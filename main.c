@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.15 2004/03/06 19:38:44 sobomax Exp $
+ * $Id: main.c,v 1.16 2004/03/06 20:00:48 sobomax Exp $
  *
  * History:
  * --------
@@ -770,6 +770,7 @@ handle_command(int controlfd)
 	    spa->ports[i] = lport;
 	    spa->rtcp->ports[i] = lport + 1;
 	    spa->complete = spa->rtcp->complete = 1;
+	    rebuild_tables();
 	}
 	lport = spa->ports[i];
 	lia[0] = spa->laddr[i];
