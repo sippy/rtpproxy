@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.14 2004/03/06 18:42:46 sobomax Exp $
+ * $Id: main.c,v 1.15 2004/03/06 19:38:44 sobomax Exp $
  *
  * History:
  * --------
@@ -546,18 +546,19 @@ static void
 handle_command(int controlfd)
 {
     int len, delete, argc, i, j, pidx, request, response, asymmetric;
-    int external, rlen, pf, ecode;
-    int fds[2], ports[2];
+    int external, rlen, pf, ecode, lidx;
+    int fds[2], lport;
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
     struct session *spa, *spb;
     char **ap, *argv[10];
-    struct sockaddr *ia[2], *lia;
+    struct sockaddr *ia[2], *lia[2];
     struct sockaddr_storage raddr;
     struct addrinfo hints, *res;
 
     (void *)ia[0] = (void *)ia[1] = (void *)res = spa = spb = NULL;
-    lia = NULL;
+    lia[0] = lia[1] = bindaddr[0];
+    lidx = 0;
     fds[0] = fds[1] = -1;
 
     if (umode == 0) {
@@ -677,7 +678,14 @@ handle_command(int controlfd)
 
 	    case 'i':
 	    case 'I':
-		external = 0;
+		lia[lidx] = bindaddr[1];
+		lidx++;
+		break;
+
+	    case 'e':
+	    case 'E':
+		lia[lidx] = bindaddr[0];
+		lidx++;
 		break;
 
 	    case '6':
@@ -725,7 +733,7 @@ handle_command(int controlfd)
 	}
     }
 
-    ports[0] = ports[1] = 0;
+    lport = 0;
     pidx = 1;
     LIST_FOREACH(spa, &session_set, link) {
 	if (spa->rtcp == NULL || spa->call_id == NULL ||
@@ -749,23 +757,22 @@ handle_command(int controlfd)
 	    return;
 	}
 	if (response == 1 && spa->complete == 0) {
-	    j = (external == 0) ? 1 : 0;
-	    if (create_listener(bindaddr[j], PORT_MIN, PORT_MAX,
-	      lastport[j], ports, fds) == -1) {
+	    j = ishostseq(bindaddr[j], spa->laddr[i]) ? 0 : 1;
+	    if (create_listener(spa->laddr[i], PORT_MIN, PORT_MAX,
+	      lastport[j], &lport, fds) == -1) {
 		warnx("can't create listener");
 		ecode = 7;
 		goto goterror;
 	    }
-	    lastport[j] = ports[1];
+	    lastport[j] = lport + 1;
 	    spa->fds[i] = fds[0];
 	    spa->rtcp->fds[i] = fds[1];
-	    spa->ports[i] = ports[0];
-	    spa->rtcp->ports[i] = ports[1];
-	    spa->laddr[i] = spa->rtcp->laddr[i] = bindaddr[j];
+	    spa->ports[i] = lport;
+	    spa->rtcp->ports[i] = lport + 1;
 	    spa->complete = spa->rtcp->complete = 1;
 	}
-	ports[0] = spa->ports[i];
-	lia = spa->laddr[i];
+	lport = spa->ports[i];
+	lia[0] = spa->laddr[i];
 	pidx = (i == 0) ? 1 : 0;
 	spa->ttl = SESSION_TIMEOUT;
 	warnx("lookup on a ports %d/%d, session timer restarted", spa->ports[0],
@@ -789,15 +796,14 @@ handle_command(int controlfd)
     warnx("new session %s, tag %s requested", call_id,
       from_tag);
 
-    j = (external == 0) ? 1 : 0;
+    j = ishostseq(bindaddr[0], lia[0]) ? 0 : 1;
     if (create_listener(bindaddr[j], PORT_MIN, PORT_MAX,
-      lastport[j], ports, fds) == -1) {
+      lastport[j], &lport, fds) == -1) {
 	warnx("can't create listener");
 	ecode = 9;
 	goto goterror;
     }
-    lia = bindaddr[j];
-    lastport[j] = ports[1];
+    lastport[j] = lport + 1;
 
     spa = malloc(sizeof(*spa));
     if (spa == NULL) {
@@ -828,13 +834,13 @@ handle_command(int controlfd)
     for (i = 0; i < 2; i++) {
 	spa->rfds[i] = -1;
 	spb->rfds[i] = -1;
+	spa->laddr[i] = lia[i];
+	spb->laddr[i] = lia[i];
     }
     spa->fds[0] = fds[0];
     spb->fds[0] = fds[1];
-    spa->laddr[0] = lia;
-    spb->laddr[0] = lia;
-    spa->ports[0] = ports[0];
-    spb->ports[0] = ports[1];
+    spa->ports[0] = lport;
+    spb->ports[0] = lport + 1;
     spa->ttl = SESSION_TIMEOUT;
     spb->ttl = -1;
     spa->rtcp = spb;
@@ -847,8 +853,8 @@ handle_command(int controlfd)
 
     rebuild_tables();
 
-    warnx("new session on a ports %d/%d created, tag %s",
-      ports[0], ports[1], from_tag);
+    warnx("new session on a port %d created, tag %s",
+      lport, from_tag);
 
 writeport:
     if (pidx >= 0) {
@@ -889,11 +895,11 @@ writeport:
 	len = sprintf(cp, "%s ", cookie);
 	cp += len;
     }
-    if (lia == NULL || ishostnull(lia))
-	len += sprintf(cp, "%d\n", ports[0]);
+    if (lia[0] == NULL || ishostnull(lia[0]))
+	len += sprintf(cp, "%d\n", lport);
     else
-	len += sprintf(cp, "%d %s%s\n", ports[0], addr2char(lia),
-	  (lia->sa_family == AF_INET) ? "" : " 6");
+	len += sprintf(cp, "%d %s%s\n", lport, addr2char(lia[0]),
+	  (lia[0]->sa_family == AF_INET) ? "" : " 6");
 doreply:
     if (umode == 0) {
 	write(controlfd, buf, len);
