@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.1 2004/01/05 21:03:36 sobomax Exp $
+ * $Id: main.c,v 1.1.1.1 2004/01/05 21:03:36 sobomax Exp $
  *
  * History:
  * --------
