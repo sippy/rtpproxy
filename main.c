@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.11 2004/03/05 00:57:13 sobomax Exp $
+ * $Id: main.c,v 1.12 2004/03/06 13:49:59 sobomax Exp $
  *
  * History:
  * --------
@@ -896,7 +896,8 @@ writeport:
     if (lia[0] == NULL)
 	len += sprintf(cp, "%d\n", ports[0]);
     else
-	len += sprintf(cp, "%d %s\n", ports[0], addr2char(lia[0]));
+	len += sprintf(cp, "%d %s%s\n", ports[0], addr2char(lia[0]),
+	  (lia[0]->sa_family == AF_INET) ? "" : " 6");
 doreply:
     if (umode == 0) {
 	write(controlfd, buf, len);
