@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.17 2004/03/13 18:48:55 sobomax Exp $
+ * $Id: main.c,v 1.18 2004/04/20 16:51:38 sobomax Exp $
  *
  * History:
  * --------
@@ -121,10 +121,10 @@
 #endif
 
 #if !defined(ACCESSPERMS)
-#define	ACCESSPERMS (S_IRWXU|S_IRWXG|S_IRWXO)
+#define	ACCESSPERMS	(S_IRWXU|S_IRWXG|S_IRWXO)
 #endif
 #if !defined(DEFFILEMODE)
-#define	DEFFILEMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
+#define	DEFFILEMODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
 #endif
 
 /*
@@ -252,7 +252,6 @@ ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
     }
 }
 
-
 static int
 ishostnull(struct sockaddr *ia)
 {
@@ -375,13 +374,14 @@ remove_session(struct session *sp)
 {
     int i;
 
-    warnx("RTP stats: %lu in from callee, %lu in from caller, %lu relayed, "
-      "%lu dropped", sp->pcount[0], sp->pcount[1],
+    warnx("RTP stats: %lu in from callee, %lu in from caller, "
+      "%lu relayed, %lu dropped", sp->pcount[0], sp->pcount[1],
       sp->pcount[2], sp->pcount[3]);
-    warnx("RTCP stats: %lu in from callee, %lu in from caller, %lu relayed, "
-      "%lu dropped", sp->rtcp->pcount[0], sp->rtcp->pcount[1],
+    warnx("RTCP stats: %lu in from callee, %lu in from caller, "
+      "%lu relayed, %lu dropped", sp->rtcp->pcount[0], sp->rtcp->pcount[1],
       sp->rtcp->pcount[2], sp->rtcp->pcount[3]);
-    warnx("session on ports %d/%d is cleaned up", sp->ports[0], sp->ports[1]);
+    warnx("session on ports %d/%d is cleaned up", sp->ports[0],
+      sp->ports[1]);
     for (i = 0; i < 2; i++) {
 	if (sp->addr[i] != NULL)
 	    free(sp->addr[i]);
@@ -746,8 +746,8 @@ handle_command(int controlfd)
 	else
 	    continue;
 	if (delete == 1) {
-	    warnx("forcefully deleting session on ports %d/%d", spa->ports[0],
-	      spa->ports[1]);
+	    warnx("forcefully deleting session on ports %d/%d",
+	      spa->ports[0], spa->ports[1]);
 	    remove_session(spa);
 	    rebuild_tables();
 	    if (cookie != NULL) {
@@ -776,8 +776,8 @@ handle_command(int controlfd)
 	lia[0] = spa->laddr[i];
 	pidx = (i == 0) ? 1 : 0;
 	spa->ttl = SESSION_TIMEOUT;
-	warnx("lookup on a ports %d/%d, session timer restarted", spa->ports[0],
-	  spa->ports[1]);
+	warnx("lookup on a ports %d/%d, session timer restarted",
+	  spa->ports[0], spa->ports[1]);
 	goto writeport;
     }
     if (delete == 1) {
@@ -794,8 +794,8 @@ handle_command(int controlfd)
 	goto writeport;
     }
 
-    warnx("new session %s, tag %s requested", call_id,
-      from_tag);
+    warnx("new session %s, tag %s requested",
+      call_id, from_tag);
 
     j = ishostseq(bindaddr[0], lia[0]) ? 0 : 1;
     if (create_listener(bindaddr[j], PORT_MIN, PORT_MAX,
@@ -966,7 +966,7 @@ int
 main(int argc, char **argv)
 {
     int controlfd, i, readyfd, len, nodaemon, dmode, port, ridx, sidx;
-    int rebuild_pending;
+    int rebuild_pending, ch;
     sigset_t set, oset;
     struct session *sp;
     struct sockaddr_un ifsun;
@@ -974,7 +974,7 @@ main(int argc, char **argv)
     socklen_t rlen;
     struct itimerval tick;
     char buf[1024 * 8];
-    char ch, *bh[2], *bh6[2], *cp;
+    char *bh[2], *bh6[2], *cp;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
     rdir = NULL;
@@ -1148,11 +1148,11 @@ main(int argc, char **argv)
 
     i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (i >= 0) {
-        len = sprintf(buf, "%u\n", getpid());
-        write(i, buf, len);
-        close(i);
+	len = sprintf(buf, "%u\n", getpid());
+	write(i, buf, len);
+	close(i);
     } else {
-        warn("can't open pidfile for writing");
+	warn("can't open pidfile for writing");
     }
 
     warnx("rtpproxy started, pid %d", getpid());
