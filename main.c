@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.8 2004/02/19 21:11:30 sobomax Exp $
+ * $Id: main.c,v 1.9 2004/03/01 12:31:55 sobomax Exp $
  *
  * History:
  * --------
@@ -115,6 +115,7 @@
 #define	SESSION_TIMEOUT	60	/* in ticks */
 #define	TOS		0xb8
 #define	LBR_THRS	128	/* low-bitrate threshold */
+#define	CPORT		"22222"
 
 /* Dummy service, getaddrinfo needs it */
 #define	SERVICE		"34999"
@@ -171,6 +172,7 @@ static struct session *sessions[MAX_FDS];
 static struct pollfd fds[MAX_FDS + 1];
 static int nsessions;
 static int bmode = 0;			/* Bridge mode */
+static int umode = 0;
 static int use_ipv6;			/* IPv6 enabled/disabled */
 
 /*
@@ -186,7 +188,7 @@ static int lastport[2] = {PORT_MIN - 1, PORT_MIN - 1};
 static const char *rdir = NULL;
 
 static const char *addr2char(struct sockaddr *);
-static void setbindhost(struct sockaddr *, int, const char *);
+static void setbindhost(struct sockaddr *, int, const char *, const char *);
 static void remove_session(struct session *);
 static void rebuild_tables(void);
 static void alarmhandler(int);
@@ -221,7 +223,8 @@ addr2char(struct sockaddr *ia)
 }
 
 static void
-setbindhost(struct sockaddr *ia, int pf, const char *bindhost)
+setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
+  const char *servname)
 {
     int n;
     struct addrinfo hints, *res;
@@ -238,7 +241,7 @@ setbindhost(struct sockaddr *ia, int pf, const char *bindhost)
     if (bindhost && (strcmp(bindhost, "*") == 0))
 	bindhost = NULL;
 
-    if ((n = getaddrinfo(bindhost, SERVICE, &hints, &res)) != 0)
+    if ((n = getaddrinfo(bindhost, servname, &hints, &res)) != 0)
 	errx(1, "setbindhost: %s", gai_strerror(n));
 
     /* Use the first socket address returned */
@@ -493,13 +496,14 @@ fatal_error:
 static void
 handle_command(int controlfd)
 {
-    int len, delete, argc, i, pidx, request, response, asymmetric, external;
+    int len, delete, argc, i, pidx, request, response, asymmetric, external, rlen;
     int fds[8], ports[2];
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port;
     struct session *spa, *spb;
     char **ap, *argv[10];
     struct sockaddr *ia[2], *lia[2];
+    struct sockaddr raddr;
     struct addrinfo hints, *res;
 
     (void *)ia[0] = (void *)ia[1] = (void *)res = spa = spb = NULL;
@@ -507,9 +511,14 @@ handle_command(int controlfd)
     for (i = 0; i < 8; i++)
 	fds[i] = -1;
 
-    do {
-	len = read(controlfd, buf, sizeof(buf) - 1);
-    } while (len == -1 && errno == EINTR);
+    if (umode == 0) {
+	do {
+	    len = read(controlfd, buf, sizeof(buf) - 1);
+	} while (len == -1 && errno == EINTR);
+    } else {
+	rlen = sizeof(raddr);
+	len = recvfrom(controlfd, buf, sizeof(buf) - 1, 0, &raddr, &rlen);
+    }
     if (len == -1)
 	warn("can't read from control socket");
     buf[len] = '\0';
@@ -780,7 +789,12 @@ writeport:
     else
 	len = sprintf(buf, "%d %s\n", ports[0], addr2char(lia[0]));
 doreply:
-    while (write(controlfd, buf, len) == -1 && errno == EINTR);
+    if (umode == 0) {
+	while (write(controlfd, buf, len) == -1 && errno == EINTR);
+    } else {
+	while (sendto(controlfd, buf, len, 0, &raddr, rlen) == -1 &&
+	  (errno == EINTR || errno == ENOBUFS));
+    }
     return;
 
 nomem:
@@ -841,14 +855,14 @@ main(int argc, char **argv)
 	struct sockaddr_in6 addr6;
     } raddr;
     struct sockaddr_un ifsun;
+    struct sockaddr ifsin;
     socklen_t rlen;
     struct itimerval tick;
     char buf[1024 * 8];
-    char ch, *bh[2], *bh6[2];
+    char ch, *bh[2], *bh6[2], *cp;
     const char *cmd_sock;
 
-    bh[0] = "*";
-    bh[1] = bh6[0] = bh6[1] = NULL;
+    bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
     rdir = NULL;
     nodaemon = 0;
 
@@ -884,6 +898,16 @@ main(int argc, char **argv)
 	    break;
 
 	case 's':
+	    if (strncmp("udp:", optarg, 4) == 0) {
+		umode = 1;
+		optarg += 4;
+	    } else if (strncmp("udp6:", optarg, 5) == 0) {
+		umode = 6;
+		optarg += 5;
+	    } else if (strncmp("unix:", optarg, 5) == 0) {
+		umode = 0;
+		optarg += 5;
+	    }
 	    cmd_sock = optarg;
 	    break;
 
@@ -911,6 +935,13 @@ main(int argc, char **argv)
     argc -= optind;
     argv += optind;
 
+    if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
+	if (umode != 0)
+	    errx(1, "explicit binding address has to be specified in UDP "
+	      "command mode");
+	bh[0] = "*";
+    }
+
     for (i = 0; i < 2; i++) {
 	if (bh[i] != NULL && *bh[i] == '\0')
 	    bh[i] = NULL;
@@ -937,30 +968,51 @@ main(int argc, char **argv)
 	bindaddr6[i] = NULL;
 	if (bh[i] != NULL) {
 	    bindaddr[i] = alloca(sizeof(*bindaddr[i]));
-	    setbindhost((struct sockaddr *)bindaddr[i], AF_INET, bh[i]);
+	    setbindhost((struct sockaddr *)bindaddr[i], AF_INET, bh[i],
+	      SERVICE);
 	}
 	if (bh6[i] != NULL) {
 	    bindaddr6[i] = alloca(sizeof(*bindaddr6[i]));
-	    setbindhost((struct sockaddr *)bindaddr6[i], AF_INET6, bh6[i]);
+	    setbindhost((struct sockaddr *)bindaddr6[i], AF_INET6, bh6[i],
+	      SERVICE);
 	}
     }
 
-    unlink(cmd_sock);
-    memset(&ifsun, '\0', sizeof ifsun);
+    if (umode == 0) {
+	unlink(cmd_sock);
+	memset(&ifsun, '\0', sizeof ifsun);
 #if !defined(__linux__) && !defined(__solaris__)
-    ifsun.sun_len = strlen(cmd_sock);
+	ifsun.sun_len = strlen(cmd_sock);
 #endif
-    ifsun.sun_family = AF_LOCAL;
-    strcpy(ifsun.sun_path, cmd_sock);
-    controlfd = socket(PF_LOCAL, SOCK_STREAM, 0);
-    if (controlfd == -1)
-	err(1, "can't create socket");
-    setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &controlfd,
-      sizeof controlfd);
-    if (bind(controlfd, (struct sockaddr *)&ifsun, sizeof ifsun) < 0)
-	err(1, "can't bind to a socket");
-    if (listen(controlfd, 5) != 0)
-	err(1, "can't listen on a socket");
+	ifsun.sun_family = AF_LOCAL;
+	strcpy(ifsun.sun_path, cmd_sock);
+	controlfd = socket(PF_LOCAL, SOCK_STREAM, 0);
+	if (controlfd == -1)
+	    err(1, "can't create socket");
+	setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &controlfd,
+	  sizeof controlfd);
+	if (bind(controlfd, (struct sockaddr *)&ifsun, sizeof ifsun) < 0)
+	    err(1, "can't bind to a socket");
+	if (listen(controlfd, 5) != 0)
+	    err(1, "can't listen on a socket");
+    } else {
+	cp = strrchr(cmd_sock, ':');
+	if (cp != NULL) {
+	    *cp = '\0';
+	    cp++;
+	}
+	if (cp == NULL || *cp == '\0')
+	    cp = CPORT;
+	i = (umode == 6) ? AF_INET6 : AF_INET;
+	setbindhost(&ifsin, i, cmd_sock, cp);
+	controlfd = socket(i, SOCK_DGRAM, 0);
+	if (controlfd == -1)
+	    err(1, "can't create socket");
+	i = (umode == 6) ?
+	  sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in);
+	if (bind(controlfd, &ifsin, i) < 0)
+	    err(1, "can't bind to a socket");
+    }
 
 #if !defined(__solaris__)
     if (nodaemon == 0) {
@@ -1014,15 +1066,21 @@ main(int argc, char **argv)
 	    if ((fds[readyfd].revents & POLLIN) == 0)
 		continue;
 	    if (readyfd == 0) {
-		rlen = sizeof(ifsun);
-		controlfd = accept(fds[readyfd].fd, (struct sockaddr *)&ifsun,
-		  &rlen);
-		if (controlfd == -1) {
-		    warn("can't accept connection on control socket");
-		    continue;
+		if (umode == 0) {
+		    rlen = sizeof(ifsun);
+		    controlfd = accept(fds[readyfd].fd, (struct sockaddr *)&ifsun,
+		      &rlen);
+		    if (controlfd == -1) {
+			warn("can't accept connection on control socket");
+			continue;
+		    }
+		} else {
+		    controlfd = fds[readyfd].fd;
 		}
 		handle_command(controlfd);
-		close(controlfd);
+		if (umode == 0) {
+		    close(controlfd);
+		}
 		/*
 		 * Don't use continue here, because we have cleared all
 		 * revents in rebuild_tables().
