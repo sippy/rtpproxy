@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.18 2004/04/20 16:51:38 sobomax Exp $
+ * $Id: main.c,v 1.19 2004/04/20 17:10:40 sobomax Exp $
  *
  * History:
  * --------
@@ -983,7 +983,7 @@ main(int argc, char **argv)
     tos = TOS;
     dmode = 0;
 
-    while ((ch = getopt(argc, argv, "vf2l:6:s:t:r:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2l:6:s:t:r:p:")) != -1)
 	switch (ch) {
 	case 'f':
 	    nodaemon = 1;
