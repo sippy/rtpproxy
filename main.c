@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.20 2004/08/09 08:05:32 sobomax Exp $
+ * $Id: main.c,v 1.21 2004/08/13 19:04:23 sobomax Exp $
  *
  * History:
  * --------
@@ -77,6 +77,16 @@
  *	       bother checking for EINTR when reading or writing data.
  *
  *	       Pidfile support added.
+ *
+ * 2004-08-13: Several small cleanups to make code closer to my own private
+ *	       version. Particularly make it friendly with gcc 3.4.
+ *
+ *	       Change format of timestamps saved with each incoming RTP packet
+ *	       from struct timeval to double unix time, since the latter is
+ *	       easier to process when extracting recorded audio.
+ *
+ *	       New command line switch `R', which tells to record only RTP
+ *	       not RTCP packets.
  *
  */
 
@@ -194,7 +204,7 @@ static LIST_HEAD(, session) session_set = LIST_HEAD_INITIALIZER(&session_set);
 
 struct pkt_hdr {
     struct sockaddr_storage addr;	/* Source address */
-    struct timeval time;		/* Time of arrival */
+    double time;			/* Time of arrival */
     int plen;				/* Length of following RTP/RTCP packet */
 };
 
@@ -213,9 +223,10 @@ static const char *pid_file = PID_FILE;
  */
 static struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
 
-static int tos;
+static int tos = TOS;
 static int lastport[2] = {PORT_MIN - 1, PORT_MIN - 1};
 static const char *rdir = NULL;
+static int rrtcp = 1;
 
 static int ishostseq(struct sockaddr *, struct sockaddr *);
 static int ishostnull(struct sockaddr *);
@@ -250,6 +261,9 @@ ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
     default:
 	break;
     }
+
+    /* Can't happen */
+    abort();
 }
 
 static int
@@ -515,14 +529,16 @@ rwrite(struct session *sp, int idx, struct sockaddr *saddr, void *buf, int len)
     struct iovec v[2];
     struct pkt_hdr hdr;
     int rval;
+    struct timeval time;
 
     memset(&hdr, 0, sizeof(hdr));
 
-    rval = gettimeofday(&hdr.time, NULL);
+    rval = gettimeofday(&time, NULL);
     if (rval == -1) {
 	warn("can't get current time");
 	goto fatal_error;
     }
+    hdr.time = time.tv_sec + ((double)time.tv_usec) / 1000000.0;
     memcpy(&hdr.addr, saddr, SA_LEN(saddr));
     hdr.plen = len;
 
@@ -556,7 +572,9 @@ handle_command(int controlfd)
     struct sockaddr_storage raddr;
     struct addrinfo hints, *res;
 
-    (void *)ia[0] = (void *)ia[1] = (void *)res = spa = spb = NULL;
+    ia[0] = ia[1] = NULL;
+    res = NULL;
+    spa = spb = NULL;
     lia[0] = lia[1] = bindaddr[0];
     lidx = 0;
     fds[0] = fds[1] = -1;
@@ -883,7 +901,7 @@ writeport:
 	if (rdir != NULL) {
 	    if (spa->rfds[pidx] == -1)
 		spa->rfds[pidx] = ropen(spa, rdir, pidx);
-	    if (spa->rtcp->rfds[pidx] == -1)
+	    if (spa->rtcp->rfds[pidx] == -1 && rrtcp != 0)
 		spa->rtcp->rfds[pidx] = ropen(spa->rtcp, rdir, pidx);
 	}
     }
@@ -912,7 +930,6 @@ doreply:
 
 nomem:
     warnx("can't allocate memory");
-freeall:
     for (i = 0; i < 2; i++)
 	if (ia[i] != NULL)
 	    free(ia[i]);
@@ -966,7 +983,7 @@ int
 main(int argc, char **argv)
 {
     int controlfd, i, readyfd, len, nodaemon, dmode, port, ridx, sidx;
-    int rebuild_pending, ch;
+    int rebuild_pending;
     sigset_t set, oset;
     struct session *sp;
     struct sockaddr_un ifsun;
@@ -974,16 +991,15 @@ main(int argc, char **argv)
     socklen_t rlen;
     struct itimerval tick;
     char buf[1024 * 8];
-    char *bh[2], *bh6[2], *cp;
+    char ch, *bh[2], *bh6[2], *cp;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
     rdir = NULL;
     nodaemon = 0;
 
-    tos = TOS;
     dmode = 0;
 
-    while ((ch = getopt(argc, argv, "vf2l:6:s:t:r:p:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:t:r:p:")) != -1)
 	switch (ch) {
 	case 'f':
 	    nodaemon = 1;
@@ -1038,6 +1054,10 @@ main(int argc, char **argv)
 
 	case 'r':
 	    rdir = optarg;
+	    break;
+
+	case 'R':
+	    rrtcp = 0;
 	    break;
 
 	case 'p':
