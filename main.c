@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.25 2005/03/24 17:51:42 sobomax Exp $
+ * $Id: main.c,v 1.26 2005/03/28 10:25:59 sobomax Exp $
  *
  */
 
@@ -77,6 +77,21 @@ static int bmode = 0;			/* Bridge mode */
 static int umode = 0;			/* UDP control mode */
 static const char *cmd_sock = CMD_SOCK;
 static const char *pid_file = PID_FILE;
+
+struct proto_cap {
+    const char	*pc_id;
+    const char	*pc_description;
+};
+
+static struct proto_cap proto_caps[] = {
+    /*
+     * The first entry must be basic protocol version and isn't shown
+     * as extension on -v.
+     */
+    { "20040107", "Basic RTP proxy functionality" },
+    { "20050322", "Support for multiple RTP streams and MOH" },
+    { NULL, NULL }
+};
 
 /*
  * The first address is for external interface, the second one - for
@@ -408,7 +423,7 @@ handle_command(int controlfd)
     case 'v':
     case 'V':
 	if (argv[0][1] == 'F' || argv[0][1] == 'f') {
-	    int known;
+	    int i, known;
 	    /*
 	     * Wait for protocol version datestamp and check whether we
 	     * know it.
@@ -418,14 +433,12 @@ handle_command(int controlfd)
 		ecode = 2;
 		goto goterror;
 	    }
-	    /*
-	     * 20040107 is base version for now.
-	     * 20050322 has extensions for multiple streams (using ";num"
-	     * suffix in from_tag or to_tag) and weak flag for session
-	     * creation and deletion.
-	     */
-	    known = (!strcmp(argv[1], "20040107") ||
-	      !strcmp(argv[1], "20050322"));
+	    for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
+		if (!strcmp(argv[1], proto_caps[i].pc_id)) {
+		    known = 1;
+		    break;
+		}
+	    }
 	    if (cookie == NULL)
 		len = sprintf(buf, "%d\n", known);
 	    else
@@ -969,7 +982,11 @@ main(int argc, char **argv)
 	    break;
 
 	case 'v':
-	    printf("%d\n", CPROTOVER);
+	    printf("Basic version: %d\n", CPROTOVER);
+	    for(i = 1; proto_caps[i].pc_id != NULL; ++i) {
+		printf("Extension %s: %s\n", proto_caps[i].pc_id,
+		    proto_caps[i].pc_description);
+	    }
 	    exit(0);
 	    break;
 
