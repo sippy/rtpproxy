@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.3 2004/01/11 02:11:59 sobomax Exp $
+ * $Id: main.c,v 1.4 2004/01/13 12:45:28 sobomax Exp $
  *
  * History:
  * --------
@@ -111,7 +111,7 @@
 #define	in_nullhost(x)	((x).s_addr == INADDR_ANY)
 
 #if !defined(SA_LEN)
-#define	SA_LEN(sa)	((sa)->sa_len)
+#define	SA_LEN(sa)	(((sa)->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
 #endif
 
 struct session {
