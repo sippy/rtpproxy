@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.12 2004/03/06 13:49:59 sobomax Exp $
+ * $Id: main.c,v 1.13 2004/03/06 17:32:51 sobomax Exp $
  *
  * History:
  * --------
@@ -218,7 +218,7 @@ static int lastport[2] = {PORT_MIN - 1, PORT_MIN - 1};
 static const char *rdir = NULL;
 
 static int ishostseq(struct sockaddr *, struct sockaddr *);
-static int isnulladdr(struct sockaddr *);
+static int ishostnull(struct sockaddr *);
 static const char *addr2char(struct sockaddr *);
 static void setbindhost(struct sockaddr *, int, const char *, const char *);
 static void remove_session(struct session *);
@@ -785,6 +785,7 @@ handle_command(int controlfd)
 		ecode = 8;
 		goto freeall;
 	    }
+	    lia[i] = bindaddr[0];
 	    lastport[0] = ports[i];
 	}
     } else {
@@ -893,7 +894,7 @@ writeport:
 	len = sprintf(cp, "%s ", cookie);
 	cp += len;
     }
-    if (lia[0] == NULL)
+    if (lia[0] == NULL || ishostnull(lia[0]))
 	len += sprintf(cp, "%d\n", ports[0]);
     else
 	len += sprintf(cp, "%d %s%s\n", ports[0], addr2char(lia[0]),
