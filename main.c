@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.9 2004/03/01 12:31:55 sobomax Exp $
+ * $Id: main.c,v 1.10 2004/03/02 14:56:55 sobomax Exp $
  *
  * History:
  * --------
@@ -106,7 +106,7 @@
  * Version of the command protocol, bump only when backward-incompatible
  * change is introduced
  */
-#define	CPROTOVER	20040107
+#define	CPROTOVER	20040302
 
 #define	PORT_MIN	35000
 #define	PORT_MAX	65000
@@ -499,7 +499,7 @@ handle_command(int controlfd)
     int len, delete, argc, i, pidx, request, response, asymmetric, external, rlen;
     int fds[8], ports[2];
     char buf[1024 * 8];
-    char *cp, *call_id, *from_tag, *to_tag, *addr, *port;
+    char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
     struct session *spa, *spb;
     char **ap, *argv[10];
     struct sockaddr *ia[2], *lia[2];
@@ -537,53 +537,70 @@ handle_command(int controlfd)
 	return;
     }
 
+    if (argc == 1) {
+	if (argv[0][0] == 'v' || (argv[0][0] == 'V')) {
+	    /* Backward compatibility hack */
+	    argv[1] = argv[0];
+	    argc++;
+	    cookie = NULL;
+	} else {
+	    warnx("command syntax error");
+	    return;
+	}
+    } else {
+	cookie = argv[0];
+    }
+
     request = response = delete = 0;
     addr = port = NULL;
-    switch (argv[0][0]) {
+    switch (argv[1][0]) {
     case 'u':
     case 'U':
-	if (argc < 5 || argc > 6) {
+	if (argc < 6 || argc > 7) {
 	    warnx("command syntax error");
 	    return;
 	}
 	request = 1;
-	addr = argv[2];
-	port = argv[3];
-	from_tag = argv[4];
-	to_tag = argv[5];
+	addr = argv[3];
+	port = argv[4];
+	from_tag = argv[5];
+	to_tag = argv[6];
 	break;
 
     case 'l':
     case 'L':
-	if (argc < 5 || argc > 6) {
+	if (argc < 6 || argc > 7) {
 	    warnx("command syntax error");
 	    return;
 	}
 	response = 1;
-	addr = argv[2];
-	port = argv[3];
-	from_tag = argv[4];
-	to_tag = argv[5];
+	addr = argv[3];
+	port = argv[4];
+	from_tag = argv[5];
+	to_tag = argv[6];
 	break;
 
     case 'd':
     case 'D':
-	if (argc < 3 || argc > 4) {
+	if (argc < 4 || argc > 5) {
 	    warnx("command syntax error");
 	    return;
 	}
 	delete = 1;
-	from_tag = argv[2];
-	to_tag = argv[3];
+	from_tag = argv[3];
+	to_tag = argv[4];
 	break;
 
     case 'v':
     case 'V':
-	if (argc > 1) {
+	if (argc != 2) {
 	    warnx("command syntax error");
 	    return;
 	}
-	len = sprintf(buf, "%d\n", CPROTOVER);
+	if (cookie == NULL)
+	    len = sprintf(buf, "%d\n", CPROTOVER);
+	else
+	    len = sprintf(buf, "%s %d\n", cookie, CPROTOVER);
 	goto doreply;
 	break;
 
@@ -591,15 +608,15 @@ handle_command(int controlfd)
 	warnx("unknown command");
 	return;
     }
-    call_id = argv[1];
+    call_id = argv[2];
 
     if (request != 0 || response != 0) {
-	if (argv[0][1] == 'a' || argv[0][1] == 'A' || bmode != 0)
+	if (argv[1][1] == 'a' || argv[1][1] == 'A' || bmode != 0)
 	    asymmetric = 1;
 	else
 	    asymmetric = 0;
 
-	if ((argv[0][1] == 'i' || argv[0][1] == 'I') && bmode != 0)
+	if ((argv[1][1] == 'i' || argv[1][1] == 'I') && bmode != 0)
 	    external = 0;
 	else
 	    external = 1;
@@ -785,9 +802,9 @@ writeport:
 	if (ia[i] != NULL)
 	    free(ia[i]);
     if (lia[0] == NULL)
-	len = sprintf(buf, "%d\n", ports[0]);
+	len = sprintf(buf, "%s %d\n", cookie, ports[0]);
     else
-	len = sprintf(buf, "%d %s\n", ports[0], addr2char(lia[0]));
+	len = sprintf(buf, "%s %d %s\n", cookie, ports[0], addr2char(lia[0]));
 doreply:
     if (umode == 0) {
 	while (write(controlfd, buf, len) == -1 && errno == EINTR);
