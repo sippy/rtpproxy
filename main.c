@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.16 2004/03/06 20:00:48 sobomax Exp $
+ * $Id: main.c,v 1.17 2004/03/13 18:48:55 sobomax Exp $
  *
  * History:
  * --------
@@ -1114,7 +1114,7 @@ main(int argc, char **argv)
 	  sizeof controlfd);
 	if (bind(controlfd, (struct sockaddr *)&ifsun, sizeof ifsun) < 0)
 	    err(1, "can't bind to a socket");
-	if (listen(controlfd, 5) != 0)
+	if (listen(controlfd, 32) != 0)
 	    err(1, "can't listen on a socket");
     } else {
 	cp = strrchr(cmd_sock, ':');
