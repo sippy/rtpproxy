@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.5 2004/02/09 11:38:20 sobomax Exp $
+ * $Id: main.c,v 1.6 2004/02/09 13:31:52 sobomax Exp $
  *
  * History:
  * --------
@@ -637,7 +637,10 @@ handle_command(int controlfd)
 	    return;
 	}
 	ports[0] = spa->ports[i];
-	lia[0] = spa->laddr[i];
+	if (bmode != 0)
+	    lia[0] = spa->laddr[i];
+	else
+	    lia[0] = spa->laddr[0];
 	pidx = (i == 0) ? 1 : 0;
 	spa->cleanup_in = SESSION_TIMEOUT;
 	warnx("lookup on a ports %d/%d, session timer restarted", spa->ports[0],
