@@ -22,12 +22,12 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: Makefile,v 1.1 2004/01/05 21:03:36 sobomax Exp $
+# $Id: Makefile,v 1.2 2004/02/09 11:38:20 sobomax Exp $
 
 PROG=	rtpproxy
 SRCS=	main.c
 MAN1=
 
-WARNS?=	2
+WARNS?=	3
 
 .include <bsd.prog.mk>
