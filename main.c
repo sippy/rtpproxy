@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.2 2004/01/07 17:02:47 sobomax Exp $
+ * $Id: main.c,v 1.3 2004/01/11 02:11:59 sobomax Exp $
  *
  * History:
  * --------
@@ -109,6 +109,10 @@
 #endif
 
 #define	in_nullhost(x)	((x).s_addr == INADDR_ANY)
+
+#if !defined(SA_LEN)
+#define	SA_LEN(sa)	((sa)->sa_len)
+#endif
 
 struct session {
     LIST_ENTRY(session) link;
@@ -565,8 +569,8 @@ handle_command(int controlfd)
 writeport:
     if (pidx >= 0 && ia[0] != NULL && ia[1] != NULL) {
 	if (spa->pcount[pidx] == 0 && !(spa->addr[pidx] != NULL &&
-	  ia[0]->sa_len == spa->addr[pidx]->sa_len &&
-	  memcmp(ia[0], spa->addr[pidx], ia[0]->sa_len) == 0)) {
+	  SA_LEN(ia[0]) == SA_LEN(spa->addr[pidx]) &&
+	  memcmp(ia[0], spa->addr[pidx], SA_LEN(ia[0])) == 0)) {
 	    warnx("pre-filling %s's address with %s:%s",
 	      (pidx == 0) ? "callee" : "caller", addr, port);
 	    if (spa->addr[pidx] != NULL)
@@ -575,8 +579,8 @@ writeport:
 	    ia[0] = NULL;
 	}
 	if (spa->rtcp->pcount[pidx] == 0 && !(spa->rtcp->addr[pidx] != NULL &&
-	  ia[1]->sa_len == spa->rtcp->addr[pidx]->sa_len &&
-	  memcmp(ia[1], spa->rtcp->addr[pidx], ia[1]->sa_len) == 0)) {
+	  SA_LEN(ia[1]) == SA_LEN(spa->rtcp->addr[pidx]) &&
+	  memcmp(ia[1], spa->rtcp->addr[pidx], SA_LEN(ia[1])) == 0)) {
 	    if (spa->rtcp->addr[pidx] != NULL)
 		free(spa->rtcp->addr[pidx]);
 	    spa->rtcp->addr[pidx] = ia[1];
