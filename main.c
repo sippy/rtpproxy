@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.24 2005/03/24 17:10:34 sobomax Exp $
+ * $Id: main.c,v 1.25 2005/03/24 17:51:42 sobomax Exp $
  *
  */
 
@@ -430,6 +430,7 @@ handle_command(int controlfd)
 		len = sprintf(buf, "%d\n", known);
 	    else
 		len = sprintf(buf, "%s %d\n", cookie, known);
+	    goto doreply;
 	}
 	if (argc != 1) {
 	    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
