@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.6 2004/02/09 13:31:52 sobomax Exp $
+ * $Id: main.c,v 1.7 2004/02/17 18:02:17 sobomax Exp $
  *
  * History:
  * --------
@@ -93,6 +93,13 @@
 #endif
 #if !defined(PF_LOCAL)
 #define	PF_LOCAL PF_UNIX
+#endif
+
+#if !defined(ACCESSPERMS)
+#define	ACCESSPERMS (S_IRWXU|S_IRWXG|S_IRWXO)
+#endif
+#if !defined(DEFFILEMODE)
+#define	DEFFILEMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
 #endif
 
 /*
