@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.23 2005/03/23 18:26:49 sobomax Exp $
+ * $Id: main.c,v 1.24 2005/03/24 17:10:34 sobomax Exp $
  *
  */
 
@@ -407,7 +407,7 @@ handle_command(int controlfd)
 
     case 'v':
     case 'V':
-	if (argv[0][1] == 'Q' || argv[0][1] == 'q') {
+	if (argv[0][1] == 'F' || argv[0][1] == 'f') {
 	    int known;
 	    /*
 	     * Wait for protocol version datestamp and check whether we
