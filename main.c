@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.10 2004/03/02 14:56:55 sobomax Exp $
+ * $Id: main.c,v 1.11 2004/03/05 00:57:13 sobomax Exp $
  *
  * History:
  * --------
@@ -52,6 +52,31 @@
  *	       and the second one is WAN, or to the same interface but one
  *	       address can be IPv4 and the second one is IPv6, etc. Requires
  *	       updated natelper module to utilise this functionality.
+ *
+ * 2004-03-02: New remote UDP/UDP6 command mode. Protocol version bumped due
+ *	       to backward-incompatible changes required for supporting
+ *	       command/reply ordering necessary in UDP command mode.
+ *
+ * 2004-03-04: Major clean-up of the IPv6 code, to make it actually working
+ *	       not crashing now and then. IPv6 now should be first-class
+ *	       citizen on par with good-ol' IPv4, unlike previously. As an
+ *	       bonus, code now became visibly simpler in some places.
+ *
+ *	       Support for ad-hoc IPv4<->IPv6 translation mode removed in
+ *	       favour of much cleaner bridge IPv4<->IPv6 translation mode.
+ *
+ *	       Revert protocol version bump, so that the cookie only required
+ *	       in the datagram mode. In the local control mode new version
+ *	       of the proxy should be 100% backward compatible with older
+ *	       clients.
+ *
+ *	       If error occured when executing command return an error
+ *	       code via a control socket.
+ *
+ *	       Most of the code runs with signals blocked, so that don't
+ *	       bother checking for EINTR when reading or writing data.
+ *
+ *	       Pidfile support added.
  *
  */
 
@@ -106,7 +131,7 @@
  * Version of the command protocol, bump only when backward-incompatible
  * change is introduced
  */
-#define	CPROTOVER	20040302
+#define	CPROTOVER	20040107
 
 #define	PORT_MIN	35000
 #define	PORT_MAX	65000
@@ -121,6 +146,7 @@
 #define	SERVICE		"34999"
 
 #define	CMD_SOCK	"/var/run/rtpproxy.sock"
+#define	PID_FILE	"/var/run/rtpproxy.pid"
 
 #if defined(__solaris__)
 #define err(exitcode, format, args...) \
@@ -133,28 +159,32 @@
   fprintf(stderr, format "\n", ## args)
 #endif
 
-#define	in_nullhost(x)	((x)->sin_addr.s_addr == INADDR_ANY)
-#define	in_hosteq(s, t)	((s)->sin_addr.s_addr == (t)->sin_addr.s_addr)
-#define	in6_hosteq(s, t) \
-  (memcmp(&(s)->sin6_addr.s6_addr[0], &(t)->sin6_addr.s6_addr[0], sizeof(struct in6_addr)) == 0)
-
 #if !defined(SA_LEN)
-#define	SA_LEN(sa)	(((sa)->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
+#define	SA_LEN(sa)	\
+  (((sa)->sa_family == AF_INET) ? \
+  sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
+#endif
+#if !defined(SS_LEN)
+#define	SS_LEN(ss)	\
+  (((ss)->ss_family == AF_INET) ? \
+  sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
 #endif
 
 struct session {
     LIST_ENTRY(session) link;
-    struct sockaddr *addr[4];
-    struct sockaddr *laddr[2];
-    int cleanup_in;
-    unsigned long pcount[6];
+    int ttl;
+    unsigned long pcount[4];
     char *call_id;
     char *tag;
     struct session* rtcp;
     struct session* rtp;
-    /* Descriptors, first pair for IPv4, the second one for IPv6 */
-    int fds[4];
+    /* Remote source addresses, one for caller and one for callee*/
+    struct sockaddr *addr[2];
+    /* Local listen addresses/ports */
+    struct sockaddr *laddr[2];
     int ports[2];
+    /* Descriptors */
+    int fds[2];
     /* Session is complete, that is we received both request and reply */
     int complete;
     int asymmetric[2];
@@ -163,42 +193,88 @@ struct session {
 static LIST_HEAD(, session) session_set = LIST_HEAD_INITIALIZER(&session_set);
 
 struct pkt_hdr {
-    struct sockaddr addr;	/* Source address */
-    struct timeval time;	/* Time of arrival */
-    int plen;			/* Length of following RTP/RTCP packet */
+    struct sockaddr_storage addr;	/* Source address */
+    struct timeval time;		/* Time of arrival */
+    int plen;				/* Length of following RTP/RTCP packet */
 };
 
 static struct session *sessions[MAX_FDS];
 static struct pollfd fds[MAX_FDS + 1];
 static int nsessions;
 static int bmode = 0;			/* Bridge mode */
-static int umode = 0;
-static int use_ipv6;			/* IPv6 enabled/disabled */
+static int umode = 0;			/* UDP control mode */
+static const char *cmd_sock = CMD_SOCK;
+static const char *pid_file = PID_FILE;
 
 /*
  * The first address is for external interface, the second one - for
- * internal one. Could be the same, in this case there is no bridge
+ * internal one. Second can be NULL, in this case there is no bridge
  * mode enabled.
  */
-static struct sockaddr_in *bindaddr[2];	/* IPv4 socket addresses */
-static struct sockaddr_in6 *bindaddr6[2];/* IPv6 socket addresses */
+static struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
 
 static int tos;
 static int lastport[2] = {PORT_MIN - 1, PORT_MIN - 1};
 static const char *rdir = NULL;
 
+static int ishostseq(struct sockaddr *, struct sockaddr *);
+static int isnulladdr(struct sockaddr *);
 static const char *addr2char(struct sockaddr *);
 static void setbindhost(struct sockaddr *, int, const char *, const char *);
 static void remove_session(struct session *);
 static void rebuild_tables(void);
 static void alarmhandler(int);
-static int create_twinlistener(struct sockaddr *, int, int, int *);
-static int create_listener(struct sockaddr_in *, struct sockaddr_in6 *,
-  int, int, int, int *, int *);
+static int create_twinlistener(struct sockaddr *, int, int *);
+static int create_listener(struct sockaddr *, int, int, int, int *, int *);
 static int ropen(struct session *, const char *, int);
 static void rwrite(struct session *, int, struct sockaddr *, void *, int);
 static void handle_command(int);
 static void usage(void);
+
+static int
+ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
+{
+    if (ia1->sa_family != ia2->sa_family)
+	return 0;
+
+    switch (ia1->sa_family) {
+    case AF_INET:
+	return (((struct sockaddr_in *)ia1)->sin_addr.s_addr ==
+	  ((struct sockaddr_in *)ia2)->sin_addr.s_addr);
+
+    case AF_INET6:
+	return (memcmp(&((struct sockaddr_in6 *)ia1)->sin6_addr.s6_addr[0],
+	  &((struct sockaddr_in6 *)ia2)->sin6_addr.s6_addr[0],
+	  sizeof(struct in6_addr)) == 0);
+
+    default:
+	break;
+    }
+}
+
+
+static int
+ishostnull(struct sockaddr *ia)
+{
+    struct in6_addr *ap;
+
+    switch (ia->sa_family) {
+    case AF_INET:
+	return (((struct sockaddr_in *)ia)->sin_addr.s_addr == INADDR_ANY);
+
+    case AF_INET6:
+	ap = &((struct sockaddr_in6 *)ia)->sin6_addr;
+	return ((*(const u_int32_t *)(const void *)(&ap->s6_addr[0]) == 0) &&
+		(*(const u_int32_t *)(const void *)(&ap->s6_addr[4]) == 0) &&
+		(*(const u_int32_t *)(const void *)(&ap->s6_addr[8]) == 0) &&
+		(*(const u_int32_t *)(const void *)(&ap->s6_addr[12]) == 0));
+
+    default:
+	break;
+    }
+
+    abort();
+}
 
 static const char *
 addr2char(struct sockaddr *ia)
@@ -258,7 +334,7 @@ rebuild_tables(void)
 
     i = 0;
     LIST_FOREACH(sp, &session_set, link) {
-	for (j = 0; j < 4; j++) {
+	for (j = 0; j < 2; j++) {
 	    if (sp->fds[j] == -1)
 		continue;
 	    fds[i + 1].fd = sp->fds[j];
@@ -282,13 +358,13 @@ alarmhandler(int sig __attribute__ ((unused)))
 	rsp = LIST_NEXT(sp, link);
 	if (sp->rtcp == NULL)
 	    continue;
-	if (sp->cleanup_in == 0) {
+	if (sp->ttl == 0) {
 	    warnx("session timeout");
 	    remove_session(sp);
 	    changed = 1;
 	    continue;
 	}
-	sp->cleanup_in--;
+	sp->ttl--;
     }
     if (changed == 1)
 	rebuild_tables();
@@ -300,28 +376,21 @@ remove_session(struct session *sp)
     int i;
 
     warnx("RTP stats: %lu in from callee, %lu in from caller, %lu relayed, "
-      "%lu dropped",
-      (sp->pcount[0] > 0) ? sp->pcount[0] : sp->pcount[2],
-      (sp->pcount[1] > 0) ? sp->pcount[1] : sp->pcount[3],
-      sp->pcount[4], sp->pcount[5]);
+      "%lu dropped", sp->pcount[0], sp->pcount[1],
+      sp->pcount[2], sp->pcount[3]);
     warnx("RTCP stats: %lu in from callee, %lu in from caller, %lu relayed, "
-      "%lu dropped",
-      (sp->rtcp->pcount[0] > 0) ? sp->rtcp->pcount[0] : sp->rtcp->pcount[2],
-      (sp->rtcp->pcount[1] > 0) ? sp->rtcp->pcount[1] : sp->rtcp->pcount[3],
-      sp->rtcp->pcount[4], sp->rtcp->pcount[5]);
-    warnx("session on ports %d/%d is cleaned up",
-      sp->ports[0], sp->ports[1]);
-    for (i = 0; i < 4; i++) {
-	if (sp->fds[i] != -1)
-	    close(sp->fds[i]);
-	if (sp->rtcp->fds[i] != -1)
-	    close(sp->rtcp->fds[i]);
+      "%lu dropped", sp->rtcp->pcount[0], sp->rtcp->pcount[1],
+      sp->rtcp->pcount[2], sp->rtcp->pcount[3]);
+    warnx("session on ports %d/%d is cleaned up", sp->ports[0], sp->ports[1]);
+    for (i = 0; i < 2; i++) {
 	if (sp->addr[i] != NULL)
 	    free(sp->addr[i]);
 	if (sp->rtcp->addr[i] != NULL)
 	    free(sp->rtcp->addr[i]);
-    }
-    for (i = 0; i < 2; i++) {
+	if (sp->fds[i] != -1)
+	    close(sp->fds[i]);
+	if (sp->rtcp->fds[i] != -1)
+	    close(sp->rtcp->fds[i]);
 	if (sp->rfds[i] != -1)
 	    close(sp->rfds[i]);
 	if (sp->rtcp->rfds[i] != -1)
@@ -338,35 +407,35 @@ remove_session(struct session *sp)
 }
 
 static int
-create_twinlistener(struct sockaddr *ia, int pf, int port, int *fds)
+create_twinlistener(struct sockaddr *ia, int port, int *fds)
 {
-    struct sockaddr iac;
-    int rval, i, size;
+    struct sockaddr_storage iac;
+    int rval, i;
 
     fds[0] = fds[1] = -1;
 
     rval = -1;
-    size = (pf == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
     for (i = 0; i < 2; i++) {
-	fds[i] = socket(pf, SOCK_DGRAM, 0);
+	fds[i] = socket(ia->sa_family, SOCK_DGRAM, 0);
 	if (fds[i] == -1) {
 	    warn("can't create %s socket",
-	      (pf == AF_INET) ? "IPv4" : "IPv6");
+	      (ia->sa_family == AF_INET) ? "IPv4" : "IPv6");
 	    goto failure;
 	}
-	memcpy(&iac, ia, size);
+	memcpy(&iac, ia, SA_LEN(ia));
 	((struct sockaddr_in *)&iac)->sin_port = htons(port);
-	if (bind(fds[i], (struct sockaddr *)&iac, size) != 0) {
+	if (bind(fds[i], (struct sockaddr *)&iac, SA_LEN(ia)) != 0) {
 	    if (errno != EADDRINUSE && errno != EACCES) {
 		warn("can't bind to the %s port %d",
-		  (pf == AF_INET) ? "IPv4" : "IPv6", port);
+		  (ia->sa_family == AF_INET) ? "IPv4" : "IPv6", port);
 	    } else {
 		rval = -2;
 	    }
 	    goto failure;
 	}
 	port++;
-	if (setsockopt(fds[i], IPPROTO_IP, IP_TOS, &tos, sizeof(tos)) == -1)
+	if ((ia->sa_family == AF_INET) &&
+	  (setsockopt(fds[i], IPPROTO_IP, IP_TOS, &tos, sizeof(tos)) == -1))
 	    warn("unable to set TOS to %d", tos);
     }
     return 0;
@@ -381,8 +450,8 @@ failure:
 }
 
 static int
-create_listener(struct sockaddr_in *ia, struct sockaddr_in6 *ia6,
-    int minport, int maxport, int startport, int *port, int *fds)
+create_listener(struct sockaddr *ia, int minport, int maxport,
+  int startport, int *port, int *fds)
 {
     int i, init, rval;
 
@@ -394,7 +463,7 @@ create_listener(struct sockaddr_in *ia, struct sockaddr_in6 *ia6,
     if ((startport & 0x1) != 0)
 	startport++;
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 2; i++)
 	fds[i] = -1;
 
     init = 0;
@@ -402,33 +471,13 @@ create_listener(struct sockaddr_in *ia, struct sockaddr_in6 *ia6,
 	startport = minport;
     for (*port = startport; *port != startport || init == 0; (*port) += 2) {
 	init = 1;
-	if (ia != NULL) {
-	    rval = create_twinlistener((struct sockaddr *)ia, AF_INET,
-		*port, fds);
-	    if (rval != 0) {
-		if (rval == -1)
-		    break;
-		if (*port >= maxport)
-		    *port = minport - 2;
-		continue;
-	    }
-	}
-
-	if (ia6 != NULL) {
-	    rval = create_twinlistener((struct sockaddr *)ia6, AF_INET6,
-		*port, fds + 2);
-	    if (rval != 0) {
-		if (ia != NULL) {
-		    close(fds[0]);
-		    close(fds[1]);
-		    fds[0] = fds[1] = -1;
-		}
-		if (rval == -1)
-		    break;
-		if (*port >= maxport)
-		    *port = minport - 2;
-		continue;
-	    }
+	rval = create_twinlistener(ia, *port, fds);
+	if (rval != 0) {
+	    if (rval == -1)
+		break;
+	    if (*port >= maxport)
+		*port = minport - 2;
+	    continue;
 	}
 	return 0;
     }
@@ -482,7 +531,7 @@ rwrite(struct session *sp, int idx, struct sockaddr *saddr, void *buf, int len)
     v[1].iov_base = buf;
     v[1].iov_len = len;
 
-    while ((rval = writev(sp->rfds[idx], v, 2)) == -1 && errno == EINTR);
+    rval = writev(sp->rfds[idx], v, 2);
     if (rval != -1)
 	return;
 
@@ -496,31 +545,33 @@ fatal_error:
 static void
 handle_command(int controlfd)
 {
-    int len, delete, argc, i, pidx, request, response, asymmetric, external, rlen;
-    int fds[8], ports[2];
+    int len, delete, argc, i, pidx, request, response, asymmetric;
+    int external, rlen, pf, ecode;
+    int fds[4], ports[2];
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
     struct session *spa, *spb;
     char **ap, *argv[10];
     struct sockaddr *ia[2], *lia[2];
-    struct sockaddr raddr;
+    struct sockaddr_storage raddr;
     struct addrinfo hints, *res;
 
     (void *)ia[0] = (void *)ia[1] = (void *)res = spa = spb = NULL;
     lia[0] = lia[1] = NULL;
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 4; i++)
 	fds[i] = -1;
 
     if (umode == 0) {
-	do {
-	    len = read(controlfd, buf, sizeof(buf) - 1);
-	} while (len == -1 && errno == EINTR);
+	len = read(controlfd, buf, sizeof(buf) - 1);
     } else {
 	rlen = sizeof(raddr);
-	len = recvfrom(controlfd, buf, sizeof(buf) - 1, 0, &raddr, &rlen);
+	len = recvfrom(controlfd, buf, sizeof(buf) - 1, 0,
+	  (struct sockaddr *)&raddr, &rlen);
     }
-    if (len == -1)
+    if (len == -1) {
 	warn("can't read from control socket");
+	return;
+    }
     buf[len] = '\0';
 
     cp = buf;
@@ -532,70 +583,73 @@ handle_command(int controlfd)
 	    if (++ap >= &argv[10])
 		break;
 	}
-    if (argc < 1) {
+    cookie = NULL;
+    if (argc < 1 || (umode != 0 && argc < 2)) {
 	warnx("command syntax error");
-	return;
+	ecode = 0;
+	goto goterror;
     }
 
-    if (argc == 1) {
-	if (argv[0][0] == 'v' || (argv[0][0] == 'V')) {
-	    /* Backward compatibility hack */
-	    argv[1] = argv[0];
-	    argc++;
-	    cookie = NULL;
-	} else {
-	    warnx("command syntax error");
-	    return;
-	}
-    } else {
+    /* Stream communication mode doesn't use cookie */
+    if (umode != 0) {
 	cookie = argv[0];
+	for (i = 1; i < argc; i++)
+	    argv[i - 1] = argv[i];
+	argc--;
+	argv[argc] = NULL;
+    } else {
+	cookie = NULL;
     }
 
     request = response = delete = 0;
     addr = port = NULL;
-    switch (argv[1][0]) {
+    switch (argv[0][0]) {
     case 'u':
     case 'U':
-	if (argc < 6 || argc > 7) {
+	if (argc < 5 || argc > 6) {
 	    warnx("command syntax error");
-	    return;
+	    ecode = 1;
+	    goto goterror;
 	}
 	request = 1;
-	addr = argv[3];
-	port = argv[4];
-	from_tag = argv[5];
-	to_tag = argv[6];
+	addr = argv[2];
+	port = argv[3];
+	from_tag = argv[4];
+	to_tag = argv[5];
 	break;
 
     case 'l':
     case 'L':
-	if (argc < 6 || argc > 7) {
+	if (argc < 5 || argc > 6) {
 	    warnx("command syntax error");
-	    return;
+	    ecode = 2;
+	    goto goterror;
 	}
 	response = 1;
-	addr = argv[3];
-	port = argv[4];
-	from_tag = argv[5];
-	to_tag = argv[6];
+	addr = argv[2];
+	port = argv[3];
+	from_tag = argv[4];
+	to_tag = argv[5];
 	break;
 
     case 'd':
     case 'D':
-	if (argc < 4 || argc > 5) {
+	if (argc < 3 || argc > 4) {
 	    warnx("command syntax error");
-	    return;
+	    ecode = 3;
+	    goto goterror;
 	}
 	delete = 1;
-	from_tag = argv[3];
-	to_tag = argv[4];
+	from_tag = argv[2];
+	to_tag = argv[3];
 	break;
 
     case 'v':
     case 'V':
-	if (argc != 2) {
+	if (argc != 1) {
 	    warnx("command syntax error");
-	    return;
+	    ecode = 4;
+	    goto goterror;
 	}
 	if (cookie == NULL)
 	    len = sprintf(buf, "%d\n", CPROTOVER);
@@ -606,20 +660,38 @@ handle_command(int controlfd)
 
     default:
 	warnx("unknown command");
-	return;
+	ecode = 5;
+	goto goterror;
     }
-    call_id = argv[2];
+    call_id = argv[1];
 
-    if (request != 0 || response != 0) {
-	if (argv[1][1] == 'a' || argv[1][1] == 'A' || bmode != 0)
+    if (delete == 0) {
+	external = 1;
+	asymmetric = 0;
+	pf = AF_INET;
+	for (cp = argv[0] + 1; *cp != '\0'; cp++) {
+	    switch (*cp) {
+	    case 'a':
+	    case 'A':
+		asymmetric = 1;
+		break;
+
+	    case 'i':
+	    case 'I':
+		external = 0;
+		break;
+
+	    case '6':
+		pf = AF_INET6;
+		break;
+
+	    default:
+		warnx("unknown command modifier `%c'", *cp);
+		break;
+	    }
+	}
+	if (bmode != 0)
 	    asymmetric = 1;
-	else
-	    asymmetric = 0;
-
-	if ((argv[1][1] == 'i' || argv[1][1] == 'I') && bmode != 0)
-	    external = 0;
-	else
-	    external = 1;
     }
 
     if (delete == 0 && addr != NULL && port != NULL && strlen(addr) >= 7) {
@@ -627,15 +699,17 @@ handle_command(int controlfd)
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_flags = AI_NUMERICHOST;/* Address is numeric */
-	hints.ai_family = AF_INET;	/* Protocol family, so far IPv4 only */
+	hints.ai_family = pf;	/* Protocol family */
 	hints.ai_socktype = SOCK_DGRAM;	/* UDP */
 
 	if ((n = getaddrinfo(addr, port, &hints, &res)) == 0) {
-	    if (!in_nullhost((struct sockaddr_in *)res->ai_addr)) {
+	    if (!ishostnull(res->ai_addr)) {
 		for (i = 0; i < 2; i++) {
 		    ia[i] = malloc(res->ai_addrlen);
-		    if (ia[i] == NULL)
+		    if (ia[i] == NULL) {
+			ecode = 6;
 			goto nomem;
+		    }
 		    /* Use the first socket address returned */
 		    memcpy(ia[i], res->ai_addr, res->ai_addrlen);
 		}
@@ -667,6 +741,10 @@ handle_command(int controlfd)
 	      spa->ports[1]);
 	    remove_session(spa);
 	    rebuild_tables();
+	    if (cookie != NULL) {
+		len = sprintf(buf, "%s\n", cookie);
+		goto doreply;
+	    }
 	    return;
 	}
 	ports[0] = spa->ports[i];
@@ -675,7 +753,7 @@ handle_command(int controlfd)
 	else
 	    lia[0] = spa->laddr[0];
 	pidx = (i == 0) ? 1 : 0;
-	spa->cleanup_in = SESSION_TIMEOUT;
+	spa->ttl = SESSION_TIMEOUT;
 	warnx("lookup on a ports %d/%d, session timer restarted", spa->ports[0],
 	  spa->ports[1]);
 	if (response == 1 && spa->complete == 0)
@@ -685,7 +763,8 @@ handle_command(int controlfd)
     if (delete == 1) {
 	warnx("delete request failed: session %s, tags %s/%s not found", call_id,
 	  from_tag, to_tag != NULL ? to_tag : "NONE");
-	return;
+	ecode = 7;
+	goto goterror;
     }
 
     if (response == 1) {
@@ -700,9 +779,10 @@ handle_command(int controlfd)
 
     if (bmode == 0) {
 	for (i = 0; i < 2; i++) {
-	    if (create_listener(bindaddr[0], bindaddr6[0], PORT_MIN, PORT_MAX,
-	      lastport[0], &ports[i], fds + i * 4) == -1) {
+	    if (create_listener(bindaddr[0], PORT_MIN, PORT_MAX,
+	      lastport[0], &ports[i], fds + i * 2) == -1) {
 		warnx("can't create listener");
+		ecode = 8;
 		goto freeall;
 	    }
 	    lastport[0] = ports[i];
@@ -712,40 +792,46 @@ handle_command(int controlfd)
 
 	for (i = 0; i < 2; i++) {
 	    j = (external == 0) ? i : 1 - i;
-	    if (create_listener(bindaddr[j], bindaddr6[j],
-	      PORT_MIN, PORT_MAX, lastport[j], &ports[i], fds + i * 4) == -1) {
+	    if (create_listener(bindaddr[j], PORT_MIN, PORT_MAX, lastport[j],
+	      &ports[i], fds + i * 2) == -1) {
 		warnx("can't create listener");
+		ecode = 9;
 		goto freeall;
 	    }
-	    lia[i] = (bindaddr[j] != NULL) ?
-	      (void *)bindaddr[j] : (void *)bindaddr6[j];
+	    lia[i] = bindaddr[j];
 	    lastport[j] = ports[i];
 	}
     }
 
     spa = malloc(sizeof(*spa));
-    if (spa == NULL)
+    if (spa == NULL) {
+    	ecode = 10;
 	goto nomem;
+    }
     spb = malloc(sizeof(*spb));
-    if (spb == NULL)
+    if (spb == NULL) {
+	ecode = 11;
 	goto nomem;
+    }
     memset(spa, 0, sizeof(*spa));
     memset(spb, 0, sizeof(*spb));
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 2; i++)
 	spa->fds[i] = spb->fds[i] = -1;
     spa->call_id = strdup(call_id);
-    if (spa->call_id == NULL)
+    if (spa->call_id == NULL) {
+	ecode = 12;
 	goto nomem;
+    }
     spb->call_id = spa->call_id;
     spa->tag = strdup(from_tag);
-    if (spa->tag == NULL)
+    if (spa->tag == NULL) {
+	ecode = 13;
 	goto nomem;
+    }
     spb->tag = spa->tag;
     for (i = 0; i < 2; i++) {
-	spa->fds[i] = fds[0 + i * 4];
-	spb->fds[i] = fds[1 + i * 4];
-	spa->fds[2 + i] = (use_ipv6) ? fds[2 + i * 4] : -1;
-	spb->fds[2 + i] = (use_ipv6) ? fds[3 + i * 4] : -1;
+	spa->fds[i] = fds[0 + i * 2];
+	spb->fds[i] = fds[1 + i * 2];
 	spa->ports[i] = ports[i];
 	spb->ports[i] = ports[i] + 1;
 	spa->laddr[i] = lia[i];
@@ -753,8 +839,8 @@ handle_command(int controlfd)
 	spa->rfds[i] = -1;
 	spb->rfds[i] = -1;
     }
-    spa->cleanup_in = SESSION_TIMEOUT;
-    spb->cleanup_in = -1;
+    spa->ttl = SESSION_TIMEOUT;
+    spb->ttl = -1;
     spa->rtcp = spb;
     spb->rtcp = NULL;
     spa->rtp = NULL;
@@ -790,27 +876,33 @@ writeport:
 		ia[1] = NULL;
 	    }
 	}
-	spa->asymmetric[pidx % 2] = spa->rtcp->asymmetric[pidx % 2] = asymmetric;
+	spa->asymmetric[pidx] = spa->rtcp->asymmetric[pidx] = asymmetric;
 	if (rdir != NULL) {
-	    if (spa->rfds[pidx % 2] == -1)
-		spa->rfds[pidx % 2] = ropen(spa, rdir, pidx % 2);
-	    if (spa->rtcp->rfds[pidx % 2] == -1)
-		spa->rtcp->rfds[pidx % 2] = ropen(spa->rtcp, rdir, pidx % 2);
+	    if (spa->rfds[pidx] == -1)
+		spa->rfds[pidx] = ropen(spa, rdir, pidx);
+	    if (spa->rtcp->rfds[pidx] == -1)
+		spa->rtcp->rfds[pidx] = ropen(spa->rtcp, rdir, pidx);
 	}
     }
     for (i = 0; i < 2; i++)
 	if (ia[i] != NULL)
 	    free(ia[i]);
+    cp = buf;
+    len = 0;
+    if (cookie != NULL) {
+	len = sprintf(cp, "%s ", cookie);
+	cp += len;
+    }
     if (lia[0] == NULL)
-	len = sprintf(buf, "%s %d\n", cookie, ports[0]);
+	len += sprintf(cp, "%d\n", ports[0]);
     else
-	len = sprintf(buf, "%s %d %s\n", cookie, ports[0], addr2char(lia[0]));
+	len += sprintf(cp, "%d %s\n", ports[0], addr2char(lia[0]));
 doreply:
     if (umode == 0) {
-	while (write(controlfd, buf, len) == -1 && errno == EINTR);
+	write(controlfd, buf, len);
     } else {
-	while (sendto(controlfd, buf, len, 0, &raddr, rlen) == -1 &&
-	  (errno == EINTR || errno == ENOBUFS));
+	while (sendto(controlfd, buf, len, 0, (struct sockaddr *)&raddr,
+	  rlen) == -1 && errno == ENOBUFS);
     }
     return;
 
@@ -829,10 +921,15 @@ freeall:
     }
     if (spb != NULL)
 	free(spb);
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 4; i++)
 	if (fds[i] != -1)
 	    close(fds[i]);
-    return;
+goterror:
+    if (cookie != NULL)
+	len = sprintf(buf, "%s E%d\n", cookie, ecode);
+    else
+	len = sprintf(buf, "E%d\n", ecode);
+    goto doreply;
 }
 
 static void
@@ -856,6 +953,8 @@ static void
 ehandler(void)
 {
 
+    unlink(cmd_sock);
+    unlink(pid_file);
     warnx("rtpproxy ended");
 }
 
@@ -866,24 +965,17 @@ main(int argc, char **argv)
     int rebuild_pending;
     sigset_t set, oset;
     struct session *sp;
-    union {
-	struct sockaddr addr;
-	struct sockaddr_in addr4;
-	struct sockaddr_in6 addr6;
-    } raddr;
     struct sockaddr_un ifsun;
-    struct sockaddr ifsin;
+    struct sockaddr_storage ifsin, raddr;
     socklen_t rlen;
     struct itimerval tick;
     char buf[1024 * 8];
     char ch, *bh[2], *bh6[2], *cp;
-    const char *cmd_sock;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
     rdir = NULL;
     nodaemon = 0;
 
-    cmd_sock = CMD_SOCK;
     tos = TOS;
     dmode = 0;
 
@@ -904,7 +996,6 @@ main(int argc, char **argv)
 	    break;
 
 	case '6':
-	    use_ipv6 = 1;
 	    bh6[0] = optarg;
 	    bh6[1] = strchr(bh6[0], '/');
 	    if (bh6[1] != NULL) {
@@ -945,6 +1036,10 @@ main(int argc, char **argv)
 	    rdir = optarg;
 	    break;
 
+	case 'p':
+	    pid_file = optarg;
+	    break;
+
 	case '?':
 	default:
 	    usage();
@@ -966,6 +1061,8 @@ main(int argc, char **argv)
 	    bh6[i] = NULL;
     }
 
+    i = ((bh[0] == NULL) ? 0 : 1) + ((bh[1] == NULL) ? 0 : 1) +
+      ((bh6[0] == NULL) ? 0 : 1) + ((bh6[1] == NULL) ? 0 : 1);
     if (bmode != 0) {
 	if (bh[0] != NULL && bh6[0] != NULL)
 	    errx(1, "either IPv4 or IPv6 should be configured for external "
@@ -973,26 +1070,29 @@ main(int argc, char **argv)
 	if (bh[1] != NULL && bh6[1] != NULL)
 	    errx(1, "either IPv4 or IPv6 should be configured for internal "
 	      "interface in bridging mode, not both");
-	i = ((bh[0] == NULL) ? 0 : 1) + ((bh[1] == NULL) ? 0 : 1) +
-	  ((bh6[0] == NULL) ? 0 : 1) + ((bh6[1] == NULL) ? 0 : 1);
 	if (i != 2)
 	    errx(1, "incomplete configuration of the bridging mode - exactly "
 	      "2 listen addresses required, %d provided", i);
+    } else if (i != 1) {
+	errx(1, "exactly 1 listen addresses required, %d provided", i);
     }
 
     for (i = 0; i < 2; i++) {
 	bindaddr[i] = NULL;
-	bindaddr6[i] = NULL;
 	if (bh[i] != NULL) {
-	    bindaddr[i] = alloca(sizeof(*bindaddr[i]));
-	    setbindhost((struct sockaddr *)bindaddr[i], AF_INET, bh[i],
-	      SERVICE);
+	    bindaddr[i] = alloca(sizeof(struct sockaddr_storage));
+	    setbindhost(bindaddr[i], AF_INET, bh[i], SERVICE);
+	    continue;
 	}
 	if (bh6[i] != NULL) {
-	    bindaddr6[i] = alloca(sizeof(*bindaddr6[i]));
-	    setbindhost((struct sockaddr *)bindaddr6[i], AF_INET6, bh6[i],
-	      SERVICE);
+	    bindaddr[i] = alloca(sizeof(struct sockaddr_storage));
+	    setbindhost(bindaddr[i], AF_INET6, bh6[i], SERVICE);
+	    continue;
 	}
+    }
+    if (bindaddr[0] == NULL) {
+	bindaddr[0] = bindaddr[1];
+	bindaddr[1] = NULL;
     }
 
     if (umode == 0) {
@@ -1021,13 +1121,11 @@ main(int argc, char **argv)
 	if (cp == NULL || *cp == '\0')
 	    cp = CPORT;
 	i = (umode == 6) ? AF_INET6 : AF_INET;
-	setbindhost(&ifsin, i, cmd_sock, cp);
+	setbindhost((struct sockaddr *)&ifsin, i, cmd_sock, cp);
 	controlfd = socket(i, SOCK_DGRAM, 0);
 	if (controlfd == -1)
 	    err(1, "can't create socket");
-	i = (umode == 6) ?
-	  sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in);
-	if (bind(controlfd, &ifsin, i) < 0)
+	if (bind(controlfd, (struct sockaddr *)&ifsin, SS_LEN(&ifsin)) < 0)
 	    err(1, "can't bind to a socket");
     }
 
@@ -1043,6 +1141,16 @@ main(int argc, char **argv)
 #endif
 
     atexit(ehandler);
+
+    i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
+    if (i >= 0) {
+        len = sprintf(buf, "%u\n", getpid());
+        write(i, buf, len);
+        close(i);
+    } else {
+        warn("can't open pidfile for writing");
+    }
+
     warnx("rtpproxy started, pid %d", getpid());
     signal(SIGHUP, fatsignal);
     signal(SIGINT, fatsignal);
@@ -1085,8 +1193,8 @@ main(int argc, char **argv)
 	    if (readyfd == 0) {
 		if (umode == 0) {
 		    rlen = sizeof(ifsun);
-		    controlfd = accept(fds[readyfd].fd, (struct sockaddr *)&ifsun,
-		      &rlen);
+		    controlfd = accept(fds[readyfd].fd,
+		      (struct sockaddr *)&ifsun, &rlen);
 		    if (controlfd == -1) {
 			warn("can't accept connection on control socket");
 			continue;
@@ -1114,7 +1222,7 @@ main(int argc, char **argv)
 	    if (sp->complete == 0)
 		continue;
 
-	    for (i = 0; i < 4; i++) {
+	    for (i = 0; i < 2; i++) {
 		if (fds[readyfd].fd == sp->fds[i]) {
 		    ridx = i;
 		    break;
@@ -1122,52 +1230,15 @@ main(int argc, char **argv)
 	    }
 
 	    /*
-	     * Can happen if we will have got packets both on IPv4 and IPv6
-	     * ports, IPv6 is to be closed, while data can be still available
-	     * from buffer.
+	     * Can't happen.
 	     */
-	    if (i == 4)
-		continue;
-
-	    /*
-	     * Once we received on IPv4 socket, close its IPv6 twin
-	     * so that we don't waste system resources, and vice versa.
-	     */
-	    i = (ridx >= 2) ? ridx - 2 : ridx + 2;
-	    if (sp->fds[i] != -1) {
-		close(sp->fds[i]);
-		sp->fds[i] = -1;
-		if (sp->addr[i] != NULL) {
-		    free(sp->addr[i]);
-		    sp->addr[i] = NULL;
-		}
-		rebuild_pending = 1;
-	    }
-	    /* The same for RTP */
-	    if (sp->rtp != NULL && sp->rtp->fds[i] != -1) {
-		close(sp->rtp->fds[i]);
-		sp->rtp->fds[i] = -1;
-		if (sp->rtp->addr[i] != NULL) {
-		    free(sp->rtp->addr[i]);
-		    sp->rtp->addr[i] = NULL;
-		}
-		rebuild_pending = 1;
-	    }
-	    /* The same for RTCP */
-	    if (sp->rtcp != NULL && sp->rtcp->fds[i] != -1) {
-		close(sp->rtcp->fds[i]);
-		sp->rtcp->fds[i] = -1;
-		if (sp->rtcp->addr[i] != NULL) {
-		    free(sp->rtcp->addr[i]);
-		    sp->rtcp->addr[i] = NULL;
-		}
-		rebuild_pending = 1;
-	    }
+	    if (i == 2)
+		abort();
 
 	    i = 0;
 	    if (sp->addr[ridx] != NULL) {
 		/* Check that the packet is authentic, drop if it isn't */
-		if (sp->asymmetric[ridx % 2] == 0 && bmode == 0) {
+		if (sp->asymmetric[ridx] == 0 && bmode == 0) {
 			if (memcmp(sp->addr[ridx], &raddr, rlen) != 0) {
 			    if (sp->pcount[ridx] > 0)
 				continue;
@@ -1175,21 +1246,19 @@ main(int argc, char **argv)
 			    i = 1;
 			}
 		} else {
-		    /* For asymmetric clients or in bridged mode don't check port */
-		    if (raddr.addr.sa_family == AF_INET) {
-			if (!in_hosteq((struct sockaddr_in *)sp->addr[ridx], (struct sockaddr_in *)&raddr))
-			    continue;
-		    } else {
-			if (!in6_hosteq((struct sockaddr_in6 *)sp->addr[ridx], (struct sockaddr_in6 *)&raddr))
-			    continue;
-		    }
+		    /*
+		     * For asymmetric clients or in bridged mode don't check
+		     * source port since it may be different.
+		     */
+		    if (!ishostseq(sp->addr[ridx], (struct sockaddr *)&raddr))
+			continue;
 		}
 		sp->pcount[ridx]++;
 	    } else {
 		sp->pcount[ridx]++;
 		sp->addr[ridx] = malloc(rlen);
 		if (sp->addr[ridx] == NULL) {
-		    sp->pcount[5]++;
+		    sp->pcount[3]++;
 		    warnx("can't allocate memory for remote address - "
 		      "removing session");
 		    if (sp->rtp == NULL)
@@ -1208,13 +1277,13 @@ main(int argc, char **argv)
 	    }
 
 	    /* Update recorded address if it's necessary. */
-	    if (i != 0 && sp->asymmetric[ridx % 2] == 0) {
+	    if (i != 0 && sp->asymmetric[ridx] == 0) {
 		memcpy(sp->addr[ridx], &raddr, rlen);
 
 		port = ntohs(((struct sockaddr_in *)&raddr)->sin_port);
 
 		warnx("%s's address filled in: %s:%d (%s)",
-		  ((ridx % 2) == 0) ? "callee" : "caller",
+		  (ridx == 0) ? "callee" : "caller",
 		  addr2char((struct sockaddr *)&raddr), port,
 		  (sp->rtp == NULL) ? "RTP" : "RTCP");
 
@@ -1226,7 +1295,7 @@ main(int argc, char **argv)
 		if (sp->rtcp != NULL && sp->rtcp->addr[ridx] == NULL) {
 		    sp->rtcp->addr[ridx] = malloc(rlen);
 		    if (sp->rtcp->addr[ridx] == NULL) {
-			sp->pcount[5]++;
+			sp->pcount[3]++;
 			warnx("can't allocate memory for remote address - "
 			  "removing session");
 			remove_session(sp);
@@ -1242,45 +1311,35 @@ main(int argc, char **argv)
 		      htons(port + 1);
 		    warnx("guessing RTCP port "
 		      "for %s to be %d",
-		      ((ridx % 2) == 0) ? "callee" : "caller", port + 1);
+		      (ridx == 0) ? "callee" : "caller", port + 1);
 		}
 	    }
 
 	    /* Select socket for sending packet out. */
-	    if (ridx == 0 || ridx == 2)
-		sidx = (sp->fds[1] != -1) ? 1 : 3;
-	    else
-		sidx = (sp->fds[0] != -1) ? 0 : 2;
+	    sidx = (ridx == 0) ? 1 : 0;
 
 	    if (sp->rtp == NULL)
-		sp->cleanup_in = SESSION_TIMEOUT;
+		sp->ttl = SESSION_TIMEOUT;
 	    else
-		sp->rtp->cleanup_in = SESSION_TIMEOUT;
+		sp->rtp->ttl = SESSION_TIMEOUT;
 
 	    /*
 	     * Check that we have some address to which packet is to be
 	     * sent out, drop otherwise.
 	     */
 	    if (sp->addr[sidx] == NULL) {
-		sp->pcount[5]++;
+		sp->pcount[3]++;
 		goto do_record;
 	    }
 
-	    sp->pcount[4]++;
+	    sp->pcount[2]++;
 	    for (i = (dmode && len < LBR_THRS) ? 2 : 1; i > 0; i--) {
-		if (sp->addr[sidx]->sa_family == AF_INET) {
-		    sendto(sp->fds[sidx], buf, len, 0,
-		      (struct sockaddr *)sp->addr[sidx],
-		      sizeof(struct sockaddr_in));
-		} else {
-		    sendto(sp->fds[sidx], buf, len, 0,
-		      (struct sockaddr *)sp->addr[sidx],
-		      sizeof(struct sockaddr_in6));
-		}
+		sendto(sp->fds[sidx], buf, len, 0, sp->addr[sidx],
+		  SA_LEN(sp->addr[sidx]));
 	    }
 do_record:
-	    if (sp->rfds[ridx % 2] != -1)
-		rwrite(sp, ridx % 2, (struct sockaddr *)&raddr, buf, len);
+	    if (sp->rfds[ridx] != -1)
+		rwrite(sp, ridx, (struct sockaddr *)&raddr, buf, len);
 	}
 	if (rebuild_pending != 0) {
 	    rebuild_tables();
