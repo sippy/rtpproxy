@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_log.h,v 1.1 2005/03/06 19:03:52 sobomax Exp $
+ * $Id: rtpp_log.h,v 1.2 2005/03/28 16:43:19 sobomax Exp $
  *
  */
 
@@ -37,15 +37,15 @@
 
 #define	rtpp_log_open(app, call_id, flag) (0)
 #define	rtpp_log_write(level, handle, format, args...)		\
-	while (0) {						\
+	do {							\
 		fprintf(stderr, format, ## args);		\
 		fprintf(stderr, "\n");				\
-	}
+	} while (0);
 #define	rtpp_log_ewrite(level, handle, format, args...)		\
-	while (0) {						\
+	do {							\
 		fprintf(stderr, format, ## args);       	\
 		fprintf(stderr, ": %s\n", strerror(errno));	\
-	}
+	} while (0);
 #define	rtpp_log_close(handle) while (0) {}
 
 #endif
