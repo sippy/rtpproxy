@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.19 2004/04/20 17:10:40 sobomax Exp $
+ * $Id: main.c,v 1.20 2004/08/09 08:05:32 sobomax Exp $
  *
  * History:
  * --------
@@ -757,7 +757,7 @@ handle_command(int controlfd)
 	    return;
 	}
 	if (response == 1 && spa->complete == 0) {
-	    j = ishostseq(bindaddr[j], spa->laddr[i]) ? 0 : 1;
+	    j = ishostseq(bindaddr[0], spa->laddr[i]) ? 0 : 1;
 	    if (create_listener(spa->laddr[i], PORT_MIN, PORT_MAX,
 	      lastport[j], &lport, fds) == -1) {
 		warnx("can't create listener");
