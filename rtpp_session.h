@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.1 2005/03/06 19:03:52 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.2 2005/03/23 18:26:49 sobomax Exp $
  *
  */
 
@@ -63,6 +63,9 @@ struct rtpp_session {
     /* Session is complete, that is we received both request and reply */
     int complete;
     int asymmetric[2];
+    /* Flags: strong create/delete; weak ones */
+    int strong;
+    int weak[2];
     /* Pointers to rtpp_record's opaque data type */
     void *rrcs[2];
     struct rtp_server *rtps[2];
