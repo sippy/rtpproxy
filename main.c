@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.7 2004/02/17 18:02:17 sobomax Exp $
+ * $Id: main.c,v 1.8 2004/02/19 21:11:30 sobomax Exp $
  *
  * History:
  * --------
@@ -847,7 +847,8 @@ main(int argc, char **argv)
     char ch, *bh[2], *bh6[2];
     const char *cmd_sock;
 
-    bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
+    bh[0] = "*";
+    bh[1] = bh6[0] = bh6[1] = NULL;
     rdir = NULL;
     nodaemon = 0;
 
