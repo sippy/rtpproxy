@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.c,v 1.1 2005/03/06 19:03:52 sobomax Exp $
+ * $Id: rtpp_network.c,v 1.2 2005/06/07 13:53:13 sobomax Exp $
  *
  */
 
@@ -137,9 +137,8 @@ resolve(struct sockaddr *ia, int pf, const char *host,
     if (n == 0) {
 	/* Use the first socket address returned */
 	memcpy(ia, res->ai_addr, res->ai_addrlen);
+	freeaddrinfo(res);
     }
-
-    freeaddrinfo(res);
 
     return n;
 }
