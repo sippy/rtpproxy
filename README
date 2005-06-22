@@ -4,8 +4,8 @@ This is symmetric RTP proxy designed to be used in conjunction with the
 SIP Express Router (SER) or any other SIP proxy capable of rewriting SDP
 bodies in SIP messages that it processes.
 
-The code has been extensively tested on FreeBSD and verified that it
-compiles on Linux and Solaris. It should be relatively easy to port it
+The code has been extensively tested on FreeBSD and Linux and verified
+that it compiles on Solaris. It should be relatively easy to port it
 to any system which has a POSIX layer.
 
 
@@ -45,11 +45,19 @@ This proxy works as follows:
   time (60 seconds by default).
 
 
-III. TODO (in no particular order)
+III. Limitations
+
+Currently, rtpproxy does not support command-line definition of RTP port
+range. By default rtpproxy uses UDP ports 35000-65000 and these should be
+opened any firewalls in front of rtpproxy. The ports used can be modified in
+rtpp_defines.h file (PORT_MIN and PORT_MAX) and then recompile/reinstall.
+
+
+IV. TODO (in no particular order)
 
 - Port to another OSes;
 
 - make more parameters (e.g. ports range, max idle time etc.) to be
   adjustible via command line.
 
-$Id: README,v 1.1 2004/01/05 21:03:36 sobomax Exp $
+$Id: README,v 1.2 2005/06/22 18:16:45 sobomax Exp $
