@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.26 2005/03/28 10:25:59 sobomax Exp $
+ * $Id: main.c,v 1.27 2005/07/07 18:53:09 sobomax Exp $
  *
  */
 
@@ -339,7 +339,7 @@ handle_command(int controlfd)
     ia[0] = ia[1] = NULL;
     spa = spb = NULL;
     lia[0] = lia[1] = bindaddr[0];
-    lidx = 0;
+    lidx = 1;
     fds[0] = fds[1] = -1;
 
     if (umode == 0) {
@@ -500,16 +500,26 @@ handle_command(int controlfd)
 		asymmetric = 1;
 		break;
 
-	    case 'i':
-	    case 'I':
-		lia[lidx] = bindaddr[1];
-		lidx++;
-		break;
-
 	    case 'e':
 	    case 'E':
+		if (lidx < 0) {
+		    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
+		    ecode = 1;
+		    goto goterror;
+		}
+		lia[lidx] = bindaddr[1];
+		lidx--;
+		break;
+
+	    case 'i':
+	    case 'I':
+		if (lidx < 0) {
+		    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
+		    ecode = 1;
+		    goto goterror;
+		}
 		lia[lidx] = bindaddr[0];
-		lidx++;
+		lidx--;
 		break;
 
 	    case '6':
@@ -1125,7 +1135,7 @@ main(int argc, char **argv)
     signal(SIGHUP, fatsignal);
     signal(SIGINT, fatsignal);
     signal(SIGKILL, fatsignal);
-    signal(SIGPIPE, fatsignal);
+    signal(SIGPIPE, SIG_IGN);
     signal(SIGTERM, fatsignal);
     signal(SIGXCPU, fatsignal);
     signal(SIGXFSZ, fatsignal);
