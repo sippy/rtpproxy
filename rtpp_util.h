@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.h,v 1.1 2005/03/06 19:03:52 sobomax Exp $
+ * $Id: rtpp_util.h,v 1.2 2005/07/10 18:11:43 sobomax Exp $
  *
  */
 
@@ -34,9 +34,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
+
 /* Function prototypes */
 int ishostseq(struct sockaddr *, struct sockaddr *);
 int ishostnull(struct sockaddr *);
+char *addr2char_r(struct sockaddr *, char *buf, int size);
 const char *addr2char(struct sockaddr *);
 double getctime(void);
 int resolve(struct sockaddr *, int, const char *, const char *, int);

@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.27 2005/07/07 18:53:09 sobomax Exp $
+ * $Id: main.c,v 1.28 2005/07/10 18:11:43 sobomax Exp $
  *
  */
 
@@ -72,6 +72,7 @@ static struct rtpp_session *sessions[MAX_FDS];
 static struct rtpp_session *rtp_servers[MAX_FDS];
 static struct pollfd fds[MAX_FDS + 1];
 static int nsessions;
+static unsigned long long sessions_created = 0;
 static int rtp_nsessions;
 static int bmode = 0;			/* Bridge mode */
 static int umode = 0;			/* UDP control mode */
@@ -336,6 +337,18 @@ handle_command(int controlfd)
     struct sockaddr *ia[2], *lia[2];
     struct sockaddr_storage raddr;
 
+#define	doreply() \
+    { \
+	buf[len] = '\0'; \
+	rtpp_log_write(RTPP_LOG_DBUG, glog, "sending reply \"%s\"", buf); \
+	if (umode == 0) { \
+	    write(controlfd, buf, len); \
+	} else { \
+	    while (sendto(controlfd, buf, len, 0, sstosa(&raddr), \
+	      rlen) == -1 && errno == ENOBUFS); \
+	} \
+    }
+
     ia[0] = ia[1] = NULL;
     spa = spb = NULL;
     lia[0] = lia[1] = bindaddr[0];
@@ -456,6 +469,54 @@ handle_command(int controlfd)
 	else
 	    len = sprintf(buf, "%s %d\n", cookie, CPROTOVER);
 	goto doreply;
+	break;
+
+    case 'i':
+    case 'I':
+	len = sprintf(buf, "sessions created: %llu\nactive sessions:\n", sessions_created);
+	LIST_FOREACH(spa, &session_set, link) {
+	    char addrs[4][256];
+
+	    /* RTCP twin session */
+	    if (spa->rtcp == NULL) {
+		spb = spa->rtp;
+		buf[len++] = '\t';
+	    } else {
+		spb = spa->rtcp;
+		buf[len++] = '\t';
+		buf[len++] = 'C';
+		buf[len++] = ' ';
+	    }
+
+	    addr2char_r(spb->laddr[1], addrs[0], sizeof(addrs[0]));
+	    if (spb->addr[1] == NULL) {
+		strcpy(addrs[1], "NONE");
+	    } else {
+		sprintf(addrs[1], "%s:%d", addr2char(spb->addr[1]),
+		  addr2port(spb->addr[1]));
+	    }
+	    addr2char_r(spb->laddr[0], addrs[2], sizeof(addrs[2]));
+	    if (spb->addr[0] == NULL) {
+		strcpy(addrs[3], "NONE");
+	    } else {
+		sprintf(addrs[3], "%s:%d", addr2char(spb->addr[0]),
+		  addr2port(spb->addr[0]));
+	    }
+
+	    len += sprintf(buf + len,
+	      "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
+	      "stats = %lu/%lu/%lu/%lu, ttl = %d\n",
+	      spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
+	      addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
+	      spa->pcount[2], spa->pcount[3], spb->ttl);
+	    if (len + 512 > sizeof(buf)) {
+		doreply();
+		len = 0;
+	    }
+	}
+	if (len > 0)
+	    doreply();
+	return;
 	break;
 
     default:
@@ -812,6 +873,8 @@ handle_command(int controlfd)
 
     rebuild_tables();
 
+    sessions_created++;
+
     rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
       "tag %s", lport, from_tag);
 
@@ -856,14 +919,7 @@ writeport:
 	len += sprintf(cp, "%d %s%s\n", lport, addr2char(lia[0]),
 	  (lia[0]->sa_family == AF_INET) ? "" : " 6");
 doreply:
-    buf[len] = '\0';
-    rtpp_log_write(RTPP_LOG_DBUG, glog, "sending reply \"%s\"", buf);
-    if (umode == 0) {
-	write(controlfd, buf, len);
-    } else {
-	while (sendto(controlfd, buf, len, 0, sstosa(&raddr),
-	  rlen) == -1 && errno == ENOBUFS);
-    }
+    doreply();
     return;
 
 nomem:

@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.c,v 1.2 2005/06/07 13:53:13 sobomax Exp $
+ * $Id: rtpp_network.c,v 1.3 2005/07/10 18:11:43 sobomax Exp $
  *
  */
 
@@ -88,10 +88,9 @@ ishostnull(struct sockaddr *ia)
     abort();
 }
 
-const char *
-addr2char(struct sockaddr *ia)
+char *
+addr2char_r(struct sockaddr *ia, char *buf, int size)
 {
-    static char buf[256];
     void *addr;
 
     switch (ia->sa_family) {
@@ -107,7 +106,15 @@ addr2char(struct sockaddr *ia)
 	abort();
     }
 
-    return inet_ntop(ia->sa_family, addr, buf, sizeof(buf));
+    return (char *)((void *)inet_ntop(ia->sa_family, addr, buf, size));
+}
+
+const char *
+addr2char(struct sockaddr *ia)
+{
+    static char buf[256];
+
+    return(addr2char_r(ia, buf, sizeof(buf)));
 }
 
 double
