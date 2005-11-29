@@ -625,7 +625,7 @@ handle_command(int controlfd)
     }
 
     /* Border case for fixed positional argument count */
-    if (strcmp(to_tag, ":") == 0)
+    if (to_tag != NULL && strcmp(to_tag, ":") == 0)
 	to_tag = NULL;
 
     lport = 0;
