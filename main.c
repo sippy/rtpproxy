@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.30 2005/12/12 22:47:44 sobomax Exp $
+ * $Id: main.c,v 1.31 2005/12/12 23:25:17 sobomax Exp $
  *
  */
 
@@ -230,7 +230,7 @@ static int
 create_twinlistener(struct sockaddr *ia, int port, int *fds)
 {
     struct sockaddr_storage iac;
-    int rval, i;
+    int rval, i, flags;
 
     fds[0] = fds[1] = -1;
 
@@ -257,6 +257,8 @@ create_twinlistener(struct sockaddr *ia, int port, int *fds)
 	if ((ia->sa_family == AF_INET) &&
 	  (setsockopt(fds[i], IPPROTO_IP, IP_TOS, &tos, sizeof(tos)) == -1))
 	    rtpp_log_ewrite(RTPP_LOG_ERR, glog, "unable to set TOS to %d", tos);
+	flags = fcntl(fds[i], F_GETFL);
+	fcntl(fds[i], F_SETFL, flags | O_NONBLOCK);
     }
     return 0;
 
