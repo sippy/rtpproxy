@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.29 2005/12/12 07:04:50 sobomax Exp $
+ * $Id: main.c,v 1.30 2005/12/12 22:47:44 sobomax Exp $
  *
  */
 
@@ -994,7 +994,7 @@ main(int argc, char **argv)
     char buf[1024 * 8];
     char ch, *bh[2], *bh6[2], *cp;
     double sptime, eptime;
-    useconds_t delay;
+    unsigned long delay;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
     nodaemon = 0;
