@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.28 2005/07/10 18:11:43 sobomax Exp $
+ * $Id: main.c,v 1.29 2005/12/12 07:04:50 sobomax Exp $
  *
  */
 
@@ -993,6 +993,8 @@ main(int argc, char **argv)
     struct itimerval tick;
     char buf[1024 * 8];
     char ch, *bh[2], *bh6[2], *cp;
+    double sptime, eptime;
+    useconds_t delay;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
     nodaemon = 0;
@@ -1217,12 +1219,21 @@ main(int argc, char **argv)
     signal(SIGALRM, alarmhandler);
 
     rebuild_pending = 0;
+    sptime = 0;
     while(1) {
 	if (rtp_nsessions > 0)
 	    timeout = RTPS_TICKS_MIN;
 	else
 	    timeout = INFTIM;
 	sigprocmask(SIG_UNBLOCK, &set, &oset);
+	eptime = getctime();
+	delay = (eptime - sptime) * 1000000.0;
+	if (delay < (1000000 / POLL_LIMIT)) {
+	    usleep((1000000 / POLL_LIMIT) - delay);
+	    sptime = getctime();
+	} else {
+	    sptime = eptime;
+	}
 	i = poll(fds, nsessions + 1, timeout);
 	if (i < 0 && errno == EINTR)
 	    continue;
@@ -1276,6 +1287,7 @@ main(int argc, char **argv)
 		 */
 		break;
 	    }
+drain:
 	    rlen = sizeof(raddr);
 	    len = recvfrom(fds[readyfd].fd, buf, sizeof(buf), 0,
 	      sstosa(&raddr), &rlen);
@@ -1408,6 +1420,8 @@ main(int argc, char **argv)
 do_record:
 	    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
 		rwrite(sp, sp->rrcs[ridx], sstosa(&raddr), buf, len);
+	    /* Repeat since we may have several packets queued */
+	    goto drain;
 	}
 	if (rebuild_pending != 0) {
 	    rebuild_tables();
