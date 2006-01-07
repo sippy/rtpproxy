@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.33 2006/01/07 00:44:07 sobomax Exp $
+ * $Id: main.c,v 1.34 2006/01/07 02:36:27 sobomax Exp $
  *
  */
 
@@ -659,7 +659,8 @@ handle_command(int controlfd)
 		spa->weak[i] = 0;
 	    else
 		spa->strong = 0;
-	    /* This seems to be stable from reiterations, the only side
+	    /*
+	     * This seems to be stable from reiterations, the only side
 	     * effect is less efficient work.
 	     */
 	    if (spa->strong || spa->weak[0] || spa->weak[1]) {
