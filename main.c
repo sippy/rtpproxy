@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.32 2006/01/07 00:42:00 sobomax Exp $
+ * $Id: main.c,v 1.33 2006/01/07 00:44:07 sobomax Exp $
  *
  */
 
@@ -769,7 +769,7 @@ handle_command(int controlfd)
 		  spa->strong, spa->weak[0], spa->weak[1]);
 	}
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	  "lookup on a ports %d/%d, session timer restarted", spa->ports[0],
+	  "lookup on ports %d/%d, session timer restarted", spa->ports[0],
 	  spa->ports[1]);
 	goto writeport;
     }
