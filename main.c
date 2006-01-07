@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.31 2005/12/12 23:25:17 sobomax Exp $
+ * $Id: main.c,v 1.32 2006/01/07 00:42:00 sobomax Exp $
  *
  */
 
@@ -76,6 +76,7 @@ static unsigned long long sessions_created = 0;
 static int rtp_nsessions;
 static int bmode = 0;			/* Bridge mode */
 static int umode = 0;			/* UDP control mode */
+static int max_ttl = SESSION_TIMEOUT;
 static const char *cmd_sock = CMD_SOCK;
 static const char *pid_file = PID_FILE;
 
@@ -760,7 +761,7 @@ handle_command(int controlfd)
 	lport = spa->ports[i];
 	lia[0] = spa->laddr[i];
 	pidx = (i == 0) ? 1 : 0;
-	spa->ttl = SESSION_TIMEOUT;
+	spa->ttl = max_ttl;
 	if (response == 0) {
 		rtpp_log_write(RTPP_LOG_INFO, spa->log,
 		  "adding %s flag to existing session, new=%d/%d/%d",
@@ -861,7 +862,7 @@ handle_command(int controlfd)
     spb->fds[0] = fds[1];
     spa->ports[0] = lport;
     spb->ports[0] = lport + 1;
-    spa->ttl = SESSION_TIMEOUT;
+    spa->ttl = max_ttl;
     spb->ttl = -1;
     spa->log = rtpp_log_open("rtpproxy", spa->call_id, 0);
     spb->log = spa->log;
@@ -960,7 +961,7 @@ usage(void)
 {
 
     fprintf(stderr, "usage: rtpproxy [-2fv] [-l addr1[/addr2]] "
-      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]]\n");
+      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]] [-T ttl]\n");
     exit(1);
 }
 
@@ -1003,7 +1004,7 @@ main(int argc, char **argv)
 
     dmode = 0;
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:")) != -1)
 	switch (ch) {
 	case 'f':
 	    nodaemon = 1;
@@ -1074,6 +1075,10 @@ main(int argc, char **argv)
 
 	case 'p':
 	    pid_file = optarg;
+	    break;
+
+	case 'T':
+	    max_ttl = atoi(optarg);
 	    break;
 
 	case '?':
@@ -1403,7 +1408,7 @@ drain:
 	    /* Select socket for sending packet out. */
 	    sidx = (ridx == 0) ? 1 : 0;
 
-	    GET_RTP(sp)->ttl = SESSION_TIMEOUT;
+	    GET_RTP(sp)->ttl = max_ttl;
 
 	    /*
 	     * Check that we have some address to which packet is to be
