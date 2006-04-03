@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.34 2006/01/07 02:36:27 sobomax Exp $
+ * $Id: main.c,v 1.35 2006/04/03 21:20:59 sobomax Exp $
  *
  */
 
@@ -739,7 +739,7 @@ handle_command(int controlfd)
 	    goto do_ok;
 	}
 
-	if (response == 1 && spa->complete == 0) {
+	if (spa->complete == 0) {
 	    j = ishostseq(bindaddr[0], spa->laddr[i]) ? 0 : 1;
 	    if (create_listener(spa->laddr[i], PORT_MIN, PORT_MAX,
 	      lastport[j], &lport, fds) == -1) {
@@ -949,7 +949,7 @@ goterror:
     goto doreply;
 do_ok:
     if (cookie != NULL)
-	len = sprintf(buf, "%s\n", cookie);
+	len = sprintf(buf, "%s 0\n", cookie);
     else {
 	strcpy(buf, "0\n");
 	len = 2;
