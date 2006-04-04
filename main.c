@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.35 2006/04/03 21:20:59 sobomax Exp $
+ * $Id: main.c,v 1.36 2006/04/04 19:24:46 sobomax Exp $
  *
  */
 
@@ -327,9 +327,10 @@ static void
 handle_command(int controlfd)
 {
     int len, delete, argc, i, j, pidx, request, response, asymmetric;
-    int external, rlen, pf, ecode, lidx, play, record, noplay, weak;
+    int external, pf, ecode, lidx, play, record, noplay, weak;
     int ndeleted, skipnext, cmpr, cmpr1;
     int fds[2], lport, n;
+    socklen_t rlen;
     unsigned medianum;
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
