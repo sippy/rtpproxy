@@ -61,18 +61,18 @@ ropen(struct rtpp_session *sp, const char *rdir, const char *sdir, int orig)
 
     rrc = malloc(sizeof(*rrc));
     if (rrc == NULL) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't allocate memory");
-        return NULL;
+	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't allocate memory");
+	return NULL;
     }
     memset(rrc, 0, sizeof(*rrc));
 
     if (sdir == NULL) {
-        sdir = rdir;
-        rrc->needspool = 0;
+	sdir = rdir;
+	rrc->needspool = 0;
     } else {
-        rrc->needspool = 1;
-        sprintf(rrc->rpath, "%s/%s=%s.%c.%s", rdir, sp->call_id, sp->tag,
-          (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
+	rrc->needspool = 1;
+	sprintf(rrc->rpath, "%s/%s=%s.%c.%s", rdir, sp->call_id, sp->tag,
+	  (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
     }
     sprintf(rrc->spath, "%s/%s=%s.%c.%s", sdir, sp->call_id, sp->tag,
       (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
@@ -94,7 +94,7 @@ rwrite(struct rtpp_session *sp, void *rrc, struct sockaddr *saddr, void *buf, in
     int rval;
 
     if (RRC_CAST(rrc)->fd == -1)
-        return;
+	return;
 
     memset(&hdr, 0, sizeof(hdr));
 
@@ -145,10 +145,10 @@ rclose(struct rtpp_session *sp, void *rrc)
 {
 
     if (RRC_CAST(rrc)->fd != -1)
-        close(RRC_CAST(rrc)->fd);
+	close(RRC_CAST(rrc)->fd);
     if (RRC_CAST(rrc)->needspool == 1)
-        if (rename(RRC_CAST(rrc)->spath, RRC_CAST(rrc)->rpath) == -1)
-            rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't move "
-              "session record from spool into permanent storage");
+	if (rename(RRC_CAST(rrc)->spath, RRC_CAST(rrc)->rpath) == -1)
+	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't move "
+	      "session record from spool into permanent storage");
     free(rrc);
 }
