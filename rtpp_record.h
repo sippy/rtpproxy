@@ -30,8 +30,9 @@
 #ifndef _RTPP_RECORD_H_
 #define _RTPP_RECORD_H_
 
-#include "rtpp_session.h"
 #include "rtpp_util.h"
+
+struct rtpp_session;
 
 /* Function prototypes */
 void *ropen(struct rtpp_session *, const char *, const char *, int);
