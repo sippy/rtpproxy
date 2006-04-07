@@ -76,6 +76,7 @@ static unsigned long long sessions_created = 0;
 static int rtp_nsessions;
 static int bmode = 0;			/* Bridge mode */
 static int umode = 0;			/* UDP control mode */
+static int max_ttl = SESSION_TIMEOUT;
 static const char *cmd_sock = CMD_SOCK;
 static const char *pid_file = PID_FILE;
 
@@ -231,7 +232,7 @@ static int
 create_twinlistener(struct sockaddr *ia, int port, int *fds)
 {
     struct sockaddr_storage iac;
-    int rval, i;
+    int rval, i, flags;
 
     fds[0] = fds[1] = -1;
 
@@ -258,6 +259,8 @@ create_twinlistener(struct sockaddr *ia, int port, int *fds)
 	if ((ia->sa_family == AF_INET) &&
 	  (setsockopt(fds[i], IPPROTO_IP, IP_TOS, &tos, sizeof(tos)) == -1))
 	    rtpp_log_ewrite(RTPP_LOG_ERR, glog, "unable to set TOS to %d", tos);
+	flags = fcntl(fds[i], F_GETFL);
+	fcntl(fds[i], F_SETFL, flags | O_NONBLOCK);
     }
     return 0;
 
@@ -821,7 +824,7 @@ handle_command(int controlfd)
 	lport = spa->ports[i];
 	lia[0] = spa->laddr[i];
 	pidx = (i == 0) ? 1 : 0;
-	spa->ttl = SESSION_TIMEOUT;
+	spa->ttl = max_ttl;
 	if (response == 0) {
 		rtpp_log_write(RTPP_LOG_INFO, spa->log,
 		  "adding %s flag to existing session, new=%d/%d/%d",
@@ -925,7 +928,7 @@ cont_sessions:
     spb->fds[0] = fds[1];
     spa->ports[0] = lport;
     spb->ports[0] = lport + 1;
-    spa->ttl = SESSION_TIMEOUT;
+    spa->ttl = max_ttl;
     spb->ttl = -1;
     spa->log = rtpp_log_open("rtpproxy", spa->call_id, 0);
     spb->log = spa->log;
@@ -1018,7 +1021,7 @@ goterror:
     goto doreply;
 do_ok:
     if (cookie != NULL)
-	len = sprintf(buf, "%s\n", cookie);
+	len = sprintf(buf, "%s 0\n", cookie);
     else {
 	strcpy(buf, "0\n");
 	len = 2;
@@ -1031,7 +1034,7 @@ usage(void)
 {
 
     fprintf(stderr, "usage: rtpproxy [-2fv] [-l addr1[/addr2]] "
-      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]]\n");
+      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]] [-T ttl]\n");
     exit(1);
 }
 
@@ -1066,13 +1069,15 @@ main(int argc, char **argv)
     struct itimerval tick;
     char buf[1024 * 8];
     char ch, *bh[2], *bh6[2], *cp;
+    double sptime, eptime;
+    unsigned long delay;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
     nodaemon = 0;
 
     dmode = 0;
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:")) != -1)
 	switch (ch) {
 	case 'f':
 	    nodaemon = 1;
@@ -1143,6 +1148,10 @@ main(int argc, char **argv)
 
 	case 'p':
 	    pid_file = optarg;
+	    break;
+
+	case 'T':
+	    max_ttl = atoi(optarg);
 	    break;
 
 	case '?':
@@ -1290,12 +1299,21 @@ main(int argc, char **argv)
     signal(SIGALRM, alarmhandler);
 
     rebuild_pending = 0;
+    sptime = 0;
     while(1) {
 	if (rtp_nsessions > 0)
 	    timeout = RTPS_TICKS_MIN;
 	else
 	    timeout = INFTIM;
 	sigprocmask(SIG_UNBLOCK, &set, &oset);
+	eptime = getctime();
+	delay = (eptime - sptime) * 1000000.0;
+	if (delay < (1000000 / POLL_LIMIT)) {
+	    usleep((1000000 / POLL_LIMIT) - delay);
+	    sptime = getctime();
+	} else {
+	    sptime = eptime;
+	}
 	i = poll(fds, nsessions + 1, timeout);
 	if (i < 0 && errno == EINTR)
 	    continue;
@@ -1349,6 +1367,7 @@ main(int argc, char **argv)
 		 */
 		break;
 	    }
+drain:
 	    rlen = sizeof(raddr);
 	    len = recvfrom(fds[readyfd].fd, buf, sizeof(buf), 0,
 	      sstosa(&raddr), &rlen);
@@ -1462,7 +1481,7 @@ main(int argc, char **argv)
 	    /* Select socket for sending packet out. */
 	    sidx = (ridx == 0) ? 1 : 0;
 
-	    GET_RTP(sp)->ttl = SESSION_TIMEOUT;
+	    GET_RTP(sp)->ttl = max_ttl;
 
 	    /*
 	     * Check that we have some address to which packet is to be
@@ -1481,6 +1500,8 @@ main(int argc, char **argv)
 do_record:
 	    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
 		rwrite(sp, sp->rrcs[ridx], sstosa(&raddr), buf, len);
+	    /* Repeat since we may have several packets queued */
+	    goto drain;
 	}
 	if (rebuild_pending != 0) {
 	    rebuild_tables();
