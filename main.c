@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.36 2006/04/04 19:24:46 sobomax Exp $
+ * $Id: main.c,v 1.37 2006/04/11 02:54:39 sobomax Exp $
  *
  */
 
@@ -32,6 +32,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/resource.h>
 #include <sys/un.h>
 #include <sys/uio.h>
 #if defined(__FreeBSD__)
@@ -963,7 +964,7 @@ usage(void)
 {
 
     fprintf(stderr, "usage: rtpproxy [-2fv] [-l addr1[/addr2]] "
-      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]] [-T ttl]\n");
+      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]] [-T ttl] [-L nfiles]\n");
     exit(1);
 }
 
@@ -1000,13 +1001,14 @@ main(int argc, char **argv)
     char ch, *bh[2], *bh6[2], *cp;
     double sptime, eptime;
     unsigned long delay;
+    struct rlimit lim;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
     nodaemon = 0;
 
     dmode = 0;
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:")) != -1)
 	switch (ch) {
 	case 'f':
 	    nodaemon = 1;
@@ -1081,6 +1083,12 @@ main(int argc, char **argv)
 
 	case 'T':
 	    max_ttl = atoi(optarg);
+	    break;
+
+	case 'L':
+	    lim.rlim_cur = lim.rlim_max = atoi(optarg);
+	    if (setrlimit(RLIMIT_NOFILE, &lim) != 0)
+	        err(1, "setrlimit");
 	    break;
 
 	case '?':
