@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.58)
-AC_INIT(rtpproxy, 0.2, sobomax@portaone.com)
+AC_INIT(rtpproxy, 0.2, sobomax@sippysoft.com)
 AM_INIT_AUTOMAKE(rtpproxy, 0.2)
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([main.c])

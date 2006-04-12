@@ -8,7 +8,7 @@
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>8</manvolnum>">
-  <!ENTITY dhemail     "<email>sobomax@PBXpress.com</email>">
+  <!ENTITY dhemail     "<email>sobomax@sippysoft.com</email>">
   <!ENTITY dhusername  "janakj">
   <!ENTITY dhucpackage "<refentrytitle>rtpproxy</refentrytitle>">
   <!ENTITY dhpackage   "rtpproxy">
