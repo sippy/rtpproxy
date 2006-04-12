@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.2 2005/03/23 18:26:49 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.3 2006/04/12 03:42:56 sobomax Exp $
  *
  */
 
@@ -69,6 +69,10 @@ struct rtpp_session {
     /* Pointers to rtpp_record's opaque data type */
     void *rrcs[2];
     struct rtp_server *rtps[2];
+    /* References to fd-to-session table */
+    int sidx[2];
+    /* Reference to active RTP generators table */
+    int sridx;
 };
 
 #endif
