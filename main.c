@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.39 2006/04/12 22:41:48 sobomax Exp $
+ * $Id: main.c,v 1.40 2006/04/12 23:26:56 sobomax Exp $
  *
  */
 
@@ -792,21 +792,21 @@ handle_command(int controlfd)
 	goto do_ok;
     }
     rname = NULL;
-    if (delete == 1)
+    if (delete != 0)
         rname = "delete";
-    if (play == 1)
+    if (play != 0)
         rname = "play";
-    if (noplay == 1)
+    if (noplay != 0)
 	rname = "noplay";
-    if (record == 1)
+    if (record != 0)
         rname = "record";
-    if (response == 1)
+    if (response != 0)
         rname = "lookup";
     if (rname != NULL) {
 	rtpp_log_write(RTPP_LOG_INFO, glog,
 	  "%s request failed: session %s, tags %s/%s not found", rname,
 	  call_id, from_tag, to_tag != NULL ? to_tag : "NONE");
-	if (response == 1) {
+	if (response != 0) {
 	    pidx = -1;
 	    goto writeport;
 	}
