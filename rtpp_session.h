@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.3 2006/04/12 03:42:56 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.4 2006/04/12 22:41:49 sobomax Exp $
  *
  */
 
@@ -33,17 +33,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#if defined(__FreeBSD__)
-#include <sys/queue.h>
-#else
-#include "myqueue.h"
-#endif
-
 #include "rtp_server.h"
 #include "rtpp_log.h"
 
 struct rtpp_session {
-    LIST_ENTRY(rtpp_session) link;
     int ttl;
     unsigned long pcount[4];
     char *call_id;

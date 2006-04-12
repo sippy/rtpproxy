@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.38 2006/04/12 03:42:55 sobomax Exp $
+ * $Id: main.c,v 1.39 2006/04/12 22:41:48 sobomax Exp $
  *
  */
 
@@ -35,11 +35,6 @@
 #include <sys/resource.h>
 #include <sys/un.h>
 #include <sys/uio.h>
-#if defined(__FreeBSD__)
-#include <sys/queue.h>
-#else
-#include "myqueue.h"
-#endif
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -68,13 +63,10 @@
 #define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
 
-static LIST_HEAD(, rtpp_session) session_set = LIST_HEAD_INITIALIZER(&session_set);
-
-static struct rtpp_session *sessions[MAX_FDS];
-static struct rtpp_session *rtp_servers[MAX_FDS];
+static struct rtpp_session *sessions[MAX_FDS + 1];
+static struct rtpp_session *rtp_servers[MAX_FDS + 1];
 static struct pollfd fds[MAX_FDS + 1];
-static int nsessions = 0;
-static int nwasted = 0;
+static int nsessions;
 static unsigned long long sessions_created = 0;
 static int rtp_nsessions;
 static int bmode = 0;			/* Bridge mode */
@@ -113,8 +105,7 @@ static const char *sdir = NULL;
 static int rrtcp = 1;
 
 static void setbindhost(struct sockaddr *, int, const char *, const char *);
-static void remove_session(struct rtpp_session *, struct rtpp_session **);
-static void rebuild_tables(void);
+static void remove_session(struct rtpp_session *);
 static void alarmhandler(int);
 static int create_twinlistener(struct sockaddr *, int, int *);
 static int create_listener(struct sockaddr *, int, int, int, int *, int *);
@@ -144,11 +135,11 @@ append_session(struct rtpp_session *sp, int index)
 
     if (sp->fds[index] != -1) {
 	sessions[nsessions] = sp;
-	nsessions++;
 	fds[nsessions].fd = sp->fds[index];
 	fds[nsessions].events = POLLIN;
 	fds[nsessions].revents = 0;
 	sp->sidx[index] = nsessions;
+	nsessions++;
     } else {
 	sp->sidx[index] = -1;
     }
@@ -161,8 +152,8 @@ append_server(struct rtpp_session *sp)
     if (sp->rtps[0] != NULL || sp->rtps[1] != NULL) {
         if (sp->sridx == -1) {
 	    rtp_servers[rtp_nsessions] = sp;
-	    rtp_nsessions++;
 	    sp->sridx = rtp_nsessions;
+	    rtp_nsessions++;
 	}
     } else {
         sp->sridx = -1;
@@ -170,46 +161,26 @@ append_server(struct rtpp_session *sp)
 }
 
 static void
-rebuild_tables(void)
-{
-    struct rtpp_session *sp;
-    int j;
-
-    nsessions = 0;
-    nwasted = 0;
-    rtp_nsessions = 0;
-    LIST_FOREACH(sp, &session_set, link) {
-        for (j = 0; j < 2; j++)
-            append_session(sp, j);
-        append_server(sp);
-    }
-}
-
-static void
 alarmhandler(int sig __attribute__ ((unused)))
 {
-    struct rtpp_session *sp, *rsp;
-    int changed;
+    struct rtpp_session *sp;
+    int i;
 
-    changed = 0;
-    for(sp = LIST_FIRST(&session_set); sp != NULL; sp = rsp) {
-	rsp = LIST_NEXT(sp, link);
-	if (sp->rtcp == NULL)
+    for(i = 1; i < nsessions; i++) {
+	sp = sessions[i];
+	if (sp == NULL || sp->rtcp == NULL || sp->sidx[0] != i)
 	    continue;
 	if (sp->ttl == 0) {
 	    rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
-	    remove_session(sp, NULL);
-	    changed = 1;
+	    remove_session(sp);
 	    continue;
 	}
 	sp->ttl--;
     }
-    if (changed == 1 || nwasted > (nsessions / 2))
-	rebuild_tables();
 }
 
 static void
-remove_session(struct rtpp_session *sp, struct rtpp_session **pspiter)
+remove_session(struct rtpp_session *sp)
 {
     int i;
 
@@ -228,18 +199,16 @@ remove_session(struct rtpp_session *sp, struct rtpp_session **pspiter)
 	    free(sp->rtcp->addr[i]);
 	if (sp->fds[i] != -1) {
 	    close(sp->fds[i]);
-	    assert(sessions[sp->sidx[i] - 1] == sp);
-	    sessions[sp->sidx[i] - 1] = NULL;
-	    nwasted++;
+	    assert(sessions[sp->sidx[i]] == sp);
+	    sessions[sp->sidx[i]] = NULL;
 	    assert(fds[sp->sidx[i]].fd == sp->fds[i]);
 	    fds[sp->sidx[i]].fd = -1;
 	    fds[sp->sidx[i]].events = 0;
 	}
 	if (sp->rtcp->fds[i] != -1) {
 	    close(sp->rtcp->fds[i]);
-	    assert(sessions[sp->rtcp->sidx[i] - 1] == sp->rtcp);
-	    sessions[sp->rtcp->sidx[i] - 1] = NULL;
-	    nwasted++;
+	    assert(sessions[sp->rtcp->sidx[i]] == sp->rtcp);
+	    sessions[sp->rtcp->sidx[i]] = NULL;
 	    assert(fds[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
 	    fds[sp->rtcp->sidx[i]].fd = -1;
 	    fds[sp->rtcp->sidx[i]].events = 0;
@@ -258,12 +227,6 @@ remove_session(struct rtpp_session *sp, struct rtpp_session **pspiter)
     if (sp->tag != NULL)
 	free(sp->tag);
     rtpp_log_close(sp->log);
-    if (pspiter != NULL && *pspiter == sp)
-	*pspiter = LIST_NEXT(sp, link);
-    LIST_REMOVE(sp, link);
-    if (pspiter != NULL && *pspiter == sp->rtcp)
-	*pspiter = LIST_NEXT(sp->rtcp, link);
-    LIST_REMOVE(sp->rtcp, link);
     free(sp->rtcp);
     free(sp);
 }
@@ -369,14 +332,14 @@ handle_command(int controlfd)
 {
     int len, delete, argc, i, j, pidx, request, response, asymmetric;
     int external, pf, ecode, lidx, play, record, noplay, weak;
-    int ndeleted, skipnext, cmpr, cmpr1;
+    int ndeleted, cmpr, cmpr1;
     int fds[2], lport, n;
     socklen_t rlen;
     unsigned medianum;
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
     char *pname, *codecs;
-    struct rtpp_session *spa, *spb, *spnext;
+    struct rtpp_session *spa, *spb;
     char **ap, *argv[10];
     const char *rname;
     struct sockaddr *ia[2], *lia[2];
@@ -520,9 +483,12 @@ handle_command(int controlfd)
     case 'i':
     case 'I':
 	len = sprintf(buf, "sessions created: %llu\nactive sessions:\n", sessions_created);
-	LIST_FOREACH(spa, &session_set, link) {
+	for (i = 1; i < nsessions; i++) {
 	    char addrs[4][256];
 
+            spa = sessions[i];
+            if (spa == NULL || spa->sidx[0] != i)
+                continue;
 	    /* RTCP twin session */
 	    if (spa->rtcp == NULL) {
 		spb = spa->rtp;
@@ -677,12 +643,10 @@ handle_command(int controlfd)
     lport = 0;
     pidx = 1;
     ndeleted = 0;
-    for (spa = LIST_FIRST(&session_set); spa != NULL;
-      spa = skipnext ? spa : LIST_NEXT(spa, link))
-    {
-	skipnext = 0;
-	if (spa->rtcp == NULL || spa->call_id == NULL ||
-	  strcmp(spa->call_id, call_id) != 0)
+    for (i = 1; i < nsessions; i++) {
+        spa = sessions[i];
+	if (spa == NULL || spa->sidx[0] != i || spa->rtcp == NULL ||
+	  spa->call_id == NULL || strcmp(spa->call_id, call_id) != 0)
 	    continue;
 	medianum = 0;
 	if ((cmpr1 = compare_session_tags(spa->tag, from_tag, &medianum)) != 0)
@@ -720,12 +684,9 @@ handle_command(int controlfd)
 	    rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	      "forcefully deleting session %d on ports %d/%d",
 	      medianum, spa->ports[0], spa->ports[1]);
-	    spnext = spa;
-	    remove_session(spa, &spnext);
+	    remove_session(spa);
 	    if (cmpr == 2) {
 		++ndeleted;
-		skipnext = 1;
-		spa = spnext;
 		continue;
 	    }
 	    goto do_ok;
@@ -923,9 +884,6 @@ handle_command(int controlfd)
     spb->rtp = spa;
     spa->sridx = spb->sridx = -1;
 
-    LIST_INSERT_HEAD(&session_set, spa, link);
-    LIST_INSERT_HEAD(&session_set, spb, link);
-
     append_session(spa, 0);
     append_session(spa, 1);
     append_session(spb, 0);
@@ -1043,7 +1001,7 @@ int
 main(int argc, char **argv)
 {
     int controlfd, i, j, k, readyfd, len, nodaemon, dmode, port, ridx, sidx;
-    int timeout, flags;
+    int timeout, flags, skipfd;
     sigset_t set, oset;
     struct rtpp_session *sp;
     struct sockaddr_un ifsun;
@@ -1278,7 +1236,9 @@ main(int argc, char **argv)
     fds[0].events = POLLIN;
     fds[0].revents = 0;
 
-    rebuild_tables();
+    sessions[0] = NULL;
+    nsessions = 1;
+    rtp_nsessions = 0;
 
     memset(&tick, 0, sizeof(tick));
     tick.it_interval.tv_sec = TIMETICK;
@@ -1305,13 +1265,22 @@ main(int argc, char **argv)
 	} else {
 	    sptime = eptime;
 	}
-	i = poll(fds, nsessions + 1, timeout);
+	i = poll(fds, nsessions, timeout);
 	if (i < 0 && errno == EINTR)
 	    continue;
 	sigprocmask(SIG_BLOCK, &set, &oset);
 	if (rtp_nsessions > 0) {
+	    skipfd = 0;
 	    for (j = 0; j < rtp_nsessions; j++) {
 		sp = rtp_servers[j];
+		if (sp == NULL) {
+		    skipfd++;
+		    continue;
+		}
+		if (skipfd > 0) {
+		    rtp_servers[j - skipfd] = rtp_servers[j];
+		    sp->sridx = j - skipfd;
+		}
 		for (sidx = 0; sidx < 2; sidx++) {
 		    if (sp->rtps[sidx] == NULL || sp->addr[sidx] == NULL)
 			continue;
@@ -1333,10 +1302,32 @@ main(int argc, char **argv)
 		    }
 		}
 	    }
+	    rtp_nsessions -= skipfd;
 	    if (i == 0)
 		continue;
 	}
-	for (readyfd = 0; readyfd < nsessions + 1; readyfd++) {
+	skipfd = 0;
+	for (readyfd = 0; readyfd < nsessions; readyfd++) {
+	    if (readyfd > 0) {
+	        if (fds[readyfd].fd == -1) {
+	            skipfd++;
+	            continue;
+	        }
+	        sp = sessions[readyfd];
+	        for (ridx = 0; ridx < 2; ridx++)
+		    if (fds[readyfd].fd == sp->fds[ridx])
+		        break;
+	        /*
+	         * Can't happen.
+	         */
+	        assert(ridx != 2);
+
+	        if (skipfd > 0) {
+	            fds[readyfd - skipfd] = fds[readyfd];
+	            sessions[readyfd - skipfd] = sessions[readyfd];
+	            sp->sidx[ridx] = readyfd - skipfd;;
+	        }
+	    }
 	    if ((fds[readyfd].revents & POLLIN) == 0)
 		continue;
 	    if (readyfd == 0) {
@@ -1363,27 +1354,13 @@ main(int argc, char **argv)
 	    }
 drain:
 	    rlen = sizeof(raddr);
-	    len = recvfrom(fds[readyfd].fd, buf, sizeof(buf), 0,
+	    len = recvfrom(sp->fds[ridx], buf, sizeof(buf), 0,
 	      sstosa(&raddr), &rlen);
 	    if (len <= 0)
 		continue;
-	    sp = sessions[readyfd - 1];
 
 	    if (sp->complete == 0)
 		continue;
-
-	    for (i = 0; i < 2; i++) {
-		if (fds[readyfd].fd == sp->fds[i]) {
-		    ridx = i;
-		    break;
-		}
-	    }
-
-	    /*
-	     * Can't happen.
-	     */
-	    if (i == 2)
-		abort();
 
 	    i = 0;
 	    if (sp->addr[ridx] != NULL) {
@@ -1412,7 +1389,8 @@ drain:
 		    rtpp_log_write(RTPP_LOG_ERR, sp->log,
 		      "can't allocate memory for remote address - "
 		      "removing session");
-		    remove_session(GET_RTP(sp), NULL);
+		    remove_session(GET_RTP(sp));
+		    continue;
 		}
 		/* Signal that an address have to be updated. */
 		i = 1;
@@ -1447,7 +1425,8 @@ drain:
 			    rtpp_log_write(RTPP_LOG_ERR, sp->log,
 			      "can't allocate memory for remote address - "
 			      "removing session");
-			    remove_session(sp, NULL);
+			    remove_session(sp);
+			    continue;
 			}
 		    }
 		    memcpy(sp->rtcp->addr[ridx], &raddr, rlen);
@@ -1485,6 +1464,7 @@ do_record:
 	    /* Repeat since we may have several packets queued */
 	    goto drain;
 	}
+	nsessions -= skipfd;
     }
 
     exit(0);
