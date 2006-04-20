@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.40 2006/04/12 23:26:56 sobomax Exp $
+ * $Id: main.c,v 1.41 2006/04/20 09:46:54 sobomax Exp $
  *
  */
 
@@ -1198,7 +1198,7 @@ main(int argc, char **argv)
 
 #if !defined(__solaris__)
     if (nodaemon == 0) {
-	if (daemon(0, 1) == -1)
+	if (daemon(0, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
 	for (i = 0; i < (int)FD_SETSIZE; i++)
