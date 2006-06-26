@@ -1006,6 +1006,10 @@ nomem:
     if (spa != NULL) {
 	if (spa->call_id != NULL)
 	    free(spa->call_id);
+	if (spa->tag != NULL)
+	    free(spa->tag);
+	if (spa->codecs != NULL)
+	    free(spa->codecs);
 	free(spa);
     }
     if (spb != NULL)
