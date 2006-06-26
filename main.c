@@ -913,7 +913,7 @@ cont_sessions:
     }
     if (codecs != NULL) {
 	spa->codecs = strdup(codecs);
-	if (!spa->codecs) {
+	if (spa->codecs == NULL) {
 	    ecode = 15;
 	    goto nomem;
 	}
