@@ -32,6 +32,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/resource.h>
 #include <sys/un.h>
 #include <sys/uio.h>
 #if defined(__FreeBSD__)
@@ -41,6 +42,7 @@
 #endif
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <assert.h>
 #if !defined(__solaris__)
 #include <err.h>
 #endif
