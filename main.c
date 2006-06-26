@@ -911,6 +911,13 @@ cont_sessions:
 	ecode = 14;
 	goto nomem;
     }
+    if (codecs != NULL) {
+	spa->codecs = strdup(codecs);
+	if (!spa->codecs) {
+	    ecode = 15;
+	    goto nomem;
+	}
+    }
     spb->tag = spa->tag;
     spb->medianum = spa->medianum = medianum;
     for (i = 0; i < 2; i++) {
@@ -936,13 +943,6 @@ cont_sessions:
     spb->rtcp = NULL;
     spa->rtp = NULL;
     spb->rtp = spa;
-    if (codecs != NULL) {
-	spa->codecs = strdup(codecs);
-	if (!spa->codecs) {
-	    ecode = 500;
-	    goto goterror;
-	}
-    } else spa->codecs = NULL;
 
     LIST_INSERT_HEAD(&session_set, spa, link);
     LIST_INSERT_HEAD(&session_set, spb, link);
