@@ -116,7 +116,7 @@ static void rebuild_tables(void);
 static void alarmhandler(int);
 static int create_twinlistener(struct sockaddr *, int, int *);
 static int create_listener(struct sockaddr *, int, int, int, int *, int *);
-static void handle_command(int);
+static int handle_command(int);
 static void usage(void);
 
 static void
@@ -308,7 +308,7 @@ create_listener(struct sockaddr *ia, int minport, int maxport,
     return -1;
 }
 
-static void
+static int
 handle_command(int controlfd)
 {
     int len, delete, argc, i, j, pidx, request, response, asymmetric;
@@ -351,8 +351,9 @@ handle_command(int controlfd)
 	  sstosa(&raddr), &rlen);
     }
     if (len == -1) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, glog, "can't read from control socket");
-	return;
+	if (errno != EAGAIN && errno != EINTR)
+	    rtpp_log_ewrite(RTPP_LOG_ERR, glog, "can't read from control socket");
+	return -1;
     }
     buf[len] = '\0';
 
@@ -504,7 +505,7 @@ handle_command(int controlfd)
 	}
 	if (len > 0)
 	    doreply();
-	return;
+	return 0;
 	break;
 
     default:
@@ -748,7 +749,9 @@ handle_command(int controlfd)
                         goto goterror;
                     }
                     lastport[j] = lport + 1;
+                    assert(spa->fds[i] == -1);
                     spa->fds[i] = fds[0];
+                    assert(spa->rtcp->fds[i] == -1);
                     spa->rtcp->fds[i] = fds[1];
                     spa->ports[i] = lport;
                     spa->rtcp->ports[i] = lport + 1;
@@ -847,21 +850,21 @@ cont_sessions:
 	goto do_ok;
     }
     rname = NULL;
-    if (delete == 1)
+    if (delete != 0)
         rname = "delete";
-    if (play == 1)
+    if (play != 0)
         rname = "play";
-    if (noplay == 1)
+    if (noplay != 0)
 	rname = "noplay";
-    if (record == 1)
+    if (record != 0)
         rname = "record";
-    if (response == 1)
+    if (response != 0)
         rname = "lookup";
     if (rname != NULL) {
 	rtpp_log_write(RTPP_LOG_INFO, glog,
 	  "%s request failed: session %s, tags %s/%s not found", rname,
 	  call_id, from_tag, to_tag != NULL ? to_tag : "NONE");
-	if (response == 1) {
+	if (response != 0) {
 	    pidx = -1;
 	    goto writeport;
 	}
@@ -931,7 +934,9 @@ cont_sessions:
 	spa->weak[0] = 1;
     else
 	spa->strong = 1;
+    assert(spa->fds[0] == -1);
     spa->fds[0] = fds[0];
+    assert(spb->fds[0] == -1);
     spb->fds[0] = fds[1];
     spa->ports[0] = lport;
     spb->ports[0] = lport + 1;
@@ -996,7 +1001,7 @@ writeport:
 	  (lia[0]->sa_family == AF_INET) ? "" : " 6");
 doreply:
     doreply();
-    return;
+    return 0;
 
 nomem:
     rtpp_log_write(RTPP_LOG_ERR, glog, "can't allocate memory");
@@ -1031,6 +1036,7 @@ do_ok:
 	len = 2;
     }
     goto doreply;
+    return 0;
 }
 
 static void
@@ -1038,7 +1044,7 @@ usage(void)
 {
 
     fprintf(stderr, "usage: rtpproxy [-2fv] [-l addr1[/addr2]] "
-      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]] [-T ttl]\n");
+      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]] [-T ttl] [-L nfiles]\n");
     exit(1);
 }
 
@@ -1064,7 +1070,7 @@ int
 main(int argc, char **argv)
 {
     int controlfd, i, j, k, readyfd, len, nodaemon, dmode, port, ridx, sidx;
-    int rebuild_pending, timeout;
+    int rebuild_pending, timeout, flags;
     sigset_t set, oset;
     struct rtpp_session *sp;
     struct sockaddr_un ifsun;
@@ -1075,13 +1081,14 @@ main(int argc, char **argv)
     char ch, *bh[2], *bh6[2], *cp;
     double sptime, eptime;
     unsigned long delay;
+    struct rlimit lim;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
     nodaemon = 0;
 
     dmode = 0;
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:")) != -1)
 	switch (ch) {
 	case 'f':
 	    nodaemon = 1;
@@ -1156,6 +1163,12 @@ main(int argc, char **argv)
 
 	case 'T':
 	    max_ttl = atoi(optarg);
+	    break;
+
+	case 'L':
+	    lim.rlim_cur = lim.rlim_max = atoi(optarg);
+	    if (setrlimit(RLIMIT_NOFILE, &lim) != 0)
+		err(1, "setrlimit");
 	    break;
 
 	case '?':
@@ -1249,10 +1262,12 @@ main(int argc, char **argv)
 	if (bind(controlfd, sstosa(&ifsin), SS_LEN(&ifsin)) < 0)
 	    err(1, "can't bind to a socket");
     }
+    flags = fcntl(controlfd, F_GETFL);
+    fcntl(controlfd, F_SETFL, flags | O_NONBLOCK);
 
 #if !defined(__solaris__)
     if (nodaemon == 0) {
-	if (daemon(1, 1) == -1)
+	if (daemon(0, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
 	for (i = 0; i < (int)FD_SETSIZE; i++)
@@ -1349,22 +1364,25 @@ main(int argc, char **argv)
 	    if ((fds[readyfd].revents & POLLIN) == 0)
 		continue;
 	    if (readyfd == 0) {
-		if (umode == 0) {
-		    rlen = sizeof(ifsun);
-		    controlfd = accept(fds[readyfd].fd,
-		      sstosa(&ifsun), &rlen);
-		    if (controlfd == -1) {
-			rtpp_log_ewrite(RTPP_LOG_ERR, glog,
-			  "can't accept connection on control socket");
-			continue;
+		do {
+		    if (umode == 0) {
+			rlen = sizeof(ifsun);
+			controlfd = accept(fds[readyfd].fd,
+			  sstosa(&ifsun), &rlen);
+			if (controlfd == -1) {
+			    if (errno != EWOULDBLOCK)
+				rtpp_log_ewrite(RTPP_LOG_ERR, glog,
+				  "can't accept connection on control socket");
+			    break;
+			}
+		    } else {
+			controlfd = fds[readyfd].fd;
 		    }
-		} else {
-		    controlfd = fds[readyfd].fd;
-		}
-		handle_command(controlfd);
-		if (umode == 0) {
-		    close(controlfd);
-		}
+		    i = handle_command(controlfd);
+		    if (umode == 0) {
+			close(controlfd);
+		    }
+		} while (i == 0);
 		/*
 		 * Don't use continue here, because we have cleared all
 		 * revents in rebuild_tables().
