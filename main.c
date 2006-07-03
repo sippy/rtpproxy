@@ -329,14 +329,16 @@ handle_command(int controlfd)
 
 #define	doreply() \
     { \
+	int sendres; \
 	buf[len] = '\0'; \
 	rtpp_log_write(RTPP_LOG_DBUG, glog, "sending reply \"%s\"", buf); \
 	if (umode == 0) { \
-	    write(controlfd, buf, len); \
+	    sendres = write(controlfd, buf, len); \
 	} else { \
-	    while (sendto(controlfd, buf, len, 0, sstosa(&raddr), \
-	      rlen) == -1 && errno == ENOBUFS); \
+	    while ((sendres = sendto(controlfd, buf, len, 0, sstosa(&raddr), \
+	      rlen) == -1) && errno == ENOBUFS); \
 	} \
+	rtpp_log_write(RTPP_LOG_DBUG, glog, "sending result: %d", sendres); \
     }
 
     ia[0] = ia[1] = NULL;
