@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.41 2006/04/20 09:46:54 sobomax Exp $
+ * $Id: main.c,v 1.42 2006/07/04 23:12:15 sobomax Exp $
  *
  */
 
@@ -46,6 +46,7 @@
 #include <limits.h>
 #include <netdb.h>
 #include <poll.h>
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -87,6 +88,7 @@ static struct proto_cap proto_caps[] = {
      */
     { "20040107", "Basic RTP proxy functionality" },
     { "20050322", "Support for multiple RTP streams and MOH" },
+    { "20060704", "Support for extra parameter in the V command" },
     { NULL, NULL }
 };
 
@@ -364,7 +366,12 @@ handle_command(int controlfd)
     fds[0] = fds[1] = -1;
 
     if (umode == 0) {
-	len = read(controlfd, buf, sizeof(buf) - 1);
+	for (;;) {
+	    len = read(controlfd, buf, sizeof(buf) - 1);
+	    if (len != -1 || (errno != EAGAIN && errno != EINTR))
+		break;
+	    sched_yield();
+	}
     } else {
 	rlen = sizeof(raddr);
 	len = recvfrom(controlfd, buf, sizeof(buf) - 1, 0,
@@ -450,7 +457,7 @@ handle_command(int controlfd)
 	     * Wait for protocol version datestamp and check whether we
 	     * know it.
 	     */
-	    if (argc != 2) {
+	    if (argc != 2 && argc != 3) {
 		rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
 		ecode = 2;
 		goto goterror;
@@ -467,7 +474,7 @@ handle_command(int controlfd)
 		len = sprintf(buf, "%s %d\n", cookie, known);
 	    goto doreply;
 	}
-	if (argc != 1) {
+	if (argc != 1 && argc != 2) {
 	    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
 	    ecode = 2;
 	    goto goterror;
