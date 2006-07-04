@@ -51,6 +51,7 @@
 #include <limits.h>
 #include <netdb.h>
 #include <poll.h>
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -348,7 +349,12 @@ handle_command(int controlfd)
     fds[0] = fds[1] = -1;
 
     if (umode == 0) {
-	len = read(controlfd, buf, sizeof(buf) - 1);
+	for (;;) {
+	    len = read(controlfd, buf, sizeof(buf) - 1);
+	    if (len != -1 || (errno != EAGAIN && errno != EINTR))
+		break;
+	    sched_yield();
+	}
     } else {
 	rlen = sizeof(raddr);
 	len = recvfrom(controlfd, buf, sizeof(buf) - 1, 0,
@@ -434,7 +440,7 @@ handle_command(int controlfd)
 	     * Wait for protocol version datestamp and check whether we
 	     * know it.
 	     */
-	    if (argc != 2) {
+	    if (argc != 2 && argc != 3) {
 		rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
 		ecode = 2;
 		goto goterror;
@@ -451,7 +457,7 @@ handle_command(int controlfd)
 		len = sprintf(buf, "%s %d\n", cookie, known);
 	    goto doreply;
 	}
-	if (argc != 1) {
+	if (argc != 1 && argc != 2) {
 	    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
 	    ecode = 2;
 	    goto goterror;
