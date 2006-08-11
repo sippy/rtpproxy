@@ -34,6 +34,6 @@ LOCALBASE?=	/usr/local
 
 CFLAGS+= -I../extractaudio -I../../siplog -I${LOCALBASE}/include
 LDFLAGS+= -I../extractaudio -L../../siplog -L${LOCALBASE}/lib
-LDADD+=	-lg729 -lm
+LDADD+=	-lg729 -lgsm -lm
 
 .include <bsd.prog.mk>

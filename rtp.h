@@ -37,6 +37,7 @@
  */
 typedef enum {
     RTP_PCMU = 0,
+    RTP_GSM = 3,
     RTP_G723 = 4,
     RTP_PCMA = 8,
     RTP_CN = 13,
