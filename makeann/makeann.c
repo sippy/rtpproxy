@@ -27,6 +27,7 @@
  *
  */
 
+#include <sys/endian.h>
 #include <err.h>
 #include <limits.h>
 #include <stdio.h>
@@ -121,8 +122,12 @@ int main(int argc, char **argv)
         }
         if (i == 0)
             break;
-        for (j = i; j < 160; j++)
-            slbuf[j] = 0;
+        for (j = 0; j < 160; j++) {
+            if (j < i)
+                slbuf[j] = le16toh(slbuf[j]);
+            else
+                slbuf[j] = 0;
+        }
         for (k = 0; efiles[k].pt != -1; k++) {
             switch (efiles[k].pt) {
             case RTP_PCMU:
