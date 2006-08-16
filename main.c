@@ -1080,7 +1080,7 @@ int
 main(int argc, char **argv)
 {
     int controlfd, i, j, k, readyfd, len, nodaemon, dmode, port, ridx, sidx;
-    int rebuild_pending, timeout, flags;
+    int rebuild_pending, timeout, flags, ch;
     sigset_t set, oset;
     struct rtpp_session *sp;
     struct sockaddr_un ifsun;
@@ -1088,7 +1088,7 @@ main(int argc, char **argv)
     socklen_t rlen;
     struct itimerval tick;
     char buf[1024 * 8];
-    char ch, *bh[2], *bh6[2], *cp;
+    char *bh[2], *bh6[2], *cp;
     double sptime, eptime;
     unsigned long delay;
     struct rlimit lim;
