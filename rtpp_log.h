@@ -40,7 +40,7 @@
 #define	RTPP_LOG_ERR	SIPLOG_ERR
 #define	RTPP_LOG_CRIT	SIPLOG_CRIT
 
-#define	rtpp_log_open(app, call_id, LF_REOPEN) siplog_open(app, call_id, LF_REOPEN)
+#define	rtpp_log_open(app, call_id, flags) siplog_open(app, call_id, flags)
 #define	rtpp_log_write(level, handle, format, args...) siplog_write(level, handle, format, ## args)
 #define	rtpp_log_ewrite(level, handle, format, args...) siplog_ewrite(level, handle, format, ## args)
 #define	rtpp_log_close(handle) siplog_close(handle)
