@@ -472,7 +472,12 @@ handle_command(int controlfd)
 
     case 'i':
     case 'I':
-	len = sprintf(buf, "sessions created: %llu\nactive sessions:\n", sessions_created);
+	if (cookie == NULL)
+	    len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n",
+	      sessions_created, nsessions / 2);
+	else
+	    len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n",
+	      cookie, sessions_created, nsessions / 2);
 	LIST_FOREACH(spa, &session_set, link) {
 	    char addrs[4][256];
 
