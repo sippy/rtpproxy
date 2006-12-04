@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makeann.c,v 1.3 2006/12/04 22:49:20 sobomax Exp $
+ * $Id: makeann.c,v 1.4 2006/12/04 22:54:05 sobomax Exp $
  *
  */
 
@@ -161,6 +161,8 @@ int main(int argc, char **argv)
                 slbuf[j] = 0;
         }
         for (k = 0; efiles[k].pt != -1; k++) {
+            if (efiles[k].enabled == 0)
+                continue;
             switch (efiles[k].pt) {
             case RTP_PCMU:
                 SL2ULAW(lawbuf, slbuf, i);
@@ -196,8 +198,11 @@ int main(int argc, char **argv)
     }
 
     fclose(infile);
-    for (k = 0; efiles[k].pt != -1; k++)
+    for (k = 0; efiles[k].pt != -1; k++) {
+        if (efiles[k].enabled == 0)
+            continue;
         fclose(efiles[k].f);
+    }
 
     return 0;
 }
