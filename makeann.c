@@ -23,11 +23,11 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makeann.c,v 1.1 2006/12/04 22:01:37 sobomax Exp $
+ * $Id: makeann.c,v 1.2 2006/12/04 22:29:55 sobomax Exp $
  *
  */
 
-#include <sys/endian.h>
+#include <stdint.h>
 #include <err.h>
 #include <limits.h>
 #include <stdio.h>
@@ -52,6 +52,13 @@
 #endif
 
 #include "rtp.h"
+
+#if BYTE_ORDER == BIG_ENDIAN
+#define LE16_2_HOST(x) \
+ ((((uint16_t)(x)) >> 8) & 0xff) | ((((uint16_t)(x)) & 0xff) << 8)) 
+#else
+#define LE16_2_HOST(x) (x)
+#endif
 
 static void
 usage(void)
@@ -149,7 +156,7 @@ int main(int argc, char **argv)
             break;
         for (j = 0; j < 160; j++) {
             if (j < i)
-                slbuf[j] = le16toh(slbuf[j]);
+                slbuf[j] = LE16_2_HOST(slbuf[j]);
             else
                 slbuf[j] = 0;
         }

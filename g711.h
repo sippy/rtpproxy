@@ -23,14 +23,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: g711.h,v 1.1 2006/12/04 22:08:59 sobomax Exp $
+ * $Id: g711.h,v 1.2 2006/12/04 22:29:55 sobomax Exp $
  *
  */
 
 #ifndef _G711_H_
 #define _G711_H_
 
-#include <sys/types.h>
+#include <stdint.h>
 
 int16_t _u2sl[256] = {
     -32124, -31100, -30076, -29052, -28028, -27004, -25980, -24956,
