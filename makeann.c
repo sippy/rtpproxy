@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makeann.c,v 1.2 2006/12/04 22:29:55 sobomax Exp $
+ * $Id: makeann.c,v 1.3 2006/12/04 22:49:20 sobomax Exp $
  *
  */
 
@@ -71,8 +71,8 @@ usage(void)
 struct efile {
     FILE *f;
     rtp_type_t pt;
-    char path[PATH_MAX + 1];
     int enabled;
+    char path[PATH_MAX + 1];
 };
 
 int main(int argc, char **argv)
