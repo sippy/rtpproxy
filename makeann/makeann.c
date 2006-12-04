@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2006 Maxim Sobolev
+ * Copyright (c) 2003-2006 Sippy Software, Inc. <sales@sippysoft.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  *
  */
 
-#include <sys/endian.h>
+#include <stdint.h>
 #include <err.h>
 #include <limits.h>
 #include <stdio.h>
@@ -35,9 +35,28 @@
 #include <unistd.h>
 
 #include "g711.h"
+#ifdef ENABLE_G729
 #include "g729_encoder.h"
+#define G729_ENABLED 1
+#else
+#define G729_ENABLED 0
+#endif
+
+#ifdef ENABLE_GSM
 #include "gsm.h"
-#include "../rtp.h"
+#define GSM_ENABLED 1
+#else
+#define GSM_ENABLED 0
+#endif
+
+#include "rtp.h"
+
+#if BYTE_ORDER == BIG_ENDIAN
+#define LE16_2_HOST(x) \
+ ((((uint16_t)(x)) >> 8) & 0xff) | ((((uint16_t)(x)) & 0xff) << 8)) 
+#else
+#define LE16_2_HOST(x) (x)
+#endif
 
 static void
 usage(void)
@@ -50,6 +69,7 @@ usage(void)
 struct efile {
     FILE *f;
     rtp_type_t pt;
+    int enabled;
     char path[PATH_MAX + 1];
 };
 
@@ -59,11 +79,15 @@ int main(int argc, char **argv)
     uint8_t lawbuf[160];
     int16_t slbuf[160];
     int i, j, k, rsize, wsize, loop, limit, rlimit, ch;
+#ifdef ENABLE_G729
     G729_CTX *ctx_g729;
+#endif
+#ifdef ENABLE_GSM
     gsm ctx_gsm;
+#endif
     const char *template;
-    struct efile efiles[] = {{NULL, RTP_PCMU}, {NULL, RTP_GSM},
-      {NULL, RTP_G729}, {NULL, RTP_PCMA}, {NULL, -1}};
+    struct efile efiles[] = {{NULL, RTP_PCMU, 1}, {NULL, RTP_GSM, GSM_ENABLED},
+      {NULL, RTP_G729, G729_ENABLED}, {NULL, RTP_PCMA, 1}, {NULL, -1, 0}};
 
     loop = 0;
     limit = -1;
@@ -95,18 +119,24 @@ int main(int argc, char **argv)
     else
         template = argv[0];
 
+#ifdef ENABLE_G729
     ctx_g729 = g729_encoder_new();
     if (ctx_g729 == NULL)
         errx(1, "can't create G.729 encoder");
+#endif
+#ifdef ENABLE_GSM
     ctx_gsm = gsm_create();
     if (ctx_gsm == NULL)
         errx(1, "can't create GSM encoder");
+#endif
 
     infile = fopen(argv[0], "r");
     if (infile == NULL)
         err(1, "can't open %s for reading", argv[0]);
 
     for (k = 0; efiles[k].pt != -1; k++) {
+        if (efiles[k].enabled == 0)
+            continue;
         sprintf(efiles[k].path, "%s.%d", template, efiles[k].pt);
         efiles[k].f = fopen(efiles[k].path, "w");
         if (efiles[k].f == NULL)
@@ -124,11 +154,13 @@ int main(int argc, char **argv)
             break;
         for (j = 0; j < 160; j++) {
             if (j < i)
-                slbuf[j] = le16toh(slbuf[j]);
+                slbuf[j] = LE16_2_HOST(slbuf[j]);
             else
                 slbuf[j] = 0;
         }
         for (k = 0; efiles[k].pt != -1; k++) {
+            if (efiles[k].enabled == 0)
+                continue;
             switch (efiles[k].pt) {
             case RTP_PCMU:
                 SL2ULAW(lawbuf, slbuf, i);
@@ -140,16 +172,20 @@ int main(int argc, char **argv)
                 wsize = i;
                 break;
 
+#ifdef ENABLE_G729
             case RTP_G729:
                 for (j = 0; j < 2; j++)
                     g729_encode_frame(ctx_g729, &(slbuf[j * 80]), &(lawbuf[j * 10]));
                 wsize = 20;
                 break;
+#endif
 
+#ifdef ENABLE_GSM
             case RTP_GSM:
                 gsm_encode(ctx_gsm, slbuf, lawbuf);
                 wsize = 33;
                 break;
+#endif
 
             default:
                 abort();
@@ -160,8 +196,11 @@ int main(int argc, char **argv)
     }
 
     fclose(infile);
-    for (k = 0; efiles[k].pt != -1; k++)
+    for (k = 0; efiles[k].pt != -1; k++) {
+        if (efiles[k].enabled == 0)
+            continue;
         fclose(efiles[k].f);
+    }
 
     return 0;
 }

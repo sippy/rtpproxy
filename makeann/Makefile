@@ -25,15 +25,15 @@
 # $Id$
 
 PROG=	makeann
-SRCS=	main.c
+SRCS=	makeann.c
 MAN1=
 
 WARNS?=	2
 
 LOCALBASE?=	/usr/local
 
-CFLAGS+= -I../extractaudio -I../../siplog -I${LOCALBASE}/include
-LDFLAGS+= -I../extractaudio -L../../siplog -L${LOCALBASE}/lib
+CFLAGS+= -DENABLE_GSM -DENABLE_G729 -I../ -I../extractaudio -I../../siplog -I${LOCALBASE}/include
+LDFLAGS+= -L../../siplog -L${LOCALBASE}/lib
 LDADD+=	-lg729 -lgsm -lm
 
 .include <bsd.prog.mk>
