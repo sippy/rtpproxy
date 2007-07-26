@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.42 2006/07/04 23:12:15 sobomax Exp $
+ * $Id: main.c,v 1.43 2007/07/26 21:09:08 sobomax Exp $
  *
  */
 
@@ -1314,7 +1314,7 @@ main(int argc, char **argv)
 		continue;
 	}
 	skipfd = 0;
-	for (readyfd = 0; readyfd < nsessions; readyfd++) {
+	for (readyfd = nsessions; readyfd >= 0; readyfd--) {
 	    if (readyfd > 0) {
 	        if (fds[readyfd].fd == -1) {
 	            skipfd++;
