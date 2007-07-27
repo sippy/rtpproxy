@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.43 2007/07/26 21:09:08 sobomax Exp $
+ * $Id: main.c,v 1.44 2007/07/27 17:44:28 sobomax Exp $
  *
  */
 
@@ -1008,7 +1008,7 @@ int
 main(int argc, char **argv)
 {
     int controlfd, i, j, k, readyfd, len, nodaemon, dmode, port, ridx, sidx;
-    int timeout, flags, skipfd;
+    int timeout, flags, skipfd, ndrain;
     sigset_t set, oset;
     struct rtpp_session *sp;
     struct sockaddr_un ifsun;
@@ -1359,6 +1359,7 @@ main(int argc, char **argv)
 		} while (i == 0);
 		continue;
 	    }
+	    ndrain = 5;
 drain:
 	    rlen = sizeof(raddr);
 	    len = recvfrom(sp->fds[ridx], buf, sizeof(buf), 0,
@@ -1469,7 +1470,9 @@ do_record:
 	    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
 		rwrite(sp, sp->rrcs[ridx], sstosa(&raddr), buf, len);
 	    /* Repeat since we may have several packets queued */
-	    goto drain;
+	    ndrain--;
+	    if (ndrain != 0)
+		goto drain;
 	}
 	nsessions -= skipfd;
     }
