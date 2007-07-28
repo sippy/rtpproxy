@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2003-2006 Sippy Software, Inc. <sales@sippysoft.com>
+ * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makeann.c,v 1.4 2006/12/04 22:54:05 sobomax Exp $
+ * $Id: makeann.c,v 1.5 2007/07/28 01:10:28 sobomax Exp $
  *
  */
 

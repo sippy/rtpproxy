@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2003, 2004 Maxim Sobolev
+ * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.c,v 1.3 2006/03/24 18:05:40 sobomax Exp $
+ * $Id: rtpp_record.c,v 1.4 2007/07/28 01:10:28 sobomax Exp $
  *
  */
 
