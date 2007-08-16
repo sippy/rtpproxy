@@ -2,11 +2,11 @@
 -------------------------------------------------------------------------
 IMPORTANT NOTES
 
-1) The GPL applies to this copy of SIPPY RFC3261 SIP stack and B2BUA..
-   For a license to use the SIPPY software under conditions
-   other than those described here, or to purchase support for this
-   software, please contact Sippy Software, Inc. by e-mail at the
-   following address:
+1) The GPL applies to this copy of SIPPY RFC3261 SIP stack and B2BUA.
+   For a license to use the SIPPY software under conditions other than
+   those described here, or to purchase support for this software,
+   please contact Sippy Software, Inc. by e-mail at the following
+   address:
 
     sales@sippysoft.com
 
@@ -313,4 +313,4 @@ POSSIBILITY OF SUCH DAMAGES.
 
 		     END OF TERMS AND CONDITIONS
 
-$Id: COPYING,v 1.2 2007/08/16 17:09:03 sobomax Exp $
+$Id: COPYING,v 1.3 2007/08/16 17:15:21 sobomax Exp $
