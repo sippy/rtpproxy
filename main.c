@@ -1085,7 +1085,7 @@ int
 main(int argc, char **argv)
 {
     int controlfd, i, j, k, readyfd, len, nodaemon, dmode, port, ridx, sidx;
-    int rebuild_pending, timeout, flags, ch;
+    int rebuild_pending, timeout, flags, ch, ndrain;
     sigset_t set, oset;
     struct rtpp_session *sp;
     struct sockaddr_un ifsun;
@@ -1375,7 +1375,7 @@ main(int argc, char **argv)
 	    if (i == 0)
 		continue;
 	}
-	for (readyfd = 0; readyfd < nsessions + 1; readyfd++) {
+	for (readyfd = nsessions; readyfd >= 0; readyfd--) {
 	    if ((fds[readyfd].revents & POLLIN) == 0)
 		continue;
 	    if (readyfd == 0) {
@@ -1404,6 +1404,7 @@ main(int argc, char **argv)
 		 */
 		break;
 	    }
+	    ndrain = 5;
 drain:
 	    rlen = sizeof(raddr);
 	    len = recvfrom(fds[readyfd].fd, buf, sizeof(buf), 0,
@@ -1538,7 +1539,9 @@ do_record:
 	    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
 		rwrite(sp, sp->rrcs[ridx], sstosa(&raddr), buf, len);
 	    /* Repeat since we may have several packets queued */
-	    goto drain;
+	    ndrain--;
+	    if (ndrain != 0)
+		goto drain;
 	}
 	if (rebuild_pending != 0) {
 	    rebuild_tables();
