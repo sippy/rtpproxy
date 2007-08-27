@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.45 2007/07/28 01:10:27 sobomax Exp $
+ * $Id: main.c,v 1.46 2007/08/27 17:51:07 sobomax Exp $
  *
  */
 
@@ -1277,6 +1277,8 @@ main(int argc, char **argv)
 	if (i < 0 && errno == EINTR)
 	    continue;
 	sigprocmask(SIG_BLOCK, &set, &oset);
+
+	/* Handle RTP servers */
 	if (rtp_nsessions > 0) {
 	    skipfd = 0;
 	    for (j = 0; j < rtp_nsessions; j++) {
@@ -1314,52 +1316,31 @@ main(int argc, char **argv)
 	    if (i == 0)
 		continue;
 	}
-	skipfd = 0;
-	for (readyfd = nsessions; readyfd >= 0; readyfd--) {
-	    if (readyfd > 0) {
-	        if (fds[readyfd].fd == -1) {
-	            skipfd++;
-	            continue;
-	        }
-	        sp = sessions[readyfd];
-	        for (ridx = 0; ridx < 2; ridx++)
-		    if (fds[readyfd].fd == sp->fds[ridx])
-		        break;
-	        /*
-	         * Can't happen.
-	         */
-	        assert(ridx != 2);
 
-	        if (skipfd > 0) {
-	            fds[readyfd - skipfd] = fds[readyfd];
-	            sessions[readyfd - skipfd] = sessions[readyfd];
-	            sp->sidx[ridx] = readyfd - skipfd;;
-	        }
+	/* Relay RTP/RTCP */
+	skipfd = 0;
+	for (readyfd = 1; readyfd < nsessions; readyfd++) {
+	    if (fds[readyfd].fd == -1) {
+		skipfd++;
+		continue;
+	    }
+	    sp = sessions[readyfd];
+	    for (ridx = 0; ridx < 2; ridx++)
+		if (fds[readyfd].fd == sp->fds[ridx])
+		    break;
+	    /*
+	     * Can't happen.
+	     */
+	    assert(ridx != 2);
+
+	    /* Compact fds[] and sessions[] by eliminating removed sessions */
+	    if (skipfd > 0) {
+		fds[readyfd - skipfd] = fds[readyfd];
+		sessions[readyfd - skipfd] = sessions[readyfd];
+		sp->sidx[ridx] = readyfd - skipfd;;
 	    }
 	    if ((fds[readyfd].revents & POLLIN) == 0)
 		continue;
-	    if (readyfd == 0) {
-	        do {
-		    if (umode == 0) {
-		        rlen = sizeof(ifsun);
-		        controlfd = accept(fds[readyfd].fd,
-		          sstosa(&ifsun), &rlen);
-		        if (controlfd == -1) {
-		            if (errno != EWOULDBLOCK)
-			        rtpp_log_ewrite(RTPP_LOG_ERR, glog,
-			          "can't accept connection on control socket");
-			    break;
-		        }
-		    } else {
-		        controlfd = fds[readyfd].fd;
-		    }
-		    i = handle_command(controlfd);
-		    if (umode == 0) {
-		        close(controlfd);
-		    }
-		} while (i == 0);
-		continue;
-	    }
 	    ndrain = 5;
 drain:
 	    rlen = sizeof(raddr);
@@ -1476,6 +1457,29 @@ do_record:
 		goto drain;
 	}
 	nsessions -= skipfd;
+
+	/* Handle commands */
+	if ((fds[0].revents & POLLIN) != 0) {
+	    do {
+		if (umode == 0) {
+		    rlen = sizeof(ifsun);
+		    controlfd = accept(fds[0].fd,
+		      sstosa(&ifsun), &rlen);
+		    if (controlfd == -1) {
+			if (errno != EWOULDBLOCK)
+			    rtpp_log_ewrite(RTPP_LOG_ERR, glog,
+			      "can't accept connection on control socket");
+			break;
+		    }
+		} else {
+		    controlfd = fds[0].fd;
+		}
+		i = handle_command(controlfd);
+		if (umode == 0) {
+		    close(controlfd);
+		}
+	    } while (i == 0);
+	}
     }
 
     exit(0);
