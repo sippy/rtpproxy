@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.46 2007/08/27 17:51:07 sobomax Exp $
+ * $Id: main.c,v 1.47 2007/08/27 18:40:39 sobomax Exp $
  *
  */
 
@@ -1313,9 +1313,10 @@ main(int argc, char **argv)
 		}
 	    }
 	    rtp_nsessions -= skipfd;
-	    if (i == 0)
-		continue;
 	}
+
+	if (i == 0)
+	    continue;
 
 	/* Relay RTP/RTCP */
 	skipfd = 0;
