@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.2 2007/04/24 08:42:28 sobomax Exp $
+# $Id: UA.py,v 1.3 2007/09/18 04:55:37 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -81,6 +81,7 @@ class UA:
     no_progress_timer = None
     on_local_sdp_change = None
     on_remote_sdp_change = None
+    last_scode = 100
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
       conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, ftag = None, extra_headers = None, \
@@ -112,7 +113,6 @@ class UA:
             self.fTag = ftag
         else:
             self.fTag = md5(str((random() * 1000000000L) + time())).hexdigest()
-        self.kaInterval = 0
         self.reqs = {}
         self.extra_headers = extra_headers
         self.expire_time = expire_time
@@ -238,10 +238,6 @@ class UA:
         self.uasResp.setSCode(scode, reason)
         self.uasResp.setBody(body)
         self.uasResp.delHFs('www-authenticate')
-        if scode == 401:
-            self.uasResp.appendHeader(SipHeader(name = 'www-authenticate'))
-        elif scode == 407:
-            self.uasResp.appendHeader(SipHeader(name = 'proxy-authenticate'))
         self.uasResp.delHFs('contact')
         if contact != None:
             self.uasResp.appendHeader(SipHeader(name = 'contact', body = contact))

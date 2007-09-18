@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipCallId.py,v 1.2 2007/04/24 08:42:28 sobomax Exp $
+# $Id: SipCallId.py,v 1.3 2007/09/18 04:55:37 sobomax Exp $
 
 from random import random
 from md5 import md5
@@ -41,6 +41,9 @@ class SipCallId:
 
     def __str__(self):
         return self.body
+
+    def __add__(self, other):
+        return SipCallId(self.body + str(other))
 
     def getCopy(self):
         return SipCallId(self.body)

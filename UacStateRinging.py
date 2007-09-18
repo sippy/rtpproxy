@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateRinging.py,v 1.2 2007/04/24 08:42:28 sobomax Exp $
+# $Id: UacStateRinging.py,v 1.3 2007/09/18 04:55:37 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -39,6 +39,7 @@ class UacStateRinging(UaStateGeneric):
         code, reason = resp.getSCode()
         scode = (code, reason, body)
         if code < 200:
+            self.ua.last_scode = code
             event = CCEventRing(scode, rtime = resp.rtime)
             for ring_cb in self.ua.ring_cbs:
                 ring_cb(self.ua, resp.rtime, code)
@@ -103,7 +104,7 @@ class UacStateRinging(UaStateGeneric):
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
-            return (UacStateCancelling, self.ua.disc_cbs, event.rtime, 100)
+            return (UacStateCancelling, self.ua.disc_cbs, event.rtime, self.ua.last_scode)
         #print 'wrong event %s in the Ringing state' % event
         return None
 

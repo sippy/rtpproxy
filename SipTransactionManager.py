@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.2 2007/04/24 08:42:28 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.3 2007/09/18 04:55:37 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -209,7 +209,7 @@ class SipTransactionManager:
         if msg.getMethod() == 'INVITE':
             t.needack = True
             t.ack = msg.genACK()
-            t.cancel = msg.genRequest('CANCEL')
+            t.cancel = msg.genCANCEL()
         else:
             t.needack = False
             t.ack = None

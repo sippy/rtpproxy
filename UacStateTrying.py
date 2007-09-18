@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateTrying.py,v 1.2 2007/04/24 08:42:28 sobomax Exp $
+# $Id: UacStateTrying.py,v 1.3 2007/09/18 04:55:37 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -45,6 +45,7 @@ class UacStateTrying(UaStateGeneric):
             self.ua.no_progress_timer.cancel()
             self.ua.no_progress_timer = None
         if code < 200:
+            self.ua.last_scode = code
             event = CCEventRing(scode, rtime = resp.rtime)
             if body != None:
                 if self.ua.on_remote_sdp_change != None:
@@ -110,7 +111,7 @@ class UacStateTrying(UaStateGeneric):
             if self.ua.no_progress_timer != None:
                 self.ua.no_progress_timer.cancel()
                 self.ua.no_progress_timer = None
-            return (UacStateCancelling, self.ua.disc_cbs, event.rtime, 100)
+            return (UacStateCancelling, self.ua.disc_cbs, event.rtime, self.ua.last_scode)
         #print 'wrong event %s in the Trying state' % event
         return None
 

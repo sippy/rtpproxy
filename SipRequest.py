@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipRequest.py,v 1.2 2007/04/24 08:42:28 sobomax Exp $
+# $Id: SipRequest.py,v 1.3 2007/09/18 04:55:37 sobomax Exp $
 
 from SipMsg import SipMsg
 from SipHeader import SipHeader
@@ -108,6 +108,13 @@ class SipRequest(SipMsg):
                           fr0m = self.getHFBody('from').getCopy(), to = to, \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
                           cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = self.getHFBody('max-forwards').getCopy())
+
+    def genCANCEL(self):
+        return SipRequest(method = 'CANCEL', ruri = self.ruri.getCopy(), sipver = self.sipver, \
+                          fr0m = self.getHFBody('from').getCopy(), to = self.getHFBody('to').getCopy(), \
+                          via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
+                          cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = self.getHFBody('max-forwards').getCopy(), \
+                          routes = map(lambda x: x.getCopy(), self.getHFBodys('route')))
 
     def genRequest(self, method, cseq = None):
         if cseq == None:

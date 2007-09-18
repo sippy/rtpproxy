@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateUpdating.py,v 1.2 2007/04/24 08:42:28 sobomax Exp $
+# $Id: UasStateUpdating.py,v 1.3 2007/09/18 04:55:37 sobomax Exp $
 
 from SipContact import SipContact
 from SipAddress import SipAddress
@@ -38,7 +38,7 @@ class UasStateUpdating(UaStateGeneric):
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(491, 'Request Pending'))
             return None
         elif req.getMethod() == 'BYE':
-            self.ua.sendUasResponse(200, 'OK')
+            self.ua.sendUasResponse(487, 'Request Terminated')
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Updating state, going to the Disconnected state'
             self.ua.equeue.append(CCEventDisconnect(rtime = req.rtime))
@@ -53,7 +53,7 @@ class UasStateUpdating(UaStateGeneric):
             if req.countHFs('refer-to') == 0:
                 self.ua.global_config['sip_tm'].sendResponse(req.genResponse(400, 'Bad Request'))
                 return None
-            self.ua.sendUasResponse(200, 'OK')
+            self.ua.sendUasResponse(487, 'Request Terminated')
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
             also = req.getHFBody('refer-to').getUrl().getCopy()
             self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime))
@@ -95,7 +95,7 @@ class UasStateUpdating(UaStateGeneric):
             self.ua.sendUasResponse(scode[0], scode[1])
             return (UaStateConnected,)
         elif isinstance(event, CCEventDisconnect):
-            self.ua.sendUasResponse(200, 'OK')
+            self.ua.sendUasResponse(487, 'Request Terminated')
             req = self.ua.genRequest('BYE')
             self.ua.lCSeq += 1
             self.ua.global_config['sip_tm'].newTransaction(req)
