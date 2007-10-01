@@ -1,6 +1,4 @@
 #
-# Updated 97/06/13 to livingston-radius-2.01 miquels@cistron.nl
-#
 #	This file contains dictionary translations for parsing
 #	requests and generating responses.  All transactions are
 #	composed of Attribute/Value Pairs.  The value of each attribute
@@ -22,6 +20,7 @@
 #	Framed-Protocol = PPP
 #	7		= 1	(integer encoding)
 #
+# $Id: dictionary,v 1.2 2007/10/01 22:23:20 sobomax Exp $
 
 VENDOR		Cisco			9
 ATTRIBUTE	Cisco-AVPair		1	string	Cisco
