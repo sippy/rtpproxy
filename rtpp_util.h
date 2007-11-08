@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2004 Maxim Sobolev
+ * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +34,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netdb.h>
 
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 

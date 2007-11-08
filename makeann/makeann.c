@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2003-2006 Sippy Software, Inc. <sales@sippysoft.com>
+ * Copyright (c) 2003-2006 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
