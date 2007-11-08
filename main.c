@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.47 2007/08/27 18:40:39 sobomax Exp $
+ * $Id: main.c,v 1.48 2007/11/08 08:15:07 sobomax Exp $
  *
  */
 
@@ -379,7 +379,7 @@ handle_command(int controlfd)
 	  sstosa(&raddr), &rlen);
     }
     if (len == -1) {
-        if (errno != EAGAIN && errno != EINTR)
+	if (errno != EAGAIN && errno != EINTR)
 	    rtpp_log_ewrite(RTPP_LOG_ERR, glog, "can't read from control socket");
 	return -1;
     }
@@ -490,7 +490,12 @@ handle_command(int controlfd)
 
     case 'i':
     case 'I':
-	len = sprintf(buf, "sessions created: %llu\nactive sessions:\n", sessions_created);
+	if (cookie == NULL)
+	    len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n",
+	      sessions_created, nsessions / 2);
+	else
+	    len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n",
+	      cookie, sessions_created, nsessions / 2);
 	for (i = 1; i < nsessions; i++) {
 	    char addrs[4][256];
 
