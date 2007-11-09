@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.49 2007/11/09 19:56:14 sobomax Exp $
+ * $Id: main.c,v 1.50 2007/11/09 20:05:58 sobomax Exp $
  *
  */
 
@@ -713,11 +713,11 @@ handle_command(int controlfd)
 		spa->rtps[i] = NULL;
 		rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	          "stopping player at port %d", spa->ports[i]);
-	        if (spa->rtps[0] == NULL && spa->rtps[1] == NULL) {
-	            assert(rtp_servers[spa->sridx] == spa);
-	            rtp_servers[spa->sridx] = NULL;
-	            spa->sridx = -1;
-	        }
+		if (spa->rtps[0] == NULL && spa->rtps[1] == NULL) {
+		    assert(rtp_servers[spa->sridx] == spa);
+		    rtp_servers[spa->sridx] = NULL;
+		    spa->sridx = -1;
+		}
 	    }
 	    if (play == 0)
 		goto do_ok;
@@ -1114,7 +1114,7 @@ main(int argc, char **argv)
 	case 'L':
 	    lim.rlim_cur = lim.rlim_max = atoi(optarg);
 	    if (setrlimit(RLIMIT_NOFILE, &lim) != 0)
-	        err(1, "setrlimit");
+		err(1, "setrlimit");
 	    break;
 
 	case '?':
