@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.48 2007/11/08 08:15:07 sobomax Exp $
+ * $Id: main.c,v 1.49 2007/11/09 19:56:14 sobomax Exp $
  *
  */
 
@@ -318,13 +318,15 @@ static int
 compare_session_tags(char *tag1, char *tag0, unsigned *medianum_p)
 {
     size_t len0 = strlen(tag0);
+
     if (!strncmp(tag1, tag0, len0)) {
 	if (tag1[len0] == ';') {
-		if (medianum_p != 0)
-			*medianum_p = strtoul(tag1+len0+1, NULL, 10);
-		return 2;
+	    if (medianum_p != 0)
+		*medianum_p = strtoul(tag1 + len0 + 1, NULL, 10);
+	    return 2;
 	}
-	if (tag1[len0] == 0) return 1;
+	if (tag1[len0] == 0)
+	    return 1;
 	return 0;
     }
     return 0;
