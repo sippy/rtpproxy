@@ -57,7 +57,7 @@ am_makeann_OBJECTS = makeann.$(OBJEXT)
 makeann_OBJECTS = $(am_makeann_OBJECTS)
 makeann_LDADD = $(LDADD)
 am_rtpproxy_OBJECTS = main.$(OBJEXT) rtp_server.$(OBJEXT) \
-	rtpp_record.$(OBJEXT) rtpp_util.$(OBJEXT)
+	rtpp_record.$(OBJEXT) rtpp_util.$(OBJEXT) rtp.$(OBJEXT)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
 rtpproxy_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -159,7 +159,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 rtpproxy_SOURCES = main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
-  rtpp_util.c rtpp_util.h
+  rtpp_util.c rtpp_util.h rtp.c
 
 makeann_SOURCES = makeann.c rtp.h g711.h
 all: config.h
