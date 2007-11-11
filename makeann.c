@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makeann.c,v 1.5 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: makeann.c,v 1.6 2007/11/11 21:59:27 sobomax Exp $
  *
  */
 
@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/socket.h>
 
 #include "config.h"
 

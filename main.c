@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.50 2007/11/09 20:05:58 sobomax Exp $
+ * $Id: main.c,v 1.51 2007/11/11 21:59:27 sobomax Exp $
  *
  */
 
@@ -36,6 +36,7 @@
 #include <sys/resource.h>
 #include <sys/un.h>
 #include <sys/uio.h>
+#include <ctype.h>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -55,6 +56,7 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include "rtp.h"
 #include "rtp_server.h"
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
@@ -71,8 +73,6 @@ static struct pollfd fds[MAX_FDS + 1];
 static int nsessions;
 static unsigned long long sessions_created = 0;
 static int rtp_nsessions;
-static int bmode = 0;			/* Bridge mode */
-static int umode = 0;			/* UDP control mode */
 static int max_ttl = SESSION_TIMEOUT;
 static const char *cmd_sock = CMD_SOCK;
 static const char *pid_file = PID_FILE;
@@ -81,6 +81,21 @@ struct proto_cap {
     const char	*pc_id;
     const char	*pc_description;
 };
+
+struct cfg
+{
+    int nodaemon;
+    int dmode;
+    int bmode;			/* Bridge mode */
+    int umode;			/* UDP control mode */
+    /*
+     * The first address is for external interface, the second one - for
+     * internal one. Second can be NULL, in this case there is no bridge
+     * mode enabled.
+     */
+    struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
+};
+
 
 static struct proto_cap proto_caps[] = {
     /*
@@ -92,13 +107,6 @@ static struct proto_cap proto_caps[] = {
     { "20060704", "Support for extra parameter in the V command" },
     { NULL, NULL }
 };
-
-/*
- * The first address is for external interface, the second one - for
- * internal one. Second can be NULL, in this case there is no bridge
- * mode enabled.
- */
-static struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
 
 static rtpp_log_t glog;
 static int tos = TOS;
@@ -112,8 +120,10 @@ static void remove_session(struct rtpp_session *);
 static void alarmhandler(int);
 static int create_twinlistener(struct sockaddr *, int, int *);
 static int create_listener(struct sockaddr *, int, int, int, int *, int *);
-static int handle_command(int);
+static int handle_command(const struct cfg *, int);
 static void usage(void);
+static void send_packet(const struct cfg *, struct rtpp_session *, int,
+  struct rtp_packet *);
 
 static void
 setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
@@ -333,7 +343,7 @@ compare_session_tags(char *tag1, char *tag0, unsigned *medianum_p)
 }
 
 static int
-handle_command(int controlfd)
+handle_command(const struct cfg *cf, int controlfd)
 {
     int len, delete, argc, i, j, pidx, request, response, asymmetric;
     int external, pf, ecode, lidx, play, record, noplay, weak;
@@ -354,7 +364,7 @@ handle_command(int controlfd)
     { \
 	buf[len] = '\0'; \
 	rtpp_log_write(RTPP_LOG_DBUG, glog, "sending reply \"%s\"", buf); \
-	if (umode == 0) { \
+	if (cf->umode == 0) { \
 	    write(controlfd, buf, len); \
 	} else { \
 	    while (sendto(controlfd, buf, len, 0, sstosa(&raddr), \
@@ -364,11 +374,11 @@ handle_command(int controlfd)
 
     ia[0] = ia[1] = NULL;
     spa = spb = NULL;
-    lia[0] = lia[1] = bindaddr[0];
+    lia[0] = lia[1] = cf->bindaddr[0];
     lidx = 1;
     fds[0] = fds[1] = -1;
 
-    if (umode == 0) {
+    if (cf->umode == 0) {
 	for (;;) {
 	    len = read(controlfd, buf, sizeof(buf) - 1);
 	    if (len != -1 || (errno != EAGAIN && errno != EINTR))
@@ -399,14 +409,14 @@ handle_command(int controlfd)
 		break;
 	}
     cookie = NULL;
-    if (argc < 1 || (umode != 0 && argc < 2)) {
+    if (argc < 1 || (cf->umode != 0 && argc < 2)) {
 	rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
 	ecode = 0;
 	goto goterror;
     }
 
     /* Stream communication mode doesn't use cookie */
-    if (umode != 0) {
+    if (cf->umode != 0) {
 	cookie = argv[0];
 	for (i = 1; i < argc; i++)
 	    argv[i - 1] = argv[i];
@@ -578,7 +588,7 @@ handle_command(int controlfd)
 	/* Process additional options */
 	external = 1;
 	/* In bridge mode all clients are assumed to be asymmetric */
-	asymmetric = (bmode != 0) ? 1 : 0;
+	asymmetric = (cf->bmode != 0) ? 1 : 0;
 	pf = AF_INET;
 	weak = 0;
 	for (cp = argv[0] + 1; *cp != '\0'; cp++) {
@@ -595,7 +605,7 @@ handle_command(int controlfd)
 		    ecode = 1;
 		    goto goterror;
 		}
-		lia[lidx] = bindaddr[1];
+		lia[lidx] = cf->bindaddr[1];
 		lidx--;
 		break;
 
@@ -606,7 +616,7 @@ handle_command(int controlfd)
 		    ecode = 1;
 		    goto goterror;
 		}
-		lia[lidx] = bindaddr[0];
+		lia[lidx] = cf->bindaddr[0];
 		lidx--;
 		break;
 
@@ -762,7 +772,7 @@ handle_command(int controlfd)
 	}
 
 	if (spa->fds[i] == -1) {
-	    j = ishostseq(bindaddr[0], spa->laddr[i]) ? 0 : 1;
+	    j = ishostseq(cf->bindaddr[0], spa->laddr[i]) ? 0 : 1;
 	    if (create_listener(spa->laddr[i], PORT_MIN, PORT_MAX,
 	      lastport[j], &lport, fds) == -1) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create listener");
@@ -833,8 +843,8 @@ handle_command(int controlfd)
 	"new session %s, tag %s requested, type %s",
 	call_id, from_tag, weak ? "weak" : "strong");
 
-    j = ishostseq(bindaddr[0], lia[0]) ? 0 : 1;
-    if (create_listener(bindaddr[j], PORT_MIN, PORT_MAX,
+    j = ishostseq(cf->bindaddr[0], lia[0]) ? 0 : 1;
+    if (create_listener(cf->bindaddr[j], PORT_MIN, PORT_MAX,
       lastport[j], &lport, fds) == -1) {
 	rtpp_log_write(RTPP_LOG_ERR, glog, "can't create listener");
 	ecode = 10;
@@ -1012,32 +1022,19 @@ ehandler(void)
     rtpp_log_close(glog);
 }
 
-int
-main(int argc, char **argv)
+static void 
+init_config(struct cfg *cf, int argc, char **argv)
 {
-    int controlfd, i, j, k, readyfd, len, nodaemon, dmode, port, ridx, sidx;
-    int timeout, flags, skipfd, ndrain;
-    sigset_t set, oset;
-    struct rtpp_session *sp;
-    struct sockaddr_un ifsun;
-    struct sockaddr_storage ifsin, raddr;
-    socklen_t rlen;
-    struct itimerval tick;
-    char buf[1024 * 8];
-    char ch, *bh[2], *bh6[2], *cp;
-    double sptime, eptime;
-    unsigned long delay;
+    int ch, i;
     struct rlimit lim;
+    char *bh[2], *bh6[2];
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
-    nodaemon = 0;
-
-    dmode = 0;
 
     while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:")) != -1)
 	switch (ch) {
 	case 'f':
-	    nodaemon = 1;
+	    cf->nodaemon = 1;
 	    break;
 
 	case 'l':
@@ -1046,7 +1043,7 @@ main(int argc, char **argv)
 	    if (bh[1] != NULL) {
 		*bh[1] = '\0';
 		bh[1]++;
-		bmode = 1;
+		cf->bmode = 1;
 	    }
 	    break;
 
@@ -1056,19 +1053,19 @@ main(int argc, char **argv)
 	    if (bh6[1] != NULL) {
 		*bh6[1] = '\0';
 		bh6[1]++;
-		bmode = 1;
+		cf->bmode = 1;
 	    }
 	    break;
 
 	case 's':
 	    if (strncmp("udp:", optarg, 4) == 0) {
-		umode = 1;
+		cf->umode = 1;
 		optarg += 4;
 	    } else if (strncmp("udp6:", optarg, 5) == 0) {
-		umode = 6;
+		cf->umode = 6;
 		optarg += 5;
 	    } else if (strncmp("unix:", optarg, 5) == 0) {
-		umode = 0;
+		cf->umode = 0;
 		optarg += 5;
 	    }
 	    cmd_sock = optarg;
@@ -1079,7 +1076,7 @@ main(int argc, char **argv)
 	    break;
 
 	case '2':
-	    dmode = 1;
+	    cf->dmode = 1;
 	    break;
 
 	case 'v':
@@ -1121,14 +1118,11 @@ main(int argc, char **argv)
 	default:
 	    usage();
 	}
-    argc -= optind;
-    argv += optind;
-
     if (rdir == NULL && sdir != NULL)
         errx(1, "-S switch requires -r switch");
 
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
-	if (umode != 0)
+	if (cf->umode != 0)
 	    errx(1, "explicit binding address has to be specified in UDP "
 	      "command mode");
 	bh[0] = "*";
@@ -1143,7 +1137,7 @@ main(int argc, char **argv)
 
     i = ((bh[0] == NULL) ? 0 : 1) + ((bh[1] == NULL) ? 0 : 1) +
       ((bh6[0] == NULL) ? 0 : 1) + ((bh6[1] == NULL) ? 0 : 1);
-    if (bmode != 0) {
+    if (cf->bmode != 0) {
 	if (bh[0] != NULL && bh6[0] != NULL)
 	    errx(1, "either IPv4 or IPv6 should be configured for external "
 	      "interface in bridging mode, not both");
@@ -1158,24 +1152,33 @@ main(int argc, char **argv)
     }
 
     for (i = 0; i < 2; i++) {
-	bindaddr[i] = NULL;
+	cf->bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
-	    bindaddr[i] = alloca(sizeof(struct sockaddr_storage));
-	    setbindhost(bindaddr[i], AF_INET, bh[i], SERVICE);
+	    cf->bindaddr[i] = malloc(sizeof(struct sockaddr_storage));
+	    setbindhost(cf->bindaddr[i], AF_INET, bh[i], SERVICE);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
-	    bindaddr[i] = alloca(sizeof(struct sockaddr_storage));
-	    setbindhost(bindaddr[i], AF_INET6, bh6[i], SERVICE);
+	    cf->bindaddr[i] = malloc(sizeof(struct sockaddr_storage));
+	    setbindhost(cf->bindaddr[i], AF_INET6, bh6[i], SERVICE);
 	    continue;
 	}
     }
-    if (bindaddr[0] == NULL) {
-	bindaddr[0] = bindaddr[1];
-	bindaddr[1] = NULL;
+    if (cf->bindaddr[0] == NULL) {
+	cf->bindaddr[0] = cf->bindaddr[1];
+	cf->bindaddr[1] = NULL;
     }
+}
 
-    if (umode == 0) {
+static int
+init_controlfd(const struct cfg *cf)
+{
+    struct sockaddr_un ifsun;
+    struct sockaddr_storage ifsin;
+    char *cp;
+    int i, controlfd, flags;
+
+    if (cf->umode == 0) {
 	unlink(cmd_sock);
 	memset(&ifsun, '\0', sizeof ifsun);
 #if !defined(__linux__) && !defined(__solaris__)
@@ -1200,7 +1203,7 @@ main(int argc, char **argv)
 	}
 	if (cp == NULL || *cp == '\0')
 	    cp = CPORT;
-	i = (umode == 6) ? AF_INET6 : AF_INET;
+	i = (cf->umode == 6) ? AF_INET6 : AF_INET;
 	setbindhost(sstosa(&ifsin), i, cmd_sock, cp);
 	controlfd = socket(i, SOCK_DGRAM, 0);
 	if (controlfd == -1)
@@ -1211,8 +1214,277 @@ main(int argc, char **argv)
     flags = fcntl(controlfd, F_GETFL);
     fcntl(controlfd, F_SETFL, flags | O_NONBLOCK);
 
+    return controlfd;
+}
+
+static void
+process_rtp_servers(const struct cfg *cf)
+{
+    int j, k, sidx, len, skipfd;
+    struct rtpp_session *sp;
+
+    skipfd = 0;
+    for (j = 0; j < rtp_nsessions; j++) {
+        sp = rtp_servers[j];
+        if (sp == NULL) {
+            skipfd++;
+            continue;
+        }
+        if (skipfd > 0) {
+            rtp_servers[j - skipfd] = rtp_servers[j];
+            sp->sridx = j - skipfd;
+        }
+        for (sidx = 0; sidx < 2; sidx++) {
+            if (sp->rtps[sidx] == NULL || sp->addr[sidx] == NULL)
+                continue;
+            while ((len = rtp_server_get(sp->rtps[sidx])) != RTPS_LATER) {
+                if (len == RTPS_EOF) {
+                    rtp_server_free(sp->rtps[sidx]);
+                    sp->rtps[sidx] = NULL;
+                    if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
+                        assert(rtp_servers[sp->sridx] == sp);
+                        rtp_servers[sp->sridx] = NULL;
+                        sp->sridx = -1;
+                    }
+                    break;
+                }
+                for (k = (cf->dmode && len < LBR_THRS) ? 2 : 1; k > 0; k--) {
+                    sendto(sp->fds[sidx], sp->rtps[sidx]->buf, len, 0,
+                      sp->addr[sidx], SA_LEN(sp->addr[sidx]));
+                }
+            }
+        }
+    }
+    rtp_nsessions -= skipfd;
+}
+
+static void
+rxmit_packets(const struct cfg *cf, struct rtpp_session *sp, int ridx)
+{
+    int ndrain, i, port;
+    struct rtp_packet *packet = NULL;
+
+    /* Repeat since we may have several packets queued on the same socket */
+    for (ndrain = 0; ndrain < 5; ndrain++) {
+	if (packet != NULL)
+	    rtp_packet_free(packet);
+
+	packet = rtp_recv(sp->fds[ridx]);
+	if (packet == NULL)
+	    break;
+
+	i = 0;
+	if (sp->addr[ridx] != NULL) {
+	    /* Check that the packet is authentic, drop if it isn't */
+	    if (sp->asymmetric[ridx] == 0) {
+		if (memcmp(sp->addr[ridx], &packet->raddr, packet->rlen) != 0) {
+		    if (sp->canupdate[ridx] == 0) {
+			/*
+			 * Continue, since there could be good packets in
+			 * queue.
+			 */
+			continue;
+		    }
+		    /* Signal that an address have to be updated */
+		    i = 1;
+		}
+	    } else {
+		/*
+		 * For asymmetric clients don't check
+		 * source port since it may be different.
+		 */
+		if (!ishostseq(sp->addr[ridx], sstosa(&packet->raddr)))
+		    /*
+		     * Continue, since there could be good packets in
+		     * queue.
+		     */
+		    continue;
+	    }
+	    sp->pcount[ridx]++;
+	} else {
+	    sp->pcount[ridx]++;
+	    sp->addr[ridx] = malloc(packet->rlen);
+	    if (sp->addr[ridx] == NULL) {
+		sp->pcount[3]++;
+		rtpp_log_write(RTPP_LOG_ERR, sp->log,
+		  "can't allocate memory for remote address - "
+		  "removing session");
+		remove_session(GET_RTP(sp));
+		/* Break, sp is invalid now */
+		break;
+	    }
+	    /* Signal that an address have to be updated. */
+	    i = 1;
+	}
+
+	/* Update recorded address if it's necessary. */
+	if (i != 0) {
+	    memcpy(sp->addr[ridx], &packet->raddr, packet->rlen);
+	    sp->canupdate[ridx] = 0;
+
+	    port = ntohs(satosin(&packet->raddr)->sin_port);
+
+	    rtpp_log_write(RTPP_LOG_INFO, sp->log,
+	      "%s's address filled in: %s:%d (%s)",
+	      (ridx == 0) ? "callee" : "caller",
+	      addr2char(sstosa(&packet->raddr)), port,
+	      (sp->rtp == NULL) ? "RTP" : "RTCP");
+
+	    /*
+	     * Check if we have updated RTP while RTCP is still
+	     * empty or contains address that differs from one we
+	     * used when updating RTP. Try to guess RTCP if so,
+	     * should be handy for non-NAT'ed clients, and some
+	     * NATed as well.
+	     */
+	    if (sp->rtcp != NULL && (sp->rtcp->addr[ridx] == NULL ||
+	      !ishostseq(sp->rtcp->addr[ridx], sstosa(&packet->raddr)))) {
+		if (sp->rtcp->addr[ridx] == NULL) {
+		    sp->rtcp->addr[ridx] = malloc(packet->rlen);
+		    if (sp->rtcp->addr[ridx] == NULL) {
+			sp->pcount[3]++;
+			rtpp_log_write(RTPP_LOG_ERR, sp->log,
+			  "can't allocate memory for remote address - "
+			  "removing session");
+			remove_session(sp);
+			/* Break, sp is invalid now */
+			break;
+		    }
+		}
+		memcpy(sp->rtcp->addr[ridx], &packet->raddr, packet->rlen);
+		satosin(sp->rtcp->addr[ridx])->sin_port = htons(port + 1);
+		/* Use guessed value as the only true one for asymmetric clients */
+		sp->rtcp->canupdate[ridx] = NOT(sp->rtcp->asymmetric[ridx]);
+		rtpp_log_write(RTPP_LOG_INFO, sp->log, "guessing RTCP port "
+		  "for %s to be %d",
+		  (ridx == 0) ? "callee" : "caller", port + 1);
+	    }
+	}
+
+	send_packet(cf, sp, ridx, packet);
+    }
+
+    if (packet != NULL)
+	rtp_packet_free(packet);
+}
+
+static void
+send_packet(const struct cfg *cf, struct rtpp_session *sp, int ridx,
+  struct rtp_packet *packet)
+{
+    int i, sidx;
+
+    GET_RTP(sp)->ttl = max_ttl;
+
+    /* Select socket for sending packet out. */
+    sidx = (ridx == 0) ? 1 : 0;
+
+    /*
+     * Check that we have some address to which packet is to be
+     * sent out, drop otherwise.
+     */
+    if (sp->addr[sidx] == NULL || GET_RTP(sp)->rtps[sidx] != NULL) {
+        sp->pcount[3]++;
+    } else {
+	sp->pcount[2]++;
+	for (i = (cf->dmode && packet->size < LBR_THRS) ? 2 : 1; i > 0; i--) {
+	    sendto(sp->fds[sidx], packet->buf, packet->size, 0, sp->addr[sidx],
+	      SA_LEN(sp->addr[sidx]));
+	}
+    }
+
+    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
+        rwrite(sp, sp->rrcs[ridx], sstosa(&packet->raddr), packet->buf, packet->size);
+}
+
+static void
+process_rtp(const struct cfg *cf)
+{
+    int readyfd, skipfd, ridx;
+    struct rtpp_session *sp;
+
+    /* Relay RTP/RTCP */
+    skipfd = 0;
+    for (readyfd = 1; readyfd < nsessions; readyfd++) {
+        if (fds[readyfd].fd == -1) {
+	    /* Deleted session, count and move one */
+            skipfd++;
+            continue;
+        }
+
+	/* Find index of the call leg within a session */
+	sp = sessions[readyfd];
+	for (ridx = 0; ridx < 2; ridx++)
+	    if (fds[readyfd].fd == sp->fds[ridx])
+		break;
+	/*
+	 * Can't happen.
+	 */
+	assert(ridx != 2);
+
+	/* Compact fds[] and sessions[] by eliminating removed sessions */
+	if (skipfd > 0) {
+	    fds[readyfd - skipfd] = fds[readyfd];
+	    sessions[readyfd - skipfd] = sessions[readyfd];
+	    sp->sidx[ridx] = readyfd - skipfd;;
+	}
+
+	if ((fds[readyfd].revents & POLLIN) != 0 && sp->complete != 0)
+	    rxmit_packets(cf, sp, ridx);
+    }
+    /* Trim any deleted sessions at the end */
+    nsessions -= skipfd;
+}
+
+static void
+process_commands(const struct cfg *cf)
+{
+    int controlfd, i;
+    socklen_t rlen;
+    struct sockaddr_un ifsun;
+
+    if ((fds[0].revents & POLLIN) == 0)
+	return;
+
+    do {
+	if (cf->umode == 0) {
+	    rlen = sizeof(ifsun);
+	    controlfd = accept(fds[0].fd, sstosa(&ifsun), &rlen);
+	    if (controlfd == -1) {
+		if (errno != EWOULDBLOCK)
+		    rtpp_log_ewrite(RTPP_LOG_ERR, glog,
+		      "can't accept connection on control socket");
+		break;
+	    }
+	} else {
+	    controlfd = fds[0].fd;
+	}
+	i = handle_command(cf, controlfd);
+	if (cf->umode == 0) {
+	    close(controlfd);
+	}
+    } while (i == 0);
+}
+
+int
+main(int argc, char **argv)
+{
+    int i, len, timeout, controlfd;
+    sigset_t set, oset;
+    struct itimerval tick;
+    double sptime, eptime;
+    unsigned long delay;
+    struct cfg cf;
+    char buf[256];
+
+    memset(&cf, 0, sizeof(cf));
+
+    init_config(&cf, argc, argv);
+
+    controlfd = init_controlfd(&cf);
+
 #if !defined(__solaris__)
-    if (nodaemon == 0) {
+    if (cf.nodaemon == 0) {
 	if (daemon(0, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
@@ -1266,7 +1538,7 @@ main(int argc, char **argv)
     signal(SIGALRM, alarmhandler);
 
     sptime = 0;
-    while(1) {
+    for (;;) {
 	if (rtp_nsessions > 0)
 	    timeout = RTPS_TICKS_MIN;
 	else
@@ -1284,210 +1556,13 @@ main(int argc, char **argv)
 	if (i < 0 && errno == EINTR)
 	    continue;
 	sigprocmask(SIG_BLOCK, &set, &oset);
-
-	/* Handle RTP servers */
 	if (rtp_nsessions > 0) {
-	    skipfd = 0;
-	    for (j = 0; j < rtp_nsessions; j++) {
-		sp = rtp_servers[j];
-		if (sp == NULL) {
-		    skipfd++;
-		    continue;
-		}
-		if (skipfd > 0) {
-		    rtp_servers[j - skipfd] = rtp_servers[j];
-		    sp->sridx = j - skipfd;
-		}
-		for (sidx = 0; sidx < 2; sidx++) {
-		    if (sp->rtps[sidx] == NULL || sp->addr[sidx] == NULL)
-			continue;
-		    while ((len = rtp_server_get(sp->rtps[sidx])) != RTPS_LATER) {
-			if (len == RTPS_EOF) {
-			    rtp_server_free(sp->rtps[sidx]);
-			    sp->rtps[sidx] = NULL;
-			    if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
-			        assert(rtp_servers[sp->sridx] == sp);
-			        rtp_servers[sp->sridx] = NULL;
-			        sp->sridx = -1;
-			    }
-			    break;
-			}
-			for (k = (dmode && len < LBR_THRS) ? 2 : 1; k > 0; k--) {
-			    sendto(sp->fds[sidx], sp->rtps[sidx]->buf, len, 0,
-			      sp->addr[sidx], SA_LEN(sp->addr[sidx]));
-			}
-		    }
-		}
-	    }
-	    rtp_nsessions -= skipfd;
+	    process_rtp_servers(&cf);
 	}
-
 	if (i == 0)
 	    continue;
-
-	/* Relay RTP/RTCP */
-	skipfd = 0;
-	for (readyfd = 1; readyfd < nsessions; readyfd++) {
-	    if (fds[readyfd].fd == -1) {
-		skipfd++;
-		continue;
-	    }
-	    sp = sessions[readyfd];
-	    for (ridx = 0; ridx < 2; ridx++)
-		if (fds[readyfd].fd == sp->fds[ridx])
-		    break;
-	    /*
-	     * Can't happen.
-	     */
-	    assert(ridx != 2);
-
-	    /* Compact fds[] and sessions[] by eliminating removed sessions */
-	    if (skipfd > 0) {
-		fds[readyfd - skipfd] = fds[readyfd];
-		sessions[readyfd - skipfd] = sessions[readyfd];
-		sp->sidx[ridx] = readyfd - skipfd;;
-	    }
-	    if ((fds[readyfd].revents & POLLIN) == 0)
-		continue;
-	    ndrain = 5;
-drain:
-	    rlen = sizeof(raddr);
-	    len = recvfrom(sp->fds[ridx], buf, sizeof(buf), 0,
-	      sstosa(&raddr), &rlen);
-	    if (len <= 0)
-		continue;
-
-	    if (sp->complete == 0)
-		continue;
-
-	    i = 0;
-	    if (sp->addr[ridx] != NULL) {
-		/* Check that the packet is authentic, drop if it isn't */
-		if (sp->asymmetric[ridx] == 0) {
-			if (memcmp(sp->addr[ridx], &raddr, rlen) != 0) {
-			    if (sp->canupdate[ridx] == 0)
-				continue;
-			    /* Signal that an address have to be updated */
-			    i = 1;
-			}
-		} else {
-		    /*
-		     * For asymmetric clients don't check
-		     * source port since it may be different.
-		     */
-		    if (!ishostseq(sp->addr[ridx], sstosa(&raddr)))
-			continue;
-		}
-		sp->pcount[ridx]++;
-	    } else {
-		sp->pcount[ridx]++;
-		sp->addr[ridx] = malloc(rlen);
-		if (sp->addr[ridx] == NULL) {
-		    sp->pcount[3]++;
-		    rtpp_log_write(RTPP_LOG_ERR, sp->log,
-		      "can't allocate memory for remote address - "
-		      "removing session");
-		    remove_session(GET_RTP(sp));
-		    continue;
-		}
-		/* Signal that an address have to be updated. */
-		i = 1;
-	    }
-
-	    /* Update recorded address if it's necessary. */
-	    if (i != 0) {
-		memcpy(sp->addr[ridx], &raddr, rlen);
-		sp->canupdate[ridx] = 0;
-
-		port = ntohs(satosin(&raddr)->sin_port);
-
-		rtpp_log_write(RTPP_LOG_INFO, sp->log,
-		  "%s's address filled in: %s:%d (%s)",
-		  (ridx == 0) ? "callee" : "caller",
-		  addr2char(sstosa(&raddr)), port,
-		  (sp->rtp == NULL) ? "RTP" : "RTCP");
-
-		/*
-		 * Check if we have updated RTP while RTCP is still
-		 * empty or contains address that differs from one we
-		 * used when updating RTP. Try to guess RTCP if so,
-		 * should be handy for non-NAT'ed clients, and some
-		 * NATed as well.
-		 */
-		if (sp->rtcp != NULL && (sp->rtcp->addr[ridx] == NULL ||
-		  !ishostseq(sp->rtcp->addr[ridx], sstosa(&raddr)))) {
-		    if (sp->rtcp->addr[ridx] == NULL) {
-		        sp->rtcp->addr[ridx] = malloc(rlen);
-		        if (sp->rtcp->addr[ridx] == NULL) {
-			    sp->pcount[3]++;
-			    rtpp_log_write(RTPP_LOG_ERR, sp->log,
-			      "can't allocate memory for remote address - "
-			      "removing session");
-			    remove_session(sp);
-			    continue;
-			}
-		    }
-		    memcpy(sp->rtcp->addr[ridx], &raddr, rlen);
-		    satosin(sp->rtcp->addr[ridx])->sin_port = htons(port + 1);
-		    /* Use guessed value as the only true one for asymmetric clients */
-		    sp->rtcp->canupdate[ridx] = NOT(sp->rtcp->asymmetric[ridx]);
-		    rtpp_log_write(RTPP_LOG_INFO, sp->log, "guessing RTCP port "
-		      "for %s to be %d",
-		      (ridx == 0) ? "callee" : "caller", port + 1);
-		}
-	    }
-
-	    /* Select socket for sending packet out. */
-	    sidx = (ridx == 0) ? 1 : 0;
-
-	    GET_RTP(sp)->ttl = max_ttl;
-
-	    /*
-	     * Check that we have some address to which packet is to be
-	     * sent out, drop otherwise.
-	     */
-	    if (sp->addr[sidx] == NULL || GET_RTP(sp)->rtps[sidx] != NULL) {
-		sp->pcount[3]++;
-		goto do_record;
-	    }
-
-	    sp->pcount[2]++;
-	    for (i = (dmode && len < LBR_THRS) ? 2 : 1; i > 0; i--) {
-		sendto(sp->fds[sidx], buf, len, 0, sp->addr[sidx],
-		  SA_LEN(sp->addr[sidx]));
-	    }
-do_record:
-	    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
-		rwrite(sp, sp->rrcs[ridx], sstosa(&raddr), buf, len);
-	    /* Repeat since we may have several packets queued */
-	    ndrain--;
-	    if (ndrain != 0)
-		goto drain;
-	}
-	nsessions -= skipfd;
-
-	/* Handle commands */
-	if ((fds[0].revents & POLLIN) != 0) {
-	    do {
-		if (umode == 0) {
-		    rlen = sizeof(ifsun);
-		    controlfd = accept(fds[0].fd,
-		      sstosa(&ifsun), &rlen);
-		    if (controlfd == -1) {
-			if (errno != EWOULDBLOCK)
-			    rtpp_log_ewrite(RTPP_LOG_ERR, glog,
-			      "can't accept connection on control socket");
-			break;
-		    }
-		} else {
-		    controlfd = fds[0].fd;
-		}
-		i = handle_command(controlfd);
-		if (umode == 0) {
-		    close(controlfd);
-		}
-	    } while (i == 0);
-	}
+	process_rtp(&cf);
+	process_commands(&cf);
     }
 
     exit(0);

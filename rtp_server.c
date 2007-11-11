@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_server.c,v 1.3 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtp_server.c,v 1.4 2007/11/11 21:59:27 sobomax Exp $
  *
  */
 
@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/socket.h>
 
 #include "rtp_server.h"
 #include "rtpp_util.h"

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.h,v 1.3 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtp.h,v 1.4 2007/11/11 21:59:27 sobomax Exp $
  *
  */
 
@@ -72,6 +72,27 @@ typedef struct {
     uint32_t csrc[0];		/* optional CSRC list */
 } rtp_hdr_t;
 
+struct rtp_packet {
+    size_t      size;
+
+    struct sockaddr_storage raddr;
+    socklen_t   rlen;
+
+    struct rtp_packet *next;
+    struct rtp_packet *prev;
+
+    /* the packet */
+    union {
+        rtp_hdr_t       header;
+        unsigned char   buf[8192];
+    };
+};
+
 #define	RTP_HDR_LEN(rhp)	(sizeof(*(rhp)) + ((rhp)->cc * sizeof((rhp)->csrc[0])))
+
+struct rtp_packet *rtp_recv(int fd);
+
+struct rtp_packet *rtp_packet_alloc();
+void rtp_packet_free(struct rtp_packet *);
 
 #endif
