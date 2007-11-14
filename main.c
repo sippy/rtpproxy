@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.51 2007/11/11 21:59:27 sobomax Exp $
+ * $Id: main.c,v 1.52 2007/11/14 08:01:03 sobomax Exp $
  *
  */
 
@@ -82,8 +82,7 @@ struct proto_cap {
     const char	*pc_description;
 };
 
-struct cfg
-{
+struct cfg {
     int nodaemon;
     int dmode;
     int bmode;			/* Bridge mode */
@@ -179,7 +178,7 @@ alarmhandler(int sig __attribute__ ((unused)))
     struct rtpp_session *sp;
     int i;
 
-    for(i = 1; i < nsessions; i++) {
+    for (i = 1; i < nsessions; i++) {
 	sp = sessions[i];
 	if (sp == NULL || sp->rtcp == NULL || sp->sidx[0] != i)
 	    continue;
@@ -1081,7 +1080,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'v':
 	    printf("Basic version: %d\n", CPROTOVER);
-	    for(i = 1; proto_caps[i].pc_id != NULL; ++i) {
+	    for (i = 1; proto_caps[i].pc_id != NULL; ++i) {
 		printf("Extension %s: %s\n", proto_caps[i].pc_id,
 		    proto_caps[i].pc_description);
 	    }
@@ -1488,9 +1487,6 @@ main(int argc, char **argv)
 	if (daemon(0, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
-	for (i = 0; i < (int)FD_SETSIZE; i++)
-	    if (i != controlfd)
-		close(i);
     }
 #endif
 
