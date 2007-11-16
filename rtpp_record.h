@@ -24,20 +24,21 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.h,v 1.3 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtpp_record.h,v 1.4 2007/11/16 02:15:36 sobomax Exp $
  *
  */
 
 #ifndef _RTPP_RECORD_H_
 #define _RTPP_RECORD_H_
 
+#include "rtp.h"
 #include "rtpp_util.h"
 
 struct rtpp_session;
 
 /* Function prototypes */
 void *ropen(struct rtpp_session *, const char *, const char *, int);
-void rwrite(struct rtpp_session *, void *, struct sockaddr *, void *, int);
+void rwrite(struct rtpp_session *, void *, struct rtp_packet *);
 void rclose(struct rtpp_session *, void *);
 
 /*

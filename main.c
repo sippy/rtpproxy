@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.52 2007/11/14 08:01:03 sobomax Exp $
+ * $Id: main.c,v 1.53 2007/11/16 02:15:36 sobomax Exp $
  *
  */
 
@@ -1393,7 +1393,7 @@ send_packet(const struct cfg *cf, struct rtpp_session *sp, int ridx,
     }
 
     if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
-        rwrite(sp, sp->rrcs[ridx], sstosa(&packet->raddr), packet->buf, packet->size);
+        rwrite(sp, sp->rrcs[ridx], packet);
 }
 
 static void

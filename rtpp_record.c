@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.c,v 1.4 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtpp_record.c,v 1.5 2007/11/16 02:15:36 sobomax Exp $
  *
  */
 
@@ -109,7 +109,7 @@ flush_rbuf(struct rtpp_session *sp, void *rrc)
 }
 
 static int
-prepare_pkt_hdr(struct rtpp_session *sp, struct sockaddr *saddr, struct pkt_hdr *hdrp, int len)
+prepare_pkt_hdr(struct rtpp_session *sp, struct rtp_packet *packet, struct pkt_hdr *hdrp)
 {
 
     memset(hdrp, 0, sizeof(*hdrp));
@@ -118,29 +118,29 @@ prepare_pkt_hdr(struct rtpp_session *sp, struct sockaddr *saddr, struct pkt_hdr 
 	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't get current time");
 	return -1;
     }
-    switch (saddr->sa_family) {
+    switch (sstosa(&packet->raddr)->sa_family) {
     case AF_INET:
-	hdrp->addr.in4.sin_family = saddr->sa_family;
-	hdrp->addr.in4.sin_port = satosin(saddr)->sin_port;
-	hdrp->addr.in4.sin_addr = satosin(saddr)->sin_addr;
+	hdrp->addr.in4.sin_family = sstosa(&packet->raddr)->sa_family;
+	hdrp->addr.in4.sin_port = satosin(&packet->raddr)->sin_port;
+	hdrp->addr.in4.sin_addr = satosin(&packet->raddr)->sin_addr;
 	break;
 
     case AF_INET6:
-	hdrp->addr.in6.sin_family = saddr->sa_family;
-	hdrp->addr.in6.sin_port = satosin6(saddr)->sin6_port;
-	hdrp->addr.in6.sin_addr = satosin6(saddr)->sin6_addr;
+	hdrp->addr.in6.sin_family = sstosa(&packet->raddr)->sa_family;
+	hdrp->addr.in6.sin_port = satosin6(&packet->raddr)->sin6_port;
+	hdrp->addr.in6.sin_addr = satosin6(&packet->raddr)->sin6_addr;
 	break;
 
     default:
 	abort();
     }
 
-    hdrp->plen = len;
+    hdrp->plen = packet->size;
     return 0;
 }
 
 void
-rwrite(struct rtpp_session *sp, void *rrc, struct sockaddr *saddr, void *buf, int len)
+rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet)
 {
     struct iovec v[2];
     struct pkt_hdr hdr;
@@ -150,19 +150,19 @@ rwrite(struct rtpp_session *sp, void *rrc, struct sockaddr *saddr, void *buf, in
 	return;
 
     /* Check if the write buffer has necessary space, and flush if not */
-    if ((RRC_CAST(rrc)->rbuf_len + sizeof(struct pkt_hdr) + len > sizeof(RRC_CAST(rrc)->rbuf)) && RRC_CAST(rrc)->rbuf_len > 0)
+    if ((RRC_CAST(rrc)->rbuf_len + sizeof(struct pkt_hdr) + packet->size > sizeof(RRC_CAST(rrc)->rbuf)) && RRC_CAST(rrc)->rbuf_len > 0)
 	if (flush_rbuf(sp, rrc) != 0)
 	    return;
 
     /* Check if received packet doesn't fit into the buffer, do synchronous write  if so*/
-    if (RRC_CAST(rrc)->rbuf_len + sizeof(struct pkt_hdr) + len > sizeof(RRC_CAST(rrc)->rbuf)) {
-	if (prepare_pkt_hdr(sp, saddr, &hdr, len) != 0)
+    if (RRC_CAST(rrc)->rbuf_len + sizeof(struct pkt_hdr) + packet->size > sizeof(RRC_CAST(rrc)->rbuf)) {
+	if (prepare_pkt_hdr(sp, packet, &hdr) != 0)
 	    return;
 
 	v[0].iov_base = (void *)&hdr;
 	v[0].iov_len = sizeof(hdr);
-	v[1].iov_base = buf;
-	v[1].iov_len = len;
+	v[1].iov_base = packet->buf;
+	v[1].iov_len = packet->size;
 
 	rval = writev(RRC_CAST(rrc)->fd, v, 2);
 	if (rval != -1)
@@ -175,11 +175,11 @@ rwrite(struct rtpp_session *sp, void *rrc, struct sockaddr *saddr, void *buf, in
 	RRC_CAST(rrc)->fd = -1;
 	return;
     }
-    if (prepare_pkt_hdr(sp, saddr, (struct pkt_hdr *)(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len), len) != 0)
+    if (prepare_pkt_hdr(sp, packet, (struct pkt_hdr *)(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len)) != 0)
 	return;
     RRC_CAST(rrc)->rbuf_len += sizeof(struct pkt_hdr);
-    memcpy(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len, buf, len);
-    RRC_CAST(rrc)->rbuf_len += len;
+    memcpy(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len, packet->buf, packet->size);
+    RRC_CAST(rrc)->rbuf_len += packet->size;
 }
 
 void
