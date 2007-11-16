@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.c,v 1.3 2007/11/16 01:58:58 sobomax Exp $
+ * $Id: rtp.c,v 1.4 2007/11/16 02:04:01 sobomax Exp $
  *
  */
 
@@ -48,8 +48,6 @@ rtp_packet_alloc()
         rtp_packet_pool = pkt->next;
     else
         pkt = malloc(sizeof(*pkt));
-    memset(pkt, 0, sizeof(*pkt));
-    pkt->rlen = sizeof(pkt->raddr);
     return pkt;
 }
 
@@ -57,6 +55,7 @@ void
 rtp_packet_free(struct rtp_packet *pkt)
 {
     pkt->next = rtp_packet_pool;
+    pkt->prev = NULL;
     rtp_packet_pool = pkt;
 }
 
@@ -70,6 +69,7 @@ rtp_recv(int fd)
     if (pkt == NULL)
         return NULL;
 
+    pkt->rlen = sizeof(pkt->raddr);
     pkt->size = recvfrom(fd, pkt->buf, sizeof(pkt->buf), 0, 
       sstosa(&pkt->raddr), &pkt->rlen);
 
@@ -77,6 +77,6 @@ rtp_recv(int fd)
 	rtp_packet_free(pkt);
 	return NULL;
     }
-    
+
     return pkt;
 }
