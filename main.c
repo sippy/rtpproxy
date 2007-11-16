@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.56 2007/11/16 08:43:26 sobomax Exp $
+ * $Id: main.c,v 1.57 2007/11/16 08:46:23 sobomax Exp $
  *
  */
 
@@ -105,6 +105,7 @@ static struct proto_cap proto_caps[] = {
     { "20040107", "Basic RTP proxy functionality" },
     { "20050322", "Support for multiple RTP streams and MOH" },
     { "20060704", "Support for extra parameter in the V command" },
+    { "20071116", "Support for RTP re-packetization" },
     { NULL, NULL }
 };
 
