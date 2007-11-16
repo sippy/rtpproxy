@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.h,v 1.5 2007/11/16 02:44:20 sobomax Exp $
+ * $Id: rtp.h,v 1.6 2007/11/16 08:43:26 sobomax Exp $
  *
  */
 
@@ -46,6 +46,8 @@ typedef enum {
     RTP_TSE = 100,
     RTP_TSE_CISCO = 101
 } rtp_type_t;
+
+#define RTP_NSAMPLES_UNKNOWN  (-1)
 
 /*
  * RTP data header
@@ -77,23 +79,40 @@ struct rtp_packet {
 
     struct sockaddr_storage raddr;
     socklen_t   rlen;
+    size_t      data_size;
+    int         data_offset;
+    int         nsamples;
+    uint32_t    ts;
+    uint16_t    seq;
+    int         resizeable;
     double      rtime;
 
     struct rtp_packet *next;
     struct rtp_packet *prev;
 
-    /* the packet */
+    /*
+     * The packet, keep it the last member so that we can use
+     * memcpy() only on portion that it's actually being
+     * utilized.
+     */
     union {
-        rtp_hdr_t       header;
-        unsigned char   buf[8192];
+	rtp_hdr_t       header;
+	unsigned char   buf[8192];
     };
 };
 
 #define	RTP_HDR_LEN(rhp)	(sizeof(*(rhp)) + ((rhp)->cc * sizeof((rhp)->csrc[0])))
 
-struct rtp_packet *rtp_recv(int fd);
+void rtp_packet_parse(struct rtp_packet *);
+struct rtp_packet *rtp_recv(int);
 
 struct rtp_packet *rtp_packet_alloc();
 void rtp_packet_free(struct rtp_packet *);
+void rtp_packet_set_seq(struct rtp_packet *, uint16_t seq);
+void rtp_packet_set_ts(struct rtp_packet *, uint32_t ts);
+
+size_t rtp_samples2bytes(int codec_id, int nsamples);
+
+#define ts_less(ts1, ts2) (((ts1) - (ts2)) > (uint32_t) (1 << 31))
 
 #endif

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.55 2007/11/16 02:44:19 sobomax Exp $
+ * $Id: main.c,v 1.56 2007/11/16 08:43:26 sobomax Exp $
  *
  */
 
@@ -57,6 +57,7 @@
 #include <unistd.h>
 
 #include "rtp.h"
+#include "rtp_resizer.h"
 #include "rtp_server.h"
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
@@ -240,6 +241,8 @@ remove_session(struct rtpp_session *sp)
 	free(sp->tag);
     rtpp_log_close(sp->log);
     free(sp->rtcp);
+    rtp_resizer_free(&sp->resizers[0]);
+    rtp_resizer_free(&sp->resizers[1]);
     free(sp);
 }
 
@@ -358,6 +361,9 @@ handle_command(const struct cfg *cf, int controlfd)
     const char *rname;
     struct sockaddr *ia[2], *lia[2];
     struct sockaddr_storage raddr;
+    int requested_nsamples;
+
+    requested_nsamples = -1;
 
 #define	doreply() \
     { \
@@ -639,6 +645,17 @@ handle_command(const struct cfg *cf, int controlfd)
 	    case 'w':
 	    case 'W':
 		weak = 1;
+		break;
+
+	    case 'z':
+	    case 'Z':
+		requested_nsamples = (strtol(cp + 1, &cp, 10) / 10) * 80;
+		if (requested_nsamples <= 0) {
+		    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
+		    ecode = 1;
+		    goto goterror;
+		}
+		cp--;
 		break;
 
 	    default:
@@ -951,6 +968,18 @@ writeport:
 	}
 	spa->asymmetric[pidx] = spa->rtcp->asymmetric[pidx] = asymmetric;
 	spa->canupdate[pidx] = spa->rtcp->canupdate[pidx] = NOT(asymmetric);
+	if (request != 0 || response != 0) {
+	    if (requested_nsamples > 0) {
+		rtpp_log_write(RTPP_LOG_INFO, spa->log, "RTP packets from %s "
+		  "will be resized to %d milliseconds",
+		  (pidx == 0) ? "callee" : "caller", requested_nsamples / 8);
+	    } else if (spa->resizers[pidx].output_nsamples > 0) {
+		rtpp_log_write(RTPP_LOG_INFO, spa->log, "Resizing of RTP "
+		  "packets from %s has been disabled",
+		  (pidx == 0) ? "callee" : "caller");
+	    }
+	    spa->resizers[pidx].output_nsamples = requested_nsamples;
+	}
     }
     for (i = 0; i < 2; i++)
 	if (ia[i] != NULL)
@@ -1370,7 +1399,10 @@ rxmit_packets(const struct cfg *cf, struct rtpp_session *sp, int ridx,
 	    }
 	}
 
-	send_packet(cf, sp, ridx, packet);
+	if (sp->resizers[ridx].output_nsamples > 0)
+	    rtp_resizer_enqueue(&sp->resizers[ridx], &packet);
+	if (packet != NULL)
+	    send_packet(cf, sp, ridx, packet);
     }
 
     if (packet != NULL)
@@ -1411,6 +1443,7 @@ process_rtp(const struct cfg *cf, double ctime)
 {
     int readyfd, skipfd, ridx;
     struct rtpp_session *sp;
+    struct rtp_packet *packet;
 
     /* Relay RTP/RTCP */
     skipfd = 0;
@@ -1438,8 +1471,16 @@ process_rtp(const struct cfg *cf, double ctime)
 	    sp->sidx[ridx] = readyfd - skipfd;;
 	}
 
-	if ((fds[readyfd].revents & POLLIN) != 0 && sp->complete != 0)
-	    rxmit_packets(cf, sp, ridx, ctime);
+	if (sp->complete != 0) {
+	    if ((fds[readyfd].revents & POLLIN) != 0)
+		rxmit_packets(cf, sp, ridx, ctime);
+	    if (sp->resizers[ridx].output_nsamples > 0) {
+		while ((packet = rtp_resizer_get(&sp->resizers[ridx], ctime)) != NULL) {
+		    send_packet(cf, sp, ridx, packet);
+		    rtp_packet_free(packet);
+		}
+	    }
+	}
     }
     /* Trim any deleted sessions at the end */
     nsessions -= skipfd;
@@ -1545,7 +1586,7 @@ main(int argc, char **argv)
 
     sptime = 0;
     for (;;) {
-	if (rtp_nsessions > 0)
+	if (rtp_nsessions > 0 || nsessions > 1)
 	    timeout = RTPS_TICKS_MIN;
 	else
 	    timeout = INFTIM;
@@ -1566,9 +1607,9 @@ main(int argc, char **argv)
 	if (rtp_nsessions > 0) {
 	    process_rtp_servers(&cf, eptime);
 	}
+	process_rtp(&cf, eptime);
 	if (i == 0)
 	    continue;
-	process_rtp(&cf, eptime);
 	process_commands(&cf);
     }
 

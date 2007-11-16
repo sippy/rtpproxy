@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.5 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.6 2007/11/16 08:43:26 sobomax Exp $
  *
  */
 
@@ -35,6 +35,7 @@
 #include <sys/socket.h>
 
 #include "rtp_server.h"
+#include "rtp_resizer.h"
 #include "rtpp_log.h"
 
 struct rtpp_session {
@@ -67,6 +68,7 @@ struct rtpp_session {
     int sidx[2];
     /* Reference to active RTP generators table */
     int sridx;
+    struct rtp_resizer resizers[2];
 };
 
 #endif
