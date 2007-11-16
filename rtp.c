@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.c,v 1.2 2007/11/16 01:57:58 sobomax Exp $
+ * $Id: rtp.c,v 1.3 2007/11/16 01:58:58 sobomax Exp $
  *
  */
 
@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+
 #include "rtp.h"
 #include "rtpp_util.h"
 
