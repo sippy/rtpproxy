@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.53 2007/11/16 02:15:36 sobomax Exp $
+ * $Id: main.c,v 1.54 2007/11/16 02:19:43 sobomax Exp $
  *
  */
 
@@ -581,10 +581,18 @@ handle_command(const struct cfg *cf, int controlfd)
 	from_tag = argv[2];
 	to_tag = argv[3];
     }
+    if (delete != 0 || record != 0 || noplay !=0) {
+	/* D, R and S commands don't take any modifiers */
+	if (argv[0][1] != '\0') {
+	    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
+	    ecode = 1;
+	    goto goterror;
+	}
+    }
     if (request != 0 || response != 0 || delete != 0) {
 	addr = argv[2];
 	port = argv[3];
-	/* Process additional options */
+	/* Process additional command modifiers */
 	external = 1;
 	/* In bridge mode all clients are assumed to be asymmetric */
 	asymmetric = (cf->bmode != 0) ? 1 : 0;
