@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.54 2007/11/16 02:19:43 sobomax Exp $
+ * $Id: main.c,v 1.55 2007/11/16 02:44:19 sobomax Exp $
  *
  */
 
@@ -1225,7 +1225,7 @@ init_controlfd(const struct cfg *cf)
 }
 
 static void
-process_rtp_servers(const struct cfg *cf)
+process_rtp_servers(const struct cfg *cf, double ctime)
 {
     int j, k, sidx, len, skipfd;
     struct rtpp_session *sp;
@@ -1244,7 +1244,7 @@ process_rtp_servers(const struct cfg *cf)
         for (sidx = 0; sidx < 2; sidx++) {
             if (sp->rtps[sidx] == NULL || sp->addr[sidx] == NULL)
                 continue;
-            while ((len = rtp_server_get(sp->rtps[sidx])) != RTPS_LATER) {
+            while ((len = rtp_server_get(sp->rtps[sidx], ctime)) != RTPS_LATER) {
                 if (len == RTPS_EOF) {
                     rtp_server_free(sp->rtps[sidx]);
                     sp->rtps[sidx] = NULL;
@@ -1266,7 +1266,8 @@ process_rtp_servers(const struct cfg *cf)
 }
 
 static void
-rxmit_packets(const struct cfg *cf, struct rtpp_session *sp, int ridx)
+rxmit_packets(const struct cfg *cf, struct rtpp_session *sp, int ridx,
+  double ctime)
 {
     int ndrain, i, port;
     struct rtp_packet *packet = NULL;
@@ -1279,6 +1280,7 @@ rxmit_packets(const struct cfg *cf, struct rtpp_session *sp, int ridx)
 	packet = rtp_recv(sp->fds[ridx]);
 	if (packet == NULL)
 	    break;
+	packet->rtime = ctime;
 
 	i = 0;
 	if (sp->addr[ridx] != NULL) {
@@ -1405,7 +1407,7 @@ send_packet(const struct cfg *cf, struct rtpp_session *sp, int ridx,
 }
 
 static void
-process_rtp(const struct cfg *cf)
+process_rtp(const struct cfg *cf, double ctime)
 {
     int readyfd, skipfd, ridx;
     struct rtpp_session *sp;
@@ -1437,7 +1439,7 @@ process_rtp(const struct cfg *cf)
 	}
 
 	if ((fds[readyfd].revents & POLLIN) != 0 && sp->complete != 0)
-	    rxmit_packets(cf, sp, ridx);
+	    rxmit_packets(cf, sp, ridx, ctime);
     }
     /* Trim any deleted sessions at the end */
     nsessions -= skipfd;
@@ -1559,13 +1561,14 @@ main(int argc, char **argv)
 	i = poll(fds, nsessions, timeout);
 	if (i < 0 && errno == EINTR)
 	    continue;
+	eptime = getctime();
 	sigprocmask(SIG_BLOCK, &set, &oset);
 	if (rtp_nsessions > 0) {
-	    process_rtp_servers(&cf);
+	    process_rtp_servers(&cf, eptime);
 	}
 	if (i == 0)
 	    continue;
-	process_rtp(&cf);
+	process_rtp(&cf, eptime);
 	process_commands(&cf);
     }
 

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.h,v 1.4 2007/11/11 21:59:27 sobomax Exp $
+ * $Id: rtp.h,v 1.5 2007/11/16 02:44:20 sobomax Exp $
  *
  */
 
@@ -77,6 +77,7 @@ struct rtp_packet {
 
     struct sockaddr_storage raddr;
     socklen_t   rlen;
+    double      rtime;
 
     struct rtp_packet *next;
     struct rtp_packet *prev;

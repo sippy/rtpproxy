@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_server.h,v 1.2 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtp_server.h,v 1.3 2007/11/16 02:44:20 sobomax Exp $
  *
  */
 
@@ -58,6 +58,6 @@ struct rtp_server {
 
 struct rtp_server *rtp_server_new(const char *, rtp_type_t, int);
 void rtp_server_free(struct rtp_server *);
-int rtp_server_get(struct rtp_server *);
+int rtp_server_get(struct rtp_server *, double);
 
 #endif

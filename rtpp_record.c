@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.c,v 1.5 2007/11/16 02:15:36 sobomax Exp $
+ * $Id: rtpp_record.c,v 1.6 2007/11/16 02:44:20 sobomax Exp $
  *
  */
 
@@ -113,7 +113,7 @@ prepare_pkt_hdr(struct rtpp_session *sp, struct rtp_packet *packet, struct pkt_h
 {
 
     memset(hdrp, 0, sizeof(*hdrp));
-    hdrp->time = getctime();
+    hdrp->time = packet->rtime;
     if (hdrp->time == -1) {
 	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't get current time");
 	return -1;
