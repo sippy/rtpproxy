@@ -58,6 +58,6 @@ struct rtp_server {
 
 struct rtp_server *rtp_server_new(const char *, rtp_type_t, int);
 void rtp_server_free(struct rtp_server *);
-int rtp_server_get(struct rtp_server *);
+int rtp_server_get(struct rtp_server *, double);
 
 #endif

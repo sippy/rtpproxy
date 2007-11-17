@@ -46,6 +46,7 @@
 #define	LBR_THRS	128	/* low-bitrate threshold */
 #define	CPORT		"22222"
 #define	POLL_LIMIT	100	/* maximum number of poll(2) calls per second */
+#define	LOG_LEVEL	RTPP_LOG_DBUG
 
 /* Dummy service, getaddrinfo needs it */
 #define	SERVICE		"34999"
