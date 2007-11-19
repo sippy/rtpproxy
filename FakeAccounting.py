@@ -22,14 +22,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: FakeAccounting.py,v 1.1 2007/09/18 06:49:11 sobomax Exp $
+# $Id: FakeAccounting.py,v 1.2 2007/11/19 19:35:19 sobomax Exp $
 
 class FakeAccounting:
     def __init__(self, *args):
         pass
 
-    def conn(self, ua):
+    def conn(self, *args):
         pass
 
-    def disc(self, ua, result = 0):
+    def disc(self, *args):
         pass
