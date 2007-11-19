@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.c,v 1.5 2007/11/16 08:43:26 sobomax Exp $
+ * $Id: rtp.c,v 1.6 2007/11/19 22:44:31 sobomax Exp $
  *
  */
 
@@ -51,7 +51,7 @@ rtp_samples2bytes(int codec_id, int nsamples)
         case RTP_GSM:
             return (nsamples / 160) * 33;
         case RTP_G723:
-            return (nsamples / 240) * 33;
+            return (nsamples / 240) * 24;
         default:
             return RTP_NSAMPLES_UNKNOWN;
     }
@@ -70,7 +70,12 @@ rtp_bytes2samples(int codec_id, size_t nbytes)
         case RTP_GSM:
             return 160 * (nbytes / 33);
         case RTP_G723:
-            return 240 * (nbytes / 33);
+            if (nbytes % 24 == 0) 
+                return 240 * (nbytes / 24);
+#if defined(NOTYET)
+            else if (nbytes % 20 == 0)
+                return 240 * (nbytes / 20);
+#endif
         default:
             return RTP_NSAMPLES_UNKNOWN;
     }
