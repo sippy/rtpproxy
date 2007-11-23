@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.c,v 1.6 2007/11/16 02:44:20 sobomax Exp $
+ * $Id: rtpp_record.c,v 1.7 2007/11/23 05:29:41 sobomax Exp $
  *
  */
 
@@ -58,9 +58,10 @@ struct rtpp_record_channel {
 #define	RRC_CAST(x)	((struct rtpp_record_channel *)(x))
 
 void *
-ropen(struct rtpp_session *sp, const char *rdir, const char *sdir, int orig)
+ropen(struct cfg *cf, struct rtpp_session *sp, int orig)
 {
     struct rtpp_record_channel *rrc;
+    const char *sdir;
 
     rrc = malloc(sizeof(*rrc));
     if (rrc == NULL) {
@@ -69,12 +70,13 @@ ropen(struct rtpp_session *sp, const char *rdir, const char *sdir, int orig)
     }
     memset(rrc, 0, sizeof(*rrc));
 
-    if (sdir == NULL) {
-	sdir = rdir;
+    if (cf->sdir == NULL) {
+	sdir = cf->rdir;
 	rrc->needspool = 0;
     } else {
+        sdir = cf->sdir;
 	rrc->needspool = 1;
-	sprintf(rrc->rpath, "%s/%s=%s.%c.%s", rdir, sp->call_id, sp->tag,
+	sprintf(rrc->rpath, "%s/%s=%s.%c.%s", cf->rdir, sp->call_id, sp->tag,
 	  (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
     }
     sprintf(rrc->spath, "%s/%s=%s.%c.%s", sdir, sp->call_id, sp->tag,

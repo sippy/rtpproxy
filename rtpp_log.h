@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_log.h,v 1.4 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtpp_log.h,v 1.5 2007/11/23 05:29:41 sobomax Exp $
  *
  */
 
@@ -41,8 +41,6 @@
 #define	RTPP_LOG_WARN	2
 #define	RTPP_LOG_ERR	3
 #define	RTPP_LOG_CRIT	4
-
-#define	rtpp_log_t	int
 
 #define	rtpp_log_open(app, call_id, flag) (0)
 #define	rtpp_log_write(level, handle, format, args...)			\

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.h,v 1.4 2007/11/16 02:15:36 sobomax Exp $
+ * $Id: rtpp_record.h,v 1.5 2007/11/23 05:29:41 sobomax Exp $
  *
  */
 
@@ -37,7 +37,7 @@
 struct rtpp_session;
 
 /* Function prototypes */
-void *ropen(struct rtpp_session *, const char *, const char *, int);
+void *ropen(struct cfg *cf, struct rtpp_session *, int);
 void rwrite(struct rtpp_session *, void *, struct rtp_packet *);
 void rclose(struct rtpp_session *, void *);
 

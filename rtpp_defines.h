@@ -24,12 +24,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.5 2007/11/16 08:43:26 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.6 2007/11/23 05:29:41 sobomax Exp $
  *
  */
 
 #ifndef _RTPP_DEFINES_H_
 #define _RTPP_DEFINES_H_
+
+#include <poll.h>
 
 /*
  * Version of the command protocol, bump only when backward-incompatible
@@ -39,8 +41,7 @@
 
 #define	PORT_MIN	35000
 #define	PORT_MAX	65000
-#define	MAX_FDS		((PORT_MAX - PORT_MIN + 1) * 2)
-#define	TIMETICK	1	/* in seconds */
+#define	TIMETICK	1.0	/* in seconds */
 #define	SESSION_TIMEOUT	60	/* in ticks */
 #define	TOS		0xb8
 #define	LBR_THRS	128	/* low-bitrate threshold */
@@ -53,5 +54,35 @@
 
 #define	CMD_SOCK	"/var/run/rtpproxy.sock"
 #define	PID_FILE	"/var/run/rtpproxy.pid"
+
+#define	rtpp_log_t	int
+
+struct cfg {
+    int nodaemon;
+    int dmode;
+    int bmode;			/* Bridge mode */
+    int umode;			/* UDP control mode */
+    int port_min;		/* Lowest UDP port for RTP */
+    int port_max;		/* Highest UDP port number for RTP */
+    int nextport[2];
+    struct rtpp_session **sessions;
+    struct rtpp_session **rtp_servers;
+    struct pollfd *pfds;
+    int nsessions;
+    int rtp_nsessions;
+    unsigned long long sessions_created;
+    int max_ttl;
+    /*
+     * The first address is for external interface, the second one - for
+     * internal one. Second can be NULL, in this case there is no bridge
+     * mode enabled.
+     */
+    struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
+    int tos;
+    const char *rdir;
+    const char *sdir;
+    int rrtcp;			/* Whether or not to relay RTCP? */
+    rtpp_log_t glog;
+};
 
 #endif
