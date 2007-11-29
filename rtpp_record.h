@@ -24,13 +24,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.h,v 1.5 2007/11/23 05:29:41 sobomax Exp $
+ * $Id: rtpp_record.h,v 1.6 2007/11/29 01:57:49 sobomax Exp $
  *
  */
 
 #ifndef _RTPP_RECORD_H_
 #define _RTPP_RECORD_H_
 
+#include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_util.h"
 
