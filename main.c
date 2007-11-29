@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.58 2007/11/23 05:29:41 sobomax Exp $
+ * $Id: main.c,v 1.59 2007/11/29 01:56:32 sobomax Exp $
  *
  */
 
@@ -1525,7 +1525,6 @@ int
 main(int argc, char **argv)
 {
     int i, len, timeout, controlfd;
-    sigset_t set, oset;
     double sptime, eptime, last_tick_time;
     unsigned long delay;
     struct cfg cf;
