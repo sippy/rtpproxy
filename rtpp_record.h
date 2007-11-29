@@ -31,13 +31,14 @@
 #ifndef _RTPP_RECORD_H_
 #define _RTPP_RECORD_H_
 
+#include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_util.h"
 
 struct rtpp_session;
 
 /* Function prototypes */
-void *ropen(struct rtpp_session *, const char *, const char *, int);
+void *ropen(struct cfg *cf, struct rtpp_session *, int);
 void rwrite(struct rtpp_session *, void *, struct rtp_packet *);
 void rclose(struct rtpp_session *, void *);
 
