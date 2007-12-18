@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.c,v 1.7 2007/11/23 05:29:41 sobomax Exp $
+ * $Id: rtpp_record.c,v 1.8 2007/12/18 21:37:21 sobomax Exp $
  *
  */
 
@@ -46,6 +46,8 @@
 #include "rtpp_session.h"
 #include "rtpp_util.h"
 
+enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP}; /* MODE_LOCAL_RTP/MODE_REMOTE_PKT? */
+
 struct rtpp_record_channel {
     char spath[PATH_MAX + 1];
     char rpath[PATH_MAX + 1];
@@ -53,15 +55,19 @@ struct rtpp_record_channel {
     int needspool;
     char rbuf[4096];
     int rbuf_len;
+    enum record_mode mode;
 };
 
 #define	RRC_CAST(x)	((struct rtpp_record_channel *)(x))
 
 void *
-ropen(struct cfg *cf, struct rtpp_session *sp, int orig)
+ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 {
     struct rtpp_record_channel *rrc;
     const char *sdir;
+    char *cp, *tmp;
+    int n, port;
+    struct sockaddr_storage raddr;
 
     rrc = malloc(sizeof(*rrc));
     if (rrc == NULL) {
@@ -70,17 +76,88 @@ ropen(struct cfg *cf, struct rtpp_session *sp, int orig)
     }
     memset(rrc, 0, sizeof(*rrc));
 
+    if (rname != NULL && strncmp("udp:", rname, 4) == 0) {
+	tmp = strdup(rname + 4);
+	if (tmp == NULL) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't allocate memory");
+	    return NULL;
+	}
+	rrc->mode = MODE_REMOTE_RTP;
+	rrc->needspool = 0;
+	cp = strrchr(tmp, ':');
+	if (cp == NULL) {
+	    rtpp_log_write(RTPP_LOG_ERR, sp->log, "remote recording target specification should include port number");
+	    free(rrc);
+	    free(tmp);
+	    return NULL;
+	}
+	*cp = '\0';
+	cp++;
+
+	if (sp->rtcp == NULL) {
+	    /* Handle RTCP (increase target port by 1) */
+	    port = atoi(cp);
+	    if (port <= 0 || port > ((sp->rtcp != NULL) ? 65534 : 65535)) {
+		rtpp_log_write(RTPP_LOG_ERR, sp->log, "invalid port in the remote recording target specification");
+		free(rrc);
+		free(tmp);
+		return NULL;
+	    }
+	    sprintf(cp, "%d", port + 1);
+	}
+
+	n = resolve(sstosa(&raddr), AF_INET, tmp, cp, AI_PASSIVE);
+	if (n != 0) {
+	    rtpp_log_write(RTPP_LOG_ERR, sp->log, "ropen: getaddrinfo: %s", gai_strerror(n));
+	    free(rrc);
+	    free(tmp);
+	    return NULL;
+	}
+	rrc->fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (rrc->fd == -1) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "ropen: can't create socket");
+	    free(rrc);
+	    free(tmp);
+	    return NULL;
+	}
+	if (connect(rrc->fd, sstosa(&raddr), SA_LEN(sstosa(&raddr))) == -1) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "ropen: can't connect socket");
+	    close(rrc->fd);
+	    free(rrc);
+	    free(tmp);
+	    return NULL;
+	}
+	free(tmp);
+	return (void *)(rrc);
+    }
+
+    if (cf->rdir == NULL) {
+	rtpp_log_write(RTPP_LOG_ERR, sp->log, "directory for saving local recordings is not configured");
+	free(rrc);
+	return NULL;
+    }
+
     if (cf->sdir == NULL) {
 	sdir = cf->rdir;
 	rrc->needspool = 0;
     } else {
         sdir = cf->sdir;
 	rrc->needspool = 1;
-	sprintf(rrc->rpath, "%s/%s=%s.%c.%s", cf->rdir, sp->call_id, sp->tag,
-	  (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
+	if (rname == NULL) {
+	    sprintf(rrc->rpath, "%s/%s=%s.%c.%s", cf->rdir, sp->call_id, sp->tag,
+	      (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
+	} else {
+	    sprintf(rrc->rpath, "%s/%s.%s", cf->rdir, rname,
+	      (sp->rtcp != NULL) ? "rtp" : "rtcp");
+	}
     }
-    sprintf(rrc->spath, "%s/%s=%s.%c.%s", sdir, sp->call_id, sp->tag,
-      (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
+    if (rname == NULL) {
+	sprintf(rrc->spath, "%s/%s=%s.%c.%s", sdir, sp->call_id, sp->tag,
+	  (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
+    } else {
+	sprintf(rrc->spath, "%s/%s.%s", sdir, rname,
+	  (sp->rtcp != NULL) ? "rtp" : "rtcp");
+    }
     rrc->fd = open(rrc->spath, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (rrc->fd == -1) {
 	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't open file %s for writing",
@@ -151,6 +228,11 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet)
     if (RRC_CAST(rrc)->fd == -1)
 	return;
 
+    if (RRC_CAST(rrc)->mode == MODE_REMOTE_RTP) {
+	send(RRC_CAST(rrc)->fd, packet->buf, packet->size, 0);
+	return;
+    }
+
     /* Check if the write buffer has necessary space, and flush if not */
     if ((RRC_CAST(rrc)->rbuf_len + sizeof(struct pkt_hdr) + packet->size > sizeof(RRC_CAST(rrc)->rbuf)) && RRC_CAST(rrc)->rbuf_len > 0)
 	if (flush_rbuf(sp, rrc) != 0)
@@ -188,7 +270,7 @@ void
 rclose(struct rtpp_session *sp, void *rrc)
 {
 
-    if (RRC_CAST(rrc)->rbuf_len > 0)
+    if (RRC_CAST(rrc)->mode != MODE_REMOTE_RTP && RRC_CAST(rrc)->rbuf_len > 0)
 	flush_rbuf(sp, rrc);
 
     if (RRC_CAST(rrc)->fd != -1)

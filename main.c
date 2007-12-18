@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.59 2007/11/29 01:56:32 sobomax Exp $
+ * $Id: main.c,v 1.60 2007/12/18 21:37:21 sobomax Exp $
  *
  */
 
@@ -86,6 +86,7 @@ static struct proto_cap proto_caps[] = {
     { "20050322", "Support for multiple RTP streams and MOH" },
     { "20060704", "Support for extra parameter in the V command" },
     { "20071116", "Support for RTP re-packetization" },
+    { "20071218", "Support for forking (copying) RTP stream" },
     { NULL, NULL }
 };
 
@@ -322,7 +323,7 @@ handle_command(struct cfg *cf, int controlfd)
     unsigned medianum;
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
-    char *pname, *codecs;
+    char *pname, *codecs, *recording_name;
     struct rtpp_session *spa, *spb;
     char **ap, *argv[10];
     const char *rname;
@@ -349,6 +350,7 @@ handle_command(struct cfg *cf, int controlfd)
     lia[0] = lia[1] = cf->bindaddr[0];
     lidx = 1;
     fds[0] = fds[1] = -1;
+    recording_name = NULL;
 
     if (cf->umode == 0) {
 	for (;;) {
@@ -428,6 +430,11 @@ handle_command(struct cfg *cf, int controlfd)
     case 'R':
         record = 1;
         break;
+
+    case 'c':
+    case 'C':
+	record = 2;
+	break;
 
     case 's':
     case 'S':
@@ -545,7 +552,17 @@ handle_command(struct cfg *cf, int controlfd)
 	if (play != 0 && argv[0][1] != '\0')
 	    play = atoi(argv[0] + 1);
     }
-    if (delete != 0 || record != 0 || noplay != 0) {
+    if (record == 2) {
+	if (argc < 4 || argc > 5) {
+	    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
+	    ecode = 1;
+	    goto goterror;
+	}
+	recording_name = argv[2];
+	from_tag = argv[3];
+	to_tag = argv[4];
+    }
+    if (delete != 0 || record == 1 || noplay != 0) {
 	if (argc < 3 || argc > 4) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 	    ecode = 1;
@@ -747,17 +764,15 @@ handle_command(struct cfg *cf, int controlfd)
 	}
 
 	if (record != 0) {
-	    if (cf->rdir != NULL) {
-	        if (spa->rrcs[i] == NULL) {
-		    spa->rrcs[i] = ropen(cf, spa, i);
-	            rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	              "starting recording RTP session on port %d", spa->ports[i]);
-	        }
-	        if (spa->rtcp->rrcs[i] == NULL && cf->rrtcp != 0) {
-		    spa->rtcp->rrcs[i] = ropen(cf, spa->rtcp, i);
-	            rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	              "starting recording RTCP session on port %d", spa->rtcp->ports[i]);
-	        }
+	    if (spa->rrcs[i] == NULL) {
+		spa->rrcs[i] = ropen(cf, spa, recording_name, i);
+		rtpp_log_write(RTPP_LOG_INFO, spa->log,
+		  "starting recording RTP session on port %d", spa->ports[i]);
+	    }
+	    if (spa->rtcp->rrcs[i] == NULL && cf->rrtcp != 0) {
+		spa->rtcp->rrcs[i] = ropen(cf, spa->rtcp, recording_name, i);
+		rtpp_log_write(RTPP_LOG_INFO, spa->log,
+		  "starting recording RTCP session on port %d", spa->rtcp->ports[i]);
 	    }
 	    goto do_ok;
 	}
