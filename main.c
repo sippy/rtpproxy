@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.60 2007/12/18 21:37:21 sobomax Exp $
+ * $Id: main.c,v 1.61 2007/12/18 23:02:02 sobomax Exp $
  *
  */
 
@@ -40,9 +40,6 @@
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <assert.h>
-#if !defined(__solaris__)
-#include <err.h>
-#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -1017,8 +1014,9 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: rtpproxy [-2fv] [-l addr1[/addr2]] "
-      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]] [-T ttl] [-L nfiles] [-m port_min] [-M port_max]\n");
+    fprintf(stderr, "usage: rtpproxy [-2fvF] [-l addr1[/addr2]] "
+      "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
+      "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]]\n");
     exit(1);
 }
 
@@ -1045,7 +1043,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
     struct rlimit lim;
-    char *bh[2], *bh6[2];
+    char *bh[2], *bh6[2], *cp;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -1056,7 +1054,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->tos = TOS;
     cf->rrtcp = 1;
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:F")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -1147,12 +1145,42 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    cf->port_max = atoi(optarg);
 	    break;
 
+	case 'u':
+	    cf->run_uname = optarg;
+	    cp = strchr(optarg, ':');
+	    if (cp != NULL) {
+		if (cp == optarg)
+		    cf->run_uname = NULL;
+	        cp[0] = '\0';
+	        cp++;
+	    }
+	    cf->run_gname = cp;
+	    break;
+
+	case 'F':
+	    cf->no_check = 1;
+	    break;
+
 	case '?':
 	default:
 	    usage();
 	}
     if (cf->rdir == NULL && cf->sdir != NULL)
         errx(1, "-S switch requires -r switch");
+
+    if (cf->no_check == 0 && getuid() == 0 && cf->run_uname == NULL) {
+	if (cf->umode != 0) {
+	    errx(1, "running this program as superuser in a remote control "
+	      "mode is strongly not recommended, as it poses serious security "
+	      "threat to your system. Use -u option to run as an unprivileged "
+	      "user or -F is you want to run as a superuser anyway.");
+	} else {
+	    warnx("WARNING!!! Running this program as superuser is strongly "
+	      "not recommended, as it may pose serious security threat to "
+	      "your system. Use -u option to run as an unprivileged user "
+	      "or -F to surpress this warning.");
+	}
+    }
 
     if (cf->port_min <= 0 || cf->port_min > 65535)
 	errx(1, "invalid value of the port_min argument, "
@@ -1583,6 +1611,14 @@ main(int argc, char **argv)
     signal(SIGPROF, fatsignal);
     signal(SIGUSR1, fatsignal);
     signal(SIGUSR2, fatsignal);
+
+    if (cf.run_uname != NULL || cf.run_gname != NULL) {
+	if (drop_privileges(&cf, cf.run_uname, cf.run_gname) != 0) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf.glog,
+	      "can't switch to requested user/group");
+	    exit(1);
+	}
+    }
 
     cf.pfds[0].fd = controlfd;
     cf.pfds[0].events = POLLIN;

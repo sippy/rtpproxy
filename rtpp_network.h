@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.h,v 1.4 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtpp_network.h,v 1.5 2007/12/18 23:02:02 sobomax Exp $
  *
  */
 
@@ -34,7 +34,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#if !defined(__solaris__)
+#include <err.h>
+#endif
 #include <netdb.h>
+
+#include "rtpp_defines.h"
 
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 
@@ -46,6 +51,7 @@ const char *addr2char(struct sockaddr *);
 double getctime(void);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 void seedrandom(void);
+int drop_privileges(struct cfg *, char *, char *);
 
 /* Stripped down version of sockaddr_in* for saving space */
 struct sockaddr_in4_s {

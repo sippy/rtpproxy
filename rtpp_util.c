@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.c,v 1.4 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtpp_util.c,v 1.5 2007/12/18 23:02:02 sobomax Exp $
  *
  */
 
@@ -35,12 +35,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <grp.h>
 #include <netdb.h>
+#include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "rtpp_util.h"
+#include "rtpp_log.h"
 
 int
 ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
@@ -166,4 +169,41 @@ seedrandom(void)
 
     gettimeofday(&tv, NULL);
     srandom((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
+}
+
+int
+drop_privileges(struct cfg *cf, char *uname, char *gname)
+{
+    struct passwd *pp;
+    struct group *gp;
+
+    if (gname != NULL) {
+	gp = getgrnam(gname);
+	if (gp == NULL) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't find ID for the group: %s", gname);
+	    return -1;
+	}
+	if (setgid(gp->gr_gid) != 0) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", gp->gr_gid);
+	    return -1;
+	}
+    }
+    if (uname == NULL)
+	return 0;
+    pp = getpwnam(uname);
+    if (pp == NULL) {
+	rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't find ID for the user: %s", uname);
+	return -1;
+    }
+    if (gname == NULL) {
+        if (setgid(pp->pw_gid) != 0) {
+            rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", pp->pw_gid);
+            return -1;
+        }
+    }
+    if (setuid(pp->pw_uid) != 0) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current user ID: %d", pp->pw_uid);
+        return -1;
+    }
+    return 0;
 }

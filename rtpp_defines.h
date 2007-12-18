@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.6 2007/11/23 05:29:41 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.7 2007/12/18 23:02:02 sobomax Exp $
  *
  */
 
@@ -83,6 +83,9 @@ struct cfg {
     const char *sdir;
     int rrtcp;			/* Whether or not to relay RTCP? */
     rtpp_log_t glog;
+    char *run_uname;
+    char *run_gname;
+    int no_check;
 };
 
 #endif
