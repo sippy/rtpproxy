@@ -34,6 +34,7 @@ MAN1=
 WARNS?=	2
 
 LOCALBASE?=	/usr/local
+BINDIR?=	${LOCALBASE}/bin
 
 CFLAGS+=	-I../siplog -I${LOCALBASE}/include
 LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog
