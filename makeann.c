@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makeann.c,v 1.6 2007/11/11 21:59:27 sobomax Exp $
+ * $Id: makeann.c,v 1.5.2.1 2008/02/05 23:19:09 sobomax Exp $
  *
  */
 
@@ -34,7 +34,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/socket.h>
 
 #include "config.h"
 
@@ -57,7 +56,7 @@
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define LE16_2_HOST(x) \
- ((((uint16_t)(x)) >> 8) & 0xff) | ((((uint16_t)(x)) & 0xff) << 8)) 
+ (((((uint16_t)(x)) >> 8) & 0xff) | ((((uint16_t)(x)) & 0xff) << 8))
 #else
 #define LE16_2_HOST(x) (x)
 #endif
