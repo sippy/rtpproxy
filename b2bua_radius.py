@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.3 2007/09/29 18:15:40 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.4 2008/02/06 20:22:41 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -146,7 +146,7 @@ class CallController:
                     self.global_config['radius_client'].do_auth(auth.username, self.cli, self.cld, self.cGUID, 
                       self.cId, self.remote_ip, self.rDone, auth.realm, auth.nonce, auth.uri, auth.response)
                 return
-            if self.state == CCStateWaitRoute:
+            if self.state != CCStateARComplete:
                 return
             self.uaO.recvEvent(event)
         else:
