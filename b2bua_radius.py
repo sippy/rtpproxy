@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.4 2008/02/06 20:22:41 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.5 2008/02/07 22:59:31 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -458,13 +458,13 @@ def usage():
     print 'usage: b2bua.py [-fDS] [-l addr] [-p port] [-P pidfile] [-L logfile] ' \
       '[-s static_route] [-a ip1[,..[,ipN]]] [-t static_tr_in] [-T static_tr_out]' \
       '[-r rtp_proxy_contact1] [-r rtp_proxy_contact2] [-r rtp_proxy_contactN] ' \
-      '[-k 0-3] [-m max_ctime] [-A 0-2] [-F pt1[,..[,ptN]]]'
+      '[-k 0-3] [-m max_ctime] [-A 0-2] [-F pt1[,..[,ptN]]] [-R radiusclient_conf]'
     sys.exit(1)
 
 if __name__ == '__main__':
     global_config = {'orig_argv':sys.argv[:], 'orig_cwd':os.getcwd(), 'digest_auth':True, 'start_acct_enable':False, 'ka_ans':0, 'ka_orig':0, 'auth_enable':True, 'acct_enable':True}
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:')
+        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:')
     except getopt.GetoptError:
         usage()
     laddr = None
@@ -557,6 +557,9 @@ if __name__ == '__main__':
                 global_config.setdefault('rtp_proxy_clients', []).append(Rtp_proxy_client_local(a))
         if o == '-F':
             global_config['allowed_pts'] = map(lambda x: int(x), a.split(','))
+            continue
+        if o == '-R':
+            global_config['radiusclient.conf'] = a.strip()
             continue
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):
