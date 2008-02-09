@@ -22,12 +22,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Cli_server_local.py,v 1.1 2007/09/18 06:49:11 sobomax Exp $
+# $Id: Cli_server_local.py,v 1.2 2008/02/09 00:35:53 sobomax Exp $
 
 from twisted.internet.protocol import Factory
 from twisted.internet import reactor
 from Cli_session import Cli_session
-from os import chown
+from os import chown, unlink
+from os.path import exists
 
 class Cli_server_local(Factory):
     command_cb = None
@@ -37,6 +38,8 @@ class Cli_server_local(Factory):
         self.protocol = Cli_session
         if address == None:
             address = '/var/run/ccm.sock'
+        if exists(address):
+            unlink(address)
         reactor.listenUNIX(address, self)
         if sock_owner != None:
             chown(address, sock_owner[0], sock_owner[1])
