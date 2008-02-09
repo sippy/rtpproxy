@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.6 2008/02/09 00:35:53 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.7 2008/02/09 00:37:09 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -335,7 +335,7 @@ class CallMap:
             # New dialog
             via = req.getHFBodys('via')[-1]
             remote_ip = via.getTAddr()[0]
-            if remote_ip not in ('76.109.105.222', '67.16.100.220') and self.global_config['auth_enable'] and self.global_config['digest_auth'] and \
+            if self.global_config['auth_enable'] and self.global_config['digest_auth'] and \
               req.countHFs('authorization') == 0:
                 resp = req.genResponse(401, 'Unauthorized')
                 header = SipHeader(name = 'www-authenticate')
