@@ -22,13 +22,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipURL.py,v 1.2 2007/04/24 08:42:28 sobomax Exp $
+# $Id: SipURL.py,v 1.3 2008/02/09 00:35:04 sobomax Exp $
 
 from SipConf import SipConf
 from urllib import quote, unquote
 
 class SipURL:
     username = None
+    userparams = None
     password = None
     host = None
     port = None
@@ -42,10 +43,14 @@ class SipURL:
     other = None
 
     def __init__(self, url = None, username = None, password = None, host = None, port = None, headers = None, \
-                 usertype = None, transport = None, ttl = None, maddr = None, method = None, tag = None, other = None):
+      usertype = None, transport = None, ttl = None, maddr = None, method = None, tag = None, other = None, \
+      userparams = None):
         self.other = []
+        self.userparams = []
         if url == None:
             self.username = username
+            if userparams != None:
+                self.userparams = userparams
             self.password = password
             self.host = host
             self.port = port
@@ -75,11 +80,14 @@ class SipURL:
         if len(udparts) == 2:
             userpass, hostport = udparts
             upparts = userpass.split(':', 1)
-            if len(upparts) == 1:
-                self.username = upparts[0]
-            else:
-                self.username = upparts[0]
+            if len(upparts) > 1:
                 self.password = upparts[1]
+            print upparts[0]
+            uparts = upparts[0].split(';')
+            print uparts
+            if len(uparts) > 1:
+                self.userparams = uparts[1:]
+            self.username = uparts[0]
         else:
             hostport = udparts[0]
         hpparts = hostport.split(':', 1)
@@ -120,6 +128,8 @@ class SipURL:
         w('sip:')
         if self.username != None:
             w(self.username)
+            for v in self.userparams:
+                w(';%s' % v)
             if self.password != None:
                 w(':%s' % self.password)
             w('@')
@@ -140,11 +150,10 @@ class SipURL:
         return ''.join(l)
 
     def getCopy(self):
-        other = []
-        other.extend(self.other)
         return SipURL(username = self.username, password = self.password, host = self.host, port = self.port, \
-                      headers = self.headers, usertype = self.usertype, transport = self.transport, ttl = self.ttl, \
-                      maddr = self.maddr, method = self.method, tag = self.tag, other = other)
+          headers = self.headers, usertype = self.usertype, transport = self.transport, ttl = self.ttl, \
+          maddr = self.maddr, method = self.method, tag = self.tag, other = list(self.other), \
+          userparams = list(self.userparams))
 
     def getHost(self):
         return self.host
