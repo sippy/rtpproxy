@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.7 2008/02/09 00:37:09 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.8 2008/02/11 22:38:29 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -86,6 +86,7 @@ class CallController:
     global_config = None
     rtp_proxy_session = None
     ntry = 1
+    huntstop_scodes = None
 
     def __init__(self, remote_ip, source, global_config):
         self.global_config = global_config
@@ -152,8 +153,13 @@ class CallController:
         else:
             if (isinstance(event, CCEventFail) or isinstance(event, CCEventDisconnect)) and self.state == CCStateARComplete and \
               (isinstance(self.uaA.state, UasStateTrying) or isinstance(self.uaA.state, UasStateRinging)) and len(self.routes) > 0:
-                self.placeOriginate(self.routes.pop(0))
-                return
+                if isinstance(event, CCEventFail):
+                    code = event.getData()[0]
+                else:
+                    code = None
+                if code == None or code not in self.huntstop_scodes:
+                    self.placeOriginate(self.routes.pop(0))
+                    return
             self.uaA.recvEvent(event)
 
     def rDone(self, results):
@@ -221,6 +227,8 @@ class CallController:
                     expires = int(v)
                     if expires < 0:
                         expires = None
+                elif a == 'hs_scodes':
+                    parameters['huntstop_scodes'] = tuple([int(x) for x in v.split(',') if len(x.strip()) > 0])
                 elif a == 'np_expires':
                     no_progress_expires = int(v)
                     if no_progress_expires < 0:
@@ -258,6 +266,7 @@ class CallController:
         cId, cGUID, cli, cld, body, auth, caller_name = self.eTry.getData()
         host, cld, credit_time, expires, no_progress_expires, forward_on_fail, user, passw, cli, \
           caller_name, parameters = args
+        self.huntstop_scodes = parameters.get('huntstop_scodes', ())
         if self.global_config.has_key('static_tr_out'):
             cld = re_replace(self.global_config['static_tr_out'], cld)
         if not forward_on_fail and self.global_config['acct_enable']:
