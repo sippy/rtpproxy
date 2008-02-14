@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.8 2008/02/11 22:38:29 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.9 2008/02/14 00:45:36 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -178,11 +178,15 @@ class CallController:
         if not isinstance(self.uaA.state, UasStateTrying):
             self.acctA.disc(self.uaA, time())
             return
-        cli = filter(lambda x: x[0] == 'h323-ivr-in' and x[1].startswith('CLI:'), results[0])
+        cli = [x[1][4:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('CLI:')]
         if len(cli) > 0:
-            self.cli = cli[0][1][4:]
+            self.cli = cli[0]
             if len(self.cli) == 0:
                 self.cli = None
+        caller_name = [x[1][5:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('CNAM:')]
+        if len(caller_name) > 0:
+            self.caller_name = caller_name[0]
+            if len(self.caller_name) == '':
                 self.caller_name = None
         credit_time = filter(lambda x: x[0] == 'h323-credit-time', results[0])
         if len(credit_time) > 0:
@@ -241,6 +245,9 @@ class CallController:
                     cli = v
                     if len(cli) == 0:
                         cli = None
+                elif a == 'cnam':
+                    caller_name = unquote(v)
+                    if len(caller_name) == 0:
                         caller_name = None
                 elif a == 'ash':
                     ash = SipHeader(unquote(v))
