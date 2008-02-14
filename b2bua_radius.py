@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.9 2008/02/14 00:45:36 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.10 2008/02/14 00:56:21 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -604,7 +604,6 @@ if __name__ == '__main__':
         SipConf.my_address = laddr
     if lport != None:
         SipConf.my_port = lport
-    SipConf.ccm_sock = cmdfile
     global_config['sip_logger'] = SipLogger('b2bua')
     global_config['sip_address'] = SipConf.my_address
     global_config['sip_port'] = SipConf.my_port
