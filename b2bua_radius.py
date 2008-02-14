@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.10 2008/02/14 00:56:21 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.11 2008/02/14 01:46:01 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -186,7 +186,7 @@ class CallController:
         caller_name = [x[1][5:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('CNAM:')]
         if len(caller_name) > 0:
             self.caller_name = caller_name[0]
-            if len(self.caller_name) == '':
+            if len(self.caller_name) == 0:
                 self.caller_name = None
         credit_time = filter(lambda x: x[0] == 'h323-credit-time', results[0])
         if len(credit_time) > 0:
