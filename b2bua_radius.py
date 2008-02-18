@@ -10,7 +10,7 @@
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# For a license to use the ser software under conditions
+# For a license to use the SIPPY software under conditions
 # other than those described here, or to purchase support for this
 # software, please contact Sippy Software, Inc. by e-mail at the
 # following addresses: sales@sippysoft.com.
@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.11 2008/02/14 01:46:01 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.12 2008/02/18 19:49:45 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal

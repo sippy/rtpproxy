@@ -8,7 +8,7 @@
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# For a license to use the ser software under conditions
+# For a license to use the SIPPY software under conditions
 # other than those described here, or to purchase support for this
 # software, please contact Sippy Software, Inc. by e-mail at the
 # following addresses: sales@sippysoft.com.
@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipNumericHF.py,v 1.2 2007/04/24 08:42:28 sobomax Exp $
+# $Id: SipNumericHF.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 
