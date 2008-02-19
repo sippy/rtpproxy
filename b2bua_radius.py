@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.12 2008/02/18 19:49:45 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.13 2008/02/19 01:19:47 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -97,10 +97,6 @@ class CallController:
         self.routes = []
         self.remote_ip = remote_ip
         self.source = source
-        if self.global_config.has_key('rtp_proxy_clients'):
-            self.rtp_proxy_session = Rtp_proxy_session(self.global_config)
-            self.uaA.on_local_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
-            self.uaA.on_remote_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
 
     def recvEvent(self, event, ua):
         if ua == self.uaA:
@@ -133,6 +129,8 @@ class CallController:
                     self.cld = re_replace(self.global_config['static_tr_in'], self.cld)
                     event = CCEventTry((self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name), \
                       rtime = event.rtime)
+                if self.global_config.has_key('rtp_proxy_clients'):
+                    self.rtp_proxy_session = Rtp_proxy_session(self.global_config, call_id = self.cId)
                 self.eTry = event
                 self.state = CCStateWaitRoute
                 if not self.global_config['auth_enable']:
@@ -300,6 +298,11 @@ class CallController:
         self.uaO = UA(self.global_config, self.recvEvent, user, passw, (host, port), credit_time, tuple(conn_handlers), \
           tuple(disc_handlers), tuple(disc_handlers), expire_time = expires, \
           no_progress_time = no_progress_expires, extra_headers = parameters.get('extra_headers', None))
+        if self.rtp_proxy_session != None:
+            self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
+            self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
+            body = body.getCopy()
+            body.content += 'a=nortpproxy:yes\r\n'
         self.uaO.kaInterval = self.global_config['ka_orig']
         self.uaO.recvEvent(CCEventTry((cId + '-b2b_%d' % self.ntry, cGUID, cli, cld, body, auth, caller_name)))
         self.ntry += 1
