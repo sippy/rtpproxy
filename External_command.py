@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: External_command.py,v 1.2 2008/02/18 19:49:45 sobomax Exp $
+# $Id: External_command.py,v 1.3 2008/03/03 19:43:58 sobomax Exp $
 
 from threading import Condition
 from popen2 import Popen3
@@ -30,18 +30,22 @@ from twisted.internet import reactor
 from datetime import datetime
 from traceback import print_exc
 from sys import stdout
+from threading import Thread
 
-MAX_WORKERS = 5
+MAX_WORKERS = 20
 
-class _Worker:
+class _Worker(Thread):
     command = None
     master = None
 
     def __init__(self, command, master):
+        Thread.__init__(self)
         self.command = command
         self.master = master
+        self.setDaemon(True)
+        self.start()
 
-    def do_work(self):
+    def run(self):
         pipe = Popen3(self.command, True)
         while True:
             self.master.work_available.acquire()
@@ -69,7 +73,7 @@ class External_command:
         self.work_available = Condition()
         self.work = []
         for i in range(0, MAX_WORKERS):
-            reactor.callInThread(_Worker(command, self).do_work)
+            _Worker(command, self)
 
     def process_command(self, data, result_callback, *callback_parameters):
         self.work_available.acquire()
