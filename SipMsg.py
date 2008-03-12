@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipMsg.py,v 1.4 2008/03/12 19:17:19 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -79,9 +79,16 @@ class SipMsg:
             if blen == 0:
                 mbody = None
             elif mbody == None or blen > len(mbody):
-                # XXX: Should generate 400 Bad Request if such condition
-                # happens with request
-                raise Exception('Truncated SIP body, %d bytes expected, %d received' % (blen, len(mbody)))
+                if mbody != None and blen - len(mbody) < 7 and len(mbody) > 7 and mbody[-4:] == '\r\n\r\n':
+                    # XXX: we should not really be doing this, but it appears to be
+                    # a common off-by-one/two/.../six problem with SDPs generates by
+                    # the consumer-grade devices.
+                    print 'Truncated SIP body, %d bytes expected, %d received, fixing...' % (blen, len(mbody))
+                    blen = len(mbody)
+                else:
+                    # XXX: Should generate 400 Bad Request if such condition
+                    # happens with request
+                    raise Exception('Truncated SIP body, %d bytes expected, %d received' % (blen, len(mbody)))
             elif blen < len(mbody):
                 mbody = mbody[:blen]
         if mbody != None:
