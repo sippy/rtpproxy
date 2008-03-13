@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.15 2008/03/13 00:25:20 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.16 2008/03/13 00:26:42 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -357,6 +357,7 @@ class CallMap:
             # New dialog
             via = req.getHFBodys('via')[-1]
             remote_ip = via.getTAddr()[0]
+            source = req.getSource()
             if self.global_config['auth_enable'] and self.global_config['digest_auth'] and \
               req.countHFs('authorization') == 0:
                 resp = req.genResponse(401, 'Unauthorized')
@@ -364,7 +365,6 @@ class CallMap:
                 header.getBody().realm = req.getRURI().host
                 resp.appendHeader(header)
                 return (resp, None, None)
-            source = req.getSource()
             if self.global_config.has_key('accept_ips') and source[0] not in self.global_config['accept_ips']:
                 return (req.genResponse(403, 'Forbidden'), None, None)
             cc = CallController(remote_ip, source, self.global_config)
