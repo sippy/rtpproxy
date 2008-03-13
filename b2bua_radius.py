@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.14 2008/03/13 00:21:02 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.15 2008/03/13 00:25:20 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -250,6 +250,8 @@ class CallController:
                 elif a == 'ash':
                     ash = SipHeader(unquote(v))
                     parameters.setdefault('extra_headers', []).append(ash)
+                elif a == 'rtpp':
+                    parameters['rtpp'] = (int(v) != 0)
                 else:
                     parameters[a] = v
             if self.global_config.has_key('max_credit_time'):
@@ -298,7 +300,7 @@ class CallController:
         self.uaO = UA(self.global_config, self.recvEvent, user, passw, (host, port), credit_time, tuple(conn_handlers), \
           tuple(disc_handlers), tuple(disc_handlers), expire_time = expires, \
           no_progress_time = no_progress_expires, extra_headers = parameters.get('extra_headers', None))
-        if self.rtp_proxy_session != None:
+        if self.rtp_proxy_session != None and parameters.get('rtpp', True):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
             body = body.getCopy()
