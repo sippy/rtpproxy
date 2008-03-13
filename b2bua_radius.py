@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.13 2008/02/19 01:19:47 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.14 2008/03/13 00:21:02 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -218,7 +218,6 @@ class CallController:
             user = None
             passw = None
             cli = self.cli
-            caller_name = self.caller_name
             parameters = {}
             for a, v in map(lambda x: x.split('='), route[1:]):
                 if a == 'credit-time':
@@ -247,6 +246,7 @@ class CallController:
                     caller_name = unquote(v)
                     if len(caller_name) == 0:
                         caller_name = None
+                    parameters['caller_name'] = caller_name
                 elif a == 'ash':
                     ash = SipHeader(unquote(v))
                     parameters.setdefault('extra_headers', []).append(ash)
@@ -258,7 +258,7 @@ class CallController:
             if credit_time == 0 or expires == 0:
                 continue
             self.routes.append((host, cld, credit_time, expires, no_progress_expires, forward_on_fail, user, \
-              passw, cli, caller_name, parameters))
+              passw, cli, parameters))
             #print 'Got route:', host, cld
         if len(self.routes) == 0:
             self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (3)')))
@@ -270,7 +270,7 @@ class CallController:
     def placeOriginate(self, args):
         cId, cGUID, cli, cld, body, auth, caller_name = self.eTry.getData()
         host, cld, credit_time, expires, no_progress_expires, forward_on_fail, user, passw, cli, \
-          caller_name, parameters = args
+          parameters = args
         self.huntstop_scodes = parameters.get('huntstop_scodes', ())
         if self.global_config.has_key('static_tr_out'):
             cld = re_replace(self.global_config['static_tr_out'], cld)
@@ -304,7 +304,8 @@ class CallController:
             body = body.getCopy()
             body.content += 'a=nortpproxy:yes\r\n'
         self.uaO.kaInterval = self.global_config['ka_orig']
-        self.uaO.recvEvent(CCEventTry((cId + '-b2b_%d' % self.ntry, cGUID, cli, cld, body, auth, caller_name)))
+        self.uaO.recvEvent(CCEventTry((cId + '-b2b_%d' % self.ntry, cGUID, cli, cld, body, auth, \
+          parameters.get('caller_name', self.caller_name))))
         self.ntry += 1
 
     def disconnect(self):
