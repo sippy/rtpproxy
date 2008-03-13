@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.16 2008/03/13 00:26:42 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.17 2008/03/13 01:09:41 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -85,7 +85,6 @@ class CallController:
     acctA = None
     global_config = None
     rtp_proxy_session = None
-    ntry = 1
     huntstop_scodes = None
 
     def __init__(self, remote_ip, source, global_config):
@@ -200,7 +199,9 @@ class CallController:
             routing = map(lambda x: x[1][8:].split(';'), routing)
         else:
             routing = [self.global_config['static_route'].split(';')]
+        rnum = 0
         for route in routing:
+            rnum += 1
             if route[0].find('@') != -1:
                 cld, host = route[0].split('@')
                 if len(cld) == 0:
@@ -252,6 +253,9 @@ class CallController:
                     parameters.setdefault('extra_headers', []).append(ash)
                 elif a == 'rtpp':
                     parameters['rtpp'] = (int(v) != 0)
+                elif a == 'gt':
+                    timeout, skip = v.split(',', 1)
+                    parameters['group_timeout'] = (int(timeout), rnum + int(skip))
                 else:
                     parameters[a] = v
             if self.global_config.has_key('max_credit_time'):
@@ -259,7 +263,7 @@ class CallController:
                     credit_time = self.global_config['max_credit_time']
             if credit_time == 0 or expires == 0:
                 continue
-            self.routes.append((host, cld, credit_time, expires, no_progress_expires, forward_on_fail, user, \
+            self.routes.append((rnum, host, cld, credit_time, expires, no_progress_expires, forward_on_fail, user, \
               passw, cli, parameters))
             #print 'Got route:', host, cld
         if len(self.routes) == 0:
@@ -271,7 +275,7 @@ class CallController:
 
     def placeOriginate(self, args):
         cId, cGUID, cli, cld, body, auth, caller_name = self.eTry.getData()
-        host, cld, credit_time, expires, no_progress_expires, forward_on_fail, user, passw, cli, \
+        rnum, host, cld, credit_time, expires, no_progress_expires, forward_on_fail, user, passw, cli, \
           parameters = args
         self.huntstop_scodes = parameters.get('huntstop_scodes', ())
         if self.global_config.has_key('static_tr_out'):
@@ -306,9 +310,11 @@ class CallController:
             body = body.getCopy()
             body.content += 'a=nortpproxy:yes\r\n'
         self.uaO.kaInterval = self.global_config['ka_orig']
-        self.uaO.recvEvent(CCEventTry((cId + '-b2b_%d' % self.ntry, cGUID, cli, cld, body, auth, \
+        if parameters.has_key['group_timeout']:
+            timeout, skipto = parameters['group_timeout']
+            Timeout(self.group_expires, timeout, 1, skipto)
+        self.uaO.recvEvent(CCEventTry((cId + '-b2b_%d' % rnum, cGUID, cli, cld, body, auth, \
           parameters.get('caller_name', self.caller_name))))
-        self.ntry += 1
 
     def disconnect(self):
         self.uaA.disconnect()
@@ -327,6 +333,14 @@ class CallController:
             if user_agent != None:
                 user_agent.recvEvent(CCEventDisconnect(rtime = rtime))
         self.rtp_proxy_session = None
+
+    def group_expires(self, skipto):
+        if self.state != CCStateARComplete or len(self.routes) == 0 or self.routes[0][0] > skipto or \
+          (not isinstance(self.uaA.state, UasStateTrying) and not isinstance(self.uaA.state, UasStateRinging)):
+            return
+        while self.routes[0][0] != skipto:
+            self.routes.pop(0)
+        self.uaO.disconnect()
 
 class CallMap:
     ccmap = None
