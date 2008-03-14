@@ -31,6 +31,9 @@
 #ifndef _RTPP_DEFINES_H_
 #define _RTPP_DEFINES_H_
 
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <poll.h>
 
 #include "rtpp_log.h"
@@ -83,6 +86,8 @@ struct cfg {
     const char *sdir;
     int rrtcp;			/* Whether or not to relay RTCP? */
     rtpp_log_t glog;
+    struct rlimit nofile_limit;
+    int nofile_limit_warned;
 };
 
 #endif

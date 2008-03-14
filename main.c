@@ -127,6 +127,19 @@ append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 	cf->pfds[cf->nsessions].revents = 0;
 	sp->sidx[index] = cf->nsessions;
 	cf->nsessions++;
+	/*
+	 * Each session can consume up to 5 open file descriptors (2 RTP,
+	 * 2 RTCP and 1 logging) so that warn user when he is likely to
+	 * exceed 80% mark on hard limit.
+	 */
+        if (cf->nofile_limit_warned == 0 && ((cf->nsessions * 80) / 100) >
+          (cf->nofile_limit.rlim_max / 5)) {
+	    cf->nofile_limit_warned = 1;
+	    rtpp_log_write(RTPP_LOG_WARN, cf->glog, "passed 80% "
+	      "threshold on the open file descriptors limit (%d), "
+	      "consuder increasing the limit using -L command line "
+	      "option", cf->nofile_limit.rlim_max);
+	}
     } else {
 	sp->sidx[index] = -1;
     }
@@ -1033,7 +1046,6 @@ static void
 init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
-    struct rlimit lim;
     char *bh[2], *bh6[2];
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
@@ -1044,6 +1056,9 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->max_ttl = SESSION_TIMEOUT;
     cf->tos = TOS;
     cf->rrtcp = 1;
+
+    if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
+	err(1, "getrlimit");
 
     while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:")) != -1)
 	switch (ch) {
@@ -1123,8 +1138,8 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'L':
-	    lim.rlim_cur = lim.rlim_max = atoi(optarg);
-	    if (setrlimit(RLIMIT_NOFILE, &lim) != 0)
+	    cf->nofile_limit.rlim_cur = cf->nofile_limit.rlim_max = atoi(optarg);
+	    if (setrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 		err(1, "setrlimit");
 	    break;
 
