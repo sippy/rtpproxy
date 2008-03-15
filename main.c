@@ -127,19 +127,6 @@ append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 	cf->pfds[cf->nsessions].revents = 0;
 	sp->sidx[index] = cf->nsessions;
 	cf->nsessions++;
-	/*
-	 * Each session can consume up to 5 open file descriptors (2 RTP,
-	 * 2 RTCP and 1 logging) so that warn user when he is likely to
-	 * exceed 80% mark on hard limit.
-	 */
-        if (cf->nofile_limit_warned == 0 && ((cf->nsessions * 80) / 100) >
-          (cf->nofile_limit.rlim_max / 5)) {
-	    cf->nofile_limit_warned = 1;
-	    rtpp_log_write(RTPP_LOG_WARN, cf->glog, "passed 80% "
-	      "threshold on the open file descriptors limit (%d), "
-	      "consuder increasing the limit using -L command line "
-	      "option", cf->nofile_limit.rlim_max);
-	}
     } else {
 	sp->sidx[index] = -1;
     }
@@ -232,6 +219,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
     rtp_resizer_free(&sp->resizers[0]);
     rtp_resizer_free(&sp->resizers[1]);
     free(sp);
+    cf->sessions_active--;
 }
 
 static int
@@ -488,11 +476,13 @@ handle_command(struct cfg *cf, int controlfd)
     case 'i':
     case 'I':
 	if (cookie == NULL)
-	    len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n",
-	      cf->sessions_created, cf->nsessions / 2);
+	    len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n"
+	      "active streams: %d\n", cf->sessions_created,
+              cf->sessions_active, cf->nsessions / 2);
 	else
-	    len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n",
-	      cookie, cf->sessions_created, cf->nsessions / 2);
+	    len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n"
+	      "active streams: %d\n", cookie, cf->sessions_created,
+	      cf->sessions_active, cf->nsessions / 2);
 	for (i = 1; i < cf->nsessions; i++) {
 	    char addrs[4][256];
 
@@ -919,6 +909,20 @@ handle_command(struct cfg *cf, int controlfd)
     append_session(cf, spb, 1);
 
     cf->sessions_created++;
+    cf->sessions_active++;
+    /*
+     * Each session can consume up to 5 open file descriptors (2 RTP,
+     * 2 RTCP and 1 logging) so that warn user when he is likely to
+     * exceed 80% mark on hard limit.
+     */
+    if (cf->sessions_active > (cf->nofile_limit.rlim_max * 80 / (100 * 5)) &&
+      cf->nofile_limit_warned == 0) {
+	cf->nofile_limit_warned = 1;
+	rtpp_log_write(RTPP_LOG_WARN, cf->glog, "passed 80%% "
+	  "threshold on the open file descriptors limit (%d), "
+	  "consider increasing the limit using -L command line "
+	  "option", cf->nofile_limit.rlim_max);
+    }
 
     rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
       "tag %s", lport, from_tag);
@@ -1141,6 +1145,12 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    cf->nofile_limit.rlim_cur = cf->nofile_limit.rlim_max = atoi(optarg);
 	    if (setrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 		err(1, "setrlimit");
+	    if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
+		err(1, "getrlimit");
+	    if (cf->nofile_limit.rlim_max < atoi(optarg))
+		warnx("limit allocated by setrlimit (%d) is less than "
+		  "requested (%d)", (int) cf->nofile_limit.rlim_max,
+		  atoi(optarg));
 	    break;
 
 	case 'm':

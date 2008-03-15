@@ -74,6 +74,7 @@ struct cfg {
     int nsessions;
     int rtp_nsessions;
     unsigned long long sessions_created;
+    int sessions_active;
     int max_ttl;
     /*
      * The first address is for external interface, the second one - for
