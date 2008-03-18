@@ -173,7 +173,7 @@ endloop:
 int
 main(int argc, char **argv)
 {
-    char ch;
+    int ch;
     int ofd, oblen, delete, stereo, idprio, nch, neof;
     int32_t osample, asample, csample;
     struct channels channels;
