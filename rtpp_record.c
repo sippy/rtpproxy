@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.c,v 1.8 2007/12/18 21:37:21 sobomax Exp $
+ * $Id: rtpp_record.c,v 1.9 2008/03/18 02:26:29 sobomax Exp $
  *
  */
 
@@ -141,7 +141,7 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 	sdir = cf->rdir;
 	rrc->needspool = 0;
     } else {
-        sdir = cf->sdir;
+	sdir = cf->sdir;
 	rrc->needspool = 1;
 	if (rname == NULL) {
 	    sprintf(rrc->rpath, "%s/%s=%s.%c.%s", cf->rdir, sp->call_id, sp->tag,

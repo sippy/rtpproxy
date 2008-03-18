@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.64 2008/03/18 02:20:34 sobomax Exp $
+ * $Id: main.c,v 1.65 2008/03/18 02:26:29 sobomax Exp $
  *
  */
 
@@ -1155,8 +1155,8 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    if (cp != NULL) {
 		if (cp == optarg)
 		    cf->run_uname = NULL;
-	        cp[0] = '\0';
-	        cp++;
+		cp[0] = '\0';
+		cp++;
 	    }
 	    cf->run_gname = cp;
 	    break;
@@ -1506,11 +1506,11 @@ process_rtp(struct cfg *cf, double ctime)
     /* Relay RTP/RTCP */
     skipfd = 0;
     for (readyfd = 1; readyfd < cf->nsessions; readyfd++) {
-        if (cf->pfds[readyfd].fd == -1) {
+	if (cf->pfds[readyfd].fd == -1) {
 	    /* Deleted session, count and move one */
-            skipfd++;
-            continue;
-        }
+	    skipfd++;
+	    continue;
+	}
 
 	/* Find index of the call leg within a session */
 	sp = cf->sessions[readyfd];

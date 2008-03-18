@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.c,v 1.5 2007/12/18 23:02:02 sobomax Exp $
+ * $Id: rtpp_network.c,v 1.6 2008/03/18 02:26:29 sobomax Exp $
  *
  */
 
@@ -196,14 +196,14 @@ drop_privileges(struct cfg *cf, char *uname, char *gname)
 	return -1;
     }
     if (gname == NULL) {
-        if (setgid(pp->pw_gid) != 0) {
-            rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", pp->pw_gid);
-            return -1;
-        }
+	if (setgid(pp->pw_gid) != 0) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", pp->pw_gid);
+	    return -1;
+	}
     }
     if (setuid(pp->pw_uid) != 0) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current user ID: %d", pp->pw_uid);
-        return -1;
+	rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current user ID: %d", pp->pw_uid);
+	return -1;
     }
     return 0;
 }
