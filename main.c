@@ -210,6 +210,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    rtp_server_free(sp->rtps[i]);
 	}
     }
+    hash_table_remove(cf, sp);
     if (sp->call_id != NULL)
 	free(sp->call_id);
     if (sp->tag != NULL)
@@ -662,11 +663,7 @@ handle_command(struct cfg *cf, int controlfd)
     lport = 0;
     pidx = 1;
     ndeleted = 0;
-    for (i = 1; i < cf->nsessions; i++) {
-        spa = cf->sessions[i];
-	if (spa == NULL || spa->sidx[0] != i || spa->rtcp == NULL ||
-	  spa->call_id == NULL || strcmp(spa->call_id, call_id) != 0)
-	    continue;
+    for (spa = hash_table_findfirst(cf, call_id); spa != NULL; spa = hash_table_findnext(spa)) {
 	medianum = 0;
 	if ((cmpr1 = compare_session_tags(spa->tag, from_tag, &medianum)) != 0)
 	{
@@ -907,6 +904,8 @@ handle_command(struct cfg *cf, int controlfd)
     append_session(cf, spa, 1);
     append_session(cf, spb, 0);
     append_session(cf, spb, 1);
+
+    hash_table_append(cf, spa);
 
     cf->sessions_created++;
     cf->sessions_active++;
@@ -1566,6 +1565,8 @@ main(int argc, char **argv)
     char buf[256];
 
     memset(&cf, 0, sizeof(cf));
+
+    init_hash_table(&cf);
 
     init_config(&cf, argc, argv);
 

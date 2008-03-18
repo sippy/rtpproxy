@@ -71,6 +71,14 @@ struct rtpp_session {
     /* Flag that indicates whether or not address supplied by client can't be trusted */
     int untrusted_addr[2];
     struct rtp_resizer resizers[2];
+    struct rtpp_session *prev;
+    struct rtpp_session *next;
 };
+
+void init_hash_table(struct cfg *);
+struct rtpp_session *hash_table_findfirst(struct cfg *, char *);
+struct rtpp_session *hash_table_findnext(struct rtpp_session *);
+void hash_table_append(struct cfg *, struct rtpp_session *);
+void hash_table_remove(struct cfg *, struct rtpp_session *);
 
 #endif

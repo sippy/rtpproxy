@@ -89,6 +89,8 @@ struct cfg {
     rtpp_log_t glog;
     struct rlimit nofile_limit;
     int nofile_limit_warned;
+    uint8_t rand_table[256];
+    struct rtpp_session *hash_table[256];
 };
 
 #endif

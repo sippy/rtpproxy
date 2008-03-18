@@ -7,8 +7,8 @@ LIBS+=	-L../siplog -lsiplog
 
 all: rtpproxy
 
-rtpproxy: main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o
-	${CC} -o rtpproxy main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o ${LIBS}
+rtpproxy: main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o
+	${CC} -o rtpproxy main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o ${LIBS}
 
 main.o: main.c
 	${CC} ${CFLAGS} -o main.o -c main.c
@@ -28,5 +28,8 @@ rtp_resizer.o: rtp_resizer.c
 rtp.o: rtp.c
 	${CC} ${CFLAGS} -o rtp.o -c rtp.c
 
+rtpp_session.o: rtpp_session.c
+	${CC} ${CFLAGS} -o rtpp_session.o -c rtpp_session.c
+
 clean:
-	rm -f main.o rtp_server.o rtpp_record.o rtpp_util.o rtpproxy
+	rm -f main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o rtpproxy
