@@ -25,7 +25,7 @@
 # $Id$
 
 PROG=	rtpproxy
-SRCS=	main.c myqueue.h rtp_server.c rtp_server.h rtpp_defines.h \
+SRCS=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_record.c rtpp_record.h rtpp_session.h rtpp_util.c \
 	rtpp_util.h rtpp_log.h rtp_resizer.c rtp_resizer.h rtp.c \
 	rtp.h rtpp_session.c
