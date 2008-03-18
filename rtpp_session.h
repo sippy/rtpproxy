@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.5 2007/07/28 01:10:28 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.5.2.1 2008/03/18 05:19:20 sobomax Exp $
  *
  */
 
@@ -67,6 +67,8 @@ struct rtpp_session {
     int sidx[2];
     /* Reference to active RTP generators table */
     int sridx;
+    /* Flag that indicates whether or not address supplied by client can't be trusted */
+    int untrusted_addr[2];
 };
 
 #endif

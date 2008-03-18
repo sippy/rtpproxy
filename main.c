@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.48.2.2 2008/03/18 04:53:09 sobomax Exp $
+ * $Id: main.c,v 1.48.2.3 2008/03/18 05:19:20 sobomax Exp $
  *
  */
 
@@ -910,8 +910,12 @@ handle_command(int controlfd)
 writeport:
     if (pidx >= 0) {
 	if (ia[0] != NULL && ia[1] != NULL) {
-	    /* If address is different from one that recorded update it */
-	    if (!(spa->addr[pidx] != NULL &&
+	    /*
+	     * Unless the address provided by client historically
+	     * cannot be trusted and address is different from one
+	     * that we recorded update it.
+	     */
+	    if (spa->untrusted_addr[pidx] == 0 && !(spa->addr[pidx] != NULL &&
 	      SA_LEN(ia[0]) == SA_LEN(spa->addr[pidx]) &&
 	      memcmp(ia[0], spa->addr[pidx], SA_LEN(ia[0])) == 0)) {
 		rtpp_log_write(RTPP_LOG_INFO, spa->log, "pre-filling %s's address "
@@ -921,7 +925,7 @@ writeport:
 		spa->addr[pidx] = ia[0];
 		ia[0] = NULL;
 	    }
-	    if (!(spa->rtcp->addr[pidx] != NULL &&
+	    if (spa->rtcp->untrusted_addr[pidx] == 0 && !(spa->rtcp->addr[pidx] != NULL &&
 	      SA_LEN(ia[1]) == SA_LEN(spa->rtcp->addr[pidx]) &&
 	      memcmp(ia[1], spa->rtcp->addr[pidx], SA_LEN(ia[1])) == 0)) {
 		if (spa->rtcp->addr[pidx] != NULL)
@@ -1389,8 +1393,14 @@ drain:
 		i = 1;
 	    }
 
-	    /* Update recorded address if it's necessary. */
+	    /*
+	     * Update recorded address if it's necessary. Set "untrusted address"
+	     * flag in the session state, so that possible future address updates
+	     * from that client won't get address changed immediately to some
+	     * bogus one.
+	     */
 	    if (i != 0) {
+		sp->untrusted_addr[ridx] = 1;
 		memcpy(sp->addr[ridx], &raddr, rlen);
 		sp->canupdate[ridx] = 0;
 
