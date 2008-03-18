@@ -38,7 +38,7 @@
 struct rtpp_session;
 
 /* Function prototypes */
-void *ropen(struct cfg *cf, struct rtpp_session *, int);
+void *ropen(struct cfg *cf, struct rtpp_session *, char *, int);
 void rwrite(struct rtpp_session *, void *, struct rtp_packet *);
 void rclose(struct rtpp_session *, void *);
 

@@ -36,6 +36,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+#include "rtpp_defines.h"
+
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 
 /* Function prototypes */
@@ -46,6 +48,7 @@ const char *addr2char(struct sockaddr *);
 double getctime(void);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 void seedrandom(void);
+int drop_privileges(struct cfg *, char *, char *);
 
 /* Stripped down version of sockaddr_in* for saving space */
 struct sockaddr_in4_s {

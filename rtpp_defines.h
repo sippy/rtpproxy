@@ -87,10 +87,16 @@ struct cfg {
     const char *sdir;
     int rrtcp;			/* Whether or not to relay RTCP? */
     rtpp_log_t glog;
+
     struct rlimit nofile_limit;
     int nofile_limit_warned;
+
     uint8_t rand_table[256];
     struct rtpp_session *hash_table[256];
+
+    char *run_uname;
+    char *run_gname;
+    int no_check;
 };
 
 #endif

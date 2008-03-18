@@ -197,13 +197,14 @@ handle_command(struct cfg *cf, int controlfd)
     unsigned medianum;
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
-    char *pname, *codecs;
+    char *pname, *codecs, *recording_name;
     struct rtpp_session *spa, *spb;
     char **ap, *argv[10];
     const char *rname;
     struct sockaddr *ia[2], *lia[2];
     struct sockaddr_storage raddr;
     int requested_nsamples;
+    recording_name = NULL;
 
     requested_nsamples = -1;
 
@@ -308,6 +309,11 @@ handle_command(struct cfg *cf, int controlfd)
     case 'S':
         noplay = 1;
         break;
+
+    case 'c':
+    case 'C':
+	record = 2;
+	break;
 
     case 'v':
     case 'V':
@@ -422,7 +428,17 @@ handle_command(struct cfg *cf, int controlfd)
 	if (play != 0 && argv[0][1] != '\0')
 	    play = atoi(argv[0] + 1);
     }
-    if (delete != 0 || record != 0 || noplay != 0) {
+    if (record == 2) {
+	if (argc < 4 || argc > 5) {
+	    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
+	    ecode = 1;
+	    goto goterror;
+	}
+	recording_name = argv[2];
+	from_tag = argv[3];
+	to_tag = argv[4];
+    }
+    if (delete != 0 || record == 1 || noplay != 0) {
 	if (argc < 3 || argc > 4) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 	    ecode = 1;
@@ -620,17 +636,15 @@ handle_command(struct cfg *cf, int controlfd)
 	}
 
 	if (record != 0) {
-	    if (cf->rdir != NULL) {
-	        if (spa->rrcs[i] == NULL) {
-		    spa->rrcs[i] = ropen(cf, spa, i);
-	            rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	              "starting recording RTP session on port %d", spa->ports[i]);
-	        }
-	        if (spa->rtcp->rrcs[i] == NULL && cf->rrtcp != 0) {
-		    spa->rtcp->rrcs[i] = ropen(cf, spa->rtcp, i);
-	            rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	              "starting recording RTCP session on port %d", spa->rtcp->ports[i]);
-	        }
+	    if (spa->rrcs[i] == NULL) {
+		spa->rrcs[i] = ropen(cf, spa, recording_name, i);
+		rtpp_log_write(RTPP_LOG_INFO, spa->log,
+		  "starting recording RTP session on port %d", spa->ports[i]);
+	    }
+	    if (spa->rtcp->rrcs[i] == NULL && cf->rrtcp != 0) {
+		spa->rtcp->rrcs[i] = ropen(cf, spa->rtcp, recording_name, i);
+		rtpp_log_write(RTPP_LOG_INFO, spa->log,
+		  "starting recording RTCP session on port %d", spa->rtcp->ports[i]);
 	    }
 	    goto do_ok;
 	}
@@ -895,8 +909,9 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: rtpproxy [-2fv] [-l addr1[/addr2]] "
-      "[-6 addr1[/addr2]] [-s path] [-t tos] [-r rdir [-S sdir]] [-T ttl] [-L nfiles] [-m port_min] [-M port_max]\n");
+    fprintf(stderr, "usage: rtpproxy [-2fvF] [-l addr1[/addr2]] "
+      "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
+      "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]]\n");
     exit(1);
 }
 
@@ -922,7 +937,7 @@ static void
 init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
-    char *bh[2], *bh6[2];
+    char *bh[2], *bh6[2], *cp;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -936,7 +951,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:F")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -1033,12 +1048,42 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    cf->port_max = atoi(optarg);
 	    break;
 
+	case 'u':
+	    cf->run_uname = optarg;
+	    cp = strchr(optarg, ':');
+	    if (cp != NULL) {
+		if (cp == optarg)
+		    cf->run_uname = NULL;
+		cp[0] = '\0';
+		cp++;
+	    }
+	    cf->run_gname = cp;
+	    break;
+
+	case 'F':
+	    cf->no_check = 1;
+	    break;
+
 	case '?':
 	default:
 	    usage();
 	}
     if (cf->rdir == NULL && cf->sdir != NULL)
         errx(1, "-S switch requires -r switch");
+
+    if (cf->no_check == 0 && getuid() == 0 && cf->run_uname == NULL) {
+	if (cf->umode != 0) {
+	    errx(1, "running this program as superuser in a remote control "
+	      "mode is strongly not recommended, as it poses serious security "
+	      "threat to your system. Use -u option to run as an unprivileged "
+	      "user or -F is you want to run as a superuser anyway.");
+	} else {
+	    warnx("WARNING!!! Running this program as superuser is strongly "
+	      "not recommended, as it may pose serious security threat to "
+	      "your system. Use -u option to run as an unprivileged user "
+	      "or -F to surpress this warning.");
+	}
+    }
 
     if (cf->port_min <= 0 || cf->port_min > 65535)
 	errx(1, "invalid value of the port_min argument, "
@@ -1488,6 +1533,14 @@ main(int argc, char **argv)
     signal(SIGPROF, fatsignal);
     signal(SIGUSR1, fatsignal);
     signal(SIGUSR2, fatsignal);
+
+    if (cf.run_uname != NULL || cf.run_gname != NULL) {
+	if (drop_privileges(&cf, cf.run_uname, cf.run_gname) != 0) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf.glog,
+	      "can't switch to requested user/group");
+	    exit(1);
+	}
+    }
 
     cf.pfds[0].fd = controlfd;
     cf.pfds[0].events = POLLIN;
