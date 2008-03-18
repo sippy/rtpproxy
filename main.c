@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.48.2.1 2007/11/14 08:03:20 sobomax Exp $
+ * $Id: main.c,v 1.48.2.2 2008/03/18 04:53:09 sobomax Exp $
  *
  */
 
@@ -1014,7 +1014,7 @@ int
 main(int argc, char **argv)
 {
     int controlfd, i, j, k, readyfd, len, nodaemon, dmode, port, ridx, sidx;
-    int timeout, flags, skipfd, ndrain;
+    int timeout, flags, skipfd, ndrain, ch;
     sigset_t set, oset;
     struct rtpp_session *sp;
     struct sockaddr_un ifsun;
@@ -1022,7 +1022,7 @@ main(int argc, char **argv)
     socklen_t rlen;
     struct itimerval tick;
     char buf[1024 * 8];
-    char ch, *bh[2], *bh6[2], *cp;
+    char *bh[2], *bh6[2], *cp;
     double sptime, eptime;
     unsigned long delay;
     struct rlimit lim;
