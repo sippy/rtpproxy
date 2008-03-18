@@ -86,6 +86,7 @@ static struct proto_cap proto_caps[] = {
     { "20050322", "Support for multiple RTP streams and MOH" },
     { "20060704", "Support for extra parameter in the V command" },
     { "20071116", "Support for RTP re-packetization" },
+    { "20071218", "Support for forking (copying) RTP stream" },
     { NULL, NULL }
 };
 
