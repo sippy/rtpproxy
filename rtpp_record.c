@@ -145,7 +145,7 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 	rrc->needspool = 1;
 	if (rname == NULL) {
 	    sprintf(rrc->rpath, "%s/%s=%s.%c.%s", cf->rdir, sp->call_id, sp->tag,
-	    (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
+	      (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
 	} else {
 	    sprintf(rrc->rpath, "%s/%s.%s", cf->rdir, rname,
 	      (sp->rtcp != NULL) ? "rtp" : "rtcp");
