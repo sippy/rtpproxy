@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.63 2008/02/19 00:34:15 sobomax Exp $
+ * $Id: main.c,v 1.64 2008/03/18 02:20:34 sobomax Exp $
  *
  */
 
@@ -930,7 +930,7 @@ writeport:
 	     * cannot be trusted and address is different from one
 	     * that we recorded update it.
 	     */
-	    if (spa->untrusted_addr[i] == 0 && !(spa->addr[pidx] != NULL &&
+	    if (spa->untrusted_addr[pidx] == 0 && !(spa->addr[pidx] != NULL &&
 	      SA_LEN(ia[0]) == SA_LEN(spa->addr[pidx]) &&
 	      memcmp(ia[0], spa->addr[pidx], SA_LEN(ia[0])) == 0)) {
 		rtpp_log_write(RTPP_LOG_INFO, spa->log, "pre-filling %s's address "
@@ -940,7 +940,7 @@ writeport:
 		spa->addr[pidx] = ia[0];
 		ia[0] = NULL;
 	    }
-	    if (spa->rtcp->untrusted_addr[i] == 0 && !(spa->rtcp->addr[pidx] != NULL &&
+	    if (spa->rtcp->untrusted_addr[pidx] == 0 && !(spa->rtcp->addr[pidx] != NULL &&
 	      SA_LEN(ia[1]) == SA_LEN(spa->rtcp->addr[pidx]) &&
 	      memcmp(ia[1], spa->rtcp->addr[pidx], SA_LEN(ia[1])) == 0)) {
 		if (spa->rtcp->addr[pidx] != NULL)
