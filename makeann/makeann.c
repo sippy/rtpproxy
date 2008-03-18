@@ -54,7 +54,7 @@
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define LE16_2_HOST(x) \
- ((((uint16_t)(x)) >> 8) & 0xff) | ((((uint16_t)(x)) & 0xff) << 8)) 
+ ((((uint16_t)(x)) >> 8) & 0xff) | ((((uint16_t)(x)) & 0xff) << 8)
 #else
 #define LE16_2_HOST(x) (x)
 #endif
