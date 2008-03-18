@@ -31,6 +31,7 @@
 #ifndef _RTP_H_
 #define _RTP_H_
 
+#include <sys/socket.h>
 #include <sys/types.h>
 
 /*

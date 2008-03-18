@@ -153,3 +153,18 @@ rtp_server_get(struct rtp_server *rp, double ctime)
 
     return (rp->pload - rp->buf) + rlen;
 }
+
+void
+append_server(struct cfg *cf, struct rtpp_session *sp)
+{
+
+    if (sp->rtps[0] != NULL || sp->rtps[1] != NULL) {
+	if (sp->sridx == -1) {
+	    cf->rtp_servers[cf->rtp_nsessions] = sp;
+	    sp->sridx = cf->rtp_nsessions;
+	    cf->rtp_nsessions++;
+	}
+    } else {
+	sp->sridx = -1;
+    }
+}

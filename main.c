@@ -90,7 +90,6 @@ static struct proto_cap proto_caps[] = {
 };
 
 static void setbindhost(struct sockaddr *, int, const char *, const char *);
-static void remove_session(struct cfg *, struct rtpp_session *);
 static int create_twinlistener(struct cfg *, struct sockaddr *, int, int *);
 static int create_listener(struct cfg *, struct sockaddr *, int, int *, int *);
 static int handle_command(struct cfg *, int);
@@ -113,93 +112,6 @@ setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
 
     if ((n = resolve(ia, pf, bindhost, servname, AI_PASSIVE)) != 0)
 	errx(1, "setbindhost: %s", gai_strerror(n));
-}
-
-static void
-append_session(struct cfg *cf, struct rtpp_session *sp, int index)
-{
-
-    if (sp->fds[index] != -1) {
-	cf->sessions[cf->nsessions] = sp;
-	cf->pfds[cf->nsessions].fd = sp->fds[index];
-	cf->pfds[cf->nsessions].events = POLLIN;
-	cf->pfds[cf->nsessions].revents = 0;
-	sp->sidx[index] = cf->nsessions;
-	cf->nsessions++;
-    } else {
-	sp->sidx[index] = -1;
-    }
-}
-
-static void
-append_server(struct cfg *cf, struct rtpp_session *sp)
-{
-
-    if (sp->rtps[0] != NULL || sp->rtps[1] != NULL) {
-        if (sp->sridx == -1) {
-	    cf->rtp_servers[cf->rtp_nsessions] = sp;
-	    sp->sridx = cf->rtp_nsessions;
-	    cf->rtp_nsessions++;
-	}
-    } else {
-        sp->sridx = -1;
-    }
-}
-
-static void
-remove_session(struct cfg *cf, struct rtpp_session *sp)
-{
-    int i;
-
-    rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped", sp->pcount[0], sp->pcount[1],
-      sp->pcount[2], sp->pcount[3]);
-    rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTCP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped", sp->rtcp->pcount[0],
-      sp->rtcp->pcount[1], sp->rtcp->pcount[2], sp->rtcp->pcount[3]);
-    rtpp_log_write(RTPP_LOG_INFO, sp->log, "session on ports %d/%d is cleaned up",
-      sp->ports[0], sp->ports[1]);
-    for (i = 0; i < 2; i++) {
-	if (sp->addr[i] != NULL)
-	    free(sp->addr[i]);
-	if (sp->rtcp->addr[i] != NULL)
-	    free(sp->rtcp->addr[i]);
-	if (sp->fds[i] != -1) {
-	    close(sp->fds[i]);
-	    assert(cf->sessions[sp->sidx[i]] == sp);
-	    cf->sessions[sp->sidx[i]] = NULL;
-	    assert(cf->pfds[sp->sidx[i]].fd == sp->fds[i]);
-	    cf->pfds[sp->sidx[i]].fd = -1;
-	    cf->pfds[sp->sidx[i]].events = 0;
-	}
-	if (sp->rtcp->fds[i] != -1) {
-	    close(sp->rtcp->fds[i]);
-	    assert(cf->sessions[sp->rtcp->sidx[i]] == sp->rtcp);
-	    cf->sessions[sp->rtcp->sidx[i]] = NULL;
-	    assert(cf->pfds[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
-	    cf->pfds[sp->rtcp->sidx[i]].fd = -1;
-	    cf->pfds[sp->rtcp->sidx[i]].events = 0;
-	}
-	if (sp->rrcs[i] != NULL)
-	    rclose(sp, sp->rrcs[i]);
-	if (sp->rtcp->rrcs[i] != NULL)
-	    rclose(sp, sp->rtcp->rrcs[i]);
-	if (sp->rtps[i] != NULL) {
-	    cf->rtp_servers[sp->sridx] = NULL;
-	    rtp_server_free(sp->rtps[i]);
-	}
-    }
-    hash_table_remove(cf, sp);
-    if (sp->call_id != NULL)
-	free(sp->call_id);
-    if (sp->tag != NULL)
-	free(sp->tag);
-    rtpp_log_close(sp->log);
-    free(sp->rtcp);
-    rtp_resizer_free(&sp->resizers[0]);
-    rtp_resizer_free(&sp->resizers[1]);
-    free(sp);
-    cf->sessions_active--;
 }
 
 static int
@@ -272,24 +184,6 @@ create_listener(struct cfg *cf, struct sockaddr *ia,  int startport,
 	return 0;
     }
     return -1;
-}
-
-static int
-compare_session_tags(char *tag1, char *tag0, unsigned *medianum_p)
-{
-    size_t len0 = strlen(tag0);
-
-    if (!strncmp(tag1, tag0, len0)) {
-	if (tag1[len0] == ';') {
-	    if (medianum_p != 0)
-		*medianum_p = strtoul(tag1 + len0 + 1, NULL, 10);
-	    return 2;
-	}
-	if (tag1[len0] == 0)
-	    return 1;
-	return 0;
-    }
-    return 0;
 }
 
 static int
