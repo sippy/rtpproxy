@@ -205,7 +205,6 @@ handle_command(struct cfg *cf, int controlfd)
     struct sockaddr *ia[2], *lia[2];
     struct sockaddr_storage raddr;
     int requested_nsamples;
-    recording_name = NULL;
 
     requested_nsamples = -1;
 
@@ -226,6 +225,7 @@ handle_command(struct cfg *cf, int controlfd)
     lia[0] = lia[1] = cf->bindaddr[0];
     lidx = 1;
     fds[0] = fds[1] = -1;
+    recording_name = NULL;
 
     if (cf->umode == 0) {
 	for (;;) {
@@ -306,15 +306,15 @@ handle_command(struct cfg *cf, int controlfd)
         record = 1;
         break;
 
-    case 's':
-    case 'S':
-        noplay = 1;
-        break;
-
     case 'c':
     case 'C':
 	record = 2;
 	break;
+
+    case 's':
+    case 'S':
+        noplay = 1;
+        break;
 
     case 'v':
     case 'V':
