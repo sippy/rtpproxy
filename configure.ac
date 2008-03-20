@@ -8,8 +8,21 @@ AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([main.c])
 AM_CONFIG_HEADER([config.h])
 
+# cross-compile macros
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+
 # Checks for programs.
 AC_PROG_CC
+
+case "${host_os}" in
+freebsd*)
+  CPPFLAGS=-I/usr/local/include
+  LDFLAGS=-L/usr/local/lib
+  ;;
+*)
+  ;;
+esac
 
 # Checks for libraries.
 
