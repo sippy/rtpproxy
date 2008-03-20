@@ -35,6 +35,9 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <poll.h>
+#ifdef __linux__
+#include <stdint.h>
+#endif
 
 #include "rtpp_log.h"
 
