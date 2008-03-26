@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateDead.py,v 1.4 2008/03/26 17:46:52 sobomax Exp $
+# $Id: UaStateDead.py,v 1.5 2008/03/26 18:01:45 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 
@@ -41,3 +41,7 @@ class UaStateDead(UaStateGeneric):
         ua.fail_cbs = ()
         ua.on_local_sdp_change = None
         ua.on_remote_sdp_change = None
+        # Keep this at the very end of processing
+        for callback in ua.dead_cbs:
+            callback(ua)
+        ua.dead_cbs = ()

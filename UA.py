@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.4 2008/02/18 19:49:45 sobomax Exp $
+# $Id: UA.py,v 1.5 2008/03/26 18:01:45 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -47,7 +47,6 @@ class UA:
     password = None
     equeue = None
     dId = None
-    nh_address = None
     credit_time = None
     credit_timer = None
     warn_timer = None
@@ -55,6 +54,7 @@ class UA:
     disc_cbs = None
     fail_cbs = None
     ring_cbs = None
+    dead_cbs = None
     rCSeq = None
     fTag = None
     lUri = None
@@ -84,14 +84,14 @@ class UA:
     last_scode = 100
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
-      conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, ftag = None, extra_headers = None, \
+      conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ftag = None, extra_headers = None, \
       expire_time = None, no_progress_time = None):
         self.global_config = global_config
         self.event_cb = event_cb
         self.equeue = []
         self.username = username
         self.password = password
-        self.nh_address = nh_address
+        self.rAddr0 = nh_address
         self.credit_time = credit_time
         if conn_cbs != None:
             self.conn_cbs = conn_cbs
@@ -109,6 +109,10 @@ class UA:
             self.ring_cbs = ring_cbs
         else:
             self.ring_cbs = ()
+        if dead_cbs != None:
+            self.dead_cbs = dead_cbs
+        else:
+            self.dead_cbs = ()
         if ftag != None:
             self.fTag = ftag
         else:

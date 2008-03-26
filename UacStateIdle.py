@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateIdle.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: UacStateIdle.py,v 1.4 2008/03/26 18:01:45 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -48,7 +48,7 @@ class UacStateIdle(UaStateGeneric):
             else:
                 self.ua.cId = cId.getCopy()
             self.ua.global_config['sip_tm'].regConsumer(self.ua, str(self.ua.cId))
-            self.ua.rTarget = SipURL(username = calledID, host = self.ua.nh_address[0], port = self.ua.nh_address[1])
+            self.ua.rTarget = SipURL(username = calledID, host = self.ua.rAddr0[0], port = self.ua.rAddr0[1])
             self.ua.rUri = SipTo(address = SipAddress(url = self.ua.rTarget.getCopy(), hadbrace = True))
             self.ua.rUri.getUrl().port = None
             self.ua.lUri = SipFrom(address = SipAddress(url = self.ua.rTarget.getCopy(), hadbrace = True, name = callingName))
@@ -58,8 +58,7 @@ class UacStateIdle(UaStateGeneric):
             self.ua.lCSeq = 200
             self.ua.lContact = SipContact()
             self.ua.routes = []
-            self.ua.rAddr = self.ua.nh_address
-            self.ua.rAddr0 = self.ua.nh_address
+            self.ua.rAddr = self.ua.rAddr0
             self.ua.cGUID = cGUID
             self.ua.lSDP = body
             req = self.ua.genRequest('INVITE', body)
