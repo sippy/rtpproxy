@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.21 2008/03/26 18:46:05 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.22 2008/03/26 18:47:45 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -357,7 +357,7 @@ class CallController:
             self.global_config['cmap'].ccmap.remove(self)
 
     def oDead(self, ua):
-        if isinstance(self.uaA.state, UaStateDead):
+        if ua == self.uaO and isinstance(self.uaA.state, UaStateDead):
             if self.global_config['cmap'].debug_mode:
                 print 'garbadge collecting', self
             for ua in self.uaA, self.uaO:
