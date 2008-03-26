@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.5 2008/03/26 18:01:45 sobomax Exp $
+# $Id: UA.py,v 1.6 2008/03/26 18:03:00 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
