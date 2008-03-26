@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.23 2008/03/26 18:52:04 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.24 2008/03/26 19:05:30 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -79,12 +79,12 @@ class CallController:
     state = None
     cId = None
     cld = None
-    acct = None
     eTry = None
     routes = None
     remote_ip = None
     source = None
     acctA = None
+    acctO = None
     global_config = None
     rtp_proxy_session = None
     huntstop_scodes = None
@@ -348,10 +348,6 @@ class CallController:
         if (self.uaO == None or isinstance(self.uaO.state, UaStateDead)):
             if self.global_config['cmap'].debug_mode:
                 print 'garbadge collecting', self
-            for ua in self.uaA, self.uaO:
-                if ua == None:
-                    continue
-                ua.state = None
             self.acctA = None
             self.acctO = None
             self.global_config['cmap'].ccmap.remove(self)
@@ -360,10 +356,6 @@ class CallController:
         if ua == self.uaO and isinstance(self.uaA.state, UaStateDead):
             if self.global_config['cmap'].debug_mode:
                 print 'garbadge collecting', self
-            for ua in self.uaA, self.uaO:
-                if ua == None:
-                    continue
-                ua.state = None
             self.acctA = None
             self.acctO = None
             self.global_config['cmap'].ccmap.remove(self)
