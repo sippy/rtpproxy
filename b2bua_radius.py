@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.22 2008/03/26 18:47:45 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.23 2008/03/26 18:52:04 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -386,12 +386,12 @@ class CallMap:
     #rc2 = None
 
     def __init__(self, global_config):
+        self.global_config = global_config
         self.ccmap = []
         self.el = Timeout(self.GClector, 60, -1)
         Signal(SIGHUP, self.discAll, SIGHUP)
         Signal(SIGUSR2, self.toggleDebug, SIGUSR2)
         Signal(SIGPROF, self.safeRestart, SIGPROF)
-        self.global_config = global_config
         #gc.disable()
         #gc.set_debug(gc.DEBUG_STATS)
         #gc.set_threshold(0)
