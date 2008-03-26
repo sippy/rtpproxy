@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.19 2008/03/26 17:34:26 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.20 2008/03/26 18:07:52 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -391,8 +391,9 @@ class CallMap:
             if self.global_config.has_key('accept_ips') and source[0] not in self.global_config['accept_ips']:
                 return (req.genResponse(403, 'Forbidden'), None, None)
             cc = CallController(remote_ip, source, self.global_config)
+            rval = cc.uaA.recvRequest(req)
             self.ccmap.append(cc)
-            return cc.uaA.recvRequest(req)
+            return rval
         if req.getMethod() in ('NOTIFY', 'PING'):
             # Whynot?
             return (req.genResponse(200, 'OK'), None, None)
