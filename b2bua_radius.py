@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.20 2008/03/26 18:07:52 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.21 2008/03/26 18:46:05 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -91,7 +91,8 @@ class CallController:
 
     def __init__(self, remote_ip, source, global_config):
         self.global_config = global_config
-        self.uaA = UA(self.global_config, event_cb = self.recvEvent, conn_cbs = (self.aConn,), disc_cbs = (self.aDisc,), fail_cbs = (self.aDisc,))
+        self.uaA = UA(self.global_config, event_cb = self.recvEvent, conn_cbs = (self.aConn,), disc_cbs = (self.aDisc,), \
+          fail_cbs = (self.aDisc,), dead_cbs = (self.aDead,))
         self.uaA.kaInterval = self.global_config['ka_ans']
         self.state = CCStateIdle
         self.uaO = None
@@ -307,7 +308,7 @@ class CallController:
         if not forward_on_fail and self.global_config['acct_enable']:
             disc_handlers.append(self.acctO.disc)
         self.uaO = UA(self.global_config, self.recvEvent, user, passw, (host, port), credit_time, tuple(conn_handlers), \
-          tuple(disc_handlers), tuple(disc_handlers), expire_time = expires, \
+          tuple(disc_handlers), tuple(disc_handlers), dead_cbs = (self.oDead,), expire_time = expires, \
           no_progress_time = no_progress_expires, extra_headers = parameters.get('extra_headers', None))
         if self.rtp_proxy_session != None and parameters.get('rtpp', True):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
@@ -342,6 +343,30 @@ class CallController:
             if user_agent != None:
                 user_agent.recvEvent(CCEventDisconnect(rtime = rtime))
         self.rtp_proxy_session = None
+
+    def aDead(self, ua):
+        if (self.uaO == None or isinstance(self.uaO.state, UaStateDead)):
+            if self.global_config['cmap'].debug_mode:
+                print 'garbadge collecting', self
+            for ua in self.uaA, self.uaO:
+                if ua == None:
+                    continue
+                ua.state = None
+            self.acctA = None
+            self.acctO = None
+            self.global_config['cmap'].ccmap.remove(self)
+
+    def oDead(self, ua):
+        if isinstance(self.uaA.state, UaStateDead):
+            if self.global_config['cmap'].debug_mode:
+                print 'garbadge collecting', self
+            for ua in self.uaA, self.uaO:
+                if ua == None:
+                    continue
+                ua.state = None
+            self.acctA = None
+            self.acctO = None
+            self.global_config['cmap'].ccmap.remove(self)
 
     def group_expires(self, skipto):
         if self.state != CCStateARComplete or len(self.routes) == 0 or self.routes[0][0] > skipto or \
@@ -417,27 +442,17 @@ class CallMap:
         self.safe_restart = True
 
     def GClector(self):
+        print 'GC is invoked, %d calls in map' % len(self.ccmap)
         if self.debug_mode:
             print self.global_config['sip_tm'].tclient, self.global_config['sip_tm'].tserver
-        else:
-            print '%d client, %d server transactions in memory' % \
-              (len(self.global_config['sip_tm'].tclient), len(self.global_config['sip_tm'].tserver))
-        print 'GC is invoked, %d calls in map' % len(self.ccmap)
-        for cc in tuple(self.ccmap):
-            if isinstance(cc.uaA.state, UaStateDead) and (cc.uaO == None or isinstance(cc.uaO.state, UaStateDead)):
-                if self.debug_mode:
-                    print 'garbadge collecting', cc
-                for ua in cc.uaA, cc.uaO:
-                    if ua == None:
-                        continue
-                    ua.state = None
-                    ua.event_cb = None
-                self.ccmap.remove(cc)
-            elif self.debug_mode:
+            for cc in tuple(self.ccmap):
                 try:
                     print cc.uaA.state, cc.uaO.state
                 except AttributeError:
                     print None
+        else:
+            print '%d client, %d server transactions in memory' % \
+              (len(self.global_config['sip_tm'].tclient), len(self.global_config['sip_tm'].tserver))
         if self.safe_restart:
             if len(self.ccmap) == 0:
                 self.global_config['sip_tm'].userv.close()
@@ -641,10 +656,10 @@ if __name__ == '__main__':
         global_config['radius_client'] = RadiusAuthorisation(global_config)
     SipConf.my_uaname = 'Sippy B2BUA (RADIUS)'
 
-    cmap = CallMap(global_config)
+    global_config['cmap'] = CallMap(global_config)
 
-    global_config['sip_tm'] = SipTransactionManager(global_config, cmap.recvRequest)
-    cli_server = Cli_server_local(cmap.recvCommand, '/var/run/b2bua.sock')
+    global_config['sip_tm'] = SipTransactionManager(global_config, global_config['cmap'].recvRequest)
+    cli_server = Cli_server_local(global_config['cmap'].recvCommand, '/var/run/b2bua.sock')
 
     if not foreground:
         file(pidfile, 'w').write(str(os.getpid()) + '\n')
