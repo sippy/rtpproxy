@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Udp_server.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: Udp_server.py,v 1.4 2008/03/26 17:55:59 sobomax Exp $
 
 from warnings import filterwarnings
 from twisted.internet import reactor
@@ -62,7 +62,6 @@ class Udp_server(DatagramProtocol):
                 stdout.flush()
 
 if __name__ == '__main__':
-    from twisted.internet import reactor
     from system import exit
 
     def ping_received(data, address, udp_server):
