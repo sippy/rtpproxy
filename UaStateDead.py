@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateDead.py,v 1.6 2008/03/26 18:03:00 sobomax Exp $
+# $Id: UaStateDead.py,v 1.7 2008/03/26 19:03:41 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 
@@ -45,3 +45,5 @@ class UaStateDead(UaStateGeneric):
         for callback in ua.dead_cbs:
             callback(ua)
         ua.dead_cbs = ()
+        # Break cross-ref chain
+        self.ua = None
