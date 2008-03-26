@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.18 2008/03/26 17:04:35 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.19 2008/03/26 17:34:26 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -332,7 +332,7 @@ class CallController:
         self.acctA.conn(ua, rtime)
 
     def aDisc(self, ua, rtime, result = 0):
-        if self.uaO != None:
+        if self.uaO != None and self.state != CCStateDead:
             self.state = CCStateDisconnecting
         else:
             self.state = CCStateDead
