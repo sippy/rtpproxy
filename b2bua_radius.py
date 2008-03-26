@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.17 2008/03/13 01:09:41 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.18 2008/03/26 17:04:35 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -70,6 +70,8 @@ class CCStateARComplete:
     sname = 'ARComplete'
 class CCStateDead:
     sname = 'Dead'
+class CCStateDisconnecting:
+    sname = 'Disconnecting'
 
 class CallController:
     uaA = None
@@ -160,6 +162,9 @@ class CallController:
             self.uaA.recvEvent(event)
 
     def rDone(self, results):
+        # Check that uaA is still in a valid state
+        if not isinstance(self.uaA.state, UasStateTrying):
+            return
         # Check that we got necessary result from Radius
         if len(results) != 2 or results[1] != 0:
             self.uaA.recvEvent(CCEventFail((403, 'Auth Failed')))
@@ -327,6 +332,10 @@ class CallController:
         self.acctA.conn(ua, rtime)
 
     def aDisc(self, ua, rtime, result = 0):
+        if self.uaO != None:
+            self.state = CCStateDisconnecting
+        else:
+            self.state = CCStateDead
         if self.acctA != None:
             self.acctA.disc(ua, rtime, result)
         for user_agent in (self.uaO,):
