@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.25 2008/03/26 20:04:56 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.26 2008/03/26 20:09:02 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -363,6 +363,13 @@ class CallController:
     def group_expires(self, skipto):
         if self.state != CCStateARComplete or len(self.routes) == 0 or self.routes[0][0] > skipto or \
           (not isinstance(self.uaA.state, UasStateTrying) and not isinstance(self.uaA.state, UasStateRinging)):
+            return
+        # When the last group in the list has timeouted don't disconnect
+        # the current attempt forcefully. Instead, make sure that if the
+        # current originate call leg fails no more routes will be
+        # processed.
+        if skipto == self.routes[-1][0] + 1:
+            self.routes = []
             return
         while self.routes[0][0] != skipto:
             self.routes.pop(0)
