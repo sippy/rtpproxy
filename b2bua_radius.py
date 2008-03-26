@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.24 2008/03/26 19:05:30 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.25 2008/03/26 20:04:56 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -316,7 +316,7 @@ class CallController:
             body = body.getCopy()
             body.content += 'a=nortpproxy:yes\r\n'
         self.uaO.kaInterval = self.global_config['ka_orig']
-        if parameters.has_key['group_timeout']:
+        if parameters.has_key('group_timeout'):
             timeout, skipto = parameters['group_timeout']
             Timeout(self.group_expires, timeout, 1, skipto)
         self.uaO.recvEvent(CCEventTry((cId + '-b2b_%d' % rnum, cGUID, cli, cld, body, auth, \
