@@ -40,9 +40,6 @@
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <assert.h>
-#if !defined(__solaris__)
-#include <err.h>
-#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>

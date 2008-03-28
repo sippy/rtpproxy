@@ -34,6 +34,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#if !defined(__solaris__)
+#include <err.h>
+#endif
 #include <netdb.h>
 
 #include "rtpp_defines.h"
