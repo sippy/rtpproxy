@@ -24,13 +24,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.h,v 1.6 2007/11/16 08:43:26 sobomax Exp $
+ * $Id: rtp.h,v 1.7 2008/03/28 23:15:19 sobomax Exp $
  *
  */
 
 #ifndef _RTP_H_
 #define _RTP_H_
 
+#include <sys/socket.h>
 #include <sys/types.h>
 
 /*
