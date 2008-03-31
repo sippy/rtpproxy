@@ -46,13 +46,13 @@ then
    AC_DEFINE([ENABLE_G729], 1, [Define if you have libg729 library installed])
   )
 fi
-if test -z "$G729_SUPPORT"
-then
-  echo "*************************************************************************** $ECHO_C" 1>&6
-  echo "* Please contact sales@sippysoft.com if you need G.729 support in makeann * $ECHO_C" 1>&6
-  echo "*************************************************************************** $ECHO_C" 1>&6
-  sleep 1
-fi
+##if test -z "$G729_SUPPORT"
+##then
+##  echo "*************************************************************************** $ECHO_C" 1>&6
+##  echo "* Please contact sales@sippysoft.com if you need G.729 support in makeann * $ECHO_C" 1>&6
+##  echo "*************************************************************************** $ECHO_C" 1>&6
+##  sleep 1
+##fi
 
 # Checks for header files.
 AC_HEADER_STDC
