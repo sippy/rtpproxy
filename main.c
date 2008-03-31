@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.66 2008/03/31 20:35:39 sobomax Exp $
+ * $Id: main.c,v 1.67 2008/03/31 22:55:49 sobomax Exp $
  *
  */
 
@@ -89,7 +89,6 @@ static struct proto_cap proto_caps[] = {
 
 static void setbindhost(struct sockaddr *, int, const char *, const char *);
 static void remove_session(struct cfg *, struct rtpp_session *);
-static void alarmhandler(struct cfg *);
 static int create_twinlistener(struct cfg *, struct sockaddr *, int, int *);
 static int create_listener(struct cfg *, struct sockaddr *, int, int *, int *);
 static int handle_command(struct cfg *, int);
@@ -142,26 +141,6 @@ append_server(struct cfg *cf, struct rtpp_session *sp)
 	}
     } else {
         sp->sridx = -1;
-    }
-}
-
-/* Function that gets called approximately every TIMETICK seconds */
-static void
-alarmhandler(struct cfg *cf)
-{
-    struct rtpp_session *sp;
-    int i;
-
-    for (i = 1; i < cf->nsessions; i++) {
-	sp = cf->sessions[i];
-	if (sp == NULL || sp->rtcp == NULL || sp->sidx[0] != i)
-	    continue;
-	if (sp->ttl == 0) {
-	    rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
-	    remove_session(cf, sp);
-	    continue;
-	}
-	sp->ttl--;
     }
 }
 
@@ -1522,7 +1501,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 }
 
 static void
-process_rtp(struct cfg *cf, double ctime)
+process_rtp(struct cfg *cf, double ctime, int alarm_tick)
 {
     int readyfd, skipfd, ridx;
     struct rtpp_session *sp;
@@ -1531,6 +1510,18 @@ process_rtp(struct cfg *cf, double ctime)
     /* Relay RTP/RTCP */
     skipfd = 0;
     for (readyfd = 1; readyfd < cf->nsessions; readyfd++) {
+	sp = cf->sessions[readyfd];
+
+	if (alarm_tick != 0 && sp != NULL && sp->rtcp != NULL &&
+	  sp->sidx[0] == readyfd) {
+	    if (sp->ttl == 0) {
+		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
+		remove_session(cf, sp);
+	    } else {
+		sp->ttl--;
+	    }
+	}
+
 	if (cf->pfds[readyfd].fd == -1) {
 	    /* Deleted session, count and move one */
 	    skipfd++;
@@ -1538,7 +1529,6 @@ process_rtp(struct cfg *cf, double ctime)
 	}
 
 	/* Find index of the call leg within a session */
-	sp = cf->sessions[readyfd];
 	for (ridx = 0; ridx < 2; ridx++)
 	    if (cf->pfds[readyfd].fd == sp->fds[ridx])
 		break;
@@ -1602,7 +1592,7 @@ process_commands(struct cfg *cf)
 int
 main(int argc, char **argv)
 {
-    int i, len, timeout, controlfd;
+    int i, len, timeout, controlfd, alarm_tick;
     double sptime, eptime, last_tick_time;
     unsigned long delay;
     struct cfg cf;
@@ -1685,13 +1675,15 @@ main(int argc, char **argv)
 	if (cf.rtp_nsessions > 0) {
 	    process_rtp_servers(&cf, eptime);
 	}
-	process_rtp(&cf, eptime);
+	if (eptime > last_tick_time + TIMETICK) {
+	    alarm_tick = 1;
+	    last_tick_time = eptime;
+	} else {
+	    alarm_tick = 0;
+	}
+	process_rtp(&cf, eptime, alarm_tick);
 	if (i > 0) {
 	    process_commands(&cf);
-	}
-	if (eptime > last_tick_time + TIMETICK) {
-	    alarmhandler(&cf);
-	    last_tick_time = eptime;
 	}
     }
 
