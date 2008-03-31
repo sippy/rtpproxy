@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.8 2008/03/31 20:35:39 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.9 2008/03/31 23:42:11 sobomax Exp $
  *
  */
 
@@ -35,6 +35,9 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <poll.h>
+#ifdef __linux__
+#include <stdint.h>
+#endif
 
 /*
  * Version of the command protocol, bump only when backward-incompatible
@@ -90,6 +93,9 @@ struct cfg {
 
     struct rlimit nofile_limit;
     int nofile_limit_warned;
+
+    uint8_t rand_table[256];
+    struct rtpp_session *hash_table[256];
 
     char *run_uname;
     char *run_gname;

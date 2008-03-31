@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_server.h,v 1.3 2007/11/16 02:44:20 sobomax Exp $
+ * $Id: rtp_server.h,v 1.4 2008/03/31 23:42:11 sobomax Exp $
  *
  */
 
@@ -34,6 +34,8 @@
 #include <sys/types.h>
 
 #include "rtp.h"
+#include "rtpp_defines.h"
+#include "rtpp_session.h"
 
 struct rtp_server {
     double btime;
@@ -59,5 +61,6 @@ struct rtp_server {
 struct rtp_server *rtp_server_new(const char *, rtp_type_t, int);
 void rtp_server_free(struct rtp_server *);
 int rtp_server_get(struct rtp_server *, double);
+void append_server(struct cfg *, struct rtpp_session *);
 
 #endif

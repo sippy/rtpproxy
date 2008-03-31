@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_server.c,v 1.5 2007/11/16 02:44:20 sobomax Exp $
+ * $Id: rtp_server.c,v 1.6 2008/03/31 23:42:11 sobomax Exp $
  *
  */
 
@@ -152,4 +152,19 @@ rtp_server_get(struct rtp_server *rp, double ctime)
     rp->rtp->seq = htons(ntohs(rp->rtp->seq) + 1);
 
     return (rp->pload - rp->buf) + rlen;
+}
+
+void
+append_server(struct cfg *cf, struct rtpp_session *sp)
+{
+
+    if (sp->rtps[0] != NULL || sp->rtps[1] != NULL) {
+	if (sp->sridx == -1) {
+	    cf->rtp_servers[cf->rtp_nsessions] = sp;
+	    sp->sridx = cf->rtp_nsessions;
+	    cf->rtp_nsessions++;
+	}
+    } else {
+	sp->sridx = -1;
+    }
 }
