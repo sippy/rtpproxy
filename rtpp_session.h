@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.7 2008/02/04 08:38:05 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.8 2008/03/31 23:36:12 sobomax Exp $
  *
  */
 
@@ -71,6 +71,16 @@ struct rtpp_session {
     /* Flag that indicates whether or not address supplied by client can't be trusted */
     int untrusted_addr[2];
     struct rtp_resizer resizers[2];
+    struct rtpp_session *prev;
+    struct rtpp_session *next;
 };
+
+void init_hash_table(struct cfg *);
+struct rtpp_session *hash_table_findfirst(struct cfg *, char *);
+struct rtpp_session *hash_table_findnext(struct rtpp_session *);
+void hash_table_append(struct cfg *, struct rtpp_session *);
+void append_session(struct cfg *, struct rtpp_session *, int);
+void remove_session(struct cfg *, struct rtpp_session *);
+int compare_session_tags(char *, char *, unsigned *);
 
 #endif
