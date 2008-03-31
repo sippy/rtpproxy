@@ -24,13 +24,16 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.7 2007/12/18 23:02:02 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.8 2008/03/31 20:35:39 sobomax Exp $
  *
  */
 
 #ifndef _RTPP_DEFINES_H_
 #define _RTPP_DEFINES_H_
 
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <poll.h>
 
 /*
@@ -71,6 +74,7 @@ struct cfg {
     int nsessions;
     int rtp_nsessions;
     unsigned long long sessions_created;
+    int sessions_active;
     int max_ttl;
     /*
      * The first address is for external interface, the second one - for
@@ -83,6 +87,10 @@ struct cfg {
     const char *sdir;
     int rrtcp;			/* Whether or not to relay RTCP? */
     rtpp_log_t glog;
+
+    struct rlimit nofile_limit;
+    int nofile_limit_warned;
+
     char *run_uname;
     char *run_gname;
     int no_check;
