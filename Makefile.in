@@ -60,7 +60,8 @@ makeann_OBJECTS = $(am_makeann_OBJECTS)
 makeann_LDADD = $(LDADD)
 am_rtpproxy_OBJECTS = main.$(OBJEXT) rtp_server.$(OBJEXT) \
 	rtpp_record.$(OBJEXT) rtpp_util.$(OBJEXT) rtp.$(OBJEXT) \
-	rtp_resizer.$(OBJEXT) rtpp_session.$(OBJEXT)
+	rtp_resizer.$(OBJEXT) rtpp_session.$(OBJEXT) \
+	rtpp_command.$(OBJEXT)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
 rtpproxy_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -180,7 +181,8 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 rtpproxy_SOURCES = main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
-  rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c
+  rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
+  rtpp_command.c rtpp_command.h
 
 dist_man_MANS = rtpproxy.8
 makeann_SOURCES = makeann.c rtp.h g711.h
@@ -289,6 +291,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp_resizer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp_server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_command.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_record.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_session.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_util.Po@am__quote@
