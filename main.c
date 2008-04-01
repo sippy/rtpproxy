@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.68 2008/03/31 23:36:12 sobomax Exp $
+ * $Id: main.c,v 1.69 2008/04/01 00:49:58 sobomax Exp $
  *
  */
 
@@ -184,6 +184,21 @@ create_listener(struct cfg *cf, struct sockaddr *ia,  int startport,
     return -1;
 }
 
+static void
+doreply(struct cfg *cf, int fd, char *buf, int len,
+  struct sockaddr_storage *raddr, socklen_t rlen)
+{
+
+    buf[len] = '\0';
+    rtpp_log_write(RTPP_LOG_DBUG, cf->glog, "sending reply \"%s\"", buf);
+    if (cf->umode == 0) {
+	write(fd, buf, len);
+    } else {
+	while (sendto(fd, buf, len, 0, sstosa(raddr),
+	  rlen) == -1 && errno == ENOBUFS);
+    }
+}
+
 static int
 handle_command(struct cfg *cf, int controlfd)
 {
@@ -204,19 +219,6 @@ handle_command(struct cfg *cf, int controlfd)
     int requested_nsamples;
 
     requested_nsamples = -1;
-
-#define	doreply() \
-    { \
-	buf[len] = '\0'; \
-	rtpp_log_write(RTPP_LOG_DBUG, cf->glog, "sending reply \"%s\"", buf); \
-	if (cf->umode == 0) { \
-	    write(controlfd, buf, len); \
-	} else { \
-	    while (sendto(controlfd, buf, len, 0, sstosa(&raddr), \
-	      rlen) == -1 && errno == ENOBUFS); \
-	} \
-    }
-
     ia[0] = ia[1] = NULL;
     spa = spb = NULL;
     lia[0] = lia[1] = cf->bindaddr[0];
@@ -336,7 +338,8 @@ handle_command(struct cfg *cf, int controlfd)
 		len = sprintf(buf, "%d\n", known);
 	    else
 		len = sprintf(buf, "%s %d\n", cookie, known);
-	    goto doreply;
+	    doreply(cf, controlfd, buf, len, &raddr, rlen);
+	    return 0;
 	}
 	if (argc != 1 && argc != 2) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
@@ -348,8 +351,8 @@ handle_command(struct cfg *cf, int controlfd)
 	    len = sprintf(buf, "%d\n", CPROTOVER);
 	else
 	    len = sprintf(buf, "%s %d\n", cookie, CPROTOVER);
-	goto doreply;
-	break;
+	doreply(cf, controlfd, buf, len, &raddr, rlen);
+	return 0;
 
     case 'i':
     case 'I':
@@ -400,12 +403,12 @@ handle_command(struct cfg *cf, int controlfd)
 	      addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
 	      spa->pcount[2], spa->pcount[3], spb->ttl);
 	    if (len + 512 > sizeof(buf)) {
-		doreply();
+		doreply(cf, controlfd, buf, len, &raddr, rlen);
 		len = 0;
 	    }
 	}
 	if (len > 0)
-	    doreply();
+	    doreply(cf, controlfd, buf, len, &raddr, rlen);;
 	return 0;
 	break;
 
@@ -867,8 +870,7 @@ writeport:
     else
 	len += sprintf(cp, "%d %s%s\n", lport, addr2char(lia[0]),
 	  (lia[0]->sa_family == AF_INET) ? "" : " 6");
-doreply:
-    doreply();
+    doreply(cf, controlfd, buf, len, &raddr, rlen);
     return 0;
 
 nomem:
@@ -891,7 +893,9 @@ goterror:
 	len = sprintf(buf, "%s E%d\n", cookie, ecode);
     else
 	len = sprintf(buf, "E%d\n", ecode);
-    goto doreply;
+    doreply(cf, controlfd, buf, len, &raddr, rlen);
+    return 0;
+
 do_ok:
     if (cookie != NULL)
 	len = sprintf(buf, "%s 0\n", cookie);
@@ -899,7 +903,7 @@ do_ok:
 	strcpy(buf, "0\n");
 	len = 2;
     }
-    goto doreply;
+    doreply(cf, controlfd, buf, len, &raddr, rlen);
     return 0;
 }
 
