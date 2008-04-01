@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.h,v 1.5 2007/12/18 23:02:02 sobomax Exp $
+ * $Id: rtpp_network.h,v 1.6 2008/04/01 22:32:03 sobomax Exp $
  *
  */
 
@@ -42,6 +42,8 @@
 #include "rtpp_defines.h"
 
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
+#define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
+#define	NOT(x)		(((x) == 0) ? 1 : 0)
 
 /* Function prototypes */
 int ishostseq(struct sockaddr *, struct sockaddr *);
