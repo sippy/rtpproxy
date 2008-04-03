@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.5 2008/04/03 20:49:58 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.6 2008/04/03 23:05:41 sobomax Exp $
  *
  */
 
@@ -33,6 +33,7 @@
 #include <sys/uio.h>
 #include <netinet/in.h>
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <netdb.h>
@@ -476,7 +477,7 @@ handle_command(struct cfg *cf, int controlfd)
     }
     if (op == COPY) {
 	if (argc < 4 || argc > 5) {
-	    rtpp_log_write(RTPP_LOG_ERR, glog, "command syntax error");
+	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 	    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
 	    return 0;
 	}
