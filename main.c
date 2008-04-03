@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.70 2008/04/01 22:32:03 sobomax Exp $
+ * $Id: main.c,v 1.71 2008/04/03 20:51:45 sobomax Exp $
  *
  */
 
@@ -253,7 +253,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    usage();
 	}
     if (cf->rdir == NULL && cf->sdir != NULL)
-        errx(1, "-S switch requires -r switch");
+	errx(1, "-S switch requires -r switch");
 
     if (cf->no_check == 0 && getuid() == 0 && cf->run_uname == NULL) {
 	if (cf->umode != 0) {
@@ -396,35 +396,35 @@ process_rtp_servers(struct cfg *cf, double ctime)
 
     skipfd = 0;
     for (j = 0; j < cf->rtp_nsessions; j++) {
-        sp = cf->rtp_servers[j];
-        if (sp == NULL) {
-            skipfd++;
-            continue;
-        }
-        if (skipfd > 0) {
-            cf->rtp_servers[j - skipfd] = cf->rtp_servers[j];
-            sp->sridx = j - skipfd;
-        }
-        for (sidx = 0; sidx < 2; sidx++) {
-            if (sp->rtps[sidx] == NULL || sp->addr[sidx] == NULL)
-                continue;
-            while ((len = rtp_server_get(sp->rtps[sidx], ctime)) != RTPS_LATER) {
-                if (len == RTPS_EOF) {
-                    rtp_server_free(sp->rtps[sidx]);
-                    sp->rtps[sidx] = NULL;
-                    if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
-                        assert(cf->rtp_servers[sp->sridx] == sp);
-                        cf->rtp_servers[sp->sridx] = NULL;
-                        sp->sridx = -1;
-                    }
-                    break;
-                }
-                for (k = (cf->dmode && len < LBR_THRS) ? 2 : 1; k > 0; k--) {
-                    sendto(sp->fds[sidx], sp->rtps[sidx]->buf, len, 0,
-                      sp->addr[sidx], SA_LEN(sp->addr[sidx]));
-                }
-            }
-        }
+	sp = cf->rtp_servers[j];
+	if (sp == NULL) {
+	    skipfd++;
+	    continue;
+	}
+	if (skipfd > 0) {
+	    cf->rtp_servers[j - skipfd] = cf->rtp_servers[j];
+	    sp->sridx = j - skipfd;
+	}
+	for (sidx = 0; sidx < 2; sidx++) {
+	    if (sp->rtps[sidx] == NULL || sp->addr[sidx] == NULL)
+		continue;
+	    while ((len = rtp_server_get(sp->rtps[sidx], ctime)) != RTPS_LATER) {
+		if (len == RTPS_EOF) {
+		    rtp_server_free(sp->rtps[sidx]);
+		    sp->rtps[sidx] = NULL;
+		    if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
+			assert(cf->rtp_servers[sp->sridx] == sp);
+			cf->rtp_servers[sp->sridx] = NULL;
+			sp->sridx = -1;
+		    }
+		    break;
+		}
+		for (k = (cf->dmode && len < LBR_THRS) ? 2 : 1; k > 0; k--) {
+		    sendto(sp->fds[sidx], sp->rtps[sidx]->buf, len, 0,
+		      sp->addr[sidx], SA_LEN(sp->addr[sidx]));
+		}
+	    }
+	}
     }
     cf->rtp_nsessions -= skipfd;
 }
@@ -566,7 +566,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
      * sent out, drop otherwise.
      */
     if (sp->addr[sidx] == NULL || GET_RTP(sp)->rtps[sidx] != NULL) {
-        sp->pcount[3]++;
+	sp->pcount[3]++;
     } else {
 	sp->pcount[2]++;
 	for (i = (cf->dmode && packet->size < LBR_THRS) ? 2 : 1; i > 0; i--) {
@@ -576,7 +576,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
     }
 
     if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
-        rwrite(sp, sp->rrcs[ridx], packet);
+	rwrite(sp, sp->rrcs[ridx], packet);
 }
 
 static void

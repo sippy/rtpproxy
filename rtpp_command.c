@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.4 2008/04/03 20:45:33 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.5 2008/04/03 20:49:58 sobomax Exp $
  *
  */
 
@@ -348,7 +348,7 @@ handle_command(struct cfg *cf, int controlfd)
     case 'R':
 	op = RECORD;
 	rname = "record";
-        break;
+	break;
 
     case 'c':
     case 'C':
@@ -360,7 +360,7 @@ handle_command(struct cfg *cf, int controlfd)
     case 'S':
 	op = NOPLAY;
 	rname = "noplay";
-        break;
+	break;
 
     case 'v':
     case 'V':
@@ -406,9 +406,9 @@ handle_command(struct cfg *cf, int controlfd)
 	for (i = 1; i < cf->nsessions; i++) {
 	    char addrs[4][256];
 
-            spa = cf->sessions[i];
-            if (spa == NULL || spa->sidx[0] != i)
-                continue;
+	    spa = cf->sessions[i];
+	    if (spa == NULL || spa->sidx[0] != i)
+		continue;
 	    /* RTCP twin session */
 	    if (spa->rtcp == NULL) {
 		spb = spa->rtp;
@@ -790,7 +790,7 @@ handle_command(struct cfg *cf, int controlfd)
 	}
 
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
-          "tag %s", lport, from_tag);
+	  "tag %s", lport, from_tag);
     }
 
     if (ia[0] != NULL && ia[1] != NULL) {
@@ -896,7 +896,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	}
     }
     if (ndeleted == 0) {
-        return -1;
+	return -1;
     }
     return 0;
 }
