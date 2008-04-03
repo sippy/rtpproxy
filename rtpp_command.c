@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.3 2008/04/03 18:02:39 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.4 2008/04/03 20:45:33 sobomax Exp $
  *
  */
 
@@ -58,6 +58,7 @@ struct proto_cap proto_caps[] = {
     { "20060704", "Support for extra parameter in the V command" },
     { "20071116", "Support for RTP re-packetization" },
     { "20071218", "Support for forking (copying) RTP stream" },
+    { "20080403", "Support for RTP statistics querying" },
     { NULL, NULL }
 };
 
@@ -67,6 +68,8 @@ static int handle_delete(struct cfg *, char *, char *, char *, int);
 static void handle_noplay(struct cfg *, struct rtpp_session *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
 static void handle_record(struct cfg *, struct rtpp_session *, int, char *);
+static void handle_query(struct cfg *, int, struct sockaddr_storage *,
+  socklen_t, char *, struct rtpp_session *, int);
 
 static int
 create_twinlistener(struct cfg *cf, struct sockaddr *ia, int port, int *fds)
@@ -253,7 +256,7 @@ handle_command(struct cfg *cf, int controlfd)
     struct sockaddr *ia[2], *lia[2];
     struct sockaddr_storage raddr;
     int requested_nsamples;
-    enum {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP} op;
+    enum {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, QUERY} op;
 
     requested_nsamples = -1;
     ia[0] = ia[1] = NULL;
@@ -316,22 +319,26 @@ handle_command(struct cfg *cf, int controlfd)
     case 'u':
     case 'U':
 	op = UPDATE;
+	rname = "update/create";
 	break;
 
     case 'l':
     case 'L':
 	op = LOOKUP;
+	rname = "lookup";
 	break;
 
     case 'd':
     case 'D':
 	op = DELETE;
+	rname = "delete";
 	break;
 
     case 'p':
     case 'P':
 	/* P callid pname codecs from_tag to_tag */
 	op = PLAY;
+	rname = "play";
 	playcount = 1;
 	pname = argv[2];
 	codecs = argv[3];
@@ -340,16 +347,19 @@ handle_command(struct cfg *cf, int controlfd)
     case 'r':
     case 'R':
 	op = RECORD;
+	rname = "record";
         break;
 
     case 'c':
     case 'C':
 	op = COPY;
+	rname = "copy";
 	break;
 
     case 's':
     case 'S':
 	op = NOPLAY;
+	rname = "noplay";
         break;
 
     case 'v':
@@ -441,6 +451,12 @@ handle_command(struct cfg *cf, int controlfd)
 	return 0;
 	break;
 
+    case 'q':
+    case 'Q':
+	op = QUERY;
+	rname = "query";
+	break;
+
     default:
 	rtpp_log_write(RTPP_LOG_ERR, cf->glog, "unknown command");
 	reply_error(cf, controlfd, &raddr, rlen, cookie, 3);
@@ -468,7 +484,7 @@ handle_command(struct cfg *cf, int controlfd)
 	from_tag = argv[3];
 	to_tag = argv[4];
     }
-    if (op == DELETE || op == RECORD || op == NOPLAY) {
+    if (op == DELETE || op == RECORD || op == NOPLAY || op == QUERY) {
 	if (argc < 3 || argc > 4) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 	    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
@@ -589,16 +605,6 @@ handle_command(struct cfg *cf, int controlfd)
     }
 
     if (i == -1 && op != UPDATE) {
-	if (op == DELETE)
-	    rname = "delete";
-	if (op == PLAY)
-	    rname = "play";
-	if (op == NOPLAY)
-	    rname = "noplay";
-	if (op == COPY || op == RECORD)
-	    rname = "record";
-	if (op == LOOKUP)
-	    rname = "lookup";
 	rtpp_log_write(RTPP_LOG_INFO, cf->glog,
 	  "%s request failed: session %s, tags %s/%s not found", rname,
 	  call_id, from_tag, to_tag != NULL ? to_tag : "NONE");
@@ -636,6 +642,10 @@ handle_command(struct cfg *cf, int controlfd)
     case RECORD:
 	handle_record(cf, spa, i, recording_name);
 	reply_ok(cf, controlfd, &raddr, rlen, cookie);
+	return 0;
+
+    case QUERY:
+	handle_query(cf, controlfd, &raddr, rlen, cookie, spa, i);
 	return 0;
     }
 
@@ -949,4 +959,23 @@ handle_record(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname)
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
     }
+}
+
+static void
+handle_query(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
+  socklen_t rlen, char *cookie, struct rtpp_session *spa, int idx)
+{
+    char buf[1024 * 8];
+    int len;
+
+    if (cookie != NULL) {
+	len = sprintf(buf, "%s %d %lu %lu %lu %lu\n", cookie, spa->ttl,
+	  spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
+	  spa->pcount[3]);
+    } else {
+	len = sprintf(buf, "%d %lu %lu %lu %lu\n", spa->ttl,
+	  spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
+	  spa->pcount[3]);
+    }
+    doreply(cf, fd, buf, len, raddr, rlen);
 }
