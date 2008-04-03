@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.2 2008/04/03 17:48:45 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.3 2008/04/03 18:02:39 sobomax Exp $
  *
  */
 
@@ -156,19 +156,26 @@ doreply(struct cfg *cf, int fd, char *buf, int len,
 }
 
 static void
-reply_ok(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
-  socklen_t rlen, char *cookie)
+reply_number(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
+  socklen_t rlen, char *cookie, int number)
 {
     int len;
     char buf[1024 * 8];
 
     if (cookie != NULL)
-	len = sprintf(buf, "%s 0\n", cookie);
+	len = sprintf(buf, "%s %d\n", cookie, number);
     else {
-	strcpy(buf, "0\n");
-	len = 2;
+	len = sprintf(buf, "%d\n", number);
     }
     doreply(cf, fd, buf, len, raddr, rlen);
+}
+
+static void
+reply_ok(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
+  socklen_t rlen, char *cookie)
+{
+
+    reply_number(cf, fd, raddr, rlen, cookie, 0);
 }
 
 static void
@@ -364,11 +371,7 @@ handle_command(struct cfg *cf, int controlfd)
 		    break;
 		}
 	    }
-	    if (cookie == NULL)
-		len = sprintf(buf, "%d\n", known);
-	    else
-		len = sprintf(buf, "%s %d\n", cookie, known);
-	    doreply(cf, controlfd, buf, len, &raddr, rlen);
+	    reply_number(cf, controlfd, &raddr, rlen, cookie, known);
 	    return 0;
 	}
 	if (argc != 1 && argc != 2) {
@@ -377,11 +380,7 @@ handle_command(struct cfg *cf, int controlfd)
 	    return 0;
 	}
 	/* This returns base version. */
-	if (cookie == NULL)
-	    len = sprintf(buf, "%d\n", CPROTOVER);
-	else
-	    len = sprintf(buf, "%s %d\n", cookie, CPROTOVER);
-	doreply(cf, controlfd, buf, len, &raddr, rlen);
+	reply_number(cf, controlfd, &raddr, rlen, cookie, CPROTOVER);
 	return 0;
 
     case 'i':
