@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: RadiusAccounting.py,v 1.2 2008/02/18 19:49:45 sobomax Exp $
+# $Id: RadiusAccounting.py,v 1.3 2008/04/04 22:31:12 sobomax Exp $
 
 from time import time, strftime, gmtime
 from Timeout import Timeout
@@ -148,9 +148,9 @@ class RadiusAccounting:
         rcode = results[1]
         if rcode in (0, 1):
             if rcode == 0:
-                message = 'Acct request accepted (delay is %.3f)\n' % delay
+                message = 'Acct/%s request accepted (delay is %.3f)\n' % (self.origin, delay)
             else:
-                message = 'Acct request rejected (delay is %.3f)\n' % delay
+                message = 'Acct/%s request rejected (delay is %.3f)\n' % (self.origin, delay)
         else:
-            message = 'Error sending Acct request (delay is %.3f)\n' % delay
+            message = 'Error sending Acct/%s request (delay is %.3f)\n' % (self.origin, delay)
         self.global_config['sip_logger'].write(message, call_id = sip_cid)
