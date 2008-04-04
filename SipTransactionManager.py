@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.5 2008/04/04 22:24:39 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.6 2008/04/04 22:27:50 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -66,7 +66,7 @@ class SipTransaction:
         self.noack_cb = None
         self.r487 = None
         self.address = None
-        self.teA = self.teB = self.teC = self.teD = self.teE = None
+        self.teA = self.teB = self.teC = self.teD = self.teE = self.teF = None
         self.tid = None
 
 # Symbolic states names
@@ -98,6 +98,7 @@ class SipTransactionManager:
     l2rcache = None
     nat_traversal = False
     req_consumers = None
+    provisional_retr = 0
 
     def __init__(self, global_config, req_cb = None):
         self.global_config = global_config
@@ -441,6 +442,7 @@ class SipTransactionManager:
             t.teA = None
             t.teD = None
             t.teE = None
+            t.teF = None
             t.method = msg.getMethod()
             t.data = None
             t.address = None
@@ -471,7 +473,7 @@ class SipTransactionManager:
             else:
                 rval = self.req_cb(msg)
             if rval == None:
-                if t.teA != None or t.teD != None or t.teE != None:
+                if t.teA != None or t.teD != None or t.teE != None or t.teF != None:
                     return
                 if self.tserver.has_key(t.tid):
                     del self.tserver[t.tid]
@@ -504,11 +506,18 @@ class SipTransactionManager:
         scode = resp.getSCode()[0]
         if scode < 200:
             t.state = RINGING
+            if self.provisional_retr > 0 and scode > 100:
+                if t.teF != None:
+                    t.teF.cancel()
+                t.teF = Timeout(self.timerF, self.provisional_retr, 1, t)
         else:
             t.state = COMPLETED
             if t.teE != None:
                 t.teE.cancel()
                 t.teE = None
+            if t.teF != None:
+                t.teF.cancel()
+                t.teF = None
             if t.needack:
                 # Schedule removal of the transaction
                 t.teD = Timeout(self.timerD, 32.0, 1, t)
@@ -554,10 +563,23 @@ class SipTransactionManager:
     def timerE(self, t):
         #print 'timerE'
         t.teE = None
+        if t.teF != None:
+            t.teF.cancel()
+            t.teF = None
         if t.state in (TRYING, RINGING):
             if t.r487 != None:
                 t.r487.reason = 'Request Expired'
             self.doCancel(t)
+
+    # Timer to retransmit the last provisional reply every
+    # 2 seconds
+    def timerF(self, t):
+        #print 'timerF', t.state
+        t.teF = None
+        if t.state == RINGING and self.provisional_retr > 0:
+            self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % t.address, t.data)
+            self.userv.send_to(t.data, t.address)
+            t.teF = Timeout(self.timerF, self.provisional_retr, 1, t)
 
     def rCachePurge(self):
         self.l2rcache = self.l1rcache
