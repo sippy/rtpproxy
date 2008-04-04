@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.4 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.5 2008/04/04 22:24:39 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -37,13 +37,14 @@ from traceback import print_exc
 from time import time
 import sys
 
-NETS_1918 = (('10.0.0.0', 0xffffffffl << 24), ('172.16.0.0',  0xffffffffl << 20), ('192.168.0.0', 0xffffffffl << 16));
-NETS_1918 = map(lambda x: (reduce(lambda z, v: (int(z) << 8l) | int(v), x[0].split('.', 4)) & x[1], x[1]), NETS_1918)
+class NETS_1918:
+    nets = (('10.0.0.0', 0xffffffffl << 24), ('172.16.0.0',  0xffffffffl << 20), ('192.168.0.0', 0xffffffffl << 16))
+    nets = [(reduce(lambda z, v: (int(z) << 8l) | int(v), x[0].split('.', 4)) & x[1], x[1]) for x in nets]
 
 def check1918(addr):
     try:
         addr = reduce(lambda x, y: (int(x) << 8l) | int(y), addr.split('.', 4))
-        for naddr, mask in NETS_1918:
+        for naddr, mask in NETS_1918.nets:
             if addr & mask == naddr:
                 return True
     except:
