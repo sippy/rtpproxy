@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.26 2008/03/26 20:09:02 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.27 2008/04/09 19:36:12 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -163,13 +163,11 @@ class CallController:
             self.uaA.recvEvent(event)
 
     def rDone(self, results):
-        # Check that uaA is still in a valid state
-        if not isinstance(self.uaA.state, UasStateTrying):
-            return
         # Check that we got necessary result from Radius
         if len(results) != 2 or results[1] != 0:
-            self.uaA.recvEvent(CCEventFail((403, 'Auth Failed')))
-            self.state = CCStateDead
+            if isinstance(self.uaA.state, UasStateTrying):
+                self.uaA.recvEvent(CCEventFail((403, 'Auth Failed')))
+                self.state = CCStateDead
             return
         if self.global_config['acct_enable']:
             self.acctA = RadiusAccounting(self.global_config, 'answer', \
