@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.5 2008/03/17 19:14:45 sobomax Exp $
+# $Id: SipMsg.py,v 1.6 2008/04/12 13:40:40 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -74,6 +74,8 @@ class SipMsg:
                     self.headers.append(SipHeader(name = einst.name, bodys = body))
             except ESipHeaderIgnore:
                 continue
+        if self.countHFs('via') == 0:
+            raise Exception('Via HF is missed')
         if self.countHFs('content-length') > 0:
             blen = self.getHFBody('content-length').number
             if mbody == None:
