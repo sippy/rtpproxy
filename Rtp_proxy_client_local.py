@@ -22,9 +22,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_local.py,v 1.2 2008/02/18 19:49:45 sobomax Exp $
+# $Id: Rtp_proxy_client_local.py,v 1.3 2008/04/12 13:39:44 sobomax Exp $
 
 from Timeout import Timeout
+from errno import EINTR
 
 import socket
 
@@ -44,8 +45,23 @@ class Rtp_proxy_client_local:
     def send_raw(self, command):
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect(self.address)
-        s.send(command)
-        return s.recv(1024).strip()
+        while True:
+            try:
+                s.send(command)
+                break
+            except socket.error, why:
+                if why[0] == EINTR:
+                    continue
+                raise why
+        while True:
+            try:
+                rval = s.recv(1024).strip()
+                break
+            except socket.error, why:
+                if why[0] == EINTR:
+                    continue
+                raise why
+        return rval
 
     def process_reply(self, args):
         args[0](args[1], *args[2])
