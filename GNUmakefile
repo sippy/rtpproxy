@@ -1,6 +1,6 @@
 CC?=	gcc
 CFLAGS+=-I../siplog
-LIBS+=	-L../siplog -lsiplog
+LIBS+=	-L../siplog -lsiplog -lpthread
 
 # Uncomment this on Solaris
 #LIBS+=	-lresolv -lsocket -lnsl
