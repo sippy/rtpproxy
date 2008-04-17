@@ -5,6 +5,7 @@ rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_command.c rtpp_command.h
 dist_man_MANS=rtpproxy.8
 makeann_SOURCES=makeann.c rtp.h g711.h
+makeann_LDADD=@LIBS_G729@ @LIBS_GSM@
 EXTRA_DIST=README.remote manpage.xml debian/README.Debian debian/changelog \
   debian/compat debian/conffiles.ex debian/control debian/copyright \
   debian/cron.d.ex debian/dirs debian/docs debian/manpage.1.ex \

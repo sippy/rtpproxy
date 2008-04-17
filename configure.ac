@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.58)
-AC_INIT(rtpproxy, 1.1.beta.200804031, sobomax@sippysoft.com)
-AM_INIT_AUTOMAKE(rtpproxy, 1.1.beta.200804031)
+AC_INIT(rtpproxy, 1.1.beta.200804171, sobomax@sippysoft.com)
+AM_INIT_AUTOMAKE(rtpproxy, 1.1.beta.200804171)
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([main.c])
 AM_CONFIG_HEADER([config.h])
@@ -31,7 +31,7 @@ AC_CHECK_HEADERS(gsm.h, found_libgsm=yes)
 if test "$found_libgsm" = yes
 then
   AC_CHECK_LIB(gsm, gsm_create,
-   LIBS="$LIBS -lgsm"
+   LIBS_GSM="-lgsm"
    GSM_SUPPORT=ext
    AC_DEFINE([ENABLE_GSM], 1, [Define if you have libgsm library installed]))
 fi
@@ -41,7 +41,7 @@ AC_CHECK_HEADERS(g729_encoder.h, found_libg729=yes)
 if test "$found_libg729" = yes
 then
   AC_CHECK_LIB(g729, g729_encoder_new,
-   LIBS="$LIBS -lg729"
+   LIBS_G729="-lg729"
    G729_SUPPORT=ext
    AC_DEFINE([ENABLE_G729], 1, [Define if you have libg729 library installed])
   )
@@ -70,4 +70,6 @@ AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([atexit gettimeofday memset mkdir socket strchr strdup strerror])
 
 AC_CONFIG_FILES([Makefile])
+AC_SUBST(LIBS_GSM)
+AC_SUBST(LIBS_G729)
 AC_OUTPUT
