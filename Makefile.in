@@ -57,7 +57,7 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_makeann_OBJECTS = makeann.$(OBJEXT)
 makeann_OBJECTS = $(am_makeann_OBJECTS)
-makeann_LDADD = $(LDADD)
+makeann_DEPENDENCIES =
 am_rtpproxy_OBJECTS = main.$(OBJEXT) rtp_server.$(OBJEXT) \
 	rtpp_record.$(OBJEXT) rtpp_util.$(OBJEXT) rtp.$(OBJEXT) \
 	rtp_resizer.$(OBJEXT) rtpp_session.$(OBJEXT) \
@@ -119,6 +119,8 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBS_G729 = @LIBS_G729@
+LIBS_GSM = @LIBS_GSM@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -186,6 +188,7 @@ rtpproxy_SOURCES = main.c rtp.h rtp_server.c rtp_server.h \
 
 dist_man_MANS = rtpproxy.8
 makeann_SOURCES = makeann.c rtp.h g711.h
+makeann_LDADD = @LIBS_G729@ @LIBS_GSM@
 EXTRA_DIST = README.remote manpage.xml debian/README.Debian debian/changelog \
   debian/compat debian/conffiles.ex debian/control debian/copyright \
   debian/cron.d.ex debian/dirs debian/docs debian/manpage.1.ex \
