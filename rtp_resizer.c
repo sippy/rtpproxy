@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_resizer.c,v 1.1 2007/11/16 08:43:26 sobomax Exp $
+ * $Id: rtp_resizer.c,v 1.2 2008/04/17 22:38:00 sobomax Exp $
  *
  */
 
@@ -36,21 +36,6 @@
 
 #include "rtp.h"
 #include "rtp_resizer.h"
-
-static int
-min_nsamples(int codec_id)
-{
-
-    switch (codec_id)
-    {
-    case RTP_GSM:
-        return 160; /* 20ms */
-    case RTP_G723:
-        return 240; /* 30ms */
-    default:
-        return 80;
-    }
-}
 
 static int
 max_nsamples(int codec_id)
@@ -79,7 +64,7 @@ rtp_resizer_free(struct rtp_resizer *this)
     }
 }
 
-void 
+void
 rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
 {
     struct rtp_packet   *p;
@@ -90,10 +75,6 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
 
     if ((*pkt)->nsamples == RTP_NSAMPLES_UNKNOWN)
         return;
-
-    (*pkt)->resizeable = 1;
-    if ((*pkt)->header.pt == RTP_G729 && (*pkt)->data_size < 10) /* G.729 comfort noise frame */
-        (*pkt)->resizeable = 0;
 
     if (this->last_sent_ts_inited && ts_less((*pkt)->ts, this->last_sent_ts))
     {
@@ -155,6 +136,65 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
     *pkt = NULL; /* take control over the packet */
 }
 
+static void
+detach_queue_head(struct rtp_resizer *this)
+{
+
+    this->queue.first = this->queue.first->next;
+    if (this->queue.first == NULL)
+	this->queue.last = NULL;
+    else
+	this->queue.first->prev = NULL;
+}
+
+static void
+append_packet(struct rtp_packet *dst, struct rtp_packet *src)
+{
+
+    memcpy(&dst->buf[dst->data_offset + dst->data_size], 
+      &src->buf[src->data_offset], src->data_size);
+    dst->nsamples += src->nsamples;
+    dst->data_size += src->data_size;
+    dst->size += src->data_size;
+    dst->appendable = src->appendable;
+}
+
+static void 
+append_chunk(struct rtp_packet *dst, struct rtp_packet *src, const struct rtp_packet_chunk *chunk)
+{
+
+    /* Copy chunk */
+    memcpy(&dst->buf[dst->data_offset + dst->data_size], 
+      &src->buf[src->data_offset], chunk->bytes);
+    dst->nsamples += chunk->nsamples;
+    dst->data_size += chunk->bytes;
+    dst->size += chunk->bytes;
+
+    /* Truncate the source packet */
+    src->nsamples -= chunk->nsamples;
+    rtp_packet_set_ts(src, src->ts + chunk->nsamples);
+    src->data_size -= chunk->bytes;
+    src->size -= chunk->bytes;
+    memmove(&src->buf[src->data_offset], &src->buf[src->data_offset + chunk->bytes], src->data_size);
+}
+
+static void 
+move_chunk(struct rtp_packet *dst, struct rtp_packet *src, const struct rtp_packet_chunk *chunk)
+{
+    /* Copy chunk */
+    memcpy(&dst->buf[dst->data_offset], &src->buf[src->data_offset], chunk->bytes);
+    dst->nsamples = chunk->nsamples;
+    dst->data_size = chunk->bytes;
+    dst->size = dst->data_size + dst->data_offset;
+
+    /* Truncate the source packet */
+    src->nsamples -= chunk->nsamples;
+    rtp_packet_set_ts(src, src->ts + chunk->nsamples);
+    src->data_size -= chunk->bytes;
+    src->size -= chunk->bytes;
+    memmove(&src->buf[src->data_offset], &src->buf[src->data_offset + chunk->bytes], src->data_size);
+}
+
 struct rtp_packet *
 rtp_resizer_get(struct rtp_resizer *this, double ctime)
 {
@@ -164,9 +204,9 @@ rtp_resizer_get(struct rtp_resizer *this, double ctime)
     int         count = 0;
     int         split = 0;
     int         nsamples_left;
-    int         bytes_left;
     int         output_nsamples;
     int         max;
+    struct      rtp_packet_chunk chunk;
 
     if (this->queue.first == NULL)
         return NULL;
@@ -180,12 +220,8 @@ rtp_resizer_get(struct rtp_resizer *this, double ctime)
         return NULL;
     }
 
+    output_nsamples = this->output_nsamples;
     max = max_nsamples(this->queue.first->header.pt);
-    output_nsamples = this->output_nsamples - (this->output_nsamples % min_nsamples(this->queue.first->header.pt));
-
-    if (output_nsamples == 0)
-        output_nsamples = this->queue.first->nsamples;
-
     if (max > 0 && output_nsamples > max)
         output_nsamples = max;
 
@@ -196,40 +232,29 @@ rtp_resizer_get(struct rtp_resizer *this, double ctime)
         if (ret == NULL) 
         {
             /* Look if the first packet is to be split */
-            if (p->nsamples > output_nsamples && p->resizeable)
-            {
-                bytes_left = rtp_samples2bytes(p->header.pt, output_nsamples);
-                if (bytes_left > 0) 
-                {
-                    ret = rtp_packet_alloc();
-		    /* Copy only portion that is in use */
-                    memcpy(ret, p, offsetof(struct rtp_packet, buf) + p->size);
-
-                    ret->nsamples = output_nsamples;
-                    ret->data_size = bytes_left;
-                    ret->size = ret->data_offset + ret->data_size;
-
-                    /* truncate the input packet */
-                    p->nsamples -= output_nsamples;
-                    rtp_packet_set_ts(p, p->ts + output_nsamples);
-                    p->data_size -= bytes_left;
-                    p->size -= bytes_left;
-                    memmove(&p->buf[p->data_offset], &p->buf[p->data_offset + bytes_left], p->data_size);
-
-                    this->nsamples_total -= output_nsamples;
-
-                    ++split;
-                    ++count;
-                    break;
-                }
-            }
+            if (p->nsamples > output_nsamples) {
+		rtp_packet_first_chunk_find(p, &chunk, output_nsamples);
+		if (chunk.whole_packet_matched) {
+		    ret = p;
+		    detach_queue_head(this);
+		} else {
+		    ret = rtp_packet_alloc();
+		    if (ret == NULL)
+			break;
+                    memcpy(ret, p, offsetof(struct rtp_packet, buf));
+		    move_chunk(ret, p, &chunk);
+		    ++split;
+		}
+		if (!this->seq_initialized) {
+		    this->seq = ret->seq;
+		    this->seq_initialized = 1;
+		}
+		++count;
+		break;
+	    }
         }
         else /* ret != NULL */
         {
-            /* Next packet is not resizeable, send current packet immediately */
-            if (!p->resizeable)
-                break;
-
             /* detect holes and payload changes in RTP stream */
             if ((ret->ts + ret->nsamples) != p->ts ||
                 ret->header.pt != p->header.pt)
@@ -240,31 +265,26 @@ rtp_resizer_get(struct rtp_resizer *this, double ctime)
 
             /* Break the input packet into pieces to create output packet 
              * of specified size */
-            if (nsamples_left > 0 && nsamples_left < p->nsamples && p->resizeable)
-            {
-                /* Take required number of bytes only */
-                bytes_left = rtp_samples2bytes(ret->header.pt, nsamples_left);
-                if (bytes_left > 0)
-                {
-                    memcpy(&ret->buf[ret->data_offset + ret->data_size], 
-                            &p->buf[p->data_offset], bytes_left);
-                    ret->nsamples += nsamples_left;
-                    ret->data_size += bytes_left;
-                    ret->size += bytes_left;
-
-                    /* truncate the input packet */
-                    p->nsamples -= nsamples_left;
-                    rtp_packet_set_ts(p, p->ts + nsamples_left);
-                    p->data_size -= bytes_left;
-                    p->size -= bytes_left;
-                    memmove(&p->buf[p->data_offset], &p->buf[p->data_offset + bytes_left], p->data_size);
-
-                    this->nsamples_total -= nsamples_left;
-
-                    ++split;
-                    ++count;
-                    break;
-                }
+            if (nsamples_left > 0 && nsamples_left < p->nsamples) {
+		rtp_packet_first_chunk_find(p, &chunk, nsamples_left);
+		if (chunk.whole_packet_matched) {
+		    /* Prevent RTP packet buffer overflow */
+		    if ((ret->size + p->data_size) > sizeof(ret->buf))
+			break;
+		    append_packet(ret, p);
+		    detach_queue_head(this);
+		    rtp_packet_free(p);
+		}
+		else {
+		    /* Prevent RTP packet buffer overflow */
+		    if ((ret->size + chunk.bytes) > sizeof(ret->buf))
+			break;
+		    /* Append chunk to output */
+		    append_chunk(ret, p, &chunk);
+		    ++split;
+		}
+		++count;
+		break;
             }
         }
         ++count;
@@ -276,42 +296,35 @@ rtp_resizer_get(struct rtp_resizer *this, double ctime)
             break;
 
         /* Detach head packet from the queue */
-        this->queue.first = p->next;
-        if (p->next == NULL)
-            this->queue.last = NULL;
-        else
-            p->next->prev = NULL;
+	detach_queue_head(this);
 
         /*
          * Add the packet to the output
          */
         if (ret == NULL) {
             ret = p; /* use the first packet as the result container */
-            this->nsamples_total -= p->nsamples;
             if (!this->seq_initialized) {
                 this->seq = p->seq;
                 this->seq_initialized = 1;
             }
-            /* Send non-resizeable packet immediately */
-            if (!ret->resizeable)
-                break;
         }
         else {
-            memcpy(&ret->buf[ret->data_offset + ret->data_size], 
-                    &p->buf[p->data_offset], p->data_size);
-            ret->nsamples += p->nsamples;
-            ret->data_size += p->data_size;
-            ret->size += p->data_size;
-            this->nsamples_total -= p->nsamples;
+	    append_packet(ret, p);
             rtp_packet_free(p);
         }
+	/* Send non-appendable packet immediately */
+	if (!ret->appendable)
+	    break;
     }
-    rtp_packet_set_seq(ret, this->seq);
-    ++this->seq;
-    this->last_sent_ts_inited = 1;
-    this->last_sent_ts = ret->ts + ret->nsamples;
+    if (ret != NULL) {
+	this->nsamples_total -= ret->nsamples;
+	rtp_packet_set_seq(ret, this->seq);
+	++this->seq;
+	this->last_sent_ts_inited = 1;
+	this->last_sent_ts = ret->ts + ret->nsamples;
 /*
-    printf("Payload %d, %d packets aggregated, %d splits done, final size %dms\n", ret->header.pt, count, split, ret->nsamples / 8);
+	printf("Payload %d, %d packets aggregated, %d splits done, final size %dms\n", ret->header.pt, count, split, ret->nsamples / 8);
 */
+    }
     return ret;
 }

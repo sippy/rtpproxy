@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.h,v 1.7 2008/03/28 23:15:19 sobomax Exp $
+ * $Id: rtp.h,v 1.8 2008/04/17 22:38:00 sobomax Exp $
  *
  */
 
@@ -85,7 +85,7 @@ struct rtp_packet {
     int         nsamples;
     uint32_t    ts;
     uint16_t    seq;
-    int         resizeable;
+    int         appendable;
     double      rtime;
 
     struct rtp_packet *next;
@@ -102,6 +102,12 @@ struct rtp_packet {
     };
 };
 
+struct rtp_packet_chunk {
+    int bytes;
+    int nsamples;
+    int whole_packet_matched;
+};
+
 #define	RTP_HDR_LEN(rhp)	(sizeof(*(rhp)) + ((rhp)->cc * sizeof((rhp)->csrc[0])))
 
 void rtp_packet_parse(struct rtp_packet *);
@@ -112,7 +118,7 @@ void rtp_packet_free(struct rtp_packet *);
 void rtp_packet_set_seq(struct rtp_packet *, uint16_t seq);
 void rtp_packet_set_ts(struct rtp_packet *, uint32_t ts);
 
-size_t rtp_samples2bytes(int codec_id, int nsamples);
+void rtp_packet_first_chunk_find(struct rtp_packet *, struct rtp_packet_chunk *, int min_nsamples);
 
 #define ts_less(ts1, ts2) (((ts1) - (ts2)) > (uint32_t) (1 << 31))
 
