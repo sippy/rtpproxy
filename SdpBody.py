@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpBody.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SdpBody.py,v 1.4 2008/04/24 23:37:43 sobomax Exp $
 
 from SdpField import SdpField
 from SdpBodySection import SdpBodySection
@@ -65,7 +65,9 @@ class SdpBody:
             self.sections[0].delFs('c')
 
     def __str__(self):
-        return reduce(lambda x, y: str(x) + str(y), self.sections)
+        if len(self.sections) > 1:
+            return reduce(lambda x, y: str(x) + str(y), self.sections)
+        return str(self.sections[0])
 
     def __iadd__(self, other):
         self.sections[-1] += other
