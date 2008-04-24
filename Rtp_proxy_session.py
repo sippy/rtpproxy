@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.2 2008/02/18 19:49:45 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.3 2008/04/24 23:36:12 sobomax Exp $
 
 from md5 import md5
 from random import random
@@ -175,10 +175,17 @@ class Rtp_proxy_session:
             sects.append(sect)
         if len(sects) == 0:
             return
+        formats = sects[0].getF('m').body.formats
         if update_xxx == self.update_caller:
-            self.caller_codecs = reduce(lambda x, y: str(x) + ',' + str(y), sects[0].getF('m').body.formats)
+            if len(formats) > 1:
+                self.caller_codecs = reduce(lambda x, y: str(x) + ',' + str(y), formats)
+            else:
+                self.caller_codecs = str(formats[0])
         else:
-            self.callee_codecs = reduce(lambda x, y: str(x) + ',' + str(y), sects[0].getF('m').body.formats)
+            if len(formats) > 1:
+                self.callee_codecs = reduce(lambda x, y: str(x) + ',' + str(y), formats)
+            else:
+                self.callee_codecs = str(formats[0])
         for sect in sects:
             update_xxx(sect.getF('c').body.addr, sect.getF('m').body.port, self.xxx_sdp_change_finish, None, \
               sects.index(sect), sdp_body, sect, sects, result_callback)
