@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpBodySection.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SdpBodySection.py,v 1.4 2008/04/24 23:39:03 sobomax Exp $
 
 from SdpField import SdpField
 
@@ -44,7 +44,9 @@ class SdpBodySection:
         self.headers.insert(self.headers.index(iheader) + 1, header)
 
     def __str__(self):
-        return reduce(lambda x, y: str(x) + '\r\n' + str(y), self.headers) + '\r\n'
+        if len(self.headers) > 1:
+            return reduce(lambda x, y: str(x) + '\r\n' + str(y), self.headers) + '\r\n'
+        return str(self.headers[0]) + '\r\n'
 
     def __iadd__(self, other):
         self.headers.append(SdpField(other))
