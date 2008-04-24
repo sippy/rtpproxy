@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.6 2008/04/12 13:40:40 sobomax Exp $
+# $Id: SipMsg.py,v 1.7 2008/04/24 23:48:26 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -76,6 +76,10 @@ class SipMsg:
                 continue
         if self.countHFs('via') == 0:
             raise Exception('Via HF is missed')
+        if self.countHFs('to') == 0:
+            raise Exception('To HF is missed')
+        if self.countHFs('from') == 0:
+            raise Exception('From HF is missed')
         if self.countHFs('content-length') > 0:
             blen = self.getHFBody('content-length').number
             if mbody == None:
@@ -85,13 +89,21 @@ class SipMsg:
             if blen == 0:
                 mbody = None
                 mblen = 0
-            elif mbody == None or blen > mblen:
-                if mbody != None and blen - mblen < 7 and mblen > 7 and mbody[-4:] == '\r\n\r\n':
+            elif mbody == None:
+                # XXX: Should generate 400 Bad Request if such condition
+                # happens with request
+                raise Exception('Missed SIP body, %d bytes expected' % blen)
+            elif blen > mblen:
+                if blen - mblen < 7 and mblen > 7 and mbody[-4:] == '\r\n\r\n':
                     # XXX: we should not really be doing this, but it appears to be
                     # a common off-by-one/two/.../six problem with SDPs generates by
                     # the consumer-grade devices.
                     print 'Truncated SIP body, %d bytes expected, %d received, fixing...' % (blen, mblen)
                     blen = mblen
+                elif blen - mblen == 2 and mbody[-2:] == '\r\n':
+                    # Missed last 2 \r\n is another common problem.
+                    print 'Truncated SIP body, %d bytes expected, %d received, fixing...' % (blen, mblen)
+                    mbody += '\r\n'
                 else:
                     # XXX: Should generate 400 Bad Request if such condition
                     # happens with request
