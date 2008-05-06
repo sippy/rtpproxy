@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.27 2008/04/09 19:36:12 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.28 2008/05/06 23:56:02 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -454,7 +454,9 @@ class CallMap:
             if len(self.ccmap) == 0:
                 self.global_config['sip_tm'].userv.close()
                 os.chdir(self.global_config['orig_cwd'])
-                os.execv(self.global_config['orig_argv'][0], self.global_config['orig_argv'])
+                argv = [sys.executable,]
+                argv.extend(self.global_config['orig_argv'])
+                os.execv(sys.executable, argv)
                 # Should not reach this point!
             self.el.ival = 1
         #print gc.collect()
