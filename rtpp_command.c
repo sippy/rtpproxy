@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.7 2008/05/28 21:36:01 dpocock Exp $
+ * $Id: rtpp_command.c,v 1.8 2008/05/29 01:17:30 sobomax Exp $
  *
  */
 
@@ -461,13 +461,15 @@ handle_command(struct cfg *cf, int controlfd)
     case 'x':
     case 'X':
         /* Delete all active sessions */
-        rtpp_log_write(RTPP_LOG_WARN, glog, "deleting all active sessions...");
-        int counter = 0;
-        while(cf->nsessions > 0) {
-            if(cf->sessions[counter]->rtcp != NULL) {
-                remove_session(cf, cf->sessions[counter]);
+        rtpp_log_write(RTPP_LOG_WARN, glog, "deleting all active sessions");
+        for (i = 1; i < cf->nsessions; i++) {
+	    spa = cf->sessions[i];
+	    if (spa == NULL || spa->sidx[0] != i)
+		continue;
+	    /* Skip RTCP twin session */
+	    if (spa->rtcp != NULL) {
+		remove_session(cf, spa);
 	    }
-           counter++;
         }
         reply_ok(cf, controlfd, &raddr, rlen, cookie);
         return 0;
