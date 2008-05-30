@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.71 2008/04/03 20:51:45 sobomax Exp $
+ * $Id: main.c,v 1.72 2008/05/30 12:42:03 dpocock Exp $
  *
  */
 
@@ -131,11 +131,12 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->max_ttl = SESSION_TIMEOUT;
     cf->tos = TOS;
     cf->rrtcp = 1;
+    cf->ttl_mode = unified;
 
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:F")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fi")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -246,6 +247,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'F':
 	    cf->no_check = 1;
+	    break;
+
+	case 'i':
+	    cf->ttl_mode = independent;
 	    break;
 
 	case '?':
@@ -556,7 +561,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 {
     int i, sidx;
 
-    GET_RTP(sp)->ttl = cf->max_ttl;
+    GET_RTP(sp)->ttl[ridx] = cf->max_ttl;
 
     /* Select socket for sending packet out. */
     sidx = (ridx == 0) ? 1 : 0;
@@ -585,6 +590,7 @@ process_rtp(struct cfg *cf, double ctime, int alarm_tick)
     int readyfd, skipfd, ridx;
     struct rtpp_session *sp;
     struct rtp_packet *packet;
+    int timeout_detected;
 
     /* Relay RTP/RTCP */
     skipfd = 0;
@@ -593,11 +599,22 @@ process_rtp(struct cfg *cf, double ctime, int alarm_tick)
 
 	if (alarm_tick != 0 && sp != NULL && sp->rtcp != NULL &&
 	  sp->sidx[0] == readyfd) {
-	    if (sp->ttl == 0) {
+	    switch(sp->ttl_mode) {
+	      case unified:
+		timeout_detected = (sp->ttl[0] == 0 && sp->ttl[1] == 0);
+		break;
+	      case independent:
+		timeout_detected = (sp->ttl[0] == 0 || sp->ttl[1] == 0);
+		break;
+	      default:
+		timeout_detected = (sp->ttl[0] == 0 && sp->ttl[1] == 0);
+	    }
+	    if(timeout_detected) {
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
 		remove_session(cf, sp);
 	    } else {
-		sp->ttl--;
+		if(sp->ttl[0]) sp->ttl[0]--;
+		if(sp->ttl[1]) sp->ttl[1]--;
 	    }
 	}
 

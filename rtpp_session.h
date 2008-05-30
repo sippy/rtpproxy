@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.9 2008/04/03 17:48:45 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.10 2008/05/30 12:42:03 dpocock Exp $
  *
  */
 
@@ -39,7 +39,9 @@
 #include "rtpp_log.h"
 
 struct rtpp_session {
-    int ttl;
+    /* ttl for caller [0] and callee [1] */
+    int ttl[2];
+    rtpp_ttl_mode ttl_mode;
     unsigned long pcount[4];
     char *call_id;
     char *tag;

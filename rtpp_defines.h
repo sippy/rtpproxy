@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.9 2008/03/31 23:42:11 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.10 2008/05/30 12:42:03 dpocock Exp $
  *
  */
 
@@ -63,6 +63,14 @@
 
 #define	rtpp_log_t	int
 
+/* TTL counters are used to detect the absence of audio packets
+   in either direction.  When the counter reaches 0, the call timeout
+   occurs. */ 
+typedef enum {
+    unified = 0,		/* all TTL counters must reach 0 */
+    independent = 1		/* any TTL counter reaches 0 */
+} rtpp_ttl_mode;
+
 struct cfg {
     int nodaemon;
     int dmode;
@@ -100,6 +108,8 @@ struct cfg {
     char *run_uname;
     char *run_gname;
     int no_check;
+
+    rtpp_ttl_mode ttl_mode;
 };
 
 #endif

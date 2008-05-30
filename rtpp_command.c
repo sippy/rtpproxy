@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.8 2008/05/29 01:17:30 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.9 2008/05/30 12:42:03 dpocock Exp $
  *
  */
 
@@ -438,10 +438,10 @@ handle_command(struct cfg *cf, int controlfd)
 
 	    len += sprintf(buf + len,
 	      "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
-	      "stats = %lu/%lu/%lu/%lu, ttl = %d\n",
+	      "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
 	      spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
 	      addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
-	      spa->pcount[2], spa->pcount[3], spb->ttl);
+	      spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
 	    if (len + 512 > sizeof(buf)) {
 		doreply(cf, controlfd, buf, len, &raddr, rlen);
 		len = 0;
@@ -697,7 +697,9 @@ handle_command(struct cfg *cf, int controlfd)
 	lport = spa->ports[i];
 	lia[0] = spa->laddr[i];
 	pidx = (i == 0) ? 1 : 0;
-	spa->ttl = cf->max_ttl;
+	spa->ttl_mode = cf->ttl_mode;
+	spa->ttl[0] = cf->max_ttl;
+	spa->ttl[1] = cf->max_ttl;
 	if (op == UPDATE) {
 	    rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	      "adding %s flag to existing session, new=%d/%d/%d",
@@ -774,8 +776,10 @@ handle_command(struct cfg *cf, int controlfd)
 	spb->fds[0] = fds[1];
 	spa->ports[0] = lport;
 	spb->ports[0] = lport + 1;
-	spa->ttl = cf->max_ttl;
-	spb->ttl = -1;
+	spa->ttl[0] = cf->max_ttl;
+	spa->ttl[1] = cf->max_ttl;
+	spb->ttl[0] = -1;
+	spb->ttl[1] = -1;
 	spa->log = rtpp_log_open("rtpproxy", spa->call_id, 0);
 	spb->log = spa->log;
 	spa->rtcp = spb;
