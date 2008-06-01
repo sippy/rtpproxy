@@ -61,6 +61,10 @@ Rtpproxy will stay in foreground mode if this option is set\&.
 Show version of program\&.
 
 .TP
+\fB\-i\fR
+Enable independent timeout mode\&.  In normal operation, a timeout (which results in automatic destruction of the session) can only occur if no packets are received on any of the session's ports\&.  This option varies that behaviour, such that a timeout will occur if packets are still being received on one port but not the other\&.
+
+.TP
 \fB\-l\fR \fIaddr1[/addr2]\fR
 IPv4 listen IP address(es)\&. You can specify either one or two addresses\&. If two addresses have been specified then rtpproxy will work in bridging mode\&.
 
