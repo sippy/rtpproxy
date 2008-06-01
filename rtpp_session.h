@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.10 2008/05/30 12:42:03 dpocock Exp $
+ * $Id: rtpp_session.h,v 1.11 2008/06/01 15:42:49 dpocock Exp $
  *
  */
 
@@ -75,6 +75,7 @@ struct rtpp_session {
     struct rtp_resizer resizers[2];
     struct rtpp_session *prev;
     struct rtpp_session *next;
+    struct rtpp_timeout_handler *timeout_handler;
 };
 
 void init_hash_table(struct cfg *);

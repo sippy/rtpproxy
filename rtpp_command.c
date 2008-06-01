@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.9 2008/05/30 12:42:03 dpocock Exp $
+ * $Id: rtpp_command.c,v 1.10 2008/06/01 15:42:49 dpocock Exp $
  *
  */
 
@@ -258,6 +258,8 @@ handle_command(struct cfg *cf, int controlfd)
     struct sockaddr_storage raddr;
     int requested_nsamples;
     enum {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, QUERY} op;
+    int max_argc;
+    char *socket_name_u;
 
     requested_nsamples = -1;
     ia[0] = ia[1] = NULL;
@@ -482,7 +484,8 @@ handle_command(struct cfg *cf, int controlfd)
     }
     call_id = argv[1];
     if (op == UPDATE || op == LOOKUP || op == PLAY) {
-	if (argc < 5 || argc > 6) {
+	max_argc = (op == UPDATE ? 7 : 6);
+	if (argc < 5 || argc > max_argc) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 	    reply_error(cf, controlfd, &raddr, rlen, cookie, 4);
 	    return 0;
@@ -491,6 +494,8 @@ handle_command(struct cfg *cf, int controlfd)
 	to_tag = argv[5];
 	if (op == PLAY && argv[0][1] != '\0')
 	    playcount = atoi(argv[0] + 1);
+	if (op == UPDATE && argc == 7)
+	    socket_name_u = argv[6];
     }
     if (op == COPY) {
 	if (argc < 4 || argc > 5) {
@@ -813,6 +818,22 @@ handle_command(struct cfg *cf, int controlfd)
 
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
 	  "tag %s", lport, from_tag);
+    }
+
+    if (op == UPDATE) {
+	if(cf->timeout_handler.socket_name == NULL && socket_name_u != NULL)
+	    rtpp_log_write(RTPP_LOG_ERR, "must permit notification socket with -n", 0, 0);
+	if(cf->timeout_handler.socket_name != NULL && socket_name_u != NULL) {
+	    if(strcmp(cf->timeout_handler.socket_name, socket_name_u) != 0) {
+		rtpp_log_write(RTPP_LOG_ERR, "invalid socket name %s", socket_name_u);
+		socket_name_u = NULL;
+	    } else {
+		rtpp_log_write(RTPP_LOG_DBUG, "setting timeout handler", 0, 0);
+		spa->timeout_handler = &cf->timeout_handler;
+	    }
+	} else if(socket_name_u == NULL && spa->timeout_handler != NULL) {
+	    spa->timeout_handler = NULL;
+	}
     }
 
     if (ia[0] != NULL && ia[1] != NULL) {

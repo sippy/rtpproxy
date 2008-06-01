@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.72 2008/05/30 12:42:03 dpocock Exp $
+ * $Id: main.c,v 1.73 2008/06/01 15:42:49 dpocock Exp $
  *
  */
 
@@ -133,10 +133,13 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->rrtcp = 1;
     cf->ttl_mode = unified;
 
+    cf->timeout_handler.socket_name = NULL;
+    cf->timeout_handler.fd = -1;
+
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fi")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -251,6 +254,23 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'i':
 	    cf->ttl_mode = independent;
+	    break;
+
+	case 'n':
+	    if(strncmp("unix:", optarg, 5) == 0) {
+		optarg += 5;
+		if(!strlen(optarg)) {
+		    fprintf(stderr, "timeout notification socket name too short\n");
+		    exit(0);
+		}
+		cf->timeout_handler.socket_name = (char *)malloc(strlen(optarg) + 1);
+		if(!cf->timeout_handler.socket_name)
+		    perror("malloc");
+		strcpy(cf->timeout_handler.socket_name, optarg);
+	    } else {
+		fprintf(stderr, "timeout notification socket must be unix:\n");
+		exit(0);
+	    }
 	    break;
 
 	case '?':
@@ -585,6 +605,83 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 }
 
 static void
+init_timeout_handler(struct rtpp_timeout_handler *th)
+{
+    int t, len;
+    struct sockaddr_un remote;
+
+    if(th->fd != -1)
+	close(th->fd);
+    th->fd = -1;
+
+    if(th->socket_name == NULL)
+	return;
+
+    if ((th->fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+	rtpp_log_write(RTPP_LOG_ERR, NULL, "timeoutfd socket() failed");
+	perror("socket");
+	exit(1);
+    }
+
+    remote.sun_family = AF_UNIX;
+    strcpy(remote.sun_path, th->socket_name);
+    len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+    if (connect(th->fd, (struct sockaddr *)&remote, len) == -1) {
+	rtpp_log_write(RTPP_LOG_ERR, NULL, "timeoutfd connect() failed");
+	perror("connect");
+	close(th->fd);
+	th->fd = -1;
+	return;
+    }
+}
+
+#define NOTIFY_BUF_LEN 80
+static void
+do_timeout_notification(struct rtpp_session *sp)
+{
+    char notify_buf[NOTIFY_BUF_LEN + 1];
+    int result;
+    int len;
+    struct rtpp_timeout_handler *th = sp->timeout_handler;
+
+    if(th == NULL)
+	return;
+
+    if(th->fd == -1) {
+	if(th->socket_name == NULL)
+	    return;
+
+	init_timeout_handler(th);
+
+	/* If init failed, no notification will be sent */
+	if(th->fd == -1) {
+	    rtpp_log_write(RTPP_LOG_ERR, NULL, "unable to send() timeout notification, no socket");
+	    return;
+	}
+    }
+
+    len = snprintf(notify_buf, NOTIFY_BUF_LEN, "%d %d\n", sp->ports[0], sp->ports[1]);
+    if(len > NOTIFY_BUF_LEN)
+	len = NOTIFY_BUF_LEN;
+    result = send(th->fd, notify_buf, len, 0);
+    if(result < 0) {
+	close(th->fd);
+	th->fd = -1;
+	init_timeout_handler(th);
+	if(th->fd == -1) {
+	    rtpp_log_write(RTPP_LOG_ERR, NULL, "failed to send() timeout notification");
+	    return;
+	}
+	result = send(th->fd, notify_buf, len, 0);
+	if(result < 0) {
+	    close(th->fd);
+	    th->fd = -1;
+	    rtpp_log_write(RTPP_LOG_ERR, NULL, "failed to send() timeout notification");
+	}
+    }
+}
+
+static void
 process_rtp(struct cfg *cf, double ctime, int alarm_tick)
 {
     int readyfd, skipfd, ridx;
@@ -611,6 +708,7 @@ process_rtp(struct cfg *cf, double ctime, int alarm_tick)
 	    }
 	    if(timeout_detected) {
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
+		do_timeout_notification(sp);
 		remove_session(cf, sp);
 	    } else {
 		if(sp->ttl[0]) sp->ttl[0]--;

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.10 2008/05/30 12:42:03 dpocock Exp $
+ * $Id: rtpp_defines.h,v 1.11 2008/06/01 15:42:49 dpocock Exp $
  *
  */
 
@@ -71,6 +71,11 @@ typedef enum {
     independent = 1		/* any TTL counter reaches 0 */
 } rtpp_ttl_mode;
 
+struct rtpp_timeout_handler {
+    char *socket_name;
+    int fd;
+};
+
 struct cfg {
     int nodaemon;
     int dmode;
@@ -110,6 +115,8 @@ struct cfg {
     int no_check;
 
     rtpp_ttl_mode ttl_mode;
+
+    struct rtpp_timeout_handler timeout_handler;
 };
 
 #endif

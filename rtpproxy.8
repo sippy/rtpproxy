@@ -101,7 +101,17 @@ Default value is \fI/var/run/rtpproxy\&.sock\fR\&.
 .LP
 .RE
 .IP
- 
+
+.TP
+\fB\-n\fR \fItimeout_socket\fR
+This parameter configures the optional timeout notification socket\&.  The socket should be created by another application, preferably before starting rtpproxy\&.  For those sessions where the timeout mechanism is enabled, notifications are sent on this socket if the session times out\&. 
+
+Example: \-n unix:/var/run/rtpproxy\&.timeout\&.sock
+
+There is no default value, notifications are not sent and not permitted unless a value is specified explicitly\&.
+.LP
+.RE
+.IP
 
 .TP
 \fB\-t\fR \fItos\fR
