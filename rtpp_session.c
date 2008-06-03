@@ -24,11 +24,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.c,v 1.2 2008/04/03 17:48:45 sobomax Exp $
+ * $Id: rtpp_session.c,v 1.3 2008/06/03 06:11:30 sobomax Exp $
  *
  */
 
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -242,3 +244,56 @@ find_stream(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
     return -1;
 }
 
+static void
+reconnect_timeout_handler(struct rtpp_session *sp, struct rtpp_timeout_handler *th)
+{
+    int t, len;
+    struct sockaddr_un remote;
+
+    assert(th->fd != -1 && th->socket_name != NULL && th->connected == 0);
+
+    rtpp_log_ewrite(RTPP_LOG_DBUG, sp->log, "reconnecting timeout socket");
+    memset(&remote, '\0', sizeof(remote));
+    remote.sun_family = AF_LOCAL;
+    strncpy(remote.sun_path, th->socket_name, sizeof(remote.sun_path) - 1);
+#if !defined(__linux__) && !defined(__solaris__)
+    remote.sun_len = strlen(remote.sun_path);
+#endif
+    if (connect(th->fd, (struct sockaddr *)&remote, sizeof(remote)) == -1) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't connect to timeout socket");
+    } else {
+        th->connected = 1;
+    }
+}
+
+void
+do_timeout_notification(struct rtpp_session *sp)
+{
+    int result, len;
+    struct rtpp_timeout_handler *th = sp->timeout_handler;
+
+    if (th == NULL)
+	return;
+
+    if (th->connected == 0) {
+        reconnect_timeout_handler(sp, th);
+
+        /* If connect fails, no notification will be sent */
+        if (th->connected == 0) {
+            rtpp_log_write(RTPP_LOG_ERR, sp->log, "unable to send timeout notification");
+            return;
+        }
+    }
+
+    len = snprintf(th->notify_buf, sizeof(th->notify_buf), "%d %d\n", sp->ports[0], sp->ports[1]);
+    assert(len < sizeof(th->notify_buf));
+
+    do {
+        result = send(th->fd, th->notify_buf, len, 0);
+    } while (len == -1 && errno == EINTR);
+
+    if (result < 0) {
+        th->connected = 0;
+        rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "failed to send timeout notification");
+    }
+}

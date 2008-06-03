@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.10 2008/06/01 15:42:49 dpocock Exp $
+ * $Id: rtpp_command.c,v 1.11 2008/06/03 06:11:30 sobomax Exp $
  *
  */
 
@@ -463,7 +463,7 @@ handle_command(struct cfg *cf, int controlfd)
     case 'x':
     case 'X':
         /* Delete all active sessions */
-        rtpp_log_write(RTPP_LOG_WARN, glog, "deleting all active sessions");
+        rtpp_log_write(RTPP_LOG_INFO, cf->glog, "deleting all active sessions");
         for (i = 1; i < cf->nsessions; i++) {
 	    spa = cf->sessions[i];
 	    if (spa == NULL || spa->sidx[0] != i)
@@ -821,18 +821,19 @@ handle_command(struct cfg *cf, int controlfd)
     }
 
     if (op == UPDATE) {
-	if(cf->timeout_handler.socket_name == NULL && socket_name_u != NULL)
-	    rtpp_log_write(RTPP_LOG_ERR, "must permit notification socket with -n", 0, 0);
-	if(cf->timeout_handler.socket_name != NULL && socket_name_u != NULL) {
-	    if(strcmp(cf->timeout_handler.socket_name, socket_name_u) != 0) {
-		rtpp_log_write(RTPP_LOG_ERR, "invalid socket name %s", socket_name_u);
+	if (cf->timeout_handler.socket_name == NULL && socket_name_u != NULL)
+	    rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
+	if (cf->timeout_handler.socket_name != NULL && socket_name_u != NULL) {
+	    if (strcmp(cf->timeout_handler.socket_name, socket_name_u) != 0) {
+		rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", socket_name_u);
 		socket_name_u = NULL;
 	    } else {
-		rtpp_log_write(RTPP_LOG_DBUG, "setting timeout handler", 0, 0);
+		rtpp_log_write(RTPP_LOG_INFO, spa->log, "setting timeout handler");
 		spa->timeout_handler = &cf->timeout_handler;
 	    }
-	} else if(socket_name_u == NULL && spa->timeout_handler != NULL) {
+	} else if (socket_name_u == NULL && spa->timeout_handler != NULL) {
 	    spa->timeout_handler = NULL;
+	    rtpp_log_write(RTPP_LOG_INFO, spa->log, "disabling timeout handler");
 	}
     }
 

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.11 2008/06/01 15:42:49 dpocock Exp $
+ * $Id: rtpp_session.h,v 1.12 2008/06/03 06:11:30 sobomax Exp $
  *
  */
 
@@ -86,5 +86,6 @@ void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(char *, char *, unsigned *);
 int find_stream(struct cfg *, char *, char *, char *, struct rtpp_session **);
+void do_timeout_notification(struct rtpp_session *sp);
 
 #endif
