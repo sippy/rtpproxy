@@ -72,7 +72,7 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop)
     rp->rtp->p = 0;
     rp->rtp->x = 0;
     rp->rtp->cc = 0;
-    rp->rtp->m = 0;
+    rp->rtp->m = 1;
     rp->rtp->pt = codec;
     rp->rtp->ts = 0;
     rp->rtp->seq = 0;
@@ -148,6 +148,9 @@ rtp_server_get(struct rtp_server *rp, double ctime)
 	    rp->loop -= 1;
     }
 
+    if (rp->rtp->m != 0 && ntohs(rp->rtp->seq) != 0) {
+        rp->rtp->m = 0;
+    }
     rp->rtp->ts = htonl(ts + (RTPS_SRATE * rticks / 1000));
     rp->rtp->seq = htons(ntohs(rp->rtp->seq) + 1);
 
