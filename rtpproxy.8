@@ -14,7 +14,7 @@
 rtpproxy \- RTP (Real\-time Transport Protocol) Proxy Server
 .SH "SYNOPSIS"
 .HP 9
-\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-F\fR]
+\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR]
 .SH "DESCRIPTION"
 .PP
 
@@ -159,6 +159,20 @@ when proxy is up and running.
 \fB\-F\fR
 .RS 4
 By default the RTPproxy will warn user if running as superuser (UID 0) in local control mode and refuse to run in remote control mode at all. This switch removes the check.
+.RE
+.PP
+\fB\-i\fR
+.RS 4
+Enable independent timeout mode. By default, a timeout (which results in automatic destruction of the session) can only occur if no RTP packets are received on any of the session's ports. This option if set varies that behaviour, such that a timeout will occur if packets are still being received on one port but not the other. The option should be used with caution since in some cases it's perfectly fine to have packets coming from only one side of conversation (i.e. when the second party has muted its audio).
+.RE
+.PP
+\fB\-n\fR \fItimeout_socket\fR
+.RS 4
+This parameter configures the optional timeout notification socket. The socket should be created by another application, preferably before starting rtpproxy. For those sessions where the timeout mechanism is enabled, notifications are sent on this socket if the session times out.
+.sp
+Example: \-n unix:/var/run/rtpproxy_timeout.sock
+.sp
+There is no default value, notifications are not sent and not permitted unless a value is specified explicitly.
 .RE
 .SH "HOWITWORKS"
 .PP
