@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_server.c,v 1.6 2008/03/31 23:42:11 sobomax Exp $
+ * $Id: rtp_server.c,v 1.7 2008/06/16 22:18:28 sobomax Exp $
  *
  */
 
@@ -72,7 +72,7 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop)
     rp->rtp->p = 0;
     rp->rtp->x = 0;
     rp->rtp->cc = 0;
-    rp->rtp->m = 0;
+    rp->rtp->m = 1;
     rp->rtp->pt = codec;
     rp->rtp->ts = 0;
     rp->rtp->seq = 0;
@@ -146,6 +146,10 @@ rtp_server_get(struct rtp_server *rp, double ctime)
 	    return RTPS_EOF;
 	if (rp->loop != -1)
 	    rp->loop -= 1;
+    }
+
+    if (rp->rtp->m != 0 && ntohs(rp->rtp->seq) != 0) {
+	rp->rtp->m = 0;
     }
 
     rp->rtp->ts = htonl(ts + (RTPS_SRATE * rticks / 1000));
