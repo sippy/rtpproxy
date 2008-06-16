@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.12 2008/06/03 06:11:30 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.9.2.1 2008/06/16 22:21:38 sobomax Exp $
  *
  */
 
@@ -38,6 +38,8 @@
 #ifdef __linux__
 #include <stdint.h>
 #endif
+
+#include "rtpp_log.h"
 
 /*
  * Version of the command protocol, bump only when backward-incompatible
@@ -62,23 +64,6 @@
 #define	PID_FILE	"/var/run/rtpproxy.pid"
 
 #define	rtpp_log_t	int
-
-/*
- * TTL counters are used to detect the absence of audio packets
- * in either direction.  When the counter reaches 0, the call timeout
- * occurs.
- */ 
-typedef enum {
-    TTL_UNIFIED = 0,		/* all TTL counters must reach 0 */
-    TTL_INDEPENDENT = 1		/* any TTL counter reaches 0 */
-} rtpp_ttl_mode;
-
-struct rtpp_timeout_handler {
-    char *socket_name;
-    int fd;
-    int connected;
-    char notify_buf[64];
-};
 
 struct cfg {
     int nodaemon;
@@ -117,10 +102,6 @@ struct cfg {
     char *run_uname;
     char *run_gname;
     int no_check;
-
-    rtpp_ttl_mode ttl_mode;
-
-    struct rtpp_timeout_handler timeout_handler;
 };
 
 #endif
