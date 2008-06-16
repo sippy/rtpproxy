@@ -1,10 +1,14 @@
 <?xml version='1.0' encoding='ISO-8859-1'?>
+
+<!-- Use the following command to generate rtpproxy.8: -->
+<!-- xsltproc /usr/local/share/xsl/docbook/manpages/docbook.xsl manpage.xml -->
+
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
 "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
   <!ENTITY dhfirstname "<firstname>Maxim</firstname>">
   <!ENTITY dhsurname   "<surname>Sobolev</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>Feb 20, 2006</date>">
+  <!ENTITY dhdate      "<date>Jun 16, 2008</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>8</manvolnum>">
@@ -370,7 +374,7 @@
 	<title>AVAILABILITY</title>
 	<para>
 	    The latest version of this program can be found at 
-	    <ulink url="http://ftp.iptel.org/pub/rtpproxy">http://ftp.iptel.org/pub/rtpproxy</ulink>.
+	    <ulink url="http://www.rtpproxy.org/">http://www.rtpproxy.org/</ulink>.
 	</para>
     </refsect1>
 
