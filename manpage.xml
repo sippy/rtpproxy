@@ -69,6 +69,8 @@
 	    <arg choice="opt"><option>-M</option> <replaceable>max_port</replaceable></arg>
 	    <arg choice="opt"><option>-u</option> <replaceable>uname<optional>:gname</optional></replaceable></arg>
 	    <arg choice="opt"><option>-F</option></arg>
+            <arg choice="opt"><option>-i</option></arg>
+            <arg choice="opt"><option>-n</option> <replaceable>timeout_socket</replaceable></arg>
 	</cmdsynopsis>
     </refsynopsisdiv>
     <refsect1>
@@ -314,6 +316,41 @@
 	            </para>
 	        </listitem>
 	    </varlistentry>
+            <varlistentry>
+                <term><option>-i</option></term>
+                <listitem>
+                    <para>
+                        Enable independent timeout mode.  By default, a timeout (which
+                        results in automatic destruction of the session) can only occur
+                        if no RTP packets are received on any of the session's ports.  This
+                        option if set varies that behaviour, such that a timeout will
+                        occur if packets are still being received on one port but not
+                        the other.  The option should be used with caution since in some
+                        cases it's perfectly fine to have packets coming from only one
+                        side of conversation (i.e. when the second party has muted its
+                        audio).
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>-n</option> <replaceable>timeout_socket</replaceable></term>
+                 <listitem>
+                    <para>
+                        This parameter configures the optional timeout notification
+                        socket.  The socket should be created by another application,
+                        preferably before starting rtpproxy.   For those sessions where
+                        the timeout mechanism is enabled, notifications are sent on
+                        this socket if the session times out.
+                    </para>
+                    <para>
+                        Example: -n unix:/var/run/rtpproxy_timeout.sock
+                    </para>
+                    <para>
+                        There is no default value, notifications are not sent and not
+                        permitted unless a value is specified explicitly.
+                    </para>
+                </listitem>
+            </varlistentry>
 	</variablelist>
     </refsect1>
 
