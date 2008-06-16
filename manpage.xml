@@ -76,7 +76,7 @@
 	<para>
 	    <command>&dhpackage;</command> is a symmetric RTP proxy designed to
 	    be used in conjunction with the SIP Express Router (SER) or any
-	    other SIP proxy capable of rewriting SDP bodies in SIP messages
+	    other SIP proxy or SIP B2BUA capable of rewriting SDP bodies in SIP messages
 	    that it processes.
 	</para>
 	<para>
