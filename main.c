@@ -356,7 +356,7 @@ handle_command(struct cfg *cf, int controlfd)
 	if (cookie == NULL)
 	    len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n"
 	      "active streams: %d\n", cf->sessions_created,
-              cf->sessions_active, cf->nsessions / 2);
+	      cf->sessions_active, cf->nsessions / 2);
 	else
 	    len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n"
 	      "active streams: %d\n", cookie, cf->sessions_created,
