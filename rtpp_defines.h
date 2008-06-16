@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.12 2008/06/03 06:11:30 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.13 2008/06/16 22:18:55 sobomax Exp $
  *
  */
 
@@ -38,6 +38,8 @@
 #ifdef __linux__
 #include <stdint.h>
 #endif
+
+#include "rtpp_log.h"
 
 /*
  * Version of the command protocol, bump only when backward-incompatible
