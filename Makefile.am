@@ -14,3 +14,6 @@ EXTRA_DIST=README.remote manpage.xml debian/README.Debian debian/changelog \
   debian/rtpproxy-default.ex debian/rtpproxy.doc-base.EX \
   debian/rtpproxy.init debian/rules debian/watch.ex  rpm/rtpproxy.init \
   rpm/rtpproxy.spec
+
+rtpproxy.8: manpage.xml
+	xsltproc /usr/local/share/xsl/docbook/manpages/docbook.xsl manpage.xml
