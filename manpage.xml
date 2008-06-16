@@ -61,6 +61,10 @@
 		<option>-r</option> <replaceable>rdir</replaceable>
 		<arg choice="opt"><option>-S</option> <replaceable>sdir</replaceable></arg>
 	    </arg>
+	    <arg choice="opt"><option>-m</option> <replaceable>min_port</replaceable></arg>
+	    <arg choice="opt"><option>-M</option> <replaceable>max_port</replaceable></arg>
+	    <arg choice="opt"><option>-u</option> <replaceable>uname<optional>:gname</optional></replaceable></arg>
+	    <arg choice="opt"><option>-F</option></arg>
 	</cmdsynopsis>
     </refsynopsisdiv>
     <refsect1>
@@ -265,6 +269,46 @@
 			the value of <replaceable>max_ttl</replaceable>.
 		    </para>
 		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+	        <term><option>-m</option> <replaceable>min_port</replaceable></term>
+	        <listitem>
+	            <para>
+	                Set lower limit on UDP ports range that the RTPproxy uses for
+	                RTP/RTCP sessions to <replaceable>min_port</replaceable>.
+	                Default is 35000.
+	            </para>
+	        </listitem>
+	    </varlistentry>
+	    <varlistentry>
+	        <term><option>-M</option> <replaceable>max_port</replaceable></term>
+	        <listitem>
+	            <para>
+	                Set upper limit on UDP ports range that the RTPproxy uses for
+	                RTP/RTCP sessions to <replaceable>max_port</replaceable>.
+	                Default is 65000.
+	            </para>
+	        </listitem>
+	    </varlistentry>
+	    <varlistentry>
+	        <term><option>-u</option> <replaceable>uname<optional>:gname</optional></replaceable></term>
+	        <listitem>
+	            <para>
+	                Switch RTPproxy to UID identified by the <replaceable>uname</replaceable>
+	                and optional GID identified by <replaceable>gname</replaceable> when
+	                proxy is up and running.
+	            </para>
+	        </listitem>
+	    </varlistentry>
+	    <varlistentry>
+	        <term><option>-F</option></term>
+	        <listitem>
+	            <para>
+	                By default the RTPproxy will warn user if running as superuser (UID 0) in
+	                local control mode and refuse to run in remote control mode at all.
+	                This switch removes the check.
+	            </para>
+	        </listitem>
 	    </varlistentry>
 	</variablelist>
     </refsect1>
