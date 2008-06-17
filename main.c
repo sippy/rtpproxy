@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.75 2008/06/16 20:38:27 sobomax Exp $
+ * $Id: main.c,v 1.76 2008/06/17 08:34:53 sobomax Exp $
  *
  */
 
@@ -96,7 +96,7 @@ usage(void)
     fprintf(stderr, "usage: rtpproxy [-2fvFi] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]] "
-      "[-n timeout_socket"\n");
+      "[-n timeout_socket]\n");
     exit(1);
 }
 
