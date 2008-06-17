@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: rtpproxy.in,v 1.1 2008/06/16 22:32:24 sobomax Exp $
+# $Id: rtpproxy.in,v 1.2 2008/06/17 03:19:20 sobomax Exp $
 #
 
 # Add the following lines to /etc/rc.conf to enable RTPproxy:
@@ -18,7 +18,7 @@ prefix=%%PREFIX%%
 name=rtpproxy
 rcvar=`set_rcvar`
 
-command="${PREFIX}/bin/rtpproxy"
+command="${prefix}/bin/rtpproxy"
 pidfile="/var/run/rtpproxy.pid"
 
 load_rc_config ${name}
