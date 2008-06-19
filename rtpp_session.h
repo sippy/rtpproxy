@@ -76,8 +76,8 @@ struct rtpp_session {
 };
 
 void init_hash_table(struct cfg *);
-struct rtpp_session *hash_table_findfirst(struct cfg *, char *);
-struct rtpp_session *hash_table_findnext(struct rtpp_session *);
+struct rtpp_session *session_findfirst(struct cfg *, char *);
+struct rtpp_session *session_findnext(struct rtpp_session *);
 void hash_table_append(struct cfg *, struct rtpp_session *);
 void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);

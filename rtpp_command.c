@@ -852,7 +852,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
     int cmpr, cmpr1, idx;
 
     ndeleted = 0;
-    for (spa = hash_table_findfirst(cf, call_id); spa != NULL;) {
+    for (spa = session_findfirst(cf, call_id); spa != NULL;) {
 	medianum = 0;
 	if ((cmpr1 = compare_session_tags(spa->tag, from_tag, &medianum)) != 0) {
 	    idx = 1;
@@ -862,7 +862,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	    idx = 0;
 	    cmpr = cmpr1;
 	} else {
-	    spa = hash_table_findnext(spa);
+	    spa = session_findnext(spa);
 	    continue;
 	}
 
@@ -884,7 +884,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	      spa->strong, spa->weak[0], spa->weak[1]);
 	    /* Skipping to next possible stream for this call */
 	    ++ndeleted;
-	    spa = hash_table_findnext(spa);
+	    spa = session_findnext(spa);
 	    continue;
 	}
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
@@ -892,7 +892,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	   medianum, spa->ports[0], spa->ports[1]);
 	/* Search forward before we do removal */
 	spb = spa;
-	spa = hash_table_findnext(spa);
+	spa = session_findnext(spa);
 	remove_session(cf, spb);
 	++ndeleted;
 	if (cmpr != 2) {
