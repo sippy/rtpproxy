@@ -7,8 +7,8 @@ LIBS+=	-L../siplog -lsiplog -lpthread
 
 all: rtpproxy
 
-rtpproxy: main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o
-	${CC} -o rtpproxy main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o ${LIBS}
+rtpproxy: main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o rtpp_command.o
+	${CC} -o rtpproxy main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o rtpp_command.o ${LIBS}
 
 main.o: main.c
 	${CC} ${CFLAGS} -o main.o -c main.c
@@ -31,5 +31,8 @@ rtp.o: rtp.c
 rtpp_session.o: rtpp_session.c
 	${CC} ${CFLAGS} -o rtpp_session.o -c rtpp_session.c
 
+rtpp_command.o: rtpp_command.c
+	${CC} ${CFLAGS} -o rtpp_command.o -c rtpp_command.c
+
 clean:
-	rm -f main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o rtpproxy
+	rm -f main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o rtpp_command.o rtpproxy
