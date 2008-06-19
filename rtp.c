@@ -43,17 +43,17 @@ rtp_samples2bytes(int codec_id, int nsamples)
 {
 
     switch (codec_id) {
-        case RTP_PCMU:
-        case RTP_PCMA:
-            return nsamples;
-        case RTP_G729:
-            return nsamples / 8;
-        case RTP_GSM:
-            return (nsamples / 160) * 33;
-        case RTP_G723:
-            return (nsamples / 240) * 24;
-        default:
-            return RTP_NSAMPLES_UNKNOWN;
+	case RTP_PCMU:
+	case RTP_PCMA:
+	    return nsamples;
+	case RTP_G729:
+	    return nsamples / 8;
+	case RTP_GSM:
+	    return (nsamples / 160) * 33;
+	case RTP_G723:
+	    return (nsamples / 240) * 24;
+	default:
+	    return RTP_NSAMPLES_UNKNOWN;
     }
 }
 
@@ -62,22 +62,26 @@ rtp_bytes2samples(int codec_id, size_t nbytes)
 {
 
     switch (codec_id) {
-        case RTP_PCMU:
-        case RTP_PCMA:
-            return nbytes;
-        case RTP_G729:
-            return nbytes * 8;
-        case RTP_GSM:
-            return 160 * (nbytes / 33);
-        case RTP_G723:
-            if (nbytes % 24 == 0) 
-                return 240 * (nbytes / 24);
+	case RTP_PCMU:
+	case RTP_PCMA:
+	    return nbytes;
+
+	case RTP_G729:
+	    return nbytes * 8;
+
+	case RTP_GSM:
+	    return 160 * (nbytes / 33);
+
+	case RTP_G723:
+	    if (nbytes % 24 == 0) 
+		return 240 * (nbytes / 24);
 #if defined(NOTYET)
-            else if (nbytes % 20 == 0)
-                return 240 * (nbytes / 20);
+	    else if (nbytes % 20 == 0)
+		return 240 * (nbytes / 20);
 #endif
-        default:
-            return RTP_NSAMPLES_UNKNOWN;
+
+	default:
+	    return RTP_NSAMPLES_UNKNOWN;
     }
 }
 
@@ -120,6 +124,7 @@ rtp_packet_alloc()
 void
 rtp_packet_free(struct rtp_packet *pkt)
 {
+
     pkt->next = rtp_packet_pool;
     pkt->prev = NULL;
     rtp_packet_pool = pkt;

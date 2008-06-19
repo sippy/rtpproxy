@@ -149,8 +149,9 @@ rtp_server_get(struct rtp_server *rp, double ctime)
     }
 
     if (rp->rtp->m != 0 && ntohs(rp->rtp->seq) != 0) {
-        rp->rtp->m = 0;
+	rp->rtp->m = 0;
     }
+
     rp->rtp->ts = htonl(ts + (RTPS_SRATE * rticks / 1000));
     rp->rtp->seq = htons(ntohs(rp->rtp->seq) + 1);
 
