@@ -232,7 +232,7 @@ find_stream(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
   struct rtpp_session **spp)
 {
 
-    for (*spp = hash_table_findfirst(cf, call_id); *spp != NULL; *spp = hash_table_findnext(*spp)) {
+    for (*spp = session_findfirst(cf, call_id); *spp != NULL; *spp = session_findnext(*spp)) {
 	if (strcmp((*spp)->tag, from_tag) == 0) {
 	    return 0;
 	} else if (to_tag != NULL && strcmp((*spp)->tag, to_tag) == 0) {
