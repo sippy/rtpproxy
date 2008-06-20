@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.11 2008/06/03 06:11:30 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.12 2008/06/20 22:04:23 sobomax Exp $
  *
  */
 
@@ -670,6 +670,15 @@ handle_command(struct cfg *cf, int controlfd)
     case QUERY:
 	handle_query(cf, controlfd, &raddr, rlen, cookie, spa, i);
 	return 0;
+
+    case LOOKUP:
+    case UPDATE:
+	/* those are handled below */
+	break;
+
+    default:
+	/* Programmatic error, should not happen */
+	abort();
     }
 
     pidx = 1;
