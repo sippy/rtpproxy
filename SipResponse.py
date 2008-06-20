@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipResponse.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipResponse.py,v 1.4 2008/06/20 17:34:59 sobomax Exp $
 
 from SipMsg import SipMsg
 from SipHeader import SipHeader
@@ -57,6 +57,8 @@ class SipResponse(SipMsg):
         else:
             self.sipver, scode, self.reason = startline.split(None, 2)
         self.scode = int(scode)
+        if self.scode == 100 or self.scode >= 400:
+            self.ignorebody = True
 
     def setSCode(self, scode, reason):
         self.scode = scode

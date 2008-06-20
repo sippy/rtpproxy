@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.7 2008/04/24 23:48:26 sobomax Exp $
+# $Id: SipMsg.py,v 1.8 2008/06/20 17:34:59 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -40,6 +40,7 @@ class SipMsg:
     source = None
     nated = False
     rtime = None
+    ignorebody = False
 
     def __init__(self, buf = None):
         self.headers = []
@@ -80,6 +81,10 @@ class SipMsg:
             raise Exception('To HF is missed')
         if self.countHFs('from') == 0:
             raise Exception('From HF is missed')
+        if self.ignorebody:
+            self.delHFs('content-type')
+            self.delHFs('content-length')
+            return
         if self.countHFs('content-length') > 0:
             blen = self.getHFBody('content-length').number
             if mbody == None:
