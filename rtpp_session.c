@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.c,v 1.3 2008/06/03 06:11:30 sobomax Exp $
+ * $Id: rtpp_session.c,v 1.4 2008/06/20 22:48:40 sobomax Exp $
  *
  */
 
@@ -71,8 +71,6 @@ hash_table_append(struct cfg *cf, struct rtpp_session *sp)
     assert(sp->rtcp != NULL);
 
     hash = hash_string(cf, sp->call_id, NULL);
-
-    rtpp_log_write(RTPP_LOG_DBUG, cf->glog, "hash_table_append: hash(%s) = %d", sp->call_id, hash);
 
     tsp = cf->hash_table[hash];
     if (tsp == NULL) {
