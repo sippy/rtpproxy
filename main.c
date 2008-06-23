@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.76 2008/06/17 08:34:53 sobomax Exp $
+ * $Id: main.c,v 1.77 2008/06/23 07:33:35 sobomax Exp $
  *
  */
 
@@ -42,9 +42,11 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
 #include <limits.h>
 #include <netdb.h>
 #include <poll.h>
+#include <pwd.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -123,6 +125,8 @@ init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
     char *bh[2], *bh6[2], *cp;
+    struct passwd *pp;
+    struct group *gp;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -248,6 +252,22 @@ init_config(struct cfg *cf, int argc, char **argv)
 		cp++;
 	    }
 	    cf->run_gname = cp;
+	    cf->run_uid = -1;
+	    cf->run_gid = -1;
+	    if (cf->run_uname != NULL) {
+		pp = getpwnam(cf->run_uname);
+		if (pp == NULL)
+		    err(1, "can't find ID for the user: %s", cf->run_uname);
+		cf->run_uid = pp->pw_uid;
+		if (cf->run_gname == NULL)
+		    cf->run_gid = pp->pw_gid;
+	    }
+	    if (cf->run_gname != NULL) {
+		gp = getgrnam(cf->run_gname);
+		if (gp == NULL)
+		    err(1, "can't find ID for the group: %s", cf->run_gname);
+		cf->run_gid = gp->gr_gid;
+	    }
 	    break;
 
 	case 'F':
@@ -389,6 +409,9 @@ init_controlfd(struct cfg *cf)
 	  sizeof controlfd);
 	if (bind(controlfd, sstosa(&ifsun), sizeof ifsun) < 0)
 	    err(1, "can't bind to a socket");
+	if ((cf->run_uname != NULL || cf->run_gname != NULL) &&
+	  chown(cmd_sock, cf->run_uid, cf->run_gid) == -1)
+	    err(1, "can't set owner of the socket");
 	if (listen(controlfd, 32) != 0)
 	    err(1, "can't listen on a socket");
     } else {
@@ -763,7 +786,7 @@ main(int argc, char **argv)
     signal(SIGUSR2, fatsignal);
 
     if (cf.run_uname != NULL || cf.run_gname != NULL) {
-	if (drop_privileges(&cf, cf.run_uname, cf.run_gname) != 0) {
+	if (drop_privileges(&cf) != 0) {
 	    rtpp_log_ewrite(RTPP_LOG_ERR, cf.glog,
 	      "can't switch to requested user/group");
 	    exit(1);

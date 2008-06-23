@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.c,v 1.6 2008/03/18 02:26:29 sobomax Exp $
+ * $Id: rtpp_network.c,v 1.7 2008/06/23 07:33:35 sobomax Exp $
  *
  */
 
@@ -172,37 +172,19 @@ seedrandom(void)
 }
 
 int
-drop_privileges(struct cfg *cf, char *uname, char *gname)
+drop_privileges(struct cfg *cf)
 {
-    struct passwd *pp;
-    struct group *gp;
 
-    if (gname != NULL) {
-	gp = getgrnam(gname);
-	if (gp == NULL) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't find ID for the group: %s", gname);
-	    return -1;
-	}
-	if (setgid(gp->gr_gid) != 0) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", gp->gr_gid);
+    if (cf->run_gname != NULL) {
+	if (setgid(cf->run_gid) != 0) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", cf->run_gid);
 	    return -1;
 	}
     }
-    if (uname == NULL)
+    if (cf->run_uname == NULL)
 	return 0;
-    pp = getpwnam(uname);
-    if (pp == NULL) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't find ID for the user: %s", uname);
-	return -1;
-    }
-    if (gname == NULL) {
-	if (setgid(pp->pw_gid) != 0) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", pp->pw_gid);
-	    return -1;
-	}
-    }
-    if (setuid(pp->pw_uid) != 0) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current user ID: %d", pp->pw_uid);
+    if (setuid(cf->run_uid) != 0) {
+	rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current user ID: %d", cf->run_uid);
 	return -1;
     }
     return 0;

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.13 2008/06/16 22:18:55 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.14 2008/06/23 07:33:35 sobomax Exp $
  *
  */
 
@@ -123,6 +123,9 @@ struct cfg {
     rtpp_ttl_mode ttl_mode;
 
     struct rtpp_timeout_handler timeout_handler;
+
+    uid_t run_uid;
+    gid_t run_gid;
 };
 
 #endif

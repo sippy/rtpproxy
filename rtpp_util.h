@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.h,v 1.6 2008/04/01 22:32:03 sobomax Exp $
+ * $Id: rtpp_util.h,v 1.7 2008/06/23 07:33:35 sobomax Exp $
  *
  */
 
@@ -53,7 +53,7 @@ const char *addr2char(struct sockaddr *);
 double getctime(void);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 void seedrandom(void);
-int drop_privileges(struct cfg *, char *, char *);
+int drop_privileges(struct cfg *);
 
 /* Stripped down version of sockaddr_in* for saving space */
 struct sockaddr_in4_s {
