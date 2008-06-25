@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipCallId.py,v 1.4 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipCallId.py,v 1.5 2008/06/25 07:57:57 sobomax Exp $
 
 from random import random
 from md5 import md5
@@ -51,5 +51,7 @@ class SipCallId:
     def genCallId(self):
         self.body = md5(str((random() * 1000000000L) + time())).hexdigest() + '@' + SipConf.my_address
 
-    def getCanName(self, name):
+    def getCanName(self, name, compact = False):
+        if compact:
+            return 'i'
         return 'Call-ID'

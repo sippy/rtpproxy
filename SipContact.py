@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipContact.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipContact.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
 
 from SipAddressHF import SipAddressHF
 from SipConf import SipConf
@@ -39,3 +39,8 @@ class SipContact(SipAddressHF):
         SipAddressHF.__init__(self, body, address)
         if body == None and address == None:
             self.address = SipAddress(name = 'Anonymous', url = SipURL(host = SipConf.my_address, port = SipConf.my_port))
+
+    def getCanName(self, name, compact = False):
+        if compact:
+            return 'm'
+        return 'Contact'

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipContentLength.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipContentLength.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
 
 from SipNumericHF import SipNumericHF
 
@@ -32,5 +32,7 @@ class SipContentLength(SipNumericHF):
     def getCopy(self):
         return SipContentLength(number = self.number)
 
-    def getCanName(self, name):
+    def getCanName(self, name, compact = False):
+        if compact:
+            return 'l'
         return 'Content-Length'

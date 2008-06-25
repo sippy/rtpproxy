@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipVia.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipVia.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
 
 from random import random
 from md5 import md5
@@ -106,3 +106,8 @@ class SipVia(SipGenericHF):
 
     def getTAddr(self):
         return (self.params.get('received', self.getAddr()[0]), int(self.params.get('rport', self.getAddr()[1])))
+
+    def getCanName(self, name, compact = False):
+        if compact:
+            return 'v'
+        return 'Via'

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipCSeq.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipCSeq.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
 
 class SipCSeq:
     hf_names = ('cseq',)
@@ -55,7 +55,7 @@ class SipCSeq:
     def getCopy(self):
         return SipCSeq(cseq = self.cseq, method = self.method)
 
-    def getCanName(self, name):
+    def getCanName(self, name, compact = False):
         return 'CSeq'
 
     def incCSeqNum(self):

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAuthorization.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipAuthorization.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from md5 import md5
@@ -91,7 +91,7 @@ class SipAuthorization(SipGenericHF):
         response = DigestCalcResponse(HA1, self.nonce, 0, '', '', method, self.uri, '')
         return response == self.response
 
-    def getCanName(self, name):
+    def getCanName(self, name, compact = False):
         return 'Authorization'
 
     def hasValidNonce(self, timeout = 300):

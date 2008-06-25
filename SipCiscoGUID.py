@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipCiscoGUID.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipCiscoGUID.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
 
 from random import random
 from md5 import md5
@@ -51,7 +51,7 @@ class SipCiscoGUID(SipGenericHF):
     def hexForm(self):
         return '%.8X %.8X %.8X %.8X' % self.ciscoGUID
 
-    def getCanName(self, name):
+    def getCanName(self, name, compact = False):
         if name.lower() == 'h323-conf-id':
             return 'h323-conf-id'
         else:

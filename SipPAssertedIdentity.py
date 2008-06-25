@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipPAssertedIdentity.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipPAssertedIdentity.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
 
 from SipFrom import SipFrom
 from SipGenericHF import SipGenericHF
@@ -33,7 +33,7 @@ class SipPAssertedIdentity(SipFrom, SipGenericHF):
     def getCopy(self):
         return SipPAssertedIdentity(address = self.address.getCopy())
 
-    def getCanName(self, name):
+    def getCanName(self, name, compact = False):
         return 'P-Asserted-Identity'
 
     def getAddr(self):
