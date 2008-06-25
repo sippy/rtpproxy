@@ -22,12 +22,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipReferredBy.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipReferredBy.py,v 1.4 2008/06/25 23:31:44 sobomax Exp $
 
 from SipAddressHF import SipAddressHF
 
 class SipReferredBy(SipAddressHF):
-    hf_names = ('referred-by',)
+    hf_names = ('referred-by', 'b')
 
     def getCopy(self):
         return SipReferredBy(address = self.address.getCopy())
+
+    def getCanName(self, name, compact = False):
+        return 'Referred-By'

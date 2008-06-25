@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipReferTo.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipReferTo.py,v 1.4 2008/06/25 23:31:44 sobomax Exp $
 
 from SipAddressHF import SipAddressHF
 
@@ -31,3 +31,8 @@ class SipReferTo(SipAddressHF):
 
     def getCopy(self):
         return SipReferTo(address = self.address.getCopy())
+
+    def getCanName(self, name, compact = False):
+        if compact:
+            return 'r'
+        return 'Refer-To'
