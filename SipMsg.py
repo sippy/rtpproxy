@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.8 2008/06/20 17:34:59 sobomax Exp $
+# $Id: SipMsg.py,v 1.9 2008/06/26 00:25:53 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -133,6 +133,19 @@ class SipMsg:
             mbody = str(self.body)
             s += 'Content-Length: %d\r\n' % len(mbody)
             s += 'Content-Type: %s\r\n\r\n' % self.body.mtype
+            s += mbody
+        else:
+            s += '\r\n'
+        return s
+
+    def compactStr(self):
+        s = str(self.getSL()) + '\r\n'
+        for header in self.headers:
+            s += header.compactStr() + '\r\n'
+        if self.body != None:
+            mbody = str(self.body)
+            s += 'l: %d\r\n' % len(mbody)
+            s += 'c: %s\r\n\r\n' % self.body.mtype
             s += mbody
         else:
             s += '\r\n'
