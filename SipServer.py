@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipServer.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipServer.py,v 1.4 2008/06/26 00:04:18 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from SipConf import SipConf
@@ -44,6 +44,3 @@ class SipServer(SipGenericHF):
 
     def getCopy(self):
         return SipServer(name = self.name)
-
-    def getName(self):
-        return self.name
