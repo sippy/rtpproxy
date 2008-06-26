@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.29 2008/06/20 17:09:03 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.30 2008/06/26 19:45:21 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -401,9 +401,9 @@ class CallMap:
         if req.getMethod() == 'INVITE':
             # New dialog
             if req.countHFs('via') > 1:
-                via = req.getHFBody('via', 1)
+                via = req.getHFBodys('via')[1]
             else:
-                via = req.getHFBody('via', 0)
+                via = req.getHFBodys('via')[0]
             remote_ip = via.getTAddr()[0]
             source = req.getSource()
             if self.global_config['auth_enable'] and self.global_config['digest_auth'] and \
