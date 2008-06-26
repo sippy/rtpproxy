@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.6 2008/04/04 22:27:50 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.7 2008/06/26 01:14:49 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -124,8 +124,7 @@ class SipTransactionManager:
             data, address = retrans
             if data == None:
                 return
-            self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
-            self.userv.send_to(data, address)
+            self.transmitData(data, address)
             return
         if data.startswith('SIP/2.0 '):
             try:
@@ -223,8 +222,7 @@ class SipTransactionManager:
         t.teC = None
         t.state = TRYING
         self.tclient[t.tid] = t
-        self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % t.address, t.data)
-        self.userv.send_to(t.data, t.address)
+        self.transmitData(t.data, t.address)
         return t
 
     def cancelTransaction(self, t):
@@ -304,10 +302,7 @@ class SipTransactionManager:
                         t.ack.appendHeaders(map(lambda x: SipHeader(name = 'route', body = x), routes))
                     if fcode >= 200 and fcode < 300:
                         t.ack.getHFBody('via').genBranch()
-                    data = str(t.ack)
-                    self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % t.address, data)
-                    self.userv.send_to(data, t.address)
-                    self.l1rcache[checksum] = (data, t.address)
+                    self.transmitMsg(t.ack, t.address, checksum)
                 else:
                     self.l1rcache[checksum] = (None, None)
                 if t.resp_cb != None:
@@ -317,8 +312,7 @@ class SipTransactionManager:
 
     def timerA(self, t):
         #print 'timerA', t
-        self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % t.address, t.data)
-        self.userv.send_to(t.data, t.address)
+        self.transmitData(t.data, t.address)
         t.tout *= 2
         t.teA = Timeout(self.timerA, t.tout, 1, t)
 
@@ -353,11 +347,7 @@ class SipTransactionManager:
         for tid in msg.getTIds():
             if self.tclient.has_key(tid):
                 resp = msg.genResponse(482, 'Loop Detected')
-                data = str(resp)
-                address = resp.getHFBody('via').getTAddr()
-                self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
-                self.userv.send_to(data, address)
-                self.l1rcache[checksum] = (data, address)
+                self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
                 return
         tid = msg.getTId()
         # Fasten seatbelts - bumpy transaction matching code ahead!
@@ -371,21 +361,13 @@ class SipTransactionManager:
                         # Different branch on transaction to which no final reply
                         # has been sent yet - merge requests
                         resp = msg.genResponse(482, 'Loop Detected')
-                        data = str(resp)
-                        address = resp.getHFBody('via').getTAddr()
-                        self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
-                        self.userv.send_to(data, address)
-                        self.l1rcache[checksum] = (data, address)
+                        self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
                         return
                     elif msg.getMethod() == 'CANCEL':
                         # CANCEL, but with branch that doesn't match any existing
                         # transactions
                         resp = msg.genResponse(481, 'Call Leg/Transaction Does Not Exist')
-                        data = str(resp)
-                        address = resp.getHFBody('via').getTAddr()
-                        self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
-                        self.userv.send_to(data, address)
-                        self.l1rcache[checksum] = (data, address)
+                        self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
                         return
         else:
             t = self.tserver.get(tid, None)
@@ -395,19 +377,13 @@ class SipTransactionManager:
                 # Duplicate received, check that we have sent any response on this
                 # request already
                 if t.data != None:
-                    self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % t.address, t.data)
-                    self.userv.send_to(t.data, t.address)
-                    self.l1rcache[checksum] = (t.data, t.address)
+                    self.transmitData(t.data, t.address, checksum)
                 return
             elif msg.getMethod() == 'CANCEL':
                 # RFC3261 says that we have to reply 200 OK in all cases if
                 # there is such transaction
                 resp = msg.genResponse(200, 'OK')
-                data = str(resp)
-                address = resp.getHFBody('via').getTAddr()
-                self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
-                self.userv.send_to(data, address)
-                self.l1rcache[checksum] = (data, address)
+                self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
                 if t.state in (TRYING, RINGING):
                     self.doCancel(t, msg.rtime)
             elif msg.getMethod() == 'ACK' and t.state == COMPLETED:
@@ -429,11 +405,7 @@ class SipTransactionManager:
             self.l1rcache[checksum] = (None, None)
         elif msg.getMethod() == 'CANCEL':
             resp = msg.genResponse(481, 'Call Leg/Transaction Does Not Exist')
-            data = str(resp)
-            address = resp.getHFBody('via').getTAddr()
-            self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
-            self.userv.send_to(data, address)
-            self.l1rcache[checksum] = (data, address)
+            self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
         else:
             #print 'new transaction', msg.getMethod()
             t = SipTransaction()
@@ -537,9 +509,7 @@ class SipTransactionManager:
                 t.cleanup()
         t.data = str(resp)
         t.address = resp.getHFBody('via').getTAddr()
-        self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % t.address, t.data)
-        self.userv.send_to(t.data, t.address)
-        self.l1rcache[t.checksum] = (t.data, t.address)
+        self.transmitData(t.data, t.address, t.checksum)
 
     def doCancel(self, t, rtime = None):
         if rtime == None:
@@ -577,10 +547,22 @@ class SipTransactionManager:
         #print 'timerF', t.state
         t.teF = None
         if t.state == RINGING and self.provisional_retr > 0:
-            self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % t.address, t.data)
-            self.userv.send_to(t.data, t.address)
+            self.transmitData(t.data, t.address)
             t.teF = Timeout(self.timerF, self.provisional_retr, 1, t)
 
     def rCachePurge(self):
         self.l2rcache = self.l1rcache
         self.l1rcache = {}
+
+    def transmitMsg(self, msg, address, cachesum, compact = False):
+        if not compact:
+            data = str(msg)
+        else:
+            data = msg.compactStr()
+        self.transmitData(data, address, cachesum)
+
+    def transmitData(self, data, address, cachesum = None):
+        self.userv.send_to(data, address)
+        self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
+        if cachesum != None:
+            self.l1rcache[cachesum] = (data, address)
