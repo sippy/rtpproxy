@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateIdle.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: UasStateIdle.py,v 1.4 2008/06/27 02:33:15 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -31,6 +31,8 @@ from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventTry
 from SipContact import SipContact
 from SipCiscoGUID import SipCiscoGUID
+from SipFrom import SipFrom
+from SipTo import SipTo
 
 class UasStateIdle(UaStateGeneric):
     sname = 'Idle(UAS)'
@@ -68,8 +70,8 @@ class UasStateIdle(UaStateGeneric):
         self.ua.rAddr0 = self.ua.rAddr
         self.ua.global_config['sip_tm'].sendResponse(self.ua.uasResp)
         self.ua.uasResp.getHFBody('to').setTag(self.ua.fTag)
-        self.ua.lUri = self.ua.uasResp.getHFBody('to')
-        self.ua.rUri = self.ua.uasResp.getHFBody('from')
+        self.ua.lUri = SipFrom(address = self.ua.uasResp.getHFBody('to').getUri())
+        self.ua.rUri = SipTo(address = self.ua.uasResp.getHFBody('from').getUri())
         self.ua.cId = self.ua.uasResp.getHFBody('call-id')
         self.ua.global_config['sip_tm'].regConsumer(self.ua, str(self.ua.cId))
         if req.countHFs('authorization') == 0:
