@@ -419,6 +419,7 @@ process_rtp_servers(struct cfg *cf, double ctime)
 		    }
 		    break;
 		}
+		cf->packets_out++;
 		for (k = (cf->dmode && len < LBR_THRS) ? 2 : 1; k > 0; k--) {
 		    sendto(sp->fds[sidx], sp->rtps[sidx]->buf, len, 0,
 		      sp->addr[sidx], SA_LEN(sp->addr[sidx]));
@@ -445,6 +446,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	if (packet == NULL)
 	    break;
 	packet->rtime = ctime;
+	cf->packets_in++;
 
 	i = 0;
 	if (sp->addr[ridx] != NULL) {
@@ -569,6 +571,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	sp->pcount[3]++;
     } else {
 	sp->pcount[2]++;
+	cf->packets_out++;
 	for (i = (cf->dmode && packet->size < LBR_THRS) ? 2 : 1; i > 0; i--) {
 	    sendto(sp->fds[sidx], packet->buf, packet->size, 0, sp->addr[sidx],
 	      SA_LEN(sp->addr[sidx]));

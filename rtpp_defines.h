@@ -100,6 +100,9 @@ struct cfg {
     char *run_uname;
     char *run_gname;
     int no_check;
+
+    unsigned long long packets_in;
+    unsigned long long packets_out;
 };
 
 #endif

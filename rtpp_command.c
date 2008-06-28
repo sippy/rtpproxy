@@ -398,12 +398,14 @@ handle_command(struct cfg *cf, int controlfd)
     case 'I':
 	if (cookie == NULL)
 	    len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n"
-	      "active streams: %d\n", cf->sessions_created,
-	      cf->sessions_active, cf->nsessions / 2);
+	      "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
+	      cf->sessions_created, cf->sessions_active, cf->nsessions / 2,
+	      cf->packets_in, cf->packets_out);
 	else
 	    len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n"
-	      "active streams: %d\n", cookie, cf->sessions_created,
-	      cf->sessions_active, cf->nsessions / 2);
+	      "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
+	      cookie, cf->sessions_created, cf->sessions_active, cf->nsessions / 2,
+	      cf->packets_in, cf->packets_out);
 	for (i = 1; i < cf->nsessions; i++) {
 	    char addrs[4][256];
 
