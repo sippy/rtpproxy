@@ -1,6 +1,7 @@
 CC?=	gcc
 CFLAGS+=-I../siplog
 LIBS+=	-L../siplog -lsiplog -lpthread
+PREFIX?= /usr/local
 
 # Uncomment this on Solaris
 #LIBS+=	-lresolv -lsocket -lnsl
@@ -36,3 +37,6 @@ rtpp_command.o: rtpp_command.c
 
 clean:
 	rm -f main.o rtp_server.o rtpp_record.o rtpp_util.o rtp_resizer.o rtp.o rtpp_session.o rtpp_command.o rtpproxy
+
+install: all
+	install rtpproxy ${PREFIX}/bin/rtpproxy
