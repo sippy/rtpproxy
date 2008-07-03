@@ -75,6 +75,12 @@ typedef struct {
     uint32_t csrc[0];		/* optional CSRC list */
 } rtp_hdr_t;
 
+typedef struct {
+    uint16_t profile;		/* defined by profile */
+    uint16_t length;		/* length of the following array in 32-byte words */
+    uint32_t extension[0];	/* actual extension data */
+} rtp_hdr_ext_t;
+
 struct rtp_packet {
     size_t      size;
 
@@ -110,7 +116,7 @@ struct rtp_packet_chunk {
 
 #define	RTP_HDR_LEN(rhp)	(sizeof(*(rhp)) + ((rhp)->cc * sizeof((rhp)->csrc[0])))
 
-void rtp_packet_parse(struct rtp_packet *);
+int rtp_packet_parse(struct rtp_packet *);
 struct rtp_packet *rtp_recv(int);
 
 struct rtp_packet *rtp_packet_alloc();

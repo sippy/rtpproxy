@@ -71,7 +71,8 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
     uint32_t            ref_ts, internal_ts;
     int                 delta;
 
-    rtp_packet_parse(*pkt);
+    if (rtp_packet_parse(*pkt) == -1)
+	return;
 
     if ((*pkt)->nsamples == RTP_NSAMPLES_UNKNOWN)
         return;

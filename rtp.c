@@ -202,37 +202,61 @@ rtp_packet_first_chunk_find(struct rtp_packet *pkt, struct rtp_packet_chunk *ret
     }
 }
 
-void 
+int
 rtp_packet_parse(struct rtp_packet *pkt)
 {
     int padding_size;
+    rtp_hdr_ext_t *hdr_ext_ptr;
 
     padding_size = 0;
 
     pkt->data_size = 0;
     pkt->data_offset = 0;
+    pkt->appendable = 1;
     pkt->nsamples = RTP_NSAMPLES_UNKNOWN;
 
-    if (pkt->header.version != 2)
-        return;
+    if (pkt->size < sizeof(pkt->header) || pkt->header.version != 2)
+        return -1;
 
     pkt->data_offset = RTP_HDR_LEN(&pkt->header);
 
-    if (pkt->header.p)
-        padding_size = ((unsigned char *) pkt)[pkt->size - 1];
+    if (pkt->header.x != 0) {
+        if (pkt->size < pkt->data_offset + sizeof(*hdr_ext_ptr))
+            return -1;
+        hdr_ext_ptr = (rtp_hdr_ext_t *)&pkt->buf[pkt->data_offset];
+        pkt->data_offset += sizeof(rtp_hdr_ext_t) +
+          (ntohs(hdr_ext_ptr->length) * sizeof(hdr_ext_ptr->extension[0]));
+    }
+
+    if (pkt->size < pkt->data_offset)
+        return -1;
+
+    if (pkt->header.p != 0) {
+        if (pkt->data_offset == pkt->size)
+            return -1;
+        padding_size = pkt->buf[pkt->size - 1];
+        if (padding_size == 0)
+            return -1;
+    }
+
+    if (pkt->size < pkt->data_offset + padding_size)
+        return -1;
 
     pkt->data_size = pkt->size - pkt->data_offset - padding_size;
-    pkt->nsamples = rtp_calc_samples(pkt->header.pt, pkt->data_size, &pkt->buf[pkt->data_offset]);
     pkt->ts = ntohl(pkt->header.ts);
     pkt->seq = ntohs(pkt->header.seq);
 
-    pkt->appendable = 1;
+    if (pkt->data_size == 0)
+        return 0;
+
+    pkt->nsamples = rtp_calc_samples(pkt->header.pt, pkt->data_size, &pkt->buf[pkt->data_offset]);
     /* 
      * G.729 comfort noise frame as the last frame causes 
      * packet to be non-appendable
      */
     if (pkt->header.pt == RTP_G729 && (pkt->data_size % 10) != 0)
         pkt->appendable = 0;
+    return 0;
 }
 
 struct rtp_packet *
