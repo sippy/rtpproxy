@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_resizer.c,v 1.2 2008/04/17 22:38:00 sobomax Exp $
+ * $Id: rtp_resizer.c,v 1.3 2008/07/10 00:17:36 sobomax Exp $
  *
  */
 
@@ -111,7 +111,7 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
         {
             (*pkt)->next = this->queue.first;
             (*pkt)->prev = NULL;
-            this->queue.first->next = *pkt;
+            this->queue.first->prev = *pkt;
             this->queue.first = *pkt;
         }
         else if (p == this->queue.last) /* tail of the queue */
