@@ -70,8 +70,6 @@ hash_table_append(struct cfg *cf, struct rtpp_session *sp)
 
     hash = hash_string(cf, sp->call_id, NULL);
 
-    rtpp_log_write(RTPP_LOG_DBUG, cf->glog, "hash_table_append: hash(%s) = %d", sp->call_id, hash);
-
     tsp = cf->hash_table[hash];
     if (tsp == NULL) {
 	cf->hash_table[hash] = sp;
