@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.c,v 1.4 2008/06/20 22:48:40 sobomax Exp $
+ * $Id: rtpp_session.c,v 1.5 2008/07/15 23:08:41 sobomax Exp $
  *
  */
 
@@ -110,7 +110,7 @@ hash_table_remove(struct cfg *cf, struct rtpp_session *sp)
 }
 
 struct rtpp_session *
-hash_table_findfirst(struct cfg *cf, char *call_id)
+session_findfirst(struct cfg *cf, char *call_id)
 {
     uint8_t hash;
     struct rtpp_session *sp;
@@ -125,7 +125,7 @@ hash_table_findfirst(struct cfg *cf, char *call_id)
 }
 
 struct rtpp_session *
-hash_table_findnext(struct rtpp_session *psp)
+session_findnext(struct rtpp_session *psp)
 {
     struct rtpp_session *sp;
 
@@ -232,7 +232,7 @@ find_stream(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
   struct rtpp_session **spp)
 {
 
-    for (*spp = hash_table_findfirst(cf, call_id); *spp != NULL; *spp = hash_table_findnext(*spp)) {
+    for (*spp = session_findfirst(cf, call_id); *spp != NULL; *spp = session_findnext(*spp)) {
 	if (strcmp((*spp)->tag, from_tag) == 0) {
 	    return 0;
 	} else if (to_tag != NULL && strcmp((*spp)->tag, to_tag) == 0) {
