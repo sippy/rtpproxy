@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.c,v 1.7 2008/06/23 07:33:35 sobomax Exp $
+ * $Id: rtpp_network.c,v 1.8 2008/07/15 23:14:52 sobomax Exp $
  *
  */
 
@@ -122,7 +122,7 @@ addr2char(struct sockaddr *ia)
 }
 
 double
-getctime(void)
+getdtime(void)
 {
     struct timeval timev;
 

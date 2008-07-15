@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_resizer.c,v 1.3 2008/07/10 00:17:36 sobomax Exp $
+ * $Id: rtp_resizer.c,v 1.4 2008/07/15 23:14:52 sobomax Exp $
  *
  */
 
@@ -196,7 +196,7 @@ move_chunk(struct rtp_packet *dst, struct rtp_packet *src, const struct rtp_pack
 }
 
 struct rtp_packet *
-rtp_resizer_get(struct rtp_resizer *this, double ctime)
+rtp_resizer_get(struct rtp_resizer *this, double dtime)
 {
     struct rtp_packet *ret = NULL;
     struct rtp_packet *p;
@@ -211,7 +211,7 @@ rtp_resizer_get(struct rtp_resizer *this, double ctime)
     if (this->queue.first == NULL)
         return NULL;
 
-    ref_ts = (ctime * 8000.0) + this->tsdelta;
+    ref_ts = (dtime * 8000.0) + this->tsdelta;
 
     /* Wait untill enough data has arrived or timeout occured */
     if (this->nsamples_total < this->output_nsamples &&

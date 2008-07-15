@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.h,v 1.7 2008/06/23 07:33:35 sobomax Exp $
+ * $Id: rtpp_network.h,v 1.8 2008/07/15 23:14:52 sobomax Exp $
  *
  */
 
@@ -50,7 +50,7 @@ int ishostseq(struct sockaddr *, struct sockaddr *);
 int ishostnull(struct sockaddr *);
 char *addr2char_r(struct sockaddr *, char *buf, int size);
 const char *addr2char(struct sockaddr *);
-double getctime(void);
+double getdtime(void);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 void seedrandom(void);
 int drop_privileges(struct cfg *);

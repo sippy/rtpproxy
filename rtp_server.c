@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_server.c,v 1.7 2008/06/16 22:18:28 sobomax Exp $
+ * $Id: rtp_server.c,v 1.8 2008/07/15 23:14:52 sobomax Exp $
  *
  */
 
@@ -91,17 +91,17 @@ rtp_server_free(struct rtp_server *rp)
 }
 
 int
-rtp_server_get(struct rtp_server *rp, double ctime)
+rtp_server_get(struct rtp_server *rp, double dtime)
 {
     uint32_t ts;
     int rlen, rticks, bytes_per_frame, ticks_per_frame, number_of_frames;
 
     if (rp->btime == -1)
-	rp->btime = ctime;
+	rp->btime = dtime;
 
     ts = ntohl(rp->rtp->ts);
 
-    if (rp->btime + ((double)ts / RTPS_SRATE) > ctime)
+    if (rp->btime + ((double)ts / RTPS_SRATE) > dtime)
 	return RTPS_LATER;
 
     switch (rp->rtp->pt) {
