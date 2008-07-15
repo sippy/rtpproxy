@@ -122,7 +122,7 @@ addr2char(struct sockaddr *ia)
 }
 
 double
-getctime(void)
+getdtime(void)
 {
     struct timeval timev;
 

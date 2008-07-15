@@ -50,7 +50,7 @@ int ishostseq(struct sockaddr *, struct sockaddr *);
 int ishostnull(struct sockaddr *);
 char *addr2char_r(struct sockaddr *, char *buf, int size);
 const char *addr2char(struct sockaddr *);
-double getctime(void);
+double getdtime(void);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 void seedrandom(void);
 int drop_privileges(struct cfg *, char *, char *);

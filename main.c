@@ -389,7 +389,7 @@ init_controlfd(struct cfg *cf)
 }
 
 static void
-process_rtp_servers(struct cfg *cf, double ctime)
+process_rtp_servers(struct cfg *cf, double dtime)
 {
     int j, k, sidx, len, skipfd;
     struct rtpp_session *sp;
@@ -408,7 +408,7 @@ process_rtp_servers(struct cfg *cf, double ctime)
 	for (sidx = 0; sidx < 2; sidx++) {
 	    if (sp->rtps[sidx] == NULL || sp->addr[sidx] == NULL)
 		continue;
-	    while ((len = rtp_server_get(sp->rtps[sidx], ctime)) != RTPS_LATER) {
+	    while ((len = rtp_server_get(sp->rtps[sidx], dtime)) != RTPS_LATER) {
 		if (len == RTPS_EOF) {
 		    rtp_server_free(sp->rtps[sidx]);
 		    sp->rtps[sidx] = NULL;
@@ -432,7 +432,7 @@ process_rtp_servers(struct cfg *cf, double ctime)
 
 static void
 rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
-  double ctime)
+  double dtime)
 {
     int ndrain, i, port;
     struct rtp_packet *packet = NULL;
@@ -445,7 +445,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	packet = rtp_recv(sp->fds[ridx]);
 	if (packet == NULL)
 	    break;
-	packet->rtime = ctime;
+	packet->rtime = dtime;
 	cf->packets_in++;
 
 	i = 0;
@@ -583,7 +583,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 }
 
 static void
-process_rtp(struct cfg *cf, double ctime, int alarm_tick)
+process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 {
     int readyfd, skipfd, ridx;
     struct rtpp_session *sp;
@@ -628,9 +628,9 @@ process_rtp(struct cfg *cf, double ctime, int alarm_tick)
 
 	if (sp->complete != 0) {
 	    if ((cf->pfds[readyfd].revents & POLLIN) != 0)
-		rxmit_packets(cf, sp, ridx, ctime);
+		rxmit_packets(cf, sp, ridx, dtime);
 	    if (sp->resizers[ridx].output_nsamples > 0) {
-		while ((packet = rtp_resizer_get(&sp->resizers[ridx], ctime)) != NULL) {
+		while ((packet = rtp_resizer_get(&sp->resizers[ridx], dtime)) != NULL) {
 		    send_packet(cf, sp, ridx, packet);
 		    rtp_packet_free(packet);
 		}
@@ -744,18 +744,18 @@ main(int argc, char **argv)
 	    timeout = RTPS_TICKS_MIN;
 	else
 	    timeout = TIMETICK * 1000;
-	eptime = getctime();
+	eptime = getdtime();
 	delay = (eptime - sptime) * 1000000.0;
 	if (delay < (1000000 / POLL_LIMIT)) {
 	    usleep((1000000 / POLL_LIMIT) - delay);
-	    sptime = getctime();
+	    sptime = getdtime();
 	} else {
 	    sptime = eptime;
 	}
 	i = poll(cf.pfds, cf.nsessions, timeout);
 	if (i < 0 && errno == EINTR)
 	    continue;
-	eptime = getctime();
+	eptime = getdtime();
 	if (cf.rtp_nsessions > 0) {
 	    process_rtp_servers(&cf, eptime);
 	}
