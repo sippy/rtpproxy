@@ -20,6 +20,9 @@ freebsd*)
   CPPFLAGS=-I/usr/local/include
   LDFLAGS=-L/usr/local/lib
   ;;
+linux*)
+  CPPFLAGS=-D_BSD_SOURCE
+  ;;
 *)
   ;;
 esac
@@ -69,7 +72,14 @@ AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([atexit gettimeofday memset mkdir socket strchr strdup strerror])
 
+if test "x$GCC" = "xyes"; then
+  ## We like to use C99 routines when available.  This makes sure that
+  ## __STDC_VERSION__ is set such that libc includes make them available.
+  AM_CFLAGS="-std=gnu99"
+fi
+
 AC_CONFIG_FILES([Makefile])
+AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_GSM)
 AC_SUBST(LIBS_G729)
 AC_OUTPUT
