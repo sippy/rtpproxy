@@ -1,6 +1,6 @@
 CC?=	gcc
-CFLAGS+=-I../siplog
-LIBS+=	-L../siplog -lsiplog -lpthread
+CFLAGS+=-I../siplog -Wall -D_BSD_SOURCE -D_ISOC99_SOURCE
+LIBS+=	-L../siplog -lsiplog -lpthread -lm
 PREFIX?= /usr/local
 
 # Uncomment this on Solaris
