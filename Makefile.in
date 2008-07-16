@@ -63,7 +63,7 @@ am_rtpproxy_OBJECTS = main.$(OBJEXT) rtp_server.$(OBJEXT) \
 	rtp_resizer.$(OBJEXT) rtpp_session.$(OBJEXT) \
 	rtpp_command.$(OBJEXT)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
-rtpproxy_LDADD = $(LDADD)
+rtpproxy_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -94,6 +94,7 @@ ALLOCA = @ALLOCA@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_CFLAGS = @AM_CFLAGS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -186,6 +187,7 @@ rtpproxy_SOURCES = main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
   rtpp_command.c rtpp_command.h
 
+rtpproxy_LDADD = -lm
 dist_man_MANS = rtpproxy.8
 makeann_SOURCES = makeann.c rtp.h g711.h
 makeann_LDADD = @LIBS_G729@ @LIBS_GSM@
@@ -410,7 +412,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/debian $(distdir)/rpm
+	$(mkdir_p) $(distdir)/debian $(distdir)/freebsd $(distdir)/rpm
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -633,6 +635,9 @@ uninstall-man: uninstall-man8
 	ps ps-am tags uninstall uninstall-am uninstall-binPROGRAMS \
 	uninstall-info-am uninstall-man uninstall-man8
 
+
+rtpproxy.8: manpage.xml
+	xsltproc /usr/local/share/xsl/docbook/manpages/docbook.xsl manpage.xml
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
