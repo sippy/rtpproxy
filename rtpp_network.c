@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.c,v 1.8 2008/07/15 23:14:52 sobomax Exp $
+ * $Id: rtpp_network.c,v 1.9 2008/07/16 20:42:21 sobomax Exp $
  *
  */
 
@@ -36,6 +36,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <grp.h>
+#include <math.h>
 #include <netdb.h>
 #include <pwd.h>
 #include <stdlib.h>
@@ -132,6 +133,14 @@ getdtime(void)
     return timev.tv_sec + ((double)timev.tv_usec) / 1000000.0;
 }
 
+void
+dtime2ts(double dtime, uint32_t *ts_sec, uint32_t *ts_usec)
+{
+
+    *ts_sec = trunc(dtime);
+    *ts_usec = round(1000000.0 * (dtime - ((double)*ts_sec)));
+}
+
 int
 resolve(struct sockaddr *ia, int pf, const char *host,
   const char *servname, int flags)
@@ -188,4 +197,43 @@ drop_privileges(struct cfg *cf)
 	return -1;
     }
     return 0;
+}
+
+uint16_t
+rtpp_in_cksum(void *addr, int len)
+{
+    int nleft, sum;
+    uint16_t *w;
+    union {
+        uint16_t us;
+        uint16_t uc[2];
+    } last;
+    uint16_t answer;
+
+    nleft = len;
+    sum = 0;
+    w = (uint16_t *)addr;
+
+    /*
+     * Our algorithm is simple, using a 32 bit accumulator (sum), we add
+     * sequential 16 bit words to it, and at the end, fold back all the
+     * carry bits from the top 16 bits into the lower 16 bits.
+     */
+    while (nleft > 1)  {
+	sum += *w++;
+	nleft -= 2;
+    }
+
+    /* mop up an odd byte, if necessary */
+    if (nleft == 1) {
+	last.uc[0] = *(uint8_t *)w;
+	last.uc[1] = 0;
+	sum += last.us;
+    }
+
+    /* add back carry outs from top 16 bits to low 16 bits */
+    sum = (sum >> 16) + (sum & 0xffff);     /* add hi 16 to low 16 */
+    sum += (sum >> 16);                     /* add carry */
+    answer = ~sum;                          /* truncate to 16 bits */
+    return (answer);
 }

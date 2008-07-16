@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.c,v 1.9 2008/03/18 02:26:29 sobomax Exp $
+ * $Id: rtpp_record.c,v 1.10 2008/07/16 20:42:21 sobomax Exp $
  *
  */
 
@@ -46,7 +46,7 @@
 #include "rtpp_session.h"
 #include "rtpp_util.h"
 
-enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP}; /* MODE_LOCAL_RTP/MODE_REMOTE_PKT? */
+enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP, MODE_LOCAL_PCAP}; /* MODE_LOCAL_RTP/MODE_REMOTE_PKT? */
 
 struct rtpp_record_channel {
     char spath[PATH_MAX + 1];
@@ -66,8 +66,9 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
     struct rtpp_record_channel *rrc;
     const char *sdir;
     char *cp, *tmp;
-    int n, port;
+    int n, port, rval;
     struct sockaddr_storage raddr;
+    pcap_hdr_t pcap_hdr;
 
     rrc = malloc(sizeof(*rrc));
     if (rrc == NULL) {
@@ -137,6 +138,12 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 	return NULL;
     }
 
+    if (cf->record_pcap != 0) {
+	rrc->mode = MODE_LOCAL_PCAP;
+    } else {
+	rrc->mode = MODE_LOCAL_PKT;
+    }
+
     if (cf->sdir == NULL) {
 	sdir = cf->rdir;
 	rrc->needspool = 0;
@@ -165,6 +172,32 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 	free(rrc);
 	return NULL;
     }
+
+    if (rrc->mode == MODE_LOCAL_PCAP) {
+	pcap_hdr.magic_number = PCAP_MAGIC;
+	pcap_hdr.version_major = PCAP_VER_MAJR;
+	pcap_hdr.version_minor = PCAP_VER_MINR;
+	pcap_hdr.thiszone = 0;
+	pcap_hdr.sigfigs = 0;
+	pcap_hdr.snaplen = 65535;
+	pcap_hdr.network = DLT_NULL;
+	rval = write(rrc->fd, &pcap_hdr, sizeof(pcap_hdr));
+	if (rval == -1) {
+	    close(rrc->fd);
+	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "%s: error writing header",
+	      rrc->spath);
+	    free(rrc);
+	    return NULL;
+	}
+	if (rval < sizeof(pcap_hdr)) {
+	    close(rrc->fd);
+	    rtpp_log_write(RTPP_LOG_ERR, sp->log, "%s: short write writing header",
+	      rrc->spath);
+	    free(rrc);
+	    return NULL;
+	}
+    }
+
     return (void *)(rrc);
 }
 
@@ -188,7 +221,7 @@ flush_rbuf(struct rtpp_session *sp, void *rrc)
 }
 
 static int
-prepare_pkt_hdr(struct rtpp_session *sp, struct rtp_packet *packet, struct pkt_hdr *hdrp)
+prepare_pkt_hdr_adhoc(struct rtpp_session *sp, struct rtp_packet *packet, struct pkt_hdr_adhoc *hdrp)
 {
 
     memset(hdrp, 0, sizeof(*hdrp));
@@ -218,33 +251,90 @@ prepare_pkt_hdr(struct rtpp_session *sp, struct rtp_packet *packet, struct pkt_h
     return 0;
 }
 
+static uint16_t ip_id = 0;
+
+static int
+prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet, struct pkt_hdr_pcap *hdrp)
+{
+
+    if (packet->rtime == -1) {
+	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't get current time");
+	return -1;
+    }
+
+    if (sstosa(&packet->raddr)->sa_family != AF_INET) {
+	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "only AF_INET pcap format is supported");
+	return -1;
+    }
+
+    memset(hdrp, 0, sizeof(*hdrp));
+    dtime2ts(packet->rtime, &(hdrp->pcaprec_hdr.ts_sec), &(hdrp->pcaprec_hdr.ts_usec));
+    hdrp->pcaprec_hdr.orig_len = hdrp->pcaprec_hdr.incl_len = sizeof(*hdrp) -
+      sizeof(hdrp->pcaprec_hdr) + packet->size;
+
+    hdrp->family = sstosa(&packet->raddr)->sa_family;
+
+    /* Prepare fake IP header */
+    hdrp->iphdr.ip_v = 4;
+    hdrp->iphdr.ip_hl = sizeof(hdrp->iphdr) >> 2;
+    hdrp->iphdr.ip_len = htons(sizeof(hdrp->iphdr) + sizeof(hdrp->udphdr) + packet->size);
+    hdrp->iphdr.ip_src = satosin(&(packet->raddr))->sin_addr;
+    hdrp->iphdr.ip_dst = satosin(packet->laddr)->sin_addr;
+    hdrp->iphdr.ip_p = IPPROTO_UDP;
+    hdrp->iphdr.ip_id = htons(ip_id++);
+    hdrp->iphdr.ip_ttl = 127;
+    hdrp->iphdr.ip_sum = rtpp_in_cksum(&(hdrp->iphdr), sizeof(hdrp->iphdr));
+
+    /* Prepare fake UDP header */
+    hdrp->udphdr.uh_sport = satosin(&packet->raddr)->sin_port;
+    hdrp->udphdr.uh_dport = htons(packet->rport);
+    hdrp->udphdr.uh_ulen = htons(sizeof(hdrp->udphdr) + packet->size);
+
+    return 0;
+}
+
 void
 rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet)
 {
     struct iovec v[2];
-    struct pkt_hdr hdr;
-    int rval;
+    union {
+	struct pkt_hdr_pcap pcap;
+	struct pkt_hdr_adhoc adhoc;
+    } hdr;
+    int rval, hdr_size;
+    int (*prepare_pkt_hdr)(struct rtpp_session *, struct rtp_packet *, void *);
 
     if (RRC_CAST(rrc)->fd == -1)
 	return;
 
-    if (RRC_CAST(rrc)->mode == MODE_REMOTE_RTP) {
+    switch (RRC_CAST(rrc)->mode) {
+    case MODE_REMOTE_RTP:
 	send(RRC_CAST(rrc)->fd, packet->buf, packet->size, 0);
 	return;
+
+    case MODE_LOCAL_PKT:
+	hdr_size = sizeof(hdr.adhoc);
+	prepare_pkt_hdr = (void *)&prepare_pkt_hdr_adhoc;
+	break;
+
+    case MODE_LOCAL_PCAP:
+	hdr_size = sizeof(hdr.pcap);
+	prepare_pkt_hdr = (void *)&prepare_pkt_hdr_pcap;
+	break;
     }
 
     /* Check if the write buffer has necessary space, and flush if not */
-    if ((RRC_CAST(rrc)->rbuf_len + sizeof(struct pkt_hdr) + packet->size > sizeof(RRC_CAST(rrc)->rbuf)) && RRC_CAST(rrc)->rbuf_len > 0)
+    if ((RRC_CAST(rrc)->rbuf_len + hdr_size + packet->size > sizeof(RRC_CAST(rrc)->rbuf)) && RRC_CAST(rrc)->rbuf_len > 0)
 	if (flush_rbuf(sp, rrc) != 0)
 	    return;
 
-    /* Check if received packet doesn't fit into the buffer, do synchronous write  if so*/
-    if (RRC_CAST(rrc)->rbuf_len + sizeof(struct pkt_hdr) + packet->size > sizeof(RRC_CAST(rrc)->rbuf)) {
-	if (prepare_pkt_hdr(sp, packet, &hdr) != 0)
+    /* Check if received packet doesn't fit into the buffer, do synchronous write  if so */
+    if (RRC_CAST(rrc)->rbuf_len + hdr_size + packet->size > sizeof(RRC_CAST(rrc)->rbuf)) {
+	if (prepare_pkt_hdr(sp, packet, (void *)&hdr) != 0)
 	    return;
 
 	v[0].iov_base = (void *)&hdr;
-	v[0].iov_len = sizeof(hdr);
+	v[0].iov_len = hdr_size;
 	v[1].iov_base = packet->buf;
 	v[1].iov_len = packet->size;
 
@@ -259,9 +349,9 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet)
 	RRC_CAST(rrc)->fd = -1;
 	return;
     }
-    if (prepare_pkt_hdr(sp, packet, (struct pkt_hdr *)(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len)) != 0)
+    if (prepare_pkt_hdr(sp, packet, (void *)(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len)) != 0)
 	return;
-    RRC_CAST(rrc)->rbuf_len += sizeof(struct pkt_hdr);
+    RRC_CAST(rrc)->rbuf_len += hdr_size;
     memcpy(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len, packet->buf, packet->size);
     RRC_CAST(rrc)->rbuf_len += packet->size;
 }
@@ -280,4 +370,13 @@ rclose(struct rtpp_session *sp, void *rrc)
 	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't move "
 	      "session record from spool into permanent storage");
     free(rrc);
+}
+
+int
+runlink(struct rtpp_session *sp, void *rrc)
+{
+
+    if (RRC_CAST(rrc)->mode == MODE_REMOTE_RTP)
+	return (EINVAL);
+    return (unlink(RRC_CAST(rrc)->spath));
 }
