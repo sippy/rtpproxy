@@ -37,7 +37,7 @@ LOCALBASE?=	/usr/local
 BINDIR?=	${LOCALBASE}/bin
 
 CFLAGS+=	-I../siplog -I${LOCALBASE}/include
-LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread
+LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread -lm
 
 cleantabs:
 	perl -pi -e 's|        |\t|g' ${SRCS}

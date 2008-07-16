@@ -51,9 +51,11 @@ int ishostnull(struct sockaddr *);
 char *addr2char_r(struct sockaddr *, char *buf, int size);
 const char *addr2char(struct sockaddr *);
 double getdtime(void);
+void dtime2ts(double, uint32_t *, uint32_t *);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 void seedrandom(void);
 int drop_privileges(struct cfg *, char *, char *);
+uint16_t rtpp_in_cksum(void *, int);
 
 /* Stripped down version of sockaddr_in* for saving space */
 struct sockaddr_in4_s {

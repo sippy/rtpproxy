@@ -85,6 +85,8 @@ struct rtp_packet {
     size_t      size;
 
     struct sockaddr_storage raddr;
+    struct sockaddr *laddr;
+
     socklen_t   rlen;
     size_t      data_size;
     int         data_offset;
@@ -93,6 +95,7 @@ struct rtp_packet {
     uint16_t    seq;
     int         appendable;
     double      rtime;
+    int         rport;
 
     struct rtp_packet *next;
     struct rtp_packet *prev;

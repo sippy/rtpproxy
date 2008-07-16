@@ -86,8 +86,11 @@ struct cfg {
      */
     struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
     int tos;
+
     const char *rdir;
     const char *sdir;
+    int record_pcap;		/* Record in the PCAP format? */
+
     int rrtcp;			/* Whether or not to relay RTCP? */
     rtpp_log_t glog;
 

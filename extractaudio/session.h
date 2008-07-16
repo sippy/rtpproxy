@@ -39,7 +39,7 @@
 
 struct packet {
     TAILQ_ENTRY(packet) link;
-    struct pkt_hdr *pkt;
+    struct pkt_hdr_adhoc *pkt;
     unsigned char *pload;
     unsigned int plen;
 };

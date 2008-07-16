@@ -90,7 +90,7 @@ load_session(const char *path, struct channels *channels, enum origin origin)
     int ifd, pcount, len;
     unsigned char *ibuf, *cp;
     struct stat sb;
-    struct pkt_hdr *pkt;
+    struct pkt_hdr_adhoc *pkt;
     struct packet *pack, *pp;
     rtp_hdr_t *rpkt;
     struct channel *channel;
@@ -115,7 +115,7 @@ load_session(const char *path, struct channels *channels, enum origin origin)
 
     pcount = 0;
     for (cp = ibuf; cp < ibuf + sb.st_size; cp += pkt->plen) {
-        pkt = (struct pkt_hdr *)cp;
+        pkt = (struct pkt_hdr_adhoc *)cp;
         if (pkt->plen < sizeof(*rpkt))
             break;
         cp += sizeof(*pkt);
