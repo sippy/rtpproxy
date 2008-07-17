@@ -90,6 +90,7 @@ struct cfg {
     const char *rdir;
     const char *sdir;
     int record_pcap;		/* Record in the PCAP format? */
+    int record_all;		/* Record everything */
 
     int rrtcp;			/* Whether or not to relay RTCP? */
     rtpp_log_t glog;

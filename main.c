@@ -93,7 +93,7 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: rtpproxy [-2fvFP] [-l addr1[/addr2]] "
+    fprintf(stderr, "usage: rtpproxy [-2fvFPa] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]]\n");
     exit(1);
@@ -135,7 +135,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:FP")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:FPa")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -250,6 +250,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'P':
 	    cf->record_pcap = 1;
+	    break;
+
+	case 'a':
+	    cf->record_all = 1;
 	    break;
 
 	case '?':
