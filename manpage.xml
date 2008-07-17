@@ -72,6 +72,7 @@
             <arg choice="opt"><option>-i</option></arg>
             <arg choice="opt"><option>-n</option> <replaceable>timeout_socket</replaceable></arg>
             <arg choice="opt"><option>-P</option></arg>
+            <arg choice="opt"><option>-a</option></arg>
 	</cmdsynopsis>
     </refsynopsisdiv>
     <refsect1>
@@ -364,6 +365,17 @@
                         is sligtly larger overhead (extra 12 bytes for every saved RTP
                         packet for IPv4).  Also, recording IPv6 sessions in PCAP format
                         is not supported at the moment.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>-a</option></term>
+                <listitem>
+                    <para>
+                        Record all sessions going through the RTPproxy unconditionally.
+                        By default the RTPproxy requires call control software (i.e.
+                        SER, OpenSER or B2BUA) to enable recording explicitly on
+                        per-session basis by sending appropriate record command.
                     </para>
                 </listitem>
             </varlistentry>

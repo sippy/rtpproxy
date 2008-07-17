@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.15 2008/07/16 20:42:21 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.16 2008/07/17 20:50:36 sobomax Exp $
  *
  */
 
@@ -109,6 +109,7 @@ struct cfg {
     const char *rdir;
     const char *sdir;
     int record_pcap;		/* Record in the PCAP format? */
+    int record_all;		/* Record everything */
 
     int rrtcp;			/* Whether or not to relay RTCP? */
     rtpp_log_t glog;

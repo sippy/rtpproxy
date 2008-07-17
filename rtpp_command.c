@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.13 2008/07/15 23:08:41 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.14 2008/07/17 20:50:36 sobomax Exp $
  *
  */
 
@@ -827,6 +827,10 @@ handle_command(struct cfg *cf, int controlfd)
 
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
 	  "tag %s", lport, from_tag);
+	if (cf->record_all != 0) {
+	    handle_record(cf, spa, 0, NULL);
+	    handle_record(cf, spa, 1, NULL);
+	}
     }
 
     if (op == UPDATE) {

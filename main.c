@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.79 2008/07/16 20:42:20 sobomax Exp $
+ * $Id: main.c,v 1.80 2008/07/17 20:50:36 sobomax Exp $
  *
  */
 
@@ -95,7 +95,7 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: rtpproxy [-2fvFiP] [-l addr1[/addr2]] "
+    fprintf(stderr, "usage: rtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]] "
       "[-n timeout_socket]\n");
@@ -145,7 +145,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:P")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pa")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -295,6 +295,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'P':
 	    cf->record_pcap = 1;
+	    break;
+
+	case 'a':
+	    cf->record_all = 1;
 	    break;
 
 	case '?':
