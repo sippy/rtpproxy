@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.c,v 1.5 2008/07/15 23:08:41 sobomax Exp $
+ * $Id: rtpp_session.c,v 1.6 2008/07/18 00:17:25 sobomax Exp $
  *
  */
 
@@ -188,9 +188,9 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    cf->pfds[sp->rtcp->sidx[i]].events = 0;
 	}
 	if (sp->rrcs[i] != NULL)
-	    rclose(sp, sp->rrcs[i]);
+	    rclose(sp, sp->rrcs[i], 1);
 	if (sp->rtcp->rrcs[i] != NULL)
-	    rclose(sp, sp->rtcp->rrcs[i]);
+	    rclose(sp, sp->rtcp->rrcs[i], 1);
 	if (sp->rtps[i] != NULL) {
 	    cf->rtp_servers[sp->sridx] = NULL;
 	    rtp_server_free(sp->rtps[i]);

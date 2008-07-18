@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.c,v 1.10 2008/07/16 20:42:21 sobomax Exp $
+ * $Id: rtpp_record.c,v 1.11 2008/07/18 00:17:25 sobomax Exp $
  *
  */
 
@@ -357,7 +357,7 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet)
 }
 
 void
-rclose(struct rtpp_session *sp, void *rrc)
+rclose(struct rtpp_session *sp, void *rrc, int keep)
 {
 
     if (RRC_CAST(rrc)->mode != MODE_REMOTE_RTP && RRC_CAST(rrc)->rbuf_len > 0)
@@ -365,18 +365,19 @@ rclose(struct rtpp_session *sp, void *rrc)
 
     if (RRC_CAST(rrc)->fd != -1)
 	close(RRC_CAST(rrc)->fd);
-    if (RRC_CAST(rrc)->needspool == 1)
+
+    if (RRC_CAST(rrc)->mode == MODE_REMOTE_RTP)
+	return;
+
+    if (keep == 0) {
+	if (unlink(RRC_CAST(rrc)->spath) == -1)
+	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't remove "
+	      "session record %s", RRC_CAST(rrc)->spath);
+    } else if (RRC_CAST(rrc)->needspool == 1) {
 	if (rename(RRC_CAST(rrc)->spath, RRC_CAST(rrc)->rpath) == -1)
 	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't move "
 	      "session record from spool into permanent storage");
+    }
+
     free(rrc);
-}
-
-int
-runlink(struct rtpp_session *sp, void *rrc)
-{
-
-    if (RRC_CAST(rrc)->mode == MODE_REMOTE_RTP)
-	return (EINVAL);
-    return (unlink(RRC_CAST(rrc)->spath));
 }

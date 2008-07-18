@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.h,v 1.8 2008/07/16 20:42:21 sobomax Exp $
+ * $Id: rtpp_record.h,v 1.9 2008/07/18 00:17:25 sobomax Exp $
  *
  */
 
@@ -52,8 +52,7 @@ struct rtpp_session;
 /* Function prototypes */
 void *ropen(struct cfg *cf, struct rtpp_session *, char *, int);
 void rwrite(struct rtpp_session *, void *, struct rtp_packet *);
-void rclose(struct rtpp_session *, void *);
-int runlink(struct rtpp_session *, void *);
+void rclose(struct rtpp_session *, void *, int);
 
 /* Global PCAP Header */
 typedef struct pcap_hdr_s {
