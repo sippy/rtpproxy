@@ -52,8 +52,7 @@ struct rtpp_session;
 /* Function prototypes */
 void *ropen(struct cfg *cf, struct rtpp_session *, char *, int);
 void rwrite(struct rtpp_session *, void *, struct rtp_packet *);
-void rclose(struct rtpp_session *, void *);
-int runlink(struct rtpp_session *, void *);
+void rclose(struct rtpp_session *, void *, int);
 
 /* Global PCAP Header */
 typedef struct pcap_hdr_s {
