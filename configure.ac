@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.58)
-AC_INIT(rtpproxy, 1.2.alpha.200807161, sobomax@sippysoft.com)
-AM_INIT_AUTOMAKE(rtpproxy, 1.2.alpha.200807161)
+AC_INIT(rtpproxy, 1.2.alpha.200807211, sobomax@sippysoft.com)
+AM_INIT_AUTOMAKE(rtpproxy, 1.2.alpha.200807211)
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([main.c])
 AM_CONFIG_HEADER([config.h])
@@ -75,7 +75,7 @@ AC_CHECK_FUNCS([atexit gettimeofday memset mkdir socket strchr strdup strerror])
 if test "x$GCC" = "xyes"; then
   ## We like to use C99 routines when available.  This makes sure that
   ## __STDC_VERSION__ is set such that libc includes make them available.
-  AM_CFLAGS="-std=gnu99"
+  AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
 AC_CONFIG_FILES([Makefile])
