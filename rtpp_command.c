@@ -811,8 +811,8 @@ handle_command(struct cfg *cf, int controlfd)
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
 	  "tag %s", lport, from_tag);
 	if (cf->record_all != 0) {
-	    handle_record(cf, spa, 0, NULL);
-	    handle_record(cf, spa, 1, NULL);
+	    handle_copy(cf, spa, 0, NULL);
+	    handle_copy(cf, spa, 1, NULL);
 	}
     }
 
