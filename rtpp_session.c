@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.c,v 1.7 2008/07/21 20:43:31 sobomax Exp $
+ * $Id: rtpp_session.c,v 1.8 2008/07/21 22:21:58 sobomax Exp $
  *
  */
 
@@ -40,6 +40,7 @@
 #include "rtpp_log.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
+#include "rtpp_util.h"
 
 void
 init_hash_table(struct cfg *cf)
@@ -264,7 +265,6 @@ find_stream(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
 static void
 reconnect_timeout_handler(struct rtpp_session *sp, struct rtpp_timeout_handler *th)
 {
-    int t, len;
     struct sockaddr_un remote;
 
     assert(th->fd != -1 && th->socket_name != NULL && th->connected == 0);
@@ -313,4 +313,23 @@ do_timeout_notification(struct rtpp_session *sp)
         th->connected = 0;
         rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "failed to send timeout notification");
     }
+}
+
+int
+get_ttl(struct rtpp_session *sp)
+{
+
+    switch(sp->ttl_mode) {
+    case TTL_UNIFIED:
+	return (MAX(sp->ttl[0], sp->ttl[1]));
+
+    case TTL_INDEPENDENT:
+	return (MIN(sp->ttl[0], sp->ttl[1]));
+
+    default:
+	/* Shouldn't happen[tm] */
+	break;
+    }
+    abort();
+    return 0;
 }

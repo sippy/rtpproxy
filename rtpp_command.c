@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.15 2008/07/21 20:42:52 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.16 2008/07/21 22:21:58 sobomax Exp $
  *
  */
 
@@ -1062,11 +1062,11 @@ handle_query(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
     int len;
 
     if (cookie != NULL) {
-	len = sprintf(buf, "%s %d %lu %lu %lu %lu\n", cookie, spa->ttl,
+	len = sprintf(buf, "%s %d %lu %lu %lu %lu\n", cookie, get_ttl(spa),
 	  spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
 	  spa->pcount[3]);
     } else {
-	len = sprintf(buf, "%d %lu %lu %lu %lu\n", spa->ttl,
+	len = sprintf(buf, "%d %lu %lu %lu %lu\n", get_ttl(spa),
 	  spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
 	  spa->pcount[3]);
     }

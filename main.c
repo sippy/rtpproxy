@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.80 2008/07/17 20:50:36 sobomax Exp $
+ * $Id: main.c,v 1.81 2008/07/21 22:21:58 sobomax Exp $
  *
  */
 
@@ -643,7 +643,6 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
     int readyfd, skipfd, ridx;
     struct rtpp_session *sp;
     struct rtp_packet *packet;
-    int timeout_detected;
 
     /* Relay RTP/RTCP */
     skipfd = 0;
@@ -652,21 +651,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 
 	if (alarm_tick != 0 && sp != NULL && sp->rtcp != NULL &&
 	  sp->sidx[0] == readyfd) {
-	    switch(sp->ttl_mode) {
-	      case TTL_UNIFIED:
-		timeout_detected = (sp->ttl[0] == 0 && sp->ttl[1] == 0);
-		break;
-
-	      case TTL_INDEPENDENT:
-		timeout_detected = (sp->ttl[0] == 0 || sp->ttl[1] == 0);
-		break;
-
-	      default:
-		/* Shouldn't happen[tm] */
-		abort();
-		break;
-	    }
-	    if (timeout_detected != 0) {
+	    if (get_ttl(sp) == 0) {
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
 		do_timeout_notification(sp);
 		remove_session(cf, sp);
