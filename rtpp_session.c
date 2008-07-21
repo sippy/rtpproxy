@@ -229,12 +229,32 @@ int
 find_stream(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
   struct rtpp_session **spp)
 {
+    char *cp1, *cp2;
 
     for (*spp = session_findfirst(cf, call_id); *spp != NULL; *spp = session_findnext(*spp)) {
 	if (strcmp((*spp)->tag, from_tag) == 0) {
 	    return 0;
-	} else if (to_tag != NULL && strcmp((*spp)->tag, to_tag) == 0) {
-	    return 1;
+
+	} else if (to_tag != NULL) {
+	    switch (compare_session_tags((*spp)->tag, to_tag, NULL)) {
+	    case 1:
+		/* Exact tag match */
+		return 1;
+
+	    case 2:
+		/*
+		 * Reverse tag match without medianum. Medianum is always
+		 * applied to the from tag, verify that.
+		 */
+		cp1 = strrchr((*spp)->tag, ';');
+		cp2 = strrchr(from_tag, ';');
+		if (cp2 != NULL && strcmp(cp1, cp2) == 0)
+		    return 1;
+		break;
+
+	    default:
+		break;
+	    }
 	}
     }
     return -1;
