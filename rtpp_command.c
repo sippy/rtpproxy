@@ -68,7 +68,8 @@ static int create_listener(struct cfg *, struct sockaddr *, int, int *, int *);
 static int handle_delete(struct cfg *, char *, char *, char *, int);
 static void handle_noplay(struct cfg *, struct rtpp_session *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
-static void handle_record(struct cfg *, struct rtpp_session *, int, char *);
+static void handle_copy(struct cfg *, struct rtpp_session *, int, char *);
+static int handle_record(struct cfg *, char *, char *, char *);
 static void handle_query(struct cfg *, int, struct sockaddr_storage *,
   socklen_t, char *, struct rtpp_session *, int);
 
@@ -599,12 +600,24 @@ handle_command(struct cfg *cf, int controlfd)
 	}
     }
 
-    if (op != DELETE) {
+    /*
+     * Record and delete need special handling since they apply to all
+     * streams in the session.
+     */
+    switch (op) {
+    case DELETE:
+	i = handle_delete(cf, call_id, from_tag, to_tag, weak);
+	break;
+
+    case RECORD:
+	i = handle_record(cf, call_id, from_tag, to_tag);
+	break;
+
+    default:
 	i = find_stream(cf, call_id, from_tag, to_tag, &spa);
 	if (i != -1 && op != UPDATE)
 	    i = NOT(i);
-    } else {
-	i = handle_delete(cf, call_id, from_tag, to_tag, weak);
+	break;
     }
 
     if (i == -1 && op != UPDATE) {
@@ -624,6 +637,7 @@ handle_command(struct cfg *cf, int controlfd)
 
     switch (op) {
     case DELETE:
+    case RECORD:
 	reply_ok(cf, controlfd, &raddr, rlen, cookie);
 	return 0;
 
@@ -642,8 +656,7 @@ handle_command(struct cfg *cf, int controlfd)
 	return 0;
 
     case COPY:
-    case RECORD:
-	handle_record(cf, spa, i, recording_name);
+	handle_copy(cf, spa, i, recording_name);
 	reply_ok(cf, controlfd, &raddr, rlen, cookie);
 	return 0;
 
@@ -956,7 +969,7 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 }
 
 static void
-handle_record(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname)
+handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname)
 {
 
     if (spa->rrcs[idx] == NULL) {
@@ -969,6 +982,29 @@ handle_record(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname)
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
     }
+}
+
+static int
+handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag)
+{
+    int nrecorded, idx;
+    struct rtpp_session *spa;
+
+    nrecorded = 0;
+    for (spa = session_findfirst(cf, call_id); spa != NULL;
+      spa = session_findnext(spa)) {
+	if (compare_session_tags(spa->tag, from_tag, NULL) != 0) {
+	    idx = 1;
+	} else if (to_tag != NULL &&
+	  (compare_session_tags(spa->tag, to_tag, NULL)) != 0) {
+	    idx = 0;
+	} else {
+	    continue;
+	}
+	nrecorded++;
+	handle_copy(cf, spa, idx, NULL);
+    }
+    return (nrecorded == 0 ? -1 : 0);
 }
 
 static void
