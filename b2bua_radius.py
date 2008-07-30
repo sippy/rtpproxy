@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.30 2008/06/26 19:45:21 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.31 2008/07/30 22:44:14 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -88,8 +88,9 @@ class CallController:
     global_config = None
     rtp_proxy_session = None
     huntstop_scodes = None
+    pass_headers = None
 
-    def __init__(self, remote_ip, source, global_config):
+    def __init__(self, remote_ip, source, global_config, pass_headers):
         self.global_config = global_config
         self.uaA = UA(self.global_config, event_cb = self.recvEvent, conn_cbs = (self.aConn,), disc_cbs = (self.aDisc,), \
           fail_cbs = (self.aDisc,), dead_cbs = (self.aDead,))
@@ -99,6 +100,7 @@ class CallController:
         self.routes = []
         self.remote_ip = remote_ip
         self.source = source
+        self.pass_headers = pass_headers
 
     def recvEvent(self, event, ua):
         if ua == self.uaA:
@@ -224,6 +226,7 @@ class CallController:
             passw = None
             cli = self.cli
             parameters = {}
+            parameters['extra_headers'] = self.pass_headers
             for a, v in map(lambda x: x.split('='), route[1:]):
                 if a == 'credit-time':
                     credit_time = int(v)
@@ -254,7 +257,7 @@ class CallController:
                     parameters['caller_name'] = caller_name
                 elif a == 'ash':
                     ash = SipHeader(unquote(v))
-                    parameters.setdefault('extra_headers', []).append(ash)
+                    parameters['extra_headers'].append(ash)
                 elif a == 'rtpp':
                     parameters['rtpp'] = (int(v) != 0)
                 elif a == 'gt':
@@ -415,7 +418,12 @@ class CallMap:
                 return (resp, None, None)
             if self.global_config.has_key('accept_ips') and source[0] not in self.global_config['accept_ips']:
                 return (req.genResponse(403, 'Forbidden'), None, None)
-            cc = CallController(remote_ip, source, self.global_config)
+            pass_headers = []
+            for header in self.global_config['pass_headers']:
+                hfs = req.getHFs(header)
+                if len(hfs) > 0:
+                    pass_headers.extend(hfs)
+            cc = CallController(remote_ip, source, self.global_config, pass_headers)
             rval = cc.uaA.recvRequest(req)
             self.ccmap.append(cc)
             return rval
@@ -525,9 +533,9 @@ def usage():
     sys.exit(1)
 
 if __name__ == '__main__':
-    global_config = {'orig_argv':sys.argv[:], 'orig_cwd':os.getcwd(), 'digest_auth':True, 'start_acct_enable':False, 'ka_ans':0, 'ka_orig':0, 'auth_enable':True, 'acct_enable':True}
+    global_config = {'orig_argv':sys.argv[:], 'orig_cwd':os.getcwd(), 'digest_auth':True, 'start_acct_enable':False, 'ka_ans':0, 'ka_orig':0, 'auth_enable':True, 'acct_enable':True, 'pass_headers':[]}
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:')
+        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:')
     except getopt.GetoptError:
         usage()
     laddr = None
@@ -623,6 +631,9 @@ if __name__ == '__main__':
             continue
         if o == '-R':
             global_config['radiusclient.conf'] = a.strip()
+            continue
+        if o == '-h':
+            global_config['pass_headers'].extend(a.split(','))
             continue
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):
