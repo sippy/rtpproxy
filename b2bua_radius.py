@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.32 2008/08/07 20:06:09 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.33 2008/08/07 20:15:10 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -299,8 +299,8 @@ class CallController:
             host = host[0]
         if not forward_on_fail and self.global_config['acct_enable']:
             self.acctO = RadiusAccounting(self.global_config, 'originate', send_start = self.global_config['start_acct_enable'])
-            self.acctO.setParams(parameters.get('bill-to', self.username), cli, parameters.get('bill-cld', cld), \
-              self.cGUID, self.cId, host[0], credit_time)
+            self.acctO.setParams(parameters.get('bill-to', self.username), parameters.get('bill-cli', cli), \
+              parameters.get('bill-cld', cld), self.cGUID, self.cId, host[0], credit_time)
         else:
             self.acctO = None
         self.acctA.credit_time = credit_time
