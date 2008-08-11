@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.34 2008/08/08 19:46:04 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.35 2008/08/11 16:35:12 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -226,7 +226,7 @@ class CallController:
             passw = None
             cli = self.cli
             parameters = {}
-            parameters['extra_headers'] = self.pass_headers
+            parameters['extra_headers'] = self.pass_headers[:]
             for a, v in map(lambda x: x.split('='), route[1:]):
                 if a == 'credit-time':
                     credit_time = int(v)
