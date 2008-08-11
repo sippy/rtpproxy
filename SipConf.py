@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipConf.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipConf.py,v 1.4 2008/08/11 18:12:30 sobomax Exp $
 
 from socket import gethostbyname, gethostname
 
@@ -30,25 +30,17 @@ class SipConf:
     default_port = 5060
 
     try: my_address
-    except: my_address = gethostbyname(gethostname())
+    except:
+        try:
+            my_address = gethostbyname(gethostname())
+        except:
+            my_address = '127.0.0.1'
 
     try: my_port
     except: my_port = default_port
 
     try: my_uaname
     except: my_uaname = 'Sippy'
-
-    try: my_iaddress
-    except: my_iaddress = '192.168.1.7'
-
-    try: my_iport
-    except: my_iport = default_port
-
-    try: my_laddress
-    except: my_laddress = '127.0.0.1'
-
-    try: my_lport
-    except: my_lport = default_port
 
     try: allow_formats
     except: allow_formats = None
