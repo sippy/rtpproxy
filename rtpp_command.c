@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.16 2008/07/21 22:21:58 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.17 2008/08/14 01:40:50 sobomax Exp $
  *
  */
 
@@ -64,7 +64,7 @@ struct proto_cap proto_caps[] = {
 };
 
 static int create_twinlistener(struct cfg *, struct sockaddr *, int, int *);
-static int create_listener(struct cfg *, struct sockaddr *, int, int *, int *);
+static int create_listener(struct cfg *, struct sockaddr *, int *, int *);
 static int handle_delete(struct cfg *, char *, char *, char *, int);
 static void handle_noplay(struct cfg *, struct rtpp_session *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
@@ -119,28 +119,23 @@ failure:
 }
 
 static int
-create_listener(struct cfg *cf, struct sockaddr *ia,  int startport,
-  int *port, int *fds)
+create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
 {
-    int i, init, rval;
+    int i, idx, rval;
 
     for (i = 0; i < 2; i++)
 	fds[i] = -1;
 
-    init = 0;
-    if (startport < cf->port_min || startport > cf->port_max)
-	startport = cf->port_min;
-    for (*port = startport; *port != startport || init == 0; (*port) += 2) {
-	init = 1;
+    for (i = 1; i < cf->port_table_len; i++) {
+	idx = (cf->port_table_idx + i) % cf->port_table_len;
+	*port = cf->port_table[idx];
 	rval = create_twinlistener(cf, ia, *port, fds);
-	if (rval != 0) {
-	    if (rval == -1)
-		break;
-	    if (*port >= cf->port_max)
-		*port = cf->port_min - 2;
-	    continue;
+	if (rval == 0) {
+	    cf->port_table_idx = idx;
+	    return 0;
 	}
-	return 0;
+	if (rval == -1)
+	    break;
     }
     return -1;
 }
@@ -700,13 +695,11 @@ handle_command(struct cfg *cf, int controlfd)
 	assert(op == UPDATE || op == LOOKUP);
 	if (spa->fds[i] == -1) {
 	    j = ishostseq(cf->bindaddr[0], spa->laddr[i]) ? 0 : 1;
-	    if (create_listener(cf, spa->laddr[i], cf->nextport[j],
-	      &lport, fds) == -1) {
+	    if (create_listener(cf, spa->laddr[i], &lport, fds) == -1) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create listener");
 		reply_error(cf, controlfd, &raddr, rlen, cookie, 7);
 		return 0;
 	    }
-	    cf->nextport[j] = lport + 2;
 	    assert(spa->fds[i] == -1);
 	    spa->fds[i] = fds[0];
 	    assert(spa->rtcp->fds[i] == -1);
@@ -743,13 +736,11 @@ handle_command(struct cfg *cf, int controlfd)
 	  call_id, from_tag, weak ? "weak" : "strong");
 
 	j = ishostseq(cf->bindaddr[0], lia[0]) ? 0 : 1;
-	if (create_listener(cf, cf->bindaddr[j], cf->nextport[j], &lport,
-	  fds) == -1) {
+	if (create_listener(cf, cf->bindaddr[j], &lport, fds) == -1) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "can't create listener");
 	    reply_error(cf, controlfd, &raddr, rlen, cookie, 10);
 	    return 0;
 	}
-	cf->nextport[j] = lport + 2;
 
 	/*
 	 * Session creation. If creation is requested with weak flag,

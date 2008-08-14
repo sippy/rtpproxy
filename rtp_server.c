@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_server.c,v 1.8 2008/07/15 23:14:52 sobomax Exp $
+ * $Id: rtp_server.c,v 1.9 2008/08/14 01:40:50 sobomax Exp $
  *
  */
 
@@ -62,7 +62,6 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop)
 
     memset(rp, 0, sizeof(*rp));
 
-    seedrandom();
     rp->btime = -1;
     rp->fd = fd;
     rp->loop = (loop > 0) ? loop - 1 : loop;

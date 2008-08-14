@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.c,v 1.9 2008/07/16 20:42:21 sobomax Exp $
+ * $Id: rtpp_util.c,v 1.10 2008/08/14 01:40:50 sobomax Exp $
  *
  */
 
@@ -236,4 +236,30 @@ rtpp_in_cksum(void *addr, int len)
     sum += (sum >> 16);                     /* add carry */
     answer = ~sum;                          /* truncate to 16 bits */
     return (answer);
+}
+
+void
+init_port_table(struct cfg *cf)
+{
+    int i, j;
+    uint16_t portnum;
+
+    /* Generate linear table */
+    cf->port_table_len = ((cf->port_max - cf->port_min) / 2) + 1;
+    portnum = cf->port_min;
+    for (i = 0; i < cf->port_table_len; i += 1) {
+	cf->port_table[i] = portnum;
+	portnum += 2;
+    }
+#if !defined(SEQUENTAL_PORTS)
+    /* Shuffle elements ramdomly */
+    for (i = 0; i < cf->port_table_len; i += 1) {
+	j = random() % cf->port_table_len;
+	portnum = cf->port_table[i];
+	cf->port_table[i] = cf->port_table[j];
+	cf->port_table[j] = portnum;
+    }
+#endif
+    /* Set the last used element to be the last element */
+    cf->port_table_idx = cf->port_table_len - 1;
 }

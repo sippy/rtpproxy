@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.16 2008/07/17 20:50:36 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.17 2008/08/14 01:40:50 sobomax Exp $
  *
  */
 
@@ -89,7 +89,6 @@ struct cfg {
     int umode;			/* UDP control mode */
     int port_min;		/* Lowest UDP port for RTP */
     int port_max;		/* Highest UDP port number for RTP */
-    int nextport[2];
     struct rtpp_session **sessions;
     struct rtpp_session **rtp_servers;
     struct pollfd *pfds;
@@ -130,6 +129,10 @@ struct cfg {
 
     uid_t run_uid;
     gid_t run_gid;
+
+    uint16_t port_table[65536];
+    int port_table_len;
+    int port_table_idx;
 };
 
 #endif

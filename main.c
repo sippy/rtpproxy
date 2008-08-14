@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.81 2008/07/21 22:21:58 sobomax Exp $
+ * $Id: main.c,v 1.82 2008/08/14 01:40:50 sobomax Exp $
  *
  */
 
@@ -322,6 +322,19 @@ init_config(struct cfg *cf, int argc, char **argv)
 	}
     }
 
+    /* make sure that port_min and port_max are even */
+    if ((cf->port_min % 2) != 0)
+	cf->port_min++;
+    if ((cf->port_max % 2) != 0) {
+	cf->port_max--;
+    } else {
+	/*
+	 * If port_max is already even then there is no
+	 * "room" for the RTCP port, go back by two ports.
+	 */
+	cf->port_max -= 2;
+    }
+
     if (cf->port_min <= 0 || cf->port_min > 65535)
 	errx(1, "invalid value of the port_min argument, "
 	  "not in the range 1-65535");
@@ -331,13 +344,6 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (cf->port_min > cf->port_max)
 	errx(1, "port_min should be less than port_max");
 
-    /* make sure that port_min and port_max are even */
-    if ((cf->port_min % 2) != 0)
-	cf->port_min++;
-    if ((cf->port_max % 2) != 0)
-	cf->port_max--;
-
-    cf->nextport[0] = cf->nextport[1] = cf->port_min;
     cf->sessions = malloc((sizeof cf->sessions[0]) *
       (((cf->port_max - cf->port_min + 1) * 2) + 1));
     cf->rtp_servers =  malloc((sizeof cf->rtp_servers[0]) *
@@ -741,9 +747,12 @@ main(int argc, char **argv)
 
     memset(&cf, 0, sizeof(cf));
 
-    init_hash_table(&cf);
-
     init_config(&cf, argc, argv);
+
+    seedrandom();
+
+    init_hash_table(&cf);
+    init_port_table(&cf);
 
     controlfd = init_controlfd(&cf);
 
