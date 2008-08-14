@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.17 2008/08/14 01:40:50 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.18 2008/08/14 01:49:19 sobomax Exp $
  *
  */
 
@@ -54,7 +54,7 @@
 #define	TOS		0xb8
 #define	LBR_THRS	128	/* low-bitrate threshold */
 #define	CPORT		"22222"
-#define	POLL_LIMIT	100	/* maximum number of poll(2) calls per second */
+#define	POLL_LIMIT	200	/* maximum number of poll(2) calls per second */
 #define	LOG_LEVEL	RTPP_LOG_DBUG
 
 /* Dummy service, getaddrinfo needs it */
