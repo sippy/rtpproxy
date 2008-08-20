@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.36 2008/08/20 00:22:40 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.37 2008/08/20 00:26:12 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -529,7 +529,8 @@ def usage():
     print 'usage: b2bua.py [-fDS] [-l addr] [-p port] [-P pidfile] [-L logfile] ' \
       '[-s static_route] [-a ip1[,..[,ipN]]] [-t static_tr_in] [-T static_tr_out]' \
       '[-r rtp_proxy_contact1] [-r rtp_proxy_contact2] [-r rtp_proxy_contactN] ' \
-      '[-k 0-3] [-m max_ctime] [-A 0-2] [-F pt1[,..[,ptN]]] [-R radiusclient_conf]'
+      '[-k 0-3] [-m max_ctime] [-A 0-2] [-F pt1[,..[,ptN]]] [-R radiusclient_conf] ' \
+      '[-c cmdfile]'
     sys.exit(1)
 
 if __name__ == '__main__':
