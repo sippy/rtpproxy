@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.35 2008/08/11 16:35:12 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.36 2008/08/20 00:22:40 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -535,7 +535,7 @@ def usage():
 if __name__ == '__main__':
     global_config = {'orig_argv':sys.argv[:], 'orig_cwd':os.getcwd(), 'digest_auth':True, 'start_acct_enable':False, 'ka_ans':0, 'ka_orig':0, 'auth_enable':True, 'acct_enable':True, 'pass_headers':[]}
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:')
+        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:c:')
     except getopt.GetoptError:
         usage()
     laddr = None
@@ -635,6 +635,9 @@ if __name__ == '__main__':
         if o == '-h':
             global_config['pass_headers'].extend(a.split(','))
             continue
+        if o == '-c':
+            cmdfile = a.strip()
+            continue
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):
         sys.__stderr__.write('ERROR: static route should be specified when Radius auth is disabled')
@@ -672,7 +675,7 @@ if __name__ == '__main__':
     global_config['cmap'] = CallMap(global_config)
 
     global_config['sip_tm'] = SipTransactionManager(global_config, global_config['cmap'].recvRequest)
-    cli_server = Cli_server_local(global_config['cmap'].recvCommand, '/var/run/b2bua.sock')
+    cli_server = Cli_server_local(global_config['cmap'].recvCommand, cmdfile)
 
     if not foreground:
         file(pidfile, 'w').write(str(os.getpid()) + '\n')
