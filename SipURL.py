@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipURL.py,v 1.5 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipURL.py,v 1.6 2008/08/26 15:27:27 sobomax Exp $
 
 from SipConf import SipConf
 from urllib import quote, unquote
@@ -52,8 +52,12 @@ class SipURL:
             if userparams != None:
                 self.userparams = userparams
             self.password = password
-            self.host = host
-            self.port = port
+            if host == None:
+                self.host = SipConf.my_address
+                self.port = SipConf.my_port
+            else:
+                self.host = host
+                self.port = port
             self.headers = headers
             self.usertype = usertype
             self.transport = transport

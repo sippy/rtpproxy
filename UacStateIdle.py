@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateIdle.py,v 1.5 2008/03/26 18:03:00 sobomax Exp $
+# $Id: UacStateIdle.py,v 1.6 2008/08/26 15:27:27 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -51,9 +51,8 @@ class UacStateIdle(UaStateGeneric):
             self.ua.rTarget = SipURL(username = calledID, host = self.ua.rAddr0[0], port = self.ua.rAddr0[1])
             self.ua.rUri = SipTo(address = SipAddress(url = self.ua.rTarget.getCopy(), hadbrace = True))
             self.ua.rUri.getUrl().port = None
-            self.ua.lUri = SipFrom(address = SipAddress(url = self.ua.rTarget.getCopy(), hadbrace = True, name = callingName))
+            self.ua.lUri = SipFrom(address = SipAddress(url = SipURL(username = callingID), hadbrace = True, name = callingName))
             self.ua.lUri.getUrl().port = None
-            self.ua.lUri.getUrl().username = callingID
             self.ua.lUri.setTag(self.ua.fTag)
             self.ua.lCSeq = 200
             self.ua.lContact = SipContact()
