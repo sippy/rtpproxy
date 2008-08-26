@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Radius_client.py,v 1.2 2008/02/18 19:49:45 sobomax Exp $
+# $Id: Radius_client.py,v 1.3 2008/08/26 14:05:36 sobomax Exp $
 
 from External_command import External_command
 
@@ -38,7 +38,8 @@ class Radius_client(External_command):
         self.global_config = global_config
         command = global_config.get('radiusclient', '/usr/local/sbin/radiusclient')
         config = global_config.get('radiusclient.conf', '/usr/local/etc/radiusclient-ng/radiusclient.conf')
-        External_command.__init__(self, (command, '-f', config, '-s'))
+        max_workers = global_config.get('max_radiusclients', 20)
+        External_command.__init__(self, (command, '-f', config, '-s'), max_workers = max_workers)
 
     def _prepare_attributes(self, type, attributes):
         data = [type]

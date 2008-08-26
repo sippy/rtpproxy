@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.37 2008/08/20 00:26:12 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.38 2008/08/26 14:05:36 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -536,7 +536,7 @@ def usage():
 if __name__ == '__main__':
     global_config = {'orig_argv':sys.argv[:], 'orig_cwd':os.getcwd(), 'digest_auth':True, 'start_acct_enable':False, 'ka_ans':0, 'ka_orig':0, 'auth_enable':True, 'acct_enable':True, 'pass_headers':[]}
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:c:')
+        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:c:M:')
     except getopt.GetoptError:
         usage()
     laddr = None
@@ -638,6 +638,9 @@ if __name__ == '__main__':
             continue
         if o == '-c':
             cmdfile = a.strip()
+            continue
+        if o == '-M':
+            global_config['max_radiusclients'] = int(a.strip())
             continue
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: External_command.py,v 1.3 2008/03/03 19:43:58 sobomax Exp $
+# $Id: External_command.py,v 1.4 2008/08/26 14:05:36 sobomax Exp $
 
 from threading import Condition
 from popen2 import Popen3
@@ -32,7 +32,7 @@ from traceback import print_exc
 from sys import stdout
 from threading import Thread
 
-MAX_WORKERS = 20
+_MAX_WORKERS = 20
 
 class _Worker(Thread):
     command = None
@@ -69,10 +69,10 @@ class External_command:
     work_available = None
     work = None
 
-    def __init__(self, command):
+    def __init__(self, command, max_workers = _MAX_WORKERS):
         self.work_available = Condition()
         self.work = []
-        for i in range(0, MAX_WORKERS):
+        for i in range(0, max_workers):
             _Worker(command, self)
 
     def process_command(self, data, result_callback, *callback_parameters):
