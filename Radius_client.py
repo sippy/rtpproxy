@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Radius_client.py,v 1.3 2008/08/26 14:05:36 sobomax Exp $
+# $Id: Radius_client.py,v 1.4 2008/08/26 15:00:02 sobomax Exp $
 
 from External_command import External_command
 
@@ -53,7 +53,7 @@ class Radius_client(External_command):
         return data
 
     def do_auth(self, attributes, result_callback, *callback_parameters):
-        External_command.process_command(self, self._prepare_attributes('AUTH', attributes), result_callback, *callback_parameters)
+        return External_command.process_command(self, self._prepare_attributes('AUTH', attributes), result_callback, *callback_parameters)
 
     def do_acct(self, attributes, result_callback = None, *callback_parameters):
         External_command.process_command(self, self._prepare_attributes('ACCT', attributes), result_callback, *callback_parameters)

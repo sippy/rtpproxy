@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: External_command.py,v 1.4 2008/08/26 14:05:36 sobomax Exp $
+# $Id: External_command.py,v 1.5 2008/08/26 15:00:02 sobomax Exp $
 
 from threading import Condition
 from popen2 import Popen3
@@ -30,7 +30,7 @@ from twisted.internet import reactor
 from datetime import datetime
 from traceback import print_exc
 from sys import stdout
-from threading import Thread
+from threading import Thread, Lock
 
 _MAX_WORKERS = 20
 
@@ -51,9 +51,14 @@ class _Worker(Thread):
             self.master.work_available.acquire()
             while len(self.master.work) == 0:
                 self.master.work_available.wait()
-            data, result_callback, callback_parameters = self.master.work.pop(0)
+            wi = self.master.work.pop(0)
             self.master.work_available.release()
-            batch = map(lambda x: x + '\n', data)
+            if wi.is_cancelled():
+                wi.data = None
+                wi.result_callback = None
+                wi.callback_parameters = None
+                continue
+            batch = map(lambda x: x + '\n', wi.data)
             batch.append('\n')
             pipe.tochild.writelines(batch)
             pipe.tochild.flush()
@@ -63,7 +68,35 @@ class _Worker(Thread):
                 if len(line) == 0:
                     break
                 result.append(line)
-            reactor.callFromThread(self.master.process_result, result_callback, tuple(result), *callback_parameters)
+            reactor.callFromThread(self.master.process_result, wi.result_callback, tuple(result), *wi.callback_parameters)
+            wi.data = None
+            wi.result_callback = None
+            wi.callback_parameters = None
+
+class Work_item:
+    cancelled = False
+    cancelled_lock = None
+    # The parameters below once inited should be managed by the worker thread
+    data = None
+    result_callback = None
+    callback_parameters = None
+
+    def __init__(self, data, result_callback, callback_parameters):
+        self.data = data
+        self.result_callback = result_callback
+        self.callback_parameters = callback_parameters
+        self.cancelled_lock = Lock()
+
+    def cancel(self):
+        self.cancelled_lock.acquire()
+        self.cancelled = True
+        self.cancelled_lock.release()
+
+    def is_cancelled(self):
+        self.cancelled_lock.acquire()
+        status = self.cancelled
+        self.cancelled_lock.release()
+        return status
 
 class External_command:
     work_available = None
@@ -76,10 +109,12 @@ class External_command:
             _Worker(command, self)
 
     def process_command(self, data, result_callback, *callback_parameters):
+        wi = Work_item(tuple(data), result_callback, callback_parameters)
         self.work_available.acquire()
-        self.work.append((tuple(data), result_callback, callback_parameters))
+        self.work.append(wi)
         self.work_available.notify()
         self.work_available.release()
+        return wi
 
     def process_result(self, result_callback, result, *callback_parameters):
         try:

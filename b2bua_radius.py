@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.38 2008/08/26 14:05:36 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.39 2008/08/26 15:00:02 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -89,6 +89,7 @@ class CallController:
     rtp_proxy_session = None
     huntstop_scodes = None
     pass_headers = None
+    auth_proc = None
 
     def __init__(self, remote_ip, source, global_config, pass_headers):
         self.global_config = global_config
@@ -142,11 +143,11 @@ class CallController:
                     self.rDone(((), 0))
                 elif auth == None or auth.username == None or len(auth.username) == 0:
                     self.username = self.remote_ip
-                    self.global_config['radius_client'].do_auth(self.remote_ip, self.cli, self.cld, self.cGUID, \
+                    self.auth_proc = self.global_config['radius_client'].do_auth(self.remote_ip, self.cli, self.cld, self.cGUID, \
                       self.cId, self.remote_ip, self.rDone)
                 else:
                     self.username = auth.username
-                    self.global_config['radius_client'].do_auth(auth.username, self.cli, self.cld, self.cGUID, 
+                    self.auth_proc = self.global_config['radius_client'].do_auth(auth.username, self.cli, self.cld, self.cGUID, 
                       self.cId, self.remote_ip, self.rDone, auth.realm, auth.nonce, auth.uri, auth.response)
                 return
             if self.state != CCStateARComplete:
@@ -334,6 +335,9 @@ class CallController:
         self.acctA.conn(ua, rtime)
 
     def aDisc(self, ua, rtime, result = 0):
+        if self.state == CCStateWaitRoute and self.auth_proc != None:
+            self.auth_proc.cancel()
+            self.auth_proc = None
         if self.uaO != None and self.state != CCStateDead:
             self.state = CCStateDisconnecting
         else:
