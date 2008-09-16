@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.c,v 1.8 2008/07/21 22:21:58 sobomax Exp $
+ * $Id: rtpp_session.c,v 1.9 2008/09/16 23:16:13 sobomax Exp $
  *
  */
 
@@ -32,6 +32,8 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <assert.h>
+#include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
