@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.17 2008/08/14 01:40:50 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.18 2008/09/17 01:11:20 sobomax Exp $
  *
  */
 
@@ -798,7 +798,7 @@ handle_command(struct cfg *cf, int controlfd)
 	spa->ttl[1] = cf->max_ttl;
 	spb->ttl[0] = -1;
 	spb->ttl[1] = -1;
-	spa->log = rtpp_log_open("rtpproxy", spa->call_id, 0);
+	spa->log = rtpp_log_open(cf, "rtpproxy", spa->call_id, 0);
 	spb->log = spa->log;
 	spa->rtcp = spb;
 	spb->rtcp = NULL;

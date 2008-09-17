@@ -73,6 +73,7 @@
             <arg choice="opt"><option>-n</option> <replaceable>timeout_socket</replaceable></arg>
             <arg choice="opt"><option>-P</option></arg>
             <arg choice="opt"><option>-a</option></arg>
+            <arg choice="opt"><option>-d</option> <replaceable>log_level</replaceable></arg>
 	</cmdsynopsis>
     </refsynopsisdiv>
     <refsect1>
@@ -376,6 +377,23 @@
                         By default the RTPproxy requires call control software (i.e.
                         SER, OpenSER or B2BUA) to enable recording explicitly on
                         per-session basis by sending appropriate record command.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>-d</option> <replaceable>log_level</replaceable></term>
+                 <listitem>
+                    <para>
+                        This parameter configures the verbosity level of the log output.
+                        Possible <replaceable>log_level</replaceable> values in the order
+                        from the most verboe to the least verbose are: DBUG, INFO, WARN,
+                        ERR and CRIT.
+                    </para>
+                    <para>
+                        Example: -d WARN
+                    </para>
+                    <para>
+                        The default level is DBUG.
                     </para>
                 </listitem>
             </varlistentry>

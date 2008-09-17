@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.82 2008/08/14 01:40:50 sobomax Exp $
+ * $Id: main.c,v 1.83 2008/09/17 01:11:20 sobomax Exp $
  *
  */
 
@@ -98,7 +98,7 @@ usage(void)
     fprintf(stderr, "usage: rtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]] "
-      "[-n timeout_socket]\n");
+      "[-n timeout_socket] [-d log_level]\n");
     exit(1);
 }
 
@@ -137,6 +137,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->tos = TOS;
     cf->rrtcp = 1;
     cf->ttl_mode = TTL_UNIFIED;
+    cf->log_level = LOG_LEVEL;
 
     cf->timeout_handler.socket_name = NULL;
     cf->timeout_handler.fd = -1;
@@ -145,7 +146,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pa")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -299,6 +300,12 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'a':
 	    cf->record_all = 1;
+	    break;
+
+	case 'd':
+	    cf->log_level = rtpp_log_str2lvl(optarg);
+	    if (cf->log_level == -1)
+		errx(1, "%s: invalid log level", optarg);
 	    break;
 
 	case '?':
@@ -765,7 +772,7 @@ main(int argc, char **argv)
 #endif
 
     atexit(ehandler);
-    glog = cf.glog = rtpp_log_open("rtpproxy", NULL, LF_REOPEN);
+    glog = cf.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
     rtpp_log_write(RTPP_LOG_INFO, cf.glog, "rtpproxy started, pid %d", getpid());
 
     i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
