@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.18 2008/08/14 01:49:19 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.19 2008/09/17 01:12:41 sobomax Exp $
  *
  */
 
@@ -62,8 +62,6 @@
 
 #define	CMD_SOCK	"/var/run/rtpproxy.sock"
 #define	PID_FILE	"/var/run/rtpproxy.pid"
-
-#define	rtpp_log_t	int
 
 /*
  * TTL counters are used to detect the absence of audio packets
@@ -133,6 +131,8 @@ struct cfg {
     uint16_t port_table[65536];
     int port_table_len;
     int port_table_idx;
+
+    int log_level;
 };
 
 #endif
