@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAuthorization.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SipAuthorization.py,v 1.6 2008/09/24 21:37:02 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from md5 import md5
@@ -94,9 +94,13 @@ class SipAuthorization(SipGenericHF):
         return self.__class__(cself = self)
 
     def verify(self, password, method):
+        if not self.parsed:
+            self.parse()
         return self.verifyHA1(DigestCalcHA1('md5', self.username, self.realm, password, self.nonce, ''), method)
 
     def verifyHA1(self, HA1, method):
+        if not self.parsed:
+            self.parse()
         response = DigestCalcResponse(HA1, self.nonce, 0, '', '', method, self.uri, '')
         return response == self.response
 
