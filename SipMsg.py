@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.10 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SipMsg.py,v 1.11 2008/09/24 21:38:19 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -109,6 +109,10 @@ class SipMsg:
                     # Missed last 2 \r\n is another common problem.
                     print 'Truncated SIP body, %d bytes expected, %d received, fixing...' % (blen, mblen)
                     mbody += '\r\n'
+                elif blen - mblen == 1 and mbody[-3:] == '\r\n\n':
+                    # Another possible mishap
+                    print 'Truncated SIP body, %d bytes expected, %d received, fixing...' % (blen, mblen)
+                    mbody = mbody[:-3] + '\r\n\r\n'
                 else:
                     # XXX: Should generate 400 Bad Request if such condition
                     # happens with request
