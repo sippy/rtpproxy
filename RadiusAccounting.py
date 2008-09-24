@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: RadiusAccounting.py,v 1.3 2008/04/04 22:31:12 sobomax Exp $
+# $Id: RadiusAccounting.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from time import time, strftime, gmtime
 from Timeout import Timeout
@@ -138,7 +138,7 @@ class RadiusAccounting:
         else:
             attributes.append(('h323-connect-time', ftime(self.cTime)))
         attributes.append(('Acct-Status-Type', type))
-        pattributes = map(lambda x: '%-32s = \'%s\'\n' % (x[0], str(x[1])), attributes)
+        pattributes = ['%-32s = \'%s\'\n' % (x[0], str(x[1])) for x in attributes]
         pattributes.insert(0, 'sending Acct %s (%s):\n' % (type, self.origin.capitalize()))
         self.global_config['sip_logger'].write(call_id = self.sip_cid, *pattributes)
         self.global_config['radius_client'].do_acct(attributes, self._process_result, self.sip_cid, time())

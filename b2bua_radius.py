@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.39 2008/08/26 15:00:02 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.40 2008/09/24 09:25:38 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -55,11 +55,22 @@ from time import time
 
 def re_replace(ptrn, s):
     s = s.split('#', 1)[0]
-    for op, p, r, mod in map(lambda x: x.split('/'), map(lambda x: x.strip(), ptrn.split(';'))):
-        if 'g' in mod.lower():
+    ptrn = ptrn.split('/')
+    while len(ptrn) > 0:
+        op, p, r, mod = ptrn[:4]
+        mod = mod.strip()
+        if len(mod) > 0 and mod[0] != ';':
+            ptrn[3] = mod[1:]
+            mod = mod[0].lower()
+        else:
+            ptrn[3] = mod
+        if 'g' in mod:
             s = sub(p, r, s)
         else:
             s = sub(p, r, s, 1)
+        if len(ptrn) == 4 and ptrn[3] == '':
+            break
+        ptrn = ptrn[3:]
     return s
 
 class CCStateIdle:
@@ -117,10 +128,16 @@ class CallController:
                     self.state = CCStateDead
                     return
                 if self.global_config.has_key('allowed_pts'):
+                    try:
+                        body.parse()
+                    except:
+                        self.uaA.recvEvent(CCEventFail((400, 'Malformed SDP Body'), rtime = event.rtime))
+                        self.state = CCStateDead
+                        return
                     allowed_pts = self.global_config['allowed_pts']
                     mbody = body.content.sections[1].getF('m').body
                     if mbody.transport.lower() == 'rtp/avp':
-                        mbody.formats = filter(lambda x: x in allowed_pts, mbody.formats)
+                        mbody.formats = [x for x in mbody.formats if x in allowed_pts]
                         if len(mbody.formats) == 0:
                             self.uaA.recvEvent(CCEventFail((488, 'Not Acceptable Here')))
                             self.state = CCStateDead
@@ -192,18 +209,18 @@ class CallController:
             self.caller_name = caller_name[0]
             if len(self.caller_name) == 0:
                 self.caller_name = None
-        credit_time = filter(lambda x: x[0] == 'h323-credit-time', results[0])
+        credit_time = [x for x in results[0] if x[0] == 'h323-credit-time']
         if len(credit_time) > 0:
             global_credit_time = int(credit_time[0][1])
         else:
             global_credit_time = None
         if not self.global_config.has_key('static_route'):
-            routing = filter(lambda x: x[0] == 'h323-ivr-in' and x[1].startswith('Routing:'), results[0])
+            routing = [x for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('Routing:')]
             if len(routing) == 0:
                 self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (2)')))
                 self.state = CCStateDead
                 return
-            routing = map(lambda x: x[1][8:].split(';'), routing)
+            routing = [x[1][8:].split(';') for x in routing]
         else:
             routing = [self.global_config['static_route'].split(';')]
         rnum = 0
@@ -228,7 +245,7 @@ class CallController:
             cli = self.cli
             parameters = {}
             parameters['extra_headers'] = self.pass_headers[:]
-            for a, v in map(lambda x: x.split('='), route[1:]):
+            for a, v in [x.split('=') for x in route[1:]]:
                 if a == 'credit-time':
                     credit_time = int(v)
                     if credit_time < 0:
@@ -408,9 +425,9 @@ class CallMap:
         if req.getMethod() == 'INVITE':
             # New dialog
             if req.countHFs('via') > 1:
-                via = req.getHFBodys('via')[1]
+                via = req.getHFBody('via', 1)
             else:
-                via = req.getHFBodys('via')[0]
+                via = req.getHFBody('via', 0)
             remote_ip = via.getTAddr()[0]
             source = req.getSource()
             if self.global_config['auth_enable'] and self.global_config['digest_auth'] and \
@@ -511,7 +528,7 @@ class CallMap:
                 self.discAll()
                 clim.send('OK\n')
                 return False
-            dlist = filter(lambda x: str(x.cId) == args[0], self.ccmap)
+            dlist = [x for x in self.ccmap if str(x.cId) == args[0]]
             if len(dlist) == 0:
                 clim.send('ERROR: no call with id of %s has been found\n' % args[0])
                 return False
@@ -632,7 +649,7 @@ if __name__ == '__main__':
                 from Rtp_proxy_client_local import Rtp_proxy_client_local
                 global_config.setdefault('rtp_proxy_clients', []).append(Rtp_proxy_client_local(a))
         if o == '-F':
-            global_config['allowed_pts'] = map(lambda x: int(x), a.split(','))
+            global_config['allowed_pts'] = [int(x) for x in a.split(',')]
             continue
         if o == '-R':
             global_config['radiusclient.conf'] = a.strip()

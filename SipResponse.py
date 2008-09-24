@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipResponse.py,v 1.4 2008/06/20 17:34:59 sobomax Exp $
+# $Id: SipResponse.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SipMsg import SipMsg
 from SipHeader import SipHeader
@@ -38,8 +38,8 @@ class SipResponse(SipMsg):
         if buf != None:
             return
         self.scode, self.reason, self.sipver = scode, reason, sipver
-        self.appendHeaders(map(lambda x: SipHeader(name = 'via', body = x), vias))
-        self.appendHeaders(map(lambda x: SipHeader(name = 'record-route', body = x), rrs))
+        self.appendHeaders([SipHeader(name = 'via', body = x) for x in vias])
+        self.appendHeaders([SipHeader(name = 'record-route', body = x) for x in rrs])
         self.appendHeader(SipHeader(name = 'from', body = fr0m))
         self.appendHeader(SipHeader(name = 'to', body = to))
         self.appendHeader(SipHeader(name = 'call-id', body = callid))

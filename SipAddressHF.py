@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAddressHF.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipAddressHF.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from SipAddress import SipAddress
@@ -32,6 +32,7 @@ class SipAddressHF(SipGenericHF):
     address = None
 
     def __init__(self, body = None, address = None):
+        SipGenericHF.__init__(self, body)
         if body != None:
             csvs = []
             pidx = 0
@@ -50,15 +51,23 @@ class SipAddressHF(SipGenericHF):
             if (len(csvs) > 0):
                 csvs.append(body)
                 raise ESipHeaderCSV(None, csvs)
-            self.address = SipAddress(body)
         else:
+            self.parsed = True
             self.address = address
 
+    def parse(self):
+        self.parsed = True
+        self.address = SipAddress(self.body)
+
     def __str__(self):
+        if not self.parsed:
+            return self.body
         return str(self.address)
 
     def getCopy(self):
-        return SipAddressHF(address = self.address.getCopy())
+        if not self.parsed:
+            return self.__class__(self.body)
+        return self.__class__(address = self.address.getCopy())
 
     def setBody(self, body):
         self.address = body

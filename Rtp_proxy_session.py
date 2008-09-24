@@ -22,11 +22,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.3 2008/04/24 23:36:12 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from md5 import md5
 from random import random
 from time import time
+from datetime import datetime
+from traceback import print_exc
+import sys
 
 class Rtp_proxy_session:
     rtp_proxy_client = None
@@ -42,7 +45,7 @@ class Rtp_proxy_session:
 
     def __init__(self, global_config, call_id = None, from_tag = None, to_tag = None):
         if global_config.has_key('rtp_proxy_clients'):
-            rtp_proxy_clients = filter(lambda x: x.online, global_config['rtp_proxy_clients'])
+            rtp_proxy_clients = [x for x in global_config['rtp_proxy_clients'] if x.online]
             n = len(rtp_proxy_clients)
             if n == 0:
                 raise Exception('No online RTP proxy client has been found')
@@ -168,6 +171,17 @@ class Rtp_proxy_session:
 
     def on_xxx_sdp_change(self, update_xxx, sdp_body, result_callback):
         sects = []
+        try:
+            sdp_body.parse()
+        except Exception, exception:
+            print datetime.now(), 'can\'t parse SDP body: %s:' % str(exception)
+            print '-' * 70
+            print_exc(file = sys.stdout)
+            print '-' * 70
+            print sdp_body.content
+            print '-' * 70
+            sys.stdout.flush()
+            return
         for i in range(1, len(sdp_body.content.sections)):
             sect = sdp_body.content.sections[i]
             if sect.getF('m').body.transport.lower() not in ('udp', 'udptl', 'rtp/avp'):
@@ -195,8 +209,9 @@ class Rtp_proxy_session:
         sect.needs_update = False
         if address_port != None:
             sect.getF('c').body.addr = address_port[0]
-            sect.getF('m').body.port = address_port[1]
-        if len(filter(lambda x: x.needs_update, sects)) == 0:
+            if sect.getF('m').body.port != 0:
+                sect.getF('m').body.port = address_port[1]
+        if len([x for x in sects if x.needs_update]) == 0:
             sdp_body.needs_update = False
             result_callback(sdp_body)
 

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipWWWAuthenticate.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipWWWAuthenticate.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from random import random
 from md5 import md5
@@ -36,20 +36,10 @@ class SipWWWAuthenticate(SipGenericHF):
     nonce = None
 
     def __init__(self, body = None, realm = None, nonce = None):
+        SipGenericHF.__init__(self, body)
         if body != None:
-            parts = body.split(' ', 1)[1].strip().split('"')
-            if len(parts) % 2 != 0 and len(parts[-1]) == 0:
-                parts.pop()
-            while len(parts) > 0:
-                parts1 = map(lambda x: x.strip().split('=', 1), parts.pop(0).strip(' ,=').split(','))
-                if len(parts) > 0:
-                    parts1[-1].append(parts.pop(0))
-                for name, value in parts1:
-                    if name == 'realm':
-                        self.realm = value
-                    elif name == 'nonce':
-                        self.nonce = value
             return
+        self.parsed = True
         if nonce == None:
             ctime = time()
             nonce = md5(str((random() * 1000000000L) + ctime)).hexdigest() + hex(int(ctime))[2:]
@@ -58,11 +48,30 @@ class SipWWWAuthenticate(SipGenericHF):
         self.realm = realm
         self.nonce = nonce
 
+    def parse(self):
+        self.parsed = True
+        parts = self.body.split(' ', 1)[1].strip().split('"')
+        if len(parts) % 2 != 0 and len(parts[-1]) == 0:
+            parts.pop()
+        while len(parts) > 0:
+            parts1 = [x.strip().split('=', 1) for x in parts.pop(0).strip(' ,=').split(',')]
+            if len(parts) > 0:
+                parts1[-1].append(parts.pop(0))
+            for name, value in parts1:
+                if name == 'realm':
+                    self.realm = value
+                elif name == 'nonce':
+                    self.nonce = value
+
     def __str__(self):
+        if not self.parsed:
+            return self.body
         return 'Digest realm="%s",nonce="%s"' % (self.realm, self.nonce)
 
     def getCopy(self):
-        return SipWWWAuthenticate(realm = self.realm, nonce = self.nonce)
+        if not self.parsed:
+            return self.__class__(self.body)
+        return self.__class__(realm = self.realm, nonce = self.nonce)
 
     def getCanName(self, name, compact = False):
         return 'WWW-Authenticate'

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipCiscoGUID.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipCiscoGUID.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from random import random
 from md5 import md5
@@ -34,15 +34,23 @@ class SipCiscoGUID(SipGenericHF):
     ciscoGUID = None
 
     def __init__(self, body = None, ciscoGUID = None):
+        SipGenericHF.__init__(self, body)
         if body != None:
-            self.ciscoGUID = tuple(map(int, body.split('-', 3)))
-        elif ciscoGUID != None:
+            return
+        self.parsed = True
+        if ciscoGUID != None:
             self.ciscoGUID = ciscoGUID
         else:
             s = md5(str((random() * 1000000000L) + time())).hexdigest()
             self.ciscoGUID = (long(s[0:8], 16), long(s[8:16], 16), long(s[16:24], 16), long(s[24:32], 16))
 
+    def parse(self):
+        self.parsed = True
+        self.ciscoGUID = tuple([int(x) for x in  self.body.split('-', 3)])
+
     def __str__(self):
+        if not self.parsed:
+            return self.body
         return '%d-%d-%d-%d' % self.ciscoGUID
 
     def getCiscoGUID(self):
@@ -58,4 +66,6 @@ class SipCiscoGUID(SipGenericHF):
             return 'cisco-GUID'
 
     def getCopy(self):
+        if not self.parsed:
+            return SipCiscoGUID(self.body)
         return SipCiscoGUID(ciscoGUID = self.ciscoGUID)

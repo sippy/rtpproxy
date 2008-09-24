@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipHeader.py,v 1.5 2008/06/26 00:25:53 sobomax Exp $
+# $Id: SipHeader.py,v 1.6 2008/09/24 09:25:38 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from SipCSeq import SipCSeq
@@ -69,7 +69,7 @@ class SipHeader:
 
     def __init__(self, s = None, name = None, body = None, bodys = None, fixname = False):
         if s != None:
-            name, bodys = map(lambda s: s.strip(), s.split(':', 1))
+            name, bodys = [x.strip() for x in s.split(':', 1)]
         if name != None:
             self.name = name.lower()
         if body == None:
@@ -81,23 +81,19 @@ class SipHeader:
             except ESipHeaderCSV, einst:
                 einst.name = self.name
                 raise einst
-        self.setBody(body)
+        self.body = body
         # If no name is provided use canonic name from the body-specific
         # class.
         if self.name == None or fixname:
             self.name = body.hf_names[0]
 
     def __str__(self):
-        return self.body.getCanName(self.name) + ': ' + str(self.getBody())
-
-    def compactStr(self):
-        return self.body.getCanName(self.name, compact = True) + ': ' + str(self.getBody())
+        return str(self.body.getCanName(self.name)) + ': ' + str(self.body)
 
     def getBody(self):
+        if not self.body.parsed:
+            self.body.parse()
         return self.body
-
-    def setBody(self, body):
-        self.body = body
 
     def isName(self, name):
         return name.lower() == self.name

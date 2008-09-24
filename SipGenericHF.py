@@ -22,22 +22,26 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipGenericHF.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipGenericHF.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 class SipGenericHF:
     hf_names = None	# Set this in each subclass!!
     body = None
+    parsed = False
 
     def __init__(self, body, name = None):
         self.body = body
         if name != None:
             self.hf_names = (name.lower(),)
 
+    def parse(self):
+        pass
+
     def __str__(self):
         return self.body
 
     def getCopy(self):
-        return SipGenericHF(self.body)
+        return self.__class__(self.body)
 
     def getCanName(self, name, compact = False):
         return name.capitalize()

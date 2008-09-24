@@ -22,31 +22,26 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipCallId.py,v 1.5 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipCallId.py,v 1.6 2008/09/24 09:25:38 sobomax Exp $
 
 from random import random
 from md5 import md5
 from time import time
 from SipConf import SipConf
+from SipGenericHF import SipGenericHF
 
-class SipCallId:
+class SipCallId(SipGenericHF):
     hf_names = ('call-id', 'i')
     body = None
 
     def __init__(self, body = None):
-        if body != None:
-            self.body = body
-        else:
+        SipGenericHF.__init__(self, body)
+        self.parsed = True
+        if body == None:
             self.body = md5(str((random() * 1000000000L) + time())).hexdigest() + '@' + SipConf.my_address
-
-    def __str__(self):
-        return self.body
 
     def __add__(self, other):
         return SipCallId(self.body + str(other))
-
-    def getCopy(self):
-        return SipCallId(self.body)
 
     def genCallId(self):
         self.body = md5(str((random() * 1000000000L) + time())).hexdigest() + '@' + SipConf.my_address

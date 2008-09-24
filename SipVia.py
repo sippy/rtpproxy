@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipVia.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipVia.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from random import random
 from md5 import md5
@@ -40,26 +40,12 @@ class SipVia(SipGenericHF):
     params = None
 
     def __init__(self, body = None, sipver = None, hostname = None, port = None, params = None):
-        self.params = {}
-        if body != None:
-            if body.find(',') > -1:
-                raise ESipHeaderCSV(None, body.split(','))
-            self.sipver, hostname = body.split(None, 1)
-            hcomps = map(lambda x: x.strip(), hostname.split(';'))
-            for param in hcomps[1:]:
-                sparam = param.split('=', 1)
-                if len(sparam) == 1:
-                    val = None
-                else:
-                    val = sparam[1]
-                self.params[sparam[0]] = val
-            hcomps = hcomps[0].split(':', 1)
-            if len(hcomps) == 2:
-                self.port = int(hcomps[1])
-            else:
-                self.port = ''
-            self.hostname = hcomps[0]
-        else:
+        if body != None and body.find(',') > -1:
+            raise ESipHeaderCSV(None, body.split(','))
+        SipGenericHF.__init__(self, body)
+        if body == None:
+            self.parsed = True
+            self.params = {}
             if sipver == None:
                 self.sipver = 'SIP/2.0/UDP'
             else:
@@ -76,7 +62,28 @@ class SipVia(SipGenericHF):
             if params != None:
                 self.params = params
 
+    def parse(self):
+        self.parsed = True
+        self.params = {}
+        self.sipver, hostname = self.body.split(None, 1)
+        hcomps = [x.strip() for x in hostname.split(';')]
+        for param in hcomps[1:]:
+            sparam = param.split('=', 1)
+            if len(sparam) == 1:
+                val = None
+            else:
+                val = sparam[1]
+            self.params[sparam[0]] = val
+        hcomps = hcomps[0].split(':', 1)
+        if len(hcomps) == 2:
+            self.port = int(hcomps[1])
+        else:
+            self.port = ''
+        self.hostname = hcomps[0]
+
     def __str__(self):
+        if not self.parsed:
+            return self.body
         s = self.sipver + ' ' + self.hostname
         if self.port != '':
             s += ':' + str(self.port)
@@ -87,6 +94,8 @@ class SipVia(SipGenericHF):
         return s
 
     def getCopy(self):
+        if not self.parsed:
+            return SipVia(self.body)
         return SipVia(sipver = self.sipver, hostname = self.hostname, port = self.port, params = self.params.copy())
 
     def genBranch(self):
@@ -106,8 +115,3 @@ class SipVia(SipGenericHF):
 
     def getTAddr(self):
         return (self.params.get('received', self.getAddr()[0]), int(self.params.get('rport', self.getAddr()[1])))
-
-    def getCanName(self, name, compact = False):
-        if compact:
-            return 'v'
-        return 'Via'

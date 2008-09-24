@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Radius_client.py,v 1.4 2008/08/26 15:00:02 sobomax Exp $
+# $Id: Radius_client.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from External_command import External_command
 
@@ -63,7 +63,7 @@ class Radius_client(External_command):
             return
         nav = []
         for av in result[:-1]:
-            a, v = map(lambda x: x.strip(), av.split(' = ', 1))
+            a, v = [x.strip() for x in av.split(' = ', 1)]
             v = v.strip('\'')
             if (a == 'Cisco-AVPair' or a in self._cisco_vsa_names):
                 t = v.split('=', 1)

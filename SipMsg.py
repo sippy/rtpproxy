@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.9 2008/06/26 00:25:53 sobomax Exp $
+# $Id: SipMsg.py,v 1.10 2008/09/24 09:25:38 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -158,22 +158,22 @@ class SipMsg:
         return self.startline
 
     def getHFs(self, name):
-        return filter(lambda x: x.isName(name), self.headers)
+        return [x for x in self.headers if x.isName(name)]
 
     def countHFs(self, name):
-        return len(filter(lambda x: x.isName(name), self.headers))
+        return len([x for x in self.headers if x.isName(name)])
 
     def delHFs(self, name):
-        self.headers = filter(lambda x: not x.isName(name), self.headers)
+        self.headers = [x for x in self.headers if not x.isName(name)]
 
     def getHF(self, name):
-        return filter(lambda x: x.isName(name), self.headers)[0]
+        return [x for x in self.headers if x.isName(name)][0]
 
     def getHFBodys(self, name):
-        return map(lambda x: x.getBody(), filter(lambda x: x.isName(name), self.headers))
+        return [x.getBody() for x in self.headers if x.isName(name)]
 
-    def getHFBody(self, name):
-        return filter(lambda x: x.isName(name), self.headers)[0].getBody()
+    def getHFBody(self, name, idx = 0):
+        return [x for x in self.headers if x.isName(name)][idx].getBody()
 
     def replaceHeader(self, oheader, nheader):
         self.headers[self.headers.index(oheader)] = nheader

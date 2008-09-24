@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpMedia.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SdpMedia.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 class MTAudio:
     pass
@@ -48,7 +48,7 @@ class SdpMedia:
             self.port = int(params[1])
             self.transport = params[2]
             if self.type == MTAudio:
-                self.formats = map(lambda x: int(x), params[3:])
+                self.formats = [int(x) for x in params[3:]]
             else:
                 self.formats = params[3:]
         else:

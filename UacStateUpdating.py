@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateUpdating.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: UacStateUpdating.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventDisconnect, CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect
@@ -70,7 +70,7 @@ class UacStateUpdating(UaStateGeneric):
                 self.ua.rSDP = None
             self.ua.equeue.append(event)
             return (UaStateConnected,)
-        if code in (301, 302) and len(resp.getHFBodys('contact')) > 0:
+        if code in (301, 302) and resp.countHFs('contact') > 0:
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
             self.ua.equeqe.append(CCEventRedirect(scode, rtime = resp.rtime))
         else:

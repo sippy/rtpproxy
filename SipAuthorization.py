@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAuthorization.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipAuthorization.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from md5 import md5
@@ -39,22 +39,10 @@ class SipAuthorization(SipGenericHF):
 
     def __init__(self, body = None, username = None, uri = None, realm = None, nonce = None, response = None, \
                  password = None, method = None, cself = None):
+        SipGenericHF.__init__(self, body)
         if body != None:
-            self.otherparams = []
-            for name, value in map(lambda x: x.strip(', ').split('=', 1), body.split(' ', 1)[1].split(',')):
-                if name == 'username':
-                    self.username = value.strip('"')
-                elif name == 'uri':
-                    self.uri = value.strip('"')
-                elif name == 'realm':
-                    self.realm = value.strip('"')
-                elif name == 'nonce':
-                    self.nonce = value.strip('"')
-                elif name == 'response':
-                    self.response = value.strip('"')
-                else:
-                    self.otherparams.append((name, value))
             return
+        self.parsed = True
         if cself != None:
             self.username = cself.username
             self.uri = cself.uri
@@ -74,7 +62,26 @@ class SipAuthorization(SipGenericHF):
             self.response = response
         self.otherparams = []
 
+    def parse(self):
+        self.parsed = True
+        self.otherparams = []
+        for name, value in [x.strip(', ').split('=', 1) for x in self.body.split(' ', 1)[1].split(',')]:
+            if name == 'username':
+                self.username = value.strip('"')
+            elif name == 'uri':
+                self.uri = value.strip('"')
+            elif name == 'realm':
+                self.realm = value.strip('"')
+            elif name == 'nonce':
+                self.nonce = value.strip('"')
+            elif name == 'response':
+                self.response = value.strip('"')
+            else:
+                self.otherparams.append((name, value))
+
     def __str__(self):
+        if not self.parsed:
+            return self.body
         rval = 'Digest username="%s",realm="%s",nonce="%s",uri="%s",response="%s"' % \
                (self.username, self.realm, self.nonce, self.uri, self.response)
         for param in self.otherparams:
@@ -82,7 +89,9 @@ class SipAuthorization(SipGenericHF):
         return rval
 
     def getCopy(self):
-        return SipAuthorization(cself = self)
+        if not self.parsed:
+            return self.__class__(self.body)
+        return self.__class__(cself = self)
 
     def verify(self, password, method):
         return self.verifyHA1(DigestCalcHA1('md5', self.username, self.realm, password, self.nonce, ''), method)

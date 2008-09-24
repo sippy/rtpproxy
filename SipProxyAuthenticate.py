@@ -22,15 +22,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipProxyAuthenticate.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipProxyAuthenticate.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SipWWWAuthenticate import SipWWWAuthenticate
 
 class SipProxyAuthenticate(SipWWWAuthenticate):
     hf_names = ('proxy-authenticate',)
-
-    def getCopy(self):
-        return SipProxyAuthenticate(realm = self.realm, nonce = self.nonce)
 
     def getCanName(self, name, compact = False):
         return 'Proxy-Authenticate'

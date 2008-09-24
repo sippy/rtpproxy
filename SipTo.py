@@ -22,16 +22,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTo.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipTo.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SipFrom import SipFrom
-from SipGenericHF import SipGenericHF
 
-class SipTo(SipFrom, SipGenericHF):
+class SipTo(SipFrom):
     hf_names = ('to', 't')
-
-    def getCopy(self):
-        return SipTo(address = self.address.getCopy())
 
     def getCanName(self, name, compact = False):
         if compact:

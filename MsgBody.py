@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: MsgBody.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: MsgBody.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from SdpBody import SdpBody
 from types import StringType
@@ -33,20 +33,27 @@ class MsgBody:
     content = None
     mtype = None
     needs_update = True
+    parsed = False
 
     def __init__(self, content = None, mtype = 'application/sdp', cself = None):
         if content != None:
             self.mtype = mtype
-            try:
-                self.content = b_types[self.mtype](content)
-            except KeyError:
-                self.content = content
+            self.content = content
         else:
+            self.parsed = True
             if type(cself.content) == StringType:
                 self.content = cself.content
             else:
                 self.content = cself.content.getCopy()
             self.mtype = cself.mtype
+
+    def parse(self):
+        if not self.parsed:
+            self.parsed = True
+            try:
+                self.content = b_types[self.mtype](self.content)
+            except KeyError:
+                pass
 
     def __str__(self):
         return str(self.content)
@@ -54,11 +61,7 @@ class MsgBody:
     def getType(self):
         return self.mtype
 
-    def setType(self, mtype):
-        self.mtype = mtype
-
-    def setContent(self, content):
-        self.content = content
-
     def getCopy(self):
+        if not self.parsed:
+            return MsgBody(self.content)
         return MsgBody(cself = self)

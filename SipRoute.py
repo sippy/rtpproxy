@@ -22,16 +22,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipRoute.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipRoute.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from SipFrom import SipFrom
-from SipGenericHF import SipGenericHF
 
-class SipRoute(SipFrom, SipGenericHF):
+class SipRoute(SipFrom):
     hf_names = ('route',)
-
-    def getCopy(self):
-        return SipRoute(address = self.address.getCopy())
 
     def getAddr(self):
         return self.address.url.getAddr()

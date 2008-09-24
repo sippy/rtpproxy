@@ -22,12 +22,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipContentType.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipContentType.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 
 class SipContentType(SipGenericHF):
     hf_names = ('content-type', 'c')
+
+    def __init__(self, body):
+        SipGenericHF.__init__(self, body)
+        self.parsed = True
 
     def getCanName(self, name, compact = False):
         if compact:

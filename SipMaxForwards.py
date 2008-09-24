@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMaxForwards.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipMaxForwards.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SipNumericHF import SipNumericHF
 
@@ -31,9 +31,6 @@ class SipMaxForwards(SipNumericHF):
 
     def __init__(self, body = None, number = 70):
         SipNumericHF.__init__(self, body, number)
-
-    def getCopy(self):
-        return SipMaxForwards(number = self.number)
 
     def getCanName(self, name, compact = False):
         return 'Max-Forwards'

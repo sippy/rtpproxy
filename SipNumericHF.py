@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipNumericHF.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipNumericHF.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 
@@ -30,16 +30,24 @@ class SipNumericHF(SipGenericHF):
     number = None
 
     def __init__(self, body = None, number = 0):
-        if body != None:
-            self.number = int(body)
-        else:
+        SipGenericHF.__init__(self, body)
+        if body == None:
+            self.parsed = True
             self.number = number
 
+    def parse(self):
+        self.parsed = True
+        self.number = int(self.body)
+
     def __str__(self):
+        if not self.parsed:
+            return self.body
         return str(self.number)
 
     def getCopy(self):
-        return SipNumericHF(number = self.number)
+        if not self.parsed:
+            return self.__class__(body = self.body)
+        return self.__class__(number = self.number)
 
     def getNum(self):
         return self.number

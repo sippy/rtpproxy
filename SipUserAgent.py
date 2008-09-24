@@ -22,15 +22,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipUserAgent.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipUserAgent.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SipServer import SipServer
 
 class SipUserAgent(SipServer):
     hf_names = ('user-agent',)
-
-    def getCopy(self):
-        return SipUserAgent(name = self.name)
 
     def getCanName(self, name, compact = False):
         return 'User-Agent'

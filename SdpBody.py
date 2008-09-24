@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpBody.py,v 1.4 2008/04/24 23:37:43 sobomax Exp $
+# $Id: SdpBody.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SdpField import SdpField
 from SdpBodySection import SdpBodySection
@@ -32,10 +32,10 @@ class SdpBody:
 
     def __init__(self, body = None, cself = None):
         if cself != None:
-            self.sections = map(lambda x: x.getCopy(), cself.sections)
+            self.sections = [x.getCopy() for x in cself.sections]
             return
         if body != None:
-            headers = map(lambda x: SdpField(x), body.strip().splitlines())
+            headers = [SdpField(x) for x in body.strip().splitlines()]
         else:
             headers = []
         self.sections = []

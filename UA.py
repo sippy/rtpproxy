@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.6 2008/03/26 18:03:00 sobomax Exp $
+# $Id: UA.py,v 1.7 2008/09/24 09:25:38 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -56,7 +56,7 @@ class UA:
     ring_cbs = None
     dead_cbs = None
     rCSeq = None
-    fTag = None
+    lTag = None
     lUri = None
     rUri = None
     cId = None
@@ -84,7 +84,7 @@ class UA:
     last_scode = 100
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
-      conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ftag = None, extra_headers = None, \
+      conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ltag = None, extra_headers = None, \
       expire_time = None, no_progress_time = None):
         self.global_config = global_config
         self.event_cb = event_cb
@@ -113,10 +113,10 @@ class UA:
             self.dead_cbs = dead_cbs
         else:
             self.dead_cbs = ()
-        if ftag != None:
-            self.fTag = ftag
+        if ltag != None:
+            self.lTag = ltag
         else:
-            self.fTag = md5(str((random() * 1000000000L) + time())).hexdigest()
+            self.lTag = md5(str((random() * 1000000000L) + time())).hexdigest()
         self.reqs = {}
         self.extra_headers = extra_headers
         self.expire_time = expire_time

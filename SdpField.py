@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpField.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SdpField.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from SdpConnecton import SdpConnecton
 from SdpMedia import SdpMedia
@@ -39,7 +39,7 @@ class SdpField:
         if body != None:
             if len(body.strip()) == 0:
                 return
-            name, body = map(lambda s: s.strip(), body.split('=', 1))
+            name, body = [s.strip() for s in body.split('=', 1)]
             self.name = name.lower()
             try:
                 self.body = f_types[self.name](body)

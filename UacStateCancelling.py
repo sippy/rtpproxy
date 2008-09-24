@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateCancelling.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: UacStateCancelling.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -69,9 +69,9 @@ class UacStateCancelling(UaStateGeneric):
         # caller already has declared his wilingless to end the session,
         # so that he is probably isn't interested in redirects anymore.
         if code >= 200 and code < 300:
-            if len(resp.getHFBodys('contact')) > 0:
+            if resp.countHFs('contact') > 0:
                 self.ua.rTarget = resp.getHFBody('contact').getUrl().getCopy()
-            self.ua.routes = map(lambda x: x.getCopy(), resp.getHFBodys('record-route'))
+            self.ua.routes = [x.getCopy() for x in resp.getHFBodys('record-route')]
             self.ua.routes.reverse()
             if len(self.ua.routes) > 0:
                 lr = False

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.7 2008/06/26 01:14:49 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.8 2008/09/24 09:25:38 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -277,7 +277,7 @@ class SipTransactionManager:
                         else:
                             rTarget = None
                         rAddr = None
-                        routes = map(lambda x: x.getCopy(), msg.getHFBodys('record-route'))
+                        routes = [x.getCopy() for x in msg.getHFBodys('record-route')]
                         routes.reverse()
                         if len(routes) > 0:
                             lr = False
@@ -299,7 +299,7 @@ class SipTransactionManager:
                         if rAddr != None:
                             t.ack.setTarget(rAddr)
                         t.ack.delHFs('route')
-                        t.ack.appendHeaders(map(lambda x: SipHeader(name = 'route', body = x), routes))
+                        t.ack.appendHeaders([SipHeader(name = 'route', body = x) for x in routes])
                     if fcode >= 200 and fcode < 300:
                         t.ack.getHFBody('via').genBranch()
                     self.transmitMsg(t.ack, t.address, checksum)
@@ -476,6 +476,9 @@ class SipTransactionManager:
         if t.state not in (TRYING, RINGING) and not retrans:
             raise ValueError('BUG: attempt to send reply on already finished transaction!!!')
         scode = resp.getSCode()[0]
+        toHF = resp.getHFBody('to')
+        if scode > 100 and toHF.getTag() == None:
+            toHF.genTag()
         if scode < 200:
             t.state = RINGING
             if self.provisional_retr > 0 and scode > 100:

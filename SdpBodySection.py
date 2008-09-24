@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpBodySection.py,v 1.4 2008/04/24 23:39:03 sobomax Exp $
+# $Id: SdpBodySection.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SdpField import SdpField
 
@@ -32,9 +32,9 @@ class SdpBodySection:
 
     def __init__(self, body = None, cself = None, headers = None):
         if body != None:
-            self.headers = map(lambda x: SdpField(x), body.strip().splitlines())
+            self.headers = [SdpField(x) for x in body.strip().splitlines()]
         elif cself != None:
-            self.headers = map(lambda x: x.getCopy(), cself.headers)
+            self.headers = [x.getCopy() for x in cself.headers]
         elif headers != None:
             self.headers = headers
         else:
@@ -56,18 +56,18 @@ class SdpBodySection:
         return SdpBodySection(cself = self)
 
     def getFs(self, name):
-        return filter(lambda x: x.isName(name), self.headers)
+        return [x for x in self.headers if x.isName(name)]
 
     def countFs(self, name, value = None):
         if value == None:
-            return len(filter(lambda x: x.isName(name), self.headers))
-        return len(filter(lambda x: x.isName(name) and str(x.body) == value, self.headers))
+            return len([x for x in self.headers if x.isName(name)])
+        return len([x for x in self.headers if x.isName(name) and str(x.body) == value])
 
     def delFs(self, name, value = None):
         if value == None:
-            self.headers = filter(lambda x: not x.isName(name), self.headers)
+            self.headers = [x for x in self.headers if not x.isName(name)]
         else:
-            self.headers = filter(lambda x: not (x.isName(name) and str(x.body) == value), self.headers)
+            self.headers = [x for x in self.headers if not (x.isName(name) and str(x.body) == value)]
 
     def getF(self, name):
-        return filter(lambda x: x.isName(name), self.headers)[0]
+        return [x for x in self.headers if x.isName(name)][0]

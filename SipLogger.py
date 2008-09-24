@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipLogger.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipLogger.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from Signal import Signal
 from time import time, localtime, strftime
@@ -69,7 +69,7 @@ class SipLogger:
             ltime = time()
         call_id = kwargs.get('call_id', self.call_id)
         obuf = '%s/%s/%s: %s\n' % (strftime('%d %b %H:%M:%S', localtime(ltime)), call_id, \
-          self.app, reduce(lambda x, y: x + y, map(lambda x: str(x), args)))
+          self.app, reduce(lambda x, y: x + y, [str(x) for x in args]))
         try:
             self.flock(self.log, LOCK_EX)
         except IOError, e:

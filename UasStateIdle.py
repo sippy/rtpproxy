@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateIdle.py,v 1.4 2008/06/27 02:33:15 sobomax Exp $
+# $Id: UasStateIdle.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -52,7 +52,7 @@ class UasStateIdle(UaStateGeneric):
         self.ua.lCSeq = 100 # XXX: 100 for debugging so that incorrect CSeq generation will be easily spotted
         self.ua.lContact = SipContact()
         self.ua.rTarget = req.getHFBody('contact').getUrl().getCopy()
-        self.ua.routes = map(lambda x: x.getCopy(), self.ua.uasResp.getHFBodys('record-route'))
+        self.ua.routes = [x.getCopy() for x in self.ua.uasResp.getHFBodys('record-route')]
         if len(self.ua.routes) > 0:
             lr = False
             for param in self.ua.routes[0].getUrl().other:
@@ -69,7 +69,7 @@ class UasStateIdle(UaStateGeneric):
             self.ua.rAddr = self.ua.rTarget.getAddr()
         self.ua.rAddr0 = self.ua.rAddr
         self.ua.global_config['sip_tm'].sendResponse(self.ua.uasResp)
-        self.ua.uasResp.getHFBody('to').setTag(self.ua.fTag)
+        self.ua.uasResp.getHFBody('to').setTag(self.ua.lTag)
         self.ua.lUri = SipFrom(address = self.ua.uasResp.getHFBody('to').getUri())
         self.ua.rUri = SipTo(address = self.ua.uasResp.getHFBody('from').getUri())
         self.ua.cId = self.ua.uasResp.getHFBody('call-id')

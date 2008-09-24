@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipRequest.py,v 1.4 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipRequest.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from SipMsg import SipMsg
 from SipHeader import SipHeader
@@ -57,7 +57,7 @@ class SipRequest(SipMsg):
         self.appendHeader(SipHeader(name = 'via', body = via))
         if via == None:
             self.getHFBody('via').genBranch()
-        self.appendHeaders(map(lambda x: SipHeader(name = 'route', body = x), routes))
+        self.appendHeaders([SipHeader(name = 'route', body = x) for x in routes])
         self.appendHeader(SipHeader(name = 'max-forwards', body = maxforwards))
         self.appendHeader(SipHeader(name = 'from', body = fr0m))
         if to == None:
@@ -93,13 +93,13 @@ class SipRequest(SipMsg):
 
     def genResponse(self, scode, reason, body = None):
         # Should be done at the transaction level
-        # to = self.getHFs('to')[0].getBody().getCopy()
+        # to = self.getHF('to').getBody().getCopy()
         # if code > 100 and to.getTag() == None:
         #    to.genTag()
         return SipResponse(scode = scode, reason = reason, sipver = self.sipver, fr0m = self.getHFBody('from').getCopy(), \
-                           callid = self.getHFBody('call-id').getCopy(), vias = map(lambda x: x.getCopy(), self.getHFBodys('via')), \
+                           callid = self.getHFBody('call-id').getCopy(), vias = [x.getCopy() for x in self.getHFBodys('via')], \
                            to = self.getHFBody('to').getCopy(), cseq = self.getHFBody('cseq').getCopy(), \
-                           rrs = map(lambda x: x.getCopy(), self.getHFBodys('record-route')), body = body)
+                           rrs = [x.getCopy() for x in self.getHFBodys('record-route')], body = body)
 
     def genACK(self, to = None):
         if to == None:
@@ -114,7 +114,7 @@ class SipRequest(SipMsg):
                           fr0m = self.getHFBody('from').getCopy(), to = self.getHFBody('to').getCopy(), \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
                           cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = self.getHFBody('max-forwards').getCopy(), \
-                          routes = map(lambda x: x.getCopy(), self.getHFBodys('route')))
+                          routes = [x.getCopy() for x in self.getHFBodys('route')])
 
     def genRequest(self, method, cseq = None):
         if cseq == None:

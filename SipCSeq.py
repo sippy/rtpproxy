@@ -22,25 +22,33 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipCSeq.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
+# $Id: SipCSeq.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
-class SipCSeq:
+from SipGenericHF import SipGenericHF
+
+class SipCSeq(SipGenericHF):
     hf_names = ('cseq',)
     cseq = None
     method = None
 
     def __init__(self, body = None, cseq = None, method = None):
-        if body != None:
-            cseq, self.method = body.split()
-            self.cseq = int(cseq)
-        else:
+        SipGenericHF.__init__(self, body)
+        if body == None:
+            self.parsed = True
             self.method = method
             if cseq != None:
                 self.cseq = cseq
             else:
                 self.cseq = 1
 
+    def parse(self):
+        self.parsed = True
+        cseq, self.method = self.body.split()
+        self.cseq = int(cseq)
+
     def __str__(self):
+        if not self.parsed:
+            return self.body
         return str(self.cseq) + ' ' + self.method
 
     def getCSeq(self):
@@ -53,6 +61,8 @@ class SipCSeq:
         return self.method
 
     def getCopy(self):
+        if not self.parsed:
+            return SipCSeq(self.body)
         return SipCSeq(cseq = self.cseq, method = self.method)
 
     def getCanName(self, name, compact = False):

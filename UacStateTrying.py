@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateTrying.py,v 1.4 2008/02/18 19:49:45 sobomax Exp $
+# $Id: UacStateTrying.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -61,9 +61,9 @@ class UacStateTrying(UaStateGeneric):
             self.ua.expire_timer.cancel()
             self.ua.expire_timer = None
         if code >= 200 and code < 300:
-            if len(resp.getHFBodys('contact')) > 0:
+            if resp.countHFs('contact') > 0:
                 self.ua.rTarget = resp.getHFBody('contact').getUrl().getCopy()
-            self.ua.routes = map(lambda x: x.getCopy(), resp.getHFBodys('record-route'))
+            self.ua.routes = [x.getCopy() for x in resp.getHFBodys('record-route')]
             self.ua.routes.reverse()
             if len(self.ua.routes) > 0:
                 lr = False
@@ -95,7 +95,7 @@ class UacStateTrying(UaStateGeneric):
                 self.ua.rSDP = None
             self.ua.equeue.append(event)
             return (UaStateConnected, self.ua.conn_cbs, resp.rtime)
-        if code in (301, 302) and len(resp.getHFBodys('contact')) > 0:
+        if code in (301, 302) and resp.countHFs('contact') > 0:
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
             self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime))
         else:

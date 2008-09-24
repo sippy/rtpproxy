@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateConnected.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: UaStateConnected.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -159,6 +159,7 @@ class UaStateConnected(UaStateGeneric):
     def keepAlive(self):
         if self.ua.state != self:
             return
+        #self.ua.lSDP.parse()
         #self.ua.lSDP.content.getF('m').body.port += 4
         req = self.ua.genRequest('INVITE', self.ua.lSDP)
         self.ua.lCSeq += 1

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipReplaces.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipReplaces.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 
@@ -36,28 +36,36 @@ class SipReplaces(SipGenericHF):
 
     def __init__(self, body = None, call_id = None, from_tag = None, to_tag = None, \
       early_only = False, params = None):
-        self.params = []
+        SipGenericHF.__init__(self, body)
         if body != None:
-            params = body.split(';')
-            self.call_id = params.pop(0)
-            for param in params:
-                if param.startswith('from-tag='):
-                    self.from_tag = param[len('from-tag='):]
-                elif param.startswith('to-tag='):
-                    self.to_tag = param[len('to-tag='):]
-                elif param == 'early-only':
-                    self.early_only = True
-                else:
-                    self.params.append(param)
-        else:
-            self.call_id = call_id
-            self.from_tag = from_tag
-            self.to_tag = to_tag
-            self.early_only = early_only
-            if params != None:
-                self.params = params[:]
+            return
+        self.parsed = True
+        self.params = []
+        self.call_id = call_id
+        self.from_tag = from_tag
+        self.to_tag = to_tag
+        self.early_only = early_only
+        if params != None:
+            self.params = params[:]
+
+    def parse(self):
+        self.parsed = True
+        self.params = []
+        params = self.body.split(';')
+        self.call_id = params.pop(0)
+        for param in params:
+            if param.startswith('from-tag='):
+                self.from_tag = param[len('from-tag='):]
+            elif param.startswith('to-tag='):
+                self.to_tag = param[len('to-tag='):]
+            elif param == 'early-only':
+                self.early_only = True
+            else:
+                self.params.append(param)
 
     def __str__(self):
+        if not self.parsed:
+            return self.body
         res = '%s;from-tag=%s;to-tag=%s' % (self.call_id, self.from_tag, self.to_tag)
         if self.early_only:
             res += ';early-only'
@@ -66,5 +74,7 @@ class SipReplaces(SipGenericHF):
         return res
 
     def getCopy(self):
+        if not self.parsed:
+            return SipReplaces(self.body)
         return SipReplaces(call_id = self.call_id, from_tag = self.from_tag, to_tag = self.to_tag, \
           early_only = self.early_only, params = self.params)

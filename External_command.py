@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: External_command.py,v 1.5 2008/08/26 15:00:02 sobomax Exp $
+# $Id: External_command.py,v 1.6 2008/09/24 09:25:38 sobomax Exp $
 
 from threading import Condition
 from popen2 import Popen3
@@ -58,7 +58,7 @@ class _Worker(Thread):
                 wi.result_callback = None
                 wi.callback_parameters = None
                 continue
-            batch = map(lambda x: x + '\n', wi.data)
+            batch = [x + '\n' for x in wi.data]
             batch.append('\n')
             pipe.tochild.writelines(batch)
             pipe.tochild.flush()

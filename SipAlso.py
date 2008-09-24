@@ -22,12 +22,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAlso.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipAlso.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
 
 from SipAddressHF import SipAddressHF
 
 class SipAlso(SipAddressHF):
     hf_names = ('also',)
-
-    def getCopy(self):
-        return SipAlso(address = self.address.getCopy())
