@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.5 2008/09/24 21:36:19 sobomax Exp $
 
 from md5 import md5
 from random import random
@@ -77,13 +77,25 @@ class Rtp_proxy_session:
     def play_caller(self, prompt_name, times = 1, result_callback = None, index = 0):
         if not self.caller_session_exists:
             return
+        if not self.callee_session_exists:
+            self.update_callee('0.0.0.0', 0, self._play_caller, None, index, prompt_name, times, result_callback, index)
+            return
+        self._play_caller(None, prompt_name, times, result_callback, index)
+
+    def _play_caller(self, result, prompt_name, times, result_callback, index):
         command = 'P%d %s %s %s %s %s' % (times, '%s-%d' % (self.call_id, index), prompt_name, self.caller_codecs, self.from_tag, self.to_tag)
         self.rtp_proxy_client.send_command(command, self.command_result, result_callback)
 
     def play_callee(self, prompt_name, times = 1, result_callback = None, index = 0):
         if not self.callee_session_exists:
             return
-        command = 'P%d %s %s %s %s %s' % (times, '%s-%d' % (self.call_id, index), prompt_name, self.caller_codecs, self.to_tag, self.from_tag)
+        if not self.caller_session_exists:
+            self.update_caller('0.0.0.0', 0, self._play_callee, None, index, prompt_name, times, result_callback, index)
+            return
+        self._play_callee(None, prompt_name, times, result_callback, index)
+
+    def _play_callee(self, result, prompt_name, times, result_callback, index):
+        command = 'P%d %s %s %s %s %s' % (times, '%s-%d' % (self.call_id, index), prompt_name, self.callee_codecs, self.to_tag, self.from_tag)
         self.rtp_proxy_client.send_command(command, self.command_result, result_callback)
 
     def stop_play_caller(self, result_callback = None, index = 0):
