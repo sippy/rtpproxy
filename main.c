@@ -111,6 +111,10 @@ static void
 ehandler(void)
 {
 
+#ifdef MP_MPATROL_H
+    __mp_leaktable(0, MP_LT_UNFREED, 0);
+#endif
+
     unlink(cmd_sock);
     unlink(pid_file);
     rtpp_log_write(RTPP_LOG_INFO, glog, "rtpproxy ended");
