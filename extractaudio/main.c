@@ -32,7 +32,9 @@
 #include <sys/param.h>
 #include <sys/mman.h>
 #include <sys/queue.h>
+#if defined(__FreeBSD__)
 #include <sys/rtprio.h>
+#endif
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
@@ -62,8 +64,8 @@ session_lookup(struct channels *channels, uint32_t ssrc)
 {
     struct channel *cp;
 
-    TAILQ_FOREACH(cp, channels, link) {
-        if (RPKT(TAILQ_FIRST(&(cp->session)))->ssrc == ssrc)
+    MYQ_FOREACH(cp, channels) {
+        if (RPKT(MYQ_FIRST(&(cp->session)))->ssrc == ssrc)
             return &(cp->session);
     }
     return NULL;
@@ -75,13 +77,13 @@ channel_insert(struct channels *channels, struct channel *channel)
 {
     struct channel *cp;
 
-    TAILQ_FOREACH_REVERSE(cp, channels, channels, link)
-        if (TAILQ_FIRST(&(cp->session))->pkt->time <
-          TAILQ_FIRST(&(channel->session))->pkt->time) {
-            TAILQ_INSERT_AFTER(channels, cp, channel, link);
+    MYQ_FOREACH_REVERSE(cp, channels)
+        if (MYQ_FIRST(&(cp->session))->pkt->time <
+          MYQ_FIRST(&(channel->session))->pkt->time) {
+            MYQ_INSERT_AFTER(channels, cp, channel);
             return;
         }
-    TAILQ_INSERT_HEAD(channels, channel, link);
+    MYQ_INSERT_HEAD(channels, channel);
 }
 
 static int
@@ -136,27 +138,27 @@ load_session(const char *path, struct channels *channels, enum origin origin)
             memset(channel, 0, sizeof(*channel));
             channel->origin = origin;
             sess = &(channel->session);
-            TAILQ_INIT(sess);
-            TAILQ_INSERT_HEAD(sess, pack, link);
+            MYQ_INIT(sess);
+            MYQ_INSERT_HEAD(sess, pack);
             channel_insert(channels, channel);
             pcount++;
             goto endloop;
         }
 
         /* Put packet it order */
-        TAILQ_FOREACH_REVERSE(pp, sess, session, link) {
+        MYQ_FOREACH_REVERSE(pp, sess) {
             if (ntohs(RPKT(pp)->seq) == ntohs(RPKT(pack)->seq)) {
                 /* Duplicate packet */
                 free(pack);
                 goto endloop;
             }
             if (ntohs(RPKT(pp)->seq) < ntohs(RPKT(pack)->seq)) {
-                TAILQ_INSERT_AFTER(sess, pp, pack, link);
+                MYQ_INSERT_AFTER(sess, pp, pack);
                 pcount++;
                 goto endloop;
             }
         }
-        TAILQ_INSERT_HEAD(sess, pack, link);
+        MYQ_INSERT_HEAD(sess, pack);
         pcount++;
 endloop:
         continue;
@@ -179,12 +181,14 @@ main(int argc, char **argv)
     struct channels channels;
     struct channel *cp;
     struct filehdr_au filehdr_au;
+#if defined(__FreeBSD__)
     struct rtprio rt;
+#endif
     int16_t obuf[1024];
     char aname[MAXPATHLEN], oname[MAXPATHLEN];
     double basetime;
 
-    TAILQ_INIT(&channels);
+    MYQ_INIT(&channels);
 
     delete = stereo = idprio = 0;
     while ((ch = getopt(argc, argv, "dsi")) != -1)
@@ -211,11 +215,13 @@ main(int argc, char **argv)
     if (argc < 2)
         usage();
 
+#if defined(__FreeBSD__)
     if (idprio != 0) {
         rt.type = RTP_PRIO_IDLE;
         rt.prio = RTP_PRIO_MAX;
         rtprio(RTP_SET, 0, &rt);
     }
+#endif
 
     sprintf(aname, "%s.a.rtp", argv[0]);
     sprintf(oname, "%s.o.rtp", argv[0]);
@@ -223,17 +229,17 @@ main(int argc, char **argv)
     load_session(aname, &channels, A_CH);
     load_session(oname, &channels, O_CH);
 
-    if (TAILQ_EMPTY(&channels))
+    if (MYQ_EMPTY(&channels))
         goto theend;
 
     nch = 0;
-    basetime = TAILQ_FIRST(&(TAILQ_FIRST(&channels)->session))->pkt->time;
-    TAILQ_FOREACH(cp, &channels, link) {
-        if (basetime > TAILQ_FIRST(&(cp->session))->pkt->time)
-            basetime = TAILQ_FIRST(&(cp->session))->pkt->time;
+    basetime = MYQ_FIRST(&(MYQ_FIRST(&channels)->session))->pkt->time;
+    MYQ_FOREACH(cp, &channels) {
+        if (basetime > MYQ_FIRST(&(cp->session))->pkt->time)
+            basetime = MYQ_FIRST(&(cp->session))->pkt->time;
     }
-    TAILQ_FOREACH(cp, &channels, link) {
-        cp->skip = (TAILQ_FIRST(&(cp->session))->pkt->time - basetime) * 8000;
+    MYQ_FOREACH(cp, &channels) {
+        cp->skip = (MYQ_FIRST(&(cp->session))->pkt->time - basetime) * 8000;
         cp->decoder = decoder_new(&(cp->session));
         nch++;
     }
@@ -249,7 +255,7 @@ main(int argc, char **argv)
     do {
         neof = 0;
         asample = osample = 0;
-        TAILQ_FOREACH(cp, &channels, link) {
+        MYQ_FOREACH(cp, &channels) {
             if (cp->skip > 0) {
                 cp->skip--;
 		continue;

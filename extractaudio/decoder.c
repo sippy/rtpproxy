@@ -53,7 +53,7 @@ decoder_new(struct session *sp)
     if (dp == NULL)
         return NULL;
     memset(dp, 0, sizeof(*dp));
-    dp->pp = TAILQ_FIRST(sp);
+    dp->pp = MYQ_FIRST(sp);
     if (dp->pp == NULL)
         /*
          * If the queue is empty return "as is", decoder_get() then'll be
@@ -107,7 +107,7 @@ decoder_get(struct decoder_stream *dp)
             j = decode_frame(dp, dp->obuf, dp->pp->pload, dp->pp->plen);
             if (j > 0)
                 dp->lpt = RPKT(dp->pp)->pt;
-            dp->pp = TAILQ_NEXT(dp->pp, link);
+            dp->pp = MYQ_NEXT(dp->pp);
             if (j <= 0)
                 return decoder_get(dp);
             dp->oblen = j / 2;

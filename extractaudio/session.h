@@ -37,13 +37,46 @@
 #include "../rtp.h"
 #include "../rtpp_record.h"
 
+#define MYQ_INIT(headp) {(headp)->first = (headp)->last = NULL;}
+#define MYQ_FIRST(headp) ((headp)->first)
+#define MYQ_NEXT(itemp) ((itemp)->next)
+#define MYQ_EMPTY(headp) ((headp)->first == NULL)
+#define MYQ_FOREACH(itemp, headp) \
+  for ((itemp) = (headp)->first; (itemp) != NULL; (itemp) = (itemp)->next)
+#define MYQ_FOREACH_REVERSE(itemp, headp) \
+  for ((itemp) = (headp)->last; (itemp) != NULL; (itemp) = (itemp)->prev)
+#define MYQ_INSERT_HEAD(headp, new_itemp) { \
+    (new_itemp)->prev = NULL; \
+    (new_itemp)->next = (headp)->first; \
+    if ((headp)->first != NULL) { \
+      (headp)->first->prev = (new_itemp); \
+    } else { \
+      (headp)->last = (new_itemp); \
+    } \
+    (headp)->first = (new_itemp); \
+  }
+#define MYQ_INSERT_AFTER(headp, itemp, new_itemp) { \
+    (new_itemp)->next = (itemp)->next; \
+    (new_itemp)->prev = (itemp); \
+    (itemp)->next = (new_itemp); \
+    if ((new_itemp)->next == NULL) { \
+      (headp)->last = (new_itemp); \
+    } else { \
+      (new_itemp)->next->prev = (new_itemp); \
+    } \
+  }
+
 struct packet {
-    TAILQ_ENTRY(packet) link;
     struct pkt_hdr_adhoc *pkt;
     unsigned char *pload;
     unsigned int plen;
+    struct packet *prev;
+    struct packet *next;
 };
-TAILQ_HEAD(session, packet);
+struct session {
+    struct packet *first;
+    struct packet *last;
+};
 
 enum origin {O_CH, A_CH};
 
@@ -53,8 +86,13 @@ struct channel {
     void *decoder;
     unsigned int skip;
     enum origin origin;
+    struct channel *prev;
+    struct channel *next;
 };
-TAILQ_HEAD(channels, channel);
+struct channels {
+    struct channel *first;
+    struct channel *last;
+};
 
 #define	RPKT(packet)	((rtp_hdr_t *)((packet)->pkt + 1))
 
