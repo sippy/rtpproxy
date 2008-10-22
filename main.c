@@ -710,8 +710,8 @@ main(int argc, char **argv)
     }
 #endif
 
-    atexit(ehandler);
     glog = cf.glog = rtpp_log_open("rtpproxy", NULL, LF_REOPEN);
+    atexit(ehandler);
     rtpp_log_write(RTPP_LOG_INFO, cf.glog, "rtpproxy started, pid %d", getpid());
 
     i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
