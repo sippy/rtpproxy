@@ -1,4 +1,5 @@
-# Copyright (c) 2003 Porta Software Ltd
+# Copyright (c) 2003-2006 Maksym Sobolyev
+# Copyright (c) 2006-2008 Sippy Software, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
