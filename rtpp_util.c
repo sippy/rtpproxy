@@ -255,3 +255,36 @@ rtpp_in_cksum(void *addr, int len)
     answer = ~sum;                          /* truncate to 16 bits */
     return (answer);
 }
+
+/*
+ * Portable strsep(3) implementation, borrowed from FreeBSD. For license
+ * and other information see:
+ *
+ * $FreeBSD: src/lib/libc/string/strsep.c,v 1.6 2007/01/09 00:28:12 imp Exp $
+ */
+char *
+rtpp_strsep(char **stringp, const char *delim)
+{
+    char *s;
+    const char *spanp;
+    int c, sc;
+    char *tok;
+
+    if ((s = *stringp) == NULL)
+	return (NULL);
+    for (tok = s;;) {
+	c = *s++;
+	spanp = delim;
+	do {
+	    if ((sc = *spanp++) == c) {
+		if (c == 0)
+		    s = NULL;
+		else
+		    s[-1] = 0;
+		*stringp = s;
+		return (tok);
+	    }
+	} while (sc != 0);
+    }
+    /* NOTREACHED */
+}

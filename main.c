@@ -594,7 +594,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	sp->pcount[2]++;
 	cf->packets_out++;
 	for (i = (cf->dmode && packet->size < LBR_THRS) ? 2 : 1; i > 0; i--) {
-	    sendto(sp->fds[sidx], packet->buf, packet->size, 0, sp->addr[sidx],
+	    sendto(sp->fds[sidx], packet->data.buf, packet->size, 0, sp->addr[sidx],
 	      SA_LEN(sp->addr[sidx]));
 	}
     }

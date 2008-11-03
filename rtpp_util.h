@@ -56,6 +56,7 @@ int resolve(struct sockaddr *, int, const char *, const char *, int);
 void seedrandom(void);
 int drop_privileges(struct cfg *, char *, char *);
 uint16_t rtpp_in_cksum(void *, int);
+char *rtpp_strsep(char **, const char *);
 
 /* Stripped down version of sockaddr_in* for saving space */
 struct sockaddr_in4_s {

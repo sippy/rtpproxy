@@ -108,7 +108,7 @@ struct rtp_packet {
     union {
 	rtp_hdr_t       header;
 	unsigned char   buf[8192];
-    };
+    } data;
 };
 
 struct rtp_packet_chunk {

@@ -39,6 +39,10 @@
 #include <stdint.h>
 #endif
 
+#if !defined(__solaris__) && defined(__sun) && defined(__svr4__)
+#define	__solaris__	1
+#endif
+
 #include "rtpp_log.h"
 
 /*

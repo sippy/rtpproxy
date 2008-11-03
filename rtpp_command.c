@@ -292,7 +292,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     cp = buf;
     argc = 0;
     memset(argv, 0, sizeof(argv));
-    for (ap = argv; (*ap = strsep(&cp, "\r\n\t ")) != NULL;)
+    for (ap = argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;)
 	if (**ap != '\0') {
 	    argc++;
 	    if (++ap >= &argv[10])
