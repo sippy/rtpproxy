@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.h,v 1.9 2008/07/16 20:42:21 sobomax Exp $
+ * $Id: rtp.h,v 1.10 2008/11/03 05:52:24 sobomax Exp $
  *
  */
 
@@ -102,7 +102,7 @@ struct rtp_packet {
     union {
 	rtp_hdr_t       header;
 	unsigned char   buf[8192];
-    };
+    } data;
 };
 
 struct rtp_packet_chunk {

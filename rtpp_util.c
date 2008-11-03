@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.c,v 1.10 2008/08/14 01:40:50 sobomax Exp $
+ * $Id: rtpp_util.c,v 1.11 2008/11/03 05:52:24 sobomax Exp $
  *
  */
 
@@ -262,4 +262,37 @@ init_port_table(struct cfg *cf)
 #endif
     /* Set the last used element to be the last element */
     cf->port_table_idx = cf->port_table_len - 1;
+}
+
+/*
+ * Portable strsep(3) implementation, borrowed from FreeBSD. For license
+ * and other information see:
+ *
+ * $FreeBSD: src/lib/libc/string/strsep.c,v 1.6 2007/01/09 00:28:12 imp Exp $
+ */
+char *
+rtpp_strsep(char **stringp, const char *delim)
+{
+    char *s;
+    const char *spanp;
+    int c, sc;
+    char *tok;
+
+    if ((s = *stringp) == NULL)
+	return (NULL);
+    for (tok = s;;) {
+	c = *s++;
+	spanp = delim;
+	do {
+	    if ((sc = *spanp++) == c) {
+		if (c == 0)
+		    s = NULL;
+		else
+		    s[-1] = 0;
+		*stringp = s;
+		return (tok);
+	    }
+	} while (sc != 0);
+    }
+    /* NOTREACHED */
 }

@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.c,v 1.7 2008/04/17 22:38:00 sobomax Exp $
+ * $Id: rtp.c,v 1.8 2008/11/03 05:52:24 sobomax Exp $
  *
  */
 
@@ -154,7 +154,7 @@ rtp_packet_chunk_find_g723(struct rtp_packet *pkt, struct rtp_packet_chunk *ret,
 	return;
     }
 
-    buf = &pkt->buf[pkt->data_offset];
+    buf = &pkt->data.buf[pkt->data_offset];
     while (pos < pkt->data_size && samples > found_samples) {
 	found_samples += 240;
 	n = g723_len(buf[pos]);
@@ -178,7 +178,7 @@ rtp_packet_first_chunk_find(struct rtp_packet *pkt, struct rtp_packet_chunk *ret
     assert(pkt->nsamples > min_nsamples);
     ret->whole_packet_matched = 0;
 
-    switch (pkt->header.pt) {
+    switch (pkt->data.header.pt) {
     case RTP_PCMU:
     case RTP_PCMA:
 	rtp_packet_chunk_find_g711(pkt, ret, min_nsamples);
@@ -213,25 +213,26 @@ rtp_packet_parse(struct rtp_packet *pkt)
     pkt->data_offset = 0;
     pkt->nsamples = RTP_NSAMPLES_UNKNOWN;
 
-    if (pkt->header.version != 2)
+    if (pkt->data.header.version != 2)
         return;
 
-    pkt->data_offset = RTP_HDR_LEN(&pkt->header);
+    pkt->data_offset = RTP_HDR_LEN(&pkt->data.header);
 
-    if (pkt->header.p)
+    if (pkt->data.header.p)
         padding_size = ((unsigned char *) pkt)[pkt->size - 1];
 
     pkt->data_size = pkt->size - pkt->data_offset - padding_size;
-    pkt->nsamples = rtp_calc_samples(pkt->header.pt, pkt->data_size, &pkt->buf[pkt->data_offset]);
-    pkt->ts = ntohl(pkt->header.ts);
-    pkt->seq = ntohs(pkt->header.seq);
+    pkt->nsamples = rtp_calc_samples(pkt->data.header.pt, pkt->data_size,
+      &pkt->data.buf[pkt->data_offset]);
+    pkt->ts = ntohl(pkt->data.header.ts);
+    pkt->seq = ntohs(pkt->data.header.seq);
 
     pkt->appendable = 1;
     /* 
      * G.729 comfort noise frame as the last frame causes 
      * packet to be non-appendable
      */
-    if (pkt->header.pt == RTP_G729 && (pkt->data_size % 10) != 0)
+    if (pkt->data.header.pt == RTP_G729 && (pkt->data_size % 10) != 0)
         pkt->appendable = 0;
 }
 
@@ -268,7 +269,7 @@ rtp_recv(int fd)
         return NULL;
 
     pkt->rlen = sizeof(pkt->raddr);
-    pkt->size = recvfrom(fd, pkt->buf, sizeof(pkt->buf), 0, 
+    pkt->size = recvfrom(fd, pkt->data.buf, sizeof(pkt->data.buf), 0, 
       sstosa(&pkt->raddr), &pkt->rlen);
 
     if (pkt->size == -1) {
@@ -284,7 +285,7 @@ rtp_packet_set_seq(struct rtp_packet *p, uint16_t seq)
 {
 
     p->seq = seq;
-    p->header.seq = htons(seq);
+    p->data.header.seq = htons(seq);
 }
 
 void 
@@ -292,5 +293,5 @@ rtp_packet_set_ts(struct rtp_packet *p, uint32_t ts)
 {
 
     p->ts = ts;
-    p->header.ts = htonl(ts);
+    p->data.header.ts = htonl(ts);
 }

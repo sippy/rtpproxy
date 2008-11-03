@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_resizer.c,v 1.4 2008/07/15 23:14:52 sobomax Exp $
+ * $Id: rtp_resizer.c,v 1.5 2008/11/03 05:52:24 sobomax Exp $
  *
  */
 
@@ -151,8 +151,8 @@ static void
 append_packet(struct rtp_packet *dst, struct rtp_packet *src)
 {
 
-    memcpy(&dst->buf[dst->data_offset + dst->data_size], 
-      &src->buf[src->data_offset], src->data_size);
+    memcpy(&dst->data.buf[dst->data_offset + dst->data_size], 
+      &src->data.buf[src->data_offset], src->data_size);
     dst->nsamples += src->nsamples;
     dst->data_size += src->data_size;
     dst->size += src->data_size;
@@ -164,8 +164,8 @@ append_chunk(struct rtp_packet *dst, struct rtp_packet *src, const struct rtp_pa
 {
 
     /* Copy chunk */
-    memcpy(&dst->buf[dst->data_offset + dst->data_size], 
-      &src->buf[src->data_offset], chunk->bytes);
+    memcpy(&dst->data.buf[dst->data_offset + dst->data_size], 
+      &src->data.buf[src->data_offset], chunk->bytes);
     dst->nsamples += chunk->nsamples;
     dst->data_size += chunk->bytes;
     dst->size += chunk->bytes;
@@ -175,14 +175,16 @@ append_chunk(struct rtp_packet *dst, struct rtp_packet *src, const struct rtp_pa
     rtp_packet_set_ts(src, src->ts + chunk->nsamples);
     src->data_size -= chunk->bytes;
     src->size -= chunk->bytes;
-    memmove(&src->buf[src->data_offset], &src->buf[src->data_offset + chunk->bytes], src->data_size);
+    memmove(&src->data.buf[src->data_offset],
+      &src->data.buf[src->data_offset + chunk->bytes], src->data_size);
 }
 
 static void 
 move_chunk(struct rtp_packet *dst, struct rtp_packet *src, const struct rtp_packet_chunk *chunk)
 {
     /* Copy chunk */
-    memcpy(&dst->buf[dst->data_offset], &src->buf[src->data_offset], chunk->bytes);
+    memcpy(&dst->data.buf[dst->data_offset],
+      &src->data.buf[src->data_offset], chunk->bytes);
     dst->nsamples = chunk->nsamples;
     dst->data_size = chunk->bytes;
     dst->size = dst->data_size + dst->data_offset;
@@ -192,7 +194,8 @@ move_chunk(struct rtp_packet *dst, struct rtp_packet *src, const struct rtp_pack
     rtp_packet_set_ts(src, src->ts + chunk->nsamples);
     src->data_size -= chunk->bytes;
     src->size -= chunk->bytes;
-    memmove(&src->buf[src->data_offset], &src->buf[src->data_offset + chunk->bytes], src->data_size);
+    memmove(&src->data.buf[src->data_offset],
+      &src->data.buf[src->data_offset + chunk->bytes], src->data_size);
 }
 
 struct rtp_packet *
@@ -221,7 +224,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
     }
 
     output_nsamples = this->output_nsamples;
-    max = max_nsamples(this->queue.first->header.pt);
+    max = max_nsamples(this->queue.first->data.header.pt);
     if (max > 0 && output_nsamples > max)
         output_nsamples = max;
 
@@ -241,7 +244,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 		    ret = rtp_packet_alloc();
 		    if (ret == NULL)
 			break;
-                    memcpy(ret, p, offsetof(struct rtp_packet, buf));
+		    memcpy(ret, p, offsetof(struct rtp_packet, data.buf));
 		    move_chunk(ret, p, &chunk);
 		    ++split;
 		}
@@ -257,7 +260,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
         {
             /* detect holes and payload changes in RTP stream */
             if ((ret->ts + ret->nsamples) != p->ts ||
-                ret->header.pt != p->header.pt)
+                ret->data.header.pt != p->data.header.pt)
             {
                 break;
             }
@@ -269,7 +272,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 		rtp_packet_first_chunk_find(p, &chunk, nsamples_left);
 		if (chunk.whole_packet_matched) {
 		    /* Prevent RTP packet buffer overflow */
-		    if ((ret->size + p->data_size) > sizeof(ret->buf))
+		    if ((ret->size + p->data_size) > sizeof(ret->data.buf))
 			break;
 		    append_packet(ret, p);
 		    detach_queue_head(this);
@@ -277,7 +280,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 		}
 		else {
 		    /* Prevent RTP packet buffer overflow */
-		    if ((ret->size + chunk.bytes) > sizeof(ret->buf))
+		    if ((ret->size + chunk.bytes) > sizeof(ret->data.buf))
 			break;
 		    /* Append chunk to output */
 		    append_chunk(ret, p, &chunk);
@@ -292,7 +295,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
         /*
          * Prevent RTP packet buffer overflow 
          */
-        if (ret != NULL && (ret->size + p->data_size) > sizeof(ret->buf))
+        if (ret != NULL && (ret->size + p->data_size) > sizeof(ret->data.buf))
             break;
 
         /* Detach head packet from the queue */
@@ -323,7 +326,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 	this->last_sent_ts_inited = 1;
 	this->last_sent_ts = ret->ts + ret->nsamples;
 /*
-	printf("Payload %d, %d packets aggregated, %d splits done, final size %dms\n", ret->header.pt, count, split, ret->nsamples / 8);
+	printf("Payload %d, %d packets aggregated, %d splits done, final size %dms\n", ret->data.header.pt, count, split, ret->nsamples / 8);
 */
     }
     return ret;

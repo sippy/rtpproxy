@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.c,v 1.11 2008/07/18 00:17:25 sobomax Exp $
+ * $Id: rtpp_record.c,v 1.12 2008/11/03 05:52:24 sobomax Exp $
  *
  */
 
@@ -309,7 +309,7 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet)
 
     switch (RRC_CAST(rrc)->mode) {
     case MODE_REMOTE_RTP:
-	send(RRC_CAST(rrc)->fd, packet->buf, packet->size, 0);
+	send(RRC_CAST(rrc)->fd, packet->data.buf, packet->size, 0);
 	return;
 
     case MODE_LOCAL_PKT:
@@ -335,7 +335,7 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet)
 
 	v[0].iov_base = (void *)&hdr;
 	v[0].iov_len = hdr_size;
-	v[1].iov_base = packet->buf;
+	v[1].iov_base = packet->data.buf;
 	v[1].iov_len = packet->size;
 
 	rval = writev(RRC_CAST(rrc)->fd, v, 2);
@@ -352,7 +352,7 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet)
     if (prepare_pkt_hdr(sp, packet, (void *)(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len)) != 0)
 	return;
     RRC_CAST(rrc)->rbuf_len += hdr_size;
-    memcpy(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len, packet->buf, packet->size);
+    memcpy(RRC_CAST(rrc)->rbuf + RRC_CAST(rrc)->rbuf_len, packet->data.buf, packet->size);
     RRC_CAST(rrc)->rbuf_len += packet->size;
 }
 

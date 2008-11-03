@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.18 2008/09/17 01:11:20 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.19 2008/11/03 05:52:24 sobomax Exp $
  *
  */
 
@@ -289,7 +289,7 @@ handle_command(struct cfg *cf, int controlfd)
     cp = buf;
     argc = 0;
     memset(argv, 0, sizeof(argv));
-    for (ap = argv; (*ap = strsep(&cp, "\r\n\t ")) != NULL;)
+    for (ap = argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;)
 	if (**ap != '\0') {
 	    argc++;
 	    if (++ap >= &argv[10])

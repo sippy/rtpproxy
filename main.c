@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.83 2008/09/17 01:11:20 sobomax Exp $
+ * $Id: main.c,v 1.84 2008/11/03 05:52:24 sobomax Exp $
  *
  */
 
@@ -641,7 +641,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
     } else {
 	sp->pcount[2]++;
 	for (i = (cf->dmode && packet->size < LBR_THRS) ? 2 : 1; i > 0; i--) {
-	    sendto(sp->fds[sidx], packet->buf, packet->size, 0, sp->addr[sidx],
+	    sendto(sp->fds[sidx], packet->data.buf, packet->size, 0, sp->addr[sidx],
 	      SA_LEN(sp->addr[sidx]));
 	}
     }
