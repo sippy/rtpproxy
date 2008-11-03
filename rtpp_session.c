@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.c,v 1.11 2008/11/03 06:45:48 sobomax Exp $
+ * $Id: rtpp_session.c,v 1.12 2008/11/03 08:49:45 sobomax Exp $
  *
  */
 
@@ -202,6 +202,10 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    cf->rtp_servers[sp->sridx] = NULL;
 	    rtp_server_free(sp->rtps[i]);
 	}
+	if (sp->codecs[i] != NULL)
+	    free(sp->codecs[i]);
+	if (sp->rtcp->codecs[i] != NULL)
+	    free(sp->rtcp->codecs[i]);
     }
     hash_table_remove(cf, sp);
     if (sp->call_id != NULL)

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.15 2008/11/03 06:09:56 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.16 2008/11/03 08:49:45 sobomax Exp $
  *
  */
 
@@ -80,6 +80,8 @@ struct rtpp_session {
     struct rtpp_timeout_handler *timeout_handler;
     /* Timestamp of the last session update */
     double last_update[2];
+    /* Supported codecs */
+    char *codecs[2];
 };
 
 void init_hash_table(struct cfg *);
