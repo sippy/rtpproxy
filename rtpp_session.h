@@ -77,6 +77,8 @@ struct rtpp_session {
     struct rtpp_session *next;
     /* Timestamp of the last session update */
     double last_update[2];
+    /* Supported codecs */
+    char *codecs[2];
 };
 
 void init_hash_table(struct cfg *);

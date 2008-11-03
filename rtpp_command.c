@@ -33,6 +33,7 @@
 #include <sys/uio.h>
 #include <netinet/in.h>
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -60,6 +61,7 @@ struct proto_cap proto_caps[] = {
     { "20071116", "Support for RTP re-packetization" },
     { "20071218", "Support for forking (copying) RTP stream" },
     { "20080403", "Support for RTP statistics querying" },
+    { "20081102", "Support for setting codecs in the update/lookup commend" },
     { NULL, NULL }
 };
 
@@ -251,7 +253,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     socklen_t rlen;
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
-    char *pname, *codecs, *recording_name;
+    char *pname, *codecs, *recording_name, *t;
     struct rtpp_session *spa, *spb;
     char **ap, *argv[10];
     const char *rname;
@@ -320,6 +322,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     switch (argv[0][0]) {
     case 'u':
     case 'U':
+	/* U[opts] callid remote_ip remote_port from_tag [to_tag] */
 	op = UPDATE;
 	rname = "update/create";
 	break;
@@ -338,7 +341,13 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 
     case 'p':
     case 'P':
-	/* P callid pname codecs from_tag to_tag */
+	/*
+	 * P callid pname codecs from_tag to_tag
+	 *
+	 *   <codecs> could be either comma-separated list of supported
+	 *   payload types or word "session" (without quotes), in which
+	 *   case list saved on last session update will be used instead.
+	 */
 	op = PLAY;
 	rname = "play";
 	playcount = 1;
@@ -568,6 +577,24 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 		cp--;
 		break;
 
+	    case 'c':
+	    case 'C':
+		cp += 1;
+		for (t = cp; *cp != '\0'; cp++) {
+		    if (!isdigit(*cp) && *cp != ',')
+			break;
+		}
+		if (t == cp) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
+		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    return 0;
+		}
+		codecs = alloca(cp - t + 1);
+		memcpy(codecs, t, cp - t);
+		codecs[cp - t] = '\0';
+		cp--;
+		break;
+
 	    default:
 		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "unknown command modifier `%c'",
 		  *cp);
@@ -648,6 +675,13 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 
     case PLAY:
 	handle_noplay(cf, spa, i);
+	if (strcmp(codecs, "session") == 0) {
+	    if (spa->codecs[i] == NULL) {
+		reply_error(cf, controlfd, &raddr, rlen, cookie, 6);
+		return 0;
+	    }
+	    codecs = spa->codecs[i];
+	}
 	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount) != 0) {
 	    reply_error(cf, controlfd, &raddr, rlen, cookie, 6);
 	    return 0;
@@ -864,6 +898,12 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     }
     spa->asymmetric[pidx] = spa->rtcp->asymmetric[pidx] = asymmetric;
     spa->canupdate[pidx] = spa->rtcp->canupdate[pidx] = NOT(asymmetric);
+    if (spa->codecs[pidx] != NULL) {
+	free(spa->codecs[pidx]);
+	spa->codecs[pidx] = NULL;
+    }
+    if (codecs != NULL)
+	spa->codecs[pidx] = strdup(codecs);
     if (requested_nsamples > 0) {
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "RTP packets from %s "
 	  "will be resized to %d milliseconds",
