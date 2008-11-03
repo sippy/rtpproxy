@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.19 2008/11/03 05:52:24 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.20 2008/11/03 06:09:56 sobomax Exp $
  *
  */
 
@@ -238,7 +238,7 @@ handle_nomem(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
 }
 
 int
-handle_command(struct cfg *cf, int controlfd)
+handle_command(struct cfg *cf, int controlfd, double dtime)
 {
     int len, argc, i, j, pidx, asymmetric;
     int external, pf, lidx, playcount, weak;
@@ -761,8 +761,11 @@ handle_command(struct cfg *cf, int controlfd)
 	}
 	memset(spa, 0, sizeof(*spa));
 	memset(spb, 0, sizeof(*spb));
-	for (i = 0; i < 2; i++)
+	for (i = 0; i < 2; i++) {
 	    spa->fds[i] = spb->fds[i] = -1;
+	    spa->last_update[i] = 0;
+	    spb->last_update[i] = 0;
+	}
 	spa->call_id = strdup(call_id);
 	if (spa->call_id == NULL) {
 	    handle_nomem(cf, controlfd, &raddr, rlen, cookie, 13, ia,
@@ -855,6 +858,10 @@ handle_command(struct cfg *cf, int controlfd)
     }
 
     if (ia[0] != NULL && ia[1] != NULL) {
+        if (spa->addr[pidx] != NULL)
+            spa->last_update[pidx] = dtime;
+        if (spa->rtcp->addr[pidx] != NULL)
+            spa->rtcp->last_update[pidx] = dtime;
 	/*
 	 * Unless the address provided by client historically
 	 * cannot be trusted and address is different from one
@@ -865,16 +872,30 @@ handle_command(struct cfg *cf, int controlfd)
 	  memcmp(ia[0], spa->addr[pidx], SA_LEN(ia[0])) == 0)) {
 	    rtpp_log_write(RTPP_LOG_INFO, spa->log, "pre-filling %s's address "
 	      "with %s:%s", (pidx == 0) ? "callee" : "caller", addr, port);
-	    if (spa->addr[pidx] != NULL)
-		free(spa->addr[pidx]);
+	    if (spa->addr[pidx] != NULL) {
+	        if (spa->canupdate[pidx] == 0) {
+	            if (spa->prev_addr[pidx] != NULL)
+	                 free(spa->prev_addr[pidx]);
+	            spa->prev_addr[pidx] = spa->addr[pidx];
+	        } else {
+		    free(spa->addr[pidx]);
+		}
+	    }
 	    spa->addr[pidx] = ia[0];
 	    ia[0] = NULL;
 	}
 	if (spa->rtcp->untrusted_addr[pidx] == 0 && !(spa->rtcp->addr[pidx] != NULL &&
 	  SA_LEN(ia[1]) == SA_LEN(spa->rtcp->addr[pidx]) &&
 	  memcmp(ia[1], spa->rtcp->addr[pidx], SA_LEN(ia[1])) == 0)) {
-	    if (spa->rtcp->addr[pidx] != NULL)
-		free(spa->rtcp->addr[pidx]);
+	    if (spa->rtcp->addr[pidx] != NULL) {
+	        if (spa->rtcp->canupdate[pidx] == 0) {
+	            if (spa->rtcp->prev_addr[pidx] != NULL)
+	                free(spa->rtcp->prev_addr[pidx]);
+	            spa->rtcp->prev_addr[pidx] = spa->rtcp->addr[pidx];
+	        } else {
+		    free(spa->rtcp->addr[pidx]);
+		}
+	    }
 	    spa->rtcp->addr[pidx] = ia[1];
 	    ia[1] = NULL;
 	}

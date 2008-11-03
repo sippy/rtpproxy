@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.84 2008/11/03 05:52:24 sobomax Exp $
+ * $Id: main.c,v 1.85 2008/11/03 06:09:55 sobomax Exp $
  *
  */
 
@@ -529,8 +529,12 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 			 */
 			continue;
 		    }
-		    /* Signal that an address have to be updated */
+		    /* Signal that an address has to be updated */
 		    i = 1;
+		} else if (sp->canupdate[ridx] != 0 &&
+		  sp->last_update[ridx] != 0 &&
+		  dtime - sp->last_update[ridx] > UPDATE_WINDOW) {
+		    sp->canupdate[ridx] = 0;
 		}
 	    } else {
 		/*
@@ -570,7 +574,10 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	if (i != 0) {
 	    sp->untrusted_addr[ridx] = 1;
 	    memcpy(sp->addr[ridx], &packet->raddr, packet->rlen);
-	    sp->canupdate[ridx] = 0;
+	    if (sp->prev_addr[ridx] == NULL || memcmp(sp->prev_addr[ridx],
+	      &packet->raddr, packet->rlen) != 0) {
+	        sp->canupdate[ridx] = 0;
+	    }
 
 	    port = ntohs(satosin(&packet->raddr)->sin_port);
 
@@ -714,7 +721,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 }
 
 static void
-process_commands(struct cfg *cf)
+process_commands(struct cfg *cf, double dtime)
 {
     int controlfd, i;
     socklen_t rlen;
@@ -736,7 +743,7 @@ process_commands(struct cfg *cf)
 	} else {
 	    controlfd = cf->pfds[0].fd;
 	}
-	i = handle_command(cf, controlfd);
+	i = handle_command(cf, controlfd, dtime);
 	if (cf->umode == 0) {
 	    close(controlfd);
 	}
@@ -842,7 +849,7 @@ main(int argc, char **argv)
 	}
 	process_rtp(&cf, eptime, alarm_tick);
 	if (i > 0) {
-	    process_commands(&cf);
+	    process_commands(&cf, eptime);
 	}
     }
 

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.14 2008/07/21 22:21:58 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.15 2008/11/03 06:09:56 sobomax Exp $
  *
  */
 
@@ -50,6 +50,8 @@ struct rtpp_session {
     struct rtpp_session* rtp;
     /* Remote source addresses, one for caller and one for callee */
     struct sockaddr *addr[2];
+    /* Save previous address when doing update */
+    struct sockaddr *prev_addr[2];
     /* Flag which tells if we are allowed to update address with RTP src IP */
     int canupdate[2];
     /* Local listen addresses/ports */
@@ -76,6 +78,8 @@ struct rtpp_session {
     struct rtpp_session *prev;
     struct rtpp_session *next;
     struct rtpp_timeout_handler *timeout_handler;
+    /* Timestamp of the last session update */
+    double last_update[2];
 };
 
 void init_hash_table(struct cfg *);

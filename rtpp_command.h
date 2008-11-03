@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.h,v 1.1 2008/04/01 22:32:03 sobomax Exp $
+ * $Id: rtpp_command.h,v 1.2 2008/11/03 06:09:56 sobomax Exp $
  *
  */
 
@@ -40,6 +40,6 @@ struct proto_cap {
 
 extern struct proto_cap proto_caps[];
 
-int handle_command(struct cfg *, int);
+int handle_command(struct cfg *, int, double);
 
 #endif
