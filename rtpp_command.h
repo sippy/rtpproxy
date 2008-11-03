@@ -40,6 +40,6 @@ struct proto_cap {
 
 extern struct proto_cap proto_caps[];
 
-int handle_command(struct cfg *, int);
+int handle_command(struct cfg *, int, double);
 
 #endif
