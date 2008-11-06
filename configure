@@ -2061,7 +2061,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=rtpproxy
- VERSION=1.2.alpha.200809161
+ VERSION=1.2.alpha.200811041
 
 
 cat >>confdefs.h <<_ACEOF
