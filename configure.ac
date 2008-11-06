@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.58)
 AC_INIT(rtpproxy, 1.2.alpha.200811041, sobomax@sippysoft.com)
-AM_INIT_AUTOMAKE(rtpproxy, 1.2.alpha.200809161)
+AM_INIT_AUTOMAKE(rtpproxy, 1.2.alpha.200811041)
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([main.c])
 AM_CONFIG_HEADER([config.h])
