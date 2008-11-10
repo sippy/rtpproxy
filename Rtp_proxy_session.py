@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.6 2008/11/10 20:22:23 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.7 2008/11/10 21:33:00 sobomax Exp $
 
 from md5 import md5
 from random import random
@@ -130,15 +130,24 @@ class Rtp_proxy_session:
         command = 'C %s udp:%s:%d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.to_tag, self.from_tag)
         self.rtp_proxy_client.send_command(command, self.command_result, result_callback)
 
-    def start_recording(self, result_callback = None, index = 0):
+    def start_recording(self, rname = None, result_callback = None, index = 0):
         if not self.caller_session_exists:
-            self.update_caller('0.0.0.0', 0, self._start_recording, None, index, result_callback, index)
+            self.update_caller('0.0.0.0', 0, self._start_recording, None, index, rname, result_callback, index)
             return
-        self._start_recording(None, result_callback, index)
+        self._start_recording(None, rname, result_callback, index)
 
-    def _start_recording(self, result, result_callback = None, index = 0):
-        command = 'R %s %s %s' % ('%s-%d' % (self.call_id, index), self.from_tag, self.to_tag)
-        self.rtp_proxy_client.send_command(command, self.command_result, result_callback)
+    def _start_recording(self, result, rname, result_callback, index):
+        if rname == None:
+            command = 'R %s %s %s' % ('%s-%d' % (self.call_id, index), self.from_tag, self.to_tag)
+            return self.rtp_proxy_client.send_command(command, self.command_result, result_callback)
+        command = 'C %s %s.a %s %s' % ('%s-%d' % (self.call_id, index), rname, self.from_tag, self.to_tag)
+        return self.rtp_proxy_client.send_command(command, self._start_recording1, \
+          (rname, result_callback, index))
+
+    def _start_recording1(self, result, args):
+        rname, result_callback, index = args
+        command = 'C %s %s.o %s %s' % ('%s-%d' % (self.call_id, index), rname, self.to_tag, self.from_tag)
+        return self.rtp_proxy_client.send_command(command, self.command_result, result_callback)
 
     def command_result(self, result, result_callback):
         if result_callback != None:
