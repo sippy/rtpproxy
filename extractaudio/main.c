@@ -109,7 +109,7 @@ load_session(const char *path, struct channels *channels, enum origin origin)
         close(ifd);
         return 0;
     }
-    ibuf = mmap(NULL, sb.st_size, PROT_READ, 0, ifd, 0);
+    ibuf = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, ifd, 0);
     if (ibuf == MAP_FAILED) {
         close(ifd);
         return -1;
