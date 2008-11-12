@@ -45,6 +45,7 @@ struct decoder_stream {
     struct session *sp;
     struct packet *pp;
     unsigned int nticks;
+    unsigned int sticks;
     unsigned char lpt;
     unsigned char obuf[8 * 1024];	/* 0.5 seconds at 8 KHz 16 bits per sample */
     unsigned char *obp;

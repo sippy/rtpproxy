@@ -44,6 +44,7 @@ struct filehdr_au {
 
 #define	AUDIO_FILE_MAGIC		((uint32_t)0x2e736e64)
 
+#define	AUDIO_FILE_ENCODING_MULAW_8	(1)
 #define	AUDIO_FILE_ENCODING_LINEAR_16	(3)
 
 #endif

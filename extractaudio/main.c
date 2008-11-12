@@ -34,6 +34,8 @@
 #include <sys/queue.h>
 #if defined(__FreeBSD__)
 #include <sys/rtprio.h>
+#else
+#include <sys/resource.h>
 #endif
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -45,7 +47,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <sndfile.h>
+
 #include "format_au.h"
+#include "g711.h"
 #include "decoder.h"
 #include "session.h"
 #include "../rtp.h"
@@ -152,7 +157,8 @@ load_session(const char *path, struct channels *channels, enum origin origin)
                 free(pack);
                 goto endloop;
             }
-            if (ntohs(RPKT(pp)->seq) < ntohs(RPKT(pack)->seq)) {
+            if (ntohl(RPKT(pp)->ts) < ntohl(RPKT(pack)->ts) ||
+              ntohs(RPKT(pp)->seq) < ntohs(RPKT(pack)->seq)) {
                 MYQ_INSERT_AFTER(sess, pp, pack);
                 pcount++;
                 goto endloop;
@@ -176,19 +182,21 @@ int
 main(int argc, char **argv)
 {
     int ch;
-    int ofd, oblen, delete, stereo, idprio, nch, neof;
+    int oblen, delete, stereo, idprio, nch, neof;
     int32_t osample, asample, csample;
     struct channels channels;
     struct channel *cp;
-    struct filehdr_au filehdr_au;
 #if defined(__FreeBSD__)
     struct rtprio rt;
 #endif
     int16_t obuf[1024];
     char aname[MAXPATHLEN], oname[MAXPATHLEN];
     double basetime;
+    SF_INFO sfinfo;
+    SNDFILE *sffile;
 
     MYQ_INIT(&channels);
+    memset(&sfinfo, 0, sizeof(sfinfo));
 
     delete = stereo = idprio = 0;
     while ((ch = getopt(argc, argv, "dsi")) != -1)
@@ -215,13 +223,15 @@ main(int argc, char **argv)
     if (argc < 2)
         usage();
 
-#if defined(__FreeBSD__)
     if (idprio != 0) {
+#if defined(__FreeBSD__)
         rt.type = RTP_PRIO_IDLE;
         rt.prio = RTP_PRIO_MAX;
         rtprio(RTP_SET, 0, &rt);
-    }
+#else
+        setpriority(PRIO_PROCESS, 0, 20);
 #endif
+    }
 
     sprintf(aname, "%s.a.rtp", argv[0]);
     sprintf(oname, "%s.o.rtp", argv[0]);
@@ -244,13 +254,21 @@ main(int argc, char **argv)
         nch++;
     }
 
-    ofd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
-    if (ofd == -1)
-        err(2, "%s", argv[1]);
-
-    lseek(ofd, sizeof(filehdr_au), SEEK_SET);
-    memset(&filehdr_au, 0, sizeof(filehdr_au));
     oblen = 0;
+
+    sfinfo.samplerate = 8000;
+    if (stereo == 0) {
+        sfinfo.channels = 1;
+        sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_GSM610;
+    } else {
+        /* GSM+WAV doesn't work with more than 1 channels */
+        sfinfo.channels = 2;
+        sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_MS_ADPCM;
+    }
+
+    sffile = sf_open(argv[1], SFM_WRITE, &sfinfo);
+    if (sffile == NULL)
+        errx(2, "%s: can't open output file", argv[1]);
 
     do {
         neof = 0;
@@ -272,33 +290,22 @@ main(int argc, char **argv)
         }
         if (neof < nch) {
             if (stereo == 0) {
-                obuf[oblen++] = htons((asample + osample) / 2);
+                obuf[oblen] = (asample + osample) / 2;
+                oblen += 1;
             } else {
-                obuf[oblen++] = htons(asample);
-                obuf[oblen++] = htons(osample);
+                obuf[oblen] = asample;
+                oblen += 1;
+                obuf[oblen] = osample;
+                oblen += 1;
             }
         }
-
-        if (neof == nch || oblen == (sizeof(obuf) / 2)) {
-            write(ofd, obuf, oblen * 2);
-            filehdr_au.data_size += oblen * 2;
+        if (neof == nch || oblen == sizeof(obuf) / sizeof(obuf[0])) {
+            sf_write_short(sffile, obuf, oblen);
             oblen = 0;
         }
     } while (neof < nch);
 
-    filehdr_au.magic = htonl(AUDIO_FILE_MAGIC);
-    filehdr_au.hdr_size = htonl(sizeof(filehdr_au));
-    filehdr_au.data_size = htonl(filehdr_au.data_size);
-    filehdr_au.encoding = htonl(AUDIO_FILE_ENCODING_LINEAR_16);
-    filehdr_au.sample_rate = htonl(8000);
-    if (stereo == 0)
-        filehdr_au.channels = htonl(1);
-    else
-        filehdr_au.channels = htonl(2);
-    lseek(ofd, 0, SEEK_SET);
-    write(ofd, &filehdr_au, sizeof(filehdr_au));
-
-    close(ofd);
+    sf_close(sffile);
 
     while (argc > 2) {
         link(argv[1], argv[argc - 1]);

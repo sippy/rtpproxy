@@ -64,7 +64,7 @@ decoder_new(struct session *sp)
     dp->obp = dp->obuf;
     dp->oblen = 0;
     dp->stime = dp->pp->pkt->time;
-    dp->nticks = ntohl(RPKT(dp->pp)->ts);
+    dp->nticks = dp->sticks = ntohl(RPKT(dp->pp)->ts);
     dp->dticks = 0;
     dp->lpt = RTP_PCMU;
     /* dp->f = fopen(i, "w"); */
@@ -76,14 +76,24 @@ decoder_new(struct session *sp)
 int32_t
 decoder_get(struct decoder_stream *dp)
 {
-    unsigned int t;
+    unsigned int cticks, t;
     int j;
 
     if (dp->oblen == 0) {
         if (dp->pp == NULL)
             return DECODER_EOF;
-        if (dp->nticks < ntohl(RPKT(dp->pp)->ts)) {
-            t = ntohl(RPKT(dp->pp)->ts) - dp->nticks;
+        cticks = ntohl(RPKT(dp->pp)->ts);
+        /*
+         * First of all check if we can trust timestamp contained in the
+         * packet. If it's off by more than 1 second than the device
+         * probably gone nuts and we can't trust it anymore.
+         */
+        if ((double)((cticks - dp->sticks) / 8000) > (dp->pp->pkt->time - dp->stime + 1.0)) {
+            dp->nticks = cticks;
+            dp->sticks = cticks - (dp->pp->pkt->time - dp->stime) * 8000;
+        }
+        if (dp->nticks < cticks) {
+            t = cticks - dp->nticks;
             if (t > 4000)
                 t = 4000;
             j = generate_silence(dp, dp->obuf, t);

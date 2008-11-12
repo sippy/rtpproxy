@@ -35,6 +35,6 @@ LOCALBASE?=	/usr/local
 
 CFLAGS+= -I../../siplog -I${LOCALBASE}/include
 LDFLAGS+= -L../../siplog -L${LOCALBASE}/lib
-LDADD+=	-lg729 -lm
+LDADD+=	-lg729 -lsndfile -lm
 
 .include <bsd.prog.mk>
