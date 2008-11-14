@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateUpdating.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
+# $Id: UacStateUpdating.py,v 1.5 2008/11/14 06:36:23 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventDisconnect, CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect
@@ -73,6 +73,17 @@ class UacStateUpdating(UaStateGeneric):
         if code in (301, 302) and resp.countHFs('contact') > 0:
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
             self.ua.equeqe.append(CCEventRedirect(scode, rtime = resp.rtime))
+        elif code in (408, 481):
+            # If the response for a request within a dialog is a 481
+            # (Call/Transaction Does Not Exist) or a 408 (Request Timeout), the UAC
+            # SHOULD terminate the dialog.  A UAC SHOULD also terminate a dialog if
+            # no response at all is received for the request (the client
+            # transaction would inform the TU about the timeout.)
+            self.ua.equeue.append(CCEventDisconnect(rtime = resp.rtime))
+            self.ua.cancelCreditTimer()
+            self.ua.disconnect_ts_assert()
+            self.ua.disconnect_ts = resp.rtime
+            return (UaStateDisconnected, self.ua.disc_cbs, resp.rtime)
         else:
             self.ua.equeue.append(CCEventFail(scode, rtime = resp.rtime))
         return (UaStateConnected,)
