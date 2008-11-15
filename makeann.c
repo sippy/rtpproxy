@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makeann.c,v 1.11 2008/11/15 08:23:53 sobomax Exp $
+ * $Id: makeann.c,v 1.12 2008/11/15 10:32:51 sobomax Exp $
  *
  */
 
@@ -33,6 +33,8 @@
 #include <stdint.h>
 #if defined(HAVE_ERR_H)
 #include <err.h>
+#else
+#include "rtpp_util.h"
 #endif
 #include <limits.h>
 #include <stdio.h>
