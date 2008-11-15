@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.h,v 1.13 2008/11/15 08:23:53 sobomax Exp $
+ * $Id: rtpp_network.h,v 1.14 2008/11/15 11:07:43 sobomax Exp $
  *
  */
 
@@ -100,7 +100,7 @@ union sockaddr_in_s {
 #define	DEFFILEMODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
 #endif
 
-#if defined(__solaris__)
+#if defined(HAVE_ERR_H)
 #define err(exitcode, format, args...) \
   errx(exitcode, format ": %s", ## args, strerror(errno))
 #define errx(exitcode, format, args...) \
