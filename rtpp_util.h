@@ -24,17 +24,19 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.h,v 1.12 2008/11/03 05:52:24 sobomax Exp $
+ * $Id: rtpp_util.h,v 1.13 2008/11/15 08:23:53 sobomax Exp $
  *
  */
 
 #ifndef _RTPP_UTIL_H_
 #define _RTPP_UTIL_H_
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#if !defined(__solaris__)
+#if defined(HAVE_ERR_H)
 #include <err.h>
 #endif
 #include <netdb.h>

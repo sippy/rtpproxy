@@ -24,12 +24,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makeann.c,v 1.10 2008/11/15 08:17:14 sobomax Exp $
+ * $Id: makeann.c,v 1.11 2008/11/15 08:23:53 sobomax Exp $
  *
  */
 
+#include "config.h"
+
 #include <stdint.h>
-#if !defined(__solaris__)
+#if defined(HAVE_ERR_H)
 #include <err.h>
 #endif
 #include <limits.h>
@@ -37,8 +39,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/socket.h>
-
-#include "config.h"
 
 #include "g711.h"
 #ifdef ENABLE_G729
