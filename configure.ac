@@ -24,7 +24,7 @@ linux*)
   CPPFLAGS=-D_BSD_SOURCE
   ;;
 solaris*)
-  LDFLAGS="-lsocket -lnsl -lxinet -lrt"
+  LDFLAGS="-lsocket -lnsl -lxnet -lrt"
   ;;
 *)
   ;;
