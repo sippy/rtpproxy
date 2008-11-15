@@ -24,12 +24,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makeann.c,v 1.9 2008/03/18 04:49:19 sobomax Exp $
+ * $Id: makeann.c,v 1.10 2008/11/15 08:17:14 sobomax Exp $
  *
  */
 
 #include <stdint.h>
+#if !defined(__solaris__)
 #include <err.h>
+#endif
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
