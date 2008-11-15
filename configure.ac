@@ -23,6 +23,9 @@ freebsd*)
 linux*)
   CPPFLAGS=-D_BSD_SOURCE
   ;;
+solaris*)
+  LDFLAGS="-lsocket -lnsl -lxinet -lrt"
+  ;;
 *)
   ;;
 esac
