@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.h,v 1.14 2008/11/15 11:07:43 sobomax Exp $
+ * $Id: rtpp_util.h,v 1.15 2008/11/15 11:29:26 sobomax Exp $
  *
  */
 
@@ -38,6 +38,9 @@
 #include <netinet/in.h>
 #if defined(HAVE_ERR_H)
 #include <err.h>
+#else
+#include <errno.h>
+#include <stdio.h>
 #endif
 #include <netdb.h>
 
