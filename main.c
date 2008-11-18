@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.85 2008/11/03 06:09:55 sobomax Exp $
+ * $Id: main.c,v 1.86 2008/11/18 22:57:02 sobomax Exp $
  *
  */
 
@@ -770,13 +770,11 @@ main(int argc, char **argv)
 
     controlfd = init_controlfd(&cf);
 
-#if !defined(__solaris__)
     if (cf.nodaemon == 0) {
-	if (daemon(0, 0) == -1)
+	if (rtpp_daemon(0, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
     }
-#endif
 
     atexit(ehandler);
     glog = cf.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);

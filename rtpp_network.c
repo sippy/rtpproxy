@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.c,v 1.11 2008/11/03 05:52:24 sobomax Exp $
+ * $Id: rtpp_network.c,v 1.12 2008/11/18 22:57:02 sobomax Exp $
  *
  */
 
@@ -39,6 +39,7 @@
 #include <math.h>
 #include <netdb.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -295,4 +296,57 @@ rtpp_strsep(char **stringp, const char *delim)
 	} while (sc != 0);
     }
     /* NOTREACHED */
+}
+
+/*
+ * Portable daemon(3) implementation, borrowed from FreeBSD. For license
+ * and other information see:
+ *
+ * $FreeBSD: src/lib/libc/gen/daemon.c,v 1.8 2007/01/09 00:27:53 imp Exp $
+ */
+int
+rtpp_daemon(int nochdir, int noclose)
+{
+    struct sigaction osa, sa;
+    int fd;
+    pid_t newgrp;
+    int oerrno;
+    int osa_ok;
+
+    /* A SIGHUP may be thrown when the parent exits below. */
+    sigemptyset(&sa.sa_mask);
+    sa.sa_handler = SIG_IGN;
+    sa.sa_flags = 0;
+    osa_ok = sigaction(SIGHUP, &sa, &osa);
+
+    switch (fork()) {
+    case -1:
+        return (-1);
+    case 0:
+        break;
+    default:
+        _exit(0);
+    }
+
+    newgrp = setsid();
+    oerrno = errno;
+    if (osa_ok != -1)
+        sigaction(SIGHUP, &osa, NULL);
+
+    if (newgrp == -1) {
+        errno = oerrno;
+        return (-1);
+    }
+
+    if (!nochdir)
+        (void)chdir("/");
+
+    if (!noclose && (fd = open("/dev/null", O_RDWR, 0)) != -1) {
+        (void)dup2(fd, STDIN_FILENO);
+        (void)dup2(fd, STDOUT_FILENO);
+        (void)dup2(fd, STDERR_FILENO);
+        if (fd > 2)
+            (void)close(fd);
+    }
+    return (0);
 }
