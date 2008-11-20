@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.c,v 1.12 2008/11/18 22:57:02 sobomax Exp $
+ * $Id: rtpp_util.c,v 1.13 2008/11/20 19:14:25 sobomax Exp $
  *
  */
 
@@ -34,6 +34,7 @@
 #include <sys/uio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <math.h>
