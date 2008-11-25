@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.21 2008/11/03 08:49:45 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.22 2008/11/25 06:13:22 sobomax Exp $
  *
  */
 
@@ -965,7 +965,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 static int
 handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int weak)
 {
-    int medianum, ndeleted;
+    int ndeleted;
+    unsigned int medianum;
     struct rtpp_session *spa, *spb;
     int cmpr, cmpr1, idx;
 
@@ -1006,7 +1007,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	    continue;
 	}
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	  "forcefully deleting session %d on ports %d/%d",
+	  "forcefully deleting session %u on ports %d/%d",
 	   medianum, spa->ports[0], spa->ports[1]);
 	/* Search forward before we do removal */
 	spb = spa;
