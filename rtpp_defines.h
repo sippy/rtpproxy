@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.21 2008/11/03 06:09:56 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.22 2008/11/25 06:12:22 sobomax Exp $
  *
  */
 
@@ -35,9 +35,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <poll.h>
-#ifdef __linux__
 #include <stdint.h>
-#endif
 
 #if !defined(__solaris__) && defined(__sun) && defined(__svr4__)
 #define	__solaris__	1
