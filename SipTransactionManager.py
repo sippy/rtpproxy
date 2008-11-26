@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.8 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.9 2008/11/26 19:46:41 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -280,12 +280,7 @@ class SipTransactionManager:
                         routes = [x.getCopy() for x in msg.getHFBodys('record-route')]
                         routes.reverse()
                         if len(routes) > 0:
-                            lr = False
-                            for param in routes[0].getUrl().other:
-                                if param == 'lr':
-                                    lr = True
-                                    break
-                            if not lr:
+                            if not routes[0].getUrl().lr:
                                 if rTarget != None:
                                     routes.append(SipRoute(address = SipAddress(url = rTarget)))
                                 rTarget = routes.pop(0).getUrl()

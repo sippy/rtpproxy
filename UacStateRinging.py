@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateRinging.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
+# $Id: UacStateRinging.py,v 1.6 2008/11/26 19:46:41 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -62,12 +62,7 @@ class UacStateRinging(UaStateGeneric):
             self.ua.routes = [x.getCopy() for x in resp.getHFBodys('record-route')]
             self.ua.routes.reverse()
             if len(self.ua.routes) > 0:
-                lr = False
-                for param in self.ua.routes[0].getUrl().other:
-                    if param == 'lr':
-                        lr = True
-                        break
-                if not lr:
+                if not self.ua.routes[0].getUrl().lr:
                     self.ua.routes.append(SipRoute(address = SipAddress(url = self.ua.rTarget.getCopy())))
                     self.ua.rTarget = self.ua.routes.pop(0).getUrl()
                     self.ua.rAddr = self.ua.rTarget.getAddr()

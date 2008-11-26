@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipURL.py,v 1.7 2008/11/26 19:42:56 sobomax Exp $
+# $Id: SipURL.py,v 1.8 2008/11/26 19:46:41 sobomax Exp $
 
 from SipConf import SipConf
 from urllib import quote, unquote
@@ -41,10 +41,11 @@ class SipURL:
     method = None
     tag = None
     other = None
+    lr = False
 
     def __init__(self, url = None, username = None, password = None, host = None, port = None, headers = None, \
       usertype = None, transport = None, ttl = None, maddr = None, method = None, tag = None, other = None, \
-      userparams = None):
+      userparams = None, lr = False):
         self.other = []
         self.userparams = []
         if url == None:
@@ -67,6 +68,7 @@ class SipURL:
             self.tag = tag
             if other != None:
                 self.other = other
+            self.lr = lr
             return
         if not url.lower().startswith('sip:'):
             raise ValueError('unsupported scheme: ' + url[:4])
@@ -107,7 +109,10 @@ class SipURL:
                     self.headers[k.lower()] = unquote(v)
             nv = p.split('=', 1)
             if len(nv) == 1:
-                self.other.append(p)
+                if p == 'lr':
+                    self.lr = True
+                else:
+                    self.other.append(p)
                 continue
             name, value = nv
             if name == 'user':
@@ -122,6 +127,10 @@ class SipURL:
                 self.method = value
             elif name == 'tag':
                 self.tag = value
+            elif name == 'lr':
+                # RFC 3261 doesn't allow lr parameter to have a value,
+                # but many stupid implementation do it anyway
+                self.lr = True
             else:
                 self.other.append(p)
 
@@ -144,6 +153,8 @@ class SipURL:
             v = getattr(self, n)
             if v != None:
                 w(';%s=%s' % (n, v))
+        if self.lr:
+            w(';lr')
         for v in self.other:
             w(';%s' % v)
         if self.headers:
@@ -155,7 +166,7 @@ class SipURL:
         return SipURL(username = self.username, password = self.password, host = self.host, port = self.port, \
           headers = self.headers, usertype = self.usertype, transport = self.transport, ttl = self.ttl, \
           maddr = self.maddr, method = self.method, tag = self.tag, other = list(self.other), \
-          userparams = list(self.userparams))
+          userparams = list(self.userparams), lr = self.lr)
 
     def getHost(self):
         return self.host
