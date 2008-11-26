@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipURL.py,v 1.6 2008/08/26 15:27:27 sobomax Exp $
+# $Id: SipURL.py,v 1.7 2008/11/26 19:42:56 sobomax Exp $
 
 from SipConf import SipConf
 from urllib import quote, unquote
@@ -68,7 +68,7 @@ class SipURL:
             if other != None:
                 self.other = other
             return
-        if not url.startswith('sip:'):
+        if not url.lower().startswith('sip:'):
             raise ValueError('unsupported scheme: ' + url[:4])
         url = url[4:]
         ear = url.find('@') + 1

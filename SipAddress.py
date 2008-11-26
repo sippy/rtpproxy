@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAddress.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: SipAddress.py,v 1.4 2008/11/26 19:42:56 sobomax Exp $
 
 from SipURL import SipURL
 from string import maketrans
@@ -46,7 +46,7 @@ class SipAddress:
                 self.hadbrace = hadbrace
             return
         # simple 'sip:foo' case
-        if address.startswith('sip:') and address.find('<') == -1:
+        if address.lower().startswith('sip:') and address.find('<') == -1:
             parts = address.split(';', 1)
             self.url = SipURL(parts[0])
             if len(parts) == 2:
