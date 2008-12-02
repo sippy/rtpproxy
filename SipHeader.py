@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipHeader.py,v 1.7 2008/12/02 15:20:45 sobomax Exp $
+# $Id: SipHeader.py,v 1.8 2008/12/02 15:28:58 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from SipCSeq import SipCSeq
@@ -92,7 +92,7 @@ class SipHeader:
 
     def compactStr(self):
         return str(self.body.getCanName(self.name, compact = True)) + \
-          ': ' + str(self.getBody())
+          ': ' + str(self.body)
 
     def getBody(self):
         if not self.body.parsed:
