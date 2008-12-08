@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.11 2008/09/24 21:38:19 sobomax Exp $
+# $Id: SipMsg.py,v 1.12 2008/12/08 23:54:50 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -81,6 +81,8 @@ class SipMsg:
             raise Exception('To HF is missed')
         if self.countHFs('from') == 0:
             raise Exception('From HF is missed')
+        if self.countHFs('cseq') == 0:
+            raise Exception('CSeq HF is missed')
         if self.ignorebody:
             self.delHFs('content-type')
             self.delHFs('content-length')
