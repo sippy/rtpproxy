@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2008 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,22 +27,9 @@
  *
  */
 
-#ifndef _RTPP_LOG_H_
-#define _RTPP_LOG_H_
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
-#include <siplog.h>
-
-#define	rtpp_log_t	siplog_t
-
-#define	RTPP_LOG_DBUG	SIPLOG_DBUG
-#define	RTPP_LOG_INFO	SIPLOG_INFO
-#define	RTPP_LOG_WARN	SIPLOG_WARN
-#define	RTPP_LOG_ERR	SIPLOG_ERR
-#define	RTPP_LOG_CRIT	SIPLOG_CRIT
-
-#define	rtpp_log_open(gf, app, call_id, flags) siplog_open(app, call_id, flags)
-#define	rtpp_log_write(level, handle, format, args...) siplog_write(level, handle, format, ## args)
-#define	rtpp_log_ewrite(level, handle, format, args...) siplog_ewrite(level, handle, format, ## args)
-#define	rtpp_log_close(handle) siplog_close(handle)
+#define HAVE_ERR_H 1
 
 #endif

@@ -31,11 +31,17 @@
 #ifndef _RTPP_UTIL_H_
 #define _RTPP_UTIL_H_
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#if !defined(__solaris__)
+#if defined(HAVE_ERR_H)
 #include <err.h>
+#else
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #endif
 #include <netdb.h>
 
@@ -44,6 +50,8 @@
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 #define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
+#define	MIN(x, y)	(((x) > (y)) ? (y) : (x))
+#define	MAX(x, y)	(((x) > (y)) ? (x) : (y))
 
 /* Function prototypes */
 int ishostseq(struct sockaddr *, struct sockaddr *);
@@ -54,9 +62,11 @@ double getdtime(void);
 void dtime2ts(double, uint32_t *, uint32_t *);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 void seedrandom(void);
-int drop_privileges(struct cfg *, char *, char *);
+int drop_privileges(struct cfg *);
 uint16_t rtpp_in_cksum(void *, int);
+void init_port_table(struct cfg *);
 char *rtpp_strsep(char **, const char *);
+int rtpp_daemon(int, int);
 
 /* Stripped down version of sockaddr_in* for saving space */
 struct sockaddr_in4_s {
@@ -95,7 +105,7 @@ union sockaddr_in_s {
 #define	DEFFILEMODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
 #endif
 
-#if defined(__solaris__)
+#if !defined(HAVE_ERR_H)
 #define err(exitcode, format, args...) \
   errx(exitcode, format ": %s", ## args, strerror(errno))
 #define errx(exitcode, format, args...) \

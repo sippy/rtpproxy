@@ -38,8 +38,15 @@
 #include "rtp_resizer.h"
 #include "rtpp_log.h"
 
+struct rtpp_timeout_data {
+    char *notify_tag;
+    struct rtpp_timeout_handler *handler;
+};
+
 struct rtpp_session {
-    int ttl;
+    /* ttl for caller [0] and callee [1] */
+    int ttl[2];
+    rtpp_ttl_mode ttl_mode;
     unsigned long pcount[4];
     char *call_id;
     char *tag;
@@ -75,6 +82,7 @@ struct rtpp_session {
     struct rtp_resizer resizers[2];
     struct rtpp_session *prev;
     struct rtpp_session *next;
+    struct rtpp_timeout_data timeout_data;
     /* Timestamp of the last session update */
     double last_update[2];
     /* Supported codecs */
@@ -89,5 +97,7 @@ void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(char *, char *, unsigned *);
 int find_stream(struct cfg *, char *, char *, char *, struct rtpp_session **);
+void do_timeout_notification(struct rtpp_session *sp);
+int get_ttl(struct rtpp_session *sp);
 
 #endif

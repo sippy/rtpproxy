@@ -34,11 +34,13 @@
 #include <sys/uio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <math.h>
 #include <netdb.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -181,37 +183,19 @@ seedrandom(void)
 }
 
 int
-drop_privileges(struct cfg *cf, char *uname, char *gname)
+drop_privileges(struct cfg *cf)
 {
-    struct passwd *pp;
-    struct group *gp;
 
-    if (gname != NULL) {
-	gp = getgrnam(gname);
-	if (gp == NULL) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't find ID for the group: %s", gname);
-	    return -1;
-	}
-	if (setgid(gp->gr_gid) != 0) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", gp->gr_gid);
+    if (cf->run_gname != NULL) {
+	if (setgid(cf->run_gid) != 0) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", cf->run_gid);
 	    return -1;
 	}
     }
-    if (uname == NULL)
+    if (cf->run_uname == NULL)
 	return 0;
-    pp = getpwnam(uname);
-    if (pp == NULL) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't find ID for the user: %s", uname);
-	return -1;
-    }
-    if (gname == NULL) {
-	if (setgid(pp->pw_gid) != 0) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current group ID: %d", pp->pw_gid);
-	    return -1;
-	}
-    }
-    if (setuid(pp->pw_uid) != 0) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current user ID: %d", pp->pw_uid);
+    if (setuid(cf->run_uid) != 0) {
+	rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't set current user ID: %d", cf->run_uid);
 	return -1;
     }
     return 0;
@@ -256,6 +240,32 @@ rtpp_in_cksum(void *addr, int len)
     return (answer);
 }
 
+void
+init_port_table(struct cfg *cf)
+{
+    int i, j;
+    uint16_t portnum;
+
+    /* Generate linear table */
+    cf->port_table_len = ((cf->port_max - cf->port_min) / 2) + 1;
+    portnum = cf->port_min;
+    for (i = 0; i < cf->port_table_len; i += 1) {
+	cf->port_table[i] = portnum;
+	portnum += 2;
+    }
+#if !defined(SEQUENTAL_PORTS)
+    /* Shuffle elements ramdomly */
+    for (i = 0; i < cf->port_table_len; i += 1) {
+	j = random() % cf->port_table_len;
+	portnum = cf->port_table[i];
+	cf->port_table[i] = cf->port_table[j];
+	cf->port_table[j] = portnum;
+    }
+#endif
+    /* Set the last used element to be the last element */
+    cf->port_table_idx = cf->port_table_len - 1;
+}
+
 /*
  * Portable strsep(3) implementation, borrowed from FreeBSD. For license
  * and other information see:
@@ -287,4 +297,57 @@ rtpp_strsep(char **stringp, const char *delim)
 	} while (sc != 0);
     }
     /* NOTREACHED */
+}
+
+/*
+ * Portable daemon(3) implementation, borrowed from FreeBSD. For license
+ * and other information see:
+ *
+ * $FreeBSD: src/lib/libc/gen/daemon.c,v 1.8 2007/01/09 00:27:53 imp Exp $
+ */
+int
+rtpp_daemon(int nochdir, int noclose)
+{
+    struct sigaction osa, sa;
+    int fd;
+    pid_t newgrp;
+    int oerrno;
+    int osa_ok;
+
+    /* A SIGHUP may be thrown when the parent exits below. */
+    sigemptyset(&sa.sa_mask);
+    sa.sa_handler = SIG_IGN;
+    sa.sa_flags = 0;
+    osa_ok = sigaction(SIGHUP, &sa, &osa);
+
+    switch (fork()) {
+    case -1:
+        return (-1);
+    case 0:
+        break;
+    default:
+        _exit(0);
+    }
+
+    newgrp = setsid();
+    oerrno = errno;
+    if (osa_ok != -1)
+        sigaction(SIGHUP, &osa, NULL);
+
+    if (newgrp == -1) {
+        errno = oerrno;
+        return (-1);
+    }
+
+    if (!nochdir)
+        (void)chdir("/");
+
+    if (!noclose && (fd = open("/dev/null", O_RDWR, 0)) != -1) {
+        (void)dup2(fd, STDIN_FILENO);
+        (void)dup2(fd, STDOUT_FILENO);
+        (void)dup2(fd, STDERR_FILENO);
+        if (fd > 2)
+            (void)close(fd);
+    }
+    return (0);
 }

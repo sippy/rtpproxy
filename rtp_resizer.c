@@ -112,7 +112,7 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
         {
             (*pkt)->next = this->queue.first;
             (*pkt)->prev = NULL;
-            this->queue.first->next = *pkt;
+            this->queue.first->prev = *pkt;
             this->queue.first = *pkt;
         }
         else if (p == this->queue.last) /* tail of the queue */

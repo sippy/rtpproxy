@@ -62,7 +62,6 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop)
 
     memset(rp, 0, sizeof(*rp));
 
-    seedrandom();
     rp->btime = -1;
     rp->fd = fd;
     rp->loop = (loop > 0) ? loop - 1 : loop;

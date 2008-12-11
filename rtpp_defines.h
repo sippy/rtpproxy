@@ -58,7 +58,7 @@
 #define	TOS		0xb8
 #define	LBR_THRS	128	/* low-bitrate threshold */
 #define	CPORT		"22222"
-#define	POLL_LIMIT	100	/* maximum number of poll(2) calls per second */
+#define	POLL_LIMIT	200	/* maximum number of poll(2) calls per second */
 #define	LOG_LEVEL	RTPP_LOG_DBUG
 #define	UPDATE_WINDOW	10.0	/* in seconds */
 
@@ -68,6 +68,23 @@
 #define	CMD_SOCK	"/var/run/rtpproxy.sock"
 #define	PID_FILE	"/var/run/rtpproxy.pid"
 
+/*
+ * TTL counters are used to detect the absence of audio packets
+ * in either direction.  When the counter reaches 0, the call timeout
+ * occurs.
+ */ 
+typedef enum {
+    TTL_UNIFIED = 0,		/* all TTL counters must reach 0 */
+    TTL_INDEPENDENT = 1		/* any TTL counter reaches 0 */
+} rtpp_ttl_mode;
+
+struct rtpp_timeout_handler {
+    char *socket_name;
+    int fd;
+    int connected;
+    char notify_buf[64];
+};
+
 struct cfg {
     int nodaemon;
     int dmode;
@@ -75,7 +92,6 @@ struct cfg {
     int umode;			/* UDP control mode */
     int port_min;		/* Lowest UDP port for RTP */
     int port_max;		/* Highest UDP port number for RTP */
-    int nextport[2];
     struct rtpp_session **sessions;
     struct rtpp_session **rtp_servers;
     struct pollfd *pfds;
@@ -112,6 +128,17 @@ struct cfg {
 
     unsigned long long packets_in;
     unsigned long long packets_out;
+
+    rtpp_ttl_mode ttl_mode;
+
+    struct rtpp_timeout_handler timeout_handler;
+
+    uid_t run_uid;
+    gid_t run_gid;
+
+    uint16_t port_table[65536];
+    int port_table_len;
+    int port_table_idx;
 };
 
 #endif

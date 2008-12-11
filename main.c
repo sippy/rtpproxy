@@ -42,9 +42,11 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
 #include <limits.h>
 #include <netdb.h>
 #include <poll.h>
+#include <pwd.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,9 +95,10 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: rtpproxy [-2fvFPa] [-l addr1[/addr2]] "
+    fprintf(stderr, "usage: rtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
-      "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]]\n");
+      "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]] "
+      "[-n timeout_socket]\n");
     exit(1);
 }
 
@@ -126,6 +129,8 @@ init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
     char *bh[2], *bh6[2], *cp;
+    struct passwd *pp;
+    struct group *gp;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -135,11 +140,16 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->max_ttl = SESSION_TIMEOUT;
     cf->tos = TOS;
     cf->rrtcp = 1;
+    cf->ttl_mode = TTL_UNIFIED;
+
+    cf->timeout_handler.socket_name = NULL;
+    cf->timeout_handler.fd = -1;
+    cf->timeout_handler.connected = 0;
 
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:FPa")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pa")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -246,10 +256,45 @@ init_config(struct cfg *cf, int argc, char **argv)
 		cp++;
 	    }
 	    cf->run_gname = cp;
+	    cf->run_uid = -1;
+	    cf->run_gid = -1;
+	    if (cf->run_uname != NULL) {
+		pp = getpwnam(cf->run_uname);
+		if (pp == NULL)
+		    err(1, "can't find ID for the user: %s", cf->run_uname);
+		cf->run_uid = pp->pw_uid;
+		if (cf->run_gname == NULL)
+		    cf->run_gid = pp->pw_gid;
+	    }
+	    if (cf->run_gname != NULL) {
+		gp = getgrnam(cf->run_gname);
+		if (gp == NULL)
+		    err(1, "can't find ID for the group: %s", cf->run_gname);
+		cf->run_gid = gp->gr_gid;
+	    }
 	    break;
 
 	case 'F':
 	    cf->no_check = 1;
+	    break;
+
+	case 'i':
+	    cf->ttl_mode = TTL_INDEPENDENT;
+	    break;
+
+	case 'n':
+	    if(strncmp("unix:", optarg, 5) == 0)
+		optarg += 5;
+	    optarg += 5;
+	    if(strlen(optarg) == 0)
+		errx(1, "timeout notification socket name too short");
+	    cf->timeout_handler.socket_name = (char *)malloc(strlen(optarg) + 1);
+	    if(cf->timeout_handler.socket_name == NULL)
+		err(1, "can't allocate memory");
+	    strcpy(cf->timeout_handler.socket_name, optarg);
+	    cf->timeout_handler.fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	    if (cf->timeout_handler.fd == -1)
+		err(1, "can't create timeout socket");
 	    break;
 
 	case 'P':
@@ -281,6 +326,19 @@ init_config(struct cfg *cf, int argc, char **argv)
 	}
     }
 
+    /* make sure that port_min and port_max are even */
+    if ((cf->port_min % 2) != 0)
+	cf->port_min++;
+    if ((cf->port_max % 2) != 0) {
+	cf->port_max--;
+    } else {
+	/*
+	 * If port_max is already even then there is no
+	 * "room" for the RTCP port, go back by two ports.
+	 */
+	cf->port_max -= 2;
+    }
+
     if (cf->port_min <= 0 || cf->port_min > 65535)
 	errx(1, "invalid value of the port_min argument, "
 	  "not in the range 1-65535");
@@ -290,13 +348,6 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (cf->port_min > cf->port_max)
 	errx(1, "port_min should be less than port_max");
 
-    /* make sure that port_min and port_max are even */
-    if ((cf->port_min % 2) != 0)
-	cf->port_min++;
-    if ((cf->port_max % 2) != 0)
-	cf->port_max--;
-
-    cf->nextport[0] = cf->nextport[1] = cf->port_min;
     cf->sessions = malloc((sizeof cf->sessions[0]) *
       (((cf->port_max - cf->port_min + 1) * 2) + 1));
     cf->rtp_servers =  malloc((sizeof cf->rtp_servers[0]) *
@@ -376,6 +427,9 @@ init_controlfd(struct cfg *cf)
 	  sizeof controlfd);
 	if (bind(controlfd, sstosa(&ifsun), sizeof ifsun) < 0)
 	    err(1, "can't bind to a socket");
+	if ((cf->run_uname != NULL || cf->run_gname != NULL) &&
+	  chown(cmd_sock, cf->run_uid, cf->run_gid) == -1)
+	    err(1, "can't set owner of the socket");
 	if (listen(controlfd, 32) != 0)
 	    err(1, "can't listen on a socket");
     } else {
@@ -579,7 +633,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 {
     int i, sidx;
 
-    GET_RTP(sp)->ttl = cf->max_ttl;
+    GET_RTP(sp)->ttl[ridx] = cf->max_ttl;
 
     /* Select socket for sending packet out. */
     sidx = (ridx == 0) ? 1 : 0;
@@ -617,11 +671,15 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 
 	if (alarm_tick != 0 && sp != NULL && sp->rtcp != NULL &&
 	  sp->sidx[0] == readyfd) {
-	    if (sp->ttl == 0) {
+	    if (get_ttl(sp) == 0) {
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
+		do_timeout_notification(sp);
 		remove_session(cf, sp);
 	    } else {
-		sp->ttl--;
+		if (sp->ttl[0] != 0)
+		    sp->ttl[0]--;
+		if (sp->ttl[1] != 0)
+		    sp->ttl[1]--;
 	    }
 	}
 
@@ -703,21 +761,22 @@ main(int argc, char **argv)
 
     memset(&cf, 0, sizeof(cf));
 
-    init_hash_table(&cf);
-
     init_config(&cf, argc, argv);
+
+    seedrandom();
+
+    init_hash_table(&cf);
+    init_port_table(&cf);
 
     controlfd = init_controlfd(&cf);
 
-#if !defined(__solaris__)
     if (cf.nodaemon == 0) {
-	if (daemon(0, 0) == -1)
+	if (rtpp_daemon(0, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
     }
-#endif
 
-    glog = cf.glog = rtpp_log_open("rtpproxy", NULL, LF_REOPEN);
+    glog = cf.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
     atexit(ehandler);
     rtpp_log_write(RTPP_LOG_INFO, cf.glog, "rtpproxy started, pid %d", getpid());
 
@@ -743,7 +802,7 @@ main(int argc, char **argv)
     signal(SIGUSR2, fatsignal);
 
     if (cf.run_uname != NULL || cf.run_gname != NULL) {
-	if (drop_privileges(&cf, cf.run_uname, cf.run_gname) != 0) {
+	if (drop_privileges(&cf) != 0) {
 	    rtpp_log_ewrite(RTPP_LOG_ERR, cf.glog,
 	      "can't switch to requested user/group");
 	    exit(1);

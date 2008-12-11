@@ -66,7 +66,7 @@ struct proto_cap proto_caps[] = {
 };
 
 static int create_twinlistener(struct cfg *, struct sockaddr *, int, int *);
-static int create_listener(struct cfg *, struct sockaddr *, int, int *, int *);
+static int create_listener(struct cfg *, struct sockaddr *, int *, int *);
 static int handle_delete(struct cfg *, char *, char *, char *, int);
 static void handle_noplay(struct cfg *, struct rtpp_session *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
@@ -121,28 +121,23 @@ failure:
 }
 
 static int
-create_listener(struct cfg *cf, struct sockaddr *ia,  int startport,
-  int *port, int *fds)
+create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
 {
-    int i, init, rval;
+    int i, idx, rval;
 
     for (i = 0; i < 2; i++)
 	fds[i] = -1;
 
-    init = 0;
-    if (startport < cf->port_min || startport > cf->port_max)
-	startport = cf->port_min;
-    for (*port = startport; *port != startport || init == 0; (*port) += 2) {
-	init = 1;
+    for (i = 1; i < cf->port_table_len; i++) {
+	idx = (cf->port_table_idx + i) % cf->port_table_len;
+	*port = cf->port_table[idx];
 	rval = create_twinlistener(cf, ia, *port, fds);
-	if (rval != 0) {
-	    if (rval == -1)
-		break;
-	    if (*port >= cf->port_max)
-		*port = cf->port_min - 2;
-	    continue;
+	if (rval == 0) {
+	    cf->port_table_idx = idx;
+	    return 0;
 	}
-	return 0;
+	if (rval == -1)
+	    break;
     }
     return -1;
 }
@@ -261,6 +256,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     struct sockaddr_storage raddr;
     int requested_nsamples;
     enum {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, QUERY} op;
+    int max_argc;
+    char *socket_name_u, *notify_tag;
 
     requested_nsamples = -1;
     ia[0] = ia[1] = NULL;
@@ -269,6 +266,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     lidx = 1;
     fds[0] = fds[1] = -1;
     recording_name = NULL;
+    socket_name_u = notify_tag = NULL;
 
     if (cf->umode == 0) {
 	for (;;) {
@@ -450,10 +448,10 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 
 	    len += sprintf(buf + len,
 	      "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
-	      "stats = %lu/%lu/%lu/%lu, ttl = %d\n",
+	      "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
 	      spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
 	      addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
-	      spa->pcount[2], spa->pcount[3], spb->ttl);
+	      spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
 	    if (len + 512 > sizeof(buf)) {
 		doreply(cf, controlfd, buf, len, &raddr, rlen);
 		len = 0;
@@ -470,6 +468,23 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	rname = "query";
 	break;
 
+    case 'x':
+    case 'X':
+        /* Delete all active sessions */
+        rtpp_log_write(RTPP_LOG_INFO, cf->glog, "deleting all active sessions");
+        for (i = 1; i < cf->nsessions; i++) {
+	    spa = cf->sessions[i];
+	    if (spa == NULL || spa->sidx[0] != i)
+		continue;
+	    /* Skip RTCP twin session */
+	    if (spa->rtcp != NULL) {
+		remove_session(cf, spa);
+	    }
+        }
+        reply_ok(cf, controlfd, &raddr, rlen, cookie);
+        return 0;
+        break;
+
     default:
 	rtpp_log_write(RTPP_LOG_ERR, cf->glog, "unknown command");
 	reply_error(cf, controlfd, &raddr, rlen, cookie, 3);
@@ -477,7 +492,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     }
     call_id = argv[1];
     if (op == UPDATE || op == LOOKUP || op == PLAY) {
-	if (argc < 5 || argc > 6) {
+	max_argc = (op == UPDATE ? 8 : 6);
+	if (argc < 5 || argc > max_argc) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 	    reply_error(cf, controlfd, &raddr, rlen, cookie, 4);
 	    return 0;
@@ -486,6 +502,11 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	to_tag = argv[5];
 	if (op == PLAY && argv[0][1] != '\0')
 	    playcount = atoi(argv[0] + 1);
+	if (op == UPDATE && argc > 6) {
+	    socket_name_u = argv[6];
+	    if (argc == 8)
+		notify_tag = argv[7];
+	}
     }
     if (op == COPY) {
 	if (argc < 4 || argc > 5) {
@@ -698,8 +719,14 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	handle_query(cf, controlfd, &raddr, rlen, cookie, spa, i);
 	return 0;
 
-    default:
+    case LOOKUP:
+    case UPDATE:
+	/* those are handled below */
 	break;
+
+    default:
+	/* Programmatic error, should not happen */
+	abort();
     }
 
     pidx = 1;
@@ -708,13 +735,11 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	assert(op == UPDATE || op == LOOKUP);
 	if (spa->fds[i] == -1) {
 	    j = ishostseq(cf->bindaddr[0], spa->laddr[i]) ? 0 : 1;
-	    if (create_listener(cf, spa->laddr[i], cf->nextport[j],
-	      &lport, fds) == -1) {
+	    if (create_listener(cf, spa->laddr[i], &lport, fds) == -1) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create listener");
 		reply_error(cf, controlfd, &raddr, rlen, cookie, 7);
 		return 0;
 	    }
-	    cf->nextport[j] = lport + 2;
 	    assert(spa->fds[i] == -1);
 	    spa->fds[i] = fds[0];
 	    assert(spa->rtcp->fds[i] == -1);
@@ -732,7 +757,9 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	lport = spa->ports[i];
 	lia[0] = spa->laddr[i];
 	pidx = (i == 0) ? 1 : 0;
-	spa->ttl = cf->max_ttl;
+	spa->ttl_mode = cf->ttl_mode;
+	spa->ttl[0] = cf->max_ttl;
+	spa->ttl[1] = cf->max_ttl;
 	if (op == UPDATE) {
 	    rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	      "adding %s flag to existing session, new=%d/%d/%d",
@@ -749,13 +776,11 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	  call_id, from_tag, weak ? "weak" : "strong");
 
 	j = ishostseq(cf->bindaddr[0], lia[0]) ? 0 : 1;
-	if (create_listener(cf, cf->bindaddr[j], cf->nextport[j], &lport,
-	  fds) == -1) {
+	if (create_listener(cf, cf->bindaddr[j], &lport, fds) == -1) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "can't create listener");
 	    reply_error(cf, controlfd, &raddr, rlen, cookie, 10);
 	    return 0;
 	}
-	cf->nextport[j] = lport + 2;
 
 	/*
 	 * Session creation. If creation is requested with weak flag,
@@ -812,9 +837,11 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	spb->fds[0] = fds[1];
 	spa->ports[0] = lport;
 	spb->ports[0] = lport + 1;
-	spa->ttl = cf->max_ttl;
-	spb->ttl = -1;
-	spa->log = rtpp_log_open("rtpproxy", spa->call_id, 0);
+	spa->ttl[0] = cf->max_ttl;
+	spa->ttl[1] = cf->max_ttl;
+	spb->ttl[0] = -1;
+	spb->ttl[1] = -1;
+	spa->log = rtpp_log_open(cf, "rtpproxy", spa->call_id, 0);
 	spb->log = spa->log;
 	spa->rtcp = spb;
 	spb->rtcp = NULL;
@@ -850,6 +877,28 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	if (cf->record_all != 0) {
 	    handle_copy(cf, spa, 0, NULL);
 	    handle_copy(cf, spa, 1, NULL);
+	}
+    }
+
+    if (op == UPDATE) {
+	if (cf->timeout_handler.socket_name == NULL && socket_name_u != NULL)
+	    rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
+	if (spa->timeout_data.notify_tag != NULL) {
+	    free(spa->timeout_data.notify_tag);
+	    spa->timeout_data.notify_tag = NULL;
+	}
+	if (cf->timeout_handler.socket_name != NULL && socket_name_u != NULL) {
+	    if (strcmp(cf->timeout_handler.socket_name, socket_name_u) != 0) {
+		rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", socket_name_u);
+		socket_name_u = NULL;
+	    } else {
+		rtpp_log_write(RTPP_LOG_INFO, spa->log, "setting timeout handler");
+		spa->timeout_data.handler = &cf->timeout_handler;
+		spa->timeout_data.notify_tag = strdup(notify_tag);
+	    }
+	} else if (socket_name_u == NULL && spa->timeout_data.handler != NULL) {
+	    spa->timeout_data.handler = NULL;
+	    rtpp_log_write(RTPP_LOG_INFO, spa->log, "disabling timeout handler");
 	}
     }
 
@@ -1076,11 +1125,11 @@ handle_query(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
     int len;
 
     if (cookie != NULL) {
-	len = sprintf(buf, "%s %d %lu %lu %lu %lu\n", cookie, spa->ttl,
+	len = sprintf(buf, "%s %d %lu %lu %lu %lu\n", cookie, get_ttl(spa),
 	  spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
 	  spa->pcount[3]);
     } else {
-	len = sprintf(buf, "%d %lu %lu %lu %lu\n", spa->ttl,
+	len = sprintf(buf, "%d %lu %lu %lu %lu\n", get_ttl(spa),
 	  spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
 	  spa->pcount[3]);
     }
