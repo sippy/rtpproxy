@@ -285,7 +285,7 @@ reconnect_timeout_handler(struct rtpp_session *sp, struct rtpp_timeout_handler *
     memset(&remote, '\0', sizeof(remote));
     remote.sun_family = AF_LOCAL;
     strncpy(remote.sun_path, th->socket_name, sizeof(remote.sun_path) - 1);
-#if !defined(__linux__) && !defined(__solaris__)
+#if defined(HAVE_SOCKADDR_SUN_LEN)
     remote.sun_len = strlen(remote.sun_path);
 #endif
     if (connect(th->fd, (struct sockaddr *)&remote, sizeof(remote)) == -1) {

@@ -35,12 +35,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <poll.h>
-#ifdef __linux__
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
-#endif
-
-#if !defined(__solaris__) && defined(__sun) && defined(__svr4__)
-#define	__solaris__	1
 #endif
 
 #include "rtpp_log.h"

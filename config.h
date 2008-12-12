@@ -30,6 +30,15 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define HAVE_ERR_H 1
+#if !defined(__solaris__) && defined(__sun) && defined(__svr4__)
+#define __solaris__     1
+#endif
+
+#define HAVE_ERR_H      1
+#define HAVE_STDINT_H   1
+
+#if !defined(__linux__) && !defined(__solaris__)
+#define HAVE_SOCKADDR_SUN_LEN 1
+#endif
 
 #endif
