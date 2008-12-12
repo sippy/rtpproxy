@@ -285,7 +285,6 @@ init_config(struct cfg *cf, int argc, char **argv)
 	case 'n':
 	    if(strncmp("unix:", optarg, 5) == 0)
 		optarg += 5;
-	    optarg += 5;
 	    if(strlen(optarg) == 0)
 		errx(1, "timeout notification socket name too short");
 	    cf->timeout_handler.socket_name = (char *)malloc(strlen(optarg) + 1);
