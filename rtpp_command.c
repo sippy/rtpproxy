@@ -504,6 +504,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    playcount = atoi(argv[0] + 1);
 	if (op == UPDATE && argc > 6) {
 	    socket_name_u = argv[6];
+	    if (strncmp("unix:", socket_name_u, 5) == 0)
+		socket_name_u += 5;
 	    if (argc == 8)
 		notify_tag = argv[7];
 	}
