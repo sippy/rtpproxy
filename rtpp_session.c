@@ -281,7 +281,7 @@ reconnect_timeout_handler(struct rtpp_session *sp, struct rtpp_timeout_handler *
 
     assert(th->fd != -1 && th->socket_name != NULL && th->connected == 0);
 
-    rtpp_log_ewrite(RTPP_LOG_DBUG, sp->log, "reconnecting timeout socket");
+    rtpp_log_write(RTPP_LOG_DBUG, sp->log, "reconnecting timeout socket");
     memset(&remote, '\0', sizeof(remote));
     remote.sun_family = AF_LOCAL;
     strncpy(remote.sun_path, th->socket_name, sizeof(remote.sun_path) - 1);
