@@ -67,6 +67,7 @@ uint16_t rtpp_in_cksum(void *, int);
 void init_port_table(struct cfg *);
 char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
+int url_unquote(uint8_t *, int);
 
 /* Stripped down version of sockaddr_in* for saving space */
 struct sockaddr_in4_s {

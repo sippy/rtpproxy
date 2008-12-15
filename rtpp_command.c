@@ -506,8 +506,17 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    socket_name_u = argv[6];
 	    if (strncmp("unix:", socket_name_u, 5) == 0)
 		socket_name_u += 5;
-	    if (argc == 8)
+	    if (argc == 8) {
 		notify_tag = argv[7];
+		len = url_unquote(notify_tag, strlen(notify_tag));
+		if (len == -1) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		      "command syntax error - invalid URL encoding");
+		    reply_error(cf, controlfd, &raddr, rlen, cookie, 4);
+		    return 0;
+		}
+		notify_tag[len] = '\0';
+	    }
 	}
     }
     if (op == COPY) {

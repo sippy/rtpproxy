@@ -318,7 +318,7 @@ do_timeout_notification(struct rtpp_session *sp)
         len = snprintf(th->notify_buf, sizeof(th->notify_buf), "%d %d\n",
           sp->ports[0], sp->ports[1]);
     } else {
-        len = snprintf(th->notify_buf, sizeof(th->notify_buf), "d %s\n",
+        len = snprintf(th->notify_buf, sizeof(th->notify_buf), "%s\n",
           sp->timeout_data.notify_tag);
     }
     assert(len < sizeof(th->notify_buf));
