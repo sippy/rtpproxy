@@ -291,9 +291,6 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    if(cf->timeout_handler.socket_name == NULL)
 		err(1, "can't allocate memory");
 	    strcpy(cf->timeout_handler.socket_name, optarg);
-	    cf->timeout_handler.fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	    if (cf->timeout_handler.fd == -1)
-		err(1, "can't create timeout socket");
 	    break;
 
 	case 'P':
@@ -672,7 +669,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 	  sp->sidx[0] == readyfd) {
 	    if (get_ttl(sp) == 0) {
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
-		do_timeout_notification(sp);
+		do_timeout_notification(sp, 1);
 		remove_session(cf, sp);
 	    } else {
 		if (sp->ttl[0] != 0)

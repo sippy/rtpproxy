@@ -279,9 +279,19 @@ reconnect_timeout_handler(struct rtpp_session *sp, struct rtpp_timeout_handler *
 {
     struct sockaddr_un remote;
 
-    assert(th->fd != -1 && th->socket_name != NULL && th->connected == 0);
+    assert(th->socket_name != NULL && th->connected == 0);
 
-    rtpp_log_write(RTPP_LOG_DBUG, sp->log, "reconnecting timeout socket");
+    if (th->fd == -1) {
+        rtpp_log_write(RTPP_LOG_DBUG, sp->log, "connecting timeout socket");
+    } else {
+        rtpp_log_write(RTPP_LOG_DBUG, sp->log, "reconnecting timeout socket");
+        close(th->fd);
+    }
+    th->fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (th->fd == -1) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't create timeout socket");
+        return;
+    }
     memset(&remote, '\0', sizeof(remote));
     remote.sun_family = AF_LOCAL;
     strncpy(remote.sun_path, th->socket_name, sizeof(remote.sun_path) - 1);
@@ -296,7 +306,7 @@ reconnect_timeout_handler(struct rtpp_session *sp, struct rtpp_timeout_handler *
 }
 
 void
-do_timeout_notification(struct rtpp_session *sp)
+do_timeout_notification(struct rtpp_session *sp, int retries)
 {
     int result, len;
     struct rtpp_timeout_handler *th = sp->timeout_data.handler;
@@ -330,6 +340,8 @@ do_timeout_notification(struct rtpp_session *sp)
     if (result < 0) {
         th->connected = 0;
         rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "failed to send timeout notification");
+        if (retries > 0)
+            do_timeout_notification(sp, retries - 1);
     }
 }
 
