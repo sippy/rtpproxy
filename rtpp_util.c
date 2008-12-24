@@ -381,7 +381,8 @@ url_unquote(uint8_t *buf, int len)
             return (-1);
         cp[0] = (hex2char[cp[1]] << 4) | hex2char[cp[2]];
         len -= cp - buf + 3;
-        memmove(cp + 1, cp + 3, len);
+        if (len > 0)
+            memmove(cp + 1, cp + 3, len);
         buf = cp + 1;
         outlen -= 2;
     }
