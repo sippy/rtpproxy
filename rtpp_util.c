@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.c,v 1.13 2008/11/20 19:14:25 sobomax Exp $
+ * $Id: rtpp_util.c,v 1.14 2008/12/24 10:31:52 sobomax Exp $
  *
  */
 
@@ -350,4 +350,41 @@ rtpp_daemon(int nochdir, int noclose)
             (void)close(fd);
     }
     return (0);
+}
+
+static int8_t hex2char[128] = {
+    -1,  -1,  -1,  -1,  -1,  -1,  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     0,   1,   2,   3,   4,   5,   6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
+    -1, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+};
+
+int
+url_unquote(uint8_t *buf, int len)
+{
+    int outlen;
+    uint8_t *cp;
+
+    outlen = len;
+    while (len > 0) {
+        cp = memchr(buf, '%', len);
+        if (cp == NULL)
+            return (outlen);
+        if (cp - buf + 2 > len)
+            return (-1);
+        if (cp[1] > 127 || cp[2] > 127 ||
+          hex2char[cp[1]] == -1 || hex2char[cp[2]] == -1)
+            return (-1);
+        cp[0] = (hex2char[cp[1]] << 4) | hex2char[cp[2]];
+        len -= cp - buf + 3;
+        if (len > 0)
+            memmove(cp + 1, cp + 3, len);
+        buf = cp + 1;
+        outlen -= 2;
+    }
+    return (outlen);
 }
