@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.16 2008/11/03 08:49:45 sobomax Exp $
+ * $Id: rtpp_session.h,v 1.17 2008/12/24 10:46:03 sobomax Exp $
  *
  */
 
@@ -37,6 +37,11 @@
 #include "rtp_server.h"
 #include "rtp_resizer.h"
 #include "rtpp_log.h"
+
+struct rtpp_timeout_data {
+    char *notify_tag;
+    struct rtpp_timeout_handler *handler;
+};
 
 struct rtpp_session {
     /* ttl for caller [0] and callee [1] */
@@ -77,7 +82,7 @@ struct rtpp_session {
     struct rtp_resizer resizers[2];
     struct rtpp_session *prev;
     struct rtpp_session *next;
-    struct rtpp_timeout_handler *timeout_handler;
+    struct rtpp_timeout_data timeout_data;
     /* Timestamp of the last session update */
     double last_update[2];
     /* Supported codecs */
@@ -92,7 +97,7 @@ void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(char *, char *, unsigned *);
 int find_stream(struct cfg *, char *, char *, char *, struct rtpp_session **);
-void do_timeout_notification(struct rtpp_session *sp);
-int get_ttl(struct rtpp_session *sp);
+void do_timeout_notification(struct rtpp_session *, int);
+int get_ttl(struct rtpp_session *);
 
 #endif

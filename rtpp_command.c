@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.22 2008/11/25 06:13:22 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.23 2008/12/24 10:46:03 sobomax Exp $
  *
  */
 
@@ -61,7 +61,8 @@ struct proto_cap proto_caps[] = {
     { "20071116", "Support for RTP re-packetization" },
     { "20071218", "Support for forking (copying) RTP stream" },
     { "20080403", "Support for RTP statistics querying" },
-    { "20081102", "Support for setting codecs in the update/lookup commend" },
+    { "20081102", "Support for setting codecs in the update/lookup command" },
+    { "20081224", "Support for session timeout notifications" },
     { NULL, NULL }
 };
 
@@ -257,7 +258,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     int requested_nsamples;
     enum {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, QUERY} op;
     int max_argc;
-    char *socket_name_u;
+    char *socket_name_u, *notify_tag;
 
     requested_nsamples = -1;
     ia[0] = ia[1] = NULL;
@@ -266,6 +267,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     lidx = 1;
     fds[0] = fds[1] = -1;
     recording_name = NULL;
+    socket_name_u = notify_tag = NULL;
 
     if (cf->umode == 0) {
 	for (;;) {
@@ -489,7 +491,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     }
     call_id = argv[1];
     if (op == UPDATE || op == LOOKUP || op == PLAY) {
-	max_argc = (op == UPDATE ? 7 : 6);
+	max_argc = (op == UPDATE ? 8 : 6);
 	if (argc < 5 || argc > max_argc) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 	    reply_error(cf, controlfd, &raddr, rlen, cookie, 4);
@@ -499,8 +501,22 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	to_tag = argv[5];
 	if (op == PLAY && argv[0][1] != '\0')
 	    playcount = atoi(argv[0] + 1);
-	if (op == UPDATE && argc == 7)
+	if (op == UPDATE && argc > 6) {
 	    socket_name_u = argv[6];
+	    if (strncmp("unix:", socket_name_u, 5) == 0)
+		socket_name_u += 5;
+	    if (argc == 8) {
+		notify_tag = argv[7];
+		len = url_unquote(notify_tag, strlen(notify_tag));
+		if (len == -1) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		      "command syntax error - invalid URL encoding");
+		    reply_error(cf, controlfd, &raddr, rlen, cookie, 4);
+		    return 0;
+		}
+		notify_tag[len] = '\0';
+	    }
+	}
     }
     if (op == COPY) {
 	if (argc < 4 || argc > 5) {
@@ -877,16 +893,21 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     if (op == UPDATE) {
 	if (cf->timeout_handler.socket_name == NULL && socket_name_u != NULL)
 	    rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
+	if (spa->timeout_data.notify_tag != NULL) {
+	    free(spa->timeout_data.notify_tag);
+	    spa->timeout_data.notify_tag = NULL;
+	}
 	if (cf->timeout_handler.socket_name != NULL && socket_name_u != NULL) {
 	    if (strcmp(cf->timeout_handler.socket_name, socket_name_u) != 0) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", socket_name_u);
 		socket_name_u = NULL;
 	    } else {
 		rtpp_log_write(RTPP_LOG_INFO, spa->log, "setting timeout handler");
-		spa->timeout_handler = &cf->timeout_handler;
+		spa->timeout_data.handler = &cf->timeout_handler;
+		spa->timeout_data.notify_tag = strdup(notify_tag);
 	    }
-	} else if (socket_name_u == NULL && spa->timeout_handler != NULL) {
-	    spa->timeout_handler = NULL;
+	} else if (socket_name_u == NULL && spa->timeout_data.handler != NULL) {
+	    spa->timeout_data.handler = NULL;
 	    rtpp_log_write(RTPP_LOG_INFO, spa->log, "disabling timeout handler");
 	}
     }

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.86 2008/11/18 22:57:02 sobomax Exp $
+ * $Id: main.c,v 1.87 2008/12/24 10:46:03 sobomax Exp $
  *
  */
 
@@ -282,16 +282,12 @@ init_config(struct cfg *cf, int argc, char **argv)
 	case 'n':
 	    if(strncmp("unix:", optarg, 5) == 0)
 		optarg += 5;
-	    optarg += 5;
 	    if(strlen(optarg) == 0)
 		errx(1, "timeout notification socket name too short");
 	    cf->timeout_handler.socket_name = (char *)malloc(strlen(optarg) + 1);
 	    if(cf->timeout_handler.socket_name == NULL)
 		err(1, "can't allocate memory");
 	    strcpy(cf->timeout_handler.socket_name, optarg);
-	    cf->timeout_handler.fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	    if (cf->timeout_handler.fd == -1)
-		err(1, "can't create timeout socket");
 	    break;
 
 	case 'P':
@@ -418,7 +414,7 @@ init_controlfd(struct cfg *cf)
     if (cf->umode == 0) {
 	unlink(cmd_sock);
 	memset(&ifsun, '\0', sizeof ifsun);
-#if !defined(__linux__) && !defined(__solaris__)
+#if defined(HAVE_SOCKADDR_SUN_LEN)
 	ifsun.sun_len = strlen(cmd_sock);
 #endif
 	ifsun.sun_family = AF_LOCAL;
@@ -673,7 +669,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 	  sp->sidx[0] == readyfd) {
 	    if (get_ttl(sp) == 0) {
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
-		do_timeout_notification(sp);
+		do_timeout_notification(sp, 1);
 		remove_session(cf, sp);
 	    } else {
 		if (sp->ttl[0] != 0)
@@ -776,8 +772,8 @@ main(int argc, char **argv)
 	    /* NOTREACHED */
     }
 
-    atexit(ehandler);
     glog = cf.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
+    atexit(ehandler);
     rtpp_log_write(RTPP_LOG_INFO, cf.glog, "rtpproxy started, pid %d", getpid());
 
     i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);

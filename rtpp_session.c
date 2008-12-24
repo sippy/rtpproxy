@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.c,v 1.12 2008/11/03 08:49:45 sobomax Exp $
+ * $Id: rtpp_session.c,v 1.13 2008/12/24 10:46:03 sobomax Exp $
  *
  */
 
@@ -207,6 +207,8 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	if (sp->rtcp->codecs[i] != NULL)
 	    free(sp->rtcp->codecs[i]);
     }
+    if (sp->timeout_data.notify_tag != NULL)
+	free(sp->timeout_data.notify_tag);
     hash_table_remove(cf, sp);
     if (sp->call_id != NULL)
 	free(sp->call_id);
@@ -277,13 +279,23 @@ reconnect_timeout_handler(struct rtpp_session *sp, struct rtpp_timeout_handler *
 {
     struct sockaddr_un remote;
 
-    assert(th->fd != -1 && th->socket_name != NULL && th->connected == 0);
+    assert(th->socket_name != NULL && th->connected == 0);
 
-    rtpp_log_ewrite(RTPP_LOG_DBUG, sp->log, "reconnecting timeout socket");
+    if (th->fd == -1) {
+        rtpp_log_write(RTPP_LOG_DBUG, sp->log, "connecting timeout socket");
+    } else {
+        rtpp_log_write(RTPP_LOG_DBUG, sp->log, "reconnecting timeout socket");
+        close(th->fd);
+    }
+    th->fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (th->fd == -1) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't create timeout socket");
+        return;
+    }
     memset(&remote, '\0', sizeof(remote));
     remote.sun_family = AF_LOCAL;
     strncpy(remote.sun_path, th->socket_name, sizeof(remote.sun_path) - 1);
-#if !defined(__linux__) && !defined(__solaris__)
+#if defined(HAVE_SOCKADDR_SUN_LEN)
     remote.sun_len = strlen(remote.sun_path);
 #endif
     if (connect(th->fd, (struct sockaddr *)&remote, sizeof(remote)) == -1) {
@@ -294,10 +306,10 @@ reconnect_timeout_handler(struct rtpp_session *sp, struct rtpp_timeout_handler *
 }
 
 void
-do_timeout_notification(struct rtpp_session *sp)
+do_timeout_notification(struct rtpp_session *sp, int retries)
 {
     int result, len;
-    struct rtpp_timeout_handler *th = sp->timeout_handler;
+    struct rtpp_timeout_handler *th = sp->timeout_data.handler;
 
     if (th == NULL)
 	return;
@@ -312,7 +324,13 @@ do_timeout_notification(struct rtpp_session *sp)
         }
     }
 
-    len = snprintf(th->notify_buf, sizeof(th->notify_buf), "%d %d\n", sp->ports[0], sp->ports[1]);
+    if (sp->timeout_data.notify_tag == NULL) {
+        len = snprintf(th->notify_buf, sizeof(th->notify_buf), "%d %d\n",
+          sp->ports[0], sp->ports[1]);
+    } else {
+        len = snprintf(th->notify_buf, sizeof(th->notify_buf), "%s\n",
+          sp->timeout_data.notify_tag);
+    }
     assert(len < sizeof(th->notify_buf));
 
     do {
@@ -322,6 +340,8 @@ do_timeout_notification(struct rtpp_session *sp)
     if (result < 0) {
         th->connected = 0;
         rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "failed to send timeout notification");
+        if (retries > 0)
+            do_timeout_notification(sp, retries - 1);
     }
 }
 
