@@ -67,6 +67,9 @@
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
 
+/* Have the sockaddr_un.sun_len member. */
+#undef HAVE_SOCKADDR_SUN_LEN
+
 /* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET
 
