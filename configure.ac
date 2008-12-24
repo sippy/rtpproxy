@@ -68,6 +68,14 @@ AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdlib.h str
 AC_C_CONST
 AC_HEADER_TIME
 
+dnl check for the sockaddr_un.sun_len member
+AC_CHECK_MEMBER([struct sockaddr_un.sun_len],
+  [AC_DEFINE(HAVE_SOCKADDR_SUN_LEN,1,[Have the sockaddr_un.sun_len member.])],
+  [],
+  [ #include <sys/types.h>
+  #include <sys/un.h>
+  ])
+
 # Checks for library functions.
 AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
