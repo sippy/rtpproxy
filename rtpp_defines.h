@@ -31,6 +31,8 @@
 #ifndef _RTPP_DEFINES_H_
 #define _RTPP_DEFINES_H_
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
