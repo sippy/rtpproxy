@@ -22,7 +22,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpOrigin.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SdpOrigin.py,v 1.5 2009/01/05 20:53:29 sobomax Exp $
+
+from SipConf import SipConf
+from time import time
 
 class SdpOrigin(object):
     username = None
@@ -31,10 +34,18 @@ class SdpOrigin(object):
     network_type = None
     address_type = None
     address = None
+    session_id = int(time() * 1000.0)
 
     def __init__(self, body = None, cself = None):
         if body != None:
             self.username, self.session_id, self.version, self.network_type, self.address_type, self.address = body.split()
+        elif cself == None:
+            self.username = '-'
+            SdpOrigin.session_id += 1
+            self.version = self.session_id
+            self.network_type = 'IN'
+            self.address_type = 'IP4'
+            self.address = SipConf.my_address
         else:
             self.username = cself.username
             self.session_id = cself.session_id
