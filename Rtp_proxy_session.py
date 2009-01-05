@@ -22,7 +22,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.8 2009/01/05 20:14:00 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.9 2009/01/05 21:00:45 sobomax Exp $
+
+from SdpOrigin import SdpOrigin
 
 from md5 import md5
 from random import random
@@ -42,6 +44,7 @@ class Rtp_proxy_session(object):
     callee_session_exists = False
     callee_codecs = None
     max_index = -1
+    origin = None
 
     def __init__(self, global_config, call_id = None, from_tag = None, to_tag = None):
         if global_config.has_key('rtp_proxy_clients'):
@@ -67,6 +70,7 @@ class Rtp_proxy_session(object):
             self.to_tag = to_tag
         else:
             self.to_tag = md5(str(random()) + str(time())).hexdigest()
+        self.origin = SdpOrigin()
 
     def version(self, result_callback):
         self.rtp_proxy_client.send_command('V', self.version_result, result_callback)
@@ -243,6 +247,7 @@ class Rtp_proxy_session(object):
             if sect.getF('m').body.port != 0:
                 sect.getF('m').body.port = address_port[1]
         if len([x for x in sects if x.needs_update]) == 0:
+            sdp_body.content.sections[0].getF('o').body = self.origin
             sdp_body.needs_update = False
             result_callback(sdp_body)
 
