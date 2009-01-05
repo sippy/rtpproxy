@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.7 2008/11/10 21:33:00 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.8 2009/01/05 20:14:00 sobomax Exp $
 
 from md5 import md5
 from random import random
@@ -31,7 +31,7 @@ from datetime import datetime
 from traceback import print_exc
 import sys
 
-class Rtp_proxy_session:
+class Rtp_proxy_session(object):
     rtp_proxy_client = None
     call_id = None
     from_tag = None

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpField.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SdpField.py,v 1.5 2009/01/05 20:14:00 sobomax Exp $
 
 from SdpConnecton import SdpConnecton
 from SdpMedia import SdpMedia
@@ -31,7 +31,7 @@ from types import StringType
 
 f_types = {'c':SdpConnecton, 'm':SdpMedia, 'o':SdpOrigin}
 
-class SdpField:
+class SdpField(object):
     name = None
     body = None
 

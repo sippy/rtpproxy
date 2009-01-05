@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.40 2008/09/24 09:25:38 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.41 2009/01/05 20:14:00 sobomax Exp $
 
 from Timeout import Timeout
 from Signal import Signal
@@ -73,18 +73,18 @@ def re_replace(ptrn, s):
         ptrn = ptrn[3:]
     return s
 
-class CCStateIdle:
+class CCStateIdle(object):
     sname = 'Idle'
-class CCStateWaitRoute:
+class CCStateWaitRoute(object):
     sname = 'WaitRoute'
-class CCStateARComplete:
+class CCStateARComplete(object):
     sname = 'ARComplete'
-class CCStateDead:
+class CCStateDead(object):
     sname = 'Dead'
-class CCStateDisconnecting:
+class CCStateDisconnecting(object):
     sname = 'Disconnecting'
 
-class CallController:
+class CallController(object):
     uaA = None
     uaO = None
     state = None
@@ -397,7 +397,7 @@ class CallController:
             self.routes.pop(0)
         self.uaO.disconnect()
 
-class CallMap:
+class CallMap(object):
     ccmap = None
     el = None
     debug_mode = False

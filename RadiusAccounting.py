@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: RadiusAccounting.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
+# $Id: RadiusAccounting.py,v 1.5 2009/01/05 20:14:00 sobomax Exp $
 
 from time import time, strftime, gmtime
 from Timeout import Timeout
@@ -47,7 +47,7 @@ sipErrToH323Err = {400:('7f', 'Interworking, unspecified'), 401:('39', 'Bearer c
   505:('7f', 'Interworking, unspecified'), 580:('2f', 'Resource unavailable, unspecified'), 600:('11', 'User busy'), \
   603:('15', 'Call rejected'), 604:('1',  'Unallocated number'), 606:('3a', 'Bearer capability not presently available')}
 
-class RadiusAccounting:
+class RadiusAccounting(object):
     global_config = None
     drec = None
     crec = None

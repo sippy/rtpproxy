@@ -22,11 +22,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpBodySection.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SdpBodySection.py,v 1.6 2009/01/05 20:14:00 sobomax Exp $
 
 from SdpField import SdpField
 
-class SdpBodySection:
+class SdpBodySection(object):
     headers = None
     needs_update = True
 

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipHeader.py,v 1.8 2008/12/02 15:28:58 sobomax Exp $
+# $Id: SipHeader.py,v 1.9 2009/01/05 20:14:00 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from SipCSeq import SipCSeq
@@ -63,7 +63,7 @@ for hf_type in _hf_types:
     for hf_name in hf_type.hf_names:
         hf_types[hf_name] = hf_type
 
-class SipHeader:
+class SipHeader(object):
     name = None
     body = None
 

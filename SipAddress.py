@@ -22,12 +22,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAddress.py,v 1.4 2008/11/26 19:42:56 sobomax Exp $
+# $Id: SipAddress.py,v 1.5 2009/01/05 20:14:00 sobomax Exp $
 
 from SipURL import SipURL
 from string import maketrans
 
-class SipAddress:
+class SipAddress(object):
     name = None
     url = None
     params = None

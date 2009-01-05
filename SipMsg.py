@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.13 2008/12/09 09:41:02 sobomax Exp $
+# $Id: SipMsg.py,v 1.14 2009/01/05 20:14:00 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -32,7 +32,7 @@ from MsgBody import MsgBody
 from ESipHeaderCSV import ESipHeaderCSV
 from ESipHeaderIgnore import ESipHeaderIgnore
 
-class SipMsg:
+class SipMsg(object):
     headers = None
     body = None
     startline = None

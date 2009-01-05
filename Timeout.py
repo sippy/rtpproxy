@@ -21,14 +21,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Timeout.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: Timeout.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
 
 from datetime import datetime
 from twisted.internet import task
 from traceback import print_exc, format_list, extract_stack
 from sys import stdout
 
-class Timeout:
+class Timeout(object):
     _task = None
     _ticks_left = None
     _timeout_callback = None

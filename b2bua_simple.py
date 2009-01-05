@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_simple.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: b2bua_simple.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
 
 from UA import UA
 from CCEvents import CCEventDisconnect, CCEventTry
@@ -36,7 +36,7 @@ from twisted.internet import reactor
 import getopt, os, sys
 #import gc
 
-class CallController:
+class CallController(object):
     global_config = None
     uaA = None
     uaO = None
@@ -59,7 +59,7 @@ class CallController:
         else:
             self.uaA.recvEvent(event)
 
-class CallMap:
+class CallMap(object):
     global_config = None
     #rc1 = None
     #rc2 = None

@@ -22,11 +22,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipConf.py,v 1.4 2008/08/11 18:12:30 sobomax Exp $
+# $Id: SipConf.py,v 1.5 2009/01/05 20:14:00 sobomax Exp $
 
 from socket import gethostbyname, gethostname
 
-class SipConf:
+class SipConf(object):
     default_port = 5060
 
     try: my_address

@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Signal.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: Signal.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
 
 from signal import signal, SIG_IGN, SIG_DFL
 from twisted.internet import reactor
@@ -29,7 +29,7 @@ from datetime import datetime
 from traceback import print_exc
 from sys import stdout
 
-class Signal:
+class Signal(object):
     callback = None
     parameters = None
     previous_handler = None

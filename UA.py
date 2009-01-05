@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.7 2008/09/24 09:25:38 sobomax Exp $
+# $Id: UA.py,v 1.8 2009/01/05 20:14:00 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -37,7 +37,7 @@ from md5 import md5
 from random import random
 from time import time
 
-class UA:
+class UA(object):
     global_config = None
     state = None
     event_cb = None

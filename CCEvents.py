@@ -22,11 +22,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: CCEvents.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: CCEvents.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
 
 from time import time
 
-class CCEventGeneric:
+class CCEventGeneric(object):
     data = None
     name = None
     rtime = None

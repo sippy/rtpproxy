@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.9 2008/11/26 19:46:41 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.10 2009/01/05 20:14:00 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -37,7 +37,7 @@ from traceback import print_exc
 from time import time
 import sys
 
-class NETS_1918:
+class NETS_1918(object):
     nets = (('10.0.0.0', 0xffffffffl << 24), ('172.16.0.0',  0xffffffffl << 20), ('192.168.0.0', 0xffffffffl << 16))
     nets = [(reduce(lambda z, v: (int(z) << 8l) | int(v), x[0].split('.', 4)) & x[1], x[1]) for x in nets]
 
@@ -51,7 +51,7 @@ def check1918(addr):
         pass
     return False
 
-class SipTransaction:
+class SipTransaction(object):
     tout = None
     tid = None
     address = None
@@ -70,7 +70,7 @@ class SipTransaction:
         self.tid = None
 
 # Symbolic states names
-class SipTransactionState:
+class SipTransactionState(object):
     pass
 class TRYING(SipTransactionState):
     # Request sent, but no reply received at all
@@ -88,7 +88,7 @@ class TERMINATED(SipTransactionState):
     # Transaction ended abnormally (request timeout and such)
     pass
 
-class SipTransactionManager:
+class SipTransactionManager(object):
     global_config = None
     userv = None
     tclient = None

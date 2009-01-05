@@ -22,14 +22,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_local.py,v 1.3 2008/04/12 13:39:44 sobomax Exp $
+# $Id: Rtp_proxy_client_local.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
 
 from Timeout import Timeout
 from errno import EINTR
 
 import socket
 
-class Rtp_proxy_client_local:
+class Rtp_proxy_client_local(object):
     address = None
     online = False
 

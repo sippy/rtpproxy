@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_udp.py,v 1.2 2008/02/18 19:49:45 sobomax Exp $
+# $Id: Rtp_proxy_client_udp.py,v 1.3 2009/01/05 20:14:00 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -31,7 +31,7 @@ from time import time
 from md5 import md5
 from random import random
 
-class Rtp_proxy_client_udp:
+class Rtp_proxy_client_udp(object):
     udp_server = None
     pending_requests = None
     address = None
