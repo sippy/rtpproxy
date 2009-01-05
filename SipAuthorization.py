@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAuthorization.py,v 1.6 2008/09/24 21:37:02 sobomax Exp $
+# $Id: SipAuthorization.py,v 1.7 2009/01/05 20:48:29 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from md5 import md5
@@ -35,6 +35,9 @@ class SipAuthorization(SipGenericHF):
     realm = None
     nonce = None
     response = None
+    qop = None
+    cnonce = None
+    nc = None
     otherparams = None
 
     def __init__(self, body = None, username = None, uri = None, realm = None, nonce = None, response = None, \
@@ -49,6 +52,9 @@ class SipAuthorization(SipGenericHF):
             self.realm = cself.realm
             self.nonce = cself.nonce
             self.response = cself.response
+            self.qop = cself.qop
+            self.cnonce = cself.cnonce
+            self.nc = cself.nc
             self.otherparams = cself.otherparams[:]
             return
         self.username = username
@@ -76,6 +82,12 @@ class SipAuthorization(SipGenericHF):
                 self.nonce = value.strip('"')
             elif name == 'response':
                 self.response = value.strip('"')
+            elif name == 'qop':
+                self.qop = value.strip('"')
+            elif name == 'cnonce':
+                self.cnonce = value.strip('"')
+            elif name == 'nc':
+                self.nc = value.strip('"')
             else:
                 self.otherparams.append((name, value))
 
@@ -84,6 +96,9 @@ class SipAuthorization(SipGenericHF):
             return self.body
         rval = 'Digest username="%s",realm="%s",nonce="%s",uri="%s",response="%s"' % \
                (self.username, self.realm, self.nonce, self.uri, self.response)
+        if self.qop != None:
+            rval += ',nc="%s",cnonce="%s",qop=%s' % (self.nc, self.cnonce, \
+              self.qop)
         for param in self.otherparams:
             rval += ',%s=%s' % param
         return rval
@@ -101,7 +116,8 @@ class SipAuthorization(SipGenericHF):
     def verifyHA1(self, HA1, method):
         if not self.parsed:
             self.parse()
-        response = DigestCalcResponse(HA1, self.nonce, 0, '', '', method, self.uri, '')
+        response = DigestCalcResponse(HA1, self.nonce, self.nc, \
+          self.cnonce, self.qop, method, self.uri, '')
         return response == self.response
 
     def getCanName(self, name, compact = False):
