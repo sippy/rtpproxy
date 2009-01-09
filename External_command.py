@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: External_command.py,v 1.7 2009/01/05 20:14:00 sobomax Exp $
+# $Id: External_command.py,v 1.8 2009/01/09 21:03:36 sobomax Exp $
 
 from threading import Condition
 from popen2 import Popen3
@@ -31,6 +31,7 @@ from datetime import datetime
 from traceback import print_exc
 from sys import stdout
 from threading import Thread, Lock
+from errno import EINTR
 
 _MAX_WORKERS = 20
 
@@ -64,7 +65,13 @@ class _Worker(Thread):
             pipe.tochild.flush()
             result = []
             while True:
-                line = pipe.fromchild.readline().strip()
+                try:
+                    line = pipe.fromchild.readline().strip()
+                except IOError, e:
+                    # Catch EINTR
+                    if e.args[0] != EINTR:
+                        raise e
+                    continue
                 if len(line) == 0:
                     break
                 result.append(line)
