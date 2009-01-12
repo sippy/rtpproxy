@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.23 2008/12/24 10:46:03 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.24 2009/01/12 10:56:59 sobomax Exp $
  *
  */
 
@@ -507,7 +507,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 		socket_name_u += 5;
 	    if (argc == 8) {
 		notify_tag = argv[7];
-		len = url_unquote(notify_tag, strlen(notify_tag));
+		len = url_unquote((uint8_t *)notify_tag, strlen(notify_tag));
 		if (len == -1) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
 		      "command syntax error - invalid URL encoding");
