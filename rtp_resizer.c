@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_resizer.c,v 1.5 2008/11/03 05:52:24 sobomax Exp $
+ * $Id: rtp_resizer.c,v 1.6 2009/01/12 11:36:40 sobomax Exp $
  *
  */
 
@@ -71,7 +71,8 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
     uint32_t            ref_ts, internal_ts;
     int                 delta;
 
-    rtp_packet_parse(*pkt);
+    if (rtp_packet_parse(*pkt) != RTP_PARSER_OK)
+        return;
 
     if ((*pkt)->nsamples == RTP_NSAMPLES_UNKNOWN)
         return;

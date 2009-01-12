@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.c,v 1.8 2008/11/03 05:52:24 sobomax Exp $
+ * $Id: rtp.c,v 1.9 2009/01/12 11:36:40 sobomax Exp $
  *
  */
 
@@ -202,38 +202,101 @@ rtp_packet_first_chunk_find(struct rtp_packet *pkt, struct rtp_packet_chunk *ret
     }
 }
 
-void 
+const char *
+rtp_packet_parse_errstr(rtp_parser_err_t ecode)
+{
+    switch (ecode) {
+    case RTP_PARSER_OK:
+       return "no error";
+
+    case RTP_PARSER_PTOOSHRT:
+       return "packet is too short for RTP header";
+
+    case RTP_PARSER_IHDRVER:
+       return "incorrect RTP header version";
+
+    case RTP_PARSER_PTOOSHRTXS:
+       return "packet is too short for extended RTP header size";
+
+    case RTP_PARSER_PTOOSHRTXH:
+       return "packet is too short for extended RTP header";
+
+    case RTP_PARSER_PTOOSHRTPS:
+        return "packet is too short for RTP padding size";
+
+    case RTP_PARSER_PTOOSHRTP:
+       return "packet is too short for RTP padding";
+
+    case RTP_PARSER_IPS:
+       return "invalid RTP padding size";
+
+    default:
+       abort();
+    }
+
+    /* NOTREACHED */
+    return NULL;
+}
+
+rtp_parser_err_t
 rtp_packet_parse(struct rtp_packet *pkt)
 {
     int padding_size;
+    rtp_hdr_ext_t *hdr_ext_ptr;
 
     padding_size = 0;
 
     pkt->data_size = 0;
     pkt->data_offset = 0;
+    pkt->appendable = 1;
     pkt->nsamples = RTP_NSAMPLES_UNKNOWN;
 
+    if (pkt->size < sizeof(pkt->data.header))
+        return RTP_PARSER_PTOOSHRT;
+
     if (pkt->data.header.version != 2)
-        return;
+        return RTP_PARSER_IHDRVER;
 
     pkt->data_offset = RTP_HDR_LEN(&pkt->data.header);
 
-    if (pkt->data.header.p)
-        padding_size = ((unsigned char *) pkt)[pkt->size - 1];
+    if (pkt->data.header.x != 0) {
+        if (pkt->size < pkt->data_offset + sizeof(*hdr_ext_ptr))
+            return RTP_PARSER_PTOOSHRTXS;
+        hdr_ext_ptr = (rtp_hdr_ext_t *)&pkt->data.buf[pkt->data_offset];
+        pkt->data_offset += sizeof(rtp_hdr_ext_t) +
+          (ntohs(hdr_ext_ptr->length) * sizeof(hdr_ext_ptr->extension[0]));
+    }
+
+    if (pkt->size < pkt->data_offset)
+        return RTP_PARSER_PTOOSHRTXH;
+
+    if (pkt->data.header.p != 0) {
+        if (pkt->data_offset == pkt->size)
+            return RTP_PARSER_PTOOSHRTPS;
+        padding_size = pkt->data.buf[pkt->size - 1];
+        if (padding_size == 0)
+            return RTP_PARSER_IPS;
+    }
+
+    if (pkt->size < pkt->data_offset + padding_size)
+        return RTP_PARSER_PTOOSHRTP;
 
     pkt->data_size = pkt->size - pkt->data_offset - padding_size;
-    pkt->nsamples = rtp_calc_samples(pkt->data.header.pt, pkt->data_size,
-      &pkt->data.buf[pkt->data_offset]);
     pkt->ts = ntohl(pkt->data.header.ts);
     pkt->seq = ntohs(pkt->data.header.seq);
 
-    pkt->appendable = 1;
+    if (pkt->data_size == 0)
+        return RTP_PARSER_OK;
+
+    pkt->nsamples = rtp_calc_samples(pkt->data.header.pt, pkt->data_size,
+      &pkt->data.buf[pkt->data_offset]);
     /* 
      * G.729 comfort noise frame as the last frame causes 
      * packet to be non-appendable
      */
     if (pkt->data.header.pt == RTP_G729 && (pkt->data_size % 10) != 0)
         pkt->appendable = 0;
+    return RTP_PARSER_OK;
 }
 
 struct rtp_packet *

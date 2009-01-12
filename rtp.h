@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.h,v 1.10 2008/11/03 05:52:24 sobomax Exp $
+ * $Id: rtp.h,v 1.11 2009/01/12 11:36:40 sobomax Exp $
  *
  */
 
@@ -75,6 +75,12 @@ typedef struct {
     uint32_t csrc[0];		/* optional CSRC list */
 } rtp_hdr_t;
 
+typedef struct {
+    uint16_t profile;		/* defined by profile */
+    uint16_t length;		/* length of the following array in 32-byte words */
+    uint32_t extension[0];	/* actual extension data */
+} rtp_hdr_ext_t;
+
 struct rtp_packet {
     size_t      size;
 
@@ -111,9 +117,21 @@ struct rtp_packet_chunk {
     int whole_packet_matched;
 };
 
+typedef enum {
+    RTP_PARSER_OK = 0,
+    RTP_PARSER_PTOOSHRT = -1,
+    RTP_PARSER_IHDRVER = -2,
+    RTP_PARSER_PTOOSHRTXS = -3,
+    RTP_PARSER_PTOOSHRTXH = -4,
+    RTP_PARSER_PTOOSHRTPS = -5,
+    RTP_PARSER_PTOOSHRTP = -6,
+    RTP_PARSER_IPS = -7
+} rtp_parser_err_t;
+
 #define	RTP_HDR_LEN(rhp)	(sizeof(*(rhp)) + ((rhp)->cc * sizeof((rhp)->csrc[0])))
 
-void rtp_packet_parse(struct rtp_packet *);
+const char *rtp_packet_parse_errstr(rtp_parser_err_t);
+rtp_parser_err_t rtp_packet_parse(struct rtp_packet *);
 struct rtp_packet *rtp_recv(int);
 
 struct rtp_packet *rtp_packet_alloc();
