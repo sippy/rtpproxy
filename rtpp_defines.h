@@ -24,12 +24,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.23 2008/12/24 10:28:06 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.24 2009/01/12 10:55:27 sobomax Exp $
  *
  */
 
 #ifndef _RTPP_DEFINES_H_
 #define _RTPP_DEFINES_H_
+
+#include "config.h"
 
 #include <sys/types.h>
 #include <sys/time.h>
