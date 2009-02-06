@@ -1,6 +1,6 @@
 %define name     rtpproxy
-%define ver      0.3
-%define rel      1
+%define ver      1.2
+%define rel      beta.200901120
 
 Name:           %name
 Version:        %ver
@@ -8,8 +8,8 @@ Release:        %rel%{?dist}
 Summary:        A symmetric RTP proxy
 Group:          Applications/Internet
 License:        BSD
-URL:            http://ftp.iptel.org/pub/rtpproxy/
-Source0:        http://ftp.iptel.org/pub/rtpproxy/rtpproxy-%{version}.tar.gz
+URL:            http://www.rtpproxy.org/
+Source0:        http://www.b2bua.org/chrome/site/rtpproxy-%{version}.tar.gz
 Packager:       Alfred E. Heggestad <aeh@db.org>
 Requires(post,preun): chkconfig
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -50,11 +50,14 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS COPYING README 
+%{_mandir}/man8/*
 %attr(755,root,root) %{_bindir}/rtpproxy
 %attr(755,root,root) %{_bindir}/makeann
-%attr(755,root,root) /etc/rc.d/init.d/*
+%config %attr(755,root,root) /etc/rc.d/init.d/*
+
+* Mon Jan 12 2009 Alfred E. Heggestad <aeh@db.org>
+- Updated for version 1.2
 
 %changelog
 * Tue Jan 30 2007 Alfred E. Heggestad <aeh@db.org> - 0.3.1
 - Initial build.
-
