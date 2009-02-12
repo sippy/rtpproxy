@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateIdle.py,v 1.7 2008/09/24 09:25:38 sobomax Exp $
+# $Id: UacStateIdle.py,v 1.8 2009/02/12 09:08:19 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -58,7 +58,6 @@ class UacStateIdle(UaStateGeneric):
             self.ua.lContact = SipContact()
             self.ua.lContact.getUrl().username = callingID
             self.ua.routes = []
-            self.ua.rAddr = self.ua.rAddr0
             self.ua.cGUID = cGUID
             self.ua.lSDP = body
             req = self.ua.genRequest('INVITE', body)

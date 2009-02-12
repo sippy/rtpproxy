@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.8 2009/01/05 20:14:00 sobomax Exp $
+# $Id: UA.py,v 1.9 2009/02/12 09:08:19 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -82,6 +82,7 @@ class UA(object):
     on_local_sdp_change = None
     on_remote_sdp_change = None
     last_scode = 100
+    user_agent = None
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
       conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ltag = None, extra_headers = None, \
@@ -91,7 +92,8 @@ class UA(object):
         self.equeue = []
         self.username = username
         self.password = password
-        self.rAddr0 = nh_address
+        self.rAddr = nh_address
+        self.rAddr0 = self.rAddr
         self.credit_time = credit_time
         if conn_cbs != None:
             self.conn_cbs = conn_cbs
@@ -126,6 +128,8 @@ class UA(object):
     def recvRequest(self, req):
         #print 'Received request %s in state %s instance %s' % (req.getMethod(), self.state, self)
         #print self.rCSeq, req.getHFBody('cseq').getCSeqNum()
+        if self.user_agent == None:
+            self.update_ua(req)
         if self.rCSeq != None and self.rCSeq >= req.getHFBody('cseq').getCSeqNum():
             return (req.genResponse(500, 'Server Internal Error'), None, None)
         self.rCSeq = req.getHFBody('cseq').getCSeqNum()
@@ -146,6 +150,7 @@ class UA(object):
     def recvResponse(self, resp):
         if self.state == None:
             return
+        self.update_ua(resp)
         code, reason = resp.getSCode()
         cseq, method = resp.getHFBody('cseq').getCSeq()
         if method == 'INVITE' and self.reqs.has_key(cseq) and code == 401 and resp.countHFs('www-authenticate') != 0 and \
@@ -310,3 +315,10 @@ class UA(object):
         self.rSDP = remote_sdp_body.getCopy()
         self.equeue.append(event)
         self.emitPendingEvents()
+
+    def update_ua(self, msg):
+        if msg.countHFs('user-agent') > 0:
+            self.user_agent = msg.getHFBody('user-agent').name
+        elif msg.countHFs('server') > 0:
+            self.user_agent = msg.getHFBody('server').name
+        return
