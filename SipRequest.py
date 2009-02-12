@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipRequest.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SipRequest.py,v 1.6 2009/02/12 09:00:59 sobomax Exp $
 
 from SipMsg import SipMsg
 from SipHeader import SipHeader
@@ -114,7 +114,7 @@ class SipRequest(SipMsg):
                           fr0m = self.getHFBody('from').getCopy(), to = self.getHFBody('to').getCopy(), \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
                           cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = self.getHFBody('max-forwards').getCopy(), \
-                          routes = [x.getCopy() for x in self.getHFBodys('route')])
+                          routes = [x.getCopy() for x in self.getHFBodys('route')], target = self.getTarget())
 
     def genRequest(self, method, cseq = None):
         if cseq == None:
