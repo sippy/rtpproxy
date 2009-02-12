@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.10 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.11 2009/02/12 09:03:07 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -270,13 +270,13 @@ class SipTransactionManager(object):
                     tag = msg.getHFBody('to').getTag()
                     if tag != None:
                         t.ack.getHFBody('to').setTag(tag)
+                    rAddr = None
                     if msg.getSCode()[0] >= 200 and msg.getSCode()[0] < 300:
                         # Some hairy code ahead
                         if msg.countHFs('contact') > 0:
                             rTarget = msg.getHFBody('contact').getUrl().getCopy()
                         else:
                             rTarget = None
-                        rAddr = None
                         routes = [x.getCopy() for x in msg.getHFBodys('record-route')]
                         routes.reverse()
                         if len(routes) > 0:
@@ -297,7 +297,9 @@ class SipTransactionManager(object):
                         t.ack.appendHeaders([SipHeader(name = 'route', body = x) for x in routes])
                     if fcode >= 200 and fcode < 300:
                         t.ack.getHFBody('via').genBranch()
-                    self.transmitMsg(t.ack, t.address, checksum)
+                    if rAddr == None:
+                        rAddr = t.address
+                    self.transmitMsg(t.ack, rAddr, checksum)
                 else:
                     self.l1rcache[checksum] = (None, None)
                 if t.resp_cb != None:
