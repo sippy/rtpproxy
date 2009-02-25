@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.43 2009/02/25 06:58:24 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.44 2009/02/25 08:35:47 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -88,6 +88,7 @@ class CCStateDisconnecting(object):
     sname = 'Disconnecting'
 
 class CallController(object):
+    id = 1
     uaA = None
     uaO = None
     state = None
@@ -104,8 +105,11 @@ class CallController(object):
     huntstop_scodes = None
     pass_headers = None
     auth_proc = None
+    proxied = False
 
     def __init__(self, remote_ip, source, global_config, pass_headers):
+        self.id = CallController.id
+        CallController.id += 1
         self.global_config = global_config
         self.uaA = UA(self.global_config, event_cb = self.recvEvent, conn_cbs = (self.aConn,), disc_cbs = (self.aDisc,), \
           fail_cbs = (self.aDisc,), dead_cbs = (self.aDead,))
@@ -155,7 +159,9 @@ class CallController(object):
                     event = CCEventTry((self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name), \
                       rtime = event.rtime)
                 if self.global_config.has_key('rtp_proxy_clients'):
-                    self.rtp_proxy_session = Rtp_proxy_session(self.global_config, call_id = self.cId)
+                    self.rtp_proxy_session = Rtp_proxy_session(self.global_config, call_id = self.cId, \
+                      notify_socket = global_config['b2bua_socket'], \
+                      notify_tag = quote('r %s' % str(self.id)))
                 self.eTry = event
                 self.state = CCStateWaitRoute
                 if not self.global_config['auth_enable']:
@@ -337,6 +343,7 @@ class CallController(object):
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
             body = body.getCopy()
             body.content += 'a=nortpproxy:yes\r\n'
+            self.proxied = True
         self.uaO.kaInterval = self.global_config['ka_orig']
         if parameters.has_key('group_timeout'):
             timeout, skipto = parameters['group_timeout']
@@ -344,8 +351,8 @@ class CallController(object):
         self.uaO.recvEvent(CCEventTry((cId + '-b2b_%d' % rnum, cGUID, cli, cld, body, auth, \
           parameters.get('caller_name', self.caller_name))))
 
-    def disconnect(self):
-        self.uaA.disconnect()
+    def disconnect(self, rtime = time()):
+        self.uaA.disconnect(rtime)
 
     def oConn(self, ua, rtime):
         if self.acctO != None:
@@ -539,6 +546,20 @@ class CallMap(object):
                 cc.disconnect()
             clim.send('OK\n')
             return False
+        if cmd == 'r':
+            if len(args) != 1:
+                clim.qSend('ERROR: syntax error: r [<id>]\n')
+                return False
+            idx = int(args[0])
+            dlist = [x for x in self.ccmap if x.id == idx]
+            if len(dlist) == 0:
+                clim.qSend('ERROR: no call with id of %d has been found\n' % idx)
+                return False
+            for cc in dlist:
+                if cc.state == CCStateConnected and cc.proxied:
+                    cc.disconnect(time() - 60)
+            clim.qSend('OK\n')
+            return False
         clim.send('ERROR: unknown command\n')
         return False
 
@@ -710,6 +731,10 @@ if __name__ == '__main__':
     global_config['cmap'] = CallMap(global_config)
 
     global_config['sip_tm'] = SipTransactionManager(global_config, global_config['cmap'].recvRequest)
+
+    global_config['b2bua_socket'] = cmdfile
+    if cmdfile.startswith('unix:'):
+        cmdfile = cmdfile[5:]
     cli_server = Cli_server_local(global_config['cmap'].recvCommand, cmdfile)
 
     if not foreground:
