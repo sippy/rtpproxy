@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.10 2009/02/25 06:56:52 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.11 2009/02/25 07:55:36 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
@@ -44,8 +44,11 @@ class Rtp_proxy_session(object):
     callee_codecs = None
     max_index = -1
     origin = None
+    notify_socket = None
+    notify_tag = None
 
-    def __init__(self, global_config, call_id = None, from_tag = None, to_tag = None):
+    def __init__(self, global_config, call_id = None, from_tag = None, to_tag = None,
+      notify_socket = None, notify_tag = None):
         if global_config.has_key('rtp_proxy_clients'):
             rtp_proxy_clients = [x for x in global_config['rtp_proxy_clients'] if x.online]
             n = len(rtp_proxy_clients)
@@ -69,6 +72,8 @@ class Rtp_proxy_session(object):
         else:
             self.to_tag = md5(str(random()) + str(time())).hexdigest()
         self.origin = SdpOrigin()
+        self.notify_socket = notify_socket
+        self.notify_tag = notify_tag
 
     def version(self, result_callback):
         self.rtp_proxy_client.send_command('V', self.version_result, result_callback)
@@ -161,6 +166,8 @@ class Rtp_proxy_session(object):
         if options != None:
             command += options
         command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.from_tag, self.to_tag)
+        if self.notify_socket != None and self.rtp_proxy_client.tnot_supported:
+            command += ' %s %s' % (self.notify_socket, self.notify_tag)
         self.rtp_proxy_client.send_command(command, self.update_result, (result_callback, 'caller', callback_parameters))
 
     def update_callee(self, remote_ip, remote_port, result_callback, options = None, index = 0, *callback_parameters):
@@ -169,6 +176,8 @@ class Rtp_proxy_session(object):
         if options != None:
             command += options
         command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.to_tag, self.from_tag)
+        if self.notify_socket != None and self.rtp_proxy_client.tnot_supported:
+            command += ' %s %s' % (self.notify_socket, self.notify_tag)
         self.rtp_proxy_client.send_command(command, self.update_result, (result_callback, 'callee', callback_parameters))
 
     def update_result(self, result, args):
