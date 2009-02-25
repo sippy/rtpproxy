@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.46 2009/02/25 09:48:41 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.47 2009/02/25 20:39:49 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -83,6 +83,8 @@ class CCStateWaitRoute(object):
     sname = 'WaitRoute'
 class CCStateARComplete(object):
     sname = 'ARComplete'
+class CCStateConnected(object):
+    sname = 'Connected'
 class CCStateDead(object):
     sname = 'Dead'
 class CCStateDisconnecting(object):
@@ -181,7 +183,7 @@ class CallController(object):
                     self.auth_proc = self.global_config['radius_client'].do_auth(auth.username, self.cli, self.cld, self.cGUID, 
                       self.cId, self.remote_ip, self.rDone, auth.realm, auth.nonce, auth.uri, auth.response)
                 return
-            if self.state != CCStateARComplete:
+            if self.state not in (CCStateARComplete, CCStateConnected, CCStateDisconnecting) or self.uaO == None:
                 return
             self.uaO.recvEvent(event)
         else:
@@ -364,6 +366,7 @@ class CallController(object):
             self.acctO.conn(ua, rtime)
 
     def aConn(self, ua, rtime):
+        self.state = CCStateConnected
         self.acctA.conn(ua, rtime)
 
     def aDisc(self, ua, rtime, result = 0):
