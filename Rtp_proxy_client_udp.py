@@ -1,5 +1,5 @@
 # Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
-# Copyright (c) 2006-2007 Sippy Software, Inc. All rights reserved.
+# Copyright (c) 2006-2009 Sippy Software, Inc. All rights reserved.
 #
 # This file is part of SIPPY, a free RFC3261 SIP stack and B2BUA.
 #
@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_udp.py,v 1.4 2009/02/25 06:56:52 sobomax Exp $
+# $Id: Rtp_proxy_client_udp.py,v 1.5 2009/02/25 07:42:28 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -36,7 +36,12 @@ class Rtp_proxy_client_udp(object):
     pending_requests = None
     address = None
     online = False
+    copy_supported = False
+    stat_supported = False
+    tnot_supported = False
+    shutdown = False
     proxy_address = None
+    caps_done = False
 
     def __init__(self, global_config, address):
         self.udp_server = Udp_server(None, self.process_reply)
@@ -73,12 +78,56 @@ class Rtp_proxy_client_udp(object):
         if parameters[3] != None:
             parameters[3](result.strip(), *parameters[4])
 
+    def caps_query1(self, result):
+        if self.shutdown:
+            return
+        if result != '1':
+            if result != None:
+                self.copy_supported = False
+                self.stat_supported = False
+                self.tnot_supported = False
+                self.caps_done = True
+            Timeout(self.heartbeat, 60)
+            return
+        self.copy_supported = True
+        self.send_command('VF 20080403', self.caps_query2)
+
+    def caps_query2(self, result):
+        if self.shutdown:
+            return
+        if result != None:
+            if result == '1':
+                self.stat_supported = True
+                self.send_command('VF 20081224', self.caps_query3)
+                return
+            else:
+                self.stat_supported = False
+                self.tnot_supported = False
+                self.caps_done = True
+        Timeout(self.heartbeat, 60)
+
+    def caps_query3(self, result):
+        if self.shutdown:
+            return
+        if result != None:
+            if result == '1':
+                self.tnot_supported = True
+            else:
+                self.tnot_supported = False
+            self.caps_done = True
+        Timeout(self.heartbeat, 60)
+
     def heartbeat(self):
         self.send_command('V', self.heartbeat_reply)
 
     def heartbeat_reply(self, version):
+        if self.shutdown:
+            return
         if version == '20040107':
             self.online = True
+            if not self.caps_done:
+                self.send_command('VF 20071218', self.caps_query1)
+                return
         else:
             self.online = False
         Timeout(self.heartbeat, 60)

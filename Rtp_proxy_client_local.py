@@ -1,5 +1,5 @@
 # Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
-# Copyright (c) 2006-2007 Sippy Software, Inc. All rights reserved.
+# Copyright (c) 2006-2009 Sippy Software, Inc. All rights reserved.
 #
 # This file is part of SIPPY, a free RFC3261 SIP stack and B2BUA.
 #
@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_local.py,v 1.5 2009/02/25 06:56:52 sobomax Exp $
+# $Id: Rtp_proxy_client_local.py,v 1.6 2009/02/25 07:42:28 sobomax Exp $
 
 from Timeout import Timeout
 from errno import EINTR
@@ -32,6 +32,10 @@ import socket
 class Rtp_proxy_client_local(object):
     address = None
     online = False
+    copy_supported = False
+    stat_supported = False
+    tnot_supported = False
+    shutdown = False
     proxy_address = None
 
     def __init__(self, global_config, address = '/var/run/rtpproxy.sock'):
@@ -69,12 +73,25 @@ class Rtp_proxy_client_local(object):
         args[0](args[1], *args[2])
 
     def heartbeat(self):
+        if self.shutdown:
+            return
+        self.online = False
+        self.copy_supported = False
+        self.stat_supported = False
+        self.tnot_supported = False
         try:
             version = self.send_raw('V')
             if version == '20040107':
                 self.online = True
-            else:
-                self.online = False
+                if self.send_raw('VF 20071218') != '1':
+                    break
+                self.copy_supported = True
+                if self.send_raw('VF 20080403') != '1':
+                    break
+                self.stat_supported = True
+                if self.send_raw('VF 20081224') != '1':
+                    break
+                self.tnot_supported = True
         except:
             self.online = False
         Timeout(self.heartbeat, 60)
