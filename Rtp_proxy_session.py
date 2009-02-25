@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.9 2009/01/05 21:00:45 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.10 2009/02/25 06:56:52 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
@@ -38,7 +38,6 @@ class Rtp_proxy_session(object):
     call_id = None
     from_tag = None
     to_tag = None
-    local_address = None
     caller_session_exists = False
     caller_codecs = None
     callee_session_exists = False
@@ -57,7 +56,6 @@ class Rtp_proxy_session(object):
             self.rtp_proxy_client = global_config['rtp_proxy_client']
             if not self.rtp_proxy_client.online:
                 raise Exception('No online RTP proxy client has been found')
-        self.local_address = global_config['sip_address']
         if call_id != None:
             self.call_id = call_id
         else:
@@ -189,7 +187,7 @@ class Rtp_proxy_session(object):
         if len(t1) > 1:
             rtpproxy_address = t1[1]
         else:
-            rtpproxy_address = self.local_address
+            rtpproxy_address = self.rtp_proxy_client.proxy_address
         result_callback((rtpproxy_address, rtpproxy_port), *callback_parameters)
 
     def delete(self):

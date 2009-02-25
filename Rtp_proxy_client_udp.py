@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_udp.py,v 1.3 2009/01/05 20:14:00 sobomax Exp $
+# $Id: Rtp_proxy_client_udp.py,v 1.4 2009/02/25 06:56:52 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -36,11 +36,13 @@ class Rtp_proxy_client_udp(object):
     pending_requests = None
     address = None
     online = False
+    proxy_address = None
 
-    def __init__(self, address):
+    def __init__(self, global_config, address):
         self.udp_server = Udp_server(None, self.process_reply)
         self.pending_requests = {}
         self.address = address
+        self.proxy_address = address[0]
         self.heartbeat()
 
     def send_command(self, command, result_callback = None, *callback_parameters):
