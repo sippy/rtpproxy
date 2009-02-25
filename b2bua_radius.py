@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.44 2009/02/25 08:35:47 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.45 2009/02/25 09:00:57 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -132,6 +132,10 @@ class CallController(object):
                 self.cGUID = cGUID.hexForm()
                 if self.cld == None:
                     self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (1)'), rtime = event.rtime))
+                    self.state = CCStateDead
+                    return
+                if body == None:
+                    self.uaA.recvEvent(CCEventFail((500, 'Body-less INVITE is not supported'), rtime = event.rtime))
                     self.state = CCStateDead
                     return
                 if self.global_config.has_key('allowed_pts'):
