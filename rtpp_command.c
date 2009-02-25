@@ -61,7 +61,8 @@ struct proto_cap proto_caps[] = {
     { "20071116", "Support for RTP re-packetization" },
     { "20071218", "Support for forking (copying) RTP stream" },
     { "20080403", "Support for RTP statistics querying" },
-    { "20081102", "Support for setting codecs in the update/lookup commend" },
+    { "20081102", "Support for setting codecs in the update/lookup command" },
+    { "20081224", "Support for session timeout notifications" },
     { NULL, NULL }
 };
 
@@ -508,7 +509,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 		socket_name_u += 5;
 	    if (argc == 8) {
 		notify_tag = argv[7];
-		len = url_unquote(notify_tag, strlen(notify_tag));
+		len = url_unquote((uint8_t *)notify_tag, strlen(notify_tag));
 		if (len == -1) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
 		      "command syntax error - invalid URL encoding");
