@@ -24,7 +24,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_simple.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
+# $Id: b2bua_simple.py,v 1.5 2009/02/25 06:42:16 sobomax Exp $
+
+import sys
+sys.path.append('sippy')
 
 from UA import UA
 from CCEvents import CCEventDisconnect, CCEventTry
@@ -33,7 +36,7 @@ from SipConf import SipConf
 from SipLogger import SipLogger
 from SipTransactionManager import SipTransactionManager
 from twisted.internet import reactor
-import getopt, os, sys
+import getopt, os
 #import gc
 
 class CallController(object):

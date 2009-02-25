@@ -24,7 +24,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.41 2009/01/05 20:14:00 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.42 2009/02/25 06:42:15 sobomax Exp $
+
+import sys
+sys.path.append('sippy')
 
 from Timeout import Timeout
 from Signal import Signal
@@ -49,7 +52,7 @@ from twisted.internet import reactor
 from urllib import unquote
 from Cli_server_local import Cli_server_local
 from SipTransactionManager import SipTransactionManager
-import gc, getopt, os, sys
+import gc, getopt, os
 from re import sub
 from time import time
 
