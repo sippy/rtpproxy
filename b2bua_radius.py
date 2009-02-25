@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.47 2009/02/25 20:39:49 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.48 2009/02/25 20:44:11 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -556,17 +556,17 @@ class CallMap(object):
             return False
         if cmd == 'r':
             if len(args) != 1:
-                clim.qSend('ERROR: syntax error: r [<id>]\n')
+                clim.send('ERROR: syntax error: r [<id>]\n')
                 return False
             idx = int(args[0])
             dlist = [x for x in self.ccmap if x.id == idx]
             if len(dlist) == 0:
-                clim.qSend('ERROR: no call with id of %d has been found\n' % idx)
+                clim.send('ERROR: no call with id of %d has been found\n' % idx)
                 return False
             for cc in dlist:
                 if cc.state == CCStateConnected and cc.proxied:
                     cc.disconnect(time() - 60)
-            clim.qSend('OK\n')
+            clim.send('OK\n')
             return False
         clim.send('ERROR: unknown command\n')
         return False
