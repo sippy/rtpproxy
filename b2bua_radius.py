@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.42 2009/02/25 06:42:15 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.43 2009/02/25 06:58:24 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -569,6 +569,7 @@ if __name__ == '__main__':
     pidfile = '/var/run/b2bua.pid'
     logfile = '/var/log/b2bua.log'
     cmdfile = '/var/run/b2bua.sock'
+    rtp_proxy_clients = []
     for o, a in opts:
         if o == '-f':
             foreground = True
@@ -647,10 +648,10 @@ if __name__ == '__main__':
                     rtp_proxy_address = (a[1], 22222)
                 else:
                     rtp_proxy_address = (a[1], int(a[2]))
-                global_config.setdefault('rtp_proxy_clients', []).append(Rtp_proxy_client_udp(rtp_proxy_address))
+                rtp_proxy_clients.append((Rtp_proxy_client_udp, rtp_proxy_address))
             else:
                 from Rtp_proxy_client_local import Rtp_proxy_client_local
-                global_config.setdefault('rtp_proxy_clients', []).append(Rtp_proxy_client_local(a))
+                rtp_proxy_clients.append((Rtp_proxy_client_local, a))
         if o == '-F':
             global_config['allowed_pts'] = [int(x) for x in a.split(',')]
             continue
@@ -696,6 +697,12 @@ if __name__ == '__main__':
     global_config['sip_logger'] = SipLogger('b2bua')
     global_config['sip_address'] = SipConf.my_address
     global_config['sip_port'] = SipConf.my_port
+
+    if len(rtp_proxy_clients) > 0:
+        global_config['rtp_proxy_clients'] = []
+        for Rtp_proxy_client, address in rtp_proxy_clients:
+            global_config['rtp_proxy_clients'].append(Rtp_proxy_client(global_config, address))
+
     if global_config['auth_enable'] or global_config['acct_enable']:
         global_config['radius_client'] = RadiusAuthorisation(global_config)
     SipConf.my_uaname = 'Sippy B2BUA (RADIUS)'
