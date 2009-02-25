@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.45 2009/02/25 09:00:57 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.46 2009/02/25 09:48:41 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -55,6 +55,7 @@ from SipTransactionManager import SipTransactionManager
 import gc, getopt, os
 from re import sub
 from time import time
+from urllib import quote
 
 def re_replace(ptrn, s):
     s = s.split('#', 1)[0]
