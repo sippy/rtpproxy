@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.9 2009/02/12 09:08:19 sobomax Exp $
+# $Id: UA.py,v 1.10 2009/02/25 07:07:51 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -188,8 +188,7 @@ class UA(object):
             self.changeState(newstate)
         self.emitPendingEvents()
 
-    def disconnect(self):
-        rtime = time()
+    def disconnect(self, rtime = time()):
         self.equeue.append(CCEventDisconnect(rtime = rtime))
         self.recvEvent(CCEventDisconnect(rtime = rtime))
 
