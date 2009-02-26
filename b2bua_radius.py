@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.48 2009/02/25 20:44:11 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.49 2009/02/26 09:58:27 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -358,8 +358,8 @@ class CallController(object):
         self.uaO.recvEvent(CCEventTry((cId + '-b2b_%d' % rnum, cGUID, cli, cld, body, auth, \
           parameters.get('caller_name', self.caller_name))))
 
-    def disconnect(self, rtime = time()):
-        self.uaA.disconnect(rtime)
+    def disconnect(self, rtime = None):
+        self.uaA.disconnect(rtime = rtime)
 
     def oConn(self, ua, rtime):
         if self.acctO != None:
