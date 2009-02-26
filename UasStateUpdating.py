@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateUpdating.py,v 1.4 2008/02/18 19:49:45 sobomax Exp $
+# $Id: UasStateUpdating.py,v 1.5 2009/02/26 22:32:12 sobomax Exp $
 
 from SipContact import SipContact
 from SipAddress import SipAddress
@@ -57,8 +57,13 @@ class UasStateUpdating(UaStateGeneric):
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
             also = req.getHFBody('refer-to').getUrl().getCopy()
             self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime))
-            self.ua.recvEvent(CCEventDisconnect(rtime = req.rtime))
-            return None
+            if self.ua.credit_timer != None:
+                self.ua.credit_timer.cancel()
+                self.ua.credit_timer = None
+                if self.ua.warn_timer != None:
+                    self.ua.warn_timer.cancel()
+                    self.ua.warn_timer = None
+            return (UaStateDisconnected, self.ua.disc_cbs, req.rtime)
         #print 'wrong request %s in the state Updating' % req.getMethod()
         return None
 
