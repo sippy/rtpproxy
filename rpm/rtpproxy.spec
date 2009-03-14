@@ -55,9 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/makeann
 %config %attr(755,root,root) /etc/rc.d/init.d/*
 
+%changelog
 * Mon Jan 12 2009 Alfred E. Heggestad <aeh@db.org>
 - Updated for version 1.2
 
-%changelog
 * Tue Jan 30 2007 Alfred E. Heggestad <aeh@db.org> - 0.3.1
 - Initial build.
