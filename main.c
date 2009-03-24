@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.87 2008/12/24 10:46:03 sobomax Exp $
+ * $Id: main.c,v 1.88 2009/03/24 04:28:59 sobomax Exp $
  *
  */
 
@@ -778,7 +778,7 @@ main(int argc, char **argv)
 
     i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (i >= 0) {
-	len = sprintf(buf, "%u\n", getpid());
+	len = sprintf(buf, "%u\n", (unsigned int)getpid());
 	write(i, buf, len);
 	close(i);
     } else {
