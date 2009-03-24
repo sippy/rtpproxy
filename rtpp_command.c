@@ -24,14 +24,19 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.24 2009/01/12 10:56:59 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.24.2.1 2009/03/24 04:30:11 sobomax Exp $
  *
  */
+
+#include "config.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <netinet/in.h>
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
