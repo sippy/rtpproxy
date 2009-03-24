@@ -411,7 +411,7 @@ init_controlfd(struct cfg *cf)
     if (cf->umode == 0) {
 	unlink(cmd_sock);
 	memset(&ifsun, '\0', sizeof ifsun);
-#ifdef HAVE_SOCKADDR_SUN_LEN
+#if defined(HAVE_SOCKADDR_SUN_LEN)
 	ifsun.sun_len = strlen(cmd_sock);
 #endif
 	ifsun.sun_family = AF_LOCAL;
