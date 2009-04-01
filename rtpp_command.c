@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.25 2009/03/24 04:28:59 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.26 2009/04/01 06:47:47 sobomax Exp $
  *
  */
 
@@ -1129,6 +1129,7 @@ handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag)
 	}
 	nrecorded++;
 	handle_copy(cf, spa, idx, NULL);
+	handle_copy(cf, spa, NOT(idx), NULL);
     }
     return (nrecorded == 0 ? -1 : 0);
 }
