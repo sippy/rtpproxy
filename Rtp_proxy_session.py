@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.11 2009/02/25 07:55:36 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.12 2009/04/07 11:14:45 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
@@ -230,6 +230,8 @@ class Rtp_proxy_session(object):
                 continue
             sects.append(sect)
         if len(sects) == 0:
+            sdp_body.needs_update = False
+            result_callback(sdp_body)
             return
         formats = sects[0].getF('m').body.formats
         if update_xxx == self.update_caller:
