@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.12 2009/04/07 11:14:45 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.13 2009/04/08 22:21:20 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
@@ -224,16 +224,16 @@ class Rtp_proxy_session(object):
             print '-' * 70
             sys.stdout.flush()
             return
-        for i in range(1, len(sdp_body.content.sections)):
+        for i in range(0, len(sdp_body.content.sections)):
             sect = sdp_body.content.sections[i]
-            if sect.getF('m').body.transport.lower() not in ('udp', 'udptl', 'rtp/avp'):
+            if sect.m_header.transport.lower() not in ('udp', 'udptl', 'rtp/avp'):
                 continue
             sects.append(sect)
         if len(sects) == 0:
             sdp_body.needs_update = False
             result_callback(sdp_body)
             return
-        formats = sects[0].getF('m').body.formats
+        formats = sects[0].m_header.formats
         if update_xxx == self.update_caller:
             if len(formats) > 1:
                 self.caller_codecs = reduce(lambda x, y: str(x) + ',' + str(y), formats)
@@ -245,18 +245,18 @@ class Rtp_proxy_session(object):
             else:
                 self.callee_codecs = str(formats[0])
         for sect in sects:
-            update_xxx(sect.getF('c').body.addr, sect.getF('m').body.port, self.xxx_sdp_change_finish, None, \
+            update_xxx(sect.c_header.addr, sect.m_header.port, self.xxx_sdp_change_finish, None, \
               sects.index(sect), sdp_body, sect, sects, result_callback)
         return
 
     def xxx_sdp_change_finish(self, address_port, sdp_body, sect, sects, result_callback):
         sect.needs_update = False
         if address_port != None:
-            sect.getF('c').body.addr = address_port[0]
-            if sect.getF('m').body.port != 0:
-                sect.getF('m').body.port = address_port[1]
+            sect.c_header.addr = address_port[0]
+            if sect.m_header.port != 0:
+                sect.m_header.port = address_port[1]
         if len([x for x in sects if x.needs_update]) == 0:
-            sdp_body.content.sections[0].getF('o').body = self.origin
+            sdp_body.content.o_header = self.origin
             sdp_body.needs_update = False
             result_callback(sdp_body)
 

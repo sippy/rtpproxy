@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.49 2009/02/26 09:58:27 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.50 2009/04/08 22:21:20 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -149,7 +149,7 @@ class CallController(object):
                         self.state = CCStateDead
                         return
                     allowed_pts = self.global_config['allowed_pts']
-                    mbody = body.content.sections[1].getF('m').body
+                    mbody = body.content.sections[0].m_header
                     if mbody.transport.lower() == 'rtp/avp':
                         mbody.formats = [x for x in mbody.formats if x in allowed_pts]
                         if len(mbody.formats) == 0:

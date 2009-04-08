@@ -22,56 +22,114 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpBody.py,v 1.6 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SdpBody.py,v 1.7 2009/04/08 22:21:20 sobomax Exp $
 
-from SdpField import SdpField
-from SdpBodySection import SdpBodySection
+from SdpMediaDescription import SdpMediaDescription
+from SdpGeneric import SdpGeneric
+from SdpOrigin import SdpOrigin
+from SdpConnecton import SdpConnecton
+
+f_types = {'v':SdpGeneric, 'o':SdpOrigin, 's':SdpGeneric, 'i':SdpGeneric, \
+  'u':SdpGeneric, 'e':SdpGeneric, 'p':SdpGeneric, 'c':SdpConnecton, \
+  'b':SdpGeneric, 't':SdpGeneric, 'r':SdpGeneric, 'z':SdpGeneric, \
+  'k':SdpGeneric}
 
 class SdpBody(object):
+    v_header = None
+    o_header = None
+    s_header = None
+    i_header = None
+    u_header = None
+    e_header = None
+    p_header = None
+    c_header = None
+    b_header = None
+    t_header = None
+    r_header = None
+    z_header = None
+    k_header = None
+    a_headers = None
+    first_half = ('v', 'o', 's', 'i', 'u', 'e', 'p')
+    second_half = ('b', 't', 'r', 'z', 'k')
+    all_headers = ('v', 'o', 's', 'i', 'u', 'e', 'p', 'c', 'b', 't', 'r', 'z', 'k')
     sections = None
 
     def __init__(self, body = None, cself = None):
         if cself != None:
+            for header_name in [x + '_header' for x in self.all_headers]:
+                try:
+                    setattr(self, header_name, getattr(cself, header_name).getCopy())
+                except AttributeError:
+                    pass
+            self.a_headers = [x for x in cself.a_headers]
             self.sections = [x.getCopy() for x in cself.sections]
             return
-        if body != None:
-            headers = [SdpField(x) for x in body.strip().splitlines()]
-        else:
-            headers = []
+        self.a_headers = []
         self.sections = []
+        if body == None:
+            return
+        avpairs = [x.split('=', 1) for x in body.strip().splitlines()]
         current_snum = 0
-        for header in tuple(headers):
-            if header.isName('m'):
-                # Protect against degenerative cases when SDP has no "global" secion.
-                # Add fake one in such cases.
-                if len(self.sections) == 0:
-                    self.sections.append(SdpBodySection())
+        c_header = None
+        for name, v in avpairs:
+            name = name.lower()
+            if name == 'm':
                 current_snum += 1
-            if len(self.sections) == current_snum:
-                self.sections.append(SdpBodySection(headers = [header]))
+                self.sections.append(SdpMediaDescription())
+            if current_snum == 0:
+                if name == 'c':
+                    c_header = v
+                elif name == 'a':
+                    self.a_headers.append(v)
+                else:
+                    setattr(self, name + '_header', f_types[name](v))
             else:
-                self.sections[current_snum].headers.append(header)
-        if len(self.sections) > 1 and self.sections[0].countFs('c') > 0:
-            for section in self.sections[1:]:
-                # Add `c' into each section that doesn't have it using global `c'
-                # This should simplify things quite a bit later when we need
-                # to modify something
-                if section.countFs('c') == 0:
-                    iheader = section.getF('m')
-                    nheader = self.sections[0].getF('c').getCopy()
-                    section.insertFAfter(iheader, nheader)
-            # Remove global `c' - we don't really need it if there are any
-            # media sections
-            self.sections[0].delFs('c')
+                self.sections[-1].addHeader(name, v)
+        if c_header != None:
+            for section in self.sections:
+                if section.c_header == None:
+                    section.addHeader('c', c_header)
+            if len(self.sections) == 0:
+                self.addHeader('c', c_header)
 
     def __str__(self):
-        if len(self.sections) > 1:
-            return reduce(lambda x, y: str(x) + str(y), self.sections)
-        return str(self.sections[0])
+        s = ''
+        if len(self.sections) == 1 and self.sections[0].c_header != None:
+            for name in self.first_half:
+                header = getattr(self, name + '_header')
+                if header != None:
+                    s += '%s=%s\r\n' % (name, str(header))
+            s += 'c=%s\r\n' % str(self.sections[0].c_header)
+            for name in self.second_half:
+                header = getattr(self, name + '_header')
+                if header != None:
+                    s += '%s=%s\r\n' % (name, str(header))
+            for header in self.a_headers:
+                s += 'a=%s\r\n' % str(header)
+            s += self.sections[0].noCStr()
+            return s
+        for name in self.all_headers:
+            header = getattr(self, name + '_header')
+            if header != None:
+                s += '%s=%s\r\n' % (name, str(header))
+        for header in self.a_headers:
+            s += 'a=%s\r\n' % str(header)
+        for section in self.sections:
+            s += str(section)
+        return s
 
     def __iadd__(self, other):
-        self.sections[-1] += other
+        if len(self.sections) > 0:
+            self.sections[-1].addHeader(*other.strip().split('=', 1))
+        else:
+            self.addHeader(*other.strip().split('=', 1))
         return self
 
     def getCopy(self):
         return SdpBody(cself = self)
+
+    def addHeader(self, name, header):
+        if name == 'a':
+            self.a_headers.append(header)
+        else:
+            setattr(self, name + '_header', f_types[name](header))
