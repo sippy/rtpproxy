@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: MsgBody.py,v 1.5 2009/01/05 20:14:00 sobomax Exp $
+# $Id: MsgBody.py,v 1.6 2009/04/08 22:00:53 sobomax Exp $
 
 from SdpBody import SdpBody
 from types import StringType
@@ -50,10 +50,8 @@ class MsgBody(object):
     def parse(self):
         if not self.parsed:
             self.parsed = True
-            try:
+            if b_types.has_key(self.mtype):
                 self.content = b_types[self.mtype](self.content)
-            except KeyError:
-                pass
 
     def __str__(self):
         return str(self.content)
