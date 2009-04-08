@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipHeader.py,v 1.9 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SipHeader.py,v 1.10 2009/04/08 22:17:12 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from SipCSeq import SipCSeq
@@ -98,6 +98,3 @@ class SipHeader(object):
         if not self.body.parsed:
             self.body.parse()
         return self.body
-
-    def isName(self, name):
-        return name.lower() == self.name

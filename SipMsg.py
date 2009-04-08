@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.14 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SipMsg.py,v 1.15 2009/04/08 22:17:12 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -67,28 +67,43 @@ class SipMsg(object):
             else:
                 i += 1
         # Parse headers
+        content_type = None
+        content_length = None
+        header_names = []
         for line in lines[1:]:
             try:
-                self.headers.append(SipHeader(line, fixname = True))
+                header = SipHeader(line, fixname = True)
+                if header.name == 'content-type':
+                    content_type = header
+                elif header.name == 'content-length':
+                    content_length = header
+                else:
+                    self.headers.append(header)
+                    header_names.append(header.name)
             except ESipHeaderCSV, einst:
                 for body in einst.bodys:
-                    self.headers.append(SipHeader(name = einst.name, bodys = body))
+                    header = SipHeader(name = einst.name, bodys = body)
+                    if header.name == 'content-type':
+                        content_type = header
+                    elif header.name == 'content-length':
+                        content_length = header
+                    else:
+                        self.headers.append(header)
+                        header_names.append(header.name)
             except ESipHeaderIgnore:
                 continue
-        if self.countHFs('via') == 0:
+        if 'via' not in header_names:
             raise Exception('Via HF is missed')
-        if self.countHFs('to') == 0:
+        if 'to' not in header_names:
             raise Exception('To HF is missed')
-        if self.countHFs('from') == 0:
+        if 'from' not in header_names:
             raise Exception('From HF is missed')
-        if self.countHFs('cseq') == 0:
+        if 'cseq' not in header_names:
             raise Exception('CSeq HF is missed')
         if self.ignorebody:
-            self.delHFs('content-type')
-            self.delHFs('content-length')
             return
-        if self.countHFs('content-length') > 0:
-            blen = self.getHFBody('content-length').number
+        if content_length != None:
+            blen = content_length.getBody().number
             if mbody == None:
                 mblen = 0
             else:
@@ -129,16 +144,13 @@ class SipMsg(object):
                 mbody = mbody[:blen]
                 mblen = blen
         if mbody != None:
-            ct = self.getHFs('content-type')
-            if len(ct) > 0:
-                self.body = MsgBody(mbody, str(ct[0].body).lower())
-                self.delHFs('content-type')
-                self.delHFs('content-length')
+            if content_type != None:
+                self.body = MsgBody(mbody, str(content_type.getBody()).lower())
             else:
                 self.body = MsgBody(mbody)
 
     def __str__(self):
-        s = str(self.getSL()) + '\r\n'
+        s = self.getSL() + '\r\n'
         for header in self.headers:
             s += str(header) + '\r\n'
         if self.body != None:
@@ -147,11 +159,11 @@ class SipMsg(object):
             s += 'Content-Type: %s\r\n\r\n' % self.body.mtype
             s += mbody
         else:
-            s += '\r\n'
+            s += 'Content-Length: 0\r\n\r\n'
         return s
 
     def compactStr(self):
-        s = str(self.getSL()) + '\r\n'
+        s = self.getSL() + '\r\n'
         for header in self.headers:
             s += header.compactStr() + '\r\n'
         if self.body != None:
@@ -160,7 +172,7 @@ class SipMsg(object):
             s += 'c: %s\r\n\r\n' % self.body.mtype
             s += mbody
         else:
-            s += '\r\n'
+            s += 'l: 0\r\n\r\n'
         return s
 
     def setSL(self, startline):
@@ -170,22 +182,22 @@ class SipMsg(object):
         return self.startline
 
     def getHFs(self, name):
-        return [x for x in self.headers if x.isName(name)]
+        return [x for x in self.headers if x.name == name]
 
     def countHFs(self, name):
-        return len([x for x in self.headers if x.isName(name)])
+        return len([x for x in self.headers if x.name == name])
 
     def delHFs(self, name):
-        self.headers = [x for x in self.headers if not x.isName(name)]
+        self.headers = [x for x in self.headers if x.name != name]
 
     def getHF(self, name):
-        return [x for x in self.headers if x.isName(name)][0]
+        return [x for x in self.headers if x.name == name][0]
 
     def getHFBodys(self, name):
-        return [x.getBody() for x in self.headers if x.isName(name)]
+        return [x.getBody() for x in self.headers if x.name == name]
 
     def getHFBody(self, name, idx = 0):
-        return [x for x in self.headers if x.isName(name)][idx].getBody()
+        return [x for x in self.headers if x.name == name][idx].getBody()
 
     def replaceHeader(self, oheader, nheader):
         self.headers[self.headers.index(oheader)] = nheader
@@ -224,19 +236,18 @@ class SipMsg(object):
         self.source = address
 
     def getTId(self, wCSM = False, wBRN = False):
-        cseq = self.getHFBody('cseq')
-        rval = [str(self.getHFBody('call-id')), self.getHFBody('from').getTag(), cseq.getCSeqNum()]
+        headers_dict = dict([(x.name, x) for x in self.headers if x.name in ('cseq', 'call-id', 'from')])
+        cseq, method = headers_dict['cseq'].getBody().getCSeq()
+        rval = [str(headers_dict['call-id'].getBody()), headers_dict['from'].getBody().getTag(), cseq]
         if wCSM:
-            rval.append(cseq.getCSeqMethod())
+            rval.append(method)
         if wBRN:
             rval.append(self.getHFBody('via').getBranch())
         return tuple(rval)
 
     def getTIds(self):
-        call_id = str(self.getHFBody('call-id'))
-        ftag = self.getHFBody('from').getTag()
-        cseq, method = self.getHFBody('cseq').getCSeq()
-        rval = []
-        for via in self.getHFBodys('via'):
-            rval.append((call_id, ftag, cseq, method, via.getBranch()))
-        return tuple(rval)
+        headers_dict = dict([(x.name, x) for x in self.headers if x.name in ('cseq', 'call-id', 'from')])
+        call_id = str(headers_dict['call-id'].getBody())
+        ftag = headers_dict['from'].getBody().getTag()
+        cseq, method = headers_dict['cseq'].getBody().getCSeq()
+        return tuple([(call_id, ftag, cseq, method, via.getBranch()) for via in self.getHFBodys('via')])
