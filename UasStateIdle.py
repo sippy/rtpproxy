@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateIdle.py,v 1.6 2008/11/26 19:46:41 sobomax Exp $
+# $Id: UasStateIdle.py,v 1.7 2009/04/08 22:14:21 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -42,7 +42,7 @@ class UasStateIdle(UaStateGeneric):
             #print 'wrong request %s in the Trying state' % req.getMethod()
             return None
         #print 'INVITE received in the Idle state, going to the Trying state'
-        if req.countHFs('cisco-GUID') != 0:
+        if req.countHFs('cisco-guid') != 0:
             self.ua.cGUID = req.getHFBody('cisco-guid').getCopy()
         elif req.countHFs('h323-conf-id') != 0:
             self.ua.cGUID = req.getHFBody('h323-conf-id').getCopy()
