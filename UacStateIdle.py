@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateIdle.py,v 1.8 2009/02/12 09:08:19 sobomax Exp $
+# $Id: UacStateIdle.py,v 1.9 2009/04/08 21:48:13 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -72,7 +72,7 @@ class UacStateIdle(UaStateGeneric):
                     self.ua.no_progress_timer = Timeout(self.ua.no_progress_expires, self.ua.no_progress_time)
             return (UacStateTrying,)
         if isinstance(event, CCEventFail) or isinstance(event, CCEventRedirect) or isinstance(event, CCEventDisconnect):
-            return (UaStateDead,)
+            return (UaStateDead, self.ua.disc_cbs, event.rtime)
         return None
 
 if not globals().has_key('UacStateTrying'):
