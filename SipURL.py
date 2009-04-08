@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipURL.py,v 1.9 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SipURL.py,v 1.10 2009/04/08 22:10:14 sobomax Exp $
 
 from SipConf import SipConf
 from urllib import quote, unquote
@@ -91,7 +91,7 @@ class SipURL(object):
             uparts = upparts[0].split(';')
             if len(uparts) > 1:
                 self.userparams = uparts[1:]
-            self.username = uparts[0]
+            self.username = unquote(uparts[0])
         else:
             hostport = udparts[0]
         hpparts = hostport.split(':', 1)
