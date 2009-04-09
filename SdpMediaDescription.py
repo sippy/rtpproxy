@@ -14,6 +14,7 @@ class SdpMediaDescription(object):
     k_header = None
     a_headers = None
     all_headers = ('m', 'i', 'c', 'b', 'k')
+    needs_update = True
 
     def __init__(self, cself = None):
         if cself != None:
