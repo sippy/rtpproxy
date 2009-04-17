@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipRequest.py,v 1.6 2009/02/12 09:00:59 sobomax Exp $
+# $Id: SipRequest.py,v 1.7 2009/04/17 19:40:19 sobomax Exp $
 
 from SipMsg import SipMsg
 from SipHeader import SipHeader
@@ -67,7 +67,8 @@ class SipRequest(SipMsg):
         self.appendHeader(SipHeader(name = 'cseq', body = SipCSeq(cseq = cseq, method = method)))
         if contact != None:
             self.appendHeader(SipHeader(name = 'contact', body = contact))
-        self.appendHeader(SipHeader(name = 'expires'))
+        if method in ('INVITE', 'REGISTER'):
+            self.appendHeader(SipHeader(name = 'expires'))
         self.appendHeader(SipHeader(name = 'user-agent'))
         if cguid != None:
             self.appendHeader(SipHeader(name = 'cisco-guid', body = cguid))
