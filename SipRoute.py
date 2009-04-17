@@ -22,12 +22,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipRoute.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SipRoute.py,v 1.5 2009/04/17 19:39:29 sobomax Exp $
 
 from SipFrom import SipFrom
 
 class SipRoute(SipFrom):
     hf_names = ('route',)
+
+    def getCanName(self, name, compact = False):
+        if name == 'record-route':
+            return 'Record-Route'
+        else:
+            return 'Route'
 
     def getAddr(self):
         return self.address.url.getAddr()
