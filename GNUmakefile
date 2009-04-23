@@ -30,8 +30,16 @@ CFLAGS+=-I../siplog -Wall -D_BSD_SOURCE -D_ISOC99_SOURCE
 LIBS+=	-L../siplog -lsiplog -lpthread -lm
 PREFIX?= /usr/local
 
-# Uncomment this on Solaris
-#LIBS+=	-lresolv -lsocket -lnsl
+OS = $(shell uname -s | sed -e s/SunOS/solaris/ -e s/CYGWIN.*/cygwin/ \
+                 | tr "[A-Z]" "[a-z]")
+
+ifeq ($(OS),solaris)
+LIBS+=	-lsocket -lnsl -lxnet -lrt
+endif
+
+ifeq ($(OS),linux)
+CFLAGS+= -D_BSD_SOURCE
+endif
 
 SRCS = main.c rtp_server.c rtpp_record.c rtpp_util.c rtp_resizer.c rtp.c rtpp_session.c \
   rtpp_command.c
