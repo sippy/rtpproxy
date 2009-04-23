@@ -34,7 +34,9 @@
 #define __solaris__     1
 #endif
 
+#if !defined(__solaris__)
 #define HAVE_ERR_H      1
+#endif
 #define HAVE_STDINT_H   1
 
 #if !defined(__linux__) && !defined(__solaris__)
