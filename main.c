@@ -778,7 +778,7 @@ main(int argc, char **argv)
 
     i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (i >= 0) {
-	len = sprintf(buf, "%u\n", getpid());
+	len = sprintf(buf, "%u\n", (unsigned int)getpid());
 	write(i, buf, len);
 	close(i);
     } else {
