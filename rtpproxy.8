@@ -171,7 +171,7 @@ rtpproxy \- RTP (Real\-time Transport Protocol) Proxy Server
 .SH "Synopsis"
 .fam C
 .HP \w'\fBrtpproxy\fR\ 'u
-\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR]
+\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR]
 .fam
 .SH "DESCRIPTION"
 .PP
@@ -375,15 +375,19 @@ Record sessions using PCAP file format instead of non\-standard ad\-hoc format\&
 Record all sessions going through the RTPproxy unconditionally\&. By default the RTPproxy requires call control software (i\&.e\&. SER, OpenSER or B2BUA) to enable recording explicitly on per\-session basis by sending appropriate record command\&.
 .RE
 .PP
-\fB\-d\fR \fIlog_level\fR
+\fB\-d\fR \fIlog_level\fR\fI[:log_facility]\fR
 .RS 4
 This parameter configures the verbosity level of the log output\&. Possible
 \fIlog_level\fR
 values in the order from the most verboe to the least verbose are: DBUG, INFO, WARN, ERR and CRIT\&.
 .sp
-Example: \-d WARN
+The optional
+\fIlog_facility\fR
+parameter sets syslog facility assigned to log messages\&.
 .sp
-The default level is DBUG\&.
+Example: \-d WARN:LOG_LOCAL5
+.sp
+The default level is DBUG and facility is LOG_DAEMON\&.
 .RE
 .SH "HowItWorks"
 .PP
