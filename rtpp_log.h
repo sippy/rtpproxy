@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_log.h,v 1.6 2008/09/17 01:12:41 sobomax Exp $
+ * $Id: rtpp_log.h,v 1.7 2009/05/29 23:48:04 sobomax Exp $
  *
  */
 
@@ -64,5 +64,6 @@ void _rtpp_log_ewrite(struct cfg *, int, const char *, const char *, ...);
 struct cfg *_rtpp_log_open(struct cfg *, const char *);
 void _rtpp_log_close(void);
 int rtpp_log_str2lvl(const char *);
+int rtpp_log_str2fac(const char *);
 
 #endif

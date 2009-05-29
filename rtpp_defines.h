@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.24 2009/01/12 10:55:27 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.25 2009/05/29 23:48:04 sobomax Exp $
  *
  */
 
@@ -136,6 +136,7 @@ struct cfg {
     int port_table_idx;
 
     int log_level;
+    int log_facility;
 };
 
 #endif

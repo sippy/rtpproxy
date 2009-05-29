@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_log.c,v 1.1 2008/09/17 01:11:20 sobomax Exp $
+ * $Id: rtpp_log.c,v 1.2 2009/05/29 23:48:04 sobomax Exp $
  *
  */
 
@@ -42,6 +42,11 @@ static int open_count = 0;
 struct cfg *
 _rtpp_log_open(struct cfg *cf, const char *app)
 {
+    int facility;
+
+    facility = cf->log_facility;
+    if (facility == -1)
+	facility = LOG_DAEMON;
 
     if (open_count == 0)
 	openlog(app, LOG_PID | LOG_CONS, LOG_DAEMON);
@@ -159,4 +164,45 @@ _rtpp_log_ewrite(struct cfg *cf, int level, const char *function, const char *fo
     }
 
     va_end(ap);
+}
+
+static struct {
+    const char *str_fac;
+    int int_fac;
+} str2fac[] = {
+    {"LOG_AUTH",     LOG_AUTH},
+    {"LOG_CRON",     LOG_CRON},
+    {"LOG_DAEMON",   LOG_DAEMON},
+    {"LOG_KERN",     LOG_KERN},
+    {"LOG_LOCAL0",   LOG_LOCAL0},
+    {"LOG_LOCAL1",   LOG_LOCAL1},
+    {"LOG_LOCAL2",   LOG_LOCAL2},
+    {"LOG_LOCAL3",   LOG_LOCAL3},
+    {"LOG_LOCAL4",   LOG_LOCAL4},
+    {"LOG_LOCAL5",   LOG_LOCAL5},
+    {"LOG_LOCAL6",   LOG_LOCAL6},
+    {"LOG_LOCAL7",   LOG_LOCAL7},
+    {"LOG_LPR",      LOG_LPR},
+    {"LOG_MAIL",     LOG_MAIL},
+    {"LOG_NEWS",     LOG_NEWS},
+    {"LOG_USER",     LOG_USER},
+    {"LOG_UUCP",     LOG_UUCP},
+#if !defined(__solaris__) && !defined(__sun) && !defined(__svr4__)
+    {"LOG_AUTHPRIV", LOG_AUTHPRIV},
+    {"LOG_FTP",      LOG_FTP},
+    {"LOG_SYSLOG",   LOG_SYSLOG},
+#endif
+    {NULL,           0}
+};
+
+int
+rtpp_log_str2fac(const char *s)
+{
+    int i;
+
+    for (i=0; str2fac[i].str_fac != NULL; i++) {
+        if (!strcasecmp(s, str2fac[i].str_fac))
+            return str2fac[i].int_fac;
+    }
+    return -1;
 }
