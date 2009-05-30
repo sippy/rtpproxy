@@ -293,7 +293,7 @@ Default value is
 .PP
 \fB\-t\fR \fItos\fR
 .RS 4
-Set this ToS (Type of Service) in outgoing packets\&. Default value is 0xB8\&.
+Set ToS (Type of Service) in the outgoing UDP packets to this value\&. Default value is 0xB8\&. Setting this parameter to \-1 disables setting ToS resulting in operating system default ToS being used instead\&.
 .RE
 .PP
 \fB\-r\fR \fIrec_dir\fR
@@ -383,7 +383,7 @@ values in the order from the most verboe to the least verbose are: DBUG, INFO, W
 .sp
 The optional
 \fIlog_facility\fR
-parameter sets syslog facility assigned to log messages\&.
+parameter sets syslog(3) facility assigned to log messages\&.
 .sp
 Example: \-d WARN:LOG_LOCAL5
 .sp
