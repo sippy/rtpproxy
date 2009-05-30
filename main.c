@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.89 2009/05/29 23:48:03 sobomax Exp $
+ * $Id: main.c,v 1.90 2009/05/30 00:50:09 sobomax Exp $
  *
  */
 
@@ -189,6 +189,8 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 't':
 	    cf->tos = atoi(optarg);
+	    if (cf->tos > 255)
+		errx(1, "%d: TOS is too large", cf->tos);
 	    break;
 
 	case '2':

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.26 2009/04/01 06:47:47 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.27 2009/05/30 00:50:11 sobomax Exp $
  *
  */
 
@@ -109,7 +109,7 @@ create_twinlistener(struct cfg *cf, struct sockaddr *ia, int port, int *fds)
 	    goto failure;
 	}
 	port++;
-	if ((ia->sa_family == AF_INET) &&
+	if ((ia->sa_family == AF_INET) && (cf->tos >= 0) &&
 	  (setsockopt(fds[i], IPPROTO_IP, IP_TOS, &cf->tos, sizeof(cf->tos)) == -1))
 	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "unable to set TOS to %d", cf->tos);
 	flags = fcntl(fds[i], F_GETFL);

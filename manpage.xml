@@ -230,8 +230,10 @@
 		<term><option>-t</option> <replaceable>tos</replaceable></term>
 		<listitem>
 		    <para>
-			Set this ToS (Type of Service) in outgoing
-			packets. Default value is 0xB8.
+			Set ToS (Type of Service) in the outgoing UDP
+			packets to this value. Default value is 0xB8. Setting this
+                        parameter to -1 disables setting ToS resulting in operating
+			system default ToS being used instead.
 		    </para>
 		</listitem>
 	    </varlistentry>
