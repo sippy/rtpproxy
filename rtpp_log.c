@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_log.c,v 1.2 2009/05/29 23:48:04 sobomax Exp $
+ * $Id: rtpp_log.c,v 1.3 2009/05/30 00:15:27 sobomax Exp $
  *
  */
 
@@ -201,7 +201,8 @@ rtpp_log_str2fac(const char *s)
     int i;
 
     for (i=0; str2fac[i].str_fac != NULL; i++) {
-        if (!strcasecmp(s, str2fac[i].str_fac))
+        if (strcasecmp(s, str2fac[i].str_fac) == 0 || \
+	  strcasecmp(s, str2fac[i].str_fac + 4) == 0)
             return str2fac[i].int_fac;
     }
     return -1;
