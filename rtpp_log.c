@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_log.c,v 1.3 2009/05/30 00:15:27 sobomax Exp $
+ * $Id: rtpp_log.c,v 1.4 2009/06/01 06:53:00 sobomax Exp $
  *
  */
 
@@ -49,7 +49,7 @@ _rtpp_log_open(struct cfg *cf, const char *app)
 	facility = LOG_DAEMON;
 
     if (open_count == 0)
-	openlog(app, LOG_PID | LOG_CONS, LOG_DAEMON);
+	openlog(app, LOG_PID | LOG_CONS, facility);
     open_count++;
     return cf;
 }
