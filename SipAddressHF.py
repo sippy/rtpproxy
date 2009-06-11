@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAddressHF.py,v 1.4 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SipAddressHF.py,v 1.5 2009/06/11 21:48:25 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from SipAddress import SipAddress
@@ -42,7 +42,9 @@ class SipAddressHF(SipGenericHF):
                     break;
                 onum = body[:idx].count('<')
                 cnum = body[:idx].count('>')
-                if (onum > 0) and (onum == cnum) and (body[:idx].count('"') % 2 == 0):
+                qnum = body[:idx].count('"')
+                if (onum == 0 and cnum == 0 and qnum == 0) or (onum > 0 and \
+                  onum == cnum and (qnum % 2 == 0)):
                     csvs.append(body[:idx])
                     body = body[idx + 1:]
                     pidx = 0
