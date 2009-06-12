@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.27 2009/05/30 00:50:11 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.28 2009/06/12 19:43:28 sobomax Exp $
  *
  */
 
@@ -749,7 +749,6 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     if (i != -1) {
 	assert(op == UPDATE || op == LOOKUP);
 	if (spa->fds[i] == -1) {
-	    j = ishostseq(cf->bindaddr[0], spa->laddr[i]) ? 0 : 1;
 	    if (create_listener(cf, spa->laddr[i], &lport, fds) == -1) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create listener");
 		reply_error(cf, controlfd, &raddr, rlen, cookie, 7);
