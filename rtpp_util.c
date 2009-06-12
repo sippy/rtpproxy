@@ -24,21 +24,15 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_util.c,v 1.14 2008/12/24 10:31:52 sobomax Exp $
+ * $Id: rtpp_util.c,v 1.15 2009/06/12 19:10:08 sobomax Exp $
  *
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/time.h>
-#include <sys/uio.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <math.h>
-#include <netdb.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -47,82 +41,6 @@
 
 #include "rtpp_util.h"
 #include "rtpp_log.h"
-
-int
-ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
-{
-
-    if (ia1->sa_family != ia2->sa_family)
-	return 0;
-
-    switch (ia1->sa_family) {
-    case AF_INET:
-	return (satosin(ia1)->sin_addr.s_addr ==
-	  satosin(ia2)->sin_addr.s_addr);
-
-    case AF_INET6:
-	return (memcmp(&satosin6(ia1)->sin6_addr.s6_addr[0],
-	  &satosin6(ia2)->sin6_addr.s6_addr[0],
-	  sizeof(struct in6_addr)) == 0);
-
-    default:
-	break;
-    }
-    /* Can't happen */
-    abort();
-}
-
-int
-ishostnull(struct sockaddr *ia)
-{
-    struct in6_addr *ap;
-
-    switch (ia->sa_family) {
-    case AF_INET:
-	return (satosin(ia)->sin_addr.s_addr == INADDR_ANY);
-
-    case AF_INET6:
-	ap = &satosin6(ia)->sin6_addr;
-	return ((*(const uint32_t *)(const void *)(&ap->s6_addr[0]) == 0) &&
-		(*(const uint32_t *)(const void *)(&ap->s6_addr[4]) == 0) &&
-		(*(const uint32_t *)(const void *)(&ap->s6_addr[8]) == 0) &&
-		(*(const uint32_t *)(const void *)(&ap->s6_addr[12]) == 0));
-
-    default:
-	break;
-    }
-
-    abort();
-}
-
-char *
-addr2char_r(struct sockaddr *ia, char *buf, int size)
-{
-    void *addr;
-
-    switch (ia->sa_family) {
-    case AF_INET:
-	addr = &(satosin(ia)->sin_addr);
-	break;
-
-    case AF_INET6:
-	addr = &(satosin6(ia)->sin6_addr);
-	break;
-
-    default:
-	abort();
-    }
-
-    return (char *)((void *)inet_ntop(ia->sa_family, addr, buf, size));
-}
-
-const char *
-addr2char(struct sockaddr *ia)
-{
-    static char buf[256];
-
-    return(addr2char_r(ia, buf, sizeof(buf)));
-}
 
 double
 getdtime(void)
@@ -141,28 +59,6 @@ dtime2ts(double dtime, uint32_t *ts_sec, uint32_t *ts_usec)
 
     *ts_sec = trunc(dtime);
     *ts_usec = round(1000000.0 * (dtime - ((double)*ts_sec)));
-}
-
-int
-resolve(struct sockaddr *ia, int pf, const char *host,
-  const char *servname, int flags)
-{
-    int n;
-    struct addrinfo hints, *res;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_flags = flags;	     /* We create listening sockets */
-    hints.ai_family = pf;	       /* Protocol family */
-    hints.ai_socktype = SOCK_DGRAM;     /* UDP */
-
-    n = getaddrinfo(host, servname, &hints, &res);
-    if (n == 0) {
-	/* Use the first socket address returned */
-	memcpy(ia, res->ai_addr, res->ai_addrlen);
-	freeaddrinfo(res);
-    }
-
-    return n;
 }
 
 void
@@ -199,45 +95,6 @@ drop_privileges(struct cfg *cf)
 	return -1;
     }
     return 0;
-}
-
-uint16_t
-rtpp_in_cksum(void *addr, int len)
-{
-    int nleft, sum;
-    uint16_t *w;
-    union {
-        uint16_t us;
-        uint16_t uc[2];
-    } last;
-    uint16_t answer;
-
-    nleft = len;
-    sum = 0;
-    w = (uint16_t *)addr;
-
-    /*
-     * Our algorithm is simple, using a 32 bit accumulator (sum), we add
-     * sequential 16 bit words to it, and at the end, fold back all the
-     * carry bits from the top 16 bits into the lower 16 bits.
-     */
-    while (nleft > 1)  {
-	sum += *w++;
-	nleft -= 2;
-    }
-
-    /* mop up an odd byte, if necessary */
-    if (nleft == 1) {
-	last.uc[0] = *(uint8_t *)w;
-	last.uc[1] = 0;
-	sum += last.us;
-    }
-
-    /* add back carry outs from top 16 bits to low 16 bits */
-    sum = (sum >> 16) + (sum & 0xffff);     /* add hi 16 to low 16 */
-    sum += (sum >> 16);                     /* add carry */
-    answer = ~sum;                          /* truncate to 16 bits */
-    return (answer);
 }
 
 void

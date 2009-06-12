@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp.c,v 1.9 2009/01/12 11:36:40 sobomax Exp $
+ * $Id: rtp.c,v 1.10 2009/06/12 19:10:08 sobomax Exp $
  *
  */
 
@@ -34,7 +34,7 @@
 #include <assert.h>
 
 #include "rtp.h"
-#include "rtpp_util.h"
+#include "rtpp_network.h"
 
 /* Linked list of free packets */
 static struct rtp_packet *rtp_packet_pool = NULL;

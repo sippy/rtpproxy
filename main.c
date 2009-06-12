@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.90 2009/05/30 00:50:09 sobomax Exp $
+ * $Id: main.c,v 1.91 2009/06/12 19:10:08 sobomax Exp $
  *
  */
 
@@ -63,6 +63,7 @@
 #include "rtpp_log.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
+#include "rtpp_network.h"
 #include "rtpp_util.h"
 
 static const char *cmd_sock = CMD_SOCK;

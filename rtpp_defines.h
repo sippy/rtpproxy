@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.25 2009/05/29 23:48:04 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.26 2009/06/12 19:10:08 sobomax Exp $
  *
  */
 
@@ -34,8 +34,10 @@
 #include "config.h"
 
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <netinet/in.h>
 #include <poll.h>
 #ifdef HAVE_STDINT_H
 #include <stdint.h>

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.h,v 1.9 2008/07/18 00:17:25 sobomax Exp $
+ * $Id: rtpp_record.h,v 1.10 2009/06/12 19:10:08 sobomax Exp $
  *
  */
 
@@ -40,7 +40,7 @@
 
 #include "rtpp_defines.h"
 #include "rtp.h"
-#include "rtpp_util.h"
+#include "rtpp_network.h"
 
 #define	DLT_NULL	0
 #define	PCAP_MAGIC	0xa1b2c3d4
