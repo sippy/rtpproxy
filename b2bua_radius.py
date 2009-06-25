@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.50 2009/04/08 22:21:20 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.51 2009/06/25 22:10:34 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -749,4 +749,4 @@ if __name__ == '__main__':
         file(pidfile, 'w').write(str(os.getpid()) + '\n')
         Signal(SIGUSR1, reopen, SIGUSR1, logfile)
 
-    reactor.run(installSignalHandlers = 0)
+    reactor.run(installSignalHandlers = True)

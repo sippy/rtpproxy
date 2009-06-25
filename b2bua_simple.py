@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_simple.py,v 1.5 2009/02/25 06:42:16 sobomax Exp $
+# $Id: b2bua_simple.py,v 1.6 2009/06/25 22:10:34 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -144,4 +144,4 @@ if __name__ == '__main__':
 
     global_config['sip_tm'] = SipTransactionManager(global_config, cmap.recvRequest)
 
-    reactor.run(installSignalHandlers = 0)
+    reactor.run(installSignalHandlers = True)
