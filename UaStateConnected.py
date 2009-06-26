@@ -22,13 +22,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateConnected.py,v 1.6 2009/04/08 21:59:07 sobomax Exp $
+# $Id: UaStateConnected.py,v 1.7 2009/06/26 05:34:57 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
 from SipAlso import SipAlso
 from SipAddress import SipAddress
-from SipURL import SipURL
 from SipHeader import SipHeader
 from SipReferTo import SipReferTo
 from SipReferredBy import SipReferredBy
