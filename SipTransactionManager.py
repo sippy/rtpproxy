@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.11 2009/02/12 09:03:07 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.12 2009/07/01 18:14:14 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -129,7 +129,7 @@ class SipTransactionManager(object):
         if data.startswith('SIP/2.0 '):
             try:
                 resp = SipResponse(data)
-                resp.rtime = rtime
+                tid = resp.getTId(True, True)
             except Exception, exception:
                 print datetime.now(), 'can\'t parse SIP response from %s:%d: %s:' % (address[0], address[1], str(exception))
                 print '-' * 70
@@ -146,7 +146,7 @@ class SipTransactionManager(object):
                 sys.stdout.flush()
                 self.l1rcache[checksum] = (None, None)
                 return
-            tid = resp.getTId(True, True)
+            resp.rtime = rtime
             if not self.tclient.has_key(tid):
                 #print 'no transaction with tid of %s in progress' % str(tid)
                 self.l1rcache[checksum] = (None, None)
@@ -163,7 +163,7 @@ class SipTransactionManager(object):
                 return
             try:
                 req = SipRequest(data)
-                req.rtime = rtime
+                tids = req.getTIds()
             except Exception, exception:
                 print datetime.now(), 'can\'t parse SIP request from %s:%d: %s:' % (address[0], address[1], str(exception))
                 print '-' * 70
@@ -174,6 +174,7 @@ class SipTransactionManager(object):
                 sys.stdout.flush()
                 self.l1rcache[checksum] = (None, None)
                 return
+            req.rtime = rtime
             via0 = req.getHFBody('via')
             ahost, aport = via0.getAddr()
             rhost, rport = address
@@ -189,7 +190,7 @@ class SipTransactionManager(object):
                     curl.host, curl.port = address
                     req.nated = True
             req.setSource(address)
-            self.incomingRequest(req, checksum)
+            self.incomingRequest(req, checksum, tids)
 
     # 1. Client transaction methods
     def newTransaction(self, msg, resp_cb = None):
@@ -340,8 +341,8 @@ class SipTransactionManager(object):
         t.cleanup()
 
     # 2. Server transaction methods
-    def incomingRequest(self, msg, checksum):
-        for tid in msg.getTIds():
+    def incomingRequest(self, msg, checksum, tids):
+        for tid in tids:
             if self.tclient.has_key(tid):
                 resp = msg.genResponse(482, 'Loop Detected')
                 self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
