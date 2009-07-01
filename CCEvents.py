@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: CCEvents.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
+# $Id: CCEvents.py,v 1.5 2009/07/01 20:39:22 sobomax Exp $
 
 from time import time
 
@@ -30,13 +30,18 @@ class CCEventGeneric(object):
     data = None
     name = None
     rtime = None
+    origin = None
+    seq = 1
 
-    def __init__(self, data = None, rtime = None):
+    def __init__(self, data = None, rtime = None, origin = None):
         self.data = data
         if rtime == None:
             self.rtime = time()
         else:
             self.rtime = rtime
+        self.seq = CCEventGeneric.seq
+        CCEventGeneric.seq += 1
+        self.origin = origin
 
     def getData(self):
         return self.data
