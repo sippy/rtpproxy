@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.11 2009/02/26 09:56:59 sobomax Exp $
+# $Id: UA.py,v 1.12 2009/07/01 20:41:37 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -83,6 +83,7 @@ class UA(object):
     on_remote_sdp_change = None
     last_scode = 100
     user_agent = None
+    elast_seq = None
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
       conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ltag = None, extra_headers = None, \
@@ -223,11 +224,20 @@ class UA(object):
 
     def emitEvent(self, event):
         if self.event_cb != None:
+            if self.elast_seq != None and self.elast_seq >= event.seq:
+                #print 'ignoring out-of-order event', event, event.seq, self.elast_seq, self.cId
+                return
+            self.elast_seq = event.seq
             self.event_cb(event, self)
 
     def emitPendingEvents(self):
         while len(self.equeue) != 0 and self.event_cb != None:
-            self.event_cb(self.equeue.pop(0), self)
+            event = self.equeue.pop(0)
+            if self.elast_seq != None and self.elast_seq >= event.seq:
+                #print 'ignoring out-of-order event', event, event.seq, self.elast_seq, self.cId
+                continue
+            self.elast_seq = event.seq
+            self.event_cb(event, self)
 
     def genRequest(self, method, body = None, nonce = None, realm = None, SipXXXAuthorization = SipAuthorization):
         req = SipRequest(method = method, ruri = self.rTarget, to = self.rUri, fr0m = self.lUri,
