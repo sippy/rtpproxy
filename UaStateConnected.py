@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateConnected.py,v 1.7 2009/06/26 05:34:57 sobomax Exp $
+# $Id: UaStateConnected.py,v 1.8 2009/07/01 21:17:45 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -56,8 +56,8 @@ class UaStateConnected(UaStateGeneric):
                 return None
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
             also = req.getHFBody('refer-to').getUrl().getCopy()
-            self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime))
-            self.ua.recvEvent(CCEventDisconnect(rtime = req.rtime))
+            self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin))
+            self.ua.recvEvent(CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin))
             return None
         if req.getMethod() == 'INVITE':
             self.ua.uasResp = req.genResponse(100, 'Trying')
@@ -66,7 +66,7 @@ class UaStateConnected(UaStateGeneric):
             if str(self.ua.rSDP) == str(body):
                 self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK', self.ua.lSDP))
                 return None
-            event = CCEventUpdate(body, rtime = req.rtime)
+            event = CCEventUpdate(body, rtime = req.rtime, origin = self.ua.origin)
             if body != None:
                 if self.ua.on_remote_sdp_change != None:
                     self.ua.on_remote_sdp_change(body, lambda x: self.ua.delayed_remote_sdp_update(event, x))
@@ -84,17 +84,17 @@ class UaStateConnected(UaStateGeneric):
                 also = req.getHFBody('also').getUrl().getCopy()
             else:
                 also = None
-            self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime))
+            self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin))
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None
                 if self.ua.warn_timer != None:
                     self.ua.warn_timer.cancel()
                     self.ua.warn_timer = None
-            return (UaStateDisconnected, self.ua.disc_cbs, req.rtime)
+            return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         if req.getMethod() == 'INFO':
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
-            self.ua.equeue.append(CCEventInfo(req.getBody(), rtime = req.rtime))
+            self.ua.equeue.append(CCEventInfo(req.getBody(), rtime = req.rtime, origin = self.ua.origin))
             return None
         if req.getMethod() == 'OPTIONS':
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
@@ -130,15 +130,16 @@ class UaStateConnected(UaStateGeneric):
                 if self.ua.warn_timer != None:
                     self.ua.warn_timer.cancel()
                     self.ua.warn_timer = None
-            return (UaStateDisconnected, self.ua.disc_cbs, event.rtime)
+            return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin)
         if isinstance(event, CCEventUpdate):
             body = event.getData()
             if str(self.ua.lSDP) == str(body):
                 if self.ua.rSDP != None:
                     self.ua.equeue.append(CCEventConnect((200, 'OK', self.ua.rSDP.getCopy()), \
-                        rtime = event.rtime))
+                        rtime = event.rtime, origin = event.origin))
                 else:
-                    self.ua.equeue.append(CCEventConnect((200, 'OK', None), rtime = event.rtime))
+                    self.ua.equeue.append(CCEventConnect((200, 'OK', None), rtime = event.rtime, \
+                      origin = event.origin))
                 return None
             if body != None and self.ua.on_local_sdp_change != None and body.needs_update:
                 self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))

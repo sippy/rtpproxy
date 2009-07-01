@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateUpdating.py,v 1.5 2009/02/26 22:32:12 sobomax Exp $
+# $Id: UasStateUpdating.py,v 1.6 2009/07/01 21:17:45 sobomax Exp $
 
 from SipContact import SipContact
 from SipAddress import SipAddress
@@ -41,14 +41,14 @@ class UasStateUpdating(UaStateGeneric):
             self.ua.sendUasResponse(487, 'Request Terminated')
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Updating state, going to the Disconnected state'
-            self.ua.equeue.append(CCEventDisconnect(rtime = req.rtime))
+            self.ua.equeue.append(CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin))
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None
                 if self.ua.warn_timer != None:
                     self.ua.warn_timer.cancel()
                     self.ua.warn_timer = None
-            return (UaStateDisconnected, self.ua.disc_cbs, req.rtime)
+            return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         elif req.getMethod() == 'REFER':
             if req.countHFs('refer-to') == 0:
                 self.ua.global_config['sip_tm'].sendResponse(req.genResponse(400, 'Bad Request'))
@@ -56,14 +56,14 @@ class UasStateUpdating(UaStateGeneric):
             self.ua.sendUasResponse(487, 'Request Terminated')
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
             also = req.getHFBody('refer-to').getUrl().getCopy()
-            self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime))
+            self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin))
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None
                 if self.ua.warn_timer != None:
                     self.ua.warn_timer.cancel()
                     self.ua.warn_timer = None
-            return (UaStateDisconnected, self.ua.disc_cbs, req.rtime)
+            return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         #print 'wrong request %s in the state Updating' % req.getMethod()
         return None
 
@@ -110,7 +110,7 @@ class UasStateUpdating(UaStateGeneric):
                 if self.ua.warn_timer != None:
                     self.ua.warn_timer.cancel()
                     self.ua.warn_timer = None
-            return (UaStateDisconnected, self.ua.disc_cbs, event.rtime)
+            return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin)
         #print 'wrong event %s in the Updating state' % event
         return None
 
@@ -124,8 +124,8 @@ class UasStateUpdating(UaStateGeneric):
             if self.ua.warn_timer != None:
                 self.ua.warn_timer.cancel()
                 self.ua.warn_timer = None
-        self.ua.changeState((UaStateDisconnected, self.ua.disc_cbs, rtime))
-        self.ua.emitEvent(CCEventDisconnect(rtime = rtime))
+        self.ua.changeState((UaStateDisconnected, self.ua.disc_cbs, rtime, self.ua.origin))
+        self.ua.emitEvent(CCEventDisconnect(rtime = rtime, origin = self.ua.origin))
 
 if not globals().has_key('UaStateConnected'):
     from UaStateConnected import UaStateConnected

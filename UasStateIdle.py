@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateIdle.py,v 1.7 2009/04/08 22:14:21 sobomax Exp $
+# $Id: UasStateIdle.py,v 1.8 2009/07/01 21:17:45 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -41,6 +41,7 @@ class UasStateIdle(UaStateGeneric):
         if req.getMethod() != 'INVITE':
             #print 'wrong request %s in the Trying state' % req.getMethod()
             return None
+        self.ua.origin = 'caller'
         #print 'INVITE received in the Idle state, going to the Trying state'
         if req.countHFs('cisco-guid') != 0:
             self.ua.cGUID = req.getHFBody('cisco-guid').getCopy()
@@ -76,7 +77,7 @@ class UasStateIdle(UaStateGeneric):
         body = req.getBody()
         self.ua.branch = req.getHFBody('via').getBranch()
         event = CCEventTry((self.ua.cId, self.ua.cGUID, self.ua.rUri.getUrl().username, req.getRURI().username, body, auth, \
-          self.ua.rUri.getUri().name), rtime = req.rtime)
+          self.ua.rUri.getUri().name), rtime = req.rtime, origin = self.ua.origin)
         if self.ua.expire_time != None:
             self.ua.expire_timer = Timeout(self.ua.expires, self.ua.expire_time)
         if self.ua.no_progress_time != None:

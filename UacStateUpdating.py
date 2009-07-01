@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateUpdating.py,v 1.7 2008/12/09 20:03:23 sobomax Exp $
+# $Id: UacStateUpdating.py,v 1.8 2009/07/01 21:17:45 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventDisconnect, CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect
@@ -40,14 +40,14 @@ class UacStateUpdating(UaStateGeneric):
             self.ua.global_config['sip_tm'].cancelTransaction(self.ua.tr)
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Updating state, going to the Disconnected state'
-            self.ua.equeue.append(CCEventDisconnect(rtime = req.rtime))
+            self.ua.equeue.append(CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin))
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None
                 if self.ua.warn_timer != None:
                     self.ua.warn_timer.cancel()
                     self.ua.warn_timer = None
-            return (UaStateDisconnected, self.ua.disc_cbs, req.rtime)
+            return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         #print 'wrong request %s in the state Updating' % req.getMethod()
         return None
 
@@ -56,10 +56,10 @@ class UacStateUpdating(UaStateGeneric):
         code, reason = resp.getSCode()
         scode = (code, reason, body)
         if code < 200:
-            self.ua.equeue.append(CCEventRing(scode, rtime = resp.rtime))
+            self.ua.equeue.append(CCEventRing(scode, rtime = resp.rtime, origin = self.ua.origin))
             return None
         if code >= 200 and code < 300:
-            event = CCEventConnect(scode, rtime = resp.rtime)
+            event = CCEventConnect(scode, rtime = resp.rtime, origin = self.ua.origin)
             if body != None:
                 if self.ua.on_remote_sdp_change != None:
                     self.ua.on_remote_sdp_change(body, lambda x: self.ua.delayed_remote_sdp_update(event, x))
@@ -72,17 +72,17 @@ class UacStateUpdating(UaStateGeneric):
             return (UaStateConnected,)
         if code in (301, 302) and resp.countHFs('contact') > 0:
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
-            self.ua.equeqe.append(CCEventRedirect(scode, rtime = resp.rtime))
+            self.ua.equeqe.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))
         elif code in (408, 481):
             # If the response for a request within a dialog is a 481
             # (Call/Transaction Does Not Exist) or a 408 (Request Timeout), the UAC
             # SHOULD terminate the dialog.  A UAC SHOULD also terminate a dialog if
             # no response at all is received for the request (the client
             # transaction would inform the TU about the timeout.)
-            self.ua.equeue.append(CCEventDisconnect(rtime = resp.rtime))
-            return (UaStateDisconnected, self.ua.disc_cbs, resp.rtime)
+            self.ua.equeue.append(CCEventDisconnect(rtime = resp.rtime, origin = self.ua.origin))
+            return (UaStateDisconnected, self.ua.disc_cbs, resp.rtime, self.ua.origin)
         else:
-            self.ua.equeue.append(CCEventFail(scode, rtime = resp.rtime))
+            self.ua.equeue.append(CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin))
         return (UaStateConnected,)
 
     def recvEvent(self, event):
@@ -97,7 +97,7 @@ class UacStateUpdating(UaStateGeneric):
                 if self.ua.warn_timer != None:
                     self.ua.warn_timer.cancel()
                     self.ua.warn_timer = None
-            return (UaStateDisconnected, self.ua.disc_cbs, event.rtime)
+            return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin)
         #print 'wrong event %s in the Updating state' % event
         return None
 

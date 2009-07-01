@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateRinging.py,v 1.6 2008/11/26 19:46:41 sobomax Exp $
+# $Id: UacStateRinging.py,v 1.7 2009/07/01 21:17:45 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -40,9 +40,9 @@ class UacStateRinging(UaStateGeneric):
         scode = (code, reason, body)
         if code < 200:
             self.ua.last_scode = code
-            event = CCEventRing(scode, rtime = resp.rtime)
+            event = CCEventRing(scode, rtime = resp.rtime, origin = self.ua.origin)
             for ring_cb in self.ua.ring_cbs:
-                ring_cb(self.ua, resp.rtime, code)
+                ring_cb(self.ua, resp.rtime, self.ua.origin, code)
             if body != None:
                 if self.ua.on_remote_sdp_change != None:
                     self.ua.on_remote_sdp_change(body, lambda x: self.ua.delayed_remote_sdp_update(event, x))
@@ -71,7 +71,7 @@ class UacStateRinging(UaStateGeneric):
             else:
                 self.ua.rAddr = self.ua.rTarget.getAddr()
             self.ua.rUri.setTag(resp.getHFBody('to').getTag())
-            event = CCEventConnect(scode, rtime = resp.rtime)
+            event = CCEventConnect(scode, rtime = resp.rtime, origin = self.ua.origin)
             if self.ua.credit_time != None:
                 if self.ua.credit_time > 10:
                     self.ua.warn_timer = Timeout(self.ua.warn, self.ua.credit_time - 10)
@@ -79,19 +79,19 @@ class UacStateRinging(UaStateGeneric):
             if body != None:
                 if self.ua.on_remote_sdp_change != None:
                     self.ua.on_remote_sdp_change(body, lambda x: self.ua.delayed_remote_sdp_update(event, x))
-                    return (UaStateConnected, self.ua.conn_cbs, resp.rtime)
+                    return (UaStateConnected, self.ua.conn_cbs, resp.rtime, self.ua.origin)
                 else:
                     self.ua.rSDP = body.getCopy()
             else:
                 self.ua.rSDP = None
             self.ua.equeue.append(event)
-            return (UaStateConnected, self.ua.conn_cbs, resp.rtime)
+            return (UaStateConnected, self.ua.conn_cbs, resp.rtime, self.ua.origin)
         if code in (301, 302) and resp.countHFs('contact') > 0:
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
-            self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime))
+            self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))
         else:
-            self.ua.equeue.append(CCEventFail(scode, rtime = resp.rtime))
-        return (UaStateFailed, self.ua.fail_cbs, resp.rtime, code)
+            self.ua.equeue.append(CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin))
+        return (UaStateFailed, self.ua.fail_cbs, resp.rtime, self.ua.origin, code)
 
     def recvEvent(self, event):
         if isinstance(event, CCEventFail) or isinstance(event, CCEventRedirect) or isinstance(event, CCEventDisconnect):
@@ -99,7 +99,7 @@ class UacStateRinging(UaStateGeneric):
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
-            return (UacStateCancelling, self.ua.disc_cbs, event.rtime, self.ua.last_scode)
+            return (UacStateCancelling, self.ua.disc_cbs, event.rtime, event.origin, self.ua.last_scode)
         #print 'wrong event %s in the Ringing state' % event
         return None
 

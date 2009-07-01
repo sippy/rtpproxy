@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.52 2009/06/26 05:34:56 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.53 2009/07/01 21:17:45 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -159,11 +159,11 @@ class CallController(object):
                     self.cld = self.cld[4:]
                     body.content += 'a=nated:yes\r\n'
                     event = CCEventTry((self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name), \
-                      rtime = event.rtime)
+                      rtime = event.rtime, origin = event.origin)
                 if self.global_config.has_key('static_tr_in'):
                     self.cld = re_replace(self.global_config['static_tr_in'], self.cld)
                     event = CCEventTry((self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name), \
-                      rtime = event.rtime)
+                      rtime = event.rtime, origin = event.origin)
                 if self.global_config.has_key('rtp_proxy_clients'):
                     self.rtp_proxy_session = Rtp_proxy_session(self.global_config, call_id = self.cId, \
                       notify_socket = global_config['b2bua_socket'], \
@@ -360,15 +360,15 @@ class CallController(object):
     def disconnect(self, rtime = None):
         self.uaA.disconnect(rtime = rtime)
 
-    def oConn(self, ua, rtime):
+    def oConn(self, ua, rtime, origin):
         if self.acctO != None:
-            self.acctO.conn(ua, rtime)
+            self.acctO.conn(ua, rtime, origin)
 
-    def aConn(self, ua, rtime):
+    def aConn(self, ua, rtime, origin):
         self.state = CCStateConnected
-        self.acctA.conn(ua, rtime)
+        self.acctA.conn(ua, rtime, origin)
 
-    def aDisc(self, ua, rtime, result = 0):
+    def aDisc(self, ua, rtime, origin, result = 0):
         if self.state == CCStateWaitRoute and self.auth_proc != None:
             self.auth_proc.cancel()
             self.auth_proc = None
@@ -377,10 +377,9 @@ class CallController(object):
         else:
             self.state = CCStateDead
         if self.acctA != None:
-            self.acctA.disc(ua, rtime, result)
-        for user_agent in (self.uaO,):
-            if user_agent != None:
-                user_agent.recvEvent(CCEventDisconnect(rtime = rtime))
+            self.acctA.disc(ua, rtime, origin, result)
+        if self.uaO != None:
+            self.uaO.recvEvent(CCEventDisconnect(rtime = rtime, origin = origin))
         self.rtp_proxy_session = None
 
     def aDead(self, ua):

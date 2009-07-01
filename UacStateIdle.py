@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateIdle.py,v 1.9 2009/04/08 21:48:13 sobomax Exp $
+# $Id: UacStateIdle.py,v 1.10 2009/07/01 21:17:45 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -39,6 +39,7 @@ class UacStateIdle(UaStateGeneric):
 
     def recvEvent(self, event):
         if isinstance(event, CCEventTry):
+            self.ua.origin = 'callee'
             cId, cGUID, callingID, calledID, body, auth, callingName = event.getData()
             if body != None and self.ua.on_local_sdp_change != None and body.needs_update:
                 self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
@@ -72,7 +73,7 @@ class UacStateIdle(UaStateGeneric):
                     self.ua.no_progress_timer = Timeout(self.ua.no_progress_expires, self.ua.no_progress_time)
             return (UacStateTrying,)
         if isinstance(event, CCEventFail) or isinstance(event, CCEventRedirect) or isinstance(event, CCEventDisconnect):
-            return (UaStateDead, self.ua.disc_cbs, event.rtime)
+            return (UaStateDead, self.ua.disc_cbs, event.rtime, event.origin)
         return None
 
 if not globals().has_key('UacStateTrying'):

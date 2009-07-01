@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: RadiusAccounting.py,v 1.5 2009/01/05 20:14:00 sobomax Exp $
+# $Id: RadiusAccounting.py,v 1.6 2009/07/01 21:17:45 sobomax Exp $
 
 from time import time, strftime, gmtime
 from Timeout import Timeout
@@ -88,27 +88,27 @@ class RadiusAccounting(object):
         self.sip_cid = str(sip_cid)
         self.complete = True
 
-    def conn(self, ua, rtime):
+    def conn(self, ua, rtime, origin):
         if self.crec:
             return
         self.crec = True
         self.cTime = rtime
         if self.send_start:
-            self.asend('Start', rtime)
+            self.asend('Start', rtime, origin)
         self._attributes.extend((('h323-voice-quality', 0), ('Acct-Terminate-Cause', 'User-Request')))
         if self.lperiod != None:
             self.el = Timeout(self.asend, self.lperiod, -1, 'Alive')
 
-    def disc(self, ua, rtime, result = 0):
+    def disc(self, ua, rtime, origin, result = 0):
         if self.drec:
             return
         self.drec = True
         if self.el != None:
             self.el.cancel()
             self.el = None
-        self.asend('Stop', rtime, result)
+        self.asend('Stop', rtime, origin, result)
 
-    def asend(self, type, rtime = None, result = 0):
+    def asend(self, type, rtime = None, origin = None, result = 0):
         if not self.complete:
             return
         if rtime == None:
@@ -137,6 +137,14 @@ class RadiusAccounting(object):
               ('h323-disconnect-cause', dc)))
         else:
             attributes.append(('h323-connect-time', ftime(self.cTime)))
+        if type == 'Stop':
+            if origin == 'caller':
+                release_source = '2'
+            elif origin == 'callee':
+                release_source = '4'
+            else:
+                release_source = '8'
+            attributes.append(('release-source', release_source))
         attributes.append(('Acct-Status-Type', type))
         pattributes = ['%-32s = \'%s\'\n' % (x[0], str(x[1])) for x in attributes]
         pattributes.insert(0, 'sending Acct %s (%s):\n' % (type, self.origin.capitalize()))
