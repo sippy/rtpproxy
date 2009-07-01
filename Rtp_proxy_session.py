@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.13 2009/04/08 22:21:20 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.14 2009/07/01 18:17:26 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
@@ -166,7 +166,8 @@ class Rtp_proxy_session(object):
         if options != None:
             command += options
         command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.from_tag, self.to_tag)
-        if self.notify_socket != None and self.rtp_proxy_client.tnot_supported:
+        if self.notify_socket != None and index == 0 and \
+          self.rtp_proxy_client.tnot_supported:
             command += ' %s %s' % (self.notify_socket, self.notify_tag)
         self.rtp_proxy_client.send_command(command, self.update_result, (result_callback, 'caller', callback_parameters))
 
@@ -176,7 +177,8 @@ class Rtp_proxy_session(object):
         if options != None:
             command += options
         command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.to_tag, self.from_tag)
-        if self.notify_socket != None and self.rtp_proxy_client.tnot_supported:
+        if self.notify_socket != None and index == 0 \
+          and self.rtp_proxy_client.tnot_supported:
             command += ' %s %s' % (self.notify_socket, self.notify_tag)
         self.rtp_proxy_client.send_command(command, self.update_result, (result_callback, 'callee', callback_parameters))
 
