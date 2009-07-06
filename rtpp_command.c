@@ -36,6 +36,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <limits.h>
 #include <netdb.h>
 #include <sched.h>
@@ -900,7 +901,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    spa->timeout_data.notify_tag = NULL;
 	}
 	if (cf->timeout_handler.socket_name != NULL && socket_name_u != NULL) {
-	    if (strcmp(cf->timeout_handler.socket_name, socket_name_u) != 0) {
+	    if (fnmatch(cf->timeout_handler.socket_name, socket_name_u, FNM_PATHNAME) != 0) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", socket_name_u);
 		socket_name_u = NULL;
 	    } else {
