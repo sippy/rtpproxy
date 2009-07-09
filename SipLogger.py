@@ -22,12 +22,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipLogger.py,v 1.6 2009/02/12 08:57:47 sobomax Exp $
+# $Id: SipLogger.py,v 1.7 2009/07/09 22:34:56 sobomax Exp $
 
 from Signal import Signal
 from time import time, localtime, strftime
 from fcntl import flock, LOCK_EX, LOCK_UN
 from signal import SIGUSR1
+from errno import EINTR
 import sys, os
 
 SIPLOG_DBUG = 0
@@ -78,7 +79,11 @@ class SipLogger(object):
             if e.args[0] != 45:
                 raise e
             self.flock = lambda x, y: None
-        self.log.write(obuf)
+        try:
+            self.log.write(obuf)
+        except IOError, e:
+            if e.args[0] != EINTR:
+                raise e
         self.log.flush()
         self.flock(self.log, LOCK_UN)
 
