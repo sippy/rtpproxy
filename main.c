@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.91 2009/06/12 19:10:08 sobomax Exp $
+ * $Id: main.c,v 1.92 2009/08/10 23:24:05 sobomax Exp $
  *
  */
 
@@ -126,6 +126,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
     char *bh[2], *bh6[2], *cp;
+    const char *errmsg;
     struct passwd *pp;
     struct group *gp;
 
@@ -366,9 +367,6 @@ init_config(struct cfg *cf, int argc, char **argv)
       (((cf->port_max - cf->port_min + 1) * 2) + 1));
 
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
-	if (cf->umode != 0)
-	    errx(1, "explicit binding address has to be specified in UDP "
-	      "command mode");
 	bh[0] = "*";
     }
 
@@ -398,13 +396,15 @@ init_config(struct cfg *cf, int argc, char **argv)
     for (i = 0; i < 2; i++) {
 	cf->bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
-	    cf->bindaddr[i] = malloc(sizeof(struct sockaddr_storage));
-	    setbindhost(cf->bindaddr[i], AF_INET, bh[i], SERVICE);
+	    cf->bindaddr[i] = host2bindaddr(cf, bh[i], AF_INET, &errmsg);
+	    if (cf->bindaddr[i] == NULL)
+		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
-	    cf->bindaddr[i] = malloc(sizeof(struct sockaddr_storage));
-	    setbindhost(cf->bindaddr[i], AF_INET6, bh6[i], SERVICE);
+	    cf->bindaddr[i] = host2bindaddr(cf, bh6[i], AF_INET6, &errmsg);
+	    if (cf->bindaddr[i] == NULL)
+		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
     }

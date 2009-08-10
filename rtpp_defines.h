@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.26 2009/06/12 19:10:08 sobomax Exp $
+ * $Id: rtpp_defines.h,v 1.27 2009/08/10 23:24:05 sobomax Exp $
  *
  */
 
@@ -85,6 +85,11 @@ struct rtpp_timeout_handler {
     char notify_buf[64];
 };
 
+struct bindaddr_list {
+    struct sockaddr_storage bindaddr;
+    struct bindaddr_list *next;
+};
+
 struct cfg {
     int nodaemon;
     int dmode;
@@ -106,6 +111,7 @@ struct cfg {
      * mode enabled.
      */
     struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
+    struct bindaddr_list *bindaddr_list;
     int tos;
 
     const char *rdir;

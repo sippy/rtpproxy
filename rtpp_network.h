@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.h,v 1.20 2009/06/12 19:10:08 sobomax Exp $
+ * $Id: rtpp_network.h,v 1.21 2009/08/10 23:24:05 sobomax Exp $
  *
  */
 
@@ -41,7 +41,6 @@
 #include "rtpp_defines.h"
 
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
-#define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 
 /* Function prototypes */
 int ishostseq(struct sockaddr *, struct sockaddr *);
@@ -50,6 +49,10 @@ char *addr2char_r(struct sockaddr *, char *buf, int size);
 const char *addr2char(struct sockaddr *);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
+struct sockaddr *addr2bindaddr(struct cfg *, struct sockaddr *, const char **);
+struct sockaddr *host2bindaddr(struct cfg *, const char *, int, const char **);
+int local4remote(struct cfg *, struct sockaddr *, struct sockaddr_storage *);
+int extractaddr(const char *, char **, char **, int *);
 
 /* Stripped down version of sockaddr_in* for saving space */
 struct sockaddr_in4_s {
@@ -96,6 +99,9 @@ union sockaddr_in_s {
 #endif
 #if !defined(sstosa)
 #define	sstosa(ss)	((struct sockaddr *)(ss))
+#endif
+#if !defined(satoss)
+#define	satoss(sa)	((struct sockaddr_storage *)(sa))
 #endif
 
 #endif

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2009 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.c,v 1.15 2009/06/12 19:10:08 sobomax Exp $
+ * $Id: rtpp_network.c,v 1.16 2009/08/10 23:24:05 sobomax Exp $
  *
  */
 
@@ -34,6 +34,8 @@
 #include <sys/uio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <ctype.h>
+#include <errno.h>
 #include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
@@ -176,4 +178,97 @@ rtpp_in_cksum(void *addr, int len)
     sum += (sum >> 16);                     /* add carry */
     answer = ~sum;                          /* truncate to 16 bits */
     return (answer);
+}
+
+struct sockaddr *
+addr2bindaddr(struct cfg *cf, struct sockaddr *ia, const char **ep)
+{
+    struct bindaddr_list *bl;
+
+    for (bl = cf->bindaddr_list; bl != NULL; bl = bl->next) {
+        if (ishostseq(sstosa(&(bl->bindaddr)), ia) != 0)
+            return (sstosa(&(bl->bindaddr)));
+    }
+    bl = malloc(sizeof(*bl));
+    if (bl == NULL) {
+        *ep = strerror(errno);
+        return (NULL);
+    }
+    memcpy(&(bl->bindaddr), ia, SA_LEN(ia));
+    bl->next = cf->bindaddr_list;
+    cf->bindaddr_list = bl;
+    return (sstosa(&(bl->bindaddr)));
+}
+
+struct sockaddr *
+host2bindaddr(struct cfg *cf, const char *host, int pf, const char **ep)
+{
+    int n;
+    struct sockaddr_storage ia;
+
+    /*
+     * If user specified * then change it to NULL,
+     * that will make getaddrinfo to return addr_any socket
+     */
+    if (host && (strcmp(host, "*") == 0))
+        host = NULL;
+
+    if ((n = resolve(sstosa(&ia), pf, host, SERVICE, AI_PASSIVE)) != 0) {
+        *ep = gai_strerror(n);
+        return (NULL);
+    }
+    return (addr2bindaddr(cf, sstosa(&ia), ep));
+}
+
+int
+local4remote(struct cfg *cf, struct sockaddr *ra, struct sockaddr_storage *la)
+{
+    int s, r;
+    socklen_t llen;
+
+    s = socket(ra->sa_family, SOCK_DGRAM, 0);
+    if (s == -1) {
+        return (-1);
+    }
+    if (connect(s, ra, SA_LEN(ra)) == -1) {
+        close(s);
+        return (-1);
+    }
+    llen = sizeof(*la);
+    r = getsockname(s, sstosa(la), &llen);
+    close(s);
+    return (r);
+}
+
+int
+extractaddr(const char *str, char **begin, char **end, int *pf)
+{
+    const char *t;
+    int tpf;
+
+    if (*str != '[') {
+	tpf = AF_INET;
+	for (t = str; *str != '\0'; str++) {
+	    if (!isdigit(*str) && *str != '.')
+		break;
+	}
+    } else {
+	tpf = AF_INET6;
+	str++;
+	for (t = str; *str != '\0'; str++) {
+	    if (!ishexnumber(*str) && *str != ':')
+		break;
+	}
+	if (*str != ']')
+	    return (-1);
+    }
+    if (t == str)
+	return (-1);
+    if (tpf == AF_INET6)
+	*end = (char *)(str + 1);
+    else
+	*end = (char *)str;
+    *pf = tpf;
+    *begin = (char *)t;
+    return(str - t);
 }
