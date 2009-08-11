@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.53 2009/07/01 21:17:45 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.54 2009/08/11 03:37:02 sobomax Exp $
 
 import sys
 sys.path.append('sippy')
@@ -446,15 +446,19 @@ class CallMap(object):
                 via = req.getHFBody('via', 0)
             remote_ip = via.getTAddr()[0]
             source = req.getSource()
-            if self.global_config['auth_enable'] and self.global_config['digest_auth'] and \
-              req.countHFs('authorization') == 0:
-                resp = req.genResponse(401, 'Unauthorized')
-                header = SipHeader(name = 'www-authenticate')
-                header.getBody().realm = req.getRURI().host
-                resp.appendHeader(header)
-                return (resp, None, None)
-            if self.global_config.has_key('accept_ips') and source[0] not in self.global_config['accept_ips']:
-                return (req.genResponse(403, 'Forbidden'), None, None)
+
+            if self.global_config['auth_enable']:
+                if not self.global_config.has_key('accept_ips') or \
+                  source[0] not in self.global_config['accept_ips']:
+                    if not self.global_config['digest_auth']:
+                        return (req.genResponse(403, 'Forbidden'), None, None)
+                    if req.countHFs('authorization') == 0:
+                        resp = req.genResponse(401, 'Unauthorized')
+                        header = SipHeader(name = 'www-authenticate')
+                        header.getBody().realm = req.getRURI().host
+                        resp.appendHeader(header)
+                        return (resp, None, None)
+
             pass_headers = []
             for header in self.global_config['pass_headers']:
                 hfs = req.getHFs(header)
