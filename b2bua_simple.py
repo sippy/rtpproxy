@@ -24,19 +24,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_simple.py,v 1.6 2009/06/25 22:10:34 sobomax Exp $
+# $Id: b2bua_simple.py,v 1.7 2009/08/13 21:01:04 sobomax Exp $
 
-import sys
-sys.path.append('sippy')
-
-from UA import UA
-from CCEvents import CCEventDisconnect, CCEventTry
-from UaStateDead import UaStateDead
-from SipConf import SipConf
-from SipLogger import SipLogger
-from SipTransactionManager import SipTransactionManager
+from sippy.UA import UA
+from sippy.CCEvents import CCEventDisconnect, CCEventTry
+from sippy.UaStateDead import UaStateDead
+from sippy.SipConf import SipConf
+from sippy.SipLogger import SipLogger
+from sippy.SipTransactionManager import SipTransactionManager
 from twisted.internet import reactor
-import getopt, os
+import getopt, os, sys
 #import gc
 
 class CallController(object):
@@ -112,7 +109,7 @@ if __name__ == '__main__':
             continue
 
     if not foreground:
-        print 'foobar'
+        #print 'foobar'
         # Fork once
         if os.fork() != 0:
             os._exit(0)

@@ -24,34 +24,31 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.54 2009/08/11 03:37:02 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.55 2009/08/13 21:01:04 sobomax Exp $
 
-import sys
-sys.path.append('sippy')
-
-from Timeout import Timeout
-from Signal import Signal
-from SipFrom import SipFrom
-from SipTo import SipTo
-from SipCiscoGUID import SipCiscoGUID
-from UA import UA
-from CCEvents import CCEventRing, CCEventConnect, CCEventDisconnect, CCEventTry, CCEventUpdate, CCEventFail
-from UasStateTrying import UasStateTrying
-from UasStateRinging import UasStateRinging
-from UaStateDead import UaStateDead
-from SipConf import SipConf
-from SipHeader import SipHeader
-from RadiusAuthorisation import RadiusAuthorisation
-from RadiusAccounting import RadiusAccounting
-from FakeAccounting import FakeAccounting
-from SipLogger import SipLogger
-from Rtp_proxy_session import Rtp_proxy_session
+from sippy.Timeout import Timeout
+from sippy.Signal import Signal
+from sippy.SipFrom import SipFrom
+from sippy.SipTo import SipTo
+from sippy.SipCiscoGUID import SipCiscoGUID
+from sippy.UA import UA
+from sippy.CCEvents import CCEventRing, CCEventConnect, CCEventDisconnect, CCEventTry, CCEventUpdate, CCEventFail
+from sippy.UasStateTrying import UasStateTrying
+from sippy.UasStateRinging import UasStateRinging
+from sippy.UaStateDead import UaStateDead
+from sippy.SipConf import SipConf
+from sippy.SipHeader import SipHeader
+from sippy.RadiusAuthorisation import RadiusAuthorisation
+from sippy.RadiusAccounting import RadiusAccounting
+from sippy.FakeAccounting import FakeAccounting
+from sippy.SipLogger import SipLogger
+from sippy.Rtp_proxy_session import Rtp_proxy_session
 from signal import SIGHUP, SIGPROF, SIGUSR1, SIGUSR2
 from twisted.internet import reactor
 from urllib import unquote
-from Cli_server_local import Cli_server_local
-from SipTransactionManager import SipTransactionManager
-import gc, getopt, os
+from sippy.Cli_server_local import Cli_server_local
+from sippy.SipTransactionManager import SipTransactionManager
+import gc, getopt, os, sys
 from re import sub
 from time import time
 from urllib import quote
@@ -673,7 +670,7 @@ if __name__ == '__main__':
             continue
         if o == '-r':
             if a.startswith('udp:'):
-                from Rtp_proxy_client_udp import Rtp_proxy_client_udp
+                from sippy.Rtp_proxy_client_udp import Rtp_proxy_client_udp
                 a = a.split(':', 2)
                 if len(a) == 2:
                     rtp_proxy_address = (a[1], 22222)
@@ -681,7 +678,7 @@ if __name__ == '__main__':
                     rtp_proxy_address = (a[1], int(a[2]))
                 rtp_proxy_clients.append((Rtp_proxy_client_udp, rtp_proxy_address))
             else:
-                from Rtp_proxy_client_local import Rtp_proxy_client_local
+                from sippy.Rtp_proxy_client_local import Rtp_proxy_client_local
                 rtp_proxy_clients.append((Rtp_proxy_client_local, a))
         if o == '-F':
             global_config['allowed_pts'] = [int(x) for x in a.split(',')]
@@ -704,7 +701,7 @@ if __name__ == '__main__':
         usage()
 
     if not foreground:
-        print 'foobar'
+        #print 'foobar'
         # Fork once
         if os.fork() != 0:
             os._exit(0)
