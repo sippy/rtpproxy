@@ -22,13 +22,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipVia.py,v 1.6 2008/12/11 07:08:13 sobomax Exp $
+# $Id: SipVia.py,v 1.7 2009/08/15 22:04:17 sobomax Exp $
 
 from random import random
 from md5 import md5
 from time import time
 from SipGenericHF import SipGenericHF
-from SipConf import SipConf
+from SipConf import SipConf, MyAddress, MyPort
 from ESipHeaderCSV import ESipHeaderCSV
 
 class SipVia(SipGenericHF):
@@ -52,12 +52,10 @@ class SipVia(SipGenericHF):
                 self.sipver = sipver
             if hostname == None:
                 self.hostname = SipConf.my_address
+                self.port = SipConf.my_port
                 self.params['rport'] = None
             else:
                 self.hostname = hostname
-            if port == None:
-                self.port = SipConf.my_port
-            else:
                 self.port = port
             if params != None:
                 self.params = params
@@ -78,15 +76,24 @@ class SipVia(SipGenericHF):
         if len(hcomps) == 2:
             self.port = int(hcomps[1])
         else:
-            self.port = ''
+            self.port = None
         self.hostname = hcomps[0]
 
     def __str__(self):
+        return self.localStr()
+
+    def localStr(self, local_addr = None, local_port = None):
         if not self.parsed:
             return self.body
-        s = self.sipver + ' ' + self.hostname
-        if self.port != '':
-            s += ':' + str(self.port)
+        if local_addr != None and isinstance(self.hostname, MyAddress):
+            s = self.sipver + ' ' + local_addr
+        else:
+            s = self.sipver + ' ' + str(self.hostname)
+        if self.port != None:
+            if local_port != None and isinstance(self.port, MyPort):
+                s += ':' + str(local_port)
+            else:
+                s += ':' + str(self.port)
         for key, val in self.params.items():
             s += ';' + key
             if val != None:

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipGenericHF.py,v 1.6 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SipGenericHF.py,v 1.7 2009/08/15 22:04:17 sobomax Exp $
 
 class SipGenericHF(object):
     hf_names = None	# Set this in each subclass!!
@@ -39,6 +39,9 @@ class SipGenericHF(object):
 
     def __str__(self):
         return self.body
+
+    def localStr(self, local_addr = None, local_port = None):
+        return self.__str__()
 
     def getCopy(self):
         return self.__class__(self.body)

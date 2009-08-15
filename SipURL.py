@@ -22,9 +22,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipURL.py,v 1.10 2009/04/08 22:10:14 sobomax Exp $
+# $Id: SipURL.py,v 1.11 2009/08/15 22:04:17 sobomax Exp $
 
-from SipConf import SipConf
+from SipConf import SipConf, MyAddress, MyPort
 from urllib import quote, unquote
 
 class SipURL(object):
@@ -135,6 +135,9 @@ class SipURL(object):
                 self.other.append(p)
 
     def __str__(self):
+        return self.localStr()
+
+    def localStr(self, local_addr = None, local_port = None):
         l = []; w = l.append
         w('sip:')
         if self.username != None:
@@ -144,9 +147,15 @@ class SipURL(object):
             if self.password != None:
                 w(':%s' % self.password)
             w('@')
-        w(self.host)
+        if local_addr != None and isinstance(self.host, MyAddress):
+            w(local_addr)
+        else:
+            w(str(self.host))
         if self.port != None:
-            w(':%d' % self.port)
+            if local_port != None and isinstance(self.port, MyPort):
+                w(':%d' % local_port)
+            else:
+                w(':%d' % self.port)
         if self.usertype != None:
             w(';user=%s' % self.usertype)
         for n in ('transport', 'ttl', 'maddr', 'method', 'tag'):

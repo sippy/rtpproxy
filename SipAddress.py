@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAddress.py,v 1.5 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SipAddress.py,v 1.6 2009/08/15 22:04:17 sobomax Exp $
 
 from SipURL import SipURL
 from string import maketrans
@@ -74,6 +74,9 @@ class SipAddress(object):
                 self.params[k] = v
 
     def __str__(self):
+        return self.localStr()
+
+    def localStr(self, local_addr = None, local_port = None):
         if self.hadbrace:
             od = '<'
             cd = '>'
@@ -88,7 +91,7 @@ class SipAddress(object):
                 s += self.name + ' '
             od = '<'
             cd = '>'
-        s += od + str(self.url) + cd
+        s += od + self.url.localStr(local_addr, local_port) + cd
         for k, v in self.params.items():
             s += ';' + k + '=' + v
         return s

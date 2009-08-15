@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_udp.py,v 1.5 2009/02/25 07:42:28 sobomax Exp $
+# $Id: Rtp_proxy_client_udp.py,v 1.6 2009/08/15 22:04:17 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -42,6 +42,7 @@ class Rtp_proxy_client_udp(object):
     shutdown = False
     proxy_address = None
     caps_done = False
+    is_local = False
 
     def __init__(self, global_config, address):
         self.udp_server = Udp_server(None, self.process_reply)

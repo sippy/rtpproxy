@@ -21,30 +21,49 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Udp_server.py,v 1.4 2008/03/26 17:55:59 sobomax Exp $
+# $Id: Udp_server.py,v 1.5 2009/08/15 22:04:17 sobomax Exp $
 
 from warnings import filterwarnings
 from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol
-from socket import inet_aton
 from datetime import datetime
 from traceback import print_exc
 from sys import stdout
+import socket
+
+from twisted.internet import udp
+
+class MyPort(udp.Port):
+    def createInternetSocket(self):
+        skt = udp.Port.createInternetSocket(self)
+        skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        if hasattr(socket, "SO_REUSEPORT"):
+            skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        return skt
 
 class Udp_server(DatagramProtocol):
     data_callback = None
+    laddress = None
 
     def __init__(self, address = None, data_callback = None):
         self.data_callback = data_callback
+        self.laddress = address
         if address == None:
             reactor.listenUDP(0, self)
+        elif address[0] == None:
+            self.listenUDP(address[1], self)
         else:
-            reactor.listenUDP(address[1], self, address[0])
+            self.listenUDP(address[1], self, address[0])
         filterwarnings('ignore', '^Please only pass')
+
+    def listenUDP(self, port, protocol, interface='', maxPacketSize=8192):
+        p = MyPort(port, protocol, interface, maxPacketSize, reactor)
+        p.startListening()
+        return p
 
     def send_to(self, data, address):
         try:
-            inet_aton(address[0])
+            socket.inet_aton(address[0])
         except:
             reactor.callInThread(self.transport.write, data, address)
             return

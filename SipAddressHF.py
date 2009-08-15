@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAddressHF.py,v 1.5 2009/06/11 21:48:25 sobomax Exp $
+# $Id: SipAddressHF.py,v 1.6 2009/08/15 22:04:17 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from SipAddress import SipAddress
@@ -62,9 +62,12 @@ class SipAddressHF(SipGenericHF):
         self.address = SipAddress(self.body)
 
     def __str__(self):
+        return self.localStr()
+
+    def localStr(self, local_addr = None, local_port = None):
         if not self.parsed:
             return self.body
-        return str(self.address)
+        return self.address.localStr(local_addr, local_port)
 
     def getCopy(self):
         if not self.parsed:

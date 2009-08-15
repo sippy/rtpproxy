@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.14 2009/07/01 18:17:26 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.15 2009/08/15 22:04:17 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
@@ -40,15 +40,19 @@ class Rtp_proxy_session(object):
     to_tag = None
     caller_session_exists = False
     caller_codecs = None
+    caller_raddress = None
     callee_session_exists = False
     callee_codecs = None
+    callee_raddress = None
     max_index = -1
     origin = None
     notify_socket = None
     notify_tag = None
+    global_config = None
 
     def __init__(self, global_config, call_id = None, from_tag = None, to_tag = None,
       notify_socket = None, notify_tag = None):
+        self.global_config = global_config
         if global_config.has_key('rtp_proxy_clients'):
             rtp_proxy_clients = [x for x in global_config['rtp_proxy_clients'] if x.online]
             n = len(rtp_proxy_clients)
@@ -85,7 +89,7 @@ class Rtp_proxy_session(object):
         if not self.caller_session_exists:
             return
         if not self.callee_session_exists:
-            self.update_callee('0.0.0.0', 0, self._play_caller, None, index, prompt_name, times, result_callback, index)
+            self.update_callee('0.0.0.0', 0, self._play_caller, '', index, prompt_name, times, result_callback, index)
             return
         self._play_caller(None, prompt_name, times, result_callback, index)
 
@@ -97,7 +101,7 @@ class Rtp_proxy_session(object):
         if not self.callee_session_exists:
             return
         if not self.caller_session_exists:
-            self.update_caller('0.0.0.0', 0, self._play_callee, None, index, prompt_name, times, result_callback, index)
+            self.update_caller('0.0.0.0', 0, self._play_callee, '', index, prompt_name, times, result_callback, index)
             return
         self._play_callee(None, prompt_name, times, result_callback, index)
 
@@ -119,7 +123,7 @@ class Rtp_proxy_session(object):
 
     def copy_caller(self, remote_ip, remote_port, result_callback = None, index = 0):
         if not self.caller_session_exists:
-            self.update_caller('0.0.0.0', 0, self._copy_caller, None, index, remote_ip, remote_port, result_callback, index)
+            self.update_caller('0.0.0.0', 0, self._copy_caller, '', index, remote_ip, remote_port, result_callback, index)
             return
         self._copy_caller(None, remote_ip, remote_port, result_callback, index)
 
@@ -129,7 +133,7 @@ class Rtp_proxy_session(object):
 
     def copy_callee(self, remote_ip, remote_port, result_callback = None, index = 0):
         if not self.callee_session_exists:
-            self.update_callee('0.0.0.0', 0, self._copy_callee, None, index, remote_ip, remote_port, result_callback, index)
+            self.update_callee('0.0.0.0', 0, self._copy_callee, '', index, remote_ip, remote_port, result_callback, index)
             return
         self._copy_callee(None, remote_ip, remote_port, result_callback, index)
 
@@ -139,7 +143,7 @@ class Rtp_proxy_session(object):
 
     def start_recording(self, rname = None, result_callback = None, index = 0):
         if not self.caller_session_exists:
-            self.update_caller('0.0.0.0', 0, self._start_recording, None, index, rname, result_callback, index)
+            self.update_caller('0.0.0.0', 0, self._start_recording, '', index, rname, result_callback, index)
             return
         self._start_recording(None, rname, result_callback, index)
 
@@ -160,22 +164,32 @@ class Rtp_proxy_session(object):
         if result_callback != None:
             result_callback(result)
 
-    def update_caller(self, remote_ip, remote_port, result_callback, options = None, index = 0, *callback_parameters):
+    def update_caller(self, remote_ip, remote_port, result_callback, options = '', index = 0, *callback_parameters):
         command = 'U'
         self.max_index = max(self.max_index, index)
-        if options != None:
-            command += options
+        if self.caller_raddress != None:
+            if self.rtp_proxy_client.is_local:
+                options += 'L%s' % self.global_config['sip_tm'].l4r.getServer( \
+                  self.caller_raddress).laddress[0]
+            else:
+                options += 'R%s' % self.caller_raddress[0]
+        command += options
         command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.from_tag, self.to_tag)
         if self.notify_socket != None and index == 0 and \
           self.rtp_proxy_client.tnot_supported:
             command += ' %s %s' % (self.notify_socket, self.notify_tag)
         self.rtp_proxy_client.send_command(command, self.update_result, (result_callback, 'caller', callback_parameters))
 
-    def update_callee(self, remote_ip, remote_port, result_callback, options = None, index = 0, *callback_parameters):
+    def update_callee(self, remote_ip, remote_port, result_callback, options = '', index = 0, *callback_parameters):
         command = 'U'
         self.max_index = max(self.max_index, index)
-        if options != None:
-            command += options
+        if self.callee_raddress != None:
+            if self.rtp_proxy_client.is_local:
+                options += 'L%s' % self.global_config['sip_tm'].l4r.getServer( \
+                  self.callee_raddress).laddress[0]
+            else:
+                options += 'R%s' % self.callee_raddress[0]
+        command += options
         command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.to_tag, self.from_tag)
         if self.notify_socket != None and index == 0 \
           and self.rtp_proxy_client.tnot_supported:
@@ -247,7 +261,7 @@ class Rtp_proxy_session(object):
             else:
                 self.callee_codecs = str(formats[0])
         for sect in sects:
-            update_xxx(sect.c_header.addr, sect.m_header.port, self.xxx_sdp_change_finish, None, \
+            update_xxx(sect.c_header.addr, sect.m_header.port, self.xxx_sdp_change_finish, '', \
               sects.index(sect), sdp_body, sect, sects, result_callback)
         return
 

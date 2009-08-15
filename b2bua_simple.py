@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_simple.py,v 1.7 2009/08/13 21:01:04 sobomax Exp $
+# $Id: b2bua_simple.py,v 1.8 2009/08/15 22:04:17 sobomax Exp $
 
 from sippy.UA import UA
 from sippy.CCEvents import CCEventDisconnect, CCEventTry
@@ -128,12 +128,12 @@ if __name__ == '__main__':
 
     SipConf.my_uaname = 'Sippy B2BUA (Simple)'
     SipConf.allow_formats = (0, 8, 18, 100, 101)
-    if laddr != None:
-        SipConf.my_address = laddr
-    if lport != None:
-        SipConf.my_port = lport
     global_config['sip_address'] = SipConf.my_address
     global_config['sip_port'] = SipConf.my_port
+    if laddr != None:
+        global_config['sip_address'] = laddr
+    if lport != None:
+        global_config['sip_port'] = lport
     global_config['sip_port_default'] = 5060
     global_config['sip_logger'] = SipLogger('b2bua')
 

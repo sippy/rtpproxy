@@ -22,22 +22,37 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipConf.py,v 1.5 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SipConf.py,v 1.6 2009/08/15 22:04:17 sobomax Exp $
 
 from socket import gethostbyname, gethostname
+
+class MyAddress(object):
+    def __str__(self):
+        try:
+            return gethostbyname(gethostname())
+        except:
+            return '127.0.0.1'
+
+class MyPort(object):
+    default_port = None
+
+    def __init__(self, default_port):
+        self.default_port = default_port
+
+    def __str__(self):
+        return str(self.default_port)
+
+    def __int__(self):
+        return self.default_port
 
 class SipConf(object):
     default_port = 5060
 
     try: my_address
-    except:
-        try:
-            my_address = gethostbyname(gethostname())
-        except:
-            my_address = '127.0.0.1'
+    except: my_address = MyAddress()
 
     try: my_port
-    except: my_port = default_port
+    except: my_port = MyPort(default_port)
 
     try: my_uaname
     except: my_uaname = 'Sippy'

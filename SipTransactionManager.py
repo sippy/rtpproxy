@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.12 2009/07/01 18:14:14 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.13 2009/08/15 22:04:17 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -31,11 +31,12 @@ from SipResponse import SipResponse
 from SipRequest import SipRequest
 from SipAddress import SipAddress
 from SipRoute import SipRoute
+from SipConf import MyAddress
 from datetime import datetime
 from md5 import md5
 from traceback import print_exc
 from time import time
-import sys
+import sys, socket
 
 class NETS_1918(object):
     nets = (('10.0.0.0', 0xffffffffl << 24), ('172.16.0.0',  0xffffffffl << 20), ('192.168.0.0', 0xffffffffl << 16))
@@ -68,6 +69,7 @@ class SipTransaction(object):
         self.address = None
         self.teA = self.teB = self.teC = self.teD = self.teE = self.teF = None
         self.tid = None
+        self.userv = None
 
 # Symbolic states names
 class SipTransactionState(object):
@@ -88,9 +90,55 @@ class TERMINATED(SipTransactionState):
     # Transaction ended abnormally (request timeout and such)
     pass
 
+class local4remote(object):
+    global_config = None
+    cache_r2l = None
+    cache_r2l_old = None
+    cache_l2s = None
+    socket = None
+    handleIncoming = None
+
+    def __init__(self, global_config, handleIncoming):
+        self.global_config = global_config
+        self.cache_r2l = {}
+        self.cache_r2l_old = {}
+        self.cache_l2s = {}
+        self.handleIncoming = handleIncoming
+        #self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        if isinstance(global_config['sip_address'], MyAddress):
+            laddress = (None, global_config['sip_port'])
+        else:
+            laddress = (global_config['sip_address'], global_config['sip_port'])
+        server = Udp_server(laddress, handleIncoming)
+        self.cache_l2s[laddress] = server
+
+    def getServer(self, raddress):
+        laddress = self.cache_r2l.get(raddress[0], None)
+        if laddress == None:
+            laddress = self.cache_r2l_old.get(raddress[0], None)
+            if laddress != None:
+                self.cache_r2l[raddress[0]] = laddress
+        if laddress != None:
+            #print 'local4remot-1: local address for %s is %s' % (raddress[0], laddress[0])
+            return self.cache_l2s[laddress]
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.connect(raddress)
+        laddress = (self.socket.getsockname()[0], self.global_config['sip_port'])
+        self.cache_r2l[raddress[0]] = laddress
+        server = self.cache_l2s.get(laddress, None)
+        if server == None:
+            server = Udp_server(laddress, self.handleIncoming)
+            self.cache_l2s[laddress] = server
+        #print 'local4remot-2: local address for %s is %s' % (raddress[0], laddress[0])
+        return server
+
+    def rotateCache(self):
+        self.cache_r2l_old = self.cache_r2l
+        self.cache_r2l = {}
+
 class SipTransactionManager(object):
     global_config = None
-    userv = None
+    l4r = None
     tclient = None
     tserver = None
     req_cb = None
@@ -102,7 +150,7 @@ class SipTransactionManager(object):
 
     def __init__(self, global_config, req_cb = None):
         self.global_config = global_config
-        self.userv = Udp_server((global_config['sip_address'], global_config['sip_port']), self.handleIncoming)
+        self.l4r = local4remote(global_config, self.handleIncoming)
         self.tclient = {}
         self.tserver = {}
         self.req_cb = req_cb
@@ -121,10 +169,10 @@ class SipTransactionManager(object):
         if retrans == None:
             retrans = self.l2rcache.get(checksum, None)
         if retrans != None:
-            data, address = retrans
+            userv, data, address = retrans
             if data == None:
                 return
-            self.transmitData(data, address)
+            self.transmitData(userv, data, address)
             return
         if data.startswith('SIP/2.0 '):
             try:
@@ -138,18 +186,18 @@ class SipTransactionManager(object):
                 print data
                 print '-' * 70
                 sys.stdout.flush()
-                self.l1rcache[checksum] = (None, None)
+                self.l1rcache[checksum] = (None, None, None)
                 return
             if resp.getSCode()[0] < 100 or resp.getSCode()[0] > 999:
                 print datetime.now(), 'invalid status code in SIP response from %s:%d:' % address
                 print data
                 sys.stdout.flush()
-                self.l1rcache[checksum] = (None, None)
+                self.l1rcache[checksum] = (None, None, None)
                 return
             resp.rtime = rtime
             if not self.tclient.has_key(tid):
                 #print 'no transaction with tid of %s in progress' % str(tid)
-                self.l1rcache[checksum] = (None, None)
+                self.l1rcache[checksum] = (None, None, None)
                 return
             t = self.tclient[tid]
             if self.nat_traversal and resp.countHFs('contact') > 0 and not check1918(t.address[0]):
@@ -172,7 +220,7 @@ class SipTransactionManager(object):
                 print data
                 print '-' * 70
                 sys.stdout.flush()
-                self.l1rcache[checksum] = (None, None)
+                self.l1rcache[checksum] = (None, None, None)
                 return
             req.rtime = rtime
             via0 = req.getHFBody('via')
@@ -190,7 +238,7 @@ class SipTransactionManager(object):
                     curl.host, curl.port = address
                     req.nated = True
             req.setSource(address)
-            self.incomingRequest(req, checksum, tids)
+            self.incomingRequest(req, checksum, tids, server)
 
     # 1. Client transaction methods
     def newTransaction(self, msg, resp_cb = None):
@@ -200,8 +248,9 @@ class SipTransactionManager(object):
             raise ValueError('BUG: Attempt to initiate transaction with the same TID as existing one!!!')
         t.tout = 0.5
         t.fcode = None
-        t.data = str(msg)
         t.address = msg.getTarget()
+        t.userv = self.l4r.getServer(t.address)
+        t.data = msg.localStr(t.userv.laddress[0], t.userv.laddress[1])
         try:
             t.expires = msg.getHFBody('expires').getNum()
             if t.expires <= 0:
@@ -223,7 +272,7 @@ class SipTransactionManager(object):
         t.teC = None
         t.state = TRYING
         self.tclient[t.tid] = t
-        self.transmitData(t.data, t.address)
+        self.transmitData(t.userv, t.data, t.address)
         return t
 
     def cancelTransaction(self, t):
@@ -260,7 +309,7 @@ class SipTransactionManager(object):
                         self.newTransaction(t.cancel)
                         t.cancelPending = False
                 t.teB = Timeout(self.timerB, t.expires, 1, t)
-                self.l1rcache[checksum] = (None, None)
+                self.l1rcache[checksum] = (None, None, None)
                 if t.resp_cb != None:
                     t.resp_cb(msg)
             else:
@@ -300,9 +349,9 @@ class SipTransactionManager(object):
                         t.ack.getHFBody('via').genBranch()
                     if rAddr == None:
                         rAddr = t.address
-                    self.transmitMsg(t.ack, rAddr, checksum)
+                    self.transmitMsg(t.userv, t.ack, rAddr, checksum)
                 else:
-                    self.l1rcache[checksum] = (None, None)
+                    self.l1rcache[checksum] = (None, None, None)
                 if t.resp_cb != None:
                     t.resp_cb(msg)
                 del self.tclient[t.tid]
@@ -310,7 +359,7 @@ class SipTransactionManager(object):
 
     def timerA(self, t):
         #print 'timerA', t
-        self.transmitData(t.data, t.address)
+        self.transmitData(t.userv, t.data, t.address)
         t.tout *= 2
         t.teA = Timeout(self.timerA, t.tout, 1, t)
 
@@ -341,11 +390,11 @@ class SipTransactionManager(object):
         t.cleanup()
 
     # 2. Server transaction methods
-    def incomingRequest(self, msg, checksum, tids):
+    def incomingRequest(self, msg, checksum, tids, server):
         for tid in tids:
             if self.tclient.has_key(tid):
                 resp = msg.genResponse(482, 'Loop Detected')
-                self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
+                self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
                 return
         tid = msg.getTId()
         # Fasten seatbelts - bumpy transaction matching code ahead!
@@ -359,13 +408,13 @@ class SipTransactionManager(object):
                         # Different branch on transaction to which no final reply
                         # has been sent yet - merge requests
                         resp = msg.genResponse(482, 'Loop Detected')
-                        self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
+                        self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
                         return
                     elif msg.getMethod() == 'CANCEL':
                         # CANCEL, but with branch that doesn't match any existing
                         # transactions
                         resp = msg.genResponse(481, 'Call Leg/Transaction Does Not Exist')
-                        self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
+                        self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
                         return
         else:
             t = self.tserver.get(tid, None)
@@ -375,13 +424,13 @@ class SipTransactionManager(object):
                 # Duplicate received, check that we have sent any response on this
                 # request already
                 if t.data != None:
-                    self.transmitData(t.data, t.address, checksum)
+                    self.transmitData(t.userv, t.data, t.address, checksum)
                 return
             elif msg.getMethod() == 'CANCEL':
                 # RFC3261 says that we have to reply 200 OK in all cases if
                 # there is such transaction
                 resp = msg.genResponse(200, 'OK')
-                self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
+                self.transmitMsg(t.userv, resp, resp.getHFBody('via').getTAddr(), checksum)
                 if t.state in (TRYING, RINGING):
                     self.doCancel(t, msg.rtime)
             elif msg.getMethod() == 'ACK' and t.state == COMPLETED:
@@ -393,17 +442,17 @@ class SipTransactionManager(object):
                 # We have done with the transaction, no need to wait for timeout
                 del self.tserver[t.tid]
                 t.cleanup()
-                self.l1rcache[checksum] = (None, None)
+                self.l1rcache[checksum] = (None, None, None)
         elif msg.getMethod() == 'ACK':
             # Some ACK that doesn't match any existing transaction.
             # Drop and forget it - upper layer is unlikely to be interested
             # to seeing this anyway.
             print datetime.now(), 'unmatched ACK transaction - ignoring'
             sys.stdout.flush()
-            self.l1rcache[checksum] = (None, None)
+            self.l1rcache[checksum] = (None, None, None)
         elif msg.getMethod() == 'CANCEL':
             resp = msg.genResponse(481, 'Call Leg/Transaction Does Not Exist')
-            self.transmitMsg(resp, resp.getHFBody('via').getTAddr(), checksum)
+            self.transmitMsg(t.userv, resp, resp.getHFBody('via').getTAddr(), checksum)
         else:
             #print 'new transaction', msg.getMethod()
             t = SipTransaction()
@@ -419,6 +468,12 @@ class SipTransactionManager(object):
             t.noack_cb = None
             t.cancel_cb = None
             t.checksum = checksum
+            if server.laddress[0] != None:
+                t.userv = server
+            else:
+                # For messages received on the wildcard interface find
+                # or create more specific server.
+                t.userv = self.l4r.getServer(msg.getSource())
             if msg.getMethod() == 'INVITE':
                 t.r487 = msg.genResponse(487, 'Request Terminated')
                 t.needack = True
@@ -477,6 +532,9 @@ class SipTransactionManager(object):
         toHF = resp.getHFBody('to')
         if scode > 100 and toHF.getTag() == None:
             toHF.genTag()
+        t.data = resp.localStr(t.userv.laddress[0], t.userv.laddress[1])
+        t.address = resp.getHFBody('via').getTAddr()
+        self.transmitData(t.userv, t.data, t.address, t.checksum)
         if scode < 200:
             t.state = RINGING
             if self.provisional_retr > 0 and scode > 100:
@@ -508,9 +566,6 @@ class SipTransactionManager(object):
                 # We have done with the transaction
                 del self.tserver[t.tid]
                 t.cleanup()
-        t.data = str(resp)
-        t.address = resp.getHFBody('via').getTAddr()
-        self.transmitData(t.data, t.address, t.checksum)
 
     def doCancel(self, t, rtime = None):
         if rtime == None:
@@ -548,22 +603,20 @@ class SipTransactionManager(object):
         #print 'timerF', t.state
         t.teF = None
         if t.state == RINGING and self.provisional_retr > 0:
-            self.transmitData(t.data, t.address)
+            self.transmitData(t.userv, t.data, t.address)
             t.teF = Timeout(self.timerF, self.provisional_retr, 1, t)
 
     def rCachePurge(self):
         self.l2rcache = self.l1rcache
         self.l1rcache = {}
+        self.l4r.rotateCache()
 
-    def transmitMsg(self, msg, address, cachesum, compact = False):
-        if not compact:
-            data = str(msg)
-        else:
-            data = msg.compactStr()
-        self.transmitData(data, address, cachesum)
+    def transmitMsg(self, userv, msg, address, cachesum, compact = False):
+        data = msg.localStr(userv.laddress[0], userv.laddress[1], compact)
+        self.transmitData(userv, data, address, cachesum)
 
-    def transmitData(self, data, address, cachesum = None):
-        self.userv.send_to(data, address)
+    def transmitData(self, userv, data, address, cachesum = None):
+        userv.send_to(data, address)
         self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
         if cachesum != None:
-            self.l1rcache[cachesum] = (data, address)
+            self.l1rcache[cachesum] = (userv, data, address)

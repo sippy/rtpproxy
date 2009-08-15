@@ -22,13 +22,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipWWWAuthenticate.py,v 1.5 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SipWWWAuthenticate.py,v 1.6 2009/08/15 22:04:17 sobomax Exp $
 
 from random import random
 from md5 import md5
 from time import time
 from SipGenericHF import SipGenericHF
-from SipConf import SipConf
+from SipConf import SipConf, MyAddress
 
 class SipWWWAuthenticate(SipGenericHF):
     hf_names = ('www-authenticate',)
@@ -64,8 +64,13 @@ class SipWWWAuthenticate(SipGenericHF):
                     self.nonce = value
 
     def __str__(self):
+        return self.localStr()
+
+    def localStr(self, local_addr = None, local_port = None):
         if not self.parsed:
             return self.body
+        if local_addr != None and isinstance(self.realm, MyAddress):
+            return 'Digest realm="%s",nonce="%s"' % (local_addr, self.nonce)
         return 'Digest realm="%s",nonce="%s"' % (self.realm, self.nonce)
 
     def getCopy(self):

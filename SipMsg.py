@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.15 2009/04/08 22:17:12 sobomax Exp $
+# $Id: SipMsg.py,v 1.16 2009/08/15 22:04:17 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -162,17 +162,24 @@ class SipMsg(object):
             s += 'Content-Length: 0\r\n\r\n'
         return s
 
-    def compactStr(self):
+    def localStr(self, local_addr = None, local_port = None, compact = False):
         s = self.getSL() + '\r\n'
         for header in self.headers:
-            s += header.compactStr() + '\r\n'
+            s += header.localStr(local_addr, local_port, compact) + '\r\n'
         if self.body != None:
             mbody = str(self.body)
-            s += 'l: %d\r\n' % len(mbody)
-            s += 'c: %s\r\n\r\n' % self.body.mtype
+            if compact:
+                s += 'l: %d\r\n' % len(mbody)
+                s += 'c: %s\r\n\r\n' % self.body.mtype
+            else:
+                s += 'Content-Length: %d\r\n' % len(mbody)
+                s += 'Content-Type: %s\r\n\r\n' % self.body.mtype
             s += mbody
         else:
-            s += 'l: 0\r\n\r\n'
+            if compact:
+                s += 'l: 0\r\n\r\n'
+            else:
+                s += 'Content-Length: 0\r\n\r\n'
         return s
 
     def setSL(self, startline):

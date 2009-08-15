@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.55 2009/08/13 21:01:04 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.56 2009/08/15 22:04:17 sobomax Exp $
 
 from sippy.Timeout import Timeout
 from sippy.Signal import Signal
@@ -165,6 +165,7 @@ class CallController(object):
                     self.rtp_proxy_session = Rtp_proxy_session(self.global_config, call_id = self.cId, \
                       notify_socket = global_config['b2bua_socket'], \
                       notify_tag = quote('r %s' % str(self.id)))
+                    self.rtp_proxy_session.callee_raddress = (self.remote_ip, 5060)
                 self.eTry = event
                 self.state = CCStateWaitRoute
                 if not self.global_config['auth_enable']:
@@ -344,6 +345,7 @@ class CallController(object):
         if self.rtp_proxy_session != None and parameters.get('rtpp', True):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
+            self.rtp_proxy_session.caller_raddress = (host, port)
             body = body.getCopy()
             body.content += 'a=nortpproxy:yes\r\n'
             self.proxied = True
@@ -718,13 +720,13 @@ if __name__ == '__main__':
         os.dup2(fd, sys.__stderr__.fileno())
         os.close(fd)
 
-    if laddr != None:
-        SipConf.my_address = laddr
-    if lport != None:
-        SipConf.my_port = lport
-    global_config['sip_logger'] = SipLogger('b2bua')
     global_config['sip_address'] = SipConf.my_address
     global_config['sip_port'] = SipConf.my_port
+    if laddr != None:
+        global_config['sip_address'] = laddr
+    if lport != None:
+        global_config['sip_port'] = lport
+    global_config['sip_logger'] = SipLogger('b2bua')
 
     if len(rtp_proxy_clients) > 0:
         global_config['rtp_proxy_clients'] = []
