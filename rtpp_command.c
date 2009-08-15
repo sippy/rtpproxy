@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.29 2009/08/10 23:24:05 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.30 2009/08/15 22:07:45 sobomax Exp $
  *
  */
 
@@ -68,6 +68,7 @@ struct proto_cap proto_caps[] = {
     { "20080403", "Support for RTP statistics querying" },
     { "20081102", "Support for setting codecs in the update/lookup command" },
     { "20081224", "Support for session timeout notifications" },
+    { "20090810", "Support for automatic bridging" },
     { NULL, NULL }
 };
 
