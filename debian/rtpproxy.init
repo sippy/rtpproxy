@@ -17,8 +17,7 @@ DESC=rtpproxy
 
 test -x $DAEMON || exit 0
 
-MYNAME=`basename $0`
-MYCFG="/etc/default/${MYNAME}"
+MYCFG="/etc/default/${NAME}"
 # Include rtpproxy defaults if available
 if [ -f ${MYCFG} ] ; then
 	. ${MYCFG}
