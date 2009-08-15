@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_network.c,v 1.16 2009/08/10 23:24:05 sobomax Exp $
+ * $Id: rtpp_network.c,v 1.17 2009/08/15 22:19:29 sobomax Exp $
  *
  */
 
@@ -256,7 +256,7 @@ extractaddr(const char *str, char **begin, char **end, int *pf)
 	tpf = AF_INET6;
 	str++;
 	for (t = str; *str != '\0'; str++) {
-	    if (!ishexnumber(*str) && *str != ':')
+	    if (!isxdigit(*str) && *str != ':')
 		break;
 	}
 	if (*str != ']')
