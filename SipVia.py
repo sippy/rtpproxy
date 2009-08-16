@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipVia.py,v 1.7 2009/08/15 22:04:17 sobomax Exp $
+# $Id: SipVia.py,v 1.8 2009/08/16 07:44:36 sobomax Exp $
 
 from random import random
 from md5 import md5
@@ -72,12 +72,17 @@ class SipVia(SipGenericHF):
             else:
                 val = sparam[1]
             self.params[sparam[0]] = val
-        hcomps = hcomps[0].split(':', 1)
+        if hcomps[0].startswith('['):
+            hcomps = hcomps[0].split(']', 1)
+            self.hostname = hcomps[0] + ']'
+            hcomps = hcomps[1].split(':', 1)
+        else:
+            hcomps = hcomps[0].split(':', 1)
+            self.hostname = hcomps[0]
         if len(hcomps) == 2:
             self.port = int(hcomps[1])
         else:
             self.port = None
-        self.hostname = hcomps[0]
 
     def __str__(self):
         return self.localStr()
