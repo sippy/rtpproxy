@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipURL.py,v 1.11 2009/08/15 22:04:17 sobomax Exp $
+# $Id: SipURL.py,v 1.12 2009/08/16 01:20:47 sobomax Exp $
 
 from SipConf import SipConf, MyAddress, MyPort
 from urllib import quote, unquote
@@ -94,12 +94,22 @@ class SipURL(object):
             self.username = unquote(uparts[0])
         else:
             hostport = udparts[0]
-        hpparts = hostport.split(':', 1)
-        if len(hpparts) == 1:
-            self.host = hpparts[0]
+        if hostport[0] == '[':
+            # IPv6 host
+            hpparts = hostport.split(']', 1)
+            self.host = hpparts[0] + ']'
+            if len(hpparts[1]) > 0:
+                hpparts = hpparts[1].split(':', 1)
+                if len(hpparts) > 1:
+                    self.port = hpparts[1]
         else:
-            self.host = hpparts[0]
-            self.port = int(hpparts[1])
+            # IPv4 host
+            hpparts = hostport.split(':', 1)
+            if len(hpparts) == 1:
+                self.host = hpparts[0]
+            else:
+                self.host = hpparts[0]
+                self.port = int(hpparts[1])
         for p in params:
             if p == params[-1] and '?' in p:
                 self.headers = {}
