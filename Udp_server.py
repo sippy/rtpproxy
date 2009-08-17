@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Udp_server.py,v 1.7 2009/08/17 02:01:20 sobomax Exp $
+# $Id: Udp_server.py,v 1.8 2009/08/17 02:09:39 sobomax Exp $
 
 from twisted.internet import reactor
 from errno import ECONNRESET, ENOTCONN, ESHUTDOWN, EWOULDBLOCK, ENOBUFS, EAGAIN
@@ -171,6 +171,7 @@ class Udp_server(object):
         self.wi.append(None)
         self.wi_available.notify()
         self.wi_available.release()
+        self.data_callback = None
 
 if __name__ == '__main__':
     from sys import exit
