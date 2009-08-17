@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Udp_server.py,v 1.6 2009/08/17 01:38:55 sobomax Exp $
+# $Id: Udp_server.py,v 1.7 2009/08/17 02:01:20 sobomax Exp $
 
 from twisted.internet import reactor
 from errno import ECONNRESET, ENOTCONN, ESHUTDOWN, EWOULDBLOCK, ENOBUFS, EAGAIN
@@ -118,7 +118,7 @@ class Udp_server(object):
     def __init__(self, address, data_callback, family = None):
         self.laddress = address
         if family == None:
-            if address[0].startswith('['):
+            if address != None and address[0].startswith('['):
                 family = socket.AF_INET6
                 address = (address[0][1:-1], address[1])
             else:
@@ -142,8 +142,7 @@ class Udp_server(object):
         self.wi = []
         for i in range(0, MAX_WORKERS):
             AsyncSender(self)
-            if address != None:
-                AsyncReceiver(self)
+            AsyncReceiver(self)
 
     def send_to(self, data, address):
         if self.family == socket.AF_INET6:
