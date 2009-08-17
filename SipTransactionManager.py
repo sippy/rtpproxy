@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.13 2009/08/15 22:04:17 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.14 2009/08/17 01:31:01 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -452,7 +452,7 @@ class SipTransactionManager(object):
             self.l1rcache[checksum] = (None, None, None)
         elif msg.getMethod() == 'CANCEL':
             resp = msg.genResponse(481, 'Call Leg/Transaction Does Not Exist')
-            self.transmitMsg(t.userv, resp, resp.getHFBody('via').getTAddr(), checksum)
+            self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
         else:
             #print 'new transaction', msg.getMethod()
             t = SipTransaction()
