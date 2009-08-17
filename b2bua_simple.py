@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_simple.py,v 1.8 2009/08/15 22:04:17 sobomax Exp $
+# $Id: b2bua_simple.py,v 1.9 2009/08/17 02:28:41 sobomax Exp $
 
 from sippy.UA import UA
 from sippy.CCEvents import CCEventDisconnect, CCEventTry
@@ -54,7 +54,8 @@ class CallController(object):
                     # Some weird event received
                     self.uaA.recvEvent(CCEventDisconnect())
                     return
-                self.uaO = UA(self.global_config, event_cb = self.recvEvent, nh_address = (self.global_config['nh_addr'], self.global_config['sip_port_default']))
+                self.uaO = UA(self.global_config, event_cb = self.recvEvent, \
+                  nh_address = (self.global_config['nh_addr'], self.global_config['nh_port']))
             self.uaO.recvEvent(event)
         else:
             self.uaA.recvEvent(event)
@@ -105,7 +106,17 @@ if __name__ == '__main__':
             lport = int(a)
             continue
         if o == '-n':
-            global_config['nh_addr'] = a
+            if a.startswith('['):
+                parts = a.split(']', 1)
+                global_config['nh_addr'] = parts[0] + ']'
+                parts = parts[1].split(':', 1)
+            else:
+                parts = a.split(':', 1)
+                global_config['nh_addr'] = parts[0]
+            if len(parts) == 2:
+                global_config['nh_port'] = int(parts[1])
+            else:
+                global_config['nh_port'] = 5060
             continue
 
     if not foreground:
@@ -134,7 +145,6 @@ if __name__ == '__main__':
         global_config['sip_address'] = laddr
     if lport != None:
         global_config['sip_port'] = lport
-    global_config['sip_port_default'] = 5060
     global_config['sip_logger'] = SipLogger('b2bua')
 
     cmap = CallMap(global_config)
