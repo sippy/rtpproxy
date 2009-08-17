@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.16 2009/08/17 01:38:55 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.17 2009/08/17 02:11:10 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
@@ -167,7 +167,7 @@ class Rtp_proxy_session(object):
     def update_caller(self, remote_ip, remote_port, result_callback, options = '', index = 0, *callback_parameters):
         command = 'U'
         self.max_index = max(self.max_index, index)
-        if self.caller_raddress != None:
+        if self.rtp_proxy_client.sbind_supported and self.caller_raddress != None:
             if self.rtp_proxy_client.is_local:
                 options += 'L%s' % self.global_config['sip_tm'].l4r.getServer( \
                   self.caller_raddress).laddress[0]
@@ -183,7 +183,7 @@ class Rtp_proxy_session(object):
     def update_callee(self, remote_ip, remote_port, result_callback, options = '', index = 0, *callback_parameters):
         command = 'U'
         self.max_index = max(self.max_index, index)
-        if self.callee_raddress != None:
+        if self.rtp_proxy_client.sbind_supported and self.callee_raddress != None:
             if self.rtp_proxy_client.is_local:
                 options += 'L%s' % self.global_config['sip_tm'].l4r.getServer( \
                   self.callee_raddress).laddress[0]
