@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_local.py,v 1.8 2009/08/15 22:04:17 sobomax Exp $
+# $Id: Rtp_proxy_client_local.py,v 1.9 2009/08/17 02:08:39 sobomax Exp $
 
 from Timeout import Timeout
 from errno import EINTR
@@ -35,6 +35,7 @@ class Rtp_proxy_client_local(object):
     copy_supported = False
     stat_supported = False
     tnot_supported = False
+    sbind_supported = False
     shutdown = False
     proxy_address = None
     is_local = True
@@ -80,6 +81,7 @@ class Rtp_proxy_client_local(object):
         self.copy_supported = False
         self.stat_supported = False
         self.tnot_supported = False
+        self.sbind_supported = False
         try:
             version = self.send_raw('V')
             while version == '20040107':
@@ -93,6 +95,9 @@ class Rtp_proxy_client_local(object):
                 if self.send_raw('VF 20081224') != '1':
                     break
                 self.tnot_supported = True
+                if self.send_raw('VF 20090810') != '1':
+                    break
+                self.sbind_supported = True
                 break
         except:
             self.online = False

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_udp.py,v 1.6 2009/08/15 22:04:17 sobomax Exp $
+# $Id: Rtp_proxy_client_udp.py,v 1.7 2009/08/17 02:08:39 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -39,6 +39,7 @@ class Rtp_proxy_client_udp(object):
     copy_supported = False
     stat_supported = False
     tnot_supported = False
+    sbind_supported = False
     shutdown = False
     proxy_address = None
     caps_done = False
@@ -81,12 +82,14 @@ class Rtp_proxy_client_udp(object):
 
     def caps_query1(self, result):
         if self.shutdown:
+            self.udp_server.shutdown()
             return
         if result != '1':
             if result != None:
                 self.copy_supported = False
                 self.stat_supported = False
                 self.tnot_supported = False
+                self.sbind_supported = False
                 self.caps_done = True
             Timeout(self.heartbeat, 60)
             return
@@ -95,6 +98,7 @@ class Rtp_proxy_client_udp(object):
 
     def caps_query2(self, result):
         if self.shutdown:
+            self.udp_server.shutdown()
             return
         if result != None:
             if result == '1':
@@ -104,17 +108,34 @@ class Rtp_proxy_client_udp(object):
             else:
                 self.stat_supported = False
                 self.tnot_supported = False
+                self.sbind_supported = False
                 self.caps_done = True
         Timeout(self.heartbeat, 60)
 
     def caps_query3(self, result):
         if self.shutdown:
+            self.udp_server.shutdown()
             return
         if result != None:
             if result == '1':
                 self.tnot_supported = True
+                self.send_command('VF 20090810', self.caps_query4)
+                return
             else:
                 self.tnot_supported = False
+                self.sbind_supported = False
+                self.caps_done = True
+        Timeout(self.heartbeat, 60)
+
+    def caps_query4(self, result):
+        if self.shutdown:
+            self.udp_server.shutdown()
+            return
+        if result != None:
+            if result == '1':
+                self.sbind_supported = True
+            else:
+                self.sbind_supported = False
             self.caps_done = True
         Timeout(self.heartbeat, 60)
 
@@ -123,6 +144,7 @@ class Rtp_proxy_client_udp(object):
 
     def heartbeat_reply(self, version):
         if self.shutdown:
+            self.udp_server.shutdown()
             return
         if version == '20040107':
             self.online = True
