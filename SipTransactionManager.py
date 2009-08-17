@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.15 2009/08/17 01:38:55 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.16 2009/08/17 23:13:36 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -105,7 +105,10 @@ class local4remote(object):
         self.cache_l2s = {}
         self.handleIncoming = handleIncoming
         if isinstance(global_config['sip_address'], MyAddress):
-            laddresses = (('0.0.0.0', global_config['sip_port']), ('[::]', global_config['sip_port']))
+            if socket.has_ipv6:
+                laddresses = (('0.0.0.0', global_config['sip_port']), ('[::]', global_config['sip_port']))
+            else:
+                laddresses = (('0.0.0.0', global_config['sip_port']),)
         else:
             laddresses = ((global_config['sip_address'], global_config['sip_port']),)
         for laddress in laddresses:
