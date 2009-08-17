@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.15 2009/08/15 22:04:17 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.16 2009/08/17 01:38:55 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
@@ -209,11 +209,14 @@ class Rtp_proxy_session(object):
         rtpproxy_port = int(t1[0])
         if rtpproxy_port == 0:
             result_callback(None, *callback_parameters)
+        family = 'IP4'
         if len(t1) > 1:
             rtpproxy_address = t1[1]
+            if len(t1) > 2 and t1[2] == '6':
+                family = 'IP6'
         else:
             rtpproxy_address = self.rtp_proxy_client.proxy_address
-        result_callback((rtpproxy_address, rtpproxy_port), *callback_parameters)
+        result_callback((rtpproxy_address, rtpproxy_port, family), *callback_parameters)
 
     def delete(self):
         while self.max_index >= 0:
@@ -261,13 +264,17 @@ class Rtp_proxy_session(object):
             else:
                 self.callee_codecs = str(formats[0])
         for sect in sects:
-            update_xxx(sect.c_header.addr, sect.m_header.port, self.xxx_sdp_change_finish, '', \
+            options = ''
+            if sect.c_header.atype == 'IP6':
+                options = '6'
+            update_xxx(sect.c_header.addr, sect.m_header.port, self.xxx_sdp_change_finish, options, \
               sects.index(sect), sdp_body, sect, sects, result_callback)
         return
 
     def xxx_sdp_change_finish(self, address_port, sdp_body, sect, sects, result_callback):
         sect.needs_update = False
         if address_port != None:
+            sect.c_header.atype = address_port[2]
             sect.c_header.addr = address_port[0]
             if sect.m_header.port != 0:
                 sect.m_header.port = address_port[1]

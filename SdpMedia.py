@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpMedia.py,v 1.5 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SdpMedia.py,v 1.6 2009/08/17 01:38:55 sobomax Exp $
 
 class MTAudio(object):
     pass
@@ -67,6 +67,9 @@ class SdpMedia(object):
             for format in self.formats:
                 rval += ' %s' % format
         return rval
+
+    def localStr(self, local_addr = None, local_port = None):
+        return str(self)
 
     def getCopy(self):
         return SdpMedia(cself = self)

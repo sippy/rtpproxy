@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: MsgBody.py,v 1.6 2009/04/08 22:00:53 sobomax Exp $
+# $Id: MsgBody.py,v 1.7 2009/08/17 01:38:55 sobomax Exp $
 
 from SdpBody import SdpBody
 from types import StringType
@@ -55,6 +55,11 @@ class MsgBody(object):
 
     def __str__(self):
         return str(self.content)
+
+    def localStr(self, local_addr = None, local_port = None):
+        if type(self.content) == StringType:
+            return self.content
+        return self.content.localStr(local_addr, local_port)
 
     def getType(self):
         return self.mtype

@@ -22,9 +22,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpOrigin.py,v 1.5 2009/01/05 20:53:29 sobomax Exp $
+# $Id: SdpOrigin.py,v 1.6 2009/08/17 01:38:55 sobomax Exp $
 
-from SipConf import SipConf
+from SipConf import SipConf, MyAddress
 from time import time
 
 class SdpOrigin(object):
@@ -55,6 +55,16 @@ class SdpOrigin(object):
             self.address = cself.address
 
     def __str__(self):
+        return '%s %s %s %s %s %s' % (self.username, self.session_id, self.version, self.network_type, self.address_type, self.address)
+
+    def localStr(self, local_addr = None, local_port = None):
+        if local_addr != None and isinstance(self.address, MyAddress):
+            if local_addr.startswith('['):
+                address_type = 'IP6'
+                local_addr = local_addr[1:-1]
+            else:
+                address_type = 'IP4'
+            return '%s %s %s %s %s %s' % (self.username, self.session_id, self.version, self.network_type, address_type, local_addr)
         return '%s %s %s %s %s %s' % (self.username, self.session_id, self.version, self.network_type, self.address_type, self.address)
 
     def getCopy(self):

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpBody.py,v 1.7 2009/04/08 22:21:20 sobomax Exp $
+# $Id: SdpBody.py,v 1.8 2009/08/17 01:38:55 sobomax Exp $
 
 from SdpMediaDescription import SdpMediaDescription
 from SdpGeneric import SdpGeneric
@@ -106,7 +106,7 @@ class SdpBody(object):
                     s += '%s=%s\r\n' % (name, str(header))
             for header in self.a_headers:
                 s += 'a=%s\r\n' % str(header)
-            s += self.sections[0].noCStr()
+            s += self.sections[0].localStr(noC = True)
             return s
         for name in self.all_headers:
             header = getattr(self, name + '_header')
@@ -116,6 +116,32 @@ class SdpBody(object):
             s += 'a=%s\r\n' % str(header)
         for section in self.sections:
             s += str(section)
+        return s
+
+    def localStr(self, local_addr = None, local_port = None):
+        s = ''
+        if len(self.sections) == 1 and self.sections[0].c_header != None:
+            for name in self.first_half:
+                header = getattr(self, name + '_header')
+                if header != None:
+                    s += '%s=%s\r\n' % (name, header.localStr(local_addr, local_port))
+            s += 'c=%s\r\n' % self.sections[0].c_header.localStr(local_addr, local_port)
+            for name in self.second_half:
+                header = getattr(self, name + '_header')
+                if header != None:
+                    s += '%s=%s\r\n' % (name, header.localStr(local_addr, local_port))
+            for header in self.a_headers:
+                s += 'a=%s\r\n' % str(header)
+            s += self.sections[0].localStr(local_addr, local_port, noC = True)
+            return s
+        for name in self.all_headers:
+            header = getattr(self, name + '_header')
+            if header != None:
+                s += '%s=%s\r\n' % (name, header.localStr(local_addr, local_port))
+        for header in self.a_headers:
+            s += 'a=%s\r\n' % str(header)
+        for section in self.sections:
+            s += section.localStr(local_addr, local_port)
         return s
 
     def __iadd__(self, other):

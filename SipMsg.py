@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipMsg.py,v 1.16 2009/08/15 22:04:17 sobomax Exp $
+# $Id: SipMsg.py,v 1.17 2009/08/17 01:38:55 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipGenericHF import SipGenericHF
@@ -167,7 +167,7 @@ class SipMsg(object):
         for header in self.headers:
             s += header.localStr(local_addr, local_port, compact) + '\r\n'
         if self.body != None:
-            mbody = str(self.body)
+            mbody = self.body.localStr(local_addr, local_port)
             if compact:
                 s += 'l: %d\r\n' % len(mbody)
                 s += 'c: %s\r\n\r\n' % self.body.mtype

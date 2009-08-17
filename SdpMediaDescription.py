@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpMediaDescription.py,v 1.3 2009/08/17 01:27:08 sobomax Exp $
+# $Id: SdpMediaDescription.py,v 1.4 2009/08/17 01:38:55 sobomax Exp $
 
 from SdpConnecton import SdpConnecton
 from SdpMedia import SdpMedia
@@ -61,14 +61,14 @@ class SdpMediaDescription(object):
             s += 'a=%s\r\n' % str(header)
         return s
 
-    def noCStr(self):
+    def localStr(self, local_addr = None, local_port = None, noC = False):
         s = ''
         for name in self.all_headers:
-            if name == 'c':
+            if noC and name == 'c':
                 continue
             header = getattr(self, name + '_header')
             if header != None:
-                s += '%s=%s\r\n' % (name, str(header))
+                s += '%s=%s\r\n' % (name, header.localStr(local_addr, local_port))
         for header in self.a_headers:
             s += 'a=%s\r\n' % str(header)
         return s

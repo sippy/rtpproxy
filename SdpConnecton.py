@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SdpConnecton.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
+# $Id: SdpConnecton.py,v 1.5 2009/08/17 01:38:55 sobomax Exp $
 
 class SdpConnecton(object):
     ntype = None
@@ -38,6 +38,9 @@ class SdpConnecton(object):
             self.addr = cself.addr
 
     def __str__(self):
+        return '%s %s %s' % (self.ntype, self.atype, self.addr)
+
+    def localStr(self, local_addr = None, local_port = None):
         return '%s %s %s' % (self.ntype, self.atype, self.addr)
 
     def getCopy(self):

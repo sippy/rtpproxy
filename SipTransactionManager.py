@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.14 2009/08/17 01:31:01 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.15 2009/08/17 01:38:55 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -95,7 +95,7 @@ class local4remote(object):
     cache_r2l = None
     cache_r2l_old = None
     cache_l2s = None
-    socket = None
+    skt = None
     handleIncoming = None
 
     def __init__(self, global_config, handleIncoming):
@@ -104,13 +104,13 @@ class local4remote(object):
         self.cache_r2l_old = {}
         self.cache_l2s = {}
         self.handleIncoming = handleIncoming
-        #self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         if isinstance(global_config['sip_address'], MyAddress):
-            laddress = (None, global_config['sip_port'])
+            laddresses = (('0.0.0.0', global_config['sip_port']), ('[::]', global_config['sip_port']))
         else:
-            laddress = (global_config['sip_address'], global_config['sip_port'])
-        server = Udp_server(laddress, handleIncoming)
-        self.cache_l2s[laddress] = server
+            laddresses = ((global_config['sip_address'], global_config['sip_port']),)
+        for laddress in laddresses:
+            server = Udp_server(laddress, handleIncoming)
+            self.cache_l2s[laddress] = server
 
     def getServer(self, raddress):
         laddress = self.cache_r2l.get(raddress[0], None)
@@ -121,9 +121,23 @@ class local4remote(object):
         if laddress != None:
             #print 'local4remot-1: local address for %s is %s' % (raddress[0], laddress[0])
             return self.cache_l2s[laddress]
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.connect(raddress)
-        laddress = (self.socket.getsockname()[0], self.global_config['sip_port'])
+        if raddress[0].startswith('['):
+            family = socket.AF_INET6
+            lookup_address = raddress[0][1:-1]
+        else:
+            family = socket.AF_INET
+            lookup_address = raddress[0]
+        self.skt = socket.socket(family, socket.SOCK_DGRAM)
+        ai = socket.getaddrinfo(lookup_address, None, family)
+        if family == socket.AF_INET:
+            address = (ai[0][4][0], raddress[1])
+        else:
+            address = (ai[0][4][0], raddress[1], ai[0][4][2], ai[0][4][3])
+        self.skt.connect(address)
+        if family == socket.AF_INET:
+            laddress = (self.skt.getsockname()[0], self.global_config['sip_port'])
+        else:
+            laddress = ('[%s]' % self.skt.getsockname()[0], self.global_config['sip_port'])
         self.cache_r2l[raddress[0]] = laddress
         server = self.cache_l2s.get(laddress, None)
         if server == None:
@@ -468,7 +482,7 @@ class SipTransactionManager(object):
             t.noack_cb = None
             t.cancel_cb = None
             t.checksum = checksum
-            if server.laddress[0] != None:
+            if server.laddress[0] not in ('0.0.0.0', '[::]'):
                 t.userv = server
             else:
                 # For messages received on the wildcard interface find

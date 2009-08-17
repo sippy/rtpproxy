@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.56 2009/08/15 22:04:17 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.57 2009/08/17 01:38:55 sobomax Exp $
 
 from sippy.Timeout import Timeout
 from sippy.Signal import Signal
@@ -322,12 +322,23 @@ class CallController(object):
             host = self.source[0]
             port = self.source[1]
         else:
-            host = host.split(':', 1)
-            if len(host) > 1:
-                port = int(host[1])
+            if host.startswith('['):
+                # IPv6
+                host = host.split(']', 1)
+                port = host[1].split(':', 1)
+                host = host[0] + ']'
+                if len(port) > 1:
+                    port = int(port[1])
+                else:
+                    port = SipConf.default_port
             else:
-                port = SipConf.default_port
-            host = host[0]
+                # IPv4
+                host = host.split(':', 1)
+                if len(host) > 1:
+                    port = int(host[1])
+                else:
+                    port = SipConf.default_port
+                host = host[0]
         if not forward_on_fail and self.global_config['acct_enable']:
             self.acctO = RadiusAccounting(self.global_config, 'originate', send_start = self.global_config['start_acct_enable'])
             self.acctO.setParams(parameters.get('bill-to', self.username), parameters.get('bill-cli', cli), \
