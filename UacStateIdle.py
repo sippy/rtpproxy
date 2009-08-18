@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateIdle.py,v 1.10 2009/07/01 21:17:45 sobomax Exp $
+# $Id: UacStateIdle.py,v 1.11 2009/08/18 01:16:47 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -61,7 +61,7 @@ class UacStateIdle(UaStateGeneric):
             self.ua.routes = []
             self.ua.cGUID = cGUID
             self.ua.lSDP = body
-            req = self.ua.genRequest('INVITE', body)
+            req = self.ua.genRequest('INVITE', body, reason = event.reason)
             self.ua.lCSeq += 1
             self.ua.tr = self.ua.global_config['sip_tm'].newTransaction(req, self.ua.recvResponse)
             self.ua.auth = None

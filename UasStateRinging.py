@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateRinging.py,v 1.4 2009/07/01 21:17:45 sobomax Exp $
+# $Id: UasStateRinging.py,v 1.5 2009/08/18 01:16:47 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, CCEventDisconnect
@@ -98,16 +98,22 @@ class UasStateRinging(UaStateGeneric):
                 also = req.getHFBody('also').getUrl().getCopy()
             else:
                 also = None
-            self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin))
+            event = CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin)
+            if req.countHFs('reason') > 0:
+                event.reason = req.getHFBody('reason')
+            self.ua.equeue.append(event)
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
             return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         return None
 
-    def cancel(self, rtime):
+    def cancel(self, rtime, req):
         self.ua.changeState((UaStateDisconnected, self.ua.disc_cbs, rtime, self.ua.origin))
-        self.ua.emitEvent(CCEventDisconnect(rtime = rtime, origin = self.ua.origin))
+        event = CCEventDisconnect(rtime = rtime, origin = self.ua.origin)
+        if req != None and req.countHFs('reason') > 0:
+            event.reason = req.getHFBody('reason')
+        self.ua.emitEvent(event)
 
 if not globals().has_key('UaStateFailed'):
     from UaStateFailed import UaStateFailed

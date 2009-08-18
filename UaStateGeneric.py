@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateGeneric.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
+# $Id: UaStateGeneric.py,v 1.5 2009/08/18 01:16:47 sobomax Exp $
 
 class UaStateGeneric(object):
     sname = 'Generic'
@@ -42,7 +42,7 @@ class UaStateGeneric(object):
     def recvEvent(self, event):
         return None
 
-    def cancel(self, rtime):
+    def cancel(self, rtime, req):
         return None
 
     def onStateChange(self, newstate):

@@ -24,7 +24,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.57 2009/08/17 01:38:55 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.58 2009/08/18 01:16:47 sobomax Exp $
+
+#import sys
+#sys.path.append('..')
 
 from sippy.Timeout import Timeout
 from sippy.Signal import Signal
@@ -155,12 +158,10 @@ class CallController(object):
                 if self.cld.startswith('nat-'):
                     self.cld = self.cld[4:]
                     body.content += 'a=nated:yes\r\n'
-                    event = CCEventTry((self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name), \
-                      rtime = event.rtime, origin = event.origin)
+                    event.data = (self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name)
                 if self.global_config.has_key('static_tr_in'):
                     self.cld = re_replace(self.global_config['static_tr_in'], self.cld)
-                    event = CCEventTry((self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name), \
-                      rtime = event.rtime, origin = event.origin)
+                    event.data = (self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name)
                 if self.global_config.has_key('rtp_proxy_clients'):
                     self.rtp_proxy_session = Rtp_proxy_session(self.global_config, call_id = self.cId, \
                       notify_socket = global_config['b2bua_socket'], \
@@ -364,8 +365,10 @@ class CallController(object):
         if parameters.has_key('group_timeout'):
             timeout, skipto = parameters['group_timeout']
             Timeout(self.group_expires, timeout, 1, skipto)
-        self.uaO.recvEvent(CCEventTry((cId + '-b2b_%d' % rnum, cGUID, cli, cld, body, auth, \
-          parameters.get('caller_name', self.caller_name))))
+        event = CCEventTry((cId + '-b2b_%d' % rnum, cGUID, cli, cld, body, auth, \
+          parameters.get('caller_name', self.caller_name)))
+        event.reason = self.eTry.reason
+        self.uaO.recvEvent(event)
 
     def disconnect(self, rtime = None):
         self.uaA.disconnect(rtime = rtime)
@@ -388,8 +391,6 @@ class CallController(object):
             self.state = CCStateDead
         if self.acctA != None:
             self.acctA.disc(ua, rtime, origin, result)
-        if self.uaO != None:
-            self.uaO.recvEvent(CCEventDisconnect(rtime = rtime, origin = origin))
         self.rtp_proxy_session = None
 
     def aDead(self, ua):

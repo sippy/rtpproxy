@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateConnected.py,v 1.8 2009/07/01 21:17:45 sobomax Exp $
+# $Id: UaStateConnected.py,v 1.9 2009/08/18 01:16:47 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -67,6 +67,8 @@ class UaStateConnected(UaStateGeneric):
                 self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK', self.ua.lSDP))
                 return None
             event = CCEventUpdate(body, rtime = req.rtime, origin = self.ua.origin)
+            if req.countHFs('reason') > 0:
+                event.reason = req.getHFBody('reason')
             if body != None:
                 if self.ua.on_remote_sdp_change != None:
                     self.ua.on_remote_sdp_change(body, lambda x: self.ua.delayed_remote_sdp_update(event, x))
@@ -84,7 +86,10 @@ class UaStateConnected(UaStateGeneric):
                 also = req.getHFBody('also').getUrl().getCopy()
             else:
                 also = None
-            self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin))
+            event = CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin)
+            if req.countHFs('reason') > 0:
+                event.reason = req.getHFBody('reason')
+            self.ua.equeue.append(event)
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None
@@ -94,7 +99,10 @@ class UaStateConnected(UaStateGeneric):
             return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         if req.getMethod() == 'INFO':
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
-            self.ua.equeue.append(CCEventInfo(req.getBody(), rtime = req.rtime, origin = self.ua.origin))
+            event = CCEventInfo(req.getBody(), rtime = req.rtime, origin = self.ua.origin)
+            if req.countHFs('reason') > 0:
+                event.reason = req.getHFBody('reason')
+            self.ua.equeue.append(event)
             return None
         if req.getMethod() == 'OPTIONS':
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
@@ -110,7 +118,7 @@ class UaStateConnected(UaStateGeneric):
             else:
                 redirect = None
             if redirect != None and self.ua.useRefer:
-                req = self.ua.genRequest('REFER')
+                req = self.ua.genRequest('REFER', reason = event.reason)
                 self.ua.lCSeq += 1
                 also = SipReferTo(address = SipAddress(url = redirect))
                 req.appendHeader(SipHeader(name = 'refer-to', body = also))
@@ -118,7 +126,7 @@ class UaStateConnected(UaStateGeneric):
                 req.appendHeader(SipHeader(name = 'referred-by', body = rby))
                 self.ua.global_config['sip_tm'].newTransaction(req, self.rComplete)
             else:
-                req = self.ua.genRequest('BYE')
+                req = self.ua.genRequest('BYE', reason = event.reason)
                 self.ua.lCSeq += 1
                 if redirect != None:
                     also = SipAlso(address = SipAddress(url = redirect))
@@ -144,14 +152,14 @@ class UaStateConnected(UaStateGeneric):
             if body != None and self.ua.on_local_sdp_change != None and body.needs_update:
                 self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
                 return None
-            req = self.ua.genRequest('INVITE', body)
+            req = self.ua.genRequest('INVITE', body, reason = event.reason)
             self.ua.lCSeq += 1
             self.ua.lSDP = body
             self.ua.tr = self.ua.global_config['sip_tm'].newTransaction(req, self.ua.recvResponse)
             return (UacStateUpdating,)
         if isinstance(event, CCEventInfo):
             body = event.getData()
-            req = self.ua.genRequest('INFO')
+            req = self.ua.genRequest('INFO', reason = event.reason)
             req.setBody(body)
             self.ua.lCSeq += 1
             self.ua.global_config['sip_tm'].newTransaction(req, None)

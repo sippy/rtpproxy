@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateUpdating.py,v 1.6 2009/07/01 21:17:45 sobomax Exp $
+# $Id: UasStateUpdating.py,v 1.7 2009/08/18 01:16:47 sobomax Exp $
 
 from SipContact import SipContact
 from SipAddress import SipAddress
@@ -41,7 +41,10 @@ class UasStateUpdating(UaStateGeneric):
             self.ua.sendUasResponse(487, 'Request Terminated')
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Updating state, going to the Disconnected state'
-            self.ua.equeue.append(CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin))
+            event = CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin)
+            if req.countHFs('reason') > 0:
+                event.reason = req.getHFBody('reason')
+            self.ua.equeue.append(event)
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None
@@ -101,7 +104,7 @@ class UasStateUpdating(UaStateGeneric):
             return (UaStateConnected,)
         elif isinstance(event, CCEventDisconnect):
             self.ua.sendUasResponse(487, 'Request Terminated')
-            req = self.ua.genRequest('BYE')
+            req = self.ua.genRequest('BYE', reason = event.reason)
             self.ua.lCSeq += 1
             self.ua.global_config['sip_tm'].newTransaction(req)
             if self.ua.credit_timer != None:
@@ -114,7 +117,7 @@ class UasStateUpdating(UaStateGeneric):
         #print 'wrong event %s in the Updating state' % event
         return None
 
-    def cancel(self, rtime):
+    def cancel(self, rtime, req):
         req = self.ua.genRequest('BYE')
         self.ua.lCSeq += 1
         self.ua.global_config['sip_tm'].newTransaction(req)
@@ -125,7 +128,10 @@ class UasStateUpdating(UaStateGeneric):
                 self.ua.warn_timer.cancel()
                 self.ua.warn_timer = None
         self.ua.changeState((UaStateDisconnected, self.ua.disc_cbs, rtime, self.ua.origin))
-        self.ua.emitEvent(CCEventDisconnect(rtime = rtime, origin = self.ua.origin))
+        event = CCEventDisconnect(rtime = rtime, origin = self.ua.origin)
+        if req != None and req.countHFs('reason') > 0:
+            event.reason = req.getHFBody('reason')     
+        self.ua.emitEvent(event)
 
 if not globals().has_key('UaStateConnected'):
     from UaStateConnected import UaStateConnected

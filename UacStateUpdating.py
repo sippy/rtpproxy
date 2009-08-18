@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateUpdating.py,v 1.8 2009/07/01 21:17:45 sobomax Exp $
+# $Id: UacStateUpdating.py,v 1.9 2009/08/18 01:16:47 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventDisconnect, CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect
@@ -40,7 +40,10 @@ class UacStateUpdating(UaStateGeneric):
             self.ua.global_config['sip_tm'].cancelTransaction(self.ua.tr)
             self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Updating state, going to the Disconnected state'
-            self.ua.equeue.append(CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin))
+            event = CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin)
+            if req.countHFs('reason') > 0:
+                event.reason = req.getHFBody('reason')
+            self.ua.equeue.append(event)
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None
@@ -88,7 +91,7 @@ class UacStateUpdating(UaStateGeneric):
     def recvEvent(self, event):
         if isinstance(event, CCEventDisconnect) or isinstance(event, CCEventFail) or isinstance(event, CCEventRedirect):
             self.ua.global_config['sip_tm'].cancelTransaction(self.ua.tr)
-            req = self.ua.genRequest('BYE')
+            req = self.ua.genRequest('BYE', reason = event.reason)
             self.ua.lCSeq += 1
             self.ua.global_config['sip_tm'].newTransaction(req)
             if self.ua.credit_timer != None:

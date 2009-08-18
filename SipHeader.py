@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipHeader.py,v 1.11 2009/08/15 22:04:17 sobomax Exp $
+# $Id: SipHeader.py,v 1.12 2009/08/18 01:16:47 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 from SipCSeq import SipCSeq
@@ -50,13 +50,14 @@ from SipProxyAuthenticate import SipProxyAuthenticate
 from SipProxyAuthorization import SipProxyAuthorization
 from SipReplaces import SipReplaces
 from SipPAssertedIdentity import SipPAssertedIdentity
+from SipReason import SipReason
 from ESipHeaderCSV import ESipHeaderCSV
 
 _hf_types = (SipCSeq, SipCallId, SipFrom, SipTo, SipMaxForwards, SipVia, SipContentLength, \
              SipContentType, SipExpires, SipRecordRoute, SipRoute, SipContact, SipWWWAuthenticate, \
              SipAuthorization, SipServer, SipUserAgent, SipCiscoGUID, SipAlso, SipReferTo, \
              SipCCDiversion, SipReferredBy, SipProxyAuthenticate, SipProxyAuthorization, \
-             SipReplaces, SipPAssertedIdentity)
+             SipReplaces, SipPAssertedIdentity, SipReason)
 
 hf_types = {}
 for hf_type in _hf_types:

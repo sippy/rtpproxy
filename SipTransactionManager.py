@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.16 2009/08/17 23:13:36 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.17 2009/08/18 01:16:47 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -449,7 +449,7 @@ class SipTransactionManager(object):
                 resp = msg.genResponse(200, 'OK')
                 self.transmitMsg(t.userv, resp, resp.getHFBody('via').getTAddr(), checksum)
                 if t.state in (TRYING, RINGING):
-                    self.doCancel(t, msg.rtime)
+                    self.doCancel(t, msg.rtime, msg)
             elif msg.getMethod() == 'ACK' and t.state == COMPLETED:
                 t.state = CONFIRMED
                 if t.teA != None:
@@ -584,13 +584,13 @@ class SipTransactionManager(object):
                 del self.tserver[t.tid]
                 t.cleanup()
 
-    def doCancel(self, t, rtime = None):
+    def doCancel(self, t, rtime = None, req = None):
         if rtime == None:
             rtime = time()
         if t.r487 != None:
             self.sendResponse(t.r487, t, True)
         if t.cancel_cb != None:
-            t.cancel_cb(rtime)
+            t.cancel_cb(rtime, req)
 
     def timerD(self, t):
         #print 'timerD'

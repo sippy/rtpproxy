@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.13 2009/07/01 21:17:45 sobomax Exp $
+# $Id: UA.py,v 1.14 2009/08/18 01:16:47 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -240,7 +240,8 @@ class UA(object):
             self.elast_seq = event.seq
             self.event_cb(event, self)
 
-    def genRequest(self, method, body = None, nonce = None, realm = None, SipXXXAuthorization = SipAuthorization):
+    def genRequest(self, method, body = None, nonce = None, realm = None, SipXXXAuthorization = SipAuthorization, \
+      reason = None):
         req = SipRequest(method = method, ruri = self.rTarget, to = self.rUri, fr0m = self.lUri,
                          cseq = self.lCSeq, callid = self.cId, contact = self.lContact,
                          routes = self.routes, target = self.rAddr, cguid = self.cGUID)
@@ -252,6 +253,8 @@ class UA(object):
             req.setBody(body)
         if self.extra_headers != None:
             req.appendHeaders(self.extra_headers)
+        if reason != None:
+            req.appendHeader(SipHeader(body = reason))
         self.reqs[self.lCSeq] = req
         return req
 
