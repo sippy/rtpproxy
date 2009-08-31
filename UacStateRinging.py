@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateRinging.py,v 1.7 2009/07/01 21:17:45 sobomax Exp $
+# $Id: UacStateRinging.py,v 1.8 2009/08/31 12:26:35 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -90,7 +90,10 @@ class UacStateRinging(UaStateGeneric):
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
             self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))
         else:
-            self.ua.equeue.append(CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin))
+            event = CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin)
+            if resp.countHFs('reason') > 0:
+                event.reason = resp.getHFBody('reason')
+            self.ua.equeue.append(event)
         return (UaStateFailed, self.ua.fail_cbs, resp.rtime, self.ua.origin, code)
 
     def recvEvent(self, event):

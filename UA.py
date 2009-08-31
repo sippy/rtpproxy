@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.14 2009/08/18 01:16:47 sobomax Exp $
+# $Id: UA.py,v 1.15 2009/08/31 12:26:35 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -258,13 +258,17 @@ class UA(object):
         self.reqs[self.lCSeq] = req
         return req
 
-    def sendUasResponse(self, scode, reason, body = None, contact = None):
+    def sendUasResponse(self, scode, reason, body = None, contact = None, \
+      reason_rfc3326 = None):
         self.uasResp.setSCode(scode, reason)
         self.uasResp.setBody(body)
         self.uasResp.delHFs('www-authenticate')
         self.uasResp.delHFs('contact')
+        self.uasResp.delHFs('reason')
         if contact != None:
             self.uasResp.appendHeader(SipHeader(name = 'contact', body = contact))
+        if reason_rfc3326 != None:
+            self.uasResp.appendHeader(SipHeader(body = reason_rfc3326))
         self.global_config['sip_tm'].sendResponse(self.uasResp)
 
     def isYours(self, req = None, call_id = None, from_tag = None, to_tag = None):

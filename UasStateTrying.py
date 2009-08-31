@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateTrying.py,v 1.5 2009/08/18 01:16:47 sobomax Exp $
+# $Id: UasStateTrying.py,v 1.6 2009/08/31 12:26:35 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, CCEventDisconnect
@@ -80,7 +80,7 @@ class UasStateTrying(UaStateGeneric):
             scode = event.getData()
             if scode == None:
                 scode = (500, 'Failed')
-            self.ua.sendUasResponse(scode[0], scode[1])
+            self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason)
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
@@ -91,7 +91,7 @@ class UasStateTrying(UaStateGeneric):
         elif isinstance(event, CCEventDisconnect):
             #import sys, traceback
             #traceback.print_stack(file = sys.stdout)
-            self.ua.sendUasResponse(500, 'Disconnected')
+            self.ua.sendUasResponse(500, 'Disconnected', reason_rfc3326 = event.reason)
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None

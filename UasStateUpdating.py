@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateUpdating.py,v 1.7 2009/08/18 01:16:47 sobomax Exp $
+# $Id: UasStateUpdating.py,v 1.8 2009/08/31 12:26:35 sobomax Exp $
 
 from SipContact import SipContact
 from SipAddress import SipAddress
@@ -100,10 +100,10 @@ class UasStateUpdating(UaStateGeneric):
             scode = event.getData()
             if scode == None:
                 scode = (500, 'Failed')
-            self.ua.sendUasResponse(scode[0], scode[1])
+            self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason)
             return (UaStateConnected,)
         elif isinstance(event, CCEventDisconnect):
-            self.ua.sendUasResponse(487, 'Request Terminated')
+            self.ua.sendUasResponse(487, 'Request Terminated', reason_rfc3326 = event.reason)
             req = self.ua.genRequest('BYE', reason = event.reason)
             self.ua.lCSeq += 1
             self.ua.global_config['sip_tm'].newTransaction(req)

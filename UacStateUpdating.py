@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateUpdating.py,v 1.9 2009/08/18 01:16:47 sobomax Exp $
+# $Id: UacStateUpdating.py,v 1.10 2009/08/31 12:26:35 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventDisconnect, CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect
@@ -82,10 +82,16 @@ class UacStateUpdating(UaStateGeneric):
             # SHOULD terminate the dialog.  A UAC SHOULD also terminate a dialog if
             # no response at all is received for the request (the client
             # transaction would inform the TU about the timeout.)
-            self.ua.equeue.append(CCEventDisconnect(rtime = resp.rtime, origin = self.ua.origin))
+            event = CCEventDisconnect(rtime = resp.rtime, origin = self.ua.origin)
+            if resp.countHFs('reason') > 0:
+                event.reason = resp.getHFBody('reason')
+            self.ua.equeue.append(event)
             return (UaStateDisconnected, self.ua.disc_cbs, resp.rtime, self.ua.origin)
         else:
-            self.ua.equeue.append(CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin))
+            event = CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin)
+            if resp.countHFs('reason') > 0:
+                event.reason = resp.getHFBody('reason')
+            self.ua.equeue.append(event)
         return (UaStateConnected,)
 
     def recvEvent(self, event):
