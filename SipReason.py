@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipReason.py,v 1.1 2009/08/18 01:16:47 sobomax Exp $
+# $Id: SipReason.py,v 1.2 2009/09/01 17:59:09 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 
@@ -44,14 +44,20 @@ class SipReason(SipGenericHF):
 
     def parse(self):
         self.parsed = True
-        protocol, cause, reason = self.body.split(';')
+        protocol, reason_params = self.body.split(';', 1)
         self.protocol = protocol.strip()
-        self.cause = int(cause.strip()[6:])
-        self.reason = reason.strip()[5:].strip('"')
+        for reason_param in reason_params.split(';'):
+            rp_name, rp_value = [x.strip() for x in reason_param.split('=', 1)]
+            if rp_name == 'cause':
+                self.cause = int(rp_value)
+            elif rp_name == 'text':
+                self.reason = rp_value.strip('"')
 
     def __str__(self):
         if not self.parsed:
             return self.body
+        if self.reason == None:
+            return '%s; cause=%d"' % (self.protocol, self.cause)
         return '%s; cause=%d; text="%s"' % (self.protocol, self.cause, self.reason)
 
     def getCopy(self):
