@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.17 2009/08/18 01:16:47 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.18 2009/09/01 16:59:20 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -32,6 +32,7 @@ from SipRequest import SipRequest
 from SipAddress import SipAddress
 from SipRoute import SipRoute
 from SipConf import MyAddress
+from SipHeader import SipHeader
 from datetime import datetime
 from md5 import md5
 from traceback import print_exc
@@ -292,12 +293,14 @@ class SipTransactionManager(object):
         self.transmitData(t.userv, t.data, t.address)
         return t
 
-    def cancelTransaction(self, t):
+    def cancelTransaction(self, t, reason = None):
         # If we got at least one provisional reply then (state == RINGING)
         # then start CANCEL transaction, otherwise deffer it
         if t.state != RINGING:
             t.cancelPending = True
         else:
+            if reason != None:
+                t.cancel.appendHeader(SipHeader(body = reason))
             self.newTransaction(t.cancel)
 
     def incomingResponse(self, msg, t, checksum):
