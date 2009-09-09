@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipVia.py,v 1.8 2009/08/16 07:44:36 sobomax Exp $
+# $Id: SipVia.py,v 1.9 2009/09/09 22:39:34 sobomax Exp $
 
 from random import random
 from md5 import md5
@@ -129,6 +129,18 @@ class SipVia(SipGenericHF):
         rport = self.params.get('rport', None)
         if rport == None:
             rport = self.getAddr()[1]
+            if rport == None:
+                rport = SipConf.default_port
         else:
             rport = int(rport)
         return (self.params.get('received', self.getAddr()[0]), rport)
+
+def _unit_test():
+    via1 = 'SIP/2.0/UDP 203.193.xx.xx;branch=z9hG4bK2dd1.1102f3e2.0'
+    v = SipVia(via1)
+    v.parse()
+    if via1 != str(v):
+        return (False, 1)
+    if v.getTAddr() != ('203.193.xx.xx', 5060):
+        return (False, 2)
+    return (True, None)
