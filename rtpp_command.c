@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.30 2009/08/15 22:07:45 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.31 2009/09/16 18:50:50 sobomax Exp $
  *
  */
 
@@ -392,6 +392,15 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    if (argc != 2 && argc != 3) {
 		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 		reply_error(cf, controlfd, &raddr, rlen, cookie, 2);
+		return 0;
+	    }
+	    /*
+	     * Only list 20081224 protocol mod as supported if
+	     * user actually enabled notification with -n
+	     */
+	    if (strcmp(argv[1], "20081224") == 0 &&
+	      cf->timeout_handler.socket_name == NULL) {
+		reply_number(cf, controlfd, &raddr, rlen, cookie, 0);
 		return 0;
 	    }
 	    for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
