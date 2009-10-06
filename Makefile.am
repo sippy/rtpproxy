@@ -3,7 +3,7 @@ rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
   rtpp_command.c rtpp_command.h rtpp_log.c rtpp_network.h rtpp_network.c \
-  rtpp_syslog_async.c rtpp_syslog_asynch
+  rtpp_syslog_async.c rtpp_syslog_async.h
 rtpproxy_LDADD=-lm -lpthread
 dist_man_MANS=rtpproxy.8
 makeann_SOURCES=makeann.c rtp.h g711.h
