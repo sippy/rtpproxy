@@ -399,7 +399,8 @@
                         Example: -d WARN:LOG_LOCAL5
                     </para>
                     <para>
-                        The default level is DBUG and facility is LOG_DAEMON.
+                        The default level in foreground mode is is DBUG, in background -
+                        WARN and facility is LOG_DAEMON.
                     </para>
                 </listitem>
             </varlistentry>
