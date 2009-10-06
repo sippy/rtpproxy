@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.92 2009/08/10 23:24:05 sobomax Exp $
+ * $Id: main.c,v 1.93 2009/10/06 05:53:03 sobomax Exp $
  *
  */
 
@@ -139,7 +139,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->tos = TOS;
     cf->rrtcp = 1;
     cf->ttl_mode = TTL_UNIFIED;
-    cf->log_level = LOG_LEVEL;
+    cf->log_level = -1;
     cf->log_facility = -1;
 
     cf->timeout_handler.socket_name = NULL;

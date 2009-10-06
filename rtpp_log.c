@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_log.c,v 1.4 2009/06/01 06:53:00 sobomax Exp $
+ * $Id: rtpp_log.c,v 1.5 2009/10/06 05:53:03 sobomax Exp $
  *
  */
 
@@ -36,8 +36,9 @@
 
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
+#include "rtpp_syslog_async.h"
 
-static int open_count = 0;
+static int syslog_async_opened = 0;
 
 struct cfg *
 _rtpp_log_open(struct cfg *cf, const char *app)
@@ -48,18 +49,17 @@ _rtpp_log_open(struct cfg *cf, const char *app)
     if (facility == -1)
 	facility = LOG_DAEMON;
 
-    if (open_count == 0)
-	openlog(app, LOG_PID | LOG_CONS, facility);
-    open_count++;
+    if (cf->nodaemon == 0 && syslog_async_opened == 0) {
+	if (syslog_async_init(app, facility) == 0)
+	    syslog_async_opened = 1;
+    }
     return cf;
 }
 
 void
 _rtpp_log_close(void)
 {
-     open_count--;
-     if (open_count == 0)
-	closelog();
+    return;
 }
 
 static const char *
@@ -113,12 +113,25 @@ rtpp_log_str2lvl(const char *strl)
     return -1;
 }
 
+static int
+check_level(struct cfg *cf, int cf_level, int level)
+{
+
+    if (cf_level == -1) {
+	cf_level = (cf->nodaemon != 0) ? RTPP_LOG_DBUG : RTPP_LOG_WARN;
+    }
+    return (level <= cf_level);
+}
+
 void
 _rtpp_log_write(struct cfg *cf, int level, const char *function, const char *format, ...)
 {
     va_list ap;
     char rtpp_log_buff[2048];
     char *fmt;
+
+    if (check_level(cf, cf->log_level, level) == 0)
+	return;
 
     va_start(ap, format);
 
@@ -133,7 +146,7 @@ _rtpp_log_write(struct cfg *cf, int level, const char *function, const char *for
     if (cf->nodaemon != 0) {
 	vfprintf(stderr, rtpp_log_buff, ap);
     } else {
-	vsyslog(level, rtpp_log_buff, ap);
+	vsyslog_async(level, rtpp_log_buff, ap);
     }
 
     va_end(ap);
@@ -145,6 +158,9 @@ _rtpp_log_ewrite(struct cfg *cf, int level, const char *function, const char *fo
     va_list ap;
     char rtpp_log_buff[2048];
     char *fmt;
+
+    if (check_level(cf, cf->log_level, level) == 0)
+	return;
 
     va_start(ap, format);
 
@@ -160,7 +176,7 @@ _rtpp_log_ewrite(struct cfg *cf, int level, const char *function, const char *fo
     if (cf->nodaemon != 0) {
 	vfprintf(stderr, rtpp_log_buff, ap);
     } else {
-	vsyslog(level, rtpp_log_buff, ap);
+	vsyslog_async(level, rtpp_log_buff, ap);
     }
 
     va_end(ap);
