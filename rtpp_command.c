@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.24.2.1 2009/03/24 04:30:11 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.24.2.2 2009/10/06 09:51:28 sobomax Exp $
  *
  */
 
@@ -109,7 +109,7 @@ create_twinlistener(struct cfg *cf, struct sockaddr *ia, int port, int *fds)
 	    goto failure;
 	}
 	port++;
-	if ((ia->sa_family == AF_INET) &&
+	if ((ia->sa_family == AF_INET) && (cf->tos >= 0) &&
 	  (setsockopt(fds[i], IPPROTO_IP, IP_TOS, &cf->tos, sizeof(cf->tos)) == -1))
 	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "unable to set TOS to %d", cf->tos);
 	flags = fcntl(fds[i], F_GETFL);
@@ -388,6 +388,15 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    if (argc != 2 && argc != 3) {
 		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 		reply_error(cf, controlfd, &raddr, rlen, cookie, 2);
+		return 0;
+	    }
+	    /*
+	     * Only list 20081224 protocol mod as supported if
+	     * user actually enabled notification with -n
+	     */
+	    if (strcmp(argv[1], "20081224") == 0 &&
+	      cf->timeout_handler.socket_name == NULL) {
+		reply_number(cf, controlfd, &raddr, rlen, cookie, 0);
 		return 0;
 	    }
 	    for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
@@ -1129,6 +1138,7 @@ handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag)
 	}
 	nrecorded++;
 	handle_copy(cf, spa, idx, NULL);
+	handle_copy(cf, spa, NOT(idx), NULL);
     }
     return (nrecorded == 0 ? -1 : 0);
 }
