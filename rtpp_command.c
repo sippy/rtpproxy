@@ -253,7 +253,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
     char *pname, *codecs, *recording_name, *t;
-    struct rtpp_session *spa, *spb;
+    struct rtpp_session *spa, *spb, *tmp_sp;
     char **ap, *argv[10];
     const char *rname;
     struct sockaddr *ia[2], *lia[2];
@@ -418,48 +418,49 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	      "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
 	      cookie, cf->sessions_created, cf->sessions_active, cf->nsessions / 2,
 	      cf->packets_in, cf->packets_out);
-	for (spa = all_sessions; spa != NULL; spa = spa->all_sessions_next) {
-	    char addrs[4][256];
+	for (tmp_sp = all_sessions; tmp_sp != NULL; tmp_sp = tmp_sp->all_sessions_next) {
+            for (spa = tmp_sp; spa != NULL; spa = spa->rtcp) {
+                char addrs[4][256];
 
-	    spa = cf->sessions[i];
-	    if (spa == NULL || spa->sidx[0] != i)
-		continue;
-	    /* RTCP twin session */
-	    if (spa->rtcp == NULL) {
-		spb = spa->rtp;
-		buf[len++] = '\t';
-	    } else {
-		spb = spa->rtcp;
-		buf[len++] = '\t';
-		buf[len++] = 'C';
-		buf[len++] = ' ';
-	    }
+                if (spa->sidx[0] == -1)
+                    continue;
+                /* RTCP twin session */
+                if (spa->rtcp == NULL) {
+                    spb = spa->rtp;
+                    buf[len++] = '\t';
+                } else {
+                    spb = spa->rtcp;
+                    buf[len++] = '\t';
+                    buf[len++] = 'C';
+                    buf[len++] = ' ';
+                }
 
-	    addr2char_r(spb->laddr[1], addrs[0], sizeof(addrs[0]));
-	    if (spb->addr[1] == NULL) {
-		strcpy(addrs[1], "NONE");
-	    } else {
-		sprintf(addrs[1], "%s:%d", addr2char(spb->addr[1]),
-		  addr2port(spb->addr[1]));
-	    }
-	    addr2char_r(spb->laddr[0], addrs[2], sizeof(addrs[2]));
-	    if (spb->addr[0] == NULL) {
-		strcpy(addrs[3], "NONE");
-	    } else {
-		sprintf(addrs[3], "%s:%d", addr2char(spb->addr[0]),
-		  addr2port(spb->addr[0]));
-	    }
+                addr2char_r(spb->laddr[1], addrs[0], sizeof(addrs[0]));
+                if (spb->addr[1] == NULL) {
+                    strcpy(addrs[1], "NONE");
+                } else {
+                    sprintf(addrs[1], "%s:%d", addr2char(spb->addr[1]),
+                      addr2port(spb->addr[1]));
+                }
+                addr2char_r(spb->laddr[0], addrs[2], sizeof(addrs[2]));
+                if (spb->addr[0] == NULL) {
+                    strcpy(addrs[3], "NONE");
+                } else {
+                    sprintf(addrs[3], "%s:%d", addr2char(spb->addr[0]),
+                      addr2port(spb->addr[0]));
+                }
 
-	    len += sprintf(buf + len,
-	      "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
-	      "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
-	      spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
-	      addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
-	      spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
-	    if (len + 512 > sizeof(buf)) {
-		doreply(cf, controlfd, buf, len, &raddr, rlen);
-		len = 0;
-	    }
+                len += sprintf(buf + len,
+                  "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
+                  "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
+                  spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
+                  addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
+                  spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
+                if (len + 512 > sizeof(buf)) {
+                    doreply(cf, controlfd, buf, len, &raddr, rlen);
+                    len = 0;
+                }
+            }
 	}
 	if (len > 0)
 	    doreply(cf, controlfd, buf, len, &raddr, rlen);;
@@ -477,15 +478,11 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
         /* Delete all active sessions */
         rtpp_log_write(RTPP_LOG_INFO, cf->glog, "deleting all active sessions");
         for (spa = all_sessions; spa != NULL; spa = spa->all_sessions_next) {
-	    spa = cf->sessions[i];
-	    if (spa == NULL || spa->sidx[0] != i)
+	    if (spa->sidx[0] == -1)
 		continue;
-	    /* Skip RTCP twin session */
-	    if (spa->rtcp != NULL) {
-                inc_ref_count(spa); /* the remove request holds the session reference */
-                hash_table_remove(cf, spa); /* protect from another remove command */
-		remove_session_later(cf, spa);
-	    }
+            inc_ref_count(spa); /* the remove request holds the session reference */
+            hash_table_remove(cf, spa); /* protect from another remove command */
+            remove_session_later(cf, spa);
         }
         reply_ok(cf, controlfd, &raddr, rlen, cookie);
         return 0;
