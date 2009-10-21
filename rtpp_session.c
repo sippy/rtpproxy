@@ -37,12 +37,40 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
+
+#define SESSION_QUEUE_ENTRIES 50
+
+struct session_queue_item {
+    struct session_queue_item *next;
+    struct rtpp_session *session;
+    int append_index;
+};
+
+static struct session_queue_item session_queue_items[SESSION_QUEUE_ENTRIES];
+static pthread_mutex_t session_queue_item_pool_lock;
+static pthread_cond_t session_queue_item_pool_cv;
+static struct session_queue_item *session_queue_item_pool;
+
+static pthread_mutex_t session_queue_lock;
+static struct session_queue_item *append_buffer = NULL;
+static struct session_queue_item *append_buffer_last_item = NULL;
+static struct session_queue_item *session_remove_queue = NULL;
+static struct session_queue_item *session_append_queue = NULL;
+
+static struct rtpp_session *free_sessions_queue = NULL;
+struct rtpp_session *all_sessions = NULL;
+
+static pthread_mutex_t ref_count_lock;
+static pthread_mutex_t free_queue_lock;
+static pthread_mutex_t session_cleaner_lock;
+static pthread_cond_t session_cleaner_cv;
 
 void
 init_hash_table(struct cfg *cf)
@@ -89,10 +117,14 @@ hash_table_append(struct cfg *cf, struct rtpp_session *sp)
     sp->next = NULL;
 }
 
-static void
+void
 hash_table_remove(struct cfg *cf, struct rtpp_session *sp)
 {
     uint8_t hash;
+
+    if (sp->removed_from_hash)
+        return;
+    sp->removed_from_hash = 1;
 
     assert(sp->rtcp != NULL);
 
@@ -140,26 +172,252 @@ session_findnext(struct rtpp_session *psp)
     return (sp);
 }
 
+void 
+session_storage_init()
+{
+    int i;
+    struct session_queue_item *prev;
+
+    pthread_mutex_init(&session_queue_item_pool_lock, NULL);
+    pthread_cond_init(&session_queue_item_pool_cv, NULL);
+    prev = session_queue_item_pool = &session_queue_items[0];
+    for (i = 1; i < SESSION_QUEUE_ENTRIES; ++i) {
+        prev->next = &session_queue_items[i];
+        prev = prev->next;
+    }
+    session_queue_items[SESSION_QUEUE_ENTRIES - 1].next = NULL;
+
+    pthread_mutex_init(&session_queue_lock, NULL);
+    pthread_mutex_init(&ref_count_lock, NULL);
+    pthread_mutex_init(&free_queue_lock, NULL);
+    pthread_mutex_init(&session_cleaner_lock, NULL);
+    pthread_cond_init(&session_cleaner_cv, NULL);
+}
+
+static void
+dec_ref_count(struct rtpp_session *sp)
+{
+    pthread_mutex_lock(&ref_count_lock);
+    --sp->ref_count;
+    pthread_mutex_unlock(&ref_count_lock);
+}
+
 void
+inc_ref_count(struct rtpp_session *sp)
+{
+    pthread_mutex_lock(&ref_count_lock);
+    ++sp->ref_count;
+    pthread_mutex_unlock(&ref_count_lock);
+}
+
+static struct session_queue_item *
+alloc_session_queue_item()
+{
+    struct session_queue_item *ret;
+
+    pthread_mutex_lock(&session_queue_item_pool_lock);
+    while (session_queue_item_pool == NULL) {
+        pthread_cond_wait(&session_queue_item_pool_cv, &session_queue_item_pool_lock);
+    }
+    ret = session_queue_item_pool;
+    session_queue_item_pool = ret->next;
+    pthread_mutex_unlock(&session_queue_item_pool_lock);
+    return ret;
+}
+
+static void
+free_session_queue_item(struct session_queue_item *it)
+{
+    pthread_mutex_lock(&session_queue_item_pool_lock);
+    it->next = session_queue_item_pool;
+    session_queue_item_pool = it;
+    pthread_mutex_unlock(&session_queue_item_pool_lock);
+    pthread_cond_signal(&session_queue_item_pool_cv);
+}
+
+void
+append_session_later(struct cfg *cf, struct rtpp_session *sp, int index)
+{
+    struct session_queue_item *it;
+
+    it = alloc_session_queue_item();
+    it->session = sp;
+    it->append_index = index;
+
+    it->next = append_buffer;
+    append_buffer = it;
+    if (append_buffer_last_item == NULL)
+        append_buffer_last_item = it;
+}
+
+void
+append_session_commit(struct cfg *cf)
+{
+    pthread_mutex_lock(&session_queue_lock);
+    append_buffer_last_item->next = session_append_queue;
+    session_append_queue = append_buffer;
+    pthread_mutex_unlock(&session_queue_lock);
+    append_buffer = append_buffer_last_item = NULL;
+}
+
+static void
 append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 {
+    cf->sessions[cf->nsessions] = sp;
+    cf->pfds[cf->nsessions].fd = sp->fds[index];
+    cf->pfds[cf->nsessions].events = POLLIN;
+    cf->pfds[cf->nsessions].revents = 0;
+    sp->sidx[index] = cf->nsessions;
+    cf->nsessions++;
+}
 
-    if (sp->fds[index] != -1) {
-	cf->sessions[cf->nsessions] = sp;
-	cf->pfds[cf->nsessions].fd = sp->fds[index];
-	cf->pfds[cf->nsessions].events = POLLIN;
-	cf->pfds[cf->nsessions].revents = 0;
-	sp->sidx[index] = cf->nsessions;
-	cf->nsessions++;
-    } else {
-	sp->sidx[index] = -1;
+void
+process_session_queue(struct cfg *cf)
+{
+    struct session_queue_item *append_it;
+    struct session_queue_item *remove_it;
+    struct session_queue_item *tmp;
+
+    pthread_mutex_lock(&session_queue_lock);
+    append_it = session_append_queue;
+    remove_it = session_remove_queue;
+    session_append_queue = session_remove_queue = NULL;
+    pthread_mutex_unlock(&session_queue_lock);
+
+    while (append_it != NULL) {
+        append_session(cf, append_it->session, append_it->append_index);
+        tmp = append_it;
+        append_it = append_it->next;
+        free_session_queue_item(tmp);
     }
+
+    while (remove_it != NULL) {
+        dec_ref_count(remove_it->session); /* release the remove request */
+        remove_session(cf, remove_it->session);
+        tmp = remove_it;
+        remove_it = remove_it->next;
+        free_session_queue_item(tmp);
+    }
+}
+
+int
+remove_session_later(struct cfg *cf, struct rtpp_session *sp)
+{
+    struct session_queue_item *it;
+
+    it = alloc_session_queue_item();
+    it->session = sp;
+
+    pthread_mutex_lock(&session_queue_lock);
+    it->next = session_remove_queue;
+    session_remove_queue = it;
+    pthread_mutex_unlock(&session_queue_lock);
+
+    return 0;
+}
+
+void *
+session_cleaner(void *arg)
+{
+    struct cfg *cf = (struct cfg *) arg;
+    pthread_mutex_lock(&session_cleaner_lock);
+    while (1) {
+        pthread_cond_wait(&session_cleaner_cv, &session_cleaner_lock);
+        free_sessions(cf);
+    }
+    /* Not reached */
+    pthread_mutex_unlock(&session_cleaner_lock);
+}
+
+void
+free_session(struct cfg *cf, struct rtpp_session *sp)
+{
+    int i;
+
+    for (i = 0; i < 2; i++) {
+	if (sp->addr[i] != NULL)
+	    free(sp->addr[i]);
+	if (sp->prev_addr[i] != NULL)
+	    free(sp->prev_addr[i]);
+	if (sp->rtcp->addr[i] != NULL)
+	    free(sp->rtcp->addr[i]);
+	if (sp->rtcp->prev_addr[i] != NULL)
+	    free(sp->rtcp->prev_addr[i]);
+	if (sp->rtps[i] != NULL) {
+	    rtp_server_free(sp->rtps[i]);
+	}
+	if (sp->codecs[i] != NULL)
+	    free(sp->codecs[i]);
+	if (sp->rtcp->codecs[i] != NULL)
+	    free(sp->rtcp->codecs[i]);
+    }
+    if (sp->timeout_data.notify_tag != NULL)
+	free(sp->timeout_data.notify_tag);
+    hash_table_remove(cf, sp);
+    if (sp->call_id != NULL)
+	free(sp->call_id);
+    if (sp->tag != NULL)
+	free(sp->tag);
+    rtpp_log_close(sp->log);
+    free(sp->rtcp);
+    rtp_resizer_free(&sp->resizers[0]);
+    rtp_resizer_free(&sp->resizers[1]);
+    free(sp);
+}
+
+void
+free_session_later(struct cfg *cf, struct rtpp_session *sp)
+{
+    pthread_mutex_lock(&free_queue_lock);
+    sp->free_queue_next = free_sessions_queue;
+    free_sessions_queue = sp;
+    pthread_mutex_unlock(&free_queue_lock);
+    pthread_cond_signal(&session_cleaner_cv);
+}
+
+void
+free_sessions(struct cfg *cf)
+{
+    struct rtpp_session *sp;
+    struct rtpp_session *tmp;
+    struct rtpp_session *keep = NULL;
+
+    pthread_mutex_lock(&free_queue_lock);
+    sp = free_sessions_queue;
+    while (sp != NULL) {
+        if (sp->ref_count > 0) {
+            tmp = sp->free_queue_next;
+            sp->free_queue_next = keep;
+            keep = sp;
+            sp = tmp;
+        }
+        else {
+            tmp = sp;
+            if (all_sessions == sp) {
+                all_sessions = sp->all_sessions_next;
+                if (all_sessions != NULL)
+                    all_sessions->all_sessions_prev = NULL;
+            }
+            else {
+                sp->all_sessions_prev->all_sessions_next = sp->all_sessions_next;
+                if (sp->all_sessions_next != NULL)
+                    sp->all_sessions_next->all_sessions_prev = sp->all_sessions_prev;
+            }
+            free_session(cf, sp);
+            sp = tmp->free_queue_next;
+        }
+    }
+    free_sessions_queue = keep;
+    pthread_mutex_unlock(&free_queue_lock);
 }
 
 void
 remove_session(struct cfg *cf, struct rtpp_session *sp)
 {
     int i;
+
+    if (sp->removed)
+        return;
 
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped", sp->pcount[0], sp->pcount[1],
@@ -170,14 +428,6 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "session on ports %d/%d is cleaned up",
       sp->ports[0], sp->ports[1]);
     for (i = 0; i < 2; i++) {
-	if (sp->addr[i] != NULL)
-	    free(sp->addr[i]);
-	if (sp->prev_addr[i] != NULL)
-	    free(sp->prev_addr[i]);
-	if (sp->rtcp->addr[i] != NULL)
-	    free(sp->rtcp->addr[i]);
-	if (sp->rtcp->prev_addr[i] != NULL)
-	    free(sp->rtcp->prev_addr[i]);
 	if (sp->fds[i] != -1) {
 	    close(sp->fds[i]);
 	    assert(cf->sessions[sp->sidx[i]] == sp);
@@ -200,26 +450,13 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    rclose(sp, sp->rtcp->rrcs[i], 1);
 	if (sp->rtps[i] != NULL) {
 	    cf->rtp_servers[sp->sridx] = NULL;
-	    rtp_server_free(sp->rtps[i]);
 	}
-	if (sp->codecs[i] != NULL)
-	    free(sp->codecs[i]);
-	if (sp->rtcp->codecs[i] != NULL)
-	    free(sp->rtcp->codecs[i]);
     }
-    if (sp->timeout_data.notify_tag != NULL)
-	free(sp->timeout_data.notify_tag);
-    hash_table_remove(cf, sp);
-    if (sp->call_id != NULL)
-	free(sp->call_id);
-    if (sp->tag != NULL)
-	free(sp->tag);
-    rtpp_log_close(sp->log);
-    free(sp->rtcp);
-    rtp_resizer_free(&sp->resizers[0]);
-    rtp_resizer_free(&sp->resizers[1]);
-    free(sp);
     cf->sessions_active--;
+
+    sp->removed = 1;
+    dec_ref_count(sp); /* release the session from the cfg->sessions array */
+    free_session_later(cf, sp);
 }
 
 int
@@ -362,4 +599,26 @@ get_ttl(struct rtpp_session *sp)
     }
     abort();
     return 0;
+}
+
+void
+lock_session_cleaner()
+{
+    pthread_mutex_lock(&session_cleaner_lock);
+}
+
+void
+unlock_session_cleaner()
+{
+    pthread_mutex_unlock(&session_cleaner_lock);
+}
+
+void
+register_session(struct rtpp_session *sp)
+{
+    if (all_sessions != NULL)
+        all_sessions->all_sessions_prev = sp;
+    sp->all_sessions_next = all_sessions;
+    all_sessions = sp;
+    sp->all_sessions_prev = NULL;
 }

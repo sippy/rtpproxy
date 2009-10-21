@@ -43,12 +43,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "rtpp_command.h"
 #include "rtpp_log.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
+
+extern struct rtpp_session *all_sessions;
 
 struct proto_cap proto_caps[] = {
     /*
@@ -415,7 +418,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	      "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
 	      cookie, cf->sessions_created, cf->sessions_active, cf->nsessions / 2,
 	      cf->packets_in, cf->packets_out);
-	for (i = 1; i < cf->nsessions; i++) {
+	for (spa = all_sessions; spa != NULL; spa = spa->all_sessions_next) {
 	    char addrs[4][256];
 
 	    spa = cf->sessions[i];
@@ -473,13 +476,15 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     case 'X':
         /* Delete all active sessions */
         rtpp_log_write(RTPP_LOG_INFO, cf->glog, "deleting all active sessions");
-        for (i = 1; i < cf->nsessions; i++) {
+        for (spa = all_sessions; spa != NULL; spa = spa->all_sessions_next) {
 	    spa = cf->sessions[i];
 	    if (spa == NULL || spa->sidx[0] != i)
 		continue;
 	    /* Skip RTCP twin session */
 	    if (spa->rtcp != NULL) {
-		remove_session(cf, spa);
+                inc_ref_count(spa); /* the remove request holds the session reference */
+                hash_table_remove(cf, spa); /* protect from another remove command */
+		remove_session_later(cf, spa);
 	    }
         }
         reply_ok(cf, controlfd, &raddr, rlen, cookie);
@@ -759,8 +764,9 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    spa->ports[i] = lport;
 	    spa->rtcp->ports[i] = lport + 1;
 	    spa->complete = spa->rtcp->complete = 1;
-	    append_session(cf, spa, i);
-	    append_session(cf, spa->rtcp, i);
+	    append_session_later(cf, spa, i);
+            append_session_later(cf, spa->rtcp, i);
+            append_session_commit(cf);
 	}
 	if (weak)
 	    spa->weak[i] = 1;
@@ -837,6 +843,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    spb->rrcs[i] = NULL;
 	    spa->laddr[i] = lia[i];
 	    spb->laddr[i] = lia[i];
+            spa->sidx[i] = spb->sidx[i] = -1;
 	}
 	spa->strong = spa->weak[0] = spa->weak[1] = 0;
 	if (weak)
@@ -861,12 +868,12 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	spb->rtp = spa;
 	spa->sridx = spb->sridx = -1;
 
-	append_session(cf, spa, 0);
-	append_session(cf, spa, 1);
-	append_session(cf, spb, 0);
-	append_session(cf, spb, 1);
-
+	append_session_later(cf, spa, 0);
+        append_session_later(cf, spb, 0);
+        inc_ref_count(spa); /* the session is placed to the cfg->sessions array */
 	hash_table_append(cf, spa);
+        register_session(spa);
+        append_session_commit(cf);
 
 	cf->sessions_created++;
 	cf->sessions_active++;
@@ -1035,7 +1042,9 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	/* Search forward before we do removal */
 	spb = spa;
 	spa = session_findnext(spa);
-	remove_session(cf, spb);
+        inc_ref_count(spb); /* the remove request holds the session reference */
+        hash_table_remove(cf, spb); /* protect from another remove command */
+	remove_session_later(cf, spb);
 	++ndeleted;
 	if (cmpr != 2) {
 	    break;
