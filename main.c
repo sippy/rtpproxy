@@ -480,6 +480,7 @@ process_rtp_servers(struct cfg *cf, double dtime)
 			cf->rtp_servers[sp->sridx] = NULL;
 			sp->sridx = -1;
 		    }
+                    dec_ref_count(sp);
 		    break;
 		}
 		cf->packets_out++;
@@ -799,6 +800,7 @@ main(int argc, char **argv)
     }
 
     session_storage_init();
+    rtp_server_storage_init();
     sigfillset(&set);
     pthread_sigmask(SIG_BLOCK, &set, &oset);
     pthread_create(&process_commands_thread, NULL, process_commands_loop, &cf);
@@ -864,6 +866,7 @@ main(int argc, char **argv)
 	if (cf.rtp_nsessions > 0) {
 	    process_rtp_servers(&cf, eptime);
 	}
+        process_rtp_server_queue(&cf);
 	if (eptime > last_tick_time + TIMETICK) {
 	    alarm_tick = 1;
 	    last_tick_time = eptime;

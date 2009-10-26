@@ -47,12 +47,6 @@
 
 #define SESSION_QUEUE_ENTRIES 50
 
-struct session_queue_item {
-    struct session_queue_item *next;
-    struct rtpp_session *session;
-    int append_index;
-};
-
 static struct session_queue_item session_queue_items[SESSION_QUEUE_ENTRIES];
 static pthread_mutex_t session_queue_item_pool_lock;
 static pthread_cond_t session_queue_item_pool_cv;
@@ -194,7 +188,7 @@ session_storage_init()
     pthread_cond_init(&session_cleaner_cv, NULL);
 }
 
-static void
+void
 dec_ref_count(struct rtpp_session *sp)
 {
     pthread_mutex_lock(&ref_count_lock);
@@ -210,7 +204,7 @@ inc_ref_count(struct rtpp_session *sp)
     pthread_mutex_unlock(&ref_count_lock);
 }
 
-static struct session_queue_item *
+struct session_queue_item *
 alloc_session_queue_item()
 {
     struct session_queue_item *ret;
@@ -225,7 +219,7 @@ alloc_session_queue_item()
     return ret;
 }
 
-static void
+void
 free_session_queue_item(struct session_queue_item *it)
 {
     pthread_mutex_lock(&session_queue_item_pool_lock);
@@ -242,7 +236,7 @@ append_session_later(struct cfg *cf, struct rtpp_session *sp, int index)
 
     it = alloc_session_queue_item();
     it->session = sp;
-    it->append_index = index;
+    it->index = index;
 
     it->next = append_buffer;
     append_buffer = it;
@@ -285,7 +279,7 @@ process_session_queue(struct cfg *cf)
     pthread_mutex_unlock(&session_queue_lock);
 
     while (append_it != NULL) {
-        append_session(cf, append_it->session, append_it->append_index);
+        append_session(cf, append_it->session, append_it->index);
         tmp = append_it;
         append_it = append_it->next;
         free_session_queue_item(tmp);

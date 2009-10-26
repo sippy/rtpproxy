@@ -72,7 +72,6 @@ struct proto_cap proto_caps[] = {
 static int create_twinlistener(struct cfg *, struct sockaddr *, int, int *);
 static int create_listener(struct cfg *, struct sockaddr *, int *, int *);
 static int handle_delete(struct cfg *, char *, char *, char *, int);
-static void handle_noplay(struct cfg *, struct rtpp_session *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
 static void handle_copy(struct cfg *, struct rtpp_session *, int, char *);
 static int handle_record(struct cfg *, char *, char *, char *);
@@ -704,12 +703,14 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	return 0;
 
     case NOPLAY:
-	handle_noplay(cf, spa, i);
+        inc_ref_count(spa);
+	handle_noplay_later(cf, spa, i);
 	reply_ok(cf, controlfd, &raddr, rlen, cookie);
 	return 0;
 
     case PLAY:
-	handle_noplay(cf, spa, i);
+        inc_ref_count(spa);
+	handle_noplay_later(cf, spa, i);
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->codecs[i] == NULL) {
 		reply_error(cf, controlfd, &raddr, rlen, cookie, 6);
@@ -1053,29 +1054,13 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
     return 0;
 }
 
-static void
-handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx)
-{
-
-    if (spa->rtps[idx] != NULL) {
-	rtp_server_free(spa->rtps[idx]);
-	spa->rtps[idx] = NULL;
-	rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	  "stopping player at port %d", spa->ports[idx]);
-	if (spa->rtps[0] == NULL && spa->rtps[1] == NULL) {
-	    assert(cf->rtp_servers[spa->sridx] == spa);
-	    cf->rtp_servers[spa->sridx] = NULL;
-	    spa->sridx = -1;
-	}
-   }
-}
-
 static int
 handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
   char *pname, int playcount)
 {
     int n;
     char *cp;
+    struct rtp_server *server;
 
     while (*codecs != '\0') {
 	n = strtol(codecs, &cp, 10);
@@ -1084,13 +1069,15 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 	codecs = cp;
 	if (*codecs != '\0')
 	    codecs++;
-	spa->rtps[idx] = rtp_server_new(pname, n, playcount);
-	if (spa->rtps[idx] == NULL)
+	server = rtp_server_new(pname, n, playcount);
+	if (server == NULL)
 	    continue;
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "%d times playing prompt %s codec %d", playcount, pname, n);
-	if (spa->sridx == -1)
-	    append_server(cf, spa);
+	if (spa->sridx == -1) {
+            inc_ref_count(spa);
+	    append_server_later(cf, spa, idx, server);
+        }
 	return 0;
     }
     rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create player");

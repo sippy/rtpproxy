@@ -28,6 +28,7 @@
  *
  */
 
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/uio.h>
@@ -39,10 +40,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <pthread.h>
 
 #include "rtp_server.h"
 #include "rtpp_util.h"
 #include "rtp.h"
+
+static pthread_mutex_t rtp_server_queue_lock;
+static struct session_queue_item *append_server_queue;
+static struct session_queue_item *noplay_queue;
 
 struct rtp_server *
 rtp_server_new(const char *name, rtp_type_t codec, int loop)
@@ -158,16 +164,95 @@ rtp_server_get(struct rtp_server *rp, double dtime)
 }
 
 void
-append_server(struct cfg *cf, struct rtpp_session *sp)
+append_server_later(struct cfg *cf, struct rtpp_session *spa, int idx, struct rtp_server *server)
+{
+    struct session_queue_item *it;
+
+    it = alloc_session_queue_item();
+    pthread_mutex_lock(&rtp_server_queue_lock);
+    it->session = spa;
+    it->index = idx;
+    it->server = server;
+    it->next = append_server_queue;
+    append_server_queue = it;
+    pthread_mutex_unlock(&rtp_server_queue_lock);
+}
+
+void
+append_server(struct cfg *cf, struct rtpp_session *sp, int idx, struct rtp_server *server)
 {
 
-    if (sp->rtps[0] != NULL || sp->rtps[1] != NULL) {
-	if (sp->sridx == -1) {
-	    cf->rtp_servers[cf->rtp_nsessions] = sp;
-	    sp->sridx = cf->rtp_nsessions;
-	    cf->rtp_nsessions++;
-	}
-    } else {
-	sp->sridx = -1;
+    sp->rtps[idx] = server;
+    if (sp->sridx == -1) {
+        cf->rtp_servers[cf->rtp_nsessions] = sp;
+        sp->sridx = cf->rtp_nsessions;
+        cf->rtp_nsessions++;
     }
+}
+
+void
+handle_noplay_later(struct cfg *cf, struct rtpp_session *spa, int idx)
+{
+    struct session_queue_item *it;
+
+    it = alloc_session_queue_item();
+    pthread_mutex_lock(&rtp_server_queue_lock);
+    it->session = spa;
+    it->index = idx;
+    it->next = noplay_queue;
+    noplay_queue = it;
+    pthread_mutex_unlock(&rtp_server_queue_lock);
+}
+
+static void
+handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx)
+{
+    if (spa->rtps[idx] != NULL) {
+	rtp_server_free(spa->rtps[idx]);
+	spa->rtps[idx] = NULL;
+	rtpp_log_write(RTPP_LOG_INFO, spa->log,
+	  "stopping player at port %d", spa->ports[idx]);
+	if (spa->rtps[0] == NULL && spa->rtps[1] == NULL) {
+	    assert(cf->rtp_servers[spa->sridx] == spa);
+	    cf->rtp_servers[spa->sridx] = NULL;
+	    spa->sridx = -1;
+            dec_ref_count(spa);
+	}
+    }
+}
+
+void
+process_rtp_server_queue(struct cfg *cf)
+{
+    struct session_queue_item *noplay_it;
+    struct session_queue_item *append_it;
+    struct session_queue_item *tmp;
+
+    pthread_mutex_lock(&rtp_server_queue_lock);
+    noplay_it = noplay_queue;
+    noplay_queue = NULL;
+    append_it = append_server_queue;
+    append_server_queue = NULL;
+    pthread_mutex_unlock(&rtp_server_queue_lock);
+
+    while (noplay_it != NULL) {
+        handle_noplay(cf, noplay_it->session, noplay_it->index);
+        tmp = noplay_it;
+        dec_ref_count(tmp->session);
+        noplay_it = noplay_it->next;
+        free_session_queue_item(tmp);
+    }
+    
+    while (append_it != NULL) {
+        append_server(cf, append_it->session, append_it->index, append_it->server);
+        tmp = append_it;
+        append_it = append_it->next;
+        free_session_queue_item(tmp);
+    }
+}
+
+void
+rtp_server_storage_init()
+{
+    pthread_mutex_init(&rtp_server_queue_lock, NULL);
 }

@@ -97,6 +97,14 @@ struct rtpp_session {
     char *codecs[2];
 };
 
+/* Structure to use in various queue operations */
+struct session_queue_item {
+    struct session_queue_item *next;
+    struct rtpp_session *session;
+    struct rtp_server *server;
+    int index;
+};
+
 void init_hash_table(struct cfg *);
 struct rtpp_session *session_findfirst(struct cfg *, char *);
 struct rtpp_session *session_findnext(struct rtpp_session *);
@@ -113,10 +121,13 @@ int get_ttl(struct rtpp_session *);
 void free_sessions(struct cfg *);
 void session_storage_init();
 void inc_ref_count(struct rtpp_session *);
+void dec_ref_count(struct rtpp_session *);
 void append_session_commit(struct cfg *);
 void register_session(struct rtpp_session *);
 void lock_session_cleaner();
 void unlock_session_cleaner();
 void *session_cleaner(void *);
+struct session_queue_item *alloc_session_queue_item();
+void free_session_queue_item(struct session_queue_item *);
 
 #endif

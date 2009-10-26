@@ -61,6 +61,9 @@ struct rtp_server {
 struct rtp_server *rtp_server_new(const char *, rtp_type_t, int);
 void rtp_server_free(struct rtp_server *);
 int rtp_server_get(struct rtp_server *, double);
-void append_server(struct cfg *, struct rtpp_session *);
+void append_server_later(struct cfg *, struct rtpp_session *, int, struct rtp_server *);
+void process_rtp_server_queue(struct cfg *);
+void rtp_server_storage_init();
+void handle_noplay_later(struct cfg *, struct rtpp_session *, int idx);
 
 #endif
