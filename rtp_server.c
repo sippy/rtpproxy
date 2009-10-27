@@ -181,6 +181,8 @@ append_server_later(struct cfg *cf, struct rtpp_session *spa, int idx, struct rt
 void
 append_server(struct cfg *cf, struct rtpp_session *sp, int idx, struct rtp_server *server)
 {
+    if (sp->rtps[idx])
+        rtp_server_free(sp->rtps[idx]);
 
     sp->rtps[idx] = server;
     if (sp->sridx == -1) {
