@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_command.c,v 1.24.2.2 2009/10/06 09:51:28 sobomax Exp $
+ * $Id: rtpp_command.c,v 1.24.2.3 2009/10/30 09:34:14 sobomax Exp $
  *
  */
 
@@ -273,6 +273,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     fds[0] = fds[1] = -1;
     recording_name = NULL;
     socket_name_u = notify_tag = NULL;
+    codecs = NULL;
 
     if (cf->umode == 0) {
 	for (;;) {
