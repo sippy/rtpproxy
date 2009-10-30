@@ -270,6 +270,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     fds[0] = fds[1] = -1;
     recording_name = NULL;
     socket_name_u = notify_tag = NULL;
+    codecs = NULL;
 
     if (cf->umode == 0) {
 	for (;;) {
