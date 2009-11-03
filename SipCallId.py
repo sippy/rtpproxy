@@ -22,10 +22,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipCallId.py,v 1.6 2008/09/24 09:25:38 sobomax Exp $
+# $Id: SipCallId.py,v 1.7 2009/11/03 11:26:14 sobomax Exp $
 
 from random import random
-from md5 import md5
+from hashlib import md5
 from time import time
 from SipConf import SipConf
 from SipGenericHF import SipGenericHF

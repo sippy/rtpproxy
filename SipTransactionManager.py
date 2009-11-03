@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.18 2009/09/01 16:59:20 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.19 2009/11/03 11:26:14 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -34,7 +34,7 @@ from SipRoute import SipRoute
 from SipConf import MyAddress
 from SipHeader import SipHeader
 from datetime import datetime
-from md5 import md5
+from hashlib import md5
 from traceback import print_exc
 from time import time
 import sys, socket

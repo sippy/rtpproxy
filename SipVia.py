@@ -22,10 +22,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipVia.py,v 1.9 2009/09/09 22:39:34 sobomax Exp $
+# $Id: SipVia.py,v 1.10 2009/11/03 11:26:14 sobomax Exp $
 
 from random import random
-from md5 import md5
+from hashlib import md5
 from time import time
 from SipGenericHF import SipGenericHF
 from SipConf import SipConf, MyAddress, MyPort

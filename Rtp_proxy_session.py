@@ -22,11 +22,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.17 2009/08/17 02:11:10 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.18 2009/11/03 11:26:14 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
-from md5 import md5
+from hashlib import md5
 from random import random
 from time import time
 from datetime import datetime

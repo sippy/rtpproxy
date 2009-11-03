@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.15 2009/08/31 12:26:35 sobomax Exp $
+# $Id: UA.py,v 1.16 2009/11/03 11:26:14 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -33,7 +33,7 @@ from SipContentType import SipContentType
 from SipProxyAuthorization import SipProxyAuthorization
 from CCEvents import CCEventTry, CCEventFail, CCEventDisconnect, CCEventInfo
 from MsgBody import MsgBody
-from md5 import md5
+from hashlib import md5
 from random import random
 from time import time
 

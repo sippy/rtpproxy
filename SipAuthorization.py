@@ -22,10 +22,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipAuthorization.py,v 1.7 2009/01/05 20:48:29 sobomax Exp $
+# $Id: SipAuthorization.py,v 1.8 2009/11/03 11:26:14 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
-from md5 import md5
+from hashlib import md5
 from time import time
 
 class SipAuthorization(SipGenericHF):
