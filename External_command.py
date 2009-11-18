@@ -22,10 +22,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: External_command.py,v 1.8 2009/01/09 21:03:36 sobomax Exp $
+# $Id: External_command.py,v 1.9 2009/11/18 20:39:48 sobomax Exp $
 
 from threading import Condition
-from popen2 import Popen3
+from subprocess import Popen, PIPE
 from twisted.internet import reactor
 from datetime import datetime
 from traceback import print_exc
@@ -47,13 +47,20 @@ class _Worker(Thread):
         self.start()
 
     def run(self):
-        pipe = Popen3(self.command, True)
+        pipe = Popen(self.command, shell = True, stdin = PIPE, \
+          stdout = PIPE, stderr = PIPE, close_fds = True)
         while True:
             self.master.work_available.acquire()
             while len(self.master.work) == 0:
                 self.master.work_available.wait()
             wi = self.master.work.pop(0)
+            if wi == None:
+                # Shutdown request, relay it further
+                self.master.work.append(None)
+                self.master.work_available.notify()
             self.master.work_available.release()
+            if wi == None:
+                break
             if wi.is_cancelled():
                 wi.data = None
                 wi.result_callback = None
@@ -61,12 +68,12 @@ class _Worker(Thread):
                 continue
             batch = [x + '\n' for x in wi.data]
             batch.append('\n')
-            pipe.tochild.writelines(batch)
-            pipe.tochild.flush()
+            pipe.stdin.writelines(batch)
+            pipe.stdin.flush()
             result = []
             while True:
                 try:
-                    line = pipe.fromchild.readline().strip()
+                    line = pipe.stdout.readline().strip()
                 except IOError, e:
                     # Catch EINTR
                     if e.args[0] != EINTR:
@@ -123,6 +130,12 @@ class External_command(object):
         self.work_available.release()
         return wi
 
+    def shutdown(self):
+        self.work_available.acquire()
+        self.work.append(None)
+        self.work_available.notify()
+        self.work_available.release()
+
     def process_result(self, result_callback, result, *callback_parameters):
         try:
             result_callback(result, *callback_parameters)
@@ -135,12 +148,17 @@ class External_command(object):
 
 if __name__ == '__main__':
     from sys import exit
+    from time import sleep
 
     def results_received(results):
+        global external_command
+        external_command.shutdown()
+        # Give threads time to finish
+        sleep(0.05)
         if not results == ('foo', 'bar'):
             exit(1)
         reactor.crash()
 
     external_command = External_command('/bin/cat')
     external_command.process_command(('foo', 'bar'), results_received)
-    reactor.run(installSignalHandlers = 0)
+    reactor.run()
