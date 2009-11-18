@@ -22,17 +22,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: RadiusAccounting.py,v 1.6 2009/07/01 21:17:45 sobomax Exp $
+# $Id: RadiusAccounting.py,v 1.7 2009/11/18 04:08:27 sobomax Exp $
 
 from time import time, strftime, gmtime
 from Timeout import Timeout
-
-def ftime(t):
-    gt = gmtime(t)
-    day = strftime('%d', gt)
-    if day[0] == '0':
-        day = day[1]
-    return strftime('%%H:%%M:%%S.000 GMT %%a %%b %s %%Y' % day, gt)
 
 sipErrToH323Err = {400:('7f', 'Interworking, unspecified'), 401:('39', 'Bearer capability not authorized'), \
   402:('15', 'Call rejected'), 403:('39', 'Bearer capability not authorized'), 404:('1', 'Unallocated number'), \
@@ -60,6 +53,7 @@ class RadiusAccounting(object):
     el = None
     send_start = None
     complete = False
+    ms_precision = False
 
     def __init__(self, global_config, origin, lperiod = None, send_start = False, itime = None):
         if itime == None:
@@ -68,7 +62,7 @@ class RadiusAccounting(object):
             self.iTime = itime
         self.global_config = global_config
         self._attributes = [('h323-call-origin', origin), ('h323-call-type', 'VoIP'), \
-          ('h323-session-protocol', 'sipv2'), ('h323-setup-time', ftime(self.iTime))]
+          ('h323-session-protocol', 'sipv2'), ('h323-setup-time', self.ftime(self.iTime))]
         self.drec = False
         self.crec = False
         self.origin = origin
@@ -132,11 +126,11 @@ class RadiusAccounting(object):
                 dc = '10'
             else:
                 dc = '0'
-            attributes.extend((('h323-disconnect-time', ftime(self.iTime + delay + duration)), \
-              ('h323-connect-time', ftime(self.iTime + delay)), ('Acct-Session-Time', int(duration)), \
+            attributes.extend((('h323-disconnect-time', self.ftime(self.iTime + delay + duration)), \
+              ('h323-connect-time', self.ftime(self.iTime + delay)), ('Acct-Session-Time', int(duration)), \
               ('h323-disconnect-cause', dc)))
         else:
-            attributes.append(('h323-connect-time', ftime(self.cTime)))
+            attributes.append(('h323-connect-time', self.ftime(self.cTime)))
         if type == 'Stop':
             if origin == 'caller':
                 release_source = '2'
@@ -150,6 +144,17 @@ class RadiusAccounting(object):
         pattributes.insert(0, 'sending Acct %s (%s):\n' % (type, self.origin.capitalize()))
         self.global_config['sip_logger'].write(call_id = self.sip_cid, *pattributes)
         self.global_config['radius_client'].do_acct(attributes, self._process_result, self.sip_cid, time())
+
+    def ftime(self, t):
+        gt = gmtime(t)
+        day = strftime('%d', gt)
+        if day[0] == '0':
+            day = day[1]
+        if self.ms_precision:
+            msec = (t % 1) * 1000
+        else:
+            msec = 0
+        return strftime('%%H:%%M:%%S.%.3d GMT %%a %%b %s %%Y' % (msec, day), gt)
 
     def _process_result(self, results, sip_cid, btime):
         delay = time() - btime
