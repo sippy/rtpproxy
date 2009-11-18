@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.58 2009/08/18 01:16:47 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.59 2009/11/18 04:03:56 sobomax Exp $
 
 #import sys
 #sys.path.append('..')
@@ -51,10 +51,12 @@ from twisted.internet import reactor
 from urllib import unquote
 from sippy.Cli_server_local import Cli_server_local
 from sippy.SipTransactionManager import SipTransactionManager
+from sippy.SipCallId import SipCallId
 import gc, getopt, os, sys
 from re import sub
 from time import time
 from urllib import quote
+from hashlib import md5
 
 def re_replace(ptrn, s):
     s = s.split('#', 1)[0]
@@ -365,7 +367,11 @@ class CallController(object):
         if parameters.has_key('group_timeout'):
             timeout, skipto = parameters['group_timeout']
             Timeout(self.group_expires, timeout, 1, skipto)
-        event = CCEventTry((cId + '-b2b_%d' % rnum, cGUID, cli, cld, body, auth, \
+        if self.global_config.get('hide_call_id', False):
+            cId = SipCallId(md5(str(cId)).hexdigest() + ('-b2b_%d' % rnum))
+        else:
+            cId += '-b2b_%d' % rnum
+        event = CCEventTry((cId, cGUID, cli, cld, body, auth, \
           parameters.get('caller_name', self.caller_name)))
         event.reason = self.eTry.reason
         self.uaO.recvEvent(event)
@@ -592,7 +598,7 @@ def reopen(signum, logfile):
     os.close(fd)
 
 def usage():
-    print 'usage: b2bua.py [-fDS] [-l addr] [-p port] [-P pidfile] [-L logfile] ' \
+    print 'usage: b2bua.py [-fDSH] [-l addr] [-p port] [-P pidfile] [-L logfile] ' \
       '[-s static_route] [-a ip1[,..[,ipN]]] [-t static_tr_in] [-T static_tr_out]' \
       '[-r rtp_proxy_contact1] [-r rtp_proxy_contact2] [-r rtp_proxy_contactN] ' \
       '[-k 0-3] [-m max_ctime] [-A 0-2] [-F pt1[,..[,ptN]]] [-R radiusclient_conf] ' \
@@ -602,7 +608,7 @@ def usage():
 if __name__ == '__main__':
     global_config = {'orig_argv':sys.argv[:], 'orig_cwd':os.getcwd(), 'digest_auth':True, 'start_acct_enable':False, 'ka_ans':0, 'ka_orig':0, 'auth_enable':True, 'acct_enable':True, 'pass_headers':[]}
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:c:M:')
+        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:c:M:H')
     except getopt.GetoptError:
         usage()
     laddr = None
@@ -708,6 +714,9 @@ if __name__ == '__main__':
             continue
         if o == '-M':
             global_config['max_radiusclients'] = int(a.strip())
+            continue
+        if o == '-H':
+            global_config['hide_call_id'] = True
             continue
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):
