@@ -23,7 +23,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: MyConfigParser.py,v 1.1 2009/11/19 02:09:30 sobomax Exp $
+# $Id: MyConfigParser.py,v 1.2 2009/11/19 13:18:25 sobomax Exp $
 
 from ConfigParser import RawConfigParser
 from SipConf import SipConf
@@ -127,7 +127,7 @@ class MyConfigParser(RawConfigParser):
         return tuple([x + '=' for x in SUPPORTED_OPTIONS.keys()])
 
     def read(self, fname):
-        RawConfigParser.read(self, fname)
+        RawConfigParser.readfp(self, open(fname))
         for key in tuple(self.options(self.default_section)):
             self.check_and_set(key, RawConfigParser.get(self, \
               self.default_section, key), False)
