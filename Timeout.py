@@ -21,10 +21,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Timeout.py,v 1.4 2009/01/05 20:14:00 sobomax Exp $
+# $Id: Timeout.py,v 1.5 2009/11/19 09:23:07 sobomax Exp $
 
 from datetime import datetime
-from twisted.internet import task
+from twisted.internet import task, reactor
 from traceback import print_exc, format_list, extract_stack
 from sys import stdout
 
@@ -34,6 +34,11 @@ class Timeout(object):
     _timeout_callback = None
 
     def __init__(self, timeout_callback, interval, ticks = 1, *callback_arguments):
+        if ticks == 1:
+            # Special case for just one call
+            self._task = reactor.callLater(interval, timeout_callback, *callback_arguments)
+            self.cancel = self.cancel_callLater
+            return
         self._ticks_left = ticks
         self._timeout_callback = timeout_callback
         self._task = task.LoopingCall(self._run, *callback_arguments)
@@ -58,6 +63,22 @@ class Timeout(object):
         self._task = None
         self._timeout_callback = None
 
+    def cancel_callLater(self):
+        self._task.cancel()
+        self._task = None
+
+class TimeoutAbs:
+    _task = None
+    def __init__(self, timeout_callback, etime, *callback_arguments):
+        etime -= reactor.seconds()
+        if etime < 0:
+            etime = 0
+        self._task = reactor.callLater(etime, timeout_callback, *callback_arguments)
+
+    def cancel(self):
+        self._task.cancel()
+        self._task = None
+
 class Timeout_debug(Timeout):
     _traceback = None
 
@@ -73,22 +94,33 @@ class Timeout_debug(Timeout):
 if __name__ == '__main__':
     from twisted.internet import reactor
     
-    def test1(arguments):
-        print 'test1'
+    def test1(arguments, testnum):
+        print testnum
         arguments['test'] = True
         reactor.crash()
 
-    def test2(arguments):
-        print 'test2'
+    def test2(arguments, testnum):
+        print testnum
         arguments['test'] = 'bar'
         reactor.crash()
 
     arguments = {'test':False}
-    timeout_1 = Timeout(test1, 0, 1, arguments)
+    timeout_1 = Timeout(test1, 0, 1, arguments, 'test1')
     reactor.run()
     assert(arguments['test'])
-    timeout_1 = Timeout(test1, 0.1, 1, arguments)
-    timeout_2 = Timeout(test2, 0.2, 1, arguments)
+    timeout_1 = Timeout(test1, 0.1, 1, arguments, 'test2')
+    timeout_2 = Timeout(test2, 0.2, 1, arguments, 'test3')
+    timeout_1.cancel()
+    reactor.run()
+    assert(arguments['test'] == 'bar')
+
+    arguments = {'test':False}
+    timeout_1 = TimeoutAbs(test1, reactor.seconds(), arguments, 'test4')
+    reactor.run()
+    assert(arguments['test'])
+
+    timeout_1 = TimeoutAbs(test1, reactor.seconds() + 0.1, arguments, 'test5')
+    timeout_2 = TimeoutAbs(test2, reactor.seconds() + 0.2, arguments, 'test6')
     timeout_1.cancel()
     reactor.run()
     assert(arguments['test'] == 'bar')
