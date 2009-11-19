@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateConnected.py,v 1.9 2009/08/18 01:16:47 sobomax Exp $
+# $Id: UaStateConnected.py,v 1.10 2009/11/19 01:51:27 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -63,7 +63,15 @@ class UaStateConnected(UaStateGeneric):
             self.ua.uasResp = req.genResponse(100, 'Trying')
             self.ua.global_config['sip_tm'].sendResponse(self.ua.uasResp)
             body = req.getBody()
-            if str(self.ua.rSDP) == str(body):
+            if body == None:
+                # Some brain-damaged stacks use body-less re-INVITE as a means
+                # for putting session on hold. Quick and dirty hack to make this
+                # scenario working.
+                body = self.ua.rSDP.getCopy()
+                body.parse()
+                for sect in body.content.sections:
+                    sect.c_header.addr = '0.0.0.0'
+            elif str(self.ua.rSDP) == str(body):
                 self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK', self.ua.lSDP))
                 return None
             event = CCEventUpdate(body, rtime = req.rtime, origin = self.ua.origin)
