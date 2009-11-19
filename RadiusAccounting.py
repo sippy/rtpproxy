@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: RadiusAccounting.py,v 1.8 2009/11/19 02:09:30 sobomax Exp $
+# $Id: RadiusAccounting.py,v 1.9 2009/11/19 20:49:28 sobomax Exp $
 
 from time import time, strftime, gmtime
 from Timeout import Timeout
@@ -46,7 +46,6 @@ class RadiusAccounting(object):
     crec = None
     iTime = None
     cTime = None
-    credit_time = None
     sip_cid = None
     origin = None
     lperiod = None
@@ -54,15 +53,14 @@ class RadiusAccounting(object):
     send_start = None
     complete = False
     ms_precision = False
+    user_agent = None
+    p1xx_ts = None
+    p100_ts = None
 
-    def __init__(self, global_config, origin, lperiod = None, send_start = False, itime = None):
-        if itime == None:
-            self.iTime = time()
-        else:
-            self.iTime = itime
+    def __init__(self, global_config, origin, lperiod = None, send_start = False):
         self.global_config = global_config
         self._attributes = [('h323-call-origin', origin), ('h323-call-type', 'VoIP'), \
-          ('h323-session-protocol', 'sipv2'), ('h323-setup-time', self.ftime(self.iTime))]
+          ('h323-session-protocol', 'sipv2')]
         self.drec = False
         self.crec = False
         self.origin = origin
@@ -70,7 +68,7 @@ class RadiusAccounting(object):
         self.send_start = send_start
 
     def setParams(self, username, caller, callee, h323_cid, sip_cid, remote_ip, \
-      credit_time = None, h323_in_cid = None):
+      h323_in_cid = None):
         if caller == None:
             caller = ''
         self._attributes.extend((('User-Name', username), ('Calling-Station-Id', caller), \
@@ -78,7 +76,6 @@ class RadiusAccounting(object):
           ('Acct-Session-Id', sip_cid), ('h323-remote-address', remote_ip)))
         if h323_in_cid != None and h323_in_cid != h323_cid:
             self._attributes.append(('h323-incoming-conf-id', h323_in_cid))
-        self.credit_time = credit_time
         self.sip_cid = str(sip_cid)
         self.complete = True
 
@@ -86,11 +83,18 @@ class RadiusAccounting(object):
         if self.crec:
             return
         self.crec = True
-        self.cTime = rtime
+        self.iTime = ua.setup_ts
+        self.cTime = ua.connect_ts
+        if ua.user_agent != None and self.user_agent == None:
+            self.user_agent = ua.user_agent
+        if ua.p1xx_ts != None:
+            self.p1xx_ts = ua.p1xx_ts
+        if ua.p100_ts != None:
+            self.p100_ts = ua.p100_ts
         if self.send_start:
-            self.asend('Start', rtime, origin)
+            self.asend('Start', rtime, origin, ua)
         self._attributes.extend((('h323-voice-quality', 0), ('Acct-Terminate-Cause', 'User-Request')))
-        if self.lperiod != None:
+        if self.lperiod != None and self.lperiod > 0:
             self.el = Timeout(self.asend, self.lperiod, -1, 'Alive')
 
     def disc(self, ua, rtime, origin, result = 0):
@@ -100,23 +104,35 @@ class RadiusAccounting(object):
         if self.el != None:
             self.el.cancel()
             self.el = None
-        self.asend('Stop', rtime, origin, result)
+        if self.iTime == None:
+            self.iTime = ua.setup_ts
+        if self.cTime == None:
+            self.cTime = rtime
+        if ua.user_agent != None and self.user_agent == None:
+            self.user_agent = ua.user_agent
+        if ua.p1xx_ts != None:
+            self.p1xx_ts = ua.p1xx_ts
+        if ua.p100_ts != None:
+            self.p100_ts = ua.p100_ts
+        self.asend('Stop', rtime, origin, result, ua)
 
-    def asend(self, type, rtime = None, origin = None, result = 0):
+    def asend(self, type, rtime = None, origin = None, result = 0, ua = None):
         if not self.complete:
             return
         if rtime == None:
             rtime = time()
+        if ua != None:
+            duration, delay, connected = ua.getAcct()[:3]
+        else:
+            # Alive accounting
+            duration = rtime - self.cTime
+            delay = self.cTime - self.iTime
+            connected = True
+        if not(self.ms_precision):
+            duration = round(duration)
+            delay = round(delay)
         attributes = self._attributes[:]
         if type != 'Start':
-            if self.cTime != None:
-                duration = rtime - self.cTime
-                delay = self.cTime - self.iTime
-            else:
-                duration = 0
-                delay = rtime - self.iTime
-            if self.credit_time != None and duration > self.credit_time and duration < self.credit_time + 10:
-                duration = self.credit_time
             if result >= 400:
                 try:
                     dc = sipErrToH323Err[result][0]
@@ -127,10 +143,7 @@ class RadiusAccounting(object):
             else:
                 dc = '0'
             attributes.extend((('h323-disconnect-time', self.ftime(self.iTime + delay + duration)), \
-              ('h323-connect-time', self.ftime(self.iTime + delay)), ('Acct-Session-Time', int(duration)), \
-              ('h323-disconnect-cause', dc)))
-        else:
-            attributes.append(('h323-connect-time', self.ftime(self.cTime)))
+              ('Acct-Session-Time', '%d' % round(duration)), ('h323-disconnect-cause', dc)))
         if type == 'Stop':
             if origin == 'caller':
                 release_source = '2'
@@ -139,6 +152,14 @@ class RadiusAccounting(object):
             else:
                 release_source = '8'
             attributes.append(('release-source', release_source))
+        attributes.extend((('h323-connect-time', self.ftime(self.iTime + delay)), ('h323-setup-time', self.ftime(self.iTime)), \
+          ('Acct-Status-Type', type)))
+        if self.user_agent != None:
+            attributes.append(('h323-ivr-out', 'sip_ua:' + self.user_agent))
+        if self.p1xx_ts != None:
+            attributes.append(('alert-timepoint', self.ftime(self.p1xx_ts)))
+        if self.p100_ts != None:
+            attributes.append(('provisional-timepoint', self.ftime(self.p100_ts)))
         attributes.append(('Acct-Status-Type', type))
         pattributes = ['%-32s = \'%s\'\n' % (x[0], str(x[1])) for x in attributes]
         pattributes.insert(0, 'sending Acct %s (%s):\n' % (type, self.origin.capitalize()))
