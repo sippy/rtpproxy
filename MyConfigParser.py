@@ -23,13 +23,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: MyConfigParser.py,v 1.2 2009/11/19 13:18:25 sobomax Exp $
+# $Id: MyConfigParser.py,v 1.3 2009/11/19 20:52:20 sobomax Exp $
 
 from ConfigParser import RawConfigParser
 from SipConf import SipConf
 
 SUPPORTED_OPTIONS = { \
  'acct_enable':       ('B', 'enable or disable Radius accounting'), \
+ 'precise_acct':      ('B', 'do Radius accounting with millisecond precision'), \
+ 'alive_acct_int':    ('I', 'interval for sending alive Radius accounting in ' \
+                             'second (0 to disable alive accounting)'), \
  'config':            ('S', 'load configuration from file (path to file)'), \
  'auth_enable':       ('B', 'enable or disable Radius authentication'), \
  'b2bua_socket':      ('S', 'path to the B2BUA command socket or address to listen ' \
@@ -189,14 +192,14 @@ class MyConfigParser(RawConfigParser):
     def options_help(self):
         supported_options = SUPPORTED_OPTIONS.items()
         supported_options.sort()
-        for option, (value_type, help) in supported_options:
+        for option, (value_type, helptext) in supported_options:
             if value_type == 'B':
                 value = 'on/off'
             elif value_type == 'I':
                 value = 'number'
             else:
                 value = '"string"'
-            print '--%s=%s\n\t%s\n' % (option, value, help)
+            print '--%s=%s\n\t%s\n' % (option, value, helptext)
 
 if __name__ == '__main__':
     m = MyConfigParser()

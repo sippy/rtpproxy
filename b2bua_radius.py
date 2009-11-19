@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.60 2009/11/19 02:09:30 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.61 2009/11/19 20:52:20 sobomax Exp $
 
 import sys
 sys.path.append('..')
@@ -208,7 +208,9 @@ class CallController(object):
             return
         if self.global_config['acct_enable']:
             self.acctA = RadiusAccounting(self.global_config, 'answer', \
-              send_start = self.global_config['start_acct_enable'], itime = self.eTry.rtime)
+              send_start = self.global_config['start_acct_enable'], lperiod = \
+              self.global_config.getdefault('alive_acct_int', None))
+            self.acctA.ms_precision = self.global_config.getdefault('precise_acct', False)
             self.acctA.setParams(self.username, self.cli, self.cld, self.cGUID, self.cId, self.remote_ip)
         else:
             self.acctA = FakeAccounting()
@@ -344,9 +346,12 @@ class CallController(object):
                     port = SipConf.default_port
                 host = host[0]
         if not forward_on_fail and self.global_config['acct_enable']:
-            self.acctO = RadiusAccounting(self.global_config, 'originate', send_start = self.global_config['start_acct_enable'])
+            self.acctO = RadiusAccounting(self.global_config, 'originate', \
+              send_start = self.global_config['start_acct_enable'], lperiod = \
+              self.global_config.getdefault('alive_acct_int', None))
+            self.acctO.ms_precision = self.global_config.getdefault('precise_acct', False)
             self.acctO.setParams(parameters.get('bill-to', self.username), parameters.get('bill-cli', cli), \
-              parameters.get('bill-cld', cld), self.cGUID, self.cId, host, credit_time)
+              parameters.get('bill-cld', cld), self.cGUID, self.cId, host)
         else:
             self.acctO = None
         self.acctA.credit_time = credit_time
@@ -665,7 +670,7 @@ if __name__ == '__main__':
                 global_config['start_acct_enable'] = True
             else:
                 sys.__stderr__.write('ERROR: -A argument not in the range 0-2')
-                usage()
+                usage(global_config)
             continue
         if o == '-t':
             global_config.check_and_set('static_tr_in', a)
@@ -686,7 +691,7 @@ if __name__ == '__main__':
                 global_config['keepalive_orig'] = 32
             else:
                 sys.__stderr__.write('ERROR: -k argument not in the range 0-3')
-                usage()
+                usage(global_config)
         if o == '-m':
             global_config.check_and_set('max_credit_time', a)
             continue
@@ -741,7 +746,7 @@ if __name__ == '__main__':
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):
         sys.__stderr__.write('ERROR: static route should be specified when Radius auth is disabled')
-        usage()
+        usage(global_config)
 
     if writeconf != None:
         global_config.write(open(writeconf, 'w'))
