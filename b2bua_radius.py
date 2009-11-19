@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.61 2009/11/19 20:52:20 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.62 2009/11/19 20:56:48 sobomax Exp $
 
 import sys
 sys.path.append('..')
@@ -603,9 +603,11 @@ def reopen(signum, logfile):
     os.dup2(fd, sys.__stderr__.fileno())
     os.close(fd)
 
-def usage(global_config):
-    print 'usage: b2bua.py [--option1=value1] [--option2=value2] ... [--optionN==valueN]\n\navailable options:\n'
-    global_config.options_help()
+def usage(global_config, brief = False):
+    print 'usage: b2bua.py [--option1=value1] [--option2=value2] ... [--optionN==valueN]'
+    if not brief:
+        print '\navailable options:\n'
+        global_config.options_help()
     sys.exit(1)
 
 if __name__ == '__main__':
@@ -669,8 +671,8 @@ if __name__ == '__main__':
                 global_config['acct_enable'] = True
                 global_config['start_acct_enable'] = True
             else:
-                sys.__stderr__.write('ERROR: -A argument not in the range 0-2')
-                usage(global_config)
+                sys.__stderr__.write('ERROR: -A argument not in the range 0-2\n')
+                usage(global_config, True)
             continue
         if o == '-t':
             global_config.check_and_set('static_tr_in', a)
@@ -690,8 +692,8 @@ if __name__ == '__main__':
                 global_config['keepalive_ans'] = 32
                 global_config['keepalive_orig'] = 32
             else:
-                sys.__stderr__.write('ERROR: -k argument not in the range 0-3')
-                usage(global_config)
+                sys.__stderr__.write('ERROR: -k argument not in the range 0-3\n')
+                usage(global_config, True)
         if o == '-m':
             global_config.check_and_set('max_credit_time', a)
             continue
@@ -745,8 +747,8 @@ if __name__ == '__main__':
                 rtp_proxy_clients.append((Rtp_proxy_client_local, a))
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):
-        sys.__stderr__.write('ERROR: static route should be specified when Radius auth is disabled')
-        usage(global_config)
+        sys.__stderr__.write('ERROR: static route should be specified when Radius auth is disabled\n')
+        usage(global_config, True)
 
     if writeconf != None:
         global_config.write(open(writeconf, 'w'))
