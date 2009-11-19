@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateConnected.py,v 1.11 2009/11/19 02:09:30 sobomax Exp $
+# $Id: UaStateConnected.py,v 1.12 2009/11/19 13:06:18 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -98,12 +98,8 @@ class UaStateConnected(UaStateGeneric):
             if req.countHFs('reason') > 0:
                 event.reason = req.getHFBody('reason')
             self.ua.equeue.append(event)
-            if self.ua.credit_timer != None:
-                self.ua.credit_timer.cancel()
-                self.ua.credit_timer = None
-                if self.ua.warn_timer != None:
-                    self.ua.warn_timer.cancel()
-                    self.ua.warn_timer = None
+            self.ua.cancelCreditTimer()
+            self.ua.disconnect_ts = req.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         if req.getMethod() == 'INFO':
             self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
@@ -140,12 +136,8 @@ class UaStateConnected(UaStateGeneric):
                     also = SipAlso(address = SipAddress(url = redirect))
                     req.appendHeader(SipHeader(name = 'also', body = also))
                 self.ua.global_config['_sip_tm'].newTransaction(req)
-            if self.ua.credit_timer != None:
-                self.ua.credit_timer.cancel()
-                self.ua.credit_timer = None
-                if self.ua.warn_timer != None:
-                    self.ua.warn_timer.cancel()
-                    self.ua.warn_timer = None
+            self.ua.cancelCreditTimer()
+            self.ua.disconnect_ts = event.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin)
         if isinstance(event, CCEventUpdate):
             body = event.getData()

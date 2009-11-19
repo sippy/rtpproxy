@@ -22,9 +22,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateIdle.py,v 1.10 2009/11/19 02:09:30 sobomax Exp $
+# $Id: UasStateIdle.py,v 1.11 2009/11/19 13:06:18 sobomax Exp $
 
-from Timeout import Timeout
+from Timeout import TimeoutAbs
 from SipAddress import SipAddress
 from SipRoute import SipRoute
 from UaStateGeneric import UaStateGeneric
@@ -81,20 +81,26 @@ class UasStateIdle(UaStateGeneric):
         if req.countHFs('reason') > 0:
             event.reason = req.getHFBody('reason')
         if self.ua.expire_time != None:
-            self.ua.expire_timer = Timeout(self.ua.expires, self.ua.expire_time)
+            self.ua.expire_time += event.rtime
         if self.ua.no_progress_time != None:
-            # Check if setting up no_progress_timer actually makes any sense
-            if self.ua.expire_time == None or self.ua.no_progress_time < self.ua.expire_time:
-                self.ua.no_progress_timer = Timeout(self.ua.no_progress_expires, self.ua.no_progress_time)
+            self.ua.no_progress_time += event.rtime
+            if self.ua.expire_time != None and self.ua.no_progress_time >= self.ua.expire_time:
+                self.ua.no_progress_time = None
+        if self.ua.no_progress_time != None:
+            self.ua.no_progress_timer = TimeoutAbs(self.ua.no_progress_expires, self.ua.no_progress_time)
+        elif self.ua.expire_time != None:
+            self.ua.expire_timer = TimeoutAbs(self.ua.expires, self.ua.expire_time)
         if body != None:
             if self.ua.on_remote_sdp_change != None:
                 self.ua.on_remote_sdp_change(body, lambda x: self.ua.delayed_remote_sdp_update(event, x))
+                self.ua.setup_ts = req.rtime
                 return (UasStateTrying,)
             else:
                 self.ua.rSDP = body.getCopy()
         else:
             self.ua.rSDP = None
         self.ua.equeue.append(event)
+        self.ua.setup_ts = req.rtime
         return (UasStateTrying,)
 
 if not globals().has_key('UasStateTrying'):

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateRinging.py,v 1.7 2009/11/19 02:09:30 sobomax Exp $
+# $Id: UasStateRinging.py,v 1.8 2009/11/19 13:06:18 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, CCEventDisconnect
@@ -45,6 +45,8 @@ class UasStateRinging(UaStateGeneric):
                     self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
                     return None
             self.ua.lSDP = body
+            if self.ua.p1xx_ts == None:
+                self.ua.p1xx_ts = event.rtime
             self.ua.sendUasResponse(code, reason, body)
             for ring_cb in self.ua.ring_cbs:
                 ring_cb(self.ua, event.rtime, event.origin, code)
@@ -59,6 +61,8 @@ class UasStateRinging(UaStateGeneric):
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
+            self.ua.startCreditTimer(event.rtime)
+            self.ua.connect_ts = event.rtime
             return (UaStateConnected, self.ua.conn_cbs, event.rtime, event.origin)
         elif isinstance(event, CCEventRedirect):
             scode = event.getData()
@@ -68,6 +72,7 @@ class UasStateRinging(UaStateGeneric):
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
+            self.ua.disconnect_ts = event.rtime
             return (UaStateFailed, self.ua.fail_cbs, event.rtime, event.origin, scode[0])
         elif isinstance(event, CCEventFail):
             scode = event.getData()
@@ -77,6 +82,7 @@ class UasStateRinging(UaStateGeneric):
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
+            self.ua.disconnect_ts = event.rtime
             return (UaStateFailed, self.ua.fail_cbs, event.rtime, event.origin, scode[0])
         elif isinstance(event, CCEventDisconnect):
             #import sys, traceback
@@ -85,6 +91,7 @@ class UasStateRinging(UaStateGeneric):
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
+            self.ua.disconnect_ts = event.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin, self.ua.last_scode)
         #print 'wrong event %s in the Ringing state' % event
         return None
@@ -105,10 +112,12 @@ class UasStateRinging(UaStateGeneric):
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
+            self.ua.disconnect_ts = req.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         return None
 
     def cancel(self, rtime, req):
+        self.ua.disconnect_ts = rtime
         self.ua.changeState((UaStateDisconnected, self.ua.disc_cbs, rtime, self.ua.origin))
         event = CCEventDisconnect(rtime = rtime, origin = self.ua.origin)
         if req != None and req.countHFs('reason') > 0:

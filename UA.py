@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.17 2009/11/19 02:09:30 sobomax Exp $
+# $Id: UA.py,v 1.18 2009/11/19 13:06:18 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -36,6 +36,7 @@ from MsgBody import MsgBody
 from hashlib import md5
 from random import random
 from time import time
+from Timeout import TimeoutAbs
 
 class UA(object):
     global_config = None
@@ -48,8 +49,8 @@ class UA(object):
     equeue = None
     dId = None
     credit_time = None
+    credit_times = None
     credit_timer = None
-    warn_timer = None
     conn_cbs = None
     disc_cbs = None
     fail_cbs = None
@@ -79,9 +80,16 @@ class UA(object):
     expire_timer = None
     no_progress_time = None
     no_progress_timer = None
+    no_reply_time = None
+    no_reply_timer = None
     on_local_sdp_change = None
     on_remote_sdp_change = None
     last_scode = 100
+    setup_ts = None
+    p100_ts = None
+    p1xx_ts = None
+    connect_ts = None
+    disconnect_ts = None
     user_agent = None
     elast_seq = None
     origin = None
@@ -97,6 +105,7 @@ class UA(object):
         self.rAddr = nh_address
         self.rAddr0 = self.rAddr
         self.credit_time = credit_time
+        self.credit_times = {}
         if conn_cbs != None:
             self.conn_cbs = conn_cbs
         else:
@@ -204,16 +213,13 @@ class UA(object):
         self.no_progress_timer = None
         self.disconnect()
 
-    def credit_expires(self):
-        self.credit_timer = None
+    def no_reply_expires(self):
+        self.no_reply_timer = None
         self.disconnect()
 
-    def warn(self):
-        rtime = time()
-        self.warn_timer = None
-        body = MsgBody('Signal=3\r\nDuration=1640\r\n', 'application/dtmf-relay')
-        self.equeue.append(CCEventInfo(body, rtime = rtime))
-        self.recvEvent(CCEventInfo(body.getCopy(), rtime = rtime))
+    def credit_expires(self, rtime):
+        self.credit_timer = None
+        self.disconnect(rtime)
 
     def changeState(self, newstate):
         if self.state != None:
@@ -335,9 +341,41 @@ class UA(object):
         self.equeue.append(event)
         self.emitPendingEvents()
 
+    def getAcct(self):
+        if self.disconnect_ts != None:
+            disconnect_ts = self.disconnect_ts
+            disconnected = True
+        else:
+            disconnect_ts = time()
+            disconnected = False
+        if self.connect_ts != None:
+            return (disconnect_ts - self.connect_ts, self.connect_ts - self.setup_ts, True, disconnected)
+        return (0, disconnect_ts - self.setup_ts, False, disconnected)
+
     def update_ua(self, msg):
         if msg.countHFs('user-agent') > 0:
             self.user_agent = msg.getHFBody('user-agent').name
         elif msg.countHFs('server') > 0:
             self.user_agent = msg.getHFBody('server').name
         return
+
+    def cancelCreditTimer(self):
+        if self.credit_timer != None:
+            self.credit_timer.cancel()
+            self.credit_timer = None
+
+    def startCreditTimer(self, rtime):
+        if self.credit_time != None:
+            self.credit_times[0] = rtime + self.credit_time
+            self.credit_time = None
+        try:
+            credit_time = min([x for x in self.credit_times.values() if x != None])
+        except ValueError:
+            return
+        self.credit_timer = TimeoutAbs(self.credit_expires, credit_time, credit_time)
+
+    def resetCreditTime(self, rtime, new_credit_times):
+        self.credit_times.update(new_credit_times)
+        if self.state.connected:
+            self.cancelCreditTimer()
+            self.startCreditTimer(rtime)

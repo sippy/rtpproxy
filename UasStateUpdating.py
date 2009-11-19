@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateUpdating.py,v 1.9 2009/11/19 02:09:30 sobomax Exp $
+# $Id: UasStateUpdating.py,v 1.10 2009/11/19 13:06:18 sobomax Exp $
 
 from SipContact import SipContact
 from SipAddress import SipAddress
@@ -45,12 +45,8 @@ class UasStateUpdating(UaStateGeneric):
             if req.countHFs('reason') > 0:
                 event.reason = req.getHFBody('reason')
             self.ua.equeue.append(event)
-            if self.ua.credit_timer != None:
-                self.ua.credit_timer.cancel()
-                self.ua.credit_timer = None
-                if self.ua.warn_timer != None:
-                    self.ua.warn_timer.cancel()
-                    self.ua.warn_timer = None
+            self.ua.cancelCreditTimer()
+            self.ua.disconnect_ts = req.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         elif req.getMethod() == 'REFER':
             if req.countHFs('refer-to') == 0:
@@ -60,12 +56,8 @@ class UasStateUpdating(UaStateGeneric):
             self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
             also = req.getHFBody('refer-to').getUrl().getCopy()
             self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin))
-            if self.ua.credit_timer != None:
-                self.ua.credit_timer.cancel()
-                self.ua.credit_timer = None
-                if self.ua.warn_timer != None:
-                    self.ua.warn_timer.cancel()
-                    self.ua.warn_timer = None
+            self.ua.cancelCreditTimer()
+            self.ua.disconnect_ts = req.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         #print 'wrong request %s in the state Updating' % req.getMethod()
         return None
@@ -107,12 +99,8 @@ class UasStateUpdating(UaStateGeneric):
             req = self.ua.genRequest('BYE', reason = event.reason)
             self.ua.lCSeq += 1
             self.ua.global_config['_sip_tm'].newTransaction(req)
-            if self.ua.credit_timer != None:
-                self.ua.credit_timer.cancel()
-                self.ua.credit_timer = None
-                if self.ua.warn_timer != None:
-                    self.ua.warn_timer.cancel()
-                    self.ua.warn_timer = None
+            self.ua.cancelCreditTimer()
+            self.ua.disconnect_ts = event.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin)
         #print 'wrong event %s in the Updating state' % event
         return None
@@ -121,12 +109,8 @@ class UasStateUpdating(UaStateGeneric):
         req = self.ua.genRequest('BYE')
         self.ua.lCSeq += 1
         self.ua.global_config['_sip_tm'].newTransaction(req)
-        if self.ua.credit_timer != None:
-            self.ua.credit_timer.cancel()
-            self.ua.credit_timer = None
-            if self.ua.warn_timer != None:
-                self.ua.warn_timer.cancel()
-                self.ua.warn_timer = None
+        self.ua.cancelCreditTimer()
+        self.ua.disconnect_ts = rtime
         self.ua.changeState((UaStateDisconnected, self.ua.disc_cbs, rtime, self.ua.origin))
         event = CCEventDisconnect(rtime = rtime, origin = self.ua.origin)
         if req != None and req.countHFs('reason') > 0:

@@ -22,12 +22,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateTrying.py,v 1.6 2009/08/31 12:26:35 sobomax Exp $
+# $Id: UasStateTrying.py,v 1.7 2009/11/19 13:06:18 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, CCEventDisconnect
 from SipContact import SipContact
 from SipAddress import SipAddress
+from Timeout import TimeoutAbs
 
 class UasStateTrying(UaStateGeneric):
     sname = 'Trying(UAS)'
@@ -49,6 +50,10 @@ class UasStateTrying(UaStateGeneric):
             if self.ua.no_progress_timer != None:
                 self.ua.no_progress_timer.cancel()
                 self.ua.no_progress_timer = None
+                if self.ua.expire_time != None:
+                    self.ua.expire_timer = TimeoutAbs(self.ua.expires, self.ua.expire_time)
+            if self.ua.p1xx_ts == None:
+                self.ua.p1xx_ts = event.rtime
             return (UasStateRinging, self.ua.ring_cbs, event.rtime, event.origin, code)
         elif isinstance(event, CCEventConnect):
             code, reason, body = event.getData()
@@ -63,6 +68,8 @@ class UasStateTrying(UaStateGeneric):
             if self.ua.no_progress_timer != None:
                 self.ua.no_progress_timer.cancel()
                 self.ua.no_progress_timer = None
+            self.ua.startCreditTimer(event.rtime)
+            self.ua.connect_ts = event.rtime
             return (UaStateConnected, self.ua.conn_cbs, event.rtime, event.origin)
         elif isinstance(event, CCEventRedirect):
             scode = event.getData()
@@ -75,6 +82,7 @@ class UasStateTrying(UaStateGeneric):
             if self.ua.no_progress_timer != None:
                 self.ua.no_progress_timer.cancel()
                 self.ua.no_progress_timer = None
+            self.ua.disconnect_ts = event.rtime
             return (UaStateFailed, self.ua.fail_cbs, event.rtime, event.origin, scode[0])
         elif isinstance(event, CCEventFail):
             scode = event.getData()
@@ -87,6 +95,7 @@ class UasStateTrying(UaStateGeneric):
             if self.ua.no_progress_timer != None:
                 self.ua.no_progress_timer.cancel()
                 self.ua.no_progress_timer = None
+            self.ua.disconnect_ts = event.rtime
             return (UaStateFailed, self.ua.fail_cbs, event.rtime, event.origin, scode[0])
         elif isinstance(event, CCEventDisconnect):
             #import sys, traceback
@@ -98,11 +107,13 @@ class UasStateTrying(UaStateGeneric):
             if self.ua.no_progress_timer != None:
                 self.ua.no_progress_timer.cancel()
                 self.ua.no_progress_timer = None
+            self.ua.disconnect_ts = event.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin, self.ua.last_scode)
         #print 'wrong event %s in the Trying state' % event
         return None
 
     def cancel(self, rtime, req):
+        self.ua.disconnect_ts = rtime
         self.ua.changeState((UaStateDisconnected, self.ua.disc_cbs, rtime, self.ua.origin))
         event = CCEventDisconnect(rtime = rtime, origin = self.ua.origin)
         if req != None and req.countHFs('reason') > 0:
