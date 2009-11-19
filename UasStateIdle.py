@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateIdle.py,v 1.9 2009/08/18 01:16:47 sobomax Exp $
+# $Id: UasStateIdle.py,v 1.10 2009/11/19 02:09:30 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -64,12 +64,12 @@ class UasStateIdle(UaStateGeneric):
         else:
             self.ua.rAddr = self.ua.rTarget.getAddr()
         self.ua.rAddr0 = self.ua.rAddr
-        self.ua.global_config['sip_tm'].sendResponse(self.ua.uasResp)
+        self.ua.global_config['_sip_tm'].sendResponse(self.ua.uasResp)
         self.ua.uasResp.getHFBody('to').setTag(self.ua.lTag)
         self.ua.lUri = SipFrom(address = self.ua.uasResp.getHFBody('to').getUri())
         self.ua.rUri = SipTo(address = self.ua.uasResp.getHFBody('from').getUri())
         self.ua.cId = self.ua.uasResp.getHFBody('call-id')
-        self.ua.global_config['sip_tm'].regConsumer(self.ua, str(self.ua.cId))
+        self.ua.global_config['_sip_tm'].regConsumer(self.ua, str(self.ua.cId))
         if req.countHFs('authorization') == 0:
             auth = None
         else:

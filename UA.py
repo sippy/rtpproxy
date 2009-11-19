@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UA.py,v 1.16 2009/11/03 11:26:14 sobomax Exp $
+# $Id: UA.py,v 1.17 2009/11/19 02:09:30 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization
@@ -160,7 +160,7 @@ class UA(object):
             challenge = resp.getHFBody('www-authenticate')
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm())
             self.lCSeq += 1
-            self.tr = self.global_config['sip_tm'].newTransaction(req, self.recvResponse)
+            self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse)
             del self.reqs[cseq]
             return None
         if method == 'INVITE' and self.reqs.has_key(cseq) and code == 407 and resp.countHFs('proxy-authenticate') != 0 and \
@@ -168,7 +168,7 @@ class UA(object):
             challenge = resp.getHFBody('proxy-authenticate')
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm(), SipProxyAuthorization)
             self.lCSeq += 1
-            self.tr = self.global_config['sip_tm'].newTransaction(req, self.recvResponse)
+            self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse)
             del self.reqs[cseq]
             return None
         if code >= 200 and self.reqs.has_key(cseq):
@@ -269,7 +269,7 @@ class UA(object):
             self.uasResp.appendHeader(SipHeader(name = 'contact', body = contact))
         if reason_rfc3326 != None:
             self.uasResp.appendHeader(SipHeader(body = reason_rfc3326))
-        self.global_config['sip_tm'].sendResponse(self.uasResp)
+        self.global_config['_sip_tm'].sendResponse(self.uasResp)
 
     def isYours(self, req = None, call_id = None, from_tag = None, to_tag = None):
         #print self.branch, req.getHFBody('via').getBranch()

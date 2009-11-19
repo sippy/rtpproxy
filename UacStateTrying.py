@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateTrying.py,v 1.9 2009/09/01 16:59:20 sobomax Exp $
+# $Id: UacStateTrying.py,v 1.10 2009/11/19 02:09:30 sobomax Exp $
 
 from Timeout import Timeout
 from SipAddress import SipAddress
@@ -102,7 +102,7 @@ class UacStateTrying(UaStateGeneric):
 
     def recvEvent(self, event):
         if isinstance(event, CCEventFail) or isinstance(event, CCEventRedirect) or isinstance(event, CCEventDisconnect):
-            self.ua.global_config['sip_tm'].cancelTransaction(self.ua.tr, reason = event.reason)
+            self.ua.global_config['_sip_tm'].cancelTransaction(self.ua.tr, reason = event.reason)
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None

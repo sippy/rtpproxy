@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_session.py,v 1.18 2009/11/03 11:26:14 sobomax Exp $
+# $Id: Rtp_proxy_session.py,v 1.19 2009/11/19 02:09:30 sobomax Exp $
 
 from SdpOrigin import SdpOrigin
 
@@ -53,8 +53,8 @@ class Rtp_proxy_session(object):
     def __init__(self, global_config, call_id = None, from_tag = None, to_tag = None,
       notify_socket = None, notify_tag = None):
         self.global_config = global_config
-        if global_config.has_key('rtp_proxy_clients'):
-            rtp_proxy_clients = [x for x in global_config['rtp_proxy_clients'] if x.online]
+        if global_config.has_key('_rtp_proxy_clients'):
+            rtp_proxy_clients = [x for x in global_config['_rtp_proxy_clients'] if x.online]
             n = len(rtp_proxy_clients)
             if n == 0:
                 raise Exception('No online RTP proxy client has been found')
@@ -169,7 +169,7 @@ class Rtp_proxy_session(object):
         self.max_index = max(self.max_index, index)
         if self.rtp_proxy_client.sbind_supported and self.caller_raddress != None:
             if self.rtp_proxy_client.is_local:
-                options += 'L%s' % self.global_config['sip_tm'].l4r.getServer( \
+                options += 'L%s' % self.global_config['_sip_tm'].l4r.getServer( \
                   self.caller_raddress).laddress[0]
             else:
                 options += 'R%s' % self.caller_raddress[0]
@@ -185,7 +185,7 @@ class Rtp_proxy_session(object):
         self.max_index = max(self.max_index, index)
         if self.rtp_proxy_client.sbind_supported and self.callee_raddress != None:
             if self.rtp_proxy_client.is_local:
-                options += 'L%s' % self.global_config['sip_tm'].l4r.getServer( \
+                options += 'L%s' % self.global_config['_sip_tm'].l4r.getServer( \
                   self.callee_raddress).laddress[0]
             else:
                 options += 'R%s' % self.callee_raddress[0]

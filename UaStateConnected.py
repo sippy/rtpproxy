@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateConnected.py,v 1.10 2009/11/19 01:51:27 sobomax Exp $
+# $Id: UaStateConnected.py,v 1.11 2009/11/19 02:09:30 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -52,16 +52,16 @@ class UaStateConnected(UaStateGeneric):
     def recvRequest(self, req):
         if req.getMethod() == 'REFER':
             if req.countHFs('refer-to') == 0:
-                self.ua.global_config['sip_tm'].sendResponse(req.genResponse(400, 'Bad Request'))
+                self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(400, 'Bad Request'))
                 return None
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
             also = req.getHFBody('refer-to').getUrl().getCopy()
             self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin))
             self.ua.recvEvent(CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin))
             return None
         if req.getMethod() == 'INVITE':
             self.ua.uasResp = req.genResponse(100, 'Trying')
-            self.ua.global_config['sip_tm'].sendResponse(self.ua.uasResp)
+            self.ua.global_config['_sip_tm'].sendResponse(self.ua.uasResp)
             body = req.getBody()
             if body == None:
                 # Some brain-damaged stacks use body-less re-INVITE as a means
@@ -72,7 +72,7 @@ class UaStateConnected(UaStateGeneric):
                 for sect in body.content.sections:
                     sect.c_header.addr = '0.0.0.0'
             elif str(self.ua.rSDP) == str(body):
-                self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK', self.ua.lSDP))
+                self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK', self.ua.lSDP))
                 return None
             event = CCEventUpdate(body, rtime = req.rtime, origin = self.ua.origin)
             if req.countHFs('reason') > 0:
@@ -88,7 +88,7 @@ class UaStateConnected(UaStateGeneric):
             self.ua.equeue.append(event)
             return (UasStateUpdating,)
         if req.getMethod() == 'BYE':
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Connected state, going to the Disconnected state'
             if req.countHFs('also') > 0:
                 also = req.getHFBody('also').getUrl().getCopy()
@@ -106,14 +106,14 @@ class UaStateConnected(UaStateGeneric):
                     self.ua.warn_timer = None
             return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         if req.getMethod() == 'INFO':
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             event = CCEventInfo(req.getBody(), rtime = req.rtime, origin = self.ua.origin)
             if req.countHFs('reason') > 0:
                 event.reason = req.getHFBody('reason')
             self.ua.equeue.append(event)
             return None
         if req.getMethod() == 'OPTIONS':
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             return None
         #print 'wrong request %s in the state Connected' % req.getMethod()
         return None
@@ -132,14 +132,14 @@ class UaStateConnected(UaStateGeneric):
                 req.appendHeader(SipHeader(name = 'refer-to', body = also))
                 rby = SipReferredBy(address = SipAddress(url = self.ua.lUri.getUrl()))
                 req.appendHeader(SipHeader(name = 'referred-by', body = rby))
-                self.ua.global_config['sip_tm'].newTransaction(req, self.rComplete)
+                self.ua.global_config['_sip_tm'].newTransaction(req, self.rComplete)
             else:
                 req = self.ua.genRequest('BYE', reason = event.reason)
                 self.ua.lCSeq += 1
                 if redirect != None:
                     also = SipAlso(address = SipAddress(url = redirect))
                     req.appendHeader(SipHeader(name = 'also', body = also))
-                self.ua.global_config['sip_tm'].newTransaction(req)
+                self.ua.global_config['_sip_tm'].newTransaction(req)
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None
@@ -163,14 +163,14 @@ class UaStateConnected(UaStateGeneric):
             req = self.ua.genRequest('INVITE', body, reason = event.reason)
             self.ua.lCSeq += 1
             self.ua.lSDP = body
-            self.ua.tr = self.ua.global_config['sip_tm'].newTransaction(req, self.ua.recvResponse)
+            self.ua.tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.ua.recvResponse)
             return (UacStateUpdating,)
         if isinstance(event, CCEventInfo):
             body = event.getData()
             req = self.ua.genRequest('INFO', reason = event.reason)
             req.setBody(body)
             self.ua.lCSeq += 1
-            self.ua.global_config['sip_tm'].newTransaction(req, None)
+            self.ua.global_config['_sip_tm'].newTransaction(req, None)
             return None
         #print 'wrong event %s in the Connected state' % event
         return None
@@ -183,7 +183,7 @@ class UaStateConnected(UaStateGeneric):
         req = self.ua.genRequest('INVITE', self.ua.lSDP)
         self.ua.lCSeq += 1
         self.triedauth = False
-        self.ka_tr = self.ua.global_config['sip_tm'].newTransaction(req, self.keepAliveResp)
+        self.ka_tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.keepAliveResp)
 
     def keepAliveResp(self, resp):
         if self.ua.state != self:
@@ -194,7 +194,7 @@ class UaStateConnected(UaStateGeneric):
             challenge = resp.getHFBody('www-authenticate')
             req = self.ua.genRequest('INVITE', self.ua.lSDP, challenge.getNonce(), challenge.getRealm())
             self.ua.lCSeq += 1
-            self.ka_tr = self.ua.global_config['sip_tm'].newTransaction(req, self.keepAliveResp)
+            self.ka_tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.keepAliveResp)
             self.triedauth = True
             return
         if code == 407 and resp.countHFs('proxy-authenticate') != 0 and \
@@ -202,7 +202,7 @@ class UaStateConnected(UaStateGeneric):
             challenge = resp.getHFBody('proxy-authenticate')
             req = self.ua.genRequest('INVITE', self.ua.lSDP, challenge.getNonce(), challenge.getRealm(), SipProxyAuthorization)
             self.ua.lCSeq += 1
-            self.ka_tr = self.ua.global_config['sip_tm'].newTransaction(req, self.keepAliveResp)
+            self.ka_tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.keepAliveResp)
             self.triedauth = True
             return
         if code < 200:
@@ -221,13 +221,13 @@ class UaStateConnected(UaStateGeneric):
 
     def onStateChange(self, newstate):
         if self.ka_tr != None:
-            self.ua.global_config['sip_tm'].cancelTransaction(self.ka_tr)
+            self.ua.global_config['_sip_tm'].cancelTransaction(self.ka_tr)
             self.ka_tr = None
 
     def rComplete(self, resp):
         req = self.ua.genRequest('BYE')
         self.ua.lCSeq += 1
-        self.ua.global_config['sip_tm'].newTransaction(req)
+        self.ua.global_config['_sip_tm'].newTransaction(req)
 
 if not globals().has_key('UaStateDisconnected'):
     from UaStateDisconnected import UaStateDisconnected

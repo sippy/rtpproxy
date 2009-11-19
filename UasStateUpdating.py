@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateUpdating.py,v 1.8 2009/08/31 12:26:35 sobomax Exp $
+# $Id: UasStateUpdating.py,v 1.9 2009/11/19 02:09:30 sobomax Exp $
 
 from SipContact import SipContact
 from SipAddress import SipAddress
@@ -35,11 +35,11 @@ class UasStateUpdating(UaStateGeneric):
 
     def recvRequest(self, req):
         if req.getMethod() == 'INVITE':
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(491, 'Request Pending'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(491, 'Request Pending'))
             return None
         elif req.getMethod() == 'BYE':
             self.ua.sendUasResponse(487, 'Request Terminated')
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Updating state, going to the Disconnected state'
             event = CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin)
             if req.countHFs('reason') > 0:
@@ -54,10 +54,10 @@ class UasStateUpdating(UaStateGeneric):
             return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         elif req.getMethod() == 'REFER':
             if req.countHFs('refer-to') == 0:
-                self.ua.global_config['sip_tm'].sendResponse(req.genResponse(400, 'Bad Request'))
+                self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(400, 'Bad Request'))
                 return None
             self.ua.sendUasResponse(487, 'Request Terminated')
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
             also = req.getHFBody('refer-to').getUrl().getCopy()
             self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin))
             if self.ua.credit_timer != None:
@@ -106,7 +106,7 @@ class UasStateUpdating(UaStateGeneric):
             self.ua.sendUasResponse(487, 'Request Terminated', reason_rfc3326 = event.reason)
             req = self.ua.genRequest('BYE', reason = event.reason)
             self.ua.lCSeq += 1
-            self.ua.global_config['sip_tm'].newTransaction(req)
+            self.ua.global_config['_sip_tm'].newTransaction(req)
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None
@@ -120,7 +120,7 @@ class UasStateUpdating(UaStateGeneric):
     def cancel(self, rtime, req):
         req = self.ua.genRequest('BYE')
         self.ua.lCSeq += 1
-        self.ua.global_config['sip_tm'].newTransaction(req)
+        self.ua.global_config['_sip_tm'].newTransaction(req)
         if self.ua.credit_timer != None:
             self.ua.credit_timer.cancel()
             self.ua.credit_timer = None

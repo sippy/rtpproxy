@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: RadiusAuthorisation.py,v 1.3 2008/09/24 09:25:38 sobomax Exp $
+# $Id: RadiusAuthorisation.py,v 1.4 2009/11/19 02:09:30 sobomax Exp $
 
 from Radius_client import Radius_client
 from time import time
@@ -47,7 +47,7 @@ class RadiusAuthorisation(Radius_client):
                 attributes.append((a, v))
         message = 'sending AAA request:\n' 
         message += reduce(lambda x, y: x + y, ['%-32s = \'%s\'\n' % (x[0], str(x[1])) for x in attributes])
-        self.global_config['sip_logger'].write(message, call_id = sip_cid)
+        self.global_config['_sip_logger'].write(message, call_id = sip_cid)
         Radius_client.do_auth(self, attributes, self._process_result, res_cb, sip_cid, time())
 
     def _process_result(self, results, res_cb, sip_cid, btime):
@@ -62,5 +62,5 @@ class RadiusAuthorisation(Radius_client):
                 message += reduce(lambda x, y: x + y, ['%-32s = \'%s\'\n' % x for x in results[0]])
         else:
             message = 'Error sending AAA request (delay is %.3f)\n' % delay
-        self.global_config['sip_logger'].write(message, call_id = sip_cid)
+        self.global_config['_sip_logger'].write(message, call_id = sip_cid)
         res_cb(results)

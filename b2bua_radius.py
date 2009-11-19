@@ -24,10 +24,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.59 2009/11/18 04:03:56 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.60 2009/11/19 02:09:30 sobomax Exp $
 
-#import sys
-#sys.path.append('..')
+import sys
+sys.path.append('..')
 
 from sippy.Timeout import Timeout
 from sippy.Signal import Signal
@@ -57,6 +57,7 @@ from re import sub
 from time import time
 from urllib import quote
 from hashlib import md5
+from MyConfigParser import MyConfigParser
 
 def re_replace(ptrn, s):
     s = s.split('#', 1)[0]
@@ -117,7 +118,7 @@ class CallController(object):
         self.global_config = global_config
         self.uaA = UA(self.global_config, event_cb = self.recvEvent, conn_cbs = (self.aConn,), disc_cbs = (self.aDisc,), \
           fail_cbs = (self.aDisc,), dead_cbs = (self.aDead,))
-        self.uaA.kaInterval = self.global_config['ka_ans']
+        self.uaA.kaInterval = self.global_config['keepalive_ans']
         self.state = CCStateIdle
         self.uaO = None
         self.routes = []
@@ -142,14 +143,14 @@ class CallController(object):
                     self.uaA.recvEvent(CCEventFail((500, 'Body-less INVITE is not supported'), rtime = event.rtime))
                     self.state = CCStateDead
                     return
-                if self.global_config.has_key('allowed_pts'):
+                if self.global_config.has_key('_allowed_pts'):
                     try:
                         body.parse()
                     except:
                         self.uaA.recvEvent(CCEventFail((400, 'Malformed SDP Body'), rtime = event.rtime))
                         self.state = CCStateDead
                         return
-                    allowed_pts = self.global_config['allowed_pts']
+                    allowed_pts = self.global_config['_allowed_pts']
                     mbody = body.content.sections[0].m_header
                     if mbody.transport.lower() == 'rtp/avp':
                         mbody.formats = [x for x in mbody.formats if x in allowed_pts]
@@ -164,7 +165,7 @@ class CallController(object):
                 if self.global_config.has_key('static_tr_in'):
                     self.cld = re_replace(self.global_config['static_tr_in'], self.cld)
                     event.data = (self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name)
-                if self.global_config.has_key('rtp_proxy_clients'):
+                if self.global_config.has_key('_rtp_proxy_clients'):
                     self.rtp_proxy_session = Rtp_proxy_session(self.global_config, call_id = self.cId, \
                       notify_socket = global_config['b2bua_socket'], \
                       notify_tag = quote('r %s' % str(self.id)))
@@ -176,11 +177,11 @@ class CallController(object):
                     self.rDone(((), 0))
                 elif auth == None or auth.username == None or len(auth.username) == 0:
                     self.username = self.remote_ip
-                    self.auth_proc = self.global_config['radius_client'].do_auth(self.remote_ip, self.cli, self.cld, self.cGUID, \
+                    self.auth_proc = self.global_config['_radius_client'].do_auth(self.remote_ip, self.cli, self.cld, self.cGUID, \
                       self.cId, self.remote_ip, self.rDone)
                 else:
                     self.username = auth.username
-                    self.auth_proc = self.global_config['radius_client'].do_auth(auth.username, self.cli, self.cld, self.cGUID, 
+                    self.auth_proc = self.global_config['_radius_client'].do_auth(auth.username, self.cli, self.cld, self.cGUID, 
                       self.cId, self.remote_ip, self.rDone, auth.realm, auth.nonce, auth.uri, auth.response)
                 return
             if self.state not in (CCStateARComplete, CCStateConnected, CCStateDisconnecting) or self.uaO == None:
@@ -363,11 +364,11 @@ class CallController(object):
             body = body.getCopy()
             body.content += 'a=nortpproxy:yes\r\n'
             self.proxied = True
-        self.uaO.kaInterval = self.global_config['ka_orig']
+        self.uaO.kaInterval = self.global_config['keepalive_orig']
         if parameters.has_key('group_timeout'):
             timeout, skipto = parameters['group_timeout']
             Timeout(self.group_expires, timeout, 1, skipto)
-        if self.global_config.get('hide_call_id', False):
+        if self.global_config.getdefault('hide_call_id', False):
             cId = SipCallId(md5(str(cId)).hexdigest() + ('-b2b_%d' % rnum))
         else:
             cId += '-b2b_%d' % rnum
@@ -401,19 +402,19 @@ class CallController(object):
 
     def aDead(self, ua):
         if (self.uaO == None or isinstance(self.uaO.state, UaStateDead)):
-            if self.global_config['cmap'].debug_mode:
+            if self.global_config['_cmap'].debug_mode:
                 print 'garbadge collecting', self
             self.acctA = None
             self.acctO = None
-            self.global_config['cmap'].ccmap.remove(self)
+            self.global_config['_cmap'].ccmap.remove(self)
 
     def oDead(self, ua):
         if ua == self.uaO and isinstance(self.uaA.state, UaStateDead):
-            if self.global_config['cmap'].debug_mode:
+            if self.global_config['_cmap'].debug_mode:
                 print 'garbadge collecting', self
             self.acctA = None
             self.acctO = None
-            self.global_config['cmap'].ccmap.remove(self)
+            self.global_config['_cmap'].ccmap.remove(self)
 
     def group_expires(self, skipto):
         if self.state != CCStateARComplete or len(self.routes) == 0 or self.routes[0][0] > skipto or \
@@ -465,8 +466,8 @@ class CallMap(object):
             source = req.getSource()
 
             if self.global_config['auth_enable']:
-                if not self.global_config.has_key('accept_ips') or \
-                  source[0] not in self.global_config['accept_ips']:
+                if not self.global_config.has_key('_accept_ips') or \
+                  source[0] not in self.global_config['_accept_ips']:
                     if not self.global_config['digest_auth']:
                         return (req.genResponse(403, 'Forbidden'), None, None)
                     if req.countHFs('authorization') == 0:
@@ -477,7 +478,7 @@ class CallMap(object):
                         return (resp, None, None)
 
             pass_headers = []
-            for header in self.global_config['pass_headers']:
+            for header in self.global_config['_pass_headers']:
                 hfs = req.getHFs(header)
                 if len(hfs) > 0:
                     pass_headers.extend(hfs)
@@ -510,7 +511,7 @@ class CallMap(object):
     def GClector(self):
         print 'GC is invoked, %d calls in map' % len(self.ccmap)
         if self.debug_mode:
-            print self.global_config['sip_tm'].tclient, self.global_config['sip_tm'].tserver
+            print self.global_config['_sip_tm'].tclient, self.global_config['_sip_tm'].tserver
             for cc in tuple(self.ccmap):
                 try:
                     print cc.uaA.state, cc.uaO.state
@@ -518,13 +519,13 @@ class CallMap(object):
                     print None
         else:
             print '%d client, %d server transactions in memory' % \
-              (len(self.global_config['sip_tm'].tclient), len(self.global_config['sip_tm'].tserver))
+              (len(self.global_config['_sip_tm'].tclient), len(self.global_config['_sip_tm'].tserver))
         if self.safe_restart:
             if len(self.ccmap) == 0:
-                self.global_config['sip_tm'].userv.close()
-                os.chdir(self.global_config['orig_cwd'])
+                self.global_config['_sip_tm'].userv.close()
+                os.chdir(self.global_config['_orig_cwd'])
                 argv = [sys.executable,]
-                argv.extend(self.global_config['orig_argv'])
+                argv.extend(self.global_config['_orig_argv'])
                 os.execv(sys.executable, argv)
                 # Should not reach this point!
             self.el.ival = 1
@@ -597,48 +598,56 @@ def reopen(signum, logfile):
     os.dup2(fd, sys.__stderr__.fileno())
     os.close(fd)
 
-def usage():
-    print 'usage: b2bua.py [-fDSH] [-l addr] [-p port] [-P pidfile] [-L logfile] ' \
-      '[-s static_route] [-a ip1[,..[,ipN]]] [-t static_tr_in] [-T static_tr_out]' \
-      '[-r rtp_proxy_contact1] [-r rtp_proxy_contact2] [-r rtp_proxy_contactN] ' \
-      '[-k 0-3] [-m max_ctime] [-A 0-2] [-F pt1[,..[,ptN]]] [-R radiusclient_conf] ' \
-      '[-c cmdfile]'
+def usage(global_config):
+    print 'usage: b2bua.py [--option1=value1] [--option2=value2] ... [--optionN==valueN]\n\navailable options:\n'
+    global_config.options_help()
     sys.exit(1)
 
 if __name__ == '__main__':
-    global_config = {'orig_argv':sys.argv[:], 'orig_cwd':os.getcwd(), 'digest_auth':True, 'start_acct_enable':False, 'ka_ans':0, 'ka_orig':0, 'auth_enable':True, 'acct_enable':True, 'pass_headers':[]}
+    global_config = MyConfigParser()
+    global_config['digest_auth'] = True
+    global_config['start_acct_enable'] = False
+    global_config['keepalive_ans'] = 0
+    global_config['keepalive_orig'] = 0
+    global_config['auth_enable'] = True
+    global_config['acct_enable'] = True
+    global_config['_pass_headers'] = []
+    global_config['_orig_argv'] = sys.argv[:]
+    global_config['_orig_cwd'] = os.getcwd()
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:c:M:H')
+        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:c:M:HC:W:',
+          global_config.get_longopts())
     except getopt.GetoptError:
-        usage()
-    laddr = None
-    lport = None
-    foreground = False
-    pidfile = '/var/run/b2bua.pid'
-    logfile = '/var/log/b2bua.log'
-    cmdfile = '/var/run/b2bua.sock'
+        usage(global_config)
+    global_config['foreground'] = False
+    global_config['pidfile'] = '/var/run/b2bua.pid'
+    global_config['logfile'] = '/var/log/b2bua.log'
+    global_config['b2bua_socket'] = '/var/run/b2bua.sock'
+    global_config['_sip_address'] = SipConf.my_address
+    global_config['_sip_port'] = SipConf.my_port
     rtp_proxy_clients = []
+    writeconf = None
     for o, a in opts:
         if o == '-f':
-            foreground = True
+            global_config['foreground'] = True
             continue
         if o == '-l':
-            laddr = a
+            global_config.check_and_set('sip_address', a)
             continue
         if o == '-p':
-            lport = int(a)
+            global_config.check_and_set('sip_port', a)
             continue
         if o == '-P':
-            pidfile = a.strip()
+            global_config.check_and_set('pidfile', a)
             continue
         if o == '-L':
-            logfile = a.strip()
+            global_config.check_and_set('logfile', a)
             continue
         if o == '-s':
-            global_config['static_route'] = a.strip()
+            global_config.check_and_set('static_route', a)
             continue
         if o == '-a':
-            global_config['accept_ips'] = a.strip().split(',')
+            global_config.check_and_set('accept_ips', a)
             continue
         if o == '-D':
             global_config['digest_auth'] = False
@@ -659,36 +668,65 @@ if __name__ == '__main__':
                 usage()
             continue
         if o == '-t':
-            global_config['static_tr_in'] = a.strip()
+            global_config.check_and_set('static_tr_in', a)
             continue
         if o == '-T':
-            global_config['static_tr_out'] = a.strip()
+            global_config.check_and_set('static_tr_out', a)
             continue
         if o == '-k':
             ka_level = int(a.strip())
             if ka_level == 0:
                 pass
             elif ka_level == 1:
-                global_config['ka_ans'] = 32
+                global_config['keepalive_ans'] = 32
             elif ka_level == 2:
-                global_config['ka_orig'] = 32
+                global_config['keepalive_orig'] = 32
             elif ka_level == 3:
-                global_config['ka_ans'] = 32
-                global_config['ka_orig'] = 32
+                global_config['keepalive_ans'] = 32
+                global_config['keepalive_orig'] = 32
             else:
                 sys.__stderr__.write('ERROR: -k argument not in the range 0-3')
                 usage()
         if o == '-m':
-            global_config['max_credit_time'] = int(a)
-            if global_config['max_credit_time'] < 0:
-                global_config['max_credit_time'] = None
-            elif global_config['max_credit_time'] == 0:
-                sys.__stderr__.write("WARNING: max_ctime is 0, all outgoing calls will be immediately disconnected!\n")
+            global_config.check_and_set('max_credit_time', a)
             continue
         if o == '-u':
             global_config['auth_enable'] = False
             continue
         if o == '-r':
+            global_config.check_and_set('rtp_proxy_client', a)
+            continue
+        if o == '-F':
+            global_config.check_and_set('allowed_pts', a)
+            continue
+        if o == '-R':
+            global_config.check_and_set('radiusclient.conf', a)
+            continue
+        if o == '-h':
+            for a in a.split(','):
+                global_config.check_and_set('pass_header', a)
+            continue
+        if o == '-c':
+            global_config.check_and_set('b2bua_socket', a)
+            continue
+        if o == '-M':
+            global_config.check_and_set('max_radiusclients', a)
+            continue
+        if o == '-H':
+            global_config['hide_call_id'] = True
+            continue
+        if o in ('-C', '--config'):
+            global_config.read(a.strip())
+            continue
+        if o.startswith('--'):
+            global_config.check_and_set(o[2:], a)
+            continue
+        if o == '-W':
+            writeconf = a.strip()
+            continue
+
+    if global_config.has_key('_rtp_proxy_clients'):
+        for a in global_config['_rtp_proxy_clients']:
             if a.startswith('udp:'):
                 from sippy.Rtp_proxy_client_udp import Rtp_proxy_client_udp
                 a = a.split(':', 2)
@@ -700,30 +738,15 @@ if __name__ == '__main__':
             else:
                 from sippy.Rtp_proxy_client_local import Rtp_proxy_client_local
                 rtp_proxy_clients.append((Rtp_proxy_client_local, a))
-        if o == '-F':
-            global_config['allowed_pts'] = [int(x) for x in a.split(',')]
-            continue
-        if o == '-R':
-            global_config['radiusclient.conf'] = a.strip()
-            continue
-        if o == '-h':
-            global_config['pass_headers'].extend(a.split(','))
-            continue
-        if o == '-c':
-            cmdfile = a.strip()
-            continue
-        if o == '-M':
-            global_config['max_radiusclients'] = int(a.strip())
-            continue
-        if o == '-H':
-            global_config['hide_call_id'] = True
-            continue
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):
         sys.__stderr__.write('ERROR: static route should be specified when Radius auth is disabled')
         usage()
 
-    if not foreground:
+    if writeconf != None:
+        global_config.write(open(writeconf, 'w'))
+
+    if not global_config['foreground']:
         #print 'foobar'
         # Fork once
         if os.fork() != 0:
@@ -736,39 +759,33 @@ if __name__ == '__main__':
         fd = os.open('/dev/null', os.O_RDONLY)
         os.dup2(fd, sys.__stdin__.fileno())
         os.close(fd)
-        fd = os.open(logfile, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
+        fd = os.open(global_config['logfile'], os.O_WRONLY | os.O_CREAT | os.O_APPEND)
         os.dup2(fd, sys.__stdout__.fileno())
         os.dup2(fd, sys.__stderr__.fileno())
         os.close(fd)
 
-    global_config['sip_address'] = SipConf.my_address
-    global_config['sip_port'] = SipConf.my_port
-    if laddr != None:
-        global_config['sip_address'] = laddr
-    if lport != None:
-        global_config['sip_port'] = lport
-    global_config['sip_logger'] = SipLogger('b2bua')
+    global_config['_sip_logger'] = SipLogger('b2bua')
 
     if len(rtp_proxy_clients) > 0:
-        global_config['rtp_proxy_clients'] = []
+        global_config['_rtp_proxy_clients'] = []
         for Rtp_proxy_client, address in rtp_proxy_clients:
-            global_config['rtp_proxy_clients'].append(Rtp_proxy_client(global_config, address))
+            global_config['_rtp_proxy_clients'].append(Rtp_proxy_client(global_config, address))
 
     if global_config['auth_enable'] or global_config['acct_enable']:
-        global_config['radius_client'] = RadiusAuthorisation(global_config)
+        global_config['_radius_client'] = RadiusAuthorisation(global_config)
     SipConf.my_uaname = 'Sippy B2BUA (RADIUS)'
 
-    global_config['cmap'] = CallMap(global_config)
+    global_config['_cmap'] = CallMap(global_config)
 
-    global_config['sip_tm'] = SipTransactionManager(global_config, global_config['cmap'].recvRequest)
+    global_config['_sip_tm'] = SipTransactionManager(global_config, global_config['_cmap'].recvRequest)
 
-    global_config['b2bua_socket'] = cmdfile
+    cmdfile = global_config['b2bua_socket']
     if cmdfile.startswith('unix:'):
         cmdfile = cmdfile[5:]
-    cli_server = Cli_server_local(global_config['cmap'].recvCommand, cmdfile)
+    cli_server = Cli_server_local(global_config['_cmap'].recvCommand, cmdfile)
 
-    if not foreground:
-        file(pidfile, 'w').write(str(os.getpid()) + '\n')
-        Signal(SIGUSR1, reopen, SIGUSR1, logfile)
+    if not global_config['foreground']:
+        file(global_config['pidfile'], 'w').write(str(os.getpid()) + '\n')
+        Signal(SIGUSR1, reopen, SIGUSR1, global_config['logfile'])
 
     reactor.run(installSignalHandlers = True)

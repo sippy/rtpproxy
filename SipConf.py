@@ -22,11 +22,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipConf.py,v 1.6 2009/08/15 22:04:17 sobomax Exp $
+# $Id: SipConf.py,v 1.7 2009/11/19 02:09:30 sobomax Exp $
 
 from socket import gethostbyname, gethostname
 
 class MyAddress(object):
+    my = True
+
     def __str__(self):
         try:
             return gethostbyname(gethostname())
@@ -34,6 +36,7 @@ class MyAddress(object):
             return '127.0.0.1'
 
 class MyPort(object):
+    my = True
     default_port = None
 
     def __init__(self, default_port):

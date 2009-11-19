@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: RadiusAccounting.py,v 1.7 2009/11/18 04:08:27 sobomax Exp $
+# $Id: RadiusAccounting.py,v 1.8 2009/11/19 02:09:30 sobomax Exp $
 
 from time import time, strftime, gmtime
 from Timeout import Timeout
@@ -142,8 +142,8 @@ class RadiusAccounting(object):
         attributes.append(('Acct-Status-Type', type))
         pattributes = ['%-32s = \'%s\'\n' % (x[0], str(x[1])) for x in attributes]
         pattributes.insert(0, 'sending Acct %s (%s):\n' % (type, self.origin.capitalize()))
-        self.global_config['sip_logger'].write(call_id = self.sip_cid, *pattributes)
-        self.global_config['radius_client'].do_acct(attributes, self._process_result, self.sip_cid, time())
+        self.global_config['_sip_logger'].write(call_id = self.sip_cid, *pattributes)
+        self.global_config['_radius_client'].do_acct(attributes, self._process_result, self.sip_cid, time())
 
     def ftime(self, t):
         gt = gmtime(t)
@@ -166,4 +166,4 @@ class RadiusAccounting(object):
                 message = 'Acct/%s request rejected (delay is %.3f)\n' % (self.origin, delay)
         else:
             message = 'Error sending Acct/%s request (delay is %.3f)\n' % (self.origin, delay)
-        self.global_config['sip_logger'].write(message, call_id = sip_cid)
+        self.global_config['_sip_logger'].write(message, call_id = sip_cid)

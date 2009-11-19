@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateRinging.py,v 1.6 2009/08/31 12:26:35 sobomax Exp $
+# $Id: UasStateRinging.py,v 1.7 2009/11/19 02:09:30 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, CCEventDisconnect
@@ -92,7 +92,7 @@ class UasStateRinging(UaStateGeneric):
     def recvRequest(self, req):
         if req.getMethod() == 'BYE':
             self.ua.sendUasResponse(487, 'Request Terminated')
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Ringing state, going to the Disconnected state'
             if req.countHFs('also') > 0:
                 also = req.getHFBody('also').getUrl().getCopy()

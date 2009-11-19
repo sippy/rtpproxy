@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateCancelling.py,v 1.5 2008/11/26 19:46:41 sobomax Exp $
+# $Id: UacStateCancelling.py,v 1.6 2009/11/19 02:09:30 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -85,7 +85,7 @@ class UacStateCancelling(UaStateGeneric):
             self.ua.rUri.setTag(resp.getHFBody('to').getTag())
             req = self.ua.genRequest('BYE')
             self.ua.lCSeq += 1
-            self.ua.global_config['sip_tm'].newTransaction(req)
+            self.ua.global_config['_sip_tm'].newTransaction(req)
             return (UaStateDisconnected,)
         return (UaStateDead,)
 

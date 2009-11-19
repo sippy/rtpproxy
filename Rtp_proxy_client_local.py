@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Rtp_proxy_client_local.py,v 1.9 2009/08/17 02:08:39 sobomax Exp $
+# $Id: Rtp_proxy_client_local.py,v 1.10 2009/11/19 02:09:30 sobomax Exp $
 
 from Timeout import Timeout
 from errno import EINTR
@@ -42,7 +42,7 @@ class Rtp_proxy_client_local(object):
 
     def __init__(self, global_config, address = '/var/run/rtpproxy.sock'):
         self.address = address
-        self.proxy_address = global_config['sip_address']
+        self.proxy_address = global_config['_sip_address']
         self.heartbeat()
 
     def send_command(self, command, result_callback = None, *callback_parameters):

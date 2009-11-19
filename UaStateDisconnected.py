@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateDisconnected.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
+# $Id: UaStateDisconnected.py,v 1.4 2009/11/19 02:09:30 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -39,9 +39,9 @@ class UaStateDisconnected(UaStateGeneric):
     def recvRequest(self, req):
         if req.getMethod() == 'BYE':
             #print 'BYE received in the Disconnected state'
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
         else:
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(500, 'Disconnected'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(500, 'Disconnected'))
         return None
 
     def goDead(self):

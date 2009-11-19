@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateIdle.py,v 1.11 2009/08/18 01:16:47 sobomax Exp $
+# $Id: UacStateIdle.py,v 1.12 2009/11/19 02:09:30 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -48,7 +48,7 @@ class UacStateIdle(UaStateGeneric):
                 self.ua.cId = SipCallId()
             else:
                 self.ua.cId = cId.getCopy()
-            self.ua.global_config['sip_tm'].regConsumer(self.ua, str(self.ua.cId))
+            self.ua.global_config['_sip_tm'].regConsumer(self.ua, str(self.ua.cId))
             self.ua.rTarget = SipURL(username = calledID, host = self.ua.rAddr0[0], port = self.ua.rAddr0[1])
             self.ua.rUri = SipTo(address = SipAddress(url = self.ua.rTarget.getCopy(), hadbrace = True))
             self.ua.rUri.getUrl().port = None
@@ -63,7 +63,7 @@ class UacStateIdle(UaStateGeneric):
             self.ua.lSDP = body
             req = self.ua.genRequest('INVITE', body, reason = event.reason)
             self.ua.lCSeq += 1
-            self.ua.tr = self.ua.global_config['sip_tm'].newTransaction(req, self.ua.recvResponse)
+            self.ua.tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.ua.recvResponse)
             self.ua.auth = None
             if self.ua.expire_time != None:
                 self.ua.expire_timer = Timeout(self.ua.expires, self.ua.expire_time)

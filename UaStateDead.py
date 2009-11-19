@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateDead.py,v 1.7 2008/03/26 19:03:41 sobomax Exp $
+# $Id: UaStateDead.py,v 1.8 2009/11/19 02:09:30 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 
@@ -33,7 +33,7 @@ class UaStateDead(UaStateGeneric):
     def __init__(self, ua):
         UaStateGeneric.__init__(self, None)
         if ua.cId != None:
-            ua.global_config['sip_tm'].unregConsumer(ua, str(ua.cId))
+            ua.global_config['_sip_tm'].unregConsumer(ua, str(ua.cId))
         ua.tr = None
         ua.event_cb = None
         ua.conn_cbs = ()

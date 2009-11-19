@@ -22,13 +22,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipVia.py,v 1.10 2009/11/03 11:26:14 sobomax Exp $
+# $Id: SipVia.py,v 1.11 2009/11/19 02:09:30 sobomax Exp $
 
 from random import random
 from hashlib import md5
 from time import time
 from SipGenericHF import SipGenericHF
-from SipConf import SipConf, MyAddress, MyPort
+from SipConf import SipConf
 from ESipHeaderCSV import ESipHeaderCSV
 
 class SipVia(SipGenericHF):
@@ -90,12 +90,12 @@ class SipVia(SipGenericHF):
     def localStr(self, local_addr = None, local_port = None):
         if not self.parsed:
             return self.body
-        if local_addr != None and isinstance(self.hostname, MyAddress):
+        if local_addr != None and 'my' in dir(self.hostname):
             s = self.sipver + ' ' + local_addr
         else:
             s = self.sipver + ' ' + str(self.hostname)
         if self.port != None:
-            if local_port != None and isinstance(self.port, MyPort):
+            if local_port != None and 'my' in dir(self.port):
                 s += ':' + str(local_port)
             else:
                 s += ':' + str(self.port)

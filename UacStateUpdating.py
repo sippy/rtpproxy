@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateUpdating.py,v 1.10 2009/08/31 12:26:35 sobomax Exp $
+# $Id: UacStateUpdating.py,v 1.11 2009/11/19 02:09:30 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventDisconnect, CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect
@@ -34,11 +34,11 @@ class UacStateUpdating(UaStateGeneric):
 
     def recvRequest(self, req):
         if req.getMethod() == 'INVITE':
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(491, 'Request Pending'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(491, 'Request Pending'))
             return None
         elif req.getMethod() == 'BYE':
-            self.ua.global_config['sip_tm'].cancelTransaction(self.ua.tr)
-            self.ua.global_config['sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].cancelTransaction(self.ua.tr)
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Updating state, going to the Disconnected state'
             event = CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin)
             if req.countHFs('reason') > 0:
@@ -96,10 +96,10 @@ class UacStateUpdating(UaStateGeneric):
 
     def recvEvent(self, event):
         if isinstance(event, CCEventDisconnect) or isinstance(event, CCEventFail) or isinstance(event, CCEventRedirect):
-            self.ua.global_config['sip_tm'].cancelTransaction(self.ua.tr)
+            self.ua.global_config['_sip_tm'].cancelTransaction(self.ua.tr)
             req = self.ua.genRequest('BYE', reason = event.reason)
             self.ua.lCSeq += 1
-            self.ua.global_config['sip_tm'].newTransaction(req)
+            self.ua.global_config['_sip_tm'].newTransaction(req)
             if self.ua.credit_timer != None:
                 self.ua.credit_timer.cancel()
                 self.ua.credit_timer = None

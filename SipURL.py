@@ -22,9 +22,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipURL.py,v 1.13 2009/08/16 21:52:35 sobomax Exp $
+# $Id: SipURL.py,v 1.14 2009/11/19 02:09:30 sobomax Exp $
 
-from SipConf import SipConf, MyAddress, MyPort
+from SipConf import SipConf
 from urllib import quote, unquote
 
 class SipURL(object):
@@ -157,12 +157,12 @@ class SipURL(object):
             if self.password != None:
                 w(':%s' % self.password)
             w('@')
-        if local_addr != None and isinstance(self.host, MyAddress):
+        if local_addr != None and 'my' in dir(self.host):
             w(local_addr)
         else:
             w(str(self.host))
         if self.port != None:
-            if local_port != None and isinstance(self.port, MyPort):
+            if local_port != None and 'my' in dir(self.port):
                 w(':%d' % local_port)
             else:
                 w(':%d' % self.port)

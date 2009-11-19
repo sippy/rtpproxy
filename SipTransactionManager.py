@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.19 2009/11/03 11:26:14 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.20 2009/11/19 02:09:30 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -31,7 +31,6 @@ from SipResponse import SipResponse
 from SipRequest import SipRequest
 from SipAddress import SipAddress
 from SipRoute import SipRoute
-from SipConf import MyAddress
 from SipHeader import SipHeader
 from datetime import datetime
 from hashlib import md5
@@ -105,13 +104,13 @@ class local4remote(object):
         self.cache_r2l_old = {}
         self.cache_l2s = {}
         self.handleIncoming = handleIncoming
-        if isinstance(global_config['sip_address'], MyAddress):
+        if 'my' in dir(global_config['_sip_address']):
             if socket.has_ipv6:
-                laddresses = (('0.0.0.0', global_config['sip_port']), ('[::]', global_config['sip_port']))
+                laddresses = (('0.0.0.0', global_config['_sip_port']), ('[::]', global_config['_sip_port']))
             else:
-                laddresses = (('0.0.0.0', global_config['sip_port']),)
+                laddresses = (('0.0.0.0', global_config['_sip_port']),)
         else:
-            laddresses = ((global_config['sip_address'], global_config['sip_port']),)
+            laddresses = ((global_config['_sip_address'], global_config['_sip_port']),)
         for laddress in laddresses:
             server = Udp_server(laddress, handleIncoming)
             self.cache_l2s[laddress] = server
@@ -139,9 +138,9 @@ class local4remote(object):
             address = (ai[0][4][0], raddress[1], ai[0][4][2], ai[0][4][3])
         self.skt.connect(address)
         if family == socket.AF_INET:
-            laddress = (self.skt.getsockname()[0], self.global_config['sip_port'])
+            laddress = (self.skt.getsockname()[0], self.global_config['_sip_port'])
         else:
-            laddress = ('[%s]' % self.skt.getsockname()[0], self.global_config['sip_port'])
+            laddress = ('[%s]' % self.skt.getsockname()[0], self.global_config['_sip_port'])
         self.cache_r2l[raddress[0]] = laddress
         server = self.cache_l2s.get(laddress, None)
         if server == None:
@@ -181,7 +180,7 @@ class SipTransactionManager(object):
         if len(data) < 32:
             return
         rtime = time()
-        self.global_config['sip_logger'].write('RECEIVED message from %s:%d:\n' % address, data, ltime = rtime)
+        self.global_config['_sip_logger'].write('RECEIVED message from %s:%d:\n' % address, data, ltime = rtime)
         checksum = md5(data).digest()
         retrans = self.l1rcache.get(checksum, None)
         if retrans == None:
@@ -637,6 +636,6 @@ class SipTransactionManager(object):
 
     def transmitData(self, userv, data, address, cachesum = None):
         userv.send_to(data, address)
-        self.global_config['sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
+        self.global_config['_sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
         if cachesum != None:
             self.l1rcache[cachesum] = (userv, data, address)
