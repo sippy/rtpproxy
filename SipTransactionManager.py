@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipTransactionManager.py,v 1.20 2009/11/19 02:09:30 sobomax Exp $
+# $Id: SipTransactionManager.py,v 1.21 2009/11/20 03:20:31 sobomax Exp $
 
 from Timeout import Timeout
 from Udp_server import Udp_server
@@ -97,6 +97,7 @@ class local4remote(object):
     cache_l2s = None
     skt = None
     handleIncoming = None
+    fixed = False
 
     def __init__(self, global_config, handleIncoming):
         self.global_config = global_config
@@ -111,11 +112,14 @@ class local4remote(object):
                 laddresses = (('0.0.0.0', global_config['_sip_port']),)
         else:
             laddresses = ((global_config['_sip_address'], global_config['_sip_port']),)
+            self.fixed = True
         for laddress in laddresses:
             server = Udp_server(laddress, handleIncoming)
             self.cache_l2s[laddress] = server
 
     def getServer(self, raddress):
+        if self.fixed:
+            return self.cache_l2s.items()[0][1]
         laddress = self.cache_r2l.get(raddress[0], None)
         if laddress == None:
             laddress = self.cache_r2l_old.get(raddress[0], None)
