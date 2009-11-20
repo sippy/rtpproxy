@@ -23,7 +23,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: MyConfigParser.py,v 1.3 2009/11/19 20:52:20 sobomax Exp $
+# $Id: MyConfigParser.py,v 1.4 2009/11/20 07:28:00 sobomax Exp $
 
 from ConfigParser import RawConfigParser
 from SipConf import SipConf
@@ -183,6 +183,8 @@ class MyConfigParser(RawConfigParser):
                 value = '*'
             elif value in ('*', '0.0.0.0', '::'):
                 self['_sip_address'] = SipConf.my_address
+            else:
+                self['_sip_address'] = value
         elif key == 'sip_port':
             if _value <= 0 or _value > 65535:
                 raise ValueError, 'sip_port should be in the range 1-65535'
