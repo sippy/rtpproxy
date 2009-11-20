@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.62 2009/11/19 20:56:48 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.63 2009/11/20 03:23:30 sobomax Exp $
 
 import sys
 sys.path.append('..')
@@ -216,7 +216,7 @@ class CallController(object):
             self.acctA = FakeAccounting()
         # Check that uaA is still in a valid state, send acct stop
         if not isinstance(self.uaA.state, UasStateTrying):
-            self.acctA.disc(self.uaA, time())
+            self.acctA.disc(self.uaA, time(), 'caller')
             return
         cli = [x[1][4:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('CLI:')]
         if len(cli) > 0:
