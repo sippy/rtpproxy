@@ -23,7 +23,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: MyConfigParser.py,v 1.4 2009/11/20 07:28:00 sobomax Exp $
+# $Id: MyConfigParser.py,v 1.5 2009/11/20 08:56:37 sobomax Exp $
 
 from ConfigParser import RawConfigParser
 from SipConf import SipConf
@@ -74,9 +74,17 @@ SUPPORTED_OPTIONS = { \
  'pass_headers':      ('S', 'list of SIP header field names that the B2BUA will ' \
                              'pass from ingress call leg to egress call leg ' \
                              'unmodified (comma-separated list)'), \
- 'accept_ips':        ('S', 'list of IP addresses that we will try to ' \
-                             'authenticate INVITE from without sending ' \
-                             'SIP Digest challenge (comma-separated list)'),
+ 'accept_ips':        ('S', 'IP addresses that we will only be accepting incoming ' \
+                             'calls from (comma-separated list). If the parameter ' \
+                             'is not specified, we will accept from any IP and ' \
+                             'then either try to authenticate if authentication ' \
+                             'is enabled, or just let them to pass through'),
+ 'digest_auth_only':  ('B', 'only use SIP Digest method to authenticate ' \
+                             'incoming INVITE requests. If the option is not ' \
+                             'specified or set to "off" then B2BUA will try to ' \
+                             'do remote IP authentication first and if that fails '
+                             'then send a challenge and re-authenticate when ' \
+                             'challenge response comes in'), \
  'rtp_proxy_clients': ('S', 'comma-separated list of paths or addresses of the ' \
                              'RTPproxy control socket. Address in the format ' \
                              '"udp:host[:port]" (comma-separated list)')}

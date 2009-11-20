@@ -24,10 +24,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.63 2009/11/20 03:23:30 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.64 2009/11/20 08:56:37 sobomax Exp $
 
-import sys
-sys.path.append('..')
+#import sys
+#sys.path.append('..')
 
 from sippy.Timeout import Timeout
 from sippy.Signal import Signal
@@ -111,6 +111,7 @@ class CallController(object):
     pass_headers = None
     auth_proc = None
     proxied = False
+    challenge = None
 
     def __init__(self, remote_ip, source, global_config, pass_headers):
         self.id = CallController.id
@@ -203,7 +204,12 @@ class CallController(object):
         # Check that we got necessary result from Radius
         if len(results) != 2 or results[1] != 0:
             if isinstance(self.uaA.state, UasStateTrying):
-                self.uaA.recvEvent(CCEventFail((403, 'Auth Failed')))
+                if self.challenge != None:
+                    event = CCEventFail((401, 'Unauthorized'))
+                    event.extra_header = self.challenge
+                else:
+                    event = CCEventFail((403, 'Auth Failed'))
+                self.uaA.recvEvent(event)
                 self.state = CCStateDead
             return
         if self.global_config['acct_enable']:
@@ -470,17 +476,28 @@ class CallMap(object):
             remote_ip = via.getTAddr()[0]
             source = req.getSource()
 
+            # First check if request comes from IP that
+            # we want to accept our traffic from
+            if self.global_config.has_key('_accept_ips') and \
+              not source[0] not in self.global_config['_accept_ips']:
+                resp = req.genResponse(403, 'Forbidden')
+                return (resp, None, None)
+
+            challenge = None
             if self.global_config['auth_enable']:
-                if not self.global_config.has_key('_accept_ips') or \
-                  source[0] not in self.global_config['_accept_ips']:
-                    if not self.global_config['digest_auth']:
-                        return (req.genResponse(403, 'Forbidden'), None, None)
-                    if req.countHFs('authorization') == 0:
-                        resp = req.genResponse(401, 'Unauthorized')
-                        header = SipHeader(name = 'www-authenticate')
-                        header.getBody().realm = req.getRURI().host
-                        resp.appendHeader(header)
-                        return (resp, None, None)
+                # Prepare challenge if no authorization header is present.
+                # Depending on configuration, we might try remote ip auth
+                # first and then challenge it or challenge immediately.
+                if self.global_config['digest_auth'] and \
+                  req.countHFs('authorization') == 0:
+                    challenge = SipHeader(name = 'www-authenticate')
+                    challenge.getBody().realm = req.getRURI().host
+                # Send challenge immediately if digest is the
+                # only method of authenticating
+                if challenge != None and self.global_config.getdefault('digest_auth_only', False):
+                    resp = req.genResponse(401, 'Unauthorized')
+                    resp.appendHeader(challenge)
+                    return (resp, None, None)
 
             pass_headers = []
             for header in self.global_config['_pass_headers']:
@@ -488,6 +505,7 @@ class CallMap(object):
                 if len(hfs) > 0:
                     pass_headers.extend(hfs)
             cc = CallController(remote_ip, source, self.global_config, pass_headers)
+            cc.challenge = challenge
             rval = cc.uaA.recvRequest(req)
             self.ccmap.append(cc)
             return rval
