@@ -22,14 +22,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: External_command.py,v 1.10 2009/11/20 02:21:42 sobomax Exp $
+# $Id: External_command.py,v 1.11 2009/11/20 19:37:00 sobomax Exp $
 
 from threading import Condition
 from subprocess import Popen, PIPE
 from twisted.internet import reactor
 from datetime import datetime
 from traceback import print_exc
-from sys import stdout
+from sys import stdout, platform
 from threading import Thread, Lock
 from errno import EINTR
 
@@ -47,8 +47,11 @@ class _Worker(Thread):
         self.start()
 
     def run(self):
+        need_close_fds = True
+        if platform == 'win32':
+            need_close_fds = False
         pipe = Popen(self.command, shell = False, stdin = PIPE, \
-          stdout = PIPE, stderr = PIPE, close_fds = True)
+          stdout = PIPE, stderr = PIPE, close_fds = need_close_fds)
         while True:
             self.master.work_available.acquire()
             while len(self.master.work) == 0:
