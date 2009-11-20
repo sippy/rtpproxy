@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateRinging.py,v 1.8 2009/11/19 13:06:18 sobomax Exp $
+# $Id: UasStateRinging.py,v 1.9 2009/11/20 04:32:01 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, CCEventDisconnect
@@ -78,7 +78,8 @@ class UasStateRinging(UaStateGeneric):
             scode = event.getData()
             if scode == None:
                 scode = (500, 'Failed')
-            self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason)
+            self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason, \
+              extra_header = event.extra_header)
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None

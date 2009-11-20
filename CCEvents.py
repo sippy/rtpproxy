@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: CCEvents.py,v 1.6 2009/08/18 01:16:47 sobomax Exp $
+# $Id: CCEvents.py,v 1.7 2009/11/20 04:32:01 sobomax Exp $
 
 from time import time
 
@@ -32,6 +32,7 @@ class CCEventGeneric(object):
     rtime = None
     origin = None
     reason = None
+    extra_header = None
     seq = 1
 
     def __init__(self, data = None, rtime = None, origin = None):
@@ -51,6 +52,8 @@ class CCEventGeneric(object):
         cself = CCEventGeneric(self.data, self.rtime, self.origin)
         if self.reason != None:
             cself.reason = self.reason.getCopy()
+        if self.extra_header != None:
+            cself.extra_header = self.extra_header.getCopy()
         return cself
 
     def __str__(self):
