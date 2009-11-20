@@ -21,10 +21,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Udp_server.py,v 1.8 2009/08/17 02:09:39 sobomax Exp $
+# $Id: Udp_server.py,v 1.9 2009/11/20 03:18:10 sobomax Exp $
 
 from twisted.internet import reactor
-from errno import ECONNRESET, ENOTCONN, ESHUTDOWN, EWOULDBLOCK, ENOBUFS, EAGAIN
+from errno import ECONNRESET, ENOTCONN, ESHUTDOWN, EWOULDBLOCK, ENOBUFS, EAGAIN, \
+  EINTR
 from datetime import datetime
 from time import sleep
 from threading import Thread, Condition
@@ -92,6 +93,8 @@ class AsyncReceiver(Thread):
             except Exception, why:
                 if isinstance(why, socket.error) and why[0] in (ECONNRESET, ENOTCONN, ESHUTDOWN):
                     break
+                if isinstance(why, socket.error) and why[0] in (EINTR,):
+                    continue
                 else:
                     print datetime.now(), 'Udp_server: unhandled exception when receiving incoming data'
                     print '-' * 70
