@@ -22,14 +22,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Radius_client.py,v 1.8 2009/11/19 02:09:30 sobomax Exp $
+# $Id: Radius_client.py,v 1.9 2009/11/20 07:26:12 sobomax Exp $
 
 from External_command import External_command
 
 class Radius_client(External_command):
     global_config = None
     _avpair_names = ('call-id', 'h323-session-protocol', 'h323-ivr-out', 'h323-incoming-conf-id', \
-      'release-source')
+      'release-source', 'alert-timepoint', 'provisional-timepoint')
     _cisco_vsa_names = ('h323-remote-address', 'h323-conf-id', 'h323-setup-time', 'h323-call-origin', \
       'h323-call-type', 'h323-connect-time', 'h323-disconnect-time', 'h323-disconnect-cause', \
       'h323-voice-quality', 'h323-credit-time', 'h323-return-code', 'h323-redirect-number', \
