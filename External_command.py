@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: External_command.py,v 1.9 2009/11/18 20:39:48 sobomax Exp $
+# $Id: External_command.py,v 1.10 2009/11/20 02:21:42 sobomax Exp $
 
 from threading import Condition
 from subprocess import Popen, PIPE
@@ -47,7 +47,7 @@ class _Worker(Thread):
         self.start()
 
     def run(self):
-        pipe = Popen(self.command, shell = True, stdin = PIPE, \
+        pipe = Popen(self.command, shell = False, stdin = PIPE, \
           stdout = PIPE, stderr = PIPE, close_fds = True)
         while True:
             self.master.work_available.acquire()
