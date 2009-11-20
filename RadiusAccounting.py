@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: RadiusAccounting.py,v 1.9 2009/11/19 20:49:28 sobomax Exp $
+# $Id: RadiusAccounting.py,v 1.10 2009/11/20 03:22:29 sobomax Exp $
 
 from time import time, strftime, gmtime
 from Timeout import Timeout
@@ -160,7 +160,6 @@ class RadiusAccounting(object):
             attributes.append(('alert-timepoint', self.ftime(self.p1xx_ts)))
         if self.p100_ts != None:
             attributes.append(('provisional-timepoint', self.ftime(self.p100_ts)))
-        attributes.append(('Acct-Status-Type', type))
         pattributes = ['%-32s = \'%s\'\n' % (x[0], str(x[1])) for x in attributes]
         pattributes.insert(0, 'sending Acct %s (%s):\n' % (type, self.origin.capitalize()))
         self.global_config['_sip_logger'].write(call_id = self.sip_cid, *pattributes)
