@@ -43,6 +43,7 @@
 #include "rtpp_util.h"
 
 #define	DLT_NULL	0
+#define	DLT_EN10MB	1
 #define	PCAP_MAGIC	0xa1b2c3d4
 #define	PCAP_VER_MAJR	2
 #define	PCAP_VER_MINR	4
@@ -51,7 +52,8 @@ struct rtpp_session;
 
 /* Function prototypes */
 void *ropen(struct cfg *cf, struct rtpp_session *, char *, int);
-void rwrite(struct rtpp_session *, void *, struct rtp_packet *);
+void rwrite(struct rtpp_session *, void *, struct rtp_packet *,
+  struct sockaddr *, struct sockaddr *, int, int);
 void rclose(struct rtpp_session *, void *, int);
 
 /* Global PCAP Header */
@@ -78,7 +80,13 @@ typedef struct pcaprec_hdr_s {
  */
 struct pkt_hdr_pcap {
     pcaprec_hdr_t pcaprec_hdr;
+#if (FORMAT_PCAP == DLT_NULL)
     uint32_t family;
+#else
+    uint8_t ether_dhost[6];
+    uint8_t ether_shost[6];
+    uint16_t ether_type;
+#endif
     struct ip iphdr;
     struct udphdr udphdr;
 } __packed;

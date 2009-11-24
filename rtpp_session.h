@@ -80,6 +80,7 @@ struct rtpp_session {
     int weak[2];
     /* Pointers to rtpp_record's opaque data type */
     void *rrcs[2];
+    int record_single_file;
     struct rtp_server *rtps[2];
     /* References to fd-to-session table */
     int sidx[2];

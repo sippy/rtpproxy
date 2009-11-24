@@ -652,7 +652,8 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
     }
 
     if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
-	rwrite(sp, sp->rrcs[ridx], packet);
+	rwrite(sp, sp->rrcs[ridx], packet, sp->addr[sidx], sp->laddr[sidx], 
+          sp->ports[sidx], sidx);
 }
 
 static void

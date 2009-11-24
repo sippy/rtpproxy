@@ -438,8 +438,14 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    cf->pfds[sp->rtcp->sidx[i]].fd = -1;
 	    cf->pfds[sp->rtcp->sidx[i]].events = 0;
 	}
-	if (sp->rrcs[i] != NULL)
+	if (sp->rrcs[i] != NULL) {
 	    rclose(sp, sp->rrcs[i], 1);
+            if (sp->record_single_file != 0) {
+                sp->rtcp->rrcs[i] = NULL;
+                sp->rrcs[NOT(i)] = NULL;
+                sp->rtcp->rrcs[NOT(i)] = NULL;
+            }
+        }
 	if (sp->rtcp->rrcs[i] != NULL)
 	    rclose(sp, sp->rtcp->rrcs[i], 1);
 	if (sp->rtps[i] != NULL) {

@@ -73,8 +73,8 @@ static int create_twinlistener(struct cfg *, struct sockaddr *, int, int *);
 static int create_listener(struct cfg *, struct sockaddr *, int *, int *);
 static int handle_delete(struct cfg *, char *, char *, char *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
-static void handle_copy(struct cfg *, struct rtpp_session *, int, char *);
-static int handle_record(struct cfg *, char *, char *, char *);
+static void handle_copy(struct cfg *, struct rtpp_session *, int, char *, int);
+static int handle_record(struct cfg *, char *, char *, char *, int);
 static void handle_query(struct cfg *, int, struct sockaddr_storage *,
   socklen_t, char *, struct rtpp_session *, int);
 
@@ -259,7 +259,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     struct sockaddr_storage raddr;
     int requested_nsamples;
     enum {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, QUERY} op;
-    int max_argc;
+    int max_argc, record_single_file;
     char *socket_name_u, *notify_tag;
 
     requested_nsamples = -1;
@@ -522,6 +522,23 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    }
 	}
     }
+    if (op == COPY || op == RECORD) {
+        if (argv[0][1] == 'S' || argv[0][1] == 's') {
+            if (argv[0][2] != '\0') {
+                rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
+                reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+                return 0;
+            }
+            record_single_file = (cf->record_pcap == 0) ? 0 : 1;
+        } else {
+            if (argv[0][1] != '\0') {
+                rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
+                reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+                return 0;
+            }
+            record_single_file = 0;
+        }
+    }
     if (op == COPY) {
 	if (argc < 4 || argc > 5) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
@@ -541,7 +558,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	from_tag = argv[2];
 	to_tag = argv[3];
     }
-    if (op == DELETE || op == RECORD || op == COPY || op == NOPLAY) {
+    if (op == DELETE || op == NOPLAY) {
 	/* D, R and S commands don't take any modifiers */
 	if (argv[0][1] != '\0') {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
@@ -672,7 +689,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	break;
 
     case RECORD:
-	i = handle_record(cf, call_id, from_tag, to_tag);
+	i = handle_record(cf, call_id, from_tag, to_tag, record_single_file);
 	break;
 
     default:
@@ -727,7 +744,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	return 0;
 
     case COPY:
-	handle_copy(cf, spa, i, recording_name);
+	handle_copy(cf, spa, i, recording_name, record_single_file);
 	reply_ok(cf, controlfd, &raddr, rlen, cookie);
 	return 0;
 
@@ -893,8 +910,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
 	  "tag %s", lport, from_tag);
 	if (cf->record_all != 0) {
-	    handle_copy(cf, spa, 0, NULL);
-	    handle_copy(cf, spa, 1, NULL);
+	    handle_copy(cf, spa, 0, NULL, 0);
+	    handle_copy(cf, spa, 1, NULL, 0);
 	}
     }
 
@@ -1086,8 +1103,32 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 }
 
 static void
-handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname)
+handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
+  int record_single_file)
 {
+    int remote;
+
+    remote = (rname != NULL && strncmp("udp:", rname, 4) == 0)? 1 : 0;
+
+    if (remote == 0 && (record_single_file != 0 || spa->record_single_file != 0)) {
+        if (spa->rrcs[idx] != NULL)
+            return;
+        spa->record_single_file = 1;
+        if (spa->rrcs[NOT(idx)] != NULL) {
+            spa->rrcs[idx] = spa->rrcs[NOT(idx)];
+        } else{
+            spa->rrcs[idx] = ropen(cf, spa, rname, idx);
+            rtpp_log_write(RTPP_LOG_INFO, spa->log,
+              "starting recording RTP session on port %d", spa->ports[idx]);
+        }
+        assert(spa->rtcp->rrcs[idx] == NULL);
+        if (cf->rrtcp != 0) {
+            spa->rtcp->rrcs[idx] = spa->rrcs[idx];
+            rtpp_log_write(RTPP_LOG_INFO, spa->log,
+              "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
+        }
+        return;
+    }
 
     if (spa->rrcs[idx] == NULL) {
 	spa->rrcs[idx] = ropen(cf, spa, rname, idx);
@@ -1102,7 +1143,8 @@ handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname)
 }
 
 static int
-handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag)
+handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
+  int record_single_file)
 {
     int nrecorded, idx;
     struct rtpp_session *spa;
@@ -1119,7 +1161,7 @@ handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag)
 	    continue;
 	}
 	nrecorded++;
-	handle_copy(cf, spa, idx, NULL);
+	handle_copy(cf, spa, idx, NULL, record_single_file);
     }
     return (nrecorded == 0 ? -1 : 0);
 }
