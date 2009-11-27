@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: Timeout.py,v 1.5 2009/11/19 09:23:07 sobomax Exp $
+# $Id: Timeout.py,v 1.6 2009/11/27 20:20:07 sobomax Exp $
 
 from datetime import datetime
 from twisted.internet import task, reactor
@@ -34,13 +34,13 @@ class Timeout(object):
     _timeout_callback = None
 
     def __init__(self, timeout_callback, interval, ticks = 1, *callback_arguments):
+        self._timeout_callback = timeout_callback
         if ticks == 1:
             # Special case for just one call
-            self._task = reactor.callLater(interval, timeout_callback, *callback_arguments)
+            self._task = reactor.callLater(interval, self._run_once, *callback_arguments)
             self.cancel = self.cancel_callLater
             return
         self._ticks_left = ticks
-        self._timeout_callback = timeout_callback
         self._task = task.LoopingCall(self._run, *callback_arguments)
         self._task.start(interval, False)
 
@@ -58,6 +58,18 @@ class Timeout(object):
         elif self._ticks_left != -1:
             self._ticks_left -= 1
 
+    def _run_once(self, *callback_arguments):
+        try:
+            self._timeout_callback(*callback_arguments)
+        except:
+            print datetime.now(), 'Timeout: unhandled exception in timeout callback'
+            print '-' * 70
+            print_exc(file = stdout)
+            print '-' * 70
+            stdout.flush()
+        self._task = None
+        self._timeout_callback = None
+
     def cancel(self):
         self._task.stop()
         self._task = None
@@ -66,18 +78,35 @@ class Timeout(object):
     def cancel_callLater(self):
         self._task.cancel()
         self._task = None
+        self._timeout_callback = None
 
 class TimeoutAbs:
     _task = None
+    _timeout_callback = None
+
     def __init__(self, timeout_callback, etime, *callback_arguments):
         etime -= reactor.seconds()
         if etime < 0:
             etime = 0
-        self._task = reactor.callLater(etime, timeout_callback, *callback_arguments)
+        self._timeout_callback = timeout_callback
+        self._task = reactor.callLater(etime, self._run_once, *callback_arguments)
+
+    def _run_once(self, *callback_arguments):
+        try:
+            self._timeout_callback(*callback_arguments)
+        except:
+            print datetime.now(), 'Timeout: unhandled exception in timeout callback'
+            print '-' * 70
+            print_exc(file = stdout)
+            print '-' * 70
+            stdout.flush()
+        self._task = None
+        self._timeout_callback = None
 
     def cancel(self):
         self._task.cancel()
         self._task = None
+        self._timeout_callback = None
 
 class Timeout_debug(Timeout):
     _traceback = None
