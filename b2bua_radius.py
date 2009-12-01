@@ -24,7 +24,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: b2bua_radius.py,v 1.64 2009/11/20 08:56:37 sobomax Exp $
+# $Id: b2bua_radius.py,v 1.65 2009/12/01 04:54:14 sobomax Exp $
 
 #import sys
 #sys.path.append('..')
@@ -479,7 +479,7 @@ class CallMap(object):
             # First check if request comes from IP that
             # we want to accept our traffic from
             if self.global_config.has_key('_accept_ips') and \
-              not source[0] not in self.global_config['_accept_ips']:
+              not source[0] in self.global_config['_accept_ips']:
                 resp = req.genResponse(403, 'Forbidden')
                 return (resp, None, None)
 
