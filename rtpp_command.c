@@ -43,15 +43,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <pthread.h>
 
 #include "rtpp_command.h"
 #include "rtpp_log.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
-
-extern struct rtpp_session *all_sessions;
 
 struct proto_cap proto_caps[] = {
     /*
@@ -72,6 +69,7 @@ struct proto_cap proto_caps[] = {
 static int create_twinlistener(struct cfg *, struct sockaddr *, int, int *);
 static int create_listener(struct cfg *, struct sockaddr *, int *, int *);
 static int handle_delete(struct cfg *, char *, char *, char *, int);
+static void handle_noplay(struct cfg *, struct rtpp_session *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
 static void handle_copy(struct cfg *, struct rtpp_session *, int, char *, int);
 static int handle_record(struct cfg *, char *, char *, char *, int);
@@ -252,7 +250,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     char buf[1024 * 8];
     char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
     char *pname, *codecs, *recording_name, *t;
-    struct rtpp_session *spa, *spb, *tmp_sp;
+    struct rtpp_session *spa, *spb;
     char **ap, *argv[10];
     const char *rname;
     struct sockaddr *ia[2], *lia[2];
@@ -418,49 +416,48 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	      "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
 	      cookie, cf->sessions_created, cf->sessions_active, cf->nsessions / 2,
 	      cf->packets_in, cf->packets_out);
-	for (tmp_sp = all_sessions; tmp_sp != NULL; tmp_sp = tmp_sp->all_sessions_next) {
-            for (spa = tmp_sp; spa != NULL; spa = spa->rtcp) {
-                char addrs[4][256];
+	for (i = 1; i < cf->nsessions; i++) {
+	    char addrs[4][256];
 
-                if (spa->sidx[0] == -1)
-                    continue;
-                /* RTCP twin session */
-                if (spa->rtcp == NULL) {
-                    spb = spa->rtp;
-                    buf[len++] = '\t';
-                } else {
-                    spb = spa->rtcp;
-                    buf[len++] = '\t';
-                    buf[len++] = 'C';
-                    buf[len++] = ' ';
-                }
+	    spa = cf->sessions[i];
+	    if (spa == NULL || spa->sidx[0] != i)
+		continue;
+	    /* RTCP twin session */
+	    if (spa->rtcp == NULL) {
+		spb = spa->rtp;
+		buf[len++] = '\t';
+	    } else {
+		spb = spa->rtcp;
+		buf[len++] = '\t';
+		buf[len++] = 'C';
+		buf[len++] = ' ';
+	    }
 
-                addr2char_r(spb->laddr[1], addrs[0], sizeof(addrs[0]));
-                if (spb->addr[1] == NULL) {
-                    strcpy(addrs[1], "NONE");
-                } else {
-                    sprintf(addrs[1], "%s:%d", addr2char(spb->addr[1]),
-                      addr2port(spb->addr[1]));
-                }
-                addr2char_r(spb->laddr[0], addrs[2], sizeof(addrs[2]));
-                if (spb->addr[0] == NULL) {
-                    strcpy(addrs[3], "NONE");
-                } else {
-                    sprintf(addrs[3], "%s:%d", addr2char(spb->addr[0]),
-                      addr2port(spb->addr[0]));
-                }
+	    addr2char_r(spb->laddr[1], addrs[0], sizeof(addrs[0]));
+	    if (spb->addr[1] == NULL) {
+		strcpy(addrs[1], "NONE");
+	    } else {
+		sprintf(addrs[1], "%s:%d", addr2char(spb->addr[1]),
+		  addr2port(spb->addr[1]));
+	    }
+	    addr2char_r(spb->laddr[0], addrs[2], sizeof(addrs[2]));
+	    if (spb->addr[0] == NULL) {
+		strcpy(addrs[3], "NONE");
+	    } else {
+		sprintf(addrs[3], "%s:%d", addr2char(spb->addr[0]),
+		  addr2port(spb->addr[0]));
+	    }
 
-                len += sprintf(buf + len,
-                  "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
-                  "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
-                  spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
-                  addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
-                  spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
-                if (len + 512 > sizeof(buf)) {
-                    doreply(cf, controlfd, buf, len, &raddr, rlen);
-                    len = 0;
-                }
-            }
+	    len += sprintf(buf + len,
+	      "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
+	      "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
+	      spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
+	      addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
+	      spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
+	    if (len + 512 > sizeof(buf)) {
+		doreply(cf, controlfd, buf, len, &raddr, rlen);
+		len = 0;
+	    }
 	}
 	if (len > 0)
 	    doreply(cf, controlfd, buf, len, &raddr, rlen);;
@@ -477,12 +474,14 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     case 'X':
         /* Delete all active sessions */
         rtpp_log_write(RTPP_LOG_INFO, cf->glog, "deleting all active sessions");
-        for (spa = all_sessions; spa != NULL; spa = spa->all_sessions_next) {
-	    if (spa->sidx[0] == -1)
+        for (i = 1; i < cf->nsessions; i++) {
+	    spa = cf->sessions[i];
+	    if (spa == NULL || spa->sidx[0] != i)
 		continue;
-            inc_ref_count(spa); /* the remove request holds the session reference */
-            hash_table_remove(cf, spa); /* protect from another remove command */
-            remove_session_later(cf, spa);
+	    /* Skip RTCP twin session */
+	    if (spa->rtcp != NULL) {
+		remove_session(cf, spa);
+	    }
         }
         reply_ok(cf, controlfd, &raddr, rlen, cookie);
         return 0;
@@ -721,14 +720,12 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	return 0;
 
     case NOPLAY:
-        inc_ref_count(spa);
-	handle_noplay_later(cf, spa, i);
+	handle_noplay(cf, spa, i);
 	reply_ok(cf, controlfd, &raddr, rlen, cookie);
 	return 0;
 
     case PLAY:
-        inc_ref_count(spa);
-	handle_noplay_later(cf, spa, i);
+	handle_noplay(cf, spa, i);
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->codecs[i] == NULL) {
 		reply_error(cf, controlfd, &raddr, rlen, cookie, 6);
@@ -780,9 +777,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    spa->ports[i] = lport;
 	    spa->rtcp->ports[i] = lport + 1;
 	    spa->complete = spa->rtcp->complete = 1;
-	    append_session_later(cf, spa, i);
-            append_session_later(cf, spa->rtcp, i);
-            append_session_commit(cf);
+	    append_session(cf, spa, i);
+	    append_session(cf, spa->rtcp, i);
 	}
 	if (weak)
 	    spa->weak[i] = 1;
@@ -859,7 +855,6 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    spb->rrcs[i] = NULL;
 	    spa->laddr[i] = lia[i];
 	    spb->laddr[i] = lia[i];
-            spa->sidx[i] = spb->sidx[i] = -1;
 	}
 	spa->strong = spa->weak[0] = spa->weak[1] = 0;
 	if (weak)
@@ -884,12 +879,12 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	spb->rtp = spa;
 	spa->sridx = spb->sridx = -1;
 
-	append_session_later(cf, spa, 0);
-        append_session_later(cf, spb, 0);
-        inc_ref_count(spa); /* the session is placed to the cfg->sessions array */
+	append_session(cf, spa, 0);
+	append_session(cf, spa, 1);
+	append_session(cf, spb, 0);
+	append_session(cf, spb, 1);
+
 	hash_table_append(cf, spa);
-        register_session(spa);
-        append_session_commit(cf);
 
 	cf->sessions_created++;
 	cf->sessions_active++;
@@ -1058,9 +1053,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	/* Search forward before we do removal */
 	spb = spa;
 	spa = session_findnext(spa);
-        inc_ref_count(spb); /* the remove request holds the session reference */
-        hash_table_remove(cf, spb); /* protect from another remove command */
-	remove_session_later(cf, spb);
+	remove_session(cf, spb);
 	++ndeleted;
 	if (cmpr != 2) {
 	    break;
@@ -1072,13 +1065,29 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
     return 0;
 }
 
+static void
+handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx)
+{
+
+    if (spa->rtps[idx] != NULL) {
+	rtp_server_free(spa->rtps[idx]);
+	spa->rtps[idx] = NULL;
+	rtpp_log_write(RTPP_LOG_INFO, spa->log,
+	  "stopping player at port %d", spa->ports[idx]);
+	if (spa->rtps[0] == NULL && spa->rtps[1] == NULL) {
+	    assert(cf->rtp_servers[spa->sridx] == spa);
+	    cf->rtp_servers[spa->sridx] = NULL;
+	    spa->sridx = -1;
+	}
+   }
+}
+
 static int
 handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
   char *pname, int playcount)
 {
     int n;
     char *cp;
-    struct rtp_server *server;
 
     while (*codecs != '\0') {
 	n = strtol(codecs, &cp, 10);
@@ -1087,15 +1096,13 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 	codecs = cp;
 	if (*codecs != '\0')
 	    codecs++;
-	server = rtp_server_new(pname, n, playcount);
-	if (server == NULL)
+	spa->rtps[idx] = rtp_server_new(pname, n, playcount);
+	if (spa->rtps[idx] == NULL)
 	    continue;
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "%d times playing prompt %s codec %d", playcount, pname, n);
-	if (spa->sridx == -1) {
-            inc_ref_count(spa);
-	    append_server_later(cf, spa, idx, server);
-        }
+	if (spa->sridx == -1)
+	    append_server(cf, spa);
 	return 0;
     }
     rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create player");

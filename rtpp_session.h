@@ -44,14 +44,6 @@ struct rtpp_timeout_data {
 };
 
 struct rtpp_session {
-    /* memory management data */
-    int removed_from_hash;
-    int removed;
-    int ref_count;
-    struct rtpp_session *free_queue_next;
-    struct rtpp_session *all_sessions_next;
-    struct rtpp_session *all_sessions_prev;
-
     /* ttl for caller [0] and callee [1] */
     int ttl[2];
     rtpp_ttl_mode ttl_mode;
@@ -98,37 +90,15 @@ struct rtpp_session {
     char *codecs[2];
 };
 
-/* Structure to use in various queue operations */
-struct session_queue_item {
-    struct session_queue_item *next;
-    struct rtpp_session *session;
-    struct rtp_server *server;
-    int index;
-};
-
 void init_hash_table(struct cfg *);
 struct rtpp_session *session_findfirst(struct cfg *, char *);
 struct rtpp_session *session_findnext(struct rtpp_session *);
 void hash_table_append(struct cfg *, struct rtpp_session *);
-void hash_table_remove(struct cfg *cf, struct rtpp_session *sp);
-void process_session_queue(struct cfg *);
-void append_session_later(struct cfg *, struct rtpp_session *, int);
-int remove_session_later(struct cfg *, struct rtpp_session *);
+void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(char *, char *, unsigned *);
 int find_stream(struct cfg *, char *, char *, char *, struct rtpp_session **);
 void do_timeout_notification(struct rtpp_session *, int);
 int get_ttl(struct rtpp_session *);
-void free_sessions(struct cfg *);
-void session_storage_init();
-void inc_ref_count(struct rtpp_session *);
-void dec_ref_count(struct rtpp_session *);
-void append_session_commit(struct cfg *);
-void register_session(struct rtpp_session *);
-void lock_session_cleaner();
-void unlock_session_cleaner();
-void *session_cleaner(void *);
-struct session_queue_item *alloc_session_queue_item();
-void free_session_queue_item(struct session_queue_item *);
 
 #endif

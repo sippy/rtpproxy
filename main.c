@@ -46,7 +46,6 @@
 #include <limits.h>
 #include <netdb.h>
 #include <poll.h>
-#include <pthread.h>
 #include <pwd.h>
 #include <sched.h>
 #include <stdio.h>
@@ -480,7 +479,6 @@ process_rtp_servers(struct cfg *cf, double dtime)
 			cf->rtp_servers[sp->sridx] = NULL;
 			sp->sridx = -1;
 		    }
-                    dec_ref_count(sp);
 		    break;
 		}
 		cf->packets_out++;
@@ -665,7 +663,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 
     /* Relay RTP/RTCP */
     skipfd = 0;
-    for (readyfd = 0; readyfd < cf->nsessions; readyfd++) {
+    for (readyfd = 1; readyfd < cf->nsessions; readyfd++) {
 	sp = cf->sessions[readyfd];
 
 	if (alarm_tick != 0 && sp != NULL && sp->rtcp != NULL &&
@@ -720,16 +718,19 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 }
 
 static void
-process_commands(struct cfg *cf, double dtime, int fd)
+process_commands(struct cfg *cf, double dtime)
 {
     int controlfd, i;
     socklen_t rlen;
     struct sockaddr_un ifsun;
 
+    if ((cf->pfds[0].revents & POLLIN) == 0)
+	return;
+
     do {
 	if (cf->umode == 0) {
 	    rlen = sizeof(ifsun);
-	    controlfd = accept(fd, sstosa(&ifsun), &rlen);
+	    controlfd = accept(cf->pfds[0].fd, sstosa(&ifsun), &rlen);
 	    if (controlfd == -1) {
 		if (errno != EWOULDBLOCK)
 		    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog,
@@ -737,52 +738,22 @@ process_commands(struct cfg *cf, double dtime, int fd)
 		break;
 	    }
 	} else {
-	    controlfd = fd;
+	    controlfd = cf->pfds[0].fd;
 	}
-        lock_session_cleaner();
 	i = handle_command(cf, controlfd, dtime);
-        unlock_session_cleaner();
 	if (cf->umode == 0) {
 	    close(controlfd);
 	}
     } while (i == 0);
 }
 
-void *
-process_commands_loop(void *arg)
-{
-    int controlfd;
-    struct cfg *cf = (struct cfg *) arg;
-    struct pollfd pfds[1];
-    int res;
-
-    controlfd = init_controlfd(cf);
-
-    while (1) {
-        pfds[0].fd = controlfd;
-        pfds[0].events = POLLIN;
-        pfds[0].revents = 0;
-
-        res = poll(pfds, 1, INFTIM);
-        if (res < 0 && errno == EINTR)
-            continue;
-
-        if (pfds[0].revents & POLLIN)
-            process_commands(cf, getdtime(), controlfd);
-    }
-    return NULL;
-}
-
 int
 main(int argc, char **argv)
 {
-    int i, len, timeout, alarm_tick;
-    pthread_t process_commands_thread;
-    pthread_t session_cleaner_thread;
+    int i, len, timeout, controlfd, alarm_tick;
     double sptime, eptime, last_tick_time;
     unsigned long delay;
-    static struct cfg cf;
-    sigset_t set, oset;
+    struct cfg cf;
     char buf[256];
 
     memset(&cf, 0, sizeof(cf));
@@ -794,19 +765,13 @@ main(int argc, char **argv)
     init_hash_table(&cf);
     init_port_table(&cf);
 
+    controlfd = init_controlfd(&cf);
+
     if (cf.nodaemon == 0) {
 	if (rtpp_daemon(0, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
     }
-
-    session_storage_init();
-    rtp_server_storage_init();
-    sigfillset(&set);
-    pthread_sigmask(SIG_BLOCK, &set, &oset);
-    pthread_create(&process_commands_thread, NULL, process_commands_loop, &cf);
-    pthread_create(&session_cleaner_thread, NULL, session_cleaner, &cf);
-    pthread_sigmask(SIG_SETMASK, &oset, NULL);
 
     glog = cf.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
     atexit(ehandler);
@@ -841,14 +806,18 @@ main(int argc, char **argv)
 	}
     }
 
+    cf.pfds[0].fd = controlfd;
+    cf.pfds[0].events = POLLIN;
+    cf.pfds[0].revents = 0;
+
     cf.sessions[0] = NULL;
-    cf.nsessions = 0;
+    cf.nsessions = 1;
     cf.rtp_nsessions = 0;
 
     sptime = 0;
     last_tick_time = 0;
     for (;;) {
-	if (cf.rtp_nsessions > 0 || cf.nsessions > 0)
+	if (cf.rtp_nsessions > 0 || cf.nsessions > 1)
 	    timeout = RTPS_TICKS_MIN;
 	else
 	    timeout = TIMETICK * 1000;
@@ -867,16 +836,16 @@ main(int argc, char **argv)
 	if (cf.rtp_nsessions > 0) {
 	    process_rtp_servers(&cf, eptime);
 	}
-        process_rtp_server_queue(&cf);
 	if (eptime > last_tick_time + TIMETICK) {
 	    alarm_tick = 1;
 	    last_tick_time = eptime;
 	} else {
 	    alarm_tick = 0;
 	}
-        if (cf.nsessions > 0)
-            process_rtp(&cf, eptime, alarm_tick);
-        process_session_queue(&cf);
+	process_rtp(&cf, eptime, alarm_tick);
+	if (i > 0) {
+	    process_commands(&cf, eptime);
+	}
     }
 
     exit(0);
