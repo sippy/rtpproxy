@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateUpdating.py,v 1.12 2009/11/19 13:06:18 sobomax Exp $
+# $Id: UacStateUpdating.py,v 1.13 2009/12/11 01:39:55 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventDisconnect, CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect
@@ -41,8 +41,10 @@ class UacStateUpdating(UaStateGeneric):
             self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Updating state, going to the Disconnected state'
             event = CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin)
-            if req.countHFs('reason') > 0:
+            try:
                 event.reason = req.getHFBody('reason')
+            except:
+                pass
             self.ua.equeue.append(event)
             self.ua.cancelCreditTimer()
             self.ua.disconnect_ts = req.rtime
@@ -79,16 +81,20 @@ class UacStateUpdating(UaStateGeneric):
             # no response at all is received for the request (the client
             # transaction would inform the TU about the timeout.)
             event = CCEventDisconnect(rtime = resp.rtime, origin = self.ua.origin)
-            if resp.countHFs('reason') > 0:
+            try:
                 event.reason = resp.getHFBody('reason')
+            except:
+                pass
             self.ua.equeue.append(event)
             self.ua.cancelCreditTimer()
             self.ua.disconnect_ts = resp.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, resp.rtime, self.ua.origin)
         else:
             event = CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin)
-            if resp.countHFs('reason') > 0:
+            try:
                 event.reason = resp.getHFBody('reason')
+            except:
+                pass
             self.ua.equeue.append(event)
         return (UaStateConnected,)
 

@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateUpdating.py,v 1.10 2009/11/19 13:06:18 sobomax Exp $
+# $Id: UasStateUpdating.py,v 1.11 2009/12/11 01:39:55 sobomax Exp $
 
 from SipContact import SipContact
 from SipAddress import SipAddress
@@ -42,8 +42,10 @@ class UasStateUpdating(UaStateGeneric):
             self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             #print 'BYE received in the Updating state, going to the Disconnected state'
             event = CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin)
-            if req.countHFs('reason') > 0:
+            try:
                 event.reason = req.getHFBody('reason')
+            except:
+                pass
             self.ua.equeue.append(event)
             self.ua.cancelCreditTimer()
             self.ua.disconnect_ts = req.rtime
@@ -113,8 +115,11 @@ class UasStateUpdating(UaStateGeneric):
         self.ua.disconnect_ts = rtime
         self.ua.changeState((UaStateDisconnected, self.ua.disc_cbs, rtime, self.ua.origin))
         event = CCEventDisconnect(rtime = rtime, origin = self.ua.origin)
-        if req != None and req.countHFs('reason') > 0:
-            event.reason = req.getHFBody('reason')     
+        if req != None:
+            try:
+                event.reason = req.getHFBody('reason')     
+            except:
+                pass
         self.ua.emitEvent(event)
 
 if not globals().has_key('UaStateConnected'):

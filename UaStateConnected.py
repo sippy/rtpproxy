@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UaStateConnected.py,v 1.12 2009/11/19 13:06:18 sobomax Exp $
+# $Id: UaStateConnected.py,v 1.13 2009/12/11 01:39:55 sobomax Exp $
 
 from Timeout import Timeout
 from UaStateGeneric import UaStateGeneric
@@ -75,8 +75,10 @@ class UaStateConnected(UaStateGeneric):
                 self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK', self.ua.lSDP))
                 return None
             event = CCEventUpdate(body, rtime = req.rtime, origin = self.ua.origin)
-            if req.countHFs('reason') > 0:
+            try:
                 event.reason = req.getHFBody('reason')
+            except:
+                pass
             if body != None:
                 if self.ua.on_remote_sdp_change != None:
                     self.ua.on_remote_sdp_change(body, lambda x: self.ua.delayed_remote_sdp_update(event, x))
@@ -95,8 +97,10 @@ class UaStateConnected(UaStateGeneric):
             else:
                 also = None
             event = CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin)
-            if req.countHFs('reason') > 0:
+            try:
                 event.reason = req.getHFBody('reason')
+            except:
+                pass
             self.ua.equeue.append(event)
             self.ua.cancelCreditTimer()
             self.ua.disconnect_ts = req.rtime
@@ -104,8 +108,10 @@ class UaStateConnected(UaStateGeneric):
         if req.getMethod() == 'INFO':
             self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
             event = CCEventInfo(req.getBody(), rtime = req.rtime, origin = self.ua.origin)
-            if req.countHFs('reason') > 0:
+            try:
                 event.reason = req.getHFBody('reason')
+            except:
+                pass
             self.ua.equeue.append(event)
             return None
         if req.getMethod() == 'OPTIONS':

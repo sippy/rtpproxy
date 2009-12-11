@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipReason.py,v 1.3 2009/12/11 00:56:19 sobomax Exp $
+# $Id: SipReason.py,v 1.4 2009/12/11 01:39:55 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 
@@ -52,6 +52,7 @@ class SipReason(SipGenericHF):
                 self.cause = int(rp_value)
             elif rp_name == 'text':
                 self.reason = rp_value.strip('"')
+        assert(self.cause != None)
 
     def __str__(self):
         if not self.parsed:

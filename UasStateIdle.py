@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateIdle.py,v 1.11 2009/11/19 13:06:18 sobomax Exp $
+# $Id: UasStateIdle.py,v 1.12 2009/12/11 01:39:55 sobomax Exp $
 
 from Timeout import TimeoutAbs
 from SipAddress import SipAddress
@@ -78,8 +78,10 @@ class UasStateIdle(UaStateGeneric):
         self.ua.branch = req.getHFBody('via').getBranch()
         event = CCEventTry((self.ua.cId, self.ua.cGUID, self.ua.rUri.getUrl().username, req.getRURI().username, body, auth, \
           self.ua.rUri.getUri().name), rtime = req.rtime, origin = self.ua.origin)
-        if req.countHFs('reason') > 0:
+        try:
             event.reason = req.getHFBody('reason')
+        except:
+            pass
         if self.ua.expire_time != None:
             self.ua.expire_time += event.rtime
         if self.ua.no_progress_time != None:

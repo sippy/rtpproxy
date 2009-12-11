@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UasStateTrying.py,v 1.8 2009/11/20 04:32:01 sobomax Exp $
+# $Id: UasStateTrying.py,v 1.9 2009/12/11 01:39:55 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, CCEventDisconnect
@@ -117,8 +117,11 @@ class UasStateTrying(UaStateGeneric):
         self.ua.disconnect_ts = rtime
         self.ua.changeState((UaStateDisconnected, self.ua.disc_cbs, rtime, self.ua.origin))
         event = CCEventDisconnect(rtime = rtime, origin = self.ua.origin)
-        if req != None and req.countHFs('reason') > 0:
-            event.reason = req.getHFBody('reason')
+        if req != None:
+            try:
+                event.reason = req.getHFBody('reason')
+            except:
+                pass
         self.ua.emitEvent(event)
 
 if not globals().has_key('UasStateRinging'):

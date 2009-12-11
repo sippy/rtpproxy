@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateTrying.py,v 1.11 2009/11/19 13:06:18 sobomax Exp $
+# $Id: UacStateTrying.py,v 1.12 2009/12/11 01:39:55 sobomax Exp $
 
 from SipAddress import SipAddress
 from SipRoute import SipRoute
@@ -107,8 +107,10 @@ class UacStateTrying(UaStateGeneric):
             self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))
         else:
             event = CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin)
-            if resp.countHFs('reason') > 0:
+            try:
                 event.reason = resp.getHFBody('reason')
+            except:
+                pass
             self.ua.equeue.append(event)
         self.ua.disconnect_ts = resp.rtime
         return (UaStateFailed, self.ua.fail_cbs, resp.rtime, self.ua.origin, code)
