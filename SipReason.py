@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipReason.py,v 1.2 2009/09/01 17:59:09 sobomax Exp $
+# $Id: SipReason.py,v 1.3 2009/12/11 00:56:19 sobomax Exp $
 
 from SipGenericHF import SipGenericHF
 
@@ -57,7 +57,7 @@ class SipReason(SipGenericHF):
         if not self.parsed:
             return self.body
         if self.reason == None:
-            return '%s; cause=%d"' % (self.protocol, self.cause)
+            return '%s; cause=%d' % (self.protocol, self.cause)
         return '%s; cause=%d; text="%s"' % (self.protocol, self.cause, self.reason)
 
     def getCopy(self):
