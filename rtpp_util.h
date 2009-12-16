@@ -47,6 +47,9 @@
 
 #include "rtpp_defines.h"
 
+#undef MIN
+#undef MAX
+
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 #define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
