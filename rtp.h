@@ -81,6 +81,15 @@ typedef struct {
     uint32_t extension[0];	/* actual extension data */
 } rtp_hdr_ext_t;
 
+struct rtp_info {
+    size_t      data_size;
+    int         data_offset;
+    int         nsamples;
+    uint32_t    ts;
+    uint16_t    seq;
+    int         appendable;
+};
+
 struct rtp_packet {
     size_t      size;
 
@@ -88,17 +97,13 @@ struct rtp_packet {
     struct sockaddr *laddr;
 
     socklen_t   rlen;
-    size_t      data_size;
-    int         data_offset;
-    int         nsamples;
-    uint32_t    ts;
-    uint16_t    seq;
-    int         appendable;
     double      rtime;
     int         rport;
 
     struct rtp_packet *next;
     struct rtp_packet *prev;
+
+    struct rtp_info parsed;
 
     /*
      * The packet, keep it the last member so that we can use
@@ -131,7 +136,7 @@ typedef enum {
 #define	RTP_HDR_LEN(rhp)	(sizeof(*(rhp)) + ((rhp)->cc * sizeof((rhp)->csrc[0])))
 
 const char *rtp_packet_parse_errstr(rtp_parser_err_t);
-rtp_parser_err_t rtp_packet_parse(struct rtp_packet *);
+rtp_parser_err_t rtp_packet_parse(unsigned char *, size_t, struct rtp_info *);
 struct rtp_packet *rtp_recv(int);
 
 struct rtp_packet *rtp_packet_alloc();

@@ -71,13 +71,14 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
     uint32_t            ref_ts, internal_ts;
     int                 delta;
 
-    if (rtp_packet_parse(*pkt) != RTP_PARSER_OK)
+    p = *pkt;
+    if (rtp_packet_parse(p->data.buf, p->size, &(p->parsed)) != RTP_PARSER_OK)
         return;
 
-    if ((*pkt)->nsamples == RTP_NSAMPLES_UNKNOWN)
+    if ((*pkt)->parsed.nsamples == RTP_NSAMPLES_UNKNOWN)
         return;
 
-    if (this->last_sent_ts_inited && ts_less((*pkt)->ts, this->last_sent_ts))
+    if (this->last_sent_ts_inited && ts_less((*pkt)->parsed.ts, this->last_sent_ts))
     {
         /* Packet arrived too late. Drop it. */
         rtp_packet_free(*pkt);
@@ -86,18 +87,18 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
     }
     internal_ts = (*pkt)->rtime * 8000.0;
     if (!this->tsdelta_inited) {
-        this->tsdelta = (*pkt)->ts - internal_ts + 40;
+        this->tsdelta = (*pkt)->parsed.ts - internal_ts + 40;
         this->tsdelta_inited = 1;
     }
     else {
         ref_ts = internal_ts + this->tsdelta;
-        if (ts_less(ref_ts, (*pkt)->ts)) {
-            this->tsdelta = (*pkt)->ts - internal_ts + 40;
+        if (ts_less(ref_ts, (*pkt)->parsed.ts)) {
+            this->tsdelta = (*pkt)->parsed.ts - internal_ts + 40;
 /*            printf("Sync forward\n"); */
         }
-        else if (ts_less((*pkt)->ts + this->output_nsamples + 160, ref_ts)) 
+        else if (ts_less((*pkt)->parsed.ts + this->output_nsamples + 160, ref_ts)) 
         {
-            delta = (ref_ts - ((*pkt)->ts + this->output_nsamples + 160)) / 2;
+            delta = (ref_ts - ((*pkt)->parsed.ts + this->output_nsamples + 160)) / 2;
             this->tsdelta -= delta;
 /*            printf("Sync backward\n"); */
         }
@@ -105,7 +106,7 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
     if (this->queue.last != NULL) 
     {
         p = this->queue.last; 
-        while (p != NULL && ts_less((*pkt)->ts, p->ts))
+        while (p != NULL && ts_less((*pkt)->parsed.ts, p->parsed.ts))
              p = p->prev;
 
         if (p == NULL) /* head reached */
@@ -133,7 +134,7 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
         (*pkt)->prev = NULL;
 	(*pkt)->next = NULL;
     }
-    this->nsamples_total += (*pkt)->nsamples;
+    this->nsamples_total += (*pkt)->parsed.nsamples;
     *pkt = NULL; /* take control over the packet */
 }
 
@@ -152,12 +153,12 @@ static void
 append_packet(struct rtp_packet *dst, struct rtp_packet *src)
 {
 
-    memcpy(&dst->data.buf[dst->data_offset + dst->data_size], 
-      &src->data.buf[src->data_offset], src->data_size);
-    dst->nsamples += src->nsamples;
-    dst->data_size += src->data_size;
-    dst->size += src->data_size;
-    dst->appendable = src->appendable;
+    memcpy(&dst->data.buf[dst->parsed.data_offset + dst->parsed.data_size], 
+      &src->data.buf[src->parsed.data_offset], src->parsed.data_size);
+    dst->parsed.nsamples += src->parsed.nsamples;
+    dst->parsed.data_size += src->parsed.data_size;
+    dst->size += src->parsed.data_size;
+    dst->parsed.appendable = src->parsed.appendable;
 }
 
 static void 
@@ -165,38 +166,38 @@ append_chunk(struct rtp_packet *dst, struct rtp_packet *src, const struct rtp_pa
 {
 
     /* Copy chunk */
-    memcpy(&dst->data.buf[dst->data_offset + dst->data_size], 
-      &src->data.buf[src->data_offset], chunk->bytes);
-    dst->nsamples += chunk->nsamples;
-    dst->data_size += chunk->bytes;
+    memcpy(&dst->data.buf[dst->parsed.data_offset + dst->parsed.data_size], 
+      &src->data.buf[src->parsed.data_offset], chunk->bytes);
+    dst->parsed.nsamples += chunk->nsamples;
+    dst->parsed.data_size += chunk->bytes;
     dst->size += chunk->bytes;
 
     /* Truncate the source packet */
-    src->nsamples -= chunk->nsamples;
-    rtp_packet_set_ts(src, src->ts + chunk->nsamples);
-    src->data_size -= chunk->bytes;
+    src->parsed.nsamples -= chunk->nsamples;
+    rtp_packet_set_ts(src, src->parsed.ts + chunk->nsamples);
+    src->parsed.data_size -= chunk->bytes;
     src->size -= chunk->bytes;
-    memmove(&src->data.buf[src->data_offset],
-      &src->data.buf[src->data_offset + chunk->bytes], src->data_size);
+    memmove(&src->data.buf[src->parsed.data_offset],
+      &src->data.buf[src->parsed.data_offset + chunk->bytes], src->parsed.data_size);
 }
 
 static void 
 move_chunk(struct rtp_packet *dst, struct rtp_packet *src, const struct rtp_packet_chunk *chunk)
 {
     /* Copy chunk */
-    memcpy(&dst->data.buf[dst->data_offset],
-      &src->data.buf[src->data_offset], chunk->bytes);
-    dst->nsamples = chunk->nsamples;
-    dst->data_size = chunk->bytes;
-    dst->size = dst->data_size + dst->data_offset;
+    memcpy(&dst->data.buf[dst->parsed.data_offset],
+      &src->data.buf[src->parsed.data_offset], chunk->bytes);
+    dst->parsed.nsamples = chunk->nsamples;
+    dst->parsed.data_size = chunk->bytes;
+    dst->size = dst->parsed.data_size + dst->parsed.data_offset;
 
     /* Truncate the source packet */
-    src->nsamples -= chunk->nsamples;
-    rtp_packet_set_ts(src, src->ts + chunk->nsamples);
-    src->data_size -= chunk->bytes;
+    src->parsed.nsamples -= chunk->nsamples;
+    rtp_packet_set_ts(src, src->parsed.ts + chunk->nsamples);
+    src->parsed.data_size -= chunk->bytes;
     src->size -= chunk->bytes;
-    memmove(&src->data.buf[src->data_offset],
-      &src->data.buf[src->data_offset + chunk->bytes], src->data_size);
+    memmove(&src->data.buf[src->parsed.data_offset],
+      &src->data.buf[src->parsed.data_offset + chunk->bytes], src->parsed.data_size);
 }
 
 struct rtp_packet *
@@ -219,7 +220,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 
     /* Wait untill enough data has arrived or timeout occured */
     if (this->nsamples_total < this->output_nsamples &&
-        ts_less(ref_ts, this->queue.first->ts + this->output_nsamples + 160))
+        ts_less(ref_ts, this->queue.first->parsed.ts + this->output_nsamples + 160))
     {
         return NULL;
     }
@@ -230,13 +231,13 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
         output_nsamples = max;
 
     /* Aggregate the output packet */
-    while ((ret == NULL || ret->nsamples < output_nsamples) && this->queue.first != NULL)
+    while ((ret == NULL || ret->parsed.nsamples < output_nsamples) && this->queue.first != NULL)
     {
         p = this->queue.first;
         if (ret == NULL) 
         {
             /* Look if the first packet is to be split */
-            if (p->nsamples > output_nsamples) {
+            if (p->parsed.nsamples > output_nsamples) {
 		rtp_packet_first_chunk_find(p, &chunk, output_nsamples);
 		if (chunk.whole_packet_matched) {
 		    ret = p;
@@ -250,7 +251,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 		    ++split;
 		}
 		if (!this->seq_initialized) {
-		    this->seq = ret->seq;
+		    this->seq = ret->parsed.seq;
 		    this->seq_initialized = 1;
 		}
 		++count;
@@ -260,20 +261,20 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
         else /* ret != NULL */
         {
             /* detect holes and payload changes in RTP stream */
-            if ((ret->ts + ret->nsamples) != p->ts ||
+            if ((ret->parsed.ts + ret->parsed.nsamples) != p->parsed.ts ||
                 ret->data.header.pt != p->data.header.pt)
             {
                 break;
             }
-            nsamples_left = output_nsamples - ret->nsamples;
+            nsamples_left = output_nsamples - ret->parsed.nsamples;
 
             /* Break the input packet into pieces to create output packet 
              * of specified size */
-            if (nsamples_left > 0 && nsamples_left < p->nsamples) {
+            if (nsamples_left > 0 && nsamples_left < p->parsed.nsamples) {
 		rtp_packet_first_chunk_find(p, &chunk, nsamples_left);
 		if (chunk.whole_packet_matched) {
 		    /* Prevent RTP packet buffer overflow */
-		    if ((ret->size + p->data_size) > sizeof(ret->data.buf))
+		    if ((ret->size + p->parsed.data_size) > sizeof(ret->data.buf))
 			break;
 		    append_packet(ret, p);
 		    detach_queue_head(this);
@@ -296,7 +297,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
         /*
          * Prevent RTP packet buffer overflow 
          */
-        if (ret != NULL && (ret->size + p->data_size) > sizeof(ret->data.buf))
+        if (ret != NULL && (ret->size + p->parsed.data_size) > sizeof(ret->data.buf))
             break;
 
         /* Detach head packet from the queue */
@@ -308,7 +309,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
         if (ret == NULL) {
             ret = p; /* use the first packet as the result container */
             if (!this->seq_initialized) {
-                this->seq = p->seq;
+                this->seq = p->parsed.seq;
                 this->seq_initialized = 1;
             }
         }
@@ -317,17 +318,17 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
             rtp_packet_free(p);
         }
 	/* Send non-appendable packet immediately */
-	if (!ret->appendable)
+	if (!ret->parsed.appendable)
 	    break;
     }
     if (ret != NULL) {
-	this->nsamples_total -= ret->nsamples;
+	this->nsamples_total -= ret->parsed.nsamples;
 	rtp_packet_set_seq(ret, this->seq);
 	++this->seq;
 	this->last_sent_ts_inited = 1;
-	this->last_sent_ts = ret->ts + ret->nsamples;
+	this->last_sent_ts = ret->parsed.ts + ret->parsed.nsamples;
 /*
-	printf("Payload %d, %d packets aggregated, %d splits done, final size %dms\n", ret->data.header.pt, count, split, ret->nsamples / 8);
+	printf("Payload %d, %d packets aggregated, %d splits done, final size %dms\n", ret->data.header.pt, count, split, ret->parsed.nsamples / 8);
 */
     }
     return ret;

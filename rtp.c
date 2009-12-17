@@ -114,7 +114,7 @@ rtp_packet_chunk_find_g729(struct rtp_packet *pkt, struct rtp_packet_chunk *ret,
     frames = min_nsamples / 80 + ((min_nsamples % 80) == 0 ? 0 : 1);
     samples = frames * 80;
 
-    if (samples >= pkt->nsamples) {
+    if (samples >= pkt->parsed.nsamples) {
 	ret->whole_packet_matched = 1;
 	return;
     }
@@ -130,7 +130,7 @@ rtp_packet_chunk_find_gsm(struct rtp_packet *pkt, struct rtp_packet_chunk *ret, 
     frames = min_nsamples / 160 + ((min_nsamples % 160) == 0 ? 0 : 1);
     samples = frames * 160;
 
-    if (samples >= pkt->nsamples) {
+    if (samples >= pkt->parsed.nsamples) {
 	ret->whole_packet_matched = 1;
 	return;
     }
@@ -149,20 +149,20 @@ rtp_packet_chunk_find_g723(struct rtp_packet *pkt, struct rtp_packet_chunk *ret,
 
     pos = 0;
     found_samples = 0;
-    if (samples >= pkt->nsamples) {
+    if (samples >= pkt->parsed.nsamples) {
 	ret->whole_packet_matched = 1;
 	return;
     }
 
-    buf = &pkt->data.buf[pkt->data_offset];
-    while (pos < pkt->data_size && samples > found_samples) {
+    buf = &pkt->data.buf[pkt->parsed.data_offset];
+    while (pos < pkt->parsed.data_size && samples > found_samples) {
 	found_samples += 240;
 	n = g723_len(buf[pos]);
 	assert(n != RTP_NSAMPLES_UNKNOWN);
 	pos += n;
     }
     ret->nsamples = found_samples;
-    ret->bytes = (pos < pkt->data_size ? pos : pkt->data_size);
+    ret->bytes = (pos < pkt->parsed.data_size ? pos : pkt->parsed.data_size);
 }
 
 /* 
@@ -175,7 +175,7 @@ void
 rtp_packet_first_chunk_find(struct rtp_packet *pkt, struct rtp_packet_chunk *ret, int min_nsamples)
 {
 
-    assert(pkt->nsamples > min_nsamples);
+    assert(pkt->parsed.nsamples > min_nsamples);
     ret->whole_packet_matched = 0;
 
     switch (pkt->data.header.pt) {
@@ -239,63 +239,66 @@ rtp_packet_parse_errstr(rtp_parser_err_t ecode)
 }
 
 rtp_parser_err_t
-rtp_packet_parse(struct rtp_packet *pkt)
+rtp_packet_parse(unsigned char *buf, size_t size, struct rtp_info *rinfo)
 {
     int padding_size;
     rtp_hdr_ext_t *hdr_ext_ptr;
+    rtp_hdr_t *header;
+
+    header = (rtp_hdr_t *)buf;
 
     padding_size = 0;
 
-    pkt->data_size = 0;
-    pkt->data_offset = 0;
-    pkt->appendable = 1;
-    pkt->nsamples = RTP_NSAMPLES_UNKNOWN;
+    rinfo->data_size = 0;
+    rinfo->data_offset = 0;
+    rinfo->appendable = 1;
+    rinfo->nsamples = RTP_NSAMPLES_UNKNOWN;
 
-    if (pkt->size < sizeof(pkt->data.header))
+    if (size < sizeof(*header))
         return RTP_PARSER_PTOOSHRT;
 
-    if (pkt->data.header.version != 2)
+    if (header->version != 2)
         return RTP_PARSER_IHDRVER;
 
-    pkt->data_offset = RTP_HDR_LEN(&pkt->data.header);
+    rinfo->data_offset = RTP_HDR_LEN(header);
 
-    if (pkt->data.header.x != 0) {
-        if (pkt->size < pkt->data_offset + sizeof(*hdr_ext_ptr))
+    if (header->x != 0) {
+        if (size < rinfo->data_offset + sizeof(*hdr_ext_ptr))
             return RTP_PARSER_PTOOSHRTXS;
-        hdr_ext_ptr = (rtp_hdr_ext_t *)&pkt->data.buf[pkt->data_offset];
-        pkt->data_offset += sizeof(rtp_hdr_ext_t) +
+        hdr_ext_ptr = (rtp_hdr_ext_t *)&buf[rinfo->data_offset];
+        rinfo->data_offset += sizeof(rtp_hdr_ext_t) +
           (ntohs(hdr_ext_ptr->length) * sizeof(hdr_ext_ptr->extension[0]));
     }
 
-    if (pkt->size < pkt->data_offset)
+    if (size < rinfo->data_offset)
         return RTP_PARSER_PTOOSHRTXH;
 
-    if (pkt->data.header.p != 0) {
-        if (pkt->data_offset == pkt->size)
+    if (header->p != 0) {
+        if (rinfo->data_offset == size)
             return RTP_PARSER_PTOOSHRTPS;
-        padding_size = pkt->data.buf[pkt->size - 1];
+        padding_size = buf[size - 1];
         if (padding_size == 0)
             return RTP_PARSER_IPS;
     }
 
-    if (pkt->size < pkt->data_offset + padding_size)
+    if (size < rinfo->data_offset + padding_size)
         return RTP_PARSER_PTOOSHRTP;
 
-    pkt->data_size = pkt->size - pkt->data_offset - padding_size;
-    pkt->ts = ntohl(pkt->data.header.ts);
-    pkt->seq = ntohs(pkt->data.header.seq);
+    rinfo->data_size = size - rinfo->data_offset - padding_size;
+    rinfo->ts = ntohl(header->ts);
+    rinfo->seq = ntohs(header->seq);
 
-    if (pkt->data_size == 0)
+    if (rinfo->data_size == 0)
         return RTP_PARSER_OK;
 
-    pkt->nsamples = rtp_calc_samples(pkt->data.header.pt, pkt->data_size,
-      &pkt->data.buf[pkt->data_offset]);
+    rinfo->nsamples = rtp_calc_samples(header->pt, rinfo->data_size,
+      &buf[rinfo->data_offset]);
     /* 
      * G.729 comfort noise frame as the last frame causes 
      * packet to be non-appendable
      */
-    if (pkt->data.header.pt == RTP_G729 && (pkt->data_size % 10) != 0)
-        pkt->appendable = 0;
+    if (header->pt == RTP_G729 && (rinfo->data_size % 10) != 0)
+        rinfo->appendable = 0;
     return RTP_PARSER_OK;
 }
 
@@ -347,7 +350,7 @@ void
 rtp_packet_set_seq(struct rtp_packet *p, uint16_t seq)
 {
 
-    p->seq = seq;
+    p->parsed.seq = seq;
     p->data.header.seq = htons(seq);
 }
 
@@ -355,6 +358,6 @@ void
 rtp_packet_set_ts(struct rtp_packet *p, uint32_t ts)
 {
 
-    p->ts = ts;
+    p->parsed.ts = ts;
     p->data.header.ts = htonl(ts);
 }
