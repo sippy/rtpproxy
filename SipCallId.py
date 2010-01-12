@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: SipCallId.py,v 1.7 2009/11/03 11:26:14 sobomax Exp $
+# $Id: SipCallId.py,v 1.8 2010/01/12 08:58:01 sobomax Exp $
 
 from random import random
 from hashlib import md5
@@ -38,13 +38,13 @@ class SipCallId(SipGenericHF):
         SipGenericHF.__init__(self, body)
         self.parsed = True
         if body == None:
-            self.body = md5(str((random() * 1000000000L) + time())).hexdigest() + '@' + SipConf.my_address
+            self.body = md5(str((random() * 1000000000L) + time())).hexdigest() + '@' + str(SipConf.my_address)
 
     def __add__(self, other):
         return SipCallId(self.body + str(other))
 
     def genCallId(self):
-        self.body = md5(str((random() * 1000000000L) + time())).hexdigest() + '@' + SipConf.my_address
+        self.body = md5(str((random() * 1000000000L) + time())).hexdigest() + '@' + str(SipConf.my_address)
 
     def getCanName(self, name, compact = False):
         if compact:
