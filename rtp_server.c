@@ -57,8 +57,10 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop)
 	return NULL;
 
     rp = malloc(sizeof(*rp));
-    if (rp == NULL)
+    if (rp == NULL) {
+	close(fd);
 	return NULL;
+    }
 
     memset(rp, 0, sizeof(*rp));
 
