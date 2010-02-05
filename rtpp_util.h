@@ -49,12 +49,14 @@
 
 #undef MIN
 #undef MAX
+#undef ABS
 
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 #define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
 #define	MIN(x, y)	(((x) > (y)) ? (y) : (x))
 #define	MAX(x, y)	(((x) > (y)) ? (x) : (y))
+#define	ABS(x)		((x) > 0 ? (x) : (-x))
 
 /* Function prototypes */
 int ishostseq(struct sockaddr *, struct sockaddr *);
