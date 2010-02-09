@@ -41,6 +41,7 @@
 #include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_util.h"
+#include "rtpp_network.h"
 
 #define	DLT_NULL	0
 #define	DLT_EN10MB	1

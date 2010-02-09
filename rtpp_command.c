@@ -28,10 +28,15 @@
  *
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <netinet/in.h>
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -63,6 +68,7 @@ struct proto_cap proto_caps[] = {
     { "20080403", "Support for RTP statistics querying" },
     { "20081102", "Support for setting codecs in the update/lookup command" },
     { "20081224", "Support for session timeout notifications" },
+    { "20090810", "Support for automatic bridging" },
     { NULL, NULL }
 };
 
@@ -104,7 +110,7 @@ create_twinlistener(struct cfg *cf, struct sockaddr *ia, int port, int *fds)
 	    goto failure;
 	}
 	port++;
-	if ((ia->sa_family == AF_INET) &&
+	if ((ia->sa_family == AF_INET) && (cf->tos >= 0) &&
 	  (setsockopt(fds[i], IPPROTO_IP, IP_TOS, &cf->tos, sizeof(cf->tos)) == -1))
 	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "unable to set TOS to %d", cf->tos);
 	flags = fcntl(fds[i], F_GETFL);
@@ -243,8 +249,8 @@ handle_nomem(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
 int
 handle_command(struct cfg *cf, int controlfd, double dtime)
 {
-    int len, argc, i, j, pidx, asymmetric;
-    int external, pf, lidx, playcount, weak;
+    int len, argc, i, pidx, asymmetric;
+    int external, pf, lidx, playcount, weak, tpf;
     int fds[2], lport, n;
     socklen_t rlen;
     char buf[1024 * 8];
@@ -252,13 +258,15 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     char *pname, *codecs, *recording_name, *t;
     struct rtpp_session *spa, *spb;
     char **ap, *argv[10];
-    const char *rname;
+    const char *rname, *errmsg;
     struct sockaddr *ia[2], *lia[2];
     struct sockaddr_storage raddr;
     int requested_nsamples;
     enum {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, QUERY} op;
     int max_argc, record_single_file;
     char *socket_name_u, *notify_tag;
+    struct sockaddr *local_addr;
+    char c;
 
     requested_nsamples = -1;
     ia[0] = ia[1] = NULL;
@@ -268,6 +276,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     fds[0] = fds[1] = -1;
     recording_name = NULL;
     socket_name_u = notify_tag = NULL;
+    local_addr = NULL;
     codecs = NULL;
 
     if (cf->umode == 0) {
@@ -384,6 +393,15 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    if (argc != 2 && argc != 3) {
 		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
 		reply_error(cf, controlfd, &raddr, rlen, cookie, 2);
+		return 0;
+	    }
+	    /*
+	     * Only list 20081224 protocol mod as supported if
+	     * user actually enabled notification with -n
+	     */
+	    if (strcmp(argv[1], "20081224") == 0 &&
+	      cf->timeout_handler.socket_name == NULL) {
+		reply_number(cf, controlfd, &raddr, rlen, cookie, 0);
 		return 0;
 	    }
 	    for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
@@ -646,6 +664,62 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 		cp--;
 		break;
 
+	    case 'l':
+	    case 'L':
+		len = extractaddr(cp + 1, &t, &cp, &tpf);
+		if (len == -1) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
+		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    return 0;
+		}
+		c = t[len];
+		t[len] = '\0';
+		local_addr = host2bindaddr(cf, t, tpf, &errmsg);
+		if (local_addr == NULL) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		      "invalid local address: %s: %s", t, errmsg);
+		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    return 0;
+		}
+		t[len] = c;
+		cp--;
+		break;
+
+	    case 'r':
+	    case 'R':
+		len = extractaddr(cp + 1, &t, &cp, &tpf);
+		if (len == -1) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
+		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    return 0;
+		}
+		c = t[len];
+		t[len] = '\0';
+		local_addr = alloca(sizeof(struct sockaddr_storage));
+		n = resolve(local_addr, tpf, t, SERVICE, AI_PASSIVE);
+		if (n != 0) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		      "invalid remote address: %s: %s", t, gai_strerror(n));
+		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    return 0;
+		}
+		if (local4remote(cf, local_addr, satoss(local_addr)) == -1) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		      "can't find local address for remote address: %s", t);
+		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    return 0;
+		}
+		local_addr = addr2bindaddr(cf, local_addr, &errmsg);
+		if (local_addr == NULL) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		      "invalid local address: %s", errmsg);
+		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    return 0;
+		}
+		t[len] = c;
+		cp--;
+		break;
+
 	    default:
 		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "unknown command modifier `%c'",
 		  *cp);
@@ -764,7 +838,9 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     if (i != -1) {
 	assert(op == UPDATE || op == LOOKUP);
 	if (spa->fds[i] == -1) {
-	    j = ishostseq(cf->bindaddr[0], spa->laddr[i]) ? 0 : 1;
+	    if (local_addr != NULL) {
+		spa->laddr[i] = local_addr;
+	    }
 	    if (create_listener(cf, spa->laddr[i], &lport, fds) == -1) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create listener");
 		reply_error(cf, controlfd, &raddr, rlen, cookie, 7);
@@ -805,8 +881,16 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	  "new session %s, tag %s requested, type %s",
 	  call_id, from_tag, weak ? "weak" : "strong");
 
-	j = ishostseq(cf->bindaddr[0], lia[0]) ? 0 : 1;
-	if (create_listener(cf, cf->bindaddr[j], &lport, fds) == -1) {
+	if (local_addr != NULL) {
+	    lia[0] = lia[1] = local_addr;
+	    if (lia[0] == NULL) {
+		rtpp_log_write(RTPP_LOG_ERR, spa->log,
+		  "can't create listener: %s", t);
+		reply_error(cf, controlfd, &raddr, rlen, cookie, 10);
+		return 0;
+	    }
+	}
+	if (create_listener(cf, lia[0], &lport, fds) == -1) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "can't create listener");
 	    reply_error(cf, controlfd, &raddr, rlen, cookie, 10);
 	    return 0;

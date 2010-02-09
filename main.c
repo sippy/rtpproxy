@@ -63,6 +63,7 @@
 #include "rtpp_log.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
+#include "rtpp_network.h"
 #include "rtpp_util.h"
 
 static const char *cmd_sock = CMD_SOCK;
@@ -98,7 +99,7 @@ usage(void)
     fprintf(stderr, "usage: rtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]] "
-      "[-n timeout_socket]\n");
+      "[-n timeout_socket] [-d log_level]\n");
     exit(1);
 }
 
@@ -129,6 +130,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
     char *bh[2], *bh6[2], *cp;
+    const char *errmsg;
     struct passwd *pp;
     struct group *gp;
 
@@ -141,6 +143,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->tos = TOS;
     cf->rrtcp = 1;
     cf->ttl_mode = TTL_UNIFIED;
+    cf->log_level = -1;
 
     cf->timeout_handler.socket_name = NULL;
     cf->timeout_handler.fd = -1;
@@ -149,7 +152,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pa")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -191,6 +194,8 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 't':
 	    cf->tos = atoi(optarg);
+	    if (cf->tos > 255)
+		errx(1, "%d: TOS is too large", cf->tos);
 	    break;
 
 	case '2':
@@ -301,6 +306,12 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    cf->record_all = 1;
 	    break;
 
+	case 'd':
+	    cf->log_level = rtpp_log_str2lvl(optarg);
+	    if (cf->log_level == -1)
+		errx(1, "%s: invalid log level", optarg);
+	    break;
+
 	case '?':
 	default:
 	    usage();
@@ -352,9 +363,6 @@ init_config(struct cfg *cf, int argc, char **argv)
       (((cf->port_max - cf->port_min + 1) * 2) + 1));
 
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
-	if (cf->umode != 0)
-	    errx(1, "explicit binding address has to be specified in UDP "
-	      "command mode");
 	bh[0] = "*";
     }
 
@@ -384,13 +392,15 @@ init_config(struct cfg *cf, int argc, char **argv)
     for (i = 0; i < 2; i++) {
 	cf->bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
-	    cf->bindaddr[i] = malloc(sizeof(struct sockaddr_storage));
-	    setbindhost(cf->bindaddr[i], AF_INET, bh[i], SERVICE);
+	    cf->bindaddr[i] = host2bindaddr(cf, bh[i], AF_INET, &errmsg);
+	    if (cf->bindaddr[i] == NULL)
+		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
-	    cf->bindaddr[i] = malloc(sizeof(struct sockaddr_storage));
-	    setbindhost(cf->bindaddr[i], AF_INET6, bh6[i], SERVICE);
+	    cf->bindaddr[i] = host2bindaddr(cf, bh6[i], AF_INET6, &errmsg);
+	    if (cf->bindaddr[i] == NULL)
+		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
     }

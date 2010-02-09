@@ -34,8 +34,10 @@
 #include "config.h"
 
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <netinet/in.h>
 #include <poll.h>
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
@@ -84,6 +86,11 @@ struct rtpp_timeout_handler {
     char notify_buf[64];
 };
 
+struct bindaddr_list {
+    struct sockaddr_storage bindaddr;
+    struct bindaddr_list *next;
+};
+
 struct cfg {
     int nodaemon;
     int dmode;
@@ -105,6 +112,7 @@ struct cfg {
      * mode enabled.
      */
     struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
+    struct bindaddr_list *bindaddr_list;
     int tos;
 
     const char *rdir;
@@ -138,6 +146,8 @@ struct cfg {
     uint16_t port_table[65536];
     int port_table_len;
     int port_table_idx;
+
+    int log_level;
 };
 
 #endif

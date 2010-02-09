@@ -34,7 +34,7 @@
 #include <assert.h>
 
 #include "rtp.h"
-#include "rtpp_util.h"
+#include "rtpp_network.h"
 
 /* Linked list of free packets */
 static struct rtp_packet *rtp_packet_pool = NULL;
