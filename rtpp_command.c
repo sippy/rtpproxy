@@ -86,7 +86,7 @@ static int
 create_twinlistener(struct cfg *cf, struct sockaddr *ia, int port, int *fds)
 {
     struct sockaddr_storage iac;
-    int rval, i, flags;
+    int rval, i, flags, so_rcvbuf;
 
     fds[0] = fds[1] = -1;
 
@@ -113,6 +113,9 @@ create_twinlistener(struct cfg *cf, struct sockaddr *ia, int port, int *fds)
 	if ((ia->sa_family == AF_INET) && (cf->tos >= 0) &&
 	  (setsockopt(fds[i], IPPROTO_IP, IP_TOS, &cf->tos, sizeof(cf->tos)) == -1))
 	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "unable to set TOS to %d", cf->tos);
+	so_rcvbuf = 256 * 1024;
+	if (setsockopt(fds[i], SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "unable to set 256K receive buffer size");
 	flags = fcntl(fds[i], F_GETFL);
 	fcntl(fds[i], F_SETFL, flags | O_NONBLOCK);
     }
