@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #
-# $Id: UacStateUpdating.py,v 1.13 2009/12/11 01:39:55 sobomax Exp $
+# $Id: UacStateUpdating.py,v 1.14 2010/02/22 11:58:40 sobomax Exp $
 
 from UaStateGeneric import UaStateGeneric
 from CCEvents import CCEventDisconnect, CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect
@@ -73,7 +73,7 @@ class UacStateUpdating(UaStateGeneric):
             return (UaStateConnected,)
         if code in (301, 302) and resp.countHFs('contact') > 0:
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
-            self.ua.equeqe.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))
+            self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))
         elif code in (408, 481):
             # If the response for a request within a dialog is a 481
             # (Call/Transaction Does Not Exist) or a 408 (Request Timeout), the UAC
