@@ -37,6 +37,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "rtpp_util.h"
@@ -50,7 +51,14 @@ getdtime(void)
     if (gettimeofday(&timev, NULL) == -1)
 	return -1;
 
-    return timev.tv_sec + ((double)timev.tv_usec) / 1000000.0;
+    return ts2dtime(timev.tv_sec, timev.tv_usec);
+}
+
+double
+ts2dtime(uint32_t ts_sec, uint32_t ts_usec)
+{
+
+    return ts_sec + ((double)ts_usec) / 1000000.0;
 }
 
 void
@@ -78,6 +86,7 @@ seedrandom(void)
     srandom((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
 }
 
+#if !defined(WITHOUT_SIPLOG)
 int
 drop_privileges(struct cfg *cf)
 {
@@ -96,6 +105,7 @@ drop_privileges(struct cfg *cf)
     }
     return 0;
 }
+#endif
 
 void
 init_port_table(struct cfg *cf)
