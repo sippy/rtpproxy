@@ -833,7 +833,11 @@ main(int argc, char **argv)
 	    timeout = TIMETICK * 1000;
 	eptime = getdtime();
 	delay = (eptime - sptime) * 1000000.0;
-	if (delay < (1000000 / POLL_LIMIT)) {
+	if (delay < 0) {
+            /* Time went backwards, handle that */
+	    sptime = eptime;
+	    last_tick_time = 0;
+	} else 	if (delay < (1000000 / POLL_LIMIT)) {
 	    usleep((1000000 / POLL_LIMIT) - delay);
 	    sptime = getdtime();
 	} else {
