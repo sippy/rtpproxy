@@ -96,6 +96,6 @@ struct pkt_hdr_adhoc {
     union sockaddr_in_s addr;   /* Source address */
     double time;		/* Time of arrival */
     unsigned short plen;	/* Length of following RTP/RTCP packet */
-};
+} __packed;
 
 #endif
