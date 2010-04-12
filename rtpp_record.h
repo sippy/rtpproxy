@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_record.h,v 1.10 2009/06/12 19:10:08 sobomax Exp $
+ * $Id: rtpp_record.h,v 1.11 2010/04/12 08:38:42 sobomax Exp $
  *
  */
 
@@ -81,7 +81,7 @@ struct pkt_hdr_pcap {
     uint32_t family;
     struct ip iphdr;
     struct udphdr udphdr;
-} __packed;
+} __attribute__((__packed__));
 
 struct pkt_hdr_adhoc {
     union sockaddr_in_s addr;   /* Source address */
