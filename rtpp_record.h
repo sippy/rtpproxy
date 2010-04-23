@@ -90,12 +90,12 @@ struct pkt_hdr_pcap {
 #endif
     struct ip iphdr;
     struct udphdr udphdr;
-} __packed;
+} __attribute__((__packed__));
 
 struct pkt_hdr_adhoc {
     union sockaddr_in_s addr;   /* Source address */
     double time;		/* Time of arrival */
     unsigned short plen;	/* Length of following RTP/RTCP packet */
-} __packed;
+} __attribute__((__packed__));
 
 #endif
