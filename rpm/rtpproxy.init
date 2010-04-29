@@ -24,6 +24,7 @@
 prog=rtpproxy
 rtpproxy=/usr/bin/$prog
 
+user=rtpproxy
 lockfile=/var/lock/subsys/$prog
 pidfile=/var/run/$prog.pid
 
@@ -37,7 +38,7 @@ RETVAL=0
 
 start() {
         echo -n $"Starting $prog: "
-        daemon $rtpproxy -p $pidfile $OPTIONS
+        daemon $rtpproxy -p $pidfile -u $user $OPTIONS
         RETVAL=$?
         echo
         [ $RETVAL = 0 ] && touch $lockfile
