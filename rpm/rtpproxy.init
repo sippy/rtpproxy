@@ -22,9 +22,14 @@
 . /etc/rc.d/init.d/functions
 
 prog=rtpproxy
-RETVAL=0
 rtpproxy=/usr/bin/$prog
 OPTIONS=
+
+# User-defined options and/or overrides of the variables,
+# listed above, should go there:
+[ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
+
+RETVAL=0
 
 start() {
         echo -n $"Starting $prog: "
