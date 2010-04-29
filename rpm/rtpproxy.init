@@ -38,6 +38,13 @@ RETVAL=0
 
 start() {
         echo -n $"Starting $prog: "
+
+        # check whether rtpproxy was already started
+        if pidofproc -p $pidfile > /dev/null 2>&1 ; then
+                echo -n "already running" && warning && echo
+	        return 0
+        fi
+
         daemon $rtpproxy -p $pidfile -u $user $OPTIONS
         RETVAL=$?
         echo
@@ -47,6 +54,13 @@ start() {
 
 stop() {
 	echo -n $"Stopping $prog: "
+
+        # check whether rtpproxy was already started
+        if ! pidofproc -p $pidfile > /dev/null 2>&1 ; then
+                echo -n "not running" && warning && echo
+                return 0
+        fi
+
 	killproc -p $pidfile $prog
 	RETVAL=$?
 	echo
