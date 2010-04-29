@@ -71,7 +71,7 @@ case "$1" in
 	stop
 	start
 	;;
-  condrestart)
+  condrestart|try-restart)
 	if [ -f /var/run/rtpproxy.pid ] ; then
 		stop
 		start
