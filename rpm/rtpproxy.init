@@ -21,9 +21,9 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-rtpproxy=/usr/bin/rtpproxy
 prog=rtpproxy
 RETVAL=0
+rtpproxy=/usr/bin/$prog
 OPTIONS=
 
 start() {
