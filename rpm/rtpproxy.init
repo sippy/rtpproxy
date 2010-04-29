@@ -46,6 +46,7 @@ stop() {
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && rm -f /var/lock/subsys/rtpproxy /var/run/rtpproxy.pid
+	return $RETVAL
 }
 
 reload() {
