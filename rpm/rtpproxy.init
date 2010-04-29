@@ -67,7 +67,7 @@ case "$1" in
         status $rtpproxy
 	RETVAL=$?
 	;;
-  restart)
+  restart|force-reload)
 	stop
 	start
 	;;
