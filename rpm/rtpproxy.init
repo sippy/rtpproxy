@@ -2,7 +2,7 @@
 #
 # Startup script for rtpproxy
 #
-# chkconfig: 345 85 15
+# chkconfig: - 85 15
 # description: A symmetric RTP proxy
 #
 # processname: rtpproxy
