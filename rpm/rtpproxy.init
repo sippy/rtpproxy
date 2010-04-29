@@ -37,7 +37,7 @@ RETVAL=0
 
 start() {
         echo -n $"Starting $prog: "
-        daemon $rtpproxy $OPTIONS
+        daemon $rtpproxy -p $pidfile $OPTIONS
         RETVAL=$?
         echo
         [ $RETVAL = 0 ] && touch $lockfile
@@ -46,7 +46,7 @@ start() {
 
 stop() {
 	echo -n $"Stopping $prog: "
-	killproc $rtpproxy
+	killproc -p $pidfile $prog
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && rm -f $lockfile $pidfile
@@ -69,7 +69,7 @@ case "$1" in
 	stop
 	;;
   status)
-        status $rtpproxy
+	status -p $pidfile $prog
 	RETVAL=$?
 	;;
   restart|force-reload)
