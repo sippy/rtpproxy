@@ -77,8 +77,11 @@ case "$1" in
 		start
 	fi
 	;;
+  reload)
+	reload
+	;;
   *)
-	echo $"Usage: $prog {start|stop|restart|condrestart|status|help}"
+	echo $"Usage: $prog {start|stop|restart|condrestart|reload|status|help}"
 	RETVAL=2
 esac
 
