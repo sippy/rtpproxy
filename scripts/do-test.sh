@@ -4,6 +4,8 @@ set -e
 
 uname -a
 ${CC} --version
+mkdir -p m4
+autoreconf --force --install --verbose
 ./configure
 make
 make clean
