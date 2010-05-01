@@ -68,13 +68,6 @@ stop() {
 	return $RETVAL
 }
 
-reload() {
-	echo -n $"Reloading $prog: "
-	killproc $rtpproxy -HUP
-	RETVAL=$?
-	echo
-}
-
 # See how we were called.
 case "$1" in
   start)
@@ -98,7 +91,8 @@ case "$1" in
 	fi
 	;;
   reload)
-	reload
+	echo -n $"Reloading $prog: not supported" && failure && echo
+	RETVAL=3
 	;;
   *)
 	echo $"Usage: $prog {start|stop|restart|condrestart|reload|status|help}"
