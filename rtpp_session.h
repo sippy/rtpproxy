@@ -98,7 +98,6 @@ void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(char *, char *, unsigned *);
 int find_stream(struct cfg *, char *, char *, char *, struct rtpp_session **);
-void do_timeout_notification(struct rtpp_session *, int);
 int get_ttl(struct rtpp_session *);
 
 #endif

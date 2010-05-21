@@ -27,7 +27,7 @@
 
 CC?=	gcc
 CFLAGS+=-I../siplog -Wall -D_BSD_SOURCE -D_ISOC99_SOURCE
-LIBS+=	-L../siplog -lsiplog -lpthread -lm
+LIBS+=	-L../siplog -L/usr/local/lib -lsiplog -lpthread -lm
 PREFIX?= /usr/local
 
 OS = $(shell uname -s | sed -e s/SunOS/solaris/ -e s/CYGWIN.*/cygwin/ \
@@ -42,7 +42,7 @@ CFLAGS+= -D_BSD_SOURCE
 endif
 
 SRCS = main.c rtp_server.c rtpp_record.c rtpp_util.c rtp_resizer.c rtp.c rtpp_session.c \
-  rtpp_command.c rtpp_network.c rtpp_log.c
+  rtpp_command.c rtpp_network.c rtpp_log.c rtpp_notify.c
 OBJS = $(SRCS:.c=.o)
 
 .c.o:
