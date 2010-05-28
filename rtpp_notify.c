@@ -38,6 +38,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpp_log.h"
 #include "rtpp_session.h"
 
 struct rtpp_notify_wi
@@ -45,7 +46,7 @@ struct rtpp_notify_wi
     char *notify_buf;
     int len;
     struct rtpp_timeout_handler *th;
-    void *glog;
+    rtpp_log_t glog;
     struct rtpp_notify_wi *next;
 };
 
@@ -220,7 +221,7 @@ rtpp_notify_schedule(struct cfg *cf, struct rtpp_session *sp)
 }
 
 static void
-reconnect_timeout_handler(void *log, struct rtpp_timeout_handler *th)
+reconnect_timeout_handler(rtpp_log_t log, struct rtpp_timeout_handler *th)
 {
     struct sockaddr_un remote;
 
