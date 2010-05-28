@@ -260,7 +260,7 @@ class SipTransactionManager(object):
             self.incomingRequest(req, checksum, tids, server)
 
     # 1. Client transaction methods
-    def newTransaction(self, msg, resp_cb = None):
+    def newTransaction(self, msg, resp_cb = None, userv = None):
         t = SipTransaction()
         t.tid = msg.getTId(True, True)
         if self.tclient.has_key(t.tid):
@@ -268,7 +268,10 @@ class SipTransactionManager(object):
         t.tout = 0.5
         t.fcode = None
         t.address = msg.getTarget()
-        t.userv = self.l4r.getServer(t.address)
+        if userv == None:
+            t.userv = self.l4r.getServer(t.address)
+        else:
+            t.userv = userv
         t.data = msg.localStr(t.userv.laddress[0], t.userv.laddress[1])
         try:
             t.expires = msg.getHFBody('expires').getNum()
@@ -302,7 +305,7 @@ class SipTransactionManager(object):
         else:
             if reason != None:
                 t.cancel.appendHeader(SipHeader(body = reason))
-            self.newTransaction(t.cancel)
+            self.newTransaction(t.cancel, userv = t.userv)
 
     def incomingResponse(self, msg, t, checksum):
         # In those two states upper level already notified, only do ACK retransmit
@@ -327,7 +330,7 @@ class SipTransactionManager(object):
                 if t.state == TRYING:
                     t.state = RINGING
                     if t.cancelPending:
-                        self.newTransaction(t.cancel)
+                        self.newTransaction(t.cancel, userv = t.userv)
                         t.cancelPending = False
                 t.teB = Timeout(self.timerB, t.expires, 1, t)
                 self.l1rcache[checksum] = (None, None, None)
