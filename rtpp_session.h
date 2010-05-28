@@ -88,13 +88,13 @@ struct rtpp_session {
 };
 
 void init_hash_table(struct cfg *);
-struct rtpp_session *session_findfirst(struct cfg *, char *);
+struct rtpp_session *session_findfirst(struct cfg *, const char *);
 struct rtpp_session *session_findnext(struct rtpp_session *);
 void hash_table_append(struct cfg *, struct rtpp_session *);
 void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);
-int compare_session_tags(char *, char *, unsigned *);
-int find_stream(struct cfg *, char *, char *, char *, struct rtpp_session **);
+int compare_session_tags(const char *, const char *, unsigned *);
+int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session **);
 int get_ttl(struct rtpp_session *);
 
 #endif

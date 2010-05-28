@@ -53,7 +53,7 @@ init_hash_table(struct cfg *cf)
 }
 
 static uint8_t
-hash_string(struct cfg *cf, char *bp, char *ep)
+hash_string(struct cfg *cf, const char *bp, const char *ep)
 {
     uint8_t res;
 
@@ -111,7 +111,7 @@ hash_table_remove(struct cfg *cf, struct rtpp_session *sp)
 }
 
 struct rtpp_session *
-session_findfirst(struct cfg *cf, char *call_id)
+session_findfirst(struct cfg *cf, const char *call_id)
 {
     uint8_t hash;
     struct rtpp_session *sp;
@@ -221,7 +221,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 }
 
 int
-compare_session_tags(char *tag1, char *tag0, unsigned *medianum_p)
+compare_session_tags(const char *tag1, const char *tag0, unsigned *medianum_p)
 {
     size_t len0 = strlen(tag0);
 
@@ -239,10 +239,10 @@ compare_session_tags(char *tag1, char *tag0, unsigned *medianum_p)
 }
 
 int
-find_stream(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
-  struct rtpp_session **spp)
+find_stream(struct cfg *cf, const char *call_id, const char *from_tag,
+  const char *to_tag, struct rtpp_session **spp)
 {
-    char *cp1, *cp2;
+    const char *cp1, *cp2;
 
     for (*spp = session_findfirst(cf, call_id); *spp != NULL; *spp = session_findnext(*spp)) {
 	if (strcmp((*spp)->tag, from_tag) == 0) {
