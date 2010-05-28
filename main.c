@@ -62,6 +62,7 @@
 #include "rtpp_record.h"
 #include "rtpp_session.h"
 #include "rtpp_network.h"
+#include "rtpp_notify.h"
 #include "rtpp_util.h"
 
 static const char *cmd_sock = CMD_SOCK;
@@ -678,7 +679,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 	  sp->sidx[0] == readyfd) {
 	    if (get_ttl(sp) == 0) {
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
-		do_timeout_notification(sp, 1);
+		rtpp_notify_schedule(cf, sp);
 		remove_session(cf, sp);
 	    } else {
 		if (sp->ttl[0] != 0)
@@ -780,6 +781,9 @@ main(int argc, char **argv)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
     }
+
+    if (rtpp_notify_init() != 0)
+        errx(1, "can't start notification thread");
 
     glog = cf.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
     atexit(ehandler);
