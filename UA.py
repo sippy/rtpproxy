@@ -282,7 +282,8 @@ class UA(object):
     def isYours(self, req = None, call_id = None, from_tag = None, to_tag = None):
         #print self.branch, req.getHFBody('via').getBranch()
         if req != None:
-            if self.branch != None and self.branch != req.getHFBody('via').getBranch():
+            if req.getMethod() != 'BYE' and self.branch != None and \
+              self.branch != req.getHFBody('via').getBranch():
                 return None
             call_id = str(req.getHFBody('call-id'))
             from_tag = req.getHFBody('from').getTag()
