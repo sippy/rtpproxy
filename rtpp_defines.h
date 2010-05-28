@@ -24,8 +24,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_defines.h,v 1.28 2009/10/06 05:53:03 sobomax Exp $
- *
  */
 
 #ifndef _RTPP_DEFINES_H_

@@ -1,7 +1,4 @@
 #!/bin/sh
-#
-# $Id: rtpproxy.in.freebsd,v 1.1 2009/11/20 11:23:19 sobomax Exp $
-#
 
 # Add the following lines to /etc/rc.conf to enable RTPproxy:
 #

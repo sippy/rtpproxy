@@ -23,8 +23,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_resizer.h,v 1.1 2007/11/16 08:43:26 sobomax Exp $
- *
  */
 
 #ifndef __RTP_RESIZER_H

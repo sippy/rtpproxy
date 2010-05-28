@@ -24,8 +24,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: g711.h,v 1.3 2007/07/28 01:10:27 sobomax Exp $
- *
  */
 
 #ifndef _G711_H_

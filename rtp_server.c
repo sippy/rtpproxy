@@ -24,8 +24,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtp_server.c,v 1.9 2008/08/14 01:40:50 sobomax Exp $
- *
  */
 
 #include <sys/types.h>

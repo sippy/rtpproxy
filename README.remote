@@ -19,5 +19,3 @@ BEWARE: command protocol contains no security or auth measures, so that
 you should be using other means to secure RTP Proxy, such as firewall or
 even better a VPN between machine runing RTP Proxy and machine wich
 runs a software that controls it.
-
-$Id: README.remote,v 1.1 2004/03/01 12:31:55 sobomax Exp $

@@ -24,8 +24,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: rtpp_session.h,v 1.17 2008/12/24 10:46:03 sobomax Exp $
- *
  */
 
 #ifndef _RTPP_SESSION_H_

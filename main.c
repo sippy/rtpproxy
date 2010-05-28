@@ -24,8 +24,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: main.c,v 1.94 2009/10/06 09:19:14 sobomax Exp $
- *
  */
 
 #include <sys/types.h>
