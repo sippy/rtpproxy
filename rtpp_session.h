@@ -97,7 +97,7 @@ void hash_table_append(struct cfg *, struct rtpp_session *);
 void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(char *, char *, unsigned *);
-int find_stream(struct cfg *, const char *call_id, const char *from_tag, const char *to_tag, struct rtpp_session **);
+int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session **);
 int get_ttl(struct rtpp_session *);
 
 #endif
