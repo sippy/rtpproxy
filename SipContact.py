@@ -21,8 +21,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
-#
-# $Id: SipContact.py,v 1.4 2008/06/25 07:57:57 sobomax Exp $
 
 from SipAddressHF import SipAddressHF
 from SipConf import SipConf

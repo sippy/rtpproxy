@@ -20,8 +20,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
-#
-# $Id: Udp_server.py,v 1.9 2009/11/20 03:18:10 sobomax Exp $
 
 from twisted.internet import reactor
 from errno import ECONNRESET, ENOTCONN, ESHUTDOWN, EWOULDBLOCK, ENOBUFS, EAGAIN, \

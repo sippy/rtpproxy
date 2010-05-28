@@ -21,8 +21,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
-#
-# $Id: UA.py,v 1.19 2009/11/20 04:32:01 sobomax Exp $
 
 from SipHeader import SipHeader
 from SipAuthorization import SipAuthorization

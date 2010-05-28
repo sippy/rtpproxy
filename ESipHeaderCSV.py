@@ -21,8 +21,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
-#
-# $Id: ESipHeaderCSV.py,v 1.3 2008/02/18 19:49:45 sobomax Exp $
 
 class ESipHeaderCSV(Exception):
     def __init__(self, name, bodys):
