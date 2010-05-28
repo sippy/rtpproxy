@@ -64,10 +64,12 @@
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
 #include "rtpp_util.h"
+#include "synchro_backup.h"
 
 static const char *cmd_sock = CMD_SOCK;
 static const char *pid_file = PID_FILE;
 static rtpp_log_t glog;
+static struct cfg cf;
 
 static void setbindhost(struct sockaddr *, int, const char *, const char *);
 static void usage(void);
@@ -88,7 +90,10 @@ setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
 	bindhost = NULL;
 
     if ((n = resolve(ia, pf, bindhost, servname, AI_PASSIVE)) != 0)
-	errx(1, "setbindhost: %s", gai_strerror(n));
+	errx(1, "setbindhost: %s for %s %s", gai_strerror(n), bindhost, servname);
+    else
+       warn("found bind for host %s %s", bindhost, servname);
+
 }
 
 static void
@@ -98,7 +103,8 @@ usage(void)
     fprintf(stderr, "usage: rtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]] "
-      "[-n timeout_socket] [-d log_level[:log_facility]]\n");
+      "[-n timeout_socket] [-d log_level[:log_facility]] [-H local_ip:port/linked_rtpproxy_ip:port] [-h file_to_store_sessions for High Avaibility (hot start) ]\n");
+
     exit(1);
 }
 
@@ -114,13 +120,15 @@ static void
 ehandler(void)
 {
 
+    save_sessions_infos(&cf);
+
     unlink(cmd_sock);
     unlink(pid_file);
     rtpp_log_write(RTPP_LOG_INFO, glog, "rtpproxy ended");
     rtpp_log_close(glog);
 }
 
-static void 
+static void
 init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
@@ -144,11 +152,22 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->timeout_handler.socket_name = NULL;
     cf->timeout_handler.fd = -1;
     cf->timeout_handler.connected = 0;
+    /*
+     * IP of the linked RTPproxy (backup or main according to heart beat)
+     * No linked proxy if NULL
+     */
+    cf->ha.is_activated = 0;
+    cf->ha.listen_ip = NULL;
+    cf->ha.listen_port = 0;
+    cf->ha.send_to_ip = NULL;
+    cf->ha.send_to_port = 0;
+    cf->ha.idx_fd = -1;
+    cf->start_rtp_idx = 1;
 
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:H:h:")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->nodaemon = 1;
@@ -315,10 +334,75 @@ init_config(struct cfg *cf, int argc, char **argv)
 		errx(1, "%s: invalid log level", optarg);
 	    break;
 
+	case 'h':
+	    cf->ha.stored_sessions_file=strdup(optarg);
+	    break;
+
+	case 'H':
+	{
+	    char* linked_proxy = NULL;
+	    linked_proxy = strdup (optarg);
+	    char * pch = strtok ( optarg, ":/" );
+	    if(pch)
+	    {
+		    cf->ha.listen_ip = strdup(pch);
+		    pch = strtok (NULL, ":/");
+		    if(pch)
+			    cf->ha.listen_port = atoi(pch);
+		    else
+		    {
+			    free(cf->ha.listen_ip);
+			    cf->ha.listen_ip=NULL;
+			    errx(1, "\"%s\": ip:port/ip:port not configured",optarg);
+		    }
+		    if((cf->ha.listen_port==0)||(cf->ha.listen_port==INT_MIN)||(cf->ha.listen_port==INT_MAX))
+		    {
+			    errx(1, "\"%s\" : port is out of range",optarg);
+		    }
+		    pch = strtok (NULL, ":/");
+		    if(pch)
+		    {
+			    cf->ha.send_to_ip = strdup(pch);
+			    pch = strtok (NULL, ":/");
+			    if(pch)
+			    {
+				    cf->ha.send_to_port = atoi(pch);
+			    }
+			    else
+			    {
+				    free(cf->ha.listen_ip);
+				    cf->ha.listen_ip=NULL;
+				    free(cf->ha.send_to_ip);
+				    cf->ha.send_to_ip=NULL;
+				    errx(1, "\"%s\": ip:port/ip:port not configured",optarg);
+			    }
+			    if(
+				((cf->ha.listen_port==0)||(cf->ha.listen_port==INT_MIN)||(cf->ha.listen_port==INT_MAX))
+				||((cf->ha.send_to_port==0)||(cf->ha.send_to_port==INT_MIN)||(cf->ha.send_to_port==INT_MAX))
+				)
+			    {
+				    errx(1, "\"%s\" : port is out of range",optarg);
+			    }
+			    cf->ha.is_activated = 1;
+			    cf->start_rtp_idx ++;
+		    }
+		    else
+		    {
+			    free(cf->ha.listen_ip);
+			    cf->ha.listen_ip=NULL;
+			    errx(1, "\"%s\": ip:port/ip:port not configured",optarg);
+		    }
+	    }
+	    else
+		    errx(1, "%s: ip:port not configured",optarg);
+	    break;
+	}
+
 	case '?':
 	default:
 	    usage();
 	}
+
     if (cf->rdir == NULL && cf->sdir != NULL)
 	errx(1, "-S switch requires -r switch");
 
@@ -351,19 +435,21 @@ init_config(struct cfg *cf, int argc, char **argv)
 
     if (cf->port_min <= 0 || cf->port_min > 65535)
 	errx(1, "invalid value of the port_min argument, "
-	  "not in the range 1-65535");
+	  "not in the range: 1-65535");
     if (cf->port_max <= 0 || cf->port_max > 65535)
 	errx(1, "invalid value of the port_max argument, "
 	  "not in the range 1-65535");
     if (cf->port_min > cf->port_max)
 	errx(1, "port_min should be less than port_max");
 
+    cf->ha.idx_fd = cf->ha.listen_ip!=NULL ? ((cf->port_max - cf->port_min + 1) * 2) + 1 : 0;
+
     cf->sessions = malloc((sizeof cf->sessions[0]) *
       (((cf->port_max - cf->port_min + 1) * 2) + 1));
     cf->rtp_servers =  malloc((sizeof cf->rtp_servers[0]) *
       (((cf->port_max - cf->port_min + 1) * 2) + 1));
     cf->pfds = malloc((sizeof cf->pfds[0]) *
-      (((cf->port_max - cf->port_min + 1) * 2) + 1));
+      (((cf->port_max - cf->port_min + 1) * 2) + 1 + (cf->ha.is_activated ? 1:0)));
 
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
 	bh[0] = "*";
@@ -407,6 +493,13 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    continue;
 	}
     }
+
+    if(cf->ha.is_activated) {
+	cf->bindsyncaddr = host2bindaddr(cf, cf->ha.listen_ip, AF_INET, &errmsg);
+	if (cf->bindsyncaddr == NULL)
+	    errx(1, "host2bindaddr: %s", errmsg);
+    }
+
     if (cf->bindaddr[0] == NULL) {
 	cf->bindaddr[0] = cf->bindaddr[1];
 	cf->bindaddr[1] = NULL;
@@ -461,6 +554,31 @@ init_controlfd(struct cfg *cf)
     fcntl(controlfd, F_SETFL, flags | O_NONBLOCK);
 
     return controlfd;
+}
+
+static int
+init_syncfd(struct cfg *cf)
+{
+	struct sockaddr_storage ifsin;
+	int i, syncfd, flags;
+	char strport[30];
+
+	snprintf (strport,10,"%d",cf->ha.listen_port);
+
+	i = (cf->umode == 6) ? AF_INET6 : AF_INET;
+
+	setbindhost(sstosa(&ifsin), i, cf->ha.listen_ip, strport);
+
+	syncfd = socket(i, SOCK_DGRAM, 0);
+	if (syncfd == -1)
+	err(1, "High avaibility :can't create socket");
+	if (bind(syncfd, sstosa(&ifsin), SS_LEN(&ifsin)) < 0)
+	err(1, "High avaibility :can't bind to a socket");
+
+	flags = fcntl(syncfd, F_GETFL);
+	fcntl(syncfd, F_SETFL, flags | O_NONBLOCK);
+
+	return syncfd;
 }
 
 static void
@@ -564,6 +682,8 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 		  "can't allocate memory for remote address - "
 		  "removing session");
 		remove_session(cf, GET_RTP(sp));
+		if((GET_RTP(sp))&&(GET_RTP(sp)->call_id!=NULL))
+			send_synchro_message( cf, "Remove_sess", GET_RTP(sp)->call_id, GET_RTP(sp)->tag, NULL,0);
 		/* Break, sp is invalid now */
 		break;
 	    }
@@ -610,6 +730,8 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 			  "can't allocate memory for remote address - "
 			  "removing session");
 			remove_session(cf, sp);
+			if((sp)&&(sp->call_id!=NULL))
+				send_synchro_message( cf, "Remove_sess", sp->call_id, sp->tag, NULL,0);
 			/* Break, sp is invalid now */
 			break;
 		    }
@@ -626,6 +748,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 
 	if (sp->resizers[ridx].output_nsamples > 0)
 	    rtp_resizer_enqueue(&sp->resizers[ridx], &packet);
+
 	if (packet != NULL)
 	    send_packet(cf, sp, ridx, packet);
     }
@@ -664,7 +787,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 }
 
 static void
-process_rtp(struct cfg *cf, double dtime, int alarm_tick)
+process_rtp(struct cfg *cf, double dtime, int alarm_tick, int passive_alarm_tick )
 {
     int readyfd, skipfd, ridx;
     struct rtpp_session *sp;
@@ -672,20 +795,24 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 
     /* Relay RTP/RTCP */
     skipfd = 0;
-    for (readyfd = 1; readyfd < cf->nsessions; readyfd++) {
+    for (readyfd = cf->start_rtp_idx; readyfd < cf->nsessions; readyfd++) {
 	sp = cf->sessions[readyfd];
 
 	if (alarm_tick != 0 && sp != NULL && sp->rtcp != NULL &&
 	  sp->sidx[0] == readyfd) {
-	    if (get_ttl(sp) == 0) {
-		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
-		rtpp_notify_schedule(cf, sp);
-		remove_session(cf, sp);
-	    } else {
-		if (sp->ttl[0] != 0)
-		    sp->ttl[0]--;
-		if (sp->ttl[1] != 0)
-		    sp->ttl[1]--;
+	    if ((!sp->passive_session) || (passive_alarm_tick != 0)) {
+		if (get_ttl(sp) == 0) {
+		    rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
+		    rtpp_notify_schedule(cf, sp);
+		    if ((sp != NULL) && (sp->call_id != NULL))
+			send_synchro_message(cf, "Remove_sess", sp->call_id, sp->tag, NULL, 0);
+		    remove_session(cf, sp);
+		} else {
+		    if (sp->ttl[0] != 0)
+			sp->ttl[0]--;
+		    if (sp->ttl[1] != 0)
+			sp->ttl[1]--;
+		}
 	    }
 	}
 
@@ -716,6 +843,10 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 		rxmit_packets(cf, sp, ridx, dtime);
 	    if (sp->resizers[ridx].output_nsamples > 0) {
 		while ((packet = rtp_resizer_get(&sp->resizers[ridx], dtime)) != NULL) {
+			//This session is no more passive cos a packet should be transmitted
+			if(sp->passive_session)
+				sp->passive_session=0;
+
 		    send_packet(cf, sp, ridx, packet);
 		    rtp_packet_free(packet);
 		}
@@ -756,13 +887,27 @@ process_commands(struct cfg *cf, double dtime)
     } while (i == 0);
 }
 
+static void
+process_sync(struct cfg *cf, double dtime)
+{
+    int syncfd, i;
+
+    if ((cf->pfds[1].revents & POLLIN) == 0)
+	return;
+
+    do {
+
+	syncfd = cf->pfds[1].fd;
+	i = handle_sync(cf, syncfd, dtime);
+    } while (i == 0);
+}
+
 int
 main(int argc, char **argv)
 {
-    int i, len, timeout, controlfd, alarm_tick;
-    double sptime, eptime, last_tick_time;
+    int i, len, timeout, controlfd,syncfd, alarm_tick;
+    double sptime, eptime, last_tick_time, passive_alarm_tick;
     unsigned long delay;
-    struct cfg cf;
     char buf[256];
 
     memset(&cf, 0, sizeof(cf));
@@ -775,6 +920,16 @@ main(int argc, char **argv)
     init_port_table(&cf);
 
     controlfd = init_controlfd(&cf);
+
+    if(cf.ha.is_activated)
+    {
+	    // High avaibility synchronization channel activated
+	    syncfd = init_syncfd(&cf);
+	    warn( "High avaibility synchronization channel");
+    }
+
+    if(cf.ha.stored_sessions_file!=NULL)
+	    warn( "High avaibility sessions saving activated");
 
     if (cf.nodaemon == 0) {
 	if (rtpp_daemon(0, 0) == -1)
@@ -826,10 +981,25 @@ main(int argc, char **argv)
     cf.nsessions = 1;
     cf.rtp_nsessions = 0;
 
+    if(cf.ha.is_activated)
+    {
+	    // High avaibility synchronization channel activated
+	    cf.pfds[1].fd = syncfd;
+	    cf.pfds[1].events = POLLIN;
+	    cf.pfds[1].revents = 0;
+	    cf.nsessions++;
+    }
+
+    if(cf.ha.stored_sessions_file!=NULL)
+    {
+	    // load all previous sessions.
+	    load_prev_sessions(&cf);
+    }
+
     sptime = 0;
     last_tick_time = 0;
     for (;;) {
-	if (cf.rtp_nsessions > 0 || cf.nsessions > 1)
+	if (cf.rtp_nsessions > 0 || cf.nsessions > cf.start_rtp_idx)
 	    timeout = RTPS_TICKS_MIN;
 	else
 	    timeout = TIMETICK * 1000;
@@ -854,9 +1024,19 @@ main(int argc, char **argv)
 	} else {
 	    alarm_tick = 0;
 	}
-	process_rtp(&cf, eptime, alarm_tick);
+	// passive sessions expire after 5400s
+	if (eptime > last_tick_time + TIMETICK*5400) {
+		    passive_alarm_tick = 1;
+	} else {
+		passive_alarm_tick = 0;
+	}
+	process_rtp(&cf, eptime, alarm_tick, passive_alarm_tick);
 	if (i > 0) {
 	    process_commands(&cf, eptime);
+	}
+	if(cf.ha.is_activated!=0)
+	{
+	    process_sync(&cf, eptime);
 	}
     }
 

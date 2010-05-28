@@ -169,7 +169,7 @@ _rtpp_log_ewrite(struct cfg *cf, int level, const char *function, const char *fo
     }
 
     snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), fmt, strlvl(level),
-      function, format, strerror(errno));
+      function, format, strerror(errno) );
 
     if (cf->nodaemon != 0) {
 	vfprintf(stderr, rtpp_log_buff, ap);

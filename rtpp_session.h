@@ -85,6 +85,9 @@ struct rtpp_session {
     double last_update[2];
     /* Supported codecs */
     char *codecs[2];
+
+    /* Passive session (sessions initialy managed by other RTP proxy) shouldn't expire so we identify it by this boolean */
+    int passive_session;
 };
 
 void init_hash_table(struct cfg *);
@@ -94,7 +97,7 @@ void hash_table_append(struct cfg *, struct rtpp_session *);
 void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(char *, char *, unsigned *);
-int find_stream(struct cfg *, char *, char *, char *, struct rtpp_session **);
+int find_stream(struct cfg *, const char *call_id, const char *from_tag, const char *to_tag, struct rtpp_session **);
 int get_ttl(struct rtpp_session *);
 
 #endif

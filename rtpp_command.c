@@ -46,12 +46,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
+#include "synchro_backup.h"
 #include "rtpp_command.h"
 #include "rtpp_log.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
+
+#include <stdio.h>
+#include <stdlib.h>
 
 struct proto_cap proto_caps[] = {
     /*
@@ -69,9 +74,10 @@ struct proto_cap proto_caps[] = {
     { "20090810", "Support for automatic bridging" },
     { NULL, NULL }
 };
-
+static int treat_sync_cmd(struct cfg *cf,const char * buf, int len, int passive);
 static int create_twinlistener(struct cfg *, struct sockaddr *, int, int *);
 static int create_listener(struct cfg *, struct sockaddr *, int *, int *);
+static int create_passive_session(struct cfg *cf, const char* addr, const  char* call_id, int lport,const char*  port_to_listen, const char* from_tag, int weak,int passive );
 static int handle_delete(struct cfg *, char *, char *, char *, int);
 static void handle_noplay(struct cfg *, struct rtpp_session *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
@@ -80,6 +86,370 @@ static int handle_record(struct cfg *, char *, char *, char *);
 static void handle_query(struct cfg *, int, struct sockaddr_storage *,
   socklen_t, char *, struct rtpp_session *, int);
 
+int load_prev_sessions(struct cfg *cf)
+{
+	int nb_loaded = 0;
+	time_t tt;
+
+	FILE* hd = fopen(cf->ha.stored_sessions_file,"r");
+
+	if(hd!=NULL)
+	{
+		fscanf(hd,"%lld\n", (long long *)(void*)&tt);
+
+		if((time ( NULL )- tt)< (5*60)) //less than 5 minutes
+		{
+			if(cf->ha.stored_sessions_file!=NULL)
+			{
+				char command[1024 * 8];
+				while(fgets(command,1024 * 8,hd)!=NULL)
+				{
+					rtpp_log_write(RTPP_LOG_DBUG, cf->glog, "High avaibility : loading sync command \"%s\"  (%i octets) (%d sessions en cours...)", command, strlen(command),cf->nsessions);
+					treat_sync_cmd(cf,command,strlen(command), 0);
+				}
+			}
+		}
+		else
+			rtpp_log_write(RTPP_LOG_INFO, cf->glog, "Previous sessions are too old");
+	}
+
+	return nb_loaded;
+}
+
+static int
+create_passive_listener(struct cfg *cf, struct sockaddr *ia, int port, int *fds)
+{
+    int i, rval;
+    int idx =-1;
+
+    for (i = 0; i < 2; i++)
+	fds[i] = -1;
+
+    for (i = 1; i < cf->port_table_len; i++)
+    {
+	if(cf->port_table[i]==port) {idx=i; break;}
+    }
+    if (idx==-1) return -1;
+
+    rval = create_twinlistener(cf, ia, port, fds);
+    if (rval == 0)
+    {
+	cf->port_table_idx = idx;
+	return 0;
+    }
+    if (rval == -1)
+	return -1;
+
+    return -1;
+}
+
+int
+update_address(struct cfg *cf, const char* call_id, int pidx, const char* addr, const char* port, const char* from_tag, const char* to_tag)
+{
+	struct sockaddr_storage tia;
+	int n=0,pf=0,i=0;
+	struct sockaddr *ia[2]={0,0};
+	struct rtpp_session *spa=NULL;
+
+	if ((n = resolve(sstosa(&tia), pf, addr, port,	AI_NUMERICHOST)) == 0)
+	{
+		if (!ishostnull(sstosa(&tia)))
+		{
+			for (i = 0; i < 2; i++)
+			{
+				ia[i] = malloc(SS_LEN(&tia));
+				if (ia[i] == NULL)
+				{
+					rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't allocate memory");
+					return 0;
+				}
+				memcpy(ia[i], &tia, SS_LEN(&tia));
+			}
+			/* Set port for RTCP, will work both for IPv4 and IPv6 */
+			n = ntohs(satosin(ia[1])->sin_port);
+			satosin(ia[1])->sin_port = htons(n + 1);
+		}
+	} else
+	{
+		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "getaddrinfo: %s", gai_strerror(n));
+	}
+
+	i = find_stream(cf, call_id, from_tag, to_tag, &spa);
+	if(!spa)
+	{
+		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't find stream ! call_id: %s addr:%s port:%s from_tag:%s to_tag:%s", call_id,addr,port,from_tag,to_tag);
+		return -1;
+	}
+	else
+		rtpp_log_write(RTPP_LOG_DBUG, cf->glog, "High Avaibility: Stream found ! call_id: %s addr:%s lport:%s from_tag:%s to_tag:%s et i vaut %d", call_id,addr,port,from_tag,to_tag,i);
+
+	if (spa->untrusted_addr[pidx] == 0 && !(spa->addr[pidx] != NULL &&
+	  SA_LEN(ia[0]) == SA_LEN(spa->addr[pidx]) &&
+	  memcmp(ia[0], spa->addr[pidx], SA_LEN(ia[0])) == 0)) {
+	    rtpp_log_write(RTPP_LOG_INFO, spa->log, "pre-filling %s's address "
+	      "with %s:%s", (pidx == 0) ? "callee" : "caller", addr, port);
+	    if (spa->addr[pidx] != NULL) {
+		if (spa->canupdate[pidx] == 0) {
+		    if (spa->prev_addr[pidx] != NULL)
+			 free(spa->prev_addr[pidx]);
+		    spa->prev_addr[pidx] = spa->addr[pidx];
+		} else {
+		    free(spa->addr[pidx]);
+		}
+	    }
+	    spa->addr[pidx] = ia[0];
+	    ia[0] = NULL;
+	}
+	if (spa->rtcp->untrusted_addr[pidx] == 0 && !(spa->rtcp->addr[pidx] != NULL &&
+	  SA_LEN(ia[1]) == SA_LEN(spa->rtcp->addr[pidx]) &&
+	  memcmp(ia[1], spa->rtcp->addr[pidx], SA_LEN(ia[1])) == 0)) {
+	    if (spa->rtcp->addr[pidx] != NULL) {
+		if (spa->rtcp->canupdate[pidx] == 0) {
+		    if (spa->rtcp->prev_addr[pidx] != NULL)
+			free(spa->rtcp->prev_addr[pidx]);
+		    spa->rtcp->prev_addr[pidx] = spa->rtcp->addr[pidx];
+		} else {
+		    free(spa->rtcp->addr[pidx]);
+		}
+	    }
+	    spa->rtcp->addr[pidx] = ia[1];
+	    ia[1] = NULL;
+	}
+
+	int asymmetric = 0;
+	spa->asymmetric[pidx] = spa->rtcp->asymmetric[pidx] = asymmetric;
+	spa->canupdate[pidx] = spa->rtcp->canupdate[pidx] = NOT(asymmetric);
+
+	if (spa->codecs[pidx] != NULL)
+	{
+		free(spa->codecs[pidx]);
+		spa->codecs[pidx] = NULL;
+	}
+
+	for (i = 0; i < 2; i++)
+		if (ia[i] != NULL)
+			free(ia[i]);
+
+	return 0;
+}
+
+static int
+create_passive_lookup(struct cfg *cf,const char * call_id, char *addr, const char* lport, const char* port, const char* from_tag, const char* to_tag, int weak)
+{
+	struct sockaddr_storage tia;
+	int n=0,pf=0,i=0;
+	struct sockaddr *ia[2]={0,0};
+	struct rtpp_session *spa=NULL;
+	int fds[2]={0,0};
+
+	if ((n = resolve(sstosa(&tia), pf, addr, port,	AI_NUMERICHOST)) == 0)
+	{
+		if (!ishostnull(sstosa(&tia)))
+		{
+			for (i = 0; i < 2; i++)
+			{
+				ia[i] = malloc(SS_LEN(&tia));
+				if (ia[i] == NULL)
+				{
+					rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't allocate memory");
+					return 0;
+				}
+				memcpy(ia[i], &tia, SS_LEN(&tia));
+			}
+			/* Set port for RTCP, will work both for IPv4 and IPv6 */
+			n = ntohs(satosin(ia[1])->sin_port);
+			satosin(ia[1])->sin_port = htons(n + 1);
+		}
+	} else
+	{
+		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "getaddrinfo: %s", gai_strerror(n));
+	}
+
+	i = find_stream(cf, call_id, from_tag, to_tag, &spa);
+	if (i != -1)
+		i = NOT(i);
+
+	if(!spa)
+	{
+		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't find stream ! call_id: %s addr:%s lport:%s from_tag:%s to_tag:%s", call_id,addr,lport,from_tag,to_tag);
+		return -1;
+	}
+	else
+		rtpp_log_write(RTPP_LOG_DBUG, cf->glog, "High Avaibility: Stream found ! call_id: %s addr:%s lport:%s from_tag:%s to_tag:%s et i vaut %d", call_id,addr,lport,from_tag,to_tag,i);
+
+	if (spa->fds[i] == -1)
+	{
+		if (create_passive_listener(cf, spa->laddr[i], atoi(lport), fds) == -1)
+		{
+			rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't create listener for port %d", atoi(lport));
+			return 0;
+		}
+
+
+		assert(spa->fds[i] == -1);
+		spa->fds[i] = fds[0];
+		assert(spa->rtcp->fds[i] == -1);
+		spa->rtcp->fds[i] = fds[1];
+		spa->ports[i] = atoi(lport);
+		spa->rtcp->ports[i] = spa->ports[i] + 1;
+		spa->complete = spa->rtcp->complete = 1;
+		append_session(cf, spa, i);
+		append_session(cf, spa->rtcp, i);
+	}
+	if (weak)
+		spa->weak[i] = 1;
+
+	spa->ttl_mode = cf->ttl_mode;
+	spa->ttl[0] = cf->max_ttl;
+	spa->ttl[1] = cf->max_ttl;
+
+	rtpp_log_write(RTPP_LOG_INFO, spa->log, "lookup on ports %d/%d", spa->ports[0], spa->ports[1]);
+
+	int pidx = i ? 0:1;
+
+	if (spa->untrusted_addr[pidx] == 0 && !(spa->addr[pidx] != NULL &&
+	  SA_LEN(ia[0]) == SA_LEN(spa->addr[pidx]) &&
+	  memcmp(ia[0], spa->addr[pidx], SA_LEN(ia[0])) == 0)) {
+	    rtpp_log_write(RTPP_LOG_INFO, spa->log, "pre-filling %s's address "
+	      "with %s:%s", (pidx == 0) ? "callee" : "caller", addr, port);
+	    if (spa->addr[pidx] != NULL) {
+	        if (spa->canupdate[pidx] == 0) {
+	            if (spa->prev_addr[pidx] != NULL)
+	                 free(spa->prev_addr[pidx]);
+	            spa->prev_addr[pidx] = spa->addr[pidx];
+	        } else {
+		    free(spa->addr[pidx]);
+		}
+	    }
+	    spa->addr[pidx] = ia[0];
+	    ia[0] = NULL;
+	}
+	if (spa->rtcp->untrusted_addr[pidx] == 0 && !(spa->rtcp->addr[pidx] != NULL &&
+	  SA_LEN(ia[1]) == SA_LEN(spa->rtcp->addr[pidx]) &&
+	  memcmp(ia[1], spa->rtcp->addr[pidx], SA_LEN(ia[1])) == 0)) {
+	    if (spa->rtcp->addr[pidx] != NULL) {
+	        if (spa->rtcp->canupdate[pidx] == 0) {
+	            if (spa->rtcp->prev_addr[pidx] != NULL)
+	                free(spa->rtcp->prev_addr[pidx]);
+	            spa->rtcp->prev_addr[pidx] = spa->rtcp->addr[pidx];
+	        } else {
+		    free(spa->rtcp->addr[pidx]);
+		}
+	    }
+	    spa->rtcp->addr[pidx] = ia[1];
+	    ia[1] = NULL;
+	}
+	return 0;
+}
+
+static int
+create_passive_session(struct cfg *cf,const  char* call_id, const char* addr, int lport, const char* port_to_listen, const char* from_tag, int weak, int passive)
+{
+
+	struct rtpp_session *spa=NULL;
+	struct rtpp_session *spb=NULL;
+	struct sockaddr *lia[2];
+	int fds[2];
+	int i=0;
+	fds[0] = fds[1] = -1;
+	lia[0] = cf->bindaddr[0];
+	lia[1] = cf->bindaddr[1];
+
+	if (create_passive_listener(cf, lia[0], lport, fds) == -1) {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't create listener for port %d", lport);
+	    return 0;
+	}
+
+	/*
+	 * Session creation. If creation is requested with weak flag,
+	 * set weak[0].
+	 */
+	spa = malloc(sizeof(*spa));
+	if (spa == NULL) {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't allocate memory");
+	    return 0;
+	}
+	/* spb is RTCP twin session for this one. */
+	spb = malloc(sizeof(*spb));
+	if (spb == NULL) {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't allocate memory");
+	    return 0;
+	}
+	memset(spa, 0, sizeof(*spa));
+	memset(spb, 0, sizeof(*spb));
+	spa->passive_session = passive;
+	spb->passive_session = passive;
+	for (i = 0; i < 2; i++) {
+	    spa->fds[i] = spb->fds[i] = -1;
+	    spa->last_update[i] = 0;
+	    spb->last_update[i] = 0;
+	}
+	spa->call_id = strdup(call_id);
+	if (spa->call_id == NULL) {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't allocate memory");
+	    return 0;
+	}
+	spb->call_id = spa->call_id;
+	spa->tag = strdup(from_tag);
+	if (spa->tag == NULL) {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "High Avaibility: can't allocate memory");
+	    return 0;
+	}
+	spb->tag = spa->tag;
+	for (i = 0; i < 2; i++) {
+	    spa->rrcs[i] = NULL;
+	    spb->rrcs[i] = NULL;
+	    spa->laddr[i] = lia[i];
+	    spb->laddr[i] = lia[i];
+	}
+	spa->strong = spa->weak[0] = spa->weak[1] = 0;
+	if (weak)
+	    spa->weak[0] = 1;
+	else
+	    spa->strong = 1;
+	assert(spa->fds[0] == -1);
+	spa->fds[0] = fds[0];
+	assert(spb->fds[0] == -1);
+	spb->fds[0] = fds[1];
+	spa->ports[0] = lport;
+	spb->ports[0] = lport + 1;
+	spa->ttl[0] = cf->max_ttl;
+	spa->ttl[1] = cf->max_ttl;
+	spb->ttl[0] = -1;
+	spb->ttl[1] = -1;
+	spa->log = rtpp_log_open(cf, "rtpproxy", spa->call_id, 0);
+	spb->log = spa->log;
+	spa->rtcp = spb;
+	spb->rtcp = NULL;
+	spa->rtp = NULL;
+	spb->rtp = spa;
+	spa->sridx = spb->sridx = -1;
+
+	append_session(cf, spa, 0);
+	append_session(cf, spa, 1);
+	append_session(cf, spb, 0);
+	append_session(cf, spb, 1);
+
+	hash_table_append(cf, spa);
+
+	cf->sessions_created++;
+	cf->sessions_active++;
+	/*
+	 * Each session can consume up to 5 open file descriptors (2 RTP,
+	 * 2 RTCP and 1 logging) so that warn user when he is likely to
+	 * exceed 80% mark on hard limit.
+	 */
+	if (cf->sessions_active > (cf->nofile_limit.rlim_max * 80 / (100 * 5)) &&
+	  cf->nofile_limit_warned == 0) {
+	    cf->nofile_limit_warned = 1;
+	    rtpp_log_write(RTPP_LOG_WARN, cf->glog, "High Avaibility: passed 80%% "
+	      "threshold on the open file descriptors limit (%d), "
+	      "consider increasing the limit using -L command line "
+	      "option", (int)cf->nofile_limit.rlim_max);
+	}
+
+	return 0;
+}
 static int
 create_twinlistener(struct cfg *cf, struct sockaddr *ia, int port, int *fds)
 {
@@ -242,6 +612,149 @@ handle_nomem(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
 	if (fds[i] != -1)
 	    close(fds[i]);
     reply_error(cf, fd, raddr, rlen, cookie, ecode);
+}
+
+int treat_sync_cmd(struct cfg *cf,const char * buf, int len, int passive)
+{
+
+
+    char * tab[255];
+    char * pch = strtok((char * )buf, " ");
+    int i=0;
+    memset (tab,0,255);
+
+    while(pch && i<255)
+    {
+	    tab[i++] = strdup(pch);
+	    pch = strtok(NULL, " ");
+    }
+
+
+    if( (tab[0]==0)||(strcmp(tab[0],"SYNC_RTPPROXY")))
+    {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "High avaibility : Bad protocole name for message %s",buf);
+    }
+    else if((tab[1]==0)||(strcmp(tab[1],"1.0")))
+    {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "High avaibility : Bad protocole version for message %s",buf);
+    }
+    else if((tab[2]==0)||((strcmp(tab[2],"LOOKUP_SESS"))&&(strcmp(tab[2],"APPEND_SESS"))&&(strcmp(tab[2],"REMOVE_SESS"))&&(strcmp(tab[2],"UPDATE_ADDRESS"))))
+    {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "High avaibility : Bad protocole command for message %s",buf);
+    }
+
+    // Format seems good, now we treat command:
+    if(strcmp(tab[2],"APPEND_SESS")==0)
+    {
+	    /*
+	     * tab[3] should be call_id
+	     * tab[4] should be local port
+	     * tab[5] should be IP
+	     * tab[6] should be port to listen
+	     * tab[7] should be from_tag
+	     * tab[8] should be weak
+	     */
+	    // rtpp_log_write(RTPP_LOG_INFO, cf->glog, "new session %s, tag %s requested, type %s", call_id, from_tag, weak ? "weak" : "strong");
+	    rtpp_log_write(RTPP_LOG_INFO, cf->glog, "High avaibility : New passive session %s, tag %s requested", tab[3], tab[7]);
+	    create_passive_session(cf,tab[3],tab[5],atoi(tab[4]),tab[6],tab[7],atoi(tab[8]),passive);
+    }
+    else if(strcmp(tab[2],"LOOKUP_SESS")==0)
+    {
+	    /*
+	     * tab[3] should be call_id
+	     * tab[4] should be ip
+	     * tab[5] should be port
+	     * tab[6] should be local port
+	     * tab[7] should be from_tag
+	     * tab[8] should be to_tag
+	     */
+	    rtpp_log_write(RTPP_LOG_INFO, cf->glog, "High avaibility : Passive lookup on ports %s %d", tab[4], atoi(tab[5]));
+	    if(strcmp(tab[4],"0.0.0.0"))
+	    	create_passive_lookup(cf,tab[3],tab[4],tab[5],tab[6],tab[7],tab[7],atoi(tab[8]));
+    }
+    else if(strcmp(tab[2],"REMOVE_SESS")==0)
+    {
+	    /*
+	     * tab[3] should be call_id
+	     * tab[4] should be  from_tag
+	     * tab[5] should be to_tag
+	     * tab[6] should be weak
+	     */
+	    rtpp_log_write(RTPP_LOG_INFO, cf->glog, "High avaibility : Passive remove session callid %s, from_tag %s, to_tag %s, weak %i", tab[3], tab[4], tab[5], atoi(tab[6]));
+	    handle_delete(cf, tab[3], tab[4], tab[5], atoi(tab[6]));
+    }
+    else if(strcmp(tab[2],"UPDATE_ADDRESS")==0)
+    {
+	    /*
+	     * tab[3] should be call_id
+	     * tab[4] should be pidx
+	     * tab[5] should be addr
+	     * tab[6] should be port
+	     * tab[7] should be from_tag
+	     * tab[8] should be to_tag
+	     */
+	    rtpp_log_write(RTPP_LOG_INFO, cf->glog, "High avaibility : Passive update address callid %s, pidx %s, addr %s, port %s,from_tag %s,to_tag %s", tab[3], tab[4], tab[5], tab[6], tab[7], tab[8]);
+	    update_address(cf, tab[3], atoi(tab[4]), tab[5], tab[6], tab[7], tab[8]);
+    }
+
+    i=0;
+    while(tab[i]!=0)
+    {
+	    free(tab[i++]);
+    }
+
+    return 0;
+}
+
+int
+handle_sync(struct cfg *cf, int syncfd, double dtime)
+{
+    int len;
+    int lidx;
+    int fds[2];
+    socklen_t rlen;
+    char buf[1024 * 8];
+    char *recording_name;
+    struct rtpp_session *spa, *spb;
+    struct sockaddr *ia[2], *lia[2];
+    struct sockaddr_storage raddr;
+    int requested_nsamples;
+    char *socket_name_u, *notify_tag;
+    struct sockaddr *local_addr;
+
+    requested_nsamples = -1;
+    ia[0] = ia[1] = NULL;
+    spa = spb = NULL;
+    lia[0] = lia[1] = cf->bindsyncaddr;
+    lidx = 1;
+    fds[0] = fds[1] = -1;
+    recording_name = NULL;
+    socket_name_u = notify_tag = NULL;
+    local_addr = NULL;
+
+    if (cf->umode == 0) {
+	for (;;) {
+	    len = read(syncfd, buf, sizeof(buf) - 1);
+	    if (len != -1 || (errno != EAGAIN && errno != EINTR))
+		break;
+	    sched_yield();
+	}
+    } else {
+	rlen = sizeof(raddr);
+	len = recvfrom(syncfd, buf, sizeof(buf) - 1, 0,
+	  sstosa(&raddr), &rlen);
+    }
+    if (len == -1) {
+	if (errno != EAGAIN && errno != EINTR)
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "High avaibility : can't read from sync control socket");
+	return -1;
+    }
+    buf[len] = '\0';
+
+    rtpp_log_write(RTPP_LOG_DBUG, cf->glog, "High avaibility : received sync command \"%s\"  (%i octets) (%d sessions en cours...)", buf, len,cf->nsessions);
+
+    return treat_sync_cmd(cf,buf,len,1);
+
 }
 
 int
@@ -430,7 +943,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n"
 	      "active streams: %d\n", cookie, cf->sessions_created,
 	      cf->sessions_active, cf->nsessions / 2);
-	for (i = 1; i < cf->nsessions; i++) {
+	for (i = cf->start_rtp_idx; i < cf->nsessions; i++) {
 	    char addrs[4][256];
 
 	    spa = cf->sessions[i];
@@ -488,7 +1001,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     case 'X':
         /* Delete all active sessions */
         rtpp_log_write(RTPP_LOG_INFO, cf->glog, "deleting all active sessions");
-        for (i = 1; i < cf->nsessions; i++) {
+        for (i = cf->start_rtp_idx; i < cf->nsessions; i++) {
 	    spa = cf->sessions[i];
 	    if (spa == NULL || spa->sidx[0] != i)
 		continue;
@@ -738,6 +1251,9 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     switch (op) {
     case DELETE:
 	i = handle_delete(cf, call_id, from_tag, to_tag, weak);
+	// High availbility : Passive RTP proxy should remove also the session
+	send_synchro_message( cf, "Remove_sess", call_id, from_tag, to_tag, weak );
+
 	break;
 
     case RECORD:
@@ -854,6 +1370,12 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "lookup on ports %d/%d, session timer restarted", spa->ports[0],
 	  spa->ports[1]);
+
+	if(op == LOOKUP )
+		// High availbility : Passive RTP proxy should perform a lookup too
+		send_synchro_message( cf, "Lookup_sess", argv[1], argv[2], spa->ports[1], atoi(argv[3]), argv[4], argv[5],spa->weak[1]);
+
+
     } else {
 	assert(op == UPDATE);
 	rtpp_log_write(RTPP_LOG_INFO, cf->glog,
@@ -965,6 +1487,10 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	      "option", (int)cf->nofile_limit.rlim_max);
 	}
 
+	// High availbility : Passive RTP proxy should append the session too
+	// Parameters for Append_sess action :Call_id port_local: remote_ip remote_port from_tag weak
+	send_synchro_message( cf, "Append_sess", spa->call_id, lport, argv[2], atoi(argv[3]), argv[4], weak );
+
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
 	  "tag %s", lport, from_tag);
 	if (cf->record_all != 0) {
@@ -996,7 +1522,11 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     }
 
     if (ia[0] != NULL && ia[1] != NULL) {
-        if (spa->addr[pidx] != NULL)
+	    rtpp_log_write(RTPP_LOG_INFO, spa->log, "High avaibility: Update session infos");
+
+	    send_synchro_message( cf, "Update_address", call_id, pidx , addr, port, from_tag, to_tag ? to_tag : "" );
+
+	if (spa->addr[pidx] != NULL)
             spa->last_update[pidx] = dtime;
         if (spa->rtcp->addr[pidx] != NULL)
             spa->rtcp->last_update[pidx] = dtime;
@@ -1098,7 +1628,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	 * This seems to be stable from reiterations, the only side
 	 * effect is less efficient work.
 	 */
-	if (spa->strong || spa->weak[0] || spa->weak[1]) {
+	if (!spa->passive_session&&(spa->strong || spa->weak[0] || spa->weak[1])) {
 	    rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	      "delete: medianum=%u: removing %s flag, seeing flags to"
 	      " continue session (strong=%d, weak=%d/%d)",

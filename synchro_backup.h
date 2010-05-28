@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
- * All rights reserved.
+ * Copyright (c) 2010 Keyyo
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,25 +22,45 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * $Id: synchro_backup.h,v 1.0 2010/04/15 11:10:08 pmaymat Exp $
+ *
+ * Author      : Philippe Maymat (Keyyo)
+ * Description : Usefull functions for communication between a main proxy and
+ * 		 a slave
  */
 
-#ifndef _RTPP_COMMAND_H_
-#define _RTPP_COMMAND_H_
+#ifndef __SYNCHRO_BACKUP_H__
+#define __SYNCHRO_BACKUP_H__
+
+#include <stdlib.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "rtpp_defines.h"
+#include "rtpp_session.h"
 
-struct proto_cap {
-    const char  *pc_id;
-    const char  *pc_description;
+
+struct sess_infos_list
+{
+	char* call_id;
+	char* mess;
+	time_t time;
+	struct sess_infos_list* next;
+
 };
 
-extern struct proto_cap proto_caps[];
+int add_session_message(const char* call_id, const char * message);
+int remove_all_session_infos(const char* call_id);
+int save_sessions_infos(struct cfg* cf);
 
-int handle_command(struct cfg *, int, double);
+int send_synchro_message(struct cfg *cf, const char * mess, ...);
+int receive_synchro_message(const int port);
 
-/* handl_sync manage communication with active rtpproxy (receive and treat synchronization commands) */
-int handle_sync(struct cfg *, int, double);
-
-int load_prev_sessions(struct cfg *cf);
 
 #endif

@@ -36,6 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "synchro_backup.h"
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
 #include "rtpp_record.h"
@@ -239,16 +240,16 @@ compare_session_tags(char *tag1, char *tag0, unsigned *medianum_p)
 }
 
 int
-find_stream(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
+find_stream(struct cfg *cf, const char *call_id, const char *from_tag, const char *to_tag,
   struct rtpp_session **spp)
 {
     char *cp1, *cp2;
 
-    for (*spp = session_findfirst(cf, call_id); *spp != NULL; *spp = session_findnext(*spp)) {
+    for (*spp = session_findfirst(cf, (char*)call_id); *spp != NULL; *spp = session_findnext(*spp)) {
 	if (strcmp((*spp)->tag, from_tag) == 0) {
 	    return 0;
 	} else if (to_tag != NULL) {
-	    switch (compare_session_tags((*spp)->tag, to_tag, NULL)) {
+	    switch (compare_session_tags((*spp)->tag, (char*)to_tag, NULL)) {
 	    case 1:
 		/* Exact tag match */
 		return 1;

@@ -62,6 +62,7 @@
 /* Dummy service, getaddrinfo needs it */
 #define	SERVICE		"34999"
 
+#define	SYNC_SOCK	"/var/run/rtpsyncproxy.sock"
 #define	CMD_SOCK	"/var/run/rtpproxy.sock"
 #define	PID_FILE	"/var/run/rtpproxy.pid"
 
@@ -69,7 +70,7 @@
  * TTL counters are used to detect the absence of audio packets
  * in either direction.  When the counter reaches 0, the call timeout
  * occurs.
- */ 
+ */
 typedef enum {
     TTL_UNIFIED = 0,		/* all TTL counters must reach 0 */
     TTL_INDEPENDENT = 1		/* any TTL counter reaches 0 */
@@ -85,6 +86,16 @@ struct rtpp_timeout_handler {
 struct bindaddr_list {
     struct sockaddr_storage bindaddr;
     struct bindaddr_list *next;
+};
+
+struct high_avaibility {
+    int is_activated;
+    char * listen_ip;
+    int listen_port;
+    char * send_to_ip;
+    int send_to_port;
+    int idx_fd;
+    char* stored_sessions_file;
 };
 
 struct cfg {
@@ -108,6 +119,7 @@ struct cfg {
      * mode enabled.
      */
     struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
+    struct sockaddr *bindsyncaddr;	/* Sync address for High Avaibility option*/
     struct bindaddr_list *bindaddr_list;
     int tos;
 
@@ -142,6 +154,13 @@ struct cfg {
 
     int log_level;
     int log_facility;
+
+    int start_rtp_idx;
+
+    /* IP parameters of the linked RTPproxy (backup or main according to heart beat)*/
+    struct high_avaibility ha;
+
+
 };
 
 #endif
