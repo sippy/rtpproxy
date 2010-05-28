@@ -62,7 +62,8 @@ am_rtpproxy_OBJECTS = main.$(OBJEXT) rtp_server.$(OBJEXT) \
 	rtpp_record.$(OBJEXT) rtpp_util.$(OBJEXT) rtp.$(OBJEXT) \
 	rtp_resizer.$(OBJEXT) rtpp_session.$(OBJEXT) \
 	rtpp_command.$(OBJEXT) rtpp_log.$(OBJEXT) \
-	rtpp_network.$(OBJEXT) rtpp_syslog_async.$(OBJEXT)
+	rtpp_network.$(OBJEXT) rtpp_syslog_async.$(OBJEXT) \
+	rtpp_notify.$(OBJEXT)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
 rtpproxy_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -187,7 +188,7 @@ rtpproxy_SOURCES = main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
   rtpp_command.c rtpp_command.h rtpp_log.c rtpp_network.h rtpp_network.c \
-  rtpp_syslog_async.c rtpp_syslog_asynch
+  rtpp_syslog_async.c rtpp_syslog_async.h rtpp_notify.c rtpp_notify.h
 
 rtpproxy_LDADD = -lm -lpthread
 dist_man_MANS = rtpproxy.8
@@ -301,6 +302,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_command.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_network.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_notify.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_record.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_session.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_syslog_async.Po@am__quote@

@@ -3533,14 +3533,15 @@ fi
 
 case "${host_os}" in
 freebsd*)
-  CPPFLAGS=-I/usr/local/include
-  LDFLAGS=-L/usr/local/lib
+  CPPFLAGS="-I/usr/local/include -pthread"
+  LDFLAGS="-L/usr/local/lib -lpthread"
   ;;
 linux*)
   CPPFLAGS=-D_BSD_SOURCE
+  LDFLAGS=-lpthread
   ;;
 solaris*)
-  LDFLAGS="-lsocket -lnsl -lxnet -lrt"
+  LDFLAGS="-lsocket -lnsl -lxnet -lrt -lpthread"
   ;;
 *)
   ;;
