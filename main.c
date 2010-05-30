@@ -882,8 +882,7 @@ main(int argc, char **argv)
     cf.nsessions = 1;
     cf.rtp_nsessions = 0;
 
-    if(cf.ha.is_activated)
-    {
+    if (cf.ha.is_activated) {
 	/* High avaibility synchronization channel activated */
 	cf.pfds[1].fd = syncfd;
 	cf.pfds[1].events = POLLIN;
@@ -891,8 +890,7 @@ main(int argc, char **argv)
 	cf.nsessions++;
     }
 
-    if(cf.ha.stored_sessions_file!=NULL)
-    {
+    if (cf.ha.stored_sessions_file!=NULL) {
 	/* load all previous sessions. */
 	load_prev_sessions(&cf);
     }
