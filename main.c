@@ -120,7 +120,7 @@ ehandler(void)
     rtpp_log_close(glog);
 }
 
-static void 
+static void
 init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
