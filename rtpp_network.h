@@ -51,6 +51,7 @@ struct sockaddr *addr2bindaddr(struct cfg *, struct sockaddr *, const char **);
 struct sockaddr *host2bindaddr(struct cfg *, const char *, int, const char **);
 int local4remote(struct cfg *, struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, char **, char **, int *);
+int setbindhost(struct sockaddr *, int, const char *, const char *);
 
 /* Stripped down version of sockaddr_in* for saving space */
 struct sockaddr_in4_s {

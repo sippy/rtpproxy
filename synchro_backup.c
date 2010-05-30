@@ -29,6 +29,7 @@
  * 		 a slave
  */
 
+#include <fcntl.h>
 #include <time.h>
 
 #include "rtpp_network.h"
@@ -273,11 +274,11 @@ parse_ha_optarg(struct cfg *cf, char *optarg)
             free(cf->ha.listen_ip);
             cf->ha.listen_ip = NULL;
             warnx("\"%s\": ip:port/ip:port not configured", optarg);
-            return 1;
+            return -1;
         }
         if (!IS_VALID_PORT(cf->ha.listen_port)) {
             warnx("\"%s\" : port is out of range", optarg);
-            return 1;
+            return -1;
         }
         pch = strtok(NULL, ":/");
         if (pch != NULL) {
@@ -291,11 +292,11 @@ parse_ha_optarg(struct cfg *cf, char *optarg)
                 free(cf->ha.send_to_ip);
                 cf->ha.send_to_ip = NULL;
                 warnx("\"%s\": ip:port/ip:port not configured", optarg);
-                return 1;
+                return -1;
             }
             if (!IS_VALID_PORT(cf->ha.send_to_port)) {
                 warnx("\"%s\" : port is out of range", optarg);
-                return 1;
+                return -1;
             }
             cf->ha.is_activated = 1;
             cf->start_rtp_idx++;
@@ -303,10 +304,40 @@ parse_ha_optarg(struct cfg *cf, char *optarg)
             free(cf->ha.listen_ip);
             cf->ha.listen_ip = NULL;
             warnx("\"%s\": ip:port/ip:port not configured", optarg);
-            return 1;
+            return -1;
         }
         return 0;
     }
     warnx("%s: ip:port not configured", optarg);
-    return 1;
+    return -1;
+}
+
+int
+init_syncfd(struct cfg *cf)
+{
+    struct sockaddr_storage ifsin;
+    int i, syncfd, flags;
+    char strport[30];
+
+    snprintf(strport, 10, "%d", cf->ha.listen_port);
+
+    i = (cf->umode == 6) ? AF_INET6 : AF_INET;
+
+    if (setbindhost(sstosa(&ifsin), i, cf->ha.listen_ip, strport) != 0)
+        return -1;
+
+    syncfd = socket(i, SOCK_DGRAM, 0);
+    if (syncfd == -1) {
+        warn("High avaibility :can't create socket");
+        return -1;
+    }
+    if (bind(syncfd, sstosa(&ifsin), SS_LEN(&ifsin)) < 0) {
+        warn("High avaibility :can't bind to a socket");
+        close(syncfd);
+        return -1;
+    }
+    flags = fcntl(syncfd, F_GETFL);
+    fcntl(syncfd, F_SETFL, flags | O_NONBLOCK);
+
+    return syncfd;
 }

@@ -63,5 +63,6 @@ int send_synchro_message(struct cfg *cf, const char * mess, ...);
 int receive_synchro_message(const int port);
 
 int parse_ha_optarg(struct cfg *, char *);
+int init_syncfd(struct cfg *);
 
 #endif

@@ -71,30 +71,9 @@ static const char *pid_file = PID_FILE;
 static rtpp_log_t glog;
 static struct cfg cf;
 
-static void setbindhost(struct sockaddr *, int, const char *, const char *);
 static void usage(void);
 static void send_packet(struct cfg *, struct rtpp_session *, int,
   struct rtp_packet *);
-
-static void
-setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
-  const char *servname)
-{
-    int n;
-
-    /*
-     * If user specified * then change it to NULL,
-     * that will make getaddrinfo to return addr_any socket
-     */
-    if (bindhost && (strcmp(bindhost, "*") == 0))
-	bindhost = NULL;
-
-    if ((n = resolve(ia, pf, bindhost, servname, AI_PASSIVE)) != 0)
-	errx(1, "setbindhost: %s for %s %s", gai_strerror(n), bindhost, servname);
-    else
-       warn("found bind for host %s %s", bindhost, servname);
-
-}
 
 static void
 usage(void)
@@ -335,7 +314,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'h':
-	    cf->ha.stored_sessions_file=strdup(optarg);
+	    cf->ha.stored_sessions_file = strdup(optarg);
 	    break;
 
 	case 'H':
@@ -380,14 +359,14 @@ init_config(struct cfg *cf, int argc, char **argv)
 
     if (!IS_VALID_PORT(cf->port_min))
 	errx(1, "invalid value of the port_min argument, "
-	  "not in the range: 1-65535");
+	  "not in the range 1-65535");
     if (!IS_VALID_PORT(cf->port_max))
 	errx(1, "invalid value of the port_max argument, "
 	  "not in the range 1-65535");
     if (cf->port_min > cf->port_max)
 	errx(1, "port_min should be less than port_max");
 
-    cf->ha.idx_fd = cf->ha.listen_ip!=NULL ? ((cf->port_max - cf->port_min + 1) * 2) + 1 : 0;
+    cf->ha.idx_fd = cf->ha.listen_ip != NULL ? ((cf->port_max - cf->port_min + 1) * 2) + 1 : 0;
 
     cf->sessions = malloc((sizeof cf->sessions[0]) *
       (((cf->port_max - cf->port_min + 1) * 2) + 1));
@@ -488,7 +467,8 @@ init_controlfd(struct cfg *cf)
 	if (cp == NULL || *cp == '\0')
 	    cp = CPORT;
 	i = (cf->umode == 6) ? AF_INET6 : AF_INET;
-	setbindhost(sstosa(&ifsin), i, cmd_sock, cp);
+	if (setbindhost(sstosa(&ifsin), i, cmd_sock, cp) != 0)
+	    exit(1);
 	controlfd = socket(i, SOCK_DGRAM, 0);
 	if (controlfd == -1)
 	    err(1, "can't create socket");
@@ -499,31 +479,6 @@ init_controlfd(struct cfg *cf)
     fcntl(controlfd, F_SETFL, flags | O_NONBLOCK);
 
     return controlfd;
-}
-
-static int
-init_syncfd(struct cfg *cf)
-{
-	struct sockaddr_storage ifsin;
-	int i, syncfd, flags;
-	char strport[30];
-
-	snprintf (strport,10,"%d",cf->ha.listen_port);
-
-	i = (cf->umode == 6) ? AF_INET6 : AF_INET;
-
-	setbindhost(sstosa(&ifsin), i, cf->ha.listen_ip, strport);
-
-	syncfd = socket(i, SOCK_DGRAM, 0);
-	if (syncfd == -1)
-	err(1, "High avaibility :can't create socket");
-	if (bind(syncfd, sstosa(&ifsin), SS_LEN(&ifsin)) < 0)
-	err(1, "High avaibility :can't bind to a socket");
-
-	flags = fcntl(syncfd, F_GETFL);
-	fcntl(syncfd, F_SETFL, flags | O_NONBLOCK);
-
-	return syncfd;
 }
 
 static void
@@ -626,9 +581,9 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 		rtpp_log_write(RTPP_LOG_ERR, sp->log,
 		  "can't allocate memory for remote address - "
 		  "removing session");
+		if((GET_RTP(sp)) && (GET_RTP(sp)->call_id != NULL))
+		    send_synchro_message(cf, "Remove_sess", GET_RTP(sp)->call_id, GET_RTP(sp)->tag, NULL, 0);
 		remove_session(cf, GET_RTP(sp));
-		if((GET_RTP(sp))&&(GET_RTP(sp)->call_id!=NULL))
-			send_synchro_message( cf, "Remove_sess", GET_RTP(sp)->call_id, GET_RTP(sp)->tag, NULL,0);
 		/* Break, sp is invalid now */
 		break;
 	    }
@@ -674,9 +629,9 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 			rtpp_log_write(RTPP_LOG_ERR, sp->log,
 			  "can't allocate memory for remote address - "
 			  "removing session");
+			if((sp) && (sp->call_id != NULL))
+			    send_synchro_message(cf, "Remove_sess", sp->call_id, sp->tag, NULL, 0);
 			remove_session(cf, sp);
-			if((sp)&&(sp->call_id!=NULL))
-				send_synchro_message( cf, "Remove_sess", sp->call_id, sp->tag, NULL,0);
 			/* Break, sp is invalid now */
 			break;
 		    }
@@ -732,7 +687,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 }
 
 static void
-process_rtp(struct cfg *cf, double dtime, int alarm_tick, int passive_alarm_tick )
+process_rtp(struct cfg *cf, double dtime, int alarm_tick, int passive_alarm_tick)
 {
     int readyfd, skipfd, ridx;
     struct rtpp_session *sp;
@@ -788,9 +743,9 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int passive_alarm_tick
 		rxmit_packets(cf, sp, ridx, dtime);
 	    if (sp->resizers[ridx].output_nsamples > 0) {
 		while ((packet = rtp_resizer_get(&sp->resizers[ridx], dtime)) != NULL) {
-			//This session is no more passive cos a packet should be transmitted
-			if(sp->passive_session)
-				sp->passive_session=0;
+			/* This session is no more passive cos a packet should be transmitted */
+			if (sp->passive_session)
+			    sp->passive_session = 0;
 
 		    send_packet(cf, sp, ridx, packet);
 		    rtp_packet_free(packet);
@@ -866,15 +821,16 @@ main(int argc, char **argv)
 
     controlfd = init_controlfd(&cf);
 
-    if(cf.ha.is_activated)
-    {
-	    // High avaibility synchronization channel activated
-	    syncfd = init_syncfd(&cf);
-	    warn( "High avaibility synchronization channel");
+    if (cf.ha.is_activated) {
+	/* High avaibility synchronization channel activated */
+	syncfd = init_syncfd(&cf);
+	if (syncfd < 0)
+	    exit(1);
+	warnx("High avaibility synchronization channel");
     }
 
-    if(cf.ha.stored_sessions_file!=NULL)
-	    warn( "High avaibility sessions saving activated");
+    if (cf.ha.stored_sessions_file != NULL)
+	warnx("High avaibility sessions saving activated");
 
     if (cf.nodaemon == 0) {
 	if (rtpp_daemon(0, 0) == -1)
@@ -928,17 +884,17 @@ main(int argc, char **argv)
 
     if(cf.ha.is_activated)
     {
-	    // High avaibility synchronization channel activated
-	    cf.pfds[1].fd = syncfd;
-	    cf.pfds[1].events = POLLIN;
-	    cf.pfds[1].revents = 0;
-	    cf.nsessions++;
+	/* High avaibility synchronization channel activated */
+	cf.pfds[1].fd = syncfd;
+	cf.pfds[1].events = POLLIN;
+	cf.pfds[1].revents = 0;
+	cf.nsessions++;
     }
 
     if(cf.ha.stored_sessions_file!=NULL)
     {
-	    // load all previous sessions.
-	    load_prev_sessions(&cf);
+	/* load all previous sessions. */
+	load_prev_sessions(&cf);
     }
 
     sptime = 0;
@@ -969,11 +925,11 @@ main(int argc, char **argv)
 	} else {
 	    alarm_tick = 0;
 	}
-	// passive sessions expire after 5400s
-	if (eptime > last_tick_time + TIMETICK*5400) {
-		    passive_alarm_tick = 1;
+	/* passive sessions expire after 5400s */
+	if (eptime > last_tick_time + TIMETICK * 5400) {
+	    passive_alarm_tick = 1;
 	} else {
-		passive_alarm_tick = 0;
+	    passive_alarm_tick = 0;
 	}
 	process_rtp(&cf, eptime, alarm_tick, passive_alarm_tick);
 	if (i > 0) {
