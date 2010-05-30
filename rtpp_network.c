@@ -286,7 +286,7 @@ setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
 	bindhost = NULL;
 
     if ((n = resolve(ia, pf, bindhost, servname, AI_PASSIVE)) != 0) {
-	warnx(1, "setbindhost: %s for %s %s", gai_strerror(n), bindhost, servname);
+	warnx("setbindhost: %s for %s %s", gai_strerror(n), bindhost, servname);
 	return -1;
     }
     return 0;
