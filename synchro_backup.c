@@ -28,8 +28,12 @@
  * Description : Usefull functions for communication between a main proxy and
  * 		 a slave
  */
-#include "synchro_backup.h"
+
 #include <time.h>
+
+#include "rtpp_network.h"
+#include "rtpp_util.h"
+#include "synchro_backup.h"
 
 #define BUFLEN 8*1024
 
@@ -251,4 +255,58 @@ int send_synchro_message(struct cfg *cf, const char * mess, ...)
 	va_end(parms);
 
 	return 0;
+}
+
+int
+parse_ha_optarg(struct cfg *cf, char *optarg)
+{
+    char *pch;
+
+    pch = strtok(optarg, ":/");
+
+    if (pch != NULL) {
+        cf->ha.listen_ip = strdup(pch);
+        pch = strtok(NULL, ":/");
+        if (pch != NULL) {
+            cf->ha.listen_port = atoi(pch);
+        } else {
+            free(cf->ha.listen_ip);
+            cf->ha.listen_ip = NULL;
+            warnx("\"%s\": ip:port/ip:port not configured", optarg);
+            return 1;
+        }
+        if (!IS_VALID_PORT(cf->ha.listen_port)) {
+            warnx("\"%s\" : port is out of range", optarg);
+            return 1;
+        }
+        pch = strtok(NULL, ":/");
+        if (pch != NULL) {
+            cf->ha.send_to_ip = strdup(pch);
+            pch = strtok (NULL, ":/");
+            if (pch != NULL) {
+                cf->ha.send_to_port = atoi(pch);
+            } else {
+                free(cf->ha.listen_ip);
+                cf->ha.listen_ip = NULL;
+                free(cf->ha.send_to_ip);
+                cf->ha.send_to_ip = NULL;
+                warnx("\"%s\": ip:port/ip:port not configured", optarg);
+                return 1;
+            }
+            if (!IS_VALID_PORT(cf->ha.send_to_port)) {
+                warnx("\"%s\" : port is out of range", optarg);
+                return 1;
+            }
+            cf->ha.is_activated = 1;
+            cf->start_rtp_idx++;
+        } else {
+            free(cf->ha.listen_ip);
+            cf->ha.listen_ip = NULL;
+            warnx("\"%s\": ip:port/ip:port not configured", optarg);
+            return 1;
+        }
+        return 0;
+    }
+    warnx("%s: ip:port not configured", optarg);
+    return 1;
 }

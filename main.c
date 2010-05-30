@@ -339,64 +339,9 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'H':
-	{
-	    char* linked_proxy = NULL;
-	    linked_proxy = strdup (optarg);
-	    char * pch = strtok ( optarg, ":/" );
-	    if(pch)
-	    {
-		    cf->ha.listen_ip = strdup(pch);
-		    pch = strtok (NULL, ":/");
-		    if(pch)
-			    cf->ha.listen_port = atoi(pch);
-		    else
-		    {
-			    free(cf->ha.listen_ip);
-			    cf->ha.listen_ip=NULL;
-			    errx(1, "\"%s\": ip:port/ip:port not configured",optarg);
-		    }
-		    if((cf->ha.listen_port==0)||(cf->ha.listen_port==INT_MIN)||(cf->ha.listen_port==INT_MAX))
-		    {
-			    errx(1, "\"%s\" : port is out of range",optarg);
-		    }
-		    pch = strtok (NULL, ":/");
-		    if(pch)
-		    {
-			    cf->ha.send_to_ip = strdup(pch);
-			    pch = strtok (NULL, ":/");
-			    if(pch)
-			    {
-				    cf->ha.send_to_port = atoi(pch);
-			    }
-			    else
-			    {
-				    free(cf->ha.listen_ip);
-				    cf->ha.listen_ip=NULL;
-				    free(cf->ha.send_to_ip);
-				    cf->ha.send_to_ip=NULL;
-				    errx(1, "\"%s\": ip:port/ip:port not configured",optarg);
-			    }
-			    if(
-				((cf->ha.listen_port==0)||(cf->ha.listen_port==INT_MIN)||(cf->ha.listen_port==INT_MAX))
-				||((cf->ha.send_to_port==0)||(cf->ha.send_to_port==INT_MIN)||(cf->ha.send_to_port==INT_MAX))
-				)
-			    {
-				    errx(1, "\"%s\" : port is out of range",optarg);
-			    }
-			    cf->ha.is_activated = 1;
-			    cf->start_rtp_idx ++;
-		    }
-		    else
-		    {
-			    free(cf->ha.listen_ip);
-			    cf->ha.listen_ip=NULL;
-			    errx(1, "\"%s\": ip:port/ip:port not configured",optarg);
-		    }
-	    }
-	    else
-		    errx(1, "%s: ip:port not configured",optarg);
+	    if (parse_ha_optarg(cf, optarg) != 0)
+		exit(1);
 	    break;
-	}
 
 	case '?':
 	default:
@@ -433,10 +378,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 	cf->port_max -= 2;
     }
 
-    if (cf->port_min <= 0 || cf->port_min > 65535)
+    if (!IS_VALID_PORT(cf->port_min))
 	errx(1, "invalid value of the port_min argument, "
 	  "not in the range: 1-65535");
-    if (cf->port_max <= 0 || cf->port_max > 65535)
+    if (!IS_VALID_PORT(cf->port_max))
 	errx(1, "invalid value of the port_max argument, "
 	  "not in the range 1-65535");
     if (cf->port_min > cf->port_max)

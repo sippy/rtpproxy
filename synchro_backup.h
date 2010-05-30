@@ -62,5 +62,6 @@ int save_sessions_infos(struct cfg* cf);
 int send_synchro_message(struct cfg *cf, const char * mess, ...);
 int receive_synchro_message(const int port);
 
+int parse_ha_optarg(struct cfg *, char *);
 
 #endif
