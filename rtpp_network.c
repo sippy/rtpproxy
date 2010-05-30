@@ -40,6 +40,7 @@
 #include <unistd.h>
 
 #include "rtpp_network.h"
+#include "rtpp_util.h"
 
 int
 ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
@@ -269,4 +270,24 @@ extractaddr(const char *str, char **begin, char **end, int *pf)
     *pf = tpf;
     *begin = (char *)t;
     return(str - t);
+}
+
+int
+setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
+  const char *servname)
+{
+    int n;
+
+    /*
+     * If user specified * then change it to NULL,
+     * that will make getaddrinfo to return addr_any socket
+     */
+    if (bindhost && (strcmp(bindhost, "*") == 0))
+	bindhost = NULL;
+
+    if ((n = resolve(ia, pf, bindhost, servname, AI_PASSIVE)) != 0) {
+	warnx("setbindhost: %s for %s %s", gai_strerror(n), bindhost, servname);
+	return -1;
+    }
+    return 0;
 }
