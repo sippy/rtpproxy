@@ -102,4 +102,6 @@ union sockaddr_in_s {
 #define	satoss(sa)	((struct sockaddr_storage *)(sa))
 #endif
 
+#define	IS_VALID_PORT(p)	((p) > 0 && (p) < 65536)
+
 #endif
