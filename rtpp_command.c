@@ -85,6 +85,8 @@ static void handle_copy(struct cfg *, struct rtpp_session *, int, char *);
 static int handle_record(struct cfg *, char *, char *, char *);
 static void handle_query(struct cfg *, int, struct sockaddr_storage *,
   socklen_t, char *, struct rtpp_session *, int);
+static void handle_info(struct cfg *, int, struct sockaddr_storage *,
+  socklen_t, char *, int);
 
 int load_prev_sessions(struct cfg *cf)
 {
@@ -935,59 +937,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 
     case 'i':
     case 'I':
-	if (cookie == NULL)
-	    len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n"
-	      "active streams: %d\n", cf->sessions_created,
-	      cf->sessions_active, cf->nsessions / 2);
-	else
-	    len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n"
-	      "active streams: %d\n", cookie, cf->sessions_created,
-	      cf->sessions_active, cf->nsessions / 2);
-	for (i = cf->start_rtp_idx; i < cf->nsessions; i++) {
-	    char addrs[4][256];
-
-	    spa = cf->sessions[i];
-	    if (spa == NULL || spa->sidx[0] != i)
-		continue;
-	    /* RTCP twin session */
-	    if (spa->rtcp == NULL) {
-		spb = spa->rtp;
-		buf[len++] = '\t';
-	    } else {
-		spb = spa->rtcp;
-		buf[len++] = '\t';
-		buf[len++] = 'C';
-		buf[len++] = ' ';
-	    }
-
-	    addr2char_r(spb->laddr[1], addrs[0], sizeof(addrs[0]));
-	    if (spb->addr[1] == NULL) {
-		strcpy(addrs[1], "NONE");
-	    } else {
-		sprintf(addrs[1], "%s:%d", addr2char(spb->addr[1]),
-		  addr2port(spb->addr[1]));
-	    }
-	    addr2char_r(spb->laddr[0], addrs[2], sizeof(addrs[2]));
-	    if (spb->addr[0] == NULL) {
-		strcpy(addrs[3], "NONE");
-	    } else {
-		sprintf(addrs[3], "%s:%d", addr2char(spb->addr[0]),
-		  addr2port(spb->addr[0]));
-	    }
-
-	    len += sprintf(buf + len,
-	      "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
-	      "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
-	      spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
-	      addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
-	      spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
-	    if (len + 512 > sizeof(buf)) {
-		doreply(cf, controlfd, buf, len, &raddr, rlen);
-		len = 0;
-	    }
-	}
-	if (len > 0)
-	    doreply(cf, controlfd, buf, len, &raddr, rlen);;
+	handle_info(cf, controlfd, &raddr, rlen, cookie,
+	  (argv[0][1] == 'b' || argv[0][1] == 'B') ? 1 : 0);
 	return 0;
 	break;
 
@@ -1759,4 +1710,66 @@ handle_query(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
 	  spa->pcount[3]);
     }
     doreply(cf, fd, buf, len, raddr, rlen);
+}
+
+static void
+handle_info(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
+  socklen_t rlen, char *cookie, int brief)
+{
+    struct rtpp_session *spa, *spb;
+    char addrs[4][256];
+    int len, i;
+    char buf[1024 * 8];
+
+    if (cookie == NULL)
+	len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n"
+	  "active streams: %d\n", cf->sessions_created,
+	  cf->sessions_active, cf->nsessions / 2);
+    else
+	len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n"
+	  "active streams: %d\n", cookie, cf->sessions_created,
+	  cf->sessions_active, cf->nsessions / 2);
+    for (i = cf->start_rtp_idx; i < cf->nsessions && brief == 0; i++) {
+	spa = cf->sessions[i];
+	if (spa == NULL || spa->sidx[0] != i)
+	    continue;
+	/* RTCP twin session */
+	if (spa->rtcp == NULL) {
+	    spb = spa->rtp;
+	    buf[len++] = '\t';
+	} else {
+	    spb = spa->rtcp;
+	    buf[len++] = '\t';
+	    buf[len++] = 'C';
+	    buf[len++] = ' ';
+	}
+
+	addr2char_r(spb->laddr[1], addrs[0], sizeof(addrs[0]));
+	if (spb->addr[1] == NULL) {
+	    strcpy(addrs[1], "NONE");
+	} else {
+	    sprintf(addrs[1], "%s:%d", addr2char(spb->addr[1]),
+	      addr2port(spb->addr[1]));
+	}
+	addr2char_r(spb->laddr[0], addrs[2], sizeof(addrs[2]));
+	if (spb->addr[0] == NULL) {
+	    strcpy(addrs[3], "NONE");
+	} else {
+	    sprintf(addrs[3], "%s:%d", addr2char(spb->addr[0]),
+	      addr2port(spb->addr[0]));
+	}
+
+	len += sprintf(buf + len,
+	  "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
+	  "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
+	  spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
+	  addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
+	  spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
+	if (len + 512 > sizeof(buf)) {
+	    doreply(cf, fd, buf, len, raddr, rlen);
+	    len = 0;
+	}
+    }
+    if (len > 0)
+	doreply(cf, fd, buf, len, raddr, rlen);;
 }
