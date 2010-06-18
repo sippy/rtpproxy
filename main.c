@@ -691,7 +691,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 	if (skipfd > 0) {
 	    cf->pfds[readyfd - skipfd] = cf->pfds[readyfd];
 	    cf->sessions[readyfd - skipfd] = cf->sessions[readyfd];
-	    sp->sidx[ridx] = readyfd - skipfd;;
+	    sp->sidx[ridx] = readyfd - skipfd;
 	}
 
 	if (sp->complete != 0) {
