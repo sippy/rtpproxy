@@ -31,8 +31,13 @@
 #ifndef _RTP_H_
 #define _RTP_H_
 
+#include "config.h"
+
 #include <sys/socket.h>
 #include <sys/types.h>
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 
 /*
  * RTP payload types
