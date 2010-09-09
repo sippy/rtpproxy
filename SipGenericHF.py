@@ -35,11 +35,11 @@ class SipGenericHF(object):
     def parse(self):
         pass
 
-    def __str__(self):
-        return self.body
-
     def localStr(self, local_addr = None, local_port = None):
         return self.__str__()
+
+    def __str__(self):
+        return self.body
 
     def getCopy(self):
         return self.__class__(self.body)
