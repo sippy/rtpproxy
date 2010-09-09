@@ -46,5 +46,6 @@ class UaStateDead(UaStateGeneric):
         for callback in ua.dead_cbs:
             callback(ua)
         ua.dead_cbs = ()
+        ua.cleanup()
         # Break cross-ref chain
         self.ua = None

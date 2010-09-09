@@ -63,7 +63,8 @@ class UacStateIdle(UaStateGeneric):
             self.ua.lSDP = body
             req = self.ua.genRequest('INVITE', body, reason = event.reason)
             self.ua.lCSeq += 1
-            self.ua.tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.ua.recvResponse)
+            self.ua.tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.ua.recvResponse, \
+              laddress = self.ua.source_address)
             self.ua.auth = None
             if self.ua.expire_time != None:
                 self.ua.expire_time += event.rtime

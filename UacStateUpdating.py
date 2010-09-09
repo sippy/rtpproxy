@@ -101,7 +101,8 @@ class UacStateUpdating(UaStateGeneric):
             self.ua.global_config['_sip_tm'].cancelTransaction(self.ua.tr)
             req = self.ua.genRequest('BYE', reason = event.reason)
             self.ua.lCSeq += 1
-            self.ua.global_config['_sip_tm'].newTransaction(req)
+            self.ua.global_config['_sip_tm'].newTransaction(req, \
+              laddress = self.ua.source_address)
             self.ua.cancelCreditTimer()
             self.ua.disconnect_ts = event.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin)

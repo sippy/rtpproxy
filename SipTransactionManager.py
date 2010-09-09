@@ -115,40 +115,43 @@ class local4remote(object):
             server = Udp_server(laddress, handleIncoming)
             self.cache_l2s[laddress] = server
 
-    def getServer(self, raddress):
+    def getServer(self, address, is_local = False):
         if self.fixed:
             return self.cache_l2s.items()[0][1]
-        laddress = self.cache_r2l.get(raddress[0], None)
-        if laddress == None:
-            laddress = self.cache_r2l_old.get(raddress[0], None)
+        if not is_local:
+            laddress = self.cache_r2l.get(address[0], None)
+            if laddress == None:
+                laddress = self.cache_r2l_old.get(address[0], None)
+                if laddress != None:
+                    self.cache_r2l[address[0]] = laddress
             if laddress != None:
-                self.cache_r2l[raddress[0]] = laddress
-        if laddress != None:
-            #print 'local4remot-1: local address for %s is %s' % (raddress[0], laddress[0])
-            return self.cache_l2s[laddress]
-        if raddress[0].startswith('['):
-            family = socket.AF_INET6
-            lookup_address = raddress[0][1:-1]
+                #print 'local4remot-1: local address for %s is %s' % (address[0], laddress[0])
+                return self.cache_l2s[laddress]
+            if address[0].startswith('['):
+                family = socket.AF_INET6
+                lookup_address = address[0][1:-1]
+            else:
+                family = socket.AF_INET
+                lookup_address = address[0]
+            self.skt = socket.socket(family, socket.SOCK_DGRAM)
+            ai = socket.getaddrinfo(lookup_address, None, family)
+            if family == socket.AF_INET:
+                _address = (ai[0][4][0], address[1])
+            else:
+                _address = (ai[0][4][0], address[1], ai[0][4][2], ai[0][4][3])
+            self.skt.connect(_address)
+            if family == socket.AF_INET:
+                laddress = (self.skt.getsockname()[0], self.global_config['_sip_port'])
+            else:
+                laddress = ('[%s]' % self.skt.getsockname()[0], self.global_config['_sip_port'])
+            self.cache_r2l[address[0]] = laddress
         else:
-            family = socket.AF_INET
-            lookup_address = raddress[0]
-        self.skt = socket.socket(family, socket.SOCK_DGRAM)
-        ai = socket.getaddrinfo(lookup_address, None, family)
-        if family == socket.AF_INET:
-            address = (ai[0][4][0], raddress[1])
-        else:
-            address = (ai[0][4][0], raddress[1], ai[0][4][2], ai[0][4][3])
-        self.skt.connect(address)
-        if family == socket.AF_INET:
-            laddress = (self.skt.getsockname()[0], self.global_config['_sip_port'])
-        else:
-            laddress = ('[%s]' % self.skt.getsockname()[0], self.global_config['_sip_port'])
-        self.cache_r2l[raddress[0]] = laddress
+            laddress = address
         server = self.cache_l2s.get(laddress, None)
         if server == None:
             server = Udp_server(laddress, self.handleIncoming)
             self.cache_l2s[laddress] = server
-        #print 'local4remot-2: local address for %s is %s' % (raddress[0], laddress[0])
+        #print 'local4remot-2: local address for %s is %s' % (address[0], laddress[0])
         return server
 
     def rotateCache(self):
@@ -260,7 +263,7 @@ class SipTransactionManager(object):
             self.incomingRequest(req, checksum, tids, server)
 
     # 1. Client transaction methods
-    def newTransaction(self, msg, resp_cb = None, userv = None):
+    def newTransaction(self, msg, resp_cb = None, laddress = None, userv = None):
         t = SipTransaction()
         t.tid = msg.getTId(True, True)
         if self.tclient.has_key(t.tid):
@@ -269,7 +272,10 @@ class SipTransactionManager(object):
         t.fcode = None
         t.address = msg.getTarget()
         if userv == None:
-            t.userv = self.l4r.getServer(t.address)
+            if laddress == None:
+                t.userv = self.l4r.getServer(t.address)
+            else:
+                t.userv = self.l4r.getServer(laddress, is_local = True)
         else:
             t.userv = userv
         t.data = msg.localStr(t.userv.laddress[0], t.userv.laddress[1])

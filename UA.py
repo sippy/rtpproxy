@@ -91,6 +91,7 @@ class UA(object):
     user_agent = None
     elast_seq = None
     origin = None
+    source_address = None
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
       conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ltag = None, extra_headers = None, \
@@ -167,7 +168,8 @@ class UA(object):
             challenge = resp.getHFBody('www-authenticate')
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm())
             self.lCSeq += 1
-            self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse)
+            self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse, \
+              laddress = self.source_address)
             del self.reqs[cseq]
             return None
         if method == 'INVITE' and self.reqs.has_key(cseq) and code == 407 and resp.countHFs('proxy-authenticate') != 0 and \
@@ -175,7 +177,8 @@ class UA(object):
             challenge = resp.getHFBody('proxy-authenticate')
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm(), SipProxyAuthorization)
             self.lCSeq += 1
-            self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse)
+            self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse, \
+              laddress = self.source_address)
             del self.reqs[cseq]
             return None
         if code >= 200 and self.reqs.has_key(cseq):
