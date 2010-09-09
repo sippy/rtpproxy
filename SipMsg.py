@@ -153,8 +153,8 @@ class SipMsg(object):
             s += str(header) + '\r\n'
         if self.body != None:
             mbody = str(self.body)
-            s += 'Content-Length: %d\r\n' % len(mbody)
-            s += 'Content-Type: %s\r\n\r\n' % self.body.mtype
+            s += 'Content-Type: %s\r\n' % self.body.mtype
+            s += 'Content-Length: %d\r\n\r\n' % len(mbody)
             s += mbody
         else:
             s += 'Content-Length: 0\r\n\r\n'
@@ -167,11 +167,11 @@ class SipMsg(object):
         if self.body != None:
             mbody = self.body.localStr(local_addr, local_port)
             if compact:
-                s += 'l: %d\r\n' % len(mbody)
-                s += 'c: %s\r\n\r\n' % self.body.mtype
+                s += 'c: %s\r\n' % self.body.mtype
+                s += 'l: %d\r\n\r\n' % len(mbody)
             else:
-                s += 'Content-Length: %d\r\n' % len(mbody)
-                s += 'Content-Type: %s\r\n\r\n' % self.body.mtype
+                s += 'Content-Type: %s\r\n' % self.body.mtype
+                s += 'Content-Length: %d\r\n\r\n' % len(mbody)
             s += mbody
         else:
             if compact:
