@@ -55,7 +55,7 @@ from re import sub
 from time import time
 from urllib import quote
 from hashlib import md5
-from MyConfigParser import MyConfigParser
+from sippy.MyConfigParser import MyConfigParser
 
 def re_replace(ptrn, s):
     s = s.split('#', 1)[0]
