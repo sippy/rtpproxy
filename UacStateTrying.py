@@ -41,7 +41,7 @@ class UacStateTrying(UaStateGeneric):
             self.ua.no_reply_timer = None
             if code == 100 and self.ua.no_progress_time != None:
                 self.ua.no_progress_timer = TimeoutAbs(self.ua.no_progress_expires, self.ua.no_progress_time)
-            elif code > 100 and code < 200 and self.ua.expire_time != None:
+            elif code < 200 and self.ua.expire_time != None:
                 self.ua.expire_timer = TimeoutAbs(self.ua.expires, self.ua.expire_time)
         if code == 100:
             if self.ua.p100_ts == None:
