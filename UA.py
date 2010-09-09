@@ -383,3 +383,6 @@ class UA(object):
         if self.state.connected:
             self.cancelCreditTimer()
             self.startCreditTimer(rtime)
+
+    def cleanup(self):
+        pass
