@@ -421,6 +421,8 @@ init_controlfd(struct cfg *cf)
 	if ((cf->run_uname != NULL || cf->run_gname != NULL) &&
 	  chown(cmd_sock, cf->run_uid, cf->run_gid) == -1)
 	    err(1, "can't set owner of the socket");
+	if (chmod(cmd_sock, 0775) == -1)
+	    err(1, "can't allow rw acces to group");
 	if (listen(controlfd, 32) != 0)
 	    err(1, "can't listen on a socket");
     } else {
