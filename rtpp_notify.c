@@ -267,7 +267,7 @@ do_timeout_notification(struct rtpp_notify_wi *wi, int retries)
     }
 
     do {
-        result = send(wi->th->fd, wi->notify_buf, wi->len, 0);
+        result = send(wi->th->fd, wi->notify_buf, wi->len - 1, 0);
     } while (result == -1 && errno == EINTR);
 
     if (result < 0) {
