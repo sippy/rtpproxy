@@ -75,13 +75,6 @@ typedef enum {
     TTL_INDEPENDENT = 1		/* any TTL counter reaches 0 */
 } rtpp_ttl_mode;
 
-struct rtpp_timeout_handler {
-    char *socket_name;
-    int fd;
-    int connected;
-    char notify_buf[64];
-};
-
 struct bindaddr_list {
     struct sockaddr_storage bindaddr;
     struct bindaddr_list *next;
@@ -131,7 +124,7 @@ struct cfg {
 
     rtpp_ttl_mode ttl_mode;
 
-    struct rtpp_timeout_handler timeout_handler;
+    struct rtpp_timeout_handler *timeout_handler;
 
     uid_t run_uid;
     gid_t run_gid;

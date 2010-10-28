@@ -123,10 +123,6 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->log_level = -1;
     cf->log_facility = -1;
 
-    cf->timeout_handler.socket_name = NULL;
-    cf->timeout_handler.fd = -1;
-    cf->timeout_handler.connected = 0;
-
     if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
 	err(1, "getrlimit");
 
@@ -270,10 +266,9 @@ init_config(struct cfg *cf, int argc, char **argv)
 		optarg += 5;
 	    if(strlen(optarg) == 0)
 		errx(1, "timeout notification socket name too short");
-	    cf->timeout_handler.socket_name = (char *)malloc(strlen(optarg) + 1);
-	    if(cf->timeout_handler.socket_name == NULL)
-		err(1, "can't allocate memory");
-	    strcpy(cf->timeout_handler.socket_name, optarg);
+	    cf->timeout_handler = rtpp_notify_init(optarg);
+	    if (cf->timeout_handler == NULL)
+		errx(1, "can't start notification thread");
 	    break;
 
 	case 'P':
@@ -764,9 +759,6 @@ main(int argc, char **argv)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
     }
-
-    if (rtpp_notify_init() != 0)
-        errx(1, "can't start notification thread");
 
     glog = cf.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
     atexit(ehandler);

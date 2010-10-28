@@ -49,6 +49,7 @@
 
 #include "rtpp_command.h"
 #include "rtpp_log.h"
+#include "rtpp_notify.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
@@ -400,7 +401,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	     * user actually enabled notification with -n
 	     */
 	    if (strcmp(argv[1], "20081224") == 0 &&
-	      cf->timeout_handler.socket_name == NULL) {
+	      cf->timeout_handler->socket_name == NULL) {
 		reply_number(cf, controlfd, &raddr, rlen, cookie, 0);
 		return 0;
 	    }
@@ -925,19 +926,19 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     }
 
     if (op == UPDATE) {
-	if (cf->timeout_handler.socket_name == NULL && socket_name_u != NULL)
+	if (cf->timeout_handler->socket_name == NULL && socket_name_u != NULL)
 	    rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
 	if (spa->timeout_data.notify_tag != NULL) {
 	    free(spa->timeout_data.notify_tag);
 	    spa->timeout_data.notify_tag = NULL;
 	}
-	if (cf->timeout_handler.socket_name != NULL && socket_name_u != NULL) {
-	    if (strcmp(cf->timeout_handler.socket_name, socket_name_u) != 0) {
+	if (cf->timeout_handler->socket_name != NULL && socket_name_u != NULL) {
+	    if (strcmp(cf->timeout_handler->socket_name, socket_name_u) != 0) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", socket_name_u);
 		socket_name_u = NULL;
 	    } else {
 		rtpp_log_write(RTPP_LOG_INFO, spa->log, "setting timeout handler");
-		spa->timeout_data.handler = &cf->timeout_handler;
+		spa->timeout_data.handler = cf->timeout_handler;
 		spa->timeout_data.notify_tag = strdup(notify_tag);
 	    }
 	} else if (socket_name_u == NULL && spa->timeout_data.handler != NULL) {

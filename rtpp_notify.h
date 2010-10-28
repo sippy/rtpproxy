@@ -31,7 +31,15 @@
 #include "rtpp_defines.h"
 #include "rtpp_session.h"
 
+struct rtpp_timeout_handler {
+    char *socket_name;
+    int socket_type;
+    int fd;
+    int connected;
+    char notify_buf[64];
+};
+
 int rtpp_notify_schedule(struct cfg *, struct rtpp_session *);
-int rtpp_notify_init(void);
+struct rtpp_timeout_handler *rtpp_notify_init(const char *);
 
 #endif

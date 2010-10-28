@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include "rtpp_log.h"
+#include "rtpp_notify.h"
 #include "rtpp_session.h"
 
 struct rtpp_notify_wi
@@ -143,9 +144,10 @@ rtpp_notify_queue_run(void)
     }
 }
 
-int
-rtpp_notify_init(void)
+struct rtpp_timeout_handler *
+rtpp_notify_init(const char *socket_name)
 {
+    struct rtpp_timeout_handler *th;
 
     rtpp_notify_wi_free = NULL;
     rtpp_notify_wi_queue = NULL;
@@ -153,14 +155,28 @@ rtpp_notify_init(void)
 
     rtpp_notify_dropped_items = 0;
 
+    th = malloc(sizeof(*th));
+    if (th == NULL)
+        return NULL;
+    memset(th, '\0', sizeof(*th));
+    th->socket_name = strdup(socket_name);
+    if (th->socket_name == NULL) {
+        free(th);
+        return NULL;
+    }
+    th->fd = -1;
+    th->connected = 0;
+
     pthread_cond_init(&rtpp_notify_queue_cond, NULL);
     pthread_mutex_init(&rtpp_notify_queue_mutex, NULL);
     pthread_mutex_init(&rtpp_notify_wi_free_mutex, NULL);
 
-    if (pthread_create(&rtpp_notify_queue, NULL, (void *(*)(void *))&rtpp_notify_queue_run, NULL) != 0)
-        return -1;
+    if (pthread_create(&rtpp_notify_queue, NULL, (void *(*)(void *))&rtpp_notify_queue_run, NULL) != 0) {
+        free(th);
+        return NULL;
+    }
 
-    return 0;
+    return th;
 }
 
 int
