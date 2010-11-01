@@ -348,7 +348,29 @@
                         this socket if the session times out.
                     </para>
                     <para>
-                        Example: -n unix:/var/run/rtpproxy_timeout.sock
+                        Format of <replaceable>timeout_socket</replaceable> is
+                        &lt;type&gt;:&lt;socket&gt;. Following types are
+                        supported:
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    <emphasis>unix:</emphasis>Connect to UNIX
+                                    domain socket for sending timeout notifications. In
+                                    this mode B2BUA and RTPProxy must be running on the
+                                    same host.
+                                </para>
+                                <para>Example: -n unix:/var/run/rtpproxy_timeout.sock</para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <emphasis>tcp:</emphasis>Connect to a remote
+                                    host using TCP/IP for sending timeout notifications.
+                                    Format of the <replaceable>socket</replaceable>
+                                    parameter in this case is &lt;host&gt;:&lt;port&gt;.
+                                </para>
+                                <para>Example: -n tcp:10.20.30:12345</para>
+                            </listitem>
+                        </itemizedlist>
                     </para>
                     <para>
                         There is no default value, notifications are not sent and not

@@ -37,8 +37,10 @@
 #include <unistd.h>
 
 #include "rtpp_log.h"
+#include "rtpp_network.h"
 #include "rtpp_notify.h"
 #include "rtpp_session.h"
+#include "rtpp_util.h"
 
 struct rtpp_notify_wi
 {
@@ -144,6 +146,66 @@ rtpp_notify_queue_run(void)
     }
 }
 
+int
+parse_hostport(const char *hostport, char *host, int hsize, char *port, int psize, int testonly)
+{
+    const char *cp;
+    int myport;
+
+    cp = strrchr(hostport, ':');
+    if (cp == NULL || cp[1] == '\0' || cp == hostport) {
+        /* warnx("invalid tcp/udp address");*/
+        return -1;
+    }
+    myport = atoi(cp + 1);
+    if (myport <= 0 || myport > 65535) {
+        /*warnx("%s: invalid port", cp + 1);*/
+        return -1;
+    }
+
+    if (testonly != 0)
+        return 0;
+
+    if (cp - hostport + 1 > hsize || psize < 6) {
+        /*warnx("supplied buffers are too small");*/
+        return -1;
+    }
+
+    memcpy(host, hostport, cp - hostport);
+    host[cp - hostport] = '\0';
+    snprintf(port, psize, "%d", myport);
+    return 0;
+}
+
+static int
+parse_timeout_sock(const char *sock_name, struct rtpp_timeout_handler *timeout_handler)
+{
+
+    if (strncmp("unix:", sock_name, 5) == 0) {
+        sock_name += 5;
+        timeout_handler->socket_type = PF_LOCAL;
+    } else if (strncmp("tcp:", sock_name, 4) == 0) {
+        if (parse_hostport(sock_name + 4, NULL, 0, NULL, 0, 1) != 0) {
+            warnx("can't parse host:port in TCP address");
+            return -1;
+        }
+        timeout_handler->socket_type = PF_INET;
+    } else {
+        timeout_handler->socket_type = PF_LOCAL;
+    }
+    if (strlen(sock_name) == 0) {
+        warnx("timeout notification socket name too short");
+        return -1;
+    }
+    timeout_handler->socket_name = strdup(sock_name);
+    if (timeout_handler->socket_name == NULL) {
+        warnx("can't allocate memory");
+        return -1;
+    }
+
+    return 0;
+}
+
 struct rtpp_timeout_handler *
 rtpp_notify_init(const char *socket_name)
 {
@@ -159,8 +221,7 @@ rtpp_notify_init(const char *socket_name)
     if (th == NULL)
         return NULL;
     memset(th, '\0', sizeof(*th));
-    th->socket_name = strdup(socket_name);
-    if (th->socket_name == NULL) {
+    if (parse_timeout_sock(socket_name, th) != 0) {
         free(th);
         return NULL;
     }
@@ -237,9 +298,14 @@ rtpp_notify_schedule(struct cfg *cf, struct rtpp_session *sp)
 static void
 reconnect_timeout_handler(rtpp_log_t log, struct rtpp_timeout_handler *th)
 {
-    struct sockaddr_un remote;
+    union {
+        struct sockaddr_un u;
+        struct sockaddr_storage i;
+    } remote;
+    char host[512], port[10];
+    int remote_len, n;
 
-    assert(th->socket_name != NULL && th->connected == 0);
+    assert (th->socket_name != NULL && th->connected == 0);
 
     if (th->fd == -1) {
         rtpp_log_write(RTPP_LOG_DBUG, log, "connecting timeout socket");
@@ -247,18 +313,31 @@ reconnect_timeout_handler(rtpp_log_t log, struct rtpp_timeout_handler *th)
         rtpp_log_write(RTPP_LOG_DBUG, log, "reconnecting timeout socket");
         close(th->fd);
     }
-    th->fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    th->fd = socket(th->socket_type, SOCK_STREAM, 0);
     if (th->fd == -1) {
         rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't create timeout socket");
         return;
     }
     memset(&remote, '\0', sizeof(remote));
-    remote.sun_family = AF_LOCAL;
-    strncpy(remote.sun_path, th->socket_name, sizeof(remote.sun_path) - 1);
+    if (th->socket_type == PF_UNIX) {
+        remote.u.sun_family = AF_LOCAL;
+        strncpy(remote.u.sun_path, th->socket_name, sizeof(remote.u.sun_path) - 1);
 #if defined(HAVE_SOCKADDR_SUN_LEN)
-    remote.sun_len = strlen(remote.sun_path);
+        remote.u.sun_len = strlen(remote.u.sun_path);
 #endif
-    if (connect(th->fd, (struct sockaddr *)&remote, sizeof(remote)) == -1) {
+        remote_len = sizeof(remote);
+    } else {
+        assert (parse_hostport(th->socket_name, host, sizeof(host), port, sizeof(port), 0) == 0);
+        n = resolve(sstosa(&remote.i), AF_INET, host, port, AI_PASSIVE);
+        if (n != 0) {
+            rtpp_log_write(RTPP_LOG_ERR, log, "reconnect_timeout_handler: getaddrinfo('%s:s'): %s",
+              host, port, gai_strerror(n));
+            return;
+        }
+        remote_len = SA_LEN(sstosa(&remote.i));
+    }
+
+    if (connect(th->fd, (struct sockaddr *)&remote, remote_len) == -1) {
         rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't connect to timeout socket");
     } else {
         th->connected = 1;
