@@ -185,7 +185,8 @@ parse_timeout_sock(const char *sock_name, struct rtpp_timeout_handler *timeout_h
         sock_name += 5;
         timeout_handler->socket_type = PF_LOCAL;
     } else if (strncmp("tcp:", sock_name, 4) == 0) {
-        if (parse_hostport(sock_name + 4, NULL, 0, NULL, 0, 1) != 0) {
+        sock_name += 4;
+        if (parse_hostport(sock_name, NULL, 0, NULL, 0, 1) != 0) {
             warnx("can't parse host:port in TCP address");
             return -1;
         }
