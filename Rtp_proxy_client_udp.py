@@ -52,7 +52,7 @@ class Rtp_proxy_client_udp(Rtp_proxy_client):
         if triesleft == 0:
             timer.cancel()
             del self.pending_requests[cookie]
-            self.online = False
+            self.go_offline()
             if result_callback != None:
                 result_callback(None, *callback_parameters)
             return
