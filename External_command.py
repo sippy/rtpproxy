@@ -33,7 +33,7 @@ from errno import EINTR
 
 _MAX_WORKERS = 20
 
-class _Worker(Thread):
+class _ECWorker(Thread):
     command = None
     master = None
 
@@ -121,7 +121,7 @@ class External_command(object):
         self.work_available = Condition()
         self.work = []
         for i in range(0, max_workers):
-            _Worker(command, self)
+            _ECWorker(command, self)
 
     def process_command(self, data, result_callback, *callback_parameters):
         wi = Work_item(tuple(data), result_callback, callback_parameters)

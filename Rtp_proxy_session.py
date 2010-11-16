@@ -48,7 +48,7 @@ class Rtp_proxy_session(object):
     notify_tag = None
     global_config = None
 
-    def __init__(self, global_config, call_id = None, from_tag = None, to_tag = None,
+    def __init__(self, global_config = {}, call_id = None, from_tag = None, to_tag = None,
       notify_socket = None, notify_tag = None):
         self.global_config = global_config
         if global_config.has_key('_rtp_proxy_clients'):
@@ -57,10 +57,13 @@ class Rtp_proxy_session(object):
             if n == 0:
                 raise Exception('No online RTP proxy client has been found')
             self.rtp_proxy_client = rtp_proxy_clients[int(random() * n)]
-        else:
+        elif global_config.has_key('rtp_proxy_client'):
             self.rtp_proxy_client = global_config['rtp_proxy_client']
             if not self.rtp_proxy_client.online:
                 raise Exception('No online RTP proxy client has been found')
+        else:
+            from Rtp_proxy_client_local import Rtp_proxy_client_local
+            self.rtp_proxy_client = Rtp_proxy_client_local()
         if call_id != None:
             self.call_id = call_id
         else:
@@ -276,6 +279,7 @@ class Rtp_proxy_session(object):
             sect.c_header.addr = address_port[0]
             if sect.m_header.port != 0:
                 sect.m_header.port = address_port[1]
+                sdp_body.content += 'a=nortpproxy:yes\r\n'
         if len([x for x in sects if x.needs_update]) == 0:
             sdp_body.content.o_header = self.origin
             sdp_body.needs_update = False

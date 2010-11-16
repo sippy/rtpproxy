@@ -56,6 +56,7 @@ class SipTransaction(object):
     address = None
     data = None
     checksum = None
+    cancel_stops_retr = False
 
     def cleanup(self):
         self.ack = None
@@ -115,7 +116,7 @@ class local4remote(object):
             server = Udp_server(laddress, handleIncoming)
             self.cache_l2s[laddress] = server
 
-    def getServer(self, address, is_local = False):
+    def getServer(self, raddress, is_local = False):
         if self.fixed:
             return self.cache_l2s.items()[0][1]
         if not is_local:
@@ -219,6 +220,7 @@ class SipTransactionManager(object):
             resp.rtime = rtime
             if not self.tclient.has_key(tid):
                 #print 'no transaction with tid of %s in progress' % str(tid)
+                #print self.tclient
                 self.l1rcache[checksum] = (None, None, None)
                 return
             t = self.tclient[tid]
@@ -278,7 +280,11 @@ class SipTransactionManager(object):
                 t.userv = self.l4r.getServer(laddress, is_local = True)
         else:
             t.userv = userv
-        t.data = msg.localStr(t.userv.laddress[0], t.userv.laddress[1])
+        if t.address[0] in ('207.94.22.82', '207.94.22.83', '64.58.62.250', '64.58.63.250'):
+            t.data = msg.localStr(t.userv.laddress[0], t.userv.laddress[1], compact = True)
+            t.cancel_stops_retr = True
+        else:
+            t.data = msg.localStr(t.userv.laddress[0], t.userv.laddress[1])
         try:
             t.expires = msg.getHFBody('expires').getNum()
             if t.expires <= 0:
@@ -304,6 +310,9 @@ class SipTransactionManager(object):
         return t
 
     def cancelTransaction(self, t, reason = None):
+        if t.cancel_stops_retr and t.teA != None:
+            t.teA.cancel()
+            t.teA = None
         # If we got at least one provisional reply then (state == RINGING)
         # then start CANCEL transaction, otherwise deffer it
         if t.state != RINGING:
@@ -421,11 +430,11 @@ class SipTransactionManager(object):
 
     # 2. Server transaction methods
     def incomingRequest(self, msg, checksum, tids, server):
-        for tid in tids:
-            if self.tclient.has_key(tid):
-                resp = msg.genResponse(482, 'Loop Detected')
-                self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
-                return
+        ##for tid in tids:
+        ##    if self.tclient.has_key(tid):
+        ##        resp = msg.genResponse(482, 'Loop Detected')
+        ##        self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
+        ##        return
         tid = msg.getTId()
         # Fasten seatbelts - bumpy transaction matching code ahead!
         if msg.getMethod() in ('INVITE', 'CANCEL', 'ACK'):
@@ -642,6 +651,8 @@ class SipTransactionManager(object):
         self.l4r.rotateCache()
 
     def transmitMsg(self, userv, msg, address, cachesum, compact = False):
+        if not compact and address[0] in ('207.94.22.82', '207.94.22.83', '64.58.62.250', '64.58.63.250'):
+            compact = True
         data = msg.localStr(userv.laddress[0], userv.laddress[1], compact)
         self.transmitData(userv, data, address, cachesum)
 

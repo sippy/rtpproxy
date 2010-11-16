@@ -24,31 +24,21 @@
 
 from Timeout import Timeout
 from Udp_server import Udp_server
+from Rtp_proxy_client import Rtp_proxy_client
 
 from time import time
 from hashlib import md5
 from random import random
 
-class Rtp_proxy_client_udp(object):
-    udp_server = None
+class Rtp_proxy_client_udp(Rtp_proxy_client):
     pending_requests = None
-    address = None
-    online = False
-    copy_supported = False
-    stat_supported = False
-    tnot_supported = False
-    sbind_supported = False
-    shutdown = False
-    proxy_address = None
-    caps_done = False
     is_local = False
 
     def __init__(self, global_config, address):
         self.udp_server = Udp_server(None, self.process_reply)
         self.pending_requests = {}
-        self.address = address
         self.proxy_address = address[0]
-        self.heartbeat()
+        Rtp_proxy_client.__init__(self, global_config, address)
 
     def send_command(self, command, result_callback = None, *callback_parameters):
         cookie = md5(str(random()) + str(time())).hexdigest()
@@ -77,78 +67,3 @@ class Rtp_proxy_client_udp(object):
         parameters[1].cancel()
         if parameters[3] != None:
             parameters[3](result.strip(), *parameters[4])
-
-    def caps_query1(self, result):
-        if self.shutdown:
-            self.udp_server.shutdown()
-            return
-        if result != '1':
-            if result != None:
-                self.copy_supported = False
-                self.stat_supported = False
-                self.tnot_supported = False
-                self.sbind_supported = False
-                self.caps_done = True
-            Timeout(self.heartbeat, 60)
-            return
-        self.copy_supported = True
-        self.send_command('VF 20080403', self.caps_query2)
-
-    def caps_query2(self, result):
-        if self.shutdown:
-            self.udp_server.shutdown()
-            return
-        if result != None:
-            if result == '1':
-                self.stat_supported = True
-                self.send_command('VF 20081224', self.caps_query3)
-                return
-            else:
-                self.stat_supported = False
-                self.tnot_supported = False
-                self.sbind_supported = False
-                self.caps_done = True
-        Timeout(self.heartbeat, 60)
-
-    def caps_query3(self, result):
-        if self.shutdown:
-            self.udp_server.shutdown()
-            return
-        if result != None:
-            if result == '1':
-                self.tnot_supported = True
-                self.send_command('VF 20090810', self.caps_query4)
-                return
-            else:
-                self.tnot_supported = False
-                self.sbind_supported = False
-                self.caps_done = True
-        Timeout(self.heartbeat, 60)
-
-    def caps_query4(self, result):
-        if self.shutdown:
-            self.udp_server.shutdown()
-            return
-        if result != None:
-            if result == '1':
-                self.sbind_supported = True
-            else:
-                self.sbind_supported = False
-            self.caps_done = True
-        Timeout(self.heartbeat, 60)
-
-    def heartbeat(self):
-        self.send_command('V', self.heartbeat_reply)
-
-    def heartbeat_reply(self, version):
-        if self.shutdown:
-            self.udp_server.shutdown()
-            return
-        if version == '20040107':
-            self.online = True
-            if not self.caps_done:
-                self.send_command('VF 20071218', self.caps_query1)
-                return
-        else:
-            self.online = False
-        Timeout(self.heartbeat, 60)

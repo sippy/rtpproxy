@@ -25,13 +25,20 @@ from datetime import datetime
 from twisted.internet import task, reactor
 from traceback import print_exc, format_list, extract_stack
 from sys import stdout
+from time import time
 
 class Timeout(object):
+    id = 1
+    debug = False
     _task = None
     _ticks_left = None
     _timeout_callback = None
 
     def __init__(self, timeout_callback, interval, ticks = 1, *callback_arguments):
+        self.id = Timeout.id
+        Timeout.id += 1
+        if Timeout.id % 100 == 0:
+            self.debug = True
         self._timeout_callback = timeout_callback
         if ticks == 1:
             # Special case for just one call
@@ -43,6 +50,8 @@ class Timeout(object):
         self._task.start(interval, False)
 
     def _run(self, *callback_arguments):
+        if self.debug:
+            now = time()
         try:
             self._timeout_callback(*callback_arguments)
         except:
@@ -51,12 +60,18 @@ class Timeout(object):
             print_exc(file = stdout)
             print '-' * 70
             stdout.flush()
+        if self.debug:
+            duration = time() - now
+            if duration > 0.1:
+                print datetime.now(), 'Timeout: %s call with arguments %s is too slow: %f s' % (str(self._timeout_callback), str(callback_arguments), duration)
         if self._ticks_left == 1:
             self.cancel()
         elif self._ticks_left != -1:
             self._ticks_left -= 1
 
     def _run_once(self, *callback_arguments):
+        if self.debug:
+            now = time()
         try:
             self._timeout_callback(*callback_arguments)
         except:
@@ -65,6 +80,10 @@ class Timeout(object):
             print_exc(file = stdout)
             print '-' * 70
             stdout.flush()
+        if self.debug:
+            duration = time() - now
+            if duration > 0.1:
+                print datetime.now(), 'Timeout: %s call with arguments %s is too slow: %f s' % (str(self._timeout_callback), str(callback_arguments), duration)
         self._task = None
         self._timeout_callback = None
 
@@ -79,10 +98,16 @@ class Timeout(object):
         self._timeout_callback = None
 
 class TimeoutAbs:
+    id = 1
+    debug = False
     _task = None
     _timeout_callback = None
 
     def __init__(self, timeout_callback, etime, *callback_arguments):
+        self.id = Timeout.id
+        Timeout.id += 1
+        if Timeout.id % 100 == 0:
+            self.debug = True
         etime -= reactor.seconds()
         if etime < 0:
             etime = 0
@@ -90,6 +115,8 @@ class TimeoutAbs:
         self._task = reactor.callLater(etime, self._run_once, *callback_arguments)
 
     def _run_once(self, *callback_arguments):
+        if self.debug:
+            now = time()
         try:
             self._timeout_callback(*callback_arguments)
         except:
@@ -98,6 +125,10 @@ class TimeoutAbs:
             print_exc(file = stdout)
             print '-' * 70
             stdout.flush()
+        if self.debug:
+            duration = time() - now
+            if duration > 0.1:
+                print datetime.now(), 'Timeout: %s call with arguments %s is too slow: %f s' % (str(self._timeout_callback), str(callback_arguments), duration)
         self._task = None
         self._timeout_callback = None
 
