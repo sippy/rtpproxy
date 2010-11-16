@@ -42,11 +42,13 @@ class Rtp_proxy_client(object):
 
     def __init__(self, global_config, address):
         self.address = address
-        self.heartbeat()
+        self.version_check()
 
     def caps_query1(self, result):
         if self.shutdown:
             self.worker.shutdown()
+            return
+        if not self.online:
             return
         if result != '1':
             if result != None:
@@ -55,7 +57,6 @@ class Rtp_proxy_client(object):
                 self.tnot_supported = False
                 self.sbind_supported = False
                 self.caps_done = True
-            Timeout(self.heartbeat, 60)
             return
         self.copy_supported = True
         self.send_command('VF 20080403', self.caps_query2)
@@ -63,6 +64,8 @@ class Rtp_proxy_client(object):
     def caps_query2(self, result):
         if self.shutdown:
             self.worker.shutdown()
+            return
+        if not self.online:
             return
         if result != None:
             if result == '1':
@@ -74,11 +77,12 @@ class Rtp_proxy_client(object):
                 self.tnot_supported = False
                 self.sbind_supported = False
                 self.caps_done = True
-        Timeout(self.heartbeat, 60)
 
     def caps_query3(self, result):
         if self.shutdown:
             self.worker.shutdown()
+            return
+        if not self.online:
             return
         if result != None:
             if result == '1':
@@ -89,11 +93,12 @@ class Rtp_proxy_client(object):
                 self.tnot_supported = False
                 self.sbind_supported = False
                 self.caps_done = True
-        Timeout(self.heartbeat, 60)
 
     def caps_query4(self, result):
         if self.shutdown:
             self.worker.shutdown()
+            return
+        if not self.online:
             return
         if result != None:
             if result == '1':
@@ -101,20 +106,50 @@ class Rtp_proxy_client(object):
             else:
                 self.sbind_supported = False
             self.caps_done = True
-        Timeout(self.heartbeat, 60)
 
-    def heartbeat(self):
-        self.send_command('V', self.heartbeat_reply)
+    def version_check(self):
+        self.send_command('V', self.version_check_reply)
 
-    def heartbeat_reply(self, version):
+    def version_check_reply(self, version):
         if self.shutdown:
             self.worker.shutdown()
             return
         if version == '20040107':
-            self.online = True
-            if not self.caps_done:
-                self.send_command('VF 20071218', self.caps_query1)
-                return
+            self.go_online()
         else:
+            self.go_offline()
+
+    def heartbeat(self):
+        #print 'heartbeat', self, self.address
+        self.send_command('Ib', self.heartbeat_reply)
+
+    def heartbeat_reply(self, stats):
+        if self.shutdown:
+            self.udp_server.shutdown()
+            return
+        if not self.online:
+            return
+        if stats == None:
+            self.active_sessions = None
+            self.go_offline()
+        else:
+            for line in stats.splitlines():
+                if not line.startswith('active sessions'):
+                    continue
+                self.update_active(int(line.split(':', 1)[1]))
+        Timeout(self.heartbeat, 10)
+
+    def go_online(self):
+        if not self.online:
+            self.caps_done = False
+            self.send_command('VF 20071218', self.caps_query1)
+            self.online = True
+            self.heartbeat()
+
+    def go_offline(self):
+        if self.online:
             self.online = False
-        Timeout(self.heartbeat, 60)
+            Timeout(self.version_check, 60)
+
+    def update_active(self, active_sessions):
+        self.active_sessions = active_sessions
