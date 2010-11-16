@@ -39,8 +39,8 @@ from sippy.UasStateRinging import UasStateRinging
 from sippy.UaStateDead import UaStateDead
 from sippy.SipConf import SipConf
 from sippy.SipHeader import SipHeader
-from VoIPCom_authorization import RadiusAuthorisation
-from VoIPCom_accounting import RadiusAccounting
+from sippy.RadiusAuthorisation import RadiusAuthorisation
+from sippy.RadiusAccounting import RadiusAccounting
 from sippy.FakeAccounting import FakeAccounting
 from sippy.SipLogger import SipLogger
 from sippy.Rtp_proxy_session import Rtp_proxy_session
@@ -49,8 +49,6 @@ from twisted.internet import reactor
 from urllib import unquote
 from sippy.Cli_server_local import Cli_server_local
 from sippy.SipTransactionManager import SipTransactionManager
-from VoIPCom_cnam_client import VoIPCom_cnam_client
-from ConnectionsStats import ConnectionsStats
 from sippy.SipCallId import SipCallId
 import gc, getopt, os, sys
 from re import sub
@@ -58,8 +56,6 @@ from time import time
 from urllib import quote
 from hashlib import md5
 from sippy.MyConfigParser import MyConfigParser
-from datetime import datetime
-from contrib import objgraph
 
 def re_replace(ptrn, s):
     s = s.split('#', 1)[0]
@@ -161,20 +157,6 @@ class CallController(object):
                             self.uaA.recvEvent(CCEventFail((488, 'Not Acceptable Here')))
                             self.state = CCStateDead
                             return
-                if self.global_config.has_key('_preferred_codecs'):
-                    try:
-                        body.parse()
-                    except:
-                        self.uaA.recvEvent(CCEventFail((400, 'Malformed SDP Body'), rtime = event.rtime))
-                        self.state = CCStateDead
-                        return
-                    preferred_codecs = self.global_config['_preferred_codecs']
-                    mbody = body.content.sections[0].m_header
-                    if mbody.transport.lower() == 'rtp/avp':
-                        for preferred_codec in preferred_codecs:
-                            if preferred_codec in mbody.formats:
-                                mbody.formats = [x for x in mbody.formats if x != preferred_codec]
-                                mbody.formats.insert(0, preferred_codec)
                 if self.cld.startswith('nat-'):
                     self.cld = self.cld[4:]
                     body.content += 'a=nated:yes\r\n'
@@ -195,14 +177,11 @@ class CallController(object):
                 elif auth == None or auth.username == None or len(auth.username) == 0:
                     self.username = self.remote_ip
                     self.auth_proc = self.global_config['_radius_client'].do_auth(self.remote_ip, self.cli, self.cld, self.cGUID, \
-                      self.cId, self.remote_ip, self.rDone, user_agent = self.uaA.user_agent, \
-                      to_username = self.uaA.lUri.getUrl().username, rtime = event.rtime)
+                      self.cId, self.remote_ip, self.rDone)
                 else:
                     self.username = auth.username
                     self.auth_proc = self.global_config['_radius_client'].do_auth(auth.username, self.cli, self.cld, self.cGUID, 
-                      self.cId, self.remote_ip, self.rDone, auth.realm, auth.nonce, auth.uri, auth.response, \
-                      user_agent = self.uaA.user_agent, to_username = self.uaA.lUri.getUrl().username, \
-                      rtime = event.rtime)
+                      self.cId, self.remote_ip, self.rDone, auth.realm, auth.nonce, auth.uri, auth.response)
                 return
             if self.state not in (CCStateARComplete, CCStateConnected, CCStateDisconnecting) or self.uaO == None:
                 return
@@ -223,12 +202,6 @@ class CallController(object):
         # Check that we got necessary result from Radius
         if len(results) != 2 or results[1] != 0:
             if isinstance(self.uaA.state, UasStateTrying):
-                if len(results[0]) > 0 and len(results[0][0]) > 0:
-                    rcode = results[0][0][0].split(';', 2)
-                    if len(rcode) > 1 and rcode[1].startswith('code='):
-                        self.uaA.recvEvent(CCEventFail((int(rcode[1][5:]), rcode[0])))
-                        self.state = CCStateDead
-                        return
                 if self.challenge != None:
                     event = CCEventFail((401, 'Unauthorized'))
                     event.extra_header = self.challenge
@@ -250,7 +223,7 @@ class CallController(object):
             self.acctA.disc(self.uaA, time(), 'caller')
             return
         cli = [x[1][4:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('CLI:')]
-        if len(cli) > 0 and self.remote_ip not in ('64.34.245.151', '72.236.70.231'):
+        if len(cli) > 0:
             self.cli = cli[0]
             if len(self.cli) == 0:
                 self.cli = None
@@ -259,10 +232,6 @@ class CallController(object):
             self.caller_name = caller_name[0]
             if len(self.caller_name) == 0:
                 self.caller_name = None
-        recording_name = [x[1][4:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('REC:')]
-        if len(recording_name) > 0:
-            if self.rtp_proxy_session != None:
-                self.rtp_proxy_session.start_recording(recording_name[0])
         credit_time = [x for x in results[0] if x[0] == 'h323-credit-time']
         if len(credit_time) > 0:
             global_credit_time = int(credit_time[0][1])
@@ -290,10 +259,6 @@ class CallController(object):
             else:
                 cld = self.cld
                 host = route[0]
-            if host.startswith('4.68.250.146') and self.remote_ip in ('64.34.245.154', '64.34.245.176'):
-                continue
-            if host.startswith('67.16.100.220'):
-                continue
             credit_time = global_credit_time
             expires = None
             no_progress_expires = None
@@ -322,7 +287,7 @@ class CallController(object):
                     forward_on_fail = True
                 elif a == 'auth':
                     user, passw = v.split(':', 1)
-                elif a == 'cli' and self.remote_ip not in ('64.34.245.151', '72.236.70.231'):
+                elif a == 'cli':
                     cli = v
                     if len(cli) == 0:
                         cli = None
@@ -353,18 +318,6 @@ class CallController(object):
             self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (3)')))
             self.state = CCStateDead
             return
-        if self.caller_name != None and self.caller_name.startswith('lookup,'):
-            cli, sipuser = self.caller_name[7:].split(',', 1)
-            self.global_config['_cnam_client'].lookup(cli, sipuser, self.clDone)
-            return
-        self.state = CCStateARComplete
-        self.placeOriginate(self.routes.pop(0))
-
-    def clDone(self, caller_name):
-        # Check that uaA is still in a valid state, send acct stop
-        if not isinstance(self.uaA.state, UasStateTrying):
-            return
-        self.caller_name = caller_name
         self.state = CCStateARComplete
         self.placeOriginate(self.routes.pop(0))
 
@@ -396,11 +349,6 @@ class CallController(object):
                 else:
                     port = SipConf.default_port
                 host = host[0]
-        if host == 'sip_ua':
-            host = self.global_config['_sip_address']
-            port = 5061
-        elif host == self.global_config['_sip_address']:
-            port = self.global_config['_sip_port']
         if not forward_on_fail and self.global_config['acct_enable']:
             self.acctO = RadiusAccounting(self.global_config, 'originate', \
               send_start = self.global_config['start_acct_enable'], lperiod = \
@@ -418,27 +366,17 @@ class CallController(object):
         self.uaO = UA(self.global_config, self.recvEvent, user, passw, (host, port), credit_time, tuple(conn_handlers), \
           tuple(disc_handlers), tuple(disc_handlers), dead_cbs = (self.oDead,), expire_time = expires, \
           no_progress_time = no_progress_expires, extra_headers = parameters.get('extra_headers', None))
-        if host == '208.64.8.8':
-            self.uaO.rAddr = (self.global_config['_sip_address'], 5060)
-        body = body.getCopy()
         if self.rtp_proxy_session != None and parameters.get('rtpp', True):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
             self.rtp_proxy_session.caller_raddress = (host, port)
-            #body = body.getCopy()
-            #body.content += 'a=nortpproxy:yes\r\n'
+            body = body.getCopy()
+            body.content += 'a=nortpproxy:yes\r\n'
             self.proxied = True
         self.uaO.kaInterval = self.global_config['keepalive_orig']
         if parameters.has_key('group_timeout'):
             timeout, skipto = parameters['group_timeout']
             Timeout(self.group_expires, timeout, 1, skipto)
-        if parameters.has_key('max_codecs'):
-            max_codecs = int(parameters['max_codecs'])
-            body.parse()
-            mbody = body.content.sections[0].m_header
-            if mbody.transport.lower() == 'rtp/avp':
-                mbody.formats = [x for x in mbody.formats if x < 96][:max_codecs] + \
-                  [x for x in mbody.formats if x >= 96]
         if self.global_config.getdefault('hide_call_id', False):
             cId = SipCallId(md5(str(cId)).hexdigest() + ('-b2b_%d' % rnum))
         else:
@@ -671,23 +609,10 @@ class CallMap(object):
                     cc.disconnect(time() - 60)
             clim.send('OK\n')
             return False
-        if cmd == 'c':
-            if len(args) > 0:
-                depth = int(args[0])
-            else:
-                depth = 30
-            cstats = self.global_config['_cstats']
-            for stat in cstats.stats.itervalues():
-                val = stat.getstat_noex(depth)
-                if val != None:
-                    clim.send('%s\t%d\t%f\n' % (stat.i_connection, stat.ncalls, val))
-            clim.send('OK\n')
-            return False
         clim.send('ERROR: unknown command\n')
         return False
 
 def reopen(signum, logfile):
-    print objgraph.show_most_common_types(limit=200)
     print 'Signal %d received, reopening logs' % signum
     fd = os.open(logfile, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
     os.dup2(fd, sys.__stdout__.fileno())
@@ -700,16 +625,6 @@ def usage(global_config, brief = False):
         print '\navailable options:\n'
         global_config.options_help()
     sys.exit(1)
-
-def heartrate_monitor(last_tick):
-    try:
-        file('/foobar - ' + str(datetime.now()), 'r')
-    except:
-        pass
-    now = time()
-    if now - 1.0 - last_tick > 0.1:
-        print datetime.now(), 'extra delay[%d]: %f' % (os.getpid(), now - 1.0 - last_tick)
-    Timeout(heartrate_monitor, 1.0, 1, now)
 
 if __name__ == '__main__':
     global_config = MyConfigParser()
@@ -810,10 +725,6 @@ if __name__ == '__main__':
         if o == '-R':
             global_config.check_and_set('radiusclient.conf', a)
             continue
-        if o == '-C':
-            global_config['_preferred_codecs'] = [int(x) for x in a.split(',')]
-            global_config['_preferred_codecs'].reverse()
-            continue
         if o == '-h':
             for a in a.split(','):
                 global_config.check_and_set('pass_header', a)
@@ -859,7 +770,7 @@ if __name__ == '__main__':
         global_config.write(open(writeconf, 'w'))
 
     if not global_config['foreground']:
-        print 'foobar'
+        #print 'foobar'
         # Fork once
         if os.fork() != 0:
             os._exit(0)
@@ -887,13 +798,9 @@ if __name__ == '__main__':
         global_config['_radius_client'] = RadiusAuthorisation(global_config)
     SipConf.my_uaname = 'Sippy B2BUA (RADIUS)'
 
-    global_config['_cstats'] = ConnectionsStats()
-
     global_config['_cmap'] = CallMap(global_config)
 
     global_config['_sip_tm'] = SipTransactionManager(global_config, global_config['_cmap'].recvRequest)
-
-    global_config['_cnam_client'] = VoIPCom_cnam_client()
 
     cmdfile = global_config['b2bua_socket']
     if cmdfile.startswith('unix:'):
@@ -903,7 +810,5 @@ if __name__ == '__main__':
     if not global_config['foreground']:
         file(global_config['pidfile'], 'w').write(str(os.getpid()) + '\n')
         Signal(SIGUSR1, reopen, SIGUSR1, global_config['logfile'])
-
-    Timeout(heartrate_monitor, 1.0, 1, time())
 
     reactor.run(installSignalHandlers = True)

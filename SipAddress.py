@@ -30,7 +30,7 @@ class SipAddress(object):
     url = None
     params = None
     hadbrace = None
-    transtable = maketrans('-.!%_+`\'~', 'a' * 9)
+    transtable = maketrans('-.!%*_+`\'~', 'a' * 10)
 
     def __init__(self, address = None, name = None, url = None, params = None, hadbrace = None):
         self.params = {}

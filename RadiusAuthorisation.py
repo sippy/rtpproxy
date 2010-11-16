@@ -27,8 +27,7 @@ from time import time
 
 class RadiusAuthorisation(Radius_client):
     def do_auth(self, username, caller, callee, h323_cid, sip_cid, remote_ip, res_cb, \
-      realm = None, nonce = None, uri = None, response = None, extra_attributes = None, \
-      user_agent = None):
+      realm = None, nonce = None, uri = None, response = None, extra_attributes = None):
         sip_cid = str(sip_cid)
         attributes = None
         if None not in (realm, nonce, uri, response):
