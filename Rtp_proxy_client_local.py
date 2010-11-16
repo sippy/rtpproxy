@@ -23,34 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 from Timeout import Timeout
+from threading import Thread, Condition
+from Rtp_proxy_client import Rtp_proxy_client
 from errno import EINTR
+from twisted.internet import reactor
 
 import socket
 
-class Rtp_proxy_client_local(object):
-    address = None
-    online = False
-    copy_supported = False
-    stat_supported = False
-    tnot_supported = False
-    sbind_supported = False
-    shutdown = False
-    proxy_address = None
-    is_local = True
+class _RTPPLWorker(Thread):
+    userv = None
 
-    def __init__(self, global_config, address = '/var/run/rtpproxy.sock'):
-        self.address = address
-        self.proxy_address = global_config['_sip_address']
-        self.heartbeat()
-
-    def send_command(self, command, result_callback = None, *callback_parameters):
-        data = self.send_raw(command)
-        if result_callback != None:
-            Timeout(self.process_reply, 0, 1, (result_callback, data, callback_parameters))
+    def __init__(self, userv):
+        Thread.__init__(self)
+        self.userv = userv
+        self.setDaemon(True)
+        self.start()
 
     def send_raw(self, command):
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(self.address)
+        s.connect(self.userv.address)
         while True:
             try:
                 s.send(command)
@@ -69,34 +60,57 @@ class Rtp_proxy_client_local(object):
                 raise why
         return rval
 
-    def process_reply(self, args):
-        args[0](args[1], *args[2])
-
-    def heartbeat(self):
-        if self.shutdown:
-            return
-        self.online = False
-        self.copy_supported = False
-        self.stat_supported = False
-        self.tnot_supported = False
-        self.sbind_supported = False
-        try:
-            version = self.send_raw('V')
-            while version == '20040107':
-                self.online = True
-                if self.send_raw('VF 20071218') != '1':
-                    break
-                self.copy_supported = True
-                if self.send_raw('VF 20080403') != '1':
-                    break
-                self.stat_supported = True
-                if self.send_raw('VF 20081224') != '1':
-                    break
-                self.tnot_supported = True
-                if self.send_raw('VF 20090810') != '1':
-                    break
-                self.sbind_supported = True
+    def run(self):
+        while True:
+            self.userv.wi_available.acquire()
+            while len(self.userv.wi) == 0:
+                self.userv.wi_available.wait()
+            wi = self.userv.wi.pop(0)
+            if wi == None:
+                # Shutdown request, relay it further
+                self.userv.wi.append(None)
+                self.userv.wi_available.notify()
+            self.userv.wi_available.release()
+            if wi == None:
                 break
-        except:
-            self.online = False
-        Timeout(self.heartbeat, 60)
+            command, result_callback, callback_parameters = wi
+            try:
+                data = self.send_raw(command)
+            except:
+                data = None
+            if result_callback != None:
+                reactor.callFromThread(result_callback, data, *callback_parameters)
+        self.userv = None
+
+    def shutdown(self):
+        self.userv.wi_available.acquire()
+        self.userv.wi.append(None)
+        self.userv.wi_available.notify()
+        self.userv.wi_available.release()
+
+class Rtp_proxy_client_local(Rtp_proxy_client):
+    is_local = True
+    wi_available = None
+    wi = None
+    worker = None
+
+    def __init__(self, global_config, address = '/var/run/rtpproxy.sock'):
+        self.proxy_address = global_config['_sip_address']
+        self.wi_available = Condition()
+        self.wi = []
+        self.worker = _RTPPLWorker(self)
+        Rtp_proxy_client.__init__(self, global_config, address)
+
+    def send_command(self, command, result_callback = None, *callback_parameters):
+        self.wi_available.acquire()
+        self.wi.append((command, result_callback, callback_parameters))
+        self.wi_available.notify()
+        self.wi_available.release()
+
+if __name__ == '__main__':
+    def display(*args):
+        print args
+    r = Rtp_proxy_client_local({'_sip_address':'1.2.3.4'})
+    r.send_command('VF 123456', display, 'abcd')
+    from twisted.internet import reactor
+    reactor.run(installSignalHandlers = 1)
