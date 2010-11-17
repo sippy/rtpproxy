@@ -526,20 +526,24 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	if (op == PLAY && argv[0][1] != '\0')
 	    playcount = atoi(argv[0] + 1);
 	if (op == UPDATE && argc > 6) {
-	    socket_name_u = argv[6];
+	    if (argc == 8) {
+		socket_name_u = argv[6];
+		notify_tag = argv[7];
+	    } else {
+		socket_name_u = argv[5];
+		notify_tag = argv[6];
+		to_tag = NULL;
+	    }
 	    if (strncmp("unix:", socket_name_u, 5) == 0)
 		socket_name_u += 5;
-	    if (argc == 8) {
-		notify_tag = argv[7];
-		len = url_unquote((uint8_t *)notify_tag, strlen(notify_tag));
-		if (len == -1) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
-		      "command syntax error - invalid URL encoding");
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 4);
-		    return 0;
-		}
-		notify_tag[len] = '\0';
+	    len = url_unquote((uint8_t *)notify_tag, strlen(notify_tag));
+	    if (len == -1) {
+		rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		  "command syntax error - invalid URL encoding");
+		reply_error(cf, controlfd, &raddr, rlen, cookie, 4);
+		return 0;
 	    }
+	    notify_tag[len] = '\0';
 	}
     }
     if (op == COPY || op == RECORD) {
