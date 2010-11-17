@@ -23,12 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 from Timeout import Timeout
+from Rtp_proxy_client_udp import Rtp_proxy_client_udp
+from Rtp_proxy_client_local import Rtp_proxy_client_local
 
 from time import time
 from hashlib import md5
 from random import random
 
-class Rtp_proxy_client(object):
+class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
     worker = None
     address = None
     online = False
@@ -39,10 +41,20 @@ class Rtp_proxy_client(object):
     shutdown = False
     proxy_address = None
     caps_done = False
+    active_sessions = None
 
-    def __init__(self, global_config, address):
-        self.address = address
+    def __init__(self, global_config, *address):
+        if len(address) > 0 and type(address[0]) in (tuple, list):
+            Rtp_proxy_client_udp.__init__(self, global_config, *address)
+        else:            
+            Rtp_proxy_client_local.__init__(self, global_config, *address)
         self.version_check()
+
+    def send_command(self, *args, **kwargs):
+        if self.is_local:
+            Rtp_proxy_client_local.send_command(self, *args, **kwargs)
+        else:
+            Rtp_proxy_client_udp.send_command(self, *args, **kwargs)
 
     def caps_query1(self, result):
         if self.shutdown:
@@ -116,14 +128,17 @@ class Rtp_proxy_client(object):
             return
         if version == '20040107':
             self.go_online()
-        else:
+        elif self.online:
             self.go_offline()
+        else:
+            Timeout(self.version_check, 60)
 
     def heartbeat(self):
         #print 'heartbeat', self, self.address
         self.send_command('Ib', self.heartbeat_reply)
 
     def heartbeat_reply(self, stats):
+        #print 'heartbeat_reply', self.address, stats, self.online
         if self.shutdown:
             self.udp_server.shutdown()
             return
@@ -147,6 +162,7 @@ class Rtp_proxy_client(object):
             self.heartbeat()
 
     def go_offline(self):
+        #print 'go_offline', self.address, self.online
         if self.online:
             self.online = False
             Timeout(self.version_check, 60)

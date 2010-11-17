@@ -24,21 +24,21 @@
 
 from Timeout import Timeout
 from Udp_server import Udp_server
-from Rtp_proxy_client import Rtp_proxy_client
 
 from time import time
 from hashlib import md5
 from random import random
 
-class Rtp_proxy_client_udp(Rtp_proxy_client):
+class Rtp_proxy_client_udp(object):
     pending_requests = None
     is_local = False
 
     def __init__(self, global_config, address):
+        self.address = address
+        self.is_local = False
         self.udp_server = Udp_server(None, self.process_reply)
         self.pending_requests = {}
         self.proxy_address = address[0]
-        Rtp_proxy_client.__init__(self, global_config, address)
 
     def send_command(self, command, result_callback = None, *callback_parameters):
         cookie = md5(str(random()) + str(time())).hexdigest()

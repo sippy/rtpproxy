@@ -44,6 +44,7 @@ from sippy.RadiusAccounting import RadiusAccounting
 from sippy.FakeAccounting import FakeAccounting
 from sippy.SipLogger import SipLogger
 from sippy.Rtp_proxy_session import Rtp_proxy_session
+from sippy.Rtp_proxy_client import Rtp_proxy_client
 from signal import SIGHUP, SIGPROF, SIGUSR1, SIGUSR2
 from twisted.internet import reactor
 from urllib import unquote
@@ -751,16 +752,14 @@ if __name__ == '__main__':
     if global_config.has_key('_rtp_proxy_clients'):
         for a in global_config['_rtp_proxy_clients']:
             if a.startswith('udp:'):
-                from sippy.Rtp_proxy_client_udp import Rtp_proxy_client_udp
                 a = a.split(':', 2)
                 if len(a) == 2:
                     rtp_proxy_address = (a[1], 22222)
                 else:
                     rtp_proxy_address = (a[1], int(a[2]))
-                rtp_proxy_clients.append((Rtp_proxy_client_udp, rtp_proxy_address))
+                rtp_proxy_clients.append(rtp_proxy_address)
             else:
-                from sippy.Rtp_proxy_client_local import Rtp_proxy_client_local
-                rtp_proxy_clients.append((Rtp_proxy_client_local, a))
+                rtp_proxy_clients.append(a)
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):
         sys.__stderr__.write('ERROR: static route should be specified when Radius auth is disabled\n')
@@ -791,7 +790,7 @@ if __name__ == '__main__':
 
     if len(rtp_proxy_clients) > 0:
         global_config['_rtp_proxy_clients'] = []
-        for Rtp_proxy_client, address in rtp_proxy_clients:
+        for address in rtp_proxy_clients:
             global_config['_rtp_proxy_clients'].append(Rtp_proxy_client(global_config, address))
 
     if global_config['auth_enable'] or global_config['acct_enable']:

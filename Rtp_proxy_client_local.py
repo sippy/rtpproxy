@@ -24,7 +24,6 @@
 
 from Timeout import Timeout
 from threading import Thread, Condition
-from Rtp_proxy_client import Rtp_proxy_client
 from errno import EINTR
 from twisted.internet import reactor
 
@@ -88,18 +87,19 @@ class _RTPPLWorker(Thread):
         self.userv.wi_available.notify()
         self.userv.wi_available.release()
 
-class Rtp_proxy_client_local(Rtp_proxy_client):
+class Rtp_proxy_client_local(object):
     is_local = True
     wi_available = None
     wi = None
     worker = None
 
     def __init__(self, global_config, address = '/var/run/rtpproxy.sock'):
+        self.address = address
+        self.is_local = True
         self.proxy_address = global_config['_sip_address']
         self.wi_available = Condition()
         self.wi = []
         self.worker = _RTPPLWorker(self)
-        Rtp_proxy_client.__init__(self, global_config, address)
 
     def send_command(self, command, result_callback = None, *callback_parameters):
         self.wi_available.acquire()
