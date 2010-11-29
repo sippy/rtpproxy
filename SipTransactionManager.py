@@ -103,6 +103,14 @@ class local4remote(object):
         self.cache_r2l_old = {}
         self.cache_l2s = {}
         self.handleIncoming = handleIncoming
+        try:
+            # Python can be compiled with IPv6 support, but if kernel
+            # has not we would get exception creating the socket.
+            # Workaround that by trying create socket and checking if
+            # we get an exception.
+            socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        except:
+            socket.has_ipv6 = False
         if 'my' in dir(global_config['_sip_address']):
             if socket.has_ipv6:
                 laddresses = (('0.0.0.0', global_config['_sip_port']), ('[::]', global_config['_sip_port']))
