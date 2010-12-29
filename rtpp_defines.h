@@ -81,60 +81,70 @@ struct bindaddr_list {
 };
 
 struct cfg {
-    int nodaemon;
-    int dmode;
-    int bmode;			/* Bridge mode */
-    int umode;			/* UDP control mode */
-    int port_min;		/* Lowest UDP port for RTP */
-    int port_max;		/* Highest UDP port number for RTP */
+    struct cfg_stable {
+        int nodaemon;
+        int dmode;
+        int bmode;			/* Bridge mode */
+        int umode;			/* UDP control mode */
+        int port_min;		/* Lowest UDP port for RTP */
+        int port_max;		/* Highest UDP port number for RTP */
+        int max_ttl;
+        /*
+         * The first address is for external interface, the second one - for
+         * internal one. Second can be NULL, in this case there is no bridge
+         * mode enabled.
+         */
+        struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
+        int tos;
+
+        const char *rdir;
+        const char *sdir;
+        int record_pcap;		/* Record in the PCAP format? */
+        int record_all;		/* Record everything */
+
+        int rrtcp;			/* Whether or not to relay RTCP? */
+        rtpp_log_t glog;
+
+        struct rlimit nofile_limit;
+        char *run_uname;
+        char *run_gname;
+        int no_check;
+
+        rtpp_ttl_mode ttl_mode;
+
+        uid_t run_uid;
+        gid_t run_gid;
+
+        int log_level;
+        int log_facility;
+
+        uint16_t port_table[65536];
+        int port_table_len;
+
+        int controlfd;
+    } stable;
+
     struct rtpp_session **sessions;
     struct rtpp_session **rtp_servers;
+
     struct pollfd *pfds;
+
     int nsessions;
     int rtp_nsessions;
-    unsigned long long sessions_created;
     int sessions_active;
-    int max_ttl;
-    /*
-     * The first address is for external interface, the second one - for
-     * internal one. Second can be NULL, in this case there is no bridge
-     * mode enabled.
-     */
-    struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
-    struct bindaddr_list *bindaddr_list;
-    int tos;
-
-    const char *rdir;
-    const char *sdir;
-    int record_pcap;		/* Record in the PCAP format? */
-    int record_all;		/* Record everything */
-
-    int rrtcp;			/* Whether or not to relay RTCP? */
-    rtpp_log_t glog;
-
-    struct rlimit nofile_limit;
+    unsigned long long sessions_created;
     int nofile_limit_warned;
+
+    struct bindaddr_list *bindaddr_list;
 
     uint8_t rand_table[256];
     struct rtpp_session *hash_table[256];
 
-    char *run_uname;
-    char *run_gname;
-    int no_check;
-
-    rtpp_ttl_mode ttl_mode;
-
     struct rtpp_timeout_handler *timeout_handler;
 
-    uid_t run_uid;
-    gid_t run_gid;
-
-    uint16_t port_table[65536];
-    int port_table_len;
     int port_table_idx;
 
-    int log_level;
-    int log_facility;
+    pthread_mutex_t glock;
 };
 
 #endif

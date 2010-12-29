@@ -44,6 +44,7 @@
 #include <limits.h>
 #include <netdb.h>
 #include <poll.h>
+#include <pthread.h>
 #include <pwd.h>
 #include <sched.h>
 #include <stdio.h>
@@ -58,6 +59,7 @@
 #include "rtp_server.h"
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
+#include "rtpp_command_async.h"
 #include "rtpp_log.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
@@ -113,23 +115,23 @@ init_config(struct cfg *cf, int argc, char **argv)
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
-    cf->port_min = PORT_MIN;
-    cf->port_max = PORT_MAX;
+    cf->stable.port_min = PORT_MIN;
+    cf->stable.port_max = PORT_MAX;
 
-    cf->max_ttl = SESSION_TIMEOUT;
-    cf->tos = TOS;
-    cf->rrtcp = 1;
-    cf->ttl_mode = TTL_UNIFIED;
-    cf->log_level = -1;
-    cf->log_facility = -1;
+    cf->stable.max_ttl = SESSION_TIMEOUT;
+    cf->stable.tos = TOS;
+    cf->stable.rrtcp = 1;
+    cf->stable.ttl_mode = TTL_UNIFIED;
+    cf->stable.log_level = -1;
+    cf->stable.log_facility = -1;
 
-    if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
+    if (getrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
 	err(1, "getrlimit");
 
     while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:")) != -1)
 	switch (ch) {
 	case 'f':
-	    cf->nodaemon = 1;
+	    cf->stable.nodaemon = 1;
 	    break;
 
 	case 'l':
@@ -138,7 +140,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    if (bh[1] != NULL) {
 		*bh[1] = '\0';
 		bh[1]++;
-		cf->bmode = 1;
+		cf->stable.bmode = 1;
 	    }
 	    break;
 
@@ -148,32 +150,32 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    if (bh6[1] != NULL) {
 		*bh6[1] = '\0';
 		bh6[1]++;
-		cf->bmode = 1;
+		cf->stable.bmode = 1;
 	    }
 	    break;
 
 	case 's':
 	    if (strncmp("udp:", optarg, 4) == 0) {
-		cf->umode = 1;
+		cf->stable.umode = 1;
 		optarg += 4;
 	    } else if (strncmp("udp6:", optarg, 5) == 0) {
-		cf->umode = 6;
+		cf->stable.umode = 6;
 		optarg += 5;
 	    } else if (strncmp("unix:", optarg, 5) == 0) {
-		cf->umode = 0;
+		cf->stable.umode = 0;
 		optarg += 5;
 	    }
 	    cmd_sock = optarg;
 	    break;
 
 	case 't':
-	    cf->tos = atoi(optarg);
-	    if (cf->tos > 255)
-		errx(1, "%d: TOS is too large", cf->tos);
+	    cf->stable.tos = atoi(optarg);
+	    if (cf->stable.tos > 255)
+		errx(1, "%d: TOS is too large", cf->stable.tos);
 	    break;
 
 	case '2':
-	    cf->dmode = 1;
+	    cf->stable.dmode = 1;
 	    break;
 
 	case 'v':
@@ -186,15 +188,15 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'r':
-	    cf->rdir = optarg;
+	    cf->stable.rdir = optarg;
 	    break;
 
 	case 'S':
-	    cf->sdir = optarg;
+	    cf->stable.sdir = optarg;
 	    break;
 
 	case 'R':
-	    cf->rrtcp = 0;
+	    cf->stable.rrtcp = 0;
 	    break;
 
 	case 'p':
@@ -202,63 +204,63 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'T':
-	    cf->max_ttl = atoi(optarg);
+	    cf->stable.max_ttl = atoi(optarg);
 	    break;
 
 	case 'L':
-	    cf->nofile_limit.rlim_cur = cf->nofile_limit.rlim_max = atoi(optarg);
-	    if (setrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
+	    cf->stable.nofile_limit.rlim_cur = cf->stable.nofile_limit.rlim_max = atoi(optarg);
+	    if (setrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
 		err(1, "setrlimit");
-	    if (getrlimit(RLIMIT_NOFILE, &(cf->nofile_limit)) != 0)
+	    if (getrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
 		err(1, "getrlimit");
-	    if (cf->nofile_limit.rlim_max < atoi(optarg))
+	    if (cf->stable.nofile_limit.rlim_max < atoi(optarg))
 		warnx("limit allocated by setrlimit (%d) is less than "
-		  "requested (%d)", (int) cf->nofile_limit.rlim_max,
+		  "requested (%d)", (int) cf->stable.nofile_limit.rlim_max,
 		  atoi(optarg));
 	    break;
 
 	case 'm':
-	    cf->port_min = atoi(optarg);
+	    cf->stable.port_min = atoi(optarg);
 	    break;
 
 	case 'M':
-	    cf->port_max = atoi(optarg);
+	    cf->stable.port_max = atoi(optarg);
 	    break;
 
 	case 'u':
-	    cf->run_uname = optarg;
+	    cf->stable.run_uname = optarg;
 	    cp = strchr(optarg, ':');
 	    if (cp != NULL) {
 		if (cp == optarg)
-		    cf->run_uname = NULL;
+		    cf->stable.run_uname = NULL;
 		cp[0] = '\0';
 		cp++;
 	    }
-	    cf->run_gname = cp;
-	    cf->run_uid = -1;
-	    cf->run_gid = -1;
-	    if (cf->run_uname != NULL) {
-		pp = getpwnam(cf->run_uname);
+	    cf->stable.run_gname = cp;
+	    cf->stable.run_uid = -1;
+	    cf->stable.run_gid = -1;
+	    if (cf->stable.run_uname != NULL) {
+		pp = getpwnam(cf->stable.run_uname);
 		if (pp == NULL)
-		    err(1, "can't find ID for the user: %s", cf->run_uname);
-		cf->run_uid = pp->pw_uid;
-		if (cf->run_gname == NULL)
-		    cf->run_gid = pp->pw_gid;
+		    err(1, "can't find ID for the user: %s", cf->stable.run_uname);
+		cf->stable.run_uid = pp->pw_uid;
+		if (cf->stable.run_gname == NULL)
+		    cf->stable.run_gid = pp->pw_gid;
 	    }
-	    if (cf->run_gname != NULL) {
-		gp = getgrnam(cf->run_gname);
+	    if (cf->stable.run_gname != NULL) {
+		gp = getgrnam(cf->stable.run_gname);
 		if (gp == NULL)
-		    err(1, "can't find ID for the group: %s", cf->run_gname);
-		cf->run_gid = gp->gr_gid;
+		    err(1, "can't find ID for the group: %s", cf->stable.run_gname);
+		cf->stable.run_gid = gp->gr_gid;
 	    }
 	    break;
 
 	case 'F':
-	    cf->no_check = 1;
+	    cf->stable.no_check = 1;
 	    break;
 
 	case 'i':
-	    cf->ttl_mode = TTL_INDEPENDENT;
+	    cf->stable.ttl_mode = TTL_INDEPENDENT;
 	    break;
 
 	case 'n':
@@ -272,23 +274,23 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'P':
-	    cf->record_pcap = 1;
+	    cf->stable.record_pcap = 1;
 	    break;
 
 	case 'a':
-	    cf->record_all = 1;
+	    cf->stable.record_all = 1;
 	    break;
 
 	case 'd':
 	    cp = strchr(optarg, ':');
 	    if (cp != NULL) {
-		cf->log_facility = rtpp_log_str2fac(cp + 1);
-		if (cf->log_facility == -1)
+		cf->stable.log_facility = rtpp_log_str2fac(cp + 1);
+		if (cf->stable.log_facility == -1)
 		    errx(1, "%s: invalid log facility", cp + 1);
 		*cp = '\0';
 	    }
-	    cf->log_level = rtpp_log_str2lvl(optarg);
-	    if (cf->log_level == -1)
+	    cf->stable.log_level = rtpp_log_str2lvl(optarg);
+	    if (cf->stable.log_level == -1)
 		errx(1, "%s: invalid log level", optarg);
 	    break;
 
@@ -296,11 +298,11 @@ init_config(struct cfg *cf, int argc, char **argv)
 	default:
 	    usage();
 	}
-    if (cf->rdir == NULL && cf->sdir != NULL)
+    if (cf->stable.rdir == NULL && cf->stable.sdir != NULL)
 	errx(1, "-S switch requires -r switch");
 
-    if (cf->no_check == 0 && getuid() == 0 && cf->run_uname == NULL) {
-	if (cf->umode != 0) {
+    if (cf->stable.no_check == 0 && getuid() == 0 && cf->stable.run_uname == NULL) {
+	if (cf->stable.umode != 0) {
 	    errx(1, "running this program as superuser in a remote control "
 	      "mode is strongly not recommended, as it poses serious security "
 	      "threat to your system. Use -u option to run as an unprivileged "
@@ -314,33 +316,33 @@ init_config(struct cfg *cf, int argc, char **argv)
     }
 
     /* make sure that port_min and port_max are even */
-    if ((cf->port_min % 2) != 0)
-	cf->port_min++;
-    if ((cf->port_max % 2) != 0) {
-	cf->port_max--;
+    if ((cf->stable.port_min % 2) != 0)
+	cf->stable.port_min++;
+    if ((cf->stable.port_max % 2) != 0) {
+	cf->stable.port_max--;
     } else {
 	/*
 	 * If port_max is already even then there is no
 	 * "room" for the RTCP port, go back by two ports.
 	 */
-	cf->port_max -= 2;
+	cf->stable.port_max -= 2;
     }
 
-    if (!IS_VALID_PORT(cf->port_min))
+    if (!IS_VALID_PORT(cf->stable.port_min))
 	errx(1, "invalid value of the port_min argument, "
 	  "not in the range 1-65535");
-    if (!IS_VALID_PORT(cf->port_max))
+    if (!IS_VALID_PORT(cf->stable.port_max))
 	errx(1, "invalid value of the port_max argument, "
 	  "not in the range 1-65535");
-    if (cf->port_min > cf->port_max)
+    if (cf->stable.port_min > cf->stable.port_max)
 	errx(1, "port_min should be less than port_max");
 
     cf->sessions = malloc((sizeof cf->sessions[0]) *
-      (((cf->port_max - cf->port_min + 1) * 2) + 1));
+      (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
     cf->rtp_servers =  malloc((sizeof cf->rtp_servers[0]) *
-      (((cf->port_max - cf->port_min + 1) * 2) + 1));
+      (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
     cf->pfds = malloc((sizeof cf->pfds[0]) *
-      (((cf->port_max - cf->port_min + 1) * 2) + 1));
+      (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
 
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
 	bh[0] = "*";
@@ -355,7 +357,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
     i = ((bh[0] == NULL) ? 0 : 1) + ((bh[1] == NULL) ? 0 : 1) +
       ((bh6[0] == NULL) ? 0 : 1) + ((bh6[1] == NULL) ? 0 : 1);
-    if (cf->bmode != 0) {
+    if (cf->stable.bmode != 0) {
 	if (bh[0] != NULL && bh6[0] != NULL)
 	    errx(1, "either IPv4 or IPv6 should be configured for external "
 	      "interface in bridging mode, not both");
@@ -370,23 +372,23 @@ init_config(struct cfg *cf, int argc, char **argv)
     }
 
     for (i = 0; i < 2; i++) {
-	cf->bindaddr[i] = NULL;
+	cf->stable.bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
-	    cf->bindaddr[i] = host2bindaddr(cf, bh[i], AF_INET, &errmsg);
-	    if (cf->bindaddr[i] == NULL)
+	    cf->stable.bindaddr[i] = host2bindaddr(cf, bh[i], AF_INET, &errmsg);
+	    if (cf->stable.bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
-	    cf->bindaddr[i] = host2bindaddr(cf, bh6[i], AF_INET6, &errmsg);
-	    if (cf->bindaddr[i] == NULL)
+	    cf->stable.bindaddr[i] = host2bindaddr(cf, bh6[i], AF_INET6, &errmsg);
+	    if (cf->stable.bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
     }
-    if (cf->bindaddr[0] == NULL) {
-	cf->bindaddr[0] = cf->bindaddr[1];
-	cf->bindaddr[1] = NULL;
+    if (cf->stable.bindaddr[0] == NULL) {
+	cf->stable.bindaddr[0] = cf->stable.bindaddr[1];
+	cf->stable.bindaddr[1] = NULL;
     }
 }
 
@@ -398,7 +400,7 @@ init_controlfd(struct cfg *cf)
     char *cp;
     int i, controlfd, flags;
 
-    if (cf->umode == 0) {
+    if (cf->stable.umode == 0) {
 	unlink(cmd_sock);
 	memset(&ifsun, '\0', sizeof ifsun);
 #if defined(HAVE_SOCKADDR_SUN_LEN)
@@ -413,8 +415,8 @@ init_controlfd(struct cfg *cf)
 	  sizeof controlfd);
 	if (bind(controlfd, sstosa(&ifsun), sizeof ifsun) < 0)
 	    err(1, "can't bind to a socket");
-	if ((cf->run_uname != NULL || cf->run_gname != NULL) &&
-	  chown(cmd_sock, cf->run_uid, cf->run_gid) == -1)
+	if ((cf->stable.run_uname != NULL || cf->stable.run_gname != NULL) &&
+	  chown(cmd_sock, cf->stable.run_uid, cf->stable.run_gid) == -1)
 	    err(1, "can't set owner of the socket");
 	if (listen(controlfd, 32) != 0)
 	    err(1, "can't listen on a socket");
@@ -426,7 +428,7 @@ init_controlfd(struct cfg *cf)
 	}
 	if (cp == NULL || *cp == '\0')
 	    cp = CPORT;
-	i = (cf->umode == 6) ? AF_INET6 : AF_INET;
+	i = (cf->stable.umode == 6) ? AF_INET6 : AF_INET;
 	if (setbindhost(sstosa(&ifsin), i, cmd_sock, cp) != 0)
 	    exit(1);
 	controlfd = socket(i, SOCK_DGRAM, 0);
@@ -472,7 +474,7 @@ process_rtp_servers(struct cfg *cf, double dtime)
 		    }
 		    break;
 		}
-		for (k = (cf->dmode && len < LBR_THRS) ? 2 : 1; k > 0; k--) {
+		for (k = (cf->stable.dmode && len < LBR_THRS) ? 2 : 1; k > 0; k--) {
 		    sendto(sp->fds[sidx], sp->rtps[sidx]->buf, len, 0,
 		      sp->addr[sidx], SA_LEN(sp->addr[sidx]));
 		}
@@ -618,7 +620,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 {
     int i, sidx;
 
-    GET_RTP(sp)->ttl[ridx] = cf->max_ttl;
+    GET_RTP(sp)->ttl[ridx] = cf->stable.max_ttl;
 
     /* Select socket for sending packet out. */
     sidx = (ridx == 0) ? 1 : 0;
@@ -631,7 +633,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	sp->pcount[3]++;
     } else {
 	sp->pcount[2]++;
-	for (i = (cf->dmode && packet->size < LBR_THRS) ? 2 : 1; i > 0; i--) {
+	for (i = (cf->stable.dmode && packet->size < LBR_THRS) ? 2 : 1; i > 0; i--) {
 	    sendto(sp->fds[sidx], packet->data.buf, packet->size, 0, sp->addr[sidx],
 	      SA_LEN(sp->addr[sidx]));
 	}
@@ -650,7 +652,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 
     /* Relay RTP/RTCP */
     skipfd = 0;
-    for (readyfd = 1; readyfd < cf->nsessions; readyfd++) {
+    for (readyfd = 0; readyfd < cf->nsessions; readyfd++) {
 	sp = cf->sessions[readyfd];
 
 	if (alarm_tick != 0 && sp != NULL && sp->rtcp != NULL &&
@@ -704,36 +706,6 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
     cf->nsessions -= skipfd;
 }
 
-static void
-process_commands(struct cfg *cf, double dtime)
-{
-    int controlfd, i;
-    socklen_t rlen;
-    struct sockaddr_un ifsun;
-
-    if ((cf->pfds[0].revents & POLLIN) == 0)
-	return;
-
-    do {
-	if (cf->umode == 0) {
-	    rlen = sizeof(ifsun);
-	    controlfd = accept(cf->pfds[0].fd, sstosa(&ifsun), &rlen);
-	    if (controlfd == -1) {
-		if (errno != EWOULDBLOCK)
-		    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog,
-		      "can't accept connection on control socket");
-		break;
-	    }
-	} else {
-	    controlfd = cf->pfds[0].fd;
-	}
-	i = handle_command(cf, controlfd, dtime);
-	if (cf->umode == 0) {
-	    close(controlfd);
-	}
-    } while (i == 0);
-}
-
 int
 main(int argc, char **argv)
 {
@@ -754,15 +726,15 @@ main(int argc, char **argv)
 
     controlfd = init_controlfd(&cf);
 
-    if (cf.nodaemon == 0) {
+    if (cf.stable.nodaemon == 0) {
 	if (rtpp_daemon(0, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
     }
 
-    glog = cf.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
+    glog = cf.stable.glog = rtpp_log_open(&cf.stable, "rtpproxy", NULL, LF_REOPEN);
     atexit(ehandler);
-    rtpp_log_write(RTPP_LOG_INFO, cf.glog, "rtpproxy started, pid %d", getpid());
+    rtpp_log_write(RTPP_LOG_INFO, cf.stable.glog, "rtpproxy started, pid %d", getpid());
 
     i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (i >= 0) {
@@ -770,7 +742,7 @@ main(int argc, char **argv)
 	write(i, buf, len);
 	close(i);
     } else {
-	rtpp_log_ewrite(RTPP_LOG_ERR, cf.glog, "can't open pidfile for writing");
+	rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable.glog, "can't open pidfile for writing");
     }
 
     signal(SIGHUP, fatsignal);
@@ -785,29 +757,33 @@ main(int argc, char **argv)
     signal(SIGUSR1, fatsignal);
     signal(SIGUSR2, fatsignal);
 
-    if (cf.run_uname != NULL || cf.run_gname != NULL) {
+    if (cf.stable.run_uname != NULL || cf.stable.run_gname != NULL) {
 	if (drop_privileges(&cf) != 0) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf.glog,
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable.glog,
 	      "can't switch to requested user/group");
 	    exit(1);
 	}
     }
 
-    cf.pfds[0].fd = controlfd;
-    cf.pfds[0].events = POLLIN;
-    cf.pfds[0].revents = 0;
+    cf.stable.controlfd = controlfd;
 
     cf.sessions[0] = NULL;
-    cf.nsessions = 1;
+    cf.nsessions = 0;
     cf.rtp_nsessions = 0;
+
+    pthread_mutex_init(&cf.glock, NULL);
+    rtpp_command_async_init(&cf);
 
     sptime = 0;
     last_tick_time = 0;
     for (;;) {
-	if (cf.rtp_nsessions > 0 || cf.nsessions > 1)
+        pthread_mutex_lock(&cf.glock);
+	if (cf.rtp_nsessions > 0 || cf.nsessions > 0) {
 	    timeout = RTPS_TICKS_MIN;
-	else
+	} else {
 	    timeout = TIMETICK * 1000;
+        }
+        pthread_mutex_unlock(&cf.glock);
 	eptime = getdtime();
 	delay = (eptime - sptime) * 1000000.0;
 	if (delay < (1000000 / POLL_LIMIT)) {
@@ -816,23 +792,31 @@ main(int argc, char **argv)
 	} else {
 	    sptime = eptime;
 	}
-	i = poll(cf.pfds, cf.nsessions, timeout);
-	if (i < 0 && errno == EINTR)
-	    continue;
+        pthread_mutex_lock(&cf.glock);
+        if (cf.nsessions > 0) {
+	    i = poll(cf.pfds, cf.nsessions, timeout);
+            pthread_mutex_unlock(&cf.glock);
+	    if (i < 0 && errno == EINTR)
+	        continue;
+        } else {
+            pthread_mutex_unlock(&cf.glock);
+            usleep(timeout * 1000);
+        }
 	eptime = getdtime();
+        pthread_mutex_lock(&cf.glock);
 	if (cf.rtp_nsessions > 0) {
 	    process_rtp_servers(&cf, eptime);
 	}
+        pthread_mutex_unlock(&cf.glock);
 	if (eptime > last_tick_time + TIMETICK) {
 	    alarm_tick = 1;
 	    last_tick_time = eptime;
 	} else {
 	    alarm_tick = 0;
 	}
+        pthread_mutex_lock(&cf.glock);
 	process_rtp(&cf, eptime, alarm_tick);
-	if (i > 0) {
-	    process_commands(&cf, eptime);
-	}
+        pthread_mutex_unlock(&cf.glock);
     }
 
     exit(0);

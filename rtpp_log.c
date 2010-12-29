@@ -38,8 +38,8 @@
 
 static int syslog_async_opened = 0;
 
-struct cfg *
-_rtpp_log_open(struct cfg *cf, const char *app)
+struct cfg_stable *
+_rtpp_log_open(struct cfg_stable *cf, const char *app)
 {
     int facility;
 
@@ -112,7 +112,7 @@ rtpp_log_str2lvl(const char *strl)
 }
 
 static int
-check_level(struct cfg *cf, int cf_level, int level)
+check_level(struct cfg_stable *cf, int cf_level, int level)
 {
 
     if (cf_level == -1) {
@@ -122,7 +122,7 @@ check_level(struct cfg *cf, int cf_level, int level)
 }
 
 void
-_rtpp_log_write(struct cfg *cf, int level, const char *function, const char *format, ...)
+_rtpp_log_write(struct cfg_stable *cf, int level, const char *function, const char *format, ...)
 {
     va_list ap;
     char rtpp_log_buff[2048];
@@ -151,7 +151,7 @@ _rtpp_log_write(struct cfg *cf, int level, const char *function, const char *for
 }
 
 void
-_rtpp_log_ewrite(struct cfg *cf, int level, const char *function, const char *format, ...)
+_rtpp_log_ewrite(struct cfg_stable *cf, int level, const char *function, const char *format, ...)
 {
     va_list ap;
     char rtpp_log_buff[2048];

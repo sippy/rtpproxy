@@ -130,29 +130,29 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 	return (void *)(rrc);
     }
 
-    if (cf->rdir == NULL) {
+    if (cf->stable.rdir == NULL) {
 	rtpp_log_write(RTPP_LOG_ERR, sp->log, "directory for saving local recordings is not configured");
 	free(rrc);
 	return NULL;
     }
 
-    if (cf->record_pcap != 0) {
+    if (cf->stable.record_pcap != 0) {
 	rrc->mode = MODE_LOCAL_PCAP;
     } else {
 	rrc->mode = MODE_LOCAL_PKT;
     }
 
-    if (cf->sdir == NULL) {
-	sdir = cf->rdir;
+    if (cf->stable.sdir == NULL) {
+	sdir = cf->stable.rdir;
 	rrc->needspool = 0;
     } else {
-	sdir = cf->sdir;
+	sdir = cf->stable.sdir;
 	rrc->needspool = 1;
 	if (rname == NULL) {
-	    sprintf(rrc->rpath, "%s/%s=%s.%c.%s", cf->rdir, sp->call_id, sp->tag,
+	    sprintf(rrc->rpath, "%s/%s=%s.%c.%s", cf->stable.rdir, sp->call_id, sp->tag,
 	      (orig != 0) ? 'o' : 'a', (sp->rtcp != NULL) ? "rtp" : "rtcp");
 	} else {
-	    sprintf(rrc->rpath, "%s/%s.%s", cf->rdir, rname,
+	    sprintf(rrc->rpath, "%s/%s.%s", cf->stable.rdir, rname,
 	      (sp->rtcp != NULL) ? "rtp" : "rtcp");
 	}
     }

@@ -35,6 +35,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -204,6 +205,7 @@ host2bindaddr(struct cfg *cf, const char *host, int pf, const char **ep)
 {
     int n;
     struct sockaddr_storage ia;
+    struct sockaddr *rval;
 
     /*
      * If user specified * then change it to NULL,
@@ -216,11 +218,14 @@ host2bindaddr(struct cfg *cf, const char *host, int pf, const char **ep)
         *ep = gai_strerror(n);
         return (NULL);
     }
-    return (addr2bindaddr(cf, sstosa(&ia), ep));
+    pthread_mutex_lock(&cf->glock);
+    rval = addr2bindaddr(cf, sstosa(&ia), ep);
+    pthread_mutex_unlock(&cf->glock);
+    return (rval);
 }
 
 int
-local4remote(struct cfg *cf, struct sockaddr *ra, struct sockaddr_storage *la)
+local4remote(struct sockaddr *ra, struct sockaddr_storage *la)
 {
     int s, r;
     socklen_t llen;
