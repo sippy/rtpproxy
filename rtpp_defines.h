@@ -121,6 +121,8 @@ struct cfg {
         uint16_t port_table[65536];
         int port_table_len;
 
+        uint8_t rand_table[256];
+
         int controlfd;
     } stable;
 
@@ -137,7 +139,6 @@ struct cfg {
 
     struct bindaddr_list *bindaddr_list;
 
-    uint8_t rand_table[256];
     struct rtpp_session *hash_table[256];
 
     struct rtpp_timeout_handler *timeout_handler;

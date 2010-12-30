@@ -125,6 +125,8 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.log_level = -1;
     cf->stable.log_facility = -1;
 
+    pthread_mutex_init(&cf->glock, NULL);
+
     if (getrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
 	err(1, "getrlimit");
 
@@ -721,7 +723,7 @@ main(int argc, char **argv)
 
     seedrandom();
 
-    init_hash_table(&cf);
+    init_hash_table(&cf.stable);
     init_port_table(&cf);
 
     controlfd = init_controlfd(&cf);
@@ -771,7 +773,6 @@ main(int argc, char **argv)
     cf.nsessions = 0;
     cf.rtp_nsessions = 0;
 
-    pthread_mutex_init(&cf.glock, NULL);
     rtpp_command_async_init(&cf);
 
     sptime = 0;

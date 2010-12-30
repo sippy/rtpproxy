@@ -43,7 +43,7 @@
 #include "rtpp_util.h"
 
 void
-init_hash_table(struct cfg *cf)
+init_hash_table(struct cfg_stable *cf)
 {
     int i;
 
@@ -53,7 +53,7 @@ init_hash_table(struct cfg *cf)
 }
 
 static uint8_t
-hash_string(struct cfg *cf, const char *bp, const char *ep)
+hash_string(struct cfg_stable *cf, const char *bp, const char *ep)
 {
     uint8_t res;
 
@@ -71,7 +71,7 @@ hash_table_append(struct cfg *cf, struct rtpp_session *sp)
 
     assert(sp->rtcp != NULL);
 
-    hash = hash_string(cf, sp->call_id, NULL);
+    hash = hash_string(&cf->stable, sp->call_id, NULL);
 
     tsp = cf->hash_table[hash];
     if (tsp == NULL) {
@@ -101,7 +101,7 @@ hash_table_remove(struct cfg *cf, struct rtpp_session *sp)
 	}
 	return;
     }
-    hash = hash_string(cf, sp->call_id, NULL);
+    hash = hash_string(&cf->stable, sp->call_id, NULL);
     /* Make sure we are removing the right session */
     assert(cf->hash_table[hash] == sp);
     cf->hash_table[hash] = sp->next;
@@ -116,7 +116,7 @@ session_findfirst(struct cfg *cf, const char *call_id)
     uint8_t hash;
     struct rtpp_session *sp;
 
-    hash = hash_string(cf, call_id, NULL);
+    hash = hash_string(&cf->stable, call_id, NULL);
     for (sp = cf->hash_table[hash]; sp != NULL; sp = sp->next) {
 	if (strcmp(sp->call_id, call_id) == 0) {
 	    break;
