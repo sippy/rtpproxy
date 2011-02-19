@@ -326,7 +326,7 @@ reconnect_timeout_handler(rtpp_log_t log, struct rtpp_timeout_handler *th)
 #if defined(HAVE_SOCKADDR_SUN_LEN)
         remote.u.sun_len = strlen(remote.u.sun_path);
 #endif
-        remote_len = sizeof(remote);
+        remote_len = sizeof(remote.u);
     } else {
         assert (parse_hostport(th->socket_name, host, sizeof(host), port, sizeof(port), 0) == 0);
         n = resolve(sstosa(&remote.i), AF_INET, host, port, AI_PASSIVE);
