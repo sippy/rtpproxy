@@ -14,6 +14,7 @@ AC_CANONICAL_HOST
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_MKDIR_P
 
 case "${host_os}" in
 freebsd*)
