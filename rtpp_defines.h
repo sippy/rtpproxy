@@ -141,6 +141,7 @@ struct cfg {
 
     struct rtpp_session *hash_table[256];
 
+    const char *timeout_socket;
     struct rtpp_timeout_handler *timeout_handler;
 
     int port_table_idx;

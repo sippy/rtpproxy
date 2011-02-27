@@ -40,6 +40,6 @@ struct rtpp_timeout_handler {
 };
 
 int rtpp_notify_schedule(struct cfg *, struct rtpp_session *);
-struct rtpp_timeout_handler *rtpp_notify_init(const char *);
+struct rtpp_timeout_handler *rtpp_notify_init(rtpp_log_t, const char *);
 
 #endif

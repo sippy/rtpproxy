@@ -178,7 +178,7 @@ parse_hostport(const char *hostport, char *host, int hsize, char *port, int psiz
 }
 
 static int
-parse_timeout_sock(const char *sock_name, struct rtpp_timeout_handler *timeout_handler)
+parse_timeout_sock(rtpp_log_t glog, const char *sock_name, struct rtpp_timeout_handler *timeout_handler)
 {
 
     if (strncmp("unix:", sock_name, 5) == 0) {
@@ -187,7 +187,7 @@ parse_timeout_sock(const char *sock_name, struct rtpp_timeout_handler *timeout_h
     } else if (strncmp("tcp:", sock_name, 4) == 0) {
         sock_name += 4;
         if (parse_hostport(sock_name, NULL, 0, NULL, 0, 1) != 0) {
-            warnx("can't parse host:port in TCP address");
+            rtpp_log_ewrite(RTPP_LOG_ERR, glog, "can't parse host:port in TCP address");
             return -1;
         }
         timeout_handler->socket_type = PF_INET;
@@ -195,12 +195,12 @@ parse_timeout_sock(const char *sock_name, struct rtpp_timeout_handler *timeout_h
         timeout_handler->socket_type = PF_LOCAL;
     }
     if (strlen(sock_name) == 0) {
-        warnx("timeout notification socket name too short");
+        rtpp_log_ewrite(RTPP_LOG_ERR, glog, "timeout notification socket name too short");
         return -1;
     }
     timeout_handler->socket_name = strdup(sock_name);
     if (timeout_handler->socket_name == NULL) {
-        warnx("can't allocate memory");
+        rtpp_log_ewrite(RTPP_LOG_ERR, glog, "can't allocate memory");
         return -1;
     }
 
@@ -208,7 +208,7 @@ parse_timeout_sock(const char *sock_name, struct rtpp_timeout_handler *timeout_h
 }
 
 struct rtpp_timeout_handler *
-rtpp_notify_init(const char *socket_name)
+rtpp_notify_init(rtpp_log_t glog, const char *socket_name)
 {
     struct rtpp_timeout_handler *th;
 
@@ -222,7 +222,7 @@ rtpp_notify_init(const char *socket_name)
     if (th == NULL)
         return NULL;
     memset(th, '\0', sizeof(*th));
-    if (parse_timeout_sock(socket_name, th) != 0) {
+    if (parse_timeout_sock(glog, socket_name, th) != 0) {
         free(th);
         return NULL;
     }

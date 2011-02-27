@@ -270,9 +270,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 		optarg += 5;
 	    if(strlen(optarg) == 0)
 		errx(1, "timeout notification socket name too short");
-	    cf->timeout_handler = rtpp_notify_init(optarg);
-	    if (cf->timeout_handler == NULL)
-		errx(1, "can't start notification thread");
+	    cf->timeout_socket = optarg;
 	    break;
 
 	case 'P':
@@ -737,6 +735,14 @@ main(int argc, char **argv)
     glog = cf.stable.glog = rtpp_log_open(&cf.stable, "rtpproxy", NULL, LF_REOPEN);
     atexit(ehandler);
     rtpp_log_write(RTPP_LOG_INFO, cf.stable.glog, "rtpproxy started, pid %d", getpid());
+
+    if (cf.timeout_socket != NULL) {
+	cf.timeout_handler = rtpp_notify_init(glog, cf.timeout_socket);
+	if (cf.timeout_handler == NULL) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, glog, "can't start notification thread");
+	    exit(1);
+	}
+    }
 
     i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (i >= 0) {
