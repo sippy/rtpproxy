@@ -64,7 +64,7 @@ decoder_new(struct session *sp)
     dp->obp = dp->obuf;
     dp->oblen = 0;
     dp->stime = dp->pp->pkt->time;
-    dp->nticks = dp->sticks = ntohl(RPKT(dp->pp)->ts);
+    dp->nticks = dp->sticks = dp->pp->parsed.ts;
     dp->dticks = 0;
     dp->lpt = RTP_PCMU;
     /* dp->f = fopen(i, "w"); */
@@ -82,7 +82,7 @@ decoder_get(struct decoder_stream *dp)
     if (dp->oblen == 0) {
         if (dp->pp == NULL)
             return DECODER_EOF;
-        cticks = ntohl(RPKT(dp->pp)->ts);
+        cticks = dp->pp->parsed.ts;
         /*
          * First of all check if we can trust timestamp contained in the
          * packet. If it's off by more than 1 second than the device
@@ -114,9 +114,9 @@ decoder_get(struct decoder_stream *dp)
             dp->oblen = j / 2;
             dp->obp = dp->obuf;
         } else {
-            j = decode_frame(dp, dp->obuf, dp->pp->pload, dp->pp->plen);
+            j = decode_frame(dp, dp->obuf, RPLOAD(dp->pp), RPLEN(dp->pp));
             if (j > 0)
-                dp->lpt = RPKT(dp->pp)->pt;
+                dp->lpt = dp->pp->rpkt->pt;
             dp->pp = MYQ_NEXT(dp->pp);
             if (j <= 0)
                 return decoder_get(dp);
@@ -136,7 +136,7 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
     unsigned int obytes;
     void *bp;
 
-    switch (RPKT(dp->pp)->pt) {
+    switch (dp->pp->rpkt->pt) {
     case RTP_PCMU:
         ULAW2SL(obuf, ibuf, ibytes);
         dp->nticks += ibytes;

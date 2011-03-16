@@ -26,15 +26,27 @@
 # $Id$
 
 PROG=	extractaudio
-SRCS=	main.c decoder.c
+SRCS=	main.c decoder.c _rtp.c _rtp_analyze.c _rtpp_util.c
+CLEANFILES+= _rtp.c _rtp_analyze.c _rtpp_util.c
 MAN1=
 
 WARNS?=	2
 
 LOCALBASE?=	/usr/local
 
-CFLAGS+= -I../../siplog -I${LOCALBASE}/include
+CFLAGS=-DWITHOUT_SIPLOG
+
+CFLAGS+= -I.. -I../../siplog -I${LOCALBASE}/include
 LDFLAGS+= -L../../siplog -L${LOCALBASE}/lib
 LDADD+=	-lg729 -lsndfile -lm
+
+_rtp.c: ../rtp.c
+	ln -sf ../rtp.c _rtp.c
+
+_rtp_analyze.c: ../rtp_analyze.c
+	ln -sf ../rtp_analyze.c _rtp_analyze.c
+
+_rtpp_util.c: ../rtpp_util.c
+	ln -sf ../rtpp_util.c _rtpp_util.c
 
 .include <bsd.prog.mk>

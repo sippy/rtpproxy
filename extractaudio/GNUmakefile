@@ -27,14 +27,15 @@
 
 CC?=	gcc
 CFLAGS+=-Wall -D_BSD_SOURCE -D_ISOC99_SOURCE -DENABLE_GSM -DENABLE_G729 \
-  -I./ -I../ -I../../siplog
-LIBS+=	-L. -lg729 -lgsm -lsndfile -lm
+  -I./ -I../ -I../../siplog -I/usr/local/include
+LIBS+=	-L. -L/usr/local/lib -lg729 -lgsm -lsndfile -lm
 PREFIX?= /usr/local
 
 # Uncomment this on Solaris
 #LIBS+=	-lresolv -lsocket -lnsl
 
-SRCS = decoder.c decoder.h format_au.h g711.h main.c session.h
+SRCS = decoder.c decoder.h format_au.h g711.h main.c session.h _rtp.c \
+  _rtp_analyze.c _rtpp_util.c
 PROG = extractaudio
 sources = $(filter %.c, $(SRCS))
 OBJS = $(sources:%.c=%.o)
@@ -44,11 +45,20 @@ OBJS = $(sources:%.c=%.o)
 
 all: $(PROG)
 
+_rtp.c: ../rtp.c
+	ln -sf ../rtp.c _rtp.c
+
+_rtp_analyze.c: ../rtp_analyze.c
+	ln -sf ../rtp_analyze.c _rtp_analyze.c
+
+_rtpp_util.c: ../rtpp_util.c
+	ln -sf ../rtpp_util.c _rtpp_util.c
+
 $(PROG): $(OBJS)
 	$(CC) -o $(PROG) $(OBJS) $(LIBS)
 
 clean:
-	rm -f $(PROG) $(OBJS)
+	rm -f $(PROG) $(OBJS) _rtp.c _rtp_analyze.c _rtpp_util.c
 
 install: all
 	install $(PROG) $(PREFIX)/bin/$(PROG)
