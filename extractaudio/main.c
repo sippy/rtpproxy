@@ -53,13 +53,9 @@
 #include "g711.h"
 #include "decoder.h"
 #include "session.h"
+#include "rtpp_loader.h"
 #include "../rtp.h"
 #include "../rtp_analyze.h"
-
-static int load_adhoc(unsigned char *, off_t, struct channels *,
-  struct rtpp_session_stat *, enum origin);
-static int load_pcap(unsigned char *, off_t, struct channels *,
-  struct rtpp_session_stat *, enum origin);
 
 static void
 usage(void)
@@ -70,7 +66,7 @@ usage(void)
 }
 
 /* Lookup session given ssrc */
-static struct session *
+struct session *
 session_lookup(struct channels *channels, uint32_t ssrc)
 {
     struct channel *cp;
@@ -83,7 +79,7 @@ session_lookup(struct channels *channels, uint32_t ssrc)
 }
 
 /* Insert channel keeping them ordered by time of first packet arrival */
-static void
+void
 channel_insert(struct channels *channels, struct channel *channel)
 {
     struct channel *cp;
@@ -100,200 +96,24 @@ channel_insert(struct channels *channels, struct channel *channel)
 static int
 load_session(const char *path, struct channels *channels, enum origin origin)
 {
-    int ifd, pcount;
-    unsigned char *ibuf;
-    struct stat sb;
+    int pcount;
     struct rtpp_session_stat stat;
+    struct rtpp_loader *loader;
 
-    memset(&stat, '\0', sizeof(stat));
+    loader = rtpp_load(path);
+    if (loader == NULL)
+        return -1;
 
-    ifd = open(path, O_RDONLY);
-    if (ifd == -1)
-        return -1;
-    if (fstat(ifd, &sb) == -1) {
-        close(ifd);
-        return -1;
-    }
-    if (sb.st_size == 0) {
-        close(ifd);
-        return 0;
-    }
-    ibuf = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, ifd, 0);
-    if (ibuf == MAP_FAILED) {
-        close(ifd);
-        return -1;
-    }
-
-    if (*(uint32_t *)ibuf != PCAP_MAGIC) {
-        pcount = load_adhoc(ibuf, sb.st_size, channels, &stat, origin);
-    } else {
-        pcount = load_pcap(ibuf, sb.st_size, channels, &stat, origin);
-    }
+    pcount = loader->load(loader, channels, &stat, origin);
 
     update_rtpp_totals(&stat);
     printf("pcount=%u, min_seq=%u, max_seq=%u, seq_offset=%u, ssrc=%u, duplicates=%u\n",
       (unsigned int)stat.last.pcount, (unsigned int)stat.last.min_seq, (unsigned int)stat.last.max_seq,
       (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc, (unsigned int)stat.last.duplicates);
     printf("ssrc_changes=%u, psent=%u, precvd=%u\n", stat.ssrc_changes, stat.psent, stat.precvd);
-    close(ifd);
 
-    return pcount;
-}
+    loader->destroy(loader);
 
-static int
-load_adhoc(unsigned char *ibuf, off_t st_size, struct channels *channels,
-  struct rtpp_session_stat *stat, enum origin origin)
-{
-    int pcount;
-    unsigned char *cp;
-    struct pkt_hdr_adhoc *pkt;
-    struct packet *pack, *pp;
-    struct channel *channel;
-    struct session *sess;
-
-    pcount = 0;
-    for (cp = ibuf; cp < ibuf + st_size; cp += pkt->plen) {
-        pkt = (struct pkt_hdr_adhoc *)cp;
-        cp += sizeof(*pkt);
-        if (pkt->plen < sizeof(rtp_hdr_t))
-            continue;
-        pack = malloc(sizeof(*pack));
-        if (rtp_packet_parse(cp, pkt->plen, &(pack->parsed)) != RTP_PARSER_OK) {
-            /* XXX error handling */
-            free(pack);
-            continue;
-        }
-        pack->pkt = pkt;
-        pack->rpkt = RPKT(pack);
-        update_rtpp_stats(stat, pack->rpkt, &(pack->parsed), pkt->time);
-
-        sess = session_lookup(channels, pack->rpkt->ssrc);
-        if (sess == NULL) {
-            channel = malloc(sizeof(*channel));
-            memset(channel, 0, sizeof(*channel));
-            channel->origin = origin;
-            sess = &(channel->session);
-            MYQ_INIT(sess);
-            MYQ_INSERT_HEAD(sess, pack);
-            channel_insert(channels, channel);
-            pcount++;
-            goto endloop;
-        }
-
-        /* Put packet it order */
-        MYQ_FOREACH_REVERSE(pp, sess) {
-            if (pp->parsed.seq == pack->parsed.seq) {
-                /* Duplicate packet */
-                free(pack);
-                goto endloop;
-            }
-            if (pp->parsed.ts < pack->parsed.ts ||
-              pp->parsed.seq < pack->parsed.seq) {
-                MYQ_INSERT_AFTER(sess, pp, pack);
-                pcount++;
-                goto endloop;
-            }
-        }
-        MYQ_INSERT_HEAD(sess, pack);
-        pcount++;
-endloop:
-        continue;
-    }
-    if (cp != ibuf + st_size) {
-        warnx("invalid format, %d packets loaded", pcount);
-        return -1;
-    }
-    return pcount;
-}
-
-static int
-load_pcap(unsigned char *ibuf, off_t st_size, struct channels *channels,
-  struct rtpp_session_stat *stat, enum origin origin)
-{
-    int pcount;
-    unsigned char *cp;
-    struct packet *pack, *pp;
-    struct channel *channel;
-    struct session *sess;
-    pcap_hdr_t *pcap_hdr;
-    struct pkt_hdr_pcap *pcap;
-    int rtp_len;
-
-    if (st_size < sizeof(*pcap_hdr)) {
-        warnx("invalid PCAP format");
-        return -1;
-    }
-    pcap_hdr = (pcap_hdr_t *)ibuf;
-    ibuf += sizeof(*pcap_hdr);
-    st_size -= sizeof(*pcap_hdr);
-    pcount = 0;
-    for (cp = ibuf; cp < ibuf + st_size; cp += rtp_len) {
-        pcap = (struct pkt_hdr_pcap *)cp;
-        rtp_len = pcap->pcaprec_hdr.incl_len - (sizeof(*pcap) - sizeof(pcap->pcaprec_hdr));
-        if (rtp_len < 0) {
-            warnx("broken or truncated PCAP file");
-            return -1;
-        }
-        cp += sizeof(*pcap);
-        if (rtp_len < sizeof(rtp_hdr_t))
-            continue;
-        pack = malloc(sizeof(*pack) + sizeof(*pack->pkt));
-        if (rtp_packet_parse(cp, rtp_len, &(pack->parsed)) != RTP_PARSER_OK) {
-            /* XXX error handling */
-            free(pack);
-            continue;
-        }
-        pack->pkt = (struct pkt_hdr_adhoc *)&pack[1];
-        pack->rpkt = (rtp_hdr_t *)cp;
-        pack->pkt->time = ts2dtime(pcap->pcaprec_hdr.ts_sec, pcap->pcaprec_hdr.ts_usec);
-        pack->pkt->plen = rtp_len;
-        if (origin == O_CH) {
-            pack->pkt->addr.in4.sin_family = AF_INET;
-            pack->pkt->addr.in4.sin_port = ntohs(pcap->udphdr.uh_dport);
-            pack->pkt->addr.in4.sin_addr = pcap->iphdr.ip_dst;
-        } else {
-            pack->pkt->addr.in4.sin_family = AF_INET;
-            pack->pkt->addr.in4.sin_port = ntohs(pcap->udphdr.uh_sport);
-            pack->pkt->addr.in4.sin_addr = pcap->iphdr.ip_src;
-        }
-        update_rtpp_stats(stat, pack->rpkt, &(pack->parsed), pack->pkt->time);
-
-        sess = session_lookup(channels, pack->rpkt->ssrc);
-        if (sess == NULL) {
-            channel = malloc(sizeof(*channel));
-            memset(channel, 0, sizeof(*channel));
-            channel->origin = origin;
-            sess = &(channel->session);
-            MYQ_INIT(sess);
-            MYQ_INSERT_HEAD(sess, pack);
-            channel_insert(channels, channel);
-            pcount++;
-            goto endloop;
-        }
-
-        /* Put packet it order */
-        MYQ_FOREACH_REVERSE(pp, sess) {
-            if (pp->parsed.seq == pack->parsed.seq) {
-                /* Duplicate packet */
-                free(pack);
-                goto endloop;
-            }
-            if (pp->parsed.ts < pack->parsed.ts ||
-              pp->parsed.seq < pack->parsed.seq) {
-                MYQ_INSERT_AFTER(sess, pp, pack);
-                pcount++;
-                goto endloop;
-            }
-        }
-        MYQ_INSERT_HEAD(sess, pack);
-        pcount++;
-endloop:
-        continue;
-    }
-    if (cp != ibuf + st_size) {
-        warnx("invalid format, %d packets loaded", pcount);
-        return -1;
-    }
     return pcount;
 }
 

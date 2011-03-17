@@ -26,7 +26,7 @@
 # $Id$
 
 PROG=	extractaudio
-SRCS=	main.c decoder.c _rtp.c _rtp_analyze.c _rtpp_util.c
+SRCS=	main.c decoder.c rtpp_loader.c _rtp.c _rtp_analyze.c _rtpp_util.c
 CLEANFILES+= _rtp.c _rtp_analyze.c _rtpp_util.c
 MAN1=
 
@@ -34,7 +34,7 @@ WARNS?=	2
 
 LOCALBASE?=	/usr/local
 
-CFLAGS=-DWITHOUT_SIPLOG
+CFLAGS=-g3 -O0 -DWITHOUT_SIPLOG
 
 CFLAGS+= -I.. -I../../siplog -I${LOCALBASE}/include
 LDFLAGS+= -L../../siplog -L${LOCALBASE}/lib

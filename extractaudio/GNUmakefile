@@ -26,7 +26,7 @@
 # $Id$
 
 CC?=	gcc
-CFLAGS+=-Wall -D_BSD_SOURCE -D_ISOC99_SOURCE -DENABLE_GSM -DENABLE_G729 \
+CFLAGS+=-Wall -DWITHOUT_SIPLOG -D_BSD_SOURCE -D_ISOC99_SOURCE -DENABLE_GSM -DENABLE_G729 \
   -I./ -I../ -I../../siplog -I/usr/local/include
 LIBS+=	-L. -L/usr/local/lib -lg729 -lgsm -lsndfile -lm
 PREFIX?= /usr/local
@@ -35,7 +35,7 @@ PREFIX?= /usr/local
 #LIBS+=	-lresolv -lsocket -lnsl
 
 SRCS = decoder.c decoder.h format_au.h g711.h main.c session.h _rtp.c \
-  _rtp_analyze.c _rtpp_util.c
+  _rtp_analyze.c _rtpp_util.c rtpp_loader.c rtpp_loader.h
 PROG = extractaudio
 sources = $(filter %.c, $(SRCS))
 OBJS = $(sources:%.c=%.o)

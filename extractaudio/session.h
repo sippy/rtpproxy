@@ -81,7 +81,6 @@ struct session {
 enum origin {O_CH, A_CH};
 
 struct channel {
-    TAILQ_ENTRY(channel) link;
     struct session session;
     void *decoder;
     unsigned int skip;
@@ -97,5 +96,8 @@ struct channels {
 #define	RPKT(packet)	((rtp_hdr_t *)((packet)->pkt + 1))
 #define RPLOAD(packet)	(((unsigned char *)(packet)->rpkt) + (packet)->parsed.data_offset)
 #define RPLEN(packet)	((packet)->parsed.data_size)
+
+struct session *session_lookup(struct channels *, uint32_t);
+void channel_insert(struct channels *, struct channel *);
 
 #endif
