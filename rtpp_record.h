@@ -76,21 +76,32 @@ typedef struct pcaprec_hdr_s {
     uint32_t orig_len;       /* actual length of packet */
 } pcaprec_hdr_t;
 
-/*
- * Recorded data header
- */
-struct pkt_hdr_pcap {
-    pcaprec_hdr_t pcaprec_hdr;
-#if (FORMAT_PCAP == DLT_NULL)
-    uint32_t family;
-#else
-    uint8_t ether_dhost[6];
-    uint8_t ether_shost[6];
-    uint16_t ether_type;
-#endif
+struct udpip {
     struct ip iphdr;
     struct udphdr udphdr;
 } __attribute__((__packed__));
+
+/*
+ * Recorded data header
+ */
+struct pkt_hdr_pcap_null {
+    pcaprec_hdr_t pcaprec_hdr;
+    uint32_t family;
+    struct udpip udpip;
+} __attribute__((__packed__));
+
+struct pkt_hdr_pcap_en10t {
+    pcaprec_hdr_t pcaprec_hdr;
+    uint8_t ether_dhost[6];
+    uint8_t ether_shost[6];
+    uint16_t ether_type;
+    struct udpip udpip;
+} __attribute__((__packed__));
+
+union pkt_hdr_pcap {
+    struct pkt_hdr_pcap_null null;
+    struct pkt_hdr_pcap_en10t en10t;
+};
 
 struct pkt_hdr_adhoc {
     union sockaddr_in_s addr;   /* Source address */

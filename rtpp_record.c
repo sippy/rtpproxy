@@ -186,7 +186,7 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 	pcap_hdr.thiszone = 0;
 	pcap_hdr.sigfigs = 0;
 	pcap_hdr.snaplen = 65535;
-	pcap_hdr.network = DLT_EN10MB;
+	pcap_hdr.network = PCAP_FORMAT;
 	rval = write(rrc->fd, &pcap_hdr, sizeof(pcap_hdr));
 	if (rval == -1) {
 	    close(rrc->fd);
@@ -263,11 +263,14 @@ static uint16_t ip_id = 0;
 
 static int
 prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
-  struct pkt_hdr_pcap *hdrp, struct sockaddr *daddr, struct sockaddr *ldaddr,
+  union pkt_hdr_pcap *hdrp, struct sockaddr *daddr, struct sockaddr *ldaddr,
   int ldport, int face)
 {
     struct sockaddr *src_addr, *dst_addr;
     uint16_t src_port, dst_port;
+    pcaprec_hdr_t *pcaprec_hdr;
+    struct udpip *udpip;
+    int pcap_size;
 
     if (packet->rtime == -1) {
 	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't get current time");
@@ -292,34 +295,41 @@ prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
     }
 
     memset(hdrp, 0, sizeof(*hdrp));
-    dtime2ts(packet->rtime, &(hdrp->pcaprec_hdr.ts_sec), &(hdrp->pcaprec_hdr.ts_usec));
-    hdrp->pcaprec_hdr.orig_len = hdrp->pcaprec_hdr.incl_len = sizeof(*hdrp) -
-      sizeof(hdrp->pcaprec_hdr) + packet->size;
 
-#if (FORMAT_PCAP == DLT_NULL)
-    hdrp->family = sstosa(src_addr)->sa_family;
+#if (PCAP_FORMAT == DLT_NULL)
+    hdrp->null.family = sstosa(src_addr)->sa_family;
+    pcaprec_hdr = &(hdrp->null.pcaprec_hdr);
+    udpip = &(hdrp->null.udpip);
+    pcap_size = sizeof(hdrp->null);
 #else
     /* Prepare fake ethernet header */
-    hdrp->ether_type = htons(0x800);
-    memcpy(hdrp->ether_dhost + 2, &(satosin(dst_addr)->sin_addr), 4);
-    memcpy(hdrp->ether_shost + 2, &(satosin(src_addr)->sin_addr), 4);
+    hdrp->en10t.ether_type = htons(0x800);
+    memcpy(hdrp->en10t.ether_dhost + 2, &(satosin(dst_addr)->sin_addr), 4);
+    memcpy(hdrp->en10t.ether_shost + 2, &(satosin(src_addr)->sin_addr), 4);
+    pcaprec_hdr = &(hdrp->en10t.pcaprec_hdr);
+    udpip = &(hdrp->en10t.udpip);
+    pcap_size = sizeof(hdrp->en10t);
 #endif
 
+    dtime2ts(packet->rtime, &(pcaprec_hdr->ts_sec), &(pcaprec_hdr->ts_usec));
+    pcaprec_hdr->orig_len = pcaprec_hdr->incl_len = pcap_size -
+      sizeof(*pcaprec_hdr) + packet->size;
+
     /* Prepare fake IP header */
-    hdrp->iphdr.ip_v = 4;
-    hdrp->iphdr.ip_hl = sizeof(hdrp->iphdr) >> 2;
-    hdrp->iphdr.ip_len = htons(sizeof(hdrp->iphdr) + sizeof(hdrp->udphdr) + packet->size);
-    hdrp->iphdr.ip_src = satosin(src_addr)->sin_addr;
-    hdrp->iphdr.ip_dst = satosin(dst_addr)->sin_addr;
-    hdrp->iphdr.ip_p = IPPROTO_UDP;
-    hdrp->iphdr.ip_id = htons(ip_id++);
-    hdrp->iphdr.ip_ttl = 127;
-    hdrp->iphdr.ip_sum = rtpp_in_cksum(&(hdrp->iphdr), sizeof(hdrp->iphdr));
+    udpip->iphdr.ip_v = 4;
+    udpip->iphdr.ip_hl = sizeof(udpip->iphdr) >> 2;
+    udpip->iphdr.ip_len = htons(sizeof(udpip->iphdr) + sizeof(udpip->udphdr) + packet->size);
+    udpip->iphdr.ip_src = satosin(src_addr)->sin_addr;
+    udpip->iphdr.ip_dst = satosin(dst_addr)->sin_addr;
+    udpip->iphdr.ip_p = IPPROTO_UDP;
+    udpip->iphdr.ip_id = htons(ip_id++);
+    udpip->iphdr.ip_ttl = 127;
+    udpip->iphdr.ip_sum = rtpp_in_cksum(&(udpip->iphdr), sizeof(udpip->iphdr));
 
     /* Prepare fake UDP header */
-    hdrp->udphdr.uh_sport = src_port;
-    hdrp->udphdr.uh_dport = dst_port;
-    hdrp->udphdr.uh_ulen = htons(sizeof(hdrp->udphdr) + packet->size);
+    udpip->udphdr.uh_sport = src_port;
+    udpip->udphdr.uh_dport = dst_port;
+    udpip->udphdr.uh_ulen = htons(sizeof(udpip->udphdr) + packet->size);
 
     return 0;
 }
@@ -330,7 +340,7 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet,
 {
     struct iovec v[2];
     union {
-	struct pkt_hdr_pcap pcap;
+	union pkt_hdr_pcap pcap;
 	struct pkt_hdr_adhoc adhoc;
     } hdr;
     int rval, hdr_size;
@@ -351,7 +361,11 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet,
 	break;
 
     case MODE_LOCAL_PCAP:
-	hdr_size = sizeof(hdr.pcap);
+#if (PCAP_FORMAT == DLT_NULL)
+	hdr_size = sizeof(hdr.pcap.null);
+#else
+        hdr_size = sizeof(hdr.pcap.en10t);
+#endif
 	prepare_pkt_hdr = (void *)&prepare_pkt_hdr_pcap;
 	break;
     }

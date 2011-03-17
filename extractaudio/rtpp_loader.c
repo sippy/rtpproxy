@@ -157,10 +157,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
     struct packet *pack, *pp;
     struct channel *channel;
     struct session *sess;
-    union {
-        struct pkt_hdr_pcap_null null;
-        struct pkt_hdr_pcap_en10t en10t;
-    } *pcap;
+    union pkt_hdr_pcap *pcap;
     int rtp_len;
     off_t st_size;
     int pcap_size, network;
