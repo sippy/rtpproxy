@@ -30,6 +30,7 @@ from sippy.UaStateDead import UaStateDead
 from sippy.SipConf import SipConf
 from sippy.SipLogger import SipLogger
 from sippy.SipTransactionManager import SipTransactionManager
+from sippy.StatefulProxy import StatefulProxy
 from twisted.internet import reactor
 import getopt, os, sys
 #import gc
@@ -53,18 +54,20 @@ class CallController(object):
                     self.uaA.recvEvent(CCEventDisconnect())
                     return
                 self.uaO = UA(self.global_config, event_cb = self.recvEvent, \
-                  nh_address = (self.global_config['nh_addr'], self.global_config['nh_port']))
+                  nh_address = self.global_config['nh_addr'])
             self.uaO.recvEvent(event)
         else:
             self.uaA.recvEvent(event)
 
 class CallMap(object):
     global_config = None
+    proxy = None
     #rc1 = None
     #rc2 = None
 
     def __init__(self, global_config):
         self.global_config = global_config
+        self.proxy = StatefulProxy(global_config, self.global_config['nh_addr'])
         #gc.disable()
         #gc.set_debug(gc.DEBUG_STATS)
         #gc.set_threshold(0)
@@ -78,6 +81,9 @@ class CallMap(object):
             # New dialog
             cc = CallController(self.global_config)
             return cc.uaA.recvRequest(req)
+        if req.getMethod() == 'REGISTER':
+            # Registration
+            return self.proxy.recvRequest(req)
         if req.getMethod() in ('NOTIFY', 'PING'):
             # Whynot?
             return (req.genResponse(200, 'OK'), None, None)
@@ -91,7 +97,7 @@ if __name__ == '__main__':
         sys.exit(1)
     laddr = None
     lport = None
-    global_config = {'nh_addr':'192.168.0.102'}
+    global_config = {'nh_addr':['192.168.0.102', 5060]}
     foreground = False
     for o, a in opts:
         if o == '-f':
@@ -106,16 +112,15 @@ if __name__ == '__main__':
         if o == '-n':
             if a.startswith('['):
                 parts = a.split(']', 1)
-                global_config['nh_addr'] = parts[0] + ']'
+                global_config['nh_addr'] = [parts[0] + ']', 5060]
                 parts = parts[1].split(':', 1)
             else:
                 parts = a.split(':', 1)
-                global_config['nh_addr'] = parts[0]
+                global_config['nh_addr'] = [parts[0], 5060]
             if len(parts) == 2:
-                global_config['nh_port'] = int(parts[1])
-            else:
-                global_config['nh_port'] = 5060
+                global_config['nh_addr'][1] = int(parts[1])
             continue
+    global_config['nh_addr'] = tuple(global_config['nh_addr'])
 
     if not foreground:
         #print 'foobar'
