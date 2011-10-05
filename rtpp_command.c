@@ -963,6 +963,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	spb->ttl[0] = -1;
 	spb->ttl[1] = -1;
 	spa->log = rtpp_log_open(cf, "rtpproxy", spa->call_id, 0);
+	rtpp_log_setlevel(spa->log, cf->log_level);
 	spb->log = spa->log;
 	spa->rtcp = spb;
 	spb->rtcp = NULL;

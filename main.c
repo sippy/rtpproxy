@@ -794,6 +794,7 @@ main(int argc, char **argv)
         errx(1, "can't start notification thread");
 
     glog = cf.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
+    rtpp_log_setlevel(cf.glog, cf.log_level);
     atexit(ehandler);
     rtpp_log_write(RTPP_LOG_INFO, cf.glog, "rtpproxy started, pid %d", getpid());
 
