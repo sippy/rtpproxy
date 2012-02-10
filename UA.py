@@ -325,9 +325,6 @@ class UA(object):
             return None
         return self.lUri.getUri().name
 
-    def getRAddr(self):
-        return self.rAddr
-
     def getRAddr0(self):
         return self.rAddr0
 
