@@ -155,7 +155,7 @@ class RadiusAccounting(object):
         if self.user_agent != None:
             attributes.append(('h323-ivr-out', 'sip_ua:' + self.user_agent))
         if self.p1xx_ts != None:
-            attributes.append(('alert-timepoint', self.ftime(self.p1xx_ts)))
+            attributes.append(('Acct-Delay-Time', round(self.p1xx_ts)))
         if self.p100_ts != None:
             attributes.append(('provisional-timepoint', self.ftime(self.p100_ts)))
         pattributes = ['%-32s = \'%s\'\n' % (x[0], str(x[1])) for x in attributes]
