@@ -65,6 +65,8 @@ class Cli_session(Protocol):
         self.pump_rxdata()
 
     def send(self, data):
+        if isinstance(data, unicode):
+            data = data.encode('ascii')
         return self.transport.write(data)
 
     def close(self):
