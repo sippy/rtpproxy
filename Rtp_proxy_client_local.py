@@ -107,6 +107,11 @@ class Rtp_proxy_client_local(object):
         self.wi_available.notify()
         self.wi_available.release()
 
+    def reconnect(self, address):
+        self.worker.shutdown()
+        self.address = address
+        self.worker = _RTPPLWorker(self)
+
 if __name__ == '__main__':
     def display(*args):
         print args

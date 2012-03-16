@@ -68,3 +68,6 @@ class Rtp_proxy_client_udp(object):
         parameters[1].cancel()
         if parameters[3] != None:
             parameters[3](result.strip(), *parameters[4])
+
+    def reconnect(self, address):
+        self.address = address
