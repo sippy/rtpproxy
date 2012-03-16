@@ -58,7 +58,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def caps_query1(self, result):
         if self.shutdown:
-            self.worker.shutdown()
+            if self.worker != None:
+                self.worker.shutdown()
+                self.worker = None
             return
         if not self.online:
             return
@@ -75,7 +77,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def caps_query2(self, result):
         if self.shutdown:
-            self.worker.shutdown()
+            if self.worker != None:
+                self.worker.shutdown()
+                self.worker = None
             return
         if not self.online:
             return
@@ -92,7 +96,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def caps_query3(self, result):
         if self.shutdown:
-            self.worker.shutdown()
+            if self.worker != None:
+                self.worker.shutdown()
+                self.worker = None
             return
         if not self.online:
             return
@@ -108,7 +114,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def caps_query4(self, result):
         if self.shutdown:
-            self.worker.shutdown()
+            if self.worker != None:
+                self.worker.shutdown()
+                self.worker = None
             return
         if not self.online:
             return
@@ -124,7 +132,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def version_check_reply(self, version):
         if self.shutdown:
-            self.worker.shutdown()
+            if self.worker != None:
+                self.worker.shutdown()
+                self.worker = None
             return
         if version == '20040107':
             self.go_online()
@@ -140,7 +150,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
     def heartbeat_reply(self, stats):
         #print 'heartbeat_reply', self.address, stats, self.online
         if self.shutdown:
-            self.udp_server.shutdown()
+            if self.worker != None:
+                self.worker.shutdown()
+                self.worker = None
             return
         if not self.online:
             return

@@ -32,11 +32,12 @@ from random import random
 class Rtp_proxy_client_udp(object):
     pending_requests = None
     is_local = False
+    worker = None
 
     def __init__(self, global_config, address):
         self.address = address
         self.is_local = False
-        self.udp_server = Udp_server(None, self.process_reply)
+        self.worker = Udp_server(None, self.process_reply)
         self.pending_requests = {}
         self.proxy_address = address[0]
 
@@ -45,7 +46,7 @@ class Rtp_proxy_client_udp(object):
         command = '%s %s' % (cookie, command)
         timer = Timeout(self.retransmit, 1, -1, cookie)
         self.pending_requests[cookie] = [3, timer, command, result_callback, callback_parameters]
-        self.udp_server.send_to(command, self.address)
+        self.worker.send_to(command, self.address)
 
     def retransmit(self, cookie):
         triesleft, timer, command, result_callback, callback_parameters = self.pending_requests[cookie]
@@ -56,10 +57,10 @@ class Rtp_proxy_client_udp(object):
             if result_callback != None:
                 result_callback(None, *callback_parameters)
             return
-        self.udp_server.send_to(command, self.address)
+        self.worker.send_to(command, self.address)
         self.pending_requests[cookie][0] -= 1
 
-    def process_reply(self, data, address, udp_server):
+    def process_reply(self, data, address, worker):
         cookie, result = data.split(None, 1)
         parameters = self.pending_requests.pop(cookie, None)
         if parameters == None:
