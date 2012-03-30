@@ -39,6 +39,8 @@ class _RTPPLWorker(Thread):
         self.start()
 
     def send_raw(self, command):
+        if not command.endswith('\n'):
+            command += '\n'
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect(self.userv.address)
         while True:
