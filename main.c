@@ -524,6 +524,9 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	cf->packets_in++;
 
 	i = 0;
+
+	port = ntohs(satosin(&packet->raddr)->sin_port);
+
 	if (sp->addr[ridx] != NULL) {
 	    /* Check that the packet is authentic, drop if it isn't */
 	    if (sp->asymmetric[ridx] == 0) {
@@ -590,8 +593,6 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	      &packet->raddr, packet->rlen) != 0) {
 	        sp->canupdate[ridx] = 0;
 	    }
-
-	    port = ntohs(satosin(&packet->raddr)->sin_port);
 
 	    rtpp_log_write(RTPP_LOG_INFO, sp->log,
 	      "%s's address filled in: %s:%d (%s)",
