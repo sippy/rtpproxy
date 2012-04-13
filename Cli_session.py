@@ -30,6 +30,7 @@ class Cli_session(Protocol):
     rbuffer = None
     wbuffer = None
     cb_busy = False
+    expect_lf = True
 
     def __init__(self):
         self.rbuffer = ''
@@ -40,16 +41,22 @@ class Cli_session(Protocol):
     #    self.transport.loseConnection()
 
     def dataReceived(self, data):
+	#print 'Cli_session::dataReceived', self, data
         if len(data) == 0:
             return
         self.rbuffer += data
         self.pump_rxdata()
 
     def pump_rxdata(self):
-        while self.rbuffer.find('\n') != -1:
+        while self.rbuffer != None and len(self.rbuffer) > 0:
             if self.cb_busy:
                 return
-            cmd, self.rbuffer = self.rbuffer.split('\n', 1)
+            if self.rbuffer.find('\n') == -1 and self.expect_lf:
+                return
+            parts = self.rbuffer.split('\n', 1)
+            if len(parts) == 1:
+                parts = (parts[0], '')
+            cmd, self.rbuffer = parts
             cmd = cmd.strip()
             if len(cmd) > 0:
                 try:
