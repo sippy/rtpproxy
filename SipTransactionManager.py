@@ -68,6 +68,7 @@ class SipTransaction(object):
         self.teA = self.teB = self.teC = self.teD = self.teE = self.teF = None
         self.tid = None
         self.userv = None
+        self.r408 = None
 
 # Symbolic states names
 class SipTransactionState(object):
@@ -304,6 +305,8 @@ class SipTransactionManager(object):
         t.cancelPending = False
         t.resp_cb = resp_cb
         t.teA = Timeout(self.timerA, t.tout, 1, t)
+        if resp_cb != None:
+            t.r408 = msg.genResponse(408, 'Request Timeout')
         t.teB = Timeout(self.timerB, 32.0, 1, t)
         t.teC = None
         t.state = TRYING
@@ -412,9 +415,8 @@ class SipTransactionManager(object):
         t.teC = Timeout(self.timerC, 32.0, 1, t)
         if t.resp_cb == None:
             return
-        fake_resp = SipRequest(t.data).genResponse(408, 'Request Timeout')
-        fake_resp.rtime = time()
-        t.resp_cb(fake_resp)
+        t.r408.rtime = time()
+        t.resp_cb(t.r408)
         #try:
         #    t.resp_cb(SipRequest(t.data).genResponse(408, 'Request Timeout'))
         #except:
