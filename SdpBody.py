@@ -66,7 +66,7 @@ class SdpBody(object):
         self.sections = []
         if body == None:
             return
-        avpairs = [x.split('=', 1) for x in body.strip().splitlines()]
+        avpairs = [x.split('=', 1) for x in body.strip().splitlines() if len(x.strip()) > 0]
         current_snum = 0
         c_header = None
         for name, v in avpairs:
