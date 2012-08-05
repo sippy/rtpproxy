@@ -91,6 +91,9 @@ rtp_calc_samples(int codec_id, size_t nbytes, const unsigned char *data)
 	case RTP_G723:
 	    return g723_samples(data, nbytes);
 
+	case RTP_G722:
+	    return nbytes * 2; 
+
 	default:
 	    return RTP_NSAMPLES_UNKNOWN;
     }
@@ -163,6 +166,14 @@ rtp_packet_chunk_find_g723(struct rtp_packet *pkt, struct rtp_packet_chunk *ret,
     ret->bytes = (pos < pkt->data_size ? pos : pkt->data_size);
 }
 
+static void
+rtp_packet_chunk_find_g722(struct rtp_packet *pkt, struct rtp_packet_chunk *ret, int min_nsamples)
+{
+    ret->nsamples = min_nsamples;
+    ret->bytes = min_nsamples / 2;
+}
+
+
 /* 
  * Find the head of the packet with the length at least 
  * of min_nsamples.
@@ -192,6 +203,10 @@ rtp_packet_first_chunk_find(struct rtp_packet *pkt, struct rtp_packet_chunk *ret
 
     case RTP_G723:
 	rtp_packet_chunk_find_g723(pkt, ret, min_nsamples);
+	break;
+
+    case RTP_G722:
+	rtp_packet_chunk_find_g722(pkt, ret, min_nsamples);
 	break;
 
     default:
