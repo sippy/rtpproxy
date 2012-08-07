@@ -50,6 +50,13 @@
 #define GSM_ENABLED 0
 #endif
 
+#ifdef ENABLE_G722
+#include "g722_encoder.h"
+#define G722_ENABLED 1
+#else
+#define G722_ENABLED 0
+#endif
+
 #include "rtp.h"
 
 #if BYTE_ORDER == BIG_ENDIAN
@@ -86,9 +93,13 @@ int main(int argc, char **argv)
 #ifdef ENABLE_GSM
     gsm ctx_gsm;
 #endif
+#ifdef ENABLE_G722
+    G722_ENC_CTX *ctx_g722;
+#endif
     const char *template;
     struct efile efiles[] = {{NULL, RTP_PCMU, 1}, {NULL, RTP_GSM, GSM_ENABLED},
-      {NULL, RTP_G729, G729_ENABLED}, {NULL, RTP_PCMA, 1}, {NULL, -1, 0}};
+      {NULL, RTP_G729, G729_ENABLED}, {NULL, RTP_PCMA, 1},
+      {NULL, RTP_G722, G722_ENABLED}, {NULL, -1, 0}};
 
     loop = 0;
     limit = -1;
@@ -129,6 +140,11 @@ int main(int argc, char **argv)
     ctx_gsm = gsm_create();
     if (ctx_gsm == NULL)
         errx(1, "can't create GSM encoder");
+#endif
+#ifdef ENABLE_G722
+    ctx_g722 = g722_encoder_new(64000, G722_SAMPLE_RATE_8000);
+    if (ctx_g722 == NULL)
+        errx(1, "can't create G.722 encoder");
 #endif
 
     infile = fopen(argv[0], "r");
@@ -185,6 +201,14 @@ int main(int argc, char **argv)
             case RTP_GSM:
                 gsm_encode(ctx_gsm, slbuf, lawbuf);
                 wsize = 33;
+                break;
+#endif
+
+#ifdef ENABLE_G722
+            case RTP_G722:
+                for (j = 0; j < 2; j++)
+                    g722_encode(ctx_g722, &(slbuf[j * 80]), 80, &(lawbuf[j * 80]));
+                wsize = 160;
                 break;
 #endif
 

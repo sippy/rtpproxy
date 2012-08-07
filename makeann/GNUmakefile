@@ -25,9 +25,12 @@
 #
 # $Id$
 
+LOCALBASE?=     /usr/local
+
 CC?=	gcc
-CFLAGS+=-Wall -D_BSD_SOURCE -D_ISOC99_SOURCE -DENABLE_GSM -DENABLE_G729 -I../ -I../extractaudio
-LIBS+=	-L. -lg729 -lgsm -lm
+CFLAGS+= -DENABLE_GSM -DENABLE_G729 -DENABLE_G722
+CFLAGS+= -Wall -D_BSD_SOURCE -D_ISOC99_SOURCE -I../ -I../extractaudio -I${LOCALBASE}/include
+LIBS+=	-L. -L${LOCALBASE}/lib -lg729 -lgsm -lg722 -lm
 PREFIX?= /usr/local
 
 # Uncomment this on Solaris

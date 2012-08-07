@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include <g729_decoder.h>
+#include <g722_decoder.h>
 
 #include "decoder.h"
 #include "session.h"
@@ -176,6 +177,16 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
             dp->dticks += 80;
         }
         return obytes;
+
+    case RTP_G722:
+        if (dp->g722_ctx == NULL)
+            dp->g722_ctx = g722_decoder_new(64000, G722_SAMPLE_RATE_8000);
+        if (dp->g722_ctx == NULL)
+            return -1;
+        g722_decode(dp->g722_ctx, ibuf, ibytes, (int16_t *)obuf);
+        dp->nticks += ibytes;
+        dp->dticks += ibytes;
+        return ibytes * 2;
 
     case RTP_CN:
     case RTP_TSE:

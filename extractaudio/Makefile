@@ -38,7 +38,7 @@ CFLAGS=-g3 -O0 -DWITHOUT_SIPLOG
 
 CFLAGS+= -I.. -I../../siplog -I${LOCALBASE}/include
 LDFLAGS+= -L../../siplog -L${LOCALBASE}/lib
-LDADD+=	-lg729 -lsndfile -lm
+LDADD+=	-lg729 -lg722 -lsndfile -lm
 
 _rtp.c: ../rtp.c
 	ln -sf ../rtp.c _rtp.c

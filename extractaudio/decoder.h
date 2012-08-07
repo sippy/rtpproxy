@@ -34,6 +34,7 @@
 #include <sys/types.h>
 
 #include <g729_decoder.h>
+#include <g722_decoder.h>
 
 #include "../rtp.h"
 #include "session.h"
@@ -51,6 +52,7 @@ struct decoder_stream {
     unsigned char *obp;
     unsigned int oblen;
     G729_CTX *g729_ctx;
+    G722_DEC_CTX *g722_ctx;
     double stime;
     double dticks;
     /* FILE *f; */
