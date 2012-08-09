@@ -51,6 +51,7 @@ from urllib import unquote
 from sippy.Cli_server_local import Cli_server_local
 from sippy.SipTransactionManager import SipTransactionManager
 from sippy.SipCallId import SipCallId
+from sippy.misc import daemonize
 import gc, getopt, os, sys
 from re import sub
 from time import time
@@ -769,22 +770,7 @@ if __name__ == '__main__':
         global_config.write(open(writeconf, 'w'))
 
     if not global_config['foreground']:
-        #print 'foobar'
-        # Fork once
-        if os.fork() != 0:
-            os._exit(0)
-        # Create new session
-        os.setsid()
-        if os.fork() != 0:
-            os._exit(0)
-        os.chdir('/')
-        fd = os.open('/dev/null', os.O_RDONLY)
-        os.dup2(fd, sys.__stdin__.fileno())
-        os.close(fd)
-        fd = os.open(global_config['logfile'], os.O_WRONLY | os.O_CREAT | os.O_APPEND)
-        os.dup2(fd, sys.__stdout__.fileno())
-        os.dup2(fd, sys.__stderr__.fileno())
-        os.close(fd)
+        daemonize(logfile = logfile)
 
     global_config['_sip_logger'] = SipLogger('b2bua')
 
