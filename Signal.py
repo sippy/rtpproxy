@@ -56,6 +56,14 @@ class Signal(object):
                 print '-' * 70
                 stdout.flush()
 
+def log_signal(signum, sip_logger, signal_cb, cb_params):
+    sip_logger.write('Dispatching signal %d to handler %s' % (signum, str(signal_cb)))
+    return signal_cb(signum, *cb_params)
+
+def LogSignal(sip_logger, signum, signal_cb, *cb_params):
+    sip_logger.write('Registering signal %d to handler %s' % (signum, str(signal_cb)))
+    return Signal(signum, log_signal, signum, sip_logger, signal_cb, cb_params)
+
 if __name__ == '__main__':
     from signal import SIGHUP
     from os import kill, getpid
