@@ -58,14 +58,14 @@ class Signal(object):
 
 def log_signal(signum, sip_logger, signal_cb, cb_params):
     sip_logger.write('Dispatching signal %d to handler %s' % (signum, str(signal_cb)))
-    return signal_cb(signum, *cb_params)
+    return signal_cb(*cb_params)
 
 def LogSignal(sip_logger, signum, signal_cb, *cb_params):
     sip_logger.write('Registering signal %d to handler %s' % (signum, str(signal_cb)))
     return Signal(signum, log_signal, signum, sip_logger, signal_cb, cb_params)
 
 if __name__ == '__main__':
-    from signal import SIGHUP
+    from signal import SIGHUP, SIGTERM
     from os import kill, getpid
 
     def test(arguments):
@@ -75,5 +75,12 @@ if __name__ == '__main__':
     arguments = {'test':False}
     Signal(SIGHUP, test, arguments)
     kill(getpid(), SIGHUP)
+    reactor.run()
+    assert(arguments['test'])
+    from SipLogger import SipLogger
+    sip_logger = SipLogger('Signal::selftest')
+    arguments = {'test':False}
+    LogSignal(sip_logger, SIGTERM, test, arguments)
+    kill(getpid(), SIGTERM)
     reactor.run()
     assert(arguments['test'])
