@@ -126,6 +126,7 @@ class SipLogger(object):
     discarded = 0
     pid = None
     logger = None
+    signal_handler = None
 
     def __init__(self, app, call_id = 'GLOBAL', logfile = '/var/log/sip.log'):
         self.app = '/%s' % app
@@ -142,7 +143,7 @@ class SipLogger(object):
             if bend != 'syslog':
                 self.logger = AsyncLogger(app, self)
                 self.logfile = os.environ.get('SIPLOG_LOGFILE_FILE', logfile)
-                LogSignal(self, SIGUSR1, self.reopen)
+                self.signal_handler = LogSignal(self, SIGUSR1, self.reopen)
             else:
                 self.logger = AsyncLoggerSyslog(app, self)
                 self.app = ''
@@ -195,5 +196,8 @@ class SipLogger(object):
     def shutdown(self):
         if self.logger == None:
             return
+        if self.signal_handler != None:
+            self.signal_handler.calcel()
+            self.signal_handler = None
         self.logger.shutdown()
         self.logger = None
