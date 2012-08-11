@@ -130,6 +130,11 @@ rtp_server_get(struct rtp_server *rp, double dtime)
 	ticks_per_frame = 20;
 	break;
 
+    case RTP_G722:
+	bytes_per_frame = 8;
+	ticks_per_frame = 1;
+	break;
+
     default:
 	return RTPS_ERROR;
     }
