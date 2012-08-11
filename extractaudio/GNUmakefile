@@ -27,8 +27,8 @@
 
 CC?=	gcc
 CFLAGS+=-Wall -DWITHOUT_SIPLOG -D_BSD_SOURCE -D_ISOC99_SOURCE -DENABLE_GSM -DENABLE_G729 \
-  -I./ -I../ -I../../siplog -I/usr/local/include
-LIBS+=	-L. -L/usr/local/lib -lg729 -lgsm -lsndfile -lm
+  -I./ -I../ -I/usr/local/include
+LIBS+=	-L. -L/usr/local/lib -lg729 -lg722 -lgsm -lsndfile -lm
 PREFIX?= /usr/local
 
 # Uncomment this on Solaris

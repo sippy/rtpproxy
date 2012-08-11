@@ -36,8 +36,8 @@ LOCALBASE?=	/usr/local
 
 CFLAGS=-g3 -O0 -DWITHOUT_SIPLOG
 
-CFLAGS+= -I.. -I../../siplog -I${LOCALBASE}/include
-LDFLAGS+= -L../../siplog -L${LOCALBASE}/lib
+CFLAGS+= -I.. -I${LOCALBASE}/include
+LDFLAGS+= -L${LOCALBASE}/lib
 LDADD+=	-lg729 -lg722 -lsndfile -lm
 
 _rtp.c: ../rtp.c
