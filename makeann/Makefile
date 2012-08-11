@@ -34,7 +34,7 @@ WARNS?=	2
 LOCALBASE?=	/usr/local
 
 CFLAGS+= -DENABLE_GSM -DENABLE_G729 -DENABLE_G722
-CFLAGS+= -I../ -I../extractaudio -I${LOCALBASE}/include
+CFLAGS+= -I${.CURDIR}/../ -I${.CURDIR}/../extractaudio -I${LOCALBASE}/include
 LDFLAGS+= -L${LOCALBASE}/lib
 LDADD+=	-lg729 -lgsm -lg722 -lm
 
