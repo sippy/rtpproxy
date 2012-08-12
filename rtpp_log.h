@@ -31,9 +31,14 @@
 #ifndef _RTPP_LOG_H_
 #define _RTPP_LOG_H_
 
+#ifndef WITHOUT_SIPLOG
 #include <siplog.h>
 
 #define	rtpp_log_t	siplog_t
+#else
+#define	rtpp_log_t	void *
+#endif
+
 
 #define	RTPP_LOG_DBUG	SIPLOG_DBUG
 #define	RTPP_LOG_INFO	SIPLOG_INFO
