@@ -36,17 +36,17 @@ LOCALBASE?=	/usr/local
 
 CFLAGS=-g3 -O0 -DWITHOUT_SIPLOG
 
-CFLAGS+= -I.. -I${LOCALBASE}/include
+CFLAGS+= -I${.CURDIR}/.. -I${LOCALBASE}/include
 LDFLAGS+= -L${LOCALBASE}/lib
 LDADD+=	-lg729 -lg722 -lsndfile -lm
 
-_rtp.c: ../rtp.c
-	ln -sf ../rtp.c _rtp.c
+_rtp.c: ${.CURDIR}/../rtp.c
+	ln -sf ${.CURDIR}/../rtp.c _rtp.c
 
-_rtp_analyze.c: ../rtp_analyze.c
-	ln -sf ../rtp_analyze.c _rtp_analyze.c
+_rtp_analyze.c: ${.CURDIR}/../rtp_analyze.c
+	ln -sf ${.CURDIR}/../rtp_analyze.c _rtp_analyze.c
 
-_rtpp_util.c: ../rtpp_util.c
-	ln -sf ../rtpp_util.c _rtpp_util.c
+_rtpp_util.c: ${.CURDIR}/../rtpp_util.c
+	ln -sf ${.CURDIR}/../rtpp_util.c _rtpp_util.c
 
 .include <bsd.prog.mk>
