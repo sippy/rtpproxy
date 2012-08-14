@@ -50,6 +50,7 @@ struct rtpp_session {
     unsigned long pcount[4];
     char *call_id;
     char *tag;
+    char *tag_nomedianum;
     rtpp_log_t log;
     struct rtpp_session* rtcp;
     struct rtpp_session* rtp;

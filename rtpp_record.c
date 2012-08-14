@@ -159,14 +159,14 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 	sdir = cf->sdir;
 	rrc->needspool = 1;
 	if (rname == NULL) {
-	    sprintf(rrc->rpath, "%s/%s=%s%s%s", cf->rdir, sp->call_id, sp->tag,
+	    sprintf(rrc->rpath, "%s/%s=%s%s%s", cf->rdir, sp->call_id, sp->tag_nomedianum,
 	      suffix1, suffix2);
 	} else {
 	    sprintf(rrc->rpath, "%s/%s%s", cf->rdir, rname, suffix2);
 	}
     }
     if (rname == NULL) {
-	sprintf(rrc->spath, "%s/%s=%s%s%s", sdir, sp->call_id, sp->tag,
+	sprintf(rrc->spath, "%s/%s=%s%s%s", sdir, sp->call_id, sp->tag_nomedianum,
 	  suffix1, suffix2);
     } else {
 	sprintf(rrc->spath, "%s/%s%s", sdir, rname, suffix2);

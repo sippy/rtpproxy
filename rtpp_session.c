@@ -220,6 +220,8 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	free(sp->call_id);
     if (sp->tag != NULL)
 	free(sp->tag);
+    if (sp->tag_nomedianum != NULL)
+	free(sp->tag_nomedianum);
     rtpp_log_close(sp->log);
     free(sp->rtcp);
     rtp_resizer_free(&sp->resizers[0]);

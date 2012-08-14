@@ -239,6 +239,10 @@ handle_nomem(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
     if (spa != NULL) {
 	if (spa->call_id != NULL)
 	    free(spa->call_id);
+	if (spa->tag != NULL)
+	    free(spa->tag);
+	if (spa->tag_nomedianum != NULL)
+	    free(spa->tag_nomedianum);
 	free(spa);
     }
     if (spb != NULL)
@@ -935,12 +939,17 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	}
 	spb->call_id = spa->call_id;
 	spa->tag = strdup(from_tag);
-	if (spa->tag == NULL) {
+	spa->tag_nomedianum = strdup(from_tag);
+	if (spa->tag == NULL || spa->tag_nomedianum == NULL) {
 	    handle_nomem(cf, controlfd, &raddr, rlen, cookie, 14, ia,
 	      fds, spa, spb);
 	    return 0;
 	}
+	cp = strrchr(spa->tag_nomedianum, ';');
+	if (cp != NULL)
+	    *cp = '\0';
 	spb->tag = spa->tag;
+	spb->tag_nomedianum = spa->tag_nomedianum;
 	for (i = 0; i < 2; i++) {
 	    spa->rrcs[i] = NULL;
 	    spb->rrcs[i] = NULL;
