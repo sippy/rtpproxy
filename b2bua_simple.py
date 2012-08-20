@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
     if not foreground:
         daemonize(logfile = '/var/log/sippy.log')
-`
+
     SipConf.my_uaname = 'Sippy B2BUA (Simple)'
     SipConf.allow_formats = (0, 8, 18, 100, 101)
     global_config['_sip_address'] = SipConf.my_address
