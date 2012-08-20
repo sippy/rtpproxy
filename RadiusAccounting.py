@@ -83,8 +83,8 @@ class RadiusAccounting(object):
         self.crec = True
         self.iTime = ua.setup_ts
         self.cTime = ua.connect_ts
-        if ua.user_agent != None and self.user_agent == None:
-            self.user_agent = ua.user_agent
+        if ua.remote_ua != None and self.user_agent == None:
+            self.user_agent = ua.remote_ua
         if ua.p1xx_ts != None:
             self.p1xx_ts = ua.p1xx_ts
         if ua.p100_ts != None:
@@ -106,8 +106,8 @@ class RadiusAccounting(object):
             self.iTime = ua.setup_ts
         if self.cTime == None:
             self.cTime = rtime
-        if ua.user_agent != None and self.user_agent == None:
-            self.user_agent = ua.user_agent
+        if ua.remote_ua != None and self.user_agent == None:
+            self.user_agent = ua.remote_ua
         if ua.p1xx_ts != None:
             self.p1xx_ts = ua.p1xx_ts
         if ua.p100_ts != None:

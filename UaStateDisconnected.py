@@ -37,9 +37,9 @@ class UaStateDisconnected(UaStateGeneric):
     def recvRequest(self, req):
         if req.getMethod() == 'BYE':
             #print 'BYE received in the Disconnected state'
-            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK', server = self.ua.local_ua))
         else:
-            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(500, 'Disconnected'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(500, 'Disconnected', server = self.ua.local_ua))
         return None
 
     def goDead(self):

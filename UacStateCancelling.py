@@ -73,9 +73,15 @@ class UacStateCancelling(UaStateGeneric):
             self.ua.routes.reverse()
             if len(self.ua.routes) > 0:
                 if not self.ua.routes[0].getUrl().lr:
-                    self.ua.routes.append(SipRoute(address = SipAddress(url = self.ua.rTarget.getCopy())))
+                    self.ua.routes.append(SipRoute(address = SipAddress(url = self.ua.rTarget)))
                     self.ua.rTarget = self.ua.routes.pop(0).getUrl()
                     self.ua.rAddr = self.ua.rTarget.getAddr()
+                elif self.ua.outbound_proxy != None:
+                    self.ua.routes.append(SipRoute(address = SipAddress(url = self.ua.rTarget)))
+                    self.ua.rTarget = self.ua.routes[0].getUrl().getCopy()
+                    self.ua.rTarget.lr = False
+                    self.ua.rTarget.other = tuple()
+                    self.ua.rTarget.headers = tuple()
                 else:
                     self.ua.rAddr = self.ua.routes[0].getAddr()
             else:

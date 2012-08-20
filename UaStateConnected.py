@@ -50,15 +50,15 @@ class UaStateConnected(UaStateGeneric):
     def recvRequest(self, req):
         if req.getMethod() == 'REFER':
             if req.countHFs('refer-to') == 0:
-                self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(400, 'Bad Request'))
+                self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(400, 'Bad Request', server = self.ua.local_ua))
                 return None
-            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(202, 'Accepted'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(202, 'Accepted', server = self.ua.local_ua))
             also = req.getHFBody('refer-to').getUrl().getCopy()
             self.ua.equeue.append(CCEventDisconnect(also, rtime = req.rtime, origin = self.ua.origin))
             self.ua.recvEvent(CCEventDisconnect(rtime = req.rtime, origin = self.ua.origin))
             return None
         if req.getMethod() == 'INVITE':
-            self.ua.uasResp = req.genResponse(100, 'Trying')
+            self.ua.uasResp = req.genResponse(100, 'Trying', server = self.ua.local_ua)
             self.ua.global_config['_sip_tm'].sendResponse(self.ua.uasResp)
             body = req.getBody()
             if body == None:
@@ -70,7 +70,7 @@ class UaStateConnected(UaStateGeneric):
                 for sect in body.content.sections:
                     sect.c_header.addr = '0.0.0.0'
             elif str(self.ua.rSDP) == str(body):
-                self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK', self.ua.lSDP))
+                self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK', self.ua.lSDP, server = self.ua.local_ua))
                 return None
             event = CCEventUpdate(body, rtime = req.rtime, origin = self.ua.origin)
             try:
@@ -88,7 +88,7 @@ class UaStateConnected(UaStateGeneric):
             self.ua.equeue.append(event)
             return (UasStateUpdating,)
         if req.getMethod() == 'BYE':
-            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK', server = self.ua.local_ua))
             #print 'BYE received in the Connected state, going to the Disconnected state'
             if req.countHFs('also') > 0:
                 also = req.getHFBody('also').getUrl().getCopy()
@@ -104,7 +104,7 @@ class UaStateConnected(UaStateGeneric):
             self.ua.disconnect_ts = req.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, req.rtime, self.ua.origin)
         if req.getMethod() == 'INFO':
-            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK', server = self.ua.local_ua))
             event = CCEventInfo(req.getBody(), rtime = req.rtime, origin = self.ua.origin)
             try:
                 event.reason = req.getHFBody('reason')
@@ -113,7 +113,7 @@ class UaStateConnected(UaStateGeneric):
             self.ua.equeue.append(event)
             return None
         if req.getMethod() == 'OPTIONS':
-            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK'))
+            self.ua.global_config['_sip_tm'].sendResponse(req.genResponse(200, 'OK', server = self.ua.local_ua))
             return None
         #print 'wrong request %s in the state Connected' % req.getMethod()
         return None

@@ -47,16 +47,23 @@ class UasStateIdle(UaStateGeneric):
             self.ua.cGUID = req.getHFBody('h323-conf-id').getCopy()
         else:
             self.ua.cGUID = SipCiscoGUID()
-        self.ua.uasResp = req.genResponse(100, 'Trying')
+        self.ua.uasResp = req.genResponse(100, 'Trying', server = self.ua.local_ua)
         self.ua.lCSeq = 100 # XXX: 100 for debugging so that incorrect CSeq generation will be easily spotted
-        self.ua.lContact = SipContact()
+        if self.ua.lContact == None:
+            self.ua.lContact = SipContact()
         self.ua.rTarget = req.getHFBody('contact').getUrl().getCopy()
         self.ua.routes = [x.getCopy() for x in self.ua.uasResp.getHFBodys('record-route')]
         if len(self.ua.routes) > 0:
             if not self.ua.routes[0].getUrl().lr:
-                self.ua.routes.append(SipRoute(address = SipAddress(url = self.ua.rTarget.getCopy())))
+                self.ua.routes.append(SipRoute(address = SipAddress(url = self.ua.rTarget)))
                 self.ua.rTarget = self.ua.routes.pop(0).getUrl()
                 self.ua.rAddr = self.ua.rTarget.getAddr()
+            elif self.ua.outbound_proxy != None:
+                self.ua.routes.append(SipRoute(address = SipAddress(url = self.ua.rTarget)))
+                self.ua.rTarget = self.ua.routes[0].getUrl().getCopy()
+                self.ua.rTarget.lr = False
+                self.ua.rTarget.other = tuple()
+                self.ua.rTarget.headers = tuple()
             else:
                 self.ua.rAddr = self.ua.routes[0].getAddr()
         else:
