@@ -35,9 +35,11 @@ class SipRequest(SipMsg):
     method = None
     ruri = None
     sipver = None
+    user_agent = None
 
     def __init__(self, buf = None, method = None, ruri = None, sipver = 'SIP/2.0', to = None, fr0m = None, via = None, cseq = None, \
-                 callid = None, maxforwards = None, body = None, contact = None, routes = (), target = None, cguid = None):
+                 callid = None, maxforwards = None, body = None, contact = None, routes = (), target = None, cguid = None,
+                 user_agent = None):
         SipMsg.__init__(self, buf)
         if buf != None:
             return
@@ -67,7 +69,11 @@ class SipRequest(SipMsg):
             self.appendHeader(SipHeader(name = 'contact', body = contact))
         if method in ('INVITE', 'REGISTER'):
             self.appendHeader(SipHeader(name = 'expires'))
-        self.appendHeader(SipHeader(name = 'user-agent'))
+        if user_agent != None:
+            self.user_agent = user_agent
+            self.appendHeader(SipHeader(name = 'user-agent', bodys = user_agent))
+        else:
+            self.appendHeader(SipHeader(name = 'user-agent'))
         if cguid != None:
             self.appendHeader(SipHeader(name = 'cisco-guid', body = cguid))
             self.appendHeader(SipHeader(name = 'h323-conf-id', body = cguid))
@@ -90,7 +96,7 @@ class SipRequest(SipMsg):
     def setRURI(self, ruri):
         self.ruri = ruri
 
-    def genResponse(self, scode, reason, body = None):
+    def genResponse(self, scode, reason, body = None, server = None):
         # Should be done at the transaction level
         # to = self.getHF('to').getBody().getCopy()
         # if code > 100 and to.getTag() == None:
@@ -98,7 +104,8 @@ class SipRequest(SipMsg):
         return SipResponse(scode = scode, reason = reason, sipver = self.sipver, fr0m = self.getHFBody('from').getCopy(), \
                            callid = self.getHFBody('call-id').getCopy(), vias = [x.getCopy() for x in self.getHFBodys('via')], \
                            to = self.getHFBody('to').getCopy(), cseq = self.getHFBody('cseq').getCopy(), \
-                           rrs = [x.getCopy() for x in self.getHFBodys('record-route')], body = body)
+                           rrs = [x.getCopy() for x in self.getHFBodys('record-route')], body = body, \
+                           server = server)
 
     def genACK(self, to = None):
         if to == None:
@@ -106,14 +113,16 @@ class SipRequest(SipMsg):
         return SipRequest(method = 'ACK', ruri = self.ruri.getCopy(), sipver = self.sipver, \
                           fr0m = self.getHFBody('from').getCopy(), to = to, \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
-                          cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = self.getHFBody('max-forwards').getCopy())
+                          cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = self.getHFBody('max-forwards').getCopy(), \
+                          user_agent = self.user_agent)
 
     def genCANCEL(self):
         return SipRequest(method = 'CANCEL', ruri = self.ruri.getCopy(), sipver = self.sipver, \
                           fr0m = self.getHFBody('from').getCopy(), to = self.getHFBody('to').getCopy(), \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
                           cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = self.getHFBody('max-forwards').getCopy(), \
-                          routes = [x.getCopy() for x in self.getHFBodys('route')], target = self.getTarget())
+                          routes = [x.getCopy() for x in self.getHFBodys('route')], target = self.getTarget(), \
+                          user_agent = self.user_agent)
 
     def genRequest(self, method, cseq = None):
         if cseq == None:
@@ -121,4 +130,5 @@ class SipRequest(SipMsg):
         return SipRequest(method = method, ruri = self.ruri.getCopy(), sipver = self.sipver, \
                           fr0m = self.getHFBody('from').getCopy(), to = self.getHFBody('to').getCopy(), \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
-                          cseq = cseq, maxforwards = self.getHFBody('max-forwards').getCopy())
+                          cseq = cseq, maxforwards = self.getHFBody('max-forwards').getCopy(), \
+                          user_agent = self.user_agent)

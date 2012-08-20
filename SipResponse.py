@@ -31,7 +31,7 @@ class SipResponse(SipMsg):
     sipver = None
 
     def __init__(self, buf = None, scode = None, reason = None, sipver = None, to = None, fr0m = None, callid = None, vias = None,
-                 cseq = None, body = None, rrs = ()):
+                 cseq = None, body = None, rrs = (), server = None):
         SipMsg.__init__(self, buf)
         if buf != None:
             return
@@ -42,7 +42,10 @@ class SipResponse(SipMsg):
         self.appendHeader(SipHeader(name = 'to', body = to))
         self.appendHeader(SipHeader(name = 'call-id', body = callid))
         self.appendHeader(SipHeader(name = 'cseq', body = cseq))
-        self.appendHeader(SipHeader(name = 'server'))
+        if server != None:
+            self.appendHeader(SipHeader(name = 'server', bodys = server))
+        else:
+            self.appendHeader(SipHeader(name = 'server'))
         if body != None:
             self.setBody(body)
 
