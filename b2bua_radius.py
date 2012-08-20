@@ -770,7 +770,7 @@ if __name__ == '__main__':
         global_config.write(open(writeconf, 'w'))
 
     if not global_config['foreground']:
-        daemonize(logfile = logfile)
+        daemonize(logfile = global_config['logfile'])
 
     global_config['_sip_logger'] = SipLogger('b2bua')
 
