@@ -29,17 +29,22 @@ class SipAddress(object):
     name = None
     url = None
     params = None
+    params_order = None
     hadbrace = None
     transtable = maketrans('-.!%*_+`\'~', 'a' * 10)
 
-    def __init__(self, address = None, name = None, url = None, params = None, hadbrace = None):
+    def __init__(self, address = None, name = None, url = None, params = None, hadbrace = None, \
+      params_order = None):
         self.params = {}
+        self.params_order = []
         self.hadbrace = True
         if address == None:
             self.name = name
             self.url = url
             if params != None:
                 self.params = params
+            if params_order != None:
+                self.params_order = params_order
             if hadbrace != None:
                 self.hadbrace = hadbrace
             return
@@ -51,8 +56,16 @@ class SipAddress(object):
                 for l in parts[1].split(';'):
                     if not l:
                         continue
-                    k, v = l.split('=')
+                    k_v = l.split('=', 1)
+                    if len(k_v) == 2:
+                        k, v = k_v
+                    else:
+                        k = k_v[0]
+                        v = None
                     self.params[k] = v
+                    if self.params_order.count(k) > 0:
+                        self.params_order.remove(k)
+                    self.params_order.append(k)
             self.hadbrace = False
             return
         self.name, url = address.split('<', 1)
@@ -68,8 +81,16 @@ class SipAddress(object):
             for l in paramstring.split(';'):
                 if not l:
                     continue
-                k, v = l.split('=')
+                k_v = l.split('=', 1)
+                if len(k_v) == 2:
+                    k, v = k_v
+                else:
+                    k = k_v[0]
+                    v = None
                 self.params[k] = v
+                if self.params_order.count(k) > 0:
+                    self.params_order.remove(k)
+                self.params_order.append(k)
 
     def __str__(self):
         return self.localStr()
@@ -90,21 +111,26 @@ class SipAddress(object):
             od = '<'
             cd = '>'
         s += od + self.url.localStr(local_addr, local_port) + cd
-        for k, v in self.params.items():
-            s += ';' + k + '=' + v
+        for k in self.params_order:
+            v = self.params[k]
+            if v != None:
+                s += ';' + k + '=' + v
+            else:
+                s += ';' + k
         return s
 
     def getCopy(self):
-        return SipAddress(name = self.name, url = self.url.getCopy(), params = self.params.copy(), hadbrace = self.hadbrace)
+        return SipAddress(name = self.name, url = self.url.getCopy(), params = self.params.copy(), \
+          hadbrace = self.hadbrace, params_order = self.params_order[:])
 
     def getParam(self, name):
-        try:
-            return self.params[name]
-        except KeyError:
-            return None
+        return self.params.get(name, None)
 
-    def setParam(self, name, value):
+    def setParam(self, name, value = None):
         self.params[name] = value
+        if self.params_order.count(name) == 0:
+            self.params_order.append(name)
 
     def delParam(self, name):
         del self.params[name]
+        self.params_order.remove(name)
