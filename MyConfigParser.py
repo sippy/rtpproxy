@@ -85,7 +85,11 @@ SUPPORTED_OPTIONS = { \
                              'challenge response comes in'), \
  'rtp_proxy_clients': ('S', 'comma-separated list of paths or addresses of the ' \
                              'RTPproxy control socket. Address in the format ' \
-                             '"udp:host[:port]" (comma-separated list)')}
+                             '"udp:host[:port]" (comma-separated list)'), \
+ 'sip_proxy':         ('S', 'address of the helper proxy to handle "REGISTER" ' \
+                             'and "SUBSCRIBE" messages. Address in the format ' \
+                             '"host[:port]"'),
+ 'nat_traversal':     ('B', 'enable NAT traversal for signalling')}
 
 class MyConfigParser(RawConfigParser):
     default_section = None

@@ -308,7 +308,11 @@ class CallController(object):
                     timeout, skip = v.split(',', 1)
                     parameters['group_timeout'] = (int(timeout), rnum + int(skip))
                 elif a == 'op':
-                    parameters['outbound_proxy'] = (v, 5060)
+                    host_port = v.split(':', 1)
+                    if len(host_port) == 1:
+                        parameters['outbound_proxy'] = (v, 5060)
+                    else:
+                        parameters['outbound_proxy'] = (host_port[0], int(host_port[1]))
                 else:
                     parameters[a] = v
             if self.global_config.has_key('max_credit_time'):
@@ -458,6 +462,7 @@ class CallMap(object):
     debug_mode = False
     safe_restart = False
     global_config = None
+    proxy = None
     #rc1 = None
     #rc2 = None
 
@@ -522,8 +527,8 @@ class CallMap(object):
             rval = cc.uaA.recvRequest(req)
             self.ccmap.append(cc)
             return rval
-        if req.getMethod() in ('REGISTER', 'SUBSCRIBE'):
-           return self.proxy.recvRequest(req)
+        if self.proxy != None and req.getMethod() in ('REGISTER', 'SUBSCRIBE'):
+            return self.proxy.recvRequest(req)
         if req.getMethod() in ('NOTIFY', 'PING'):
             # Whynot?
             return (req.genResponse(200, 'OK'), None, None)
@@ -799,9 +804,16 @@ if __name__ == '__main__':
     SipConf.my_uaname = 'Sippy B2BUA (RADIUS)'
 
     global_config['_cmap'] = CallMap(global_config)
+    if global_config.has_key('sip_proxy'):
+        host_port = global_config['sip_proxy'].split(':', 1)
+        if len(host_port) == 1:
+            global_config['_sip_proxy'] = (host_port[0], 5060)
+        else:
+            global_config['_sip_proxy'] = (host_port[0], int(host_port[1]))
+        global_config['_cmap'].proxy = StatefulProxy(global_config, global_config['_sip_proxy'])
 
     global_config['_sip_tm'] = SipTransactionManager(global_config, global_config['_cmap'].recvRequest)
-    global_config['_sip_tm'].nat_traversal = True
+    global_config['_sip_tm'].nat_traversal = global_config.getdefault('nat_traversal', False)
 
     cmdfile = global_config['b2bua_socket']
     if cmdfile.startswith('unix:'):
