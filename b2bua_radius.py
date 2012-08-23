@@ -306,6 +306,12 @@ class CallController(object):
                 elif a == 'gt':
                     timeout, skip = v.split(',', 1)
                     parameters['group_timeout'] = (int(timeout), rnum + int(skip))
+                elif a == 'op':
+                    host_port = v.split(':', 1)
+                    if len(host_port) == 1:
+                        parameters['outbound_proxy'] = (v, 5060)
+                    else:
+                        parameters['outbound_proxy'] = (host_port[0], int(host_port[1]))
                 else:
                     parameters[a] = v
             if self.global_config.has_key('max_credit_time'):
@@ -368,6 +374,8 @@ class CallController(object):
         self.uaO = UA(self.global_config, self.recvEvent, user, passw, (host, port), credit_time, tuple(conn_handlers), \
           tuple(disc_handlers), tuple(disc_handlers), dead_cbs = (self.oDead,), expire_time = expires, \
           no_progress_time = no_progress_expires, extra_headers = parameters.get('extra_headers', None))
+        if self.source != parameters.get('outbound_proxy', None):
+            self.uaO.outbound_proxy = parameters.get('outbound_proxy', None)
         if self.rtp_proxy_session != None and parameters.get('rtpp', True):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
