@@ -24,13 +24,13 @@
 
 from SipVia import SipVia
 from SipHeader import SipHeader
+from SipConf import SipConf
 
 class StatefulProxy:
     global_config = None
     destination = None
 
     def __init__(self, global_config, destination):
-        print destination
         self.global_config = global_config
         self.destination = destination
 
@@ -40,10 +40,51 @@ class StatefulProxy:
         via1 = req.getHF('via')
         req.insertHeaderBefore(via1, SipHeader(name = 'via', body = via0))
         req.setTarget(self.destination)
-        print req
+        contact = req.getHFBody('contact')
+        curl = contact.getUrl()
+        if req.getMethod() != 'REGISTER':
+            ruri = req.getRURI()
+            ruri.host = 'pennytel.com'
+            from_h = req.getHFBody('from').getUrl()
+            from_h.host = 'pennytel.com'
+            to_h = req.getHFBody('to').getUrl()
+            to_h.host = 'pennytel.com'
+            to_h.username = from_h.username
+            ruri.username = from_h.username
+        if req.getMethod() in ('REGISTER', 'SUBSCRIBE'):
+            fakeusername = '%s__%d_%s' % (curl.host.replace('.', '_'), curl.port, curl.username)
+            curl.username = fakeusername
+        curl.host, curl.port = (SipConf.my_address, SipConf.my_port)
+        req.delHFs('user-agent')
+        req.delHFs('server')
+        req.appendHeader(SipHeader(name = 'user-agent'))
+        self.global_config['_sip_tm'].newTransaction(req, self.recvResponse)
+        return (None, None, None)
+
+    def recvRequestDial(self, req):
+        via0 = SipVia()
+        via0.genBranch()
+        via1 = req.getHF('via')
+        req.insertHeaderBefore(via1, SipHeader(name = 'via', body = via0))
+        ruri = req.getRURI()
+        host, port_cld = ruri.username.split('__', 1)
+        port, cld = port_cld.split('_', 1)
+        ruri.username = cld
+        req.setTarget((host.replace('_', '.'), int(port)))
+        req.delHFs('user-agent')
+        req.delHFs('server')
+        req.appendHeader(SipHeader(name = 'user-agent'))
         self.global_config['_sip_tm'].newTransaction(req, self.recvResponse)
         return (None, None, None)
 
     def recvResponse(self, resp):
         resp.removeHeader(resp.getHF('via'))
+        if resp.scode >= 200 and resp.scode < 300 and resp.getHFBody('cseq').getCSeqMethod() == 'REGISTER':
+            curl = resp.getHFBody('contact').getUrl()
+            host, port_cld = curl.username.split('__', 1)
+            port, cld = port_cld.split('_')
+            curl.username = cld
+        resp.delHFs('user-agent')
+        resp.delHFs('server')
+        resp.appendHeader(SipHeader(name = 'server'))
         self.global_config['_sip_tm'].sendResponse(resp)

@@ -51,6 +51,7 @@ from urllib import unquote
 from sippy.Cli_server_local import Cli_server_local
 from sippy.SipTransactionManager import SipTransactionManager
 from sippy.SipCallId import SipCallId
+from sippy.StatefulProxy import StatefulProxy
 from sippy.misc import daemonize
 import gc, getopt, os, sys
 from re import sub
@@ -306,6 +307,8 @@ class CallController(object):
                 elif a == 'gt':
                     timeout, skip = v.split(',', 1)
                     parameters['group_timeout'] = (int(timeout), rnum + int(skip))
+                elif a == 'op':
+                    parameters['outbound_proxy'] = (v, 5060)
                 else:
                     parameters[a] = v
             if self.global_config.has_key('max_credit_time'):
@@ -351,6 +354,11 @@ class CallController(object):
                 else:
                     port = SipConf.default_port
                 host = host[0]
+        if self.source == parameters.get('outbound_proxy', None):
+            host, port_cld = cld.split('__', 1)
+            port, cld = port_cld.split('_', 1)
+            host = host.replace('_', '.')
+            port = int(port)
         if not forward_on_fail and self.global_config['acct_enable']:
             self.acctO = RadiusAccounting(self.global_config, 'originate', \
               send_start = self.global_config['start_acct_enable'], lperiod = \
@@ -368,12 +376,14 @@ class CallController(object):
         self.uaO = UA(self.global_config, self.recvEvent, user, passw, (host, port), credit_time, tuple(conn_handlers), \
           tuple(disc_handlers), tuple(disc_handlers), dead_cbs = (self.oDead,), expire_time = expires, \
           no_progress_time = no_progress_expires, extra_headers = parameters.get('extra_headers', None))
+        if self.source != parameters.get('outbound_proxy', None):
+            self.uaO.outbound_proxy = parameters.get('outbound_proxy', None)
         if self.rtp_proxy_session != None and parameters.get('rtpp', True):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
             self.rtp_proxy_session.caller_raddress = (host, port)
             body = body.getCopy()
-            body.content += 'a=nortpproxy:yes\r\n'
+            #body.content += 'a=nortpproxy:yes\r\n'
             self.proxied = True
         self.uaO.kaInterval = self.global_config['keepalive_orig']
         if parameters.has_key('group_timeout'):
@@ -383,7 +393,7 @@ class CallController(object):
             cId = SipCallId(md5(str(cId)).hexdigest() + ('-b2b_%d' % rnum))
         else:
             cId += '-b2b_%d' % rnum
-        event = CCEventTry((cId, cGUID, cli, cld, body, auth, \
+        event = CCEventTry((cId, None, cli, cld, body, auth, \
           parameters.get('caller_name', self.caller_name)))
         event.reason = self.eTry.reason
         self.uaO.recvEvent(event)
@@ -455,6 +465,7 @@ class CallMap(object):
         self.global_config = global_config
         self.ccmap = []
         self.el = Timeout(self.GClector, 60, -1)
+        self.proxy = StatefulProxy(global_config, ('202.85.245.137', 5060))
         Signal(SIGHUP, self.discAll, SIGHUP)
         Signal(SIGUSR2, self.toggleDebug, SIGUSR2)
         Signal(SIGPROF, self.safeRestart, SIGPROF)
@@ -465,6 +476,8 @@ class CallMap(object):
 
     def recvRequest(self, req):
         if req.getHFBody('to').getTag() != None:
+            if req.getMethod() == 'NOTIFY':
+                return self.proxy.recvRequestDial(req)
             # Request within dialog, but no such dialog
             return (req.genResponse(481, 'Call Leg/Transaction Does Not Exist'), None, None)
         if req.getMethod() == 'INVITE':
@@ -509,6 +522,8 @@ class CallMap(object):
             rval = cc.uaA.recvRequest(req)
             self.ccmap.append(cc)
             return rval
+        if req.getMethod() in ('REGISTER', 'SUBSCRIBE'):
+           return self.proxy.recvRequest(req)
         if req.getMethod() in ('NOTIFY', 'PING'):
             # Whynot?
             return (req.genResponse(200, 'OK'), None, None)
@@ -786,6 +801,7 @@ if __name__ == '__main__':
     global_config['_cmap'] = CallMap(global_config)
 
     global_config['_sip_tm'] = SipTransactionManager(global_config, global_config['_cmap'].recvRequest)
+    global_config['_sip_tm'].nat_traversal = True
 
     cmdfile = global_config['b2bua_socket']
     if cmdfile.startswith('unix:'):
