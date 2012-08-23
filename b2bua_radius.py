@@ -470,7 +470,6 @@ class CallMap(object):
         self.global_config = global_config
         self.ccmap = []
         self.el = Timeout(self.GClector, 60, -1)
-        self.proxy = StatefulProxy(global_config, ('202.85.245.137', 5060))
         Signal(SIGHUP, self.discAll, SIGHUP)
         Signal(SIGUSR2, self.toggleDebug, SIGUSR2)
         Signal(SIGPROF, self.safeRestart, SIGPROF)
