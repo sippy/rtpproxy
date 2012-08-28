@@ -43,7 +43,14 @@ class StatefulProxy:
                 resp = req.genResponse(401, 'Unauthorized')
                 resp.appendHeader(SipHeader(body = SipWWWAuthenticate(realm = 'pennytel.com')))
                 return (resp, None, None)
-            auth = req.getHFBody('authorization')
+            if req.countHFs('contact') == 0:
+               resp = req.genResponse(400, 'Bad Request')
+               return (resp, None, None)
+            try:
+                auth = req.getHFBody('authorization')
+            except:
+               resp = req.genResponse(400, 'Bad Request')
+               return (resp, None, None) 
             self.global_config['_radius_client'].do_auth(auth.username, self.authDone, auth, req)
             return (None, None, None)
         via0 = SipVia()
@@ -63,7 +70,7 @@ class StatefulProxy:
             to_h.username = from_h.username
             ruri.username = from_h.username
         if req.getMethod() in ('REGISTER', 'SUBSCRIBE'):
-            fakeusername = '%s__%d_%s' % (curl.host.replace('.', '_'), curl.port, curl.username)
+            fakeusername = '%s__%d_%s' % (curl.host.replace('.', '_'), curl.getPort(), curl.username)
             curl.username = fakeusername
         curl.host, curl.port = (SipConf.my_address, SipConf.my_port)
         req.delHFs('user-agent')
