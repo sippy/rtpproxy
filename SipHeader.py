@@ -97,3 +97,7 @@ class SipHeader(object):
         if not self.body.parsed:
             self.body.parse()
         return self.body
+
+    def getCopy(self):
+        cself = self.__class__(name = self.name, body = self.body.getCopy())
+        return cself 
