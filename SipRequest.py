@@ -110,25 +110,40 @@ class SipRequest(SipMsg):
     def genACK(self, to = None):
         if to == None:
             to = self.getHFBody('to').getCopy()
+        maxforwards = self.getHFBodys('max-forwards')
+        if len(maxforwards) > 0:
+            maxforward = maxforwards[0].getCopy()
+        else:
+            maxforward = None
         return SipRequest(method = 'ACK', ruri = self.ruri.getCopy(), sipver = self.sipver, \
                           fr0m = self.getHFBody('from').getCopy(), to = to, \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
-                          cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = self.getHFBody('max-forwards').getCopy(), \
+                          cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = maxforward, \
                           user_agent = self.user_agent)
 
     def genCANCEL(self):
+        maxforwards = self.getHFBodys('max-forwards')
+        if len(maxforwards) > 0:
+            maxforward = maxforwards[0].getCopy()
+        else:
+            maxforward = None
         return SipRequest(method = 'CANCEL', ruri = self.ruri.getCopy(), sipver = self.sipver, \
                           fr0m = self.getHFBody('from').getCopy(), to = self.getHFBody('to').getCopy(), \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
-                          cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = self.getHFBody('max-forwards').getCopy(), \
+                          cseq = self.getHFBody('cseq').getCSeqNum(), maxforwards = maxforward, \
                           routes = [x.getCopy() for x in self.getHFBodys('route')], target = self.getTarget(), \
                           user_agent = self.user_agent)
 
     def genRequest(self, method, cseq = None):
         if cseq == None:
             cseq = self.getHFBody('cseq').getCSeqNum()
+        maxforwards = self.getHFBodys('max-forwards')
+        if len(maxforwards) > 0:
+            maxforward = maxforwards[0].getCopy()
+        else:
+            maxforward = None
         return SipRequest(method = method, ruri = self.ruri.getCopy(), sipver = self.sipver, \
                           fr0m = self.getHFBody('from').getCopy(), to = self.getHFBody('to').getCopy(), \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
-                          cseq = cseq, maxforwards = self.getHFBody('max-forwards').getCopy(), \
+                          cseq = cseq, maxforwards = maxforward, \
                           user_agent = self.user_agent)
