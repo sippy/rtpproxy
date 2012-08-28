@@ -512,7 +512,7 @@ class CallMap(object):
             return rval
         if self.proxy != None and req.getMethod() in ('REGISTER', 'SUBSCRIBE'):
             return self.proxy.recvRequest(req)
-        if req.getMethod() in ('NOTIFY', 'PING'):
+        if req.getMethod() in ('NOTIFY', 'PING', 'OPTIONS'):
             # Whynot?
             return (req.genResponse(200, 'OK'), None, None)
         return (req.genResponse(501, 'Not Implemented'), None, None)
