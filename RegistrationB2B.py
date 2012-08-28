@@ -23,8 +23,14 @@ class RegistrationB2B(object):
         via0 = SipHeader(name = 'via')
         via0.getBody().genBranch()
         self.req.replaceHeader(self.req.getHF('via'), via0)
-        contact = self.orig_req.getHF('contact').getCopy()
-        curl = contact.getBody().getUrl()
+        contact = self.orig_req.getHF('contact')
+        if not contact.getBody().asterisk:
+            contact = contact.getCopy()
+            curl = contact.getBody().getUrl()
+            fakeusername = '%s__%d_%s' % (curl.host.replace('.', '_'), curl.getPort(), curl.username)
+            curl.username = fakeusername
+            curl.host, curl.port = (SipConf.my_address, SipConf.my_port)
+        self.req.appendHeader(contact)
         ruri = self.req.getRURI()
         ruri.host = domain
         from_h = self.req.getHFBody('from').getUrl()
@@ -32,10 +38,6 @@ class RegistrationB2B(object):
         to_h = self.req.getHFBody('to').getUrl()
         to_h.host = domain
         to_h.username = username
-        fakeusername = '%s__%d_%s' % (curl.host.replace('.', '_'), curl.port, curl.username)
-        curl.username = fakeusername
-        curl.host, curl.port = (SipConf.my_address, SipConf.my_port)
-        self.req.appendHeader(contact)
         allows = self.orig_req.getHFs('allow')
         if len(allows) > 0:
             self.req.appendHeader(allows[0].getCopy())
