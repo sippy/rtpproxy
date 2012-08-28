@@ -76,8 +76,12 @@ class UasStateRinging(UaStateGeneric):
             scode = event.getData()
             if scode == None:
                 scode = (500, 'Failed')
+            if event.extra_header != None:
+                extra_headers = (event.extra_header,)
+            else:
+                extra_headers = None
             self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason, \
-              extra_headers = (event.extra_header,))
+              extra_headers = extra_headers)
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
