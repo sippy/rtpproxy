@@ -163,7 +163,7 @@ def DigestCalcResponse(HA1, pszNonce, pszNonceCount, pszCNonce, pszQop, pszMetho
     m.update(":")
     m.update(pszNonce)
     m.update(":")
-    if pszNonceCount and pszCNonce: # pszQop:
+    if pszNonceCount and pszCNonce and pszQop:
         m.update(pszNonceCount)
         m.update(":")
         m.update(pszCNonce)
