@@ -39,7 +39,7 @@ from sippy.UasStateRinging import UasStateRinging
 from sippy.UaStateDead import UaStateDead
 from sippy.SipConf import SipConf
 from sippy.SipHeader import SipHeader
-from sippy.RadiusAuthorisation import RadiusAuthorisation
+from sippy.IVoiSysAuthorisation import IVoiSysAuthorisation
 from sippy.RadiusAccounting import RadiusAccounting
 from sippy.FakeAccounting import FakeAccounting
 from sippy.SipLogger import SipLogger
@@ -183,8 +183,7 @@ class CallController(object):
                       self.cId, self.remote_ip, self.rDone)
                 else:
                     self.username = auth.username
-                    self.auth_proc = self.global_config['_radius_client'].do_auth(auth.username, self.cli, self.cld, self.cGUID, 
-                      self.cId, self.remote_ip, self.rDone, auth.realm, auth.nonce, auth.uri, auth.response)
+                    self.auth_proc = self.global_config['_radius_client'].do_auth(auth.username, self.rDone, auth)
                 return
             if self.state not in (CCStateARComplete, CCStateConnected, CCStateDisconnecting) or self.uaO == None:
                 return
@@ -201,9 +200,9 @@ class CallController(object):
                     return
             self.uaA.recvEvent(event)
 
-    def rDone(self, results):
+    def rDone(self, result, auth):
         # Check that we got necessary result from Radius
-        if len(results) != 2 or results[1] != 0:
+        if result == None:
             if isinstance(self.uaA.state, UasStateTrying):
                 if self.challenge != None:
                     event = CCEventFail((401, 'Unauthorized'))
@@ -213,6 +212,14 @@ class CallController(object):
                 self.uaA.recvEvent(event)
                 self.state = CCStateDead
             return
+        password, outbound_proxy, domain = result
+        if not auth.verify(password, 'INVITE'):
+            if isinstance(self.uaA.state, UasStateTrying):
+                event = CCEventFail((403, 'Auth Failed'))
+                self.uaA.recvEvent(event)
+                self.state = CCStateDead
+            return
+        routing = ((domain, 'op=%s:%d' % outbound_proxy, 'auth=%s:%s' % (auth.username, password)),)
         if self.global_config['acct_enable']:
             self.acctA = RadiusAccounting(self.global_config, 'answer', \
               send_start = self.global_config['start_acct_enable'], lperiod = \
@@ -225,30 +232,7 @@ class CallController(object):
         if not isinstance(self.uaA.state, UasStateTrying):
             self.acctA.disc(self.uaA, time(), 'caller')
             return
-        cli = [x[1][4:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('CLI:')]
-        if len(cli) > 0:
-            self.cli = cli[0]
-            if len(self.cli) == 0:
-                self.cli = None
-        caller_name = [x[1][5:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('CNAM:')]
-        if len(caller_name) > 0:
-            self.caller_name = caller_name[0]
-            if len(self.caller_name) == 0:
-                self.caller_name = None
-        credit_time = [x for x in results[0] if x[0] == 'h323-credit-time']
-        if len(credit_time) > 0:
-            global_credit_time = int(credit_time[0][1])
-        else:
-            global_credit_time = None
-        if not self.global_config.has_key('static_route'):
-            routing = [x for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('Routing:')]
-            if len(routing) == 0:
-                self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (2)')))
-                self.state = CCStateDead
-                return
-            routing = [x[1][8:].split(';') for x in routing]
-        else:
-            routing = [self.global_config['static_route'].split(';')]
+        global_credit_time = None
         rnum = 0
         for route in routing:
             rnum += 1
@@ -799,7 +783,7 @@ if __name__ == '__main__':
             global_config['_rtp_proxy_clients'].append(Rtp_proxy_client(global_config, address))
 
     if global_config['auth_enable'] or global_config['acct_enable']:
-        global_config['_radius_client'] = RadiusAuthorisation(global_config)
+        global_config['_radius_client'] = IVoiSysAuthorisation(global_config)
     SipConf.my_uaname = 'Sippy B2BUA (RADIUS)'
 
     global_config['_cmap'] = CallMap(global_config)
