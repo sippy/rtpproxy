@@ -119,10 +119,13 @@ class UacStateTrying(UaStateGeneric):
             self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))
         else:
             event = CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin)
-            try:
-                event.reason = resp.getHFBody('reason')
-            except:
-                pass
+            if self.ua.pass_auth:
+                if code == 401 and resp.countHFs('www-authenticate') != 0:
+                    event.challenge = resp.getHF('www-authenticate').getCopy()
+                elif code == 407 and resp.countHFs('proxy-authenticate') != 0:
+                    event.challenge = resp.getHF('proxy-authenticate').getCopy()
+            if resp.countHFs('reason') != 0:
+                event.reason = resp.getHFBody('reason').getCopy()
             self.ua.equeue.append(event)
         self.ua.disconnect_ts = resp.rtime
         return (UaStateFailed, self.ua.fail_cbs, resp.rtime, self.ua.origin, code)

@@ -96,6 +96,7 @@ class UA(object):
     to_username = None
     ruri_userparams = None
     outbound_proxy = None
+    pass_auth = False
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
       conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ltag = None, extra_headers = None, \
@@ -167,7 +168,8 @@ class UA(object):
         self.update_ua(resp)
         code, reason = resp.getSCode()
         cseq, method = resp.getHFBody('cseq').getCSeq()
-        if method == 'INVITE' and self.reqs.has_key(cseq) and code == 401 and resp.countHFs('www-authenticate') != 0 and \
+        if method == 'INVITE' and not self.pass_auth and self.reqs.has_key(cseq) and code == 401 and \
+          resp.countHFs('www-authenticate') != 0 and \
           self.username != None and self.password != None and self.reqs[cseq].countHFs('authorization') == 0:
             challenge = resp.getHFBody('www-authenticate')
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm())
@@ -176,7 +178,8 @@ class UA(object):
               laddress = self.source_address)
             del self.reqs[cseq]
             return None
-        if method == 'INVITE' and self.reqs.has_key(cseq) and code == 407 and resp.countHFs('proxy-authenticate') != 0 and \
+        if method == 'INVITE' and not self.pass_auth and self.reqs.has_key(cseq) and code == 407 and \
+          resp.countHFs('proxy-authenticate') != 0 and \
           self.username != None and self.password != None and self.reqs[cseq].countHFs('proxy-authorization') == 0:
             challenge = resp.getHFBody('proxy-authenticate')
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm(), SipProxyAuthorization)
@@ -275,7 +278,7 @@ class UA(object):
         return req
 
     def sendUasResponse(self, scode, reason, body = None, contact = None, \
-      reason_rfc3326 = None, extra_header = None):
+      reason_rfc3326 = None, extra_headers = None):
         self.uasResp.setSCode(scode, reason)
         self.uasResp.setBody(body)
         self.uasResp.delHFs('www-authenticate')
@@ -285,8 +288,8 @@ class UA(object):
             self.uasResp.appendHeader(SipHeader(name = 'contact', body = contact))
         if reason_rfc3326 != None:
             self.uasResp.appendHeader(SipHeader(body = reason_rfc3326))
-        if extra_header != None:
-            self.uasResp.appendHeader(extra_header)
+        if extra_headers != None:
+            self.uasResp.appendHeaders(extra_headers)
         self.global_config['_sip_tm'].sendResponse(self.uasResp)
 
     def isYours(self, req = None, call_id = None, from_tag = None, to_tag = None):
