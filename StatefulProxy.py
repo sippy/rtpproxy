@@ -25,6 +25,8 @@
 from SipVia import SipVia
 from SipHeader import SipHeader
 from SipConf import SipConf
+from SipWWWAuthenticate import SipWWWAuthenticate
+from RegistrationB2B import RegistrationB2B
 
 class StatefulProxy:
     global_config = None
@@ -35,6 +37,15 @@ class StatefulProxy:
         self.destination = destination
 
     def recvRequest(self, req):
+        ruri = req.getRURI()
+        if req.getMethod() == 'REGISTER':
+            if req.countHFs('authorization') == 0:
+                resp = req.genResponse(401, 'Unauthorized')
+                resp.appendHeader(SipHeader(body = SipWWWAuthenticate(realm = 'pennytel.com')))
+                return (resp, None, None)
+            auth = req.getHFBody('authorization')
+            self.global_config['_radius_client'].do_auth(auth.username, self.authDone, auth, req)
+            return (None, None, None)
         via0 = SipVia()
         via0.genBranch()
         via1 = req.getHF('via')
@@ -60,6 +71,19 @@ class StatefulProxy:
         req.appendHeader(SipHeader(name = 'user-agent'))
         self.global_config['_sip_tm'].newTransaction(req, self.recvResponse)
         return (None, None, None)
+
+    def authDone(self, result, auth, req):
+        if result == None:
+            resp = req.genResponse(403, 'Auth Failed - 1')
+            self.global_config['_sip_tm'].sendResponse(resp)
+            return
+        password, outbound_proxy, domain = result
+        if not auth.verify(password, 'REGISTER'):
+            resp = req.genResponse(403, 'Auth Failed - 2')
+            self.global_config['_sip_tm'].sendResponse(resp)
+            return
+        reg_b2b = RegistrationB2B(self.global_config, req)
+        return reg_b2b.proxyReq(outbound_proxy, domain, auth.username, password)
 
     def recvRequestDial(self, req):
         via0 = SipVia()
