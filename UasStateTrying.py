@@ -86,8 +86,11 @@ class UasStateTrying(UaStateGeneric):
             scode = event.getData()
             if scode == None:
                 scode = (500, 'Failed')
+            extra_headers = [x for x in (event.extra_header, event.challenge) if x != None]
+            if len(extra_headers) == 0:
+                extra_headers = None
             self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason, \
-              extra_header = event.extra_header)
+              extra_headers = extra_headers)
             if self.ua.expire_timer != None:
                 self.ua.expire_timer.cancel()
                 self.ua.expire_timer = None
