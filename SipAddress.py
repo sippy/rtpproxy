@@ -68,12 +68,14 @@ class SipAddress(object):
                     self.params_order.append(k)
             self.hadbrace = False
             return
-        self.name, url = address.split('<', 1)
-        self.name = self.name.strip()
-        if self.name.startswith('"'):
-            self.name = self.name[1:]
-        if self.name.endswith('"'):
-            self.name = self.name[:-1]
+        if address.startswith('"'):
+            self.name, url = address[1:].split('"', 1)
+            url = url.strip()
+            if url.startswith('<'):
+                url = url[1:]
+        else:
+            self.name, url = address.split('<', 1)
+            self.name = self.name.strip()
         url, paramstring = url.split('>', 1)
         self.url = SipURL(url)
         paramstring = paramstring.strip()
