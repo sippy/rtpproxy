@@ -84,13 +84,13 @@ class StatefulProxy:
             resp = req.genResponse(403, 'Auth Failed - 1')
             self.global_config['_sip_tm'].sendResponse(resp)
             return
-        password, outbound_proxy, domain = result
-        if not auth.verify(password, 'REGISTER'):
+        password_in, password_out, outbound_proxy, domain = result
+        if not auth.verify(password_in, 'REGISTER'):
             resp = req.genResponse(403, 'Auth Failed - 2')
             self.global_config['_sip_tm'].sendResponse(resp)
             return
         reg_b2b = RegistrationB2B(self.global_config, req)
-        return reg_b2b.proxyReq(outbound_proxy, domain, auth.username, password)
+        return reg_b2b.proxyReq(outbound_proxy, domain, auth.username, password_out)
 
     def recvRequestDial(self, req):
         via0 = SipVia()
