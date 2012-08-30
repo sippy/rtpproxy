@@ -232,9 +232,11 @@ class SipTransactionManager(object):
                 return
             t = self.tclient[tid]
             if self.nat_traversal and resp.countHFs('contact') > 0 and not check1918(t.address[0]):
-                curl = resp.getHFBody('contact').getUrl()
-                if check1918(curl.host):
-                    curl.host, curl.port = address
+                cbody = resp.getHFBody('contact')
+                if not cbody.asterisk:
+                    curl = cbody.getUrl()
+                    if check1918(curl.host):
+                        curl.host, curl.port = address
             resp.setSource(address)
             self.incomingResponse(resp, t, checksum)
         else:
@@ -264,10 +266,12 @@ class SipTransactionManager(object):
             if via0.params.has_key('rport') or req.nated:
                 via0.params['rport'] = str(rport)
             if self.nat_traversal and req.countHFs('contact') > 0 and req.countHFs('via') == 1:
-                curl = req.getHFBody('contact').getUrl()
-                if check1918(curl.host):
-                    curl.host, curl.port = address
-                    req.nated = True
+                cbody = req.getHFBody('contact')
+                if not cbody.asterisk:
+                    curl = cbody.getUrl()
+                    if check1918(curl.host):
+                        curl.host, curl.port = address
+                        req.nated = True
             req.setSource(address)
             self.incomingRequest(req, checksum, tids, server)
 

@@ -185,8 +185,10 @@ class MyConfigParser(RawConfigParser):
                 raise ValueError, 'max_credit_time should be more than zero'
         elif key == 'allowed_pts':
             self['_allowed_pts'] = [int(x) for x in value.split(',')]
-        elif key in ('accept_ips', 'pass_headers', 'rtp_proxy_clients'):
+        elif key in ('accept_ips', 'rtp_proxy_clients'):
             self['_' + key] = [x.strip() for x in value.split(',')]
+        elif key == 'pass_headers':
+            self['_' + key] = [x.strip().lower() for x in value.split(',')]
         elif key == 'sip_address':
             if 'my' in dir(value):
                 self['_sip_address'] = value

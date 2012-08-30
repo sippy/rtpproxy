@@ -83,11 +83,21 @@ class AsyncReceiver(Thread):
         self.start()
 
     def run(self):
+        maxemptydata = 100
         while True:
             try:
                 data, address = self.userv.skt.recvfrom(8192)
                 if not data:
-                    break
+                    # Ugly hack to detect socket being closed under us on Linux.
+                    # The problem is that even call on non-closed socket can
+                    # sometimes return empty data buffer, making AsyncReceiver
+                    # to exit prematurely.
+                    maxemptydata -= 1
+                    if maxemptydata == 0:
+                        break
+                    continue
+                else:
+                    maxemptydata = 100
             except Exception, why:
                 if isinstance(why, socket.error) and why[0] in (ECONNRESET, ENOTCONN, ESHUTDOWN):
                     break

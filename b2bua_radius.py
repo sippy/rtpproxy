@@ -808,4 +808,5 @@ if __name__ == '__main__':
         file(global_config['pidfile'], 'w').write(str(os.getpid()) + '\n')
         Signal(SIGUSR1, reopen, SIGUSR1, global_config['logfile'])
 
+    reactor.suggestThreadPoolSize(50)
     reactor.run(installSignalHandlers = True)

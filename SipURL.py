@@ -68,9 +68,13 @@ class SipURL(object):
                 self.other = other
             self.lr = lr
             return
-        if not url.lower().startswith('sip:'):
-            raise ValueError('unsupported scheme: ' + url[:4])
-        url = url[4:]
+        sidx = url.find(':')
+        if sidx == 3 or (sidx != -1 and sidx < url.find('.')):
+            if not url.lower().startswith('sip:'):
+                raise ValueError('unsupported scheme: ' + url[:4])
+            url = url[4:]
+        # else:
+        #     scheme is missing, assume sip:
         ear = url.find('@') + 1
         parts = url[ear:].split(';')
         userdomain, params = url[0:ear] + parts[0], parts[1:]
