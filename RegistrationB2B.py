@@ -77,10 +77,23 @@ class RegistrationB2B(object):
         my_resp = self.orig_req.genResponse(resp.scode, resp.reason)
         supporteds = resp.getHFs('supported')
         if len(supporteds) > 0:
-            my_resp.appendHeader(supporteds[0].getCopy())
+            my_resp.appendHeader(supporteds[0])
         portabillings = resp.getHFs('portabilling')
         if len(portabillings) > 0:
-            my_resp.appendHeader(portabillings[0].getCopy())
+            my_resp.appendHeader(portabillings[0])
+        contacts = resp.getHFs('contact')
+        for contact in contacts:
+            cbody = contact.getBody()
+            if not cbody.asterisk:
+                curl = cbody.getUrl()
+                if curl.username != None and curl.username.find('__') != -1:
+                    host, port_username = curl.username.split('__', 1)
+                    port, curl.username = port_username.split('_', 1)
+                    curl.host = host.replace('_', '.')
+                    curl.port = int(port)
+            my_resp.appendHeader(contact)
+        for expire in resp.getHFs('expires'):
+            my_resp.appendHeader(expire)
         self.global_config['_sip_tm'].sendResponse(my_resp)
         if resp.scode > 199:
             self.global_config = None
