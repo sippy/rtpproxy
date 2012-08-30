@@ -145,6 +145,10 @@ class CallController(object):
                     self.uaA.recvEvent(CCEventFail((500, 'Body-less INVITE is not supported'), rtime = event.rtime))
                     self.state = CCStateDead
                     return
+                if auth != None and (auth.username == None or len(auth.username) == 0):
+                    self.uaA.recvEvent(CCEventFail((403, 'Auth Broken'), rtime = event.rtime))
+                    self.state = CCStateDead
+                    return
                 if self.global_config.has_key('_allowed_pts'):
                     try:
                         body.parse()
@@ -179,11 +183,10 @@ class CallController(object):
                     self.rDone(((), 0))
                 elif auth == None or auth.username == None or len(auth.username) == 0:
                     self.username = self.remote_ip
-                    self.auth_proc = self.global_config['_radius_client'].do_auth(self.remote_ip, self.cli, self.cld, self.cGUID, \
-                      self.cId, self.remote_ip, self.rDone)
+                    self.rDone(('', '', self.source, 'sip.pennytel.com'), None)
                 else:
                     self.username = auth.username
-                    self.auth_proc = self.global_config['_radius_client'].do_auth(auth.username, self.rDone, auth)
+                    self.global_config['_radius_client'].do_auth(auth.username, self.rDone, auth)
                 return
             if self.state not in (CCStateARComplete, CCStateConnected, CCStateDisconnecting) or self.uaO == None:
                 return
@@ -212,14 +215,14 @@ class CallController(object):
                 self.uaA.recvEvent(event)
                 self.state = CCStateDead
             return
-        password, outbound_proxy, domain = result
-        if not auth.verify(password, 'INVITE'):
+        password_in, password_out, outbound_proxy, domain = result
+        if auth != None and not auth.verify(password_in, 'INVITE'):
             if isinstance(self.uaA.state, UasStateTrying):
                 event = CCEventFail((403, 'Auth Failed'))
                 self.uaA.recvEvent(event)
                 self.state = CCStateDead
             return
-        routing = ((domain, 'op=%s:%d' % outbound_proxy, 'auth=%s:%s' % (auth.username, password)),)
+        routing = ((domain, 'op=%s:%d' % outbound_proxy, 'auth=%s:%s' % (self.username, password_out)),)
         if self.global_config['acct_enable']:
             self.acctA = RadiusAccounting(self.global_config, 'answer', \
               send_start = self.global_config['start_acct_enable'], lperiod = \
@@ -479,13 +482,14 @@ class CallMap(object):
 
             # First check if request comes from IP that
             # we want to accept our traffic from
-            if self.global_config.has_key('_accept_ips') and \
-              not source[0] in self.global_config['_accept_ips']:
-                resp = req.genResponse(403, 'Forbidden')
-                return (resp, None, None)
+            #if self.global_config.has_key('_accept_ips') and \
+            #  not source[0] in self.global_config['_accept_ips']:
+            #    resp = req.genResponse(403, 'Forbidden')
+            #    return (resp, None, None)
 
             challenge = None
-            if self.global_config['auth_enable']:
+            if self.global_config['auth_enable'] and \
+              not source[0] in self.global_config['_accept_ips']:
                 # Prepare challenge if no authorization header is present.
                 # Depending on configuration, we might try remote ip auth
                 # first and then challenge it or challenge immediately.
@@ -493,9 +497,6 @@ class CallMap(object):
                   req.countHFs('authorization') == 0:
                     challenge = SipHeader(name = 'www-authenticate')
                     challenge.getBody().realm = req.getRURI().host
-                # Send challenge immediately if digest is the
-                # only method of authenticating
-                if challenge != None and self.global_config.getdefault('digest_auth_only', False):
                     resp = req.genResponse(401, 'Unauthorized')
                     resp.appendHeader(challenge)
                     return (resp, None, None)
