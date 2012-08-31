@@ -32,7 +32,7 @@ class IVoiSysAuthorisation(object):
 
     def do_auth(self, username, res_cb, *cb_args):
         self.sql_tm.sendQuery(('SELECT password, outbound_proxy, domain, ' \
-          'altpassword, use_alt_password FROM SBC_Reg_Config ' \
+          'altpassword, use_alt_password, use_rtp FROM SBC_Reg_Config ' \
           'WHERE account_number = \'%s\'' % username), self._process_result, 0, False, None,
           res_cb, cb_args)
 
@@ -41,7 +41,8 @@ class IVoiSysAuthorisation(object):
         if exceptions[0] != None or len(results[0]) == 0:
             res_cb(None, *cb_args)
         else:
-            password, outbound_proxy, domain, altpassword, use_alt_password = results[0][0]
+            password, outbound_proxy, domain, altpassword, use_alt_password, \
+              use_rtp = results[0][0]
             if use_alt_password == 0:
                 altpassword = password
-            res_cb((password, altpassword, (outbound_proxy, 5060), domain), *cb_args)
+            res_cb((password, altpassword, (outbound_proxy, 5060), domain, use_rtp), *cb_args)
