@@ -59,6 +59,7 @@ from time import time
 from urllib import quote
 from hashlib import md5
 from sippy.MyConfigParser import MyConfigParser
+from sippy.SipAddress import SipAddress
 
 def re_replace(ptrn, s):
     s = s.split('#', 1)[0]
@@ -180,7 +181,10 @@ class CallController(object):
                 self.state = CCStateWaitRoute
                 if not self.global_config['auth_enable']:
                     self.username = self.remote_ip
-                    self.rDone(((), 0))
+                    if self.charge_info != None:
+                        cinfo = SipAddress(self.charge_info.body)
+                        self.cli = cinfo.url.username
+                    self.rDone((None, None, None, None), None)
                 elif auth == None or auth.username == None or len(auth.username) == 0:
                     self.username = self.remote_ip
                     self.rDone(('', '', self.source, 'sip.pennytel.com'), None)
@@ -222,7 +226,6 @@ class CallController(object):
                 self.uaA.recvEvent(event)
                 self.state = CCStateDead
             return
-        routing = ((domain, 'op=%s:%d' % outbound_proxy, 'auth=%s:%s' % (self.username, password_out)),)
         if self.global_config['acct_enable']:
             self.acctA = RadiusAccounting(self.global_config, 'answer', \
               send_start = self.global_config['start_acct_enable'], lperiod = \
@@ -236,6 +239,10 @@ class CallController(object):
             self.acctA.disc(self.uaA, time(), 'caller')
             return
         global_credit_time = None
+        if not self.global_config.has_key('static_route'):
+            routing = ((domain, 'op=%s:%d' % outbound_proxy, 'auth=%s:%s' % (self.username, password_out)),)
+        else:
+            routing = [self.global_config['static_route'].split(';')]
         rnum = 0
         for route in routing:
             rnum += 1
@@ -507,6 +514,10 @@ class CallMap(object):
                 if len(hfs) > 0:
                     pass_headers.extend(hfs)
             cc = CallController(remote_ip, source, self.global_config, pass_headers)
+            if req.countHFs('p-charge-info') > 0:
+                cc.charge_info = req.getHFBody('p-charge-info')
+            else:
+                cc.charge_info = None
             cc.challenge = challenge
             rval = cc.uaA.recvRequest(req)
             self.ccmap.append(cc)
