@@ -44,6 +44,10 @@ class RegistrationB2B(object):
         supporteds = self.orig_req.getHFs('supported')
         if len(supporteds) > 0:
             self.req.appendHeader(supporteds[0].getCopy())
+        if self.orig_req.countHFs('user-agent') > 0:
+            orig_user_agent = self.orig_req.getHFBody('user-agent').name
+            user_agent = self.req.getHFBody('user-agent')
+            user_agent.name = '%s:%s' % (user_agent.name, orig_user_agent)
         self.global_config['_sip_tm'].newTransaction(self.req, self.recvResponse)
         return (None, None, None)
 
