@@ -84,7 +84,7 @@ class StatefulProxy:
             resp = req.genResponse(403, 'Auth Failed - 1')
             self.global_config['_sip_tm'].sendResponse(resp)
             return
-        password_in, password_out, outbound_proxy, domain = result
+        password_in, password_out, outbound_proxy, domain, use_rtp = result
         if not auth.verify(password_in, 'REGISTER'):
             resp = req.genResponse(403, 'Auth Failed - 2')
             self.global_config['_sip_tm'].sendResponse(resp)

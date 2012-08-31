@@ -183,7 +183,7 @@ class CallController(object):
                     self.rDone(((), 0))
                 elif auth == None or auth.username == None or len(auth.username) == 0:
                     self.username = self.remote_ip
-                    self.rDone(('', '', self.source, 'sip.pennytel.com'), None)
+                    self.rDone(('', '', self.source, 'sip.pennytel.com', False), None)
                 else:
                     self.username = auth.username
                     self.global_config['_radius_client'].do_auth(auth.username, self.rDone, auth)
@@ -215,14 +215,15 @@ class CallController(object):
                 self.uaA.recvEvent(event)
                 self.state = CCStateDead
             return
-        password_in, password_out, outbound_proxy, domain = result
+        password_in, password_out, outbound_proxy, domain, use_rtp = result
         if auth != None and not auth.verify(password_in, 'INVITE'):
             if isinstance(self.uaA.state, UasStateTrying):
                 event = CCEventFail((403, 'Auth Failed'))
                 self.uaA.recvEvent(event)
                 self.state = CCStateDead
             return
-        routing = ((domain, 'op=%s:%d' % outbound_proxy, 'auth=%s:%s' % (self.username, password_out)),)
+        routing = ((domain, 'op=%s:%d' % outbound_proxy, 'auth=%s:%s' % (self.username, password_out), \
+          'rtpp=%d' % use_rtp),)
         if self.global_config['acct_enable']:
             self.acctA = RadiusAccounting(self.global_config, 'answer', \
               send_start = self.global_config['start_acct_enable'], lperiod = \
