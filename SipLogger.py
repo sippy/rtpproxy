@@ -165,7 +165,7 @@ class SipLogger(object):
         if len(self.wi) > 1000:
             # Discard some items, as the writer doesn't seems to be able
             # to keep up pace with incoming requests
-            self.discarded += 1000 - len(self.wi)
+            self.discarded += len(self.wi) - 1000
             self.wi = self.wi[-1000:]
             discarded = True
         self.wi.append(('write', args, kwargs))
