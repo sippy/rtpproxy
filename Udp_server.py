@@ -126,7 +126,7 @@ class Udp_server(object):
     wi_available = None
     wi = None
 
-    def __init__(self, address, data_callback, family = None):
+    def __init__(self, global_config, address, data_callback, family = None):
         self.laddress = address
         if family == None:
             if address != None and address[0].startswith('['):
@@ -218,10 +218,10 @@ if __name__ == '__main__':
         if npongs == 0:
             reactor.stop()
 
-    udp_server_ping = Udp_server(('127.0.0.1', 12345), ping_received)
-    udp_server_pong = Udp_server(('127.0.0.1', 54321), pong_received)
+    udp_server_ping = Udp_server({}, ('127.0.0.1', 12345), ping_received)
+    udp_server_pong = Udp_server({}, ('127.0.0.1', 54321), pong_received)
     udp_server_pong.send_to('ping!', ('127.0.0.1', 12345))
-    udp_server_ping6 = Udp_server(('[::1]', 12345), ping_received6)
-    udp_server_pong6 = Udp_server(('::1', 54321), pong_received6, socket.AF_INET6)
+    udp_server_ping6 = Udp_server({}, ('[::1]', 12345), ping_received6)
+    udp_server_pong6 = Udp_server({}, ('::1', 54321), pong_received6, socket.AF_INET6)
     udp_server_pong6.send_to('ping!', ('[::1]', 12345))
     reactor.run()

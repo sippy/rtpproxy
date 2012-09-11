@@ -37,7 +37,7 @@ class Rtp_proxy_client_udp(object):
     def __init__(self, global_config, address):
         self.address = address
         self.is_local = False
-        self.worker = Udp_server(None, self.process_reply)
+        self.worker = Udp_server(global_config, None, self.process_reply)
         self.pending_requests = {}
         self.proxy_address = address[0]
 

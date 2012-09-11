@@ -121,7 +121,7 @@ class local4remote(object):
             laddresses = ((global_config['_sip_address'], global_config['_sip_port']),)
             self.fixed = True
         for laddress in laddresses:
-            server = Udp_server(laddress, handleIncoming)
+            server = Udp_server(global_config, laddress, handleIncoming)
             self.cache_l2s[laddress] = server
 
     def getServer(self, address, is_local = False):
@@ -158,7 +158,7 @@ class local4remote(object):
             laddress = address
         server = self.cache_l2s.get(laddress, None)
         if server == None:
-            server = Udp_server(laddress, self.handleIncoming)
+            server = Udp_server(self.global_config, laddress, self.handleIncoming)
             self.cache_l2s[laddress] = server
         #print 'local4remot-2: local address for %s is %s' % (address[0], laddress[0])
         return server
