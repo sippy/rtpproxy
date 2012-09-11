@@ -39,7 +39,7 @@ from sippy.UasStateRinging import UasStateRinging
 from sippy.UaStateDead import UaStateDead
 from sippy.SipConf import SipConf
 from sippy.SipHeader import SipHeader
-from sippy.IVoiSysAuthorisation import IVoiSysAuthorisation
+from sippy.RadiusAuthorisation import RadiusAuthorisation
 from sippy.RadiusAccounting import RadiusAccounting
 from sippy.FakeAccounting import FakeAccounting
 from sippy.SipLogger import SipLogger
@@ -59,7 +59,6 @@ from time import time
 from urllib import quote
 from hashlib import md5
 from sippy.MyConfigParser import MyConfigParser
-from sippy.SipAddress import SipAddress
 
 def re_replace(ptrn, s):
     s = s.split('#', 1)[0]
@@ -146,10 +145,6 @@ class CallController(object):
                     self.uaA.recvEvent(CCEventFail((500, 'Body-less INVITE is not supported'), rtime = event.rtime))
                     self.state = CCStateDead
                     return
-                if auth != None and (auth.username == None or len(auth.username) == 0):
-                    self.uaA.recvEvent(CCEventFail((403, 'Auth Broken'), rtime = event.rtime))
-                    self.state = CCStateDead
-                    return
                 if self.global_config.has_key('_allowed_pts'):
                     try:
                         body.parse()
@@ -181,16 +176,15 @@ class CallController(object):
                 self.state = CCStateWaitRoute
                 if not self.global_config['auth_enable']:
                     self.username = self.remote_ip
-                    if self.charge_info != None:
-                        cinfo = SipAddress(self.charge_info.body)
-                        self.cli = cinfo.url.username
-                    self.rDone((None, None, None, None), None)
+                    self.rDone(((), 0))
                 elif auth == None or auth.username == None or len(auth.username) == 0:
                     self.username = self.remote_ip
-                    self.rDone(('', '', self.source, 'sip.pennytel.com', False), None)
+                    self.auth_proc = self.global_config['_radius_client'].do_auth(self.remote_ip, self.cli, self.cld, self.cGUID, \
+                      self.cId, self.remote_ip, self.rDone)
                 else:
                     self.username = auth.username
-                    self.global_config['_radius_client'].do_auth(auth.username, self.rDone, auth)
+                    self.auth_proc = self.global_config['_radius_client'].do_auth(auth.username, self.cli, self.cld, self.cGUID, 
+                      self.cId, self.remote_ip, self.rDone, auth.realm, auth.nonce, auth.uri, auth.response)
                 return
             if self.state not in (CCStateARComplete, CCStateConnected, CCStateDisconnecting) or self.uaO == None:
                 return
@@ -207,22 +201,15 @@ class CallController(object):
                     return
             self.uaA.recvEvent(event)
 
-    def rDone(self, result, auth):
+    def rDone(self, results):
         # Check that we got necessary result from Radius
-        if result == None:
+        if len(results) != 2 or results[1] != 0:
             if isinstance(self.uaA.state, UasStateTrying):
                 if self.challenge != None:
                     event = CCEventFail((401, 'Unauthorized'))
                     event.extra_header = self.challenge
                 else:
                     event = CCEventFail((403, 'Auth Failed'))
-                self.uaA.recvEvent(event)
-                self.state = CCStateDead
-            return
-        password_in, password_out, outbound_proxy, domain, use_rtp = result
-        if auth != None and not auth.verify(password_in, 'INVITE'):
-            if isinstance(self.uaA.state, UasStateTrying):
-                event = CCEventFail((403, 'Auth Failed'))
                 self.uaA.recvEvent(event)
                 self.state = CCStateDead
             return
@@ -238,10 +225,28 @@ class CallController(object):
         if not isinstance(self.uaA.state, UasStateTrying):
             self.acctA.disc(self.uaA, time(), 'caller')
             return
-        global_credit_time = None
+        cli = [x[1][4:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('CLI:')]
+        if len(cli) > 0:
+            self.cli = cli[0]
+            if len(self.cli) == 0:
+                self.cli = None
+        caller_name = [x[1][5:] for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('CNAM:')]
+        if len(caller_name) > 0:
+            self.caller_name = caller_name[0]
+            if len(self.caller_name) == 0:
+                self.caller_name = None
+        credit_time = [x for x in results[0] if x[0] == 'h323-credit-time']
+        if len(credit_time) > 0:
+            global_credit_time = int(credit_time[0][1])
+        else:
+            global_credit_time = None
         if not self.global_config.has_key('static_route'):
-            routing = ((domain, 'op=%s:%d' % outbound_proxy, 'auth=%s:%s' % (self.username, password_out), \
-              'rtpp=%d' % use_rtp),)
+            routing = [x for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('Routing:')]
+            if len(routing) == 0:
+                self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (2)')))
+                self.state = CCStateDead
+                return
+            routing = [x[1][8:].split(';') for x in routing]
         else:
             routing = [self.global_config['static_route'].split(';')]
         rnum = 0
@@ -353,11 +358,6 @@ class CallController(object):
                 else:
                     port = SipConf.default_port
                 host = host[0]
-        if self.source == parameters.get('outbound_proxy', None):
-            host, port_cld = cld.split('__', 1)
-            port, cld = port_cld.split('_', 1)
-            host = host.replace('_', '.')
-            port = int(port)
         if not forward_on_fail and self.global_config['acct_enable']:
             self.acctO = RadiusAccounting(self.global_config, 'originate', \
               send_start = self.global_config['start_acct_enable'], lperiod = \
@@ -382,7 +382,7 @@ class CallController(object):
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
             self.rtp_proxy_session.caller_raddress = (host, port)
             body = body.getCopy()
-            #body.content += 'a=nortpproxy:yes\r\n'
+            body.content += 'a=nortpproxy:yes\r\n'
             self.proxied = True
         self.uaO.kaInterval = self.global_config['keepalive_orig']
         if parameters.has_key('group_timeout'):
@@ -392,7 +392,7 @@ class CallController(object):
             cId = SipCallId(md5(str(cId)).hexdigest() + ('-b2b_%d' % rnum))
         else:
             cId += '-b2b_%d' % rnum
-        event = CCEventTry((cId, None, cli, cld, body, auth, \
+        event = CCEventTry((cId, cGUID, cli, cld, body, auth, \
           parameters.get('caller_name', self.caller_name)))
         event.reason = self.eTry.reason
         self.uaO.recvEvent(event)
@@ -475,8 +475,6 @@ class CallMap(object):
 
     def recvRequest(self, req):
         if req.getHFBody('to').getTag() != None:
-            if req.getMethod() == 'NOTIFY':
-                return self.proxy.recvRequestDial(req)
             # Request within dialog, but no such dialog
             return (req.genResponse(481, 'Call Leg/Transaction Does Not Exist'), None, None)
         if req.getMethod() == 'INVITE':
@@ -490,14 +488,13 @@ class CallMap(object):
 
             # First check if request comes from IP that
             # we want to accept our traffic from
-            #if self.global_config.has_key('_accept_ips') and \
-            #  not source[0] in self.global_config['_accept_ips']:
-            #    resp = req.genResponse(403, 'Forbidden')
-            #    return (resp, None, None)
+            if self.global_config.has_key('_accept_ips') and \
+              not source[0] in self.global_config['_accept_ips']:
+                resp = req.genResponse(403, 'Forbidden')
+                return (resp, None, None)
 
             challenge = None
-            if self.global_config['auth_enable'] and \
-              not source[0] in self.global_config['_accept_ips']:
+            if self.global_config['auth_enable']:
                 # Prepare challenge if no authorization header is present.
                 # Depending on configuration, we might try remote ip auth
                 # first and then challenge it or challenge immediately.
@@ -505,6 +502,9 @@ class CallMap(object):
                   req.countHFs('authorization') == 0:
                     challenge = SipHeader(name = 'www-authenticate')
                     challenge.getBody().realm = req.getRURI().host
+                # Send challenge immediately if digest is the
+                # only method of authenticating
+                if challenge != None and self.global_config.getdefault('digest_auth_only', False):
                     resp = req.genResponse(401, 'Unauthorized')
                     resp.appendHeader(challenge)
                     return (resp, None, None)
@@ -515,17 +515,13 @@ class CallMap(object):
                 if len(hfs) > 0:
                     pass_headers.extend(hfs)
             cc = CallController(remote_ip, source, self.global_config, pass_headers)
-            if req.countHFs('p-charge-info') > 0:
-                cc.charge_info = req.getHFBody('p-charge-info')
-            else:
-                cc.charge_info = None
             cc.challenge = challenge
             rval = cc.uaA.recvRequest(req)
             self.ccmap.append(cc)
             return rval
         if self.proxy != None and req.getMethod() in ('REGISTER', 'SUBSCRIBE'):
             return self.proxy.recvRequest(req)
-        if req.getMethod() in ('NOTIFY', 'PING', 'OPTIONS'):
+        if req.getMethod() in ('NOTIFY', 'PING'):
             # Whynot?
             return (req.genResponse(200, 'OK'), None, None)
         return (req.genResponse(501, 'Not Implemented'), None, None)
@@ -796,7 +792,7 @@ if __name__ == '__main__':
             global_config['_rtp_proxy_clients'].append(Rtp_proxy_client(global_config, address))
 
     if global_config['auth_enable'] or global_config['acct_enable']:
-        global_config['_radius_client'] = IVoiSysAuthorisation(global_config)
+        global_config['_radius_client'] = RadiusAuthorisation(global_config)
     SipConf.my_uaname = 'Sippy B2BUA (RADIUS)'
 
     global_config['_cmap'] = CallMap(global_config)
