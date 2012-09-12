@@ -1,9 +1,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <err.h>
 #include <netdb.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -16,6 +18,8 @@
 struct sender_arg {
     char *host;
     int port;
+    char *sendbuf;
+    int sendlen;
 };
 
 int
@@ -43,7 +47,6 @@ resolve(struct sockaddr *ia, int pf, const char *host,
 void sender(void *prt)
 {
     int s, n;
-    char sendbuf[88];
     struct sockaddr ia;
     struct sender_arg *sender_arg;
     char *port;
@@ -58,7 +61,7 @@ void sender(void *prt)
     connect(s, &ia, SA_LEN(&ia));
 
     for (;;) {
-        n = send(s, sendbuf, sizeof(sendbuf), 0);
+        n = send(s, sender_arg->sendbuf, sender_arg->sendlen, 0);
         /*printf("send: %d\n", n);*/
         usleep(10000);
     }
@@ -66,16 +69,19 @@ void sender(void *prt)
 
 int main(int argc, char **argv)
 {
-    int i, min_port, max_port;
+    int min_port, max_port;
     pthread_t thread;
     struct sender_arg sender_arg;
     void *thread_ret;
-    char ch;
+    char ch, *datafile;
+    char sendbuf[88], databuf[1024 * 8];
+    FILE *f;
 
     min_port = 6000;
     max_port = 7000;
     sender_arg.host = "1.2.3.4";
-    while ((ch = getopt(argc, argv, "p:P:h:")) != -1)
+    datafile = NULL;
+    while ((ch = getopt(argc, argv, "p:P:h:f:")) != -1)
         switch (ch) {
         case 'p':
             min_port = atoi(optarg);
@@ -88,6 +94,23 @@ int main(int argc, char **argv)
         case 'h':
             sender_arg.host = optarg;
             break;
+
+        case 'f':
+            datafile = optarg;
+            break;
+    }
+    if (datafile == NULL) {
+        sender_arg.sendbuf = sendbuf;
+        sender_arg.sendlen = sizeof(sendbuf);
+    } else {
+        f = fopen(datafile, "r");
+        if (f == NULL) {
+            err(1, "%s", datafile);
+            /* Not reached */
+        }
+        sender_arg.sendlen = fread(databuf, sizeof(databuf), 1, f);
+        sender_arg.sendbuf = databuf;
+        fclose(f);
     }
 
     for (sender_arg.port = min_port; sender_arg.port <= max_port; sender_arg.port++) {
