@@ -89,7 +89,8 @@ SUPPORTED_OPTIONS = { \
  'sip_proxy':         ('S', 'address of the helper proxy to handle "REGISTER" ' \
                              'and "SUBSCRIBE" messages. Address in the format ' \
                              '"host[:port]"'),
- 'nat_traversal':     ('B', 'enable NAT traversal for signalling')}
+ 'nat_traversal':     ('B', 'enable NAT traversal for signalling'), \
+ 'xmpp_b2bua_id':     ('I', 'ID passed to the XMPP socket server')}
 
 class MyConfigParser(RawConfigParser):
     default_section = None
