@@ -69,7 +69,7 @@ void sender(void *prt)
 
 int main(int argc, char **argv)
 {
-    int min_port, max_port;
+    int min_port, max_port, nthreads;
     pthread_t thread;
     struct sender_arg sender_arg, *sa;
     void *thread_ret;
@@ -81,7 +81,8 @@ int main(int argc, char **argv)
     max_port = 7000;
     sender_arg.host = "1.2.3.4";
     datafile = NULL;
-    while ((ch = getopt(argc, argv, "p:P:h:f:")) != -1)
+    nthreads = -1;
+    while ((ch = getopt(argc, argv, "p:P:h:f:t:")) != -1)
         switch (ch) {
         case 'p':
             min_port = atoi(optarg);
@@ -98,7 +99,19 @@ int main(int argc, char **argv)
         case 'f':
             datafile = optarg;
             break;
+
+        case 't':
+            nthreads = atoi(optarg);
+            break;
     }
+
+    if (nthreads <= 0) {
+        nthreads = max_port - min_port + 1;
+    } else if (nthreads < (max_port - min_port + 1)) {
+        errx(1, "number of threads should be greater than or equial to port range");
+        /* Not reached */
+    }
+
     if (datafile == NULL) {
         sender_arg.sendbuf = sendbuf;
         sender_arg.sendlen = sizeof(sendbuf);
@@ -113,13 +126,16 @@ int main(int argc, char **argv)
         fclose(f);
     }
 
-    for (sender_arg.port = min_port; sender_arg.port <= max_port; sender_arg.port++) {
+    for (sender_arg.port = min_port; nthreads > 0; nthreads--) {
         sa = malloc(sizeof(*sa));
         sa->host = sender_arg.host;
         sa->port = sender_arg.port;
         sa->sendbuf = sender_arg.sendbuf;
         sa->sendlen = sender_arg.sendlen;
         pthread_create(&thread, NULL, (void *(*)(void *))&sender, (void *)sa);
+        sender_arg.port++;
+        if (sender_arg.port > max_port)
+            sender_arg.port = min_port;
     }
     pthread_join(thread, &thread_ret);
     for(;;);
