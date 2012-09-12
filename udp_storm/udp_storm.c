@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 {
     int min_port, max_port;
     pthread_t thread;
-    struct sender_arg sender_arg;
+    struct sender_arg sender_arg, *sa;
     void *thread_ret;
     char ch, *datafile;
     char sendbuf[88], databuf[1024 * 8];
@@ -108,13 +108,18 @@ int main(int argc, char **argv)
             err(1, "%s", datafile);
             /* Not reached */
         }
-        sender_arg.sendlen = fread(databuf, sizeof(databuf), 1, f);
+        sender_arg.sendlen = fread(databuf, 1, sizeof(databuf), f);
         sender_arg.sendbuf = databuf;
         fclose(f);
     }
 
     for (sender_arg.port = min_port; sender_arg.port <= max_port; sender_arg.port++) {
-        pthread_create(&thread, NULL, (void *(*)(void *))&sender, (void *)&sender_arg);
+        sa = malloc(sizeof(*sa));
+        sa->host = sender_arg.host;
+        sa->port = sender_arg.port;
+        sa->sendbuf = sender_arg.sendbuf;
+        sa->sendlen = sender_arg.sendlen;
+        pthread_create(&thread, NULL, (void *(*)(void *))&sender, (void *)sa);
     }
     pthread_join(thread, &thread_ret);
     for(;;);
