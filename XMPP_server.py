@@ -17,11 +17,12 @@ import datetime, time
 import traceback, sys, os
 from twisted.internet import reactor
 
-MAX_WORKERS = 1
+MAX_WORKERS = 10
 
 class Worker(iksemel.Stream):
-    def __init__(self, owner):
+    def __init__(self, owner, id):
         self.__owner = owner
+        self.__id = id
         self.__tx_lock = threading.Lock()
         iksemel.Stream.__init__(self)
         rx_thr = threading.Thread(target = self.run_rx)
@@ -49,17 +50,13 @@ class Worker(iksemel.Stream):
                     self.__tx_lock.acquire()
                     try:
                         self.connect(jid=iksemel.JID('127.0.0.1'), tls=False, port=22223)
-                        os.write(self.fileno(), '<b2bua_slot id="%s"/>' % self.__owner.laddress[1])
+                        os.write(self.fileno(), '<b2bua_slot id="%s"/>' % self.__id)
                         self.__tx_lock.release()
                     except:
                         self.__tx_lock.release()
                         raise
                     reconnect = False
-                rlist, wlist, xlist = select.select([self], [], [])
-                if self.__owner._shutdown:
-                    return
-                if len(rlist) > 0:
-                    self.recv()
+                self.recv()
             except iksemel.StreamError:
                 reconnect = True
                 time.sleep(0.1)
@@ -104,10 +101,8 @@ class Worker(iksemel.Stream):
                 os.close(self.fileno())
                 return
             try:
-                rlist, wlist, xlist = select.select([], [self], [])
-                if len(wlist) > 0:
-                    sent = os.write(self.fileno(), buf)
-                    buf = buf[sent:]
+                sent = os.write(self.fileno(), buf)
+                buf = buf[sent:]
             except IOError:
                 # wait for reconnect
                 time.sleep(0.1)
@@ -116,14 +111,15 @@ class Worker(iksemel.Stream):
                 time.sleep(0.1)
 
 class XMPP_server(object):
-    def __init__(self, address, data_callback):
+    def __init__(self, global_config, address, data_callback):
         self._shutdown = False
         self.laddress = address
         self.__data_callback = data_callback
         self._wi_available = threading.Condition()
         self._wi = []
+        id = global_config.getdefault('xmpp_b2bua_id', 5061)
         for i in range(0, MAX_WORKERS):
-            Worker(self)
+            Worker(self, id)
 
     def handle_read(self, data, address):
         if len(data) > 0 and self.__data_callback != None:
