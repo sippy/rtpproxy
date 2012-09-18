@@ -7,24 +7,24 @@
 # penalties, and will be prosecuted under the maximum extent possible under
 # law.
 #
-# $Id: XMPP_server.py,v 1.9 2012/09/12 11:25:35 bamby Exp $
+# $Id: XMPP_server.py,v 1.10 2012/09/13 07:38:54 bamby Exp $
 
-import select
 import iksemel
 import threading
 import base64
 import datetime, time
 import traceback, sys, os
-from select import poll, POLLIN
+from select import poll, POLLIN, POLLOUT
 from twisted.internet import reactor
 
-MAX_WORKERS = 10
+MAX_WORKERS = 5
 
 class Worker(iksemel.Stream):
-    def __init__(self, owner, id):
+    def __init__(self, owner, _id):
         self.__owner = owner
-        self.__id = id
+        self.__id = _id
         self.__reconnect = True
+        self.__reconnect_count = 0
         iksemel.Stream.__init__(self)
         rx_thr = threading.Thread(target = self.run_rx)
         rx_thr.setDaemon(True)
@@ -42,7 +42,7 @@ class Worker(iksemel.Stream):
             reactor.callFromThread(self.__owner.handle_read, data, (doc.get('src_addr'), int(doc.get('src_port'))))
 
     def run_rx(self):
-        pollobj = poll()
+        prev_reconnect_count = -1
         while True:
             if self.__owner._shutdown:
                 return
@@ -50,7 +50,12 @@ class Worker(iksemel.Stream):
                 time.sleep(0.1)
                 continue
             try:
-                pollobj.register(self.fileno(), POLLIN)
+                # between the check and write to prev_reconnect_count the self.__reconnect_count may change
+                curr_reconnect_count = self.__reconnect_count
+                if curr_reconnect_count != prev_reconnect_count:
+                    prev_reconnect_count = curr_reconnect_count
+                    pollobj = poll()
+                    pollobj.register(self.fileno(), POLLIN)
                 pollret = dict(pollobj.poll())
                 if pollret.get(self.fileno(), 0) & POLLIN == 0:
                     continue
@@ -109,6 +114,8 @@ class Worker(iksemel.Stream):
                     try:
                         self.connect(jid=iksemel.JID('127.0.0.1'), tls=False, port=22223)
                         os.write(self.fileno(), '<b2bua_slot id="%s"/>' % self.__id)
+                        pollobj = poll()
+                        pollobj.register(self.fileno(), POLLOUT)
                     except iksemel.StreamError:
                         continue
                     except:
@@ -116,6 +123,7 @@ class Worker(iksemel.Stream):
                         sys.stdout.flush()
                         continue
                     self.__reconnect = False
+                    self.__reconnect_count += 1
                 if data == None:
                     continue
                 dst_addr, dst_port = addr
@@ -127,6 +135,9 @@ class Worker(iksemel.Stream):
             if self.__owner._shutdown:
                 os.close(self.fileno())
                 return
+            pollret = dict(pollobj.poll())
+            if pollret.get(self.fileno(), 0) & POLLOUT == 0:
+                continue
             try:
                 sent = os.write(self.fileno(), buf)
                 buf = buf[sent:]
@@ -144,9 +155,12 @@ class XMPP_server(object):
         self.__data_callback = data_callback
         self._wi_available = threading.Condition()
         self._wi = []
-        id = global_config.get('xmpp_b2bua_id', 5061)
+        if type(global_config) == dict:
+            _id = global_config.get('xmpp_b2bua_id', 5061)
+        else:
+            _id = global_config.getdefault('xmpp_b2bua_id', 5061)
         for i in range(0, MAX_WORKERS):
-            Worker(self, id)
+            Worker(self, _id)
 
     def handle_read(self, data, address):
         if len(data) > 0 and self.__data_callback != None:
