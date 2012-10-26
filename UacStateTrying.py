@@ -32,7 +32,7 @@ class UacStateTrying(UaStateGeneric):
     sname = 'Trying(UAC)'
     triedauth = False
 
-    def recvResponse(self, resp):
+    def recvResponse(self, resp, tr):
         body = resp.getBody()
         code, reason = resp.getSCode()
         scode = (code, reason, body)
@@ -100,20 +100,27 @@ class UacStateTrying(UaStateGeneric):
                 self.ua.recvEvent(CCEventDisconnect(rtime = resp.rtime, origin = self.ua.origin))
                 return (UaStateFailed, self.ua.fail_cbs, resp.rtime, self.ua.origin, scode[0])
             self.ua.rUri.setTag(tag)
-            event = CCEventConnect(scode, rtime = resp.rtime, origin = self.ua.origin)
-            self.ua.startCreditTimer(resp.rtime)
+            if not self.ua.late_media or body == None:
+                self.ua.late_media = False
+                event = CCEventConnect(scode, rtime = resp.rtime, origin = self.ua.origin)
+                self.ua.startCreditTimer(resp.rtime)
+                self.ua.connect_ts = resp.rtime
+                rval = (UaStateConnected, self.ua.conn_cbs, resp.rtime, self.ua.origin)
+            else:
+                event = CCEventPreConnect(scode, rtime = resp.rtime, origin = self.ua.origin)
+                tr.uack = True
+                self.ua.pending_tr = tr
+                rval = (UaStateConnected,)
             if body != None:
                 if self.ua.on_remote_sdp_change != None:
                     self.ua.on_remote_sdp_change(body, lambda x: self.ua.delayed_remote_sdp_update(event, x))
-                    self.ua.connect_ts = resp.rtime
-                    return (UaStateConnected, self.ua.conn_cbs, resp.rtime, self.ua.origin)
+                    return rval
                 else:
                     self.ua.rSDP = body.getCopy()
             else:
                 self.ua.rSDP = None
             self.ua.equeue.append(event)
-            self.ua.connect_ts = resp.rtime
-            return (UaStateConnected, self.ua.conn_cbs, resp.rtime, self.ua.origin)
+            return rval
         if code in (301, 302) and resp.countHFs('contact') > 0:
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
             self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))

@@ -56,6 +56,8 @@ class SipTransaction(object):
     address = None
     data = None
     checksum = None
+    cb_ifver = None
+    uack = False
 
     def cleanup(self):
         self.ack = None
@@ -63,9 +65,10 @@ class SipTransaction(object):
         self.resp_cb = None
         self.cancel_cb = None
         self.noack_cb = None
+        self.ack_cb = None
         self.r487 = None
         self.address = None
-        self.teA = self.teB = self.teC = self.teD = self.teE = self.teF = None
+        self.teA = self.teB = self.teC = self.teD = self.teE = self.teF = self.teG = None
         self.tid = None
         self.userv = None
         self.r408 = None
@@ -87,6 +90,9 @@ class CONFIRMED(SipTransactionState):
     pass
 class TERMINATED(SipTransactionState):
     # Transaction ended abnormally (request timeout and such)
+    pass
+class UACK(SipTransactionState):
+    # UAC wants to generate ACK at its own discretion
     pass
 
 class local4remote(object):
@@ -276,8 +282,10 @@ class SipTransactionManager(object):
             self.incomingRequest(req, checksum, tids, server)
 
     # 1. Client transaction methods
-    def newTransaction(self, msg, resp_cb = None, laddress = None, userv = None):
+    def newTransaction(self, msg, resp_cb = None, laddress = None, userv = None, \
+      cb_ifver = 1):
         t = SipTransaction()
+        t.cb_ifver = cb_ifver
         t.tid = msg.getTId(True, True)
         if self.tclient.has_key(t.tid):
             raise ValueError('BUG: Attempt to initiate transaction with the same TID as existing one!!!')
@@ -356,10 +364,18 @@ class SipTransactionManager(object):
                 t.teB = Timeout(self.timerB, t.expires, 1, t)
                 self.l1rcache[checksum] = (None, None, None)
                 if t.resp_cb != None:
-                    t.resp_cb(msg)
+                    if t.cb_ifver == 1:
+                        t.resp_cb(msg)
+                    else:
+                        t.resp_cb(msg, t)
             else:
                 # Final response - notify upper layer and remove transaction
                 if t.needack:
+                    if t.resp_cb != None:
+                        if t.cb_ifver == 1:
+                            t.resp_cb(msg)
+                        else:
+                            t.resp_cb(msg, t)
                     # Prepare and send ACK if necessary
                     fcode = msg.getSCode()[0]
                     tag = msg.getHFBody('to').getTag()
@@ -394,11 +410,17 @@ class SipTransactionManager(object):
                         t.ack.getHFBody('via').genBranch()
                     if rAddr == None:
                         rAddr = t.address
-                    self.transmitMsg(t.userv, t.ack, rAddr, checksum)
+                    if not t.uack:
+                        self.transmitMsg(t.userv, t.ack, rAddr, checksum)
+                    else:
+                        t.state = UACK
+                        t.ack_rAddr = rAddr
+                        t.ack_checksum = checksum
+                        self.l1rcache[checksum] = (None, None, None)
+                        t.teG = Timeout(self.timerG, 64, 1, t)
+                        return
                 else:
                     self.l1rcache[checksum] = (None, None, None)
-                if t.resp_cb != None:
-                    t.resp_cb(msg)
                 del self.tclient[t.tid]
                 t.cleanup()
 
@@ -420,7 +442,10 @@ class SipTransactionManager(object):
         if t.resp_cb == None:
             return
         t.r408.rtime = time()
-        t.resp_cb(t.r408)
+        if t.cb_ifver == 1:
+            t.resp_cb(t.r408)
+        else:
+            t.resp_cb(t.r408, t)
         #try:
         #    t.resp_cb(SipRequest(t.data).genResponse(408, 'Request Timeout'))
         #except:
@@ -485,6 +510,8 @@ class SipTransactionManager(object):
                 t.teD.cancel()
                 # We have done with the transaction, no need to wait for timeout
                 del self.tserver[t.tid]
+                if t.ack_cb != None:
+                    t.ack_cb(msg)
                 t.cleanup()
                 self.l1rcache[checksum] = (None, None, None)
         elif msg.getMethod() == 'ACK':
@@ -506,10 +533,12 @@ class SipTransactionManager(object):
             t.teD = None
             t.teE = None
             t.teF = None
+            t.teG = None
             t.method = msg.getMethod()
             t.data = None
             t.address = None
             t.noack_cb = None
+            t.ack_cb = None
             t.cancel_cb = None
             t.checksum = checksum
             if server.laddress[0] not in ('0.0.0.0', '[::]'):
@@ -548,9 +577,7 @@ class SipTransactionManager(object):
                     del self.tserver[t.tid]
                 t.cleanup()
                 return
-            resp, cancel_cb, noack_cb = rval
-            t.cancel_cb = cancel_cb
-            t.noack_cb = noack_cb
+            resp, t.cancel_cb, t.noack_cb = rval
             if resp != None:
                 self.sendResponse(resp, t)
 
@@ -565,7 +592,7 @@ class SipTransactionManager(object):
             consumers.remove(consumer)
             self.req_consumers[call_id] = consumers
 
-    def sendResponse(self, resp, t = None, retrans = False):
+    def sendResponse(self, resp, t = None, retrans = False, ack_cb = None):
         #print self.tserver
         if t == None:
             tid = resp.getTId()
@@ -595,6 +622,7 @@ class SipTransactionManager(object):
                 t.teF = None
             if t.needack:
                 # Schedule removal of the transaction
+                t.ack_cb = ack_cb
                 t.teD = Timeout(self.timerD, 32.0, 1, t)
                 if scode >= 300:
                     # Black magick to allow proxy send us another INVITE with diffetent branch
@@ -650,6 +678,12 @@ class SipTransactionManager(object):
             self.transmitData(t.userv, t.data, t.address)
             t.teF = Timeout(self.timerF, self.provisional_retr, 1, t)
 
+    def timerG(self, t):
+        #print 'timerG', t.state
+        t.teG = None
+        if t.state == UACK:
+            print datetime.now(), 'INVITE transaction stuck in the UACK state, possible UAC bug'
+
     def rCachePurge(self):
         self.l2rcache = self.l1rcache
         self.l1rcache = {}
@@ -664,3 +698,12 @@ class SipTransactionManager(object):
         self.global_config['_sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
         if cachesum != None:
             self.l1rcache[cachesum] = (userv, data, address)
+
+    def sendACK(self, t):
+        #print 'sendACK', t.state
+        if t.teG != None:
+            t.teG.cancel()
+            t.teG = None
+        self.transmitMsg(t.userv, t.ack, t.ack_rAddr, t.ack_checksum)
+        del self.tclient[t.tid]
+        t.cleanup()

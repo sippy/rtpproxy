@@ -44,7 +44,7 @@ class UacStateCancelling(UaStateGeneric):
         self.te = None
         self.ua.changeState((UaStateDead,))
 
-    def recvResponse(self, resp):
+    def recvResponse(self, resp, tr):
         code, reason = resp.getSCode()
         if code < 200:
             return None

@@ -41,9 +41,12 @@ class UacStateIdle(UaStateGeneric):
                 self.ua.setup_ts = event.rtime
             self.ua.origin = 'callee'
             cId, cGUID, callingID, calledID, body, auth, callingName = event.getData()
-            if body != None and self.ua.on_local_sdp_change != None and body.needs_update:
-                self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
-                return None
+            if body != None:
+                if self.ua.on_local_sdp_change != None and body.needs_update:
+                    self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
+                    return None
+            else:
+                self.ua.late_media = True
             if cId == None:
                 self.ua.cId = SipCallId()
             else:
@@ -69,7 +72,7 @@ class UacStateIdle(UaStateGeneric):
             req = self.ua.genRequest('INVITE', body, reason = event.reason)
             self.ua.lCSeq += 1
             self.ua.tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.ua.recvResponse, \
-              laddress = self.ua.source_address)
+              laddress = self.ua.source_address, cb_ifver = 2)
             self.ua.auth = None
             if self.ua.expire_time != None:
                 self.ua.expire_time += event.rtime

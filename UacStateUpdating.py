@@ -50,7 +50,7 @@ class UacStateUpdating(UaStateGeneric):
         #print 'wrong request %s in the state Updating' % req.getMethod()
         return None
 
-    def recvResponse(self, resp):
+    def recvResponse(self, resp, tr):
         body = resp.getBody()
         code, reason = resp.getSCode()
         scode = (code, reason, body)

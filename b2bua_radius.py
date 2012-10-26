@@ -141,11 +141,7 @@ class CallController(object):
                     self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (1)'), rtime = event.rtime))
                     self.state = CCStateDead
                     return
-                if body == None:
-                    self.uaA.recvEvent(CCEventFail((500, 'Body-less INVITE is not supported'), rtime = event.rtime))
-                    self.state = CCStateDead
-                    return
-                if self.global_config.has_key('_allowed_pts'):
+                if body != None and self.global_config.has_key('_allowed_pts'):
                     try:
                         body.parse()
                     except:
@@ -162,7 +158,8 @@ class CallController(object):
                             return
                 if self.cld.startswith('nat-'):
                     self.cld = self.cld[4:]
-                    body.content += 'a=nated:yes\r\n'
+                    if body != None:
+                        body.content += 'a=nated:yes\r\n'
                     event.data = (self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name)
                 if self.global_config.has_key('static_tr_in'):
                     self.cld = re_replace(self.global_config['static_tr_in'], self.cld)
@@ -381,8 +378,9 @@ class CallController(object):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
             self.rtp_proxy_session.caller_raddress = (host, port)
-            body = body.getCopy()
-            body.content += 'a=nortpproxy:yes\r\n'
+            if body != None:
+                body = body.getCopy()
+                body.content += 'a=nortpproxy:yes\r\n'
             self.proxied = True
         self.uaO.kaInterval = self.global_config['keepalive_orig']
         if parameters.has_key('group_timeout'):

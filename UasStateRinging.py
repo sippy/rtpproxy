@@ -23,7 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 from UaStateGeneric import UaStateGeneric
-from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, CCEventDisconnect
+from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, \
+  CCEventDisconnect, CCEventPreConnect
 from SipContact import SipContact
 from SipAddress import SipAddress
 
@@ -49,19 +50,23 @@ class UasStateRinging(UaStateGeneric):
             for ring_cb in self.ua.ring_cbs:
                 ring_cb(self.ua, event.rtime, event.origin, code)
             return None
-        elif isinstance(event, CCEventConnect):
+        elif isinstance(event, CCEventConnect) or isinstance(event, CCEventPreConnect):
             code, reason, body = event.getData()
             if body != None and self.ua.on_local_sdp_change != None and body.needs_update:
                 self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
                 return None
             self.ua.lSDP = body
-            self.ua.sendUasResponse(code, reason, body, self.ua.lContact)
-            if self.ua.expire_timer != None:
-                self.ua.expire_timer.cancel()
-                self.ua.expire_timer = None
-            self.ua.startCreditTimer(event.rtime)
-            self.ua.connect_ts = event.rtime
-            return (UaStateConnected, self.ua.conn_cbs, event.rtime, event.origin)
+            if isinstance(event, CCEventConnect):
+                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = False)
+                if self.ua.expire_timer != None:
+                    self.ua.expire_timer.cancel()
+                    self.ua.expire_timer = None
+                self.ua.startCreditTimer(event.rtime)
+                self.ua.connect_ts = event.rtime
+                return (UaStateConnected, self.ua.conn_cbs, event.rtime, event.origin)
+            else:
+                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = True)
+                return (UaStateConnected,)
         elif isinstance(event, CCEventRedirect):
             scode = event.getData()
             if scode == None:

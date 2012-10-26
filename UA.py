@@ -97,6 +97,8 @@ class UA(object):
     ruri_userparams = None
     outbound_proxy = None
     pass_auth = False
+    pending_tr = None
+    late_media = False
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
       conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ltag = None, extra_headers = None, \
@@ -162,7 +164,7 @@ class UA(object):
         else:
             return None
 
-    def recvResponse(self, resp):
+    def recvResponse(self, resp, tr):
         if self.state == None:
             return
         self.update_ua(resp)
@@ -175,7 +177,7 @@ class UA(object):
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm())
             self.lCSeq += 1
             self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse, \
-              laddress = self.source_address)
+              laddress = self.source_address, cb_ifver = 2)
             del self.reqs[cseq]
             return None
         if method == 'INVITE' and not self.pass_auth and self.reqs.has_key(cseq) and code == 407 and \
@@ -185,12 +187,12 @@ class UA(object):
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm(), SipProxyAuthorization)
             self.lCSeq += 1
             self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse, \
-              laddress = self.source_address)
+              laddress = self.source_address, cb_ifver = 2)
             del self.reqs[cseq]
             return None
         if code >= 200 and self.reqs.has_key(cseq):
             del self.reqs[cseq]
-        newstate = self.state.recvResponse(resp)
+        newstate = self.state.recvResponse(resp, tr)
         if newstate != None:
             self.changeState(newstate)
         self.emitPendingEvents()
@@ -278,7 +280,7 @@ class UA(object):
         return req
 
     def sendUasResponse(self, scode, reason, body = None, contact = None, \
-      reason_rfc3326 = None, extra_headers = None):
+      reason_rfc3326 = None, extra_headers = None, ack_wait = False):
         self.uasResp.setSCode(scode, reason)
         self.uasResp.setBody(body)
         self.uasResp.delHFs('www-authenticate')
@@ -290,7 +292,20 @@ class UA(object):
             self.uasResp.appendHeader(SipHeader(body = reason_rfc3326))
         if extra_headers != None:
             self.uasResp.appendHeaders(extra_headers)
-        self.global_config['_sip_tm'].sendResponse(self.uasResp)
+        if ack_wait:
+            ack_cb = self.recvACK
+        else:
+            ack_cb = None
+        self.global_config['_sip_tm'].sendResponse(self.uasResp, ack_cb = ack_cb)
+
+    def recvACK(self, req):
+        if not self.isConnected():
+            return
+        #print 'UA::recvACK', req
+        newstate = self.state.recvACK(req)
+        if newstate != None:
+            self.changeState(newstate)
+        self.emitPendingEvents()
 
     def isYours(self, req = None, call_id = None, from_tag = None, to_tag = None):
         #print self.branch, req.getHFBody('via').getBranch()

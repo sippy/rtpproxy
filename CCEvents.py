@@ -65,6 +65,10 @@ class CCEventRing(CCEventGeneric):
     name = 'CCEventRing'
     pass
 
+class CCEventPreConnect(CCEventGeneric):
+    name = 'CCEventPreConnect'
+    pass
+
 class CCEventConnect(CCEventGeneric):
     name = 'CCEventConnect'
     pass

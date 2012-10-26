@@ -34,7 +34,7 @@ class UaStateGeneric(object):
     def recvRequest(self, req):
         return None
 
-    def recvResponse(self, resp):
+    def recvResponse(self, resp, tr):
         return None
 
     def recvEvent(self, event):
