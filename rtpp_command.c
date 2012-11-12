@@ -403,7 +403,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	     */
             pthread_mutex_lock(&cf->glock);
 	    if (strcmp(argv[1], "20081224") == 0 &&
-	      cf->timeout_handler->socket_name == NULL) {
+	      cf->timeout_handler == NULL) {
                 pthread_mutex_unlock(&cf->glock);
 		reply_number(&cf->stable, controlfd, &raddr, rlen, cookie, 0);
 		return 0;
@@ -966,13 +966,13 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 
     pthread_mutex_lock(&cf->glock);
     if (op == UPDATE) {
-	if (cf->timeout_handler->socket_name == NULL && socket_name_u != NULL)
+	if (cf->timeout_handler == NULL && socket_name_u != NULL)
 	    rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
 	if (spa->timeout_data.notify_tag != NULL) {
 	    free(spa->timeout_data.notify_tag);
 	    spa->timeout_data.notify_tag = NULL;
 	}
-	if (cf->timeout_handler->socket_name != NULL && socket_name_u != NULL) {
+	if (cf->timeout_handler != NULL && socket_name_u != NULL) {
 	    if (strcmp(cf->timeout_handler->socket_name, socket_name_u) != 0) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", socket_name_u);
 		socket_name_u = NULL;
