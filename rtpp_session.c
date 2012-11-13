@@ -31,6 +31,7 @@
 #include <sys/un.h>
 #include <assert.h>
 #include <errno.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,6 +117,9 @@ session_findfirst(struct cfg *cf, const char *call_id)
     uint8_t hash;
     struct rtpp_session *sp;
 
+    /* Make sure structure is properly locked */
+    assert(pthread_mutex_islocked(&cf->glock) == 1);
+
     hash = hash_string(&cf->stable, call_id, NULL);
     for (sp = cf->hash_table[hash]; sp != NULL; sp = sp->next) {
 	if (strcmp(sp->call_id, call_id) == 0) {
@@ -126,9 +130,12 @@ session_findfirst(struct cfg *cf, const char *call_id)
 }
 
 struct rtpp_session *
-session_findnext(struct rtpp_session *psp)
+session_findnext(struct cfg *cf, struct rtpp_session *psp)
 {
     struct rtpp_session *sp;
+
+    /* Make sure structure is properly locked */
+    assert(pthread_mutex_islocked(&cf->glock) == 1);
 
     for (sp = psp->next; sp != NULL; sp = sp->next) {
 	if (strcmp(sp->call_id, psp->call_id) == 0) {
@@ -142,13 +149,18 @@ void
 append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 {
 
+    /* Make sure structure is properly locked */
+    assert(pthread_mutex_islocked(&cf->glock) == 1);
+
     if (sp->fds[index] != -1) {
-	cf->sessions[cf->nsessions] = sp;
-	cf->pfds[cf->nsessions].fd = sp->fds[index];
-	cf->pfds[cf->nsessions].events = POLLIN;
-	cf->pfds[cf->nsessions].revents = 0;
-	sp->sidx[index] = cf->nsessions;
-	cf->nsessions++;
+        pthread_mutex_lock(&cf->sessinfo.lock);
+	cf->sessinfo.sessions[cf->sessinfo.nsessions] = sp;
+	cf->sessinfo.pfds[cf->sessinfo.nsessions].fd = sp->fds[index];
+	cf->sessinfo.pfds[cf->sessinfo.nsessions].events = POLLIN;
+	cf->sessinfo.pfds[cf->sessinfo.nsessions].revents = 0;
+	sp->sidx[index] = cf->sessinfo.nsessions;
+	cf->sessinfo.nsessions++;
+        pthread_mutex_unlock(&cf->sessinfo.lock);
     } else {
 	sp->sidx[index] = -1;
     }
@@ -158,6 +170,10 @@ void
 remove_session(struct cfg *cf, struct rtpp_session *sp)
 {
     int i;
+
+    /* Make sure structure is properly locked */
+    assert(pthread_mutex_islocked(&cf->glock) == 1);
+    assert(pthread_mutex_islocked(&cf->sessinfo.lock) == 1);
 
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped", sp->pcount[0], sp->pcount[1],
@@ -178,19 +194,19 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    free(sp->rtcp->prev_addr[i]);
 	if (sp->fds[i] != -1) {
 	    close(sp->fds[i]);
-	    assert(cf->sessions[sp->sidx[i]] == sp);
-	    cf->sessions[sp->sidx[i]] = NULL;
-	    assert(cf->pfds[sp->sidx[i]].fd == sp->fds[i]);
-	    cf->pfds[sp->sidx[i]].fd = -1;
-	    cf->pfds[sp->sidx[i]].events = 0;
+	    assert(cf->sessinfo.sessions[sp->sidx[i]] == sp);
+	    cf->sessinfo.sessions[sp->sidx[i]] = NULL;
+	    assert(cf->sessinfo.pfds[sp->sidx[i]].fd == sp->fds[i]);
+	    cf->sessinfo.pfds[sp->sidx[i]].fd = -1;
+	    cf->sessinfo.pfds[sp->sidx[i]].events = 0;
 	}
 	if (sp->rtcp->fds[i] != -1) {
 	    close(sp->rtcp->fds[i]);
-	    assert(cf->sessions[sp->rtcp->sidx[i]] == sp->rtcp);
-	    cf->sessions[sp->rtcp->sidx[i]] = NULL;
-	    assert(cf->pfds[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
-	    cf->pfds[sp->rtcp->sidx[i]].fd = -1;
-	    cf->pfds[sp->rtcp->sidx[i]].events = 0;
+	    assert(cf->sessinfo.sessions[sp->rtcp->sidx[i]] == sp->rtcp);
+	    cf->sessinfo.sessions[sp->rtcp->sidx[i]] = NULL;
+	    assert(cf->sessinfo.pfds[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
+	    cf->sessinfo.pfds[sp->rtcp->sidx[i]].fd = -1;
+	    cf->sessinfo.pfds[sp->rtcp->sidx[i]].events = 0;
 	}
 	if (sp->rrcs[i] != NULL)
 	    rclose(sp, sp->rrcs[i], 1);
@@ -244,7 +260,10 @@ find_stream(struct cfg *cf, const char *call_id, const char *from_tag,
 {
     const char *cp1, *cp2;
 
-    for (*spp = session_findfirst(cf, call_id); *spp != NULL; *spp = session_findnext(*spp)) {
+    /* Make sure structure is properly locked */
+    assert(pthread_mutex_islocked(&cf->glock) == 1);
+
+    for (*spp = session_findfirst(cf, call_id); *spp != NULL; *spp = session_findnext(cf, *spp)) {
 	if (strcmp((*spp)->tag, from_tag) == 0) {
 	    return 0;
 	} else if (to_tag != NULL) {

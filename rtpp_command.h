@@ -36,8 +36,19 @@ struct proto_cap {
     const char  *pc_description;
 };
 
+struct rtpp_command
+{
+    char buf[1024 * 8];
+    char *argv[10];
+    int argc;
+    struct sockaddr_storage raddr;
+    socklen_t rlen;
+    char *cookie;
+};
+
 extern struct proto_cap proto_caps[];
 
-int handle_command(struct cfg *, int, double);
+int handle_command(struct cfg *, int, struct rtpp_command *, double);
+int get_command(struct cfg_stable *, int, struct rtpp_command *);
 
 #endif

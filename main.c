@@ -126,6 +126,8 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.log_facility = -1;
 
     pthread_mutex_init(&cf->glock, NULL);
+    pthread_mutex_init(&cf->sessinfo.lock, NULL);
+    pthread_mutex_init(&cf->bindaddr_lock, NULL);
 
     if (getrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
 	err(1, "getrlimit");
@@ -337,11 +339,11 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (cf->stable.port_min > cf->stable.port_max)
 	errx(1, "port_min should be less than port_max");
 
-    cf->sessions = malloc((sizeof cf->sessions[0]) *
+    cf->sessinfo.sessions = malloc((sizeof cf->sessinfo.sessions[0]) *
       (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
     cf->rtp_servers =  malloc((sizeof cf->rtp_servers[0]) *
       (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
-    cf->pfds = malloc((sizeof cf->pfds[0]) *
+    cf->sessinfo.pfds = malloc((sizeof cf->sessinfo.pfds[0]) *
       (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
 
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
@@ -652,8 +654,9 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 
     /* Relay RTP/RTCP */
     skipfd = 0;
-    for (readyfd = 0; readyfd < cf->nsessions; readyfd++) {
-	sp = cf->sessions[readyfd];
+    pthread_mutex_lock(&cf->sessinfo.lock);
+    for (readyfd = 0; readyfd < cf->sessinfo.nsessions; readyfd++) {
+	sp = cf->sessinfo.sessions[readyfd];
 
 	if (alarm_tick != 0 && sp != NULL && sp->rtcp != NULL &&
 	  sp->sidx[0] == readyfd) {
@@ -669,7 +672,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 	    }
 	}
 
-	if (cf->pfds[readyfd].fd == -1) {
+	if (cf->sessinfo.pfds[readyfd].fd == -1) {
 	    /* Deleted session, count and move one */
 	    skipfd++;
 	    continue;
@@ -677,7 +680,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 
 	/* Find index of the call leg within a session */
 	for (ridx = 0; ridx < 2; ridx++)
-	    if (cf->pfds[readyfd].fd == sp->fds[ridx])
+	    if (cf->sessinfo.pfds[readyfd].fd == sp->fds[ridx])
 		break;
 	/*
 	 * Can't happen.
@@ -686,13 +689,13 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 
 	/* Compact pfds[] and sessions[] by eliminating removed sessions */
 	if (skipfd > 0) {
-	    cf->pfds[readyfd - skipfd] = cf->pfds[readyfd];
-	    cf->sessions[readyfd - skipfd] = cf->sessions[readyfd];
+	    cf->sessinfo.pfds[readyfd - skipfd] = cf->sessinfo.pfds[readyfd];
+	    cf->sessinfo.sessions[readyfd - skipfd] = cf->sessinfo.sessions[readyfd];
 	    sp->sidx[ridx] = readyfd - skipfd;
 	}
 
 	if (sp->complete != 0) {
-	    if ((cf->pfds[readyfd].revents & POLLIN) != 0)
+	    if ((cf->sessinfo.pfds[readyfd].revents & POLLIN) != 0)
 		rxmit_packets(cf, sp, ridx, dtime);
 	    if (sp->resizers[ridx].output_nsamples > 0) {
 		while ((packet = rtp_resizer_get(&sp->resizers[ridx], dtime)) != NULL) {
@@ -703,7 +706,8 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 	}
     }
     /* Trim any deleted sessions at the end */
-    cf->nsessions -= skipfd;
+    cf->sessinfo.nsessions -= skipfd;
+    pthread_mutex_unlock(&cf->sessinfo.lock);
 }
 
 int
@@ -775,8 +779,8 @@ main(int argc, char **argv)
 
     cf.stable.controlfd = controlfd;
 
-    cf.sessions[0] = NULL;
-    cf.nsessions = 0;
+    cf.sessinfo.sessions[0] = NULL;
+    cf.sessinfo.nsessions = 0;
     cf.rtp_nsessions = 0;
 
     rtpp_command_async_init(&cf);
@@ -785,11 +789,13 @@ main(int argc, char **argv)
     last_tick_time = 0;
     for (;;) {
         pthread_mutex_lock(&cf.glock);
-	if (cf.rtp_nsessions > 0 || cf.nsessions > 0) {
+        pthread_mutex_lock(&cf.sessinfo.lock);
+	if (cf.rtp_nsessions > 0 || cf.sessinfo.nsessions > 0) {
 	    timeout = RTPS_TICKS_MIN;
 	} else {
 	    timeout = TIMETICK * 1000;
         }
+        pthread_mutex_unlock(&cf.sessinfo.lock);
         pthread_mutex_unlock(&cf.glock);
 	eptime = getdtime();
 	delay = (eptime - sptime) * 1000000.0;
@@ -799,14 +805,14 @@ main(int argc, char **argv)
 	} else {
 	    sptime = eptime;
 	}
-        pthread_mutex_lock(&cf.glock);
-        if (cf.nsessions > 0) {
-	    i = poll(cf.pfds, cf.nsessions, timeout);
-            pthread_mutex_unlock(&cf.glock);
+        pthread_mutex_lock(&cf.sessinfo.lock);
+        if (cf.sessinfo.nsessions > 0) {
+	    i = poll(cf.sessinfo.pfds, cf.sessinfo.nsessions, timeout);
+            pthread_mutex_unlock(&cf.sessinfo.lock);
 	    if (i < 0 && errno == EINTR)
 	        continue;
         } else {
-            pthread_mutex_unlock(&cf.glock);
+            pthread_mutex_unlock(&cf.sessinfo.lock);
             usleep(timeout * 1000);
         }
 	eptime = getdtime();

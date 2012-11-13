@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <grp.h>
 #include <math.h>
+#include <pthread.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -242,4 +243,19 @@ url_unquote(uint8_t *buf, int len)
         outlen -= 2;
     }
     return (outlen);
+}
+
+int
+pthread_mutex_islocked(pthread_mutex_t *mutex)
+{
+    int rval;
+
+    rval = pthread_mutex_trylock(mutex);
+    if (rval != 0) {
+        if (rval == EBUSY)
+            return (1);
+        return (-1);
+    }
+    pthread_mutex_unlock(mutex);
+    return (0);
 }

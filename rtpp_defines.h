@@ -126,18 +126,27 @@ struct cfg {
         int controlfd;
     } stable;
 
-    struct rtpp_session **sessions;
+    /*
+     * Data fields that must be locked separately from the main configuration
+     * structure below.
+     */
+    struct {
+        struct pollfd *pfds;
+        struct rtpp_session **sessions;
+        int nsessions;
+        pthread_mutex_t lock;
+    } sessinfo;
+
+    struct bindaddr_list *bindaddr_list;
+    pthread_mutex_t bindaddr_lock;
+
+    /* Structures below are protected by the glock */
     struct rtpp_session **rtp_servers;
 
-    struct pollfd *pfds;
-
-    int nsessions;
     int rtp_nsessions;
     int sessions_active;
     unsigned long long sessions_created;
     int nofile_limit_warned;
-
-    struct bindaddr_list *bindaddr_list;
 
     struct rtpp_session *hash_table[256];
 

@@ -43,6 +43,7 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
     int controlfd, i;
     socklen_t rlen;
     struct sockaddr_un ifsun;
+    struct rtpp_command cmd;
 
     do {
         if (cf->stable.umode == 0) {
@@ -57,7 +58,11 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
         } else {
             controlfd = controlfd_in;
         }
-        i = handle_command(cf, controlfd, dtime);
+        if (get_command(&cf->stable, controlfd, &cmd) > 0) {
+            pthread_mutex_lock(&cf->glock);
+            i = handle_command(cf, controlfd, &cmd, dtime);
+            pthread_mutex_unlock(&cf->glock);
+        }
         if (cf->stable.umode == 0) {
             close(controlfd);
         }

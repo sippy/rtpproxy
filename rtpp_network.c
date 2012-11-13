@@ -185,18 +185,23 @@ addr2bindaddr(struct cfg *cf, struct sockaddr *ia, const char **ep)
 {
     struct bindaddr_list *bl;
 
+    pthread_mutex_lock(&cf->bindaddr_lock);
     for (bl = cf->bindaddr_list; bl != NULL; bl = bl->next) {
-        if (ishostseq(sstosa(&(bl->bindaddr)), ia) != 0)
+        if (ishostseq(sstosa(&(bl->bindaddr)), ia) != 0) {
+            pthread_mutex_unlock(&cf->bindaddr_lock);
             return (sstosa(&(bl->bindaddr)));
+        }
     }
     bl = malloc(sizeof(*bl));
     if (bl == NULL) {
+        pthread_mutex_unlock(&cf->bindaddr_lock);
         *ep = strerror(errno);
         return (NULL);
     }
     memcpy(&(bl->bindaddr), ia, SA_LEN(ia));
     bl->next = cf->bindaddr_list;
     cf->bindaddr_list = bl;
+    pthread_mutex_unlock(&cf->bindaddr_lock);
     return (sstosa(&(bl->bindaddr)));
 }
 
@@ -218,9 +223,7 @@ host2bindaddr(struct cfg *cf, const char *host, int pf, const char **ep)
         *ep = gai_strerror(n);
         return (NULL);
     }
-    pthread_mutex_lock(&cf->glock);
     rval = addr2bindaddr(cf, sstosa(&ia), ep);
-    pthread_mutex_unlock(&cf->glock);
     return (rval);
 }
 
