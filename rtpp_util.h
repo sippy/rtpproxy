@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <string.h>
 #endif
+#include <pthread.h>
 
 #include "rtpp_defines.h"
 
@@ -67,6 +68,7 @@ void init_port_table(struct cfg *);
 char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
 int url_unquote(uint8_t *, int);
+int pthread_mutex_islocked(pthread_mutex_t *);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)

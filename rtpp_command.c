@@ -43,6 +43,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <netdb.h>
+#include <pthread.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,18 +73,19 @@ struct proto_cap proto_caps[] = {
     { NULL, NULL }
 };
 
-static int create_twinlistener(struct cfg *, struct sockaddr *, int, int *);
+static int create_twinlistener(struct cfg_stable *, struct sockaddr *, int, int *);
 static int create_listener(struct cfg *, struct sockaddr *, int *, int *);
 static int handle_delete(struct cfg *, char *, char *, char *, int);
 static void handle_noplay(struct cfg *, struct rtpp_session *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
 static void handle_copy(struct cfg *, struct rtpp_session *, int, char *, int);
 static int handle_record(struct cfg *, char *, char *, char *, int);
-static void handle_query(struct cfg *, int, struct sockaddr_storage *,
-  socklen_t, char *, struct rtpp_session *, int);
+static void handle_query(struct cfg *, int, struct rtpp_command *,
+  struct rtpp_session *, int);
+static void handle_info(struct cfg *, int, struct rtpp_command *);
 
 static int
-create_twinlistener(struct cfg *cf, struct sockaddr *ia, int port, int *fds)
+create_twinlistener(struct cfg_stable *cf, struct sockaddr *ia, int port, int *fds)
 {
     struct sockaddr_storage iac;
     int rval, i, flags, so_rcvbuf;
@@ -138,10 +140,10 @@ create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
     for (i = 0; i < 2; i++)
 	fds[i] = -1;
 
-    for (i = 1; i < cf->port_table_len; i++) {
-	idx = (cf->port_table_idx + i) % cf->port_table_len;
-	*port = cf->port_table[idx];
-	rval = create_twinlistener(cf, ia, *port, fds);
+    for (i = 1; i < cf->stable.port_table_len; i++) {
+	idx = (cf->port_table_idx + i) % cf->stable.port_table_len;
+	*port = cf->stable.port_table[idx];
+	rval = create_twinlistener(&(cf->stable), ia, *port, fds);
 	if (rval == 0) {
 	    cf->port_table_idx = idx;
 	    return 0;
@@ -153,7 +155,7 @@ create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
 }
 
 static void
-doreply(struct cfg *cf, int fd, char *buf, int len,
+doreply(struct cfg_stable *cf, int fd, char *buf, int len,
   struct sockaddr_storage *raddr, socklen_t rlen)
 {
 
@@ -168,39 +170,38 @@ doreply(struct cfg *cf, int fd, char *buf, int len,
 }
 
 static void
-reply_number(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
-  socklen_t rlen, char *cookie, int number)
+reply_number(struct cfg_stable *cf, int fd, struct rtpp_command *cmd,
+  int number)
 {
     int len;
     char buf[1024 * 8];
 
-    if (cookie != NULL)
-	len = sprintf(buf, "%s %d\n", cookie, number);
+    if (cmd->cookie != NULL)
+	len = sprintf(buf, "%s %d\n", cmd->cookie, number);
     else {
 	len = sprintf(buf, "%d\n", number);
     }
-    doreply(cf, fd, buf, len, raddr, rlen);
+    doreply(cf, fd, buf, len, &cmd->raddr, cmd->rlen);
 }
 
 static void
-reply_ok(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
-  socklen_t rlen, char *cookie)
+reply_ok(struct cfg_stable *cf, int fd, struct rtpp_command *cmd)
 {
 
-    reply_number(cf, fd, raddr, rlen, cookie, 0);
+    reply_number(cf, fd, cmd, 0);
 }
 
 static void
-reply_port(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
-  socklen_t rlen, char *cookie, int lport, struct sockaddr **lia)
+reply_port(struct cfg_stable *cf, int fd, struct rtpp_command *cmd,
+  int lport, struct sockaddr **lia)
 {
     int len;
     char buf[1024 * 8], *cp;
 
     cp = buf;
     len = 0;
-    if (cookie != NULL) {
-	len = sprintf(cp, "%s ", cookie);
+    if (cmd->cookie != NULL) {
+	len = sprintf(cp, "%s ", cmd->cookie);
 	cp += len;
     }
     if (lia[0] == NULL || ishostnull(lia[0]))
@@ -208,26 +209,26 @@ reply_port(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
     else
 	len += sprintf(cp, "%d %s%s\n", lport, addr2char(lia[0]),
 	  (lia[0]->sa_family == AF_INET) ? "" : " 6");
-    doreply(cf, fd, buf, len, raddr, rlen);
+    doreply(cf, fd, buf, len, &cmd->raddr, cmd->rlen);
 }
 
 static void
-reply_error(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
-  socklen_t rlen, char *cookie, int ecode)
+reply_error(struct cfg_stable *cf, int fd, struct rtpp_command *cmd,
+  int ecode)
 {
     int len;
     char buf[1024 * 8];
 
-    if (cookie != NULL)
-	len = sprintf(buf, "%s E%d\n", cookie, ecode);
+    if (cmd->cookie != NULL)
+	len = sprintf(buf, "%s E%d\n", cmd->cookie, ecode);
     else
 	len = sprintf(buf, "E%d\n", ecode);
-    doreply(cf, fd, buf, len, raddr, rlen);
+    doreply(cf, fd, buf, len, &cmd->raddr, cmd->rlen);
 }
 
 static void
-handle_nomem(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
-  socklen_t rlen, char *cookie, int ecode, struct sockaddr **ia, int *fds,
+handle_nomem(struct cfg_stable *cf, int fd, struct rtpp_command *cmd,
+  int ecode, struct sockaddr **ia, int *fds,
   struct rtpp_session *spa, struct rtpp_session *spb)
 {
     int i;
@@ -250,24 +251,77 @@ handle_nomem(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
     for (i = 0; i < 2; i++)
 	if (fds[i] != -1)
 	    close(fds[i]);
-    reply_error(cf, fd, raddr, rlen, cookie, ecode);
+    reply_error(cf, fd, cmd, ecode);
 }
 
 int
-handle_command(struct cfg *cf, int controlfd, double dtime)
+get_command(struct cfg_stable *cfs, int controlfd, struct rtpp_command *cmd)
 {
-    int len, argc, i, pidx, asymmetric;
+    char **ap;
+    char *cp;
+    int len, i;
+
+    if (cfs->umode == 0) {
+        for (;;) {
+            len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
+            if (len != -1 || (errno != EAGAIN && errno != EINTR))
+                break;
+            sched_yield();
+        }
+    } else {
+        cmd->rlen = sizeof(cmd->raddr);
+        len = recvfrom(controlfd, cmd->buf, sizeof(cmd->buf) - 1, 0,
+          sstosa(&cmd->raddr), &cmd->rlen);
+    }
+    if (len == -1) {
+        if (errno != EAGAIN && errno != EINTR)
+            rtpp_log_ewrite(RTPP_LOG_ERR, cfs->glog, "can't read from control socket");
+        return (-1);
+    }
+    cmd->buf[len] = '\0';
+
+    rtpp_log_write(RTPP_LOG_DBUG, cfs->glog, "received command \"%s\"", cmd->buf);
+
+    cp = cmd->buf;
+    cmd->argc = 0;
+    memset(cmd->argv, 0, sizeof(cmd->argv));
+    for (ap = cmd->argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;)
+        if (**ap != '\0') {
+            cmd->argc++;
+            if (++ap >= &cmd->argv[10])
+                break;
+        }
+    cmd->cookie = NULL;
+    if (cmd->argc < 1 || (cfs->umode != 0 && cmd->argc < 2)) {
+        rtpp_log_write(RTPP_LOG_ERR, cfs->glog, "command syntax error");
+        reply_error(cfs, controlfd, cmd, 0);
+        return (0);
+    }
+
+    /* Stream communication mode doesn't use cookie */
+    if (cfs->umode != 0) {
+        cmd->cookie = cmd->argv[0];
+        for (i = 1; i < cmd->argc; i++)
+            cmd->argv[i - 1] = cmd->argv[i];
+        cmd->argc--;
+        cmd->argv[cmd->argc] = NULL;
+    } else {
+        cmd->cookie = NULL;
+    }
+    return (cmd->argc);
+}
+
+int
+handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double dtime)
+{
+    int len, i, pidx, asymmetric;
     int external, pf, lidx, playcount, weak, tpf;
     int fds[2], lport, n;
-    socklen_t rlen;
-    char buf[1024 * 8];
-    char *cp, *call_id, *from_tag, *to_tag, *addr, *port, *cookie;
+    char *cp, *call_id, *from_tag, *to_tag, *addr, *port;
     char *pname, *codecs, *recording_name, *t;
     struct rtpp_session *spa, *spb;
-    char **ap, *argv[10];
     const char *rname, *errmsg;
     struct sockaddr *ia[2], *lia[2];
-    struct sockaddr_storage raddr;
     int requested_nsamples;
     enum {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, QUERY} op;
     int max_argc, record_single_file;
@@ -278,7 +332,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     requested_nsamples = -1;
     ia[0] = ia[1] = NULL;
     spa = spb = NULL;
-    lia[0] = lia[1] = cf->bindaddr[0];
+    lia[0] = lia[1] = cf->stable.bindaddr[0];
     lidx = 1;
     fds[0] = fds[1] = -1;
     recording_name = NULL;
@@ -286,56 +340,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     local_addr = NULL;
     codecs = NULL;
 
-    if (cf->umode == 0) {
-	for (;;) {
-	    len = read(controlfd, buf, sizeof(buf) - 1);
-	    if (len != -1 || (errno != EAGAIN && errno != EINTR))
-		break;
-	    sched_yield();
-	}
-    } else {
-	rlen = sizeof(raddr);
-	len = recvfrom(controlfd, buf, sizeof(buf) - 1, 0,
-	  sstosa(&raddr), &rlen);
-    }
-    if (len == -1) {
-	if (errno != EAGAIN && errno != EINTR)
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't read from control socket");
-	return -1;
-    }
-    buf[len] = '\0';
-
-    rtpp_log_write(RTPP_LOG_DBUG, cf->glog, "received command \"%s\"", buf);
-
-    cp = buf;
-    argc = 0;
-    memset(argv, 0, sizeof(argv));
-    for (ap = argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;)
-	if (**ap != '\0') {
-	    argc++;
-	    if (++ap >= &argv[10])
-		break;
-	}
-    cookie = NULL;
-    if (argc < 1 || (cf->umode != 0 && argc < 2)) {
-	rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-	reply_error(cf, controlfd, &raddr, rlen, cookie, 0);
-	return 0;
-    }
-
-    /* Stream communication mode doesn't use cookie */
-    if (cf->umode != 0) {
-	cookie = argv[0];
-	for (i = 1; i < argc; i++)
-	    argv[i - 1] = argv[i];
-	argc--;
-	argv[argc] = NULL;
-    } else {
-	cookie = NULL;
-    }
-
     addr = port = NULL;
-    switch (argv[0][0]) {
+    switch (cmd->argv[0][0]) {
     case 'u':
     case 'U':
 	/* U[opts] callid remote_ip remote_port from_tag [to_tag] */
@@ -367,8 +373,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	op = PLAY;
 	rname = "play";
 	playcount = 1;
-	pname = argv[2];
-	codecs = argv[3];
+	pname = cmd->argv[2];
+	codecs = cmd->argv[3];
 	break;
 
     case 'r':
@@ -391,101 +397,47 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 
     case 'v':
     case 'V':
-	if (argv[0][1] == 'F' || argv[0][1] == 'f') {
+	if (cmd->argv[0][1] == 'F' || cmd->argv[0][1] == 'f') {
 	    int i, known;
 	    /*
 	     * Wait for protocol version datestamp and check whether we
 	     * know it.
 	     */
-	    if (argc != 2 && argc != 3) {
-		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-		reply_error(cf, controlfd, &raddr, rlen, cookie, 2);
+	    if (cmd->argc != 2 && cmd->argc != 3) {
+		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+		reply_error(&cf->stable, controlfd, cmd, 2);
 		return 0;
 	    }
 	    /*
 	     * Only list 20081224 protocol mod as supported if
 	     * user actually enabled notification with -n
 	     */
-	    if (strcmp(argv[1], "20081224") == 0 &&
+	    if (strcmp(cmd->argv[1], "20081224") == 0 &&
 	      cf->timeout_handler.socket_name == NULL) {
-		reply_number(cf, controlfd, &raddr, rlen, cookie, 0);
+		reply_number(&cf->stable, controlfd, cmd, 0);
 		return 0;
 	    }
 	    for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
-		if (!strcmp(argv[1], proto_caps[i].pc_id)) {
+		if (!strcmp(cmd->argv[1], proto_caps[i].pc_id)) {
 		    known = 1;
 		    break;
 		}
 	    }
-	    reply_number(cf, controlfd, &raddr, rlen, cookie, known);
+	    reply_number(&cf->stable, controlfd, cmd, known);
 	    return 0;
 	}
-	if (argc != 1 && argc != 2) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-	    reply_error(cf, controlfd, &raddr, rlen, cookie, 2);
+	if (cmd->argc != 1 && cmd->argc != 2) {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+	    reply_error(&cf->stable, controlfd, cmd, 2);
 	    return 0;
 	}
 	/* This returns base version. */
-	reply_number(cf, controlfd, &raddr, rlen, cookie, CPROTOVER);
+	reply_number(&cf->stable, controlfd, cmd, CPROTOVER);
 	return 0;
 
     case 'i':
     case 'I':
-	if (cookie == NULL)
-	    len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n"
-	      "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
-	      cf->sessions_created, cf->sessions_active, cf->nsessions / 2,
-	      cf->packets_in, cf->packets_out);
-	else
-	    len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n"
-	      "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
-	      cookie, cf->sessions_created, cf->sessions_active, cf->nsessions / 2,
-	      cf->packets_in, cf->packets_out);
-	for (i = 1; i < cf->nsessions; i++) {
-	    char addrs[4][256];
-
-	    spa = cf->sessions[i];
-	    if (spa == NULL || spa->sidx[0] != i)
-		continue;
-	    /* RTCP twin session */
-	    if (spa->rtcp == NULL) {
-		spb = spa->rtp;
-		buf[len++] = '\t';
-	    } else {
-		spb = spa->rtcp;
-		buf[len++] = '\t';
-		buf[len++] = 'C';
-		buf[len++] = ' ';
-	    }
-
-	    addr2char_r(spb->laddr[1], addrs[0], sizeof(addrs[0]));
-	    if (spb->addr[1] == NULL) {
-		strcpy(addrs[1], "NONE");
-	    } else {
-		sprintf(addrs[1], "%s:%d", addr2char(spb->addr[1]),
-		  addr2port(spb->addr[1]));
-	    }
-	    addr2char_r(spb->laddr[0], addrs[2], sizeof(addrs[2]));
-	    if (spb->addr[0] == NULL) {
-		strcpy(addrs[3], "NONE");
-	    } else {
-		sprintf(addrs[3], "%s:%d", addr2char(spb->addr[0]),
-		  addr2port(spb->addr[0]));
-	    }
-
-	    len += sprintf(buf + len,
-	      "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
-	      "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
-	      spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
-	      addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
-	      spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
-	    if (len + 512 > sizeof(buf)) {
-		doreply(cf, controlfd, buf, len, &raddr, rlen);
-		len = 0;
-	    }
-	}
-	if (len > 0)
-	    doreply(cf, controlfd, buf, len, &raddr, rlen);;
+	handle_info(cf, controlfd, cmd);
 	return 0;
 	break;
 
@@ -498,9 +450,10 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     case 'x':
     case 'X':
         /* Delete all active sessions */
-        rtpp_log_write(RTPP_LOG_INFO, cf->glog, "deleting all active sessions");
-        for (i = 1; i < cf->nsessions; i++) {
-	    spa = cf->sessions[i];
+        rtpp_log_write(RTPP_LOG_INFO, cf->stable.glog, "deleting all active sessions");
+        pthread_mutex_lock(&cf->sessinfo.lock);
+        for (i = 0; i < cf->sessinfo.nsessions; i++) {
+	    spa = cf->sessinfo.sessions[i];
 	    if (spa == NULL || spa->sidx[0] != i)
 		continue;
 	    /* Skip RTCP twin session */
@@ -508,102 +461,103 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 		remove_session(cf, spa);
 	    }
         }
-        reply_ok(cf, controlfd, &raddr, rlen, cookie);
+        pthread_mutex_unlock(&cf->sessinfo.lock);
+        reply_ok(&cf->stable, controlfd, cmd);
         return 0;
         break;
 
     default:
-	rtpp_log_write(RTPP_LOG_ERR, cf->glog, "unknown command");
-	reply_error(cf, controlfd, &raddr, rlen, cookie, 3);
+	rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "unknown command");
+	reply_error(&cf->stable, controlfd, cmd, 3);
 	return 0;
     }
-    call_id = argv[1];
+    call_id = cmd->argv[1];
     if (op == UPDATE || op == LOOKUP || op == PLAY) {
 	max_argc = (op == UPDATE ? 8 : 6);
-	if (argc < 5 || argc > max_argc) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-	    reply_error(cf, controlfd, &raddr, rlen, cookie, 4);
+	if (cmd->argc < 5 || cmd->argc > max_argc) {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+	    reply_error(&cf->stable, controlfd, cmd, 4);
 	    return 0;
 	}
-	from_tag = argv[4];
-	to_tag = argv[5];
-	if (op == PLAY && argv[0][1] != '\0')
-	    playcount = atoi(argv[0] + 1);
-	if (op == UPDATE && argc > 6) {
-	    if (argc == 8) {
-		socket_name_u = argv[6];
-		notify_tag = argv[7];
+	from_tag = cmd->argv[4];
+	to_tag = cmd->argv[5];
+	if (op == PLAY && cmd->argv[0][1] != '\0')
+	    playcount = atoi(cmd->argv[0] + 1);
+	if (op == UPDATE && cmd->argc > 6) {
+	    if (cmd->argc == 8) {
+		socket_name_u = cmd->argv[6];
+		notify_tag = cmd->argv[7];
 	    } else {
-		socket_name_u = argv[5];
-		notify_tag = argv[6];
+		socket_name_u = cmd->argv[5];
+		notify_tag = cmd->argv[6];
 		to_tag = NULL;
 	    }
 	    if (strncmp("unix:", socket_name_u, 5) == 0)
 		socket_name_u += 5;
 	    len = url_unquote((uint8_t *)notify_tag, strlen(notify_tag));
 	    if (len == -1) {
-		rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		  "command syntax error - invalid URL encoding");
-		reply_error(cf, controlfd, &raddr, rlen, cookie, 4);
+		reply_error(&cf->stable, controlfd, cmd, 4);
 		return 0;
 	    }
 	    notify_tag[len] = '\0';
 	}
     }
     if (op == COPY || op == RECORD) {
-        if (argv[0][1] == 'S' || argv[0][1] == 's') {
-            if (argv[0][2] != '\0') {
-                rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-                reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+        if (cmd->argv[0][1] == 'S' || cmd->argv[0][1] == 's') {
+            if (cmd->argv[0][2] != '\0') {
+                rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+                reply_error(&cf->stable, controlfd, cmd, 1);
                 return 0;
             }
-            record_single_file = (cf->record_pcap == 0) ? 0 : 1;
+            record_single_file = (cf->stable.record_pcap == 0) ? 0 : 1;
         } else {
-            if (argv[0][1] != '\0') {
-                rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-                reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+            if (cmd->argv[0][1] != '\0') {
+                rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+                reply_error(&cf->stable, controlfd, cmd, 1);
                 return 0;
             }
             record_single_file = 0;
         }
     }
     if (op == COPY) {
-	if (argc < 4 || argc > 5) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-	    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+	if (cmd->argc < 4 || cmd->argc > 5) {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+	    reply_error(&cf->stable, controlfd, cmd, 1);
 	    return 0;
 	}
-	recording_name = argv[2];
-	from_tag = argv[3];
-	to_tag = argv[4];
+	recording_name = cmd->argv[2];
+	from_tag = cmd->argv[3];
+	to_tag = cmd->argv[4];
     }
     if (op == DELETE || op == RECORD || op == NOPLAY || op == QUERY) {
-	if (argc < 3 || argc > 4) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-	    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+	if (cmd->argc < 3 || cmd->argc > 4) {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+	    reply_error(&cf->stable, controlfd, cmd, 1);
 	    return 0;
 	}
-	from_tag = argv[2];
-	to_tag = argv[3];
+	from_tag = cmd->argv[2];
+	to_tag = cmd->argv[3];
     }
     if (op == DELETE || op == NOPLAY) {
 	/* D, R and S commands don't take any modifiers */
-	if (argv[0][1] != '\0') {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-	    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+	if (cmd->argv[0][1] != '\0') {
+	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+	    reply_error(&cf->stable, controlfd, cmd, 1);
 	    return 0;
 	}
     }
     if (op == UPDATE || op == LOOKUP || op == DELETE) {
-	addr = argv[2];
-	port = argv[3];
+	addr = cmd->argv[2];
+	port = cmd->argv[3];
 	/* Process additional command modifiers */
 	external = 1;
 	/* In bridge mode all clients are assumed to be asymmetric */
-	asymmetric = (cf->bmode != 0) ? 1 : 0;
+	asymmetric = (cf->stable.bmode != 0) ? 1 : 0;
 	pf = AF_INET;
 	weak = 0;
-	for (cp = argv[0] + 1; *cp != '\0'; cp++) {
+	for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
 	    switch (*cp) {
 	    case 'a':
 	    case 'A':
@@ -613,22 +567,22 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    case 'e':
 	    case 'E':
 		if (lidx < 0) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
-		lia[lidx] = cf->bindaddr[1];
+		lia[lidx] = cf->stable.bindaddr[1];
 		lidx--;
 		break;
 
 	    case 'i':
 	    case 'I':
 		if (lidx < 0) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
-		lia[lidx] = cf->bindaddr[0];
+		lia[lidx] = cf->stable.bindaddr[0];
 		lidx--;
 		break;
 
@@ -650,8 +604,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    case 'Z':
 		requested_nsamples = (strtol(cp + 1, &cp, 10) / 10) * 80;
 		if (requested_nsamples <= 0) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
 		cp--;
@@ -665,8 +619,8 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 			break;
 		}
 		if (t == cp) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
 		codecs = alloca(cp - t + 1);
@@ -679,17 +633,19 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    case 'L':
 		len = extractaddr(cp + 1, &t, &cp, &tpf);
 		if (len == -1) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
 		c = t[len];
 		t[len] = '\0';
+                pthread_mutex_unlock(&cf->glock);
 		local_addr = host2bindaddr(cf, t, tpf, &errmsg);
+                pthread_mutex_lock(&cf->glock);
 		if (local_addr == NULL) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		      "invalid local address: %s: %s", t, errmsg);
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
 		t[len] = c;
@@ -700,31 +656,33 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    case 'R':
 		len = extractaddr(cp + 1, &t, &cp, &tpf);
 		if (len == -1) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "command syntax error");
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
 		c = t[len];
 		t[len] = '\0';
 		local_addr = alloca(sizeof(struct sockaddr_storage));
+                pthread_mutex_unlock(&cf->glock);
 		n = resolve(local_addr, tpf, t, SERVICE, AI_PASSIVE);
+                pthread_mutex_lock(&cf->glock);
 		if (n != 0) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		      "invalid remote address: %s: %s", t, gai_strerror(n));
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
-		if (local4remote(cf, local_addr, satoss(local_addr)) == -1) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		if (local4remote(local_addr, satoss(local_addr)) == -1) {
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		      "can't find local address for remote address: %s", t);
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
 		local_addr = addr2bindaddr(cf, local_addr, &errmsg);
 		if (local_addr == NULL) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->glog,
+		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		      "invalid local address: %s", errmsg);
-		    reply_error(cf, controlfd, &raddr, rlen, cookie, 1);
+		    reply_error(&cf->stable, controlfd, cmd, 1);
 		    return 0;
 		}
 		t[len] = c;
@@ -732,7 +690,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 		break;
 
 	    default:
-		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "unknown command modifier `%c'",
+		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "unknown command modifier `%c'",
 		  *cp);
 		break;
 	    }
@@ -740,13 +698,15 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	if (op != DELETE && addr != NULL && port != NULL && strlen(addr) >= 7) {
 	    struct sockaddr_storage tia;
 
-	    if ((n = resolve(sstosa(&tia), pf, addr, port,
-	      AI_NUMERICHOST)) == 0) {
+            pthread_mutex_unlock(&cf->glock);
+            n = resolve(sstosa(&tia), pf, addr, port, AI_NUMERICHOST);
+            pthread_mutex_lock(&cf->glock);
+            if (n == 0) {
 		if (!ishostnull(sstosa(&tia))) {
 		    for (i = 0; i < 2; i++) {
 			ia[i] = malloc(SS_LEN(&tia));
 			if (ia[i] == NULL) {
-			    handle_nomem(cf, controlfd, &raddr, rlen, cookie,
+			    handle_nomem(&cf->stable, controlfd, cmd,
 			      5, ia, fds, spa, spb);
 			    return 0;
 			}
@@ -757,7 +717,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 		    satosin(ia[1])->sin_port = htons(n + 1);
 		}
 	    } else {
-		rtpp_log_write(RTPP_LOG_ERR, cf->glog, "getaddrinfo: %s",
+		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "getaddrinfo: %s",
 		  gai_strerror(n));
 	    }
 	}
@@ -784,54 +744,54 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
     }
 
     if (i == -1 && op != UPDATE) {
-	rtpp_log_write(RTPP_LOG_INFO, cf->glog,
+	rtpp_log_write(RTPP_LOG_INFO, cf->stable.glog,
 	  "%s request failed: session %s, tags %s/%s not found", rname,
 	  call_id, from_tag, to_tag != NULL ? to_tag : "NONE");
 	if (op == LOOKUP) {
 	    for (i = 0; i < 2; i++)
 		if (ia[i] != NULL)
 		    free(ia[i]);
-	    reply_port(cf, controlfd, &raddr, rlen, cookie, 0, lia);
+	    reply_port(&cf->stable, controlfd, cmd, 0, lia);
 	    return 0;
 	}
-	reply_error(cf, controlfd, &raddr, rlen, cookie, 8);
+	reply_error(&cf->stable, controlfd, cmd, 8);
 	return 0;
     }
 
     switch (op) {
     case DELETE:
     case RECORD:
-	reply_ok(cf, controlfd, &raddr, rlen, cookie);
+	reply_ok(&cf->stable, controlfd, cmd);
 	return 0;
 
     case NOPLAY:
 	handle_noplay(cf, spa, i);
-	reply_ok(cf, controlfd, &raddr, rlen, cookie);
+	reply_ok(&cf->stable, controlfd, cmd);
 	return 0;
 
     case PLAY:
 	handle_noplay(cf, spa, i);
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->codecs[i] == NULL) {
-		reply_error(cf, controlfd, &raddr, rlen, cookie, 6);
+		reply_error(&cf->stable, controlfd, cmd, 6);
 		return 0;
 	    }
 	    codecs = spa->codecs[i];
 	}
 	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount) != 0) {
-	    reply_error(cf, controlfd, &raddr, rlen, cookie, 6);
+	    reply_error(&cf->stable, controlfd, cmd, 6);
 	    return 0;
 	}
-	reply_ok(cf, controlfd, &raddr, rlen, cookie);
+	reply_ok(&cf->stable, controlfd, cmd);
 	return 0;
 
     case COPY:
 	handle_copy(cf, spa, i, recording_name, record_single_file);
-	reply_ok(cf, controlfd, &raddr, rlen, cookie);
+	reply_ok(&cf->stable, controlfd, cmd);
 	return 0;
 
     case QUERY:
-	handle_query(cf, controlfd, &raddr, rlen, cookie, spa, i);
+	handle_query(cf, controlfd, cmd, spa, i);
 	return 0;
 
     case LOOKUP:
@@ -854,7 +814,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    }
 	    if (create_listener(cf, spa->laddr[i], &lport, fds) == -1) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create listener");
-		reply_error(cf, controlfd, &raddr, rlen, cookie, 7);
+		reply_error(&cf->stable, controlfd, cmd, 7);
 		return 0;
 	    }
 	    assert(spa->fds[i] == -1);
@@ -874,9 +834,9 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	lport = spa->ports[i];
 	lia[0] = spa->laddr[i];
 	pidx = (i == 0) ? 1 : 0;
-	spa->ttl_mode = cf->ttl_mode;
-	spa->ttl[0] = cf->max_ttl;
-	spa->ttl[1] = cf->max_ttl;
+	spa->ttl_mode = cf->stable.ttl_mode;
+	spa->ttl[0] = cf->stable.max_ttl;
+	spa->ttl[1] = cf->stable.max_ttl;
 	if (op == UPDATE) {
 	    rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	      "adding %s flag to existing session, new=%d/%d/%d",
@@ -888,7 +848,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	  spa->ports[1]);
     } else {
 	assert(op == UPDATE);
-	rtpp_log_write(RTPP_LOG_INFO, cf->glog,
+	rtpp_log_write(RTPP_LOG_INFO, cf->stable.glog,
 	  "new session %s, tag %s requested, type %s",
 	  call_id, from_tag, weak ? "weak" : "strong");
 
@@ -897,13 +857,13 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    if (lia[0] == NULL) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log,
 		  "can't create listener: %s", t);
-		reply_error(cf, controlfd, &raddr, rlen, cookie, 10);
+		reply_error(&cf->stable, controlfd, cmd, 10);
 		return 0;
 	    }
 	}
 	if (create_listener(cf, lia[0], &lport, fds) == -1) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->glog, "can't create listener");
-	    reply_error(cf, controlfd, &raddr, rlen, cookie, 10);
+	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "can't create listener");
+	    reply_error(&cf->stable, controlfd, cmd, 10);
 	    return 0;
 	}
 
@@ -913,14 +873,14 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	 */
 	spa = malloc(sizeof(*spa));
 	if (spa == NULL) {
-	    handle_nomem(cf, controlfd, &raddr, rlen, cookie, 11, ia,
+	    handle_nomem(&cf->stable, controlfd, cmd, 11, ia,
 	      fds, spa, spb);
 	    return 0;
 	}
 	/* spb is RTCP twin session for this one. */
 	spb = malloc(sizeof(*spb));
 	if (spb == NULL) {
-	    handle_nomem(cf, controlfd, &raddr, rlen, cookie, 12, ia,
+	    handle_nomem(&cf->stable, controlfd, cmd, 12, ia,
 	      fds, spa, spb);
 	    return 0;
 	}
@@ -933,15 +893,15 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	}
 	spa->call_id = strdup(call_id);
 	if (spa->call_id == NULL) {
-	    handle_nomem(cf, controlfd, &raddr, rlen, cookie, 13, ia,
+	    handle_nomem(&cf->stable, controlfd, cmd, 13, ia,
 	      fds, spa, spb);
 	    return 0;
 	}
 	spb->call_id = spa->call_id;
 	spa->tag = strdup(from_tag);
 	spa->tag_nomedianum = strdup(from_tag);
-	if (spa->tag == NULL || spa->tag_nomedianum == NULL) {
-	    handle_nomem(cf, controlfd, &raddr, rlen, cookie, 14, ia,
+	if (spa->tag == NULL) {
+	    handle_nomem(&cf->stable, controlfd, cmd, 14, ia,
 	      fds, spa, spb);
 	    return 0;
 	}
@@ -967,12 +927,12 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	spb->fds[0] = fds[1];
 	spa->ports[0] = lport;
 	spb->ports[0] = lport + 1;
-	spa->ttl[0] = cf->max_ttl;
-	spa->ttl[1] = cf->max_ttl;
+	spa->ttl[0] = cf->stable.max_ttl;
+	spa->ttl[1] = cf->stable.max_ttl;
 	spb->ttl[0] = -1;
 	spb->ttl[1] = -1;
-	spa->log = rtpp_log_open(cf, "rtpproxy", spa->call_id, 0);
-	rtpp_log_setlevel(spa->log, cf->log_level);
+	spa->log = rtpp_log_open(&cf->stable, "rtpproxy", spa->call_id, 0);
+	rtpp_log_setlevel(spa->log, cf->stable.log_level);
 	spb->log = spa->log;
 	spa->rtcp = spb;
 	spb->rtcp = NULL;
@@ -989,23 +949,24 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 
 	cf->sessions_created++;
 	cf->sessions_active++;
+
 	/*
 	 * Each session can consume up to 5 open file descriptors (2 RTP,
 	 * 2 RTCP and 1 logging) so that warn user when he is likely to
 	 * exceed 80% mark on hard limit.
 	 */
-	if (cf->sessions_active > (cf->nofile_limit.rlim_max * 80 / (100 * 5)) &&
+	if (cf->sessions_active > (cf->stable.nofile_limit.rlim_max * 80 / (100 * 5)) &&
 	  cf->nofile_limit_warned == 0) {
 	    cf->nofile_limit_warned = 1;
-	    rtpp_log_write(RTPP_LOG_WARN, cf->glog, "passed 80%% "
+	    rtpp_log_write(RTPP_LOG_WARN, cf->stable.glog, "passed 80%% "
 	      "threshold on the open file descriptors limit (%d), "
 	      "consider increasing the limit using -L command line "
-	      "option", (int)cf->nofile_limit.rlim_max);
+	      "option", (int)cf->stable.nofile_limit.rlim_max);
 	}
 
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
 	  "tag %s", lport, from_tag);
-	if (cf->record_all != 0) {
+	if (cf->stable.record_all != 0) {
 	    handle_copy(cf, spa, 0, NULL, 0);
 	    handle_copy(cf, spa, 1, NULL, 0);
 	}
@@ -1100,7 +1061,7 @@ handle_command(struct cfg *cf, int controlfd, double dtime)
 	    free(ia[i]);
 
     assert(lport != 0);
-    reply_port(cf, controlfd, &raddr, rlen, cookie, lport, lia);
+    reply_port(&cf->stable, controlfd, cmd, lport, lia);
     return 0;
 }
 
@@ -1123,7 +1084,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	    idx = 0;
 	    cmpr = cmpr1;
 	} else {
-	    spa = session_findnext(spa);
+	    spa = session_findnext(cf, spa);
 	    continue;
 	}
 
@@ -1145,7 +1106,7 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	      spa->strong, spa->weak[0], spa->weak[1]);
 	    /* Skipping to next possible stream for this call */
 	    ++ndeleted;
-	    spa = session_findnext(spa);
+	    spa = session_findnext(cf, spa);
 	    continue;
 	}
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
@@ -1153,8 +1114,10 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
 	   medianum, spa->ports[0], spa->ports[1]);
 	/* Search forward before we do removal */
 	spb = spa;
-	spa = session_findnext(spa);
+	spa = session_findnext(cf, spa);
+        pthread_mutex_lock(&cf->sessinfo.lock);
 	remove_session(cf, spb);
+        pthread_mutex_unlock(&cf->sessinfo.lock);
 	++ndeleted;
 	if (cmpr != 2) {
 	    break;
@@ -1230,7 +1193,7 @@ handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
               "starting recording RTP session on port %d", spa->ports[idx]);
         }
         assert(spa->rtcp->rrcs[idx] == NULL);
-        if (cf->rrtcp != 0) {
+        if (cf->stable.rrtcp != 0) {
             spa->rtcp->rrcs[idx] = spa->rrcs[idx];
             rtpp_log_write(RTPP_LOG_INFO, spa->log,
               "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
@@ -1243,7 +1206,7 @@ handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "starting recording RTP session on port %d", spa->ports[idx]);
     }
-    if (spa->rtcp->rrcs[idx] == NULL && cf->rrtcp != 0) {
+    if (spa->rtcp->rrcs[idx] == NULL && cf->stable.rrtcp != 0) {
 	spa->rtcp->rrcs[idx] = ropen(cf, spa->rtcp, rname, idx);
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
@@ -1259,7 +1222,7 @@ handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
 
     nrecorded = 0;
     for (spa = session_findfirst(cf, call_id); spa != NULL;
-      spa = session_findnext(spa)) {
+      spa = session_findnext(cf, spa)) {
 	if (compare_session_tags(spa->tag, from_tag, NULL) != 0) {
 	    idx = 1;
 	} else if (to_tag != NULL &&
@@ -1275,14 +1238,14 @@ handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
 }
 
 static void
-handle_query(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
-  socklen_t rlen, char *cookie, struct rtpp_session *spa, int idx)
+handle_query(struct cfg *cf, int fd, struct rtpp_command *cmd,
+  struct rtpp_session *spa, int idx)
 {
     char buf[1024 * 8];
     int len;
 
-    if (cookie != NULL) {
-	len = sprintf(buf, "%s %d %lu %lu %lu %lu\n", cookie, get_ttl(spa),
+    if (cmd->cookie != NULL) {
+	len = sprintf(buf, "%s %d %lu %lu %lu %lu\n", cmd->cookie, get_ttl(spa),
 	  spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
 	  spa->pcount[3]);
     } else {
@@ -1290,5 +1253,70 @@ handle_query(struct cfg *cf, int fd, struct sockaddr_storage *raddr,
 	  spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
 	  spa->pcount[3]);
     }
-    doreply(cf, fd, buf, len, raddr, rlen);
+    doreply(&cf->stable, fd, buf, len, &cmd->raddr, cmd->rlen);
+}
+
+static void
+handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd)
+{
+    struct rtpp_session *spa, *spb;
+    int len, i;
+    char addrs[4][256];
+    char buf[1024 * 8];
+
+    pthread_mutex_lock(&cf->sessinfo.lock);
+    if (cmd->cookie == NULL)
+        len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n"
+          "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
+          cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions / 2,
+          cf->packets_in, cf->packets_out);
+    else
+        len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n"
+          "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
+          cmd->cookie, cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions / 2,
+          cf->packets_in, cf->packets_out);
+    for (i = 0; i < cf->sessinfo.nsessions; i++) {
+        spa = cf->sessinfo.sessions[i];
+        if (spa == NULL || spa->sidx[0] != i)
+            continue;
+        /* RTCP twin session */
+        if (spa->rtcp == NULL) {
+            spb = spa->rtp;
+            buf[len++] = '\t';
+        } else {
+            spb = spa->rtcp;
+            buf[len++] = '\t';
+            buf[len++] = 'C';
+            buf[len++] = ' ';
+        }
+
+        addr2char_r(spb->laddr[1], addrs[0], sizeof(addrs[0]));
+        if (spb->addr[1] == NULL) {
+            strcpy(addrs[1], "NONE");
+        } else {
+            sprintf(addrs[1], "%s:%d", addr2char(spb->addr[1]),
+              addr2port(spb->addr[1]));
+        }
+        addr2char_r(spb->laddr[0], addrs[2], sizeof(addrs[2]));
+        if (spb->addr[0] == NULL) {
+            strcpy(addrs[3], "NONE");
+        } else {
+            sprintf(addrs[3], "%s:%d", addr2char(spb->addr[0]),
+              addr2port(spb->addr[0]));
+        }
+
+        len += sprintf(buf + len,
+          "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
+          "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
+          spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
+          addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
+          spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
+        if (len + 512 > sizeof(buf)) {
+            doreply(&cf->stable, fd, buf, len, &cmd->raddr, cmd->rlen);
+            len = 0;
+        }
+    }
+    pthread_mutex_unlock(&cf->sessinfo.lock);
+    if (len > 0)
+        doreply(&cf->stable, fd, buf, len, &cmd->raddr, cmd->rlen);
 }

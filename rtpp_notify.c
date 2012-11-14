@@ -214,7 +214,7 @@ rtpp_notify_schedule(struct cfg *cf, struct rtpp_session *sp)
           sp->timeout_data.notify_tag);
     }
 
-    wi->glog = cf->glog;
+    wi->glog = cf->stable.glog;
 
     rtpp_notify_queue_put_item(wi);
     return 0;

@@ -51,7 +51,7 @@ int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
 struct sockaddr *addr2bindaddr(struct cfg *, struct sockaddr *, const char **);
 struct sockaddr *host2bindaddr(struct cfg *, const char *, int, const char **);
-int local4remote(struct cfg *, struct sockaddr *, struct sockaddr_storage *);
+int local4remote(struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, char **, char **, int *);
 
 /* Stripped down version of sockaddr_in* for saving space */
