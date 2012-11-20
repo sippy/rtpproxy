@@ -77,6 +77,8 @@ class _RTPPLWorker(Thread):
             command, result_callback, callback_parameters = wi
             try:
                 data = self.send_raw(command)
+                if len(data) == 0:
+                    data = None
             except:
                 data = None
             if result_callback != None:
