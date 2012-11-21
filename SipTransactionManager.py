@@ -301,7 +301,7 @@ class SipTransactionManager(object):
         else:
             t.userv = userv
         t.data = msg.localStr(t.userv.laddress[0], t.userv.laddress[1])
-        if msg.getMethod() == 'INVITE':
+        if t.method == 'INVITE':
             try:
                 t.expires = msg.getHFBody('expires').getNum()
                 if t.expires <= 0:
