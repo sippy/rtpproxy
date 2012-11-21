@@ -1,0 +1,14 @@
+[Unit]
+Description=A symmetric RTP proxy
+After=network.target
+
+[Service]
+Type=simple
+User=rtpproxy
+Group=rtpproxy
+EnvironmentFile=/etc/sysconfig/rtpproxy
+PIDFile=/var/run/rtpproxy/rtpproxy.pid
+ExecStart=/usr/bin/rtpproxy -f -p /var/run/rtpproxy/rtpproxy.pid $OPTIONS
+
+[Install]
+WantedBy=multi-user.target
