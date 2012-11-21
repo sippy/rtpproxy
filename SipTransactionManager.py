@@ -378,11 +378,6 @@ class SipTransactionManager(object):
                     else:
                         t.resp_cb(msg, t)
                 if t.needack:
-                    if t.resp_cb != None:
-                        if t.cb_ifver == 1:
-                            t.resp_cb(msg)
-                        else:
-                            t.resp_cb(msg, t)
                     # Prepare and send ACK if necessary
                     fcode = msg.getSCode()[0]
                     tag = msg.getHFBody('to').getTag()
