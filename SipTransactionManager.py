@@ -372,6 +372,11 @@ class SipTransactionManager(object):
                         t.resp_cb(msg, t)
             else:
                 # Final response - notify upper layer and remove transaction
+                if t.resp_cb != None:
+                    if t.cb_ifver == 1:
+                        t.resp_cb(msg)
+                    else:
+                        t.resp_cb(msg, t)
                 if t.needack:
                     if t.resp_cb != None:
                         if t.cb_ifver == 1:
