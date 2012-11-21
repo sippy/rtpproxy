@@ -285,6 +285,7 @@ class SipTransactionManager(object):
     def newTransaction(self, msg, resp_cb = None, laddress = None, userv = None, \
       cb_ifver = 1):
         t = SipTransaction()
+        t.method = msg.getMethod()
         t.cb_ifver = cb_ifver
         t.tid = msg.getTId(True, True)
         if self.tclient.has_key(t.tid):
@@ -300,17 +301,18 @@ class SipTransactionManager(object):
         else:
             t.userv = userv
         t.data = msg.localStr(t.userv.laddress[0], t.userv.laddress[1])
-        try:
-            t.expires = msg.getHFBody('expires').getNum()
-            if t.expires <= 0:
-                t.expires = 300
-        except IndexError:
-            t.expires = 300
         if msg.getMethod() == 'INVITE':
+            try:
+                t.expires = msg.getHFBody('expires').getNum()
+                if t.expires <= 0:
+                    t.expires = 300
+            except IndexError:
+                t.expires = 300
             t.needack = True
             t.ack = msg.genACK()
             t.cancel = msg.genCANCEL()
         else:
+            t.expires = 32
             t.needack = False
             t.ack = None
             t.cancel = None
