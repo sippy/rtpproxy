@@ -39,11 +39,10 @@ class SipRequest(SipMsg):
 
     def __init__(self, buf = None, method = None, ruri = None, sipver = 'SIP/2.0', to = None, fr0m = None, via = None, cseq = None, \
                  callid = None, maxforwards = None, body = None, contact = None, routes = (), target = None, cguid = None,
-                 user_agent = None):
+                 user_agent = None, expires = None):
         SipMsg.__init__(self, buf)
         if buf != None:
             return
-
         self.method = method
         self.ruri = ruri
         if target == None:
@@ -68,7 +67,11 @@ class SipRequest(SipMsg):
         if contact != None:
             self.appendHeader(SipHeader(name = 'contact', body = contact))
         if method in ('INVITE', 'REGISTER'):
-            self.appendHeader(SipHeader(name = 'expires'))
+            if expires == None:
+                expires = SipHeader(name = 'expires')
+            else:
+                expires = SipHeader(name = 'expires', body = expires)
+            self.appendHeader(expires)
         if user_agent != None:
             self.user_agent = user_agent
             self.appendHeader(SipHeader(name = 'user-agent', bodys = user_agent))
@@ -142,8 +145,13 @@ class SipRequest(SipMsg):
             maxforward = maxforwards[0].getCopy()
         else:
             maxforward = None
+        expires = self.getHFBodys('expires')
+        if len(expires) > 0:
+            expires = expires[0].getCopy()
+        else:
+            expires = None
         return SipRequest(method = method, ruri = self.ruri.getCopy(), sipver = self.sipver, \
                           fr0m = self.getHFBody('from').getCopy(), to = self.getHFBody('to').getCopy(), \
                           via = self.getHFBody('via').getCopy(), callid = self.getHFBody('call-id').getCopy(), \
                           cseq = cseq, maxforwards = maxforward, \
-                          user_agent = self.user_agent)
+                          user_agent = self.user_agent, expires = expires)
