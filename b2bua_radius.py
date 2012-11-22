@@ -591,6 +591,15 @@ class CallMap(object):
             res += 'Total: %d\n' % total
             clim.send(res)
             return False
+        if cmd == 'lt':
+            res = 'In-memory server transactions:\n'
+            for tid, t in self.global_config['_sip_tm'].tserver.iteritems():
+                res += '%s %s %s\n' % (tid, t.method, t.state)
+            res += 'In-memory client transactions:\n'
+            for tid, t in self.global_config['_sip_tm'].tclient.iteritems():
+                res += '%s %s %s\n' % (tid, t.method, t.state)
+            clim.send(res)
+            return False
         if cmd == 'd':
             if len(args) != 1:
                 clim.send('ERROR: syntax error: d <call-id>\n')
