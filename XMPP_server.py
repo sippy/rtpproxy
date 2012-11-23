@@ -39,7 +39,9 @@ class Worker(iksemel.Stream):
     def on_stanza(self, doc):
         if doc.name() == 'incoming_packet':
             data = base64.b64decode(doc.get('msg'))
-            reactor.callFromThread(self.__owner.handle_read, data, (doc.get('src_addr'), int(doc.get('src_port'))))
+            raddr = (doc.get('src_addr'), int(doc.get('src_port')))
+            laddr = (doc.get('dst_addr'), int(doc.get('dst_port')))
+            reactor.callFromThread(self.__owner.handle_read, data, raddr, laddr)
 
     def run_rx(self):
         prev_reconnect_count = -1
@@ -61,7 +63,7 @@ class Worker(iksemel.Stream):
                     continue
                 self.recv()
             except:
-                print datetime.datetime.now(), 'XMPP_server: unhandled exception when processing incoming data'
+                print datetime.datetime.now(), 'XMPP_server: unhandled exception when receiving incoming data'
                 print '-' * 70
                 traceback.print_exc(file = sys.stdout)
                 print '-' * 70
@@ -90,29 +92,31 @@ class Worker(iksemel.Stream):
             if self.__owner._shutdown:
                 return
             if self.__reconnect:
-                if not first_time:
-                    time.sleep(0.1)
-                    first_time = False
                 buf = '' # throw away unsent data
             if len(buf) == 0:
                 data, addr = None, None
-                self.__owner._wi_available.acquire()
-                while len(self.__owner._wi) == 0 and not self.__reconnect:
-                    self.__owner._wi_available.wait()
-                    if self.__owner._shutdown:
-                        os.close(self.fileno())
-                        self.__owner._wi_available.release()
-                        return
-                if len(self.__owner._wi) > 0:
-                    data, addr = self.__owner._wi.pop(0)
-                self.__owner._wi_available.release()
+                if not self.__reconnect:
+                    self.__owner._wi_available.acquire()
+                    while len(self.__owner._wi) == 0:
+                        self.__owner._wi_available.wait()
+                        if self.__owner._shutdown:
+                            os.close(self.fileno())
+                            self.__owner._wi_available.release()
+                            return
+                    if len(self.__owner._wi) > 0:
+                        data, addr, laddress = self.__owner._wi.pop(0)
+                    self.__owner._wi_available.release()
                 if self.__reconnect:
-                    #try:
-                    #    os.close(self.fileno())
-                    #except:
-                    #    pass
+                    #print self, self.__reconnect_count
+                    if not first_time:
+                        time.sleep(0.1)
+                        try:
+                            os.close(self.fileno())
+                        except:
+                            pass
                     try:
                         self.connect(jid=iksemel.JID('127.0.0.1'), tls=False, port=22223)
+                        first_time = False
                         os.write(self.fileno(), '<b2bua_slot id="%s"/>' % self.__id)
                         pollobj = poll()
                         pollobj.register(self.fileno(), POLLOUT)
@@ -130,7 +134,7 @@ class Worker(iksemel.Stream):
                 buf = '<outgoing_packet dst_addr="%s" dst_port="%s" ' \
                                 'src_addr="%s" src_port="%s" ' \
                                 'msg="%s"/>' % (dst_addr, dst_port, 
-                                                self.__owner.laddress[0], self.__owner.laddress[1], 
+                                                laddress[0], laddress[1], 
                                                 base64.b64encode(data))
             if self.__owner._shutdown:
                 os.close(self.fileno())
@@ -148,6 +152,21 @@ class Worker(iksemel.Stream):
                 # wait for reconnect
                 self.__reconnect = True
 
+class _XMPP_server(object):
+    def __init__(self, laddress, real_server):
+        self.laddress = laddress
+        self.real_server = real_server
+
+    def send_to(self, data, address):
+        self.real_server._wi_available.acquire()
+        self.real_server._wi.append((data, address, self.laddress))
+        self.real_server._wi_available.notify()
+        self.real_server._wi_available.release()
+
+    def shutdown(self):
+        self.real_server.shutdown()
+        self.real_server = None
+
 class XMPP_server(object):
     def __init__(self, global_config, address, data_callback):
         self._shutdown = False
@@ -155,6 +174,7 @@ class XMPP_server(object):
         self.__data_callback = data_callback
         self._wi_available = threading.Condition()
         self._wi = []
+        self.lservers = {}
         if type(global_config) == dict:
             _id = global_config.get('xmpp_b2bua_id', 5061)
         else:
@@ -162,10 +182,14 @@ class XMPP_server(object):
         for i in range(0, MAX_WORKERS):
             Worker(self, _id)
 
-    def handle_read(self, data, address):
+    def handle_read(self, data, address, laddress):
         if len(data) > 0 and self.__data_callback != None:
+            lserver = self.lservers.get(laddress, None)
+            if lserver == None:
+                lserver = _XMPP_server(laddress, self)
+                self.lservers[laddress] = lserver
             try:
-                self.__data_callback(data, address, self)
+                self.__data_callback(data, address, lserver)
             except:
                 print datetime.datetime.now(), 'XMPP_server: unhandled exception when processing incoming data'
                 print '-' * 70
@@ -175,7 +199,7 @@ class XMPP_server(object):
 
     def send_to(self, data, address):
         self._wi_available.acquire()
-        self._wi.append((data, address))
+        self._wi.append((data, address, self.laddress))
         self._wi_available.notify()
         self._wi_available.release()
 
@@ -184,3 +208,4 @@ class XMPP_server(object):
         self._wi_available.acquire()
         self._wi_available.notifyAll()
         self._wi_available.release()
+        self.lservers = {}
