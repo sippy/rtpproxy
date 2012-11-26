@@ -50,13 +50,14 @@ from SipReplaces import SipReplaces
 from SipPAssertedIdentity import SipPAssertedIdentity
 from SipReason import SipReason
 from SipAllow import SipAllow
+from SipSupported import SipSupported
 from ESipHeaderCSV import ESipHeaderCSV
 
 _hf_types = (SipCSeq, SipCallId, SipFrom, SipTo, SipMaxForwards, SipVia, SipContentLength, \
              SipContentType, SipExpires, SipRecordRoute, SipRoute, SipContact, SipWWWAuthenticate, \
              SipAuthorization, SipServer, SipUserAgent, SipCiscoGUID, SipAlso, SipReferTo, \
              SipCCDiversion, SipReferredBy, SipProxyAuthenticate, SipProxyAuthorization, \
-             SipReplaces, SipPAssertedIdentity, SipReason, SipAllow)
+             SipReplaces, SipPAssertedIdentity, SipReason, SipAllow, SipSupported)
 
 hf_types = {}
 for hf_type in _hf_types:
