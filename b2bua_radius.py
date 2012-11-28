@@ -250,7 +250,7 @@ class CallController(object):
         for route in routing:
             rnum += 1
             if route[0].find('@') != -1:
-                cld, host = route[0].split('@')
+                cld, host = route[0].split('@', 1)
                 if len(cld) == 0:
                     # Allow CLD to be forcefully removed by sending `Routing:@host' entry,
                     # as opposed to the Routing:host, which means that CLD should be obtained
@@ -268,7 +268,7 @@ class CallController(object):
             cli = self.cli
             parameters = {}
             parameters['extra_headers'] = self.pass_headers[:]
-            for a, v in [x.split('=') for x in route[1:]]:
+            for a, v in [x.split('=', 1) for x in route[1:]]:
                 if a == 'credit-time':
                     credit_time = int(v)
                     if credit_time < 0:
