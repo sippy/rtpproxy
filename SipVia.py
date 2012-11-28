@@ -125,12 +125,14 @@ class SipVia(SipGenericHF):
 
     def getTAddr(self):
         rport = self.params.get('rport', None)
+        if rport != None:
+            rport = int(rport)
+            if rport <= 0:
+                rport = None
         if rport == None:
             rport = self.getAddr()[1]
             if rport == None:
                 rport = SipConf.default_port
-        else:
-            rport = int(rport)
         return (self.params.get('received', self.getAddr()[0]), rport)
 
 def _unit_test():
