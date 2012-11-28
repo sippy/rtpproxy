@@ -69,8 +69,16 @@ class SipAddress(object):
             self.hadbrace = False
             return
         if address.startswith('"'):
-            self.name, url = address[1:].split('"', 1)
-            url = url.strip()
+            pos = 1
+            while True:
+                pos1 = address[pos:].find('"')
+                if pos1 == -1:
+                    raise ValueError('Cannot separate name from URI: %s' % address)
+                pos += pos1 + 1
+                if address[pos - 2] != '\\':
+                    break
+            self.name = address[1:pos - 1].strip()
+            url = address[pos:].strip()
             if url.startswith('<'):
                 url = url[1:]
         else:
