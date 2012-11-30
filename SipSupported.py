@@ -41,7 +41,7 @@ class SipSupported(SipGenericHF):
     def __str__(self):
         if not self.parsed:
             return self.body
-        return reduce(lambda x,y: '%s, %s' % (x, y), self.caps)
+        return reduce(lambda x,y: '%s,%s' % (x, y), self.caps)
 
     def getCopy(self):
         if not self.parsed:
