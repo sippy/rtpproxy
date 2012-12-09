@@ -59,6 +59,8 @@ from time import time
 from urllib import quote
 from hashlib import md5
 from sippy.MyConfigParser import MyConfigParser
+from traceback import print_exc
+from datetime import datetime
 
 def re_replace(ptrn, s):
     s = s.split('#', 1)[0]
@@ -472,7 +474,18 @@ class CallMap(object):
         #print gc.collect()
 
     def recvRequest(self, req):
-        if req.getHFBody('to').getTag() != None:
+        try:
+            to_tag = req.getHFBody('to').getTag()
+        except Exception, exception:
+            print datetime.now(), 'can\'t parse SIP request: %s:\n' % str(exception)
+            print '-' * 70
+            print_exc(file = sys.stdout)
+            print '-' * 70
+            print req
+            print '-' * 70
+            sys.stdout.flush()
+            return (None, None, None)
+        if to_tag != None:
             # Request within dialog, but no such dialog
             return (req.genResponse(481, 'Call Leg/Transaction Does Not Exist'), None, None)
         if req.getMethod() == 'INVITE':
@@ -551,8 +564,8 @@ class CallMap(object):
                 except AttributeError:
                     print None
         else:
-            print '%d client, %d server transactions in memory' % \
-              (len(self.global_config['_sip_tm'].tclient), len(self.global_config['_sip_tm'].tserver))
+            print '[%d]: %d client, %d server transactions in memory' % \
+              (os.getpid(), len(self.global_config['_sip_tm'].tclient), len(self.global_config['_sip_tm'].tserver))
         if self.safe_restart:
             if len(self.ccmap) == 0:
                 self.global_config['_sip_tm'].userv.close()
@@ -598,6 +611,26 @@ class CallMap(object):
             res += 'In-memory client transactions:\n'
             for tid, t in self.global_config['_sip_tm'].tclient.iteritems():
                 res += '%s %s %s\n' % (tid, t.method, t.state)
+            clim.send(res)
+            return False
+        if cmd in ('lt', 'llt'):
+            if cmd == 'llt':
+                mindur = 60.0
+            else:
+                mindur = 0.0
+            ctime = time()
+            res = 'In-memory server transactions:\n'
+            for tid, t in self.global_config['_sip_tm'].tserver.iteritems():
+                duration = ctime - t.rtime
+                if duration < mindur:
+                    continue
+                res += '%s %s %s %s\n' % (tid, t.method, t.state, duration)
+            res += 'In-memory client transactions:\n'
+            for tid, t in self.global_config['_sip_tm'].tclient.iteritems():
+                duration = ctime - t.rtime
+                if duration < mindur:
+                    continue
+                res += '%s %s %s %s\n' % (tid, t.method, t.state, duration)
             clim.send(res)
             return False
         if cmd == 'd':
