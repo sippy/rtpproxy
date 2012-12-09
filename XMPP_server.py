@@ -191,7 +191,7 @@ class XMPP_server(object):
             try:
                 self.__data_callback(data, address, lserver)
             except:
-                print datetime.datetime.now(), 'XMPP_server: unhandled exception when processing incoming data'
+                print datetime.datetime.now(), 'XMPP_server: unhandled exception when receiving incoming data'
                 print '-' * 70
                 traceback.print_exc(file = sys.stdout)
                 print '-' * 70
