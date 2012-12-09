@@ -41,7 +41,6 @@ class SipReason(SipGenericHF):
             self.reason = reason
 
     def parse(self):
-        self.parsed = True
         protocol, reason_params = self.body.split(';', 1)
         self.protocol = protocol.strip()
         for reason_param in reason_params.split(';'):
@@ -51,6 +50,7 @@ class SipReason(SipGenericHF):
             elif rp_name == 'text':
                 self.reason = rp_value.strip('"')
         assert(self.cause != None)
+        self.parsed = True
 
     def __str__(self):
         if not self.parsed:

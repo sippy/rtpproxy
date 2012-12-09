@@ -35,8 +35,8 @@ class SipSupported(SipGenericHF):
             self.caps = caps[:]
 
     def parse(self):
-        self.parsed = True
         self.caps = [x.strip() for x in self.body.split(',')]
+        self.parsed = True
 
     def __str__(self):
         if not self.parsed:

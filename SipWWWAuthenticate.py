@@ -47,7 +47,6 @@ class SipWWWAuthenticate(SipGenericHF):
         self.nonce = nonce
 
     def parse(self):
-        self.parsed = True
         parts = self.body.split(' ', 1)[1].strip().split('"')
         if len(parts) % 2 != 0 and len(parts[-1]) == 0:
             parts.pop()
@@ -60,6 +59,7 @@ class SipWWWAuthenticate(SipGenericHF):
                     self.realm = value
                 elif name == 'nonce':
                     self.nonce = value
+        self.parsed = True
 
     def __str__(self):
         return self.localStr()

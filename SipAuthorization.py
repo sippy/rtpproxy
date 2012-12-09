@@ -67,7 +67,6 @@ class SipAuthorization(SipGenericHF):
         self.otherparams = []
 
     def parse(self):
-        self.parsed = True
         self.otherparams = []
         for name, value in [x.strip(', ').split('=', 1) for x in self.body.split(' ', 1)[1].split(',')]:
             if name == 'username':
@@ -88,6 +87,7 @@ class SipAuthorization(SipGenericHF):
                 self.nc = value.strip('"')
             else:
                 self.otherparams.append((name, value))
+        self.parsed = True
 
     def __str__(self):
         if not self.parsed:

@@ -56,8 +56,8 @@ class SipAddressHF(SipGenericHF):
             self.address = address
 
     def parse(self):
-        self.parsed = True
         self.address = SipAddress(self.body)
+        self.parsed = True
 
     def __str__(self):
         return self.localStr()

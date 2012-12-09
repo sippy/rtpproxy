@@ -47,7 +47,6 @@ class SipReplaces(SipGenericHF):
             self.params = params[:]
 
     def parse(self):
-        self.parsed = True
         self.params = []
         params = self.body.split(';')
         self.call_id = params.pop(0)
@@ -60,6 +59,7 @@ class SipReplaces(SipGenericHF):
                 self.early_only = True
             else:
                 self.params.append(param)
+        self.parsed = True
 
     def __str__(self):
         if not self.parsed:

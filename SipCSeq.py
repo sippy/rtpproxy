@@ -40,9 +40,9 @@ class SipCSeq(SipGenericHF):
                 self.cseq = 1
 
     def parse(self):
-        self.parsed = True
         cseq, self.method = self.body.split()
         self.cseq = int(cseq)
+        self.parsed = True
 
     def __str__(self):
         if not self.parsed:

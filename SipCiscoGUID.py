@@ -43,8 +43,8 @@ class SipCiscoGUID(SipGenericHF):
             self.ciscoGUID = (long(s[0:8], 16), long(s[8:16], 16), long(s[16:24], 16), long(s[24:32], 16))
 
     def parse(self):
-        self.parsed = True
         self.ciscoGUID = tuple([int(x) for x in  self.body.split('-', 3)])
+        self.parsed = True
 
     def __str__(self):
         if not self.parsed:

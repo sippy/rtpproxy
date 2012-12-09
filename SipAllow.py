@@ -35,8 +35,8 @@ class SipAllow(SipGenericHF):
             self.methods = methods[:]
 
     def parse(self):
-        self.parsed = True
         self.methods = [x.strip() for x in self.body.split(',')]
+        self.parsed = True
 
     def __str__(self):
         if not self.parsed:

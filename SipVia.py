@@ -59,7 +59,6 @@ class SipVia(SipGenericHF):
                 self.params = params
 
     def parse(self):
-        self.parsed = True
         self.params = {}
         self.sipver, hostname = self.body.split(None, 1)
         hcomps = [x.strip() for x in hostname.split(';')]
@@ -89,6 +88,7 @@ class SipVia(SipGenericHF):
                 self.port = int(portparts[0])
         else:
             self.port = None
+        self.parsed = True
 
     def __str__(self):
         return self.localStr()
