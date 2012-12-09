@@ -66,11 +66,11 @@ class SipRequest(SipMsg):
         self.appendHeader(SipHeader(name = 'cseq', body = SipCSeq(cseq = cseq, method = method)))
         if contact != None:
             self.appendHeader(SipHeader(name = 'contact', body = contact))
-        if method in ('INVITE', 'REGISTER'):
-            if expires == None:
-                expires = SipHeader(name = 'expires')
-            else:
-                expires = SipHeader(name = 'expires', body = expires)
+        if expires == None and method == 'INVITE':
+            expires = SipHeader(name = 'expires')
+            self.appendHeader(expires)
+        elif expires != None:
+            expires = SipHeader(name = 'expires', body = expires)
             self.appendHeader(expires)
         if user_agent != None:
             self.user_agent = user_agent
