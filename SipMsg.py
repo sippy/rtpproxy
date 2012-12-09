@@ -240,7 +240,7 @@ class SipMsg(object):
     def setSource(self, address):
         self.source = address
 
-    def getTId(self, wCSM = False, wBRN = False):
+    def getTId(self, wCSM = False, wBRN = False, wTTG = False):
         headers_dict = dict([(x.name, x) for x in self.headers if x.name in ('cseq', 'call-id', 'from')])
         cseq, method = headers_dict['cseq'].getBody().getCSeq()
         rval = [str(headers_dict['call-id'].getBody()), headers_dict['from'].getBody().getTag(), cseq]
@@ -248,6 +248,8 @@ class SipMsg(object):
             rval.append(method)
         if wBRN:
             rval.append(self.getHFBody('via').getBranch())
+        if wTTG:
+            rval.append(self.getHFBody('to').getTag())
         return tuple(rval)
 
     def getTIds(self):
