@@ -25,6 +25,17 @@
 from SipURL import SipURL
 from string import maketrans
 
+def findquotes(s, pos = 1):
+    rval = []
+    while True:
+        pos1 = s.find('"', pos)
+        if pos1 == -1:
+            break
+        pos = pos1 + 1
+        if pos1 == 0 or s[pos1 - 1] != '\\':
+            rval.append(pos1)
+    return rval
+
 class SipAddress(object):
     name = None
     url = None
@@ -69,16 +80,22 @@ class SipAddress(object):
             self.hadbrace = False
             return
         if address.startswith('"'):
-            pos = 1
-            while True:
-                pos1 = address[pos:].find('"')
-                if pos1 == -1:
-                    raise ValueError('Cannot separate name from URI: %s' % address)
-                pos += pos1 + 1
-                if address[pos - 2] != '\\':
-                    break
-            self.name = address[1:pos - 1].strip()
-            url = address[pos:].strip()
+            qpos = findquotes(address)
+            url = None
+            if len(qpos) == 1:
+                self.name = address[1:qpos[0]]
+                url = address[qpos[0] + 1:].strip()
+            else:
+                for i in range(1, len(qpos)):
+                    if address.find('<', 1, qpos[i]) != -1:
+                        self.name = address[1:qpos[i - 1]]
+                        url = address[qpos[i - 1] + 1:].strip()
+                        break
+                else:
+                    self.name = address[1:qpos[i]]
+                    url = address[qpos[i] + 1:].strip()
+            if url == None:
+                raise ValueError('Cannot separate name from URI: %s' % address)
             if url.startswith('<'):
                 url = url[1:]
         else:
