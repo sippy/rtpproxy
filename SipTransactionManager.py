@@ -272,10 +272,21 @@ class SipTransactionManager(object):
             if via0.params.has_key('rport') or req.nated:
                 via0.params['rport'] = str(rport)
             if self.nat_traversal and req.countHFs('contact') > 0 and req.countHFs('via') == 1:
-                cbody = req.getHFBody('contact')
+                try:
+                    cbody = req.getHFBody('contact')
+                except Exception, exception:
+                    print datetime.now(), 'can\'t parse SIP request from %s:%d: %s:' % (address[0], address[1], str(exception))
+                    print '-' * 70
+                    print_exc(file = sys.stdout)
+                    print '-' * 70
+                    print data
+                    print '-' * 70
+                    sys.stdout.flush()
+                    self.l1rcache[checksum] = (None, None, None)
+                    return
                 if not cbody.asterisk:
                     curl = cbody.getUrl()
-                    if check1918(curl.host):
+                    if check1918(curl.host) or curl.port == 0 or curl.host == '255.255.255.255':
                         curl.host, curl.port = address
                         req.nated = True
             req.setSource(address)
@@ -285,6 +296,7 @@ class SipTransactionManager(object):
     def newTransaction(self, msg, resp_cb = None, laddress = None, userv = None, \
       cb_ifver = 1):
         t = SipTransaction()
+        t.rtime = time()
         t.method = msg.getMethod()
         t.cb_ifver = cb_ifver
         t.tid = msg.getTId(True, True)
@@ -467,28 +479,11 @@ class SipTransactionManager(object):
                 resp = msg.genResponse(482, 'Loop Detected')
                 self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
                 return
-        tid = msg.getTId()
-        # Fasten seatbelts - bumpy transaction matching code ahead!
-        if msg.getMethod() in ('INVITE', 'CANCEL', 'ACK'):
-            btid = msg.getTId(wBRN = True)
-            t = self.tserver.get(btid, None)
-            if t == None:
-                t = self.tserver.get(tid, None)
-                if t != None and t.branch != btid[3]:
-                    if msg.getMethod() == 'INVITE':
-                        # Different branch on transaction to which no final reply
-                        # has been sent yet - merge requests
-                        resp = msg.genResponse(482, 'Loop Detected')
-                        self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
-                        return
-                    elif msg.getMethod() == 'CANCEL':
-                        # CANCEL, but with branch that doesn't match any existing
-                        # transactions
-                        resp = msg.genResponse(481, 'Call Leg/Transaction Does Not Exist')
-                        self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
-                        return
+        if  msg.getMethod() != 'ACK':
+            tid = msg.getTId(wBRN = True)
         else:
-            t = self.tserver.get(tid, None)
+            tid = msg.getTId(wTTG = True)
+        t = self.tserver.get(tid, None)
         if t != None:
             #print 'existing transaction'
             if msg.getMethod() == t.method:
@@ -537,6 +532,7 @@ class SipTransactionManager(object):
             t.teF = None
             t.teG = None
             t.method = msg.getMethod()
+            t.rtime = msg.rtime
             t.data = None
             t.address = None
             t.noack_cb = None
@@ -597,7 +593,7 @@ class SipTransactionManager(object):
     def sendResponse(self, resp, t = None, retrans = False, ack_cb = None):
         #print self.tserver
         if t == None:
-            tid = resp.getTId()
+            tid = resp.getTId(wBRN = True)
             t = self.tserver[tid]
         if t.state not in (TRYING, RINGING) and not retrans:
             raise ValueError('BUG: attempt to send reply on already finished transaction!!!')
@@ -626,11 +622,14 @@ class SipTransactionManager(object):
                 # Schedule removal of the transaction
                 t.ack_cb = ack_cb
                 t.teD = Timeout(self.timerD, 32.0, 1, t)
-                if scode >= 300:
-                    # Black magick to allow proxy send us another INVITE with diffetent branch
+                if scode >= 200:
+                    # Black magick to allow proxy send us another INVITE
+                    # same branch and From tag. Use To tag to match
+                    # ACK transaction after this point. Branch tag in ACK
+                    # could differ as well.
                     del self.tserver[t.tid]
-                    t.tid = list(t.tid)
-                    t.tid.append(t.branch)
+                    t.tid = list(t.tid[:-1])
+                    t.tid.append(resp.getHFBody('to').getTag())
                     t.tid = tuple(t.tid)
                     self.tserver[t.tid] = t
                 # Install retransmit timer if necessary
