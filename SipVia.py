@@ -78,7 +78,15 @@ class SipVia(SipGenericHF):
             hcomps = hcomps[0].split(':', 1)
             self.hostname = hcomps[0]
         if len(hcomps) == 2:
-            self.port = int(hcomps[1])
+            try:
+                self.port = int(hcomps[1])
+            except Exception, e:
+                # XXX: some bad-ass devices send us port number twice
+                # While not allowed by the RFC, deal with it
+                portparts = hcomps[1].split(':', 1)
+                if len(portparts) != 2 or portparts[0] != portparts[1]:
+                    raise e
+                self.port = int(portparts[0])
         else:
             self.port = None
 

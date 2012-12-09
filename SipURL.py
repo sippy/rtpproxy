@@ -111,7 +111,15 @@ class SipURL(object):
                 self.host = hpparts[0]
             else:
                 self.host = hpparts[0]
-                self.port = int(hpparts[1])
+                try:
+                    self.port = int(hpparts[1])
+                except Exception, e:
+                    # XXX: some bad-ass devices send us port number twice
+                    # While not allowed by the RFC, deal with it
+                    portparts = hpparts[1].split(':', 1)
+                    if len(portparts) != 2 or portparts[0] != portparts[1]:
+                        raise e
+                    self.port = int(portparts[0])
         for p in params:
             if p == params[-1] and '?' in p:
                 self.headers = {}
