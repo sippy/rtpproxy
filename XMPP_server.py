@@ -97,7 +97,7 @@ class Worker(iksemel.Stream):
                 data, addr = None, None
                 if not self.__reconnect:
                     self.__owner._wi_available.acquire()
-                    while len(self.__owner._wi) == 0 and and not self.__reconnect:
+                    while len(self.__owner._wi) == 0 and not self.__reconnect:
                         self.__owner._wi_available.wait()
                         if self.__owner._shutdown:
                             os.close(self.fileno())
