@@ -43,7 +43,7 @@ class SipURL(object):
 
     def __init__(self, url = None, username = None, password = None, host = None, port = None, headers = None, \
       usertype = None, transport = None, ttl = None, maddr = None, method = None, tag = None, other = None, \
-      userparams = None, lr = False):
+      userparams = None, lr = False, relaxedparser = False):
         self.other = []
         self.userparams = []
         if url == None:
@@ -96,7 +96,9 @@ class SipURL(object):
             self.username = unquote(uparts[0])
         else:
             hostport = udparts[0]
-        if hostport[0] == '[':
+        if relaxedparser and len(hostport) == 0:
+            self.host = ''
+        elif hostport[0] == '[':
             # IPv6 host
             hpparts = hostport.split(']', 1)
             self.host = hpparts[0] + ']'
