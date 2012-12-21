@@ -81,7 +81,29 @@ class UacStateRinging(UaStateGeneric):
                 print 'tag-less 200 OK, disconnecting'
                 scode = (502, 'Bad Gateway')
                 self.ua.equeue.append(CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin))
-                self.ua.recvEvent(CCEventDisconnect(rtime = resp.rtime, origin = self.ua.origin))
+                if resp.countHFs('contact') > 0:
+                    self.ua.rTarget = resp.getHFBody('contact').getUrl().getCopy()
+                self.ua.routes = [x.getCopy() for x in resp.getHFBodys('record-route')]
+                self.ua.routes.reverse()
+                if len(self.ua.routes) > 0:
+                    if not self.ua.routes[0].getUrl().lr:
+                        self.ua.routes.append(SipRoute(address = SipAddress(url = self.ua.rTarget)))
+                        self.ua.rTarget = self.ua.routes.pop(0).getUrl()
+                        self.ua.rAddr = self.ua.rTarget.getAddr()
+                    elif self.ua.outbound_proxy != None:
+                        self.ua.routes.append(SipRoute(address = SipAddress(url = self.ua.rTarget)))
+                        self.ua.rTarget = self.ua.routes[0].getUrl().getCopy()
+                        self.ua.rTarget.lr = False
+                        self.ua.rTarget.other = tuple()
+                        self.ua.rTarget.headers = tuple()
+                    else:
+                        self.ua.rAddr = self.ua.routes[0].getAddr()
+                else:
+                    self.ua.rAddr = self.ua.rTarget.getAddr()
+                req = self.ua.genRequest('BYE')
+                self.ua.lCSeq += 1
+                self.ua.global_config['_sip_tm'].newTransaction(req, \
+                  laddress = self.ua.source_address)
                 return (UaStateFailed, self.ua.fail_cbs, resp.rtime, self.ua.origin, scode[0])
             self.ua.rUri.setTag(tag)
             if not self.ua.late_media or body == None:
