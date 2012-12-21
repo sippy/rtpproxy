@@ -44,8 +44,8 @@ class SipAddress(object):
     hadbrace = None
     transtable = maketrans('-.!%*_+`\'~', 'a' * 10)
 
-    def __init__(self, address = None, name = None, url = None, params = None, hadbrace = None, \
-      params_order = None):
+    def __init__(self, address = None, name = None, url = None, params = None,
+      hadbrace = None, params_order = None, relaxedparser = False):
         self.params = {}
         self.params_order = []
         self.hadbrace = True
@@ -62,7 +62,7 @@ class SipAddress(object):
         # simple 'sip:foo' case
         if address.lower().startswith('sip:') and address.find('<') == -1:
             parts = address.split(';', 1)
-            self.url = SipURL(parts[0])
+            self.url = SipURL(parts[0], relaxedparser = relaxedparser)
             if len(parts) == 2:
                 for l in parts[1].split(';'):
                     if not l:
@@ -102,7 +102,7 @@ class SipAddress(object):
             self.name, url = address.split('<', 1)
             self.name = self.name.strip()
         url, paramstring = url.split('>', 1)
-        self.url = SipURL(url)
+        self.url = SipURL(url, relaxedparser = relaxedparser)
         paramstring = paramstring.strip()
         if paramstring:
             for l in paramstring.split(';'):

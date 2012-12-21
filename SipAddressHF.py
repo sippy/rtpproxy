@@ -56,7 +56,7 @@ class SipAddressHF(SipGenericHF):
             self.address = address
 
     def parse(self):
-        self.address = SipAddress(self.body)
+        self.address = SipAddress(self.body, relaxedparser = self.relaxedparser)
         self.parsed = True
 
     def __str__(self):
@@ -69,8 +69,11 @@ class SipAddressHF(SipGenericHF):
 
     def getCopy(self):
         if not self.parsed:
-            return self.__class__(self.body)
-        return self.__class__(address = self.address.getCopy())
+            oret = self.__class__(self.body)
+        else:
+            oret = self.__class__(address = self.address.getCopy())
+        oret.relaxedparser = self.relaxedparser
+        return oret
 
     def setBody(self, body):
         self.address = body

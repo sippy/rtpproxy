@@ -32,6 +32,7 @@ from SipConf import SipConf
 
 class SipFrom(SipAddressHF):
     hf_names = ('from', 'f')
+    relaxedparser = True
 
     def __init__(self, body = None, address = None):
         SipAddressHF.__init__(self, body, address)
