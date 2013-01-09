@@ -204,6 +204,12 @@ class SipMsg(object):
     def getHFBody(self, name, idx = 0):
         return [x for x in self.headers if x.name == name][idx].getBody()
 
+    def getHFBCopys(self, name):
+        return [x.getBCopy() for x in self.headers if x.name == name]
+
+    def getHFBCopy(self, name, idx = 0):
+        return [x for x in self.headers if x.name == name][idx].getBCopy()
+
     def replaceHeader(self, oheader, nheader):
         self.headers[self.headers.index(oheader)] = nheader
 
