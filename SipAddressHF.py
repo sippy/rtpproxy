@@ -28,6 +28,7 @@ from ESipHeaderCSV import ESipHeaderCSV
 
 class SipAddressHF(SipGenericHF):
     address = None
+    relaxedparser = False
 
     def __init__(self, body = None, address = None):
         SipGenericHF.__init__(self, body)
