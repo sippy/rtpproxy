@@ -844,6 +844,8 @@ if __name__ == '__main__':
             global_config['_sip_proxy'] = (host_port[0], int(host_port[1]))
         global_config['_cmap'].proxy = StatefulProxy(global_config, global_config['_sip_proxy'])
 
+    if global_config.get('xmpp_b2bua_id', None) != None:
+        global_config['xmpp_mode'] = True
     global_config['_sip_tm'] = SipTransactionManager(global_config, global_config['_cmap'].recvRequest)
     global_config['_sip_tm'].nat_traversal = global_config.getdefault('nat_traversal', False)
 
