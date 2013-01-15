@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 from Timeout import Timeout
-from Udp_server import Udp_server
 from SipHeader import SipHeader
 from SipResponse import SipResponse
 from SipRequest import SipRequest
@@ -105,6 +104,12 @@ class local4remote(object):
     fixed = False
 
     def __init__(self, global_config, handleIncoming):
+        if not global_config['xmpp_mode']:
+            from Udp_server import Udp_server
+            self.udp_server_class = Udp_server
+        else:
+            from XMPP_server import XMPP_server
+            self.udp_server_class = XMPP_server
         self.global_config = global_config
         self.cache_r2l = {}
         self.cache_r2l_old = {}
@@ -127,7 +132,7 @@ class local4remote(object):
             laddresses = ((global_config['_sip_address'], global_config['_sip_port']),)
             self.fixed = True
         for laddress in laddresses:
-            server = Udp_server(global_config, laddress, handleIncoming)
+            server = self.udp_server_class(global_config, laddress, handleIncoming)
             self.cache_l2s[laddress] = server
 
     def getServer(self, address, is_local = False):
@@ -164,7 +169,7 @@ class local4remote(object):
             laddress = address
         server = self.cache_l2s.get(laddress, None)
         if server == None:
-            server = Udp_server(self.global_config, laddress, self.handleIncoming)
+            server = self.udp_server_class(self.global_config, laddress, self.handleIncoming)
             self.cache_l2s[laddress] = server
         #print 'local4remot-2: local address for %s is %s' % (address[0], laddress[0])
         return server
