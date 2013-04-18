@@ -1,0 +1,19 @@
+v=0
+o=- 12333 12333 IN IP4 192.168.1.42
+s=-
+c=IN IP4 192.168.1.42
+t=0 0
+m=audio 16442 RTP/AVP 18 0 2 4 8 96 97 98 101
+a=rtpmap:18 G729a/8000
+a=rtpmap:0 PCMU/8000
+a=rtpmap:2 G726-32/8000
+a=rtpmap:4 G723/8000
+a=rtpmap:8 PCMA/8000
+a=rtpmap:96 G726-40/8000
+a=rtpmap:97 G726-24/8000
+a=rtpmap:98 G726-16/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-15
+a=ptime:30
+a=sendrecv
+
