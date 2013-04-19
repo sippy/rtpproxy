@@ -153,11 +153,14 @@ class CallController(object):
                     allowed_pts = self.global_config['_allowed_pts']
                     mbody = body.content.sections[0].m_header
                     if mbody.transport.lower() == 'rtp/avp':
+                        old_len = len(mbody.formats)
                         mbody.formats = [x for x in mbody.formats if x in allowed_pts]
                         if len(mbody.formats) == 0:
                             self.uaA.recvEvent(CCEventFail((488, 'Not Acceptable Here')))
                             self.state = CCStateDead
                             return
+                        if old_len > len(mbody.formats):
+                            body.content.sections[0].optimize_a()
                 if self.cld.startswith('nat-'):
                     self.cld = self.cld[4:]
                     if body != None:

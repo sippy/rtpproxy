@@ -83,3 +83,19 @@ class SdpMediaDescription(object):
             self.a_headers.append(header)
         else:
             setattr(self, name + '_header', f_types[name](header))
+
+    def optimize_a(self):
+        new_a_headers = []
+        for ah in self.a_headers:
+            pt = None
+            try:
+                if ah.startswith('rtpmap:'):
+                    pt = int(ah[7:].split(' ')[0])
+                elif ah.startswith('fmtp:'):
+                    pt = int(ah[5:].split(' ')[0])
+            except:
+                pass
+            if pt != None and not pt in self.m_header.formats:
+                continue
+            new_a_headers.append(ah)
+        self.a_headers = new_a_headers
