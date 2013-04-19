@@ -135,11 +135,11 @@ class SdpBody(object):
         for header in self.a_headers:
             s += 'a=%s\r\n' % str(header)
         for section in self.sections:
-           if optimize_c_headers and section.c_header != None and \
-             str(section.c_header) == sections_0_str:
-               s += section.localStr(noC = True)
-           else:
-               s += str(section)
+            if optimize_c_headers and section.c_header != None and \
+              str(section.c_header) == sections_0_str:
+                s += section.localStr(noC = True)
+            else:
+                s += str(section)
         return s
 
     def localStr(self, local_addr = None, local_port = None):
