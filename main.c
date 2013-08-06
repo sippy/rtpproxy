@@ -517,7 +517,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
     struct rtp_packet *packet = NULL;
 
     /* Repeat since we may have several packets queued on the same socket */
-    for (ndrain = 0; ndrain < 5; ndrain++) {
+    for (ndrain = 0; ndrain < 1; ndrain++) {
 	if (packet != NULL)
 	    rtp_packet_free(packet);
 
@@ -815,26 +815,18 @@ main(int argc, char **argv)
     rtpp_command_async_init(&cf);
 
     sptime = 0;
+    eptime = getdtime();
     last_tick_time = 0;
+    timeout = 1000 / POLL_LIMIT;
     for (;;) {
-        pthread_mutex_lock(&cf.glock);
-        pthread_mutex_lock(&cf.sessinfo.lock);
-	if (cf.rtp_nsessions > 0 || cf.sessinfo.nsessions > 0) {
-	    timeout = RTPS_TICKS_MIN;
-	} else {
-	    timeout = TIMETICK * 1000;
-        }
-        pthread_mutex_unlock(&cf.sessinfo.lock);
-        pthread_mutex_unlock(&cf.glock);
-	eptime = getdtime();
 	delay = (eptime - sptime) * 1000000.0;
-	if (delay < 0) {
+	if (delay <= 0) {
             /* Time went backwards, handle that */
 	    sptime = eptime;
 	    last_tick_time = 0;
 	} else 	if (delay < (1000000 / POLL_LIMIT)) {
+	    sptime += 1.0 / (double)POLL_LIMIT;
 	    usleep((1000000 / POLL_LIMIT) - delay);
-	    sptime = getdtime();
 	} else {
 	    sptime = eptime;
 	}
@@ -849,19 +841,17 @@ main(int argc, char **argv)
             usleep(timeout * 1000);
         }
 	eptime = getdtime();
+        if (eptime > last_tick_time + TIMETICK) {
+            alarm_tick = 1;
+            last_tick_time = eptime;
+        } else {
+            alarm_tick = 0;
+        }
         pthread_mutex_lock(&cf.glock);
+	process_rtp(&cf, eptime, alarm_tick);
 	if (cf.rtp_nsessions > 0) {
 	    process_rtp_servers(&cf, eptime);
 	}
-        pthread_mutex_unlock(&cf.glock);
-	if (eptime > last_tick_time + TIMETICK) {
-	    alarm_tick = 1;
-	    last_tick_time = eptime;
-	} else {
-	    alarm_tick = 0;
-	}
-        pthread_mutex_lock(&cf.glock);
-	process_rtp(&cf, eptime, alarm_tick);
         pthread_mutex_unlock(&cf.glock);
     }
 
