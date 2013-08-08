@@ -25,13 +25,18 @@
 #
 # $Id$
 
+PKGNAME=	rtpproxy
+PKGFILES=	GNUmakefile Makefile README extractaudio makeann \
+		  rtpproxy.init rtpproxy.sh udp_storm ${SRCS}
+
 PROG=	rtpproxy
 SRCS=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_record.c rtpp_record.h rtpp_session.h rtpp_util.c \
 	rtpp_util.h rtpp_log.h rtp_resizer.c rtp_resizer.h rtp.c \
 	rtp.h rtpp_session.c rtpp_command.c rtpp_command.h \
 	rtpp_network.c rtpp_network.h rtpp_log.c rtpp_notify.c \
-	rtpp_notify.h rtpp_command_async.h rtpp_command_async.c
+	rtpp_notify.h rtpp_command_async.h rtpp_command_async.c \
+	config.h
 MAN1=
 
 WARNS?=	2
@@ -44,5 +49,12 @@ LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread -lm
 
 cleantabs:
 	perl -pi -e 's|        |\t|g' ${SRCS}
+
+TSTAMP!=	date "+%Y%m%d%H%M%S"
+
+distribution: clean
+	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 ${PKGFILES}
+	git tag rel.${TSTAMP}
+	git push origin rel.${TSTAMP}
 
 .include <bsd.prog.mk>
