@@ -353,10 +353,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 	cf->stable.port_max -= 2;
     }
 
-    if (cf->stable.port_min <= 0 || cf->stable.port_min > 65535)
+    if (!IS_VALID_PORT(cf->stable.port_min))
 	errx(1, "invalid value of the port_min argument, "
 	  "not in the range 1-65535");
-    if (cf->stable.port_max <= 0 || cf->stable.port_max > 65535)
+    if (!IS_VALID_PORT(cf->stable.port_max))
 	errx(1, "invalid value of the port_max argument, "
 	  "not in the range 1-65535");
     if (cf->stable.port_min > cf->stable.port_max)
