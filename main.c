@@ -505,6 +505,8 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	packet->rport = sp->ports[ridx];
 	packet->rtime = dtime;
 
+	port = ntohs(satosin(&packet->raddr)->sin_port);
+
 	i = 0;
 	if (sp->addr[ridx] != NULL) {
 	    /* Check that the packet is authentic, drop if it isn't */
@@ -519,10 +521,16 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 		    }
 		    /* Signal that an address has to be updated */
 		    i = 1;
-		} else if (sp->canupdate[ridx] != 0 &&
-		  sp->last_update[ridx] != 0 &&
-		  dtime - sp->last_update[ridx] > UPDATE_WINDOW) {
-		    sp->canupdate[ridx] = 0;
+		} else if (sp->canupdate[ridx] != 0) {
+		    if (sp->last_update[ridx] != 0 ||
+		      dtime - sp->last_update[ridx] > UPDATE_WINDOW) {
+			rtpp_log_write(RTPP_LOG_INFO, sp->log,
+			  "%s's address latched in: %s:%d (%s)",
+			  (ridx == 0) ? "callee" : "caller",
+			  addr2char(sstosa(&packet->raddr)), port,
+			  (sp->rtp == NULL) ? "RTP" : "RTCP");
+			sp->canupdate[ridx] = 0;
+		    }
 		}
 	    } else {
 		/*
@@ -566,8 +574,6 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	      &packet->raddr, packet->rlen) != 0) {
 	        sp->canupdate[ridx] = 0;
 	    }
-
-	    port = ntohs(satosin(&packet->raddr)->sin_port);
 
 	    rtpp_log_write(RTPP_LOG_INFO, sp->log,
 	      "%s's address filled in: %s:%d (%s)",
