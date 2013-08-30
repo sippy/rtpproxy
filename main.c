@@ -505,9 +505,10 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 	packet->rport = sp->ports[ridx];
 	packet->rtime = dtime;
 
+	i = 0;
+
 	port = ntohs(satosin(&packet->raddr)->sin_port);
 
-	i = 0;
 	if (sp->addr[ridx] != NULL) {
 	    /* Check that the packet is authentic, drop if it isn't */
 	    if (sp->asymmetric[ridx] == 0) {
@@ -522,7 +523,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
 		    /* Signal that an address has to be updated */
 		    i = 1;
 		} else if (sp->canupdate[ridx] != 0) {
-		    if (sp->last_update[ridx] != 0 ||
+		    if (sp->last_update[ridx] == 0 ||
 		      dtime - sp->last_update[ridx] > UPDATE_WINDOW) {
 			rtpp_log_write(RTPP_LOG_INFO, sp->log,
 			  "%s's address latched in: %s:%d (%s)",
