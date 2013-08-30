@@ -56,7 +56,7 @@
 #define	TOS		0xb8
 #define	LBR_THRS	128	/* low-bitrate threshold */
 #define	CPORT		"22222"
-#define	POLL_LIMIT	200	/* maximum number of poll(2) calls per second */
+#define	POLL_RATE	200	/* maximum number of poll(2) calls per second */
 #define	UPDATE_WINDOW	10.0	/* in seconds */
 
 /* Dummy service, getaddrinfo needs it */
