@@ -817,16 +817,16 @@ main(int argc, char **argv)
     sptime = 0;
     eptime = getdtime();
     last_tick_time = 0;
-    timeout = 1000 / POLL_LIMIT;
+    timeout = 1000 / POLL_RATE;
     for (;;) {
 	delay = (eptime - sptime) * 1000000.0;
 	if (delay <= 0) {
             /* Time went backwards, handle that */
 	    sptime = eptime;
 	    last_tick_time = 0;
-	} else 	if (delay < (1000000 / POLL_LIMIT)) {
-	    sptime += 1.0 / (double)POLL_LIMIT;
-	    usleep((1000000 / POLL_LIMIT) - delay);
+	} else 	if (delay < (1000000 / POLL_RATE)) {
+	    sptime += 1.0 / (double)POLL_RATE;
+	    usleep((1000000 / POLL_RATE) - delay);
 	} else {
 	    sptime = eptime;
 	}

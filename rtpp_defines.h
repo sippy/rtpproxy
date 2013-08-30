@@ -58,7 +58,7 @@
 #define	TOS		0xb8
 #define	LBR_THRS	128	/* low-bitrate threshold */
 #define	CPORT		"22222"
-#define	POLL_LIMIT	200	/* maximum number of poll(2) calls per second */
+#define	POLL_RATE	200	/* target number of poll(2) calls per second */
 #define	LOG_LEVEL	RTPP_LOG_DBUG
 #define	UPDATE_WINDOW	10.0	/* in seconds */
 #define	PCAP_FORMAT	DLT_EN10MB
