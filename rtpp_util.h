@@ -44,6 +44,12 @@
 
 #define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
+#ifdef MIN
+#undef MIN
+#endif
+#ifdef MAX
+#undef MAX
+#endif
 #define	MIN(x, y)	(((x) > (y)) ? (y) : (x))
 #define	MAX(x, y)	(((x) > (y)) ? (x) : (y))
 
