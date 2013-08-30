@@ -73,27 +73,9 @@ static const char *cmd_sock = CMD_SOCK;
 static const char *pid_file = PID_FILE;
 static rtpp_log_t glog;
 
-static void setbindhost(struct sockaddr *, int, const char *, const char *);
 static void usage(void);
 static void send_packet(struct cfg *, struct rtpp_session *, int,
   struct rtp_packet *);
-
-static void
-setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
-  const char *servname)
-{
-    int n;
-
-    /*
-     * If user specified * then change it to NULL,
-     * that will make getaddrinfo to return addr_any socket
-     */
-    if (bindhost && (strcmp(bindhost, "*") == 0))
-	bindhost = NULL;
-
-    if ((n = resolve(ia, pf, bindhost, servname, AI_PASSIVE)) != 0)
-	errx(1, "setbindhost: %s", gai_strerror(n));
-}
 
 static void
 usage(void)
@@ -454,7 +436,8 @@ init_controlfd(struct cfg *cf)
 	if (cp == NULL || *cp == '\0')
 	    cp = CPORT;
 	i = (cf->stable.umode == 6) ? AF_INET6 : AF_INET;
-	setbindhost(sstosa(&ifsin), i, cmd_sock, cp);
+	if (setbindhost(sstosa(&ifsin), i, cmd_sock, cp) != 0)
+	    exit(1);
 	controlfd = socket(i, SOCK_DGRAM, 0);
 	if (controlfd == -1)
 	    err(1, "can't create socket");
