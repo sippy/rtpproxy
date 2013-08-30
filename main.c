@@ -726,6 +726,9 @@ main(int argc, char **argv)
     seedrandom();
 
     init_hash_table(&cf.stable);
+#ifdef DEBUG_BUILD
+    dump_hash_table(&cf.stable);
+#endif
     init_port_table(&cf);
 
     controlfd = init_controlfd(&cf);

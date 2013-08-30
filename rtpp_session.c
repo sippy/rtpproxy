@@ -47,9 +47,24 @@ void
 init_hash_table(struct cfg_stable *cf)
 {
     int i;
+    uint8_t rval;
+
+    memset(cf->rand_table, '\0', sizeof(cf->rand_table));
+    for (i = 1; i < 256; i++) {
+        do {
+            rval = random() & 0xff;
+        } while (cf->rand_table[rval] != 0);
+        cf->rand_table[rval] = i;
+    }
+}
+
+void
+dump_hash_table(struct cfg_stable *cfs)
+{
+    int i;
 
     for (i = 0; i < 256; i++) {
-	cf->rand_table[i] = random();
+        printf("%d, ", cfs->rand_table[i]);
     }
 }
 
