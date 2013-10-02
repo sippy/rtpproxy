@@ -59,12 +59,17 @@ class UasStateTrying(UaStateGeneric):
             if body != None and self.ua.on_local_sdp_change != None and body.needs_update:
                 self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
                 return None
+            if event.extra_headers != None:
+                extra_headers = tuple(event.extra_headers)
+            else:
+                extra_headers = None
             self.ua.lSDP = body
             if self.ua.no_progress_timer != None:
                 self.ua.no_progress_timer.cancel()
                 self.ua.no_progress_timer = None
             if isinstance(event, CCEventConnect):
-                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = False)
+                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = False, \
+                  extra_headers = extra_headers)
                 if self.ua.expire_timer != None:
                     self.ua.expire_timer.cancel()
                     self.ua.expire_timer = None
@@ -72,7 +77,8 @@ class UasStateTrying(UaStateGeneric):
                 self.ua.connect_ts = event.rtime
                 return (UaStateConnected, self.ua.conn_cbs, event.rtime, event.origin)
             else:
-                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = True)
+                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = True, \
+                  extra_headers = extra_headers)
                 return (UaStateConnected,)
         elif isinstance(event, CCEventRedirect):
             scode = event.getData()
@@ -91,9 +97,15 @@ class UasStateTrying(UaStateGeneric):
             scode = event.getData()
             if scode == None:
                 scode = (500, 'Failed')
-            extra_headers = [x for x in (event.extra_header, event.challenge) if x != None]
+            extra_headers = []
+            if event.extra_headers != None:
+                extra_headers.extend(event.extra_headers)
+            if event.challenge != None:
+                extra_headers.append(event.challenge)
             if len(extra_headers) == 0:
                 extra_headers = None
+            else:
+                extra_headers = tuple(extra_headers)
             self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason, \
               extra_headers = extra_headers)
             if self.ua.expire_timer != None:

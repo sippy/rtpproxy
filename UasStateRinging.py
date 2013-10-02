@@ -55,9 +55,14 @@ class UasStateRinging(UaStateGeneric):
             if body != None and self.ua.on_local_sdp_change != None and body.needs_update:
                 self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
                 return None
+            if event.extra_headers != None:
+                extra_headers = tuple(event.extra_headers)
+            else:
+                extra_headers = None
             self.ua.lSDP = body
             if isinstance(event, CCEventConnect):
-                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = False)
+                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = False, \
+                  extra_headers = extra_headers)
                 if self.ua.expire_timer != None:
                     self.ua.expire_timer.cancel()
                     self.ua.expire_timer = None
@@ -65,7 +70,8 @@ class UasStateRinging(UaStateGeneric):
                 self.ua.connect_ts = event.rtime
                 return (UaStateConnected, self.ua.conn_cbs, event.rtime, event.origin)
             else:
-                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = True)
+                self.ua.sendUasResponse(code, reason, body, self.ua.lContact, ack_wait = True, \
+                  extra_headers = extra_headers)
                 return (UaStateConnected,)
         elif isinstance(event, CCEventRedirect):
             scode = event.getData()
@@ -81,8 +87,8 @@ class UasStateRinging(UaStateGeneric):
             scode = event.getData()
             if scode == None:
                 scode = (500, 'Failed')
-            if event.extra_header != None:
-                extra_headers = (event.extra_header,)
+            if event.extra_headers != None:
+                extra_headers = tuple(event.extra_headers)
             else:
                 extra_headers = None
             self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason, \

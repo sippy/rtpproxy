@@ -30,7 +30,7 @@ class CCEventGeneric(object):
     rtime = None
     origin = None
     reason = None
-    extra_header = None
+    extra_headers = None
     seq = 1
 
     def __init__(self, data = None, rtime = None, origin = None):
@@ -50,8 +50,8 @@ class CCEventGeneric(object):
         cself = self.__class__(self.data, self.rtime, self.origin)
         if self.reason != None:
             cself.reason = self.reason.getCopy()
-        if self.extra_header != None:
-            cself.extra_header = self.extra_header.getCopy()
+        if self.extra_headers != None:
+            cself.extra_headers = tuple([x.getCopy() for x in self.extra_headers])
         return cself
 
     def __str__(self):
