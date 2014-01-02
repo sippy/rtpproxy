@@ -197,7 +197,7 @@ class SipLogger(object):
         if self.logger == None:
             return
         if self.signal_handler != None:
-            self.signal_handler.calcel()
+            self.signal_handler.cancel()
             self.signal_handler = None
         self.logger.shutdown()
         self.logger = None
