@@ -178,7 +178,10 @@ class Rtp_proxy_session(object):
             else:
                 options += 'R%s' % self.caller_raddress[0]
         command += options
-        command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.from_tag, self.to_tag)
+        if self.callee_session_exists:
+            command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.from_tag, self.to_tag)
+        else:
+            command += ' %s %s %d %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.from_tag)
         if self.notify_socket != None and index == 0 and \
           self.rtp_proxy_client.tnot_supported:
             command += ' %s %s' % (self.notify_socket, self.notify_tag)
@@ -194,7 +197,10 @@ class Rtp_proxy_session(object):
             else:
                 options += 'R%s' % self.callee_raddress[0]
         command += options
-        command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.to_tag, self.from_tag)
+        if self.caller_session_exists:
+            command += ' %s %s %d %s %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.to_tag, self.from_tag)
+        else:
+            command += ' %s %s %d %s' % ('%s-%d' % (self.call_id, index), remote_ip, remote_port, self.to_tag)
         if self.notify_socket != None and index == 0 \
           and self.rtp_proxy_client.tnot_supported:
             command += ' %s %s' % (self.notify_socket, self.notify_tag)
