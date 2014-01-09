@@ -29,7 +29,10 @@ from random import random
 from time import time
 from datetime import datetime
 from traceback import print_exc
+from thread import get_ident
 import sys
+
+from twisted.internet import reactor
 
 class Rtp_proxy_session(object):
     rtp_proxy_client = None
@@ -47,10 +50,12 @@ class Rtp_proxy_session(object):
     notify_socket = None
     notify_tag = None
     global_config = None
+    my_ident = None
 
     def __init__(self, global_config, call_id = None, from_tag = None, to_tag = None,
       notify_socket = None, notify_tag = None):
         self.global_config = global_config
+        self.my_ident = get_ident()
         if global_config.has_key('_rtp_proxy_clients'):
             rtp_proxy_clients = [x for x in global_config['_rtp_proxy_clients'] if x.online]
             n = len(rtp_proxy_clients)
@@ -219,10 +224,13 @@ class Rtp_proxy_session(object):
         result_callback((rtpproxy_address, rtpproxy_port, family), *callback_parameters)
 
     def delete(self):
+        if self.rtp_proxy_client == None:
+            return
         while self.max_index >= 0:
             command = 'D %s %s %s' % ('%s-%d' % (self.call_id, self.max_index), self.from_tag, self.to_tag)
             self.rtp_proxy_client.send_command(command)
             self.max_index -= 1
+        self.rtp_proxy_client = None
 
     def on_caller_sdp_change(self, sdp_body, result_callback):
         self.on_xxx_sdp_change(self.update_caller, sdp_body, result_callback)
@@ -284,5 +292,8 @@ class Rtp_proxy_session(object):
             result_callback(sdp_body)
 
     def __del__(self):
-        self.delete()
-        self.rtp_proxy_client = None
+        if self.my_ident != get_ident():
+            #print 'Rtp_proxy_session.__del__() from wrong thread, re-routing'
+            reactor.callFromThread(self.delete)
+        else:
+            self.delete()
