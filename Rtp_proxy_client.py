@@ -57,6 +57,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             Rtp_proxy_client_udp.send_command(self, *args, **kwargs)
 
     def caps_query1(self, result):
+        #print '%s.caps_query1(%s)' % (id(self), result)
         if self.shutdown:
             if self.worker != None:
                 self.worker.shutdown()
@@ -76,6 +77,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         self.send_command('VF 20080403', self.caps_query2)
 
     def caps_query2(self, result):
+        #print '%s.caps_query2(%s)' % (id(self), result)
         if self.shutdown:
             if self.worker != None:
                 self.worker.shutdown()
@@ -95,6 +97,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
                 self.caps_done = True
 
     def caps_query3(self, result):
+        #print '%s.caps_query3(%s)' % (id(self), result)
         if self.shutdown:
             if self.worker != None:
                 self.worker.shutdown()
@@ -113,6 +116,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
                 self.caps_done = True
 
     def caps_query4(self, result):
+        #print '%s.caps_query4(%s)' % (id(self), result)
         if self.shutdown:
             if self.worker != None:
                 self.worker.shutdown()

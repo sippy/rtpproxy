@@ -159,6 +159,7 @@ class Rtp_proxy_session(object):
         return self.rtp_proxy_client.send_command(command, self.command_result, result_callback)
 
     def command_result(self, result, result_callback):
+        #print '%s.command_result(%s)' % (id(self), result)
         if result_callback != None:
             result_callback(result)
 
@@ -195,6 +196,7 @@ class Rtp_proxy_session(object):
         self.rtp_proxy_client.send_command(command, self.update_result, (result_callback, 'callee', callback_parameters))
 
     def update_result(self, result, args):
+        #print '%s.update_result(%s)' % (id(self), result)
         result_callback, face, callback_parameters = args
         if face == 'caller':
             self.caller_session_exists = True
