@@ -42,9 +42,15 @@ class UasStateIdle(UaStateGeneric):
         self.ua.origin = 'caller'
         #print 'INVITE received in the Idle state, going to the Trying state'
         if req.countHFs('cisco-guid') != 0:
-            self.ua.cGUID = req.getHFBody('cisco-guid').getCopy()
+            try:
+                self.ua.cGUID = req.getHFBody('cisco-guid').getCopy()
+            except:
+                self.ua.cGUID = SipCiscoGUID()
         elif req.countHFs('h323-conf-id') != 0:
-            self.ua.cGUID = req.getHFBody('h323-conf-id').getCopy()
+            try:
+                self.ua.cGUID = req.getHFBody('h323-conf-id').getCopy()
+            except:
+                self.ua.cGUID = SipCiscoGUID()
         else:
             self.ua.cGUID = SipCiscoGUID()
         self.ua.uasResp = req.genResponse(100, 'Trying', server = self.ua.local_ua)
