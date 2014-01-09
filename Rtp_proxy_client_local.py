@@ -43,6 +43,7 @@ class _RTPPLWorker(Thread):
     def send_raw(self, command):
         if not command.endswith('\n'):
             command += '\n'
+        #print '%s.send_raw(%s)' % (id(self), command)
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect(self.userv.address)
         while True:
