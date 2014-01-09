@@ -108,12 +108,10 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         if result != None:
             if result == '1':
                 self.tnot_supported = True
-                self.send_command('VF 20090810', self.caps_query4)
-                return
             else:
                 self.tnot_supported = False
-                self.sbind_supported = False
-                self.caps_done = True
+            self.send_command('VF 20090810', self.caps_query4)
+            return
 
     def caps_query4(self, result):
         #print '%s.caps_query4(%s)' % (id(self), result)
