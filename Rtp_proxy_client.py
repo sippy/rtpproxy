@@ -41,9 +41,14 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
     shutdown = False
     proxy_address = None
     caps_done = False
+    sessions_created = None
     active_sessions = None
+    active_streams = None
+    preceived = None
+    ptransmitted = None
 
     def __init__(self, global_config, *address):
+        #print 'Rtp_proxy_client', address
         if len(address) > 0 and type(address[0]) in (tuple, list):
             Rtp_proxy_client_udp.__init__(self, global_config, *address)
         else:            
@@ -162,10 +167,20 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             self.active_sessions = None
             self.go_offline()
         else:
+            sessions_created = active_sessions = active_streams = preceived = ptransmitted = 0
             for line in stats.splitlines():
-                if not line.startswith('active sessions'):
-                    continue
-                self.update_active(int(line.split(':', 1)[1]))
+                line_parts = line.split(':', 1)
+                if line_parts[0] == 'sessions created':
+                    sessions_created = int(line_parts[1])
+                elif line_parts[0] == 'active sessions':
+                    active_sessions = int(line_parts[1])
+                elif line_parts[0] == 'active streams':
+                    active_streams = int(line_parts[1])
+                elif line_parts[0] == 'packets received':
+                    preceived = int(line_parts[1])
+                elif line_parts[0] == 'packets transmitted':
+                    ptransmitted = int(line_parts[1])
+                self.update_active(active_sessions, sessions_created, active_streams, preceived, ptransmitted)
         Timeout(self.heartbeat, 10)
 
     def go_online(self):
@@ -181,5 +196,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             self.online = False
             Timeout(self.version_check, 60)
 
-    def update_active(self, active_sessions):
+    def update_active(self, active_sessions, sessions_created, active_streams, preceived, ptransmitted):
+        self.sessions_created = sessions_created
         self.active_sessions = active_sessions
+        self.active_streams = active_streams
+        self.preceived = preceived
+        self.ptransmitted = ptransmitted
