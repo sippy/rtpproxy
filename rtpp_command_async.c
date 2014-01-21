@@ -62,6 +62,8 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
             pthread_mutex_lock(&cf->glock);
             i = handle_command(cf, controlfd, &cmd, dtime);
             pthread_mutex_unlock(&cf->glock);
+        } else {
+            i = -1;
         }
         if (cf->stable.umode == 0) {
             close(controlfd);
