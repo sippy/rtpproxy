@@ -82,7 +82,8 @@ static void handle_copy(struct cfg *, struct rtpp_session *, int, char *, int);
 static int handle_record(struct cfg *, char *, char *, char *, int);
 static void handle_query(struct cfg *, int, struct rtpp_command *,
   struct rtpp_session *, int);
-static void handle_info(struct cfg *, int, struct rtpp_command *);
+static void handle_info(struct cfg *, int, struct rtpp_command *,
+  int);
 
 static int
 create_twinlistener(struct cfg_stable *cf, struct sockaddr *ia, int port, int *fds)
@@ -437,7 +438,8 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 
     case 'i':
     case 'I':
-	handle_info(cf, controlfd, cmd);
+	handle_info(cf, controlfd, cmd,
+          (cmd->argv[0][1] == 'b' || cmd->argv[0][1] == 'B') ? 1 : 0);
 	return 0;
 	break;
 
@@ -1257,7 +1259,8 @@ handle_query(struct cfg *cf, int fd, struct rtpp_command *cmd,
 }
 
 static void
-handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd)
+handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd,
+  int brief)
 {
     struct rtpp_session *spa, *spb;
     int len, i;
@@ -1275,7 +1278,7 @@ handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd)
           "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
           cmd->cookie, cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions / 2,
           cf->packets_in, cf->packets_out);
-    for (i = 0; i < cf->sessinfo.nsessions; i++) {
+    for (i = 0; i < cf->sessinfo.nsessions && brief == 0; i++) {
         spa = cf->sessinfo.sessions[i];
         if (spa == NULL || spa->sidx[0] != i)
             continue;
