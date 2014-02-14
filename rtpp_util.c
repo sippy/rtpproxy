@@ -271,3 +271,18 @@ pthread_mutex_islocked(pthread_mutex_t *mutex)
     pthread_mutex_unlock(mutex);
     return (0);
 }
+
+double
+sigmoid(double x)
+{
+
+    return (x / (1 + fabs(x)));
+}
+
+double
+recfilter_apply(struct recfilter *f, double x)
+{
+
+    f->lastval = (1.0 - f->fcoef) * x + f->fcoef * f->lastval;
+    return f->lastval;
+}

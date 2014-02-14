@@ -59,6 +59,11 @@
 #define	MAX(x, y)	(((x) > (y)) ? (x) : (y))
 #define	ABS(x)		((x) > 0 ? (x) : (-x))
 
+struct recfilter {
+    double fcoef;
+    double lastval;
+};
+
 /* Function prototypes */
 double getdtime(void);
 double ts2dtime(uint32_t, uint32_t);
@@ -70,6 +75,8 @@ char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
 int url_unquote(uint8_t *, int);
 int pthread_mutex_islocked(pthread_mutex_t *);
+double sigmoid(double);
+double recfilter_apply(struct recfilter *, double);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)

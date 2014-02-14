@@ -729,11 +729,12 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 int
 main(int argc, char **argv)
 {
-    int i, len, timeout, controlfd, alarm_tick;
-    double sptime, eptime, last_tick_time;
-    unsigned long delay;
+    int i, len, controlfd, alarm_tick, counter;
+    double eptime, eptime_prev, last_tick_time, eval, filter_lastval;
+    double target_runtime, add_delay;
     struct cfg cf;
     char buf[256];
+    struct recfilter loop_error = {0.90, 0.0};
 
     memset(&cf, 0, sizeof(cf));
 
@@ -797,33 +798,27 @@ main(int argc, char **argv)
 
     rtpp_command_async_init(&cf);
 
-    sptime = 0;
     eptime = getdtime();
     last_tick_time = 0;
-    timeout = 1000 / POLL_RATE;
+    counter = 0;
+    add_delay = 0;
+    target_runtime = 1.0 / POLL_RATE;
     for (;;) {
-	delay = (eptime - sptime) * 1000000.0;
-	if (delay <= 0) {
-            /* Time went backwards, handle that */
-	    sptime = eptime;
-	    last_tick_time = 0;
-	} else 	if (delay < (1000000 / POLL_RATE)) {
-	    sptime += 1.0 / (double)POLL_RATE;
-	    usleep((1000000 / POLL_RATE) - delay);
-	} else {
-	    sptime = eptime;
-	}
         pthread_mutex_lock(&cf.sessinfo.lock);
         if (cf.sessinfo.nsessions > 0) {
-	    i = poll(cf.sessinfo.pfds, cf.sessinfo.nsessions, timeout);
+	    i = poll(cf.sessinfo.pfds, cf.sessinfo.nsessions, 0);
             pthread_mutex_unlock(&cf.sessinfo.lock);
 	    if (i < 0 && errno == EINTR)
 	        continue;
         } else {
             pthread_mutex_unlock(&cf.sessinfo.lock);
-            usleep(timeout * 1000);
         }
+        eptime_prev = eptime;
 	eptime = getdtime();
+        if (eptime_prev > eptime) {
+            /* Time went backwards, handle that */
+            last_tick_time = 0;
+        }
         if (eptime > last_tick_time + TIMETICK) {
             alarm_tick = 1;
             last_tick_time = eptime;
@@ -836,6 +831,23 @@ main(int argc, char **argv)
 	    process_rtp_servers(&cf, eptime);
 	}
         pthread_mutex_unlock(&cf.glock);
+
+        eval = sigmoid(2000.0 * (eptime_prev - eptime + target_runtime));
+        filter_lastval = loop_error.lastval;
+        recfilter_apply(&loop_error, eval);
+        if (loop_error.lastval > 0) {
+            add_delay += (target_runtime - add_delay) * loop_error.lastval;
+        } else {
+            add_delay += add_delay * loop_error.lastval;
+        }
+#if 0
+        if (counter % POLL_RATE == 0 || counter < 1000) {
+            rtpp_log_write(RTPP_LOG_ERR, cf.stable.glog, "filter lastval %f, eval %f, filter nextval %f", filter_lastval, eval, loop_error.lastval);
+            rtpp_log_write(RTPP_LOG_ERR, cf.stable.glog, "run %d extra sleeping time %llu, error %f, raw error %f", counter, add_delay * 1000000.0, eval, eptime_prev - eptime + 0.005);
+        }
+#endif
+        usleep(add_delay * 1000000.0);
+        counter += 1;
     }
 
     exit(0);
