@@ -53,7 +53,7 @@
 
 #define	PORT_MIN	35000
 #define	PORT_MAX	65000
-#define	TIMETICK	1.0	/* in seconds */
+#define	TIMETICK	1	/* in seconds */
 #define	SESSION_TIMEOUT	60	/* in ticks */
 #define	TOS		0xb8
 #define	LBR_THRS	128	/* low-bitrate threshold */
