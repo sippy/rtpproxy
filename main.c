@@ -744,6 +744,7 @@ main(int argc, char **argv)
     char buf[256];
     struct recfilter loop_error;
     struct recfilter idle_time;
+    useconds_t usleep_time;
 #if RTPP_DEBUG
     double sleep_time;
 #endif
@@ -837,7 +838,7 @@ main(int argc, char **argv)
 
         ncycles_ref = llrint(eptime / target_runtime);
 
-        alarm_tick = ((counter % (TIMETICK * POLL_RATE)) == 0 ? 1 : 0);
+        alarm_tick = (counter > 0 && (counter % (TIMETICK * POLL_RATE)) == 0 ? 1 : 0);
         pthread_mutex_lock(&cf.glock);
 	process_rtp(&cf, eptime, alarm_tick);
 	if (cf.rtp_nsessions > 0) {
@@ -859,15 +860,23 @@ main(int argc, char **argv)
         } else {
             add_delay += add_delay * loop_error.lastval;
         }
+        if (add_delay < 0) {
+            add_delay = 0;
+        } else if (add_delay > target_runtime) {
+            add_delay = target_runtime;
+        }
+        usleep_time = add_delay * 1000000.0;
 #if RTPP_DEBUG
         if (counter % POLL_RATE == 0 || counter < 1000) {
             rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld filter lastval %f, filter nextval %f, idle time %f, error %d", counter, filter_lastval, loop_error.lastval, idle_time.lastval, eval);
-            rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld extra sleeping time %llu", counter, (useconds_t)(add_delay * 1000000.0));
+            rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld extra sleeping time %llu", counter, usleep_time);
             rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld average load %f", counter, (1.0 - (idle_time.lastval / idle_time.maxval)) * 100.0);
             sleep_time = getdtime();
         }
 #endif
-        usleep(add_delay * 1000000.0);
+        if (usleep_time > 0) {
+            usleep(usleep_time);
+        }
 #if RTPP_DEBUG
         if (counter % POLL_RATE == 0 || counter < 1000) {
             sleep_time = getdtime() - sleep_time;
