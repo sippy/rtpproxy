@@ -283,6 +283,46 @@ double
 recfilter_apply(struct recfilter *f, double x)
 {
 
-    f->lastval = (1.0 - f->fcoef) * x + f->fcoef * f->lastval;
+    f->lastval = f->a * x + f->b * f->lastval;
+    if (f->peak_detect != 0) {
+        if (f->lastval > f->maxval) {
+            f->maxval = f->lastval;
+        } if (f->lastval < f->minval) {
+            f->minval = f->maxval;
+        }
+    }
     return f->lastval;
+}
+
+double
+recfilter_apply_int(struct recfilter *f, int x)
+{
+
+    f->lastval = f->a * (double)(x) + f->b * f->lastval;
+    if (f->peak_detect != 0) {
+        if (f->lastval > f->maxval) {
+            f->maxval = f->lastval;
+        } if (f->lastval < f->minval) {
+            f->minval = f->lastval;
+        }
+    }
+    return f->lastval;
+}
+
+void
+recfilter_init(struct recfilter *f, double fcoef, double initval, int peak_detect)
+{
+
+    f->lastval = initval;
+    f->a = 1.0 - fcoef;
+    f->b = fcoef;
+    if (peak_detect != 0) {
+        f->peak_detect = 1;
+        f->maxval = initval;
+        f->minval = initval;
+    } else {
+        f->peak_detect = 0;
+        f->maxval = 0;
+        f->minval = 0;
+    }
 }

@@ -60,8 +60,12 @@
 #define	ABS(x)		((x) > 0 ? (x) : (-x))
 
 struct recfilter {
-    double fcoef;
+    double a;
+    double b;
     double lastval;
+    double minval;
+    double maxval;
+    int peak_detect;
 };
 
 /* Function prototypes */
@@ -77,6 +81,8 @@ int url_unquote(uint8_t *, int);
 int pthread_mutex_islocked(pthread_mutex_t *);
 double sigmoid(double);
 double recfilter_apply(struct recfilter *, double);
+double recfilter_apply_int(struct recfilter *, int);
+void recfilter_init(struct recfilter *, double, double, int);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)
