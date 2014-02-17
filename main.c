@@ -813,7 +813,7 @@ main(int argc, char **argv)
     counter = 0;
     target_runtime = 1.0 / POLL_RATE;
     add_delay = target_runtime / 2;
-    recfilter_init(&loop_error, 0.90, 0.0, 0);
+    recfilter_init(&loop_error, 0.95, 0.0, 0);
     recfilter_init(&idle_time, 0.99, 0.5, 1);
     sched_yield();
     for (;;) {
@@ -855,14 +855,11 @@ main(int argc, char **argv)
             counter, ncycles_ref, ncycles_ref_prev, eval, filter_lastval, loop_error.lastval);
         }
 #endif
-        if (loop_error.lastval > 0) {
-            add_delay += (target_runtime - add_delay) * loop_error.lastval;
-        } else {
-            add_delay += add_delay * loop_error.lastval;
+        if (add_delay == 0) {
+            add_delay = target_runtime / 100;
         }
-        if (add_delay < 0) {
-            add_delay = 0;
-        } else if (add_delay > target_runtime) {
+        add_delay = add_delay / (1 - loop_error.lastval);
+        if (add_delay > target_runtime) {
             add_delay = target_runtime;
         }
         usleep_time = add_delay * 1000000.0;
