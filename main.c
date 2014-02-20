@@ -864,7 +864,7 @@ main(int argc, char **argv)
             counter, ncycles_ref, ncycles_ref_prev, eval, filter_lastval, loop_error.lastval);
         }
 #endif
-        add_delay = add_delay / (1.0 - (loop_error.lastval / 20.0));
+        add_delay = add_delay / (1.0 - (loop_error.lastval / 100.0));
         if (add_delay > target_runtime) {
             add_delay = target_runtime;
         }
