@@ -412,7 +412,7 @@ init_controlfd(struct cfg *cf)
     struct sockaddr_un ifsun;
     struct sockaddr_storage ifsin;
     char *cp;
-    int i, controlfd, flags;
+    int i, controlfd, flags, so_rcvbuf;
 
     if (cf->stable.umode == 0) {
 	unlink(cmd_sock);
@@ -448,6 +448,9 @@ init_controlfd(struct cfg *cf)
 	controlfd = socket(i, SOCK_DGRAM, 0);
 	if (controlfd == -1)
 	    err(1, "can't create socket");
+        so_rcvbuf = 16 * 1024;
+        if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
+            rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog, "unable to set 16K receive buffer size on controlfd");
 	if (bind(controlfd, sstosa(&ifsin), SS_LEN(&ifsin)) < 0)
 	    err(1, "can't bind to a socket");
     }
