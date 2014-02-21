@@ -816,7 +816,7 @@ main(int argc, char **argv)
     counter = 0;
     target_runtime = 1.0 / POLL_RATE;
     add_delay = target_runtime / 2;
-    recfilter_init(&loop_error, 0.95, 0.0, 0);
+    recfilter_init(&loop_error, 0.96, 0.0, 0);
     recfilter_init(&idle_time, 0.99, 0.0, 1);
     sched_yield();
     for (;;) {
