@@ -27,6 +27,7 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/un.h>
 
@@ -34,8 +35,6 @@
 #include "rtpp_command.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"
-
-static pthread_t rtpp_cmd_queue;
 
 static void
 process_commands(struct cfg *cf, int controlfd_in, double dtime)
@@ -100,8 +99,15 @@ int
 rtpp_command_async_init(struct cfg *cf)
 {
 
-    if (pthread_create(&rtpp_cmd_queue, NULL, (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0)
+    cf->rtpp_cmd_queue = malloc(sizeof(pthread_t));
+    if (cf->rtpp_cmd_queue == NULL)
+        return (-1);
+
+    if (pthread_create(cf->rtpp_cmd_queue, NULL, (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
+        free(cf->rtpp_cmd_queue);
+        cf->rtpp_cmd_queue = NULL;
         return -1;
+    }
 
     return 0;
 }

@@ -168,6 +168,8 @@ struct cfg {
     int port_table_idx;
 
     pthread_mutex_t glock;
+
+    pthread_t *rtpp_cmd_queue;
 };
 
 #endif
