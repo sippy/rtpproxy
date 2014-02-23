@@ -41,6 +41,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "rtpp_defines.h"
 #include "rtpp_util.h"
 #include "rtpp_log.h"
 

@@ -33,6 +33,7 @@
 #include <netinet/in.h>
 #include <assert.h>
 
+#include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_network.h"
 

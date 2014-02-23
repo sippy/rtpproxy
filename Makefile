@@ -36,7 +36,8 @@ SRCS=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtp.h rtpp_session.c rtpp_command.c rtpp_command.h \
 	rtpp_network.c rtpp_network.h rtpp_log.c rtpp_notify.c \
 	rtpp_notify.h rtpp_command_async.h rtpp_command_async.c \
-	config.h
+	config.h rtpp_proc_async.c rtpp_proc_async.h rtpp_proc.h \
+	rtpp_proc.c
 MAN1=
 
 WARNS?=	2
@@ -47,6 +48,7 @@ BINDIR?=	${LOCALBASE}/bin
 CFLAGS+=	-I../siplog -I${LOCALBASE}/include
 #CFLAGS+=	-DRTPP_DEBUG
 LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread -lm
+#LDADD+=	-static
 
 cleantabs:
 	perl -pi -e 's|        |\t|g' ${SRCS}

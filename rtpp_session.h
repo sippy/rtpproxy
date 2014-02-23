@@ -31,9 +31,6 @@
 #ifndef _RTPP_SESSION_H_
 #define _RTPP_SESSION_H_
 
-#include <sys/types.h>
-#include <sys/socket.h>
-
 #include "rtp_server.h"
 #include "rtp_resizer.h"
 #include "rtpp_log.h"

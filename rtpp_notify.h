@@ -30,9 +30,6 @@
 #ifndef _RTPP_NOTIFY_H_
 #define _RTPP_NOTIFY_H_
 
-#include "rtpp_defines.h"
-#include "rtpp_session.h"
-
 int rtpp_notify_schedule(struct cfg *, struct rtpp_session *);
 int rtpp_notify_init(void);
 

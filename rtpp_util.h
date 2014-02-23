@@ -40,9 +40,6 @@
 #include <stdio.h>
 #include <string.h>
 #endif
-#include <pthread.h>
-
-#include "rtpp_defines.h"
 
 #define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)

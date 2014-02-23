@@ -31,15 +31,6 @@
 #ifndef _RTPP_NETWORK_H_
 #define _RTPP_NETWORK_H_
 
-#include "config.h"
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-
-#include "rtpp_defines.h"
-
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 
 /* Function prototypes */
