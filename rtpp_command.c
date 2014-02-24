@@ -267,7 +267,6 @@ get_command(struct cfg_stable *cfs, int controlfd, struct rtpp_command *cmd)
             len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
             if (len != -1 || (errno != EAGAIN && errno != EINTR))
                 break;
-            sched_yield();
         }
     } else {
         cmd->rlen = sizeof(cmd->raddr);
