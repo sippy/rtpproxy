@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "rtpp_defines.h"
+#include "rtpp_command_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_util.h"
@@ -37,8 +38,10 @@ rtpp_proc_async_run(void *arg)
         if (cf->sessinfo.nsessions > 0) {
             i = poll(cf->sessinfo.pfds, cf->sessinfo.nsessions, 0);
             pthread_mutex_unlock(&cf->sessinfo.lock);
-            if (i < 0 && errno == EINTR)
+            if (i < 0 && errno == EINTR) {
+                rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick);
                 continue;
+            }
         } else {
             pthread_mutex_unlock(&cf->sessinfo.lock);
         }
@@ -67,6 +70,7 @@ rtpp_proc_async_run(void *arg)
             process_rtp_servers(cf, eptime);
         }
         pthread_mutex_unlock(&cf->glock);
+        rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick);
     }
 
 }

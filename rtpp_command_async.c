@@ -28,11 +28,13 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/un.h>
 
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
+#include "rtpp_command_async.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"
 
@@ -74,40 +76,80 @@ static void
 rtpp_cmd_queue_run(void *arg)
 {
     struct cfg *cf;
+    struct rtpp_cmd_async_cf *cmd_cf;
     struct pollfd pfds[1];
-    int i;
+    int i, last_ctick;
     double eptime;
 
     cf = (struct cfg *)arg;
+    cmd_cf = cf->rtpp_cmd_cf;
 
     pfds[0].fd = cf->stable.controlfd;
     pfds[0].events = POLLIN;
     pfds[0].revents = 0;
 
+    pthread_mutex_lock(&cmd_cf->cmd_mutex);
+    last_ctick = cmd_cf->clock_tick;
+    pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+
     for (;;) {
-        i = poll(pfds, 1, INFTIM);
+        pthread_mutex_lock(&cmd_cf->cmd_mutex);
+        while (cmd_cf->clock_tick == last_ctick) {
+            pthread_cond_wait(&cmd_cf->cmd_cond, &cmd_cf->cmd_mutex);
+        }
+        last_ctick = cmd_cf->clock_tick;
+        pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+
+        i = poll(pfds, 1, 0);
         if (i < 0 && errno == EINTR)
             continue;
-        eptime = getdtime();
         if (i > 0 && (pfds[0].revents & POLLIN) != 0) {
+            eptime = getdtime();
             process_commands(cf, pfds[0].fd, eptime);
         }
     }
 }
 
 int
+rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf, int clock)
+{
+    int old_clock;
+
+    pthread_mutex_lock(&cmd_cf->cmd_mutex);
+
+    old_clock = cmd_cf->clock_tick;
+    cmd_cf->clock_tick = clock;
+
+    /* notify worker thread */
+    pthread_cond_signal(&cmd_cf->cmd_cond);
+
+    pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+
+    return (old_clock);
+}
+
+int
 rtpp_command_async_init(struct cfg *cf)
 {
+    struct rtpp_cmd_async_cf *cmd_cf;
 
-    cf->rtpp_cmd_queue = malloc(sizeof(pthread_t));
-    if (cf->rtpp_cmd_queue == NULL)
+    cmd_cf = malloc(sizeof(*cmd_cf));
+    if (cmd_cf == NULL)
         return (-1);
 
-    if (pthread_create(cf->rtpp_cmd_queue, NULL, (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
-        free(cf->rtpp_cmd_queue);
-        cf->rtpp_cmd_queue = NULL;
-        return -1;
+    memset(cmd_cf, '\0', sizeof(*cmd_cf));
+
+    pthread_cond_init(&cmd_cf->cmd_cond, NULL);
+    pthread_mutex_init(&cmd_cf->cmd_mutex, NULL);
+
+    cf->rtpp_cmd_cf = cmd_cf;
+    if (pthread_create(&cmd_cf->thread_id, NULL, (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
+        pthread_cond_destroy(&cmd_cf->cmd_cond);
+        pthread_mutex_destroy(&cmd_cf->cmd_mutex);
+        free(cmd_cf);
+        cf->rtpp_cmd_cf = NULL;
+        return (-1);
     }
 
-    return 0;
+    return (0);
 }

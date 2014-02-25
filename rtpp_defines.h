@@ -91,6 +91,7 @@ struct bindaddr_list {
     struct bindaddr_list *next;
 };
 
+struct rtpp_cmd_async_cf;
 struct rtpp_proc_async_cf;
 
 struct cfg {
@@ -171,8 +172,7 @@ struct cfg {
 
     pthread_mutex_t glock;
 
-    pthread_t *rtpp_cmd_queue;
-
+    struct rtpp_cmd_async_cf *rtpp_cmd_cf;
     struct rtpp_proc_async_cf *rtpp_proc_cf;
 };
 
