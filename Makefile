@@ -66,6 +66,7 @@ TSTAMP!=	date "+%Y%m%d%H%M%S"
 
 distribution: clean
 	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 ${PKGFILES}
+	scp /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
 	git tag rel.${TSTAMP}
 	git push origin rel.${TSTAMP}
 
