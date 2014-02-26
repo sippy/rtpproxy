@@ -44,6 +44,7 @@
 #include "rtpp_log.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
+#include "rtpp_proc.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
@@ -94,13 +95,13 @@ process_rtp_servers(struct cfg *cf, double dtime)
 
 static void
 rxmit_packets(struct cfg *cf, struct rtpp_session *sp, int ridx,
-  double dtime)
+  double dtime, int drain_repeat)
 {
     int ndrain, i, port;
     struct rtp_packet *packet = NULL;
 
     /* Repeat since we may have several packets queued on the same socket */
-    for (ndrain = 0; ndrain < 1; ndrain++) {
+    for (ndrain = 0; ndrain < drain_repeat; ndrain++) {
 	if (packet != NULL)
 	    rtp_packet_free(packet);
 
@@ -262,7 +263,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
 }
 
 void
-process_rtp(struct cfg *cf, double dtime, int alarm_tick)
+process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat)
 {
     int readyfd, skipfd, ridx;
     struct rtpp_session *sp;
@@ -312,7 +313,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick)
 
 	if (sp->complete != 0) {
 	    if ((cf->sessinfo.pfds[readyfd].revents & POLLIN) != 0)
-		rxmit_packets(cf, sp, ridx, dtime);
+		rxmit_packets(cf, sp, ridx, dtime, drain_repeat);
 	    if (sp->resizers[ridx].output_nsamples > 0) {
 		while ((packet = rtp_resizer_get(&sp->resizers[ridx], dtime)) != NULL) {
 		    send_packet(cf, sp, ridx, packet);

@@ -31,6 +31,6 @@
 #include "rtpp_defines.h"
 
 void process_rtp_servers(struct cfg *, double);
-void process_rtp(struct cfg *, double, int);
+void process_rtp(struct cfg *, double, int, int);
 
 #endif

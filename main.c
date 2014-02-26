@@ -587,7 +587,7 @@ main(int argc, char **argv)
             sleep_time = getdtime();
         }
 #endif
-        rtpp_proc_async_wakeup(cf.rtpp_proc_cf, counter);
+        rtpp_proc_async_wakeup(cf.rtpp_proc_cf, counter, ncycles_ref);
         usleep(usleep_time);
 #if RTPP_DEBUG
         if (counter % POLL_RATE == 0 || counter < 1000) {

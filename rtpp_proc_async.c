@@ -15,8 +15,9 @@ rtpp_proc_async_run(void *arg)
 {
     struct cfg *cf;
     double eptime, last_tick_time;
-    int alarm_tick, i, last_ctick;
+    int alarm_tick, i, last_ctick, ndrain;
     struct rtpp_proc_async_cf *proc_cf;
+    long long ncycles_ref, ncycles_ref_pre;
 
     cf = (struct cfg *)arg;
     proc_cf = cf->rtpp_proc_cf;
@@ -24,6 +25,7 @@ rtpp_proc_async_run(void *arg)
     last_tick_time = 0;
     pthread_mutex_lock(&proc_cf->proc_mutex);
     last_ctick = proc_cf->clock_tick;
+    ncycles_ref = proc_cf->ncycles_ref;
     pthread_mutex_unlock(&proc_cf->proc_mutex);
 
     for (;;) {
@@ -32,7 +34,25 @@ rtpp_proc_async_run(void *arg)
             pthread_cond_wait(&proc_cf->proc_cond, &proc_cf->proc_mutex);
         }
         last_ctick = proc_cf->clock_tick;
+        ndrain = (proc_cf->ncycles_ref - ncycles_ref) / (POLL_RATE / MAX_RTP_RATE);
+        ncycles_ref_pre = ncycles_ref;
+        ncycles_ref = proc_cf->ncycles_ref;
         pthread_mutex_unlock(&proc_cf->proc_mutex);
+
+        if (ndrain < 1) {
+            ndrain = 1;
+        } else if (ndrain > 10) {
+            ndrain = 10;
+        }
+
+#if RTPP_DEBUG
+        if (ndrain > 1) {
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld eptime %f, " \
+              "ncycles_ref %lld, ncycles_ref_pre %lld, ndrain %d CSV: %f,%f,%d", \
+              last_ctick, eptime, ncycles_ref, ncycles_ref_pre, ndrain, \
+              (double)last_ctick / (double)POLL_RATE, eptime, ndrain);
+        }
+#endif
 
         pthread_mutex_lock(&cf->sessinfo.lock);
         if (cf->sessinfo.nsessions > 0) {
@@ -65,7 +85,7 @@ rtpp_proc_async_run(void *arg)
         }
 
         pthread_mutex_lock(&cf->glock);
-        process_rtp(cf, eptime, alarm_tick);
+        process_rtp(cf, eptime, alarm_tick, ndrain);
         if (cf->rtp_nsessions > 0) {
             process_rtp_servers(cf, eptime);
         }
@@ -76,7 +96,7 @@ rtpp_proc_async_run(void *arg)
 }
 
 int
-rtpp_proc_async_wakeup(struct rtpp_proc_async_cf *proc_cf, int clock)
+rtpp_proc_async_wakeup(struct rtpp_proc_async_cf *proc_cf, int clock, long long ncycles_ref)
 {
     int old_clock;
 
@@ -84,6 +104,7 @@ rtpp_proc_async_wakeup(struct rtpp_proc_async_cf *proc_cf, int clock)
 
     old_clock = proc_cf->clock_tick;
     proc_cf->clock_tick = clock;
+    proc_cf->ncycles_ref = ncycles_ref;
 
     /* notify worker thread */
     pthread_cond_signal(&proc_cf->proc_cond);
