@@ -29,7 +29,14 @@ PKGNAME=	rtpproxy
 PKGFILES=	GNUmakefile Makefile README extractaudio makeann \
 		  rtpproxy.init rtpproxy.sh udp_storm ${SRCS}
 
+.if !defined(RTPP_DEBUG)
 PROG=	rtpproxy
+CLEANFILES+=	rtpproxy_debug
+.else
+PROG=	rtpproxy_debug
+CLEANFILES+=	rtpproxy
+.endif
+
 SRCS=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_record.c rtpp_record.h rtpp_session.h rtpp_util.c \
 	rtpp_util.h rtpp_log.h rtp_resizer.c rtp_resizer.h rtp.c \
@@ -46,9 +53,11 @@ LOCALBASE?=	/usr/local
 BINDIR?=	${LOCALBASE}/bin
 
 CFLAGS+=	-I../siplog -I${LOCALBASE}/include
-#CFLAGS+=	-DRTPP_DEBUG
 LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread -lm
-#LDADD+=	-static
+.if defined(RTPP_DEBUG)
+CFLAGS+=	-DRTPP_DEBUG
+LDADD+=	-static
+.endif
 
 cleantabs:
 	perl -pi -e 's|        |\t|g' ${SRCS}
