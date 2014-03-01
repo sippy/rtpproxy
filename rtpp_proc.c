@@ -262,6 +262,19 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
           sp->ports[sidx], sidx);
 }
 
+static void
+drain_socket(int rfd)
+{
+    struct rtp_packet *packet;
+
+    for (;;) {
+        packet = rtp_recv(rfd);
+        if (packet == NULL)
+            break;
+        rtp_packet_free(packet);
+    }
+}
+
 void
 process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat)
 {
@@ -320,7 +333,12 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat)
 		    rtp_packet_free(packet);
 		}
 	    }
-	}
+	} else {
+#if RTPP_DEBUG
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining socket %d", readyfd);
+#endif
+            drain_socket(readyfd);
+        }
     }
     /* Trim any deleted sessions at the end */
     cf->sessinfo.nsessions -= skipfd;
