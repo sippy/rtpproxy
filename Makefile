@@ -66,7 +66,7 @@ TSTAMP!=	date "+%Y%m%d%H%M%S"
 
 distribution: clean
 	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 ${PKGFILES}
-	echo scp /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
+	scp /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
 	echo '#define RTPP_SW_VERSION "'rel.${TSTAMP}'"' > rtpp_version.h
 	git commit -m "Update to rel.${TSTAMP}" rtpp_version.h
 	git push origin master
