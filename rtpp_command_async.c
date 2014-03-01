@@ -69,7 +69,7 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
         if (cf->stable.umode == 0) {
             close(controlfd);
         }
-    } while (i == 0);
+    } while (i == 0 || cf->stable.umode == 0);
 }
 
 static void
