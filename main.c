@@ -70,6 +70,7 @@
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
 #include "rtpp_util.h"
+#include "rtpp_version.h"
 
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
@@ -87,10 +88,11 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: rtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
-      "[-6 addr1[/addr2]] [-s path]\n\t[-t tos] [-r rdir [-S sdir]] [-T ttl] "
-      "[-L nfiles] [-m port_min]\n\t[-M port_max] [-u uname[:gname]] "
-      "[-n timeout_socket] [-d log_level]\n");
+    fprintf(stderr, "usage:\trtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
+      "[-6 addr1[/addr2]] [-s path]\n\t  [-t tos] [-r rdir [-S sdir]] [-T ttl] "
+      "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] "
+      "[-n timeout_socket] [-d log_level]\n"
+      "\trtpproxy -V\n");
     exit(1);
 }
 
@@ -147,7 +149,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:V")) != -1)
 	switch (ch) {
 	case 'f':
 	    cf->stable.nodaemon = 1;
@@ -305,6 +307,11 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    cf->stable.log_level = rtpp_log_str2lvl(optarg);
 	    if (cf->stable.log_level == -1)
 		errx(1, "%s: invalid log level", optarg);
+	    break;
+
+	case 'V':
+	    printf("%s\n", RTPP_SW_VERSION);
+	    exit(0);
 	    break;
 
 	case '?':

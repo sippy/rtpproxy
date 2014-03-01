@@ -44,7 +44,7 @@ SRCS=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_network.c rtpp_network.h rtpp_log.c rtpp_notify.c \
 	rtpp_notify.h rtpp_command_async.h rtpp_command_async.c \
 	config.h rtpp_proc_async.c rtpp_proc_async.h rtpp_proc.h \
-	rtpp_proc.c
+	rtpp_proc.c rtpp_version.h
 MAN1=
 
 WARNS?=	2
@@ -66,7 +66,10 @@ TSTAMP!=	date "+%Y%m%d%H%M%S"
 
 distribution: clean
 	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 ${PKGFILES}
-	scp /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
+	echo scp /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
+	echo '#define RTPP_SW_VERSION "'rel.${TSTAMP}'"' > rtpp_version.h
+	git commit -m "Update to rel.${TSTAMP}" rtpp_version.h
+	git push origin master
 	git tag rel.${TSTAMP}
 	git push origin rel.${TSTAMP}
 
