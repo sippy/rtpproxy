@@ -200,6 +200,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	if (sp->rtcp->prev_addr[i] != NULL)
 	    free(sp->rtcp->prev_addr[i]);
 	if (sp->fds[i] != -1) {
+	    shutdown(sp->fds[i], SHUT_RDWR);
 	    close(sp->fds[i]);
 	    assert(cf->sessinfo.sessions[sp->sidx[i]] == sp);
 	    cf->sessinfo.sessions[sp->sidx[i]] = NULL;
@@ -208,6 +209,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    cf->sessinfo.pfds[sp->sidx[i]].events = 0;
 	}
 	if (sp->rtcp->fds[i] != -1) {
+	    shutdown(sp->rtcp->fds[i], SHUT_RDWR);
 	    close(sp->rtcp->fds[i]);
 	    assert(cf->sessinfo.sessions[sp->rtcp->sidx[i]] == sp->rtcp);
 	    cf->sessinfo.sessions[sp->rtcp->sidx[i]] = NULL;
