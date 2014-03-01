@@ -333,11 +333,11 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat)
 		    rtp_packet_free(packet);
 		}
 	    }
-	} else {
+	} else if ((cf->sessinfo.pfds[readyfd].revents & POLLIN) != 0) {
 #if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining socket %d", readyfd);
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining socket %d", cf->sessinfo.pfds[readyfd].fd);
 #endif
-            drain_socket(readyfd);
+            drain_socket(cf->sessinfo.pfds[readyfd].fd);
         }
     }
     /* Trim any deleted sessions at the end */
