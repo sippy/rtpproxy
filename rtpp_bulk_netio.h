@@ -31,11 +31,13 @@
 struct sendto_s;
 struct rtpp_bnet_opipe;
 
-struct rtpp_bnet_opipe *rtpp_bulk_netio_opipe_new(int);
+struct rtpp_bnet_opipe *rtpp_bulk_netio_opipe_new(int, int, int);
 int rtpp_bulk_netio_opipe_destroy(struct rtpp_bnet_opipe *);
 int rtpp_bulk_netio_opipe_flush(struct rtpp_bnet_opipe *);
 int rtpp_bulk_netio_opipe_sendto(struct rtpp_bnet_opipe *, int, const void *, \
   size_t, int, const struct sockaddr *, socklen_t);
+int rtpp_bulk_netio_opipe_send_pkt(struct rtpp_bnet_opipe *, int, \
+  const struct sockaddr *, socklen_t, struct rtp_packet *);
 
 int rtpp_bulk_netio_init();
 
