@@ -28,12 +28,7 @@
 #ifndef _RTPP_COMMAND_ASYNC_H_
 #define _RTPP_COMMAND_ASYNC_H_
 
-struct rtpp_cmd_async_cf {
-    pthread_t thread_id;
-    pthread_cond_t cmd_cond;
-    pthread_mutex_t cmd_mutex;
-    int clock_tick;
-};
+struct rtpp_cmd_async_cf;
 
 int rtpp_command_async_init(struct cfg *);
 int rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *, int);

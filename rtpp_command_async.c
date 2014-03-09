@@ -38,13 +38,20 @@
 #include "rtpp_network.h"
 #include "rtpp_util.h"
 
+struct rtpp_cmd_async_cf {
+    pthread_t thread_id;
+    pthread_cond_t cmd_cond;
+    pthread_mutex_t cmd_mutex;
+    int clock_tick;
+};
+
 static void
 process_commands(struct cfg *cf, int controlfd_in, double dtime)
 {
-    int controlfd, i;
+    int controlfd, i, rval;
     socklen_t rlen;
     struct sockaddr_un ifsun;
-    struct rtpp_command cmd;
+    struct rtpp_command *cmd;
 
     do {
         if (cf->stable.umode == 0) {
@@ -59,10 +66,12 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
         } else {
             controlfd = controlfd_in;
         }
-        if (get_command(&cf->stable, controlfd, &cmd) > 0) {
+        cmd = get_command(&cf->stable, controlfd, &rval);
+        if (cmd != NULL) {
             pthread_mutex_lock(&cf->glock);
-            i = handle_command(cf, controlfd, &cmd, dtime);
+            i = handle_command(cf, controlfd, cmd, dtime);
             pthread_mutex_unlock(&cf->glock);
+            free_command(cmd);
         } else {
             i = -1;
         }
