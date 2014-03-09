@@ -52,8 +52,20 @@
 #include "rtpp_command.h"
 #include "rtpp_log.h"
 #include "rtpp_record.h"
+#include "rtp_resizer.h"
 #include "rtpp_session.h"
+#include "rtp_server.h"
 #include "rtpp_util.h"
+
+struct rtpp_command
+{
+    char buf[1024 * 8];
+    char *argv[10];
+    int argc;
+    struct sockaddr_storage raddr;
+    socklen_t rlen;
+    char *cookie;
+};
 
 struct proto_cap proto_caps[] = {
     /*
@@ -254,13 +266,26 @@ handle_nomem(struct cfg_stable *cf, int fd, struct rtpp_command *cmd,
     reply_error(cf, fd, cmd, ecode);
 }
 
-int
-get_command(struct cfg_stable *cfs, int controlfd, struct rtpp_command *cmd)
+void
+free_command(struct rtpp_command *cmd)
+{
+
+    free(cmd);
+}
+
+struct rtpp_command *
+get_command(struct cfg_stable *cfs, int controlfd, int *rval)
 {
     char **ap;
     char *cp;
     int len, i;
+    struct rtpp_command *cmd;
 
+    cmd = malloc(sizeof(struct rtpp_command));
+    if (cmd == NULL) {
+        *rval = ENOMEM;
+        return (NULL);
+    }
     if (cfs->umode == 0) {
         for (;;) {
             len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
@@ -275,7 +300,9 @@ get_command(struct cfg_stable *cfs, int controlfd, struct rtpp_command *cmd)
     if (len == -1) {
         if (errno != EAGAIN && errno != EINTR)
             rtpp_log_ewrite(RTPP_LOG_ERR, cfs->glog, "can't read from control socket");
-        return (-1);
+        free(cmd);
+        *rval = -1;
+        return (NULL);
     }
     cmd->buf[len] = '\0';
 
@@ -294,7 +321,9 @@ get_command(struct cfg_stable *cfs, int controlfd, struct rtpp_command *cmd)
     if (cmd->argc < 1 || (cfs->umode != 0 && cmd->argc < 2)) {
         rtpp_log_write(RTPP_LOG_ERR, cfs->glog, "command syntax error");
         reply_error(cfs, controlfd, cmd, 0);
-        return (0);
+        *rval = 0;
+        free(cmd);
+        return (NULL);
     }
 
     /* Stream communication mode doesn't use cookie */
@@ -307,7 +336,7 @@ get_command(struct cfg_stable *cfs, int controlfd, struct rtpp_command *cmd)
     } else {
         cmd->cookie = NULL;
     }
-    return (cmd->argc);
+    return (cmd);
 }
 
 int
@@ -1049,12 +1078,21 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "RTP packets from %s "
 	  "will be resized to %d milliseconds",
 	  (pidx == 0) ? "callee" : "caller", requested_nsamples / 8);
-    } else if (spa->resizers[pidx].output_nsamples > 0) {
+    } else if (spa->resizers[pidx] != NULL) {
 	  rtpp_log_write(RTPP_LOG_INFO, spa->log, "Resizing of RTP "
 	  "packets from %s has been disabled",
 	  (pidx == 0) ? "callee" : "caller");
     }
-    spa->resizers[pidx].output_nsamples = requested_nsamples;
+    if (requested_nsamples > 0) {
+        if (spa->resizers[pidx] != NULL) {
+            rtp_resizer_set_onsamples(spa->resizers[pidx], requested_nsamples);
+        } else {
+            spa->resizers[pidx] = rtp_resizer_new(requested_nsamples);
+        }
+    } else if (spa->resizers[pidx] != NULL) {
+        rtp_resizer_free(spa->resizers[pidx]);
+        spa->resizers[pidx] = NULL;
+    }
 
     for (i = 0; i < 2; i++)
 	if (ia[i] != NULL)
