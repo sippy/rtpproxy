@@ -37,6 +37,26 @@
 #include "rtp.h"
 #include "rtp_resizer.h"
 
+struct rtp_resizer {
+    int         nsamples_total;
+
+    int         seq_initialized;
+    uint16_t    seq;
+
+    int         last_sent_ts_inited;
+    uint32_t    last_sent_ts;
+
+    int         tsdelta_inited;
+    uint32_t    tsdelta;
+
+    int         output_nsamples;
+
+    struct {
+        struct rtp_packet *first;
+        struct rtp_packet *last;
+    } queue;
+};
+
 static int
 max_nsamples(int codec_id)
 {
@@ -48,6 +68,19 @@ max_nsamples(int codec_id)
     default:
         return 0; /* infinite */
     }
+}
+
+struct rtp_resizer *
+rtp_resizer_new(int output_nsamples)
+{
+    struct rtp_resizer *this;
+
+    this = malloc(sizeof(struct rtp_resizer));
+    if (this == NULL)
+        return (NULL);
+    memset(this, 0, sizeof(struct rtp_resizer));
+    this->output_nsamples = output_nsamples;
+    return (this);
 }
 
 void 
@@ -62,6 +95,24 @@ rtp_resizer_free(struct rtp_resizer *this)
         p = p->next;
         rtp_packet_free(p1);
     }
+    free(this);
+}
+
+int
+rtp_resizer_get_onsamples(struct rtp_resizer *this)
+{
+
+    return(this->output_nsamples);
+}
+
+int
+rtp_resizer_set_onsamples(struct rtp_resizer *this, int output_nsamples_new)
+{
+    int output_nsamples_old;
+
+    output_nsamples_old = this->output_nsamples;
+    this->output_nsamples = output_nsamples_new;
+    return (output_nsamples_old);
 }
 
 void
