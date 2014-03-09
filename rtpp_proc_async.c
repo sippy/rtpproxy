@@ -10,6 +10,14 @@
 #include "rtpp_proc_async.h"
 #include "rtpp_util.h"
 
+struct rtpp_proc_async_cf {
+    pthread_t thread_id;
+    pthread_cond_t proc_cond;
+    pthread_mutex_t proc_mutex;
+    int clock_tick;
+    long long ncycles_ref;
+};
+
 static void
 rtpp_proc_async_run(void *arg)
 {
