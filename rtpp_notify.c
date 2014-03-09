@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 #include "rtpp_log.h"
+#include "rtpp_defines.h"
 #include "rtpp_session.h"
 
 struct rtpp_notify_wi
