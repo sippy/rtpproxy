@@ -39,6 +39,7 @@
 #include <netinet/in.h>
 
 
+#include "rtp.h"
 #include "rtp_resizer.h"
 #include "rtp_server.h"
 #include "rtpp_log.h"
@@ -66,9 +67,12 @@ static void send_packets(struct cfg *, struct rtpp_proc_out_lst *, int);
 void
 process_rtp_servers(struct cfg *cf, double dtime)
 {
-    int j, k, sidx, len, skipfd;
+    int j, sidx, len, skipfd;
     struct rtpp_session *sp;
+    struct rtp_packet *pkt;
+    struct rtpp_bnet_opipe *op;
 
+    op = rtpp_bulk_netio_opipe_new(cf->rtp_nsessions, 1, cf->stable.dmode);
     skipfd = 0;
     for (j = 0; j < cf->rtp_nsessions; j++) {
 	sp = cf->rtp_servers[j];
@@ -83,25 +87,29 @@ process_rtp_servers(struct cfg *cf, double dtime)
 	for (sidx = 0; sidx < 2; sidx++) {
 	    if (sp->rtps[sidx] == NULL || sp->addr[sidx] == NULL)
 		continue;
-	    while ((len = rtp_server_get(sp->rtps[sidx], dtime)) != RTPS_LATER) {
-		if (len == RTPS_EOF) {
-		    rtp_server_free(sp->rtps[sidx]);
-		    sp->rtps[sidx] = NULL;
-		    if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
-			assert(cf->rtp_servers[sp->sridx] == sp);
-			cf->rtp_servers[sp->sridx] = NULL;
-			sp->sridx = -1;
-		    }
-		    break;
+            for (;;) {
+                pkt = rtp_server_get(sp->rtps[sidx], dtime, &len);
+                if (pkt == NULL) {
+                    if (len == RTPS_EOF) {
+                        rtp_server_free(sp->rtps[sidx]);
+                        sp->rtps[sidx] = NULL;
+                        if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
+                            assert(cf->rtp_servers[sp->sridx] == sp);
+                            cf->rtp_servers[sp->sridx] = NULL;
+                            sp->sridx = -1;
+                        }
+                    } else if (len != RTPS_LATER) {
+                        /* XXX some error, brag to logs */
+                    }
+                    break;
 		}
 		cf->packets_out++;
-		for (k = (cf->stable.dmode && len < LBR_THRS) ? 2 : 1; k > 0; k--) {
-		    sendto(sp->fds[sidx], sp->rtps[sidx]->buf, len, 0,
-		      sp->addr[sidx], SA_LEN(sp->addr[sidx]));
-		}
+                rtpp_bulk_netio_opipe_send_pkt(op, sp->fds[sidx], sp->addr[sidx], \
+                  SA_LEN(sp->addr[sidx]), pkt);
 	    }
 	}
     }
+    rtpp_bulk_netio_opipe_destroy(op);
     cf->rtp_nsessions -= skipfd;
 }
 
@@ -253,8 +261,8 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	    }
 	}
 
-	if (sp->resizers[ridx].output_nsamples > 0)
-	    rtp_resizer_enqueue(&sp->resizers[ridx], &packet);
+	if (sp->resizers[ridx] != NULL)
+	    rtp_resizer_enqueue(sp->resizers[ridx], &packet);
 	if (packet != NULL) {
             rout[rout_len].sp = sp;
             rout[rout_len].ridx = ridx;
@@ -278,14 +286,19 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 static void
 send_packets(struct cfg *cf, struct rtpp_proc_out_lst *rout, int rout_len)
 {
-    int i, sidx, ridx, rout_idx;
+    int sidx, ridx, rout_idx;
     struct rtpp_session *sp;
     struct rtp_packet *packet;
     struct rtpp_bnet_opipe *op;
 
-    op = rtpp_bulk_netio_opipe_new(rout_len);
+    op = rtpp_bulk_netio_opipe_new(rout_len, 1, cf->stable.dmode);
     if (op == NULL) {
         /* XXX complain to log */
+        /* drop all packets :( */
+        for (rout_idx = 0; rout_idx < rout_len; rout_idx += 1) {
+            rout[rout_idx].sp->pcount[3]++;
+            rtp_packet_free(rout[rout_idx].packet);
+        }
         return;
     }
     for (rout_idx = 0; rout_idx < rout_len; rout_idx += 1) {
@@ -307,10 +320,8 @@ send_packets(struct cfg *cf, struct rtpp_proc_out_lst *rout, int rout_len)
         } else {
 	    sp->pcount[2]++;
 	    cf->packets_out++;
-	    for (i = (cf->stable.dmode && packet->size < LBR_THRS) ? 2 : 1; i > 0; i--) {
-                rtpp_bulk_netio_opipe_sendto(op, sp->fds[sidx], packet->data.buf,
-                  packet->size, 0, sp->addr[sidx], SA_LEN(sp->addr[sidx]));
-	    }
+            rtpp_bulk_netio_opipe_send_pkt(op, sp->fds[sidx],  sp->addr[sidx], \
+              SA_LEN(sp->addr[sidx]), packet);
         }
 
         if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
@@ -318,9 +329,6 @@ send_packets(struct cfg *cf, struct rtpp_proc_out_lst *rout, int rout_len)
               sp->ports[sidx], sidx);
     }
     rtpp_bulk_netio_opipe_destroy(op);
-    for (rout_idx = 0; rout_idx < rout_len; rout_idx += 1) {
-        rtp_packet_free(rout[rout_idx].packet);
-    }
 }
 
 static void
@@ -399,8 +407,8 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat)
 		rxmit_packets(cf, rready, rready_len, dtime, drain_repeat);
                 rready_len = 0;
             }
-	    if (sp->resizers[ridx].output_nsamples > 0) {
-		while ((packet = rtp_resizer_get(&sp->resizers[ridx], dtime)) != NULL) {
+	    if (sp->resizers[ridx] != NULL) {
+		while ((packet = rtp_resizer_get(sp->resizers[ridx], dtime)) != NULL) {
                     rout[rout_len].sp = sp;
                     rout[rout_len].ridx = ridx;
                     rout[rout_len].packet = packet;
