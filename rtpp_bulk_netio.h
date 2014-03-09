@@ -28,7 +28,6 @@
 #ifndef _RTPP_BULK_NETIO_H_
 #define _RTPP_BULK_NETIO_H_
 
-struct sendto_s;
 struct rtpp_bnet_opipe;
 
 struct rtpp_bnet_opipe *rtpp_bulk_netio_opipe_new(int, int, int);
