@@ -114,11 +114,11 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
     struct rtpp_proc_out_lst rout[10];
 
     /* Repeat since we may have several packets queued on the same socket */
-    ndrain = 0;
+    ndrain = -1;
     rout_len = 0;
     for (rn = 0; rn < rlen; rn += (ndrain > 0) ? 0 : 1) {
-        if (ndrain <= 0) {
-            ndrain = drain_repeat;
+        if (ndrain < 0) {
+            ndrain = drain_repeat - 1;
         } else {
             ndrain -= 1;
         }
@@ -130,7 +130,8 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 
 	packet = rtp_recv(sp->fds[ridx]);
 	if (packet == NULL) {
-            ndrain = 0;
+            /* Move on to the next session */
+            ndrain = -1;
 	    continue;
         }
 	packet->laddr = sp->laddr[ridx];
@@ -192,7 +193,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 		  "removing session");
 		remove_session(cf, GET_RTP(sp));
 		/* Move on to the next session, sp is invalid now */
-                ndrain = 0;
+                ndrain = -1;
 		continue;
 	    }
 	    /* Signal that an address have to be updated. */
@@ -237,7 +238,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 			  "removing session");
 			remove_session(cf, sp);
 			/* Move on to the next session, sp is invalid now */
-                        ndrain = 0;
+                        ndrain = -1;
 			continue;
 		    }
 		}
