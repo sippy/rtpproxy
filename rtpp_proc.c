@@ -48,6 +48,7 @@
 #include "rtpp_record.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
+#include "rtpp_bulk_netio.h"
 
 struct rtpp_proc_out_lst {
     struct rtpp_session *sp;
@@ -280,7 +281,13 @@ send_packets(struct cfg *cf, struct rtpp_proc_out_lst *rout, int rout_len)
     int i, sidx, ridx, rout_idx;
     struct rtpp_session *sp;
     struct rtp_packet *packet;
+    struct rtpp_bnet_opipe *op;
 
+    op = rtpp_bulk_netio_opipe_new(rout_len);
+    if (op == NULL) {
+        /* XXX complain to log */
+        return;
+    }
     for (rout_idx = 0; rout_idx < rout_len; rout_idx += 1) {
         sp = rout[rout_idx].sp;
         ridx = rout[rout_idx].ridx;
@@ -301,15 +308,18 @@ send_packets(struct cfg *cf, struct rtpp_proc_out_lst *rout, int rout_len)
 	    sp->pcount[2]++;
 	    cf->packets_out++;
 	    for (i = (cf->stable.dmode && packet->size < LBR_THRS) ? 2 : 1; i > 0; i--) {
-	        sendto(sp->fds[sidx], packet->data.buf, packet->size, 0, sp->addr[sidx],
-	          SA_LEN(sp->addr[sidx]));
+                rtpp_bulk_netio_opipe_sendto(op, sp->fds[sidx], packet->data.buf,
+                  packet->size, 0, sp->addr[sidx], SA_LEN(sp->addr[sidx]));
 	    }
         }
 
         if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
 	    rwrite(sp, sp->rrcs[ridx], packet, sp->addr[sidx], sp->laddr[sidx], 
               sp->ports[sidx], sidx);
-        rtp_packet_free(packet);
+    }
+    rtpp_bulk_netio_opipe_destroy(op);
+    for (rout_idx = 0; rout_idx < rout_len; rout_idx += 1) {
+        rtp_packet_free(rout[rout_idx].packet);
     }
 }
 

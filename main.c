@@ -71,6 +71,7 @@
 #include "rtpp_notify.h"
 #include "rtpp_util.h"
 #include "rtpp_version.h"
+#include "rtpp_bulk_netio.h"
 
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
@@ -500,6 +501,9 @@ main(int argc, char **argv)
 
     if (rtpp_notify_init() != 0)
         errx(1, "can't start notification thread");
+
+    if (rtpp_bulk_netio_init() != 0)
+        warn("can't init bulk net I/O");
 
     glog = cf.stable.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
     rtpp_log_setlevel(cf.stable.glog, cf.stable.log_level);
