@@ -42,7 +42,9 @@
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
 #include "rtpp_record.h"
+#include "rtp_resizer.h"
 #include "rtpp_session.h"
+#include "rtp_server.h"
 #include "rtpp_util.h"
 
 void
@@ -235,6 +237,8 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    free(sp->codecs[i]);
 	if (sp->rtcp->codecs[i] != NULL)
 	    free(sp->rtcp->codecs[i]);
+        if (sp->resizers[i] != NULL)
+             rtp_resizer_free(sp->resizers[i]);
     }
     if (sp->timeout_data.notify_tag != NULL)
 	free(sp->timeout_data.notify_tag);
@@ -247,8 +251,6 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	free(sp->tag_nomedianum);
     rtpp_log_close(sp->log);
     free(sp->rtcp);
-    rtp_resizer_free(&sp->resizers[0]);
-    rtp_resizer_free(&sp->resizers[1]);
     free(sp);
     cf->sessions_active--;
 }

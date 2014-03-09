@@ -31,8 +31,6 @@
 #ifndef _RTPP_SESSION_H_
 #define _RTPP_SESSION_H_
 
-#include "rtp_server.h"
-#include "rtp_resizer.h"
 #include "rtpp_log.h"
 
 struct rtpp_timeout_data {
@@ -78,7 +76,7 @@ struct rtpp_session {
     int sridx;
     /* Flag that indicates whether or not address supplied by client can't be trusted */
     int untrusted_addr[2];
-    struct rtp_resizer resizers[2];
+    struct rtp_resizer *resizers[2];
     struct rtpp_session *prev;
     struct rtpp_session *next;
     struct rtpp_timeout_data timeout_data;
