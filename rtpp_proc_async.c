@@ -4,8 +4,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "rtp.h"
 #include "rtpp_defines.h"
 #include "rtpp_command_async.h"
+#include "rtpp_bulk_netio.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_util.h"
@@ -16,6 +18,7 @@ struct rtpp_proc_async_cf {
     pthread_mutex_t proc_mutex;
     int clock_tick;
     long long ncycles_ref;
+    struct rtpp_bnet_opipe *op;
 };
 
 static void
@@ -93,9 +96,9 @@ rtpp_proc_async_run(void *arg)
         }
 
         pthread_mutex_lock(&cf->glock);
-        process_rtp(cf, eptime, alarm_tick, ndrain);
+        process_rtp(cf, eptime, alarm_tick, ndrain, proc_cf->op);
         if (cf->rtp_nsessions > 0) {
-            process_rtp_servers(cf, eptime);
+            process_rtp_servers(cf, eptime, proc_cf->op);
         }
         pthread_mutex_unlock(&cf->glock);
         rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick);
@@ -133,6 +136,12 @@ rtpp_proc_async_init(struct cfg *cf)
 
     memset(proc_cf, '\0', sizeof(*proc_cf));
 
+    proc_cf->op = rtpp_bulk_netio_opipe_new(20, 1, cf->stable.dmode);
+    if (proc_cf->op == NULL) {
+        free(proc_cf);
+        return (-1);
+    }
+
     pthread_cond_init(&proc_cf->proc_cond, NULL);
     pthread_mutex_init(&proc_cf->proc_mutex, NULL);
 
@@ -140,6 +149,7 @@ rtpp_proc_async_init(struct cfg *cf)
     if (pthread_create(&proc_cf->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, cf) != 0) {
         pthread_cond_destroy(&proc_cf->proc_cond);
         pthread_mutex_destroy(&proc_cf->proc_mutex);
+        rtpp_bulk_netio_opipe_destroy(proc_cf->op);
         free(proc_cf);
         cf->rtpp_proc_cf = NULL;
         return (-1);
