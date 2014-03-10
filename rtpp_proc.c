@@ -90,6 +90,7 @@ process_rtp_servers(struct cfg *cf, double dtime, struct rtpp_bnet_opipe *op)
                 pkt = rtp_server_get(sp->rtps[sidx], dtime, &len);
                 if (pkt == NULL) {
                     if (len == RTPS_EOF) {
+                        rtpp_bulk_netio_opipe_flush(op);
                         rtp_server_free(sp->rtps[sidx]);
                         sp->rtps[sidx] = NULL;
                         if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
