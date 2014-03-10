@@ -316,6 +316,7 @@ send_packets(struct cfg *cf, struct rtpp_proc_out_lst *rout, int rout_len)
          * sent out, drop otherwise.
          */
         if (sp->addr[sidx] == NULL || GET_RTP(sp)->rtps[sidx] != NULL) {
+            rtp_packet_free(packet);
 	    sp->pcount[3]++;
         } else {
 	    sp->pcount[2]++;
