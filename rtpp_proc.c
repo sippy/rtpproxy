@@ -303,6 +303,10 @@ send_packets(struct cfg *cf, struct rtpp_proc_out_lst *rout, int rout_len, \
         /* Select socket for sending packet out. */
         sidx = (ridx == 0) ? 1 : 0;
 
+        if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
+            rwrite(sp, sp->rrcs[ridx], packet, sp->addr[sidx], sp->laddr[sidx],
+              sp->ports[sidx], sidx);
+
         /*
          * Check that we have some address to which packet is to be
          * sent out, drop otherwise.
@@ -316,10 +320,6 @@ send_packets(struct cfg *cf, struct rtpp_proc_out_lst *rout, int rout_len, \
             rtpp_bulk_netio_opipe_send_pkt(op, sp->fds[sidx],  sp->addr[sidx], \
               SA_LEN(sp->addr[sidx]), packet);
         }
-
-        if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
-	    rwrite(sp, sp->rrcs[ridx], packet, sp->addr[sidx], sp->laddr[sidx], 
-              sp->ports[sidx], sidx);
     }
 }
 
