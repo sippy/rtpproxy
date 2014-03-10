@@ -56,6 +56,21 @@ struct rtpp_bnet_opipe {
     struct rtp_packet **pkts;
 };
 
+struct ipipe_cb {
+    ipipe_cb_t cb_func;
+    void *cb_func_arg;
+    int ndrain;
+};
+
+struct rtpp_bnet_ipipe {
+    int plen;
+    int clen;
+    int compat;
+    struct recvfrom_s *ss_recv;
+    struct rtp_packet **pkts;
+    struct ipipe_cb *cbs;
+};
+
 struct rtpp_bnet_opipe *
 rtpp_bulk_netio_opipe_new(int plen, int freepkts, int dmode)
 {
@@ -84,6 +99,47 @@ rtpp_bulk_netio_opipe_new(int plen, int freepkts, int dmode)
     op->dmode = dmode;
 
     return (op);
+}
+
+struct rtpp_bnet_ipipe *
+rtpp_bulk_netio_ipipe_new(int plen)
+{
+    struct rtpp_bnet_ipipe *ip;
+    int msize;
+
+    msize = sizeof(struct rtpp_bnet_ipipe) + (sizeof(struct recvfrom_s) * plen);
+    msize += (sizeof(struct rtp_packet *) * plen);
+    msize += (sizeof(struct ipipe_cb) * plen);
+
+    ip = malloc(msize);
+    if (ip == NULL) {
+        return (NULL);
+    }
+    memset(ip, 0, msize);
+    ip->ss_recv = (struct recvfrom_s *)(ip + 1);
+    ip->pkts = (void *)((uint8_t *)ip->ss_recv + (sizeof(struct recvfrom_s) * plen));
+    ip->cbs = (void *)((uint8_t *)ip->pkts + (sizeof(struct rtp_packet *) * plen));
+    ip->plen = plen;
+    ip->clen = 0;
+    ip->compat = (sendto_bulk_sycallno == -1) ? 1 : 0;
+
+    return (ip);
+}
+
+int
+rtpp_bulk_netio_ipipe_add_s(struct rtpp_bnet_ipipe *ip, int s, \
+  int ndrain, ipipe_cb_t cb_func, void *cb_func_arg)
+{
+    struct ipipe_cb *cb;
+
+    if (ip->clen >= ip->plen)
+        return (-1);
+    cb = &ip->cbs[ip->clen];
+    cb->ndrain = ndrain;
+    cb->cb_func = cb_func;
+    cb->cb_func_arg = cb_func_arg;
+    ip->clen += 1;
+    return (0);
 }
 
 int

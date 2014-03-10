@@ -30,6 +30,8 @@
 
 struct rtpp_bnet_opipe;
 
+typedef void (*ipipe_cb_t) (struct rtp_packet *, void *);
+
 struct rtpp_bnet_opipe *rtpp_bulk_netio_opipe_new(int, int, int);
 int rtpp_bulk_netio_opipe_destroy(struct rtpp_bnet_opipe *);
 int rtpp_bulk_netio_opipe_flush(struct rtpp_bnet_opipe *);
