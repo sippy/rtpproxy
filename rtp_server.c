@@ -187,7 +187,7 @@ rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
     rp->rtp->ts = htonl(ts + (RTPS_SRATE * rticks / 1000));
     rp->rtp->seq = htons(ntohs(rp->rtp->seq) + 1);
 
-    memcpy(rp->rtp, &pkt->data.header, hlen);
+    memcpy(&pkt->data.header, rp->rtp, hlen);
 
     pkt->size = hlen + rlen;
     return (pkt);
