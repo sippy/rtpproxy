@@ -63,10 +63,16 @@ cleantabs:
 	perl -pi -e 's|        |\t|g' ${SRCS}
 
 TSTAMP!=	date "+%Y%m%d%H%M%S"
+GIT_BRANCH!=	sh -c "git branch | grep '^[*]' | awk '{print \$$2}'"
 
 distribution: clean
+.if ${GIT_BRANCH} == "master"
 	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 ${PKGFILES}
 	scp /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
+.else
+	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}_${GIT_BRANCH}.tbz2 ${PKGFILES}
+	scp /tmp/${PKGNAME}-sippy-${TSTAMP}_${GIT_BRANCH}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
+.endif
 	echo '#define RTPP_SW_VERSION "'rel.${TSTAMP}'"' > rtpp_version.h
 	git commit -m "Update to rel.${TSTAMP}" rtpp_version.h
 	git push origin master
