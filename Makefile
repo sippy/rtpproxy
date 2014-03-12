@@ -64,19 +64,19 @@ cleantabs:
 
 TSTAMP!=	date "+%Y%m%d%H%M%S"
 GIT_BRANCH!=	sh -c "git branch | grep '^[*]' | awk '{print \$$2}'"
+.if ${GIT_BRANCH} == "master"
+RTPP_SW_VERSION=	${TSTAMP}
+.else
+RTPP_SW_VERSION=	${TSTAMP}_${GIT_BRANCH}
+.endif
 
 distribution: clean
-.if ${GIT_BRANCH} == "master"
-	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 ${PKGFILES}
-	scp /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
-.else
-	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}_${GIT_BRANCH}.tbz2 ${PKGFILES}
-	scp /tmp/${PKGNAME}-sippy-${TSTAMP}_${GIT_BRANCH}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
-.endif
-	echo '#define RTPP_SW_VERSION "'rel.${TSTAMP}'"' > rtpp_version.h
-	git commit -m "Update to rel.${TSTAMP}" rtpp_version.h
-	git push origin master
-	git tag rel.${TSTAMP}
-	git push origin rel.${TSTAMP}
+	tar cvfy /tmp/${PKGNAME}-sippy-${RTPP_SW_VERSION}.tbz2 ${PKGFILES}
+	scp /tmp/${PKGNAME}-sippy-${RTPP_SW_VERSION}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
+	echo '#define RTPP_SW_VERSION "'rel.${RTPP_SW_VERSION}'"' > rtpp_version.h
+	git commit -m "Update to rel.${RTPP_SW_VERSION}" rtpp_version.h
+	git push origin ${GIT_BRANCH}
+	git tag rel.${RTPP_SW_VERSION}
+	git push origin rel.${RTPP_SW_VERSION}
 
 .include <bsd.prog.mk>
