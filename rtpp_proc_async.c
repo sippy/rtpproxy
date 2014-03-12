@@ -136,7 +136,7 @@ rtpp_proc_async_init(struct cfg *cf)
 
     memset(proc_cf, '\0', sizeof(*proc_cf));
 
-    proc_cf->op = rtpp_bulk_netio_opipe_new(20, 1, cf->stable.dmode);
+    proc_cf->op = rtpp_bulk_netio_opipe_new(4, 1, cf->stable.dmode);
     if (proc_cf->op == NULL) {
         free(proc_cf);
         return (-1);

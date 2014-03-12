@@ -271,7 +271,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
             rout[rout_len].packet = packet;
             packet = NULL;
             rout_len += 1;
-            if (rout_len == 10) {
+            if (rout_len == 4) {
 	        send_packets(cf, rout, rout_len, op);
                 rout_len = 0;
             }
@@ -397,7 +397,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
                 rready[rready_len].ridx = ridx;
                 rready_len += 1;
             }
-            if (rready_len == 10) {
+            if (rready_len == 4) {
 		rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, op);
                 rready_len = 0;
             }
@@ -407,7 +407,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
                     rout[rout_len].ridx = ridx;
                     rout[rout_len].packet = packet;
                     rout_len += 1;
-                    if (rout_len == 10) {
+                    if (rout_len == 4) {
 		        send_packets(cf, rout, rout_len, op);
                         rout_len = 0;
                     }
