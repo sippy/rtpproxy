@@ -51,19 +51,13 @@
 #include "rtpp_session.h"
 #include "rtpp_util.h"
 
-struct rtpp_proc_out_lst {
-    struct rtpp_session *sp;
-    int ridx;
-    struct rtp_packet *packet;
-};
-
 struct rtpp_proc_ready_lst {
     struct rtpp_session *sp;
     int ridx;
 };
 
-static void send_packets(struct cfg *, struct rtpp_proc_out_lst *, int, \
-  struct rtpp_bnet_opipe *);
+static void send_packet(struct cfg *, struct rtpp_session *, int, \
+  struct rtp_packet *, struct rtpp_bnet_opipe *);
 
 void
 process_rtp_servers(struct cfg *cf, double dtime, struct rtpp_bnet_opipe *op)
@@ -117,14 +111,12 @@ static void
 rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
   double dtime, int drain_repeat, struct rtpp_bnet_opipe *op)
 {
-    int ndrain, i, port, rn, ridx, rout_len;
+    int ndrain, i, port, rn, ridx;
     struct rtp_packet *packet = NULL;
     struct rtpp_session *sp;
-    struct rtpp_proc_out_lst rout[10];
 
     /* Repeat since we may have several packets queued on the same socket */
     ndrain = -1;
-    rout_len = 0;
     for (rn = 0; rn < rlen; rn += (ndrain > 0) ? 0 : 1) {
         if (ndrain < 0) {
             ndrain = drain_repeat - 1;
@@ -266,60 +258,42 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	if (sp->resizers[ridx] != NULL)
 	    rtp_resizer_enqueue(sp->resizers[ridx], &packet);
 	if (packet != NULL) {
-            rout[rout_len].sp = sp;
-            rout[rout_len].ridx = ridx;
-            rout[rout_len].packet = packet;
+	    send_packet(cf, sp, ridx, packet, op);
             packet = NULL;
-            rout_len += 1;
-            if (rout_len == 4) {
-	        send_packets(cf, rout, rout_len, op);
-                rout_len = 0;
-            }
         }
     }
     if (packet != NULL)
         rtp_packet_free(packet);
-    if (rout_len > 0) {
-        send_packets(cf, rout, rout_len, op);
-        rout_len = 0;
-    }
 }
 
 static void
-send_packets(struct cfg *cf, struct rtpp_proc_out_lst *rout, int rout_len, \
-  struct rtpp_bnet_opipe *op)
+send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
+  struct rtp_packet *packet, struct rtpp_bnet_opipe *op)
 {
-    int sidx, ridx, rout_idx;
-    struct rtpp_session *sp;
-    struct rtp_packet *packet;
+    int sidx;
 
-    for (rout_idx = 0; rout_idx < rout_len; rout_idx += 1) {
-        sp = rout[rout_idx].sp;
-        ridx = rout[rout_idx].ridx;
-        packet = rout[rout_idx].packet;
 
-        GET_RTP(sp)->ttl[ridx] = cf->stable.max_ttl;
+    GET_RTP(sp)->ttl[ridx] = cf->stable.max_ttl;
 
-        /* Select socket for sending packet out. */
-        sidx = (ridx == 0) ? 1 : 0;
+    /* Select socket for sending packet out. */
+    sidx = (ridx == 0) ? 1 : 0;
 
-        if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
-            rwrite(sp, sp->rrcs[ridx], packet, sp->addr[sidx], sp->laddr[sidx],
-              sp->ports[sidx], sidx);
+    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
+        rwrite(sp, sp->rrcs[ridx], packet, sp->addr[sidx], sp->laddr[sidx],
+          sp->ports[sidx], sidx);
 
-        /*
-         * Check that we have some address to which packet is to be
-         * sent out, drop otherwise.
-         */
-        if (sp->addr[sidx] == NULL || GET_RTP(sp)->rtps[sidx] != NULL) {
-            rtp_packet_free(packet);
-	    sp->pcount[3]++;
-        } else {
-	    sp->pcount[2]++;
-	    cf->packets_out++;
-            rtpp_bulk_netio_opipe_send_pkt(op, sp->fds[sidx],  sp->addr[sidx], \
-              SA_LEN(sp->addr[sidx]), packet);
-        }
+    /*
+     * Check that we have some address to which packet is to be
+     * sent out, drop otherwise.
+     */
+    if (sp->addr[sidx] == NULL || GET_RTP(sp)->rtps[sidx] != NULL) {
+        rtp_packet_free(packet);
+	sp->pcount[3]++;
+    } else {
+	sp->pcount[2]++;
+	cf->packets_out++;
+        rtpp_bulk_netio_opipe_send_pkt(op, sp->fds[sidx],  sp->addr[sidx], \
+          SA_LEN(sp->addr[sidx]), packet);
     }
 }
 
@@ -340,16 +314,14 @@ void
 process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
   struct rtpp_bnet_opipe *op)
 {
-    int readyfd, skipfd, ridx, rready_len, rout_len;
+    int readyfd, skipfd, ridx, rready_len;
     struct rtpp_session *sp;
     struct rtp_packet *packet;
     struct rtpp_proc_ready_lst rready[10];
-    struct rtpp_proc_out_lst rout[10];
 
     /* Relay RTP/RTCP */
     skipfd = 0;
     rready_len = 0;
-    rout_len = 0;
     pthread_mutex_lock(&cf->sessinfo.lock);
     for (readyfd = 0; readyfd < cf->sessinfo.nsessions; readyfd++) {
 	sp = cf->sessinfo.sessions[readyfd];
@@ -403,14 +375,8 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
             }
 	    if (sp->resizers[ridx] != NULL) {
 		while ((packet = rtp_resizer_get(sp->resizers[ridx], dtime)) != NULL) {
-                    rout[rout_len].sp = sp;
-                    rout[rout_len].ridx = ridx;
-                    rout[rout_len].packet = packet;
-                    rout_len += 1;
-                    if (rout_len == 4) {
-		        send_packets(cf, rout, rout_len, op);
-                        rout_len = 0;
-                    }
+		    send_packet(cf, sp, ridx, packet, op);
+		    packet = NULL;
 		}
 	    }
 	} else if ((cf->sessinfo.pfds[readyfd].revents & POLLIN) != 0) {
@@ -423,10 +389,6 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
     if (rready_len > 0) {
         rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, op);
         rready_len = 0;
-    }
-    if (rout_len > 0) {
-        send_packets(cf, rout, rout_len, op);
-        rout_len = 0;
     }
     /* Trim any deleted sessions at the end */
     cf->sessinfo.nsessions -= skipfd;
