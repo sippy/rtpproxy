@@ -56,19 +56,19 @@ struct rtpp_bnet_opipe {
     struct rtp_packet **pkts;
 };
 
-struct ipipe_cb {
-    ipipe_cb_t cb_func;
-    void *cb_func_arg;
+struct rtpp_bnet_ipipe_sock {
+    int s;
     int ndrain;
+    void *cb_func_arg;
 };
 
 struct rtpp_bnet_ipipe {
     int plen;
-    int clen;
     int compat;
+    int nsocks;
+    int usocks;
     struct recvfrom_s *ss_recv;
-    struct rtp_packet **pkts;
-    struct ipipe_cb *cbs;
+    struct rtpp_bnet_ipipe_sock *socks;
 };
 
 struct rtpp_bnet_opipe *
@@ -108,19 +108,24 @@ rtpp_bulk_netio_ipipe_new(int plen)
     int msize;
 
     msize = sizeof(struct rtpp_bnet_ipipe) + (sizeof(struct recvfrom_s) * plen);
-    msize += (sizeof(struct rtp_packet *) * plen);
-    msize += (sizeof(struct ipipe_cb) * plen);
 
     ip = malloc(msize);
     if (ip == NULL) {
         return (NULL);
     }
     memset(ip, 0, msize);
+
+    ip->nsocks = plen * 4;
+    msize = (sizeof(struct rtpp_bnet_ipipe_sock) * ip->nsocks);
+    ip->socks = malloc(msize);
+    if (ip->socks == NULL) {
+        free(ip);
+        return (NULL);
+    }
+
     ip->ss_recv = (struct recvfrom_s *)(ip + 1);
-    ip->pkts = (void *)((uint8_t *)ip->ss_recv + (sizeof(struct recvfrom_s) * plen));
-    ip->cbs = (void *)((uint8_t *)ip->pkts + (sizeof(struct rtp_packet *) * plen));
     ip->plen = plen;
-    ip->clen = 0;
+    ip->usocks = 0;
     ip->compat = (sendto_bulk_sycallno == -1) ? 1 : 0;
 
     return (ip);
@@ -128,18 +133,92 @@ rtpp_bulk_netio_ipipe_new(int plen)
 
 int
 rtpp_bulk_netio_ipipe_add_s(struct rtpp_bnet_ipipe *ip, int s, \
-  int ndrain, ipipe_cb_t cb_func, void *cb_func_arg)
+  int ndrain, void *cb_func_arg)
 {
-    struct ipipe_cb *cb;
+    struct rtpp_bnet_ipipe_sock *iss;
 
-    if (ip->clen >= ip->plen)
-        return (-1);
-    cb = &ip->cbs[ip->clen];
-    cb->ndrain = ndrain;
-    cb->cb_func = cb_func;
-    cb->cb_func_arg = cb_func_arg;
-    ip->clen += 1;
+    if (ip->usocks == ip->nsocks) {
+        /* Make up some more room */
+        iss = realloc(ip->socks, (sizeof(struct rtpp_bnet_ipipe_sock) * ip->nsocks * 2));
+        if (iss == NULL) {
+            return (-1);
+        }
+        ip->nsocks *= 2;
+        ip->socks = iss;
+        iss += ip->usocks;
+    } else {
+        iss = &ip->socks[ip->usocks];
+    }
+    
+    iss->s = s;
+    iss->ndrain = ndrain;
+    iss->cb_func_arg = cb_func_arg;
+    ip->usocks += 1;
     return (0);
+}
+
+static void
+rtpp_bulk_netio_ipipe_proc(struct recvfrom_s *ss_recv, \
+  struct rtpp_bnet_ipipe_sock **iss, ipipe_cb_t proc_func, int clen)
+{
+    int i;
+    struct rtp_packet *packet;
+
+    for (i = 0; i < clen; i++) {
+        packet = rtp_recv(ss_recv[i].args.s);
+        if (packet == NULL) {
+            /* Move on to the next session */
+            iss[i]->ndrain = -1;
+            continue;
+        }
+        proc_func(packet, iss[i]->cb_func_arg);
+    }
+}
+
+
+void
+rtpp_bulk_netio_ipipe_pump(struct rtpp_bnet_ipipe *ip, ipipe_cb_t proc_func)
+{
+    int i, clen, ndrain;
+    struct recvfrom_s *ss_recv;
+    struct rtpp_bnet_ipipe_sock **iss;
+
+    clen = 0;
+    ss_recv = ip->ss_recv;
+    iss = alloca(sizeof(struct rtpp_bnet_ipipe_sock *) * ip->plen);
+    do {
+        ndrain = 0;
+        for (i = 0; i < ip->usocks; i++) {
+            if (ip->socks[i].ndrain <= 0)
+                continue;
+            iss[clen] = &ip->socks[i];
+            iss[clen]->ndrain -= 1;
+            ndrain += 1;
+            ss_recv[clen].args.s = ip->socks[i].s;
+            clen += 1;
+            if (clen < ip->plen)
+                continue;
+            rtpp_bulk_netio_ipipe_proc(ss_recv, iss, proc_func, clen);
+            clen = 0;
+        }
+    } while (ndrain > 0);
+    if (clen > 0)
+        rtpp_bulk_netio_ipipe_proc(ss_recv, iss, proc_func, clen);
+}
+
+void
+rtpp_bulk_netio_ipipe_reset(struct rtpp_bnet_ipipe *ip)
+{
+
+    ip->usocks = 0;
+}
+
+void
+rtpp_bulk_netio_ipipe_destroy(struct rtpp_bnet_ipipe *ip)
+{
+
+    free(ip->socks);
+    free(ip);
 }
 
 int

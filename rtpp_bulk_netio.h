@@ -29,6 +29,7 @@
 #define _RTPP_BULK_NETIO_H_
 
 struct rtpp_bnet_opipe;
+struct rtpp_bnet_ipipe;
 
 typedef void (*ipipe_cb_t) (struct rtp_packet *, void *);
 
@@ -39,6 +40,13 @@ int rtpp_bulk_netio_opipe_sendto(struct rtpp_bnet_opipe *, int, const void *, \
   size_t, int, const struct sockaddr *, socklen_t);
 int rtpp_bulk_netio_opipe_send_pkt(struct rtpp_bnet_opipe *, int, \
   const struct sockaddr *, socklen_t, struct rtp_packet *);
+
+struct rtpp_bnet_ipipe *rtpp_bulk_netio_ipipe_new(int);
+int rtpp_bulk_netio_ipipe_add_s(struct rtpp_bnet_ipipe *, int, \
+  int, void *);
+void rtpp_bulk_netio_ipipe_pump(struct rtpp_bnet_ipipe *, ipipe_cb_t);
+void rtpp_bulk_netio_ipipe_reset(struct rtpp_bnet_ipipe *);
+void rtpp_bulk_netio_ipipe_destroy(struct rtpp_bnet_ipipe *);
 
 int rtpp_bulk_netio_init();
 
