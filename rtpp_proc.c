@@ -369,7 +369,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
                 rready[rready_len].ridx = ridx;
                 rready_len += 1;
             }
-            if (rready_len == 4) {
+            if (rready_len == 8) {
 		rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, op);
                 rready_len = 0;
             }
