@@ -52,8 +52,6 @@ rtpp_proc_async_run(void *arg)
 
         if (ndrain < 1) {
             ndrain = 1;
-        } else if (ndrain > 10) {
-            ndrain = 10;
         }
 
 #if RTPP_DEBUG
