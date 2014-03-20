@@ -123,7 +123,7 @@ static void
 init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i;
-    char *bh[2], *bh6[2], *cp;
+    char *bh[2], *bh6[2], *cp, *tp[2];
     const char *errmsg;
     struct passwd *pp;
     struct group *gp;
@@ -138,6 +138,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.rrtcp = 1;
     cf->stable.ttl_mode = TTL_UNIFIED;
     cf->stable.log_level = -1;
+    cf->stable.sched_offset = 0.0;
 
     cf->timeout_handler.socket_name = NULL;
     cf->timeout_handler.fd = -1;
@@ -150,8 +151,20 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:V")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:")) != -1)
 	switch (ch) {
+        case 'N':
+            tp[0] = optarg;
+            tp[1] = strchr(tp[0], '/');
+            if (tp[1] == NULL) {
+                errx(1, "%s: -N should be in the format X/Y", optarg);
+            }
+            *tp[1] = '\0';
+            tp[1]++;
+            cf->stable.sched_offset = (double)strtol(tp[0], &tp[0], 10) / ((double)strtol(tp[1], &tp[1], 10) * (double)POLL_RATE);
+            warnx("sched_offset = %f",  cf->stable.sched_offset);
+            break;
+
 	case 'f':
 	    cf->stable.nodaemon = 1;
 	    break;
@@ -473,7 +486,7 @@ main(int argc, char **argv)
     int i, len, controlfd, eval;
     long long ncycles_ref, ncycles_ref_prev, counter;
     double eptime, filter_lastval;
-    double target_runtime, add_delay, rtpp_epoch;
+    double target_runtime, add_delay;
     struct cfg cf;
     char buf[256];
     struct recfilter loop_error;
@@ -559,13 +572,12 @@ main(int argc, char **argv)
 
         if (ncycles_ref_prev > ncycles_ref || counter == 0) {
             /* Time went backwards, handle that */
-            rtpp_epoch = eptime;
             ncycles_ref_prev = llrint(eptime / target_runtime);
         } else {
             ncycles_ref_prev = ncycles_ref;
         }
 
-        ncycles_ref = llrint(eptime / target_runtime);
+        ncycles_ref = llrint((eptime + cf.stable.sched_offset)/ target_runtime);
 
         eval = ncycles_ref_prev - ncycles_ref + 1;
         filter_lastval = loop_error.lastval;

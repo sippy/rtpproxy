@@ -138,6 +138,8 @@ struct cfg {
         uint8_t rand_table[256];
 
         int controlfd;
+
+        double sched_offset;
     } stable;
 
     /*
