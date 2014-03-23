@@ -50,6 +50,7 @@
 #include <unistd.h>
 
 #include "rtpp_command.h"
+#include "rtpp_command_async.h"
 #include "rtpp_log.h"
 #include "rtpp_record.h"
 #include "rtp_resizer.h"
@@ -81,6 +82,7 @@ struct proto_cap proto_caps[] = {
     { "20081102", "Support for setting codecs in the update/lookup command" },
     { "20081224", "Support for session timeout notifications" },
     { "20090810", "Support for automatic bridging" },
+    { "20140323", "Support for tracking/reporting load" },
     { NULL, NULL }
 };
 
@@ -94,7 +96,7 @@ static int handle_record(struct cfg *, char *, char *, char *, int);
 static void handle_query(struct cfg *, int, struct rtpp_command *,
   struct rtpp_session *, int);
 static void handle_info(struct cfg *, int, struct rtpp_command *,
-  int);
+  const char *);
 
 static int
 create_twinlistener(struct cfg_stable *cf, struct sockaddr *ia, int port, int *fds)
@@ -465,8 +467,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 
     case 'i':
     case 'I':
-	handle_info(cf, controlfd, cmd,
-          (cmd->argv[0][1] == 'b' || cmd->argv[0][1] == 'B') ? 1 : 0);
+	handle_info(cf, controlfd, cmd, &cmd->argv[0][1]);
 	return 0;
 	break;
 
@@ -1296,12 +1297,32 @@ handle_query(struct cfg *cf, int fd, struct rtpp_command *cmd,
 
 static void
 handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd,
-  int brief)
+  const char *opts)
 {
     struct rtpp_session *spa, *spb;
-    int len, i;
+    int len, i, brief, load;
     char addrs[4][256];
     char buf[1024 * 8];
+
+    brief = 0;
+    load = 0;
+    for (i = 0; opts[i] != '\0'; i++) {
+        switch (opts[i]) {
+        case 'b':
+        case 'B':
+            brief = 1;
+            break;
+
+        case 'l':
+        case 'L':
+            load = 1;
+            break;
+
+        default:
+            /* complain ? */
+            break;
+        }
+    }
 
     pthread_mutex_lock(&cf->sessinfo.lock);
     if (cmd->cookie == NULL)
@@ -1314,6 +1335,9 @@ handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd,
           "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
           cmd->cookie, cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions / 2,
           cf->packets_in, cf->packets_out);
+    if (load != 0) {
+          len += sprintf(buf + len, "average load: %f\n", rtpp_command_async_get_aload(cf->rtpp_cmd_cf));
+    }
     for (i = 0; i < cf->sessinfo.nsessions && brief == 0; i++) {
         spa = cf->sessinfo.sessions[i];
         if (spa == NULL || spa->sidx[0] != i)
