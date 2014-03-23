@@ -35,6 +35,8 @@ CLEANFILES+=	rtpproxy_debug
 .else
 PROG=	rtpproxy_debug
 CLEANFILES+=	rtpproxy
+CFLAGS+=	-g3 -O0 -DRTPP_DEBUG
+LDADD+=		-static
 .endif
 
 SRCS=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
@@ -55,10 +57,6 @@ BINDIR?=	${LOCALBASE}/bin
 
 CFLAGS+=	-I../siplog -I${LOCALBASE}/include
 LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread -lm
-.if defined(RTPP_DEBUG)
-CFLAGS+=	-DRTPP_DEBUG
-LDADD+=	-static
-.endif
 
 cleantabs:
 	perl -pi -e 's|        |\t|g' ${SRCS}
