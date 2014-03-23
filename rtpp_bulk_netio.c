@@ -38,7 +38,23 @@
 #include <string.h>
 #include <unistd.h>
 
+#if 0
 #include "bulk_net/module/syscall.h"
+#else
+#include <sys/sysproto.h>
+
+#define BULK_NET_INIT_SS(ss, nss) {int _i; for (_i=0;_i<nss;_i++) {(ss)[_i].rval = EINVAL;}}
+
+struct sendto_s {
+    struct sendto_args args;
+    ssize_t rval;
+};
+
+struct recvfrom_s {
+    struct recvfrom_args args;
+    ssize_t rval;
+};
+#endif
 
 #include "rtpp_defines.h"
 #include "rtp.h"
