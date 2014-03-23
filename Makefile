@@ -35,7 +35,7 @@ CLEANFILES+=	rtpproxy_debug
 .else
 PROG=	rtpproxy_debug
 CLEANFILES+=	rtpproxy
-CFLAGS+=	-g3 -O0 -DRTPP_DEBUG
+DEBUG_FLAGS=	-g3 -O0 -DRTPP_DEBUG
 LDADD+=		-static
 .endif
 
