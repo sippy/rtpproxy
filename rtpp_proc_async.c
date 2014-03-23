@@ -8,6 +8,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_command_async.h"
 #include "rtpp_bulk_netio.h"
+#include "rtpp_math.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_util.h"
@@ -29,6 +30,10 @@ rtpp_proc_async_run(void *arg)
     int alarm_tick, i, last_ctick, ndrain;
     struct rtpp_proc_async_cf *proc_cf;
     long long ncycles_ref, ncycles_ref_pre;
+#if RTPP_DEBUG
+    double sptime;
+    struct recfilter average_load;
+#endif
 
     cf = (struct cfg *)arg;
     proc_cf = cf->rtpp_proc_cf;
@@ -36,8 +41,12 @@ rtpp_proc_async_run(void *arg)
     last_tick_time = 0;
     pthread_mutex_lock(&proc_cf->proc_mutex);
     last_ctick = proc_cf->clock_tick;
-    ncycles_ref = proc_cf->ncycles_ref;
+    ncycles_ref_pre = proc_cf->ncycles_ref;
     pthread_mutex_unlock(&proc_cf->proc_mutex);
+
+#if RTPP_DEBUG
+    recfilter_init(&average_load, 0.999, 0.0, 1);
+#endif
 
     for (;;) {
         pthread_mutex_lock(&proc_cf->proc_mutex);
@@ -45,10 +54,19 @@ rtpp_proc_async_run(void *arg)
             pthread_cond_wait(&proc_cf->proc_cond, &proc_cf->proc_mutex);
         }
         last_ctick = proc_cf->clock_tick;
-        ndrain = (proc_cf->ncycles_ref - ncycles_ref) / (POLL_RATE / MAX_RTP_RATE);
+        ndrain = (proc_cf->ncycles_ref - ncycles_ref_pre) / (POLL_RATE / MAX_RTP_RATE);
         ncycles_ref_pre = ncycles_ref;
         ncycles_ref = proc_cf->ncycles_ref;
         pthread_mutex_unlock(&proc_cf->proc_mutex);
+
+#if RTPP_DEBUG
+        sptime = getdtime();
+        if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld sptime %f, CSV: %f,%f,%f", \
+              last_ctick, sptime, (double)last_ctick / (double)POLL_RATE, \
+              ((double)ncycles_ref * cf->stable.target_runtime) - sptime, sptime);
+        }
+#endif
 
         if (ndrain < 1) {
             ndrain = 1;
@@ -56,10 +74,10 @@ rtpp_proc_async_run(void *arg)
 
 #if RTPP_DEBUG
         if (ndrain > 1) {
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld eptime %f, " \
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld " \
               "ncycles_ref %lld, ncycles_ref_pre %lld, ndrain %d CSV: %f,%f,%d", \
-              last_ctick, eptime, ncycles_ref, ncycles_ref_pre, ndrain, \
-              (double)last_ctick / (double)POLL_RATE, eptime, ndrain);
+              last_ctick, ncycles_ref, ncycles_ref_pre, ndrain, \
+              (double)last_ctick / (double)POLL_RATE, ndrain);
         }
 #endif
 
@@ -74,14 +92,8 @@ rtpp_proc_async_run(void *arg)
         } else {
             pthread_mutex_unlock(&cf->sessinfo.lock);
         }
-        eptime = getdtime();
 
-#if RTPP_DEBUG
-        if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld eptime %f, CSV: %f,%f", \
-              last_ctick, eptime, (double)last_ctick / (double)POLL_RATE, eptime);
-        }
-#endif
+        eptime = getdtime();
 
         if (last_tick_time == 0 || last_tick_time > eptime) {
             alarm_tick = 0;
@@ -100,6 +112,17 @@ rtpp_proc_async_run(void *arg)
         }
         pthread_mutex_unlock(&cf->glock);
         rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick);
+
+#if RTPP_DEBUG
+        eptime = getdtime();
+        recfilter_apply(&average_load, (eptime - sptime) / cf->stable.target_runtime);
+        if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld eptime %f, CSV: %f,%f,%f", \
+              last_ctick, eptime, (double)last_ctick / (double)POLL_RATE, eptime - sptime, eptime);
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld average load %f", last_ctick, \
+              average_load.lastval * 100.0);
+        }
+#endif
     }
 
 }

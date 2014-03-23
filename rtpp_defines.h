@@ -140,6 +140,7 @@ struct cfg {
         int controlfd;
 
         double sched_offset;
+        double target_runtime;
     } stable;
 
     /*
