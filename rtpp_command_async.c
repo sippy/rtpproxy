@@ -35,6 +35,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
+#include "rtpp_math.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"
 
@@ -43,6 +44,8 @@ struct rtpp_cmd_async_cf {
     pthread_cond_t cmd_cond;
     pthread_mutex_t cmd_mutex;
     int clock_tick;
+    double tused;
+    struct recfilter average_load;
 };
 
 static void
@@ -88,7 +91,7 @@ rtpp_cmd_queue_run(void *arg)
     struct rtpp_cmd_async_cf *cmd_cf;
     struct pollfd pfds[1];
     int i, last_ctick;
-    double eptime;
+    double eptime, sptime, tused;
 
     cf = (struct cfg *)arg;
     cmd_cf = cf->rtpp_cmd_cf;
@@ -107,20 +110,47 @@ rtpp_cmd_queue_run(void *arg)
             pthread_cond_wait(&cmd_cf->cmd_cond, &cmd_cf->cmd_mutex);
         }
         last_ctick = cmd_cf->clock_tick;
+        tused = cmd_cf->tused;
         pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+
+        sptime = getdtime();
 
         i = poll(pfds, 1, 0);
         if (i < 0 && errno == EINTR)
             continue;
         if (i > 0 && (pfds[0].revents & POLLIN) != 0) {
-            eptime = getdtime();
-            process_commands(cf, pfds[0].fd, eptime);
+            process_commands(cf, pfds[0].fd, sptime);
         }
+        eptime = getdtime();
+        pthread_mutex_lock(&cmd_cf->cmd_mutex);
+        recfilter_apply(&cmd_cf->average_load, (eptime - sptime + tused) / cf->stable.target_runtime);
+        pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+#if RTPP_DEBUG
+        if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
+              last_ctick, sptime, eptime, (double)last_ctick / (double)POLL_RATE, \
+              eptime - sptime + tused, eptime, sptime, tused);
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld average load %f, CSV: %f,%f", last_ctick, \
+              cmd_cf->average_load.lastval * 100.0, (double)last_ctick / (double)POLL_RATE, cmd_cf->average_load.lastval);
+        }
+#endif
     }
 }
 
+double
+rtpp_command_async_get_aload(struct rtpp_cmd_async_cf *cmd_cf)
+{
+    double aload;
+
+    pthread_mutex_lock(&cmd_cf->cmd_mutex);
+    aload = cmd_cf->average_load.lastval;
+    pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+
+    return (aload);
+}
+
 int
-rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf, int clock)
+rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf, int clock, double tused)
 {
     int old_clock;
 
@@ -128,6 +158,7 @@ rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf, int clock)
 
     old_clock = cmd_cf->clock_tick;
     cmd_cf->clock_tick = clock;
+    cmd_cf->tused = tused;
 
     /* notify worker thread */
     pthread_cond_signal(&cmd_cf->cmd_cond);
@@ -150,6 +181,8 @@ rtpp_command_async_init(struct cfg *cf)
 
     pthread_cond_init(&cmd_cf->cmd_cond, NULL);
     pthread_mutex_init(&cmd_cf->cmd_mutex, NULL);
+
+    recfilter_init(&cmd_cf->average_load, 0.999, 0.0, 1);
 
     cf->rtpp_cmd_cf = cmd_cf;
     if (pthread_create(&cmd_cf->thread_id, NULL, (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {

@@ -30,10 +30,7 @@ rtpp_proc_async_run(void *arg)
     int alarm_tick, i, last_ctick, ndrain;
     struct rtpp_proc_async_cf *proc_cf;
     long long ncycles_ref, ncycles_ref_pre;
-#if RTPP_DEBUG
     double sptime;
-    struct recfilter average_load;
-#endif
 
     cf = (struct cfg *)arg;
     proc_cf = cf->rtpp_proc_cf;
@@ -43,10 +40,6 @@ rtpp_proc_async_run(void *arg)
     last_ctick = proc_cf->clock_tick;
     ncycles_ref_pre = proc_cf->ncycles_ref;
     pthread_mutex_unlock(&proc_cf->proc_mutex);
-
-#if RTPP_DEBUG
-    recfilter_init(&average_load, 0.999, 0.0, 1);
-#endif
 
     for (;;) {
         pthread_mutex_lock(&proc_cf->proc_mutex);
@@ -59,8 +52,8 @@ rtpp_proc_async_run(void *arg)
         ncycles_ref = proc_cf->ncycles_ref;
         pthread_mutex_unlock(&proc_cf->proc_mutex);
 
-#if RTPP_DEBUG
         sptime = getdtime();
+#if RTPP_DEBUG
         if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld sptime %f, CSV: %f,%f,%f", \
               last_ctick, sptime, (double)last_ctick / (double)POLL_RATE, \
@@ -86,7 +79,8 @@ rtpp_proc_async_run(void *arg)
             i = poll(cf->sessinfo.pfds, cf->sessinfo.nsessions, 0);
             pthread_mutex_unlock(&cf->sessinfo.lock);
             if (i < 0 && errno == EINTR) {
-                rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick);
+                eptime = getdtime();
+                rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick, eptime - sptime);
                 continue;
             }
         } else {
@@ -111,16 +105,13 @@ rtpp_proc_async_run(void *arg)
             process_rtp_servers(cf, eptime, proc_cf->op);
         }
         pthread_mutex_unlock(&cf->glock);
-        rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick);
+        eptime = getdtime();
+        rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick, eptime - sptime);
 
 #if RTPP_DEBUG
-        eptime = getdtime();
-        recfilter_apply(&average_load, (eptime - sptime) / cf->stable.target_runtime);
         if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld eptime %f, CSV: %f,%f,%f", \
               last_ctick, eptime, (double)last_ctick / (double)POLL_RATE, eptime - sptime, eptime);
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld average load %f", last_ctick, \
-              average_load.lastval * 100.0);
         }
 #endif
     }
