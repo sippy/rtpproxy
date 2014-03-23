@@ -41,6 +41,7 @@
 
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
+#include "rtpp_math.h"
 #include "rtpp_record.h"
 #include "rtp_resizer.h"
 #include "rtpp_session.h"

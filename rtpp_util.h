@@ -43,27 +43,6 @@
 
 #define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
-#ifdef MIN
-#undef MIN
-#endif
-#ifdef MAX
-#undef MAX
-#endif
-#ifdef ABS
-#undef ABS
-#endif
-#define	MIN(x, y)	(((x) > (y)) ? (y) : (x))
-#define	MAX(x, y)	(((x) > (y)) ? (x) : (y))
-#define	ABS(x)		((x) > 0 ? (x) : (-x))
-
-struct recfilter {
-    double a;
-    double b;
-    double lastval;
-    double minval;
-    double maxval;
-    int peak_detect;
-};
 
 /* Function prototypes */
 double getdtime(void);
@@ -76,10 +55,6 @@ char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
 int url_unquote(uint8_t *, int);
 int pthread_mutex_islocked(pthread_mutex_t *);
-double sigmoid(double);
-double recfilter_apply(struct recfilter *, double);
-double recfilter_apply_int(struct recfilter *, int);
-void recfilter_init(struct recfilter *, double, double, int);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)
