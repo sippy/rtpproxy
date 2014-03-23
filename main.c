@@ -139,7 +139,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.rrtcp = 1;
     cf->stable.ttl_mode = TTL_UNIFIED;
     cf->stable.log_level = -1;
-    cf->stable.sched_offset = 0.0;
+    cf->stable.sched_offset = drand48();
     cf->stable.target_runtime = 1.0 / POLL_RATE;
 
     cf->timeout_handler.socket_name = NULL;
