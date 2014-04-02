@@ -128,6 +128,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     const char *errmsg;
     struct passwd *pp;
     struct group *gp;
+    double x, y;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -139,7 +140,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.rrtcp = 1;
     cf->stable.ttl_mode = TTL_UNIFIED;
     cf->stable.log_level = -1;
-    cf->stable.sched_offset = drand48();
+    cf->stable.sched_offset = 0.0;
     cf->stable.target_runtime = 1.0 / POLL_RATE;
 
     cf->timeout_handler.socket_name = NULL;
@@ -156,14 +157,24 @@ init_config(struct cfg *cf, int argc, char **argv)
     while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:")) != -1)
 	switch (ch) {
         case 'N':
-            tp[0] = optarg;
-            tp[1] = strchr(tp[0], '/');
-            if (tp[1] == NULL) {
-                errx(1, "%s: -N should be in the format X/Y", optarg);
+	    if (strcmp(optarg, "random") == 0) {
+                x = getdtime() * 1000000.0;
+                srand48((long)x);
+                cf->stable.sched_offset = drand48();
+            } else {
+                tp[0] = optarg;
+                tp[1] = strchr(tp[0], '/');
+       	        if (tp[1] == NULL) {
+                    errx(1, "%s: -N should be in the format X/Y", optarg);
+                }
+                *tp[1] = '\0';
+                tp[1]++;
+                x = (double)strtol(tp[0], &tp[0], 10);
+                y = (double)strtol(tp[1], &tp[1], 10);
+                cf->stable.sched_offset = x / y;
             }
-            *tp[1] = '\0';
-            tp[1]++;
-            cf->stable.sched_offset = (double)strtol(tp[0], &tp[0], 10) / ((double)strtol(tp[1], &tp[1], 10) * (double)POLL_RATE);
+            cf->stable.sched_offset = trunc(5.0 * cf->stable.sched_offset) / 5.0;
+            cf->stable.sched_offset /= (double)POLL_RATE;
             warnx("sched_offset = %f",  cf->stable.sched_offset);
             break;
 
@@ -567,7 +578,7 @@ main(int argc, char **argv)
     counter = 0;
     add_delay = cf.stable.target_runtime / 2;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
-    PFD_init(&phase_detector, 3.0);
+    PFD_init(&phase_detector, 1.0);
     for (;;) {
 	eptime = getdtime();
 
@@ -600,14 +611,14 @@ main(int argc, char **argv)
             rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld filter lastval %f, filter nextval %f, error %f",
               counter, filter_lastval, loop_error.lastval, sigmoid(eval));
             rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld extra sleeping time %llu", counter, usleep_time);
-            sleep_time = getdtime();
         }
+        sleep_time = getdtime();
 #endif
         rtpp_proc_async_wakeup(cf.rtpp_proc_cf, counter, ncycles_ref);
         usleep(usleep_time);
 #if RTPP_DEBUG
-        if (counter % POLL_RATE == 0 || counter < 1000) {
-            sleep_time = getdtime() - sleep_time;
+        sleep_time = getdtime() - sleep_time;
+        if (counter % POLL_RATE == 0 || counter < 1000 || sleep_time > cf.stable.target_runtime * 2) {
             rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld sleeping time required %llu sleeping time actual %f, CSV: %f,%f,%f", \
               counter, usleep_time, sleep_time, (double)counter / (double)POLL_RATE, ((double)usleep_time) / 1000.0, sleep_time * 1000.0);
         }
