@@ -74,7 +74,7 @@ rtpp_proc_async_run(void *arg)
             pthread_cond_wait(&proc_cf->proc_cond, &proc_cf->proc_mutex);
         }
         last_ctick = proc_cf->clock_tick;
-        ndrain = (proc_cf->ncycles_ref - ncycles_ref_pre) / (POLL_RATE / MAX_RTP_RATE);
+        ndrain = (proc_cf->ncycles_ref - ncycles_ref) / (POLL_RATE / MAX_RTP_RATE);
         ncycles_ref_pre = ncycles_ref;
         ncycles_ref = proc_cf->ncycles_ref;
         pthread_mutex_unlock(&proc_cf->proc_mutex);
