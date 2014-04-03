@@ -36,12 +36,13 @@ def extract_to_next_token(s, match, invert = False):
 
 class UpdateLookupOpts(object):
     destination_ip = None
+    local_ip = None
     codecs = None
     otherparams = None
 
     def __init__(self, s = None, *params):
         if s == None:
-            self.destination_ip, self.codecs, self.otherparams = params
+            self.destination_ip, self.local_ip, self.codecs, self.otherparams = params
             return
         self.otherparams = ''
         while len(s) > 0:
@@ -50,6 +51,11 @@ class UpdateLookupOpts(object):
                 val = val.strip()
                 if len(val) > 0:
                     self.destination_ip = val
+            if s[0] == 'L':
+                val, s = extract_to_next_token(s[1:], ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.'))
+                val = val.strip()
+                if len(val) > 0:
+                    self.local_ip = val
             elif s[0] == 'c':
                 val, s = extract_to_next_token(s[1:], ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ','))
                 val = val.strip()
@@ -63,14 +69,16 @@ class UpdateLookupOpts(object):
     def __str__(self):
         s = ''
         if self.destination_ip != None:
-            s = '%sR%s' % (s, self.destination_ip)
+            s += 'R%s' % (self.destination_ip,)
+        if self.local_ip != None:
+            s += 'L%s' % (self.local_ip,)
         if self.codecs != None:
-            s = s + 'c'
+            s += 'c'
             for codec in self.codecs:
-                s = '%s%s,' % (s, codec)
+                s += '%s,' % (codec,)
             s = s[:-1]
         if self.otherparams != None and len(self.otherparams) > 0:
-            s = s + self.otherparams
+            s += + self.otherparams
         return s
 
 class Rtp_proxy_cmd(object):
