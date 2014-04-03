@@ -45,15 +45,24 @@
 #include "rtpp_util.h"
 #include "rtpp_log.h"
 
+static double timespec2dtime(time_t, long);
+
 double
 getdtime(void)
 {
-    struct timeval timev;
+    struct timespec tp;
 
-    if (gettimeofday(&timev, NULL) == -1)
-	return -1;
+    if (clock_gettime(CLOCK_UPTIME_PRECISE, &tp) == -1)
+        return (-1);
 
-    return ts2dtime(timev.tv_sec, timev.tv_usec);
+    return timespec2dtime(tp.tv_sec, tp.tv_nsec);
+}
+
+static double
+timespec2dtime(time_t tv_sec, long tv_nsec)
+{
+
+    return (double)tv_sec + (double)tv_nsec / 1000000000.0;
 }
 
 double
