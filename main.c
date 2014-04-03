@@ -93,7 +93,7 @@ usage(void)
     fprintf(stderr, "usage:\trtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t  [-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] "
-      "[-n timeout_socket] [-d log_level]\n"
+      "[-n timeout_socket] [-d log_level]\n\t  [-c fifo|rr]\n"
       "\trtpproxy -V\n");
     exit(1);
 }
@@ -141,6 +141,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.ttl_mode = TTL_UNIFIED;
     cf->stable.log_level = -1;
     cf->stable.sched_offset = 0.0;
+    cf->stable.sched_policy = SCHED_OTHER;
     cf->stable.target_runtime = 1.0 / POLL_RATE;
 
     cf->timeout_handler.socket_name = NULL;
@@ -154,8 +155,20 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:")) != -1)
 	switch (ch) {
+        case 'c':
+            if (strcmp(optarg, "fifo") == 0) {
+                 cf->stable.sched_policy = SCHED_FIFO;
+                 break;
+            }
+            if (strcmp(optarg, "rr") == 0) {
+                 cf->stable.sched_policy = SCHED_RR;
+                 break;
+            }
+            errx(1, "%s: unknown scheduling policy", optarg);
+            break;
+
         case 'N':
 	    if (strcmp(optarg, "random") == 0) {
                 x = getdtime() * 1000000.0;
@@ -506,6 +519,7 @@ main(int argc, char **argv)
     struct recfilter loop_error;
     struct PFD phase_detector;
     useconds_t usleep_time;
+    struct sched_param sparam;
 #if RTPP_DEBUG
     double sleep_time;
 #endif
@@ -557,6 +571,14 @@ main(int argc, char **argv)
     signal(SIGPROF, fatsignal);
     signal(SIGUSR1, fatsignal);
     signal(SIGUSR2, fatsignal);
+
+    if (cf.stable.sched_policy != SCHED_OTHER) {
+        sparam.sched_priority = sched_get_priority_max(cf.stable.sched_policy);
+        if (sched_setscheduler(0, cf.stable.sched_policy, &sparam) == -1) {
+            rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable.glog, "sched_setscheduler(SCHED_%s, %d)",
+              (cf.stable.sched_policy == SCHED_FIFO) ? "FIFO" : "RR", sparam.sched_priority);
+        }
+    }
 
     if (cf.stable.run_uname != NULL || cf.stable.run_gname != NULL) {
 	if (drop_privileges(&cf) != 0) {
