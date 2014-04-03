@@ -141,6 +141,7 @@ struct cfg {
 
         double sched_offset;
         int sched_policy;
+        int sched_hz;
         double target_runtime;
     } stable;
 

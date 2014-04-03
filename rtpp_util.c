@@ -29,6 +29,8 @@
  */
 
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -280,4 +282,16 @@ pthread_mutex_islocked(pthread_mutex_t *mutex)
     }
     pthread_mutex_unlock(mutex);
     return (0);
+}
+
+int
+rtpp_get_sched_hz(void)
+{
+    int sched_hz;
+    size_t len;
+
+    len = sizeof(sched_hz);
+    if (sysctlbyname("kern.hz", &sched_hz, &len, NULL, 0) == -1 || sched_hz <= 0)
+        return 1000;
+    return (sched_hz);
 }

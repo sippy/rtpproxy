@@ -55,6 +55,7 @@ char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
 int url_unquote(uint8_t *, int);
 int pthread_mutex_islocked(pthread_mutex_t *);
+int rtpp_get_sched_hz(void);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)

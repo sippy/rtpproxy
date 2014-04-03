@@ -141,6 +141,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.ttl_mode = TTL_UNIFIED;
     cf->stable.log_level = -1;
     cf->stable.sched_offset = 0.0;
+    cf->stable.sched_hz = rtpp_get_sched_hz();
     cf->stable.sched_policy = SCHED_OTHER;
     cf->stable.target_runtime = 1.0 / POLL_RATE;
 
@@ -186,9 +187,10 @@ init_config(struct cfg *cf, int argc, char **argv)
                 y = (double)strtol(tp[1], &tp[1], 10);
                 cf->stable.sched_offset = x / y;
             }
-            cf->stable.sched_offset = trunc(5.0 * cf->stable.sched_offset) / 5.0;
+            x = (double)cf->stable.sched_hz / (double)POLL_RATE;
+            cf->stable.sched_offset = trunc(x * cf->stable.sched_offset) / x;
             cf->stable.sched_offset /= (double)POLL_RATE;
-            warnx("sched_offset = %f",  cf->stable.sched_offset);
+            errx(0, "sched_offset = %f",  cf->stable.sched_offset);
             break;
 
 	case 'f':
