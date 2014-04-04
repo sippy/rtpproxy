@@ -190,7 +190,7 @@ init_config(struct cfg *cf, int argc, char **argv)
             x = (double)cf->stable.sched_hz / (double)POLL_RATE;
             cf->stable.sched_offset = trunc(x * cf->stable.sched_offset) / x;
             cf->stable.sched_offset /= (double)POLL_RATE;
-            errx(0, "sched_offset = %f",  cf->stable.sched_offset);
+            warnx("sched_offset = %f",  cf->stable.sched_offset);
             break;
 
 	case 'f':
