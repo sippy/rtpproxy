@@ -184,7 +184,7 @@ rtpp_netio_async_destroy(struct rtpp_anetio_cf *netio_cf)
 {
     struct rtpp_wi *wi;
 
-    wi = rtpp_wi_malloc_sgnl(SIGTERM);
+    wi = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
     if (wi == NULL) {
         /* XXX complain */
         return;
