@@ -38,14 +38,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-
 #include "rtp.h"
 #include "rtp_resizer.h"
 #include "rtp_server.h"
 #include "rtpp_log.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
-#include "rtpp_bulk_netio.h"
+#include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
@@ -57,10 +56,10 @@ struct rtpp_proc_ready_lst {
 };
 
 static void send_packet(struct cfg *, struct rtpp_session *, int, \
-  struct rtp_packet *, struct rtpp_bnet_opipe *);
+  struct rtp_packet *, struct rtpp_anetio_cf *);
 
 void
-process_rtp_servers(struct cfg *cf, double dtime, struct rtpp_bnet_opipe *op)
+process_rtp_servers(struct cfg *cf, double dtime, struct rtpp_anetio_cf *op)
 {
     int j, sidx, len, skipfd;
     struct rtpp_session *sp;
@@ -84,7 +83,6 @@ process_rtp_servers(struct cfg *cf, double dtime, struct rtpp_bnet_opipe *op)
                 pkt = rtp_server_get(sp->rtps[sidx], dtime, &len);
                 if (pkt == NULL) {
                     if (len == RTPS_EOF) {
-                        rtpp_bulk_netio_opipe_flush(op);
                         rtp_server_free(sp->rtps[sidx]);
                         sp->rtps[sidx] = NULL;
                         if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
@@ -98,18 +96,17 @@ process_rtp_servers(struct cfg *cf, double dtime, struct rtpp_bnet_opipe *op)
                     break;
 		}
 		cf->packets_out++;
-                rtpp_bulk_netio_opipe_send_pkt(op, sp->fds[sidx], sp->addr[sidx], \
+                rtpp_anetio_send_pkt(op, sp->fds[sidx], sp->addr[sidx], \
                   SA_LEN(sp->addr[sidx]), pkt);
 	    }
 	}
     }
-    rtpp_bulk_netio_opipe_flush(op);
     cf->rtp_nsessions -= skipfd;
 }
 
 static void
 rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
-  double dtime, int drain_repeat, struct rtpp_bnet_opipe *op)
+  double dtime, int drain_repeat, struct rtpp_anetio_cf *op)
 {
     int ndrain, i, port, rn, ridx;
     struct rtp_packet *packet = NULL;
@@ -192,7 +189,6 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 		rtpp_log_write(RTPP_LOG_ERR, sp->log,
 		  "can't allocate memory for remote address - "
 		  "removing session");
-                rtpp_bulk_netio_opipe_flush(op);
 		remove_session(cf, GET_RTP(sp));
 		/* Move on to the next session, sp is invalid now */
                 ndrain = -1;
@@ -238,7 +234,6 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 			rtpp_log_write(RTPP_LOG_ERR, sp->log,
 			  "can't allocate memory for remote address - "
 			  "removing session");
-                        rtpp_bulk_netio_opipe_flush(op);
 			remove_session(cf, sp);
 			/* Move on to the next session, sp is invalid now */
                         ndrain = -1;
@@ -268,7 +263,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 
 static void
 send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
-  struct rtp_packet *packet, struct rtpp_bnet_opipe *op)
+  struct rtp_packet *packet, struct rtpp_anetio_cf *op)
 {
     int sidx;
 
@@ -292,7 +287,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
     } else {
 	sp->pcount[2]++;
 	cf->packets_out++;
-        rtpp_bulk_netio_opipe_send_pkt(op, sp->fds[sidx],  sp->addr[sidx], \
+        rtpp_anetio_send_pkt(op, sp->fds[sidx], sp->addr[sidx], \
           SA_LEN(sp->addr[sidx]), packet);
     }
 }
@@ -312,7 +307,7 @@ drain_socket(int rfd)
 
 void
 process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
-  struct rtpp_bnet_opipe *op)
+  struct rtpp_anetio_cf *op)
 {
     int readyfd, skipfd, ridx, rready_len;
     struct rtpp_session *sp;
@@ -331,7 +326,6 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 	    if (get_ttl(sp) == 0) {
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
 		rtpp_notify_schedule(cf, sp);
-                rtpp_bulk_netio_opipe_flush(op);
 		remove_session(cf, sp);
 	    } else {
 		if (sp->ttl[0] != 0)
@@ -369,7 +363,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
                 rready[rready_len].ridx = ridx;
                 rready_len += 1;
             }
-            if (rready_len == 4) {
+            if (rready_len == 10) {
 		rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, op);
                 rready_len = 0;
             }
@@ -392,6 +386,5 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
     }
     /* Trim any deleted sessions at the end */
     cf->sessinfo.nsessions -= skipfd;
-    rtpp_bulk_netio_opipe_flush(op);
     pthread_mutex_unlock(&cf->sessinfo.lock);
 }

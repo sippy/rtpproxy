@@ -34,8 +34,8 @@
 #include "rtp.h"
 #include "rtpp_defines.h"
 #include "rtpp_command_async.h"
-#include "rtpp_bulk_netio.h"
 #include "rtpp_math.h"
+#include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_util.h"
@@ -46,7 +46,7 @@ struct rtpp_proc_async_cf {
     pthread_mutex_t proc_mutex;
     int clock_tick;
     long long ncycles_ref;
-    struct rtpp_bnet_opipe *op;
+    struct rtpp_anetio_cf *op;
 };
 
 static void
@@ -60,7 +60,7 @@ rtpp_proc_async_run(void *arg)
     double sptime;
 
     cf = (struct cfg *)arg;
-    proc_cf = cf->rtpp_proc_cf;
+    proc_cf = cf->stable.rtpp_proc_cf;
 
     last_tick_time = 0;
     pthread_mutex_lock(&proc_cf->proc_mutex);
@@ -107,7 +107,7 @@ rtpp_proc_async_run(void *arg)
             pthread_mutex_unlock(&cf->sessinfo.lock);
             if (i < 0 && errno == EINTR) {
                 eptime = getdtime();
-                rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick, eptime - sptime);
+                rtpp_command_async_wakeup(cf->stable.rtpp_cmd_cf, last_ctick, eptime - sptime);
                 continue;
             }
         } else {
@@ -132,8 +132,9 @@ rtpp_proc_async_run(void *arg)
             process_rtp_servers(cf, eptime, proc_cf->op);
         }
         pthread_mutex_unlock(&cf->glock);
+        rtpp_anetio_pump(proc_cf->op);
         eptime = getdtime();
-        rtpp_command_async_wakeup(cf->rtpp_cmd_cf, last_ctick, eptime - sptime);
+        rtpp_command_async_wakeup(cf->stable.rtpp_cmd_cf, last_ctick, eptime - sptime);
 
 #if RTPP_DEBUG
         if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
@@ -175,7 +176,7 @@ rtpp_proc_async_init(struct cfg *cf)
 
     memset(proc_cf, '\0', sizeof(*proc_cf));
 
-    proc_cf->op = rtpp_bulk_netio_opipe_new(4, 1, cf->stable.dmode);
+    proc_cf->op = rtpp_netio_async_init(cf, 10);
     if (proc_cf->op == NULL) {
         free(proc_cf);
         return (-1);
@@ -184,13 +185,13 @@ rtpp_proc_async_init(struct cfg *cf)
     pthread_cond_init(&proc_cf->proc_cond, NULL);
     pthread_mutex_init(&proc_cf->proc_mutex, NULL);
 
-    cf->rtpp_proc_cf = proc_cf;
+    cf->stable.rtpp_proc_cf = proc_cf;
     if (pthread_create(&proc_cf->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, cf) != 0) {
         pthread_cond_destroy(&proc_cf->proc_cond);
         pthread_mutex_destroy(&proc_cf->proc_mutex);
-        rtpp_bulk_netio_opipe_destroy(proc_cf->op);
+        rtpp_netio_async_destroy(proc_cf->op);
         free(proc_cf);
-        cf->rtpp_proc_cf = NULL;
+        cf->stable.rtpp_proc_cf = NULL;
         return (-1);
     }
 
