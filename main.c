@@ -71,7 +71,6 @@
 #include "rtpp_notify.h"
 #include "rtpp_util.h"
 #include "rtpp_version.h"
-#include "rtpp_bulk_netio.h"
 #include "rtpp_math.h"
 
 #ifndef RTPP_DEBUG
@@ -545,9 +544,6 @@ main(int argc, char **argv)
     if (rtpp_notify_init() != 0)
         errx(1, "can't start notification thread");
 
-    if (rtpp_bulk_netio_init() != 0)
-        warn("can't init bulk net I/O");
-
     glog = cf.stable.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
     rtpp_log_setlevel(cf.stable.glog, cf.stable.log_level);
     atexit(ehandler);
@@ -638,7 +634,7 @@ main(int argc, char **argv)
         }
         sleep_time = getdtime();
 #endif
-        rtpp_proc_async_wakeup(cf.rtpp_proc_cf, counter, ncycles_ref);
+        rtpp_proc_async_wakeup(cf.stable.rtpp_proc_cf, counter, ncycles_ref);
         usleep(usleep_time);
 #if RTPP_DEBUG
         sleep_time = getdtime() - sleep_time;
