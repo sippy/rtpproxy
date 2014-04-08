@@ -94,6 +94,7 @@ struct bindaddr_list {
 
 struct rtpp_cmd_async_cf;
 struct rtpp_proc_async_cf;
+struct rtpp_anetio_cf;
 
 struct cfg {
     struct cfg_stable {
@@ -143,6 +144,9 @@ struct cfg {
         int sched_policy;
         int sched_hz;
         double target_runtime;
+        struct rtpp_cmd_async_cf *rtpp_cmd_cf;
+        struct rtpp_proc_async_cf *rtpp_proc_cf;
+        struct rtpp_anetio_cf *rtpp_netio_cf;
     } stable;
 
     /*
@@ -177,9 +181,6 @@ struct cfg {
     int port_table_idx;
 
     pthread_mutex_t glock;
-
-    struct rtpp_cmd_async_cf *rtpp_cmd_cf;
-    struct rtpp_proc_async_cf *rtpp_proc_cf;
 };
 
 #endif
