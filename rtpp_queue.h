@@ -29,6 +29,7 @@
 #define _RTPP_QUEUE_H_
 
 struct rtpp_queue;
+struct rtpp_wi;
 
 struct rtpp_queue *rtpp_queue_init(int, const char *format, ...);
 void rtpp_queue_destroy(struct rtpp_queue *queue);
