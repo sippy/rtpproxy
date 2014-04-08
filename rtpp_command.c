@@ -52,6 +52,7 @@
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_log.h"
+#include "rtpp_netio_async.h"
 #include "rtpp_record.h"
 #include "rtp_resizer.h"
 #include "rtpp_session.h"
@@ -178,8 +179,8 @@ doreply(struct cfg_stable *cf, int fd, char *buf, int len,
     if (cf->umode == 0) {
 	write(fd, buf, len);
     } else {
-	while (sendto(fd, buf, len, 0, sstosa(raddr),
-	  rlen) == -1 && errno == ENOBUFS);
+        rtpp_anetio_sendto(cf->rtpp_netio_cf, fd, buf, len, 0, sstosa(raddr),
+          rlen);
     }
 }
 
@@ -1336,7 +1337,7 @@ handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd,
           cmd->cookie, cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions / 2,
           cf->packets_in, cf->packets_out);
     if (load != 0) {
-          len += sprintf(buf + len, "average load: %f\n", rtpp_command_async_get_aload(cf->rtpp_cmd_cf));
+          len += sprintf(buf + len, "average load: %f\n", rtpp_command_async_get_aload(cf->stable.rtpp_cmd_cf));
     }
     for (i = 0; i < cf->sessinfo.nsessions && brief == 0; i++) {
         spa = cf->sessinfo.sessions[i];

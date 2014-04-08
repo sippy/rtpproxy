@@ -37,6 +37,7 @@
 #include "rtpp_command_async.h"
 #include "rtpp_math.h"
 #include "rtpp_network.h"
+#include "rtpp_netio_async.h"
 #include "rtpp_util.h"
 
 struct rtpp_cmd_async_cf {
@@ -94,7 +95,7 @@ rtpp_cmd_queue_run(void *arg)
     double eptime, sptime, tused;
 
     cf = (struct cfg *)arg;
-    cmd_cf = cf->rtpp_cmd_cf;
+    cmd_cf = cf->stable.rtpp_cmd_cf;
 
     pfds[0].fd = cf->stable.controlfd;
     pfds[0].events = POLLIN;
@@ -121,6 +122,7 @@ rtpp_cmd_queue_run(void *arg)
         if (i > 0 && (pfds[0].revents & POLLIN) != 0) {
             process_commands(cf, pfds[0].fd, sptime);
         }
+        rtpp_anetio_pump(cf->stable.rtpp_netio_cf);
         eptime = getdtime();
         pthread_mutex_lock(&cmd_cf->cmd_mutex);
         recfilter_apply(&cmd_cf->average_load, (eptime - sptime + tused) / cf->stable.target_runtime);
@@ -184,12 +186,12 @@ rtpp_command_async_init(struct cfg *cf)
 
     recfilter_init(&cmd_cf->average_load, 0.999, 0.0, 1);
 
-    cf->rtpp_cmd_cf = cmd_cf;
+    cf->stable.rtpp_cmd_cf = cmd_cf;
     if (pthread_create(&cmd_cf->thread_id, NULL, (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
         pthread_cond_destroy(&cmd_cf->cmd_cond);
         pthread_mutex_destroy(&cmd_cf->cmd_mutex);
         free(cmd_cf);
-        cf->rtpp_cmd_cf = NULL;
+        cf->stable.rtpp_cmd_cf = NULL;
         return (-1);
     }
 
