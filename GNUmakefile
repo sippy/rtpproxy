@@ -43,7 +43,8 @@ endif
 
 SRCS = main.c rtp_server.c rtpp_record.c rtpp_util.c rtp_resizer.c rtp.c rtpp_session.c \
   rtpp_command.c rtpp_network.c rtpp_log.c rtpp_notify.c rtpp_command_async.c \
-  rtpp_proc_async.c rtpp_proc.c
+  rtpp_proc_async.c rtpp_proc.c rtpp_math.c rtpp_wi.c rtpp_queue.c  \
+  rtpp_netio_async.c
 OBJS = $(SRCS:.c=.o)
 
 .c.o:
