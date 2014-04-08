@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -84,11 +85,11 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
 }
 
 struct rtpp_wi *
-rtpp_wi_malloc_sgnl(int signum)
+rtpp_wi_malloc_sgnl(int signum, const void *data, size_t datalen)
 {
     struct rtpp_wi *wi;
 
-    wi = malloc(sizeof(struct rtpp_wi));
+    wi = malloc(sizeof(struct rtpp_wi) + datalen);
     if (wi == NULL) {
         return (NULL);
     }
@@ -96,7 +97,23 @@ rtpp_wi_malloc_sgnl(int signum)
     wi->free_ptr = wi;
     wi->wi_type = RTPP_WI_TYPE_SGNL;
     wi->flags = signum;
+    if (datalen > 0) {
+        wi->msg = (char *)wi + datalen;
+        wi->msg_len = datalen;
+        memcpy(wi->msg, data, datalen);
+    }
     return (wi);
+}
+
+void *
+rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
+{
+
+    assert(wi->wi_type == RTPP_WI_TYPE_SGNL);
+    if (datalen != NULL) {
+        *datalen = wi->msg_len;
+    }
+    return(wi->msg);
 }
 
 void
