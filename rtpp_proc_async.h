@@ -31,6 +31,6 @@
 struct rtpp_proc_async_cf;
 
 int rtpp_proc_async_init(struct cfg *);
-int rtpp_proc_async_wakeup(struct rtpp_proc_async_cf *, int, long long);
+void rtpp_proc_async_wakeup(struct rtpp_proc_async_cf *, int, long long);
 
 #endif

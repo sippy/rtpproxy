@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
+#include <signal.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -38,15 +39,21 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_queue.h"
+#include "rtpp_wi.h"
 #include "rtpp_util.h"
 
 struct rtpp_proc_async_cf {
     pthread_t thread_id;
-    pthread_cond_t proc_cond;
-    pthread_mutex_t proc_mutex;
     int clock_tick;
     long long ncycles_ref;
     struct rtpp_anetio_cf *op;
+    struct rtpp_queue *time_q;
+};
+
+struct sign_arg {
+    int clock_tick;
+    long long ncycles_ref;
 };
 
 static void
@@ -58,26 +65,33 @@ rtpp_proc_async_run(void *arg)
     struct rtpp_proc_async_cf *proc_cf;
     long long ncycles_ref, ncycles_ref_pre;
     double sptime;
+    struct sign_arg *s_a;
+    struct rtpp_wi *wi, *wis[10];
 
     cf = (struct cfg *)arg;
     proc_cf = cf->stable.rtpp_proc_cf;
 
     last_tick_time = 0;
-    pthread_mutex_lock(&proc_cf->proc_mutex);
-    last_ctick = proc_cf->clock_tick;
-    ncycles_ref_pre = proc_cf->ncycles_ref;
-    pthread_mutex_unlock(&proc_cf->proc_mutex);
+    wi = rtpp_queue_get_item(proc_cf->time_q, 0);
+    s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wi, NULL);
+    last_ctick = s_a->clock_tick;
+    ncycles_ref_pre = s_a->ncycles_ref;
+    rtpp_wi_free(wi);
 
     for (;;) {
-        pthread_mutex_lock(&proc_cf->proc_mutex);
-        while (proc_cf->clock_tick == last_ctick) {
-            pthread_cond_wait(&proc_cf->proc_cond, &proc_cf->proc_mutex);
+        i = rtpp_queue_get_items(proc_cf->time_q, wis, 10, 0);
+        if (i <= 0) {
+            continue;
         }
-        last_ctick = proc_cf->clock_tick;
-        ndrain = (proc_cf->ncycles_ref - ncycles_ref) / (POLL_RATE / MAX_RTP_RATE);
+        i -= 1;
+        s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wis[i], NULL);
+        last_ctick = s_a->clock_tick;
+        ndrain = (s_a->ncycles_ref - ncycles_ref) / (POLL_RATE / MAX_RTP_RATE);
         ncycles_ref_pre = ncycles_ref;
-        ncycles_ref = proc_cf->ncycles_ref;
-        pthread_mutex_unlock(&proc_cf->proc_mutex);
+        ncycles_ref = s_a->ncycles_ref;
+        for(; i > -1; i--) {
+            rtpp_wi_free(wis[i]);
+        }
 
         sptime = getdtime();
 #if RTPP_DEBUG
@@ -146,23 +160,20 @@ rtpp_proc_async_run(void *arg)
 
 }
 
-int
+void
 rtpp_proc_async_wakeup(struct rtpp_proc_async_cf *proc_cf, int clock, long long ncycles_ref)
 {
-    int old_clock;
+    struct sign_arg s_a;
+    struct rtpp_wi *wi;
 
-    pthread_mutex_lock(&proc_cf->proc_mutex);
-
-    old_clock = proc_cf->clock_tick;
-    proc_cf->clock_tick = clock;
-    proc_cf->ncycles_ref = ncycles_ref;
-
-    /* notify worker thread */
-    pthread_cond_signal(&proc_cf->proc_cond);
-
-    pthread_mutex_unlock(&proc_cf->proc_mutex);
-
-    return (old_clock);
+    s_a.clock_tick = clock;
+    s_a.ncycles_ref = ncycles_ref;
+    wi = rtpp_wi_malloc_sgnl(SIGALRM, &s_a, sizeof(s_a));
+    if (wi == NULL) {
+        /* XXX complain */
+        return;
+    }
+    rtpp_queue_put_item(wi, proc_cf->time_q);
 }
 
 int
@@ -176,19 +187,22 @@ rtpp_proc_async_init(struct cfg *cf)
 
     memset(proc_cf, '\0', sizeof(*proc_cf));
 
-    proc_cf->op = rtpp_netio_async_init(cf, 10);
-    if (proc_cf->op == NULL) {
+    proc_cf->time_q = rtpp_queue_init(1, "RTP_PROC(time)");
+    if (proc_cf->time_q == NULL) {
         free(proc_cf);
         return (-1);
     }
 
-    pthread_cond_init(&proc_cf->proc_cond, NULL);
-    pthread_mutex_init(&proc_cf->proc_mutex, NULL);
+    proc_cf->op = rtpp_netio_async_init(cf, 10);
+    if (proc_cf->op == NULL) {
+        rtpp_queue_destroy(proc_cf->time_q);
+        free(proc_cf);
+        return (-1);
+    }
 
     cf->stable.rtpp_proc_cf = proc_cf;
     if (pthread_create(&proc_cf->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, cf) != 0) {
-        pthread_cond_destroy(&proc_cf->proc_cond);
-        pthread_mutex_destroy(&proc_cf->proc_mutex);
+        rtpp_queue_destroy(proc_cf->time_q);
         rtpp_netio_async_destroy(proc_cf->op);
         free(proc_cf);
         cf->stable.rtpp_proc_cf = NULL;
