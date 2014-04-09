@@ -71,11 +71,11 @@ RTPP_SW_VERSION=	${TSTAMP}_${GIT_BRANCH}
 .endif
 
 distribution: clean
-	tar cvfy /tmp/${PKGNAME}-sippy-${RTPP_SW_VERSION}.tbz2 ${PKGFILES}
-	scp /tmp/${PKGNAME}-sippy-${RTPP_SW_VERSION}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
 	echo '#define RTPP_SW_VERSION "'rel.${RTPP_SW_VERSION}'"' > rtpp_version.h
 	git commit -m "Update to rel.${RTPP_SW_VERSION}" rtpp_version.h
 	git push origin ${GIT_BRANCH}
+	tar cvfy /tmp/${PKGNAME}-sippy-${RTPP_SW_VERSION}.tbz2 ${PKGFILES}
+	scp /tmp/${PKGNAME}-sippy-${RTPP_SW_VERSION}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/rtpproxy/
 	git tag rel.${RTPP_SW_VERSION}
 	git push origin rel.${RTPP_SW_VERSION}
 
