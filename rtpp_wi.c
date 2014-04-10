@@ -27,11 +27,13 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "rtp.h"
+#include "rtpp_network.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 
@@ -65,7 +67,7 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
 {
     struct rtpp_wi *wi;
 
-    if (pkt->size + tolen + sizeof(struct rtpp_wi) > sizeof(pkt->data.buf)) {
+    if (pkt->size + sizeof(struct rtpp_wi) > sizeof(pkt->data.buf)) {
         wi = rtpp_wi_malloc(sock, pkt->data.buf, pkt->size, 0, sendto, tolen);
         rtp_packet_free(pkt);
     } else {
@@ -75,8 +77,8 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
         wi->sock = sock;
         wi->flags = 0;
         wi->msg = pkt->data.buf;
-        wi->sendto = (struct sockaddr *)((char *)wi + sizeof(struct rtpp_wi));
         wi->msg_len = pkt->size;
+        wi->sendto = sstosa(&pkt->raddr);
         wi->tolen = tolen;
         memcpy(wi->sendto, sendto, tolen);
     }
