@@ -44,6 +44,8 @@
 #define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
 
+struct cfg;
+
 /* Function prototypes */
 double getdtime(void);
 double ts2dtime(uint32_t, uint32_t);
