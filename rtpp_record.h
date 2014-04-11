@@ -31,82 +31,15 @@
 #ifndef _RTPP_RECORD_H_
 #define _RTPP_RECORD_H_
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
-
-#include "rtpp_defines.h"
-#include "rtp.h"
-#include "rtpp_util.h"
-#include "rtpp_network.h"
-
-#define	DLT_NULL	0
-#define	DLT_EN10MB	1
-#define	PCAP_MAGIC	0xa1b2c3d4
-#define	PCAP_VER_MAJR	2
-#define	PCAP_VER_MINR	4
-
+struct cfg;
 struct rtpp_session;
+struct rtp_packet;
+struct sockaddr;
 
 /* Function prototypes */
 void *ropen(struct cfg *cf, struct rtpp_session *, char *, int);
 void rwrite(struct rtpp_session *, void *, struct rtp_packet *,
   struct sockaddr *, struct sockaddr *, int, int);
 void rclose(struct rtpp_session *, void *, int);
-
-/* Global PCAP Header */
-typedef struct pcap_hdr_s {
-    uint32_t magic_number;   /* magic number */
-    uint16_t version_major;  /* major version number */
-    uint16_t version_minor;  /* minor version number */
-    int32_t  thiszone;       /* GMT to local correction */
-    uint32_t sigfigs;        /* accuracy of timestamps */
-    uint32_t snaplen;        /* max length of captured packets, in octets */
-    uint32_t network;        /* data link type */
-} pcap_hdr_t;
-
-/* PCAP Packet Header */
-typedef struct pcaprec_hdr_s {
-    uint32_t ts_sec;         /* timestamp seconds */
-    uint32_t ts_usec;        /* timestamp microseconds */
-    uint32_t incl_len;       /* number of octets of packet saved in file */
-    uint32_t orig_len;       /* actual length of packet */
-} pcaprec_hdr_t;
-
-struct udpip {
-    struct ip iphdr;
-    struct udphdr udphdr;
-} __attribute__((__packed__));
-
-/*
- * Recorded data header
- */
-struct pkt_hdr_pcap_null {
-    pcaprec_hdr_t pcaprec_hdr;
-    uint32_t family;
-    struct udpip udpip;
-} __attribute__((__packed__));
-
-struct pkt_hdr_pcap_en10t {
-    pcaprec_hdr_t pcaprec_hdr;
-    uint8_t ether_dhost[6];
-    uint8_t ether_shost[6];
-    uint16_t ether_type;
-    struct udpip udpip;
-} __attribute__((__packed__));
-
-union pkt_hdr_pcap {
-    struct pkt_hdr_pcap_null null;
-    struct pkt_hdr_pcap_en10t en10t;
-};
-
-struct pkt_hdr_adhoc {
-    union sockaddr_in_s addr;   /* Source address */
-    double time;		/* Time of arrival */
-    unsigned short plen;	/* Length of following RTP/RTCP packet */
-} __attribute__((__packed__));
 
 #endif
