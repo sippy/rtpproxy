@@ -31,8 +31,6 @@
 #ifndef _RTPP_SESSION_H_
 #define _RTPP_SESSION_H_
 
-#include "rtpp_log.h"
-
 struct rtpp_timeout_data {
     char *notify_tag;
     struct rtpp_timeout_handler *handler;
@@ -85,6 +83,8 @@ struct rtpp_session {
     /* Supported codecs */
     char *codecs[2];
 };
+
+struct cfg_stable;
 
 void init_hash_table(struct cfg_stable *);
 struct rtpp_session *session_findfirst(struct cfg *, const char *);
