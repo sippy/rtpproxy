@@ -31,11 +31,6 @@
 #ifndef _RTP_ANALYZE_H_
 #define _RTP_ANALYZE_H_
 
-#include <sys/socket.h>
-#include <sys/types.h>
-
-#include "rtp.h"
-
 struct rtpp_session_stat_last {
     long long pcount;
     uint32_t min_seq;
