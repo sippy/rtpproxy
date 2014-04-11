@@ -31,14 +31,14 @@
 #ifndef _RTPP_COMMAND_H_
 #define _RTPP_COMMAND_H_
 
-#include "rtpp_defines.h"
-
 struct proto_cap {
     const char  *pc_id;
     const char  *pc_description;
 };
 
 struct rtpp_command;
+struct cfg;
+struct cfg_stable;
 
 extern struct proto_cap proto_caps[];
 
