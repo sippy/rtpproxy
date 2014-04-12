@@ -33,7 +33,8 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <netinet/in.h>
-#include <errno.h>
+#include <netinet/ip.h>
+#include <netinet/udp.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <netdb.h>
@@ -42,8 +43,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtp.h"
 #include "rtpp_log.h"
+#include "rtpp_defines.h"
+#include "rtpp_network.h"
 #include "rtpp_record.h"
+#include "rtpp_record_private.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
 
