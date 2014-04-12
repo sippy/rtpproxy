@@ -29,43 +29,29 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/resource.h>
 #include <sys/un.h>
-#include <sys/uio.h>
-#include <ctype.h>
-#include <sys/select.h>
+#include <sys/resource.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
-#include <assert.h>
+#include <netinet/in.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
-#include <limits.h>
 #include <math.h>
-#include <netdb.h>
 #include <poll.h>
 #include <pthread.h>
 #include <pwd.h>
-#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
-#include <strings.h>
 #include <unistd.h>
 
-#include "rtp.h"
-#include "rtp_resizer.h"
-#include "rtp_server.h"
+#include "rtpp_log.h"
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
-#include "rtpp_log.h"
 #include "rtpp_proc_async.h"
-#include "rtpp_record.h"
 #include "rtpp_session.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
@@ -144,15 +130,18 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.sched_policy = SCHED_OTHER;
     cf->stable.target_runtime = 1.0 / POLL_RATE;
 
-    cf->timeout_handler.socket_name = NULL;
-    cf->timeout_handler.fd = -1;
-    cf->timeout_handler.connected = 0;
+    cf->timeout_handler = rtpp_th_init(NULL, -1, 0);
+    if (cf->timeout_handler == NULL)
+        err(1, "malloc");
 
     pthread_mutex_init(&cf->glock, NULL);
     pthread_mutex_init(&cf->sessinfo.lock, NULL);
     pthread_mutex_init(&cf->bindaddr_lock, NULL);
 
-    if (getrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
+    cf->stable.nofile_limit = malloc(sizeof(*cf->stable.nofile_limit));
+    if (cf->stable.nofile_limit == NULL)
+        err(1, "malloc");
+    if (getrlimit(RLIMIT_NOFILE, cf->stable.nofile_limit) != 0)
 	err(1, "getrlimit");
 
     while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:")) != -1)
@@ -270,14 +259,14 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'L':
-	    cf->stable.nofile_limit.rlim_cur = cf->stable.nofile_limit.rlim_max = atoi(optarg);
-	    if (setrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
+	    cf->stable.nofile_limit->rlim_cur = cf->stable.nofile_limit->rlim_max = atoi(optarg);
+	    if (setrlimit(RLIMIT_NOFILE, cf->stable.nofile_limit) != 0)
 		err(1, "setrlimit");
-	    if (getrlimit(RLIMIT_NOFILE, &(cf->stable.nofile_limit)) != 0)
+	    if (getrlimit(RLIMIT_NOFILE, cf->stable.nofile_limit) != 0)
 		err(1, "getrlimit");
-	    if (cf->stable.nofile_limit.rlim_max < atoi(optarg))
+	    if (cf->stable.nofile_limit->rlim_max < atoi(optarg))
 		warnx("limit allocated by setrlimit (%d) is less than "
-		  "requested (%d)", (int) cf->stable.nofile_limit.rlim_max,
+		  "requested (%d)", (int) cf->stable.nofile_limit->rlim_max,
 		  atoi(optarg));
 	    break;
 
@@ -330,10 +319,9 @@ init_config(struct cfg *cf, int argc, char **argv)
 		optarg += 5;
 	    if(strlen(optarg) == 0)
 		errx(1, "timeout notification socket name too short");
-	    cf->timeout_handler.socket_name = (char *)malloc(strlen(optarg) + 1);
-	    if(cf->timeout_handler.socket_name == NULL)
+            if (rtpp_th_set_sn(cf->timeout_handler, optarg) == NULL) {
 		err(1, "can't allocate memory");
-	    strcpy(cf->timeout_handler.socket_name, optarg);
+            }
 	    break;
 
 	case 'P':

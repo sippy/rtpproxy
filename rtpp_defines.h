@@ -31,20 +31,6 @@
 #ifndef _RTPP_DEFINES_H_
 #define _RTPP_DEFINES_H_
 
-#include "config.h"
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <netinet/in.h>
-#include <poll.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-
-#include "rtpp_log.h"
-
 /*
  * Version of the command protocol, bump only when backward-incompatible
  * change is introduced
@@ -80,21 +66,14 @@ typedef enum {
     TTL_INDEPENDENT = 1		/* any TTL counter reaches 0 */
 } rtpp_ttl_mode;
 
-struct rtpp_timeout_handler {
-    char *socket_name;
-    int fd;
-    int connected;
-    char notify_buf[64];
-};
-
-struct bindaddr_list {
-    struct sockaddr_storage bindaddr;
-    struct bindaddr_list *next;
-};
-
+struct pollfd;
 struct rtpp_cmd_async_cf;
 struct rtpp_proc_async_cf;
 struct rtpp_anetio_cf;
+struct rlimit;
+struct sockaddr_storage;
+struct bindaddr_list;
+struct rtpp_timeout_handler;
 
 struct cfg {
     struct cfg_stable {
@@ -121,7 +100,7 @@ struct cfg {
         int rrtcp;			/* Whether or not to relay RTCP? */
         rtpp_log_t glog;
 
-        struct rlimit nofile_limit;
+        struct rlimit *nofile_limit;
         char *run_uname;
         char *run_gname;
         int no_check;
@@ -176,7 +155,7 @@ struct cfg {
     unsigned long long packets_in;
     unsigned long long packets_out;
 
-    struct rtpp_timeout_handler timeout_handler;
+    struct rtpp_timeout_handler *timeout_handler;
 
     int port_table_idx;
 

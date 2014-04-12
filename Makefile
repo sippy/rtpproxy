@@ -79,4 +79,9 @@ distribution: clean
 	git tag rel.${RTPP_SW_VERSION}
 	git push origin rel.${RTPP_SW_VERSION}
 
+includepolice:
+	for file in ${SRCS}; do \
+	  python includepolice.py $${file} || sleep 5; \
+	done
+
 .include <bsd.prog.mk>

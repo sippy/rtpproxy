@@ -42,6 +42,13 @@
 #include "rtpp_defines.h"
 #include "rtpp_session.h"
 
+struct rtpp_timeout_handler {
+    char *socket_name;
+    int fd;
+    int connected;
+    char notify_buf[64];
+};
+
 struct rtpp_notify_wi
 {
     char *notify_buf;
@@ -277,4 +284,36 @@ do_timeout_notification(struct rtpp_notify_wi *wi, int retries)
         if (retries > 0)
             do_timeout_notification(wi, retries - 1);
     }
+}
+
+struct rtpp_timeout_handler *
+rtpp_th_init(char *socket_name, int fd, int connected)
+{
+    struct rtpp_timeout_handler *th;
+
+    th = malloc(sizeof(struct rtpp_timeout_handler));
+    if (th == NULL) {
+        return (NULL);
+    }
+    th->socket_name = socket_name;
+    th->fd = fd;
+    th->connected = connected;
+    return (th);
+}
+
+char *
+rtpp_th_set_sn(struct rtpp_timeout_handler *th, const char *socket_name)
+{
+    if (th->socket_name != NULL) {
+        free(th->socket_name);
+    }
+    th->socket_name = strdup(socket_name);
+    return (th->socket_name);
+}
+
+const char *
+rtpp_th_get_sn(struct rtpp_timeout_handler *th)
+{
+
+    return (th->socket_name);
 }

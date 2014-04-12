@@ -31,8 +31,8 @@
 #include "config.h"
 
 #include <sys/types.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
-#include <sys/uio.h>
 #include <netinet/in.h>
 #ifdef HAVE_ALLOCA_H
 #include <alloca.h>
@@ -41,7 +41,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <limits.h>
 #include <netdb.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -49,10 +48,14 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtp.h"
+#include "rtpp_log.h"
+#include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
-#include "rtpp_log.h"
 #include "rtpp_netio_async.h"
+#include "rtpp_network.h"
+#include "rtpp_notify.h"
 #include "rtpp_record.h"
 #include "rtp_resizer.h"
 #include "rtpp_session.h"
@@ -444,7 +447,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	     * user actually enabled notification with -n
 	     */
 	    if (strcmp(cmd->argv[1], "20081224") == 0 &&
-	      cf->timeout_handler.socket_name == NULL) {
+	      rtpp_th_get_sn(cf->timeout_handler) == NULL) {
 		reply_number(&cf->stable, controlfd, cmd, 0);
 		return 0;
 	    }
@@ -986,13 +989,13 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	 * 2 RTCP and 1 logging) so that warn user when he is likely to
 	 * exceed 80% mark on hard limit.
 	 */
-	if (cf->sessions_active > (cf->stable.nofile_limit.rlim_max * 80 / (100 * 5)) &&
+	if (cf->sessions_active > (cf->stable.nofile_limit->rlim_max * 80 / (100 * 5)) &&
 	  cf->nofile_limit_warned == 0) {
 	    cf->nofile_limit_warned = 1;
 	    rtpp_log_write(RTPP_LOG_WARN, cf->stable.glog, "passed 80%% "
 	      "threshold on the open file descriptors limit (%d), "
 	      "consider increasing the limit using -L command line "
-	      "option", (int)cf->stable.nofile_limit.rlim_max);
+	      "option", (int)cf->stable.nofile_limit->rlim_max);
 	}
 
 	rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
@@ -1004,19 +1007,19 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
     }
 
     if (op == UPDATE) {
-	if (cf->timeout_handler.socket_name == NULL && socket_name_u != NULL)
+	if (rtpp_th_get_sn(cf->timeout_handler) == NULL && socket_name_u != NULL)
 	    rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
 	if (spa->timeout_data.notify_tag != NULL) {
 	    free(spa->timeout_data.notify_tag);
 	    spa->timeout_data.notify_tag = NULL;
 	}
-	if (cf->timeout_handler.socket_name != NULL && socket_name_u != NULL) {
-	    if (strcmp(cf->timeout_handler.socket_name, socket_name_u) != 0) {
+	if (rtpp_th_get_sn(cf->timeout_handler) != NULL && socket_name_u != NULL) {
+	    if (strcmp(rtpp_th_get_sn(cf->timeout_handler), socket_name_u) != 0) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", socket_name_u);
 		socket_name_u = NULL;
 	    } else {
 		rtpp_log_write(RTPP_LOG_INFO, spa->log, "setting timeout handler");
-		spa->timeout_data.handler = &cf->timeout_handler;
+		spa->timeout_data.handler = cf->timeout_handler;
 		spa->timeout_data.notify_tag = strdup(notify_tag);
 	    }
 	} else if (socket_name_u == NULL && spa->timeout_data.handler != NULL) {
