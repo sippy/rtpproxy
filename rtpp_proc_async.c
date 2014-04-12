@@ -25,6 +25,8 @@
  *
  */
 
+#include <sys/types.h>
+#include <netinet/in.h>
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
@@ -32,10 +34,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "rtp.h"
+#include "rtpp_log.h"
 #include "rtpp_defines.h"
 #include "rtpp_command_async.h"
-#include "rtpp_math.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
