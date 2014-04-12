@@ -30,17 +30,16 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <assert.h>
-#include <errno.h>
+#include <poll.h>
 #include <pthread.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "rtpp_defines.h"
+#include "rtp.h"
 #include "rtpp_log.h"
+#include "rtpp_defines.h"
 #include "rtpp_math.h"
 #include "rtpp_record.h"
 #include "rtp_resizer.h"
