@@ -27,13 +27,11 @@
  *
  */
 
-#include <string.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <assert.h>
 
-#include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_network.h"
 
