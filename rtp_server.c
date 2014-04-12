@@ -29,8 +29,6 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
-#include <sys/uio.h>
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -38,13 +36,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/socket.h>
 
 #include "rtp.h"
 #include "rtp_server.h"
+#include "rtpp_log.h"
 #include "rtpp_defines.h"
 #include "rtpp_session.h"
-#include "rtpp_util.h"
 
 struct rtp_server {
     double btime;
