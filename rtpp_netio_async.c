@@ -30,10 +30,10 @@
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_log.h"
 #include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_wi.h"
