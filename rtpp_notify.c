@@ -46,7 +46,6 @@ struct rtpp_timeout_handler {
     char *socket_name;
     int fd;
     int connected;
-    char notify_buf[64];
 };
 
 struct rtpp_notify_wi
