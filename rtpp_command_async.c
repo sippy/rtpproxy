@@ -25,13 +25,17 @@
  *
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <errno.h>
+#include <poll.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/un.h>
 
+#include "rtpp_log.h"
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
