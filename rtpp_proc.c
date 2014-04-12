@@ -28,20 +28,20 @@
  *
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <assert.h>
 #include <poll.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 
 #include "rtp.h"
 #include "rtp_resizer.h"
 #include "rtp_server.h"
 #include "rtpp_log.h"
+#include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
 #include "rtpp_netio_async.h"
