@@ -81,7 +81,7 @@ distribution: clean
 
 includepolice:
 	for file in ${SRCS}; do \
-	  python includepolice.py $${file} || sleep 5; \
+	  python misc/includepolice.py $${file} || sleep 5; \
 	done
 
 .include <bsd.prog.mk>
