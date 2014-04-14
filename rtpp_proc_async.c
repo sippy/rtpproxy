@@ -62,7 +62,7 @@ rtpp_proc_async_run(void *arg)
 {
     struct cfg *cf;
     double eptime, last_tick_time;
-    int alarm_tick, i, last_ctick, ndrain;
+    int alarm_tick, i, last_ctick, ndrain, rtp_only;
     struct rtpp_proc_async_cf *proc_cf;
     long long ncycles_ref, ncycles_ref_pre;
     double sptime;
@@ -117,9 +117,29 @@ rtpp_proc_async_run(void *arg)
         }
 #endif
 
+        if (last_tick_time == 0 || last_tick_time > sptime) {
+            alarm_tick = 0;
+            last_tick_time = sptime;
+        } else if (last_tick_time + TIMETICK < sptime) {
+            alarm_tick = 1;
+            last_tick_time = sptime;
+        } else {
+            alarm_tick = 0;
+        }
+
+        if (alarm_tick || (ncycles_ref % 7) == 0) {
+            rtp_only = 0;
+        } else {
+            rtp_only = 1;
+        }
+
         pthread_mutex_lock(&cf->sessinfo.lock);
         if (cf->sessinfo.nsessions > 0) {
-            i = poll(cf->sessinfo.pfds, cf->sessinfo.nsessions, 0);
+            if (rtp_only == 0) {
+                i = poll(cf->sessinfo.pfds_all, cf->sessinfo.nsessions, 0);
+            } else {
+                i = poll(cf->sessinfo.pfds_rtp, cf->sessinfo.nsessions / 2, 0);
+            }
             pthread_mutex_unlock(&cf->sessinfo.lock);
             if (i < 0 && errno == EINTR) {
                 eptime = getdtime();
@@ -132,19 +152,14 @@ rtpp_proc_async_run(void *arg)
 
         eptime = getdtime();
 
-        if (last_tick_time == 0 || last_tick_time > eptime) {
-            alarm_tick = 0;
-            last_tick_time = eptime;
-        } else if (last_tick_time + TIMETICK < eptime) {
-            alarm_tick = 1;
-            last_tick_time = eptime;
-        } else {
-            alarm_tick = 0;
-        }
-
         sender = rtpp_anetio_pick_sender(proc_cf->op);
-        pthread_mutex_lock(&cf->glock);
-        process_rtp(cf, eptime, alarm_tick, ndrain, sender);
+        if (rtp_only == 0) {
+            pthread_mutex_lock(&cf->glock);
+            process_rtp(cf, eptime, alarm_tick, ndrain, sender);
+        } else {
+            process_rtp_only(cf, eptime, ndrain, sender);
+            pthread_mutex_lock(&cf->glock);
+        }
         if (cf->rtp_nsessions > 0) {
             process_rtp_servers(cf, eptime, sender);
         }

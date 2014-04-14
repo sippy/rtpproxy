@@ -306,10 +306,67 @@ drain_socket(int rfd)
 }
 
 void
+process_rtp_only(struct cfg *cf, double dtime, int drain_repeat, \
+  struct sthread_args *sender)
+{
+    int readyfd, ridx, rready_len;
+    struct rtpp_session *sp;
+    struct rtp_packet *packet;
+    struct rtpp_proc_ready_lst rready[10];
+
+    rready_len = 0;
+    pthread_mutex_lock(&cf->sessinfo.lock);
+    for (readyfd = 0; readyfd < cf->sessinfo.nsessions / 2; readyfd++) {
+        sp = cf->sessinfo.sessions[readyfd * 2];
+
+        if (cf->sessinfo.pfds_all[readyfd * 2].fd == -1) {
+            /* Deleted session, move one */
+            continue;
+        }
+        /* Find index of the call leg within a session */
+        for (ridx = 0; ridx < 2; ridx++)
+            if (cf->sessinfo.pfds_rtp[readyfd].fd == sp->fds[ridx])
+                break;
+        /*
+         * Can't happen.
+         */
+        assert(ridx != 2);
+
+        if (sp->complete != 0) {
+            if ((cf->sessinfo.pfds_rtp[readyfd].revents & POLLIN) != 0) {
+                rready[rready_len].sp = sp;
+                rready[rready_len].ridx = ridx;
+                rready_len += 1;
+            }
+            if (rready_len == 10) {
+                rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, sender);
+                rready_len = 0;
+            }
+            if (sp->resizers[ridx] != NULL) {
+                while ((packet = rtp_resizer_get(sp->resizers[ridx], dtime)) != NULL) {
+                    send_packet(cf, sp, ridx, packet, sender);
+                    packet = NULL;
+                }
+            }
+        } else if ((cf->sessinfo.pfds_rtp[readyfd].revents & POLLIN) != 0) {
+#if RTPP_DEBUG
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining socket %d", cf->sessinfo.pfds_rtp[readyfd].fd);
+#endif
+            drain_socket(cf->sessinfo.pfds_rtp[readyfd].fd);
+        }
+    }
+    if (rready_len > 0) {
+        rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, sender);
+        rready_len = 0;
+    }
+    pthread_mutex_unlock(&cf->sessinfo.lock);
+}
+
+void
 process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
   struct sthread_args *sender)
 {
-    int readyfd, skipfd, ridx, rready_len;
+    int readyfd, skipfd, skipfd_rtp, ridx, rready_len;
     struct rtpp_session *sp;
     struct rtp_packet *packet;
     struct rtpp_proc_ready_lst rready[10];
@@ -335,15 +392,18 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 	    }
 	}
 
-	if (cf->sessinfo.pfds[readyfd].fd == -1) {
+	if (cf->sessinfo.pfds_all[readyfd].fd == -1) {
 	    /* Deleted session, count and move one */
 	    skipfd++;
+            if ((readyfd % 2) == 0) {
+                skipfd_rtp++;
+            }
 	    continue;
 	}
 
 	/* Find index of the call leg within a session */
 	for (ridx = 0; ridx < 2; ridx++)
-	    if (cf->sessinfo.pfds[readyfd].fd == sp->fds[ridx])
+	    if (cf->sessinfo.pfds_all[readyfd].fd == sp->fds[ridx])
 		break;
 	/*
 	 * Can't happen.
@@ -352,13 +412,16 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 
 	/* Compact pfds[] and sessions[] by eliminating removed sessions */
 	if (skipfd > 0) {
-	    cf->sessinfo.pfds[readyfd - skipfd] = cf->sessinfo.pfds[readyfd];
+	    cf->sessinfo.pfds_all[readyfd - skipfd] = cf->sessinfo.pfds_all[readyfd];
 	    cf->sessinfo.sessions[readyfd - skipfd] = cf->sessinfo.sessions[readyfd];
 	    sp->sidx[ridx] = readyfd - skipfd;
 	}
+	if ((readyfd % 2) == 0 && skipfd_rtp > 0) {
+	    cf->sessinfo.pfds_rtp[(readyfd / 2) - skipfd_rtp] = cf->sessinfo.pfds_rtp[readyfd / 2];
+	}
 
 	if (sp->complete != 0) {
-	    if ((cf->sessinfo.pfds[readyfd].revents & POLLIN) != 0) {
+	    if ((cf->sessinfo.pfds_all[readyfd].revents & POLLIN) != 0) {
                 rready[rready_len].sp = sp;
                 rready[rready_len].ridx = ridx;
                 rready_len += 1;
@@ -373,11 +436,11 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 		    packet = NULL;
 		}
 	    }
-	} else if ((cf->sessinfo.pfds[readyfd].revents & POLLIN) != 0) {
+	} else if ((cf->sessinfo.pfds_all[readyfd].revents & POLLIN) != 0) {
 #if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining socket %d", cf->sessinfo.pfds[readyfd].fd);
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining socket %d", cf->sessinfo.pfds_all[readyfd].fd);
 #endif
-            drain_socket(cf->sessinfo.pfds[readyfd].fd);
+            drain_socket(cf->sessinfo.pfds_all[readyfd].fd);
         }
     }
     if (rready_len > 0) {

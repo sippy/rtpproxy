@@ -75,6 +75,14 @@ struct sockaddr_storage;
 struct bindaddr_list;
 struct rtpp_timeout_handler;
 
+struct sessinfo {
+    struct pollfd *pfds_all;
+    struct pollfd *pfds_rtp;
+    struct rtpp_session **sessions;
+    int nsessions;
+    pthread_mutex_t lock;
+};
+
 struct cfg {
     struct cfg_stable {
         int nodaemon;
@@ -132,12 +140,7 @@ struct cfg {
      * Data fields that must be locked separately from the main configuration
      * structure below.
      */
-    struct {
-        struct pollfd *pfds;
-        struct rtpp_session **sessions;
-        int nsessions;
-        pthread_mutex_t lock;
-    } sessinfo;
+    struct sessinfo sessinfo;
 
     struct bindaddr_list *bindaddr_list;
     pthread_mutex_t bindaddr_lock;

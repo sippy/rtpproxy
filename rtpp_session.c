@@ -155,8 +155,9 @@ session_findnext(struct cfg *cf, struct rtpp_session *psp)
 }
 
 void
-append_session(struct cfg *cf, struct rtpp_session *sp, int index)
+append_session(struct cfg *cf, struct rtpp_session *sp, int index, int stype)
 {
+    int rtp_index;
 
     /* Make sure structure is properly locked */
     assert(pthread_mutex_islocked(&cf->glock) == 1);
@@ -164,11 +165,21 @@ append_session(struct cfg *cf, struct rtpp_session *sp, int index)
     if (sp->fds[index] != -1) {
         pthread_mutex_lock(&cf->sessinfo.lock);
 	cf->sessinfo.sessions[cf->sessinfo.nsessions] = sp;
-	cf->sessinfo.pfds[cf->sessinfo.nsessions].fd = sp->fds[index];
-	cf->sessinfo.pfds[cf->sessinfo.nsessions].events = POLLIN;
-	cf->sessinfo.pfds[cf->sessinfo.nsessions].revents = 0;
+	cf->sessinfo.pfds_all[cf->sessinfo.nsessions].fd = sp->fds[index];
+	cf->sessinfo.pfds_all[cf->sessinfo.nsessions].events = POLLIN;
+	cf->sessinfo.pfds_all[cf->sessinfo.nsessions].revents = 0;
 	sp->sidx[index] = cf->sessinfo.nsessions;
+
+        if (stype == SESS_RTP) {
+            assert((cf->sessinfo.nsessions % 2) == 0);
+            rtp_index = cf->sessinfo.nsessions / 2;
+            cf->sessinfo.pfds_rtp[rtp_index].fd = sp->fds[index];
+            cf->sessinfo.pfds_rtp[rtp_index].events = POLLIN;
+            cf->sessinfo.pfds_rtp[rtp_index].revents = 0;
+        }
+
 	cf->sessinfo.nsessions++;
+            
         pthread_mutex_unlock(&cf->sessinfo.lock);
     } else {
 	sp->sidx[index] = -1;
@@ -206,18 +217,18 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    close(sp->fds[i]);
 	    assert(cf->sessinfo.sessions[sp->sidx[i]] == sp);
 	    cf->sessinfo.sessions[sp->sidx[i]] = NULL;
-	    assert(cf->sessinfo.pfds[sp->sidx[i]].fd == sp->fds[i]);
-	    cf->sessinfo.pfds[sp->sidx[i]].fd = -1;
-	    cf->sessinfo.pfds[sp->sidx[i]].events = 0;
+	    assert(cf->sessinfo.pfds_all[sp->sidx[i]].fd == sp->fds[i]);
+	    cf->sessinfo.pfds_all[sp->sidx[i]].fd = -1;
+	    cf->sessinfo.pfds_all[sp->sidx[i]].events = 0;
 	}
 	if (sp->rtcp->fds[i] != -1) {
 	    shutdown(sp->rtcp->fds[i], SHUT_RDWR);
 	    close(sp->rtcp->fds[i]);
 	    assert(cf->sessinfo.sessions[sp->rtcp->sidx[i]] == sp->rtcp);
 	    cf->sessinfo.sessions[sp->rtcp->sidx[i]] = NULL;
-	    assert(cf->sessinfo.pfds[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
-	    cf->sessinfo.pfds[sp->rtcp->sidx[i]].fd = -1;
-	    cf->sessinfo.pfds[sp->rtcp->sidx[i]].events = 0;
+	    assert(cf->sessinfo.pfds_all[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
+	    cf->sessinfo.pfds_all[sp->rtcp->sidx[i]].fd = -1;
+	    cf->sessinfo.pfds_all[sp->rtcp->sidx[i]].events = 0;
 	}
 	if (sp->rrcs[i] != NULL) {
 	    rclose(sp, sp->rrcs[i], 1);

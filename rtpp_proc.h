@@ -30,5 +30,6 @@
 
 void process_rtp_servers(struct cfg *, double, struct sthread_args *);
 void process_rtp(struct cfg *, double, int, int, struct sthread_args *);
+void process_rtp_only(struct cfg *, double, int, struct sthread_args *sender);
 
 #endif

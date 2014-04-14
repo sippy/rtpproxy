@@ -858,8 +858,8 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	    spa->ports[i] = lport;
 	    spa->rtcp->ports[i] = lport + 1;
 	    spa->complete = spa->rtcp->complete = 1;
-	    append_session(cf, spa, i);
-	    append_session(cf, spa->rtcp, i);
+	    append_session(cf, spa, i, SESS_RTP);
+	    append_session(cf, spa->rtcp, i, SESS_RTCP);
 	}
 	if (weak)
 	    spa->weak[i] = 1;
@@ -974,10 +974,10 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	spb->rtp = spa;
 	spa->sridx = spb->sridx = -1;
 
-	append_session(cf, spa, 0);
-	append_session(cf, spa, 1);
-	append_session(cf, spb, 0);
-	append_session(cf, spb, 1);
+	append_session(cf, spa, 0, SESS_RTP);
+	append_session(cf, spb, 0, SESS_RTCP);
+	append_session(cf, spa, 1, SESS_RTP);
+	append_session(cf, spb, 1, SESS_RTCP);
 
 	hash_table_append(cf, spa);
 
