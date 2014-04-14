@@ -56,10 +56,10 @@ struct rtpp_proc_ready_lst {
 };
 
 static void send_packet(struct cfg *, struct rtpp_session *, int, \
-  struct rtp_packet *, struct rtpp_anetio_cf *);
+  struct rtp_packet *, struct sthread_args *);
 
 void
-process_rtp_servers(struct cfg *cf, double dtime, struct rtpp_anetio_cf *op)
+process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender)
 {
     int j, sidx, len, skipfd;
     struct rtpp_session *sp;
@@ -96,7 +96,7 @@ process_rtp_servers(struct cfg *cf, double dtime, struct rtpp_anetio_cf *op)
                     break;
 		}
 		cf->packets_out++;
-                rtpp_anetio_send_pkt(op, sp->fds[sidx], sp->addr[sidx], \
+                rtpp_anetio_send_pkt(sender, sp->fds[sidx], sp->addr[sidx], \
                   SA_LEN(sp->addr[sidx]), pkt);
 	    }
 	}
@@ -106,7 +106,7 @@ process_rtp_servers(struct cfg *cf, double dtime, struct rtpp_anetio_cf *op)
 
 static void
 rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
-  double dtime, int drain_repeat, struct rtpp_anetio_cf *op)
+  double dtime, int drain_repeat, struct sthread_args *sender)
 {
     int ndrain, i, port, rn, ridx;
     struct rtp_packet *packet = NULL;
@@ -253,7 +253,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	if (sp->resizers[ridx] != NULL)
 	    rtp_resizer_enqueue(sp->resizers[ridx], &packet);
 	if (packet != NULL) {
-	    send_packet(cf, sp, ridx, packet, op);
+	    send_packet(cf, sp, ridx, packet, sender);
             packet = NULL;
         }
     }
@@ -263,7 +263,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 
 static void
 send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
-  struct rtp_packet *packet, struct rtpp_anetio_cf *op)
+  struct rtp_packet *packet, struct sthread_args *sender)
 {
     int sidx;
 
@@ -287,7 +287,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
     } else {
 	sp->pcount[2]++;
 	cf->packets_out++;
-        rtpp_anetio_send_pkt(op, sp->fds[sidx], sp->addr[sidx], \
+        rtpp_anetio_send_pkt(sender, sp->fds[sidx], sp->addr[sidx], \
           SA_LEN(sp->addr[sidx]), packet);
     }
 }
@@ -307,7 +307,7 @@ drain_socket(int rfd)
 
 void
 process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
-  struct rtpp_anetio_cf *op)
+  struct sthread_args *sender)
 {
     int readyfd, skipfd, ridx, rready_len;
     struct rtpp_session *sp;
@@ -364,12 +364,12 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
                 rready_len += 1;
             }
             if (rready_len == 10) {
-		rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, op);
+		rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, sender);
                 rready_len = 0;
             }
 	    if (sp->resizers[ridx] != NULL) {
 		while ((packet = rtp_resizer_get(sp->resizers[ridx], dtime)) != NULL) {
-		    send_packet(cf, sp, ridx, packet, op);
+		    send_packet(cf, sp, ridx, packet, sender);
 		    packet = NULL;
 		}
 	    }
@@ -381,7 +381,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
         }
     }
     if (rready_len > 0) {
-        rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, op);
+        rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, sender);
         rready_len = 0;
     }
     /* Trim any deleted sessions at the end */

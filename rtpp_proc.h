@@ -28,7 +28,7 @@
 #ifndef _RTPP_PROC_H_
 #define _RTPP_PROC_H_
 
-void process_rtp_servers(struct cfg *, double, struct rtpp_anetio_cf *);
-void process_rtp(struct cfg *, double, int, int, struct rtpp_anetio_cf *);
+void process_rtp_servers(struct cfg *, double, struct sthread_args *);
+void process_rtp(struct cfg *, double, int, int, struct sthread_args *);
 
 #endif

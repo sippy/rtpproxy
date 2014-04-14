@@ -39,5 +39,6 @@ void rtpp_queue_pump(struct rtpp_queue *);
 
 struct rtpp_wi *rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake);
 int rtpp_queue_get_items(struct rtpp_queue *, struct rtpp_wi **, int, int);
+int rtpp_queue_get_length(struct rtpp_queue *);
 
 #endif

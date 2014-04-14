@@ -182,3 +182,14 @@ rtpp_queue_get_items(struct rtpp_queue *queue, struct rtpp_wi **items, int ilen,
 
     return (i);
 }
+
+int
+rtpp_queue_get_length(struct rtpp_queue *queue)
+{
+    int length;
+
+    pthread_mutex_lock(&queue->mutex);
+    length = queue->length;
+    pthread_mutex_unlock(&queue->mutex);
+    return (length);
+}

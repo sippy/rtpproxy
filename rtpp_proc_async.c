@@ -68,6 +68,7 @@ rtpp_proc_async_run(void *arg)
     double sptime;
     struct sign_arg *s_a;
     struct rtpp_wi *wi, *wis[10];
+    struct sthread_args *sender;
 
     cf = (struct cfg *)arg;
     proc_cf = cf->stable.rtpp_proc_cf;
@@ -141,13 +142,14 @@ rtpp_proc_async_run(void *arg)
             alarm_tick = 0;
         }
 
+        sender = rtpp_anetio_pick_sender(proc_cf->op);
         pthread_mutex_lock(&cf->glock);
-        process_rtp(cf, eptime, alarm_tick, ndrain, proc_cf->op);
+        process_rtp(cf, eptime, alarm_tick, ndrain, sender);
         if (cf->rtp_nsessions > 0) {
-            process_rtp_servers(cf, eptime, proc_cf->op);
+            process_rtp_servers(cf, eptime, sender);
         }
         pthread_mutex_unlock(&cf->glock);
-        rtpp_anetio_pump(proc_cf->op);
+        rtpp_anetio_pump_q(sender);
         eptime = getdtime();
         rtpp_command_async_wakeup(cf->stable.rtpp_cmd_cf, last_ctick, eptime - sptime);
 
