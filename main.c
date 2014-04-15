@@ -575,6 +575,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
     }
+    set_rlimits(&cf);
 
     cf.stable.controlfd = controlfd;
 

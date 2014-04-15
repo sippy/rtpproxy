@@ -41,6 +41,7 @@ double getdtime(void);
 double ts2dtime(uint32_t, uint32_t);
 void dtime2ts(double, uint32_t *, uint32_t *);
 void seedrandom(void);
+int set_rlimits(struct cfg *);
 int drop_privileges(struct cfg *);
 void init_port_table(struct cfg *);
 char *rtpp_strsep(char **, const char *);
