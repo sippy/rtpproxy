@@ -31,6 +31,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#include <sys/resource.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -97,6 +98,24 @@ seedrandom(void)
 
     gettimeofday(&tv, NULL);
     srandom((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
+}
+
+int
+set_rlimits(struct cfg *cf)
+{
+    struct rlimit rlp;
+
+    if (getrlimit(RLIMIT_CORE, &rlp) < 0) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog, "getrlimit(RLIMIT_CORE)");
+        return (-1);
+    }
+    rlp.rlim_cur = RLIM_INFINITY;
+    rlp.rlim_max = RLIM_INFINITY;
+    if (setrlimit(RLIMIT_CORE, &rlp) < 0) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog, "setrlimit(RLIMIT_CORE)");
+        return (-1);
+    }
+    return (0);
 }
 
 #if !defined(WITHOUT_SIPLOG)
