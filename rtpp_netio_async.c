@@ -39,12 +39,17 @@
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 #include "rtpp_queue.h"
+#include "rtpp_math.h"
 #include "rtpp_netio_async.h"
+#include "rtpp_util.h"
 
 struct sthread_args {
     struct rtpp_queue *out_q;
     rtpp_log_t glog;
     int dmode;
+#ifdef RTPP_DEBUG
+    struct recfilter average_load;
+#endif
 };
 
 #define SEND_THREADS 2
@@ -59,14 +64,18 @@ rtpp_anetio_sthread(struct sthread_args *args)
 {
     int n, nsend, i;
     struct rtpp_wi *wi, *wis[10];
+#ifdef RTPP_DEBUG
+    double tp[3], runtime, sleeptime;
+    long run_n;
 
+    runtime = sleeptime = 0.0;
+    run_n = 0;
+    tp[0] = getdtime();
+#endif
     for (;;) {
         nsend = rtpp_queue_get_items(args->out_q, wis, 10, 0);
-
-#ifdef DEBUG
-	rtpp_log_write(RTPP_LOG_DBUG, args->glog, "rtpp_anetio_sthread: nsend %d", nsend);
-        printf("rtpp_anetio_sthread: outgoing packet to %s:%s, size %d\n",
-          OUTP(wi).remote_addr, OUTP(wi).remote_port, OUTP(wi).ssize);
+#ifdef RTPP_DEBUG
+        tp[1] = getdtime();
 #endif
 
         for (i = 0; i < nsend; i++) {
@@ -75,10 +84,6 @@ rtpp_anetio_sthread(struct sthread_args *args)
                 rtpp_wi_free(wi);
                 goto out;
             }
-#ifdef DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, args->glog, "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d)",
-              wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
-#endif
             do {
                 n = sendto(wi->sock, wi->msg, wi->msg_len, wi->flags,
                   wi->sendto, wi->tolen);
@@ -89,10 +94,21 @@ rtpp_anetio_sthread(struct sthread_args *args)
                 }
             } while (wi->nsend > 0);
             rtpp_wi_free(wi);
-#ifdef DEBUG
-            printf("lthread_tx: sendto(%d)\n", n);
-#endif
         }
+#ifdef RTPP_DEBUG
+        sleeptime += tp[1] - tp[0];
+        tp[0] = getdtime();
+        runtime += tp[0] - tp[1];
+        if ((run_n % 10000) == 0) {
+            rtpp_log_write(RTPP_LOG_DBUG, args->glog, "rtpp_anetio_sthread(%p): run %ld aload = %f filtered = %f", \
+              args, run_n, runtime / (runtime + sleeptime), args->average_load.lastval);
+        }
+        if (runtime + sleeptime > 1.0) {
+            recfilter_apply(&args->average_load, runtime / (runtime + sleeptime));
+            runtime = sleeptime = 0.0;
+        }
+        run_n += 1;
+#endif
     }
 out:
     return;
@@ -202,6 +218,9 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
         }
         netio_cf->args[i].glog = cf->stable.glog;
         netio_cf->args[i].dmode = cf->stable.dmode;
+#ifdef RTPP_DEBUG
+        recfilter_init(&netio_cf->args[i].average_load, 0.9, 0.0, 0);
+#endif
     }
 
     cf->stable.rtpp_netio_cf = netio_cf;
