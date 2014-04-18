@@ -314,6 +314,22 @@ drain_socket(int rfd)
     __rready_len = 0; \
   } }\
 
+static int
+find_ridx(struct cfg *cf, int readyfd, struct rtpp_session *sp)
+{
+    int ridx;
+
+    for (ridx = 0; ridx < 2; ridx++)
+        if (cf->sessinfo.pfds_rtp[readyfd].fd == sp->fds[ridx])
+            break;
+    /*
+     * Can't happen.
+     */
+    assert(ridx != 2);
+
+    return (ridx);
+}
+
 void
 process_rtp_only(struct cfg *cf, double dtime, int drain_repeat, \
   struct sthread_args *sender)
@@ -332,20 +348,13 @@ process_rtp_only(struct cfg *cf, double dtime, int drain_repeat, \
             /* Deleted session, move one */
             continue;
         }
-        /* Find index of the call leg within a session */
-        for (ridx = 0; ridx < 2; ridx++)
-            if (cf->sessinfo.pfds_rtp[readyfd].fd == sp->fds[ridx])
-                break;
-        /*
-         * Can't happen.
-         */
-        assert(ridx != 2);
-
         if (sp->complete != 0) {
             if ((cf->sessinfo.pfds_rtp[readyfd].revents & POLLIN) != 0) {
+                ridx = find_ridx(cf, readyfd, sp);
                 RR_ADD_PUSH(rready, rready_len, sp, ridx);
             }
             if (sp->resizers[ridx] != NULL) {
+                ridx = find_ridx(cf, readyfd, sp);
                 while ((packet = rtp_resizer_get(sp->resizers[ridx], dtime)) != NULL) {
                     send_packet(cf, sp, ridx, packet, sender);
                     packet = NULL;
@@ -353,7 +362,7 @@ process_rtp_only(struct cfg *cf, double dtime, int drain_repeat, \
             }
         } else if ((cf->sessinfo.pfds_rtp[readyfd].revents & POLLIN) != 0) {
 #if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining socket %d", cf->sessinfo.pfds_rtp[readyfd].fd);
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining RTP socket %d", cf->sessinfo.pfds_rtp[readyfd].fd);
 #endif
             drain_socket(cf->sessinfo.pfds_rtp[readyfd].fd);
         }
@@ -401,13 +410,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 	}
 
 	/* Find index of the call leg within a session */
-	for (ridx = 0; ridx < 2; ridx++)
-	    if (cf->sessinfo.pfds_rtp[readyfd].fd == sp->fds[ridx])
-		break;
-	/*
-	 * Can't happen.
-	 */
-	assert(ridx != 2);
+        ridx = find_ridx(cf, readyfd, sp);
 
 	/* Compact pfds[] and sessions[] by eliminating removed sessions */
 	if (skipfd > 0) {
