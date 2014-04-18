@@ -387,7 +387,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	errx(1, "port_min should be less than port_max");
 
     cf->sessinfo.sessions = malloc((sizeof cf->sessinfo.sessions[0]) *
-      (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
+      (((cf->stable.port_max - cf->stable.port_min + 1)) + 1));
     cf->rtp_servers =  malloc((sizeof cf->rtp_servers[0]) *
       (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
     cf->sessinfo.pfds_rtp = malloc((sizeof cf->sessinfo.pfds_rtp[0]) *
