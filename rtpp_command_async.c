@@ -156,7 +156,7 @@ rtpp_command_async_get_aload(struct rtpp_cmd_async_cf *cmd_cf)
 }
 
 int
-rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf, int clock, double tused)
+rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf, int clock)
 {
     int old_clock;
 
@@ -164,7 +164,7 @@ rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf, int clock, double tu
 
     old_clock = cmd_cf->clock_tick;
     cmd_cf->clock_tick = clock;
-    cmd_cf->tused = tused;
+    cmd_cf->tused = 0.0;
 
     /* notify worker thread */
     pthread_cond_signal(&cmd_cf->cmd_cond);

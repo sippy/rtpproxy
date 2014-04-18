@@ -63,7 +63,7 @@ static void
 rtpp_anetio_sthread(struct sthread_args *args)
 {
     int n, nsend, i;
-    struct rtpp_wi *wi, *wis[10];
+    struct rtpp_wi *wi, *wis[100];
 #ifdef RTPP_DEBUG
     double tp[3], runtime, sleeptime;
     long run_n;
@@ -73,7 +73,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
     tp[0] = getdtime();
 #endif
     for (;;) {
-        nsend = rtpp_queue_get_items(args->out_q, wis, 10, 0);
+        nsend = rtpp_queue_get_items(args->out_q, wis, 100, 0);
 #ifdef RTPP_DEBUG
         tp[1] = getdtime();
 #endif
