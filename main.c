@@ -390,9 +390,9 @@ init_config(struct cfg *cf, int argc, char **argv)
       (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
     cf->rtp_servers =  malloc((sizeof cf->rtp_servers[0]) *
       (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
-    cf->sessinfo.pfds_all = malloc((sizeof cf->sessinfo.pfds_rtp[0]) *
-      (((cf->stable.port_max - cf->stable.port_min + 1) * 2) + 1));
     cf->sessinfo.pfds_rtp = malloc((sizeof cf->sessinfo.pfds_rtp[0]) *
+      (((cf->stable.port_max - cf->stable.port_min + 1)) + 1));
+    cf->sessinfo.pfds_rtcp = malloc((sizeof cf->sessinfo.pfds_rtcp[0]) *
       (((cf->stable.port_max - cf->stable.port_min + 1)) + 1));
 
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {

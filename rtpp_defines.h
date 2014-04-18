@@ -76,8 +76,8 @@ struct bindaddr_list;
 struct rtpp_timeout_handler;
 
 struct sessinfo {
-    struct pollfd *pfds_all;
     struct pollfd *pfds_rtp;
+    struct pollfd *pfds_rtcp;
     struct rtpp_session **sessions;
     int nsessions;
     pthread_mutex_t lock;

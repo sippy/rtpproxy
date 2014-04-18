@@ -93,7 +93,7 @@ void init_hash_table(struct cfg_stable *);
 struct rtpp_session *session_findfirst(struct cfg *, const char *);
 struct rtpp_session *session_findnext(struct cfg *cf, struct rtpp_session *);
 void hash_table_append(struct cfg *, struct rtpp_session *);
-void append_session(struct cfg *, struct rtpp_session *, int, int);
+void append_session(struct cfg *, struct rtpp_session *, int);
 void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(const char *, const char *, unsigned *);
 int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session **);
