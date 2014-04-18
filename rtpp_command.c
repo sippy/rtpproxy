@@ -490,10 +490,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	    spa = cf->sessinfo.sessions[i];
 	    if (spa == NULL || spa->sidx[0] != i)
 		continue;
-	    /* Skip RTCP twin session */
-	    if (spa->rtcp != NULL) {
-		remove_session(cf, spa);
-	    }
+	    remove_session(cf, spa);
         }
         pthread_mutex_unlock(&cf->sessinfo.lock);
         reply_ok(&cf->stable, controlfd, cmd);
@@ -1300,9 +1297,11 @@ static void
 handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd,
   const char *opts)
 {
+#if 0
     struct rtpp_session *spa, *spb;
-    int len, i, brief, load;
     char addrs[4][256];
+#endif
+    int len, i, brief, load;
     char buf[1024 * 8];
 
     brief = 0;
@@ -1329,17 +1328,19 @@ handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd,
     if (cmd->cookie == NULL)
         len = sprintf(buf, "sessions created: %llu\nactive sessions: %d\n"
           "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
-          cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions / 2,
+          cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions,
           cf->packets_in, cf->packets_out);
     else
         len = sprintf(buf, "%s sessions created: %llu\nactive sessions: %d\n"
           "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
-          cmd->cookie, cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions / 2,
+          cmd->cookie, cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions,
           cf->packets_in, cf->packets_out);
     if (load != 0) {
           len += sprintf(buf + len, "average load: %f\n", rtpp_command_async_get_aload(cf->stable.rtpp_cmd_cf));
     }
     for (i = 0; i < cf->sessinfo.nsessions && brief == 0; i++) {
+#if 0
+XXX this needs work to fix it after rtp/rtcp split 
         spa = cf->sessinfo.sessions[i];
         if (spa == NULL || spa->sidx[0] != i)
             continue;
@@ -1379,6 +1380,7 @@ handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd,
             doreply(&cf->stable, fd, buf, len, &cmd->raddr, cmd->rlen);
             len = 0;
         }
+#endif
     }
     pthread_mutex_unlock(&cf->sessinfo.lock);
     if (len > 0)
