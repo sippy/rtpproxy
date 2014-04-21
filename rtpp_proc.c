@@ -349,12 +349,11 @@ process_rtp_only(struct cfg *cf, double dtime, int drain_repeat, \
             continue;
         }
         if (sp->complete != 0) {
+            ridx = find_ridx(cf, readyfd, sp);
             if ((cf->sessinfo.pfds_rtp[readyfd].revents & POLLIN) != 0) {
-                ridx = find_ridx(cf, readyfd, sp);
                 RR_ADD_PUSH(rready, rready_len, sp, ridx);
             }
             if (sp->resizers[ridx] != NULL) {
-                ridx = find_ridx(cf, readyfd, sp);
                 while ((packet = rtp_resizer_get(sp->resizers[ridx], dtime)) != NULL) {
                     send_packet(cf, sp, ridx, packet, sender);
                     packet = NULL;
