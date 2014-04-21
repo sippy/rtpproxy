@@ -124,10 +124,10 @@ rtpp_proc_async_run(void *arg)
         }
 #endif
 
+        alarm_tick = 0;
         if (last_tick_time == 0 || last_tick_time > tp[1]) {
-            alarm_tick = 0;
             last_tick_time = tp[1];
-        } else if (last_tick_time + TIMETICK < tp[1]) {
+        } else if (last_tick_time + (double)TIMETICK < tp[1]) {
             alarm_tick = 1;
             last_tick_time = tp[1];
         }
