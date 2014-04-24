@@ -26,9 +26,9 @@
 # $Id$
 
 CC?=	gcc
-CFLAGS+=-Wall -DWITHOUT_SIPLOG -D_BSD_SOURCE -D_ISOC99_SOURCE -DENABLE_GSM -DENABLE_G729 \
+CFLAGS+=-Wall -DWITHOUT_SIPLOG -D_BSD_SOURCE -D_ISOC99_SOURCE -DENABLE_GSM \
   -I./ -I../ -I/usr/local/include
-LIBS+=	-L. -L/usr/local/lib -lg729 -lgsm -lsndfile -lm
+LIBS+=	-L. -L/usr/local/lib -lgsm -lsndfile -lm
 PREFIX?= /usr/local
 
 ifeq ($(origin WITHOUT_G722), undefined)
@@ -36,6 +36,12 @@ LIBS+= -lg722
 else
 CFLAGS+= -DWITHOUT_G722
 endif
+ifeq ($(origin WITHOUT_G729), undefined)
+LIBS+= -lg729
+else
+CFLAGS+= -DWITHOUT_G729
+endif
+
 
 # Uncomment this on Solaris
 #LIBS+=	-lresolv -lsocket -lnsl
