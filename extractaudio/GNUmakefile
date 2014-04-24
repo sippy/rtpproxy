@@ -28,14 +28,20 @@
 CC?=	gcc
 CFLAGS+=-Wall -DWITHOUT_SIPLOG -D_BSD_SOURCE -D_ISOC99_SOURCE -DENABLE_GSM -DENABLE_G729 \
   -I./ -I../ -I/usr/local/include
-LIBS+=	-L. -L/usr/local/lib -lg729 -lg722 -lgsm -lsndfile -lm
+LIBS+=	-L. -L/usr/local/lib -lg729 -lgsm -lsndfile -lm
 PREFIX?= /usr/local
+
+ifeq ($(origin WITHOUT_G722), undefined)
+LIBS+= -lg722
+else
+CFLAGS+= -DWITHOUT_G722
+endif
 
 # Uncomment this on Solaris
 #LIBS+=	-lresolv -lsocket -lnsl
 
 SRCS = decoder.c decoder.h format_au.h g711.h main.c session.h _rtp.c \
-  _rtp_analyze.c _rtpp_util.c rtpp_loader.c rtpp_loader.h
+  _rtp_analyze.c _rtpp_util.c rtpp_loader.c rtpp_loader.h _rtpp_log_stand.c
 PROG = extractaudio
 sources = $(filter %.c, $(SRCS))
 OBJS = $(sources:%.c=%.o)
@@ -53,6 +59,9 @@ _rtp_analyze.c: ../rtp_analyze.c
 
 _rtpp_util.c: ../rtpp_util.c
 	ln -sf ../rtpp_util.c _rtpp_util.c
+
+_rtpp_log_stand.c: ../rtpp_log_stand.c
+	ln -sf ../rtpp_log_stand.c _rtpp_log_stand.c
 
 $(PROG): $(OBJS)
 	$(CC) -o $(PROG) $(OBJS) $(LIBS)

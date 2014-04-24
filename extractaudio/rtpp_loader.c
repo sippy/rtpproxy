@@ -1,9 +1,16 @@
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/udp.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include "../rtpp_record_private.h"
+#include "../rtpp_util.h"
 #include "rtpp_loader.h"
 
 static int load_adhoc(struct rtpp_loader *loader, struct channels *,

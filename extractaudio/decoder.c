@@ -29,17 +29,20 @@
  */
 
 #include <sys/types.h>
-#include <sys/queue.h>
-#include <arpa/inet.h>
-#include <stdio.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/udp.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <g729_decoder.h>
+#ifndef WITHOUT_G722
 #include <g722_decoder.h>
+#endif
 
 #include "decoder.h"
 #include "session.h"
+#include "../rtpp_record_private.h"
 #include "../rtp.h"
 #include "g711.h"
 
@@ -178,6 +181,7 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
         }
         return obytes;
 
+#ifndef WITHOUT_G722
     case RTP_G722:
         if (dp->g722_ctx == NULL)
             dp->g722_ctx = g722_decoder_new(64000, G722_SAMPLE_RATE_8000);
@@ -187,6 +191,7 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
         dp->nticks += ibytes;
         dp->dticks += ibytes;
         return ibytes * 2;
+#endif
 
     case RTP_CN:
     case RTP_TSE:

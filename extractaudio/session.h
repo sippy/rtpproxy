@@ -66,6 +66,8 @@
     } \
   }
 
+struct pkt_hdr_adhoc;
+
 struct packet {
     struct pkt_hdr_adhoc *pkt;
     struct rtp_info parsed;

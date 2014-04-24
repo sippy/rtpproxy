@@ -26,8 +26,9 @@
 # $Id$
 
 PROG=	extractaudio
-SRCS=	main.c decoder.c rtpp_loader.c _rtp.c _rtp_analyze.c _rtpp_util.c
-CLEANFILES+= _rtp.c _rtp_analyze.c _rtpp_util.c
+SRCS=	main.c decoder.c rtpp_loader.c _rtp.c _rtp_analyze.c _rtpp_util.c \
+	  _rtpp_log_stand.c
+CLEANFILES+= _rtp.c _rtp_analyze.c _rtpp_util.c _rtpp_log_stand.c
 MAN1=
 
 WARNS?=	2
@@ -35,10 +36,15 @@ WARNS?=	2
 LOCALBASE?=	/usr/local
 
 CFLAGS=-g3 -O0 -DWITHOUT_SIPLOG
+.if defined(WITHOUT_G722)
+CFLAGS+= -DWITHOUT_G722
+.else
+LDADD+= -lg722
+.endif
 
 CFLAGS+= -I${.CURDIR}/.. -I${LOCALBASE}/include
 LDFLAGS+= -L${LOCALBASE}/lib
-LDADD+=	-lg729 -lg722 -lsndfile -lm
+LDADD+=	-lg729 -lsndfile -lm
 
 _rtp.c: ${.CURDIR}/../rtp.c
 	ln -sf ${.CURDIR}/../rtp.c _rtp.c
@@ -48,5 +54,14 @@ _rtp_analyze.c: ${.CURDIR}/../rtp_analyze.c
 
 _rtpp_util.c: ${.CURDIR}/../rtpp_util.c
 	ln -sf ${.CURDIR}/../rtpp_util.c _rtpp_util.c
+
+_rtpp_log_stand.c: ${.CURDIR}/../rtpp_log_stand.c
+	ln -sf ${.CURDIR}/../rtpp_log_stand.c _rtpp_log_stand.c
+
+includepolice:
+	for file in ${SRCS}; do \
+	  ${MAKE} $${file}; \
+	  python ${.CURDIR}/../misc/includepolice.py $${file} || sleep 5; \
+	done
 
 .include <bsd.prog.mk>

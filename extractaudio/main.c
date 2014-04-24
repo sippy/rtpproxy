@@ -30,8 +30,6 @@
 
 #include <sys/types.h>
 #include <sys/param.h>
-#include <sys/mman.h>
-#include <sys/queue.h>
 #if defined(__FreeBSD__)
 #include <sys/rtprio.h>
 #else
@@ -40,6 +38,8 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/udp.h>
 #include <err.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -53,6 +53,7 @@
 #include "g711.h"
 #include "decoder.h"
 #include "session.h"
+#include "../rtpp_record_private.h"
 #include "rtpp_loader.h"
 #include "../rtp.h"
 #include "../rtp_analyze.h"
