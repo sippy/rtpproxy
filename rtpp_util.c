@@ -94,6 +94,8 @@ seedrandom(void)
     if (fd >= 0) {
 	read(fd, &junk, sizeof(junk));
 	close(fd);
+    } else {
+        junk = 0;
     }
 
     gettimeofday(&tv, NULL);
