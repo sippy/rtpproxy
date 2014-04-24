@@ -35,11 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <g729_decoder.h>
-#ifndef WITHOUT_G722
-#include <g722_decoder.h>
-#endif
-
 #include "decoder.h"
 #include "session.h"
 #include "../rtpp_record_private.h"
@@ -136,10 +131,6 @@ decoder_get(struct decoder_stream *dp)
 int
 decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf, unsigned int ibytes)
 {
-    int fsize;
-    unsigned int obytes;
-    void *bp;
-
     switch (dp->pp->rpkt->pt) {
     case RTP_PCMU:
         ULAW2SL(obuf, ibuf, ibytes);
@@ -153,7 +144,12 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
         dp->dticks += ibytes;
         return ibytes * 2;
 
-    case RTP_G729:
+#ifndef WITHOUT_G729
+    case RTP_G729: {
+        int fsize;
+        unsigned int obytes;
+        void *bp;
+
         /* fwrite(ibuf, ibytes, 1, dp->f); */
         /* fflush(dp->f); */
         if (ibytes % 10 == 0)
@@ -180,6 +176,8 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
             dp->dticks += 80;
         }
         return obytes;
+    }
+#endif
 
 #ifndef WITHOUT_G722
     case RTP_G722:
@@ -206,8 +204,6 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
 int
 generate_silence(struct decoder_stream *dp, unsigned char *obuf, unsigned int iticks)
 {
-    unsigned int obytes;
-    void *bp;
 
     switch (dp->lpt) {
     case RTP_PCMU:
@@ -216,7 +212,10 @@ generate_silence(struct decoder_stream *dp, unsigned char *obuf, unsigned int it
         memset(obuf, 0, iticks * 2);
         return iticks * 2;
 
-    case RTP_G729:
+#ifndef WITHOUT_G729
+    case RTP_G729: {
+        unsigned int obytes;
+        void *bp;
         if (dp->g729_ctx == NULL)
             dp->g729_ctx = g729_decoder_new();
         if (dp->g729_ctx == NULL) {
@@ -234,6 +233,8 @@ generate_silence(struct decoder_stream *dp, unsigned char *obuf, unsigned int it
             obytes += iticks * 2;
         }
         return obytes;
+    }
+#endif
 
     default:
         return -1;

@@ -33,7 +33,9 @@
 
 #include <sys/types.h>
 
+#ifndef WITHOUT_G729
 #include <g729_decoder.h>
+#endif
 #ifndef WITHOUT_G722
 #include <g722_decoder.h>
 #endif
@@ -53,7 +55,9 @@ struct decoder_stream {
     unsigned char obuf[8 * 1024];	/* 0.5 seconds at 8 KHz 16 bits per sample */
     unsigned char *obp;
     unsigned int oblen;
+#ifndef WITHOUT_G729
     G729_CTX *g729_ctx;
+#endif
 #ifndef WITHOUT_G722
     G722_DEC_CTX *g722_ctx;
 #endif

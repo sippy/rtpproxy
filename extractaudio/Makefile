@@ -41,10 +41,15 @@ CFLAGS+= -DWITHOUT_G722
 .else
 LDADD+= -lg722
 .endif
+.if defined(WITHOUT_G729)
+CFLAGS+= -DWITHOUT_G729
+.else
+LDADD+= -lg729
+.endif
 
 CFLAGS+= -I${.CURDIR}/.. -I${LOCALBASE}/include
 LDFLAGS+= -L${LOCALBASE}/lib
-LDADD+=	-lg729 -lsndfile -lm
+LDADD+=	-lsndfile -lm
 
 _rtp.c: ${.CURDIR}/../rtp.c
 	ln -sf ${.CURDIR}/../rtp.c _rtp.c
