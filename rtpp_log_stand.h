@@ -24,33 +24,48 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id$
- *
  */
 
-#ifndef _RTPP_LOG_H_
-#define _RTPP_LOG_H_
+#ifndef _RTPP_LOG_STAND_H_
+#define _RTPP_LOG_STAND_H_
 
-#ifdef WITHOUT_SIPLOG
-#include "rtpp_log_stand.h"
-#else
-#include <siplog.h>
+#include <syslog.h>
+#include <stdarg.h>
 
-#define	rtpp_log_t	siplog_t
+struct cfg_stable;
 
-#define	RTPP_LOG_DBUG	SIPLOG_DBUG
-#define	RTPP_LOG_INFO	SIPLOG_INFO
-#define	RTPP_LOG_WARN	SIPLOG_WARN
-#define	RTPP_LOG_ERR	SIPLOG_ERR
-#define	RTPP_LOG_CRIT	SIPLOG_CRIT
+#define	rtpp_log_t	struct cfg_stable *
 
-#define	rtpp_log_open(gf, app, call_id, flags) siplog_open(app, call_id, flags)
-#define	rtpp_log_setlevel(handle, level) siplog_set_level(handle, level)
-#define	rtpp_log_write(level, handle, format, args...) siplog_write(level, handle, format, ## args)
-#define	rtpp_log_ewrite(level, handle, format, args...) siplog_ewrite(level, handle, format, ## args)
-#define	rtpp_log_close(handle) siplog_close(handle)
-#endif /* !WITHOUT_SIPLOG */
+#if 0
+#include "rtpp_defines.h"
+#endif
 
+#define	RTPP_LOG_DBUG	LOG_DEBUG
+#define	RTPP_LOG_INFO	LOG_INFO
+#define	RTPP_LOG_WARN	LOG_WARNING
+#define	RTPP_LOG_ERR	LOG_ERR
+#define	RTPP_LOG_CRIT	LOG_CRIT
+
+#define	rtpp_log_open(cf, app, call_id, flag) _rtpp_log_open(cf, app);
+#define	rtpp_log_write(level, handle, format, args...)			\
+	if (level <= handle->log_level) {				\
+		_rtpp_log_write(handle, level, __FUNCTION__, format,	\
+		    ## args);						\
+	};
+#define	rtpp_log_ewrite(level, handle, format, args...)			\
+	if (level <= handle->log_level) {				\
+		_rtpp_log_ewrite(handle, level, __FUNCTION__, format,	\
+		    ## args);						\
+	};
+#define	rtpp_log_close(handle) _rtpp_log_close();
+
+struct cfg_stable;
+
+void _rtpp_log_write(struct cfg_stable *, int, const char *, const char *, ...);
+void _rtpp_log_ewrite(struct cfg_stable *, int, const char *, const char *, ...);
+struct cfg_stable *_rtpp_log_open(struct cfg_stable *, const char *);
+void _rtpp_log_close(void);
 int rtpp_log_str2lvl(const char *);
+int rtpp_log_str2fac(const char *);
 
 #endif
