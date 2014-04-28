@@ -6,8 +6,8 @@
 
 . /etc/rc.subr
 
-name=rtpproxy
-rcvar=`set_rcvar`
+name="rtpproxy"
+rcvar="${name}_enable"
 
 command="/usr/local/bin/rtpproxy"
 pidfile="/var/run/rtpproxy.pid"
