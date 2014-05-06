@@ -91,6 +91,7 @@ struct cfg {
         int umode;			/* UDP control mode */
         int port_min;		/* Lowest UDP port for RTP */
         int port_max;		/* Highest UDP port number for RTP */
+        int port_ctl;		/* Port number for UDP control, 0 for Unix domain */
         int max_ttl;
         /*
          * The first address is for external interface, the second one - for

@@ -119,6 +119,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
     cf->stable.port_min = PORT_MIN;
     cf->stable.port_max = PORT_MAX;
+    cf->stable.port_ctl = 0;
 
     cf->stable.max_ttl = SESSION_TIMEOUT;
     cf->stable.tos = TOS;
@@ -479,6 +480,7 @@ init_controlfd(struct cfg *cf)
 	}
 	if (cp == NULL || *cp == '\0')
 	    cp = CPORT;
+	cf->stable.port_ctl = atoi(cp);
 	i = (cf->stable.umode == 6) ? AF_INET6 : AF_INET;
 	if (setbindhost(sstosa(&ifsin), i, cmd_sock, cp) != 0)
 	    exit(1);

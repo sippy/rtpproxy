@@ -161,6 +161,8 @@ create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
     for (i = 1; i < cf->stable.port_table_len; i++) {
 	idx = (cf->port_table_idx + i) % cf->stable.port_table_len;
 	*port = cf->stable.port_table[idx];
+	if (*port == cf->stable.port_ctl || *port == (cf->stable.port_ctl - 1))
+	    continue;
 	rval = create_twinlistener(&(cf->stable), ia, *port, fds);
 	if (rval == 0) {
 	    cf->port_table_idx = idx;
