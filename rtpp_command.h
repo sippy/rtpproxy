@@ -31,6 +31,47 @@
 #ifndef _RTPP_COMMAND_H_
 #define _RTPP_COMMAND_H_
 
+#define ECODE_CMDUNKN   0
+
+#define ECODE_PARSE_1   1
+#define ECODE_PARSE_2   2
+#define ECODE_PARSE_3   3
+#define ECODE_PARSE_4   4
+#define ECODE_PARSE_5   5
+#define ECODE_PARSE_6   6
+#define ECODE_PARSE_7   7
+#define ECODE_PARSE_8   8
+#define ECODE_PARSE_9   9
+#define ECODE_PARSE_10  10
+#define ECODE_PARSE_11  11
+#define ECODE_PARSE_12  12
+#define ECODE_PARSE_13  13
+#define ECODE_PARSE_14  14
+#define ECODE_PARSE_15  15
+#define ECODE_PARSE_16  16
+
+#define ECODE_INVLARG_1 31
+#define ECODE_INVLARG_2 32
+#define ECODE_INVLARG_3 33
+#define ECODE_INVLARG_4 34
+#define ECODE_INVLARG_5 35
+
+#define ECODE_SESUNKN   50
+
+#define ECODE_PLRFAIL   60
+
+#define ECODE_LSTFAIL_1 71
+#define ECODE_LSTFAIL_2 72
+#define ECODE_LSTFAIL_3 73
+
+#define ECODE_NOMEM_1   81
+#define ECODE_NOMEM_2   82
+#define ECODE_NOMEM_3   83
+#define ECODE_NOMEM_4   84
+#define ECODE_NOMEM_5   85
+
+#define ECODE_SLOWSHTDN 99
+
 struct proto_cap {
     const char  *pc_id;
     const char  *pc_description;

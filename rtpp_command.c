@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -318,7 +318,7 @@ get_command(struct cfg *cf, int controlfd, int *rval)
     cmd->cookie = NULL;
     if (cmd->argc < 1 || (cf->stable.umode != 0 && cmd->argc < 2)) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-        reply_error(cf, controlfd, cmd, 0);
+        reply_error(cf, controlfd, cmd, ECODE_PARSE_1);
         *rval = 0;
         free(cmd);
         return (NULL);
@@ -431,7 +431,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	     */
 	    if (cmd->argc != 2 && cmd->argc != 3) {
 		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		reply_error(cf, controlfd, cmd, 2);
+		reply_error(cf, controlfd, cmd, ECODE_PARSE_2);
 		return 0;
 	    }
 	    /*
@@ -454,7 +454,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	}
 	if (cmd->argc != 1 && cmd->argc != 2) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, 2);
+	    reply_error(cf, controlfd, cmd, ECODE_PARSE_3);
 	    return 0;
 	}
 	/* This returns base version. */
@@ -491,7 +491,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 
     default:
 	rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "unknown command");
-	reply_error(cf, controlfd, cmd, 3);
+	reply_error(cf, controlfd, cmd, ECODE_CMDUNKN);
 	return 0;
     }
     call_id = cmd->argv[1];
@@ -499,7 +499,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	max_argc = (op == UPDATE ? 8 : 6);
 	if (cmd->argc < 5 || cmd->argc > max_argc) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, 4);
+	    reply_error(cf, controlfd, cmd, ECODE_PARSE_4);
 	    return 0;
 	}
 	from_tag = cmd->argv[4];
@@ -521,7 +521,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	    if (len == -1) {
 		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		  "command syntax error - invalid URL encoding");
-		reply_error(cf, controlfd, cmd, 4);
+		reply_error(cf, controlfd, cmd, ECODE_PARSE_5);
 		return 0;
 	    }
 	    notify_tag[len] = '\0';
@@ -531,14 +531,14 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
         if (cmd->argv[0][1] == 'S' || cmd->argv[0][1] == 's') {
             if (cmd->argv[0][2] != '\0') {
                 rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-                reply_error(cf, controlfd, cmd, 1);
+                reply_error(cf, controlfd, cmd, ECODE_PARSE_6);
                 return 0;
             }
             record_single_file = (cf->stable.record_pcap == 0) ? 0 : 1;
         } else {
             if (cmd->argv[0][1] != '\0') {
                 rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-                reply_error(cf, controlfd, cmd, 1);
+                reply_error(cf, controlfd, cmd, ECODE_PARSE_7);
                 return 0;
             }
             record_single_file = 0;
@@ -547,7 +547,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
     if (op == COPY) {
 	if (cmd->argc < 4 || cmd->argc > 5) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, 1);
+	    reply_error(cf, controlfd, cmd, ECODE_PARSE_8);
 	    return 0;
 	}
 	recording_name = cmd->argv[2];
@@ -557,7 +557,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
     if (op == DELETE || op == RECORD || op == NOPLAY || op == QUERY) {
 	if (cmd->argc < 3 || cmd->argc > 4) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, 1);
+	    reply_error(cf, controlfd, cmd, ECODE_PARSE_9);
 	    return 0;
 	}
 	from_tag = cmd->argv[2];
@@ -567,7 +567,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	/* D, R and S commands don't take any modifiers */
 	if (cmd->argv[0][1] != '\0') {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, 1);
+	    reply_error(cf, controlfd, cmd, ECODE_PARSE_10);
 	    return 0;
 	}
     }
@@ -591,7 +591,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	    case 'E':
 		if (lidx < 0) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_PARSE_11);
 		    return 0;
 		}
 		lia[lidx] = cf->stable.bindaddr[1];
@@ -602,7 +602,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	    case 'I':
 		if (lidx < 0) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_PARSE_12);
 		    return 0;
 		}
 		lia[lidx] = cf->stable.bindaddr[0];
@@ -628,7 +628,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 		requested_nsamples = (strtol(cp + 1, &cp, 10) / 10) * 80;
 		if (requested_nsamples <= 0) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_PARSE_13);
 		    return 0;
 		}
 		cp--;
@@ -643,7 +643,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 		}
 		if (t == cp) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_PARSE_14);
 		    return 0;
 		}
 		codecs = alloca(cp - t + 1);
@@ -657,7 +657,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 		len = extractaddr(cp + 1, &t, &cp, &tpf);
 		if (len == -1) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_PARSE_15);
 		    return 0;
 		}
 		c = t[len];
@@ -668,7 +668,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 		if (local_addr == NULL) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		      "invalid local address: %s: %s", t, errmsg);
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_INVLARG_1);
 		    return 0;
 		}
 		t[len] = c;
@@ -680,7 +680,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 		len = extractaddr(cp + 1, &t, &cp, &tpf);
 		if (len == -1) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_PARSE_16);
 		    return 0;
 		}
 		c = t[len];
@@ -692,20 +692,20 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 		if (n != 0) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		      "invalid remote address: %s: %s", t, gai_strerror(n));
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_INVLARG_2);
 		    return 0;
 		}
 		if (local4remote(local_addr, satoss(local_addr)) == -1) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		      "can't find local address for remote address: %s", t);
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_INVLARG_3);
 		    return 0;
 		}
 		local_addr = addr2bindaddr(cf, local_addr, &errmsg);
 		if (local_addr == NULL) {
 		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
 		      "invalid local address: %s", errmsg);
-		    reply_error(cf, controlfd, cmd, 1);
+		    reply_error(cf, controlfd, cmd, ECODE_INVLARG_4);
 		    return 0;
 		}
 		t[len] = c;
@@ -730,7 +730,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 			ia[i] = malloc(SS_LEN(&tia));
 			if (ia[i] == NULL) {
 			    handle_nomem(cf, controlfd, cmd,
-			      5, ia, fds, spa, spb);
+			      ECODE_NOMEM_1, ia, fds, spa, spb);
 			    return 0;
 			}
 			memcpy(ia[i], &tia, SS_LEN(&tia));
@@ -777,7 +777,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	    reply_port(cf, controlfd, cmd, 0, lia);
 	    return 0;
 	}
-	reply_error(cf, controlfd, cmd, 8);
+	reply_error(cf, controlfd, cmd, ECODE_SESUNKN);
 	return 0;
     }
 
@@ -796,13 +796,13 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	handle_noplay(cf, spa, i);
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->codecs[i] == NULL) {
-		reply_error(cf, controlfd, cmd, 6);
+		reply_error(cf, controlfd, cmd, ECODE_INVLARG_5);
 		return 0;
 	    }
 	    codecs = spa->codecs[i];
 	}
 	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount) != 0) {
-	    reply_error(cf, controlfd, cmd, 6);
+	    reply_error(cf, controlfd, cmd, ECODE_PLRFAIL);
 	    return 0;
 	}
 	reply_ok(cf, controlfd, cmd);
@@ -837,7 +837,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	    }
 	    if (create_listener(cf, spa->laddr[i], &lport, fds) == -1) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create listener");
-		reply_error(cf, controlfd, cmd, 7);
+		reply_error(cf, controlfd, cmd, ECODE_LSTFAIL_1);
 		return 0;
 	    }
 	    assert(spa->fds[i] == -1);
@@ -873,19 +873,24 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	rtpp_log_write(RTPP_LOG_INFO, cf->stable.glog,
 	  "new session %s, tag %s requested, type %s",
 	  call_id, from_tag, weak ? "weak" : "strong");
-
+        if (cf->stable.slowshutdown != 0) {
+            rtpp_log_write(RTPP_LOG_INFO, cf->stable.glog,
+              "proxy is in the deorbiting-burn mode, new session rejected");
+            reply_error(cf, controlfd, cmd, ECODE_SLOWSHTDN);
+            return 0;
+        }
 	if (local_addr != NULL) {
 	    lia[0] = lia[1] = local_addr;
 	    if (lia[0] == NULL) {
 		rtpp_log_write(RTPP_LOG_ERR, spa->log,
 		  "can't create listener: %s", t);
-		reply_error(cf, controlfd, cmd, 10);
+		reply_error(cf, controlfd, cmd, ECODE_LSTFAIL_2);
 		return 0;
 	    }
 	}
 	if (create_listener(cf, lia[0], &lport, fds) == -1) {
 	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "can't create listener");
-	    reply_error(cf, controlfd, cmd, 10);
+	    reply_error(cf, controlfd, cmd, ECODE_LSTFAIL_3);
 	    return 0;
 	}
 
@@ -895,14 +900,14 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	 */
 	spa = malloc(sizeof(*spa));
 	if (spa == NULL) {
-	    handle_nomem(cf, controlfd, cmd, 11, ia,
+	    handle_nomem(cf, controlfd, cmd, ECODE_NOMEM_2, ia,
 	      fds, spa, spb);
 	    return 0;
 	}
 	/* spb is RTCP twin session for this one. */
 	spb = malloc(sizeof(*spb));
 	if (spb == NULL) {
-	    handle_nomem(cf, controlfd, cmd, 12, ia,
+	    handle_nomem(cf, controlfd, cmd, ECODE_NOMEM_3, ia,
 	      fds, spa, spb);
 	    return 0;
 	}
@@ -915,7 +920,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	}
 	spa->call_id = strdup(call_id);
 	if (spa->call_id == NULL) {
-	    handle_nomem(cf, controlfd, cmd, 13, ia,
+	    handle_nomem(cf, controlfd, cmd, ECODE_NOMEM_4, ia,
 	      fds, spa, spb);
 	    return 0;
 	}
@@ -923,7 +928,7 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	spa->tag = strdup(from_tag);
 	spa->tag_nomedianum = strdup(from_tag);
 	if (spa->tag == NULL) {
-	    handle_nomem(cf, controlfd, cmd, 14, ia,
+	    handle_nomem(cf, controlfd, cmd, ECODE_NOMEM_5, ia,
 	      fds, spa, spb);
 	    return 0;
 	}

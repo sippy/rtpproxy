@@ -135,6 +135,7 @@ struct cfg {
         struct rtpp_cmd_async_cf *rtpp_cmd_cf;
         struct rtpp_proc_async_cf *rtpp_proc_cf;
         struct rtpp_anetio_cf *rtpp_netio_cf;
+        int slowshutdown;
     } stable;
 
     /*

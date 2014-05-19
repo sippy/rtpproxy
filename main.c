@@ -67,7 +67,6 @@
 
 static const char *cmd_sock = CMD_SOCK;
 static const char *pid_file = PID_FILE;
-static rtpp_log_t glog;
 
 static void usage(void);
 
@@ -83,12 +82,25 @@ usage(void)
     exit(1);
 }
 
+static struct cfg *_sig_cf;
+
 static void
 fatsignal(int sig)
 {
 
-    rtpp_log_write(RTPP_LOG_INFO, glog, "got signal %d", sig);
+    rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable.glog, "got signal %d", sig);
     exit(0);
+}
+
+static void
+sighup(int sig)
+{
+
+    if (_sig_cf->stable.slowshutdown == 0) {
+        rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable.glog,
+          "got SIGHUP, initiating deorbiting-burn sequence");
+    }
+    _sig_cf->stable.slowshutdown = 1;
 }
 
 static void
@@ -101,8 +113,8 @@ ehandler(void)
 
     unlink(cmd_sock);
     unlink(pid_file);
-    rtpp_log_write(RTPP_LOG_INFO, glog, "rtpproxy ended");
-    rtpp_log_close(glog);
+    rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable.glog, "rtpproxy ended");
+    rtpp_log_close(_sig_cf->stable.glog);
 }
 
 static void
@@ -130,6 +142,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.sched_hz = rtpp_get_sched_hz();
     cf->stable.sched_policy = SCHED_OTHER;
     cf->stable.target_runtime = 1.0 / POLL_RATE;
+    cf->stable.slowshutdown = 0;
 
     cf->timeout_handler = rtpp_th_init(NULL, -1, 0);
     if (cf->timeout_handler == NULL)
@@ -536,8 +549,9 @@ main(int argc, char **argv)
     if (rtpp_notify_init() != 0)
         errx(1, "can't start notification thread");
 
-    glog = cf.stable.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
+    cf.stable.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
     rtpp_log_setlevel(cf.stable.glog, cf.stable.log_level);
+    _sig_cf = &cf;
     atexit(ehandler);
     rtpp_log_write(RTPP_LOG_INFO, cf.stable.glog, "rtpproxy started, pid %d", getpid());
 
@@ -550,7 +564,7 @@ main(int argc, char **argv)
 	rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable.glog, "can't open pidfile for writing");
     }
 
-    signal(SIGHUP, fatsignal);
+    signal(SIGHUP, sighup);
     signal(SIGINT, fatsignal);
     signal(SIGKILL, fatsignal);
     signal(SIGPIPE, SIG_IGN);
@@ -637,6 +651,17 @@ main(int argc, char **argv)
         }
 #endif
         counter += 1;
+        if (cf.stable.slowshutdown != 0) {
+            pthread_mutex_lock(&cf.sessinfo.lock);
+            if (cf.sessinfo.nsessions == 0) {
+                /* The below unlock is not necessary, but does not hurt either */
+                pthread_mutex_unlock(&cf.sessinfo.lock);
+                rtpp_log_write(RTPP_LOG_INFO, cf.stable.glog,
+                  "deorbiting-burn sequence completed, exiting");
+                break;
+            }
+            pthread_mutex_unlock(&cf.sessinfo.lock);
+        }
     }
 
     exit(0);
