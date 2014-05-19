@@ -44,6 +44,6 @@ extern struct proto_cap proto_caps[];
 
 int handle_command(struct cfg *, int, struct rtpp_command *, double);
 void free_command(struct rtpp_command *);
-struct rtpp_command *get_command(struct cfg_stable *, int, int *);
+struct rtpp_command *get_command(struct cfg *, int, int *);
 
 #endif

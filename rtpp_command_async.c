@@ -74,7 +74,7 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
         } else {
             controlfd = controlfd_in;
         }
-        cmd = get_command(&cf->stable, controlfd, &rval);
+        cmd = get_command(cf, controlfd, &rval);
         if (cmd != NULL) {
             pthread_mutex_lock(&cf->glock);
             i = handle_command(cf, controlfd, cmd, dtime);
