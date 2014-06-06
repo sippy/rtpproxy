@@ -33,13 +33,18 @@ class Rtp_proxy_client_udp(object):
     pending_requests = None
     is_local = False
     worker = None
+    bind_address = None
+    global_config = None
 
-    def __init__(self, global_config, address):
+    def __init__(self, global_config, address, bind_address = None):
         self.address = address
         self.is_local = False
-        self.worker = Udp_server(global_config, None, self.process_reply)
+        self.worker = Udp_server(global_config, bind_address, \
+          self.process_reply, flags = 0)
         self.pending_requests = {}
         self.proxy_address = address[0]
+        self.bind_address = bind_address
+        self.global_config = global_config
 
     def send_command(self, command, result_callback = None, *callback_parameters):
         cookie = md5(str(random()) + str(time())).hexdigest()
@@ -69,5 +74,10 @@ class Rtp_proxy_client_udp(object):
         if parameters[3] != None:
             parameters[3](result.strip(), *parameters[4])
 
-    def reconnect(self, address):
+    def reconnect(self, address, bind_address = None):
         self.address = address
+        if bind_address != self.bind_address:
+            self.worker.shutdown()
+            self.worker = Udp_server(self.global_config, bind_address, \
+              self.process_reply, flags = 0)
+            self.bind_address = bind_address

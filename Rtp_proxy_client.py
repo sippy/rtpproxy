@@ -47,12 +47,14 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
     preceived = None
     ptransmitted = None
 
-    def __init__(self, global_config, *address):
+    def __init__(self, global_config, *address, **kwargs):
         #print 'Rtp_proxy_client', address
         if len(address) > 0 and type(address[0]) in (tuple, list):
-            Rtp_proxy_client_udp.__init__(self, global_config, *address)
+            Rtp_proxy_client_udp.__init__(self, global_config, *address, \
+              **kwargs)
         else:            
-            Rtp_proxy_client_local.__init__(self, global_config, *address)
+            Rtp_proxy_client_local.__init__(self, global_config, *address, \
+              **kwargs)
         self.version_check()
 
     def send_command(self, *args, **kwargs):
