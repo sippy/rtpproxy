@@ -116,6 +116,10 @@ class AsyncReceiver(Thread):
             reactor.callFromThread(self.userv.handle_read, data, address)
         self.userv = None
 
+_DEFAULT_FLAGS = socket.SO_REUSEADDR
+if hasattr(socket, 'SO_REUSEPORT'):
+    _DEFAULT_FLAGS |= socket.SO_REUSEPORT
+
 class Udp_server(object):
     skt = None
     family = None
@@ -126,7 +130,8 @@ class Udp_server(object):
     wi_available = None
     wi = None
 
-    def __init__(self, global_config, address, data_callback, family = None):
+    def __init__(self, global_config, address, data_callback, family = None, \
+      flags = _DEFAULT_FLAGS):
         self.laddress = address
         if family == None:
             if address != None and address[0].startswith('['):
@@ -142,8 +147,10 @@ class Udp_server(object):
                 address = (ai[0][4][0], address[1])
             else:
                 address = (ai[0][4][0], address[1], ai[0][4][2], ai[0][4][3])
-            self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            if hasattr(socket, 'SO_REUSEPORT'):
+            if (flags & socket.SO_REUSEADDR) != 0:
+                self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if hasattr(socket, 'SO_REUSEPORT') and \
+              (flags & socket.SO_REUSEPORT) != 0:
                 self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             self.skt.bind(address)
         self.data_callback = data_callback
