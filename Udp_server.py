@@ -129,6 +129,8 @@ class Udp_server(object):
     stats = None
     wi_available = None
     wi = None
+    asenders = None
+    areceivers = None
 
     def __init__(self, global_config, address, data_callback, family = None, \
       flags = _DEFAULT_FLAGS):
@@ -158,9 +160,11 @@ class Udp_server(object):
         self.stats = [0, 0, 0]
         self.wi_available = Condition()
         self.wi = []
+        self.asenders = []
+        self.areceivers = []
         for i in range(0, MAX_WORKERS):
-            AsyncSender(self)
-            AsyncReceiver(self)
+            self.asenders.append(AsyncSender(self))
+            self.areceivers.append(AsyncReceiver(self))
 
     def send_to(self, data, address):
         if self.family == socket.AF_INET6:
@@ -190,6 +194,10 @@ class Udp_server(object):
         self.wi_available.notify()
         self.wi_available.release()
         self.data_callback = None
+        for worker in self.asenders + self.areceivers:
+            worker.join()
+        self.asenders = None
+        self.areceivers = None
 
 if __name__ == '__main__':
     from sys import exit
@@ -232,3 +240,7 @@ if __name__ == '__main__':
     udp_server_pong6 = Udp_server({}, ('::1', 54321), pong_received6, socket.AF_INET6)
     udp_server_pong6.send_to('ping!', ('[::1]', 12345))
     reactor.run()
+    udp_server_ping.shutdown()
+    udp_server_pong.shutdown()
+    udp_server_ping6.shutdown()
+    udp_server_pong6.shutdown()
