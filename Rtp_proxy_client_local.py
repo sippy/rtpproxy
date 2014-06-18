@@ -116,7 +116,6 @@ class Rtp_proxy_client_local(object):
       bind_address = None):
         self.address = address
         self.is_local = True
-        self.proxy_address = global_config['_sip_address']
         self.wi_available = Condition()
         self.wi = []
         self.worker = _RTPPLWorker(self)

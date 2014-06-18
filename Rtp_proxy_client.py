@@ -54,9 +54,11 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         if len(address) > 0 and type(address[0]) in (tuple, list):
             Rtp_proxy_client_udp.__init__(self, global_config, *address, \
               **kwargs)
+            self.proxy_address = address[0]
         else:            
             Rtp_proxy_client_local.__init__(self, global_config, *address, \
               **kwargs)
+            self.proxy_address = global_config['_sip_address']
         self.version_check()
 
     def send_command(self, *args, **kwargs):

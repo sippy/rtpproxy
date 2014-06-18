@@ -44,7 +44,6 @@ class Rtp_proxy_client_udp(object):
         self.worker = Udp_server(global_config, bind_address, \
           self.process_reply, flags = 0)
         self.pending_requests = {}
-        self.proxy_address = address[0]
         self.bind_address = bind_address
         self.global_config = global_config
 
