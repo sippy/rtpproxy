@@ -74,10 +74,10 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
         } else {
             controlfd = controlfd_in;
         }
-        cmd = get_command(cf, controlfd, &rval);
+        cmd = get_command(cf, controlfd, &rval, dtime);
         if (cmd != NULL) {
             pthread_mutex_lock(&cf->glock);
-            i = handle_command(cf, controlfd, cmd, dtime);
+            i = handle_command(cf, cmd);
             pthread_mutex_unlock(&cf->glock);
             free_command(cmd);
         } else {
