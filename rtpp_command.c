@@ -31,17 +31,11 @@
 #include "config.h"
 
 #include <sys/types.h>
-#include <sys/resource.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#ifdef HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
 #include <assert.h>
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <netdb.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,25 +47,16 @@
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
+#include "rtpp_command_copy.h"
+#include "rtpp_command_parse.h"
+#include "rtpp_command_private.h"
+#include "rtpp_command_ul.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
-#include "rtpp_record.h"
-#include "rtp_resizer.h"
 #include "rtpp_session.h"
 #include "rtp_server.h"
 #include "rtpp_util.h"
-
-struct rtpp_command
-{
-    char buf[1024 * 8];
-    char buf_t[256];
-    char *argv[10];
-    int argc;
-    struct sockaddr_storage raddr;
-    socklen_t rlen;
-    char *cookie;
-};
 
 struct proto_cap proto_caps[] = {
     /*
@@ -88,20 +73,22 @@ struct proto_cap proto_caps[] = {
     { "20081224", "Support for session timeout notifications" },
     { "20090810", "Support for automatic bridging" },
     { "20140323", "Support for tracking/reporting load" },
+    { "20140617", "Support for anchoring session connect time" },
     { NULL, NULL }
 };
 
+struct d_opts;
+
 static int create_twinlistener(struct cfg_stable *, struct sockaddr *, int, int *);
-static int create_listener(struct cfg *, struct sockaddr *, int *, int *);
-static int handle_delete(struct cfg *, char *, char *, char *, int);
+static int handle_delete(struct cfg *,  struct common_cmd_args *, int);
 static void handle_noplay(struct cfg *, struct rtpp_session *, int);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
-static void handle_copy(struct cfg *, struct rtpp_session *, int, char *, int);
-static int handle_record(struct cfg *, char *, char *, char *, int);
-static void handle_query(struct cfg *, int, struct rtpp_command *,
+static int handle_record(struct cfg *, struct common_cmd_args *, int);
+static void handle_query(struct cfg *, struct rtpp_command *,
   struct rtpp_session *, int);
-static void handle_info(struct cfg *, int, struct rtpp_command *,
+static void handle_info(struct cfg *, struct rtpp_command *,
   const char *);
+static void handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd);
 
 static int
 create_twinlistener(struct cfg_stable *cf, struct sockaddr *ia, int port, int *fds)
@@ -151,8 +138,8 @@ failure:
     return rval;
 }
 
-static int
-create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
+int
+rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
 {
     int i, idx, rval;
 
@@ -176,44 +163,43 @@ create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
 }
 
 static void
-doreply(struct cfg *cf, int fd, char *buf, int len,
-  struct rtpp_command *cmd)
+doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd)
 {
 
     buf[len] = '\0';
     rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "sending reply \"%s\"", buf);
     if (cf->stable.umode == 0) {
-	write(fd, buf, len);
+	write(cmd->controlfd, buf, len);
     } else {
         if (cmd->cookie != NULL) {
             len = snprintf(cmd->buf, sizeof(cmd->buf), "%s %s", cmd->cookie,
               buf);
             buf = cmd->buf;
         }
-        rtpp_anetio_sendto(cf->stable.rtpp_netio_cf, fd, buf, len, 0,
+        rtpp_anetio_sendto(cf->stable.rtpp_netio_cf, cmd->controlfd, buf, len, 0,
           sstosa(&cmd->raddr), cmd->rlen);
     }
 }
 
 static void
-reply_number(struct cfg *cf, int fd, struct rtpp_command *cmd,
+reply_number(struct cfg *cf, struct rtpp_command *cmd,
   int number)
 {
     int len;
 
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", number);
-    doreply(cf, fd, cmd->buf_t, len, cmd);
+    doreply(cf, cmd->buf_t, len, cmd);
 }
 
 static void
-reply_ok(struct cfg *cf, int fd, struct rtpp_command *cmd)
+reply_ok(struct cfg *cf, struct rtpp_command *cmd)
 {
 
-    reply_number(cf, fd, cmd, 0);
+    reply_number(cf, cmd, 0);
 }
 
-static void
-reply_port(struct cfg *cf, int fd, struct rtpp_command *cmd,
+void
+reply_port(struct cfg *cf, struct rtpp_command *cmd,
   int lport, struct sockaddr **lia)
 {
     int len;
@@ -223,45 +209,17 @@ reply_port(struct cfg *cf, int fd, struct rtpp_command *cmd,
     else
 	len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", lport,
           addr2char(lia[0]), (lia[0]->sa_family == AF_INET) ? "" : " 6");
-    doreply(cf, fd, cmd->buf_t, len, cmd);
+    doreply(cf, cmd->buf_t, len, cmd);
 }
 
-static void
-reply_error(struct cfg *cf, int fd, struct rtpp_command *cmd,
+void
+reply_error(struct cfg *cf, struct rtpp_command *cmd,
   int ecode)
 {
     int len;
 
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "E%d\n", ecode);
-    doreply(cf, fd, cmd->buf_t, len, cmd);
-}
-
-static void
-handle_nomem(struct cfg *cf, int fd, struct rtpp_command *cmd,
-  int ecode, struct sockaddr **ia, int *fds,
-  struct rtpp_session *spa, struct rtpp_session *spb)
-{
-    int i;
-
-    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "can't allocate memory");
-    for (i = 0; i < 2; i++)
-	if (ia[i] != NULL)
-	    free(ia[i]);
-    if (spa != NULL) {
-	if (spa->call_id != NULL)
-	    free(spa->call_id);
-	if (spa->tag != NULL)
-	    free(spa->tag);
-	if (spa->tag_nomedianum != NULL)
-	    free(spa->tag_nomedianum);
-	free(spa);
-    }
-    if (spb != NULL)
-	free(spb);
-    for (i = 0; i < 2; i++)
-	if (fds[i] != -1)
-	    close(fds[i]);
-    reply_error(cf, fd, cmd, ecode);
+    doreply(cf, cmd->buf_t, len, cmd);
 }
 
 void
@@ -272,7 +230,7 @@ free_command(struct rtpp_command *cmd)
 }
 
 struct rtpp_command *
-get_command(struct cfg *cf, int controlfd, int *rval)
+get_command(struct cfg *cf, int controlfd, int *rval, double dtime)
 {
     char **ap;
     char *cp;
@@ -284,6 +242,9 @@ get_command(struct cfg *cf, int controlfd, int *rval)
         *rval = ENOMEM;
         return (NULL);
     }
+    memset(cmd, 0, sizeof(struct rtpp_command));
+    cmd->controlfd = controlfd;
+    cmd->dtime = dtime;
     if (cf->stable.umode == 0) {
         for (;;) {
             len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
@@ -307,18 +268,16 @@ get_command(struct cfg *cf, int controlfd, int *rval)
     rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "received command \"%s\"", cmd->buf);
 
     cp = cmd->buf;
-    cmd->argc = 0;
-    memset(cmd->argv, 0, sizeof(cmd->argv));
-    for (ap = cmd->argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;)
+    for (ap = cmd->argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
         if (**ap != '\0') {
             cmd->argc++;
             if (++ap >= &cmd->argv[10])
                 break;
         }
-    cmd->cookie = NULL;
+    }
     if (cmd->argc < 1 || (cf->stable.umode != 0 && cmd->argc < 2)) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-        reply_error(cf, controlfd, cmd, ECODE_PARSE_1);
+        reply_error(cf, cmd, ECODE_PARSE_1);
         *rval = 0;
         free(cmd);
         return (NULL);
@@ -331,495 +290,210 @@ get_command(struct cfg *cf, int controlfd, int *rval)
             cmd->argv[i - 1] = cmd->argv[i];
         cmd->argc--;
         cmd->argv[cmd->argc] = NULL;
-    } else {
-        cmd->cookie = NULL;
     }
+
     return (cmd);
 }
 
+struct d_opts {
+    int weak;
+};
+
 int
-handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double dtime)
+handle_command(struct cfg *cf, struct rtpp_command *cmd)
 {
-    int len, i, pidx, asymmetric;
-    int external, pf, lidx, playcount, weak, tpf;
-    int fds[2], lport, n;
-    char *cp, *call_id, *from_tag, *to_tag, *addr, *port;
-    char *pname, *codecs, *recording_name, *t;
-    struct rtpp_session *spa, *spb;
-    const char *rname, *errmsg;
-    struct sockaddr *ia[2], *lia[2];
-    int requested_nsamples;
-    enum {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, QUERY} op;
-    int max_argc, record_single_file;
-    char *socket_name_u, *notify_tag;
-    struct sockaddr *local_addr;
-    char c;
+    int i;
+    int playcount;
+    char *cp;
+    char *pname, *codecs, *recording_name;
+    struct rtpp_session *spa;
+    int record_single_file;
+    struct common_cmd_args cca;
+    struct ul_opts *ulop;
+    struct d_opts dopt;
 
-    requested_nsamples = -1;
-    ia[0] = ia[1] = NULL;
-    spa = spb = NULL;
-    lia[0] = lia[1] = cf->stable.bindaddr[0];
-    lidx = 1;
-    fds[0] = fds[1] = -1;
+    spa = NULL;
     recording_name = NULL;
-    socket_name_u = notify_tag = NULL;
-    local_addr = NULL;
     codecs = NULL;
+    memset(&cca, '\0', sizeof(cca));
 
-    addr = port = NULL;
-    switch (cmd->argv[0][0]) {
-    case 'u':
-    case 'U':
-	/* U[opts] callid remote_ip remote_port from_tag [to_tag] */
-	op = UPDATE;
-	rname = "update/create";
-	break;
+    /* Step I: parse parameters that are common to all ops */
+    if (rtpp_command_pre_parse(cf, cmd, &cca) != 0) {
+        /* Error reply is handled by the rtpp_command_pre_parse() */
+        return 0;
+    }
 
-    case 'l':
-    case 'L':
-	op = LOOKUP;
-	rname = "lookup";
-	break;
+    /* Step II: parse parameters that are specific to a particular op and run simple ops */
+    switch (cca.op) {
+    case VER_FEATURE:
+        handle_ver_feature(cf, cmd);
+        return 0;
 
-    case 'd':
-    case 'D':
-	op = DELETE;
-	rname = "delete";
-	break;
+    case VERSION:
+        /* This returns base version. */
+        reply_number(cf, cmd, CPROTOVER);
+        return 0;
 
-    case 'p':
-    case 'P':
-	/*
-	 * P callid pname codecs from_tag to_tag
-	 *
-	 *   <codecs> could be either comma-separated list of supported
-	 *   payload types or word "session" (without quotes), in which
-	 *   case list saved on last session update will be used instead.
-	 */
-	op = PLAY;
-	rname = "play";
-	playcount = 1;
-	pname = cmd->argv[2];
-	codecs = cmd->argv[3];
-	break;
-
-    case 'r':
-    case 'R':
-	op = RECORD;
-	rname = "record";
-	break;
-
-    case 'c':
-    case 'C':
-	op = COPY;
-	rname = "copy";
-	break;
-
-    case 's':
-    case 'S':
-	op = NOPLAY;
-	rname = "noplay";
-	break;
-
-    case 'v':
-    case 'V':
-	if (cmd->argv[0][1] == 'F' || cmd->argv[0][1] == 'f') {
-	    int i, known;
-	    /*
-	     * Wait for protocol version datestamp and check whether we
-	     * know it.
-	     */
-	    if (cmd->argc != 2 && cmd->argc != 3) {
-		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		reply_error(cf, controlfd, cmd, ECODE_PARSE_2);
-		return 0;
-	    }
-	    /*
-	     * Only list 20081224 protocol mod as supported if
-	     * user actually enabled notification with -n
-	     */
-	    if (strcmp(cmd->argv[1], "20081224") == 0 &&
-	      rtpp_th_get_sn(cf->timeout_handler) == NULL) {
-		reply_number(cf, controlfd, cmd, 0);
-		return 0;
-	    }
-	    for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
-		if (!strcmp(cmd->argv[1], proto_caps[i].pc_id)) {
-		    known = 1;
-		    break;
-		}
-	    }
-	    reply_number(cf, controlfd, cmd, known);
-	    return 0;
-	}
-	if (cmd->argc != 1 && cmd->argc != 2) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, ECODE_PARSE_3);
-	    return 0;
-	}
-	/* This returns base version. */
-	reply_number(cf, controlfd, cmd, CPROTOVER);
-	return 0;
-
-    case 'i':
-    case 'I':
-	handle_info(cf, controlfd, cmd, &cmd->argv[0][1]);
-	return 0;
-	break;
-
-    case 'q':
-    case 'Q':
-	op = QUERY;
-	rname = "query";
-	break;
-
-    case 'x':
-    case 'X':
+    case DELETE_ALL:
         /* Delete all active sessions */
         rtpp_log_write(RTPP_LOG_INFO, cf->stable.glog, "deleting all active sessions");
         pthread_mutex_lock(&cf->sessinfo.lock);
         for (i = 0; i < cf->sessinfo.nsessions; i++) {
-	    spa = cf->sessinfo.sessions[i];
-	    if (spa == NULL || spa->sidx[0] != i)
-		continue;
-	    remove_session(cf, spa);
+            spa = cf->sessinfo.sessions[i];
+            if (spa == NULL || spa->sidx[0] != i)
+                continue;
+            remove_session(cf, spa);
         }
         pthread_mutex_unlock(&cf->sessinfo.lock);
-        reply_ok(cf, controlfd, cmd);
+        reply_ok(cf, cmd);
         return 0;
+
+    case INFO:
+        handle_info(cf, cmd, &cmd->argv[0][1]);
+        return 0;
+
+    case PLAY:
+        /*
+         * P callid pname codecs from_tag to_tag
+         *
+         *   <codecs> could be either comma-separated list of supported
+         *   payload types or word "session" (without quotes), in which
+         *   case list saved on last session update will be used instead.
+         */
+        playcount = 1;
+        pname = cmd->argv[2];
+        codecs = cmd->argv[3];
+	if (cmd->argv[0][1] != '\0')
+	    playcount = atoi(cmd->argv[0] + 1);
         break;
 
-    default:
-	rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "unknown command");
-	reply_error(cf, controlfd, cmd, ECODE_CMDUNKN);
-	return 0;
-    }
-    call_id = cmd->argv[1];
-    if (op == UPDATE || op == LOOKUP || op == PLAY) {
-	max_argc = (op == UPDATE ? 8 : 6);
-	if (cmd->argc < 5 || cmd->argc > max_argc) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, ECODE_PARSE_4);
-	    return 0;
-	}
-	from_tag = cmd->argv[4];
-	to_tag = cmd->argv[5];
-	if (op == PLAY && cmd->argv[0][1] != '\0')
-	    playcount = atoi(cmd->argv[0] + 1);
-	if (op == UPDATE && cmd->argc > 6) {
-	    if (cmd->argc == 8) {
-		socket_name_u = cmd->argv[6];
-		notify_tag = cmd->argv[7];
-	    } else {
-		socket_name_u = cmd->argv[5];
-		notify_tag = cmd->argv[6];
-		to_tag = NULL;
-	    }
-	    if (strncmp("unix:", socket_name_u, 5) == 0)
-		socket_name_u += 5;
-	    len = url_unquote((uint8_t *)notify_tag, strlen(notify_tag));
-	    if (len == -1) {
-		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
-		  "command syntax error - invalid URL encoding");
-		reply_error(cf, controlfd, cmd, ECODE_PARSE_5);
-		return 0;
-	    }
-	    notify_tag[len] = '\0';
-	}
-    }
-    if (op == COPY || op == RECORD) {
+    case COPY:
+        recording_name = cmd->argv[2];
+        /* Fallthrough */
+    case RECORD:
         if (cmd->argv[0][1] == 'S' || cmd->argv[0][1] == 's') {
             if (cmd->argv[0][2] != '\0') {
                 rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-                reply_error(cf, controlfd, cmd, ECODE_PARSE_6);
+                reply_error(cf, cmd, ECODE_PARSE_2);
                 return 0;
             }
             record_single_file = (cf->stable.record_pcap == 0) ? 0 : 1;
         } else {
             if (cmd->argv[0][1] != '\0') {
                 rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-                reply_error(cf, controlfd, cmd, ECODE_PARSE_7);
+                reply_error(cf, cmd, ECODE_PARSE_3);
                 return 0;
             }
             record_single_file = 0;
         }
-    }
-    if (op == COPY) {
-	if (cmd->argc < 4 || cmd->argc > 5) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, ECODE_PARSE_8);
-	    return 0;
-	}
-	recording_name = cmd->argv[2];
-	from_tag = cmd->argv[3];
-	to_tag = cmd->argv[4];
-    }
-    if (op == DELETE || op == RECORD || op == NOPLAY || op == QUERY) {
-	if (cmd->argc < 3 || cmd->argc > 4) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, ECODE_PARSE_9);
-	    return 0;
-	}
-	from_tag = cmd->argv[2];
-	to_tag = cmd->argv[3];
-    }
-    if (op == DELETE || op == NOPLAY) {
-	/* D, R and S commands don't take any modifiers */
-	if (cmd->argv[0][1] != '\0') {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-	    reply_error(cf, controlfd, cmd, ECODE_PARSE_10);
-	    return 0;
-	}
-    }
-    if (op == UPDATE || op == LOOKUP || op == DELETE) {
-	addr = cmd->argv[2];
-	port = cmd->argv[3];
-	/* Process additional command modifiers */
-	external = 1;
-	/* In bridge mode all clients are assumed to be asymmetric */
-	asymmetric = (cf->stable.bmode != 0) ? 1 : 0;
-	pf = AF_INET;
-	weak = 0;
-	for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
-	    switch (*cp) {
-	    case 'a':
-	    case 'A':
-		asymmetric = 1;
-		break;
+        break;
 
-	    case 'e':
-	    case 'E':
-		if (lidx < 0) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, ECODE_PARSE_11);
-		    return 0;
-		}
-		lia[lidx] = cf->stable.bindaddr[1];
-		lidx--;
-		break;
+    case DELETE:
+        /* D[w] call_id from_tag [to_tag] */
+        dopt.weak = 0;
+        for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
+            switch (*cp) {
+            case 'w':
+            case 'W':
+                dopt.weak = 1;
+                break;
 
-	    case 'i':
-	    case 'I':
-		if (lidx < 0) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, ECODE_PARSE_12);
-		    return 0;
-		}
-		lia[lidx] = cf->stable.bindaddr[0];
-		lidx--;
-		break;
+            default:
+                rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
+                  "DELETE: unknown command modifier `%c'", *cp);
+                reply_error(cf, cmd, ECODE_PARSE_4);
+                break;
+            }
+        }
+        break;
 
-	    case '6':
-		pf = AF_INET6;
-		break;
+    case UPDATE:
+    case LOOKUP:
+        ulop = rtpp_command_ul_opts_parse(cf, cmd, &cca);
+        if (ulop == NULL) {
+            return 0;
+        }
+	break;
 
-	    case 's':
-	    case 'S':
-		asymmetric = 0;
-		break;
-
-	    case 'w':
-	    case 'W':
-		weak = 1;
-		break;
-
-	    case 'z':
-	    case 'Z':
-		requested_nsamples = (strtol(cp + 1, &cp, 10) / 10) * 80;
-		if (requested_nsamples <= 0) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, ECODE_PARSE_13);
-		    return 0;
-		}
-		cp--;
-		break;
-
-	    case 'c':
-	    case 'C':
-		cp += 1;
-		for (t = cp; *cp != '\0'; cp++) {
-		    if (!isdigit(*cp) && *cp != ',')
-			break;
-		}
-		if (t == cp) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, ECODE_PARSE_14);
-		    return 0;
-		}
-		codecs = alloca(cp - t + 1);
-		memcpy(codecs, t, cp - t);
-		codecs[cp - t] = '\0';
-		cp--;
-		break;
-
-	    case 'l':
-	    case 'L':
-		len = extractaddr(cp + 1, &t, &cp, &tpf);
-		if (len == -1) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, ECODE_PARSE_15);
-		    return 0;
-		}
-		c = t[len];
-		t[len] = '\0';
-                pthread_mutex_unlock(&cf->glock);
-		local_addr = host2bindaddr(cf, t, tpf, &errmsg);
-                pthread_mutex_lock(&cf->glock);
-		if (local_addr == NULL) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
-		      "invalid local address: %s: %s", t, errmsg);
-		    reply_error(cf, controlfd, cmd, ECODE_INVLARG_1);
-		    return 0;
-		}
-		t[len] = c;
-		cp--;
-		break;
-
-	    case 'r':
-	    case 'R':
-		len = extractaddr(cp + 1, &t, &cp, &tpf);
-		if (len == -1) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "command syntax error");
-		    reply_error(cf, controlfd, cmd, ECODE_PARSE_16);
-		    return 0;
-		}
-		c = t[len];
-		t[len] = '\0';
-		local_addr = alloca(sizeof(struct sockaddr_storage));
-                pthread_mutex_unlock(&cf->glock);
-		n = resolve(local_addr, tpf, t, SERVICE, AI_PASSIVE);
-                pthread_mutex_lock(&cf->glock);
-		if (n != 0) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
-		      "invalid remote address: %s: %s", t, gai_strerror(n));
-		    reply_error(cf, controlfd, cmd, ECODE_INVLARG_2);
-		    return 0;
-		}
-		if (local4remote(local_addr, satoss(local_addr)) == -1) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
-		      "can't find local address for remote address: %s", t);
-		    reply_error(cf, controlfd, cmd, ECODE_INVLARG_3);
-		    return 0;
-		}
-		local_addr = addr2bindaddr(cf, local_addr, &errmsg);
-		if (local_addr == NULL) {
-		    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog,
-		      "invalid local address: %s", errmsg);
-		    reply_error(cf, controlfd, cmd, ECODE_INVLARG_4);
-		    return 0;
-		}
-		t[len] = c;
-		cp--;
-		break;
-
-	    default:
-		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "unknown command modifier `%c'",
-		  *cp);
-		break;
-	    }
-	}
-	if (op != DELETE && addr != NULL && port != NULL && strlen(addr) >= 7) {
-	    struct sockaddr_storage tia;
-
-            pthread_mutex_unlock(&cf->glock);
-            n = resolve(sstosa(&tia), pf, addr, port, AI_NUMERICHOST);
-            pthread_mutex_lock(&cf->glock);
-            if (n == 0) {
-		if (!ishostnull(sstosa(&tia))) {
-		    for (i = 0; i < 2; i++) {
-			ia[i] = malloc(SS_LEN(&tia));
-			if (ia[i] == NULL) {
-			    handle_nomem(cf, controlfd, cmd,
-			      ECODE_NOMEM_1, ia, fds, spa, spb);
-			    return 0;
-			}
-			memcpy(ia[i], &tia, SS_LEN(&tia));
-		    }
-		    /* Set port for RTCP, will work both for IPv4 and IPv6 */
-		    n = ntohs(satosin(ia[1])->sin_port);
-		    satosin(ia[1])->sin_port = htons(n + 1);
-		}
-	    } else {
-		rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "getaddrinfo: %s",
-		  gai_strerror(n));
-	    }
-	}
+    default:
+        break;
     }
 
     /*
      * Record and delete need special handling since they apply to all
      * streams in the session.
      */
-    switch (op) {
+    switch (cca.op) {
     case DELETE:
-	i = handle_delete(cf, call_id, from_tag, to_tag, weak);
+	i = handle_delete(cf, &cca, dopt.weak);
 	break;
 
     case RECORD:
-	i = handle_record(cf, call_id, from_tag, to_tag, record_single_file);
+	i = handle_record(cf, &cca, record_single_file);
 	break;
 
     default:
-	i = find_stream(cf, call_id, from_tag, to_tag, &spa);
-	if (i != -1 && op != UPDATE)
+	i = find_stream(cf, cca.call_id, cca.from_tag, cca.to_tag, &spa);
+	if (i != -1 && cca.op != UPDATE)
 	    i = NOT(i);
 	break;
     }
 
-    if (i == -1 && op != UPDATE) {
+    if (i == -1 && cca.op != UPDATE) {
 	rtpp_log_write(RTPP_LOG_INFO, cf->stable.glog,
-	  "%s request failed: session %s, tags %s/%s not found", rname,
-	  call_id, from_tag, to_tag != NULL ? to_tag : "NONE");
-	if (op == LOOKUP) {
-	    for (i = 0; i < 2; i++)
-		if (ia[i] != NULL)
-		    free(ia[i]);
-	    reply_port(cf, controlfd, cmd, 0, lia);
+	  "%s request failed: session %s, tags %s/%s not found", cca.rname,
+	  cca.call_id, cca.from_tag, cca.to_tag != NULL ? cca.to_tag : "NONE");
+	if (cca.op == LOOKUP) {
+            rtpp_command_ul_opts_free(ulop);
+	    reply_port(cf, cmd, 0, NULL);
 	    return 0;
 	}
-	reply_error(cf, controlfd, cmd, ECODE_SESUNKN);
+	reply_error(cf, cmd, ECODE_SESUNKN);
 	return 0;
     }
 
-    switch (op) {
+    switch (cca.op) {
     case DELETE:
     case RECORD:
-	reply_ok(cf, controlfd, cmd);
-	return 0;
+	reply_ok(cf, cmd);
+	break;
 
     case NOPLAY:
 	handle_noplay(cf, spa, i);
-	reply_ok(cf, controlfd, cmd);
-	return 0;
+	reply_ok(cf, cmd);
+	break;
 
     case PLAY:
 	handle_noplay(cf, spa, i);
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->codecs[i] == NULL) {
-		reply_error(cf, controlfd, cmd, ECODE_INVLARG_5);
+		reply_error(cf, cmd, ECODE_INVLARG_5);
 		return 0;
 	    }
 	    codecs = spa->codecs[i];
 	}
 	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount) != 0) {
-	    reply_error(cf, controlfd, cmd, ECODE_PLRFAIL);
+	    reply_error(cf, cmd, ECODE_PLRFAIL);
 	    return 0;
 	}
-	reply_ok(cf, controlfd, cmd);
-	return 0;
+	reply_ok(cf, cmd);
+	break;
 
     case COPY:
-	handle_copy(cf, spa, i, recording_name, record_single_file);
-	reply_ok(cf, controlfd, cmd);
-	return 0;
+	if (handle_copy(cf, spa, i, recording_name, record_single_file) != 0) {
+            reply_error(cf, cmd, ECODE_CPYFAIL);
+            return 0;
+        }
+	reply_ok(cf, cmd);
+	break;
 
     case QUERY:
-	handle_query(cf, controlfd, cmd, spa, i);
-	return 0;
+	handle_query(cf, cmd, spa, i);
+	break;
 
     case LOOKUP:
     case UPDATE:
-	/* those are handled below */
+        rtpp_command_ul_handle(cf, cmd, &cca, ulop, spa, i);
 	break;
 
     default:
@@ -827,280 +501,11 @@ handle_command(struct cfg *cf, int controlfd, struct rtpp_command *cmd, double d
 	abort();
     }
 
-    pidx = 1;
-    lport = 0;
-    if (i != -1) {
-	assert(op == UPDATE || op == LOOKUP);
-	if (spa->fds[i] == -1) {
-	    if (local_addr != NULL) {
-		spa->laddr[i] = local_addr;
-	    }
-	    if (create_listener(cf, spa->laddr[i], &lport, fds) == -1) {
-		rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create listener");
-		reply_error(cf, controlfd, cmd, ECODE_LSTFAIL_1);
-		return 0;
-	    }
-	    assert(spa->fds[i] == -1);
-	    spa->fds[i] = fds[0];
-	    assert(spa->rtcp->fds[i] == -1);
-	    spa->rtcp->fds[i] = fds[1];
-	    spa->ports[i] = lport;
-	    spa->rtcp->ports[i] = lport + 1;
-	    spa->complete = spa->rtcp->complete = 1;
-	    append_session(cf, spa, i);
-	}
-	if (weak)
-	    spa->weak[i] = 1;
-	else if (op == UPDATE)
-	    spa->strong = 1;
-	lport = spa->ports[i];
-	lia[0] = spa->laddr[i];
-	pidx = (i == 0) ? 1 : 0;
-	spa->ttl_mode = cf->stable.ttl_mode;
-	spa->ttl[0] = cf->stable.max_ttl;
-	spa->ttl[1] = cf->stable.max_ttl;
-	if (op == UPDATE) {
-	    rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	      "adding %s flag to existing session, new=%d/%d/%d",
-	      weak ? ( i ? "weak[1]" : "weak[0]" ) : "strong",
-	      spa->strong, spa->weak[0], spa->weak[1]);
-	}
-	rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	  "lookup on ports %d/%d, session timer restarted", spa->ports[0],
-	  spa->ports[1]);
-    } else {
-	assert(op == UPDATE);
-	rtpp_log_write(RTPP_LOG_INFO, cf->stable.glog,
-	  "new session %s, tag %s requested, type %s",
-	  call_id, from_tag, weak ? "weak" : "strong");
-        if (cf->stable.slowshutdown != 0) {
-            rtpp_log_write(RTPP_LOG_INFO, cf->stable.glog,
-              "proxy is in the deorbiting-burn mode, new session rejected");
-            reply_error(cf, controlfd, cmd, ECODE_SLOWSHTDN);
-            return 0;
-        }
-	if (local_addr != NULL) {
-	    lia[0] = lia[1] = local_addr;
-	    if (lia[0] == NULL) {
-		rtpp_log_write(RTPP_LOG_ERR, spa->log,
-		  "can't create listener: %s", t);
-		reply_error(cf, controlfd, cmd, ECODE_LSTFAIL_2);
-		return 0;
-	    }
-	}
-	if (create_listener(cf, lia[0], &lport, fds) == -1) {
-	    rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "can't create listener");
-	    reply_error(cf, controlfd, cmd, ECODE_LSTFAIL_3);
-	    return 0;
-	}
-
-	/*
-	 * Session creation. If creation is requested with weak flag,
-	 * set weak[0].
-	 */
-	spa = malloc(sizeof(*spa));
-	if (spa == NULL) {
-	    handle_nomem(cf, controlfd, cmd, ECODE_NOMEM_2, ia,
-	      fds, spa, spb);
-	    return 0;
-	}
-	/* spb is RTCP twin session for this one. */
-	spb = malloc(sizeof(*spb));
-	if (spb == NULL) {
-	    handle_nomem(cf, controlfd, cmd, ECODE_NOMEM_3, ia,
-	      fds, spa, spb);
-	    return 0;
-	}
-	memset(spa, 0, sizeof(*spa));
-	memset(spb, 0, sizeof(*spb));
-	for (i = 0; i < 2; i++) {
-	    spa->fds[i] = spb->fds[i] = -1;
-	    spa->last_update[i] = 0;
-	    spb->last_update[i] = 0;
-	}
-	spa->call_id = strdup(call_id);
-	if (spa->call_id == NULL) {
-	    handle_nomem(cf, controlfd, cmd, ECODE_NOMEM_4, ia,
-	      fds, spa, spb);
-	    return 0;
-	}
-	spb->call_id = spa->call_id;
-	spa->tag = strdup(from_tag);
-	spa->tag_nomedianum = strdup(from_tag);
-	if (spa->tag == NULL) {
-	    handle_nomem(cf, controlfd, cmd, ECODE_NOMEM_5, ia,
-	      fds, spa, spb);
-	    return 0;
-	}
-	cp = strrchr(spa->tag_nomedianum, ';');
-	if (cp != NULL)
-	    *cp = '\0';
-	spb->tag = spa->tag;
-	spb->tag_nomedianum = spa->tag_nomedianum;
-	for (i = 0; i < 2; i++) {
-	    spa->rrcs[i] = NULL;
-	    spb->rrcs[i] = NULL;
-	    spa->laddr[i] = lia[i];
-	    spb->laddr[i] = lia[i];
-	}
-	spa->strong = spa->weak[0] = spa->weak[1] = 0;
-	if (weak)
-	    spa->weak[0] = 1;
-	else
-	    spa->strong = 1;
-	assert(spa->fds[0] == -1);
-	spa->fds[0] = fds[0];
-	assert(spb->fds[0] == -1);
-	spb->fds[0] = fds[1];
-	spa->ports[0] = lport;
-	spb->ports[0] = lport + 1;
-	spa->ttl[0] = cf->stable.max_ttl;
-	spa->ttl[1] = cf->stable.max_ttl;
-	spb->ttl[0] = -1;
-	spb->ttl[1] = -1;
-	spa->log = rtpp_log_open(&cf->stable, "rtpproxy", spa->call_id, 0);
-	rtpp_log_setlevel(spa->log, cf->stable.log_level);
-	spb->log = spa->log;
-	spa->rtcp = spb;
-	spb->rtcp = NULL;
-	spa->rtp = NULL;
-	spb->rtp = spa;
-	spa->sridx = spb->sridx = -1;
-
-	append_session(cf, spa, 0);
-	append_session(cf, spa, 1);
-
-	hash_table_append(cf, spa);
-
-	cf->sessions_created++;
-	cf->sessions_active++;
-
-	/*
-	 * Each session can consume up to 5 open file descriptors (2 RTP,
-	 * 2 RTCP and 1 logging) so that warn user when he is likely to
-	 * exceed 80% mark on hard limit.
-	 */
-	if (cf->sessions_active > (cf->stable.nofile_limit->rlim_max * 80 / (100 * 5)) &&
-	  cf->nofile_limit_warned == 0) {
-	    cf->nofile_limit_warned = 1;
-	    rtpp_log_write(RTPP_LOG_WARN, cf->stable.glog, "passed 80%% "
-	      "threshold on the open file descriptors limit (%d), "
-	      "consider increasing the limit using -L command line "
-	      "option", (int)cf->stable.nofile_limit->rlim_max);
-	}
-
-	rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
-	  "tag %s", lport, from_tag);
-	if (cf->stable.record_all != 0) {
-	    handle_copy(cf, spa, 0, NULL, 0);
-	    handle_copy(cf, spa, 1, NULL, 0);
-	}
-    }
-
-    if (op == UPDATE) {
-	if (rtpp_th_get_sn(cf->timeout_handler) == NULL && socket_name_u != NULL)
-	    rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
-	if (spa->timeout_data.notify_tag != NULL) {
-	    free(spa->timeout_data.notify_tag);
-	    spa->timeout_data.notify_tag = NULL;
-	}
-	if (rtpp_th_get_sn(cf->timeout_handler) != NULL && socket_name_u != NULL) {
-	    if (strcmp(rtpp_th_get_sn(cf->timeout_handler), socket_name_u) != 0) {
-		rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", socket_name_u);
-		socket_name_u = NULL;
-	    } else {
-		rtpp_log_write(RTPP_LOG_INFO, spa->log, "setting timeout handler");
-		spa->timeout_data.handler = cf->timeout_handler;
-		spa->timeout_data.notify_tag = strdup(notify_tag);
-	    }
-	} else if (socket_name_u == NULL && spa->timeout_data.handler != NULL) {
-	    spa->timeout_data.handler = NULL;
-	    rtpp_log_write(RTPP_LOG_INFO, spa->log, "disabling timeout handler");
-	}
-    }
-
-    if (ia[0] != NULL && ia[1] != NULL) {
-        if (spa->addr[pidx] != NULL)
-            spa->last_update[pidx] = dtime;
-        if (spa->rtcp->addr[pidx] != NULL)
-            spa->rtcp->last_update[pidx] = dtime;
-	/*
-	 * Unless the address provided by client historically
-	 * cannot be trusted and address is different from one
-	 * that we recorded update it.
-	 */
-	if (spa->untrusted_addr[pidx] == 0 && !(spa->addr[pidx] != NULL &&
-	  SA_LEN(ia[0]) == SA_LEN(spa->addr[pidx]) &&
-	  memcmp(ia[0], spa->addr[pidx], SA_LEN(ia[0])) == 0)) {
-	    rtpp_log_write(RTPP_LOG_INFO, spa->log, "pre-filling %s's address "
-	      "with %s:%s", (pidx == 0) ? "callee" : "caller", addr, port);
-	    if (spa->addr[pidx] != NULL) {
-	        if (spa->canupdate[pidx] == 0) {
-	            if (spa->prev_addr[pidx] != NULL)
-	                 free(spa->prev_addr[pidx]);
-	            spa->prev_addr[pidx] = spa->addr[pidx];
-	        } else {
-		    free(spa->addr[pidx]);
-		}
-	    }
-	    spa->addr[pidx] = ia[0];
-	    ia[0] = NULL;
-	}
-	if (spa->rtcp->untrusted_addr[pidx] == 0 && !(spa->rtcp->addr[pidx] != NULL &&
-	  SA_LEN(ia[1]) == SA_LEN(spa->rtcp->addr[pidx]) &&
-	  memcmp(ia[1], spa->rtcp->addr[pidx], SA_LEN(ia[1])) == 0)) {
-	    if (spa->rtcp->addr[pidx] != NULL) {
-	        if (spa->rtcp->canupdate[pidx] == 0) {
-	            if (spa->rtcp->prev_addr[pidx] != NULL)
-	                free(spa->rtcp->prev_addr[pidx]);
-	            spa->rtcp->prev_addr[pidx] = spa->rtcp->addr[pidx];
-	        } else {
-		    free(spa->rtcp->addr[pidx]);
-		}
-	    }
-	    spa->rtcp->addr[pidx] = ia[1];
-	    ia[1] = NULL;
-	}
-    }
-    spa->asymmetric[pidx] = spa->rtcp->asymmetric[pidx] = asymmetric;
-    spa->canupdate[pidx] = spa->rtcp->canupdate[pidx] = NOT(asymmetric);
-    if (spa->codecs[pidx] != NULL) {
-	free(spa->codecs[pidx]);
-	spa->codecs[pidx] = NULL;
-    }
-    if (codecs != NULL)
-	spa->codecs[pidx] = strdup(codecs);
-    if (requested_nsamples > 0) {
-	rtpp_log_write(RTPP_LOG_INFO, spa->log, "RTP packets from %s "
-	  "will be resized to %d milliseconds",
-	  (pidx == 0) ? "callee" : "caller", requested_nsamples / 8);
-    } else if (spa->resizers[pidx] != NULL) {
-	  rtpp_log_write(RTPP_LOG_INFO, spa->log, "Resizing of RTP "
-	  "packets from %s has been disabled",
-	  (pidx == 0) ? "callee" : "caller");
-    }
-    if (requested_nsamples > 0) {
-        if (spa->resizers[pidx] != NULL) {
-            rtp_resizer_set_onsamples(spa->resizers[pidx], requested_nsamples);
-        } else {
-            spa->resizers[pidx] = rtp_resizer_new(requested_nsamples);
-        }
-    } else if (spa->resizers[pidx] != NULL) {
-        rtp_resizer_free(spa->resizers[pidx]);
-        spa->resizers[pidx] = NULL;
-    }
-
-    for (i = 0; i < 2; i++)
-	if (ia[i] != NULL)
-	    free(ia[i]);
-
-    assert(lport != 0);
-    reply_port(cf, controlfd, cmd, lport, lia);
     return 0;
 }
 
 static int
-handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int weak)
+handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 {
     int ndeleted;
     unsigned int medianum;
@@ -1108,13 +513,13 @@ handle_delete(struct cfg *cf, char *call_id, char *from_tag, char *to_tag, int w
     int cmpr, cmpr1, idx;
 
     ndeleted = 0;
-    for (spa = session_findfirst(cf, call_id); spa != NULL;) {
+    for (spa = session_findfirst(cf, ccap->call_id); spa != NULL;) {
 	medianum = 0;
-	if ((cmpr1 = compare_session_tags(spa->tag, from_tag, &medianum)) != 0) {
+	if ((cmpr1 = compare_session_tags(spa->tag, ccap->from_tag, &medianum)) != 0) {
 	    idx = 1;
 	    cmpr = cmpr1;
-	} else if (to_tag != NULL &&
-	  (cmpr1 = compare_session_tags(spa->tag, to_tag, &medianum)) != 0) {
+	} else if (ccap->to_tag != NULL &&
+	  (cmpr1 = compare_session_tags(spa->tag, ccap->to_tag, &medianum)) != 0) {
 	    idx = 0;
 	    cmpr = cmpr1;
 	} else {
@@ -1207,60 +612,20 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
     return -1;
 }
 
-static void
-handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
-  int record_single_file)
-{
-    int remote;
-
-    remote = (rname != NULL && strncmp("udp:", rname, 4) == 0)? 1 : 0;
-
-    if (remote == 0 && (record_single_file != 0 || spa->record_single_file != 0)) {
-        if (spa->rrcs[idx] != NULL)
-            return;
-        spa->record_single_file = 1;
-        if (spa->rrcs[NOT(idx)] != NULL) {
-            spa->rrcs[idx] = spa->rrcs[NOT(idx)];
-        } else{
-            spa->rrcs[idx] = ropen(cf, spa, rname, idx);
-            rtpp_log_write(RTPP_LOG_INFO, spa->log,
-              "starting recording RTP session on port %d", spa->ports[idx]);
-        }
-        assert(spa->rtcp->rrcs[idx] == NULL);
-        if (cf->stable.rrtcp != 0) {
-            spa->rtcp->rrcs[idx] = spa->rrcs[idx];
-            rtpp_log_write(RTPP_LOG_INFO, spa->log,
-              "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
-        }
-        return;
-    }
-
-    if (spa->rrcs[idx] == NULL) {
-	spa->rrcs[idx] = ropen(cf, spa, rname, idx);
-	rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	  "starting recording RTP session on port %d", spa->ports[idx]);
-    }
-    if (spa->rtcp->rrcs[idx] == NULL && cf->stable.rrtcp != 0) {
-	spa->rtcp->rrcs[idx] = ropen(cf, spa->rtcp, rname, idx);
-	rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	  "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
-    }
-}
-
 static int
-handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
+handle_record(struct cfg *cf, struct common_cmd_args *ccap,
   int record_single_file)
 {
     int nrecorded, idx;
     struct rtpp_session *spa;
 
     nrecorded = 0;
-    for (spa = session_findfirst(cf, call_id); spa != NULL;
+    for (spa = session_findfirst(cf, ccap->call_id); spa != NULL;
       spa = session_findnext(cf, spa)) {
-	if (compare_session_tags(spa->tag, from_tag, NULL) != 0) {
+	if (compare_session_tags(spa->tag, ccap->from_tag, NULL) != 0) {
 	    idx = 1;
-	} else if (to_tag != NULL &&
-	  (compare_session_tags(spa->tag, to_tag, NULL)) != 0) {
+	} else if (ccap->to_tag != NULL &&
+	  (compare_session_tags(spa->tag, ccap->to_tag, NULL)) != 0) {
 	    idx = 0;
 	} else {
 	    continue;
@@ -1272,7 +637,7 @@ handle_record(struct cfg *cf, char *call_id, char *from_tag, char *to_tag,
 }
 
 static void
-handle_query(struct cfg *cf, int fd, struct rtpp_command *cmd,
+handle_query(struct cfg *cf, struct rtpp_command *cmd,
   struct rtpp_session *spa, int idx)
 {
     int len;
@@ -1280,11 +645,11 @@ handle_query(struct cfg *cf, int fd, struct rtpp_command *cmd,
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n", get_ttl(spa),
       spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
       spa->pcount[3]);
-    doreply(cf, fd, cmd->buf_t, len, cmd);
+    doreply(cf, cmd->buf_t, len, cmd);
 }
 
 static void
-handle_info(struct cfg *cf, int fd, struct rtpp_command *cmd,
+handle_info(struct cfg *cf, struct rtpp_command *cmd,
   const char *opts)
 {
 #if 0
@@ -1362,12 +727,39 @@ XXX this needs work to fix it after rtp/rtcp split
           addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
           spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
         if (len + 512 > sizeof(buf)) {
-            doreply(cf, fd, buf, len, cmd);
+            doreply(cf, buf, len, cmd);
             len = 0;
         }
 #endif
     }
     pthread_mutex_unlock(&cf->sessinfo.lock);
     if (len > 0)
-        doreply(cf, fd, buf, len, cmd);
+        doreply(cf, buf, len, cmd);
+}
+
+static void
+handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd)
+{
+    int i, known;
+
+    /*
+     * Wait for protocol version datestamp and check whether we
+     * know it.
+     */
+    /*
+     * Only list 20081224 protocol mod as supported if
+     * user actually enabled notification with -n
+     */
+    if (strcmp(cmd->argv[1], "20081224") == 0 &&
+      rtpp_th_get_sn(cf->timeout_handler) == NULL) {
+        reply_number(cf, cmd, 0);
+        return;
+    }
+    for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
+        if (!strcmp(cmd->argv[1], proto_caps[i].pc_id)) {
+            known = 1;
+            break;
+        }
+    }
+    reply_number(cf, cmd, known);
 }

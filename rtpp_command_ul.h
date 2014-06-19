@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,30 +24,18 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id$
- *
  */
 
-#ifndef _RTPP_COMMAND_H_
-#define _RTPP_COMMAND_H_
+#ifndef _RTPP_COMMAND_UL_H_
+#define _RTPP_COMMAND_UL_H_
 
-struct proto_cap {
-    const char  *pc_id;
-    const char  *pc_description;
-};
+struct ul_opts;
 
-struct rtpp_command;
-struct cfg;
-struct cfg_stable;
-
-extern struct proto_cap proto_caps[];
-
-int handle_command(struct cfg *, struct rtpp_command *);
-void free_command(struct rtpp_command *);
-struct rtpp_command *get_command(struct cfg *, int, int *, double);
-void reply_error(struct cfg *cf, struct rtpp_command *cmd, int ecode);
-void reply_port(struct cfg *cf, struct rtpp_command *cmd, int lport,
-  struct sockaddr **lia);
-int rtpp_create_listener(struct cfg *, struct sockaddr *, int *, int *);
+struct ul_opts *rtpp_command_ul_opts_parse(struct cfg *cf,
+  struct rtpp_command *cmd, struct common_cmd_args *ccap);
+void rtpp_command_ul_opts_free(struct ul_opts *ulop);
+int rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
+  struct common_cmd_args *ccap, struct ul_opts *ulop,
+  struct rtpp_session *sp, int sidx);
 
 #endif

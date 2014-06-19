@@ -48,7 +48,9 @@ SRCS=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	config.h rtpp_proc_async.c rtpp_proc_async.h rtpp_proc.h \
 	rtpp_proc.c rtpp_version.h rtpp_math.c rtpp_math.h rtpp_wi.c \
 	rtpp_wi.h rtpp_wi_private.h rtpp_queue.c rtpp_queue.h \
-	rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h
+	rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
+	rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
+	rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h
 MAN1=
 
 WARNS?=	2
