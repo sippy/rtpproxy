@@ -37,7 +37,9 @@
 #include "rtpp_log.h"
 #include "rtpp_defines.h"
 #include "rtpp_command_async.h"
+#ifdef RTPP_DEBUG
 #include "rtpp_math.h"
+#endif
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
