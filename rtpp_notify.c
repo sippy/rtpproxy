@@ -130,7 +130,7 @@ rtpp_notify_queue_put_item(struct rtpp_notify_wi *wi)
     pthread_mutex_unlock(&rtpp_notify_queue_mutex);
 }
 
-void
+static void
 rtpp_notify_queue_run(void)
 {
     struct rtpp_notify_wi *wi;
