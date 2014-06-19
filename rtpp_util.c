@@ -34,14 +34,11 @@
 #include <sys/resource.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <grp.h>
 #include <math.h>
 #include <pthread.h>
-#include <pwd.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "rtpp_log.h"
