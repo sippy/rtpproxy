@@ -117,6 +117,13 @@ ehandler(void)
     rtpp_log_close(_sig_cf->stable.glog);
 }
 
+long long
+rtpp_rlim_max(struct cfg *cf)
+{
+
+    return (long long)(cf->stable.nofile_limit->rlim_max);
+}
+
 static void
 init_config(struct cfg *cf, int argc, char **argv)
 {

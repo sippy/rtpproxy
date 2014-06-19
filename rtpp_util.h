@@ -49,6 +49,7 @@ int rtpp_daemon(int, int);
 int url_unquote(uint8_t *, int);
 int pthread_mutex_islocked(pthread_mutex_t *);
 int rtpp_get_sched_hz(void);
+long long rtpp_rlim_max(struct cfg *cf);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)
