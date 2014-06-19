@@ -39,9 +39,11 @@
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 #include "rtpp_queue.h"
-#include "rtpp_math.h"
 #include "rtpp_netio_async.h"
+#ifdef RTPP_DEBUG
+#include "rtpp_math.h"
 #include "rtpp_util.h"
+#endif
 
 struct sthread_args {
     struct rtpp_queue *out_q;
