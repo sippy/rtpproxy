@@ -202,7 +202,7 @@ reply_port(struct cfg *cf, struct rtpp_command *cmd,
 {
     int len;
 
-    if (lia[0] == NULL || ishostnull(lia[0]))
+    if (lia == NULL || lia[0] == NULL || ishostnull(lia[0]))
 	len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", lport);
     else
 	len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", lport,
