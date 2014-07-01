@@ -30,6 +30,7 @@
 #include <pthread.h>
 #include <syslog.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -127,6 +128,14 @@ check_level(struct cfg_stable *cf, int cf_level, int level)
 	cf_level = (cf->nodaemon != 0) ? RTPP_LOG_DBUG : RTPP_LOG_WARN;
     }
     return (level <= cf_level);
+}
+
+void
+rtpp_log_setlevel(struct cfg_stable *cf, int level)
+{
+/*
+ * STUB
+ */
 }
 
 void

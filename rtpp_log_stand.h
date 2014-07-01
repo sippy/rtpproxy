@@ -67,5 +67,6 @@ struct cfg_stable *_rtpp_log_open(struct cfg_stable *, const char *);
 void _rtpp_log_close(void);
 int rtpp_log_str2lvl(const char *);
 int rtpp_log_str2fac(const char *);
+void rtpp_log_setlevel(struct cfg_stable *cf, int level);
 
 #endif
