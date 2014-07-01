@@ -26,25 +26,32 @@
 # $Id$
 
 CC?=	gcc
-CFLAGS+=-I../siplog -Wall -D_BSD_SOURCE -D_ISOC99_SOURCE
-LIBS+=	-L../siplog -L/usr/local/lib -lsiplog -lpthread -lm
+CFLAGS+=-DWITHOUT_SIPLOG -Wall -D_BSD_SOURCE -D_ISOC99_SOURCE 
+LIBS+=	-lpthread -lm
 PREFIX?= /usr/local
 
 OS = $(shell uname -s | sed -e s/SunOS/solaris/ -e s/CYGWIN.*/cygwin/ \
                  | tr "[A-Z]" "[a-z]")
+
+ifdef RTPP_DEBUG
+CFLAGS+= -DRTPP_DEBUG
+endif
 
 ifeq ($(OS),solaris)
 LIBS+=	-lsocket -lnsl -lxnet -lrt
 endif
 
 ifeq ($(OS),linux)
-CFLAGS+= -D_BSD_SOURCE
+CFLAGS+= -D_BSD_SOURCE -DLINUX_XXX
+LIBS+= -lrt
 endif
 
 SRCS = main.c rtp_server.c rtpp_record.c rtpp_util.c rtp_resizer.c rtp.c rtpp_session.c \
-  rtpp_command.c rtpp_network.c rtpp_log.c rtpp_notify.c rtpp_command_async.c \
+  rtpp_command.c rtpp_network.c rtpp_notify.c rtpp_command_async.c \
   rtpp_proc_async.c rtpp_proc.c rtpp_math.c rtpp_wi.c rtpp_queue.c  \
-  rtpp_netio_async.c
+  rtpp_netio_async.c rtpp_log_stand.c \
+  rtpp_command_parse.c rtpp_command_copy.c \
+  rtpp_command_ul.c
 OBJS = $(SRCS:.c=.o)
 
 .c.o:
