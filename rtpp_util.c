@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <pthread.h>
+#include <stdint.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,6 +44,16 @@
 #include "rtpp_defines.h"
 #include "rtpp_util.h"
 
+#if defined(CLOCK_UPTIME_PRECISE)
+#define RTPP_CLOCK CLOCK_UPTIME_PRECISE
+#else
+# if defined(CLOCK_MONOTONIC_RAW)
+#define RTPP_CLOCK CLOCK_MONOTONIC_RAW
+# else
+#define RTPP_CLOCK CLOCK_MONOTONIC
+#endif
+#endif
+
 static double timespec2dtime(time_t, long);
 
 double
@@ -50,7 +61,7 @@ getdtime(void)
 {
     struct timespec tp;
 
-    if (clock_gettime(CLOCK_UPTIME_PRECISE, &tp) == -1)
+    if (clock_gettime(RTPP_CLOCK, &tp) == -1)
         return (-1);
 
     return timespec2dtime(tp.tv_sec, tp.tv_nsec);
@@ -115,7 +126,6 @@ set_rlimits(struct cfg *cf)
     return (0);
 }
 
-#if !defined(WITHOUT_SIPLOG)
 int
 drop_privileges(struct cfg *cf)
 {
@@ -134,7 +144,6 @@ drop_privileges(struct cfg *cf)
     }
     return 0;
 }
-#endif
 
 void
 init_port_table(struct cfg *cf)
@@ -300,6 +309,16 @@ pthread_mutex_islocked(pthread_mutex_t *mutex)
     return (0);
 }
 
+#if defined(_SC_CLK_TCK)
+int
+rtpp_get_sched_hz(void)
+{
+    int sched_hz;
+
+    sched_hz = sysconf(_SC_CLK_TCK);
+    return (sched_hz > 0 ? sched_hz : 100);
+}
+#else
 int
 rtpp_get_sched_hz(void)
 {
@@ -311,3 +330,4 @@ rtpp_get_sched_hz(void)
         return 1000;
     return (sched_hz);
 }
+#endif
