@@ -26,6 +26,11 @@
  *
  */
 
+#ifdef LINUX_XXX
+/* Apparently needed for drand48(3) */
+#define _SVID_SOURCE	1
+#endif
+
 #include <sys/types.h>
 #include <sys/un.h>
 #include <sys/resource.h>
@@ -523,7 +528,7 @@ main(int argc, char **argv)
     int i, len, controlfd;
     double eval, clk;
     long long ncycles_ref, counter;
-    double eptime, filter_lastval;
+    double eptime;
     double add_delay;
     struct cfg cf;
     char buf[256];
@@ -532,7 +537,7 @@ main(int argc, char **argv)
     useconds_t usleep_time;
     struct sched_param sparam;
 #if RTPP_DEBUG
-    double sleep_time;
+    double sleep_time, filter_lastval;
 #endif
     memset(&cf, 0, sizeof(cf));
 
@@ -554,7 +559,7 @@ main(int argc, char **argv)
     if (rtpp_notify_init() != 0)
         errx(1, "can't start notification thread");
 
-    cf.stable.glog = rtpp_log_open(&cf, "rtpproxy", NULL, LF_REOPEN);
+    cf.stable.glog = rtpp_log_open(&cf.stable, "rtpproxy", NULL, LF_REOPEN);
     rtpp_log_setlevel(cf.stable.glog, cf.stable.log_level);
     _sig_cf = &cf;
     atexit(ehandler);
@@ -620,7 +625,9 @@ main(int argc, char **argv)
 
         eval = PFD_get_error(&phase_detector, clk);
 
+#if RTPP_DEBUG
         filter_lastval = loop_error.lastval;
+#endif
 
         recfilter_apply(&loop_error, sigmoid(eval));
 
