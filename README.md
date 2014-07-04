@@ -1,3 +1,6 @@
+
+[![Build Status](https://drone.io/github.com/jevonearth/rtpproxy/status.png)](https://drone.io/github.com/jevonearth/rtpproxy/latest)
+
 I. About
 
 The RTPproxy is a high-performance software proxy for RTP streams that can
