@@ -5,7 +5,7 @@
 
 The RTPproxy is a high-performance software proxy for RTP streams that can
 work together with SER or OpenSER. Originally created for handling NAT
-scenarious it can also act as a generic media relay as well as gateway RTP
+scenarios it can also act as a generic media relay as well as gateway RTP
 sessions between IPv4 and IPv6 networks. RTPproxy was developed by Maxim
 Sobolev and now is being actively maintained by the Sippy Software, Inc.
 
@@ -22,14 +22,14 @@ The software also supports video relaying and RTP session recording.
 
 This proxy works as follows:
 
-- When SER receives INVITE reqiest, it extracts call-id from it and
+- When SER receives INVITE request, it extracts call-id from it and
   communicates it to the proxy via Unix domain socket. Proxy looks for an
   existing sessions with such id, if the session exists it returns UDP port
   for that session, if not, then it creates a new session, binds to a first
   empty UDP port from the range specified at the compile time and returns
   number of that port to a SER. After receiving reply from the proxy, SER
   replaces media ip:port in the SDP to point to the proxy and forwards
-  reqiest as usually;
+  request as usually;
 
 - when SER receives non-negative SIP reply with SDP it again extracts
   call-id from it and communicates it to the proxy. In this case the proxy
@@ -67,7 +67,7 @@ rtpp_defines.h file (PORT_MIN and PORT_MAX) and then recompile/reinstall.
 - Port to other OSes;
 
 - add more configuration parameters (e.g. ports range, max idle time etc.) to be
-  adjustible via command line.
+  adjustable via command line.
 
 
 ## Support
