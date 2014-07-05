@@ -1,7 +1,7 @@
 
-[![Build Status](https://drone.io/github.com/jevonearth/rtpproxy/status.png)](https://drone.io/github.com/jevonearth/rtpproxy/latest)
+[![Build Status](https://drone.io/github.com/sippy/rtpproxy/status.png)](https://drone.io/github.com/sippy/rtpproxy/latest)
 
-I. About
+## About
 
 The RTPproxy is a high-performance software proxy for RTP streams that can
 work together with SER or OpenSER. Originally created for handling NAT
@@ -18,7 +18,7 @@ load-balancing purposes.
 The software also supports video relaying and RTP session recording.
 
 
-II. How it works
+## How it works
 
 This proxy works as follows:
 
@@ -54,7 +54,7 @@ This proxy works as follows:
   time (60 seconds by default).
 
 
-III. Limitations
+## Limitations
 
 Currently, rtpproxy does not support command-line definition of RTP port
 range. By default rtpproxy uses UDP ports 35000-65000 and these should be
@@ -62,18 +62,18 @@ opened any firewalls in front of rtpproxy. The ports used can be modified in
 rtpp_defines.h file (PORT_MIN and PORT_MAX) and then recompile/reinstall.
 
 
-IV. TODO (in no particular order)
+## TODO (in no particular order)
 
-- Port to another OSes;
+- Port to other OSes;
 
-- make more parameters (e.g. ports range, max idle time etc.) to be
+- add more configuration parameters (e.g. ports range, max idle time etc.) to be
   adjustible via command line.
 
 
-V. Support
+## Support
 
-Community-based support could be obtained via SER mailing lists
-<serusers@iptel.org>.
+Open a ticket on the github issue tracker, or post a message on the [mailing
+list](https://groups.google.com/forum/#!forum/rtpproxy)
 
 Commercial support is available from the Sippy Software, Inc. - visit
 http://www.sippysoft.com for details.
