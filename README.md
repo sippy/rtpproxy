@@ -1,8 +1,11 @@
-I. About
+
+[![Build Status](https://drone.io/github.com/sippy/rtpproxy/status.png)](https://drone.io/github.com/sippy/rtpproxy/latest)
+
+## About
 
 The RTPproxy is a high-performance software proxy for RTP streams that can
 work together with SER or OpenSER. Originally created for handling NAT
-scenarious it can also act as a generic media relay as well as gateway RTP
+scenarios it can also act as a generic media relay as well as gateway RTP
 sessions between IPv4 and IPv6 networks. RTPproxy was developed by Maxim
 Sobolev and now is being actively maintained by the Sippy Software, Inc.
 
@@ -15,18 +18,18 @@ load-balancing purposes.
 The software also supports video relaying and RTP session recording.
 
 
-II. How it works
+## How it works
 
 This proxy works as follows:
 
-- When SER receives INVITE reqiest, it extracts call-id from it and
+- When SER receives INVITE request, it extracts call-id from it and
   communicates it to the proxy via Unix domain socket. Proxy looks for an
   existing sessions with such id, if the session exists it returns UDP port
   for that session, if not, then it creates a new session, binds to a first
   empty UDP port from the range specified at the compile time and returns
   number of that port to a SER. After receiving reply from the proxy, SER
   replaces media ip:port in the SDP to point to the proxy and forwards
-  reqiest as usually;
+  request as usually;
 
 - when SER receives non-negative SIP reply with SDP it again extracts
   call-id from it and communicates it to the proxy. In this case the proxy
@@ -51,7 +54,7 @@ This proxy works as follows:
   time (60 seconds by default).
 
 
-III. Limitations
+## Limitations
 
 Currently, rtpproxy does not support command-line definition of RTP port
 range. By default rtpproxy uses UDP ports 35000-65000 and these should be
@@ -59,18 +62,18 @@ opened any firewalls in front of rtpproxy. The ports used can be modified in
 rtpp_defines.h file (PORT_MIN and PORT_MAX) and then recompile/reinstall.
 
 
-IV. TODO (in no particular order)
+## TODO (in no particular order)
 
-- Port to another OSes;
+- Port to other OSes;
 
-- make more parameters (e.g. ports range, max idle time etc.) to be
-  adjustible via command line.
+- add more configuration parameters (e.g. ports range, max idle time etc.) to be
+  adjustable via command line.
 
 
-V. Support
+## Support
 
-Community-based support could be obtained via SER mailing lists
-<serusers@iptel.org>.
+Open a ticket on the github issue tracker, or post a message on the [mailing
+list](https://groups.google.com/forum/#!forum/rtpproxy)
 
 Commercial support is available from the Sippy Software, Inc. - visit
 http://www.sippysoft.com for details.
