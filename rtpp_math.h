@@ -65,4 +65,6 @@ void recfilter_init(struct recfilter *, double, double, int);
 void PFD_init(struct PFD *, double);
 double PFD_get_error(struct PFD *, double);
 
+double freqoff_to_period(double freq_0, double foff_c, double foff_x);
+
 #endif /* _RTPP_MATH_H_ */

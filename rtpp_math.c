@@ -117,3 +117,10 @@ recfilter_init(struct recfilter *f, double fcoef, double initval, int peak_detec
         f->minval = 0;
     }
 }
+
+double
+freqoff_to_period(double freq_0, double foff_c, double foff_x)
+{
+
+    return (1.0 / freq_0 * (1 + foff_c * foff_x));
+}
