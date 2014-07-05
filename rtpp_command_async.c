@@ -130,15 +130,15 @@ rtpp_cmd_queue_run(void *arg)
         rtpp_anetio_pump(cf->stable.rtpp_netio_cf);
         eptime = getdtime();
         pthread_mutex_lock(&cmd_cf->cmd_mutex);
-        recfilter_apply(&cmd_cf->average_load, (eptime - sptime + tused) / cf->stable.target_runtime);
+        recfilter_apply(&cmd_cf->average_load, (eptime - sptime + tused) * cf->stable.target_pfreq);
         pthread_mutex_unlock(&cmd_cf->cmd_mutex);
 #if RTPP_DEBUG
-        if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
+        if (last_ctick % (unsigned int)cf->stable.target_pfreq == 0 || last_ctick < 1000) {
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
-              last_ctick, sptime, eptime, (double)last_ctick / (double)POLL_RATE, \
+              last_ctick, sptime, eptime, (double)last_ctick / cf->stable.target_pfreq, \
               eptime - sptime + tused, eptime, sptime, tused);
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld average load %f, CSV: %f,%f", last_ctick, \
-              cmd_cf->average_load.lastval * 100.0, (double)last_ctick / (double)POLL_RATE, cmd_cf->average_load.lastval);
+              cmd_cf->average_load.lastval * 100.0, (double)last_ctick / cf->stable.target_pfreq, cmd_cf->average_load.lastval);
         }
 #endif
     }

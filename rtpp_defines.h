@@ -129,7 +129,7 @@ struct cfg {
         double sched_offset;
         int sched_policy;
         int sched_hz;
-        double target_runtime;
+        double target_pfreq;
         struct rtpp_cmd_async_cf *rtpp_cmd_cf;
         struct rtpp_proc_async_cf *rtpp_proc_cf;
         struct rtpp_anetio_cf *rtpp_netio_cf;

@@ -102,7 +102,7 @@ rtpp_proc_async_run(void *arg)
         i -= 1;
         s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wis[i], NULL);
         last_ctick = s_a->clock_tick;
-        ndrain = (s_a->ncycles_ref - ncycles_ref) / (POLL_RATE / MAX_RTP_RATE);
+        ndrain = (s_a->ncycles_ref - ncycles_ref) / (cf->stable.target_pfreq / MAX_RTP_RATE);
 #ifdef RTPP_DEBUG
         ncycles_ref_pre = ncycles_ref;
 #endif
@@ -113,10 +113,10 @@ rtpp_proc_async_run(void *arg)
 
         tp[1] = getdtime();
 #if RTPP_DEBUG
-        if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
+        if (last_ctick % (unsigned int)cf->stable.target_pfreq == 0 || last_ctick < 1000) {
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld sptime %f, CSV: %f,%f,%f", \
-              last_ctick, tp[1], (double)last_ctick / (double)POLL_RATE, \
-              ((double)ncycles_ref * cf->stable.target_runtime) - tp[1], tp[1]);
+              last_ctick, tp[1], (double)last_ctick / cf->stable.target_pfreq, \
+              ((double)ncycles_ref / cf->stable.target_pfreq) - tp[1], tp[1]);
         }
 #endif
 
@@ -129,7 +129,7 @@ rtpp_proc_async_run(void *arg)
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld " \
               "ncycles_ref %lld, ncycles_ref_pre %lld, ndrain %d CSV: %f,%f,%d", \
               last_ctick, ncycles_ref, ncycles_ref_pre, ndrain, \
-              (double)last_ctick / (double)POLL_RATE, ndrain);
+              (double)last_ctick / cf->stable.target_pfreq, ndrain);
         }
 #endif
 
@@ -189,14 +189,14 @@ rtpp_proc_async_run(void *arg)
 #endif
         tp[0] = tp[3];
 #if RTPP_DEBUG
-        if (last_ctick % POLL_RATE == 0 || last_ctick < 1000) {
+        if (last_ctick % (unsigned int)cf->stable.target_pfreq == 0 || last_ctick < 1000) {
 #if 0
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld eptime %f, CSV: %f,%f,%f", \
-              last_ctick, tp[3], (double)last_ctick / (double)POLL_RATE, tp[3] - tp[1], tp[3]);
+              last_ctick, tp[3], (double)last_ctick / cf->stable.target_pfreq, tp[3] - tp[1], tp[3]);
 #endif
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld eptime %f sleep_time %f poll_time %f proc_time %f CSV: %f,%f,%f,%f", \
               last_ctick, tp[3], proc_cf->sleep_time.lastval, proc_cf->poll_time.lastval, proc_cf->proc_time.lastval, \
-              (double)last_ctick / (double)POLL_RATE, proc_cf->sleep_time.lastval, proc_cf->poll_time.lastval, proc_cf->proc_time.lastval);
+              (double)last_ctick / cf->stable.target_pfreq, proc_cf->sleep_time.lastval, proc_cf->poll_time.lastval, proc_cf->proc_time.lastval);
         }
 #endif
     }

@@ -151,7 +151,10 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.sched_offset = 0.0;
     cf->stable.sched_hz = rtpp_get_sched_hz();
     cf->stable.sched_policy = SCHED_OTHER;
-    cf->stable.target_runtime = 1.0 / POLL_RATE;
+    cf->stable.target_pfreq = MIN(POLL_RATE, cf->stable.sched_hz);
+#if defined(RTPP_DEBUG)
+    printf("target_pfreq = %f\n", cf->stable.target_pfreq);
+#endif
     cf->stable.slowshutdown = 0;
 
     cf->timeout_handler = rtpp_th_init(NULL, -1, 0);
@@ -199,9 +202,9 @@ init_config(struct cfg *cf, int argc, char **argv)
                 y = (double)strtol(tp[1], &tp[1], 10);
                 cf->stable.sched_offset = x / y;
             }
-            x = (double)cf->stable.sched_hz / (double)POLL_RATE;
+            x = (double)cf->stable.sched_hz / cf->stable.target_pfreq;
             cf->stable.sched_offset = trunc(x * cf->stable.sched_offset) / x;
-            cf->stable.sched_offset /= (double)POLL_RATE;
+            cf->stable.sched_offset /= cf->stable.target_pfreq;
             warnx("sched_offset = %f",  cf->stable.sched_offset);
             break;
 
@@ -613,13 +616,12 @@ main(int argc, char **argv)
     rtpp_proc_async_init(&cf);
 
     counter = 0;
-    add_delay = cf.stable.target_runtime / 2;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
     PFD_init(&phase_detector, 1.0);
     for (;;) {
 	eptime = getdtime();
 
-        clk = (eptime + cf.stable.sched_offset) / cf.stable.target_runtime;
+        clk = (eptime + cf.stable.sched_offset) * cf.stable.target_pfreq;
 
         ncycles_ref = llrint(clk);
 
@@ -632,21 +634,15 @@ main(int argc, char **argv)
         recfilter_apply(&loop_error, sigmoid(eval));
 
 #if RTPP_DEBUG
-        if (counter % POLL_RATE == 0 || counter < 1000) {
+        if (counter % (unsigned int)cf.stable.target_pfreq == 0 || counter < 1000) {
           rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld ncycles %lld raw error1 %f, filter lastval %f, filter nextval %f",
             counter, ncycles_ref, eval, filter_lastval, loop_error.lastval);
         }
 #endif
-        add_delay = add_delay / (1.0 - (loop_error.lastval / 1000.0));
-        if (add_delay > cf.stable.target_runtime) {
-            add_delay = cf.stable.target_runtime;
-        }
-        if (add_delay < cf.stable.target_runtime / 2) {
-            add_delay = cf.stable.target_runtime / 2;
-        }
+        add_delay = freqoff_to_period(cf.stable.target_pfreq, 0.2, loop_error.lastval);
         usleep_time = add_delay * 1000000.0;
 #if RTPP_DEBUG
-        if (counter % POLL_RATE == 0 || counter < 1000) {
+        if (counter % (unsigned int)cf.stable.target_pfreq == 0 || counter < 1000) {
             rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld filter lastval %f, filter nextval %f, error %f",
               counter, filter_lastval, loop_error.lastval, sigmoid(eval));
             rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld extra sleeping time %llu", counter, usleep_time);
@@ -657,9 +653,9 @@ main(int argc, char **argv)
         usleep(usleep_time);
 #if RTPP_DEBUG
         sleep_time = getdtime() - sleep_time;
-        if (counter % POLL_RATE == 0 || counter < 1000 || sleep_time > cf.stable.target_runtime * 2) {
+        if (counter % (unsigned int)cf.stable.target_pfreq == 0 || counter < 1000 || sleep_time > add_delay * 2.0) {
             rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld sleeping time required %llu sleeping time actual %f, CSV: %f,%f,%f", \
-              counter, usleep_time, sleep_time, (double)counter / (double)POLL_RATE, ((double)usleep_time) / 1000.0, sleep_time * 1000.0);
+              counter, usleep_time, sleep_time, (double)counter / cf.stable.target_pfreq, ((double)usleep_time) / 1000.0, sleep_time * 1000.0);
         }
 #endif
         counter += 1;
