@@ -617,7 +617,7 @@ main(int argc, char **argv)
 
     counter = 0;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
-    PFD_init(&phase_detector, 1.0);
+    PFD_init(&phase_detector, 2.0);
     for (;;) {
 	eptime = getdtime();
 
@@ -631,15 +631,17 @@ main(int argc, char **argv)
         filter_lastval = loop_error.lastval;
 #endif
 
-        recfilter_apply(&loop_error, sigmoid(eval));
+        if (eval != 0.0) {
+            recfilter_apply(&loop_error, sigmoid(eval));
+        }
 
 #if RTPP_DEBUG
         if (counter % (unsigned int)cf.stable.target_pfreq == 0 || counter < 1000) {
-          rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld ncycles %lld raw error1 %f, filter lastval %f, filter nextval %f",
-            counter, ncycles_ref, eval, filter_lastval, loop_error.lastval);
+          rtpp_log_write(RTPP_LOG_DBUG, cf.stable.glog, "run %lld ncycles %f raw error1 %f, filter lastval %f, filter nextval %f",
+            counter, clk, eval, filter_lastval, loop_error.lastval);
         }
 #endif
-        add_delay = freqoff_to_period(cf.stable.target_pfreq, 0.2, loop_error.lastval);
+        add_delay = freqoff_to_period(cf.stable.target_pfreq, 1.0, loop_error.lastval);
         usleep_time = add_delay * 1000000.0;
 #if RTPP_DEBUG
         if (counter % (unsigned int)cf.stable.target_pfreq == 0 || counter < 1000) {
