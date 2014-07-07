@@ -309,7 +309,7 @@ pthread_mutex_islocked(pthread_mutex_t *mutex)
     return (0);
 }
 
-#if defined(_SC_CLK_TCK)
+#if defined(_SC_CLK_TCK) && !defined(__FreeBSD__)
 int
 rtpp_get_sched_hz(void)
 {
