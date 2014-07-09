@@ -37,8 +37,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_defines.h"
+#include "rtpp_hash_table.h"
 #include "rtpp_command.h"
 #include "rtpp_command_copy.h"
 #include "rtpp_command_private.h"
@@ -480,7 +482,13 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         append_session(cf, spa, 0);
         append_session(cf, spa, 1);
 
-        hash_table_append(cf, spa);
+        spa->hte = CALL_METHOD(cf->stable.sessions_ht, append, spa->call_id, spa);
+        if (spa->hte == NULL) {
+            remove_session(cf, spa);
+            remove_session(cf, spb);
+            handle_nomem(cf, cmd, ECODE_NOMEM_8, ulop, fds, spa, spb);
+            return (-1);
+        }
 
         cf->sessions_created++;
         cf->sessions_active++;

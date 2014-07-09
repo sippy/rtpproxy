@@ -34,6 +34,8 @@ struct rtpp_timeout_data {
     struct rtpp_timeout_handler *handler;
 };
 
+struct rtpp_hash_table_entry;
+
 struct rtpp_session {
     /* ttl for caller [0] and callee [1] */
     int ttl[2];
@@ -80,6 +82,7 @@ struct rtpp_session {
     double last_update[2];
     /* Supported codecs */
     char *codecs[2];
+    struct rtpp_hash_table_entry *hte;
 };
 
 struct cfg_stable;

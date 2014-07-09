@@ -81,6 +81,8 @@ struct sessinfo {
     pthread_mutex_t lock;
 };
 
+struct rtpp_hash_table_obj;
+
 struct cfg {
     struct cfg_stable {
         int nodaemon;
@@ -122,7 +124,7 @@ struct cfg {
         uint16_t port_table[65536];
         int port_table_len;
 
-        uint8_t rand_table[256];
+        struct rtpp_hash_table_obj *sessions_ht;
 
         int controlfd;
 
@@ -152,8 +154,6 @@ struct cfg {
     int sessions_active;
     unsigned long long sessions_created;
     int nofile_limit_warned;
-
-    struct rtpp_session *hash_table[256];
 
     unsigned long long packets_in;
     unsigned long long packets_out;
