@@ -92,6 +92,7 @@ struct common_cmd_args {
 #define ECODE_NOMEM_5     85
 #define ECODE_NOMEM_6     86
 #define ECODE_NOMEM_7     87
+#define ECODE_NOMEM_8     88
 
 #define ECODE_SLOWSHTDN   99
 
