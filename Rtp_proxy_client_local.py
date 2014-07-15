@@ -105,6 +105,7 @@ class _RTPPLWorker(Thread):
         self.userv.wi.append(None)
         self.userv.wi_available.notify()
         self.userv.wi_available.release()
+        self.join()
 
 class Rtp_proxy_client_local(object):
     is_local = True
