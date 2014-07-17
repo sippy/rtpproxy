@@ -28,31 +28,17 @@
 #ifndef __RTP_RESIZER_H
 #define __RTP_RESIZER_H
 
-struct rtp_resizer {
-    int         nsamples_total;
-
-    int         seq_initialized;
-    uint16_t    seq;
-
-    int         last_sent_ts_inited;
-    uint32_t    last_sent_ts;
-
-    int         tsdelta_inited;
-    uint32_t    tsdelta;
-
-    int         output_nsamples;
-
-    struct {
-	struct rtp_packet *first;
-	struct rtp_packet *last;
-    } queue;
-};
+struct rtp_resizer;
 
 void rtp_resizer_enqueue(struct rtp_resizer *, struct rtp_packet **);
 struct rtp_packet *rtp_resizer_get(struct rtp_resizer *, double);
 
+struct rtp_resizer *rtp_resizer_new(int);
 void rtp_resizer_free(struct rtp_resizer *);
 
 #define is_rtp_resizer_enabled(resizer) ((resizer).output_nsamples > 0)
+
+int rtp_resizer_get_onsamples(struct rtp_resizer *);
+int rtp_resizer_set_onsamples(struct rtp_resizer *, int);
 
 #endif /* __RTP_RESIZER_H */

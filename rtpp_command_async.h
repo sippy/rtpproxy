@@ -28,8 +28,10 @@
 #ifndef _RTPP_COMMAND_ASYNC_H_
 #define _RTPP_COMMAND_ASYNC_H_
 
-#include "rtpp_defines.h"
+struct rtpp_cmd_async_cf;
 
 int rtpp_command_async_init(struct cfg *);
+int rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *, int);
+double rtpp_command_async_get_aload(struct rtpp_cmd_async_cf *);
 
 #endif

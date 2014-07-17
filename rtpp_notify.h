@@ -28,18 +28,12 @@
 #ifndef _RTPP_NOTIFY_H_
 #define _RTPP_NOTIFY_H_
 
-#include "rtpp_defines.h"
-#include "rtpp_session.h"
-
-struct rtpp_timeout_handler {
-    char *socket_name;
-    int socket_type;
-    int fd;
-    int connected;
-    char notify_buf[64];
-};
+struct rtpp_timeout_handler;
 
 int rtpp_notify_schedule(struct cfg *, struct rtpp_session *);
-struct rtpp_timeout_handler *rtpp_notify_init(rtpp_log_t, const char *);
+int rtpp_notify_init(void);
+struct rtpp_timeout_handler *rtpp_th_init(char *, int, int);
+char *rtpp_th_set_sn(struct rtpp_timeout_handler *, const char *);
+const char *rtpp_th_get_sn(struct rtpp_timeout_handler *);
 
 #endif

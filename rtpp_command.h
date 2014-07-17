@@ -29,26 +29,23 @@
 #ifndef _RTPP_COMMAND_H_
 #define _RTPP_COMMAND_H_
 
-#include "rtpp_defines.h"
-
 struct proto_cap {
     const char  *pc_id;
     const char  *pc_description;
 };
 
-struct rtpp_command
-{
-    char buf[1024 * 8];
-    char *argv[10];
-    int argc;
-    struct sockaddr_storage raddr;
-    socklen_t rlen;
-    char *cookie;
-};
+struct rtpp_command;
+struct cfg;
+struct cfg_stable;
 
 extern struct proto_cap proto_caps[];
 
-int handle_command(struct cfg *, int, struct rtpp_command *, double);
-int get_command(struct cfg_stable *, int, struct rtpp_command *);
+int handle_command(struct cfg *, struct rtpp_command *);
+void free_command(struct rtpp_command *);
+struct rtpp_command *get_command(struct cfg *, int, int *, double);
+void reply_error(struct cfg *cf, struct rtpp_command *cmd, int ecode);
+void reply_port(struct cfg *cf, struct rtpp_command *cmd, int lport,
+  struct sockaddr **lia);
+int rtpp_create_listener(struct cfg *, struct sockaddr *, int *, int *);
 
 #endif

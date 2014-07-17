@@ -28,19 +28,22 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <assert.h>
-#include <errno.h>
+#include <poll.h>
 #include <pthread.h>
-#include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "rtpp_defines.h"
+#include "rtp.h"
 #include "rtpp_log.h"
+#include "rtpp_defines.h"
+#include "rtpp_math.h"
 #include "rtpp_record.h"
+#include "rtp_resizer.h"
 #include "rtpp_session.h"
+#include "rtp_server.h"
 #include "rtpp_util.h"
 
 void
@@ -51,20 +54,10 @@ init_hash_table(struct cfg_stable *cf)
 
     memset(cf->rand_table, '\0', sizeof(cf->rand_table));
     for (i = 1; i < 256; i++) {
-        do {
-            rval = random() & 0xff;
-        } while (cf->rand_table[rval] != 0);
-        cf->rand_table[rval] = i;
-    }
-}
-
-void
-dump_hash_table(struct cfg_stable *cfs)
-{
-    int i;
-
-    for (i = 0; i < 256; i++) {
-        printf("%d, ", cfs->rand_table[i]);
+	do {
+	    rval = random() & 0xff;
+	} while (cf->rand_table[rval] != 0);
+	cf->rand_table[rval] = i;
     }
 }
 
@@ -163,18 +156,25 @@ session_findnext(struct cfg *cf, struct rtpp_session *psp)
 void
 append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 {
+    int rtp_index;
 
     /* Make sure structure is properly locked */
     assert(pthread_mutex_islocked(&cf->glock) == 1);
 
     if (sp->fds[index] != -1) {
         pthread_mutex_lock(&cf->sessinfo.lock);
-	cf->sessinfo.sessions[cf->sessinfo.nsessions] = sp;
-	cf->sessinfo.pfds[cf->sessinfo.nsessions].fd = sp->fds[index];
-	cf->sessinfo.pfds[cf->sessinfo.nsessions].events = POLLIN;
-	cf->sessinfo.pfds[cf->sessinfo.nsessions].revents = 0;
-	sp->sidx[index] = cf->sessinfo.nsessions;
+        rtp_index = cf->sessinfo.nsessions;
+	cf->sessinfo.sessions[rtp_index] = sp;
+	cf->sessinfo.pfds_rtp[rtp_index].fd = sp->fds[index];
+	cf->sessinfo.pfds_rtp[rtp_index].events = POLLIN;
+	cf->sessinfo.pfds_rtp[rtp_index].revents = 0;
+        cf->sessinfo.pfds_rtcp[rtp_index].fd = sp->rtcp->fds[index];
+        cf->sessinfo.pfds_rtcp[rtp_index].events = POLLIN;
+        cf->sessinfo.pfds_rtcp[rtp_index].revents = 0;
+	sp->sidx[index] = rtp_index;
+	sp->rtcp->sidx[index] = rtp_index;
 	cf->sessinfo.nsessions++;
+            
         pthread_mutex_unlock(&cf->sessinfo.lock);
     } else {
 	sp->sidx[index] = -1;
@@ -208,23 +208,29 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	if (sp->rtcp->prev_addr[i] != NULL)
 	    free(sp->rtcp->prev_addr[i]);
 	if (sp->fds[i] != -1) {
+	    shutdown(sp->fds[i], SHUT_RDWR);
 	    close(sp->fds[i]);
 	    assert(cf->sessinfo.sessions[sp->sidx[i]] == sp);
 	    cf->sessinfo.sessions[sp->sidx[i]] = NULL;
-	    assert(cf->sessinfo.pfds[sp->sidx[i]].fd == sp->fds[i]);
-	    cf->sessinfo.pfds[sp->sidx[i]].fd = -1;
-	    cf->sessinfo.pfds[sp->sidx[i]].events = 0;
+	    assert(cf->sessinfo.pfds_rtp[sp->sidx[i]].fd == sp->fds[i]);
+	    cf->sessinfo.pfds_rtp[sp->sidx[i]].fd = -1;
+	    cf->sessinfo.pfds_rtp[sp->sidx[i]].events = 0;
 	}
 	if (sp->rtcp->fds[i] != -1) {
+	    shutdown(sp->rtcp->fds[i], SHUT_RDWR);
 	    close(sp->rtcp->fds[i]);
-	    assert(cf->sessinfo.sessions[sp->rtcp->sidx[i]] == sp->rtcp);
-	    cf->sessinfo.sessions[sp->rtcp->sidx[i]] = NULL;
-	    assert(cf->sessinfo.pfds[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
-	    cf->sessinfo.pfds[sp->rtcp->sidx[i]].fd = -1;
-	    cf->sessinfo.pfds[sp->rtcp->sidx[i]].events = 0;
+	    assert(cf->sessinfo.pfds_rtcp[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
+	    cf->sessinfo.pfds_rtcp[sp->rtcp->sidx[i]].fd = -1;
+	    cf->sessinfo.pfds_rtcp[sp->rtcp->sidx[i]].events = 0;
 	}
-	if (sp->rrcs[i] != NULL)
+	if (sp->rrcs[i] != NULL) {
 	    rclose(sp, sp->rrcs[i], 1);
+            if (sp->record_single_file != 0) {
+                sp->rtcp->rrcs[i] = NULL;
+                sp->rrcs[NOT(i)] = NULL;
+                sp->rtcp->rrcs[NOT(i)] = NULL;
+            }
+        }
 	if (sp->rtcp->rrcs[i] != NULL)
 	    rclose(sp, sp->rtcp->rrcs[i], 1);
 	if (sp->rtps[i] != NULL) {
@@ -235,6 +241,8 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    free(sp->codecs[i]);
 	if (sp->rtcp->codecs[i] != NULL)
 	    free(sp->rtcp->codecs[i]);
+        if (sp->resizers[i] != NULL)
+             rtp_resizer_free(sp->resizers[i]);
     }
     if (sp->timeout_data.notify_tag != NULL)
 	free(sp->timeout_data.notify_tag);
@@ -243,10 +251,10 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	free(sp->call_id);
     if (sp->tag != NULL)
 	free(sp->tag);
+    if (sp->tag_nomedianum != NULL)
+	free(sp->tag_nomedianum);
     rtpp_log_close(sp->log);
     free(sp->rtcp);
-    rtp_resizer_free(&sp->resizers[0]);
-    rtp_resizer_free(&sp->resizers[1]);
     free(sp);
     cf->sessions_active--;
 }

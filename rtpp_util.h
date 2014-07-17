@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,40 +29,25 @@
 #ifndef _RTPP_UTIL_H_
 #define _RTPP_UTIL_H_
 
-#include "config.h"
-
-#if defined(HAVE_ERR_H)
-#include <err.h>
-#else
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#endif
-#include <pthread.h>
-
-#include "rtpp_defines.h"
-
 #define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
-#ifdef MIN
-#undef MIN
-#endif
-#ifdef MAX
-#undef MAX
-#endif
-#define	MIN(x, y)	(((x) > (y)) ? (y) : (x))
-#define	MAX(x, y)	(((x) > (y)) ? (x) : (y))
+
+struct cfg;
 
 /* Function prototypes */
 double getdtime(void);
+double ts2dtime(uint32_t, uint32_t);
 void dtime2ts(double, uint32_t *, uint32_t *);
 void seedrandom(void);
+int set_rlimits(struct cfg *);
 int drop_privileges(struct cfg *);
 void init_port_table(struct cfg *);
 char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
 int url_unquote(uint8_t *, int);
 int pthread_mutex_islocked(pthread_mutex_t *);
+int rtpp_get_sched_hz(void);
+long long rtpp_rlim_max(struct cfg *cf);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)

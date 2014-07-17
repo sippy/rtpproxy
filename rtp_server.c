@@ -27,8 +27,6 @@
  */
 
 #include <sys/types.h>
-#include <sys/time.h>
-#include <sys/uio.h>
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -36,11 +34,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/socket.h>
 
-#include "rtp_server.h"
-#include "rtpp_util.h"
 #include "rtp.h"
+#include "rtp_server.h"
+#include "rtpp_log.h"
+#include "rtpp_defines.h"
+#include "rtpp_session.h"
+
+struct rtp_server {
+    double btime;
+    unsigned char buf[1024];
+    rtp_hdr_t *rtp;
+    unsigned char *pload;
+    int fd;
+    int loop;
+};
 
 struct rtp_server *
 rtp_server_new(const char *name, rtp_type_t codec, int loop)
@@ -89,19 +97,23 @@ rtp_server_free(struct rtp_server *rp)
     free(rp);
 }
 
-int
-rtp_server_get(struct rtp_server *rp, double dtime)
+struct rtp_packet *
+rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
 {
+    struct rtp_packet *pkt;
     uint32_t ts;
     int rlen, rticks, bytes_per_frame, ticks_per_frame, number_of_frames;
+    int hlen;
 
     if (rp->btime == -1)
 	rp->btime = dtime;
 
     ts = ntohl(rp->rtp->ts);
 
-    if (rp->btime + ((double)ts / RTPS_SRATE) > dtime)
-	return RTPS_LATER;
+    if (rp->btime + ((double)ts / RTPS_SRATE) > dtime) {
+        *rval = RTPS_LATER;
+	return (NULL);
+    }
 
     switch (rp->rtp->pt) {
     case RTP_PCMU:
@@ -134,7 +146,8 @@ rtp_server_get(struct rtp_server *rp, double dtime)
 	break;
 
     default:
-	return RTPS_ERROR;
+	*rval = RTPS_ERROR;
+        return (NULL);
     }
 
     number_of_frames = RTPS_TICKS_MIN / ticks_per_frame;
@@ -144,10 +157,20 @@ rtp_server_get(struct rtp_server *rp, double dtime)
     rlen = bytes_per_frame * number_of_frames;
     rticks = ticks_per_frame * number_of_frames;
 
-    if (read(rp->fd, rp->pload, rlen) != rlen) {
+    pkt = rtp_packet_alloc();
+    if (pkt == NULL) {
+        *rval = RTPS_ENOMEM;
+        return (NULL);
+    }
+    hlen = RTP_HDR_LEN(rp->rtp);
+
+    if (read(rp->fd, pkt->data.buf + hlen, rlen) != rlen) {
 	if (rp->loop == 0 || lseek(rp->fd, 0, SEEK_SET) == -1 ||
-	  read(rp->fd, rp->pload, rlen) != rlen)
-	    return RTPS_EOF;
+	  read(rp->fd, pkt->data.buf + hlen, rlen) != rlen) {
+	    *rval = RTPS_EOF;
+            rtp_packet_free(pkt);
+            return (NULL);
+        }
 	if (rp->loop != -1)
 	    rp->loop -= 1;
     }
@@ -159,7 +182,10 @@ rtp_server_get(struct rtp_server *rp, double dtime)
     rp->rtp->ts = htonl(ts + (RTPS_SRATE * rticks / 1000));
     rp->rtp->seq = htons(ntohs(rp->rtp->seq) + 1);
 
-    return (rp->pload - rp->buf) + rlen;
+    memcpy(&pkt->data.header, rp->rtp, hlen);
+
+    pkt->size = hlen + rlen;
+    return (pkt);
 }
 
 void

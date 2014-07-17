@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,29 +27,58 @@
  */
 
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <sys/resource.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <grp.h>
 #include <math.h>
 #include <pthread.h>
-#include <pwd.h>
+#include <stdint.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "rtpp_util.h"
 #include "rtpp_log.h"
+#include "rtpp_defines.h"
+#include "rtpp_util.h"
+
+#if defined(CLOCK_UPTIME_PRECISE)
+#define RTPP_CLOCK CLOCK_UPTIME_PRECISE
+#else
+# if defined(CLOCK_MONOTONIC_RAW)
+#define RTPP_CLOCK CLOCK_MONOTONIC_RAW
+# else
+#define RTPP_CLOCK CLOCK_MONOTONIC
+#endif
+#endif
+
+static double timespec2dtime(time_t, long);
 
 double
 getdtime(void)
 {
-    struct timeval timev;
+    struct timespec tp;
 
-    if (gettimeofday(&timev, NULL) == -1)
-	return -1;
+    if (clock_gettime(RTPP_CLOCK, &tp) == -1)
+        return (-1);
 
-    return timev.tv_sec + ((double)timev.tv_usec) / 1000000.0;
+    return timespec2dtime(tp.tv_sec, tp.tv_nsec);
+}
+
+static double
+timespec2dtime(time_t tv_sec, long tv_nsec)
+{
+
+    return (double)tv_sec + (double)tv_nsec / 1000000000.0;
+}
+
+double
+ts2dtime(uint32_t ts_sec, uint32_t ts_usec)
+{
+
+    return ts_sec + ((double)ts_usec) / 1000000.0;
 }
 
 void
@@ -71,10 +100,30 @@ seedrandom(void)
     if (fd >= 0) {
 	read(fd, &junk, sizeof(junk));
 	close(fd);
+    } else {
+        junk = 0;
     }
 
     gettimeofday(&tv, NULL);
     srandom((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
+}
+
+int
+set_rlimits(struct cfg *cf)
+{
+    struct rlimit rlp;
+
+    if (getrlimit(RLIMIT_CORE, &rlp) < 0) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog, "getrlimit(RLIMIT_CORE)");
+        return (-1);
+    }
+    rlp.rlim_cur = RLIM_INFINITY;
+    rlp.rlim_max = RLIM_INFINITY;
+    if (setrlimit(RLIMIT_CORE, &rlp) < 0) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog, "setrlimit(RLIMIT_CORE)");
+        return (-1);
+    }
+    return (0);
 }
 
 int
@@ -259,3 +308,26 @@ pthread_mutex_islocked(pthread_mutex_t *mutex)
     pthread_mutex_unlock(mutex);
     return (0);
 }
+
+#if defined(_SC_CLK_TCK) && !defined(__FreeBSD__)
+int
+rtpp_get_sched_hz(void)
+{
+    int sched_hz;
+
+    sched_hz = sysconf(_SC_CLK_TCK);
+    return (sched_hz > 0 ? sched_hz : 100);
+}
+#else
+int
+rtpp_get_sched_hz(void)
+{
+    int sched_hz;
+    size_t len;
+
+    len = sizeof(sched_hz);
+    if (sysctlbyname("kern.hz", &sched_hz, &len, NULL, 0) == -1 || sched_hz <= 0)
+        return 1000;
+    return (sched_hz);
+}
+#endif

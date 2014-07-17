@@ -28,18 +28,19 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/uio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpp_log.h"
+#include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"
 
@@ -180,6 +181,11 @@ rtpp_in_cksum(void *addr, int len)
     return (answer);
 }
 
+struct bindaddr_list {
+    struct sockaddr_storage *bindaddr;
+    struct bindaddr_list *next;
+};
+
 struct sockaddr *
 addr2bindaddr(struct cfg *cf, struct sockaddr *ia, const char **ep)
 {
@@ -187,22 +193,23 @@ addr2bindaddr(struct cfg *cf, struct sockaddr *ia, const char **ep)
 
     pthread_mutex_lock(&cf->bindaddr_lock);
     for (bl = cf->bindaddr_list; bl != NULL; bl = bl->next) {
-        if (ishostseq(sstosa(&(bl->bindaddr)), ia) != 0) {
+        if (ishostseq(sstosa(bl->bindaddr), ia) != 0) {
             pthread_mutex_unlock(&cf->bindaddr_lock);
-            return (sstosa(&(bl->bindaddr)));
+            return (sstosa(bl->bindaddr));
         }
     }
-    bl = malloc(sizeof(*bl));
+    bl = malloc(sizeof(*bl) + sizeof(*bl->bindaddr));
     if (bl == NULL) {
         pthread_mutex_unlock(&cf->bindaddr_lock);
         *ep = strerror(errno);
         return (NULL);
     }
-    memcpy(&(bl->bindaddr), ia, SA_LEN(ia));
+    bl->bindaddr = (struct sockaddr_storage *)((char *)bl + sizeof(*bl));
+    memcpy(bl->bindaddr, ia, SA_LEN(ia));
     bl->next = cf->bindaddr_list;
     cf->bindaddr_list = bl;
     pthread_mutex_unlock(&cf->bindaddr_lock);
-    return (sstosa(&(bl->bindaddr)));
+    return (sstosa(bl->bindaddr));
 }
 
 struct sockaddr *

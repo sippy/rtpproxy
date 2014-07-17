@@ -29,13 +29,6 @@
 #ifndef _RTPP_SESSION_H_
 #define _RTPP_SESSION_H_
 
-#include <sys/types.h>
-#include <sys/socket.h>
-
-#include "rtp_server.h"
-#include "rtp_resizer.h"
-#include "rtpp_log.h"
-
 struct rtpp_timeout_data {
     char *notify_tag;
     struct rtpp_timeout_handler *handler;
@@ -48,6 +41,7 @@ struct rtpp_session {
     unsigned long pcount[4];
     char *call_id;
     char *tag;
+    char *tag_nomedianum;
     rtpp_log_t log;
     struct rtpp_session* rtcp;
     struct rtpp_session* rtp;
@@ -70,6 +64,7 @@ struct rtpp_session {
     int weak[2];
     /* Pointers to rtpp_record's opaque data type */
     void *rrcs[2];
+    int record_single_file;
     struct rtp_server *rtps[2];
     /* References to fd-to-session table */
     int sidx[2];
@@ -77,7 +72,7 @@ struct rtpp_session {
     int sridx;
     /* Flag that indicates whether or not address supplied by client can't be trusted */
     int untrusted_addr[2];
-    struct rtp_resizer resizers[2];
+    struct rtp_resizer *resizers[2];
     struct rtpp_session *prev;
     struct rtpp_session *next;
     struct rtpp_timeout_data timeout_data;
@@ -87,8 +82,12 @@ struct rtpp_session {
     char *codecs[2];
 };
 
+struct cfg_stable;
+
+#define	SESS_RTP	1
+#define	SESS_RTCP	2
+
 void init_hash_table(struct cfg_stable *);
-void dump_hash_table(struct cfg_stable *);
 struct rtpp_session *session_findfirst(struct cfg *, const char *);
 struct rtpp_session *session_findnext(struct cfg *cf, struct rtpp_session *);
 void hash_table_append(struct cfg *, struct rtpp_session *);

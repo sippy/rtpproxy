@@ -29,16 +29,9 @@
 #ifndef _RTPP_NETWORK_H_
 #define _RTPP_NETWORK_H_
 
-#include "config.h"
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-
-#include "rtpp_defines.h"
-
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
+
+struct cfg;
 
 /* Function prototypes */
 int ishostseq(struct sockaddr *, struct sockaddr *);
@@ -52,24 +45,6 @@ struct sockaddr *host2bindaddr(struct cfg *, const char *, int, const char **);
 int local4remote(struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, char **, char **, int *);
 int setbindhost(struct sockaddr *, int, const char *, const char *);
-
-/* Stripped down version of sockaddr_in* for saving space */
-struct sockaddr_in4_s {
-    sa_family_t sin_family;
-    in_port_t sin_port;
-    struct in_addr sin_addr;
-};
-
-struct sockaddr_in6_s {
-    sa_family_t sin_family;
-    in_port_t sin_port;
-    struct in6_addr sin_addr;
-};
-
-union sockaddr_in_s {
-    struct sockaddr_in4_s in4;
-    struct sockaddr_in6_s in6;
-};
 
 /* Some handy/compat macros */
 #if !defined(AF_LOCAL)

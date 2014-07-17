@@ -29,20 +29,6 @@
 #ifndef _RTPP_DEFINES_H_
 #define _RTPP_DEFINES_H_
 
-#include "config.h"
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <netinet/in.h>
-#include <poll.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-
-#include "rtpp_log.h"
-
 /*
  * Version of the command protocol, bump only when backward-incompatible
  * change is introduced
@@ -51,13 +37,16 @@
 
 #define	PORT_MIN	35000
 #define	PORT_MAX	65000
-#define	TIMETICK	1.0	/* in seconds */
+#define	TIMETICK	1	/* in seconds */
 #define	SESSION_TIMEOUT	60	/* in ticks */
 #define	TOS		0xb8
 #define	LBR_THRS	128	/* low-bitrate threshold */
 #define	CPORT		"22222"
-#define	POLL_RATE	200	/* target number of poll(2) calls per second */
+#define	MAX_RTP_RATE	100
+#define	POLL_RATE	(MAX_RTP_RATE * 2)	/* target number of poll(2) calls per second */
+#define	LOG_LEVEL	RTPP_LOG_DBUG
 #define	UPDATE_WINDOW	10.0	/* in seconds */
+#define	PCAP_FORMAT	DLT_EN10MB
 
 /* Dummy service, getaddrinfo needs it */
 #define	SERVICE		"34999"
@@ -75,9 +64,21 @@ typedef enum {
     TTL_INDEPENDENT = 1		/* any TTL counter reaches 0 */
 } rtpp_ttl_mode;
 
-struct bindaddr_list {
-    struct sockaddr_storage bindaddr;
-    struct bindaddr_list *next;
+struct pollfd;
+struct rtpp_cmd_async_cf;
+struct rtpp_proc_async_cf;
+struct rtpp_anetio_cf;
+struct rlimit;
+struct sockaddr_storage;
+struct bindaddr_list;
+struct rtpp_timeout_handler;
+
+struct sessinfo {
+    struct pollfd *pfds_rtp;
+    struct pollfd *pfds_rtcp;
+    struct rtpp_session **sessions;
+    int nsessions;
+    pthread_mutex_t lock;
 };
 
 struct cfg {
@@ -88,6 +89,7 @@ struct cfg {
         int umode;			/* UDP control mode */
         int port_min;		/* Lowest UDP port for RTP */
         int port_max;		/* Highest UDP port number for RTP */
+        int port_ctl;		/* Port number for UDP control, 0 for Unix domain */
         int max_ttl;
         /*
          * The first address is for external interface, the second one - for
@@ -105,7 +107,7 @@ struct cfg {
         int rrtcp;			/* Whether or not to relay RTCP? */
         rtpp_log_t glog;
 
-        struct rlimit nofile_limit;
+        struct rlimit *nofile_limit;
         char *run_uname;
         char *run_gname;
         int no_check;
@@ -124,18 +126,22 @@ struct cfg {
         uint8_t rand_table[256];
 
         int controlfd;
+
+        double sched_offset;
+        int sched_policy;
+        int sched_hz;
+        double target_pfreq;
+        struct rtpp_cmd_async_cf *rtpp_cmd_cf;
+        struct rtpp_proc_async_cf *rtpp_proc_cf;
+        struct rtpp_anetio_cf *rtpp_netio_cf;
+        int slowshutdown;
     } stable;
 
     /*
      * Data fields that must be locked separately from the main configuration
      * structure below.
      */
-    struct {
-        struct pollfd *pfds;
-        struct rtpp_session **sessions;
-        int nsessions;
-        pthread_mutex_t lock;
-    } sessinfo;
+    struct sessinfo sessinfo;
 
     struct bindaddr_list *bindaddr_list;
     pthread_mutex_t bindaddr_lock;
@@ -150,7 +156,9 @@ struct cfg {
 
     struct rtpp_session *hash_table[256];
 
-    const char *timeout_socket;
+    unsigned long long packets_in;
+    unsigned long long packets_out;
+
     struct rtpp_timeout_handler *timeout_handler;
 
     int port_table_idx;

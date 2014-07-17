@@ -27,20 +27,29 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <sys/un.h>
 #include <assert.h>
 #include <errno.h>
+#include <netdb.h>
 #include <pthread.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "rtpp_log.h"
+#include "rtpp_defines.h"
 #include "rtpp_network.h"
-#include "rtpp_notify.h"
 #include "rtpp_session.h"
-#include "rtpp_util.h"
+
+struct rtpp_timeout_handler {
+    char *socket_name;
+    int socket_type;
+    int fd;
+    int connected;
+};
 
 struct rtpp_notify_wi
 {
@@ -124,7 +133,7 @@ rtpp_notify_queue_put_item(struct rtpp_notify_wi *wi)
     pthread_mutex_unlock(&rtpp_notify_queue_mutex);
 }
 
-void
+static void
 rtpp_notify_queue_run(void)
 {
     struct rtpp_notify_wi *wi;
@@ -370,4 +379,36 @@ do_timeout_notification(struct rtpp_notify_wi *wi, int retries)
         if (retries > 0)
             do_timeout_notification(wi, retries - 1);
     }
+}
+
+struct rtpp_timeout_handler *
+rtpp_th_init(char *socket_name, int fd, int connected)
+{
+    struct rtpp_timeout_handler *th;
+
+    th = malloc(sizeof(struct rtpp_timeout_handler));
+    if (th == NULL) {
+        return (NULL);
+    }
+    th->socket_name = socket_name;
+    th->fd = fd;
+    th->connected = connected;
+    return (th);
+}
+
+char *
+rtpp_th_set_sn(struct rtpp_timeout_handler *th, const char *socket_name)
+{
+    if (th->socket_name != NULL) {
+        free(th->socket_name);
+    }
+    th->socket_name = strdup(socket_name);
+    return (th->socket_name);
+}
+
+const char *
+rtpp_th_get_sn(struct rtpp_timeout_handler *th)
+{
+
+    return (th->socket_name);
 }
