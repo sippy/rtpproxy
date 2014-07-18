@@ -13,6 +13,6 @@ rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_log_stand.c rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
   rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h
 
-rtpproxy_LDADD=-lm
+rtpproxy_LDADD=-lm -lpthread
 
-DEFS=	-DWITHOUT_SIPLOG -Wall -D_BSD_SOURCE -D_ISOC99_SOURCE -DRTPP_LOG_ADVANCED @DEFS@
+DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
