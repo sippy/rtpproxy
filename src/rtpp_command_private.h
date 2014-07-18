@@ -43,7 +43,7 @@ struct rtpp_command
 };
 
 enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
-  QUERY, VER_FEATURE, VERSION, DELETE_ALL};
+  QUERY, VER_FEATURE, GET_VER, DELETE_ALL};
 
 struct common_cmd_args {
     enum rtpp_cmd_op op;

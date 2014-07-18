@@ -33,6 +33,7 @@
  * RTP payload types
  */
 typedef enum {
+    RTP_UNKN = -1,
     RTP_PCMU = 0,
     RTP_GSM = 3,
     RTP_G723 = 4,

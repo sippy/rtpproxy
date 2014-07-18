@@ -151,7 +151,7 @@ fill_cmd_props(struct rtpp_command *cmd, struct common_cmd_args *cca,
             cpp->has_call_id = 0;
             break;
         }
-        cca->op = VERSION;
+        cca->op = GET_VER;
         cca->rname = "get_version";
         cca->hint = "V";
         cpp->max_argc = 1;

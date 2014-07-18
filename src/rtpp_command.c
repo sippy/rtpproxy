@@ -26,7 +26,9 @@
  *
  */
 
+#if defined(HAVE_CONFIG_H)
 #include "config.h"
+#endif
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -327,7 +329,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
         handle_ver_feature(cf, cmd);
         return 0;
 
-    case VERSION:
+    case GET_VER:
         /* This returns base version. */
         reply_number(cf, cmd, CPROTOVER);
         return 0;
