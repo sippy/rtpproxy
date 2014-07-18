@@ -19,14 +19,15 @@ AC_PROG_MKDIR_P
 case "${host_os}" in
 freebsd*)
   CPPFLAGS="-I/usr/local/include -pthread"
-  LDFLAGS="-L/usr/local/lib -lpthread"
+  LDFLAGS="-L/usr/local/lib"
+  #LIBS=
   ;;
 linux*)
-  CPPFLAGS=-D_BSD_SOURCE
-  LDFLAGS=-lpthread
+  CPPFLAGS="-D_BSD_SOURCE -D_ISOC99_SOURCE -DLINUX_XXX"
+  LIBS="-lrt"
   ;;
 solaris*)
-  LDFLAGS="-lsocket -lnsl -lxnet -lrt -lpthread"
+  LIBS="-lsocket -lnsl -lxnet -lrt"
   ;;
 *)
   ;;
