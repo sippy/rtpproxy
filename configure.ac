@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.58)
-AC_INIT(rtpproxy, 1.3.alpha.200903230, sobomax@sippysoft.com)
-AM_INIT_AUTOMAKE(rtpproxy, 1.3.alpha.200903230)
+AC_INIT(rtpproxy, 2.0.alpha.20140718, sobomax@sippysoft.com)
 AM_MAINTAINER_MODE
-AC_CONFIG_SRCDIR([main.c])
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_SRCDIR([src/main.c])
+AM_INIT_AUTOMAKE
+AM_CONFIG_HEADER([src/config.h])
 
 # cross-compile macros
 AC_CANONICAL_BUILD
@@ -91,7 +91,7 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile])
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_GSM)
 AC_SUBST(LIBS_G729)
