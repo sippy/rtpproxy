@@ -50,8 +50,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_defines.h"
+#include "rtpp_hash_table.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_proc_async.h"
@@ -557,7 +559,7 @@ main(int argc, char **argv)
 
     seedrandom();
 
-    init_hash_table(&cf.stable);
+    cf.stable.sessions_ht = rtpp_hash_table_ctor();
     init_port_table(&cf);
 
     controlfd = init_controlfd(&cf);

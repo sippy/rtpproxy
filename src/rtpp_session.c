@@ -36,9 +36,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpp_types.h"
 #include "rtp.h"
 #include "rtpp_log.h"
 #include "rtpp_defines.h"
+#include "rtpp_hash_table.h"
 #include "rtpp_math.h"
 #include "rtpp_record.h"
 #include "rtp_resizer.h"
@@ -46,93 +48,18 @@
 #include "rtp_server.h"
 #include "rtpp_util.h"
 
-void
-init_hash_table(struct cfg_stable *cf)
-{
-    int i;
-    uint8_t rval;
-
-    memset(cf->rand_table, '\0', sizeof(cf->rand_table));
-    for (i = 1; i < 256; i++) {
-	do {
-	    rval = random() & 0xff;
-	} while (cf->rand_table[rval] != 0);
-	cf->rand_table[rval] = i;
-    }
-}
-
-static uint8_t
-hash_string(struct cfg_stable *cf, const char *bp, const char *ep)
-{
-    uint8_t res;
-
-    for (res = cf->rand_table[0]; bp[0] != '\0' && bp != ep; bp++) {
-	res = cf->rand_table[res ^ bp[0]];
-    }
-    return res;
-}
-
-void
-hash_table_append(struct cfg *cf, struct rtpp_session *sp)
-{
-    uint8_t hash;
-    struct rtpp_session *tsp;
-
-    assert(sp->rtcp != NULL);
-
-    hash = hash_string(&cf->stable, sp->call_id, NULL);
-
-    tsp = cf->hash_table[hash];
-    if (tsp == NULL) {
-	cf->hash_table[hash] = sp;
-	sp->prev = sp->next = NULL;
-	return;
-    }
-    while (tsp->next != NULL) {
-	tsp = tsp->next;
-    }
-    tsp->next = sp;
-    sp->prev = tsp;
-    sp->next = NULL;
-}
-
-static void
-hash_table_remove(struct cfg *cf, struct rtpp_session *sp)
-{
-    uint8_t hash;
-
-    assert(sp->rtcp != NULL);
-
-    if (sp->prev != NULL) {
-	sp->prev->next = sp->next;
-	if (sp->next != NULL) {
-	    sp->next->prev = sp->prev;
-	}
-	return;
-    }
-    hash = hash_string(&cf->stable, sp->call_id, NULL);
-    /* Make sure we are removing the right session */
-    assert(cf->hash_table[hash] == sp);
-    cf->hash_table[hash] = sp->next;
-    if (sp->next != NULL) {
-	sp->next->prev = NULL;
-    }
-}
-
 struct rtpp_session *
 session_findfirst(struct cfg *cf, const char *call_id)
 {
-    uint8_t hash;
     struct rtpp_session *sp;
+    struct rtpp_hash_table_entry *he;
 
     /* Make sure structure is properly locked */
     assert(pthread_mutex_islocked(&cf->glock) == 1);
 
-    hash = hash_string(&cf->stable, call_id, NULL);
-    for (sp = cf->hash_table[hash]; sp != NULL; sp = sp->next) {
-	if (strcmp(sp->call_id, call_id) == 0) {
-	    break;
-	}
+    he = CALL_METHOD(cf->stable.sessions_ht, findfirst, call_id, (void **)&sp);
+    if (he == NULL) {
+        return (NULL);
     }
     return (sp);
 }
@@ -141,14 +68,14 @@ struct rtpp_session *
 session_findnext(struct cfg *cf, struct rtpp_session *psp)
 {
     struct rtpp_session *sp;
+    struct rtpp_hash_table_entry *he;
 
     /* Make sure structure is properly locked */
     assert(pthread_mutex_islocked(&cf->glock) == 1);
 
-    for (sp = psp->next; sp != NULL; sp = sp->next) {
-	if (strcmp(sp->call_id, psp->call_id) == 0) {
-	    break;
-	}
+    he = CALL_METHOD(cf->stable.sessions_ht, findnext, psp->hte, (void **)&sp); 
+    if (he == NULL) {
+        return (NULL);
     }
     return (sp);
 }
@@ -246,7 +173,8 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
     }
     if (sp->timeout_data.notify_tag != NULL)
 	free(sp->timeout_data.notify_tag);
-    hash_table_remove(cf, sp);
+    if (sp->hte != NULL)
+        CALL_METHOD(cf->stable.sessions_ht, remove, sp->call_id, sp->hte);
     if (sp->call_id != NULL)
 	free(sp->call_id);
     if (sp->tag != NULL)

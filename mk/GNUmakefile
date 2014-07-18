@@ -51,7 +51,7 @@ SRCS = main.c rtp_server.c rtpp_record.c rtpp_util.c rtp_resizer.c rtp.c rtpp_se
   rtpp_proc_async.c rtpp_proc.c rtpp_math.c rtpp_wi.c rtpp_queue.c  \
   rtpp_syslog_async.c rtpp_netio_async.c rtpp_log_stand.c \
   rtpp_command_parse.c rtpp_command_copy.c \
-  rtpp_command_ul.c
+  rtpp_command_ul.c rtpp_hash_table.c
 OBJS = $(SRCS:.c=.o)
 
 .c.o:
