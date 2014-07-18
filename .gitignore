@@ -1,14 +1,9 @@
 *~
 *.orig
 *.rej
-*.o
-.deps
 autom4te.cache
 config.guess
-config.h
 config.log
 config.status
 Makefile
-makeann
-rtpproxy
 stamp-h1
