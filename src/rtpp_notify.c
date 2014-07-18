@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2010-2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,10 @@
  *
  */
 
+#if defined(HAVE_CONFIG_H)
+#include "config_pp.h"
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -39,9 +43,16 @@
 #include <string.h>
 #include <unistd.h>
 
+#if !defined(NO_ERR_H)
+#include <err.h>
+#else
+#include "rtpp_util.h"
+#endif
+
 #include "rtpp_log.h"
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
+#include "rtpp_notify.h"
 #include "rtpp_session.h"
 
 struct rtpp_timeout_handler {
@@ -49,6 +60,11 @@ struct rtpp_timeout_handler {
     int socket_type;
     int fd;
     int connected;
+    union {
+        struct sockaddr_un u;
+        struct sockaddr_storage i;
+    } remote;
+    socklen_t remote_len;
 };
 
 struct rtpp_notify_wi
@@ -186,68 +202,88 @@ parse_hostport(const char *hostport, char *host, int hsize, char *port, int psiz
     return 0;
 }
 
+#define _ELOGORWARN(ltype, glog, msg, args...) \
+    if (glog != NULL) { \
+        rtpp_log_ewrite(ltype, glog, msg, ## args); \
+    } else { \
+        warn(msg, ## args); \
+    }
+
+#define _LOGORWARNX(ltype, glog, msg, args...) \
+    if (glog != NULL) { \
+        rtpp_log_write(ltype, glog, msg, ## args); \
+    } else { \
+        warnx(msg, ## args); \
+    }
+
 static int
-parse_timeout_sock(rtpp_log_t glog, const char *sock_name, struct rtpp_timeout_handler *timeout_handler)
+parse_timeout_sock(rtpp_log_t glog, const char *sock_name, struct rtpp_timeout_handler *th)
 {
+    char host[512], port[10];
+    char *new_sn;
+    int n;
 
     if (strncmp("unix:", sock_name, 5) == 0) {
         sock_name += 5;
-        timeout_handler->socket_type = PF_LOCAL;
+        th->socket_type = PF_LOCAL;
     } else if (strncmp("tcp:", sock_name, 4) == 0) {
         sock_name += 4;
-        if (parse_hostport(sock_name, NULL, 0, NULL, 0, 1) != 0) {
-            rtpp_log_ewrite(RTPP_LOG_ERR, glog, "can't parse host:port in TCP address");
-            return -1;
+        if (parse_hostport(sock_name, host, sizeof(host), port, sizeof(port), 0) != 0) {
+            _LOGORWARNX(RTPP_LOG_ERR, glog, "can't parse host:port in TCP address");
+            return (-1);
         }
-        timeout_handler->socket_type = PF_INET;
+        th->socket_type = PF_INET;
     } else {
-        timeout_handler->socket_type = PF_LOCAL;
+        th->socket_type = PF_LOCAL;
+    }
+    if (th->socket_type == PF_UNIX) {
+        th->remote.u.sun_family = AF_LOCAL;
+        strncpy(th->remote.u.sun_path, th->socket_name, sizeof(th->remote.u.sun_path) - 1);
+#if defined(HAVE_SOCKADDR_SUN_LEN)
+        th->remote.u.sun_len = strlen(th->remote.u.sun_path);
+#endif
+        th->remote_len = sizeof(th->remote.u);
+    } else {
+        n = resolve(sstosa(&(th->remote.i)), AF_INET, host, port, AI_PASSIVE);
+        if (n != 0) {
+            _LOGORWARNX(RTPP_LOG_ERR, glog, "parse_timeout_sock: getaddrinfo('%s:%ss'): %s",
+              host, port, gai_strerror(n));
+            return (-1);
+        }
+        th->remote_len = SA_LEN(sstosa(&(th->remote.i)));
     }
     if (strlen(sock_name) == 0) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, glog, "timeout notification socket name too short");
-        return -1;
+        _LOGORWARNX(RTPP_LOG_ERR, glog, "timeout notification socket name too short");
+        return (-1);
     }
-    timeout_handler->socket_name = strdup(sock_name);
-    if (timeout_handler->socket_name == NULL) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, glog, "can't allocate memory");
-        return -1;
+    new_sn = strdup(sock_name);
+    if (new_sn == NULL) {
+        _ELOGORWARN(RTPP_LOG_ERR, glog, "can't allocate memory");
+        return (-1);
     }
+    th->socket_name = new_sn;
 
-    return 0;
+    return (0);
 }
 
-struct rtpp_timeout_handler *
-rtpp_notify_init(rtpp_log_t glog, const char *socket_name)
+int
+rtpp_notify_init(void)
 {
-    struct rtpp_timeout_handler *th;
-
     rtpp_notify_wi_free = NULL;
     rtpp_notify_wi_queue = NULL;
     rtpp_notify_wi_queue_tail = NULL;
 
     rtpp_notify_dropped_items = 0;
 
-    th = malloc(sizeof(*th));
-    if (th == NULL)
-        return NULL;
-    memset(th, '\0', sizeof(*th));
-    if (parse_timeout_sock(glog, socket_name, th) != 0) {
-        free(th);
-        return NULL;
-    }
-    th->fd = -1;
-    th->connected = 0;
-
     pthread_cond_init(&rtpp_notify_queue_cond, NULL);
     pthread_mutex_init(&rtpp_notify_queue_mutex, NULL);
     pthread_mutex_init(&rtpp_notify_wi_free_mutex, NULL);
 
     if (pthread_create(&rtpp_notify_queue, NULL, (void *(*)(void *))&rtpp_notify_queue_run, NULL) != 0) {
-        free(th);
-        return NULL;
+        return (-1);
     }
 
-    return th;
+    return (0);
 }
 
 int
@@ -308,12 +344,6 @@ rtpp_notify_schedule(struct cfg *cf, struct rtpp_session *sp)
 static void
 reconnect_timeout_handler(rtpp_log_t log, struct rtpp_timeout_handler *th)
 {
-    union {
-        struct sockaddr_un u;
-        struct sockaddr_storage i;
-    } remote;
-    char host[512], port[10];
-    int remote_len, n;
 
     assert (th->socket_name != NULL && th->connected == 0);
 
@@ -328,26 +358,8 @@ reconnect_timeout_handler(rtpp_log_t log, struct rtpp_timeout_handler *th)
         rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't create timeout socket");
         return;
     }
-    memset(&remote, '\0', sizeof(remote));
-    if (th->socket_type == PF_UNIX) {
-        remote.u.sun_family = AF_LOCAL;
-        strncpy(remote.u.sun_path, th->socket_name, sizeof(remote.u.sun_path) - 1);
-#if defined(HAVE_SOCKADDR_SUN_LEN)
-        remote.u.sun_len = strlen(remote.u.sun_path);
-#endif
-        remote_len = sizeof(remote.u);
-    } else {
-        assert (parse_hostport(th->socket_name, host, sizeof(host), port, sizeof(port), 0) == 0);
-        n = resolve(sstosa(&remote.i), AF_INET, host, port, AI_PASSIVE);
-        if (n != 0) {
-            rtpp_log_write(RTPP_LOG_ERR, log, "reconnect_timeout_handler: getaddrinfo('%s:s'): %s",
-              host, port, gai_strerror(n));
-            return;
-        }
-        remote_len = SA_LEN(sstosa(&remote.i));
-    }
 
-    if (connect(th->fd, (struct sockaddr *)&remote, remote_len) == -1) {
+    if (connect(th->fd, (struct sockaddr *)&(th->remote), th->remote_len) == -1) {
         rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't connect to timeout socket");
     } else {
         th->connected = 1;
@@ -382,7 +394,7 @@ do_timeout_notification(struct rtpp_notify_wi *wi, int retries)
 }
 
 struct rtpp_timeout_handler *
-rtpp_th_init(char *socket_name, int fd, int connected)
+rtpp_th_init(void)
 {
     struct rtpp_timeout_handler *th;
 
@@ -390,19 +402,24 @@ rtpp_th_init(char *socket_name, int fd, int connected)
     if (th == NULL) {
         return (NULL);
     }
-    th->socket_name = socket_name;
-    th->fd = fd;
-    th->connected = connected;
+    memset(th, '\0', sizeof(struct rtpp_timeout_handler));
+    th->fd = -1;
+    th->connected = 0;
     return (th);
 }
 
 char *
-rtpp_th_set_sn(struct rtpp_timeout_handler *th, const char *socket_name)
+rtpp_th_set_sn(struct rtpp_timeout_handler *th, const char *socket_name, rtpp_log_t glog)
 {
-    if (th->socket_name != NULL) {
-        free(th->socket_name);
+    char *oldsn;
+
+    oldsn = th->socket_name;
+    if (parse_timeout_sock(glog, socket_name, th) != 0) {
+        return (NULL);
     }
-    th->socket_name = strdup(socket_name);
+    if (oldsn != NULL) {
+        free(oldsn);
+    }
     return (th->socket_name);
 }
 

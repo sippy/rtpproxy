@@ -161,9 +161,9 @@ init_config(struct cfg *cf, int argc, char **argv)
 #endif
     cf->stable.slowshutdown = 0;
 
-    cf->timeout_handler = rtpp_th_init(NULL, -1, 0);
+    cf->timeout_handler = rtpp_th_init();
     if (cf->timeout_handler == NULL)
-        err(1, "malloc");
+        err(1, "rtpp_th_init");
 
     pthread_mutex_init(&cf->glock, NULL);
     pthread_mutex_init(&cf->sessinfo.lock, NULL);
@@ -350,7 +350,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 		optarg += 5;
 	    if(strlen(optarg) == 0)
 		errx(1, "timeout notification socket name too short");
-            if (rtpp_th_set_sn(cf->timeout_handler, optarg) == NULL) {
+            if (rtpp_th_set_sn(cf->timeout_handler, optarg, NULL) == NULL) {
 		err(1, "can't allocate memory");
             }
 	    break;
