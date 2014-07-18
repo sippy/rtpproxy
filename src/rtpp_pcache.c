@@ -1,3 +1,6 @@
+#if defined(RTPP_DEBUG)
+#include <assert.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>

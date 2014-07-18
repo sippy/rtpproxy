@@ -74,6 +74,11 @@ RTPP_SW_VERSION=	${TSTAMP}
 RTPP_SW_VERSION=	${TSTAMP}_${GIT_BRANCH}
 .endif
 
+CLEANFILES+=	config.h
+
+config.h: config_std.h
+	cp ${.ALLSRC} ${.TARGET}
+
 distribution: clean
 	echo '#define RTPP_SW_VERSION "'rel.${RTPP_SW_VERSION}'"' > rtpp_version.h
 	git commit -m "Update to rel.${RTPP_SW_VERSION}" rtpp_version.h
