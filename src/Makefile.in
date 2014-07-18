@@ -177,7 +177,7 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DEFS = -DWITHOUT_SIPLOG -Wall -D_BSD_SOURCE -D_ISOC99_SOURCE -DRTPP_LOG_ADVANCED @DEFS@
+DEFS = -DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
 DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -276,7 +276,7 @@ rtpproxy_SOURCES = main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_log_stand.c rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
   rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h
 
-rtpproxy_LDADD = -lm
+rtpproxy_LDADD = -lm -lpthread
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
