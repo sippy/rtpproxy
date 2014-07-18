@@ -102,7 +102,8 @@ am_rtpproxy_OBJECTS = main.$(OBJEXT) rtp_server.$(OBJEXT) \
 	rtpp_proc.$(OBJEXT) rtpp_math.$(OBJEXT) rtpp_wi.$(OBJEXT) \
 	rtpp_queue.$(OBJEXT) rtpp_netio_async.$(OBJEXT) \
 	rtpp_command_parse.$(OBJEXT) rtpp_command_copy.$(OBJEXT) \
-	rtpp_command_ul.$(OBJEXT) rtpp_log_stand.$(OBJEXT)
+	rtpp_command_ul.$(OBJEXT) rtpp_log_stand.$(OBJEXT) \
+	rtpp_hash_table.$(OBJEXT) rtpp_pcache.$(OBJEXT)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
 rtpproxy_DEPENDENCIES =
 AM_V_P = $(am__v_P_@AM_V@)
@@ -272,7 +273,8 @@ rtpproxy_SOURCES = main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
   rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
   rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
-  rtpp_log_stand.c rtpp_log_stand.h
+  rtpp_log_stand.c rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
+  rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h
 
 rtpproxy_LDADD = -lm
 all: config.h
@@ -387,11 +389,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_command_copy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_command_parse.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_command_ul.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_hash_table.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_log_stand.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_math.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_netio_async.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_network.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_notify.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_pcache.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_proc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_proc_async.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_queue.Po@am__quote@
