@@ -10,7 +10,8 @@ rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
   rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
   rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
-  rtpp_log_stand.c rtpp_log_stand.h
+  rtpp_log_stand.c rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
+  rtpp_types.h rtpp_pcache.c rtpp_pcache.h
 
 rtpproxy_LDADD=-lm
 
