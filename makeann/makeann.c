@@ -24,16 +24,24 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id$
- *
  */
 
+#if defined(HAVE_CONFIG_H)
+#include "config_pp.h"
+#endif
+
+#include <sys/socket.h>
 #include <stdint.h>
-#include <err.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#if !defined(NO_ERR_H)
+#include <err.h>
+#else
+#include "rtpp_util.h"
+#endif
 
 #include "g711.h"
 #ifdef ENABLE_G729
