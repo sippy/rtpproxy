@@ -6,3 +6,5 @@
 config.h
 Makefile
 rtpproxy
+ktrace.out
+rtpproxy_debug
