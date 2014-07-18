@@ -52,7 +52,7 @@ SRCS=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
 	rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
 	rtpp_hash_table.c rtpp_hash_table.h rtpp_types.h \
-	rtpp_pcache.c rtpp_pcache.h
+	rtpp_pcache.c rtpp_pcache.h config_pp.h
 MAN1=
 
 WARNS?=	2
