@@ -42,6 +42,12 @@ class UpdateLookupOpts(object):
     local_ip = None
     codecs = None
     otherparams = None
+    remote_ip = None
+    remote_port = None
+    from_tag = None
+    to_tag = None
+    notify_socket = None
+    notify_tag = None
 
     def __init__(self, s = None, *params):
         if s == None:
@@ -69,7 +75,7 @@ class UpdateLookupOpts(object):
                 if len(val) > 0:
                     self.otherparams += val
 
-    def __str__(self):
+    def getstr(self, call_id, swaptags = False):
         s = ''
         if self.destination_ip != None:
             s += 'R%s' % (self.destination_ip,)
@@ -82,6 +88,25 @@ class UpdateLookupOpts(object):
             s = s[:-1]
         if self.otherparams != None and len(self.otherparams) > 0:
             s += + self.otherparams
+        s = '%s %s' % (s, call_id)
+        if self.remote_ip != None:
+            s = '%s %s' % (s, self.remote_ip)
+        if self.remote_port != None:
+            s = '%s %s' % (s, self.remote_port)
+        if not swaptags:
+            from_tag, to_tag = (self.from_tag, self.to_tag)
+        else:
+            if self.to_tag == None:
+                raise Exception('UpdateLookupOpts::getstr(swaptags = True): to_tag is not set')
+            to_tag, from_tag = (self.from_tag, self.to_tag)
+        if self.from_tag != None:
+            s = '%s %s' % (s, self.from_tag)
+        if self.to_tag != None:
+            s = '%s %s' % (s, self.to_tag)
+        if self.notify_socket != None:
+            s = '%s %s' % (s, self.notify_socket)
+        if self.notify_tag != None:
+            s = '%s %s' % (s, self.notify_tag)
         return s
 
 class Rtp_proxy_cmd(object):
@@ -94,10 +119,22 @@ class Rtp_proxy_cmd(object):
     def __init__(self, cmd):
         self.type = cmd[0].upper()
         if self.type in ('U', 'L', 'D', 'P', 'S', 'R', 'C', 'Q'):
-            command_opts, self.call_id, self.args = cmd.split(None, 2)
+            command_opts, self.call_id, args = cmd.split(None, 2)
             if self.type in ('U', 'L'):
                 self.ul_opts = UpdateLookupOpts(command_opts[1:])
+                self.ul_opts.remote_ip, self.ul_opts.remote_port, args = args.split(None, 2)
+                args = args.split(None, 1)
+                self.ul_opts.from_tag = args[0]
+                if len(args) > 1:
+                    args = args[1].split(None, 2)
+                    if len(args) == 1:
+                        self.ul_opts.to_tag = args[0]
+                    elif len(args) == 2:
+                        self.ul_opts.notify_socket, self.ul_opts.notify_tag = args
+                    else:
+                        self.ul_opts.to_tag, self.ul_opts.notify_socket, self.ul_opts.notify_tag = args
             else:
+                self.args = args
                 self.command_opts = command_opts[1:]
         else:
             self.command_opts = cmd[1:]
@@ -105,11 +142,12 @@ class Rtp_proxy_cmd(object):
     def __str__(self):
         s = self.type
         if self.ul_opts != None:
-            s += str(self.ul_opts)
-        elif self.command_opts != None:
-            s += self.command_opts
-        if self.call_id != None:
-            s = '%s %s' % (s, self.call_id)
+            s += self.ul_opts.getstr(self.call_id)
+        else:
+            if self.command_opts != None:
+                s += self.command_opts
+            if self.call_id != None:
+                s = '%s %s' % (s, self.call_id)
         if self.args != None:
             s = '%s %s' % (s, self.args)
         return s
