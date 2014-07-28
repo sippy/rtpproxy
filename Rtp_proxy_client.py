@@ -32,6 +32,9 @@ from time import time
 from hashlib import md5
 from random import random
 
+def randomize(x, p):
+    return x * (1.0 + p * (1.0 - 2.0 * random()))
+
 class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
     worker = None
     address = None
@@ -154,7 +157,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         elif self.online:
             self.go_offline()
         else:
-            Timeout(self.version_check, 60)
+            Timeout(self.version_check, randomize(60, 0.1))
 
     def heartbeat(self):
         #print 'heartbeat', self, self.address
@@ -187,7 +190,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
                 elif line_parts[0] == 'packets transmitted':
                     ptransmitted = int(line_parts[1])
                 self.update_active(active_sessions, sessions_created, active_streams, preceived, ptransmitted)
-        Timeout(self.heartbeat, 10)
+        Timeout(self.heartbeat, randomize(10, 0.1))
 
     def go_online(self):
         if not self.online:
@@ -200,7 +203,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         #print 'go_offline', self.address, self.online
         if self.online:
             self.online = False
-            Timeout(self.version_check, 60)
+            Timeout(self.version_check, randomize(60, 0.1))
 
     def update_active(self, active_sessions, sessions_created, active_streams, preceived, ptransmitted):
         self.sessions_created = sessions_created
