@@ -28,8 +28,6 @@ from Timeout import Timeout
 from Rtp_proxy_client_udp import Rtp_proxy_client_udp
 from Rtp_proxy_client_local import Rtp_proxy_client_local
 
-from time import time
-from hashlib import md5
 from random import random
 
 def randomize(x, p):
