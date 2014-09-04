@@ -107,7 +107,7 @@ int main(int argc, char **argv)
     const char *template;
     struct efile efiles[] = {{NULL, RTP_PCMU, 1}, {NULL, RTP_GSM, GSM_ENABLED},
       {NULL, RTP_G729, G729_ENABLED}, {NULL, RTP_PCMA, 1},
-      {NULL, RTP_G722, G722_ENABLED}, {NULL, -1, 0}};
+      {NULL, RTP_G722, G722_ENABLED}, {NULL, RTP_UNKN, 0}};
 
     loop = 0;
     limit = -1;
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     if (infile == NULL)
         err(1, "can't open %s for reading", argv[0]);
 
-    for (k = 0; efiles[k].pt != -1; k++) {
+    for (k = 0; efiles[k].pt != RTP_UNKN; k++) {
         if (efiles[k].enabled == 0)
             continue;
         sprintf(efiles[k].path, "%s.%d", template, efiles[k].pt);
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
             else
                 slbuf[j] = 0;
         }
-        for (k = 0; efiles[k].pt != -1; k++) {
+        for (k = 0; efiles[k].pt != RTP_UNKN; k++) {
             if (efiles[k].enabled == 0)
                 continue;
             switch (efiles[k].pt) {
@@ -229,7 +229,7 @@ int main(int argc, char **argv)
     }
 
     fclose(infile);
-    for (k = 0; efiles[k].pt != -1; k++) {
+    for (k = 0; efiles[k].pt != RTP_UNKN; k++) {
         if (efiles[k].enabled == 0)
             continue;
         fclose(efiles[k].f);
