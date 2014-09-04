@@ -162,8 +162,8 @@ rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
     return -1;
 }
 
-static void
-doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd)
+void
+rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd)
 {
 
     buf[len] = '\0';
@@ -188,7 +188,7 @@ reply_number(struct cfg *cf, struct rtpp_command *cmd,
     int len;
 
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", number);
-    doreply(cf, cmd->buf_t, len, cmd);
+    rtpc_doreply(cf, cmd->buf_t, len, cmd);
 }
 
 static void
@@ -199,27 +199,13 @@ reply_ok(struct cfg *cf, struct rtpp_command *cmd)
 }
 
 void
-reply_port(struct cfg *cf, struct rtpp_command *cmd,
-  int lport, struct sockaddr **lia)
-{
-    int len;
-
-    if (lia == NULL || lia[0] == NULL || ishostnull(lia[0]))
-	len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", lport);
-    else
-	len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", lport,
-          addr2char(lia[0]), (lia[0]->sa_family == AF_INET) ? "" : " 6");
-    doreply(cf, cmd->buf_t, len, cmd);
-}
-
-void
 reply_error(struct cfg *cf, struct rtpp_command *cmd,
   int ecode)
 {
     int len;
 
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "E%d\n", ecode);
-    doreply(cf, cmd->buf_t, len, cmd);
+    rtpc_doreply(cf, cmd->buf_t, len, cmd);
 }
 
 void
@@ -445,7 +431,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	  cca.call_id, cca.from_tag, cca.to_tag != NULL ? cca.to_tag : "NONE");
 	if (cca.op == LOOKUP) {
             rtpp_command_ul_opts_free(ulop);
-	    reply_port(cf, cmd, 0, NULL);
+	    ul_reply_port(cf, cmd, NULL);
 	    return 0;
 	}
 	reply_error(cf, cmd, ECODE_SESUNKN);
@@ -645,7 +631,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n", get_ttl(spa),
       spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
       spa->pcount[3]);
-    doreply(cf, cmd->buf_t, len, cmd);
+    rtpc_doreply(cf, cmd->buf_t, len, cmd);
 }
 
 static void
@@ -727,14 +713,14 @@ XXX this needs work to fix it after rtp/rtcp split
           addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
           spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
         if (len + 512 > sizeof(buf)) {
-            doreply(cf, buf, len, cmd);
+            rtpc_doreply(cf, buf, len, cmd);
             len = 0;
         }
 #endif
     }
     pthread_mutex_unlock(&cf->sessinfo.lock);
     if (len > 0)
-        doreply(cf, buf, len, cmd);
+        rtpc_doreply(cf, buf, len, cmd);
 }
 
 static void

@@ -48,4 +48,6 @@ void reply_port(struct cfg *cf, struct rtpp_command *cmd, int lport,
   struct sockaddr **lia);
 int rtpp_create_listener(struct cfg *, struct sockaddr *, int *, int *);
 
+void rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd);
+
 #endif

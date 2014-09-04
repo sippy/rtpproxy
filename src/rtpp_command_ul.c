@@ -33,6 +33,7 @@
 #include <ctype.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -54,6 +55,12 @@
 
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
+struct ul_reply {
+    struct sockaddr *ia;
+    const char *ia_ov;
+    int port;
+};
+
 struct ul_opts {
     int asymmetric;
     int weak;
@@ -63,12 +70,36 @@ struct ul_opts {
     char *port;
     struct sockaddr *ia[2];
     struct sockaddr *lia[2];
+
+    struct ul_reply reply;
+    
     int lidx;
     struct sockaddr *local_addr;
     char *socket_name_u;
     char *notify_tag;
     int pf;
 };
+
+void
+ul_reply_port(struct cfg *cf, struct rtpp_command *cmd, struct ul_reply *ulr)
+{
+    int len, rport;
+
+    if (ulr == NULL || ulr->ia == NULL || ishostnull(ulr->ia)) {
+        rport = (ulr == NULL) ? 0 : ulr->port;
+        len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", rport);
+    } else {
+        if (ulr->ia_ov == NULL) {
+            len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", ulr->port,
+              addr2char(ulr->ia), (ulr->ia->sa_family == AF_INET) ? "" : "6");
+        } else {
+            len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s %s\n", ulr->port,
+              ulr->ia_ov, (ulr->ia->sa_family == AF_INET) ? "" : "6");
+        }
+    }
+
+    rtpc_doreply(cf, cmd->buf_t, len, cmd);
+}
 
 static void
 ul_opts_init(struct cfg *cf, struct ul_opts *ulop)
@@ -77,7 +108,7 @@ ul_opts_init(struct cfg *cf, struct ul_opts *ulop)
     /* In bridge mode all clients are assumed to be asymmetric */
     ulop->asymmetric = (cf->stable.bmode != 0) ? 1 : 0;
     ulop->requested_nsamples = -1;
-    ulop->lia[0] = ulop->lia[1] = cf->stable.bindaddr[0];
+    ulop->lia[0] = ulop->lia[1] = ulop->reply.ia = cf->stable.bindaddr[0];
     ulop->lidx = 1;
     ulop->pf = AF_INET;
 }
@@ -610,9 +641,19 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spa->resizers[pidx] = NULL;
     }
 
-    rtpp_command_ul_opts_free(ulop);
     assert(lport != 0);
-    reply_port(cf, cmd, lport, ulop->lia);
+    ulop->reply.port = lport;
+    ulop->reply.ia = ulop->lia[0];
+    if (cf->stable.advaddr[0] != NULL) {
+        if (cf->stable.bmode != 0 && cf->stable.advaddr[1] != NULL &&
+          ulop->lia[0] == cf->stable.bindaddr[1]) {
+            ulop->reply.ia_ov = cf->stable.advaddr[1];
+        } else {
+            ulop->reply.ia_ov = cf->stable.advaddr[0];
+        }
+    }
+    ul_reply_port(cf, cmd, &ulop->reply);
+    rtpp_command_ul_opts_free(ulop);
     return (0);
 
 err_undo_0:
