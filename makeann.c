@@ -140,7 +140,7 @@ int main(int argc, char **argv)
     if (infile == NULL)
         err(1, "can't open %s for reading", argv[0]);
 
-    for (k = 0; efiles[k].pt != -1; k++) {
+    for (k = 0; efiles[k].pt != RTP_UNKN; k++) {
         if (efiles[k].enabled == 0)
             continue;
         sprintf(efiles[k].path, "%s.%d", template, efiles[k].pt);
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
             else
                 slbuf[j] = 0;
         }
-        for (k = 0; efiles[k].pt != -1; k++) {
+        for (k = 0; efiles[k].pt != RTP_UNKN; k++) {
             if (efiles[k].enabled == 0)
                 continue;
             switch (efiles[k].pt) {
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
     }
 
     fclose(infile);
-    for (k = 0; efiles[k].pt != -1; k++) {
+    for (k = 0; efiles[k].pt != RTP_UNKN; k++) {
         if (efiles[k].enabled == 0)
             continue;
         fclose(efiles[k].f);

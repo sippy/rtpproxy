@@ -83,7 +83,7 @@ syslog_queue_run(void)
         /* main work here */
         switch (wi->item_type) {
             case SYSLOG_ITEM_ASYNC_WRITE:
-                syslog(wi->priority, wi->data);
+                syslog(wi->priority, "%s", wi->data);
                 break;
 
             case SYSLOG_ITEM_ASYNC_EXIT:
