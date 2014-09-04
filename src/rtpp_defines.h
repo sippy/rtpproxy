@@ -99,6 +99,7 @@ struct cfg {
          * mode enabled.
          */
         struct sockaddr *bindaddr[2];	/* RTP socket(s) addresses */
+        char *advaddr[2]; /* advertised addresses */
         int tos;
 
         const char *rdir;

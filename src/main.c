@@ -90,7 +90,7 @@ usage(void)
       "[-6 addr1[/addr2]] [-s path]\n\t  [-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] "
       "[-n timeout_socket] [-d log_level[:log_facility]]\n"
-      "\t  [-c fifo|rr]\n"
+      "\t[-c fifo|rr] [-A addr1[/addr2]\n"
       "\trtpproxy -V\n");
     exit(1);
 }
@@ -153,6 +153,9 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable.port_max = PORT_MAX;
     cf->stable.port_ctl = 0;
 
+    cf->stable.advaddr[0] = NULL;
+    cf->stable.advaddr[1] = NULL;
+
     cf->stable.max_ttl = SESSION_TIMEOUT;
     cf->stable.tos = TOS;
     cf->stable.rrtcp = 1;
@@ -182,7 +185,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, cf->stable.nofile_limit) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:")) != -1)
 	switch (ch) {
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
@@ -242,6 +245,22 @@ init_config(struct cfg *cf, int argc, char **argv)
 		cf->stable.bmode = 1;
 	    }
 	    break;
+
+    case 'A':
+        if (*optarg == '\0') {
+            errx(1, "first advertised address is invalid");
+        }
+        cf->stable.advaddr[0] = optarg;
+        cp = strchr(optarg, '/');
+        if (cp != NULL) {
+            *cp = '\0';
+            cp++;
+            if (*cp == '\0') {
+                errx(1, "second advertised address is invalid");
+            }
+        }
+        cf->stable.advaddr[1] = cp;
+        break;
 
 	case 's':
 	    if (strncmp("udp:", optarg, 4) == 0) {
@@ -460,6 +479,9 @@ init_config(struct cfg *cf, int argc, char **argv)
 	if (bh[1] != NULL && bh6[1] != NULL)
 	    errx(1, "either IPv4 or IPv6 should be configured for internal "
 	      "interface in bridging mode, not both");
+    if (cf->stable.advaddr[0] != NULL && cf->stable.advaddr[1] == NULL)
+        errx(1, "two advertised addresses are required for internal "
+          "and external interfaces in bridging mode");
 	if (i != 2)
 	    errx(1, "incomplete configuration of the bridging mode - exactly "
 	      "2 listen addresses required, %d provided", i);
