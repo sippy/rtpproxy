@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python2
 #
 # Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
 # Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
@@ -428,7 +428,7 @@ class CallController(object):
     def aDead(self, ua):
         if (self.uaO == None or isinstance(self.uaO.state, UaStateDead)):
             if self.global_config['_cmap'].debug_mode:
-                print 'garbadge collecting', self
+                print('garbadge collecting', self)
             self.acctA = None
             self.acctO = None
             self.global_config['_cmap'].ccmap.remove(self)
@@ -436,7 +436,7 @@ class CallController(object):
     def oDead(self, ua):
         if ua == self.uaO and isinstance(self.uaA.state, UaStateDead):
             if self.global_config['_cmap'].debug_mode:
-                print 'garbadge collecting', self
+                print('garbadge collecting', self)
             self.acctA = None
             self.acctO = None
             self.global_config['_cmap'].ccmap.remove(self)
@@ -481,13 +481,13 @@ class CallMap(object):
     def recvRequest(self, req):
         try:
             to_tag = req.getHFBody('to').getTag()
-        except Exception, exception:
-            print datetime.now(), 'can\'t parse SIP request: %s:\n' % str(exception)
-            print '-' * 70
+        except Exception as exception:
+            print(datetime.now(), 'can\'t parse SIP request: %s:\n' % str(exception))
+            print( '-' * 70)
             print_exc(file = sys.stdout)
-            print '-' * 70
-            print req
-            print '-' * 70
+            print( '-' * 70)
+            print(req)
+            print('-' * 70)
             sys.stdout.flush()
             return (None, None, None)
         if to_tag != None:
@@ -544,33 +544,33 @@ class CallMap(object):
 
     def discAll(self, signum = None):
         if signum != None:
-            print 'Signal %d received, disconnecting all calls' % signum
+            print('Signal %d received, disconnecting all calls' % signum)
         for cc in tuple(self.ccmap):
             cc.disconnect()
 
     def toggleDebug(self, signum):
         if self.debug_mode:
-            print 'Signal %d received, toggling extra debug output off' % signum
+            print('Signal %d received, toggling extra debug output off' % signum)
         else:
-            print 'Signal %d received, toggling extra debug output on' % signum
+            print('Signal %d received, toggling extra debug output on' % signum)
         self.debug_mode = not self.debug_mode
 
     def safeRestart(self, signum):
-        print 'Signal %d received, scheduling safe restart' % signum
+        print('Signal %d received, scheduling safe restart' % signum)
         self.safe_restart = True
 
     def GClector(self):
-        print 'GC is invoked, %d calls in map' % len(self.ccmap)
+        print('GC is invoked, %d calls in map' % len(self.ccmap))
         if self.debug_mode:
-            print self.global_config['_sip_tm'].tclient, self.global_config['_sip_tm'].tserver
+            print(self.global_config['_sip_tm'].tclient, self.global_config['_sip_tm'].tserver)
             for cc in tuple(self.ccmap):
                 try:
-                    print cc.uaA.state, cc.uaO.state
+                    print(cc.uaA.state, cc.uaO.state)
                 except AttributeError:
-                    print None
+                    print(None)
         else:
-            print '[%d]: %d client, %d server transactions in memory' % \
-              (os.getpid(), len(self.global_config['_sip_tm'].tclient), len(self.global_config['_sip_tm'].tserver))
+            print('[%d]: %d client, %d server transactions in memory' % \
+              (os.getpid(), len(self.global_config['_sip_tm'].tclient), len(self.global_config['_sip_tm'].tserver)))
         if self.safe_restart:
             if len(self.ccmap) == 0:
                 self.global_config['_sip_tm'].userv.close()
@@ -582,7 +582,7 @@ class CallMap(object):
             self.el.ival = 1
         #print gc.collect()
         if len(gc.garbage) > 0:
-            print gc.garbage
+            print(gc.garbage)
 
     def recvCommand(self, clim, cmd):
         args = cmd.split()
@@ -672,20 +672,21 @@ class CallMap(object):
         return False
 
 def reopen(signum, logfile):
-    print 'Signal %d received, reopening logs' % signum
+    print('Signal %d received, reopening logs' % signum)
     fd = os.open(logfile, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
     os.dup2(fd, sys.__stdout__.fileno())
     os.dup2(fd, sys.__stderr__.fileno())
     os.close(fd)
 
 def usage(global_config, brief = False):
-    print 'usage: b2bua.py [--option1=value1] [--option2=value2] ... [--optionN==valueN]'
+    print('usage: b2bua.py [--option1=value1] [--option2=value2] ... [--optionN==valueN]')
     if not brief:
-        print '\navailable options:\n'
+        print('\navailable options:\n')
         global_config.options_help()
     sys.exit(1)
 
-if __name__ == '__main__':
+
+def main_func():
     global_config = MyConfigParser()
     global_config['digest_auth'] = True
     global_config['start_acct_enable'] = False
@@ -865,3 +866,7 @@ if __name__ == '__main__':
 
     reactor.suggestThreadPoolSize(50)
     reactor.run(installSignalHandlers = True)
+
+
+if __name__ == '__main__':
+    main_func()

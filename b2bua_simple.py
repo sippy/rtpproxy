@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python2
 #
 # Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
 # Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
@@ -92,14 +92,15 @@ class CallMap(object):
             return (req.genResponse(200, 'OK'), None, None)
         return (req.genResponse(501, 'Not Implemented'), None, None)
 
-if __name__ == '__main__':
+def main_func():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'fl:p:n:')
+        opts, args = getopt.getopt(sys.argv[1:], 'fl:p:n:L:')
     except getopt.GetoptError:
-        print 'usage: b2bua.py [-l addr] [-p port] [-n addr] [-f]'
+        print('usage: b2bua.py [-l addr] [-p port] [-n addr] [-f] [-L logfile]')
         sys.exit(1)
     laddr = None
     lport = None
+    logfile = '/var/log/sippy.log'
     global_config = {'nh_addr':['192.168.0.102', 5060]}
     foreground = False
     for o, a in opts:
@@ -112,6 +113,8 @@ if __name__ == '__main__':
         if o == '-p':
             lport = int(a)
             continue
+        if o == '-L':
+            logfile = a
         if o == '-n':
             if a.startswith('['):
                 parts = a.split(']', 1)
@@ -126,7 +129,7 @@ if __name__ == '__main__':
     global_config['nh_addr'] = tuple(global_config['nh_addr'])
 
     if not foreground:
-        daemonize(logfile = '/var/log/sippy.log')
+        daemonize(logfile)
 
     SipConf.my_uaname = 'Sippy B2BUA (Simple)'
     SipConf.allow_formats = (0, 8, 18, 100, 101)
@@ -143,3 +146,7 @@ if __name__ == '__main__':
     global_config['_sip_tm'] = SipTransactionManager(global_config, cmap.recvRequest)
 
     reactor.run(installSignalHandlers = True)
+
+if __name__ == '__main__':
+    main_func()
+
