@@ -39,7 +39,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "rtpp_log.h"
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"
