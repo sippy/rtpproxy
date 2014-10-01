@@ -28,10 +28,10 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <stdint.h>
 #include <stdlib.h>
 
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_parse.h"
@@ -207,19 +207,19 @@ rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd,
     struct cmd_props cprops;
 
     if (fill_cmd_props(cmd, cca, &cprops) != 0) {
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "unknown command \"%c\"",
+        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "unknown command \"%c\"",
           cmd->argv[0][0]);
         reply_error(cf, cmd, ECODE_CMDUNKN);
         return (-1);
     }
     if (cmd->argc < cprops.min_argc || cmd->argc > cprops.max_argc) {
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "%s command syntax error"
+        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "%s command syntax error"
           ": invalid number of arguments (%d)", cca->rname, cmd->argc);
         reply_error(cf, cmd, ECODE_PARSE_NARGS);
         return (-1);
     }
     if (cprops.has_cmods == 0 && cmd->argv[0][1] != '\0') {
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable.glog, "%s command syntax error"
+        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "%s command syntax error"
           ": modifiers are not supported by the command", cca->rname);
         reply_error(cf, cmd, ECODE_PARSE_MODS);
         return (-1);

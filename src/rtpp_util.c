@@ -34,13 +34,13 @@
 #include <fcntl.h>
 #include <math.h>
 #include <pthread.h>
-#include <stdint.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_util.h"
 
@@ -114,13 +114,13 @@ set_rlimits(struct cfg *cf)
     struct rlimit rlp;
 
     if (getrlimit(RLIMIT_CORE, &rlp) < 0) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog, "getrlimit(RLIMIT_CORE)");
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "getrlimit(RLIMIT_CORE)");
         return (-1);
     }
     rlp.rlim_cur = RLIM_INFINITY;
     rlp.rlim_max = RLIM_INFINITY;
     if (setrlimit(RLIMIT_CORE, &rlp) < 0) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog, "setrlimit(RLIMIT_CORE)");
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "setrlimit(RLIMIT_CORE)");
         return (-1);
     }
     return (0);
@@ -130,16 +130,16 @@ int
 drop_privileges(struct cfg *cf)
 {
 
-    if (cf->stable.run_gname != NULL) {
-	if (setgid(cf->stable.run_gid) != 0) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog, "can't set current group ID: %d", cf->stable.run_gid);
+    if (cf->stable->run_gname != NULL) {
+	if (setgid(cf->stable->run_gid) != 0) {
+	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "can't set current group ID: %d", cf->stable->run_gid);
 	    return -1;
 	}
     }
-    if (cf->stable.run_uname == NULL)
+    if (cf->stable->run_uname == NULL)
 	return 0;
-    if (setuid(cf->stable.run_uid) != 0) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog, "can't set current user ID: %d", cf->stable.run_uid);
+    if (setuid(cf->stable->run_uid) != 0) {
+	rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "can't set current user ID: %d", cf->stable->run_uid);
 	return -1;
     }
     return 0;
@@ -152,23 +152,23 @@ init_port_table(struct cfg *cf)
     uint16_t portnum;
 
     /* Generate linear table */
-    cf->stable.port_table_len = ((cf->stable.port_max - cf->stable.port_min) / 2) + 1;
-    portnum = cf->stable.port_min;
-    for (i = 0; i < cf->stable.port_table_len; i += 1) {
-	cf->stable.port_table[i] = portnum;
+    cf->stable->port_table_len = ((cf->stable->port_max - cf->stable->port_min) / 2) + 1;
+    portnum = cf->stable->port_min;
+    for (i = 0; i < cf->stable->port_table_len; i += 1) {
+	cf->stable->port_table[i] = portnum;
 	portnum += 2;
     }
 #if !defined(SEQUENTAL_PORTS)
     /* Shuffle elements ramdomly */
-    for (i = 0; i < cf->stable.port_table_len; i += 1) {
-	j = random() % cf->stable.port_table_len;
-	portnum = cf->stable.port_table[i];
-	cf->stable.port_table[i] = cf->stable.port_table[j];
-	cf->stable.port_table[j] = portnum;
+    for (i = 0; i < cf->stable->port_table_len; i += 1) {
+	j = random() % cf->stable->port_table_len;
+	portnum = cf->stable->port_table[i];
+	cf->stable->port_table[i] = cf->stable->port_table[j];
+	cf->stable->port_table[j] = portnum;
     }
 #endif
     /* Set the last used element to be the last element */
-    cf->port_table_idx = cf->stable.port_table_len - 1;
+    cf->port_table_idx = cf->stable->port_table_len - 1;
 }
 
 /*

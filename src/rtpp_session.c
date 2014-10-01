@@ -31,7 +31,6 @@
 #include <assert.h>
 #include <poll.h>
 #include <pthread.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -39,6 +38,7 @@
 #include "rtpp_types.h"
 #include "rtp.h"
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_math.h"
@@ -57,7 +57,7 @@ session_findfirst(struct cfg *cf, const char *call_id)
     /* Make sure structure is properly locked */
     assert(pthread_mutex_islocked(&cf->glock) == 1);
 
-    he = CALL_METHOD(cf->stable.sessions_ht, findfirst, call_id, (void **)&sp);
+    he = CALL_METHOD(cf->stable->sessions_ht, findfirst, call_id, (void **)&sp);
     if (he == NULL) {
         return (NULL);
     }
@@ -73,7 +73,7 @@ session_findnext(struct cfg *cf, struct rtpp_session *psp)
     /* Make sure structure is properly locked */
     assert(pthread_mutex_islocked(&cf->glock) == 1);
 
-    he = CALL_METHOD(cf->stable.sessions_ht, findnext, psp->hte, (void **)&sp); 
+    he = CALL_METHOD(cf->stable->sessions_ht, findnext, psp->hte, (void **)&sp); 
     if (he == NULL) {
         return (NULL);
     }
@@ -174,7 +174,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
     if (sp->timeout_data.notify_tag != NULL)
 	free(sp->timeout_data.notify_tag);
     if (sp->hte != NULL)
-        CALL_METHOD(cf->stable.sessions_ht, remove, sp->call_id, sp->hte);
+        CALL_METHOD(cf->stable->sessions_ht, remove, sp->call_id, sp->hte);
     if (sp->call_id != NULL)
 	free(sp->call_id);
     if (sp->tag != NULL)

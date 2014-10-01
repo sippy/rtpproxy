@@ -43,6 +43,7 @@
 
 #include "rtp.h"
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_record.h"
@@ -138,13 +139,13 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 	return (void *)(rrc);
     }
 
-    if (cf->stable.rdir == NULL) {
+    if (cf->stable->rdir == NULL) {
 	rtpp_log_write(RTPP_LOG_ERR, sp->log, "directory for saving local recordings is not configured");
 	free(rrc);
 	return NULL;
     }
 
-    if (cf->stable.record_pcap != 0) {
+    if (cf->stable->record_pcap != 0) {
 	rrc->mode = MODE_LOCAL_PCAP;
     } else {
 	rrc->mode = MODE_LOCAL_PKT;
@@ -156,17 +157,17 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
         suffix1 = (orig != 0) ? ".o" : ".a";
         suffix2 = (sp->rtcp != NULL) ? ".rtp" : ".rtcp";
     }
-    if (cf->stable.sdir == NULL) {
-	sdir = cf->stable.rdir;
+    if (cf->stable->sdir == NULL) {
+	sdir = cf->stable->rdir;
 	rrc->needspool = 0;
     } else {
-	sdir = cf->stable.sdir;
+	sdir = cf->stable->sdir;
 	rrc->needspool = 1;
 	if (rname == NULL) {
-	    sprintf(rrc->rpath, "%s/%s=%s%s%s", cf->stable.rdir, sp->call_id, sp->tag_nomedianum,
+	    sprintf(rrc->rpath, "%s/%s=%s%s%s", cf->stable->rdir, sp->call_id, sp->tag_nomedianum,
 	      suffix1, suffix2);
 	} else {
-	    sprintf(rrc->rpath, "%s/%s%s", cf->stable.rdir, rname, suffix2);
+	    sprintf(rrc->rpath, "%s/%s%s", cf->stable->rdir, rname, suffix2);
 	}
     }
     if (rname == NULL) {

@@ -30,13 +30,13 @@
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/un.h>
 
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
@@ -63,12 +63,12 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
     struct rtpp_command *cmd;
 
     do {
-        if (cf->stable.umode == 0) {
+        if (cf->stable->umode == 0) {
             rlen = sizeof(ifsun);
             controlfd = accept(controlfd_in, sstosa(&ifsun), &rlen);
             if (controlfd == -1) {
                 if (errno != EWOULDBLOCK)
-                    rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable.glog,
+                    rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog,
                       "can't accept connection on control socket");
                 break;
             }
@@ -84,10 +84,10 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
         } else {
             i = -1;
         }
-        if (cf->stable.umode == 0) {
+        if (cf->stable->umode == 0) {
             close(controlfd);
         }
-    } while (i == 0 || cf->stable.umode == 0);
+    } while (i == 0 || cf->stable->umode == 0);
 }
 
 static void
@@ -100,9 +100,9 @@ rtpp_cmd_queue_run(void *arg)
     double eptime, sptime, tused;
 
     cf = (struct cfg *)arg;
-    cmd_cf = cf->stable.rtpp_cmd_cf;
+    cmd_cf = cf->stable->rtpp_cmd_cf;
 
-    pfds[0].fd = cf->stable.controlfd;
+    pfds[0].fd = cf->stable->controlfd;
     pfds[0].events = POLLIN;
     pfds[0].revents = 0;
 
@@ -127,18 +127,18 @@ rtpp_cmd_queue_run(void *arg)
         if (i > 0 && (pfds[0].revents & POLLIN) != 0) {
             process_commands(cf, pfds[0].fd, sptime);
         }
-        rtpp_anetio_pump(cf->stable.rtpp_netio_cf);
+        rtpp_anetio_pump(cf->stable->rtpp_netio_cf);
         eptime = getdtime();
         pthread_mutex_lock(&cmd_cf->cmd_mutex);
-        recfilter_apply(&cmd_cf->average_load, (eptime - sptime + tused) * cf->stable.target_pfreq);
+        recfilter_apply(&cmd_cf->average_load, (eptime - sptime + tused) * cf->stable->target_pfreq);
         pthread_mutex_unlock(&cmd_cf->cmd_mutex);
 #if RTPP_DEBUG
-        if (last_ctick % (unsigned int)cf->stable.target_pfreq == 0 || last_ctick < 1000) {
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
-              last_ctick, sptime, eptime, (double)last_ctick / cf->stable.target_pfreq, \
+        if (last_ctick % (unsigned int)cf->stable->target_pfreq == 0 || last_ctick < 1000) {
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
+              last_ctick, sptime, eptime, (double)last_ctick / cf->stable->target_pfreq, \
               eptime - sptime + tused, eptime, sptime, tused);
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "run %lld average load %f, CSV: %f,%f", last_ctick, \
-              cmd_cf->average_load.lastval * 100.0, (double)last_ctick / cf->stable.target_pfreq, cmd_cf->average_load.lastval);
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld average load %f, CSV: %f,%f", last_ctick, \
+              cmd_cf->average_load.lastval * 100.0, (double)last_ctick / cf->stable->target_pfreq, cmd_cf->average_load.lastval);
         }
 #endif
     }
@@ -191,12 +191,12 @@ rtpp_command_async_init(struct cfg *cf)
 
     recfilter_init(&cmd_cf->average_load, 0.999, 0.0, 1);
 
-    cf->stable.rtpp_cmd_cf = cmd_cf;
+    cf->stable->rtpp_cmd_cf = cmd_cf;
     if (pthread_create(&cmd_cf->thread_id, NULL, (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
         pthread_cond_destroy(&cmd_cf->cmd_cond);
         pthread_mutex_destroy(&cmd_cf->cmd_mutex);
         free(cmd_cf);
-        cf->stable.rtpp_cmd_cf = NULL;
+        cf->stable->rtpp_cmd_cf = NULL;
         return (-1);
     }
 

@@ -37,7 +37,6 @@
 #include <errno.h>
 #include <netdb.h>
 #include <pthread.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,6 +49,7 @@
 #endif
 
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
@@ -335,7 +335,7 @@ rtpp_notify_schedule(struct cfg *cf, struct rtpp_session *sp)
           sp->timeout_data.notify_tag);
     }
 
-    wi->glog = cf->stable.glog;
+    wi->glog = cf->stable->glog;
 
     rtpp_notify_queue_put_item(wi);
     return 0;

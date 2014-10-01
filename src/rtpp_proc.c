@@ -39,6 +39,7 @@
 #include "rtp_resizer.h"
 #include "rtp_server.h"
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
@@ -266,7 +267,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
     int sidx;
 
 
-    GET_RTP(sp)->ttl[ridx] = cf->stable.max_ttl;
+    GET_RTP(sp)->ttl[ridx] = cf->stable->max_ttl;
 
     /* Select socket for sending packet out. */
     sidx = (ridx == 0) ? 1 : 0;
@@ -359,7 +360,7 @@ process_rtp_only(struct cfg *cf, double dtime, int drain_repeat, \
             }
         } else if ((cf->sessinfo.pfds_rtp[readyfd].revents & POLLIN) != 0) {
 #if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining RTP socket %d", cf->sessinfo.pfds_rtp[readyfd].fd);
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "Draining RTP socket %d", cf->sessinfo.pfds_rtp[readyfd].fd);
 #endif
             drain_socket(cf->sessinfo.pfds_rtp[readyfd].fd);
         }
@@ -433,12 +434,12 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 	    }
 	} else if ((cf->sessinfo.pfds_rtp[readyfd].revents & POLLIN) != 0) {
 #if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining RTP socket %d", cf->sessinfo.pfds_rtp[readyfd].fd);
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "Draining RTP socket %d", cf->sessinfo.pfds_rtp[readyfd].fd);
 #endif
             drain_socket(cf->sessinfo.pfds_rtp[readyfd].fd);
         } else if ((cf->sessinfo.pfds_rtcp[readyfd].revents & POLLIN) != 0) {
 #if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable.glog, "Draining RTCP socket %d", cf->sessinfo.pfds_rtcp[readyfd].fd);
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "Draining RTCP socket %d", cf->sessinfo.pfds_rtcp[readyfd].fd);
 #endif
             drain_socket(cf->sessinfo.pfds_rtcp[readyfd].fd);
         }

@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #ifdef RTPP_LOG_ADVANCED
 #include "rtpp_syslog_async.h"
@@ -45,8 +46,8 @@
 static int syslog_async_opened = 0;
 #endif
 
-struct cfg_stable *
-_rtpp_log_open(struct cfg_stable *cf, const char *app)
+struct rtpp_cfg_stable *
+_rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app)
 {
 #ifdef RTPP_LOG_ADVANCED
     int facility;
@@ -121,7 +122,7 @@ rtpp_log_str2lvl(const char *strl)
 }
 
 static int
-check_level(struct cfg_stable *cf, int cf_level, int level)
+check_level(struct rtpp_cfg_stable *cf, int cf_level, int level)
 {
 
     if (cf_level == -1) {
@@ -131,7 +132,7 @@ check_level(struct cfg_stable *cf, int cf_level, int level)
 }
 
 void
-rtpp_log_setlevel(struct cfg_stable *cf, int level)
+rtpp_log_setlevel(struct rtpp_cfg_stable *cf, int level)
 {
 /*
  * STUB
@@ -139,7 +140,7 @@ rtpp_log_setlevel(struct cfg_stable *cf, int level)
 }
 
 void
-_rtpp_log_write(struct cfg_stable *cf, int level, const char *function, const char *format, ...)
+_rtpp_log_write(struct rtpp_cfg_stable *cf, int level, const char *function, const char *format, ...)
 {
     va_list ap;
     char rtpp_log_buff[2048];
@@ -170,7 +171,7 @@ _rtpp_log_write(struct cfg_stable *cf, int level, const char *function, const ch
 }
 
 void
-_rtpp_log_ewrite(struct cfg_stable *cf, int level, const char *function, const char *format, ...)
+_rtpp_log_ewrite(struct rtpp_cfg_stable *cf, int level, const char *function, const char *format, ...)
 {
     va_list ap;
     char rtpp_log_buff[2048];

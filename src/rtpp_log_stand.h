@@ -32,9 +32,9 @@
 #include <syslog.h>
 #include <stdarg.h>
 
-struct cfg_stable;
+struct rtpp_cfg_stable;
 
-#define	rtpp_log_t	struct cfg_stable *
+#define	rtpp_log_t	struct rtpp_cfg_stable *
 
 #if 0
 #include "rtpp_defines.h"
@@ -59,14 +59,12 @@ struct cfg_stable;
 	};
 #define	rtpp_log_close(handle) _rtpp_log_close();
 
-struct cfg_stable;
-
-void _rtpp_log_write(struct cfg_stable *, int, const char *, const char *, ...);
-void _rtpp_log_ewrite(struct cfg_stable *, int, const char *, const char *, ...);
-struct cfg_stable *_rtpp_log_open(struct cfg_stable *, const char *);
+void _rtpp_log_write(struct rtpp_cfg_stable *, int, const char *, const char *, ...);
+void _rtpp_log_ewrite(struct rtpp_cfg_stable *, int, const char *, const char *, ...);
+struct rtpp_cfg_stable *_rtpp_log_open(struct rtpp_cfg_stable *, const char *);
 void _rtpp_log_close(void);
 int rtpp_log_str2lvl(const char *);
 int rtpp_log_str2fac(const char *);
-void rtpp_log_setlevel(struct cfg_stable *cf, int level);
+void rtpp_log_setlevel(struct rtpp_cfg_stable *cf, int level);
 
 #endif

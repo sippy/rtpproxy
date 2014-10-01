@@ -29,12 +29,12 @@
 #include <sys/socket.h>
 #include <errno.h>
 #include <pthread.h>
-#include <stdint.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_wi.h"
@@ -219,21 +219,21 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
             free(netio_cf);
             return (NULL);
         }
-        netio_cf->args[i].glog = cf->stable.glog;
-        netio_cf->args[i].dmode = cf->stable.dmode;
+        netio_cf->args[i].glog = cf->stable->glog;
+        netio_cf->args[i].dmode = cf->stable->dmode;
 #ifdef RTPP_DEBUG
         recfilter_init(&netio_cf->args[i].average_load, 0.9, 0.0, 0);
 #endif
     }
 
-    cf->stable.rtpp_netio_cf = netio_cf;
+    cf->stable->rtpp_netio_cf = netio_cf;
     for (i = 0; i < SEND_THREADS; i++) {
         if (pthread_create(&netio_cf->thread_id[i], NULL, (void *(*)(void *))&rtpp_anetio_sthread, &netio_cf->args[i]) != 0) {
              for (ri = i; ri >= 0; ri--) {
                  rtpp_queue_destroy(netio_cf->args[i].out_q);
              }
              free(netio_cf);
-             cf->stable.rtpp_netio_cf = NULL;
+             cf->stable->rtpp_netio_cf = NULL;
              return (NULL);
         }
     }

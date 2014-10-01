@@ -28,10 +28,10 @@
 
 #include <sys/types.h>
 #include <assert.h>
-#include <stdint.h>
 #include <string.h>
 
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
@@ -60,7 +60,7 @@ handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
               "starting recording RTP session on port %d", spa->ports[idx]);
         }
         assert(spa->rtcp->rrcs[idx] == NULL);
-        if (cf->stable.rrtcp != 0) {
+        if (cf->stable->rrtcp != 0) {
             spa->rtcp->rrcs[idx] = spa->rrcs[idx];
             rtpp_log_write(RTPP_LOG_INFO, spa->log,
               "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
@@ -76,7 +76,7 @@ handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
         rtpp_log_write(RTPP_LOG_INFO, spa->log,
           "starting recording RTP session on port %d", spa->ports[idx]);
     }
-    if (spa->rtcp->rrcs[idx] == NULL && cf->stable.rrtcp != 0) {
+    if (spa->rtcp->rrcs[idx] == NULL && cf->stable->rrtcp != 0) {
         spa->rtcp->rrcs[idx] = ropen(cf, spa->rtcp, rname, idx);
         if (spa->rtcp->rrcs[idx] == NULL) {
             return (-1);

@@ -38,6 +38,7 @@
 #include "rtp.h"
 #include "rtp_server.h"
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_session.h"
 
