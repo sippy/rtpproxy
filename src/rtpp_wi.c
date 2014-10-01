@@ -28,7 +28,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <assert.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
