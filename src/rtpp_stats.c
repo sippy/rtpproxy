@@ -56,7 +56,7 @@ static struct
     {.name = "nplrs_created",   .descr = "Number of RTP players created"},
     {.name = "nplrs_destroyed", .descr = "Number of RTP players destroyed"},
     {.name = "npkts_rcvd",      .descr = "Total number of RTP/RTPC packets received"},
-    {.name = "npkts_played",    .descr = "Total number of RTP/RTPC packets locally generated (played out)"},
+    {.name = "npkts_played",    .descr = "Total number of RTP packets locally generated (played out)"},
     {.name = "npkts_relayed",   .descr = "Total number of RTP/RTPC packets relayed"},
     {.name = "npkts_discard",   .descr = "Total number of RTP/RTPC packets discarded"},
     {.name = "total_duration",  .descr = "Cumulative duration of all sessions"},
