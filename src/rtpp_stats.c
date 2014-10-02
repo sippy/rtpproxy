@@ -81,6 +81,7 @@ struct rtpp_stats_obj_full
 static void rtpp_stats_obj_dtor(struct rtpp_stats_obj *);
 static int rtpp_stats_obj_getidxbyname(struct rtpp_stats_obj *, const char *);
 static int rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *, int, uint64_t);
+static int rtpp_stats_obj_updatebyname(struct rtpp_stats_obj *, const char *, uint64_t);
 static int64_t rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *, const char *);
 
 struct rtpp_stats_obj *
@@ -119,6 +120,7 @@ rtpp_stats_ctor(void)
     pub->dtor = &rtpp_stats_obj_dtor;
     pub->getidxbyname = &rtpp_stats_obj_getidxbyname;
     pub->updatebyidx = &rtpp_stats_obj_updatebyidx;
+    pub->updatebyname = &rtpp_stats_obj_updatebyname;
     pub->getlvalbyname = &rtpp_stats_obj_getlvalbyname;
     return (pub);
 }
@@ -153,6 +155,17 @@ rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *self, int idx, uint64_t incr)
     st->cnt += incr;
     pthread_mutex_unlock(&st->mutex);
     return (0);
+}
+
+static int
+rtpp_stats_obj_updatebyname(struct rtpp_stats_obj *self, const char *name, uint64_t incr)
+{
+    int idx;
+
+    idx = rtpp_stats_obj_getidxbyname(self, name);
+    if (idx < 0)
+        return (-1);
+    return rtpp_stats_obj_updatebyidx(self, idx, incr);
 }
 
 static int64_t
