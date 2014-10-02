@@ -93,6 +93,8 @@ struct rtpp_cfg_stable {
     struct rtpp_proc_async_cf *rtpp_proc_cf;
     struct rtpp_anetio_cf *rtpp_netio_cf;
     int slowshutdown;
+
+    struct rtpp_stats_obj *rtpp_stats;
 };
 
 #endif
