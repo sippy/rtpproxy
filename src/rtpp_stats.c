@@ -37,10 +37,10 @@ struct rtpp_stat
 {
     const char *name;
     pthread_mutex_t mutex;
-    uint64_t ctr;
+    uint64_t cnt;
 };
 
-#define RTPP_NSTATS 17
+#define RTPP_NSTATS 18
 
 static struct
 {
@@ -58,6 +58,7 @@ static struct
     {.name = "npkts_rcvd",      .descr = "Total number of RTP/RTPC packets received"},
     {.name = "npkts_played",    .descr = "Total number of RTP packets locally generated (played out)"},
     {.name = "npkts_relayed",   .descr = "Total number of RTP/RTPC packets relayed"},
+    {.name = "npkts_resized",   .descr = "Total number of RTP packets resized (re-packetized)"},
     {.name = "npkts_discard",   .descr = "Total number of RTP/RTPC packets discarded"},
     {.name = "total_duration",  .descr = "Cumulative duration of all sessions"},
     {.name = "ncmds_rcvd",      .descr = "Total number of control commands received"},
@@ -78,6 +79,9 @@ struct rtpp_stats_obj_full
 };
 
 static void rtpp_stats_obj_dtor(struct rtpp_stats_obj *);
+static int rtpp_stats_obj_getidxbyname(struct rtpp_stats_obj *, const char *);
+static int rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *, int, uint64_t);
+static int64_t rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *, const char *);
 
 struct rtpp_stats_obj *
 rtpp_stats_ctor(void)
@@ -109,11 +113,66 @@ rtpp_stats_ctor(void)
             free(fp);
             return (NULL);
         }
-        st->ctr = 0;
+        st->cnt = 0;
     }
     pub->pvt = pvt;
     pub->dtor = &rtpp_stats_obj_dtor;
+    pub->getidxbyname = &rtpp_stats_obj_getidxbyname;
+    pub->updatebyidx = &rtpp_stats_obj_updatebyidx;
+    pub->getlvalbyname = &rtpp_stats_obj_getlvalbyname;
     return (pub);
+}
+
+static int
+rtpp_stats_obj_getidxbyname(struct rtpp_stats_obj *self, const char *name)
+{
+    int i;
+    struct rtpp_stats_obj_priv *pvt;
+
+    pvt = self->pvt;
+    for (i = 0; i < RTPP_NSTATS; i++) {
+        if (strcmp(pvt->stats[i].name, name) != 0)
+            continue;
+        return (i);
+    }
+    return (-1);
+}
+
+static int
+rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *self, int idx, uint64_t incr)
+{
+    int i;
+    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stat *st;
+
+    if (idx < 0 || idx >= RTPP_NSTATS)
+        return (-1);
+    pvt = self->pvt;
+    st = &pvt->stats[i];
+    pthread_mutex_lock(&st->mutex);
+    st->cnt += incr;
+    pthread_mutex_unlock(&st->mutex);
+    return (0);
+}
+
+static int64_t
+rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *self, const char *name)
+{
+    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stat *st;
+    uint64_t rval;
+    int idx;
+
+    idx = rtpp_stats_obj_getidxbyname(self, name);
+    if (idx < 0) {
+        return (-1);
+    }
+    pvt = self->pvt;
+    st = &pvt->stats[idx];
+    pthread_mutex_lock(&st->mutex);
+    rval = st->cnt;
+    pthread_mutex_unlock(&st->mutex);
+    return (rval);
 }
 
 static void

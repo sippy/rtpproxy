@@ -32,12 +32,18 @@ struct rtpp_stats_obj;
 #endif
 
 DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_dtor, void);
+DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_getidxbyname, int, const char *);
+DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_updatebyidx, int, int, uint64_t);
+DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_getlvalbyname, int64_t, const char *);
 
 struct rtpp_stats_obj_priv;
 
 struct rtpp_stats_obj
 {
     rtpp_stats_obj_dtor_t dtor;
+    rtpp_stats_obj_getidxbyname_t getidxbyname;
+    rtpp_stats_obj_updatebyidx_t updatebyidx;
+    rtpp_stats_obj_getlvalbyname_t getlvalbyname;
     struct rtpp_stats_obj_priv *pvt;
 };
 
