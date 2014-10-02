@@ -70,6 +70,7 @@
 #include "rtpp_notify.h"
 #include "rtpp_util.h"
 #include "rtpp_math.h"
+#include "rtpp_stats.h"
 
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
@@ -596,6 +597,15 @@ main(int argc, char **argv)
     memset(cf.stable, '\0', sizeof(struct rtpp_cfg_stable));
 
     cf.stable->sessions_ht = rtpp_hash_table_ctor();
+    if (cf.stable->sessions_ht == NULL) {
+        err(1, "can't allocate memory for the hash table");
+         /* NOTREACHED */
+    }
+    cf.stable->rtpp_stats = rtpp_stats_ctor();
+    if (cf.stable->rtpp_stats == NULL) {
+        err(1, "can't allocate memory for the stats data");
+         /* NOTREACHED */
+    }
     init_port_table(&cf);
 
     controlfd = init_controlfd(&cf);
