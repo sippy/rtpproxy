@@ -28,8 +28,24 @@
 #ifndef _RTPP_PROC_H_
 #define _RTPP_PROC_H_
 
-void process_rtp_servers(struct cfg *, double, struct sthread_args *);
-void process_rtp(struct cfg *, double, int, int, struct sthread_args *);
-void process_rtp_only(struct cfg *, double, int, struct sthread_args *sender);
+struct rtpp_proc_stat {
+    uint64_t cnt;
+    int cnt_idx;
+};
+
+struct rtpp_proc_rstats {
+    struct rtpp_proc_stat npkts_rcvd;
+    struct rtpp_proc_stat npkts_played;
+    struct rtpp_proc_stat npkts_relayed;
+    struct rtpp_proc_stat npkts_resized;
+    struct rtpp_proc_stat npkts_discard;
+};
+
+void process_rtp_servers(struct cfg *, double, struct sthread_args *,
+  struct rtpp_proc_rstats *);
+void process_rtp(struct cfg *, double, int, int, struct sthread_args *,
+  struct rtpp_proc_rstats *);
+void process_rtp_only(struct cfg *, double, int, struct sthread_args *sender,
+  struct rtpp_proc_rstats *);
 
 #endif

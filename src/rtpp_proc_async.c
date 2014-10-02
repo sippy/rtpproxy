@@ -47,6 +47,8 @@
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
 #include "rtpp_util.h"
+#include "rtpp_types.h"
+#include "rtpp_stats.h"
 
 struct rtpp_proc_async_cf {
     pthread_t thread_id;
@@ -59,12 +61,31 @@ struct rtpp_proc_async_cf {
     struct recfilter poll_time;
     struct recfilter proc_time;
 #endif
+    struct rtpp_proc_rstats rstats;
 };
 
 struct sign_arg {
     int clock_tick;
     long long ncycles_ref;
 };
+
+#define FLUSH_STAT(sobj, st)	{ \
+    if ((st).cnt > 0) { \
+        CALL_METHOD(sobj, updatebyidx, (st).cnt_idx, (st).cnt); \
+        (st).cnt = 0; \
+    } \
+}
+
+static void
+flush_rstats(struct rtpp_stats_obj *sobj, struct rtpp_proc_rstats *rsp)
+{
+
+    FLUSH_STAT(sobj, rsp->npkts_rcvd);
+    FLUSH_STAT(sobj, rsp->npkts_played);
+    FLUSH_STAT(sobj, rsp->npkts_relayed);
+    FLUSH_STAT(sobj, rsp->npkts_resized);
+    FLUSH_STAT(sobj, rsp->npkts_discard);
+}
 
 static void
 rtpp_proc_async_run(void *arg)
@@ -81,9 +102,13 @@ rtpp_proc_async_run(void *arg)
     struct rtpp_wi *wi, *wis[10];
     struct sthread_args *sender;
     double tp[4];
+    struct rtpp_proc_rstats *rstats;
+    struct rtpp_stats_obj *stats_cf;
 
     cf = (struct cfg *)arg;
     proc_cf = cf->stable->rtpp_proc_cf;
+    stats_cf = cf->stable->rtpp_stats;
+    rstats = &proc_cf->rstats;
 
     last_tick_time = 0;
     wi = rtpp_queue_get_item(proc_cf->time_q, 0);
@@ -169,19 +194,20 @@ rtpp_proc_async_run(void *arg)
         sender = rtpp_anetio_pick_sender(proc_cf->op);
         if (rtp_only == 0) {
             pthread_mutex_lock(&cf->glock);
-            process_rtp(cf, tp[2], alarm_tick, ndrain, sender);
+            process_rtp(cf, tp[2], alarm_tick, ndrain, sender, rstats);
         } else {
-            process_rtp_only(cf, tp[2], ndrain, sender);
+            process_rtp_only(cf, tp[2], ndrain, sender, rstats);
             pthread_mutex_lock(&cf->glock);
         }
 
         if (cf->rtp_nsessions > 0) {
-            process_rtp_servers(cf, tp[2], sender);
+            process_rtp_servers(cf, tp[2], sender, rstats);
         }
         pthread_mutex_unlock(&cf->glock);
         rtpp_anetio_pump_q(sender);
         rtpp_command_async_wakeup(cf->stable->rtpp_cmd_cf, last_ctick);
         tp[3] = getdtime();
+        flush_rstats(stats_cf, rstats);
 
 #if RTPP_DEBUG
         recfilter_apply(&proc_cf->sleep_time, tp[1] - tp[0]);
@@ -230,6 +256,17 @@ rtpp_proc_async_init(struct cfg *cf)
         return (-1);
 
     memset(proc_cf, '\0', sizeof(*proc_cf));
+
+    proc_cf->rstats.npkts_rcvd.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
+      getidxbyname, "npkts_rcvd");
+    proc_cf->rstats.npkts_played.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
+      getidxbyname, "npkts_played");
+    proc_cf->rstats.npkts_relayed.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
+      getidxbyname, "npkts_relayed");
+    proc_cf->rstats.npkts_resized.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
+      getidxbyname, "npkts_resized");
+    proc_cf->rstats.npkts_discard.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
+      getidxbyname, "npkts_discard");
 
 #if RTPP_DEBUG
     recfilter_init(&proc_cf->sleep_time, 0.999, 0.0, 0);

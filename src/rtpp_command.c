@@ -58,6 +58,8 @@
 #include "rtpp_session.h"
 #include "rtp_server.h"
 #include "rtpp_util.h"
+#include "rtpp_types.h"
+#include "rtpp_stats.h"
 
 struct proto_cap proto_caps[] = {
     /*
@@ -645,6 +647,7 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
 #endif
     int len, i, brief, load;
     char buf[1024 * 8];
+    unsigned long long packets_in, packets_out;
 
     brief = 0;
     load = 0;
@@ -666,11 +669,14 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
         }
     }
 
+    packets_in = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_rcvd");
+    packets_out = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_relayed") +
+      CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_played");
     pthread_mutex_lock(&cf->sessinfo.lock);
     len = snprintf(buf, sizeof(buf), "sessions created: %llu\nactive sessions: %d\n"
       "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
       cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions,
-      cf->packets_in, cf->packets_out);
+      packets_in, packets_out);
     if (load != 0) {
           len += snprintf(buf + len, sizeof(buf) - len, "average load: %f\n",
             rtpp_command_async_get_aload(cf->stable->rtpp_cmd_cf));

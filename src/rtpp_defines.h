@@ -89,9 +89,6 @@ struct cfg {
     unsigned long long sessions_created;
     int nofile_limit_warned;
 
-    unsigned long long packets_in;
-    unsigned long long packets_out;
-
     struct rtpp_timeout_handler *timeout_handler;
 
     int port_table_idx;
