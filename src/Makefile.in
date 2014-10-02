@@ -102,7 +102,8 @@ am_rtpproxy_OBJECTS = main.$(OBJEXT) rtp_server.$(OBJEXT) \
 	rtpp_queue.$(OBJEXT) rtpp_netio_async.$(OBJEXT) \
 	rtpp_command_parse.$(OBJEXT) rtpp_command_copy.$(OBJEXT) \
 	rtpp_command_ul.$(OBJEXT) rtpp_log_stand.$(OBJEXT) \
-	rtpp_hash_table.$(OBJEXT) rtpp_pcache.$(OBJEXT)
+	rtpp_hash_table.$(OBJEXT) rtpp_pcache.$(OBJEXT) \
+	rtpp_stats.$(OBJEXT)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
 rtpproxy_DEPENDENCIES =
 AM_V_P = $(am__v_P_@AM_V@)
@@ -273,7 +274,8 @@ rtpproxy_SOURCES = main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
   rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
   rtpp_log_stand.c rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
-  rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h
+  rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h rtpp_stats.c \
+  rtpp_stats.h rtpp_cfg_stable.h
 
 rtpproxy_LDADD = -lm -lpthread
 all: config.h
@@ -400,6 +402,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_queue.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_record.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_session.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_stats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_syslog_async.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_wi.Po@am__quote@
