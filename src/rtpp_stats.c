@@ -37,34 +37,43 @@ struct rtpp_stat
 {
     const char *name;
     pthread_mutex_t mutex;
-    uint64_t cnt;
+    union {
+      uint64_t u64;
+      double d;
+    } cnt;
 };
 
 #define RTPP_NSTATS 18
+
+enum rtpp_cnt_type {
+    RTPP_CNT_U64,
+    RTPP_CNT_DBL
+};
 
 static struct
 {
     const char *name;
     const char *descr;
+    enum rtpp_cnt_type type;
 } default_stats[RTPP_NSTATS] = {
-    {.name = "nsess_created",   .descr = "Number of RTP sessions created"},
-    {.name = "nsess_destroyed", .descr = "Number of RTP sessions destroyed"},
-    {.name = "nsess_nortp",     .descr = "Number of sessions that had no RTP neither in nor out"},
-    {.name = "nsess_owrtp",     .descr = "Number of sessions that had one-way RTP only"},
-    {.name = "nsess_nortcp",    .descr = "Number of sessions that had no RTCP neither in nor out"},
-    {.name = "nsess_owrtcp",    .descr = "Number of sessions that had one-way RTCP only"}, 
-    {.name = "nplrs_created",   .descr = "Number of RTP players created"},
-    {.name = "nplrs_destroyed", .descr = "Number of RTP players destroyed"},
-    {.name = "npkts_rcvd",      .descr = "Total number of RTP/RTPC packets received"},
-    {.name = "npkts_played",    .descr = "Total number of RTP packets locally generated (played out)"},
-    {.name = "npkts_relayed",   .descr = "Total number of RTP/RTPC packets relayed"},
-    {.name = "npkts_resized",   .descr = "Total number of RTP packets resized (re-packetized)"},
-    {.name = "npkts_discard",   .descr = "Total number of RTP/RTPC packets discarded"},
-    {.name = "total_duration",  .descr = "Cumulative duration of all sessions"},
-    {.name = "ncmds_rcvd",      .descr = "Total number of control commands received"},
-    {.name = "ncmds_succd",     .descr = "Total number of control commands successfully processed"},
-    {.name = "ncmds_errs",      .descr = "Total number of control commands ended up with an error"},
-    {.name = "ncmds_repld",     .descr = "Total number of control commands that had a reply generated"}
+    {.name = "nsess_created",   .descr = "Number of RTP sessions created", .type = RTPP_CNT_U64},
+    {.name = "nsess_destroyed", .descr = "Number of RTP sessions destroyed", .type = RTPP_CNT_U64},
+    {.name = "nsess_nortp",     .descr = "Number of sessions that had no RTP neither in nor out", .type = RTPP_CNT_U64},
+    {.name = "nsess_owrtp",     .descr = "Number of sessions that had one-way RTP only", .type = RTPP_CNT_U64},
+    {.name = "nsess_nortcp",    .descr = "Number of sessions that had no RTCP neither in nor out", .type = RTPP_CNT_U64},
+    {.name = "nsess_owrtcp",    .descr = "Number of sessions that had one-way RTCP only", .type = RTPP_CNT_U64}, 
+    {.name = "nplrs_created",   .descr = "Number of RTP players created", .type = RTPP_CNT_U64},
+    {.name = "nplrs_destroyed", .descr = "Number of RTP players destroyed", .type = RTPP_CNT_U64},
+    {.name = "npkts_rcvd",      .descr = "Total number of RTP/RTPC packets received", .type = RTPP_CNT_U64},
+    {.name = "npkts_played",    .descr = "Total number of RTP packets locally generated (played out)", .type = RTPP_CNT_U64},
+    {.name = "npkts_relayed",   .descr = "Total number of RTP/RTPC packets relayed", .type = RTPP_CNT_U64},
+    {.name = "npkts_resized",   .descr = "Total number of RTP packets resized (re-packetized)", .type = RTPP_CNT_U64},
+    {.name = "npkts_discard",   .descr = "Total number of RTP/RTPC packets discarded", .type = RTPP_CNT_U64},
+    {.name = "total_duration",  .descr = "Cumulative duration of all sessions", .type = RTPP_CNT_DBL},
+    {.name = "ncmds_rcvd",      .descr = "Total number of control commands received", .type = RTPP_CNT_U64},
+    {.name = "ncmds_succd",     .descr = "Total number of control commands successfully processed", .type = RTPP_CNT_U64},
+    {.name = "ncmds_errs",      .descr = "Total number of control commands ended up with an error", .type = RTPP_CNT_U64},
+    {.name = "ncmds_repld",     .descr = "Total number of control commands that had a reply generated", .type = RTPP_CNT_U64}
 };
 
 struct rtpp_stats_obj_priv
@@ -82,6 +91,7 @@ static void rtpp_stats_obj_dtor(struct rtpp_stats_obj *);
 static int rtpp_stats_obj_getidxbyname(struct rtpp_stats_obj *, const char *);
 static int rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *, int, uint64_t);
 static int rtpp_stats_obj_updatebyname(struct rtpp_stats_obj *, const char *, uint64_t);
+static int rtpp_stats_obj_updatebyname_d(struct rtpp_stats_obj *, const char *, double);
 static int64_t rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *, const char *);
 
 struct rtpp_stats_obj *
@@ -114,13 +124,18 @@ rtpp_stats_ctor(void)
             free(fp);
             return (NULL);
         }
-        st->cnt = 0;
+        if (default_stats[i].type == RTPP_CNT_U64) {
+            st->cnt.u64 = 0;
+        } else {
+            st->cnt.d = 0.0;
+        }
     }
     pub->pvt = pvt;
     pub->dtor = &rtpp_stats_obj_dtor;
     pub->getidxbyname = &rtpp_stats_obj_getidxbyname;
     pub->updatebyidx = &rtpp_stats_obj_updatebyidx;
     pub->updatebyname = &rtpp_stats_obj_updatebyname;
+    pub->updatebyname_d = &rtpp_stats_obj_updatebyname_d;
     pub->getlvalbyname = &rtpp_stats_obj_getlvalbyname;
     return (pub);
 }
@@ -141,7 +156,8 @@ rtpp_stats_obj_getidxbyname(struct rtpp_stats_obj *self, const char *name)
 }
 
 static int
-rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *self, int idx, uint64_t incr)
+rtpp_stats_obj_updatebyidx_internal(struct rtpp_stats_obj *self, int idx,
+  enum rtpp_cnt_type type, void *argp)
 {
     int i;
     struct rtpp_stats_obj_priv *pvt;
@@ -152,9 +168,20 @@ rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *self, int idx, uint64_t incr)
     pvt = self->pvt;
     st = &pvt->stats[i];
     pthread_mutex_lock(&st->mutex);
-    st->cnt += incr;
+    if (type == RTPP_CNT_U64) {
+        st->cnt.u64 += *(uint64_t *)argp;
+    } else {
+        st->cnt.d += *(double *)argp;
+    }
     pthread_mutex_unlock(&st->mutex);
     return (0);
+}
+
+static int
+rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *self, int idx, uint64_t incr)
+{
+
+    return rtpp_stats_obj_updatebyidx_internal(self, idx, RTPP_CNT_U64, &incr);
 }
 
 static int
@@ -163,9 +190,16 @@ rtpp_stats_obj_updatebyname(struct rtpp_stats_obj *self, const char *name, uint6
     int idx;
 
     idx = rtpp_stats_obj_getidxbyname(self, name);
-    if (idx < 0)
-        return (-1);
-    return rtpp_stats_obj_updatebyidx(self, idx, incr);
+    return rtpp_stats_obj_updatebyidx_internal(self, idx, RTPP_CNT_U64, &incr);
+}
+
+static int
+rtpp_stats_obj_updatebyname_d(struct rtpp_stats_obj *self, const char *name, double incr)
+{
+    int idx;
+
+    idx = rtpp_stats_obj_getidxbyname(self, name);
+    return rtpp_stats_obj_updatebyidx_internal(self, idx, RTPP_CNT_DBL, &incr);
 }
 
 static int64_t
@@ -183,7 +217,7 @@ rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *self, const char *name)
     pvt = self->pvt;
     st = &pvt->stats[idx];
     pthread_mutex_lock(&st->mutex);
-    rval = st->cnt;
+    rval = st->cnt.u64;
     pthread_mutex_unlock(&st->mutex);
     return (rval);
 }
