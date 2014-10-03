@@ -464,6 +464,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         }
         memset(spa, 0, sizeof(*spa));
         memset(spb, 0, sizeof(*spb));
+        spa->init_ts = cmd->dtime;
+        spb->init_ts = cmd->dtime;
         for (i = 0; i < 2; i++) {
             spa->fds[i] = spb->fds[i] = -1;
             spa->last_update[i] = 0;

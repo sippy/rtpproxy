@@ -78,6 +78,8 @@ struct rtpp_session {
     struct rtpp_session *prev;
     struct rtpp_session *next;
     struct rtpp_timeout_data timeout_data;
+    /* Timestamp of session instantiation time */
+    double init_ts;
     /* Timestamp of the last session update */
     double last_update[2];
     /* Supported codecs */
