@@ -124,9 +124,19 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped", sp->pcount[0], sp->pcount[1],
       sp->pcount[2], sp->pcount[3]);
+    if (sp->pcount[0] == 0 && sp->pcount[1] == 0) {
+        CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_nortp", 1);
+    } else if (sp->pcount[0] == 0 || sp->pcount[1] == 0) {
+        CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_owrtp", 1);
+    }
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTCP stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped", sp->rtcp->pcount[0],
       sp->rtcp->pcount[1], sp->rtcp->pcount[2], sp->rtcp->pcount[3]);
+    if (sp->rtcp->pcount[0] == 0 && sp->rtcp->pcount[1] == 0) {
+        CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_nortcp", 1);
+    } else if (sp->rtcp->pcount[0] == 0 || sp->rtcp->pcount[1] == 0) {
+        CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_owrtcp", 1);
+    }
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "session on ports %d/%d is cleaned up",
       sp->ports[0], sp->ports[1]);
     for (i = 0; i < 2; i++) {
