@@ -96,7 +96,7 @@ seedrandom(void)
     unsigned long junk;
     struct timeval tv;
 
-    fd = open("/dev/random", O_RDONLY, 0);
+    fd = open("/dev/urandom", O_RDONLY, 0);
     if (fd >= 0) {
 	read(fd, &junk, sizeof(junk));
 	close(fd);
