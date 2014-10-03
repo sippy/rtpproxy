@@ -53,6 +53,8 @@
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
 #include "rtpp_util.h"
+#include "rtpp_types.h"
+#include "rtpp_stats.h"
 
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
@@ -100,6 +102,11 @@ ul_reply_port(struct cfg *cf, struct rtpp_command *cmd, struct ul_reply *ulr)
     }
 
     rtpc_doreply(cf, cmd->buf_t, len, cmd);
+    if (ulr != NULL) {
+        cmd->csp->ncmds_succd.cnt++;
+    } else {
+        cmd->csp->ncmds_errs.cnt++;
+    }
 }
 
 static void
@@ -524,6 +531,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
 
         cf->sessions_created++;
         cf->sessions_active++;
+        CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_created", 1);
 
         /*
          * Each session can consume up to 5 open file descriptors (2 RTP,

@@ -29,6 +29,18 @@
 #ifndef _RTPP_COMMAND_PRIVATE_H_
 #define _RTPP_COMMAND_PRIVATE_H_
 
+struct rtpp_command_stat {
+    uint64_t cnt;
+    int cnt_idx;
+};
+
+struct rtpp_command_stats {
+    struct rtpp_command_stat ncmds_rcvd;
+    struct rtpp_command_stat ncmds_succd;
+    struct rtpp_command_stat ncmds_errs;
+    struct rtpp_command_stat ncmds_repld;
+};
+
 struct rtpp_command
 {
     char buf[1024 * 8];
@@ -40,6 +52,7 @@ struct rtpp_command
     char *cookie;
     int controlfd;
     double dtime;
+    struct rtpp_command_stats *csp;
 };
 
 enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,

@@ -40,10 +40,13 @@
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
+#include "rtpp_command_private.h"
 #include "rtpp_math.h"
 #include "rtpp_network.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_util.h"
+#include "rtpp_types.h"
+#include "rtpp_stats.h"
 
 struct rtpp_cmd_async_cf {
     pthread_t thread_id;
@@ -52,10 +55,39 @@ struct rtpp_cmd_async_cf {
     int clock_tick;
     double tused;
     struct recfilter average_load;
+    struct rtpp_command_stats cstats;
 };
 
 static void
-process_commands(struct cfg *cf, int controlfd_in, double dtime)
+init_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
+{
+
+    csp->ncmds_rcvd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_rcvd");
+    csp->ncmds_succd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_succd");
+    csp->ncmds_errs.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_errs");
+    csp->ncmds_repld.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_repld");
+}
+
+#define FLUSH_CSTAT(sobj, st)    { \
+    if ((st).cnt > 0) { \
+        CALL_METHOD(sobj, updatebyidx, (st).cnt_idx, (st).cnt); \
+        (st).cnt = 0; \
+    } \
+}
+
+static void
+flush_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
+{
+
+    FLUSH_CSTAT(sobj, csp->ncmds_rcvd);
+    FLUSH_CSTAT(sobj, csp->ncmds_succd);
+    FLUSH_CSTAT(sobj, csp->ncmds_errs);
+    FLUSH_CSTAT(sobj, csp->ncmds_repld);
+}
+
+static void
+process_commands(struct cfg *cf, int controlfd_in, double dtime,
+  struct rtpp_command_stats *csp)
 {
     int controlfd, i, rval;
     socklen_t rlen;
@@ -75,8 +107,9 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime)
         } else {
             controlfd = controlfd_in;
         }
-        cmd = get_command(cf, controlfd, &rval, dtime);
+        cmd = get_command(cf, controlfd, &rval, dtime, csp);
         if (cmd != NULL) {
+            csp->ncmds_rcvd.cnt++;
             pthread_mutex_lock(&cf->glock);
             i = handle_command(cf, cmd);
             pthread_mutex_unlock(&cf->glock);
@@ -98,9 +131,13 @@ rtpp_cmd_queue_run(void *arg)
     struct pollfd pfds[1];
     int i, last_ctick;
     double eptime, sptime, tused;
+    struct rtpp_command_stats *csp;
+    struct rtpp_stats_obj *rtpp_stats_cf;
 
     cf = (struct cfg *)arg;
     cmd_cf = cf->stable->rtpp_cmd_cf;
+    rtpp_stats_cf = cf->stable->rtpp_stats;
+    csp = &cmd_cf->cstats;
 
     pfds[0].fd = cf->stable->controlfd;
     pfds[0].events = POLLIN;
@@ -125,13 +162,14 @@ rtpp_cmd_queue_run(void *arg)
         if (i < 0 && errno == EINTR)
             continue;
         if (i > 0 && (pfds[0].revents & POLLIN) != 0) {
-            process_commands(cf, pfds[0].fd, sptime);
+            process_commands(cf, pfds[0].fd, sptime, csp);
         }
         rtpp_anetio_pump(cf->stable->rtpp_netio_cf);
         eptime = getdtime();
         pthread_mutex_lock(&cmd_cf->cmd_mutex);
         recfilter_apply(&cmd_cf->average_load, (eptime - sptime + tused) * cf->stable->target_pfreq);
         pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+        flush_cstats(rtpp_stats_cf, csp);
 #if RTPP_DEBUG
         if (last_ctick % (unsigned int)cf->stable->target_pfreq == 0 || last_ctick < 1000) {
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
@@ -185,6 +223,8 @@ rtpp_command_async_init(struct cfg *cf)
         return (-1);
 
     memset(cmd_cf, '\0', sizeof(*cmd_cf));
+
+    init_cstats(cf->stable->rtpp_stats, &cmd_cf->cstats);
 
     pthread_cond_init(&cmd_cf->cmd_cond, NULL);
     pthread_mutex_init(&cmd_cf->cmd_mutex, NULL);

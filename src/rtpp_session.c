@@ -47,6 +47,8 @@
 #include "rtpp_session.h"
 #include "rtp_server.h"
 #include "rtpp_util.h"
+#include "rtpp_types.h"
+#include "rtpp_stats.h"
 
 struct rtpp_session *
 session_findfirst(struct cfg *cf, const char *call_id)
@@ -185,6 +187,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
     free(sp->rtcp);
     free(sp);
     cf->sessions_active--;
+    CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_destroyed", 1);
 }
 
 int

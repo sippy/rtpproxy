@@ -182,6 +182,7 @@ rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd)
         rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, cmd->controlfd, buf, len, 0,
           sstosa(&cmd->raddr), cmd->rlen);
     }
+    cmd->csp->ncmds_repld.cnt++;
 }
 
 static void
@@ -192,6 +193,7 @@ reply_number(struct cfg *cf, struct rtpp_command *cmd,
 
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", number);
     rtpc_doreply(cf, cmd->buf_t, len, cmd);
+    cmd->csp->ncmds_succd.cnt++;
 }
 
 static void
@@ -209,6 +211,7 @@ reply_error(struct cfg *cf, struct rtpp_command *cmd,
 
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "E%d\n", ecode);
     rtpc_doreply(cf, cmd->buf_t, len, cmd);
+    cmd->csp->ncmds_errs.cnt++;
 }
 
 void
@@ -219,7 +222,8 @@ free_command(struct rtpp_command *cmd)
 }
 
 struct rtpp_command *
-get_command(struct cfg *cf, int controlfd, int *rval, double dtime)
+get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
+  struct rtpp_command_stats *csp)
 {
     char **ap;
     char *cp;
@@ -234,6 +238,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime)
     memset(cmd, 0, sizeof(struct rtpp_command));
     cmd->controlfd = controlfd;
     cmd->dtime = dtime;
+    cmd->csp = csp;
     if (cf->stable->umode == 0) {
         for (;;) {
             len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
@@ -635,6 +640,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
       spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
       spa->pcount[3]);
     rtpc_doreply(cf, cmd->buf_t, len, cmd);
+    cmd->csp->ncmds_succd.cnt++;
 }
 
 static void
@@ -681,9 +687,9 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
           len += snprintf(buf + len, sizeof(buf) - len, "average load: %f\n",
             rtpp_command_async_get_aload(cf->stable->rtpp_cmd_cf));
     }
-    for (i = 0; i < cf->sessinfo.nsessions && brief == 0; i++) {
 #if 0
 XXX this needs work to fix it after rtp/rtcp split 
+    for (i = 0; i < cf->sessinfo.nsessions && brief == 0; i++) {
         spa = cf->sessinfo.sessions[i];
         if (spa == NULL || spa->sidx[0] != i)
             continue;
@@ -723,11 +729,13 @@ XXX this needs work to fix it after rtp/rtcp split
             rtpc_doreply(cf, buf, len, cmd);
             len = 0;
         }
-#endif
     }
+#endif
     pthread_mutex_unlock(&cf->sessinfo.lock);
-    if (len > 0)
+    if (len > 0) {
         rtpc_doreply(cf, buf, len, cmd);
+        cmd->csp->ncmds_succd.cnt++;
+    }
 }
 
 static void
