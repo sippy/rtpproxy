@@ -114,7 +114,9 @@ void
 remove_session(struct cfg *cf, struct rtpp_session *sp)
 {
     int i;
+    double session_time;
 
+    session_time = getdtime() - sp->init_ts;
     /* Make sure structure is properly locked */
     assert(pthread_mutex_islocked(&cf->glock) == 1);
     assert(pthread_mutex_islocked(&cf->sessinfo.lock) == 1);
@@ -188,6 +190,8 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
     free(sp);
     cf->sessions_active--;
     CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_destroyed", 1);
+    CALL_METHOD(cf->stable->rtpp_stats, updatebyname_d, "total_duration",
+      session_time);
 }
 
 int
