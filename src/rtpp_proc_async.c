@@ -88,6 +88,17 @@ flush_rstats(struct rtpp_stats_obj *sobj, struct rtpp_proc_rstats *rsp)
 }
 
 static void
+init_rstats(struct rtpp_stats_obj *sobj, struct rtpp_proc_rstats *rsp)
+{
+
+    rsp->npkts_rcvd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_rcvd");
+    rsp->npkts_played.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_played");
+    rsp->npkts_relayed.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_relayed");
+    rsp->npkts_resized.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_resized");
+    rsp->npkts_discard.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_discard");
+}
+
+static void
 rtpp_proc_async_run(void *arg)
 {
     struct cfg *cf;
@@ -257,16 +268,7 @@ rtpp_proc_async_init(struct cfg *cf)
 
     memset(proc_cf, '\0', sizeof(*proc_cf));
 
-    proc_cf->rstats.npkts_rcvd.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
-      getidxbyname, "npkts_rcvd");
-    proc_cf->rstats.npkts_played.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
-      getidxbyname, "npkts_played");
-    proc_cf->rstats.npkts_relayed.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
-      getidxbyname, "npkts_relayed");
-    proc_cf->rstats.npkts_resized.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
-      getidxbyname, "npkts_resized");
-    proc_cf->rstats.npkts_discard.cnt_idx = CALL_METHOD(cf->stable->rtpp_stats,
-      getidxbyname, "npkts_discard");
+    init_rstats(cf->stable->rtpp_stats, &proc_cf->rstats);
 
 #if RTPP_DEBUG
     recfilter_init(&proc_cf->sleep_time, 0.999, 0.0, 0);
