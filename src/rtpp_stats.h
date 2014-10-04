@@ -40,6 +40,8 @@ DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_getlvalbyname, int64_t, const char 
 
 struct rtpp_stats_obj_priv;
 
+#define RTPP_NSTATS 18
+
 struct rtpp_stats_obj
 {
     rtpp_stats_obj_dtor_t dtor;

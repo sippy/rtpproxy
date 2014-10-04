@@ -43,8 +43,6 @@ struct rtpp_stat
     } cnt;
 };
 
-#define RTPP_NSTATS 18
-
 enum rtpp_cnt_type {
     RTPP_CNT_U64,
     RTPP_CNT_DBL
@@ -159,14 +157,13 @@ static int
 rtpp_stats_obj_updatebyidx_internal(struct rtpp_stats_obj *self, int idx,
   enum rtpp_cnt_type type, void *argp)
 {
-    int i;
     struct rtpp_stats_obj_priv *pvt;
     struct rtpp_stat *st;
 
     if (idx < 0 || idx >= RTPP_NSTATS)
         return (-1);
     pvt = self->pvt;
-    st = &pvt->stats[i];
+    st = &pvt->stats[idx];
     pthread_mutex_lock(&st->mutex);
     if (type == RTPP_CNT_U64) {
         st->cnt.u64 += *(uint64_t *)argp;
