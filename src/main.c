@@ -585,16 +585,16 @@ main(int argc, char **argv)
 #endif
     memset(&cf, 0, sizeof(cf));
 
-    init_config(&cf, argc, argv);
-
-    seedrandom();
-
     cf.stable = malloc(sizeof(struct rtpp_cfg_stable));
     if (cf.stable == NULL) {
          err(1, "can't allocate memory for the struct rtpp_cfg_stable");
          /* NOTREACHED */
     }
     memset(cf.stable, '\0', sizeof(struct rtpp_cfg_stable));
+
+    init_config(&cf, argc, argv);
+
+    seedrandom();
 
     cf.stable->sessions_ht = rtpp_hash_table_ctor();
     if (cf.stable->sessions_ht == NULL) {
