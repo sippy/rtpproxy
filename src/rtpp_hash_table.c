@@ -94,6 +94,7 @@ rtpp_hash_table_ctor(void)
 	} while (pvt->rand_table[rval] != 0);
 	pvt->rand_table[rval] = i;
     }
+    pub->pvt = pvt;
     return (pub);
 }
 
@@ -146,7 +147,7 @@ hash_table_append(struct rtpp_hash_table_obj *self, const char *key, void *sptr)
     }
     memset(sp, '\0', malen);
     sp->sptr = sptr;
-    sp->key = ((char *)sp) + klen;
+    sp->key = ((char *)sp) + sizeof(struct rtpp_hash_table_entry);
     memcpy(sp->key, key, klen);
     pvt = self->pvt;
     sp->hash = hash_string(pvt, key, NULL);
