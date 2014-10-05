@@ -51,6 +51,7 @@
 #include "rtpp_command_copy.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_stats.h"
 #include "rtpp_command_ul.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_network.h"
@@ -166,7 +167,7 @@ rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
 }
 
 void
-rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd)
+rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd, int errd)
 {
 
     buf[len] = '\0';
@@ -183,6 +184,11 @@ rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd)
           sstosa(&cmd->raddr), cmd->rlen);
     }
     cmd->csp->ncmds_repld.cnt++;
+    if (errd == 0) {
+        cmd->csp->ncmds_succd.cnt++;
+    } else {
+        cmd->csp->ncmds_errs.cnt++;
+    }
 }
 
 static void
@@ -192,8 +198,7 @@ reply_number(struct cfg *cf, struct rtpp_command *cmd,
     int len;
 
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", number);
-    rtpc_doreply(cf, cmd->buf_t, len, cmd);
-    cmd->csp->ncmds_succd.cnt++;
+    rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
 }
 
 static void
@@ -210,8 +215,7 @@ reply_error(struct cfg *cf, struct rtpp_command *cmd,
     int len;
 
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "E%d\n", ecode);
-    rtpc_doreply(cf, cmd->buf_t, len, cmd);
-    cmd->csp->ncmds_errs.cnt++;
+    rtpc_doreply(cf, cmd->buf_t, len, cmd, 1);
 }
 
 void
@@ -265,7 +269,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     for (ap = cmd->argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
         if (**ap != '\0') {
             cmd->argc++;
-            if (++ap >= &cmd->argv[10])
+            if (++ap >= &cmd->argv[RTPC_MAX_ARGC])
                 break;
         }
     }
@@ -408,6 +412,12 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
             return 0;
         }
 	break;
+
+    case GET_STATS:
+        if (handle_get_stats(cf, cmd) != 0) {
+            reply_error(cf, cmd, ECODE_STSFAIL);
+        }
+        return 0;
 
     default:
         break;
@@ -639,8 +649,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n", get_ttl(spa),
       spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
       spa->pcount[3]);
-    rtpc_doreply(cf, cmd->buf_t, len, cmd);
-    cmd->csp->ncmds_succd.cnt++;
+    rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
 }
 
 static void
@@ -733,8 +742,7 @@ XXX this needs work to fix it after rtp/rtcp split
 #endif
     pthread_mutex_unlock(&cf->sessinfo.lock);
     if (len > 0) {
-        rtpc_doreply(cf, buf, len, cmd);
-        cmd->csp->ncmds_succd.cnt++;
+        rtpc_doreply(cf, buf, len, cmd, 0);
     }
 }
 

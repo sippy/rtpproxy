@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,31 +25,37 @@
  *
  */
 
-#ifndef _RTPP_COMMAND_H_
-#define _RTPP_COMMAND_H_
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <stdio.h>
 
-struct proto_cap {
-    const char  *pc_id;
-    const char  *pc_description;
-};
+#include "rtpp_log.h"
+#include "rtpp_defines.h"
+#include "rtpp_cfg_stable.h"
+#include "rtpp_command.h"
+#include "rtpp_command_private.h"
+#include "rtpp_types.h"
+#include "rtpp_stats.h"
 
-struct rtpp_command;
-struct rtpp_command_stats;
-struct cfg;
-struct cfg_stable;
-struct sockaddr;
+int
+handle_get_stats(struct cfg *cf, struct rtpp_command *cmd)
+{
+    int len, i, rval;
 
-extern struct proto_cap proto_caps[];
-
-int handle_command(struct cfg *, struct rtpp_command *);
-void free_command(struct rtpp_command *);
-struct rtpp_command *get_command(struct cfg *, int, int *, double,
-  struct rtpp_command_stats *csp);
-void reply_error(struct cfg *cf, struct rtpp_command *cmd, int ecode);
-void reply_port(struct cfg *cf, struct rtpp_command *cmd, int lport,
-  struct sockaddr **lia);
-int rtpp_create_listener(struct cfg *, struct sockaddr *, int *, int *);
-
-void rtpc_doreply(struct cfg *, char *, int, struct rtpp_command *, int);
-
-#endif
+    len = 0;
+    for (i = 1; i < cmd->argc && len < (sizeof(cmd->buf_t) - 2); i++) {
+        if (i > 1) {
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, " ");
+        }
+        rval = CALL_METHOD(cf->stable->rtpp_stats, nstr, cmd->buf_t + len,
+          sizeof(cmd->buf_t) - len, cmd->argv[i]);
+        if (rval < 0) {
+            return (-1);
+        }
+        len += rval;
+    }
+    len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "\n");
+    rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
+    return (0);
+}

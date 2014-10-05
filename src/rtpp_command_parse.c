@@ -36,6 +36,8 @@
 #include "rtpp_command.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_private.h"
+#include "rtpp_types.h"
+#include "rtpp_stats.h"
 
 struct cmd_props {
     int max_argc;
@@ -189,6 +191,17 @@ fill_cmd_props(struct rtpp_command *cmd, struct common_cmd_args *cca,
         cca->rname = "delete_all";
         cca->hint = "X";
         cpp->max_argc = 1;
+        cpp->min_argc = 1;
+        cpp->has_cmods = 0;
+        cpp->has_call_id = 0;
+        break;
+
+    case 'g':
+    case 'G':
+        cca->op = GET_STATS;
+        cca->rname = "get_stats";
+        cca->hint = "G [stat_name1 [stat_name2 [stat_name3 ...[stat_nameN]]]]";
+        cpp->max_argc = RTPP_NSTATS + 1;
         cpp->min_argc = 1;
         cpp->has_cmods = 0;
         cpp->has_call_id = 0;

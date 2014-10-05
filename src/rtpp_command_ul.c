@@ -101,12 +101,7 @@ ul_reply_port(struct cfg *cf, struct rtpp_command *cmd, struct ul_reply *ulr)
         }
     }
 
-    rtpc_doreply(cf, cmd->buf_t, len, cmd);
-    if (ulr != NULL) {
-        cmd->csp->ncmds_succd.cnt++;
-    } else {
-        cmd->csp->ncmds_errs.cnt++;
-    }
+    rtpc_doreply(cf, cmd->buf_t, len, cmd, (ulr != NULL) ? 0 : 1);
 }
 
 static void

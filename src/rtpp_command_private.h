@@ -41,11 +41,13 @@ struct rtpp_command_stats {
     struct rtpp_command_stat ncmds_repld;
 };
 
+#define RTPC_MAX_ARGC   20
+
 struct rtpp_command
 {
     char buf[1024 * 8];
     char buf_t[256];
-    char *argv[10];
+    char *argv[RTPC_MAX_ARGC];
     int argc;
     struct sockaddr_storage raddr;
     socklen_t rlen;
@@ -56,7 +58,7 @@ struct rtpp_command
 };
 
 enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
-  QUERY, VER_FEATURE, GET_VER, DELETE_ALL};
+  QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS};
 
 struct common_cmd_args {
     enum rtpp_cmd_op op;
@@ -94,6 +96,7 @@ struct common_cmd_args {
 
 #define ECODE_PLRFAIL     60
 #define ECODE_CPYFAIL     65
+#define ECODE_STSFAIL     68
 
 #define ECODE_LSTFAIL_1   71
 #define ECODE_LSTFAIL_2   72
