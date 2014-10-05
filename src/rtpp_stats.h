@@ -37,6 +37,7 @@ DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_updatebyidx, int, int, uint64_t);
 DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_updatebyname, int, const char *, uint64_t);
 DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_updatebyname_d, int, const char *, double);
 DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_getlvalbyname, int64_t, const char *);
+DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_nstr, int, char *, int, const char *);
 
 struct rtpp_stats_obj_priv;
 
@@ -50,6 +51,7 @@ struct rtpp_stats_obj
     rtpp_stats_obj_updatebyname_t updatebyname;
     rtpp_stats_obj_updatebyname_d_t updatebyname_d;
     rtpp_stats_obj_getlvalbyname_t getlvalbyname;
+    rtpp_stats_obj_nstr_t nstr;
     struct rtpp_stats_obj_priv *pvt;
 };
 

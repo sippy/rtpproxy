@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -91,6 +92,7 @@ static int rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *, int, uint64_t);
 static int rtpp_stats_obj_updatebyname(struct rtpp_stats_obj *, const char *, uint64_t);
 static int rtpp_stats_obj_updatebyname_d(struct rtpp_stats_obj *, const char *, double);
 static int64_t rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *, const char *);
+static int rtpp_stats_obj_nstr(struct rtpp_stats_obj *, char *, int, const char *);
 
 struct rtpp_stats_obj *
 rtpp_stats_ctor(void)
@@ -135,6 +137,7 @@ rtpp_stats_ctor(void)
     pub->updatebyname = &rtpp_stats_obj_updatebyname;
     pub->updatebyname_d = &rtpp_stats_obj_updatebyname_d;
     pub->getlvalbyname = &rtpp_stats_obj_getlvalbyname;
+    pub->nstr = &rtpp_stats_obj_nstr;
     return (pub);
 }
 
@@ -216,6 +219,35 @@ rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *self, const char *name)
     pthread_mutex_lock(&st->mutex);
     rval = st->cnt.u64;
     pthread_mutex_unlock(&st->mutex);
+    return (rval);
+}
+
+static int
+rtpp_stats_obj_nstr(struct rtpp_stats_obj *self, char *buf, int len, const char *name)
+{
+    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stat *st;
+    int idx, rval;
+    uint64_t uval;
+    double dval;
+
+    idx = rtpp_stats_obj_getidxbyname(self, name);
+    if (idx < 0) {
+        return (-1);
+    }
+    pvt = self->pvt;
+    st = &pvt->stats[idx];
+    if (default_stats[idx].type == RTPP_CNT_U64) {
+        pthread_mutex_lock(&st->mutex);
+        uval = st->cnt.u64;
+        pthread_mutex_unlock(&st->mutex);
+        rval = snprintf(buf, len, "%lu", uval);
+    } else {
+        pthread_mutex_lock(&st->mutex);
+        dval = st->cnt.d;
+        pthread_mutex_unlock(&st->mutex);
+        rval = snprintf(buf, len, "%f", dval);
+    }
     return (rval);
 }
 
