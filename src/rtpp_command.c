@@ -78,6 +78,7 @@ struct proto_cap proto_caps[] = {
     { "20090810", "Support for automatic bridging" },
     { "20140323", "Support for tracking/reporting load" },
     { "20140617", "Support for anchoring session connect time" },
+    { "20141004", "Support for extendable performance counters" },
     { NULL, NULL }
 };
 
