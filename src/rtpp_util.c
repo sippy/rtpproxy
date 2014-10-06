@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <pthread.h>
+#include <stdint.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>

@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <poll.h>
 #include <pthread.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>

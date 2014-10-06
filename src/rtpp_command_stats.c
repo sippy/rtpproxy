@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include "rtpp_log.h"
 #include "rtpp_defines.h"
