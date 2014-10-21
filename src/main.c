@@ -691,6 +691,9 @@ main(int argc, char **argv)
     counter = 0;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
     PFD_init(&phase_detector, 2.0);
+#ifdef HAVE_SYSTEMD_SD_DAEMON_H
+    sd_notify(0, "READY=1");
+#endif
     for (;;) {
 	eptime = getdtime();
 
@@ -746,6 +749,10 @@ main(int argc, char **argv)
             pthread_mutex_unlock(&cf.sessinfo.lock);
         }
     }
+
+#ifdef HAVE_SYSTEMD_SD_DAEMON_H
+    sd_notify(0, "STATUS=Exited");
+#endif
 
     exit(0);
 }
