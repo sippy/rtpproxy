@@ -72,6 +72,10 @@
 #include "rtpp_math.h"
 #include "rtpp_stats.h"
 
+#ifdef HAVE_SYSTEMD_DAEMON
+#include <systemd/sd-daemon.h>
+#endif
+
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
 #else
@@ -519,6 +523,15 @@ init_controlfd(struct cfg *cf)
     char *cp;
     int i, controlfd, flags, so_rcvbuf;
 
+#ifdef HAVE_SYSTEMD_DAEMON
+    i = sd_listen_fds(0);
+    if (i > 1) {
+        fprintf(stderr, "Too many file descriptors received.\n");
+        exit(1);
+    } else if (i == 1) {
+        controlfd = SD_LISTEN_FDS_START + 0;
+    } else {
+#endif
     if (cf->stable->umode == 0) {
 	unlink(cmd_sock);
 	memset(&ifsun, '\0', sizeof ifsun);
@@ -562,6 +575,9 @@ init_controlfd(struct cfg *cf)
     }
     flags = fcntl(controlfd, F_GETFL);
     fcntl(controlfd, F_SETFL, flags | O_NONBLOCK);
+#ifdef HAVE_SYSTEMD_DAEMON
+    }
+#endif
 
     return controlfd;
 }
@@ -675,6 +691,9 @@ main(int argc, char **argv)
     counter = 0;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
     PFD_init(&phase_detector, 2.0);
+#ifdef HAVE_SYSTEMD_SD_DAEMON_H
+    sd_notify(0, "READY=1");
+#endif
     for (;;) {
 	eptime = getdtime();
 
@@ -730,6 +749,10 @@ main(int argc, char **argv)
             pthread_mutex_unlock(&cf.sessinfo.lock);
         }
     }
+
+#ifdef HAVE_SYSTEMD_SD_DAEMON_H
+    sd_notify(0, "STATUS=Exited");
+#endif
 
     exit(0);
 }

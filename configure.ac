@@ -33,7 +33,28 @@ solaris*)
   ;;
 esac
 
+AC_ARG_ENABLE(systemd,
+AS_HELP_STRING([--enable-systemd], [enable systemd support in rtpproxy]),
+[],
+[enable_systemd=no])
+
 # Checks for libraries.
+
+if test "$enable_systemd" = 'yes'
+then
+  AC_SEARCH_LIBS(sd_listen_fds,[systemd systemd-daemon],
+   [have_sd_listen_fds=yes],
+   [AC_MSG_ERROR([Cannot find sd_listen_fds function])],)
+  AC_CHECK_HEADERS(systemd/sd-daemon.h,
+   [have_systemd_sd_daemon_h=yes],
+   [AC_MSG_ERROR([Cannot find <systemd/sd-daemon.h> header])])
+  if test x"$have_sd_listen_fds" = x"yes" && \
+     test x"$have_systemd_sd_daemon_h" = x"yes"
+  then
+     AC_DEFINE([HAVE_SYSTEMD_DAEMON],[1],[Define if you have systemd daemon])
+  fi
+
+fi
 
 # GSM
 AC_CHECK_HEADERS(gsm.h, found_libgsm=yes)
