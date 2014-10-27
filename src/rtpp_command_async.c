@@ -49,14 +49,25 @@
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
 
+struct rtpp_cmd_pollset {
+    struct pollfd *pfds;
+    int pfds_used;
+    int accept_fd;
+    pthread_mutex_t pfds_mutex;
+};
+
 struct rtpp_cmd_async_cf {
     pthread_t thread_id;
+    pthread_t acpt_thread_id;
     pthread_cond_t cmd_cond;
     pthread_mutex_t cmd_mutex;
     int clock_tick;
     double tused;
+#if 0
     struct recfilter average_load;
+#endif
     struct rtpp_command_stats cstats;
+    struct rtpp_cmd_pollset pset;
 };
 
 static void
@@ -86,28 +97,33 @@ flush_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
     FLUSH_CSTAT(sobj, csp->ncmds_repld);
 }
 
-static void
-process_commands(struct cfg *cf, int controlfd_in, double dtime,
-  struct rtpp_command_stats *csp)
+static int
+accept_connection(struct cfg *cf, int controlfd_in)
 {
-    int controlfd, i, rval;
+    int controlfd;
     socklen_t rlen;
     struct sockaddr_un ifsun;
+
+    rlen = sizeof(ifsun);
+    controlfd = accept(controlfd_in, sstosa(&ifsun), &rlen);
+    if (controlfd == -1) {
+        if (errno != EWOULDBLOCK) {
+            rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog,
+              "can't accept connection on control socket");
+        }
+        return (-1);
+    }
+    return (controlfd);
+}
+
+static int
+process_commands(struct cfg *cf, int controlfd, double dtime,
+  struct rtpp_command_stats *csp)
+{
+    int i, rval;
     struct rtpp_command *cmd;
 
     do {
-        if (cf->stable->umode == 0) {
-            rlen = sizeof(ifsun);
-            controlfd = accept(controlfd_in, sstosa(&ifsun), &rlen);
-            if (controlfd == -1) {
-                if (errno != EWOULDBLOCK)
-                    rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog,
-                      "can't accept connection on control socket");
-                break;
-            }
-        } else {
-            controlfd = controlfd_in;
-        }
         cmd = get_command(cf, controlfd, &rval, dtime, csp);
         if (cmd != NULL) {
             csp->ncmds_rcvd.cnt++;
@@ -118,10 +134,52 @@ process_commands(struct cfg *cf, int controlfd_in, double dtime,
         } else {
             i = -1;
         }
-        if (cf->stable->umode == 0) {
-            close(controlfd);
+    } while (i == 0 && cf->stable->umode != 0);
+    return (i);
+}
+
+static void
+rtpp_cmd_acceptor_run(void *arg)
+{
+    struct cfg *cf;
+    struct rtpp_cmd_async_cf *cmd_cf;
+    struct pollfd pfds[1], *tp;
+    struct rtpp_cmd_pollset *psp;
+    int nready, controlfd;
+
+    cf = (struct cfg *)arg;
+    cmd_cf = cf->stable->rtpp_cmd_cf;
+    psp = &cmd_cf->pset;
+
+    pfds[0].fd = psp->accept_fd;
+    psp->pfds[0].events = POLLIN;
+    psp->pfds[0].revents = 0;
+
+    for (;;) {
+        nready = poll(pfds, 1, INFTIM);
+        if (nready <= 0)
+            continue;
+        if ((pfds[0].revents & POLLIN) == 0) {
+            continue;
         }
-    } while (i == 0 || cf->stable->umode == 0);
+        controlfd = accept_connection(cf, psp->accept_fd);
+        if (controlfd < 0) {
+            continue;
+        }
+        pthread_mutex_lock(&psp->pfds_mutex);
+        tp = realloc(psp->pfds, sizeof(struct pollfd) * (psp->pfds_used + 1));
+        if (tp == NULL) {
+            pthread_mutex_unlock(&psp->pfds_mutex);
+            continue;
+        }
+        psp->pfds = tp;
+        psp->pfds[psp->pfds_used].fd = controlfd;
+        psp->pfds[psp->pfds_used].events = POLLIN | POLLERR | POLLHUP;
+        psp->pfds[psp->pfds_used].revents = 0;
+        psp->pfds_used++;
+        pthread_mutex_unlock(&psp->pfds_mutex);
+        rtpp_command_async_wakeup(cmd_cf);
+    }
 }
 
 static void
@@ -129,9 +187,12 @@ rtpp_cmd_queue_run(void *arg)
 {
     struct cfg *cf;
     struct rtpp_cmd_async_cf *cmd_cf;
-    struct pollfd pfds[1];
-    int i, last_ctick;
-    double eptime, sptime, tused;
+    struct rtpp_cmd_pollset *psp;
+    int i, last_ctick, nready, rval;
+    double sptime;
+#if 0
+    double eptime, tused;
+#endif
     struct rtpp_command_stats *csp;
     struct rtpp_stats_obj *rtpp_stats_cf;
 
@@ -140,9 +201,7 @@ rtpp_cmd_queue_run(void *arg)
     rtpp_stats_cf = cf->stable->rtpp_stats;
     csp = &cmd_cf->cstats;
 
-    pfds[0].fd = cf->stable->controlfd;
-    pfds[0].events = POLLIN;
-    pfds[0].revents = 0;
+    psp = &cmd_cf->pset;
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
     last_ctick = cmd_cf->clock_tick;
@@ -154,23 +213,59 @@ rtpp_cmd_queue_run(void *arg)
             pthread_cond_wait(&cmd_cf->cmd_cond, &cmd_cf->cmd_mutex);
         }
         last_ctick = cmd_cf->clock_tick;
+#if 0
         tused = cmd_cf->tused;
+#endif
         pthread_mutex_unlock(&cmd_cf->cmd_mutex);
 
         sptime = getdtime();
 
-        i = poll(pfds, 1, 0);
-        if (i < 0 && errno == EINTR)
+        pthread_mutex_lock(&psp->pfds_mutex);
+        if (psp->pfds_used == 0) {
+            pthread_mutex_unlock(&psp->pfds_mutex);
             continue;
-        if (i > 0 && (pfds[0].revents & POLLIN) != 0) {
-            process_commands(cf, pfds[0].fd, sptime, csp);
         }
-        rtpp_anetio_pump(cf->stable->rtpp_netio_cf);
+        nready = poll(psp->pfds, psp->pfds_used, 0);
+        if (nready < 0 && errno == EINTR) {
+            pthread_mutex_unlock(&psp->pfds_mutex);
+            continue;
+        }
+        if (nready > 0) {
+            for (i = 0; i < psp->pfds_used; i++) {
+                if (cf->stable->umode == 0 && (psp->pfds[i].revents & (POLLERR | POLLHUP)) != 0) {
+                    goto closefd;
+                }
+                if ((psp->pfds[i].revents & POLLIN) == 0) {
+                    continue;
+                }
+                rval = process_commands(cf, psp->pfds[i].fd, sptime, csp);
+                if (cf->stable->umode == 0 && rval == -1) {
+closefd:
+                    close(psp->pfds[i].fd);
+                    psp->pfds_used--;
+                    if (psp->pfds_used > 0) {
+                        if (i < psp->pfds_used) {
+                            memcpy(&psp->pfds[i], &psp->pfds[i + 1],
+                              (psp->pfds_used - i) * sizeof(struct pollfd));
+                        }
+                        psp->pfds = realloc(psp->pfds,
+                          sizeof(struct pollfd) * psp->pfds_used);
+                    }
+                }
+            }
+        }
+        pthread_mutex_unlock(&psp->pfds_mutex);
+        if (nready > 0) {
+            rtpp_anetio_pump(cf->stable->rtpp_netio_cf);
+        }
+#if 0
         eptime = getdtime();
         pthread_mutex_lock(&cmd_cf->cmd_mutex);
         recfilter_apply(&cmd_cf->average_load, (eptime - sptime + tused) * cf->stable->target_pfreq);
         pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+#endif
         flush_cstats(rtpp_stats_cf, csp);
+#if 0
 #if RTPP_DEBUG
         if (last_ctick % (unsigned int)cf->stable->target_pfreq == 0 || last_ctick < 1000) {
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
@@ -180,12 +275,14 @@ rtpp_cmd_queue_run(void *arg)
               cmd_cf->average_load.lastval * 100.0, (double)last_ctick / cf->stable->target_pfreq, cmd_cf->average_load.lastval);
         }
 #endif
+#endif
     }
 }
 
 double
 rtpp_command_async_get_aload(struct rtpp_cmd_async_cf *cmd_cf)
 {
+#if 0
     double aload;
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
@@ -193,18 +290,20 @@ rtpp_command_async_get_aload(struct rtpp_cmd_async_cf *cmd_cf)
     pthread_mutex_unlock(&cmd_cf->cmd_mutex);
 
     return (aload);
+#else
+    return (0);
+#endif
 }
 
 int
-rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf, int clock)
+rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf)
 {
     int old_clock;
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
 
     old_clock = cmd_cf->clock_tick;
-    cmd_cf->clock_tick = clock;
-    cmd_cf->tused = 0.0;
+    cmd_cf->clock_tick++;
 
     /* notify worker thread */
     pthread_cond_signal(&cmd_cf->cmd_cond);
@@ -212,6 +311,32 @@ rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf, int clock)
     pthread_mutex_unlock(&cmd_cf->cmd_mutex);
 
     return (old_clock);
+}
+
+static int
+init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp, int controlfd)
+{
+
+    psp->pfds = malloc(sizeof(struct pollfd));
+    if (psp->pfds == NULL) {
+        return (-1);
+    }
+    if (pthread_mutex_init(&psp->pfds_mutex, NULL) != 0) {
+        free(psp->pfds);
+        return (-1);
+    }
+    psp->pfds_used = 1;
+    if (cf->stable->umode == 0) {
+        psp->pfds_used = 0;
+        psp->accept_fd = controlfd;
+    } else {
+        psp->pfds_used = 1;
+        psp->accept_fd = -1;
+        psp->pfds[0].fd = controlfd;
+        psp->pfds[0].events = POLLIN;
+        psp->pfds[0].revents = 0;
+    }
+    return (0);
 }
 
 int
@@ -225,15 +350,27 @@ rtpp_command_async_init(struct cfg *cf)
 
     memset(cmd_cf, '\0', sizeof(*cmd_cf));
 
+    if (init_pollset(cf, &cmd_cf->pset, cf->stable->controlfd) == -1) {
+        free(cmd_cf);
+        return (-1);
+    }
+
     init_cstats(cf->stable->rtpp_stats, &cmd_cf->cstats);
 
     pthread_cond_init(&cmd_cf->cmd_cond, NULL);
     pthread_mutex_init(&cmd_cf->cmd_mutex, NULL);
 
+#if 0
     recfilter_init(&cmd_cf->average_load, 0.999, 0.0, 1);
+#endif
 
     cf->stable->rtpp_cmd_cf = cmd_cf;
-    if (pthread_create(&cmd_cf->thread_id, NULL, (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
+    if (cf->stable->umode == 0) {
+        pthread_create(&cmd_cf->acpt_thread_id, NULL,
+          (void *(*)(void *))&rtpp_cmd_acceptor_run, cf);
+    }
+    if (pthread_create(&cmd_cf->thread_id, NULL,
+      (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
         pthread_cond_destroy(&cmd_cf->cmd_cond);
         pthread_mutex_destroy(&cmd_cf->cmd_mutex);
         free(cmd_cf);

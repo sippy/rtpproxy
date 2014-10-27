@@ -192,7 +192,7 @@ rtpp_proc_async_run(void *arg)
             i = poll(cf->sessinfo.pfds_rtp, cf->sessinfo.nsessions, 0);
             pthread_mutex_unlock(&cf->sessinfo.lock);
             if (i < 0 && errno == EINTR) {
-                rtpp_command_async_wakeup(cf->stable->rtpp_cmd_cf, last_ctick);
+                rtpp_command_async_wakeup(cf->stable->rtpp_cmd_cf);
                 tp[0] = getdtime();
                 continue;
             }
@@ -216,7 +216,7 @@ rtpp_proc_async_run(void *arg)
         }
         pthread_mutex_unlock(&cf->glock);
         rtpp_anetio_pump_q(sender);
-        rtpp_command_async_wakeup(cf->stable->rtpp_cmd_cf, last_ctick);
+        rtpp_command_async_wakeup(cf->stable->rtpp_cmd_cf);
         tp[3] = getdtime();
         flush_rstats(stats_cf, rstats);
 
