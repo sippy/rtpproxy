@@ -171,7 +171,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable->sched_hz = rtpp_get_sched_hz();
     cf->stable->sched_policy = SCHED_OTHER;
     cf->stable->target_pfreq = MIN(POLL_RATE, cf->stable->sched_hz);
-#if defined(RTPP_DEBUG)
+#if RTPP_DEBUG
     printf("target_pfreq = %f\n", cf->stable->target_pfreq);
 #endif
     cf->stable->slowshutdown = 0;
