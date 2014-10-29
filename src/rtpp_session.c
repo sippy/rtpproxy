@@ -48,7 +48,6 @@
 #include "rtpp_session.h"
 #include "rtp_server.h"
 #include "rtpp_util.h"
-#include "rtpp_types.h"
 #include "rtpp_stats.h"
 
 struct rtpp_session *
