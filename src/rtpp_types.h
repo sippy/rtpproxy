@@ -25,5 +25,13 @@
  *
  */
 
+struct rtpp_type_linkable {
+#if 0
+    unsigned int rtpp_type;
+#endif
+    struct rtpp_type_linkable *next;
+    char type_data[0];
+};
+
 #define DEFINE_METHOD(class, func, rval, args...) typedef rval (*func##_t)(struct class *, ## args)
 #define CALL_METHOD(obj, method, args...) (obj)->method(obj, ## args)

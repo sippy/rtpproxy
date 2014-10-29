@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,31 +26,19 @@
  *
  */
 
-#ifndef _RTPP_COMMAND_H_
-#define _RTPP_COMMAND_H_
+enum rtpp_ctrl_type {RTPC_IFSUN, RTPC_UDP4, RTPC_UDP6, RTPC_SYSD, RTPC_STDIO, RTPC_IFSUN_C};
 
-struct proto_cap {
-    const char  *pc_id;
-    const char  *pc_description;
+struct rtpp_ctrl_sock {
+    struct rtpp_type_linkable t;
+    enum rtpp_ctrl_type type;
+    const char *cmd_sock;
+    int controlfd;
+    int port_ctl;                   /* Port number for UDP control, 0 for Unix domain */
 };
 
-struct rtpp_command;
-struct rtpp_command_stats;
-struct cfg;
-struct cfg_stable;
-struct sockaddr;
+#define RTPP_CTRL_ISDG(rcsp) ((rcsp)->type == RTPC_UDP4 || (rcsp)->type == RTPC_UDP4)
+#define RTPP_CTRL_ISUNIX(rcsp) ((rcsp)->type == RTPC_IFSUN || (rcsp)->type == RTPC_IFSUN_C)
 
-extern struct proto_cap proto_caps[];
-
-int handle_command(struct cfg *, struct rtpp_command *);
-void free_command(struct rtpp_command *);
-struct rtpp_command *get_command(struct cfg *, int, int *, double,
-  struct rtpp_command_stats *csp, int umode);
-void reply_error(struct cfg *cf, struct rtpp_command *cmd, int ecode);
-void reply_port(struct cfg *cf, struct rtpp_command *cmd, int lport,
-  struct sockaddr **lia);
-int rtpp_create_listener(struct cfg *, struct sockaddr *, int *, int *);
-
-void rtpc_doreply(struct cfg *, char *, int, struct rtpp_command *, int);
-
-#endif
+int rtpp_controlfd_init(struct cfg *cf);
+struct rtpp_ctrl_sock *rtpp_ctrl_sock_parse(const char *);
+void rtpp_controlfd_cleanup(struct cfg *cf);

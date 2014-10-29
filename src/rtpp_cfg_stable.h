@@ -40,10 +40,11 @@ typedef enum {
 } rtpp_ttl_mode;
 
 struct rtpp_cfg_stable {
+    const char *pid_file;
+
     int nodaemon;
     int dmode;
     int bmode;                      /* Bridge mode */
-    int umode;                      /* UDP control mode */
     int port_min;                   /* Lowest UDP port for RTP */
     int port_max;                   /* Highest UDP port number for RTP */
     int port_ctl;                   /* Port number for UDP control, 0 for Unix domain */
@@ -83,8 +84,6 @@ struct rtpp_cfg_stable {
 
     struct rtpp_hash_table_obj *sessions_ht;
 
-    int controlfd;
-
     double sched_offset;
     int sched_policy;
     int sched_hz;
@@ -95,6 +94,8 @@ struct rtpp_cfg_stable {
     int slowshutdown;
 
     struct rtpp_stats_obj *rtpp_stats;
+
+    struct rtpp_list *ctrl_socks;
 };
 
 #endif

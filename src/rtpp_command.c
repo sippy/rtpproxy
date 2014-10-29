@@ -173,7 +173,7 @@ rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd, int e
 
     buf[len] = '\0';
     rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "sending reply \"%s\"", buf);
-    if (cf->stable->umode == 0) {
+    if (cmd->umode == 0) {
 	write(cmd->controlfd, buf, len);
     } else {
         if (cmd->cookie != NULL) {
@@ -228,7 +228,7 @@ free_command(struct rtpp_command *cmd)
 
 struct rtpp_command *
 get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
-  struct rtpp_command_stats *csp)
+  struct rtpp_command_stats *csp, int umode)
 {
     char **ap;
     char *cp;
@@ -244,7 +244,8 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     cmd->controlfd = controlfd;
     cmd->dtime = dtime;
     cmd->csp = csp;
-    if (cf->stable->umode == 0) {
+    cmd->umode = umode;
+    if (umode == 0) {
         for (;;) {
             len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
             if (len != -1 || (errno != EAGAIN && errno != EINTR))
@@ -274,7 +275,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
                 break;
         }
     }
-    if (cmd->argc < 1 || (cf->stable->umode != 0 && cmd->argc < 2)) {
+    if (cmd->argc < 1 || (umode != 0 && cmd->argc < 2)) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
         reply_error(cf, cmd, ECODE_PARSE_1);
         *rval = 0;
@@ -283,7 +284,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     }
 
     /* Stream communication mode doesn't use cookie */
-    if (cf->stable->umode != 0) {
+    if (umode != 0) {
         cmd->cookie = cmd->argv[0];
         for (i = 1; i < cmd->argc; i++)
             cmd->argv[i - 1] = cmd->argv[i];

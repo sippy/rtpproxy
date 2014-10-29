@@ -32,11 +32,9 @@
 #endif
 
 #include <sys/types.h>
-#include <sys/un.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <netinet/in.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -58,10 +56,15 @@
 #include "rtpp_util.h"
 #endif
 
+#ifdef HAVE_SYSTEMD_DAEMON
+#include <systemd/sd-daemon.h>
+#endif
+
 #include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_controlfd.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
@@ -71,19 +74,13 @@
 #include "rtpp_util.h"
 #include "rtpp_math.h"
 #include "rtpp_stats.h"
-
-#ifdef HAVE_SYSTEMD_DAEMON
-#include <systemd/sd-daemon.h>
-#endif
+#include "rtpp_list.h"
 
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
 #else
 # define RTPP_DEBUG	1
 #endif
-
-static const char *cmd_sock = CMD_SOCK;
-static const char *pid_file = PID_FILE;
 
 static void usage(void);
 
@@ -129,8 +126,8 @@ ehandler(void)
     __mp_leaktable(0, MP_LT_UNFREED, 0);
 #endif
 
-    unlink(cmd_sock);
-    unlink(pid_file);
+    rtpp_controlfd_cleanup(_sig_cf);
+    unlink(_sig_cf->stable->pid_file);
     rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog, "rtpproxy ended");
     rtpp_log_close(_sig_cf->stable->glog);
 }
@@ -145,14 +142,19 @@ rtpp_rlim_max(struct cfg *cf)
 static void
 init_config(struct cfg *cf, int argc, char **argv)
 {
-    int ch, i;
+    int ch, i, umode, stdio_mode;
     char *bh[2], *bh6[2], *cp, *tp[2];
     const char *errmsg;
     struct passwd *pp;
     struct group *gp;
     double x, y;
+    struct rtpp_ctrl_sock *ctrl_sock;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
+
+    umode = stdio_mode = 0;
+
+    cf->stable->pid_file = PID_FILE;
 
     cf->stable->port_min = PORT_MIN;
     cf->stable->port_max = PORT_MAX;
@@ -190,7 +192,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:")) != -1)
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:")) != -1) {
 	switch (ch) {
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
@@ -268,17 +270,16 @@ init_config(struct cfg *cf, int argc, char **argv)
         break;
 
 	case 's':
-	    if (strncmp("udp:", optarg, 4) == 0) {
-		cf->stable->umode = 1;
-		optarg += 4;
-	    } else if (strncmp("udp6:", optarg, 5) == 0) {
-		cf->stable->umode = 6;
-		optarg += 5;
-	    } else if (strncmp("unix:", optarg, 5) == 0) {
-		cf->stable->umode = 0;
-		optarg += 5;
-	    }
-	    cmd_sock = optarg;
+            ctrl_sock = rtpp_ctrl_sock_parse(optarg);
+            if (ctrl_sock == NULL) {
+                errx(1, "can't parse control socket argument");
+            }
+            rtpp_list_append(cf->stable->ctrl_socks, ctrl_sock);
+            if (RTPP_CTRL_ISDG(ctrl_sock)) {
+                umode = 1;
+            } else if (ctrl_sock->type == RTPC_STDIO) {
+                stdio_mode = 1;
+            }
 	    break;
 
 	case 't':
@@ -313,7 +314,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'p':
-	    pid_file = optarg;
+	    cf->stable->pid_file = optarg;
 	    break;
 
 	case 'T':
@@ -416,11 +417,25 @@ init_config(struct cfg *cf, int argc, char **argv)
 	default:
 	    usage();
 	}
+    }
+
+    /* No control socket has been specified, add a default one */
+    if (RTPP_LIST_IS_EMPTY(cf->stable->ctrl_socks)) {
+        ctrl_sock = rtpp_ctrl_sock_parse(CMD_SOCK);
+        if (ctrl_sock == NULL) {
+            errx(1, "can't parse control socket: \"%s\"", CMD_SOCK);
+        }
+        rtpp_list_append(cf->stable->ctrl_socks, ctrl_sock);
+    }
+
     if (cf->stable->rdir == NULL && cf->stable->sdir != NULL)
 	errx(1, "-S switch requires -r switch");
 
+    if (cf->stable->nodaemon == 0 && stdio_mode != 0)
+        errx(1, "stdio command mode requires -f switch");
+
     if (cf->stable->no_check == 0 && getuid() == 0 && cf->stable->run_uname == NULL) {
-	if (cf->stable->umode != 0) {
+	if (umode != 0) {
 	    errx(1, "running this program as superuser in a remote control "
 	      "mode is strongly not recommended, as it poses serious security "
 	      "threat to your system. Use -u option to run as an unprivileged "
@@ -515,77 +530,10 @@ init_config(struct cfg *cf, int argc, char **argv)
     }
 }
 
-static int
-init_controlfd(struct cfg *cf)
-{
-    struct sockaddr_un ifsun;
-    struct sockaddr_storage ifsin;
-    char *cp;
-    int i, controlfd, flags, so_rcvbuf;
-
-#ifdef HAVE_SYSTEMD_DAEMON
-    i = sd_listen_fds(0);
-    if (i > 1) {
-        fprintf(stderr, "Too many file descriptors received.\n");
-        exit(1);
-    } else if (i == 1) {
-        controlfd = SD_LISTEN_FDS_START + 0;
-    } else {
-#endif
-    if (cf->stable->umode == 0) {
-	unlink(cmd_sock);
-	memset(&ifsun, '\0', sizeof ifsun);
-#if defined(HAVE_SOCKADDR_SUN_LEN)
-	ifsun.sun_len = strlen(cmd_sock);
-#endif
-	ifsun.sun_family = AF_LOCAL;
-	strcpy(ifsun.sun_path, cmd_sock);
-	controlfd = socket(PF_LOCAL, SOCK_STREAM, 0);
-	if (controlfd == -1)
-	    err(1, "can't create socket");
-	setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &controlfd,
-	  sizeof controlfd);
-	if (bind(controlfd, sstosa(&ifsun), sizeof ifsun) < 0)
-	    err(1, "can't bind to a socket");
-	if ((cf->stable->run_uname != NULL || cf->stable->run_gname != NULL) &&
-	  chown(cmd_sock, cf->stable->run_uid, cf->stable->run_gid) == -1)
-	    err(1, "can't set owner of the socket");
-	if (listen(controlfd, 32) != 0)
-	    err(1, "can't listen on a socket");
-    } else {
-	cp = strrchr(cmd_sock, ':');
-	if (cp != NULL) {
-	    *cp = '\0';
-	    cp++;
-	}
-	if (cp == NULL || *cp == '\0')
-	    cp = CPORT;
-	cf->stable->port_ctl = atoi(cp);
-	i = (cf->stable->umode == 6) ? AF_INET6 : AF_INET;
-	if (setbindhost(sstosa(&ifsin), i, cmd_sock, cp) != 0)
-	    exit(1);
-	controlfd = socket(i, SOCK_DGRAM, 0);
-	if (controlfd == -1)
-	    err(1, "can't create socket");
-        so_rcvbuf = 16 * 1024;
-        if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
-            rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "unable to set 16K receive buffer size on controlfd");
-	if (bind(controlfd, sstosa(&ifsin), SS_LEN(&ifsin)) < 0)
-	    err(1, "can't bind to a socket");
-    }
-    flags = fcntl(controlfd, F_GETFL);
-    fcntl(controlfd, F_SETFL, flags | O_NONBLOCK);
-#ifdef HAVE_SYSTEMD_DAEMON
-    }
-#endif
-
-    return controlfd;
-}
-
 int
 main(int argc, char **argv)
 {
-    int i, len, controlfd;
+    int i, len;
     double eval, clk;
     long long ncycles_ref, counter;
     double eptime;
@@ -607,6 +555,13 @@ main(int argc, char **argv)
          /* NOTREACHED */
     }
     memset(cf.stable, '\0', sizeof(struct rtpp_cfg_stable));
+    cf.stable->ctrl_socks = malloc(sizeof(struct rtpp_list));
+    if (cf.stable->ctrl_socks == NULL) {
+         err(1, "can't allocate memory for the struct rtpp_cfg_stable");
+         /* NOTREACHED */
+    }
+    memset(cf.stable->ctrl_socks, '\0', sizeof(struct rtpp_list));
+    RTPP_LIST_RESET(cf.stable->ctrl_socks);    
 
     init_config(&cf, argc, argv);
 
@@ -624,7 +579,10 @@ main(int argc, char **argv)
     }
     init_port_table(&cf);
 
-    controlfd = init_controlfd(&cf);
+    if (rtpp_controlfd_init(&cf) != 0) {
+        err(1, "can't inilialize control socket%s",
+          cf.stable->ctrl_socks->len > 1 ? "s" : "");
+    }
 
     if (cf.stable->nodaemon == 0) {
 	if (rtpp_daemon(0, 0) == -1)
@@ -641,7 +599,7 @@ main(int argc, char **argv)
     atexit(ehandler);
     rtpp_log_write(RTPP_LOG_INFO, cf.stable->glog, "rtpproxy started, pid %d", getpid());
 
-    i = open(pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
+    i = open(cf.stable->pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (i >= 0) {
 	len = sprintf(buf, "%u\n", (unsigned int)getpid());
 	write(i, buf, len);
@@ -678,8 +636,6 @@ main(int argc, char **argv)
 	}
     }
     set_rlimits(&cf);
-
-    cf.stable->controlfd = controlfd;
 
     cf.sessinfo.sessions[0] = NULL;
     cf.sessinfo.nsessions = 0;

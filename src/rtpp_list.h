@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2013-2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,31 +25,39 @@
  *
  */
 
-#ifndef _RTPP_COMMAND_H_
-#define _RTPP_COMMAND_H_
+#ifdef RTPP_DEBUG
+#include <assert.h>
+#endif
 
-struct proto_cap {
-    const char  *pc_id;
-    const char  *pc_description;
+struct rtpp_list {
+    struct rtpp_type_linkable *head;
+    struct rtpp_type_linkable *tail;
+    unsigned int len;
 };
 
-struct rtpp_command;
-struct rtpp_command_stats;
-struct cfg;
-struct cfg_stable;
-struct sockaddr;
+static inline void
+rtpp_list_append(struct rtpp_list *lst, void *p)
+{
+    struct rtpp_type_linkable *elem;
 
-extern struct proto_cap proto_caps[];
-
-int handle_command(struct cfg *, struct rtpp_command *);
-void free_command(struct rtpp_command *);
-struct rtpp_command *get_command(struct cfg *, int, int *, double,
-  struct rtpp_command_stats *csp, int umode);
-void reply_error(struct cfg *cf, struct rtpp_command *cmd, int ecode);
-void reply_port(struct cfg *cf, struct rtpp_command *cmd, int lport,
-  struct sockaddr **lia);
-int rtpp_create_listener(struct cfg *, struct sockaddr *, int *, int *);
-
-void rtpc_doreply(struct cfg *, char *, int, struct rtpp_command *, int);
-
+    elem = (struct rtpp_type_linkable *)p;
+#ifdef RTPP_DEBUG
+#if 0
+    assert(RTPP_TYPE_IS_LINKABLE(elem));
 #endif
+    assert(elem->next == NULL);
+#endif
+    if (lst->head == NULL) {
+        lst->head = lst->tail = elem;
+    } else {
+        lst->tail->next = elem;
+        lst->tail = elem;
+    }
+    lst->len += 1;
+}
+
+#define RTPP_LIST_RESET(lst) {(lst)->head = (lst)->tail = NULL; (lst)->len = 0;}
+#define RTPP_LIST_HEAD(lst)  (void *)((lst)->head)
+#define RTPP_LIST_IS_EMPTY(slp) ((slp)->len == 0)
+
+#define RTPP_ITER_NEXT(stlp)     ((void *)((stlp)->t.next))

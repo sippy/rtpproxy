@@ -13,7 +13,8 @@ rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_log_stand.c rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
   rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h rtpp_stats.c \
   rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
-  rtp_info.h rtpp_command_private.h
+  rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
+  rtpp_list.h
 
 rtpproxy_LDADD=-lm -lpthread
 

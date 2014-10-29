@@ -55,6 +55,7 @@ struct rtpp_command
     int controlfd;
     double dtime;
     struct rtpp_command_stats *csp;
+    int umode;
 };
 
 enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,

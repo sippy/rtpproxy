@@ -48,12 +48,22 @@
 #include "rtpp_util.h"
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
+#include "rtpp_list.h"
+#include "rtpp_controlfd.h"
+
+#define RTPC_MAX_CONNECTIONS 10
 
 struct rtpp_cmd_pollset {
     struct pollfd *pfds;
     int pfds_used;
-    int accept_fd;
+    struct rtpp_ctrl_sock *csocks[RTPC_MAX_CONNECTIONS];
     pthread_mutex_t pfds_mutex;
+};
+
+struct rtpp_cmd_accptset {
+    struct pollfd *pfds;
+    struct rtpp_ctrl_sock **csocks;
+    int pfds_used;
 };
 
 struct rtpp_cmd_async_cf {
@@ -68,6 +78,7 @@ struct rtpp_cmd_async_cf {
 #endif
     struct rtpp_command_stats cstats;
     struct rtpp_cmd_pollset pset;
+    struct rtpp_cmd_accptset aset;
 };
 
 static void
@@ -118,13 +129,13 @@ accept_connection(struct cfg *cf, int controlfd_in)
 
 static int
 process_commands(struct cfg *cf, int controlfd, double dtime,
-  struct rtpp_command_stats *csp)
+  struct rtpp_command_stats *csp, int umode)
 {
     int i, rval;
     struct rtpp_command *cmd;
 
     do {
-        cmd = get_command(cf, controlfd, &rval, dtime, csp);
+        cmd = get_command(cf, controlfd, &rval, dtime, csp, umode);
         if (cmd != NULL) {
             csp->ncmds_rcvd.cnt++;
             pthread_mutex_lock(&cf->glock);
@@ -134,7 +145,7 @@ process_commands(struct cfg *cf, int controlfd, double dtime,
         } else {
             i = -1;
         }
-    } while (i == 0 && cf->stable->umode != 0);
+    } while (i == 0 && umode != 0);
     return (i);
 }
 
@@ -143,42 +154,49 @@ rtpp_cmd_acceptor_run(void *arg)
 {
     struct cfg *cf;
     struct rtpp_cmd_async_cf *cmd_cf;
-    struct pollfd pfds[1], *tp;
+    struct pollfd *tp;
     struct rtpp_cmd_pollset *psp;
-    int nready, controlfd;
+    struct rtpp_cmd_accptset *asp;
+    int nready, controlfd, i;
 
     cf = (struct cfg *)arg;
     cmd_cf = cf->stable->rtpp_cmd_cf;
     psp = &cmd_cf->pset;
-
-    pfds[0].fd = psp->accept_fd;
-    psp->pfds[0].events = POLLIN;
-    psp->pfds[0].revents = 0;
+    asp = &cmd_cf->aset;
 
     for (;;) {
-        nready = poll(pfds, 1, INFTIM);
+        nready = poll(asp->pfds, asp->pfds_used, INFTIM);
         if (nready <= 0)
             continue;
-        if ((pfds[0].revents & POLLIN) == 0) {
-            continue;
-        }
-        controlfd = accept_connection(cf, psp->accept_fd);
-        if (controlfd < 0) {
-            continue;
-        }
-        pthread_mutex_lock(&psp->pfds_mutex);
-        tp = realloc(psp->pfds, sizeof(struct pollfd) * (psp->pfds_used + 1));
-        if (tp == NULL) {
+        for (i = 0; i < asp->pfds_used; i++) {
+            if ((asp->pfds[i].revents & POLLIN) == 0) {
+                continue;
+            }
+            pthread_mutex_lock(&psp->pfds_mutex);
+            if (psp->pfds_used >= RTPC_MAX_CONNECTIONS) {
+                pthread_mutex_unlock(&psp->pfds_mutex);
+                continue;
+            }
+            controlfd = accept_connection(cf, asp->pfds[i].fd);
+            if (controlfd < 0) {
+                pthread_mutex_unlock(&psp->pfds_mutex);
+                continue;
+            }
+            tp = realloc(psp->pfds, sizeof(struct pollfd) * (psp->pfds_used + 1));
+            if (tp == NULL) {
+                pthread_mutex_unlock(&psp->pfds_mutex);
+                close(controlfd); /* Yeah, sorry, please try later */
+                continue;
+            }
+            psp->pfds = tp;
+            psp->pfds[psp->pfds_used].fd = controlfd;
+            psp->pfds[psp->pfds_used].events = POLLIN | POLLERR | POLLHUP;
+            psp->pfds[psp->pfds_used].revents = 0;
+            psp->csocks[psp->pfds_used] = asp->csocks[i];
+            psp->pfds_used++;
             pthread_mutex_unlock(&psp->pfds_mutex);
-            continue;
+            rtpp_command_async_wakeup(cmd_cf);
         }
-        psp->pfds = tp;
-        psp->pfds[psp->pfds_used].fd = controlfd;
-        psp->pfds[psp->pfds_used].events = POLLIN | POLLERR | POLLHUP;
-        psp->pfds[psp->pfds_used].revents = 0;
-        psp->pfds_used++;
-        pthread_mutex_unlock(&psp->pfds_mutex);
-        rtpp_command_async_wakeup(cmd_cf);
     }
 }
 
@@ -188,7 +206,7 @@ rtpp_cmd_queue_run(void *arg)
     struct cfg *cf;
     struct rtpp_cmd_async_cf *cmd_cf;
     struct rtpp_cmd_pollset *psp;
-    int i, last_ctick, nready, rval;
+    int i, last_ctick, nready, rval, umode;
     double sptime;
 #if 0
     double eptime, tused;
@@ -232,24 +250,23 @@ rtpp_cmd_queue_run(void *arg)
         }
         if (nready > 0) {
             for (i = 0; i < psp->pfds_used; i++) {
-                if (cf->stable->umode == 0 && (psp->pfds[i].revents & (POLLERR | POLLHUP)) != 0) {
+                if (RTPP_CTRL_ISUNIX(psp->csocks[i]) && (psp->pfds[i].revents & (POLLERR | POLLHUP)) != 0) {
                     goto closefd;
                 }
                 if ((psp->pfds[i].revents & POLLIN) == 0) {
                     continue;
                 }
-                rval = process_commands(cf, psp->pfds[i].fd, sptime, csp);
-                if (cf->stable->umode == 0 && rval == -1) {
+                umode = RTPP_CTRL_ISDG(psp->csocks[i]);
+                rval = process_commands(cf, psp->pfds[i].fd, sptime, csp, umode);
+                if (psp->csocks[i]->type == RTPC_IFSUN || (psp->csocks[i]->type == RTPC_IFSUN_C && rval == -1)) {
 closefd:
                     close(psp->pfds[i].fd);
                     psp->pfds_used--;
-                    if (psp->pfds_used > 0) {
-                        if (i < psp->pfds_used) {
-                            memcpy(&psp->pfds[i], &psp->pfds[i + 1],
-                              (psp->pfds_used - i) * sizeof(struct pollfd));
-                        }
-                        psp->pfds = realloc(psp->pfds,
-                          sizeof(struct pollfd) * psp->pfds_used);
+                    if (psp->pfds_used > 0 && i < psp->pfds_used) {
+                        memcpy(&psp->pfds[i], &psp->pfds[i + 1],
+                          (psp->pfds_used - i) * sizeof(struct pollfd));
+                        memcpy(&psp->csocks[i], &psp->csocks[i + 1],
+                          (psp->pfds_used - i) * sizeof(struct rtpp_ctrl_sock *));
                     }
                 }
             }
@@ -314,10 +331,20 @@ rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *cmd_cf)
 }
 
 static int
-init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp, int controlfd)
+init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp)
 {
+    struct rtpp_ctrl_sock *ctrl_sock;
+    int pfds_used, msize, i;
 
-    psp->pfds = malloc(sizeof(struct pollfd));
+    pfds_used = 0;
+    ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
+    for (pfds_used = 0; ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
+        if (RTPP_CTRL_ISUNIX(ctrl_sock))
+            continue;
+        pfds_used++;
+    }
+    msize = pfds_used > 0 ? pfds_used : 1;
+    psp->pfds = malloc(sizeof(struct pollfd) * msize);
     if (psp->pfds == NULL) {
         return (-1);
     }
@@ -325,24 +352,84 @@ init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp, int controlfd)
         free(psp->pfds);
         return (-1);
     }
-    psp->pfds_used = 1;
-    if (cf->stable->umode == 0) {
-        psp->pfds_used = 0;
-        psp->accept_fd = controlfd;
-    } else {
-        psp->pfds_used = 1;
-        psp->accept_fd = -1;
-        psp->pfds[0].fd = controlfd;
-        psp->pfds[0].events = POLLIN;
-        psp->pfds[0].revents = 0;
+    psp->pfds_used = pfds_used;
+    if (psp->pfds_used == 0) {
+        return (0);
+    }
+    ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
+    for (i = 0; ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
+        if (RTPP_CTRL_ISUNIX(ctrl_sock))
+            continue;
+        psp->pfds[i].fd = ctrl_sock->controlfd;
+        psp->pfds[i].events = POLLIN;
+        psp->pfds[i].revents = 0;
+        psp->csocks[i] = ctrl_sock;
+        i++;
     }
     return (0);
+}
+
+static void
+free_pollset(struct rtpp_cmd_pollset *psp)
+{
+
+    free(psp->pfds);
+}
+
+static int
+init_accptset(struct cfg *cf, struct rtpp_cmd_accptset *asp)
+{
+    int i, pfds_used;
+    struct rtpp_ctrl_sock *ctrl_sock;
+
+    pfds_used = 0;
+    ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
+    for (pfds_used = 0; ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
+        if (RTPP_CTRL_ISUNIX(ctrl_sock) == 0)
+            continue;
+        pfds_used++;
+    }
+    if (pfds_used == 0) {
+        return (0);
+    }
+
+    asp->pfds = malloc(sizeof(struct pollfd) * pfds_used);
+    if (asp->pfds == NULL) {
+        return (-1);
+    }
+    asp->pfds_used = pfds_used;
+    asp->csocks = malloc(sizeof(struct rtpp_ctrl_sock) * pfds_used);
+    if (asp->csocks == NULL) {
+        free(asp->pfds);
+        return (-1);
+    }
+    ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
+    for (i = 0; i < asp->pfds_used; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
+        if (RTPP_CTRL_ISUNIX(ctrl_sock) == 0)
+            continue;
+        asp->pfds[i].fd = ctrl_sock->controlfd;
+        asp->pfds[i].events = POLLIN;
+        asp->pfds[i].revents = 0;
+        asp->csocks[i] = ctrl_sock;
+        i++;
+    }
+    return (pfds_used);
+}
+
+static void
+free_accptset(struct rtpp_cmd_accptset *asp)
+{
+    if (asp->pfds_used > 0) {
+        free(asp->csocks);
+        free(asp->pfds);
+    }
 }
 
 int
 rtpp_command_async_init(struct cfg *cf)
 {
     struct rtpp_cmd_async_cf *cmd_cf;
+    int need_acptr;
 
     cmd_cf = malloc(sizeof(*cmd_cf));
     if (cmd_cf == NULL)
@@ -350,7 +437,13 @@ rtpp_command_async_init(struct cfg *cf)
 
     memset(cmd_cf, '\0', sizeof(*cmd_cf));
 
-    if (init_pollset(cf, &cmd_cf->pset, cf->stable->controlfd) == -1) {
+    if (init_pollset(cf, &cmd_cf->pset) == -1) {
+        free(cmd_cf);
+        return (-1);
+    }
+    need_acptr = init_accptset(cf, &cmd_cf->aset);
+    if (need_acptr == -1) {
+        free_pollset(&cmd_cf->pset);
         free(cmd_cf);
         return (-1);
     }
@@ -365,7 +458,7 @@ rtpp_command_async_init(struct cfg *cf)
 #endif
 
     cf->stable->rtpp_cmd_cf = cmd_cf;
-    if (cf->stable->umode == 0) {
+    if (need_acptr != 0) {
         pthread_create(&cmd_cf->acpt_thread_id, NULL,
           (void *(*)(void *))&rtpp_cmd_acceptor_run, cf);
     }
@@ -373,6 +466,8 @@ rtpp_command_async_init(struct cfg *cf)
       (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
         pthread_cond_destroy(&cmd_cf->cmd_cond);
         pthread_mutex_destroy(&cmd_cf->cmd_mutex);
+        free_pollset(&cmd_cf->pset);
+        free_accptset(&cmd_cf->aset);
         free(cmd_cf);
         cf->stable->rtpp_cmd_cf = NULL;
         return (-1);
