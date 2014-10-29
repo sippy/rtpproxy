@@ -27,7 +27,7 @@
 
 PKGNAME=	rtpproxy
 PKGFILES=	GNUmakefile Makefile README extractaudio makeann \
-		  rtpproxy.init rtpproxy.sh udp_storm ${SRCS}
+		  rtpproxy.init rtpproxy.sh udp_storm ${SRCS:Nconfig[.]h}
 
 .if !defined(RTPP_DEBUG)
 PROG=	rtpproxy
@@ -54,7 +54,9 @@ SRCS=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_hash_table.c rtpp_hash_table.h rtpp_types.h \
 	rtpp_pcache.c rtpp_pcache.h config_pp.h rtpp_stats.c \
 	rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h \
-	rtpp_command_stats.c config_std.h
+	rtpp_command_stats.c config_std.h rtp_info.h \
+	rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
+	rtpp_list.h
 MAN1=
 
 WARNS?=	2
@@ -92,7 +94,7 @@ distribution: clean
 
 includepolice:
 	for file in ${SRCS}; do \
-	  python misc/includepolice.py $${file} || sleep 5; \
+	  SMAKE="${MAKE}" SMAKEFLAGS="-f ../mk/Makefile" python ../misc/includepolice.py $${file} || sleep 5; \
 	done
 
 .include <bsd.prog.mk>
