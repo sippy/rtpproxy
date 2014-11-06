@@ -397,6 +397,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             spa->rtcp->fds[sidx] = fds[1];
             spa->ports[sidx] = lport;
             spa->rtcp->ports[sidx] = lport + 1;
+            if (spa->complete == 0) {
+                CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_complete", 1);
+            }
             spa->complete = spa->rtcp->complete = 1;
             append_session(cf, spa, sidx);
         }
