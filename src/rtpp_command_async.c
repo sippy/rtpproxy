@@ -51,7 +51,7 @@
 #include "rtpp_list.h"
 #include "rtpp_controlfd.h"
 
-#define RTPC_MAX_CONNECTIONS 10
+#define RTPC_MAX_CONNECTIONS 100
 
 struct rtpp_cmd_pollset {
     struct pollfd *pfds;
