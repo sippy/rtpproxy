@@ -38,6 +38,7 @@ import sys
 sys.path.append('../../sippy.git')
 
 from sippy.Rtp_proxy_client_local import Rtp_proxy_client_local
+from sippy.Rtp_proxy_client_udp import Rtp_proxy_client_udp
 from sippy.Timeout import Timeout
 
 sys.path.append('../../sip_test_data/python')
@@ -66,7 +67,10 @@ class res(object):
         global_config = {}
         self.prand_cid = pickrandom(kind = 'call_id')
         self.prand_tags = pickrandom(kind = 'to_from_tags')
-        self.rtppc = Rtp_proxy_client_local(global_config, address = '/var/run/rtpproxy.sock')
+        self.rtppc = Rtp_proxy_client_local(global_config, \
+          address = '/var/run/rtpproxy.sock', nworkers = 2)
+        #self.rtppc = Rtp_proxy_client_udp(global_config, \
+        #  address = ('127.0.0.1', 1234), nworkers = 2)
 
     def issue_command(self):
         call_id = self.prand_cid.get()
@@ -88,7 +92,8 @@ class res(object):
             Timeout(self.issue_command, 3 * random())
             return
         if rval == None or rval.startswith('E'):
-            print ('error: %s' % str(rval))
+            print ('rtpp_reply_u: error: %s, original command: %s' % \
+              (str(rval), sdata.command_u))
             reactor.stop()
             return
 
@@ -112,17 +117,19 @@ class res(object):
             Timeout(self.issue_command_l, 2 * random(), 1, sdata)
             return
         if rval == None or rval.startswith('E'):
-            print ('error: %s' % str(rval))
+            print ('rtpp_reply_l: error: %s, original command: %s' % \
+              (str(rval), sdata.command_l))
             reactor.stop()
             return
 
         if random() > 0.5:
             # let 50% of the sessions timeout, disconnect the rest after
-            # 0-59 seconds explicitly
+            # 8.5-58.5 seconds explicitly
+            tout = 8.5 + (50.0 * random())
             if random() > 0.5:
-                Timeout(self.issue_command_d, 59 * random(), 1, sdata.command_d_b1)
+                Timeout(self.issue_command_d, tout, 1, sdata.command_d_b1)
             else:
-                Timeout(self.issue_command_d, 59 * random(), 1, sdata.command_d_b2)
+                Timeout(self.issue_command_d, tout, 1, sdata.command_d_b2)
         self.rcodes.append(rval)
         self.rremain -= 1
         if self.rremain == 0:
@@ -130,11 +137,12 @@ class res(object):
         self.issue_command()
 
     def issue_command_d(self, command_d):
-        self.rtppc.send_command(command_d, self.rtpp_reply_d)
+        self.rtppc.send_command(command_d, self.rtpp_reply_d, command_d)
 
-    def rtpp_reply_d(self, rval):
+    def rtpp_reply_d(self, rval, command_d):
         if rval != '0':
-            print ('rtpp_reply_d_c: error: %s' % str(rval))
+            print ('rtpp_reply_d: error: %s, original command: %s' % \
+              (str(rval), command_d))
             reactor.stop()
             return
 
@@ -143,4 +151,4 @@ rres.issue_command()
 
 reactor.run()
 #print 'main:', rres.rcodes
-rres.rtppc.worker.shutdown()
+rres.rtppc.shutdown()
