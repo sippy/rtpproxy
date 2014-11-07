@@ -26,12 +26,14 @@
 
 from Timeout import Timeout
 from threading import Thread, Condition
-from errno import EINTR
+from errno import EINTR, EPIPE, ENOTCONN
 from twisted.internet import reactor
 
 from datetime import datetime
 import socket
 import sys, traceback
+
+_MAX_RECURSE = 10
 
 class _RTPPLWorker(Thread):
     userv = None
@@ -40,29 +42,44 @@ class _RTPPLWorker(Thread):
         Thread.__init__(self)
         self.userv = userv
         self.setDaemon(True)
+        self.connect()
         self.start()
 
-    def send_raw(self, command):
+    def connect(self):
+        self.s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.s.connect(self.userv.address)
+
+    def send_raw(self, command, _recurse = 0):
+        if _recurse > _MAX_RECURSE:
+            raise Exception('Cannot reconnect: %s', self.userv.address)
         if not command.endswith('\n'):
             command += '\n'
         #print '%s.send_raw(%s)' % (id(self), command)
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(self.userv.address)
         while True:
             try:
-                s.send(command)
+                self.s.send(command)
                 break
             except socket.error, why:
                 if why[0] == EINTR:
                     continue
+                elif why[0] in (EPIPE, ENOTCONN):
+                    self.connect()
+                    return self.send_raw(command, _recurse + 1)
                 raise why
         while True:
             try:
-                rval = s.recv(1024).strip()
+                rval = self.s.recv(1024)
+                if len(rval) == 0:
+                    self.connect()
+                    return self.send_raw(command, _MAX_RECURSE)
+                rval = rval.strip()
                 break
             except socket.error, why:
                 if why[0] == EINTR:
                     continue
+                elif why[0] in (EPIPE, ENOTCONN):
+                    self.connect()
+                    return self.send_raw(command, _recurse + 1)
                 raise why
         return rval
 
@@ -84,11 +101,11 @@ class _RTPPLWorker(Thread):
                 data = self.send_raw(command)
                 if len(data) == 0:
                     data = None
-            except:
+            except Exception, e:
+                print e
                 data = None
             if result_callback != None:
                 reactor.callFromThread(self.dispatch, result_callback, data, callback_parameters)
-        self.userv = None
 
     def dispatch(self, result_callback, data, callback_parameters):
         try:
@@ -106,20 +123,25 @@ class _RTPPLWorker(Thread):
         self.userv.wi_available.notify()
         self.userv.wi_available.release()
         self.join()
+        self.userv = None
 
 class Rtp_proxy_client_local(object):
     is_local = True
     wi_available = None
     wi = None
-    worker = None
+    nworkers = None
+    workers = None
 
     def __init__(self, global_config, address = '/var/run/rtpproxy.sock', \
-      bind_address = None):
+      bind_address = None, nworkers = 1):
         self.address = address
         self.is_local = True
         self.wi_available = Condition()
         self.wi = []
-        self.worker = _RTPPLWorker(self)
+        self.nworkers = nworkers
+        self.workers = []
+        for i in range(0, self.nworkers):
+            self.workers.append(_RTPPLWorker(self))
 
     def send_command(self, command, result_callback = None, *callback_parameters):
         self.wi_available.acquire()
@@ -128,9 +150,16 @@ class Rtp_proxy_client_local(object):
         self.wi_available.release()
 
     def reconnect(self, address, bind_address = None):
-        self.worker.shutdown()
+        self.shutdown()
         self.address = address
-        self.worker = _RTPPLWorker(self)
+        self.workers = []
+        for i in range(0, self.nworkers):
+            self.workers.append(_RTPPLWorker(self))
+
+    def shutdown(self):
+        for rworker in self.workers:
+            rworker.shutdown()
+        self.workers = None
 
 if __name__ == '__main__':
     def display(*args):
@@ -139,3 +168,4 @@ if __name__ == '__main__':
     r.send_command('VF 123456', display, 'abcd')
     from twisted.internet import reactor
     reactor.run(installSignalHandlers = 1)
+    r.shutdown()
