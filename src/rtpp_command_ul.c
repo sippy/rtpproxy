@@ -398,7 +398,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             spa->ports[sidx] = lport;
             spa->rtcp->ports[sidx] = lport + 1;
             if (spa->complete == 0) {
-                CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_complete", 1);
+                cmd->csp->nsess_complete.cnt++;
             }
             spa->complete = spa->rtcp->complete = 1;
             append_session(cf, spa, sidx);
@@ -530,7 +530,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
 
         cf->sessions_created++;
         cf->sessions_active++;
-        CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_created", 1);
+        cmd->csp->nsess_created.cnt++;
 
         /*
          * Each session can consume up to 5 open file descriptors (2 RTP,
