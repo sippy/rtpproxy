@@ -33,8 +33,6 @@ from threading import Thread, Condition
 import socket
 import sys, traceback
 
-MAX_WORKERS = 30
-
 class AsyncSender(Thread):
     userv = None
 
@@ -122,6 +120,7 @@ class AsyncReceiver(Thread):
 _DEFAULT_FLAGS = socket.SO_REUSEADDR
 if hasattr(socket, 'SO_REUSEPORT'):
     _DEFAULT_FLAGS |= socket.SO_REUSEPORT
+_DEFAULT_NWORKERS = 30
 
 class Udp_server(object):
     skt = None
@@ -136,7 +135,7 @@ class Udp_server(object):
     areceivers = None
 
     def __init__(self, global_config, address, data_callback, family = None, \
-      flags = _DEFAULT_FLAGS):
+      flags = _DEFAULT_FLAGS, nworkers = _DEFAULT_NWORKERS):
         self.laddress = address
         if family == None:
             if address != None and address[0].startswith('['):
@@ -163,9 +162,10 @@ class Udp_server(object):
         self.stats = [0, 0, 0]
         self.wi_available = Condition()
         self.wi = []
+        self.nworkers = nworkers
         self.asenders = []
         self.areceivers = []
-        for i in range(0, MAX_WORKERS):
+        for i in range(0, self.nworkers):
             self.asenders.append(AsyncSender(self))
             self.areceivers.append(AsyncReceiver(self))
 
