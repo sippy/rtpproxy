@@ -71,4 +71,4 @@ for command in VALID_CMDS:
 
 reactor.run()
 print 'main:', rres.rcodes
-rtppc.worker.shutdown()
+rtppc.shutdown()
