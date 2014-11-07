@@ -38,11 +38,15 @@ class Rtp_proxy_client_udp(object):
     bind_address = None
     global_config = None
 
-    def __init__(self, global_config, address, bind_address = None):
+    def __init__(self, global_config, address, bind_address = None, nworkers = None):
         self.address = address
         self.is_local = False
-        self.worker = Udp_server(global_config, bind_address, \
-          self.process_reply, flags = 0)
+        if nworkers == None:
+            self.worker = Udp_server(global_config, bind_address, \
+              self.process_reply, flags = 0)
+        else:
+            self.worker = Udp_server(global_config, bind_address, \
+              self.process_reply, flags = 0, nworkers = nworkers)
         self.pending_requests = {}
         self.bind_address = bind_address
         self.global_config = global_config
@@ -82,3 +86,7 @@ class Rtp_proxy_client_udp(object):
             self.worker = Udp_server(self.global_config, bind_address, \
               self.process_reply, flags = 0)
             self.bind_address = bind_address
+
+    def shutdown(self):
+        self.worker.shutdown()
+        self.worker = None
