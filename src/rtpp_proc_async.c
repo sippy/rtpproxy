@@ -103,11 +103,11 @@ rtpp_proc_async_run(void *arg)
 {
     struct cfg *cf;
     double last_tick_time;
-    int alarm_tick, i, last_ctick, ndrain, rtp_only;
+    int alarm_tick, i, ndrain, rtp_only;
     struct rtpp_proc_async_cf *proc_cf;
     long long ncycles_ref;
 #ifdef RTPP_DEBUG
-    int ncycles_ref_pre;
+    int ncycles_ref_pre, last_ctick;
 #endif
     struct sign_arg *s_a;
     struct rtpp_wi *wi, *wis[10];
@@ -124,8 +124,8 @@ rtpp_proc_async_run(void *arg)
     last_tick_time = 0;
     wi = rtpp_queue_get_item(proc_cf->time_q, 0);
     s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wi, NULL);
-    last_ctick = s_a->clock_tick;
 #ifdef RTPP_DEBUG
+    last_ctick = s_a->clock_tick;
     ncycles_ref_pre = s_a->ncycles_ref;
 #endif
     rtpp_wi_free(wi);
@@ -138,9 +138,9 @@ rtpp_proc_async_run(void *arg)
         }
         i -= 1;
         s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wis[i], NULL);
-        last_ctick = s_a->clock_tick;
         ndrain = (s_a->ncycles_ref - ncycles_ref) / (cf->stable->target_pfreq / MAX_RTP_RATE);
 #ifdef RTPP_DEBUG
+        last_ctick = s_a->clock_tick;
         ncycles_ref_pre = ncycles_ref;
 #endif
         ncycles_ref = s_a->ncycles_ref;

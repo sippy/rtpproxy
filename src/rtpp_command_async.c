@@ -51,7 +51,7 @@
 #include "rtpp_list.h"
 #include "rtpp_controlfd.h"
 
-#define RTPC_MAX_CONNECTIONS 10
+#define RTPC_MAX_CONNECTIONS 100
 
 struct rtpp_cmd_pollset {
     struct pollfd *pfds;
@@ -89,6 +89,9 @@ init_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
     csp->ncmds_succd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_succd");
     csp->ncmds_errs.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_errs");
     csp->ncmds_repld.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_repld");
+
+    csp->nsess_complete.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nsess_complete");
+    csp->nsess_created.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nsess_created");
 }
 
 #define FLUSH_CSTAT(sobj, st)    { \
@@ -106,6 +109,9 @@ flush_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
     FLUSH_CSTAT(sobj, csp->ncmds_succd);
     FLUSH_CSTAT(sobj, csp->ncmds_errs);
     FLUSH_CSTAT(sobj, csp->ncmds_repld);
+
+    FLUSH_CSTAT(sobj, csp->nsess_complete);
+    FLUSH_CSTAT(sobj, csp->nsess_created);
 }
 
 static int
@@ -201,12 +207,28 @@ rtpp_cmd_acceptor_run(void *arg)
 }
 
 static void
+wait_next_clock(struct rtpp_cmd_async_cf *cmd_cf)
+{
+    static int last_ctick = -1;
+
+    pthread_mutex_lock(&cmd_cf->cmd_mutex);
+    if (last_ctick == -1) {
+        last_ctick = cmd_cf->clock_tick;
+    }
+    while (cmd_cf->clock_tick == last_ctick) {
+        pthread_cond_wait(&cmd_cf->cmd_cond, &cmd_cf->cmd_mutex);
+    }
+    last_ctick = cmd_cf->clock_tick;
+    pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+}
+
+static void
 rtpp_cmd_queue_run(void *arg)
 {
     struct cfg *cf;
     struct rtpp_cmd_async_cf *cmd_cf;
     struct rtpp_cmd_pollset *psp;
-    int i, last_ctick, nready, rval, umode;
+    int i, nready, rval, umode;
     double sptime;
 #if 0
     double eptime, tused;
@@ -221,29 +243,21 @@ rtpp_cmd_queue_run(void *arg)
 
     psp = &cmd_cf->pset;
 
-    pthread_mutex_lock(&cmd_cf->cmd_mutex);
-    last_ctick = cmd_cf->clock_tick;
-    pthread_mutex_unlock(&cmd_cf->cmd_mutex);
-
     for (;;) {
-        pthread_mutex_lock(&cmd_cf->cmd_mutex);
-        while (cmd_cf->clock_tick == last_ctick) {
-            pthread_cond_wait(&cmd_cf->cmd_cond, &cmd_cf->cmd_mutex);
-        }
-        last_ctick = cmd_cf->clock_tick;
-#if 0
-        tused = cmd_cf->tused;
-#endif
-        pthread_mutex_unlock(&cmd_cf->cmd_mutex);
-
         sptime = getdtime();
 
         pthread_mutex_lock(&psp->pfds_mutex);
         if (psp->pfds_used == 0) {
             pthread_mutex_unlock(&psp->pfds_mutex);
+            wait_next_clock(cmd_cf);
             continue;
         }
-        nready = poll(psp->pfds, psp->pfds_used, 0);
+        nready = poll(psp->pfds, psp->pfds_used, 2);
+        if (nready == 0) {
+            pthread_mutex_unlock(&psp->pfds_mutex);
+            wait_next_clock(cmd_cf);
+            continue;
+        }
         if (nready < 0 && errno == EINTR) {
             pthread_mutex_unlock(&psp->pfds_mutex);
             continue;

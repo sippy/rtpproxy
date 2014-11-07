@@ -39,6 +39,9 @@ struct rtpp_command_stats {
     struct rtpp_command_stat ncmds_succd;
     struct rtpp_command_stat ncmds_errs;
     struct rtpp_command_stat ncmds_repld;
+
+    struct rtpp_command_stat nsess_complete;
+    struct rtpp_command_stat nsess_created;
 };
 
 #define RTPC_MAX_ARGC   20

@@ -114,4 +114,4 @@ rres.issue_command()
 
 reactor.run()
 #print 'main:', rres.rcodes
-rres.rtppc.worker.shutdown()
+rres.rtppc.shutdown()
