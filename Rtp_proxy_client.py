@@ -41,7 +41,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
     stat_supported = False
     tnot_supported = False
     sbind_supported = False
-    shutdown = False
+    shut_down = False
     proxy_address = None
     caps_done = False
     sessions_created = None
@@ -70,10 +70,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def caps_query1(self, result):
         #print '%s.caps_query1(%s)' % (id(self), result)
-        if self.shutdown:
-            if self.worker != None:
-                self.worker.shutdown()
-                self.worker = None
+        if self.shut_down:
             return
         if not self.online:
             return
@@ -90,10 +87,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def caps_query2(self, result):
         #print '%s.caps_query2(%s)' % (id(self), result)
-        if self.shutdown:
-            if self.worker != None:
-                self.worker.shutdown()
-                self.worker = None
+        if self.shut_down:
             return
         if not self.online:
             return
@@ -110,10 +104,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def caps_query3(self, result):
         #print '%s.caps_query3(%s)' % (id(self), result)
-        if self.shutdown:
-            if self.worker != None:
-                self.worker.shutdown()
-                self.worker = None
+        if self.shut_down:
             return
         if not self.online:
             return
@@ -127,10 +118,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def caps_query4(self, result):
         #print '%s.caps_query4(%s)' % (id(self), result)
-        if self.shutdown:
-            if self.worker != None:
-                self.worker.shutdown()
-                self.worker = None
+        if self.shut_down:
             return
         if not self.online:
             return
@@ -145,10 +133,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         self.send_command('V', self.version_check_reply)
 
     def version_check_reply(self, version):
-        if self.shutdown:
-            if self.worker != None:
-                self.worker.shutdown()
-                self.worker = None
+        if self.shut_down:
             return
         if version == '20040107':
             self.go_online()
@@ -163,10 +148,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def heartbeat_reply(self, stats):
         #print 'heartbeat_reply', self.address, stats, self.online
-        if self.shutdown:
-            if self.worker != None:
-                self.worker.shutdown()
-                self.worker = None
+        if self.shut_down:
             return
         if not self.online:
             return
@@ -209,3 +191,10 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         self.active_streams = active_streams
         self.preceived = preceived
         self.ptransmitted = ptransmitted
+
+    def shutdown(self):
+        self.shut_down = True
+        if self.is_local:
+            return Rtp_proxy_client_local.shutdown(self)
+        else:
+            return Rtp_proxy_client_udp.shutdown(self)
