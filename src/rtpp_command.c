@@ -177,9 +177,9 @@ rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd, int e
 	write(cmd->controlfd, buf, len);
     } else {
         if (cmd->cookie != NULL) {
-            len = snprintf(cmd->buf, sizeof(cmd->buf), "%s %s", cmd->cookie,
+            len = snprintf(cmd->buf_r, sizeof(cmd->buf_r), "%s %s", cmd->cookie,
               buf);
-            buf = cmd->buf;
+            buf = cmd->buf_r;
         }
         rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, cmd->controlfd, buf, len, 0,
           sstosa(&cmd->raddr), cmd->rlen);

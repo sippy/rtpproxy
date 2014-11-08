@@ -50,6 +50,7 @@ struct rtpp_command
 {
     char buf[1024 * 8];
     char buf_t[256];
+    char buf_r[256];
     char *argv[RTPC_MAX_ARGC];
     int argc;
     struct sockaddr_storage raddr;
