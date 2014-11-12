@@ -62,7 +62,6 @@ if test "$found_libgsm" = yes
 then
   AC_CHECK_LIB(gsm, gsm_create,
    LIBS_GSM="-lgsm"
-   GSM_SUPPORT=ext
    AC_DEFINE([ENABLE_GSM], 1, [Define if you have libgsm library installed]))
 fi
 
