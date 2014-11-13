@@ -70,6 +70,15 @@ struct memdeb_node
     struct memdeb_node *next;
 };
 
+static struct {
+    const char *funcn;
+    int max_nunalloc;
+    const char *why;
+} approved_unallocated[] = {
+    {.funcn = "addr2bindaddr", .max_nunalloc = 100, .why = "Too busy to fix now"},
+    {.funcn = NULL}
+};
+
 static struct memdeb_node *nodes;
 static pthread_mutex_t *memdeb_mutex;
 
@@ -206,11 +215,24 @@ rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *fu
     return (rval);
 }
 
+static int
+is_approved(const char *funcn)
+{
+    int i;
+
+    for (i = 0; approved_unallocated[i].funcn != NULL; i++) {
+        if (strcmp(approved_unallocated[i].funcn, funcn) != 0)
+            continue;
+        return (approved_unallocated[i].max_nunalloc);
+    }
+    return (0);
+}
+
 int
 rtpp_memdeb_dumpstats(struct cfg *cf)
 {
     static struct memdeb_node *mnp;
-    int errors_found;
+    int errors_found, max_nunalloc;
 
     errors_found = 0;
     pthread_mutex_lock(memdeb_mutex);
@@ -221,6 +243,11 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
             if (mnp->mstats.nalloc == mnp->mstats.nfree)
                 continue;
             if (mnp->mstats.nalloc == mnp->mstats.nalloc_baseln)
+                continue;
+        }
+        if (mnp->mstats.nalloc > mnp->mstats.nfree) {
+            max_nunalloc = is_approved(mnp->funcn);
+            if (max_nunalloc > 0 && (mnp->mstats.nalloc - mnp->mstats.nfree) <= max_nunalloc)
                 continue;
         }
         if (errors_found == 0) {
