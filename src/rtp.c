@@ -46,9 +46,6 @@ struct rtp_packet_full {
     struct rtp_packet_priv pvt;
 };
 
-/* Linked list of free packets */
-static struct rtp_packet_full *rtp_packet_pool = NULL;
-
 static int 
 g723_len(unsigned char ch)
 {
@@ -332,26 +329,18 @@ rtp_packet_alloc()
 {
     struct rtp_packet_full *pkt;
 
-    pkt = rtp_packet_pool;
-    if (pkt != NULL) {
-        rtp_packet_pool = (struct rtp_packet_full *)pkt->pub.next;
-    } else {
-        pkt = malloc(sizeof(*pkt));
-        memset(pkt, '\0', sizeof(*pkt));
-        pkt->pub.parsed = &(pkt->pvt.parsed);
-    }
+    pkt = malloc(sizeof(*pkt));
+    memset(pkt, '\0', sizeof(*pkt));
+    pkt->pub.parsed = &(pkt->pvt.parsed);
+
     return &(pkt->pub);
 }
 
 void
 rtp_packet_free(struct rtp_packet *pkt)
 {
-    struct rtp_packet_full *pktf;
 
-    pktf = (struct rtp_packet_full *)pkt;
-    pktf->pub.next = (struct rtp_packet *)rtp_packet_pool;
-    pktf->pub.prev = NULL;
-    rtp_packet_pool = pktf;
+    free(pkt);
 }
 
 struct rtp_packet *
