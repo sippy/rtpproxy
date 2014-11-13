@@ -715,8 +715,8 @@ main(int argc, char **argv)
 #endif
 
 #ifdef RTPP_CHECK_LEAKS
-    rtpp_memdeb_dumpstats(&cf);
-#endif
-
+    exit(rtpp_memdeb_dumpstats(&cf) == 0 ? 0 : 1);
+#else
     exit(0);
+#endif
 }

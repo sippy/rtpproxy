@@ -40,7 +40,7 @@ char *rtpp_memdeb_strdup(const char *, const char *, int, const char *);
 
 struct cfg;
 
-void rtpp_memdeb_dumpstats(struct cfg *);
+int rtpp_memdeb_dumpstats(struct cfg *);
 void rtpp_memdeb_setbaseln(void);
 
 #define RTPP_CHECK_LEAKS 	1

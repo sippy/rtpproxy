@@ -206,13 +206,13 @@ rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *fu
     return (rval);
 }
 
-void
+int
 rtpp_memdeb_dumpstats(struct cfg *cf)
 {
     static struct memdeb_node *mnp;
-    int banner_printed;
+    int errors_found;
 
-    banner_printed = 0;
+    errors_found = 0;
     pthread_mutex_lock(memdeb_mutex);
     for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
         if (mnp->mstats.afails == 0) {
@@ -223,21 +223,25 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
             if (mnp->mstats.nalloc == mnp->mstats.nalloc_baseln)
                 continue;
         }
-        if (banner_printed == 0) {
+        if (errors_found == 0) {
             rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
               "MEMDEB suspicious allocations:");
-            banner_printed = 1;
         }
+        errors_found++;
         rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
           "  %s+%d, %s(): nalloc = %ld, nfree = %ld, afails = %ld\n",
           mnp->fname, mnp->linen, mnp->funcn, mnp->mstats.nalloc,
           mnp->mstats.nfree, mnp->mstats.afails);
     }
     pthread_mutex_unlock(memdeb_mutex);
-    if (banner_printed == 0) {
+    if (errors_found == 0) {
         rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
           "MEMDEB: all clear");
+    } else {
+        rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
+          "MEMDEB: errors found: %d", errors_found);
     }
+    return (errors_found);
 }
 
 void
