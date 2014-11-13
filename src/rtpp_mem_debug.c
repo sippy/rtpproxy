@@ -1,0 +1,260 @@
+/*
+ * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ */
+
+/*
+ * Simple memory debug layer to track any unallocated memory as well as to
+ * catch any other common mistakes, such as double free or freeing of
+ * unallocated memory. Our attitude here is "fail with core dump early" if
+ * some error of inconsistency is found to aid debugging. Some extra smarts
+ * can be added, such as guard area to detect any buffer overflows.
+ */
+
+#include <sys/types.h>
+#include <pthread.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
+#include "rtpp_defines.h"
+#include "rtpp_mem_debug.h"
+
+#undef malloc
+#undef free
+#undef realloc
+#undef strdup
+
+struct memdeb_stats {
+    int64_t nalloc;
+    int64_t nalloc_baseln;
+    int64_t nfree;
+    int64_t nrealloc;
+    int64_t afails;
+};
+
+#define MEMDEB_SIGNATURE 0x8b26e00041dfdec6UL
+
+struct memdeb_node
+{
+    uint64_t magic;
+    const char *fname;
+    int linen;
+    const char *funcn;
+    struct memdeb_stats mstats;
+    struct memdeb_node *next;
+};
+
+static struct memdeb_node *nodes;
+static pthread_mutex_t *memdeb_mutex;
+
+static struct memdeb_node *
+rtpp_memdeb_nget(const char *fname, int linen, const char *funcn, int doalloc)
+{
+    static struct memdeb_node *rval, *mnp, *lastnode;
+
+    if (memdeb_mutex == NULL) {
+        memdeb_mutex = malloc(sizeof(pthread_mutex_t));
+        if (memdeb_mutex == NULL)
+            abort();
+        pthread_mutex_init(memdeb_mutex, NULL);
+    }
+    pthread_mutex_lock(memdeb_mutex);
+    lastnode = NULL;
+    for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
+        if (mnp->magic != MEMDEB_SIGNATURE) {
+            /* nodelist is corrupt */
+            abort();
+        }
+        if (mnp->fname == fname && mnp->linen == linen && mnp->funcn == funcn)
+            return (mnp);
+        lastnode = mnp;
+    }
+    if (doalloc == 0) {
+        pthread_mutex_unlock(memdeb_mutex);
+        return (NULL);
+    }
+    rval = malloc(sizeof(struct memdeb_node));
+    if (rval == NULL) {
+        abort();
+    }
+    memset(rval, '\0', sizeof(struct memdeb_node));
+    rval->magic = MEMDEB_SIGNATURE;
+    rval->fname = fname;
+    rval->linen = linen;
+    rval->funcn = funcn;
+    if (nodes == NULL) {
+        nodes = rval;
+    } else {
+        lastnode->next = rval;
+    }
+    return (rval);
+}
+
+void *
+rtpp_memdeb_malloc(size_t size, const char *fname, int linen, const char *funcn)
+{
+    struct memdeb_node *mnp;
+    char *rval;
+
+    mnp = rtpp_memdeb_nget(fname, linen, funcn, 1);
+
+    rval = malloc(sizeof(struct memdeb_node *) + size);
+    if (rval == NULL) {
+        mnp->mstats.afails++;
+        pthread_mutex_unlock(memdeb_mutex);
+        return (NULL);
+    }
+    mnp->mstats.nalloc++;
+    pthread_mutex_unlock(memdeb_mutex);
+    memcpy(rval, &mnp, sizeof(struct memdeb_node *));
+    rval += sizeof(struct memdeb_node *);
+    return (rval);
+}
+
+void
+rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
+{
+    char *cp;
+    struct memdeb_node *mnp;
+
+    cp = ptr;
+    cp -= sizeof(struct memdeb_node *);
+    memcpy(&mnp, cp, sizeof(struct memdeb_node *));
+    if (mnp->magic != MEMDEB_SIGNATURE) {
+        /* Free of unallicated pointer or nodelist is corrupt */
+        abort();
+    }
+    pthread_mutex_lock(memdeb_mutex);
+    mnp->mstats.nfree++;
+    pthread_mutex_unlock(memdeb_mutex);
+    return free(cp);
+}
+
+void *
+rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const char *funcn)
+{
+    char *cp;
+    struct memdeb_node *mnp;
+
+    cp = ptr;
+    cp -= sizeof(struct memdeb_node *);
+    memcpy(&mnp, cp, sizeof(struct memdeb_node *));
+    if (mnp->magic != MEMDEB_SIGNATURE) {
+        /* Realloc of unallicated pointer or nodelist is corrupt */
+        abort();
+    }
+    cp = realloc(cp, size + sizeof(struct memdeb_node *));
+    if (cp == NULL) {
+        pthread_mutex_lock(memdeb_mutex);
+        mnp->mstats.afails++;
+        pthread_mutex_unlock(memdeb_mutex);
+        return (cp);
+    }
+    pthread_mutex_lock(memdeb_mutex);
+    mnp->mstats.nrealloc++;
+    pthread_mutex_unlock(memdeb_mutex);
+    return (cp + sizeof(struct memdeb_node *));
+}
+
+char *
+rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *funcn)
+{
+    struct memdeb_node *mnp;
+    char *rval;
+    size_t size;
+
+    mnp = rtpp_memdeb_nget(fname, linen, funcn, 1);
+
+    size = strlen(ptr) + 1;
+    rval = malloc(size + sizeof(struct memdeb_node *));
+    if (rval == NULL) {
+        mnp->mstats.afails++;
+        pthread_mutex_unlock(memdeb_mutex);
+        return (NULL);
+    }
+    mnp->mstats.nalloc++;
+    pthread_mutex_unlock(memdeb_mutex);
+    memcpy(rval, &mnp, sizeof(struct memdeb_node *));
+    rval += sizeof(struct memdeb_node *);
+    memcpy(rval, ptr, size);
+    return (rval);
+}
+
+void
+rtpp_memdeb_dumpstats(struct cfg *cf)
+{
+    static struct memdeb_node *mnp;
+    int banner_printed;
+
+    banner_printed = 0;
+    pthread_mutex_lock(memdeb_mutex);
+    for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
+        if (mnp->mstats.afails == 0) {
+            if (mnp->mstats.nalloc == 0)
+                continue;
+            if (mnp->mstats.nalloc == mnp->mstats.nfree)
+                continue;
+            if (mnp->mstats.nalloc == mnp->mstats.nalloc_baseln)
+                continue;
+        }
+        if (banner_printed == 0) {
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
+              "MEMDEB suspicious allocations:");
+            banner_printed = 1;
+        }
+        rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
+          "  %s+%d, %s(): nalloc = %ld, nfree = %ld, afails = %ld\n",
+          mnp->fname, mnp->linen, mnp->funcn, mnp->mstats.nalloc,
+          mnp->mstats.nfree, mnp->mstats.afails);
+    }
+    pthread_mutex_unlock(memdeb_mutex);
+    if (banner_printed == 0) {
+        rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
+          "MEMDEB: all clear");
+    }
+}
+
+void
+rtpp_memdeb_setbaseln(void)
+{
+
+    static struct memdeb_node *mnp;
+
+    pthread_mutex_lock(memdeb_mutex);
+    for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
+        if (mnp->magic != MEMDEB_SIGNATURE) {
+            /* Nodelist is corrupt */
+            abort();
+        }
+        if (mnp->mstats.nalloc == 0)
+            continue;
+        mnp->mstats.nalloc_baseln = mnp->mstats.nalloc;
+    }
+    pthread_mutex_unlock(memdeb_mutex);
+}
