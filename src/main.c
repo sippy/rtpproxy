@@ -651,7 +651,7 @@ main(int argc, char **argv)
 #ifdef HAVE_SYSTEMD_SD_DAEMON_H
     sd_notify(0, "READY=1");
 #endif
-#if RTPP_CHECK_LEAKS
+#ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setbaseln();
 #endif
     for (;;) {
@@ -714,7 +714,7 @@ main(int argc, char **argv)
     sd_notify(0, "STATUS=Exited");
 #endif
 
-#if RTPP_CHECK_LEAKS
+#ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_dumpstats(&cf);
 #endif
 
