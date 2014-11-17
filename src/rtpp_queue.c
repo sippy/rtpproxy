@@ -27,6 +27,7 @@
 
 #include <pthread.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -45,8 +46,6 @@ struct rtpp_queue
     char *name;
     int qlen;
 };
-
-extern int vasprintf(char **, const char *, va_list);
 
 struct rtpp_queue *
 rtpp_queue_init(int qlen, const char *fmt, ...)
