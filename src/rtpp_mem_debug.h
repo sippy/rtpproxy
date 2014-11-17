@@ -25,6 +25,7 @@
  *
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -32,11 +33,15 @@
 #define free(p) rtpp_memdeb_free((p), __FILE__, __LINE__, __func__)
 #define realloc(p,n) rtpp_memdeb_realloc((p), (n), __FILE__, __LINE__, __func__)
 #define strdup(p) rtpp_memdeb_strdup((p), __FILE__, __LINE__, __func__)
+#define asprintf(pp, fmt, args...) rtpp_memdeb_asprintf((pp), (fmt), __FILE__, __LINE__, __func__, ## args)
+#define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), __FILE__, __LINE__, __func__, (vl))
 
 void *rtpp_memdeb_malloc(size_t, const char *, int, const char *);
 void rtpp_memdeb_free(void *, const char *, int, const char *);
 void *rtpp_memdeb_realloc(void *, size_t,  const char *, int, const char *);
 char *rtpp_memdeb_strdup(const char *, const char *, int, const char *);
+int rtpp_memdeb_asprintf(char **, const char *, const char *, int, const char *, ...);
+int rtpp_memdeb_vasprintf(char **, const char *, const char *, int, const char *, va_list);
 
 struct cfg;
 

@@ -35,6 +35,7 @@
 
 #include <sys/types.h>
 #include <pthread.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,10 +50,14 @@
 #undef free
 #undef realloc
 #undef strdup
+#undef asprintf
+#undef vasprintf
+
+#define UNUSED(x) (void)(x)
 
 struct memdeb_stats {
     int64_t nalloc;
-    int64_t nalloc_baseln;
+    int64_t nunalloc_baseln;
     int64_t nfree;
     int64_t nrealloc;
     int64_t afails;
@@ -149,6 +154,9 @@ rtpp_memdeb_malloc(size_t size, const char *fname, int linen, const char *funcn)
 void
 rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
 {
+    UNUSED(fname);
+    UNUSED(linen);
+    UNUSED(funcn);
     char *cp;
     struct memdeb_node *mnp;
 
@@ -168,6 +176,9 @@ rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
 void *
 rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const char *funcn)
 {
+    UNUSED(fname);
+    UNUSED(linen);
+    UNUSED(funcn);
     char *cp;
     struct memdeb_node *mnp;
 
@@ -215,6 +226,42 @@ rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *fu
     return (rval);
 }
 
+int
+rtpp_memdeb_asprintf(char **pp, const char *fmt, const char *fname,
+  int linen, const char *funcn, ...)
+{
+    va_list ap;
+    int rval;
+
+    va_start(ap, funcn);
+    rval = rtpp_memdeb_vasprintf(pp, fmt, fname, linen, funcn, ap);
+    va_end(ap);
+    return (rval);
+}
+
+int
+rtpp_memdeb_vasprintf(char **pp, const char *fmt, const char *fname,
+  int linen, const char *funcn, va_list ap)
+{
+    int rval;
+    void *tp;
+
+    rval = vasprintf(pp, fmt, ap);
+    if (rval <= 0) {
+        return (rval);
+    }
+    tp = rtpp_memdeb_malloc(rval + 1, fname, linen, funcn);
+    if (tp == NULL) {
+        free(*pp);
+        *pp = NULL;
+        return (-1);
+    }
+    memcpy(tp, *pp, rval + 1);
+    free(*pp);
+    *pp = tp;
+    return (rval);
+}
+
 static int
 is_approved(const char *funcn)
 {
@@ -233,21 +280,23 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
 {
     static struct memdeb_node *mnp;
     int errors_found, max_nunalloc;
+    int64_t nunalloc;
 
     errors_found = 0;
     pthread_mutex_lock(memdeb_mutex);
     for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
+        nunalloc = mnp->mstats.nalloc - mnp->mstats.nfree;
         if (mnp->mstats.afails == 0) {
             if (mnp->mstats.nalloc == 0)
                 continue;
             if (mnp->mstats.nalloc == mnp->mstats.nfree)
                 continue;
-            if (mnp->mstats.nalloc == mnp->mstats.nalloc_baseln)
+            if (nunalloc == mnp->mstats.nunalloc_baseln)
                 continue;
         }
-        if (mnp->mstats.nalloc > mnp->mstats.nfree) {
+        if (nunalloc > 0) {
             max_nunalloc = is_approved(mnp->funcn);
-            if (max_nunalloc > 0 && (mnp->mstats.nalloc - mnp->mstats.nfree) <= max_nunalloc)
+            if (max_nunalloc > 0 && nunalloc <= max_nunalloc)
                 continue;
         }
         if (errors_found == 0) {
@@ -256,7 +305,7 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
         }
         errors_found++;
         rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
-          "  %s+%d, %s(): nalloc = %ld, nfree = %ld, afails = %ld\n",
+          "  %s+%d, %s(): nalloc = %ld, nfree = %ld, afails = %ld",
           mnp->fname, mnp->linen, mnp->funcn, mnp->mstats.nalloc,
           mnp->mstats.nfree, mnp->mstats.afails);
     }
@@ -285,7 +334,7 @@ rtpp_memdeb_setbaseln(void)
         }
         if (mnp->mstats.nalloc == 0)
             continue;
-        mnp->mstats.nalloc_baseln = mnp->mstats.nalloc;
+        mnp->mstats.nunalloc_baseln = mnp->mstats.nalloc - mnp->mstats.nfree;
     }
     pthread_mutex_unlock(memdeb_mutex);
 }
