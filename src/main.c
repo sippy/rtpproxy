@@ -648,7 +648,7 @@ main(int argc, char **argv)
     counter = 0;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
     PFD_init(&phase_detector, 2.0);
-#ifdef HAVE_SYSTEMD_SD_DAEMON_H
+#ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "READY=1");
 #endif
 #ifdef RTPP_CHECK_LEAKS
@@ -710,7 +710,7 @@ main(int argc, char **argv)
         }
     }
 
-#ifdef HAVE_SYSTEMD_SD_DAEMON_H
+#ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif
 
