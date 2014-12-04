@@ -647,7 +647,7 @@ main(int argc, char **argv)
 
     counter = 0;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
-    PFD_init(&phase_detector, 2.0);
+    PFD_init(&phase_detector, 0.0);
 #ifdef HAVE_SYSTEMD_SD_DAEMON_H
     sd_notify(0, "READY=1");
 #endif
