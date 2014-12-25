@@ -90,11 +90,11 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage:\trtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
+    fprintf(stderr, "usage:\trtpproxy [-2fvFiPaR] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t  [-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] "
-      "[-n timeout_socket] [-d log_level[:log_facility]]\n"
-      "\t[-c fifo|rr] [-A addr1[/addr2]\n"
+      "[-n timeout_socket] [-d log_level[:log_facility]] [-p pid_file]\n"
+      "\t[-c fifo|rr] [-A addr1[/addr2] [-N random/sched_offset]\n"
       "\trtpproxy -V\n");
     exit(1);
 }
