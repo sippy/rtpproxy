@@ -69,6 +69,7 @@ struct rtpp_cfg_stable {
     struct rlimit *nofile_limit;
     char *run_uname;
     char *run_gname;
+    mode_t sock_mode;
     int no_check;
 
     rtpp_ttl_mode ttl_mode;
