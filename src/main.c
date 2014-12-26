@@ -90,11 +90,11 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage:\trtpproxy [-2fvFiPa] [-l addr1[/addr2]] "
+    fprintf(stderr, "usage:\trtpproxy [-2fvFiPaR] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t  [-t tos] [-r rdir [-S sdir]] [-T ttl] "
-      "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] "
-      "[-n timeout_socket] [-d log_level[:log_facility]]\n"
-      "\t[-c fifo|rr] [-A addr1[/addr2]\n"
+      "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] [-w sock_mode]"
+      "[-n timeout_socket] [-d log_level[:log_facility]] [-p pid_file]\n"
+      "\t[-c fifo|rr] [-A addr1[/addr2] [-N random/sched_offset]\n"
       "\trtpproxy -V\n");
     exit(1);
 }
@@ -168,6 +168,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable->max_ttl = SESSION_TIMEOUT;
     cf->stable->tos = TOS;
     cf->stable->rrtcp = 1;
+    cf->stable->sock_mode = 0755;
     cf->stable->ttl_mode = TTL_UNIFIED;
     cf->stable->log_level = -1;
     cf->stable->log_facility = -1;
@@ -194,7 +195,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:")) != -1) {
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:")) != -1) {
 	switch (ch) {
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
@@ -369,6 +370,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 		    err(1, "can't find ID for the group: %s", cf->stable->run_gname);
 		cf->stable->run_gid = gp->gr_gid;
 	    }
+	    break;
+
+	case 'w':
+	    cf->stable->sock_mode = atoi(optarg);
 	    break;
 
 	case 'F':

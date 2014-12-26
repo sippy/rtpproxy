@@ -50,10 +50,12 @@
 	<cmdsynopsis>
 	    <command>&dhpackage;</command>
 	    
+	    <!-- TODO "S:N:c:" -->
 	    <arg choice="opt"><option>-?</option></arg>
 	    <arg choice="opt"><option>-2</option></arg>
 	    <arg choice="opt"><option>-f</option></arg>
 	    <arg choice="opt"><option>-v</option></arg>
+	    <arg choice="opt"><option>-V</option></arg>
 	    <arg choice="opt"><option>-R</option></arg>
 	    <arg choice="opt"><option>-l</option> <replaceable>addr1<optional>/addr2</optional></replaceable></arg>
 	    <arg choice="opt"><option>-6</option> <replaceable>addr1<optional>/addr2</optional></replaceable></arg>
@@ -65,9 +67,12 @@
 		<option>-r</option> <replaceable>rdir</replaceable>
 		<arg choice="opt"><option>-S</option> <replaceable>sdir</replaceable></arg>
 	    </arg>
+	    <arg choice="opt"><option>-L</option> <replaceable>nofile_limit</replaceable></arg>
+	    <arg choice="opt"><option>-A</option> <replaceable>advaddr1<optional>/advaddr2</optional></replaceable></arg>
 	    <arg choice="opt"><option>-m</option> <replaceable>min_port</replaceable></arg>
 	    <arg choice="opt"><option>-M</option> <replaceable>max_port</replaceable></arg>
 	    <arg choice="opt"><option>-u</option> <replaceable>uname<optional>:gname</optional></replaceable></arg>
+	    <arg choice="opt"><option>-w</option> <replaceable>sock_mode</replaceable></arg>
 	    <arg choice="opt"><option>-F</option></arg>
             <arg choice="opt"><option>-i</option></arg>
             <arg choice="opt"><option>-n</option> <replaceable>timeout_socket</replaceable></arg>
@@ -141,6 +146,12 @@
 		<term><option>-v</option></term>
 		<listitem>
 		    <para>Show version of program.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-V</option></term>
+		<listitem>
+		    <para>Show command protocol version.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -282,6 +293,25 @@
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
+		    <term><option>-L</option> <replaceable>nofile_limit</replaceable></term>
+		<listitem>
+		    <para>
+			Adjust the number of simultaneous open connections.
+			Please note that each RTP media stream requires four
+			open connections. A SIP call can open more than one RTP
+			media stream depending on the client's setup.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-A</option> <replaceable>advaddr1<optional>/advaddr2</optional></replaceable></term>
+		<listitem>
+		    <para>
+			Setup advertised address if necessary.
+		    </para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
 	        <term><option>-m</option> <replaceable>min_port</replaceable></term>
 	        <listitem>
 	            <para>
@@ -310,6 +340,16 @@
 	                proxy is up and running.
 	            </para>
 	        </listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-w</option> <replaceable>sock_mode</replaceable></term>
+		<listitem>
+		    <para>
+			Set access mode for the controlling UNIX-socket (if
+			used). Only applies if RTPproxy runs under a different
+			GID using <option>-u</option> option.
+		    </para>
+		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 	        <term><option>-F</option></term>
