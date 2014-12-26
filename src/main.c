@@ -168,7 +168,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable->max_ttl = SESSION_TIMEOUT;
     cf->stable->tos = TOS;
     cf->stable->rrtcp = 1;
-    cf->stable->sock_mode = 0755;
+    cf->stable->sock_mode = 0;
     cf->stable->ttl_mode = TTL_UNIFIED;
     cf->stable->log_level = -1;
     cf->stable->log_facility = -1;
@@ -369,6 +369,9 @@ init_config(struct cfg *cf, int argc, char **argv)
 		if (gp == NULL)
 		    err(1, "can't find ID for the group: %s", cf->stable->run_gname);
 		cf->stable->run_gid = gp->gr_gid;
+                if (cf->stable->sock_mode == 0) {
+                    cf->stable->sock_mode = 0755;
+                }
 	    }
 	    break;
 
