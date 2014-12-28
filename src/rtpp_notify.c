@@ -246,7 +246,7 @@ parse_timeout_sock(rtpp_log_t glog, const char *sock_name, struct rtpp_timeout_h
     } else {
         n = resolve(sstosa(&(th->remote.i)), AF_INET, host, port, AI_PASSIVE);
         if (n != 0) {
-            _LOGORWARNX(RTPP_LOG_ERR, glog, "parse_timeout_sock: getaddrinfo('%s:%ss'): %s",
+            _LOGORWARNX(RTPP_LOG_ERR, glog, "parse_timeout_sock: getaddrinfo('%s:%s'): %s",
               host, port, gai_strerror(n));
             return (-1);
         }
