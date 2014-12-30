@@ -79,6 +79,7 @@
             <arg choice="opt"><option>-P</option></arg>
             <arg choice="opt"><option>-a</option></arg>
             <arg choice="opt"><option>-d</option> <replaceable>log_level<optional>:log_facility</optional></replaceable></arg>
+            <arg choice="opt"><option>-W</option> <replaceable>setup_ttl</replaceable></arg>
 	</cmdsynopsis>
     </refsynopsisdiv>
     <refsect1>

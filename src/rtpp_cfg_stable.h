@@ -49,6 +49,7 @@ struct rtpp_cfg_stable {
     int port_max;                   /* Highest UDP port number for RTP */
     int port_ctl;                   /* Port number for UDP control, 0 for Unix domain */
     int max_ttl;
+    int max_setup_ttl;
     /*
      * The first address is for external interface, the second one - for
      * internal one. Second can be NULL, in this case there is no bridge

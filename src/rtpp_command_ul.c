@@ -411,13 +411,16 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         ulop->lia[0] = spa->laddr[sidx];
         pidx = (sidx == 0) ? 1 : 0;
         spa->ttl_mode = cf->stable->ttl_mode;
-        spa->ttl[0] = cf->stable->max_ttl;
-        spa->ttl[1] = cf->stable->max_ttl;
         if (ccap->op == UPDATE) {
+            spa->ttl[0] = cf->stable->max_setup_ttl;
+            spa->ttl[1] = cf->stable->max_setup_ttl;
             rtpp_log_write(RTPP_LOG_INFO, spa->log,
               "adding %s flag to existing session, new=%d/%d/%d",
               ulop->weak ? ( sidx ? "weak[1]" : "weak[0]" ) : "strong",
               spa->strong, spa->weak[0], spa->weak[1]);
+        } else {
+            spa->ttl[0] = cf->stable->max_ttl;
+            spa->ttl[1] = cf->stable->max_ttl;
         }
         rtpp_log_write(RTPP_LOG_INFO, spa->log,
           "lookup on ports %d/%d, session timer restarted", spa->ports[0],
@@ -504,8 +507,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spb->fds[0] = fds[1];
         spa->ports[0] = lport;
         spb->ports[0] = lport + 1;
-        spa->ttl[0] = cf->stable->max_ttl;
-        spa->ttl[1] = cf->stable->max_ttl;
+        spa->ttl[0] = cf->stable->max_setup_ttl;
+        spa->ttl[1] = cf->stable->max_setup_ttl;
         spb->ttl[0] = -1;
         spb->ttl[1] = -1;
         spa->log = rtpp_log_open(cf->stable, "rtpproxy", spa->call_id, 0);
