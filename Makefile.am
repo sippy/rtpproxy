@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS=	foreign
 
-SUBDIRS=	src makeann
+SUBDIRS=	src makeann tests
 
 dist_man_MANS=	rtpproxy.8
 EXTRA_DIST=	README.remote manpage.xml debian/README.Debian debian/changelog \

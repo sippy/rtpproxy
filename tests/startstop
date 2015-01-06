@@ -1,0 +1,13 @@
+#!/bin/sh
+
+. $(dirname $0)/functions
+rtpproxy_start
+report "rtpproxy start"
+kill -TERM `cat ${TMP_PIDFILE}`
+report "rtpproxy stop"
+sleep 1
+if [ -e ${TMP_PIDFILE} ]
+then
+  kill -KILL `cat ${TMP_PIDFILE}`
+  fail "rtpproxy stop"
+fi

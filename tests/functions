@@ -1,0 +1,49 @@
+TZ=CET
+export TZ
+
+BASEDIR="${BASEDIR:-$(dirname -- $0)}"
+BASEDIR="$(readlink -f -- $BASEDIR)"
+
+BUILDDIR="${BUILDDIR:-${BASEDIR}}"
+TOP_BUILDDIR="${TOP_BUILDDIR:-${BASEDIR}/..}"
+
+RTPPROXY=$TOP_BUILDDIR/src/rtpproxy_debug
+
+rtpproxy_start() {
+  tempfoo=`basename $0`
+  TMP_PIDFILE=`mktemp -t ${tempfoo}` || exit 1
+  TMP_SOCKFILE=`mktemp -t ${tempfoo}` || exit 1
+  ${RTPPROXY} -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} || exit 1
+  export TMP_PIDFILE
+  export TMP_SOCKFILE
+}
+
+fail() {
+  RC=$?
+  echo >&2 "FAILED: (rc=$RC)" "$@"
+  if [ -n "$CONTINUE" ] ; then
+    return
+  fi
+  if [ -n "$INTERACTIVE" ] ; then
+    read -p "Continue? (y/n)" YN
+    if [ "$YN" != 'y' ] ; then
+      exit $RC
+    fi
+  else
+    exit $RC
+  fi
+}
+
+ok() {
+  echo >&2 "OK:" "$@"
+}
+
+report() {
+  RC=$?
+  if [ "$RC" = 0 ]
+  then
+    ok "$@"
+  else
+    fail "$@"
+  fi
+}
