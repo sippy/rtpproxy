@@ -10,7 +10,7 @@ TOP_BUILDDIR="${TOP_BUILDDIR:-${BASEDIR}/..}"
 RTPPROXY=$TOP_BUILDDIR/src/rtpproxy_debug
 
 rtpproxy_start() {
-  tempfoo=`basename $0`
+  tempfoo="`basename $0`.XXXXX"
   TMP_PIDFILE=`mktemp -t ${tempfoo}` || exit 1
   TMP_SOCKFILE=`mktemp -t ${tempfoo}` || exit 1
   ${RTPPROXY} -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} || exit 1
