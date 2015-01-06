@@ -29,11 +29,17 @@
 #include <string.h>
 #include <stdlib.h>
 
+#undef malloc
 #define malloc(n) rtpp_memdeb_malloc((n), __FILE__, __LINE__, __func__)
+#undef free
 #define free(p) rtpp_memdeb_free((p), __FILE__, __LINE__, __func__)
+#undef realloc
 #define realloc(p,n) rtpp_memdeb_realloc((p), (n), __FILE__, __LINE__, __func__)
+#undef strdup
 #define strdup(p) rtpp_memdeb_strdup((p), __FILE__, __LINE__, __func__)
+#undef asprintf
 #define asprintf(pp, fmt, args...) rtpp_memdeb_asprintf((pp), (fmt), __FILE__, __LINE__, __func__, ## args)
+#undef vasprintf
 #define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), __FILE__, __LINE__, __func__, (vl))
 
 void *rtpp_memdeb_malloc(size_t, const char *, int, const char *);
