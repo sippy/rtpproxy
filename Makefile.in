@@ -322,7 +322,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = src makeann
+SUBDIRS = src makeann tests
 dist_man_MANS = rtpproxy.8
 EXTRA_DIST = README.remote manpage.xml debian/README.Debian debian/changelog \
   debian/compat debian/conffiles.ex debian/control debian/copyright \
