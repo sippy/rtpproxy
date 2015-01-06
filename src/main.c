@@ -92,9 +92,9 @@ usage(void)
 
     fprintf(stderr, "usage:\trtpproxy [-2fvFiPaR] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t  [-t tos] [-r rdir [-S sdir]] [-T ttl] "
-      "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] [-w sock_mode]"
-      "[-n timeout_socket] [-d log_level[:log_facility]] [-p pid_file]\n"
-      "\t[-c fifo|rr] [-A addr1[/addr2] [-N random/sched_offset] [-W setup_ttl]\n"
+      "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] [-w sock_mode] "
+      "[-n timeout_socket]\n\t  [-d log_level[:log_facility]] [-p pid_file]\n"
+      "\t  [-c fifo|rr] [-A addr1[/addr2] [-N random/sched_offset] [-W setup_ttl]\n"
       "\trtpproxy -V\n");
     exit(1);
 }
