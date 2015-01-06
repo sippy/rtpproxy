@@ -1,4 +1,4 @@
-bin_PROGRAMS=rtpproxy
+bin_PROGRAMS=rtpproxy rtpproxy_debug
 rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
@@ -15,7 +15,12 @@ rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
   rtpp_list.h
+SRCS_DEBUG=	rtpp_mem_debug.c rtpp_mem_debug.h
+rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
 rtpproxy_LDADD=-lm -lpthread
+rtpproxy_debug_LDADD=${rtpproxy_LDADD}
+rtpproxy_debug_LDFLAGS=-static
+rtpproxy_debug_CPPFLAGS=-g3 -O0 -DRTPP_DEBUG -include rtpp_mem_debug.h
 
 DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
