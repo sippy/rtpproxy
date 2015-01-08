@@ -90,7 +90,7 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage:\trtpproxy [-2fvFiPaR] [-l addr1[/addr2]] "
+    fprintf(stderr, "usage:\trtpproxy [-2fvFiPaRb] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t  [-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] [-w sock_mode] "
       "[-n timeout_socket]\n\t  [-d log_level[:log_facility]] [-p pid_file]\n"
@@ -195,7 +195,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:")) != -1) {
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:b")) != -1) {
 	switch (ch) {
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
@@ -425,6 +425,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 
         case 'W':
             cf->stable->max_setup_ttl = atoi(optarg);
+            break;
+
+        case 'b':
+            cf->stable->seq_ports = 1;
             break;
 
 	case '?':

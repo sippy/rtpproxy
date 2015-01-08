@@ -159,15 +159,15 @@ init_port_table(struct cfg *cf)
 	cf->stable->port_table[i] = portnum;
 	portnum += 2;
     }
-#if !defined(SEQUENTAL_PORTS)
-    /* Shuffle elements ramdomly */
-    for (i = 0; i < cf->stable->port_table_len; i += 1) {
-	j = random() % cf->stable->port_table_len;
-	portnum = cf->stable->port_table[i];
-	cf->stable->port_table[i] = cf->stable->port_table[j];
-	cf->stable->port_table[j] = portnum;
+    if (cf->stable->seq_ports == 0) {
+        /* Shuffle elements ramdomly */
+        for (i = 0; i < cf->stable->port_table_len; i += 1) {
+	    j = random() % cf->stable->port_table_len;
+	    portnum = cf->stable->port_table[i];
+	    cf->stable->port_table[i] = cf->stable->port_table[j];
+	    cf->stable->port_table[j] = portnum;
+        }
     }
-#endif
     /* Set the last used element to be the last element */
     cf->port_table_idx = cf->stable->port_table_len - 1;
 }

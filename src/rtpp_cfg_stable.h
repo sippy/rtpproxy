@@ -44,10 +44,11 @@ struct rtpp_cfg_stable {
 
     int nodaemon;
     int dmode;
-    int bmode;                      /* Bridge mode */
-    int port_min;                   /* Lowest UDP port for RTP */
-    int port_max;                   /* Highest UDP port number for RTP */
-    int port_ctl;                   /* Port number for UDP control, 0 for Unix domain */
+    int bmode;                  /* Bridge mode */
+    int port_min;               /* Lowest UDP port for RTP */
+    int port_max;               /* Highest UDP port number for RTP */
+    int seq_ports;              /* Allocate ports in sequential manner rather than randomly */
+    int port_ctl;               /* Port number for UDP control, 0 for Unix domain */
     int max_ttl;
     int max_setup_ttl;
     /*
