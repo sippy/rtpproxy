@@ -413,8 +413,10 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = startstop basic_versions
-EXTRA_DIST = Makefile.am startstop basic_versions basic_versions.input basic_versions.output
+TESTS = startstop basic_versions command_parser
+EXTRA_DIST = Makefile.am startstop basic_versions basic_versions.input \
+    basic_versions.output command_parser command_parser.input command_parser.output
+
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
@@ -613,6 +615,13 @@ startstop.log: startstop
 basic_versions.log: basic_versions
 	@p='basic_versions'; \
 	b='basic_versions'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+command_parser.log: command_parser
+	@p='command_parser'; \
+	b='command_parser'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
