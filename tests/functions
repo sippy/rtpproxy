@@ -8,6 +8,7 @@ BUILDDIR="${BUILDDIR:-${BASEDIR}}"
 TOP_BUILDDIR="${TOP_BUILDDIR:-${BASEDIR}/..}"
 
 RTPPROXY=$TOP_BUILDDIR/src/rtpproxy_debug
+DIFF="diff -u"
 
 rtpproxy_start() {
   tempfoo="`basename $0`.XXXXX"
