@@ -32,10 +32,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "rtpp_defines.h"
-#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
+#include "rtpp_defines.h"
+#include "rtpp_types.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_stream.h"
@@ -57,7 +57,7 @@ rtpp_command_stream_compact(struct rtpp_cmd_connection *rcs)
     }
     cp = &rcs->inbuf[rcs->inbuf_ppos];
     clen = rcs->inbuf_epos - rcs->inbuf_ppos;
-    memcpy(0, cp, clen);
+    memcpy(rcs->inbuf, cp, clen);
     rcs->inbuf_epos = clen;
     rcs->inbuf_ppos = 0;
 }   
