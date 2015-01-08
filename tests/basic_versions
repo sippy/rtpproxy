@@ -1,0 +1,7 @@
+#!/bin/sh
+
+. $(dirname $0)/functions
+
+${RTPPROXY} -f -s stdio: < $BASEDIR/basic_versions.input | \
+  ${DIFF} - ${BASEDIR}/basic_versions.output
+report "basic_versions"
