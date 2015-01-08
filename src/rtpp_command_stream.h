@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,22 +25,15 @@
  *
  */
 
-enum rtpp_ctrl_type {RTPC_IFSUN, RTPC_UDP4, RTPC_UDP6, RTPC_SYSD, RTPC_STDIO, RTPC_IFSUN_C};
-
-struct rtpp_ctrl_sock {
-    struct rtpp_type_linkable t;
-    enum rtpp_ctrl_type type;
-    const char *cmd_sock;
+struct rtpp_cmd_connection {
     int controlfd_in;
     int controlfd_out;
-    int port_ctl;                   /* Port number for UDP control, 0 for Unix domain */
-    int exit_on_close;
+    char inbuf[1024 * 8];
+    struct rtpp_ctrl_sock *csock;
+    int inbuf_ppos;
+    int inbuf_epos;
 };
 
-#define RTPP_CTRL_ISDG(rcsp) ((rcsp)->type == RTPC_UDP4 || (rcsp)->type == RTPC_UDP4)
-#define RTPP_CTRL_ISUNIX(rcsp) ((rcsp)->type == RTPC_IFSUN || (rcsp)->type == RTPC_IFSUN_C)
-#define RTPP_CTRL_ISSTREAM(rcsp) ((rcsp)->type == RTPC_IFSUN_C || (rcsp)->type == RTPC_STDIO)
-
-int rtpp_controlfd_init(struct cfg *cf);
-struct rtpp_ctrl_sock *rtpp_ctrl_sock_parse(const char *);
-void rtpp_controlfd_cleanup(struct cfg *cf);
+int rtpp_command_stream_doio(struct cfg *cf, struct rtpp_cmd_connection *rcs);
+struct rtpp_command *rtpp_command_stream_get(struct cfg *cf, 
+  struct rtpp_cmd_connection *rcs, int *rval, double dtime, struct rtpp_command_stats *csp);

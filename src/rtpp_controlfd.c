@@ -143,36 +143,38 @@ controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
 int
 rtpp_controlfd_init(struct cfg *cf)
 {
-    int controlfd, flags;
+    int controlfd_in, controlfd_out, flags;
     struct rtpp_ctrl_sock *ctrl_sock;
 
     for (ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
         switch (ctrl_sock->type) {
         case RTPC_SYSD:
-            controlfd = controlfd_init_systemd();
+            controlfd_in = controlfd_out = controlfd_init_systemd();
             break;
 
         case RTPC_IFSUN:
         case RTPC_IFSUN_C:
-            controlfd = controlfd_init_ifsun(cf, ctrl_sock->cmd_sock);
+            controlfd_in = controlfd_out = controlfd_init_ifsun(cf, ctrl_sock->cmd_sock);
             break;
 
         case RTPC_UDP4:
         case RTPC_UDP6:
-            controlfd = controlfd_init_udp(cf, ctrl_sock);
+            controlfd_in = controlfd_out = controlfd_init_udp(cf, ctrl_sock);
             break;
 
         case RTPC_STDIO:
-            controlfd = fileno(stdin);
+            controlfd_in = fileno(stdin);
+            controlfd_out = fileno(stdout);
             break;
         }
-        if (controlfd < 0) {
+        if (controlfd_in < 0 || controlfd_out < 0) {
             return (-1);
         }
-        flags = fcntl(controlfd, F_GETFL);
-        fcntl(controlfd, F_SETFL, flags | O_NONBLOCK);
-        ctrl_sock->controlfd = controlfd;
+        flags = fcntl(controlfd_in, F_GETFL);
+        fcntl(controlfd_in, F_SETFL, flags | O_NONBLOCK);
+        ctrl_sock->controlfd_in = controlfd_in;
+        ctrl_sock->controlfd_out = controlfd_out;
     }
 
     return (0);

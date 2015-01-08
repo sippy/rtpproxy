@@ -14,7 +14,7 @@ rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h rtpp_stats.c \
   rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
-  rtpp_list.h
+  rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c
 SRCS_DEBUG=	rtpp_mem_debug.c rtpp_mem_debug.h
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
