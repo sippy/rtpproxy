@@ -1,0 +1,7 @@
+#!/bin/sh
+
+. $(dirname $0)/functions
+
+${RTPPROXY} -b -f -s stdio: -m 23820 -M 23823 < $BASEDIR/command_parser.input | \
+  ${DIFF} - ${BASEDIR}/command_parser.output
+report "command_parser"
