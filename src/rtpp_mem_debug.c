@@ -55,6 +55,14 @@
 
 #define UNUSED(x) (void)(x)
 
+#ifndef RTPP_MEMDEB_STDOUT
+#  define RTPP_MEMDEB_REPORT(handle, format, args...) rtpp_log_write(RTPP_LOG_DBUG, handle, format, ## args)
+#else
+#  define RTPP_MEMDEB_REPORT(handle, format, args...) { \
+    rtpp_log_write(RTPP_LOG_DBUG, handle, format, ## args); \
+    printf((format "\n"), ## args); }
+#endif
+
 struct memdeb_stats {
     int64_t nalloc;
     int64_t nunalloc_baseln;
@@ -300,21 +308,21 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
                 continue;
         }
         if (errors_found == 0) {
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
+            RTPP_MEMDEB_REPORT(cf->stable->glog,
               "MEMDEB suspicious allocations:");
         }
         errors_found++;
-        rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
+        RTPP_MEMDEB_REPORT(cf->stable->glog,
           "  %s+%d, %s(): nalloc = %ld, nfree = %ld, afails = %ld",
           mnp->fname, mnp->linen, mnp->funcn, mnp->mstats.nalloc,
           mnp->mstats.nfree, mnp->mstats.afails);
     }
     pthread_mutex_unlock(memdeb_mutex);
     if (errors_found == 0) {
-        rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
+        RTPP_MEMDEB_REPORT(cf->stable->glog,
           "MEMDEB: all clear");
     } else {
-        rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog,
+        RTPP_MEMDEB_REPORT(cf->stable->glog,
           "MEMDEB: errors found: %d", errors_found);
     }
     return (errors_found);
