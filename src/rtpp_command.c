@@ -312,6 +312,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     struct ul_opts *ulop;
     struct d_opts dopt;
 
+    malloc(1);
     spa = NULL;
     recording_name = NULL;
     codecs = NULL;
