@@ -4587,7 +4587,6 @@ fi
 $as_echo "$ac_cv_lib_gsm_gsm_create" >&6; }
 if test "x$ac_cv_lib_gsm_gsm_create" = xyes; then :
   LIBS_GSM="-lgsm"
-   GSM_SUPPORT=ext
 
 $as_echo "#define ENABLE_GSM 1" >>confdefs.h
 
@@ -4648,13 +4647,75 @@ fi
 $as_echo "$ac_cv_lib_g729_g729_encoder_new" >&6; }
 if test "x$ac_cv_lib_g729_g729_encoder_new" = xyes; then :
   LIBS_G729="-lg729"
-   G729_SUPPORT=ext
 
 $as_echo "#define ENABLE_G729 1" >>confdefs.h
 
 
 fi
 
+else
+  for ac_header in bcg729/encoder.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "bcg729/encoder.h" "ac_cv_header_bcg729_encoder_h" "$ac_includes_default"
+if test "x$ac_cv_header_bcg729_encoder_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_BCG729_ENCODER_H 1
+_ACEOF
+ found_libbcg729=yes
+fi
+
+done
+
+  if test "$found_libbcg729" = yes
+  then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for initBcg729EncoderChannel in -lbcg729" >&5
+$as_echo_n "checking for initBcg729EncoderChannel in -lbcg729... " >&6; }
+if ${ac_cv_lib_bcg729_initBcg729EncoderChannel+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lbcg729  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char initBcg729EncoderChannel ();
+int
+main ()
+{
+return initBcg729EncoderChannel ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_bcg729_initBcg729EncoderChannel=yes
+else
+  ac_cv_lib_bcg729_initBcg729EncoderChannel=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_bcg729_initBcg729EncoderChannel" >&5
+$as_echo "$ac_cv_lib_bcg729_initBcg729EncoderChannel" >&6; }
+if test "x$ac_cv_lib_bcg729_initBcg729EncoderChannel" = xyes; then :
+  LIBS_G729=`pkg-config --libs libbcg729`
+
+$as_echo "#define ENABLE_G729 1" >>confdefs.h
+
+
+$as_echo "#define ENABLE_BCG729 1" >>confdefs.h
+
+
+fi
+
+  fi
 fi
 ##if test -z "$G729_SUPPORT"
 ##then
