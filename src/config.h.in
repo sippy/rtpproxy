@@ -8,7 +8,10 @@
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
 
-/* Define if you have libg729 library installed */
+/* Define if you have bcg729 library */
+#undef ENABLE_BCG729
+
+/* Define if you have G.729 support */
 #undef ENABLE_G729
 
 /* Define if you have libgsm library installed */
@@ -26,6 +29,9 @@
 
 /* Define to 1 if you have the `atexit' function. */
 #undef HAVE_ATEXIT
+
+/* Define to 1 if you have the <bcg729/encoder.h> header file. */
+#undef HAVE_BCG729_ENCODER_H
 
 /* Define to 1 if you have the <err.h> header file. */
 #undef HAVE_ERR_H
@@ -93,6 +99,12 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define if you have systemd daemon */
+#undef HAVE_SYSTEMD_DAEMON
+
+/* Define to 1 if you have the <systemd/sd-daemon.h> header file. */
+#undef HAVE_SYSTEMD_SD_DAEMON_H
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #undef HAVE_SYS_SOCKET_H
