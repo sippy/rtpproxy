@@ -16,9 +16,12 @@ DIFF="diff -u"
 sha256_compute() {
   if [ "${OS}" != "FreeBSD" ]
   then
-    sha256sum "${@}" | awk '{print $1}'
+    for sfile in "${@}"
+    do
+      sha256sum "${sfile}" | awk "{print \"SHA256 (${sfile}) = \"\$1}"
+    done
   else
-    sha256 -q "${@}"
+    sha256 "${@}"
   fi
 }
 
