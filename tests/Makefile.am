@@ -1,6 +1,7 @@
-TESTS = startstop basic_versions command_parser
+TESTS = startstop basic_versions command_parser makeann
 EXTRA_DIST = Makefile.am startstop basic_versions basic_versions.input \
-    basic_versions.output command_parser command_parser.input command_parser.output
+    basic_versions.output command_parser command_parser.input \
+    command_parser.output ringback.sln makeann makeann.output
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \

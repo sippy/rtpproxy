@@ -1,0 +1,9 @@
+#!/bin/sh
+
+. $(dirname $0)/functions
+
+${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/ringback
+report "makeann ringback.sln"
+${SHA256} ringback.0 ringback.3 ringback.8 | \
+  ${DIFF} - ${BASEDIR}/makeann.output
+report "G.711[ua], GSM"
