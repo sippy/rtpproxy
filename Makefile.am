@@ -2,6 +2,10 @@ AUTOMAKE_OPTIONS=	foreign
 
 SUBDIRS=	src makeann tests
 
+if BUILD_EXTRACTAUDIO
+SUBDIRS+=	extractaudio
+endif
+
 dist_man_MANS=	rtpproxy.8
 EXTRA_DIST=	README.remote manpage.xml debian/README.Debian debian/changelog \
   debian/compat debian/conffiles.ex debian/control debian/copyright \

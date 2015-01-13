@@ -94,6 +94,15 @@ then
    AC_DEFINE([ENABLE_G722], 1, [Define if you have libg722 library installed]))
 fi
 
+# libsndfile
+AC_CHECK_HEADERS(sndfile.h, found_libsndfile=yes)
+if test "$found_libsndfile" = yes
+then
+  AC_CHECK_LIB(sndfile, sf_open,
+   LIBS_SNDFILE="-lsndfile"
+   AC_DEFINE([ENABLE_SNDFILE], 1, [Define if you have libsndfile library installed]))
+fi
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h sys/time.h unistd.h err.h])
@@ -123,9 +132,12 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
-AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile])
+AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
+
+AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile])
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_GSM)
 AC_SUBST(LIBS_G729)
 AC_SUBST(LIBS_G722)
+AC_SUBST(LIBS_SNDFILE)
 AC_OUTPUT
