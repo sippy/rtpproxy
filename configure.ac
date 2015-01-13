@@ -62,7 +62,6 @@ if test "$found_libgsm" = yes
 then
   AC_CHECK_LIB(gsm, gsm_create,
    LIBS_GSM="-lgsm"
-   GSM_SUPPORT=ext
    AC_DEFINE([ENABLE_GSM], 1, [Define if you have libgsm library installed]))
 fi
 
@@ -72,9 +71,18 @@ if test "$found_libg729" = yes
 then
   AC_CHECK_LIB(g729, g729_encoder_new,
    LIBS_G729="-lg729"
-   G729_SUPPORT=ext
-   AC_DEFINE([ENABLE_G729], 1, [Define if you have libg729 library installed])
+   AC_DEFINE([ENABLE_G729], 1, [Define if you have G.729 support])
   )
+else
+  AC_CHECK_HEADERS(bcg729/encoder.h, found_libbcg729=yes)
+  if test "$found_libbcg729" = yes
+  then
+    AC_CHECK_LIB(bcg729, initBcg729EncoderChannel,
+     LIBS_G729=`pkg-config --libs libbcg729`
+     AC_DEFINE([ENABLE_G729], 1, [Define if you have G.729 support])
+     AC_DEFINE([ENABLE_BCG729], 1, [Define if you have bcg729 library])
+    )
+  fi
 fi
 ##if test -z "$G729_SUPPORT"
 ##then
