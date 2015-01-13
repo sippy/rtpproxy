@@ -413,9 +413,10 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = startstop basic_versions command_parser
+TESTS = startstop basic_versions command_parser makeann
 EXTRA_DIST = Makefile.am startstop basic_versions basic_versions.input \
-    basic_versions.output command_parser command_parser.input command_parser.output
+    basic_versions.output command_parser command_parser.input \
+    command_parser.output ringback.sln makeann makeann.output
 
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
@@ -622,6 +623,13 @@ basic_versions.log: basic_versions
 command_parser.log: command_parser
 	@p='command_parser'; \
 	b='command_parser'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+makeann.log: makeann
+	@p='makeann'; \
+	b='makeann'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
