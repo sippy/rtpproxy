@@ -2,7 +2,7 @@
 
 . $(dirname $0)/functions
 
-MAKEANN_RFILES="ringback.0 ringback.3 ringback.8 ringback.18"
+MAKEANN_RFILES="ringback.0 ringback.3 ringback.8 ringback.18 ringback.9"
 rm -f ${MAKEANN_RFILES}
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/ringback
 report "makeann ringback.sln"
@@ -13,4 +13,4 @@ do
 done
 sha256_compute ${MAKEANN_RFILES} | \
   ${DIFF} - ${BASEDIR}/makeann.output
-report "G.711[ua], GSM, G729a data"
+report "G.711[ua], GSM, G.729a, G.722 data"
