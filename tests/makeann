@@ -4,6 +4,6 @@
 
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/ringback
 report "makeann ringback.sln"
-sha256_compute ringback.0 ringback.3 ringback.8 | \
+sha256_compute ringback.0 ringback.3 ringback.8 ringback.18 | \
   ${DIFF} - ${BASEDIR}/makeann.output
-report "G.711[ua], GSM"
+report "G.711[ua], GSM, G729a"
