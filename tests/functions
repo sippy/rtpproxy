@@ -14,7 +14,7 @@ MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 DIFF="diff -u"
 if [ "${OS}" != "FreeBSD" ]
 then
-  SHA256="sha256sum --tag"
+  SHA256="sha256sum"
 else
   SHA256="sha256"
 fi
