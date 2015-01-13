@@ -11,6 +11,6 @@ do
   test -s ${rfile}
   report "${rfile}"
 done
-sha256_compute ringback.0 ringback.3 ringback.8 ringback.18 | \
+sha256_compute ${MAKEANN_RFILES} | \
   ${DIFF} - ${BASEDIR}/makeann.output
 report "G.711[ua], GSM, G729a data"
