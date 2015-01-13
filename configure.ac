@@ -14,6 +14,7 @@ AC_CANONICAL_HOST
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CPP
 AC_PROG_MKDIR_P
 
 case "${host_os}" in
@@ -71,7 +72,8 @@ if test "$found_libg729" = yes
 then
   AC_CHECK_LIB(g729, g729_encoder_new,
    LIBS_G729="-lg729"
-   AC_DEFINE([ENABLE_G729], 1, [Define if you have G.729 support])
+   AC_DEFINE([ENABLE_G729], 1, [Define if you have G.729 support]),,
+   -lm
   )
 else
   AC_CHECK_HEADERS(bcg729/encoder.h, found_libbcg729=yes)
