@@ -11,6 +11,7 @@ TOP_BUILDDIR="${TOP_BUILDDIR:-${BASEDIR}/..}"
 
 RTPPROXY=$TOP_BUILDDIR/src/rtpproxy_debug
 MAKEANN=${TOP_BUILDDIR}/makeann/makeann
+EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
 DIFF="diff -u"
 
 sha256_compute() {

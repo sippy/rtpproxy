@@ -1,0 +1,21 @@
+#!/bin/sh
+
+. $(dirname $0)/functions
+
+extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729"
+ofiles=""
+for rfile in ${extractaudio_RFILES}
+do
+  wfile="${rfile}.wav"
+  if [ -e "${wfile}" ]
+  then
+    rm "${wfile}"
+  fi
+  ${EXTRACTAUDIO} ${rfile} ${wfile}
+  test -s ${wfile}
+  report "${rfile} -> ${wfile}"
+  ofiles="${ofiles} ${wfile}"
+done
+sha256_compute ${ofiles} | \
+  ${DIFF} - ${BASEDIR}/extractaudio.output
+report "G.711[ua], G.729a, G.722 data"
