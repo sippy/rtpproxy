@@ -84,13 +84,15 @@ else
     )
   fi
 fi
-##if test -z "$G729_SUPPORT"
-##then
-##  echo "*************************************************************************** $ECHO_C" 1>&6
-##  echo "* Please contact sales@sippysoft.com if you need G.729 support in makeann * $ECHO_C" 1>&6
-##  echo "*************************************************************************** $ECHO_C" 1>&6
-##  sleep 1
-##fi
+
+# G.722
+AC_CHECK_HEADERS(g722.h, found_libg722=yes)
+if test "$found_libg722" = yes
+then
+  AC_CHECK_LIB(g722, g722_encoder_new,
+   LIBS_G722="-lg722"
+   AC_DEFINE([ENABLE_G722], 1, [Define if you have libg722 library installed]))
+fi
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -125,4 +127,5 @@ AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile])
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_GSM)
 AC_SUBST(LIBS_G729)
+AC_SUBST(LIBS_G722)
 AC_OUTPUT
