@@ -12,12 +12,15 @@ TOP_BUILDDIR="${TOP_BUILDDIR:-${BASEDIR}/..}"
 RTPPROXY=$TOP_BUILDDIR/src/rtpproxy_debug
 MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 DIFF="diff -u"
-if [ "${OS}" != "FreeBSD" ]
-then
-  SHA256="sha256sum"
-else
-  SHA256="sha256"
-fi
+
+sha256_compute() {
+  if [ "${OS}" != "FreeBSD" ]
+  then
+    sha256sum "${@}" | awk '{print $1}'
+  else
+    sha256 -q "${@}"
+  fi
+}
 
 rtpproxy_start() {
   tempfoo="`basename $0`.XXXXX"
