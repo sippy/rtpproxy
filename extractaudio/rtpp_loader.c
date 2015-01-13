@@ -36,8 +36,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "../rtpp_record_private.h"
-#include "../rtpp_util.h"
+#include "rtp_info.h"
+#include "rtpp_record_private.h"
+#include "rtpp_util.h"
 #include "rtpp_loader.h"
 
 static int load_adhoc(struct rtpp_loader *loader, struct channels *,

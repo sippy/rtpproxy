@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtp_info.h"
 #include "rtp.h"
 #include "rtp_analyze.h"
 #include "rtpp_math.h"

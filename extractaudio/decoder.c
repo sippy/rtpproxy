@@ -35,10 +35,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
+
+#include "rtp_info.h"
 #include "decoder.h"
+#include "g729_compat.h"
 #include "session.h"
-#include "../rtpp_record_private.h"
-#include "../rtp.h"
+#include "rtpp_record_private.h"
+#include "rtp.h"
 #include "g711.h"
 
 /* static char i[] = "0"; */
@@ -144,7 +148,7 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
         dp->dticks += ibytes;
         return ibytes * 2;
 
-#ifndef WITHOUT_G729
+#ifdef ENABLE_G729
     case RTP_G729: {
         int fsize;
         unsigned int obytes;
@@ -163,11 +167,11 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
         else
             return -1;
         if (dp->g729_ctx == NULL)
-            dp->g729_ctx = g729_decoder_new();
+            dp->g729_ctx = G729_DINIT();
         if (dp->g729_ctx == NULL)
             return -1;
         for (obytes = 0; ibytes > 0; ibytes -= fsize) {
-            bp = g729_decode_frame(dp->g729_ctx, ibuf, fsize);
+            bp = G729_DECODE(dp->g729_ctx, ibuf, fsize);
             ibuf += fsize;
             memcpy(obuf, bp, 160);
             obuf += 160;
@@ -179,7 +183,7 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
     }
 #endif
 
-#ifndef WITHOUT_G722
+#ifdef ENABLE_G722
     case RTP_G722:
         if (dp->g722_ctx == NULL)
             dp->g722_ctx = g722_decoder_new(64000, G722_SAMPLE_RATE_8000);
@@ -212,18 +216,18 @@ generate_silence(struct decoder_stream *dp, unsigned char *obuf, unsigned int it
         memset(obuf, 0, iticks * 2);
         return iticks * 2;
 
-#ifndef WITHOUT_G729
+#ifdef ENABLE_G729
     case RTP_G729: {
         unsigned int obytes;
         void *bp;
         if (dp->g729_ctx == NULL)
-            dp->g729_ctx = g729_decoder_new();
+            dp->g729_ctx = G729_DINIT();
         if (dp->g729_ctx == NULL) {
             memset(obuf, 0, iticks * 2);
             return iticks * 2;
         }
         for (obytes = 0; iticks >= 80; iticks -= 80) {
-            bp = g729_decode_frame(dp->g729_ctx, NULL, 0);
+            bp = G729_DECODE(dp->g729_ctx, NULL, 0);
             memcpy(obuf, bp, 160);
             obuf += 160;
             obytes += 160;

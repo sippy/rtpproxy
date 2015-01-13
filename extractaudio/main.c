@@ -51,12 +51,13 @@
 
 #include "format_au.h"
 #include "g711.h"
+#include "rtp_info.h"
 #include "decoder.h"
 #include "session.h"
-#include "../rtpp_record_private.h"
+#include "rtpp_record_private.h"
 #include "rtpp_loader.h"
-#include "../rtp.h"
-#include "../rtp_analyze.h"
+#include "rtp.h"
+#include "rtp_analyze.h"
 
 static void
 usage(void)

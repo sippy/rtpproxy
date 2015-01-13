@@ -33,14 +33,16 @@
 
 #include <sys/types.h>
 
-#ifndef WITHOUT_G729
-#include <g729_decoder.h>
+#include "config.h"
+
+#ifdef ENABLE_G729
+#include "g729_compat.h"
 #endif
-#ifndef WITHOUT_G722
+#ifdef ENABLE_G722
 #include <g722_decoder.h>
 #endif
 
-#include "../rtp.h"
+#include "rtp.h"
 #include "session.h"
 
 #define	DECODER_EOF	(-(1 << 16))
@@ -55,10 +57,10 @@ struct decoder_stream {
     unsigned char obuf[8 * 1024];	/* 0.5 seconds at 8 KHz 16 bits per sample */
     unsigned char *obp;
     unsigned int oblen;
-#ifndef WITHOUT_G729
-    G729_CTX *g729_ctx;
+#ifdef ENABLE_G729
+    G729_DCTX *g729_ctx;
 #endif
-#ifndef WITHOUT_G722
+#ifdef ENABLE_G722
     G722_DEC_CTX *g722_ctx;
 #endif
     double stime;

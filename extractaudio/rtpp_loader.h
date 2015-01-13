@@ -34,7 +34,7 @@
 #include <sys/stat.h>
 
 #include "session.h"
-#include "../rtp_analyze.h"
+#include "rtp_analyze.h"
 
 struct rtpp_loader;
 
