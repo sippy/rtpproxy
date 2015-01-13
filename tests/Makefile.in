@@ -344,8 +344,10 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBS_G722 = @LIBS_G722@
 LIBS_G729 = @LIBS_G729@
 LIBS_GSM = @LIBS_GSM@
+LIBS_SNDFILE = @LIBS_SNDFILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
@@ -424,7 +426,7 @@ TESTS_ENVIRONMENT = \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
 
-CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18
+CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
 all: all-am
 
 .SUFFIXES:

@@ -20,6 +20,9 @@
 /* Define if you have libgsm library installed */
 #undef ENABLE_GSM
 
+/* Define if you have libsndfile library installed */
+#undef ENABLE_SNDFILE
+
 /* Define to 1 if you have `alloca', as a function or macro. */
 #undef HAVE_ALLOCA
 
@@ -78,6 +81,9 @@
 
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the <sndfile.h> header file. */
+#undef HAVE_SNDFILE_H
 
 /* Have the sockaddr_un.sun_len member. */
 #undef HAVE_SOCKADDR_SUN_LEN

@@ -625,10 +625,13 @@ ac_includes_default="\
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+LIBS_SNDFILE
 LIBS_G722
 LIBS_G729
 LIBS_GSM
 AM_CFLAGS
+BUILD_EXTRACTAUDIO_FALSE
+BUILD_EXTRACTAUDIO_TRUE
 LIBOBJS
 ALLOCA
 EGREP
@@ -4779,6 +4782,66 @@ fi
 
 fi
 
+# libsndfile
+for ac_header in sndfile.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "sndfile.h" "ac_cv_header_sndfile_h" "$ac_includes_default"
+if test "x$ac_cv_header_sndfile_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SNDFILE_H 1
+_ACEOF
+ found_libsndfile=yes
+fi
+
+done
+
+if test "$found_libsndfile" = yes
+then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sf_open in -lsndfile" >&5
+$as_echo_n "checking for sf_open in -lsndfile... " >&6; }
+if ${ac_cv_lib_sndfile_sf_open+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsndfile  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char sf_open ();
+int
+main ()
+{
+return sf_open ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_sndfile_sf_open=yes
+else
+  ac_cv_lib_sndfile_sf_open=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sndfile_sf_open" >&5
+$as_echo "$ac_cv_lib_sndfile_sf_open" >&6; }
+if test "x$ac_cv_lib_sndfile_sf_open" = xyes; then :
+  LIBS_SNDFILE="-lsndfile"
+
+$as_echo "#define ENABLE_SNDFILE 1" >>confdefs.h
+
+fi
+
+fi
+
 # Checks for header files.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
 $as_echo_n "checking for ANSI C header files... " >&6; }
@@ -5414,7 +5477,17 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile"
+ if test "${LIBS_SNDFILE}" != ""; then
+  BUILD_EXTRACTAUDIO_TRUE=
+  BUILD_EXTRACTAUDIO_FALSE='#'
+else
+  BUILD_EXTRACTAUDIO_TRUE='#'
+  BUILD_EXTRACTAUDIO_FALSE=
+fi
+
+
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile"
+
 
 
 
@@ -5554,6 +5627,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_EXTRACTAUDIO_TRUE}" && test -z "${BUILD_EXTRACTAUDIO_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_EXTRACTAUDIO\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -6154,6 +6231,7 @@ do
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "makeann/Makefile") CONFIG_FILES="$CONFIG_FILES makeann/Makefile" ;;
     "tests/Makefile") CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
+    "extractaudio/Makefile") CONFIG_FILES="$CONFIG_FILES extractaudio/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
