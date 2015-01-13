@@ -11,6 +11,9 @@
 /* Define if you have bcg729 library */
 #undef ENABLE_BCG729
 
+/* Define if you have libg722 library installed */
+#undef ENABLE_G722
+
 /* Define if you have G.729 support */
 #undef ENABLE_G729
 
@@ -38,6 +41,9 @@
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
+
+/* Define to 1 if you have the <g722.h> header file. */
+#undef HAVE_G722_H
 
 /* Define to 1 if you have the <g729_encoder.h> header file. */
 #undef HAVE_G729_ENCODER_H

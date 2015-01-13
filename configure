@@ -625,6 +625,7 @@ ac_includes_default="\
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+LIBS_G722
 LIBS_G729
 LIBS_GSM
 AM_CFLAGS
@@ -4717,13 +4718,66 @@ fi
 
   fi
 fi
-##if test -z "$G729_SUPPORT"
-##then
-##  echo "*************************************************************************** $ECHO_C" 1>&6
-##  echo "* Please contact sales@sippysoft.com if you need G.729 support in makeann * $ECHO_C" 1>&6
-##  echo "*************************************************************************** $ECHO_C" 1>&6
-##  sleep 1
-##fi
+
+# G.722
+for ac_header in g722.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "g722.h" "ac_cv_header_g722_h" "$ac_includes_default"
+if test "x$ac_cv_header_g722_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_G722_H 1
+_ACEOF
+ found_libg722=yes
+fi
+
+done
+
+if test "$found_libg722" = yes
+then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for g722_encoder_new in -lg722" >&5
+$as_echo_n "checking for g722_encoder_new in -lg722... " >&6; }
+if ${ac_cv_lib_g722_g722_encoder_new+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lg722  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char g722_encoder_new ();
+int
+main ()
+{
+return g722_encoder_new ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_g722_g722_encoder_new=yes
+else
+  ac_cv_lib_g722_g722_encoder_new=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_g722_g722_encoder_new" >&5
+$as_echo "$ac_cv_lib_g722_g722_encoder_new" >&6; }
+if test "x$ac_cv_lib_g722_g722_encoder_new" = xyes; then :
+  LIBS_G722="-lg722"
+
+$as_echo "#define ENABLE_G722 1" >>confdefs.h
+
+fi
+
+fi
 
 # Checks for header files.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
@@ -5361,6 +5415,7 @@ if test "x$GCC" = "xyes"; then
 fi
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile"
+
 
 
 
