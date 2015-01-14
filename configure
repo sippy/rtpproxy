@@ -4651,7 +4651,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_g729_g729_encoder_new" >&5
 $as_echo "$ac_cv_lib_g729_g729_encoder_new" >&6; }
 if test "x$ac_cv_lib_g729_g729_encoder_new" = xyes; then :
-  LIBS_G729="-lg729"
+  LIBS_G729="-lg729 -lm"
 
 $as_echo "#define ENABLE_G729 1" >>confdefs.h
 
