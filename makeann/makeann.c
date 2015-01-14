@@ -44,15 +44,12 @@
 #endif
 
 #include "g711.h"
+
 #ifdef ENABLE_G729
-#ifdef ENABLE_BCG729
-#include <bcg729/encoder.h>
+# include "g729_compat.h"
+# define G729_ENABLED 1
 #else
-#include "g729_encoder.h"
-#endif
-#define G729_ENABLED 1
-#else
-#define G729_ENABLED 0
+# define G729_ENABLED 0
 #endif
 
 #ifdef ENABLE_GSM
@@ -100,11 +97,7 @@ int main(int argc, char **argv)
     int16_t slbuf[160];
     int i, j, k, rsize, wsize, loop, limit, rlimit, ch;
 #ifdef ENABLE_G729
-#ifdef ENABLE_BCG729
-    bcg729EncoderChannelContextStruct* ctx_g729;
-#else
-    G729_CTX *ctx_g729;
-#endif
+    G729_ECTX *ctx_g729;
 #endif
 #ifdef ENABLE_GSM
     gsm ctx_gsm;
@@ -148,11 +141,7 @@ int main(int argc, char **argv)
         template = argv[0];
 
 #ifdef ENABLE_G729
-#ifdef ENABLE_BCG729
-    ctx_g729 = initBcg729EncoderChannel();
-#else
-    ctx_g729 = g729_encoder_new();
-#endif
+    ctx_g729 = G729_EINIT();
     if (ctx_g729 == NULL)
         errx(1, "can't create G.729 encoder");
 #endif
@@ -212,11 +201,7 @@ int main(int argc, char **argv)
 #ifdef ENABLE_G729
             case RTP_G729:
                 for (j = 0; j < 2; j++) {
-#ifdef ENABLE_BCG729
-                    bcg729Encoder(ctx_g729, &(slbuf[j * 80]), &(lawbuf[j * 10]));
-#else
-                    g729_encode_frame(ctx_g729, &(slbuf[j * 80]), &(lawbuf[j * 10]));
-#endif
+                    G729_ENCODE(ctx_g729, &(slbuf[j * 80]), &(lawbuf[j * 10]));
                 }
                 wsize = 20;
                 break;
@@ -253,9 +238,7 @@ int main(int argc, char **argv)
     }
 
 #ifdef ENABLE_G729
-#ifdef ENABLE_BCG729
-    closeBcg729EncoderChannel(ctx_g729);
-#endif
+    G729_ECLOSE(ctx_g729);
 #endif
 
     return 0;
