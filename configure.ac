@@ -71,7 +71,7 @@ AC_CHECK_HEADERS(g729_encoder.h, found_libg729=yes)
 if test "$found_libg729" = yes
 then
   AC_CHECK_LIB(g729, g729_encoder_new,
-   LIBS_G729="-lg729"
+   LIBS_G729="-lg729 -lm"
    AC_DEFINE([ENABLE_G729], 1, [Define if you have G.729 support]),,
    -lm
   )
