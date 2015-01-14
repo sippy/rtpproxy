@@ -2,19 +2,31 @@
 
 . $(dirname $0)/functions
 
-extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729"
+TKINDS="mono stereo"
+
 ofiles=""
-for rfile in ${extractaudio_RFILES}
+extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729"
+
+for tkind in ${TKINDS}
 do
-  wfile="${rfile}.wav"
-  if [ -e "${wfile}" ]
+  if [ ${tkind} = "mono" ]
   then
-    rm "${wfile}"
+    EXTRACTAUDIO_ARGS=""
+  else
+    EXTRACTAUDIO_ARGS="-s"
   fi
-  ${EXTRACTAUDIO} ${rfile} ${wfile}
-  test -s ${wfile}
-  report "${rfile} -> ${wfile}"
-  ofiles="${ofiles} ${wfile}"
+  for rfile in ${extractaudio_RFILES}
+  do
+    wfile="${rfile}.${tkind}.wav"
+    if [ -e "${wfile}" ]
+    then
+      rm "${wfile}"
+    fi
+    ${EXTRACTAUDIO} ${EXTRACTAUDIO_ARGS} ${rfile} ${wfile}
+    test -s ${wfile}
+    report "${rfile} -> ${wfile}"
+    ofiles="${ofiles} ${wfile}"
+  done
 done
 sha256_compute ${ofiles} | \
   ${DIFF} - ${BASEDIR}/extractaudio.output
