@@ -125,6 +125,7 @@ main(int argc, char **argv)
     int ch;
     int oblen, delete, stereo, idprio, nch, neof;
     int32_t osample, asample, csample;
+    uint64_t nasamples, nosamples;
     struct channels channels;
     struct channel *cp;
 #if defined(__FreeBSD__)
@@ -211,6 +212,7 @@ main(int argc, char **argv)
     if (sffile == NULL)
         errx(2, "%s: can't open output file", argv[1]);
 
+    nasamples = nosamples = 0;
     do {
         neof = 0;
         asample = osample = 0;
@@ -224,10 +226,13 @@ main(int argc, char **argv)
                 neof++;
                 continue;
             }
-            if (cp->origin == A_CH)
+            if (cp->origin == A_CH) {
                 asample += csample;
-            else
+                nasamples++;
+            } else {
                 osample += csample;
+                nosamples++;
+            }
         }
         if (neof < nch) {
             if (stereo == 0) {
@@ -245,6 +250,7 @@ main(int argc, char **argv)
             oblen = 0;
         }
     } while (neof < nch);
+    fprintf(stderr, "samples decoded: O: %lu, A: %lu\n", nosamples, nasamples);
 
     sf_close(sffile);
 
