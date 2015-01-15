@@ -29,5 +29,5 @@ do
   done
 done
 sha256_compute ${ofiles} | \
-  ${DIFF} - ${BASEDIR}/extractaudio.output
+  ${DIFF} - ${BASEDIR}/extractaudio.checksums
 report "G.711[ua], G.729a, G.722, GSM data"

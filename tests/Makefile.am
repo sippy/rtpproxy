@@ -1,7 +1,7 @@
 TESTS = startstop basic_versions command_parser makeann extractaudio
 extractaudio_EXTRA_DIST = call1_alaw.a.rtp call1_alaw.o.rtp call1_g722.a.rtp \
   call1_g722.o.rtp call1_g729.a.rtp call1_g729.o.rtp call1_ulaw.a.rtp \
-  call1_ulaw.o.rtp call1_gsm.a.rtp call1_gsm.o.rtp extractaudio.output
+  call1_ulaw.o.rtp call1_gsm.a.rtp call1_gsm.o.rtp extractaudio.checksums
 extractaudio_CLEANFILES = call1_alaw.mono.wav call1_alaw.stereo.wav \
   call1_g722.mono.wav call1_g722.stereo.wav call1_g729.mono.wav \
   call1_g729.stereo.wav call1_ulaw.mono.wav call1_ulaw.stereo.wav \
