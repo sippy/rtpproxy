@@ -135,6 +135,8 @@ decoder_get(struct decoder_stream *dp)
 int
 decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf, unsigned int ibytes)
 {
+    unsigned int obytes;
+
     switch (dp->pp->rpkt->pt) {
     case RTP_PCMU:
         ULAW2SL(obuf, ibuf, ibytes);
@@ -151,7 +153,6 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
 #ifdef ENABLE_G729
     case RTP_G729: {
         int fsize;
-        unsigned int obytes;
         void *bp;
 
         /* fwrite(ibuf, ibytes, 1, dp->f); */
@@ -193,6 +194,29 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
         dp->nticks += ibytes;
         dp->dticks += ibytes;
         return ibytes * 2;
+#endif
+
+#ifdef ENABLE_GSM
+    case RTP_GSM:
+        if (dp->ctx_gsm == NULL) {
+            dp->ctx_gsm = gsm_create();
+            if (dp->ctx_gsm == NULL) {
+                fprintf(stderr, "can't create GSM decoder\n");
+                return (-1);
+            }
+        }
+        if (ibytes < 33) {
+            return (-1);
+        }
+        for (obytes = 0; ibytes > 0; ibytes -= 33) {
+            gsm_decode(dp->ctx_gsm, ibuf, (int16_t *)obuf);
+            ibuf += 33;
+            obuf += 320;
+            obytes += 320;
+            dp->nticks += 160;
+            dp->dticks += 160;
+        }
+        return obytes;
 #endif
 
     case RTP_CN:

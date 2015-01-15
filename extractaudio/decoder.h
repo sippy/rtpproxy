@@ -41,6 +41,9 @@
 #ifdef ENABLE_G722
 #include <g722_decoder.h>
 #endif
+#ifdef ENABLE_GSM
+#include "gsm.h"
+#endif
 
 #include "rtp.h"
 #include "session.h"
@@ -62,6 +65,9 @@ struct decoder_stream {
 #endif
 #ifdef ENABLE_G722
     G722_DEC_CTX *g722_ctx;
+#endif
+#ifdef ENABLE_GSM
+    gsm ctx_gsm;
 #endif
     double stime;
     double dticks;
