@@ -237,11 +237,14 @@ generate_silence(struct decoder_stream *dp, unsigned char *obuf, unsigned int it
     case RTP_PCMU:
     case RTP_PCMA:
     case RTP_G723:
+    case RTP_G722:
+    case RTP_GSM:
         memset(obuf, 0, iticks * 2);
         return iticks * 2;
 
 #ifdef ENABLE_G729
     case RTP_G729: {
+#ifndef ENABLE_BCG729
         unsigned int obytes;
         void *bp;
         if (dp->g729_ctx == NULL)
@@ -261,6 +264,10 @@ generate_silence(struct decoder_stream *dp, unsigned char *obuf, unsigned int it
             obytes += iticks * 2;
         }
         return obytes;
+#else
+        memset(obuf, 0, iticks * 2);
+        return iticks * 2;
+#endif
     }
 #endif
 
