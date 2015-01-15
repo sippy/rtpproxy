@@ -5,7 +5,7 @@
 TKINDS="mono stereo"
 
 ofiles=""
-extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729"
+extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729 call1_gsm"
 
 for tkind in ${TKINDS}
 do
@@ -30,4 +30,4 @@ do
 done
 sha256_compute ${ofiles} | \
   ${DIFF} - ${BASEDIR}/extractaudio.output
-report "G.711[ua], G.729a, G.722 data"
+report "G.711[ua], G.729a, G.722, GSM data"
