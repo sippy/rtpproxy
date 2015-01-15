@@ -1,0 +1,35 @@
+#!/bin/sh
+
+. $(dirname $0)/functions
+
+PLAYBACK_RFILES="playback1.0 playback1.3 playback1.8 playback1.18 playback1.9"
+rm -f ${PLAYBACK_RFILES}
+${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/playback1
+report "makeann playback1"
+
+ofiles=""
+for codec in 0 3 8 18 9
+do
+  if [ ${codec} -ne 3 ]
+  then
+    NPKTS=600
+  else
+    NPKTS=300
+  fi
+  (sleep 1; sed "s|%%CODEC%%|${codec}|" playback1.input | ${RTPPROXY} -T5 -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null) &
+  ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port 12344
+  report "tcpdump playback1.${codec}.a.rtp"
+  ofile="playback1.${codec}.wav"
+  ${EXTRACTAUDIO} playback1.${codec} ${ofile} #>/dev/null 2>/dev/null
+  report "extractaudio playback1.${codec} -> ${ofile}"
+  #sha256 ${ofile}
+  #report "sha256 ${ofile}"
+  wait
+  report "wait for rtpproxy shutdown"
+  ${DIFF} playback1.rout playback1.output
+  report "checking rtpproxy stdout"
+  ofiles="${ofiles} ${ofile}"
+done
+sha256_compute ${ofiles} | \
+  ${DIFF} - ${BASEDIR}/playback1.checksums
+report "G.711[ua], GSM, G.729a, G.722 data"
