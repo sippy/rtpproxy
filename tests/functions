@@ -1,4 +1,5 @@
 OS=`uname`
+UID=`id -u`
 
 TZ=CET
 export TZ
@@ -13,6 +14,13 @@ RTPPROXY=$TOP_BUILDDIR/src/rtpproxy_debug
 MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
 DIFF="diff -u"
+TCPDUMP="tcpdump"
+if [ ${UID} -eq 0 ]
+then
+  SUDO=""
+else
+  SUDO="sudo "
+fi
 
 sha256_compute() {
   if [ "${OS}" != "FreeBSD" ]
@@ -25,6 +33,13 @@ sha256_compute() {
     sha256 "${@}"
   fi
 }
+
+if [ "${OS}" != "FreeBSD" ]
+then
+  LOOPBACK_INTERFACE="lo"
+else
+  LOOPBACK_INTERFACE="lo0"
+fi
 
 rtpproxy_start() {
   tempfoo="`basename $0`.XXXXX"
