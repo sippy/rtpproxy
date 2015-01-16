@@ -331,6 +331,12 @@ rtpp_cmd_queue_run(void *arg)
                     if (RTPP_CTRL_ISUNIX(psp->rccs[i]->csock)) {
                         goto closefd;
                     }
+                    if (psp->rccs[i]->csock->type == RTPC_STDIO && (psp->pfds[i].revents & POLLIN) == 0) {
+                        if (psp->rccs[i]->csock->exit_on_close != 0) {
+                            cf->stable->slowshutdown = 1;
+                        }
+                        goto closefd;
+                    }
                 }
                 if ((psp->pfds[i].revents & POLLIN) == 0) {
                     continue;
