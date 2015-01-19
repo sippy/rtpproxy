@@ -281,9 +281,10 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
     /* Select socket for sending packet out. */
     sidx = (ridx == 0) ? 1 : 0;
 
-    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
+    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[sidx] == NULL) {
         rwrite(sp, sp->rrcs[ridx], packet, sp->addr[sidx], sp->laddr[sidx],
           sp->ports[sidx], sidx);
+    }
 
     /*
      * Check that we have some address to which packet is to be
