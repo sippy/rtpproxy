@@ -16,6 +16,7 @@ AC_CANONICAL_HOST
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_MKDIR_P
+AM_PROG_CC_C_O
 
 case "${host_os}" in
 freebsd*)
