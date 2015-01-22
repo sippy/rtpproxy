@@ -63,7 +63,7 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: extractaudio [-ids] rdir outfile [link1] ... [linkN]\n");
+    fprintf(stderr, "usage: extractaudio [-idsn] rdir outfile [link1] ... [linkN]\n");
     exit(1);
 }
 
@@ -136,12 +136,14 @@ main(int argc, char **argv)
     double basetime;
     SF_INFO sfinfo;
     SNDFILE *sffile;
+    int dflags;
 
     MYQ_INIT(&channels);
     memset(&sfinfo, 0, sizeof(sfinfo));
 
     delete = stereo = idprio = 0;
-    while ((ch = getopt(argc, argv, "dsi")) != -1)
+    dflags = D_FLAG_NONE;
+    while ((ch = getopt(argc, argv, "dsin")) != -1)
         switch (ch) {
         case 'd':
             delete = 1;
@@ -153,6 +155,10 @@ main(int argc, char **argv)
 
         case 'i':
             idprio = 1;
+            break;
+
+        case 'n':
+            dflags |= D_FLAG_NOSILENCE;
             break;
 
         case '?':
@@ -192,7 +198,7 @@ main(int argc, char **argv)
     }
     MYQ_FOREACH(cp, &channels) {
         cp->skip = (MYQ_FIRST(&(cp->session))->pkt->time - basetime) * 8000;
-        cp->decoder = decoder_new(&(cp->session));
+        cp->decoder = decoder_new(&(cp->session), dflags);
         nch++;
     }
 
@@ -221,7 +227,9 @@ main(int argc, char **argv)
                 cp->skip--;
 		continue;
             }
-            csample = decoder_get(cp->decoder);
+            do {
+                csample = decoder_get(cp->decoder);
+            } while (csample == DECODER_SKIP);
             if (csample == DECODER_EOF || csample == DECODER_ERROR) {
                 neof++;
                 continue;
