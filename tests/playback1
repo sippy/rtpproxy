@@ -2,6 +2,7 @@
 
 . $(dirname $0)/functions
 
+TARGET_PORT=12344
 PLAYBACK_RFILES="playback1.0 playback1.3 playback1.8 playback1.18 playback1.9"
 rm -f ${PLAYBACK_RFILES}
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/playback1
@@ -16,11 +17,12 @@ do
   else
     NPKTS=300
   fi
-  (sleep 1; sed "s|%%CODEC%%|${codec}|" playback1.input | ${RTPPROXY} -T5 -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null) &
-  ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port 12344
+  (sleep 1; sed "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${TARGET_PORT}| ; s|%%PORT2%%|$((${TARGET_PORT} + 2))|" playback1.input | \
+   ${RTPPROXY} -T5 -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null) &
+  ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT}
   report "tcpdump playback1.${codec}.a.rtp"
   ofile="playback1.${codec}.wav"
-  ${EXTRACTAUDIO} playback1.${codec} ${ofile} #>/dev/null 2>/dev/null
+  ${EXTRACTAUDIO} -n playback1.${codec} ${ofile} #>/dev/null 2>/dev/null
   report "extractaudio playback1.${codec} -> ${ofile}"
   #sha256 ${ofile}
   #report "sha256 ${ofile}"
