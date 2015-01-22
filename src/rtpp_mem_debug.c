@@ -60,7 +60,8 @@
 #else
 #  define RTPP_MEMDEB_REPORT(handle, format, args...) { \
     rtpp_log_write(RTPP_LOG_DBUG, handle, format, ## args); \
-    printf((format "\n"), ## args); }
+    printf((format "\n"), ## args); \
+    fflush(stdout); }
 #endif
 
 struct memdeb_stats {
