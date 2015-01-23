@@ -551,7 +551,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 int
 main(int argc, char **argv)
 {
-    int i, len;
+    int i, len, ecode;
     double eval, clk;
     long long ncycles_ref, counter;
     double eptime;
@@ -659,8 +659,8 @@ main(int argc, char **argv)
     cf.sessinfo.nsessions = 0;
     cf.rtp_nsessions = 0;
 
-    rtpp_command_async_init(&cf);
     rtpp_proc_async_init(&cf);
+    rtpp_command_async_init(&cf);
 
     counter = 0;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
@@ -731,9 +731,12 @@ main(int argc, char **argv)
     sd_notify(0, "STATUS=Exited");
 #endif
 
+    ecode = 0;
 #ifdef RTPP_CHECK_LEAKS
-    exit(rtpp_memdeb_dumpstats(&cf) == 0 ? 0 : 1);
-#else
-    exit(0);
+    ecode = rtpp_memdeb_dumpstats(&cf) == 0 ? 0 : 1;
+#ifdef RTPP_MEMDEB_STDOUT
+    fclose(stdout);
 #endif
+#endif
+    exit(ecode);
 }
