@@ -95,8 +95,10 @@ reportifnotfail() {
   RC=$?
   if [ "$RC" = 0 ]
   then
+    false
     fail "$@"
   else
+    true
     ok "$@"
   fi
 }
