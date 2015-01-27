@@ -3,7 +3,7 @@
 . $(dirname $0)/functions
 
 TARGET_PORT=12344
-RTPP_TIMEOUT=7
+RTPP_TIMEOUT=8
 PLAYBACK_RFILES="playback1.0 playback1.3 playback1.8 playback1.18 playback1.9"
 rm -f ${PLAYBACK_RFILES}
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/playback1
