@@ -21,12 +21,14 @@ do
     ${RTPPROXY} -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -d info -f -m ${PORTA} < forwarding1.input > forwarding1.rout 2>/dev/null &
     FWD_PID=${!}
     #ktrace -p ${FWD_PID} -f /var/tmp/rtpproxy.${FWD_PID}.ktrace
-    (sleep 1; sed "s|%%CODEC%%|${codeco}| ; s|%%PORT1%%|${PORTO}| ; s|%%PORT2%%|${TRASH_PORT1}| ; s|%%CALLID%%|${CIDO}|" \
-     forwarding1.gen.input) | ${RTPPROXY} -r `pwd` -T5 -b -m 12000 -s stdio: -f -d info > forwarding1.geno.rout 2>/dev/null &
+    (cat forwarding1.rec.input; sleep 1; cat forwarding1.gen.input ) | \
+     sed "s|%%CODEC%%|${codeco}| ; s|%%PORT1%%|${PORTO}| ; s|%%PORT2%%|${TRASH_PORT1}| ; s|%%CALLID%%|${CIDO}|" | \
+     ${RTPPROXY} -r `pwd` -T5 -b -m 12000 -s stdio: -f -d info > forwarding1.geno.rout 2>/dev/null &
     GENO_PID=${!}
     #ktrace -p ${GENO_PID} -f /var/tmp/rtpproxy.${GENO_PID}.ktrace
-    (sleep 1; sed "s|%%CODEC%%|${codeca}| ; s|%%PORT1%%|${PORTA}| ; s|%%PORT2%%|${TRASH_PORT2}| ; s|%%CALLID%%|${CIDA}|" \
-     forwarding1.gen.input) | ${RTPPROXY} -r `pwd` -T5 -b -m 15000 -s stdio: -f -d info > forwarding1.gena.rout 2>/dev/null &
+    (cat forwarding1.rec.input; sleep 1; cat forwarding1.gen.input ) | \
+     sed "s|%%CODEC%%|${codeca}| ; s|%%PORT1%%|${PORTA}| ; s|%%PORT2%%|${TRASH_PORT2}| ; s|%%CALLID%%|${CIDA}|" | \
+     ${RTPPROXY} -r `pwd` -T5 -b -m 15000 -s stdio: -f -d info > forwarding1.gena.rout 2>/dev/null &
     GENA_PID=${!}
     #ktrace -p ${GENA_PID} -f /var/tmp/rtpproxy.${GENA_PID}.ktrace
     wait ${FWD_PID}
