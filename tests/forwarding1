@@ -20,7 +20,7 @@ do
   do
     ${RTPPROXY} -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -d info -f -m ${PORTA} < forwarding1.input > forwarding1.rout 2>/dev/null &
     FWD_PID=${!}
-    ktrace -p ${FWD_PID} -f /var/tmp/rtpproxy.${FWD_PID}.ktrace
+    #ktrace -p ${FWD_PID} -f /var/tmp/rtpproxy.${FWD_PID}.ktrace
     (sleep 1; sed "s|%%CODEC%%|${codeco}| ; s|%%PORT1%%|${PORTO}| ; s|%%PORT2%%|${TRASH_PORT1}| ; s|%%CALLID%%|${CIDO}|" \
      forwarding1.gen.input) | ${RTPPROXY} -r `pwd` -T5 -b -m 12000 -s stdio: -f -d info > forwarding1.geno.rout 2>/dev/null &
     GENO_PID=${!}
