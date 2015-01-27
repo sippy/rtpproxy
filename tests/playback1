@@ -21,6 +21,10 @@ do
     fi
     ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} &
     TCPD_PID=${!}
+    if [ ${delay} -eq 0 ]
+    then
+      sleep 1
+    fi
     (sleep ${delay}; sed "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${TARGET_PORT}| ; s|%%PORT2%%|$((${TARGET_PORT} + 2))|" playback1.input) | \
      ${RTPPROXY} -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null &
     PLB_PID=${!}
