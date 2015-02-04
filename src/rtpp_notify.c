@@ -238,7 +238,7 @@ parse_timeout_sock(rtpp_log_t glog, const char *sock_name, struct rtpp_timeout_h
     }
     if (th->socket_type == PF_UNIX) {
         th->remote.u.sun_family = AF_LOCAL;
-        strncpy(th->remote.u.sun_path, th->socket_name, sizeof(th->remote.u.sun_path) - 1);
+        strncpy(th->remote.u.sun_path, sock_name, sizeof(th->remote.u.sun_path) - 1);
 #if defined(HAVE_SOCKADDR_SUN_LEN)
         th->remote.u.sun_len = strlen(th->remote.u.sun_path);
 #endif
