@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Test will start rtpproxy, initiate a stream playing out,
+# capture and decode packers them with extractaudio and verifies the
+# checksums for all supported codecs.
+
 . $(dirname $0)/functions
 
 TARGET_PORT=12344
