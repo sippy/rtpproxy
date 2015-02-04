@@ -57,7 +57,7 @@ SRCS+=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h \
 	rtpp_command_stats.c config_std.h rtp_info.h \
 	rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
-	rtpp_list.h
+	rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c
 MAN1=
 
 WARNS?=	2
