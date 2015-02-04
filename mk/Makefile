@@ -32,12 +32,14 @@ PKGFILES=	GNUmakefile Makefile README extractaudio makeann \
 .if !defined(RTPP_DEBUG)
 PROG=	rtpproxy
 CLEANFILES+=	rtpproxy_debug
+LIBSIPLOG=	siplog
 .else
 PROG=	rtpproxy_debug
 CLEANFILES+=	rtpproxy
 DEBUG_FLAGS=	-g3 -O0 -DRTPP_DEBUG -include rtpp_mem_debug.h
 LDADD+=		-static
-SRCS+=		rtpp_mem_debug.c rtpp_mem_debug.h
+SRCS+=		${SRCS_DEBUG}
+LIBSIPLOG=	siplog_debug
 .endif
 
 SRCS+=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
@@ -58,6 +60,7 @@ SRCS+=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_command_stats.c config_std.h rtp_info.h \
 	rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
 	rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c
+SRCS_DEBUG=	rtpp_mem_debug.c rtpp_mem_debug.h
 MAN1=
 
 WARNS?=	2
@@ -66,7 +69,7 @@ LOCALBASE?=	/usr/local
 BINDIR?=	${LOCALBASE}/bin
 
 CFLAGS+=	-I../siplog -I${LOCALBASE}/include
-LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread -lm
+LDADD+=	-L../siplog -L${LOCALBASE}/lib -l${LIBSIPLOG} -lpthread -lm
 
 cleantabs:
 	perl -pi -e 's|        |\t|g' ${SRCS}
