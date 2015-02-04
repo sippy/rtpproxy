@@ -31,9 +31,9 @@ do
     ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace
     ##echo ${TCPD_PID}
     wait ${PLB_PID}
-    report "wait for rtpproxy shutdown"
+    report "wait for rtpproxy shutdown, PID: ${PLB_PID}"
     kill -TERM ${TCPD_PID} 2>/dev/null
-    reportifnotfail "wait for tcpdump shutdown"
+    reportifnotfail "wait for tcpdump shutdown, PID: ${TCPD_PID}"
     wait ${TCPD_PID}
     report "tcpdump playback1.${codec}.a.rtp"
     ofile="playback1.${codec}.wav"
