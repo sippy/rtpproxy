@@ -37,7 +37,7 @@ do
     wait ${TCPD_PID}
     report "tcpdump playback1.${codec}.a.rtp"
     ofile="playback1.${codec}.wav"
-    ${EXTRACTAUDIO} -n playback1.${codec} ${ofile} #>/dev/null 2>/dev/null
+    ${EXTRACTAUDIO} -n playback1.${codec} ${ofile} | grep -v 'delta '
     report "extractaudio playback1.${codec} -> ${ofile}"
     #sha256 ${ofile}
     #report "sha256 ${ofile}"
