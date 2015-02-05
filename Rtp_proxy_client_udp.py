@@ -25,7 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from Timeout import Timeout
-from Udp_server import Udp_server
+from Udp_server import Udp_server, Udp_server_opts
 
 from time import time
 from hashlib import md5
@@ -35,20 +35,18 @@ class Rtp_proxy_client_udp(object):
     pending_requests = None
     is_local = False
     worker = None
-    bind_address = None
+    uopts = None
     global_config = None
 
     def __init__(self, global_config, address, bind_address = None, nworkers = None):
         self.address = address
         self.is_local = False
-        if nworkers == None:
-            self.worker = Udp_server(global_config, bind_address, \
-              self.process_reply, flags = 0)
-        else:
-            self.worker = Udp_server(global_config, bind_address, \
-              self.process_reply, flags = 0, nworkers = nworkers)
+        self.uopts = Udp_server_opts(bind_address, self.process_reply)
+        self.uopts.flags = 0
+        if nworkers != None:
+            self.uopts.nworkers = nworkers
+        self.worker = Udp_server(global_config, self.uopts)
         self.pending_requests = {}
-        self.bind_address = bind_address
         self.global_config = global_config
 
     def send_command(self, command, result_callback = None, *callback_parameters):
@@ -60,7 +58,7 @@ class Rtp_proxy_client_udp(object):
 
     def retransmit(self, cookie):
         triesleft, timer, command, result_callback, callback_parameters = self.pending_requests[cookie]
-        if triesleft == 0:
+        if triesleft == 0 or self.worker == None:
             timer.cancel()
             del self.pending_requests[cookie]
             self.go_offline()
@@ -81,12 +79,39 @@ class Rtp_proxy_client_udp(object):
 
     def reconnect(self, address, bind_address = None):
         self.address = address
-        if bind_address != self.bind_address:
+        if bind_address != self.uopts.laddress:
+            self.uopts.laddress = bind_address
             self.worker.shutdown()
-            self.worker = Udp_server(self.global_config, bind_address, \
-              self.process_reply, flags = 0)
-            self.bind_address = bind_address
+            self.worker = Udp_server(self.global_config, self.uopts)
 
     def shutdown(self):
         self.worker.shutdown()
         self.worker = None
+
+class selftest(object):
+    def gotreply(self, *args):
+        from twisted.internet import reactor
+        print args
+        reactor.crash()
+
+    def run(self):
+        import os
+        from twisted.internet import reactor
+        global_config = {}
+        global_config['my_pid'] = os.getpid()
+        rtpc = Rtp_proxy_client_udp(global_config, ('127.0.0.1', 22226), None)
+        os.system('sockstat | grep -w %d' % global_config['my_pid'])
+        rtpc.send_command('Ib', self.gotreply)
+        reactor.run()
+        rtpc.reconnect(('localhost', 22226), ('0.0.0.0', 34222))
+        os.system('sockstat | grep -w %d' % global_config['my_pid'])
+        rtpc.send_command('V', self.gotreply)
+        reactor.run()
+        rtpc.reconnect(('localhost', 22226), ('127.0.0.1', 57535))
+        os.system('sockstat | grep -w %d' % global_config['my_pid'])
+        rtpc.send_command('V', self.gotreply)
+        reactor.run()
+        rtpc.shutdown()
+
+if __name__ == '__main__':
+    selftest().run()

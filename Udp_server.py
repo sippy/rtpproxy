@@ -57,10 +57,10 @@ class AsyncSender(Thread):
                 break
             data, address = wi
             try:
-                ai = socket.getaddrinfo(address[0], None, self.userv.family)
+                ai = socket.getaddrinfo(address[0], None, self.userv.uopts.family)
             except:
                 continue
-            if self.userv.family == socket.AF_INET:
+            if self.userv.uopts.family == socket.AF_INET:
                 address = (ai[0][4][0], address[1])
             else:
                 address = (ai[0][4][0], address[1], ai[0][4][2], ai[0][4][3])
@@ -112,7 +112,7 @@ class AsyncReceiver(Thread):
                     sys.stdout.flush()
                     sleep(1)
                     continue
-            if self.userv.family == socket.AF_INET6:
+            if self.userv.uopts.family == socket.AF_INET6:
                 address = ('[%s]' % address[0], address[1])
             reactor.callFromThread(self.userv.handle_read, data, address)
         self.userv = None
@@ -122,11 +122,34 @@ if hasattr(socket, 'SO_REUSEPORT'):
     _DEFAULT_FLAGS |= socket.SO_REUSEPORT
 _DEFAULT_NWORKERS = 30
 
+class Udp_server_opts(object):
+    laddress = None
+    data_callback = None
+    family = None
+    flags = _DEFAULT_FLAGS
+    nworkers = _DEFAULT_NWORKERS
+
+    def __init__(self, laddress, data_callback, family = None, o = None):
+        if o == None:
+            if family == None:
+                if laddress != None and laddress[0].startswith('['):
+                    family = socket.AF_INET6
+                    laddress = (laddress[0][1:-1], laddress[1])
+                else:
+                    family = socket.AF_INET
+            self.family = family
+            self.laddress = laddress
+            self.data_callback = data_callback
+        else:
+            self.laddress, self.data_callback, self.family, o.nworkers, self.flags = \
+              o.laddress, o.data_callback, o.family, o.nworkers, o.flags
+
+    def getCopy(self):
+        return self.__class__(None, None, o = self)
+
 class Udp_server(object):
     skt = None
-    family = None
-    data_callback = None
-    laddress = None
+    uopts = None
     sendqueue = None
     stats = None
     wi_available = None
@@ -134,116 +157,141 @@ class Udp_server(object):
     asenders = None
     areceivers = None
 
-    def __init__(self, global_config, address, data_callback, family = None, \
-      flags = _DEFAULT_FLAGS, nworkers = _DEFAULT_NWORKERS):
-        self.laddress = address
-        if family == None:
-            if address != None and address[0].startswith('['):
-                family = socket.AF_INET6
-                address = (address[0][1:-1], address[1])
+    def __init__(self, global_config, uopts):
+        self.uopts = uopts.getCopy()
+        self.skt = socket.socket(self.uopts.family, socket.SOCK_DGRAM)
+        if self.uopts.laddress != None:
+            ai = socket.getaddrinfo(self.uopts.laddress[0], None, self.uopts.family)
+            if self.uopts.family == socket.AF_INET:
+                address = (ai[0][4][0], self.uopts.laddress[1])
             else:
-                family = socket.AF_INET
-        self.family = family
-        self.skt = socket.socket(family, socket.SOCK_DGRAM)
-        if address != None:
-            ai = socket.getaddrinfo(address[0], None, family)
-            if family == socket.AF_INET:
-                address = (ai[0][4][0], address[1])
-            else:
-                address = (ai[0][4][0], address[1], ai[0][4][2], ai[0][4][3])
-            if (flags & socket.SO_REUSEADDR) != 0:
+                address = (ai[0][4][0], self.uopts.laddress[1], ai[0][4][2], ai[0][4][3])
+            if (self.uopts.flags & socket.SO_REUSEADDR) != 0:
                 self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             if hasattr(socket, 'SO_REUSEPORT') and \
-              (flags & socket.SO_REUSEPORT) != 0:
+              (self.uopts.flags & socket.SO_REUSEPORT) != 0:
                 self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             self.skt.bind(address)
-        self.data_callback = data_callback
         self.sendqueue = []
         self.stats = [0, 0, 0]
         self.wi_available = Condition()
         self.wi = []
-        self.nworkers = nworkers
         self.asenders = []
         self.areceivers = []
-        for i in range(0, self.nworkers):
+        for i in range(0, self.uopts.nworkers):
             self.asenders.append(AsyncSender(self))
             self.areceivers.append(AsyncReceiver(self))
 
     def send_to(self, data, address):
-        if self.family == socket.AF_INET6:
-            if not address[0].startswith('['):
-                raise Exception('Invalid IPv6 address: %s' % address[0])
-            address = (address[0][1:-1], address[1])
+        if not isinstance(address, tuple):
+            raise Exception('Invalid address, not a tuple: %s' % str(address))
+        addr, port = address
+        if self.uopts.family == socket.AF_INET6:
+            if not addr.startswith('['):
+                raise Exception('Invalid IPv6 address: %s' % addr)
+            address = (addr[1:-1], port)
         self.wi_available.acquire()
         self.wi.append((data, address))
         self.wi_available.notify()
         self.wi_available.release()
  
     def handle_read(self, data, address):
-        self.stats[2] += 1
-        try:
-            self.data_callback(data, address, self)
-        except:
-            print datetime.now(), 'Udp_server: unhandled exception when processing incoming data'
-            print '-' * 70
-            traceback.print_exc(file = sys.stdout)
-            print '-' * 70
-            sys.stdout.flush()
+        if len(data) > 0 and self.uopts.data_callback != None:
+            self.stats[2] += 1
+            try:
+                self.uopts.data_callback(data, address, self)
+            except:
+                print datetime.now(), 'Udp_server: unhandled exception when processing incoming data'
+                print '-' * 70
+                traceback.print_exc(file = sys.stdout)
+                print '-' * 70
+                sys.stdout.flush()
 
     def shutdown(self):
-        self.skt.shutdown(socket.SHUT_RDWR)
+        try:
+            self.skt.shutdown(socket.SHUT_RDWR)
+        except:
+            pass
         self.wi_available.acquire()
         self.wi.append(None)
         self.wi_available.notify()
         self.wi_available.release()
-        self.data_callback = None
+        self.uopts.data_callback = None
         for worker in self.asenders + self.areceivers:
             worker.join()
         self.asenders = None
         self.areceivers = None
 
-if __name__ == '__main__':
+class self_test(object):
     from sys import exit
     npongs = 2
+    ping_data = 'ping!'
+    ping_data6 = 'ping6!'
+    pong_laddr = None
+    pong_laddr6 = None
+    pong_data = 'pong!'
+    pong_data6 = 'pong6!'
+    ping_laddr = None
+    ping_laddr6 = None
+    ping_raddr = None
+    ping_raddr6 = None
+    pong_raddr = None
+    pong_raddr6 = None
 
-    def ping_received(data, address, udp_server):
-        print 'ping_received'
-        if not (data == 'ping!' and address == ('127.0.0.1', 54321)):
-            exit(1)
-        udp_server.send_to('pong!', address)
+    def ping_received(self, data, address, udp_server):
+        if udp_server.uopts.family == socket.AF_INET:
+            print 'ping_received'
+            if data != self.ping_data or address != self.pong_raddr:
+                print data, address, self.ping_data, self.pong_raddr
+                exit(1)
+            udp_server.send_to(self.pong_data, address)
+        else:
+            print 'ping_received6'
+            if data != self.ping_data6 or address != self.pong_raddr6:
+                exit(1)
+            udp_server.send_to(self.pong_data6, address)
 
-    def pong_received(data, address, udp_server):
-        print 'pong_received'
-        if not (data == 'pong!' and address == ('127.0.0.1', 12345)):
-            exit(1)
-        global npongs
-        npongs -= 1
-        if npongs == 0:
+    def pong_received(self, data, address, udp_server):
+        if udp_server.uopts.family == socket.AF_INET:
+            print 'pong_received'
+            if data != self.pong_data or address != self.ping_raddr:
+                exit(1)
+        else:
+            print 'pong_received6'
+            if data != self.pong_data6 or address != self.ping_raddr6:
+                exit(1)
+        self.npongs -= 1
+        if self.npongs == 0:
             reactor.stop()
 
-    def ping_received6(data, address, udp_server):
-        print 'ping_received6', address
-        if not (data == 'ping!' and address == ('[::1]', 54321)):
-            exit(1)
-        udp_server.send_to('pong!', address)
+    def run(self):
+        local_host = '127.0.0.1'
+        local_host6 = '[::1]'
+        remote_host = local_host
+        remote_host6 = local_host6
+        self.ping_laddr = (local_host, 12345)
+        self.pong_laddr = (local_host, 54321)
+        self.ping_laddr6 = (local_host6, 12345)
+        self.pong_laddr6 = (local_host6, 54321)
+        self.ping_raddr = (remote_host, 12345)
+        self.pong_raddr = (remote_host, 54321)
+        self.ping_raddr6 = (remote_host6, 12345)
+        self.pong_raddr6 = (remote_host6, 54321)
+        uopts_ping = Udp_server_opts(self.ping_laddr, self.ping_received)
+        uopts_ping6 = Udp_server_opts(self.ping_laddr6, self.ping_received)
+        uopts_pong = Udp_server_opts(self.pong_laddr, self.pong_received)
+        uopts_pong6 = Udp_server_opts(self.pong_laddr6, self.pong_received)
+        udp_server_ping = Udp_server({}, uopts_ping)
+        udp_server_pong = Udp_server({}, uopts_pong)
+        udp_server_pong.send_to(self.ping_data, self.ping_laddr)
+        udp_server_ping6 = Udp_server({}, uopts_ping6)
+        udp_server_pong6 = Udp_server({}, uopts_pong6)
+        udp_server_pong6.send_to(self.ping_data6, self.ping_laddr6)
+        reactor.run()
+        udp_server_ping.shutdown()
+        udp_server_pong.shutdown()
+        udp_server_ping6.shutdown()
+        udp_server_pong6.shutdown()
 
-    def pong_received6(data, address, udp_server):
-        print 'pong_received6', address
-        if not (data == 'pong!' and address == ('[::1]', 12345)):
-            exit(1)
-        global npongs
-        npongs -= 1
-        if npongs == 0:
-            reactor.stop()
-
-    udp_server_ping = Udp_server({}, ('127.0.0.1', 12345), ping_received)
-    udp_server_pong = Udp_server({}, ('127.0.0.1', 54321), pong_received)
-    udp_server_pong.send_to('ping!', ('127.0.0.1', 12345))
-    udp_server_ping6 = Udp_server({}, ('[::1]', 12345), ping_received6)
-    udp_server_pong6 = Udp_server({}, ('::1', 54321), pong_received6, socket.AF_INET6)
-    udp_server_pong6.send_to('ping!', ('[::1]', 12345))
-    reactor.run()
-    udp_server_ping.shutdown()
-    udp_server_pong.shutdown()
-    udp_server_ping6.shutdown()
-    udp_server_pong6.shutdown()
+if __name__ == '__main__':
+    self_test().run()

@@ -107,10 +107,12 @@ class local4remote(object):
 
     def __init__(self, global_config, handleIncoming):
         if not global_config.has_key('_xmpp_mode') or not global_config['_xmpp_mode']:
-            from Udp_server import Udp_server
+            from Udp_server import Udp_server, Udp_server_opts
+            self.Udp_server_opts = Udp_server_opts
             self.udp_server_class = Udp_server
         else:
-            from XMPP_server import XMPP_server
+            from XMPP_server import XMPP_server, XMPP_server_opts
+            self.Udp_server_opts = XMPP_server_opts
             self.udp_server_class = XMPP_server
         self.global_config = global_config
         self.cache_r2l = {}
@@ -134,7 +136,8 @@ class local4remote(object):
             laddresses = ((global_config['_sip_address'], global_config['_sip_port']),)
             self.fixed = True
         for laddress in laddresses:
-            server = self.udp_server_class(global_config, laddress, handleIncoming)
+            sopts = self.Udp_server_opts(laddress, handleIncoming)
+            server = self.udp_server_class(global_config, sopts)
             self.cache_l2s[laddress] = server
 
     def getServer(self, address, is_local = False):
@@ -171,7 +174,8 @@ class local4remote(object):
             laddress = address
         server = self.cache_l2s.get(laddress, None)
         if server == None:
-            server = self.udp_server_class(self.global_config, laddress, self.handleIncoming)
+            sopts = self.Udp_server_opts(laddress, handleIncoming)
+            server = self.udp_server_class(self.global_config, sopts)
             self.cache_l2s[laddress] = server
         #print 'local4remot-2: local address for %s is %s' % (address[0], laddress[0])
         return server

@@ -169,14 +169,27 @@ class Worker(iksemel.Stream):
                 # wait for reconnect
                 self.__reconnect = True
 
-class _XMPP_server(object):
-    def __init__(self, laddress, real_server):
+class XMPP_server_opts(object):
+    laddress = None
+    data_callback = None
+
+    def __init__(self, laddress, data_callback):
         self.laddress = laddress
+        self.data_callback = data_callback
+
+    def getCopy(self):
+        return self.__class__(self.laddress, self.data_callback)
+
+class _XMPP_server(object):
+    _uopts = None
+
+    def __init__(self, uopts, real_server):
+        self._uopts = uopts
         self.real_server = real_server
 
     def send_to(self, data, address):
         self.real_server._wi_available.acquire()
-        self.real_server._wi.append((data, address, self.laddress))
+        self.real_server._wi.append((data, address, self._uopts.laddress))
         self.real_server._wi_available.notify()
         self.real_server._wi_available.release()
 
@@ -185,9 +198,11 @@ class _XMPP_server(object):
         self.real_server = None
 
 class XMPP_server(object):
-    def __init__(self, global_config, address, data_callback):
+    uopts = None
+
+    def __init__(self, global_config, uopts):
+        self.uopts = uopts.getCopy()
         self._shutdown = False
-        self.laddress = address
         self.__data_callback = data_callback
         self._wi_available = threading.Condition()
         self._wi = []
@@ -200,13 +215,13 @@ class XMPP_server(object):
             Worker(self, _id)
 
     def handle_read(self, data, address, laddress):
-        if len(data) > 0 and self.__data_callback != None:
+        if len(data) > 0 and self.uopts.data_callback != None:
             lserver = self.lservers.get(laddress, None)
             if lserver == None:
                 lserver = _XMPP_server(laddress, self)
                 self.lservers[laddress] = lserver
             try:
-                self.__data_callback(data, address, lserver)
+                self.uopts.data_callback(data, address, lserver)
             except:
                 print datetime.datetime.now(), 'XMPP_server: unhandled exception when receiving incoming data'
                 print '-' * 70
@@ -216,7 +231,7 @@ class XMPP_server(object):
 
     def send_to(self, data, address):
         self._wi_available.acquire()
-        self._wi.append((data, address, self.laddress))
+        self._wi.append((data, address, self.uopts.laddress))
         self._wi_available.notify()
         self._wi_available.release()
 
@@ -226,3 +241,4 @@ class XMPP_server(object):
         self._wi_available.notifyAll()
         self._wi_available.release()
         self.lservers = {}
+        self.uopts.data_callback = None
