@@ -58,7 +58,8 @@ class Worker(iksemel.Stream):
             data = base64.b64decode(doc.get('msg'))
             raddr = (doc.get('src_addr'), int(doc.get('src_port')))
             laddr = (doc.get('dst_addr'), int(doc.get('dst_port')))
-            reactor.callFromThread(self.__owner.handle_read, data, raddr, laddr)
+            rtime = float(doc.get('rtime'))
+            reactor.callFromThread(self.__owner.handle_read, data, raddr, laddr, rtime)
 
     def run_rx(self):
         prev_reconnect_count = -1
@@ -214,14 +215,14 @@ class XMPP_server(object):
         for i in range(0, MAX_WORKERS):
             Worker(self, _id)
 
-    def handle_read(self, data, address, laddress):
+    def handle_read(self, data, address, laddress, rtime):
         if len(data) > 0 and self.uopts.data_callback != None:
             lserver = self.lservers.get(laddress, None)
             if lserver == None:
                 lserver = _XMPP_server(laddress, self)
                 self.lservers[laddress] = lserver
             try:
-                self.uopts.data_callback(data, address, lserver)
+                self.uopts.data_callback(data, address, lserver, rtime)
             except:
                 print datetime.datetime.now(), 'XMPP_server: unhandled exception when receiving incoming data'
                 print '-' * 70

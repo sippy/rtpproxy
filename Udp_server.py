@@ -28,7 +28,7 @@ from twisted.internet import reactor
 from errno import ECONNRESET, ENOTCONN, ESHUTDOWN, EWOULDBLOCK, ENOBUFS, EAGAIN, \
   EINTR
 from datetime import datetime
-from time import sleep
+from time import sleep, time
 from threading import Thread, Condition
 import socket
 import sys, traceback
@@ -112,9 +112,10 @@ class AsyncReceiver(Thread):
                     sys.stdout.flush()
                     sleep(1)
                     continue
+            rtime = time()
             if self.userv.uopts.family == socket.AF_INET6:
                 address = ('[%s]' % address[0], address[1])
-            reactor.callFromThread(self.userv.handle_read, data, address)
+            reactor.callFromThread(self.userv.handle_read, data, address, rtime)
         self.userv = None
 
 _DEFAULT_FLAGS = socket.SO_REUSEADDR
@@ -195,11 +196,11 @@ class Udp_server(object):
         self.wi_available.notify()
         self.wi_available.release()
  
-    def handle_read(self, data, address):
+    def handle_read(self, data, address, rtime):
         if len(data) > 0 and self.uopts.data_callback != None:
             self.stats[2] += 1
             try:
-                self.uopts.data_callback(data, address, self)
+                self.uopts.data_callback(data, address, self, rtime)
             except:
                 print datetime.now(), 'Udp_server: unhandled exception when processing incoming data'
                 print '-' * 70
@@ -238,7 +239,7 @@ class self_test(object):
     pong_raddr = None
     pong_raddr6 = None
 
-    def ping_received(self, data, address, udp_server):
+    def ping_received(self, data, address, udp_server, rtime):
         if udp_server.uopts.family == socket.AF_INET:
             print 'ping_received'
             if data != self.ping_data or address != self.pong_raddr:
@@ -251,7 +252,7 @@ class self_test(object):
                 exit(1)
             udp_server.send_to(self.pong_data6, address)
 
-    def pong_received(self, data, address, udp_server):
+    def pong_received(self, data, address, udp_server, rtime):
         if udp_server.uopts.family == socket.AF_INET:
             print 'pong_received'
             if data != self.pong_data or address != self.ping_raddr:

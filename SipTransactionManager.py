@@ -207,10 +207,9 @@ class SipTransactionManager(object):
         self.req_consumers = {}
         Timeout(self.rCachePurge, 32, -1)
 
-    def handleIncoming(self, data, address, server):
+    def handleIncoming(self, data, address, server, rtime):
         if len(data) < 32:
             return
-        rtime = time()
         self.global_config['_sip_logger'].write('RECEIVED message from %s:%d:\n' % address, data, ltime = rtime)
         checksum = md5(data).digest()
         retrans = self.l1rcache.get(checksum, None)

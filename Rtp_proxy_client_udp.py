@@ -68,7 +68,7 @@ class Rtp_proxy_client_udp(object):
         self.worker.send_to(command, self.address)
         self.pending_requests[cookie][0] -= 1
 
-    def process_reply(self, data, address, worker):
+    def process_reply(self, data, address, worker, rtime):
         cookie, result = data.split(None, 1)
         parameters = self.pending_requests.pop(cookie, None)
         if parameters == None:
