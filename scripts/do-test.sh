@@ -4,6 +4,7 @@ set -e
 
 uname -a
 cc --version
+${CC} --version
 ./configure CC=gcc
 make
 make clean
