@@ -162,10 +162,11 @@ class Rtp_proxy_client_local(object):
         self.workers = None
 
 if __name__ == '__main__':
+    from twisted.internet import reactor
     def display(*args):
         print args
+        reactor.crash()
     r = Rtp_proxy_client_local({'_sip_address':'1.2.3.4'})
     r.send_command('VF 123456', display, 'abcd')
-    from twisted.internet import reactor
     reactor.run(installSignalHandlers = 1)
     r.shutdown()
