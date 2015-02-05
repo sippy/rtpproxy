@@ -3,12 +3,8 @@
 set -e
 
 uname -a
-cc --version
 ${CC} --version
-./configure CC=gcc
-make
-make clean
-./configure CC=clang
+./configure
 make
 make clean
 sudo DEBIAN_FRONTEND=noninteractive apt-get install libgsm1-dev libsndfile1-dev tcpdump
@@ -30,10 +26,6 @@ cd ../..
 sudo ldconfig
 libtoolize
 autoreconf --force --install --verbose
-./configure CC=gcc
+./configure
 make
 make check || (cat tests/test-suite.log; exit 1)
-make clean
-./configure CC=clang
-make
-make check || (cat tests/test-suite.log ; exit 1)
