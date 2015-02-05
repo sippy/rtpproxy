@@ -63,6 +63,34 @@ rtpproxy_start() {
   ${RTPPROXY} -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} || exit 1
   export TMP_PIDFILE
   export TMP_SOCKFILE
+  i=0
+  while [ ! -s ${TMP_PIDFILE} ]
+  do
+    sleep 1
+    i=$((${i} + 1))
+    if [ ${i} -eq 3 ]
+    then
+      false
+      return
+    fi
+  done
+}
+
+rtpproxy_stop() {
+  SIGNAME="${1}"
+  kill -${SIGNAME} `cat ${TMP_PIDFILE}` || return
+  i=0
+  while [ -e ${TMP_PIDFILE} ]
+  do
+    sleep 1
+    i=$((${i} + 1))
+    if [ ${i} -eq 3 ]
+    then
+      kill -KILL `cat ${TMP_PIDFILE}`
+      false
+      return
+    fi
+  done
 }
 
 fail() {
