@@ -25,7 +25,7 @@ do
     then
       sleep 1
     fi
-    (sleep ${delay}; sed "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${TARGET_PORT}| ; s|%%PORT2%%|$((${TARGET_PORT} + 2))|" playback1.input) | \
+    (sleep ${delay}; ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${TARGET_PORT}| ; s|%%PORT2%%|$((${TARGET_PORT} + 2))|" playback1.input) | \
      ${RTPPROXY} -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null &
     PLB_PID=${!}
     ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace

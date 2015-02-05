@@ -48,9 +48,13 @@ sha256_verify() {
 if [ "${OS}" != "FreeBSD" ]
 then
   LOOPBACK_INTERFACE="lo"
+  SED_ARGS="-u"
 else
   LOOPBACK_INTERFACE="lo0"
+  SED_ARGS="-l"
 fi
+
+SED="sed ${SED_ARGS}"
 
 rtpproxy_start() {
   tempfoo="`basename $0`.XXXXX"
