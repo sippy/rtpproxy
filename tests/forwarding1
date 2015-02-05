@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# tests forwarding of payloads from one end-point to another, and the
+# reverse of that scenario.
+
 . $(dirname $0)/functions
 
 PORTO=12344
