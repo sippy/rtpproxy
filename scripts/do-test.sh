@@ -14,6 +14,7 @@ cd deps
 wget http://download-mirror.savannah.gnu.org/releases/linphone/plugins/sources/bcg729-1.0.0.tar.gz
 tar xfz bcg729-1.0.0.tar.gz
 cd bcg729-1.0.0
+perl -pi -e 's|BASICOPERATIONSMACROS__H|BASICOPERATIONSMACROS_H|g' include/basicOperationsMacros.h
 ./configure
 make
 sudo make install
