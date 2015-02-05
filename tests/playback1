@@ -19,21 +19,39 @@ do
     else
       NPKTS=300
     fi
-    ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} &
-    TCPD_PID=${!}
-    if [ ${delay} -eq 0 ]
-    then
-      sleep 1
-    fi
-    (sleep ${delay}; ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${TARGET_PORT}| ; s|%%PORT2%%|$((${TARGET_PORT} + 2))|" playback1.input) | \
-     ${RTPPROXY} -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null &
-    PLB_PID=${!}
-    ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace
-    ##echo ${TCPD_PID}
-    wait ${PLB_PID}
-    report "wait for rtpproxy shutdown"
-    kill -TERM ${TCPD_PID} 2>/dev/null
-    reportifnotfail "wait for tcpdump shutdown"
+    for retry in 1 2 3
+    do
+      ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} 2>playback1.tout &
+      TCPD_PID=${!}
+      if [ ${delay} -eq 0 ]
+      then
+        sleep 1
+      fi
+      (sleep ${delay}; ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${TARGET_PORT}| ; s|%%PORT2%%|$((${TARGET_PORT} + 2))|" playback1.input) | \
+       ${RTPPROXY} -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null &
+      PLB_PID=${!}
+      ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace
+      ##echo ${TCPD_PID}
+      wait ${PLB_PID}
+      report "wait for rtpproxy shutdown"
+      kill -TERM ${TCPD_PID} 2>/dev/null
+      if [ ${?} -ne 0 ]
+      then
+        ok "wait for tcpdump shutdown"
+        break
+      fi
+      wait ${TCPD_PID}
+      cat playback1.tout
+      ndropped=`grep 'dropped by kernel' playback1.tout | awk '{print $1}'`
+      if [ ${ndropped} -ne 0 -a ${retry} -lt 3 ]
+      then
+        report "..kernel dropped some packets, re-run"
+        continue
+      fi
+      false
+      fail "wait for tcpdump shutdown"
+    done
+    cat playback1.tout
     wait ${TCPD_PID}
     report "tcpdump playback1.${codec}.a.rtp"
     ofile="playback1.${codec}.wav"
