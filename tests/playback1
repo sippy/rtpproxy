@@ -27,7 +27,7 @@ do
     do
       if [ -e playback1.${codec}.a.rtp ]
       then
-        rm playback1.${codec}.a.rtp
+        rm -f playback1.${codec}.a.rtp
       fi
       ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} 2>playback1.tout &
       TCPD_PID=${!}
