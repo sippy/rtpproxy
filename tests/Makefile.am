@@ -1,5 +1,5 @@
 TESTS = startstop basic_versions command_parser makeann extractaudio \
-  playback1 forwarding1
+  session_timeouts playback1 forwarding1
 extractaudio_EXTRA_DIST = extractaudio call1_alaw.a.rtp call1_alaw.o.rtp call1_g722.a.rtp \
   call1_g722.o.rtp call1_g729.a.rtp call1_g729.o.rtp call1_ulaw.a.rtp \
   call1_ulaw.o.rtp call1_gsm.a.rtp call1_gsm.o.rtp extractaudio.checksums
@@ -19,15 +19,20 @@ forwarding1_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav 
   forwarding1.rout forwarding1_a_1=from_tag_1.o.rtcp forwarding1_a_1=from_tag_1.o.rtp \
   forwarding1_o_1=from_tag_1.o.rtcp forwarding1_o_1=from_tag_1.o.rtp \
   forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18
+session_timeouts_EXTRA_DIST = session_timeouts session_timeouts.half.input \
+  session_timeouts.output1 session_timeouts.full.input session_timeouts.lookup.input \
+  session_timeouts.output2
+session_timeouts_CLEANFILES = session_timeouts.rout 
 EXTRA_DIST = Makefile.am startstop basic_versions basic_versions.input \
     basic_versions.output command_parser command_parser.input \
     command_parser.output ringback.sln makeann makeann.output \
     ${extractaudio_EXTRA_DIST} ${playback1_EXTRA_DIST} \
-    ${forwarding1_EXTRA_DIST}
+    ${forwarding1_EXTRA_DIST} ${session_timeouts_EXTRA_DIST}
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
 CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9 \
-  ${extractaudio_CLEANFILES} ${playback1_CLEANFILES} ${forwarding1_CLEANFILES}
+  ${extractaudio_CLEANFILES} ${playback1_CLEANFILES} ${forwarding1_CLEANFILES} \
+  ${session_timeouts_CLEANFILES}
