@@ -25,8 +25,16 @@ do
     fi
     for retry in 1 2 3
     do
+      if [ -e playback1.${codec}.a.rtp ]
+      then
+        rm playback1.${codec}.a.rtp
+      fi
       ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} 2>playback1.tout &
       TCPD_PID=${!}
+      while [ ! -e playback1.${codec}.a.rtp ]
+      do
+        sleep 1
+      done
       if [ ${delay} -eq 0 ]
       then
         sleep 1
