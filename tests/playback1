@@ -52,6 +52,7 @@ do
         report "..kernel dropped some packets, re-run"
         continue
       fi
+      ${EXTRACTAUDIO} -n playback1.${codec} /dev/null
       false
       fail "wait for tcpdump shutdown, PID: ${TCPD_PID}"
     done
