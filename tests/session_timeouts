@@ -48,7 +48,7 @@ geninput() {
     ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup.input
     i=$((${i} + 1))
   done
-  sleep 11
+  sleep 12
   i=0
   while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
   do
