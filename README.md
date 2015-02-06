@@ -1,4 +1,4 @@
-
+[![Travis Build Status](https://travis-ci.org/sippy/rtpproxy.svg?branch=travis-ci-setup)]
 [![Build Status](https://drone.io/github.com/sippy/rtpproxy/status.png)](https://drone.io/github.com/sippy/rtpproxy/latest)
 
 ## About

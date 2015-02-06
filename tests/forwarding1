@@ -25,12 +25,12 @@ do
     FWD_PID=${!}
     #ktrace -p ${FWD_PID} -f /var/tmp/rtpproxy.${FWD_PID}.ktrace
     (cat forwarding1.rec.input; sleep 1; cat forwarding1.gen.input ) | \
-     sed "s|%%CODEC%%|${codeco}| ; s|%%PORT1%%|${PORTO}| ; s|%%PORT2%%|${TRASH_PORT1}| ; s|%%CALLID%%|${CIDO}|" | \
+     ${SED} "s|%%CODEC%%|${codeco}| ; s|%%PORT1%%|${PORTO}| ; s|%%PORT2%%|${TRASH_PORT1}| ; s|%%CALLID%%|${CIDO}|" | \
      ${RTPPROXY} -r `pwd` -T5 -b -m 12000 -s stdio: -f -d info > forwarding1.geno.rout 2>/dev/null &
     GENO_PID=${!}
     #ktrace -p ${GENO_PID} -f /var/tmp/rtpproxy.${GENO_PID}.ktrace
     (cat forwarding1.rec.input; sleep 1; cat forwarding1.gen.input ) | \
-     sed "s|%%CODEC%%|${codeca}| ; s|%%PORT1%%|${PORTA}| ; s|%%PORT2%%|${TRASH_PORT2}| ; s|%%CALLID%%|${CIDA}|" | \
+     ${SED} "s|%%CODEC%%|${codeca}| ; s|%%PORT1%%|${PORTA}| ; s|%%PORT2%%|${TRASH_PORT2}| ; s|%%CALLID%%|${CIDA}|" | \
      ${RTPPROXY} -r `pwd` -T5 -b -m 15000 -s stdio: -f -d info > forwarding1.gena.rout 2>/dev/null &
     GENA_PID=${!}
     #ktrace -p ${GENA_PID} -f /var/tmp/rtpproxy.${GENA_PID}.ktrace
@@ -47,12 +47,12 @@ do
     ${DIFF} forwarding1.gena.rout forwarding1.gena.output
     report "checking rtpproxy.gena stdout"
     rm -f forwarding1.${codeco}.wav
-    ${EXTRACTAUDIO} -n -s forwarding1_a_1=from_tag_1 forwarding1.${codeco}.wav
+    ${EXTRACTAUDIO} -n -s forwarding1_a_1=from_tag_1 forwarding1.${codeco}.wav | grep -v 'delta '
     report "extractaudio forwarding1.${codeco}.wav"
     #sha256 forwarding1.${codeco}.wav
     sha256_verify forwarding1.${codeco}.wav forwarding1.checksums
     rm -f forwarding1.${codeca}.wav
-    ${EXTRACTAUDIO} -n -s forwarding1_o_1=from_tag_1 forwarding1.${codeca}.wav
+    ${EXTRACTAUDIO} -n -s forwarding1_o_1=from_tag_1 forwarding1.${codeca}.wav | grep -v 'delta '
     report "extractaudio forwarding1.${codeca}.wav"
     sha256_verify forwarding1.${codeca}.wav forwarding1.checksums
     #sha256 forwarding1.${codeca}.wav

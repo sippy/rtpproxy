@@ -11,7 +11,7 @@ playback1_EXTRA_DIST = playback1 playback1.input playback1.output playback1.chec
 playback1_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
   playback1.8.a.rtp playback1.9.a.rtp playback1.0 playback1.18 playback1.3 \
   playback1.8 playback1.9 playback1.rout playback1.0.wav playback1.18.wav \
-  playback1.3.wav playback1.8.wav playback1.9.wav
+  playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout
 forwarding1_EXTRA_DIST = forwarding1 forwarding1.checksums forwarding1.gen.input \
   forwarding1.gena.output forwarding1.geno.output forwarding1.input forwarding1.output
 forwarding1_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
