@@ -437,11 +437,9 @@ init_config(struct cfg *cf, int argc, char **argv)
 	}
     }
 
-#if 0
     if (cf->stable->max_setup_ttl == 0) {
         cf->stable->max_setup_ttl = cf->stable->max_ttl;
     }
-#endif
 
     /* No control socket has been specified, add a default one */
     if (RTPP_LIST_IS_EMPTY(cf->stable->ctrl_socks)) {
