@@ -7,6 +7,7 @@ AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([src/main.c])
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER([src/config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 # cross-compile macros
 AC_CANONICAL_BUILD
@@ -17,6 +18,7 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_MKDIR_P
 AM_PROG_CC_C_O
+LT_INIT
 
 case "${host_os}" in
 freebsd*)
