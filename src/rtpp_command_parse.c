@@ -50,8 +50,8 @@ struct cmd_props {
 };
 
 static int 
-fill_cmd_props(struct rtpp_command *cmd, struct common_cmd_args *cca,
-  struct cmd_props *cpp)
+fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
+  struct common_cmd_args *cca, struct cmd_props *cpp)
 {
 
     cpp->has_call_id = 1;
@@ -224,7 +224,7 @@ rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd,
 {
     struct cmd_props cprops;
 
-    if (fill_cmd_props(cmd, cca, &cprops) != 0) {
+    if (fill_cmd_props(cf, cmd, cca, &cprops) != 0) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "unknown command \"%c\"",
           cmd->argv[0][0]);
         reply_error(cf, cmd, ECODE_CMDUNKN);
