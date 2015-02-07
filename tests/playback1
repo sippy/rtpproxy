@@ -47,12 +47,20 @@ do
       wait ${PLB_PID}
       report "wait for rtpproxy shutdown, PID: ${PLB_PID}"
       kill -TERM ${TCPD_PID} 2>/dev/null
-      if [ ${?} -ne 0 ]
+      KILL_RC=${?}
+      wait ${TCPD_PID}
+      TCPD_RC=${?}
+      if [ ${KILL_RC} -ne 0 -a ${TCPD_RC} -eq 0 ]
       then
         ok "wait for tcpdump shutdown, PID: ${TCPD_PID}"
         break
       fi
-      wait ${TCPD_PID}
+      ncaptured=`grep 'packets captured' playback1.tout | awk '{print $1}'`
+      if [ ${ncaptured} -eq ${NPKTS} ]
+      then
+        ok "wait for tcpdump shutdown, PID: ${TCPD_PID}, kill rc = ${KILL_RC}, tcpdump rc = ${TCPD_RC}"
+        break
+      fi
       cat playback1.tout
       ndropped=`grep 'dropped by kernel' playback1.tout | awk '{print $1}'`
       if [ ${ndropped} -ne 0 -a ${retry} -lt 3 ]
@@ -61,12 +69,9 @@ do
         continue
       fi
       ${EXTRACTAUDIO} -n playback1.${codec} /dev/null
-      false
-      fail "wait for tcpdump shutdown, PID: ${TCPD_PID}"
+      forcefail 1 "wait for tcpdump shutdown, PID: ${TCPD_PID}, kill rc: ${KILL_RC}, tcpd rc: ${TCPD_RC}"
     done
     cat playback1.tout
-    wait ${TCPD_PID}
-    report "tcpdump playback1.${codec}.a.rtp"
     ofile="playback1.${codec}.wav"
     ${EXTRACTAUDIO} -n playback1.${codec} ${ofile} | grep -v 'delta '
     report "extractaudio playback1.${codec} -> ${ofile}"
