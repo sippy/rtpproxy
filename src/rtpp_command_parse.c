@@ -110,7 +110,11 @@ fill_cmd_props(struct rtpp_command *cmd, struct common_cmd_args *cca,
     case 'R':
         cca->op = RECORD;
         cca->rname = "record";
-        cca->hint = "R[-xxx-] call_id from_tag [to_tag]";
+        if (cf->stable->record_pcap != 0) {
+            cca->hint = "R[s] call_id from_tag [to_tag]";
+        } else {
+            cca->hint = "R call_id from_tag [to_tag]";
+        }
         cpp->max_argc = 4;
         cpp->min_argc = 3;
         cpp->has_cmods = 1;
