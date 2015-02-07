@@ -136,7 +136,7 @@ accept_connection(struct cfg *cf, int controlfd_in)
 
 static int
 process_commands(struct cfg *cf, int controlfd, double dtime,
-  struct rtpp_command_stats *csp, int umode)
+  struct rtpp_command_stats *csp, int umode, struct rtpp_stats_obj *rsc)
 {
     int i, rval;
     struct rtpp_command *cmd;
@@ -145,6 +145,9 @@ process_commands(struct cfg *cf, int controlfd, double dtime,
         cmd = get_command(cf, controlfd, &rval, dtime, csp, umode);
         if (cmd != NULL) {
             csp->ncmds_rcvd.cnt++;
+            if (cmd->argv[0][0] == 'g' || cmd->argv[0][0] == 'G') {
+                flush_cstats(rsc, csp);
+            }
             pthread_mutex_lock(&cf->glock);
             i = handle_command(cf, cmd);
             pthread_mutex_unlock(&cf->glock);
@@ -158,7 +161,7 @@ process_commands(struct cfg *cf, int controlfd, double dtime,
 
 static int
 process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
-  double dtime, struct rtpp_command_stats *csp)
+  double dtime, struct rtpp_command_stats *csp, struct rtpp_stats_obj *rsc)
 {
     int rval;
     struct rtpp_command *cmd;
@@ -171,6 +174,9 @@ process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
         cmd = rtpp_command_stream_get(cf, rcc, &rval, dtime, csp);
         if (cmd != NULL) {
             csp->ncmds_rcvd.cnt++;
+            if (cmd->argv[0][0] == 'g' || cmd->argv[0][0] == 'G') {
+                flush_cstats(rsc, csp);
+            }
             pthread_mutex_lock(&cf->glock);
             rval = handle_command(cf, cmd);
             pthread_mutex_unlock(&cf->glock);
@@ -342,10 +348,10 @@ rtpp_cmd_queue_run(void *arg)
                     continue;
                 }
                 if (RTPP_CTRL_ISSTREAM(psp->rccs[i]->csock)) {
-                    rval = process_commands_stream(cf, psp->rccs[i], sptime, csp);
+                    rval = process_commands_stream(cf, psp->rccs[i], sptime, csp, rtpp_stats_cf);
                 } else {
                     umode = RTPP_CTRL_ISDG(psp->rccs[i]->csock);
-                    rval = process_commands(cf, psp->pfds[i].fd, sptime, csp, umode);
+                    rval = process_commands(cf, psp->pfds[i].fd, sptime, csp, umode, rtpp_stats_cf);
                 }
                 if (rval == -1 && psp->rccs[i]->csock->type == RTPC_STDIO && psp->rccs[i]->csock->exit_on_close != 0) {
                     cf->stable->slowshutdown = 1;
