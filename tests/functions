@@ -93,6 +93,28 @@ rtpproxy_stop() {
   done
 }
 
+forcefail() {
+  RC=${1}
+  if [ ${RC} -eq 0 ]
+  then
+    echo >&2 "ALERT, forcefail() called with the bogus 0 RC!"
+    ${RC}=1
+  fi
+  shift
+  echo >&2 "FAILED: (rc=${RC})" "${@}"
+  if [ -n "$CONTINUE" ] ; then
+    return
+  fi
+  if [ -n "$INTERACTIVE" ] ; then
+    read -p "Continue? (y/n)" YN
+    if [ "$YN" != 'y' ] ; then
+      exit $RC
+    fi
+  else
+    exit $RC
+  fi
+}
+
 fail() {
   RC=$?
   echo >&2 "FAILED: (rc=$RC)" "$@"
