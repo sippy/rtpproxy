@@ -21,7 +21,7 @@ forwarding1_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav 
   forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18
 session_timeouts_EXTRA_DIST = session_timeouts session_timeouts.half.input \
   session_timeouts.output1 session_timeouts.full.input session_timeouts.lookup.input \
-  session_timeouts.output2
+  session_timeouts.output2 session_timeouts.stats.input
 session_timeouts_CLEANFILES = session_timeouts.rout 
 EXTRA_DIST = Makefile.am startstop basic_versions basic_versions.input \
     basic_versions.output command_parser command_parser.input \
