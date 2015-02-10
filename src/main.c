@@ -77,6 +77,9 @@
 #include "rtpp_math.h"
 #include "rtpp_stats.h"
 #include "rtpp_list.h"
+#ifdef RTPP_CHECK_LEAKS
+#include "rtpp_memdeb_internal.h"
+#endif
 
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
@@ -102,11 +105,26 @@ usage(void)
 static struct cfg *_sig_cf;
 
 static void
+rtpp_exit(void)
+{
+    int ecode;
+
+    ecode = 0;
+#ifdef RTPP_CHECK_LEAKS
+    ecode = rtpp_memdeb_dumpstats(_sig_cf) == 0 ? 0 : 1;
+#ifdef RTPP_MEMDEB_STDOUT
+    fclose(stdout);
+#endif
+#endif
+    exit(ecode);
+}
+
+static void
 fatsignal(int sig)
 {
 
     rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog, "got signal %d", sig);
-    exit(0);
+    rtpp_exit();
 }
 
 static void
@@ -301,7 +319,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 		printf("Extension %s: %s\n", proto_caps[i].pc_id,
 		    proto_caps[i].pc_description);
 	    }
-	    exit(0);
+	    rtpp_exit();
 	    break;
 
 	case 'r':
@@ -420,7 +438,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'V':
 	    printf("%s\n", RTPP_SW_VERSION);
-	    exit(0);
+	    rtpp_exit();
 	    break;
 
         case 'W':
@@ -555,7 +573,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 int
 main(int argc, char **argv)
 {
-    int i, len, ecode;
+    int i, len;
     double eval, clk;
     long long ncycles_ref, counter;
     double eptime;
@@ -569,6 +587,14 @@ main(int argc, char **argv)
 #if RTPP_DEBUG
     double sleep_time, filter_lastval;
 #endif
+
+#ifdef RTPP_CHECK_LEAKS
+    if (rtpp_memdeb_selftest() != 0) {
+        errx(1, "MEMDEB self-test has failed");
+        /* NOTREACHED */
+    }
+#endif
+
     memset(&cf, 0, sizeof(cf));
 
     cf.stable = malloc(sizeof(struct rtpp_cfg_stable));
@@ -735,12 +761,5 @@ main(int argc, char **argv)
     sd_notify(0, "STATUS=Exited");
 #endif
 
-    ecode = 0;
-#ifdef RTPP_CHECK_LEAKS
-    ecode = rtpp_memdeb_dumpstats(&cf) == 0 ? 0 : 1;
-#ifdef RTPP_MEMDEB_STDOUT
-    fclose(stdout);
-#endif
-#endif
-    exit(ecode);
+    rtpp_exit();
 }
