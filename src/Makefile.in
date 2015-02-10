@@ -142,7 +142,8 @@ am__objects_1 = rtpproxy_debug-main.$(OBJEXT) \
 	rtpproxy_debug-rtpp_command_stats.$(OBJEXT) \
 	rtpproxy_debug-rtpp_controlfd.$(OBJEXT) \
 	rtpproxy_debug-rtpp_command_stream.$(OBJEXT)
-am__objects_2 = rtpproxy_debug-rtpp_mem_debug.$(OBJEXT)
+am__objects_2 = rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
+	rtpproxy_debug-rtpp_memdeb_test.$(OBJEXT)
 am_rtpproxy_debug_OBJECTS = $(am__objects_1) $(am__objects_2)
 rtpproxy_debug_OBJECTS = $(am_rtpproxy_debug_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -351,12 +352,14 @@ rtpproxy_SOURCES = main.c rtp.h rtp_server.c rtp_server.h \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
   rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c
 
-SRCS_DEBUG = rtpp_mem_debug.c rtpp_mem_debug.h
+SRCS_DEBUG = rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
+  rtpp_memdeb_stats.h rtpp_memdeb_test.c
+
 rtpproxy_debug_SOURCES = ${rtpproxy_SOURCES} ${SRCS_DEBUG}
 rtpproxy_LDADD = -lm -lpthread
 rtpproxy_debug_LDADD = ${rtpproxy_LDADD}
 rtpproxy_debug_LDFLAGS = -static
-rtpproxy_debug_CPPFLAGS = -g3 -O0 -DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -include rtpp_mem_debug.h
+rtpproxy_debug_CPPFLAGS = -g3 -O0 -DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -514,7 +517,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_hash_table.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_log_stand.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_math.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_mem_debug.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_netio_async.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_network.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_notify.Po@am__quote@
@@ -942,19 +946,33 @@ rtpproxy_debug-rtpp_command_stream.obj: rtpp_command_stream.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_command_stream.obj `if test -f 'rtpp_command_stream.c'; then $(CYGPATH_W) 'rtpp_command_stream.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_command_stream.c'; fi`
 
-rtpproxy_debug-rtpp_mem_debug.o: rtpp_mem_debug.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_mem_debug.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_mem_debug.Tpo -c -o rtpproxy_debug-rtpp_mem_debug.o `test -f 'rtpp_mem_debug.c' || echo '$(srcdir)/'`rtpp_mem_debug.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_mem_debug.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_mem_debug.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_mem_debug.c' object='rtpproxy_debug-rtpp_mem_debug.o' libtool=no @AMDEPBACKSLASH@
+rtpproxy_debug-rtpp_memdeb.o: rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_memdeb.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Tpo -c -o rtpproxy_debug-rtpp_memdeb.o `test -f 'rtpp_memdeb.c' || echo '$(srcdir)/'`rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_memdeb.c' object='rtpproxy_debug-rtpp_memdeb.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_mem_debug.o `test -f 'rtpp_mem_debug.c' || echo '$(srcdir)/'`rtpp_mem_debug.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_memdeb.o `test -f 'rtpp_memdeb.c' || echo '$(srcdir)/'`rtpp_memdeb.c
 
-rtpproxy_debug-rtpp_mem_debug.obj: rtpp_mem_debug.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_mem_debug.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_mem_debug.Tpo -c -o rtpproxy_debug-rtpp_mem_debug.obj `if test -f 'rtpp_mem_debug.c'; then $(CYGPATH_W) 'rtpp_mem_debug.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_mem_debug.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_mem_debug.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_mem_debug.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_mem_debug.c' object='rtpproxy_debug-rtpp_mem_debug.obj' libtool=no @AMDEPBACKSLASH@
+rtpproxy_debug-rtpp_memdeb.obj: rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_memdeb.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Tpo -c -o rtpproxy_debug-rtpp_memdeb.obj `if test -f 'rtpp_memdeb.c'; then $(CYGPATH_W) 'rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_memdeb.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_memdeb.c' object='rtpproxy_debug-rtpp_memdeb.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_mem_debug.obj `if test -f 'rtpp_mem_debug.c'; then $(CYGPATH_W) 'rtpp_mem_debug.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_mem_debug.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_memdeb.obj `if test -f 'rtpp_memdeb.c'; then $(CYGPATH_W) 'rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_memdeb.c'; fi`
+
+rtpproxy_debug-rtpp_memdeb_test.o: rtpp_memdeb_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_memdeb_test.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Tpo -c -o rtpproxy_debug-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_memdeb_test.c' object='rtpproxy_debug-rtpp_memdeb_test.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
+
+rtpproxy_debug-rtpp_memdeb_test.obj: rtpp_memdeb_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_memdeb_test.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Tpo -c -o rtpproxy_debug-rtpp_memdeb_test.obj `if test -f 'rtpp_memdeb_test.c'; then $(CYGPATH_W) 'rtpp_memdeb_test.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_memdeb_test.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_memdeb_test.c' object='rtpproxy_debug-rtpp_memdeb_test.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_memdeb_test.obj `if test -f 'rtpp_memdeb_test.c'; then $(CYGPATH_W) 'rtpp_memdeb_test.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_memdeb_test.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
