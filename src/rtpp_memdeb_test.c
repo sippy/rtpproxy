@@ -45,9 +45,14 @@ rtpp_memdeb_selftest(void)
 
     memset(&mds_b, '\0', sizeof(mds_b));
     memset(&mds_a, '\0', sizeof(mds_a));
-    p = malloc(1);
+    p = malloc(50);
     free(p);
-    if (rtpp_memdeb_stat_by_funcn(__func__, &mds_b) == -1) {
+    if (rtpp_memdeb_stat_by_funcn(__func__, &mds_b) < 1) {
+        RTPP_MEMDEB_REPORT(NULL, "MEMDEB is compiled in but is not working");
+        return (-1);
+    }
+    if (mds_b.nalloc < 1 || mds_b.nfree < 1 || \
+      mds_b.balloc < 50 ||  mds_b.bfree < 50) {
         RTPP_MEMDEB_REPORT(NULL, "MEMDEB is compiled in but is not working");
         return (-1);
     }
@@ -55,16 +60,17 @@ rtpp_memdeb_selftest(void)
         p = malloc(16);
         free(p);
     }
-    if (rtpp_memdeb_stat_by_funcn(__func__, &mds_a) == -1) {
+    if (rtpp_memdeb_stat_by_funcn(__func__, &mds_a) < 2) {
         RTPP_MEMDEB_REPORT(NULL, "MEMDEB is compiled in but is not working");
         return (-1);
     }
-    if (MD_STATS_CMP(&mds_b, &mds_a) == 0) {
+    if (RTPP_MD_STATS_CMP(&mds_b, &mds_a) == 0) {
         RTPP_MEMDEB_REPORT(NULL, "MEMDEB is compiled in but is not working");
         return (-1);
     }
-    if (mds_a.nalloc - mds_b.nalloc != 10 || mds_a.nfree - mds_b.nfree != 10 || \
-      mds_a.balloc - mds_b.balloc != 160 ||  mds_a.bfree - mds_b.bfree != 160) {
+    RTPP_MD_STATS_SUB(&mds_a, &mds_b);
+    if (mds_a.nalloc != 10 || mds_a.nfree != 10 || \
+      mds_a.balloc != 160 ||  mds_a.bfree != 160) {
         RTPP_MEMDEB_REPORT(NULL, "MEMDEB is compiled in but is not working");
         return (-1);
     }
