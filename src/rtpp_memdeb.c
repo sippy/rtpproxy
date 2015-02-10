@@ -373,7 +373,7 @@ rtpp_memdeb_stat_by_funcn(const char *funcn, struct memdeb_stats *mstatp)
         if (strcmp(funcn, mnp->funcn) != 0) {
             continue;
         }
-        MD_STATS_ADD(mstatp, &mnp->mstats);
+        RTPP_MD_STATS_ADD(mstatp, &mnp->mstats);
         nmatches += 1;
     }
     pthread_mutex_unlock(memdeb_mutex);

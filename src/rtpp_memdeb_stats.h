@@ -38,7 +38,7 @@ struct memdeb_stats {
 };
 
 /* a += b */
-#define MD_STATS_ADD(a, b) { \
+#define RTPP_MD_STATS_ADD(a, b) { \
     (a)->nalloc += (b)->nalloc; \
     (a)->balloc += (b)->balloc; \
     (a)->nunalloc_baseln += (b)->nunalloc_baseln; \
@@ -51,7 +51,7 @@ struct memdeb_stats {
 }
 
 /* a -= b */
-#define MD_STATS_SUB(a, b) { \
+#define RTPP_MD_STATS_SUB(a, b) { \
     (a)->nalloc -= (b)->nalloc; \
     (a)->balloc -= (b)->balloc; \
     (a)->nunalloc_baseln -= (b)->nunalloc_baseln; \
@@ -64,7 +64,7 @@ struct memdeb_stats {
 }
 
 /* (a == b) ? 0: 1 */
-#define MD_STATS_CMP(a, b) ( \
+#define RTPP_MD_STATS_CMP(a, b) ( \
     (((a)->nalloc == (b)->nalloc) && \
      ((a)->balloc == (b)->balloc) && \
      ((a)->nunalloc_baseln == (b)->nunalloc_baseln) && \
