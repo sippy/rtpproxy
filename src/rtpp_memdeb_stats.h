@@ -75,4 +75,4 @@ struct memdeb_stats {
      ((a)->brealloc == (b)->brealloc) && \
      ((a)->afails == (b)->afails)) ? 0 : 1)
 
-int rtpp_memdeb_stat_by_funcn(const char *, struct memdeb_stats *);
+int rtpp_memdeb_get_stats(const char *, const char *, struct memdeb_stats *);

@@ -358,7 +358,8 @@ rtpp_memdeb_setbaseln(void)
 }
 
 int
-rtpp_memdeb_stat_by_funcn(const char *funcn, struct memdeb_stats *mstatp)
+rtpp_memdeb_get_stats(const char *fname, const char *funcn,
+  struct memdeb_stats *mstatp)
 {
     struct memdeb_node *mnp;
     int nmatches;
@@ -370,7 +371,10 @@ rtpp_memdeb_stat_by_funcn(const char *funcn, struct memdeb_stats *mstatp)
             /* Nodelist is corrupt */
             abort();
         }
-        if (strcmp(funcn, mnp->funcn) != 0) {
+        if (funcn != NULL && strcmp(funcn, mnp->funcn) != 0) {
+            continue;
+        }
+        if (fname != NULL && strcmp(fname, mnp->fname) != 0) {
             continue;
         }
         RTPP_MD_STATS_ADD(mstatp, &mnp->mstats);

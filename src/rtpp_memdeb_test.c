@@ -47,7 +47,7 @@ rtpp_memdeb_selftest(void)
     memset(&mds_a, '\0', sizeof(mds_a));
     p = malloc(50);
     free(p);
-    if (rtpp_memdeb_stat_by_funcn(__func__, &mds_b) < 1) {
+    if (rtpp_memdeb_get_stats(__FILE__, __func__, &mds_b) < 1) {
         RTPP_MEMDEB_REPORT(NULL, "MEMDEB is compiled in but is not working");
         return (-1);
     }
@@ -60,7 +60,7 @@ rtpp_memdeb_selftest(void)
         p = malloc(16);
         free(p);
     }
-    if (rtpp_memdeb_stat_by_funcn(__func__, &mds_a) < 2) {
+    if (rtpp_memdeb_get_stats(__FILE__, __func__, &mds_a) < 2) {
         RTPP_MEMDEB_REPORT(NULL, "MEMDEB is compiled in but is not working");
         return (-1);
     }
