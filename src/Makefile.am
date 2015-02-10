@@ -15,12 +15,13 @@ rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
   rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
   rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c
-SRCS_DEBUG=	rtpp_mem_debug.c rtpp_mem_debug.h
+SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
+  rtpp_memdeb_stats.h rtpp_memdeb_test.c
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
 rtpproxy_LDADD=-lm -lpthread
 rtpproxy_debug_LDADD=${rtpproxy_LDADD}
 rtpproxy_debug_LDFLAGS=-static
-rtpproxy_debug_CPPFLAGS=-g3 -O0 -DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -include rtpp_mem_debug.h
+rtpproxy_debug_CPPFLAGS=-g3 -O0 -DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
 
 DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@

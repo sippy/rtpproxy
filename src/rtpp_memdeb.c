@@ -45,7 +45,7 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
-#include "rtpp_mem_debug.h"
+#include "rtpp_memdeb.h"
 #include "rtpp_memdeb_internal.h"
 #include "rtpp_memdeb_stats.h"
 
