@@ -36,11 +36,9 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
-#include "rtpp_types.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_stream.h"
-#include "rtpp_controlfd.h"
 #include "rtpp_util.h"
 
 static void
