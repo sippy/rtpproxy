@@ -179,6 +179,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	if (sp->rtps[i] != NULL) {
 	    cf->rtp_servers[sp->sridx] = NULL;
 	    rtp_server_free(sp->rtps[i]);
+            CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nplrs_destroyed", 1);
 	}
 	if (sp->codecs[i] != NULL)
 	    free(sp->codecs[i]);

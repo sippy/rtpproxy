@@ -86,8 +86,9 @@ struct d_opts;
 
 static int create_twinlistener(struct rtpp_cfg_stable *, struct sockaddr *, int, int *);
 static int handle_delete(struct cfg *,  struct common_cmd_args *, int);
-static void handle_noplay(struct cfg *, struct rtpp_session *, int);
-static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int);
+static void handle_noplay(struct cfg *, struct rtpp_session *, int, struct rtpp_command *);
+static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int,
+  struct rtpp_command *);
 static int handle_record(struct cfg *, struct common_cmd_args *, int);
 static void handle_query(struct cfg *, struct rtpp_command *,
   struct rtpp_session *, int);
@@ -465,12 +466,12 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case NOPLAY:
-	handle_noplay(cf, spa, i);
+	handle_noplay(cf, spa, i, cmd);
 	reply_ok(cf, cmd);
 	break;
 
     case PLAY:
-	handle_noplay(cf, spa, i);
+	handle_noplay(cf, spa, i, cmd);
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->codecs[i] == NULL) {
 		reply_error(cf, cmd, ECODE_INVLARG_5);
@@ -478,7 +479,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	    }
 	    codecs = spa->codecs[i];
 	}
-	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount) != 0) {
+	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount, cmd) != 0) {
 	    reply_error(cf, cmd, ECODE_PLRFAIL);
 	    return 0;
 	}
@@ -575,11 +576,12 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 }
 
 static void
-handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx)
+handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx, struct rtpp_command *cmd)
 {
 
     if (spa->rtps[idx] != NULL) {
 	rtp_server_free(spa->rtps[idx]);
+	cmd->csp->nplrs_destroyed.cnt++;
 	spa->rtps[idx] = NULL;
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "stopping player at port %d", spa->ports[idx]);
@@ -593,7 +595,7 @@ handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx)
 
 static int
 handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
-  char *pname, int playcount)
+  char *pname, int playcount, struct rtpp_command *cmd)
 {
     int n;
     char *cp;
@@ -608,6 +610,7 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 	spa->rtps[idx] = rtp_server_new(pname, n, playcount);
 	if (spa->rtps[idx] == NULL)
 	    continue;
+	cmd->csp->nplrs_created.cnt++;
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "%d times playing prompt %s codec %d", playcount, pname, n);
 	if (spa->sridx == -1)
