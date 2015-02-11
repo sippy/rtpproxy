@@ -26,7 +26,7 @@
  */
 
 #ifndef RTPP_MEMDEB_STDOUT
-#  define RTPP_MEMDEB_REPORT(handle, format, args...) { \
+#  define RTPP_MEMDEB_REPORT(handle, format, args...) \
     if (handle != NULL) { \
         rtpp_log_write(RTPP_LOG_DBUG, ((rtpp_log_t)handle), format, ## args); \
     }
