@@ -93,6 +93,9 @@ init_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
 
     csp->nsess_complete.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nsess_complete");
     csp->nsess_created.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nsess_created");
+
+    csp->nplrs_created.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nplrs_created");
+    csp->nplrs_destroyed.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nplrs_destroyed");
 }
 
 #define FLUSH_CSTAT(sobj, st)    { \
@@ -113,6 +116,9 @@ flush_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
 
     FLUSH_CSTAT(sobj, csp->nsess_complete);
     FLUSH_CSTAT(sobj, csp->nsess_created);
+
+    FLUSH_CSTAT(sobj, csp->nplrs_created);
+    FLUSH_CSTAT(sobj, csp->nplrs_destroyed);
 }
 
 static int
