@@ -124,16 +124,16 @@ done
 CODECSO="${_CODECSO}"
 CODECSA="${_CODECSA}"
 
-sts=`date "+%Y%m%d%H%M%S"`
-(setup_fwd ${GENO_SPORT} ${GENA_SPORT} ${CODECSO} | ${RTPPROXY} -i -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -d info -f -m ${FWD_SPORT} > forwarding1.rout ) &
+#sts=`date "+%Y%m%d%H%M%S"`
+(setup_fwd ${GENO_SPORT} ${GENA_SPORT} ${CODECSO} | ${RTPPROXY} -i -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -f -m ${FWD_SPORT} > forwarding1.rout 2>/dev/null) &
 FWD_PID=${!}
 (setup_gen "o" ${FWD_SPORT} ${CODECSO} | ${RTPPROXY} -P -r `pwd` -T5 -b -m ${GENO_SPORT} -s stdio: -f -d info > forwarding1.geno.rout 2>/dev/null) &
 GENO_PID=${!}
 (setup_gen "a" ${PORTO} ${CODECSA} | ${RTPPROXY} -r `pwd` -T5 -b -m ${GENA_SPORT} -s stdio: -f -d info > forwarding1.gena.rout 2>/dev/null) &
 GENA_PID=${!}
 wait ${FWD_PID}
-ets=`date "+%Y%m%d%H%M%S"`
-echo $((${ets} - ${sts}))
+#ets=`date "+%Y%m%d%H%M%S"`
+#echo $((${ets} - ${sts}))
 report "wait for rtpproxy Fwd shutdown, PID: ${FWD_PID}"
 wait ${GENO_PID}
 report "wait for rtpproxy Gen.O shutdown, PID: ${GENO_PID}"
