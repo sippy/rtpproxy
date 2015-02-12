@@ -311,11 +311,43 @@ pthread_mutex_islocked(pthread_mutex_t *mutex)
 }
 
 #if defined(_SC_CLK_TCK) && !defined(__FreeBSD__)
+#if defined(LINUX_XXX)
+static int
+rtpp_get_sched_hz_linux(void)
+{
+    int fd, rlen;
+    char buf[16], *cp;
+    int64_t n;
+
+    fd = open("/proc/sys/kernel/sched_min_granularity_ns", O_RDONLY, 0);
+    if (fd == -1) {
+        return (-1);
+    }
+    rlen = read(fd, buf, sizeof(buf) - 1);
+    close(fd);
+    if (rlen <= 0) {
+        return (-1);
+    }
+    buf[rlen] = '\0'; 
+    n = strtol(buf, &cp, 10);
+    if (cp == buf) {
+        return (-1);
+    }
+    return ((int64_t)1000000000 / n);
+}
+#endif
+
 int
 rtpp_get_sched_hz(void)
 {
     int sched_hz;
 
+#if defined (LINUX_XXX)
+    sched_hz = rtpp_get_sched_hz_linux();
+    if (sched_hz > 0) {
+        return (sched_hz);
+    }
+#endif
     sched_hz = sysconf(_SC_CLK_TCK);
     return (sched_hz > 0 ? sched_hz : 100);
 }
