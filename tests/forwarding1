@@ -162,9 +162,10 @@ ${DIFF} forwarding1.geno.rout forwarding1.geno.output
 DIFF_GENO_RC=${?}
 ${DIFF} forwarding1.gena.rout forwarding1.gena.output
 DIFF_GENA_RC=${?}
-report_rc ${DIFF_FWD_RC} "checking rtpproxy.fwd stdout"
-report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
-report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
 
 verify_results "o" "${CODECSA}" "${REPACK_CODECSA}"
 verify_results "a" "${CODECSO}" "${REPACK_CODECSO}"
+
+report_rc ${DIFF_FWD_RC} "checking rtpproxy.fwd stdout"
+report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
+report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
