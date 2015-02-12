@@ -157,11 +157,14 @@ report "wait for rtpproxy Gen.O shutdown, PID: ${GENO_PID}"
 wait ${GENA_PID}
 report "wait for rtpproxy Gen.A shutdown, PID: ${GENA_PID}"
 ${DIFF} forwarding1.rout forwarding1.output
-report "checking rtpproxy.fwd stdout"
+DIFF_FWD_RC=${?}
 ${DIFF} forwarding1.geno.rout forwarding1.geno.output
-report "checking rtpproxy.geno stdout"
+DIFF_GENO_RC=${?}
 ${DIFF} forwarding1.gena.rout forwarding1.gena.output
-report "checking rtpproxy.gena stdout"
+DIFF_GENA_RC=${?}
+report_rc ${DIFF_FWD_RC} "checking rtpproxy.fwd stdout"
+report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
+report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
 
 verify_results "o" "${CODECSA}" "${REPACK_CODECSA}"
 verify_results "a" "${CODECSO}" "${REPACK_CODECSO}"
