@@ -53,7 +53,7 @@ setup_gen() {
     ${SED} "${SED_TRANS}" forwarding1.gen.input
     i=$((${i}+1))
   done
-  sleep 32
+  sleep 33
   cat session_timeouts.stats.input forwarding1.stats.input
 }
 
@@ -71,7 +71,7 @@ setup_fwd() {
     PORTA=$((${PORTA} + 4))
     i=$((${i}+1))
   done
-  sleep 33
+  sleep 34
   j=$((${i}-1))
   while [ ${j} -gt $((${i}/2)) ]
   do
