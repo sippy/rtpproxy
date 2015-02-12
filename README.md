@@ -53,22 +53,6 @@ This proxy works as follows:
   time (60 seconds by default).
 
 
-## Limitations
-
-Currently, rtpproxy does not support command-line definition of RTP port
-range. By default rtpproxy uses UDP ports 35000-65000 and these should be
-opened any firewalls in front of rtpproxy. The ports used can be modified in
-rtpp_defines.h file (PORT_MIN and PORT_MAX) and then recompile/reinstall.
-
-
-## TODO (in no particular order)
-
-- Port to other OSes;
-
-- add more configuration parameters (e.g. ports range, max idle time etc.) to be
-  adjustable via command line.
-
-
 ## Support
 
 Open a ticket on the github issue tracker, or post a message on the [mailing
