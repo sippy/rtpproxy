@@ -276,6 +276,7 @@ prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
     pcaprec_hdr_t *pcaprec_hdr;
     struct udpip *udpip;
     int pcap_size;
+    struct sockaddr_storage tmp_addr;
 
     if (packet->rtime == -1) {
 	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't get current time");
@@ -309,7 +310,17 @@ prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
 #else
     /* Prepare fake ethernet header */
     hdrp->en10t.ether_type = htons(0x800);
+    if (face == 0 && ishostnull(dst_addr) && !ishostnull(src_addr)) {
+        if (local4remote(src_addr, &tmp_addr) == 0) {
+            dst_addr = sstosa(&tmp_addr);
+        }
+    }
     memcpy(hdrp->en10t.ether_dhost + 2, &(satosin(dst_addr)->sin_addr), 4);
+    if (face != 0 && ishostnull(src_addr) && !ishostnull(dst_addr)) {
+        if (local4remote(dst_addr, &tmp_addr) == 0) {
+            src_addr = sstosa(&tmp_addr);
+        }
+    }
     memcpy(hdrp->en10t.ether_shost + 2, &(satosin(src_addr)->sin_addr), 4);
     pcaprec_hdr = &(hdrp->en10t.pcaprec_hdr);
     udpip = &(hdrp->en10t.udpip);
