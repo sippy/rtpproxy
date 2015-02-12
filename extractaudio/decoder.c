@@ -48,7 +48,7 @@
 /* static char i[] = "0"; */
 
 void *
-decoder_new(struct session *sp)
+decoder_new(struct session *sp, int dflags)
 {
     struct decoder_stream *dp;
 
@@ -70,6 +70,7 @@ decoder_new(struct session *sp)
     dp->nticks = dp->sticks = dp->pp->parsed.ts;
     dp->dticks = 0;
     dp->lpt = RTP_PCMU;
+    dp->dflags = dflags;
     /* dp->f = fopen(i, "w"); */
     /* i[0]++; */
 
@@ -99,6 +100,11 @@ decoder_get(struct decoder_stream *dp)
             t = cticks - dp->nticks;
             if (t > 4000)
                 t = 4000;
+            if ((dp->dflags & D_FLAG_NOSILENCE) != 0) {
+                dp->nticks += t;
+                dp->dticks += t;
+                return (DECODER_SKIP);
+            }
             j = generate_silence(dp, dp->obuf, t);
             if (j <= 0)
                 return DECODER_ERROR;
@@ -110,6 +116,10 @@ decoder_get(struct decoder_stream *dp)
             t = (((dp->pp->pkt->time - dp->stime) * 8000) - dp->dticks) / 2;
             if (t > 4000)
                 t = 4000;
+            if ((dp->dflags & D_FLAG_NOSILENCE) != 0) {
+                dp->dticks += t;
+                return (DECODER_SKIP);
+            }
             j = generate_silence(dp, dp->obuf, t);
             if (j <= 0)
                 return DECODER_ERROR;

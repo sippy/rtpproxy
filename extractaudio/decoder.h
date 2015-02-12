@@ -50,6 +50,7 @@
 
 #define	DECODER_EOF	(-(1 << 16))
 #define	DECODER_ERROR	(-(2 << 16))
+#define	DECODER_SKIP	(-(3 << 16))
 
 struct decoder_stream {
     struct session *sp;
@@ -72,9 +73,13 @@ struct decoder_stream {
     double stime;
     double dticks;
     /* FILE *f; */
+    int dflags;
 };
 
-void *decoder_new(struct session *);
+#define D_FLAG_NONE      0x0
+#define D_FLAG_NOSILENCE 0x1
+
+void *decoder_new(struct session *, int);
 int32_t decoder_get(struct decoder_stream *);
 int decode_frame(struct decoder_stream *, unsigned char *, unsigned char *, unsigned int);
 int generate_silence(struct decoder_stream *, unsigned char *, unsigned int);

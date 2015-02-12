@@ -77,6 +77,9 @@
 #include "rtpp_math.h"
 #include "rtpp_stats.h"
 #include "rtpp_list.h"
+#ifdef RTPP_CHECK_LEAKS
+#include "rtpp_memdeb_internal.h"
+#endif
 
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
@@ -102,11 +105,26 @@ usage(void)
 static struct cfg *_sig_cf;
 
 static void
+rtpp_exit(void)
+{
+    int ecode;
+
+    ecode = 0;
+#ifdef RTPP_CHECK_LEAKS
+    ecode = rtpp_memdeb_dumpstats(_sig_cf) == 0 ? 0 : 1;
+#ifdef RTPP_MEMDEB_STDOUT
+    fclose(stdout);
+#endif
+#endif
+    exit(ecode);
+}
+
+static void
 fatsignal(int sig)
 {
 
     rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog, "got signal %d", sig);
-    exit(0);
+    rtpp_exit();
 }
 
 static void
@@ -195,7 +213,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:b")) != -1) {
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:bW:")) != -1) {
 	switch (ch) {
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
@@ -301,7 +319,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 		printf("Extension %s: %s\n", proto_caps[i].pc_id,
 		    proto_caps[i].pc_description);
 	    }
-	    exit(0);
+	    rtpp_exit();
 	    break;
 
 	case 'r':
@@ -420,7 +438,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'V':
 	    printf("%s\n", RTPP_SW_VERSION);
-	    exit(0);
+	    rtpp_exit();
 	    break;
 
         case 'W':
@@ -435,6 +453,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 	default:
 	    usage();
 	}
+    }
+
+    if (cf->stable->max_setup_ttl == 0) {
+        cf->stable->max_setup_ttl = cf->stable->max_ttl;
     }
 
     /* No control socket has been specified, add a default one */
@@ -565,6 +587,14 @@ main(int argc, char **argv)
 #if RTPP_DEBUG
     double sleep_time, filter_lastval;
 #endif
+
+#ifdef RTPP_CHECK_LEAKS
+    if (rtpp_memdeb_selftest() != 0) {
+        errx(1, "MEMDEB self-test has failed");
+        /* NOTREACHED */
+    }
+#endif
+
     memset(&cf, 0, sizeof(cf));
 
     cf.stable = malloc(sizeof(struct rtpp_cfg_stable));
@@ -659,8 +689,8 @@ main(int argc, char **argv)
     cf.sessinfo.nsessions = 0;
     cf.rtp_nsessions = 0;
 
-    rtpp_command_async_init(&cf);
     rtpp_proc_async_init(&cf);
+    rtpp_command_async_init(&cf);
 
     counter = 0;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
@@ -731,9 +761,5 @@ main(int argc, char **argv)
     sd_notify(0, "STATUS=Exited");
 #endif
 
-#ifdef RTPP_CHECK_LEAKS
-    exit(rtpp_memdeb_dumpstats(&cf) == 0 ? 0 : 1);
-#else
-    exit(0);
-#endif
+    rtpp_exit();
 }

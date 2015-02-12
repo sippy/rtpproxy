@@ -34,12 +34,27 @@ sha256_compute() {
   fi
 }
 
+sha256_verify() {
+  act_chksum=`sha256_compute "${1}" | awk '{print $4}'`
+  prop_chksum=`grep -w ${1} < ${2} | awk '{print $4}'`
+  if [ "${act_chksum}" = "${prop_chksum}" ]
+  then
+    ok "${1} data"
+  else
+    fail "${1} data"
+  fi
+}
+
 if [ "${OS}" != "FreeBSD" ]
 then
   LOOPBACK_INTERFACE="lo"
+  SED_ARGS="-u"
 else
   LOOPBACK_INTERFACE="lo0"
+  SED_ARGS="-l"
 fi
+
+SED="sed ${SED_ARGS}"
 
 rtpproxy_start() {
   tempfoo="`basename $0`.XXXXX"
@@ -48,6 +63,56 @@ rtpproxy_start() {
   ${RTPPROXY} -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} || exit 1
   export TMP_PIDFILE
   export TMP_SOCKFILE
+  i=0
+  while [ ! -s ${TMP_PIDFILE} ]
+  do
+    sleep 1
+    i=$((${i} + 1))
+    if [ ${i} -eq 3 ]
+    then
+      false
+      return
+    fi
+  done
+}
+
+rtpproxy_stop() {
+  SIGNAME="${1}"
+  kill -${SIGNAME} `cat ${TMP_PIDFILE}` || return
+  i=0
+  while [ -e ${TMP_PIDFILE} ]
+  do
+    sleep 1
+    i=$((${i} + 1))
+    if [ ${i} -eq 3 ]
+    then
+      kill -KILL `cat ${TMP_PIDFILE}`
+      false
+      return
+    fi
+  done
+}
+
+forcefail() {
+  RC=${1}
+  if [ ${RC} -eq 0 ]
+  then
+    echo >&2 "ALERT, forcefail() called with the bogus 0 RC!"
+    ${RC}=1
+  fi
+  shift
+  echo >&2 "FAILED: (rc=${RC})" "${@}"
+  if [ -n "$CONTINUE" ] ; then
+    return
+  fi
+  if [ -n "$INTERACTIVE" ] ; then
+    read -p "Continue? (y/n)" YN
+    if [ "$YN" != 'y' ] ; then
+      exit $RC
+    fi
+  else
+    exit $RC
+  fi
 }
 
 fail() {
@@ -70,12 +135,30 @@ ok() {
   echo >&2 "OK:" "$@"
 }
 
+report_rc() {
+  RC=${1}
+  shift
+  if [ ${RC} -eq 0 ]
+  then
+    ok "${@}"
+  else
+    fail "${@}"
+  fi
+}
+
 report() {
+  RC=${?}
+  report_rc ${RC} "${@}"
+}
+
+reportifnotfail() {
   RC=$?
   if [ "$RC" = 0 ]
   then
-    ok "$@"
-  else
+    false
     fail "$@"
+  else
+    true
+    ok "$@"
   fi
 }

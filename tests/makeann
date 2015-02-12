@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# tests that the makeann utility can produce output in the prescribed payloads
+# from a single source .sln file.
+
 . $(dirname $0)/functions
 
 MAKEANN_RFILES="ringback.0 ringback.3 ringback.8 ringback.18 ringback.9"

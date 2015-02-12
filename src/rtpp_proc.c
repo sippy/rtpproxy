@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_types.h"
 #include "rtp.h"
 #include "rtp_resizer.h"
 #include "rtp_server.h"
@@ -47,6 +48,7 @@
 #include "rtpp_proc.h"
 #include "rtpp_record.h"
 #include "rtpp_session.h"
+#include "rtpp_stats.h"
 #include "rtpp_util.h"
 
 struct rtpp_proc_ready_lst {
@@ -84,6 +86,7 @@ process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
                 if (pkt == NULL) {
                     if (len == RTPS_EOF) {
                         rtp_server_free(sp->rtps[sidx]);
+                        CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nplrs_destroyed", 1);
                         sp->rtps[sidx] = NULL;
                         if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
                             assert(cf->rtp_servers[sp->sridx] == sp);
@@ -281,9 +284,10 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
     /* Select socket for sending packet out. */
     sidx = (ridx == 0) ? 1 : 0;
 
-    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[ridx] == NULL)
+    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[sidx] == NULL) {
         rwrite(sp, sp->rrcs[ridx], packet, sp->addr[sidx], sp->laddr[sidx],
           sp->ports[sidx], sidx);
+    }
 
     /*
      * Check that we have some address to which packet is to be

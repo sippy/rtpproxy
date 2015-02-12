@@ -1,0 +1,78 @@
+#!/bin/sh
+
+# Test that session timeouts for fully setup sessions and half-setup sessions
+# work correctly and there is no early/late destruction of sessions.
+
+. $(dirname $0)/functions
+
+geninput() {
+  NFULL=5
+  NHALF=7
+  NHALF_LATE=3
+
+  i=0
+  while [ ${i} -lt ${NFULL} ]
+  do
+    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.full.input
+    i=$((${i} + 1))
+  done
+  cat session_timeouts.stats.input
+  sleep 2
+  cat session_timeouts.stats.input
+  i=0
+  while [ ${i} -lt ${NFULL} ]
+  do
+    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup.input
+    i=$((${i} + 1))
+  done
+  while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
+  do
+    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.half.input
+    i=$((${i} + 1))
+  done
+  cat session_timeouts.stats.input
+  sleep 3
+  cat session_timeouts.stats.input
+  i=${NFULL}
+  while [ ${i} -lt $((${NFULL} + ${NHALF} - ${NHALF_LATE})) ]
+  do
+    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup.input
+    i=$((${i} + 1))
+  done
+  cat session_timeouts.stats.input
+  sleep 6
+  cat session_timeouts.stats.input
+  while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
+  do
+    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup.input
+    i=$((${i} + 1))
+  done
+  cat session_timeouts.stats.input
+  sleep 3
+  cat session_timeouts.stats.input
+  i=0
+  while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
+  do
+    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup.input
+    i=$((${i} + 1))
+  done
+  cat session_timeouts.stats.input
+  sleep 12
+  cat session_timeouts.stats.input
+  i=0
+  while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
+  do
+    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup.input
+    i=$((${i} + 1))
+  done
+  cat session_timeouts.stats.input
+}
+
+geninput | ${RTPPROXY} -f -s stdio: -T10 -b -m 12000 -W5 > session_timeouts.rout
+report "wait for rtpproxy shutdown"
+${DIFF} session_timeouts.rout session_timeouts.output1
+report "checking rtpproxy stdout"
+geninput | ${RTPPROXY} -f -s stdio: -T10 -b -m 12000 > session_timeouts.rout
+report "wait for rtpproxy shutdown"
+${DIFF} session_timeouts.rout session_timeouts.output2
+report "checking rtpproxy stdout"

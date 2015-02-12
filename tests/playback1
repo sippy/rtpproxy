@@ -1,35 +1,85 @@
 #!/bin/sh
 
+# Test will start rtpproxy, initiate a stream playing out,
+# capture and decode packers them with extractaudio and verifies the
+# checksums for all supported codecs.
+
 . $(dirname $0)/functions
 
+TARGET_PORT=12344
+RTPP_TIMEOUT=8
 PLAYBACK_RFILES="playback1.0 playback1.3 playback1.8 playback1.18 playback1.9"
 rm -f ${PLAYBACK_RFILES}
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/playback1
 report "makeann playback1"
 
-ofiles=""
-for codec in 0 3 8 18 9
+for delay in 0 1
 do
-  if [ ${codec} -ne 3 ]
-  then
-    NPKTS=600
-  else
-    NPKTS=300
-  fi
-  (sleep 1; sed "s|%%CODEC%%|${codec}|" playback1.input | ${RTPPROXY} -T5 -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null) &
-  ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port 12344
-  report "tcpdump playback1.${codec}.a.rtp"
-  ofile="playback1.${codec}.wav"
-  ${EXTRACTAUDIO} playback1.${codec} ${ofile} #>/dev/null 2>/dev/null
-  report "extractaudio playback1.${codec} -> ${ofile}"
-  #sha256 ${ofile}
-  #report "sha256 ${ofile}"
-  wait
-  report "wait for rtpproxy shutdown"
-  ${DIFF} playback1.rout playback1.output
-  report "checking rtpproxy stdout"
-  ofiles="${ofiles} ${ofile}"
+  for codec in 0 3 8 18 9
+  do
+    if [ ${codec} -ne 3 ]
+    then
+      NPKTS=600
+    else
+      NPKTS=300
+    fi
+    for retry in 1 2 3
+    do
+      if [ -e playback1.${codec}.a.rtp ]
+      then
+        rm -f playback1.${codec}.a.rtp
+      fi
+      ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} 2>playback1.tout &
+      TCPD_PID=${!}
+      while [ ! -e playback1.${codec}.a.rtp ]
+      do
+        sleep 1
+      done
+      if [ ${delay} -eq 0 ]
+      then
+        sleep 1
+      fi
+      (sleep ${delay}; ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${TARGET_PORT}| ; s|%%PORT2%%|$((${TARGET_PORT} + 2))|" playback1.input) | \
+       ${RTPPROXY} -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null &
+      PLB_PID=${!}
+      ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace
+      ##echo ${TCPD_PID}
+      wait ${PLB_PID}
+      report "wait for rtpproxy shutdown, PID: ${PLB_PID}"
+      kill -TERM ${TCPD_PID} 2>/dev/null
+      KILL_RC=${?}
+      wait ${TCPD_PID}
+      TCPD_RC=${?}
+      if [ ${KILL_RC} -ne 0 -a ${TCPD_RC} -eq 0 ]
+      then
+        ok "wait for tcpdump shutdown, PID: ${TCPD_PID}"
+        break
+      fi
+      ncaptured=`grep 'packets captured' playback1.tout | awk '{print $1}'`
+      if [ ${ncaptured} -eq ${NPKTS} ]
+      then
+        ok "wait for tcpdump shutdown, PID: ${TCPD_PID}, kill rc = ${KILL_RC}, tcpdump rc = ${TCPD_RC}"
+        break
+      fi
+      cat playback1.tout
+      ndropped=`grep 'dropped by kernel' playback1.tout | awk '{print $1}'`
+      if [ ${ndropped} -ne 0 -a ${retry} -lt 3 ]
+      then
+        report "..kernel dropped some packets, re-run"
+        continue
+      fi
+      ${EXTRACTAUDIO} -n playback1.${codec} /dev/null
+      forcefail 1 "wait for tcpdump shutdown, PID: ${TCPD_PID}, kill rc: ${KILL_RC}, tcpd rc: ${TCPD_RC}"
+    done
+    cat playback1.tout
+    ofile="playback1.${codec}.wav"
+    ${EXTRACTAUDIO} -n playback1.${codec} ${ofile} | grep -v 'delta '
+    report "extractaudio playback1.${codec} -> ${ofile}"
+    #sha256 ${ofile}
+    #report "sha256 ${ofile}"
+    #wait
+    ${DIFF} playback1.rout playback1.output
+    report "checking rtpproxy stdout"
+    sha256_verify ${ofile} playback1.checksums
+  done
 done
-sha256_compute ${ofiles} | \
-  ${DIFF} - ${BASEDIR}/playback1.checksums
-report "G.711[ua], GSM, G.729a, G.722 data"

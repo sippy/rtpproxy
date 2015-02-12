@@ -7,6 +7,7 @@ AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([src/main.c])
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER([src/config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 # cross-compile macros
 AC_CANONICAL_BUILD
@@ -16,6 +17,8 @@ AC_CANONICAL_HOST
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_MKDIR_P
+AM_PROG_CC_C_O
+LT_INIT
 
 case "${host_os}" in
 freebsd*)
@@ -127,7 +130,6 @@ AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([atexit gettimeofday memset mkdir socket strchr strdup strerror])
-
 if test "x$GCC" = "xyes"; then
   ## We like to use C99 routines when available.  This makes sure that
   ## __STDC_VERSION__ is set such that libc includes make them available.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2015 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,33 +25,22 @@
  *
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#undef malloc
-#define malloc(n) rtpp_memdeb_malloc((n), __FILE__, __LINE__, __func__)
-#undef free
-#define free(p) rtpp_memdeb_free((p), __FILE__, __LINE__, __func__)
-#undef realloc
-#define realloc(p,n) rtpp_memdeb_realloc((p), (n), __FILE__, __LINE__, __func__)
-#undef strdup
-#define strdup(p) rtpp_memdeb_strdup((p), __FILE__, __LINE__, __func__)
-#undef asprintf
-#define asprintf(pp, fmt, args...) rtpp_memdeb_asprintf((pp), (fmt), __FILE__, __LINE__, __func__, ## args)
-#undef vasprintf
-#define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), __FILE__, __LINE__, __func__, (vl))
-
-void *rtpp_memdeb_malloc(size_t, const char *, int, const char *);
-void rtpp_memdeb_free(void *, const char *, int, const char *);
-void *rtpp_memdeb_realloc(void *, size_t,  const char *, int, const char *);
-char *rtpp_memdeb_strdup(const char *, const char *, int, const char *);
-int rtpp_memdeb_asprintf(char **, const char *, const char *, int, const char *, ...);
-int rtpp_memdeb_vasprintf(char **, const char *, const char *, int, const char *, va_list);
+#ifndef RTPP_MEMDEB_STDOUT
+#  define RTPP_MEMDEB_REPORT(handle, format, args...) \
+    if (handle != NULL) { \
+        rtpp_log_write(RTPP_LOG_DBUG, ((rtpp_log_t)handle), format, ## args); \
+    }
+#else
+#  define RTPP_MEMDEB_REPORT(handle, format, args...) { \
+    if (handle != NULL) { \
+        rtpp_log_write(RTPP_LOG_DBUG, ((rtpp_log_t)handle), format, ## args); \
+    }; \
+    printf((format "\n"), ## args); \
+    fflush(stdout); }
+#endif
 
 struct cfg;
 
 int rtpp_memdeb_dumpstats(struct cfg *);
 void rtpp_memdeb_setbaseln(void);
-
-#define RTPP_CHECK_LEAKS 	1
+int rtpp_memdeb_selftest(void);

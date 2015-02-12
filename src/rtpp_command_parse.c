@@ -50,8 +50,8 @@ struct cmd_props {
 };
 
 static int 
-fill_cmd_props(struct rtpp_command *cmd, struct common_cmd_args *cca,
-  struct cmd_props *cpp)
+fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
+  struct common_cmd_args *cca, struct cmd_props *cpp)
 {
 
     cpp->has_call_id = 1;
@@ -110,7 +110,11 @@ fill_cmd_props(struct rtpp_command *cmd, struct common_cmd_args *cca,
     case 'R':
         cca->op = RECORD;
         cca->rname = "record";
-        cca->hint = "R[-xxx-] call_id from_tag [to_tag]";
+        if (cf->stable->record_pcap != 0) {
+            cca->hint = "R[s] call_id from_tag [to_tag]";
+        } else {
+            cca->hint = "R call_id from_tag [to_tag]";
+        }
         cpp->max_argc = 4;
         cpp->min_argc = 3;
         cpp->has_cmods = 1;
@@ -220,7 +224,7 @@ rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd,
 {
     struct cmd_props cprops;
 
-    if (fill_cmd_props(cmd, cca, &cprops) != 0) {
+    if (fill_cmd_props(cf, cmd, cca, &cprops) != 0) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "unknown command \"%c\"",
           cmd->argv[0][0]);
         reply_error(cf, cmd, ECODE_CMDUNKN);

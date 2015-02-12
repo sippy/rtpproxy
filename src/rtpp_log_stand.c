@@ -46,9 +46,17 @@
 static int syslog_async_opened = 0;
 #endif
 
-struct rtpp_cfg_stable *
-_rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app)
+struct rtpp_log_inst {
+    char *call_id;
+    int level;
+    const char *format;
+    const char *eformat;
+};
+
+struct rtpp_log_inst *
+_rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app, const char *call_id)
 {
+    struct rtpp_log_inst *rli;
 #ifdef RTPP_LOG_ADVANCED
     int facility;
 
@@ -61,12 +69,36 @@ _rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app)
 	    syslog_async_opened = 1;
     }
 #endif
-    return cf;
+    rli = malloc(sizeof(struct rtpp_log_inst));
+    if (rli == NULL) {
+        return (NULL);
+    }
+    memset(rli, '\0', sizeof(struct rtpp_log_inst));
+    if (call_id != NULL) {
+        rli->call_id = strdup(call_id);
+    }
+    if (cf->log_level == -1) {
+	rli->level = (cf->nodaemon != 0) ? RTPP_LOG_DBUG : RTPP_LOG_WARN;
+    } else {
+        rli->level = cf->log_level;
+    }
+    if (cf->nodaemon != 0) {
+        rli->format = "%s:%s:%s: %s\n";
+        rli->eformat = "%s:%s:%s: %s: %s\n";
+    } else {
+        rli->format = "%s:%s:%s: %s";
+        rli->eformat = "%s:%s:%s: %s: %s";
+    }
+    return (rli);
 }
 
 void
-_rtpp_log_close(void)
+_rtpp_log_close(struct rtpp_log_inst *rli)
 {
+    if (rli->call_id != NULL) {
+        free(rli->call_id);
+    }
+    free(rli);
     return;
 }
 
@@ -122,43 +154,39 @@ rtpp_log_str2lvl(const char *strl)
 }
 
 static int
-check_level(struct rtpp_cfg_stable *cf, int cf_level, int level)
+check_level(struct rtpp_log_inst *rli, int level)
 {
 
-    if (cf_level == -1) {
-	cf_level = (cf->nodaemon != 0) ? RTPP_LOG_DBUG : RTPP_LOG_WARN;
-    }
-    return (level <= cf_level);
+    return (level <= rli->level);
 }
 
 void
-rtpp_log_setlevel(struct rtpp_cfg_stable *cf, int level)
+rtpp_log_setlevel(struct rtpp_log_inst *rli, int level)
 {
-/*
- * STUB
- */
+
+    rli->level = level;
 }
 
 void
-_rtpp_log_write(struct rtpp_cfg_stable *cf, int level, const char *function, const char *format, ...)
+_rtpp_log_write(struct rtpp_log_inst *rli, int level, const char *function, const char *format, ...)
 {
     va_list ap;
     char rtpp_log_buff[2048];
-    char *fmt;
+    const char *call_id;
 
-    if (check_level(cf, cf->log_level, level) == 0)
+    if (check_level(rli, level) == 0)
 	return;
+
+    if (rli->call_id != NULL) {
+        call_id = rli->call_id;
+    } else {
+        call_id = "GLOBAL";
+    }
 
     va_start(ap, format);
 
-    if (cf->nodaemon != 0) {
-	fmt = "%s:%s: %s\n";
-    } else {
-	fmt = "%s:%s: %s";
-    }
-
-    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), fmt, strlvl(level),
-      function, format);
+    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format, strlvl(level),
+      function, call_id, format);
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
 	vsyslog_async(level, rtpp_log_buff, ap);
@@ -171,26 +199,25 @@ _rtpp_log_write(struct rtpp_cfg_stable *cf, int level, const char *function, con
 }
 
 void
-_rtpp_log_ewrite(struct rtpp_cfg_stable *cf, int level, const char *function, const char *format, ...)
+_rtpp_log_ewrite(struct rtpp_log_inst *rli, int level, const char *function, const char *format, ...)
 {
     va_list ap;
     char rtpp_log_buff[2048];
-    char *fmt;
-
-    if (check_level(cf, cf->log_level, level) == 0)
+    const char *call_id;
+    
+    if (check_level(rli, level) == 0)
 	return;
+
+    if (rli->call_id != NULL) {
+        call_id = rli->call_id;
+    } else {
+        call_id = "GENERAL";
+    }
 
     va_start(ap, format);
 
-    if (cf->nodaemon != 0) {
-	fmt = "%s:%s: %s: %s\n";
-    } else {
-	fmt = "%s:%s: %s: %s";
-    }
-
-    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), fmt, strlvl(level),
-      function, format, strerror(errno));
-
+    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat, strlvl(level),
+      function, call_id, format, strerror(errno));
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
 	vsyslog_async(level, rtpp_log_buff, ap);

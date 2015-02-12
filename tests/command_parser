@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Tests a set of commands listed in the command_parser.input file
+# and runs those commands through the rtpp control channel, comparing
+# the results with the expected results contained in the
+# command_parser.output file.
+
 . $(dirname $0)/functions
 
 ${RTPPROXY} -b -f -s stdio: -m 23820 -M 23823 < $BASEDIR/command_parser.input | \

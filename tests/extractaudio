@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# checksum tests to verify that captured audio is correct.
+
 . $(dirname $0)/functions
 
 TKINDS="mono stereo"
@@ -22,12 +24,9 @@ do
     then
       rm "${wfile}"
     fi
-    ${EXTRACTAUDIO} ${EXTRACTAUDIO_ARGS} ${rfile} ${wfile}
+    ${EXTRACTAUDIO} ${EXTRACTAUDIO_ARGS} ${rfile} ${wfile} 2>/dev/null >/dev/null
     test -s ${wfile}
     report "${rfile} -> ${wfile}"
-    ofiles="${ofiles} ${wfile}"
+    sha256_verify ${wfile} extractaudio.checksums
   done
 done
-sha256_compute ${ofiles} | \
-  ${DIFF} - ${BASEDIR}/extractaudio.checksums
-report "G.711[ua], G.729a, G.722, GSM data"

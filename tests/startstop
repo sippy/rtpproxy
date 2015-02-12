@@ -1,24 +1,14 @@
 #!/bin/sh
 
+# test start up of rtpproxy and handling of SIGTERM and SIGHUP
+
 . $(dirname $0)/functions
 
 rtpproxy_start
 report "rtpproxy start"
-kill -TERM `cat ${TMP_PIDFILE}`
-sleep 1
-if [ -e ${TMP_PIDFILE} ]
-then
-  kill -KILL `cat ${TMP_PIDFILE}`
-  fail "rtpproxy stop (SIGTERM)"
-fi
+rtpproxy_stop TERM
 report "rtpproxy stop (SIGTERM)"
 rtpproxy_start
 report "rtpproxy start"
-kill -HUP `cat ${TMP_PIDFILE}`
-sleep 1
-if [ -e ${TMP_PIDFILE} ]
-then
-  kill -KILL `cat ${TMP_PIDFILE}`
-  fail "rtpproxy stop (SIGHUP)"
-fi
+rtpproxy_stop HUP
 report "rtpproxy stop (SIGHUP)"

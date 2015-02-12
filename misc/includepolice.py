@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-from os import rename, remove
 from random import random
 from subprocess import call
-import sys
+import sys, os
 
 def first_pass(fname):
     includes = []
@@ -34,6 +33,8 @@ def second_pass(fname_in, fname_out, filter):
         fout.write('#endif\n')
 
 if __name__ == '__main__':
+    make = os.environ['SMAKE']
+    make_flags = os.environ['SMAKEFLAGS'].split()
     always_ignore = ('<sys/types.h>', '"config.h"')
     fname = sys.argv[1]
     ignore = list(always_ignore)
@@ -46,12 +47,20 @@ if __name__ == '__main__':
         sys.exit(0)
     includes = [x for x in includes if x not in ignore]
     includes.sort()
+    devnull = file('/dev/null', 'w')
     print ' .collected %d "#include" statements' % len(includes)
+    print ' .doing dry run'
+    cargs = [make,]
+    cargs.extend(make_flags)
+    cargs.extend(['-DRTPP_DEBUG', 'clean', 'all'])
+    rval = call(cargs, stdout = devnull)
+    if rval != 0:
+        print '  ...dry run failed'
+        sys.exit(1)
     r = int(random() * 1000000.0)
     sfl_includes = []
-    devnull = file('/dev/null', 'w')
     fname_bak = '%s.%.6d' % (fname, r)
-    rename(fname, fname_bak)
+    os.rename(fname, fname_bak)
     print ' ..renamed "%s" into "%s"' % (fname, fname_bak)
     while True:
         sfl_includes_bak = sfl_includes[:]
@@ -61,15 +70,20 @@ if __name__ == '__main__':
             i2 = sfl_includes[:]
             i2.append(include)
             second_pass(fname_bak, fname, i2)
-            rval = call(['make', '-DRTPP_DEBUG', 'clean', 'all'], stdout = devnull, \
+            cargs = [make,]
+            cargs.extend(make_flags)
+            cargs.extend(['-DRTPP_DEBUG', 'clean', 'all'])
+            #print (cargs)
+#            rval = call(cargs)
+            rval = call(cargs, stdout = devnull, \
               stderr = devnull)
-            remove(fname)
+            os.remove(fname)
             if rval == 0:
                 sfl_includes.append(include)
                 break
         if len(sfl_includes_bak) == len(sfl_includes):
             break
-    rename(fname_bak, fname)
+    os.rename(fname_bak, fname)
     for include in sfl_includes:
         print '"#include %s" is superfluous in %s' % (include, fname)
     else:
