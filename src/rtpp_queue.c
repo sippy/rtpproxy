@@ -25,6 +25,11 @@
  *
  */
 
+#ifdef LINUX_XXX
+/* Apparently needed for vasprintf(3) */
+#define _GNU_SOURCE
+#endif
+
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
