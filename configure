@@ -12735,6 +12735,50 @@ _ACEOF
 fi
 done
 
+for ac_func in vasprintf
+do :
+  ac_fn_c_check_func "$LINENO" "vasprintf" "ac_cv_func_vasprintf"
+if test "x$ac_cv_func_vasprintf" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_VASPRINTF 1
+_ACEOF
+
+else
+
+$as_echo "#define _GNU_SOURCE /**/" >>confdefs.h
+
+fi
+done
+
+for ac_func in srand48 drand48
+do :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+else
+
+$as_echo "#define _SVID_SOURCE /**/" >>confdefs.h
+
+fi
+done
+
+for ac_func in vasprintf srand48 drand48
+do :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+else
+  as_fn_error $? "some needed function(s) not found" "$LINENO" 5
+fi
+done
 
 if test "x$GCC" = "xyes"; then
   ## We like to use C99 routines when available.  This makes sure that

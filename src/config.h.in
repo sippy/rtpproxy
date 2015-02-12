@@ -42,6 +42,9 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Define to 1 if you have the `drand48' function. */
+#undef HAVE_DRAND48
+
 /* Define to 1 if you have the <err.h> header file. */
 #undef HAVE_ERR_H
 
@@ -94,6 +97,9 @@
 /* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET
 
+/* Define to 1 if you have the `srand48' function. */
+#undef HAVE_SRAND48
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
@@ -135,6 +141,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `vasprintf' function. */
+#undef HAVE_VASPRINTF
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
@@ -179,6 +188,12 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Linux requires _GNU_SOURCE for vasprintf */
+#undef _GNU_SOURCE
+
+/* Linux requires _SVID_SOURCE for sran48/drand48 */
+#undef _SVID_SOURCE
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
