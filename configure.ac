@@ -27,7 +27,7 @@ freebsd*)
   #LIBS=
   ;;
 linux*)
-  CPPFLAGS="-D_BSD_SOURCE -D_ISOC99_SOURCE -DLINUX_XXX"
+  CPPFLAGS="-D_BSD_SOURCE -D_ISOC99_SOURCE -DLINUX_XXX -D_GNU_SOURCE -D_SVID_SOURCE"
   LIBS="-lrt"
   ;;
 solaris*)
@@ -135,11 +135,6 @@ if test "x$GCC" = "xyes"; then
   ## __STDC_VERSION__ is set such that libc includes make them available.
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
-AC_CHECK_FUNCS([vasprintf],,
-  AC_DEFINE([_GNU_SOURCE], [], [Linux requires _GNU_SOURCE for vasprintf]))
-AC_CHECK_FUNCS([srand48 drand48],,
-  AC_DEFINE([_SVID_SOURCE], [], [Linux requires _SVID_SOURCE for sran48/drand48]))
-AC_CHECK_FUNCS([vasprintf srand48 drand48],, AC_MSG_ERROR([some needed function(s) not found]))
 
 AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
 
