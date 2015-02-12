@@ -84,7 +84,7 @@ setup_fwd() {
     PORTA=$((${PORTA} + 4))
     i=$((${i}+1))
   done
-  sleep 34
+  sleep 36
   j=$((${i}-1))
   while [ ${j} -gt $((${i}/2)) ]
   do
