@@ -27,7 +27,7 @@ freebsd*)
   #LIBS=
   ;;
 linux*)
-  CPPFLAGS="-D_BSD_SOURCE -D_ISOC99_SOURCE -DLINUX_XXX -D_GNU_SOURCE"
+  CPPFLAGS="-D_BSD_SOURCE -D_ISOC99_SOURCE -DLINUX_XXX"
   LIBS="-lrt"
   ;;
 solaris*)
