@@ -135,14 +135,20 @@ ok() {
   echo >&2 "OK:" "$@"
 }
 
-report() {
-  RC=$?
-  if [ "$RC" = 0 ]
+report_rc() {
+  RC=${1}
+  shift
+  if [ ${RC} -eq 0 ]
   then
-    ok "$@"
+    ok "${@}"
   else
-    fail "$@"
+    fail "${@}"
   fi
+}
+
+report() {
+  RC=${?}
+  report_rc ${RC} "${@}"
 }
 
 reportifnotfail() {
