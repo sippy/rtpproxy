@@ -101,7 +101,7 @@ rtp_calc_samples(int codec_id, size_t nbytes, const unsigned char *data)
 	    return g723_samples(data, nbytes);
 
 	case RTP_G722:
-	    return nbytes * 2; 
+	    return nbytes;
 
 	default:
 	    return RTP_NSAMPLES_UNKNOWN;
