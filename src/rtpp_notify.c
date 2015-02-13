@@ -79,53 +79,38 @@ struct rtpp_notify_wi
 static pthread_t rtpp_notify_queue;
 static pthread_cond_t rtpp_notify_queue_cond;
 static pthread_mutex_t rtpp_notify_queue_mutex;
-static pthread_mutex_t rtpp_notify_wi_free_mutex;
 
 static int rtpp_notify_dropped_items;
 
 static struct rtpp_notify_wi *rtpp_notify_wi_free;
 static struct rtpp_notify_wi *rtpp_notify_wi_queue, *rtpp_notify_wi_queue_tail;
 
-static struct rtpp_notify_wi *rtpp_notify_queue_get_free_item(void);
+static struct rtpp_notify_wi *rtpp_notify_queue_alloc_item(void);
 static void rtpp_notify_queue_put_item(struct rtpp_notify_wi *);
 static void do_timeout_notification(struct rtpp_notify_wi *, int);
 
-struct rtpp_notify_wi *
-rtpp_notify_queue_get_free_item(void)
+static struct rtpp_notify_wi *
+rtpp_notify_queue_alloc_item(void)
 {
     struct rtpp_notify_wi *wi;
 
-    pthread_mutex_lock(&rtpp_notify_wi_free_mutex);
-    if (rtpp_notify_wi_free == NULL) {
-        /* no free work items, allocate one now */
-        wi = malloc(sizeof(*wi));
-        if (wi == NULL)
-            rtpp_notify_dropped_items++;
-        memset(wi, '\0', sizeof(*wi));
-
-        pthread_mutex_unlock(&rtpp_notify_wi_free_mutex);
-        return wi;
+    wi = malloc(sizeof(*wi));
+    if (wi == NULL) {
+        rtpp_notify_dropped_items++;
+        return NULL;
     }
-
-    wi = rtpp_notify_wi_free;
-
-    /* move up rtpp_notify_wi_free */
-    rtpp_notify_wi_free = rtpp_notify_wi_free->next;
-    pthread_mutex_unlock(&rtpp_notify_wi_free_mutex);
-
+    memset(wi, '\0', sizeof(*wi));
     return wi;
 }
 
 static void
-rtpp_notify_queue_return_free_item(struct rtpp_notify_wi *wi)
+rtpp_notify_queue_free_item(struct rtpp_notify_wi *wi)
 {
 
-    pthread_mutex_lock(&rtpp_notify_wi_free_mutex);
-
-    wi->next = rtpp_notify_wi_free;
-    rtpp_notify_wi_free = wi;
-
-    pthread_mutex_unlock(&rtpp_notify_wi_free_mutex);
+    if (wi->notify_buf != NULL) {
+        free(wi->notify_buf);
+    }
+    free(wi);
 }
 
 static void
@@ -166,8 +151,8 @@ rtpp_notify_queue_run(void)
         /* main work here */
         do_timeout_notification(wi, 1);
 
-        /* put wi into rtpp_notify_wi_free' tail */
-        rtpp_notify_queue_return_free_item(wi);
+        /* deallocate wi */
+        rtpp_notify_queue_free_item(wi);
     }
 }
 
@@ -277,7 +262,6 @@ rtpp_notify_init(void)
 
     pthread_cond_init(&rtpp_notify_queue_cond, NULL);
     pthread_mutex_init(&rtpp_notify_queue_mutex, NULL);
-    pthread_mutex_init(&rtpp_notify_wi_free_mutex, NULL);
 
     if (pthread_create(&rtpp_notify_queue, NULL, (void *(*)(void *))&rtpp_notify_queue_run, NULL) != 0) {
         return (-1);
@@ -299,7 +283,7 @@ rtpp_notify_schedule(struct cfg *cf, struct rtpp_session *sp)
         return 0;
     }
 
-    wi = rtpp_notify_queue_get_free_item();
+    wi = rtpp_notify_queue_alloc_item();
     if (wi == NULL)
         return -1;
 
@@ -314,13 +298,13 @@ rtpp_notify_schedule(struct cfg *cf, struct rtpp_session *sp)
     if (wi->notify_buf == NULL) {
         wi->notify_buf = malloc(len);
         if (wi->notify_buf == NULL) {
-            rtpp_notify_queue_return_free_item(wi);
+            rtpp_notify_queue_free_item(wi);
             return -1;
         }
     } else {
         notify_buf = realloc(wi->notify_buf, len);
         if (notify_buf == NULL) {
-            rtpp_notify_queue_return_free_item(wi);
+            rtpp_notify_queue_free_item(wi);
             return -1;
         }
         wi->notify_buf = notify_buf;
