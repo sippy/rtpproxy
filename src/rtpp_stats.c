@@ -58,6 +58,7 @@ static struct
 } default_stats[RTPP_NSTATS] = {
     {.name = "nsess_created",     .descr = "Number of RTP sessions created", .type = RTPP_CNT_U64},
     {.name = "nsess_destroyed",   .descr = "Number of RTP sessions destroyed", .type = RTPP_CNT_U64},
+    {.name = "nsess_timeout",     .descr = "Number of RTP sessions ended due to media timeout", .type = RTPP_CNT_U64},
     {.name = "nsess_complete",    .descr = "Number of RTP sessions fully setup", .type = RTPP_CNT_U64},
     {.name = "nsess_nortp",       .descr = "Number of sessions that had no RTP neither in nor out", .type = RTPP_CNT_U64},
     {.name = "nsess_owrtp",       .descr = "Number of sessions that had one-way RTP only", .type = RTPP_CNT_U64},

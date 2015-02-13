@@ -411,6 +411,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
 		rtpp_notify_schedule(cf, sp);
 		remove_session(cf, sp);
+		CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_timeout", 1);
 	    } else {
 		if (sp->ttl[0] != 0)
 		    sp->ttl[0]--;
