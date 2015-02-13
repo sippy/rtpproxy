@@ -25,7 +25,6 @@ make
 sudo make install
 cd ../..
 sudo ldconfig
-libtoolize
 autoreconf --force --install --verbose
 ./configure
 make
