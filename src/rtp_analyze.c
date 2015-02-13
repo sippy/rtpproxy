@@ -70,8 +70,10 @@ update_rtpp_stats(struct rtpp_session_stat *stat, rtp_hdr_t *header,
         printf("ssrc_changes=%u, psent=%u, precvd=%u\n", stat->ssrc_changes, stat->psent, stat->precvd);
         return;
     }
-    if (ABS(rtime - stat->last.base_rtime - rtp_ts2dtime(rinfo->ts - stat->last.base_ts)) > 0.1)
-        printf("delta rtime=%f,  delta ts=%f\n", rtime - stat->last.base_rtime, rtp_ts2dtime(rinfo->ts - stat->last.base_ts));
+    if (ABS(rtime - stat->last.base_rtime - rtp_ts2dtime(rinfo->ts - stat->last.base_ts)) > 0.1) {
+        printf("seq %d: delta rtime=%f, delta ts=%f\n", header->seq, rtime - stat->last.base_rtime,
+          rtp_ts2dtime(rinfo->ts - stat->last.base_ts));
+    }
     seq += stat->last.seq_offset;
     if (stat->last.max_seq % 65536 < 536 && rinfo->seq > 65000) {
         /* Pre-wrap packet received after a wrap */
