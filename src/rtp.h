@@ -47,10 +47,14 @@ typedef enum {
 
 #define RTP_NSAMPLES_UNKNOWN  (-1)
 
+#if !defined(BYTE_ORDER)
+# error "BYTE_ORDER needs to be defined"
+#endif
+
 /*
  * RTP data header
  */
-typedef struct {
+struct rtp_hdr {
 #if BYTE_ORDER == BIG_ENDIAN
     unsigned int version:2;	/* protocol version */
     unsigned int p:1;		/* padding flag */
@@ -70,13 +74,17 @@ typedef struct {
     uint32_t ts;		/* timestamp */
     uint32_t ssrc;		/* synchronization source */
     uint32_t csrc[0];		/* optional CSRC list */
-} rtp_hdr_t;
+} __attribute__((__packed__));
 
-typedef struct {
+struct rtp_hdr_ext {
     uint16_t profile;		/* defined by profile */
     uint16_t length;		/* length of the following array in 32-byte words */
     uint32_t extension[0];	/* actual extension data */
-} rtp_hdr_ext_t;
+} __attribute__((__packed__));
+
+typedef struct rtp_hdr rtp_hdr_t;
+
+typedef struct rtp_hdr_ext rtp_hdr_ext_t;
 
 struct rtp_packet {
     size_t      size;
