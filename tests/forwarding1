@@ -23,6 +23,7 @@
 . $(dirname $0)/functions
 
 TEST_CODECS="0 3 8 18 9"
+#TEST_CODECS="9 9 9 9 9"
 FWD_SPORT=13342
 GENO_SPORT=12000
 GENA_SPORT=15000
@@ -166,6 +167,6 @@ DIFF_GENA_RC=${?}
 verify_results "o" "${CODECSA}" "${REPACK_CODECSA}"
 verify_results "a" "${CODECSO}" "${REPACK_CODECSO}"
 
-#report_rc ${DIFF_FWD_RC} "checking rtpproxy.fwd stdout"
-#report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
-#report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
+report_rc ${DIFF_FWD_RC} "checking rtpproxy.fwd stdout"
+report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
+report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
