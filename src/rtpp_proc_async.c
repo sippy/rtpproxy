@@ -83,7 +83,8 @@ flush_rstats(struct rtpp_stats_obj *sobj, struct rtpp_proc_rstats *rsp)
     FLUSH_STAT(sobj, rsp->npkts_rcvd);
     FLUSH_STAT(sobj, rsp->npkts_played);
     FLUSH_STAT(sobj, rsp->npkts_relayed);
-    FLUSH_STAT(sobj, rsp->npkts_resized);
+    FLUSH_STAT(sobj, rsp->npkts_resized_in);
+    FLUSH_STAT(sobj, rsp->npkts_resized_out);
     FLUSH_STAT(sobj, rsp->npkts_discard);
 }
 
@@ -94,7 +95,8 @@ init_rstats(struct rtpp_stats_obj *sobj, struct rtpp_proc_rstats *rsp)
     rsp->npkts_rcvd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_rcvd");
     rsp->npkts_played.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_played");
     rsp->npkts_relayed.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_relayed");
-    rsp->npkts_resized.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_resized");
+    rsp->npkts_resized_in.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_resized_in");
+    rsp->npkts_resized_out.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_resized_out");
     rsp->npkts_discard.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_discard");
 }
 

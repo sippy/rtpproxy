@@ -37,7 +37,8 @@ struct rtpp_proc_rstats {
     struct rtpp_proc_stat npkts_rcvd;
     struct rtpp_proc_stat npkts_played;
     struct rtpp_proc_stat npkts_relayed;
-    struct rtpp_proc_stat npkts_resized;
+    struct rtpp_proc_stat npkts_resized_in;
+    struct rtpp_proc_stat npkts_resized_out;
     struct rtpp_proc_stat npkts_discard;
 };
 
