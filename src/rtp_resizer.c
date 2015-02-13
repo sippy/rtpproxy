@@ -25,11 +25,18 @@
  *
  */
 
-#include <machine/endian.h>
+#include "config.h"
+
+#if defined(HAVE_SYS_ENDIAN_H)
+#include <sys/endian.h>
+#endif
+#include <sys/socket.h>
+#if defined(HAVE_ENDIAN_H)
+#include <endian.h>
+#endif
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <stdint.h>
 
 #include "rtp.h"
