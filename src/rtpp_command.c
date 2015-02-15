@@ -639,8 +639,9 @@ handle_record(struct cfg *cf, struct common_cmd_args *ccap,
 	} else {
 	    continue;
 	}
-	nrecorded++;
-	handle_copy(cf, spa, idx, NULL, record_single_file);
+	if (handle_copy(cf, spa, idx, NULL, record_single_file) == 0) {
+            nrecorded++;
+        }
     }
     return (nrecorded == 0 ? -1 : 0);
 }
