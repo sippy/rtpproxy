@@ -33,11 +33,10 @@ struct ul_opts;
 struct ul_reply;
 
 struct ul_opts *rtpp_command_ul_opts_parse(struct cfg *cf,
-  struct rtpp_command *cmd, struct common_cmd_args *ccap);
+  struct rtpp_command *cmd);
 void rtpp_command_ul_opts_free(struct ul_opts *ulop);
 int rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
-  struct common_cmd_args *ccap, struct ul_opts *ulop,
-  struct rtpp_session *sp, int sidx);
+  struct ul_opts *ulop, struct rtpp_session *sp, int sidx);
 void ul_reply_port(struct cfg *cf, struct rtpp_command *cmd,
   struct ul_reply *ulr);
 

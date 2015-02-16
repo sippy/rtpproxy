@@ -51,7 +51,7 @@ struct cmd_props {
 
 static int 
 fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
-  struct common_cmd_args *cca, struct cmd_props *cpp)
+  struct cmd_props *cpp)
 {
 
     cpp->has_call_id = 1;
@@ -60,9 +60,9 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
     switch (cmd->argv[0][0]) {
     case 'u':
     case 'U':
-        cca->op = UPDATE;
-        cca->rname = "update/create";
-        cca->hint = "U[opts] callid remote_ip remote_port from_tag [to_tag] [notify_socket notify_tag]";
+        cmd->cca.op = UPDATE;
+        cmd->cca.rname = "update/create";
+        cmd->cca.hint = "U[opts] callid remote_ip remote_port from_tag [to_tag] [notify_socket notify_tag]";
         cpp->max_argc = 8;
         cpp->min_argc = 5;
         cpp->has_cmods = 1;
@@ -72,9 +72,9 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'l':
     case 'L':
-        cca->op = LOOKUP;
-        cca->rname = "lookup";
-        cca->hint = "L[opts] callid remote_ip remote_port from_tag [to_tag]";
+        cmd->cca.op = LOOKUP;
+        cmd->cca.rname = "lookup";
+        cmd->cca.hint = "L[opts] callid remote_ip remote_port from_tag [to_tag]";
         cpp->max_argc = 6;
         cpp->min_argc = 5;
         cpp->has_cmods = 1;
@@ -84,9 +84,9 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'd':
     case 'D':
-        cca->op = DELETE;
-        cca->rname = "delete";
-        cca->hint = "D[w] callid from_tag [to_tag]";
+        cmd->cca.op = DELETE;
+        cmd->cca.rname = "delete";
+        cmd->cca.hint = "D[w] callid from_tag [to_tag]";
         cpp->max_argc = 4;
         cpp->min_argc = 3;
         cpp->has_cmods = 1;
@@ -96,9 +96,9 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'p':
     case 'P':
-        cca->op = PLAY;
-        cca->rname = "play";
-        cca->hint = "P[n] callid pname codecs from_tag [to_tag]";
+        cmd->cca.op = PLAY;
+        cmd->cca.rname = "play";
+        cmd->cca.hint = "P[n] callid pname codecs from_tag [to_tag]";
         cpp->max_argc = 6;
         cpp->min_argc = 5;
         cpp->has_cmods = 1;
@@ -108,12 +108,12 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'r':
     case 'R':
-        cca->op = RECORD;
-        cca->rname = "record";
+        cmd->cca.op = RECORD;
+        cmd->cca.rname = "record";
         if (cf->stable->record_pcap != 0) {
-            cca->hint = "R[s] call_id from_tag [to_tag]";
+            cmd->cca.hint = "R[s] call_id from_tag [to_tag]";
         } else {
-            cca->hint = "R call_id from_tag [to_tag]";
+            cmd->cca.hint = "R call_id from_tag [to_tag]";
         }
         cpp->max_argc = 4;
         cpp->min_argc = 3;
@@ -124,9 +124,9 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'c':
     case 'C':
-        cca->op = COPY;
-        cca->rname = "copy";
-        cca->hint = "C[-xxx-] call_id -XXX- from_tag [to_tag]";
+        cmd->cca.op = COPY;
+        cmd->cca.rname = "copy";
+        cmd->cca.hint = "C[-xxx-] call_id -XXX- from_tag [to_tag]";
         cpp->max_argc = 5;
         cpp->min_argc = 4;
         cpp->has_cmods = 1;
@@ -136,9 +136,9 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 's':
     case 'S':
-        cca->op = NOPLAY;
-        cca->rname = "noplay";
-        cca->hint = "S call_id from_tag [to_tag]";
+        cmd->cca.op = NOPLAY;
+        cmd->cca.rname = "noplay";
+        cmd->cca.hint = "S call_id from_tag [to_tag]";
         cpp->max_argc = 4;
         cpp->min_argc = 3;
         cpp->has_cmods = 0;
@@ -149,18 +149,20 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
     case 'v':
     case 'V':
         if (cmd->argv[0][1] == 'F' || cmd->argv[0][1] == 'f') {
-            cca->op = VER_FEATURE;
-            cca->rname = "feature_check";
-            cca->hint = "VF feature_num";
+            cmd->cca.op = VER_FEATURE;
+            cmd->cca.rname = "feature_check";
+            cmd->cca.hint = "VF feature_num";
+            cmd->no_glock = 1;
             cpp->max_argc = 2;
             cpp->min_argc = 2;
             cpp->has_cmods = 1;
             cpp->has_call_id = 0;
             break;
         }
-        cca->op = GET_VER;
-        cca->rname = "get_version";
-        cca->hint = "V";
+        cmd->cca.op = GET_VER;
+        cmd->cca.rname = "get_version";
+        cmd->cca.hint = "V";
+        cmd->no_glock = 1;
         cpp->max_argc = 1;
         cpp->min_argc = 1;
         cpp->has_cmods = 0;
@@ -169,9 +171,9 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'i':
     case 'I':
-        cca->op = INFO;
-        cca->rname = "get_info";
-        cca->hint = "I[b]";
+        cmd->cca.op = INFO;
+        cmd->cca.rname = "get_info";
+        cmd->cca.hint = "I[b]";
         cpp->max_argc = 1;
         cpp->min_argc = 1;
         cpp->has_cmods = 1;
@@ -180,9 +182,9 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'q':
     case 'Q':
-        cca->op = QUERY;
-        cca->rname = "query";
-        cca->hint = "Q call_id from_tag [to_tag]";
+        cmd->cca.op = QUERY;
+        cmd->cca.rname = "query";
+        cmd->cca.hint = "Q call_id from_tag [to_tag]";
         cpp->max_argc = 4;
         cpp->min_argc = 3;
         cpp->has_cmods = 0;
@@ -192,9 +194,9 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'x':
     case 'X':
-        cca->op = DELETE_ALL;
-        cca->rname = "delete_all";
-        cca->hint = "X";
+        cmd->cca.op = DELETE_ALL;
+        cmd->cca.rname = "delete_all";
+        cmd->cca.hint = "X";
         cpp->max_argc = 1;
         cpp->min_argc = 1;
         cpp->has_cmods = 0;
@@ -203,9 +205,10 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'g':
     case 'G':
-        cca->op = GET_STATS;
-        cca->rname = "get_stats";
-        cca->hint = "G [stat_name1 [stat_name2 [stat_name3 ...[stat_nameN]]]]";
+        cmd->cca.op = GET_STATS;
+        cmd->cca.rname = "get_stats";
+        cmd->cca.hint = "G [stat_name1 [stat_name2 [stat_name3 ...[stat_nameN]]]]";
+        cmd->no_glock = 1;
         cpp->max_argc = RTPP_NSTATS + 1;
         cpp->min_argc = 1;
         cpp->has_cmods = 0;
@@ -219,12 +222,11 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 }
 
 int
-rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd,
-  struct common_cmd_args *cca)
+rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd)
 {
     struct cmd_props cprops;
 
-    if (fill_cmd_props(cf, cmd, cca, &cprops) != 0) {
+    if (fill_cmd_props(cf, cmd, &cprops) != 0) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "unknown command \"%c\"",
           cmd->argv[0][0]);
         reply_error(cf, cmd, ECODE_CMDUNKN);
@@ -232,18 +234,18 @@ rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd,
     }
     if (cmd->argc < cprops.min_argc || cmd->argc > cprops.max_argc) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "%s command syntax error"
-          ": invalid number of arguments (%d)", cca->rname, cmd->argc);
+          ": invalid number of arguments (%d)", cmd->cca.rname, cmd->argc);
         reply_error(cf, cmd, ECODE_PARSE_NARGS);
         return (-1);
     }
     if (cprops.has_cmods == 0 && cmd->argv[0][1] != '\0') {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "%s command syntax error"
-          ": modifiers are not supported by the command", cca->rname);
+          ": modifiers are not supported by the command", cmd->cca.rname);
         reply_error(cf, cmd, ECODE_PARSE_MODS);
         return (-1);
     }
-    cca->call_id = cprops.has_call_id ? cmd->argv[1] : NULL;
-    cca->from_tag = cprops.fpos > 0 ? cmd->argv[cprops.fpos] : NULL;
-    cca->to_tag = cprops.tpos > 0 ? cmd->argv[cprops.tpos] : NULL;
+    cmd->cca.call_id = cprops.has_call_id ? cmd->argv[1] : NULL;
+    cmd->cca.from_tag = cprops.fpos > 0 ? cmd->argv[cprops.fpos] : NULL;
+    cmd->cca.to_tag = cprops.tpos > 0 ? cmd->argv[cprops.tpos] : NULL;
     return (0);
 }

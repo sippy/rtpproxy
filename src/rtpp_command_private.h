@@ -49,6 +49,18 @@ struct rtpp_command_stats {
 
 #define RTPC_MAX_ARGC   20
 
+enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
+  QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS};
+
+struct common_cmd_args {
+    enum rtpp_cmd_op op;
+    const char *rname;
+    const char *hint;
+    char *call_id;
+    char *from_tag;
+    char *to_tag;
+};
+
 struct rtpp_command
 {
     char buf[1024 * 8];
@@ -63,18 +75,8 @@ struct rtpp_command
     double dtime;
     struct rtpp_command_stats *csp;
     int umode;
-};
-
-enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
-  QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS};
-
-struct common_cmd_args {
-    enum rtpp_cmd_op op;
-    const char *rname;
-    const char *hint;
-    char *call_id;
-    char *from_tag;
-    char *to_tag;
+    struct common_cmd_args cca;
+    int no_glock;
 };
 
 #define ECODE_CMDUNKN      0

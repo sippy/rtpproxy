@@ -147,16 +147,28 @@ process_commands(struct cfg *cf, int controlfd, double dtime,
     int i, rval;
     struct rtpp_command *cmd;
 
+    i = 0;
     do {
         cmd = get_command(cf, controlfd, &rval, dtime, csp, umode);
+        if (cmd == NULL && rval == 0) {
+            /*
+             * get_command() failed with error other than I/O error
+             * or something, there might be some good commands in
+             * the queue.
+             */
+            continue;
+        }
         if (cmd != NULL) {
-            csp->ncmds_rcvd.cnt++;
-            if (cmd->argv[0][0] == 'g' || cmd->argv[0][0] == 'G') {
+            if (cmd->cca.op == GET_STATS) {
                 flush_cstats(rsc, csp);
             }
-            pthread_mutex_lock(&cf->glock);
+            if (cmd->no_glock == 0) {
+                pthread_mutex_lock(&cf->glock);
+            }
             i = handle_command(cf, cmd);
-            pthread_mutex_unlock(&cf->glock);
+            if (cmd->no_glock == 0) {
+                pthread_mutex_unlock(&cf->glock);
+            }
             free_command(cmd);
         } else {
             i = -1;
@@ -178,18 +190,23 @@ process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
     }
     do {
         cmd = rtpp_command_stream_get(cf, rcc, &rval, dtime, csp);
-        if (cmd != NULL) {
-            csp->ncmds_rcvd.cnt++;
-            if (cmd->argv[0][0] == 'g' || cmd->argv[0][0] == 'G') {
-                flush_cstats(rsc, csp);
+        if (cmd == NULL) {
+            if (rval != 0) {
+                break;
             }
-            pthread_mutex_lock(&cf->glock);
-            rval = handle_command(cf, cmd);
-            pthread_mutex_unlock(&cf->glock);
-            free_command(cmd);
-        } else {
-            break;
+            continue;
         }
+        if (cmd->cca.op == GET_STATS) {
+            flush_cstats(rsc, csp);
+        }
+        if (cmd->no_glock == 0) {
+            pthread_mutex_lock(&cf->glock);
+        }
+        rval = handle_command(cf, cmd);
+        if (cmd->no_glock == 0) {
+            pthread_mutex_unlock(&cf->glock);
+        }
+        free_command(cmd);
     } while (rval == 0);
     return (rval);
 }

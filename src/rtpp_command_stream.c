@@ -38,6 +38,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_parse.h"
 #include "rtpp_command_stream.h"
 #include "rtpp_util.h"
 
@@ -124,6 +125,7 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     rcs->inbuf_ppos += len + 1;
 
     rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "received command \"%s\"", cmd->buf);
+    csp->ncmds_rcvd.cnt++;
 
     cp = cmd->buf;
     for (ap = cmd->argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
@@ -133,10 +135,19 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
                 break;
         }
     }
+
     if (cmd->argc < 1) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
         reply_error(cf, cmd, ECODE_PARSE_1);
         *rval = EINVAL;
+        free(cmd);
+        return (NULL);
+    }
+
+    /* Step I: parse parameters that are common to all ops */
+    if (rtpp_command_pre_parse(cf, cmd) != 0) {
+        /* Error reply is handled by the rtpp_command_pre_parse() */
+        *rval = 0;
         free(cmd);
         return (NULL);
     }

@@ -33,7 +33,6 @@ struct rtpp_command;
 struct cfg;
 struct common_cmd_args;
 
-int rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd,
-  struct common_cmd_args *cca);
+int rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd);
 
 #endif

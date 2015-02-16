@@ -85,7 +85,7 @@ struct proto_cap proto_caps[] = {
 struct d_opts;
 
 static int create_twinlistener(struct rtpp_cfg_stable *, struct sockaddr *, int, int *);
-static int handle_delete(struct cfg *,  struct common_cmd_args *, int);
+static int handle_delete(struct cfg *, struct common_cmd_args *, int);
 static void handle_noplay(struct cfg *, struct rtpp_session *, int, struct rtpp_command *);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int,
   struct rtpp_command *);
@@ -267,6 +267,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     cmd->buf[len] = '\0';
 
     rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "received command \"%s\"", cmd->buf);
+    csp->ncmds_rcvd.cnt++;
 
     cp = cmd->buf;
     for (ap = cmd->argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
@@ -293,6 +294,14 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
         cmd->argv[cmd->argc] = NULL;
     }
 
+    /* Step I: parse parameters that are common to all ops */
+    if (rtpp_command_pre_parse(cf, cmd) != 0) {
+        /* Error reply is handled by the rtpp_command_pre_parse() */
+        *rval = 0;
+        free(cmd);
+        return (NULL);
+    }
+
     return (cmd);
 }
 
@@ -309,23 +318,15 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     char *pname, *codecs, *recording_name;
     struct rtpp_session *spa;
     int record_single_file;
-    struct common_cmd_args cca;
     struct ul_opts *ulop;
     struct d_opts dopt;
 
     spa = NULL;
     recording_name = NULL;
     codecs = NULL;
-    memset(&cca, '\0', sizeof(cca));
-
-    /* Step I: parse parameters that are common to all ops */
-    if (rtpp_command_pre_parse(cf, cmd, &cca) != 0) {
-        /* Error reply is handled by the rtpp_command_pre_parse() */
-        return 0;
-    }
 
     /* Step II: parse parameters that are specific to a particular op and run simple ops */
-    switch (cca.op) {
+    switch (cmd->cca.op) {
     case VER_FEATURE:
         handle_ver_feature(cf, cmd);
         return 0;
@@ -410,7 +411,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case UPDATE:
     case LOOKUP:
-        ulop = rtpp_command_ul_opts_parse(cf, cmd, &cca);
+        ulop = rtpp_command_ul_opts_parse(cf, cmd);
         if (ulop == NULL) {
             return 0;
         }
@@ -430,27 +431,27 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
      * Record and delete need special handling since they apply to all
      * streams in the session.
      */
-    switch (cca.op) {
+    switch (cmd->cca.op) {
     case DELETE:
-	i = handle_delete(cf, &cca, dopt.weak);
+	i = handle_delete(cf, &cmd->cca, dopt.weak);
 	break;
 
     case RECORD:
-	i = handle_record(cf, &cca, record_single_file);
+	i = handle_record(cf, &cmd->cca, record_single_file);
 	break;
 
     default:
-	i = find_stream(cf, cca.call_id, cca.from_tag, cca.to_tag, &spa);
-	if (i != -1 && cca.op != UPDATE)
+	i = find_stream(cf, cmd->cca.call_id, cmd->cca.from_tag, cmd->cca.to_tag, &spa);
+	if (i != -1 && cmd->cca.op != UPDATE)
 	    i = NOT(i);
 	break;
     }
 
-    if (i == -1 && cca.op != UPDATE) {
+    if (i == -1 && cmd->cca.op != UPDATE) {
 	rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog,
-	  "%s request failed: session %s, tags %s/%s not found", cca.rname,
-	  cca.call_id, cca.from_tag, cca.to_tag != NULL ? cca.to_tag : "NONE");
-	if (cca.op == LOOKUP) {
+	  "%s request failed: session %s, tags %s/%s not found", cmd->cca.rname,
+	  cmd->cca.call_id, cmd->cca.from_tag, cmd->cca.to_tag != NULL ? cmd->cca.to_tag : "NONE");
+	if (cmd->cca.op == LOOKUP) {
             rtpp_command_ul_opts_free(ulop);
 	    ul_reply_port(cf, cmd, NULL);
 	    return 0;
@@ -459,7 +460,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	return 0;
     }
 
-    switch (cca.op) {
+    switch (cmd->cca.op) {
     case DELETE:
     case RECORD:
 	reply_ok(cf, cmd);
@@ -500,7 +501,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case LOOKUP:
     case UPDATE:
-        rtpp_command_ul_handle(cf, cmd, &cca, ulop, spa, i);
+        rtpp_command_ul_handle(cf, cmd, ulop, spa, i);
 	break;
 
     default:

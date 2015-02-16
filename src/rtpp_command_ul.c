@@ -125,8 +125,7 @@ rtpp_command_ul_opts_free(struct ul_opts *ulop)
 }
 
 struct ul_opts *
-rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd,
-  struct common_cmd_args *ccap)
+rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
 {
     int len, tpf, n, i;
     char c;
@@ -142,14 +141,14 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd,
     }
     memset(ulop, '\0', sizeof(struct ul_opts));
     ul_opts_init(cf, ulop);
-    if (ccap->op == UPDATE && cmd->argc > 6) {
+    if (cmd->cca.op == UPDATE && cmd->argc > 6) {
         if (cmd->argc == 8) {
             ulop->socket_name_u = cmd->argv[6];
             ulop->notify_tag = cmd->argv[7];
         } else {
             ulop->socket_name_u = cmd->argv[5];
             ulop->notify_tag = cmd->argv[6];
-            ccap->to_tag = NULL;
+            cmd->cca.to_tag = NULL;
         }
         if (strncmp("unix:", ulop->socket_name_u, 5) == 0)
             ulop->socket_name_u += 5;
@@ -366,8 +365,7 @@ handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
 
 int
 rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
-  struct common_cmd_args *ccap, struct ul_opts *ulop,
-  struct rtpp_session *sp, int sidx)
+  struct ul_opts *ulop, struct rtpp_session *sp, int sidx)
 {
     int pidx, lport, i;
     int fds[2];
@@ -379,7 +377,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     spa = spb = NULL;
     fds[0] = fds[1] = -1;
     if (sidx != -1) {
-        assert(ccap->op == UPDATE || ccap->op == LOOKUP);
+        assert(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = sp;
         if (spa->fds[sidx] == -1) {
             if (ulop->local_addr != NULL) {
@@ -404,13 +402,13 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         }
         if (ulop->weak)
             spa->weak[sidx] = 1;
-        else if (ccap->op == UPDATE)
+        else if (cmd->cca.op == UPDATE)
             spa->strong = 1;
         lport = spa->ports[sidx];
         ulop->lia[0] = spa->laddr[sidx];
         pidx = (sidx == 0) ? 1 : 0;
         spa->ttl_mode = cf->stable->ttl_mode;
-        if (ccap->op == UPDATE) {
+        if (cmd->cca.op == UPDATE) {
             spa->ttl[0] = cf->stable->max_setup_ttl;
             spa->ttl[1] = cf->stable->max_setup_ttl;
             rtpp_log_write(RTPP_LOG_INFO, spa->log,
@@ -425,10 +423,10 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
           "lookup on ports %d/%d, session timer restarted", spa->ports[0],
           spa->ports[1]);
     } else {
-        assert(ccap->op == UPDATE);
+        assert(cmd->cca.op == UPDATE);
         rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog,
           "new session %s, tag %s requested, type %s",
-          ccap->call_id, ccap->from_tag, ulop->weak ? "weak" : "strong");
+          cmd->cca.call_id, cmd->cca.from_tag, ulop->weak ? "weak" : "strong");
         if (cf->stable->slowshutdown != 0) {
             rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog,
               "proxy is in the deorbiting-burn mode, new session rejected");
@@ -470,15 +468,15 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             spa->last_update[i] = 0;
             spb->last_update[i] = 0;
         }
-        spa->call_id = strdup(ccap->call_id);
+        spa->call_id = strdup(cmd->cca.call_id);
         if (spa->call_id == NULL) {
             handle_nomem(cf, cmd, ECODE_NOMEM_6, ulop,
               fds, spa, spb);
             return (-1);
         }
         spb->call_id = spa->call_id;
-        spa->tag = strdup(ccap->from_tag);
-        spa->tag_nomedianum = strdup(ccap->from_tag);
+        spa->tag = strdup(cmd->cca.from_tag);
+        spa->tag_nomedianum = strdup(cmd->cca.from_tag);
         if (spa->tag == NULL) {
             handle_nomem(cf, cmd, ECODE_NOMEM_7, ulop,
               fds, spa, spb);
@@ -549,14 +547,14 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         }
 
         rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
-          "tag %s", lport, ccap->from_tag);
+          "tag %s", lport, cmd->cca.from_tag);
         if (cf->stable->record_all != 0) {
             handle_copy(cf, spa, 0, NULL, 0);
             handle_copy(cf, spa, 1, NULL, 0);
         }
     }
 
-    if (ccap->op == UPDATE) {
+    if (cmd->cca.op == UPDATE) {
         if (rtpp_th_get_sn(cf->timeout_handler) == NULL && ulop->socket_name_u != NULL)
             rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
         if (spa->timeout_data.notify_tag != NULL) {
