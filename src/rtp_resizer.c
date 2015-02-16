@@ -64,7 +64,7 @@ struct rtp_resizer {
 };
 
 static int
-max_nsamples(int codec_id)
+min_nsamples(int codec_id)
 {
 
     switch (codec_id)
@@ -72,7 +72,7 @@ max_nsamples(int codec_id)
     case RTP_GSM:
         return 160; /* 20ms */
     default:
-        return 0; /* infinite */
+        return 80; /* 10ms */
     }
 }
 
@@ -267,7 +267,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
     int         split = 0;
     int         nsamples_left;
     int         output_nsamples;
-    int         max;
+    int         min;
     struct      rtp_packet_chunk chunk;
 
     if (this->queue.first == NULL)
@@ -283,9 +283,12 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
     }
 
     output_nsamples = this->output_nsamples;
-    max = max_nsamples(this->queue.first->data.header.pt);
-    if (max > 0 && output_nsamples > max)
-        output_nsamples = max;
+    min = min_nsamples(this->queue.first->data.header.pt);
+    if (output_nsamples < min) {
+        output_nsamples = min;
+    } else if (output_nsamples % min != 0) {
+        output_nsamples += (min - (output_nsamples % min));
+    }
 
     /* Aggregate the output packet */
     while ((ret == NULL || ret->parsed->nsamples < output_nsamples) && this->queue.first != NULL)
