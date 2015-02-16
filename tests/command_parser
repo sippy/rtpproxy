@@ -7,6 +7,15 @@
 
 . $(dirname $0)/functions
 
-${RTPPROXY} -b -f -s stdio: -m 23820 -M 23823 < $BASEDIR/command_parser.input | \
-  ${DIFF} - ${BASEDIR}/command_parser.output
+run_command_parser() {
+  for extra_opts in "${@}"
+  do
+    ${RTPPROXY} -b -f -s stdio: -m 23820 -M 23823 ${extra_opts} < $BASEDIR/command_parser.input || return 1
+  done
+}
+
+RECORD_DIR="${BUILDDIR}"
+run_command_parser "" "-P" "-r ${RECORD_DIR}" "-P -r ${RECORD_DIR}" > command_parser.rout
+report "wait for the rtproxy shutdown"
+${DIFF} command_parser.rout ${BASEDIR}/command_parser.output
 report "command_parser"
