@@ -15,6 +15,12 @@ report "makeann playback1"
 
 for delay in 0 1
 do
+  if [ ${delay} -eq 0 ]
+  then
+    PIFILE="playback1.type1.input"
+  else
+    PIFILE="playback1.type2.input"
+  fi
   for codec in 0 3 8 18 9
   do
     if [ ${codec} -ne 3 ]
@@ -39,8 +45,8 @@ do
       then
         sleep 1
       fi
-      (sleep ${delay}; ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${TARGET_PORT}| ; s|%%PORT2%%|$((${TARGET_PORT} + 2))|" playback1.input) | \
-       ${RTPPROXY} -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>/dev/null &
+      (sleep ${delay}; ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${TARGET_PORT}| ; s|%%PORT2%%|$((${TARGET_PORT} + 2))|" "${PIFILE}") | \
+       ${RTPPROXY} -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout &
       PLB_PID=${!}
       ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace
       ##echo ${TCPD_PID}

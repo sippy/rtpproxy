@@ -451,7 +451,9 @@ extractaudio_CLEANFILES = call1_alaw.mono.wav call1_alaw.stereo.wav \
   call1_g729.stereo.wav call1_ulaw.mono.wav call1_ulaw.stereo.wav \
   call1_gsm.mono.wav call1_gsm.stereo.wav
 
-playback1_EXTRA_DIST = playback1 playback1.input playback1.output playback1.checksums
+playback1_EXTRA_DIST = playback1 playback1.output playback1.checksums \
+  playback1.type1.input playback1.type2.input
+
 playback1_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
   playback1.8.a.rtp playback1.9.a.rtp playback1.0 playback1.18 playback1.3 \
   playback1.8 playback1.9 playback1.rout playback1.0.wav playback1.18.wav \
