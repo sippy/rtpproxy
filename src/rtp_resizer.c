@@ -56,6 +56,7 @@ struct rtp_resizer {
     uint32_t    tsdelta;
 
     int         output_nsamples;
+    int         max_buf_nsamples;
 
     struct {
         struct rtp_packet *first;
@@ -85,7 +86,7 @@ rtp_resizer_new(int output_nsamples)
     if (this == NULL)
         return (NULL);
     memset(this, 0, sizeof(struct rtp_resizer));
-    this->output_nsamples = output_nsamples;
+    rtp_resizer_set_onsamples(this, output_nsamples);
     return (this);
 }
 
@@ -118,6 +119,10 @@ rtp_resizer_set_onsamples(struct rtp_resizer *this, int output_nsamples_new)
 
     output_nsamples_old = this->output_nsamples;
     this->output_nsamples = output_nsamples_new;
+    this->max_buf_nsamples = output_nsamples_new * 2;
+    if (this->max_buf_nsamples < 320) {
+        this->max_buf_nsamples = 320;
+    }
     return (output_nsamples_old);
 }
 
@@ -277,7 +282,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 
     /* Wait untill enough data has arrived or timeout occured */
     if (this->nsamples_total < this->output_nsamples &&
-        ts_less(ref_ts, this->queue.first->parsed->ts + this->output_nsamples + 160))
+        ts_less(ref_ts, this->queue.first->parsed->ts + this->max_buf_nsamples))
     {
         return NULL;
     }
