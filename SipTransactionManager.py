@@ -322,7 +322,7 @@ class SipTransactionManager(object):
                 t.userv = self.l4r.getServer(laddress, is_local = True)
         else:
             t.userv = userv
-        t.data = msg.localStr(t.userv.laddress[0], t.userv.laddress[1])
+        t.data = msg.localStr(*t.userv.uopts.laddress)
         if t.method == 'INVITE':
             try:
                 t.expires = msg.getHFBody('expires').getNum()
@@ -611,7 +611,7 @@ class SipTransactionManager(object):
         toHF = resp.getHFBody('to')
         if scode > 100 and toHF.getTag() == None:
             toHF.genTag()
-        t.data = resp.localStr(t.userv.laddress[0], t.userv.laddress[1])
+        t.data = resp.localStr(*t.userv.uopts.laddress)
         t.address = resp.getHFBody('via').getTAddr()
         self.transmitData(t.userv, t.data, t.address, t.checksum)
         if scode < 200:
@@ -701,7 +701,7 @@ class SipTransactionManager(object):
         self.l4r.rotateCache()
 
     def transmitMsg(self, userv, msg, address, cachesum, compact = False):
-        data = msg.localStr(userv.laddress[0], userv.laddress[1], compact)
+        data = msg.localStr(*userv.uopts.laddress, compact = compact)
         self.transmitData(userv, data, address, cachesum)
 
     def transmitData(self, userv, data, address, cachesum = None):
