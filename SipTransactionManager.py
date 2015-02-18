@@ -549,7 +549,7 @@ class SipTransactionManager(object):
             t.ack_cb = None
             t.cancel_cb = None
             t.checksum = checksum
-            if server.laddress[0] not in ('0.0.0.0', '[::]'):
+            if server.uopts.laddress[0] not in ('0.0.0.0', '[::]'):
                 t.userv = server
             else:
                 # For messages received on the wildcard interface find
