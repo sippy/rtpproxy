@@ -69,7 +69,7 @@ do
       fi
       cat playback1.tout
       ndropped=`grep 'dropped by kernel' playback1.tout | awk '{print $1}'`
-      if [ ${ndropped} -ne 0 -a ${retry} -lt 3 ]
+      if [ ${ndropped} -ne 0 -a ${retry} -lt 6 ]
       then
         report "..kernel dropped some packets, re-run"
         continue
