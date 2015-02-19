@@ -227,3 +227,31 @@ rtpp_ctrl_sock_parse(const char *optarg)
 
     return (rcsp);
 }
+
+const char *
+rtpp_ctrl_sock_describe(struct rtpp_ctrl_sock *rcsp)
+{
+
+    switch (rcsp->type) {
+    case RTPC_IFSUN:
+        return "unix";
+
+    case RTPC_UDP4:
+        return "udp";
+
+    case RTPC_UDP6:
+        return "udp6";
+
+    case RTPC_IFSUN_C:
+        return "cunix";
+
+    case RTPC_SYSD:
+        return "systemd";
+
+    case RTPC_STDIO:
+        return "stdio";
+
+    default:
+        abort();
+    }
+}
