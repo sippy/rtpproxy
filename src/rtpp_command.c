@@ -312,9 +312,9 @@ struct d_opts {
 int
 handle_command(struct cfg *cf, struct rtpp_command *cmd)
 {
-    int i;
+    int i, verbose;
     int playcount;
-    char *cp;
+    char *cp, *tcp;
     char *pname, *codecs, *recording_name;
     struct rtpp_session *spa;
     int record_single_file;
@@ -365,8 +365,15 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
         playcount = 1;
         pname = cmd->argv[2];
         codecs = cmd->argv[3];
-	if (cmd->argv[0][1] != '\0')
-	    playcount = atoi(cmd->argv[0] + 1);
+        tcp = &(cmd->argv[0][1]);
+	if (*tcp != '\0') {
+	    playcount = strtol(tcp, &cp, 10);
+            if (cp == tcp || *cp != '\0') {
+                rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
+                reply_error(cf, cmd, ECODE_PARSE_6);
+                return 0;
+            }
+        }
         break;
 
     case COPY:
@@ -404,7 +411,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
                 rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog,
                   "DELETE: unknown command modifier `%c'", *cp);
                 reply_error(cf, cmd, ECODE_PARSE_4);
-                break;
+                return 0;
             }
         }
         break;
@@ -418,8 +425,24 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case GET_STATS:
-        if (handle_get_stats(cf, cmd) != 0) {
-            reply_error(cf, cmd, ECODE_STSFAIL);
+        verbose = 0;
+        for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
+            switch (*cp) {
+            case 'v':
+            case 'V':
+                verbose = 1;
+                break;
+
+            default:
+                rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog,
+                  "STATS: unknown command modifier `%c'", *cp);
+                reply_error(cf, cmd, ECODE_PARSE_5);
+                return 0;
+            }
+        }
+        i = handle_get_stats(cf, cmd, verbose);
+        if (i != 0) {
+            reply_error(cf, cmd, i);
         }
         return 0;
 
@@ -686,8 +709,9 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
             break;
 
         default:
-            /* complain ? */
-            break;
+            rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
+            reply_error(cf, cmd, ECODE_PARSE_7);
+            return;
         }
     }
 

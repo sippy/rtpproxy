@@ -25,4 +25,4 @@
  *
  */
 
-int handle_get_stats(struct cfg *, struct rtpp_command *);
+int handle_get_stats(struct cfg *, struct rtpp_command *, int);

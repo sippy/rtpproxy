@@ -38,23 +38,38 @@
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
 
+#define CHECK_OVERFLOW() \
+    if (len > sizeof(cmd->buf_t) - 2) { \
+        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, \
+          "STATS: output buffer overflow"); \
+        return (ECODE_RTOOBIG_1); \
+    }
+
 int
-handle_get_stats(struct cfg *cf, struct rtpp_command *cmd)
+handle_get_stats(struct cfg *cf, struct rtpp_command *cmd, int verbose)
 {
     int len, i, rval;
 
     len = 0;
     for (i = 1; i < cmd->argc && len < (sizeof(cmd->buf_t) - 2); i++) {
         if (i > 1) {
+            CHECK_OVERFLOW();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, " ");
         }
+        if (verbose != 0) {
+            CHECK_OVERFLOW();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%s=", \
+              cmd->argv[i]);
+        }
+        CHECK_OVERFLOW();
         rval = CALL_METHOD(cf->stable->rtpp_stats, nstr, cmd->buf_t + len,
           sizeof(cmd->buf_t) - len, cmd->argv[i]);
         if (rval < 0) {
-            return (-1);
+            return (ECODE_STSFAIL);
         }
         len += rval;
     }
+    CHECK_OVERFLOW();
     len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "\n");
     rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
     return (0);
