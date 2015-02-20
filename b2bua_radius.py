@@ -173,7 +173,7 @@ class CallController(object):
                     event.data = (self.cId, cGUID, self.cli, self.cld, body, auth, self.caller_name)
                 if self.global_config.has_key('_rtp_proxy_clients'):
                     self.rtp_proxy_session = Rtp_proxy_session(self.global_config, call_id = self.cId, \
-                      notify_socket = global_config['b2bua_socket'], \
+                      notify_socket = self.global_config['b2bua_socket'], \
                       notify_tag = quote('r %s' % str(self.id)))
                     self.rtp_proxy_session.callee_raddress = (self.remote_ip, 5060)
                 self.eTry = event
