@@ -38,7 +38,7 @@ struct rtpp_ctrl_sock {
     int exit_on_close;
 };
 
-#define RTPP_CTRL_ISDG(rcsp) ((rcsp)->type == RTPC_UDP4 || (rcsp)->type == RTPC_UDP4)
+#define RTPP_CTRL_ISDG(rcsp) ((rcsp)->type == RTPC_UDP4 || (rcsp)->type == RTPC_UDP6)
 #define RTPP_CTRL_ISUNIX(rcsp) ((rcsp)->type == RTPC_IFSUN || (rcsp)->type == RTPC_IFSUN_C)
 #define RTPP_CTRL_ISSTREAM(rcsp) ((rcsp)->type == RTPC_IFSUN_C || (rcsp)->type == RTPC_STDIO)
 
