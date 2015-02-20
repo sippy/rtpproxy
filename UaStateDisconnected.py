@@ -34,7 +34,7 @@ class UaStateDisconnected(UaStateGeneric):
         UaStateGeneric.__init__(self, ua)
         ua.on_local_sdp_change = None
         ua.on_remote_sdp_change = None
-        Timeout(self.goDead, 32.0)
+        Timeout(self.goDead, ua.godead_timeout)
 
     def recvRequest(self, req):
         if req.getMethod() == 'BYE':
