@@ -31,11 +31,14 @@ do
     fi
     for retry in 1 2 3 4 5 6
     do
-      if [ -e playback1.${codec}.a.rtp ]
-      then
-        rm -f playback1.${codec}.a.rtp
-      fi
-      ${SUDO} ${TCPDUMP} -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} 2>playback1.tout &
+      for fname in playback1.tout playback1.${codec}.a.rtp
+      do
+        if [ -e "${fname}" ]
+        then
+          rm -f "${fname}"
+        fi
+      done
+      ${SUDO} ${TCPDUMP} -B 4096 -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} 2>playback1.tout &
       TCPD_PID=${!}
       while [ ! -e playback1.${codec}.a.rtp ]
       do
