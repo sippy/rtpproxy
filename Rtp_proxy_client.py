@@ -56,8 +56,14 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             Rtp_proxy_client_udp.__init__(self, global_config, *address, \
               **kwargs)
             self.proxy_address = address[0]
-        else:            
-            Rtp_proxy_client_local.__init__(self, global_config, *address, \
+        else:
+            print 'Rtp_proxy_client.__init__', address
+            if address[0].startswith('unix:'):
+                spath = address[0][5:]
+            else:
+                spath = address[0]
+            print 'Rtp_proxy_client.__init__, spath =', spath
+            Rtp_proxy_client_local.__init__(self, global_config, spath, \
               **kwargs)
             self.proxy_address = global_config['_sip_address']
         self.version_check()
