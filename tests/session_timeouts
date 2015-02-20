@@ -76,7 +76,7 @@ wait ${RTPP1_PID}
 report "wait for rtpproxy #1 shutdown"
 wait ${RTPP2_PID}
 report "wait for rtpproxy #2 shutdown"
-${DIFF} session_timeouts.rout1 session_timeouts.output1
+${DIFF} session_timeouts.output1 session_timeouts.rout1
 report "checking rtpproxy #1 stdout"
-${DIFF} session_timeouts.rout2 session_timeouts.output2
+${DIFF} session_timeouts.output2 session_timeouts.rout2
 report "checking rtpproxy #2 stdout"

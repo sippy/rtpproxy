@@ -87,7 +87,7 @@ do
     #sha256 ${ofile}
     #report "sha256 ${ofile}"
     #wait
-    ${DIFF} playback1.rout playback1.output
+    ${DIFF} playback1.output playback1.rout
     report "checking rtpproxy stdout"
     sha256_verify ${ofile} playback1.checksums
   done

@@ -15,5 +15,5 @@ do
   report "${rfile}"
 done
 sha256_compute ${MAKEANN_RFILES} | \
-  ${DIFF} - ${BASEDIR}/makeann.output
+  ${DIFF} ${BASEDIR}/makeann.output -
 report "G.711[ua], GSM, G.729a, G.722 data"
