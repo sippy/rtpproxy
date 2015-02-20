@@ -17,5 +17,5 @@ packets transmitted: 0
 1
 1
 0
-0 0 0 0 0 0 0 16 15 0 15
+nsess_created=0 nsess_destroyed=0 nsess_complete=0 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=0 nsess_owrtcp=0 ncmds_rcvd=16 ncmds_succd=15 ncmds_errs=0 ncmds_repld=15
 MEMDEB: all clear
