@@ -74,6 +74,7 @@ struct rtpp_cmd_async_cf {
     pthread_mutex_t cmd_mutex;
     int clock_tick;
     double tused;
+    int tstate;
 #if 0
     struct recfilter average_load;
 #endif
@@ -81,6 +82,9 @@ struct rtpp_cmd_async_cf {
     struct rtpp_cmd_pollset pset;
     struct rtpp_cmd_accptset aset;
 };
+
+#define TSTATE_RUN   0x0
+#define TSTATE_CEASE 0x1
 
 static void
 init_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
@@ -298,20 +302,23 @@ rtpp_cmd_acceptor_run(void *arg)
     }
 }
 
-static void
+static int
 wait_next_clock(struct rtpp_cmd_async_cf *cmd_cf)
 {
     static int last_ctick = -1;
+    int tstate;
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
     if (last_ctick == -1) {
         last_ctick = cmd_cf->clock_tick;
     }
-    while (cmd_cf->clock_tick == last_ctick) {
+    tstate = cmd_cf->tstate;
+    while (cmd_cf->clock_tick == last_ctick && tstate == TSTATE_RUN) {
         pthread_cond_wait(&cmd_cf->cmd_cond, &cmd_cf->cmd_mutex);
     }
     last_ctick = cmd_cf->clock_tick;
     pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+    return (tstate);
 }
 
 static void
@@ -341,13 +348,17 @@ rtpp_cmd_queue_run(void *arg)
         pthread_mutex_lock(&psp->pfds_mutex);
         if (psp->pfds_used == 0) {
             pthread_mutex_unlock(&psp->pfds_mutex);
-            wait_next_clock(cmd_cf);
+            if (wait_next_clock(cmd_cf) == TSTATE_CEASE) {
+                break;
+            }
             continue;
         }
         nready = poll(psp->pfds, psp->pfds_used, 2);
         if (nready == 0) {
             pthread_mutex_unlock(&psp->pfds_mutex);
-            wait_next_clock(cmd_cf);
+            if (wait_next_clock(cmd_cf) == TSTATE_CEASE) {
+                break;
+            }
             continue;
         }
         if (nready < 0 && errno == EINTR) {
@@ -605,3 +616,28 @@ rtpp_command_async_init(struct cfg *cf)
 
     return (0);
 }
+
+#if 0
+/* Incomplete, needs more work, utility unknown at the moment */
+void
+rtpp_command_async_dtor(struct cfg *cf)
+{
+    struct rtpp_cmd_async_cf *cmd_cf;
+
+    cmd_cf = cf->stable->rtpp_cmd_cf;
+
+    pthread_mutex_lock(&cmd_cf->cmd_mutex);
+    cmd_cf->tstate = TSTATE_CEASE;
+    /* notify worker thread */
+    pthread_cond_signal(&cmd_cf->cmd_cond);
+    pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+    pthread_join(cmd_cf->thread_id, NULL);
+
+    pthread_cond_destroy(&cmd_cf->cmd_cond);
+    pthread_mutex_destroy(&cmd_cf->cmd_mutex);
+    free_pollset(&cmd_cf->pset);
+    free_accptset(&cmd_cf->aset);
+    free(cmd_cf);
+    cf->stable->rtpp_cmd_cf = NULL;
+}
+#endif
