@@ -186,7 +186,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	if (sp->rtcp->codecs[i] != NULL)
 	    free(sp->rtcp->codecs[i]);
         if (sp->resizers[i] != NULL)
-             rtp_resizer_free(sp->resizers[i]);
+             rtp_resizer_free(cf->stable->rtpp_stats, sp->resizers[i]);
     }
     if (sp->timeout_data.notify_tag != NULL)
 	free(sp->timeout_data.notify_tag);

@@ -42,6 +42,9 @@
 #include "rtp.h"
 #include "rtp_info.h"
 #include "rtp_resizer.h"
+#include "rtpp_proc.h"
+#include "rtpp_types.h"
+#include "rtpp_stats.h"
 
 struct rtp_resizer {
     int         nsamples_total;
@@ -91,18 +94,24 @@ rtp_resizer_new(int output_nsamples)
 }
 
 void 
-rtp_resizer_free(struct rtp_resizer *this)
+rtp_resizer_free(struct rtpp_stats_obj *rtpp_stats, struct rtp_resizer *this)
 {
     struct rtp_packet *p;
     struct rtp_packet *p1;
+    int nfree;
 
+    nfree = 0;
     p = this->queue.first;
     while (p != NULL) {
         p1 = p;
         p = p->next;
         rtp_packet_free(p1);
+        nfree++;
     }
     free(this);
+    if (nfree > 0) {
+        CALL_METHOD(rtpp_stats, updatebyname, "npkts_resizer_discard", nfree);
+    }
 }
 
 int
@@ -127,7 +136,8 @@ rtp_resizer_set_onsamples(struct rtp_resizer *this, int output_nsamples_new)
 }
 
 void
-rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
+rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt,
+  struct rtpp_proc_rstats *rsp)
 {
     struct rtp_packet   *p;
     uint32_t            ref_ts, internal_ts;
@@ -145,6 +155,7 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt)
         /* Packet arrived too late. Drop it. */
         rtp_packet_free(*pkt);
         *pkt = NULL;
+        rsp->npkts_resizer_discard.cnt++;
         return;
     }
     internal_ts = (*pkt)->rtime * 8000.0;

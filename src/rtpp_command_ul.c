@@ -645,7 +645,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             spa->resizers[pidx] = rtp_resizer_new(ulop->requested_nsamples);
         }
     } else if (spa->resizers[pidx] != NULL) {
-        rtp_resizer_free(spa->resizers[pidx]);
+        rtp_resizer_free(cf->stable->rtpp_stats, spa->resizers[pidx]);
         spa->resizers[pidx] = NULL;
     }
 

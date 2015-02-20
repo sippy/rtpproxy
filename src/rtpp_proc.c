@@ -259,9 +259,9 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	}
 
 	if (sp->resizers[ridx] != NULL) {
-	    rtp_resizer_enqueue(sp->resizers[ridx], &packet);
+	    rtp_resizer_enqueue(sp->resizers[ridx], &packet, rsp);
             if (packet == NULL) {
-                rsp->npkts_resized_in.cnt++;
+                rsp->npkts_resizer_in.cnt++;
             }
         }
 	if (packet != NULL) {
@@ -372,7 +372,7 @@ process_rtp_only(struct cfg *cf, double dtime, int drain_repeat, \
             if (sp->resizers[ridx] != NULL) {
                 while ((packet = rtp_resizer_get(sp->resizers[ridx], dtime)) != NULL) {
                     send_packet(cf, sp, ridx, packet, sender, rsp);
-                    rsp->npkts_resized_out.cnt++;
+                    rsp->npkts_resizer_out.cnt++;
                     packet = NULL;
                 }
             }
@@ -448,7 +448,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 	    if (sp->resizers[ridx] != NULL) {
 		while ((packet = rtp_resizer_get(sp->resizers[ridx], dtime)) != NULL) {
 		    send_packet(cf, sp, ridx, packet, sender, rsp);
-                    rsp->npkts_resized_out.cnt++;
+                    rsp->npkts_resizer_out.cnt++;
 		    packet = NULL;
 		}
 	    }

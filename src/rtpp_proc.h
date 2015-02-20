@@ -28,6 +28,9 @@
 #ifndef _RTPP_PROC_H_
 #define _RTPP_PROC_H_
 
+struct cfg;
+struct sthread_args;
+
 struct rtpp_proc_stat {
     uint64_t cnt;
     int cnt_idx;
@@ -37,8 +40,9 @@ struct rtpp_proc_rstats {
     struct rtpp_proc_stat npkts_rcvd;
     struct rtpp_proc_stat npkts_played;
     struct rtpp_proc_stat npkts_relayed;
-    struct rtpp_proc_stat npkts_resized_in;
-    struct rtpp_proc_stat npkts_resized_out;
+    struct rtpp_proc_stat npkts_resizer_in;
+    struct rtpp_proc_stat npkts_resizer_out;
+    struct rtpp_proc_stat npkts_resizer_discard;
     struct rtpp_proc_stat npkts_discard;
 };
 
