@@ -47,6 +47,7 @@ struct cmd_props {
     int has_call_id;
     int fpos;
     int tpos;
+    char *cmods;
 };
 
 static int 
@@ -57,6 +58,7 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
     cpp->has_call_id = 1;
     cpp->fpos = -1;
     cpp->tpos = -1;
+    cpp->cmods = &(cmd->argv[0][1]);
     switch (cmd->argv[0][0]) {
     case 'u':
     case 'U':
@@ -148,7 +150,8 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 
     case 'v':
     case 'V':
-        if (cmd->argv[0][1] == 'F' || cmd->argv[0][1] == 'f') {
+        if (cpp->cmods[0] == 'F' || cpp->cmods[0] == 'f') {
+            cpp->cmods += 1;
             cmd->cca.op = VER_FEATURE;
             cmd->cca.rname = "feature_check";
             cmd->cca.hint = "VF feature_num";
@@ -238,7 +241,7 @@ rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd)
         reply_error(cf, cmd, ECODE_PARSE_NARGS);
         return (-1);
     }
-    if (cprops.has_cmods == 0 && cmd->argv[0][1] != '\0') {
+    if (cprops.has_cmods == 0 && cprops.cmods[0] != '\0') {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "%s command syntax error"
           ": modifiers are not supported by the command", cmd->cca.rname);
         reply_error(cf, cmd, ECODE_PARSE_MODS);
