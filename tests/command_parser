@@ -17,5 +17,5 @@ run_command_parser() {
 RECORD_DIR="${BUILDDIR}"
 run_command_parser "" "-P" "-r ${RECORD_DIR}" "-P -r ${RECORD_DIR}" > command_parser.rout
 report "wait for the rtproxy shutdown"
-${DIFF} command_parser.rout ${BASEDIR}/command_parser.output
+${DIFF} ${BASEDIR}/command_parser.output command_parser.rout
 report "command_parser"
