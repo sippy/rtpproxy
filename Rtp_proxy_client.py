@@ -29,6 +29,7 @@ from Rtp_proxy_client_udp import Rtp_proxy_client_udp
 from Rtp_proxy_client_local import Rtp_proxy_client_local
 
 from random import random
+import socket
 
 def randomize(x, p):
     return x * (1.0 + p * (1.0 - 2.0 * random()))
@@ -52,18 +53,50 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def __init__(self, global_config, *address, **kwargs):
         #print 'Rtp_proxy_client', address
-        if len(address) > 0 and type(address[0]) in (tuple, list):
+        if len(address) == 0 and kwargs.has_key('spath'):
+            a = kwargs['spath']
+            del kwargs['spath']
+            if a.startswith('udp:'):
+                a = a.split(':', 2)
+                if len(a) == 2:
+                    rtppa = (a[1], 22222)
+                else:
+                    rtppa = (a[1], int(a[2]))
+                self.proxy_address = rtppa[0]
+                kwargs['family'] = socket.AF_INET
+                rtpp_class = Rtp_proxy_client_udp
+            elif a.startswith('udp6:'):
+                proto, a = a.split(':', 1)
+                if not a.endswith(']'):
+                    a = a.rsplit(':', 1)
+                    if len(a) == 1:
+                        rtp_proxy_host, rtp_proxy_port = a[0], 22222
+                    else:
+                        rtp_proxy_host, rtp_proxy_port = (a[0], int(a[1]))
+                else:
+                    rtp_proxy_host, rtp_proxy_port = a, 22222
+                if not rtp_proxy_host.startswith('['):
+                    rtp_proxy_host = '[%s]' % rtp_proxy_host
+                rtppa = (rtp_proxy_host, rtp_proxy_port)
+                self.proxy_address = rtppa[0]
+                kwargs['family'] = socket.AF_INET6
+                rtpp_class = Rtp_proxy_client_udp
+            else:
+                if a.startswith('unix:'):
+                    rtppa = a[5:]
+                elif a.startswith('cunix:'):
+                    rtppa = a[6:]
+                else:
+                    rtppa = a
+                self.proxy_address = global_config['_sip_address']
+                rtpp_class = Rtp_proxy_client_local
+            rtpp_class.__init__(self, global_config, rtppa, **kwargs)
+        elif len(address) > 0 and type(address[0]) in (tuple, list):
             Rtp_proxy_client_udp.__init__(self, global_config, *address, \
               **kwargs)
             self.proxy_address = address[0]
         else:
-            print 'Rtp_proxy_client.__init__', address
-            if address[0].startswith('unix:'):
-                spath = address[0][5:]
-            else:
-                spath = address[0]
-            print 'Rtp_proxy_client.__init__, spath =', spath
-            Rtp_proxy_client_local.__init__(self, global_config, spath, \
+            Rtp_proxy_client_local.__init__(self, global_config, *address, \
               **kwargs)
             self.proxy_address = global_config['_sip_address']
         self.version_check()
