@@ -810,15 +810,7 @@ def main_func():
 
     if global_config.has_key('_rtp_proxy_clients'):
         for a in global_config['_rtp_proxy_clients']:
-            if a.startswith('udp:'):
-                a = a.split(':', 2)
-                if len(a) == 2:
-                    rtp_proxy_address = (a[1], 22222)
-                else:
-                    rtp_proxy_address = (a[1], int(a[2]))
-                rtp_proxy_clients.append(rtp_proxy_address)
-            else:
-                rtp_proxy_clients.append(a)
+            rtp_proxy_clients.append(a)
 
     if not global_config['auth_enable'] and not global_config.has_key('static_route'):
         sys.__stderr__.write('ERROR: static route should be specified when Radius auth is disabled\n')
@@ -835,7 +827,7 @@ def main_func():
     if len(rtp_proxy_clients) > 0:
         global_config['_rtp_proxy_clients'] = []
         for address in rtp_proxy_clients:
-            global_config['_rtp_proxy_clients'].append(Rtp_proxy_client(global_config, address))
+            global_config['_rtp_proxy_clients'].append(Rtp_proxy_client(global_config, spath = address))
 
     if global_config['auth_enable'] or global_config['acct_enable']:
         global_config['_radius_client'] = RadiusAuthorisation(global_config)

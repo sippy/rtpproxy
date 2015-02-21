@@ -176,7 +176,7 @@ class Rtp_proxy_session(object):
         if self.rtp_proxy_client.sbind_supported and self.caller_raddress != None:
             if self.rtp_proxy_client.is_local:
                 options += 'L%s' % self.global_config['_sip_tm'].l4r.getServer( \
-                  self.caller_raddress).laddress[0]
+                  self.caller_raddress).uopts.laddress[0]
             else:
                 options += 'R%s' % self.caller_raddress[0]
         command += options
@@ -195,7 +195,7 @@ class Rtp_proxy_session(object):
         if self.rtp_proxy_client.sbind_supported and self.callee_raddress != None:
             if self.rtp_proxy_client.is_local:
                 options += 'L%s' % self.global_config['_sip_tm'].l4r.getServer( \
-                  self.callee_raddress).laddress[0]
+                  self.callee_raddress).uopts.laddress[0]
             else:
                 options += 'R%s' % self.callee_raddress[0]
         command += options
