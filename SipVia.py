@@ -145,6 +145,11 @@ class SipVia(SipGenericHF):
                 rport = SipConf.default_port
         return (self.params.get('received', self.getAddr()[0]), rport)
 
+    def getCanName(self, name, compact = False):
+        if compact:
+            return 'v'
+        return 'Via'
+
 def _unit_test():
     via1 = 'SIP/2.0/UDP 203.193.xx.xx;branch=z9hG4bK2dd1.1102f3e2.0'
     v = SipVia(via1)
