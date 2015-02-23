@@ -92,10 +92,10 @@ ul_reply_port(struct cfg *cf, struct rtpp_command *cmd, struct ul_reply *ulr)
     } else {
         if (ulr->ia_ov == NULL) {
             len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", ulr->port,
-              addr2char(ulr->ia), (ulr->ia->sa_family == AF_INET) ? "" : "6");
+              addr2char(ulr->ia), (ulr->ia->sa_family == AF_INET) ? "" : " 6");
         } else {
-            len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s %s\n", ulr->port,
-              ulr->ia_ov, (ulr->ia->sa_family == AF_INET) ? "" : "6");
+            len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", ulr->port,
+              ulr->ia_ov, (ulr->ia->sa_family == AF_INET) ? "" : " 6");
         }
     }
 
@@ -308,7 +308,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
     }
     if (ulop->addr != NULL && ulop->port != NULL && strlen(ulop->addr) >= 7) {
         pthread_mutex_unlock(&cf->glock);
-        n = resolve(sstosa(&tia), ulop-> pf, ulop->addr, ulop->port, AI_NUMERICHOST);
+        n = resolve(sstosa(&tia), ulop->pf, ulop->addr, ulop->port, AI_NUMERICHOST);
         pthread_mutex_lock(&cf->glock);
         if (n == 0) {
             if (!ishostnull(sstosa(&tia))) {
@@ -325,8 +325,8 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
                 satosin(ulop->ia[1])->sin_port = htons(n + 1);
             }
         } else {
-            rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "getaddrinfo: %s",
-              gai_strerror(n));
+            rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "getaddrinfo(pf=%d, addr=%s, port=%s): %s",
+              ulop->pf, ulop->addr, ulop->port, gai_strerror(n));
         }
     }
     return (ulop);
@@ -589,8 +589,17 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         if (spa->untrusted_addr[pidx] == 0 && !(spa->addr[pidx] != NULL &&
           SA_LEN(ulop->ia[0]) == SA_LEN(spa->addr[pidx]) &&
           memcmp(ulop->ia[0], spa->addr[pidx], SA_LEN(ulop->ia[0])) == 0)) {
+            const char *obr, *cbr;
+            if (ulop->pf == AF_INET) {
+                obr = "";
+                cbr = "";
+            } else {
+                obr = "[";
+                cbr = "]";
+            }
             rtpp_log_write(RTPP_LOG_INFO, spa->log, "pre-filling %s's address "
-              "with %s:%s", (pidx == 0) ? "callee" : "caller", ulop->addr, ulop->port);
+              "with %s%s%s:%s", (pidx == 0) ? "callee" : "caller", obr, ulop->addr,
+              cbr, ulop->port);
             if (spa->addr[pidx] != NULL) {
                 if (spa->canupdate[pidx] == 0) {
                     if (spa->prev_addr[pidx] != NULL)
