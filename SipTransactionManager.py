@@ -51,6 +51,14 @@ def check1918(addr):
         pass
     return False
 
+class SipTransactionConsumer(object):
+    compact = False
+    cobj = None
+
+    def __init__(self, cobj, compact):
+        self.compact = compact
+        self.cobj = cobj
+
 class SipTransaction(object):
     tout = None
     tid = None
@@ -59,6 +67,7 @@ class SipTransaction(object):
     checksum = None
     cb_ifver = None
     uack = False
+    compact = False
 
     def cleanup(self):
         self.ack = None
@@ -304,9 +313,10 @@ class SipTransactionManager(object):
 
     # 1. Client transaction methods
     def newTransaction(self, msg, resp_cb = None, laddress = None, userv = None, \
-      cb_ifver = 1):
+      cb_ifver = 1, compact = False):
         t = SipTransaction()
         t.rtime = time()
+        t.compact = compact
         t.method = msg.getMethod()
         t.cb_ifver = cb_ifver
         t.tid = msg.getTId(True, True)
@@ -322,7 +332,7 @@ class SipTransactionManager(object):
                 t.userv = self.l4r.getServer(laddress, is_local = True)
         else:
             t.userv = userv
-        t.data = msg.localStr(*t.userv.uopts.laddress)
+        t.data = msg.localStr(*t.userv.uopts.laddress, compact = t.compact)
         if t.method == 'INVITE':
             try:
                 t.expires = msg.getHFBody('expires').getNum()
@@ -435,7 +445,7 @@ class SipTransactionManager(object):
                     if rAddr == None:
                         rAddr = t.address
                     if not t.uack:
-                        self.transmitMsg(t.userv, t.ack, rAddr, checksum)
+                        self.transmitMsg(t.userv, t.ack, rAddr, checksum, t.compact)
                     else:
                         t.state = UACK
                         t.ack_rAddr = rAddr
@@ -486,8 +496,10 @@ class SipTransactionManager(object):
     def incomingRequest(self, msg, checksum, tids, server):
         for tid in tids:
             if self.tclient.has_key(tid):
+                t = self.tclient[tid]
                 resp = msg.genResponse(482, 'Loop Detected')
-                self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
+                self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum, \
+                  t.compact)
                 return
         if  msg.getMethod() != 'ACK':
             tid = msg.getTId(wBRN = True)
@@ -506,7 +518,8 @@ class SipTransactionManager(object):
                 # RFC3261 says that we have to reply 200 OK in all cases if
                 # there is such transaction
                 resp = msg.genResponse(200, 'OK')
-                self.transmitMsg(t.userv, resp, resp.getHFBody('via').getTAddr(), checksum)
+                self.transmitMsg(t.userv, resp, resp.getHFBody('via').getTAddr(), checksum, \
+                  t.compact)
                 if t.state in (TRYING, RINGING):
                     self.doCancel(t, msg.rtime, msg)
             elif msg.getMethod() == 'ACK' and t.state == COMPLETED:
@@ -572,12 +585,13 @@ class SipTransactionManager(object):
                 t.branch = None
             self.tserver[t.tid] = t
             for consumer in self.req_consumers.get(t.tid[0], ()):
-                consumer = consumer.isYours(msg)
-                if consumer != None:
-                    rval = consumer.recvRequest(msg)
+                cobj = consumer.cobj.isYours(msg)
+                if cobj != None:
+                    t.compact = consumer.compact
+                    rval = cobj.recvRequest(msg, t)
                     break
             else:
-                rval = self.req_cb(msg)
+                rval = self.req_cb(msg, t)
             if rval == None:
                 if t.teA != None or t.teD != None or t.teE != None or t.teF != None:
                     return
@@ -589,16 +603,23 @@ class SipTransactionManager(object):
             if resp != None:
                 self.sendResponse(resp, t)
 
-    def regConsumer(self, consumer, call_id):
-        self.req_consumers.setdefault(call_id, []).append(consumer)
+    def regConsumer(self, consumer, call_id, compact = False):
+        cons = SipTransactionConsumer(consumer, compact)
+        self.req_consumers.setdefault(call_id, []).append(cons)
 
     def unregConsumer(self, consumer, call_id):
         # Usually there will be only one consumer per call_id, so that
         # optimize management for this case
         consumers = self.req_consumers.pop(call_id)
-        if len(consumers) > 1:
-            consumers.remove(consumer)
+        for cons in consumers:
+            if cons.cobj != consumer:
+                continue
+            consumers.remove(cons)
             self.req_consumers[call_id] = consumers
+            break
+        else:
+            raise IndexError('unregConsumer: consumer %s for call-id %s is not registered' % \
+              (str(consumer), call_id))
 
     def sendResponse(self, resp, t = None, retrans = False, ack_cb = None):
         #print self.tserver
@@ -611,7 +632,7 @@ class SipTransactionManager(object):
         toHF = resp.getHFBody('to')
         if scode > 100 and toHF.getTag() == None:
             toHF.genTag()
-        t.data = resp.localStr(*t.userv.uopts.laddress)
+        t.data = resp.localStr(*t.userv.uopts.laddress, compact = t.compact)
         t.address = resp.getHFBody('via').getTAddr()
         self.transmitData(t.userv, t.data, t.address, t.checksum)
         if scode < 200:
@@ -715,6 +736,6 @@ class SipTransactionManager(object):
         if t.teG != None:
             t.teG.cancel()
             t.teG = None
-        self.transmitMsg(t.userv, t.ack, t.ack_rAddr, t.ack_checksum)
+        self.transmitMsg(t.userv, t.ack, t.ack_rAddr, t.ack_checksum, t.compact)
         del self.tclient[t.tid]
         t.cleanup()

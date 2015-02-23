@@ -76,14 +76,14 @@ class CallMap(object):
         #gc.set_threshold(0)
         #print gc.collect()
 
-    def recvRequest(self, req):
+    def recvRequest(self, req, sip_t):
         if req.getHFBody('to').getTag() != None:
             # Request within dialog, but no such dialog
             return (req.genResponse(481, 'Call Leg/Transaction Does Not Exist'), None, None)
         if req.getMethod() == 'INVITE':
             # New dialog
             cc = CallController(self.global_config)
-            return cc.uaA.recvRequest(req)
+            return cc.uaA.recvRequest(req, sip_t)
         if req.getMethod() == 'REGISTER':
             # Registration
             return self.proxy.recvRequest(req)

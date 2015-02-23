@@ -92,7 +92,7 @@ class UacStateCancelling(UaStateGeneric):
             req = self.ua.genRequest('BYE')
             self.ua.lCSeq += 1
             self.ua.global_config['_sip_tm'].newTransaction(req, \
-              laddress = self.ua.source_address)
+              laddress = self.ua.source_address, compact = self.ua.compact_sip)
             return (UaStateDisconnected,)
         return (UaStateDead,)
 

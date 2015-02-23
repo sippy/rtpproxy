@@ -102,6 +102,7 @@ class UA(object):
     pending_tr = None
     late_media = False
     godead_timeout = 32.0
+    compact_sip = False
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
       conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ltag = None, extra_headers = None, \
@@ -145,9 +146,10 @@ class UA(object):
         self.no_progress_time = no_progress_time
         #print self.username, self.password
 
-    def recvRequest(self, req):
+    def recvRequest(self, req, sip_t):
         #print 'Received request %s in state %s instance %s' % (req.getMethod(), self.state, self)
         #print self.rCSeq, req.getHFBody('cseq').getCSeqNum()
+        sip_t.compact = self.compact_sip
         if self.remote_ua == None:
             self.update_ua(req)
         if self.rCSeq != None and self.rCSeq >= req.getHFBody('cseq').getCSeqNum():
@@ -180,7 +182,7 @@ class UA(object):
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm())
             self.lCSeq += 1
             self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse, \
-              laddress = self.source_address, cb_ifver = 2)
+              laddress = self.source_address, cb_ifver = 2, compact = self.compact_sip)
             del self.reqs[cseq]
             return None
         if method == 'INVITE' and not self.pass_auth and self.reqs.has_key(cseq) and code == 407 and \
@@ -190,7 +192,7 @@ class UA(object):
             req = self.genRequest('INVITE', self.lSDP, challenge.getNonce(), challenge.getRealm(), SipProxyAuthorization)
             self.lCSeq += 1
             self.tr = self.global_config['_sip_tm'].newTransaction(req, self.recvResponse, \
-              laddress = self.source_address, cb_ifver = 2)
+              laddress = self.source_address, cb_ifver = 2, compact = self.compact_sip)
             del self.reqs[cseq]
             return None
         if code >= 200 and self.reqs.has_key(cseq):

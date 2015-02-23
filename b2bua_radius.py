@@ -478,7 +478,7 @@ class CallMap(object):
         #gc.set_threshold(0)
         #print gc.collect()
 
-    def recvRequest(self, req):
+    def recvRequest(self, req, sip_t):
         try:
             to_tag = req.getHFBody('to').getTag()
         except Exception as exception:
@@ -532,7 +532,7 @@ class CallMap(object):
                     pass_headers.extend(hfs)
             cc = CallController(remote_ip, source, self.global_config, pass_headers)
             cc.challenge = challenge
-            rval = cc.uaA.recvRequest(req)
+            rval = cc.uaA.recvRequest(req, sip_t)
             self.ccmap.append(cc)
             return rval
         if self.proxy != None and req.getMethod() in ('REGISTER', 'SUBSCRIBE'):
