@@ -11,3 +11,7 @@ config.status
 Makefile
 stamp-h1
 libtool
+extractaudio/extractaudio
+rtpproxy/rtpproxy
+rtpproxy/rtpproxy_debug
+makeann/makeann
