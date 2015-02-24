@@ -142,6 +142,9 @@ CODECSO="${_CODECSO}"
 CODECSA="${_CODECSA}"
 
 RECORD_DIR="${BUILDDIR}"
+
+setup_buffers
+
 #sts=`date "+%Y%m%d%H%M%S"`
 (setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | ${RTPPROXY} -i -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -f -m ${FWD_SPORT} > forwarding1.rout 2>/dev/null) &
 FWD_PID=${!}

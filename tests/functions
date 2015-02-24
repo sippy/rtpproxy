@@ -19,7 +19,7 @@ if [ ${UID} -eq 0 ]
 then
   SUDO=""
 else
-  SUDO="sudo "
+  SUDO="sudo -n"
 fi
 
 sha256_compute() {
@@ -31,6 +31,14 @@ sha256_compute() {
     done
   else
     sha256 "${@}"
+  fi
+}
+
+setup_buffers() {
+  if [ "${OS}" != "FreeBSD" ]
+  then
+    ${SUDO} -s "echo 49600 > /proc/sys/net/ipv4/udp_rmem_min"
+    ${SUDO} -s "echo 49600 > /proc/sys/net/ipv4/udp_wmem_min"
   fi
 }
 
