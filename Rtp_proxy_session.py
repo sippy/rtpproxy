@@ -94,7 +94,7 @@ class Rtp_proxy_session(object):
         if not self.caller_session_exists:
             return
         if not self.callee_session_exists:
-            self.update_callee('0.0.0.0', 0, self._play_caller, '', index, prompt_name, times, result_callback, index)
+            self.update_callee('0.0.0.0', 0, self._play_caller, '', index, 'IP4', prompt_name, times, result_callback, index)
             return
         self._play_caller(None, prompt_name, times, result_callback, index)
 
@@ -106,7 +106,7 @@ class Rtp_proxy_session(object):
         if not self.callee_session_exists:
             return
         if not self.caller_session_exists:
-            self.update_caller('0.0.0.0', 0, self._play_callee, '', index, prompt_name, times, result_callback, index)
+            self.update_caller('0.0.0.0', 0, self._play_callee, '', index, 'IP4', prompt_name, times, result_callback, index)
             return
         self._play_callee(None, prompt_name, times, result_callback, index)
 
@@ -128,7 +128,7 @@ class Rtp_proxy_session(object):
 
     def copy_caller(self, remote_ip, remote_port, result_callback = None, index = 0):
         if not self.caller_session_exists:
-            self.update_caller('0.0.0.0', 0, self._copy_caller, '', index, remote_ip, remote_port, result_callback, index)
+            self.update_caller('0.0.0.0', 0, self._copy_caller, '', index, 'IP4', remote_ip, remote_port, result_callback, index)
             return
         self._copy_caller(None, remote_ip, remote_port, result_callback, index)
 
@@ -138,7 +138,7 @@ class Rtp_proxy_session(object):
 
     def copy_callee(self, remote_ip, remote_port, result_callback = None, index = 0):
         if not self.callee_session_exists:
-            self.update_callee('0.0.0.0', 0, self._copy_callee, '', index, remote_ip, remote_port, result_callback, index)
+            self.update_callee('0.0.0.0', 0, self._copy_callee, '', index, 'IP4', remote_ip, remote_port, result_callback, index)
             return
         self._copy_callee(None, remote_ip, remote_port, result_callback, index)
 
@@ -148,7 +148,7 @@ class Rtp_proxy_session(object):
 
     def start_recording(self, rname = None, result_callback = None, index = 0):
         if not self.caller_session_exists:
-            self.update_caller('0.0.0.0', 0, self._start_recording, '', index, rname, result_callback, index)
+            self.update_caller('0.0.0.0', 0, self._start_recording, '', index, 'IP4', rname, result_callback, index)
             return
         self._start_recording(None, rname, result_callback, index)
 
@@ -170,10 +170,11 @@ class Rtp_proxy_session(object):
         if result_callback != None:
             result_callback(result)
 
-    def update_caller(self, remote_ip, remote_port, result_callback, options = '', index = 0, *callback_parameters):
+    def update_caller(self, remote_ip, remote_port, result_callback, options = '', index = 0, \
+      atype = 'IP4', *callback_parameters):
         command = 'U'
         self.max_index = max(self.max_index, index)
-        if self.rtp_proxy_client.sbind_supported and self.caller_raddress != None:
+        if self.rtp_proxy_client.sbind_supported and self.caller_raddress != None and atype == 'IP4':
             if self.rtp_proxy_client.is_local:
                 options += 'L%s' % self.global_config['_sip_tm'].l4r.getServer( \
                   self.caller_raddress).uopts.laddress[0]
@@ -189,10 +190,11 @@ class Rtp_proxy_session(object):
             command += ' %s %s' % (self.notify_socket, self.notify_tag)
         self.rtp_proxy_client.send_command(command, self.update_result, (result_callback, 'caller', callback_parameters))
 
-    def update_callee(self, remote_ip, remote_port, result_callback, options = '', index = 0, *callback_parameters):
+    def update_callee(self, remote_ip, remote_port, result_callback, options = '', index = 0, \
+      atype = 'IP4', *callback_parameters):
         command = 'U'
         self.max_index = max(self.max_index, index)
-        if self.rtp_proxy_client.sbind_supported and self.callee_raddress != None:
+        if self.rtp_proxy_client.sbind_supported and self.callee_raddress != None and atype == 'IP4':
             if self.rtp_proxy_client.is_local:
                 options += 'L%s' % self.global_config['_sip_tm'].l4r.getServer( \
                   self.callee_raddress).uopts.laddress[0]
@@ -284,7 +286,7 @@ class Rtp_proxy_session(object):
             if sect.c_header.atype == 'IP6':
                 options = '6'
             update_xxx(sect.c_header.addr, sect.m_header.port, self.xxx_sdp_change_finish, options, \
-              sects.index(sect), sdp_body, sect, sects, result_callback)
+              sects.index(sect), sect.c_header.atype, sdp_body, sect, sects, result_callback)
         return
 
     def xxx_sdp_change_finish(self, address_port, sdp_body, sect, sects, result_callback):
