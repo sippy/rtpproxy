@@ -59,6 +59,9 @@ class SipTransactionConsumer(object):
         self.compact = compact
         self.cobj = cobj
 
+    def cleanup(self):
+        self.cobj = None
+
 class SipTransaction(object):
     tout = None
     tid = None
@@ -615,9 +618,12 @@ class SipTransactionManager(object):
             if cons.cobj != consumer:
                 continue
             consumers.remove(cons)
-            self.req_consumers[call_id] = consumers
+            cons.cleanup()
+            if len(consumers) > 0:
+                self.req_consumers[call_id] = consumers
             break
         else:
+            self.req_consumers[call_id] = consumers
             raise IndexError('unregConsumer: consumer %s for call-id %s is not registered' % \
               (str(consumer), call_id))
 
