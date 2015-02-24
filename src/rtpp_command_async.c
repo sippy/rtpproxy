@@ -372,9 +372,6 @@ rtpp_cmd_queue_run(void *arg)
                         goto closefd;
                     }
                     if (psp->rccs[i]->csock->type == RTPC_STDIO && (psp->pfds[i].revents & POLLIN) == 0) {
-                        if (psp->rccs[i]->csock->exit_on_close != 0) {
-                            cf->stable->slowshutdown = 1;
-                        }
                         goto closefd;
                     }
                 }
@@ -387,12 +384,11 @@ rtpp_cmd_queue_run(void *arg)
                     umode = RTPP_CTRL_ISDG(psp->rccs[i]->csock);
                     rval = process_commands(cf, psp->pfds[i].fd, sptime, csp, umode, rtpp_stats_cf);
                 }
-                if (rval == -1 && psp->rccs[i]->csock->type == RTPC_STDIO && psp->rccs[i]->csock->exit_on_close != 0) {
-                    cf->stable->slowshutdown = 1;
-                    goto closefd;
-                }
-                if (psp->rccs[i]->csock->type == RTPC_IFSUN || (psp->rccs[i]->csock->type == RTPC_IFSUN_C && rval == -1)) {
+                if (!RTPP_CTRL_ISDG(psp->rccs[i]->csock) && rval == -1) {
 closefd:
+                    if (psp->rccs[i]->csock->type == RTPC_STDIO && psp->rccs[i]->csock->exit_on_close != 0) {
+                        cf->stable->slowshutdown = 1;
+                    }
                     rtpp_cmd_connection_dtor(psp->rccs[i]);
                     psp->pfds_used--;
                     if (psp->pfds_used > 0 && i < psp->pfds_used) {
