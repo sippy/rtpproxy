@@ -664,8 +664,14 @@ class CallMap(object):
                 clim.send('ERROR: no call with id of %d has been found\n' % idx)
                 return False
             for cc in dlist:
-                if cc.state == CCStateConnected and cc.proxied:
+                if not cc.proxied:
+                    continue
+                if cc.state == CCStateConnected:
                     cc.disconnect(time() - 60)
+                    continue
+                if cc.state == CCStateARComplete:
+                    cc.uaO.disconnect(time() - 60)
+                    continue
             clim.send('OK\n')
             return False
         clim.send('ERROR: unknown command\n')
