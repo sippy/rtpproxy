@@ -38,7 +38,13 @@ setup_buffers() {
   if [ "${OS}" != "FreeBSD" ]
   then
     ${SUDO} -s "echo 49600 > /proc/sys/net/ipv4/udp_rmem_min"
+    ${SUDO} sysctl net.ipv4.udp_rmem_min=49600
     ${SUDO} -s "echo 49600 > /proc/sys/net/ipv4/udp_wmem_min"
+    ${SUDO} sysctl net.ipv4.udp_wmem_min=49600
+    ${SUDO} -s "echo 33554432 > /proc/sys/net/core/rmem_max"
+    ${SUDO} sysctl net.core.rmem_max=33554432
+    ${SUDO} -s "echo 33554432 > /proc/sys/net/core/rmem_default"
+    ${SUDO} sysctl net.core.rmem_default=33554432
   fi
 }
 
