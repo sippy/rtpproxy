@@ -133,13 +133,14 @@ class SipLogger(object):
     offstime = False
 
     def __init__(self, app, call_id = 'GLOBAL', logfile = '/var/log/sip.log'):
+        self.itime = time()
         self.app = '/%s' % app
         self.call_id = call_id
         bend = os.environ.get('SIPLOG_BEND', 'stderr').lower()
         tform = os.environ.get('SIPLOG_TFORM', 'abs').lower()
         if tform == 'rel':
             self.offstime = True
-            itime = os.environ.get('SIPLOG_TSTART', time())
+            itime = os.environ.get('SIPLOG_TSTART', self.itime)
             self.itime = float(itime)
         if bend == 'stderr':
             self.write = self.write_stderr
