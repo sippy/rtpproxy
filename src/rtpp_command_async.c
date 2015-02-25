@@ -384,7 +384,12 @@ rtpp_cmd_queue_run(void *arg)
                     umode = RTPP_CTRL_ISDG(psp->rccs[i]->csock);
                     rval = process_commands(cf, psp->pfds[i].fd, sptime, csp, umode, rtpp_stats_cf);
                 }
-                if (!RTPP_CTRL_ISDG(psp->rccs[i]->csock) && rval == -1) {
+                /*
+                 * Shut down non-datagram sockets that got I/O error
+                 * and also all non-continuous UNIX sockets are recycled
+                 * after each use.
+                 */
+                if (!RTPP_CTRL_ISDG(psp->rccs[i]->csock) && (rval == -1 || RTPP_CTRL_ISUNIX(psp->rccs[i]->csock))) {
 closefd:
                     if (psp->rccs[i]->csock->type == RTPC_STDIO && psp->rccs[i]->csock->exit_on_close != 0) {
                         cf->stable->slowshutdown = 1;
