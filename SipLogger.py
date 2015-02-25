@@ -129,11 +129,18 @@ class SipLogger(object):
     pid = None
     logger = None
     signal_handler = None
+    itime = None
+    offstime = False
 
     def __init__(self, app, call_id = 'GLOBAL', logfile = '/var/log/sip.log'):
         self.app = '/%s' % app
         self.call_id = call_id
         bend = os.environ.get('SIPLOG_BEND', 'stderr').lower()
+        tform = os.environ.get('SIPLOG_TFORM', 'abs').lower()
+        if tform == 'rel':
+            self.offstime = True
+            itime = os.environ.get('SIPLOG_TSTART', time())
+            self.itime = float(itime)
         if bend == 'stderr':
             self.write = self.write_stderr
         elif bend == 'none':
@@ -150,6 +157,19 @@ class SipLogger(object):
                 self.logger = AsyncLoggerSyslog(app, self)
                 self.app = ''
         self.level = eval('SIPLOG_' + os.environ.get('SIPLOG_LVL', 'INFO'))
+
+    def ftime(self, ltime):
+        if self.offstime:
+            ltime -= self.itime
+        msec = (ltime % 1) * 1000
+        if not self.offstime:
+            return '%s.%.3d' % (strftime('%d %b %H:%M:%S', localtime(ltime)), msec)
+        hrs = int(ltime / (60 * 60))
+        ltime -= (hrs * 60 * 60)
+        mins = int(ltime / 60)
+        ltime -= (mins * 60)
+        secs = int(ltime)
+        return '%.2d:%.2d:%.2d.%.3d' % (hrs, mins, secs, msec)
 
     def donoting(self, *args, **kwargs):
         pass
@@ -185,8 +205,8 @@ class SipLogger(object):
             pid = '[%d]' % self.pid
         else:
             pid = ''
-        return '%s.%.3d/%s%s%s: %s\n' % (strftime('%d %b %H:%M:%S', localtime(ltime)), \
-          (ltime % 1) * 1000, call_id, self.app, pid, \
+        return '%s/%s%s%s: %s\n' % (self.ftime(ltime), \
+          call_id, self.app, pid, \
           reduce(lambda x, y: x + y, [str(x) for x in args]))
 
     def reopen(self, signum = None):
