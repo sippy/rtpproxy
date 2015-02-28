@@ -286,22 +286,20 @@ class UA(object):
 
     def sendUasResponse(self, scode, reason, body = None, contact = None, \
       reason_rfc3326 = None, extra_headers = None, ack_wait = False):
-        self.uasResp.setSCode(scode, reason)
-        self.uasResp.setBody(body)
-        self.uasResp.delHFs('www-authenticate')
-        self.uasResp.delHFs('contact')
-        self.uasResp.delHFs('reason')
+        uasResp = self.uasResp.getCopy()
+        uasResp.setSCode(scode, reason)
+        uasResp.setBody(body)
         if contact != None:
-            self.uasResp.appendHeader(SipHeader(name = 'contact', body = contact))
+            uasResp.appendHeader(SipHeader(name = 'contact', body = contact))
         if reason_rfc3326 != None:
-            self.uasResp.appendHeader(SipHeader(body = reason_rfc3326))
+            uasResp.appendHeader(SipHeader(body = reason_rfc3326))
         if extra_headers != None:
-            self.uasResp.appendHeaders(extra_headers)
+            uasResp.appendHeaders(extra_headers)
         if ack_wait:
             ack_cb = self.recvACK
         else:
             ack_cb = None
-        self.global_config['_sip_tm'].sendResponse(self.uasResp, ack_cb = ack_cb)
+        self.global_config['_sip_tm'].sendResponse(uasResp, ack_cb = ack_cb)
 
     def recvACK(self, req):
         if not self.isConnected():
