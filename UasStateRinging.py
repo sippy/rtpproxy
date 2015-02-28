@@ -29,9 +29,19 @@ from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, 
   CCEventDisconnect, CCEventPreConnect
 from SipContact import SipContact
 from SipAddress import SipAddress
+from SipRSeq import SipRSeq
+from SipHeader import SipHeader
 
 class UasStateRinging(UaStateGeneric):
     sname = 'Ringing(UAS)'
+    rseq = None
+
+    def __init__(self, ua):
+        if isinstance(ua.state, UasStateTrying):
+            self.rseq = ua.state.rseq
+        else:
+            self.rseq = SipRSeq()
+        UaStateGeneric.__init__(self, ua)
 
     def recvEvent(self, event):
         if isinstance(event, CCEventRing):
@@ -48,7 +58,10 @@ class UasStateRinging(UaStateGeneric):
             self.ua.lSDP = body
             if self.ua.p1xx_ts == None:
                 self.ua.p1xx_ts = event.rtime
-            self.ua.sendUasResponse(code, reason, body)
+            rseq = self.rseq.getCopy()
+            self.rseq.incNum()
+            rseq_h = SipHeader(name = 'rseq', body = rseq)
+            self.ua.sendUasResponse(code, reason, body, extra_headers = (rseq_h,))
             for ring_cb in self.ua.ring_cbs:
                 ring_cb(self.ua, event.rtime, event.origin, code)
             return None
@@ -151,3 +164,5 @@ if not globals().has_key('UaStateConnected'):
     from UaStateConnected import UaStateConnected
 if not globals().has_key('UaStateDisconnected'):
     from UaStateDisconnected import UaStateDisconnected
+if not globals().has_key('UasStateTrying'):
+    from UasStateTrying import UasStateTrying
