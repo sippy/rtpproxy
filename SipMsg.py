@@ -25,7 +25,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from SipHeader import SipHeader
-from SipGenericHF import SipGenericHF
 from SipContentLength import SipContentLength
 from SipContentType import SipContentType
 from MsgBody import MsgBody
@@ -266,3 +265,16 @@ class SipMsg(object):
         ftag = headers_dict['from'].getBody().getTag()
         cseq, method = headers_dict['cseq'].getBody().getCSeq()
         return tuple([(call_id, ftag, cseq, method, via.getBranch()) for via in self.getHFBodys('via')])
+
+    def getCopy(self):
+        cself = self.__class__()
+        for header in self.headers:
+            cself.appendHeader(header.getCopy())
+        if self.body != None:
+            cself.body = self.body.getCopy()
+        cself.startline = self.startline
+        cself.target = self.target
+        cself.source = self.source
+        cself.nated = self.nated
+        cself.rtime = self.rtime
+        return cself
