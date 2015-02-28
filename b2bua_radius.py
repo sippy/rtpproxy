@@ -125,6 +125,7 @@ class CallController(object):
         self.uaA = UA(self.global_config, event_cb = self.recvEvent, conn_cbs = (self.aConn,), disc_cbs = (self.aDisc,), \
           fail_cbs = (self.aDisc,), dead_cbs = (self.aDead,))
         self.uaA.kaInterval = self.global_config['keepalive_ans']
+        self.uaA.local_ua = self.global_config['_uaname']
         self.state = CCStateIdle
         self.uaO = None
         self.routes = []
@@ -379,6 +380,7 @@ class CallController(object):
         self.uaO = UA(self.global_config, self.recvEvent, user, passw, (host, port), credit_time, tuple(conn_handlers), \
           tuple(disc_handlers), tuple(disc_handlers), dead_cbs = (self.oDead,), expire_time = expires, \
           no_progress_time = no_progress_expires, extra_headers = parameters.get('extra_headers', None))
+        self.uaO.local_ua = self.global_config['_uaname']
         if self.source != parameters.get('outbound_proxy', None):
             self.uaO.outbound_proxy = parameters.get('outbound_proxy', None)
         if self.rtp_proxy_session != None and parameters.get('rtpp', True):
@@ -837,7 +839,7 @@ def main_func():
 
     if global_config['auth_enable'] or global_config['acct_enable']:
         global_config['_radius_client'] = RadiusAuthorisation(global_config)
-    SipConf.my_uaname = 'Sippy B2BUA (RADIUS)'
+    global_config['_uaname'] = 'Sippy B2BUA (RADIUS)'
 
     global_config['_cmap'] = CallMap(global_config)
     if global_config.has_key('sip_proxy'):
