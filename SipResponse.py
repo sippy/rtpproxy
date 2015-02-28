@@ -38,16 +38,15 @@ class SipResponse(SipMsg):
         if buf != None:
             return
         self.scode, self.reason, self.sipver = scode, reason, sipver
-        self.appendHeaders([SipHeader(name = 'via', body = x) for x in vias])
-        self.appendHeaders([SipHeader(name = 'record-route', body = x) for x in rrs])
-        self.appendHeader(SipHeader(name = 'from', body = fr0m))
-        self.appendHeader(SipHeader(name = 'to', body = to))
-        self.appendHeader(SipHeader(name = 'call-id', body = callid))
-        self.appendHeader(SipHeader(name = 'cseq', body = cseq))
+        if vias != None:
+            self.appendHeaders([SipHeader(name = 'via', body = x) for x in vias])
+            self.appendHeaders([SipHeader(name = 'record-route', body = x) for x in rrs])
+            self.appendHeader(SipHeader(name = 'from', body = fr0m))
+            self.appendHeader(SipHeader(name = 'to', body = to))
+            self.appendHeader(SipHeader(name = 'call-id', body = callid))
+            self.appendHeader(SipHeader(name = 'cseq', body = cseq))
         if server != None:
             self.appendHeader(SipHeader(name = 'server', bodys = server))
-        else:
-            self.appendHeader(SipHeader(name = 'server'))
         if body != None:
             self.setBody(body)
 
@@ -72,3 +71,10 @@ class SipResponse(SipMsg):
 
     def getSCode(self):
         return (self.scode, self.reason)
+
+    def getCopy(self):
+        cself = SipMsg.getCopy(self)
+        cself.scode = self.scode
+        cself.reason = self.reason
+        cself.sipver = self.sipver
+        return cself
