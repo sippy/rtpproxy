@@ -50,6 +50,10 @@ class SipRAck(SipCSeq):
     def getCanName(self, name, compact = False):
         return 'RAck'
 
+    def getRSeq(self):
+        cseq, method = SipCSeq.getCSeq(self)
+        return (self.rseq, cseq, method)
+
     def __str__(self):
         if not self.parsed:
             return self.body
