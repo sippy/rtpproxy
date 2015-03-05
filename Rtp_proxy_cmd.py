@@ -136,6 +136,15 @@ class Rtp_proxy_cmd(object):
             else:
                 self.args = args
                 self.command_opts = command_opts[1:]
+        elif self.type in ('G',):
+            if not cmd[1].isspace():
+                cparts = cmd[1:].split(None, 1)
+                if len(cparts) > 1:
+                    self.command_opts, self.args = cparts
+                else:
+                    self.command_opts = cparts[0]
+            else:
+                self.args = cmd[1:].strip()
         else:
             self.command_opts = cmd[1:]
 
@@ -151,3 +160,57 @@ class Rtp_proxy_cmd(object):
         if self.args != None:
             s = '%s %s' % (s, self.args)
         return s
+
+class Rtpp_stats(object):
+    spookyprefix = ''
+    verbose = False
+
+    def __init__(self, snames):
+        all_types = []
+        for sname in snames:
+            if sname != 'total_duration':
+                stype = int
+            else:
+                stype = float
+            self.__dict__[self.spookyprefix + sname] = stype()
+            all_types.append(stype)
+        self.all_names = tuple(snames)
+        self.all_types = tuple(all_types)
+
+    def __iadd__(self, other):
+        for sname in self.all_names:
+            aname = self.spookyprefix + sname
+            self.__dict__[aname] += other.__dict__[aname]
+        return self
+
+    def parseAndAdd(self, rstr):
+        rparts = rstr.split(None, len(self.all_names) - 1)
+        for i in range(0, len(self.all_names)):
+            stype = self.all_types[i]
+            rval = stype(rparts[i])
+            aname = self.spookyprefix + self.all_names[i]
+            self.__dict__[aname] += rval
+
+    def __str__(self):
+        aname = self.spookyprefix + self.all_names[0]
+        if self.verbose:
+            rval = '%s=%s' % (self.all_names[0], str(self.__dict__[aname]))
+        else:
+            rval = str(self.__dict__[aname])
+        for sname in self.all_names[1:]:
+            aname = self.spookyprefix + sname
+            if self.verbose:
+                rval += ' %s=%s' % (sname, str(self.__dict__[aname]))
+            else:
+                rval += ' %s' % str(self.__dict__[aname])
+        return rval
+
+if __name__ == '__main__':
+    rc = Rtp_proxy_cmd('G nsess_created total_duration')
+    print rc
+    print rc.args
+    print rc.command_opts
+    rc = Rtp_proxy_cmd('Gv nsess_created total_duration')
+    print rc
+    print rc.args
+    print rc.command_opts
