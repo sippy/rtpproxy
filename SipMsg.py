@@ -277,4 +277,5 @@ class SipMsg(object):
         cself.source = self.source
         cself.nated = self.nated
         cself.rtime = self.rtime
+        cself.ignorebody = self.ignorebody
         return cself
