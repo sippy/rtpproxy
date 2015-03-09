@@ -47,6 +47,9 @@ void rtpp_memdeb_free(void *, const char *, int, const char *);
 void *rtpp_memdeb_realloc(void *, size_t,  const char *, int, const char *);
 char *rtpp_memdeb_strdup(const char *, const char *, int, const char *);
 int rtpp_memdeb_asprintf(char **, const char *, const char *, int, const char *, ...);
+
+#include <stdarg.h>
+
 int rtpp_memdeb_vasprintf(char **, const char *, const char *, int, const char *, va_list);
 
 #define RTPP_CHECK_LEAKS 	1
