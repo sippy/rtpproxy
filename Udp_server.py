@@ -30,8 +30,11 @@ from errno import ECONNRESET, ENOTCONN, ESHUTDOWN, EWOULDBLOCK, ENOBUFS, EAGAIN,
 from datetime import datetime
 from time import sleep, time
 from threading import Thread, Condition
+from random import random
 import socket
 import sys, traceback
+
+from Timeout import Timeout
 
 class AsyncSender(Thread):
     userv = None
@@ -129,6 +132,8 @@ class Udp_server_opts(object):
     family = None
     flags = _DEFAULT_FLAGS
     nworkers = _DEFAULT_NWORKERS
+    ploss_rate = 0.0
+    pdelay_max = 0.0
 
     def __init__(self, laddress, data_callback, family = None, o = None):
         if o == None:
@@ -142,8 +147,9 @@ class Udp_server_opts(object):
             self.laddress = laddress
             self.data_callback = data_callback
         else:
-            self.laddress, self.data_callback, self.family, o.nworkers, self.flags = \
-              o.laddress, o.data_callback, o.family, o.nworkers, o.flags
+            self.laddress, self.data_callback, self.family, self.nworkers, self.flags, \
+              self.ploss_rate, self.pdelay_max = o.laddress, o.data_callback, o.family, \
+              o.nworkers, o.flags, o.ploss_rate, o.pdelay_max
 
     def getCopy(self):
         return self.__class__(None, None, o = self)
@@ -183,9 +189,16 @@ class Udp_server(object):
             self.asenders.append(AsyncSender(self))
             self.areceivers.append(AsyncReceiver(self))
 
-    def send_to(self, data, address):
+    def send_to(self, data, address, delayed = False):
         if not isinstance(address, tuple):
             raise Exception('Invalid address, not a tuple: %s' % str(address))
+        if self.uopts.ploss_rate > 0.0:
+            if random() < self.uopts.ploss_rate:
+                return
+        if self.uopts.pdelay_max > 0.0 and not delayed:
+            pdelay = self.uopts.pdelay_max * random()
+            Timeout(self.send_to, pdelay, 1, data, address, True)
+            return
         addr, port = address
         if self.uopts.family == socket.AF_INET6:
             if not addr.startswith('['):
