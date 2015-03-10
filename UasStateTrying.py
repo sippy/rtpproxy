@@ -30,16 +30,9 @@ from CCEvents import CCEventRing, CCEventConnect, CCEventFail, CCEventRedirect, 
 from SipContact import SipContact
 from SipAddress import SipAddress
 from Timeout import TimeoutAbs
-from SipRSeq import SipRSeq
-from SipHeader import SipHeader
 
 class UasStateTrying(UaStateGeneric):
     sname = 'Trying(UAS)'
-    rseq = None
-
-    def __init__(self, ua):
-        self.rseq = SipRSeq()
-        UaStateGeneric.__init__(self, ua)
 
     def recvEvent(self, event):
         if isinstance(event, CCEventRing):
@@ -54,10 +47,7 @@ class UasStateTrying(UaStateGeneric):
                     self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
                     return None
             self.ua.lSDP = body
-            rseq = self.rseq.getCopy()
-            self.rseq.incNum()
-            rseq_h = SipHeader(name = 'rseq', body = rseq)
-            self.ua.sendUasResponse(code, reason, body, extra_headers = (rseq_h,))
+            self.ua.sendUasResponse(code, reason, body, retrans = False)
             if self.ua.no_progress_timer != None:
                 self.ua.no_progress_timer.cancel()
                 self.ua.no_progress_timer = None
