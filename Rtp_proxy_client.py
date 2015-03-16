@@ -171,6 +171,8 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             self.caps_done = True
 
     def version_check(self):
+        if self.shut_down:
+            return
         self.send_command('V', self.version_check_reply)
 
     def version_check_reply(self, version):
@@ -185,6 +187,8 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def heartbeat(self):
         #print 'heartbeat', self, self.address
+        if self.shut_down:
+            return
         self.send_command('Ib', self.heartbeat_reply)
 
     def heartbeat_reply(self, stats):
@@ -214,6 +218,8 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         Timeout(self.heartbeat, randomize(self.hrtb_ival, 0.1))
 
     def go_online(self):
+        if self.shut_down:
+            return
         if not self.online:
             self.caps_done = False
             self.send_command('VF 20071218', self.caps_query1)
@@ -221,6 +227,8 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             self.heartbeat()
 
     def go_offline(self):
+        if self.shut_down:
+            return
         #print 'go_offline', self.address, self.online
         if self.online:
             self.online = False
@@ -234,6 +242,8 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         self.ptransmitted = ptransmitted
 
     def shutdown(self):
+        if self.shut_down: # do not crash when shutdown() called twice
+            return
         self.shut_down = True
         if self.is_local:
             return Rtp_proxy_client_local.shutdown(self)
