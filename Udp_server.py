@@ -35,6 +35,7 @@ import socket
 import sys, traceback
 
 from Timeout import Timeout
+from Time.MonoTime import MonoTime
 
 class AsyncSender(Thread):
     userv = None
@@ -115,7 +116,7 @@ class AsyncReceiver(Thread):
                     sys.stdout.flush()
                     sleep(1)
                     continue
-            rtime = time()
+            rtime = MonoTime()
             if self.userv.uopts.family == socket.AF_INET6:
                 address = ('[%s]' % address[0], address[1])
             reactor.callFromThread(self.userv.handle_read, data, address, rtime)
