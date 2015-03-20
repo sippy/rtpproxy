@@ -72,8 +72,8 @@ class Rtp_proxy_client_udp(object):
             return
         stime = MonoTime()
         self.worker.send_to(command, self.address)
-        retr -= 1
-        self.pending_requests[cookie] = (retr, timer, command, result_callback, stime, callback_parameters)
+        triesleft -= 1
+        self.pending_requests[cookie] = (triesleft, timer, command, result_callback, stime, callback_parameters)
 
     def process_reply(self, data, address, worker, rtime):
         cookie, result = data.split(None, 1)
