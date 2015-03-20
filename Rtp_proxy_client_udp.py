@@ -26,6 +26,8 @@
 
 from Timeout import Timeout
 from Udp_server import Udp_server, Udp_server_opts
+from Time.MonoTime import MonoTime
+from Math.recfilter import recfilter
 
 from time import time
 from hashlib import md5
@@ -37,6 +39,7 @@ class Rtp_proxy_client_udp(object):
     worker = None
     uopts = None
     global_config = None
+    delay_flt = None
 
     def __init__(self, global_config, address, bind_address = None, family = None, nworkers = None):
         self.address = address
@@ -48,16 +51,18 @@ class Rtp_proxy_client_udp(object):
         self.worker = Udp_server(global_config, self.uopts)
         self.pending_requests = {}
         self.global_config = global_config
+        self.delay_flt = recfilter(0.95, 0.25)
 
     def send_command(self, command, result_callback = None, *callback_parameters):
         cookie = md5(str(random()) + str(time())).hexdigest()
         command = '%s %s' % (cookie, command)
         timer = Timeout(self.retransmit, 1, -1, cookie)
-        self.pending_requests[cookie] = [3, timer, command, result_callback, callback_parameters]
+        stime = MonoTime()
         self.worker.send_to(command, self.address)
+        self.pending_requests[cookie] = (3, timer, command, result_callback, stime, callback_parameters)
 
     def retransmit(self, cookie):
-        triesleft, timer, command, result_callback, callback_parameters = self.pending_requests[cookie]
+        triesleft, timer, command, result_callback, stime, callback_parameters = self.pending_requests[cookie]
         if triesleft == 0 or self.worker == None:
             timer.cancel()
             del self.pending_requests[cookie]
@@ -65,17 +70,22 @@ class Rtp_proxy_client_udp(object):
             if result_callback != None:
                 result_callback(None, *callback_parameters)
             return
+        stime = MonoTime()
         self.worker.send_to(command, self.address)
-        self.pending_requests[cookie][0] -= 1
+        retr -= 1
+        self.pending_requests[cookie] = (retr, timer, command, result_callback, stime, callback_parameters)
 
     def process_reply(self, data, address, worker, rtime):
         cookie, result = data.split(None, 1)
         parameters = self.pending_requests.pop(cookie, None)
         if parameters == None:
             return
-        parameters[1].cancel()
-        if parameters[3] != None:
-            parameters[3](result.strip(), *parameters[4])
+        retr, timer, command, result_callback, stime, callback_parameters = parameters
+        timer.cancel()
+        if result_callback != None:
+            result_callback(result.strip(), *callback_parameters)
+        self.delay_flt.apply(rtime - stime)
+        #print 'Rtp_proxy_client_udp.process_reply(): delay %f' % (rtime - stime)
 
     def reconnect(self, address, bind_address = None):
         self.address = address
@@ -83,10 +93,14 @@ class Rtp_proxy_client_udp(object):
             self.uopts.laddress = bind_address
             self.worker.shutdown()
             self.worker = Udp_server(self.global_config, self.uopts)
+            self.delay_flt = recfilter(0.95, 0.25)
 
     def shutdown(self):
         self.worker.shutdown()
         self.worker = None
+
+    def get_rtpc_delay(self):
+        return self.delay_flt.lastval
 
 class selftest(object):
     def gotreply(self, *args):

@@ -28,6 +28,8 @@ from Timeout import Timeout
 from threading import Thread, Condition
 from errno import EINTR, EPIPE, ENOTCONN
 from twisted.internet import reactor
+from Time.MonoTime import MonoTime
+from Math.recfilter import recfilter
 
 from datetime import datetime
 import socket
@@ -49,12 +51,14 @@ class _RTPPLWorker(Thread):
         self.s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.s.connect(self.userv.address)
 
-    def send_raw(self, command, _recurse = 0):
+    def send_raw(self, command, _recurse = 0, stime = None):
         if _recurse > _MAX_RECURSE:
             raise Exception('Cannot reconnect: %s', self.userv.address)
         if not command.endswith('\n'):
             command += '\n'
         #print '%s.send_raw(%s)' % (id(self), command)
+        if stime == None:
+            stime = MonoTime()
         while True:
             try:
                 self.s.send(command)
@@ -64,14 +68,14 @@ class _RTPPLWorker(Thread):
                     continue
                 elif why[0] in (EPIPE, ENOTCONN):
                     self.connect()
-                    return self.send_raw(command, _recurse + 1)
+                    return self.send_raw(command, _recurse + 1, stime)
                 raise why
         while True:
             try:
                 rval = self.s.recv(1024)
                 if len(rval) == 0:
                     self.connect()
-                    return self.send_raw(command, _MAX_RECURSE)
+                    return self.send_raw(command, _MAX_RECURSE, stime)
                 rval = rval.strip()
                 break
             except socket.error, why:
@@ -79,9 +83,10 @@ class _RTPPLWorker(Thread):
                     continue
                 elif why[0] in (EPIPE, ENOTCONN):
                     self.connect()
-                    return self.send_raw(command, _recurse + 1)
+                    return self.send_raw(command, _recurse + 1, stime)
                 raise why
-        return rval
+        rtpc_delay = stime.offsetFromNow()
+        return (rval, rtpc_delay)
 
     def run(self):
         while True:
@@ -98,14 +103,16 @@ class _RTPPLWorker(Thread):
                 break
             command, result_callback, callback_parameters = wi
             try:
-                data = self.send_raw(command)
+                data, rtpc_delay = self.send_raw(command)
                 if len(data) == 0:
-                    data = None
+                    data, rtpc_delay = None, None
             except Exception, e:
                 print e
-                data = None
+                data, rtpc_delay = None, None
             if result_callback != None:
                 reactor.callFromThread(self.dispatch, result_callback, data, callback_parameters)
+            if rtpc_delay != None:
+                reactor.callFromThread(self.userv.register_delay, rtpc_delay)
 
     def dispatch(self, result_callback, data, callback_parameters):
         try:
@@ -131,6 +138,7 @@ class Rtp_proxy_client_local(object):
     wi = None
     nworkers = None
     workers = None
+    delay_flt = None
 
     def __init__(self, global_config, address = '/var/run/rtpproxy.sock', \
       bind_address = None, nworkers = 1):
@@ -142,6 +150,7 @@ class Rtp_proxy_client_local(object):
         self.workers = []
         for i in range(0, self.nworkers):
             self.workers.append(_RTPPLWorker(self))
+        self.delay_flt = recfilter(0.95, 0.25)
 
     def send_command(self, command, result_callback = None, *callback_parameters):
         self.wi_available.acquire()
@@ -155,11 +164,18 @@ class Rtp_proxy_client_local(object):
         self.workers = []
         for i in range(0, self.nworkers):
             self.workers.append(_RTPPLWorker(self))
+        self.delay_flt = recfilter(0.95, 0.25)
 
     def shutdown(self):
         for rworker in self.workers:
             rworker.shutdown()
         self.workers = None
+
+    def register_delay(self, rtpc_delay):
+        self.delay_flt.apply(rtpc_delay)
+
+    def get_rtpc_delay(self):
+        return self.delay_flt.lastval
 
 if __name__ == '__main__':
     from twisted.internet import reactor

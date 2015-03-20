@@ -249,3 +249,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             return Rtp_proxy_client_local.shutdown(self)
         else:
             return Rtp_proxy_client_udp.shutdown(self)
+
+    def get_rtpc_delay(self):
+        if self.is_local:
+            return Rtp_proxy_client_local.get_rtpc_delay(self)
+        else:
+            return Rtp_proxy_client_udp.get_rtpc_delay(self)
