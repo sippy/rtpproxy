@@ -83,7 +83,7 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop)
     rp->rtp->m = 1;
     rp->rtp->pt = codec;
     rp->rtp->ts = 0;
-    rp->rtp->seq = 0;
+    rp->rtp->seq = random() & 0xffff;
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
