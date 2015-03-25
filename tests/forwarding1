@@ -146,11 +146,14 @@ RECORD_DIR="${BUILDDIR}"
 setup_buffers
 
 #sts=`date "+%Y%m%d%H%M%S"`
-(setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | ${RTPPROXY} -i -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -f -m ${FWD_SPORT} > forwarding1.rout 2>/dev/null) &
+(setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
+  ${RTPPROXY} -i -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -f -d info -m ${FWD_SPORT} > forwarding1.rout 2>forwarding1.rlog) &
 FWD_PID=${!}
-(setup_gen "o" ${FWD_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | ${RTPPROXY} -P -r "${RECORD_DIR}" -T5 -b -m ${GENO_SPORT} -s stdio: -f -d info > forwarding1.geno.rout 2>/dev/null) &
+(setup_gen "o" ${FWD_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
+  ${RTPPROXY} -P -r "${RECORD_DIR}" -T5 -b -m ${GENO_SPORT} -s stdio: -f -d info > forwarding1.geno.rout 2>forwarding1.geno.rlog) &
 GENO_PID=${!}
-(setup_gen "a" ${PORTO} "${CODECSA}" "${REPACK_CODECSA}" | ${RTPPROXY} -r "${RECORD_DIR}" -T5 -b -m ${GENA_SPORT} -s stdio: -f -d info > forwarding1.gena.rout 2>/dev/null) &
+(setup_gen "a" ${PORTO} "${CODECSA}" "${REPACK_CODECSA}" | \
+  ${RTPPROXY} -r "${RECORD_DIR}" -T5 -b -m ${GENA_SPORT} -s stdio: -f -d info > forwarding1.gena.rout 2>forwarding1.gena.rlog) &
 GENA_PID=${!}
 wait ${FWD_PID}
 #ets=`date "+%Y%m%d%H%M%S"`

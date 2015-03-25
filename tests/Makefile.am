@@ -21,7 +21,8 @@ forwarding1_EXTRA_DIST = forwarding1 forwarding1.checksums forwarding1.gen.input
 forwarding1_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
   forwarding1.8.wav forwarding1.9.wav forwarding1.gena.rout forwarding1.geno.rout \
   forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
-  forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18
+  forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
+  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog
 session_timeouts_EXTRA_DIST = session_timeouts session_timeouts.full.input \
   session_timeouts.full6.input session_timeouts.half.input \
   session_timeouts.half6.input session_timeouts.lookup.input \
