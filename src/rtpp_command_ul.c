@@ -601,7 +601,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
               "with %s%s%s:%s", (pidx == 0) ? "callee" : "caller", obr, ulop->addr,
               cbr, ulop->port);
             if (spa->addr[pidx] != NULL) {
-                if (spa->canupdate[pidx] == 0) {
+                if (spa->latch_info[pidx].latched != 0) {
                     if (spa->prev_addr[pidx] != NULL)
                          free(spa->prev_addr[pidx]);
                     spa->prev_addr[pidx] = spa->addr[pidx];
@@ -616,7 +616,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
           SA_LEN(ulop->ia[1]) == SA_LEN(spa->rtcp->addr[pidx]) &&
           memcmp(ulop->ia[1], spa->rtcp->addr[pidx], SA_LEN(ulop->ia[1])) == 0)) {
             if (spa->rtcp->addr[pidx] != NULL) {
-                if (spa->rtcp->canupdate[pidx] == 0) {
+                if (spa->rtcp->latch_info[pidx].latched != 0) {
                     if (spa->rtcp->prev_addr[pidx] != NULL)
                         free(spa->rtcp->prev_addr[pidx]);
                     spa->rtcp->prev_addr[pidx] = spa->rtcp->addr[pidx];
@@ -629,7 +629,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         }
     }
     spa->asymmetric[pidx] = spa->rtcp->asymmetric[pidx] = ulop->asymmetric;
-    spa->canupdate[pidx] = spa->rtcp->canupdate[pidx] = NOT(ulop->asymmetric);
+    spa->latch_info[pidx].latched = spa->rtcp->latch_info[pidx].latched = ulop->asymmetric;
     if (spa->codecs[pidx] != NULL) {
         free(spa->codecs[pidx]);
         spa->codecs[pidx] = NULL;

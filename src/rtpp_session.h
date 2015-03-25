@@ -36,6 +36,12 @@ struct rtpp_timeout_data {
 
 struct rtpp_hash_table_entry;
 
+struct rtpps_latch {
+    int latched;
+    unsigned int ssrc;
+    int seq;
+};
+
 struct rtpp_session {
     /* ttl for caller [0] and callee [1] */
     int ttl[2];
@@ -52,7 +58,7 @@ struct rtpp_session {
     /* Save previous address when doing update */
     struct sockaddr *prev_addr[2];
     /* Flag which tells if we are allowed to update address with RTP src IP */
-    int canupdate[2];
+    struct rtpps_latch latch_info[2];
     /* Local listen addresses/ports */
     struct sockaddr *laddr[2];
     int ports[2];

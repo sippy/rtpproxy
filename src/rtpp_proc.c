@@ -32,11 +32,13 @@
 #include <assert.h>
 #include <poll.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "rtpp_types.h"
 #include "rtp.h"
+#include "rtp_info.h"
 #include "rtp_resizer.h"
 #include "rtp_server.h"
 #include "rtpp_log.h"
@@ -107,6 +109,77 @@ process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
     cf->rtp_nsessions -= skipfd;
 }
 
+static int
+latch_session(struct rtpp_session *sp, double dtime, int ridx,
+  struct rtp_packet *packet)
+{
+    const char *actor, *raddr, *ptype, *ssrc, *seq;
+    char ssrc_buf[11], seq_buf[6];
+    int rport;
+
+    if (sp->last_update[ridx] != 0 && \
+      dtime - sp->last_update[ridx] < UPDATE_WINDOW) {
+        return (0);
+    }
+
+    actor = (ridx == 0) ? "callee" : "caller";
+    raddr = addr2char(sstosa(&packet->raddr));
+    rport = ntohs(satosin(&packet->raddr)->sin_port);
+
+    if (sp->rtp == NULL) {
+        if (rtp_packet_parse(packet->data.buf, packet->size, packet->parsed) == RTP_PARSER_OK) {
+            sp->latch_info[ridx].ssrc = packet->data.header.ssrc;
+            sp->latch_info[ridx].seq = packet->parsed->seq;
+            snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", packet->data.header.ssrc);
+            snprintf(seq_buf, sizeof(seq_buf), "%u", packet->parsed->seq);
+            ssrc = ssrc_buf;
+            seq = seq_buf;
+        } else {
+            sp->latch_info[ridx].ssrc = 0;
+            ssrc = seq = "INVALID";
+        }
+        ptype = "RTP";
+    } else {
+        sp->latch_info[ridx].ssrc = 0;
+        ssrc = seq = "UNKNOWN";
+        ptype = "RTCP";
+    }
+
+    rtpp_log_write(RTPP_LOG_INFO, sp->log,
+      "%s's address latched in: %s:%d (%s), SSRC=%s, Seq=%s", actor, raddr,
+      rport, ptype, ssrc, seq);
+    sp->latch_info[ridx].latched = 1;
+    return (1);
+}
+
+static int
+check_latch_override(struct rtpp_session *sp, struct rtp_packet *packet, int ridx)
+{
+    const char *actor, *raddr;
+    int rport;
+
+    if (sp->rtp != NULL || sp->latch_info[ridx].ssrc == 0)
+        return (0);
+    if (rtp_packet_parse(packet->data.buf, packet->size, packet->parsed) != RTP_PARSER_OK)
+        return (0);
+    if (packet->data.header.ssrc != sp->latch_info[ridx].ssrc)
+        return (0);
+    if (packet->parsed->seq < sp->latch_info[ridx].seq && sp->latch_info[ridx].seq - packet->parsed->seq < 536)
+        return (0);
+
+    actor = (ridx == 0) ? "callee" : "caller";
+    raddr = addr2char(sstosa(&packet->raddr));
+    rport = ntohs(satosin(&packet->raddr)->sin_port);
+
+    rtpp_log_write(RTPP_LOG_INFO, sp->log,
+      "%s's address re-latched: %s:%d (%s), SSRC=0x%.8X, Seq=%u->%u", actor, raddr,
+      rport, "RTP", sp->latch_info[ridx].ssrc, sp->latch_info[ridx].seq,
+      packet->parsed->seq);
+
+    sp->latch_info[ridx].seq = packet->parsed->seq;
+    return (1);
+}
+
 static void
 rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
   double dtime, int drain_repeat, struct sthread_args *sender,
@@ -149,7 +222,8 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	    /* Check that the packet is authentic, drop if it isn't */
 	    if (sp->asymmetric[ridx] == 0) {
 		if (memcmp(sp->addr[ridx], &packet->raddr, packet->rlen) != 0) {
-		    if (sp->canupdate[ridx] == 0) {
+		    if (sp->latch_info[ridx].latched != 0 && \
+                      check_latch_override(sp, packet, ridx) == 0) {
 			/*
 			 * Continue, since there could be good packets in
 			 * queue.
@@ -160,16 +234,8 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 		    }
 		    /* Signal that an address has to be updated */
 		    i = 1;
-		} else if (sp->canupdate[ridx] != 0) {
-		    if (sp->last_update[ridx] == 0 ||
-		      dtime - sp->last_update[ridx] > UPDATE_WINDOW) {
-			rtpp_log_write(RTPP_LOG_INFO, sp->log,
-			  "%s's address latched in: %s:%d (%s)",
-			  (ridx == 0) ? "callee" : "caller",
-			  addr2char(sstosa(&packet->raddr)), port,
-			  (sp->rtp == NULL) ? "RTP" : "RTCP");
-			sp->canupdate[ridx] = 0;
-		    }
+		} else if (sp->latch_info[ridx].latched == 0) {
+                    latch_session(sp, dtime, ridx, packet);
 		}
 	    } else {
 		/*
@@ -216,7 +282,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	    memcpy(sp->addr[ridx], &packet->raddr, packet->rlen);
 	    if (sp->prev_addr[ridx] == NULL || memcmp(sp->prev_addr[ridx],
 	      &packet->raddr, packet->rlen) != 0) {
-	        sp->canupdate[ridx] = 0;
+	        sp->latch_info[ridx].latched = 1;
 	    }
 
 	    rtpp_log_write(RTPP_LOG_INFO, sp->log,
@@ -251,7 +317,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 		memcpy(sp->rtcp->addr[ridx], &packet->raddr, packet->rlen);
 		satosin(sp->rtcp->addr[ridx])->sin_port = htons(port + 1);
 		/* Use guessed value as the only true one for asymmetric clients */
-		sp->rtcp->canupdate[ridx] = NOT(sp->rtcp->asymmetric[ridx]);
+		sp->rtcp->latch_info[ridx].latched = sp->rtcp->asymmetric[ridx];
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "guessing RTCP port "
 		  "for %s to be %d",
 		  (ridx == 0) ? "callee" : "caller", port + 1);
