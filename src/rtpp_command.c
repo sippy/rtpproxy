@@ -677,8 +677,8 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
     int len;
 
     len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n", get_ttl(spa),
-      spa->pcount[idx], spa->pcount[NOT(idx)], spa->pcount[2],
-      spa->pcount[3]);
+      spa->pcount.npkts_in[idx], spa->pcount.npkts_in[NOT(idx)],
+      spa->pcount.nrelayed, spa->pcount.ndropped);
     rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
 }
 

@@ -229,6 +229,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 			 * queue.
 			 */
                         ndrain += 1;
+                        sp->pcount.nignored++;
                         rsp->npkts_discard.cnt++;
 			continue;
 		    }
@@ -248,16 +249,17 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 		     * queue.
 		     */
                     ndrain += 1;
+                    sp->pcount.nignored++;
                     rsp->npkts_discard.cnt++;
 		    continue;
                 }
 	    }
-	    sp->pcount[ridx]++;
+	    sp->pcount.npkts_in[ridx]++;
 	} else {
-	    sp->pcount[ridx]++;
+	    sp->pcount.npkts_in[ridx]++;
 	    sp->addr[ridx] = malloc(packet->rlen);
 	    if (sp->addr[ridx] == NULL) {
-		sp->pcount[3]++;
+		sp->pcount.ndropped++;
 		rtpp_log_write(RTPP_LOG_ERR, sp->log,
 		  "can't allocate memory for remote address - "
 		  "removing session");
@@ -303,7 +305,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 		if (sp->rtcp->addr[ridx] == NULL) {
 		    sp->rtcp->addr[ridx] = malloc(packet->rlen);
 		    if (sp->rtcp->addr[ridx] == NULL) {
-			sp->pcount[3]++;
+			sp->pcount.ndropped++;
 			rtpp_log_write(RTPP_LOG_ERR, sp->log,
 			  "can't allocate memory for remote address - "
 			  "removing session");
@@ -363,12 +365,12 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
      */
     if (sp->addr[sidx] == NULL || GET_RTP(sp)->rtps[sidx] != NULL) {
         rtp_packet_free(packet);
-	sp->pcount[3]++;
+	sp->pcount.ndropped++;
         rsp->npkts_discard.cnt++;
     } else {
         rtpp_anetio_send_pkt(sender, sp->fds[sidx], sp->addr[sidx], \
           SA_LEN(sp->addr[sidx]), packet);
-        sp->pcount[2]++;
+        sp->pcount.nrelayed++;
         rsp->npkts_relayed.cnt++;
     }
 }

@@ -42,11 +42,18 @@ struct rtpps_latch {
     int seq;
 };
 
+struct rtpps_pcount {
+    unsigned long npkts_in[2];
+    unsigned long nrelayed;
+    unsigned long ndropped;
+    unsigned long nignored;
+};
+
 struct rtpp_session {
     /* ttl for caller [0] and callee [1] */
     int ttl[2];
     rtpp_ttl_mode ttl_mode;
-    unsigned long pcount[4];
+    struct rtpps_pcount pcount;
     char *call_id;
     char *tag;
     char *tag_nomedianum;

@@ -122,20 +122,22 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
     assert(pthread_mutex_islocked(&cf->sessinfo.lock) == 1);
 
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped", sp->pcount[0], sp->pcount[1],
-      sp->pcount[2], sp->pcount[3]);
+      "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->pcount.npkts_in[0],
+      sp->pcount.npkts_in[1], sp->pcount.nrelayed, sp->pcount.ndropped,
+      sp->pcount.nignored);
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTCP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped", sp->rtcp->pcount[0],
-      sp->rtcp->pcount[1], sp->rtcp->pcount[2], sp->rtcp->pcount[3]);
+      "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->rtcp->pcount.npkts_in[0],
+      sp->rtcp->pcount.npkts_in[1], sp->rtcp->pcount.nrelayed,
+      sp->rtcp->pcount.ndropped, sp->rtcp->pcount.nignored);
     if (sp->complete != 0) {
-        if (sp->pcount[0] == 0 && sp->pcount[1] == 0) {
+        if (sp->pcount.npkts_in[0] == 0 && sp->pcount.npkts_in[1] == 0) {
             CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_nortp", 1);
-        } else if (sp->pcount[0] == 0 || sp->pcount[1] == 0) {
+        } else if (sp->pcount.npkts_in[0] == 0 || sp->pcount.npkts_in[1] == 0) {
             CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_owrtp", 1);
         }
-        if (sp->rtcp->pcount[0] == 0 && sp->rtcp->pcount[1] == 0) {
+        if (sp->rtcp->pcount.npkts_in[0] == 0 && sp->rtcp->pcount.npkts_in[1] == 0) {
             CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_nortcp", 1);
-        } else if (sp->rtcp->pcount[0] == 0 || sp->rtcp->pcount[1] == 0) {
+        } else if (sp->rtcp->pcount.npkts_in[0] == 0 || sp->rtcp->pcount.npkts_in[1] == 0) {
             CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_owrtcp", 1);
         }
     }
