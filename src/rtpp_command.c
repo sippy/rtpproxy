@@ -79,6 +79,7 @@ struct proto_cap proto_caps[] = {
     { "20140323", "Support for tracking/reporting load" },
     { "20140617", "Support for anchoring session connect time" },
     { "20141004", "Support for extendable performance counters" },
+    { "20150330", "Support for allocating a new port (\"Un\"/\"Ln\" commands)" },
     { NULL, NULL }
 };
 

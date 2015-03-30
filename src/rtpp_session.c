@@ -111,6 +111,32 @@ append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 }
 
 void
+update_sessions(struct cfg *cf, struct rtpp_session *sp, int index, int *new_fds)
+{
+    int rtp_index;
+
+    /* Make sure structure is properly locked */
+    assert(pthread_mutex_islocked(&cf->glock) == 1);
+    rtp_index = sp->sidx[index];
+    assert(rtp_index > -1);
+    assert(sp->rtcp->sidx[index] == rtp_index);
+    if (sp->fds[index] != -1) {
+        shutdown(sp->fds[index], SHUT_RDWR);
+        close(sp->fds[index]);
+    }
+    cf->sessinfo.pfds_rtp[rtp_index].fd = sp->fds[index] = new_fds[0];
+    cf->sessinfo.pfds_rtp[rtp_index].events = POLLIN;
+    cf->sessinfo.pfds_rtp[rtp_index].revents = 0;
+    if (sp->rtcp->fds[index] != -1) {
+        shutdown(sp->rtcp->fds[index], SHUT_RDWR);
+        close(sp->rtcp->fds[index]);
+    }
+    cf->sessinfo.pfds_rtcp[rtp_index].fd = sp->rtcp->fds[index] = new_fds[1];
+    cf->sessinfo.pfds_rtcp[rtp_index].events = POLLIN;
+    cf->sessinfo.pfds_rtcp[rtp_index].revents = 0;
+}
+
+void
 remove_session(struct cfg *cf, struct rtpp_session *sp)
 {
     int i;

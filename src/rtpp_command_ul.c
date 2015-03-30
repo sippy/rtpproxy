@@ -79,6 +79,7 @@ struct ul_opts {
     char *socket_name_u;
     char *notify_tag;
     int pf;
+    int new_port;
 };
 
 void
@@ -300,6 +301,11 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             cp--;
             break;
 
+        case 'n':
+        case 'N':
+            ulop->new_port = 1;
+            break;
+
         default:
             rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "unknown command modifier `%c'",
               *cp);
@@ -379,7 +385,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     if (sidx != -1) {
         assert(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = sp;
-        if (spa->fds[sidx] == -1) {
+        if (spa->fds[sidx] == -1 || ulop->new_port != 0) {
             if (ulop->local_addr != NULL) {
                 spa->laddr[sidx] = ulop->local_addr;
             }
@@ -388,17 +394,24 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
                 reply_error(cf, cmd, ECODE_LSTFAIL_1);
                 goto err_undo_0;
             }
-            assert(spa->fds[sidx] == -1);
-            spa->fds[sidx] = fds[0];
-            assert(spa->rtcp->fds[sidx] == -1);
-            spa->rtcp->fds[sidx] = fds[1];
+            if (spa->fds[sidx] != -1 && ulop->new_port != 0) {
+                rtpp_log_write(RTPP_LOG_INFO, spa->log,
+                  "new port requested, releasing %d/%d, replacing with %d/%d",
+                  spa->ports[sidx], spa->rtcp->ports[sidx], lport, lport + 1);
+                update_sessions(cf, spa, sidx, fds);
+            } else {
+                assert(spa->fds[sidx] == -1);
+                spa->fds[sidx] = fds[0];
+                assert(spa->rtcp->fds[sidx] == -1);
+                spa->rtcp->fds[sidx] = fds[1];
+                append_session(cf, spa, sidx);
+            }
             spa->ports[sidx] = lport;
             spa->rtcp->ports[sidx] = lport + 1;
             if (spa->complete == 0) {
                 cmd->csp->nsess_complete.cnt++;
             }
             spa->complete = spa->rtcp->complete = 1;
-            append_session(cf, spa, sidx);
         }
         if (ulop->weak)
             spa->weak[sidx] = 1;
