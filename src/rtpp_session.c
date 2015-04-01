@@ -49,6 +49,7 @@
 #include "rtp_server.h"
 #include "rtpp_util.h"
 #include "rtpp_stats.h"
+#include "rtpp_timed.h"
 
 struct rtpp_session *
 session_findfirst(struct cfg *cf, const char *call_id)
@@ -110,6 +111,34 @@ append_session(struct cfg *cf, struct rtpp_session *sp, int index)
     }
 }
 
+static void
+close_socket_now(void *argp)
+{
+    int fd;
+
+    fd = *(int *)argp;
+    shutdown(fd, SHUT_RDWR);
+    close(fd);
+    free(argp);
+}
+
+static void
+close_socket_later(struct cfg *cf, int fd)
+{
+    int *argp;
+
+    argp = malloc(sizeof(int));
+    if (argp == NULL) {
+        shutdown(fd, SHUT_RDWR);
+        close(fd);
+        return;
+    }
+    *argp = fd;
+    if (rtpp_timed_schedule(cf, 1.0, close_socket_now, argp) != 0) {
+        close_socket_now(argp);
+    }
+}
+
 void
 update_sessions(struct cfg *cf, struct rtpp_session *sp, int index, int *new_fds)
 {
@@ -121,15 +150,13 @@ update_sessions(struct cfg *cf, struct rtpp_session *sp, int index, int *new_fds
     assert(rtp_index > -1);
     assert(sp->rtcp->sidx[index] == rtp_index);
     if (sp->fds[index] != -1) {
-        shutdown(sp->fds[index], SHUT_RDWR);
-        close(sp->fds[index]);
+        close_socket_later(cf, sp->fds[index]);
     }
     cf->sessinfo.pfds_rtp[rtp_index].fd = sp->fds[index] = new_fds[0];
     cf->sessinfo.pfds_rtp[rtp_index].events = POLLIN;
     cf->sessinfo.pfds_rtp[rtp_index].revents = 0;
     if (sp->rtcp->fds[index] != -1) {
-        shutdown(sp->rtcp->fds[index], SHUT_RDWR);
-        close(sp->rtcp->fds[index]);
+        close_socket_later(cf, sp->rtcp->fds[index]);
     }
     cf->sessinfo.pfds_rtcp[rtp_index].fd = sp->rtcp->fds[index] = new_fds[1];
     cf->sessinfo.pfds_rtcp[rtp_index].events = POLLIN;
@@ -179,8 +206,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	if (sp->rtcp->prev_addr[i] != NULL)
 	    free(sp->rtcp->prev_addr[i]);
 	if (sp->fds[i] != -1) {
-	    shutdown(sp->fds[i], SHUT_RDWR);
-	    close(sp->fds[i]);
+	    close_socket_later(cf, sp->fds[i]);
 	    assert(cf->sessinfo.sessions[sp->sidx[i]] == sp);
 	    cf->sessinfo.sessions[sp->sidx[i]] = NULL;
 	    assert(cf->sessinfo.pfds_rtp[sp->sidx[i]].fd == sp->fds[i]);
@@ -188,8 +214,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    cf->sessinfo.pfds_rtp[sp->sidx[i]].events = 0;
 	}
 	if (sp->rtcp->fds[i] != -1) {
-	    shutdown(sp->rtcp->fds[i], SHUT_RDWR);
-	    close(sp->rtcp->fds[i]);
+	    close_socket_later(cf, sp->fds[i]);
 	    assert(cf->sessinfo.pfds_rtcp[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
 	    cf->sessinfo.pfds_rtcp[sp->rtcp->sidx[i]].fd = -1;
 	    cf->sessinfo.pfds_rtcp[sp->rtcp->sidx[i]].events = 0;
