@@ -35,6 +35,7 @@ struct rtp_info {
     int         nsamples;
     uint32_t    ts;
     uint16_t    seq;
+    uint32_t    ssrc;
     int         appendable;
 };
 

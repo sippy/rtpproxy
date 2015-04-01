@@ -309,6 +309,7 @@ rtp_packet_parse(unsigned char *buf, size_t size, struct rtp_info *rinfo)
     rinfo->data_size = size - rinfo->data_offset - padding_size;
     rinfo->ts = ntohl(header->ts);
     rinfo->seq = ntohs(header->seq);
+    rinfo->ssrc = ntohl(header->ssrc);
 
     if (rinfo->data_size == 0)
         return RTP_PARSER_OK;
