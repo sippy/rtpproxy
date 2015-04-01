@@ -241,7 +241,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
   double dtime, int drain_repeat, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
-    int ndrain, i, port, rn, ridx;
+    int ndrain, rn, ridx;
     struct rtp_packet *packet = NULL;
     struct rtpp_session *sp;
 
@@ -269,10 +269,6 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	packet->rport = sp->ports[ridx];
 	packet->rtime = dtime;
         rsp->npkts_rcvd.cnt++;
-
-	i = 0;
-
-	port = ntohs(satosin(&packet->raddr)->sin_port);
 
 	if (sp->addr[ridx] != NULL) {
 	    /* Check that the packet is authentic, drop if it isn't */
