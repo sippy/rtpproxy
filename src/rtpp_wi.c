@@ -39,7 +39,7 @@
 
 struct rtpp_wi *
 rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
-  const struct sockaddr *sendto, socklen_t tolen)
+  const struct sockaddr *sendto, size_t tolen)
 {
     struct rtpp_wi *wi;
 
@@ -63,7 +63,7 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
 
 struct rtpp_wi *
 rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
-  const struct sockaddr *sendto, socklen_t tolen, int nsend)
+  const struct sockaddr *sendto, size_t tolen, int nsend)
 {
     struct rtpp_wi *wi;
 
@@ -107,6 +107,47 @@ rtpp_wi_malloc_sgnl(int signum, const void *data, size_t datalen)
     return (wi);
 }
 
+struct rtpp_wi *
+rtpp_wi_malloc_apis(const char *apiname, void *data, size_t datalen)
+{
+    struct rtpp_wi *wi;
+
+    wi = malloc(sizeof(struct rtpp_wi) + datalen);
+    if (wi == NULL) {
+        return (NULL);
+    }
+    memset(wi, '\0', sizeof(struct rtpp_wi));
+    wi->free_ptr = wi;
+    wi->wi_type = RTPP_WI_TYPE_API_STR;
+    wi->sendto = (void *)apiname;
+    if (datalen > 0) {
+        wi->msg = (char *)wi + datalen;
+        wi->msg_len = datalen;
+        memcpy(wi->msg, data, datalen);
+    }
+    return (wi);
+}
+
+struct rtpp_wi *
+rtpp_wi_malloc_data(void *dataptr, size_t datalen)
+{
+    struct rtpp_wi *wi;
+
+    wi = malloc(sizeof(struct rtpp_wi) + datalen);
+    if (wi == NULL) {
+        return (NULL);
+    }
+    memset(wi, '\0', sizeof(struct rtpp_wi));
+    wi->free_ptr = wi;
+    wi->wi_type = RTPP_WI_TYPE_DATA;
+    if (datalen > 0) {
+        wi->msg = (char *)wi + datalen;
+        wi->msg_len = datalen;
+        memcpy(wi->msg, dataptr, datalen);
+    }
+    return (wi);
+}
+
 void *
 rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
 {
@@ -115,6 +156,16 @@ rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
     if (datalen != NULL) {
         *datalen = wi->msg_len;
     }
+    return(wi->msg);
+}
+
+void *
+rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t datalen)
+{
+
+    assert(wi->wi_type == RTPP_WI_TYPE_DATA);
+    assert(wi->msg_len == datalen);
+
     return(wi->msg);
 }
 
