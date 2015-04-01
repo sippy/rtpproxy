@@ -53,7 +53,7 @@ update_rtpp_stats(struct rtpp_session_stat *stat, rtp_hdr_t *header,
     uint32_t mask;
 
     seq = rinfo->seq;
-    if (stat->last.ssrc != header->ssrc) {
+    if (stat->last.ssrc != rinfo->ssrc) {
         if (stat->last.pcount > 10) {
             stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
             stat->precvd += stat->last.pcount;
@@ -61,7 +61,7 @@ update_rtpp_stats(struct rtpp_session_stat *stat, rtp_hdr_t *header,
         stat->duplicates += stat->last.duplicates;
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
-        stat->last.ssrc = header->ssrc;
+        stat->last.ssrc = rinfo->ssrc;
         stat->last.max_seq = stat->last.min_seq =  seq;
         stat->last.base_ts = rinfo->ts;
         stat->last.base_rtime = rtime;
@@ -98,7 +98,7 @@ update_rtpp_stats(struct rtpp_session_stat *stat, rtp_hdr_t *header,
         stat->duplicates += stat->last.duplicates;
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
-        stat->last.ssrc = header->ssrc;
+        stat->last.ssrc = rinfo->ssrc;
         stat->last.max_seq = stat->last.min_seq =  seq;
         stat->last.pcount = 1;
         stat->desync_count += 1;
