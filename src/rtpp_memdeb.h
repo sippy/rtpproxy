@@ -25,6 +25,9 @@
  *
  */
 
+#if defined(LINUX_XXX)
+#define _GNU_SOURCE
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
