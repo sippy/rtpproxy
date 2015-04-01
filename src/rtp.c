@@ -38,7 +38,7 @@
 struct rtp_packet_full;
 
 struct rtp_packet_priv {
-    struct rtp_info parsed;
+    struct rtp_info rinfo;
 };
 
 struct rtp_packet_full {
@@ -261,7 +261,7 @@ rtp_packet_parse_errstr(rtp_parser_err_t ecode)
 }
 
 rtp_parser_err_t
-rtp_packet_parse(unsigned char *buf, size_t size, struct rtp_info *rinfo)
+rtp_packet_parse_raw(unsigned char *buf, size_t size, struct rtp_info *rinfo)
 {
     int padding_size;
     rtp_hdr_ext_t *hdr_ext_ptr;
@@ -325,6 +325,23 @@ rtp_packet_parse(unsigned char *buf, size_t size, struct rtp_info *rinfo)
     return RTP_PARSER_OK;
 }
 
+rtp_parser_err_t
+rtp_packet_parse(struct rtp_packet *pkt)
+{
+    struct rtp_packet_full *pkt_full;
+    struct rtp_info *rinfo;    
+
+    if (pkt->parse_result != RTP_PARSER_NOTPARSED) {
+        return (pkt->parse_result);
+    }
+    assert(pkt->parsed == NULL);
+    pkt_full = (void *)pkt;
+    rinfo = &(pkt_full->pvt.rinfo);
+    pkt->parse_result = rtp_packet_parse_raw(pkt->data.buf, pkt->size, rinfo);
+    pkt->parsed = rinfo;
+    return (pkt->parse_result);
+}
+
 struct rtp_packet *
 rtp_packet_alloc()
 {
@@ -332,7 +349,6 @@ rtp_packet_alloc()
 
     pkt = malloc(sizeof(*pkt));
     memset(pkt, '\0', sizeof(*pkt));
-    pkt->pub.parsed = &(pkt->pvt.parsed);
 
     return &(pkt->pub);
 }

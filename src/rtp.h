@@ -86,6 +86,18 @@ typedef struct rtp_hdr rtp_hdr_t;
 
 typedef struct rtp_hdr_ext rtp_hdr_ext_t;
 
+typedef enum {
+    RTP_PARSER_NOTPARSED = 0,
+    RTP_PARSER_OK = 1,
+    RTP_PARSER_PTOOSHRT = -1,
+    RTP_PARSER_IHDRVER = -2,
+    RTP_PARSER_PTOOSHRTXS = -3,
+    RTP_PARSER_PTOOSHRTXH = -4,
+    RTP_PARSER_PTOOSHRTPS = -5,
+    RTP_PARSER_PTOOSHRTP = -6,
+    RTP_PARSER_IPS = -7
+} rtp_parser_err_t;
+
 struct rtp_packet {
     size_t      size;
 
@@ -100,6 +112,7 @@ struct rtp_packet {
     struct rtp_packet *prev;
 
     struct rtp_info *parsed;
+    rtp_parser_err_t parse_result;
 
     /*
      * The packet, keep it the last member so that we can use
@@ -118,21 +131,11 @@ struct rtp_packet_chunk {
     int whole_packet_matched;
 };
 
-typedef enum {
-    RTP_PARSER_OK = 0,
-    RTP_PARSER_PTOOSHRT = -1,
-    RTP_PARSER_IHDRVER = -2,
-    RTP_PARSER_PTOOSHRTXS = -3,
-    RTP_PARSER_PTOOSHRTXH = -4,
-    RTP_PARSER_PTOOSHRTPS = -5,
-    RTP_PARSER_PTOOSHRTP = -6,
-    RTP_PARSER_IPS = -7
-} rtp_parser_err_t;
-
 #define	RTP_HDR_LEN(rhp)	(sizeof(*(rhp)) + ((rhp)->cc * sizeof((rhp)->csrc[0])))
 
 const char *rtp_packet_parse_errstr(rtp_parser_err_t);
-rtp_parser_err_t rtp_packet_parse(unsigned char *, size_t, struct rtp_info *);
+rtp_parser_err_t rtp_packet_parse_raw(unsigned char *, size_t, struct rtp_info *);
+rtp_parser_err_t rtp_packet_parse(struct rtp_packet *);
 struct rtp_packet *rtp_recv(int);
 
 struct rtp_packet *rtp_packet_alloc();

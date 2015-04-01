@@ -127,7 +127,7 @@ latch_session(struct rtpp_session *sp, double dtime, int ridx,
     rport = ntohs(satosin(&packet->raddr)->sin_port);
 
     if (sp->rtp == NULL) {
-        if (rtp_packet_parse(packet->data.buf, packet->size, packet->parsed) == RTP_PARSER_OK) {
+        if (rtp_packet_parse(packet) == RTP_PARSER_OK) {
             sp->latch_info[ridx].ssrc = packet->parsed->ssrc;
             sp->latch_info[ridx].seq = packet->parsed->seq;
             snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", packet->parsed->ssrc);
@@ -160,7 +160,7 @@ check_latch_override(struct rtpp_session *sp, struct rtp_packet *packet, int rid
 
     if (sp->rtp != NULL || sp->latch_info[ridx].ssrc == 0)
         return (0);
-    if (rtp_packet_parse(packet->data.buf, packet->size, packet->parsed) != RTP_PARSER_OK)
+    if (rtp_packet_parse(packet) != RTP_PARSER_OK)
         return (0);
     if (packet->parsed->ssrc != sp->latch_info[ridx].ssrc)
         return (0);

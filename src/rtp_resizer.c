@@ -144,7 +144,7 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt,
     int                 delta;
 
     p = *pkt;
-    if (rtp_packet_parse(p->data.buf, p->size, p->parsed) != RTP_PARSER_OK)
+    if (rtp_packet_parse(p) != RTP_PARSER_OK)
         return;
 
     if ((*pkt)->parsed->nsamples == RTP_NSAMPLES_UNKNOWN)
