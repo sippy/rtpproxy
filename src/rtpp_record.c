@@ -26,6 +26,10 @@
  *
  */
 
+#if defined(LINUX_XXX)
+#undef _GNU_SOURCE
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
