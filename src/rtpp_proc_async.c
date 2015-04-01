@@ -44,10 +44,10 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_types.h"
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
 #include "rtpp_util.h"
-#include "rtpp_types.h"
 #include "rtpp_stats.h"
 
 struct rtpp_proc_async_cf {
