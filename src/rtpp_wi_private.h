@@ -30,6 +30,8 @@
 
 #define	RTPP_WI_TYPE_OPKT	0
 #define	RTPP_WI_TYPE_SGNL	1
+#define	RTPP_WI_TYPE_API_STR	2
+#define	RTPP_WI_TYPE_DATA	3
 
 struct rtpp_wi {
     struct rtpp_wi *next;
