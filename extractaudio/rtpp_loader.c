@@ -135,7 +135,7 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
         if (pkt->plen < sizeof(rtp_hdr_t))
             continue;
         pack = malloc(sizeof(*pack));
-        if (rtp_packet_parse(cp, pkt->plen, &(pack->parsed)) != RTP_PARSER_OK) {
+        if (rtp_packet_parse_raw(cp, pkt->plen, &(pack->parsed)) != RTP_PARSER_OK) {
             /* XXX error handling */
             free(pack);
             continue;
@@ -224,7 +224,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
         if (rtp_len < sizeof(rtp_hdr_t))
             continue;
         pack = malloc(sizeof(*pack) + sizeof(*pack->pkt));
-        if (rtp_packet_parse(cp, rtp_len, &(pack->parsed)) != RTP_PARSER_OK) {
+        if (rtp_packet_parse_raw(cp, rtp_len, &(pack->parsed)) != RTP_PARSER_OK) {
             /* XXX error handling */
             free(pack);
             continue;
