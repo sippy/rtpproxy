@@ -40,6 +40,7 @@
 #include "rtp.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
+#include "rtpp_types.h"
 #include "rtpp_queue.h"
 #include "rtpp_netio_async.h"
 #ifdef RTPP_DEBUG
