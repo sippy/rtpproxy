@@ -128,9 +128,9 @@ latch_session(struct rtpp_session *sp, double dtime, int ridx,
 
     if (sp->rtp == NULL) {
         if (rtp_packet_parse(packet->data.buf, packet->size, packet->parsed) == RTP_PARSER_OK) {
-            sp->latch_info[ridx].ssrc = packet->data.header.ssrc;
+            sp->latch_info[ridx].ssrc = packet->parsed->ssrc;
             sp->latch_info[ridx].seq = packet->parsed->seq;
-            snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", packet->data.header.ssrc);
+            snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", packet->parsed->ssrc);
             snprintf(seq_buf, sizeof(seq_buf), "%u", packet->parsed->seq);
             ssrc = ssrc_buf;
             seq = seq_buf;
@@ -162,7 +162,7 @@ check_latch_override(struct rtpp_session *sp, struct rtp_packet *packet, int rid
         return (0);
     if (rtp_packet_parse(packet->data.buf, packet->size, packet->parsed) != RTP_PARSER_OK)
         return (0);
-    if (packet->data.header.ssrc != sp->latch_info[ridx].ssrc)
+    if (packet->parsed->ssrc != sp->latch_info[ridx].ssrc)
         return (0);
     if (packet->parsed->seq < sp->latch_info[ridx].seq && sp->latch_info[ridx].seq - packet->parsed->seq < 536)
         return (0);
@@ -178,6 +178,62 @@ check_latch_override(struct rtpp_session *sp, struct rtp_packet *packet, int rid
 
     sp->latch_info[ridx].seq = packet->parsed->seq;
     return (1);
+}
+
+static int
+fill_session_addr(struct rtpp_session *sp, struct rtp_packet *packet, int ridx)
+{
+    int rport;
+
+    sp->untrusted_addr[ridx] = 1;
+    memcpy(sp->addr[ridx], &packet->raddr, packet->rlen);
+    if (sp->prev_addr[ridx] == NULL || memcmp(sp->prev_addr[ridx],
+      &packet->raddr, packet->rlen) != 0) {
+        sp->latch_info[ridx].latched = 1;
+    }
+
+    rport = ntohs(satosin(&packet->raddr)->sin_port);
+    rtpp_log_write(RTPP_LOG_INFO, sp->log,
+      "%s's address filled in: %s:%d (%s)",
+      (ridx == 0) ? "callee" : "caller",
+      addr2char(sstosa(&packet->raddr)), rport,
+      (sp->rtp == NULL) ? "RTP" : "RTCP");
+
+    /*
+     * Check if we have updated RTP while RTCP is still
+     * empty or contains address that differs from one we
+     * used when updating RTP. Try to guess RTCP if so,
+     * should be handy for non-NAT'ed clients, and some
+     * NATed as well.
+     */
+    if (sp->rtcp != NULL && (sp->rtcp->addr[ridx] == NULL ||
+      !ishostseq(sp->rtcp->addr[ridx], sstosa(&packet->raddr)))) {
+        if (sp->rtcp->addr[ridx] == NULL) {
+            sp->rtcp->addr[ridx] = malloc(packet->rlen);
+            if (sp->rtcp->addr[ridx] == NULL) {
+                return (-1);
+#if 0
+                sp->pcount.ndropped++;
+                rtpp_log_write(RTPP_LOG_ERR, sp->log,
+                  "can't allocate memory for remote address - "
+                  "removing session");
+                remove_session(cf, sp);
+                /* Move on to the next session, sp is invalid now */
+                ndrain = -1;
+                rsp->npkts_discard.cnt++;
+                continue;
+#endif
+            }
+        }
+        memcpy(sp->rtcp->addr[ridx], &packet->raddr, packet->rlen);
+        satosin(sp->rtcp->addr[ridx])->sin_port = htons(rport + 1);
+        /* Use guessed value as the only true one for asymmetric clients */
+        sp->rtcp->latch_info[ridx].latched = sp->rtcp->asymmetric[ridx];
+        rtpp_log_write(RTPP_LOG_INFO, sp->log, "guessing RTCP port "
+          "for %s to be %d",
+          (ridx == 0) ? "callee" : "caller", rport + 1);
+    }
+    return (0);
 }
 
 static void
@@ -234,7 +290,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 			continue;
 		    }
 		    /* Signal that an address has to be updated */
-		    i = 1;
+		    fill_session_addr(sp, packet, ridx);
 		} else if (sp->latch_info[ridx].latched == 0) {
                     latch_session(sp, dtime, ridx, packet);
 		}
@@ -269,63 +325,9 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
                 rsp->npkts_discard.cnt++;
 		continue;
 	    }
-	    /* Signal that an address have to be updated. */
-	    i = 1;
+	    /* Update address recorded in the session */
+	    fill_session_addr(sp, packet, ridx);
 	}
-
-	/*
-	 * Update recorded address if it's necessary. Set "untrusted address"
-	 * flag in the session state, so that possible future address updates
-	 * from that client won't get address changed immediately to some
-	 * bogus one.
-	 */
-	if (i != 0) {
-	    sp->untrusted_addr[ridx] = 1;
-	    memcpy(sp->addr[ridx], &packet->raddr, packet->rlen);
-	    if (sp->prev_addr[ridx] == NULL || memcmp(sp->prev_addr[ridx],
-	      &packet->raddr, packet->rlen) != 0) {
-	        sp->latch_info[ridx].latched = 1;
-	    }
-
-	    rtpp_log_write(RTPP_LOG_INFO, sp->log,
-	      "%s's address filled in: %s:%d (%s)",
-	      (ridx == 0) ? "callee" : "caller",
-	      addr2char(sstosa(&packet->raddr)), port,
-	      (sp->rtp == NULL) ? "RTP" : "RTCP");
-
-	    /*
-	     * Check if we have updated RTP while RTCP is still
-	     * empty or contains address that differs from one we
-	     * used when updating RTP. Try to guess RTCP if so,
-	     * should be handy for non-NAT'ed clients, and some
-	     * NATed as well.
-	     */
-	    if (sp->rtcp != NULL && (sp->rtcp->addr[ridx] == NULL ||
-	      !ishostseq(sp->rtcp->addr[ridx], sstosa(&packet->raddr)))) {
-		if (sp->rtcp->addr[ridx] == NULL) {
-		    sp->rtcp->addr[ridx] = malloc(packet->rlen);
-		    if (sp->rtcp->addr[ridx] == NULL) {
-			sp->pcount.ndropped++;
-			rtpp_log_write(RTPP_LOG_ERR, sp->log,
-			  "can't allocate memory for remote address - "
-			  "removing session");
-			remove_session(cf, sp);
-			/* Move on to the next session, sp is invalid now */
-                        ndrain = -1;
-                        rsp->npkts_discard.cnt++;
-			continue;
-		    }
-		}
-		memcpy(sp->rtcp->addr[ridx], &packet->raddr, packet->rlen);
-		satosin(sp->rtcp->addr[ridx])->sin_port = htons(port + 1);
-		/* Use guessed value as the only true one for asymmetric clients */
-		sp->rtcp->latch_info[ridx].latched = sp->rtcp->asymmetric[ridx];
-		rtpp_log_write(RTPP_LOG_INFO, sp->log, "guessing RTCP port "
-		  "for %s to be %d",
-		  (ridx == 0) ? "callee" : "caller", port + 1);
-	    }
-	}
-
 	if (sp->resizers[ridx] != NULL) {
 	    rtp_resizer_enqueue(sp->resizers[ridx], &packet, rsp);
             if (packet == NULL) {
