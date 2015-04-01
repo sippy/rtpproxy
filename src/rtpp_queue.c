@@ -39,6 +39,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "rtpp_types.h"
+#include "rtpp_queue.h"
 #include "rtpp_wi_private.h"
 
 struct rtpp_queue
@@ -100,16 +102,7 @@ rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *queue)
 {
 
     pthread_mutex_lock(&queue->mutex);
-
-    wi->next = NULL;
-    if (queue->head == NULL) {
-        queue->head = wi;
-        queue->tail = wi;
-    } else {
-        queue->tail->next = wi;
-        queue->tail = wi;
-    }
-    queue->length += 1;
+    RTPPQ_APPEND(queue, wi);
 #if 0
     if (queue->length > 99 && queue->length % 100 == 0)
         fprintf(stderr, "queue(%s): length %d\n", queue->name, queue->length);
@@ -150,11 +143,9 @@ rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake)
         }
     }
     wi = queue->head;
-    queue->head = wi->next;
-    if (queue->head == NULL)
-        queue->tail = NULL;
-    queue->length -= 1;
+    RTPPQ_REMOVE_HEAD(queue);
     pthread_mutex_unlock(&queue->mutex);
+    wi->next = NULL;
 
     return (wi);
 }
@@ -196,4 +187,39 @@ rtpp_queue_get_length(struct rtpp_queue *queue)
     length = queue->length;
     pthread_mutex_unlock(&queue->mutex);
     return (length);
+}
+
+int
+rtpp_queue_count_matching(struct rtpp_queue *queue, rtpp_queue_match_fn_t match_fn, void *fn_args)
+{
+    struct rtpp_wi *wi;
+    int mcnt;
+
+    mcnt = 0;
+    pthread_mutex_lock(&queue->mutex);
+    for (wi = queue->head; wi != NULL; wi = wi->next) {
+        if (match_fn(wi, fn_args) == 0) {
+            mcnt++;
+        }
+    }
+    pthread_mutex_unlock(&queue->mutex);
+    return (mcnt);
+}
+
+struct rtpp_wi *
+rtpp_queue_get_first_matching(struct rtpp_queue *queue, rtpp_queue_match_fn_t match_fn, void *fn_args)
+{
+    struct rtpp_wi *wi, *wi_prev;
+
+    pthread_mutex_lock(&queue->mutex);
+    wi_prev = NULL;
+    for (wi = queue->head; wi != NULL; wi_prev = wi, wi = wi->next) {
+        if (match_fn(wi, fn_args) == 0) {
+            RTPPQ_REMOVE_AFTER(queue, wi_prev);
+            pthread_mutex_unlock(&queue->mutex);
+            return (wi);
+        }
+    }
+    pthread_mutex_unlock(&queue->mutex);
+    return (NULL);
 }

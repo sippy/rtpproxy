@@ -31,6 +31,44 @@
 struct rtpp_queue;
 struct rtpp_wi;
 
+#define RTPPQ_REMOVE_HEAD(rqp) {             \
+    if ((rqp)->tail == (rqp)->head) {        \
+        (rqp)->tail = NULL;                  \
+    }                                        \
+    (rqp)->head = (rqp)->head->next;         \
+    (rqp)->length -= 1;                      \
+}
+
+#define RTPPQ_REMOVE_AFTER(rqp, wip) {       \
+    struct rtpp_wi *_twip;                   \
+    if ((wip) == NULL) {                     \
+        _twip = (rqp)->head;                 \
+        RTPPQ_REMOVE_HEAD(rqp);              \
+    } else if ((rqp)->tail == (wip)->next) { \
+        _twip = (wip)->next;                 \
+        (wip)->next = NULL;                  \
+        (rqp)->tail = (wip);                 \
+        (rqp)->length -= 1;                  \
+    } else {                                 \
+        _twip = (wip)->next;                 \
+        (wip)->next = _twip->next;           \
+        (rqp)->length -= 1;                  \
+    }                                        \
+    _twip->next = NULL;                      \
+}
+
+#define RTPPQ_APPEND(rqp, wip) {             \
+    (wip)->next = NULL;                      \
+    if ((rqp)->head == NULL) {               \
+        (rqp)->head = (wip);                 \
+        (rqp)->tail = (wip);                 \
+    } else {                                 \
+        (rqp)->tail->next = (wip);           \
+        (rqp)->tail = (wip);                 \
+    }                                        \
+    (rqp)->length += 1;                      \
+}
+
 struct rtpp_queue *rtpp_queue_init(int, const char *format, ...);
 void rtpp_queue_destroy(struct rtpp_queue *queue);
 
@@ -40,5 +78,10 @@ void rtpp_queue_pump(struct rtpp_queue *);
 struct rtpp_wi *rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake);
 int rtpp_queue_get_items(struct rtpp_queue *, struct rtpp_wi **, int, int);
 int rtpp_queue_get_length(struct rtpp_queue *);
+
+DEFINE_METHOD(rtpp_wi, rtpp_queue_match_fn, int, void *);
+
+int rtpp_queue_count_matching(struct rtpp_queue *, rtpp_queue_match_fn_t, void *);
+struct rtpp_wi *rtpp_queue_get_first_matching(struct rtpp_queue *, rtpp_queue_match_fn_t, void *);
 
 #endif
