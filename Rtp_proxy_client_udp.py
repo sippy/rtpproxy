@@ -28,10 +28,21 @@ from Timeout import Timeout
 from Udp_server import Udp_server, Udp_server_opts
 from Time.MonoTime import MonoTime
 from Math.recfilter import recfilter
+from Rtp_proxy_cmd import Rtp_proxy_cmd
 
 from time import time
 from hashlib import md5
 from random import random
+
+def getnretrans(first_rert, timeout):
+    n = 0
+    while True:
+        timeout -= first_rert
+        if timeout < 0:
+            break
+        first_rert *= 2.0
+        n += 1
+    return n
 
 class Rtp_proxy_client_udp(object):
     pending_requests = None
@@ -55,32 +66,52 @@ class Rtp_proxy_client_udp(object):
 
     def send_command(self, command, result_callback = None, *callback_parameters):
         cookie = md5(str(random()) + str(time())).hexdigest()
+        next_retr = self.delay_flt.lastval * 4.0
+        rtime = 3.0
+        if isinstance(command, Rtp_proxy_cmd):
+            if command.type == 'I':
+                rtime = 10.0
+            if command.type == 'G':
+                rtime = 1.0
+            nretr = command.nretr
+            command = str(command)
+        else:
+            if command.startswith('I'):
+                rtime = 10.0
+            elif command.startswith('G'):
+                rtime = 1.0
+            nretr = None
+        if nretr == None:
+            nretr = getnretrans(next_retr, rtime)
         command = '%s %s' % (cookie, command)
-        timer = Timeout(self.retransmit, 1, -1, cookie)
+        timer = Timeout(self.retransmit, next_retr, 1, cookie)
         stime = MonoTime()
         self.worker.send_to(command, self.address)
-        self.pending_requests[cookie] = (3, timer, command, result_callback, stime, callback_parameters)
+        nretr -= 1
+        self.pending_requests[cookie] = (next_retr, nretr, timer, command, result_callback, stime, callback_parameters)
 
     def retransmit(self, cookie):
-        triesleft, timer, command, result_callback, stime, callback_parameters = self.pending_requests[cookie]
-        if triesleft == 0 or self.worker == None:
-            timer.cancel()
+        next_retr, triesleft, timer, command, result_callback, stime, callback_parameters = self.pending_requests[cookie]
+        #print 'command to %s timeout %s cookie %s triesleft %d' % (str(self.address), command, cookie, triesleft)
+        if triesleft <= 0 or self.worker == None:
             del self.pending_requests[cookie]
             self.go_offline()
             if result_callback != None:
                 result_callback(None, *callback_parameters)
             return
+        next_retr *= 2
+        timer = Timeout(self.retransmit, next_retr, 1, cookie)
         stime = MonoTime()
         self.worker.send_to(command, self.address)
         triesleft -= 1
-        self.pending_requests[cookie] = (triesleft, timer, command, result_callback, stime, callback_parameters)
+        self.pending_requests[cookie] = (next_retr, triesleft, timer, command, result_callback, stime, callback_parameters)
 
     def process_reply(self, data, address, worker, rtime):
         cookie, result = data.split(None, 1)
         parameters = self.pending_requests.pop(cookie, None)
         if parameters == None:
             return
-        retr, timer, command, result_callback, stime, callback_parameters = parameters
+        next_retr, triesleft, timer, command, result_callback, stime, callback_parameters = parameters
         timer.cancel()
         if result_callback != None:
             result_callback(result.strip(), *callback_parameters)
