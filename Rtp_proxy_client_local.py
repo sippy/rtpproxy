@@ -124,14 +124,6 @@ class _RTPPLWorker(Thread):
             print '-' * 70
             sys.stdout.flush()
 
-    def shutdown(self):
-        self.userv.wi_available.acquire()
-        self.userv.wi.append(None)
-        self.userv.wi_available.notify()
-        self.userv.wi_available.release()
-        self.join()
-        self.userv = None
-
 class Rtp_proxy_client_local(object):
     is_local = True
     wi_available = None
@@ -153,6 +145,8 @@ class Rtp_proxy_client_local(object):
         self.delay_flt = recfilter(0.95, 0.25)
 
     def send_command(self, command, result_callback = None, *callback_parameters):
+        if not command.endswith('\n'):
+            command += '\n'
         self.wi_available.acquire()
         self.wi.append((command, result_callback, callback_parameters))
         self.wi_available.notify()
@@ -167,8 +161,12 @@ class Rtp_proxy_client_local(object):
         self.delay_flt = recfilter(0.95, 0.25)
 
     def shutdown(self):
+        self.wi_available.acquire()
+        self.wi.append(None)
+        self.wi_available.notify()
+        self.wi_available.release()
         for rworker in self.workers:
-            rworker.shutdown()
+            rworker.join()
         self.workers = None
 
     def register_delay(self, rtpc_delay):
