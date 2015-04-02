@@ -87,7 +87,7 @@ class UpdateLookupOpts(object):
                 s += '%s,' % (codec,)
             s = s[:-1]
         if self.otherparams != None and len(self.otherparams) > 0:
-            s += + self.otherparams
+            s += self.otherparams
         s = '%s %s' % (s, call_id)
         if self.remote_ip != None:
             s = '%s %s' % (s, self.remote_ip)
@@ -115,6 +115,7 @@ class Rtp_proxy_cmd(object):
     command_opts = None
     call_id = None
     args = None
+    nretr = None
 
     def __init__(self, cmd):
         self.type = cmd[0].upper()
