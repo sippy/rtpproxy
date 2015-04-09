@@ -107,7 +107,11 @@ class Rtp_proxy_client_udp(object):
         self.pending_requests[cookie] = (next_retr, triesleft, timer, command, result_callback, stime, callback_parameters)
 
     def process_reply(self, data, address, worker, rtime):
-        cookie, result = data.split(None, 1)
+        try:
+            cookie, result = data.split(None, 1)
+        except:
+            print('Rtp_proxy_client_udp.process_reply(): invalid response %s' % data)
+            return
         parameters = self.pending_requests.pop(cookie, None)
         if parameters == None:
             return
