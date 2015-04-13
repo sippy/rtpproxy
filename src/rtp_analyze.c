@@ -140,6 +140,8 @@ void
 update_rtpp_totals(struct rtpp_session_stat *stat)
 {
 
+    if (stat->last.pcount == 0)
+        return;
     stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
     stat->precvd += stat->last.pcount;
 }
