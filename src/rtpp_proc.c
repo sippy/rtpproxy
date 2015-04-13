@@ -52,6 +52,7 @@
 #include "rtpp_session.h"
 #include "rtpp_stats.h"
 #include "rtpp_util.h"
+#include "rtpp_analyzer.h"
 
 struct rtpp_proc_ready_lst {
     struct rtpp_session *sp;
@@ -324,6 +325,9 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	    /* Update address recorded in the session */
 	    fill_session_addr(sp, packet, ridx);
 	}
+        if (sp->analyzers[ridx] != NULL) {
+            rtpp_analyzer_update(sp, sp->analyzers[ridx], packet);
+        }
 	if (sp->resizers[ridx] != NULL) {
 	    rtp_resizer_enqueue(sp->resizers[ridx], &packet, rsp);
             if (packet == NULL) {

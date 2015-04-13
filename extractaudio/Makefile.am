@@ -6,4 +6,6 @@ extractaudio_SOURCES=main.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c \
   session.h g729_compat.c g729_compat.h
 extractaudio_LDADD=@LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
 
-DEFS=   -DWITHOUT_SIPLOG -Wall @DEFS@
+DEFS=   -DWITHOUT_SIPLOG -Wall -D"rtpp_log_t=void *" \
+  -D"rtpp_log_write(lvl, ld, format, args...)=fprintf(stderr, format, \#\# args)" \
+  @DEFS@

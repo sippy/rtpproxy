@@ -50,6 +50,7 @@
 #include "rtpp_util.h"
 #include "rtpp_stats.h"
 #include "rtpp_timed.h"
+#include "rtpp_analyzer.h"
 
 struct rtpp_session *
 session_findfirst(struct cfg *cf, const char *call_id)
@@ -240,6 +241,17 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    free(sp->rtcp->codecs[i]);
         if (sp->resizers[i] != NULL)
              rtp_resizer_free(cf->stable->rtpp_stats, sp->resizers[i]);
+        if (sp->analyzers[i] != NULL) {
+             struct rtpp_analyzer_stats rst;
+             const char *actor;
+
+             actor = (i == 0) ? "callee" : "caller";
+             rtpp_analyzer_stat(sp->analyzers[i], &rst);
+             rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stream from %s: "
+               "ssrc_changes=%u, psent=%u, precvd=%u", actor,
+               rst.ssrc_changes, rst.psent, rst.precvd);
+             rtpp_analyzer_dtor(sp->analyzers[i]);
+        }
     }
     if (sp->timeout_data.notify_tag != NULL)
 	free(sp->timeout_data.notify_tag);

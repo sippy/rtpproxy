@@ -182,7 +182,10 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DEFS = -DWITHOUT_SIPLOG -Wall @DEFS@
+DEFS = -DWITHOUT_SIPLOG -Wall -D"rtpp_log_t=void *" \
+  -D"rtpp_log_write(lvl, ld, format, args...)=fprintf(stderr, format, \#\# args)" \
+  @DEFS@
+
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@

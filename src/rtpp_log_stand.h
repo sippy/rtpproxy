@@ -35,7 +35,9 @@
 struct rtpp_log_inst;
 struct rtpp_cfg_stable;
 
+#if !defined(rtpp_log_t)
 #define	rtpp_log_t	struct rtpp_log_inst *
+#endif
 
 #if 0
 #include "rtpp_defines.h"
@@ -48,8 +50,10 @@ struct rtpp_cfg_stable;
 #define	RTPP_LOG_CRIT	LOG_CRIT
 
 #define	rtpp_log_open(cf, app, call_id, flag) _rtpp_log_open(cf, app, call_id);
+#if !defined(rtpp_log_write)
 #define	rtpp_log_write(level, handle, format, args...)			\
 	_rtpp_log_write(handle, level, __FUNCTION__, format, ## args)
+#endif
 #define	rtpp_log_ewrite(level, handle, format, args...)			\
 	_rtpp_log_ewrite(handle, level, __FUNCTION__, format, ## args)
 #define	rtpp_log_close(handle) _rtpp_log_close(handle)

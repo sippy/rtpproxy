@@ -142,7 +142,10 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
         }
         pack->pkt = pkt;
         pack->rpkt = RPKT(pack);
-        update_rtpp_stats(stat, pack->rpkt, &(pack->parsed), pkt->time);
+        if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pkt->time) != 0) {
+            /* XXX error handling */
+            abort();
+        }
 
         sess = session_lookup(channels, pack->rpkt->ssrc);
         if (sess == NULL) {
@@ -242,7 +245,10 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
             pack->pkt->addr.in4.sin_port = ntohs(udpip->udphdr.uh_sport);
             pack->pkt->addr.in4.sin_addr = udpip->iphdr.ip_src;
         }
-        update_rtpp_stats(stat, pack->rpkt, &(pack->parsed), pack->pkt->time);
+        if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pack->pkt->time) != 0) {
+            /* XXX error handling */
+            abort();
+        }
 
         sess = session_lookup(channels, pack->rpkt->ssrc);
         if (sess == NULL) {

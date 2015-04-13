@@ -53,6 +53,7 @@
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
 #include "rtpp_util.h"
+#include "rtpp_analyzer.h"
 
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
@@ -529,6 +530,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spa->rtp = NULL;
         spb->rtp = spa;
         spa->sridx = spb->sridx = -1;
+        spa->analyzers[0] = rtpp_analyzer_ctor();
+        spa->analyzers[1] = rtpp_analyzer_ctor();
 
         append_session(cf, spa, 0);
         append_session(cf, spa, 1);

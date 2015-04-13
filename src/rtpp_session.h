@@ -88,6 +88,7 @@ struct rtpp_session {
     /* Flag that indicates whether or not address supplied by client can't be trusted */
     int untrusted_addr[2];
     struct rtp_resizer *resizers[2];
+    struct rtpp_analyzer *analyzers[2];
     struct rtpp_session *prev;
     struct rtpp_session *next;
     struct rtpp_timeout_data timeout_data;
@@ -100,6 +101,7 @@ struct rtpp_session {
     struct rtpp_hash_table_entry *hte;
 };
 
+struct cfg;
 struct cfg_stable;
 
 #define	SESS_RTP	1
