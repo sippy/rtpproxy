@@ -215,7 +215,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    cf->sessinfo.pfds_rtp[sp->sidx[i]].events = 0;
 	}
 	if (sp->rtcp->fds[i] != -1) {
-	    close_socket_later(cf, sp->fds[i]);
+	    close_socket_later(cf, sp->rtcp->fds[i]);
 	    assert(cf->sessinfo.pfds_rtcp[sp->rtcp->sidx[i]].fd == sp->rtcp->fds[i]);
 	    cf->sessinfo.pfds_rtcp[sp->rtcp->sidx[i]].fd = -1;
 	    cf->sessinfo.pfds_rtcp[sp->rtcp->sidx[i]].events = 0;
