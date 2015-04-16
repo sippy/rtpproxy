@@ -14,7 +14,7 @@ playback1_EXTRA_DIST = playback1 playback1.output playback1.checksums \
 playback1_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
   playback1.8.a.rtp playback1.9.a.rtp playback1.0 playback1.18 playback1.3 \
   playback1.8 playback1.9 playback1.rout playback1.0.wav playback1.18.wav \
-  playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout
+  playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout playback1.rlog
 forwarding1_EXTRA_DIST = forwarding1 forwarding1.checksums forwarding1.gen.input \
   forwarding1.gena.output forwarding1.geno.output forwarding1.input forwarding1.output \
   forwarding1.stats.input forwarding1.delete.input forwarding1.rec.input
@@ -28,7 +28,7 @@ session_timeouts_EXTRA_DIST = session_timeouts session_timeouts.full.input \
   session_timeouts.half6.input session_timeouts.lookup.input \
   session_timeouts.lookup6.input session_timeouts.output1 session_timeouts.output2 \
   session_timeouts.stats.input session_timeouts6.output1 session_timeouts6.output2
-session_timeouts_CLEANFILES = session_timeouts.rout[1234]
+session_timeouts_CLEANFILES = session_timeouts.rout[1234] session_timeouts.rlog[1234]
 EXTRA_DIST = Makefile.am startstop basic_versions basic_versions.input \
     basic_versions.output ${command_parser_EXTRA_DIST} \
     ringback.sln makeann makeann.output \
