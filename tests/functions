@@ -1,5 +1,5 @@
 OS=`uname`
-UID=`id -u`
+MYUID=`id -u`
 
 TZ=CET
 export TZ
@@ -15,7 +15,7 @@ MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
 DIFF="diff -u"
 TCPDUMP="tcpdump"
-if [ ${UID} -eq 0 ]
+if [ ${MYUID} -eq 0 ]
 then
   SUDO=""
 else
