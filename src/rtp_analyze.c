@@ -69,14 +69,15 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         stat->last.pcount = 1;
         stat->ssrc_changes += 1;
         if (stat->psent > 0 || stat->precvd > 0) {
-            rtpp_log_write(RTPP_LOG_DBUG, rlog, "ssrc_changes=%u, psent=%u, precvd=%u\n", stat->ssrc_changes, stat->psent, stat->precvd);
+            rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: ssrc_changes=%u, psent=%u, precvd=%u\n",
+              rinfo->ssrc, rinfo->seq, stat->ssrc_changes, stat->psent, stat->precvd);
         }
         return (0);
     }
     seq += stat->last.seq_offset;
-    if (header->m && (seq < stat->last.max_seq || seq > stat->last.max_seq + 1)) {
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "seq %d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
-          header->seq, stat->last.max_seq, seq, header->m);
+    if (header->m && ((seq < stat->last.max_seq && (stat->last.max_seq & 0xffff) != 65535) || (seq > stat->last.max_seq + 10))) {
+        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
+          rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->m);
         /* Seq reset has happened. Treat it as a ssrc change */
         if (stat->last.pcount > 10) {
             stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
@@ -93,14 +94,17 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         return (0);
     }
     if (ABS(rtime - stat->last.base_rtime - rtp_ts2dtime(rinfo->ts - stat->last.base_ts)) > 0.1) {
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "seq %d: delta rtime=%f, delta ts=%f\n", header->seq, rtime - stat->last.base_rtime,
+        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: delta rtime=%f, delta ts=%f\n",
+          rinfo->ssrc, rinfo->seq, rtime - stat->last.base_rtime,
           rtp_ts2dtime(rinfo->ts - stat->last.base_ts));
+        stat->last.base_rtime = rtime;
     }
     if (stat->last.max_seq % 65536 < 536 && rinfo->seq > 65000) {
         /* Pre-wrap packet received after a wrap */
         seq -= 65536;
     } else if (stat->last.max_seq > 65000 && seq < stat->last.max_seq - 65000) {
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "wrap last->max_seq=%u, seq=%u\n", stat->last.max_seq, seq);
+        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: wrap last->max_seq=%u, seq=%u\n",
+          rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq);
         /* Wrap up has happened */
         stat->last.seq_offset += 65536;
         seq += 65536;
@@ -110,7 +114,8 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
             memset(stat->last.seen, '\0', sizeof(stat->last.seen) / 2);
         }
     } else if (seq + 536 < stat->last.max_seq || seq > stat->last.max_seq + 536) {
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "desync last->max_seq=%u, seq=%u, m=%u\n", stat->last.max_seq, seq, header->m);
+        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: desync last->max_seq=%u, seq=%u, m=%u\n",
+          rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->m);
         /* Desynchronization has happened. Treat it as a ssrc change */
         if (stat->last.pcount > 10) {
             stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
@@ -119,7 +124,6 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         stat->duplicates += stat->last.duplicates;
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
-        stat->last.ssrc = rinfo->ssrc;
         stat->last.max_seq = stat->last.min_seq =  seq;
         stat->last.pcount = 1;
         stat->desync_count += 1;
@@ -136,7 +140,8 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
     }
     stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
     if (seq - stat->last.max_seq != 1)
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "delta = %d\n", seq - stat->last.max_seq);
+        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: delta = %d\n",
+          rinfo->ssrc, rinfo->seq, seq - stat->last.max_seq);
     if (seq >= stat->last.max_seq) {
         stat->last.max_seq = seq;
         stat->last.pcount += 1;
@@ -149,7 +154,8 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
     if (stat->last.seq_offset == 0 && seq < stat->last.min_seq) {
         stat->last.min_seq =  seq;
         stat->last.pcount += 1;
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "last->min_seq=%u\n", stat->last.min_seq);
+        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: last->min_seq=%u\n",
+          rinfo->ssrc, rinfo->seq, stat->last.min_seq);
         return (0);
     }
     /* XXX something wrong with the stream */
