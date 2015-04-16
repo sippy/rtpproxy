@@ -69,13 +69,13 @@ geninput() {
   cat session_timeouts.stats.input
 }
 
-(geninput | ${RTPPROXY} -f -s stdio: -T10 -b -m 12000 -W5 > session_timeouts.rout1)&
+(geninput | ${RTPPROXY} -d info -f -s stdio: -T10 -b -m 12000 -W5 > session_timeouts.rout1 2> session_timeouts.rlog1)&
 RTPP1_PID=${!}
-(geninput | ${RTPPROXY} -f -s stdio: -T10 -b -m 13000 > session_timeouts.rout2)&
+(geninput | ${RTPPROXY} -d info -f -s stdio: -T10 -b -m 13000 > session_timeouts.rout2 2> session_timeouts.rlog2)&
 RTPP2_PID=${!}
-(geninput "6" | ${RTPPROXY} -6 '::1' -f -s stdio: -T10 -b -m 12000 -W5 > session_timeouts.rout3)&
+(geninput "6" | ${RTPPROXY} -d info -6 '::1' -f -s stdio: -T10 -b -m 12000 -W5 > session_timeouts.rout3 2> session_timeouts.rlog3)&
 RTPP3_PID=${!}
-(geninput "6" | ${RTPPROXY} -6 '::1' -f -s stdio: -T10 -b -m 13000 > session_timeouts.rout4)&
+(geninput "6" | ${RTPPROXY} -d info -6 '::1' -f -s stdio: -T10 -b -m 13000 > session_timeouts.rout4 2> session_timeouts.rlog4)&
 RTPP4_PID=${!}
 wait ${RTPP1_PID}
 report "wait for rtpproxy #1 shutdown"
