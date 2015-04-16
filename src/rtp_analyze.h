@@ -47,6 +47,7 @@ struct rtpp_session_stat {
     uint32_t precvd;
     uint32_t duplicates;
     uint32_t desync_count;
+    uint32_t seq_res_count;
     struct rtpp_session_stat_last last;
 };
 
