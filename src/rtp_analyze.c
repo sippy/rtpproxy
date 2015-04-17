@@ -75,7 +75,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         return (0);
     }
     seq += stat->last.seq_offset;
-    if (header->m && ((seq < stat->last.max_seq && (stat->last.max_seq & 0xffff) != 65535) || (seq > stat->last.max_seq + 10))) {
+    if (header->m && (seq < stat->last.max_seq && (stat->last.max_seq & 0xffff) != 65535)) {
         rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->m);
         /* Seq reset has happened. Treat it as a ssrc change */
