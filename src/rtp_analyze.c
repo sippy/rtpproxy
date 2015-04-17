@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,6 +55,18 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
     uint32_t mask;
 
     seq = rinfo->seq;
+    if (stat->ssrc_changes == 0) {
+        assert(stat->last.pcount == 0);
+        assert(stat->psent == 0);
+        assert(stat->precvd == 0);
+        stat->last.ssrc = rinfo->ssrc;
+        stat->last.max_seq = stat->last.min_seq = seq;
+        stat->last.base_ts = rinfo->ts;
+        stat->last.base_rtime = rtime;
+        stat->last.pcount = 1;
+        stat->ssrc_changes = 1;
+        return (0);
+    }
     if (stat->last.ssrc != rinfo->ssrc) {
         if (stat->last.pcount > 10) {
             stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
@@ -63,7 +76,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
         stat->last.ssrc = rinfo->ssrc;
-        stat->last.max_seq = stat->last.min_seq =  seq;
+        stat->last.max_seq = stat->last.min_seq = seq;
         stat->last.base_ts = rinfo->ts;
         stat->last.base_rtime = rtime;
         stat->last.pcount = 1;
@@ -124,7 +137,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         stat->duplicates += stat->last.duplicates;
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
-        stat->last.max_seq = stat->last.min_seq =  seq;
+        stat->last.max_seq = stat->last.min_seq = seq;
         stat->last.pcount = 1;
         stat->desync_count += 1;
         return (0);
@@ -152,7 +165,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         return (0);
     }
     if (stat->last.seq_offset == 0 && seq < stat->last.min_seq) {
-        stat->last.min_seq =  seq;
+        stat->last.min_seq = seq;
         stat->last.pcount += 1;
         rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: last->min_seq=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.min_seq);
