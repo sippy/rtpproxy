@@ -65,14 +65,12 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         stat->last.base_rtime = rtime;
         stat->last.pcount = 1;
         stat->ssrc_changes = 1;
+        idx = (seq % 131072) >> 5;
+        stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
         return (0);
     }
     if (stat->last.ssrc != rinfo->ssrc) {
-        if (stat->last.pcount > 10) {
-            stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
-            stat->precvd += stat->last.pcount;
-        }
-        stat->duplicates += stat->last.duplicates;
+        update_rtpp_totals(stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
         stat->last.ssrc = rinfo->ssrc;
@@ -85,6 +83,8 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
             rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: ssrc_changes=%u, psent=%u, precvd=%u\n",
               rinfo->ssrc, rinfo->seq, stat->ssrc_changes, stat->psent, stat->precvd);
         }
+        idx = (seq % 131072) >> 5;
+        stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
         return (0);
     }
     seq += stat->last.seq_offset;
@@ -92,11 +92,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->m);
         /* Seq reset has happened. Treat it as a ssrc change */
-        if (stat->last.pcount > 10) {
-            stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
-            stat->precvd += stat->last.pcount;
-        }
-        stat->duplicates += stat->last.duplicates;
+        update_rtpp_totals(stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
         stat->last.max_seq = stat->last.min_seq = seq;
@@ -104,6 +100,8 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         stat->last.base_rtime = rtime;
         stat->last.pcount = 1;
         stat->seq_res_count += 1;
+        idx = (seq % 131072) >> 5;
+        stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
         return (0);
     }
     if (ABS(rtime - stat->last.base_rtime - rtp_ts2dtime(rinfo->ts - stat->last.base_ts)) > 0.1) {
@@ -130,25 +128,23 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: desync last->max_seq=%u, seq=%u, m=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->m);
         /* Desynchronization has happened. Treat it as a ssrc change */
-        if (stat->last.pcount > 10) {
-            stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
-            stat->precvd += stat->last.pcount;
-        }
-        stat->duplicates += stat->last.duplicates;
+        update_rtpp_totals(stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
         stat->last.max_seq = stat->last.min_seq = seq;
         stat->last.pcount = 1;
         stat->desync_count += 1;
+        idx = (seq % 131072) >> 5;
+        stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
         return (0);
     }
         /* printf("last->max_seq=%u, seq=%u, m=%u\n", stat->last.max_seq, seq, header->m);*/
     idx = (seq % 131072) >> 5;
     mask = stat->last.seen[idx];
     if (((mask >> (seq & 31)) & 1) != 0) {
+        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: DUP\n",
+          rinfo->ssrc, rinfo->seq);
         stat->last.duplicates += 1;
-        if (stat->last.duplicates > 20)
-            {static int b=0; while (b);}
         return (0);
     }
     stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
@@ -183,4 +179,5 @@ update_rtpp_totals(struct rtpp_session_stat *stat)
         return;
     stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
     stat->precvd += stat->last.pcount;
+    stat->duplicates += stat->last.duplicates;
 }

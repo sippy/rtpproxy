@@ -248,8 +248,9 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
              actor = (i == 0) ? "callee" : "caller";
              rtpp_analyzer_stat(sp->analyzers[i], &rst);
              rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stream from %s: "
-               "ssrc_changes=%u, psent=%u, precvd=%u, plost=%d", actor,
-               rst.ssrc_changes, rst.psent, rst.precvd, rst.psent - rst.precvd);
+               "ssrc_changes=%u, psent=%u, precvd=%u, plost=%d, pdups=%u", actor,
+               rst.ssrc_changes, rst.psent, rst.precvd, rst.psent - rst.precvd,
+               rst.pdups);
              rtpp_analyzer_dtor(sp->analyzers[i]);
         }
     }

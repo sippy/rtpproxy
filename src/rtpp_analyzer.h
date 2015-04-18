@@ -28,6 +28,7 @@
 struct rtpp_analyzer_stats {
     uint32_t psent;
     uint32_t precvd;
+    uint32_t pdups;
     uint32_t ssrc_changes;
     uint32_t pecount;
     uint32_t aecount;
