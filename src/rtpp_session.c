@@ -32,6 +32,7 @@
 #include <poll.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -243,14 +244,21 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
              rtp_resizer_free(cf->stable->rtpp_stats, sp->resizers[i]);
         if (sp->analyzers[i] != NULL) {
              struct rtpp_analyzer_stats rst;
-             const char *actor;
+             char ssrc_buf[11];
+             const char *actor, *ssrc;
 
              actor = (i == 0) ? "callee" : "caller";
              rtpp_analyzer_stat(sp->analyzers[i], &rst);
+             if (rst.ssrc_changes != 0) {
+                 snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", rst.last_ssrc);
+                 ssrc = ssrc_buf;
+             } else {
+                 ssrc = "NONE";
+             }
              rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stream from %s: "
-               "ssrc_changes=%u, psent=%u, precvd=%u, plost=%d, pdups=%u", actor,
-               rst.ssrc_changes, rst.psent, rst.precvd, rst.psent - rst.precvd,
-               rst.pdups);
+               "SSRC=%s, ssrc_changes=%u, psent=%u, precvd=%u, plost=%d, pdups=%u",
+               actor, ssrc, rst.ssrc_changes, rst.psent, rst.precvd,
+               rst.psent - rst.precvd, rst.pdups);
              rtpp_analyzer_dtor(sp->analyzers[i]);
         }
     }

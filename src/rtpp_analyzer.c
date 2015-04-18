@@ -82,6 +82,7 @@ rtpp_analyzer_stat(struct rtpp_analyzer *rap, struct rtpp_analyzer_stats *rsp)
     rsp->precvd = rap->rstat.precvd;
     rsp->pdups = rap->rstat.duplicates;
     rsp->ssrc_changes = rap->rstat.ssrc_changes;
+    rsp->last_ssrc = rap->rstat.last.ssrc;
 }
 
 void

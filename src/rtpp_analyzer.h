@@ -32,6 +32,7 @@ struct rtpp_analyzer_stats {
     uint32_t ssrc_changes;
     uint32_t pecount;
     uint32_t aecount;
+    uint32_t last_ssrc;
 };
 
 struct rtpp_session;
