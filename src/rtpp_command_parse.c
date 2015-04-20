@@ -37,6 +37,7 @@
 #include "rtpp_command.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_query.h"
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
 
@@ -187,10 +188,10 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
     case 'Q':
         cmd->cca.op = QUERY;
         cmd->cca.rname = "query";
-        cmd->cca.hint = "Q call_id from_tag [to_tag]";
-        cpp->max_argc = 4;
+        cmd->cca.hint = "Q[v] call_id from_tag [to_tag [stat_name1 ...[stat_nameN]]]";
+        cpp->max_argc = 4 + RTPP_QUERY_NSTATS;
         cpp->min_argc = 3;
-        cpp->has_cmods = 0;
+        cpp->has_cmods = 1;
         cpp->fpos = 2;
         cpp->tpos = 3;
         break;

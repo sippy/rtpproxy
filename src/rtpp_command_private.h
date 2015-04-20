@@ -98,8 +98,10 @@ struct rtpp_command
 #define ECODE_PARSE_16    16
 #define ECODE_PARSE_6     17
 #define ECODE_PARSE_7     18
+#define ECODE_PARSE_8     19
 
 #define ECODE_RTOOBIG_1   25
+#define ECODE_RTOOBIG_2   26
 
 #define ECODE_INVLARG_1   31
 #define ECODE_INVLARG_2   32
@@ -110,6 +112,7 @@ struct rtpp_command
 #define ECODE_SESUNKN     50
 
 #define ECODE_PLRFAIL     60
+#define ECODE_QRYFAIL     62
 #define ECODE_CPYFAIL     65
 #define ECODE_STSFAIL     68
 

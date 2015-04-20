@@ -51,6 +51,7 @@
 #include "rtpp_command_copy.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_query.h"
 #include "rtpp_command_stats.h"
 #include "rtpp_command_ul.h"
 #include "rtpp_netio_async.h"
@@ -80,6 +81,7 @@ struct proto_cap proto_caps[] = {
     { "20140617", "Support for anchoring session connect time" },
     { "20141004", "Support for extendable performance counters" },
     { "20150330", "Support for allocating a new port (\"Un\"/\"Ln\" commands)" },
+    { "20150420", "Support for SEQ tracking and new rtpa_ counters; Q command extended" },
     { NULL, NULL }
 };
 
@@ -91,8 +93,6 @@ static void handle_noplay(struct cfg *, struct rtpp_session *, int, struct rtpp_
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int,
   struct rtpp_command *);
 static int handle_record(struct cfg *, struct common_cmd_args *, int);
-static void handle_query(struct cfg *, struct rtpp_command *,
-  struct rtpp_session *, int);
 static void handle_info(struct cfg *, struct rtpp_command *,
   const char *);
 static void handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd);
@@ -313,7 +313,7 @@ struct d_opts {
 int
 handle_command(struct cfg *cf, struct rtpp_command *cmd)
 {
-    int i, verbose;
+    int i, verbose, rval;
     int playcount;
     char *cp, *tcp;
     char *pname, *codecs, *recording_name;
@@ -520,7 +520,10 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case QUERY:
-	handle_query(cf, cmd, spa, i);
+	rval = handle_query(cf, cmd, spa, i);
+	if (rval != 0) {
+	    reply_error(cf, cmd, rval);
+	}
 	break;
 
     case LOOKUP:
@@ -669,18 +672,6 @@ handle_record(struct cfg *cf, struct common_cmd_args *ccap,
         }
     }
     return (nrecorded == 0 ? -1 : 0);
-}
-
-static void
-handle_query(struct cfg *cf, struct rtpp_command *cmd,
-  struct rtpp_session *spa, int idx)
-{
-    int len;
-
-    len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n", get_ttl(spa),
-      spa->pcount.npkts_in[idx], spa->pcount.npkts_in[NOT(idx)],
-      spa->pcount.nrelayed, spa->pcount.ndropped);
-    rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
 }
 
 static void
