@@ -53,6 +53,6 @@ struct rtpp_session_stat {
 
 int update_rtpp_stats(rtpp_log_t, struct rtpp_session_stat *, rtp_hdr_t *, struct rtp_info *,
   double);
-void update_rtpp_totals(struct rtpp_session_stat *);
+void update_rtpp_totals(struct rtpp_session_stat *, struct rtpp_session_stat *);
 
 #endif

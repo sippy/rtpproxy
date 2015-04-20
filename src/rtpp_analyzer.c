@@ -75,12 +75,15 @@ rtpp_analyzer_update(struct rtpp_session *sp, struct rtpp_analyzer *rap,
 void
 rtpp_analyzer_stat(struct rtpp_analyzer *rap, struct rtpp_analyzer_stats *rsp)
 {
+    struct rtpp_session_stat ostat;
+
     rsp->pecount = rap->pecount;
     rsp->aecount = rap->aecount;
-    update_rtpp_totals(&(rap->rstat));
-    rsp->psent = rap->rstat.psent;
-    rsp->precvd = rap->rstat.precvd;
-    rsp->pdups = rap->rstat.duplicates;
+    memset(&ostat, '\0', sizeof(ostat));
+    update_rtpp_totals(&(rap->rstat), &ostat);
+    rsp->psent = ostat.psent;
+    rsp->precvd = ostat.precvd;
+    rsp->pdups = ostat.duplicates;
     rsp->ssrc_changes = rap->rstat.ssrc_changes;
     rsp->last_ssrc = rap->rstat.last.ssrc;
 }

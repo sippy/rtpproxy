@@ -70,7 +70,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         return (0);
     }
     if (stat->last.ssrc != rinfo->ssrc) {
-        update_rtpp_totals(stat);
+        update_rtpp_totals(stat, stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
         stat->last.ssrc = rinfo->ssrc;
@@ -92,7 +92,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->m);
         /* Seq reset has happened. Treat it as a ssrc change */
-        update_rtpp_totals(stat);
+        update_rtpp_totals(stat, stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
         stat->last.max_seq = stat->last.min_seq = seq;
@@ -128,7 +128,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: desync last->max_seq=%u, seq=%u, m=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->m);
         /* Desynchronization has happened. Treat it as a ssrc change */
-        update_rtpp_totals(stat);
+        update_rtpp_totals(stat, stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
         stat->last.max_seq = stat->last.min_seq = seq;
@@ -172,12 +172,17 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
 }
 
 void
-update_rtpp_totals(struct rtpp_session_stat *stat)
+update_rtpp_totals(struct rtpp_session_stat *wstat, struct rtpp_session_stat *ostat)
 {
 
-    if (stat->last.pcount == 0)
+    if (ostat != wstat) {
+        ostat->psent = wstat->psent;
+        ostat->precvd = wstat->precvd;
+        ostat->duplicates = wstat->duplicates;
+    }
+    if (wstat->last.pcount == 0)
         return;
-    stat->psent += stat->last.max_seq - stat->last.min_seq + 1;
-    stat->precvd += stat->last.pcount;
-    stat->duplicates += stat->last.duplicates;
+    ostat->psent += wstat->last.max_seq - wstat->last.min_seq + 1;
+    ostat->precvd += wstat->last.pcount;
+    ostat->duplicates += wstat->last.duplicates;
 }
