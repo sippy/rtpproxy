@@ -77,7 +77,10 @@ static struct
     {.name = "ncmds_rcvd",           .descr = "Total number of control commands received", .type = RTPP_CNT_U64},
     {.name = "ncmds_succd",          .descr = "Total number of control commands successfully processed", .type = RTPP_CNT_U64},
     {.name = "ncmds_errs",           .descr = "Total number of control commands ended up with an error", .type = RTPP_CNT_U64},
-    {.name = "ncmds_repld",          .descr = "Total number of control commands that had a reply generated", .type = RTPP_CNT_U64}
+    {.name = "ncmds_repld",          .descr = "Total number of control commands that had a reply generated", .type = RTPP_CNT_U64},
+    {.name = "rtpa_nsent",           .descr = "Total number of uniqie RTP packets sent to us based on SEQ tracking", .type = RTPP_CNT_U64},
+    {.name = "rtpa_nrcvd",           .descr = "Total number of unique RTP packets received by us based on SEQ tracking", .type = RTPP_CNT_U64},
+    {.name = "rtpa_ndups",           .descr = "Total number of duplicate RTP packets received by us based on SEQ tracking", .type = RTPP_CNT_U64}
 };
 
 struct rtpp_stats_obj_priv

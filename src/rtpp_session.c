@@ -259,6 +259,15 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
                "SSRC=%s, ssrc_changes=%u, psent=%u, precvd=%u, plost=%d, pdups=%u",
                actor, ssrc, rst.ssrc_changes, rst.psent, rst.precvd,
                rst.psent - rst.precvd, rst.pdups);
+             if (rst.psent > 0) {
+                 CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "rtpa_nsent", rst.psent);
+             }
+             if (rst.precvd > 0) {
+                 CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "rtpa_nrcvd", rst.precvd);
+             }
+             if (rst.pdups > 0) {
+                 CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "rtpa_ndups", rst.pdups);
+             }
              rtpp_analyzer_dtor(sp->analyzers[i]);
         }
     }
