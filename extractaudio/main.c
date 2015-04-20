@@ -109,7 +109,7 @@ load_session(const char *path, struct channels *channels, enum origin origin)
     memset(&stat, '\0', sizeof(stat));
     pcount = loader->load(loader, channels, &stat, origin);
 
-    update_rtpp_totals(&stat);
+    update_rtpp_totals(&stat, &stat);
     printf("pcount=%u, min_seq=%u, max_seq=%u, seq_offset=%u, ssrc=0x%.8X, duplicates=%u\n",
       (unsigned int)stat.last.pcount, (unsigned int)stat.last.min_seq, (unsigned int)stat.last.max_seq,
       (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc, (unsigned int)stat.last.duplicates);
