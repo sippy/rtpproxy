@@ -34,6 +34,7 @@
 #include "rtpp_log.h"
 #include "rtpp_defines.h"
 #include "rtpp_cfg_stable.h"
+#include "rtpp_analyzer.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_types.h"
@@ -68,12 +69,19 @@ handle_query_simple(struct cfg *cf, struct rtpp_command *cmd,
     return (0);
 }
 
+#define PULL_RST() \
+    if (rst_pulled == 0) { \
+        rtpp_analyzer_stat(spa->analyzers[idx], &rst); \
+        rst_pulled = 1; \
+    }
+
 int
 handle_query(struct cfg *cf, struct rtpp_command *cmd,
   struct rtpp_session *spa, int idx)
 {
-    int len, i, verbose;
+    int len, i, verbose, rst_pulled;
     char *cp;
+    struct rtpp_analyzer_stats rst;
 
     verbose = 0;
     for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
@@ -93,6 +101,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
         return (handle_query_simple(cf, cmd, spa, idx, verbose));
     }
     len = 0;
+    rst_pulled = 0;
     for (i = 4; i < cmd->argc && len < (sizeof(cmd->buf_t) - 2); i++) {
         if (i > 4) {
             CHECK_OVERFLOW();
@@ -127,6 +136,30 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
         if (strcmp(cmd->argv[i], "ndropped") == 0) {
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               spa->pcount.ndropped);
+            continue;
+        }
+        if (strcmp(cmd->argv[i], "rtpa_nsent") == 0) {
+            PULL_RST();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%u",
+              rst.psent);
+            continue;
+        }
+        if (strcmp(cmd->argv[i], "rtpa_nrcvd") == 0) {
+            PULL_RST();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%u",
+              rst.precvd);
+            continue;
+        }
+        if (strcmp(cmd->argv[i], "rtpa_ndups") == 0) {
+            PULL_RST();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%u",
+              rst.pdups);
+            continue;
+        }
+        if (strcmp(cmd->argv[i], "rtpa_nlost") == 0) {
+            PULL_RST();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
+              rst.psent - rst.precvd);
             continue;
         }
         rtpp_log_write(RTPP_LOG_ERR, spa->log,

@@ -36,6 +36,7 @@ struct rtpp_analyzer_stats {
 };
 
 struct rtpp_session;
+struct rtp_packet;
 
 struct rtpp_analyzer * rtpp_analyzer_ctor(void);
 int rtpp_analyzer_update(struct rtpp_session *, struct rtpp_analyzer *, struct rtp_packet *);
