@@ -47,7 +47,7 @@ struct rtp_server;
 struct rtpp_session;
 struct cfg;
 
-struct rtp_server *rtp_server_new(const char *, rtp_type_t, int);
+struct rtp_server *rtp_server_new(const char *, rtp_type_t, int, double);
 void rtp_server_free(struct rtp_server *);
 struct rtp_packet *rtp_server_get(struct rtp_server *, double, int *);
 void append_server(struct cfg *, struct rtpp_session *);

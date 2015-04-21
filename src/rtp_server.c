@@ -49,10 +49,11 @@ struct rtp_server {
     unsigned char *pload;
     int fd;
     int loop;
+    uint64_t dts;
 };
 
 struct rtp_server *
-rtp_server_new(const char *name, rtp_type_t codec, int loop)
+rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime)
 {
     struct rtp_server *rp;
     int fd;
@@ -71,7 +72,8 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop)
 
     memset(rp, 0, sizeof(*rp));
 
-    rp->btime = -1;
+    rp->btime = dtime;
+    rp->dts = 0;
     rp->fd = fd;
     rp->loop = (loop > 0) ? loop - 1 : loop;
 
@@ -106,12 +108,8 @@ rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
     int rlen, rticks, bytes_per_frame, ticks_per_frame, number_of_frames;
     int hlen;
 
-    if (rp->btime == -1)
-	rp->btime = dtime;
 
-    ts = ntohl(rp->rtp->ts);
-
-    if (rp->btime + ((double)ts / RTPS_SRATE) > dtime) {
+    if (rp->btime + ((double)rp->dts / 1000.0) > dtime) {
         *rval = RTPS_LATER;
 	return (NULL);
     }
@@ -157,6 +155,7 @@ rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
 
     rlen = bytes_per_frame * number_of_frames;
     rticks = ticks_per_frame * number_of_frames;
+    rp->dts += rticks;
 
     pkt = rtp_packet_alloc();
     if (pkt == NULL) {
@@ -180,6 +179,7 @@ rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
 	rp->rtp->m = 0;
     }
 
+    ts = ntohl(rp->rtp->ts);
     rp->rtp->ts = htonl(ts + (RTPS_SRATE * rticks / 1000));
     rp->rtp->seq = htons(ntohs(rp->rtp->seq) + 1);
 
