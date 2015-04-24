@@ -338,7 +338,9 @@ rtp_packet_parse(struct rtp_packet *pkt)
     pkt_full = (void *)pkt;
     rinfo = &(pkt_full->pvt.rinfo);
     pkt->parse_result = rtp_packet_parse_raw(pkt->data.buf, pkt->size, rinfo);
-    pkt->parsed = rinfo;
+    if (pkt->parse_result == RTP_PARSER_OK) {
+        pkt->parsed = rinfo;
+    }
     return (pkt->parse_result);
 }
 
