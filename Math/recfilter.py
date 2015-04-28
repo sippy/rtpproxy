@@ -24,6 +24,13 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from threading import local
+from math import exp, pi
+
+def calc_f_coef(Fs, Fc):
+    if Fs < Fc * 2.0:
+        raise ValueError('The cutoff frequency (%f) should be less ' \
+          'than half of the sampling rate (%f)' %  (Fc, Fs))
+    return exp(-2.0 * pi * Fc / Fs)
 
 class recfilter(object):
     lastval = 0.0
