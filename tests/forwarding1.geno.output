@@ -122,4 +122,7 @@ nsess_created=30 nsess_destroyed=0 nsess_timeout=0 nsess_complete=30 nsess_nortp
 ncmds_rcvd=122 ncmds_succd=121 ncmds_errs=0 ncmds_repld=121
 npkts_rcvd=71250 npkts_played=81000 npkts_relayed=71250 npkts_discard=0 nplrs_created=30 nplrs_destroyed=30
 npkts_resizer_in=0 npkts_resizer_out=0 npkts_resizer_discard=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_perrs=0
+0
+rtpa_nsent=71250 rtpa_nrcvd=71250 rtpa_ndups=0 rtpa_perrs=0
 MEMDEB: all clear
