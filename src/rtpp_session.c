@@ -268,6 +268,9 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
              if (rst.pdups > 0) {
                  CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "rtpa_ndups", rst.pdups);
              }
+             if (rst.pecount > 0) {
+                 CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
+             }
              rtpp_analyzer_dtor(sp->analyzers[i]);
         }
     }
