@@ -162,6 +162,12 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
               rst.psent - rst.precvd);
             continue;
         }
+        if (strcmp(cmd->argv[i], "rtpa_perrs") == 0) {
+            PULL_RST();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
+              rst.pecount);
+            continue;
+        }
         rtpp_log_write(RTPP_LOG_ERR, spa->log,
               "QUERY: unsupported/invalid counter name `%s'", cmd->argv[i]);
         return (ECODE_QRYFAIL);
