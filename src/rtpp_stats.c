@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include "rtpp_types.h"
+#include "rtpp_pearson.h"
 #include "rtpp_stats.h"
 
 struct rtpp_stat
@@ -50,7 +51,7 @@ enum rtpp_cnt_type {
     RTPP_CNT_DBL
 };
 
-static struct
+static struct rtpp_stats
 {
     const char *name;
     const char *descr;
@@ -86,6 +87,7 @@ static struct
 struct rtpp_stats_obj_priv
 {
     struct rtpp_stat *stats;
+    struct rtpp_pearson_perfect *rppp;
 };
 
 struct rtpp_stats_obj_full
@@ -102,6 +104,20 @@ static int rtpp_stats_obj_updatebyname_d(struct rtpp_stats_obj *, const char *, 
 static int64_t rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *, const char *);
 static int rtpp_stats_obj_nstr(struct rtpp_stats_obj *, char *, int, const char *);
 
+static const char *
+getdstat(void *p, int n)
+{
+    struct rtpp_stats *sp;
+
+    if (n >= RTPP_NSTATS) {
+        return (NULL);
+    }
+
+    sp = (struct rtpp_stats *)p;
+
+    return (sp[n].name);
+}
+
 struct rtpp_stats_obj *
 rtpp_stats_ctor(void)
 {
@@ -113,24 +129,30 @@ rtpp_stats_ctor(void)
 
     fp = malloc(sizeof(struct rtpp_stats_obj_full));
     if (fp == NULL) {
-        return (NULL);
+        goto e0;
     }
     memset(fp, '\0', sizeof(struct rtpp_stats_obj_full));
     pub = &(fp->pub);
     pvt = &(fp->pvt);
+    pvt->rppp = rtpp_pearson_perfect_ctor(getdstat, default_stats);
+    if (pvt->rppp == NULL) {
+        goto e1;
+    }
     pvt->stats = malloc(sizeof(struct rtpp_stat) * RTPP_NSTATS);
     if (pvt->stats == NULL) {
-        free(fp);
-        return (NULL);
+        goto e2;
     }
     memset(pvt->stats, '\0', sizeof(struct rtpp_stat) * RTPP_NSTATS);
     for (i = 0; i < RTPP_NSTATS; i++) {
         st = &pvt->stats[i];
         st->name = default_stats[i].name;
         if (pthread_mutex_init(&st->mutex, NULL) != 0) {
-            free(pvt->stats);
-            free(fp);
-            return (NULL);
+            while ((i - 1) >= 0) {
+                st = &pvt->stats[i - 1];
+                pthread_mutex_destroy(&st->mutex);
+                i -= 1;
+            }
+            goto e3;
         }
         if (default_stats[i].type == RTPP_CNT_U64) {
             st->cnt.u64 = 0;
@@ -147,21 +169,23 @@ rtpp_stats_ctor(void)
     pub->getlvalbyname = &rtpp_stats_obj_getlvalbyname;
     pub->nstr = &rtpp_stats_obj_nstr;
     return (pub);
+e3:
+    free(pvt->stats);
+e2:
+    rtpp_pearson_perfect_dtor(pvt->rppp);
+e1:
+    free(fp);
+e0:
+    return (NULL);
 }
 
 static int
 rtpp_stats_obj_getidxbyname(struct rtpp_stats_obj *self, const char *name)
 {
-    int i;
     struct rtpp_stats_obj_priv *pvt;
 
     pvt = self->pvt;
-    for (i = 0; i < RTPP_NSTATS; i++) {
-        if (strcmp(pvt->stats[i].name, name) != 0)
-            continue;
-        return (i);
-    }
-    return (-1);
+    return (rtpp_pearson_perfect_hash(pvt->rppp, name));
 }
 
 static int
@@ -271,6 +295,7 @@ rtpp_stats_obj_dtor(struct rtpp_stats_obj *self)
         st = &pvt->stats[i];
         pthread_mutex_destroy(&st->mutex);
     }
+    rtpp_pearson_perfect_dtor(pvt->rppp);
     free(pvt->stats);
     free(self);
 }
