@@ -34,6 +34,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
+#include "rtpp_pearson.h"
 
 struct rtpp_hash_table_entry {
     struct rtpp_hash_table_entry *prev;
@@ -45,7 +46,7 @@ struct rtpp_hash_table_entry {
 
 struct rtpp_hash_table_priv
 {
-    uint8_t rand_table[256];
+    struct rtpp_pearson rp;
     struct rtpp_hash_table_entry *hash_table[256];
     pthread_mutex_t hash_table_lock;
 };
@@ -69,8 +70,6 @@ rtpp_hash_table_ctor(void)
     struct rtpp_hash_table_full *rp;
     struct rtpp_hash_table_obj *pub;
     struct rtpp_hash_table_priv *pvt;
-    int i;
-    uint8_t rval;
 
     rp = malloc(sizeof(struct rtpp_hash_table_full));
     if (rp == NULL) {
@@ -86,14 +85,7 @@ rtpp_hash_table_ctor(void)
     pub->findnext = &hash_table_findnext;
     pub->dtor = &hash_table_dtor;
     pthread_mutex_init(&pvt->hash_table_lock, NULL);
-    for (i = 0; i < 256; i++) {
-        if (i == 0)
-            continue;
-	do {
-	    rval = random() & 0xff;
-	} while (pvt->rand_table[rval] != 0);
-	pvt->rand_table[rval] = i;
-    }
+    rtpp_pearson_shuffle(&pvt->rp);
     pub->pvt = pvt;
     return (pub);
 }
@@ -121,17 +113,6 @@ hash_table_dtor(struct rtpp_hash_table_obj *self)
     free(self);
 }
 
-static uint8_t
-hash_string(struct rtpp_hash_table_priv *pvt, const char *bp, const char *ep)
-{
-    uint8_t res;
-
-    for (res = pvt->rand_table[0]; bp[0] != '\0' && bp != ep; bp++) {
-	res = pvt->rand_table[res ^ bp[0]];
-    }
-    return res;
-}
-
 static struct rtpp_hash_table_entry *
 hash_table_append(struct rtpp_hash_table_obj *self, const char *key, void *sptr)
 {
@@ -150,7 +131,7 @@ hash_table_append(struct rtpp_hash_table_obj *self, const char *key, void *sptr)
     sp->key = ((char *)sp) + sizeof(struct rtpp_hash_table_entry);
     memcpy(sp->key, key, klen);
     pvt = self->pvt;
-    sp->hash = hash_string(pvt, key, NULL);
+    sp->hash = rtpp_pearson_hash8(&pvt->rp, key, NULL);
 
     pthread_mutex_lock(&pvt->hash_table_lock);
     tsp = pvt->hash_table[sp->hash];
@@ -184,7 +165,7 @@ hash_table_remove(struct rtpp_hash_table_obj *self, const char *key,
 	}
         goto out;
     }
-    hash = hash_string(pvt, key, NULL);
+    hash = rtpp_pearson_hash8(&pvt->rp, key, NULL);
     /* Make sure we are removing the right session */
     assert(pvt->hash_table[hash] == sp);
     pvt->hash_table[hash] = sp->next;
@@ -229,7 +210,7 @@ hash_table_findfirst(struct rtpp_hash_table_obj *self, const char *key, void **s
     struct rtpp_hash_table_priv *pvt;
 
     pvt = self->pvt;
-    hash = hash_string(pvt, key, NULL);
+    hash = rtpp_pearson_hash8(&pvt->rp, key, NULL);
     pthread_mutex_lock(&pvt->hash_table_lock);
     for (sp = pvt->hash_table[hash]; sp != NULL; sp = sp->next) {
 	if (strcmp(sp->key, key) == 0) {
