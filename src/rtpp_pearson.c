@@ -32,6 +32,14 @@
 
 #include "rtpp_pearson.h"
 
+struct rtpp_pearson_perfect
+{
+    struct rtpp_pearson rp;
+    uint8_t omap_table[256];
+    rtpp_pearson_getval_t gv;
+    void *gv_arg;
+};
+
 void
 rtpp_pearson_shuffle(struct rtpp_pearson *rpp)
 {
@@ -58,4 +66,66 @@ rtpp_pearson_hash8(struct rtpp_pearson *rpp, const char *bp, const char *ep)
         res = rpp->rand_table[res ^ bp[0]];
     }
     return res;
+}
+
+static void
+compute_perfect_hash(struct rtpp_pearson_perfect *rppp)
+{
+    int i;
+    const char *sval;
+    uint8_t hval;
+
+again:
+    rtpp_pearson_shuffle(&rppp->rp);
+    memset(rppp->omap_table, '\0', sizeof(rppp->omap_table));
+
+    for (i = 0; rppp->gv(rppp->gv_arg, i) != NULL; i++) {
+        sval = rppp->gv(rppp->gv_arg, i);
+        hval = rtpp_pearson_hash8(&rppp->rp, sval, NULL);
+        if (rppp->omap_table[hval] != 0) {
+            goto again;
+        }
+        rppp->omap_table[hval] = i + 1;
+    }
+}
+
+struct rtpp_pearson_perfect *
+rtpp_pearson_perfect_ctor(rtpp_pearson_getval_t gv, void *gv_arg)
+{
+    struct rtpp_pearson_perfect *rppp;
+
+    rppp = malloc(sizeof(struct rtpp_pearson_perfect));
+    if (rppp == NULL) {
+        return (NULL);
+    }
+    memset(rppp, '\0', sizeof(struct rtpp_pearson_perfect));
+    rppp->gv = gv;
+    rppp->gv_arg = gv_arg;
+
+    compute_perfect_hash(rppp);
+    return(rppp);
+}
+
+int
+rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *rppp, const char *isval)
+{
+    int rval;
+    const char *sval;
+
+    rval = rppp->omap_table[rtpp_pearson_hash8(&rppp->rp, isval, NULL)] - 1;
+    if (rval == -1) {
+        return (-1);
+    }
+    sval = rppp->gv(rppp->gv_arg, rval);
+    if (strcmp(isval, sval) != 0) {
+        return (-1);
+    }
+    return (rval);
+}
+
+void
+rtpp_pearson_perfect_dtor(struct rtpp_pearson_perfect *rppp)
+{
+
+    free(rppp);
 }

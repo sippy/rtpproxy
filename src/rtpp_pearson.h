@@ -32,3 +32,10 @@ struct rtpp_pearson {
 
 void rtpp_pearson_shuffle(struct rtpp_pearson *);
 uint8_t rtpp_pearson_hash8(struct rtpp_pearson *, const char *, const char *);
+
+struct rtpp_pearson_perfect;
+typedef const char * (*rtpp_pearson_getval_t)(void *, int);
+
+struct rtpp_pearson_perfect *rtpp_pearson_perfect_ctor(rtpp_pearson_getval_t, void *);
+int rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *, const char *);
+void rtpp_pearson_perfect_dtor(struct rtpp_pearson_perfect *);
