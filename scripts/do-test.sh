@@ -7,6 +7,7 @@ ${CC} --version
 ./configure
 make
 make clean
+sudo DEBIAN_FRONTEND=noninteractive apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install libgsm1-dev libsndfile1-dev tcpdump
 tcpdump --version || true
 mkdir deps
