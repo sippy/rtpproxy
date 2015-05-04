@@ -47,9 +47,7 @@ rtpp_pearson_shuffle(struct rtpp_pearson *rpp)
     uint8_t rval;
 
     memset(rpp->rand_table, '\0', sizeof(rpp->rand_table));
-    for (i = 0; i < 256; i++) {
-        if (i == 0)
-            continue;
+    for (i = 1; i < 256; i++) {
         do {
             rval = random() & 0xff;
         } while (rpp->rand_table[rval] != 0);
