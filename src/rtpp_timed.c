@@ -78,11 +78,13 @@ rtpp_timed_destroy(struct cfg *cf)
 {
     struct rtpp_wi *wi;
     struct rtpp_timed_wi *wi_data;
+    double ctime;
 
+    ctime = getdtime();
     while (rtpp_queue_get_length(cf->stable->rtpp_timed_cf->q) > 0) {
         wi = rtpp_queue_get_item(cf->stable->rtpp_timed_cf->q, 1);
         wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_timed_wi));
-        wi_data->cb_func(wi_data->cb_func_arg);
+        wi_data->cb_func(ctime, wi_data->cb_func_arg);
         rtpp_wi_free(wi);
     }
 
@@ -138,7 +140,7 @@ rtpp_timed_process(struct cfg *cf, double ctime)
             return;
         }
         wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_timed_wi));
-        wi_data->cb_func(wi_data->cb_func_arg);
+        wi_data->cb_func(ctime, wi_data->cb_func_arg);
         rtpp_wi_free(wi);
     }
     rtcp->last_run = ctime;

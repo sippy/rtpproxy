@@ -114,7 +114,7 @@ append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 }
 
 static void
-close_socket_now(void *argp)
+close_socket_now(double ctime, void *argp)
 {
     int fd;
 
@@ -137,7 +137,7 @@ close_socket_later(struct cfg *cf, int fd)
     }
     *argp = fd;
     if (rtpp_timed_schedule(cf, 1.0, close_socket_now, argp) != 0) {
-        close_socket_now(argp);
+        close_socket_now(getdtime(), argp);
     }
 }
 

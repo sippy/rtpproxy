@@ -25,7 +25,7 @@
  *
  */
 
-typedef void (*rtpp_timed_cb_t)(void *);
+typedef void (*rtpp_timed_cb_t)(double, void *);
 
 int rtpp_timed_init(struct cfg *);
 void rtpp_timed_destroy(struct cfg *);
