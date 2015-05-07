@@ -39,7 +39,7 @@ struct rtpp_refcnt_priv
     struct rtpp_refcnt_obj pub;
     int64_t cnt;
     pthread_mutex_t cnt_lock;
-    rtpp_refcnt_free_t free_f;
+    rtpp_refcnt_dtor_t dtor_f;
     void *data;
 };
 
@@ -48,7 +48,7 @@ static void rtpp_refcnt_decref(struct rtpp_refcnt_obj *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt_obj *);
 
 struct rtpp_refcnt_obj *
-rtpp_refcnt_ctor(void *data, rtpp_refcnt_free_t free_f)
+rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
 {
     struct rtpp_refcnt_priv *pvt;
 
@@ -62,14 +62,14 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_free_t free_f)
         return (NULL);
     }
     pvt->data = data;
-    if (free_f != NULL) {
-        pvt->free_f = free_f;
+    if (dtor_f != NULL) {
+        pvt->dtor_f = dtor_f;
     } else {
-        pvt->free_f = free;
+        pvt->dtor_f = free;
     }
-    pvt->pub.incref = rtpp_refcnt_incref;
-    pvt->pub.decref = rtpp_refcnt_decref;
-    pvt->pub.getdata = rtpp_refcnt_getdata;
+    pvt->pub.incref = &rtpp_refcnt_incref;
+    pvt->pub.decref = &rtpp_refcnt_decref;
+    pvt->pub.getdata = &rtpp_refcnt_getdata;
     pvt->cnt = 1;
     return (&pvt->pub);
 }
@@ -95,7 +95,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt_obj *pub)
     pthread_mutex_lock(&pvt->cnt_lock);
     pvt->cnt -= 1;
     if (pvt->cnt == 0) {
-        pvt->free_f(pvt->data);
+        pvt->dtor_f(pvt->data);
         pthread_mutex_unlock(&pvt->cnt_lock);
         pthread_mutex_destroy(&pvt->cnt_lock);
         free(pvt);

@@ -27,7 +27,7 @@
 
 struct rtpp_refcnt_obj;
 
-typedef void (*rtpp_refcnt_free_t)(void *);
+typedef void (*rtpp_refcnt_dtor_t)(void *);
 
 DEFINE_METHOD(rtpp_refcnt_obj, refcnt_incref, void);
 DEFINE_METHOD(rtpp_refcnt_obj, refcnt_decref, void);
@@ -40,4 +40,4 @@ struct rtpp_refcnt_obj
     refcnt_getdata_t getdata;
 };
 
-struct rtpp_refcnt_obj *rtpp_refcnt_ctor(void *, rtpp_refcnt_free_t);
+struct rtpp_refcnt_obj *rtpp_refcnt_ctor(void *, rtpp_refcnt_dtor_t);
