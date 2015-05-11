@@ -575,25 +575,26 @@ rtpp_command_async_init(struct cfg *cf)
 
     cmd_cf = malloc(sizeof(*cmd_cf));
     if (cmd_cf == NULL)
-        return (-1);
+        goto e0;
 
     memset(cmd_cf, '\0', sizeof(*cmd_cf));
 
     if (init_pollset(cf, &cmd_cf->pset) == -1) {
-        free(cmd_cf);
-        return (-1);
+        goto e1;
     }
     need_acptr = init_accptset(cf, &cmd_cf->aset);
     if (need_acptr == -1) {
-        free_pollset(&cmd_cf->pset);
-        free(cmd_cf);
-        return (-1);
+        goto e2;
     }
 
     init_cstats(cf->stable->rtpp_stats, &cmd_cf->cstats);
 
-    pthread_cond_init(&cmd_cf->cmd_cond, NULL);
-    pthread_mutex_init(&cmd_cf->cmd_mutex, NULL);
+    if (pthread_cond_init(&cmd_cf->cmd_cond, NULL) != 0) {
+        goto e3;
+    }
+    if (pthread_mutex_init(&cmd_cf->cmd_mutex, NULL) != 0) {
+        goto e4;
+    }
 
 #if 0
     recfilter_init(&cmd_cf->average_load, 0.999, 0.0, 1);
@@ -606,16 +607,23 @@ rtpp_command_async_init(struct cfg *cf)
     }
     if (pthread_create(&cmd_cf->thread_id, NULL,
       (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
-        pthread_cond_destroy(&cmd_cf->cmd_cond);
-        pthread_mutex_destroy(&cmd_cf->cmd_mutex);
-        free_pollset(&cmd_cf->pset);
-        free_accptset(&cmd_cf->aset);
-        free(cmd_cf);
-        cf->stable->rtpp_cmd_cf = NULL;
-        return (-1);
+        goto e5;
     }
-
     return (0);
+
+e5:
+    cf->stable->rtpp_cmd_cf = NULL;
+    pthread_mutex_destroy(&cmd_cf->cmd_mutex);
+e4:
+    pthread_cond_destroy(&cmd_cf->cmd_cond);
+e3:
+    free_accptset(&cmd_cf->aset);
+e2:
+    free_pollset(&cmd_cf->pset);
+e1:
+    free(cmd_cf);
+e0:
+    return (-1);
 }
 
 #if 0
