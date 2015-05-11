@@ -628,8 +628,9 @@ main(int argc, char **argv)
     }
     init_port_table(&cf);
 
-    if (rtpp_timed_init(&cf) != 0) {
-        err(1, "rtpp_timed_init() failed");
+    cf.stable->rtpp_timed_cf = rtpp_timed_ctor();
+    if (cf.stable->rtpp_timed_cf == NULL) {
+        err(1, "rtpp_timed_ctor() failed");
     }
 
     if (rtpp_controlfd_init(&cf) != 0) {
@@ -741,7 +742,7 @@ main(int argc, char **argv)
 #endif
         rtpp_proc_async_wakeup(cf.stable->rtpp_proc_cf, counter, ncycles_ref);
         usleep(usleep_time);
-        rtpp_timed_process(&cf, eptime);
+        CALL_METHOD(cf.stable->rtpp_timed_cf, process, eptime);
 #if RTPP_DEBUG
         sleep_time = getdtime() - sleep_time;
         if (counter % (unsigned int)cf.stable->target_pfreq == 0 || counter < 1000 || sleep_time > add_delay * 2.0) {
@@ -763,7 +764,7 @@ main(int argc, char **argv)
         }
     }
 
-    rtpp_timed_destroy(&cf);
+    CALL_METHOD(cf.stable->rtpp_timed_cf, dtor);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif

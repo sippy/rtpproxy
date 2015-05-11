@@ -39,7 +39,7 @@ typedef enum {
     TTL_INDEPENDENT = 1         /* any TTL counter reaches 0 */
 } rtpp_ttl_mode;
 
-struct rtpp_timed_cf;
+struct rtpp_timed_obj;
 
 struct rtpp_cfg_stable {
     const char *pid_file;
@@ -102,7 +102,7 @@ struct rtpp_cfg_stable {
 
     struct rtpp_list *ctrl_socks;
 
-    struct rtpp_timed_cf *rtpp_timed_cf;
+    struct rtpp_timed_obj *rtpp_timed_cf;
 };
 
 #endif

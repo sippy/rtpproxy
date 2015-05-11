@@ -26,9 +26,22 @@
  */
 
 typedef void (*rtpp_timed_cb_t)(double, void *);
+typedef void (*rtpp_timed_cancel_cb_t)(void *);
 
-int rtpp_timed_init(struct cfg *);
-void rtpp_timed_destroy(struct cfg *);
-void rtpp_timed_process(struct cfg *, double);
-int rtpp_timed_schedule(struct cfg *, double, rtpp_timed_cb_t, void *);
+struct rtpp_wi;
+struct rtpp_timed_obj;
 
+DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_dtor, void);
+DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_process, void, double);
+DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_schedule, struct rtpp_wi *, double,
+  rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
+DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_cancel, int, struct rtpp_wi *);
+
+struct rtpp_timed_obj {
+    rtpp_timed_dtor_t dtor;
+    rtpp_timed_process_t process;
+    rtpp_timed_schedule_t schedule;
+    rtpp_timed_cancel_t cancel;
+};
+
+struct rtpp_timed_obj *rtpp_timed_ctor(void);

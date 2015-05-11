@@ -41,6 +41,7 @@
 #include "rtpp_timed.h"
 
 struct rtpp_timed_cf {
+    struct rtpp_timed_obj pub;
     struct rtpp_queue *q;
     double last_run;
     double period;
@@ -48,68 +49,81 @@ struct rtpp_timed_cf {
 
 struct rtpp_timed_wi {
     rtpp_timed_cb_t cb_func;
+    rtpp_timed_cancel_cb_t cancel_cb_func;
     void *cb_func_arg;
     double when;
 };
 
-int
-rtpp_timed_init(struct cfg *cf)
+static void rtpp_timed_destroy(struct rtpp_timed_obj *);
+static struct rtpp_wi *rtpp_timed_schedule(struct rtpp_timed_obj *, double offset,
+  rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
+static void rtpp_timed_process(struct rtpp_timed_obj *, double);
+static int rtpp_timed_cancel(struct rtpp_timed_obj *, struct rtpp_wi *);
+
+struct rtpp_timed_obj *
+rtpp_timed_ctor(void)
 {
     struct rtpp_timed_cf *rtcp;
 
     rtcp = malloc(sizeof(struct rtpp_timed_cf));
     if (rtcp == NULL) {
-        return (-1);
+        return (NULL);
     }
     memset(rtcp, '\0', sizeof(struct rtpp_timed_cf));
     rtcp->q = rtpp_queue_init(1, "rtpp_timed(requests)");
     if (rtcp->q == NULL) {
         free(rtcp);
-        return (-1);
+        return (NULL);
     }
     rtcp->last_run = getdtime();
     rtcp->period = 0.1;
-    cf->stable->rtpp_timed_cf = rtcp;
-    return (0);
+    rtcp->pub.dtor = &rtpp_timed_destroy;
+    rtcp->pub.process = &rtpp_timed_process;
+    rtcp->pub.schedule = &rtpp_timed_schedule;
+    rtcp->pub.cancel = &rtpp_timed_cancel;
+    return (&rtcp->pub);
 }
 
-void
-rtpp_timed_destroy(struct cfg *cf)
+static void
+rtpp_timed_destroy(struct rtpp_timed_obj *pub)
 {
     struct rtpp_wi *wi;
     struct rtpp_timed_wi *wi_data;
-    double ctime;
+    struct rtpp_timed_cf *rtpp_timed_cf;
 
-    ctime = getdtime();
-    while (rtpp_queue_get_length(cf->stable->rtpp_timed_cf->q) > 0) {
-        wi = rtpp_queue_get_item(cf->stable->rtpp_timed_cf->q, 1);
+    rtpp_timed_cf = (struct rtpp_timed_cf *)pub;
+    while (rtpp_queue_get_length(rtpp_timed_cf->q) > 0) {
+        wi = rtpp_queue_get_item(rtpp_timed_cf->q, 1);
         wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_timed_wi));
-        wi_data->cb_func(ctime, wi_data->cb_func_arg);
+        wi_data->cancel_cb_func(wi_data->cb_func_arg);
         rtpp_wi_free(wi);
     }
 
-    rtpp_queue_destroy(cf->stable->rtpp_timed_cf->q);
-    free(cf->stable->rtpp_timed_cf);
+    rtpp_queue_destroy(rtpp_timed_cf->q);
+    free(rtpp_timed_cf);
 }
 
 
-int
-rtpp_timed_schedule(struct cfg *cf, double offset, rtpp_timed_cb_t cb_func,
-  void *cb_func_arg)
+static struct rtpp_wi *
+rtpp_timed_schedule(struct rtpp_timed_obj *pub, double offset, rtpp_timed_cb_t cb_func,
+  rtpp_timed_cancel_cb_t cancel_cb_func, void *cb_func_arg)
 {
     struct rtpp_wi *wi;
     struct rtpp_timed_wi wi_data;
+    struct rtpp_timed_cf *rtpp_timed_cf;
 
+    rtpp_timed_cf = (struct rtpp_timed_cf *)pub;
     wi_data.cb_func = cb_func;
+    wi_data.cancel_cb_func = cancel_cb_func;
     wi_data.cb_func_arg = cb_func_arg;
     wi_data.when = getdtime() + offset;
     
     wi = rtpp_wi_malloc_data(&wi_data, sizeof(wi_data));
     if (wi == NULL) {
-        return (-1);
+        return (NULL);
     }
-    rtpp_queue_put_item(wi, cf->stable->rtpp_timed_cf->q);
-    return (0);
+    rtpp_queue_put_item(wi, rtpp_timed_cf->q);
+    return (wi);
 }
 
 static int
@@ -123,14 +137,14 @@ rtpp_timed_istime(struct rtpp_wi *wi, void *ctimep)
     return (1);
 }
 
-void
-rtpp_timed_process(struct cfg *cf, double ctime)
+static void
+rtpp_timed_process(struct rtpp_timed_obj *pub, double ctime)
 {
     struct rtpp_wi *wi;
     struct rtpp_timed_wi *wi_data;
     struct rtpp_timed_cf *rtcp;
 
-    rtcp = cf->stable->rtpp_timed_cf;
+    rtcp = (struct rtpp_timed_cf *)pub;
     if (rtcp->last_run + rtcp->period > ctime)
         return;
 
@@ -144,4 +158,37 @@ rtpp_timed_process(struct cfg *cf, double ctime)
         rtpp_wi_free(wi);
     }
     rtcp->last_run = ctime;
+}
+
+static int
+rtpp_timed_match_wi(struct rtpp_wi *wia, void *p)
+{
+
+    struct rtpp_wi *wib;
+
+    wib = (void *)p;
+    if (wia == wib) {
+        return (0);
+    }
+    return (1);
+}
+
+static int
+rtpp_timed_cancel(struct rtpp_timed_obj *pub, struct rtpp_wi *wi)
+{
+    struct rtpp_wi *wim;
+    struct rtpp_timed_cf *rtcp;
+    struct rtpp_timed_wi *wi_data;
+
+    rtcp = (struct rtpp_timed_cf *)pub;
+    wim = rtpp_queue_get_first_matching(rtcp->q, rtpp_timed_match_wi, wi);
+    if (wim == NULL) {
+        return (0);
+    }
+    wi_data = rtpp_wi_data_get_ptr(wim, sizeof(struct rtpp_timed_wi));
+    if (wi_data->cancel_cb_func != NULL) {
+        wi_data->cancel_cb_func(wi_data->cb_func_arg);
+    }
+    rtpp_wi_free(wim);
+    return (1);
 }
