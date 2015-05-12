@@ -100,9 +100,9 @@ rtpp_wi_malloc_sgnl(int signum, const void *data, size_t datalen)
     wi->wi_type = RTPP_WI_TYPE_SGNL;
     wi->flags = signum;
     if (datalen > 0) {
-        wi->msg = (char *)wi + datalen;
+        wi->msg = wi->data;
         wi->msg_len = datalen;
-        memcpy(wi->msg, data, datalen);
+        memcpy(wi->data, data, datalen);
     }
     return (wi);
 }
@@ -121,9 +121,9 @@ rtpp_wi_malloc_apis(const char *apiname, void *data, size_t datalen)
     wi->wi_type = RTPP_WI_TYPE_API_STR;
     wi->sendto = (void *)apiname;
     if (datalen > 0) {
-        wi->msg = (char *)wi + datalen;
+        wi->msg = wi->data;
         wi->msg_len = datalen;
-        memcpy(wi->msg, data, datalen);
+        memcpy(wi->data, data, datalen);
     }
     return (wi);
 }
@@ -141,9 +141,9 @@ rtpp_wi_malloc_data(void *dataptr, size_t datalen)
     wi->free_ptr = wi;
     wi->wi_type = RTPP_WI_TYPE_DATA;
     if (datalen > 0) {
-        wi->msg = (char *)wi + datalen;
+        wi->msg = wi->data;
         wi->msg_len = datalen;
-        memcpy(wi->msg, dataptr, datalen);
+        memcpy(wi->data, dataptr, datalen);
     }
     return (wi);
 }
