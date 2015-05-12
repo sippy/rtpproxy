@@ -42,6 +42,7 @@
 #include <poll.h>
 #include <pthread.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -742,7 +743,7 @@ main(int argc, char **argv)
 #endif
         rtpp_proc_async_wakeup(cf.stable->rtpp_proc_cf, counter, ncycles_ref);
         usleep(usleep_time);
-        CALL_METHOD(cf.stable->rtpp_timed_cf, process, eptime);
+        CALL_METHOD(cf.stable->rtpp_timed_cf, wakeup);
 #if RTPP_DEBUG
         sleep_time = getdtime() - sleep_time;
         if (counter % (unsigned int)cf.stable->target_pfreq == 0 || counter < 1000 || sleep_time > add_delay * 2.0) {
