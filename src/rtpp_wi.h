@@ -37,6 +37,7 @@ struct rtpp_wi *rtpp_wi_malloc_pkt(int, struct rtp_packet *,
   const struct sockaddr *, size_t, int);
 struct rtpp_wi *rtpp_wi_malloc_sgnl(int, const void *, size_t);
 void *rtpp_wi_sgnl_get_data(struct rtpp_wi *, size_t *);
+int rtpp_wi_sgnl_get_signum(struct rtpp_wi *);
 struct rtpp_wi *rtpp_wi_malloc_apis(const char *, void *, size_t);
 struct rtpp_wi *rtpp_wi_malloc_data(void *, size_t);
 void *rtpp_wi_data_get_ptr(struct rtpp_wi *, size_t);

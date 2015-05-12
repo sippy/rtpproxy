@@ -159,6 +159,14 @@ rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
     return(wi->msg);
 }
 
+int
+rtpp_wi_sgnl_get_signum(struct rtpp_wi *wi)
+{
+
+    assert(wi->wi_type == RTPP_WI_TYPE_SGNL);
+    return (wi->flags);
+}
+
 void *
 rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t datalen)
 {
