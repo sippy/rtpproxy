@@ -44,6 +44,7 @@ struct rtpp_wi {
     void *free_ptr;
     void *msg;
     int nsend;
+    char data[0];
 };
 
 #endif
