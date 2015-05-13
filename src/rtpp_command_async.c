@@ -270,7 +270,11 @@ rtpp_cmd_acceptor_run(void *arg)
     asp = &cmd_cf->aset;
 
     for (;;) {
+#ifndef LINUX_XXX
         nready = poll(asp->pfds, asp->pfds_used, INFTIM);
+#else
+	nready = poll(asp->pfds, asp->pfds_used, 100);
+#endif
         pthread_mutex_lock(&cmd_cf->cmd_mutex);
         tstate = cmd_cf->tstate_acceptor;
         pthread_mutex_unlock(&cmd_cf->cmd_mutex);
