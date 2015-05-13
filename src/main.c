@@ -697,16 +697,16 @@ main(int argc, char **argv)
     cf.rtp_nsessions = 0;
 
     rtpp_proc_async_init(&cf);
-    rtpp_command_async_init(&cf);
 
     counter = 0;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
     PFD_init(&phase_detector, 0.0);
-#ifdef HAVE_SYSTEMD_DAEMON
-    sd_notify(0, "READY=1");
-#endif
 #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setbaseln();
+#endif
+    rtpp_command_async_init(&cf);
+#ifdef HAVE_SYSTEMD_DAEMON
+    sd_notify(0, "READY=1");
 #endif
     for (;;) {
 	eptime = getdtime();
@@ -765,6 +765,7 @@ main(int argc, char **argv)
         }
     }
 
+    rtpp_command_async_dtor(&cf);
     CALL_METHOD(cf.stable->rtpp_timed_cf, dtor);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
