@@ -743,7 +743,7 @@ main(int argc, char **argv)
 #endif
         rtpp_proc_async_wakeup(cf.stable->rtpp_proc_cf, counter, ncycles_ref);
         usleep(usleep_time);
-        CALL_METHOD(cf.stable->rtpp_timed_cf, wakeup);
+        CALL_METHOD(cf.stable->rtpp_timed_cf, wakeup, eptime + add_delay);
 #if RTPP_DEBUG
         sleep_time = getdtime() - sleep_time;
         if (counter % (unsigned int)cf.stable->target_pfreq == 0 || counter < 1000 || sleep_time > add_delay * 2.0) {

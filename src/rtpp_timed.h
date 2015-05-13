@@ -32,7 +32,7 @@ struct rtpp_wi;
 struct rtpp_timed_obj;
 
 DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_dtor, void);
-DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_wakeup, void);
+DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_wakeup, void, double);
 DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_schedule, struct rtpp_wi *, double,
   rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
 DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_cancel, int, struct rtpp_wi *);
