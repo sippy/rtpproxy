@@ -28,11 +28,18 @@
 #ifndef _RTPP_COMMAND_ASYNC_H_
 #define _RTPP_COMMAND_ASYNC_H_
 
-struct rtpp_cmd_async_cf;
+struct rtpp_cmd_async_obj;
 
-int rtpp_command_async_init(struct cfg *);
-int rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *);
-double rtpp_command_async_get_aload(struct rtpp_cmd_async_cf *);
-void rtpp_command_async_dtor(struct cfg *);
+DEFINE_METHOD(rtpp_cmd_async_obj, rtpp_cmd_async_dtor, void);
+DEFINE_METHOD(rtpp_cmd_async_obj, rtpp_cmd_async_wakeup, int);
+DEFINE_METHOD(rtpp_cmd_async_obj, rtpp_cmd_async_get_aload, double);
+
+struct rtpp_cmd_async_obj {
+    rtpp_cmd_async_dtor_t dtor;
+    rtpp_cmd_async_wakeup_t wakeup;
+    rtpp_cmd_async_get_aload_t get_aload;
+};
+
+struct rtpp_cmd_async_obj *rtpp_command_async_ctor(struct cfg *);
 
 #endif

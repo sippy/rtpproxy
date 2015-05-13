@@ -37,6 +37,7 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_types.h"
 #include "rtpp_command_async.h"
 #ifdef RTPP_DEBUG
 #include "rtpp_math.h"
@@ -44,7 +45,6 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
-#include "rtpp_types.h"
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
 #include "rtpp_util.h"
@@ -196,7 +196,7 @@ rtpp_proc_async_run(void *arg)
             i = poll(cf->sessinfo.pfds_rtp, cf->sessinfo.nsessions, 0);
             pthread_mutex_unlock(&cf->sessinfo.lock);
             if (i < 0 && errno == EINTR) {
-                rtpp_command_async_wakeup(cf->stable->rtpp_cmd_cf);
+                CALL_METHOD(cf->stable->rtpp_cmd_cf, wakeup);
                 tp[0] = getdtime();
                 continue;
             }
@@ -220,7 +220,7 @@ rtpp_proc_async_run(void *arg)
         }
         pthread_mutex_unlock(&cf->glock);
         rtpp_anetio_pump_q(sender);
-        rtpp_command_async_wakeup(cf->stable->rtpp_cmd_cf);
+        CALL_METHOD(cf->stable->rtpp_cmd_cf, wakeup);
         tp[3] = getdtime();
         flush_rstats(stats_cf, rstats);
 

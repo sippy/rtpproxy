@@ -46,6 +46,7 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_types.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_copy.h"
@@ -60,7 +61,6 @@
 #include "rtpp_session.h"
 #include "rtp_server.h"
 #include "rtpp_util.h"
-#include "rtpp_types.h"
 #include "rtpp_stats.h"
 
 struct proto_cap proto_caps[] = {
@@ -717,7 +717,7 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
       packets_in, packets_out);
     if (load != 0) {
           len += snprintf(buf + len, sizeof(buf) - len, "average load: %f\n",
-            rtpp_command_async_get_aload(cf->stable->rtpp_cmd_cf));
+            CALL_METHOD(cf->stable->rtpp_cmd_cf, get_aload));
     }
 #if 0
 XXX this needs work to fix it after rtp/rtcp split 

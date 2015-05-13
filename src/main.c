@@ -704,7 +704,7 @@ main(int argc, char **argv)
 #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setbaseln();
 #endif
-    rtpp_command_async_init(&cf);
+    cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "READY=1");
 #endif
@@ -765,7 +765,7 @@ main(int argc, char **argv)
         }
     }
 
-    rtpp_command_async_dtor(&cf);
+    CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_timed_cf, dtor);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
