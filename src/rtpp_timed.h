@@ -44,4 +44,4 @@ struct rtpp_timed_obj {
     rtpp_timed_cancel_t cancel;
 };
 
-struct rtpp_timed_obj *rtpp_timed_ctor(void);
+struct rtpp_timed_obj *rtpp_timed_ctor(double);

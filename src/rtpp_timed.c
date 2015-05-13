@@ -97,7 +97,7 @@ rtpp_timed_queue_run(void *argp)
 }
 
 struct rtpp_timed_obj *
-rtpp_timed_ctor(void)
+rtpp_timed_ctor(double run_period)
 {
     struct rtpp_timed_cf *rtcp;
 
@@ -127,7 +127,7 @@ rtpp_timed_ctor(void)
         goto e4;
     }
     rtcp->last_run = getdtime();
-    rtcp->period = 0.1;
+    rtcp->period = run_period;
     rtcp->pub.dtor = &rtpp_timed_destroy;
     rtcp->pub.wakeup = &rtpp_timed_wakeup;
     rtcp->pub.schedule = &rtpp_timed_schedule;

@@ -640,7 +640,7 @@ main(int argc, char **argv)
 	    /* NOTREACHED */
     }
 
-    cf.stable->rtpp_timed_cf = rtpp_timed_ctor();
+    cf.stable->rtpp_timed_cf = rtpp_timed_ctor(0.1);
     if (cf.stable->rtpp_timed_cf == NULL) {
         err(1, "rtpp_timed_ctor() failed");
     }
