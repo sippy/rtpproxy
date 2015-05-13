@@ -33,9 +33,6 @@ struct rtpp_cmd_async_cf;
 int rtpp_command_async_init(struct cfg *);
 int rtpp_command_async_wakeup(struct rtpp_cmd_async_cf *);
 double rtpp_command_async_get_aload(struct rtpp_cmd_async_cf *);
-
-#if 0
 void rtpp_command_async_dtor(struct cfg *);
-#endif
 
 #endif

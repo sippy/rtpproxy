@@ -74,7 +74,9 @@ struct rtpp_cmd_async_cf {
     pthread_mutex_t cmd_mutex;
     int clock_tick;
     double tused;
-    int tstate;
+    int tstate_queue;
+    int tstate_acceptor;
+    int acceptor_started;
 #if 0
     struct recfilter average_load;
 #endif
@@ -253,7 +255,7 @@ rtpp_cmd_acceptor_run(void *arg)
     struct rtpp_cmd_pollset *psp;
     struct rtpp_cmd_accptset *asp;
     struct rtpp_cmd_connection *rcc;
-    int nready, controlfd, i;
+    int nready, controlfd, i, tstate;
 
     cf = (struct cfg *)arg;
     cmd_cf = cf->stable->rtpp_cmd_cf;
@@ -262,6 +264,12 @@ rtpp_cmd_acceptor_run(void *arg)
 
     for (;;) {
         nready = poll(asp->pfds, asp->pfds_used, INFTIM);
+        pthread_mutex_lock(&cmd_cf->cmd_mutex);
+        tstate = cmd_cf->tstate_acceptor;
+        pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+        if (tstate == TSTATE_CEASE) {
+            break;
+        }
         if (nready <= 0)
             continue;
         for (i = 0; i < asp->pfds_used; i++) {
@@ -312,10 +320,10 @@ wait_next_clock(struct rtpp_cmd_async_cf *cmd_cf)
     if (last_ctick == -1) {
         last_ctick = cmd_cf->clock_tick;
     }
-    tstate = cmd_cf->tstate;
-    while (cmd_cf->clock_tick == last_ctick && tstate == TSTATE_RUN) {
+    while (cmd_cf->clock_tick == last_ctick && cmd_cf->tstate_queue == TSTATE_RUN) {
         pthread_cond_wait(&cmd_cf->cmd_cond, &cmd_cf->cmd_mutex);
     }
+    tstate = cmd_cf->tstate_queue;
     last_ctick = cmd_cf->clock_tick;
     pthread_mutex_unlock(&cmd_cf->cmd_mutex);
     return (tstate);
@@ -389,7 +397,7 @@ rtpp_cmd_queue_run(void *arg)
                  * and also all non-continuous UNIX sockets are recycled
                  * after each use.
                  */
-                if (!RTPP_CTRL_ISDG(psp->rccs[i]->csock) && (rval == -1 || RTPP_CTRL_ISUNIX(psp->rccs[i]->csock))) {
+                if (!RTPP_CTRL_ISDG(psp->rccs[i]->csock) && (rval == -1 || !RTPP_CTRL_ISSTREAM(psp->rccs[i]->csock))) {
 closefd:
                     if (psp->rccs[i]->csock->type == RTPC_STDIO && psp->rccs[i]->csock->exit_on_close != 0) {
                         cf->stable->slowshutdown = 1;
@@ -571,7 +579,7 @@ int
 rtpp_command_async_init(struct cfg *cf)
 {
     struct rtpp_cmd_async_cf *cmd_cf;
-    int need_acptr;
+    int need_acptr, i;
 
     cmd_cf = malloc(sizeof(*cmd_cf));
     if (cmd_cf == NULL)
@@ -602,15 +610,25 @@ rtpp_command_async_init(struct cfg *cf)
 
     cf->stable->rtpp_cmd_cf = cmd_cf;
     if (need_acptr != 0) {
-        pthread_create(&cmd_cf->acpt_thread_id, NULL,
-          (void *(*)(void *))&rtpp_cmd_acceptor_run, cf);
+        if (pthread_create(&cmd_cf->acpt_thread_id, NULL,
+          (void *(*)(void *))&rtpp_cmd_acceptor_run, cf) != 0) {
+            goto e5;
+        }
+        cmd_cf->acceptor_started = 1;
     }
     if (pthread_create(&cmd_cf->thread_id, NULL,
       (void *(*)(void *))&rtpp_cmd_queue_run, cf) != 0) {
-        goto e5;
+        goto e6;
     }
     return (0);
 
+e6:
+    if (cmd_cf->acceptor_started != 0) {
+        for (i = 0; i < cmd_cf->aset.pfds_used; i ++) {
+            close(cmd_cf->aset.pfds[i].fd);
+        }
+        pthread_join(cmd_cf->acpt_thread_id, NULL);
+    }
 e5:
     cf->stable->rtpp_cmd_cf = NULL;
     pthread_mutex_destroy(&cmd_cf->cmd_mutex);
@@ -626,21 +644,30 @@ e0:
     return (-1);
 }
 
-#if 0
-/* Incomplete, needs more work, utility unknown at the moment */
 void
 rtpp_command_async_dtor(struct cfg *cf)
 {
     struct rtpp_cmd_async_cf *cmd_cf;
+    int i;
 
     cmd_cf = cf->stable->rtpp_cmd_cf;
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
-    cmd_cf->tstate = TSTATE_CEASE;
+    cmd_cf->tstate_queue = TSTATE_CEASE;
+    /* nudge acceptor thread */
+    if (cmd_cf->acceptor_started != 0) {
+        cmd_cf->tstate_acceptor = TSTATE_CEASE;
+        for (i = 0; i < cmd_cf->aset.pfds_used; i ++) {
+            close(cmd_cf->aset.pfds[i].fd);
+        }
+    }
     /* notify worker thread */
     pthread_cond_signal(&cmd_cf->cmd_cond);
     pthread_mutex_unlock(&cmd_cf->cmd_mutex);
-    pthread_join(cmd_cf->thread_id, NULL);
+    pthread_join(cmd_cf->thread_id, NULL);        
+    if (cmd_cf->acceptor_started != 0) {
+        pthread_join(cmd_cf->acpt_thread_id, NULL);
+    }
 
     pthread_cond_destroy(&cmd_cf->cmd_cond);
     pthread_mutex_destroy(&cmd_cf->cmd_mutex);
@@ -649,4 +676,3 @@ rtpp_command_async_dtor(struct cfg *cf)
     free(cmd_cf);
     cf->stable->rtpp_cmd_cf = NULL;
 }
-#endif
