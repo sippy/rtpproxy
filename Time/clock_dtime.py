@@ -38,8 +38,8 @@ class timespec(ctypes.Structure):
         ('tv_nsec', ctypes.c_long)
     ]
 
-def find_libc():
-    spaths = ('/usr/lib/libc.so', '/lib/libc.so')
+def find_lib(libname, paths):
+    spaths = ['%s/lib%s.so' % (path, libname) for path in paths]
     for path in spaths:
         if os.path.islink(path):
             libcname = os.readlink(path)
@@ -51,13 +51,21 @@ def find_libc():
                     continue
                 libcname = parts[2]
                 return (libcname)
-    return None
+    return ctypes.util.find_library(libname)
 
-libname = find_libc()
-if libname == None:
-    libname = ctypes.util.find_library('c')
-libc = ctypes.CDLL(libname, use_errno = True)
-clock_gettime = libc.clock_gettime
+def find_symbol(symname, lnames, paths):
+    for lname in lnames:
+        lib = find_lib(lname, paths)
+        if lib == None:
+            continue
+        try:
+            llib = ctypes.CDLL(lib, use_errno = True)
+            return llib.__getitem__(symname)
+        except:
+            continue
+    raise Exception('Bah, %s cannot be found in libs %s in the paths %s' % (symname, lnames, paths))
+
+clock_gettime = find_symbol('clock_gettime', ('c', 'rt'), ('/usr/lib', '/lib'))
 clock_gettime.argtypes = [ctypes.c_int, ctypes.POINTER(timespec)]
 
 def clock_getdtime(type):
