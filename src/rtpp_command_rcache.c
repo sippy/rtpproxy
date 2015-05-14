@@ -119,9 +119,13 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache_obj *pub, const char *cookie,
     if (rco == NULL) {
         goto e3;
     }
-    if (CALL_METHOD(pvt->ht, append_refcnt, cookie, rco) == NULL) {
-        CALL_METHOD(rco, decref);
-    }
+    CALL_METHOD(pvt->ht, append_refcnt, cookie, rco);
+    /*
+     * append_refcnt() either takes ownership in which case it incs refcount
+     * or it drops the ball in which it does not, so we release rco and set
+     * it free.
+     */
+    CALL_METHOD(rco, decref);
     return;
 e3:
     free(rep->reply);
