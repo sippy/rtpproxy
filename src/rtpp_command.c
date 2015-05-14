@@ -52,6 +52,7 @@
 #include "rtpp_command_copy.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_rcache.h"
 #include "rtpp_command_query.h"
 #include "rtpp_command_stats.h"
 #include "rtpp_command_ul.h"
@@ -182,6 +183,7 @@ rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd, int e
             len = snprintf(cmd->buf_r, sizeof(cmd->buf_r), "%s %s", cmd->cookie,
               buf);
             buf = cmd->buf_r;
+            CALL_METHOD(cmd->rcache_obj, insert, cmd->cookie, cmd->buf_r, cmd->dtime);
         }
         rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, cmd->controlfd, buf, len, 0,
           sstosa(&cmd->raddr), cmd->rlen);
@@ -230,7 +232,8 @@ free_command(struct rtpp_command *cmd)
 
 struct rtpp_command *
 get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
-  struct rtpp_command_stats *csp, int umode)
+  struct rtpp_command_stats *csp, int umode,
+  struct rtpp_cmd_rcache_obj *rcache_obj)
 {
     char **ap;
     char *cp;
@@ -289,6 +292,15 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     /* Stream communication mode doesn't use cookie */
     if (umode != 0) {
         cmd->cookie = cmd->argv[0];
+        if (CALL_METHOD(rcache_obj, lookup, cmd->cookie, cmd->buf_r, sizeof(cmd->buf_r)) == 1) {
+            len = strlen(cmd->buf_r);
+            rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, cmd->controlfd, cmd->buf_r, len, 0,
+              sstosa(&cmd->raddr), cmd->rlen);
+            *rval = 0;
+            free(cmd);
+            return (NULL);
+        }
+        cmd->rcache_obj = rcache_obj;
         for (i = 1; i < cmd->argc; i++)
             cmd->argv[i - 1] = cmd->argv[i];
         cmd->argc--;

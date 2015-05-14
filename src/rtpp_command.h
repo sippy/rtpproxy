@@ -39,13 +39,14 @@ struct rtpp_command_stats;
 struct cfg;
 struct cfg_stable;
 struct sockaddr;
+struct rtpp_cmd_rcache_obj;
 
 extern struct proto_cap proto_caps[];
 
 int handle_command(struct cfg *, struct rtpp_command *);
 void free_command(struct rtpp_command *);
 struct rtpp_command *get_command(struct cfg *, int, int *, double,
-  struct rtpp_command_stats *csp, int umode);
+  struct rtpp_command_stats *csp, int umode, struct rtpp_cmd_rcache_obj *);
 void reply_error(struct cfg *cf, struct rtpp_command *cmd, int ecode);
 void reply_port(struct cfg *cf, struct rtpp_command *cmd, int lport,
   struct sockaddr **lia);

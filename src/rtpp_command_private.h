@@ -77,6 +77,7 @@ struct rtpp_command
     int umode;
     struct common_cmd_args cca;
     int no_glock;
+    struct rtpp_cmd_rcache_obj *rcache_obj;
 };
 
 #define ECODE_CMDUNKN      0
