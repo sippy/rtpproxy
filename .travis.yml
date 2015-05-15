@@ -2,5 +2,8 @@ language: c
 compiler:
   - clang
   - gcc
+python:
+  - "2.7"
+sudo: required
 script:
     sh -x ./scripts/do-test.sh
