@@ -9,6 +9,7 @@ pip --version
 ./configure
 make
 make clean
+pip install -r requirements.txt
 sudo DEBIAN_FRONTEND=noninteractive apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install libgsm1-dev libsndfile1-dev tcpdump
 tcpdump --version || true
