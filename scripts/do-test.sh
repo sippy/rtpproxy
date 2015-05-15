@@ -4,7 +4,6 @@ set -e
 
 uname -a
 ${CC} --version
-source ~/virtualenv/python2.7/bin/activate
 python --version
 pip --version
 ./configure
