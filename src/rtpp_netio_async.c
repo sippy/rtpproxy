@@ -57,7 +57,7 @@ struct sthread_args {
 #endif
 };
 
-#define SEND_THREADS 2
+#define SEND_THREADS 1
 
 struct rtpp_anetio_cf {
     pthread_t thread_id[SEND_THREADS];
