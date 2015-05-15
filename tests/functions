@@ -11,6 +11,7 @@ BUILDDIR="${BUILDDIR:-${BASEDIR}}"
 TOP_BUILDDIR="${TOP_BUILDDIR:-${BASEDIR}/..}"
 
 RTPPROXY=$TOP_BUILDDIR/src/rtpproxy_debug
+RTPP_TEST_SOCKETS="stdio: udp:127.0.0.1:37223 udp6:::1:43863 unix:/tmp/rtpproxy.sock cunix:/tmp/rtpproxy.sock"
 MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
 DIFF="diff -u"
@@ -73,9 +74,9 @@ SED="sed ${SED_ARGS}"
 rtpproxy_start() {
   tempfoo="`basename $0`.XXXXX"
   TMP_PIDFILE=`mktemp -t ${tempfoo}` || exit 1
-  TMP_SOCKFILE=`mktemp -t ${tempfoo}` || exit 1
+  TMP_SOCKFILE=${RTPP_SOCKFILE:-`mktemp -t ${tempfoo}`} || exit 1
   TMP_LOGFILE=`mktemp -t ${tempfoo}` || exit 1
-  ${RTPPROXY} -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} -d info 2>${TMP_LOGFILE}|| exit 1
+  ${RTPPROXY} -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} -d info ${RTPP_ARGS} 2>${TMP_LOGFILE}|| exit 1
   export TMP_PIDFILE
   export TMP_SOCKFILE
   i=0
