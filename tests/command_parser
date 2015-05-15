@@ -8,14 +8,36 @@
 . $(dirname $0)/functions
 
 run_command_parser() {
+  socket=${1}
+  shift
   for extra_opts in "${@}"
   do
-    ${RTPPROXY} -b -f -s stdio: -m 23820 -M 23823 ${extra_opts} < $BASEDIR/command_parser.input || return 1
+    RTPP_ARGS="-b -m 23820 -M 23823 ${extra_opts}"
+    if [ "${socket}" = "stdio:" ]
+    then
+      ${RTPPROXY} -f -s "${socket}" ${RTPP_ARGS} < $BASEDIR/command_parser.input || return 1
+    else
+      RTPP_SOCKFILE="${socket}" RTPP_ARGS="${RTPP_ARGS}" rtpproxy_start || return 1
+      if ! ${TOP_BUILDDIR}/python/rtpp_query.py -b -s "${socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/command_parser.input
+      then
+        rtpproxy_stop TERM
+        return 1
+      fi
+      rtpproxy_stop TERM || return 1
+    fi
   done
 }
 
 RECORD_DIR="${BUILDDIR}"
-run_command_parser "" "-P" "-r ${RECORD_DIR}" "-P -r ${RECORD_DIR}" > command_parser.rout
-report "wait for the rtproxy shutdown"
-${DIFF} ${BASEDIR}/command_parser.output command_parser.rout
-report "command_parser"
+for socket in ${RTPP_TEST_SOCKETS}
+do
+  run_command_parser "${socket}" "" "-P" "-r ${RECORD_DIR}" "-P -r ${RECORD_DIR}" > command_parser.rout
+  report "wait for the rtproxy shutdown on ${socket}"
+  if [ "${socket}" = "stdio:" ]
+  then
+    ${DIFF} ${BASEDIR}/command_parser.output command_parser.rout
+  else
+    ${DIFF} ${BASEDIR}/command_parser.rtpp_query.output command_parser.rout
+  fi
+  report "command_parser on ${socket}"
+done

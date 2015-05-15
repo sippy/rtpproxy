@@ -5,6 +5,21 @@
 
 . $(dirname $0)/functions
 
-${RTPPROXY} -f -s stdio: < $BASEDIR/basic_versions.input | \
-  ${DIFF} ${BASEDIR}/basic_versions.output -
-report "basic_versions"
+for socket in ${RTPP_TEST_SOCKETS}
+do
+  if [ "${socket}" = "stdio:" ]
+  then
+    ${RTPPROXY} -f -s "${socket}" < $BASEDIR/basic_versions.input | \
+      ${DIFF} ${BASEDIR}/basic_versions.output -
+    report "basic_versions on ${socket}"
+  else
+    RTPP_SOCKFILE="${socket}" rtpproxy_start
+    report "rtpproxy start on ${socket}"
+    ${TOP_BUILDDIR}/python/rtpp_query.py -s "${socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions.input | \
+      ${DIFF} ${BASEDIR}/basic_versions.rtpp_query.output -
+    DIFF_RC=${?}
+    rtpproxy_stop TERM
+    report "rtpproxy stop (SIGTERM) on ${socket}"
+    report_rc ${DIFF_RC} "basic_versions on ${socket}"
+  fi
+done
