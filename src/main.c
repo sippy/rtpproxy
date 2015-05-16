@@ -126,6 +126,10 @@ fatsignal(int sig)
 {
 
     rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog, "got signal %d", sig);
+#ifdef RTPP_CHECK_LEAKS
+    CALL_METHOD(_sig_cf->stable->rtpp_cmd_cf, dtor);
+    CALL_METHOD(_sig_cf->stable->rtpp_timed_cf, dtor);
+#endif
     rtpp_exit();
 }
 
@@ -663,18 +667,6 @@ main(int argc, char **argv)
 	rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog, "can't open pidfile for writing");
     }
 
-    signal(SIGHUP, sighup);
-    signal(SIGINT, fatsignal);
-    signal(SIGKILL, fatsignal);
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGTERM, fatsignal);
-    signal(SIGXCPU, fatsignal);
-    signal(SIGXFSZ, fatsignal);
-    signal(SIGVTALRM, fatsignal);
-    signal(SIGPROF, fatsignal);
-    signal(SIGUSR1, fatsignal);
-    signal(SIGUSR2, fatsignal);
-
     if (cf.stable->sched_policy != SCHED_OTHER) {
         sparam.sched_priority = sched_get_priority_max(cf.stable->sched_policy);
         if (sched_setscheduler(0, cf.stable->sched_policy, &sparam) == -1) {
@@ -704,7 +696,26 @@ main(int argc, char **argv)
 #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setbaseln();
 #endif
+
     cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
+    if (cf.stable->rtpp_cmd_cf == NULL) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
+          "can't init command processing subsystem");
+        exit(1);
+    }
+
+    signal(SIGHUP, sighup);
+    signal(SIGINT, fatsignal);
+    signal(SIGKILL, fatsignal);
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGTERM, fatsignal);
+    signal(SIGXCPU, fatsignal);
+    signal(SIGXFSZ, fatsignal);
+    signal(SIGVTALRM, fatsignal);
+    signal(SIGPROF, fatsignal);
+    signal(SIGUSR1, fatsignal);
+    signal(SIGUSR2, fatsignal);
+
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "READY=1");
 #endif
