@@ -15,7 +15,7 @@ do
   else
     RTPP_SOCKFILE="${socket}" rtpproxy_start
     report "rtpproxy start on ${socket}"
-    ${TOP_BUILDDIR}/python/rtpp_query.py -s "${socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions.input | \
+    ${TOP_BUILDDIR}/python/rtpp_query.py -b -s "${socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions.input | \
       ${DIFF} ${BASEDIR}/basic_versions.rtpp_query.output -
     DIFF_RC=${?}
     rtpproxy_stop TERM
