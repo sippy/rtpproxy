@@ -5,5 +5,8 @@ compiler:
 python:
   - "2.7"
 sudo: required
+before_install:
+    - pip install -r requirements.txt
+    - DEBIAN_FRONTEND=noninteractive apt-get update
 script:
     sh -x ./scripts/do-test.sh
