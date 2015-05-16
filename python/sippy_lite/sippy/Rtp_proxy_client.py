@@ -55,6 +55,10 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def __init__(self, global_config, *address, **kwargs):
         #print 'Rtp_proxy_client', address
+        no_version_check = False
+        if kwargs.has_key('no_version_check'):
+            no_version_check = kwargs['no_version_check']
+            del kwargs['no_version_check']
         if len(address) == 0 and kwargs.has_key('spath'):
             a = kwargs['spath']
             del kwargs['spath']
@@ -101,7 +105,11 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             Rtp_proxy_client_local.__init__(self, global_config, *address, \
               **kwargs)
             self.proxy_address = global_config['_sip_address']
-        self.version_check()
+        if not no_version_check:
+            self.version_check()
+        else:
+            self.caps_done = True
+            self.online = True
 
     def send_command(self, *args, **kwargs):
         if self.is_local:

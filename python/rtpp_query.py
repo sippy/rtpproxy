@@ -57,7 +57,7 @@ class command_runner(object):
             command = self.commands.pop(0)
         else:
             command = self.fin.readline()
-            if command == None:
+            if command == None or len(command) == 0:
                 reactor.crash()
                 return
         self.rc.send_command(command, self.got_result)
@@ -80,9 +80,10 @@ if __name__ == '__main__':
     file_in = None
     file_out = sys.stdout
     commands = None
+    no_rtpp_version_check = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 's:S:i:o:')
+        opts, args = getopt.getopt(sys.argv[1:], 's:S:i:o:b')
     except getopt.GetoptError:
         usage()
 
@@ -105,6 +106,8 @@ if __name__ == '__main__':
                file_out = sys.stdout
            else:
                file_out = file(fname, 'w')
+        if o == '-b':
+           no_rtpp_version_check = True
 
     if len(args) > 0:
         commands = args
@@ -114,7 +117,7 @@ if __name__ == '__main__':
 
     from sippy.Rtp_proxy_client import Rtp_proxy_client
 
-    rc = Rtp_proxy_client(global_config, spath = spath)
+    rc = Rtp_proxy_client(global_config, spath = spath, no_version_check = no_rtpp_version_check)
     #commands = ('VF 123456', 'G nsess_created', 'G ncmds_rcvd')
     crun = command_runner(rc, commands, file_in, file_out)
     reactor.run(installSignalHandlers = 1)
