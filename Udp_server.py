@@ -133,8 +133,10 @@ class Udp_server_opts(object):
     family = None
     flags = _DEFAULT_FLAGS
     nworkers = _DEFAULT_NWORKERS
-    ploss_rate = 0.0
-    pdelay_max = 0.0
+    ploss_out_rate = 0.0
+    pdelay_out_max = 0.0
+    ploss_in_rate = 0.0
+    pdelay_in_max = 0.0
 
     def __init__(self, laddress, data_callback, family = None, o = None):
         if o == None:
@@ -149,8 +151,10 @@ class Udp_server_opts(object):
             self.data_callback = data_callback
         else:
             self.laddress, self.data_callback, self.family, self.nworkers, self.flags, \
-              self.ploss_rate, self.pdelay_max = o.laddress, o.data_callback, o.family, \
-              o.nworkers, o.flags, o.ploss_rate, o.pdelay_max
+              self.ploss_out_rate, self.pdelay_out_max, self.ploss_in_rate, \
+              self.pdelay_in_max = o.laddress, o.data_callback, o.family, \
+              o.nworkers, o.flags, o.ploss_out_rate, o.pdelay_out_max, o.ploss_in_rate, \
+              o.pdelay_in_max
 
     def getCopy(self):
         return self.__class__(None, None, o = self)
@@ -193,11 +197,11 @@ class Udp_server(object):
     def send_to(self, data, address, delayed = False):
         if not isinstance(address, tuple):
             raise Exception('Invalid address, not a tuple: %s' % str(address))
-        if self.uopts.ploss_rate > 0.0:
-            if random() < self.uopts.ploss_rate:
+        if self.uopts.ploss_out_rate > 0.0 and not delayed:
+            if random() < self.uopts.ploss_out_rate:
                 return
-        if self.uopts.pdelay_max > 0.0 and not delayed:
-            pdelay = self.uopts.pdelay_max * random()
+        if self.uopts.pdelay_out_max > 0.0 and not delayed:
+            pdelay = self.uopts.pdelay_out_max * random()
             Timeout(self.send_to, pdelay, 1, data, address, True)
             return
         addr, port = address
@@ -210,9 +214,16 @@ class Udp_server(object):
         self.wi_available.notify()
         self.wi_available.release()
  
-    def handle_read(self, data, address, rtime):
+    def handle_read(self, data, address, rtime, delayed = False):
         if len(data) > 0 and self.uopts.data_callback != None:
             self.stats[2] += 1
+            if self.uopts.ploss_in_rate > 0.0 and not delayed:
+                if random() < self.uopts.ploss_in_rate:
+                    return
+            if self.uopts.pdelay_in_max > 0.0 and not delayed:
+                pdelay = self.uopts.pdelay_in_max * random()
+                Timeout(self.handle_read, pdelay, 1, data, address, rtime + pdelay, True)
+                return
             try:
                 self.uopts.data_callback(data, address, self, rtime)
             except:
