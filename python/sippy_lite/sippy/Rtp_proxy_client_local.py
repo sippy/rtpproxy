@@ -26,7 +26,7 @@
 
 from Timeout import Timeout
 from threading import Thread, Condition
-from errno import EINTR, EPIPE, ENOTCONN
+from errno import EINTR, EPIPE, ENOTCONN, ECONNRESET
 from twisted.internet import reactor
 from Time.MonoTime import MonoTime
 from Math.recfilter import recfilter
@@ -66,7 +66,7 @@ class _RTPPLWorker(Thread):
             except socket.error, why:
                 if why[0] == EINTR:
                     continue
-                elif why[0] in (EPIPE, ENOTCONN):
+                elif why[0] in (EPIPE, ENOTCONN, ECONNRESET):
                     self.connect()
                     return self.send_raw(command, _recurse + 1, stime)
                 raise why
@@ -81,7 +81,7 @@ class _RTPPLWorker(Thread):
             except socket.error, why:
                 if why[0] == EINTR:
                     continue
-                elif why[0] in (EPIPE, ENOTCONN):
+                elif why[0] in (EPIPE, ENOTCONN, ECONNRESET):
                     self.connect()
                     return self.send_raw(command, _recurse + 1, stime)
                 raise why
