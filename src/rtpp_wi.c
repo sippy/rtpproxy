@@ -148,6 +148,26 @@ rtpp_wi_malloc_data(void *dataptr, size_t datalen)
     return (wi);
 }
 
+struct rtpp_wi *
+rtpp_wi_malloc_udata(void **dataptr, size_t datalen)
+{
+    struct rtpp_wi *wi;
+
+    wi = malloc(sizeof(struct rtpp_wi) + datalen);
+    if (wi == NULL) {
+        return (NULL);
+    }
+    memset(wi, '\0', sizeof(struct rtpp_wi));
+    wi->free_ptr = wi;
+    wi->wi_type = RTPP_WI_TYPE_DATA;
+    if (datalen > 0) {
+        wi->msg = wi->data;
+        wi->msg_len = datalen;
+        *dataptr = wi->data;
+    }
+    return (wi);
+}
+
 void *
 rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
 {
@@ -168,11 +188,12 @@ rtpp_wi_sgnl_get_signum(struct rtpp_wi *wi)
 }
 
 void *
-rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t datalen)
+rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t min_len, size_t max_len)
 {
 
     assert(wi->wi_type == RTPP_WI_TYPE_DATA);
-    assert(wi->msg_len == datalen);
+    assert(wi->msg_len >= min_len);
+    assert(max_len == 0 || wi->msg_len <= max_len);
 
     return(wi->msg);
 }

@@ -40,7 +40,8 @@ void *rtpp_wi_sgnl_get_data(struct rtpp_wi *, size_t *);
 int rtpp_wi_sgnl_get_signum(struct rtpp_wi *);
 struct rtpp_wi *rtpp_wi_malloc_apis(const char *, void *, size_t);
 struct rtpp_wi *rtpp_wi_malloc_data(void *, size_t);
-void *rtpp_wi_data_get_ptr(struct rtpp_wi *, size_t);
+struct rtpp_wi *rtpp_wi_malloc_udata(void **, size_t);
+void *rtpp_wi_data_get_ptr(struct rtpp_wi *, size_t, size_t);
 
 void rtpp_wi_free(struct rtpp_wi *);
 

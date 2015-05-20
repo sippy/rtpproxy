@@ -88,7 +88,8 @@ rtpp_timed_queue_run(void *argp)
     /* We are terminating, get rid of all requests */
     while (rtpp_queue_get_length(rtcp->q) > 0) {
         wi = rtpp_queue_get_item(rtcp->q, 1);
-        wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_timed_wi));
+        wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_timed_wi),
+          sizeof(struct rtpp_timed_wi));
         if (wi_data->cancel_cb_func != NULL) {
             wi_data->cancel_cb_func(wi_data->cb_func_arg);
         }
@@ -187,7 +188,8 @@ rtpp_timed_istime(struct rtpp_wi *wi, void *ctimep)
 {
     struct rtpp_timed_wi *wi_data;
 
-    wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_timed_wi));
+    wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_timed_wi),
+      sizeof(struct rtpp_timed_wi));
     if (wi_data->when <= *(double *)ctimep)
        return (0);
     return (1);
@@ -223,7 +225,8 @@ rtpp_timed_process(struct rtpp_timed_cf *rtcp, double ctime)
         if (wi == NULL) {
             return;
         }
-        wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_timed_wi));
+        wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_timed_wi),
+          sizeof(struct rtpp_timed_wi));
         wi_data->cb_func(ctime, wi_data->cb_func_arg);
         rtpp_wi_free(wi);
     }
@@ -254,7 +257,8 @@ rtpp_timed_cancel(struct rtpp_timed_obj *pub, struct rtpp_wi *wi)
     if (wim == NULL) {
         return (0);
     }
-    wi_data = rtpp_wi_data_get_ptr(wim, sizeof(struct rtpp_timed_wi));
+    wi_data = rtpp_wi_data_get_ptr(wim, sizeof(struct rtpp_timed_wi),
+      sizeof(struct rtpp_timed_wi));
     if (wi_data->cancel_cb_func != NULL) {
         wi_data->cancel_cb_func(wi_data->cb_func_arg);
     }
