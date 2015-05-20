@@ -105,6 +105,7 @@ init_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
 {
 
     csp->ncmds_rcvd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_rcvd");
+    csp->ncmds_rcvd_ndups.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_rcvd_ndups");
     csp->ncmds_succd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_succd");
     csp->ncmds_errs.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_errs");
     csp->ncmds_repld.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_repld");
@@ -128,6 +129,7 @@ flush_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
 {
 
     FLUSH_CSTAT(sobj, csp->ncmds_rcvd);
+    FLUSH_CSTAT(sobj, csp->ncmds_rcvd_ndups);
     FLUSH_CSTAT(sobj, csp->ncmds_succd);
     FLUSH_CSTAT(sobj, csp->ncmds_errs);
     FLUSH_CSTAT(sobj, csp->ncmds_repld);

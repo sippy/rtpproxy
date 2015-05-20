@@ -76,6 +76,7 @@ static struct rtpp_stats
     {.name = "npkts_discard",        .descr = "Total number of RTP/RTPC packets discarded", .type = RTPP_CNT_U64},
     {.name = "total_duration",       .descr = "Cumulative duration of all sessions", .type = RTPP_CNT_DBL},
     {.name = "ncmds_rcvd",           .descr = "Total number of control commands received", .type = RTPP_CNT_U64},
+    {.name = "ncmds_rcvd_ndups",     .descr = "Total number of duplicate control commands received", .type = RTPP_CNT_U64},
     {.name = "ncmds_succd",          .descr = "Total number of control commands successfully processed", .type = RTPP_CNT_U64},
     {.name = "ncmds_errs",           .descr = "Total number of control commands ended up with an error", .type = RTPP_CNT_U64},
     {.name = "ncmds_repld",          .descr = "Total number of control commands that had a reply generated", .type = RTPP_CNT_U64},

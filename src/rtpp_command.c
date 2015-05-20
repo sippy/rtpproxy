@@ -296,6 +296,8 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
             len = strlen(cmd->buf_r);
             rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, cmd->controlfd, cmd->buf_r, len, 0,
               sstosa(&cmd->raddr), cmd->rlen);
+            csp->ncmds_rcvd.cnt--;
+            csp->ncmds_rcvd_ndups.cnt++;
             *rval = 0;
             free(cmd);
             return (NULL);

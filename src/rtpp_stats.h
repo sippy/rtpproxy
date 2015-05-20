@@ -41,7 +41,7 @@ DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_nstr, int, char *, int, const char 
 
 struct rtpp_stats_obj_priv;
 
-#define RTPP_NSTATS 26
+#define RTPP_NSTATS 27
 
 struct rtpp_stats_obj
 {

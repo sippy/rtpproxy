@@ -36,6 +36,7 @@ struct rtpp_command_stat {
 
 struct rtpp_command_stats {
     struct rtpp_command_stat ncmds_rcvd;
+    struct rtpp_command_stat ncmds_rcvd_ndups;
     struct rtpp_command_stat ncmds_succd;
     struct rtpp_command_stat ncmds_errs;
     struct rtpp_command_stat ncmds_repld;
