@@ -151,7 +151,7 @@ rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache_obj *pub, const char *cookie,
      * to decref when we've done with it.
      */
     rep = CALL_METHOD(rco, getdata);
-    strncpy(rep->reply, rbuf, rblen);
+    strncpy(rbuf, rep->reply, rblen);
     CALL_METHOD(rco, decref);
     return (1);
 }
