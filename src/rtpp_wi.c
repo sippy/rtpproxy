@@ -168,6 +168,13 @@ rtpp_wi_malloc_udata(void **dataptr, size_t datalen)
     return (wi);
 }
 
+enum rtpp_wi_type
+rtpp_wi_get_type(struct rtpp_wi *wi)
+{
+
+    return (wi->wi_type);
+}
+
 void *
 rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
 {

@@ -28,14 +28,9 @@
 #ifndef _RTPP_WI_PRIVATE_H_
 #define _RTPP_WI_PRIVATE_H_
 
-#define	RTPP_WI_TYPE_OPKT	0
-#define	RTPP_WI_TYPE_SGNL	1
-#define	RTPP_WI_TYPE_API_STR	2
-#define	RTPP_WI_TYPE_DATA	3
-
 struct rtpp_wi {
     struct rtpp_wi *next;
-    int wi_type;
+    enum rtpp_wi_type wi_type;
     int sock;
     size_t msg_len;
     int flags;
