@@ -166,19 +166,20 @@ rtpp_timed_schedule(struct rtpp_timed_obj *pub, double offset, rtpp_timed_cb_t c
   rtpp_timed_cancel_cb_t cancel_cb_func, void *cb_func_arg)
 {
     struct rtpp_wi *wi;
-    struct rtpp_timed_wi wi_data;
+    struct rtpp_timed_wi *wi_data;
     struct rtpp_timed_cf *rtpp_timed_cf;
 
     rtpp_timed_cf = (struct rtpp_timed_cf *)pub;
-    wi_data.cb_func = cb_func;
-    wi_data.cancel_cb_func = cancel_cb_func;
-    wi_data.cb_func_arg = cb_func_arg;
-    wi_data.when = getdtime() + offset;
     
-    wi = rtpp_wi_malloc_data(&wi_data, sizeof(struct rtpp_timed_wi));
+    wi = rtpp_wi_malloc_udata((void **)&wi_data, sizeof(struct rtpp_timed_wi));
     if (wi == NULL) {
         return (NULL);
     }
+    memset(wi_data, '\0', sizeof(struct rtpp_timed_wi));
+    wi_data->cb_func = cb_func;
+    wi_data->cancel_cb_func = cancel_cb_func;
+    wi_data->cb_func_arg = cb_func_arg;
+    wi_data->when = getdtime() + offset;
     rtpp_queue_put_item(wi, rtpp_timed_cf->q);
     return (wi);
 }
