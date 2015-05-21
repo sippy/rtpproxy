@@ -37,6 +37,8 @@
 #include <errno.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <signal.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,9 +53,12 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_types.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
+#include "rtpp_queue.h"
 #include "rtpp_session.h"
+#include "rtpp_wi.h"
 
 struct rtpp_timeout_handler {
     char *socket_name;
@@ -69,90 +74,47 @@ struct rtpp_timeout_handler {
 
 struct rtpp_notify_wi
 {
-    char *notify_buf;
     int len;
     struct rtpp_timeout_handler *th;
     rtpp_log_t glog;
-    struct rtpp_notify_wi *next;
+    char notify_buf[0];
 };
 
-static pthread_t rtpp_notify_queue;
-static pthread_cond_t rtpp_notify_queue_cond;
-static pthread_mutex_t rtpp_notify_queue_mutex;
+struct rtpp_notify_priv {
+    struct rtpp_notify_obj pub;
+    struct rtpp_queue *nqueue;
+    struct rtpp_wi *sigterm;
+    pthread_t thread_id;
+    rtpp_log_t glog;
+};
 
-static int rtpp_notify_dropped_items;
+#define PUB2PVT(pubp)      ((struct rtpp_notify_priv *)((char *)(pubp) - offsetof(struct rtpp_notify_priv, pub)))
 
-static struct rtpp_notify_wi *rtpp_notify_wi_free;
-static struct rtpp_notify_wi *rtpp_notify_wi_queue, *rtpp_notify_wi_queue_tail;
-
-static struct rtpp_notify_wi *rtpp_notify_queue_alloc_item(void);
-static void rtpp_notify_queue_put_item(struct rtpp_notify_wi *);
+static int rtpp_notify_schedule(struct rtpp_notify_obj *, struct rtpp_session *);
+static void rtpp_notify_dtor(struct rtpp_notify_obj *);
 static void do_timeout_notification(struct rtpp_notify_wi *, int);
 
-static struct rtpp_notify_wi *
-rtpp_notify_queue_alloc_item(void)
-{
-    struct rtpp_notify_wi *wi;
-
-    wi = malloc(sizeof(*wi));
-    if (wi == NULL) {
-        rtpp_notify_dropped_items++;
-        return NULL;
-    }
-    memset(wi, '\0', sizeof(*wi));
-    return wi;
-}
-
 static void
-rtpp_notify_queue_free_item(struct rtpp_notify_wi *wi)
+rtpp_notify_queue_run(void *arg)
 {
+    struct rtpp_wi *wi;
+    struct rtpp_notify_wi *wi_data;
+    struct rtpp_notify_priv *pvt;
 
-    if (wi->notify_buf != NULL) {
-        free(wi->notify_buf);
-    }
-    free(wi);
-}
-
-static void
-rtpp_notify_queue_put_item(struct rtpp_notify_wi *wi)
-{
-
-    pthread_mutex_lock(&rtpp_notify_queue_mutex);
-
-    wi->next = NULL;
-    if (rtpp_notify_wi_queue == NULL) {
-        rtpp_notify_wi_queue = wi;
-        rtpp_notify_wi_queue_tail = wi;
-    } else {
-        rtpp_notify_wi_queue_tail->next = wi;
-        rtpp_notify_wi_queue_tail = wi;
-    }
-
-    /* notify worker thread */
-    pthread_cond_signal(&rtpp_notify_queue_cond);
-
-    pthread_mutex_unlock(&rtpp_notify_queue_mutex);
-}
-
-static void
-rtpp_notify_queue_run(void)
-{
-    struct rtpp_notify_wi *wi;
-
+    pvt = (struct rtpp_notify_priv *)arg;
     for (;;) {
-        pthread_mutex_lock(&rtpp_notify_queue_mutex);
-        while (rtpp_notify_wi_queue == NULL) {
-            pthread_cond_wait(&rtpp_notify_queue_cond, &rtpp_notify_queue_mutex);
+        wi = rtpp_queue_get_item(pvt->nqueue, 0);
+        if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
+            rtpp_wi_free(wi);
+            break;
         }
-        wi = rtpp_notify_wi_queue;
-        rtpp_notify_wi_queue = wi->next;
-        pthread_mutex_unlock(&rtpp_notify_queue_mutex);
+        wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_notify_wi), 0);
 
         /* main work here */
-        do_timeout_notification(wi, 1);
+        do_timeout_notification(wi_data, 1);
 
         /* deallocate wi */
-        rtpp_notify_queue_free_item(wi);
+        rtpp_wi_free(wi);
     }
 }
 
@@ -251,43 +213,76 @@ parse_timeout_sock(rtpp_log_t glog, const char *sock_name, struct rtpp_timeout_h
     return (0);
 }
 
-int
-rtpp_notify_init(void)
+struct rtpp_notify_obj *
+rtpp_notify_ctor(rtpp_log_t glog)
 {
-    rtpp_notify_wi_free = NULL;
-    rtpp_notify_wi_queue = NULL;
-    rtpp_notify_wi_queue_tail = NULL;
+    struct rtpp_notify_priv *pvt;
 
-    rtpp_notify_dropped_items = 0;
-
-    pthread_cond_init(&rtpp_notify_queue_cond, NULL);
-    pthread_mutex_init(&rtpp_notify_queue_mutex, NULL);
-
-    if (pthread_create(&rtpp_notify_queue, NULL, (void *(*)(void *))&rtpp_notify_queue_run, NULL) != 0) {
-        return (-1);
+    pvt = malloc(sizeof(struct rtpp_notify_priv));
+    if (pvt == NULL) {
+        goto e0;
+    }
+    memset(pvt, '\0', sizeof(struct rtpp_notify_priv));
+    pvt->nqueue = rtpp_queue_init(1, "rtpp_notify");
+    if (pvt->nqueue == NULL) {
+        goto e1;
     }
 
-    return (0);
+    /* Pre-allocate sigterm, so that we don't have any malloc() in dtor() */
+    pvt->sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
+    if (pvt->sigterm == NULL) {
+        goto e2;
+    }
+
+    if (pthread_create(&pvt->thread_id, NULL, (void *(*)(void *))&rtpp_notify_queue_run, pvt) != 0) {
+        goto e3;
+    }
+
+    pvt->glog = glog;
+    pvt->pub.schedule = &rtpp_notify_schedule;
+    pvt->pub.dtor = &rtpp_notify_dtor;
+
+    return (&pvt->pub);
+
+e3:
+    rtpp_wi_free(pvt->sigterm);
+e2:
+    rtpp_queue_destroy(pvt->nqueue);
+e1:
+    free(pvt);
+e0:
+    return (NULL);
 }
 
-int
-rtpp_notify_schedule(struct cfg *cf, struct rtpp_session *sp)
+static void
+rtpp_notify_dtor(struct rtpp_notify_obj *pub)
 {
-    struct rtpp_notify_wi *wi;
+    struct rtpp_notify_priv *pvt;
+
+    pvt = PUB2PVT(pub);
+
+    rtpp_queue_put_item(pvt->sigterm, pvt->nqueue);
+    pthread_join(pvt->thread_id, NULL);
+    rtpp_queue_destroy(pvt->nqueue);
+    free(pvt);
+}
+
+static int
+rtpp_notify_schedule(struct rtpp_notify_obj *pub, struct rtpp_session *sp)
+{
+    struct rtpp_notify_wi *wi_data;
+    struct rtpp_wi *wi;
     struct rtpp_timeout_handler *th = sp->timeout_data.handler;
     int len;
-    char *notify_buf;
+    struct rtpp_notify_priv *pvt;
 
     if (th == NULL) {
         /* Not an error, just nothing to do */
-        return 0;
+        return (0);
     }
 
-    wi = rtpp_notify_queue_alloc_item();
-    if (wi == NULL)
-        return -1;
+    pvt = PUB2PVT(pub);
 
-    wi->th = th;
     if (sp->timeout_data.notify_tag == NULL) {
         /* two 5-digit numbers, space, \0 and \n */
         len = 5 + 5 + 3;
@@ -295,34 +290,27 @@ rtpp_notify_schedule(struct cfg *cf, struct rtpp_session *sp)
         /* string, \0 and \n */
         len = strlen(sp->timeout_data.notify_tag) + 2;
     }
-    if (wi->notify_buf == NULL) {
-        wi->notify_buf = malloc(len);
-        if (wi->notify_buf == NULL) {
-            rtpp_notify_queue_free_item(wi);
-            return -1;
-        }
-    } else {
-        notify_buf = realloc(wi->notify_buf, len);
-        if (notify_buf == NULL) {
-            rtpp_notify_queue_free_item(wi);
-            return -1;
-        }
-        wi->notify_buf = notify_buf;
-    }
-    wi->len = len;
+
+    wi = rtpp_wi_malloc_udata((void **)&wi_data,
+      sizeof(struct rtpp_notify_wi) + len);
+    if (wi == NULL)
+        return (-1);
+
+    wi_data->th = th;
+    wi_data->len = len;
 
     if (sp->timeout_data.notify_tag == NULL) {
-        len = snprintf(wi->notify_buf, len, "%d %d\n",
+        len = snprintf(wi_data->notify_buf, len, "%d %d\n",
           sp->ports[0], sp->ports[1]);
     } else {
-        len = snprintf(wi->notify_buf, len, "%s\n",
+        len = snprintf(wi_data->notify_buf, len, "%s\n",
           sp->timeout_data.notify_tag);
     }
 
-    wi->glog = cf->stable->glog;
+    wi_data->glog = pvt->glog;
 
-    rtpp_notify_queue_put_item(wi);
-    return 0;
+    rtpp_queue_put_item(wi, pvt->nqueue);
+    return (0);
 }
 
 static void

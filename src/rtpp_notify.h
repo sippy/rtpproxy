@@ -28,10 +28,18 @@
 #ifndef _RTPP_NOTIFY_H_
 #define _RTPP_NOTIFY_H_
 
-struct rtpp_timeout_handler;
+struct rtpp_notify_obj;
 
-int rtpp_notify_schedule(struct cfg *, struct rtpp_session *);
-int rtpp_notify_init(void);
+DEFINE_METHOD(rtpp_notify_obj, rtpp_notify_schedule, int, struct rtpp_session *);
+DEFINE_METHOD(rtpp_notify_obj, rtpp_notify_dtor, void);
+
+struct rtpp_notify_obj {
+    rtpp_notify_schedule_t schedule;
+    rtpp_notify_dtor_t dtor;
+};
+
+struct rtpp_notify_obj *rtpp_notify_ctor(rtpp_log_t);
+
 struct rtpp_timeout_handler *rtpp_th_init(void);
 char *rtpp_th_set_sn(struct rtpp_timeout_handler *, const char *, rtpp_log_t glog);
 const char *rtpp_th_get_sn(struct rtpp_timeout_handler *);
