@@ -129,6 +129,7 @@ fatsignal(int sig)
 #ifdef RTPP_CHECK_LEAKS
     CALL_METHOD(_sig_cf->stable->rtpp_cmd_cf, dtor);
     CALL_METHOD(_sig_cf->stable->rtpp_timed_cf, dtor);
+    CALL_METHOD(_sig_cf->stable->rtpp_notify_cf, dtor);
 #endif
     rtpp_exit();
 }
@@ -644,14 +645,6 @@ main(int argc, char **argv)
 	    /* NOTREACHED */
     }
 
-    cf.stable->rtpp_timed_cf = rtpp_timed_ctor(0.1);
-    if (cf.stable->rtpp_timed_cf == NULL) {
-        err(1, "rtpp_timed_ctor() failed");
-    }
-
-    if (rtpp_notify_init() != 0)
-        errx(1, "can't start notification thread");
-
     cf.stable->glog = rtpp_log_open(cf.stable, "rtpproxy", NULL, LF_REOPEN);
     rtpp_log_setlevel(cf.stable->glog, cf.stable->log_level);
     _sig_cf = &cf;
@@ -696,6 +689,20 @@ main(int argc, char **argv)
 #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setbaseln();
 #endif
+
+    cf.stable->rtpp_timed_cf = rtpp_timed_ctor(0.1);
+    if (cf.stable->rtpp_timed_cf == NULL) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
+          "can't init scheduling subsystem");
+        exit(1);
+    }
+
+    cf.stable->rtpp_notify_cf = rtpp_notify_ctor(cf.stable->glog);
+    if (cf.stable->rtpp_notify_cf == NULL) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
+          "can't init timeout notification subsystem");
+        exit(1);
+    }
 
     cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
     if (cf.stable->rtpp_cmd_cf == NULL) {
@@ -777,6 +784,7 @@ main(int argc, char **argv)
     }
 
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
+    CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_timed_cf, dtor);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
