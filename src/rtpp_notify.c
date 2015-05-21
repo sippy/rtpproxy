@@ -293,8 +293,10 @@ rtpp_notify_schedule(struct rtpp_notify_obj *pub, struct rtpp_session *sp)
 
     wi = rtpp_wi_malloc_udata((void **)&wi_data,
       sizeof(struct rtpp_notify_wi) + len);
-    if (wi == NULL)
+    if (wi == NULL) {
         return (-1);
+    }
+    memset(wi_data, '\0', sizeof(struct rtpp_notify_wi) + len);
 
     wi_data->th = th;
     wi_data->len = len;
