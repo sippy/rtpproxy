@@ -96,6 +96,7 @@ struct rtpp_cfg_stable {
     struct rtpp_cmd_async_obj *rtpp_cmd_cf;
     struct rtpp_proc_async_cf *rtpp_proc_cf;
     struct rtpp_anetio_cf *rtpp_netio_cf;
+    struct rtpp_tnotify_set_obj *rtpp_tnset_cf;
     struct rtpp_notify_obj *rtpp_notify_cf;
     int slowshutdown;
 

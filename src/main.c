@@ -79,6 +79,7 @@
 #include "rtpp_stats.h"
 #include "rtpp_list.h"
 #include "rtpp_timed.h"
+#include "rtpp_tnotify_set.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -209,6 +210,10 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->timeout_handler = rtpp_th_init();
     if (cf->timeout_handler == NULL)
         err(1, "rtpp_th_init");
+    cf->stable->rtpp_tnset_cf = rtpp_tnotify_set_ctor();
+    if (cf->stable->rtpp_tnset_cf == NULL) {
+        err(1, "rtpp_tnotify_set_ctor");
+    }
 
     pthread_mutex_init(&cf->glock, NULL);
     pthread_mutex_init(&cf->sessinfo.lock, NULL);
@@ -413,10 +418,12 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'n':
-	    if(strncmp("unix:", optarg, 5) == 0)
-		optarg += 5;
 	    if(strlen(optarg) == 0)
 		errx(1, "timeout notification socket name too short");
+            if (CALL_METHOD(cf->stable->rtpp_tnset_cf, append, optarg,
+              &errmsg) != 0) {
+                errx(1, "error adding timeout notification: %s", errmsg);
+            }
             if (rtpp_th_set_sn(cf->timeout_handler, optarg, NULL) == NULL) {
 		err(1, "can't allocate memory");
             }
