@@ -118,7 +118,7 @@ rtpp_notify_queue_run(void *arg)
     }
 }
 
-int
+static int
 parse_hostport(const char *hostport, char *host, int hsize, char *port, int psize, int testonly)
 {
     const char *cp;
