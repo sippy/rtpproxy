@@ -11,7 +11,13 @@ BUILDDIR="${BUILDDIR:-${BASEDIR}}"
 TOP_BUILDDIR="${TOP_BUILDDIR:-${BASEDIR}/..}"
 
 RTPPROXY=$TOP_BUILDDIR/src/rtpproxy_debug
-RTPP_TEST_SOCKETS="stdio: udp:127.0.0.1:37223 udp6:::1:43863 unix:/tmp/rtpproxy.sock cunix:/tmp/rtpproxy.sock"
+RTPP_TEST_SOCK_UDP4_PORT=${RTPP_TEST_SOCK_UDP4_PORT:-37223}
+RTPP_TEST_SOCK_UDP6_PORT=${RTPP_TEST_SOCK_UDP6_PORT:-43863}
+RTPP_TEST_SOCK_UNIX=${RTPP_TEST_SOCK_UNIX:-/tmp/rtpproxy.sock}
+RTPP_TEST_SOCK_CUNIX=${RTPP_TEST_SOCK_CUNIX:-/tmp/rtpproxy.csock}
+RTPP_TEST_SOCKETS="stdio: udp:127.0.0.1:${RTPP_TEST_SOCK_UDP4_PORT} \
+  udp6:::1:${RTPP_TEST_SOCK_UDP6_PORT} unix:${RTPP_TEST_SOCK_UNIX} \
+  cunix:${RTPP_TEST_SOCK_CUNIX}"
 MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
 DIFF="diff -u"
@@ -90,12 +96,12 @@ rtpproxy_start() {
   fi  
   export TMP_PIDFILE
   export TMP_SOCKFILE
-  i=0
+  _i=0
   while [ ! -s ${TMP_PIDFILE} ]
   do
     sleep 1
-    i=$((${i} + 1))
-    if [ ${i} -eq 3 ]
+    _i=$((${_i} + 1))
+    if [ ${_i} -eq 3 ]
     then
       cat ${TMP_LOGFILE} >&2
       rm ${TMP_LOGFILE}
@@ -108,12 +114,12 @@ rtpproxy_start() {
 rtpproxy_stop() {
   SIGNAME="${1}"
   kill -${SIGNAME} `cat ${TMP_PIDFILE}` || return
-  i=0
+  _i=0
   while [ -e ${TMP_PIDFILE} ]
   do
     sleep 1
-    i=$((${i} + 1))
-    if [ ${i} -eq 3 ]
+    _i=$((${_i} + 1))
+    if [ ${_i} -eq 3 ]
     then
       kill -KILL `cat ${TMP_PIDFILE}`
       cat ${TMP_LOGFILE} >&2
