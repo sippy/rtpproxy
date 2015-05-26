@@ -10,6 +10,10 @@ RTPP_TEST_SOCK_CUNIX="%%LOCAL_SOCK%%"
 
 . $(dirname $0)/functions
 
+substinput() {
+  ${SED} "s|%%CALLID%%|call_id_${i}| ; s|%%RTPP_NS%%|${RTPP_NOTIFY_SOCK_UNIX}| ; s|%%RTPP_NS_MSG%%|call${i}_${IPV6}_disconnected|" ${1}
+}
+
 geninput() {
   NFULL=5
   NHALF=7
@@ -19,7 +23,7 @@ geninput() {
   i=0
   while [ ${i} -lt ${NFULL} ]
   do
-    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.full.input
+    substinput session_timeouts.full.input
     i=$((${i} + 1))
   done
   cat session_timeouts.stats.input
@@ -28,12 +32,12 @@ geninput() {
   i=0
   while [ ${i} -lt ${NFULL} ]
   do
-    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
   while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
   do
-    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.half${IPV6}.input
+    substinput session_timeouts.half${IPV6}.input
     i=$((${i} + 1))
   done
   cat session_timeouts.stats.input
@@ -42,7 +46,7 @@ geninput() {
   i=${NFULL}
   while [ ${i} -lt $((${NFULL} + ${NHALF} - ${NHALF_LATE})) ]
   do
-    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
   cat session_timeouts.stats.input
@@ -50,7 +54,7 @@ geninput() {
   cat session_timeouts.stats.input
   while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
   do
-    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
   cat session_timeouts.stats.input
@@ -59,7 +63,7 @@ geninput() {
   i=0
   while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
   do
-    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
   cat session_timeouts.stats.input
@@ -68,14 +72,15 @@ geninput() {
   i=0
   while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
   do
-    ${SED} "s|%%CALLID%%|call_id_${i}|" session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
   cat session_timeouts.stats.input
 }
 
-RTPP1_ARGS="-T10 -b -m 12000 -W5"
-RTPP2_ARGS="-T10 -b -m 13000"
+RTPP0_ARGS="-d info -T10 -b -n ${RTPP_NOTIFY_SOCK_UNIX}"
+RTPP1_ARGS="${RTPP0_ARGS} -m 12000 -W5"
+RTPP2_ARGS="${RTPP0_ARGS} -m 13000"
 RTPP3_ARGS="-6 ::1 ${RTPP1_ARGS}"
 RTPP4_ARGS="-6 ::1 ${RTPP2_ARGS}"
 
@@ -91,17 +96,23 @@ advance_sockidx() {
     socket_idx=$((${socket_idx} + 1))
 }
 
+${RTPP_NOTYFY_CLIENT} -s ${RTPP_NOTIFY_SOCK_UNIX} \
+  -S "${TOP_BUILDDIR}/python/sippy_lite" -o session_timeouts.tlog -t 160&
+RTPP_NC_RC=${?}
+RTPP_NC_PID=${!}
+report_rc ${RTPP_NC_RC} "Starting rtpp_notify_client.py"
+
 for socket in ${RTPP_TEST_SOCKETS}
 do
   if [ "${socket}" = "stdio:" ]
   then
-    (geninput | ${RTPPROXY} -d info -f -s stdio: ${RTPP1_ARGS} > session_timeouts.rout1 2> session_timeouts.rlog1)&
+    (geninput | ${RTPPROXY} -f -s stdio: ${RTPP1_ARGS} > session_timeouts.rout1 2> session_timeouts.rlog1)&
     RTPP1_PID=${!}
-    (geninput | ${RTPPROXY} -d info -f -s stdio: ${RTPP2_ARGS} > session_timeouts.rout2 2> session_timeouts.rlog2)&
+    (geninput | ${RTPPROXY} -f -s stdio: ${RTPP2_ARGS} > session_timeouts.rout2 2> session_timeouts.rlog2)&
     RTPP2_PID=${!}
-    (geninput "6" | ${RTPPROXY} -d info -f -s stdio: ${RTPP3_ARGS} > session_timeouts.rout3 2> session_timeouts.rlog3)&
+    (geninput "6" | ${RTPPROXY} -f -s stdio: ${RTPP3_ARGS} > session_timeouts.rout3 2> session_timeouts.rlog3)&
     RTPP3_PID=${!}
-    (geninput "6" | ${RTPPROXY} -d info -f -s stdio: ${RTPP4_ARGS} > session_timeouts.rout4 2> session_timeouts.rlog4)&
+    (geninput "6" | ${RTPPROXY} -f -s stdio: ${RTPP4_ARGS} > session_timeouts.rout4 2> session_timeouts.rlog4)&
     RTPP4_PID=${!}
     wait ${RTPP1_PID}
     report "wait for rtpproxy #1 shutdown"
@@ -193,3 +204,9 @@ do
     report_rc ${RTPP4_STOP_RC} "wait for rtpproxy #4 shutdown"
   fi
 done
+
+wait ${RTPP_NC_PID}
+report "wait for rtpp_notify_client.py shutdown"
+sort session_timeouts.tlog > session_timeouts.tlog.sorted
+sort session_timeouts.rtpp_query.output | ${DIFF} - session_timeouts.tlog.sorted
+report "checking rtpp_notify_client.py output"

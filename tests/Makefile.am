@@ -27,8 +27,10 @@ session_timeouts_EXTRA_DIST = session_timeouts session_timeouts.full.input \
   session_timeouts.full6.input session_timeouts.half.input \
   session_timeouts.half6.input session_timeouts.lookup.input \
   session_timeouts.lookup6.input session_timeouts.output1 session_timeouts.output2 \
-  session_timeouts.stats.input session_timeouts6.output1 session_timeouts6.output2
-session_timeouts_CLEANFILES = session_timeouts.rout[1234] session_timeouts.rlog[1234]
+  session_timeouts.stats.input session_timeouts6.output1 session_timeouts6.output2 \
+  session_timeouts.rtpp_query.output
+session_timeouts_CLEANFILES = session_timeouts.rout[1234] session_timeouts.rlog[1234] \
+  session_timeouts.tlog session_timeouts.tlog.sorted
 EXTRA_DIST = Makefile.am startstop basic_versions basic_versions.input \
     basic_versions.output ${command_parser_EXTRA_DIST} \
     ringback.sln makeann makeann.output \
