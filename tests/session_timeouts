@@ -131,7 +131,7 @@ do
     RTPP2_START_RC=${?}
     if [ ${RTPP2_START_RC} -ne 0 ]
     then
-      TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE=${RTPP1_LOG} rtpproxy_stop SIGTERM
+      TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE=${RTPP1_LOG} rtpproxy_stop TERM
     fi
     report_rc ${RTPP2_START_RC} "rtpproxy #2 start on ${_socket}"
     RTPP2_PID="${TMP_PIDFILE}"
@@ -141,8 +141,8 @@ do
     RTPP3_START_RC=${?}
     if [ ${RTPP3_START_RC} -ne 0 ]
     then
-      TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE=${RTPP1_LOG} rtpproxy_stop SIGTERM
-      TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE=${RTPP2_LOG} rtpproxy_stop SIGTERM
+      TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE=${RTPP1_LOG} rtpproxy_stop TERM
+      TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE=${RTPP2_LOG} rtpproxy_stop TERM
     fi
     report_rc ${RTPP3_START_RC}  "rtpproxy #3 start on ${_socket}"
     RTPP3_PID="${TMP_PIDFILE}"
@@ -152,9 +152,9 @@ do
     RTPP4_START_RC=${?}
     if [ ${RTPP4_START_RC} -ne 0 ]
     then
-      TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE=${RTPP1_LOG} rtpproxy_stop SIGTERM
-      TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE=${RTPP2_LOG} rtpproxy_stop SIGTERM
-      TMP_PIDFILE=${RTPP3_PID} TMP_LOGFILE=${RTPP3_LOG} rtpproxy_stop SIGTERM
+      TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE=${RTPP1_LOG} rtpproxy_stop TERM
+      TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE=${RTPP2_LOG} rtpproxy_stop TERM
+      TMP_PIDFILE=${RTPP3_PID} TMP_LOGFILE=${RTPP3_LOG} rtpproxy_stop TERM
     fi
     report_rc ${RTPP4_START_RC} "rtpproxy #4 start on ${_socket}"
     RTPP4_PID="${TMP_PIDFILE}"
@@ -184,7 +184,7 @@ do
     for i in 1 2 3 4
     do
       eval "RTPP_PID=\${RTPP${i}_PID} RTPP_LOG=\${RTPP${i}_LOG}"
-      TMP_PIDFILE=${RTPP_PID} TMP_LOGFILE=${RTPP_LOG} rtpproxy_stop SIGHUP
+      TMP_PIDFILE=${RTPP_PID} TMP_LOGFILE=${RTPP_LOG} rtpproxy_stop HUP
       eval RTPP${i}_STOP_RC=${?}
     done
     report_rc ${RTPP1_STOP_RC} "wait for rtpproxy #1 shutdown"
