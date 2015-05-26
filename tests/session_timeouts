@@ -3,6 +3,11 @@
 # Test that session timeouts for fully setup sessions and half-setup sessions
 # work correctly and there is no early/late destruction of sessions.
 
+RTPP_TEST_SOCK_UDP4_PORT="%%UDP4_PORT%%"
+RTPP_TEST_SOCK_UDP6_PORT="%%UDP6_PORT%%"
+RTPP_TEST_SOCK_UNIX="%%LOCAL_SOCK%%"
+RTPP_TEST_SOCK_CUNIX="%%LOCAL_SOCK%%"
+
 . $(dirname $0)/functions
 
 geninput() {
@@ -69,27 +74,122 @@ geninput() {
   cat session_timeouts.stats.input
 }
 
-(geninput | ${RTPPROXY} -d info -f -s stdio: -T10 -b -m 12000 -W5 > session_timeouts.rout1 2> session_timeouts.rlog1)&
-RTPP1_PID=${!}
-(geninput | ${RTPPROXY} -d info -f -s stdio: -T10 -b -m 13000 > session_timeouts.rout2 2> session_timeouts.rlog2)&
-RTPP2_PID=${!}
-(geninput "6" | ${RTPPROXY} -d info -6 '::1' -f -s stdio: -T10 -b -m 12000 -W5 > session_timeouts.rout3 2> session_timeouts.rlog3)&
-RTPP3_PID=${!}
-(geninput "6" | ${RTPPROXY} -d info -6 '::1' -f -s stdio: -T10 -b -m 13000 > session_timeouts.rout4 2> session_timeouts.rlog4)&
-RTPP4_PID=${!}
-wait ${RTPP1_PID}
-report "wait for rtpproxy #1 shutdown"
-wait ${RTPP2_PID}
-report "wait for rtpproxy #2 shutdown"
-wait ${RTPP3_PID}
-report "wait for rtpproxy #3 shutdown"
-wait ${RTPP4_PID}
-report "wait for rtpproxy #4 shutdown"
-${DIFF} session_timeouts.output1 session_timeouts.rout1
-report "checking rtpproxy #1 stdout"
-${DIFF} session_timeouts.output2 session_timeouts.rout2
-report "checking rtpproxy #2 stdout"
-${DIFF} session_timeouts6.output1 session_timeouts.rout3
-report "checking rtpproxy #3 stdout"
-${DIFF} session_timeouts6.output2 session_timeouts.rout4
-report "checking rtpproxy #4 stdout"
+RTPP1_ARGS="-T10 -b -m 12000 -W5"
+RTPP2_ARGS="-T10 -b -m 13000"
+RTPP3_ARGS="-6 ::1 ${RTPP1_ARGS}"
+RTPP4_ARGS="-6 ::1 ${RTPP2_ARGS}"
+
+UDP4_STARTPORT=37223
+UDP6_STARTPORT=43863
+
+advance_sockidx() {
+    udp4_port=$((${UDP4_STARTPORT} + ${socket_idx}))
+    udp6_port=$((${UDP6_STARTPORT} + ${socket_idx}))
+    local_sock="/tmp/rtpproxy${socket_idx}.sock"
+    _socket=`echo ${socket} | sed "s|%%UDP4_PORT%%|${udp4_port}|g ; \
+      s|%%UDP6_PORT%%|${udp6_port}|g ; s|%%LOCAL_SOCK%%|${local_sock}|g"`
+    socket_idx=$((${socket_idx} + 1))
+}
+
+for socket in ${RTPP_TEST_SOCKETS}
+do
+  if [ "${socket}" = "stdio:" ]
+  then
+    (geninput | ${RTPPROXY} -d info -f -s stdio: ${RTPP1_ARGS} > session_timeouts.rout1 2> session_timeouts.rlog1)&
+    RTPP1_PID=${!}
+    (geninput | ${RTPPROXY} -d info -f -s stdio: ${RTPP2_ARGS} > session_timeouts.rout2 2> session_timeouts.rlog2)&
+    RTPP2_PID=${!}
+    (geninput "6" | ${RTPPROXY} -d info -f -s stdio: ${RTPP3_ARGS} > session_timeouts.rout3 2> session_timeouts.rlog3)&
+    RTPP3_PID=${!}
+    (geninput "6" | ${RTPPROXY} -d info -f -s stdio: ${RTPP4_ARGS} > session_timeouts.rout4 2> session_timeouts.rlog4)&
+    RTPP4_PID=${!}
+    wait ${RTPP1_PID}
+    report "wait for rtpproxy #1 shutdown"
+    wait ${RTPP2_PID}
+    report "wait for rtpproxy #2 shutdown"
+    wait ${RTPP3_PID}
+    report "wait for rtpproxy #3 shutdown"
+    wait ${RTPP4_PID}
+    report "wait for rtpproxy #4 shutdown"
+    ${DIFF} session_timeouts.output1 session_timeouts.rout1
+    report "checking rtpproxy #1 stdout"
+    ${DIFF} session_timeouts.output2 session_timeouts.rout2
+    report "checking rtpproxy #2 stdout"
+    ${DIFF} session_timeouts6.output1 session_timeouts.rout3
+    report "checking rtpproxy #3 stdout"
+    ${DIFF} session_timeouts6.output2 session_timeouts.rout4
+    report "checking rtpproxy #4 stdout"
+  else
+    socket_idx=0
+    advance_sockidx
+    RTPP_SOCKFILE="${_socket}" RTPP_ARGS="${RTPP1_ARGS}" rtpproxy_start
+    report "rtpproxy #1 start on ${_socket}"
+    RTPP1_PID="${TMP_PIDFILE}"
+    RTPP1_LOG="${TMP_LOGFILE}"
+    advance_sockidx
+    RTPP_SOCKFILE="${_socket}" RTPP_ARGS="${RTPP2_ARGS}" rtpproxy_start
+    RTPP2_START_RC=${?}
+    if [ ${RTPP2_START_RC} -ne 0 ]
+    then
+      TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE=${RTPP1_LOG} rtpproxy_stop SIGTERM
+    fi
+    report_rc ${RTPP2_START_RC} "rtpproxy #2 start on ${_socket}"
+    RTPP2_PID="${TMP_PIDFILE}"
+    RTPP2_LOG="${TMP_LOGFILE}"
+    advance_sockidx
+    RTPP_SOCKFILE="${_socket}" RTPP_ARGS="${RTPP3_ARGS}" rtpproxy_start
+    RTPP3_START_RC=${?}
+    if [ ${RTPP3_START_RC} -ne 0 ]
+    then
+      TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE=${RTPP1_LOG} rtpproxy_stop SIGTERM
+      TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE=${RTPP2_LOG} rtpproxy_stop SIGTERM
+    fi
+    report_rc ${RTPP3_START_RC}  "rtpproxy #3 start on ${_socket}"
+    RTPP3_PID="${TMP_PIDFILE}"
+    RTPP3_LOG="${TMP_LOGFILE}"
+     advance_sockidx
+    RTPP_SOCKFILE="${_socket}" RTPP_ARGS="${RTPP4_ARGS}" rtpproxy_start
+    RTPP4_START_RC=${?}
+    if [ ${RTPP4_START_RC} -ne 0 ]
+    then
+      TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE=${RTPP1_LOG} rtpproxy_stop SIGTERM
+      TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE=${RTPP2_LOG} rtpproxy_stop SIGTERM
+      TMP_PIDFILE=${RTPP3_PID} TMP_LOGFILE=${RTPP3_LOG} rtpproxy_stop SIGTERM
+    fi
+    report_rc ${RTPP4_START_RC} "rtpproxy #4 start on ${_socket}"
+    RTPP4_PID="${TMP_PIDFILE}"
+    RTPP4_LOG="${TMP_LOGFILE}"
+    socket_idx=0
+    for i in 1 2 3 4
+    do
+      advance_sockidx
+      (geninput | ${TOP_BUILDDIR}/python/rtpp_query.py -b -s "${_socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i - \
+        > session_timeouts.rout${i} 2> session_timeouts.rlog${i})&
+      eval RTPQ${i}_PID=${!}
+    done
+    for i in 1 2 3 4
+    do
+      eval "RTPQ_PID=\${RTPQ${i}_PID}"
+      wait ${RTPQ_PID}
+      report "wait for rtpp_query.py #${i} shutdown"
+      if [ ${i} -eq 1 -o ${i} -eq 2 ]
+      then
+        ofile=session_timeouts.output${i}
+      else
+        ofile=session_timeouts6.output$((${i} - 2))
+      fi
+      cat ${ofile} | grep -v ^MEMDEB: | ${DIFF} - session_timeouts.rout${i}
+      report "checking rtpp_query.py #${i} stdout"
+    done
+    for i in 1 2 3 4
+    do
+      eval "RTPP_PID=\${RTPP${i}_PID} RTPP_LOG=\${RTPP${i}_LOG}"
+      TMP_PIDFILE=${RTPP_PID} TMP_LOGFILE=${RTPP_LOG} rtpproxy_stop SIGHUP
+      eval RTPP${i}_STOP_RC=${?}
+    done
+    report_rc ${RTPP1_STOP_RC} "wait for rtpproxy #1 shutdown"
+    report_rc ${RTPP2_STOP_RC} "wait for rtpproxy #2 shutdown"
+    report_rc ${RTPP3_STOP_RC} "wait for rtpproxy #3 shutdown"
+    report_rc ${RTPP4_STOP_RC} "wait for rtpproxy #4 shutdown"
+  fi
+done
