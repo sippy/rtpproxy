@@ -163,7 +163,7 @@ do
     for i in 1 2 3 4
     do
       advance_sockidx
-      (geninput | ${TOP_BUILDDIR}/python/rtpp_query.py -b -s "${_socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i - \
+      (geninput | ${RTPP_QUERY} -b -s "${_socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i - \
         > session_timeouts.rout${i} 2> session_timeouts.rlog${i})&
       eval RTPQ${i}_PID=${!}
     done
