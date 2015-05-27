@@ -5,12 +5,16 @@ E1
 E1
 E1
 E16
+E12
+E11
 23820
 E1
 E1
 E1
 E1
 E16
+E12
+E11
 23822
 E1
 E1
@@ -82,10 +86,10 @@ E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 81 6 74 80
+1 1 1 1 0 1 0 85 6 78 84
 E25
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=84 ncmds_succd=7 ncmds_errs=76 ncmds_repld=83
+nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=88 ncmds_succd=7 ncmds_errs=80 ncmds_repld=87
 E0
 E0
 E1
@@ -93,12 +97,16 @@ E1
 E1
 E1
 E16
+E12
+E11
 23820
 E1
 E1
 E1
 E1
 E16
+E12
+E11
 23822
 E1
 E1
@@ -170,10 +178,10 @@ E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 81 6 74 80
+1 1 1 1 0 1 0 85 6 78 84
 E25
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=84 ncmds_succd=7 ncmds_errs=76 ncmds_repld=83
+nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=88 ncmds_succd=7 ncmds_errs=80 ncmds_repld=87
 E0
 E0
 E1
@@ -181,12 +189,16 @@ E1
 E1
 E1
 E16
+E12
+E11
 23820
 E1
 E1
 E1
 E1
 E16
+E12
+E11
 23822
 E1
 E1
@@ -258,10 +270,10 @@ E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 81 7 73 80
+1 1 1 1 0 1 0 85 7 77 84
 E25
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=84 ncmds_succd=8 ncmds_errs=75 ncmds_repld=83
+nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=88 ncmds_succd=8 ncmds_errs=79 ncmds_repld=87
 E0
 E0
 E1
@@ -269,12 +281,16 @@ E1
 E1
 E1
 E16
+E12
+E11
 23820
 E1
 E1
 E1
 E1
 E16
+E12
+E11
 23822
 E1
 E1
@@ -346,7 +362,7 @@ E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 81 7 73 80
+1 1 1 1 0 1 0 85 7 77 84
 E25
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=84 ncmds_succd=8 ncmds_errs=75 ncmds_repld=83
+nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=88 ncmds_succd=8 ncmds_errs=79 ncmds_repld=87
