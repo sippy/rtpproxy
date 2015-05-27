@@ -2,5 +2,7 @@ language: c
 compiler:
   - clang
   - gcc
+before_install:
+    - sudo DEBIAN_FRONTEND=noninteractive apt-get update
 script:
     sh -x ./scripts/do-test.sh
