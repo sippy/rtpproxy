@@ -35,7 +35,7 @@ from hashlib import md5
 from random import random
 
 def getnretrans(first_rert, timeout):
-    n = 0
+    n = 5
     while True:
         timeout -= first_rert
         if timeout < 0:
@@ -57,12 +57,14 @@ class Rtp_proxy_client_udp(object):
         self.is_local = False
         self.uopts = Udp_server_opts(bind_address, self.process_reply, family)
         self.uopts.flags = 0
+        ##self.uopts.ploss_in_rate = 0.025
+        ##self.uopts.pdelay_out_max = 1.0
         if nworkers != None:
             self.uopts.nworkers = nworkers
         self.worker = Udp_server(global_config, self.uopts)
         self.pending_requests = {}
         self.global_config = global_config
-        self.delay_flt = recfilter(0.95, 0.25)
+        self.delay_flt = recfilter(0.95, 0.025)
 
     def send_command(self, command, result_callback = None, *callback_parameters):
         cookie = md5(str(random()) + str(time())).hexdigest()
@@ -99,7 +101,7 @@ class Rtp_proxy_client_udp(object):
             if result_callback != None:
                 result_callback(None, *callback_parameters)
             return
-        next_retr *= 2
+        #next_retr *= 2
         timer = Timeout(self.retransmit, next_retr, 1, cookie)
         stime = MonoTime()
         self.worker.send_to(command, self.address)
@@ -119,7 +121,7 @@ class Rtp_proxy_client_udp(object):
         timer.cancel()
         if result_callback != None:
             result_callback(result.strip(), *callback_parameters)
-        self.delay_flt.apply(rtime - stime)
+        ##self.delay_flt.apply(rtime - stime)
         #print 'Rtp_proxy_client_udp.process_reply(): delay %f' % (rtime - stime)
 
     def reconnect(self, address, bind_address = None):
