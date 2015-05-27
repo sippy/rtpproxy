@@ -175,7 +175,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
 
         case 'e':
         case 'E':
-            if (ulop->lidx < 0) {
+            if (ulop->lidx < 0 || cf->stable->bindaddr[1] == NULL) {
                 rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
                 reply_error(cf, cmd, ECODE_PARSE_11);
                 goto err_undo_1;
@@ -186,7 +186,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
 
         case 'i':
         case 'I':
-            if (ulop->lidx < 0) {
+            if (ulop->lidx < 0 || cf->stable->bindaddr[1] == NULL) {
                 rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
                 reply_error(cf, cmd, ECODE_PARSE_12);
                 goto err_undo_1;
