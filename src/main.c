@@ -628,10 +628,6 @@ main(int argc, char **argv)
     }
     init_port_table(&cf);
 
-    if (rtpp_timed_init(&cf) != 0) {
-        err(1, "rtpp_timed_init() failed");
-    }
-
     if (rtpp_controlfd_init(&cf) != 0) {
         err(1, "can't inilialize control socket%s",
           cf.stable->ctrl_socks->len > 1 ? "s" : "");
@@ -641,6 +637,10 @@ main(int argc, char **argv)
 	if (rtpp_daemon(0, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
+    }
+
+    if (rtpp_timed_init(&cf) != 0) {
+        err(1, "rtpp_timed_init() failed");
     }
 
     if (rtpp_notify_init() != 0)
