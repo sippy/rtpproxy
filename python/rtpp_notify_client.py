@@ -51,6 +51,7 @@ class cli_handler(object):
 
 if __name__ == '__main__':
     spath = DEFAULT_RTPP_SPATH
+    stype = 'unix'
     sippy_path = None
     file_out = sys.stdout
     timeout = None
@@ -65,6 +66,15 @@ if __name__ == '__main__':
             spath = a.strip()
             if spath.startswith('unix:'):
                 spath = spath[5:]
+                stype = 'unix'
+            elif spath.startswith('tcp:'):
+                spath = spath[4:].split(':', 1)
+                if len(spath) != 2:
+                    raise ValueError('TCP listening socket not in the form "IP:port": ' + spath[0])
+                spath[1] = int(spath[1])
+                if spath[1] <= 0 or spath[1] > 65535:
+                    raise ValueError('TCP listening port not in the range 1-65535: %d' % spath[1])
+                stype = 'tcp'
             continue
         if o == '-S':
             sippy_path = a.strip()
@@ -83,10 +93,14 @@ if __name__ == '__main__':
         sys.path.insert(0, sippy_path)
 
     from sippy.Cli_server_local import Cli_server_local
+    from sippy.Cli_server_tcp import Cli_server_tcp
     from sippy.Timeout import Timeout
 
     ch = cli_handler(file_out)
-    cs = Cli_server_local(ch.command_received, spath)
+    if type == 'unix':
+        cs = Cli_server_local(ch.command_received, spath)
+    else:
+        cs = Cli_server_tcp(ch.command_received, spath)
     if timeout != None:
         Timeout(ch.done, timeout)
     reactor.run(installSignalHandlers = 1)
