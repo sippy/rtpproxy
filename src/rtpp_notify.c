@@ -67,7 +67,8 @@ struct rtpp_notify_priv {
 
 #define PUB2PVT(pubp)      ((struct rtpp_notify_priv *)((char *)(pubp) - offsetof(struct rtpp_notify_priv, pub)))
 
-static int rtpp_notify_schedule(struct rtpp_notify_obj *, struct rtpp_tnotify_target *, const char *);
+static int rtpp_notify_schedule(struct rtpp_notify_obj *,
+  struct rtpp_tnotify_target *, const char *);
 static void rtpp_notify_dtor(struct rtpp_notify_obj *);
 static void do_timeout_notification(struct rtpp_notify_wi *, int);
 
@@ -160,13 +161,8 @@ rtpp_notify_schedule(struct rtpp_notify_obj *pub,
 
     pvt = PUB2PVT(pub);
 
-    if (notify_tag == NULL) {
-        /* two 5-digit numbers, space, \0 and \n */
-        len = 5 + 5 + 3;
-    } else {
-        /* string, \0 and \n */
-        len = strlen(notify_tag) + 2;
-    }
+    /* string, \0 and \n */
+    len = strlen(notify_tag) + 2;
 
     wi = rtpp_wi_malloc_udata((void **)&wi_data,
       sizeof(struct rtpp_notify_wi) + len);
@@ -178,15 +174,7 @@ rtpp_notify_schedule(struct rtpp_notify_obj *pub,
     wi_data->rttp = rttp;
     wi_data->len = len;
 
-    if (notify_tag == NULL) {
-#if LATER
-        len = snprintf(wi_data->notify_buf, len, "%d %d\n",
-          sp->ports[0], sp->ports[1]);
-#endif
-    } else {
-        len = snprintf(wi_data->notify_buf, len, "%s\n",
-          notify_tag);
-    }
+    len = snprintf(wi_data->notify_buf, len, "%s\n", notify_tag);
 
     wi_data->glog = pvt->glog;
 
