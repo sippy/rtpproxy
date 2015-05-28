@@ -186,7 +186,7 @@ static void
 reconnect_timeout_handler(rtpp_log_t log, struct rtpp_tnotify_target *rttp)
 {
 
-    assert (rttp->socket_name != NULL && rttp->connected == 0);
+    assert (rttp->connected == 0);
 
     if (rttp->fd == -1) {
         rtpp_log_write(RTPP_LOG_DBUG, log, "connecting timeout socket");
