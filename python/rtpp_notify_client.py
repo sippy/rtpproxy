@@ -42,9 +42,11 @@ class cli_handler(object):
     def command_received(self, clm, cmd):
         try:
             self.file_out.write(cmd + '\n')
+            self.file_out.flush()
         except:
             self.rval = 1
             reactor.crash()
+            return
 
     def done(self):
         reactor.crash()

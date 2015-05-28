@@ -37,6 +37,7 @@ class command_runner(object):
     rc = None
     fin = None
     fout = None
+    rval = 0
 
     def __init__(self, rc, commands = None, fin = None, fout = None):
         self.responses = []
@@ -64,7 +65,13 @@ class command_runner(object):
 
     def got_result(self, result):
         if self.fout != None:
-            self.fout.write('%s\n' % result)
+            try:
+                self.fout.write('%s\n' % result)
+                self.fout.flush()
+            except:
+                self.rval = 1
+                reactor.crash()
+                return
         self.responses.append(result)
         self.issue_next_cmd()
 
@@ -122,3 +129,4 @@ if __name__ == '__main__':
     crun = command_runner(rc, commands, file_in, file_out)
     reactor.run(installSignalHandlers = 1)
     rc.shutdown()
+    sys.exit(crun.rval)
