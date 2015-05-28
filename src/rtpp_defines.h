@@ -89,8 +89,6 @@ struct cfg {
     unsigned long long sessions_created;
     int nofile_limit_warned;
 
-    struct rtpp_timeout_handler *timeout_handler;
-
     int port_table_idx;
 
     pthread_mutex_t glock;

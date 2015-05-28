@@ -29,8 +29,9 @@
 #define _RTPP_NOTIFY_H_
 
 struct rtpp_notify_obj;
+struct rtpp_tnotify_target;
 
-DEFINE_METHOD(rtpp_notify_obj, rtpp_notify_schedule, int, struct rtpp_session *);
+DEFINE_METHOD(rtpp_notify_obj, rtpp_notify_schedule, int, struct rtpp_tnotify_target *, const char *);
 DEFINE_METHOD(rtpp_notify_obj, rtpp_notify_dtor, void);
 
 struct rtpp_notify_obj {
@@ -39,9 +40,5 @@ struct rtpp_notify_obj {
 };
 
 struct rtpp_notify_obj *rtpp_notify_ctor(rtpp_log_t);
-
-struct rtpp_timeout_handler *rtpp_th_init(void);
-char *rtpp_th_set_sn(struct rtpp_timeout_handler *, const char *, rtpp_log_t glog);
-const char *rtpp_th_get_sn(struct rtpp_timeout_handler *);
 
 #endif

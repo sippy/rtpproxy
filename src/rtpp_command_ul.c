@@ -51,7 +51,7 @@
 #include "rtp.h"
 #include "rtp_resizer.h"
 #include "rtpp_network.h"
-#include "rtpp_notify.h"
+#include "rtpp_tnotify_set.h"
 #include "rtpp_util.h"
 #include "rtpp_analyzer.h"
 
@@ -77,7 +77,7 @@ struct ul_opts {
     
     int lidx;
     struct sockaddr *local_addr;
-    char *socket_name_u;
+    char *notify_socket;
     char *notify_tag;
     int pf;
     int new_port;
@@ -145,15 +145,15 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
     ul_opts_init(cf, ulop);
     if (cmd->cca.op == UPDATE && cmd->argc > 6) {
         if (cmd->argc == 8) {
-            ulop->socket_name_u = cmd->argv[6];
+            ulop->notify_socket = cmd->argv[6];
             ulop->notify_tag = cmd->argv[7];
         } else {
-            ulop->socket_name_u = cmd->argv[5];
+            ulop->notify_socket = cmd->argv[5];
             ulop->notify_tag = cmd->argv[6];
             cmd->cca.to_tag = NULL;
         }
-        if (strncmp("unix:", ulop->socket_name_u, 5) == 0)
-            ulop->socket_name_u += 5;
+        if (strncmp("unix:", ulop->notify_socket, 5) == 0)
+            ulop->notify_socket += 5;
         len = url_unquote((uint8_t *)ulop->notify_tag, strlen(ulop->notify_tag));
         if (len == -1) {
             rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog,
@@ -571,23 +571,26 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     }
 
     if (cmd->cca.op == UPDATE) {
-        if (rtpp_th_get_sn(cf->timeout_handler) == NULL && ulop->socket_name_u != NULL)
+        if (!CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled) && ulop->notify_socket != NULL)
             rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
         if (spa->timeout_data.notify_tag != NULL) {
             free(spa->timeout_data.notify_tag);
             spa->timeout_data.notify_tag = NULL;
         }
-        if (rtpp_th_get_sn(cf->timeout_handler) != NULL && ulop->socket_name_u != NULL) {
-            if (strcmp(rtpp_th_get_sn(cf->timeout_handler), ulop->socket_name_u) != 0) {
-                rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", ulop->socket_name_u);
-                ulop->socket_name_u = NULL;
+        if (ulop->notify_socket != NULL) {
+            struct rtpp_tnotify_target *rttp;
+
+            rttp = CALL_METHOD(cf->stable->rtpp_tnset_cf, lookup, ulop->notify_socket);
+            if (rttp == NULL) {
+                rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", ulop->notify_socket);
+                ulop->notify_socket = NULL;
             } else {
                 rtpp_log_write(RTPP_LOG_INFO, spa->log, "setting timeout handler");
-                spa->timeout_data.handler = cf->timeout_handler;
+                spa->timeout_data.notify_target = rttp;
                 spa->timeout_data.notify_tag = strdup(ulop->notify_tag);
             }
-        } else if (ulop->socket_name_u == NULL && spa->timeout_data.handler != NULL) {
-            spa->timeout_data.handler = NULL;
+        } else if (spa->timeout_data.notify_target != NULL) {
+            spa->timeout_data.notify_target = NULL;
             rtpp_log_write(RTPP_LOG_INFO, spa->log, "disabling timeout handler");
         }
     }

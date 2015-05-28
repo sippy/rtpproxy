@@ -58,7 +58,7 @@
 #include "rtpp_command_ul.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_network.h"
-#include "rtpp_notify.h"
+#include "rtpp_tnotify_set.h"
 #include "rtpp_session.h"
 #include "rtp_server.h"
 #include "rtpp_util.h"
@@ -797,7 +797,7 @@ handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd)
      * user actually enabled notification with -n
      */
     if (strcmp(cmd->argv[1], "20081224") == 0 &&
-      rtpp_th_get_sn(cf->timeout_handler) == NULL) {
+      !CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled)) {
         reply_number(cf, cmd, 0);
         return;
     }

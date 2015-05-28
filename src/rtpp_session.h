@@ -31,7 +31,7 @@
 
 struct rtpp_timeout_data {
     char *notify_tag;
-    struct rtpp_timeout_handler *handler;
+    struct rtpp_tnotify_target *notify_target;
 };
 
 struct rtpp_hash_table_entry;

@@ -207,9 +207,6 @@ init_config(struct cfg *cf, int argc, char **argv)
 #endif
     cf->stable->slowshutdown = 0;
 
-    cf->timeout_handler = rtpp_th_init();
-    if (cf->timeout_handler == NULL)
-        err(1, "rtpp_th_init");
     cf->stable->rtpp_tnset_cf = rtpp_tnotify_set_ctor();
     if (cf->stable->rtpp_tnset_cf == NULL) {
         err(1, "rtpp_tnotify_set_ctor");
@@ -423,9 +420,6 @@ init_config(struct cfg *cf, int argc, char **argv)
             if (CALL_METHOD(cf->stable->rtpp_tnset_cf, append, optarg,
               &errmsg) != 0) {
                 errx(1, "error adding timeout notification: %s", errmsg);
-            }
-            if (rtpp_th_set_sn(cf->timeout_handler, optarg, NULL) == NULL) {
-		err(1, "can't allocate memory");
             }
 	    break;
 

@@ -479,7 +479,10 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 	if (alarm_tick != 0 && sp != NULL && sp->sidx[0] == readyfd) {
 	    if (get_ttl(sp) == 0) {
 		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
-		CALL_METHOD(cf->stable->rtpp_notify_cf, schedule, sp);
+                if (sp->timeout_data.notify_target != NULL) {
+		    CALL_METHOD(cf->stable->rtpp_notify_cf, schedule,
+                      sp->timeout_data.notify_target, sp->timeout_data.notify_tag);
+                }
 		remove_session(cf, sp);
 		CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_timeout", 1);
 	    } else {

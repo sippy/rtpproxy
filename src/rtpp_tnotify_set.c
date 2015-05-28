@@ -43,33 +43,38 @@
 #include "rtpp_types.h"
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
+#include "rtpp_tnotify_tgt.h"
 
 #define RTPP_TNOTIFY_TARGETS_MAX 64
+#define RTPP_TNOTIFY_WILDCARDS_MAX 2
 
 #define CC_SELF_STR	"%%CC_SELF%%"
 
-struct rtpp_tnotify_target {
+struct rtpp_tnotify_wildcard {
     char *socket_name;
     int socket_type;
-    int wildcard;
-    union {
-        struct sockaddr_un u;
-        struct sockaddr_storage i;
-        int wildport;
-    } remote;
-    socklen_t remote_len;
+    int port;
+};
+
+union rtpp_tnotify_entry {
+    struct rtpp_tnotify_target rtt;
+    struct rtpp_tnotify_wildcard rtw;
 };
 
 struct rtpp_tnotify_set {
     struct rtpp_tnotify_set_obj pub;
     struct rtpp_tnotify_target *tp[RTPP_TNOTIFY_TARGETS_MAX];
     int tp_len;
+    struct rtpp_tnotify_wildcard *wp[RTPP_TNOTIFY_WILDCARDS_MAX];
+    int wp_len;
 };
 
 #define PUB2PVT(pubp)      ((struct rtpp_tnotify_set *)((char *)(pubp) - offsetof(struct rtpp_tnotify_set, pub)))
 
 static void rtpp_tnotify_set_dtor(struct rtpp_tnotify_set_obj *);
 static int rtpp_tnotify_set_append(struct rtpp_tnotify_set_obj *, const char *, const char **);
+static struct rtpp_tnotify_target *rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *, const char *);
+static int rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set_obj *);
 
 struct rtpp_tnotify_set_obj *
 rtpp_tnotify_set_ctor(void)
@@ -83,6 +88,8 @@ rtpp_tnotify_set_ctor(void)
     memset(pvt, '\0', sizeof(struct rtpp_tnotify_set));
     pvt->pub.dtor = &rtpp_tnotify_set_dtor;
     pvt->pub.append = &rtpp_tnotify_set_append;
+    pvt->pub.lookup = &rtpp_tnotify_set_lookup;
+    pvt->pub.isenabled = &rtpp_tnotify_set_isenabled;
 
     return (&pvt->pub);
 }
@@ -97,6 +104,10 @@ rtpp_tnotify_set_dtor(struct rtpp_tnotify_set_obj *pub)
     for (i = 0; i < pvt->tp_len; i++) {
         free(pvt->tp[i]->socket_name);
         free(pvt->tp[i]);
+    }
+    for (i = 0; i < pvt->wp_len; i++) {
+        free(pvt->wp[i]->socket_name);
+        free(pvt->wp[i]);
     }
     free(pvt);
 }
@@ -133,43 +144,47 @@ parse_hostport(const char *hostport, char *host, int hsize, char *port, int psiz
     return (0);
 }
 
+/* Returns 0 for a specific target, 1 for wildcard, -1 for an error */
 static int
-parse_timeout_sock(const char *sock_name, struct rtpp_tnotify_target *th,
+parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
   const char **e)
 {
     char host[512], port[10];
-    char *new_sn;
-    int n;
+    char *new_sn, **snp;
+    int n, rval;
 
+    snp = &rtep->rtt.socket_name;
+    rval = 0;
     if (strncmp("unix:", sock_name, 5) == 0) {
         sock_name += 5;
-        th->socket_type = PF_LOCAL;
+        rtep->rtt.socket_type = PF_LOCAL;
     } else if (strncmp("tcp:", sock_name, 4) == 0) {
-        sock_name += 4;
-        if (parse_hostport(sock_name, host, sizeof(host), port, sizeof(port), 0, e) != 0) {
+        if (parse_hostport(sock_name + 4, host, sizeof(host), port, sizeof(port), 0, e) != 0) {
             return (-1);
         }
-        th->socket_type = PF_INET;
+        rtep->rtt.socket_type = PF_INET;
     } else {
-        th->socket_type = PF_LOCAL;
+        rtep->rtt.socket_type = PF_LOCAL;
     }
-    if (th->socket_type == PF_UNIX) {
-        th->remote.u.sun_family = AF_LOCAL;
-        strncpy(th->remote.u.sun_path, sock_name, sizeof(th->remote.u.sun_path) - 1);
+    if (rtep->rtt.socket_type == PF_UNIX) {
+        rtep->rtt.remote.u.sun_family = AF_LOCAL;
+        strncpy(rtep->rtt.remote.u.sun_path, sock_name, sizeof(rtep->rtt.remote.u.sun_path) - 1);
 #if defined(HAVE_SOCKADDR_SUN_LEN)
-        th->remote.u.sun_len = strlen(th->remote.u.sun_path);
+        rtep->rtt.remote.u.sun_len = strlen(rtep->rtt.remote.u.sun_path);
 #endif
-        th->remote_len = sizeof(th->remote.u);
+        rtep->rtt.remote_len = sizeof(rtep->rtt.remote.u);
     } else if (strcmp(host, CC_SELF_STR) == 0) {
-        th->wildcard = 1;
-        th->remote.wildport = atoi(port);
+        rtep->rtw.socket_type = PF_INET;
+        rtep->rtw.port = atoi(port);
+        snp = &rtep->rtt.socket_name;
+        rval = 1;
     } else {
-        n = resolve(sstosa(&(th->remote.i)), AF_INET, host, port, AI_PASSIVE);
+        n = resolve(sstosa(&(rtep->rtt.remote.i)), AF_INET, host, port, AI_PASSIVE);
         if (n != 0) {
             *e = gai_strerror(n);
             return (-1);
         }
-        th->remote_len = SA_LEN(sstosa(&(th->remote.i)));
+        rtep->rtt.remote_len = SA_LEN(sstosa(&(rtep->rtt.remote.i)));
     }
     if (strlen(sock_name) == 0) {
         *e = "Timeout notification socket name too short";
@@ -180,38 +195,90 @@ parse_timeout_sock(const char *sock_name, struct rtpp_tnotify_target *th,
         *e = strerror(errno);
         return (-1);
     }
-    th->socket_name = new_sn;
+    *snp = new_sn;
 
-    return (0);
+    return (rval);
 }
 
 static int
 rtpp_tnotify_set_append(struct rtpp_tnotify_set_obj *pub,
 const char *socket_name, const char **e)
 {
+    int rval;
     struct rtpp_tnotify_set *pvt;
     struct rtpp_tnotify_target *tntp;
+    struct rtpp_tnotify_wildcard *tnwp;
+    union rtpp_tnotify_entry rte;
 
     pvt = PUB2PVT(pub);
-    if (pvt->tp_len == RTPP_TNOTIFY_TARGETS_MAX) {
-        *e = "Number of notify sockets exceeds RTPP_TNOTIFY_TARGETS_MAX";
+    memset(&rte, '\0', sizeof(union rtpp_tnotify_entry));
+    rval = parse_timeout_sock(socket_name, &rte, e);
+    if (rval < 0) {
         goto e0;
     }
-    tntp = malloc(sizeof(struct rtpp_tnotify_target));
-    if (tntp == NULL) {
-         *e = strerror(errno);
-         goto e0;
+    tntp = NULL;
+    tnwp = NULL;
+    if (rval == 0) {
+        if (pvt->tp_len == RTPP_TNOTIFY_TARGETS_MAX) {
+            *e = "Number of notify targets exceeds RTPP_TNOTIFY_TARGETS_MAX";
+            goto e0;
+        }
+        tntp = malloc(sizeof(struct rtpp_tnotify_target));
+        if (tntp == NULL) {
+             *e = strerror(errno);
+             goto e1;
+        }
+        memcpy(tntp, &rte.rtt, sizeof(struct rtpp_tnotify_target));
+        tntp->connected = 0;
+        tntp->fd = -1;
+        pvt->tp[pvt->tp_len] = tntp;
+        pvt->tp_len += 1;
+    } else {
+        if (pvt->wp_len == RTPP_TNOTIFY_WILDCARDS_MAX) {
+            *e = "Number of notify wildcards exceeds RTPP_TNOTIFY_WILDCARDS_MAX";
+            goto e0;
+        }
+        tnwp = malloc(sizeof(struct rtpp_tnotify_wildcard));
+        if (tnwp == NULL) {
+             *e = strerror(errno);
+             goto e1;
+        }
+        memcpy(tnwp, &rte.rtw, sizeof(struct rtpp_tnotify_wildcard));
+        pvt->wp[pvt->wp_len] = tnwp;
+        pvt->wp_len += 1;
     }
-    memset(tntp, '\0', sizeof(struct rtpp_tnotify_target));
-    if (parse_timeout_sock(socket_name, tntp, e) != 0) {
-        goto e1;
-    }
-    pvt->tp[pvt->tp_len] = tntp;
-    pvt->tp_len += 1;
+
     return (0);
 
 e1:
-    free(tntp);
+    if (tntp != NULL)
+        free(tntp);
+    if (tnwp != NULL)
+        free(tnwp);
 e0:
     return (-1);
+}
+
+static struct rtpp_tnotify_target *
+rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *pub, const char *socket_name)
+{
+    struct rtpp_tnotify_set *pvt;
+    int i;
+
+    pvt = PUB2PVT(pub);
+    for (i = 0; i < pvt->tp_len; i++) {
+        if (strcmp(pvt->tp[i]->socket_name, socket_name) != 0)
+            continue;
+        return (pvt->tp[i]);
+    }
+    return (NULL);
+}
+
+static int
+rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set_obj *pub)
+{
+    struct rtpp_tnotify_set *pvt;
+
+    pvt = PUB2PVT(pub);
+    return (pvt->wp_len > 0 || pvt->tp_len > 0);
 }
