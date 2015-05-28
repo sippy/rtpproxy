@@ -152,8 +152,6 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             ulop->notify_tag = cmd->argv[6];
             cmd->cca.to_tag = NULL;
         }
-        if (strncmp("unix:", ulop->notify_socket, 5) == 0)
-            ulop->notify_socket += 5;
         len = url_unquote((uint8_t *)ulop->notify_tag, strlen(ulop->notify_tag));
         if (len == -1) {
             rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog,
@@ -580,7 +578,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         if (ulop->notify_socket != NULL) {
             struct rtpp_tnotify_target *rttp;
 
-            rttp = CALL_METHOD(cf->stable->rtpp_tnset_cf, lookup, ulop->notify_socket);
+            rttp = CALL_METHOD(cf->stable->rtpp_tnset_cf, lookup, ulop->notify_socket,
+              (cmd->rlen > 0) ? sstosa(&cmd->raddr) : NULL);
             if (rttp == NULL) {
                 rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", ulop->notify_socket);
                 ulop->notify_socket = NULL;
