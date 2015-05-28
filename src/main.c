@@ -129,8 +129,9 @@ fatsignal(int sig)
     rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog, "got signal %d", sig);
 #ifdef RTPP_CHECK_LEAKS
     CALL_METHOD(_sig_cf->stable->rtpp_cmd_cf, dtor);
-    CALL_METHOD(_sig_cf->stable->rtpp_timed_cf, dtor);
     CALL_METHOD(_sig_cf->stable->rtpp_notify_cf, dtor);
+    CALL_METHOD(_sig_cf->stable->rtpp_tnset_cf, dtor);
+    CALL_METHOD(_sig_cf->stable->rtpp_timed_cf, dtor);
 #endif
     rtpp_exit();
 }
@@ -786,6 +787,7 @@ main(int argc, char **argv)
 
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
+    CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_timed_cf, dtor);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
