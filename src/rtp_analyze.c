@@ -37,7 +37,6 @@
 #include "rtp.h"
 #include "rtp_analyze.h"
 #include "rtpp_math.h"
-#include "rtpp_util.h"
 
 static double
 rtp_ts2dtime(uint32_t ts)
