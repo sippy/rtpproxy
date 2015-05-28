@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/un.h>
 #include <errno.h>
 #include <netdb.h>
@@ -73,7 +74,8 @@ struct rtpp_tnotify_set {
 
 static void rtpp_tnotify_set_dtor(struct rtpp_tnotify_set_obj *);
 static int rtpp_tnotify_set_append(struct rtpp_tnotify_set_obj *, const char *, const char **);
-static struct rtpp_tnotify_target *rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *, const char *);
+static struct rtpp_tnotify_target *rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *,
+  const char *, struct sockaddr *);
 static int rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set_obj *);
 
 struct rtpp_tnotify_set_obj *
@@ -102,7 +104,8 @@ rtpp_tnotify_set_dtor(struct rtpp_tnotify_set_obj *pub)
 
     pvt = PUB2PVT(pub);
     for (i = 0; i < pvt->tp_len; i++) {
-        free(pvt->tp[i]->socket_name);
+        if (pvt->tp[i]->socket_name != NULL)
+            free(pvt->tp[i]->socket_name);
         free(pvt->tp[i]);
     }
     for (i = 0; i < pvt->wp_len; i++) {
@@ -152,11 +155,13 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
     char host[512], port[10];
     char *new_sn, **snp;
     int n, rval;
+    const char *sprefix, *usock_name;
 
     snp = &rtep->rtt.socket_name;
     rval = 0;
+    sprefix = NULL;
     if (strncmp("unix:", sock_name, 5) == 0) {
-        sock_name += 5;
+        usock_name = sock_name + 5;
         rtep->rtt.socket_type = PF_LOCAL;
     } else if (strncmp("tcp:", sock_name, 4) == 0) {
         if (parse_hostport(sock_name + 4, host, sizeof(host), port, sizeof(port), 0, e) != 0) {
@@ -164,16 +169,22 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
         }
         rtep->rtt.socket_type = PF_INET;
     } else {
+        sprefix = "unix:";
+        usock_name = sock_name;
         rtep->rtt.socket_type = PF_LOCAL;
     }
     if (rtep->rtt.socket_type == PF_UNIX) {
+        if (strlen(usock_name) == 0) {
+            *e = "Timeout notification socket name too short";
+            return (-1);
+        }
         rtep->rtt.remote.u.sun_family = AF_LOCAL;
-        strncpy(rtep->rtt.remote.u.sun_path, sock_name, sizeof(rtep->rtt.remote.u.sun_path) - 1);
+        strncpy(rtep->rtt.remote.u.sun_path, usock_name, sizeof(rtep->rtt.remote.u.sun_path) - 1);
 #if defined(HAVE_SOCKADDR_SUN_LEN)
         rtep->rtt.remote.u.sun_len = strlen(rtep->rtt.remote.u.sun_path);
 #endif
         rtep->rtt.remote_len = sizeof(rtep->rtt.remote.u);
-    } else if (strcmp(host, CC_SELF_STR) == 0) {
+    } else if (rtep->rtt.socket_type == PF_INET && strcmp(host, CC_SELF_STR) == 0) {
         rtep->rtw.socket_type = PF_INET;
         rtep->rtw.port = atoi(port);
         snp = &rtep->rtt.socket_name;
@@ -186,11 +197,11 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
         }
         rtep->rtt.remote_len = SA_LEN(sstosa(&(rtep->rtt.remote.i)));
     }
-    if (strlen(sock_name) == 0) {
-        *e = "Timeout notification socket name too short";
-        return (-1);
+    if (sprefix == NULL) {
+        new_sn = strdup(sock_name);
+    } else {
+        asprintf(&new_sn, "%s%s", sprefix, usock_name);
     }
-    new_sn = strdup(sock_name);
     if (new_sn == NULL) {
         *e = strerror(errno);
         return (-1);
@@ -202,7 +213,7 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
 
 static int
 rtpp_tnotify_set_append(struct rtpp_tnotify_set_obj *pub,
-const char *socket_name, const char **e)
+  const char *socket_name, const char **e)
 {
     int rval;
     struct rtpp_tnotify_set *pvt;
@@ -260,16 +271,89 @@ e0:
 }
 
 static struct rtpp_tnotify_target *
-rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *pub, const char *socket_name)
+get_tp4wp(struct rtpp_tnotify_set *pvt, struct rtpp_tnotify_wildcard *wp,
+  struct sockaddr *ccaddr)
+{
+    int i;
+    struct rtpp_tnotify_target *tp;
+    struct sockaddr_in localhost;
+
+    if (ccaddr == NULL) {
+        /* Request on the unix domain socket, assume it's 127.0.0.1 */
+        memset(&localhost, '\0', sizeof(struct sockaddr_in));
+        inet_aton("127.0.0.1", &localhost.sin_addr);
+        ccaddr = sstosa(&localhost);
+        ccaddr->sa_family = AF_INET;
+    }
+    for (i = 0; i < pvt->tp_len; i++) {
+        /* First check against existing targets */
+        tp = pvt->tp[i];
+        if (tp->socket_type != wp->socket_type)
+            continue;
+        if (!ishostseq(ccaddr, sstosa(&tp->remote.i)))
+            continue;
+        if (getport(sstosa(&tp->remote.i)) != wp->port)
+            continue;
+        return (tp);
+    }
+    /* Nothing found, crank up a new entry */
+    tp = malloc(sizeof(struct rtpp_tnotify_target));
+    if (tp == NULL) {
+        return (NULL);
+    }
+    memset(tp, '\0', sizeof(struct rtpp_tnotify_target));
+    tp->remote_len = SA_LEN(ccaddr);
+    memcpy(&tp->remote.i, ccaddr, tp->remote_len);
+    setport(sstosa(&tp->remote.i), wp->port);
+    tp->socket_type = wp->socket_type;
+    tp->connected = 0;
+    tp->fd = -1;
+    pvt->tp[pvt->tp_len] = tp;
+    pvt->tp_len += 1;
+    return (tp);
+}
+
+static struct rtpp_tnotify_target *
+rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *pub, const char *socket_name,
+  struct sockaddr *ccaddr)
 {
     struct rtpp_tnotify_set *pvt;
+    struct rtpp_tnotify_wildcard *wp;
     int i;
+    char *sep;
 
     pvt = PUB2PVT(pub);
     for (i = 0; i < pvt->tp_len; i++) {
+        if (pvt->tp[i]->socket_name == NULL)
+            continue;
         if (strcmp(pvt->tp[i]->socket_name, socket_name) != 0)
             continue;
         return (pvt->tp[i]);
+    }
+    sep = strchr(socket_name, ':');
+    if (sep == NULL) {
+        /*
+         * Backwards-compat code, deal with the socket names that skip "unix:"
+         * preffix, which was allowed in the rtpp 1.0-2.0.
+         */
+        for (i = 0; i < pvt->tp_len; i++) {
+            if (pvt->tp[i]->socket_name == NULL)
+                continue;
+            if (pvt->tp[i]->socket_type != PF_LOCAL ||
+              strcmp(pvt->tp[i]->socket_name + 5, socket_name) != 0)
+                continue;
+            return (pvt->tp[i]);
+        }
+        return (NULL);
+    }
+    /* Handle wildcards */
+    for (i = 0; i < pvt->wp_len; i++) {
+        wp = pvt->wp[i];
+        if (strcmp(wp->socket_name, socket_name) != 0)
+            continue;
+        if (ccaddr != NULL && wp->socket_type != ccaddr->sa_family)
+            continue;
+        return (get_tp4wp(pvt, wp, ccaddr));
     }
     return (NULL);
 }
