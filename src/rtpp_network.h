@@ -36,6 +36,8 @@ struct cfg;
 /* Function prototypes */
 int ishostseq(struct sockaddr *, struct sockaddr *);
 int ishostnull(struct sockaddr *);
+int getport(struct sockaddr *);
+void setport(struct sockaddr *, int);
 char *addr2char_r(struct sockaddr *, char *buf, int size);
 const char *addr2char(struct sockaddr *);
 int resolve(struct sockaddr *, int, const char *, const char *, int);

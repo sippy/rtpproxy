@@ -30,6 +30,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
@@ -87,6 +88,46 @@ ishostnull(struct sockaddr *ia)
 	break;
     }
 
+    abort();
+}
+
+int
+getport(struct sockaddr *ia)
+{
+
+    switch (ia->sa_family) {
+    case AF_INET:
+        return (ntohs(satosin(ia)->sin_port));
+
+    case AF_INET6:
+        return (ntohs(satosin6(ia)->sin6_port));
+
+    default:
+        break;
+    }
+    /* Can't happen */
+    abort();
+}
+
+void
+setport(struct sockaddr *ia, int portnum)
+{
+
+    assert(IS_VALID_PORT(portnum));
+
+    switch (ia->sa_family) {
+    case AF_INET:
+        satosin(ia)->sin_port = htons(portnum);
+        return;
+
+    case AF_INET6:
+        satosin6(ia)->sin6_port = htons(portnum);
+        return;
+
+    default:
+        break;
+    }
+    /* Can't happen */
     abort();
 }
 
