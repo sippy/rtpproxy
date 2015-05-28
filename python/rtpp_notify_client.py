@@ -97,7 +97,7 @@ if __name__ == '__main__':
     from sippy.Timeout import Timeout
 
     ch = cli_handler(file_out)
-    if type == 'unix':
+    if stype == 'unix':
         cs = Cli_server_local(ch.command_received, spath)
     else:
         cs = Cli_server_tcp(ch.command_received, spath)
