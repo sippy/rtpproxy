@@ -34,12 +34,14 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/un.h>
+#include <assert.h>
 #include <errno.h>
 #include <netdb.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "rtpp_types.h"
 #include "rtpp_network.h"
@@ -100,13 +102,19 @@ static void
 rtpp_tnotify_set_dtor(struct rtpp_tnotify_set_obj *pub)
 {
     struct rtpp_tnotify_set *pvt;
+    struct rtpp_tnotify_target *tp;
     int i;
 
     pvt = PUB2PVT(pub);
     for (i = 0; i < pvt->tp_len; i++) {
-        if (pvt->tp[i]->socket_name != NULL)
-            free(pvt->tp[i]->socket_name);
-        free(pvt->tp[i]);
+        tp = pvt->tp[i];
+        if (tp->socket_name != NULL)
+            free(tp->socket_name);
+        if (tp->connected) {
+            assert(tp->fd >= 0);
+            close(tp->fd);
+        }
+        free(tp);
     }
     for (i = 0; i < pvt->wp_len; i++) {
         free(pvt->wp[i]->socket_name);
