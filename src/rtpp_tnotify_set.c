@@ -305,6 +305,9 @@ get_tp4wp(struct rtpp_tnotify_set *pvt, struct rtpp_tnotify_wildcard *wp,
         return (tp);
     }
     /* Nothing found, crank up a new entry */
+    if (pvt->tp_len == RTPP_TNOTIFY_TARGETS_MAX) {
+        return (NULL);
+    }
     tp = malloc(sizeof(struct rtpp_tnotify_target));
     if (tp == NULL) {
         return (NULL);
