@@ -589,6 +589,11 @@ main(int argc, char **argv)
     double sleep_time, filter_lastval;
 #endif
 
+    if (getdtime() == -1) {
+        err(1, "timer self-test has failed: please check your build configuration");
+        /* NOTREACHED */
+    }
+
 #ifdef RTPP_CHECK_LEAKS
     if (rtpp_memdeb_selftest() != 0) {
         errx(1, "MEMDEB self-test has failed");
