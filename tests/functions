@@ -14,8 +14,8 @@ RTPPROXY=${TOP_BUILDDIR}/src/rtpproxy_debug
 RTPP_QUERY=${TOP_BUILDDIR}/python/rtpp_query.py
 RTPP_NOTYFY_CLIENT=${TOP_BUILDDIR}/python/rtpp_notify_client.py
 
-RTPP_NOTIFY_SOCK_UNIX="unix:/tmp/rtpp_nc.sock"
 RTPP_NOTIFY_SOCK_UNIX_SHRT="/tmp/rtpp_nc.sock"
+RTPP_NOTIFY_SOCK_UNIX="unix:${RTPP_NOTIFY_SOCK_UNIX_SHRT}"
 RTPP_NOTIFY_SOCK_TCP="tcp:127.0.0.1:9642"
 RTPP_NOTIFY_SOCK_WILD="tcp:%%CC_SELF%%:9642"
 
