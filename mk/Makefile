@@ -62,7 +62,10 @@ SRCS+=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c \
 	rtpp_timed.c rtpp_timed.h rtpp_analyzer.c rtpp_analyzer.h \
 	rtp_analyze.c rtp_analyze.h rtpp_command_query.c rtpp_command_query.h \
-        rtpp_pearson.c rtpp_pearson.h
+	rtpp_pearson.c rtpp_pearson.h rtpp_refcnt.c rtpp_refcnt.h \
+	rtpp_command_rcache.c rtpp_command_rcache.h \
+	rtpp_tnotify_set.c rtpp_tnotify_set.h rtpp_tnotify_tgt.h
+
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
                 rtpp_memdeb_stats.h rtpp_memdeb_test.c
 MAN1=
