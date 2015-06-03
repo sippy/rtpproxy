@@ -38,7 +38,6 @@ struct rtpp_wi *rtpp_wi_malloc(int, const void *, size_t, int,
   const struct sockaddr *, size_t);
 struct rtpp_wi *rtpp_wi_malloc_pkt(int, struct rtp_packet *,
   const struct sockaddr *, size_t, int);
-struct rtpp_wi *rtpp_wi_malloc_sgnl(int, const void *, size_t);
 enum rtpp_wi_type rtpp_wi_get_type(struct rtpp_wi *);
 void *rtpp_wi_sgnl_get_data(struct rtpp_wi *, size_t *);
 int rtpp_wi_sgnl_get_signum(struct rtpp_wi *);
@@ -48,5 +47,12 @@ struct rtpp_wi *rtpp_wi_malloc_udata(void **, size_t);
 void *rtpp_wi_data_get_ptr(struct rtpp_wi *, size_t, size_t);
 
 void rtpp_wi_free(struct rtpp_wi *);
+
+#if defined(RTPP_CHECK_LEAKS)
+#define rtpp_wi_malloc_sgnl(args...) rtpp_wi_malloc_sgnl_memdeb(__FILE__, __LINE__, __func__, ## args)
+struct rtpp_wi *rtpp_wi_malloc_sgnl_memdeb(const char *, int, const char *, int, const void *, size_t);
+#else
+struct rtpp_wi *rtpp_wi_malloc_sgnl(int, const void *, size_t);
+#endif
 
 #endif

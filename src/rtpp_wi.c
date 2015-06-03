@@ -87,11 +87,18 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
 }
 
 struct rtpp_wi *
+#if !defined(RTPP_CHECK_LEAKS)
 rtpp_wi_malloc_sgnl(int signum, const void *data, size_t datalen)
+#else
+rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int signum, const void *data, size_t datalen)
+#endif
 {
     struct rtpp_wi *wi;
-
+#if !defined(RTPP_CHECK_LEAKS)
     wi = malloc(sizeof(struct rtpp_wi) + datalen);
+#else
+    wi = rtpp_memdeb_malloc(sizeof(struct rtpp_wi) + datalen, fname, linen, funcn);
+#endif
     if (wi == NULL) {
         return (NULL);
     }
