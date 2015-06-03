@@ -13,13 +13,14 @@ do
       ${DIFF} ${BASEDIR}/basic_versions.output -
     report "basic_versions on ${socket}"
   else
-    RTPP_SOCKFILE="${socket}" rtpproxy_start
+    RTPP_SOCKFILE="${socket}" RTPP_OUTFILE="basic_versions.rout" rtpproxy_start
     report "rtpproxy start on ${socket}"
-    ${TOP_BUILDDIR}/python/rtpp_query.py -b -s "${socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions.input | \
-      ${DIFF} ${BASEDIR}/basic_versions.rtpp_query.output -
-    DIFF_RC=${?}
+    ${TOP_BUILDDIR}/python/rtpp_query.py -b -s "${socket}" \
+      -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions.input -o basic_versions.qout
+    report "rtpp_query on ${socket}"
     rtpproxy_stop TERM
     report "rtpproxy stop (SIGTERM) on ${socket}"
-    report_rc ${DIFF_RC} "basic_versions on ${socket}"
+    cat basic_versions.qout basic_versions.rout | ${DIFF} ${BASEDIR}/basic_versions.output -
+    report "basic_versions on ${socket}"
   fi
 done
