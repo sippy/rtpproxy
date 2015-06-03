@@ -70,6 +70,7 @@ struct rtpp_command
     char *argv[RTPC_MAX_ARGC];
     int argc;
     struct sockaddr_storage raddr;
+    struct sockaddr *laddr;
     socklen_t rlen;
     char *cookie;
     int controlfd;

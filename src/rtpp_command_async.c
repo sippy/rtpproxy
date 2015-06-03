@@ -161,13 +161,15 @@ accept_connection(struct cfg *cf, int controlfd_in)
 }
 
 static int
-process_commands(struct cfg *cf, int controlfd, double dtime,
-  struct rtpp_command_stats *csp, int umode, struct rtpp_stats_obj *rsc,
+process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, double dtime,
+  struct rtpp_command_stats *csp, struct rtpp_stats_obj *rsc,
   struct rtpp_cmd_rcache_obj *rcp)
 {
     int i, rval;
     struct rtpp_command *cmd;
+    int umode;
 
+    umode = RTPP_CTRL_ISDG(csock);
     i = 0;
     do {
         cmd = get_command(cf, controlfd, &rval, dtime, csp, umode, rcp);
@@ -180,6 +182,7 @@ process_commands(struct cfg *cf, int controlfd, double dtime,
             continue;
         }
         if (cmd != NULL) {
+            cmd->laddr = sstosa(&csock->bindaddr);
             if (cmd->cca.op == GET_STATS) {
                 flush_cstats(rsc, csp);
             }
@@ -217,6 +220,7 @@ process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
             }
             continue;
         }
+        cmd->laddr = sstosa(&rcc->csock->bindaddr);
         if (cmd->cca.op == GET_STATS) {
             flush_cstats(rsc, csp);
         }
@@ -351,7 +355,7 @@ rtpp_cmd_queue_run(void *arg)
 {
     struct rtpp_cmd_async_cf *cmd_cf;
     struct rtpp_cmd_pollset *psp;
-    int i, nready, rval, umode;
+    int i, nready, rval;
     double sptime;
 #if 0
     double eptime, tused;
@@ -404,9 +408,8 @@ rtpp_cmd_queue_run(void *arg)
                 if (RTPP_CTRL_ISSTREAM(psp->rccs[i]->csock)) {
                     rval = process_commands_stream(cmd_cf->cf_save, psp->rccs[i], sptime, csp, rtpp_stats_cf);
                 } else {
-                    umode = RTPP_CTRL_ISDG(psp->rccs[i]->csock);
-                    rval = process_commands(cmd_cf->cf_save, psp->pfds[i].fd,
-                      sptime, csp, umode, rtpp_stats_cf, cmd_cf->rcache);
+                    rval = process_commands(psp->rccs[i]->csock, cmd_cf->cf_save, psp->pfds[i].fd,
+                      sptime, csp, rtpp_stats_cf, cmd_cf->rcache);
                 }
                 /*
                  * Shut down non-datagram sockets that got I/O error
