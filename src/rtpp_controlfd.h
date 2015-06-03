@@ -36,6 +36,7 @@ struct rtpp_ctrl_sock {
     int controlfd_out;
     int port_ctl;                   /* Port number for UDP control, 0 for Unix domain */
     int exit_on_close;
+    struct sockaddr_storage bindaddr;
 };
 
 #define RTPP_CTRL_ISDG(rcsp) ((rcsp)->type == RTPC_UDP4 || (rcsp)->type == RTPC_UDP6)

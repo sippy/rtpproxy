@@ -79,33 +79,34 @@ controlfd_init_systemd(void)
 }
 
 static int
-controlfd_init_ifsun(struct cfg *cf, const char *cmd_sock)
+controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
 {
     int controlfd;
-    struct sockaddr_un ifsun;
+    struct sockaddr_un *ifsun;
 
-    unlink(cmd_sock);
-    memset(&ifsun, '\0', sizeof ifsun);
+    unlink(csp->cmd_sock);
+    ifsun = sstosun(&csp->bindaddr);
+    memset(ifsun, '\0', sizeof(struct sockaddr_un));
 #if defined(HAVE_SOCKADDR_SUN_LEN)
-    ifsun.sun_len = strlen(cmd_sock);
+    ifsun->sun_len = strlen(csp->cmd_sock);
 #endif
-    ifsun.sun_family = AF_LOCAL;
-    strcpy(ifsun.sun_path, cmd_sock);
+    ifsun->sun_family = AF_LOCAL;
+    strcpy(ifsun->sun_path, csp->cmd_sock);
     controlfd = socket(PF_LOCAL, SOCK_STREAM, 0);
     if (controlfd == -1)
         err(1, "can't create socket");
     setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &controlfd,
       sizeof controlfd);
-    if (bind(controlfd, sstosa(&ifsun), sizeof ifsun) < 0)
-        err(1, "can't bind to a socket: %s", cmd_sock);
+    if (bind(controlfd, sstosa(ifsun), sizeof(struct sockaddr_un)) < 0)
+        err(1, "can't bind to a socket: %s", csp->cmd_sock);
     if ((cf->stable->run_uname != NULL || cf->stable->run_gname != NULL) &&
-      chown(cmd_sock, cf->stable->run_uid, cf->stable->run_gid) == -1)
-        err(1, "can't set owner of the socket: %s", cmd_sock);
+      chown(csp->cmd_sock, cf->stable->run_uid, cf->stable->run_gid) == -1)
+        err(1, "can't set owner of the socket: %s", csp->cmd_sock);
     if ((cf->stable->run_gname != NULL) && cf->stable->sock_mode != 0 &&
-      (chmod(cmd_sock, cf->stable->sock_mode) == -1))
+      (chmod(csp->cmd_sock, cf->stable->sock_mode) == -1))
         err(1, "can't allow rw acces to group");
     if (listen(controlfd, 32) != 0)
-        err(1, "can't listen on a socket: %s", cmd_sock);
+        err(1, "can't listen on a socket: %s", csp->cmd_sock);
 
     return (controlfd);
 }
@@ -113,7 +114,7 @@ controlfd_init_ifsun(struct cfg *cf, const char *cmd_sock)
 static int
 controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
 {
-    struct sockaddr_storage ifsin;
+    struct sockaddr *ifsin;
     char *cp;
     int controlfd, so_rcvbuf, i;
 
@@ -126,7 +127,8 @@ controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
         cp = CPORT;
     csp->port_ctl = atoi(cp);
     i = (csp->type == RTPC_UDP6) ? AF_INET6 : AF_INET;
-    if (setbindhost(sstosa(&ifsin), i, csp->cmd_sock, cp) != 0)
+    ifsin = sstosa(&csp->bindaddr);
+    if (setbindhost(ifsin, i, csp->cmd_sock, cp) != 0)
         exit(1);
     controlfd = socket(i, SOCK_DGRAM, 0);
     if (controlfd == -1)
@@ -134,7 +136,7 @@ controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     so_rcvbuf = 16 * 1024;
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
         rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "unable to set 16K receive buffer size on controlfd");
-    if (bind(controlfd, sstosa(&ifsin), SS_LEN(&ifsin)) < 0)
+    if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0)
         err(1, "can't bind to a socket");
 
     return (controlfd);
@@ -155,7 +157,7 @@ rtpp_controlfd_init(struct cfg *cf)
 
         case RTPC_IFSUN:
         case RTPC_IFSUN_C:
-            controlfd_in = controlfd_out = controlfd_init_ifsun(cf, ctrl_sock->cmd_sock);
+            controlfd_in = controlfd_out = controlfd_init_ifsun(cf, ctrl_sock);
             break;
 
         case RTPC_UDP4:
