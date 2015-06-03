@@ -49,8 +49,10 @@ static int syslog_async_opened = 0;
 struct rtpp_log_inst {
     char *call_id;
     int level;
-    const char *format;
-    const char *eformat;
+    const char *format_sl;
+    const char *eformat_sl;
+    const char *format_se;
+    const char *eformat_se;
 };
 
 struct rtpp_log_inst *
@@ -82,13 +84,10 @@ _rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app, const char *call_id)
     } else {
         rli->level = cf->log_level;
     }
-    if (cf->nodaemon != 0) {
-        rli->format = "%s:%s:%s: %s\n";
-        rli->eformat = "%s:%s:%s: %s: %s\n";
-    } else {
-        rli->format = "%s:%s:%s: %s";
-        rli->eformat = "%s:%s:%s: %s: %s";
-    }
+    rli->format_se = "%s:%s:%s: %s\n";
+    rli->eformat_se = "%s:%s:%s: %s: %s\n";
+    rli->format_sl = "%s:%s:%s: %s";
+    rli->eformat_sl = "%s:%s:%s: %s: %s";
     return (rli);
 }
 
@@ -183,17 +182,21 @@ _rtpp_log_write(struct rtpp_log_inst *rli, int level, const char *function, cons
         call_id = "GLOBAL";
     }
 
-    va_start(ap, format);
-
-    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format, strlvl(level),
-      function, call_id, format);
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
+        snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_sl, strlvl(level),
+          function, call_id, format);
+        va_start(ap, format);
 	vsyslog_async(level, rtpp_log_buff, ap);
         va_end(ap);
+#if !defined(RTPP_DEBUG)
         return;
+#endif
     }
 #endif
+    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_se, strlvl(level),
+      function, call_id, format);
+    va_start(ap, format);
     vfprintf(stderr, rtpp_log_buff, ap);
     va_end(ap);
 }
@@ -214,17 +217,22 @@ _rtpp_log_ewrite(struct rtpp_log_inst *rli, int level, const char *function, con
         call_id = "GENERAL";
     }
 
-    va_start(ap, format);
 
-    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat, strlvl(level),
-      function, call_id, format, strerror(errno));
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
+        snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_sl, strlvl(level),
+          function, call_id, format, strerror(errno));
+        va_start(ap, format);
 	vsyslog_async(level, rtpp_log_buff, ap);
 	va_end(ap);
+#if !defined(RTPP_DEBUG)
 	return;
+#endif
     }
 #endif
+    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_se, strlvl(level),
+      function, call_id, format, strerror(errno));
+    va_start(ap, format);
     vfprintf(stderr, rtpp_log_buff, ap);
     va_end(ap);
 }
