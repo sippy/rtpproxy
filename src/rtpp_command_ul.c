@@ -579,7 +579,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             struct rtpp_tnotify_target *rttp;
 
             rttp = CALL_METHOD(cf->stable->rtpp_tnset_cf, lookup, ulop->notify_socket,
-              (cmd->rlen > 0) ? sstosa(&cmd->raddr) : NULL);
+              (cmd->rlen > 0) ? sstosa(&cmd->raddr) : NULL, (cmd->rlen > 0) ? cmd->laddr : NULL);
             if (rttp == NULL) {
                 rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", ulop->notify_socket);
                 ulop->notify_socket = NULL;

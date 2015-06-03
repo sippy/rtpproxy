@@ -31,7 +31,7 @@ struct rtpp_tnotify_target;
 DEFINE_METHOD(rtpp_tnotify_set_obj, rtpp_tn_set_dtor, void);
 DEFINE_METHOD(rtpp_tnotify_set_obj, rtpp_tn_set_append, int, const char *, const char **);
 DEFINE_METHOD(rtpp_tnotify_set_obj, rtpp_tn_set_lookup, struct rtpp_tnotify_target *,
-  const char *, struct sockaddr *);
+  const char *, struct sockaddr *, struct sockaddr *);
 DEFINE_METHOD(rtpp_tnotify_set_obj, rtpp_tn_set_isenabled, int);
 
 struct rtpp_tnotify_set_obj {

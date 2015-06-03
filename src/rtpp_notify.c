@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <netinet/in.h>
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
@@ -44,6 +45,7 @@
 
 #include "rtpp_log.h"
 #include "rtpp_types.h"
+#include "rtpp_network.h"
 #include "rtpp_notify.h"
 #include "rtpp_queue.h"
 #include "rtpp_tnotify_tgt.h"
@@ -199,12 +201,24 @@ reconnect_timeout_handler(rtpp_log_t log, struct rtpp_tnotify_target *rttp)
         rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't create timeout socket");
         return;
     }
-
+    if (rttp->local != NULL) {
+        if (bind(rttp->fd, rttp->local, SA_LEN(rttp->local)) < 0) {
+            rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't bind timeout socket");
+            goto e0;
+        }
+    }
     if (connect(rttp->fd, (struct sockaddr *)&(rttp->remote), rttp->remote_len) == -1) {
         rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't connect to timeout socket");
+        goto e0;
     } else {
         rttp->connected = 1;
     }
+    return;
+
+e0:
+    close(rttp->fd);
+    rttp->fd = -1;
+    return;
 }
 
 static void

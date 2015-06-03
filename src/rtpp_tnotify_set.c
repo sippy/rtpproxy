@@ -77,7 +77,7 @@ struct rtpp_tnotify_set {
 static void rtpp_tnotify_set_dtor(struct rtpp_tnotify_set_obj *);
 static int rtpp_tnotify_set_append(struct rtpp_tnotify_set_obj *, const char *, const char **);
 static struct rtpp_tnotify_target *rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *,
-  const char *, struct sockaddr *);
+  const char *, struct sockaddr *, struct sockaddr *);
 static int rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set_obj *);
 
 struct rtpp_tnotify_set_obj *
@@ -114,6 +114,8 @@ rtpp_tnotify_set_dtor(struct rtpp_tnotify_set_obj *pub)
             assert(tp->fd >= 0);
             close(tp->fd);
         }
+        if (tp->local != NULL)
+            free(tp->local);
         free(tp);
     }
     for (i = 0; i < pvt->wp_len; i++) {
@@ -164,6 +166,8 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
     char *new_sn, **snp;
     int n, rval;
     const char *sprefix, *usock_name;
+    struct sockaddr_un *ifsun;
+    struct sockaddr *ifsa;
 
     snp = &rtep->rtt.socket_name;
     rval = 0;
@@ -186,24 +190,26 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
             *e = "Timeout notification socket name too short";
             return (-1);
         }
-        rtep->rtt.remote.u.sun_family = AF_LOCAL;
-        strncpy(rtep->rtt.remote.u.sun_path, usock_name, sizeof(rtep->rtt.remote.u.sun_path) - 1);
+        ifsun = sstosun(&rtep->rtt.remote);
+        ifsun->sun_family = AF_LOCAL;
+        strncpy(ifsun->sun_path, usock_name, sizeof(ifsun->sun_path) - 1);
 #if defined(HAVE_SOCKADDR_SUN_LEN)
-        rtep->rtt.remote.u.sun_len = strlen(rtep->rtt.remote.u.sun_path);
+        ifsun->sun_len = strlen(ifsun->sun_path);
 #endif
-        rtep->rtt.remote_len = sizeof(rtep->rtt.remote.u);
+        rtep->rtt.remote_len = sizeof(struct sockaddr_un);
     } else if (rtep->rtt.socket_type == PF_INET && strcmp(host, CC_SELF_STR) == 0) {
         rtep->rtw.socket_type = PF_INET;
         rtep->rtw.port = atoi(port);
         snp = &rtep->rtt.socket_name;
         rval = 1;
     } else {
-        n = resolve(sstosa(&(rtep->rtt.remote.i)), AF_INET, host, port, AI_PASSIVE);
+        ifsa = sstosa(&rtep->rtt.remote);
+        n = resolve(ifsa, AF_INET, host, port, AI_PASSIVE);
         if (n != 0) {
             *e = gai_strerror(n);
             return (-1);
         }
-        rtep->rtt.remote_len = SA_LEN(sstosa(&(rtep->rtt.remote.i)));
+        rtep->rtt.remote_len = SA_LEN(ifsa);
     }
     if (sprefix == NULL) {
         new_sn = strdup(sock_name);
@@ -280,14 +286,14 @@ e0:
 
 static struct rtpp_tnotify_target *
 get_tp4wp(struct rtpp_tnotify_set *pvt, struct rtpp_tnotify_wildcard *wp,
-  struct sockaddr *ccaddr)
+  struct sockaddr *ccaddr, struct sockaddr *laddr)
 {
     int i;
     struct rtpp_tnotify_target *tp;
     struct sockaddr_in localhost;
 
-    if (ccaddr == NULL) {
-        /* Request on the unix domain socket, assume it's 127.0.0.1 */
+    if (ccaddr == NULL || ccaddr->sa_family != AF_INET) {
+        /* Request on the unix/IPv6 domain socket, assume it's 127.0.0.1 */
         memset(&localhost, '\0', sizeof(struct sockaddr_in));
         inet_aton("127.0.0.1", &localhost.sin_addr);
         ccaddr = sstosa(&localhost);
@@ -296,11 +302,15 @@ get_tp4wp(struct rtpp_tnotify_set *pvt, struct rtpp_tnotify_wildcard *wp,
     for (i = 0; i < pvt->tp_len; i++) {
         /* First check against existing targets */
         tp = pvt->tp[i];
+        if (tp->socket_name != NULL) {
+            /* Only match "automatic" entries */
+            continue;
+        }
         if (tp->socket_type != wp->socket_type)
             continue;
-        if (!ishostseq(ccaddr, sstosa(&tp->remote.i)))
+        if (!ishostseq(ccaddr, sstosa(&tp->remote)))
             continue;
-        if (getport(sstosa(&tp->remote.i)) != wp->port)
+        if (getport(sstosa(&tp->remote)) != wp->port)
             continue;
         return (tp);
     }
@@ -313,9 +323,18 @@ get_tp4wp(struct rtpp_tnotify_set *pvt, struct rtpp_tnotify_wildcard *wp,
         return (NULL);
     }
     memset(tp, '\0', sizeof(struct rtpp_tnotify_target));
+    if (laddr != NULL && laddr->sa_family == ccaddr->sa_family) {
+        tp->local = malloc(SA_LEN(laddr));
+        if (tp->local == NULL) {
+            free(tp);
+            return (NULL);
+        }
+        memcpy(tp->local, laddr, SA_LEN(laddr));
+        setanyport(tp->local);
+    }
     tp->remote_len = SA_LEN(ccaddr);
-    memcpy(&tp->remote.i, ccaddr, tp->remote_len);
-    setport(sstosa(&tp->remote.i), wp->port);
+    memcpy(&tp->remote, ccaddr, tp->remote_len);
+    setport(sstosa(&tp->remote), wp->port);
     tp->socket_type = wp->socket_type;
     tp->connected = 0;
     tp->fd = -1;
@@ -326,13 +345,15 @@ get_tp4wp(struct rtpp_tnotify_set *pvt, struct rtpp_tnotify_wildcard *wp,
 
 static struct rtpp_tnotify_target *
 rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *pub, const char *socket_name,
-  struct sockaddr *ccaddr)
+  struct sockaddr *ccaddr, struct sockaddr *laddr)
 {
     struct rtpp_tnotify_set *pvt;
     struct rtpp_tnotify_wildcard *wp;
     int i;
     char *sep;
 
+    if ((ccaddr != NULL && ccaddr->sa_family == AF_INET6) || (laddr != NULL && laddr->sa_family == AF_INET6)) {
+    static int b=0; while (b);}
     pvt = PUB2PVT(pub);
     for (i = 0; i < pvt->tp_len; i++) {
         if (pvt->tp[i]->socket_name == NULL)
@@ -364,7 +385,13 @@ rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *pub, const char *socket_nam
             continue;
         if (ccaddr != NULL && wp->socket_type != ccaddr->sa_family)
             continue;
-        return (get_tp4wp(pvt, wp, ccaddr));
+        return (get_tp4wp(pvt, wp, ccaddr, laddr));
+    }
+    for (i = 0; i < pvt->wp_len; i++) {
+        wp = pvt->wp[i];
+        if (strcmp(wp->socket_name, socket_name) != 0)
+            continue;
+        return (get_tp4wp(pvt, wp, ccaddr, laddr));
     }
     return (NULL);
 }

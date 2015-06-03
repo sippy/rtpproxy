@@ -28,11 +28,9 @@
 struct rtpp_tnotify_target {
     char *socket_name;
     int socket_type;
-    union {
-        struct sockaddr_un u;
-        struct sockaddr_storage i;
-    } remote;
+    struct sockaddr_storage remote;
     socklen_t remote_len;
+    struct sockaddr *local;
     int fd;
     int connected;
 };
