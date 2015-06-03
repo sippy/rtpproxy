@@ -24,8 +24,8 @@ RTPP_TEST_SOCK_UDP6_PORT=${RTPP_TEST_SOCK_UDP6_PORT:-43863}
 RTPP_TEST_SOCK_UNIX=${RTPP_TEST_SOCK_UNIX:-/tmp/rtpproxy.sock}
 RTPP_TEST_SOCK_CUNIX=${RTPP_TEST_SOCK_CUNIX:-/tmp/rtpproxy.csock}
 RTPP_TEST_SOCKETS="stdio: udp:127.0.0.1:${RTPP_TEST_SOCK_UDP4_PORT} \
-  udp6:::1:${RTPP_TEST_SOCK_UDP6_PORT} unix:${RTPP_TEST_SOCK_UNIX} \
-  cunix:${RTPP_TEST_SOCK_CUNIX}"
+  unix:${RTPP_TEST_SOCK_UNIX} \
+  cunix:${RTPP_TEST_SOCK_CUNIX} udp6:::1:${RTPP_TEST_SOCK_UDP6_PORT}"
 MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
 DIFF="diff -u"
@@ -87,10 +87,12 @@ SED="sed ${SED_ARGS}"
 
 rtpproxy_start() {
   tempfoo="`basename $0`.XXXXX"
-  TMP_PIDFILE=`mktemp -t ${tempfoo}` || return
-  TMP_SOCKFILE=${RTPP_SOCKFILE:-`mktemp -t ${tempfoo}`} || return
-  TMP_LOGFILE=`mktemp -t ${tempfoo}` || return
-  ${RTPPROXY} -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} -d info ${RTPP_ARGS} 2>${TMP_LOGFILE}
+  TMP_PIDFILE=`mktemp -t ${tempfoo}` || return 1
+  TMP_SOCKFILE=${RTPP_SOCKFILE:-`mktemp -t ${tempfoo}`} || return 1
+  TMP_LOGFILE=${RTPP_LOGFILE:-`mktemp -t ${tempfoo}`} || return 1
+  TMP_OUTFILE=${RTPP_OUTFILE:-`mktemp -t ${tempfoo}`} || return 1
+  ${RTPPROXY} -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} -d info ${RTPP_ARGS} \
+   >${TMP_OUTFILE} 2>${TMP_LOGFILE}
   RC=${?}
   if [ ${RC} -ne 0 ]
   then
