@@ -250,8 +250,10 @@ rtpp_daemon(int nochdir, int noclose)
 
     if (!noclose && (fd = open("/dev/null", O_RDWR, 0)) != -1) {
         (void)dup2(fd, STDIN_FILENO);
+#if !defined(RTPP_DEBUG)
         (void)dup2(fd, STDOUT_FILENO);
         (void)dup2(fd, STDERR_FILENO);
+#endif
         if (fd > 2)
             (void)close(fd);
     }
