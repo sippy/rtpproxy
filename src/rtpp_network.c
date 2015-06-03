@@ -131,6 +131,26 @@ setport(struct sockaddr *ia, int portnum)
     abort();
 }
 
+void
+setanyport(struct sockaddr *ia)
+{
+
+    switch (ia->sa_family) {
+    case AF_INET:
+        satosin(ia)->sin_port = 0;
+        return;
+
+    case AF_INET6:
+        satosin6(ia)->sin6_port = 0;
+        return;
+
+    default:
+        break;
+    }
+    /* Can't happen */
+    abort();
+}
+
 char *
 addr2char_r(struct sockaddr *ia, char *buf, int size)
 {
