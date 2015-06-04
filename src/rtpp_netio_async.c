@@ -55,6 +55,7 @@ struct sthread_args {
 #ifdef RTPP_DEBUG
     struct recfilter average_load;
 #endif
+    struct rtpp_wi *sigterm;
 };
 
 #define SEND_THREADS 1
@@ -218,8 +219,7 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
             for (ri = i - 1; ri >= 0; ri--) {
                 rtpp_queue_destroy(netio_cf->args[ri].out_q);
             }
-            free(netio_cf);
-            return (NULL);
+            goto e0;
         }
         netio_cf->args[i].glog = cf->stable->glog;
         netio_cf->args[i].dmode = cf->stable->dmode;
@@ -228,41 +228,58 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
 #endif
     }
 
+    for (i = 0; i < SEND_THREADS; i++) {
+        netio_cf->args[i].sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
+        if (netio_cf->args[i].sigterm == NULL) {
+            for (ri = i - 1; ri >= 0; ri--) {
+                rtpp_wi_free(netio_cf->args[ri].sigterm);
+            }
+            goto e1;
+        }
+    }
+
     cf->stable->rtpp_netio_cf = netio_cf;
     for (i = 0; i < SEND_THREADS; i++) {
-        if (pthread_create(&netio_cf->thread_id[i], NULL, (void *(*)(void *))&rtpp_anetio_sthread, &netio_cf->args[i]) != 0) {
-             for (ri = i; ri >= 0; ri--) {
-                 rtpp_queue_destroy(netio_cf->args[i].out_q);
+        if (pthread_create(&(netio_cf->thread_id[i]), NULL, (void *(*)(void *))&rtpp_anetio_sthread, &netio_cf->args[i]) != 0) {
+             for (ri = i - 1; ri >= 0; ri--) {
+                 rtpp_queue_put_item(netio_cf->args[ri].sigterm, netio_cf->args[ri].out_q);
+                 pthread_join(netio_cf->thread_id[ri], NULL);
              }
-             free(netio_cf);
-             cf->stable->rtpp_netio_cf = NULL;
-             return (NULL);
+             for (ri = i; ri < SEND_THREADS; ri++) {
+                 rtpp_wi_free(netio_cf->args[ri].sigterm);
+             }
+             goto e1;
         }
     }
 
     return (netio_cf);
+
+#if 0
+e2:
+    for (i = 0; i < SEND_THREADS; i++) {
+        rtpp_wi_free(netio_cf->args[i].sigterm);
+    }
+#endif
+e1:
+    for (i = 0; i < SEND_THREADS; i++) {
+        rtpp_queue_destroy(netio_cf->args[i].out_q);
+    }
+e0:
+    free(netio_cf);
+    return (NULL);
 }
 
 void
 rtpp_netio_async_destroy(struct rtpp_anetio_cf *netio_cf)
 {
-    int i, ri;
-    struct rtpp_wi *wi[SEND_THREADS];
+    int i;
 
     for (i = 0; i < SEND_THREADS; i++) {
-        wi[i] = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
-        if (wi[i] == NULL) {
-            for (ri = i - 1; ri >= 0; ri--) {
-                 rtpp_wi_free(wi[ri]);
-            }
-            /* XXX complain */
-            return;
-        }
-    }
-    for (i = 0; i < SEND_THREADS; i++) {
-        rtpp_queue_put_item(wi[i], netio_cf->args[i].out_q);
+        rtpp_queue_put_item(netio_cf->args[i].sigterm, netio_cf->args[i].out_q);
     }
     for (i = 0; i < SEND_THREADS; i++) {
         pthread_join(netio_cf->thread_id[i], NULL);
+        rtpp_queue_destroy(netio_cf->args[i].out_q);
     }
+    free(netio_cf);
 }
