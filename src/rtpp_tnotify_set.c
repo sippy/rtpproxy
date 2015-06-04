@@ -352,8 +352,6 @@ rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *pub, const char *socket_nam
     int i;
     char *sep;
 
-    if ((ccaddr != NULL && ccaddr->sa_family == AF_INET6) || (laddr != NULL && laddr->sa_family == AF_INET6)) {
-    static int b=0; while (b);}
     pvt = PUB2PVT(pub);
     for (i = 0; i < pvt->tp_len; i++) {
         if (pvt->tp[i]->socket_name == NULL)
