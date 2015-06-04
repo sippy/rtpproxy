@@ -132,6 +132,7 @@ fatsignal(int sig)
     CALL_METHOD(_sig_cf->stable->rtpp_notify_cf, dtor);
     CALL_METHOD(_sig_cf->stable->rtpp_tnset_cf, dtor);
     CALL_METHOD(_sig_cf->stable->rtpp_timed_cf, dtor);
+    CALL_METHOD(_sig_cf->stable->rtpp_proc_cf, dtor);
 #endif
     rtpp_exit();
 }
@@ -658,6 +659,10 @@ main(int argc, char **argv)
     atexit(ehandler);
     rtpp_log_write(RTPP_LOG_INFO, cf.stable->glog, "rtpproxy started, pid %d", getpid());
 
+#ifdef RTPP_CHECK_LEAKS
+    rtpp_memdeb_setbaseln();
+#endif
+
     i = open(cf.stable->pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (i >= 0) {
 	len = sprintf(buf, "%u\n", (unsigned int)getpid());
@@ -688,14 +693,16 @@ main(int argc, char **argv)
     cf.sessinfo.nsessions = 0;
     cf.rtp_nsessions = 0;
 
-    rtpp_proc_async_init(&cf);
+    cf.stable->rtpp_proc_cf = rtpp_proc_async_ctor(&cf);
+    if (cf.stable->rtpp_proc_cf == NULL) {
+        rtpp_log_write(RTPP_LOG_ERR, cf.stable->glog,
+          "can't init RTP processing subsystem");
+        exit(1);
+    }
 
     counter = 0;
     recfilter_init(&loop_error, 0.96, 0.0, 0);
     PFD_init(&phase_detector, 0.0);
-#ifdef RTPP_CHECK_LEAKS
-    rtpp_memdeb_setbaseln();
-#endif
 
     cf.stable->rtpp_timed_cf = rtpp_timed_ctor(0.1);
     if (cf.stable->rtpp_timed_cf == NULL) {
@@ -766,7 +773,7 @@ main(int argc, char **argv)
         }
         sleep_time = getdtime();
 #endif
-        rtpp_proc_async_wakeup(cf.stable->rtpp_proc_cf, counter, ncycles_ref);
+        CALL_METHOD(cf.stable->rtpp_proc_cf, wakeup, counter, ncycles_ref);
         usleep(usleep_time);
         CALL_METHOD(cf.stable->rtpp_timed_cf, wakeup, eptime + add_delay);
 #if RTPP_DEBUG
@@ -794,6 +801,7 @@ main(int argc, char **argv)
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_timed_cf, dtor);
+    CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif
