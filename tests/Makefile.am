@@ -1,5 +1,7 @@
 TESTS = startstop basic_versions command_parser makeann extractaudio \
   session_timeouts playback1 forwarding1
+startstop_EXTRA_DIST = startstop startstop.output
+startstop_CLEANFILES = startstop.rout
 basic_versions_EXTRA_DIST = basic_versions basic_versions.input basic_versions.output
 basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout
 command_parser_EXTRA_DIST = command_parser command_parser.input command_parser.output
@@ -33,7 +35,7 @@ session_timeouts_EXTRA_DIST = session_timeouts session_timeouts.full.input \
   session_timeouts.tnotify.output
 session_timeouts_CLEANFILES = session_timeouts.rout[1234] session_timeouts.rlog[1234] \
   session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234]
-EXTRA_DIST = Makefile.am startstop ${basic_versions_EXTRA_DIST} \
+EXTRA_DIST = Makefile.am ${startstop_EXTRA_DIST} ${basic_versions_EXTRA_DIST} \
     ${command_parser_EXTRA_DIST} \
     ringback.sln makeann makeann.output \
     ${extractaudio_EXTRA_DIST} ${playback1_EXTRA_DIST} \
@@ -43,6 +45,6 @@ TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
-CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9 \
+CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9 ${startstop_CLEANFILES} \
   ${extractaudio_CLEANFILES} ${playback1_CLEANFILES} ${forwarding1_CLEANFILES} \
   ${session_timeouts_CLEANFILES} ${command_parser_CLEANFILES} ${basic_versions_CLEANFILES}

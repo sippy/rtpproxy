@@ -4,11 +4,16 @@
 
 . $(dirname $0)/functions
 
+RTPP_OUTFILE="startstop.rout"
 rtpproxy_start
 report "rtpproxy start"
 rtpproxy_stop TERM
 report "rtpproxy stop (SIGTERM)"
+${DIFF} startstop.output startstop.rout
+report "rtpproxy output"
 rtpproxy_start
 report "rtpproxy start"
 rtpproxy_stop HUP
 report "rtpproxy stop (SIGHUP)"
+${DIFF} startstop.output startstop.rout
+report "rtpproxy output"
