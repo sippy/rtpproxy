@@ -116,6 +116,8 @@ class local4remote(object):
     skt = None
     handleIncoming = None
     fixed = False
+    ploss_out_rate = 0.0
+    pdelay_out_max = 0.0
 
     def __init__(self, global_config, handleIncoming):
         if not global_config.has_key('_xmpp_mode') or not global_config['_xmpp_mode']:
@@ -149,6 +151,8 @@ class local4remote(object):
             self.fixed = True
         for laddress in laddresses:
             sopts = self.Udp_server_opts(laddress, handleIncoming)
+            sopts.ploss_out_rate = self.ploss_out_rate
+            sopts.pdelay_out_max = self.pdelay_out_max
             server = self.udp_server_class(global_config, sopts)
             self.cache_l2s[laddress] = server
 
@@ -187,6 +191,8 @@ class local4remote(object):
         server = self.cache_l2s.get(laddress, None)
         if server == None:
             sopts = self.Udp_server_opts(laddress, handleIncoming)
+            sopts.ploss_out_rate = self.ploss_out_rate
+            sopts.pdelay_out_max = self.pdelay_out_max
             server = self.udp_server_class(self.global_config, sopts)
             self.cache_l2s[laddress] = server
         #print 'local4remot-2: local address for %s is %s' % (address[0], laddress[0])
@@ -207,10 +213,14 @@ class SipTransactionManager(object):
     nat_traversal = False
     req_consumers = None
     provisional_retr = 0
+    ploss_out_rate = 0.0
+    pdelay_out_max = 0.0
 
     def __init__(self, global_config, req_cb = None):
         self.global_config = global_config
         self.l4r = local4remote(global_config, self.handleIncoming)
+        self.l4r.ploss_out_rate = self.ploss_out_rate
+        self.l4r.pdelay_out_max = self.pdelay_out_max
         self.tclient = {}
         self.tserver = {}
         self.req_cb = req_cb

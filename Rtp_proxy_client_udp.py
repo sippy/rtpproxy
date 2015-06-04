@@ -51,12 +51,16 @@ class Rtp_proxy_client_udp(object):
     uopts = None
     global_config = None
     delay_flt = None
+    ploss_out_rate = 0.0
+    pdelay_out_max = 0.0
 
     def __init__(self, global_config, address, bind_address = None, family = None, nworkers = None):
         self.address = address
         self.is_local = False
         self.uopts = Udp_server_opts(bind_address, self.process_reply, family)
         self.uopts.flags = 0
+        self.uopts.ploss_out_rate = self.ploss_out_rate
+        self.uopts.pdelay_out_max = self.pdelay_out_max
         if nworkers != None:
             self.uopts.nworkers = nworkers
         self.worker = Udp_server(global_config, self.uopts)
