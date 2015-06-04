@@ -28,9 +28,16 @@
 #ifndef _RTPP_PROC_ASYNC_H_
 #define _RTPP_PROC_ASYNC_H_
 
-struct rtpp_proc_async_cf;
+struct rtpp_proc_async_obj;
 
-int rtpp_proc_async_init(struct cfg *);
-void rtpp_proc_async_wakeup(struct rtpp_proc_async_cf *, int, long long);
+DEFINE_METHOD(rtpp_proc_async_obj, rtpp_proc_async_dtor, void);
+DEFINE_METHOD(rtpp_proc_async_obj, rtpp_proc_async_wakeup, void, int, long long);
+
+struct rtpp_proc_async_obj {
+    rtpp_proc_async_dtor_t dtor;
+    rtpp_proc_async_wakeup_t wakeup;
+};
+
+struct rtpp_proc_async_obj *rtpp_proc_async_ctor(struct cfg *);
 
 #endif

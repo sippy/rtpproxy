@@ -31,6 +31,7 @@
 #include <poll.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -51,6 +52,7 @@
 #include "rtpp_stats.h"
 
 struct rtpp_proc_async_cf {
+    struct rtpp_proc_async_obj pub;
     pthread_t thread_id;
     int clock_tick;
     long long ncycles_ref;
@@ -62,12 +64,19 @@ struct rtpp_proc_async_cf {
     struct recfilter proc_time;
 #endif
     struct rtpp_proc_rstats rstats;
+    struct rtpp_wi *sigterm;
+    struct cfg *cf_save;
 };
 
 struct sign_arg {
     int clock_tick;
     long long ncycles_ref;
 };
+
+static void rtpp_proc_async_dtor(struct rtpp_proc_async_obj *);
+static void rtpp_proc_async_wakeup(struct rtpp_proc_async_obj *, int, long long);
+
+#define PUB2PVT(pubp)      ((struct rtpp_proc_async_cf *)((char *)(pubp) - offsetof(struct rtpp_proc_async_cf, pub)))
 
 #define FLUSH_STAT(sobj, st)	{ \
     if ((st).cnt > 0) { \
@@ -107,7 +116,7 @@ rtpp_proc_async_run(void *arg)
 {
     struct cfg *cf;
     double last_tick_time;
-    int alarm_tick, i, ndrain, rtp_only;
+    int alarm_tick, i, ndrain, rtp_only, j;
     struct rtpp_proc_async_cf *proc_cf;
     long long ncycles_ref;
 #ifdef RTPP_DEBUG
@@ -120,13 +129,17 @@ rtpp_proc_async_run(void *arg)
     struct rtpp_proc_rstats *rstats;
     struct rtpp_stats_obj *stats_cf;
 
-    cf = (struct cfg *)arg;
-    proc_cf = cf->stable->rtpp_proc_cf;
+    proc_cf = (struct rtpp_proc_async_cf *)arg;
+    cf = proc_cf->cf_save;
     stats_cf = cf->stable->rtpp_stats;
     rstats = &proc_cf->rstats;
 
     last_tick_time = 0;
     wi = rtpp_queue_get_item(proc_cf->time_q, 0);
+    if (rtpp_wi_sgnl_get_signum(wi) == SIGTERM) {
+        rtpp_wi_free(wi);
+        return;
+    }
     s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wi, NULL);
 #ifdef RTPP_DEBUG
     last_ctick = s_a->clock_tick;
@@ -140,6 +153,15 @@ rtpp_proc_async_run(void *arg)
         if (i <= 0) {
             continue;
         }
+        for (j = 0; j < i; j++) {
+            if (rtpp_wi_sgnl_get_signum(wis[j]) != SIGTERM)
+                continue;
+            while (i > 0) {
+                rtpp_wi_free(wis[i - 1]);
+                i -= 1;
+            }
+            return;
+        }   
         i -= 1;
         s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wis[i], NULL);
         ndrain = (s_a->ncycles_ref - ncycles_ref) / (cf->stable->target_pfreq / MAX_RTP_RATE);
@@ -245,12 +267,14 @@ rtpp_proc_async_run(void *arg)
 
 }
 
-void
-rtpp_proc_async_wakeup(struct rtpp_proc_async_cf *proc_cf, int clock, long long ncycles_ref)
+static void
+rtpp_proc_async_wakeup(struct rtpp_proc_async_obj *pub, int clock, long long ncycles_ref)
 {
     struct sign_arg s_a;
     struct rtpp_wi *wi;
+    struct rtpp_proc_async_cf *proc_cf;
 
+    proc_cf = PUB2PVT(pub);
     s_a.clock_tick = clock;
     s_a.ncycles_ref = ncycles_ref;
     wi = rtpp_wi_malloc_sgnl(SIGALRM, &s_a, sizeof(s_a));
@@ -261,14 +285,14 @@ rtpp_proc_async_wakeup(struct rtpp_proc_async_cf *proc_cf, int clock, long long 
     rtpp_queue_put_item(wi, proc_cf->time_q);
 }
 
-int
-rtpp_proc_async_init(struct cfg *cf)
+struct rtpp_proc_async_obj *
+rtpp_proc_async_ctor(struct cfg *cf)
 {
     struct rtpp_proc_async_cf *proc_cf;
 
     proc_cf = malloc(sizeof(*proc_cf));
     if (proc_cf == NULL)
-        return (-1);
+        return (NULL);
 
     memset(proc_cf, '\0', sizeof(*proc_cf));
 
@@ -282,25 +306,48 @@ rtpp_proc_async_init(struct cfg *cf)
 
     proc_cf->time_q = rtpp_queue_init(1, "RTP_PROC(time)");
     if (proc_cf->time_q == NULL) {
-        free(proc_cf);
-        return (-1);
+        goto e0;
     }
 
-    proc_cf->op = rtpp_netio_async_init(cf, 10);
+    proc_cf->op = rtpp_netio_async_init(cf, 1);
     if (proc_cf->op == NULL) {
-        rtpp_queue_destroy(proc_cf->time_q);
-        free(proc_cf);
-        return (-1);
+        goto e1;
     }
 
-    cf->stable->rtpp_proc_cf = proc_cf;
-    if (pthread_create(&proc_cf->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, cf) != 0) {
-        rtpp_queue_destroy(proc_cf->time_q);
-        rtpp_netio_async_destroy(proc_cf->op);
-        free(proc_cf);
-        cf->stable->rtpp_proc_cf = NULL;
-        return (-1);
+    proc_cf->sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
+    if (proc_cf->sigterm == NULL) {
+        goto e2;
     }
 
-    return (0);
+    proc_cf->cf_save = cf;
+
+    if (pthread_create(&proc_cf->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, proc_cf) != 0) {
+        goto e3;
+    }
+    proc_cf->pub.dtor = &rtpp_proc_async_dtor;
+    proc_cf->pub.wakeup = &rtpp_proc_async_wakeup;
+    return (&proc_cf->pub);
+
+e3:
+    rtpp_wi_free(proc_cf->sigterm);
+e2:
+    rtpp_netio_async_destroy(proc_cf->op);
+e1:
+    rtpp_queue_destroy(proc_cf->time_q);
+e0:
+    free(proc_cf);
+    return (NULL);
+}
+
+static void
+rtpp_proc_async_dtor(struct rtpp_proc_async_obj *pub)
+{
+    struct rtpp_proc_async_cf *proc_cf;
+
+    proc_cf = PUB2PVT(pub);
+    rtpp_queue_put_item(proc_cf->sigterm, proc_cf->time_q);
+    pthread_join(proc_cf->thread_id, NULL);
+    rtpp_netio_async_destroy(proc_cf->op);
+    rtpp_queue_destroy(proc_cf->time_q);
+    free(proc_cf);
 }
