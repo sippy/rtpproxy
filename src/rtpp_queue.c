@@ -109,7 +109,7 @@ rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *queue)
         fprintf(stderr, "queue(%s): length %d\n", queue->name, queue->length);
 #endif
 
-    if (queue->qlen > 0 && queue->length % queue->qlen == 0) {
+    if ((queue->qlen > 0 && queue->length % queue->qlen == 0) || wi->wi_type == RTPP_WI_TYPE_SGNL) {
         /* notify worker thread */
         pthread_cond_signal(&queue->cond);
     }
