@@ -138,8 +138,8 @@ decoder_get(struct decoder_stream *dp)
         }
     }
     dp->oblen--;
-    dp->obp += sizeof(int16_t);
-    return *(((int16_t *)(dp->obp)) - 1);
+    dp->obp += 1;
+    return *(dp->obp - 1);
 }
 
 int
@@ -200,7 +200,7 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf, unsi
             dp->g722_ctx = g722_decoder_new(64000, G722_SAMPLE_RATE_8000);
         if (dp->g722_ctx == NULL)
             return -1;
-        g722_decode(dp->g722_ctx, ibuf, ibytes, (int16_t *)obuf);
+        g722_decode(dp->g722_ctx, ibuf, ibytes, obuf);
         dp->nticks += ibytes;
         dp->dticks += ibytes;
         return ibytes * 2;
@@ -219,7 +219,7 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf, unsi
             return (-1);
         }
         for (obytes = 0; ibytes > 0; ibytes -= 33) {
-            gsm_decode(dp->ctx_gsm, ibuf, (int16_t *)obuf);
+            gsm_decode(dp->ctx_gsm, ibuf, obuf);
             ibuf += 33;
             obuf += 320;
             obytes += 320;
