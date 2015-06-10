@@ -260,7 +260,7 @@ main(int argc, char **argv)
             oblen = 0;
         }
     } while (neof < nch);
-    fprintf(stderr, "samples decoded: O: %lu, A: %lu\n", nosamples, nasamples);
+    fprintf(stderr, "samples decoded: O: %llu, A: %llu\n", nosamples, nasamples);
 
     sf_close(sffile);
 

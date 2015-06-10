@@ -321,8 +321,8 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
         }
         errors_found++;
         RTPP_MEMDEB_REPORT(glog,
-          "  %s+%d, %s(): nalloc = %ld, balloc = %ld, nfree = %ld, bfree = %ld,"
-          " afails = %ld, nunalloc_baseln = %ld", mnp->fname, mnp->linen, 
+          "  %s+%d, %s(): nalloc = %lld, balloc = %lld, nfree = %lld, bfree = %lld,"
+          " afails = %lld, nunalloc_baseln = %lld", mnp->fname, mnp->linen, 
           mnp->funcn, mnp->mstats.nalloc,
           mnp->mstats.balloc, mnp->mstats.nfree, mnp->mstats.bfree,
           mnp->mstats.afails, mnp->mstats.nunalloc_baseln);

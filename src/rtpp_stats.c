@@ -275,7 +275,7 @@ rtpp_stats_obj_nstr(struct rtpp_stats_obj *self, char *buf, int len, const char 
         pthread_mutex_lock(&st->mutex);
         uval = st->cnt.u64;
         pthread_mutex_unlock(&st->mutex);
-        rval = snprintf(buf, len, "%lu", uval);
+        rval = snprintf(buf, len, "%llu", uval);
     } else {
         pthread_mutex_lock(&st->mutex);
         dval = st->cnt.d;
