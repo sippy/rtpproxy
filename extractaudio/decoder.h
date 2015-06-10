@@ -58,8 +58,8 @@ struct decoder_stream {
     unsigned int nticks;
     unsigned int sticks;
     unsigned char lpt;
-    unsigned char obuf[8 * 1024];	/* 0.5 seconds at 8 KHz 16 bits per sample */
-    unsigned char *obp;
+    int16_t obuf[4 * 1024];	/* 0.5 seconds at 8 KHz 16 bits per sample */
+    int16_t *obp;
     unsigned int oblen;
 #ifdef ENABLE_G729
     G729_DCTX *g729_ctx;
@@ -81,7 +81,7 @@ struct decoder_stream {
 
 void *decoder_new(struct session *, int);
 int32_t decoder_get(struct decoder_stream *);
-int decode_frame(struct decoder_stream *, unsigned char *, unsigned char *, unsigned int);
-int generate_silence(struct decoder_stream *, unsigned char *, unsigned int);
+int decode_frame(struct decoder_stream *, int16_t *, unsigned char *, unsigned int);
+int generate_silence(struct decoder_stream *, int16_t *, unsigned int);
 
 #endif

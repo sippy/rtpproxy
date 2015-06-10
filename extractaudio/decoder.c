@@ -143,7 +143,7 @@ decoder_get(struct decoder_stream *dp)
 }
 
 int
-decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf, unsigned int ibytes)
+decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf, unsigned int ibytes)
 {
     unsigned int obytes;
 
@@ -240,7 +240,7 @@ decode_frame(struct decoder_stream *dp, unsigned char *obuf, unsigned char *ibuf
 }
 
 int
-generate_silence(struct decoder_stream *dp, unsigned char *obuf, unsigned int iticks)
+generate_silence(struct decoder_stream *dp, int16_t *obuf, unsigned int iticks)
 {
 
     switch (dp->lpt) {
