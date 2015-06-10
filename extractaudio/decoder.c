@@ -185,7 +185,7 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf, unsi
             bp = G729_DECODE(dp->g729_ctx, ibuf, fsize);
             ibuf += fsize;
             memcpy(obuf, bp, 160);
-            obuf += 160;
+            obuf += 80;
             obytes += 160;
             dp->nticks += 80;
             dp->dticks += 80;
@@ -221,7 +221,7 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf, unsi
         for (obytes = 0; ibytes > 0; ibytes -= 33) {
             gsm_decode(dp->ctx_gsm, ibuf, obuf);
             ibuf += 33;
-            obuf += 320;
+            obuf += 160;
             obytes += 320;
             dp->nticks += 160;
             dp->dticks += 160;
