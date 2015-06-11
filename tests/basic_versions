@@ -18,8 +18,8 @@ do
     ${TOP_BUILDDIR}/python/rtpp_query.py -b -s "${socket}" \
       -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions.input -o basic_versions.qout
     report "rtpp_query on ${socket}"
-    rtpproxy_stop TERM
-    report "rtpproxy stop (SIGTERM) on ${socket}"
+    rtpproxy_stop HUP
+    report "rtpproxy stop (SIGHUP) on ${socket}"
     cat basic_versions.qout basic_versions.rout | ${DIFF} ${BASEDIR}/basic_versions.output -
     report "basic_versions on ${socket}"
   fi
