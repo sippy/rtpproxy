@@ -99,6 +99,7 @@ struct rtpp_cfg_stable {
     struct rtpp_tnotify_set_obj *rtpp_tnset_cf;
     struct rtpp_notify_obj *rtpp_notify_cf;
     int slowshutdown;
+    int fastshutdown;
 
     struct rtpp_stats_obj *rtpp_stats;
 

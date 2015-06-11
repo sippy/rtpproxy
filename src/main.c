@@ -127,13 +127,14 @@ fatsignal(int sig)
 {
 
     rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog, "got signal %d", sig);
-#ifdef RTPP_CHECK_LEAKS
-    CALL_METHOD(_sig_cf->stable->rtpp_cmd_cf, dtor);
-    CALL_METHOD(_sig_cf->stable->rtpp_notify_cf, dtor);
-    CALL_METHOD(_sig_cf->stable->rtpp_tnset_cf, dtor);
-    CALL_METHOD(_sig_cf->stable->rtpp_timed_cf, dtor);
-    CALL_METHOD(_sig_cf->stable->rtpp_proc_cf, dtor);
-#endif
+    if (_sig_cf->stable->fastshutdown == 0) {
+        _sig_cf->stable->fastshutdown = 1;
+        return;
+    }
+    /*
+     * Got second signal while already in the fastshutdown mode, something
+     * probably jammed, do quick exit right from sighandler.
+     */
     rtpp_exit();
 }
 
@@ -208,6 +209,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     fprintf(stderr, "target_pfreq = %f\n", cf->stable->target_pfreq);
 #endif
     cf->stable->slowshutdown = 0;
+    cf->stable->fastshutdown = 0;
 
     cf->stable->rtpp_tnset_cf = rtpp_tnotify_set_ctor();
     if (cf->stable->rtpp_tnset_cf == NULL) {
@@ -784,6 +786,9 @@ main(int argc, char **argv)
         }
 #endif
         counter += 1;
+        if (cf.stable->fastshutdown != 0) {
+            break;
+        }
         if (cf.stable->slowshutdown != 0) {
             pthread_mutex_lock(&cf.sessinfo.lock);
             if (cf.sessinfo.nsessions == 0) {
