@@ -42,6 +42,7 @@
 #include <netinet/udp.h>
 #include <err.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -260,7 +261,8 @@ main(int argc, char **argv)
             oblen = 0;
         }
     } while (neof < nch);
-    fprintf(stderr, "samples decoded: O: %llu, A: %llu\n", nosamples, nasamples);
+    fprintf(stderr, "samples decoded: O: %" PRIu64 ", A: %" PRIu64 "\n",
+      nosamples, nasamples);
 
     sf_close(sffile);
 

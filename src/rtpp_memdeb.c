@@ -35,6 +35,7 @@
 
 #include <sys/types.h>
 #include <pthread.h>
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -321,9 +322,9 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
         }
         errors_found++;
         RTPP_MEMDEB_REPORT(glog,
-          "  %s+%d, %s(): nalloc = %lld, balloc = %lld, nfree = %lld, bfree = %lld,"
-          " afails = %lld, nunalloc_baseln = %lld", mnp->fname, mnp->linen, 
-          mnp->funcn, mnp->mstats.nalloc,
+          "  %s+%d, %s(): nalloc = %" PRId64 ", balloc = %" PRId64 ", nfree = %"
+          PRId64 ", bfree = %" PRId64 ", afails = %" PRId64 ", nunalloc_baseln"
+          " = %" PRId64, mnp->fname, mnp->linen, mnp->funcn, mnp->mstats.nalloc,
           mnp->mstats.balloc, mnp->mstats.nfree, mnp->mstats.bfree,
           mnp->mstats.afails, mnp->mstats.nunalloc_baseln);
     }

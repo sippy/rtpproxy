@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <pthread.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -275,7 +276,7 @@ rtpp_stats_obj_nstr(struct rtpp_stats_obj *self, char *buf, int len, const char 
         pthread_mutex_lock(&st->mutex);
         uval = st->cnt.u64;
         pthread_mutex_unlock(&st->mutex);
-        rval = snprintf(buf, len, "%llu", uval);
+        rval = snprintf(buf, len, "%" PRIu64, uval);
     } else {
         pthread_mutex_lock(&st->mutex);
         dval = st->cnt.d;
