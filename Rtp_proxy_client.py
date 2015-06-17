@@ -34,6 +34,33 @@ import socket
 def randomize(x, p):
     return x * (1.0 + p * (1.0 - 2.0 * random()))
 
+CAPSTABLE = {'20071218':'copy_supported', '20080403':'stat_supported', \
+  '20081224':'tnot_supported', '20090810':'sbind_supported', \
+  '20150617':'wdnt_supported'}
+
+class Rtpp_caps_checker(object):
+    caps_requested = 0
+    caps_received = 0
+    rtpc = None
+
+    def __init__(self, rtpc):
+        self.rtpc = rtpc
+        rtpc.caps_done = False
+        for vers in CAPSTABLE.iterkeys():
+            self.caps_requested += 1
+            rtpc.send_command('VF %s' % vers, self.caps_query_done, vers)
+
+    def caps_query_done(self, result, vers):
+        self.caps_received -= 1
+        vname = CAPSTABLE[vers]
+        if result == '1':
+            setattr(self.rtpc, vname, True)
+        else:
+            setattr(self.rtpc, vname, False)
+        if self.caps_received == 0:
+            self.rtpc.caps_done = True
+            self.rtpc = None
+
 class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
     worker = None
     address = None
@@ -123,67 +150,6 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         else:
             Rtp_proxy_client_udp.reconnect(self, *args, **kwargs)
 
-    def caps_query1(self, result):
-        #print '%s.caps_query1(%s)' % (id(self), result)
-        if self.shut_down:
-            return
-        if not self.online:
-            return
-        if result != '1':
-            if result != None:
-                self.copy_supported = False
-                self.stat_supported = False
-                self.tnot_supported = False
-                self.sbind_supported = False
-                self.caps_done = True
-            return
-        self.copy_supported = True
-        self.send_command('VF 20080403', self.caps_query2)
-
-    def caps_query2(self, result):
-        #print '%s.caps_query2(%s)' % (id(self), result)
-        if self.shut_down:
-            return
-        if not self.online:
-            return
-        if result != None:
-            if result == '1':
-                self.stat_supported = True
-                self.send_command('VF 20081224', self.caps_query3)
-                return
-            else:
-                self.stat_supported = False
-                self.tnot_supported = False
-                self.sbind_supported = False
-                self.caps_done = True
-
-    def caps_query3(self, result):
-        #print '%s.caps_query3(%s)' % (id(self), result)
-        if self.shut_down:
-            return
-        if not self.online:
-            return
-        if result != None:
-            if result == '1':
-                self.tnot_supported = True
-            else:
-                self.tnot_supported = False
-            self.send_command('VF 20090810', self.caps_query4)
-            return
-
-    def caps_query4(self, result):
-        #print '%s.caps_query4(%s)' % (id(self), result)
-        if self.shut_down:
-            return
-        if not self.online:
-            return
-        if result != None:
-            if result == '1':
-                self.sbind_supported = True
-            else:
-                self.sbind_supported = False
-            self.caps_done = True
-
     def version_check(self):
         if self.shut_down:
             return
@@ -235,8 +201,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         if self.shut_down:
             return
         if not self.online:
-            self.caps_done = False
-            self.send_command('VF 20071218', self.caps_query1)
+            rtpp_cc = Rtpp_caps_checker(self)
             self.online = True
             self.heartbeat()
 
