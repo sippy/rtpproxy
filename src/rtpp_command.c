@@ -83,6 +83,7 @@ struct proto_cap proto_caps[] = {
     { "20141004", "Support for extendable performance counters" },
     { "20150330", "Support for allocating a new port (\"Un\"/\"Ln\" commands)" },
     { "20150420", "Support for SEQ tracking and new rtpa_ counters; Q command extended" },
+    { "20150617", "Support for the wildcard %%CC_SELF%% as a disconnect notify target" },
     { NULL, NULL }
 };
 
