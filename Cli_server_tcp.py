@@ -26,20 +26,25 @@
 
 from twisted.internet.protocol import Factory
 from twisted.internet import reactor
+from twisted.internet.defer import inlineCallbacks
 from Cli_session import Cli_session
 
 class Cli_server_tcp(Factory):
     command_cb = None
+    lport = None
 
     def __init__(self, command_cb, address):
         self.command_cb = command_cb
         self.protocol = Cli_session
-        reactor.listenTCP(address[1], self, interface = address[0])
+        self.lport = reactor.listenTCP(address[1], self, interface = address[0])
 
     def buildProtocol(self, addr):
         p = Factory.buildProtocol(self, addr)
         p.command_cb = self.command_cb
         return p
+
+    def shutdown(self):
+        self.lport.stopListening()
 
 if __name__ == '__main__':
     def callback(clm, cmd):
