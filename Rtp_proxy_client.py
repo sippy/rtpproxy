@@ -117,6 +117,12 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         else:
             Rtp_proxy_client_udp.send_command(self, *args, **kwargs)
 
+    def reconnect(self, *args, **kwargs):
+        if self.is_local:
+            Rtp_proxy_client_local.reconnect(self, *args, **kwargs)
+        else:
+            Rtp_proxy_client_udp.reconnect(self, *args, **kwargs)
+
     def caps_query1(self, result):
         #print '%s.caps_query1(%s)' % (id(self), result)
         if self.shut_down:
