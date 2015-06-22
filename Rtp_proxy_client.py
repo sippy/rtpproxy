@@ -69,6 +69,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
     stat_supported = False
     tnot_supported = False
     sbind_supported = False
+    wdnt_supported = False
     shut_down = False
     proxy_address = None
     caps_done = False
