@@ -32,6 +32,7 @@ from Cli_session import Cli_session
 class Cli_server_tcp(Factory):
     command_cb = None
     lport = None
+    accept_list = None
 
     def __init__(self, command_cb, address):
         self.command_cb = command_cb
@@ -39,6 +40,8 @@ class Cli_server_tcp(Factory):
         self.lport = reactor.listenTCP(address[1], self, interface = address[0])
 
     def buildProtocol(self, addr):
+        if self.accept_list != None and addr.host not in self.accept_list:
+            return None
         p = Factory.buildProtocol(self, addr)
         p.command_cb = self.command_cb
         return p
