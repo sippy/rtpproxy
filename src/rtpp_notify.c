@@ -91,7 +91,7 @@ rtpp_notify_queue_run(void *arg)
         wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_notify_wi), 0);
 
         /* main work here */
-        do_timeout_notification(wi_data, 1);
+        do_timeout_notification(wi_data, 3);
 
         /* deallocate wi */
         rtpp_wi_free(wi);
