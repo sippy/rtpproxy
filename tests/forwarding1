@@ -145,6 +145,8 @@ RECORD_DIR="${BUILDDIR}"
 
 setup_buffers
 
+witness_start forwarding1
+
 #sts=`date "+%Y%m%d%H%M%S"`
 (setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
   ${RTPPROXY} -i -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -f -d info -m ${FWD_SPORT} > forwarding1.rout 2>forwarding1.rlog) &
@@ -176,3 +178,5 @@ verify_results "a" "${CODECSO}" "${REPACK_CODECSO}"
 #report_rc ${DIFF_FWD_RC} "checking rtpproxy.fwd stdout"
 #report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
 #report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
+
+witness_stop
