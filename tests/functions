@@ -4,6 +4,8 @@ MYUID=`id -u`
 TZ=CET
 export TZ
 
+TEST_TIMESTAMP=${TEST_TIMESTAMP:-`date "+%Y%m%d%H%M%S"`}
+
 BASEDIR="${BASEDIR:-$(dirname -- $0)}"
 BASEDIR="$(readlink -f -- $BASEDIR)"
 
@@ -146,6 +148,41 @@ rtpproxy_stop() {
   done
 }
 
+witness_start() {
+  TESTNAME=${1}
+  PCAP_NAME="${TESTNAME}.${TEST_TIMESTAMP}.debug.pcap"
+  if [ "${TEST_WITNESS_ENABLE}" = "" ]
+  then
+    return
+  fi
+  if ${SUDO} true
+  then
+    for file in /tmp/witness.pid ${PCAP_NAME}
+    do
+      if [ -e ${file} ]
+      then
+        ${SUDO} rm ${file}
+      fi
+    done
+    ${SUDO} sh -c "echo \${$} > /tmp/witness.pid && exec ${TCPDUMP} -B 4096 -w ${PCAP_NAME} -s0 -ni ${LOOPBACK_INTERFACE} udp 2>/dev/null" &
+    while [ ! -e ${PCAP_NAME} ]
+    do
+      sleep 1
+    done
+    WITNESS_PID=`cat /tmp/witness.pid`
+    ${SUDO} rm /tmp/witness.pid
+  fi
+}
+
+witness_stop() {
+  if [ "${WITNESS_PID}" != "" ]
+  then
+    ${SUDO} kill -TERM ${WITNESS_PID} 2>/dev/null
+    curl -F "pcap_meta_data=somePcapInfo" -F "pcap_file=@${PCAP_NAME}" hooks.sippysoft.com:80/rtpproxy/pcap_catcher
+    ${SUDO} rm -f ${PCAP_NAME}
+  fi
+}
+
 forcefail() {
   RC=${1}
   if [ ${RC} -eq 0 ]
@@ -160,28 +197,16 @@ forcefail() {
   fi
   if [ -n "$INTERACTIVE" ] ; then
     read -p "Continue? (y/n)" YN
-    if [ "$YN" != 'y' ] ; then
-      exit $RC
+    if [ "$YN" = 'y' ] ; then
+      return
     fi
-  else
-    exit $RC
   fi
+  witness_stop
+  exit $RC
 }
 
 fail() {
-  RC=$?
-  echo >&2 "FAILED: (rc=$RC)" "$@"
-  if [ -n "$CONTINUE" ] ; then
-    return
-  fi
-  if [ -n "$INTERACTIVE" ] ; then
-    read -p "Continue? (y/n)" YN
-    if [ "$YN" != 'y' ] ; then
-      exit $RC
-    fi
-  else
-    exit $RC
-  fi
+  forcefail ${?} "$@"
 }
 
 ok() {
