@@ -11,7 +11,7 @@ make
 make clean
 #sudo pip install -r requirements.txt
 #sudo DEBIAN_FRONTEND=noninteractive apt-get update
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libgsm1-dev libsndfile1-dev tcpdump
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libgsm1-dev libsndfile1-dev tcpdump curl
 tcpdump --version || true
 mkdir deps
 cd deps
