@@ -33,6 +33,9 @@ MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
 DIFF="diff -u"
 TCPDUMP="tcpdump"
+
+TRASH_PORT1=38322
+
 if [ ${MYUID} -eq 0 ]
 then
   SUDO=""
@@ -164,7 +167,7 @@ witness_start() {
         ${SUDO} rm ${file}
       fi
     done
-    ${SUDO} sh -c "echo \${$} > /tmp/witness.pid && exec ${TCPDUMP} -B 4096 -w ${PCAP_NAME} -s0 -ni ${LOOPBACK_INTERFACE} udp 2>/dev/null" &
+    ${SUDO} sh -c "echo \${$} > /tmp/witness.pid && exec ${TCPDUMP} -B 4096 -w ${PCAP_NAME} -s0 -ni ${LOOPBACK_INTERFACE} udp and not port ${TRASH_PORT1} 2>/dev/null" &
     while [ ! -e ${PCAP_NAME} ]
     do
       sleep 1

@@ -38,7 +38,6 @@ setup_gen() {
   direction="${1}"
   START_PORT="${2}"
   shift 2
-  TRASH_PORT1=38322
   PORT=${START_PORT}
   i=1
   for codec in ${1} ${2}
