@@ -32,4 +32,4 @@ sudo ldconfig
 autoreconf --force --install --verbose
 ./configure
 make
-make check || (cat tests/test-suite.log; exit 1)
+TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
