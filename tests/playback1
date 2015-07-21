@@ -66,7 +66,7 @@ do
       ##echo ${TCPD_PID}
       wait ${PLB_PID}
       report "wait for rtpproxy shutdown, PID: ${PLB_PID}"
-      kill -TERM ${TCPD_PID} 2>/dev/null
+      ${SUDO} kill -TERM ${TCPD_PID} 2>/dev/null
       KILL_RC=${?}
       wait ${TCPD_PID}
       TCPD_RC=${?}
