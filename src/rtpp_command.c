@@ -174,6 +174,7 @@ rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd, int e
 {
 
     buf[len] = '\0';
+    rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "sending reply \"%s\"", buf);
     if (cmd->umode == 0) {
 	write(cmd->controlfd, buf, len);
     } else {
@@ -185,7 +186,6 @@ rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd, int e
         rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, cmd->controlfd, buf, len, 0,
           sstosa(&cmd->raddr), cmd->rlen);
     }
-    rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog, "sending reply \"%s\"", buf);
     cmd->csp->ncmds_repld.cnt++;
     if (errd == 0) {
         cmd->csp->ncmds_succd.cnt++;
@@ -267,7 +267,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     }
     cmd->buf[len] = '\0';
 
-    rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog, "received command \"%s\"", cmd->buf);
+    rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "received command \"%s\"", cmd->buf);
     csp->ncmds_rcvd.cnt++;
 
     cp = cmd->buf;
