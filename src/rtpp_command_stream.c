@@ -124,7 +124,7 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     cmd->buf[len] = '\0';
     rcs->inbuf_ppos += len + 1;
 
-    rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "received command \"%s\"", cmd->buf);
+    rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog, "received command \"%s\"", cmd->buf);
     csp->ncmds_rcvd.cnt++;
 
     cp = cmd->buf;
