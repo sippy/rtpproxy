@@ -286,7 +286,7 @@ rtpp_proc_async_init(struct cfg *cf)
         return (-1);
     }
 
-    proc_cf->op = rtpp_netio_async_init(cf, 10);
+    proc_cf->op = rtpp_netio_async_init(cf, 1);
     if (proc_cf->op == NULL) {
         rtpp_queue_destroy(proc_cf->time_q);
         free(proc_cf);
