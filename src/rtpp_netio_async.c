@@ -92,6 +92,12 @@ rtpp_anetio_sthread(struct sthread_args *args)
             do {
                 n = sendto(wi->sock, wi->msg, wi->msg_len, wi->flags,
                   wi->sendto, wi->tolen);
+                if (wi->debug != 0) {
+                    rtpp_log_write(RTPP_LOG_DBUG, args->glog,
+                      "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d) = %d",
+                      wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto,
+                      wi->tolen, n);
+                }
                 if (n >= 0) {
                     wi->nsend--;
                 } else if (n == -1 && errno != ENOBUFS) {
@@ -135,6 +141,25 @@ rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
     rtpp_log_write(RTPP_LOG_DBUG, netio_cf->args.glog, "rtpp_anetio_sendto: sendto(%d, %p, %d, %d, %p, %d)",
       wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
 #endif
+    rtpp_queue_put_item(wi, netio_cf->args[0].out_q);
+    return (0);
+}
+
+int
+rtpp_anetio_sendto_debug(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
+  size_t msg_len, int flags, const struct sockaddr *sendto, socklen_t tolen)
+{
+    struct rtpp_wi *wi;
+
+    wi = rtpp_wi_malloc(sock, msg, msg_len, flags, sendto, tolen);
+    if (wi == NULL) {
+        return (-1);
+    }
+    wi->debug = 1;
+    rtpp_log_write(RTPP_LOG_DBUG, netio_cf->args[0].glog, "rtpp_anetio_sendto: malloc(%d, %p, %d, %d, %p, %d) = %p",
+      sock, msg, msg_len, flags, sendto, tolen, wi);
+    rtpp_log_write(RTPP_LOG_DBUG, netio_cf->args[0].glog, "rtpp_anetio_sendto: sendto(%d, %p, %d, %d, %p, %d)",
+      wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
     rtpp_queue_put_item(wi, netio_cf->args[0].out_q);
     return (0);
 }

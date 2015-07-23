@@ -35,6 +35,8 @@ struct sthread_args;
 
 int rtpp_anetio_sendto(struct rtpp_anetio_cf *, int, const void *, \
   size_t, int, const struct sockaddr *, socklen_t);
+int rtpp_anetio_sendto_debug(struct rtpp_anetio_cf *, int, const void *, \
+  size_t, int, const struct sockaddr *, socklen_t);
 int rtpp_anetio_send_pkt(struct sthread_args *, int, \
   const struct sockaddr *, socklen_t, struct rtp_packet *);
 void rtpp_anetio_pump(struct rtpp_anetio_cf *);

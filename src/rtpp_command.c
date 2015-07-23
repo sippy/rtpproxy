@@ -183,7 +183,7 @@ rtpc_doreply(struct cfg *cf, char *buf, int len, struct rtpp_command *cmd, int e
               buf);
             buf = cmd->buf_r;
         }
-        rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, cmd->controlfd, buf, len, 0,
+        rtpp_anetio_sendto_debug(cf->stable->rtpp_netio_cf, cmd->controlfd, buf, len, 0,
           sstosa(&cmd->raddr), cmd->rlen);
     }
     cmd->csp->ncmds_repld.cnt++;
