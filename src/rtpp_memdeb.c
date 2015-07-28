@@ -75,7 +75,8 @@ struct memdeb_pfx
 {
     struct memdeb_node *mnp;
     size_t asize;
-    char real_data[0];
+    /* Use longest datatype to ensure proper alignment */
+    long long real_data[0];
 };
 
 static struct {
@@ -234,7 +235,7 @@ rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *fu
     mpf->mnp = mnp;
     mpf->asize = size;
     memcpy(mpf->real_data, ptr, size);
-    return (mpf->real_data);
+    return ((char *)mpf->real_data);
 }
 
 int
