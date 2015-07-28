@@ -33,6 +33,7 @@
 
 #include "rtp.h"
 #include "rtp_info.h"
+#include "rtp_packet.h"
 #include "rtpp_network.h"
 
 struct rtp_packet_full;

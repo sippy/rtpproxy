@@ -46,6 +46,7 @@
 #include <unistd.h>
 
 #include "rtp.h"
+#include "rtp_packet.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"

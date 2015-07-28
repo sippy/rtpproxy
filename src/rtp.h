@@ -98,32 +98,8 @@ typedef enum {
     RTP_PARSER_IPS = -7
 } rtp_parser_err_t;
 
-struct rtp_packet {
-    size_t      size;
-
-    struct sockaddr_storage raddr;
-    struct sockaddr *laddr;
-
-    socklen_t   rlen;
-    double      rtime;
-    int         rport;
-
-    struct rtp_packet *next;
-    struct rtp_packet *prev;
-
-    struct rtp_info *parsed;
-    rtp_parser_err_t parse_result;
-
-    /*
-     * The packet, keep it the last member so that we can use
-     * memcpy() only on portion that it's actually being
-     * utilized.
-     */
-    union {
-	rtp_hdr_t       header;
-	unsigned char   buf[8192];
-    } data;
-};
+struct rtp_packet;
+struct rtp_info;
 
 struct rtp_packet_chunk {
     int bytes;
@@ -136,12 +112,6 @@ struct rtp_packet_chunk {
 const char *rtp_packet_parse_errstr(rtp_parser_err_t);
 rtp_parser_err_t rtp_packet_parse_raw(unsigned char *, size_t, struct rtp_info *);
 rtp_parser_err_t rtp_packet_parse(struct rtp_packet *);
-struct rtp_packet *rtp_recv(int);
-
-struct rtp_packet *rtp_packet_alloc();
-void rtp_packet_free(struct rtp_packet *);
-void rtp_packet_set_seq(struct rtp_packet *, uint16_t seq);
-void rtp_packet_set_ts(struct rtp_packet *, uint32_t ts);
 
 void rtp_packet_first_chunk_find(struct rtp_packet *, struct rtp_packet_chunk *, int min_nsamples);
 

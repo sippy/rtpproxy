@@ -33,6 +33,7 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtp.h"
+#include "rtp_packet.h"
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
 #include "rtpp_session.h"

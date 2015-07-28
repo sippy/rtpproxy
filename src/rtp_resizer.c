@@ -41,6 +41,7 @@
 
 #include "rtp.h"
 #include "rtp_info.h"
+#include "rtp_packet.h"
 #include "rtp_resizer.h"
 #include "rtpp_proc.h"
 #include "rtpp_types.h"
