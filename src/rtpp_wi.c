@@ -37,28 +37,34 @@
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 
+struct rtpp_wi_sendto {
+    struct rtpp_wi wi;
+    struct sockaddr_storage to;
+    char msg[0];
+};
+
 struct rtpp_wi *
 rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
   const struct sockaddr *sendto, size_t tolen)
 {
-    struct rtpp_wi *wi;
+    struct rtpp_wi_sendto *wis;
 
-    wi = malloc(sizeof(struct rtpp_wi) + msg_len + tolen);
-    if (wi == NULL) {
+    wis = malloc(sizeof(struct rtpp_wi_sendto) + msg_len);
+    if (wis == NULL) {
         return (NULL);
     }
-    wi->free_ptr = wi;
-    wi->wi_type = RTPP_WI_TYPE_OPKT;
-    wi->sock = sock;
-    wi->flags = flags;
-    wi->msg = (char *)wi + sizeof(struct rtpp_wi);
-    wi->sendto = (struct sockaddr *)((char *)wi->msg + msg_len);
-    wi->msg_len = msg_len;
-    wi->nsend = 1;
-    memcpy(wi->msg, msg, msg_len);
-    wi->tolen = tolen;
-    memcpy(wi->sendto, sendto, tolen);
-    return (wi);
+    wis->wi.free_ptr = &(wis->wi);
+    wis->wi.wi_type = RTPP_WI_TYPE_OPKT;
+    wis->wi.sock = sock;
+    wis->wi.flags = flags;
+    wis->wi.msg = &(wis->msg);
+    wis->wi.sendto = sstosa(&(wis->to));
+    wis->wi.msg_len = msg_len;
+    wis->wi.nsend = 1;
+    memcpy(wis->msg, msg, msg_len);
+    wis->wi.tolen = tolen;
+    memcpy(&(wis->to), sendto, tolen);
+    return (&(wis->wi));
 }
 
 struct rtpp_wi *
