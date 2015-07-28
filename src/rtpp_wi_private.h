@@ -39,6 +39,7 @@ struct rtpp_wi {
     void *free_ptr;
     void *msg;
     int nsend;
+    int debug;
     char data[0];
 };
 
