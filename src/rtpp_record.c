@@ -278,7 +278,7 @@ prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
 {
     struct sockaddr *src_addr, *dst_addr;
     uint16_t src_port, dst_port;
-    pcaprec_hdr_t *pcaprec_hdr;
+    pcaprec_hdr_t pcaprec_hdr;
     struct udpip *udpip;
     int pcap_size;
     struct sockaddr_storage tmp_addr;
@@ -306,10 +306,10 @@ prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
     }
 
     memset(hdrp, 0, sizeof(*hdrp));
+    memset(&pcaprec_hdr, 0, sizeof(pcaprec_hdr));
 
 #if (PCAP_FORMAT == DLT_NULL)
     hdrp->null.family = sstosa(src_addr)->sa_family;
-    pcaprec_hdr = &(hdrp->null.pcaprec_hdr);
     udpip = &(hdrp->null.udpip);
     pcap_size = sizeof(hdrp->null);
 #else
@@ -327,14 +327,13 @@ prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
         }
     }
     memcpy(hdrp->en10t.ether_shost + 2, &(satosin(src_addr)->sin_addr), 4);
-    pcaprec_hdr = &(hdrp->en10t.pcaprec_hdr);
     udpip = &(hdrp->en10t.udpip);
     pcap_size = sizeof(hdrp->en10t);
 #endif
 
-    dtime2ts(packet->rtime, &(pcaprec_hdr->ts_sec), &(pcaprec_hdr->ts_usec));
-    pcaprec_hdr->orig_len = pcaprec_hdr->incl_len = pcap_size -
-      sizeof(*pcaprec_hdr) + packet->size;
+    dtime2ts(packet->rtime, &(pcaprec_hdr.ts_sec), &(pcaprec_hdr.ts_usec));
+    pcaprec_hdr.orig_len = pcaprec_hdr.incl_len = pcap_size -
+      sizeof(pcaprec_hdr) + packet->size;
 
     /* Prepare fake IP header */
     udpip->iphdr.ip_v = 4;
@@ -351,6 +350,12 @@ prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
     udpip->udphdr.uh_sport = src_port;
     udpip->udphdr.uh_dport = dst_port;
     udpip->udphdr.uh_ulen = htons(sizeof(udpip->udphdr) + packet->size);
+
+#if (PCAP_FORMAT == DLT_NULL)
+    memcpy(&(hdrp->null.pcaprec_hdr), &pcaprec_hdr, sizeof(pcaprec_hdr));
+#else
+    memcpy(&(hdrp->en10t.pcaprec_hdr), &pcaprec_hdr, sizeof(pcaprec_hdr));
+#endif
 
     return 0;
 }
