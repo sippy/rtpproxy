@@ -195,7 +195,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
     struct packet *pack, *pp;
     struct channel *channel;
     struct session *sess;
-    union pkt_hdr_pcap *pcap;
+    union pkt_hdr_pcap pcap;
     int rtp_len;
     off_t st_size;
     int pcap_size, network;
@@ -207,16 +207,16 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
 
     pcount = 0;
     for (cp = loader->ibuf; cp < loader->ibuf + st_size; cp += rtp_len) {
-        pcap = (void *)cp;
-
         if (network == DLT_NULL) {
             pcap_size = sizeof(struct pkt_hdr_pcap_null);
-            pcaprec_hdr = &(pcap->null.pcaprec_hdr);
-            udpip = &(pcap->null.udpip);
+            memcpy(&pcap, cp, pcap_size);
+            pcaprec_hdr = &(pcap.null.pcaprec_hdr);
+            udpip = &(pcap.null.udpip);
         } else {
             pcap_size = sizeof(struct pkt_hdr_pcap_en10t);
-            pcaprec_hdr = &(pcap->en10t.pcaprec_hdr);
-            udpip = &(pcap->en10t.udpip);
+            memcpy(&pcap, cp, pcap_size);
+            pcaprec_hdr = &(pcap.en10t.pcaprec_hdr);
+            udpip = &(pcap.en10t.udpip);
         }
         rtp_len = pcaprec_hdr->incl_len - (pcap_size - sizeof(*pcaprec_hdr));
         if (rtp_len < 0) {
