@@ -44,6 +44,7 @@ class Cli_server_tcp(Factory):
             return None
         p = Factory.buildProtocol(self, addr)
         p.command_cb = self.command_cb
+        p.raddr = addr
         return p
 
     def shutdown(self):
