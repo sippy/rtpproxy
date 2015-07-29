@@ -202,43 +202,54 @@ resolve(struct sockaddr *ia, int pf, const char *host,
     return n;
 }
 
+#if !defined(BYTE_ORDER)
+# error "BYTE_ORDER needs to be defined"
+#endif
+
+/*
+ * Checksum routine for Internet Protocol family headers.
+ */
 uint16_t
-rtpp_in_cksum(void *addr, int len)
+rtpp_in_cksum(void *p, int len)
 {
-    int nleft, sum;
-    uint16_t *w;
-    union {
-        uint16_t us;
-        uint16_t uc[2];
-    } last;
-    uint16_t answer;
+    int sum = 0, oddbyte = 0, v = 0;
+    u_char *cp = p;
 
-    nleft = len;
-    sum = 0;
-    w = (uint16_t *)addr;
-
-    /*
-     * Our algorithm is simple, using a 32 bit accumulator (sum), we add
-     * sequential 16 bit words to it, and at the end, fold back all the
-     * carry bits from the top 16 bits into the lower 16 bits.
-     */
-    while (nleft > 1)  {
-	sum += *w++;
-	nleft -= 2;
+    /* we assume < 2^16 bytes being summed */
+    while (len > 0) {
+        if (oddbyte) {
+            sum += v + *cp++;
+            len--;
+        }
+        if (((long)cp & 1) == 0) {
+            while ((len -= 2) >= 0) {
+                sum += *(u_short *)cp;
+                cp += 2;
+            }
+        } else {
+            while ((len -= 2) >= 0) {
+#if BYTE_ORDER == BIG_ENDIAN
+                sum += *cp++ << 8;
+                sum += *cp++;
+#else
+                sum += *cp++;
+                sum += *cp++ << 8;
+#endif
+            }
+        }
+        if ((oddbyte = len & 1) != 0) {
+#if BYTE_ORDER == BIG_ENDIAN
+            v = *cp << 8;
+#else
+            v = *cp;
+#endif
+        }
     }
-
-    /* mop up an odd byte, if necessary */
-    if (nleft == 1) {
-	last.uc[0] = *(uint8_t *)w;
-	last.uc[1] = 0;
-	sum += last.us;
-    }
-
-    /* add back carry outs from top 16 bits to low 16 bits */
-    sum = (sum >> 16) + (sum & 0xffff);     /* add hi 16 to low 16 */
-    sum += (sum >> 16);                     /* add carry */
-    answer = ~sum;                          /* truncate to 16 bits */
-    return (answer);
+    if (oddbyte)
+        sum += v;
+    sum = (sum >> 16) + (sum & 0xffff); /* add in accumulated carries */
+    sum += sum >> 16;               /* add potential last carry */
+    return (0xffff & ~sum);
 }
 
 struct bindaddr_list {
