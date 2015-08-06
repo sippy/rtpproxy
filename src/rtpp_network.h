@@ -53,9 +53,6 @@ int setbindhost(struct sockaddr *, int, const char *, const char *);
 #if !defined(AF_LOCAL)
 #define	AF_LOCAL	AF_UNIX
 #endif
-#if !defined(PF_LOCAL)
-#define	PF_LOCAL	PF_UNIX
-#endif
 
 #if !defined(SA_LEN)
 #define SA_LEN(sa) \

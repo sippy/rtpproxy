@@ -92,7 +92,7 @@ controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
 #endif
     ifsun->sun_family = AF_LOCAL;
     strcpy(ifsun->sun_path, csp->cmd_sock);
-    controlfd = socket(PF_LOCAL, SOCK_STREAM, 0);
+    controlfd = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (controlfd == -1)
         err(1, "can't create socket");
     setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &controlfd,

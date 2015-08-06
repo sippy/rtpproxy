@@ -174,18 +174,18 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
     sprefix = NULL;
     if (strncmp("unix:", sock_name, 5) == 0) {
         usock_name = sock_name + 5;
-        rtep->rtt.socket_type = PF_LOCAL;
+        rtep->rtt.socket_type = AF_LOCAL;
     } else if (strncmp("tcp:", sock_name, 4) == 0) {
         if (parse_hostport(sock_name + 4, host, sizeof(host), port, sizeof(port), 0, e) != 0) {
             return (-1);
         }
-        rtep->rtt.socket_type = PF_INET;
+        rtep->rtt.socket_type = AF_INET;
     } else {
         sprefix = "unix:";
         usock_name = sock_name;
-        rtep->rtt.socket_type = PF_LOCAL;
+        rtep->rtt.socket_type = AF_LOCAL;
     }
-    if (rtep->rtt.socket_type == PF_UNIX) {
+    if (rtep->rtt.socket_type == AF_UNIX) {
         if (strlen(usock_name) == 0) {
             *e = "Timeout notification socket name too short";
             return (-1);
@@ -197,8 +197,8 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
         ifsun->sun_len = strlen(ifsun->sun_path);
 #endif
         rtep->rtt.remote_len = sizeof(struct sockaddr_un);
-    } else if (rtep->rtt.socket_type == PF_INET && strcmp(host, CC_SELF_STR) == 0) {
-        rtep->rtw.socket_type = PF_INET;
+    } else if (rtep->rtt.socket_type == AF_INET && strcmp(host, CC_SELF_STR) == 0) {
+        rtep->rtw.socket_type = AF_INET;
         rtep->rtw.port = atoi(port);
         snp = &rtep->rtt.socket_name;
         rval = 1;
@@ -369,7 +369,7 @@ rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *pub, const char *socket_nam
         for (i = 0; i < pvt->tp_len; i++) {
             if (pvt->tp[i]->socket_name == NULL)
                 continue;
-            if (pvt->tp[i]->socket_type != PF_LOCAL ||
+            if (pvt->tp[i]->socket_type != AF_LOCAL ||
               strcmp(pvt->tp[i]->socket_name + 5, socket_name) != 0)
                 continue;
             return (pvt->tp[i]);
