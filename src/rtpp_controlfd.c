@@ -142,6 +142,39 @@ controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     return (controlfd);
 }
 
+static int
+controlfd_init_tcp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
+{
+    struct sockaddr *ifsin;
+    char *cp;
+    int controlfd, so_rcvbuf, i;
+
+    cp = strrchr(csp->cmd_sock, ':');
+    if (cp != NULL) {
+        *cp = '\0';
+        cp++;
+    }
+    if (cp == NULL || *cp == '\0')
+        cp = CPORT;
+    csp->port_ctl = atoi(cp);
+    i = (csp->type == RTPC_TCP6) ? AF_INET6 : AF_INET;
+    ifsin = sstosa(&csp->bindaddr);
+    if (setbindhost(ifsin, i, csp->cmd_sock, cp) != 0)
+        exit(1);
+    controlfd = socket(i, SOCK_STREAM, 0);
+    if (controlfd == -1)
+        err(1, "can't create socket");
+    so_rcvbuf = 16 * 1024;
+    if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "unable to set 16K receive buffer size on controlfd");
+    if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0)
+        err(1, "can't bind to a socket");
+    if (listen(controlfd, 32) != 0)
+        err(1, "can't listen on a socket: %s", csp->cmd_sock);
+
+    return (controlfd);
+}
+
 int
 rtpp_controlfd_init(struct cfg *cf)
 {
@@ -165,6 +198,11 @@ rtpp_controlfd_init(struct cfg *cf)
             controlfd_in = controlfd_out = controlfd_init_udp(cf, ctrl_sock);
             break;
 
+        case RTPC_TCP4:
+        case RTPC_TCP6:
+            controlfd_in = controlfd_out = controlfd_init_tcp(cf, ctrl_sock);
+            break;
+
         case RTPC_STDIO:
             controlfd_in = fileno(stdin);
             controlfd_out = fileno(stdout);
@@ -180,6 +218,30 @@ rtpp_controlfd_init(struct cfg *cf)
     }
 
     return (0);
+}
+
+int
+rtpp_csock_addrlen(struct rtpp_ctrl_sock *ctrl_sock)
+{
+
+    switch (ctrl_sock->type) {
+    case RTPC_IFSUN:
+    case RTPC_IFSUN_C:
+        return (sizeof(struct sockaddr_un));
+
+    case RTPC_UDP4:
+    case RTPC_TCP4:
+        return (sizeof(struct sockaddr_in));
+
+    case RTPC_UDP6:
+    case RTPC_TCP6:
+        return (sizeof(struct sockaddr_in6));
+
+    default:
+        break;
+    }
+
+    return (-1);
 }
 
 void
@@ -218,12 +280,18 @@ rtpp_ctrl_sock_parse(const char *optarg)
     } else if (strncmp("cunix:", optarg, 6) == 0) {
         rcsp->type= RTPC_IFSUN_C;
         optarg += 6;
-    }  else if (strncmp("systemd:", optarg, 8) == 0) {
+    } else if (strncmp("systemd:", optarg, 8) == 0) {
         rcsp->type= RTPC_SYSD;
         optarg += 8;
     } else if (strncmp("stdio:", optarg, 6) == 0) {
         rcsp->type= RTPC_STDIO;
         optarg += 6;
+    } else if (strncmp("tcp:", optarg, 4) == 0) {
+        rcsp->type= RTPC_TCP4;
+        optarg += 4;
+    } else if (strncmp("tcp6:", optarg, 5) == 0) {
+        rcsp->type= RTPC_TCP6;
+        optarg += 5;
     }
     rcsp->cmd_sock = optarg;
 
@@ -252,6 +320,12 @@ rtpp_ctrl_sock_describe(struct rtpp_ctrl_sock *rcsp)
 
     case RTPC_STDIO:
         return "stdio";
+
+    case RTPC_TCP4:
+        return "tcp";
+
+    case RTPC_TCP6:
+        return "tcp6";
 
     default:
         abort();

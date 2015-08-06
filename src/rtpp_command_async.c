@@ -142,14 +142,16 @@ flush_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
 }
 
 static int
-accept_connection(struct cfg *cf, int controlfd_in)
+accept_connection(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd_in)
 {
     int controlfd;
     socklen_t rlen;
-    struct sockaddr_un ifsun;
+    struct sockaddr_storage raddr;
 
-    rlen = sizeof(ifsun);
-    controlfd = accept(controlfd_in, sstosa(&ifsun), &rlen);
+    rlen = rtpp_csock_addrlen(rcsp);
+    assert(rlen > 0);
+    assert(rcsp->controlfd_in == controlfd_in);
+    controlfd = accept(rcsp->controlfd_in, sstosa(&raddr), &rlen);
     if (controlfd == -1) {
         if (errno != EWOULDBLOCK) {
             rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog,
@@ -302,7 +304,7 @@ rtpp_cmd_acceptor_run(void *arg)
                 pthread_mutex_unlock(&psp->pfds_mutex);
                 continue;
             }
-            controlfd = accept_connection(cmd_cf->cf_save, asp->pfds[i].fd);
+            controlfd = accept_connection(cmd_cf->cf_save, asp->csocks[i], asp->pfds[i].fd);
             if (controlfd < 0) {
                 pthread_mutex_unlock(&psp->pfds_mutex);
                 continue;
@@ -395,7 +397,7 @@ rtpp_cmd_queue_run(void *arg)
         if (nready > 0) {
             for (i = 0; i < psp->pfds_used; i++) {
                 if ((psp->pfds[i].revents & (POLLERR | POLLHUP)) != 0) {
-                    if (RTPP_CTRL_ISUNIX(psp->rccs[i]->csock)) {
+                    if (RTPP_CTRL_ACCEPTABLE(psp->rccs[i]->csock)) {
                         goto closefd;
                     }
                     if (psp->rccs[i]->csock->type == RTPC_STDIO && (psp->pfds[i].revents & POLLIN) == 0) {
@@ -506,7 +508,7 @@ init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp)
     pfds_used = 0;
     ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
     for (pfds_used = 0; ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
-        if (RTPP_CTRL_ISUNIX(ctrl_sock))
+        if (RTPP_CTRL_ACCEPTABLE(ctrl_sock))
             continue;
         pfds_used++;
     }
@@ -525,7 +527,7 @@ init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp)
     }
     ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
     for (i = 0; ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
-        if (RTPP_CTRL_ISUNIX(ctrl_sock))
+        if (RTPP_CTRL_ACCEPTABLE(ctrl_sock))
             continue;
         psp->pfds[i].fd = ctrl_sock->controlfd_in;
         psp->pfds[i].events = POLLIN;
@@ -560,7 +562,7 @@ init_accptset(struct cfg *cf, struct rtpp_cmd_accptset *asp)
     pfds_used = 0;
     ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
     for (pfds_used = 0; ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
-        if (RTPP_CTRL_ISUNIX(ctrl_sock) == 0)
+        if (RTPP_CTRL_ACCEPTABLE(ctrl_sock) == 0)
             continue;
         pfds_used++;
     }
@@ -580,7 +582,7 @@ init_accptset(struct cfg *cf, struct rtpp_cmd_accptset *asp)
     }
     ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
     for (i = 0; i < asp->pfds_used; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
-        if (RTPP_CTRL_ISUNIX(ctrl_sock) == 0)
+        if (RTPP_CTRL_ACCEPTABLE(ctrl_sock) == 0)
             continue;
         asp->pfds[i].fd = ctrl_sock->controlfd_in;
         asp->pfds[i].events = POLLIN;

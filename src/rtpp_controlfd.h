@@ -26,7 +26,8 @@
  *
  */
 
-enum rtpp_ctrl_type {RTPC_IFSUN, RTPC_UDP4, RTPC_UDP6, RTPC_SYSD, RTPC_STDIO, RTPC_IFSUN_C};
+enum rtpp_ctrl_type {RTPC_IFSUN, RTPC_UDP4, RTPC_UDP6, RTPC_SYSD, RTPC_STDIO,
+  RTPC_IFSUN_C, RTPC_TCP4, RTPC_TCP6};
 
 struct rtpp_ctrl_sock {
     struct rtpp_type_linkable t;
@@ -41,9 +42,13 @@ struct rtpp_ctrl_sock {
 
 #define RTPP_CTRL_ISDG(rcsp) ((rcsp)->type == RTPC_UDP4 || (rcsp)->type == RTPC_UDP6)
 #define RTPP_CTRL_ISUNIX(rcsp) ((rcsp)->type == RTPC_IFSUN || (rcsp)->type == RTPC_IFSUN_C)
-#define RTPP_CTRL_ISSTREAM(rcsp) ((rcsp)->type == RTPC_IFSUN_C || (rcsp)->type == RTPC_STDIO)
+#define RTPP_CTRL_ISSTREAM(rcsp) ((rcsp)->type == RTPC_IFSUN_C || (rcsp)->type == RTPC_STDIO \
+  || (rcsp)->type == RTPC_TCP4 || (rcsp)->type == RTPC_TCP6)
+#define RTPP_CTRL_ACCEPTABLE(rcsp) ((rcsp)->type == RTPC_IFSUN || (rcsp)->type == RTPC_IFSUN_C \
+  || (rcsp)->type == RTPC_TCP4 || (rcsp)->type == RTPC_TCP6)
 
 int rtpp_controlfd_init(struct cfg *cf);
 struct rtpp_ctrl_sock *rtpp_ctrl_sock_parse(const char *);
 const char *rtpp_ctrl_sock_describe(struct rtpp_ctrl_sock *);
 void rtpp_controlfd_cleanup(struct cfg *cf);
+int rtpp_csock_addrlen(struct rtpp_ctrl_sock *);
