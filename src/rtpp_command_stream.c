@@ -118,6 +118,10 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     cmd->dtime = dtime;
     cmd->csp = csp;
     cmd->umode = 0;
+    if (rcs->rlen > 0) {
+        cmd->rlen = rcs->rlen;
+        memcpy(&cmd->raddr, &rcs->raddr, rcs->rlen);
+    }
 
     len = cp1 - cp;
     memcpy(cmd->buf, cp, len);

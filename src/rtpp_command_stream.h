@@ -32,6 +32,8 @@ struct rtpp_cmd_connection {
     struct rtpp_ctrl_sock *csock;
     int inbuf_ppos;
     int inbuf_epos;
+    struct sockaddr_storage raddr;
+    socklen_t rlen;
 };
 
 int rtpp_command_stream_doio(struct cfg *cf, struct rtpp_cmd_connection *rcs);
