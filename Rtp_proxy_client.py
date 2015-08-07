@@ -26,7 +26,7 @@
 
 from Timeout import Timeout
 from Rtp_proxy_client_udp import Rtp_proxy_client_udp
-from Rtp_proxy_client_local import Rtp_proxy_client_local
+from Rtp_proxy_client_stream import Rtp_proxy_client_stream
 
 from random import random
 import socket
@@ -61,7 +61,7 @@ class Rtpp_caps_checker(object):
             self.rtpc.caps_done = True
             self.rtpc = None
 
-class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
+class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
     worker = None
     address = None
     online = False
@@ -115,6 +115,31 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
                 self.proxy_address = rtppa[0]
                 kwargs['family'] = socket.AF_INET6
                 rtpp_class = Rtp_proxy_client_udp
+            elif a.startswith('tcp:'):
+                a = a.split(':', 2)
+                if len(a) == 2:
+                    rtppa = (a[1], 22222)
+                else:
+                    rtppa = (a[1], int(a[2]))
+                self.proxy_address = rtppa[0]
+                kwargs['family'] = socket.AF_INET
+                rtpp_class = Rtp_proxy_client_stream
+            elif a.startswith('tcp6:'):
+                proto, a = a.split(':', 1)
+                if not a.endswith(']'):
+                    a = a.rsplit(':', 1)
+                    if len(a) == 1:
+                        rtp_proxy_host, rtp_proxy_port = a[0], 22222
+                    else:
+                        rtp_proxy_host, rtp_proxy_port = (a[0], int(a[1]))
+                else:
+                    rtp_proxy_host, rtp_proxy_port = a, 22222
+                if not rtp_proxy_host.startswith('['):
+                    rtp_proxy_host = '[%s]' % rtp_proxy_host
+                rtppa = (rtp_proxy_host, rtp_proxy_port)
+                self.proxy_address = rtppa[0]
+                kwargs['family'] = socket.AF_INET6
+                rtpp_class = Rtp_proxy_client_stream
             else:
                 if a.startswith('unix:'):
                     rtppa = a[5:]
@@ -123,14 +148,15 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
                 else:
                     rtppa = a
                 self.proxy_address = global_config['_sip_address']
-                rtpp_class = Rtp_proxy_client_local
+                kwargs['family'] = socket.AF_UNIX
+                rtpp_class = Rtp_proxy_client_stream
             rtpp_class.__init__(self, global_config, rtppa, **kwargs)
         elif len(address) > 0 and type(address[0]) in (tuple, list):
             Rtp_proxy_client_udp.__init__(self, global_config, *address, \
               **kwargs)
             self.proxy_address = address[0]
         else:
-            Rtp_proxy_client_local.__init__(self, global_config, *address, \
+            Rtp_proxy_client_stream.__init__(self, global_config, *address, \
               **kwargs)
             self.proxy_address = global_config['_sip_address']
         if not no_version_check:
@@ -141,13 +167,13 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def send_command(self, *args, **kwargs):
         if self.is_local:
-            Rtp_proxy_client_local.send_command(self, *args, **kwargs)
+            Rtp_proxy_client_stream.send_command(self, *args, **kwargs)
         else:
             Rtp_proxy_client_udp.send_command(self, *args, **kwargs)
 
     def reconnect(self, *args, **kwargs):
         if self.is_local:
-            Rtp_proxy_client_local.reconnect(self, *args, **kwargs)
+            Rtp_proxy_client_stream.reconnect(self, *args, **kwargs)
         else:
             Rtp_proxy_client_udp.reconnect(self, *args, **kwargs)
 
@@ -226,12 +252,12 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             return
         self.shut_down = True
         if self.is_local:
-            return Rtp_proxy_client_local.shutdown(self)
+            return Rtp_proxy_client_stream.shutdown(self)
         else:
             return Rtp_proxy_client_udp.shutdown(self)
 
     def get_rtpc_delay(self):
         if self.is_local:
-            return Rtp_proxy_client_local.get_rtpc_delay(self)
+            return Rtp_proxy_client_stream.get_rtpc_delay(self)
         else:
             return Rtp_proxy_client_udp.get_rtpc_delay(self)
