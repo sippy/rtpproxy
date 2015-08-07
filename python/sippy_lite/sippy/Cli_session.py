@@ -34,6 +34,7 @@ class Cli_session(Protocol):
     wbuffer = None
     cb_busy = False
     expect_lf = True
+    raddr = None
 
     def __init__(self):
         self.rbuffer = ''

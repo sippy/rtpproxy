@@ -26,7 +26,7 @@
 
 from Timeout import Timeout
 from Rtp_proxy_client_udp import Rtp_proxy_client_udp
-from Rtp_proxy_client_local import Rtp_proxy_client_local
+from Rtp_proxy_client_stream import Rtp_proxy_client_stream
 
 from random import random
 import socket
@@ -34,7 +34,34 @@ import socket
 def randomize(x, p):
     return x * (1.0 + p * (1.0 - 2.0 * random()))
 
-class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
+CAPSTABLE = {'20071218':'copy_supported', '20080403':'stat_supported', \
+  '20081224':'tnot_supported', '20090810':'sbind_supported', \
+  '20150617':'wdnt_supported'}
+
+class Rtpp_caps_checker(object):
+    caps_requested = 0
+    caps_received = 0
+    rtpc = None
+
+    def __init__(self, rtpc):
+        self.rtpc = rtpc
+        rtpc.caps_done = False
+        for vers in CAPSTABLE.iterkeys():
+            self.caps_requested += 1
+            rtpc.send_command('VF %s' % vers, self.caps_query_done, vers)
+
+    def caps_query_done(self, result, vers):
+        self.caps_received -= 1
+        vname = CAPSTABLE[vers]
+        if result == '1':
+            setattr(self.rtpc, vname, True)
+        else:
+            setattr(self.rtpc, vname, False)
+        if self.caps_received == 0:
+            self.rtpc.caps_done = True
+            self.rtpc = None
+
+class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
     worker = None
     address = None
     online = False
@@ -42,6 +69,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
     stat_supported = False
     tnot_supported = False
     sbind_supported = False
+    wdnt_supported = False
     shut_down = False
     proxy_address = None
     caps_done = False
@@ -87,6 +115,31 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
                 self.proxy_address = rtppa[0]
                 kwargs['family'] = socket.AF_INET6
                 rtpp_class = Rtp_proxy_client_udp
+            elif a.startswith('tcp:'):
+                a = a.split(':', 2)
+                if len(a) == 2:
+                    rtppa = (a[1], 22222)
+                else:
+                    rtppa = (a[1], int(a[2]))
+                self.proxy_address = rtppa[0]
+                kwargs['family'] = socket.AF_INET
+                rtpp_class = Rtp_proxy_client_stream
+            elif a.startswith('tcp6:'):
+                proto, a = a.split(':', 1)
+                if not a.endswith(']'):
+                    a = a.rsplit(':', 1)
+                    if len(a) == 1:
+                        rtp_proxy_host, rtp_proxy_port = a[0], 22222
+                    else:
+                        rtp_proxy_host, rtp_proxy_port = (a[0], int(a[1]))
+                else:
+                    rtp_proxy_host, rtp_proxy_port = a, 22222
+                if not rtp_proxy_host.startswith('['):
+                    rtp_proxy_host = '[%s]' % rtp_proxy_host
+                rtppa = (rtp_proxy_host, rtp_proxy_port)
+                self.proxy_address = rtppa[0]
+                kwargs['family'] = socket.AF_INET6
+                rtpp_class = Rtp_proxy_client_stream
             else:
                 if a.startswith('unix:'):
                     rtppa = a[5:]
@@ -95,14 +148,15 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
                 else:
                     rtppa = a
                 self.proxy_address = global_config['_sip_address']
-                rtpp_class = Rtp_proxy_client_local
+                kwargs['family'] = socket.AF_UNIX
+                rtpp_class = Rtp_proxy_client_stream
             rtpp_class.__init__(self, global_config, rtppa, **kwargs)
         elif len(address) > 0 and type(address[0]) in (tuple, list):
             Rtp_proxy_client_udp.__init__(self, global_config, *address, \
               **kwargs)
             self.proxy_address = address[0]
         else:
-            Rtp_proxy_client_local.__init__(self, global_config, *address, \
+            Rtp_proxy_client_stream.__init__(self, global_config, *address, \
               **kwargs)
             self.proxy_address = global_config['_sip_address']
         if not no_version_check:
@@ -113,70 +167,15 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
 
     def send_command(self, *args, **kwargs):
         if self.is_local:
-            Rtp_proxy_client_local.send_command(self, *args, **kwargs)
+            Rtp_proxy_client_stream.send_command(self, *args, **kwargs)
         else:
             Rtp_proxy_client_udp.send_command(self, *args, **kwargs)
 
-    def caps_query1(self, result):
-        #print '%s.caps_query1(%s)' % (id(self), result)
-        if self.shut_down:
-            return
-        if not self.online:
-            return
-        if result != '1':
-            if result != None:
-                self.copy_supported = False
-                self.stat_supported = False
-                self.tnot_supported = False
-                self.sbind_supported = False
-                self.caps_done = True
-            return
-        self.copy_supported = True
-        self.send_command('VF 20080403', self.caps_query2)
-
-    def caps_query2(self, result):
-        #print '%s.caps_query2(%s)' % (id(self), result)
-        if self.shut_down:
-            return
-        if not self.online:
-            return
-        if result != None:
-            if result == '1':
-                self.stat_supported = True
-                self.send_command('VF 20081224', self.caps_query3)
-                return
-            else:
-                self.stat_supported = False
-                self.tnot_supported = False
-                self.sbind_supported = False
-                self.caps_done = True
-
-    def caps_query3(self, result):
-        #print '%s.caps_query3(%s)' % (id(self), result)
-        if self.shut_down:
-            return
-        if not self.online:
-            return
-        if result != None:
-            if result == '1':
-                self.tnot_supported = True
-            else:
-                self.tnot_supported = False
-            self.send_command('VF 20090810', self.caps_query4)
-            return
-
-    def caps_query4(self, result):
-        #print '%s.caps_query4(%s)' % (id(self), result)
-        if self.shut_down:
-            return
-        if not self.online:
-            return
-        if result != None:
-            if result == '1':
-                self.sbind_supported = True
-            else:
-                self.sbind_supported = False
-            self.caps_done = True
+    def reconnect(self, *args, **kwargs):
+        if self.is_local:
+            Rtp_proxy_client_stream.reconnect(self, *args, **kwargs)
+        else:
+            Rtp_proxy_client_udp.reconnect(self, *args, **kwargs)
 
     def version_check(self):
         if self.shut_down:
@@ -229,8 +228,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
         if self.shut_down:
             return
         if not self.online:
-            self.caps_done = False
-            self.send_command('VF 20071218', self.caps_query1)
+            rtpp_cc = Rtpp_caps_checker(self)
             self.online = True
             self.heartbeat()
 
@@ -254,12 +252,12 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_local):
             return
         self.shut_down = True
         if self.is_local:
-            return Rtp_proxy_client_local.shutdown(self)
+            return Rtp_proxy_client_stream.shutdown(self)
         else:
             return Rtp_proxy_client_udp.shutdown(self)
 
     def get_rtpc_delay(self):
         if self.is_local:
-            return Rtp_proxy_client_local.get_rtpc_delay(self)
+            return Rtp_proxy_client_stream.get_rtpc_delay(self)
         else:
             return Rtp_proxy_client_udp.get_rtpc_delay(self)
