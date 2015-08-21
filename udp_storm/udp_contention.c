@@ -57,6 +57,8 @@ struct recvset
 {
     pthread_t tid;
     int ndest;
+    uint64_t **nrecvd;
+    uint64_t nrecvd_total;
     int done;
     struct pollfd pollset[0];
 };
@@ -192,7 +194,7 @@ process_workset(struct workset *wp)
 static void
 process_recvset(struct recvset  *rp)
 {
-    int nready, i;
+    int nready, i, rval;
     struct pollfd *pdp;
     unsigned char buf[256];
     struct sockaddr_storage raddr;
@@ -212,8 +214,12 @@ process_recvset(struct recvset  *rp)
                 continue;
             }
             fromlen = sizeof(raddr);
-            recvfrom(pdp->fd, buf, sizeof(buf), 0, sstosa(&raddr),
+            rval = recvfrom(pdp->fd, buf, sizeof(buf), 0, sstosa(&raddr),
               &fromlen);
+            if (rval > 0) {
+                rp->nrecvd[i]++;
+                rp->nrecvd_total++;
+            }
             nready -= 1;
         }
     }
@@ -237,6 +243,7 @@ static void
 release_recvset(struct recvset  *rp)
 {
 
+    free(rp->nrecvd);
     free(rp);
 }
 
@@ -244,15 +251,22 @@ struct recvset *
 generate_recvset(struct workset *wp)
 {
     struct recvset *rp;
-    int rpsize, i;
+    int msize, i;
     struct pollfd *pdp;
 
-    rpsize = sizeof(struct recvset) + (sizeof(struct pollfd) * wp->ndest);
-    rp = malloc(rpsize);
+    msize = sizeof(struct recvset) + (sizeof(struct pollfd) * wp->ndest);
+    rp = malloc(msize);
     if (rp == NULL) {
         return (NULL);
     }
-    memset(rp, '\0', rpsize);
+    memset(rp, '\0', msize);
+    msize = sizeof(uint64_t) * wp->ndest;
+    rp->nrecvd = malloc(msize);
+    if (rp->nrecvd == NULL) {
+        free(rp);
+        return (NULL);
+    }
+    memset(rp->nrecvd, '\0', msize);
     for (i = 0; i < wp->ndest; i++) {
         pdp = &rp->pollset[i];
         pdp->fd = wp->dests[i].s;
@@ -262,15 +276,22 @@ generate_recvset(struct workset *wp)
     return (rp);
 }
 
-double
-run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref)
+struct tstats {
+    double total_pps;
+    double ploss_rate;
+};
+
+void
+run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref,
+  struct tstats *tsp)
 {
     int nreps = 120 * 100;
     int npkts = 2000;
     struct workset *wsp[32];
     struct recvset *rsp[32];
     int i;
-    double total_pps, pps;
+    double pps;
+    uint64_t nrecvd_total, nsent_total;
 
     for (i = 0; i < nthreads; i++) {
         wsp[i] = generate_workset(npkts, dstaddr, dstnetpref);
@@ -284,18 +305,24 @@ run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref)
         pthread_create(&wsp[i]->tid, NULL, (void *(*)(void *))process_workset, wsp[i]);
         pthread_create(&rsp[i]->tid, NULL, (void *(*)(void *))process_recvset, rsp[i]);
     }
-    total_pps = 0;
+    tsp->total_pps = 0;
+    nrecvd_total = 0;
+    nsent_total = 0;
     for (i = 0; i < nthreads; i++) {
         pthread_join(wsp[i]->tid, NULL);
         rsp[i]->done = 1;
         pthread_join(rsp[i]->tid, NULL);
+        nsent_total += wsp[i]->nreps * wsp[i]->ndest;
         pps = wsp[i]->nreps * wsp[i]->ndest;
         pps /= wsp[i]->etime - wsp[i]->stime;
-        total_pps += pps;
+        tsp->total_pps += pps;
+        nrecvd_total += rsp[i]->nrecvd_total;
         release_workset(wsp[i]);
         release_recvset(rsp[i]);
     }
-    return (total_pps);
+    tsp->ploss_rate = (double)(nsent_total - nrecvd_total) /
+      (double)(nsent_total);
+    return;
 }
 
 int
@@ -306,11 +333,14 @@ main(void)
     int i, j;
     const char *dstaddr = "172.16.0.0";
     int dstnetpref = 12;
+    struct tstats tstats;
 
     srandomdev();
     for (i = nthreads_min; i <= nthreads_max; i++) {
         for (j = 0; j <= 1; j++) {
-            printf("nthreads = %d, connected = %d: total PPS = %f\n", i, j, run_test(i, j, dstaddr, dstnetpref));
+            run_test(i, j, dstaddr, dstnetpref, &tstats);
+            printf("nthreads = %d, connected = %d: total PPS = %f, loss %f%%\n",
+              i, j, tstats.total_pps, tstats.ploss_rate * 100);
         }
     }
     exit(0);
