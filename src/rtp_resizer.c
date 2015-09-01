@@ -53,6 +53,9 @@ struct rtp_resizer {
     int         seq_initialized;
     uint16_t    seq;
 
+    int         ssrc_inited;
+    uint32_t    ssrc;
+
     int         last_sent_ts_inited;
     uint32_t    last_sent_ts;
 
@@ -151,6 +154,16 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt,
     if ((*pkt)->parsed->nsamples == RTP_NSAMPLES_UNKNOWN)
         return;
 
+    if (!this->ssrc_inited) {
+        this->ssrc = p->parsed->ssrc;
+        this->ssrc_inited = 1;
+    } else if (this->ssrc != p->parsed->ssrc) {
+        /* SSRC has been changed, TS and SEQ are no longer contiuous */
+        this->ssrc = p->parsed->ssrc;
+        this->last_sent_ts_inited = 0;
+        this->tsdelta_inited = 0;
+    }
+        
     if (this->last_sent_ts_inited && ts_less((*pkt)->parsed->ts, this->last_sent_ts))
     {
         /* Packet arrived too late. Drop it. */
