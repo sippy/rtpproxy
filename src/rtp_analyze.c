@@ -87,9 +87,9 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         return (0);
     }
     seq += stat->last.seq_offset;
-    if (header->m && (seq < stat->last.max_seq && (stat->last.max_seq & 0xffff) != 65535)) {
+    if (header->mbt && (seq < stat->last.max_seq && (stat->last.max_seq & 0xffff) != 65535)) {
         rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
-          rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->m);
+          rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->mbt);
         /* Seq reset has happened. Treat it as a ssrc change */
         update_rtpp_totals(stat, stat);
         stat->last.duplicates = 0;
@@ -125,7 +125,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         }
     } else if (seq + 536 < stat->last.max_seq || seq > stat->last.max_seq + 536) {
         rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: desync last->max_seq=%u, seq=%u, m=%u\n",
-          rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->m);
+          rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->mbt);
         /* Desynchronization has happened. Treat it as a ssrc change */
         update_rtpp_totals(stat, stat);
         stat->last.duplicates = 0;
@@ -137,7 +137,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
         return (0);
     }
-        /* printf("last->max_seq=%u, seq=%u, m=%u\n", stat->last.max_seq, seq, header->m);*/
+        /* printf("last->max_seq=%u, seq=%u, m=%u\n", stat->last.max_seq, seq, header->mbt);*/
     idx = (seq % 131072) >> 5;
     mask = stat->last.seen[idx];
     if (((mask >> (seq & 31)) & 1) != 0) {
