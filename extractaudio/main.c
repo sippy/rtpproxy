@@ -125,10 +125,10 @@ load_session(const char *path, struct channels *channels, enum origin origin)
 int
 main(int argc, char **argv)
 {
-    int ch;
+    int ch, seen_a, seen_o;
     int oblen, delete, stereo, idprio, nch, neof;
     int32_t osample, asample, csample;
-    uint64_t nasamples, nosamples;
+    uint64_t nasamples, nosamples, nwsamples;
     struct channels channels;
     struct channel *cp;
 #if defined(__FreeBSD__)
@@ -161,7 +161,7 @@ main(int argc, char **argv)
             break;
 
         case 'n':
-            dflags |= D_FLAG_NOSILENCE;
+            dflags |= D_FLAG_NOSYNC;
             break;
 
         case '?':
@@ -221,14 +221,22 @@ main(int argc, char **argv)
     if (sffile == NULL)
         errx(2, "%s: can't open output file", argv[1]);
 
-    nasamples = nosamples = 0;
+    nasamples = nosamples = nwsamples = 0;
     do {
         neof = 0;
         asample = osample = 0;
+        seen_a = seen_o = 0;
         MYQ_FOREACH(cp, &channels) {
-            if (cp->skip > 0) {
-                cp->skip--;
-		continue;
+            if ((dflags & D_FLAG_NOSYNC) == 0) {
+                if (cp->skip > 0) {
+                    cp->skip--;
+                    continue;
+                }
+            } else {
+                if (cp->origin == A_CH && seen_a != 0)
+                    continue;
+                if (cp->origin == O_CH && seen_o != 0)
+                    continue;
             }
             do {
                 csample = decoder_get(cp->decoder);
@@ -240,9 +248,19 @@ main(int argc, char **argv)
             if (cp->origin == A_CH) {
                 asample += csample;
                 nasamples++;
+                if (seen_a != 0) {
+                    asample /= 2;
+                } else {
+                    seen_a = 1;
+                }
             } else {
                 osample += csample;
                 nosamples++;
+                if (seen_o != 0) {
+                    osample /= 2;
+                } else {
+                    seen_o = 1;
+                }
             }
         }
         if (neof < nch) {
@@ -258,11 +276,12 @@ main(int argc, char **argv)
         }
         if (neof == nch || oblen == sizeof(obuf) / sizeof(obuf[0])) {
             sf_write_short(sffile, obuf, oblen);
+            nwsamples += oblen / sizeof(obuf[0]);
             oblen = 0;
         }
     } while (neof < nch);
-    fprintf(stderr, "samples decoded: O: %" PRIu64 ", A: %" PRIu64 "\n",
-      nosamples, nasamples);
+    fprintf(stderr, "samples decoded: O: %" PRIu64 ", A: %" PRIu64
+      ", written: %" PRIu64 "\n", nosamples, nasamples, nwsamples);
 
     sf_close(sffile);
 

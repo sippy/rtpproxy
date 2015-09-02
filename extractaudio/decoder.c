@@ -100,7 +100,7 @@ decoder_get(struct decoder_stream *dp)
             t = cticks - dp->nticks;
             if (t > 4000)
                 t = 4000;
-            if ((dp->dflags & D_FLAG_NOSILENCE) != 0) {
+            if ((dp->dflags & D_FLAG_NOSYNC) != 0) {
                 dp->nticks += t;
                 dp->dticks += t;
                 return (DECODER_SKIP);
@@ -116,7 +116,7 @@ decoder_get(struct decoder_stream *dp)
             t = (((dp->pp->pkt->time - dp->stime) * 8000) - dp->dticks) / 2;
             if (t > 4000)
                 t = 4000;
-            if ((dp->dflags & D_FLAG_NOSILENCE) != 0) {
+            if ((dp->dflags & D_FLAG_NOSYNC) != 0) {
                 dp->dticks += t;
                 return (DECODER_SKIP);
             }
