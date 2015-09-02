@@ -39,6 +39,7 @@
 
 #define MYQ_INIT(headp) {(headp)->first = (headp)->last = NULL;}
 #define MYQ_FIRST(headp) ((headp)->first)
+#define MYQ_LAST(headp) ((headp)->last)
 #define MYQ_NEXT(itemp) ((itemp)->next)
 #define MYQ_EMPTY(headp) ((headp)->first == NULL)
 #define MYQ_FOREACH(itemp, headp) \
