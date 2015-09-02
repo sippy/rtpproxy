@@ -53,11 +53,20 @@ setup_gen() {
   for codec in ${1} ${2}
   do
     CID="forwarding1_${direction}_${i}"
-    SED_TRANS="s|%%CODEC%%|${codec}| ; s|%%CALLID%%|${CID}|"
+    SED_TRANS="s|%%CODEC%%|${codec}| ; s|%%CALLID%%|${CID}| ; s|%%NTIMES%%|4|"
     ${SED} "${SED_TRANS}" forwarding1.gen.input
     i=$((${i}+1))
   done
-  sleep 32
+  sleep 25
+  i=1
+  for codec in ${1} ${2}
+  do
+    CID="forwarding1_${direction}_${i}"
+    SED_TRANS="s|%%CODEC%%|${codec}| ; s|%%CALLID%%|${CID}| ; s|%%NTIMES%%|1|"
+    ${SED} "${SED_TRANS}" forwarding1.gen.input
+    i=$((${i}+1))
+  done
+  sleep 8
   cat session_timeouts.stats.input forwarding1.stats.input
 }
 
