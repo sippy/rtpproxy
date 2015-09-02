@@ -83,7 +83,7 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime)
     rp->rtp->p = 0;
     rp->rtp->x = 0;
     rp->rtp->cc = 0;
-    rp->rtp->m = 1;
+    rp->rtp->mbt = 1;
     rp->rtp->pt = codec;
     rp->rtp->ts = 0;
     rp->rtp->seq = random() & 0xffff;
@@ -176,8 +176,8 @@ rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
 	    rp->loop -= 1;
     }
 
-    if (rp->rtp->m != 0 && ntohs(rp->rtp->seq) != 0) {
-	rp->rtp->m = 0;
+    if (rp->rtp->mbt != 0 && ntohs(rp->rtp->seq) != 0) {
+	rp->rtp->mbt = 0;
     }
 
     ts = ntohl(rp->rtp->ts);
