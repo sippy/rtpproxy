@@ -24,14 +24,15 @@ setup_playback() {
   ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" playback1.nat.input
 }
 
-for delay in 0 1
+for ttype in 1 2 3
 do
-  if [ ${delay} -eq 0 ]
+  if [ ${ttype} -eq 1 ]
   then
-    PIFILE="playback1.type1.input"
+    delay=0
   else
-    PIFILE="playback1.type2.input"
+    delay=1
   fi
+  PIFILE="playback1.type${ttype}.input"
   for codec in 0 3 8 18 9
   do
     if [ ${codec} -ne 3 ]
@@ -39,6 +40,10 @@ do
       NPKTS=600
     else
       NPKTS=300
+    fi
+    if [ ${ttype} -eq 3 ]
+    then
+      NPKTS=100
     fi
     for retry in 1 2 3 4 5 6
     do
