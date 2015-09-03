@@ -66,7 +66,7 @@ struct ul_reply {
 struct ul_opts {
     int asymmetric;
     int weak;
-    int requested_nsamples;
+    int requested_ptime;
     char *codecs;
     char *addr;
     char *port;
@@ -110,7 +110,7 @@ ul_opts_init(struct cfg *cf, struct ul_opts *ulop)
 
     /* In bridge mode all clients are assumed to be asymmetric */
     ulop->asymmetric = (cf->stable->bmode != 0) ? 1 : 0;
-    ulop->requested_nsamples = -1;
+    ulop->requested_ptime = -1;
     ulop->lia[0] = ulop->lia[1] = ulop->reply.ia = cf->stable->bindaddr[0];
     ulop->lidx = 1;
     ulop->pf = AF_INET;
@@ -209,8 +209,8 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
 
         case 'z':
         case 'Z':
-            ulop->requested_nsamples = (strtol(cp + 1, &cp, 10) / 10) * 80;
-            if (ulop->requested_nsamples <= 0) {
+            ulop->requested_ptime = strtol(cp + 1, &cp, 10);
+            if (ulop->requested_ptime <= 0) {
                 rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
                 reply_error(cf, cmd, ECODE_PARSE_13);
                 goto err_undo_1;
@@ -656,20 +656,20 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spa->codecs[pidx] = ulop->codecs;
         ulop->codecs = NULL;
     }
-    if (ulop->requested_nsamples > 0) {
+    if (ulop->requested_ptime > 0) {
         rtpp_log_write(RTPP_LOG_INFO, spa->log, "RTP packets from %s "
           "will be resized to %d milliseconds",
-          (pidx == 0) ? "callee" : "caller", ulop->requested_nsamples / 8);
+          (pidx == 0) ? "callee" : "caller", ulop->requested_ptime);
     } else if (spa->resizers[pidx] != NULL) {
           rtpp_log_write(RTPP_LOG_INFO, spa->log, "Resizing of RTP "
           "packets from %s has been disabled",
           (pidx == 0) ? "callee" : "caller");
     }
-    if (ulop->requested_nsamples > 0) {
+    if (ulop->requested_ptime > 0) {
         if (spa->resizers[pidx] != NULL) {
-            rtp_resizer_set_onsamples(spa->resizers[pidx], ulop->requested_nsamples);
+            rtp_resizer_set_ptime(spa->resizers[pidx], ulop->requested_ptime);
         } else {
-            spa->resizers[pidx] = rtp_resizer_new(ulop->requested_nsamples);
+            spa->resizers[pidx] = rtp_resizer_new(ulop->requested_ptime);
         }
     } else if (spa->resizers[pidx] != NULL) {
         rtp_resizer_free(cf->stable->rtpp_stats, spa->resizers[pidx]);

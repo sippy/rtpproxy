@@ -650,7 +650,7 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 	codecs = cp;
 	if (*codecs != '\0')
 	    codecs++;
-	spa->rtps[idx] = rtp_server_new(pname, n, playcount, cmd->dtime);
+	spa->rtps[idx] = rtp_server_new(pname, n, playcount, cmd->dtime, -1);
 	if (spa->rtps[idx] == NULL)
 	    continue;
 	cmd->csp->nplrs_created.cnt++;

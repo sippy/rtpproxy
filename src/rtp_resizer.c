@@ -79,13 +79,15 @@ min_nsamples(int codec_id)
     {
     case RTP_GSM:
         return 160; /* 20ms */
+    case RTP_G723:
+        return 240; /* 30ms */
     default:
         return 80; /* 10ms */
     }
 }
 
 struct rtp_resizer *
-rtp_resizer_new(int output_nsamples)
+rtp_resizer_new(int output_ptime)
 {
     struct rtp_resizer *this;
 
@@ -93,7 +95,7 @@ rtp_resizer_new(int output_nsamples)
     if (this == NULL)
         return (NULL);
     memset(this, 0, sizeof(struct rtp_resizer));
-    rtp_resizer_set_onsamples(this, output_nsamples);
+    rtp_resizer_set_ptime(this, output_ptime);
     return (this);
 }
 
@@ -119,24 +121,24 @@ rtp_resizer_free(struct rtpp_stats_obj *rtpp_stats, struct rtp_resizer *this)
 }
 
 int
-rtp_resizer_get_onsamples(struct rtp_resizer *this)
+rtp_resizer_get_ptime(struct rtp_resizer *this)
 {
 
-    return(this->output_nsamples);
+    return(this->output_nsamples / 8);
 }
 
 int
-rtp_resizer_set_onsamples(struct rtp_resizer *this, int output_nsamples_new)
+rtp_resizer_set_ptime(struct rtp_resizer *this, int ptime_new)
 {
-    int output_nsamples_old;
+    int ptime_old;
 
-    output_nsamples_old = this->output_nsamples;
-    this->output_nsamples = output_nsamples_new;
-    this->max_buf_nsamples = output_nsamples_new * 2;
+    ptime_old = rtp_resizer_get_ptime(this);
+    this->output_nsamples = ptime_new * 8;
+    this->max_buf_nsamples = this->output_nsamples * 2;
     if (this->max_buf_nsamples < 320) {
         this->max_buf_nsamples = 320;
     }
-    return (output_nsamples_old);
+    return (ptime_old);
 }
 
 void

@@ -41,7 +41,7 @@ void rtp_resizer_free(struct rtpp_stats_obj *, struct rtp_resizer *);
 
 #define is_rtp_resizer_enabled(resizer) ((resizer).output_nsamples > 0)
 
-int rtp_resizer_get_onsamples(struct rtp_resizer *);
-int rtp_resizer_set_onsamples(struct rtp_resizer *, int);
+int rtp_resizer_get_ptime(struct rtp_resizer *);
+int rtp_resizer_set_ptime(struct rtp_resizer *, int);
 
 #endif /* __RTP_RESIZER_H */
