@@ -51,10 +51,12 @@ struct rtp_server {
     int fd;
     int loop;
     uint64_t dts;
+    int ptime;
 };
 
 struct rtp_server *
-rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime)
+rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime,
+  int ptime)
 {
     struct rtp_server *rp;
     int fd;
@@ -77,6 +79,7 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime)
     rp->dts = 0;
     rp->fd = fd;
     rp->loop = (loop > 0) ? loop - 1 : loop;
+    rp->ptime = (ptime > 0) ? ptime : RTPS_TICKS_MIN;
 
     rp->rtp = (rtp_hdr_t *)rp->buf;
     rp->rtp->version = 2;
@@ -150,8 +153,8 @@ rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
         return (NULL);
     }
 
-    number_of_frames = RTPS_TICKS_MIN / ticks_per_frame;
-    if (RTPS_TICKS_MIN % ticks_per_frame != 0)
+    number_of_frames = rp->ptime / ticks_per_frame;
+    if (rp->ptime % ticks_per_frame != 0)
 	number_of_frames++;
 
     rlen = bytes_per_frame * number_of_frames;

@@ -98,6 +98,8 @@ struct rtpp_session {
     double last_update[2];
     /* Supported codecs */
     char *codecs[2];
+    /* Requested ptime */
+    int ptime[2];
     struct rtpp_hash_table_entry *hte;
 };
 

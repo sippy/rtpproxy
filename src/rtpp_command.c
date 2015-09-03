@@ -93,7 +93,7 @@ static int create_twinlistener(struct rtpp_cfg_stable *, struct sockaddr *, int,
 static int handle_delete(struct cfg *, struct common_cmd_args *, int);
 static void handle_noplay(struct cfg *, struct rtpp_session *, int, struct rtpp_command *);
 static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int,
-  struct rtpp_command *);
+  struct rtpp_command *, int);
 static int handle_record(struct cfg *, struct common_cmd_args *, int);
 static void handle_info(struct cfg *, struct rtpp_command *,
   const char *);
@@ -329,7 +329,7 @@ int
 handle_command(struct cfg *cf, struct rtpp_command *cmd)
 {
     int i, verbose, rval;
-    int playcount;
+    int playcount, ptime;
     char *cp, *tcp;
     char *pname, *codecs, *recording_name;
     struct rtpp_session *spa;
@@ -512,14 +512,17 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case PLAY:
 	handle_noplay(cf, spa, i, cmd);
+	ptime = -1;
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->codecs[i] == NULL) {
 		reply_error(cf, cmd, ECODE_INVLARG_5);
 		return 0;
 	    }
 	    codecs = spa->codecs[i];
+	    ptime = spa->ptime[i];
 	}
-	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount, cmd) != 0) {
+	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount,
+          cmd, ptime) != 0) {
 	    reply_error(cf, cmd, ECODE_PLRFAIL);
 	    return 0;
 	}
@@ -638,7 +641,7 @@ handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx, struct rtpp_com
 
 static int
 handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
-  char *pname, int playcount, struct rtpp_command *cmd)
+  char *pname, int playcount, struct rtpp_command *cmd, int ptime)
 {
     int n;
     char *cp;
@@ -650,7 +653,7 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 	codecs = cp;
 	if (*codecs != '\0')
 	    codecs++;
-	spa->rtps[idx] = rtp_server_new(pname, n, playcount, cmd->dtime, -1);
+	spa->rtps[idx] = rtp_server_new(pname, n, playcount, cmd->dtime, ptime);
 	if (spa->rtps[idx] == NULL)
 	    continue;
 	cmd->csp->nplrs_created.cnt++;
