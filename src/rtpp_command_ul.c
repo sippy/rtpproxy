@@ -656,7 +656,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spa->codecs[pidx] = ulop->codecs;
         ulop->codecs = NULL;
     }
-    spa->ptime[pidx] = ulop->requested_ptime;
+    spa->ptime[NOT(pidx)] = ulop->requested_ptime;
     if (ulop->requested_ptime > 0) {
         rtpp_log_write(RTPP_LOG_INFO, spa->log, "RTP packets from %s "
           "will be resized to %d milliseconds",
