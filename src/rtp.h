@@ -113,9 +113,6 @@ const char *rtp_packet_parse_errstr(rtp_parser_err_t);
 rtp_parser_err_t rtp_packet_parse_raw(unsigned char *, size_t, struct rtp_info *);
 rtp_parser_err_t rtp_packet_parse(struct rtp_packet *);
 
-#define RTPP_DUP_HDRONLY 0x1
-void rtp_packet_dup(struct rtp_packet *, struct rtp_packet *, int);
-
 void rtp_packet_first_chunk_find(struct rtp_packet *, struct rtp_packet_chunk *, int min_nsamples);
 
 #define ts_less(ts1, ts2) (((ts1) - (ts2)) > (uint32_t) (1 << 31))

@@ -70,4 +70,7 @@ void rtp_packet_free(struct rtp_packet *);
 void rtp_packet_set_seq(struct rtp_packet *, uint16_t seq);
 void rtp_packet_set_ts(struct rtp_packet *, uint32_t ts);
 
+#define RTPP_DUP_HDRONLY 0x1    /* Do not copy payload, only headers, requires packet to be parsed */
+void rtp_packet_dup(struct rtp_packet *, struct rtp_packet *, int);
+
 #endif
