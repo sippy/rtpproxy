@@ -338,7 +338,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 		    ret = rtp_packet_alloc();
 		    if (ret == NULL)
 			break;
-		    memcpy(ret, p, offsetof(struct rtp_packet, data.buf) + sizeof(rtp_hdr_t));
+		    rtp_packet_dup(ret, p, RTPP_DUP_HDRONLY);
 		    move_chunk(ret, p, &chunk);
 		    ++split;
 		}
