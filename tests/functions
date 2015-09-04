@@ -182,6 +182,7 @@ witness_stop() {
   then
     ${SUDO} kill -TERM ${WITNESS_PID} 2>/dev/null
     curl -F "pcap_meta_data=somePcapInfo" -F "pcap_file=@${PCAP_NAME}" hooks.sippysoft.com:80/rtpproxy/pcap_catcher
+    echo ""
     ${SUDO} rm -f ${PCAP_NAME}
   fi
 }
