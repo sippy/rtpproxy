@@ -150,7 +150,7 @@
 0
 nsess_created=30 nsess_destroyed=0 nsess_timeout=0 nsess_complete=30 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=0 nsess_owrtcp=0
 ncmds_rcvd=152 ncmds_succd=151 ncmds_errs=0 ncmds_repld=151
-npkts_rcvd=70000 npkts_played=81000 npkts_relayed=70000 npkts_discard=0 nplrs_created=60 nplrs_destroyed=60
+npkts_rcvd=70000 npkts_played=15000 npkts_relayed=70000 npkts_discard=0 nplrs_created=60 nplrs_destroyed=60
 npkts_resizer_in=0 npkts_resizer_out=0 npkts_resizer_discard=0
 rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_perrs=0
 0

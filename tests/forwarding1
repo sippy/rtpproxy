@@ -43,8 +43,8 @@ setup_gen() {
   for codec in ${1} ${2}
   do
     CID="forwarding1_${direction}_${i}"
-    SED_TRANS="s|%%PORT1%%|${PORT}| ; s|%%PORT2%%|${TRASH_PORT1}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.rec.input
+    SED_TRANS="s|%%PORT1%%|${PORT}| ; s|%%PORT2%%|${TRASH_PORT1}| ; s|%%CALLID%%|${CID}| ; s|%%CODEC%%|${codec}|"
+    ${SED} "${SED_TRANS}" forwarding1.rec${direction}.input
     PORT=$((${PORT} + 4))
     i=$((${i}+1))
   done
@@ -54,7 +54,7 @@ setup_gen() {
   do
     CID="forwarding1_${direction}_${i}"
     SED_TRANS="s|%%CODEC%%|${codec}| ; s|%%CALLID%%|${CID}| ; s|%%NTIMES%%|4|"
-    ${SED} "${SED_TRANS}" forwarding1.gen.input
+    ${SED} "${SED_TRANS}" forwarding1.gen${direction}.input
     i=$((${i}+1))
   done
   sleep 25
@@ -63,7 +63,7 @@ setup_gen() {
   do
     CID="forwarding1_${direction}_${i}"
     SED_TRANS="s|%%CODEC%%|${codec}| ; s|%%CALLID%%|${CID}| ; s|%%NTIMES%%|1|"
-    ${SED} "${SED_TRANS}" forwarding1.gen.input
+    ${SED} "${SED_TRANS}" forwarding1.gen${direction}.input
     i=$((${i}+1))
   done
   sleep 8
