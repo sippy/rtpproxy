@@ -30,6 +30,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <assert.h>
+#include <stddef.h>
 
 #include "rtp.h"
 #include "rtp_info.h"
@@ -343,6 +344,35 @@ rtp_packet_parse(struct rtp_packet *pkt)
         pkt->parsed = rinfo;
     }
     return (pkt->parse_result);
+}
+
+void
+rtp_packet_dup(struct rtp_packet *dpkt, struct rtp_packet *spkt, int flags)
+{
+    int csize;
+    struct rtp_packet_full *pkt_full;
+    struct rtp_info *drinfo, *srinfo;
+
+    csize = offsetof(struct rtp_packet, data.buf) + spkt->size;
+    if ((flags & RTPP_DUP_HDRONLY) != 0) {
+        assert(spkt->parse_result == RTP_PARSER_OK);
+        csize -= spkt->parsed->data_size;
+    }
+    memcpy(dpkt, spkt, csize);
+    if (dpkt->parsed == NULL) {
+        return;
+    }
+    pkt_full = (void *)dpkt;
+    drinfo = &(pkt_full->pvt.rinfo);    
+    pkt_full = (void *)spkt;
+    srinfo = &(pkt_full->pvt.rinfo);
+    memcpy(drinfo, srinfo, sizeof(struct rtp_info));
+    dpkt->parsed = drinfo;
+    if ((flags & RTPP_DUP_HDRONLY) != 0) {
+        dpkt->size -= dpkt->parsed->data_size;
+        dpkt->parsed->data_size = 0;
+        dpkt->parsed->nsamples = 0;
+    }
 }
 
 struct rtp_packet *
