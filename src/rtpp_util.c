@@ -366,3 +366,23 @@ rtpp_get_sched_hz(void)
     return (sched_hz);
 }
 #endif
+
+void *
+#if !defined(RTPP_CHECK_LEAKS)
+rtpp_zmalloc(size_t msize)
+#else
+rtpp_zmalloc_memdeb(const char *fname, int linen, const char *funcn, size_t msize)
+#endif
+{
+    void *rval;
+
+#if !defined(RTPP_CHECK_LEAKS)
+    rval = malloc(msize);
+#else
+    rval = rtpp_memdeb_malloc(msize, fname, linen, funcn);
+#endif
+    if (rval != NULL) {
+        memset(rval, '\0', msize);
+    }
+    return (rval);
+}
