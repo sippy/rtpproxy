@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,53 +26,7 @@
  *
  */
 
-#ifndef _RTPP_UTIL_H_
-#define _RTPP_UTIL_H_
-
-#define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
-#define	NOT(x)		(((x) == 0) ? 1 : 0)
-
-struct cfg;
-
 /* Function prototypes */
-void seedrandom(void);
-int set_rlimits(struct cfg *);
-int drop_privileges(struct cfg *);
-void init_port_table(struct cfg *);
-char *rtpp_strsep(char **, const char *);
-int rtpp_daemon(int, int);
-int url_unquote(unsigned char *, int);
-int rtpp_get_sched_hz(void);
-long long rtpp_rlim_max(struct cfg *cf);
-
-#if defined(RTPP_CHECK_LEAKS)
-#define rtpp_zmalloc(args...) rtpp_zmalloc_memdeb(__FILE__, __LINE__, __func__, ## args)
-void *rtpp_zmalloc_memdeb(const char *, int, const char *, size_t);
-#else
-void *rtpp_zmalloc(size_t);
-#endif
-
-/* Some handy/compat macros */
-#if !defined(INFTIM)
-#define	INFTIM		(-1)
-#endif
-
-#if !defined(ACCESSPERMS)
-#define	ACCESSPERMS	(S_IRWXU|S_IRWXG|S_IRWXO)
-#endif
-#if !defined(DEFFILEMODE)
-#define	DEFFILEMODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
-#endif
-
-#if !defined(HAVE_ERR_H)
-#define err(exitcode, format, args...) \
-  errx(exitcode, format ": %s", ## args, strerror(errno))
-#define errx(exitcode, format, args...) \
-  { warnx(format, ## args); exit(exitcode); }
-#define warn(format, args...) \
-  warnx(format ": %s", ## args, strerror(errno))
-#define warnx(format, args...) \
-  fprintf(stderr, format "\n", ## args)
-#endif
-
-#endif
+double getdtime(void);
+double ts2dtime(uint32_t, uint32_t);
+void dtime2ts(double, uint32_t *, uint32_t *);
