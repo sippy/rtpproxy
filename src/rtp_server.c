@@ -42,6 +42,7 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_session.h"
+#include "rtpp_sessinfo.h"
 
 struct rtp_server {
     double btime;
@@ -199,9 +200,9 @@ append_server(struct cfg *cf, struct rtpp_session *sp)
 
     if (sp->rtps[0] != NULL || sp->rtps[1] != NULL) {
 	if (sp->sridx == -1) {
-	    cf->rtp_servers[cf->rtp_nsessions] = sp;
-	    sp->sridx = cf->rtp_nsessions;
-	    cf->rtp_nsessions++;
+	    cf->sessinfo->rtp_servers[cf->sessinfo->rtp_nsessions] = sp;
+	    sp->sridx = cf->sessinfo->rtp_nsessions;
+	    cf->sessinfo->rtp_nsessions++;
 	}
     } else {
 	sp->sridx = -1;

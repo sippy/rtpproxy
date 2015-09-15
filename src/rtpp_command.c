@@ -60,6 +60,7 @@
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_session.h"
+#include "rtpp_sessinfo.h"
 #include "rtp_server.h"
 #include "rtpp_util.h"
 #include "rtpp_stats.h"
@@ -355,14 +356,14 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     case DELETE_ALL:
         /* Delete all active sessions */
         rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog, "deleting all active sessions");
-        pthread_mutex_lock(&cf->sessinfo.lock);
-        for (i = 0; i < cf->sessinfo.nsessions; i++) {
-            spa = cf->sessinfo.sessions[i];
+        pthread_mutex_lock(&cf->sessinfo->lock);
+        for (i = 0; i < cf->sessinfo->nsessions; i++) {
+            spa = cf->sessinfo->sessions[i];
             if (spa == NULL || spa->sidx[0] != i)
                 continue;
             remove_session(cf, spa);
         }
-        pthread_mutex_unlock(&cf->sessinfo.lock);
+        pthread_mutex_unlock(&cf->sessinfo->lock);
         reply_ok(cf, cmd);
         return 0;
 
@@ -607,9 +608,9 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	/* Search forward before we do removal */
 	spb = spa;
 	spa = session_findnext(cf, spa);
-        pthread_mutex_lock(&cf->sessinfo.lock);
+        pthread_mutex_lock(&cf->sessinfo->lock);
 	remove_session(cf, spb);
-        pthread_mutex_unlock(&cf->sessinfo.lock);
+        pthread_mutex_unlock(&cf->sessinfo->lock);
 	++ndeleted;
 	if (cmpr != 2) {
 	    break;
@@ -632,8 +633,8 @@ handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx, struct rtpp_com
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "stopping player at port %d", spa->ports[idx]);
 	if (spa->rtps[0] == NULL && spa->rtps[1] == NULL) {
-	    assert(cf->rtp_servers[spa->sridx] == spa);
-	    cf->rtp_servers[spa->sridx] = NULL;
+	    assert(cf->sessinfo->rtp_servers[spa->sridx] == spa);
+	    cf->sessinfo->rtp_servers[spa->sridx] = NULL;
 	    spa->sridx = -1;
 	}
    }
@@ -728,10 +729,10 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
     packets_in = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_rcvd");
     packets_out = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_relayed") +
       CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_played");
-    pthread_mutex_lock(&cf->sessinfo.lock);
+    pthread_mutex_lock(&cf->sessinfo->lock);
     len = snprintf(buf, sizeof(buf), "sessions created: %llu\nactive sessions: %d\n"
       "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
-      cf->sessions_created, cf->sessions_active, cf->sessinfo.nsessions,
+      cf->sessions_created, cf->sessions_active, cf->sessinfo->nsessions,
       packets_in, packets_out);
     if (load != 0) {
           len += snprintf(buf + len, sizeof(buf) - len, "average load: %f\n",
@@ -739,8 +740,8 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
     }
 #if 0
 XXX this needs work to fix it after rtp/rtcp split 
-    for (i = 0; i < cf->sessinfo.nsessions && brief == 0; i++) {
-        spa = cf->sessinfo.sessions[i];
+    for (i = 0; i < cf->sessinfo->nsessions && brief == 0; i++) {
+        spa = cf->sessinfo->sessions[i];
         if (spa == NULL || spa->sidx[0] != i)
             continue;
         /* RTCP twin session */
@@ -781,7 +782,7 @@ XXX this needs work to fix it after rtp/rtcp split
         }
     }
 #endif
-    pthread_mutex_unlock(&cf->sessinfo.lock);
+    pthread_mutex_unlock(&cf->sessinfo->lock);
     if (len > 0) {
         rtpc_doreply(cf, buf, len, cmd, 0);
     }

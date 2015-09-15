@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,19 @@
  *
  */
 
-#ifndef _RTPP_COMMAND_UL_H_
-#define _RTPP_COMMAND_UL_H_
-
-struct ul_opts;
-struct ul_reply;
+struct pollfd;
 struct rtpp_session;
 
-struct ul_opts *rtpp_command_ul_opts_parse(struct cfg *cf,
-  struct rtpp_command *cmd);
-void rtpp_command_ul_opts_free(struct ul_opts *ulop);
-int rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
-  struct ul_opts *ulop, struct rtpp_session *sp, int sidx);
-void ul_reply_port(struct cfg *cf, struct rtpp_command *cmd,
-  struct ul_reply *ulr);
+struct rtpp_sessinfo {
+    struct pollfd *pfds_rtp;
+    struct pollfd *pfds_rtcp;
+    struct rtpp_session **sessions;
+    int nsessions;
+    pthread_mutex_t lock;
+    /* Structures below are protected by the glock */
+    struct rtpp_session **rtp_servers;
+    int rtp_nsessions;
+};
 
-#endif
+struct rtpp_sessinfo *rtpp_sessinfo_ctor(struct rtpp_cfg_stable *);
+

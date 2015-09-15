@@ -39,7 +39,6 @@
 #include <fcntl.h>
 #include <grp.h>
 #include <math.h>
-#include <poll.h>
 #include <pthread.h>
 #include <pwd.h>
 #include <signal.h>
@@ -77,6 +76,7 @@
 #include "rtpp_util.h"
 #include "rtpp_math.h"
 #include "rtpp_stats.h"
+#include "rtpp_sessinfo.h"
 #include "rtpp_list.h"
 #include "rtpp_timed.h"
 #include "rtpp_tnotify_set.h"
@@ -217,7 +217,6 @@ init_config(struct cfg *cf, int argc, char **argv)
     }
 
     pthread_mutex_init(&cf->glock, NULL);
-    pthread_mutex_init(&cf->sessinfo.lock, NULL);
     pthread_mutex_init(&cf->bindaddr_lock, NULL);
 
     cf->stable->nofile_limit = malloc(sizeof(*cf->stable->nofile_limit));
@@ -522,14 +521,10 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (cf->stable->port_min > cf->stable->port_max)
 	errx(1, "port_min should be less than port_max");
 
-    cf->sessinfo.sessions = malloc((sizeof cf->sessinfo.sessions[0]) *
-      (((cf->stable->port_max - cf->stable->port_min + 1)) + 1));
-    cf->rtp_servers =  malloc((sizeof cf->rtp_servers[0]) *
-      (((cf->stable->port_max - cf->stable->port_min + 1) * 2) + 1));
-    cf->sessinfo.pfds_rtp = malloc((sizeof cf->sessinfo.pfds_rtp[0]) *
-      (((cf->stable->port_max - cf->stable->port_min + 1)) + 1));
-    cf->sessinfo.pfds_rtcp = malloc((sizeof cf->sessinfo.pfds_rtcp[0]) *
-      (((cf->stable->port_max - cf->stable->port_min + 1)) + 1));
+    cf->sessinfo = rtpp_sessinfo_ctor(cf->stable);
+    if (cf->sessinfo == NULL) {
+        errx(1, "cannot construct rtpp_sessinfo structure");
+    }
 
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
 	bh[0] = "*";
@@ -691,10 +686,6 @@ main(int argc, char **argv)
     }
     set_rlimits(&cf);
 
-    cf.sessinfo.sessions[0] = NULL;
-    cf.sessinfo.nsessions = 0;
-    cf.rtp_nsessions = 0;
-
     cf.stable->rtpp_proc_cf = rtpp_proc_async_ctor(&cf);
     if (cf.stable->rtpp_proc_cf == NULL) {
         rtpp_log_write(RTPP_LOG_ERR, cf.stable->glog,
@@ -790,15 +781,15 @@ main(int argc, char **argv)
             break;
         }
         if (cf.stable->slowshutdown != 0) {
-            pthread_mutex_lock(&cf.sessinfo.lock);
-            if (cf.sessinfo.nsessions == 0) {
+            pthread_mutex_lock(&cf.sessinfo->lock);
+            if (cf.sessinfo->nsessions == 0) {
                 /* The below unlock is not necessary, but does not hurt either */
-                pthread_mutex_unlock(&cf.sessinfo.lock);
+                pthread_mutex_unlock(&cf.sessinfo->lock);
                 rtpp_log_write(RTPP_LOG_INFO, cf.stable->glog,
                   "deorbiting-burn sequence completed, exiting");
                 break;
             }
-            pthread_mutex_unlock(&cf.sessinfo.lock);
+            pthread_mutex_unlock(&cf.sessinfo->lock);
         }
     }
 

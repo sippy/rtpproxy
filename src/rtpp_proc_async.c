@@ -49,6 +49,7 @@
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
 #include "rtpp_util.h"
+#include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
 
 struct rtpp_proc_async_cf {
@@ -210,20 +211,20 @@ rtpp_proc_async_run(void *arg)
             rtp_only = 1;
         }
 
-        pthread_mutex_lock(&cf->sessinfo.lock);
-        if (cf->sessinfo.nsessions > 0) {
+        pthread_mutex_lock(&cf->sessinfo->lock);
+        if (cf->sessinfo->nsessions > 0) {
             if (rtp_only == 0) {
-                i = poll(cf->sessinfo.pfds_rtcp, cf->sessinfo.nsessions, 0);
+                i = poll(cf->sessinfo->pfds_rtcp, cf->sessinfo->nsessions, 0);
             }
-            i = poll(cf->sessinfo.pfds_rtp, cf->sessinfo.nsessions, 0);
-            pthread_mutex_unlock(&cf->sessinfo.lock);
+            i = poll(cf->sessinfo->pfds_rtp, cf->sessinfo->nsessions, 0);
+            pthread_mutex_unlock(&cf->sessinfo->lock);
             if (i < 0 && errno == EINTR) {
                 CALL_METHOD(cf->stable->rtpp_cmd_cf, wakeup);
                 tp[0] = getdtime();
                 continue;
             }
         } else {
-            pthread_mutex_unlock(&cf->sessinfo.lock);
+            pthread_mutex_unlock(&cf->sessinfo->lock);
         }
 
         tp[2] = getdtime();
@@ -237,7 +238,7 @@ rtpp_proc_async_run(void *arg)
             pthread_mutex_lock(&cf->glock);
         }
 
-        if (cf->rtp_nsessions > 0) {
+        if (cf->sessinfo->rtp_nsessions > 0) {
             process_rtp_servers(cf, tp[2], sender, rstats);
         }
         pthread_mutex_unlock(&cf->glock);

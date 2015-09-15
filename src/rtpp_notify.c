@@ -208,7 +208,12 @@ reconnect_timeout_handler(rtpp_log_t log, struct rtpp_tnotify_target *rttp)
         }
     }
     if (connect(rttp->fd, (struct sockaddr *)&(rttp->remote), rttp->remote_len) == -1) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't connect to timeout socket");
+        if (sstosa(&rttp->remote)->sa_family == AF_INET) {
+            rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't connect to timeout socket at '%s:%d'",
+              addr2char(sstosa(&rttp->remote)), getport(sstosa(&rttp->remote)));
+        } else {
+            rtpp_log_ewrite(RTPP_LOG_ERR, log, "can't connect to timeout socket");
+        }
         goto e0;
     } else {
         rttp->connected = 1;

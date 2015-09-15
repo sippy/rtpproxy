@@ -57,14 +57,7 @@
 struct pollfd;
 struct bindaddr_list;
 struct rtpp_timeout_handler;
-
-struct sessinfo {
-    struct pollfd *pfds_rtp;
-    struct pollfd *pfds_rtcp;
-    struct rtpp_session **sessions;
-    int nsessions;
-    pthread_mutex_t lock;
-};
+struct rtpp_sessinfo;
 
 struct rtpp_hash_table_obj;
 struct rtpp_cfg_stable;
@@ -76,15 +69,11 @@ struct cfg {
      * Data fields that must be locked separately from the main configuration
      * structure below.
      */
-    struct sessinfo sessinfo;
+    struct rtpp_sessinfo *sessinfo;
 
     struct bindaddr_list *bindaddr_list;
     pthread_mutex_t bindaddr_lock;
 
-    /* Structures below are protected by the glock */
-    struct rtpp_session **rtp_servers;
-
-    int rtp_nsessions;
     int sessions_active;
     unsigned long long sessions_created;
     int nofile_limit_warned;
