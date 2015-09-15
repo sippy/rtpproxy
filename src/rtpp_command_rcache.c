@@ -33,6 +33,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_timed.h"
+#include "rtpp_util.h"
 
 #define	RTPP_RCACHE_CPERD	3.0
 
@@ -61,11 +62,10 @@ rtpp_cmd_rcache_ctor(struct rtpp_timed_obj *rtpp_timed_cf, double min_ttl)
 {
     struct rtpp_cmd_rcache_pvt *pvt;
 
-    pvt = malloc(sizeof(struct rtpp_cmd_rcache_pvt));
+    pvt = rtpp_zmalloc(sizeof(struct rtpp_cmd_rcache_pvt));
     if (pvt == NULL) {
         return (NULL);
     }
-    memset(pvt, '\0', sizeof(struct rtpp_cmd_rcache_pvt));
     pvt->ht = rtpp_hash_table_ctor();
     if (pvt->ht == NULL) {
         goto e0;
@@ -105,11 +105,10 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache_obj *pub, const char *cookie,
     struct rtpp_refcnt_obj *rco;
 
     pvt = (struct rtpp_cmd_rcache_pvt *)pub;
-    rep = malloc(sizeof(struct rtpp_cmd_rcache_entry));
+    rep = rtpp_zmalloc(sizeof(struct rtpp_cmd_rcache_entry));
     if (rep == NULL) {
         return;
     }
-    memset(rep, '\0', sizeof(struct rtpp_cmd_rcache_entry));
     rep->reply = strdup(reply);
     if (rep->reply == NULL) {
         goto e1;

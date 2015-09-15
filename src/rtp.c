@@ -36,6 +36,7 @@
 #include "rtp_info.h"
 #include "rtp_packet.h"
 #include "rtpp_network.h"
+#include "rtpp_util.h"
 
 struct rtp_packet_full;
 
@@ -380,8 +381,7 @@ rtp_packet_alloc()
 {
     struct rtp_packet_full *pkt;
 
-    pkt = malloc(sizeof(*pkt));
-    memset(pkt, '\0', sizeof(*pkt));
+    pkt = rtpp_zmalloc(sizeof(*pkt));
 
     return &(pkt->pub);
 }

@@ -33,6 +33,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_util.h"
 
 struct rtpp_refcnt_priv
 {
@@ -52,11 +53,10 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
 {
     struct rtpp_refcnt_priv *pvt;
 
-    pvt = malloc(sizeof(struct rtpp_refcnt_priv));
+    pvt = rtpp_zmalloc(sizeof(struct rtpp_refcnt_priv));
     if (pvt == NULL) {
         return (NULL);
     }
-    memset(pvt, '\0', sizeof(struct rtpp_refcnt_priv));
     if (pthread_mutex_init(&pvt->cnt_lock, NULL) != 0) {
         free(pvt);
         return (NULL);

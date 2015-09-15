@@ -50,6 +50,7 @@
 #include "rtpp_wi.h"
 #include "rtpp_util.h"
 #include "rtpp_stats.h"
+#include "rtpp_time.h"
 
 struct rtpp_proc_async_cf {
     struct rtpp_proc_async_obj pub;
@@ -290,11 +291,9 @@ rtpp_proc_async_ctor(struct cfg *cf)
 {
     struct rtpp_proc_async_cf *proc_cf;
 
-    proc_cf = malloc(sizeof(*proc_cf));
+    proc_cf = rtpp_zmalloc(sizeof(*proc_cf));
     if (proc_cf == NULL)
         return (NULL);
-
-    memset(proc_cf, '\0', sizeof(*proc_cf));
 
     init_rstats(cf->stable->rtpp_stats, &proc_cf->rstats);
 

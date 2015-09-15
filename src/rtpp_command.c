@@ -241,12 +241,11 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     int len, i;
     struct rtpp_command *cmd;
 
-    cmd = malloc(sizeof(struct rtpp_command));
+    cmd = rtpp_zmalloc(sizeof(struct rtpp_command));
     if (cmd == NULL) {
         *rval = ENOMEM;
         return (NULL);
     }
-    memset(cmd, 0, sizeof(struct rtpp_command));
     cmd->controlfd = controlfd;
     cmd->dtime = dtime;
     cmd->csp = csp;

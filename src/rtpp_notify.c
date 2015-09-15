@@ -49,6 +49,7 @@
 #include "rtpp_notify.h"
 #include "rtpp_queue.h"
 #include "rtpp_tnotify_tgt.h"
+#include "rtpp_util.h"
 #include "rtpp_wi.h"
 
 struct rtpp_notify_wi
@@ -103,11 +104,10 @@ rtpp_notify_ctor(rtpp_log_t glog)
 {
     struct rtpp_notify_priv *pvt;
 
-    pvt = malloc(sizeof(struct rtpp_notify_priv));
+    pvt = rtpp_zmalloc(sizeof(struct rtpp_notify_priv));
     if (pvt == NULL) {
         goto e0;
     }
-    memset(pvt, '\0', sizeof(struct rtpp_notify_priv));
     pvt->nqueue = rtpp_queue_init(1, "rtpp_notify");
     if (pvt->nqueue == NULL) {
         goto e1;

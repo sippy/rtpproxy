@@ -54,6 +54,7 @@
 #include "rtpp_record.h"
 #include "rtpp_record_private.h"
 #include "rtpp_session.h"
+#include "rtpp_time.h"
 #include "rtpp_util.h"
 
 enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP, MODE_LOCAL_PCAP}; /* MODE_LOCAL_RTP/MODE_REMOTE_PKT? */
@@ -82,12 +83,11 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0) ? 1 : 0;
 
-    rrc = malloc(sizeof(*rrc));
+    rrc = rtpp_zmalloc(sizeof(*rrc));
     if (rrc == NULL) {
 	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't allocate memory");
 	return NULL;
     }
-    memset(rrc, 0, sizeof(*rrc));
 
     if (remote) {
 	tmp = strdup(rname + 4);

@@ -41,6 +41,7 @@
 #ifdef RTPP_LOG_ADVANCED
 #include "rtpp_syslog_async.h"
 #endif
+#include "rtpp_util.h"
 
 #ifdef RTPP_LOG_ADVANCED
 static int syslog_async_opened = 0;
@@ -71,11 +72,10 @@ _rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app, const char *call_id)
 	    syslog_async_opened = 1;
     }
 #endif
-    rli = malloc(sizeof(struct rtpp_log_inst));
+    rli = rtpp_zmalloc(sizeof(struct rtpp_log_inst));
     if (rli == NULL) {
         return (NULL);
     }
-    memset(rli, '\0', sizeof(struct rtpp_log_inst));
     if (call_id != NULL) {
         rli->call_id = strdup(call_id);
     }

@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include "rtpp_pearson.h"
+#include "rtpp_util.h"
 
 struct rtpp_pearson_perfect
 {
@@ -92,11 +93,10 @@ rtpp_pearson_perfect_ctor(rtpp_pearson_getval_t gv, void *gv_arg)
 {
     struct rtpp_pearson_perfect *rppp;
 
-    rppp = malloc(sizeof(struct rtpp_pearson_perfect));
+    rppp = rtpp_zmalloc(sizeof(struct rtpp_pearson_perfect));
     if (rppp == NULL) {
         return (NULL);
     }
-    memset(rppp, '\0', sizeof(struct rtpp_pearson_perfect));
     rppp->gv = gv;
     rppp->gv_arg = gv_arg;
 

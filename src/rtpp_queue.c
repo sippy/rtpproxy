@@ -41,6 +41,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_queue.h"
+#include "rtpp_util.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 
@@ -62,10 +63,9 @@ rtpp_queue_init(int qlen, const char *fmt, ...)
     va_list ap;
     int eval;
 
-    queue = malloc(sizeof(*queue));
+    queue = rtpp_zmalloc(sizeof(*queue));
     if (queue == NULL)
         return (NULL);
-    memset(queue, '\0', sizeof(*queue));
     queue->qlen = qlen;
     if ((eval = pthread_cond_init(&queue->cond, NULL)) != 0) {
         free(queue);

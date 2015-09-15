@@ -38,6 +38,7 @@
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
 #include "rtpp_util.h"
+#include "rtpp_time.h"
 #include "rtpp_timed.h"
 
 struct rtpp_timed_cf {
@@ -101,11 +102,10 @@ rtpp_timed_ctor(double run_period)
 {
     struct rtpp_timed_cf *rtcp;
 
-    rtcp = malloc(sizeof(struct rtpp_timed_cf));
+    rtcp = rtpp_zmalloc(sizeof(struct rtpp_timed_cf));
     if (rtcp == NULL) {
         goto e0;
     }
-    memset(rtcp, '\0', sizeof(struct rtpp_timed_cf));
     rtcp->q = rtpp_queue_init(0, "rtpp_timed(requests)");
     if (rtcp->q == NULL) {
         goto e1;

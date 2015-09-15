@@ -37,6 +37,7 @@
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
 #include "rtpp_session.h"
+#include "rtpp_util.h"
 
 struct rtpp_analyzer {
     struct rtpp_session_stat rstat;
@@ -49,11 +50,10 @@ rtpp_analyzer_ctor(void)
 {
     struct rtpp_analyzer *rap;
 
-    rap = malloc(sizeof(struct rtpp_analyzer));
+    rap = rtpp_zmalloc(sizeof(struct rtpp_analyzer));
     if (rap == NULL) {
         return (NULL);
     }
-    memset(rap, '\0', sizeof(struct rtpp_analyzer));
     return (rap);
 }
 

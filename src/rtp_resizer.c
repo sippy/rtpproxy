@@ -46,6 +46,7 @@
 #include "rtpp_proc.h"
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
+#include "rtpp_util.h"
 
 struct rtp_resizer {
     int         nsamples_total;
@@ -91,10 +92,9 @@ rtp_resizer_new(int output_ptime)
 {
     struct rtp_resizer *this;
 
-    this = malloc(sizeof(struct rtp_resizer));
+    this = rtpp_zmalloc(sizeof(struct rtp_resizer));
     if (this == NULL)
         return (NULL);
-    memset(this, 0, sizeof(struct rtp_resizer));
     rtp_resizer_set_ptime(this, output_ptime);
     return (this);
 }

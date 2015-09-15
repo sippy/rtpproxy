@@ -47,6 +47,7 @@
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_tnotify_tgt.h"
+#include "rtpp_util.h"
 
 #define RTPP_TNOTIFY_TARGETS_MAX 64
 #define RTPP_TNOTIFY_WILDCARDS_MAX 2
@@ -85,11 +86,10 @@ rtpp_tnotify_set_ctor(void)
 {
     struct rtpp_tnotify_set *pvt;
 
-    pvt = malloc(sizeof(struct rtpp_tnotify_set));
+    pvt = rtpp_zmalloc(sizeof(struct rtpp_tnotify_set));
     if (pvt == NULL) {
         return (NULL);
     }
-    memset(pvt, '\0', sizeof(struct rtpp_tnotify_set));
     pvt->pub.dtor = &rtpp_tnotify_set_dtor;
     pvt->pub.append = &rtpp_tnotify_set_append;
     pvt->pub.lookup = &rtpp_tnotify_set_lookup;
@@ -318,11 +318,10 @@ get_tp4wp(struct rtpp_tnotify_set *pvt, struct rtpp_tnotify_wildcard *wp,
     if (pvt->tp_len == RTPP_TNOTIFY_TARGETS_MAX) {
         return (NULL);
     }
-    tp = malloc(sizeof(struct rtpp_tnotify_target));
+    tp = rtpp_zmalloc(sizeof(struct rtpp_tnotify_target));
     if (tp == NULL) {
         return (NULL);
     }
-    memset(tp, '\0', sizeof(struct rtpp_tnotify_target));
     if (laddr != NULL && laddr->sa_family == ccaddr->sa_family) {
         tp->local = malloc(SA_LEN(laddr));
         if (tp->local == NULL) {

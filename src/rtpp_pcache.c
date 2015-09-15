@@ -8,6 +8,7 @@
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_pcache.h"
+#include "rtpp_util.h"
 
 struct rtpp_pcache_obj_priv {
   struct rtpp_pcache_obj *real;
@@ -36,11 +37,10 @@ rtpp_pcache_ctor(void)
     struct rtpp_pcache_obj *pub;
     struct rtpp_pcache_obj_priv *pvt;
 
-    fp = malloc(sizeof(struct rtpp_pcache_obj_full));
+    fp = rtpp_zmalloc(sizeof(struct rtpp_pcache_obj_full));
     if (fp == NULL) {
         return (NULL);
     }
-    memset(fp, '\0', sizeof(struct rtpp_pcache_obj_full));
     pub = &(fp->pub);
     pvt = &(fp->pvt);
     pvt->hash_table = rtpp_hash_table_ctor();
@@ -65,11 +65,10 @@ rtpp_pcache_obj_open(struct rtpp_pcache_obj *self, const char *fname)
     struct rtpp_pcache_fd *p_fd;
     struct rtpp_pcache_obj_priv *pvt;
 
-    p_fd = malloc(sizeof(struct rtpp_pcache_fd));
+    p_fd = rtpp_zmalloc(sizeof(struct rtpp_pcache_fd));
     if (p_fd == NULL) {
         return (NULL);
     }
-    memset(p_fd, '\0', sizeof(struct rtpp_pcache_fd));
     pvt = self->pvt;
     p_fd->hte = CALL_METHOD(pvt->hash_table, append, fname, p_fd);    
     return (p_fd);
