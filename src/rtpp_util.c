@@ -33,7 +33,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <math.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -44,51 +43,6 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_util.h"
-
-#if defined(CLOCK_UPTIME_PRECISE)
-#define RTPP_CLOCK CLOCK_UPTIME_PRECISE
-#else
-# if defined(CLOCK_MONOTONIC_RAW)
-#define RTPP_CLOCK CLOCK_MONOTONIC_RAW
-# else
-#define RTPP_CLOCK CLOCK_MONOTONIC
-#endif
-#endif
-
-static double timespec2dtime(time_t, long);
-
-double
-getdtime(void)
-{
-    struct timespec tp;
-
-    if (clock_gettime(RTPP_CLOCK, &tp) == -1)
-        return (-1);
-
-    return timespec2dtime(tp.tv_sec, tp.tv_nsec);
-}
-
-static double
-timespec2dtime(time_t tv_sec, long tv_nsec)
-{
-
-    return (double)tv_sec + (double)tv_nsec / 1000000000.0;
-}
-
-double
-ts2dtime(uint32_t ts_sec, uint32_t ts_usec)
-{
-
-    return ts_sec + ((double)ts_usec) / 1000000.0;
-}
-
-void
-dtime2ts(double dtime, uint32_t *ts_sec, uint32_t *ts_usec)
-{
-
-    *ts_sec = trunc(dtime);
-    *ts_usec = round(1000000.0 * (dtime - ((double)*ts_sec)));
-}
 
 void
 seedrandom(void)
@@ -272,7 +226,7 @@ static int8_t hex2char[128] = {
 };
 
 int
-url_unquote(uint8_t *buf, int len)
+url_unquote(unsigned char *buf, int len)
 {
     int outlen;
     uint8_t *cp;
@@ -295,21 +249,6 @@ url_unquote(uint8_t *buf, int len)
         outlen -= 2;
     }
     return (outlen);
-}
-
-int
-pthread_mutex_islocked(pthread_mutex_t *mutex)
-{
-    int rval;
-
-    rval = pthread_mutex_trylock(mutex);
-    if (rval != 0) {
-        if (rval == EBUSY)
-            return (1);
-        return (-1);
-    }
-    pthread_mutex_unlock(mutex);
-    return (0);
 }
 
 #if defined(_SC_CLK_TCK) && !defined(__FreeBSD__)
@@ -366,3 +305,23 @@ rtpp_get_sched_hz(void)
     return (sched_hz);
 }
 #endif
+
+void *
+#if !defined(RTPP_CHECK_LEAKS)
+rtpp_zmalloc(size_t msize)
+#else
+rtpp_zmalloc_memdeb(const char *fname, int linen, const char *funcn, size_t msize)
+#endif
+{
+    void *rval;
+
+#if !defined(RTPP_CHECK_LEAKS)
+    rval = malloc(msize);
+#else
+    rval = rtpp_memdeb_malloc(msize, fname, linen, funcn);
+#endif
+    if (rval != NULL) {
+        memset(rval, '\0', msize);
+    }
+    return (rval);
+}

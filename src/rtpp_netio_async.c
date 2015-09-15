@@ -44,9 +44,10 @@
 #include "rtpp_types.h"
 #include "rtpp_queue.h"
 #include "rtpp_netio_async.h"
+#include "rtpp_time.h"
+#include "rtpp_util.h"
 #ifdef RTPP_DEBUG
 #include "rtpp_math.h"
-#include "rtpp_util.h"
 #endif
 
 struct sthread_args {
@@ -215,11 +216,9 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
     struct rtpp_anetio_cf *netio_cf;
     int i, ri;
 
-    netio_cf = malloc(sizeof(*netio_cf));
+    netio_cf = rtpp_zmalloc(sizeof(*netio_cf));
     if (netio_cf == NULL)
         return (NULL);
-
-    memset(netio_cf, '\0', sizeof(*netio_cf));
 
     for (i = 0; i < SEND_THREADS; i++) {
         netio_cf->args[i].out_q = rtpp_queue_init(qlen, "RTPP->NET%.2d", i);

@@ -43,6 +43,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
+#include "rtpp_util.h"
 
 struct rtp_server {
     double btime;
@@ -68,13 +69,11 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime,
     if (fd == -1)
 	return NULL;
 
-    rp = malloc(sizeof(*rp));
+    rp = rtpp_zmalloc(sizeof(*rp));
     if (rp == NULL) {
 	close(fd);
 	return NULL;
     }
-
-    memset(rp, 0, sizeof(*rp));
 
     rp->btime = dtime;
     rp->dts = 0;

@@ -36,6 +36,7 @@
 #include "rtpp_types.h"
 #include "rtpp_pearson.h"
 #include "rtpp_stats.h"
+#include "rtpp_util.h"
 
 struct rtpp_stat
 {
@@ -130,22 +131,20 @@ rtpp_stats_ctor(void)
     struct rtpp_stat *st;
     int i;
 
-    fp = malloc(sizeof(struct rtpp_stats_obj_full));
+    fp = rtpp_zmalloc(sizeof(struct rtpp_stats_obj_full));
     if (fp == NULL) {
         goto e0;
     }
-    memset(fp, '\0', sizeof(struct rtpp_stats_obj_full));
     pub = &(fp->pub);
     pvt = &(fp->pvt);
     pvt->rppp = rtpp_pearson_perfect_ctor(getdstat, default_stats);
     if (pvt->rppp == NULL) {
         goto e1;
     }
-    pvt->stats = malloc(sizeof(struct rtpp_stat) * RTPP_NSTATS);
+    pvt->stats = rtpp_zmalloc(sizeof(struct rtpp_stat) * RTPP_NSTATS);
     if (pvt->stats == NULL) {
         goto e2;
     }
-    memset(pvt->stats, '\0', sizeof(struct rtpp_stat) * RTPP_NSTATS);
     for (i = 0; i < RTPP_NSTATS; i++) {
         st = &pvt->stats[i];
         st->name = default_stats[i].name;

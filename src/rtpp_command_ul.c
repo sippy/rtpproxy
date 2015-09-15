@@ -136,12 +136,11 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
     struct sockaddr_storage tia;
     struct ul_opts *ulop;
 
-    ulop = malloc(sizeof(struct ul_opts));
+    ulop = rtpp_zmalloc(sizeof(struct ul_opts));
     if (ulop == NULL) {
         reply_error(cf, cmd, ECODE_NOMEM_1);
         goto err_undo_0;
     }
-    memset(ulop, '\0', sizeof(struct ul_opts));
     ul_opts_init(cf, ulop);
     if (cmd->cca.op == UPDATE && cmd->argc > 6) {
         if (cmd->argc == 8) {
@@ -458,21 +457,19 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
          * Session creation. If creation is requested with weak flag,
          * set weak[0].
          */
-        spa = malloc(sizeof(*spa));
+        spa = rtpp_zmalloc(sizeof(*spa));
         if (spa == NULL) {
             handle_nomem(cf, cmd, ECODE_NOMEM_4, ulop,
               fds, spa, spb);
             return (-1);
         }
         /* spb is RTCP twin session for this one. */
-        spb = malloc(sizeof(*spb));
+        spb = rtpp_zmalloc(sizeof(*spb));
         if (spb == NULL) {
             handle_nomem(cf, cmd, ECODE_NOMEM_5, ulop,
               fds, spa, spb);
             return (-1);
         }
-        memset(spa, 0, sizeof(*spa));
-        memset(spb, 0, sizeof(*spb));
         spa->init_ts = cmd->dtime;
         spb->init_ts = cmd->dtime;
         for (i = 0; i < 2; i++) {

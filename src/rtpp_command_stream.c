@@ -107,12 +107,11 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
         return (NULL);
     }
 
-    cmd = malloc(sizeof(struct rtpp_command));
+    cmd = rtpp_zmalloc(sizeof(struct rtpp_command));
     if (cmd == NULL) {
         *rval = ENOMEM;
         return (NULL);
     }
-    memset(cmd, 0, sizeof(struct rtpp_command));
 
     cmd->controlfd = rcs->controlfd_out;
     cmd->dtime = dtime;

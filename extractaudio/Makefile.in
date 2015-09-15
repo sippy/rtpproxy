@@ -106,8 +106,8 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_extractaudio_OBJECTS = main.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_loader.$(OBJEXT) rtp.$(OBJEXT) rtp_analyze.$(OBJEXT) \
-	rtpp_util.$(OBJEXT) rtpp_log_stand.$(OBJEXT) \
-	g729_compat.$(OBJEXT)
+	rtpp_util.$(OBJEXT) rtpp_time.$(OBJEXT) \
+	rtpp_log_stand.$(OBJEXT) g729_compat.$(OBJEXT)
 extractaudio_OBJECTS = $(am_extractaudio_OBJECTS)
 extractaudio_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -302,7 +302,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 MAINSRCDIR = $(top_srcdir)/src
 extractaudio_SOURCES = main.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c \
-  ${MAINSRCDIR}/rtp_analyze.c ${MAINSRCDIR}/rtpp_util.c \
+  ${MAINSRCDIR}/rtp_analyze.c ${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
   ${MAINSRCDIR}/rtpp_log_stand.c decoder.h format_au.h g711.h rtpp_loader.h \
   session.h g729_compat.c g729_compat.h
 
@@ -407,6 +407,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp_analyze.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_loader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_log_stand.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_util.Po@am__quote@
 
 .c.o:
@@ -471,6 +472,20 @@ rtpp_util.obj: ${MAINSRCDIR}/rtpp_util.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_util.c' object='rtpp_util.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_util.obj `if test -f '${MAINSRCDIR}/rtpp_util.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_util.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_util.c'; fi`
+
+rtpp_time.o: ${MAINSRCDIR}/rtpp_time.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_time.o -MD -MP -MF $(DEPDIR)/rtpp_time.Tpo -c -o rtpp_time.o `test -f '${MAINSRCDIR}/rtpp_time.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_time.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_time.Tpo $(DEPDIR)/rtpp_time.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_time.c' object='rtpp_time.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_time.o `test -f '${MAINSRCDIR}/rtpp_time.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_time.c
+
+rtpp_time.obj: ${MAINSRCDIR}/rtpp_time.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_time.obj -MD -MP -MF $(DEPDIR)/rtpp_time.Tpo -c -o rtpp_time.obj `if test -f '${MAINSRCDIR}/rtpp_time.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_time.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_time.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_time.Tpo $(DEPDIR)/rtpp_time.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_time.c' object='rtpp_time.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_time.obj `if test -f '${MAINSRCDIR}/rtpp_time.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_time.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_time.c'; fi`
 
 rtpp_log_stand.o: ${MAINSRCDIR}/rtpp_log_stand.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_log_stand.o -MD -MP -MF $(DEPDIR)/rtpp_log_stand.Tpo -c -o rtpp_log_stand.o `test -f '${MAINSRCDIR}/rtpp_log_stand.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_log_stand.c

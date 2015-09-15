@@ -50,6 +50,7 @@
 
 #if !defined(NO_ERR_H)
 #include <err.h>
+#include "rtpp_util.h"
 #else
 #include "rtpp_util.h"
 #endif
@@ -262,11 +263,10 @@ rtpp_ctrl_sock_parse(const char *optarg)
 {
     struct rtpp_ctrl_sock *rcsp;
 
-    rcsp = malloc(sizeof(struct rtpp_ctrl_sock));
+    rcsp = rtpp_zmalloc(sizeof(struct rtpp_ctrl_sock));
     if (rcsp == NULL) {
         return (NULL);
     }
-    memset(rcsp, '\0', sizeof(struct rtpp_ctrl_sock));
     rcsp->type= RTPC_IFSUN;
     if (strncmp("udp:", optarg, 4) == 0) {
         rcsp->type= RTPC_UDP4;

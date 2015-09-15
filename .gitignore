@@ -12,6 +12,8 @@ Makefile
 stamp-h1
 libtool
 extractaudio/extractaudio
-rtpproxy/rtpproxy
-rtpproxy/rtpproxy_debug
+src/rtpproxy
+src/rtpproxy_debug
 makeann/makeann
+src/config.h
+src/config_std.h

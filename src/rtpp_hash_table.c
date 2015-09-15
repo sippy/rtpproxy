@@ -36,6 +36,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_pearson.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_util.h"
 
 enum rtpp_hte_types {rtpp_hte_naive_t = 0, rtpp_hte_refcnt_t};
 
@@ -81,11 +82,10 @@ rtpp_hash_table_ctor(void)
     struct rtpp_hash_table_obj *pub;
     struct rtpp_hash_table_priv *pvt;
 
-    rp = malloc(sizeof(struct rtpp_hash_table_full));
+    rp = rtpp_zmalloc(sizeof(struct rtpp_hash_table_full));
     if (rp == NULL) {
         return (NULL);
     }
-    memset(rp, '\0', sizeof(struct rtpp_hash_table_full));
     pvt = &(rp->pvt);
     pub = &(rp->pub);
     pub->append = &hash_table_append;
@@ -141,11 +141,10 @@ hash_table_append_raw(struct rtpp_hash_table_obj *self, const char *key,
 
     klen = strlen(key);
     malen = sizeof(struct rtpp_hash_table_entry) + klen + 1;
-    sp = malloc(malen);
+    sp = rtpp_zmalloc(malen);
     if (sp == NULL) {
         return (NULL);
     }
-    memset(sp, '\0', malen);
     sp->sptr = sptr;
     sp->hte_type = htype;
     sp->key = ((char *)sp) + sizeof(struct rtpp_hash_table_entry);

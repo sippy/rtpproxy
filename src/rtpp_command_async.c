@@ -55,6 +55,7 @@
 #include "rtpp_stats.h"
 #include "rtpp_list.h"
 #include "rtpp_controlfd.h"
+#include "rtpp_time.h"
 
 #define RTPC_MAX_CONNECTIONS 100
 
@@ -243,11 +244,10 @@ rtpp_cmd_connection_ctor(int controlfd_in, int controlfd_out,
 {
     struct rtpp_cmd_connection *rcc;
 
-    rcc = malloc(sizeof(struct rtpp_cmd_connection));
+    rcc = rtpp_zmalloc(sizeof(struct rtpp_cmd_connection));
     if (rcc == NULL) {
         return (NULL);
     }
-    memset(rcc, '\0', sizeof(struct rtpp_cmd_connection));
     rcc->controlfd_in = controlfd_in;
     rcc->controlfd_out = controlfd_out;
     rcc->csock = csock;
@@ -615,11 +615,9 @@ rtpp_command_async_ctor(struct cfg *cf)
     struct rtpp_cmd_async_cf *cmd_cf;
     int need_acptr, i;
 
-    cmd_cf = malloc(sizeof(*cmd_cf));
+    cmd_cf = rtpp_zmalloc(sizeof(*cmd_cf));
     if (cmd_cf == NULL)
         goto e0;
-
-    memset(cmd_cf, '\0', sizeof(*cmd_cf));
 
     if (init_pollset(cf, &cmd_cf->pset) == -1) {
         goto e1;

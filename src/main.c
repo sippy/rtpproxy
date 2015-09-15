@@ -54,6 +54,7 @@
 
 #if !defined(NO_ERR_H)
 #include <err.h>
+#include "rtpp_util.h"
 #else
 #include "rtpp_util.h"
 #endif
@@ -73,11 +74,11 @@
 #include "rtpp_proc_async.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
-#include "rtpp_util.h"
 #include "rtpp_math.h"
 #include "rtpp_stats.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_list.h"
+#include "rtpp_time.h"
 #include "rtpp_timed.h"
 #include "rtpp_tnotify_set.h"
 #ifdef RTPP_CHECK_LEAKS
@@ -609,18 +610,16 @@ main(int argc, char **argv)
 
     memset(&cf, 0, sizeof(cf));
 
-    cf.stable = malloc(sizeof(struct rtpp_cfg_stable));
+    cf.stable = rtpp_zmalloc(sizeof(struct rtpp_cfg_stable));
     if (cf.stable == NULL) {
          err(1, "can't allocate memory for the struct rtpp_cfg_stable");
          /* NOTREACHED */
     }
-    memset(cf.stable, '\0', sizeof(struct rtpp_cfg_stable));
-    cf.stable->ctrl_socks = malloc(sizeof(struct rtpp_list));
+    cf.stable->ctrl_socks = rtpp_zmalloc(sizeof(struct rtpp_list));
     if (cf.stable->ctrl_socks == NULL) {
          err(1, "can't allocate memory for the struct rtpp_cfg_stable");
          /* NOTREACHED */
     }
-    memset(cf.stable->ctrl_socks, '\0', sizeof(struct rtpp_list));
     RTPP_LIST_RESET(cf.stable->ctrl_socks);    
 
     init_config(&cf, argc, argv);
