@@ -44,12 +44,14 @@
 #include "rtpp_defines.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_math.h"
+#include "rtpp_pthread.h"
 #include "rtpp_record.h"
 #include "rtp_resizer.h"
 #include "rtpp_session.h"
 #include "rtp_server.h"
 #include "rtpp_util.h"
 #include "rtpp_stats.h"
+#include "rtpp_time.h"
 #include "rtpp_timed.h"
 #include "rtpp_analyzer.h"
 
@@ -60,7 +62,7 @@ session_findfirst(struct cfg *cf, const char *call_id)
     struct rtpp_hash_table_entry *he;
 
     /* Make sure structure is properly locked */
-    assert(pthread_mutex_islocked(&cf->glock) == 1);
+    assert(rtpp_mutex_islocked(&cf->glock) == 1);
 
     he = CALL_METHOD(cf->stable->sessions_ht, findfirst, call_id, (void **)&sp);
     if (he == NULL) {
@@ -76,7 +78,7 @@ session_findnext(struct cfg *cf, struct rtpp_session *psp)
     struct rtpp_hash_table_entry *he;
 
     /* Make sure structure is properly locked */
-    assert(pthread_mutex_islocked(&cf->glock) == 1);
+    assert(rtpp_mutex_islocked(&cf->glock) == 1);
 
     he = CALL_METHOD(cf->stable->sessions_ht, findnext, psp->hte, (void **)&sp); 
     if (he == NULL) {
@@ -91,7 +93,7 @@ append_session(struct cfg *cf, struct rtpp_session *sp, int index)
     int rtp_index;
 
     /* Make sure structure is properly locked */
-    assert(pthread_mutex_islocked(&cf->glock) == 1);
+    assert(rtpp_mutex_islocked(&cf->glock) == 1);
 
     if (sp->fds[index] != -1) {
         pthread_mutex_lock(&cf->sessinfo.lock);
@@ -155,7 +157,7 @@ update_sessions(struct cfg *cf, struct rtpp_session *sp, int index, int *new_fds
     int rtp_index;
 
     /* Make sure structure is properly locked */
-    assert(pthread_mutex_islocked(&cf->glock) == 1);
+    assert(rtpp_mutex_islocked(&cf->glock) == 1);
     rtp_index = sp->sidx[index];
     assert(rtp_index > -1);
     assert(sp->rtcp->sidx[index] == rtp_index);
@@ -181,8 +183,8 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 
     session_time = getdtime() - sp->init_ts;
     /* Make sure structure is properly locked */
-    assert(pthread_mutex_islocked(&cf->glock) == 1);
-    assert(pthread_mutex_islocked(&cf->sessinfo.lock) == 1);
+    assert(rtpp_mutex_islocked(&cf->glock) == 1);
+    assert(rtpp_mutex_islocked(&cf->sessinfo.lock) == 1);
 
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->pcount.npkts_in[0],
@@ -326,7 +328,7 @@ find_stream(struct cfg *cf, const char *call_id, const char *from_tag,
     const char *cp1, *cp2;
 
     /* Make sure structure is properly locked */
-    assert(pthread_mutex_islocked(&cf->glock) == 1);
+    assert(rtpp_mutex_islocked(&cf->glock) == 1);
 
     for (*spp = session_findfirst(cf, call_id); *spp != NULL; *spp = session_findnext(cf, *spp)) {
 	if (strcmp((*spp)->tag, from_tag) == 0) {
