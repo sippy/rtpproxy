@@ -779,16 +779,11 @@ main(int argc, char **argv)
         if (cf.stable->fastshutdown != 0) {
             break;
         }
-        if (cf.stable->slowshutdown != 0) {
-            pthread_mutex_lock(&cf.sessinfo->lock);
-            if (cf.sessinfo->nsessions == 0) {
-                /* The below unlock is not necessary, but does not hurt either */
-                pthread_mutex_unlock(&cf.sessinfo->lock);
-                rtpp_log_write(RTPP_LOG_INFO, cf.stable->glog,
-                  "deorbiting-burn sequence completed, exiting");
-                break;
-            }
-            pthread_mutex_unlock(&cf.sessinfo->lock);
+        if (cf.stable->slowshutdown != 0 &&
+          CALL_METHOD(cf.sessinfo, get_nsessions) == 0) {
+            rtpp_log_write(RTPP_LOG_INFO, cf.stable->glog,
+              "deorbiting-burn sequence completed, exiting");
+            break;
         }
     }
 

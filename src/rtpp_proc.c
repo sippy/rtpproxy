@@ -94,9 +94,7 @@ process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
                         CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nplrs_destroyed", 1);
                         sp->rtps[sidx] = NULL;
                         if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
-                            assert(cf->sessinfo->rtp_servers[sp->sridx] == sp);
-                            cf->sessinfo->rtp_servers[sp->sridx] = NULL;
-                            sp->sridx = -1;
+                            CALL_METHOD(cf->sessinfo, blank_srv_locked, sp);
                         }
                     } else if (len != RTPS_LATER) {
                         /* XXX some error, brag to logs */

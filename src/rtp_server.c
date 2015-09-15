@@ -39,6 +39,7 @@
 #include "rtp_packet.h"
 #include "rtp_server.h"
 #include "rtpp_log.h"
+#include "rtpp_types.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_session.h"
@@ -199,9 +200,7 @@ append_server(struct cfg *cf, struct rtpp_session *sp)
 
     if (sp->rtps[0] != NULL || sp->rtps[1] != NULL) {
 	if (sp->sridx == -1) {
-	    cf->sessinfo->rtp_servers[cf->sessinfo->rtp_nsessions] = sp;
-	    sp->sridx = cf->sessinfo->rtp_nsessions;
-	    cf->sessinfo->rtp_nsessions++;
+            CALL_METHOD(cf->sessinfo, append_srv, sp);
 	}
     } else {
 	sp->sridx = -1;

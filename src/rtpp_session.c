@@ -91,26 +91,12 @@ session_findnext(struct cfg *cf, struct rtpp_session *psp)
 void
 append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 {
-    int rtp_index;
 
     /* Make sure structure is properly locked */
     assert(rtpp_mutex_islocked(&cf->glock) == 1);
 
     if (sp->fds[index] != -1) {
-        pthread_mutex_lock(&cf->sessinfo->lock);
-        rtp_index = cf->sessinfo->nsessions;
-	cf->sessinfo->sessions[rtp_index] = sp;
-	cf->sessinfo->pfds_rtp[rtp_index].fd = sp->fds[index];
-	cf->sessinfo->pfds_rtp[rtp_index].events = POLLIN;
-	cf->sessinfo->pfds_rtp[rtp_index].revents = 0;
-        cf->sessinfo->pfds_rtcp[rtp_index].fd = sp->rtcp->fds[index];
-        cf->sessinfo->pfds_rtcp[rtp_index].events = POLLIN;
-        cf->sessinfo->pfds_rtcp[rtp_index].revents = 0;
-	sp->sidx[index] = rtp_index;
-	sp->rtcp->sidx[index] = rtp_index;
-	cf->sessinfo->nsessions++;
-            
-        pthread_mutex_unlock(&cf->sessinfo->lock);
+        CALL_METHOD(cf->sessinfo, append, sp, index);
     } else {
 	sp->sidx[index] = -1;
     }

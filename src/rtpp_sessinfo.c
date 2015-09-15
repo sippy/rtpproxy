@@ -27,6 +27,7 @@
  */
 
 #include <sys/stat.h>
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,16 +35,28 @@
 #include <pthread.h>
 
 #include "rtpp_log.h"
+#include "rtpp_types.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_sessinfo.h"
+#include "rtpp_session.h"
 #include "rtpp_util.h"
 
-struct rtpp_sessinfo *
+static int rtpp_sinfo_get_nsessions(struct rtpp_sessinfo_obj *);
+static void rtpp_sinfo_append(struct rtpp_sessinfo_obj *, struct rtpp_session *,
+  int index);
+static void rtpp_sinfo_append_srv(struct rtpp_sessinfo_obj *,
+  struct rtpp_session *);
+static void rtpp_sinfo_blank_srv(struct rtpp_sessinfo_obj *,
+  struct rtpp_session *);
+static void rtpp_sinfo_blank_srv_locked(struct rtpp_sessinfo_obj *,
+  struct rtpp_session *);
+
+struct rtpp_sessinfo_obj *
 rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
 {
-    struct rtpp_sessinfo *sessinfo;
+    struct rtpp_sessinfo_obj *sessinfo;
 
-    sessinfo = rtpp_zmalloc(sizeof(struct rtpp_sessinfo));
+    sessinfo = rtpp_zmalloc(sizeof(struct rtpp_sessinfo_obj));
     if (sessinfo == NULL) {
         return (NULL);
     }
@@ -69,9 +82,11 @@ rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
     }
     pthread_mutex_init(&sessinfo->lock, NULL);
 
-    sessinfo->sessions[0] = NULL;
-    sessinfo->nsessions = 0;
-    sessinfo->rtp_nsessions = 0;
+    sessinfo->get_nsessions = &rtpp_sinfo_get_nsessions;
+    sessinfo->append = &rtpp_sinfo_append;
+    sessinfo->append_srv = &rtpp_sinfo_append_srv;
+    sessinfo->blank_srv = &rtpp_sinfo_blank_srv;
+    sessinfo->blank_srv_locked = &rtpp_sinfo_blank_srv_locked;
 
     return (sessinfo);
 
@@ -84,4 +99,65 @@ e1:
 e0:
     free(sessinfo);
     return (NULL);
+}
+
+static int
+rtpp_sinfo_get_nsessions(struct rtpp_sessinfo_obj *sessinfo)
+{
+    int rval;
+
+    pthread_mutex_lock(&sessinfo->lock);
+    rval = sessinfo->nsessions;
+    pthread_mutex_unlock(&sessinfo->lock);
+    return (rval);
+}
+
+static void
+rtpp_sinfo_append(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session *sp,
+  int index)
+{
+    int rtp_index;
+
+    pthread_mutex_lock(&sessinfo->lock);
+    rtp_index = sessinfo->nsessions;
+    sessinfo->sessions[rtp_index] = sp;
+    sessinfo->pfds_rtp[rtp_index].fd = sp->fds[index];
+    sessinfo->pfds_rtp[rtp_index].events = POLLIN;
+    sessinfo->pfds_rtp[rtp_index].revents = 0;
+    sessinfo->pfds_rtcp[rtp_index].fd = sp->rtcp->fds[index];
+    sessinfo->pfds_rtcp[rtp_index].events = POLLIN;
+    sessinfo->pfds_rtcp[rtp_index].revents = 0;
+    sp->sidx[index] = rtp_index;
+    sp->rtcp->sidx[index] = rtp_index;
+    sessinfo->nsessions++;
+    pthread_mutex_unlock(&sessinfo->lock);
+}
+
+static void
+rtpp_sinfo_append_srv(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session *sp)
+{
+
+    pthread_mutex_lock(&sessinfo->lock);
+    sessinfo->rtp_servers[sessinfo->rtp_nsessions] = sp;
+    sp->sridx = sessinfo->rtp_nsessions;
+    sessinfo->rtp_nsessions++;
+    pthread_mutex_unlock(&sessinfo->lock);
+}
+
+static void
+rtpp_sinfo_blank_srv(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session *sp)
+{
+
+    pthread_mutex_lock(&sessinfo->lock);
+    rtpp_sinfo_blank_srv_locked(sessinfo, sp);
+    pthread_mutex_unlock(&sessinfo->lock);
+}
+
+static void
+rtpp_sinfo_blank_srv_locked(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session *sp)
+{
+
+    assert(sessinfo->rtp_servers[sp->sridx] == sp);
+    sessinfo->rtp_servers[sp->sridx] = NULL;
+    sp->sridx = -1;
 }

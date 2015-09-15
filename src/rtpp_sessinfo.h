@@ -28,8 +28,17 @@
 
 struct pollfd;
 struct rtpp_session;
+struct rtpp_sessinfo_obj;
 
-struct rtpp_sessinfo {
+DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_get_nsessions, int);
+DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_append, void, struct rtpp_session *,
+  int);
+DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_append_srv, void,
+  struct rtpp_session *);
+DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_blank_srv, void,
+  struct rtpp_session *);
+
+struct rtpp_sessinfo_obj {
     struct pollfd *pfds_rtp;
     struct pollfd *pfds_rtcp;
     struct rtpp_session **sessions;
@@ -38,7 +47,11 @@ struct rtpp_sessinfo {
     /* Structures below are protected by the glock */
     struct rtpp_session **rtp_servers;
     int rtp_nsessions;
+    rtpp_si_get_nsessions_t get_nsessions;
+    rtpp_si_append_t append;
+    rtpp_si_append_srv_t append_srv;
+    rtpp_si_blank_srv_t blank_srv;
+    rtpp_si_blank_srv_t blank_srv_locked;
 };
 
-struct rtpp_sessinfo *rtpp_sessinfo_ctor(struct rtpp_cfg_stable *);
-
+struct rtpp_sessinfo_obj *rtpp_sessinfo_ctor(struct rtpp_cfg_stable *);

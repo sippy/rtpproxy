@@ -632,9 +632,7 @@ handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx, struct rtpp_com
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "stopping player at port %d", spa->ports[idx]);
 	if (spa->rtps[0] == NULL && spa->rtps[1] == NULL) {
-	    assert(cf->sessinfo->rtp_servers[spa->sridx] == spa);
-	    cf->sessinfo->rtp_servers[spa->sridx] = NULL;
-	    spa->sridx = -1;
+            CALL_METHOD(cf->sessinfo, blank_srv, spa);
 	}
    }
 }
