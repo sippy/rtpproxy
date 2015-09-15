@@ -7,33 +7,33 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_sessinfo.h"
+#include "rtpp_util.h"
 
 struct rtpp_sessinfo *
 rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
 {
     struct rtpp_sessinfo *sessinfo;
 
-    sessinfo = malloc(sizeof(struct rtpp_sessinfo));
+    sessinfo = rtpp_zmalloc(sizeof(struct rtpp_sessinfo));
     if (sessinfo == NULL) {
         return (NULL);
     }
-    memset(sessinfo, '\0', sizeof(struct rtpp_sessinfo));
-    sessinfo->sessions = malloc((sizeof sessinfo->sessions[0]) *
+    sessinfo->sessions = rtpp_zmalloc((sizeof sessinfo->sessions[0]) *
       (((cfsp->port_max - cfsp->port_min + 1)) + 1));
     if (sessinfo->sessions == NULL) {
         goto e0;
     }
-    sessinfo->rtp_servers =  malloc((sizeof sessinfo->rtp_servers[0]) *
+    sessinfo->rtp_servers =  rtpp_zmalloc((sizeof sessinfo->rtp_servers[0]) *
       (((cfsp->port_max - cfsp->port_min + 1) * 2) + 1));
     if (sessinfo->rtp_servers == NULL) {
         goto e1;
     }
-    sessinfo->pfds_rtp = malloc((sizeof sessinfo->pfds_rtp[0]) *
+    sessinfo->pfds_rtp = rtpp_zmalloc((sizeof sessinfo->pfds_rtp[0]) *
       (((cfsp->port_max - cfsp->port_min + 1)) + 1));
     if (sessinfo->pfds_rtp == NULL) {
         goto e2;
     }
-    sessinfo->pfds_rtcp = malloc((sizeof sessinfo->pfds_rtcp[0]) *
+    sessinfo->pfds_rtcp = rtpp_zmalloc((sizeof sessinfo->pfds_rtcp[0]) *
       (((cfsp->port_max - cfsp->port_min + 1)) + 1));
     if (sessinfo->pfds_rtcp == NULL) {
         goto e3;
