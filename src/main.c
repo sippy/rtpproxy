@@ -626,7 +626,7 @@ main(int argc, char **argv)
 
     seedrandom();
 
-    cf.stable->sessions_ht = rtpp_hash_table_ctor();
+    cf.stable->sessions_ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t);
     if (cf.stable->sessions_ht == NULL) {
         err(1, "can't allocate memory for the hash table");
          /* NOTREACHED */
