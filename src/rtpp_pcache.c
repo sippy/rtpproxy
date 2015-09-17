@@ -43,7 +43,7 @@ rtpp_pcache_ctor(void)
     }
     pub = &(fp->pub);
     pvt = &(fp->pvt);
-    pvt->hash_table = rtpp_hash_table_ctor(rtpp_ht_key_str_t);
+    pvt->hash_table = rtpp_hash_table_ctor(rtpp_ht_key_str_t, 0);
     if (pvt->hash_table == NULL) {
         free(fp);
         return (NULL);

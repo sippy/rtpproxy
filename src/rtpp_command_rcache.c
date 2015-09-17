@@ -66,7 +66,12 @@ rtpp_cmd_rcache_ctor(struct rtpp_timed_obj *rtpp_timed_cf, double min_ttl)
     if (pvt == NULL) {
         return (NULL);
     }
-    pvt->ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t);
+#if !defined(RTPP_DEBUG)
+    pvt->ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, RTPP_HT_NODUPS);
+#else
+    pvt->ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, RTPP_HT_NODUPS |
+      RTPP_HT_DUP_ABRT);
+#endif
     if (pvt->ht == NULL) {
         goto e0;
     }
