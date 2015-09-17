@@ -67,6 +67,19 @@ rtpp_pearson_hash8(struct rtpp_pearson *rpp, const char *bp, const char *ep)
     return res;
 }
 
+uint8_t
+rtpp_pearson_hash8b(struct rtpp_pearson *rpp, const uint8_t *bp, size_t blen)
+{
+    uint8_t res;
+    const uint8_t *ep;
+
+    ep = bp + blen;
+    for (res = rpp->rand_table[0]; bp != ep; bp++) {
+        res = rpp->rand_table[res ^ bp[0]];
+    }
+    return res;
+}
+
 static void
 compute_perfect_hash(struct rtpp_pearson_perfect *rppp)
 {
