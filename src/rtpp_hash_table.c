@@ -64,6 +64,7 @@ struct rtpp_hash_table_priv
     pthread_mutex_t hash_table_lock;
     int hte_num;
     enum rtpp_ht_key_types key_type;
+    int flags;
 };
 
 struct rtpp_hash_table_full
@@ -83,7 +84,7 @@ static void hash_table_expire(struct rtpp_hash_table_obj *self, rtpp_hash_table_
 static void hash_table_dtor(struct rtpp_hash_table_obj *self);
 
 struct rtpp_hash_table_obj *
-rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type)
+rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
 {
     struct rtpp_hash_table_full *rp;
     struct rtpp_hash_table_obj *pub;
@@ -95,6 +96,7 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type)
     }
     pvt = &(rp->pvt);
     pvt->key_type = key_type;
+    pvt->flags = flags;
     pub = &(rp->pub);
     pub->append = &hash_table_append;
     pub->append_refcnt = &hash_table_append_refcnt;
@@ -201,7 +203,7 @@ hash_table_append_raw(struct rtpp_hash_table_obj *self, const void *key,
   void *sptr, enum rtpp_hte_types htype)
 {
     int malen, klen;
-    struct rtpp_hash_table_entry *sp, *tsp;
+    struct rtpp_hash_table_entry *sp, *tsp, *tsp1;
     struct rtpp_hash_table_priv *pvt;
 
     pvt = self->pvt;
@@ -219,7 +221,7 @@ hash_table_append_raw(struct rtpp_hash_table_obj *self, const void *key,
     sp->hte_type = htype;
 
     sp->hash = rtpp_ht_hashkey(pvt, key);
-        
+
     switch (pvt->key_type) {
     case rtpp_ht_key_str_t:
         sp->key.ch = &sp->chstor[0];
@@ -244,8 +246,21 @@ hash_table_append_raw(struct rtpp_hash_table_obj *self, const void *key,
     if (tsp == NULL) {
        	pvt->hash_table[sp->hash] = sp;
     } else {
-        while (tsp->next != NULL) {
-	    tsp = tsp->next;
+        for (tsp1 = tsp; tsp1 != NULL; tsp1 = tsp1->next) {
+            tsp = tsp1;
+            if ((pvt->flags & RTPP_HT_NODUPS) == 0) {
+                continue;
+            }
+            if (rtpp_ht_cmpkey2(pvt, sp, tsp) == 0) {
+                continue;
+            }
+            /* Duplicate detected, reject / abort */
+            if ((pvt->flags & RTPP_HT_DUP_ABRT) != 0) {
+                abort();
+            }
+            pthread_mutex_unlock(&pvt->hash_table_lock);
+            free(sp);
+            return (NULL);
         }
         tsp->next = sp;
         sp->prev = tsp;

@@ -49,6 +49,9 @@ struct rtpp_hash_table_priv;
 enum rtpp_ht_key_types {rtpp_ht_key_str_t = 0, rtpp_ht_key_u64_t,
   rtpp_ht_key_u32_t, rtpp_ht_key_u16_t};
 
+#define RTPP_HT_NODUPS    0x1
+#define RTPP_HT_DUP_ABRT  0x2
+
 struct rtpp_hash_table_obj
 {
     hash_table_append_t append;
@@ -63,4 +66,4 @@ struct rtpp_hash_table_obj
     struct rtpp_hash_table_priv *pvt;
 };
 
-struct rtpp_hash_table_obj *rtpp_hash_table_ctor(enum rtpp_ht_key_types);
+struct rtpp_hash_table_obj *rtpp_hash_table_ctor(enum rtpp_ht_key_types, int);
