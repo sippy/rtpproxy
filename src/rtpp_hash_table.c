@@ -207,10 +207,10 @@ hash_table_append_raw(struct rtpp_hash_table_obj *self, const void *key,
     pvt = self->pvt;
     if (pvt->key_type == rtpp_ht_key_str_t) {
         klen = strlen(key);
+        malen = sizeof(struct rtpp_hash_table_entry) + klen + 1;
     } else {
-        klen = 0;
+        malen = sizeof(struct rtpp_hash_table_entry);
     }
-    malen = sizeof(struct rtpp_hash_table_entry) + klen + 1;
     sp = rtpp_zmalloc(malen);
     if (sp == NULL) {
         return (NULL);
