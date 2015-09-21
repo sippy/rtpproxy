@@ -33,28 +33,28 @@
 
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
-#include "rtpp_streamdb.h"
+#include "rtpp_weakref.h"
 #include "rtpp_util.h"
 
-struct rtpp_streamdb_priv {
-    struct rtpp_streamdb_obj pub;
+struct rtpp_weakref_priv {
+    struct rtpp_weakref_obj pub;
     uint64_t lastsuid;
     pthread_mutex_t lastsuid_lock;
     struct rtpp_hash_table_obj *ht;
 };
 
-#define PUB2PVT(pubp)      ((struct rtpp_streamdb_priv *)((char *)(pubp) - offsetof(struct rtpp_streamdb_priv, pub)))
+#define PUB2PVT(pubp)      ((struct rtpp_weakref_priv *)((char *)(pubp) - offsetof(struct rtpp_weakref_priv, pub)))
 
-static void rtpp_streamdb_dtor(struct rtpp_streamdb_obj *);
-static uint64_t rtpp_streamdb_append(struct rtpp_streamdb_obj *, struct rtpp_refcnt_obj *);
-static struct rtpp_refcnt_obj *rtpp_sdb_get_by_idx(struct rtpp_streamdb_obj *, uint64_t);
+static void rtpp_weakref_dtor(struct rtpp_weakref_obj *);
+static uint64_t rtpp_weakref_append(struct rtpp_weakref_obj *, struct rtpp_refcnt_obj *);
+static struct rtpp_refcnt_obj *rtpp_wref_get_by_idx(struct rtpp_weakref_obj *, uint64_t);
 
-struct rtpp_streamdb_obj *
-rtpp_streamdb_ctor(void)
+struct rtpp_weakref_obj *
+rtpp_weakref_ctor(void)
 {
-    struct rtpp_streamdb_priv *pvt;
+    struct rtpp_weakref_priv *pvt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_streamdb_priv));
+    pvt = rtpp_zmalloc(sizeof(struct rtpp_weakref_priv));
     if (pvt == NULL) {
         return (NULL);
     }
@@ -66,9 +66,9 @@ rtpp_streamdb_ctor(void)
     if (pvt->ht == NULL) {
         goto e1;
     }
-    pvt->pub.dtor = &rtpp_streamdb_dtor;
-    pvt->pub.append = &rtpp_streamdb_append;
-    pvt->pub.get_by_idx = &rtpp_sdb_get_by_idx;
+    pvt->pub.dtor = &rtpp_weakref_dtor;
+    pvt->pub.append = &rtpp_weakref_append;
+    pvt->pub.get_by_idx = &rtpp_wref_get_by_idx;
     return (&pvt->pub);
 
 e1:
@@ -79,9 +79,9 @@ e0:
 }
 
 static uint64_t
-rtpp_streamdb_append(struct rtpp_streamdb_obj *pub, struct rtpp_refcnt_obj *sp)
+rtpp_weakref_append(struct rtpp_weakref_obj *pub, struct rtpp_refcnt_obj *sp)
 {
-    struct rtpp_streamdb_priv *pvt;
+    struct rtpp_weakref_priv *pvt;
     uint64_t suid;
 
     pvt = PUB2PVT(pub);
@@ -96,9 +96,9 @@ rtpp_streamdb_append(struct rtpp_streamdb_obj *pub, struct rtpp_refcnt_obj *sp)
 }
 
 static void
-rtpp_streamdb_dtor(struct rtpp_streamdb_obj *pub)
+rtpp_weakref_dtor(struct rtpp_weakref_obj *pub)
 {
-    struct rtpp_streamdb_priv *pvt;
+    struct rtpp_weakref_priv *pvt;
 
     pvt = PUB2PVT(pub);
 
@@ -108,9 +108,9 @@ rtpp_streamdb_dtor(struct rtpp_streamdb_obj *pub)
 }
 
 static struct rtpp_refcnt_obj *
-rtpp_sdb_get_by_idx(struct rtpp_streamdb_obj *pub, uint64_t suid)
+rtpp_wref_get_by_idx(struct rtpp_weakref_obj *pub, uint64_t suid)
 {
-    struct rtpp_streamdb_priv *pvt;
+    struct rtpp_weakref_priv *pvt;
     struct rtpp_refcnt_obj *sp;
 
     pvt = PUB2PVT(pub);

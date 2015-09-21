@@ -26,21 +26,21 @@
  *
  */
 
-struct rtpp_streamdb_obj;
+struct rtpp_weakref_obj;
 struct rtpp_refcnt_obj;
 
-DEFINE_METHOD(rtpp_streamdb_obj, rtpp_sdb_append, uint64_t,
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_append, uint64_t,
   struct rtpp_refcnt_obj *);
-DEFINE_METHOD(rtpp_streamdb_obj, rtpp_sdb_remove, int, uint64_t);
-DEFINE_METHOD(rtpp_streamdb_obj, rtpp_sdb_get_by_idx, struct rtpp_refcnt_obj *,
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_remove, int, uint64_t);
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_by_idx, struct rtpp_refcnt_obj *,
   uint64_t);
-DEFINE_METHOD(rtpp_streamdb_obj, rtpp_streamdb_dtor, void);
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_weakref_dtor, void);
 
-struct rtpp_streamdb_obj {
-    rtpp_sdb_append_t append;
-    rtpp_sdb_remove_t remove;
-    rtpp_streamdb_dtor_t dtor;
-    rtpp_sdb_get_by_idx_t get_by_idx;
+struct rtpp_weakref_obj {
+    rtpp_wref_append_t append;
+    rtpp_wref_remove_t remove;
+    rtpp_weakref_dtor_t dtor;
+    rtpp_wref_get_by_idx_t get_by_idx;
 };
 
-struct rtpp_streamdb_obj *rtpp_streamdb_ctor(void);
+struct rtpp_weakref_obj *rtpp_weakref_ctor(void);
