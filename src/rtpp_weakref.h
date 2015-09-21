@@ -29,6 +29,8 @@
 struct rtpp_weakref_obj;
 struct rtpp_refcnt_obj;
 
+#define RTPP_WEAKID_ERR 0
+
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_reg, uint64_t,
   struct rtpp_refcnt_obj *);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_unreg, struct rtpp_refcnt_obj *,
