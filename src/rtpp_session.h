@@ -101,6 +101,8 @@ struct rtpp_session {
     /* Requested ptime */
     int ptime[2];
     struct rtpp_hash_table_entry *hte;
+    uint64_t suid;
+    struct rtpp_stats_obj *rtpp_stats;
 };
 
 struct cfg;
