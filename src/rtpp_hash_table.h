@@ -36,6 +36,7 @@ DEFINE_METHOD(rtpp_hash_table_obj, hash_table_append, struct rtpp_hash_table_ent
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_append_refcnt, struct rtpp_hash_table_entry *, const void *, struct rtpp_refcnt_obj *);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_remove, void, const void *key, struct rtpp_hash_table_entry *sp);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_remove_nc, void, struct rtpp_hash_table_entry *sp);
+DEFINE_METHOD(rtpp_hash_table_obj, hash_table_remove_by_key, struct rtpp_refcnt_obj *, const void *key);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_findfirst, struct rtpp_hash_table_entry *,
   const void *key, void **);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_findnext,  struct rtpp_hash_table_entry *,
@@ -58,6 +59,7 @@ struct rtpp_hash_table_obj
     hash_table_append_refcnt_t append_refcnt;
     hash_table_remove_t remove;
     hash_table_remove_nc_t remove_nc;
+    hash_table_remove_by_key_t remove_by_key;
     hash_table_findfirst_t findfirst;
     hash_table_findnext_t findnext;
     hash_table_find_t find;

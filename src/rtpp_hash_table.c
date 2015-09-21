@@ -77,6 +77,7 @@ static struct rtpp_hash_table_entry * hash_table_append(struct rtpp_hash_table_o
 static struct rtpp_hash_table_entry * hash_table_append_refcnt(struct rtpp_hash_table_obj *self, const void *key, struct rtpp_refcnt_obj *);
 static void hash_table_remove(struct rtpp_hash_table_obj *self, const void *key, struct rtpp_hash_table_entry * sp);
 static void hash_table_remove_nc(struct rtpp_hash_table_obj *self, struct rtpp_hash_table_entry * sp);
+static struct rtpp_refcnt_obj * hash_table_remove_by_key(struct rtpp_hash_table_obj *self, const void *key);
 static struct rtpp_hash_table_entry * hash_table_findfirst(struct rtpp_hash_table_obj *self, const void *key, void **sptrp);
 static struct rtpp_hash_table_entry * hash_table_findnext(struct rtpp_hash_table_obj *self, struct rtpp_hash_table_entry *psp, void **sptrp);
 static struct rtpp_refcnt_obj * hash_table_find(struct rtpp_hash_table_obj *self, const void *key);
@@ -102,6 +103,7 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
     pub->append_refcnt = &hash_table_append_refcnt;
     pub->remove = &hash_table_remove;
     pub->remove_nc = &hash_table_remove_nc;
+    pub->remove_by_key = &hash_table_remove_by_key;
     pub->findfirst = &hash_table_findfirst;
     pub->findnext = &hash_table_findnext;
     pub->find = &hash_table_find;
@@ -292,6 +294,27 @@ hash_table_append_refcnt(struct rtpp_hash_table_obj *self, const void *key,
     return (rval);
 }
 
+static inline void
+hash_table_remove_locked(struct rtpp_hash_table_priv *pvt,
+  struct rtpp_hash_table_entry *sp, uint8_t hash)
+{
+
+    if (sp->prev != NULL) {
+        sp->prev->next = sp->next;
+        if (sp->next != NULL) {
+            sp->next->prev = sp->prev;
+        }
+    } else {
+        /* Make sure we are removing the right session */
+        assert(pvt->hash_table[hash] == sp);
+        pvt->hash_table[hash] = sp->next;
+        if (sp->next != NULL) {
+            sp->next->prev = NULL;
+        }
+    }
+    pvt->hte_num -= 1;
+}
+
 static void
 hash_table_remove(struct rtpp_hash_table_obj *self, const void *key,
   struct rtpp_hash_table_entry * sp)
@@ -300,23 +323,9 @@ hash_table_remove(struct rtpp_hash_table_obj *self, const void *key,
     struct rtpp_hash_table_priv *pvt;
 
     pvt = self->pvt;
+    hash = rtpp_ht_hashkey(pvt, key);
     pthread_mutex_lock(&pvt->hash_table_lock);
-    if (sp->prev != NULL) {
-	sp->prev->next = sp->next;
-	if (sp->next != NULL) {
-	    sp->next->prev = sp->prev;
-	}
-    } else {
-        hash = rtpp_ht_hashkey(pvt, key);
-
-        /* Make sure we are removing the right session */
-        assert(pvt->hash_table[hash] == sp);
-        pvt->hash_table[hash] = sp->next;
-        if (sp->next != NULL) {
-	    sp->next->prev = NULL;
-        }
-    }
-    pvt->hte_num -= 1;
+    hash_table_remove_locked(pvt, sp, hash);
     pthread_mutex_unlock(&pvt->hash_table_lock);
     if (sp->hte_type == rtpp_hte_refcnt_t) {
         CALL_METHOD((struct rtpp_refcnt_obj *)sp->sptr, decref);
@@ -331,25 +340,42 @@ hash_table_remove_nc(struct rtpp_hash_table_obj *self, struct rtpp_hash_table_en
 
     pvt = self->pvt;
     pthread_mutex_lock(&pvt->hash_table_lock);
-    if (sp->prev != NULL) {
-        sp->prev->next = sp->next;
-        if (sp->next != NULL) {
-            sp->next->prev = sp->prev;
-        }
-    } else {
-        /* Make sure we are removing the right entry */
-        assert(pvt->hash_table[sp->hash] == sp);
-        pvt->hash_table[sp->hash] = sp->next;
-        if (sp->next != NULL) {
-            sp->next->prev = NULL;
-        }
-    }
-    pvt->hte_num -= 1;
+    hash_table_remove_locked(pvt, sp, sp->hash);
     pthread_mutex_unlock(&pvt->hash_table_lock);
     if (sp->hte_type == rtpp_hte_refcnt_t) {
         CALL_METHOD((struct rtpp_refcnt_obj *)sp->sptr, decref);
     }
     free(sp);
+}
+
+static struct rtpp_refcnt_obj *
+hash_table_remove_by_key(struct rtpp_hash_table_obj *self, const void *key)
+{
+    uint8_t hash;
+    struct rtpp_hash_table_entry *sp;
+    struct rtpp_hash_table_priv *pvt;
+    struct rtpp_refcnt_obj *rptr;
+
+    pvt = self->pvt;
+    hash = rtpp_ht_hashkey(pvt, key);
+    pthread_mutex_lock(&pvt->hash_table_lock);
+    for (sp = pvt->hash_table[hash]; sp != NULL; sp = sp->next) {
+        if (rtpp_ht_cmpkey(pvt, sp, key)) {
+            break;
+        }
+    }
+    if (sp == NULL) {
+        pthread_mutex_unlock(&pvt->hash_table_lock);
+        return (NULL);
+    }
+    hash_table_remove_locked(pvt, sp, hash);
+    pthread_mutex_unlock(&pvt->hash_table_lock);
+    if (sp->hte_type == rtpp_hte_refcnt_t) {
+        CALL_METHOD((struct rtpp_refcnt_obj *)sp->sptr, decref);
+    }
+    rptr = sp->sptr;
+    free(sp);
+    return (rptr);
 }
 
 static struct rtpp_hash_table_entry *
