@@ -55,6 +55,8 @@
 #include "rtpp_time.h"
 #include "rtpp_timed.h"
 #include "rtpp_analyzer.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_weakref.h"
 
 struct rtpp_session *
 session_findfirst(struct cfg *cf, const char *call_id)
@@ -88,9 +90,57 @@ session_findnext(struct cfg *cf, struct rtpp_session *psp)
     return (sp);
 }
 
+static void
+session_dtor(struct rtpp_session *sp)
+{
+    int i;
+
+    for (i = 0; i < 2; i++) {
+        if (sp->addr[i] != NULL)
+            free(sp->addr[i]);
+        if (sp->prev_addr[i] != NULL)
+            free(sp->prev_addr[i]);
+        if (sp->codecs[i] != NULL)
+            free(sp->codecs[i]);
+        if (sp->rtcp->addr[i] != NULL)
+            free(sp->rtcp->addr[i]);
+        if (sp->rtcp->prev_addr[i] != NULL)
+            free(sp->rtcp->prev_addr[i]);
+        if (sp->rtcp->codecs[i] != NULL)
+            free(sp->rtcp->codecs[i]);
+        if (sp->rtps[i] != NULL) {
+            rtp_server_free(sp->rtps[i]);
+            CALL_METHOD(sp->rtpp_stats, updatebyname, "nplrs_destroyed", 1);
+        }
+        if (sp->resizers[i] != NULL)
+             rtp_resizer_free(sp->rtpp_stats, sp->resizers[i]);
+    }
+    if (sp->timeout_data.notify_tag != NULL)
+        free(sp->timeout_data.notify_tag);
+    if (sp->call_id != NULL)
+        free(sp->call_id);
+    if (sp->tag != NULL)
+        free(sp->tag);
+    if (sp->tag_nomedianum != NULL)
+        free(sp->tag_nomedianum);
+
+    rtpp_log_close(sp->log);
+
+    free(sp->rtcp);
+    free(sp);
+}
+
 void
 append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 {
+    struct rtpp_refcnt_obj *rco;
+
+    if (sp->suid == 0) {
+        sp->rtpp_stats = cf->stable->rtpp_stats;
+        rco = rtpp_refcnt_ctor(sp, (rtpp_refcnt_dtor_t)session_dtor);
+        sp->suid = CALL_METHOD(cf->stable->sessions_wrt, reg, rco);
+        CALL_METHOD(rco, decref);
+    }
 
     /* Make sure structure is properly locked */
     assert(rtpp_mutex_islocked(&cf->glock) == 1);
@@ -183,27 +233,19 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
       sp->rtcp->pcount.ndropped, sp->rtcp->pcount.nignored);
     if (sp->complete != 0) {
         if (sp->pcount.npkts_in[0] == 0 && sp->pcount.npkts_in[1] == 0) {
-            CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_nortp", 1);
+            CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_nortp", 1);
         } else if (sp->pcount.npkts_in[0] == 0 || sp->pcount.npkts_in[1] == 0) {
-            CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_owrtp", 1);
+            CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_owrtp", 1);
         }
         if (sp->rtcp->pcount.npkts_in[0] == 0 && sp->rtcp->pcount.npkts_in[1] == 0) {
-            CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_nortcp", 1);
+            CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_nortcp", 1);
         } else if (sp->rtcp->pcount.npkts_in[0] == 0 || sp->rtcp->pcount.npkts_in[1] == 0) {
-            CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_owrtcp", 1);
+            CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_owrtcp", 1);
         }
     }
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "session on ports %d/%d is cleaned up",
       sp->ports[0], sp->ports[1]);
     for (i = 0; i < 2; i++) {
-	if (sp->addr[i] != NULL)
-	    free(sp->addr[i]);
-	if (sp->prev_addr[i] != NULL)
-	    free(sp->prev_addr[i]);
-	if (sp->rtcp->addr[i] != NULL)
-	    free(sp->rtcp->addr[i]);
-	if (sp->rtcp->prev_addr[i] != NULL)
-	    free(sp->rtcp->prev_addr[i]);
 	if (sp->fds[i] != -1) {
 	    close_socket_later(cf, sp->fds[i]);
 	    assert(cf->sessinfo->sessions[sp->sidx[i]] == sp);
@@ -230,15 +272,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
 	    rclose(sp, sp->rtcp->rrcs[i], 1);
 	if (sp->rtps[i] != NULL) {
 	    cf->sessinfo->rtp_servers[sp->sridx] = NULL;
-	    rtp_server_free(sp->rtps[i]);
-            CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nplrs_destroyed", 1);
 	}
-	if (sp->codecs[i] != NULL)
-	    free(sp->codecs[i]);
-	if (sp->rtcp->codecs[i] != NULL)
-	    free(sp->rtcp->codecs[i]);
-        if (sp->resizers[i] != NULL)
-             rtp_resizer_free(cf->stable->rtpp_stats, sp->resizers[i]);
         if (sp->analyzers[i] != NULL) {
              struct rtpp_analyzer_stats rst;
              char ssrc_buf[11];
@@ -257,36 +291,27 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
                actor, ssrc, rst.ssrc_changes, rst.psent, rst.precvd,
                rst.psent - rst.precvd, rst.pdups);
              if (rst.psent > 0) {
-                 CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "rtpa_nsent", rst.psent);
+                 CALL_METHOD(sp->rtpp_stats, updatebyname, "rtpa_nsent", rst.psent);
              }
              if (rst.precvd > 0) {
-                 CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "rtpa_nrcvd", rst.precvd);
+                 CALL_METHOD(sp->rtpp_stats, updatebyname, "rtpa_nrcvd", rst.precvd);
              }
              if (rst.pdups > 0) {
-                 CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "rtpa_ndups", rst.pdups);
+                 CALL_METHOD(sp->rtpp_stats, updatebyname, "rtpa_ndups", rst.pdups);
              }
              if (rst.pecount > 0) {
-                 CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
+                 CALL_METHOD(sp->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
              }
              rtpp_analyzer_dtor(sp->analyzers[i]);
         }
     }
-    if (sp->timeout_data.notify_tag != NULL)
-	free(sp->timeout_data.notify_tag);
     if (sp->hte != NULL)
         CALL_METHOD(cf->stable->sessions_ht, remove, sp->call_id, sp->hte);
-    if (sp->call_id != NULL)
-	free(sp->call_id);
-    if (sp->tag != NULL)
-	free(sp->tag);
-    if (sp->tag_nomedianum != NULL)
-	free(sp->tag_nomedianum);
-    rtpp_log_close(sp->log);
-    free(sp->rtcp);
-    free(sp);
+    assert(sp->suid != 0);
+    CALL_METHOD(cf->stable->sessions_wrt, unreg, sp->suid);
     cf->sessions_active--;
-    CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_destroyed", 1);
-    CALL_METHOD(cf->stable->rtpp_stats, updatebyname_d, "total_duration",
+    CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_destroyed", 1);
+    CALL_METHOD(sp->rtpp_stats, updatebyname_d, "total_duration",
       session_time);
 }
 
