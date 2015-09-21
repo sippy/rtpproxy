@@ -81,6 +81,7 @@
 #include "rtpp_time.h"
 #include "rtpp_timed.h"
 #include "rtpp_tnotify_set.h"
+#include "rtpp_weakref.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -631,6 +632,12 @@ main(int argc, char **argv)
         err(1, "can't allocate memory for the hash table");
          /* NOTREACHED */
     }
+    cf.stable->sessions_wrt = rtpp_weakref_ctor();
+    if (cf.stable->sessions_wrt == NULL) {
+        err(1, "can't allocate memory for the weakref table");
+         /* NOTREACHED */
+    }
+
     cf.stable->rtpp_stats = rtpp_stats_ctor();
     if (cf.stable->rtpp_stats == NULL) {
         err(1, "can't allocate memory for the stats data");
