@@ -29,16 +29,17 @@
 struct rtpp_weakref_obj;
 struct rtpp_refcnt_obj;
 
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_append, uint64_t,
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_reg, uint64_t,
   struct rtpp_refcnt_obj *);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_remove, int, uint64_t);
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_unreg, struct rtpp_refcnt_obj *,
+  uint64_t);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_by_idx, struct rtpp_refcnt_obj *,
   uint64_t);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_weakref_dtor, void);
 
 struct rtpp_weakref_obj {
-    rtpp_wref_append_t append;
-    rtpp_wref_remove_t remove;
+    rtpp_wref_reg_t reg;
+    rtpp_wref_unreg_t unreg;
     rtpp_weakref_dtor_t dtor;
     rtpp_wref_get_by_idx_t get_by_idx;
 };
