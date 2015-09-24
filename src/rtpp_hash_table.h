@@ -44,6 +44,7 @@ DEFINE_METHOD(rtpp_hash_table_obj, hash_table_findnext,  struct rtpp_hash_table_
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_find, struct rtpp_refcnt_obj *, const void *);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_expire, void, rtpp_hash_table_match_t, void *);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_dtor, void);
+DEFINE_METHOD(rtpp_hash_table_obj, hash_table_get_length, int);
 
 struct rtpp_hash_table_priv;
 
@@ -65,6 +66,7 @@ struct rtpp_hash_table_obj
     hash_table_find_t find;
     hash_table_expire_t expire;
     hash_table_dtor_t dtor;
+    hash_table_get_length_t get_length;
     struct rtpp_hash_table_priv *pvt;
 };
 

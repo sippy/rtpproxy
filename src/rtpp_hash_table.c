@@ -83,6 +83,7 @@ static struct rtpp_hash_table_entry * hash_table_findnext(struct rtpp_hash_table
 static struct rtpp_refcnt_obj * hash_table_find(struct rtpp_hash_table_obj *self, const void *key);
 static void hash_table_expire(struct rtpp_hash_table_obj *self, rtpp_hash_table_match_t, void *);
 static void hash_table_dtor(struct rtpp_hash_table_obj *self);
+static int hash_table_get_length(struct rtpp_hash_table_obj *self);
 
 struct rtpp_hash_table_obj *
 rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
@@ -109,6 +110,7 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
     pub->find = &hash_table_find;
     pub->expire = &hash_table_expire;
     pub->dtor = &hash_table_dtor;
+    pub->get_length = &hash_table_get_length;
     pthread_mutex_init(&pvt->hash_table_lock, NULL);
     rtpp_pearson_shuffle(&pvt->rp);
     pub->pvt = pvt;
@@ -484,4 +486,18 @@ hash_table_expire(struct rtpp_hash_table_obj *self,
         }
     }
     pthread_mutex_unlock(&pvt->hash_table_lock);
+}
+
+static int
+hash_table_get_length(struct rtpp_hash_table_obj *self)
+{
+    struct rtpp_hash_table_priv *pvt;
+    int rval;
+
+    pvt = self->pvt;
+    pthread_mutex_lock(&pvt->hash_table_lock);
+    rval = pvt->hte_num;
+    pthread_mutex_unlock(&pvt->hash_table_lock);
+
+    return (rval);
 }
