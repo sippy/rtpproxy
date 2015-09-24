@@ -94,7 +94,7 @@ rtpp_weakref_reg(struct rtpp_weakref_obj *pub, struct rtpp_refcnt_obj *sp)
     pthread_mutex_unlock(&pvt->lastsuid_lock);
 
     if (CALL_METHOD(pvt->ht, append_refcnt, &suid, sp) == NULL) {
-        return (RTPP_WEAKID_ERR);
+        return (RTPP_WEAKID_NONE);
     }
     return (suid);
 }
