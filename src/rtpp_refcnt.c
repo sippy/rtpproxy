@@ -42,12 +42,16 @@ struct rtpp_refcnt_priv
     pthread_mutex_t cnt_lock;
     rtpp_refcnt_dtor_t dtor_f;
     void *data;
+    rtpp_refcnt_dtor_t pre_dtor_f;
+    void *pd_data;
 };
 
 static void rtpp_refcnt_incref(struct rtpp_refcnt_obj *);
 static void rtpp_refcnt_decref(struct rtpp_refcnt_obj *);
 static void rtpp_refcnt_decref_pa(struct rtpp_refcnt_obj *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt_obj *);
+static void rtpp_refcnt_reg_pd(struct rtpp_refcnt_obj *, rtpp_refcnt_dtor_t,
+  void *);
 
 struct rtpp_refcnt_obj *
 rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
@@ -71,6 +75,7 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     pvt->pub.incref = &rtpp_refcnt_incref;
     pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
+    pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
     pvt->cnt = 1;
     return (&pvt->pub);
 }
@@ -100,6 +105,7 @@ rtpp_refcnt_ctor_pa(void *pap, void *data, rtpp_refcnt_dtor_t dtor_f)
     pvt->pub.incref = &rtpp_refcnt_incref;
     pvt->pub.decref = &rtpp_refcnt_decref_pa;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
+    pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
     pvt->cnt = 1;
     return (&pvt->pub);
 }
@@ -125,6 +131,9 @@ rtpp_refcnt_decref(struct rtpp_refcnt_obj *pub)
     pthread_mutex_lock(&pvt->cnt_lock);
     pvt->cnt -= 1;
     if (pvt->cnt == 0) {
+        if (pvt->pre_dtor_f != NULL) {
+            pvt->pre_dtor_f(pvt->pd_data);
+        }
         pvt->dtor_f(pvt->data);
         pthread_mutex_unlock(&pvt->cnt_lock);
         pthread_mutex_destroy(&pvt->cnt_lock);
@@ -144,6 +153,9 @@ rtpp_refcnt_decref_pa(struct rtpp_refcnt_obj *pub)
     pthread_mutex_lock(&pvt->cnt_lock);
     pvt->cnt -= 1;
     if (pvt->cnt == 0) {
+        if (pvt->pre_dtor_f != NULL) {
+            pvt->pre_dtor_f(pvt->pd_data);
+        }
         pvt->dtor_f(pvt->data);
         pthread_mutex_unlock(&pvt->cnt_lock);
         pthread_mutex_destroy(&pvt->cnt_lock);
@@ -161,4 +173,16 @@ rtpp_refcnt_getdata(struct rtpp_refcnt_obj *pub)
     pvt = (struct rtpp_refcnt_priv *)pub;
     assert(pvt->cnt > 0);
     return (pvt->data);
+}
+
+static void
+rtpp_refcnt_reg_pd(struct rtpp_refcnt_obj *pub, rtpp_refcnt_dtor_t pre_dtor_f,
+  void *pd_data)
+{
+    struct rtpp_refcnt_priv *pvt;
+
+    pvt = (struct rtpp_refcnt_priv *)pub;
+    assert(pvt->pre_dtor_f == NULL);
+    pvt->pre_dtor_f = pre_dtor_f;
+    pvt->pd_data = pd_data;
 }
