@@ -48,6 +48,7 @@ struct rtpp_cmd_rcache_pvt {
 struct rtpp_cmd_rcache_entry {
     char *reply;
     double etime;
+    void *rco[0];
 };
 
 static void rtpp_cmd_rcache_cleanup(double, void *);
@@ -110,7 +111,7 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache_obj *pub, const char *cookie,
     struct rtpp_refcnt_obj *rco;
 
     pvt = (struct rtpp_cmd_rcache_pvt *)pub;
-    rep = rtpp_zmalloc(sizeof(struct rtpp_cmd_rcache_entry));
+    rep = rtpp_zmalloc(sizeof(struct rtpp_cmd_rcache_entry) + rtpp_refcnt_osize());
     if (rep == NULL) {
         return;
     }
@@ -119,7 +120,7 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache_obj *pub, const char *cookie,
         goto e1;
     }
     rep->etime = ctime + pvt->min_ttl;
-    rco = rtpp_refcnt_ctor(rep, rtpp_cmd_rcache_entry_free);
+    rco = rtpp_refcnt_ctor_pa(&rep->rco[0], rep, rtpp_cmd_rcache_entry_free);
     if (rco == NULL) {
         goto e3;
     }
