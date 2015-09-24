@@ -41,3 +41,5 @@ struct rtpp_refcnt_obj
 };
 
 struct rtpp_refcnt_obj *rtpp_refcnt_ctor(void *, rtpp_refcnt_dtor_t);
+size_t rtpp_refcnt_osize(void);
+struct rtpp_refcnt_obj *rtpp_refcnt_ctor_pa(void *, void *, rtpp_refcnt_dtor_t);
