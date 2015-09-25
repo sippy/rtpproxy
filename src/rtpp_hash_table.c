@@ -468,21 +468,9 @@ hash_table_expire(struct rtpp_hash_table_obj *self,
             if (hte_ematch(rptr, marg) == 0) {
                 continue;
             }
-            if (sp->prev != NULL) {
-                sp->prev->next = sp->next;
-                if (sp->next != NULL) {
-                    sp->next->prev = sp->prev;
-                }
-            } else {
-                assert(pvt->hash_table[sp->hash] == sp);
-                pvt->hash_table[sp->hash] = sp->next;
-                if (sp->next != NULL) {
-                    sp->next->prev = NULL;
-                }
-            }
+            hash_table_remove_locked(pvt, sp, sp->hash);
             CALL_METHOD(rptr, decref);
             free(sp);
-            pvt->hte_num -= 1;
         }
     }
     pthread_mutex_unlock(&pvt->hash_table_lock);
