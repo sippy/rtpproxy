@@ -44,11 +44,11 @@ struct rtpp_refcnt_priv
     void *data;
     rtpp_refcnt_dtor_t pre_dtor_f;
     void *pd_data;
+    int pa_flag;
 };
 
 static void rtpp_refcnt_incref(struct rtpp_refcnt_obj *);
 static void rtpp_refcnt_decref(struct rtpp_refcnt_obj *);
-static void rtpp_refcnt_decref_pa(struct rtpp_refcnt_obj *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt_obj *);
 static void rtpp_refcnt_reg_pd(struct rtpp_refcnt_obj *, rtpp_refcnt_dtor_t,
   void *);
@@ -103,10 +103,11 @@ rtpp_refcnt_ctor_pa(void *pap, void *data, rtpp_refcnt_dtor_t dtor_f)
         pvt->dtor_f = free;
     }
     pvt->pub.incref = &rtpp_refcnt_incref;
-    pvt->pub.decref = &rtpp_refcnt_decref_pa;
+    pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
     pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
     pvt->cnt = 1;
+    pvt->pa_flag = 1;
     return (&pvt->pub);
 }
 
@@ -137,28 +138,9 @@ rtpp_refcnt_decref(struct rtpp_refcnt_obj *pub)
         pvt->dtor_f(pvt->data);
         pthread_mutex_unlock(&pvt->cnt_lock);
         pthread_mutex_destroy(&pvt->cnt_lock);
-        free(pvt);
-        return;
-    }
-    assert(pvt->cnt > 0);
-    pthread_mutex_unlock(&pvt->cnt_lock);
-}
-
-static void
-rtpp_refcnt_decref_pa(struct rtpp_refcnt_obj *pub)
-{
-    struct rtpp_refcnt_priv *pvt;
-
-    pvt = (struct rtpp_refcnt_priv *)pub;
-    pthread_mutex_lock(&pvt->cnt_lock);
-    pvt->cnt -= 1;
-    if (pvt->cnt == 0) {
-        if (pvt->pre_dtor_f != NULL) {
-            pvt->pre_dtor_f(pvt->pd_data);
+        if (pvt->pa_flag == 0) {
+            free(pvt);
         }
-        pvt->dtor_f(pvt->data);
-        pthread_mutex_unlock(&pvt->cnt_lock);
-        pthread_mutex_destroy(&pvt->cnt_lock);
         return;
     }
     assert(pvt->cnt > 0);
