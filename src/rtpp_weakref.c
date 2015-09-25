@@ -49,6 +49,8 @@ static void rtpp_weakref_dtor(struct rtpp_weakref_obj *);
 static uint64_t rtpp_weakref_reg(struct rtpp_weakref_obj *, struct rtpp_refcnt_obj *);
 static struct rtpp_refcnt_obj *rtpp_wref_get_by_idx(struct rtpp_weakref_obj *, uint64_t);
 static struct rtpp_refcnt_obj *rtpp_weakref_unreg(struct rtpp_weakref_obj *, uint64_t);
+static void rtpp_wref_foreach(struct rtpp_weakref_obj *, rtpp_weakref_foreach_t,
+  void *);
 
 struct rtpp_weakref_obj *
 rtpp_weakref_ctor(void)
@@ -71,6 +73,7 @@ rtpp_weakref_ctor(void)
     pvt->pub.reg = &rtpp_weakref_reg;
     pvt->pub.get_by_idx = &rtpp_wref_get_by_idx;
     pvt->pub.unreg = &rtpp_weakref_unreg;
+    pvt->pub.foreach = &rtpp_wref_foreach;
     return (&pvt->pub);
 
 e1:
@@ -133,4 +136,14 @@ rtpp_wref_get_by_idx(struct rtpp_weakref_obj *pub, uint64_t suid)
 
     sp = CALL_METHOD(pvt->ht, find, &suid);
     return (sp);
+}
+
+static void
+rtpp_wref_foreach(struct rtpp_weakref_obj *pub, rtpp_weakref_foreach_t foreach_f,
+  void *foreach_d)
+{
+    struct rtpp_weakref_priv *pvt;
+
+    pvt = PUB2PVT(pub);
+    CALL_METHOD(pvt->ht, expire, foreach_f, foreach_d);
 }

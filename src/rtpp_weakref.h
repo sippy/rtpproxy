@@ -31,6 +31,8 @@ struct rtpp_refcnt_obj;
 
 #define RTPP_WEAKID_NONE 0
 
+typedef int (*rtpp_weakref_foreach_t)(struct rtpp_refcnt_obj *, void *);
+
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_reg, uint64_t,
   struct rtpp_refcnt_obj *);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_unreg, struct rtpp_refcnt_obj *,
@@ -38,12 +40,15 @@ DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_unreg, struct rtpp_refcnt_obj *,
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_by_idx, struct rtpp_refcnt_obj *,
   uint64_t);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_weakref_dtor, void);
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_foreach, void,
+  rtpp_weakref_foreach_t, void *);
 
 struct rtpp_weakref_obj {
     rtpp_wref_reg_t reg;
     rtpp_wref_unreg_t unreg;
     rtpp_weakref_dtor_t dtor;
     rtpp_wref_get_by_idx_t get_by_idx;
+    rtpp_wref_foreach_t foreach;
 };
 
 struct rtpp_weakref_obj *rtpp_weakref_ctor(void);
