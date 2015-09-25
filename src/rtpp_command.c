@@ -673,6 +673,7 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
         cmd->csp->nplrs_created.cnt++;
         CALL_METHOD(rco, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           cf->stable->rtpp_stats);
+        CALL_METHOD(rco, decref);
         rtpp_log_write(RTPP_LOG_INFO, spa->log,
           "%d times playing prompt %s codec %d", playcount, pname, n);
         if (spa->sridx == -1)
