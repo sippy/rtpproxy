@@ -634,7 +634,12 @@ main(int argc, char **argv)
     }
     cf.stable->sessions_wrt = rtpp_weakref_ctor();
     if (cf.stable->sessions_wrt == NULL) {
-        err(1, "can't allocate memory for the weakref table");
+        err(1, "can't allocate memory for the sessions weakref table");
+         /* NOTREACHED */
+    }
+    cf.stable->servers_wrt = rtpp_weakref_ctor();
+    if (cf.stable->servers_wrt == NULL) {
+        err(1, "can't allocate memory for the servers weakref table");
          /* NOTREACHED */
     }
 

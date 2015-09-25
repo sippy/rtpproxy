@@ -89,6 +89,7 @@ struct rtpp_cfg_stable {
 
     struct rtpp_hash_table_obj *sessions_ht;
     struct rtpp_weakref_obj *sessions_wrt;
+    struct rtpp_weakref_obj *servers_wrt;
 
     double sched_offset;
     int sched_policy;

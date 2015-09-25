@@ -80,7 +80,7 @@ struct rtpp_session {
     /* Pointers to rtpp_record's opaque data type */
     void *rrcs[2];
     int record_single_file;
-    struct rtp_server *rtps[2];
+    uint64_t rtps[2];
     /* References to fd-to-session table */
     int sidx[2];
     /* Reference to active RTP generators table */
@@ -102,7 +102,9 @@ struct rtpp_session {
     int ptime[2];
     struct rtpp_hash_table_entry *hte;
     uint64_t suid;
+
     struct rtpp_stats_obj *rtpp_stats;
+    struct rtpp_weakref_obj *servers_wrt;
 };
 
 struct cfg;
@@ -121,5 +123,6 @@ void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(const char *, const char *, unsigned *);
 int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session **);
 int get_ttl(struct rtpp_session *);
+void append_server(struct cfg *, struct rtpp_session *, uint64_t);
 
 #endif

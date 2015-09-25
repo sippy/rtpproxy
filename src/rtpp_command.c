@@ -47,6 +47,8 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_weakref.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_copy.h"
@@ -625,16 +627,23 @@ static void
 handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx, struct rtpp_command *cmd)
 {
 
-    if (spa->rtps[idx] != NULL) {
-	rtp_server_free(spa->rtps[idx]);
-	cmd->csp->nplrs_destroyed.cnt++;
-	spa->rtps[idx] = NULL;
+    if (spa->rtps[idx] != RTPP_WEAKID_NONE) {
+        if (CALL_METHOD(spa->servers_wrt, unreg, spa->rtps[idx]) != NULL) {
+            spa->rtps[idx] = RTPP_WEAKID_NONE;
+        }
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "stopping player at port %d", spa->ports[idx]);
-	if (spa->rtps[0] == NULL && spa->rtps[1] == NULL) {
+	if (spa->rtps[0] == RTPP_WEAKID_NONE && spa->rtps[1] == RTPP_WEAKID_NONE) {
             CALL_METHOD(cf->sessinfo, blank_srv, spa);
 	}
    }
+}
+
+static void
+player_predestroy_cb(struct rtpp_stats_obj *rtpp_stats)
+{
+
+    CALL_METHOD(rtpp_stats, updatebyname, "nplrs_destroyed", 1);
 }
 
 static int
@@ -643,6 +652,9 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 {
     int n;
     char *cp;
+    struct rtp_server *rsrv;
+    struct rtpp_refcnt_obj *rco;
+    uint64_t suid;
 
     while (*codecs != '\0') {
 	n = strtol(codecs, &cp, 10);
@@ -651,14 +663,20 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 	codecs = cp;
 	if (*codecs != '\0')
 	    codecs++;
-	spa->rtps[idx] = rtp_server_new(pname, n, playcount, cmd->dtime, ptime);
-	if (spa->rtps[idx] == NULL)
+        rsrv = rtp_server_new(pname, n, playcount, cmd->dtime, ptime);
+	if (rsrv == NULL)
 	    continue;
-	cmd->csp->nplrs_created.cnt++;
-	rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	  "%d times playing prompt %s codec %d", playcount, pname, n);
-	if (spa->sridx == -1)
-	    append_server(cf, spa);
+        rco = rtpp_refcnt_ctor(rsrv, (rtpp_refcnt_dtor_t)&rtp_server_free);
+        suid = CALL_METHOD(cf->stable->servers_wrt, reg, rco);
+        assert(spa->rtps[idx] == RTPP_WEAKID_NONE);
+        spa->rtps[idx] = suid;
+        cmd->csp->nplrs_created.cnt++;
+        CALL_METHOD(rco, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
+          cf->stable->rtpp_stats);
+        rtpp_log_write(RTPP_LOG_INFO, spa->log,
+          "%d times playing prompt %s codec %d", playcount, pname, n);
+        if (spa->sridx == -1)
+            append_server(cf, spa, suid);
 	return 0;
     }
     rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create player");

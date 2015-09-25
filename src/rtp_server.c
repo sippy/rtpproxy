@@ -194,15 +194,3 @@ rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
     return (pkt);
 }
 
-void
-append_server(struct cfg *cf, struct rtpp_session *sp)
-{
-
-    if (sp->rtps[0] != NULL || sp->rtps[1] != NULL) {
-	if (sp->sridx == -1) {
-            CALL_METHOD(cf->sessinfo, append_srv, sp);
-	}
-    } else {
-	sp->sridx = -1;
-    }
-}

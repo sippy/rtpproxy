@@ -37,6 +37,8 @@
 #include <string.h>
 
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_weakref.h"
 #include "rtp.h"
 #include "rtp_info.h"
 #include "rtp_packet.h"
@@ -71,6 +73,8 @@ process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
     int j, sidx, len, skipfd;
     struct rtpp_session *sp;
     struct rtp_packet *pkt;
+    struct rtpp_refcnt_obj *rco;
+    struct rtp_server *rsrv;
 
     skipfd = 0;
     for (j = 0; j < cf->sessinfo->rtp_nsessions; j++) {
@@ -84,16 +88,20 @@ process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
 	    sp->sridx = j - skipfd;
 	}
 	for (sidx = 0; sidx < 2; sidx++) {
-	    if (sp->rtps[sidx] == NULL || sp->addr[sidx] == NULL)
+	    if (sp->rtps[sidx] == RTPP_WEAKID_NONE || sp->addr[sidx] == NULL)
 		continue;
+            rco = CALL_METHOD(sp->servers_wrt, get_by_idx, sp->rtps[sidx]);
+            if (rco == NULL)
+                continue;
+            rsrv = CALL_METHOD(rco, getdata);
             for (;;) {
-                pkt = rtp_server_get(sp->rtps[sidx], dtime, &len);
+                pkt = rtp_server_get(rsrv, dtime, &len);
                 if (pkt == NULL) {
                     if (len == RTPS_EOF) {
-                        rtp_server_free(sp->rtps[sidx]);
-                        CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nplrs_destroyed", 1);
-                        sp->rtps[sidx] = NULL;
-                        if (sp->rtps[0] == NULL && sp->rtps[1] == NULL) {
+                        if (CALL_METHOD(sp->servers_wrt, unreg, sp->rtps[sidx]) != NULL) {
+                            sp->rtps[sidx] = RTPP_WEAKID_NONE;
+                        }
+                        if (sp->rtps[0] == RTPP_WEAKID_NONE && sp->rtps[1] == RTPP_WEAKID_NONE) {
                             CALL_METHOD(cf->sessinfo, blank_srv_locked, sp);
                         }
                     } else if (len != RTPS_LATER) {
@@ -105,6 +113,7 @@ process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
                   SA_LEN(sp->addr[sidx]), pkt);
                 rsp->npkts_played.cnt++;
 	    }
+            CALL_METHOD(rco, decref);
 	}
     }
     cf->sessinfo->rtp_nsessions -= skipfd;
@@ -356,7 +365,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
     /* Select socket for sending packet out. */
     sidx = (ridx == 0) ? 1 : 0;
 
-    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[sidx] == NULL) {
+    if (sp->rrcs[ridx] != NULL && GET_RTP(sp)->rtps[sidx] == RTPP_WEAKID_NONE) {
         rwrite(sp, sp->rrcs[ridx], packet, sp->addr[sidx], sp->laddr[sidx],
           sp->ports[sidx], sidx);
     }
@@ -365,7 +374,7 @@ send_packet(struct cfg *cf, struct rtpp_session *sp, int ridx,
      * Check that we have some address to which packet is to be
      * sent out, drop otherwise.
      */
-    if (sp->addr[sidx] == NULL || GET_RTP(sp)->rtps[sidx] != NULL) {
+    if (sp->addr[sidx] == NULL || GET_RTP(sp)->rtps[sidx] != RTPP_WEAKID_NONE) {
         rtp_packet_free(packet);
 	sp->pcount.ndropped++;
         rsp->npkts_discard.cnt++;

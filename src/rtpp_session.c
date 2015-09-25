@@ -108,10 +108,8 @@ session_dtor(struct rtpp_session *sp)
             free(sp->rtcp->prev_addr[i]);
         if (sp->rtcp->codecs[i] != NULL)
             free(sp->rtcp->codecs[i]);
-        if (sp->rtps[i] != NULL) {
-            rtp_server_free(sp->rtps[i]);
-            CALL_METHOD(sp->rtpp_stats, updatebyname, "nplrs_destroyed", 1);
-        }
+        if (sp->rtps[i] != RTPP_WEAKID_NONE)
+            CALL_METHOD(sp->servers_wrt, unreg, sp->rtps[i]);
         if (sp->resizers[i] != NULL)
              rtp_resizer_free(sp->rtpp_stats, sp->resizers[i]);
     }
@@ -137,6 +135,7 @@ append_session(struct cfg *cf, struct rtpp_session *sp, int index)
 
     if (sp->suid == 0) {
         sp->rtpp_stats = cf->stable->rtpp_stats;
+        sp->servers_wrt = cf->stable->servers_wrt;
         rco = rtpp_refcnt_ctor(sp, (rtpp_refcnt_dtor_t)session_dtor);
         sp->suid = CALL_METHOD(cf->stable->sessions_wrt, reg, rco);
         CALL_METHOD(rco, decref);
@@ -270,7 +269,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
         }
 	if (sp->rtcp->rrcs[i] != NULL)
 	    rclose(sp, sp->rtcp->rrcs[i], 1);
-	if (sp->rtps[i] != NULL) {
+	if (sp->rtps[i] != RTPP_WEAKID_NONE) {
 	    cf->sessinfo->rtp_servers[sp->sridx] = NULL;
 	}
         if (sp->analyzers[i] != NULL) {
@@ -387,4 +386,17 @@ get_ttl(struct rtpp_session *sp)
     }
     abort();
     return 0;
+}
+
+void
+append_server(struct cfg *cf, struct rtpp_session *sp, uint64_t suid)
+{
+
+    if (sp->rtps[0] != RTPP_WEAKID_NONE || sp->rtps[1] != RTPP_WEAKID_NONE) {
+        if (sp->sridx == -1) {
+            CALL_METHOD(cf->sessinfo, append_srv, sp);
+        }
+    } else {
+        sp->sridx = -1;
+    }
 }
