@@ -48,9 +48,26 @@ struct rtpp_stat
     } cnt;
 };
 
+struct rtpp_stat_derived
+{
+    struct rtpp_stat stat;
+    double last_ts;
+    struct rtpp_stat last_val;
+};
+
 enum rtpp_cnt_type {
     RTPP_CNT_U64,
     RTPP_CNT_DBL
+};
+
+struct rtpp_stats_derived
+{
+    const char *name;
+    const char *descr;
+};    
+
+static struct rtpp_stats_derived rtpp_stats_pps_in = {
+    .name = "pps_in",                .descr = "Rate at which RTP/RTPC packets are received (packets per second)"
 };
 
 static struct rtpp_stats
@@ -58,7 +75,8 @@ static struct rtpp_stats
     const char *name;
     const char *descr;
     enum rtpp_cnt_type type;
-} default_stats[RTPP_NSTATS] = {
+    struct rtpp_stats_derived *derive;
+} default_stats[] = {
     {.name = "nsess_created",        .descr = "Number of RTP sessions created", .type = RTPP_CNT_U64},
     {.name = "nsess_destroyed",      .descr = "Number of RTP sessions destroyed", .type = RTPP_CNT_U64},
     {.name = "nsess_timeout",        .descr = "Number of RTP sessions ended due to media timeout", .type = RTPP_CNT_U64},
@@ -69,7 +87,7 @@ static struct rtpp_stats
     {.name = "nsess_owrtcp",         .descr = "Number of sessions that had one-way RTCP only", .type = RTPP_CNT_U64}, 
     {.name = "nplrs_created",        .descr = "Number of RTP players created", .type = RTPP_CNT_U64},
     {.name = "nplrs_destroyed",      .descr = "Number of RTP players destroyed", .type = RTPP_CNT_U64},
-    {.name = "npkts_rcvd",           .descr = "Total number of RTP/RTPC packets received", .type = RTPP_CNT_U64},
+    {.name = "npkts_rcvd",           .descr = "Total number of RTP/RTPC packets received", .type = RTPP_CNT_U64, .derive = &rtpp_stats_pps_in},
     {.name = "npkts_played",         .descr = "Total number of RTP packets locally generated (played out)", .type = RTPP_CNT_U64},
     {.name = "npkts_relayed",        .descr = "Total number of RTP/RTPC packets relayed", .type = RTPP_CNT_U64},
     {.name = "npkts_resizer_in",     .descr = "Total number of RTP packets ingress into resizer (re-packetizer)", .type = RTPP_CNT_U64},
@@ -85,11 +103,13 @@ static struct rtpp_stats
     {.name = "rtpa_nsent",           .descr = "Total number of uniqie RTP packets sent to us based on SEQ tracking", .type = RTPP_CNT_U64},
     {.name = "rtpa_nrcvd",           .descr = "Total number of unique RTP packets received by us based on SEQ tracking", .type = RTPP_CNT_U64},
     {.name = "rtpa_ndups",           .descr = "Total number of duplicate RTP packets received by us based on SEQ tracking", .type = RTPP_CNT_U64},
-    {.name = "rtpa_perrs",           .descr = "Total number of RTP packets that failed RTP parse routine in SEQ tracking", .type = RTPP_CNT_U64}
+    {.name = "rtpa_perrs",           .descr = "Total number of RTP packets that failed RTP parse routine in SEQ tracking", .type = RTPP_CNT_U64},
+    {.name = NULL}
 };
 
 struct rtpp_stats_obj_priv
 {
+    int nstats;
     struct rtpp_stat *stats;
     struct rtpp_pearson_perfect *rppp;
 };
@@ -107,19 +127,34 @@ static int rtpp_stats_obj_updatebyname(struct rtpp_stats_obj *, const char *, ui
 static int rtpp_stats_obj_updatebyname_d(struct rtpp_stats_obj *, const char *, double);
 static int64_t rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *, const char *);
 static int rtpp_stats_obj_nstr(struct rtpp_stats_obj *, char *, int, const char *);
+static int rtpp_stats_obj_getnstats(struct rtpp_stats_obj *);
 
 static const char *
 getdstat(void *p, int n)
 {
-    struct rtpp_stats *sp;
+    struct rtpp_stats_obj_priv *pvt;
 
-    if (n >= RTPP_NSTATS) {
+    pvt = (struct rtpp_stats_obj_priv *)p;
+    if (n >= pvt->nstats) {
         return (NULL);
     }
 
-    sp = (struct rtpp_stats *)p;
+    return (pvt->stats[n].name);
+}
 
-    return (sp[n].name);
+static int
+count_rtpp_stats(struct rtpp_stats *sp)
+{
+    int nstats, i;
+
+    nstats = 0;
+    for (i = 0; sp[i].name != NULL; i++) {
+        nstats += 1;
+        if (sp[i].derive != NULL) {
+            nstats += 1;
+        }
+    }
+    return (nstats);
 }
 
 struct rtpp_stats_obj *
@@ -137,15 +172,12 @@ rtpp_stats_ctor(void)
     }
     pub = &(fp->pub);
     pvt = &(fp->pvt);
-    pvt->rppp = rtpp_pearson_perfect_ctor(getdstat, default_stats);
-    if (pvt->rppp == NULL) {
+    pvt->stats = rtpp_zmalloc(sizeof(struct rtpp_stat) *
+      count_rtpp_stats(default_stats));
+    if (pvt->stats == NULL) {
         goto e1;
     }
-    pvt->stats = rtpp_zmalloc(sizeof(struct rtpp_stat) * RTPP_NSTATS);
-    if (pvt->stats == NULL) {
-        goto e2;
-    }
-    for (i = 0; i < RTPP_NSTATS; i++) {
+    for (i = 0; default_stats[i].name != NULL; i++) {
         st = &pvt->stats[i];
         st->name = default_stats[i].name;
         if (pthread_mutex_init(&st->mutex, NULL) != 0) {
@@ -154,13 +186,18 @@ rtpp_stats_ctor(void)
                 pthread_mutex_destroy(&st->mutex);
                 i -= 1;
             }
-            goto e3;
+            goto e2;
         }
         if (default_stats[i].type == RTPP_CNT_U64) {
             st->cnt.u64 = 0;
         } else {
             st->cnt.d = 0.0;
         }
+        pvt->nstats += 1;
+    }
+    pvt->rppp = rtpp_pearson_perfect_ctor(getdstat, pvt);
+    if (pvt->rppp == NULL) {
+        goto e2;
     }
     pub->pvt = pvt;
     pub->dtor = &rtpp_stats_obj_dtor;
@@ -170,11 +207,10 @@ rtpp_stats_ctor(void)
     pub->updatebyname_d = &rtpp_stats_obj_updatebyname_d;
     pub->getlvalbyname = &rtpp_stats_obj_getlvalbyname;
     pub->nstr = &rtpp_stats_obj_nstr;
+    pub->getnstats = &rtpp_stats_obj_getnstats;
     return (pub);
-e3:
-    free(pvt->stats);
 e2:
-    rtpp_pearson_perfect_dtor(pvt->rppp);
+    free(pvt->stats);
 e1:
     free(fp);
 e0:
@@ -197,9 +233,9 @@ rtpp_stats_obj_updatebyidx_internal(struct rtpp_stats_obj *self, int idx,
     struct rtpp_stats_obj_priv *pvt;
     struct rtpp_stat *st;
 
-    if (idx < 0 || idx >= RTPP_NSTATS)
-        return (-1);
     pvt = self->pvt;
+    if (idx < 0 || idx >= pvt->nstats)
+        return (-1);
     st = &pvt->stats[idx];
     pthread_mutex_lock(&st->mutex);
     if (type == RTPP_CNT_U64) {
@@ -293,11 +329,18 @@ rtpp_stats_obj_dtor(struct rtpp_stats_obj *self)
     struct rtpp_stat *st;
 
     pvt = self->pvt;
-    for (i = 0; i < RTPP_NSTATS; i++) {
+    for (i = 0; i < pvt->nstats; i++) {
         st = &pvt->stats[i];
         pthread_mutex_destroy(&st->mutex);
     }
     rtpp_pearson_perfect_dtor(pvt->rppp);
     free(pvt->stats);
     free(self);
+}
+
+static int
+rtpp_stats_obj_getnstats(struct rtpp_stats_obj *self)
+{
+
+    return (self->pvt->nstats);
 }
