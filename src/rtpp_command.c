@@ -666,6 +666,8 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
         rsrv = rtpp_server_ctor(pname, n, playcount, cmd->dtime, ptime);
 	if (rsrv == NULL)
 	    continue;
+        rsrv->suid = spa->suid;
+        rsrv->sidx = idx;
         rco = rtpp_refcnt_ctor(rsrv, (rtpp_refcnt_dtor_t)rsrv->dtor);
         suid = CALL_METHOD(cf->stable->servers_wrt, reg, rco);
         assert(spa->rtps[idx] == RTPP_WEAKID_NONE);
@@ -676,8 +678,10 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
         CALL_METHOD(rco, decref);
         rtpp_log_write(RTPP_LOG_INFO, spa->log,
           "%d times playing prompt %s codec %d", playcount, pname, n);
+#if 0
         if (spa->sridx == -1)
             append_server(cf, spa, suid);
+#endif
 	return 0;
     }
     rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create player");

@@ -38,6 +38,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_hash_table.h"
 #include "rtpp_weakref.h"
 #include "rtp.h"
 #include "rtp_info.h"
@@ -66,57 +67,67 @@ struct rtpp_proc_ready_lst {
 static void send_packet(struct cfg *, struct rtpp_session *, int, \
   struct rtp_packet *, struct sthread_args *, struct rtpp_proc_rstats *);
 
+struct foreach_args {
+    double dtime;
+    struct sthread_args *sender;
+    struct rtpp_proc_rstats *rsp;
+    struct rtpp_weakref_obj *sessions_wrt;
+};
+
+static int
+process_rtp_servers_foreach(struct rtpp_refcnt_obj *rco, void *p)
+{
+    struct foreach_args *fap;
+    struct rtpp_server_obj *rsrv;
+    struct rtp_packet *pkt;
+    int len;
+    struct rtpp_session *sp;
+    struct rtpp_refcnt_obj *sp_rco;
+
+    fap = (struct foreach_args *)p;
+    /*
+     * This method does not need us to bump ref, since we are in the
+     * context of the rtpp_hash_table, which holds its own ref.
+     */
+    rsrv = CALL_METHOD(rco, getdata);
+    sp_rco = CALL_METHOD(fap->sessions_wrt, get_by_idx, rsrv->suid);
+    if (sp_rco == NULL) {
+        return (RTPP_WR_MATCH_CONT);
+    }
+    sp = CALL_METHOD(sp_rco, getdata);
+    for (;;) {
+        pkt = CALL_METHOD(rsrv, get, fap->dtime, &len);
+        if (pkt == NULL) {
+            if (len == RTPS_EOF) {
+                sp->rtps[rsrv->sidx] = RTPP_WEAKID_NONE;
+                CALL_METHOD(sp_rco, decref);
+                return (RTPP_WR_MATCH_DEL);
+            } else if (len != RTPS_LATER) {
+                /* XXX some error, brag to logs */
+            }
+            break;
+        }
+        rtpp_anetio_send_pkt(fap->sender, sp->fds[rsrv->sidx],
+          sp->addr[rsrv->sidx], SA_LEN(sp->addr[rsrv->sidx]), pkt);
+        fap->rsp->npkts_played.cnt++;
+    }
+    CALL_METHOD(sp_rco, decref);
+    return (RTPP_HT_MATCH_CONT);
+}
+
 void
 process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
-    int j, sidx, len, skipfd;
-    struct rtpp_session *sp;
-    struct rtp_packet *pkt;
-    struct rtpp_refcnt_obj *rco;
-    struct rtpp_server_obj *rsrv;
+    struct foreach_args fargs;
 
-    skipfd = 0;
-    for (j = 0; j < cf->sessinfo->rtp_nsessions; j++) {
-	sp = cf->sessinfo->rtp_servers[j];
-	if (sp == NULL) {
-	    skipfd++;
-	    continue;
-	}
-	if (skipfd > 0) {
-	    cf->sessinfo->rtp_servers[j - skipfd] = cf->sessinfo->rtp_servers[j];
-	    sp->sridx = j - skipfd;
-	}
-	for (sidx = 0; sidx < 2; sidx++) {
-	    if (sp->rtps[sidx] == RTPP_WEAKID_NONE || sp->addr[sidx] == NULL)
-		continue;
-            rco = CALL_METHOD(sp->servers_wrt, get_by_idx, sp->rtps[sidx]);
-            if (rco == NULL)
-                continue;
-            rsrv = CALL_METHOD(rco, getdata);
-            for (;;) {
-                pkt = CALL_METHOD(rsrv, get, dtime, &len);
-                if (pkt == NULL) {
-                    if (len == RTPS_EOF) {
-                        if (CALL_METHOD(sp->servers_wrt, unreg, sp->rtps[sidx]) != NULL) {
-                            sp->rtps[sidx] = RTPP_WEAKID_NONE;
-                        }
-                        if (sp->rtps[0] == RTPP_WEAKID_NONE && sp->rtps[1] == RTPP_WEAKID_NONE) {
-                            CALL_METHOD(cf->sessinfo, blank_srv_locked, sp);
-                        }
-                    } else if (len != RTPS_LATER) {
-                        /* XXX some error, brag to logs */
-                    }
-                    break;
-		}
-                rtpp_anetio_send_pkt(sender, sp->fds[sidx], sp->addr[sidx], \
-                  SA_LEN(sp->addr[sidx]), pkt);
-                rsp->npkts_played.cnt++;
-	    }
-            CALL_METHOD(rco, decref);
-	}
-    }
-    cf->sessinfo->rtp_nsessions -= skipfd;
+    fargs.dtime = dtime;
+    fargs.sender = sender;
+    fargs.rsp = rsp;
+    fargs.sessions_wrt = cf->stable->sessions_wrt;
+
+    CALL_METHOD(cf->stable->servers_wrt, foreach, process_rtp_servers_foreach,
+      &fargs);
 }
 
 static int

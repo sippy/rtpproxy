@@ -269,9 +269,11 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
         }
 	if (sp->rtcp->rrcs[i] != NULL)
 	    rclose(sp, sp->rtcp->rrcs[i], 1);
+#if 0
 	if (sp->rtps[i] != RTPP_WEAKID_NONE) {
 	    cf->sessinfo->rtp_servers[sp->sridx] = NULL;
 	}
+#endif
         if (sp->analyzers[i] != NULL) {
              struct rtpp_analyzer_stats rst;
              char ssrc_buf[11];
@@ -388,6 +390,7 @@ get_ttl(struct rtpp_session *sp)
     return 0;
 }
 
+#if 0
 void
 append_server(struct cfg *cf, struct rtpp_session *sp, uint64_t suid)
 {
@@ -400,3 +403,4 @@ append_server(struct cfg *cf, struct rtpp_session *sp, uint64_t suid)
         sp->sridx = -1;
     }
 }
+#endif

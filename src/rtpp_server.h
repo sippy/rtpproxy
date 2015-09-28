@@ -43,6 +43,8 @@ DEFINE_METHOD(rtpp_server_obj, rtpp_server_dtor, void);
 struct rtpp_server_obj {
     rtpp_server_get_t get;
     rtpp_server_dtor_t dtor;
+    uint64_t suid;
+    int sidx;
 };
 
 struct rtpp_server_obj *rtpp_server_ctor(const char *, rtp_type_t, int, double,

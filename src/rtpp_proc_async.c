@@ -39,6 +39,7 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
+#include "rtpp_weakref.h"
 #include "rtpp_command_async.h"
 #ifdef RTPP_DEBUG
 #include "rtpp_math.h"
@@ -234,15 +235,15 @@ rtpp_proc_async_run(void *arg)
         if (rtp_only == 0) {
             pthread_mutex_lock(&cf->glock);
             process_rtp(cf, tp[2], alarm_tick, ndrain, sender, rstats);
+            pthread_mutex_unlock(&cf->glock);
         } else {
             process_rtp_only(cf, tp[2], ndrain, sender, rstats);
-            pthread_mutex_lock(&cf->glock);
         }
 
-        if (cf->sessinfo->rtp_nsessions > 0) {
+        if (CALL_METHOD(cf->stable->servers_wrt, get_length) > 0) {
             process_rtp_servers(cf, tp[2], sender, rstats);
         }
-        pthread_mutex_unlock(&cf->glock);
+
         rtpp_anetio_pump_q(sender);
         CALL_METHOD(cf->stable->rtpp_cmd_cf, wakeup);
         tp[3] = getdtime();
