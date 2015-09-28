@@ -1,5 +1,5 @@
 bin_PROGRAMS=rtpproxy rtpproxy_debug
-rtpproxy_SOURCES=main.c rtp.h rtp_server.c rtp_server.h \
+rtpproxy_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
   rtpp_command.c rtpp_command.h rtpp_network.h rtpp_network.c \

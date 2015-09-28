@@ -48,7 +48,7 @@
 #include "rtpp_record.h"
 #include "rtp_resizer.h"
 #include "rtpp_session.h"
-#include "rtp_server.h"
+#include "rtpp_server.h"
 #include "rtpp_util.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
