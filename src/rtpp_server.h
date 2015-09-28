@@ -36,14 +36,6 @@ struct rtp_server;
 #define	RTPS_ERROR	(-2)
 #define	RTPS_ENOMEM	(-3)
 
-/*
- * Minimum length of each RTP packet in ms.
- * Actual length may differ due to codec's framing constrains.
- */
-#define	RTPS_TICKS_MIN	10
-
-#define	RTPS_SRATE	8000
-
 struct rtp_server *rtp_server_new(const char *, rtp_type_t, int, double,
   int);
 void rtp_server_free(struct rtp_server *);

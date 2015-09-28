@@ -46,6 +46,14 @@
 #include "rtpp_sessinfo.h"
 #include "rtpp_util.h"
 
+/*
+ * Minimum length of each RTP packet in ms.
+ * Actual length may differ due to codec's framing constrains.
+ */
+#define RTPS_TICKS_MIN  10
+
+#define RTPS_SRATE      8000
+
 struct rtp_server {
     double btime;
     unsigned char buf[1024];
