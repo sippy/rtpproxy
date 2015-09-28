@@ -145,5 +145,5 @@ rtpp_wref_foreach(struct rtpp_weakref_obj *pub, rtpp_weakref_foreach_t foreach_f
     struct rtpp_weakref_priv *pvt;
 
     pvt = PUB2PVT(pub);
-    CALL_METHOD(pvt->ht, expire, foreach_f, foreach_d);
+    CALL_METHOD(pvt->ht, foreach, foreach_f, foreach_d);
 }

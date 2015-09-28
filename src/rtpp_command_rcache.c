@@ -185,9 +185,9 @@ rtpp_cmd_rcache_ematch(struct rtpp_refcnt_obj *rco, void *p)
     ctimep = (double *)p;
     rep = CALL_METHOD(rco, getdata);
     if (rep->etime < *ctimep) {
-        return (1);
+        return (RTPP_HT_MATCH_DEL);
     }
-    return (0);
+    return (RTPP_HT_MATCH_CONT);
 }
 
 static void
@@ -196,7 +196,7 @@ rtpp_cmd_rcache_cleanup(double ctime, void *p)
     struct rtpp_cmd_rcache_pvt *pvt;
 
     pvt = (struct rtpp_cmd_rcache_pvt *)p;
-    CALL_METHOD(pvt->ht, expire, rtpp_cmd_rcache_ematch, &ctime);
+    CALL_METHOD(pvt->ht, foreach, rtpp_cmd_rcache_ematch, &ctime);
     pvt->timeout = CALL_METHOD(pvt->rtpp_timed_cf_save, schedule,
       RTPP_RCACHE_CPERD, rtpp_cmd_rcache_cleanup, NULL, pvt);
 }

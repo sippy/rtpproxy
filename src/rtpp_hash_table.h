@@ -42,7 +42,7 @@ DEFINE_METHOD(rtpp_hash_table_obj, hash_table_findfirst, struct rtpp_hash_table_
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_findnext,  struct rtpp_hash_table_entry *,
   struct rtpp_hash_table_entry *, void **);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_find, struct rtpp_refcnt_obj *, const void *);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_expire, void, rtpp_hash_table_match_t, void *);
+DEFINE_METHOD(rtpp_hash_table_obj, hash_table_foreach, void, rtpp_hash_table_match_t, void *);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_dtor, void);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_get_length, int);
 
@@ -54,6 +54,10 @@ enum rtpp_ht_key_types {rtpp_ht_key_str_t = 0, rtpp_ht_key_u64_t,
 #define RTPP_HT_NODUPS    0x1
 #define RTPP_HT_DUP_ABRT  0x2
 
+#define RTPP_HT_MATCH_BRK  -1
+#define RTPP_HT_MATCH_CONT  0
+#define RTPP_HT_MATCH_DEL   1
+
 struct rtpp_hash_table_obj
 {
     hash_table_append_t append;
@@ -64,7 +68,7 @@ struct rtpp_hash_table_obj
     hash_table_findfirst_t findfirst;
     hash_table_findnext_t findnext;
     hash_table_find_t find;
-    hash_table_expire_t expire;
+    hash_table_foreach_t foreach;
     hash_table_dtor_t dtor;
     hash_table_get_length_t get_length;
     struct rtpp_hash_table_priv *pvt;

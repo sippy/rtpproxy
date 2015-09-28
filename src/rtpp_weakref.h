@@ -31,6 +31,10 @@ struct rtpp_refcnt_obj;
 
 #define RTPP_WEAKID_NONE 0
 
+#define RTPP_WR_MATCH_BRK  RTPP_HT_MATCH_BRK
+#define RTPP_WR_MATCH_CONT RTPP_HT_MATCH_CONT
+#define RTPP_WR_MATCH_DEL  RTPP_HT_MATCH_DEL
+
 typedef int (*rtpp_weakref_foreach_t)(struct rtpp_refcnt_obj *, void *);
 
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_reg, uint64_t,

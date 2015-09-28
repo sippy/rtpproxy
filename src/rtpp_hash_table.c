@@ -81,7 +81,7 @@ static struct rtpp_refcnt_obj * hash_table_remove_by_key(struct rtpp_hash_table_
 static struct rtpp_hash_table_entry * hash_table_findfirst(struct rtpp_hash_table_obj *self, const void *key, void **sptrp);
 static struct rtpp_hash_table_entry * hash_table_findnext(struct rtpp_hash_table_obj *self, struct rtpp_hash_table_entry *psp, void **sptrp);
 static struct rtpp_refcnt_obj * hash_table_find(struct rtpp_hash_table_obj *self, const void *key);
-static void hash_table_expire(struct rtpp_hash_table_obj *self, rtpp_hash_table_match_t, void *);
+static void hash_table_foreach(struct rtpp_hash_table_obj *self, rtpp_hash_table_match_t, void *);
 static void hash_table_dtor(struct rtpp_hash_table_obj *self);
 static int hash_table_get_length(struct rtpp_hash_table_obj *self);
 
@@ -108,7 +108,7 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
     pub->findfirst = &hash_table_findfirst;
     pub->findnext = &hash_table_findnext;
     pub->find = &hash_table_find;
-    pub->expire = &hash_table_expire;
+    pub->foreach = &hash_table_foreach;
     pub->dtor = &hash_table_dtor;
     pub->get_length = &hash_table_get_length;
     pthread_mutex_init(&pvt->hash_table_lock, NULL);
@@ -446,13 +446,13 @@ hash_table_find(struct rtpp_hash_table_obj *self, const void *key)
 }
 
 static void
-hash_table_expire(struct rtpp_hash_table_obj *self,
+hash_table_foreach(struct rtpp_hash_table_obj *self,
   rtpp_hash_table_match_t hte_ematch, void *marg)
 {
     struct rtpp_hash_table_entry *sp, *sp_next;
     struct rtpp_hash_table_priv *pvt;
     struct rtpp_refcnt_obj *rptr;
-    int i;
+    int i, mval;
 
     pvt = self->pvt;
     pthread_mutex_lock(&pvt->hash_table_lock);
@@ -465,9 +465,14 @@ hash_table_expire(struct rtpp_hash_table_obj *self,
             assert(sp->hte_type == rtpp_hte_refcnt_t);
             rptr = (struct rtpp_refcnt_obj *)sp->sptr;
             sp_next = sp->next;
-            if (hte_ematch(rptr, marg) == 0) {
+            mval = hte_ematch(rptr, marg);
+            if (mval == RTPP_HT_MATCH_CONT) {
                 continue;
             }
+            if (mval == RTPP_HT_MATCH_BRK) {
+                break;
+            }
+            assert(mval == RTPP_HT_MATCH_DEL);
             hash_table_remove_locked(pvt, sp, sp->hash);
             CALL_METHOD(rptr, decref);
             free(sp);
