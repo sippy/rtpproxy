@@ -579,6 +579,17 @@ init_config(struct cfg *cf, int argc, char **argv)
     }
 }
 
+static void
+update_derived_stats(double dtime, void *argp)
+{
+    struct rtpp_cfg_stable *csp;
+
+    csp = (struct rtpp_cfg_stable *)argp;
+    CALL_METHOD(csp->rtpp_stats, update_derived, dtime);
+    CALL_METHOD(csp->rtpp_timed_cf, schedule, 1.0, update_derived_stats, NULL,
+      argp);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -713,6 +724,12 @@ main(int argc, char **argv)
         rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
           "can't init scheduling subsystem");
         exit(1);
+    }
+
+    if (CALL_METHOD(cf.stable->rtpp_timed_cf, schedule, 1.0,
+      update_derived_stats, NULL, cf.stable) == NULL) {
+        rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
+          "can't schedule notification to derive stats");
     }
 
     cf.stable->rtpp_notify_cf = rtpp_notify_ctor(cf.stable->glog);

@@ -38,10 +38,10 @@ DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_updatebyname, int, const char *, ui
 DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_updatebyname_d, int, const char *, double);
 DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_getlvalbyname, int64_t, const char *);
 DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_nstr, int, char *, int, const char *);
+DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_getnstats, int);
+DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_update_derived, void, double);
 
 struct rtpp_stats_obj_priv;
-
-#define RTPP_NSTATS 27
 
 struct rtpp_stats_obj
 {
@@ -51,7 +51,9 @@ struct rtpp_stats_obj
     rtpp_stats_obj_updatebyname_t updatebyname;
     rtpp_stats_obj_updatebyname_d_t updatebyname_d;
     rtpp_stats_obj_getlvalbyname_t getlvalbyname;
+    rtpp_stats_obj_getnstats_t getnstats;
     rtpp_stats_obj_nstr_t nstr;
+    rtpp_stats_obj_update_derived_t update_derived;
     struct rtpp_stats_obj_priv *pvt;
 };
 

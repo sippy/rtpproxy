@@ -213,7 +213,7 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
         cmd->cca.rname = "get_stats";
         cmd->cca.hint = "G[v] [stat_name1 [stat_name2 [stat_name3 ...[stat_nameN]]]]";
         cmd->no_glock = 1;
-        cpp->max_argc = RTPP_NSTATS + 1;
+        cpp->max_argc = CALL_METHOD(cf->stable->rtpp_stats, getnstats) + 1;
         cpp->min_argc = 1;
         cpp->has_cmods = 1;
         cpp->has_call_id = 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2014-2015 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,9 @@
  */
 
 #include <sys/types.h>
-#include <pthread.h>
+#include <assert.h>
 #include <inttypes.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -36,29 +37,45 @@
 #include "rtpp_types.h"
 #include "rtpp_pearson.h"
 #include "rtpp_stats.h"
+#include "rtpp_time.h"
 #include "rtpp_util.h"
 
-struct rtpp_stat
-{
-    const char *name;
-    pthread_mutex_t mutex;
-    union {
-      uint64_t u64;
-      double d;
-    } cnt;
-};
+struct rtpp_stat_derived;
 
 enum rtpp_cnt_type {
     RTPP_CNT_U64,
     RTPP_CNT_DBL
 };
 
-static struct rtpp_stats
+struct rtpp_stat_descr
 {
     const char *name;
     const char *descr;
     enum rtpp_cnt_type type;
-} default_stats[RTPP_NSTATS] = {
+    const char *derive_from;
+};
+
+union rtpp_stat_cnt {
+    uint64_t u64;
+    double d;
+};
+
+struct rtpp_stat
+{
+    struct rtpp_stat_descr *descr;
+    pthread_mutex_t mutex;
+    union rtpp_stat_cnt cnt;
+};
+
+struct rtpp_stat_derived
+{
+    struct rtpp_stat *derive_from;
+    struct rtpp_stat *derive_to;
+    double last_ts;
+    union rtpp_stat_cnt last_val;
+};
+
+static struct rtpp_stat_descr default_stats[] = {
     {.name = "nsess_created",        .descr = "Number of RTP sessions created", .type = RTPP_CNT_U64},
     {.name = "nsess_destroyed",      .descr = "Number of RTP sessions destroyed", .type = RTPP_CNT_U64},
     {.name = "nsess_timeout",        .descr = "Number of RTP sessions ended due to media timeout", .type = RTPP_CNT_U64},
@@ -85,12 +102,17 @@ static struct rtpp_stats
     {.name = "rtpa_nsent",           .descr = "Total number of uniqie RTP packets sent to us based on SEQ tracking", .type = RTPP_CNT_U64},
     {.name = "rtpa_nrcvd",           .descr = "Total number of unique RTP packets received by us based on SEQ tracking", .type = RTPP_CNT_U64},
     {.name = "rtpa_ndups",           .descr = "Total number of duplicate RTP packets received by us based on SEQ tracking", .type = RTPP_CNT_U64},
-    {.name = "rtpa_perrs",           .descr = "Total number of RTP packets that failed RTP parse routine in SEQ tracking", .type = RTPP_CNT_U64}
+    {.name = "rtpa_perrs",           .descr = "Total number of RTP packets that failed RTP parse routine in SEQ tracking", .type = RTPP_CNT_U64},
+    {.name = "pps_in",               .descr = "Rate at which RTP/RTPC packets are received (packets per second)", .type = RTPP_CNT_DBL, .derive_from = "npkts_rcvd"},
+    {.name = NULL}
 };
 
 struct rtpp_stats_obj_priv
 {
+    int nstats;
+    int nstats_derived;
     struct rtpp_stat *stats;
+    struct rtpp_stat_derived *dstats;
     struct rtpp_pearson_perfect *rppp;
 };
 
@@ -107,19 +129,46 @@ static int rtpp_stats_obj_updatebyname(struct rtpp_stats_obj *, const char *, ui
 static int rtpp_stats_obj_updatebyname_d(struct rtpp_stats_obj *, const char *, double);
 static int64_t rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *, const char *);
 static int rtpp_stats_obj_nstr(struct rtpp_stats_obj *, char *, int, const char *);
+static int rtpp_stats_obj_getnstats(struct rtpp_stats_obj *);
+static void rtpp_stats_obj_update_derived(struct rtpp_stats_obj *, double);
 
 static const char *
 getdstat(void *p, int n)
 {
-    struct rtpp_stats *sp;
+    struct rtpp_stats_obj_priv *pvt;
 
-    if (n >= RTPP_NSTATS) {
+    pvt = (struct rtpp_stats_obj_priv *)p;
+    if (n >= pvt->nstats) {
         return (NULL);
     }
 
-    sp = (struct rtpp_stats *)p;
+    return (pvt->stats[n].descr->name);
+}
 
-    return (sp[n].name);
+static int
+count_rtpp_stats(struct rtpp_stat_descr *sp)
+{
+    int nstats, i;
+
+    nstats = 0;
+    for (i = 0; sp[i].name != NULL; i++) {
+        nstats += 1;
+    }
+    return (nstats);
+}
+
+static int
+count_rtpp_stats_derived(struct rtpp_stat_descr *sp)
+{
+    int nstats, i;
+
+    nstats = 0;
+    for (i = 0; sp[i].name != NULL; i++) {
+        if (sp[i].derive_from == NULL)
+            continue;
+        nstats += 1;
+    }
+    return (nstats);
 }
 
 struct rtpp_stats_obj *
@@ -129,7 +178,8 @@ rtpp_stats_ctor(void)
     struct rtpp_stats_obj *pub;
     struct rtpp_stats_obj_priv *pvt;
     struct rtpp_stat *st;
-    int i;
+    struct rtpp_stat_derived *dst;
+    int i, idx;
 
     fp = rtpp_zmalloc(sizeof(struct rtpp_stats_obj_full));
     if (fp == NULL) {
@@ -137,32 +187,51 @@ rtpp_stats_ctor(void)
     }
     pub = &(fp->pub);
     pvt = &(fp->pvt);
-    pvt->rppp = rtpp_pearson_perfect_ctor(getdstat, default_stats);
-    if (pvt->rppp == NULL) {
+    pvt->stats = rtpp_zmalloc(sizeof(struct rtpp_stat) *
+      count_rtpp_stats(default_stats));
+    if (pvt->stats == NULL) {
         goto e1;
     }
-    pvt->stats = rtpp_zmalloc(sizeof(struct rtpp_stat) * RTPP_NSTATS);
-    if (pvt->stats == NULL) {
-        goto e2;
+    i = count_rtpp_stats_derived(default_stats);
+    if (i > 0) {
+        pvt->dstats = rtpp_zmalloc(sizeof(struct rtpp_stat_derived) * i);
+        if (pvt->dstats == NULL)
+            goto e2;
     }
-    for (i = 0; i < RTPP_NSTATS; i++) {
-        st = &pvt->stats[i];
-        st->name = default_stats[i].name;
+    for (i = 0; default_stats[i].name != NULL; i++) {
+        st = &pvt->stats[pvt->nstats];
+        st->descr = &default_stats[i];
         if (pthread_mutex_init(&st->mutex, NULL) != 0) {
-            while ((i - 1) >= 0) {
-                st = &pvt->stats[i - 1];
+            while ((pvt->nstats - 1) >= 0) {
+                st = &pvt->stats[pvt->nstats - 1];
                 pthread_mutex_destroy(&st->mutex);
-                i -= 1;
+                pvt->nstats -= 1;
             }
-            goto e3;
+            goto e2;
         }
         if (default_stats[i].type == RTPP_CNT_U64) {
             st->cnt.u64 = 0;
         } else {
             st->cnt.d = 0.0;
         }
+        pvt->nstats += 1;
+    }
+    pvt->rppp = rtpp_pearson_perfect_ctor(getdstat, pvt);
+    if (pvt->rppp == NULL) {
+        goto e2;
     }
     pub->pvt = pvt;
+    for (i = 0; default_stats[i].name != NULL; i++) {
+        if (default_stats[i].derive_from == NULL)
+            continue;
+        dst = &pvt->dstats[pvt->nstats_derived];
+        idx = rtpp_stats_obj_getidxbyname(pub, default_stats[i].name);
+        dst->derive_to = &pvt->stats[idx];
+        idx = rtpp_stats_obj_getidxbyname(pub, default_stats[i].derive_from);
+        dst->derive_from = &pvt->stats[idx];
+        pvt->nstats_derived += 1;
+        dst->last_ts = getdtime();
+    }
     pub->dtor = &rtpp_stats_obj_dtor;
     pub->getidxbyname = &rtpp_stats_obj_getidxbyname;
     pub->updatebyidx = &rtpp_stats_obj_updatebyidx;
@@ -170,11 +239,13 @@ rtpp_stats_ctor(void)
     pub->updatebyname_d = &rtpp_stats_obj_updatebyname_d;
     pub->getlvalbyname = &rtpp_stats_obj_getlvalbyname;
     pub->nstr = &rtpp_stats_obj_nstr;
+    pub->getnstats = &rtpp_stats_obj_getnstats;
+    pub->update_derived = &rtpp_stats_obj_update_derived;
     return (pub);
-e3:
-    free(pvt->stats);
 e2:
-    rtpp_pearson_perfect_dtor(pvt->rppp);
+    if (pvt->dstats != NULL)
+        free(pvt->dstats);
+    free(pvt->stats);
 e1:
     free(fp);
 e0:
@@ -197,9 +268,9 @@ rtpp_stats_obj_updatebyidx_internal(struct rtpp_stats_obj *self, int idx,
     struct rtpp_stats_obj_priv *pvt;
     struct rtpp_stat *st;
 
-    if (idx < 0 || idx >= RTPP_NSTATS)
-        return (-1);
     pvt = self->pvt;
+    if (idx < 0 || idx >= pvt->nstats)
+        return (-1);
     st = &pvt->stats[idx];
     pthread_mutex_lock(&st->mutex);
     if (type == RTPP_CNT_U64) {
@@ -271,7 +342,7 @@ rtpp_stats_obj_nstr(struct rtpp_stats_obj *self, char *buf, int len, const char 
     }
     pvt = self->pvt;
     st = &pvt->stats[idx];
-    if (default_stats[idx].type == RTPP_CNT_U64) {
+    if (pvt->stats[idx].descr->type == RTPP_CNT_U64) {
         pthread_mutex_lock(&st->mutex);
         uval = st->cnt.u64;
         pthread_mutex_unlock(&st->mutex);
@@ -293,11 +364,51 @@ rtpp_stats_obj_dtor(struct rtpp_stats_obj *self)
     struct rtpp_stat *st;
 
     pvt = self->pvt;
-    for (i = 0; i < RTPP_NSTATS; i++) {
+    for (i = 0; i < pvt->nstats; i++) {
         st = &pvt->stats[i];
         pthread_mutex_destroy(&st->mutex);
     }
     rtpp_pearson_perfect_dtor(pvt->rppp);
+    if (pvt->dstats != NULL) {
+        free(pvt->dstats);
+    }
     free(pvt->stats);
     free(self);
+}
+
+static int
+rtpp_stats_obj_getnstats(struct rtpp_stats_obj *self)
+{
+
+    return (self->pvt->nstats);
+}
+
+static void
+rtpp_stats_obj_update_derived(struct rtpp_stats_obj *self, double dtime)
+{
+    struct rtpp_stats_obj_priv *pvt;
+    int i;
+    struct rtpp_stat_derived *dst;
+    double ival, dval;
+    union rtpp_stat_cnt last_val;
+
+    pvt = self->pvt;
+    for (i = 0; i < pvt->nstats_derived; i++) {
+        dst = &pvt->dstats[i];
+        assert(dst->last_ts < dtime);
+        ival = dtime - dst->last_ts;
+        last_val = dst->last_val;
+        pthread_mutex_lock(&dst->derive_from->mutex);
+        dst->last_val = dst->derive_from->cnt;
+        pthread_mutex_unlock(&dst->derive_from->mutex);
+        if (dst->derive_from->descr->type == RTPP_CNT_U64) {
+            dval = (dst->last_val.u64 - last_val.u64) / ival;
+        } else {
+            dval = (dst->last_val.d - last_val.d) / ival;
+        }
+        pthread_mutex_lock(&dst->derive_to->mutex);
+        dst->derive_to->cnt.d = dval;
+        pthread_mutex_unlock(&dst->derive_to->mutex);
+        dst->last_ts = dtime;
+    }
 }
