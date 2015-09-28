@@ -46,6 +46,7 @@ DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_by_idx, struct rtpp_refcnt_obj *,
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_weakref_dtor, void);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_foreach, void,
   rtpp_weakref_foreach_t, void *);
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_length, int);
 
 struct rtpp_weakref_obj {
     rtpp_wref_reg_t reg;
@@ -53,6 +54,7 @@ struct rtpp_weakref_obj {
     rtpp_weakref_dtor_t dtor;
     rtpp_wref_get_by_idx_t get_by_idx;
     rtpp_wref_foreach_t foreach;
+    rtpp_wref_get_length_t get_length;
 };
 
 struct rtpp_weakref_obj *rtpp_weakref_ctor(void);
