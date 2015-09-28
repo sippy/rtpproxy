@@ -633,9 +633,6 @@ handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx, struct rtpp_com
         }
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "stopping player at port %d", spa->ports[idx]);
-	if (spa->rtps[0] == RTPP_WEAKID_NONE && spa->rtps[1] == RTPP_WEAKID_NONE) {
-            CALL_METHOD(cf->sessinfo, blank_srv, spa);
-	}
    }
 }
 
@@ -678,10 +675,6 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
         CALL_METHOD(rco, decref);
         rtpp_log_write(RTPP_LOG_INFO, spa->log,
           "%d times playing prompt %s codec %d", playcount, pname, n);
-#if 0
-        if (spa->sridx == -1)
-            append_server(cf, spa, suid);
-#endif
 	return 0;
     }
     rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create player");

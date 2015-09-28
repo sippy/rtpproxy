@@ -44,12 +44,6 @@
 static int rtpp_sinfo_get_nsessions(struct rtpp_sessinfo_obj *);
 static void rtpp_sinfo_append(struct rtpp_sessinfo_obj *, struct rtpp_session *,
   int index);
-static void rtpp_sinfo_append_srv(struct rtpp_sessinfo_obj *,
-  struct rtpp_session *);
-static void rtpp_sinfo_blank_srv(struct rtpp_sessinfo_obj *,
-  struct rtpp_session *);
-static void rtpp_sinfo_blank_srv_locked(struct rtpp_sessinfo_obj *,
-  struct rtpp_session *);
 
 struct rtpp_sessinfo_obj *
 rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
@@ -65,13 +59,6 @@ rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
     if (sessinfo->sessions == NULL) {
         goto e0;
     }
-#if 0
-    sessinfo->rtp_servers =  rtpp_zmalloc((sizeof sessinfo->rtp_servers[0]) *
-      (((cfsp->port_max - cfsp->port_min + 1) * 2) + 1));
-    if (sessinfo->rtp_servers == NULL) {
-        goto e1;
-    }
-#endif
     sessinfo->pfds_rtp = rtpp_zmalloc((sizeof sessinfo->pfds_rtp[0]) *
       (((cfsp->port_max - cfsp->port_min + 1)) + 1));
     if (sessinfo->pfds_rtp == NULL) {
@@ -86,19 +73,12 @@ rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
 
     sessinfo->get_nsessions = &rtpp_sinfo_get_nsessions;
     sessinfo->append = &rtpp_sinfo_append;
-    sessinfo->append_srv = &rtpp_sinfo_append_srv;
-    sessinfo->blank_srv = &rtpp_sinfo_blank_srv;
-    sessinfo->blank_srv_locked = &rtpp_sinfo_blank_srv_locked;
 
     return (sessinfo);
 
 e3:
     free(sessinfo->pfds_rtp);
 e2:
-#if 0
-    free(sessinfo->rtp_servers);
-e1:
-#endif
     free(sessinfo->sessions);
 e0:
     free(sessinfo);
@@ -135,39 +115,4 @@ rtpp_sinfo_append(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session *sp,
     sp->rtcp->sidx[index] = rtp_index;
     sessinfo->nsessions++;
     pthread_mutex_unlock(&sessinfo->lock);
-}
-
-static void
-rtpp_sinfo_append_srv(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session *sp)
-{
-
-#if 0
-    pthread_mutex_lock(&sessinfo->lock);
-    sessinfo->rtp_servers[sessinfo->rtp_nsessions] = sp;
-    sp->sridx = sessinfo->rtp_nsessions;
-    sessinfo->rtp_nsessions++;
-    pthread_mutex_unlock(&sessinfo->lock);
-#endif
-}
-
-static void
-rtpp_sinfo_blank_srv(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session *sp)
-{
-
-#if 0
-    pthread_mutex_lock(&sessinfo->lock);
-    rtpp_sinfo_blank_srv_locked(sessinfo, sp);
-    pthread_mutex_unlock(&sessinfo->lock);
-#endif
-}
-
-static void
-rtpp_sinfo_blank_srv_locked(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session *sp)
-{
-
-#if 0
-    assert(sessinfo->rtp_servers[sp->sridx] == sp);
-    sessinfo->rtp_servers[sp->sridx] = NULL;
-    sp->sridx = -1;
-#endif
 }

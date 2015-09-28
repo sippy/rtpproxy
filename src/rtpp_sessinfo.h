@@ -33,10 +33,6 @@ struct rtpp_sessinfo_obj;
 DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_get_nsessions, int);
 DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_append, void, struct rtpp_session *,
   int);
-DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_append_srv, void,
-  struct rtpp_session *);
-DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_blank_srv, void,
-  struct rtpp_session *);
 
 struct rtpp_sessinfo_obj {
     struct pollfd *pfds_rtp;
@@ -49,9 +45,6 @@ struct rtpp_sessinfo_obj {
     int rtp_nsessions;
     rtpp_si_get_nsessions_t get_nsessions;
     rtpp_si_append_t append;
-    rtpp_si_append_srv_t append_srv;
-    rtpp_si_blank_srv_t blank_srv;
-    rtpp_si_blank_srv_t blank_srv_locked;
 };
 
 struct rtpp_sessinfo_obj *rtpp_sessinfo_ctor(struct rtpp_cfg_stable *);

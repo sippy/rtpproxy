@@ -83,10 +83,6 @@ struct rtpp_session {
     uint64_t rtps[2];
     /* References to fd-to-session table */
     int sidx[2];
-#if 0
-    /* Reference to active RTP generators table */
-    int sridx;
-#endif
     /* Flag that indicates whether or not address supplied by client can't be trusted */
     int untrusted_addr[2];
     struct rtp_resizer *resizers[2];
@@ -125,6 +121,5 @@ void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(const char *, const char *, unsigned *);
 int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session **);
 int get_ttl(struct rtpp_session *);
-void append_server(struct cfg *, struct rtpp_session *, uint64_t);
 
 #endif

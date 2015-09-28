@@ -524,9 +524,6 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spb->rtcp = NULL;
         spa->rtp = NULL;
         spb->rtp = spa;
-#if 0
-        spa->sridx = spb->sridx = -1;
-#endif
         spa->analyzers[0] = rtpp_analyzer_ctor();
         spa->analyzers[1] = rtpp_analyzer_ctor();
 
