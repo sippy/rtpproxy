@@ -652,7 +652,7 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 {
     int n;
     char *cp;
-    struct rtp_server *rsrv;
+    struct rtpp_server_obj *rsrv;
     struct rtpp_refcnt_obj *rco;
     uint64_t suid;
 
@@ -663,10 +663,10 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 	codecs = cp;
 	if (*codecs != '\0')
 	    codecs++;
-        rsrv = rtp_server_new(pname, n, playcount, cmd->dtime, ptime);
+        rsrv = rtpp_server_ctor(pname, n, playcount, cmd->dtime, ptime);
 	if (rsrv == NULL)
 	    continue;
-        rco = rtpp_refcnt_ctor(rsrv, (rtpp_refcnt_dtor_t)&rtp_server_free);
+        rco = rtpp_refcnt_ctor(rsrv, (rtpp_refcnt_dtor_t)rsrv->dtor);
         suid = CALL_METHOD(cf->stable->servers_wrt, reg, rco);
         assert(spa->rtps[idx] == RTPP_WEAKID_NONE);
         spa->rtps[idx] = suid;

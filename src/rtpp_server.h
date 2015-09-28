@@ -29,16 +29,23 @@
 #ifndef _RTP_SERVER_H_
 #define _RTP_SERVER_H_
 
-struct rtp_server;
+struct rtpp_server_obj;
+struct rtp_packet;
+
+DEFINE_METHOD(rtpp_server_obj, rtpp_server_get, struct rtp_packet *, double, int *);
+DEFINE_METHOD(rtpp_server_obj, rtpp_server_dtor, void);
 
 #define	RTPS_LATER	(0)
 #define	RTPS_EOF	(-1)
 #define	RTPS_ERROR	(-2)
 #define	RTPS_ENOMEM	(-3)
 
-struct rtp_server *rtp_server_new(const char *, rtp_type_t, int, double,
+struct rtpp_server_obj {
+    rtpp_server_get_t get;
+    rtpp_server_dtor_t dtor;
+};
+
+struct rtpp_server_obj *rtpp_server_ctor(const char *, rtp_type_t, int, double,
   int);
-void rtp_server_free(struct rtp_server *);
-struct rtp_packet *rtp_server_get(struct rtp_server *, double, int *);
 
 #endif

@@ -74,7 +74,7 @@ process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
     struct rtpp_session *sp;
     struct rtp_packet *pkt;
     struct rtpp_refcnt_obj *rco;
-    struct rtp_server *rsrv;
+    struct rtpp_server_obj *rsrv;
 
     skipfd = 0;
     for (j = 0; j < cf->sessinfo->rtp_nsessions; j++) {
@@ -95,7 +95,7 @@ process_rtp_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
                 continue;
             rsrv = CALL_METHOD(rco, getdata);
             for (;;) {
-                pkt = rtp_server_get(rsrv, dtime, &len);
+                pkt = CALL_METHOD(rsrv, get, dtime, &len);
                 if (pkt == NULL) {
                     if (len == RTPS_EOF) {
                         if (CALL_METHOD(sp->servers_wrt, unreg, sp->rtps[sidx]) != NULL) {

@@ -30,6 +30,7 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,9 +38,9 @@
 
 #include "rtp.h"
 #include "rtp_packet.h"
-#include "rtpp_server.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
+#include "rtpp_server.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_session.h"
@@ -54,7 +55,8 @@
 
 #define RTPS_SRATE      8000
 
-struct rtp_server {
+struct rtpp_server_priv {
+    struct rtpp_server_obj pub;
     double btime;
     unsigned char buf[1024];
     rtp_hdr_t *rtp;
@@ -65,11 +67,16 @@ struct rtp_server {
     int ptime;
 };
 
-struct rtp_server *
-rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime,
+#define PUB2PVT(pubp)      ((struct rtpp_server_priv *)((char *)(pubp) - offsetof(struct rtpp_server_priv, pub)))
+
+static void rtpp_server_dtor(struct rtpp_server_obj *);
+static struct rtp_packet *rtpp_server_get(struct rtpp_server_obj *, double, int *);
+
+struct rtpp_server_obj *
+rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
   int ptime)
 {
-    struct rtp_server *rp;
+    struct rtpp_server_priv *rp;
     int fd;
     char path[PATH_MAX + 1];
 
@@ -78,7 +85,7 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime,
     if (fd == -1)
 	return NULL;
 
-    rp = rtpp_zmalloc(sizeof(*rp));
+    rp = rtpp_zmalloc(sizeof(struct rtpp_server_priv));
     if (rp == NULL) {
 	close(fd);
 	return NULL;
@@ -102,25 +109,32 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime,
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
-    return rp;
+    rp->pub.dtor = &rtpp_server_dtor;
+    rp->pub.get = &rtpp_server_get;
+
+    return (&rp->pub);
 }
 
-void
-rtp_server_free(struct rtp_server *rp)
+static void
+rtpp_server_dtor(struct rtpp_server_obj *self)
 {
+    struct rtpp_server_priv *rp;
 
+    rp = PUB2PVT(self);
     close(rp->fd);
     free(rp);
 }
 
-struct rtp_packet *
-rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
+static struct rtp_packet *
+rtpp_server_get(struct rtpp_server_obj *self, double dtime, int *rval)
 {
     struct rtp_packet *pkt;
     uint32_t ts;
     int rlen, rticks, bytes_per_frame, ticks_per_frame, number_of_frames;
     int hlen;
+    struct rtpp_server_priv *rp;
 
+    rp = PUB2PVT(self);
 
     if (rp->btime + ((double)rp->dts / 1000.0) > dtime) {
         *rval = RTPS_LATER;
