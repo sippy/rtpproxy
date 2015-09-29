@@ -112,7 +112,7 @@ process_rtp_servers_foreach(struct rtpp_refcnt_obj *rco, void *p)
         fap->rsp->npkts_played.cnt++;
     }
     CALL_METHOD(sp_rco, decref);
-    return (RTPP_HT_MATCH_CONT);
+    return (RTPP_WR_MATCH_CONT);
 }
 
 void
