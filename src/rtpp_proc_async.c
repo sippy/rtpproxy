@@ -47,6 +47,7 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_proc_servers.h"
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
 #include "rtpp_util.h"
@@ -241,7 +242,7 @@ rtpp_proc_async_run(void *arg)
         }
 
         if (CALL_METHOD(cf->stable->servers_wrt, get_length) > 0) {
-            process_rtp_servers(cf, tp[2], sender, rstats);
+            rtpp_proc_servers(cf, tp[2], sender, rstats);
         }
 
         rtpp_anetio_pump_q(sender);
