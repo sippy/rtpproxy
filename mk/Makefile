@@ -42,7 +42,7 @@ SRCS+=		${SRCS_DEBUG}
 LIBSIPLOG=	siplog_debug
 .endif
 
-SRCS+=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
+SRCS+=	main.c rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_record.c rtpp_record.h rtpp_session.h rtpp_util.c \
 	rtpp_util.h rtpp_log.h rtp_resizer.c rtp_resizer.h rtp.c \
 	rtp.h rtpp_session.c rtpp_command.c rtpp_command.h \
@@ -66,7 +66,8 @@ SRCS+=	main.c rtp_server.c rtp_server.h rtpp_defines.h \
 	rtpp_command_rcache.c rtpp_command_rcache.h \
 	rtpp_tnotify_set.c rtpp_tnotify_set.h rtpp_tnotify_tgt.h \
 	rtp_packet.h rtpp_pthread.c rtpp_pthread.h rtpp_time.h rtpp_time.c \
-	rtpp_sessinfo.c rtpp_sessinfo.h
+	rtpp_sessinfo.c rtpp_sessinfo.h rtpp_weakref.c rtpp_weakref.h \
+	rtpp_proc_servers.h rtpp_proc_servers.c
 
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
                 rtpp_memdeb_stats.h rtpp_memdeb_test.c
