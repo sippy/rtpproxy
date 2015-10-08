@@ -45,6 +45,7 @@
 #include "rtpp_proc_servers.h"
 #include "rtp.h"
 #include "rtpp_server.h"
+#include "rtpp_stream.h"
 #include "rtpp_session.h"
 
 struct foreach_args {
@@ -79,7 +80,7 @@ process_rtp_servers_foreach(struct rtpp_refcnt_obj *rco, void *p)
         pkt = CALL_METHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
-                sp->rtps[rsrv->sidx] = RTPP_WEAKID_NONE;
+                sp->stream[rsrv->sidx].rtps = RTPP_WEAKID_NONE;
                 CALL_METHOD(sp_rco, decref);
                 return (RTPP_WR_MATCH_DEL);
             } else if (len != RTPS_LATER) {
@@ -87,8 +88,8 @@ process_rtp_servers_foreach(struct rtpp_refcnt_obj *rco, void *p)
             }
             break;
         }
-        rtpp_anetio_send_pkt(fap->sender, sp->fds[rsrv->sidx],
-          sp->addr[rsrv->sidx], SA_LEN(sp->addr[rsrv->sidx]), pkt);
+        rtpp_anetio_send_pkt(fap->sender, sp->stream[rsrv->sidx].fd,
+          sp->stream[rsrv->sidx].addr, SA_LEN(sp->stream[rsrv->sidx].addr), pkt);
         fap->rsp->npkts_played.cnt++;
     }
     CALL_METHOD(sp_rco, decref);

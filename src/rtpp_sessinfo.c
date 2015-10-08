@@ -38,6 +38,7 @@
 #include "rtpp_types.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_sessinfo.h"
+#include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
 
@@ -105,14 +106,14 @@ rtpp_sinfo_append(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session *sp,
     pthread_mutex_lock(&sessinfo->lock);
     rtp_index = sessinfo->nsessions;
     sessinfo->sessions[rtp_index] = sp;
-    sessinfo->pfds_rtp[rtp_index].fd = sp->fds[index];
+    sessinfo->pfds_rtp[rtp_index].fd = sp->stream[index].fd;
     sessinfo->pfds_rtp[rtp_index].events = POLLIN;
     sessinfo->pfds_rtp[rtp_index].revents = 0;
-    sessinfo->pfds_rtcp[rtp_index].fd = sp->rtcp->fds[index];
+    sessinfo->pfds_rtcp[rtp_index].fd = sp->rtcp->stream[index].fd;
     sessinfo->pfds_rtcp[rtp_index].events = POLLIN;
     sessinfo->pfds_rtcp[rtp_index].revents = 0;
-    sp->sidx[index] = rtp_index;
-    sp->rtcp->sidx[index] = rtp_index;
+    sp->stream[index].sidx = rtp_index;
+    sp->rtcp->stream[index].sidx = rtp_index;
     sessinfo->nsessions++;
     pthread_mutex_unlock(&sessinfo->lock);
 }

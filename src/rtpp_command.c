@@ -61,6 +61,7 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
+#include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_server.h"
@@ -360,7 +361,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
         pthread_mutex_lock(&cf->sessinfo->lock);
         for (i = 0; i < cf->sessinfo->nsessions; i++) {
             spa = cf->sessinfo->sessions[i];
-            if (spa == NULL || spa->sidx[0] != i)
+            if (spa == NULL || spa->stream[0].sidx != i)
                 continue;
             remove_session(cf, spa);
         }
@@ -516,12 +517,12 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	handle_noplay(cf, spa, i, cmd);
 	ptime = -1;
 	if (strcmp(codecs, "session") == 0) {
-	    if (spa->codecs[i] == NULL) {
+	    if (spa->stream[i].codecs == NULL) {
 		reply_error(cf, cmd, ECODE_INVLARG_5);
 		return 0;
 	    }
-	    codecs = spa->codecs[i];
-	    ptime = spa->ptime[i];
+	    codecs = spa->stream[i].codecs;
+	    ptime = spa->stream[i].ptime;
 	}
 	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount,
           cmd, ptime) != 0) {
@@ -583,7 +584,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	}
 
 	if (weak)
-	    spa->weak[idx] = 0;
+	    spa->stream[idx].weak = 0;
 	else
 	    spa->strong = 0;
 
@@ -591,13 +592,13 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	 * This seems to be stable from reiterations, the only side
 	 * effect is less efficient work.
 	 */
-	if (spa->strong || spa->weak[0] || spa->weak[1]) {
+	if (spa->strong || spa->stream[0].weak || spa->stream[1].weak) {
 	    rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	      "delete: medianum=%u: removing %s flag, seeing flags to"
 	      " continue session (strong=%d, weak=%d/%d)",
 	      medianum,
 	      weak ? ( idx ? "weak[1]" : "weak[0]" ) : "strong",
-	      spa->strong, spa->weak[0], spa->weak[1]);
+	      spa->strong, spa->stream[0].weak, spa->stream[1].weak);
 	    /* Skipping to next possible stream for this call */
 	    ++ndeleted;
 	    spa = session_findnext(cf, spa);
@@ -605,7 +606,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	}
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "forcefully deleting session %u on ports %d/%d",
-	   medianum, spa->ports[0], spa->ports[1]);
+	   medianum, spa->stream[0].port, spa->stream[1].port);
 	/* Search forward before we do removal */
 	spb = spa;
 	spa = session_findnext(cf, spa);
@@ -627,12 +628,12 @@ static void
 handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx, struct rtpp_command *cmd)
 {
 
-    if (spa->rtps[idx] != RTPP_WEAKID_NONE) {
-        if (CALL_METHOD(spa->servers_wrt, unreg, spa->rtps[idx]) != NULL) {
-            spa->rtps[idx] = RTPP_WEAKID_NONE;
+    if (spa->stream[idx].rtps != RTPP_WEAKID_NONE) {
+        if (CALL_METHOD(spa->servers_wrt, unreg, spa->stream[idx].rtps) != NULL) {
+            spa->stream[idx].rtps = RTPP_WEAKID_NONE;
         }
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	  "stopping player at port %d", spa->ports[idx]);
+	  "stopping player at port %d", spa->stream[idx].port);
    }
 }
 
@@ -667,8 +668,8 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
         rsrv->sidx = idx;
         rco = rtpp_refcnt_ctor(rsrv, (rtpp_refcnt_dtor_t)rsrv->dtor);
         suid = CALL_METHOD(cf->stable->servers_wrt, reg, rco);
-        assert(spa->rtps[idx] == RTPP_WEAKID_NONE);
-        spa->rtps[idx] = suid;
+        assert(spa->stream[idx].rtps == RTPP_WEAKID_NONE);
+        spa->stream[idx].rtps = suid;
         cmd->csp->nplrs_created.cnt++;
         CALL_METHOD(rco, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           cf->stable->rtpp_stats);
@@ -755,7 +756,7 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
 XXX this needs work to fix it after rtp/rtcp split 
     for (i = 0; i < cf->sessinfo->nsessions && brief == 0; i++) {
         spa = cf->sessinfo->sessions[i];
-        if (spa == NULL || spa->sidx[0] != i)
+        if (spa == NULL || spa->stream[0].sidx != i)
             continue;
         /* RTCP twin session */
         if (spa->rtcp == NULL) {
@@ -786,8 +787,8 @@ XXX this needs work to fix it after rtp/rtcp split
         len += snprintf(buf + len, sizeof(buf) - len,
           "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
           "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
-          spb->call_id, spb->tag, addrs[0], spb->ports[1], addrs[1],
-          addrs[2], spb->ports[0], addrs[3], spa->pcount[0], spa->pcount[1],
+          spb->call_id, spb->tag, addrs[0], spb->stream[1].port, addrs[1],
+          addrs[2], spb->stream[0].port, addrs[3], spa->pcount[0], spa->pcount[1],
           spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
         if (len + 512 > sizeof(buf)) {
             rtpc_doreply(cf, buf, len, cmd);

@@ -43,6 +43,7 @@
 #include "rtpp_server.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_util.h"

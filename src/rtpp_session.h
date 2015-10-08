@@ -36,22 +36,15 @@ struct rtpp_timeout_data {
 
 struct rtpp_hash_table_entry;
 
-struct rtpps_latch {
-    int latched;
-    unsigned int ssrc;
-    int seq;
-};
-
 struct rtpps_pcount {
-    unsigned long npkts_in[2];
     unsigned long nrelayed;
     unsigned long ndropped;
     unsigned long nignored;
 };
 
 struct rtpp_session {
-    /* ttl for caller [0] and callee [1] */
-    int ttl[2];
+    /* Session for caller [0] and callee [1] */
+    struct rtpp_stream stream[2];
     rtpp_ttl_mode ttl_mode;
     struct rtpps_pcount pcount;
     char *call_id;
@@ -60,44 +53,16 @@ struct rtpp_session {
     rtpp_log_t log;
     struct rtpp_session* rtcp;
     struct rtpp_session* rtp;
-    /* Remote source addresses, one for caller and one for callee */
-    struct sockaddr *addr[2];
-    /* Save previous address when doing update */
-    struct sockaddr *prev_addr[2];
-    /* Flag which tells if we are allowed to update address with RTP src IP */
-    struct rtpps_latch latch_info[2];
-    /* Local listen addresses/ports */
-    struct sockaddr *laddr[2];
-    int ports[2];
-    /* Descriptors */
-    int fds[2];
     /* Session is complete, that is we received both request and reply */
     int complete;
-    int asymmetric[2];
     /* Flags: strong create/delete; weak ones */
     int strong;
-    int weak[2];
-    /* Pointers to rtpp_record's opaque data type */
-    void *rrcs[2];
     int record_single_file;
-    uint64_t rtps[2];
-    /* References to fd-to-session table */
-    int sidx[2];
-    /* Flag that indicates whether or not address supplied by client can't be trusted */
-    int untrusted_addr[2];
-    struct rtp_resizer *resizers[2];
-    struct rtpp_analyzer *analyzers[2];
     struct rtpp_session *prev;
     struct rtpp_session *next;
     struct rtpp_timeout_data timeout_data;
     /* Timestamp of session instantiation time */
     double init_ts;
-    /* Timestamp of the last session update */
-    double last_update[2];
-    /* Supported codecs */
-    char *codecs[2];
-    /* Requested ptime */
-    int ptime[2];
     struct rtpp_hash_table_entry *hte;
     uint64_t suid;
 

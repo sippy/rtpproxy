@@ -36,6 +36,7 @@
 #include "rtpp_analyzer.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
+#include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
 
@@ -54,12 +55,12 @@ handle_query_simple(struct cfg *cf, struct rtpp_command *cmd,
 
     if (verbose == 0) {
         len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n", get_ttl(spa),
-          spa->pcount.npkts_in[idx], spa->pcount.npkts_in[NOT(idx)],
+          spa->stream[idx].npkts_in, spa->stream[NOT(idx)].npkts_in,
           spa->pcount.nrelayed, spa->pcount.ndropped);
     } else {
         len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "ttl=%d npkts_ina=%lu "
           "npkts_ino=%lu nrelayed=%lu ndropped=%lu\n", get_ttl(spa),
-          spa->pcount.npkts_in[idx], spa->pcount.npkts_in[NOT(idx)],
+          spa->stream[idx].npkts_in, spa->stream[NOT(idx)].npkts_in,
           spa->pcount.nrelayed, spa->pcount.ndropped);
     }
     rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
@@ -68,7 +69,7 @@ handle_query_simple(struct cfg *cf, struct rtpp_command *cmd,
 
 #define PULL_RST() \
     if (rst_pulled == 0) { \
-        rtpp_analyzer_stat(spa->analyzers[idx], &rst); \
+        rtpp_analyzer_stat(spa->stream[idx].analyzer, &rst); \
         rst_pulled = 1; \
     }
 
@@ -117,12 +118,12 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
         }
         if (strcmp(cmd->argv[i], "npkts_ina") == 0) {
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
-              spa->pcount.npkts_in[idx]);
+              spa->stream[idx].npkts_in);
             continue;
         }
         if (strcmp(cmd->argv[i], "npkts_ino") == 0) {
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
-              spa->pcount.npkts_in[NOT(idx)]);
+              spa->stream[NOT(idx)].npkts_in);
             continue;
         }
         if (strcmp(cmd->argv[i], "nrelayed") == 0) {
