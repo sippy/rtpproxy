@@ -173,7 +173,7 @@ rtpp_cmd_rcache_dtor(struct rtpp_cmd_rcache_obj *pub)
 }
 
 static int
-rtpp_cmd_rcache_ematch(struct rtpp_refcnt_obj *rco, void *p)
+rtpp_cmd_rcache_ematch(void *dp, void *ap)
 {
     struct rtpp_cmd_rcache_entry *rep;
     double *ctimep;
@@ -182,8 +182,8 @@ rtpp_cmd_rcache_ematch(struct rtpp_refcnt_obj *rco, void *p)
      * This method does not need us to bump ref, since we are in the
      * context of the rtpp_hash_table, which hold its own ref.
      */
-    ctimep = (double *)p;
-    rep = CALL_METHOD(rco, getdata);
+    ctimep = (double *)ap;
+    rep = (struct rtpp_cmd_rcache_entry *)dp;
     if (rep->etime < *ctimep) {
         return (RTPP_HT_MATCH_DEL);
     }
