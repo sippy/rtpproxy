@@ -455,16 +455,14 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
          * Session creation. If creation is requested with weak flag,
          * set weak[0].
          */
-        spa = rtpp_session_ctor(cf->stable->servers_wrt,
-          cf->stable->rtpp_stats);
+        spa = rtpp_session_ctor(cf->stable, SESS_RTP);
         if (spa == NULL) {
             handle_nomem(cf, cmd, ECODE_NOMEM_4, ulop,
               fds, spa, spb);
             return (-1);
         }
         /* spb is RTCP twin session for this one. */
-        spb = rtpp_session_ctor(cf->stable->servers_wrt,
-          cf->stable->rtpp_stats);
+        spb = rtpp_session_ctor(cf->stable, SESS_RTCP);
         if (spb == NULL) {
             handle_nomem(cf, cmd, ECODE_NOMEM_5, ulop,
               fds, spa, spb);
