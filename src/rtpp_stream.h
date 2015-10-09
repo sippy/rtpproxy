@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,13 +29,17 @@
 #ifndef _RTPP_STREAM_H_
 #define _RTPP_STREAM_H_
 
+struct rtpp_stream_obj;
+struct rtpp_weakref_obj;
+struct rtpp_stats_obj;
+
 struct rtpps_latch {
     int latched;
     unsigned int ssrc;
     int seq;
 };
 
-struct rtpp_stream {
+struct rtpp_stream_obj {
     /* ttl for stream */
     int ttl;
     /* Remote source address */
@@ -70,6 +74,10 @@ struct rtpp_stream {
     int ptime;
     /* Packets received */
     unsigned long npkts_in;
+    /* Refcounter */
+    struct rtpp_refcnt_obj *rcnt;
 };
+
+struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_weakref_obj *, struct rtpp_stats_obj *);
 
 #endif
