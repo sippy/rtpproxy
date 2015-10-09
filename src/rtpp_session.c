@@ -62,6 +62,8 @@
 struct rtpp_session_priv
 {
     struct rtpp_session_obj pub;
+    struct rtpp_weakref_obj *rtp_streams_wrt;
+    int session_type;
     void *rco[0];
 };
 
@@ -103,8 +105,7 @@ session_findnext(struct cfg *cf, struct rtpp_session_obj *psp)
 }
 
 struct rtpp_session_obj *
-rtpp_session_ctor(struct rtpp_weakref_obj *servers_wrt,
-  struct rtpp_stats_obj *rtpp_stats)
+rtpp_session_ctor(struct rtpp_cfg_stable *cfs, int session_type)
 {
     struct rtpp_session_priv *pvt;
     int i;
@@ -114,9 +115,17 @@ rtpp_session_ctor(struct rtpp_weakref_obj *servers_wrt,
         goto e0;
     }
     for (i = 0; i < 2; i++) {
-        pvt->pub.stream[i] = rtpp_stream_ctor(servers_wrt, rtpp_stats);
+        pvt->pub.stream[i] = rtpp_stream_ctor(cfs->servers_wrt,
+          cfs->rtpp_stats);
         if (pvt->pub.stream[i] == NULL) {
             goto e1;
+        }
+        if (session_type == SESS_RTP) {
+            pvt->pub.stream[i]->stuid = CALL_METHOD(cfs->rtp_streams_wrt, reg,
+              pvt->pub.stream[i]->rcnt);
+            if (pvt->pub.stream[i]->stuid == RTPP_WEAKID_NONE) {
+                goto e1;
+            }
         }
     }
     pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
@@ -125,12 +134,17 @@ rtpp_session_ctor(struct rtpp_weakref_obj *servers_wrt,
         free(pvt);
         return (NULL);
     }
-    pvt->pub.rtpp_stats = rtpp_stats;
+    pvt->rtp_streams_wrt = cfs->rtp_streams_wrt;
+    pvt->session_type = session_type;
+    pvt->pub.rtpp_stats = cfs->rtpp_stats;
     return (&pvt->pub);
 
 e1:
     for (i = 0; i < 2; i++) {
         if (pvt->pub.stream[i] != NULL) {
+            if (session_type == SESS_RTP &&pvt->pub.stream[i]->stuid != RTPP_WEAKID_NONE) {
+                CALL_METHOD(cfs->rtp_streams_wrt, unreg, pvt->pub.stream[i]->stuid);
+            }
             CALL_METHOD(pvt->pub.stream[i]->rcnt, decref);
         }
     }
@@ -145,9 +159,12 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     int i;
 
     for (i = 0; i < 2; i++) {
+        if (pvt->session_type == SESS_RTP) {
+            CALL_METHOD(pvt->rtp_streams_wrt, unreg, pvt->pub.stream[i]->stuid);
+        }
         CALL_METHOD(pvt->pub.stream[i]->rcnt, decref);
     }
-    if (pvt->pub.rtcp == NULL) {
+    if (pvt->session_type == SESS_RTCP) {
         free(pvt);
         return;
     }

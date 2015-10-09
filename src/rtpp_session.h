@@ -93,7 +93,6 @@ int compare_session_tags(const char *, const char *, unsigned *);
 int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session_obj **);
 int get_ttl(struct rtpp_session_obj *);
 
-struct rtpp_session_obj *rtpp_session_ctor(struct rtpp_weakref_obj *,
-  struct rtpp_stats_obj *);
+struct rtpp_session_obj *rtpp_session_ctor(struct rtpp_cfg_stable *, int);
 
 #endif
