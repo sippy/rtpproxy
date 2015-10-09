@@ -76,6 +76,8 @@ struct rtpp_stream_obj {
     unsigned long npkts_in;
     /* Refcounter */
     struct rtpp_refcnt_obj *rcnt;
+    /* UID */
+    uint64_t stuid;
 };
 
 struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_weakref_obj *, struct rtpp_stats_obj *);
