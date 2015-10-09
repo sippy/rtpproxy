@@ -663,8 +663,7 @@ handle_play(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *codecs,
         rsrv = rtpp_server_ctor(pname, n, playcount, cmd->dtime, ptime);
 	if (rsrv == NULL)
 	    continue;
-        rsrv->suid = spa->suid;
-        rsrv->sidx = idx;
+        rsrv->stuid = spa->stream[idx]->stuid;
         suid = CALL_METHOD(cf->stable->servers_wrt, reg, rsrv->rcnt);
         assert(spa->stream[idx]->rtps == RTPP_WEAKID_NONE);
         spa->stream[idx]->rtps = suid;
