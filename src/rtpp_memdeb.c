@@ -64,6 +64,8 @@
 #define MEMDEB_SIGNATURE_ALLOC(x) (MEMDEB_SIGNATURE ^ (uint64_t)(x))
 #define MEMDEB_SIGNATURE_FREE(x) (~MEMDEB_SIGNATURE_ALLOC(x))
 
+#define MEMDEB_GUARD_SIZE 8
+
 struct memdeb_node
 {
     uint64_t magic;
@@ -143,8 +145,10 @@ rtpp_memdeb_malloc(size_t size, const char *fname, int linen, const char *funcn)
 {
     struct memdeb_node *mnp;
     struct memdeb_pfx *mpf;
+    unsigned char *gp;
+    uint64_t guard;
 
-    mpf = malloc(offsetof(struct memdeb_pfx, real_data) + size);
+    mpf = malloc(offsetof(struct memdeb_pfx, real_data) + size + MEMDEB_GUARD_SIZE);
     mnp = rtpp_memdeb_nget(fname, linen, funcn, 1);
     if (mpf == NULL) {
         mnp->mstats.afails++;
@@ -157,6 +161,9 @@ rtpp_memdeb_malloc(size_t size, const char *fname, int linen, const char *funcn)
     pthread_mutex_unlock(memdeb_mutex);
     mpf->asize = size;
     mpf->mnp = mnp;
+    gp = (unsigned char *)mpf->real_data + size;
+    guard = MEMDEB_SIGNATURE_ALLOC(gp);
+    memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
     return (mpf->real_data);
 }
 
@@ -183,8 +190,16 @@ rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
     UNUSED(linen);
     UNUSED(funcn);
     struct memdeb_pfx *mpf;
+    unsigned char *gp;
+    uint64_t guard;
 
     mpf = ptr2mpf(ptr);
+    gp = (unsigned char *)mpf->real_data + mpf->asize;
+    guard = MEMDEB_SIGNATURE_ALLOC(gp);
+    if (memcmp(gp, &guard, MEMDEB_GUARD_SIZE) != 0) {
+        /* Guard is b0rken, probably out-of-bound write */
+        abort();
+    }
     pthread_mutex_lock(memdeb_mutex);
     if (mpf->magic != MEMDEB_SIGNATURE_ALLOC(mpf)) {
         /* Random of de-allocated pointer */
@@ -206,6 +221,8 @@ rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const
     struct memdeb_pfx *mpf, *new_mpf;
     char *cp;
     uint64_t sig_save;
+    unsigned char *gp;
+    uint64_t guard;
 
     mpf = ptr2mpf(ptr);
     pthread_mutex_lock(memdeb_mutex);
@@ -216,7 +233,7 @@ rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const
     }
     mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
     pthread_mutex_unlock(memdeb_mutex);
-    cp = realloc(mpf, size + offsetof(struct memdeb_pfx, real_data));
+    cp = realloc(mpf, size + offsetof(struct memdeb_pfx, real_data) + MEMDEB_GUARD_SIZE);
     if (cp == NULL) {
         pthread_mutex_lock(memdeb_mutex);
         mpf->magic = sig_save;
@@ -235,6 +252,9 @@ rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const
     new_mpf->mnp->mstats.balloc += size - new_mpf->asize;
     pthread_mutex_unlock(memdeb_mutex);
     new_mpf->asize = size;
+    gp = (unsigned char *)new_mpf->real_data + size;
+    guard = MEMDEB_SIGNATURE_ALLOC(gp);
+    memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
     return (new_mpf->real_data);
 }
 
@@ -244,9 +264,11 @@ rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *fu
     struct memdeb_node *mnp;
     struct memdeb_pfx *mpf;
     size_t size;
+    unsigned char *gp;
+    uint64_t guard;
 
     size = strlen(ptr) + 1;
-    mpf = malloc(size + offsetof(struct memdeb_pfx, real_data));
+    mpf = malloc(size + offsetof(struct memdeb_pfx, real_data) + MEMDEB_GUARD_SIZE);
     mnp = rtpp_memdeb_nget(fname, linen, funcn, 1);
     if (mpf == NULL) {
         mnp->mstats.afails++;
@@ -260,6 +282,9 @@ rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *fu
     mpf->asize = size;
     memcpy(mpf->real_data, ptr, size);
     mpf->magic = MEMDEB_SIGNATURE_ALLOC(mpf);
+    gp = (unsigned char *)mpf->real_data + size;
+    guard = MEMDEB_SIGNATURE_ALLOC(gp);
+    memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
     return ((char *)mpf->real_data);
 }
 
