@@ -27,6 +27,7 @@ rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 rtpproxy_LDADD=-lm -lpthread
 rtpproxy_debug_LDADD=${rtpproxy_LDADD}
 rtpproxy_debug_LDFLAGS=-static
-rtpproxy_debug_CPPFLAGS=-g3 -O0 -DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
+rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
+rtpproxy_debug_CFLAGS=-g3 -O0
 
 DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
