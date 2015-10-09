@@ -178,10 +178,18 @@ witness_start() {
 }
 
 witness_stop() {
+  WITNESS_ADD_FILES="${1}"
   if [ "${WITNESS_PID}" != "" ]
   then
     ${SUDO} kill -TERM ${WITNESS_PID} 2>/dev/null
-    curl -F "pcap_meta_data=somePcapInfo" -F "pcap_file=@${PCAP_NAME}" hooks.sippysoft.com:80/rtpproxy/pcap_catcher
+    if [ "${WITNESS_ADD_FILES}" != "" ]
+    then
+      WITNESS_NAME="${TESTNAME}.${TEST_TIMESTAMP}.debug.tbz2"
+      tar -cyf ${WITNESS_NAME} "${PCAP_NAME}" ${WITNESS_ADD_FILES}
+    else
+      WITNESS_NAME="${PCAP_NAME}"
+    fi
+    curl -F "pcap_meta_data=somePcapInfo" -F "pcap_file=@${WITNESS_NAME}" hooks.sippysoft.com:80/rtpproxy/pcap_catcher
     echo ""
     ${SUDO} rm -f ${PCAP_NAME}
   fi
