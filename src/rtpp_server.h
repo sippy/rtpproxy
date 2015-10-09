@@ -43,8 +43,8 @@ struct rtpp_server_obj {
     rtpp_server_get_t get;
     /* Refcounter */
     struct rtpp_refcnt_obj *rcnt;
-    uint64_t suid;
-    int sidx;
+    /* Weakref to the associated RTP stream */
+    uint64_t stuid;
 };
 
 struct rtpp_server_obj *rtpp_server_ctor(const char *, rtp_type_t, int, double,
