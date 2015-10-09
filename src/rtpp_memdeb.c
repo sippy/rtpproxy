@@ -61,6 +61,9 @@
 
 #define MEMDEB_SIGNATURE 0x8b26e00041dfdec6UL
 
+#define MEMDEB_SIGNATURE_ALLOC(x) (MEMDEB_SIGNATURE ^ (uint64_t)(x))
+#define MEMDEB_SIGNATURE_FREE(x) (~MEMDEB_SIGNATURE_ALLOC(x))
+
 struct memdeb_node
 {
     uint64_t magic;
@@ -75,6 +78,7 @@ struct memdeb_pfx
 {
     struct memdeb_node *mnp;
     size_t asize;
+    uint64_t magic;
     /* Use longest datatype to ensure proper alignment */
     long long real_data[0];
 };
@@ -149,6 +153,7 @@ rtpp_memdeb_malloc(size_t size, const char *fname, int linen, const char *funcn)
     }
     mnp->mstats.nalloc++;
     mnp->mstats.balloc += size;
+    mpf->magic = MEMDEB_SIGNATURE_ALLOC(mpf);
     pthread_mutex_unlock(memdeb_mutex);
     mpf->asize = size;
     mpf->mnp = mnp;
@@ -165,7 +170,7 @@ ptr2mpf(void *ptr)
     cp -= offsetof(struct memdeb_pfx, real_data);
     mpf = (struct memdeb_pfx *)cp;
     if (mpf->mnp->magic != MEMDEB_SIGNATURE) {
-        /* Free of unallicated pointer or nodelist is corrupt */
+        /* Free of unallocated pointer or nodelist is corrupt */
         abort();
     }
     return (mpf);
@@ -181,8 +186,13 @@ rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
 
     mpf = ptr2mpf(ptr);
     pthread_mutex_lock(memdeb_mutex);
+    if (mpf->magic != MEMDEB_SIGNATURE_ALLOC(mpf)) {
+        /* Random of de-allocated pointer */
+        abort();
+    }
     mpf->mnp->mstats.nfree++;
     mpf->mnp->mstats.bfree += mpf->asize;
+    mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
     pthread_mutex_unlock(memdeb_mutex);
     return free(mpf);
 }
@@ -193,25 +203,39 @@ rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const
     UNUSED(fname);
     UNUSED(linen);
     UNUSED(funcn);
-    struct memdeb_pfx *mpf;
+    struct memdeb_pfx *mpf, *new_mpf;
     char *cp;
+    uint64_t sig_save;
 
     mpf = ptr2mpf(ptr);
+    pthread_mutex_lock(memdeb_mutex);
+    sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
+    if (mpf->magic != sig_save) {
+        /* Random of de-allocated pointer */
+        abort();
+    }
+    mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
+    pthread_mutex_unlock(memdeb_mutex);
     cp = realloc(mpf, size + offsetof(struct memdeb_pfx, real_data));
     if (cp == NULL) {
         pthread_mutex_lock(memdeb_mutex);
+        mpf->magic = sig_save;
         mpf->mnp->mstats.afails++;
         pthread_mutex_unlock(memdeb_mutex);
         return (cp);
     }
-    mpf = (struct memdeb_pfx *)cp;
+    new_mpf = (struct memdeb_pfx *)cp;
+    if (new_mpf != mpf) {
+        sig_save = MEMDEB_SIGNATURE_ALLOC(new_mpf);
+    }
     pthread_mutex_lock(memdeb_mutex);
-    mpf->mnp->mstats.nrealloc++;
-    mpf->mnp->mstats.brealloc += size;
-    mpf->mnp->mstats.balloc += size - mpf->asize;
+    new_mpf->magic = sig_save;
+    new_mpf->mnp->mstats.nrealloc++;
+    new_mpf->mnp->mstats.brealloc += size;
+    new_mpf->mnp->mstats.balloc += size - new_mpf->asize;
     pthread_mutex_unlock(memdeb_mutex);
-    mpf->asize = size;
-    return (mpf->real_data);
+    new_mpf->asize = size;
+    return (new_mpf->real_data);
 }
 
 char *
@@ -235,6 +259,7 @@ rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *fu
     mpf->mnp = mnp;
     mpf->asize = size;
     memcpy(mpf->real_data, ptr, size);
+    mpf->magic = MEMDEB_SIGNATURE_ALLOC(mpf);
     return ((char *)mpf->real_data);
 }
 
