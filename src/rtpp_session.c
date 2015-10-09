@@ -59,10 +59,21 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
 
-struct rtpp_session *
+struct rtpp_session_priv
+{
+    struct rtpp_session_obj pub;
+    void *rco[0];
+};
+
+#define PUB2PVT(pubp) \
+  ((struct rtpp_session_priv *)((char *)(pubp) - offsetof(struct rtpp_session_priv, pub)))
+
+static void rtpp_session_dtor(struct rtpp_session_priv *);
+
+struct rtpp_session_obj *
 session_findfirst(struct cfg *cf, const char *call_id)
 {
-    struct rtpp_session *sp;
+    struct rtpp_session_obj *sp;
     struct rtpp_hash_table_entry *he;
 
     /* Make sure structure is properly locked */
@@ -75,10 +86,10 @@ session_findfirst(struct cfg *cf, const char *call_id)
     return (sp);
 }
 
-struct rtpp_session *
-session_findnext(struct cfg *cf, struct rtpp_session *psp)
+struct rtpp_session_obj *
+session_findnext(struct cfg *cf, struct rtpp_session_obj *psp)
 {
-    struct rtpp_session *sp;
+    struct rtpp_session_obj *sp;
     struct rtpp_hash_table_entry *he;
 
     /* Make sure structure is properly locked */
@@ -91,64 +102,81 @@ session_findnext(struct cfg *cf, struct rtpp_session *psp)
     return (sp);
 }
 
+struct rtpp_session_obj *
+rtpp_session_ctor(struct rtpp_weakref_obj *servers_wrt,
+  struct rtpp_stats_obj *rtpp_stats)
+{
+    struct rtpp_session_priv *pvt;
+    int i;
+
+    pvt = rtpp_zmalloc(sizeof(struct rtpp_session_obj) + rtpp_refcnt_osize());
+    if (pvt == NULL) {
+        goto e0;
+    }
+    for (i = 0; i < 2; i++) {
+        pvt->pub.stream[i] = rtpp_stream_ctor(servers_wrt, rtpp_stats);
+        if (pvt->pub.stream[i] == NULL) {
+            goto e1;
+        }
+    }
+    pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
+      (rtpp_refcnt_dtor_t)&rtpp_session_dtor);
+    if (pvt->pub.rcnt == NULL) {
+        free(pvt);
+        return (NULL);
+    }
+    pvt->pub.rtpp_stats = rtpp_stats;
+    return (&pvt->pub);
+
+e1:
+    for (i = 0; i < 2; i++) {
+        if (pvt->pub.stream[i] != NULL) {
+            CALL_METHOD(pvt->pub.stream[i]->rcnt, decref);
+        }
+    }
+    free(pvt);
+e0:
+    return (NULL);
+}
+
 static void
-session_dtor(struct rtpp_session *sp)
+rtpp_session_dtor(struct rtpp_session_priv *pvt)
 {
     int i;
 
     for (i = 0; i < 2; i++) {
-        if (sp->stream[i].addr != NULL)
-            free(sp->stream[i].addr);
-        if (sp->stream[i].prev_addr != NULL)
-            free(sp->stream[i].prev_addr);
-        if (sp->stream[i].codecs != NULL)
-            free(sp->stream[i].codecs);
-        if (sp->rtcp->stream[i].addr != NULL)
-            free(sp->rtcp->stream[i].addr);
-        if (sp->rtcp->stream[i].prev_addr != NULL)
-            free(sp->rtcp->stream[i].prev_addr);
-        if (sp->rtcp->stream[i].codecs != NULL)
-            free(sp->rtcp->stream[i].codecs);
-        if (sp->stream[i].rtps != RTPP_WEAKID_NONE)
-            CALL_METHOD(sp->servers_wrt, unreg, sp->stream[i].rtps);
-        if (sp->stream[i].resizer != NULL)
-             rtp_resizer_free(sp->rtpp_stats, sp->stream[i].resizer);
+        CALL_METHOD(pvt->pub.stream[i]->rcnt, decref);
     }
-    if (sp->timeout_data.notify_tag != NULL)
-        free(sp->timeout_data.notify_tag);
-    if (sp->call_id != NULL)
-        free(sp->call_id);
-    if (sp->tag != NULL)
-        free(sp->tag);
-    if (sp->tag_nomedianum != NULL)
-        free(sp->tag_nomedianum);
+    if (pvt->pub.rtcp == NULL) {
+        free(pvt);
+        return;
+    }
+    if (pvt->pub.timeout_data.notify_tag != NULL)
+        free(pvt->pub.timeout_data.notify_tag);
+    if (pvt->pub.call_id != NULL)
+        free(pvt->pub.call_id);
+    if (pvt->pub.tag != NULL)
+        free(pvt->pub.tag);
+    if (pvt->pub.tag_nomedianum != NULL)
+        free(pvt->pub.tag_nomedianum);
 
-    rtpp_log_close(sp->log);
+    rtpp_log_close(pvt->pub.log);
 
-    free(sp->rtcp);
-    free(sp);
+    CALL_METHOD(pvt->pub.rtcp->rcnt, decref);
+    free(pvt);
 }
 
 void
-append_session(struct cfg *cf, struct rtpp_session *sp, int index)
+append_session(struct cfg *cf, struct rtpp_session_obj *sp, int index)
 {
-    struct rtpp_refcnt_obj *rco;
-
-    if (sp->suid == 0) {
-        sp->rtpp_stats = cf->stable->rtpp_stats;
-        sp->servers_wrt = cf->stable->servers_wrt;
-        rco = rtpp_refcnt_ctor(sp, (rtpp_refcnt_dtor_t)session_dtor);
-        sp->suid = CALL_METHOD(cf->stable->sessions_wrt, reg, rco);
-        CALL_METHOD(rco, decref);
-    }
 
     /* Make sure structure is properly locked */
     assert(rtpp_mutex_islocked(&cf->glock) == 1);
 
-    if (sp->stream[index].fd != -1) {
+    if (sp->stream[index]->fd != -1) {
         CALL_METHOD(cf->sessinfo, append, sp, index);
     } else {
-	sp->stream[index].sidx = -1;
+	sp->stream[index]->sidx = -1;
     }
 }
 
@@ -189,31 +217,31 @@ close_socket_later(struct cfg *cf, int fd)
 }
 
 void
-update_sessions(struct cfg *cf, struct rtpp_session *sp, int index, int *new_fds)
+update_sessions(struct cfg *cf, struct rtpp_session_obj *sp, int index, int *new_fds)
 {
     int rtp_index;
 
     /* Make sure structure is properly locked */
     assert(rtpp_mutex_islocked(&cf->glock) == 1);
-    rtp_index = sp->stream[index].sidx;
+    rtp_index = sp->stream[index]->sidx;
     assert(rtp_index > -1);
-    assert(sp->rtcp->stream[index].sidx == rtp_index);
-    if (sp->stream[index].fd != -1) {
-        close_socket_later(cf, sp->stream[index].fd);
+    assert(sp->rtcp->stream[index]->sidx == rtp_index);
+    if (sp->stream[index]->fd != -1) {
+        close_socket_later(cf, sp->stream[index]->fd);
     }
-    cf->sessinfo->pfds_rtp[rtp_index].fd = sp->stream[index].fd = new_fds[0];
+    cf->sessinfo->pfds_rtp[rtp_index].fd = sp->stream[index]->fd = new_fds[0];
     cf->sessinfo->pfds_rtp[rtp_index].events = POLLIN;
     cf->sessinfo->pfds_rtp[rtp_index].revents = 0;
-    if (sp->rtcp->stream[index].fd != -1) {
-        close_socket_later(cf, sp->rtcp->stream[index].fd);
+    if (sp->rtcp->stream[index]->fd != -1) {
+        close_socket_later(cf, sp->rtcp->stream[index]->fd);
     }
-    cf->sessinfo->pfds_rtcp[rtp_index].fd = sp->rtcp->stream[index].fd = new_fds[1];
+    cf->sessinfo->pfds_rtcp[rtp_index].fd = sp->rtcp->stream[index]->fd = new_fds[1];
     cf->sessinfo->pfds_rtcp[rtp_index].events = POLLIN;
     cf->sessinfo->pfds_rtcp[rtp_index].revents = 0;
 }
 
 void
-remove_session(struct cfg *cf, struct rtpp_session *sp)
+remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
 {
     int i;
     double session_time;
@@ -224,59 +252,59 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
     assert(rtpp_mutex_islocked(&cf->sessinfo->lock) == 1);
 
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->stream[0].npkts_in,
-      sp->stream[1].npkts_in, sp->pcount.nrelayed, sp->pcount.ndropped,
+      "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->stream[0]->npkts_in,
+      sp->stream[1]->npkts_in, sp->pcount.nrelayed, sp->pcount.ndropped,
       sp->pcount.nignored);
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTCP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->rtcp->stream[0].npkts_in,
-      sp->rtcp->stream[1].npkts_in, sp->rtcp->pcount.nrelayed,
+      "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->rtcp->stream[0]->npkts_in,
+      sp->rtcp->stream[1]->npkts_in, sp->rtcp->pcount.nrelayed,
       sp->rtcp->pcount.ndropped, sp->rtcp->pcount.nignored);
     if (sp->complete != 0) {
-        if (sp->stream[0].npkts_in == 0 && sp->stream[1].npkts_in == 0) {
+        if (sp->stream[0]->npkts_in == 0 && sp->stream[1]->npkts_in == 0) {
             CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_nortp", 1);
-        } else if (sp->stream[0].npkts_in == 0 || sp->stream[1].npkts_in == 0) {
+        } else if (sp->stream[0]->npkts_in == 0 || sp->stream[1]->npkts_in == 0) {
             CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_owrtp", 1);
         }
-        if (sp->rtcp->stream[0].npkts_in == 0 && sp->rtcp->stream[1].npkts_in == 0) {
+        if (sp->rtcp->stream[0]->npkts_in == 0 && sp->rtcp->stream[1]->npkts_in == 0) {
             CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_nortcp", 1);
-        } else if (sp->rtcp->stream[0].npkts_in == 0 || sp->rtcp->stream[1].npkts_in == 0) {
+        } else if (sp->rtcp->stream[0]->npkts_in == 0 || sp->rtcp->stream[1]->npkts_in == 0) {
             CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_owrtcp", 1);
         }
     }
     rtpp_log_write(RTPP_LOG_INFO, sp->log, "session on ports %d/%d is cleaned up",
-      sp->stream[0].port, sp->stream[1].port);
+      sp->stream[0]->port, sp->stream[1]->port);
     for (i = 0; i < 2; i++) {
-	if (sp->stream[i].fd != -1) {
-	    close_socket_later(cf, sp->stream[i].fd);
-	    assert(cf->sessinfo->sessions[sp->stream[i].sidx] == sp);
-	    cf->sessinfo->sessions[sp->stream[i].sidx] = NULL;
-	    assert(cf->sessinfo->pfds_rtp[sp->stream[i].sidx].fd == sp->stream[i].fd);
-	    cf->sessinfo->pfds_rtp[sp->stream[i].sidx].fd = -1;
-	    cf->sessinfo->pfds_rtp[sp->stream[i].sidx].events = 0;
+	if (sp->stream[i]->fd != -1) {
+	    close_socket_later(cf, sp->stream[i]->fd);
+	    assert(cf->sessinfo->sessions[sp->stream[i]->sidx] == sp);
+	    cf->sessinfo->sessions[sp->stream[i]->sidx] = NULL;
+	    assert(cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].fd == sp->stream[i]->fd);
+	    cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].fd = -1;
+	    cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].events = 0;
 	}
-	if (sp->rtcp->stream[i].fd != -1) {
-	    close_socket_later(cf, sp->rtcp->stream[i].fd);
-	    assert(cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i].sidx].fd == sp->rtcp->stream[i].fd);
-	    cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i].sidx].fd = -1;
-	    cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i].sidx].events = 0;
+	if (sp->rtcp->stream[i]->fd != -1) {
+	    close_socket_later(cf, sp->rtcp->stream[i]->fd);
+	    assert(cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].fd == sp->rtcp->stream[i]->fd);
+	    cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].fd = -1;
+	    cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].events = 0;
 	}
-	if (sp->stream[i].rrc != NULL) {
-	    rclose(sp, sp->stream[i].rrc, 1);
+	if (sp->stream[i]->rrc != NULL) {
+	    rclose(sp, sp->stream[i]->rrc, 1);
             if (sp->record_single_file != 0) {
-                sp->rtcp->stream[i].rrc = NULL;
-                sp->stream[NOT(i)].rrc = NULL;
-                sp->rtcp->stream[NOT(i)].rrc = NULL;
+                sp->rtcp->stream[i]->rrc = NULL;
+                sp->stream[NOT(i)]->rrc = NULL;
+                sp->rtcp->stream[NOT(i)]->rrc = NULL;
             }
         }
-	if (sp->rtcp->stream[i].rrc != NULL)
-	    rclose(sp, sp->rtcp->stream[i].rrc, 1);
-        if (sp->stream[i].analyzer != NULL) {
+	if (sp->rtcp->stream[i]->rrc != NULL)
+	    rclose(sp, sp->rtcp->stream[i]->rrc, 1);
+        if (sp->stream[i]->analyzer != NULL) {
              struct rtpp_analyzer_stats rst;
              char ssrc_buf[11];
              const char *actor, *ssrc;
 
              actor = (i == 0) ? "callee" : "caller";
-             rtpp_analyzer_stat(sp->stream[i].analyzer, &rst);
+             rtpp_analyzer_stat(sp->stream[i]->analyzer, &rst);
              if (rst.ssrc_changes != 0) {
                  snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", rst.last_ssrc);
                  ssrc = ssrc_buf;
@@ -299,7 +327,7 @@ remove_session(struct cfg *cf, struct rtpp_session *sp)
              if (rst.pecount > 0) {
                  CALL_METHOD(sp->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
              }
-             rtpp_analyzer_dtor(sp->stream[i].analyzer);
+             rtpp_analyzer_dtor(sp->stream[i]->analyzer);
         }
     }
     if (sp->hte != NULL)
@@ -332,7 +360,7 @@ compare_session_tags(const char *tag1, const char *tag0, unsigned *medianum_p)
 
 int
 find_stream(struct cfg *cf, const char *call_id, const char *from_tag,
-  const char *to_tag, struct rtpp_session **spp)
+  const char *to_tag, struct rtpp_session_obj **spp)
 {
     const char *cp1, *cp2;
 
@@ -368,15 +396,15 @@ find_stream(struct cfg *cf, const char *call_id, const char *from_tag,
 }
 
 int
-get_ttl(struct rtpp_session *sp)
+get_ttl(struct rtpp_session_obj *sp)
 {
 
     switch(sp->ttl_mode) {
     case TTL_UNIFIED:
-	return (MAX(sp->stream[0].ttl, sp->stream[1].ttl));
+	return (MAX(sp->stream[0]->ttl, sp->stream[1]->ttl));
 
     case TTL_INDEPENDENT:
-	return (MIN(sp->stream[0].ttl, sp->stream[1].ttl));
+	return (MIN(sp->stream[0]->ttl, sp->stream[1]->ttl));
 
     default:
 	/* Shouldn't happen[tm] */

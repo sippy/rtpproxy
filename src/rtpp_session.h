@@ -29,6 +29,10 @@
 #ifndef _RTPP_SESSION_H_
 #define _RTPP_SESSION_H_
 
+struct rtpp_session_obj;
+
+DEFINE_METHOD(rtpp_session_obj, rtpp_session_dtor, void);
+
 struct rtpp_timeout_data {
     char *notify_tag;
     struct rtpp_tnotify_target *notify_target;
@@ -42,24 +46,23 @@ struct rtpps_pcount {
     unsigned long nignored;
 };
 
-struct rtpp_session {
+struct rtpp_session_obj {
     /* Session for caller [0] and callee [1] */
-    struct rtpp_stream stream[2];
+    struct rtpp_stream_obj *stream[2];
     rtpp_ttl_mode ttl_mode;
     struct rtpps_pcount pcount;
     char *call_id;
     char *tag;
     char *tag_nomedianum;
     rtpp_log_t log;
-    struct rtpp_session* rtcp;
-    struct rtpp_session* rtp;
+    struct rtpp_session_obj* rtcp;
     /* Session is complete, that is we received both request and reply */
     int complete;
     /* Flags: strong create/delete; weak ones */
     int strong;
     int record_single_file;
-    struct rtpp_session *prev;
-    struct rtpp_session *next;
+    struct rtpp_session_obj *prev;
+    struct rtpp_session_obj *next;
     struct rtpp_timeout_data timeout_data;
     /* Timestamp of session instantiation time */
     double init_ts;
@@ -68,6 +71,9 @@ struct rtpp_session {
 
     struct rtpp_stats_obj *rtpp_stats;
     struct rtpp_weakref_obj *servers_wrt;
+
+    /* Refcounter */
+    struct rtpp_refcnt_obj *rcnt;
 };
 
 struct cfg;
@@ -77,14 +83,17 @@ struct cfg_stable;
 #define	SESS_RTCP	2
 
 void init_hash_table(struct cfg_stable *);
-struct rtpp_session *session_findfirst(struct cfg *, const char *);
-struct rtpp_session *session_findnext(struct cfg *cf, struct rtpp_session *);
-void hash_table_append(struct cfg *, struct rtpp_session *);
-void append_session(struct cfg *, struct rtpp_session *, int);
-void update_sessions(struct cfg *, struct rtpp_session *, int, int *);
-void remove_session(struct cfg *, struct rtpp_session *);
+struct rtpp_session_obj *session_findfirst(struct cfg *, const char *);
+struct rtpp_session_obj *session_findnext(struct cfg *cf, struct rtpp_session_obj *);
+void hash_table_append(struct cfg *, struct rtpp_session_obj *);
+void append_session(struct cfg *, struct rtpp_session_obj *, int);
+void update_sessions(struct cfg *, struct rtpp_session_obj *, int, int *);
+void remove_session(struct cfg *, struct rtpp_session_obj *);
 int compare_session_tags(const char *, const char *, unsigned *);
-int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session **);
-int get_ttl(struct rtpp_session *);
+int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session_obj **);
+int get_ttl(struct rtpp_session_obj *);
+
+struct rtpp_session_obj *rtpp_session_ctor(struct rtpp_weakref_obj *,
+  struct rtpp_stats_obj *);
 
 #endif
