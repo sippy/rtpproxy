@@ -153,6 +153,7 @@ rtpproxy_stop() {
 
 witness_start() {
   TESTNAME=${1}
+  WITNESS_ADD_FILES="${2}"
   PCAP_NAME="${TESTNAME}.${TEST_TIMESTAMP}.debug.pcap"
   if [ "${TEST_WITNESS_ENABLE}" = "" ]
   then
@@ -178,7 +179,6 @@ witness_start() {
 }
 
 witness_stop() {
-  WITNESS_ADD_FILES="${1}"
   if [ "${WITNESS_PID}" != "" ]
   then
     ${SUDO} kill -TERM ${WITNESS_PID} 2>/dev/null
