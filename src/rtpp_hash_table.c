@@ -465,7 +465,7 @@ hash_table_foreach(struct rtpp_hash_table_obj *self,
             assert(sp->hte_type == rtpp_hte_refcnt_t);
             rptr = (struct rtpp_refcnt_obj *)sp->sptr;
             sp_next = sp->next;
-            mval = hte_ematch(rptr, marg);
+            mval = hte_ematch(CALL_METHOD(rptr, getdata), marg);
             if (mval == RTPP_HT_MATCH_CONT) {
                 continue;
             }

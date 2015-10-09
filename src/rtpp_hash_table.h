@@ -30,7 +30,7 @@ struct rtpp_hash_table_obj;
 struct rtpp_hash_table_entry;
 struct rtpp_refcnt_obj;
 
-typedef int (*rtpp_hash_table_match_t)(struct rtpp_refcnt_obj *, void *);
+typedef int (*rtpp_hash_table_match_t)(void *, void *);
 
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_append, struct rtpp_hash_table_entry *, const void *, void *);
 DEFINE_METHOD(rtpp_hash_table_obj, hash_table_append_refcnt, struct rtpp_hash_table_entry *, const void *, struct rtpp_refcnt_obj *);
