@@ -33,7 +33,6 @@ struct rtpp_server_obj;
 struct rtp_packet;
 
 DEFINE_METHOD(rtpp_server_obj, rtpp_server_get, struct rtp_packet *, double, int *);
-DEFINE_METHOD(rtpp_server_obj, rtpp_server_dtor, void);
 
 #define	RTPS_LATER	(0)
 #define	RTPS_EOF	(-1)
@@ -42,7 +41,8 @@ DEFINE_METHOD(rtpp_server_obj, rtpp_server_dtor, void);
 
 struct rtpp_server_obj {
     rtpp_server_get_t get;
-    rtpp_server_dtor_t dtor;
+    /* Refcounter */
+    struct rtpp_refcnt_obj *rcnt;
     uint64_t suid;
     int sidx;
 };

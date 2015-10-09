@@ -40,6 +40,7 @@
 #include "rtp_packet.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_server.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
@@ -66,11 +67,12 @@ struct rtpp_server_priv {
     int loop;
     uint64_t dts;
     int ptime;
+    void *rco[0];
 };
 
 #define PUB2PVT(pubp)      ((struct rtpp_server_priv *)((char *)(pubp) - offsetof(struct rtpp_server_priv, pub)))
 
-static void rtpp_server_dtor(struct rtpp_server_obj *);
+static void rtpp_server_dtor(struct rtpp_server_priv *);
 static struct rtp_packet *rtpp_server_get(struct rtpp_server_obj *, double, int *);
 
 struct rtpp_server_obj *
@@ -84,12 +86,17 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     sprintf(path, "%s.%d", name, codec);
     fd = open(path, O_RDONLY);
     if (fd == -1)
-	return NULL;
+	goto e0;
 
-    rp = rtpp_zmalloc(sizeof(struct rtpp_server_priv));
+    rp = rtpp_zmalloc(sizeof(struct rtpp_server_priv) + rtpp_refcnt_osize());
     if (rp == NULL) {
-	close(fd);
-	return NULL;
+	goto e1;
+    }
+
+    rp->pub.rcnt = rtpp_refcnt_ctor_pa(&rp->rco[0], rp,
+      (rtpp_refcnt_dtor_t)&rtpp_server_dtor);
+    if (rp->pub.rcnt == NULL) {
+        goto e2;
     }
 
     rp->btime = dtime;
@@ -110,18 +117,21 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
-    rp->pub.dtor = &rtpp_server_dtor;
     rp->pub.get = &rtpp_server_get;
 
     return (&rp->pub);
+e2:
+    free(rp);
+e1:
+    close(fd);
+e0:
+    return (NULL);
 }
 
 static void
-rtpp_server_dtor(struct rtpp_server_obj *self)
+rtpp_server_dtor(struct rtpp_server_priv *rp)
 {
-    struct rtpp_server_priv *rp;
 
-    rp = PUB2PVT(self);
     close(rp->fd);
     free(rp);
 }
