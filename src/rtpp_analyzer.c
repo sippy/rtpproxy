@@ -32,6 +32,7 @@
 
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
+#include "rtpp_types.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtp_analyze.h"
@@ -59,7 +60,7 @@ rtpp_analyzer_ctor(void)
 }
 
 int
-rtpp_analyzer_update(struct rtpp_session *sp, struct rtpp_analyzer *rap,
+rtpp_analyzer_update(struct rtpp_session_obj *sp, struct rtpp_analyzer *rap,
   struct rtp_packet *pkt)
 {
 

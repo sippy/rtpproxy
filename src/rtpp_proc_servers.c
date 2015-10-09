@@ -62,8 +62,7 @@ process_rtp_servers_foreach(struct rtpp_refcnt_obj *rco, void *p)
     struct rtpp_server_obj *rsrv;
     struct rtp_packet *pkt;
     int len;
-    struct rtpp_session *sp;
-    struct rtpp_refcnt_obj *sp_rco;
+    struct rtpp_session_obj *sp;
 
     fap = (struct foreach_args *)p;
     /*
@@ -71,28 +70,27 @@ process_rtp_servers_foreach(struct rtpp_refcnt_obj *rco, void *p)
      * context of the rtpp_hash_table, which holds its own ref.
      */
     rsrv = CALL_METHOD(rco, getdata);
-    sp_rco = CALL_METHOD(fap->sessions_wrt, get_by_idx, rsrv->suid);
-    if (sp_rco == NULL) {
+    sp = CALL_METHOD(fap->sessions_wrt, get_by_idx, rsrv->suid);
+    if (sp == NULL) {
         return (RTPP_WR_MATCH_CONT);
     }
-    sp = CALL_METHOD(sp_rco, getdata);
     for (;;) {
         pkt = CALL_METHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
-                sp->stream[rsrv->sidx].rtps = RTPP_WEAKID_NONE;
-                CALL_METHOD(sp_rco, decref);
+                sp->stream[rsrv->sidx]->rtps = RTPP_WEAKID_NONE;
+                CALL_METHOD(sp->rcnt, decref);
                 return (RTPP_WR_MATCH_DEL);
             } else if (len != RTPS_LATER) {
                 /* XXX some error, brag to logs */
             }
             break;
         }
-        rtpp_anetio_send_pkt(fap->sender, sp->stream[rsrv->sidx].fd,
-          sp->stream[rsrv->sidx].addr, SA_LEN(sp->stream[rsrv->sidx].addr), pkt);
+        rtpp_anetio_send_pkt(fap->sender, sp->stream[rsrv->sidx]->fd,
+          sp->stream[rsrv->sidx]->addr, SA_LEN(sp->stream[rsrv->sidx]->addr), pkt);
         fap->rsp->npkts_played.cnt++;
     }
-    CALL_METHOD(sp_rco, decref);
+    CALL_METHOD(sp->rcnt, decref);
     return (RTPP_WR_MATCH_CONT);
 }
 

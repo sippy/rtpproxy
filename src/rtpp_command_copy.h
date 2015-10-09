@@ -29,9 +29,9 @@
 #ifndef _RTPP_COMMAND_COPY_H_
 #define _RTPP_COMMAND_COPY_H_
 
-struct rtpp_session;
+struct rtpp_session_obj;
 
-int handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
+int handle_copy(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *rname,
   int record_single_file);
 
 #endif

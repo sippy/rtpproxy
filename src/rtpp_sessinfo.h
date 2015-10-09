@@ -27,21 +27,21 @@
  */
 
 struct pollfd;
-struct rtpp_session;
+struct rtpp_session_obj;
 struct rtpp_sessinfo_obj;
 
 DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_get_nsessions, int);
-DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_append, void, struct rtpp_session *,
+DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_append, void, struct rtpp_session_obj *,
   int);
 
 struct rtpp_sessinfo_obj {
     struct pollfd *pfds_rtp;
     struct pollfd *pfds_rtcp;
-    struct rtpp_session **sessions;
+    struct rtpp_session_obj **sessions;
     int nsessions;
     pthread_mutex_t lock;
     /* Structures below are protected by the glock */
-    struct rtpp_session **rtp_servers;
+    struct rtpp_session_obj **rtp_servers;
     int rtp_nsessions;
     rtpp_si_get_nsessions_t get_nsessions;
     rtpp_si_append_t append;

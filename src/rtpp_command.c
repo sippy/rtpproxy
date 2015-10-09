@@ -95,8 +95,8 @@ struct d_opts;
 
 static int create_twinlistener(struct rtpp_cfg_stable *, struct sockaddr *, int, int *);
 static int handle_delete(struct cfg *, struct common_cmd_args *, int);
-static void handle_noplay(struct cfg *, struct rtpp_session *, int, struct rtpp_command *);
-static int handle_play(struct cfg *, struct rtpp_session *, int, char *, char *, int,
+static void handle_noplay(struct cfg *, struct rtpp_session_obj *, int, struct rtpp_command *);
+static int handle_play(struct cfg *, struct rtpp_session_obj *, int, char *, char *, int,
   struct rtpp_command *, int);
 static int handle_record(struct cfg *, struct common_cmd_args *, int);
 static void handle_info(struct cfg *, struct rtpp_command *,
@@ -335,7 +335,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     int playcount, ptime;
     char *cp, *tcp;
     char *pname, *codecs, *recording_name;
-    struct rtpp_session *spa;
+    struct rtpp_session_obj *spa;
     int record_single_file;
     struct ul_opts *ulop;
     struct d_opts dopt;
@@ -361,7 +361,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
         pthread_mutex_lock(&cf->sessinfo->lock);
         for (i = 0; i < cf->sessinfo->nsessions; i++) {
             spa = cf->sessinfo->sessions[i];
-            if (spa == NULL || spa->stream[0].sidx != i)
+            if (spa == NULL || spa->stream[0]->sidx != i)
                 continue;
             remove_session(cf, spa);
         }
@@ -517,12 +517,12 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	handle_noplay(cf, spa, i, cmd);
 	ptime = -1;
 	if (strcmp(codecs, "session") == 0) {
-	    if (spa->stream[i].codecs == NULL) {
+	    if (spa->stream[i]->codecs == NULL) {
 		reply_error(cf, cmd, ECODE_INVLARG_5);
 		return 0;
 	    }
-	    codecs = spa->stream[i].codecs;
-	    ptime = spa->stream[i].ptime;
+	    codecs = spa->stream[i]->codecs;
+	    ptime = spa->stream[i]->ptime;
 	}
 	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount,
           cmd, ptime) != 0) {
@@ -565,7 +565,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 {
     int ndeleted;
     unsigned int medianum;
-    struct rtpp_session *spa, *spb;
+    struct rtpp_session_obj *spa, *spb;
     int cmpr, cmpr1, idx;
 
     ndeleted = 0;
@@ -584,7 +584,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	}
 
 	if (weak)
-	    spa->stream[idx].weak = 0;
+	    spa->stream[idx]->weak = 0;
 	else
 	    spa->strong = 0;
 
@@ -592,13 +592,13 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	 * This seems to be stable from reiterations, the only side
 	 * effect is less efficient work.
 	 */
-	if (spa->strong || spa->stream[0].weak || spa->stream[1].weak) {
+	if (spa->strong || spa->stream[0]->weak || spa->stream[1]->weak) {
 	    rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	      "delete: medianum=%u: removing %s flag, seeing flags to"
 	      " continue session (strong=%d, weak=%d/%d)",
 	      medianum,
 	      weak ? ( idx ? "weak[1]" : "weak[0]" ) : "strong",
-	      spa->strong, spa->stream[0].weak, spa->stream[1].weak);
+	      spa->strong, spa->stream[0]->weak, spa->stream[1]->weak);
 	    /* Skipping to next possible stream for this call */
 	    ++ndeleted;
 	    spa = session_findnext(cf, spa);
@@ -606,7 +606,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	}
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "forcefully deleting session %u on ports %d/%d",
-	   medianum, spa->stream[0].port, spa->stream[1].port);
+	   medianum, spa->stream[0]->port, spa->stream[1]->port);
 	/* Search forward before we do removal */
 	spb = spa;
 	spa = session_findnext(cf, spa);
@@ -625,15 +625,15 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 }
 
 static void
-handle_noplay(struct cfg *cf, struct rtpp_session *spa, int idx, struct rtpp_command *cmd)
+handle_noplay(struct cfg *cf, struct rtpp_session_obj *spa, int idx, struct rtpp_command *cmd)
 {
 
-    if (spa->stream[idx].rtps != RTPP_WEAKID_NONE) {
-        if (CALL_METHOD(spa->servers_wrt, unreg, spa->stream[idx].rtps) != NULL) {
-            spa->stream[idx].rtps = RTPP_WEAKID_NONE;
+    if (spa->stream[idx]->rtps != RTPP_WEAKID_NONE) {
+        if (CALL_METHOD(spa->servers_wrt, unreg, spa->stream[idx]->rtps) != NULL) {
+            spa->stream[idx]->rtps = RTPP_WEAKID_NONE;
         }
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
-	  "stopping player at port %d", spa->stream[idx].port);
+	  "stopping player at port %d", spa->stream[idx]->port);
    }
 }
 
@@ -645,13 +645,12 @@ player_predestroy_cb(struct rtpp_stats_obj *rtpp_stats)
 }
 
 static int
-handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
+handle_play(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *codecs,
   char *pname, int playcount, struct rtpp_command *cmd, int ptime)
 {
     int n;
     char *cp;
     struct rtpp_server_obj *rsrv;
-    struct rtpp_refcnt_obj *rco;
     uint64_t suid;
 
     while (*codecs != '\0') {
@@ -666,14 +665,13 @@ handle_play(struct cfg *cf, struct rtpp_session *spa, int idx, char *codecs,
 	    continue;
         rsrv->suid = spa->suid;
         rsrv->sidx = idx;
-        rco = rtpp_refcnt_ctor(rsrv, (rtpp_refcnt_dtor_t)rsrv->dtor);
-        suid = CALL_METHOD(cf->stable->servers_wrt, reg, rco);
-        assert(spa->stream[idx].rtps == RTPP_WEAKID_NONE);
-        spa->stream[idx].rtps = suid;
+        suid = CALL_METHOD(cf->stable->servers_wrt, reg, rsrv->rcnt);
+        assert(spa->stream[idx]->rtps == RTPP_WEAKID_NONE);
+        spa->stream[idx]->rtps = suid;
         cmd->csp->nplrs_created.cnt++;
-        CALL_METHOD(rco, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
+        CALL_METHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           cf->stable->rtpp_stats);
-        CALL_METHOD(rco, decref);
+        CALL_METHOD(rsrv->rcnt, decref);
         rtpp_log_write(RTPP_LOG_INFO, spa->log,
           "%d times playing prompt %s codec %d", playcount, pname, n);
 	return 0;
@@ -687,7 +685,7 @@ handle_record(struct cfg *cf, struct common_cmd_args *ccap,
   int record_single_file)
 {
     int nrecorded, idx;
-    struct rtpp_session *spa;
+    struct rtpp_session_obj *spa;
 
     nrecorded = 0;
     for (spa = session_findfirst(cf, ccap->call_id); spa != NULL;
@@ -712,7 +710,7 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
   const char *opts)
 {
 #if 0
-    struct rtpp_session *spa, *spb;
+    struct rtpp_session_obj *spa, *spb;
     char addrs[4][256];
 #endif
     int len, i, brief, load;
@@ -756,7 +754,7 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
 XXX this needs work to fix it after rtp/rtcp split 
     for (i = 0; i < cf->sessinfo->nsessions && brief == 0; i++) {
         spa = cf->sessinfo->sessions[i];
-        if (spa == NULL || spa->stream[0].sidx != i)
+        if (spa == NULL || spa->stream[0]->sidx != i)
             continue;
         /* RTCP twin session */
         if (spa->rtcp == NULL) {
@@ -787,8 +785,8 @@ XXX this needs work to fix it after rtp/rtcp split
         len += snprintf(buf + len, sizeof(buf) - len,
           "%s/%s: caller = %s:%d/%s, callee = %s:%d/%s, "
           "stats = %lu/%lu/%lu/%lu, ttl = %d/%d\n",
-          spb->call_id, spb->tag, addrs[0], spb->stream[1].port, addrs[1],
-          addrs[2], spb->stream[0].port, addrs[3], spa->pcount[0], spa->pcount[1],
+          spb->call_id, spb->tag, addrs[0], spb->stream[1]->port, addrs[1],
+          addrs[2], spb->stream[0]->port, addrs[3], spa->pcount[0], spa->pcount[1],
           spa->pcount[2], spa->pcount[3], spb->ttl[0], spb->ttl[1]);
         if (len + 512 > sizeof(buf)) {
             rtpc_doreply(cf, buf, len, cmd);

@@ -50,6 +50,7 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_types.h"
 #include "rtpp_network.h"
 #include "rtpp_record.h"
 #include "rtpp_record_private.h"
@@ -73,7 +74,7 @@ struct rtpp_record_channel {
 #define	RRC_CAST(x)	((struct rtpp_record_channel *)(x))
 
 void *
-ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
+ropen(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig)
 {
     struct rtpp_record_channel *rrc;
     const char *sdir, *suffix1, *suffix2;
@@ -219,7 +220,7 @@ ropen(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig)
 }
 
 static int
-flush_rbuf(struct rtpp_session *sp, void *rrc)
+flush_rbuf(struct rtpp_session_obj *sp, void *rrc)
 {
     int rval;
 
@@ -238,7 +239,7 @@ flush_rbuf(struct rtpp_session *sp, void *rrc)
 }
 
 static int
-prepare_pkt_hdr_adhoc(struct rtpp_session *sp, struct rtp_packet *packet,
+prepare_pkt_hdr_adhoc(struct rtpp_session_obj *sp, struct rtp_packet *packet,
   struct pkt_hdr_adhoc *hdrp, struct sockaddr *daddr, struct sockaddr *ldaddr,
   int ldport, int face)
 {
@@ -273,7 +274,7 @@ prepare_pkt_hdr_adhoc(struct rtpp_session *sp, struct rtp_packet *packet,
 static uint16_t ip_id = 0;
 
 static int
-prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
+prepare_pkt_hdr_pcap(struct rtpp_session_obj *sp, struct rtp_packet *packet,
   union pkt_hdr_pcap *hdrp, struct sockaddr *daddr, struct sockaddr *ldaddr,
   int ldport, int face)
 {
@@ -362,7 +363,7 @@ prepare_pkt_hdr_pcap(struct rtpp_session *sp, struct rtp_packet *packet,
 }
 
 void
-rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet,
+rwrite(struct rtpp_session_obj *sp, void *rrc, struct rtp_packet *packet,
   struct sockaddr *daddr, struct sockaddr *ldaddr, int ldport, int face)
 {
     struct iovec v[2];
@@ -371,7 +372,7 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet,
 	struct pkt_hdr_adhoc adhoc;
     } hdr;
     int rval, hdr_size;
-    int (*prepare_pkt_hdr)(struct rtpp_session *, struct rtp_packet *, void *,
+    int (*prepare_pkt_hdr)(struct rtpp_session_obj *, struct rtp_packet *, void *,
       struct sockaddr *, struct sockaddr *, int, int);
 
     if (RRC_CAST(rrc)->fd == -1)
@@ -434,7 +435,7 @@ rwrite(struct rtpp_session *sp, void *rrc, struct rtp_packet *packet,
 }
 
 void
-rclose(struct rtpp_session *sp, void *rrc, int keep)
+rclose(struct rtpp_session_obj *sp, void *rrc, int keep)
 {
 
     if (RRC_CAST(rrc)->mode != MODE_REMOTE_RTP && RRC_CAST(rrc)->rbuf_len > 0)
