@@ -648,6 +648,11 @@ main(int argc, char **argv)
         err(1, "can't allocate memory for the sessions weakref table");
          /* NOTREACHED */
     }
+    cf.stable->rtp_streams_wrt = rtpp_weakref_ctor();
+    if (cf.stable->rtp_streams_wrt == NULL) {
+        err(1, "can't allocate memory for the streams weakref table");
+         /* NOTREACHED */
+    }
     cf.stable->servers_wrt = rtpp_weakref_ctor();
     if (cf.stable->servers_wrt == NULL) {
         err(1, "can't allocate memory for the servers weakref table");
