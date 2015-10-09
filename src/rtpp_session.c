@@ -110,7 +110,7 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, int session_type)
     struct rtpp_session_priv *pvt;
     int i;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_session_obj) + rtpp_refcnt_osize());
+    pvt = rtpp_zmalloc(sizeof(struct rtpp_session_priv) + rtpp_refcnt_osize());
     if (pvt == NULL) {
         goto e0;
     }
