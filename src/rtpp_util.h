@@ -29,7 +29,6 @@
 #ifndef _RTPP_UTIL_H_
 #define _RTPP_UTIL_H_
 
-#define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
 
 struct cfg;
