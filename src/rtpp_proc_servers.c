@@ -52,45 +52,45 @@ struct foreach_args {
     double dtime;
     struct sthread_args *sender;
     struct rtpp_proc_rstats *rsp;
-    struct rtpp_weakref_obj *sessions_wrt;
+    struct rtpp_weakref_obj *rtp_streams_wrt;
 };
 
 static int
-process_rtp_servers_foreach(struct rtpp_refcnt_obj *rco, void *p)
+process_rtp_servers_foreach(void *dp, void *ap)
 {
     struct foreach_args *fap;
     struct rtpp_server_obj *rsrv;
     struct rtp_packet *pkt;
     int len;
-    struct rtpp_session_obj *sp;
+    struct rtpp_stream_obj *rsop;
 
-    fap = (struct foreach_args *)p;
+    fap = (struct foreach_args *)ap;
     /*
      * This method does not need us to bump ref, since we are in the
-     * context of the rtpp_hash_table, which holds its own ref.
+     * locked context of the rtpp_hash_table, which holds its own ref.
      */
-    rsrv = CALL_METHOD(rco, getdata);
-    sp = CALL_METHOD(fap->sessions_wrt, get_by_idx, rsrv->suid);
-    if (sp == NULL) {
+    rsrv = (struct rtpp_server_obj *)dp;
+    rsop = CALL_METHOD(fap->rtp_streams_wrt, get_by_idx, rsrv->stuid);
+    if (rsop == NULL) {
         return (RTPP_WR_MATCH_CONT);
     }
     for (;;) {
         pkt = CALL_METHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
-                sp->stream[rsrv->sidx]->rtps = RTPP_WEAKID_NONE;
-                CALL_METHOD(sp->rcnt, decref);
+                rsop->rtps = RTPP_WEAKID_NONE;
+                CALL_METHOD(rsop->rcnt, decref);
                 return (RTPP_WR_MATCH_DEL);
             } else if (len != RTPS_LATER) {
                 /* XXX some error, brag to logs */
             }
             break;
         }
-        rtpp_anetio_send_pkt(fap->sender, sp->stream[rsrv->sidx]->fd,
-          sp->stream[rsrv->sidx]->addr, SA_LEN(sp->stream[rsrv->sidx]->addr), pkt);
+        rtpp_anetio_send_pkt(fap->sender, rsop->fd, rsop->addr,
+          SA_LEN(rsop->addr), pkt);
         fap->rsp->npkts_played.cnt++;
     }
-    CALL_METHOD(sp->rcnt, decref);
+    CALL_METHOD(rsop->rcnt, decref);
     return (RTPP_WR_MATCH_CONT);
 }
 
@@ -103,7 +103,7 @@ rtpp_proc_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
     fargs.dtime = dtime;
     fargs.sender = sender;
     fargs.rsp = rsp;
-    fargs.sessions_wrt = cf->stable->sessions_wrt;
+    fargs.rtp_streams_wrt = cf->stable->rtp_streams_wrt;
 
     CALL_METHOD(cf->stable->servers_wrt, foreach, process_rtp_servers_foreach,
       &fargs);
