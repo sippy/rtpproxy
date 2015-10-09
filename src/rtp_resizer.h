@@ -31,6 +31,7 @@
 struct rtp_resizer;
 struct rtpp_proc_rstats;
 struct rtpp_stats_obj;
+struct rtp_packet;
 
 void rtp_resizer_enqueue(struct rtp_resizer *, struct rtp_packet **,
   struct rtpp_proc_rstats *);
