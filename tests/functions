@@ -33,6 +33,7 @@ MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
 DIFF="diff -u"
 TCPDUMP="tcpdump"
+TAR="tar"
 
 TRASH_PORT1=38322
 
@@ -41,6 +42,13 @@ then
   SUDO=""
 else
   SUDO="sudo -n"
+fi
+
+if [ "${OS}" != "FreeBSD" ]
+then
+  TAR_COMPRESS_FLAG="-j"
+else
+  TAR_COMPRESS_FLAG="-y"
 fi
 
 sha256_compute() {
@@ -185,7 +193,7 @@ witness_stop() {
     if [ "${WITNESS_ADD_FILES}" != "" ]
     then
       WITNESS_NAME="${TESTNAME}.${TEST_TIMESTAMP}.debug.tbz2"
-      tar -cyf ${WITNESS_NAME} "${PCAP_NAME}" ${WITNESS_ADD_FILES}
+      ${TAR} ${TAR_COMPRESS_FLAG} -cf ${WITNESS_NAME} "${PCAP_NAME}" ${WITNESS_ADD_FILES}
     else
       WITNESS_NAME="${PCAP_NAME}"
     fi
