@@ -41,7 +41,7 @@ DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_reg, uint64_t,
   struct rtpp_refcnt_obj *);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_unreg, struct rtpp_refcnt_obj *,
   uint64_t);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_by_idx, struct rtpp_refcnt_obj *,
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_by_idx, void *,
   uint64_t);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_weakref_dtor, void);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_foreach, void,

@@ -33,6 +33,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
 #include "rtpp_util.h"
 
@@ -47,7 +48,7 @@ struct rtpp_weakref_priv {
 
 static void rtpp_weakref_dtor(struct rtpp_weakref_obj *);
 static uint64_t rtpp_weakref_reg(struct rtpp_weakref_obj *, struct rtpp_refcnt_obj *);
-static struct rtpp_refcnt_obj *rtpp_wref_get_by_idx(struct rtpp_weakref_obj *, uint64_t);
+static void *rtpp_wref_get_by_idx(struct rtpp_weakref_obj *, uint64_t);
 static struct rtpp_refcnt_obj *rtpp_weakref_unreg(struct rtpp_weakref_obj *, uint64_t);
 static void rtpp_wref_foreach(struct rtpp_weakref_obj *, rtpp_weakref_foreach_t,
   void *);
@@ -128,16 +129,19 @@ rtpp_weakref_dtor(struct rtpp_weakref_obj *pub)
     free(pvt);
 }
 
-static struct rtpp_refcnt_obj *
+static void *
 rtpp_wref_get_by_idx(struct rtpp_weakref_obj *pub, uint64_t suid)
 {
     struct rtpp_weakref_priv *pvt;
-    struct rtpp_refcnt_obj *sp;
+    struct rtpp_refcnt_obj *rco;
 
     pvt = PUB2PVT(pub);
 
-    sp = CALL_METHOD(pvt->ht, find, &suid);
-    return (sp);
+    rco = CALL_METHOD(pvt->ht, find, &suid);
+    if (rco == NULL) {
+        return (NULL);
+    }
+    return (CALL_METHOD(rco, getdata));
 }
 
 static void
