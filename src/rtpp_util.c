@@ -42,7 +42,11 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_types.h"
+#include "rtpp_genuid.h"
 #include "rtpp_util.h"
+
+static struct rtpp_genuid_obj *gup = NULL;
 
 void
 seedrandom(void)
@@ -61,6 +65,20 @@ seedrandom(void)
 
     gettimeofday(&tv, NULL);
     srandom((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
+}
+
+void
+rtpp_gen_uid_init(void)
+{
+
+    gup = rtpp_genuid_ctor();
+}
+
+void
+rtpp_gen_uid(uint64_t *uip)
+{
+
+    CALL_METHOD(gup, gen, uip);
 }
 
 int
