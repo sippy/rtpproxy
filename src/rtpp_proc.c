@@ -199,7 +199,7 @@ get_rtp(struct cfg *cf, struct rtpp_session_obj *sp)
     if (sp->rtcp != NULL) {
         return (sp);
     }
-    return (CALL_METHOD(cf->stable->sessions_wrt, get_by_idx, sp->suid));
+    return (CALL_METHOD(cf->stable->sessions_wrt, get_by_idx, sp->rtp_seuid));
 }
 
 static void
@@ -329,7 +329,7 @@ send_packet(struct cfg *cf, struct rtpp_session_obj *sp, int ridx,
     /* Select socket for sending packet out. */
     sidx = (ridx == 0) ? 1 : 0;
 
-    if (sp->stream[ridx]->rrc != NULL && tsp->stream[sidx]->rtps == RTPP_WEAKID_NONE) {
+    if (sp->stream[ridx]->rrc != NULL && tsp->stream[sidx]->rtps == RTPP_UID_NONE) {
         rwrite(sp, sp->stream[ridx]->rrc, packet, sp->stream[sidx]->addr, sp->stream[sidx]->laddr,
           sp->stream[sidx]->port, sidx);
     }
@@ -338,7 +338,7 @@ send_packet(struct cfg *cf, struct rtpp_session_obj *sp, int ridx,
      * Check that we have some address to which packet is to be
      * sent out, drop otherwise.
      */
-    if (sp->stream[sidx]->addr == NULL || tsp->stream[sidx]->rtps != RTPP_WEAKID_NONE) {
+    if (sp->stream[sidx]->addr == NULL || tsp->stream[sidx]->rtps != RTPP_UID_NONE) {
         rtp_packet_free(packet);
 	sp->pcount.ndropped++;
         rsp->npkts_discard.cnt++;
