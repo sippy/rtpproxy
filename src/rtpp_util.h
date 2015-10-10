@@ -31,6 +31,8 @@
 
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
 
+#define RTPP_UID_NONE ((uint64_t)0)
+
 struct cfg;
 
 /* Function prototypes */
