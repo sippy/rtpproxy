@@ -68,6 +68,7 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_controlfd.h"
+#include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
@@ -637,6 +638,7 @@ main(int argc, char **argv)
     init_config(&cf, argc, argv);
 
     seedrandom();
+    rtpp_gen_uid_init();
 
     cf.stable->sessions_ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, 0);
     if (cf.stable->sessions_ht == NULL) {
