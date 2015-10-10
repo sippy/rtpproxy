@@ -47,6 +47,7 @@
 #include "rtpp_server.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
+#include "rtpp_util.h"
 
 struct foreach_args {
     double dtime;
@@ -78,7 +79,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
         pkt = CALL_METHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
-                rsop->rtps = RTPP_WEAKID_NONE;
+                rsop->rtps = RTPP_UID_NONE;
                 CALL_METHOD(rsop->rcnt, decref);
                 return (RTPP_WR_MATCH_DEL);
             } else if (len != RTPS_LATER) {
