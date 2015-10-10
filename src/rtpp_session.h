@@ -67,7 +67,10 @@ struct rtpp_session_obj {
     /* Timestamp of session instantiation time */
     double init_ts;
     struct rtpp_hash_table_entry *hte;
-    uint64_t suid;
+    /* UID */
+    uint64_t seuid;
+    /* Weakref to the main (RTP) */
+    uint64_t rtp_seuid;
 
     struct rtpp_stats_obj *rtpp_stats;
     struct rtpp_weakref_obj *servers_wrt;

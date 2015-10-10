@@ -42,6 +42,7 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_math.h"
 #include "rtpp_pthread.h"
@@ -121,9 +122,8 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, int session_type)
             goto e1;
         }
         if (session_type == SESS_RTP) {
-            pvt->pub.stream[i]->stuid = CALL_METHOD(cfs->rtp_streams_wrt, reg,
-              pvt->pub.stream[i]->rcnt);
-            if (pvt->pub.stream[i]->stuid == RTPP_WEAKID_NONE) {
+            if (CALL_METHOD(cfs->rtp_streams_wrt, reg, pvt->pub.stream[i]->rcnt,
+              pvt->pub.stream[i]->stuid) != 0) {
                 goto e1;
             }
         }
@@ -137,12 +137,13 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, int session_type)
     pvt->rtp_streams_wrt = cfs->rtp_streams_wrt;
     pvt->session_type = session_type;
     pvt->pub.rtpp_stats = cfs->rtpp_stats;
+    rtpp_gen_uid(&pvt->pub.seuid);
     return (&pvt->pub);
 
 e1:
     for (i = 0; i < 2; i++) {
         if (pvt->pub.stream[i] != NULL) {
-            if (session_type == SESS_RTP &&pvt->pub.stream[i]->stuid != RTPP_WEAKID_NONE) {
+            if (session_type == SESS_RTP) {
                 CALL_METHOD(cfs->rtp_streams_wrt, unreg, pvt->pub.stream[i]->stuid);
             }
             CALL_METHOD(pvt->pub.stream[i]->rcnt, decref);
@@ -349,8 +350,8 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
     }
     if (sp->hte != NULL)
         CALL_METHOD(cf->stable->sessions_ht, remove, sp->call_id, sp->hte);
-    assert(sp->suid != 0);
-    CALL_METHOD(cf->stable->sessions_wrt, unreg, sp->suid);
+    assert(sp->rtp_seuid == 0);
+    CALL_METHOD(cf->stable->sessions_wrt, unreg, sp->seuid);
     cf->sessions_active--;
     CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_destroyed", 1);
     CALL_METHOD(sp->rtpp_stats, updatebyname_d, "total_duration",
