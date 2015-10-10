@@ -153,7 +153,7 @@ RECORD_DIR="${BUILDDIR}"
 
 setup_buffers
 
-witness_start forwarding1
+witness_start forwarding1 "forwarding1.rout forwarding1.geno.rout forwarding1.gena.rout forwarding1.rlog forwarding1.geno.rlog forwarding1.gena.rlog"
 
 #sts=`date "+%Y%m%d%H%M%S"`
 (setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
@@ -187,4 +187,4 @@ verify_results "a" "${CODECSO}" "${REPACK_CODECSO}"
 #report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
 #report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
 
-witness_stop forwarding1.rout forwarding1.geno.rout forwarding1.gena.rout forwarding1.rlog forwarding1.geno.rlog forwarding1.gena.rlog
+witness_stop

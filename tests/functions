@@ -33,6 +33,7 @@ MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
 DIFF="diff -u"
 TCPDUMP="tcpdump"
+TAR="tar"
 
 TRASH_PORT1=38322
 
@@ -41,6 +42,13 @@ then
   SUDO=""
 else
   SUDO="sudo -n"
+fi
+
+if [ "${OS}" != "FreeBSD" ]
+then
+  TAR_COMPRESS_FLAG="-j"
+else
+  TAR_COMPRESS_FLAG="-y"
 fi
 
 sha256_compute() {
@@ -153,6 +161,7 @@ rtpproxy_stop() {
 
 witness_start() {
   TESTNAME=${1}
+  WITNESS_ADD_FILES="${2}"
   PCAP_NAME="${TESTNAME}.${TEST_TIMESTAMP}.debug.pcap"
   if [ "${TEST_WITNESS_ENABLE}" = "" ]
   then
@@ -178,14 +187,13 @@ witness_start() {
 }
 
 witness_stop() {
-  WITNESS_ADD_FILES="${1}"
   if [ "${WITNESS_PID}" != "" ]
   then
     ${SUDO} kill -TERM ${WITNESS_PID} 2>/dev/null
     if [ "${WITNESS_ADD_FILES}" != "" ]
     then
       WITNESS_NAME="${TESTNAME}.${TEST_TIMESTAMP}.debug.tbz2"
-      tar -cyf ${WITNESS_NAME} "${PCAP_NAME}" ${WITNESS_ADD_FILES}
+      ${TAR} ${TAR_COMPRESS_FLAG} -cf ${WITNESS_NAME} "${PCAP_NAME}" ${WITNESS_ADD_FILES}
     else
       WITNESS_NAME="${PCAP_NAME}"
     fi
