@@ -628,9 +628,9 @@ static void
 handle_noplay(struct cfg *cf, struct rtpp_session_obj *spa, int idx, struct rtpp_command *cmd)
 {
 
-    if (spa->stream[idx]->rtps != RTPP_WEAKID_NONE) {
+    if (spa->stream[idx]->rtps != RTPP_UID_NONE) {
         if (CALL_METHOD(spa->servers_wrt, unreg, spa->stream[idx]->rtps) != NULL) {
-            spa->stream[idx]->rtps = RTPP_WEAKID_NONE;
+            spa->stream[idx]->rtps = RTPP_UID_NONE;
         }
 	rtpp_log_write(RTPP_LOG_INFO, spa->log,
 	  "stopping player at port %d", spa->stream[idx]->port);
@@ -651,7 +651,6 @@ handle_play(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *codecs,
     int n;
     char *cp;
     struct rtpp_server_obj *rsrv;
-    uint64_t suid;
 
     while (*codecs != '\0') {
 	n = strtol(codecs, &cp, 10);
@@ -664,9 +663,12 @@ handle_play(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *codecs,
 	if (rsrv == NULL)
 	    continue;
         rsrv->stuid = spa->stream[idx]->stuid;
-        suid = CALL_METHOD(cf->stable->servers_wrt, reg, rsrv->rcnt);
-        assert(spa->stream[idx]->rtps == RTPP_WEAKID_NONE);
-        spa->stream[idx]->rtps = suid;
+        if (CALL_METHOD(cf->stable->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
+            CALL_METHOD(rsrv->rcnt, decref);
+            continue;
+        }
+        assert(spa->stream[idx]->rtps == RTPP_UID_NONE);
+        spa->stream[idx]->rtps = rsrv->sruid;
         cmd->csp->nplrs_created.cnt++;
         CALL_METHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           cf->stable->rtpp_stats);
