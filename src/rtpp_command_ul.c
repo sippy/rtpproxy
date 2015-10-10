@@ -537,7 +537,13 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             return (-1);
         }
 
-        spb->suid = spa->suid = CALL_METHOD(cf->stable->sessions_wrt, reg, spa->rcnt);
+        if (CALL_METHOD(cf->stable->sessions_wrt, reg, spa->rcnt, spa->seuid) != 0) {
+            remove_session(cf, spa);
+            handle_nomem(cf, cmd, ECODE_NOMEM_8, ulop, fds, spa, spb);
+            return (-1);
+        }
+
+        spb->rtp_seuid = spa->seuid;
 
         cf->sessions_created++;
         cf->sessions_active++;
