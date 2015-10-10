@@ -45,6 +45,7 @@
 #include "rtpp_server.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_genuid_singlet.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
@@ -119,6 +120,7 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
     rp->pub.get = &rtpp_server_get;
+    rtpp_gen_uid(&rp->pub.sruid);
 
     return (&rp->pub);
 e2:

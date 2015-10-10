@@ -43,6 +43,8 @@ struct rtpp_server_obj {
     rtpp_server_get_t get;
     /* Refcounter */
     struct rtpp_refcnt_obj *rcnt;
+    /* UID */
+    uint64_t sruid;
     /* Weakref to the associated RTP stream */
     uint64_t stuid;
 };
