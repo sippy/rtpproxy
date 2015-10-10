@@ -32,6 +32,7 @@
 
 #include "rtpp_types.h"
 #include "rtp_resizer.h"
+#include "rtpp_genuid_singlet.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_stream.h"
 #include "rtpp_util.h"
@@ -68,6 +69,7 @@ rtpp_stream_ctor(struct rtpp_weakref_obj *servers_wrt, struct rtpp_stats_obj *rt
     }
     pvt->servers_wrt = servers_wrt;
     pvt->rtpp_stats = rtpp_stats;
+    rtpp_gen_uid(&pvt->pub.stuid);
     return (&pvt->pub);
 }
 
@@ -83,7 +85,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
         free(pub->prev_addr);
     if (pub->codecs != NULL)
         free(pub->codecs);
-    if (pub->rtps != RTPP_WEAKID_NONE)
+    if (pub->rtps != RTPP_UID_NONE)
         CALL_METHOD(pvt->servers_wrt, unreg, pub->rtps);
     if (pub->resizer != NULL)
         rtp_resizer_free(pvt->rtpp_stats, pub->resizer);
