@@ -26,33 +26,66 @@
  *
  */
 
-struct rtpp_weakref_obj;
-struct rtpp_refcnt_obj;
+#include <pthread.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-#define RTPP_WR_MATCH_BRK  RTPP_HT_MATCH_BRK
-#define RTPP_WR_MATCH_CONT RTPP_HT_MATCH_CONT
-#define RTPP_WR_MATCH_DEL  RTPP_HT_MATCH_DEL
+#include "rtpp_types.h"
+#include "rtpp_genuid.h"
+#include "rtpp_util.h"
 
-typedef int (*rtpp_weakref_foreach_t)(void *, void *);
-
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_reg, int,
-  struct rtpp_refcnt_obj *, uint64_t);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_unreg, struct rtpp_refcnt_obj *,
-  uint64_t);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_by_idx, void *,
-  uint64_t);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_weakref_dtor, void);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_foreach, void,
-  rtpp_weakref_foreach_t, void *);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_length, int);
-
-struct rtpp_weakref_obj {
-    rtpp_wref_reg_t reg;
-    rtpp_wref_unreg_t unreg;
-    rtpp_weakref_dtor_t dtor;
-    rtpp_wref_get_by_idx_t get_by_idx;
-    rtpp_wref_foreach_t foreach;
-    rtpp_wref_get_length_t get_length;
+struct rtpp_genuid_priv {
+    struct rtpp_genuid_obj pub;
+    uint64_t lastsuid;
+    pthread_mutex_t lastsuid_lock;
 };
 
-struct rtpp_weakref_obj *rtpp_weakref_ctor(void);
+#define PUB2PVT(pubp)      ((struct rtpp_genuid_priv *)((char *)(pubp) - offsetof(struct rtpp_genuid_priv, pub)))
+
+static void rtpp_genuid_gen(struct rtpp_genuid_obj *, uint64_t *vp);
+static void rtpp_genuid_dtor(struct rtpp_genuid_obj *);
+
+struct rtpp_genuid_obj *
+rtpp_genuid_ctor(void)
+{
+    struct rtpp_genuid_priv *pvt;
+
+    pvt = rtpp_zmalloc(sizeof(struct rtpp_genuid_priv));
+    if (pvt == NULL) {
+        return (NULL);
+    }
+    if (pthread_mutex_init(&pvt->lastsuid_lock, NULL) != 0) {
+        goto e0;
+    }
+    pvt->pub.dtor = &rtpp_genuid_dtor;
+    pvt->pub.gen = &rtpp_genuid_gen;
+    return (&pvt->pub);
+
+e0:
+    free(pvt);
+    return (NULL);
+}
+
+static void
+rtpp_genuid_dtor(struct rtpp_genuid_obj *pub)
+{
+    struct rtpp_genuid_priv *pvt;
+
+    pvt = PUB2PVT(pub);
+
+    pthread_mutex_destroy(&pvt->lastsuid_lock);
+    free(pvt);
+}
+
+static void
+rtpp_genuid_gen(struct rtpp_genuid_obj *pub, uint64_t *vp)
+{
+    struct rtpp_genuid_priv *pvt;
+
+    pvt = PUB2PVT(pub);
+
+    pthread_mutex_lock(&pvt->lastsuid_lock);
+    *vp = ++(pvt->lastsuid);
+    pthread_mutex_unlock(&pvt->lastsuid_lock);
+}

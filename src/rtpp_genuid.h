@@ -26,33 +26,14 @@
  *
  */
 
-struct rtpp_weakref_obj;
-struct rtpp_refcnt_obj;
+struct rtpp_genuid_obj;
 
-#define RTPP_WR_MATCH_BRK  RTPP_HT_MATCH_BRK
-#define RTPP_WR_MATCH_CONT RTPP_HT_MATCH_CONT
-#define RTPP_WR_MATCH_DEL  RTPP_HT_MATCH_DEL
+DEFINE_METHOD(rtpp_genuid_obj, rtpp_genuid_gen, void, uint64_t *);
+DEFINE_METHOD(rtpp_genuid_obj, rtpp_genuid_dtor, void);
 
-typedef int (*rtpp_weakref_foreach_t)(void *, void *);
-
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_reg, int,
-  struct rtpp_refcnt_obj *, uint64_t);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_unreg, struct rtpp_refcnt_obj *,
-  uint64_t);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_by_idx, void *,
-  uint64_t);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_weakref_dtor, void);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_foreach, void,
-  rtpp_weakref_foreach_t, void *);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_length, int);
-
-struct rtpp_weakref_obj {
-    rtpp_wref_reg_t reg;
-    rtpp_wref_unreg_t unreg;
-    rtpp_weakref_dtor_t dtor;
-    rtpp_wref_get_by_idx_t get_by_idx;
-    rtpp_wref_foreach_t foreach;
-    rtpp_wref_get_length_t get_length;
+struct rtpp_genuid_obj {
+    rtpp_genuid_gen_t gen;
+    rtpp_genuid_dtor_t dtor;
 };
 
-struct rtpp_weakref_obj *rtpp_weakref_ctor(void);
+struct rtpp_genuid_obj *rtpp_genuid_ctor(void);
