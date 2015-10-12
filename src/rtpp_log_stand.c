@@ -172,7 +172,9 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
 {
     char rtpp_log_buff[2048];
     const char *call_id;
+#ifdef RTPP_LOG_ADVANCED
     va_list apc;
+#endif
 
     if (check_level(rli, level) == 0)
 	return;
@@ -215,7 +217,9 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
 {
     char rtpp_log_buff[2048];
     const char *call_id;
+#ifdef RTPP_LOG_ADVANCED
     va_list apc;
+#endif
     
     if (check_level(rli, level) == 0)
 	return;
