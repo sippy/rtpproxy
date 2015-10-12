@@ -22,7 +22,8 @@ rtpproxy_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_pthread.c rtpp_pthread.h rtpp_time.c rtpp_time.h \
   rtpp_sessinfo.c rtpp_sessinfo.h rtpp_weakref.c rtpp_weakref.h \
   rtpp_proc_servers.h rtpp_proc_servers.c rtpp_stream.h rtpp_stream.c \
-  rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c
+  rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
+  rtpp_log_obj.h rtpp_log_obj.c
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
   rtpp_memdeb_stats.h rtpp_memdeb_test.c
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
