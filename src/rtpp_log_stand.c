@@ -167,11 +167,12 @@ rtpp_log_setlevel(struct rtpp_log_inst *rli, int level)
 }
 
 void
-_rtpp_log_write(struct rtpp_log_inst *rli, int level, const char *function, const char *format, ...)
+_rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
+  const char *format, va_list ap)
 {
-    va_list ap;
     char rtpp_log_buff[2048];
     const char *call_id;
+    va_list apc;
 
     if (check_level(rli, level) == 0)
 	return;
@@ -182,31 +183,39 @@ _rtpp_log_write(struct rtpp_log_inst *rli, int level, const char *function, cons
         call_id = "GLOBAL";
     }
 
+    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_sl, strlvl(level),
+      function, call_id, format);
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
-        snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_sl, strlvl(level),
-          function, call_id, format);
-        va_start(ap, format);
+        va_copy(apc, ap);
 	vsyslog_async(level, rtpp_log_buff, ap);
-        va_end(ap);
+        va_end(apc);
 #if !defined(RTPP_DEBUG)
         return;
 #endif
     }
 #endif
-    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_se, strlvl(level),
-      function, call_id, format);
-    va_start(ap, format);
     vfprintf(stderr, rtpp_log_buff, ap);
-    va_end(ap);
 }
 
 void
-_rtpp_log_ewrite(struct rtpp_log_inst *rli, int level, const char *function, const char *format, ...)
+_rtpp_log_write(struct rtpp_log_inst *rli, int level, const char *function, const char *format, ...)
 {
     va_list ap;
+
+    va_start(ap, format);
+    _rtpp_log_write_va(rli, level, function, format, ap);
+    va_end(ap);
+}
+
+
+void
+_rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
+  const char *format, va_list ap)
+{
     char rtpp_log_buff[2048];
     const char *call_id;
+    va_list apc;
     
     if (check_level(rli, level) == 0)
 	return;
@@ -217,23 +226,28 @@ _rtpp_log_ewrite(struct rtpp_log_inst *rli, int level, const char *function, con
         call_id = "GENERAL";
     }
 
-
+    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_sl, strlvl(level),
+      function, call_id, format, strerror(errno));
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
-        snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_sl, strlvl(level),
-          function, call_id, format, strerror(errno));
-        va_start(ap, format);
+        va_copy(apc, ap);
 	vsyslog_async(level, rtpp_log_buff, ap);
-	va_end(ap);
+        va_end(apc);
 #if !defined(RTPP_DEBUG)
 	return;
 #endif
     }
 #endif
-    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_se, strlvl(level),
-      function, call_id, format, strerror(errno));
-    va_start(ap, format);
     vfprintf(stderr, rtpp_log_buff, ap);
+}
+
+void
+_rtpp_log_ewrite(struct rtpp_log_inst *rli, int level, const char *function, const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    _rtpp_log_ewrite_va(rli, level, function, format, ap);
     va_end(ap);
 }
 

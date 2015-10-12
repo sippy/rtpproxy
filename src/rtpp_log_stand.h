@@ -53,13 +53,19 @@ struct rtpp_cfg_stable;
 #if !defined(rtpp_log_write)
 #define	rtpp_log_write(level, handle, format, args...)			\
 	_rtpp_log_write(handle, level, __FUNCTION__, format, ## args)
+#define rtpp_log_write_va(level, handle, format, args...)                  \
+        _rtpp_log_write_va(handle, level, __FUNCTION__, format, ## args)
 #endif
 #define	rtpp_log_ewrite(level, handle, format, args...)			\
 	_rtpp_log_ewrite(handle, level, __FUNCTION__, format, ## args)
+#define rtpp_log_ewrite_va(level, handle, format, args...)                 \
+        _rtpp_log_ewrite_va(handle, level, __FUNCTION__, format, ## args)
 #define	rtpp_log_close(handle) _rtpp_log_close(handle)
 
 void _rtpp_log_write(struct rtpp_log_inst *, int, const char *, const char *, ...);
+void _rtpp_log_write_va(struct rtpp_log_inst *, int, const char *, const char *, va_list);
 void _rtpp_log_ewrite(struct rtpp_log_inst *, int, const char *, const char *, ...);
+void _rtpp_log_ewrite_va(struct rtpp_log_inst *, int, const char *, const char *, va_list);
 struct rtpp_log_inst *_rtpp_log_open(struct rtpp_cfg_stable *, const char *, const char *);
 void _rtpp_log_close(struct rtpp_log_inst *);
 int rtpp_log_str2lvl(const char *);
