@@ -40,6 +40,7 @@
 #include "rtpp_types.h"
 #include "rtp.h"
 #include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_genuid_singlet.h"
@@ -106,7 +107,7 @@ session_findnext(struct cfg *cf, struct rtpp_session_obj *psp)
 }
 
 struct rtpp_session_obj *
-rtpp_session_ctor(struct rtpp_cfg_stable *cfs, int session_type)
+rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct rtpp_log_obj *log, int session_type)
 {
     struct rtpp_session_priv *pvt;
     int i;
@@ -116,7 +117,7 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, int session_type)
         goto e0;
     }
     for (i = 0; i < 2; i++) {
-        pvt->pub.stream[i] = rtpp_stream_ctor(cfs->servers_wrt,
+        pvt->pub.stream[i] = rtpp_stream_ctor(log, cfs->servers_wrt,
           cfs->rtpp_stats);
         if (pvt->pub.stream[i] == NULL) {
             goto e1;
@@ -131,12 +132,13 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, int session_type)
     pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
       (rtpp_refcnt_dtor_t)&rtpp_session_dtor);
     if (pvt->pub.rcnt == NULL) {
-        free(pvt);
-        return (NULL);
+        goto e1;
     }
     pvt->rtp_streams_wrt = cfs->rtp_streams_wrt;
     pvt->session_type = session_type;
     pvt->pub.rtpp_stats = cfs->rtpp_stats;
+    pvt->pub.log = log;
+    CALL_METHOD(log->rcnt, incref);
     rtpp_gen_uid(&pvt->pub.seuid);
     return (&pvt->pub);
 
@@ -165,6 +167,7 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
         }
         CALL_METHOD(pvt->pub.stream[i]->rcnt, decref);
     }
+    CALL_METHOD(pvt->pub.log->rcnt, decref);
     if (pvt->session_type == SESS_RTCP) {
         free(pvt);
         return;
@@ -177,8 +180,6 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
         free(pvt->pub.tag);
     if (pvt->pub.tag_nomedianum != NULL)
         free(pvt->pub.tag_nomedianum);
-
-    rtpp_log_close(pvt->pub.log);
 
     CALL_METHOD(pvt->pub.rtcp->rcnt, decref);
     free(pvt);
@@ -269,11 +270,11 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
     assert(rtpp_mutex_islocked(&cf->glock) == 1);
     assert(rtpp_mutex_islocked(&cf->sessinfo->lock) == 1);
 
-    rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stats: %lu in from callee, %lu "
+    CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "RTP stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->stream[0]->npkts_in,
       sp->stream[1]->npkts_in, sp->pcount.nrelayed, sp->pcount.ndropped,
       sp->pcount.nignored);
-    rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTCP stats: %lu in from callee, %lu "
+    CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "RTCP stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->rtcp->stream[0]->npkts_in,
       sp->rtcp->stream[1]->npkts_in, sp->rtcp->pcount.nrelayed,
       sp->rtcp->pcount.ndropped, sp->rtcp->pcount.nignored);
@@ -289,7 +290,7 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
             CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_owrtcp", 1);
         }
     }
-    rtpp_log_write(RTPP_LOG_INFO, sp->log, "session on ports %d/%d is cleaned up",
+    CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "session on ports %d/%d is cleaned up",
       sp->stream[0]->port, sp->stream[1]->port);
     for (i = 0; i < 2; i++) {
 	if (sp->stream[i]->fd != -1) {
@@ -329,7 +330,7 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
              } else {
                  ssrc = "NONE";
              }
-             rtpp_log_write(RTPP_LOG_INFO, sp->log, "RTP stream from %s: "
+             CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "RTP stream from %s: "
                "SSRC=%s, ssrc_changes=%u, psent=%u, precvd=%u, plost=%d, pdups=%u",
                actor, ssrc, rst.ssrc_changes, rst.psent, rst.precvd,
                rst.psent - rst.precvd, rst.pdups);

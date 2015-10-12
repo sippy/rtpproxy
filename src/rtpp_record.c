@@ -51,6 +51,7 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_network.h"
 #include "rtpp_record.h"
 #include "rtpp_record_private.h"
@@ -87,21 +88,21 @@ ropen(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig)
 
     rrc = rtpp_zmalloc(sizeof(*rrc));
     if (rrc == NULL) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't allocate memory");
+	CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "can't allocate memory");
 	return NULL;
     }
 
     if (remote) {
 	tmp = strdup(rname + 4);
 	if (tmp == NULL) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't allocate memory");
+	    CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "can't allocate memory");
 	    return NULL;
 	}
 	rrc->mode = MODE_REMOTE_RTP;
 	rrc->needspool = 0;
 	cp = strrchr(tmp, ':');
 	if (cp == NULL) {
-	    rtpp_log_write(RTPP_LOG_ERR, sp->log, "remote recording target specification should include port number");
+	    CALL_METHOD(sp->log, write, RTPP_LOG_ERR, "remote recording target specification should include port number");
 	    free(rrc);
 	    free(tmp);
 	    return NULL;
@@ -113,7 +114,7 @@ ropen(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig)
 	    /* Handle RTCP (increase target port by 1) */
 	    port = atoi(cp);
 	    if (port <= 0 || port > ((sp->rtcp != NULL) ? 65534 : 65535)) {
-		rtpp_log_write(RTPP_LOG_ERR, sp->log, "invalid port in the remote recording target specification");
+		CALL_METHOD(sp->log, write, RTPP_LOG_ERR, "invalid port in the remote recording target specification");
 		free(rrc);
 		free(tmp);
 		return NULL;
@@ -123,20 +124,20 @@ ropen(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig)
 
 	n = resolve(sstosa(&raddr), AF_INET, tmp, cp, AI_PASSIVE);
 	if (n != 0) {
-	    rtpp_log_write(RTPP_LOG_ERR, sp->log, "ropen: getaddrinfo: %s", gai_strerror(n));
+	    CALL_METHOD(sp->log, write, RTPP_LOG_ERR, "ropen: getaddrinfo: %s", gai_strerror(n));
 	    free(rrc);
 	    free(tmp);
 	    return NULL;
 	}
 	rrc->fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (rrc->fd == -1) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "ropen: can't create socket");
+	    CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "ropen: can't create socket");
 	    free(rrc);
 	    free(tmp);
 	    return NULL;
 	}
 	if (connect(rrc->fd, sstosa(&raddr), SA_LEN(sstosa(&raddr))) == -1) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "ropen: can't connect socket");
+	    CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "ropen: can't connect socket");
 	    close(rrc->fd);
 	    free(rrc);
 	    free(tmp);
@@ -147,7 +148,7 @@ ropen(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig)
     }
 
     if (cf->stable->rdir == NULL) {
-	rtpp_log_write(RTPP_LOG_ERR, sp->log, "directory for saving local recordings is not configured");
+	CALL_METHOD(sp->log, write, RTPP_LOG_ERR, "directory for saving local recordings is not configured");
 	free(rrc);
 	return NULL;
     }
@@ -185,7 +186,7 @@ ropen(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig)
     }
     rrc->fd = open(rrc->spath, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (rrc->fd == -1) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't open file %s for writing",
+	CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "can't open file %s for writing",
 	  rrc->spath);
 	free(rrc);
 	return NULL;
@@ -202,14 +203,14 @@ ropen(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig)
 	rval = write(rrc->fd, &pcap_hdr, sizeof(pcap_hdr));
 	if (rval == -1) {
 	    close(rrc->fd);
-	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "%s: error writing header",
+	    CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "%s: error writing header",
 	      rrc->spath);
 	    free(rrc);
 	    return NULL;
 	}
 	if (rval < sizeof(pcap_hdr)) {
 	    close(rrc->fd);
-	    rtpp_log_write(RTPP_LOG_ERR, sp->log, "%s: short write writing header",
+	    CALL_METHOD(sp->log, write, RTPP_LOG_ERR, "%s: short write writing header",
 	      rrc->spath);
 	    free(rrc);
 	    return NULL;
@@ -230,7 +231,7 @@ flush_rbuf(struct rtpp_session_obj *sp, void *rrc)
 	return 0;
     }
 
-    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "error while recording session (%s)",
+    CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "error while recording session (%s)",
       (sp->rtcp != NULL) ? "RTP" : "RTCP");
     /* Prevent futher writing if error happens */
     close(RRC_CAST(rrc)->fd);
@@ -247,7 +248,7 @@ prepare_pkt_hdr_adhoc(struct rtpp_session_obj *sp, struct rtp_packet *packet,
     memset(hdrp, 0, sizeof(*hdrp));
     hdrp->time = packet->rtime;
     if (hdrp->time == -1) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't get current time");
+	CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "can't get current time");
 	return -1;
     }
     switch (sstosa(&packet->raddr)->sa_family) {
@@ -286,7 +287,7 @@ prepare_pkt_hdr_pcap(struct rtpp_session_obj *sp, struct rtp_packet *packet,
     struct sockaddr_storage tmp_addr;
 
     if (packet->rtime == -1) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't get current time");
+	CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "can't get current time");
 	return -1;
     }
 
@@ -303,7 +304,7 @@ prepare_pkt_hdr_pcap(struct rtpp_session_obj *sp, struct rtp_packet *packet,
     }
 
     if (sstosa(src_addr)->sa_family != AF_INET) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "only AF_INET pcap format is supported");
+	CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "only AF_INET pcap format is supported");
 	return -1;
     }
 
@@ -419,7 +420,7 @@ rwrite(struct rtpp_session_obj *sp, void *rrc, struct rtp_packet *packet,
 	if (rval != -1)
 	    return;
 
-	rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "error while recording session (%s)",
+	CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "error while recording session (%s)",
 	  (sp->rtcp != NULL) ? "RTP" : "RTCP");
 	/* Prevent futher writing if error happens */
 	close(RRC_CAST(rrc)->fd);
@@ -449,11 +450,11 @@ rclose(struct rtpp_session_obj *sp, void *rrc, int keep)
 
     if (keep == 0) {
 	if (unlink(RRC_CAST(rrc)->spath) == -1)
-	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't remove "
+	    CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "can't remove "
 	      "session record %s", RRC_CAST(rrc)->spath);
     } else if (RRC_CAST(rrc)->needspool == 1) {
 	if (rename(RRC_CAST(rrc)->spath, RRC_CAST(rrc)->rpath) == -1)
-	    rtpp_log_ewrite(RTPP_LOG_ERR, sp->log, "can't move "
+	    CALL_METHOD(sp->log, ewrite, RTPP_LOG_ERR, "can't move "
 	      "session record from spool into permanent storage");
     }
 

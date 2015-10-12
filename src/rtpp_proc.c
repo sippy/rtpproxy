@@ -43,6 +43,7 @@
 #include "rtp_packet.h"
 #include "rtp_resizer.h"
 #include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
@@ -102,7 +103,7 @@ latch_session(struct rtpp_session_obj *sp, double dtime, int ridx,
         ptype = "RTCP";
     }
 
-    rtpp_log_write(RTPP_LOG_INFO, sp->log,
+    CALL_METHOD(sp->log, write, RTPP_LOG_INFO,
       "%s's address latched in: %s:%d (%s), SSRC=%s, Seq=%s", actor, raddr,
       rport, ptype, ssrc, seq);
     sp->stream[ridx]->latch_info.latched = 1;
@@ -128,7 +129,7 @@ check_latch_override(struct rtpp_session_obj *sp, struct rtp_packet *packet, int
     raddr = addr2char(sstosa(&packet->raddr));
     rport = ntohs(satosin(&packet->raddr)->sin_port);
 
-    rtpp_log_write(RTPP_LOG_INFO, sp->log,
+    CALL_METHOD(sp->log, write, RTPP_LOG_INFO,
       "%s's address re-latched: %s:%d (%s), SSRC=0x%.8X, Seq=%u->%u", actor, raddr,
       rport, "RTP", sp->stream[ridx]->latch_info.ssrc, sp->stream[ridx]->latch_info.seq,
       packet->parsed->seq);
@@ -150,7 +151,7 @@ fill_session_addr(struct rtpp_session_obj *sp, struct rtp_packet *packet, int ri
     }
 
     rport = ntohs(satosin(&packet->raddr)->sin_port);
-    rtpp_log_write(RTPP_LOG_INFO, sp->log,
+    CALL_METHOD(sp->log, write, RTPP_LOG_INFO,
       "%s's address filled in: %s:%d (%s)",
       (ridx == 0) ? "callee" : "caller",
       addr2char(sstosa(&packet->raddr)), rport,
@@ -171,7 +172,7 @@ fill_session_addr(struct rtpp_session_obj *sp, struct rtp_packet *packet, int ri
                 return (-1);
 #if 0
                 sp->pcount.ndropped++;
-                rtpp_log_write(RTPP_LOG_ERR, sp->log,
+                CALL_METHOD(sp->log, write, RTPP_LOG_ERR,
                   "can't allocate memory for remote address - "
                   "removing session");
                 remove_session(cf, sp);
@@ -186,7 +187,7 @@ fill_session_addr(struct rtpp_session_obj *sp, struct rtp_packet *packet, int ri
         satosin(sp->rtcp->stream[ridx]->addr)->sin_port = htons(rport + 1);
         /* Use guessed value as the only true one for asymmetric clients */
         sp->rtcp->stream[ridx]->latch_info.latched = sp->rtcp->stream[ridx]->asymmetric;
-        rtpp_log_write(RTPP_LOG_INFO, sp->log, "guessing RTCP port "
+        CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "guessing RTCP port "
           "for %s to be %d",
           (ridx == 0) ? "callee" : "caller", rport + 1);
     }
@@ -278,7 +279,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	    sp->stream[ridx]->addr = malloc(packet->rlen);
 	    if (sp->stream[ridx]->addr == NULL) {
 		sp->pcount.ndropped++;
-		rtpp_log_write(RTPP_LOG_ERR, sp->log,
+		CALL_METHOD(sp->log, write, RTPP_LOG_ERR,
 		  "can't allocate memory for remote address - "
 		  "removing session");
                 tsp = get_rtp(cf, sp);
@@ -454,7 +455,7 @@ process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
 
 	if (alarm_tick != 0 && sp != NULL && sp->stream[0]->sidx == readyfd) {
 	    if (get_ttl(sp) == 0) {
-		rtpp_log_write(RTPP_LOG_INFO, sp->log, "session timeout");
+		CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "session timeout");
                 if (sp->timeout_data.notify_target != NULL) {
 		    CALL_METHOD(cf->stable->rtpp_notify_cf, schedule,
                       sp->timeout_data.notify_target, sp->timeout_data.notify_tag);

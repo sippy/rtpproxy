@@ -29,6 +29,8 @@
 #ifndef _RTP_ANALYZE_H_
 #define _RTP_ANALYZE_H_
 
+struct rtpp_log_obj;
+
 struct rtpp_session_stat_last {
     long long pcount;
     uint32_t min_seq;
@@ -51,8 +53,8 @@ struct rtpp_session_stat {
     struct rtpp_session_stat_last last;
 };
 
-int update_rtpp_stats(rtpp_log_t, struct rtpp_session_stat *, rtp_hdr_t *, struct rtp_info *,
-  double);
+int update_rtpp_stats(struct rtpp_log_obj *, struct rtpp_session_stat *, rtp_hdr_t *,
+  struct rtp_info *, double);
 void update_rtpp_totals(struct rtpp_session_stat *, struct rtpp_session_stat *);
 
 #endif

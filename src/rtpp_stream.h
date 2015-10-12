@@ -32,6 +32,7 @@
 struct rtpp_stream_obj;
 struct rtpp_weakref_obj;
 struct rtpp_stats_obj;
+struct rtpp_log_obj;
 
 struct rtpps_latch {
     int latched;
@@ -80,6 +81,7 @@ struct rtpp_stream_obj {
     uint64_t stuid;
 };
 
-struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_weakref_obj *, struct rtpp_stats_obj *);
+struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_log_obj *,
+  struct rtpp_weakref_obj *, struct rtpp_stats_obj *);
 
 #endif

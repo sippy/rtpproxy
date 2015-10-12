@@ -35,6 +35,7 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_record.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
@@ -59,13 +60,13 @@ handle_copy(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *rname,
             if (spa->stream[idx]->rrc == NULL) {
                 return (-1);
             }
-            rtpp_log_write(RTPP_LOG_INFO, spa->log,
+            CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
               "starting recording RTP session on port %d", spa->stream[idx]->port);
         }
         assert(spa->rtcp->stream[idx]->rrc == NULL);
         if (cf->stable->rrtcp != 0) {
             spa->rtcp->stream[idx]->rrc = spa->stream[idx]->rrc;
-            rtpp_log_write(RTPP_LOG_INFO, spa->log,
+            CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
               "starting recording RTCP session on port %d", spa->rtcp->stream[idx]->port);
         }
         return (0);
@@ -76,7 +77,7 @@ handle_copy(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *rname,
         if (spa->stream[idx]->rrc == NULL) {
             return (-1);
         }
-        rtpp_log_write(RTPP_LOG_INFO, spa->log,
+        CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
           "starting recording RTP session on port %d", spa->stream[idx]->port);
     }
     if (spa->rtcp->stream[idx]->rrc == NULL && cf->stable->rrtcp != 0) {
@@ -84,7 +85,7 @@ handle_copy(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *rname,
         if (spa->rtcp->stream[idx]->rrc == NULL) {
             return (-1);
         }
-        rtpp_log_write(RTPP_LOG_INFO, spa->log,
+        CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
           "starting recording RTCP session on port %d", spa->rtcp->stream[idx]->port);
     }
     return (0);

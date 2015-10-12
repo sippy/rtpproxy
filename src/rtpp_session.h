@@ -54,7 +54,7 @@ struct rtpp_session_obj {
     char *call_id;
     char *tag;
     char *tag_nomedianum;
-    rtpp_log_t log;
+    struct rtpp_log_obj *log;
     struct rtpp_session_obj* rtcp;
     /* Session is complete, that is we received both request and reply */
     int complete;
@@ -96,6 +96,7 @@ int compare_session_tags(const char *, const char *, unsigned *);
 int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session_obj **);
 int get_ttl(struct rtpp_session_obj *);
 
-struct rtpp_session_obj *rtpp_session_ctor(struct rtpp_cfg_stable *, int);
+struct rtpp_session_obj *rtpp_session_ctor(struct rtpp_cfg_stable *,
+  struct rtpp_log_obj *, int);
 
 #endif

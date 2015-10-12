@@ -32,7 +32,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_types.h"
 #include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtp_info.h"
 #include "rtp.h"
 #include "rtp_analyze.h"
@@ -46,7 +48,7 @@ rtp_ts2dtime(uint32_t ts)
 }
 
 int
-update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *header,
+update_rtpp_stats(struct rtpp_log_obj *rlog, struct rtpp_session_stat *stat, rtp_hdr_t *header,
   struct rtp_info *rinfo, double rtime)
 {
     uint32_t seq;
@@ -79,7 +81,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         stat->last.pcount = 1;
         stat->ssrc_changes += 1;
         if (stat->psent > 0 || stat->precvd > 0) {
-            rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: ssrc_changes=%u, psent=%u, precvd=%u\n",
+            CALL_METHOD(rlog, write, RTPP_LOG_DBUG, "0x%.8X/%d: ssrc_changes=%u, psent=%u, precvd=%u\n",
               rinfo->ssrc, rinfo->seq, stat->ssrc_changes, stat->psent, stat->precvd);
         }
         idx = (seq % 131072) >> 5;
@@ -88,7 +90,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
     }
     seq += stat->last.seq_offset;
     if (header->mbt && (seq < stat->last.max_seq && (stat->last.max_seq & 0xffff) != 65535)) {
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
+        CALL_METHOD(rlog, write, RTPP_LOG_DBUG, "0x%.8X/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->mbt);
         /* Seq reset has happened. Treat it as a ssrc change */
         update_rtpp_totals(stat, stat);
@@ -104,7 +106,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         return (0);
     }
     if (ABS(rtime - stat->last.base_rtime - rtp_ts2dtime(rinfo->ts - stat->last.base_ts)) > 0.1) {
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: delta rtime=%f, delta ts=%f\n",
+        CALL_METHOD(rlog, write, RTPP_LOG_DBUG, "0x%.8X/%d: delta rtime=%f, delta ts=%f\n",
           rinfo->ssrc, rinfo->seq, rtime - stat->last.base_rtime,
           rtp_ts2dtime(rinfo->ts - stat->last.base_ts));
         stat->last.base_rtime = rtime;
@@ -113,7 +115,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
         /* Pre-wrap packet received after a wrap */
         seq -= 65536;
     } else if (stat->last.max_seq > 65000 && seq < stat->last.max_seq - 65000) {
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: wrap last->max_seq=%u, seq=%u\n",
+        CALL_METHOD(rlog, write, RTPP_LOG_DBUG, "0x%.8X/%d: wrap last->max_seq=%u, seq=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq);
         /* Wrap up has happened */
         stat->last.seq_offset += 65536;
@@ -124,7 +126,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
             memset(stat->last.seen, '\0', sizeof(stat->last.seen) / 2);
         }
     } else if (seq + 536 < stat->last.max_seq || seq > stat->last.max_seq + 536) {
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: desync last->max_seq=%u, seq=%u, m=%u\n",
+        CALL_METHOD(rlog, write, RTPP_LOG_DBUG, "0x%.8X/%d: desync last->max_seq=%u, seq=%u, m=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->mbt);
         /* Desynchronization has happened. Treat it as a ssrc change */
         update_rtpp_totals(stat, stat);
@@ -141,14 +143,14 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
     idx = (seq % 131072) >> 5;
     mask = stat->last.seen[idx];
     if (((mask >> (seq & 31)) & 1) != 0) {
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: DUP\n",
+        CALL_METHOD(rlog, write, RTPP_LOG_DBUG, "0x%.8X/%d: DUP\n",
           rinfo->ssrc, rinfo->seq);
         stat->last.duplicates += 1;
         return (0);
     }
     stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
     if (seq - stat->last.max_seq != 1)
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: delta = %d\n",
+        CALL_METHOD(rlog, write, RTPP_LOG_DBUG, "0x%.8X/%d: delta = %d\n",
           rinfo->ssrc, rinfo->seq, seq - stat->last.max_seq);
     if (seq >= stat->last.max_seq) {
         stat->last.max_seq = seq;
@@ -162,7 +164,7 @@ update_rtpp_stats(rtpp_log_t rlog, struct rtpp_session_stat *stat, rtp_hdr_t *he
     if (stat->last.seq_offset == 0 && seq < stat->last.min_seq) {
         stat->last.min_seq = seq;
         stat->last.pcount += 1;
-        rtpp_log_write(RTPP_LOG_DBUG, rlog, "0x%.8X/%d: last->min_seq=%u\n",
+        CALL_METHOD(rlog, write, RTPP_LOG_DBUG, "0x%.8X/%d: last->min_seq=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.min_seq);
         return (0);
     }

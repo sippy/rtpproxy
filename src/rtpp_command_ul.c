@@ -42,6 +42,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
 #include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_hash_table.h"
@@ -373,6 +374,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     int fds[2];
     char *cp;
     struct rtpp_session_obj *spa, *spb;
+    struct rtpp_log_obj *log;
 
     pidx = 1;
     lport = 0;
@@ -386,12 +388,12 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
                 spa->stream[sidx]->laddr = ulop->local_addr;
             }
             if (rtpp_create_listener(cf, spa->stream[sidx]->laddr, &lport, fds) == -1) {
-                rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create listener");
+                CALL_METHOD(spa->log, write, RTPP_LOG_ERR, "can't create listener");
                 reply_error(cf, cmd, ECODE_LSTFAIL_1);
                 goto err_undo_0;
             }
             if (spa->stream[sidx]->fd != -1 && ulop->new_port != 0) {
-                rtpp_log_write(RTPP_LOG_INFO, spa->log,
+                CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
                   "new port requested, releasing %d/%d, replacing with %d/%d",
                   spa->stream[sidx]->port, spa->rtcp->stream[sidx]->port, lport, lport + 1);
                 update_sessions(cf, spa, sidx, fds);
@@ -420,7 +422,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         if (cmd->cca.op == UPDATE) {
             spa->stream[0]->ttl = cf->stable->max_setup_ttl;
             spa->stream[1]->ttl = cf->stable->max_setup_ttl;
-            rtpp_log_write(RTPP_LOG_INFO, spa->log,
+            CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
               "adding %s flag to existing session, new=%d/%d/%d",
               ulop->weak ? ( sidx ? "weak[1]" : "weak[0]" ) : "strong",
               spa->strong, spa->stream[0]->weak, spa->stream[1]->weak);
@@ -428,7 +430,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             spa->stream[0]->ttl = cf->stable->max_ttl;
             spa->stream[1]->ttl = cf->stable->max_ttl;
         }
-        rtpp_log_write(RTPP_LOG_INFO, spa->log,
+        CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
           "lookup on ports %d/%d, session timer restarted", spa->stream[0]->port,
           spa->stream[1]->port);
     } else {
@@ -455,14 +457,17 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
          * Session creation. If creation is requested with weak flag,
          * set weak[0].
          */
-        spa = rtpp_session_ctor(cf->stable, SESS_RTP);
+        log = rtpp_log_obj_ctor(cf->stable, "rtpproxy", cmd->cca.call_id, 0);
+        CALL_METHOD(log, setlevel, cf->stable->log_level);
+        spa = rtpp_session_ctor(cf->stable, log, SESS_RTP);
+        CALL_METHOD(log->rcnt, decref);
         if (spa == NULL) {
             handle_nomem(cf, cmd, ECODE_NOMEM_4, ulop,
               fds, spa, spb);
             return (-1);
         }
         /* spb is RTCP twin session for this one. */
-        spb = rtpp_session_ctor(cf->stable, SESS_RTCP);
+        spb = rtpp_session_ctor(cf->stable, spa->log, SESS_RTCP);
         if (spb == NULL) {
             handle_nomem(cf, cmd, ECODE_NOMEM_5, ulop,
               fds, spa, spb);
@@ -515,9 +520,6 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spa->stream[1]->ttl = cf->stable->max_setup_ttl;
         spb->stream[0]->ttl = -1;
         spb->stream[1]->ttl = -1;
-        spa->log = rtpp_log_open(cf->stable, "rtpproxy", spa->call_id, 0);
-        rtpp_log_setlevel(spa->log, cf->stable->log_level);
-        spb->log = spa->log;
         spa->rtcp = spb;
         spb->rtcp = NULL;
         spa->stream[0]->analyzer = rtpp_analyzer_ctor();
@@ -563,7 +565,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
               "option", (int)rtpp_rlim_max(cf));
         }
 
-        rtpp_log_write(RTPP_LOG_INFO, spa->log, "new session on a port %d created, "
+        CALL_METHOD(spa->log, write, RTPP_LOG_INFO, "new session on a port %d created, "
           "tag %s", lport, cmd->cca.from_tag);
         if (cf->stable->record_all != 0) {
             handle_copy(cf, spa, 0, NULL, 0);
@@ -575,7 +577,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
 
     if (cmd->cca.op == UPDATE) {
         if (!CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled) && ulop->notify_socket != NULL)
-            rtpp_log_write(RTPP_LOG_ERR, spa->log, "must permit notification socket with -n");
+            CALL_METHOD(spa->log, write, RTPP_LOG_ERR, "must permit notification socket with -n");
         if (spa->timeout_data.notify_tag != NULL) {
             free(spa->timeout_data.notify_tag);
             spa->timeout_data.notify_tag = NULL;
@@ -586,16 +588,16 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             rttp = CALL_METHOD(cf->stable->rtpp_tnset_cf, lookup, ulop->notify_socket,
               (cmd->rlen > 0) ? sstosa(&cmd->raddr) : NULL, (cmd->rlen > 0) ? cmd->laddr : NULL);
             if (rttp == NULL) {
-                rtpp_log_write(RTPP_LOG_ERR, spa->log, "invalid socket name %s", ulop->notify_socket);
+                CALL_METHOD(spa->log, write, RTPP_LOG_ERR, "invalid socket name %s", ulop->notify_socket);
                 ulop->notify_socket = NULL;
             } else {
-                rtpp_log_write(RTPP_LOG_INFO, spa->log, "setting timeout handler");
+                CALL_METHOD(spa->log, write, RTPP_LOG_INFO, "setting timeout handler");
                 spa->timeout_data.notify_target = rttp;
                 spa->timeout_data.notify_tag = strdup(ulop->notify_tag);
             }
         } else if (spa->timeout_data.notify_target != NULL) {
             spa->timeout_data.notify_target = NULL;
-            rtpp_log_write(RTPP_LOG_INFO, spa->log, "disabling timeout handler");
+            CALL_METHOD(spa->log, write, RTPP_LOG_INFO, "disabling timeout handler");
         }
     }
 
@@ -620,7 +622,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
                 obr = "[";
                 cbr = "]";
             }
-            rtpp_log_write(RTPP_LOG_INFO, spa->log, "pre-filling %s's address "
+            CALL_METHOD(spa->log, write, RTPP_LOG_INFO, "pre-filling %s's address "
               "with %s%s%s:%s", (pidx == 0) ? "callee" : "caller", obr, ulop->addr,
               cbr, ulop->port);
             if (spa->stream[pidx]->addr != NULL) {
@@ -663,11 +665,11 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     }
     spa->stream[NOT(pidx)]->ptime = ulop->requested_ptime;
     if (ulop->requested_ptime > 0) {
-        rtpp_log_write(RTPP_LOG_INFO, spa->log, "RTP packets from %s "
+        CALL_METHOD(spa->log, write, RTPP_LOG_INFO, "RTP packets from %s "
           "will be resized to %d milliseconds",
           (pidx == 0) ? "callee" : "caller", ulop->requested_ptime);
     } else if (spa->stream[pidx]->resizer != NULL) {
-          rtpp_log_write(RTPP_LOG_INFO, spa->log, "Resizing of RTP "
+          CALL_METHOD(spa->log, write, RTPP_LOG_INFO, "Resizing of RTP "
           "packets from %s has been disabled",
           (pidx == 0) ? "callee" : "caller");
     }

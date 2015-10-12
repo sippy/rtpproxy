@@ -47,6 +47,7 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
 #include "rtpp_command.h"
@@ -593,7 +594,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	 * effect is less efficient work.
 	 */
 	if (spa->strong || spa->stream[0]->weak || spa->stream[1]->weak) {
-	    rtpp_log_write(RTPP_LOG_INFO, spa->log,
+	    CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
 	      "delete: medianum=%u: removing %s flag, seeing flags to"
 	      " continue session (strong=%d, weak=%d/%d)",
 	      medianum,
@@ -604,7 +605,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	    spa = session_findnext(cf, spa);
 	    continue;
 	}
-	rtpp_log_write(RTPP_LOG_INFO, spa->log,
+	CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
 	  "forcefully deleting session %u on ports %d/%d",
 	   medianum, spa->stream[0]->port, spa->stream[1]->port);
 	/* Search forward before we do removal */
@@ -632,7 +633,7 @@ handle_noplay(struct cfg *cf, struct rtpp_session_obj *spa, int idx, struct rtpp
         if (CALL_METHOD(spa->servers_wrt, unreg, spa->stream[idx]->rtps) != NULL) {
             spa->stream[idx]->rtps = RTPP_UID_NONE;
         }
-	rtpp_log_write(RTPP_LOG_INFO, spa->log,
+	CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
 	  "stopping player at port %d", spa->stream[idx]->port);
    }
 }
@@ -673,11 +674,11 @@ handle_play(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *codecs,
         CALL_METHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           cf->stable->rtpp_stats);
         CALL_METHOD(rsrv->rcnt, decref);
-        rtpp_log_write(RTPP_LOG_INFO, spa->log,
+        CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
           "%d times playing prompt %s codec %d", playcount, pname, n);
 	return 0;
     }
-    rtpp_log_write(RTPP_LOG_ERR, spa->log, "can't create player");
+    CALL_METHOD(spa->log, write, RTPP_LOG_ERR, "can't create player");
     return -1;
 }
 

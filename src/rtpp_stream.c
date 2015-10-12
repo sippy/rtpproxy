@@ -31,6 +31,7 @@
 #include <stdint.h>
 
 #include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtp_resizer.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_refcnt.h"
@@ -43,6 +44,7 @@ struct rtpp_stream_priv
     struct rtpp_stream_obj pub;
     struct rtpp_weakref_obj *servers_wrt;
     struct rtpp_stats_obj *rtpp_stats;
+    struct rtpp_log_obj *log;
     void *rco[0];
 };
 
@@ -52,7 +54,8 @@ struct rtpp_stream_priv
 static void rtpp_stream_dtor(struct rtpp_stream_priv *);
 
 struct rtpp_stream_obj *
-rtpp_stream_ctor(struct rtpp_weakref_obj *servers_wrt, struct rtpp_stats_obj *rtpp_stats)
+rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
+  struct rtpp_stats_obj *rtpp_stats)
 {
     struct rtpp_stream_priv *pvt;
 
@@ -69,6 +72,8 @@ rtpp_stream_ctor(struct rtpp_weakref_obj *servers_wrt, struct rtpp_stats_obj *rt
     }
     pvt->servers_wrt = servers_wrt;
     pvt->rtpp_stats = rtpp_stats;
+    pvt->log = log;
+    CALL_METHOD(log->rcnt, incref);
     rtpp_gen_uid(&pvt->pub.stuid);
     return (&pvt->pub);
 }
@@ -90,5 +95,6 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     if (pub->resizer != NULL)
         rtp_resizer_free(pvt->rtpp_stats, pub->resizer);
 
+    CALL_METHOD(pvt->log->rcnt, decref);
     free(pvt);
 }
