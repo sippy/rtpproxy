@@ -506,12 +506,12 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case NOPLAY:
-	CALL_METHOD(spa->stream[i], handle_noplay, cmd);
+	CALL_METHOD(spa->stream[i], handle_noplay);
 	reply_ok(cf, cmd);
 	break;
 
     case PLAY:
-	CALL_METHOD(spa->stream[i], handle_noplay, cmd);
+	CALL_METHOD(spa->stream[i], handle_noplay);
 	ptime = -1;
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->stream[i]->codecs == NULL) {
