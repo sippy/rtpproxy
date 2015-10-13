@@ -34,10 +34,12 @@
  * in either direction.  When the counter reaches 0, the call timeout
  * occurs.
  */
-typedef enum {
+enum rtpp_ttl_mode {
     TTL_UNIFIED = 0,            /* all TTL counters must reach 0 */
     TTL_INDEPENDENT = 1         /* any TTL counter reaches 0 */
-} rtpp_ttl_mode;
+};
+
+typedef enum rtpp_ttl_mode rtpp_ttl_mode;
 
 struct rtpp_timed_obj;
 
