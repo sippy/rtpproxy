@@ -32,7 +32,7 @@
 /*
  * RTP payload types
  */
-typedef enum {
+enum rtp_type {
     RTP_UNKN = -1,
     RTP_PCMU = 0,
     RTP_GSM = 3,
@@ -43,7 +43,9 @@ typedef enum {
     RTP_G729 = 18,
     RTP_TSE = 100,
     RTP_TSE_CISCO = 101
-} rtp_type_t;
+};
+
+typedef enum rtp_type rtp_type_t;
 
 #define RTP_NSAMPLES_UNKNOWN  (-1)
 
