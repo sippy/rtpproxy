@@ -30,6 +30,7 @@
 #define _RTPP_SESSION_H_
 
 struct rtpp_session_obj;
+enum rtpp_ttl_mode;
 
 DEFINE_METHOD(rtpp_session_obj, rtpp_session_dtor, void);
 
@@ -49,7 +50,7 @@ struct rtpps_pcount {
 struct rtpp_session_obj {
     /* Session for caller [0] and callee [1] */
     struct rtpp_stream_obj *stream[2];
-    rtpp_ttl_mode ttl_mode;
+    enum rtpp_ttl_mode ttl_mode;
     struct rtpps_pcount pcount;
     char *call_id;
     char *tag;
