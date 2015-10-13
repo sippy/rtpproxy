@@ -33,6 +33,12 @@ struct rtpp_stream_obj;
 struct rtpp_weakref_obj;
 struct rtpp_stats_obj;
 struct rtpp_log_obj;
+struct rtpp_command;
+
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_handle_play, int, char *,
+  char *, int, struct rtpp_command *, int);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_handle_noplay, void,
+  struct rtpp_command *);
 
 struct rtpps_latch {
     int latched;
@@ -79,6 +85,9 @@ struct rtpp_stream_obj {
     struct rtpp_refcnt_obj *rcnt;
     /* UID */
     uint64_t stuid;
+    /* Public methods */
+    rtpp_stream_obj_handle_play_t handle_play;
+    rtpp_stream_obj_handle_noplay_t handle_noplay;
 };
 
 struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_log_obj *,

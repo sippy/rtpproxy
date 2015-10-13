@@ -42,7 +42,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "rtp.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
@@ -96,9 +95,6 @@ struct d_opts;
 
 static int create_twinlistener(struct rtpp_cfg_stable *, struct sockaddr *, int, int *);
 static int handle_delete(struct cfg *, struct common_cmd_args *, int);
-static void handle_noplay(struct cfg *, struct rtpp_session_obj *, int, struct rtpp_command *);
-static int handle_play(struct cfg *, struct rtpp_session_obj *, int, char *, char *, int,
-  struct rtpp_command *, int);
 static int handle_record(struct cfg *, struct common_cmd_args *, int);
 static void handle_info(struct cfg *, struct rtpp_command *,
   const char *);
@@ -510,12 +506,12 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case NOPLAY:
-	handle_noplay(cf, spa, i, cmd);
+	CALL_METHOD(spa->stream[i], handle_noplay, cmd);
 	reply_ok(cf, cmd);
 	break;
 
     case PLAY:
-	handle_noplay(cf, spa, i, cmd);
+	CALL_METHOD(spa->stream[i], handle_noplay, cmd);
 	ptime = -1;
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->stream[i]->codecs == NULL) {
@@ -525,8 +521,8 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	    codecs = spa->stream[i]->codecs;
 	    ptime = spa->stream[i]->ptime;
 	}
-	if (playcount != 0 && handle_play(cf, spa, i, codecs, pname, playcount,
-          cmd, ptime) != 0) {
+	if (playcount != 0 && CALL_METHOD(spa->stream[i], handle_play, codecs,
+          pname, playcount, cmd, ptime) != 0) {
 	    reply_error(cf, cmd, ECODE_PLRFAIL);
 	    return 0;
 	}
@@ -623,63 +619,6 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	return -1;
     }
     return 0;
-}
-
-static void
-handle_noplay(struct cfg *cf, struct rtpp_session_obj *spa, int idx, struct rtpp_command *cmd)
-{
-
-    if (spa->stream[idx]->rtps != RTPP_UID_NONE) {
-        if (CALL_METHOD(spa->servers_wrt, unreg, spa->stream[idx]->rtps) != NULL) {
-            spa->stream[idx]->rtps = RTPP_UID_NONE;
-        }
-	CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
-	  "stopping player at port %d", spa->stream[idx]->port);
-   }
-}
-
-static void
-player_predestroy_cb(struct rtpp_stats_obj *rtpp_stats)
-{
-
-    CALL_METHOD(rtpp_stats, updatebyname, "nplrs_destroyed", 1);
-}
-
-static int
-handle_play(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *codecs,
-  char *pname, int playcount, struct rtpp_command *cmd, int ptime)
-{
-    int n;
-    char *cp;
-    struct rtpp_server_obj *rsrv;
-
-    while (*codecs != '\0') {
-	n = strtol(codecs, &cp, 10);
-	if (cp == codecs)
-	    break;
-	codecs = cp;
-	if (*codecs != '\0')
-	    codecs++;
-        rsrv = rtpp_server_ctor(pname, n, playcount, cmd->dtime, ptime);
-	if (rsrv == NULL)
-	    continue;
-        rsrv->stuid = spa->stream[idx]->stuid;
-        if (CALL_METHOD(cf->stable->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
-            CALL_METHOD(rsrv->rcnt, decref);
-            continue;
-        }
-        assert(spa->stream[idx]->rtps == RTPP_UID_NONE);
-        spa->stream[idx]->rtps = rsrv->sruid;
-        cmd->csp->nplrs_created.cnt++;
-        CALL_METHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
-          cf->stable->rtpp_stats);
-        CALL_METHOD(rsrv->rcnt, decref);
-        CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
-          "%d times playing prompt %s codec %d", playcount, pname, n);
-	return 0;
-    }
-    CALL_METHOD(spa->log, write, RTPP_LOG_ERR, "can't create player");
-    return -1;
 }
 
 static int
