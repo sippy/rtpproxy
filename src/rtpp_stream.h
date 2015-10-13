@@ -34,12 +34,21 @@ struct rtpp_weakref_obj;
 struct rtpp_stats_obj;
 struct rtpp_log_obj;
 struct rtpp_command;
+struct rtp_packet;
 
 DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_handle_play, int, char *,
   char *, int, struct rtpp_command *, int);
 DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_handle_noplay, void);
 DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_isplayer_active, int);
 DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_finish_playback, void, uint64_t);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_get_actor, const char *);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_get_proto, const char *);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_latch, int, double,
+  struct rtp_packet *);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_check_latch_override, int,
+  struct rtp_packet *);
+
+enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
 
 struct rtpps_latch {
     int latched;
@@ -82,16 +91,23 @@ struct rtpp_stream_obj {
     unsigned long npkts_in;
     /* Refcounter */
     struct rtpp_refcnt_obj *rcnt;
-    /* UID */
+    /* UID, read-only */
     uint64_t stuid;
+    /* Type of session we are associated with, read-only */
+    int session_type;
     /* Public methods */
     rtpp_stream_obj_handle_play_t handle_play;
     rtpp_stream_obj_handle_noplay_t handle_noplay;
     rtpp_stream_obj_isplayer_active_t isplayer_active;
     rtpp_stream_obj_finish_playback_t finish_playback;
+    rtpp_stream_obj_get_actor_t get_actor;
+    rtpp_stream_obj_get_proto_t get_proto;
+    rtpp_stream_obj_latch_t latch;
+    rtpp_stream_obj_check_latch_override_t check_latch_override;
 };
 
 struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_log_obj *,
-  struct rtpp_weakref_obj *, struct rtpp_stats_obj *);
+  struct rtpp_weakref_obj *, struct rtpp_stats_obj *, enum rtpp_stream_side,
+  int);
 
 #endif

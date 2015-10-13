@@ -28,23 +28,31 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/stat.h>
 #include <assert.h>
 #include <pthread.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 
-#include "rtpp_types.h"
+#include "rtpp_defines.h"
 #include "rtpp_log.h"
+#include "rtpp_cfg_stable.h"
+#include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtp.h"
 #include "rtp_resizer.h"
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
+#include "rtp_info.h"
+#include "rtp_packet.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_network.h"
 #include "rtpp_stats.h"
 #include "rtpp_stream.h"
 #include "rtpp_server.h"
+#include "rtpp_session.h"
 #include "rtpp_util.h"
 #include "rtpp_weakref.h"
 
@@ -57,6 +65,7 @@ struct rtpp_stream_priv
     pthread_mutex_t lock;
     /* Weak reference to the "rtpp_server" (player) */
     uint64_t rtps;
+    enum rtpp_stream_side side;
     void *rco[0];
 };
 
@@ -69,10 +78,17 @@ static int rtpp_stream_handle_play(struct rtpp_stream_obj *, char *, char *,
 static void rtpp_stream_handle_noplay(struct rtpp_stream_obj *);
 static int rtpp_stream_isplayer_active(struct rtpp_stream_obj *);
 static void rtpp_stream_finish_playback(struct rtpp_stream_obj *, uint64_t);
+static const char *rtpp_stream_get_actor(struct rtpp_stream_obj *);
+static const char *rtpp_stream_get_proto(struct rtpp_stream_obj *);
+static int rtpp_stream_latch(struct rtpp_stream_obj *, double,
+  struct rtp_packet *);
+static int rtpp_stream_check_latch_override(struct rtpp_stream_obj *,
+  struct rtp_packet *);
 
 struct rtpp_stream_obj *
 rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
-  struct rtpp_stats_obj *rtpp_stats)
+  struct rtpp_stats_obj *rtpp_stats, enum rtpp_stream_side side,
+  int session_type)
 {
     struct rtpp_stream_priv *pvt;
 
@@ -93,10 +109,16 @@ rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
     pvt->rtpp_stats = rtpp_stats;
     pvt->log = log;
     CALL_METHOD(log->rcnt, incref);
+    pvt->side = side;
+    pvt->pub.session_type = session_type;
     pvt->pub.handle_play = &rtpp_stream_handle_play;
     pvt->pub.handle_noplay = &rtpp_stream_handle_noplay;
     pvt->pub.isplayer_active = &rtpp_stream_isplayer_active;
     pvt->pub.finish_playback = &rtpp_stream_finish_playback;
+    pvt->pub.get_actor = &rtpp_stream_get_actor;
+    pvt->pub.get_proto = &rtpp_stream_get_proto;
+    pvt->pub.latch = &rtpp_stream_latch;
+    pvt->pub.check_latch_override = &rtpp_stream_check_latch_override;
     rtpp_gen_uid(&pvt->pub.stuid);
     return (&pvt->pub);
 
@@ -227,4 +249,96 @@ rtpp_stream_finish_playback(struct rtpp_stream_obj *self, uint64_t sruid)
           "player at port %d has finished", self->port);
     }
     pthread_mutex_unlock(&pvt->lock);
+}
+
+static const char *
+rtpp_stream_get_actor(struct rtpp_stream_obj *self)
+{
+    struct rtpp_stream_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    return ((pvt->side == RTPP_SSIDE_CALLER) ? "caller" : "callee");
+}
+
+static const char *
+rtpp_stream_get_proto(struct rtpp_stream_obj *self)
+{
+
+    return ((self->session_type == SESS_RTP) ? "RTP" : "RTCP");
+}
+
+static int
+rtpp_stream_latch(struct rtpp_stream_obj *self, double dtime,
+  struct rtp_packet *packet)
+{
+    const char *actor, *raddr, *ptype, *ssrc, *seq;
+    char ssrc_buf[11], seq_buf[6];
+    int rport;
+    struct rtpp_stream_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    if (self->last_update != 0 && \
+      dtime - self->last_update < UPDATE_WINDOW) {
+        return (0);
+    }
+
+    actor = rtpp_stream_get_actor(self);
+    ptype = rtpp_stream_get_proto(self);
+    raddr = addr2char(sstosa(&packet->raddr));
+    rport = ntohs(satosin(&packet->raddr)->sin_port);
+
+    if (self->session_type == SESS_RTP) {
+        if (rtp_packet_parse(packet) == RTP_PARSER_OK) {
+            self->latch_info.ssrc = packet->parsed->ssrc;
+            self->latch_info.seq = packet->parsed->seq;
+            snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", packet->parsed->ssrc);
+            snprintf(seq_buf, sizeof(seq_buf), "%u", packet->parsed->seq);
+            ssrc = ssrc_buf;
+            seq = seq_buf;
+        } else {
+            self->latch_info.ssrc = 0;
+            ssrc = seq = "INVALID";
+        }
+    } else {
+        self->latch_info.ssrc = 0;
+        ssrc = seq = "UNKNOWN";
+    }
+
+    RTPP_LOG(pvt->log, RTPP_LOG_INFO,
+      "%s's address latched in: %s:%d (%s), SSRC=%s, Seq=%s", actor, raddr,
+      rport, ptype, ssrc, seq);
+    self->latch_info.latched = 1;
+    return (1);
+}
+
+static int
+rtpp_stream_check_latch_override(struct rtpp_stream_obj *self,
+  struct rtp_packet *packet)
+{
+    const char *actor, *raddr;
+    int rport;
+    struct rtpp_stream_priv *pvt;
+
+    pvt = PUB2PVT(self);
+
+    if (self->session_type == SESS_RTCP || self->latch_info.ssrc == 0)
+        return (0);
+    if (rtp_packet_parse(packet) != RTP_PARSER_OK)
+        return (0);
+    if (packet->parsed->ssrc != self->latch_info.ssrc)
+        return (0);
+    if (packet->parsed->seq < self->latch_info.seq && self->latch_info.seq - packet->parsed->seq < 536)
+        return (0);
+
+    actor = rtpp_stream_get_actor(self);
+    raddr = addr2char(sstosa(&packet->raddr));
+    rport = ntohs(satosin(&packet->raddr)->sin_port);
+
+    RTPP_LOG(pvt->log, RTPP_LOG_INFO,
+      "%s's address re-latched: %s:%d (%s), SSRC=0x%.8X, Seq=%u->%u", actor, raddr,
+      rport, "RTP", self->latch_info.ssrc, self->latch_info.seq,
+      packet->parsed->seq);
+
+    self->latch_info.seq = packet->parsed->seq;
+    return (1);
 }
