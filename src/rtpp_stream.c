@@ -145,6 +145,8 @@ rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
     int n;
     char *cp;
     struct rtpp_server_obj *rsrv;
+    uint16_t seq;
+    uint32_t ssrc;
 
     pvt = PUB2PVT(self);
     while (*codecs != '\0') {
@@ -158,9 +160,11 @@ rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
         if (rsrv == NULL)
             continue;
         rsrv->stuid = self->stuid;
+        ssrc = CALL_METHOD(rsrv, get_ssrc);
+        seq = CALL_METHOD(rsrv, get_seq);
         if (CALL_METHOD(pvt->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
             CALL_METHOD(rsrv->rcnt, decref);
-            continue;
+            break;
         }
         assert(pvt->rtps == RTPP_UID_NONE);
         pvt->rtps = rsrv->sruid;
@@ -169,7 +173,8 @@ rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
           pvt->rtpp_stats);
         CALL_METHOD(rsrv->rcnt, decref);
         CALL_METHOD(pvt->log, write, RTPP_LOG_INFO,
-          "%d times playing prompt %s codec %d", playcount, pname, n);
+          "%d times playing prompt %s codec %d: SSRC=0x%.8X, seq=%u",
+          playcount, pname, n, ssrc, seq);
         return 0;
     }
     CALL_METHOD(pvt->log, write, RTPP_LOG_ERR, "can't create player");
