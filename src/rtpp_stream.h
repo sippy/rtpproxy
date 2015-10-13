@@ -37,8 +37,9 @@ struct rtpp_command;
 
 DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_handle_play, int, char *,
   char *, int, struct rtpp_command *, int);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_handle_noplay, void,
-  struct rtpp_command *);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_handle_noplay, void);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_isplayer_active, int);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_finish_playback, void, uint64_t);
 
 struct rtpps_latch {
     int latched;
@@ -65,8 +66,6 @@ struct rtpp_stream_obj {
     int weak;
     /* Pointer to rtpp_record's opaque data type */
     void *rrc;
-    /* Weak reference to the "rtpp_server" (player) */
-    uint64_t rtps;
     /* References to fd-to-session table */
     int sidx;
     /* Flag that indicates whether or not address supplied by client can't be trusted */
@@ -88,6 +87,8 @@ struct rtpp_stream_obj {
     /* Public methods */
     rtpp_stream_obj_handle_play_t handle_play;
     rtpp_stream_obj_handle_noplay_t handle_noplay;
+    rtpp_stream_obj_isplayer_active_t isplayer_active;
+    rtpp_stream_obj_finish_playback_t finish_playback;
 };
 
 struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_log_obj *,
