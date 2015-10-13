@@ -35,6 +35,8 @@ struct rtp_packet;
 enum rtp_type;
 
 DEFINE_METHOD(rtpp_server_obj, rtpp_server_get, struct rtp_packet *, double, int *);
+DEFINE_METHOD(rtpp_server_obj, rtpp_server_get_ssrc, uint32_t);
+DEFINE_METHOD(rtpp_server_obj, rtpp_server_get_seq, uint16_t);
 
 #define	RTPS_LATER	(0)
 #define	RTPS_EOF	(-1)
@@ -42,7 +44,10 @@ DEFINE_METHOD(rtpp_server_obj, rtpp_server_get, struct rtp_packet *, double, int
 #define	RTPS_ENOMEM	(-3)
 
 struct rtpp_server_obj {
+    /* Public methods */
     rtpp_server_get_t get;
+    rtpp_server_get_ssrc_t get_ssrc;
+    rtpp_server_get_seq_t get_seq;
     /* Refcounter */
     struct rtpp_refcnt_obj *rcnt;
     /* UID */

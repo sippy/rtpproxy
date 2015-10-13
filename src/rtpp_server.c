@@ -70,6 +70,8 @@ struct rtpp_server_priv {
 
 static void rtpp_server_dtor(struct rtpp_server_priv *);
 static struct rtp_packet *rtpp_server_get(struct rtpp_server_obj *, double, int *);
+static uint32_t rtpp_server_get_ssrc(struct rtpp_server_obj *);
+static uint16_t rtpp_server_get_seq(struct rtpp_server_obj *);
 
 struct rtpp_server_obj *
 rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
@@ -114,6 +116,8 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
     rp->pub.get = &rtpp_server_get;
+    rp->pub.get_ssrc = &rtpp_server_get_ssrc;
+    rp->pub.get_seq = &rtpp_server_get_seq;
     rtpp_gen_uid(&rp->pub.sruid);
 
     return (&rp->pub);
@@ -224,3 +228,20 @@ rtpp_server_get(struct rtpp_server_obj *self, double dtime, int *rval)
     return (pkt);
 }
 
+static uint32_t
+rtpp_server_get_ssrc(struct rtpp_server_obj *self)
+{
+    struct rtpp_server_priv *rp;
+
+    rp = PUB2PVT(self);
+    return (ntohl(rp->rtp->ssrc));
+}
+
+static uint16_t
+rtpp_server_get_seq(struct rtpp_server_obj *self)
+{
+    struct rtpp_server_priv *rp;
+
+    rp = PUB2PVT(self);
+    return (ntohs(rp->rtp->seq));
+}
