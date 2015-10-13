@@ -32,6 +32,8 @@
 struct rtpp_server_obj;
 struct rtp_packet;
 
+enum rtp_type;
+
 DEFINE_METHOD(rtpp_server_obj, rtpp_server_get, struct rtp_packet *, double, int *);
 
 #define	RTPS_LATER	(0)
@@ -49,7 +51,7 @@ struct rtpp_server_obj {
     uint64_t stuid;
 };
 
-struct rtpp_server_obj *rtpp_server_ctor(const char *, rtp_type_t, int, double,
+struct rtpp_server_obj *rtpp_server_ctor(const char *, enum rtp_type, int, double,
   int);
 
 #endif
