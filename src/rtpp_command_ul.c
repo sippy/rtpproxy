@@ -372,6 +372,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     int pidx, lport, i;
     int fds[2];
     char *cp;
+    const char *actor;
     struct rtpp_session_obj *spa, *spb;
     struct rtpp_log_obj *log;
 
@@ -621,9 +622,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
                 obr = "[";
                 cbr = "]";
             }
+            actor = CALL_METHOD(spa->stream[pidx], get_actor);
             RTPP_LOG(spa->log, RTPP_LOG_INFO, "pre-filling %s's address "
-              "with %s%s%s:%s", (pidx == 0) ? "callee" : "caller", obr, ulop->addr,
-              cbr, ulop->port);
+              "with %s%s%s:%s", actor, obr, ulop->addr, cbr, ulop->port);
             if (spa->stream[pidx]->addr != NULL) {
                 if (spa->stream[pidx]->latch_info.latched != 0) {
                     if (spa->stream[pidx]->prev_addr != NULL)
@@ -663,14 +664,13 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         ulop->codecs = NULL;
     }
     spa->stream[NOT(pidx)]->ptime = ulop->requested_ptime;
+    actor = CALL_METHOD(spa->stream[pidx], get_actor);
     if (ulop->requested_ptime > 0) {
         RTPP_LOG(spa->log, RTPP_LOG_INFO, "RTP packets from %s "
-          "will be resized to %d milliseconds",
-          (pidx == 0) ? "callee" : "caller", ulop->requested_ptime);
+          "will be resized to %d milliseconds", actor, ulop->requested_ptime);
     } else if (spa->stream[pidx]->resizer != NULL) {
           RTPP_LOG(spa->log, RTPP_LOG_INFO, "Resizing of RTP "
-          "packets from %s has been disabled",
-          (pidx == 0) ? "callee" : "caller");
+          "packets from %s has been disabled", actor);
     }
     if (ulop->requested_ptime > 0) {
         if (spa->stream[pidx]->resizer != NULL) {
