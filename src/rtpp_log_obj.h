@@ -29,7 +29,8 @@
 struct rtpp_cfg_stable;
 struct rtpp_log_obj;
 
-DEFINE_METHOD(rtpp_log_obj, rtpp_log_obj_write, void, int, const char *, ...);
+DEFINE_METHOD(rtpp_log_obj, rtpp_log_obj_write, void, const char *, int,
+  const char *, ...);
 DEFINE_METHOD(rtpp_log_obj, rtpp_log_obj_setlevel, void, int);
 
 struct rtpp_log_obj {
@@ -44,3 +45,8 @@ struct rtpp_log_obj {
 
 struct rtpp_log_obj *rtpp_log_obj_ctor(struct rtpp_cfg_stable *, const char *,
   const char *, int);
+
+#define RTPP_LOG(log, args...) CALL_METHOD((log), write, __FUNCTION__, \
+  ## args)
+#define RTPP_ELOG(log, args...) CALL_METHOD((log), ewrite, __FUNCTION__, \
+  ## args)

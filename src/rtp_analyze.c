@@ -50,7 +50,7 @@ rtp_ts2dtime(uint32_t ts)
 /* rlog can be null in this context, when compiled for the extractaudio context */
 #define LOG_IF_NOT_NULL(log, args...) \
     if ((log) != NULL) { \
-        CALL_METHOD((log), write, RTPP_LOG_DBUG, ## args); \
+        RTPP_LOG((log), RTPP_LOG_DBUG, ## args); \
     }
 
 int

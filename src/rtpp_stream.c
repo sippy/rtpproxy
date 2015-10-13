@@ -172,12 +172,12 @@ rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
         CALL_METHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           pvt->rtpp_stats);
         CALL_METHOD(rsrv->rcnt, decref);
-        CALL_METHOD(pvt->log, write, RTPP_LOG_INFO,
+        RTPP_LOG(pvt->log, RTPP_LOG_INFO,
           "%d times playing prompt %s codec %d: SSRC=0x%.8X, seq=%u",
           playcount, pname, n, ssrc, seq);
         return 0;
     }
-    CALL_METHOD(pvt->log, write, RTPP_LOG_ERR, "can't create player");
+    RTPP_LOG(pvt->log, RTPP_LOG_ERR, "can't create player");
     return -1;
 }
 
@@ -192,7 +192,7 @@ rtpp_stream_handle_noplay(struct rtpp_stream_obj *self)
         if (CALL_METHOD(pvt->servers_wrt, unreg, pvt->rtps) != NULL) {
             pvt->rtps = RTPP_UID_NONE;
         }
-        CALL_METHOD(pvt->log, write, RTPP_LOG_INFO,
+        RTPP_LOG(pvt->log, RTPP_LOG_INFO,
           "stopping player at port %d", self->port);
     }
     pthread_mutex_unlock(&pvt->lock);
@@ -220,7 +220,7 @@ rtpp_stream_finish_playback(struct rtpp_stream_obj *self, uint64_t sruid)
     pthread_mutex_lock(&pvt->lock);
     if (pvt->rtps != RTPP_UID_NONE && pvt->rtps == sruid) {
         pvt->rtps = RTPP_UID_NONE;
-        CALL_METHOD(pvt->log, write, RTPP_LOG_INFO,
+        RTPP_LOG(pvt->log, RTPP_LOG_INFO,
           "player at port %d has finished", self->port);
     }
     pthread_mutex_unlock(&pvt->lock);

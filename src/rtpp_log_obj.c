@@ -50,8 +50,8 @@ struct rtpp_log_priv
 
 static void rtpp_log_obj_dtor(struct rtpp_log_priv *);
 static void rtpp_log_obj_setlevel(struct rtpp_log_obj *, int);
-static void rtpp_log_obj_write(struct rtpp_log_obj *, int, const char *, ...);
-static void rtpp_log_obj_ewrite(struct rtpp_log_obj *, int, const char *, ...);
+static void rtpp_log_obj_write(struct rtpp_log_obj *, const char *, int, const char *, ...);
+static void rtpp_log_obj_ewrite(struct rtpp_log_obj *, const char *, int, const char *, ...);
 
 struct rtpp_log_obj *
 rtpp_log_obj_ctor(struct rtpp_cfg_stable *cfs, const char *app,
@@ -96,27 +96,29 @@ rtpp_log_obj_setlevel(struct rtpp_log_obj *self, int log_level)
 }
 
 static void
-rtpp_log_obj_write(struct rtpp_log_obj *self, int level, const char *fmt, ...)
+rtpp_log_obj_write(struct rtpp_log_obj *self, const char *fname, int level,
+  const char *fmt, ...)
 {
     va_list ap;
     struct rtpp_log_priv *pvt;
 
     pvt = PUB2PVT(self);
     va_start(ap, fmt);
-    rtpp_log_write_va(level, pvt->log, fmt, ap);
+    _rtpp_log_write_va(pvt->log, level, fname, fmt, ap);
     va_end(ap);
     return;
 }
 
 static void
-rtpp_log_obj_ewrite(struct rtpp_log_obj *self, int level, const char *fmt, ...)
+rtpp_log_obj_ewrite(struct rtpp_log_obj *self, const char *fname, int level,
+  const char *fmt, ...)
 {
     va_list ap;
     struct rtpp_log_priv *pvt;
 
     pvt = PUB2PVT(self);
     va_start(ap, fmt);
-    rtpp_log_ewrite_va(level, pvt->log, fmt, ap);
+    _rtpp_log_ewrite_va(pvt->log, level, fname, fmt, ap);
     va_end(ap);
     return;
 }

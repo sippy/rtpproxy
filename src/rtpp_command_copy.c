@@ -60,13 +60,13 @@ handle_copy(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *rname,
             if (spa->stream[idx]->rrc == NULL) {
                 return (-1);
             }
-            CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
+            RTPP_LOG(spa->log, RTPP_LOG_INFO,
               "starting recording RTP session on port %d", spa->stream[idx]->port);
         }
         assert(spa->rtcp->stream[idx]->rrc == NULL);
         if (cf->stable->rrtcp != 0) {
             spa->rtcp->stream[idx]->rrc = spa->stream[idx]->rrc;
-            CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
+            RTPP_LOG(spa->log, RTPP_LOG_INFO,
               "starting recording RTCP session on port %d", spa->rtcp->stream[idx]->port);
         }
         return (0);
@@ -77,7 +77,7 @@ handle_copy(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *rname,
         if (spa->stream[idx]->rrc == NULL) {
             return (-1);
         }
-        CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
+        RTPP_LOG(spa->log, RTPP_LOG_INFO,
           "starting recording RTP session on port %d", spa->stream[idx]->port);
     }
     if (spa->rtcp->stream[idx]->rrc == NULL && cf->stable->rrtcp != 0) {
@@ -85,7 +85,7 @@ handle_copy(struct cfg *cf, struct rtpp_session_obj *spa, int idx, char *rname,
         if (spa->rtcp->stream[idx]->rrc == NULL) {
             return (-1);
         }
-        CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
+        RTPP_LOG(spa->log, RTPP_LOG_INFO,
           "starting recording RTCP session on port %d", spa->rtcp->stream[idx]->port);
     }
     return (0);

@@ -267,11 +267,11 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
     assert(rtpp_mutex_islocked(&cf->glock) == 1);
     assert(rtpp_mutex_islocked(&cf->sessinfo->lock) == 1);
 
-    CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "RTP stats: %lu in from callee, %lu "
+    RTPP_LOG(sp->log, RTPP_LOG_INFO, "RTP stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->stream[0]->npkts_in,
       sp->stream[1]->npkts_in, sp->pcount.nrelayed, sp->pcount.ndropped,
       sp->pcount.nignored);
-    CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "RTCP stats: %lu in from callee, %lu "
+    RTPP_LOG(sp->log, RTPP_LOG_INFO, "RTCP stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped, %lu ignored", sp->rtcp->stream[0]->npkts_in,
       sp->rtcp->stream[1]->npkts_in, sp->rtcp->pcount.nrelayed,
       sp->rtcp->pcount.ndropped, sp->rtcp->pcount.nignored);
@@ -287,7 +287,7 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
             CALL_METHOD(sp->rtpp_stats, updatebyname, "nsess_owrtcp", 1);
         }
     }
-    CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "session on ports %d/%d is cleaned up",
+    RTPP_LOG(sp->log, RTPP_LOG_INFO, "session on ports %d/%d is cleaned up",
       sp->stream[0]->port, sp->stream[1]->port);
     for (i = 0; i < 2; i++) {
 	if (sp->stream[i]->fd != -1) {
@@ -327,7 +327,7 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
              } else {
                  ssrc = "NONE";
              }
-             CALL_METHOD(sp->log, write, RTPP_LOG_INFO, "RTP stream from %s: "
+             RTPP_LOG(sp->log, RTPP_LOG_INFO, "RTP stream from %s: "
                "SSRC=%s, ssrc_changes=%u, psent=%u, precvd=%u, plost=%d, pdups=%u",
                actor, ssrc, rst.ssrc_changes, rst.psent, rst.precvd,
                rst.psent - rst.precvd, rst.pdups);

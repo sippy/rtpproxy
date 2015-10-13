@@ -44,7 +44,7 @@
 
 #define CHECK_OVERFLOW() \
     if (len > sizeof(cmd->buf_t) - 2) { \
-        CALL_METHOD(spa->log, write, RTPP_LOG_ERR, \
+        RTPP_LOG(spa->log, RTPP_LOG_ERR, \
           "QUERY: output buffer overflow"); \
         return (ECODE_RTOOBIG_2); \
     }
@@ -92,7 +92,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
             break;
 
         default:
-            CALL_METHOD(spa->log, write, RTPP_LOG_ERR,
+            RTPP_LOG(spa->log, RTPP_LOG_ERR,
               "QUERY: unknown command modifier `%c'", *cp);
             return (ECODE_PARSE_8);
         }
@@ -168,7 +168,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
               rst.pecount);
             continue;
         }
-        CALL_METHOD(spa->log, write, RTPP_LOG_ERR,
+        RTPP_LOG(spa->log, RTPP_LOG_ERR,
               "QUERY: unsupported/invalid counter name `%s'", cmd->argv[i]);
         return (ECODE_QRYFAIL);
     }

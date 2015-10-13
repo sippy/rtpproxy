@@ -590,7 +590,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	 * effect is less efficient work.
 	 */
 	if (spa->strong || spa->stream[0]->weak || spa->stream[1]->weak) {
-	    CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
+	    RTPP_LOG(spa->log, RTPP_LOG_INFO,
 	      "delete: medianum=%u: removing %s flag, seeing flags to"
 	      " continue session (strong=%d, weak=%d/%d)",
 	      medianum,
@@ -601,7 +601,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	    spa = session_findnext(cf, spa);
 	    continue;
 	}
-	CALL_METHOD(spa->log, write, RTPP_LOG_INFO,
+	RTPP_LOG(spa->log, RTPP_LOG_INFO,
 	  "forcefully deleting session %u on ports %d/%d",
 	   medianum, spa->stream[0]->port, spa->stream[1]->port);
 	/* Search forward before we do removal */
