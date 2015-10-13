@@ -32,6 +32,7 @@
 #ifdef WITHOUT_SIPLOG
 #include "rtpp_log_stand.h"
 #else
+#include <stdarg.h>
 #include <siplog.h>
 
 #define	rtpp_log_t	siplog_t
@@ -45,7 +46,9 @@
 #define	rtpp_log_open(gf, app, call_id, flags) siplog_open(app, call_id, flags)
 #define	rtpp_log_setlevel(handle, level) siplog_set_level(handle, level)
 #define	rtpp_log_write(level, handle, format, args...) siplog_write(level, handle, format, ## args)
+#define	rtpp_log_write_va(level, handle, format, va) siplog_write_va(level, handle, format, va)
 #define	rtpp_log_ewrite(level, handle, format, args...) siplog_ewrite(level, handle, format, ## args)
+#define	rtpp_log_ewrite_va(level, handle, format, va) siplog_ewrite(level, handle, format, va)
 #define	rtpp_log_close(handle) siplog_close(handle)
 #endif /* !WITHOUT_SIPLOG */
 
