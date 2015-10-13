@@ -68,80 +68,10 @@ static void send_packet(struct cfg *, struct rtpp_session_obj *, int, \
   struct rtp_packet *, struct sthread_args *, struct rtpp_proc_rstats *);
 
 static int
-latch_session(struct rtpp_session_obj *sp, double dtime, int ridx,
-  struct rtp_packet *packet)
-{
-    const char *actor, *raddr, *ptype, *ssrc, *seq;
-    char ssrc_buf[11], seq_buf[6];
-    int rport;
-
-    if (sp->stream[ridx]->last_update != 0 && \
-      dtime - sp->stream[ridx]->last_update < UPDATE_WINDOW) {
-        return (0);
-    }
-
-    actor = (ridx == 0) ? "callee" : "caller";
-    raddr = addr2char(sstosa(&packet->raddr));
-    rport = ntohs(satosin(&packet->raddr)->sin_port);
-
-    if (sp->rtcp != NULL) {
-        if (rtp_packet_parse(packet) == RTP_PARSER_OK) {
-            sp->stream[ridx]->latch_info.ssrc = packet->parsed->ssrc;
-            sp->stream[ridx]->latch_info.seq = packet->parsed->seq;
-            snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", packet->parsed->ssrc);
-            snprintf(seq_buf, sizeof(seq_buf), "%u", packet->parsed->seq);
-            ssrc = ssrc_buf;
-            seq = seq_buf;
-        } else {
-            sp->stream[ridx]->latch_info.ssrc = 0;
-            ssrc = seq = "INVALID";
-        }
-        ptype = "RTP";
-    } else {
-        sp->stream[ridx]->latch_info.ssrc = 0;
-        ssrc = seq = "UNKNOWN";
-        ptype = "RTCP";
-    }
-
-    RTPP_LOG(sp->log, RTPP_LOG_INFO,
-      "%s's address latched in: %s:%d (%s), SSRC=%s, Seq=%s", actor, raddr,
-      rport, ptype, ssrc, seq);
-    sp->stream[ridx]->latch_info.latched = 1;
-    return (1);
-}
-
-static int
-check_latch_override(struct rtpp_session_obj *sp, struct rtp_packet *packet, int ridx)
-{
-    const char *actor, *raddr;
-    int rport;
-
-    if (sp->rtcp == NULL || sp->stream[ridx]->latch_info.ssrc == 0)
-        return (0);
-    if (rtp_packet_parse(packet) != RTP_PARSER_OK)
-        return (0);
-    if (packet->parsed->ssrc != sp->stream[ridx]->latch_info.ssrc)
-        return (0);
-    if (packet->parsed->seq < sp->stream[ridx]->latch_info.seq && sp->stream[ridx]->latch_info.seq - packet->parsed->seq < 536)
-        return (0);
-
-    actor = (ridx == 0) ? "callee" : "caller";
-    raddr = addr2char(sstosa(&packet->raddr));
-    rport = ntohs(satosin(&packet->raddr)->sin_port);
-
-    RTPP_LOG(sp->log, RTPP_LOG_INFO,
-      "%s's address re-latched: %s:%d (%s), SSRC=0x%.8X, Seq=%u->%u", actor, raddr,
-      rport, "RTP", sp->stream[ridx]->latch_info.ssrc, sp->stream[ridx]->latch_info.seq,
-      packet->parsed->seq);
-
-    sp->stream[ridx]->latch_info.seq = packet->parsed->seq;
-    return (1);
-}
-
-static int
 fill_session_addr(struct rtpp_session_obj *sp, struct rtp_packet *packet, int ridx)
 {
     int rport;
+    const char *actor, *ptype;
 
     sp->stream[ridx]->untrusted_addr = 1;
     memcpy(sp->stream[ridx]->addr, &packet->raddr, packet->rlen);
@@ -150,12 +80,12 @@ fill_session_addr(struct rtpp_session_obj *sp, struct rtp_packet *packet, int ri
         sp->stream[ridx]->latch_info.latched = 1;
     }
 
+    actor = CALL_METHOD(sp->stream[ridx], get_actor);
+    ptype = CALL_METHOD(sp->stream[ridx], get_proto);
     rport = ntohs(satosin(&packet->raddr)->sin_port);
     RTPP_LOG(sp->log, RTPP_LOG_INFO,
-      "%s's address filled in: %s:%d (%s)",
-      (ridx == 0) ? "callee" : "caller",
-      addr2char(sstosa(&packet->raddr)), rport,
-      (sp->rtcp != NULL) ? "RTP" : "RTCP");
+      "%s's address filled in: %s:%d (%s)", actor,
+      addr2char(sstosa(&packet->raddr)), rport, ptype);
 
     /*
      * Check if we have updated RTP while RTCP is still
@@ -188,8 +118,7 @@ fill_session_addr(struct rtpp_session_obj *sp, struct rtp_packet *packet, int ri
         /* Use guessed value as the only true one for asymmetric clients */
         sp->rtcp->stream[ridx]->latch_info.latched = sp->rtcp->stream[ridx]->asymmetric;
         RTPP_LOG(sp->log, RTPP_LOG_INFO, "guessing RTCP port "
-          "for %s to be %d",
-          (ridx == 0) ? "callee" : "caller", rport + 1);
+          "for %s to be %d", actor, rport + 1);
     }
     return (0);
 }
@@ -242,7 +171,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	    if (sp->stream[ridx]->asymmetric == 0) {
 		if (memcmp(sp->stream[ridx]->addr, &packet->raddr, packet->rlen) != 0) {
 		    if (sp->stream[ridx]->latch_info.latched != 0 && \
-                      check_latch_override(sp, packet, ridx) == 0) {
+                      CALL_METHOD(sp->stream[ridx], check_latch_override, packet) == 0) {
 			/*
 			 * Continue, since there could be good packets in
 			 * queue.
@@ -255,7 +184,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 		    /* Signal that an address has to be updated */
 		    fill_session_addr(sp, packet, ridx);
 		} else if (sp->stream[ridx]->latch_info.latched == 0) {
-                    latch_session(sp, dtime, ridx, packet);
+                    CALL_METHOD(sp->stream[ridx], latch, dtime, packet);
 		}
 	    } else {
 		/*
