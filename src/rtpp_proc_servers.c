@@ -43,10 +43,8 @@
 #include "rtpp_network.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_servers.h"
-#include "rtp.h"
 #include "rtpp_server.h"
 #include "rtpp_stream.h"
-#include "rtpp_session.h"
 #include "rtpp_util.h"
 
 struct foreach_args {
