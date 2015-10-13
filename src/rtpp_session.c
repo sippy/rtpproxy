@@ -115,7 +115,7 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct rtpp_log_obj *log, int ses
     }
     for (i = 0; i < 2; i++) {
         pvt->pub.stream[i] = rtpp_stream_ctor(log, cfs->servers_wrt,
-          cfs->rtpp_stats);
+          cfs->rtpp_stats, i, session_type);
         if (pvt->pub.stream[i] == NULL) {
             goto e1;
         }
@@ -319,7 +319,7 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
              char ssrc_buf[11];
              const char *actor, *ssrc;
 
-             actor = (i == 0) ? "callee" : "caller";
+             actor = CALL_METHOD(sp->stream[i], get_actor);
              rtpp_analyzer_stat(sp->stream[i]->analyzer, &rst);
              if (rst.ssrc_changes != 0) {
                  snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", rst.last_ssrc);
