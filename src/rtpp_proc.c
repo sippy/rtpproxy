@@ -330,7 +330,7 @@ send_packet(struct cfg *cf, struct rtpp_session_obj *sp, int ridx,
     /* Select socket for sending packet out. */
     sidx = (ridx == 0) ? 1 : 0;
 
-    if (sp->stream[ridx]->rrc != NULL && tsp->stream[sidx]->rtps == RTPP_UID_NONE) {
+    if (sp->stream[ridx]->rrc != NULL && !CALL_METHOD(tsp->stream[sidx], isplayer_active)) {
         rwrite(sp, sp->stream[ridx]->rrc, packet, sp->stream[sidx]->addr, sp->stream[sidx]->laddr,
           sp->stream[sidx]->port, sidx);
     }
@@ -339,7 +339,7 @@ send_packet(struct cfg *cf, struct rtpp_session_obj *sp, int ridx,
      * Check that we have some address to which packet is to be
      * sent out, drop otherwise.
      */
-    if (sp->stream[sidx]->addr == NULL || tsp->stream[sidx]->rtps != RTPP_UID_NONE) {
+    if (sp->stream[sidx]->addr == NULL || CALL_METHOD(tsp->stream[sidx], isplayer_active)) {
         rtp_packet_free(packet);
 	sp->pcount.ndropped++;
         rsp->npkts_discard.cnt++;
