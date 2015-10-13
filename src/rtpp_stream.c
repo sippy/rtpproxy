@@ -149,6 +149,7 @@ rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
     uint32_t ssrc;
 
     pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
     while (*codecs != '\0') {
         n = strtol(codecs, &cp, 10);
         if (cp == codecs)
@@ -168,6 +169,7 @@ rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
         }
         assert(pvt->rtps == RTPP_UID_NONE);
         pvt->rtps = rsrv->sruid;
+        pthread_mutex_unlock(&pvt->lock);
         cmd->csp->nplrs_created.cnt++;
         CALL_METHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           pvt->rtpp_stats);
@@ -177,6 +179,7 @@ rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
           playcount, pname, n, ssrc, seq);
         return 0;
     }
+    pthread_mutex_unlock(&pvt->lock);
     RTPP_LOG(pvt->log, RTPP_LOG_ERR, "can't create player");
     return -1;
 }
