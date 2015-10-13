@@ -52,7 +52,6 @@
 #include "rtpp_command_ul.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
-#include "rtp.h"
 #include "rtp_resizer.h"
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
