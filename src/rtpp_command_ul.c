@@ -90,14 +90,16 @@ void
 ul_reply_port(struct cfg *cf, struct rtpp_command *cmd, struct ul_reply *ulr)
 {
     int len, rport;
+    char saddr[MAX_ADDR_STRLEN];
 
     if (ulr == NULL || ulr->ia == NULL || ishostnull(ulr->ia)) {
         rport = (ulr == NULL) ? 0 : ulr->port;
         len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", rport);
     } else {
         if (ulr->ia_ov == NULL) {
+            addr2char_r(ulr->ia, saddr, sizeof(saddr));
             len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", ulr->port,
-              addr2char(ulr->ia), (ulr->ia->sa_family == AF_INET) ? "" : " 6");
+              saddr, (ulr->ia->sa_family == AF_INET) ? "" : " 6");
         } else {
             len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", ulr->port,
               ulr->ia_ov, (ulr->ia->sa_family == AF_INET) ? "" : " 6");
