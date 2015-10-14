@@ -36,10 +36,13 @@ struct cfg;
 /* Function prototypes */
 int ishostseq(struct sockaddr *, struct sockaddr *);
 int ishostnull(struct sockaddr *);
-int getport(struct sockaddr *);
+uint16_t getport(struct sockaddr *);
+int isaddrseq(struct sockaddr *ia1, struct sockaddr *ia2);
+int isaddreq(struct sockaddr *ia1, struct sockaddr *ia2);
 void setport(struct sockaddr *, int);
 void setanyport(struct sockaddr *);
 char *addr2char_r(struct sockaddr *, char *buf, int size);
+char *addrport2char_r(struct sockaddr *, char *buf, int size);
 const char *addr2char(struct sockaddr *);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
@@ -82,5 +85,22 @@ int setbindhost(struct sockaddr *, int, const char *, const char *);
 #endif
 
 #define	IS_VALID_PORT(p)	((p) > 0 && (p) < 65536)
+#define	IS_LAST_PORT(p)		((p) == 65535)
+
+
+/*
+ * > len('0000:0000:0000:0000:0000:0000:127.127.127.127')
+ * 45
+ */
+#define INET6_ADDR_STRLEN 46
+#define MAX_ADDR_STRLEN INET6_ADDR_STRLEN
+
+/*
+ * > len('[0000:0000:0000:0000:0000:0000:127.127.127.127]:65535')
+ * 53
+ * > len('127.127.127.127:65535')
+ * 21
+ */
+#define MAX_AP_STRLEN 54
 
 #endif

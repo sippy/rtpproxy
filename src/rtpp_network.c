@@ -91,7 +91,7 @@ ishostnull(struct sockaddr *ia)
     abort();
 }
 
-int
+uint16_t
 getport(struct sockaddr *ia)
 {
 
@@ -107,6 +107,15 @@ getport(struct sockaddr *ia)
     }
     /* Can't happen */
     abort();
+}
+
+int
+isaddrseq(struct sockaddr *ia1, struct sockaddr *ia2)
+{
+
+    if (ishostseq(ia1, ia2) == 0)
+        return (0);
+    return (getport(ia1) == getport(ia2));
 }
 
 void
@@ -170,6 +179,32 @@ addr2char_r(struct sockaddr *ia, char *buf, int size)
     }
 
     return (char *)((void *)inet_ntop(ia->sa_family, addr, buf, size));
+}
+
+char *
+addrport2char_r(struct sockaddr *ia, char *buf, int size)
+{
+    char abuf[MAX_ADDR_STRLEN];
+    const char *bs, *es;
+
+    switch (ia->sa_family) {
+    case AF_INET:
+        bs = es = "";
+        break;
+
+    case AF_INET6:
+        bs = "[";
+        es = "]";
+        break;
+
+    default:
+        abort();
+    }
+
+    if (addr2char_r(ia, abuf, MAX_ADDR_STRLEN) == NULL)
+        return (NULL);
+    snprintf(buf, size, "%s%s%s:%u", bs, abuf, es, getport(ia));
+    return (buf);
 }
 
 const char *
