@@ -207,14 +207,6 @@ addrport2char_r(struct sockaddr *ia, char *buf, int size)
     return (buf);
 }
 
-const char *
-addr2char(struct sockaddr *ia)
-{
-    static char buf[256];
-
-    return(addr2char_r(ia, buf, sizeof(buf)));
-}
-
 int
 resolve(struct sockaddr *ia, int pf, const char *host,
   const char *servname, int flags)

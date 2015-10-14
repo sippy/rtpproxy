@@ -43,7 +43,6 @@ void setport(struct sockaddr *, int);
 void setanyport(struct sockaddr *);
 char *addr2char_r(struct sockaddr *, char *buf, int size);
 char *addrport2char_r(struct sockaddr *, char *buf, int size);
-const char *addr2char(struct sockaddr *);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
 struct sockaddr *addr2bindaddr(struct cfg *, struct sockaddr *, const char **);
