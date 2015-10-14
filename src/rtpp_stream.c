@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
@@ -84,6 +85,12 @@ static int rtpp_stream_latch(struct rtpp_stream_obj *, double,
   struct rtp_packet *);
 static int rtpp_stream_check_latch_override(struct rtpp_stream_obj *,
   struct rtp_packet *);
+static void rtpp_stream_fill_addr(struct rtpp_stream_obj *,
+  struct rtp_packet *);
+static int rtpp_stream_guess_addr(struct rtpp_stream_obj *,
+  struct rtp_packet *);
+static void rtpp_stream_prefill_addr(struct rtpp_stream_obj *,
+  struct sockaddr **, double);
 
 struct rtpp_stream_obj *
 rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
@@ -119,6 +126,11 @@ rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
     pvt->pub.get_proto = &rtpp_stream_get_proto;
     pvt->pub.latch = &rtpp_stream_latch;
     pvt->pub.check_latch_override = &rtpp_stream_check_latch_override;
+    pvt->pub.fill_addr = &rtpp_stream_fill_addr;
+    pvt->pub.prefill_addr = &rtpp_stream_prefill_addr;
+    if (session_type == SESS_RTCP) {
+        pvt->pub.guess_addr = &rtpp_stream_guess_addr;
+    }
     rtpp_gen_uid(&pvt->pub.stuid);
     return (&pvt->pub);
 
@@ -341,4 +353,107 @@ rtpp_stream_check_latch_override(struct rtpp_stream_obj *self,
 
     self->latch_info.seq = packet->parsed->seq;
     return (1);
+}
+
+static void
+rtpp_stream_fill_addr(struct rtpp_stream_obj *self,
+  struct rtp_packet *packet)
+{
+    int rport;
+    const char *actor, *ptype;
+    struct rtpp_stream_priv *pvt;
+
+    pvt = PUB2PVT(self);
+
+    self->untrusted_addr = 1;
+    memcpy(self->addr, &packet->raddr, packet->rlen);
+    if (self->prev_addr == NULL || memcmp(self->prev_addr,
+      &packet->raddr, packet->rlen) != 0) {
+        self->latch_info.latched = 1;
+    }
+
+    actor = rtpp_stream_get_actor(self);
+    ptype =  rtpp_stream_get_proto(self);
+    rport = ntohs(satosin(&packet->raddr)->sin_port);
+    RTPP_LOG(pvt->log, RTPP_LOG_INFO,
+      "%s's address filled in: %s:%d (%s)", actor,
+      addr2char(sstosa(&packet->raddr)), rport, ptype);
+    return;
+}
+
+static int
+rtpp_stream_guess_addr(struct rtpp_stream_obj *self,
+  struct rtp_packet *packet)
+{
+    int rport;
+    const char *actor, *ptype;
+    struct rtpp_stream_priv *pvt;
+
+    pvt = PUB2PVT(self);
+
+    if (self->addr != NULL && ishostseq(self->addr, sstosa(&packet->raddr))) {
+        return (0);
+    }
+    if (self->addr == NULL) {
+        self->addr = malloc(packet->rlen);
+        if (self->addr == NULL) {
+            return (-1);
+        }
+    }
+    actor = rtpp_stream_get_actor(self);
+    ptype =  rtpp_stream_get_proto(self);
+    rport = ntohs(satosin(&packet->raddr)->sin_port);
+    if (IS_LAST_PORT(rport)) {
+        return (-1);
+    }
+    memcpy(self->addr, &packet->raddr, packet->rlen);
+    satosin(self->addr)->sin_port = htons(rport + 1);
+    /* Use guessed value as the only true one for asymmetric clients */
+    self->latch_info.latched = self->asymmetric;
+    RTPP_LOG(pvt->log, RTPP_LOG_INFO, "guessing %s port "
+      "for %s to be %d", ptype, actor, rport + 1);
+
+    return (0);
+}
+
+static void
+rtpp_stream_prefill_addr(struct rtpp_stream_obj *self, struct sockaddr **iapp,
+  double dtime)
+{
+    struct rtpp_stream_priv *pvt;
+    char saddr[MAX_AP_STRLEN];
+    const char *actor, *ptype;
+
+    pvt = PUB2PVT(self);
+
+    if (self->addr != NULL)
+        self->last_update = dtime;
+
+    /*
+     * Unless the address provided by client historically
+     * cannot be trusted and address is different from one
+     * that we recorded update it.
+     */
+    if (self->untrusted_addr != 0)
+        return;
+    if (self->addr != NULL && isaddrseq(self->addr, *iapp)) {
+        return;
+    }
+
+    addrport2char_r(*iapp, saddr, sizeof(saddr));
+    actor = rtpp_stream_get_actor(self);
+    ptype =  rtpp_stream_get_proto(self);
+    RTPP_LOG(pvt->log, RTPP_LOG_INFO, "pre-filling %s's %s address "
+      "with %s", actor, ptype, saddr);
+    if (self->addr != NULL) {
+        if (self->latch_info.latched != 0) {
+            if (self->prev_addr != NULL)
+                 free(self->prev_addr);
+            self->prev_addr = self->addr;
+        } else {
+            free(self->addr);
+        }
+    }
+    self->addr = *iapp;
+    *iapp = NULL;
 }

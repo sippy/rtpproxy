@@ -36,17 +36,23 @@ struct rtpp_log_obj;
 struct rtpp_command;
 struct rtp_packet;
 
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_handle_play, int, char *,
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_handle_play, int, char *,
   char *, int, struct rtpp_command *, int);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_handle_noplay, void);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_isplayer_active, int);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_finish_playback, void, uint64_t);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_get_actor, const char *);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_get_proto, const char *);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_latch, int, double,
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_handle_noplay, void);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_isplayer_active, int);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_finish_playback, void, uint64_t);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_get_actor, const char *);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_get_proto, const char *);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_latch, int, double,
   struct rtp_packet *);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_obj_check_latch_override, int,
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_check_latch_override, int,
   struct rtp_packet *);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_fill_addr, void,
+  struct rtp_packet *);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_guess_addr, int,
+  struct rtp_packet *);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_prefill_addr, void,
+  struct sockaddr **, double);
 
 enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
 
@@ -96,14 +102,17 @@ struct rtpp_stream_obj {
     /* Type of session we are associated with, read-only */
     int session_type;
     /* Public methods */
-    rtpp_stream_obj_handle_play_t handle_play;
-    rtpp_stream_obj_handle_noplay_t handle_noplay;
-    rtpp_stream_obj_isplayer_active_t isplayer_active;
-    rtpp_stream_obj_finish_playback_t finish_playback;
-    rtpp_stream_obj_get_actor_t get_actor;
-    rtpp_stream_obj_get_proto_t get_proto;
-    rtpp_stream_obj_latch_t latch;
-    rtpp_stream_obj_check_latch_override_t check_latch_override;
+    rtpp_stream_handle_play_t handle_play;
+    rtpp_stream_handle_noplay_t handle_noplay;
+    rtpp_stream_isplayer_active_t isplayer_active;
+    rtpp_stream_finish_playback_t finish_playback;
+    rtpp_stream_get_actor_t get_actor;
+    rtpp_stream_get_proto_t get_proto;
+    rtpp_stream_latch_t latch;
+    rtpp_stream_check_latch_override_t check_latch_override;
+    rtpp_stream_fill_addr_t fill_addr;
+    rtpp_stream_guess_addr_t guess_addr;
+    rtpp_stream_prefill_addr_t prefill_addr;
 };
 
 struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_log_obj *,
