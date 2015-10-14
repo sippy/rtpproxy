@@ -283,10 +283,10 @@ static int
 rtpp_stream_latch(struct rtpp_stream_obj *self, double dtime,
   struct rtp_packet *packet)
 {
-    const char *actor, *raddr, *ptype, *ssrc, *seq;
+    const char *actor, *ptype, *ssrc, *seq;
     char ssrc_buf[11], seq_buf[6];
-    int rport;
     struct rtpp_stream_priv *pvt;
+    char saddr[MAX_AP_STRLEN];
 
     pvt = PUB2PVT(self);
     if (self->last_update != 0 && \
@@ -296,8 +296,6 @@ rtpp_stream_latch(struct rtpp_stream_obj *self, double dtime,
 
     actor = rtpp_stream_get_actor(self);
     ptype = rtpp_stream_get_proto(self);
-    raddr = addr2char(sstosa(&packet->raddr));
-    rport = ntohs(satosin(&packet->raddr)->sin_port);
 
     if (self->session_type == SESS_RTP) {
         if (rtp_packet_parse(packet) == RTP_PARSER_OK) {
@@ -316,9 +314,10 @@ rtpp_stream_latch(struct rtpp_stream_obj *self, double dtime,
         ssrc = seq = "UNKNOWN";
     }
 
+    addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
     RTPP_LOG(pvt->log, RTPP_LOG_INFO,
-      "%s's address latched in: %s:%d (%s), SSRC=%s, Seq=%s", actor, raddr,
-      rport, ptype, ssrc, seq);
+      "%s's address latched in: %s (%s), SSRC=%s, Seq=%s", actor, saddr,
+      ptype, ssrc, seq);
     self->latch_info.latched = 1;
     return (1);
 }
@@ -327,9 +326,9 @@ static int
 rtpp_stream_check_latch_override(struct rtpp_stream_obj *self,
   struct rtp_packet *packet)
 {
-    const char *actor, *raddr;
-    int rport;
+    const char *actor;
     struct rtpp_stream_priv *pvt;
+    char saddr[MAX_AP_STRLEN];
 
     pvt = PUB2PVT(self);
 
@@ -343,12 +342,11 @@ rtpp_stream_check_latch_override(struct rtpp_stream_obj *self,
         return (0);
 
     actor = rtpp_stream_get_actor(self);
-    raddr = addr2char(sstosa(&packet->raddr));
-    rport = ntohs(satosin(&packet->raddr)->sin_port);
 
+    addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
     RTPP_LOG(pvt->log, RTPP_LOG_INFO,
-      "%s's address re-latched: %s:%d (%s), SSRC=0x%.8X, Seq=%u->%u", actor, raddr,
-      rport, "RTP", self->latch_info.ssrc, self->latch_info.seq,
+      "%s's address re-latched: %s (%s), SSRC=0x%.8X, Seq=%u->%u", actor,
+      saddr, "RTP", self->latch_info.ssrc, self->latch_info.seq,
       packet->parsed->seq);
 
     self->latch_info.seq = packet->parsed->seq;
@@ -359,9 +357,9 @@ static void
 rtpp_stream_fill_addr(struct rtpp_stream_obj *self,
   struct rtp_packet *packet)
 {
-    int rport;
     const char *actor, *ptype;
     struct rtpp_stream_priv *pvt;
+    char saddr[MAX_AP_STRLEN];
 
     pvt = PUB2PVT(self);
 
@@ -374,10 +372,9 @@ rtpp_stream_fill_addr(struct rtpp_stream_obj *self,
 
     actor = rtpp_stream_get_actor(self);
     ptype =  rtpp_stream_get_proto(self);
-    rport = ntohs(satosin(&packet->raddr)->sin_port);
+    addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
     RTPP_LOG(pvt->log, RTPP_LOG_INFO,
-      "%s's address filled in: %s:%d (%s)", actor,
-      addr2char(sstosa(&packet->raddr)), rport, ptype);
+      "%s's address filled in: %s (%s)", actor, saddr, ptype);
     return;
 }
 
