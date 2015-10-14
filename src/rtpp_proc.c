@@ -70,57 +70,12 @@ static void send_packet(struct cfg *, struct rtpp_session_obj *, int, \
 static int
 fill_session_addr(struct rtpp_session_obj *sp, struct rtp_packet *packet, int ridx)
 {
-    int rport;
-    const char *actor, *ptype;
 
-    sp->stream[ridx]->untrusted_addr = 1;
-    memcpy(sp->stream[ridx]->addr, &packet->raddr, packet->rlen);
-    if (sp->stream[ridx]->prev_addr == NULL || memcmp(sp->stream[ridx]->prev_addr,
-      &packet->raddr, packet->rlen) != 0) {
-        sp->stream[ridx]->latch_info.latched = 1;
+    CALL_METHOD(sp->stream[ridx], fill_addr, packet);
+    if (sp->rtcp == NULL) {
+        return (0);
     }
-
-    actor = CALL_METHOD(sp->stream[ridx], get_actor);
-    ptype = CALL_METHOD(sp->stream[ridx], get_proto);
-    rport = ntohs(satosin(&packet->raddr)->sin_port);
-    RTPP_LOG(sp->log, RTPP_LOG_INFO,
-      "%s's address filled in: %s:%d (%s)", actor,
-      addr2char(sstosa(&packet->raddr)), rport, ptype);
-
-    /*
-     * Check if we have updated RTP while RTCP is still
-     * empty or contains address that differs from one we
-     * used when updating RTP. Try to guess RTCP if so,
-     * should be handy for non-NAT'ed clients, and some
-     * NATed as well.
-     */
-    if (sp->rtcp != NULL && (sp->rtcp->stream[ridx]->addr == NULL ||
-      !ishostseq(sp->rtcp->stream[ridx]->addr, sstosa(&packet->raddr)))) {
-        if (sp->rtcp->stream[ridx]->addr == NULL) {
-            sp->rtcp->stream[ridx]->addr = malloc(packet->rlen);
-            if (sp->rtcp->stream[ridx]->addr == NULL) {
-                return (-1);
-#if 0
-                sp->pcount.ndropped++;
-                RTPP_LOG(sp->log, RTPP_LOG_ERR,
-                  "can't allocate memory for remote address - "
-                  "removing session");
-                remove_session(cf, sp);
-                /* Move on to the next session, sp is invalid now */
-                ndrain = -1;
-                rsp->npkts_discard.cnt++;
-                continue;
-#endif
-            }
-        }
-        memcpy(sp->rtcp->stream[ridx]->addr, &packet->raddr, packet->rlen);
-        satosin(sp->rtcp->stream[ridx]->addr)->sin_port = htons(rport + 1);
-        /* Use guessed value as the only true one for asymmetric clients */
-        sp->rtcp->stream[ridx]->latch_info.latched = sp->rtcp->stream[ridx]->asymmetric;
-        RTPP_LOG(sp->log, RTPP_LOG_INFO, "guessing RTCP port "
-          "for %s to be %d", actor, rport + 1);
-    }
-    return (0);
+    return (CALL_METHOD(sp->rtcp->stream[ridx], guess_addr, packet));
 }
 
 static struct rtpp_session_obj *

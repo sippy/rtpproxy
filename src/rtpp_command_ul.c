@@ -602,56 +602,10 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     }
 
     if (ulop->ia[0] != NULL && ulop->ia[1] != NULL) {
-        if (spa->stream[pidx]->addr != NULL)
-            spa->stream[pidx]->last_update = cmd->dtime;
-        if (spa->rtcp->stream[pidx]->addr != NULL)
-            spa->rtcp->stream[pidx]->last_update = cmd->dtime;
-        /*
-         * Unless the address provided by client historically
-         * cannot be trusted and address is different from one
-         * that we recorded update it.
-         */
-        if (spa->stream[pidx]->untrusted_addr == 0 && !(spa->stream[pidx]->addr != NULL &&
-          SA_LEN(ulop->ia[0]) == SA_LEN(spa->stream[pidx]->addr) &&
-          memcmp(ulop->ia[0], spa->stream[pidx]->addr, SA_LEN(ulop->ia[0])) == 0)) {
-            const char *obr, *cbr;
-            if (ulop->pf == AF_INET) {
-                obr = "";
-                cbr = "";
-            } else {
-                obr = "[";
-                cbr = "]";
-            }
-            actor = CALL_METHOD(spa->stream[pidx], get_actor);
-            RTPP_LOG(spa->log, RTPP_LOG_INFO, "pre-filling %s's address "
-              "with %s%s%s:%s", actor, obr, ulop->addr, cbr, ulop->port);
-            if (spa->stream[pidx]->addr != NULL) {
-                if (spa->stream[pidx]->latch_info.latched != 0) {
-                    if (spa->stream[pidx]->prev_addr != NULL)
-                         free(spa->stream[pidx]->prev_addr);
-                    spa->stream[pidx]->prev_addr = spa->stream[pidx]->addr;
-                } else {
-                    free(spa->stream[pidx]->addr);
-                }
-            }
-            spa->stream[pidx]->addr = ulop->ia[0];
-            ulop->ia[0] = NULL;
-        }
-        if (spa->rtcp->stream[pidx]->untrusted_addr == 0 && !(spa->rtcp->stream[pidx]->addr != NULL &&
-          SA_LEN(ulop->ia[1]) == SA_LEN(spa->rtcp->stream[pidx]->addr) &&
-          memcmp(ulop->ia[1], spa->rtcp->stream[pidx]->addr, SA_LEN(ulop->ia[1])) == 0)) {
-            if (spa->rtcp->stream[pidx]->addr != NULL) {
-                if (spa->rtcp->stream[pidx]->latch_info.latched != 0) {
-                    if (spa->rtcp->stream[pidx]->prev_addr != NULL)
-                        free(spa->rtcp->stream[pidx]->prev_addr);
-                    spa->rtcp->stream[pidx]->prev_addr = spa->rtcp->stream[pidx]->addr;
-                } else {
-                    free(spa->rtcp->stream[pidx]->addr);
-                }
-            }
-            spa->rtcp->stream[pidx]->addr = ulop->ia[1];
-            ulop->ia[1] = NULL;
-        }
+        CALL_METHOD(spa->stream[pidx], prefill_addr, &(ulop->ia[0]),
+          cmd->dtime);
+        CALL_METHOD(spa->rtcp->stream[pidx], prefill_addr, &(ulop->ia[1]),
+          cmd->dtime);
     }
     spa->stream[pidx]->asymmetric = spa->rtcp->stream[pidx]->asymmetric = ulop->asymmetric;
     spa->stream[pidx]->latch_info.latched = spa->rtcp->stream[pidx]->latch_info.latched = ulop->asymmetric;
