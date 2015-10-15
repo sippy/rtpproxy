@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <errno.h>
+#include <math.h>
 #include <pthread.h>
 #include <syslog.h>
 #include <stdarg.h>
@@ -41,11 +42,13 @@
 #ifdef RTPP_LOG_ADVANCED
 #include "rtpp_syslog_async.h"
 #endif
+#include "rtpp_time.h"
 #include "rtpp_util.h"
 
 #ifdef RTPP_LOG_ADVANCED
 static int syslog_async_opened = 0;
 #endif
+static double iitime = 0.0;
 
 struct rtpp_log_inst {
     char *call_id;
@@ -54,11 +57,15 @@ struct rtpp_log_inst {
     const char *eformat_sl;
     const char *format_se;
     const char *eformat_se;
+    double itime;
 };
 
 struct rtpp_log_inst *
 _rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app, const char *call_id)
 {
+    const char *stritime;
+    const char *tform;
+    char *se;
     struct rtpp_log_inst *rli;
 #ifdef RTPP_LOG_ADVANCED
     int facility;
@@ -76,6 +83,18 @@ _rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app, const char *call_id)
     if (rli == NULL) {
         return (NULL);
     }
+    tform = getenv("RTPP_LOG_TFORM");
+    if (tform != NULL && strcmp(tform, "rel") == 0) {
+        stritime = getenv("RTPP_LOG_TSTART");
+        if (stritime != NULL) {
+            rli->itime = strtod(stritime, &se);
+        } else {
+            if (iitime == 0.0) {
+                iitime = getdtime();
+            }
+            rli->itime = iitime;
+        }
+    }
     if (call_id != NULL) {
         rli->call_id = strdup(call_id);
     }
@@ -84,8 +103,8 @@ _rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app, const char *call_id)
     } else {
         rli->level = cf->log_level;
     }
-    rli->format_se = "%s:%s:%s: %s\n";
-    rli->eformat_se = "%s:%s:%s: %s: %s\n";
+    rli->format_se = "%s%s:%s:%s: %s\n";
+    rli->eformat_se = "%s%s:%s:%s: %s: %s\n";
     rli->format_sl = "%s:%s:%s: %s";
     rli->eformat_sl = "%s:%s:%s: %s: %s";
     return (rli);
@@ -166,11 +185,31 @@ rtpp_log_setlevel(struct rtpp_log_inst *rli, int level)
     rli->level = level;
 }
 
+static void
+ftime(struct rtpp_log_inst *rli, double ltime, char *buf, int buflen)
+{
+    int hrs, mins, secs, msec;
+
+    if (rli->itime != 0.0) {
+        ltime -= rli->itime;
+        msec = modf(ltime, &ltime) * 1000;
+        hrs = (int)(ltime / (60 * 60));
+        ltime -= (hrs * 60 * 60);
+        mins = (int)(ltime / 60);
+        ltime -= (mins * 60);
+        secs = (int)(ltime);
+        snprintf(buf, buflen, "%.2d:%.2d:%.2d.%.3d/", hrs, mins, secs, msec);
+    } else {
+        buf[0] = '\0';
+    }
+}
+
 void
 _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
   const char *format, va_list ap)
 {
     char rtpp_log_buff[2048];
+    char rtpp_time_buff[32];
     const char *call_id;
 #ifdef RTPP_LOG_ADVANCED
     va_list apc;
@@ -197,8 +236,10 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
 #endif
     }
 #endif
-    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_se, strlvl(level),
-      function, call_id, format);
+
+    ftime(rli, getdtime(), rtpp_time_buff, sizeof(rtpp_time_buff));
+    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_se,
+      rtpp_time_buff, strlvl(level), function, call_id, format);
     vfprintf(stderr, rtpp_log_buff, ap);
 }
 
@@ -212,12 +253,12 @@ _rtpp_log_write(struct rtpp_log_inst *rli, int level, const char *function, cons
     va_end(ap);
 }
 
-
 void
 _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
   const char *format, va_list ap)
 {
     char rtpp_log_buff[2048];
+    char rtpp_time_buff[32];
     const char *call_id;
 #ifdef RTPP_LOG_ADVANCED
     va_list apc;
@@ -244,8 +285,10 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
 #endif
     }
 #endif
-    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_se, strlvl(level),
-      function, call_id, format, strerror(errno));
+    ftime(rli, getdtime(), rtpp_time_buff, sizeof(rtpp_time_buff));
+    snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_se,
+      rtpp_time_buff, strlvl(level), function, call_id, format,
+      strerror(errno));
     vfprintf(stderr, rtpp_log_buff, ap);
 }
 
