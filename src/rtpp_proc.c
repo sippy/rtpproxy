@@ -182,7 +182,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	    fill_session_addr(sp, packet, ridx);
 	}
         if (sp->stream[ridx]->analyzer != NULL) {
-            if (rtpp_analyzer_update(sp, sp->stream[ridx]->analyzer, packet) == UPDATE_SSRC_CHG) {
+            if (rtpp_analyzer_update(sp->stream[ridx]->analyzer, packet) == UPDATE_SSRC_CHG) {
                 CALL_METHOD(sp->stream[ridx], latch, dtime, packet);
             }
         }

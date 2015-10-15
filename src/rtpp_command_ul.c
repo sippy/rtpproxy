@@ -524,8 +524,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spb->stream[1]->ttl = -1;
         spa->rtcp = spb;
         spb->rtcp = NULL;
-        spa->stream[0]->analyzer = rtpp_analyzer_ctor();
-        spa->stream[1]->analyzer = rtpp_analyzer_ctor();
+        spa->stream[0]->analyzer = rtpp_analyzer_ctor(spa->log);
+        spa->stream[1]->analyzer = rtpp_analyzer_ctor(spa->log);
 
         append_session(cf, spa, 0);
         append_session(cf, spa, 1);
