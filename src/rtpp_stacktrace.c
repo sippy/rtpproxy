@@ -50,6 +50,7 @@ rtpp_stacktrace(int sig)
 
     for (i = 0; i < size; i++)
         fprintf(stderr, "%s\n", strings[i]);
+    fflush(stderr);
     signal(sig, SIG_DFL);
     kill(getpid(), sig);
 }
