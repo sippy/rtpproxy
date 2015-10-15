@@ -775,7 +775,9 @@ main(int argc, char **argv)
     signal(SIGILL, rtpp_stacktrace);
     signal(SIGTRAP, rtpp_stacktrace);
     signal(SIGABRT, rtpp_stacktrace);
+#if defined(SIGEMT)
     signal(SIGEMT, rtpp_stacktrace);
+#endif
     signal(SIGFPE, rtpp_stacktrace);
     signal(SIGBUS, rtpp_stacktrace);
     signal(SIGSEGV, rtpp_stacktrace);
