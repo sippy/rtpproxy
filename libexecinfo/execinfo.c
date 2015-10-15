@@ -26,9 +26,11 @@
  * $Id: execinfo.c,v 1.3 2004/07/19 05:21:09 sobomax Exp $
  */
 
+#if defined(LINUX_XXX)
+#define _GNU_SOURCE
+#endif
 #include <sys/types.h>
 #include <sys/uio.h>
-#define _GNU_SOURCE
 #include <dlfcn.h>
 #include <math.h>
 #include <stddef.h>
