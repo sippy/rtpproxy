@@ -32,7 +32,6 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <dlfcn.h>
-#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,17 +41,22 @@
 #include "execinfo.h"
 #include "stacktraverse.h"
 
-#define D10(x) ceil(log10(((x) == 0) ? 2 : ((x) + 1)))
+#define LINELEN_MAX 512
 
-inline static void *
-realloc_safe(void *ptr, size_t size)
+static char bt_buffer[STACKTRAVERSE_MAX_LEVELS * LINELEN_MAX];
+static char *bt_rvals[STACKTRAVERSE_MAX_LEVELS];
+
+static int
+get_d10(int val)
 {
-    void *nptr;
+    int c;
 
-    nptr = realloc(ptr, size);
-    if (nptr == NULL)
-        free(ptr);
-    return nptr;
+    if (val == 0)
+        return (1);
+    for (c = 0; val > 0; val = val / 10) {
+        c += 1;
+    }
+    return (c);
 }
 
 int
@@ -60,6 +64,8 @@ backtrace(void **buffer, int size)
 {
     int i;
 
+    if (size > STACKTRAVERSE_MAX_LEVELS)
+        size = STACKTRAVERSE_MAX_LEVELS;
     for (i = 1; getframeaddr(i + 1) != NULL && i != size + 1; i++) {
         buffer[i - 1] = getreturnaddr(i);
         if (buffer[i - 1] == NULL)
@@ -72,15 +78,14 @@ backtrace(void **buffer, int size)
 char **
 backtrace_symbols(void *const *buffer, int size)
 {
-    size_t clen, alen;
-    int i, offset;
-    char **rval;
+    int i, offset, bsize, alen;
     Dl_info info;
+    char *bp;
 
-    clen = size * sizeof(char *);
-    rval = malloc(clen);
-    if (rval == NULL)
-        return NULL;
+    if (size > STACKTRAVERSE_MAX_LEVELS)
+        size = STACKTRAVERSE_MAX_LEVELS;
+    bp = bt_buffer;
+    bsize = sizeof(bt_buffer);
     for (i = 0; i < size; i++) {
         if (dladdr(buffer[i], &info) != 0) {
             if (info.dli_sname == NULL)
@@ -94,32 +99,30 @@ backtrace_symbols(void *const *buffer, int size)
                    2 +                      /* " <" */
                    strlen(info.dli_sname) + /* "function" */
                    1 +                      /* "+" */
-                   10 +                     /* "offset */
+                   get_d10(offset) +        /* "offset" */
                    5 +                      /* "> at " */
                    strlen(info.dli_fname) + /* "filename" */
                    1;                       /* "\0" */
-            rval = realloc_safe(rval, clen + alen);
-            if (rval == NULL)
-                return NULL;
-            snprintf((char *) rval + clen, alen, "%p <%s+%d> at %s",
+            snprintf(bp, bsize, "%p <%s+%d> at %s",
               buffer[i], info.dli_sname, offset, info.dli_fname);
         } else {
             alen = 2 +                      /* "0x" */
                    (sizeof(void *) * 2) +   /* "01234567" */
                    1;                       /* "\0" */
-            rval = realloc_safe(rval, clen + alen);
-            if (rval == NULL)
-                return NULL;
-            snprintf((char *) rval + clen, alen, "%p", buffer[i]);
+            snprintf(bp, bsize, "%p", buffer[i]);
         }
-        rval[i] = (char *) clen;
-        clen += alen;
+        bt_rvals[i] = bp;
+        bp += alen;
+        bsize -= alen;
+        if (bsize <= 0) {
+            for (i = i + 1; i < size; i++) {
+                bt_rvals[i] = NULL;
+            }
+            break;
+        }
     }
 
-    for (i = 0; i < size; i++)
-        rval[i] += (long) rval;
-
-    return rval;
+    return bt_rvals;
 }
 
 void
@@ -129,6 +132,8 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd)
     char *buf;
     Dl_info info;
 
+    if (size > STACKTRAVERSE_MAX_LEVELS)
+        size = STACKTRAVERSE_MAX_LEVELS;
     for (i = 0; i < size; i++) {
         if (dladdr(buffer[i], &info) != 0) {
             if (info.dli_sname == NULL)
@@ -142,7 +147,7 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd)
                   2 +                      /* " <" */
                   strlen(info.dli_sname) + /* "function" */
                   1 +                      /* "+" */
-                  D10(offset) +            /* "offset */
+                  get_d10(offset) +        /* "offset" */
                   5 +                      /* "> at " */
                   strlen(info.dli_fname) + /* "filename" */
                   2;                       /* "\n\0" */
