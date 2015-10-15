@@ -57,6 +57,7 @@
 #include "rtpp_session.h"
 #include "rtpp_stats.h"
 #include "rtpp_util.h"
+#include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
 
 struct rtpp_proc_ready_lst {
@@ -181,7 +182,9 @@ rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
 	    fill_session_addr(sp, packet, ridx);
 	}
         if (sp->stream[ridx]->analyzer != NULL) {
-            rtpp_analyzer_update(sp, sp->stream[ridx]->analyzer, packet);
+            if (rtpp_analyzer_update(sp, sp->stream[ridx]->analyzer, packet) == UPDATE_SSRC_CHG) {
+                CALL_METHOD(sp->stream[ridx], latch, dtime, packet);
+            }
         }
 	if (sp->stream[ridx]->resizer != NULL) {
 	    rtp_resizer_enqueue(sp->stream[ridx]->resizer, &packet, rsp);
