@@ -283,7 +283,7 @@ static int
 rtpp_stream_latch(struct rtpp_stream_obj *self, double dtime,
   struct rtp_packet *packet)
 {
-    const char *actor, *ptype, *ssrc, *seq;
+    const char *actor, *ptype, *ssrc, *seq, *relatch;
     char ssrc_buf[11], seq_buf[6];
     struct rtpp_stream_priv *pvt;
     char saddr[MAX_AP_STRLEN];
@@ -315,9 +315,14 @@ rtpp_stream_latch(struct rtpp_stream_obj *self, double dtime,
     }
 
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
+    if (self->latch_info.latched == 0) {
+        relatch = "";
+    } else {
+        relatch = "re-";
+    }
     RTPP_LOG(pvt->log, RTPP_LOG_INFO,
-      "%s's address latched in: %s (%s), SSRC=%s, Seq=%s", actor, saddr,
-      ptype, ssrc, seq);
+      "%s's address %slatched in: %s (%s), SSRC=%s, Seq=%s", actor, relatch,
+      saddr, ptype, ssrc, seq);
     self->latch_info.latched = 1;
     return (1);
 }
