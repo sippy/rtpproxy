@@ -66,7 +66,7 @@
 
 #define MEMDEB_GUARD_SIZE 8
 
-static rtpp_log_t glog;
+static rtpp_log_t _md_glog;
 
 struct memdeb_node
 {
@@ -103,7 +103,7 @@ void
 rtpp_memdeb_setlog(rtpp_log_t log)
 {
 
-    glog = log;
+    _md_glog = log;
 }
 
 static struct memdeb_node *
@@ -122,7 +122,7 @@ rtpp_memdeb_nget(const char *fname, int linen, const char *funcn, int doalloc)
     for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
         if (mnp->magic != MEMDEB_SIGNATURE) {
             /* nodelist is corrupt */
-            RTPP_MEMDEB_REPORT(glog, "Nodelist %p is corrupt", mnp);
+            RTPP_MEMDEB_REPORT(_md_glog, "Nodelist %p is corrupt", mnp);
             abort();
         }
         if (mnp->fname == fname && mnp->linen == linen && mnp->funcn == funcn)
@@ -135,7 +135,7 @@ rtpp_memdeb_nget(const char *fname, int linen, const char *funcn, int doalloc)
     }
     rval = malloc(sizeof(struct memdeb_node));
     if (rval == NULL) {
-        RTPP_MEMDEB_REPORT(glog, "Allocation for the new nodelist failed");
+        RTPP_MEMDEB_REPORT(_md_glog, "Allocation for the new nodelist failed");
         abort();
     }
     memset(rval, '\0', sizeof(struct memdeb_node));
@@ -189,7 +189,7 @@ ptr2mpf(void *ptr)
     mpf = (struct memdeb_pfx *)cp;
     if (mpf->mnp->magic != MEMDEB_SIGNATURE) {
         /* Free of unallocated pointer or nodelist is corrupt */
-        RTPP_MEMDEB_REPORT(glog, "Nodelist %p is corrupt", mpf->mnp);
+        RTPP_MEMDEB_REPORT(_md_glog, "Nodelist %p is corrupt", mpf->mnp);
         abort();
     }
     return (mpf);
@@ -210,13 +210,13 @@ rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
     if (memcmp(gp, &guard, MEMDEB_GUARD_SIZE) != 0) {
         /* Guard is b0rken, probably out-of-bound write */
-        RTPP_MEMDEB_REPORT(glog, "Guard is b0rken, probably out-of-bound write");
+        RTPP_MEMDEB_REPORT(_md_glog, "Guard is b0rken, probably out-of-bound write");
         abort();
     }
     pthread_mutex_lock(memdeb_mutex);
     if (mpf->magic != MEMDEB_SIGNATURE_ALLOC(mpf)) {
         /* Random of de-allocated pointer */
-        RTPP_MEMDEB_REPORT(glog, "Random of de-allocated pointer");
+        RTPP_MEMDEB_REPORT(_md_glog, "Random of de-allocated pointer");
         abort();
     }
     mpf->mnp->mstats.nfree++;
@@ -243,7 +243,7 @@ rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const
     sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
     if (mpf->magic != sig_save) {
         /* Random of de-allocated pointer */
-        RTPP_MEMDEB_REPORT(glog, "Random of de-allocated pointer");
+        RTPP_MEMDEB_REPORT(_md_glog, "Random of de-allocated pointer");
         abort();
     }
     mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
@@ -364,7 +364,7 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
     if (cf != NULL) {
         log = cf->stable->glog;
     } else {
-        memset(&log, '\0', sizeof(glog));
+        memset(&log, '\0', sizeof(log));
     }
     pthread_mutex_lock(memdeb_mutex);
     for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
@@ -415,7 +415,7 @@ rtpp_memdeb_setbaseln(void)
     for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
         if (mnp->magic != MEMDEB_SIGNATURE) {
             /* Nodelist is corrupt */
-            RTPP_MEMDEB_REPORT(glog, "Nodelist %p is corrupt", mnp);
+            RTPP_MEMDEB_REPORT(_md_glog, "Nodelist %p is corrupt", mnp);
             abort();
         }
         if (mnp->mstats.nalloc == 0)
@@ -438,7 +438,7 @@ rtpp_memdeb_get_stats(const char *fname, const char *funcn,
     for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
         if (mnp->magic != MEMDEB_SIGNATURE) {
             /* Nodelist is corrupt */
-            RTPP_MEMDEB_REPORT(glog, "Nodelist %p is corrupt", mnp);
+            RTPP_MEMDEB_REPORT(_md_glog, "Nodelist %p is corrupt", mnp);
             abort();
         }
         if (funcn != NULL && strcmp(funcn, mnp->funcn) != 0) {
