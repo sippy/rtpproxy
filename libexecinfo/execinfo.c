@@ -51,9 +51,13 @@ get_d10(int val)
 {
     int c;
 
-    if (val == 0)
-        return (1);
-    for (c = 0; val > 0; val = val / 10) {
+    if (val < 0) {
+        c = 2;
+        val = -val;
+    } else {
+        c = 1;
+    }
+    for (; val >= 10; val = val / 10) {
         c += 1;
     }
     return (c);
