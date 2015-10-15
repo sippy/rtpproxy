@@ -25,13 +25,14 @@ rtpproxy_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
   rtpp_log_obj.h rtpp_log_obj.c
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
-  rtpp_memdeb_stats.h rtpp_memdeb_test.c
+  rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
 rtpproxy_LDADD=-lm -lpthread
-rtpproxy_debug_LDADD=${rtpproxy_LDADD}
-rtpproxy_debug_LDFLAGS=-static
-rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
+rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a
+rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
+rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
+  -include rtpp_memdeb.h
 rtpproxy_debug_CFLAGS=-g3 -O0
 
 DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
