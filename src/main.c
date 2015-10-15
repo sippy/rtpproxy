@@ -86,6 +86,9 @@
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
+#ifdef RTPP_DEBUG
+#include "rtpp_stacktrace.h"
+#endif
 
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
@@ -767,6 +770,17 @@ main(int argc, char **argv)
     signal(SIGPROF, fatsignal);
     signal(SIGUSR1, fatsignal);
     signal(SIGUSR2, fatsignal);
+#if RTPP_DEBUG
+    signal(SIGQUIT, rtpp_stacktrace);
+    signal(SIGILL, rtpp_stacktrace);
+    signal(SIGTRAP, rtpp_stacktrace);
+    signal(SIGABRT, rtpp_stacktrace);
+    signal(SIGEMT, rtpp_stacktrace);
+    signal(SIGFPE, rtpp_stacktrace);
+    signal(SIGBUS, rtpp_stacktrace);
+    signal(SIGSEGV, rtpp_stacktrace);
+    signal(SIGSYS, rtpp_stacktrace);
+#endif
 
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "READY=1");
