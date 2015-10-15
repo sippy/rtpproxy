@@ -28,6 +28,7 @@
 
 #include <sys/types.h>
 #include <sys/uio.h>
+#define _GNU_SOURCE
 #include <dlfcn.h>
 #include <math.h>
 #include <stddef.h>
