@@ -44,3 +44,4 @@ struct cfg;
 int rtpp_memdeb_dumpstats(struct cfg *);
 void rtpp_memdeb_setbaseln(void);
 int rtpp_memdeb_selftest(void);
+void rtpp_memdeb_setlog(rtpp_log_t);

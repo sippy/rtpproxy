@@ -680,6 +680,9 @@ main(int argc, char **argv)
     }
 
     cf.stable->glog = rtpp_log_open(cf.stable, "rtpproxy", NULL, LF_REOPEN);
+#ifdef RTPP_CHECK_LEAKS
+    rtpp_memdeb_setlog(cf.stable->glog);
+#endif
     rtpp_log_setlevel(cf.stable->glog, cf.stable->log_level);
     _sig_cf = &cf;
     atexit(ehandler);
