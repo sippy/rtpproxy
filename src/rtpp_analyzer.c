@@ -33,6 +33,8 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_log_obj.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtp_analyze.h"
@@ -44,10 +46,11 @@ struct rtpp_analyzer {
     struct rtpp_session_stat rstat;
     uint32_t pecount;
     uint32_t aecount;
+    struct rtpp_log_obj *log;
 };
 
 struct rtpp_analyzer *
-rtpp_analyzer_ctor(void)
+rtpp_analyzer_ctor(struct rtpp_log_obj *log)
 {
     struct rtpp_analyzer *rap;
 
@@ -55,12 +58,13 @@ rtpp_analyzer_ctor(void)
     if (rap == NULL) {
         return (NULL);
     }
+    rap->log = log;
+    CALL_METHOD(log->rcnt, incref);
     return (rap);
 }
 
 enum update_rtpp_stats_rval
-rtpp_analyzer_update(struct rtpp_session_obj *sp, struct rtpp_analyzer *rap,
-  struct rtp_packet *pkt)
+rtpp_analyzer_update(struct rtpp_analyzer *rap, struct rtp_packet *pkt)
 {
     enum update_rtpp_stats_rval rval;
 
@@ -68,7 +72,7 @@ rtpp_analyzer_update(struct rtpp_session_obj *sp, struct rtpp_analyzer *rap,
         rap->pecount++;
         return (UPDATE_ERR);
     }
-    rval = update_rtpp_stats(sp->log, &(rap->rstat), &(pkt->data.header), pkt->parsed, pkt->rtime);
+    rval = update_rtpp_stats(rap->log, &(rap->rstat), &(pkt->data.header), pkt->parsed, pkt->rtime);
     if (rval == UPDATE_ERR) {
         rap->aecount++;
     }
@@ -95,5 +99,6 @@ void
 rtpp_analyzer_dtor(struct rtpp_analyzer *rap)
 {
 
+    CALL_METHOD(rap->log->rcnt, decref);
     free(rap);
 }

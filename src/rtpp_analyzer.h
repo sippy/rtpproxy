@@ -35,10 +35,10 @@ struct rtpp_analyzer_stats {
     uint32_t last_ssrc;
 };
 
-struct rtpp_session_obj;
+struct rtpp_log_obj;
 struct rtp_packet;
 
-struct rtpp_analyzer * rtpp_analyzer_ctor(void);
-enum update_rtpp_stats_rval rtpp_analyzer_update(struct rtpp_session_obj *, struct rtpp_analyzer *, struct rtp_packet *);
+struct rtpp_analyzer * rtpp_analyzer_ctor(struct rtpp_log_obj *);
+enum update_rtpp_stats_rval rtpp_analyzer_update(struct rtpp_analyzer *, struct rtp_packet *);
 void rtpp_analyzer_stat(struct rtpp_analyzer *, struct rtpp_analyzer_stats *);
 void rtpp_analyzer_dtor(struct rtpp_analyzer *);
