@@ -32,11 +32,12 @@
     }
 #else
 #  define RTPP_MEMDEB_REPORT(handle, format, args...) { \
+    printf((format "\n"), ## args); \
+    fflush(stdout); \
     if (handle != NULL) { \
         rtpp_log_write(RTPP_LOG_DBUG, ((rtpp_log_t)handle), format, ## args); \
-    }; \
-    printf((format "\n"), ## args); \
-    fflush(stdout); }
+    } \
+}
 #endif
 
 struct cfg;
