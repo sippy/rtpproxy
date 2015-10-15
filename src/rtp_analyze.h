@@ -40,6 +40,7 @@ struct rtpp_session_stat_last {
     uint32_t seen[4096];
     uint32_t duplicates;
     uint32_t base_ts;
+    uint16_t seq;
     double base_rtime;
 };
 
@@ -53,8 +54,10 @@ struct rtpp_session_stat {
     struct rtpp_session_stat_last last;
 };
 
-int update_rtpp_stats(struct rtpp_log_obj *, struct rtpp_session_stat *, rtp_hdr_t *,
-  struct rtp_info *, double);
+enum update_rtpp_stats_rval {UPDATE_OK = 0, UPDATE_SSRC_CHG = 1, UPDATE_ERR = -1};
+
+enum update_rtpp_stats_rval update_rtpp_stats(struct rtpp_log_obj *,
+  struct rtpp_session_stat *, rtp_hdr_t *, struct rtp_info *, double);
 void update_rtpp_totals(struct rtpp_session_stat *, struct rtpp_session_stat *);
 
 #endif

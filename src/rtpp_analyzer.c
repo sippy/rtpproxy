@@ -58,20 +58,21 @@ rtpp_analyzer_ctor(void)
     return (rap);
 }
 
-int
+enum update_rtpp_stats_rval
 rtpp_analyzer_update(struct rtpp_session_obj *sp, struct rtpp_analyzer *rap,
   struct rtp_packet *pkt)
 {
+    enum update_rtpp_stats_rval rval;
 
     if (rtp_packet_parse(pkt) != RTP_PARSER_OK) {
         rap->pecount++;
-        return (-1);
+        return (UPDATE_ERR);
     }
-    if (update_rtpp_stats(sp->log, &(rap->rstat), &(pkt->data.header), pkt->parsed, pkt->rtime) != 0) {
+    rval = update_rtpp_stats(sp->log, &(rap->rstat), &(pkt->data.header), pkt->parsed, pkt->rtime);
+    if (rval == UPDATE_ERR) {
         rap->aecount++;
-        return (-1);
     }
-    return (0);
+    return (rval);
 }
 
 void

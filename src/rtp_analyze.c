@@ -48,12 +48,16 @@ rtp_ts2dtime(uint32_t ts)
 }
 
 /* rlog can be null in this context, when compiled for the extractaudio context */
-#define LOG_IF_NOT_NULL(log, args...) \
+#define LOGD_IF_NOT_NULL(log, args...) \
     if ((log) != NULL) { \
         RTPP_LOG((log), RTPP_LOG_DBUG, ## args); \
     }
+#define LOGI_IF_NOT_NULL(log, args...) \
+    if ((log) != NULL) { \
+        RTPP_LOG((log), RTPP_LOG_INFO, ## args); \
+    }
 
-int
+enum update_rtpp_stats_rval
 update_rtpp_stats(struct rtpp_log_obj *rlog, struct rtpp_session_stat *stat, rtp_hdr_t *header,
   struct rtp_info *rinfo, double rtime)
 {
@@ -74,12 +78,15 @@ update_rtpp_stats(struct rtpp_log_obj *rlog, struct rtpp_session_stat *stat, rtp
         stat->ssrc_changes = 1;
         idx = (seq % 131072) >> 5;
         stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
-        return (0);
+        stat->last.seq = rinfo->seq;
+        return (UPDATE_OK);
     }
     if (stat->last.ssrc != rinfo->ssrc) {
         update_rtpp_totals(stat, stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
+        LOGI_IF_NOT_NULL(rlog, "SSRC changed from 0x%.8X/%d to 0x%.8X/%d",
+          stat->last.ssrc, stat->last.seq, rinfo->ssrc, seq); 
         stat->last.ssrc = rinfo->ssrc;
         stat->last.max_seq = stat->last.min_seq = seq;
         stat->last.base_ts = rinfo->ts;
@@ -87,16 +94,17 @@ update_rtpp_stats(struct rtpp_log_obj *rlog, struct rtpp_session_stat *stat, rtp
         stat->last.pcount = 1;
         stat->ssrc_changes += 1;
         if ((stat->psent > 0 || stat->precvd > 0) && rlog != NULL) {
-            LOG_IF_NOT_NULL(rlog, "0x%.8X/%d: ssrc_changes=%u, psent=%u, precvd=%u\n",
+            LOGD_IF_NOT_NULL(rlog, "0x%.8X/%d: ssrc_changes=%u, psent=%u, precvd=%u\n",
               rinfo->ssrc, rinfo->seq, stat->ssrc_changes, stat->psent, stat->precvd);
         }
         idx = (seq % 131072) >> 5;
         stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
-        return (0);
+        stat->last.seq = rinfo->seq;
+        return (UPDATE_SSRC_CHG);
     }
     seq += stat->last.seq_offset;
     if (header->mbt && (seq < stat->last.max_seq && (stat->last.max_seq & 0xffff) != 65535)) {
-        LOG_IF_NOT_NULL(rlog, "0x%.8X/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
+        LOGD_IF_NOT_NULL(rlog, "0x%.8X/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->mbt);
         /* Seq reset has happened. Treat it as a ssrc change */
         update_rtpp_totals(stat, stat);
@@ -109,10 +117,11 @@ update_rtpp_stats(struct rtpp_log_obj *rlog, struct rtpp_session_stat *stat, rtp
         stat->seq_res_count += 1;
         idx = (seq % 131072) >> 5;
         stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
-        return (0);
+        stat->last.seq = rinfo->seq;
+        return (UPDATE_OK);
     }
     if (ABS(rtime - stat->last.base_rtime - rtp_ts2dtime(rinfo->ts - stat->last.base_ts)) > 0.1) {
-        LOG_IF_NOT_NULL(rlog, "0x%.8X/%d: delta rtime=%f, delta ts=%f\n",
+        LOGD_IF_NOT_NULL(rlog, "0x%.8X/%d: delta rtime=%f, delta ts=%f\n",
           rinfo->ssrc, rinfo->seq, rtime - stat->last.base_rtime,
           rtp_ts2dtime(rinfo->ts - stat->last.base_ts));
         stat->last.base_rtime = rtime;
@@ -121,7 +130,7 @@ update_rtpp_stats(struct rtpp_log_obj *rlog, struct rtpp_session_stat *stat, rtp
         /* Pre-wrap packet received after a wrap */
         seq -= 65536;
     } else if (stat->last.max_seq > 65000 && seq < stat->last.max_seq - 65000) {
-        LOG_IF_NOT_NULL(rlog, "0x%.8X/%d: wrap last->max_seq=%u, seq=%u\n",
+        LOGD_IF_NOT_NULL(rlog, "0x%.8X/%d: wrap last->max_seq=%u, seq=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq);
         /* Wrap up has happened */
         stat->last.seq_offset += 65536;
@@ -132,7 +141,7 @@ update_rtpp_stats(struct rtpp_log_obj *rlog, struct rtpp_session_stat *stat, rtp
             memset(stat->last.seen, '\0', sizeof(stat->last.seen) / 2);
         }
     } else if (seq + 536 < stat->last.max_seq || seq > stat->last.max_seq + 536) {
-        LOG_IF_NOT_NULL(rlog, "0x%.8X/%d: desync last->max_seq=%u, seq=%u, m=%u\n",
+        LOGD_IF_NOT_NULL(rlog, "0x%.8X/%d: desync last->max_seq=%u, seq=%u, m=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->mbt);
         /* Desynchronization has happened. Treat it as a ssrc change */
         update_rtpp_totals(stat, stat);
@@ -143,39 +152,45 @@ update_rtpp_stats(struct rtpp_log_obj *rlog, struct rtpp_session_stat *stat, rtp
         stat->desync_count += 1;
         idx = (seq % 131072) >> 5;
         stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
-        return (0);
+        stat->last.seq = rinfo->seq;
+        return (UPDATE_OK);
     }
         /* printf("last->max_seq=%u, seq=%u, m=%u\n", stat->last.max_seq, seq, header->mbt);*/
     idx = (seq % 131072) >> 5;
     mask = stat->last.seen[idx];
     if (((mask >> (seq & 31)) & 1) != 0) {
-        LOG_IF_NOT_NULL(rlog, "0x%.8X/%d: DUP\n",
+        LOGD_IF_NOT_NULL(rlog, "0x%.8X/%d: DUP\n",
           rinfo->ssrc, rinfo->seq);
         stat->last.duplicates += 1;
-        return (0);
+        stat->last.seq = rinfo->seq;
+        return (UPDATE_OK);
     }
     stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
     if (seq - stat->last.max_seq != 1)
-        LOG_IF_NOT_NULL(rlog, "0x%.8X/%d: delta = %d\n",
+        LOGD_IF_NOT_NULL(rlog, "0x%.8X/%d: delta = %d\n",
           rinfo->ssrc, rinfo->seq, seq - stat->last.max_seq);
     if (seq >= stat->last.max_seq) {
         stat->last.max_seq = seq;
         stat->last.pcount += 1;
-        return (0);
+        stat->last.seq = rinfo->seq;
+        return (UPDATE_OK);
     }
     if (seq >= stat->last.min_seq) {
         stat->last.pcount += 1;
-        return (0);
+        stat->last.seq = rinfo->seq;
+        return (UPDATE_OK);
     }
     if (stat->last.seq_offset == 0 && seq < stat->last.min_seq) {
         stat->last.min_seq = seq;
         stat->last.pcount += 1;
-        LOG_IF_NOT_NULL(rlog, "0x%.8X/%d: last->min_seq=%u\n",
+        LOGD_IF_NOT_NULL(rlog, "0x%.8X/%d: last->min_seq=%u\n",
           rinfo->ssrc, rinfo->seq, stat->last.min_seq);
-        return (0);
+        stat->last.seq = rinfo->seq;
+        return (UPDATE_OK);
     }
     /* XXX something wrong with the stream */
-    return (-1);
+    stat->last.seq = rinfo->seq;
+    return (UPDATE_ERR);
 }
 
 void
