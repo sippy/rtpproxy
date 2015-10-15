@@ -12751,7 +12751,7 @@ else
 fi
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile"
 
 
 
@@ -13776,6 +13776,7 @@ do
     "makeann/Makefile") CONFIG_FILES="$CONFIG_FILES makeann/Makefile" ;;
     "tests/Makefile") CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
     "extractaudio/Makefile") CONFIG_FILES="$CONFIG_FILES extractaudio/Makefile" ;;
+    "libexecinfo/Makefile") CONFIG_FILES="$CONFIG_FILES libexecinfo/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

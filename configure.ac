@@ -138,7 +138,7 @@ fi
 
 AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
 
-AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile])
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_GSM)
 AC_SUBST(LIBS_G729)

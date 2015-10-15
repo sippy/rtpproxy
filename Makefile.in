@@ -190,7 +190,7 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = src makeann tests extractaudio
+DIST_SUBDIRS = libexecinfo src makeann tests extractaudio
 am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in AUTHORS \
 	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
 	install-sh ltmain.sh missing
@@ -359,7 +359,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = src makeann tests $(am__append_1)
+SUBDIRS = libexecinfo src makeann tests $(am__append_1)
 dist_man_MANS = rtpproxy.8
 EXTRA_DIST = README.remote manpage.xml debian/README.Debian debian/changelog \
   debian/compat debian/conffiles.ex debian/control debian/copyright \
