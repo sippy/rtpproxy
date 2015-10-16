@@ -413,7 +413,7 @@ rtpproxy_debug_LDFLAGS = -static -Wl,--export-dynamic
 rtpproxy_debug_CPPFLAGS = -DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
   -include rtpp_memdeb.h
 
-rtpproxy_debug_CFLAGS = -g3 -O0
+rtpproxy_debug_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 

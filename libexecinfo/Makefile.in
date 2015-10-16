@@ -109,7 +109,8 @@ am__v_AR_0 = @echo "  AR      " $@;
 am__v_AR_1 = 
 libexecinfo_a_AR = $(AR) $(ARFLAGS)
 libexecinfo_a_LIBADD =
-am_libexecinfo_a_OBJECTS = execinfo.$(OBJEXT) stacktraverse.$(OBJEXT)
+am_libexecinfo_a_OBJECTS = libexecinfo_a-execinfo.$(OBJEXT) \
+	libexecinfo_a-stacktraverse.$(OBJEXT)
 libexecinfo_a_OBJECTS = $(am_libexecinfo_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -127,12 +128,12 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
 	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
@@ -189,7 +190,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = -O0
+CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -301,6 +302,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libexecinfo.a
 libexecinfo_a_SOURCES = execinfo.c execinfo.h stacktraverse.c stacktraverse.h
+libexecinfo_a_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 all: all-am
 
 .SUFFIXES:
@@ -349,8 +351,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execinfo.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stacktraverse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libexecinfo_a-execinfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libexecinfo_a-stacktraverse.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -372,6 +374,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+libexecinfo_a-execinfo.o: execinfo.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexecinfo_a_CFLAGS) $(CFLAGS) -MT libexecinfo_a-execinfo.o -MD -MP -MF $(DEPDIR)/libexecinfo_a-execinfo.Tpo -c -o libexecinfo_a-execinfo.o `test -f 'execinfo.c' || echo '$(srcdir)/'`execinfo.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libexecinfo_a-execinfo.Tpo $(DEPDIR)/libexecinfo_a-execinfo.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo.c' object='libexecinfo_a-execinfo.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexecinfo_a_CFLAGS) $(CFLAGS) -c -o libexecinfo_a-execinfo.o `test -f 'execinfo.c' || echo '$(srcdir)/'`execinfo.c
+
+libexecinfo_a-execinfo.obj: execinfo.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexecinfo_a_CFLAGS) $(CFLAGS) -MT libexecinfo_a-execinfo.obj -MD -MP -MF $(DEPDIR)/libexecinfo_a-execinfo.Tpo -c -o libexecinfo_a-execinfo.obj `if test -f 'execinfo.c'; then $(CYGPATH_W) 'execinfo.c'; else $(CYGPATH_W) '$(srcdir)/execinfo.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libexecinfo_a-execinfo.Tpo $(DEPDIR)/libexecinfo_a-execinfo.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo.c' object='libexecinfo_a-execinfo.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexecinfo_a_CFLAGS) $(CFLAGS) -c -o libexecinfo_a-execinfo.obj `if test -f 'execinfo.c'; then $(CYGPATH_W) 'execinfo.c'; else $(CYGPATH_W) '$(srcdir)/execinfo.c'; fi`
+
+libexecinfo_a-stacktraverse.o: stacktraverse.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexecinfo_a_CFLAGS) $(CFLAGS) -MT libexecinfo_a-stacktraverse.o -MD -MP -MF $(DEPDIR)/libexecinfo_a-stacktraverse.Tpo -c -o libexecinfo_a-stacktraverse.o `test -f 'stacktraverse.c' || echo '$(srcdir)/'`stacktraverse.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libexecinfo_a-stacktraverse.Tpo $(DEPDIR)/libexecinfo_a-stacktraverse.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='stacktraverse.c' object='libexecinfo_a-stacktraverse.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexecinfo_a_CFLAGS) $(CFLAGS) -c -o libexecinfo_a-stacktraverse.o `test -f 'stacktraverse.c' || echo '$(srcdir)/'`stacktraverse.c
+
+libexecinfo_a-stacktraverse.obj: stacktraverse.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexecinfo_a_CFLAGS) $(CFLAGS) -MT libexecinfo_a-stacktraverse.obj -MD -MP -MF $(DEPDIR)/libexecinfo_a-stacktraverse.Tpo -c -o libexecinfo_a-stacktraverse.obj `if test -f 'stacktraverse.c'; then $(CYGPATH_W) 'stacktraverse.c'; else $(CYGPATH_W) '$(srcdir)/stacktraverse.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libexecinfo_a-stacktraverse.Tpo $(DEPDIR)/libexecinfo_a-stacktraverse.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='stacktraverse.c' object='libexecinfo_a-stacktraverse.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libexecinfo_a_CFLAGS) $(CFLAGS) -c -o libexecinfo_a-stacktraverse.obj `if test -f 'stacktraverse.c'; then $(CYGPATH_W) 'stacktraverse.c'; else $(CYGPATH_W) '$(srcdir)/stacktraverse.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
