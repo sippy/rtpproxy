@@ -34,6 +34,6 @@ rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
 rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
 rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
   -include rtpp_memdeb.h
-rtpproxy_debug_CFLAGS=-g3 -O0
+rtpproxy_debug_CFLAGS=-g3 -O0 -fno-omit-frame-pointer
 
 DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
