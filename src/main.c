@@ -743,7 +743,7 @@ main(int argc, char **argv)
     }
 
     if (CALL_METHOD(cf.stable->rtpp_timed_cf, schedule, 1.0,
-      update_derived_stats, NULL, cf.stable) == NULL) {
+      update_derived_stats, NULL, cf.stable) != 0) {
         rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
           "can't schedule notification to derive stats");
     }

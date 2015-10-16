@@ -227,7 +227,7 @@ close_socket_later(struct cfg *cf, int fd)
     }
     *argp = fd;
     if (CALL_METHOD(cf->stable->rtpp_timed_cf, schedule, 1.0,
-      close_socket_ontime, close_socket_now, argp) == NULL) {
+      close_socket_ontime, close_socket_now, argp) != 0) {
         close_socket_now(argp);
     }
 }
