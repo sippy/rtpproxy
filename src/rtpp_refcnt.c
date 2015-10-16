@@ -49,6 +49,7 @@ struct rtpp_refcnt_priv
 
 static void rtpp_refcnt_incref(struct rtpp_refcnt_obj *);
 static void rtpp_refcnt_decref(struct rtpp_refcnt_obj *);
+static void rtpp_refcnt_abort(struct rtpp_refcnt_obj *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt_obj *);
 static void rtpp_refcnt_reg_pd(struct rtpp_refcnt_obj *, rtpp_refcnt_dtor_t,
   void *);
@@ -76,6 +77,7 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
     pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
+    pvt->pub.abort = &rtpp_refcnt_abort;
     pvt->cnt = 1;
     return (&pvt->pub);
 }
@@ -106,6 +108,7 @@ rtpp_refcnt_ctor_pa(void *pap, void *data, rtpp_refcnt_dtor_t dtor_f)
     pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
     pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
+    pvt->pub.abort = &rtpp_refcnt_abort;
     pvt->cnt = 1;
     pvt->pa_flag = 1;
     return (&pvt->pub);
@@ -145,6 +148,27 @@ rtpp_refcnt_decref(struct rtpp_refcnt_obj *pub)
     }
     assert(pvt->cnt > 0);
     pthread_mutex_unlock(&pvt->cnt_lock);
+}
+
+/*
+ * Special case destructor, only when we want to abort object without
+ * calling any registered callbacks, i.e. when rolling back failed
+ * constructor in the complex class.
+ */
+static void
+rtpp_refcnt_abort(struct rtpp_refcnt_obj *pub)
+{
+    struct rtpp_refcnt_priv *pvt;
+
+    pvt = (struct rtpp_refcnt_priv *)pub;
+    pthread_mutex_lock(&pvt->cnt_lock);
+    assert(pvt->cnt == 1);
+    pthread_mutex_unlock(&pvt->cnt_lock);
+    pthread_mutex_destroy(&pvt->cnt_lock);
+    if (pvt->pa_flag == 0) {
+        free(pvt);
+    }
+    return;
 }
 
 static void *
