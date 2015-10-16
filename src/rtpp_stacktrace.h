@@ -27,3 +27,4 @@
  */
 
 void rtpp_stacktrace(int);
+void rtpp_stacktrace_print(const char *);

@@ -54,3 +54,21 @@ rtpp_stacktrace(int sig)
     signal(sig, SIG_DFL);
     kill(getpid(), sig);
 }
+
+void
+rtpp_stacktrace_print(const char *msg)
+{
+    /* Obtain a backtrace and print it to stderr. */
+    void *array[10];
+    size_t size;
+    char **strings;
+    int i;
+
+    size = backtrace(array, 10);
+    strings = backtrace_symbols(array, size);
+
+    fprintf(stderr, "%s\nTraceback:\n", msg);
+    for (i = 0; i < size; i++)
+        fprintf(stderr, "  %s\n", strings[i]);
+    fflush(stderr);
+}
