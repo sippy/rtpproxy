@@ -83,6 +83,7 @@ rtpp_cmd_rcache_ctor(struct rtpp_timed_obj *rtpp_timed_cf, double min_ttl)
     }
     pvt->min_ttl = min_ttl;
     pvt->rtpp_timed_cf_save = rtpp_timed_cf;
+    CALL_METHOD(rtpp_timed_cf->rcnt, incref);
     pvt->pub.insert = rtpp_cmd_rcache_insert;
     pvt->pub.lookup = rtpp_cmd_rcache_lookup;
     pvt->pub.dtor = rtpp_cmd_rcache_dtor;
@@ -169,6 +170,7 @@ rtpp_cmd_rcache_dtor(struct rtpp_cmd_rcache_obj *pub)
     pvt = (struct rtpp_cmd_rcache_pvt *)pub;
     CALL_METHOD(pvt->rtpp_timed_cf_save, cancel, pvt->timeout);
     CALL_METHOD(pvt->timeout->rcnt, decref);
+    CALL_METHOD(pvt->rtpp_timed_cf_save->rcnt, decref);
     CALL_METHOD(pvt->ht, dtor);
     free(pvt);
 }
