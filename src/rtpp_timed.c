@@ -52,6 +52,7 @@ struct rtpp_timed_cf {
     pthread_t thread_id;
     struct rtpp_wi *sigterm;
     int wi_dsize;
+    void *rco[0];
 };
 
 struct rtpp_timed_wi {
@@ -67,7 +68,7 @@ struct rtpp_timed_wi {
   ((struct rtpp_timed_wi *)((char *)(pubp) - \
   offsetof(struct rtpp_timed_wi, pub)))
 
-static void rtpp_timed_destroy(struct rtpp_timed_obj *);
+static void rtpp_timed_destroy(struct rtpp_timed_cf *);
 static int rtpp_timed_schedule(struct rtpp_timed_obj *,
   double offset, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
 static struct rtpp_timed_task *rtpp_timed_schedule_rc(struct rtpp_timed_obj *,
@@ -112,7 +113,7 @@ rtpp_timed_ctor(double run_period)
 {
     struct rtpp_timed_cf *rtcp;
 
-    rtcp = rtpp_zmalloc(sizeof(struct rtpp_timed_cf));
+    rtcp = rtpp_zmalloc(sizeof(struct rtpp_timed_cf) + rtpp_refcnt_osize());
     if (rtcp == NULL) {
         goto e0;
     }
@@ -132,20 +133,26 @@ rtpp_timed_ctor(double run_period)
     if (rtcp->sigterm == NULL) {
         goto e3;
     }
+    rtcp->pub.rcnt = rtpp_refcnt_ctor_pa(&rtcp->rco[0], rtcp,
+      (rtpp_refcnt_dtor_t)&rtpp_timed_destroy);
+    if (rtcp->pub.rcnt == NULL) {
+        goto e4;
+    }
     if (pthread_create(&rtcp->thread_id, NULL,
       (void *(*)(void *))&rtpp_timed_queue_run, rtcp) != 0) {
-        goto e4;
+        goto e5;
     }
     rtcp->last_run = getdtime();
     rtcp->period = run_period;
     rtcp->wi_dsize = sizeof(struct rtpp_timed_wi) + rtpp_refcnt_osize();
-    rtcp->pub.dtor = &rtpp_timed_destroy;
     rtcp->pub.wakeup = &rtpp_timed_wakeup;
     rtcp->pub.schedule = &rtpp_timed_schedule;
     rtcp->pub.schedule_rc = &rtpp_timed_schedule_rc;
     rtcp->pub.cancel = &rtpp_timed_cancel;
     return (&rtcp->pub);
 
+e5:
+    CALL_METHOD(rtcp->pub.rcnt, abort);
 e4:
     rtpp_wi_free(rtcp->sigterm);
 e3:
@@ -159,11 +166,9 @@ e0:
 }
 
 static void
-rtpp_timed_destroy(struct rtpp_timed_obj *pub)
+rtpp_timed_destroy(struct rtpp_timed_cf *rtpp_timed_cf)
 {
-    struct rtpp_timed_cf *rtpp_timed_cf;
 
-    rtpp_timed_cf = (struct rtpp_timed_cf *)pub;
     rtpp_queue_put_item(rtpp_timed_cf->sigterm, rtpp_timed_cf->cmd_q);
     pthread_join(rtpp_timed_cf->thread_id, NULL);
     rtpp_queue_destroy(rtpp_timed_cf->cmd_q);
