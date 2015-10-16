@@ -163,6 +163,9 @@ ehandler(void)
     __mp_leaktable(0, MP_LT_UNFREED, 0);
 #endif
 
+#if RTPP_DEBUG
+    rtpp_stacktrace_print("Exiting from: ehandler()");
+#endif
     rtpp_controlfd_cleanup(_sig_cf);
     unlink(_sig_cf->stable->pid_file);
     rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog, "rtpproxy ended");
