@@ -42,7 +42,7 @@ struct rtpp_cmd_rcache_pvt {
     double min_ttl;
     struct rtpp_hash_table_obj *ht;
     struct rtpp_timed_obj *rtpp_timed_cf_save;
-    struct rtpp_wi *timeout;
+    struct rtpp_timed_task *timeout;
 };
 
 struct rtpp_cmd_rcache_entry {
@@ -76,7 +76,7 @@ rtpp_cmd_rcache_ctor(struct rtpp_timed_obj *rtpp_timed_cf, double min_ttl)
     if (pvt->ht == NULL) {
         goto e0;
     }
-    pvt->timeout = CALL_METHOD(rtpp_timed_cf, schedule, RTPP_RCACHE_CPERD,
+    pvt->timeout = CALL_METHOD(rtpp_timed_cf, schedule_rc, RTPP_RCACHE_CPERD,
       rtpp_cmd_rcache_cleanup, NULL, pvt);
     if (pvt->timeout == NULL) {
         goto e0;
@@ -168,6 +168,7 @@ rtpp_cmd_rcache_dtor(struct rtpp_cmd_rcache_obj *pub)
 
     pvt = (struct rtpp_cmd_rcache_pvt *)pub;
     CALL_METHOD(pvt->rtpp_timed_cf_save, cancel, pvt->timeout);
+    CALL_METHOD(pvt->timeout->rcnt, decref);
     CALL_METHOD(pvt->ht, dtor);
     free(pvt);
 }
@@ -197,6 +198,7 @@ rtpp_cmd_rcache_cleanup(double ctime, void *p)
 
     pvt = (struct rtpp_cmd_rcache_pvt *)p;
     CALL_METHOD(pvt->ht, foreach, rtpp_cmd_rcache_ematch, &ctime);
-    pvt->timeout = CALL_METHOD(pvt->rtpp_timed_cf_save, schedule,
+    CALL_METHOD(pvt->timeout->rcnt, decref);
+    pvt->timeout = CALL_METHOD(pvt->rtpp_timed_cf_save, schedule_rc,
       RTPP_RCACHE_CPERD, rtpp_cmd_rcache_cleanup, NULL, pvt);
 }
