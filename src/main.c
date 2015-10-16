@@ -64,6 +64,7 @@
 #endif
 
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
@@ -658,7 +659,12 @@ main(int argc, char **argv)
     }
     cf.stable->rtp_streams_wrt = rtpp_weakref_ctor();
     if (cf.stable->rtp_streams_wrt == NULL) {
-        err(1, "can't allocate memory for the streams weakref table");
+        err(1, "can't allocate memory for the RTP streams weakref table");
+         /* NOTREACHED */
+    }
+    cf.stable->rtcp_streams_wrt = rtpp_weakref_ctor();
+    if (cf.stable->rtcp_streams_wrt == NULL) {
+        err(1, "can't allocate memory for the RTCP streams weakref table");
          /* NOTREACHED */
     }
     cf.stable->servers_wrt = rtpp_weakref_ctor();
@@ -848,7 +854,7 @@ main(int argc, char **argv)
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
-    CALL_METHOD(cf.stable->rtpp_timed_cf, dtor);
+    CALL_METHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
     CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
