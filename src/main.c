@@ -587,15 +587,14 @@ init_config(struct cfg *cf, int argc, char **argv)
     }
 }
 
-static void
+static enum rtpp_timed_cb_rvals
 update_derived_stats(double dtime, void *argp)
 {
-    struct rtpp_cfg_stable *csp;
+    struct rtpp_stats_obj *rtpp_stats;
 
-    csp = (struct rtpp_cfg_stable *)argp;
-    CALL_METHOD(csp->rtpp_stats, update_derived, dtime);
-    CALL_METHOD(csp->rtpp_timed_cf, schedule, 1.0, update_derived_stats, NULL,
-      argp);
+    rtpp_stats = (struct rtpp_stats_obj *)argp;
+    CALL_METHOD(rtpp_stats, update_derived, dtime);
+    return (CB_MORE);
 }
 
 int
@@ -749,7 +748,7 @@ main(int argc, char **argv)
     }
 
     if (CALL_METHOD(cf.stable->rtpp_timed_cf, schedule, 1.0,
-      update_derived_stats, NULL, cf.stable) != 0) {
+      update_derived_stats, NULL, cf.stable->rtpp_stats) != 0) {
         rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
           "can't schedule notification to derive stats");
     }
