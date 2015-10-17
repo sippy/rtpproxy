@@ -60,7 +60,11 @@ struct rtpp_timed_wi {
     rtpp_timed_cb_t cb_func;
     rtpp_timed_cancel_cb_t cancel_cb_func;
     void *cb_func_arg;
+    struct rtpp_refcnt_obj *callback_rcnt;
     double when;
+    double offset;
+    struct rtpp_timed_cf *timed_cf;
+    struct rtpp_wi *wi;
     void *rco[0];
 };
 
@@ -72,10 +76,13 @@ static void rtpp_timed_destroy(struct rtpp_timed_cf *);
 static int rtpp_timed_schedule(struct rtpp_timed_obj *,
   double offset, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
 static struct rtpp_timed_task *rtpp_timed_schedule_rc(struct rtpp_timed_obj *,
-  double offset, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
+  double offset, struct rtpp_refcnt_obj *, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t,
+  void *);
 static void rtpp_timed_wakeup(struct rtpp_timed_obj *, double);
 static void rtpp_timed_process(struct rtpp_timed_cf *, double);
-static int rtpp_timed_cancel(struct rtpp_timed_obj *, struct rtpp_timed_task *);
+static int rtpp_timed_cancel(struct rtpp_timed_task *);
+
+static void rtpp_timed_task_dtor(struct rtpp_timed_wi *);
 
 static void
 rtpp_timed_queue_run(void *argp)
@@ -103,6 +110,9 @@ rtpp_timed_queue_run(void *argp)
         wi_data = rtpp_wi_data_get_ptr(wi, rtcp->wi_dsize, rtcp->wi_dsize);
         if (wi_data->cancel_cb_func != NULL) {
             wi_data->cancel_cb_func(wi_data->cb_func_arg);
+        }
+        if (wi_data->callback_rcnt != NULL) {
+            CALL_METHOD(wi_data->callback_rcnt, decref);
         }
         CALL_METHOD(wi_data->pub.rcnt, decref);
     }
@@ -148,7 +158,6 @@ rtpp_timed_ctor(double run_period)
     rtcp->pub.wakeup = &rtpp_timed_wakeup;
     rtcp->pub.schedule = &rtpp_timed_schedule;
     rtcp->pub.schedule_rc = &rtpp_timed_schedule_rc;
-    rtcp->pub.cancel = &rtpp_timed_cancel;
     return (&rtcp->pub);
 
 e5:
@@ -177,9 +186,10 @@ rtpp_timed_destroy(struct rtpp_timed_cf *rtpp_timed_cf)
 }
 
 static struct rtpp_timed_task *
-rtpp_timed_schedule_rc(struct rtpp_timed_obj *pub, double offset,
-  rtpp_timed_cb_t cb_func, rtpp_timed_cancel_cb_t cancel_cb_func,
-  void *cb_func_arg)
+rtpp_timed_schedule_base(struct rtpp_timed_obj *pub, double offset,
+  struct rtpp_refcnt_obj *callback_rcnt, rtpp_timed_cb_t cb_func,
+  rtpp_timed_cancel_cb_t cancel_cb_func, void *cb_func_arg,
+  int support_cancel)
 {
     struct rtpp_wi *wi;
     struct rtpp_timed_wi *wi_data;
@@ -192,8 +202,9 @@ rtpp_timed_schedule_rc(struct rtpp_timed_obj *pub, double offset,
         return (NULL);
     }
     memset(wi_data, '\0', rtpp_timed_cf->wi_dsize);
-    wi_data->pub.rcnt = rtpp_refcnt_ctor_pa(&wi_data->rco[0], wi,
-      (rtpp_refcnt_dtor_t)&rtpp_wi_free);
+    wi_data->wi = wi;
+    wi_data->pub.rcnt = rtpp_refcnt_ctor_pa(&wi_data->rco[0], wi_data,
+      (rtpp_refcnt_dtor_t)&rtpp_timed_task_dtor);
     if (wi_data->pub.rcnt == NULL) {
         rtpp_wi_free(wi);
         return (NULL);
@@ -202,9 +213,34 @@ rtpp_timed_schedule_rc(struct rtpp_timed_obj *pub, double offset,
     wi_data->cancel_cb_func = cancel_cb_func;
     wi_data->cb_func_arg = cb_func_arg;
     wi_data->when = getdtime() + offset;
-    rtpp_queue_put_item(wi, rtpp_timed_cf->q);
+    wi_data->offset = offset;
+    wi_data->callback_rcnt = callback_rcnt;
+    if (callback_rcnt != NULL) {
+        CALL_METHOD(callback_rcnt, incref);
+    }
+    if (support_cancel != 0) {
+        wi_data->pub.cancel = &rtpp_timed_cancel;
+        wi_data->timed_cf = rtpp_timed_cf;
+        CALL_METHOD(pub->rcnt, incref);
+    }
     CALL_METHOD(wi_data->pub.rcnt, incref);
+    rtpp_queue_put_item(wi, rtpp_timed_cf->q);
     return (&(wi_data->pub));
+}
+
+static struct rtpp_timed_task *
+rtpp_timed_schedule_rc(struct rtpp_timed_obj *pub, double offset,
+  struct rtpp_refcnt_obj *callback_rcnt, rtpp_timed_cb_t cb_func,
+  rtpp_timed_cancel_cb_t cancel_cb_func, void *cb_func_arg)
+{
+    struct rtpp_timed_task *tpub;
+
+    tpub = rtpp_timed_schedule_base(pub, offset, callback_rcnt, cb_func,
+      cancel_cb_func, cb_func_arg, 1);
+    if (tpub == NULL) {
+        return (NULL);
+    }
+    return (tpub);
 }
 
 static int
@@ -214,8 +250,8 @@ rtpp_timed_schedule(struct rtpp_timed_obj *pub, double offset,
 {
     struct rtpp_timed_task *tpub;
 
-    tpub = rtpp_timed_schedule_rc(pub, offset, cb_func, cancel_cb_func,
-      cb_func_arg);
+    tpub = rtpp_timed_schedule_base(pub, offset, NULL, cb_func, cancel_cb_func,
+      cb_func_arg, 0);
     if (tpub == NULL) {
         return (-1);
     }
@@ -236,8 +272,9 @@ rtpp_timed_istime(struct rtpp_wi *wi, void *p)
 
     ap = (struct rtpp_timed_istime_arg *)p;
     wi_data = rtpp_wi_data_get_ptr(wi, ap->wi_dsize, ap->wi_dsize);
-    if (wi_data->when <= ap->ctime)
+    if (wi_data->when <= ap->ctime) {
        return (0);
+    }
     return (1);
 }
 
@@ -266,6 +303,7 @@ rtpp_timed_process(struct rtpp_timed_cf *rtcp, double ctime)
     struct rtpp_wi *wi;
     struct rtpp_timed_wi *wi_data;
     struct rtpp_timed_istime_arg istime_arg;
+    enum rtpp_timed_cb_rvals cb_rval;
 
     istime_arg.ctime = ctime;
     istime_arg.wi_dsize = rtcp->wi_dsize;
@@ -276,7 +314,15 @@ rtpp_timed_process(struct rtpp_timed_cf *rtcp, double ctime)
             return;
         }
         wi_data = rtpp_wi_data_get_ptr(wi, rtcp->wi_dsize, rtcp->wi_dsize);
-        wi_data->cb_func(ctime, wi_data->cb_func_arg);
+        cb_rval = wi_data->cb_func(ctime, wi_data->cb_func_arg);
+        if (cb_rval == CB_MORE) {
+            wi_data->when += wi_data->offset;
+            rtpp_queue_put_item(wi, rtcp->q);
+            continue;
+        }
+        if (wi_data->callback_rcnt != NULL) {
+            CALL_METHOD(wi_data->callback_rcnt, decref);
+        }
         CALL_METHOD(wi_data->pub.rcnt, decref);
     }
 }
@@ -300,16 +346,27 @@ rtpp_timed_match_wi(struct rtpp_wi *wia, void *p)
     return (1);
 }
 
+static void
+rtpp_timed_task_dtor(struct rtpp_timed_wi *wi_data)
+{
+
+    if (wi_data->timed_cf != NULL) {
+        CALL_METHOD(wi_data->timed_cf->pub.rcnt, decref);
+    }
+    rtpp_wi_free(wi_data->wi);
+}
+
 static int
-rtpp_timed_cancel(struct rtpp_timed_obj *pub, struct rtpp_timed_task *taskpub)
+rtpp_timed_cancel(struct rtpp_timed_task *taskpub)
 {
     struct rtpp_wi *wim;
     struct rtpp_timed_cf *rtcp;
     struct rtpp_timed_match_wi_arg match_arg;
     struct rtpp_timed_wi *wi_data;
 
-    rtcp = (struct rtpp_timed_cf *)pub;
     wi_data = TASKPUB2PVT(taskpub);
+
+    rtcp = wi_data->timed_cf;
     match_arg.wi_dsize = rtcp->wi_dsize;
     match_arg.wi_data = wi_data;
     wim = rtpp_queue_get_first_matching(rtcp->q, rtpp_timed_match_wi,
@@ -319,6 +376,9 @@ rtpp_timed_cancel(struct rtpp_timed_obj *pub, struct rtpp_timed_task *taskpub)
     }
     if (wi_data->cancel_cb_func != NULL) {
         wi_data->cancel_cb_func(wi_data->cb_func_arg);
+    }
+    if (wi_data->callback_rcnt != NULL) {
+        CALL_METHOD(wi_data->callback_rcnt, decref);
     }
     CALL_METHOD(wi_data->pub.rcnt, decref);
     return (1);

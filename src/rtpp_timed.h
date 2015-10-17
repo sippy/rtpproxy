@@ -25,27 +25,32 @@
  *
  */
 
-typedef void (*rtpp_timed_cb_t)(double, void *);
+enum rtpp_timed_cb_rvals {CB_LAST, CB_MORE};
+
+typedef enum rtpp_timed_cb_rvals (*rtpp_timed_cb_t)(double, void *);
 typedef void (*rtpp_timed_cancel_cb_t)(void *);
 
 struct rtpp_timed_obj;
+struct rtpp_timed_task;
+struct rtpp_refcnt_obj;
+
+DEFINE_METHOD(rtpp_timed_task, rtpp_timed_task_cancel, int);
 
 struct rtpp_timed_task {
     struct rtpp_refcnt_obj *rcnt;
+    rtpp_timed_task_cancel_t cancel;
 };
 
 DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_wakeup, void, double);
 DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_schedule, int, double,
   rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
 DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_schedule_rc, struct rtpp_timed_task *,
-  double, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
-DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_cancel, int, struct rtpp_timed_task *);
+  double, struct rtpp_refcnt_obj *, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
 
 struct rtpp_timed_obj {
     rtpp_timed_wakeup_t wakeup;
     rtpp_timed_schedule_t schedule;
     rtpp_timed_schedule_rc_t schedule_rc;
-    rtpp_timed_cancel_t cancel;
     struct rtpp_refcnt_obj *rcnt;
 };
 
