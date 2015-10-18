@@ -47,6 +47,8 @@ CLEANFILES= ${SRCS_AUTOGEN}
 
 GENFINCODE= $(top_srcdir)/src/genfincode.sh
 
+genfincode: $(SRCS_AUTOGEN)
+
 rtpp_timed_fin.c: genfincode.sh rtpp_timed.h
 	$(GENFINCODE) rtpp_timed.h rtpp_timed_fin.h rtpp_timed_fin.c
 
@@ -76,3 +78,5 @@ rtpp_command_rcache_fin.c: $(GENFINCODE) rtpp_command_rcache.h
 	$(GENFINCODE) rtpp_command_rcache.h rtpp_command_rcache_fin.h rtpp_command_rcache_fin.c
 
 rtpp_command_rcache_fin.h: rtpp_command_rcache_fin.c
+
+.PHONY: genfincode
