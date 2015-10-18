@@ -32,8 +32,6 @@
 struct rtpp_session_obj;
 enum rtpp_ttl_mode;
 
-DEFINE_METHOD(rtpp_session_obj, rtpp_session_dtor, void);
-
 struct rtpp_timeout_data {
     char *notify_tag;
     struct rtpp_tnotify_target *notify_target;
