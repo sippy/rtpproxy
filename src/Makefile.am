@@ -1,5 +1,5 @@
 bin_PROGRAMS=rtpproxy rtpproxy_debug
-rtpproxy_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
+BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
   rtpp_command.c rtpp_command.h rtpp_network.h rtpp_network.c \
@@ -26,6 +26,11 @@ rtpproxy_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_log_obj.h rtpp_log_obj.c
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
   rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
+SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
+  rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
+  rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
+  rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h
+rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
 rtpproxy_LDADD=-lm -lpthread
@@ -37,3 +42,37 @@ rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
 rtpproxy_debug_CFLAGS=-g3 -O0 -fno-omit-frame-pointer
 
 DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
+
+CLEANFILES= ${SRCS_AUTOGEN}
+
+GENFINCODE= $(top_srcdir)/src/genfincode.sh
+
+rtpp_timed_fin.c: genfincode.sh rtpp_timed.h
+	$(GENFINCODE) rtpp_timed.h rtpp_timed_fin.h rtpp_timed_fin.c
+
+rtpp_timed_fin.h: rtpp_timed_fin.c
+
+rtpp_stream_fin.c: $(GENFINCODE) rtpp_stream.h
+	$(GENFINCODE) rtpp_stream.h rtpp_stream_fin.h rtpp_stream_fin.c
+
+rtpp_stream_fin.h: rtpp_stream_fin.c
+
+rtpp_server_fin.c: $(GENFINCODE) rtpp_server.h
+	$(GENFINCODE) rtpp_server.h rtpp_server_fin.h rtpp_server_fin.c
+
+rtpp_server_fin.h: rtpp_server_fin.c
+
+rtpp_refcnt_fin.c: $(GENFINCODE) rtpp_refcnt.h
+	$(GENFINCODE) rtpp_refcnt.h rtpp_refcnt_fin.h rtpp_refcnt_fin.c
+
+rtpp_refcnt_fin.h: rtpp_refcnt_fin.c
+
+rtpp_log_obj_fin.c: $(GENFINCODE) rtpp_log_obj.h
+	$(GENFINCODE) rtpp_log_obj.h rtpp_log_obj_fin.h rtpp_log_obj_fin.c
+
+rtpp_log_obj_fin.h: rtpp_log_obj_fin.c
+
+rtpp_command_rcache_fin.c: $(GENFINCODE) rtpp_command_rcache.h
+	$(GENFINCODE) rtpp_command_rcache.h rtpp_command_rcache_fin.h rtpp_command_rcache_fin.c
+
+rtpp_command_rcache_fin.h: rtpp_command_rcache_fin.c
