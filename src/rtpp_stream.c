@@ -114,6 +114,9 @@ rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
     }
     if (session_type == SESS_RTP) {
         pvt->pub.analyzer = rtpp_analyzer_ctor(log);
+        if (pvt->pub.analyzer == NULL) {
+            goto e3;
+        }
     }
     pvt->servers_wrt = servers_wrt;
     pvt->rtpp_stats = rtpp_stats;
@@ -137,6 +140,8 @@ rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
     rtpp_gen_uid(&pvt->pub.stuid);
     return (&pvt->pub);
 
+e3:
+    CALL_METHOD(pvt->pub.rcnt, abort);
 e2:
     pthread_mutex_destroy(&pvt->lock);
 e1:
