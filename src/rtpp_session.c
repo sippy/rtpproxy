@@ -207,11 +207,12 @@ close_socket_now(void *argp)
     free(argp);
 }
 
-static void
+static enum rtpp_timed_cb_rvals
 close_socket_ontime(double ctime, void *argp)
 {
 
     close_socket_now(argp);
+    return (CB_LAST);
 }
 
 static void
