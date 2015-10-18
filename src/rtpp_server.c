@@ -42,6 +42,7 @@
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_server.h"
+#include "rtpp_server_fin.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_util.h"
 
@@ -133,6 +134,7 @@ static void
 rtpp_server_dtor(struct rtpp_server_priv *rp)
 {
 
+    rtpp_server_obj_fin(&rp->pub);
     close(rp->fd);
     free(rp);
 }

@@ -34,6 +34,7 @@
 #include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_log_obj_fin.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_util.h"
@@ -82,6 +83,7 @@ static void
 rtpp_log_obj_dtor(struct rtpp_log_priv *pvt)
 {
 
+    rtpp_log_obj_fin(&pvt->pub);
     rtpp_log_close(pvt->log);
     free(pvt);
 }

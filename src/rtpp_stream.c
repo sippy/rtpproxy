@@ -53,6 +53,7 @@
 #include "rtpp_network.h"
 #include "rtpp_stats.h"
 #include "rtpp_stream.h"
+#include "rtpp_stream_fin.h"
 #include "rtpp_server.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
@@ -156,6 +157,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     struct rtpp_stream_obj *pub;
 
     pub = &(pvt->pub);
+    rtpp_stream_obj_fin(pub);
     if (pub->analyzer != NULL) {
          struct rtpp_analyzer_stats rst;
          char ssrc_buf[11];

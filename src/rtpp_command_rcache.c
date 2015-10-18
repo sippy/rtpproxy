@@ -30,6 +30,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_command_rcache.h"
+#include "rtpp_command_rcache_fin.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_timed.h"
@@ -189,6 +190,7 @@ void
 rtpp_cmd_rcache_dtor(struct rtpp_cmd_rcache_pvt *pvt)
 {
 
+    rtpp_cmd_rcache_obj_fin(&pvt->pub);
     CALL_METHOD(pvt->ht, dtor);
     free(pvt);
 }

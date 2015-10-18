@@ -42,6 +42,7 @@
 #include "rtpp_util.h"
 #include "rtpp_time.h"
 #include "rtpp_timed.h"
+#include "rtpp_timed_fin.h"
 
 struct rtpp_timed_cf {
     struct rtpp_timed_obj pub;
@@ -179,6 +180,7 @@ rtpp_timed_destroy(struct rtpp_timed_cf *rtpp_timed_cf)
 {
 
     rtpp_queue_put_item(rtpp_timed_cf->sigterm, rtpp_timed_cf->cmd_q);
+    rtpp_timed_obj_fin(&(rtpp_timed_cf->pub));
     pthread_join(rtpp_timed_cf->thread_id, NULL);
     rtpp_queue_destroy(rtpp_timed_cf->cmd_q);
     rtpp_queue_destroy(rtpp_timed_cf->q);
@@ -350,6 +352,7 @@ static void
 rtpp_timed_task_dtor(struct rtpp_timed_wi *wi_data)
 {
 
+    rtpp_timed_task_fin(&(wi_data->pub));
     if (wi_data->timed_cf != NULL) {
         CALL_METHOD(wi_data->timed_cf->pub.rcnt, decref);
     }

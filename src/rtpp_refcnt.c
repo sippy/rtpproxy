@@ -33,6 +33,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_refcnt_fin.h"
 #include "rtpp_util.h"
 
 struct rtpp_refcnt_priv
@@ -139,6 +140,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt_obj *pub)
             pvt->pre_dtor_f(pvt->pd_data);
         }
         pvt->dtor_f(pvt->data);
+        rtpp_refcnt_obj_fin(pub);
         pthread_mutex_unlock(&pvt->cnt_lock);
         pthread_mutex_destroy(&pvt->cnt_lock);
         if (pvt->pa_flag == 0) {
