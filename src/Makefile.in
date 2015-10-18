@@ -432,8 +432,9 @@ rtpproxy_debug_CPPFLAGS = -DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
 
 rtpproxy_debug_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 CLEANFILES = ${SRCS_AUTOGEN}
+BUILT_SOURCES = ${SRCS_AUTOGEN}
 GENFINCODE = $(top_srcdir)/src/genfincode.sh
-all: config.h
+all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
@@ -1518,13 +1519,15 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(PROGRAMS) config.h
 installdirs:
 	for dir in "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -1555,6 +1558,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
@@ -1625,7 +1629,7 @@ ps-am:
 
 uninstall-am: uninstall-binPROGRAMS
 
-.MAKE: all install-am install-strip
+.MAKE: all check install install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am check check-am clean \
 	clean-binPROGRAMS clean-generic clean-libtool cscopelist-am \
@@ -1644,8 +1648,6 @@ uninstall-am: uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
 
-
-genfincode: $(SRCS_AUTOGEN)
 
 rtpp_timed_fin.c: genfincode.sh rtpp_timed.h
 	$(GENFINCODE) rtpp_timed.h rtpp_timed_fin.h rtpp_timed_fin.c
@@ -1676,8 +1678,6 @@ rtpp_command_rcache_fin.c: $(GENFINCODE) rtpp_command_rcache.h
 	$(GENFINCODE) rtpp_command_rcache.h rtpp_command_rcache_fin.h rtpp_command_rcache_fin.c
 
 rtpp_command_rcache_fin.h: rtpp_command_rcache_fin.c
-
-.PHONY: genfincode
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
