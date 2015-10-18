@@ -45,9 +45,9 @@ DEFINE_METHOD(rtpp_server_obj, rtpp_server_get_seq, uint16_t);
 
 struct rtpp_server_obj {
     /* Public methods */
-    rtpp_server_get_t get;
-    rtpp_server_get_ssrc_t get_ssrc;
-    rtpp_server_get_seq_t get_seq;
+    METHOD_ENTRY(rtpp_server_get, get);
+    METHOD_ENTRY(rtpp_server_get_ssrc, get_ssrc);
+    METHOD_ENTRY(rtpp_server_get_seq, get_seq);
     /* Refcounter */
     struct rtpp_refcnt_obj *rcnt;
     /* UID */

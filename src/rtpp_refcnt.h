@@ -37,11 +37,11 @@ DEFINE_METHOD(rtpp_refcnt_obj, refcnt_abort, void);
 
 struct rtpp_refcnt_obj
 {
-    refcnt_incref_t incref;
-    refcnt_decref_t decref;
-    refcnt_getdata_t getdata;
-    refcnt_reg_pd_t reg_pd;
-    refcnt_abort_t abort;
+    METHOD_ENTRY(refcnt_incref, incref);
+    METHOD_ENTRY(refcnt_decref, decref);
+    METHOD_ENTRY(refcnt_getdata, getdata);
+    METHOD_ENTRY(refcnt_reg_pd, reg_pd);
+    METHOD_ENTRY(refcnt_abort, abort);
 };
 
 struct rtpp_refcnt_obj *rtpp_refcnt_ctor(void *, rtpp_refcnt_dtor_t);

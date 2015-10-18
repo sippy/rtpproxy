@@ -38,7 +38,7 @@ DEFINE_METHOD(rtpp_timed_task, rtpp_timed_task_cancel, int);
 
 struct rtpp_timed_task {
     struct rtpp_refcnt_obj *rcnt;
-    rtpp_timed_task_cancel_t cancel;
+    METHOD_ENTRY(rtpp_timed_task_cancel, cancel);
 };
 
 DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_wakeup, void, double);
@@ -48,9 +48,9 @@ DEFINE_METHOD(rtpp_timed_obj, rtpp_timed_schedule_rc, struct rtpp_timed_task *,
   double, struct rtpp_refcnt_obj *, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
 
 struct rtpp_timed_obj {
-    rtpp_timed_wakeup_t wakeup;
-    rtpp_timed_schedule_t schedule;
-    rtpp_timed_schedule_rc_t schedule_rc;
+    METHOD_ENTRY(rtpp_timed_wakeup, wakeup);
+    METHOD_ENTRY(rtpp_timed_schedule, schedule);
+    METHOD_ENTRY(rtpp_timed_schedule_rc, schedule_rc);
     struct rtpp_refcnt_obj *rcnt;
 };
 

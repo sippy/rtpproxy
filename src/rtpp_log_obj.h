@@ -31,14 +31,16 @@ struct rtpp_log_obj;
 
 DEFINE_METHOD(rtpp_log_obj, rtpp_log_obj_write, void, const char *, int,
   const char *, ...);
+DEFINE_METHOD(rtpp_log_obj, rtpp_log_obj_ewrite, void, const char *, int,
+  const char *, ...);
 DEFINE_METHOD(rtpp_log_obj, rtpp_log_obj_setlevel, void, int);
 
 struct rtpp_log_obj {
     struct rtpp_refcnt_obj *rcnt;
     /* Public methods */
-    rtpp_log_obj_write_t write;
-    rtpp_log_obj_write_t ewrite;
-    rtpp_log_obj_setlevel_t setlevel;
+    METHOD_ENTRY(rtpp_log_obj_write, write);
+    METHOD_ENTRY(rtpp_log_obj_ewrite, ewrite);
+    METHOD_ENTRY(rtpp_log_obj_setlevel, setlevel);
     /* UID */
     uint64_t lguid;
 };

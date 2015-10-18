@@ -35,6 +35,7 @@ struct rtpp_stats_obj;
 struct rtpp_log_obj;
 struct rtpp_command;
 struct rtp_packet;
+struct sockaddr;
 
 DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_handle_play, int, char *,
   char *, int, struct rtpp_command *, int);
@@ -103,17 +104,17 @@ struct rtpp_stream_obj {
     int session_type;
     struct rtpp_log_obj *log;
     /* Public methods */
-    rtpp_stream_handle_play_t handle_play;
-    rtpp_stream_handle_noplay_t handle_noplay;
-    rtpp_stream_isplayer_active_t isplayer_active;
-    rtpp_stream_finish_playback_t finish_playback;
-    rtpp_stream_get_actor_t get_actor;
-    rtpp_stream_get_proto_t get_proto;
-    rtpp_stream_latch_t latch;
-    rtpp_stream_check_latch_override_t check_latch_override;
-    rtpp_stream_fill_addr_t fill_addr;
-    rtpp_stream_guess_addr_t guess_addr;
-    rtpp_stream_prefill_addr_t prefill_addr;
+    METHOD_ENTRY(rtpp_stream_handle_play, handle_play);
+    METHOD_ENTRY(rtpp_stream_handle_noplay, handle_noplay);
+    METHOD_ENTRY(rtpp_stream_isplayer_active, isplayer_active);
+    METHOD_ENTRY(rtpp_stream_finish_playback, finish_playback);
+    METHOD_ENTRY(rtpp_stream_get_actor, get_actor);
+    METHOD_ENTRY(rtpp_stream_get_proto, get_proto);
+    METHOD_ENTRY(rtpp_stream_latch, latch);
+    METHOD_ENTRY(rtpp_stream_check_latch_override, check_latch_override);
+    METHOD_ENTRY(rtpp_stream_fill_addr, fill_addr);
+    METHOD_ENTRY(rtpp_stream_guess_addr, guess_addr);
+    METHOD_ENTRY(rtpp_stream_prefill_addr, prefill_addr);
 };
 
 struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_log_obj *,

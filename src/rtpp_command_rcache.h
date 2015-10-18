@@ -33,9 +33,9 @@ DEFINE_METHOD(rtpp_cmd_rcache_obj, rcache_lookup, int, const char *, char *, int
 DEFINE_METHOD(rtpp_cmd_rcache_obj, rcache_shutdown, void);
 
 struct rtpp_cmd_rcache_obj {
-    rcache_insert_t insert;
-    rcache_lookup_t lookup;
-    rcache_shutdown_t shutdown;
+    METHOD_ENTRY(rcache_insert, insert);
+    METHOD_ENTRY(rcache_lookup, lookup);
+    METHOD_ENTRY(rcache_shutdown, shutdown);
     struct rtpp_refcnt_obj *rcnt;
 };
 
