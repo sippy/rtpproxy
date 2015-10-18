@@ -43,6 +43,7 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_private.h"
@@ -670,7 +671,8 @@ e7:
         pthread_join(cmd_cf->acpt_thread_id, NULL);
     }
 e6:
-    CALL_METHOD(cmd_cf->rcache, dtor);
+    CALL_METHOD(cmd_cf->rcache, shutdown);
+    CALL_METHOD(cmd_cf->rcache->rcnt, decref);
 e5:
     pthread_mutex_destroy(&cmd_cf->cmd_mutex);
 e4:
@@ -709,8 +711,8 @@ rtpp_command_async_dtor(struct rtpp_cmd_async_obj *pub)
     if (cmd_cf->acceptor_started != 0) {
         pthread_join(cmd_cf->acpt_thread_id, NULL);
     }
-
-    CALL_METHOD(cmd_cf->rcache, dtor);
+    CALL_METHOD(cmd_cf->rcache, shutdown);
+    CALL_METHOD(cmd_cf->rcache->rcnt, decref);
     pthread_cond_destroy(&cmd_cf->cmd_cond);
     pthread_mutex_destroy(&cmd_cf->cmd_mutex);
     free_pollset(&cmd_cf->pset);
