@@ -16,8 +16,8 @@ gen_fin_c() {
   for mname in ${MNAMES_ALL}
   do
     echo "static void ${mname}_fin(void *pub) {"
-    echo '    fprintf(stderr, "Method '"${mname}"' is called after destruction\n");'
-    echo '    abort();'
+    echo "    fprintf(stderr, \"Method ${mname} is called after destruction\\n\");"
+    echo "    abort();"
     echo "}"
   done
   for oname in ${ONAMES}
