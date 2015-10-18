@@ -30,12 +30,13 @@ struct rtpp_cmd_rcache_obj;
 
 DEFINE_METHOD(rtpp_cmd_rcache_obj, rcache_insert, void, const char *, const char *, double);
 DEFINE_METHOD(rtpp_cmd_rcache_obj, rcache_lookup, int, const char *, char *, int);
-DEFINE_METHOD(rtpp_cmd_rcache_obj, rcache_dtor, void);
+DEFINE_METHOD(rtpp_cmd_rcache_obj, rcache_shutdown, void);
 
 struct rtpp_cmd_rcache_obj {
     rcache_insert_t insert;
     rcache_lookup_t lookup;
-    rcache_dtor_t dtor;
+    rcache_shutdown_t shutdown;
+    struct rtpp_refcnt_obj *rcnt;
 };
 
 struct rtpp_timed_obj;
