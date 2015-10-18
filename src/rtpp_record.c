@@ -56,6 +56,7 @@
 #include "rtpp_record.h"
 #include "rtpp_record_private.h"
 #include "rtpp_session.h"
+#include "rtpp_stream.h"
 #include "rtpp_time.h"
 #include "rtpp_util.h"
 
@@ -220,9 +221,10 @@ ropen(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig)
 }
 
 static int
-flush_rbuf(struct rtpp_session_obj *sp, void *rrc)
+flush_rbuf(struct rtpp_stream_obj *stp, void *rrc)
 {
     int rval;
+    const char *proto;
 
     rval = write(RRC_CAST(rrc)->fd, RRC_CAST(rrc)->rbuf, RRC_CAST(rrc)->rbuf_len);
     if (rval != -1) {
@@ -230,8 +232,9 @@ flush_rbuf(struct rtpp_session_obj *sp, void *rrc)
 	return 0;
     }
 
-    RTPP_ELOG(sp->log, RTPP_LOG_ERR, "error while recording session (%s)",
-      (sp->rtcp != NULL) ? "RTP" : "RTCP");
+    proto = CALL_METHOD(stp, get_proto);
+    RTPP_ELOG(stp->log, RTPP_LOG_ERR, "error while recording session (%s)",
+      proto);
     /* Prevent futher writing if error happens */
     close(RRC_CAST(rrc)->fd);
     RRC_CAST(rrc)->fd = -1;
@@ -400,7 +403,7 @@ rwrite(struct rtpp_session_obj *sp, void *rrc, struct rtp_packet *packet,
 
     /* Check if the write buffer has necessary space, and flush if not */
     if ((RRC_CAST(rrc)->rbuf_len + hdr_size + packet->size > sizeof(RRC_CAST(rrc)->rbuf)) && RRC_CAST(rrc)->rbuf_len > 0)
-	if (flush_rbuf(sp, rrc) != 0)
+	if (flush_rbuf(sp->stream[face], rrc) != 0)
 	    return;
 
     face = (sp->record_single_file == 0) ? 0 : face;
@@ -435,11 +438,11 @@ rwrite(struct rtpp_session_obj *sp, void *rrc, struct rtp_packet *packet,
 }
 
 void
-rclose(struct rtpp_session_obj *sp, void *rrc, int keep)
+rclose(struct rtpp_stream_obj *stp, void *rrc, int keep)
 {
 
     if (RRC_CAST(rrc)->mode != MODE_REMOTE_RTP && RRC_CAST(rrc)->rbuf_len > 0)
-	flush_rbuf(sp, rrc);
+	flush_rbuf(stp, rrc);
 
     if (RRC_CAST(rrc)->fd != -1)
 	close(RRC_CAST(rrc)->fd);
@@ -449,11 +452,11 @@ rclose(struct rtpp_session_obj *sp, void *rrc, int keep)
 
     if (keep == 0) {
 	if (unlink(RRC_CAST(rrc)->spath) == -1)
-	    RTPP_ELOG(sp->log, RTPP_LOG_ERR, "can't remove "
+	    RTPP_ELOG(stp->log, RTPP_LOG_ERR, "can't remove "
 	      "session record %s", RRC_CAST(rrc)->spath);
     } else if (RRC_CAST(rrc)->needspool == 1) {
 	if (rename(RRC_CAST(rrc)->spath, RRC_CAST(rrc)->rpath) == -1)
-	    RTPP_ELOG(sp->log, RTPP_LOG_ERR, "can't move "
+	    RTPP_ELOG(stp->log, RTPP_LOG_ERR, "can't move "
 	      "session record from spool into permanent storage");
     }
 

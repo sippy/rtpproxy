@@ -31,6 +31,7 @@
 
 struct cfg;
 struct rtpp_session_obj;
+struct rtpp_stream_obj;
 struct rtp_packet;
 struct sockaddr;
 
@@ -38,6 +39,6 @@ struct sockaddr;
 void *ropen(struct cfg *cf, struct rtpp_session_obj *, char *, int);
 void rwrite(struct rtpp_session_obj *, void *, struct rtp_packet *,
   struct sockaddr *, struct sockaddr *, int, int);
-void rclose(struct rtpp_session_obj *, void *, int);
+void rclose(struct rtpp_stream_obj *, void *, int);
 
 #endif
