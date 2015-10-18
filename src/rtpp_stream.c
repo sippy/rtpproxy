@@ -43,6 +43,7 @@
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtp.h"
+#include "rtpp_analyzer.h"
 #include "rtp_resizer.h"
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
@@ -62,7 +63,6 @@ struct rtpp_stream_priv
     struct rtpp_stream_obj pub;
     struct rtpp_weakref_obj *servers_wrt;
     struct rtpp_stats_obj *rtpp_stats;
-    struct rtpp_log_obj *log;
     pthread_mutex_t lock;
     /* Weak reference to the "rtpp_server" (player) */
     uint64_t rtps;
@@ -112,9 +112,12 @@ rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
     if (pvt->pub.rcnt == NULL) {
         goto e2;
     }
+    if (session_type == SESS_RTP) {
+        pvt->pub.analyzer = rtpp_analyzer_ctor(log);
+    }
     pvt->servers_wrt = servers_wrt;
     pvt->rtpp_stats = rtpp_stats;
-    pvt->log = log;
+    pvt->pub.log = log;
     CALL_METHOD(log->rcnt, incref);
     pvt->side = side;
     pvt->pub.session_type = session_type;
@@ -148,6 +151,37 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     struct rtpp_stream_obj *pub;
 
     pub = &(pvt->pub);
+    if (pub->analyzer != NULL) {
+         struct rtpp_analyzer_stats rst;
+         char ssrc_buf[11];
+         const char *actor, *ssrc;
+
+         actor = rtpp_stream_get_actor(pub);
+         rtpp_analyzer_stat(pub->analyzer, &rst);
+         if (rst.ssrc_changes != 0) {
+             snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", rst.last_ssrc);
+             ssrc = ssrc_buf;
+         } else {
+             ssrc = "NONE";
+         }
+         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "RTP stream from %s: "
+           "SSRC=%s, ssrc_changes=%u, psent=%u, precvd=%u, plost=%d, pdups=%u",
+           actor, ssrc, rst.ssrc_changes, rst.psent, rst.precvd,
+           rst.psent - rst.precvd, rst.pdups);
+         if (rst.psent > 0) {
+             CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_nsent", rst.psent);
+         }
+         if (rst.precvd > 0) {
+             CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_nrcvd", rst.precvd);
+         }
+         if (rst.pdups > 0) {
+             CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_ndups", rst.pdups);
+         }
+         if (rst.pecount > 0) {
+             CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
+         }
+         rtpp_analyzer_dtor(pub->analyzer);
+    }
     if (pub->addr != NULL)
         free(pub->addr);
     if (pub->prev_addr != NULL)
@@ -159,7 +193,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     if (pub->resizer != NULL)
         rtp_resizer_free(pvt->rtpp_stats, pub->resizer);
 
-    CALL_METHOD(pvt->log->rcnt, decref);
+    CALL_METHOD(pvt->pub.log->rcnt, decref);
     pthread_mutex_destroy(&pvt->lock);
     free(pvt);
 }
@@ -208,13 +242,13 @@ rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
         CALL_METHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           pvt->rtpp_stats);
         CALL_METHOD(rsrv->rcnt, decref);
-        RTPP_LOG(pvt->log, RTPP_LOG_INFO,
+        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
           "%d times playing prompt %s codec %d: SSRC=0x%.8X, seq=%u",
           playcount, pname, n, ssrc, seq);
         return 0;
     }
     pthread_mutex_unlock(&pvt->lock);
-    RTPP_LOG(pvt->log, RTPP_LOG_ERR, "can't create player");
+    RTPP_LOG(pvt->pub.log, RTPP_LOG_ERR, "can't create player");
     return -1;
 }
 
@@ -229,7 +263,7 @@ rtpp_stream_handle_noplay(struct rtpp_stream_obj *self)
         if (CALL_METHOD(pvt->servers_wrt, unreg, pvt->rtps) != NULL) {
             pvt->rtps = RTPP_UID_NONE;
         }
-        RTPP_LOG(pvt->log, RTPP_LOG_INFO,
+        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
           "stopping player at port %d", self->port);
     }
     pthread_mutex_unlock(&pvt->lock);
@@ -257,7 +291,7 @@ rtpp_stream_finish_playback(struct rtpp_stream_obj *self, uint64_t sruid)
     pthread_mutex_lock(&pvt->lock);
     if (pvt->rtps != RTPP_UID_NONE && pvt->rtps == sruid) {
         pvt->rtps = RTPP_UID_NONE;
-        RTPP_LOG(pvt->log, RTPP_LOG_INFO,
+        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
           "player at port %d has finished", self->port);
     }
     pthread_mutex_unlock(&pvt->lock);
@@ -320,7 +354,7 @@ rtpp_stream_latch(struct rtpp_stream_obj *self, double dtime,
     } else {
         relatch = "re-";
     }
-    RTPP_LOG(pvt->log, RTPP_LOG_INFO,
+    RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address %slatched in: %s (%s), SSRC=%s, Seq=%s", actor, relatch,
       saddr, ptype, ssrc, seq);
     self->latch_info.latched = 1;
@@ -349,7 +383,7 @@ rtpp_stream_check_latch_override(struct rtpp_stream_obj *self,
     actor = rtpp_stream_get_actor(self);
 
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
-    RTPP_LOG(pvt->log, RTPP_LOG_INFO,
+    RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address re-latched: %s (%s), SSRC=0x%.8X, Seq=%u->%u", actor,
       saddr, "RTP", self->latch_info.ssrc, self->latch_info.seq,
       packet->parsed->seq);
@@ -378,7 +412,7 @@ rtpp_stream_fill_addr(struct rtpp_stream_obj *self,
     actor = rtpp_stream_get_actor(self);
     ptype =  rtpp_stream_get_proto(self);
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
-    RTPP_LOG(pvt->log, RTPP_LOG_INFO,
+    RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address filled in: %s (%s)", actor, saddr, ptype);
     return;
 }
@@ -412,7 +446,7 @@ rtpp_stream_guess_addr(struct rtpp_stream_obj *self,
     satosin(self->addr)->sin_port = htons(rport + 1);
     /* Use guessed value as the only true one for asymmetric clients */
     self->latch_info.latched = self->asymmetric;
-    RTPP_LOG(pvt->log, RTPP_LOG_INFO, "guessing %s port "
+    RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "guessing %s port "
       "for %s to be %d", ptype, actor, rport + 1);
 
     return (0);
@@ -445,7 +479,7 @@ rtpp_stream_prefill_addr(struct rtpp_stream_obj *self, struct sockaddr **iapp,
     addrport2char_r(*iapp, saddr, sizeof(saddr));
     actor = rtpp_stream_get_actor(self);
     ptype =  rtpp_stream_get_proto(self);
-    RTPP_LOG(pvt->log, RTPP_LOG_INFO, "pre-filling %s's %s address "
+    RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "pre-filling %s's %s address "
       "with %s", actor, ptype, saddr);
     if (self->addr != NULL) {
         if (self->latch_info.latched != 0) {

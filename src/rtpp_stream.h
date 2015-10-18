@@ -101,6 +101,7 @@ struct rtpp_stream_obj {
     uint64_t stuid;
     /* Type of session we are associated with, read-only */
     int session_type;
+    struct rtpp_log_obj *log;
     /* Public methods */
     rtpp_stream_handle_play_t handle_play;
     rtpp_stream_handle_noplay_t handle_noplay;
