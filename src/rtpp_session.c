@@ -306,7 +306,7 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
 	    cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].events = 0;
 	}
 	if (sp->stream[i]->rrc != NULL) {
-	    rclose(sp, sp->stream[i]->rrc, 1);
+	    rclose(sp->stream[i], sp->stream[i]->rrc, 1);
             if (sp->record_single_file != 0) {
                 sp->rtcp->stream[i]->rrc = NULL;
                 sp->stream[NOT(i)]->rrc = NULL;
@@ -314,38 +314,7 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
             }
         }
 	if (sp->rtcp->stream[i]->rrc != NULL)
-	    rclose(sp, sp->rtcp->stream[i]->rrc, 1);
-        if (sp->stream[i]->analyzer != NULL) {
-             struct rtpp_analyzer_stats rst;
-             char ssrc_buf[11];
-             const char *actor, *ssrc;
-
-             actor = CALL_METHOD(sp->stream[i], get_actor);
-             rtpp_analyzer_stat(sp->stream[i]->analyzer, &rst);
-             if (rst.ssrc_changes != 0) {
-                 snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", rst.last_ssrc);
-                 ssrc = ssrc_buf;
-             } else {
-                 ssrc = "NONE";
-             }
-             RTPP_LOG(sp->log, RTPP_LOG_INFO, "RTP stream from %s: "
-               "SSRC=%s, ssrc_changes=%u, psent=%u, precvd=%u, plost=%d, pdups=%u",
-               actor, ssrc, rst.ssrc_changes, rst.psent, rst.precvd,
-               rst.psent - rst.precvd, rst.pdups);
-             if (rst.psent > 0) {
-                 CALL_METHOD(sp->rtpp_stats, updatebyname, "rtpa_nsent", rst.psent);
-             }
-             if (rst.precvd > 0) {
-                 CALL_METHOD(sp->rtpp_stats, updatebyname, "rtpa_nrcvd", rst.precvd);
-             }
-             if (rst.pdups > 0) {
-                 CALL_METHOD(sp->rtpp_stats, updatebyname, "rtpa_ndups", rst.pdups);
-             }
-             if (rst.pecount > 0) {
-                 CALL_METHOD(sp->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
-             }
-             rtpp_analyzer_dtor(sp->stream[i]->analyzer);
-        }
+	    rclose(sp->rtcp->stream[i], sp->rtcp->stream[i]->rrc, 1);
     }
     if (sp->hte != NULL)
         CALL_METHOD(cf->stable->sessions_ht, remove, sp->call_id, sp->hte);
