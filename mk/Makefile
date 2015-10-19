@@ -37,12 +37,13 @@ LIBSIPLOG=	siplog
 PROG=	rtpproxy_debug
 CLEANFILES+=	rtpproxy
 DEBUG_FLAGS=	-g3 -O0 -DRTPP_DEBUG -include rtpp_memdeb.h
-LDADD+=		-static
+LDADD+=		-static ../libexecinfo/libexecinfo.a
+CFLAGS+=	-I../
 SRCS+=		${SRCS_DEBUG}
 LIBSIPLOG=	siplog_debug
 .endif
 
-SRCS+=	main.c rtpp_server.c rtpp_server.h rtpp_defines.h \
+SRCS_BASE=	main.c rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_record.c rtpp_record.h rtpp_session.h rtpp_util.c \
 	rtpp_util.h rtpp_log.h rtp_resizer.c rtp_resizer.h rtp.c \
 	rtp.h rtpp_session.c rtpp_command.c rtpp_command.h \
@@ -69,10 +70,22 @@ SRCS+=	main.c rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_sessinfo.c rtpp_sessinfo.h rtpp_weakref.c rtpp_weakref.h \
 	rtpp_proc_servers.h rtpp_proc_servers.c rtpp_stream.h rtpp_stream.c \
 	rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
-	rtpp_log_obj.h rtpp_log_obj.c
+	rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h
+SRCS+=	${SRCS_BASE}
 
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
-                rtpp_memdeb_stats.h rtpp_memdeb_test.c
+        rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c \
+	rtpp_stacktrace.h
+
+SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
+  rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
+  rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
+  rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h rtpp_socket_fin.c \
+  rtpp_socket_fin.h
+
+SRCS+=		${SRCS_AUTOGEN}
+CLEANFILES+=	${SRCS_AUTOGEN}
+
 MAN1=
 
 WARNS?=	2
@@ -109,8 +122,45 @@ distribution: clean
 	git push origin rel.${RTPP_SW_VERSION}
 
 includepolice:
-	for file in ${SRCS}; do \
+	for file in ${SRCS_BASE} ${SRCS_DEBUG}; do \
 	  SMAKE="${MAKE}" SMAKEFLAGS="-f ../mk/Makefile" python ../misc/includepolice.py $${file} || sleep 5; \
 	done
+
+GENFINCODE= ../src/genfincode.sh
+
+rtpp_timed_fin.c: genfincode.sh rtpp_timed.h
+	$(GENFINCODE) rtpp_timed.h rtpp_timed_fin.h rtpp_timed_fin.c
+
+rtpp_timed_fin.h: rtpp_timed_fin.c
+
+rtpp_stream_fin.c: $(GENFINCODE) rtpp_stream.h
+	$(GENFINCODE) rtpp_stream.h rtpp_stream_fin.h rtpp_stream_fin.c
+
+rtpp_stream_fin.h: rtpp_stream_fin.c
+
+rtpp_server_fin.c: $(GENFINCODE) rtpp_server.h
+	$(GENFINCODE) rtpp_server.h rtpp_server_fin.h rtpp_server_fin.c
+
+rtpp_server_fin.h: rtpp_server_fin.c
+
+rtpp_refcnt_fin.c: $(GENFINCODE) rtpp_refcnt.h
+	$(GENFINCODE) rtpp_refcnt.h rtpp_refcnt_fin.h rtpp_refcnt_fin.c
+
+rtpp_refcnt_fin.h: rtpp_refcnt_fin.c
+
+rtpp_log_obj_fin.c: $(GENFINCODE) rtpp_log_obj.h
+	$(GENFINCODE) rtpp_log_obj.h rtpp_log_obj_fin.h rtpp_log_obj_fin.c
+
+rtpp_log_obj_fin.h: rtpp_log_obj_fin.c
+
+rtpp_command_rcache_fin.c: $(GENFINCODE) rtpp_command_rcache.h
+	$(GENFINCODE) rtpp_command_rcache.h rtpp_command_rcache_fin.h rtpp_command_rcache_fin.c
+
+rtpp_command_rcache_fin.h: rtpp_command_rcache_fin.c
+
+rtpp_socket_fin.c: $(GENFINCODE) rtpp_socket.h
+	$(GENFINCODE) rtpp_socket.h rtpp_socket_fin.h rtpp_socket_fin.c
+
+rtpp_socket_fin.h: rtpp_socket_fin.c
 
 .include <bsd.prog.mk>
