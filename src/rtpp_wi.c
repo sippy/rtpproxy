@@ -32,6 +32,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_types.h"
+#include "rtpp_refcnt.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_network.h"
@@ -54,6 +56,7 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
     if (wis == NULL) {
         return (NULL);
     }
+    memset(wis, '\0', sizeof(struct rtpp_wi_sendto));
     wis->wi.free_ptr = &(wis->wi);
     wis->wi.wi_type = RTPP_WI_TYPE_OPKT;
     wis->wi.sock = sock;
@@ -70,7 +73,8 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
 
 struct rtpp_wi *
 rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
-  const struct sockaddr *sendto, size_t tolen, int nsend)
+  const struct sockaddr *sendto, size_t tolen, int nsend,
+  struct rtpp_refcnt_obj *sock_rcnt)
 {
     struct rtpp_wi *wi;
 
@@ -78,6 +82,10 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
     wi->free_ptr = (struct rtpp_wi *)pkt;
     wi->wi_type = RTPP_WI_TYPE_OPKT;
     wi->sock = sock;
+    if (sock_rcnt != NULL) {
+        CALL_METHOD(sock_rcnt, incref);
+    }
+    wi->sock_rcnt = sock_rcnt;
     wi->flags = 0;
     wi->msg = pkt->data.buf;
     wi->msg_len = pkt->size;
@@ -218,5 +226,8 @@ void
 rtpp_wi_free(struct rtpp_wi *wi)
 {
 
+    if (wi->sock_rcnt != NULL) {
+        CALL_METHOD(wi->sock_rcnt, decref);
+    }
     free(wi->free_ptr);
 }

@@ -28,10 +28,13 @@
 #ifndef _RTPP_WI_PRIVATE_H_
 #define _RTPP_WI_PRIVATE_H_
 
+struct rtpp_refcnt_obj;
+
 struct rtpp_wi {
     struct rtpp_wi *next;
     enum rtpp_wi_type wi_type;
     int sock;
+    struct rtpp_refcnt_obj *sock_rcnt;
     size_t msg_len;
     int flags;
     struct sockaddr *sendto;
