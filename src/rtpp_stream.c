@@ -56,6 +56,7 @@
 #include "rtpp_stream_fin.h"
 #include "rtpp_server.h"
 #include "rtpp_session.h"
+#include "rtpp_socket.h"
 #include "rtpp_util.h"
 #include "rtpp_weakref.h"
 
@@ -189,6 +190,8 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          }
          rtpp_analyzer_dtor(pub->analyzer);
     }
+    if (pub->fd != NULL)
+        CALL_METHOD(pub->fd->rcnt, decref);
     if (pub->addr != NULL)
         free(pub->addr);
     if (pub->prev_addr != NULL)

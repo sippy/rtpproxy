@@ -54,8 +54,6 @@
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
-#include "rtpp_timed.h"
-#include "rtpp_analyzer.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
 
@@ -262,13 +260,11 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
 	    assert(cf->sessinfo->sessions[sp->stream[i]->sidx] == sp);
 	    cf->sessinfo->sessions[sp->stream[i]->sidx] = NULL;
 	    assert(cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].fd == CALL_METHOD(sp->stream[i]->fd, getfd));
-	    CALL_METHOD(sp->stream[i]->fd->rcnt, decref);
 	    cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].fd = -1;
 	    cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].events = 0;
 	}
 	if (sp->rtcp->stream[i]->fd != NULL) {
 	    assert(cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].fd == CALL_METHOD(sp->rtcp->stream[i]->fd, getfd));
-	    CALL_METHOD(sp->rtcp->stream[i]->fd->rcnt, decref);
 	    cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].fd = -1;
 	    cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].events = 0;
 	}
