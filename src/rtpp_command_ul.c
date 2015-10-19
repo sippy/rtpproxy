@@ -57,7 +57,6 @@
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_util.h"
-#include "rtpp_analyzer.h"
 
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 

@@ -30,8 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
@@ -39,7 +37,6 @@
 #include "rtp_packet.h"
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
-#include "rtpp_session.h"
 #include "rtpp_util.h"
 
 struct rtpp_analyzer {

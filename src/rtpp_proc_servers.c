@@ -39,14 +39,12 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
 #include "rtpp_hash_table.h"
-#include "rtpp_netio_async.h"
 #include "rtpp_network.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_servers.h"
 #include "rtpp_socket.h"
 #include "rtpp_server.h"
 #include "rtpp_stream.h"
-#include "rtpp_util.h"
 
 struct foreach_args {
     double dtime;
