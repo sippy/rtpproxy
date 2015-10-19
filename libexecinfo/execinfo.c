@@ -96,7 +96,7 @@ backtrace_symbols(void *const *buffer, int size)
                 info.dli_sname = "???";
             if (info.dli_saddr == NULL)
                 info.dli_saddr = buffer[i];
-            offset = buffer[i] - info.dli_saddr;
+            offset = (char *)buffer[i] - (char *)info.dli_saddr;
             /* "0x01234567 <function+offset> at filename" */
             alen = 2 +                      /* "0x" */
                    (sizeof(void *) * 2) +   /* "01234567" */
@@ -144,7 +144,7 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd)
                 info.dli_sname = "???";
             if (info.dli_saddr == NULL)
                 info.dli_saddr = buffer[i];
-            offset = buffer[i] - info.dli_saddr;
+            offset = (char *)buffer[i] - (char *)info.dli_saddr;
             /* "0x01234567 <function+offset> at filename" */
             len = 2 +                      /* "0x" */
                   (sizeof(void *) * 2) +   /* "01234567" */
