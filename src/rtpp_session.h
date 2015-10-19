@@ -30,6 +30,7 @@
 #define _RTPP_SESSION_H_
 
 struct rtpp_session_obj;
+struct rtpp_socket;
 enum rtpp_ttl_mode;
 
 struct rtpp_timeout_data {
@@ -89,7 +90,7 @@ struct rtpp_session_obj *session_findfirst(struct cfg *, const char *);
 struct rtpp_session_obj *session_findnext(struct cfg *cf, struct rtpp_session_obj *);
 void hash_table_append(struct cfg *, struct rtpp_session_obj *);
 void append_session(struct cfg *, struct rtpp_session_obj *, int);
-void update_sessions(struct cfg *, struct rtpp_session_obj *, int, int *);
+void update_sessions(struct cfg *, struct rtpp_session_obj *, int, struct rtpp_socket **);
 void remove_session(struct cfg *, struct rtpp_session_obj *);
 int compare_session_tags(const char *, const char *, unsigned *);
 int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session_obj **);

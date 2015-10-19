@@ -65,6 +65,7 @@
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_server.h"
+#include "rtpp_socket.h"
 #include "rtpp_util.h"
 #include "rtpp_stats.h"
 
@@ -93,7 +94,8 @@ struct proto_cap proto_caps[] = {
 
 struct d_opts;
 
-static int create_twinlistener(struct rtpp_cfg_stable *, struct sockaddr *, int, int *);
+static int create_twinlistener(struct rtpp_cfg_stable *, struct sockaddr *, int,
+  struct rtpp_socket **);
 static int handle_delete(struct cfg *, struct common_cmd_args *, int);
 static int handle_record(struct cfg *, struct common_cmd_args *, int);
 static void handle_info(struct cfg *, struct rtpp_command *,
@@ -101,24 +103,25 @@ static void handle_info(struct cfg *, struct rtpp_command *,
 static void handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd);
 
 static int
-create_twinlistener(struct rtpp_cfg_stable *cf, struct sockaddr *ia, int port, int *fds)
+create_twinlistener(struct rtpp_cfg_stable *cf, struct sockaddr *ia, int port,
+  struct rtpp_socket **fds)
 {
     struct sockaddr_storage iac;
-    int rval, i, flags, so_rcvbuf;
+    int rval, i, so_rcvbuf;
 
-    fds[0] = fds[1] = -1;
+    fds[0] = fds[1] = NULL;
 
     rval = -1;
     for (i = 0; i < 2; i++) {
-	fds[i] = socket(ia->sa_family, SOCK_DGRAM, 0);
-	if (fds[i] == -1) {
+	fds[i] = rtpp_socket_ctor(ia->sa_family, SOCK_DGRAM);
+	if (fds[i] == NULL) {
 	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't create %s socket",
 	      (ia->sa_family == AF_INET) ? "IPv4" : "IPv6");
 	    goto failure;
 	}
 	memcpy(&iac, ia, SA_LEN(ia));
 	satosin(&iac)->sin_port = htons(port);
-	if (bind(fds[i], sstosa(&iac), SA_LEN(ia)) != 0) {
+	if (CALL_METHOD(fds[i], bind, sstosa(&iac), SA_LEN(ia)) != 0) {
 	    if (errno != EADDRINUSE && errno != EACCES) {
 		rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't bind to the %s port %d",
 		  (ia->sa_family == AF_INET) ? "IPv4" : "IPv6", port);
@@ -129,32 +132,32 @@ create_twinlistener(struct rtpp_cfg_stable *cf, struct sockaddr *ia, int port, i
 	}
 	port++;
 	if ((ia->sa_family == AF_INET) && (cf->tos >= 0) &&
-	  (setsockopt(fds[i], IPPROTO_IP, IP_TOS, &cf->tos, sizeof(cf->tos)) == -1))
+	  (CALL_METHOD(fds[i], settos, cf->tos) == -1))
 	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "unable to set TOS to %d", cf->tos);
 	so_rcvbuf = 256 * 1024;
-	if (setsockopt(fds[i], SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
+	if (CALL_METHOD(fds[i], setrbuf, so_rcvbuf) == -1)
 	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "unable to set 256K receive buffer size");
-	flags = fcntl(fds[i], F_GETFL);
-	fcntl(fds[i], F_SETFL, flags | O_NONBLOCK);
+        CALL_METHOD(fds[i], setnonblock);
     }
     return 0;
 
 failure:
     for (i = 0; i < 2; i++)
-	if (fds[i] != -1) {
-	    close(fds[i]);
-	    fds[i] = -1;
+	if (fds[i] != NULL) {
+            CALL_METHOD(fds[i]->rcnt, decref);
+	    fds[i] = NULL;
 	}
     return rval;
 }
 
 int
-rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port, int *fds)
+rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port,
+  struct rtpp_socket **fds)
 {
     int i, idx, rval;
 
     for (i = 0; i < 2; i++)
-	fds[i] = -1;
+	fds[i] = NULL;
 
     for (i = 1; i < cf->stable->port_table_len; i++) {
 	idx = (cf->port_table_idx + i) % cf->stable->port_table_len;

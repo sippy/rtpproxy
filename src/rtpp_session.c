@@ -49,6 +49,7 @@
 #include "rtpp_record.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
+#include "rtpp_socket.h"
 #include "rtpp_util.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
@@ -189,52 +190,16 @@ append_session(struct cfg *cf, struct rtpp_session_obj *sp, int index)
     /* Make sure structure is properly locked */
     assert(rtpp_mutex_islocked(&cf->glock) == 1);
 
-    if (sp->stream[index]->fd != -1) {
+    if (sp->stream[index]->fd != NULL) {
         CALL_METHOD(cf->sessinfo, append, sp, index);
     } else {
 	sp->stream[index]->sidx = -1;
     }
 }
 
-static void
-close_socket_now(void *argp)
-{
-    int fd;
-
-    fd = *(int *)argp;
-    shutdown(fd, SHUT_RDWR);
-    close(fd);
-    free(argp);
-}
-
-static enum rtpp_timed_cb_rvals
-close_socket_ontime(double ctime, void *argp)
-{
-
-    close_socket_now(argp);
-    return (CB_LAST);
-}
-
-static void
-close_socket_later(struct cfg *cf, int fd)
-{
-    int *argp;
-
-    argp = malloc(sizeof(int));
-    if (argp == NULL) {
-        shutdown(fd, SHUT_RDWR);
-        close(fd);
-        return;
-    }
-    *argp = fd;
-    if (CALL_METHOD(cf->stable->rtpp_timed_cf, schedule, 1.0,
-      close_socket_ontime, close_socket_now, argp) != 0) {
-        close_socket_now(argp);
-    }
-}
-
 void
-update_sessions(struct cfg *cf, struct rtpp_session_obj *sp, int index, int *new_fds)
+update_sessions(struct cfg *cf, struct rtpp_session_obj *sp, int index, 
+  struct rtpp_socket **new_fds)
 {
     int rtp_index;
 
@@ -243,16 +208,18 @@ update_sessions(struct cfg *cf, struct rtpp_session_obj *sp, int index, int *new
     rtp_index = sp->stream[index]->sidx;
     assert(rtp_index > -1);
     assert(sp->rtcp->stream[index]->sidx == rtp_index);
-    if (sp->stream[index]->fd != -1) {
-        close_socket_later(cf, sp->stream[index]->fd);
+    if (sp->stream[index]->fd != NULL) {
+        CALL_METHOD(sp->stream[index]->fd->rcnt, decref);
     }
-    cf->sessinfo->pfds_rtp[rtp_index].fd = sp->stream[index]->fd = new_fds[0];
+    sp->stream[index]->fd = new_fds[0];
+    cf->sessinfo->pfds_rtp[rtp_index].fd = CALL_METHOD(new_fds[0], getfd);
     cf->sessinfo->pfds_rtp[rtp_index].events = POLLIN;
     cf->sessinfo->pfds_rtp[rtp_index].revents = 0;
-    if (sp->rtcp->stream[index]->fd != -1) {
-        close_socket_later(cf, sp->rtcp->stream[index]->fd);
+    if (sp->rtcp->stream[index]->fd != NULL) {
+        CALL_METHOD(sp->rtcp->stream[index]->fd->rcnt, decref);
     }
-    cf->sessinfo->pfds_rtcp[rtp_index].fd = sp->rtcp->stream[index]->fd = new_fds[1];
+    sp->rtcp->stream[index]->fd = new_fds[1];
+    cf->sessinfo->pfds_rtcp[rtp_index].fd = CALL_METHOD(new_fds[1], getfd);
     cf->sessinfo->pfds_rtcp[rtp_index].events = POLLIN;
     cf->sessinfo->pfds_rtcp[rtp_index].revents = 0;
 }
@@ -291,17 +258,17 @@ remove_session(struct cfg *cf, struct rtpp_session_obj *sp)
     RTPP_LOG(sp->log, RTPP_LOG_INFO, "session on ports %d/%d is cleaned up",
       sp->stream[0]->port, sp->stream[1]->port);
     for (i = 0; i < 2; i++) {
-	if (sp->stream[i]->fd != -1) {
-	    close_socket_later(cf, sp->stream[i]->fd);
+	if (sp->stream[i]->fd != NULL) {
 	    assert(cf->sessinfo->sessions[sp->stream[i]->sidx] == sp);
 	    cf->sessinfo->sessions[sp->stream[i]->sidx] = NULL;
-	    assert(cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].fd == sp->stream[i]->fd);
+	    assert(cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].fd == CALL_METHOD(sp->stream[i]->fd, getfd));
+	    CALL_METHOD(sp->stream[i]->fd->rcnt, decref);
 	    cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].fd = -1;
 	    cf->sessinfo->pfds_rtp[sp->stream[i]->sidx].events = 0;
 	}
-	if (sp->rtcp->stream[i]->fd != -1) {
-	    close_socket_later(cf, sp->rtcp->stream[i]->fd);
-	    assert(cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].fd == sp->rtcp->stream[i]->fd);
+	if (sp->rtcp->stream[i]->fd != NULL) {
+	    assert(cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].fd == CALL_METHOD(sp->rtcp->stream[i]->fd, getfd));
+	    CALL_METHOD(sp->rtcp->stream[i]->fd->rcnt, decref);
 	    cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].fd = -1;
 	    cf->sessinfo->pfds_rtcp[sp->rtcp->stream[i]->sidx].events = 0;
 	}

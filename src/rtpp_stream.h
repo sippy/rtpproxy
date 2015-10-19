@@ -36,6 +36,7 @@ struct rtpp_log_obj;
 struct rtpp_command;
 struct rtp_packet;
 struct sockaddr;
+struct rtpp_socket;
 
 DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_handle_play, int, char *,
   char *, int, struct rtpp_command *, int);
@@ -76,7 +77,7 @@ struct rtpp_stream_obj {
     struct sockaddr *laddr;
     int port;
     /* Descriptors */
-    int fd;
+    struct rtpp_socket *fd;
     int asymmetric;
     /* Flags: strong create/delete; weak ones */
     int weak;

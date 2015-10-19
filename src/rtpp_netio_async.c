@@ -165,7 +165,8 @@ rtpp_anetio_pump_q(struct sthread_args *sender)
 
 int
 rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
-  const struct sockaddr *sendto, socklen_t tolen, struct rtp_packet *pkt)
+  const struct sockaddr *sendto, socklen_t tolen, struct rtp_packet *pkt,
+  struct rtpp_refcnt_obj *sock_rcnt)
 {
     struct rtpp_wi *wi;
     int nsend;
@@ -176,7 +177,7 @@ rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
         nsend = 1;
     }
 
-    wi = rtpp_wi_malloc_pkt(sock, pkt, sendto, tolen, nsend);
+    wi = rtpp_wi_malloc_pkt(sock, pkt, sendto, tolen, nsend, sock_rcnt);
     if (wi == NULL) {
         rtp_packet_free(pkt);
         return (-1);

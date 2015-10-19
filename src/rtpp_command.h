@@ -40,6 +40,7 @@ struct cfg;
 struct cfg_stable;
 struct sockaddr;
 struct rtpp_cmd_rcache_obj;
+struct rtpp_socket;
 
 extern struct proto_cap proto_caps[];
 
@@ -50,7 +51,8 @@ struct rtpp_command *get_command(struct cfg *, int, int *, double,
 void reply_error(struct cfg *cf, struct rtpp_command *cmd, int ecode);
 void reply_port(struct cfg *cf, struct rtpp_command *cmd, int lport,
   struct sockaddr **lia);
-int rtpp_create_listener(struct cfg *, struct sockaddr *, int *, int *);
+int rtpp_create_listener(struct cfg *, struct sockaddr *, int *,
+  struct rtpp_socket **);
 
 void rtpc_doreply(struct cfg *, char *, int, struct rtpp_command *, int);
 

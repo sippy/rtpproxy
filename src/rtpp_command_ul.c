@@ -52,6 +52,7 @@
 #include "rtpp_command_ul.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
+#include "rtpp_socket.h"
 #include "rtp_resizer.h"
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
@@ -348,7 +349,7 @@ err_undo_0:
 
 static void
 handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
-  int ecode, struct ul_opts *ulop, int *fds,
+  int ecode, struct ul_opts *ulop, struct rtpp_socket **fds,
   struct rtpp_session_obj *spa, struct rtpp_session_obj *spb)
 {
     int i;
@@ -362,8 +363,8 @@ handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
         CALL_METHOD(spb->rcnt, decref);
     }
     for (i = 0; i < 2; i++)
-        if (fds[i] != -1)
-            close(fds[i]);
+        if (fds[i] != NULL)
+            CALL_METHOD(fds[i]->rcnt, decref);
     reply_error(cf, cmd, ecode);
 }
 
@@ -372,7 +373,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
   struct ul_opts *ulop, struct rtpp_session_obj *sp, int sidx)
 {
     int pidx, lport, i;
-    int fds[2];
+    struct rtpp_socket *fds[2];
     char *cp;
     const char *actor;
     struct rtpp_session_obj *spa, *spb;
@@ -381,11 +382,11 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     pidx = 1;
     lport = 0;
     spa = spb = NULL;
-    fds[0] = fds[1] = -1;
+    fds[0] = fds[1] = NULL;
     if (sidx != -1) {
         assert(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = sp;
-        if (spa->stream[sidx]->fd == -1 || ulop->new_port != 0) {
+        if (spa->stream[sidx]->fd == NULL || ulop->new_port != 0) {
             if (ulop->local_addr != NULL) {
                 spa->stream[sidx]->laddr = ulop->local_addr;
             }
@@ -394,15 +395,15 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
                 reply_error(cf, cmd, ECODE_LSTFAIL_1);
                 goto err_undo_0;
             }
-            if (spa->stream[sidx]->fd != -1 && ulop->new_port != 0) {
+            if (spa->stream[sidx]->fd != NULL && ulop->new_port != 0) {
                 RTPP_LOG(spa->log, RTPP_LOG_INFO,
                   "new port requested, releasing %d/%d, replacing with %d/%d",
                   spa->stream[sidx]->port, spa->rtcp->stream[sidx]->port, lport, lport + 1);
                 update_sessions(cf, spa, sidx, fds);
             } else {
-                assert(spa->stream[sidx]->fd == -1);
+                assert(spa->stream[sidx]->fd == NULL);
                 spa->stream[sidx]->fd = fds[0];
-                assert(spa->rtcp->stream[sidx]->fd == -1);
+                assert(spa->rtcp->stream[sidx]->fd == NULL);
                 spa->rtcp->stream[sidx]->fd = fds[1];
                 append_session(cf, spa, sidx);
             }
@@ -478,7 +479,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spa->init_ts = cmd->dtime;
         spb->init_ts = cmd->dtime;
         for (i = 0; i < 2; i++) {
-            spa->stream[i]->fd = spb->stream[i]->fd = -1;
+            spa->stream[i]->fd = spb->stream[i]->fd = NULL;
             spa->stream[i]->last_update = 0;
             spb->stream[i]->last_update = 0;
         }
@@ -512,9 +513,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             spa->stream[0]->weak = 1;
         else
             spa->strong = 1;
-        assert(spa->stream[0]->fd == -1);
+        assert(spa->stream[0]->fd == NULL);
         spa->stream[0]->fd = fds[0];
-        assert(spb->stream[0]->fd == -1);
+        assert(spb->stream[0]->fd == NULL);
         spb->stream[0]->fd = fds[1];
         spa->stream[0]->port = lport;
         spb->stream[0]->port = lport + 1;

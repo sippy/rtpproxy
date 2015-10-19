@@ -43,6 +43,7 @@
 #include "rtpp_network.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_servers.h"
+#include "rtpp_socket.h"
 #include "rtpp_server.h"
 #include "rtpp_stream.h"
 #include "rtpp_util.h"
@@ -85,7 +86,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
             }
             break;
         }
-        rtpp_anetio_send_pkt(fap->sender, rsop->fd, rsop->addr,
+        CALL_METHOD(rsop->fd, send_pkt, fap->sender, rsop->addr,
           SA_LEN(rsop->addr), pkt);
         fap->rsp->npkts_played.cnt++;
     }
