@@ -187,6 +187,12 @@ ptr2mpf(void *ptr)
     cp = ptr;
     cp -= offsetof(struct memdeb_pfx, real_data);
     mpf = (struct memdeb_pfx *)cp;
+
+    if (mpf->magic != MEMDEB_SIGNATURE_ALLOC(mpf)) {
+        /* Random of de-allocated pointer */
+        RTPP_MEMDEB_REPORT(_md_glog, "Random of de-allocated pointer");
+        abort();
+    }
     if (mpf->mnp->magic != MEMDEB_SIGNATURE) {
         /* Free of unallocated pointer or nodelist is corrupt */
         RTPP_MEMDEB_REPORT(_md_glog, "Nodelist %p is corrupt", mpf->mnp);
@@ -214,11 +220,6 @@ rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
         abort();
     }
     pthread_mutex_lock(memdeb_mutex);
-    if (mpf->magic != MEMDEB_SIGNATURE_ALLOC(mpf)) {
-        /* Random of de-allocated pointer */
-        RTPP_MEMDEB_REPORT(_md_glog, "Random of de-allocated pointer");
-        abort();
-    }
     mpf->mnp->mstats.nfree++;
     mpf->mnp->mstats.bfree += mpf->asize;
     mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
@@ -239,13 +240,8 @@ rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const
     uint64_t guard;
 
     mpf = ptr2mpf(ptr);
-    pthread_mutex_lock(memdeb_mutex);
     sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
-    if (mpf->magic != sig_save) {
-        /* Random of de-allocated pointer */
-        RTPP_MEMDEB_REPORT(_md_glog, "Random of de-allocated pointer");
-        abort();
-    }
+    pthread_mutex_lock(memdeb_mutex);
     mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
     pthread_mutex_unlock(memdeb_mutex);
     cp = realloc(mpf, size + offsetof(struct memdeb_pfx, real_data) + MEMDEB_GUARD_SIZE);
