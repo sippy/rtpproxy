@@ -136,16 +136,25 @@ rtpp_refcnt_decref(struct rtpp_refcnt_obj *pub)
     pthread_mutex_lock(&pvt->cnt_lock);
     pvt->cnt -= 1;
     if (pvt->cnt == 0) {
-        if (pvt->pre_dtor_f != NULL) {
-            pvt->pre_dtor_f(pvt->pd_data);
-        }
-        pvt->dtor_f(pvt->data);
-        rtpp_refcnt_obj_fin(pub);
-        pthread_mutex_unlock(&pvt->cnt_lock);
-        pthread_mutex_destroy(&pvt->cnt_lock);
         if (pvt->pa_flag == 0) {
+            if (pvt->pre_dtor_f != NULL) {
+                pvt->pre_dtor_f(pvt->pd_data);
+            }
+            pvt->dtor_f(pvt->data);
+            rtpp_refcnt_obj_fin(pub);
+            pthread_mutex_unlock(&pvt->cnt_lock);
+            pthread_mutex_destroy(&pvt->cnt_lock);
             free(pvt);
+        } else {
+            pthread_mutex_unlock(&pvt->cnt_lock);
+            pthread_mutex_destroy(&pvt->cnt_lock);
+            rtpp_refcnt_obj_fin(pub);
+            if (pvt->pre_dtor_f != NULL) {
+                pvt->pre_dtor_f(pvt->pd_data);
+            }
+            pvt->dtor_f(pvt->data);
         }
+
         return;
     }
     assert(pvt->cnt > 0);
