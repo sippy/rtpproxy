@@ -129,7 +129,7 @@ am__objects_1 = main.$(OBJEXT) rtpp_server.$(OBJEXT) \
 am__objects_2 = rtpp_timed_fin.$(OBJEXT) rtpp_stream_fin.$(OBJEXT) \
 	rtpp_server_fin.$(OBJEXT) rtpp_refcnt_fin.$(OBJEXT) \
 	rtpp_log_obj_fin.$(OBJEXT) rtpp_command_rcache_fin.$(OBJEXT) \
-	rtpp_socket_fin.$(OBJEXT)
+	rtpp_socket_fin.$(OBJEXT) rtpp_record_fin.$(OBJEXT)
 am_rtpproxy_OBJECTS = $(am__objects_1) $(am__objects_2)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
 rtpproxy_DEPENDENCIES =
@@ -189,7 +189,8 @@ am__objects_4 = rtpproxy_debug-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_refcnt_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_log_obj_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_command_rcache_fin.$(OBJEXT) \
-	rtpproxy_debug-rtpp_socket_fin.$(OBJEXT)
+	rtpproxy_debug-rtpp_socket_fin.$(OBJEXT) \
+	rtpproxy_debug-rtpp_record_fin.$(OBJEXT)
 am__objects_5 = $(am__objects_3) $(am__objects_4)
 am__objects_6 = rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
 	rtpproxy_debug-rtpp_memdeb_test.$(OBJEXT) \
@@ -422,7 +423,7 @@ SRCS_AUTOGEN = rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
   rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
   rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h rtpp_socket_fin.c \
-  rtpp_socket_fin.h
+  rtpp_socket_fin.h rtpp_record_fin.c rtpp_record_fin.h
 
 rtpproxy_SOURCES = ${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES = ${rtpproxy_SOURCES} ${SRCS_DEBUG}
@@ -585,6 +586,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_pthread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_queue.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_record.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_record_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_refcnt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_refcnt_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_server.Po@am__quote@
@@ -640,6 +642,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_pthread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_queue.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_record.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_record_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_refcnt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_refcnt_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_server.Po@am__quote@
@@ -1424,6 +1427,20 @@ rtpproxy_debug-rtpp_socket_fin.obj: rtpp_socket_fin.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_socket_fin.obj `if test -f 'rtpp_socket_fin.c'; then $(CYGPATH_W) 'rtpp_socket_fin.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_socket_fin.c'; fi`
 
+rtpproxy_debug-rtpp_record_fin.o: rtpp_record_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_record_fin.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_record_fin.Tpo -c -o rtpproxy_debug-rtpp_record_fin.o `test -f 'rtpp_record_fin.c' || echo '$(srcdir)/'`rtpp_record_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_record_fin.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_record_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_record_fin.c' object='rtpproxy_debug-rtpp_record_fin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_record_fin.o `test -f 'rtpp_record_fin.c' || echo '$(srcdir)/'`rtpp_record_fin.c
+
+rtpproxy_debug-rtpp_record_fin.obj: rtpp_record_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_record_fin.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_record_fin.Tpo -c -o rtpproxy_debug-rtpp_record_fin.obj `if test -f 'rtpp_record_fin.c'; then $(CYGPATH_W) 'rtpp_record_fin.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_record_fin.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_record_fin.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_record_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_record_fin.c' object='rtpproxy_debug-rtpp_record_fin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_record_fin.obj `if test -f 'rtpp_record_fin.c'; then $(CYGPATH_W) 'rtpp_record_fin.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_record_fin.c'; fi`
+
 rtpproxy_debug-rtpp_memdeb.o: rtpp_memdeb.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_memdeb.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Tpo -c -o rtpproxy_debug-rtpp_memdeb.o `test -f 'rtpp_memdeb.c' || echo '$(srcdir)/'`rtpp_memdeb.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po
@@ -1717,6 +1734,11 @@ rtpp_command_rcache_fin.h: rtpp_command_rcache_fin.c
 
 rtpp_socket_fin.c: $(GENFINCODE) rtpp_socket.h
 	$(GENFINCODE) rtpp_socket.h rtpp_socket_fin.h rtpp_socket_fin.c
+
+rtpp_socket_fin.h: rtpp_socket_fin.c
+
+rtpp_record_fin.c: $(GENFINCODE) rtpp_record.h
+	$(GENFINCODE) rtpp_record.h rtpp_record_fin.h rtpp_record_fin.c
 
 rtpp_socket_fin.h: rtpp_socket_fin.c
 
