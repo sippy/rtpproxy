@@ -50,6 +50,7 @@ static struct rtpp_refcnt_obj *rtpp_weakref_unreg(struct rtpp_weakref_obj *, uin
 static void rtpp_wref_foreach(struct rtpp_weakref_obj *, rtpp_weakref_foreach_t,
   void *);
 static int rtpp_wref_get_length(struct rtpp_weakref_obj *);
+static int rtpp_wref_purge(struct rtpp_weakref_obj *);
 
 struct rtpp_weakref_obj *
 rtpp_weakref_ctor(void)
@@ -71,6 +72,7 @@ rtpp_weakref_ctor(void)
     pvt->pub.unreg = &rtpp_weakref_unreg;
     pvt->pub.foreach = &rtpp_wref_foreach;
     pvt->pub.get_length = &rtpp_wref_get_length;
+    pvt->pub.purge = &rtpp_wref_purge;
     return (&pvt->pub);
 
 e0:
@@ -147,4 +149,26 @@ rtpp_wref_get_length(struct rtpp_weakref_obj *pub)
 
     pvt = PUB2PVT(pub);
     return (CALL_METHOD(pvt->ht, get_length));
+}
+
+static int
+rtpp_wref_purge_f(void *dp, void *ap)
+{
+    int *npurgedp;
+
+    npurgedp = (int *)ap;
+    *npurgedp += 1;
+    return (RTPP_WR_MATCH_DEL);
+}
+
+static int
+rtpp_wref_purge(struct rtpp_weakref_obj *pub)
+{
+    struct rtpp_weakref_priv *pvt;
+    int npurged;
+
+    pvt = PUB2PVT(pub);
+    npurged = 0;
+    CALL_METHOD(pvt->ht, foreach, rtpp_wref_purge_f, &npurged);
+    return (npurged);
 }
