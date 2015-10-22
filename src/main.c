@@ -842,7 +842,7 @@ main(int argc, char **argv)
             break;
         }
         if (cf.stable->slowshutdown != 0 &&
-          CALL_METHOD(cf.sessinfo, get_nsessions) == 0) {
+          CALL_METHOD(cf.stable->sessions_wrt, get_length) == 0) {
             rtpp_log_write(RTPP_LOG_INFO, cf.stable->glog,
               "deorbiting-burn sequence completed, exiting");
             break;
