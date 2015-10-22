@@ -23,14 +23,18 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_sessinfo.c rtpp_sessinfo.h rtpp_weakref.c rtpp_weakref.h \
   rtpp_proc_servers.h rtpp_proc_servers.c rtpp_stream.h rtpp_stream.c \
   rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
-  rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h
+  rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h \
+  rtpp_ttl.c rtpp_ttl.h rtpp_proc_ttl.h rtpp_proc_ttl.c
+
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
   rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
+
 SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
   rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
   rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h rtpp_socket_fin.c \
-  rtpp_socket_fin.h rtpp_record_fin.c rtpp_record_fin.h
+  rtpp_socket_fin.h rtpp_record_fin.c rtpp_record_fin.h rtpp_ttl_fin.c \
+  rtpp_ttl_fin.h
 rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
@@ -88,3 +92,8 @@ rtpp_record_fin.c: $(GENFINCODE) rtpp_record.h
 	$(GENFINCODE) rtpp_record.h rtpp_record_fin.h rtpp_record_fin.c
 
 rtpp_socket_fin.h: rtpp_socket_fin.c
+
+rtpp_ttl_fin.c: $(GENFINCODE) rtpp_ttl.h
+	$(GENFINCODE) rtpp_ttl.h rtpp_ttl_fin.h rtpp_ttl_fin.c
+
+rtpp_ttl_fin.h: rtpp_ttl_fin.c
