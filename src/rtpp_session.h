@@ -31,7 +31,6 @@
 
 struct rtpp_session_obj;
 struct rtpp_socket;
-enum rtpp_ttl_mode;
 
 struct rtpp_timeout_data {
     char *notify_tag;
@@ -49,7 +48,6 @@ struct rtpps_pcount {
 struct rtpp_session_obj {
     /* Session for caller [0] and callee [1] */
     struct rtpp_stream_obj *stream[2];
-    enum rtpp_ttl_mode ttl_mode;
     struct rtpps_pcount pcount;
     char *call_id;
     char *tag;
@@ -60,7 +58,6 @@ struct rtpp_session_obj {
     int complete;
     /* Flags: strong create/delete; weak ones */
     int strong;
-    int record_single_file;
     struct rtpp_session_obj *prev;
     struct rtpp_session_obj *next;
     struct rtpp_timeout_data timeout_data;
