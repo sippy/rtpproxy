@@ -37,6 +37,8 @@ struct rtpp_command;
 struct rtp_packet;
 struct sockaddr;
 struct rtpp_socket;
+struct rtpp_record;
+struct rtpp_ttl;
 
 DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_handle_play, int, char *,
   char *, int, struct rtpp_command *, int);
@@ -55,6 +57,8 @@ DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_guess_addr, int,
   struct rtp_packet *);
 DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_prefill_addr, void,
   struct sockaddr **, double);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_get_rtps, uint64_t);
+DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_set_rtps, void, uint64_t);
 
 enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
 
@@ -66,7 +70,7 @@ struct rtpps_latch {
 
 struct rtpp_stream_obj {
     /* ttl for stream */
-    int ttl;
+    struct rtpp_ttl *ttl;
     /* Remote source address */
     struct sockaddr *addr;
     /* Save previous address when doing update */
@@ -82,7 +86,7 @@ struct rtpp_stream_obj {
     /* Flags: strong create/delete; weak ones */
     int weak;
     /* Pointer to rtpp_record's opaque data type */
-    void *rrc;
+    struct rtpp_record *rrc;
     /* References to fd-to-session table */
     int sidx;
     /* Flag that indicates whether or not address supplied by client can't be trusted */
@@ -101,6 +105,14 @@ struct rtpp_stream_obj {
     struct rtpp_refcnt_obj *rcnt;
     /* UID, read-only */
     uint64_t stuid;
+    /* UID of the session we belong to, read-only */
+    uint64_t seuid;
+    /* UID of the associated "sending" stream, read-only */
+    uint64_t stuid_sendr;
+    /* UID of the associated "RTCP" stream, read-only */
+    uint64_t stuid_rtcp;
+    /* UID of the associated "RTP" stream, read-only */
+    uint64_t stuid_rtp;
     /* Type of session we are associated with, read-only */
     int session_type;
     struct rtpp_log_obj *log;
@@ -116,10 +128,12 @@ struct rtpp_stream_obj {
     METHOD_ENTRY(rtpp_stream_fill_addr, fill_addr);
     METHOD_ENTRY(rtpp_stream_guess_addr, guess_addr);
     METHOD_ENTRY(rtpp_stream_prefill_addr, prefill_addr);
+    METHOD_ENTRY(rtpp_stream_get_rtps, get_rtps);
+    METHOD_ENTRY(rtpp_stream_set_rtps, set_rtps);
 };
 
 struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_log_obj *,
   struct rtpp_weakref_obj *, struct rtpp_stats_obj *, enum rtpp_stream_side,
-  int);
+  int, uint64_t);
 
 #endif
