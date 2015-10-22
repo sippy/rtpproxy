@@ -83,7 +83,7 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     return (&pvt->pub);
 }
 
-size_t
+const unsigned int
 rtpp_refcnt_osize(void)
 {
 
