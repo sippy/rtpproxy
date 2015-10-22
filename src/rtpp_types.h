@@ -25,6 +25,8 @@
  *
  */
 
+#define RTPP_UID_NONE ((uint64_t)0)
+
 struct rtpp_type_linkable {
 #if 0
     unsigned int rtpp_type;
