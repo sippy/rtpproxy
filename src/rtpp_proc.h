@@ -30,6 +30,7 @@
 
 struct cfg;
 struct sthread_args;
+struct rtpp_polltbl;
 
 struct rtpp_proc_stat {
     uint64_t cnt;
@@ -48,9 +49,7 @@ struct rtpp_proc_rstats {
 
 void process_rtp_servers(struct cfg *, double, struct sthread_args *,
   struct rtpp_proc_rstats *);
-void process_rtp(struct cfg *, double, int, int, struct sthread_args *,
-  struct rtpp_proc_rstats *);
-void process_rtp_only(struct cfg *, double, int, struct sthread_args *sender,
-  struct rtpp_proc_rstats *);
+void process_rtp_only(struct cfg *, struct rtpp_polltbl *, double, int,
+  struct sthread_args *sender, struct rtpp_proc_rstats *);
 
 #endif
