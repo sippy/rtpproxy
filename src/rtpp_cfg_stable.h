@@ -42,6 +42,7 @@ enum rtpp_ttl_mode {
 typedef enum rtpp_ttl_mode rtpp_ttl_mode;
 
 struct rtpp_timed_obj;
+struct rtpp_sessinfo_obj;
 
 struct rtpp_cfg_stable {
     const char *pid_file;
@@ -112,6 +113,8 @@ struct rtpp_cfg_stable {
     struct rtpp_list *ctrl_socks;
 
     struct rtpp_timed_obj *rtpp_timed_cf;
+
+    struct rtpp_sessinfo_obj *sessinfo;
 };
 
 #endif

@@ -57,7 +57,6 @@
 struct pollfd;
 struct bindaddr_list;
 struct rtpp_timeout_handler;
-struct rtpp_sessinfo_obj;
 
 struct rtpp_hash_table_obj;
 struct rtpp_cfg_stable;
@@ -69,13 +68,10 @@ struct cfg {
      * Data fields that must be locked separately from the main configuration
      * structure below.
      */
-    struct rtpp_sessinfo_obj *sessinfo;
 
     struct bindaddr_list *bindaddr_list;
     pthread_mutex_t bindaddr_lock;
 
-    int sessions_active;
-    unsigned long long sessions_created;
     int nofile_limit_warned;
 
     int port_table_idx;
