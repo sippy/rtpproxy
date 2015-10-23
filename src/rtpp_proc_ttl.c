@@ -67,9 +67,6 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
             CALL_METHOD(fap->rtpp_notify_cf, schedule,
               sp->timeout_data.notify_target, sp->timeout_data.notify_tag);
         }
-#if 0
-        remove_session(cf, sp);
-#endif
         CALL_METHOD(fap->rtpp_stats, updatebyname, "nsess_timeout", 1);
         return (RTPP_WR_MATCH_DEL);
     } else {
