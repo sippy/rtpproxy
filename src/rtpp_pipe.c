@@ -51,6 +51,7 @@ struct rtpp_pipe_priv
 
 static void rtpp_pipe_dtor(struct rtpp_pipe_priv *);
 static int rtpp_pipe_get_ttl(struct rtpp_pipe *);
+static void rtpp_pipe_decr_ttl(struct rtpp_pipe *);
 
 struct rtpp_pipe *
 rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
@@ -90,10 +91,15 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
     if (pvt->pub.pcount == NULL) {
         goto e2;
     }
+    for (i = 0; i < 2; i++) {
+        CALL_METHOD(pvt->pub.pcount->rcnt, incref);
+        pvt->pub.stream[i]->pcount = pvt->pub.pcount;
+    }
     pvt->session_type = session_type;
     pvt->pub.rtpp_stats = rtpp_stats;
     pvt->pub.log = log;
     pvt->pub.get_ttl = &rtpp_pipe_get_ttl;
+    pvt->pub.decr_ttl = &rtpp_pipe_decr_ttl;
     CALL_METHOD(log->rcnt, incref);
     return (&pvt->pub);
 
@@ -133,4 +139,13 @@ rtpp_pipe_get_ttl(struct rtpp_pipe *self)
     ttls[0] = CALL_METHOD(self->stream[0]->ttl, get_remaining);
     ttls[1] = CALL_METHOD(self->stream[1]->ttl, get_remaining);
     return (MIN(ttls[0], ttls[1]));
+}
+
+static void
+rtpp_pipe_decr_ttl(struct rtpp_pipe *self)
+{
+    CALL_METHOD(self->stream[0]->ttl, decr);
+    if (self->stream[1]->ttl == self->stream[0]->ttl)
+        return;
+    CALL_METHOD(self->stream[1]->ttl, decr);
 }

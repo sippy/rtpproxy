@@ -35,6 +35,7 @@ struct rtpp_pipe;
 #include "rtpp_pcount.h"
 
 DEFINE_METHOD(rtpp_pipe, rtpp_pipe_get_ttl, int);
+DEFINE_METHOD(rtpp_pipe, rtpp_pipe_decr_ttl, void);
 
 struct rtpp_pipe {
     /* Session for caller [0] and callee [1] */
@@ -52,6 +53,7 @@ struct rtpp_pipe {
     struct rtpp_refcnt_obj *rcnt;
 
     METHOD_ENTRY(rtpp_pipe_get_ttl, get_ttl);
+    METHOD_ENTRY(rtpp_pipe_decr_ttl, decr_ttl);
 };
 
 struct rtpp_pipe *rtpp_pipe_ctor(uint64_t, struct rtpp_weakref_obj *,
