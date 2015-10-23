@@ -31,6 +31,8 @@
 
 struct rtpp_session_obj;
 struct rtpp_socket;
+struct common_cmd_args;
+struct sockaddr;
 
 struct rtpp_timeout_data {
     char *notify_tag;
@@ -39,27 +41,17 @@ struct rtpp_timeout_data {
 
 struct rtpp_hash_table_entry;
 
-struct rtpps_pcount {
-    unsigned long nrelayed;
-    unsigned long ndropped;
-    unsigned long nignored;
-};
-
 struct rtpp_session_obj {
-    /* Session for caller [0] and callee [1] */
-    struct rtpp_stream_obj *stream[2];
-    struct rtpps_pcount pcount;
     char *call_id;
     char *tag;
     char *tag_nomedianum;
     struct rtpp_log_obj *log;
-    struct rtpp_session_obj* rtcp;
+    struct rtpp_pipe *rtp;
+    struct rtpp_pipe *rtcp;
     /* Session is complete, that is we received both request and reply */
     int complete;
     /* Flags: strong create/delete; weak ones */
     int strong;
-    struct rtpp_session_obj *prev;
-    struct rtpp_session_obj *next;
     struct rtpp_timeout_data timeout_data;
     /* Timestamp of session instantiation time */
     double init_ts;
@@ -92,6 +84,7 @@ int find_stream(struct cfg *, const char *, const char *, const char *, struct r
 int get_ttl(struct rtpp_session_obj *);
 
 struct rtpp_session_obj *rtpp_session_ctor(struct rtpp_cfg_stable *,
-  struct rtpp_log_obj *, int);
+  struct common_cmd_args *, double, struct sockaddr **, int, int,
+  struct rtpp_socket **);
 
 #endif
