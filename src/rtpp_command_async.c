@@ -186,7 +186,7 @@ process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, do
         }
         if (cmd != NULL) {
             cmd->laddr = sstosa(&csock->bindaddr);
-            if (cmd->cca.op == GET_STATS) {
+            if (cmd->cca.op == GET_STATS || cmd->cca.op == INFO) {
                 flush_cstats(rsc, csp);
             }
             if (cmd->no_glock == 0) {
@@ -224,7 +224,7 @@ process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
             continue;
         }
         cmd->laddr = sstosa(&rcc->csock->bindaddr);
-        if (cmd->cca.op == GET_STATS) {
+        if (cmd->cca.op == GET_STATS || cmd->cca.op == INFO) {
             flush_cstats(rsc, csp);
         }
         if (cmd->no_glock == 0) {
