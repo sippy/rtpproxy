@@ -53,357 +53,284 @@
 #include "rtpp_sessinfo.h"
 #include "rtpp_socket.h"
 #include "rtpp_stream.h"
+#include "rtpp_pcount.h"
 #include "rtpp_session.h"
 #include "rtpp_stats.h"
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
+#include "rtpp_ttl.h"
 
 struct rtpp_proc_ready_lst {
     struct rtpp_session_obj *sp;
-    int ridx;
+    struct rtpp_stream_obj *stp;
 };
 
-static void send_packet(struct cfg *, struct rtpp_session_obj *, int, \
+static void send_packet(struct cfg *, struct rtpp_stream_obj *,
   struct rtp_packet *, struct sthread_args *, struct rtpp_proc_rstats *);
 
 static int
-fill_session_addr(struct rtpp_session_obj *sp, struct rtp_packet *packet, int ridx)
+fill_session_addr(struct cfg *cf, struct rtpp_stream_obj *stp,
+  struct rtp_packet *packet)
 {
+    struct rtpp_stream_obj *stp_rtcp;
+    int rval;
 
-    CALL_METHOD(sp->stream[ridx], fill_addr, packet);
-    if (sp->rtcp == NULL) {
+    CALL_METHOD(stp, fill_addr, packet);
+    if (stp->stuid_rtcp == RTPP_UID_NONE) {
         return (0);
     }
-    return (CALL_METHOD(sp->rtcp->stream[ridx], guess_addr, packet));
-}
-
-static struct rtpp_session_obj *
-get_rtp(struct cfg *cf, struct rtpp_session_obj *sp)
-{
-    if (sp->rtcp != NULL) {
-        return (sp);
+    stp_rtcp = CALL_METHOD(cf->stable->rtcp_streams_wrt, get_by_idx,
+      stp->stuid_rtcp);
+    if (stp_rtcp == NULL) {
+        return (0);
     }
-    return (CALL_METHOD(cf->stable->sessions_wrt, get_by_idx, sp->rtp_seuid));
+    rval = CALL_METHOD(stp_rtcp, guess_addr, packet);
+    CALL_METHOD(stp_rtcp->rcnt, decref);
+    return (rval);
 }
 
 static void
-rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready, int rlen,
+rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready,
   double dtime, int drain_repeat, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
-    int ndrain, rn, ridx;
+    int ndrain;
     struct rtp_packet *packet = NULL;
-    struct rtpp_session_obj *sp, *tsp;
+    struct rtpp_session_obj *sp;
+    struct rtpp_stream_obj *stp;
 
+    sp = rready->sp;
+    stp = rready->stp;
     /* Repeat since we may have several packets queued on the same socket */
     ndrain = -1;
-    for (rn = 0; rn < rlen; rn += (ndrain > 0) ? 0 : 1) {
+    do {
         if (ndrain < 0) {
             ndrain = drain_repeat - 1;
         } else {
             ndrain -= 1;
         }
-	if (packet != NULL)
-	    rtp_packet_free(packet);
 
-        sp = rready[rn].sp;
-        ridx = rready[rn].ridx;
-
-	packet = CALL_METHOD(sp->stream[ridx]->fd, rtp_recv);
+	packet = CALL_METHOD(stp->fd, rtp_recv);
 	if (packet == NULL) {
             /* Move on to the next session */
-            ndrain = -1;
-	    continue;
+            return;
         }
-	packet->laddr = sp->stream[ridx]->laddr;
-	packet->rport = sp->stream[ridx]->port;
+	packet->laddr = stp->laddr;
+	packet->rport = stp->port;
 	packet->rtime = dtime;
         rsp->npkts_rcvd.cnt++;
 
-	if (sp->stream[ridx]->addr != NULL) {
+	if (stp->addr != NULL) {
 	    /* Check that the packet is authentic, drop if it isn't */
-	    if (sp->stream[ridx]->asymmetric == 0) {
-		if (memcmp(sp->stream[ridx]->addr, &packet->raddr, packet->rlen) != 0) {
-		    if (sp->stream[ridx]->latch_info.latched != 0 && \
-                      CALL_METHOD(sp->stream[ridx], check_latch_override, packet) == 0) {
+	    if (stp->asymmetric == 0) {
+		if (memcmp(stp->addr, &packet->raddr, packet->rlen) != 0) {
+		    if (stp->latch_info.latched != 0 && \
+                      CALL_METHOD(stp, check_latch_override, packet) == 0) {
 			/*
 			 * Continue, since there could be good packets in
 			 * queue.
 			 */
                         ndrain += 1;
-                        sp->pcount.nignored++;
+                        CALL_METHOD(stp->pcount, reg_ignr);
                         rsp->npkts_discard.cnt++;
-			continue;
+			goto discard_and_continue;
 		    }
 		    /* Signal that an address has to be updated */
-		    fill_session_addr(sp, packet, ridx);
-		} else if (sp->stream[ridx]->latch_info.latched == 0) {
-                    CALL_METHOD(sp->stream[ridx], latch, dtime, packet);
+		    fill_session_addr(cf, stp, packet);
+		} else if (stp->latch_info.latched == 0) {
+                    CALL_METHOD(stp, latch, dtime, packet);
 		}
 	    } else {
 		/*
 		 * For asymmetric clients don't check
 		 * source port since it may be different.
 		 */
-		if (!ishostseq(sp->stream[ridx]->addr, sstosa(&packet->raddr))) {
+		if (!ishostseq(stp->addr, sstosa(&packet->raddr))) {
 		    /*
 		     * Continue, since there could be good packets in
 		     * queue.
 		     */
                     ndrain += 1;
-                    sp->pcount.nignored++;
+                    CALL_METHOD(stp->pcount, reg_ignr);
                     rsp->npkts_discard.cnt++;
-		    continue;
+		    goto discard_and_continue;
                 }
 	    }
-	    sp->stream[ridx]->npkts_in++;
+	    stp->npkts_in++;
 	} else {
-	    sp->stream[ridx]->npkts_in++;
-	    sp->stream[ridx]->addr = malloc(packet->rlen);
-	    if (sp->stream[ridx]->addr == NULL) {
-		sp->pcount.ndropped++;
-		RTPP_LOG(sp->log, RTPP_LOG_ERR,
+	    stp->npkts_in++;
+	    stp->addr = malloc(packet->rlen);
+	    if (stp->addr == NULL) {
+		CALL_METHOD(stp->pcount, reg_drop);
+		RTPP_LOG(stp->log, RTPP_LOG_ERR,
 		  "can't allocate memory for remote address - "
-		  "removing session");
-                tsp = get_rtp(cf, sp);
-                if (tsp != NULL) {
-		    remove_session(cf, tsp);
-                    if (tsp != sp)
-                        CALL_METHOD(sp->rcnt, decref);
-                }
-		/* Move on to the next session, sp is invalid now */
-                ndrain = -1;
+		  "discarding packet");
                 rsp->npkts_discard.cnt++;
-		continue;
+		goto discard;
 	    }
 	    /* Update address recorded in the session */
-	    fill_session_addr(sp, packet, ridx);
+	    fill_session_addr(cf, stp, packet);
 	}
-        if (sp->stream[ridx]->analyzer != NULL) {
-            if (rtpp_analyzer_update(sp->stream[ridx]->analyzer, packet) == UPDATE_SSRC_CHG) {
-                CALL_METHOD(sp->stream[ridx], latch, dtime, packet);
+        if (stp->analyzer != NULL) {
+            if (rtpp_analyzer_update(stp->analyzer, packet) == UPDATE_SSRC_CHG) {
+                CALL_METHOD(stp, latch, dtime, packet);
             }
         }
-	if (sp->stream[ridx]->resizer != NULL) {
-	    rtp_resizer_enqueue(sp->stream[ridx]->resizer, &packet, rsp);
+	if (stp->resizer != NULL) {
+	    rtp_resizer_enqueue(stp->resizer, &packet, rsp);
             if (packet == NULL) {
                 rsp->npkts_resizer_in.cnt++;
             }
         }
 	if (packet != NULL) {
-	    send_packet(cf, sp, ridx, packet, sender, rsp);
+	    send_packet(cf, stp, packet, sender, rsp);
             packet = NULL;
         }
+discard_and_continue:
+        if (packet != NULL) {
+            rtp_packet_free(packet);
+        }
+    } while (ndrain > 0);
+    return;
+
+discard:
+    rtp_packet_free(packet);
+    return;
+}
+
+static struct rtpp_stream_obj *
+get_sender(struct cfg *cf, struct rtpp_stream_obj *stp)
+{
+    if (stp->session_type == SESS_RTP) {
+       return (CALL_METHOD(cf->stable->rtp_streams_wrt, get_by_idx,
+         stp->stuid_sendr));
     }
-    if (packet != NULL)
-        rtp_packet_free(packet);
+    return (CALL_METHOD(cf->stable->rtcp_streams_wrt, get_by_idx,
+      stp->stuid_sendr));
 }
 
 static void
-send_packet(struct cfg *cf, struct rtpp_session_obj *sp, int ridx,
-  struct rtp_packet *packet, struct sthread_args *sender, 
+send_packet(struct cfg *cf, struct rtpp_stream_obj *stp_in,
+  struct rtp_packet *packet, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
-    int sidx;
-    struct rtpp_session_obj *tsp;
+    struct rtpp_stream_obj *stp_out;
 
-    tsp = get_rtp(cf, sp);
-    if (tsp == NULL)
-        return;
-    tsp->stream[ridx]->ttl = cf->stable->max_ttl;
+    CALL_METHOD(stp_in->ttl, reset);
 
-    /* Select socket for sending packet out. */
-    sidx = (ridx == 0) ? 1 : 0;
+    stp_out = get_sender(cf, stp_in);
+    if (stp_out == NULL) {
+        goto e0;
+    }
 
-    if (sp->stream[ridx]->rrc != NULL && !CALL_METHOD(tsp->stream[sidx], isplayer_active)) {
-        rwrite(sp, sp->stream[ridx]->rrc, packet, sp->stream[sidx]->addr, sp->stream[sidx]->laddr,
-          sp->stream[sidx]->port, sidx);
+    if (stp_in->rrc != NULL) {
+        if (!CALL_METHOD(stp_out, isplayer_active)) {
+            CALL_METHOD(stp_in->rrc, write, stp_out, packet);
+        }
     }
 
     /*
      * Check that we have some address to which packet is to be
      * sent out, drop otherwise.
      */
-    if (sp->stream[sidx]->addr == NULL || CALL_METHOD(tsp->stream[sidx], isplayer_active)) {
-        rtp_packet_free(packet);
-	sp->pcount.ndropped++;
-        rsp->npkts_discard.cnt++;
+    if (stp_out->addr == NULL || CALL_METHOD(stp_out, isplayer_active)) {
+        goto e1;
     } else {
-        CALL_METHOD(sp->stream[sidx]->fd, send_pkt, sender, sp->stream[sidx]->addr, \
-          SA_LEN(sp->stream[sidx]->addr), packet);
-        sp->pcount.nrelayed++;
+        CALL_METHOD(stp_out->fd, send_pkt, sender, stp_out->addr, \
+          SA_LEN(stp_out->addr), packet);
+        CALL_METHOD(stp_in->pcount, reg_reld);
         rsp->npkts_relayed.cnt++;
     }
-    if (tsp != sp) {
-        CALL_METHOD(tsp->rcnt, decref);
-    }
+    CALL_METHOD(stp_out->rcnt, decref);
+    return;
+
+e1:
+    CALL_METHOD(stp_out->rcnt, decref);
+e0:
+    rtp_packet_free(packet);
+    CALL_METHOD(stp_in->pcount, reg_drop);
+    rsp->npkts_discard.cnt++;
 }
 
-static void
+static int
 drain_socket(struct rtpp_socket *rfd, struct rtpp_proc_rstats *rsp)
 {
     struct rtp_packet *packet;
+    int ndrained;
 
+    ndrained = 0;
     for (;;) {
         packet = CALL_METHOD(rfd, rtp_recv);
         if (packet == NULL)
             break;
         rsp->npkts_discard.cnt++;
+        ndrained++;
         rtp_packet_free(packet);
     }
+    return (ndrained);
 }
 
-#define	RR_ADD_PUSH(__rready, __rready_len, __sp, __ridx) { \
-  __rready[__rready_len].sp = __sp; \
-  __rready[rready_len].ridx = __ridx; \
-  __rready_len += 1; \
-  if (__rready_len == 10) { \
-    rxmit_packets(cf, __rready, __rready_len, dtime, drain_repeat, sender, rsp); \
-    __rready_len = 0; \
-  } }\
-
-static int
-find_ridx(struct cfg *cf, int readyfd, struct rtpp_session_obj *sp)
-{
-    int ridx;
-
-    for (ridx = 0; ridx < 2; ridx++)
-        if (cf->sessinfo->pfds_rtp[readyfd].fd == CALL_METHOD(sp->stream[ridx]->fd, getfd))
-            break;
-    /*
-     * Can't happen.
-     */
-    assert(ridx != 2);
-
-    return (ridx);
-}
+#define	RX_PUSH(__rready, __sp, __stp) { \
+  __rready.sp = __sp; \
+  __rready.stp = __stp; \
+  rxmit_packets(cf, &__rready, dtime, drain_repeat, sender, rsp); \
+  }
 
 void
-process_rtp_only(struct cfg *cf, double dtime, int drain_repeat, \
-  struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
+process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
+  int drain_repeat, struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
 {
-    int readyfd, ridx, rready_len;
+    int readyfd, rready_len, ndrained;
     struct rtpp_session_obj *sp;
+    struct rtpp_stream_obj *stp;
     struct rtp_packet *packet;
-    struct rtpp_proc_ready_lst rready[10];
+    struct rtpp_proc_ready_lst rready;
+#if RTPP_DEBUG
+    const char *proto;
+    int fd;
+#endif
 
     rready_len = 0;
-    pthread_mutex_lock(&cf->sessinfo->lock);
-    for (readyfd = 0; readyfd < cf->sessinfo->nsessions; readyfd++) {
-        sp = cf->sessinfo->sessions[readyfd];
-
-        if (cf->sessinfo->pfds_rtp[readyfd].fd == -1) {
-            /* Deleted session, move one */
+    {static int b=0; while (b);}
+    for (readyfd = 0; readyfd < ptbl->curlen; readyfd++) {
+        if ((ptbl->pfds[readyfd].revents & POLLIN) == 0)
+            continue;
+        stp = CALL_METHOD(ptbl->streams_wrt, get_by_idx,
+          ptbl->stuids[readyfd]);
+        if (stp == NULL)
+            continue;
+        sp = CALL_METHOD(cf->stable->sessions_wrt, get_by_idx, stp->seuid);
+        if (sp == NULL) {
+            CALL_METHOD(stp->rcnt, decref);
             continue;
         }
-        ridx = find_ridx(cf, readyfd, sp);
         if (sp->complete != 0) {
-            if ((cf->sessinfo->pfds_rtp[readyfd].revents & POLLIN) != 0) {
-                RR_ADD_PUSH(rready, rready_len, sp, ridx);
-            }
-            if (sp->stream[ridx]->resizer != NULL) {
-                while ((packet = rtp_resizer_get(sp->stream[ridx]->resizer, dtime)) != NULL) {
-                    send_packet(cf, sp, ridx, packet, sender, rsp);
+            RX_PUSH(rready, sp, stp);
+            CALL_METHOD(sp->rcnt, decref);
+            if (stp->resizer != NULL) {
+                while ((packet = rtp_resizer_get(stp->resizer, dtime)) != NULL) {
+                    send_packet(cf, stp, packet, sender, rsp);
                     rsp->npkts_resizer_out.cnt++;
                     packet = NULL;
                 }
             }
-        } else if ((cf->sessinfo->pfds_rtp[readyfd].revents & POLLIN) != 0) {
+        } else {
+            CALL_METHOD(sp->rcnt, decref);
 #if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "Draining RTP socket %d", cf->sessinfo->pfds_rtp[readyfd].fd);
+            proto = CALL_METHOD(stp, get_proto);
+            fd = CALL_METHOD(stp->fd, getfd);
+            RTPP_LOG(stp->log, RTPP_LOG_DBUG, "Draining %s socket %d", fd,
+              proto);
 #endif
-            drain_socket(sp->stream[ridx]->fd, rsp);
-        }
-    }
-    if (rready_len > 0) {
-        rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, sender, rsp);
-        rready_len = 0;
-    }
-    pthread_mutex_unlock(&cf->sessinfo->lock);
-}
-
-void
-process_rtp(struct cfg *cf, double dtime, int alarm_tick, int drain_repeat, \
-  struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
-{
-    int readyfd, skipfd, ridx, rready_len;
-    struct rtpp_session_obj *sp;
-    struct rtp_packet *packet;
-    struct rtpp_proc_ready_lst rready[10];
-
-    /* Relay RTP/RTCP */
-    skipfd = 0;
-    rready_len = 0;
-    pthread_mutex_lock(&cf->sessinfo->lock);
-    for (readyfd = 0; readyfd < cf->sessinfo->nsessions; readyfd++) {
-	sp = cf->sessinfo->sessions[readyfd];
-
-	if (alarm_tick != 0 && sp != NULL && sp->stream[0]->sidx == readyfd) {
-	    if (get_ttl(sp) == 0) {
-		RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
-                if (sp->timeout_data.notify_target != NULL) {
-		    CALL_METHOD(cf->stable->rtpp_notify_cf, schedule,
-                      sp->timeout_data.notify_target, sp->timeout_data.notify_tag);
-                }
-		remove_session(cf, sp);
-		CALL_METHOD(cf->stable->rtpp_stats, updatebyname, "nsess_timeout", 1);
-	    } else {
-		if (sp->stream[0]->ttl != 0)
-		    sp->stream[0]->ttl--;
-		if (sp->stream[1]->ttl != 0)
-		    sp->stream[1]->ttl--;
-	    }
-	}
-
-	if (cf->sessinfo->pfds_rtp[readyfd].fd == -1) {
-	    /* Deleted session, count and move one */
-	    skipfd++;
-	    continue;
-	}
-
-	/* Find index of the call leg within a session */
-        ridx = find_ridx(cf, readyfd, sp);
-
-	/* Compact pfds[] and sessions[] by eliminating removed sessions */
-	if (skipfd > 0) {
-	    cf->sessinfo->pfds_rtp[readyfd - skipfd] = cf->sessinfo->pfds_rtp[readyfd];
-	    cf->sessinfo->pfds_rtcp[readyfd - skipfd] = cf->sessinfo->pfds_rtcp[readyfd];
-	    cf->sessinfo->sessions[readyfd - skipfd] = cf->sessinfo->sessions[readyfd];
-	    sp->stream[ridx]->sidx = readyfd - skipfd;
-	    sp->rtcp->stream[ridx]->sidx = readyfd - skipfd;
-	}
-
-	if (sp->complete != 0) {
-	    if ((cf->sessinfo->pfds_rtp[readyfd].revents & POLLIN) != 0) {
-                RR_ADD_PUSH(rready, rready_len, sp, ridx);
+            ndrained = drain_socket(stp->fd, rsp);
+#if RTPP_DEBUG
+            if (ndrained > 0) {
+                RTPP_LOG(stp->log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
+                  "packets discarded", fd, proto, ndrained);
             }
-            if ((cf->sessinfo->pfds_rtcp[readyfd].revents & POLLIN) != 0) {
-                RR_ADD_PUSH(rready, rready_len, sp->rtcp, ridx);
-            }
-	    if (sp->stream[ridx]->resizer != NULL) {
-		while ((packet = rtp_resizer_get(sp->stream[ridx]->resizer, dtime)) != NULL) {
-		    send_packet(cf, sp, ridx, packet, sender, rsp);
-                    rsp->npkts_resizer_out.cnt++;
-		    packet = NULL;
-		}
-	    }
-	} else if ((cf->sessinfo->pfds_rtp[readyfd].revents & POLLIN) != 0) {
-#if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "Draining RTP socket %d", cf->sessinfo->pfds_rtp[readyfd].fd);
 #endif
-            drain_socket(sp->stream[ridx]->fd, rsp);
-        } else if ((cf->sessinfo->pfds_rtcp[readyfd].revents & POLLIN) != 0) {
-#if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "Draining RTCP socket %d", cf->sessinfo->pfds_rtcp[readyfd].fd);
-#endif
-            drain_socket(sp->rtcp->stream[ridx]->fd, rsp);
+
         }
+        CALL_METHOD(stp->rcnt, decref);
     }
-    if (rready_len > 0) {
-        rxmit_packets(cf, rready, rready_len, dtime, drain_repeat, sender, rsp);
-        rready_len = 0;
-    }
-    /* Trim any deleted sessions at the end */
-    cf->sessinfo->nsessions -= skipfd;
-    pthread_mutex_unlock(&cf->sessinfo->lock);
 }
