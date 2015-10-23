@@ -530,11 +530,6 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (cf->stable->port_min > cf->stable->port_max)
 	errx(1, "port_min should be less than port_max");
 
-    cf->stable->sessinfo = rtpp_sessinfo_ctor(cf->stable);
-    if (cf->stable->sessinfo == NULL) {
-        errx(1, "cannot construct rtpp_sessinfo structure");
-    }
-
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
 	bh[0] = "*";
     }
@@ -669,6 +664,10 @@ main(int argc, char **argv)
     if (cf.stable->servers_wrt == NULL) {
         err(1, "can't allocate memory for the servers weakref table");
          /* NOTREACHED */
+    }
+    cf.stable->sessinfo = rtpp_sessinfo_ctor(cf.stable);
+    if (cf.stable->sessinfo == NULL) {
+        errx(1, "cannot construct rtpp_sessinfo structure");
     }
 
     cf.stable->rtpp_stats = rtpp_stats_ctor();
