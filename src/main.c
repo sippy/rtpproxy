@@ -530,8 +530,8 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (cf->stable->port_min > cf->stable->port_max)
 	errx(1, "port_min should be less than port_max");
 
-    cf->sessinfo = rtpp_sessinfo_ctor(cf->stable);
-    if (cf->sessinfo == NULL) {
+    cf->stable->sessinfo = rtpp_sessinfo_ctor(cf->stable);
+    if (cf->stable->sessinfo == NULL) {
         errx(1, "cannot construct rtpp_sessinfo structure");
     }
 
