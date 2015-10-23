@@ -60,12 +60,14 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
+#include "rtpp_pipe.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_socket.h"
 #include "rtpp_util.h"
 #include "rtpp_stats.h"
+#include "rtpp_weakref.h"
 
 struct proto_cap proto_caps[] = {
     /*
@@ -337,6 +339,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     int record_single_file;
     struct ul_opts *ulop;
     struct d_opts dopt;
+    uint64_t rtps, rtps_old;
 
     spa = NULL;
     recording_name = NULL;
@@ -356,14 +359,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     case DELETE_ALL:
         /* Delete all active sessions */
         rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog, "deleting all active sessions");
-        pthread_mutex_lock(&cf->sessinfo->lock);
-        for (i = 0; i < cf->sessinfo->nsessions; i++) {
-            spa = cf->sessinfo->sessions[i];
-            if (spa == NULL || spa->stream[0]->sidx != i)
-                continue;
-            remove_session(cf, spa);
-        }
-        pthread_mutex_unlock(&cf->sessinfo->lock);
+        CALL_METHOD(cf->stable->sessions_wrt, purge);
         reply_ok(cf, cmd);
         return 0;
 
@@ -507,26 +503,32 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case NOPLAY:
-	CALL_METHOD(spa->stream[i], handle_noplay);
+        rtps_old = CALL_METHOD(spa->rtp->stream[i], get_rtps);
+	CALL_METHOD(spa->rtp->stream[i], handle_noplay);
+        CALL_METHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, RTPP_UID_NONE);
 	reply_ok(cf, cmd);
 	break;
 
     case PLAY:
-	CALL_METHOD(spa->stream[i], handle_noplay);
+        rtps_old = CALL_METHOD(spa->rtp->stream[i], get_rtps);
+	CALL_METHOD(spa->rtp->stream[i], handle_noplay);
+        CALL_METHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, RTPP_UID_NONE);
 	ptime = -1;
 	if (strcmp(codecs, "session") == 0) {
-	    if (spa->stream[i]->codecs == NULL) {
+	    if (spa->rtp->stream[i]->codecs == NULL) {
 		reply_error(cf, cmd, ECODE_INVLARG_5);
 		return 0;
 	    }
-	    codecs = spa->stream[i]->codecs;
-	    ptime = spa->stream[i]->ptime;
+	    codecs = spa->rtp->stream[i]->codecs;
+	    ptime = spa->rtp->stream[i]->ptime;
 	}
-	if (playcount != 0 && CALL_METHOD(spa->stream[i], handle_play, codecs,
+	if (playcount != 0 && CALL_METHOD(spa->rtp->stream[i], handle_play, codecs,
           pname, playcount, cmd, ptime) != 0) {
 	    reply_error(cf, cmd, ECODE_PLRFAIL);
 	    return 0;
 	}
+        rtps = CALL_METHOD(spa->rtp->stream[i], get_rtps);
+        CALL_METHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, rtps);
 	reply_ok(cf, cmd);
 	break;
 
@@ -539,7 +541,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case QUERY:
-	rval = handle_query(cf, cmd, spa, i);
+	rval = handle_query(cf, cmd, spa->rtp, i);
 	if (rval != 0) {
 	    reply_error(cf, cmd, rval);
 	}
@@ -582,7 +584,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	}
 
 	if (weak)
-	    spa->stream[idx]->weak = 0;
+	    spa->rtp->stream[idx]->weak = 0;
 	else
 	    spa->strong = 0;
 
@@ -590,13 +592,13 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	 * This seems to be stable from reiterations, the only side
 	 * effect is less efficient work.
 	 */
-	if (spa->strong || spa->stream[0]->weak || spa->stream[1]->weak) {
+	if (spa->strong || spa->rtp->stream[0]->weak || spa->rtp->stream[1]->weak) {
 	    RTPP_LOG(spa->log, RTPP_LOG_INFO,
 	      "delete: medianum=%u: removing %s flag, seeing flags to"
 	      " continue session (strong=%d, weak=%d/%d)",
 	      medianum,
 	      weak ? ( idx ? "weak[1]" : "weak[0]" ) : "strong",
-	      spa->strong, spa->stream[0]->weak, spa->stream[1]->weak);
+	      spa->strong, spa->rtp->stream[0]->weak, spa->rtp->stream[1]->weak);
 	    /* Skipping to next possible stream for this call */
 	    ++ndeleted;
 	    spa = session_findnext(cf, spa);
@@ -604,14 +606,13 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 	}
 	RTPP_LOG(spa->log, RTPP_LOG_INFO,
 	  "forcefully deleting session %u on ports %d/%d",
-	   medianum, spa->stream[0]->port, spa->stream[1]->port);
+	   medianum, spa->rtp->stream[0]->port, spa->rtp->stream[1]->port);
 	/* Search forward before we do removal */
 	spb = spa;
 	spa = session_findnext(cf, spa);
-        pthread_mutex_lock(&cf->sessinfo->lock);
-	remove_session(cf, spb);
-        pthread_mutex_unlock(&cf->sessinfo->lock);
-	++ndeleted;
+        if (CALL_METHOD(cf->stable->sessions_wrt, unreg, spb->seuid) != NULL) {
+	    ++ndeleted;
+        }
 	if (cmpr != 2) {
 	    break;
 	}
@@ -658,6 +659,8 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
     int len, i, brief, load;
     char buf[1024 * 8];
     unsigned long long packets_in, packets_out;
+    unsigned long long sessions_created;
+    int sessions_active, rtp_streams_active;
 
     brief = 0;
     load = 0;
@@ -683,11 +686,14 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
     packets_in = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_rcvd");
     packets_out = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_relayed") +
       CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_played");
-    pthread_mutex_lock(&cf->sessinfo->lock);
+    sessions_created = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname,
+      "nsess_created");
+    sessions_active = sessions_created - CALL_METHOD(cf->stable->rtpp_stats,
+      getlvalbyname, "nsess_destroyed");
+    rtp_streams_active = CALL_METHOD(cf->stable->rtp_streams_wrt, get_length);
     len = snprintf(buf, sizeof(buf), "sessions created: %llu\nactive sessions: %d\n"
       "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
-      cf->sessions_created, cf->sessions_active, cf->sessinfo->nsessions,
-      packets_in, packets_out);
+      sessions_created, sessions_active, rtp_streams_active, packets_in, packets_out);
     if (load != 0) {
           len += snprintf(buf + len, sizeof(buf) - len, "average load: %f\n",
             CALL_METHOD(cf->stable->rtpp_cmd_cf, get_aload));
@@ -736,7 +742,6 @@ XXX this needs work to fix it after rtp/rtcp split
         }
     }
 #endif
-    pthread_mutex_unlock(&cf->sessinfo->lock);
     if (len > 0) {
         rtpc_doreply(cf, buf, len, cmd, 0);
     }
