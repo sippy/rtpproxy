@@ -88,7 +88,7 @@ static void rtpp_record_close(struct rtpp_record_channel *);
 
 static int
 ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log_obj *log,
-  char *rname, int is_rtp)
+  char *rname, int is_rtcp)
 {
     char *cp, *tmp;
     int n, port;
@@ -109,10 +109,10 @@ ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log_obj *log,
     *cp = '\0';
     cp++;
 
-    if (is_rtp) {
+    if (is_rtcp) {
         /* Handle RTCP (increase target port by 1) */
         port = atoi(cp);
-        if (port <= 0 || port > ((is_rtp) ? 65534 : 65535)) {
+        if (port <= 0 || port > 65534) {
             RTPP_LOG(log, RTPP_LOG_ERR, "invalid port in the remote recording target specification");
             goto e1;
         }
@@ -146,7 +146,7 @@ e0:
 
 struct rtpp_record *
 rtpp_record_open(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig,
-  int record_single_file)
+  int record_type)
 {
     struct rtpp_record_channel *rrc;
     const char *sdir, *suffix1, *suffix2;
@@ -166,17 +166,17 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int o
         goto e1;
     }
 
-    rrc->record_single_file = record_single_file;
+    rrc->record_single_file = (record_type == RECORD_BOTH) ? 1 : 0;
     if (rrc->record_single_file != 0) {
         rrc->proto = "RTP/RTCP";
     } else {
-        rrc->proto = (sp->rtcp != NULL) ? "RTP" : "RTCP";
+        rrc->proto = (record_type == RECORD_RTP) ? "RTP" : "RTCP";
     }
     rrc->log = sp->log;
     CALL_METHOD(sp->log->rcnt, incref);
     rrc->pub.write = &rtpp_record_write;
     if (remote) {
-	rval = ropen_remote_ctor_pa(rrc, sp->log, rname, (sp->rtcp != NULL));
+	rval = ropen_remote_ctor_pa(rrc, sp->log, rname, (record_type == RECORD_RTCP));
         if (rval < 0) {
             goto e2;
         }
@@ -198,7 +198,7 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int o
         suffix1 = suffix2 = "";
     } else {
         suffix1 = (orig != 0) ? ".o" : ".a";
-        suffix2 = (sp->rtcp != NULL) ? ".rtp" : ".rtcp";
+        suffix2 = (record_type == RECORD_RTP) ? ".rtp" : ".rtcp";
     }
     if (cf->stable->sdir == NULL) {
 	sdir = cf->stable->rdir;

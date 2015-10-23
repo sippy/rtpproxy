@@ -42,6 +42,10 @@ struct rtpp_record {
     METHOD_ENTRY(rtpp_record_write, write);
 };
 
+#define RECORD_RTP  0
+#define RECORD_RTCP 1
+#define RECORD_BOTH 2
+
 /* Function prototypes */
 struct rtpp_record *rtpp_record_open(struct cfg *cf, struct rtpp_session_obj *, char *, int, int);
 
