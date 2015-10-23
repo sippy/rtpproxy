@@ -48,9 +48,11 @@
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_proc_servers.h"
+#include "rtpp_proc_ttl.h"
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
 #include "rtpp_util.h"
+#include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
@@ -121,6 +123,7 @@ rtpp_proc_async_run(void *arg)
     struct cfg *cf;
     double last_tick_time;
     int alarm_tick, i, ndrain, rtp_only, j;
+    int nready_rtp, nready_rtcp;
     struct rtpp_proc_async_cf *proc_cf;
     long long ncycles_ref;
 #ifdef RTPP_DEBUG
@@ -132,11 +135,16 @@ rtpp_proc_async_run(void *arg)
     double tp[4];
     struct rtpp_proc_rstats *rstats;
     struct rtpp_stats_obj *stats_cf;
+    struct rtpp_polltbl ptbl_rtp;
+    struct rtpp_polltbl ptbl_rtcp;
 
     proc_cf = (struct rtpp_proc_async_cf *)arg;
     cf = proc_cf->cf_save;
     stats_cf = cf->stable->rtpp_stats;
     rstats = &proc_cf->rstats;
+
+    memset(&ptbl_rtp, '\0', sizeof(struct rtpp_polltbl));
+    memset(&ptbl_rtcp, '\0', sizeof(struct rtpp_polltbl));
 
     last_tick_time = 0;
     wi = rtpp_queue_get_item(proc_cf->time_q, 0);
@@ -163,6 +171,14 @@ rtpp_proc_async_run(void *arg)
             while (i > 0) {
                 rtpp_wi_free(wis[i - 1]);
                 i -= 1;
+            }
+            if (ptbl_rtp.pfds != NULL) {
+                free(ptbl_rtp.pfds);
+                free(ptbl_rtp.stuids);
+            }
+            if (ptbl_rtcp.pfds != NULL) {
+                free(ptbl_rtcp.pfds);
+                free(ptbl_rtcp.stuids);
             }
             return;
         }   
@@ -214,31 +230,53 @@ rtpp_proc_async_run(void *arg)
             rtp_only = 1;
         }
 
-        pthread_mutex_lock(&cf->sessinfo->lock);
-        if (cf->sessinfo->nsessions > 0) {
+        CALL_METHOD(cf->stable->sessinfo, copy_polltbl, &ptbl_rtp, SESS_RTP);
+        nready_rtp = nready_rtcp = 0;
+        if (ptbl_rtp.curlen > 0) {
             if (rtp_only == 0) {
-                i = poll(cf->sessinfo->pfds_rtcp, cf->sessinfo->nsessions, 0);
+                CALL_METHOD(cf->stable->sessinfo, copy_polltbl, &ptbl_rtcp, SESS_RTCP);
+#if RTPP_DEBUG
+                rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld " \
+                  "polling for %d RTCP file descriptors", \
+                  last_ctick, ptbl_rtcp.curlen);
+#endif
+                nready_rtcp = poll(ptbl_rtcp.pfds, ptbl_rtcp.curlen, 0);
+#if RTPP_DEBUG
+                rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld " \
+                  "polling for RTCP file descriptors: %d descriptors are ready", \
+                  last_ctick, nready_rtcp);
+#endif
             }
-            i = poll(cf->sessinfo->pfds_rtp, cf->sessinfo->nsessions, 0);
-            pthread_mutex_unlock(&cf->sessinfo->lock);
-            if (i < 0 && errno == EINTR) {
+#if RTPP_DEBUG
+           rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld " \
+              "polling for %d RTP file descriptors", \
+              last_ctick, ptbl_rtcp.curlen);
+#endif
+            nready_rtp = poll(ptbl_rtp.pfds, ptbl_rtp.curlen, 0);
+#if RTPP_DEBUG
+            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld " \
+              "polling for RTP file descriptors: %d descriptors are ready", \
+              last_ctick, nready_rtp);
+#endif
+            if (nready_rtp < 0 && errno == EINTR) {
                 CALL_METHOD(cf->stable->rtpp_cmd_cf, wakeup);
                 tp[0] = getdtime();
                 continue;
             }
-        } else {
-            pthread_mutex_unlock(&cf->sessinfo->lock);
         }
 
         tp[2] = getdtime();
 
         sender = rtpp_anetio_pick_sender(proc_cf->op);
-        if (rtp_only == 0) {
-            pthread_mutex_lock(&cf->glock);
-            process_rtp(cf, tp[2], alarm_tick, ndrain, sender, rstats);
-            pthread_mutex_unlock(&cf->glock);
-        } else {
-            process_rtp_only(cf, tp[2], ndrain, sender, rstats);
+        if (nready_rtp > 0) {
+            process_rtp_only(cf, &ptbl_rtp, tp[2], ndrain, sender, rstats);
+        }
+        if (nready_rtcp > 0 && rtp_only == 0) {
+            process_rtp_only(cf, &ptbl_rtcp, tp[2], ndrain, sender, rstats);
+        }
+        if (alarm_tick != 0) {
+            rtpp_proc_ttl(cf->stable->sessions_wrt, cf->stable->rtpp_notify_cf,
+              cf->stable->rtpp_stats);
         }
 
         if (CALL_METHOD(cf->stable->servers_wrt, get_length) > 0) {
