@@ -51,6 +51,7 @@ struct foreach_args {
     struct sthread_args *sender;
     struct rtpp_proc_rstats *rsp;
     struct rtpp_weakref_obj *rtp_streams_wrt;
+    struct rtpp_weakref_obj *rtcp_streams_wrt;
 };
 
 static int
@@ -61,6 +62,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
     struct rtp_packet *pkt;
     int len;
     struct rtpp_stream_obj *rsop;
+    uint64_t rtps_old;
 
     fap = (struct foreach_args *)ap;
     /*
@@ -76,7 +78,15 @@ process_rtp_servers_foreach(void *dp, void *ap)
         pkt = CALL_METHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
+                struct rtpp_stream_obj *rsop_rtcp;
                 CALL_METHOD(rsop, finish_playback, rsrv->sruid);
+                rtps_old = rsrv->sruid;
+                rsop_rtcp = CALL_METHOD(fap->rtcp_streams_wrt, get_by_idx,
+                  rsop->stuid_rtcp);
+                if (rsop_rtcp != NULL) {
+                    CALL_METHOD(rsop_rtcp, replace_rtps, rtps_old, RTPP_UID_NONE);
+                    CALL_METHOD(rsop_rtcp->rcnt, decref);
+                }
                 CALL_METHOD(rsop->rcnt, decref);
                 return (RTPP_WR_MATCH_DEL);
             } else if (len != RTPS_LATER) {
@@ -102,6 +112,7 @@ rtpp_proc_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
     fargs.sender = sender;
     fargs.rsp = rsp;
     fargs.rtp_streams_wrt = cf->stable->rtp_streams_wrt;
+    fargs.rtcp_streams_wrt = cf->stable->rtcp_streams_wrt;
 
     CALL_METHOD(cf->stable->servers_wrt, foreach, process_rtp_servers_foreach,
       &fargs);
