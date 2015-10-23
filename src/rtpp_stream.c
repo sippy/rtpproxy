@@ -51,6 +51,8 @@
 #include "rtp_packet.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_network.h"
+#include "rtpp_pcount.h"
+#include "rtpp_record.h"
 #include "rtpp_stats.h"
 #include "rtpp_stream.h"
 #include "rtpp_stream_fin.h"
@@ -59,6 +61,7 @@
 #include "rtpp_socket.h"
 #include "rtpp_util.h"
 #include "rtpp_weakref.h"
+#include "rtpp_ttl.h"
 
 struct rtpp_stream_priv
 {
@@ -93,11 +96,13 @@ static int rtpp_stream_guess_addr(struct rtpp_stream_obj *,
   struct rtp_packet *);
 static void rtpp_stream_prefill_addr(struct rtpp_stream_obj *,
   struct sockaddr **, double);
+static uint64_t rtpp_stream_get_rtps(struct rtpp_stream_obj *);
+static void rtpp_stream_replace_rtps(struct rtpp_stream_obj *, uint64_t, uint64_t);
 
 struct rtpp_stream_obj *
 rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
   struct rtpp_stats_obj *rtpp_stats, enum rtpp_stream_side side,
-  int session_type)
+  int session_type, uint64_t seuid)
 {
     struct rtpp_stream_priv *pvt;
 
@@ -136,10 +141,13 @@ rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
     pvt->pub.check_latch_override = &rtpp_stream_check_latch_override;
     pvt->pub.fill_addr = &rtpp_stream_fill_addr;
     pvt->pub.prefill_addr = &rtpp_stream_prefill_addr;
+    pvt->pub.get_rtps = &rtpp_stream_get_rtps;
+    pvt->pub.replace_rtps = &rtpp_stream_replace_rtps;
     if (session_type == SESS_RTCP) {
         pvt->pub.guess_addr = &rtpp_stream_guess_addr;
     }
     rtpp_gen_uid(&pvt->pub.stuid);
+    pvt->pub.seuid = seuid;
     return (&pvt->pub);
 
 e3:
@@ -202,6 +210,11 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
         CALL_METHOD(pvt->servers_wrt, unreg, pvt->rtps);
     if (pub->resizer != NULL)
         rtp_resizer_free(pvt->rtpp_stats, pub->resizer);
+    if (pub->rrc != NULL)
+        CALL_METHOD(pub->rrc->rcnt, decref);
+    if (pub->pcount != NULL)
+        CALL_METHOD(pub->pcount->rcnt, decref);
+    CALL_METHOD(pub->ttl->rcnt, decref);
 
     CALL_METHOD(pvt->pub.log->rcnt, decref);
     pthread_mutex_destroy(&pvt->lock);
@@ -502,4 +515,30 @@ rtpp_stream_prefill_addr(struct rtpp_stream_obj *self, struct sockaddr **iapp,
     }
     self->addr = *iapp;
     *iapp = NULL;
+}
+
+static uint64_t
+rtpp_stream_get_rtps(struct rtpp_stream_obj *self)
+{
+    struct rtpp_stream_priv *pvt;
+    uint64_t rval;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    rval = pvt->rtps;
+    pthread_mutex_unlock(&pvt->lock);
+    return (rval);
+}
+static void
+rtpp_stream_replace_rtps(struct rtpp_stream_obj *self, uint64_t rtps_old,
+  uint64_t rtps_new)
+{
+    struct rtpp_stream_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    if (pvt->rtps == rtps_old) {
+        pvt->rtps = rtps_new;
+    }
+    pthread_mutex_unlock(&pvt->lock);
 }
