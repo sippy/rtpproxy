@@ -74,6 +74,7 @@ rtpp_ttl_ctor(int max_ttl)
     pvt->pub.reset_with = &rtpp_ttl_reset_with;
     pvt->pub.get_remaining = &rtpp_ttl_get_remaining;
     pvt->pub.decr = &rtpp_ttl_decr;
+    pvt->ttl = pvt->max_ttl = max_ttl;
     return ((&pvt->pub));
 
 e2:
