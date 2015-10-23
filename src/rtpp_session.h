@@ -76,12 +76,8 @@ void init_hash_table(struct cfg_stable *);
 struct rtpp_session_obj *session_findfirst(struct cfg *, const char *);
 struct rtpp_session_obj *session_findnext(struct cfg *cf, struct rtpp_session_obj *);
 void hash_table_append(struct cfg *, struct rtpp_session_obj *);
-void append_session(struct cfg *, struct rtpp_session_obj *, int);
-void update_sessions(struct cfg *, struct rtpp_session_obj *, int, struct rtpp_socket **);
-void remove_session(struct cfg *, struct rtpp_session_obj *);
 int compare_session_tags(const char *, const char *, unsigned *);
 int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session_obj **);
-int get_ttl(struct rtpp_session_obj *);
 
 struct rtpp_session_obj *rtpp_session_ctor(struct rtpp_cfg_stable *,
   struct common_cmd_args *, double, struct sockaddr **, int, int,
