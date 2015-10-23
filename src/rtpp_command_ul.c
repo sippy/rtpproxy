@@ -50,13 +50,16 @@
 #include "rtpp_command_copy.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_ul.h"
+#include "rtpp_pipe.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
+#include "rtpp_sessinfo.h"
 #include "rtpp_socket.h"
 #include "rtp_resizer.h"
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_util.h"
+#include "rtpp_ttl.h"
 
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
@@ -349,7 +352,7 @@ err_undo_0:
 static void
 handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
   int ecode, struct ul_opts *ulop, struct rtpp_socket **fds,
-  struct rtpp_session_obj *spa, struct rtpp_session_obj *spb)
+  struct rtpp_session_obj *spa)
 {
     int i;
 
@@ -358,12 +361,11 @@ handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
     if (spa != NULL) {
         CALL_METHOD(spa->rcnt, decref);
     }
-    if (spb != NULL) {
-        CALL_METHOD(spb->rcnt, decref);
+    if (fds != NULL) {
+        for (i = 0; i < 2; i++)
+            if (fds[i] != NULL)
+                CALL_METHOD(fds[i]->rcnt, decref);
     }
-    for (i = 0; i < 2; i++)
-        if (fds[i] != NULL)
-            CALL_METHOD(fds[i]->rcnt, decref);
     reply_error(cf, cmd, ecode);
 }
 
@@ -371,12 +373,10 @@ int
 rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
   struct ul_opts *ulop, struct rtpp_session_obj *sp, int sidx)
 {
-    int pidx, lport, i;
+    int pidx, lport, sessions_active;
     struct rtpp_socket *fds[2];
-    char *cp;
     const char *actor;
     struct rtpp_session_obj *spa, *spb;
-    struct rtpp_log_obj *log;
 
     pidx = 1;
     lport = 0;
@@ -385,56 +385,57 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     if (sidx != -1) {
         assert(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = sp;
-        if (spa->stream[sidx]->fd == NULL || ulop->new_port != 0) {
+        if (spa->rtp->stream[sidx]->fd == NULL || ulop->new_port != 0) {
             if (ulop->local_addr != NULL) {
-                spa->stream[sidx]->laddr = ulop->local_addr;
+                spa->rtp->stream[sidx]->laddr = ulop->local_addr;
             }
-            if (rtpp_create_listener(cf, spa->stream[sidx]->laddr, &lport, fds) == -1) {
+            if (rtpp_create_listener(cf, spa->rtp->stream[sidx]->laddr, &lport, fds) == -1) {
                 RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
                 reply_error(cf, cmd, ECODE_LSTFAIL_1);
                 goto err_undo_0;
             }
-            if (spa->stream[sidx]->fd != NULL && ulop->new_port != 0) {
+            if (spa->rtp->stream[sidx]->fd != NULL && ulop->new_port != 0) {
                 RTPP_LOG(spa->log, RTPP_LOG_INFO,
                   "new port requested, releasing %d/%d, replacing with %d/%d",
-                  spa->stream[sidx]->port, spa->rtcp->stream[sidx]->port, lport, lport + 1);
-                update_sessions(cf, spa, sidx, fds);
+                  spa->rtp->stream[sidx]->port, spa->rtcp->stream[sidx]->port, lport, lport + 1);
+                CALL_METHOD(cf->stable->sessinfo, update, spa, sidx, fds);
             } else {
-                assert(spa->stream[sidx]->fd == NULL);
-                spa->stream[sidx]->fd = fds[0];
+                assert(spa->rtp->stream[sidx]->fd == NULL);
+                spa->rtp->stream[sidx]->fd = fds[0];
                 assert(spa->rtcp->stream[sidx]->fd == NULL);
                 spa->rtcp->stream[sidx]->fd = fds[1];
-                append_session(cf, spa, sidx);
+                CALL_METHOD(cf->stable->sessinfo, append, spa, sidx);
             }
-            spa->stream[sidx]->port = lport;
+            spa->rtp->stream[sidx]->port = lport;
             spa->rtcp->stream[sidx]->port = lport + 1;
             if (spa->complete == 0) {
                 cmd->csp->nsess_complete.cnt++;
             }
-            spa->complete = spa->rtcp->complete = 1;
+            spa->complete = 1;
         }
         if (ulop->weak)
-            spa->stream[sidx]->weak = 1;
+            spa->rtp->stream[sidx]->weak = 1;
         else if (cmd->cca.op == UPDATE)
             spa->strong = 1;
-        lport = spa->stream[sidx]->port;
-        ulop->lia[0] = spa->stream[sidx]->laddr;
+        lport = spa->rtp->stream[sidx]->port;
+        ulop->lia[0] = spa->rtp->stream[sidx]->laddr;
         pidx = (sidx == 0) ? 1 : 0;
-        spa->ttl_mode = cf->stable->ttl_mode;
         if (cmd->cca.op == UPDATE) {
-            spa->stream[0]->ttl = cf->stable->max_setup_ttl;
-            spa->stream[1]->ttl = cf->stable->max_setup_ttl;
+            CALL_METHOD(spa->rtp->stream[0]->ttl, reset_with,
+              cf->stable->max_setup_ttl);
+            CALL_METHOD(spa->rtp->stream[1]->ttl, reset_with,
+              cf->stable->max_setup_ttl);
             RTPP_LOG(spa->log, RTPP_LOG_INFO,
               "adding %s flag to existing session, new=%d/%d/%d",
               ulop->weak ? ( sidx ? "weak[1]" : "weak[0]" ) : "strong",
-              spa->strong, spa->stream[0]->weak, spa->stream[1]->weak);
+              spa->strong, spa->rtp->stream[0]->weak, spa->rtp->stream[1]->weak);
         } else {
-            spa->stream[0]->ttl = cf->stable->max_ttl;
-            spa->stream[1]->ttl = cf->stable->max_ttl;
+            CALL_METHOD(spa->rtp->stream[0]->ttl, reset_with, cf->stable->max_ttl);
+            CALL_METHOD(spa->rtp->stream[1]->ttl, reset_with, cf->stable->max_ttl);
         }
         RTPP_LOG(spa->log, RTPP_LOG_INFO,
-          "lookup on ports %d/%d, session timer restarted", spa->stream[0]->port,
-          spa->stream[1]->port);
+          "lookup on ports %d/%d, session timer restarted", spa->rtp->stream[0]->port,
+          spa->rtp->stream[1]->port);
     } else {
         assert(cmd->cca.op == UPDATE);
         rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog,
@@ -459,96 +460,19 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
          * Session creation. If creation is requested with weak flag,
          * set weak[0].
          */
-        log = rtpp_log_obj_ctor(cf->stable, "rtpproxy", cmd->cca.call_id, 0);
-        CALL_METHOD(log, setlevel, cf->stable->log_level);
-        spa = rtpp_session_ctor(cf->stable, log, SESS_RTP);
-        CALL_METHOD(log->rcnt, decref);
+        spa = rtpp_session_ctor(cf->stable, &cmd->cca, cmd->dtime, ulop->lia,
+          ulop->weak, lport, fds);
         if (spa == NULL) {
             handle_nomem(cf, cmd, ECODE_NOMEM_4, ulop,
-              fds, spa, spb);
-            return (-1);
-        }
-        /* spb is RTCP twin session for this one. */
-        spb = rtpp_session_ctor(cf->stable, spa->log, SESS_RTCP);
-        if (spb == NULL) {
-            handle_nomem(cf, cmd, ECODE_NOMEM_5, ulop,
-              fds, spa, spb);
-            return (-1);
-        }
-        spa->init_ts = cmd->dtime;
-        spb->init_ts = cmd->dtime;
-        for (i = 0; i < 2; i++) {
-            spa->stream[i]->fd = spb->stream[i]->fd = NULL;
-            spa->stream[i]->last_update = 0;
-            spb->stream[i]->last_update = 0;
-        }
-        spa->call_id = strdup(cmd->cca.call_id);
-        if (spa->call_id == NULL) {
-            handle_nomem(cf, cmd, ECODE_NOMEM_6, ulop,
-              fds, spa, spb);
-            return (-1);
-        }
-        spb->call_id = spa->call_id;
-        spa->tag = strdup(cmd->cca.from_tag);
-        spa->tag_nomedianum = strdup(cmd->cca.from_tag);
-        if (spa->tag == NULL) {
-            handle_nomem(cf, cmd, ECODE_NOMEM_7, ulop,
-              fds, spa, spb);
-            return (-1);
-        }
-        cp = strrchr(spa->tag_nomedianum, ';');
-        if (cp != NULL)
-            *cp = '\0';
-        spb->tag = spa->tag;
-        spb->tag_nomedianum = spa->tag_nomedianum;
-        for (i = 0; i < 2; i++) {
-            spa->stream[i]->rrc = NULL;
-            spb->stream[i]->rrc = NULL;
-            spa->stream[i]->laddr = ulop->lia[i];
-            spb->stream[i]->laddr = ulop->lia[i];
-        }
-        spa->strong = spa->stream[0]->weak = spa->stream[1]->weak = 0;
-        if (ulop->weak)
-            spa->stream[0]->weak = 1;
-        else
-            spa->strong = 1;
-        assert(spa->stream[0]->fd == NULL);
-        spa->stream[0]->fd = fds[0];
-        assert(spb->stream[0]->fd == NULL);
-        spb->stream[0]->fd = fds[1];
-        spa->stream[0]->port = lport;
-        spb->stream[0]->port = lport + 1;
-        spa->stream[0]->ttl = cf->stable->max_setup_ttl;
-        spa->stream[1]->ttl = cf->stable->max_setup_ttl;
-        spb->stream[0]->ttl = -1;
-        spb->stream[1]->ttl = -1;
-        spa->rtcp = spb;
-        spb->rtcp = NULL;
-
-        append_session(cf, spa, 0);
-        append_session(cf, spa, 1);
-
-        spa->hte = CALL_METHOD(cf->stable->sessions_ht, append, spa->call_id, spa);
-        if (spa->hte == NULL) {
-            remove_session(cf, spa);
-#if 0
-            /* Not needed for the rtcp */
-            remove_session(cf, spb);
-#endif
-            handle_nomem(cf, cmd, ECODE_NOMEM_8, ulop, fds, spa, spb);
+              fds, NULL);
             return (-1);
         }
 
         if (CALL_METHOD(cf->stable->sessions_wrt, reg, spa->rcnt, spa->seuid) != 0) {
-            remove_session(cf, spa);
-            handle_nomem(cf, cmd, ECODE_NOMEM_8, ulop, fds, spa, spb);
+            handle_nomem(cf, cmd, ECODE_NOMEM_8, ulop, NULL, spa);
             return (-1);
         }
 
-        spb->rtp_seuid = spa->seuid;
-
-        cf->sessions_created++;
-        cf->sessions_active++;
         cmd->csp->nsess_created.cnt++;
 
         /*
@@ -556,7 +480,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
          * 2 RTCP and 1 logging) so that warn user when he is likely to
          * exceed 80% mark on hard limit.
          */
-        if (cf->sessions_active > (rtpp_rlim_max(cf) * 80 / (100 * 5)) &&
+        sessions_active = CALL_METHOD(cf->stable->sessions_wrt, get_length);
+        if (sessions_active > (rtpp_rlim_max(cf) * 80 / (100 * 5)) &&
           cf->nofile_limit_warned == 0) {
             cf->nofile_limit_warned = 1;
             rtpp_log_write(RTPP_LOG_WARN, cf->stable->glog, "passed 80%% "
@@ -602,39 +527,39 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     }
 
     if (ulop->ia[0] != NULL && ulop->ia[1] != NULL) {
-        CALL_METHOD(spa->stream[pidx], prefill_addr, &(ulop->ia[0]),
+        CALL_METHOD(spa->rtp->stream[pidx], prefill_addr, &(ulop->ia[0]),
           cmd->dtime);
         CALL_METHOD(spa->rtcp->stream[pidx], prefill_addr, &(ulop->ia[1]),
           cmd->dtime);
     }
-    spa->stream[pidx]->asymmetric = spa->rtcp->stream[pidx]->asymmetric = ulop->asymmetric;
-    spa->stream[pidx]->latch_info.latched = spa->rtcp->stream[pidx]->latch_info.latched = ulop->asymmetric;
-    if (spa->stream[pidx]->codecs != NULL) {
-        free(spa->stream[pidx]->codecs);
-        spa->stream[pidx]->codecs = NULL;
+    spa->rtp->stream[pidx]->asymmetric = spa->rtcp->stream[pidx]->asymmetric = ulop->asymmetric;
+    spa->rtp->stream[pidx]->latch_info.latched = spa->rtcp->stream[pidx]->latch_info.latched = ulop->asymmetric;
+    if (spa->rtp->stream[pidx]->codecs != NULL) {
+        free(spa->rtp->stream[pidx]->codecs);
+        spa->rtp->stream[pidx]->codecs = NULL;
     }
     if (ulop->codecs != NULL) {
-        spa->stream[pidx]->codecs = ulop->codecs;
+        spa->rtp->stream[pidx]->codecs = ulop->codecs;
         ulop->codecs = NULL;
     }
-    spa->stream[NOT(pidx)]->ptime = ulop->requested_ptime;
-    actor = CALL_METHOD(spa->stream[pidx], get_actor);
+    spa->rtp->stream[NOT(pidx)]->ptime = ulop->requested_ptime;
+    actor = CALL_METHOD(spa->rtp->stream[pidx], get_actor);
     if (ulop->requested_ptime > 0) {
         RTPP_LOG(spa->log, RTPP_LOG_INFO, "RTP packets from %s "
           "will be resized to %d milliseconds", actor, ulop->requested_ptime);
-    } else if (spa->stream[pidx]->resizer != NULL) {
+    } else if (spa->rtp->stream[pidx]->resizer != NULL) {
           RTPP_LOG(spa->log, RTPP_LOG_INFO, "Resizing of RTP "
           "packets from %s has been disabled", actor);
     }
     if (ulop->requested_ptime > 0) {
-        if (spa->stream[pidx]->resizer != NULL) {
-            rtp_resizer_set_ptime(spa->stream[pidx]->resizer, ulop->requested_ptime);
+        if (spa->rtp->stream[pidx]->resizer != NULL) {
+            rtp_resizer_set_ptime(spa->rtp->stream[pidx]->resizer, ulop->requested_ptime);
         } else {
-            spa->stream[pidx]->resizer = rtp_resizer_new(ulop->requested_ptime);
+            spa->rtp->stream[pidx]->resizer = rtp_resizer_new(ulop->requested_ptime);
         }
-    } else if (spa->stream[pidx]->resizer != NULL) {
-        rtp_resizer_free(cf->stable->rtpp_stats, spa->stream[pidx]->resizer);
-        spa->stream[pidx]->resizer = NULL;
+    } else if (spa->rtp->stream[pidx]->resizer != NULL) {
+        rtp_resizer_free(cf->stable->rtpp_stats, spa->rtp->stream[pidx]->resizer);
+        spa->rtp->stream[pidx]->resizer = NULL;
     }
 
     assert(lport != 0);
