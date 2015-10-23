@@ -41,6 +41,7 @@
 #include "rtpp_weakref.h"
 #include "rtpp_ttl.h"
 #include "rtpp_proc_ttl.h"
+#include "rtpp_pipe.h"
 
 struct foreach_args {
     struct rtpp_notify_obj *rtpp_notify_cf;
@@ -60,7 +61,7 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
      */
     sp = (struct rtpp_session_obj *)dp;
 
-    if (get_ttl(sp) == 0) {
+    if (CALL_METHOD(sp->rtp, get_ttl) == 0) {
         RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
         if (sp->timeout_data.notify_target != NULL) {
             CALL_METHOD(fap->rtpp_notify_cf, schedule,
@@ -70,13 +71,10 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
         remove_session(cf, sp);
 #endif
         CALL_METHOD(fap->rtpp_stats, updatebyname, "nsess_timeout", 1);
-        CALL_METHOD(sp->rcnt, decref);
         return (RTPP_WR_MATCH_DEL);
     } else {
-        CALL_METHOD(sp->stream[0]->ttl, decr);
-        CALL_METHOD(sp->stream[1]->ttl, decr);
+        CALL_METHOD(sp->rtp, decr_ttl);
     }
-    CALL_METHOD(sp->rcnt, decref);
     return (RTPP_WR_MATCH_CONT);
 }
 
