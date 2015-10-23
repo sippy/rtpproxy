@@ -29,22 +29,34 @@
 struct pollfd;
 struct rtpp_session_obj;
 struct rtpp_sessinfo_obj;
+struct rtpp_socket;
+struct rtpp_polltbl;
+struct rtpp_weakref_obj;
 
 DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_get_nsessions, int);
 DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_append, void, struct rtpp_session_obj *,
   int);
+DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_update, void, struct rtpp_session_obj *,
+  int, struct rtpp_socket **);
+DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_remove, void, struct rtpp_session_obj *,
+  int);
+DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_copy_polltbl, int, struct rtpp_polltbl *,
+  int session_type);
+
+struct rtpp_polltbl {
+    struct pollfd *pfds;
+    uint64_t *stuids;
+    int curlen;
+    int aloclen;
+    uint64_t revision;
+    struct rtpp_weakref_obj *streams_wrt;
+};
 
 struct rtpp_sessinfo_obj {
-    struct pollfd *pfds_rtp;
-    struct pollfd *pfds_rtcp;
-    struct rtpp_session_obj **sessions;
-    int nsessions;
-    pthread_mutex_t lock;
-    /* Structures below are protected by the glock */
-    struct rtpp_session_obj **rtp_servers;
-    int rtp_nsessions;
-    rtpp_si_get_nsessions_t get_nsessions;
     rtpp_si_append_t append;
+    rtpp_si_update_t update;
+    rtpp_si_remove_t remove;
+    rtpp_si_copy_polltbl_t copy_polltbl;
 };
 
 struct rtpp_sessinfo_obj *rtpp_sessinfo_ctor(struct rtpp_cfg_stable *);
