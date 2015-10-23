@@ -228,7 +228,8 @@ rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
 }
 
 void *
-rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const char *funcn)
+rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen,
+  const char *funcn)
 {
     UNUSED(fname);
     UNUSED(linen);
@@ -239,6 +240,9 @@ rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const
     unsigned char *gp;
     uint64_t guard;
 
+    if (ptr == NULL) {
+        return (rtpp_memdeb_malloc(size, fname, linen, funcn));
+    }
     mpf = ptr2mpf(ptr);
     sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
     pthread_mutex_lock(memdeb_mutex);
