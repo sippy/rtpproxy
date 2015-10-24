@@ -186,6 +186,11 @@ rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
      * rtpp_wi_malloc_pkt() consumes pkt and returns wi, so no need to
      * call rtp_packet_free() here.
      */
+#ifdef RTPP_DEBUG
+    wi->debug = 1;
+    rtpp_log_write(RTPP_LOG_DBUG, sender->glog, "rtpp_anetio: send_pkt(%d, %p, %d, %d, %p, %d)",
+      wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
+#endif
     rtpp_queue_put_item(wi, sender->out_q);
     return (0);
 }
