@@ -90,17 +90,13 @@ fill_session_addr(struct cfg *cf, struct rtpp_stream_obj *stp,
 }
 
 static void
-rxmit_packets(struct cfg *cf, struct rtpp_proc_ready_lst *rready,
+rxmit_packets(struct cfg *cf, struct rtpp_stream_obj *stp,
   double dtime, int drain_repeat, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
     int ndrain;
     struct rtp_packet *packet = NULL;
-    struct rtpp_session_obj *sp;
-    struct rtpp_stream_obj *stp;
 
-    sp = rready->sp;
-    stp = rready->stp;
     /* Repeat since we may have several packets queued on the same socket */
     ndrain = -1;
     do {
@@ -270,28 +266,19 @@ drain_socket(struct rtpp_socket *rfd, struct rtpp_proc_rstats *rsp)
     return (ndrained);
 }
 
-#define	RX_PUSH(__rready, __sp, __stp) { \
-  __rready.sp = __sp; \
-  __rready.stp = __stp; \
-  rxmit_packets(cf, &__rready, dtime, drain_repeat, sender, rsp); \
-  }
-
 void
 process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
   int drain_repeat, struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
 {
-    int readyfd, rready_len, ndrained;
+    int readyfd, ndrained;
     struct rtpp_session_obj *sp;
     struct rtpp_stream_obj *stp;
     struct rtp_packet *packet;
-    struct rtpp_proc_ready_lst rready;
 #if RTPP_DEBUG
     const char *proto;
     int fd;
 #endif
 
-    rready_len = 0;
-    {static int b=0; while (b);}
     for (readyfd = 0; readyfd < ptbl->curlen; readyfd++) {
         if ((ptbl->pfds[readyfd].revents & POLLIN) == 0)
             continue;
@@ -305,7 +292,7 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
             continue;
         }
         if (sp->complete != 0) {
-            RX_PUSH(rready, sp, stp);
+            rxmit_packets(cf, stp, dtime, drain_repeat, sender, rsp);
             CALL_METHOD(sp->rcnt, decref);
             if (stp->resizer != NULL) {
                 while ((packet = rtp_resizer_get(stp->resizer, dtime)) != NULL) {
