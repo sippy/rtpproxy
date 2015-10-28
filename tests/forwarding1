@@ -68,6 +68,14 @@ setup_gen() {
     i=$((${i}+1))
   done
   sleep 8
+  i=1
+  for codec in ${1} ${2}
+  do
+    CID="forwarding1_${direction}_${i}"
+    SED_TRANS="s|%%CALLID%%|${CID}|"
+    ${SED} "${SED_TRANS}" forwarding1.sstats.input
+    i=$((${i}+1))
+  done
   cat session_timeouts.stats.input forwarding1.stats.input
 }
 
@@ -100,7 +108,7 @@ setup_fwd() {
   do
     CID="forwarding1_${j}"
     SED_TRANS="s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.delete.input
+    ${SED} "${SED_TRANS}" forwarding1.sstats.input forwarding1.delete.input
     j=$((${j} - 1))
   done  
   cat session_timeouts.stats.input forwarding1.stats.input
