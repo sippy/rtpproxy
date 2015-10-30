@@ -107,16 +107,11 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
         return (NULL);
     }
 
-    cmd = rtpp_zmalloc(sizeof(struct rtpp_command));
+    cmd = rtpp_command_ctor(cf, rcs->controlfd_out, dtime, rval, csp, 0);
     if (cmd == NULL) {
-        *rval = ENOMEM;
         return (NULL);
     }
 
-    cmd->controlfd = rcs->controlfd_out;
-    cmd->dtime = dtime;
-    cmd->csp = csp;
-    cmd->umode = 0;
     if (rcs->rlen > 0) {
         cmd->rlen = rcs->rlen;
         memcpy(&cmd->raddr, &rcs->raddr, rcs->rlen);
@@ -141,9 +136,9 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
 
     if (cmd->argc < 1) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
-        reply_error(cf, cmd, ECODE_PARSE_1);
+        reply_error(cmd, ECODE_PARSE_1);
         *rval = EINVAL;
-        free(cmd);
+        free_command(cmd);
         return (NULL);
     }
 
@@ -151,7 +146,7 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     if (rtpp_command_pre_parse(cf, cmd) != 0) {
         /* Error reply is handled by the rtpp_command_pre_parse() */
         *rval = 0;
-        free(cmd);
+        free_command(cmd);
         return (NULL);
     }
 

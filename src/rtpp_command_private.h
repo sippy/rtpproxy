@@ -66,20 +66,15 @@ struct rtpp_command
 {
     char buf[1024 * 8];
     char buf_t[256];
-    char buf_r[256];
     char *argv[RTPC_MAX_ARGC];
     int argc;
     struct sockaddr_storage raddr;
     struct sockaddr *laddr;
     socklen_t rlen;
-    char *cookie;
-    int controlfd;
     double dtime;
     struct rtpp_command_stats *csp;
-    int umode;
     struct common_cmd_args cca;
     int no_glock;
-    struct rtpp_cmd_rcache_obj *rcache_obj;
 };
 
 #define ECODE_CMDUNKN      0

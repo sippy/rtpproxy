@@ -71,6 +71,6 @@ handle_get_stats(struct cfg *cf, struct rtpp_command *cmd, int verbose)
     }
     CHECK_OVERFLOW();
     len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "\n");
-    rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
+    rtpc_doreply(cmd, cmd->buf_t, len, 0);
     return (0);
 }

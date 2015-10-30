@@ -233,19 +233,19 @@ rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd)
     if (fill_cmd_props(cf, cmd, &cprops) != 0) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "unknown command \"%c\"",
           cmd->argv[0][0]);
-        reply_error(cf, cmd, ECODE_CMDUNKN);
+        reply_error(cmd, ECODE_CMDUNKN);
         return (-1);
     }
     if (cmd->argc < cprops.min_argc || cmd->argc > cprops.max_argc) {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "%s command syntax error"
           ": invalid number of arguments (%d)", cmd->cca.rname, cmd->argc);
-        reply_error(cf, cmd, ECODE_PARSE_NARGS);
+        reply_error(cmd, ECODE_PARSE_NARGS);
         return (-1);
     }
     if (cprops.has_cmods == 0 && cprops.cmods[0] != '\0') {
         rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "%s command syntax error"
           ": modifiers are not supported by the command", cmd->cca.rname);
-        reply_error(cf, cmd, ECODE_PARSE_MODS);
+        reply_error(cmd, ECODE_PARSE_MODS);
         return (-1);
     }
     cmd->cca.call_id = cprops.has_call_id ? cmd->argv[1] : NULL;

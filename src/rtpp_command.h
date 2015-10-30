@@ -48,12 +48,14 @@ int handle_command(struct cfg *, struct rtpp_command *);
 void free_command(struct rtpp_command *);
 struct rtpp_command *get_command(struct cfg *, int, int *, double,
   struct rtpp_command_stats *csp, int umode, struct rtpp_cmd_rcache_obj *);
-void reply_error(struct cfg *cf, struct rtpp_command *cmd, int ecode);
-void reply_port(struct cfg *cf, struct rtpp_command *cmd, int lport,
+void reply_error(struct rtpp_command *cmd, int ecode);
+void reply_port(struct rtpp_command *cmd, int lport,
   struct sockaddr **lia);
 int rtpp_create_listener(struct cfg *, struct sockaddr *, int *,
   struct rtpp_socket **);
+struct rtpp_command *rtpp_command_ctor(struct cfg *, int, double, int *,
+  struct rtpp_command_stats *, int);
 
-void rtpc_doreply(struct cfg *, char *, int, struct rtpp_command *, int);
+void rtpc_doreply(struct rtpp_command *, char *, int, int);
 
 #endif
