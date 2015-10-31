@@ -96,10 +96,17 @@ rtpp_anetio_sthread(struct sthread_args *args)
                 n = sendto(wi->sock, wi->msg, wi->msg_len, wi->flags,
                   wi->sendto, wi->tolen);
                 if (wi->debug != 0) {
-                    rtpp_log_write(RTPP_LOG_DBUG, args->glog,
-                      "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d) = %d",
-                      wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto,
-                      wi->tolen, n);
+                    if (n >= 0) {
+                        rtpp_log_write(RTPP_LOG_DBUG, args->glog,
+                          "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d) = %d",
+                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto,
+                          wi->tolen, n);
+                    } else {
+                        rtpp_log_ewrite(RTPP_LOG_DBUG, args->glog,
+                          "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d) = %d",
+                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto,
+                          wi->tolen, n);
+                    }
                 }
                 if (n >= 0) {
                     wi->nsend--;
