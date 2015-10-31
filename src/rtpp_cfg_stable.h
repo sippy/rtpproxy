@@ -41,8 +41,8 @@ enum rtpp_ttl_mode {
 
 typedef enum rtpp_ttl_mode rtpp_ttl_mode;
 
-struct rtpp_timed_obj;
-struct rtpp_sessinfo_obj;
+struct rtpp_timed;
+struct rtpp_sessinfo;
 
 struct rtpp_cfg_stable {
     const char *pid_file;
@@ -90,7 +90,7 @@ struct rtpp_cfg_stable {
     uint16_t port_table[65536];
     int port_table_len;
 
-    struct rtpp_hash_table_obj *sessions_ht;
+    struct rtpp_hash_table *sessions_ht;
     struct rtpp_weakref_obj *sessions_wrt;
     struct rtpp_weakref_obj *servers_wrt;
     struct rtpp_weakref_obj *rtp_streams_wrt;
@@ -100,21 +100,21 @@ struct rtpp_cfg_stable {
     int sched_policy;
     int sched_hz;
     double target_pfreq;
-    struct rtpp_cmd_async_obj *rtpp_cmd_cf;
-    struct rtpp_proc_async_obj *rtpp_proc_cf;
+    struct rtpp_cmd_async *rtpp_cmd_cf;
+    struct rtpp_proc_async *rtpp_proc_cf;
     struct rtpp_anetio_cf *rtpp_netio_cf;
-    struct rtpp_tnotify_set_obj *rtpp_tnset_cf;
-    struct rtpp_notify_obj *rtpp_notify_cf;
+    struct rtpp_tnotify_set *rtpp_tnset_cf;
+    struct rtpp_notify *rtpp_notify_cf;
     int slowshutdown;
     int fastshutdown;
 
-    struct rtpp_stats_obj *rtpp_stats;
+    struct rtpp_stats *rtpp_stats;
 
     struct rtpp_list *ctrl_socks;
 
-    struct rtpp_timed_obj *rtpp_timed_cf;
+    struct rtpp_timed *rtpp_timed_cf;
 
-    struct rtpp_sessinfo_obj *sessinfo;
+    struct rtpp_sessinfo *sessinfo;
 };
 
 #endif

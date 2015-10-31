@@ -27,7 +27,7 @@
  */
 
 struct rtpp_ttl;
-struct rtpp_refcnt_obj;
+struct rtpp_refcnt;
 
 DEFINE_METHOD(rtpp_ttl, rtpp_ttl_reset, void);
 DEFINE_METHOD(rtpp_ttl, rtpp_ttl_reset_with, void, int);
@@ -35,7 +35,7 @@ DEFINE_METHOD(rtpp_ttl, rtpp_ttl_get_remaining, int);
 DEFINE_METHOD(rtpp_ttl, rtpp_ttl_decr, int);
 
 struct rtpp_ttl {
-    struct rtpp_refcnt_obj *rcnt;
+    struct rtpp_refcnt *rcnt;
     METHOD_ENTRY(rtpp_ttl_reset, reset);
     METHOD_ENTRY(rtpp_ttl_reset_with, reset_with);
     METHOD_ENTRY(rtpp_ttl_get_remaining, get_remaining);

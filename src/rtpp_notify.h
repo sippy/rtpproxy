@@ -28,18 +28,18 @@
 #ifndef _RTPP_NOTIFY_H_
 #define _RTPP_NOTIFY_H_
 
-struct rtpp_notify_obj;
+struct rtpp_notify;
 struct rtpp_tnotify_target;
 
-DEFINE_METHOD(rtpp_notify_obj, rtpp_notify_schedule, int,
+DEFINE_METHOD(rtpp_notify, rtpp_notify_schedule, int,
   struct rtpp_tnotify_target *, const char *);
-DEFINE_METHOD(rtpp_notify_obj, rtpp_notify_dtor, void);
+DEFINE_METHOD(rtpp_notify, rtpp_notify_dtor, void);
 
-struct rtpp_notify_obj {
+struct rtpp_notify {
     rtpp_notify_schedule_t schedule;
     rtpp_notify_dtor_t dtor;
 };
 
-struct rtpp_notify_obj *rtpp_notify_ctor(rtpp_log_t);
+struct rtpp_notify *rtpp_notify_ctor(rtpp_log_t);
 
 #endif

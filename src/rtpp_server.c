@@ -55,7 +55,7 @@
 #define RTPS_SRATE      8000
 
 struct rtpp_server_priv {
-    struct rtpp_server_obj pub;
+    struct rtpp_server pub;
     double btime;
     unsigned char buf[1024];
     rtp_hdr_t *rtp;
@@ -70,11 +70,11 @@ struct rtpp_server_priv {
 #define PUB2PVT(pubp)      ((struct rtpp_server_priv *)((char *)(pubp) - offsetof(struct rtpp_server_priv, pub)))
 
 static void rtpp_server_dtor(struct rtpp_server_priv *);
-static struct rtp_packet *rtpp_server_get(struct rtpp_server_obj *, double, int *);
-static uint32_t rtpp_server_get_ssrc(struct rtpp_server_obj *);
-static uint16_t rtpp_server_get_seq(struct rtpp_server_obj *);
+static struct rtp_packet *rtpp_server_get(struct rtpp_server *, double, int *);
+static uint32_t rtpp_server_get_ssrc(struct rtpp_server *);
+static uint16_t rtpp_server_get_seq(struct rtpp_server *);
 
-struct rtpp_server_obj *
+struct rtpp_server *
 rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
   int ptime)
 {
@@ -134,13 +134,13 @@ static void
 rtpp_server_dtor(struct rtpp_server_priv *rp)
 {
 
-    rtpp_server_obj_fin(&rp->pub);
+    rtpp_server_fin(&rp->pub);
     close(rp->fd);
     free(rp);
 }
 
 static struct rtp_packet *
-rtpp_server_get(struct rtpp_server_obj *self, double dtime, int *rval)
+rtpp_server_get(struct rtpp_server *self, double dtime, int *rval)
 {
     struct rtp_packet *pkt;
     uint32_t ts;
@@ -231,7 +231,7 @@ rtpp_server_get(struct rtpp_server_obj *self, double dtime, int *rval)
 }
 
 static uint32_t
-rtpp_server_get_ssrc(struct rtpp_server_obj *self)
+rtpp_server_get_ssrc(struct rtpp_server *self)
 {
     struct rtpp_server_priv *rp;
 
@@ -240,7 +240,7 @@ rtpp_server_get_ssrc(struct rtpp_server_obj *self)
 }
 
 static uint16_t
-rtpp_server_get_seq(struct rtpp_server_obj *self)
+rtpp_server_get_seq(struct rtpp_server *self)
 {
     struct rtpp_server_priv *rp;
 

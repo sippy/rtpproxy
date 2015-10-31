@@ -30,15 +30,15 @@
 #define _RTPP_RECORD_H_
 
 struct cfg;
-struct rtpp_session_obj;
-struct rtpp_stream_obj;
+struct rtpp_session;
+struct rtpp_stream;
 struct rtp_packet;
 struct rtpp_record;
 
-DEFINE_METHOD(rtpp_record, rtpp_record_write, void, struct rtpp_stream_obj *, struct rtp_packet *);
+DEFINE_METHOD(rtpp_record, rtpp_record_write, void, struct rtpp_stream *, struct rtp_packet *);
 
 struct rtpp_record {
-    struct rtpp_refcnt_obj *rcnt;
+    struct rtpp_refcnt *rcnt;
     METHOD_ENTRY(rtpp_record_write, write);
 };
 
@@ -47,6 +47,6 @@ struct rtpp_record {
 #define RECORD_BOTH 2
 
 /* Function prototypes */
-struct rtpp_record *rtpp_record_open(struct cfg *cf, struct rtpp_session_obj *, char *, int, int);
+struct rtpp_record *rtpp_record_open(struct cfg *cf, struct rtpp_session *, char *, int, int);
 
 #endif

@@ -58,7 +58,7 @@ rtp_ts2dtime(uint32_t ts)
     }
 
 enum update_rtpp_stats_rval
-update_rtpp_stats(struct rtpp_log_obj *rlog, struct rtpp_session_stat *stat, rtp_hdr_t *header,
+update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr_t *header,
   struct rtp_info *rinfo, double rtime)
 {
     uint32_t seq;

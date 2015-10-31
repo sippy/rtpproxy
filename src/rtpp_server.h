@@ -29,34 +29,34 @@
 #ifndef _RTP_SERVER_H_
 #define _RTP_SERVER_H_
 
-struct rtpp_server_obj;
+struct rtpp_server;
 struct rtp_packet;
 
 enum rtp_type;
 
-DEFINE_METHOD(rtpp_server_obj, rtpp_server_get, struct rtp_packet *, double, int *);
-DEFINE_METHOD(rtpp_server_obj, rtpp_server_get_ssrc, uint32_t);
-DEFINE_METHOD(rtpp_server_obj, rtpp_server_get_seq, uint16_t);
+DEFINE_METHOD(rtpp_server, rtpp_server_get, struct rtp_packet *, double, int *);
+DEFINE_METHOD(rtpp_server, rtpp_server_get_ssrc, uint32_t);
+DEFINE_METHOD(rtpp_server, rtpp_server_get_seq, uint16_t);
 
 #define	RTPS_LATER	(0)
 #define	RTPS_EOF	(-1)
 #define	RTPS_ERROR	(-2)
 #define	RTPS_ENOMEM	(-3)
 
-struct rtpp_server_obj {
+struct rtpp_server {
     /* Public methods */
     METHOD_ENTRY(rtpp_server_get, get);
     METHOD_ENTRY(rtpp_server_get_ssrc, get_ssrc);
     METHOD_ENTRY(rtpp_server_get_seq, get_seq);
     /* Refcounter */
-    struct rtpp_refcnt_obj *rcnt;
+    struct rtpp_refcnt *rcnt;
     /* UID */
     uint64_t sruid;
     /* Weakref to the associated RTP stream */
     uint64_t stuid;
 };
 
-struct rtpp_server_obj *rtpp_server_ctor(const char *, enum rtp_type, int, double,
+struct rtpp_server *rtpp_server_ctor(const char *, enum rtp_type, int, double,
   int);
 
 #endif

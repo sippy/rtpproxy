@@ -46,17 +46,17 @@
 #include "rtpp_socket.h"
 #include "rtpp_util.h"
 
-static void rtpp_sinfo_append(struct rtpp_sessinfo_obj *, struct rtpp_session_obj *,
+static void rtpp_sinfo_append(struct rtpp_sessinfo *, struct rtpp_session *,
   int index);
-static void rtpp_sinfo_update(struct rtpp_sessinfo_obj *, struct rtpp_session_obj *,
+static void rtpp_sinfo_update(struct rtpp_sessinfo *, struct rtpp_session *,
   int, struct rtpp_socket **);
-static void rtpp_sinfo_remove(struct rtpp_sessinfo_obj *, struct rtpp_session_obj *,
+static void rtpp_sinfo_remove(struct rtpp_sessinfo *, struct rtpp_session *,
   int);
-static int rtpp_sinfo_copy_polltbl(struct rtpp_sessinfo_obj *, struct rtpp_polltbl *,
+static int rtpp_sinfo_copy_polltbl(struct rtpp_sessinfo *, struct rtpp_polltbl *,
   int session_type);
 
 struct rtpp_sessinfo_priv {
-   struct rtpp_sessinfo_obj pub;
+   struct rtpp_sessinfo pub;
    struct rtpp_polltbl rtp;
    struct rtpp_polltbl rtcp;
    pthread_mutex_t lock;
@@ -65,10 +65,10 @@ struct rtpp_sessinfo_priv {
 #define PUB2PVT(pubp) \
   ((struct rtpp_sessinfo_priv *)((char *)(pubp) - offsetof(struct rtpp_sessinfo_priv, pub)))
 
-struct rtpp_sessinfo_obj *
+struct rtpp_sessinfo *
 rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
 {
-    struct rtpp_sessinfo_obj *sessinfo;
+    struct rtpp_sessinfo *sessinfo;
     struct rtpp_sessinfo_priv *pvt;
 
     pvt = rtpp_zmalloc(sizeof(struct rtpp_sessinfo_priv));
@@ -121,7 +121,7 @@ e1:
 }
 
 static void
-rtpp_sinfo_append(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session_obj *sp,
+rtpp_sinfo_append(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
   int index)
 {
     int rtp_index, rtcp_index;
@@ -160,7 +160,7 @@ find_polltbl_idx(struct rtpp_polltbl *ptp, uint64_t stuid)
 }
 
 static void
-rtpp_sinfo_update(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session_obj *sp,
+rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
   int index, struct rtpp_socket **new_fds)
 {
     struct rtpp_sessinfo_priv *pvt;
@@ -203,7 +203,7 @@ rtpp_sinfo_update(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session_obj *s
 }
 
 static void
-rtpp_sinfo_remove(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session_obj *sp,
+rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
   int index)
 {
     struct rtpp_sessinfo_priv *pvt;
@@ -244,7 +244,7 @@ rtpp_sinfo_remove(struct rtpp_sessinfo_obj *sessinfo, struct rtpp_session_obj *s
 }
 
 static int
-rtpp_sinfo_copy_polltbl(struct rtpp_sessinfo_obj *sessinfo,
+rtpp_sinfo_copy_polltbl(struct rtpp_sessinfo *sessinfo,
   struct rtpp_polltbl *ptbl, int session_type)
 {
     struct rtpp_sessinfo_priv *pvt;

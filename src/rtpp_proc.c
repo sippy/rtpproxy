@@ -61,18 +61,18 @@
 #include "rtpp_ttl.h"
 
 struct rtpp_proc_ready_lst {
-    struct rtpp_session_obj *sp;
-    struct rtpp_stream_obj *stp;
+    struct rtpp_session *sp;
+    struct rtpp_stream *stp;
 };
 
-static void send_packet(struct cfg *, struct rtpp_stream_obj *,
+static void send_packet(struct cfg *, struct rtpp_stream *,
   struct rtp_packet *, struct sthread_args *, struct rtpp_proc_rstats *);
 
 static int
-fill_session_addr(struct cfg *cf, struct rtpp_stream_obj *stp,
+fill_session_addr(struct cfg *cf, struct rtpp_stream *stp,
   struct rtp_packet *packet)
 {
-    struct rtpp_stream_obj *stp_rtcp;
+    struct rtpp_stream *stp_rtcp;
     int rval;
 
     CALL_METHOD(stp, fill_addr, packet);
@@ -90,7 +90,7 @@ fill_session_addr(struct cfg *cf, struct rtpp_stream_obj *stp,
 }
 
 static void
-rxmit_packets(struct cfg *cf, struct rtpp_stream_obj *stp,
+rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
   double dtime, int drain_repeat, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
@@ -194,8 +194,8 @@ discard:
     return;
 }
 
-static struct rtpp_stream_obj *
-get_sender(struct cfg *cf, struct rtpp_stream_obj *stp)
+static struct rtpp_stream *
+get_sender(struct cfg *cf, struct rtpp_stream *stp)
 {
     if (stp->session_type == SESS_RTP) {
        return (CALL_METHOD(cf->stable->rtp_streams_wrt, get_by_idx,
@@ -206,11 +206,11 @@ get_sender(struct cfg *cf, struct rtpp_stream_obj *stp)
 }
 
 static void
-send_packet(struct cfg *cf, struct rtpp_stream_obj *stp_in,
+send_packet(struct cfg *cf, struct rtpp_stream *stp_in,
   struct rtp_packet *packet, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
-    struct rtpp_stream_obj *stp_out;
+    struct rtpp_stream *stp_out;
 
     CALL_METHOD(stp_in->ttl, reset);
 
@@ -271,8 +271,8 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
   int drain_repeat, struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
 {
     int readyfd, ndrained;
-    struct rtpp_session_obj *sp;
-    struct rtpp_stream_obj *stp;
+    struct rtpp_session *sp;
+    struct rtpp_stream *stp;
     struct rtp_packet *packet;
 #if RTPP_DEBUG
     const char *proto;

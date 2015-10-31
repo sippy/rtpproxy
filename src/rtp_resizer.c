@@ -100,7 +100,7 @@ rtp_resizer_new(int output_ptime)
 }
 
 void 
-rtp_resizer_free(struct rtpp_stats_obj *rtpp_stats, struct rtp_resizer *this)
+rtp_resizer_free(struct rtpp_stats *rtpp_stats, struct rtp_resizer *this)
 {
     struct rtp_packet *p;
     struct rtp_packet *p1;

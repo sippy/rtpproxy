@@ -76,18 +76,18 @@ struct rtpp_record_channel {
     enum record_mode mode;
     int record_single_file;
     const char *proto;
-    struct rtpp_log_obj *log;
+    struct rtpp_log *log;
     void *rco[0];
 };
 
-static void rtpp_record_write(struct rtpp_record *, struct rtpp_stream_obj *, struct rtp_packet *);
+static void rtpp_record_write(struct rtpp_record *, struct rtpp_stream *, struct rtp_packet *);
 static void rtpp_record_close(struct rtpp_record_channel *);
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_record_channel *)((char *)(pubp) - offsetof(struct rtpp_record_channel, pub)))
 
 static int
-ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log_obj *log,
+ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
   char *rname, int is_rtcp)
 {
     char *cp, *tmp;
@@ -145,7 +145,7 @@ e0:
 }
 
 struct rtpp_record *
-rtpp_record_open(struct cfg *cf, struct rtpp_session_obj *sp, char *rname, int orig,
+rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
   int record_type)
 {
     struct rtpp_record_channel *rrc;
@@ -280,7 +280,7 @@ flush_rbuf(struct rtpp_record_channel *rrc)
 }
 
 static int
-prepare_pkt_hdr_adhoc(struct rtpp_log_obj *log, struct rtp_packet *packet,
+prepare_pkt_hdr_adhoc(struct rtpp_log *log, struct rtp_packet *packet,
   struct pkt_hdr_adhoc *hdrp, struct sockaddr *daddr, struct sockaddr *ldaddr,
   int ldport, int face)
 {
@@ -315,7 +315,7 @@ prepare_pkt_hdr_adhoc(struct rtpp_log_obj *log, struct rtp_packet *packet,
 static uint16_t ip_id = 0;
 
 static int
-prepare_pkt_hdr_pcap(struct rtpp_log_obj *log, struct rtp_packet *packet,
+prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
   union pkt_hdr_pcap *hdrp, struct sockaddr *daddr, struct sockaddr *ldaddr,
   int ldport, int face)
 {
@@ -404,7 +404,7 @@ prepare_pkt_hdr_pcap(struct rtpp_log_obj *log, struct rtp_packet *packet,
 }
 
 static void
-rtpp_record_write(struct rtpp_record *self, struct rtpp_stream_obj *stp, struct rtp_packet *packet)
+rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_packet *packet)
 {
     struct iovec v[2];
     union {
@@ -412,7 +412,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream_obj *stp, struct 
 	struct pkt_hdr_adhoc adhoc;
     } hdr;
     int rval, hdr_size;
-    int (*prepare_pkt_hdr)(struct rtpp_log_obj *, struct rtp_packet *, void *,
+    int (*prepare_pkt_hdr)(struct rtpp_log *, struct rtp_packet *, void *,
       struct sockaddr *, struct sockaddr *, int, int);
     const char *proto;
     struct sockaddr *daddr;

@@ -61,7 +61,7 @@ struct rtpp_notify_wi
 };
 
 struct rtpp_notify_priv {
-    struct rtpp_notify_obj pub;
+    struct rtpp_notify pub;
     struct rtpp_queue *nqueue;
     struct rtpp_wi *sigterm;
     pthread_t thread_id;
@@ -70,9 +70,9 @@ struct rtpp_notify_priv {
 
 #define PUB2PVT(pubp)      ((struct rtpp_notify_priv *)((char *)(pubp) - offsetof(struct rtpp_notify_priv, pub)))
 
-static int rtpp_notify_schedule(struct rtpp_notify_obj *,
+static int rtpp_notify_schedule(struct rtpp_notify *,
   struct rtpp_tnotify_target *, const char *);
-static void rtpp_notify_dtor(struct rtpp_notify_obj *);
+static void rtpp_notify_dtor(struct rtpp_notify *);
 static void do_timeout_notification(struct rtpp_notify_wi *, int);
 
 static void
@@ -99,7 +99,7 @@ rtpp_notify_queue_run(void *arg)
     }
 }
 
-struct rtpp_notify_obj *
+struct rtpp_notify *
 rtpp_notify_ctor(rtpp_log_t glog)
 {
     struct rtpp_notify_priv *pvt;
@@ -140,7 +140,7 @@ e0:
 }
 
 static void
-rtpp_notify_dtor(struct rtpp_notify_obj *pub)
+rtpp_notify_dtor(struct rtpp_notify *pub)
 {
     struct rtpp_notify_priv *pvt;
 
@@ -153,7 +153,7 @@ rtpp_notify_dtor(struct rtpp_notify_obj *pub)
 }
 
 static int
-rtpp_notify_schedule(struct rtpp_notify_obj *pub,
+rtpp_notify_schedule(struct rtpp_notify *pub,
   struct rtpp_tnotify_target *rttp, const char *notify_tag)
 {
     struct rtpp_notify_wi *wi_data;

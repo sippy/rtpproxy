@@ -43,11 +43,11 @@ struct rtpp_analyzer {
     struct rtpp_session_stat rstat;
     uint32_t pecount;
     uint32_t aecount;
-    struct rtpp_log_obj *log;
+    struct rtpp_log *log;
 };
 
 struct rtpp_analyzer *
-rtpp_analyzer_ctor(struct rtpp_log_obj *log)
+rtpp_analyzer_ctor(struct rtpp_log *log)
 {
     struct rtpp_analyzer *rap;
 

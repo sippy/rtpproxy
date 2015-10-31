@@ -584,9 +584,9 @@ init_config(struct cfg *cf, int argc, char **argv)
 static enum rtpp_timed_cb_rvals
 update_derived_stats(double dtime, void *argp)
 {
-    struct rtpp_stats_obj *rtpp_stats;
+    struct rtpp_stats *rtpp_stats;
 
-    rtpp_stats = (struct rtpp_stats_obj *)argp;
+    rtpp_stats = (struct rtpp_stats *)argp;
     CALL_METHOD(rtpp_stats, update_derived, dtime);
     return (CB_MORE);
 }

@@ -58,10 +58,10 @@ static int
 process_rtp_servers_foreach(void *dp, void *ap)
 {
     struct foreach_args *fap;
-    struct rtpp_server_obj *rsrv;
+    struct rtpp_server *rsrv;
     struct rtp_packet *pkt;
     int len;
-    struct rtpp_stream_obj *rsop;
+    struct rtpp_stream *rsop;
     uint64_t rtps_old;
 
     fap = (struct foreach_args *)ap;
@@ -69,7 +69,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
      * This method does not need us to bump ref, since we are in the
      * locked context of the rtpp_hash_table, which holds its own ref.
      */
-    rsrv = (struct rtpp_server_obj *)dp;
+    rsrv = (struct rtpp_server *)dp;
     rsop = CALL_METHOD(fap->rtp_streams_wrt, get_by_idx, rsrv->stuid);
     if (rsop == NULL) {
         return (RTPP_WR_MATCH_CONT);
@@ -78,7 +78,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
         pkt = CALL_METHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
-                struct rtpp_stream_obj *rsop_rtcp;
+                struct rtpp_stream *rsop_rtcp;
                 CALL_METHOD(rsop, finish_playback, rsrv->sruid);
                 rtps_old = rsrv->sruid;
                 rsop_rtcp = CALL_METHOD(fap->rtcp_streams_wrt, get_by_idx,

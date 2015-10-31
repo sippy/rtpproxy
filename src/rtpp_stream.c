@@ -65,9 +65,9 @@
 
 struct rtpp_stream_priv
 {
-    struct rtpp_stream_obj pub;
+    struct rtpp_stream pub;
     struct rtpp_weakref_obj *servers_wrt;
-    struct rtpp_stats_obj *rtpp_stats;
+    struct rtpp_stats *rtpp_stats;
     pthread_mutex_t lock;
     /* Weak reference to the "rtpp_server" (player) */
     uint64_t rtps;
@@ -79,29 +79,29 @@ struct rtpp_stream_priv
   ((struct rtpp_stream_priv *)((char *)(pubp) - offsetof(struct rtpp_stream_priv, pub)))
 
 static void rtpp_stream_dtor(struct rtpp_stream_priv *);
-static int rtpp_stream_handle_play(struct rtpp_stream_obj *, char *, char *,
+static int rtpp_stream_handle_play(struct rtpp_stream *, char *, char *,
   int, struct rtpp_command *, int);
-static void rtpp_stream_handle_noplay(struct rtpp_stream_obj *);
-static int rtpp_stream_isplayer_active(struct rtpp_stream_obj *);
-static void rtpp_stream_finish_playback(struct rtpp_stream_obj *, uint64_t);
-static const char *rtpp_stream_get_actor(struct rtpp_stream_obj *);
-static const char *rtpp_stream_get_proto(struct rtpp_stream_obj *);
-static int rtpp_stream_latch(struct rtpp_stream_obj *, double,
+static void rtpp_stream_handle_noplay(struct rtpp_stream *);
+static int rtpp_stream_isplayer_active(struct rtpp_stream *);
+static void rtpp_stream_finish_playback(struct rtpp_stream *, uint64_t);
+static const char *rtpp_stream_get_actor(struct rtpp_stream *);
+static const char *rtpp_stream_get_proto(struct rtpp_stream *);
+static int rtpp_stream_latch(struct rtpp_stream *, double,
   struct rtp_packet *);
-static int rtpp_stream_check_latch_override(struct rtpp_stream_obj *,
+static int rtpp_stream_check_latch_override(struct rtpp_stream *,
   struct rtp_packet *);
-static void rtpp_stream_fill_addr(struct rtpp_stream_obj *,
+static void rtpp_stream_fill_addr(struct rtpp_stream *,
   struct rtp_packet *);
-static int rtpp_stream_guess_addr(struct rtpp_stream_obj *,
+static int rtpp_stream_guess_addr(struct rtpp_stream *,
   struct rtp_packet *);
-static void rtpp_stream_prefill_addr(struct rtpp_stream_obj *,
+static void rtpp_stream_prefill_addr(struct rtpp_stream *,
   struct sockaddr **, double);
-static uint64_t rtpp_stream_get_rtps(struct rtpp_stream_obj *);
-static void rtpp_stream_replace_rtps(struct rtpp_stream_obj *, uint64_t, uint64_t);
+static uint64_t rtpp_stream_get_rtps(struct rtpp_stream *);
+static void rtpp_stream_replace_rtps(struct rtpp_stream *, uint64_t, uint64_t);
 
-struct rtpp_stream_obj *
-rtpp_stream_ctor(struct rtpp_log_obj *log, struct rtpp_weakref_obj *servers_wrt,
-  struct rtpp_stats_obj *rtpp_stats, enum rtpp_stream_side side,
+struct rtpp_stream *
+rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
+  struct rtpp_stats *rtpp_stats, enum rtpp_stream_side side,
   int session_type, uint64_t seuid)
 {
     struct rtpp_stream_priv *pvt;
@@ -163,10 +163,10 @@ e0:
 static void
 rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
 {
-    struct rtpp_stream_obj *pub;
+    struct rtpp_stream *pub;
 
     pub = &(pvt->pub);
-    rtpp_stream_obj_fin(pub);
+    rtpp_stream_fin(pub);
     if (pub->analyzer != NULL) {
          struct rtpp_analyzer_stats rst;
          char ssrc_buf[11];
@@ -222,20 +222,20 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
 }
 
 static void
-player_predestroy_cb(struct rtpp_stats_obj *rtpp_stats)
+player_predestroy_cb(struct rtpp_stats *rtpp_stats)
 {
 
     CALL_METHOD(rtpp_stats, updatebyname, "nplrs_destroyed", 1);
 }
 
 static int
-rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
+rtpp_stream_handle_play(struct rtpp_stream *self, char *codecs,
   char *pname, int playcount, struct rtpp_command *cmd, int ptime)
 {
     struct rtpp_stream_priv *pvt;
     int n;
     char *cp;
-    struct rtpp_server_obj *rsrv;
+    struct rtpp_server *rsrv;
     uint16_t seq;
     uint32_t ssrc;
 
@@ -276,7 +276,7 @@ rtpp_stream_handle_play(struct rtpp_stream_obj *self, char *codecs,
 }
 
 static void
-rtpp_stream_handle_noplay(struct rtpp_stream_obj *self)
+rtpp_stream_handle_noplay(struct rtpp_stream *self)
 {
     struct rtpp_stream_priv *pvt;
 
@@ -293,7 +293,7 @@ rtpp_stream_handle_noplay(struct rtpp_stream_obj *self)
 }
 
 static int
-rtpp_stream_isplayer_active(struct rtpp_stream_obj *self)
+rtpp_stream_isplayer_active(struct rtpp_stream *self)
 {
     struct rtpp_stream_priv *pvt;
     int rval;
@@ -306,7 +306,7 @@ rtpp_stream_isplayer_active(struct rtpp_stream_obj *self)
 }
 
 static void
-rtpp_stream_finish_playback(struct rtpp_stream_obj *self, uint64_t sruid)
+rtpp_stream_finish_playback(struct rtpp_stream *self, uint64_t sruid)
 {
     struct rtpp_stream_priv *pvt;
 
@@ -321,7 +321,7 @@ rtpp_stream_finish_playback(struct rtpp_stream_obj *self, uint64_t sruid)
 }
 
 static const char *
-rtpp_stream_get_actor(struct rtpp_stream_obj *self)
+rtpp_stream_get_actor(struct rtpp_stream *self)
 {
     struct rtpp_stream_priv *pvt;
 
@@ -330,14 +330,14 @@ rtpp_stream_get_actor(struct rtpp_stream_obj *self)
 }
 
 static const char *
-rtpp_stream_get_proto(struct rtpp_stream_obj *self)
+rtpp_stream_get_proto(struct rtpp_stream *self)
 {
 
     return ((self->session_type == SESS_RTP) ? "RTP" : "RTCP");
 }
 
 static int
-rtpp_stream_latch(struct rtpp_stream_obj *self, double dtime,
+rtpp_stream_latch(struct rtpp_stream *self, double dtime,
   struct rtp_packet *packet)
 {
     const char *actor, *ptype, *ssrc, *seq, *relatch;
@@ -385,7 +385,7 @@ rtpp_stream_latch(struct rtpp_stream_obj *self, double dtime,
 }
 
 static int
-rtpp_stream_check_latch_override(struct rtpp_stream_obj *self,
+rtpp_stream_check_latch_override(struct rtpp_stream *self,
   struct rtp_packet *packet)
 {
     const char *actor;
@@ -416,7 +416,7 @@ rtpp_stream_check_latch_override(struct rtpp_stream_obj *self,
 }
 
 static void
-rtpp_stream_fill_addr(struct rtpp_stream_obj *self,
+rtpp_stream_fill_addr(struct rtpp_stream *self,
   struct rtp_packet *packet)
 {
     const char *actor, *ptype;
@@ -441,7 +441,7 @@ rtpp_stream_fill_addr(struct rtpp_stream_obj *self,
 }
 
 static int
-rtpp_stream_guess_addr(struct rtpp_stream_obj *self,
+rtpp_stream_guess_addr(struct rtpp_stream *self,
   struct rtp_packet *packet)
 {
     int rport;
@@ -476,7 +476,7 @@ rtpp_stream_guess_addr(struct rtpp_stream_obj *self,
 }
 
 static void
-rtpp_stream_prefill_addr(struct rtpp_stream_obj *self, struct sockaddr **iapp,
+rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
   double dtime)
 {
     struct rtpp_stream_priv *pvt;
@@ -518,7 +518,7 @@ rtpp_stream_prefill_addr(struct rtpp_stream_obj *self, struct sockaddr **iapp,
 }
 
 static uint64_t
-rtpp_stream_get_rtps(struct rtpp_stream_obj *self)
+rtpp_stream_get_rtps(struct rtpp_stream *self)
 {
     struct rtpp_stream_priv *pvt;
     uint64_t rval;
@@ -530,7 +530,7 @@ rtpp_stream_get_rtps(struct rtpp_stream_obj *self)
     return (rval);
 }
 static void
-rtpp_stream_replace_rtps(struct rtpp_stream_obj *self, uint64_t rtps_old,
+rtpp_stream_replace_rtps(struct rtpp_stream *self, uint64_t rtps_old,
   uint64_t rtps_new)
 {
     struct rtpp_stream_priv *pvt;

@@ -42,7 +42,7 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_rtp_recv, struct rtp_packet *);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_getfd, int);
 
 struct rtpp_socket {
-    struct rtpp_refcnt_obj *rcnt;
+    struct rtpp_refcnt *rcnt;
     /* Public methods */
     METHOD_ENTRY(rtpp_socket_bind, bind);
     METHOD_ENTRY(rtpp_socket_settos, settos);

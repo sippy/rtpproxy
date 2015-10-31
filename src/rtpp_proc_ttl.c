@@ -44,22 +44,22 @@
 #include "rtpp_pipe.h"
 
 struct foreach_args {
-    struct rtpp_notify_obj *rtpp_notify_cf;
-    struct rtpp_stats_obj *rtpp_stats;
+    struct rtpp_notify *rtpp_notify_cf;
+    struct rtpp_stats *rtpp_stats;
 };  
 
 static int
 rtpp_proc_ttl_foreach(void *dp, void *ap)
 {
     struct foreach_args *fap;
-    struct rtpp_session_obj *sp;
+    struct rtpp_session *sp;
 
     fap = (struct foreach_args *)ap;
     /*
      * This method does not need us to bump ref, since we are in the
      * locked context of the rtpp_hash_table, which holds its own ref.
      */
-    sp = (struct rtpp_session_obj *)dp;
+    sp = (struct rtpp_session *)dp;
 
     if (CALL_METHOD(sp->rtp, get_ttl) == 0) {
         RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
@@ -77,7 +77,7 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
 
 void
 rtpp_proc_ttl(struct rtpp_weakref_obj *sessions_wrt,
-  struct rtpp_notify_obj *rtpp_notify_cf, struct rtpp_stats_obj *rtpp_stats)
+  struct rtpp_notify *rtpp_notify_cf, struct rtpp_stats *rtpp_stats)
 {
     struct foreach_args fargs;
 

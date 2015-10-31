@@ -38,15 +38,15 @@
 
 struct rtpp_weakref_priv {
     struct rtpp_weakref_obj pub;
-    struct rtpp_hash_table_obj *ht;
+    struct rtpp_hash_table *ht;
 };
 
 #define PUB2PVT(pubp)      ((struct rtpp_weakref_priv *)((char *)(pubp) - offsetof(struct rtpp_weakref_priv, pub)))
 
 static void rtpp_weakref_dtor(struct rtpp_weakref_obj *);
-static int rtpp_weakref_reg(struct rtpp_weakref_obj *, struct rtpp_refcnt_obj *, uint64_t);
+static int rtpp_weakref_reg(struct rtpp_weakref_obj *, struct rtpp_refcnt *, uint64_t);
 static void *rtpp_wref_get_by_idx(struct rtpp_weakref_obj *, uint64_t);
-static struct rtpp_refcnt_obj *rtpp_weakref_unreg(struct rtpp_weakref_obj *, uint64_t);
+static struct rtpp_refcnt *rtpp_weakref_unreg(struct rtpp_weakref_obj *, uint64_t);
 static void rtpp_wref_foreach(struct rtpp_weakref_obj *, rtpp_weakref_foreach_t,
   void *);
 static int rtpp_wref_get_length(struct rtpp_weakref_obj *);
@@ -81,7 +81,7 @@ e0:
 }
 
 static int
-rtpp_weakref_reg(struct rtpp_weakref_obj *pub, struct rtpp_refcnt_obj *sp,
+rtpp_weakref_reg(struct rtpp_weakref_obj *pub, struct rtpp_refcnt *sp,
   uint64_t suid)
 {
     struct rtpp_weakref_priv *pvt;
@@ -94,11 +94,11 @@ rtpp_weakref_reg(struct rtpp_weakref_obj *pub, struct rtpp_refcnt_obj *sp,
     return (0);
 }
 
-static struct rtpp_refcnt_obj *
+static struct rtpp_refcnt *
 rtpp_weakref_unreg(struct rtpp_weakref_obj *pub, uint64_t suid)
 {
     struct rtpp_weakref_priv *pvt;
-    struct rtpp_refcnt_obj *sp;
+    struct rtpp_refcnt *sp;
 
     pvt = PUB2PVT(pub);
 
@@ -121,7 +121,7 @@ static void *
 rtpp_wref_get_by_idx(struct rtpp_weakref_obj *pub, uint64_t suid)
 {
     struct rtpp_weakref_priv *pvt;
-    struct rtpp_refcnt_obj *rco;
+    struct rtpp_refcnt *rco;
 
     pvt = PUB2PVT(pub);
 

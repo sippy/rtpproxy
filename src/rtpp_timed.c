@@ -45,7 +45,7 @@
 #include "rtpp_timed_fin.h"
 
 struct rtpp_timed_cf {
-    struct rtpp_timed_obj pub;
+    struct rtpp_timed pub;
     struct rtpp_queue *q;
     struct rtpp_queue *cmd_q;
     double last_run;
@@ -61,7 +61,7 @@ struct rtpp_timed_wi {
     rtpp_timed_cb_t cb_func;
     rtpp_timed_cancel_cb_t cancel_cb_func;
     void *cb_func_arg;
-    struct rtpp_refcnt_obj *callback_rcnt;
+    struct rtpp_refcnt *callback_rcnt;
     double when;
     double offset;
     struct rtpp_timed_cf *timed_cf;
@@ -74,12 +74,12 @@ struct rtpp_timed_wi {
   offsetof(struct rtpp_timed_wi, pub)))
 
 static void rtpp_timed_destroy(struct rtpp_timed_cf *);
-static int rtpp_timed_schedule(struct rtpp_timed_obj *,
+static int rtpp_timed_schedule(struct rtpp_timed *,
   double offset, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
-static struct rtpp_timed_task *rtpp_timed_schedule_rc(struct rtpp_timed_obj *,
-  double offset, struct rtpp_refcnt_obj *, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t,
+static struct rtpp_timed_task *rtpp_timed_schedule_rc(struct rtpp_timed *,
+  double offset, struct rtpp_refcnt *, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t,
   void *);
-static void rtpp_timed_wakeup(struct rtpp_timed_obj *, double);
+static void rtpp_timed_wakeup(struct rtpp_timed *, double);
 static void rtpp_timed_process(struct rtpp_timed_cf *, double);
 static int rtpp_timed_cancel(struct rtpp_timed_task *);
 
@@ -119,7 +119,7 @@ rtpp_timed_queue_run(void *argp)
     }
 }
 
-struct rtpp_timed_obj *
+struct rtpp_timed *
 rtpp_timed_ctor(double run_period)
 {
     struct rtpp_timed_cf *rtcp;
@@ -180,7 +180,7 @@ rtpp_timed_destroy(struct rtpp_timed_cf *rtpp_timed_cf)
 {
 
     rtpp_queue_put_item(rtpp_timed_cf->sigterm, rtpp_timed_cf->cmd_q);
-    rtpp_timed_obj_fin(&(rtpp_timed_cf->pub));
+    rtpp_timed_fin(&(rtpp_timed_cf->pub));
     pthread_join(rtpp_timed_cf->thread_id, NULL);
     rtpp_queue_destroy(rtpp_timed_cf->cmd_q);
     rtpp_queue_destroy(rtpp_timed_cf->q);
@@ -188,8 +188,8 @@ rtpp_timed_destroy(struct rtpp_timed_cf *rtpp_timed_cf)
 }
 
 static struct rtpp_timed_task *
-rtpp_timed_schedule_base(struct rtpp_timed_obj *pub, double offset,
-  struct rtpp_refcnt_obj *callback_rcnt, rtpp_timed_cb_t cb_func,
+rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
+  struct rtpp_refcnt *callback_rcnt, rtpp_timed_cb_t cb_func,
   rtpp_timed_cancel_cb_t cancel_cb_func, void *cb_func_arg,
   int support_cancel)
 {
@@ -231,8 +231,8 @@ rtpp_timed_schedule_base(struct rtpp_timed_obj *pub, double offset,
 }
 
 static struct rtpp_timed_task *
-rtpp_timed_schedule_rc(struct rtpp_timed_obj *pub, double offset,
-  struct rtpp_refcnt_obj *callback_rcnt, rtpp_timed_cb_t cb_func,
+rtpp_timed_schedule_rc(struct rtpp_timed *pub, double offset,
+  struct rtpp_refcnt *callback_rcnt, rtpp_timed_cb_t cb_func,
   rtpp_timed_cancel_cb_t cancel_cb_func, void *cb_func_arg)
 {
     struct rtpp_timed_task *tpub;
@@ -246,7 +246,7 @@ rtpp_timed_schedule_rc(struct rtpp_timed_obj *pub, double offset,
 }
 
 static int
-rtpp_timed_schedule(struct rtpp_timed_obj *pub, double offset,
+rtpp_timed_schedule(struct rtpp_timed *pub, double offset,
   rtpp_timed_cb_t cb_func, rtpp_timed_cancel_cb_t cancel_cb_func,
   void *cb_func_arg)
 {
@@ -281,7 +281,7 @@ rtpp_timed_istime(struct rtpp_wi *wi, void *p)
 }
 
 static void
-rtpp_timed_wakeup(struct rtpp_timed_obj *pub, double ctime)
+rtpp_timed_wakeup(struct rtpp_timed *pub, double ctime)
 {
     struct rtpp_timed_cf *rtcp;
     struct rtpp_wi *wi;

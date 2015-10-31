@@ -25,20 +25,20 @@
  *
  */
 
-struct rtpp_refcnt_obj;
-struct rtpp_cmd_rcache_obj;
+struct rtpp_refcnt;
+struct rtpp_cmd_rcache;
 
-DEFINE_METHOD(rtpp_cmd_rcache_obj, rcache_insert, void, const char *, const char *, double);
-DEFINE_METHOD(rtpp_cmd_rcache_obj, rcache_lookup, int, const char *, char *, int);
-DEFINE_METHOD(rtpp_cmd_rcache_obj, rcache_shutdown, void);
+DEFINE_METHOD(rtpp_cmd_rcache, rcache_insert, void, const char *, const char *, double);
+DEFINE_METHOD(rtpp_cmd_rcache, rcache_lookup, int, const char *, char *, int);
+DEFINE_METHOD(rtpp_cmd_rcache, rcache_shutdown, void);
 
-struct rtpp_cmd_rcache_obj {
+struct rtpp_cmd_rcache {
     METHOD_ENTRY(rcache_insert, insert);
     METHOD_ENTRY(rcache_lookup, lookup);
     METHOD_ENTRY(rcache_shutdown, shutdown);
-    struct rtpp_refcnt_obj *rcnt;
+    struct rtpp_refcnt *rcnt;
 };
 
-struct rtpp_timed_obj;
+struct rtpp_timed;
 
-struct rtpp_cmd_rcache_obj *rtpp_cmd_rcache_ctor(struct rtpp_timed_obj *, double);
+struct rtpp_cmd_rcache *rtpp_cmd_rcache_ctor(struct rtpp_timed *, double);

@@ -58,7 +58,7 @@
 #include "rtpp_time.h"
 
 struct rtpp_proc_async_cf {
-    struct rtpp_proc_async_obj pub;
+    struct rtpp_proc_async pub;
     pthread_t thread_id;
     int clock_tick;
     long long ncycles_ref;
@@ -79,8 +79,8 @@ struct sign_arg {
     long long ncycles_ref;
 };
 
-static void rtpp_proc_async_dtor(struct rtpp_proc_async_obj *);
-static void rtpp_proc_async_wakeup(struct rtpp_proc_async_obj *, int, long long);
+static void rtpp_proc_async_dtor(struct rtpp_proc_async *);
+static void rtpp_proc_async_wakeup(struct rtpp_proc_async *, int, long long);
 
 #define PUB2PVT(pubp)      ((struct rtpp_proc_async_cf *)((char *)(pubp) - offsetof(struct rtpp_proc_async_cf, pub)))
 
@@ -92,7 +92,7 @@ static void rtpp_proc_async_wakeup(struct rtpp_proc_async_obj *, int, long long)
 }
 
 static void
-flush_rstats(struct rtpp_stats_obj *sobj, struct rtpp_proc_rstats *rsp)
+flush_rstats(struct rtpp_stats *sobj, struct rtpp_proc_rstats *rsp)
 {
 
     FLUSH_STAT(sobj, rsp->npkts_rcvd);
@@ -105,7 +105,7 @@ flush_rstats(struct rtpp_stats_obj *sobj, struct rtpp_proc_rstats *rsp)
 }
 
 static void
-init_rstats(struct rtpp_stats_obj *sobj, struct rtpp_proc_rstats *rsp)
+init_rstats(struct rtpp_stats *sobj, struct rtpp_proc_rstats *rsp)
 {
 
     rsp->npkts_rcvd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_rcvd");
@@ -134,7 +134,7 @@ rtpp_proc_async_run(void *arg)
     struct sthread_args *sender;
     double tp[4];
     struct rtpp_proc_rstats *rstats;
-    struct rtpp_stats_obj *stats_cf;
+    struct rtpp_stats *stats_cf;
     struct rtpp_polltbl ptbl_rtp;
     struct rtpp_polltbl ptbl_rtcp;
 
@@ -310,7 +310,7 @@ rtpp_proc_async_run(void *arg)
 }
 
 static void
-rtpp_proc_async_wakeup(struct rtpp_proc_async_obj *pub, int clock, long long ncycles_ref)
+rtpp_proc_async_wakeup(struct rtpp_proc_async *pub, int clock, long long ncycles_ref)
 {
     struct sign_arg s_a;
     struct rtpp_wi *wi;
@@ -327,7 +327,7 @@ rtpp_proc_async_wakeup(struct rtpp_proc_async_obj *pub, int clock, long long ncy
     rtpp_queue_put_item(wi, proc_cf->time_q);
 }
 
-struct rtpp_proc_async_obj *
+struct rtpp_proc_async *
 rtpp_proc_async_ctor(struct cfg *cf)
 {
     struct rtpp_proc_async_cf *proc_cf;
@@ -380,7 +380,7 @@ e0:
 }
 
 static void
-rtpp_proc_async_dtor(struct rtpp_proc_async_obj *pub)
+rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
 {
     struct rtpp_proc_async_cf *proc_cf;
 

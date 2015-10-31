@@ -27,20 +27,20 @@
  */
 
 struct pollfd;
-struct rtpp_session_obj;
-struct rtpp_sessinfo_obj;
+struct rtpp_session;
+struct rtpp_sessinfo;
 struct rtpp_socket;
 struct rtpp_polltbl;
 struct rtpp_weakref_obj;
 
-DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_get_nsessions, int);
-DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_append, void, struct rtpp_session_obj *,
+DEFINE_METHOD(rtpp_sessinfo, rtpp_si_get_nsessions, int);
+DEFINE_METHOD(rtpp_sessinfo, rtpp_si_append, void, struct rtpp_session *,
   int);
-DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_update, void, struct rtpp_session_obj *,
+DEFINE_METHOD(rtpp_sessinfo, rtpp_si_update, void, struct rtpp_session *,
   int, struct rtpp_socket **);
-DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_remove, void, struct rtpp_session_obj *,
+DEFINE_METHOD(rtpp_sessinfo, rtpp_si_remove, void, struct rtpp_session *,
   int);
-DEFINE_METHOD(rtpp_sessinfo_obj, rtpp_si_copy_polltbl, int, struct rtpp_polltbl *,
+DEFINE_METHOD(rtpp_sessinfo, rtpp_si_copy_polltbl, int, struct rtpp_polltbl *,
   int session_type);
 
 struct rtpp_polltbl {
@@ -52,11 +52,11 @@ struct rtpp_polltbl {
     struct rtpp_weakref_obj *streams_wrt;
 };
 
-struct rtpp_sessinfo_obj {
+struct rtpp_sessinfo {
     rtpp_si_append_t append;
     rtpp_si_update_t update;
     rtpp_si_remove_t remove;
     rtpp_si_copy_polltbl_t copy_polltbl;
 };
 
-struct rtpp_sessinfo_obj *rtpp_sessinfo_ctor(struct rtpp_cfg_stable *);
+struct rtpp_sessinfo *rtpp_sessinfo_ctor(struct rtpp_cfg_stable *);

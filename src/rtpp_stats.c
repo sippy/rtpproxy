@@ -107,7 +107,7 @@ static struct rtpp_stat_descr default_stats[] = {
     {.name = NULL}
 };
 
-struct rtpp_stats_obj_priv
+struct rtpp_stats_priv
 {
     int nstats;
     int nstats_derived;
@@ -116,28 +116,28 @@ struct rtpp_stats_obj_priv
     struct rtpp_pearson_perfect *rppp;
 };
 
-struct rtpp_stats_obj_full
+struct rtpp_stats_full
 {
-    struct rtpp_stats_obj pub;
-    struct rtpp_stats_obj_priv pvt;
+    struct rtpp_stats pub;
+    struct rtpp_stats_priv pvt;
 };
 
-static void rtpp_stats_obj_dtor(struct rtpp_stats_obj *);
-static int rtpp_stats_obj_getidxbyname(struct rtpp_stats_obj *, const char *);
-static int rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *, int, uint64_t);
-static int rtpp_stats_obj_updatebyname(struct rtpp_stats_obj *, const char *, uint64_t);
-static int rtpp_stats_obj_updatebyname_d(struct rtpp_stats_obj *, const char *, double);
-static int64_t rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *, const char *);
-static int rtpp_stats_obj_nstr(struct rtpp_stats_obj *, char *, int, const char *);
-static int rtpp_stats_obj_getnstats(struct rtpp_stats_obj *);
-static void rtpp_stats_obj_update_derived(struct rtpp_stats_obj *, double);
+static void rtpp_stats_dtor(struct rtpp_stats *);
+static int rtpp_stats_getidxbyname(struct rtpp_stats *, const char *);
+static int rtpp_stats_updatebyidx(struct rtpp_stats *, int, uint64_t);
+static int rtpp_stats_updatebyname(struct rtpp_stats *, const char *, uint64_t);
+static int rtpp_stats_updatebyname_d(struct rtpp_stats *, const char *, double);
+static int64_t rtpp_stats_getlvalbyname(struct rtpp_stats *, const char *);
+static int rtpp_stats_nstr(struct rtpp_stats *, char *, int, const char *);
+static int rtpp_stats_getnstats(struct rtpp_stats *);
+static void rtpp_stats_update_derived(struct rtpp_stats *, double);
 
 static const char *
 getdstat(void *p, int n)
 {
-    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stats_priv *pvt;
 
-    pvt = (struct rtpp_stats_obj_priv *)p;
+    pvt = (struct rtpp_stats_priv *)p;
     if (n >= pvt->nstats) {
         return (NULL);
     }
@@ -171,17 +171,17 @@ count_rtpp_stats_derived(struct rtpp_stat_descr *sp)
     return (nstats);
 }
 
-struct rtpp_stats_obj *
+struct rtpp_stats *
 rtpp_stats_ctor(void)
 {
-    struct rtpp_stats_obj_full *fp;
-    struct rtpp_stats_obj *pub;
-    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stats_full *fp;
+    struct rtpp_stats *pub;
+    struct rtpp_stats_priv *pvt;
     struct rtpp_stat *st;
     struct rtpp_stat_derived *dst;
     int i, idx;
 
-    fp = rtpp_zmalloc(sizeof(struct rtpp_stats_obj_full));
+    fp = rtpp_zmalloc(sizeof(struct rtpp_stats_full));
     if (fp == NULL) {
         goto e0;
     }
@@ -225,22 +225,22 @@ rtpp_stats_ctor(void)
         if (default_stats[i].derive_from == NULL)
             continue;
         dst = &pvt->dstats[pvt->nstats_derived];
-        idx = rtpp_stats_obj_getidxbyname(pub, default_stats[i].name);
+        idx = rtpp_stats_getidxbyname(pub, default_stats[i].name);
         dst->derive_to = &pvt->stats[idx];
-        idx = rtpp_stats_obj_getidxbyname(pub, default_stats[i].derive_from);
+        idx = rtpp_stats_getidxbyname(pub, default_stats[i].derive_from);
         dst->derive_from = &pvt->stats[idx];
         pvt->nstats_derived += 1;
         dst->last_ts = getdtime();
     }
-    pub->dtor = &rtpp_stats_obj_dtor;
-    pub->getidxbyname = &rtpp_stats_obj_getidxbyname;
-    pub->updatebyidx = &rtpp_stats_obj_updatebyidx;
-    pub->updatebyname = &rtpp_stats_obj_updatebyname;
-    pub->updatebyname_d = &rtpp_stats_obj_updatebyname_d;
-    pub->getlvalbyname = &rtpp_stats_obj_getlvalbyname;
-    pub->nstr = &rtpp_stats_obj_nstr;
-    pub->getnstats = &rtpp_stats_obj_getnstats;
-    pub->update_derived = &rtpp_stats_obj_update_derived;
+    pub->dtor = &rtpp_stats_dtor;
+    pub->getidxbyname = &rtpp_stats_getidxbyname;
+    pub->updatebyidx = &rtpp_stats_updatebyidx;
+    pub->updatebyname = &rtpp_stats_updatebyname;
+    pub->updatebyname_d = &rtpp_stats_updatebyname_d;
+    pub->getlvalbyname = &rtpp_stats_getlvalbyname;
+    pub->nstr = &rtpp_stats_nstr;
+    pub->getnstats = &rtpp_stats_getnstats;
+    pub->update_derived = &rtpp_stats_update_derived;
     return (pub);
 e2:
     if (pvt->dstats != NULL)
@@ -253,19 +253,19 @@ e0:
 }
 
 static int
-rtpp_stats_obj_getidxbyname(struct rtpp_stats_obj *self, const char *name)
+rtpp_stats_getidxbyname(struct rtpp_stats *self, const char *name)
 {
-    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stats_priv *pvt;
 
     pvt = self->pvt;
     return (rtpp_pearson_perfect_hash(pvt->rppp, name));
 }
 
 static int
-rtpp_stats_obj_updatebyidx_internal(struct rtpp_stats_obj *self, int idx,
+rtpp_stats_updatebyidx_internal(struct rtpp_stats *self, int idx,
   enum rtpp_cnt_type type, void *argp)
 {
-    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stats_priv *pvt;
     struct rtpp_stat *st;
 
     pvt = self->pvt;
@@ -283,39 +283,39 @@ rtpp_stats_obj_updatebyidx_internal(struct rtpp_stats_obj *self, int idx,
 }
 
 static int
-rtpp_stats_obj_updatebyidx(struct rtpp_stats_obj *self, int idx, uint64_t incr)
+rtpp_stats_updatebyidx(struct rtpp_stats *self, int idx, uint64_t incr)
 {
 
-    return rtpp_stats_obj_updatebyidx_internal(self, idx, RTPP_CNT_U64, &incr);
+    return rtpp_stats_updatebyidx_internal(self, idx, RTPP_CNT_U64, &incr);
 }
 
 static int
-rtpp_stats_obj_updatebyname(struct rtpp_stats_obj *self, const char *name, uint64_t incr)
+rtpp_stats_updatebyname(struct rtpp_stats *self, const char *name, uint64_t incr)
 {
     int idx;
 
-    idx = rtpp_stats_obj_getidxbyname(self, name);
-    return rtpp_stats_obj_updatebyidx_internal(self, idx, RTPP_CNT_U64, &incr);
+    idx = rtpp_stats_getidxbyname(self, name);
+    return rtpp_stats_updatebyidx_internal(self, idx, RTPP_CNT_U64, &incr);
 }
 
 static int
-rtpp_stats_obj_updatebyname_d(struct rtpp_stats_obj *self, const char *name, double incr)
+rtpp_stats_updatebyname_d(struct rtpp_stats *self, const char *name, double incr)
 {
     int idx;
 
-    idx = rtpp_stats_obj_getidxbyname(self, name);
-    return rtpp_stats_obj_updatebyidx_internal(self, idx, RTPP_CNT_DBL, &incr);
+    idx = rtpp_stats_getidxbyname(self, name);
+    return rtpp_stats_updatebyidx_internal(self, idx, RTPP_CNT_DBL, &incr);
 }
 
 static int64_t
-rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *self, const char *name)
+rtpp_stats_getlvalbyname(struct rtpp_stats *self, const char *name)
 {
-    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stats_priv *pvt;
     struct rtpp_stat *st;
     uint64_t rval;
     int idx;
 
-    idx = rtpp_stats_obj_getidxbyname(self, name);
+    idx = rtpp_stats_getidxbyname(self, name);
     if (idx < 0) {
         return (-1);
     }
@@ -328,15 +328,15 @@ rtpp_stats_obj_getlvalbyname(struct rtpp_stats_obj *self, const char *name)
 }
 
 static int
-rtpp_stats_obj_nstr(struct rtpp_stats_obj *self, char *buf, int len, const char *name)
+rtpp_stats_nstr(struct rtpp_stats *self, char *buf, int len, const char *name)
 {
-    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stats_priv *pvt;
     struct rtpp_stat *st;
     int idx, rval;
     uint64_t uval;
     double dval;
 
-    idx = rtpp_stats_obj_getidxbyname(self, name);
+    idx = rtpp_stats_getidxbyname(self, name);
     if (idx < 0) {
         return (-1);
     }
@@ -357,10 +357,10 @@ rtpp_stats_obj_nstr(struct rtpp_stats_obj *self, char *buf, int len, const char 
 }
 
 static void
-rtpp_stats_obj_dtor(struct rtpp_stats_obj *self)
+rtpp_stats_dtor(struct rtpp_stats *self)
 {
     int i;
-    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stats_priv *pvt;
     struct rtpp_stat *st;
 
     pvt = self->pvt;
@@ -377,16 +377,16 @@ rtpp_stats_obj_dtor(struct rtpp_stats_obj *self)
 }
 
 static int
-rtpp_stats_obj_getnstats(struct rtpp_stats_obj *self)
+rtpp_stats_getnstats(struct rtpp_stats *self)
 {
 
     return (self->pvt->nstats);
 }
 
 static void
-rtpp_stats_obj_update_derived(struct rtpp_stats_obj *self, double dtime)
+rtpp_stats_update_derived(struct rtpp_stats *self, double dtime)
 {
-    struct rtpp_stats_obj_priv *pvt;
+    struct rtpp_stats_priv *pvt;
     int i;
     struct rtpp_stat_derived *dst;
     double ival, dval;

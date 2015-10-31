@@ -29,7 +29,7 @@
 #ifndef _RTPP_SESSION_H_
 #define _RTPP_SESSION_H_
 
-struct rtpp_session_obj;
+struct rtpp_session;
 struct rtpp_socket;
 struct common_cmd_args;
 struct sockaddr;
@@ -41,11 +41,11 @@ struct rtpp_timeout_data {
 
 struct rtpp_hash_table_entry;
 
-struct rtpp_session_obj {
+struct rtpp_session {
     char *call_id;
     char *tag;
     char *tag_nomedianum;
-    struct rtpp_log_obj *log;
+    struct rtpp_log *log;
     struct rtpp_pipe *rtp;
     struct rtpp_pipe *rtcp;
     /* Session is complete, that is we received both request and reply */
@@ -59,11 +59,11 @@ struct rtpp_session_obj {
     /* UID */
     uint64_t seuid;
 
-    struct rtpp_stats_obj *rtpp_stats;
+    struct rtpp_stats *rtpp_stats;
     struct rtpp_weakref_obj *servers_wrt;
 
     /* Refcounter */
-    struct rtpp_refcnt_obj *rcnt;
+    struct rtpp_refcnt *rcnt;
 };
 
 struct cfg;
@@ -73,13 +73,13 @@ struct cfg_stable;
 #define	SESS_RTCP	2
 
 void init_hash_table(struct cfg_stable *);
-struct rtpp_session_obj *session_findfirst(struct cfg *, const char *);
-struct rtpp_session_obj *session_findnext(struct cfg *cf, struct rtpp_session_obj *);
-void hash_table_append(struct cfg *, struct rtpp_session_obj *);
+struct rtpp_session *session_findfirst(struct cfg *, const char *);
+struct rtpp_session *session_findnext(struct cfg *cf, struct rtpp_session *);
+void hash_table_append(struct cfg *, struct rtpp_session *);
 int compare_session_tags(const char *, const char *, unsigned *);
-int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session_obj **);
+int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session **);
 
-struct rtpp_session_obj *rtpp_session_ctor(struct rtpp_cfg_stable *,
+struct rtpp_session *rtpp_session_ctor(struct rtpp_cfg_stable *,
   struct common_cmd_args *, double, struct sockaddr **, int, int,
   struct rtpp_socket **);
 

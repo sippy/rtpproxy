@@ -166,7 +166,7 @@ rtpp_anetio_pump_q(struct sthread_args *sender)
 int
 rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
   const struct sockaddr *sendto, socklen_t tolen, struct rtp_packet *pkt,
-  struct rtpp_refcnt_obj *sock_rcnt)
+  struct rtpp_refcnt *sock_rcnt)
 {
     struct rtpp_wi *wi;
     int nsend;

@@ -27,7 +27,7 @@
  */
 
 struct rtpp_weakref_obj;
-struct rtpp_refcnt_obj;
+struct rtpp_refcnt;
 
 #define RTPP_WR_MATCH_BRK  RTPP_HT_MATCH_BRK
 #define RTPP_WR_MATCH_CONT RTPP_HT_MATCH_CONT
@@ -36,8 +36,8 @@ struct rtpp_refcnt_obj;
 typedef int (*rtpp_weakref_foreach_t)(void *, void *);
 
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_reg, int,
-  struct rtpp_refcnt_obj *, uint64_t);
-DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_unreg, struct rtpp_refcnt_obj *,
+  struct rtpp_refcnt *, uint64_t);
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_unreg, struct rtpp_refcnt *,
   uint64_t);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_by_idx, void *,
   uint64_t);

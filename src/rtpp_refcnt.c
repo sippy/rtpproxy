@@ -38,7 +38,7 @@
 
 struct rtpp_refcnt_priv
 {
-    struct rtpp_refcnt_obj pub;
+    struct rtpp_refcnt pub;
     int64_t cnt;
     pthread_mutex_t cnt_lock;
     rtpp_refcnt_dtor_t dtor_f;
@@ -48,14 +48,14 @@ struct rtpp_refcnt_priv
     int pa_flag;
 };
 
-static void rtpp_refcnt_incref(struct rtpp_refcnt_obj *);
-static void rtpp_refcnt_decref(struct rtpp_refcnt_obj *);
-static void rtpp_refcnt_abort(struct rtpp_refcnt_obj *);
-static void *rtpp_refcnt_getdata(struct rtpp_refcnt_obj *);
-static void rtpp_refcnt_reg_pd(struct rtpp_refcnt_obj *, rtpp_refcnt_dtor_t,
+static void rtpp_refcnt_incref(struct rtpp_refcnt *);
+static void rtpp_refcnt_decref(struct rtpp_refcnt *);
+static void rtpp_refcnt_abort(struct rtpp_refcnt *);
+static void *rtpp_refcnt_getdata(struct rtpp_refcnt *);
+static void rtpp_refcnt_reg_pd(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *);
 
-struct rtpp_refcnt_obj *
+struct rtpp_refcnt *
 rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
 {
     struct rtpp_refcnt_priv *pvt;
@@ -90,7 +90,7 @@ rtpp_refcnt_osize(void)
     return (sizeof(struct rtpp_refcnt_priv));
 }
 
-struct rtpp_refcnt_obj *
+struct rtpp_refcnt *
 rtpp_refcnt_ctor_pa(void *pap, void *data, rtpp_refcnt_dtor_t dtor_f)
 {
     struct rtpp_refcnt_priv *pvt;
@@ -116,7 +116,7 @@ rtpp_refcnt_ctor_pa(void *pap, void *data, rtpp_refcnt_dtor_t dtor_f)
 }
 
 static void
-rtpp_refcnt_incref(struct rtpp_refcnt_obj *pub)
+rtpp_refcnt_incref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
 
@@ -128,7 +128,7 @@ rtpp_refcnt_incref(struct rtpp_refcnt_obj *pub)
 }
 
 static void
-rtpp_refcnt_decref(struct rtpp_refcnt_obj *pub)
+rtpp_refcnt_decref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
 
@@ -141,14 +141,14 @@ rtpp_refcnt_decref(struct rtpp_refcnt_obj *pub)
                 pvt->pre_dtor_f(pvt->pd_data);
             }
             pvt->dtor_f(pvt->data);
-            rtpp_refcnt_obj_fin(pub);
+            rtpp_refcnt_fin(pub);
             pthread_mutex_unlock(&pvt->cnt_lock);
             pthread_mutex_destroy(&pvt->cnt_lock);
             free(pvt);
         } else {
             pthread_mutex_unlock(&pvt->cnt_lock);
             pthread_mutex_destroy(&pvt->cnt_lock);
-            rtpp_refcnt_obj_fin(pub);
+            rtpp_refcnt_fin(pub);
             if (pvt->pre_dtor_f != NULL) {
                 pvt->pre_dtor_f(pvt->pd_data);
             }
@@ -167,7 +167,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt_obj *pub)
  * constructor in the complex class.
  */
 static void
-rtpp_refcnt_abort(struct rtpp_refcnt_obj *pub)
+rtpp_refcnt_abort(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
 
@@ -183,7 +183,7 @@ rtpp_refcnt_abort(struct rtpp_refcnt_obj *pub)
 }
 
 static void *
-rtpp_refcnt_getdata(struct rtpp_refcnt_obj *pub)
+rtpp_refcnt_getdata(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
 
@@ -193,7 +193,7 @@ rtpp_refcnt_getdata(struct rtpp_refcnt_obj *pub)
 }
 
 static void
-rtpp_refcnt_reg_pd(struct rtpp_refcnt_obj *pub, rtpp_refcnt_dtor_t pre_dtor_f,
+rtpp_refcnt_reg_pd(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t pre_dtor_f,
   void *pd_data)
 {
     struct rtpp_refcnt_priv *pvt;

@@ -27,25 +27,25 @@
  */
 
 struct rtpp_cfg_stable;
-struct rtpp_log_obj;
+struct rtpp_log;
 
-DEFINE_METHOD(rtpp_log_obj, rtpp_log_obj_write, void, const char *, int,
+DEFINE_METHOD(rtpp_log, rtpp_log_write, void, const char *, int,
   const char *, ...);
-DEFINE_METHOD(rtpp_log_obj, rtpp_log_obj_ewrite, void, const char *, int,
+DEFINE_METHOD(rtpp_log, rtpp_log_ewrite, void, const char *, int,
   const char *, ...);
-DEFINE_METHOD(rtpp_log_obj, rtpp_log_obj_setlevel, void, int);
+DEFINE_METHOD(rtpp_log, rtpp_log_setlevel, void, int);
 
-struct rtpp_log_obj {
-    struct rtpp_refcnt_obj *rcnt;
+struct rtpp_log {
+    struct rtpp_refcnt *rcnt;
     /* Public methods */
-    METHOD_ENTRY(rtpp_log_obj_write, write);
-    METHOD_ENTRY(rtpp_log_obj_ewrite, ewrite);
-    METHOD_ENTRY(rtpp_log_obj_setlevel, setlevel);
+    METHOD_ENTRY(rtpp_log_write, write);
+    METHOD_ENTRY(rtpp_log_ewrite, ewrite);
+    METHOD_ENTRY(rtpp_log_setlevel, setlevel);
     /* UID */
     uint64_t lguid;
 };
 
-struct rtpp_log_obj *rtpp_log_obj_ctor(struct rtpp_cfg_stable *, const char *,
+struct rtpp_log *rtpp_log_ctor(struct rtpp_cfg_stable *, const char *,
   const char *, int);
 
 #define RTPP_LOG(log, args...) CALL_METHOD((log), write, __FUNCTION__, \

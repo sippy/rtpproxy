@@ -352,7 +352,7 @@ err_undo_0:
 static void
 handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
   int ecode, struct ul_opts *ulop, struct rtpp_socket **fds,
-  struct rtpp_session_obj *spa)
+  struct rtpp_session *spa)
 {
     int i;
 
@@ -371,12 +371,12 @@ handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
 
 int
 rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
-  struct ul_opts *ulop, struct rtpp_session_obj *sp, int sidx)
+  struct ul_opts *ulop, struct rtpp_session *sp, int sidx)
 {
     int pidx, lport, sessions_active;
     struct rtpp_socket *fds[2];
     const char *actor;
-    struct rtpp_session_obj *spa, *spb;
+    struct rtpp_session *spa, *spb;
 
     pidx = 1;
     lport = 0;

@@ -63,9 +63,9 @@
 
 struct rtpp_session_priv
 {
-    struct rtpp_session_obj pub;
-    struct rtpp_sessinfo_obj *sessinfo;
-    struct rtpp_hash_table_obj *sessions_ht;
+    struct rtpp_session pub;
+    struct rtpp_sessinfo *sessinfo;
+    struct rtpp_hash_table *sessions_ht;
     void *rco[0];
 };
 
@@ -74,10 +74,10 @@ struct rtpp_session_priv
 
 static void rtpp_session_dtor(struct rtpp_session_priv *);
 
-struct rtpp_session_obj *
+struct rtpp_session *
 session_findfirst(struct cfg *cf, const char *call_id)
 {
-    struct rtpp_session_obj *sp;
+    struct rtpp_session *sp;
     struct rtpp_hash_table_entry *he;
 
     /* Make sure structure is properly locked */
@@ -90,10 +90,10 @@ session_findfirst(struct cfg *cf, const char *call_id)
     return (sp);
 }
 
-struct rtpp_session_obj *
-session_findnext(struct cfg *cf, struct rtpp_session_obj *psp)
+struct rtpp_session *
+session_findnext(struct cfg *cf, struct rtpp_session *psp)
 {
-    struct rtpp_session_obj *sp;
+    struct rtpp_session *sp;
     struct rtpp_hash_table_entry *he;
 
     /* Make sure structure is properly locked */
@@ -106,14 +106,14 @@ session_findnext(struct cfg *cf, struct rtpp_session_obj *psp)
     return (sp);
 }
 
-struct rtpp_session_obj *
+struct rtpp_session *
 rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
   double dtime, struct sockaddr **lia, int weak, int lport,
   struct rtpp_socket **fds)
 {
     struct rtpp_session_priv *pvt;
-    struct rtpp_session_obj *pub;
-    struct rtpp_log_obj *log;
+    struct rtpp_session *pub;
+    struct rtpp_log *log;
     int i;
     char *cp;
 
@@ -125,7 +125,7 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     pub = &(pvt->pub);
     rtpp_gen_uid(&pub->seuid);
 
-    log = rtpp_log_obj_ctor(cfs, "rtpproxy", ccap->call_id, 0);
+    log = rtpp_log_ctor(cfs, "rtpproxy", ccap->call_id, 0);
     if (log == NULL) {
         goto e1;
     }
@@ -236,7 +236,7 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     struct rtpps_pcount pcnts;
     int i;
     double session_time;
-    struct rtpp_session_obj *pub;
+    struct rtpp_session *pub;
 
     pub = &(pvt->pub);
     session_time = getdtime() - pub->init_ts;
@@ -306,7 +306,7 @@ compare_session_tags(const char *tag1, const char *tag0, unsigned *medianum_p)
 
 int
 find_stream(struct cfg *cf, const char *call_id, const char *from_tag,
-  const char *to_tag, struct rtpp_session_obj **spp)
+  const char *to_tag, struct rtpp_session **spp)
 {
     const char *cp1, *cp2;
 

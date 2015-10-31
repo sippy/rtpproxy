@@ -29,10 +29,10 @@
 #ifndef _RTPP_STREAM_H_
 #define _RTPP_STREAM_H_
 
-struct rtpp_stream_obj;
+struct rtpp_stream;
 struct rtpp_weakref_obj;
-struct rtpp_stats_obj;
-struct rtpp_log_obj;
+struct rtpp_stats;
+struct rtpp_log;
 struct rtpp_command;
 struct rtp_packet;
 struct sockaddr;
@@ -41,25 +41,25 @@ struct rtpp_record;
 struct rtpp_ttl;
 struct rtpp_pcount;
 
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_handle_play, int, char *,
+DEFINE_METHOD(rtpp_stream, rtpp_stream_handle_play, int, char *,
   char *, int, struct rtpp_command *, int);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_handle_noplay, void);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_isplayer_active, int);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_finish_playback, void, uint64_t);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_get_actor, const char *);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_get_proto, const char *);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_latch, int, double,
+DEFINE_METHOD(rtpp_stream, rtpp_stream_handle_noplay, void);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_isplayer_active, int);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_finish_playback, void, uint64_t);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_get_actor, const char *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_get_proto, const char *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_latch, int, double,
   struct rtp_packet *);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_check_latch_override, int,
+DEFINE_METHOD(rtpp_stream, rtpp_stream_check_latch_override, int,
   struct rtp_packet *);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_fill_addr, void,
+DEFINE_METHOD(rtpp_stream, rtpp_stream_fill_addr, void,
   struct rtp_packet *);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_guess_addr, int,
+DEFINE_METHOD(rtpp_stream, rtpp_stream_guess_addr, int,
   struct rtp_packet *);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_prefill_addr, void,
+DEFINE_METHOD(rtpp_stream, rtpp_stream_prefill_addr, void,
   struct sockaddr **, double);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_get_rtps, uint64_t);
-DEFINE_METHOD(rtpp_stream_obj, rtpp_stream_replace_rtps, void, uint64_t,
+DEFINE_METHOD(rtpp_stream, rtpp_stream_get_rtps, uint64_t);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_replace_rtps, void, uint64_t,
   uint64_t);
 
 enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
@@ -70,7 +70,7 @@ struct rtpps_latch {
     int seq;
 };
 
-struct rtpp_stream_obj {
+struct rtpp_stream {
     /* ttl for stream */
     struct rtpp_ttl *ttl;
     /* Remote source address */
@@ -102,7 +102,7 @@ struct rtpp_stream_obj {
     /* Packets received */
     unsigned long npkts_in;
     /* Refcounter */
-    struct rtpp_refcnt_obj *rcnt;
+    struct rtpp_refcnt *rcnt;
     /* UID, read-only */
     uint64_t stuid;
     /* UID of the session we belong to, read-only */
@@ -115,7 +115,7 @@ struct rtpp_stream_obj {
     uint64_t stuid_rtp;
     /* Type of session we are associated with, read-only */
     int session_type;
-    struct rtpp_log_obj *log;
+    struct rtpp_log *log;
     struct rtpp_pcount *pcount;
     /* Public methods */
     METHOD_ENTRY(rtpp_stream_handle_play, handle_play);
@@ -133,8 +133,8 @@ struct rtpp_stream_obj {
     METHOD_ENTRY(rtpp_stream_replace_rtps, replace_rtps);
 };
 
-struct rtpp_stream_obj *rtpp_stream_ctor(struct rtpp_log_obj *,
-  struct rtpp_weakref_obj *, struct rtpp_stats_obj *, enum rtpp_stream_side,
+struct rtpp_stream *rtpp_stream_ctor(struct rtpp_log *,
+  struct rtpp_weakref_obj *, struct rtpp_stats *, enum rtpp_stream_side,
   int, uint64_t);
 
 #endif

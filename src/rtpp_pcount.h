@@ -30,7 +30,7 @@
 #define _RTPP_PCOUNT_H_
 
 struct rtpp_pcount;
-struct rtpp_refcnt_obj;
+struct rtpp_refcnt;
 struct rtpps_pcount;
 
 DEFINE_METHOD(rtpp_pcount, rtpp_pcount_reg_reld, void);
@@ -46,7 +46,7 @@ struct rtpps_pcount {
 };
 
 struct rtpp_pcount {
-    struct rtpp_refcnt_obj *rcnt;
+    struct rtpp_refcnt *rcnt;
     METHOD_ENTRY(rtpp_pcount_reg_reld, reg_reld);
     METHOD_ENTRY(rtpp_pcount_reg_drop, reg_drop);
     METHOD_ENTRY(rtpp_pcount_reg_ignr, reg_ignr);

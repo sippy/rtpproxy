@@ -100,7 +100,7 @@ struct rtpp_command_priv {
     char *cookie;
     int umode;
     char buf_r[256];
-    struct rtpp_cmd_rcache_obj *rcache_obj;
+    struct rtpp_cmd_rcache *rcache_obj;
 };
 
 #define PUB2PVT(pubp) \
@@ -280,7 +280,7 @@ rtpp_command_ctor(struct cfg *cf, int controlfd, double dtime, int *rval,
 struct rtpp_command *
 get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
   struct rtpp_command_stats *csp, int umode,
-  struct rtpp_cmd_rcache_obj *rcache_obj)
+  struct rtpp_cmd_rcache *rcache_obj)
 {
     char **ap;
     char *cp;
@@ -375,7 +375,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     int playcount, ptime;
     char *cp, *tcp;
     char *pname, *codecs, *recording_name;
-    struct rtpp_session_obj *spa;
+    struct rtpp_session *spa;
     int record_single_file;
     struct ul_opts *ulop;
     struct d_opts dopt;
@@ -605,7 +605,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
 {
     int ndeleted;
     unsigned int medianum;
-    struct rtpp_session_obj *spa, *spb;
+    struct rtpp_session *spa, *spb;
     int cmpr, cmpr1, idx;
 
     ndeleted = 0;
@@ -668,7 +668,7 @@ handle_record(struct cfg *cf, struct common_cmd_args *ccap,
   int record_single_file)
 {
     int nrecorded, idx;
-    struct rtpp_session_obj *spa;
+    struct rtpp_session *spa;
 
     nrecorded = 0;
     for (spa = session_findfirst(cf, ccap->call_id); spa != NULL;
@@ -693,7 +693,7 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
   const char *opts)
 {
 #if 0
-    struct rtpp_session_obj *spa, *spb;
+    struct rtpp_session *spa, *spb;
     char addrs[4][256];
 #endif
     int len, i, brief, load;

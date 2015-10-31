@@ -74,7 +74,7 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
 struct rtpp_wi *
 rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
   const struct sockaddr *sendto, size_t tolen, int nsend,
-  struct rtpp_refcnt_obj *sock_rcnt)
+  struct rtpp_refcnt *sock_rcnt)
 {
     struct rtpp_wi *wi;
 

@@ -26,25 +26,25 @@
  *
  */
 
-struct rtpp_hash_table_obj;
+struct rtpp_hash_table;
 struct rtpp_hash_table_entry;
-struct rtpp_refcnt_obj;
+struct rtpp_refcnt;
 
 typedef int (*rtpp_hash_table_match_t)(void *, void *);
 
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_append, struct rtpp_hash_table_entry *, const void *, void *);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_append_refcnt, struct rtpp_hash_table_entry *, const void *, struct rtpp_refcnt_obj *);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_remove, void, const void *key, struct rtpp_hash_table_entry *sp);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_remove_nc, void, struct rtpp_hash_table_entry *sp);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_remove_by_key, struct rtpp_refcnt_obj *, const void *key);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_findfirst, struct rtpp_hash_table_entry *,
+DEFINE_METHOD(rtpp_hash_table, hash_table_append, struct rtpp_hash_table_entry *, const void *, void *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_append_refcnt, struct rtpp_hash_table_entry *, const void *, struct rtpp_refcnt *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_remove, void, const void *key, struct rtpp_hash_table_entry *sp);
+DEFINE_METHOD(rtpp_hash_table, hash_table_remove_nc, void, struct rtpp_hash_table_entry *sp);
+DEFINE_METHOD(rtpp_hash_table, hash_table_remove_by_key, struct rtpp_refcnt *, const void *key);
+DEFINE_METHOD(rtpp_hash_table, hash_table_findfirst, struct rtpp_hash_table_entry *,
   const void *key, void **);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_findnext,  struct rtpp_hash_table_entry *,
+DEFINE_METHOD(rtpp_hash_table, hash_table_findnext,  struct rtpp_hash_table_entry *,
   struct rtpp_hash_table_entry *, void **);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_find, struct rtpp_refcnt_obj *, const void *);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_foreach, void, rtpp_hash_table_match_t, void *);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_dtor, void);
-DEFINE_METHOD(rtpp_hash_table_obj, hash_table_get_length, int);
+DEFINE_METHOD(rtpp_hash_table, hash_table_find, struct rtpp_refcnt *, const void *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_foreach, void, rtpp_hash_table_match_t, void *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_dtor, void);
+DEFINE_METHOD(rtpp_hash_table, hash_table_get_length, int);
 
 struct rtpp_hash_table_priv;
 
@@ -58,7 +58,7 @@ enum rtpp_ht_key_types {rtpp_ht_key_str_t = 0, rtpp_ht_key_u64_t,
 #define RTPP_HT_MATCH_CONT  0
 #define RTPP_HT_MATCH_DEL   1
 
-struct rtpp_hash_table_obj
+struct rtpp_hash_table
 {
     hash_table_append_t append;
     hash_table_append_refcnt_t append_refcnt;
@@ -74,4 +74,4 @@ struct rtpp_hash_table_obj
     struct rtpp_hash_table_priv *pvt;
 };
 
-struct rtpp_hash_table_obj *rtpp_hash_table_ctor(enum rtpp_ht_key_types, int);
+struct rtpp_hash_table *rtpp_hash_table_ctor(enum rtpp_ht_key_types, int);

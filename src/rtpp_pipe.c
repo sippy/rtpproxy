@@ -55,8 +55,8 @@ static void rtpp_pipe_decr_ttl(struct rtpp_pipe *);
 
 struct rtpp_pipe *
 rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
-  struct rtpp_weakref_obj *servers_wrt, struct rtpp_log_obj *log,
-  struct rtpp_stats_obj *rtpp_stats, int session_type)
+  struct rtpp_weakref_obj *servers_wrt, struct rtpp_log *log,
+  struct rtpp_stats *rtpp_stats, int session_type)
 {
     struct rtpp_pipe_priv *pvt;
     int i;
