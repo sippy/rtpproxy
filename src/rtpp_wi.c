@@ -34,6 +34,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_log_obj.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_network.h"
@@ -228,6 +229,9 @@ rtpp_wi_free(struct rtpp_wi *wi)
 
     if (wi->sock_rcnt != NULL) {
         CALL_METHOD(wi->sock_rcnt, decref);
+    }
+    if (wi->log != NULL) {
+        CALL_METHOD(wi->log->rcnt, decref);
     }
     free(wi->free_ptr);
 }
