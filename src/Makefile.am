@@ -25,7 +25,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
   rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h \
   rtpp_ttl.c rtpp_ttl.h rtpp_proc_ttl.h rtpp_proc_ttl.c rtpp_pipe.h \
-  rtpp_pipe.c rtpp_pcount.h rtpp_pcount.c
+  rtpp_pipe.c rtpp_pcount.h rtpp_pcount.c rtpp_debug.h
 
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
   rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
