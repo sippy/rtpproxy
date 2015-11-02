@@ -343,7 +343,7 @@ rtpp_stream_latch(struct rtpp_stream *self, double dtime,
     const char *actor, *ptype, *ssrc, *seq, *relatch;
     char ssrc_buf[11], seq_buf[6];
     struct rtpp_stream_priv *pvt;
-    char saddr[MAX_AP_STRLEN];
+    char saddr[MAX_AP_STRBUF];
 
     pvt = PUB2PVT(self);
     if (self->last_update != 0 && \
@@ -390,7 +390,7 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
 {
     const char *actor;
     struct rtpp_stream_priv *pvt;
-    char saddr[MAX_AP_STRLEN];
+    char saddr[MAX_AP_STRBUF];
 
     pvt = PUB2PVT(self);
 
@@ -421,7 +421,7 @@ rtpp_stream_fill_addr(struct rtpp_stream *self,
 {
     const char *actor, *ptype;
     struct rtpp_stream_priv *pvt;
-    char saddr[MAX_AP_STRLEN];
+    char saddr[MAX_AP_STRBUF];
 
     pvt = PUB2PVT(self);
 
@@ -480,7 +480,7 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
   double dtime)
 {
     struct rtpp_stream_priv *pvt;
-    char saddr[MAX_AP_STRLEN];
+    char saddr[MAX_AP_STRBUF];
     const char *actor, *ptype;
 
     pvt = PUB2PVT(self);

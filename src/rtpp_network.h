@@ -100,6 +100,6 @@ int setbindhost(struct sockaddr *, int, const char *, const char *);
  * > len('127.127.127.127:65535')
  * 21
  */
-#define MAX_AP_STRLEN 54
+#define MAX_AP_STRBUF 54
 
 #endif
