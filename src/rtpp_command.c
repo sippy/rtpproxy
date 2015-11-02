@@ -129,7 +129,7 @@ create_twinlistener(struct rtpp_cfg_stable *cf, struct sockaddr *ia, int port,
     for (i = 0; i < 2; i++) {
 	fds[i] = rtpp_socket_ctor(ia->sa_family, SOCK_DGRAM);
 	if (fds[i] == NULL) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't create %s socket",
+	    RTPP_ELOG(cf->glog, RTPP_LOG_ERR, "can't create %s socket",
 	      (ia->sa_family == AF_INET) ? "IPv4" : "IPv6");
 	    goto failure;
 	}
@@ -137,7 +137,7 @@ create_twinlistener(struct rtpp_cfg_stable *cf, struct sockaddr *ia, int port,
 	satosin(&iac)->sin_port = htons(port);
 	if (CALL_METHOD(fds[i], bind, sstosa(&iac), SA_LEN(ia)) != 0) {
 	    if (errno != EADDRINUSE && errno != EACCES) {
-		rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "can't bind to the %s port %d",
+		RTPP_ELOG(cf->glog, RTPP_LOG_ERR, "can't bind to the %s port %d",
 		  (ia->sa_family == AF_INET) ? "IPv4" : "IPv6", port);
 	    } else {
 		rval = -2;
@@ -147,10 +147,10 @@ create_twinlistener(struct rtpp_cfg_stable *cf, struct sockaddr *ia, int port,
 	port++;
 	if ((ia->sa_family == AF_INET) && (cf->tos >= 0) &&
 	  (CALL_METHOD(fds[i], settos, cf->tos) == -1))
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "unable to set TOS to %d", cf->tos);
+	    RTPP_ELOG(cf->glog, RTPP_LOG_ERR, "unable to set TOS to %d", cf->tos);
 	so_rcvbuf = 256 * 1024;
 	if (CALL_METHOD(fds[i], setrbuf, so_rcvbuf) == -1)
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->glog, "unable to set 256K receive buffer size");
+	    RTPP_ELOG(cf->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
         CALL_METHOD(fds[i], setnonblock);
     }
     return 0;
@@ -197,7 +197,12 @@ rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
     pvt = PUB2PVT(cmd);
 
     buf[len] = '\0';
-    rtpp_log_write(RTPP_LOG_DBUG, pvt->cfs->glog, "sending reply \"%s\"", buf);
+    if (len > 0 && buf[len - 1] == '\n') {
+        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "sending reply \"%.*s\\n\"",
+          len - 1, buf);
+    } else {
+        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "sending reply \"%s\"", buf);
+    }
     if (pvt->umode == 0) {
 	write(pvt->controlfd, buf, len);
     } else {
@@ -306,14 +311,20 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     }
     if (len == -1) {
         if (errno != EAGAIN && errno != EINTR)
-            rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "can't read from control socket");
+            RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't read from control socket");
         free_command(cmd);
         *rval = -1;
         return (NULL);
     }
     cmd->buf[len] = '\0';
 
-    rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "received command \"%s\"", cmd->buf);
+    if (len > 0 && cmd->buf[len - 1] == '\n') {
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "received command \"%.*s\\n\"",
+          len - 1, cmd->buf);
+    } else {
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "received command \"%s\"",
+          cmd->buf);
+    }
     csp->ncmds_rcvd.cnt++;
 
     cp = cmd->buf;
@@ -325,7 +336,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
         }
     }
     if (cmd->argc < 1 || (umode != 0 && cmd->argc < 2)) {
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
         reply_error(cmd, ECODE_PARSE_1);
         *rval = 0;
         free_command(cmd);
@@ -398,7 +409,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case DELETE_ALL:
         /* Delete all active sessions */
-        rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog, "deleting all active sessions");
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO, "deleting all active sessions");
         CALL_METHOD(cf->stable->sessions_wrt, purge);
         reply_ok(cmd);
         return 0;
@@ -422,7 +433,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	if (*tcp != '\0') {
 	    playcount = strtol(tcp, &cp, 10);
             if (cp == tcp || *cp != '\0') {
-                rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
+                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_6);
                 return 0;
             }
@@ -435,14 +446,14 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     case RECORD:
         if (cmd->argv[0][1] == 'S' || cmd->argv[0][1] == 's') {
             if (cmd->argv[0][2] != '\0') {
-                rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
+                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_2);
                 return 0;
             }
             record_single_file = (cf->stable->record_pcap == 0) ? 0 : 1;
         } else {
             if (cmd->argv[0][1] != '\0') {
-                rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
+                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_3);
                 return 0;
             }
@@ -461,7 +472,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
                 break;
 
             default:
-                rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog,
+                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR,
                   "DELETE: unknown command modifier `%c'", *cp);
                 reply_error(cmd, ECODE_PARSE_4);
                 return 0;
@@ -487,7 +498,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
                 break;
 
             default:
-                rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog,
+                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR,
                   "STATS: unknown command modifier `%c'", *cp);
                 reply_error(cmd, ECODE_PARSE_5);
                 return 0;
@@ -524,7 +535,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     }
 
     if (i == -1 && cmd->cca.op != UPDATE) {
-	rtpp_log_write(RTPP_LOG_INFO, cf->stable->glog,
+	RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO,
 	  "%s request failed: session %s, tags %s/%s not found", cmd->cca.rname,
 	  cmd->cca.call_id, cmd->cca.from_tag, cmd->cca.to_tag != NULL ? cmd->cca.to_tag : "NONE");
 	if (cmd->cca.op == LOOKUP) {
@@ -717,7 +728,7 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
             break;
 
         default:
-            rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
             reply_error(cmd, ECODE_PARSE_7);
             return;
         }
