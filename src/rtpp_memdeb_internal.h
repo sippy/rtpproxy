@@ -28,21 +28,24 @@
 #ifndef RTPP_MEMDEB_STDOUT
 #  define RTPP_MEMDEB_REPORT(handle, format, args...) \
     if (handle != NULL) { \
-        rtpp_log_write(RTPP_LOG_DBUG, ((rtpp_log_t)handle), format, ## args); \
+        RTPP_LOG(((struct rtpp_log *)handle), RTPP_LOG_DBUG, format, ## args); \
     }
 #else
 #  define RTPP_MEMDEB_REPORT(handle, format, args...) { \
     printf((format "\n"), ## args); \
     fflush(stdout); \
     if (handle != NULL) { \
-        rtpp_log_write(RTPP_LOG_DBUG, ((rtpp_log_t)handle), format, ## args); \
+        RTPP_LOG(((struct rtpp_log *)handle), RTPP_LOG_DBUG, format, ## args); \
     } \
 }
 #endif
 
 struct cfg;
+struct rtpp_log;
 
 int rtpp_memdeb_dumpstats(struct cfg *);
 void rtpp_memdeb_setbaseln(void);
 int rtpp_memdeb_selftest(void);
-void rtpp_memdeb_setlog(rtpp_log_t);
+void rtpp_memdeb_setlog(struct rtpp_log *);
+void rtpp_memdeb_releaselog(void);
+

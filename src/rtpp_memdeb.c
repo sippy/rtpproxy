@@ -44,6 +44,9 @@
 #include <string.h>
 
 #include "rtpp_log.h"
+#include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_memdeb.h"
@@ -66,7 +69,7 @@
 
 #define MEMDEB_GUARD_SIZE 8
 
-static rtpp_log_t _md_glog;
+static struct rtpp_log *_md_glog;
 
 struct memdeb_node
 {
@@ -100,10 +103,21 @@ static struct memdeb_node *nodes;
 static pthread_mutex_t *memdeb_mutex;
 
 void
-rtpp_memdeb_setlog(rtpp_log_t log)
+rtpp_memdeb_setlog(struct rtpp_log *log)
 {
 
+    CALL_METHOD(log->rcnt, incref);
     _md_glog = log;
+}
+
+void
+rtpp_memdeb_releaselog(void)
+{
+
+    if (_md_glog != NULL) {
+        CALL_METHOD(_md_glog->rcnt, decref);
+        _md_glog = NULL;
+    }
 }
 
 static struct memdeb_node *
@@ -358,13 +372,13 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
     struct memdeb_node *mnp;
     int errors_found, max_nunalloc;
     int64_t nunalloc;
-    rtpp_log_t log;
+    struct rtpp_log *log;
 
     errors_found = 0;
     if (cf != NULL) {
         log = cf->stable->glog;
     } else {
-        memset(&log, '\0', sizeof(log));
+        log = NULL;
     }
     pthread_mutex_lock(memdeb_mutex);
     for (mnp = nodes; mnp != NULL; mnp = mnp->next) {

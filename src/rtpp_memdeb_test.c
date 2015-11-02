@@ -32,6 +32,8 @@
 #include <string.h>
 
 #include "rtpp_log.h"
+#include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_memdeb_internal.h"
 #include "rtpp_memdeb_stats.h"
