@@ -42,6 +42,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_list.h"
 #include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_controlfd.h"
 #include "rtpp_network.h"
@@ -136,7 +137,7 @@ controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
         err(1, "can't create socket");
     so_rcvbuf = 16 * 1024;
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "unable to set 16K receive buffer size on controlfd");
+        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
     if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0)
         err(1, "can't bind to a socket");
 
@@ -167,7 +168,7 @@ controlfd_init_tcp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
         err(1, "can't create socket");
     so_rcvbuf = 16 * 1024;
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "unable to set 16K receive buffer size on controlfd");
+        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
     if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0)
         err(1, "can't bind to a socket");
     if (listen(controlfd, 32) != 0)

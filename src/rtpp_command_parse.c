@@ -40,6 +40,7 @@
 #include "rtpp_command_query.h"
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
+#include "rtpp_log_obj.h"
 
 struct cmd_props {
     int max_argc;
@@ -231,19 +232,19 @@ rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd)
     struct cmd_props cprops;
 
     if (fill_cmd_props(cf, cmd, &cprops) != 0) {
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "unknown command \"%c\"",
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "unknown command \"%c\"",
           cmd->argv[0][0]);
         reply_error(cmd, ECODE_CMDUNKN);
         return (-1);
     }
     if (cmd->argc < cprops.min_argc || cmd->argc > cprops.max_argc) {
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "%s command syntax error"
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "%s command syntax error"
           ": invalid number of arguments (%d)", cmd->cca.rname, cmd->argc);
         reply_error(cmd, ECODE_PARSE_NARGS);
         return (-1);
     }
     if (cprops.has_cmods == 0 && cprops.cmods[0] != '\0') {
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "%s command syntax error"
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "%s command syntax error"
           ": modifiers are not supported by the command", cmd->cca.rname);
         reply_error(cmd, ECODE_PARSE_MODS);
         return (-1);

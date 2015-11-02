@@ -44,6 +44,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_private.h"
@@ -155,7 +156,7 @@ accept_connection(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, struct sockaddr *
     controlfd = accept(rcsp->controlfd_in, rap, &rlen);
     if (controlfd == -1) {
         if (errno != EWOULDBLOCK) {
-            rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog,
+            RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR,
               "can't accept connection on control socket");
         }
         return (-1);
@@ -456,10 +457,10 @@ closefd:
 #if 0
 #if RTPP_DEBUG
         if (last_ctick % (unsigned int)cmd_cf->cf_save->stable->target_pfreq == 0 || last_ctick < 1000) {
-            rtpp_log_write(RTPP_LOG_DBUG, cmd_cf->cf_save->stable->glog, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
+            RTPP_LOG(cmd_cf->cf_save->stable->glog, RTPP_LOG_DBUG, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
               last_ctick, sptime, eptime, (double)last_ctick / cmd_cf->cf_save->stable->target_pfreq, \
               eptime - sptime + tused, eptime, sptime, tused);
-            rtpp_log_write(RTPP_LOG_DBUG, cmd_cf->cf_save->stable->glog, "run %lld average load %f, CSV: %f,%f", last_ctick, \
+            RTPP_LOG(cmd_cf->cf_save->stable->glog, RTPP_LOG_DBUG, "run %lld average load %f, CSV: %f,%f", last_ctick, \
               cmd_cf->average_load.lastval * 100.0, (double)last_ctick / cmd_cf->cf_save->stable->target_pfreq, cmd_cf->average_load.lastval);
         }
 #endif

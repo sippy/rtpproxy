@@ -40,6 +40,6 @@ struct rtpp_notify {
     rtpp_notify_dtor_t dtor;
 };
 
-struct rtpp_notify *rtpp_notify_ctor(rtpp_log_t);
+struct rtpp_notify *rtpp_notify_ctor(struct rtpp_log *);
 
 #endif

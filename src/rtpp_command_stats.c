@@ -37,10 +37,11 @@
 #include "rtpp_command_private.h"
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
+#include "rtpp_log_obj.h"
 
 #define CHECK_OVERFLOW() \
     if (len > sizeof(cmd->buf_t) - 2) { \
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, \
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, \
           "STATS: output buffer overflow"); \
         return (ECODE_RTOOBIG_1); \
     }
