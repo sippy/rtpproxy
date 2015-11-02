@@ -43,6 +43,7 @@ typedef enum rtpp_ttl_mode rtpp_ttl_mode;
 
 struct rtpp_timed;
 struct rtpp_sessinfo;
+struct rtpp_log;
 
 struct rtpp_cfg_stable {
     const char *pid_file;
@@ -71,7 +72,7 @@ struct rtpp_cfg_stable {
     int record_all;                 /* Record everything */
 
     int rrtcp;                      /* Whether or not to relay RTCP? */
-    rtpp_log_t glog;
+    struct rtpp_log *glog;
 
     struct rlimit *nofile_limit;
     char *run_uname;
