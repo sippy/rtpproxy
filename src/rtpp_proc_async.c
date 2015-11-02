@@ -40,8 +40,10 @@
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
 #include "rtpp_weakref.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_command_async.h"
-#ifdef RTPP_DEBUG
+#include "rtpp_debug.h"
+#if RTPP_DEBUG_timers
 #include "rtpp_math.h"
 #endif
 #include "rtpp_netio_async.h"
@@ -64,7 +66,7 @@ struct rtpp_proc_async_cf {
     long long ncycles_ref;
     struct rtpp_anetio_cf *op;
     struct rtpp_queue *time_q;
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
     struct recfilter sleep_time;
     struct recfilter poll_time;
     struct recfilter proc_time;
@@ -126,8 +128,11 @@ rtpp_proc_async_run(void *arg)
     int nready_rtp, nready_rtcp;
     struct rtpp_proc_async_cf *proc_cf;
     long long ncycles_ref;
-#ifdef RTPP_DEBUG
-    int ncycles_ref_pre, last_ctick;
+#if RTPP_DEBUG_timers
+    int ncycles_ref_pre;
+#endif
+#if RTPP_DEBUG_timers || RTPP_DEBUG_netio
+    int last_ctick;
 #endif
     struct sign_arg *s_a;
     struct rtpp_wi *wi, *wis[10];
@@ -153,8 +158,10 @@ rtpp_proc_async_run(void *arg)
         return;
     }
     s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wi, NULL);
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_timers || RTPP_DEBUG_netio
     last_ctick = s_a->clock_tick;
+#endif
+#if RTPP_DEBUG_timers
     ncycles_ref_pre = s_a->ncycles_ref;
 #endif
     rtpp_wi_free(wi);
@@ -185,8 +192,10 @@ rtpp_proc_async_run(void *arg)
         i -= 1;
         s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wis[i], NULL);
         ndrain = (s_a->ncycles_ref - ncycles_ref) / (cf->stable->target_pfreq / MAX_RTP_RATE);
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_timers || RTPP_DEBUG_netio
         last_ctick = s_a->clock_tick;
+#endif
+#if RTPP_DEBUG_timers
         ncycles_ref_pre = ncycles_ref;
 #endif
         ncycles_ref = s_a->ncycles_ref;
@@ -195,9 +204,9 @@ rtpp_proc_async_run(void *arg)
         }
 
         tp[1] = getdtime();
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
         if (last_ctick % (unsigned int)cf->stable->target_pfreq == 0 || last_ctick < 1000) {
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld sptime %f, CSV: %f,%f,%f", \
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld sptime %f, CSV: %f,%f,%f", \
               last_ctick, tp[1], (double)last_ctick / cf->stable->target_pfreq, \
               ((double)ncycles_ref / cf->stable->target_pfreq) - tp[1], tp[1]);
         }
@@ -207,9 +216,9 @@ rtpp_proc_async_run(void *arg)
             ndrain = 1;
         }
 
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
         if (ndrain > 1) {
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld " \
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
               "ncycles_ref %lld, ncycles_ref_pre %lld, ndrain %d CSV: %f,%f,%d", \
               last_ctick, ncycles_ref, ncycles_ref_pre, ndrain, \
               (double)last_ctick / cf->stable->target_pfreq, ndrain);
@@ -235,26 +244,26 @@ rtpp_proc_async_run(void *arg)
         if (ptbl_rtp.curlen > 0) {
             if (rtp_only == 0) {
                 CALL_METHOD(cf->stable->sessinfo, copy_polltbl, &ptbl_rtcp, SESS_RTCP);
-#if RTPP_DEBUG
-                rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld " \
+#if RTPP_DEBUG_netio
+                RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for %d RTCP file descriptors", \
                   last_ctick, ptbl_rtcp.curlen);
 #endif
                 nready_rtcp = poll(ptbl_rtcp.pfds, ptbl_rtcp.curlen, 0);
-#if RTPP_DEBUG
-                rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld " \
+#if RTPP_DEBUG_netio
+                RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for RTCP file descriptors: %d descriptors are ready", \
                   last_ctick, nready_rtcp);
 #endif
             }
-#if RTPP_DEBUG
-           rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld " \
+#if RTPP_DEBUG_netio
+           RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
               "polling for %d RTP file descriptors", \
               last_ctick, ptbl_rtcp.curlen);
 #endif
             nready_rtp = poll(ptbl_rtp.pfds, ptbl_rtp.curlen, 0);
-#if RTPP_DEBUG
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld " \
+#if RTPP_DEBUG_netio
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
               "polling for RTP file descriptors: %d descriptors are ready", \
               last_ctick, nready_rtp);
 #endif
@@ -288,19 +297,19 @@ rtpp_proc_async_run(void *arg)
         tp[3] = getdtime();
         flush_rstats(stats_cf, rstats);
 
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
         recfilter_apply(&proc_cf->sleep_time, tp[1] - tp[0]);
         recfilter_apply(&proc_cf->poll_time, tp[2] - tp[1]);
         recfilter_apply(&proc_cf->proc_time, tp[3] - tp[2]);
 #endif
         tp[0] = tp[3];
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
         if (last_ctick % (unsigned int)cf->stable->target_pfreq == 0 || last_ctick < 1000) {
 #if 0
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld eptime %f, CSV: %f,%f,%f", \
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld eptime %f, CSV: %f,%f,%f", \
               last_ctick, tp[3], (double)last_ctick / cf->stable->target_pfreq, tp[3] - tp[1], tp[3]);
 #endif
-            rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "run %lld eptime %f sleep_time %f poll_time %f proc_time %f CSV: %f,%f,%f,%f", \
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld eptime %f sleep_time %f poll_time %f proc_time %f CSV: %f,%f,%f,%f", \
               last_ctick, tp[3], proc_cf->sleep_time.lastval, proc_cf->poll_time.lastval, proc_cf->proc_time.lastval, \
               (double)last_ctick / cf->stable->target_pfreq, proc_cf->sleep_time.lastval, proc_cf->poll_time.lastval, proc_cf->proc_time.lastval);
         }
@@ -338,7 +347,7 @@ rtpp_proc_async_ctor(struct cfg *cf)
 
     init_rstats(cf->stable->rtpp_stats, &proc_cf->rstats);
 
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
     recfilter_init(&proc_cf->sleep_time, 0.999, 0.0, 0);
     recfilter_init(&proc_cf->poll_time, 0.999, 0.0, 0);
     recfilter_init(&proc_cf->proc_time, 0.999, 0.0, 0);

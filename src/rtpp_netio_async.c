@@ -42,19 +42,22 @@
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_queue.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_time.h"
 #include "rtpp_util.h"
+#include "rtpp_debug.h"
 #ifdef RTPP_DEBUG
 #include "rtpp_math.h"
 #endif
 
 struct sthread_args {
     struct rtpp_queue *out_q;
-    rtpp_log_t glog;
+    struct rtpp_log *glog;
     int dmode;
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_timers
     struct recfilter average_load;
 #endif
     struct rtpp_wi *sigterm;
@@ -72,7 +75,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
 {
     int n, nsend, i;
     struct rtpp_wi *wi, *wis[100];
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_timers
     double tp[3], runtime, sleeptime;
     long run_n;
 
@@ -82,7 +85,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
 #endif
     for (;;) {
         nsend = rtpp_queue_get_items(args->out_q, wis, 100, 0);
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_timers
         tp[1] = getdtime();
 #endif
 
@@ -97,12 +100,12 @@ rtpp_anetio_sthread(struct sthread_args *args)
                   wi->sendto, wi->tolen);
                 if (wi->debug != 0) {
                     if (n >= 0) {
-                        rtpp_log_write(RTPP_LOG_DBUG, args->glog,
+                        RTPP_LOG(args->glog, RTPP_LOG_DBUG,
                           "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d) = %d",
                           wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto,
                           wi->tolen, n);
                     } else {
-                        rtpp_log_ewrite(RTPP_LOG_DBUG, args->glog,
+                        RTPP_ELOG(args->glog, RTPP_LOG_DBUG,
                           "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d) = %d",
                           wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto,
                           wi->tolen, n);
@@ -116,12 +119,12 @@ rtpp_anetio_sthread(struct sthread_args *args)
             } while (wi->nsend > 0);
             rtpp_wi_free(wi);
         }
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_timers
         sleeptime += tp[1] - tp[0];
         tp[0] = getdtime();
         runtime += tp[0] - tp[1];
         if ((run_n % 10000) == 0) {
-            rtpp_log_write(RTPP_LOG_DBUG, args->glog, "rtpp_anetio_sthread(%p): run %ld aload = %f filtered = %f", \
+            RTPP_LOG(args->glog, RTPP_LOG_DBUG, "rtpp_anetio_sthread(%p): run %ld aload = %f filtered = %f", \
               args, run_n, runtime / (runtime + sleeptime), args->average_load.lastval);
         }
         if (runtime + sleeptime > 1.0) {
@@ -145,11 +148,11 @@ rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
     if (wi == NULL) {
         return (-1);
     }
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_netio >= 2
     wi->debug = 1;
-    rtpp_log_write(RTPP_LOG_DBUG, netio_cf->args[0].glog, "rtpp_anetio_sendto: malloc(%d, %p, %d, %d, %p, %d) = %p",
+    RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "rtpp_anetio_sendto: malloc(%d, %p, %d, %d, %p, %d) = %p",
       sock, msg, msg_len, flags, sendto, tolen, wi);
-    rtpp_log_write(RTPP_LOG_DBUG, netio_cf->args[0].glog, "rtpp_anetio_sendto: sendto(%d, %p, %d, %d, %p, %d)",
+    RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "rtpp_anetio_sendto: sendto(%d, %p, %d, %d, %p, %d)",
       wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
 #endif
     rtpp_queue_put_item(wi, netio_cf->args[0].out_q);
@@ -193,9 +196,9 @@ rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
      * rtpp_wi_malloc_pkt() consumes pkt and returns wi, so no need to
      * call rtp_packet_free() here.
      */
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_netio >= 2
     wi->debug = 1;
-    rtpp_log_write(RTPP_LOG_DBUG, sender->glog, "rtpp_anetio: send_pkt(%d, %p, %d, %d, %p, %d)",
+    RTPP_LOG(sender->glog, RTPP_LOG_DBUG, "rtpp_anetio: send_pkt(%d, %p, %d, %d, %p, %d)",
       wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
 #endif
     rtpp_queue_put_item(wi, sender->out_q);
@@ -238,12 +241,14 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
         if (netio_cf->args[i].out_q == NULL) {
             for (ri = i - 1; ri >= 0; ri--) {
                 rtpp_queue_destroy(netio_cf->args[ri].out_q);
+                CALL_METHOD(netio_cf->args[ri].glog->rcnt, decref);
             }
             goto e0;
         }
+        CALL_METHOD(cf->stable->glog->rcnt, incref);
         netio_cf->args[i].glog = cf->stable->glog;
         netio_cf->args[i].dmode = cf->stable->dmode;
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_timers
         recfilter_init(&netio_cf->args[i].average_load, 0.9, 0.0, 0);
 #endif
     }
@@ -283,6 +288,7 @@ e2:
 e1:
     for (i = 0; i < SEND_THREADS; i++) {
         rtpp_queue_destroy(netio_cf->args[i].out_q);
+        CALL_METHOD(netio_cf->args[i].glog->rcnt, decref);
     }
 e0:
     free(netio_cf);
@@ -300,6 +306,7 @@ rtpp_netio_async_destroy(struct rtpp_anetio_cf *netio_cf)
     for (i = 0; i < SEND_THREADS; i++) {
         pthread_join(netio_cf->thread_id[i], NULL);
         rtpp_queue_destroy(netio_cf->args[i].out_q);
+        CALL_METHOD(netio_cf->args[i].glog->rcnt, decref);
     }
     free(netio_cf);
 }
