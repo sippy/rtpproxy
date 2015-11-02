@@ -65,6 +65,7 @@
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_controlfd.h"
@@ -83,6 +84,7 @@
 #include "rtpp_timed.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_weakref.h"
+#include "rtpp_debug.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -121,6 +123,7 @@ rtpp_exit(void)
     ecode = 0;
 #ifdef RTPP_CHECK_LEAKS
     ecode = rtpp_memdeb_dumpstats(_sig_cf) == 0 ? 0 : 1;
+    rtpp_memdeb_releaselog();
 #ifdef RTPP_MEMDEB_STDOUT
     fclose(stdout);
 #endif
@@ -132,7 +135,7 @@ static void
 fatsignal(int sig)
 {
 
-    rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog, "got signal %d", sig);
+    RTPP_LOG(_sig_cf->stable->glog, RTPP_LOG_INFO, "got signal %d", sig);
     if (_sig_cf->stable->fastshutdown == 0) {
         _sig_cf->stable->fastshutdown = 1;
         return;
@@ -149,7 +152,7 @@ sighup(int sig)
 {
 
     if (_sig_cf->stable->slowshutdown == 0) {
-        rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog,
+        RTPP_LOG(_sig_cf->stable->glog, RTPP_LOG_INFO,
           "got SIGHUP, initiating deorbiting-burn sequence");
     }
     _sig_cf->stable->slowshutdown = 1;
@@ -168,8 +171,8 @@ ehandler(void)
 #endif
     rtpp_controlfd_cleanup(_sig_cf);
     unlink(_sig_cf->stable->pid_file);
-    rtpp_log_write(RTPP_LOG_INFO, _sig_cf->stable->glog, "rtpproxy ended");
-    rtpp_log_close(_sig_cf->stable->glog);
+    RTPP_LOG(_sig_cf->stable->glog, RTPP_LOG_INFO, "rtpproxy ended");
+    CALL_METHOD(_sig_cf->stable->glog->rcnt, decref);
 }
 
 long long
@@ -605,7 +608,7 @@ main(int argc, char **argv)
     struct PFD phase_detector;
     useconds_t usleep_time;
     struct sched_param sparam;
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
     double sleep_time, filter_lastval;
 #endif
 
@@ -688,14 +691,19 @@ main(int argc, char **argv)
 	    /* NOTREACHED */
     }
 
-    cf.stable->glog = rtpp_log_open(cf.stable, "rtpproxy", NULL, LF_REOPEN);
+    cf.stable->glog = rtpp_log_ctor(cf.stable, "rtpproxy", NULL, LF_REOPEN);
+    if (cf.stable->glog == NULL) {
+        err(1, "can't inilialize logging subsystem");
+            /* NOTREACHED */
+    }
+
 #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setlog(cf.stable->glog);
 #endif
-    rtpp_log_setlevel(cf.stable->glog, cf.stable->log_level);
+    CALL_METHOD(cf.stable->glog, setlevel, cf.stable->log_level);
     _sig_cf = &cf;
     atexit(ehandler);
-    rtpp_log_write(RTPP_LOG_INFO, cf.stable->glog, "rtpproxy started, pid %d", getpid());
+    RTPP_LOG(cf.stable->glog, RTPP_LOG_INFO, "rtpproxy started, pid %d", getpid());
 
 #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setbaseln();
@@ -707,20 +715,20 @@ main(int argc, char **argv)
 	write(i, buf, len);
 	close(i);
     } else {
-	rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog, "can't open pidfile for writing");
+	RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR, "can't open pidfile for writing");
     }
 
     if (cf.stable->sched_policy != SCHED_OTHER) {
         sparam.sched_priority = sched_get_priority_max(cf.stable->sched_policy);
         if (sched_setscheduler(0, cf.stable->sched_policy, &sparam) == -1) {
-            rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog, "sched_setscheduler(SCHED_%s, %d)",
+            RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR, "sched_setscheduler(SCHED_%s, %d)",
               (cf.stable->sched_policy == SCHED_FIFO) ? "FIFO" : "RR", sparam.sched_priority);
         }
     }
 
     if (cf.stable->run_uname != NULL || cf.stable->run_gname != NULL) {
 	if (drop_privileges(&cf) != 0) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
+	    RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
 	      "can't switch to requested user/group");
 	    exit(1);
 	}
@@ -729,7 +737,7 @@ main(int argc, char **argv)
 
     cf.stable->rtpp_proc_cf = rtpp_proc_async_ctor(&cf);
     if (cf.stable->rtpp_proc_cf == NULL) {
-        rtpp_log_write(RTPP_LOG_ERR, cf.stable->glog,
+        RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
           "can't init RTP processing subsystem");
         exit(1);
     }
@@ -740,27 +748,27 @@ main(int argc, char **argv)
 
     cf.stable->rtpp_timed_cf = rtpp_timed_ctor(0.1);
     if (cf.stable->rtpp_timed_cf == NULL) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
+        RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
           "can't init scheduling subsystem");
         exit(1);
     }
 
     if (CALL_METHOD(cf.stable->rtpp_timed_cf, schedule, 1.0,
       update_derived_stats, NULL, cf.stable->rtpp_stats) != 0) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
+        RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
           "can't schedule notification to derive stats");
     }
 
     cf.stable->rtpp_notify_cf = rtpp_notify_ctor(cf.stable->glog);
     if (cf.stable->rtpp_notify_cf == NULL) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
+        RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
           "can't init timeout notification subsystem");
         exit(1);
     }
 
     cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
     if (cf.stable->rtpp_cmd_cf == NULL) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf.stable->glog,
+        RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
           "can't init command processing subsystem");
         exit(1);
     }
@@ -802,7 +810,7 @@ main(int argc, char **argv)
 
         eval = PFD_get_error(&phase_detector, clk);
 
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
         filter_lastval = loop_error.lastval;
 #endif
 
@@ -810,29 +818,29 @@ main(int argc, char **argv)
             recfilter_apply(&loop_error, sigmoid(eval));
         }
 
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
         if (counter % (unsigned int)cf.stable->target_pfreq == 0 || counter < 1000) {
-          rtpp_log_write(RTPP_LOG_DBUG, cf.stable->glog, "run %lld ncycles %f raw error1 %f, filter lastval %f, filter nextval %f",
+          RTPP_LOG(cf.stable->glog, RTPP_LOG_DBUG, "run %lld ncycles %f raw error1 %f, filter lastval %f, filter nextval %f",
             counter, clk, eval, filter_lastval, loop_error.lastval);
         }
 #endif
         add_delay = freqoff_to_period(cf.stable->target_pfreq, 1.0, loop_error.lastval);
         usleep_time = add_delay * 1000000.0;
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
         if (counter % (unsigned int)cf.stable->target_pfreq == 0 || counter < 1000) {
-            rtpp_log_write(RTPP_LOG_DBUG, cf.stable->glog, "run %lld filter lastval %f, filter nextval %f, error %f",
+            RTPP_LOG(cf.stable->glog, RTPP_LOG_DBUG, "run %lld filter lastval %f, filter nextval %f, error %f",
               counter, filter_lastval, loop_error.lastval, sigmoid(eval));
-            rtpp_log_write(RTPP_LOG_DBUG, cf.stable->glog, "run %lld extra sleeping time %llu", counter, usleep_time);
+            RTPP_LOG(cf.stable->glog, RTPP_LOG_DBUG, "run %lld extra sleeping time %llu", counter, usleep_time);
         }
         sleep_time = getdtime();
 #endif
         CALL_METHOD(cf.stable->rtpp_proc_cf, wakeup, counter, ncycles_ref);
         usleep(usleep_time);
         CALL_METHOD(cf.stable->rtpp_timed_cf, wakeup, eptime + add_delay);
-#if RTPP_DEBUG
+#if RTPP_DEBUG_timers
         sleep_time = getdtime() - sleep_time;
         if (counter % (unsigned int)cf.stable->target_pfreq == 0 || counter < 1000 || sleep_time > add_delay * 2.0) {
-            rtpp_log_write(RTPP_LOG_DBUG, cf.stable->glog, "run %lld sleeping time required %llu sleeping time actual %f, CSV: %f,%f,%f", \
+            RTPP_LOG(cf.stable->glog, RTPP_LOG_DBUG, "run %lld sleeping time required %llu sleeping time actual %f, CSV: %f,%f,%f", \
               counter, usleep_time, sleep_time, (double)counter / cf.stable->target_pfreq, ((double)usleep_time) / 1000.0, sleep_time * 1000.0);
         }
 #endif
@@ -842,7 +850,7 @@ main(int argc, char **argv)
         }
         if (cf.stable->slowshutdown != 0 &&
           CALL_METHOD(cf.stable->sessions_wrt, get_length) == 0) {
-            rtpp_log_write(RTPP_LOG_INFO, cf.stable->glog,
+            RTPP_LOG(cf.stable->glog, RTPP_LOG_INFO,
               "deorbiting-burn sequence completed, exiting");
             break;
         }
