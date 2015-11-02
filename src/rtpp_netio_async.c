@@ -45,6 +45,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_queue.h"
+#include "rtpp_network.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_time.h"
 #include "rtpp_util.h"
@@ -99,15 +100,18 @@ rtpp_anetio_sthread(struct sthread_args *args)
                 n = sendto(wi->sock, wi->msg, wi->msg_len, wi->flags,
                   wi->sendto, wi->tolen);
                 if (wi->debug != 0) {
+                    char daddr[MAX_AP_STRBUF];
+
+                    addrport2char_r(wi->sendto, daddr, sizeof(daddr));
                     if (n >= 0) {
                         RTPP_LOG(args->glog, RTPP_LOG_DBUG,
-                          "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d) = %d",
-                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto,
+                          "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
+                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
                           wi->tolen, n);
                     } else {
                         RTPP_ELOG(args->glog, RTPP_LOG_DBUG,
-                          "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d) = %d",
-                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto,
+                          "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
+                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
                           wi->tolen, n);
                     }
                 }
