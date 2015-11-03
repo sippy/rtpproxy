@@ -104,9 +104,9 @@ _rtpp_log_open(struct rtpp_cfg_stable *cf, const char *app, const char *call_id)
         rli->level = cf->log_level;
     }
     rli->format_se = "%s%s:%s:%s: %s\n";
-    rli->eformat_se = "%s%s:%s:%s: %s: %s\n";
+    rli->eformat_se = "%s%s:%s:%s: %s: %s (%d)\n";
     rli->format_sl = "%s:%s:%s: %s";
-    rli->eformat_sl = "%s:%s:%s: %s: %s";
+    rli->eformat_sl = "%s:%s:%s: %s: %s (%d)";
     return (rli);
 }
 
@@ -276,7 +276,7 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
         snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_sl, strlvl(level),
-          function, call_id, format, strerror(errno));
+          function, call_id, format, strerror(errno), errno);
         va_copy(apc, ap);
 	vsyslog_async(level, rtpp_log_buff, apc);
         va_end(apc);
@@ -288,7 +288,7 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
     ftime(rli, getdtime(), rtpp_time_buff, sizeof(rtpp_time_buff));
     snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_se,
       rtpp_time_buff, strlvl(level), function, call_id, format,
-      strerror(errno));
+      strerror(errno), errno);
     vfprintf(stderr, rtpp_log_buff, ap);
 }
 
