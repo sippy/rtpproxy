@@ -233,7 +233,7 @@ send_packet(struct cfg *cf, struct rtpp_stream *stp_in,
         goto e1;
     } else {
         CALL_METHOD(stp_out->fd, send_pkt, sender, stp_out->addr, \
-          SA_LEN(stp_out->addr), packet);
+          SA_LEN(stp_out->addr), packet, stp_out->log);
         CALL_METHOD(stp_in->pcount, reg_reld);
         rsp->npkts_relayed.cnt++;
     }

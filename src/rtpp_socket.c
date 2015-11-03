@@ -56,7 +56,7 @@ static int rtpp_socket_settos(struct rtpp_socket *, int);
 static int rtpp_socket_setrbuf(struct rtpp_socket *, int);
 static int rtpp_socket_setnonblock(struct rtpp_socket *);
 static int rtpp_socket_send_pkt(struct rtpp_socket *, struct sthread_args *,
-  const struct sockaddr *, int, struct rtp_packet *);
+  const struct sockaddr *, int, struct rtp_packet *, struct rtpp_log *);
 static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *);
 static int rtpp_socket_getfd(struct rtpp_socket *);
 
@@ -149,13 +149,14 @@ rtpp_socket_setnonblock(struct rtpp_socket *self)
 
 static int 
 rtpp_socket_send_pkt(struct rtpp_socket *self, struct sthread_args *str,
-  const struct sockaddr *daddr, int addrlen, struct rtp_packet *pkt)
+  const struct sockaddr *daddr, int addrlen, struct rtp_packet *pkt,
+  struct rtpp_log *log)
 {
     struct rtpp_socket_priv *pvt;
 
     pvt = PUB2PVT(self);
     return (rtpp_anetio_send_pkt(str, pvt->fd, daddr, addrlen, pkt,
-      self->rcnt));
+      self->rcnt, log));
 }
 
 static struct rtp_packet *

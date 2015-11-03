@@ -95,7 +95,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
             break;
         }
         CALL_METHOD(rsop->fd, send_pkt, fap->sender, rsop->addr,
-          SA_LEN(rsop->addr), pkt);
+          SA_LEN(rsop->addr), pkt, rsop->log);
         fap->rsp->npkts_played.cnt++;
     }
     CALL_METHOD(rsop->rcnt, decref);

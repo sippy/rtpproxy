@@ -30,6 +30,7 @@ struct rtpp_socket;
 struct sockaddr;
 struct rtp_packet;
 struct sthread_args;
+struct rtpp_log;
 
 DEFINE_METHOD(rtpp_socket, rtpp_socket_bind, int, const struct sockaddr *,
   int);
@@ -37,7 +38,8 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_settos, int, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_setrbuf, int, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_setnonblock, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_send_pkt, int,
-  struct sthread_args *, const struct sockaddr *, int, struct rtp_packet *);
+  struct sthread_args *, const struct sockaddr *, int, struct rtp_packet *,
+  struct rtpp_log *);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_rtp_recv, struct rtp_packet *);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_getfd, int);
 
