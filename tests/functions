@@ -58,6 +58,7 @@ fi
 if [ "${OS}" != "FreeBSD" ]
 then
   TAR_COMPRESS_FLAG="-j"
+  ulimit -c unlimited
 else
   TAR_COMPRESS_FLAG="-y"
 fi
@@ -115,12 +116,13 @@ rtpproxy_start() {
   TMP_PIDFILE=`mktemp -t ${tempfoo}` || return 1
   TMP_SOCKFILE=${RTPP_SOCKFILE:-`mktemp -t ${tempfoo}`} || return 1
   TMP_LOGFILE=${RTPP_LOGFILE:-`mktemp -t ${tempfoo}`} || return 1
+  RTPP_RUNDIR=`pwd`
   if [ ! -z "${RTPP_OUTFILE}" ]
   then
-    ${RTPPROXY} -F -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} -d info ${RTPP_ARGS} \
+    ${RTPPROXY} -D -F -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} -d info ${RTPP_ARGS} \
      >${RTPP_OUTFILE} 2>${TMP_LOGFILE}
   else
-    ${RTPPROXY} -F -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} -d info ${RTPP_ARGS} \
+    ${RTPPROXY} -D -F -s ${TMP_SOCKFILE} -p ${TMP_PIDFILE} -d info ${RTPP_ARGS} \
      2>${TMP_LOGFILE}
   fi
   RC=${?}
@@ -155,6 +157,10 @@ rtpproxy_stop() {
   SIGNAME="${1}"
   if ! kill -${SIGNAME} `cat ${TMP_PIDFILE}`
   then
+    if [ -e ${RTPP_RUNDIR}/core ]
+    then
+      gdb --command=${BUILDDIR}/gdb.gettrace ${RTPPROXY} ${RTPP_RUNDIR}/core >&2
+    fi
     cat ${TMP_LOGFILE} >&2
     false
     return
