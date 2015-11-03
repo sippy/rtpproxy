@@ -6,6 +6,8 @@ uname -a
 ${CC} --version
 python --version
 pip --version
+sudo iptables -L OUTPUT
+sudo iptables -L PREROUTING
 ./configure
 make
 make clean
