@@ -153,7 +153,12 @@ rtpproxy_start() {
 
 rtpproxy_stop() {
   SIGNAME="${1}"
-  kill -${SIGNAME} `cat ${TMP_PIDFILE}` || return
+  if ! kill -${SIGNAME} `cat ${TMP_PIDFILE}`
+  then
+    cat ${TMP_LOGFILE} >&2
+    false
+    return
+  fi
   _i=0
   while [ -e ${TMP_PIDFILE} ]
   do
