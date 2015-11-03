@@ -49,6 +49,7 @@ struct rtpp_cfg_stable {
     const char *pid_file;
 
     int nodaemon;
+    int no_chdir;
     int dmode;
     int bmode;                  /* Bridge mode */
     int port_min;               /* Lowest UDP port for RTP */
