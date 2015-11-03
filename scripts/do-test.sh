@@ -7,7 +7,7 @@ ${CC} --version
 python --version
 pip --version
 sudo iptables -L OUTPUT
-sudo iptables -L PREROUTING
+sudo iptables -L INPUT
 ./configure
 make
 make clean
