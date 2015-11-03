@@ -104,13 +104,13 @@ rtpp_anetio_sthread(struct sthread_args *args)
 
                     addrport2char_r(wi->sendto, daddr, sizeof(daddr));
                     if (n >= 0) {
-                        RTPP_LOG(args->glog, RTPP_LOG_DBUG,
-                          "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
+                        RTPP_LOG(wi->log, RTPP_LOG_DBUG,
+                          "sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
                           wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
                           wi->tolen, n);
                     } else {
-                        RTPP_ELOG(args->glog, RTPP_LOG_DBUG,
-                          "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
+                        RTPP_ELOG(wi->log, RTPP_LOG_DBUG,
+                          "sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
                           wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
                           wi->tolen, n);
                     }
@@ -154,9 +154,9 @@ rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
     }
 #if RTPP_DEBUG_netio >= 2
     wi->debug = 1;
-    RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "rtpp_anetio_sendto: malloc(%d, %p, %d, %d, %p, %d) = %p",
+    RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "malloc(%d, %p, %d, %d, %p, %d) = %p",
       sock, msg, msg_len, flags, sendto, tolen, wi);
-    RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "rtpp_anetio_sendto: sendto(%d, %p, %d, %d, %p, %d)",
+    RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "sendto(%d, %p, %d, %d, %p, %d)",
       wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
 #endif
     rtpp_queue_put_item(wi, netio_cf->args[0].out_q);
@@ -180,7 +180,7 @@ rtpp_anetio_pump_q(struct sthread_args *sender)
 int
 rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
   const struct sockaddr *sendto, socklen_t tolen, struct rtp_packet *pkt,
-  struct rtpp_refcnt *sock_rcnt)
+  struct rtpp_refcnt *sock_rcnt, struct rtpp_log *plog)
 {
     struct rtpp_wi *wi;
     int nsend;
@@ -202,7 +202,12 @@ rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
      */
 #if RTPP_DEBUG_netio >= 2
     wi->debug = 1;
-    RTPP_LOG(sender->glog, RTPP_LOG_DBUG, "rtpp_anetio: send_pkt(%d, %p, %d, %d, %p, %d)",
+    if (plog == NULL) {
+        plog = sender->glog;
+    }
+    CALL_METHOD(plog->rcnt, incref);
+    wi->log = plog;
+    RTPP_LOG(plog, RTPP_LOG_DBUG, "send_pkt(%d, %p, %d, %d, %p, %d)",
       wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
 #endif
     rtpp_queue_put_item(wi, sender->out_q);
