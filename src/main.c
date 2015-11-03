@@ -88,7 +88,7 @@
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
-#ifdef RTPP_DEBUG
+#if RTPP_DEBUG_catchtrace
 #include "rtpp_stacktrace.h"
 #endif
 
@@ -104,7 +104,7 @@ static void
 usage(void)
 {
 
-    fprintf(stderr, "usage:\trtpproxy [-2fvFiPaRb] [-l addr1[/addr2]] "
+    fprintf(stderr, "usage:\trtpproxy [-2fvFiPaRbD] [-l addr1[/addr2]] "
       "[-6 addr1[/addr2]] [-s path]\n\t  [-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] [-w sock_mode] "
       "[-n timeout_socket]\n\t  [-d log_level[:log_facility]] [-p pid_file]\n"
@@ -166,7 +166,7 @@ ehandler(void)
     __mp_leaktable(0, MP_LT_UNFREED, 0);
 #endif
 
-#if RTPP_DEBUG
+#if RTPP_DEBUG_catchtrace 
     rtpp_stacktrace_print("Exiting from: ehandler()");
 #endif
     rtpp_controlfd_cleanup(_sig_cf);
@@ -237,7 +237,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:bW:")) != -1) {
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:bW:D")) != -1) {
 	switch (ch) {
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
@@ -472,6 +472,10 @@ init_config(struct cfg *cf, int argc, char **argv)
             cf->stable->seq_ports = 1;
             break;
 
+        case 'D':
+           cf->stable->no_chdir = 1;
+           break;
+
 	case '?':
 	default:
 	    usage();
@@ -686,7 +690,7 @@ main(int argc, char **argv)
     }
 
     if (cf.stable->nodaemon == 0) {
-	if (rtpp_daemon(0, 0) == -1)
+	if (rtpp_daemon(cf.stable->no_chdir, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
     }
@@ -784,7 +788,7 @@ main(int argc, char **argv)
     signal(SIGPROF, fatsignal);
     signal(SIGUSR1, fatsignal);
     signal(SIGUSR2, fatsignal);
-#if RTPP_DEBUG
+#if RTPP_DEBUG_catchtrace
     signal(SIGQUIT, rtpp_stacktrace);
     signal(SIGILL, rtpp_stacktrace);
     signal(SIGTRAP, rtpp_stacktrace);
