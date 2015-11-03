@@ -50,6 +50,8 @@ static int syslog_async_opened = 0;
 #endif
 static double iitime = 0.0;
 
+#define CALL_ID_NONE "GLOBAL"
+
 struct rtpp_log_inst {
     char *call_id;
     int level;
@@ -221,13 +223,13 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
     if (rli->call_id != NULL) {
         call_id = rli->call_id;
     } else {
-        call_id = "GLOBAL";
+        call_id = CALL_ID_NONE;
     }
 
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
         snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_sl, strlvl(level),
-          function, call_id, format);
+          call_id, function, format);
         va_copy(apc, ap);
 	vsyslog_async(level, rtpp_log_buff, apc);
         va_end(apc);
@@ -239,7 +241,7 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
 
     ftime(rli, getdtime(), rtpp_time_buff, sizeof(rtpp_time_buff));
     snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_se,
-      rtpp_time_buff, strlvl(level), function, call_id, format);
+      rtpp_time_buff, strlvl(level), call_id, function, format);
     vfprintf(stderr, rtpp_log_buff, ap);
 }
 
@@ -270,13 +272,13 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
     if (rli->call_id != NULL) {
         call_id = rli->call_id;
     } else {
-        call_id = "GENERAL";
+        call_id = CALL_ID_NONE;
     }
 
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
         snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_sl, strlvl(level),
-          function, call_id, format, strerror(errno), errno);
+          call_id, function, format, strerror(errno), errno);
         va_copy(apc, ap);
 	vsyslog_async(level, rtpp_log_buff, apc);
         va_end(apc);
@@ -287,7 +289,7 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
 #endif
     ftime(rli, getdtime(), rtpp_time_buff, sizeof(rtpp_time_buff));
     snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->eformat_se,
-      rtpp_time_buff, strlvl(level), function, call_id, format,
+      rtpp_time_buff, strlvl(level), call_id, function, format,
       strerror(errno), errno);
     vfprintf(stderr, rtpp_log_buff, ap);
 }
