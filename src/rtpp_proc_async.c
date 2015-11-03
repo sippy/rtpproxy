@@ -259,7 +259,7 @@ rtpp_proc_async_run(void *arg)
 #if RTPP_DEBUG_netio
            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
               "polling for %d RTP file descriptors", \
-              last_ctick, ptbl_rtcp.curlen);
+              last_ctick, ptbl_rtp.curlen);
 #endif
             nready_rtp = poll(ptbl_rtp.pfds, ptbl_rtp.curlen, 0);
 #if RTPP_DEBUG_netio
