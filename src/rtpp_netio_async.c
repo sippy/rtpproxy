@@ -29,6 +29,7 @@
 #include <sys/socket.h>
 #include <errno.h>
 #include <pthread.h>
+#include <sched.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -99,6 +100,11 @@ rtpp_anetio_sthread(struct sthread_args *args)
             do {
                 n = sendto(wi->sock, wi->msg, wi->msg_len, wi->flags,
                   wi->sendto, wi->tolen);
+                if (n == -1 && errno == EPERM) {
+                    sched_yield();
+                    i -= 1;
+                    continue;
+                }
                 if (wi->debug != 0) {
                     char daddr[MAX_AP_STRBUF];
 
