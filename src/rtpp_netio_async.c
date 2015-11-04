@@ -72,10 +72,12 @@ struct rtpp_anetio_cf {
     struct sthread_args args[SEND_THREADS];
 };
 
+#define RTPP_ANETIO_MAX_RETRY 3
+
 static void
 rtpp_anetio_sthread(struct sthread_args *args)
 {
-    int n, nsend, i;
+    int n, nsend, i, send_errno, nretry;
     struct rtpp_wi *wi, *wis[100];
 #if RTPP_DEBUG_timers
     double tp[3], runtime, sleeptime;
@@ -97,34 +99,47 @@ rtpp_anetio_sthread(struct sthread_args *args)
                 rtpp_wi_free(wi);
                 goto out;
             }
+            nretry = 0;
             do {
                 n = sendto(wi->sock, wi->msg, wi->msg_len, wi->flags,
                   wi->sendto, wi->tolen);
-                if (n == -1 && errno == EPERM) {
-                    sched_yield();
-                    i -= 1;
-                    continue;
-                }
+                send_errno = (n < 0) ? errno : 0;
+#if RTPP_DEBUG_netio >= 1
                 if (wi->debug != 0) {
                     char daddr[MAX_AP_STRBUF];
 
                     addrport2char_r(wi->sendto, daddr, sizeof(daddr));
-                    if (n >= 0) {
-                        RTPP_LOG(wi->log, RTPP_LOG_DBUG,
-                          "sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
-                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
-                          wi->tolen, n);
-                    } else {
+                    if (n < 0) {
                         RTPP_ELOG(wi->log, RTPP_LOG_DBUG,
                           "sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
                           wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
                           wi->tolen, n);
+                    } else if (n < wi->msg_len) {
+                        RTPP_LOG(wi->log, RTPP_LOG_DBUG,
+                          "sendto(%d, %p, %d, %d, %p (%s), %d) = %d: short write",
+                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
+                          wi->tolen, n);
+#if RTPP_DEBUG_netio >= 2
+                    } else {
+                        RTPP_LOG(wi->log, RTPP_LOG_DBUG,
+                          "sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
+                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
+                          wi->tolen, n);
+#endif
                     }
                 }
+#endif
                 if (n >= 0) {
                     wi->nsend--;
-                } else if (n == -1 && errno != ENOBUFS) {
-                    break;
+                } else {
+                    /* "EPERM" is Linux thing, yield and retry */
+                    if ((send_errno == EPERM || send_errno == ENOBUFS)
+                      && nretry < RTPP_ANETIO_MAX_RETRY) {
+                        sched_yield();
+                        nretry++;
+                    } else {
+                        break;
+                    }
                 }
             } while (wi->nsend > 0);
             rtpp_wi_free(wi);
@@ -158,14 +173,16 @@ rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
     if (wi == NULL) {
         return (-1);
     }
-#if RTPP_DEBUG_netio >= 2
+#if RTPP_DEBUG_netio >= 1
     wi->debug = 1;
     wi->log = netio_cf->args[0].glog;
     CALL_METHOD(wi->log->rcnt, incref);
+#if RTPP_DEBUG_netio >= 2
     RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "malloc(%d, %p, %d, %d, %p, %d) = %p",
       sock, msg, msg_len, flags, sendto, tolen, wi);
     RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "sendto(%d, %p, %d, %d, %p, %d)",
       wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
+#endif
 #endif
     rtpp_queue_put_item(wi, netio_cf->args[0].out_q);
     return (0);

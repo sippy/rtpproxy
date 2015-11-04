@@ -30,7 +30,7 @@
 #define _RTPP_DEBUG_H_
 
 #if defined(RTPP_DEBUG)
-/* Supported levels 0, 1, 2. 1 - basic debug, 2 - debug on every packet */
+/* Supported levels 0, 1, 2. 1 - basic debug & debug when I/O fails, 2 - debug on every packet */
 #define RTPP_DEBUG_netio      2
 /* Supported levels 0, 1. */
 #define RTPP_DEBUG_timers     0
