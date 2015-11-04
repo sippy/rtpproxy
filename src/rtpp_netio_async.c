@@ -160,6 +160,8 @@ rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
     }
 #if RTPP_DEBUG_netio >= 2
     wi->debug = 1;
+    wi->log = netio_cf->args[0].glog;
+    CALL_METHOD(wi->log->rcnt, incref);
     RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "malloc(%d, %p, %d, %d, %p, %d) = %p",
       sock, msg, msg_len, flags, sendto, tolen, wi);
     RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "sendto(%d, %p, %d, %d, %p, %d)",
