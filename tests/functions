@@ -58,7 +58,10 @@ fi
 if [ "${OS}" != "FreeBSD" ]
 then
   TAR_COMPRESS_FLAG="-j"
-  ulimit -c unlimited
+  if ! ulimit -c unlimited 2>/dev/null
+  then
+    ${SUDO} ulimit -c unlimited
+  fi
 else
   TAR_COMPRESS_FLAG="-y"
 fi
