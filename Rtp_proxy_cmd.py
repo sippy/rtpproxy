@@ -1,5 +1,5 @@
 # Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
-# Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
+# Copyright (c) 2006-2015 Sippy Software, Inc. All rights reserved.
 #
 # All rights reserved.
 #
