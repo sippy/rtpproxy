@@ -29,6 +29,7 @@
 #include <sys/socket.h>
 #include <errno.h>
 #include <pthread.h>
+#include <sched.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -67,7 +68,7 @@ struct rtpp_anetio_cf {
 static void
 rtpp_anetio_sthread(struct sthread_args *args)
 {
-    int n, nsend, i;
+    int n, nsend, i, send_errno;
     struct rtpp_wi *wi, *wis[100];
 #ifdef RTPP_DEBUG
     double tp[3], runtime, sleeptime;
@@ -92,6 +93,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
             do {
                 n = sendto(wi->sock, wi->msg, wi->msg_len, wi->flags,
                   wi->sendto, wi->tolen);
+                send_errno = (n < 0) ? errno : 0;
                 if (wi->debug != 0) {
                     rtpp_log_write(RTPP_LOG_DBUG, args->glog,
                       "rtpp_anetio_sthread: sendto(%d, %p, %d, %d, %p, %d) = %d",
@@ -100,8 +102,11 @@ rtpp_anetio_sthread(struct sthread_args *args)
                 }
                 if (n >= 0) {
                     wi->nsend--;
-                } else if (n == -1 && errno != ENOBUFS) {
-                    break;
+                } else if (n == -1) {
+                    if (send_errno != EPERM && send_errno != ENOBUFS) {
+                        break;
+                    }
+                    sched_yield();
                 }
             } while (wi->nsend > 0);
             rtpp_wi_free(wi);
