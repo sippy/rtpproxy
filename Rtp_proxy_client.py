@@ -78,7 +78,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
     active_streams = None
     preceived = None
     ptransmitted = None
-    hrtb_ival = 10.0
+    hrtb_ival = 1.0
     hrtb_retr_ival = 60.0
     rtpp_class = None
 
