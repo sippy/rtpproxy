@@ -102,7 +102,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
                 }
                 if (n >= 0) {
                     wi->nsend--;
-                } else if (n == -1) {
+                } else {
                     if (send_errno != EPERM && send_errno != ENOBUFS) {
                         break;
                     }
