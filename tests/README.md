@@ -7,6 +7,23 @@ Running `make check` in the root RTPProxy directory will run these tests.
 The RTPProxy repository is hooked up to a continuous integration services
 (travis or drone.io) that will automatically run all tests.
 
+## Test Suite Dependencies
+
+The following libraries and build tools are required by the test suite.
+All but libg722 are available in most Linux distribuitions package
+systems.
+
+- audio/bcg729
+- audio/gsm
+- audio/libsndfile
+- devel/autoconf
+- devel/automake
+- devel/libtool
+- devel/pkgconf
+- devel/py-twisted 
+- libg722 (Available from https://github.com/sippy/libg722)
+
+
 ## RTPProxy payload conventions
 
 The tests make use of prerecorded files that are encoded in various
