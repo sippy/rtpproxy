@@ -8,6 +8,8 @@ python --version
 pip --version
 sudo iptables -L OUTPUT
 sudo iptables -L INPUT
+echo -n "/proc/sys/kernel/core_pattern: "
+cat /proc/sys/kernel/core_pattern
 ./configure
 make
 make clean
