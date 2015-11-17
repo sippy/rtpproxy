@@ -30,15 +30,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#if defined(CLOCK_UPTIME_PRECISE)
-#define RTPP_CLOCK CLOCK_UPTIME_PRECISE
-#else
-# if defined(CLOCK_MONOTONIC_RAW)
-#define RTPP_CLOCK CLOCK_MONOTONIC_RAW
-# else
-#define RTPP_CLOCK CLOCK_MONOTONIC
-#endif
-#endif
+#include "rtpp_time.h"
 
 static double timespec2dtime(time_t, long);
 
@@ -47,7 +39,7 @@ getdtime(void)
 {
     struct timespec tp;
 
-    if (clock_gettime(RTPP_CLOCK, &tp) == -1)
+    if (clock_gettime(RTPP_CLOCK_MONO, &tp) == -1)
         return (-1);
 
     return timespec2dtime(tp.tv_sec, tp.tv_nsec);
