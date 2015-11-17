@@ -26,7 +26,28 @@
  *
  */
 
+#ifndef _RTPP_TIME_H_
+#define _RTPP_TIME_H_
+
+#if defined(CLOCK_UPTIME_PRECISE)
+# define RTPP_CLOCK_MONO CLOCK_UPTIME_PRECISE
+#else
+# if defined(CLOCK_BOOTTIME)
+#  define RTPP_CLOCK_MONO CLOCK_BOOTTIME
+# else
+#  define RTPP_CLOCK_MONO CLOCK_MONOTONIC
+# endif
+#endif
+
+#if defined(CLOCK_REALTIME_PRECISE)
+# define RTPP_CLOCK_REAL CLOCK_REALTIME_PRECISE
+#else
+# define RTPP_CLOCK_REAL CLOCK_REALTIME
+#endif
+
 /* Function prototypes */
 double getdtime(void);
 double ts2dtime(uint32_t, uint32_t);
 void dtime2ts(double, uint32_t *, uint32_t *);
+
+#endif
