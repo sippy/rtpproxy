@@ -245,7 +245,7 @@ Enable independent RTP activity timeout mode\&. By default, a timeout (which res
 .PP
 \fB\-n\fR \fItimeout_socket\fR
 .RS 4
-This parameter configures specifies a permitted notification socket\&. The socket should be created by another application, preferably before starting rtpproxy\&.
+This parameter specifies permitted notification sockets only\&. The listening socket must be created by another application, preferably before starting rtpproxy\&.
 .sp
 Timeout notifications must be enabled by the SIP controller when setting up the session\&. The SIP Controller must specify the timeout_socket, and a notify_tag, which is expected to be an arbitrary string that can be used by the SIP controller to identify which session a received time out notification relates to\&.
 .sp
@@ -353,5 +353,5 @@ Author.
 .RE
 .SH "COPYRIGHT"
 .br
-Copyright \(co 2006 sobomax
+Copyright \(co 2006 janakj
 .br

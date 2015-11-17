@@ -394,8 +394,8 @@
                 <term><option>-n</option> <replaceable>timeout_socket</replaceable></term>
                  <listitem>
                     <para>
-                        This parameter configures specifies a permitted notification socket.
-                        The socket should be created by another application,
+                        This parameter specifies permitted notification sockets only.
+                        The listening socket must be created by another application,
                         preferably before starting rtpproxy. 
                     </para>
                     <para>
