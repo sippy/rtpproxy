@@ -36,11 +36,6 @@
 #include "rtpp_monotime.h"
 #include "rtpp_time.h"
 
-#define SEC(x)   ((x)->tv_sec)
-#define NSEC(x)  ((x)->tv_nsec)
-#define NSEC_MAX 1000000000L
-#define USEC(x)  ((x)->tv_usec)
-
 #define timespecsub2(r, v, u)                                      \
     do {                                                           \
         SEC(r) = SEC(v) - SEC(u);                                  \
@@ -52,6 +47,16 @@
     } while (0);
 
 #define timespecsub(v, u) timespecsub2((v), (v), (u))
+
+#define timespecadd2(r, v, u)                                      \
+    do {                                                           \
+        SEC(r) = SEC(v) + SEC(u);                                  \
+        NSEC(r) = NSEC(v) + NSEC(u);                               \
+        if (NSEC(r) >= NSEC_MAX) {                                 \
+            SEC(r)++;                                              \
+            NSEC(r) -= NSEC_MAX;                                   \
+        }                                                          \
+    } while (0);
 
 #define timespecmean2(r, v, u)                                     \
     do {                                                           \
@@ -70,9 +75,6 @@
     ((SEC(t) == SEC(u)) ?                                          \
       (NSEC(t) c NSEC(u)) :                                        \
       (SEC(t) c SEC(u)))
-
-#define timespeciszero(t)                                          \
-    (SEC(t) == 0 && NSEC(t) == 0)
 
 #define timespecaddnsec(v, nsec)                                   \
     do {                                                           \
@@ -390,6 +392,11 @@ static const struct timespec recal_ival = {.tv_sec = 1, .tv_nsec = 0};
         SEC(s) = SEC(v);               \
         NSEC(s) = USEC(v) * 1000;      \
     } while (0);
+#define timespec2timeval(v, s)         \
+    do {                               \
+        SEC(v) = SEC(s);               \
+        USEC(v) = NSEC(s) / 1000;      \
+    } while (0);
 
 double
 rtimeval2dtime(struct timeval *rtime)
@@ -410,4 +417,22 @@ rtimeval2dtime(struct timeval *rtime)
     timespecsub2(&mtime, &rtimespec, &r2m_conv1.cval);
 
     return (timespec2dtime(&mtime));
+}
+
+void
+dtime2rtimeval(double dtime, struct timeval *rtimeval)
+{
+    struct timespec rtimespec, mtime, timediff;
+
+    dtime2mtimespec(dtime, &mtime);
+    if (timespeciszero(&r2m_conv1.cval)) {
+        r2m_calibrate(&r2m_conv1);
+    } else {
+        timespecsub2(&timediff, &mtime, &r2m_conv1.lastcal_mtime);
+        if (timespeccmp(&timediff, >, &recal_ival)) {
+            r2m_calibrate(&r2m_conv1);
+        }
+    }
+    timespecadd2(&rtimespec, &mtime, &r2m_conv1.cval);
+    timespec2timeval(rtimeval, &rtimespec);
 }
