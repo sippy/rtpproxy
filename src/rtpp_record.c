@@ -54,6 +54,7 @@
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_monotime.h"
 #include "rtpp_network.h"
 #include "rtpp_record.h"
 #include "rtpp_record_fin.h"
@@ -325,6 +326,7 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
     struct udpip *udpip;
     int pcap_size;
     struct sockaddr_storage tmp_addr;
+    struct timeval rtimeval;
 
     if (packet->rtime == -1) {
 	RTPP_ELOG(log, RTPP_LOG_ERR, "can't get current time");
@@ -335,7 +337,7 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
         src_addr = sstosa(&(packet->raddr));
         src_port = satosin(src_addr)->sin_port;
         dst_addr = packet->laddr;
-        dst_port = htons(packet->rport);
+        dst_port = htons(packet->lport);
     } else {
         src_addr = ldaddr;
         src_port = htons(ldport);
@@ -374,7 +376,9 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
     pcap_size = sizeof(hdrp->en10t);
 #endif
 
-    dtime2ts(packet->rtime, &(pcaprec_hdr.ts_sec), &(pcaprec_hdr.ts_usec));
+    dtime2rtimeval(packet->rtime, &rtimeval);
+    pcaprec_hdr.ts_sec = SEC(&rtimeval);
+    pcaprec_hdr.ts_usec = USEC(&rtimeval);
     pcaprec_hdr.orig_len = pcaprec_hdr.incl_len = pcap_size -
       sizeof(pcaprec_hdr) + packet->size;
 
