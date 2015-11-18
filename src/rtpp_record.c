@@ -337,7 +337,7 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
         src_addr = sstosa(&(packet->raddr));
         src_port = satosin(src_addr)->sin_port;
         dst_addr = packet->laddr;
-        dst_port = htons(packet->lport);
+        dst_port = htons(packet->rport);
     } else {
         src_addr = ldaddr;
         src_port = htons(ldport);
