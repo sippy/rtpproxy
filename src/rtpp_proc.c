@@ -106,14 +106,11 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             ndrain -= 1;
         }
 
-	packet = CALL_METHOD(stp->fd, rtp_recv);
+	packet = CALL_METHOD(stp->fd, rtp_recv, dtime, stp->laddr, stp->port);
 	if (packet == NULL) {
             /* Move on to the next session */
             return;
         }
-	packet->laddr = stp->laddr;
-	packet->rport = stp->port;
-	packet->rtime = dtime;
         rsp->npkts_rcvd.cnt++;
 
 	if (stp->addr != NULL) {
@@ -256,7 +253,7 @@ drain_socket(struct rtpp_socket *rfd, struct rtpp_proc_rstats *rsp)
 
     ndrained = 0;
     for (;;) {
-        packet = CALL_METHOD(rfd, rtp_recv);
+        packet = CALL_METHOD(rfd, rtp_recv, 0.0, NULL, 0);
         if (packet == NULL)
             break;
         rsp->npkts_discard.cnt++;
