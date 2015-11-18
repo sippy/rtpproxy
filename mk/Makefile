@@ -70,7 +70,11 @@ SRCS_BASE=	main.c rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_sessinfo.c rtpp_sessinfo.h rtpp_weakref.c rtpp_weakref.h \
 	rtpp_proc_servers.h rtpp_proc_servers.c rtpp_stream.h rtpp_stream.c \
 	rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
-	rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h
+	rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h \
+	rtpp_ttl.c rtpp_ttl.h rtpp_proc_ttl.h rtpp_proc_ttl.c rtpp_pipe.h \
+	rtpp_pipe.c rtpp_pcount.h rtpp_pcount.c rtpp_debug.h rtpp_monotime.h \
+	rtpp_monotime.c
+
 SRCS+=	${SRCS_BASE}
 
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
@@ -81,7 +85,9 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
   rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
   rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h rtpp_socket_fin.c \
-  rtpp_socket_fin.h
+  rtpp_socket_fin.h rtpp_record_fin.c rtpp_record_fin.h rtpp_ttl_fin.c \
+  rtpp_ttl_fin.h rtpp_pipe_fin.c rtpp_pipe_fin.h rtpp_pcount_fin.c \
+  rtpp_pcount_fin.h
 
 SRCS+=		${SRCS_AUTOGEN}
 CLEANFILES+=	${SRCS_AUTOGEN}
@@ -162,5 +168,25 @@ rtpp_socket_fin.c: $(GENFINCODE) rtpp_socket.h
 	$(GENFINCODE) rtpp_socket.h rtpp_socket_fin.h rtpp_socket_fin.c
 
 rtpp_socket_fin.h: rtpp_socket_fin.c
+
+rtpp_record_fin.c: $(GENFINCODE) rtpp_record.h
+	$(GENFINCODE) rtpp_record.h rtpp_record_fin.h rtpp_record_fin.c
+
+rtpp_record_fin.h: rtpp_record_fin.c
+
+rtpp_ttl_fin.c: $(GENFINCODE) rtpp_ttl.h
+	$(GENFINCODE) rtpp_ttl.h rtpp_ttl_fin.h rtpp_ttl_fin.c
+
+rtpp_ttl_fin.h: rtpp_ttl_fin.c
+
+rtpp_pipe_fin.c: $(GENFINCODE) rtpp_pipe.h
+	$(GENFINCODE) rtpp_pipe.h rtpp_pipe_fin.h rtpp_pipe_fin.c
+
+rtpp_pipe_fin.h: rtpp_pipe_fin.c
+
+rtpp_pcount_fin.c: $(GENFINCODE) rtpp_pcount.h
+	$(GENFINCODE) rtpp_pcount.h rtpp_pcount_fin.h rtpp_pcount_fin.c
+
+rtpp_pcount_fin.h: rtpp_pcount_fin.c
 
 .include <bsd.prog.mk>
