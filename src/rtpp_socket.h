@@ -37,10 +37,12 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_bind, int, const struct sockaddr *,
 DEFINE_METHOD(rtpp_socket, rtpp_socket_settos, int, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_setrbuf, int, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_setnonblock, int);
+DEFINE_METHOD(rtpp_socket, rtpp_socket_settimestamp, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_send_pkt, int,
   struct sthread_args *, const struct sockaddr *, int, struct rtp_packet *,
   struct rtpp_log *);
-DEFINE_METHOD(rtpp_socket, rtpp_socket_rtp_recv, struct rtp_packet *);
+DEFINE_METHOD(rtpp_socket, rtpp_socket_rtp_recv, struct rtp_packet *,
+  double, struct sockaddr *, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_getfd, int);
 
 struct rtpp_socket {
@@ -50,6 +52,7 @@ struct rtpp_socket {
     METHOD_ENTRY(rtpp_socket_settos, settos);
     METHOD_ENTRY(rtpp_socket_setrbuf, setrbuf);
     METHOD_ENTRY(rtpp_socket_setnonblock, setnonblock);
+    METHOD_ENTRY(rtpp_socket_settimestamp, settimestamp);
     METHOD_ENTRY(rtpp_socket_send_pkt, send_pkt);
     METHOD_ENTRY(rtpp_socket_rtp_recv, rtp_recv);
     METHOD_ENTRY(rtpp_socket_getfd, getfd);

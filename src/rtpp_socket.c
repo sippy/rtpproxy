@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "rtpp_types.h"
@@ -40,6 +41,9 @@
 #include "rtpp_socket_fin.h"
 #include "rtpp_util.h"
 #include "rtpp_netio_async.h"
+#include "rtpp_monotime.h"
+#include "rtpp_time.h"
+#include "rtpp_network.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 
@@ -55,9 +59,13 @@ static int rtpp_socket_bind(struct rtpp_socket *, const struct sockaddr *,
 static int rtpp_socket_settos(struct rtpp_socket *, int);
 static int rtpp_socket_setrbuf(struct rtpp_socket *, int);
 static int rtpp_socket_setnonblock(struct rtpp_socket *);
+static int rtpp_socket_settimestamp(struct rtpp_socket *);
 static int rtpp_socket_send_pkt(struct rtpp_socket *, struct sthread_args *,
   const struct sockaddr *, int, struct rtp_packet *, struct rtpp_log *);
-static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *);
+static struct rtp_packet * rtpp_socket_rtp_recv_simple(struct rtpp_socket *,
+  double, struct sockaddr *, int);
+static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *, double,
+  struct sockaddr *, int);
 static int rtpp_socket_getfd(struct rtpp_socket *);
 
 #define PUB2PVT(pubp) \
@@ -85,8 +93,9 @@ rtpp_socket_ctor(int domain, int type)
     pvt->pub.settos = &rtpp_socket_settos;
     pvt->pub.setrbuf = &rtpp_socket_setrbuf;
     pvt->pub.setnonblock = &rtpp_socket_setnonblock;
+    pvt->pub.settimestamp = &rtpp_socket_settimestamp;
     pvt->pub.send_pkt = &rtpp_socket_send_pkt;
-    pvt->pub.rtp_recv = &rtpp_socket_rtp_recv;
+    pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_simple;
     pvt->pub.getfd = &rtpp_socket_getfd;
     return (&pvt->pub);
 e2:
@@ -147,6 +156,23 @@ rtpp_socket_setnonblock(struct rtpp_socket *self)
     return (fcntl(pvt->fd, F_SETFL, flags | O_NONBLOCK));
 }
 
+static int
+rtpp_socket_settimestamp(struct rtpp_socket *self)
+{
+    struct rtpp_socket_priv *pvt;
+    int sval, rval;
+
+    pvt = PUB2PVT(self);
+    sval = 1;
+    rval = setsockopt(pvt->fd, SOL_SOCKET, SO_TIMESTAMP, &sval,
+      sizeof(sval));
+    if (rval != 0) {
+        return (rval);
+    }
+    pvt->pub.rtp_recv = &rtpp_socket_rtp_recv;
+    return (0);
+}
+
 static int 
 rtpp_socket_send_pkt(struct rtpp_socket *self, struct sthread_args *str,
   const struct sockaddr *daddr, int addrlen, struct rtp_packet *pkt,
@@ -160,12 +186,75 @@ rtpp_socket_send_pkt(struct rtpp_socket *self, struct sthread_args *str,
 }
 
 static struct rtp_packet *
-rtpp_socket_rtp_recv(struct rtpp_socket *self)
+rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, double dtime,
+  struct sockaddr *laddr, int port)
 {
     struct rtpp_socket_priv *pvt;
+    struct rtp_packet *packet;
+
+    packet = rtp_packet_alloc();
+    if (packet == NULL) {
+        return NULL;
+    }
 
     pvt = PUB2PVT(self);
-    return (rtp_recv(pvt->fd));
+
+    packet->rlen = sizeof(packet->raddr);
+    packet->size = recvfrom(pvt->fd, packet->data.buf, sizeof(packet->data.buf), 0, 
+      sstosa(&packet->raddr), &packet->rlen);
+
+    if (packet->size == -1) {
+        rtp_packet_free(packet);
+        return (NULL);
+    }
+    packet->laddr = laddr;
+    packet->lport = port;
+    packet->rtime = dtime;
+
+    return (packet);
+}
+
+static struct rtp_packet *
+rtpp_socket_rtp_recv(struct rtpp_socket *self, double dtime,
+  struct sockaddr *laddr, int port)
+{
+    struct rtpp_socket_priv *pvt;
+    struct rtp_packet *packet;
+    struct timeval rtime;
+    socklen_t llen;
+
+    packet = rtp_packet_alloc();
+    if (packet == NULL) {
+        return NULL;
+    }
+
+    pvt = PUB2PVT(self);
+
+    packet->rlen = sizeof(packet->raddr);
+    llen = sizeof(packet->_laddr);
+    memset(&rtime, '\0', sizeof(rtime));
+    packet->size = recvfromto(pvt->fd, packet->data.buf, sizeof(packet->data.buf),
+      sstosa(&packet->raddr), &packet->rlen, sstosa(&packet->_laddr), &llen,
+      &rtime);
+
+    if (packet->size == -1) {
+        rtp_packet_free(packet);
+        return (NULL);
+    }
+    if (llen > 0) {
+        packet->laddr = sstosa(&packet->_laddr);
+        packet->lport = getport(packet->laddr);
+    } else {
+        packet->laddr = laddr;
+        packet->lport = port;
+    }
+    if (!timevaliszero(&rtime)) {
+        packet->rtime = rtimeval2dtime(&rtime);
+    } else {
+        packet->rtime = dtime;
+    }
+
+    return (packet);
 }
 
 static int

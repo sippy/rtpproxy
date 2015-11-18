@@ -38,11 +38,12 @@ struct rtp_packet {
     size_t      size;
 
     struct sockaddr_storage raddr;
+    struct sockaddr_storage _laddr;
     struct sockaddr *laddr;
+    int         lport;
 
     socklen_t   rlen;
     double      rtime;
-    int         rport;
 
     struct rtp_packet *next;
     struct rtp_packet *prev;
@@ -62,8 +63,6 @@ struct rtp_packet {
 
     struct rtpp_wi wi;
 };
-
-struct rtp_packet *rtp_recv(int);
 
 struct rtp_packet *rtp_packet_alloc();
 void rtp_packet_free(struct rtp_packet *);

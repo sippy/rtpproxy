@@ -27,7 +27,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <assert.h>
 #include <stddef.h>
@@ -35,7 +35,6 @@
 #include "rtp.h"
 #include "rtp_info.h"
 #include "rtp_packet.h"
-#include "rtpp_network.h"
 #include "rtpp_util.h"
 
 struct rtp_packet_full;
@@ -391,28 +390,6 @@ rtp_packet_free(struct rtp_packet *pkt)
 {
 
     free(pkt);
-}
-
-struct rtp_packet *
-rtp_recv(int fd)
-{
-    struct rtp_packet *pkt;
-
-    pkt = rtp_packet_alloc();
-
-    if (pkt == NULL)
-        return NULL;
-
-    pkt->rlen = sizeof(pkt->raddr);
-    pkt->size = recvfrom(fd, pkt->data.buf, sizeof(pkt->data.buf), 0, 
-      sstosa(&pkt->raddr), &pkt->rlen);
-
-    if (pkt->size == -1) {
-	rtp_packet_free(pkt);
-	return NULL;
-    }
-
-    return pkt;
 }
 
 void 
