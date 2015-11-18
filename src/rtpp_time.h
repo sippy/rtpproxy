@@ -45,9 +45,13 @@
 # define RTPP_CLOCK_REAL CLOCK_REALTIME
 #endif
 
+#define timespec2dtime(s) ((double)((s)->tv_sec) + \
+  (double)((s)->tv_nsec) / 1000000000.0)
+#define ts2dtime(ts_sec, ts_usec) ((double)(ts_sec) + \
+  (double)(ts_usec) / 1000000.0)
+
 /* Function prototypes */
 double getdtime(void);
-double ts2dtime(uint32_t, uint32_t);
 void dtime2ts(double, uint32_t *, uint32_t *);
 
 #endif
