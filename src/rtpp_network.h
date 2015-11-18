@@ -32,6 +32,7 @@
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 
 struct cfg;
+struct timeval;
 
 /* Function prototypes */
 int ishostseq(struct sockaddr *, struct sockaddr *);
