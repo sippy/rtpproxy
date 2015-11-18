@@ -107,7 +107,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_extractaudio_OBJECTS = main.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_loader.$(OBJEXT) rtp.$(OBJEXT) rtp_analyze.$(OBJEXT) \
 	rtpp_util.$(OBJEXT) rtpp_time.$(OBJEXT) \
-	rtpp_log_stand.$(OBJEXT) g729_compat.$(OBJEXT)
+	rtpp_log_stand.$(OBJEXT) g729_compat.$(OBJEXT) \
+	rtpp_network.$(OBJEXT) rtpp_monotime.$(OBJEXT)
 extractaudio_OBJECTS = $(am_extractaudio_OBJECTS)
 extractaudio_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -305,7 +306,8 @@ MAINSRCDIR = $(top_srcdir)/src
 extractaudio_SOURCES = main.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c \
   ${MAINSRCDIR}/rtp_analyze.c ${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
   ${MAINSRCDIR}/rtpp_log_stand.c decoder.h format_au.h g711.h rtpp_loader.h \
-  session.h g729_compat.c g729_compat.h
+  session.h g729_compat.c g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
+  ${MAINSRCDIR}/rtpp_monotime.c
 
 extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
 all: all-am
@@ -408,6 +410,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp_analyze.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_loader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_log_stand.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_monotime.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_network.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_util.Po@am__quote@
 
@@ -501,6 +505,34 @@ rtpp_log_stand.obj: ${MAINSRCDIR}/rtpp_log_stand.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_log_stand.c' object='rtpp_log_stand.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_log_stand.obj `if test -f '${MAINSRCDIR}/rtpp_log_stand.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_log_stand.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_log_stand.c'; fi`
+
+rtpp_network.o: ${MAINSRCDIR}/rtpp_network.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_network.o -MD -MP -MF $(DEPDIR)/rtpp_network.Tpo -c -o rtpp_network.o `test -f '${MAINSRCDIR}/rtpp_network.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_network.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_network.Tpo $(DEPDIR)/rtpp_network.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_network.c' object='rtpp_network.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_network.o `test -f '${MAINSRCDIR}/rtpp_network.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_network.c
+
+rtpp_network.obj: ${MAINSRCDIR}/rtpp_network.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_network.obj -MD -MP -MF $(DEPDIR)/rtpp_network.Tpo -c -o rtpp_network.obj `if test -f '${MAINSRCDIR}/rtpp_network.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_network.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_network.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_network.Tpo $(DEPDIR)/rtpp_network.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_network.c' object='rtpp_network.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_network.obj `if test -f '${MAINSRCDIR}/rtpp_network.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_network.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_network.c'; fi`
+
+rtpp_monotime.o: ${MAINSRCDIR}/rtpp_monotime.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_monotime.o -MD -MP -MF $(DEPDIR)/rtpp_monotime.Tpo -c -o rtpp_monotime.o `test -f '${MAINSRCDIR}/rtpp_monotime.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_monotime.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_monotime.Tpo $(DEPDIR)/rtpp_monotime.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_monotime.c' object='rtpp_monotime.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_monotime.o `test -f '${MAINSRCDIR}/rtpp_monotime.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_monotime.c
+
+rtpp_monotime.obj: ${MAINSRCDIR}/rtpp_monotime.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_monotime.obj -MD -MP -MF $(DEPDIR)/rtpp_monotime.Tpo -c -o rtpp_monotime.obj `if test -f '${MAINSRCDIR}/rtpp_monotime.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_monotime.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_monotime.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_monotime.Tpo $(DEPDIR)/rtpp_monotime.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_monotime.c' object='rtpp_monotime.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_monotime.obj `if test -f '${MAINSRCDIR}/rtpp_monotime.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_monotime.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_monotime.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
