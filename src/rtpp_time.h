@@ -45,13 +45,23 @@
 # define RTPP_CLOCK_REAL CLOCK_REALTIME
 #endif
 
-#define timespec2dtime(s) ((double)((s)->tv_sec) + \
-  (double)((s)->tv_nsec) / 1000000000.0)
+#define SEC(x)   ((x)->tv_sec)
+#define NSEC(x)  ((x)->tv_nsec)
+#define NSEC_MAX 1000000000L
+#define USEC(x)  ((x)->tv_usec)
+
+#define timespeciszero(t)                                          \
+    (SEC(t) == 0 && NSEC(t) == 0)
+#define timevaliszero(v)                                           \
+    (SEC(v) == 0 && USEC(v) == 0)
+
+#define timespec2dtime(s) ((double)SEC(s) + \
+  (double)NSEC(s) / 1000000000.0)
 #define ts2dtime(ts_sec, ts_usec) ((double)(ts_sec) + \
   (double)(ts_usec) / 1000000.0)
 
 /* Function prototypes */
 double getdtime(void);
-void dtime2ts(double, uint32_t *, uint32_t *);
+void dtime2mtimespec(double, struct timespec *);
 
 #endif

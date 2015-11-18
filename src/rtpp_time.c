@@ -44,9 +44,9 @@ getdtime(void)
 }
 
 void
-dtime2ts(double dtime, uint32_t *ts_sec, uint32_t *ts_usec)
+dtime2mtimespec(double dtime, struct timespec *mtime)
 {
 
-    *ts_sec = trunc(dtime);
-    *ts_usec = round(1000000.0 * (dtime - ((double)*ts_sec)));
+    SEC(mtime) = trunc(dtime);
+    NSEC(mtime) = round((double)NSEC_MAX * (dtime - (double)SEC(mtime)));
 }
