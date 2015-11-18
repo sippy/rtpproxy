@@ -50,6 +50,8 @@ struct sockaddr *host2bindaddr(struct cfg *, const char *, int, const char **);
 int local4remote(struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, char **, char **, int *);
 int setbindhost(struct sockaddr *, int, const char *, const char *);
+ssize_t recvfromto(int, void *, size_t, struct sockaddr *,
+  socklen_t *, struct sockaddr *, socklen_t *, struct timeval *);
 
 /* Some handy/compat macros */
 #if !defined(AF_LOCAL)
