@@ -152,6 +152,7 @@ create_twinlistener(struct rtpp_cfg_stable *cf, struct sockaddr *ia, int port,
 	if (CALL_METHOD(fds[i], setrbuf, so_rcvbuf) == -1)
 	    RTPP_ELOG(cf->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
         CALL_METHOD(fds[i], setnonblock);
+        CALL_METHOD(fds[i], settimestamp);
     }
     return 0;
 
