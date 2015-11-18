@@ -94,7 +94,7 @@ rtpp_socket_fin.h: rtpp_socket_fin.c
 rtpp_record_fin.c: $(GENFINCODE) rtpp_record.h
 	$(GENFINCODE) rtpp_record.h rtpp_record_fin.h rtpp_record_fin.c
 
-rtpp_socket_fin.h: rtpp_socket_fin.c
+rtpp_record_fin.h: rtpp_record_fin.c
 
 rtpp_ttl_fin.c: $(GENFINCODE) rtpp_ttl.h
 	$(GENFINCODE) rtpp_ttl.h rtpp_ttl_fin.h rtpp_ttl_fin.c
