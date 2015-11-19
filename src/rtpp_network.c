@@ -462,7 +462,6 @@ recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
 #endif
         if ((cmsg->cmsg_level == SOL_SOCKET)
           && (cmsg->cmsg_type == SCM_TIMESTAMP)) {
-            {int b=0; while (b);}
             memcpy(timeptr, CMSG_DATA(cmsg), sizeof(struct timeval));
         }
     }
