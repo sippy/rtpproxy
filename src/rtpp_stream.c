@@ -26,7 +26,6 @@
  *
  */
 
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -39,7 +38,6 @@
 
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtp.h"

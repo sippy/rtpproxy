@@ -29,9 +29,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <assert.h>
 #include <poll.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,7 +44,6 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
-#include "rtpp_notify.h"
 #include "rtpp_proc.h"
 #include "rtpp_record.h"
 #include "rtpp_refcnt.h"
@@ -55,7 +52,6 @@
 #include "rtpp_stream.h"
 #include "rtpp_pcount.h"
 #include "rtpp_session.h"
-#include "rtpp_stats.h"
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
 #include "rtpp_ttl.h"

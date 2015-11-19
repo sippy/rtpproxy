@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
@@ -45,7 +44,6 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
-#include "rtpp_hash_table.h"
 #include "rtpp_command.h"
 #include "rtpp_command_copy.h"
 #include "rtpp_command_private.h"

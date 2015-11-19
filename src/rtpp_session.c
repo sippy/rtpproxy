@@ -29,13 +29,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <assert.h>
-#include <poll.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "rtpp_types.h"
 #include "rtpp_log.h"
@@ -47,19 +44,15 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_math.h"
 #include "rtpp_pthread.h"
-#include "rtpp_record.h"
 #include "rtpp_pipe.h"
-#include "rtpp_pcount.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
-#include "rtpp_socket.h"
 #include "rtpp_util.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
 #include "rtpp_ttl.h"
 #include "rtpp_refcnt.h"
-#include "rtpp_weakref.h"
 
 struct rtpp_session_priv
 {

@@ -33,10 +33,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,7 +61,6 @@
 #include "rtpp_pipe.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
-#include "rtpp_sessinfo.h"
 #include "rtpp_socket.h"
 #include "rtpp_util.h"
 #include "rtpp_stats.h"

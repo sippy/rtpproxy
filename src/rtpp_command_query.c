@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_analyzer.h"
@@ -40,7 +39,6 @@
 #include "rtpp_command_private.h"
 #include "rtpp_pipe.h"
 #include "rtpp_stream.h"
-#include "rtpp_session.h"
 #include "rtpp_util.h"
 #include "rtpp_command_query.h"
 
