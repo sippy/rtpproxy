@@ -31,7 +31,7 @@
 
 #if defined(RTPP_DEBUG)
 /* Supported levels 0, 1, 2. 1 - basic debug & debug when I/O fails, 2 - debug on every packet */
-#define RTPP_DEBUG_netio      2
+#define RTPP_DEBUG_netio      1
 /* Supported levels 0, 1. */
 #define RTPP_DEBUG_timers     0
 /* Catch fatal signals and try to pring backtrace */
