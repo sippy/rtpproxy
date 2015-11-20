@@ -50,3 +50,10 @@ dtime2mtimespec(double dtime, struct timespec *mtime)
     SEC(mtime) = trunc(dtime);
     NSEC(mtime) = round((double)NSEC_MAX * (dtime - (double)SEC(mtime)));
 }
+
+const char *
+get_mclock_name(void)
+{
+
+    return (RTPP_MCLOCK_NAME);
+}

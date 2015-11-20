@@ -31,18 +31,23 @@
 
 #if defined(CLOCK_UPTIME_PRECISE)
 # define RTPP_CLOCK_MONO CLOCK_UPTIME_PRECISE
+# define RTPP_MCLOCK_NAME "CLOCK_UPTIME_PRECISE"
 #else
 # if defined(CLOCK_BOOTTIME)
 #  define RTPP_CLOCK_MONO CLOCK_BOOTTIME
+#  define RTPP_MCLOCK_NAME "CLOCK_BOOTTIME"
 # else
 #  define RTPP_CLOCK_MONO CLOCK_MONOTONIC
+#  define RTPP_MCLOCK_NAME "CLOCK_MONOTONIC"
 # endif
 #endif
 
 #if defined(CLOCK_REALTIME_PRECISE)
 # define RTPP_CLOCK_REAL CLOCK_REALTIME_PRECISE
+# define RTPP_RCLOCK_NAME "CLOCK_REALTIME_PRECISE"
 #else
 # define RTPP_CLOCK_REAL CLOCK_REALTIME
+# define RTPP_RCLOCK_NAME "CLOCK_REALTIME"
 #endif
 
 #define SEC(x)   ((x)->tv_sec)
@@ -63,5 +68,6 @@
 /* Function prototypes */
 double getdtime(void);
 void dtime2mtimespec(double, struct timespec *);
+const char *get_mclock_name(void);
 
 #endif

@@ -237,7 +237,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:bW:D")) != -1) {
+    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:bW:DC")) != -1) {
 	switch (ch) {
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
@@ -474,6 +474,11 @@ init_config(struct cfg *cf, int argc, char **argv)
 
         case 'D':
            cf->stable->no_chdir = 1;
+           break;
+
+        case 'C':
+           printf("%s\n", get_mclock_name());
+           rtpp_exit();
            break;
 
 	case '?':
