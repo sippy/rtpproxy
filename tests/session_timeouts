@@ -212,7 +212,8 @@ do
         else
           ofile=session_timeouts6.output$((${i} - 2))
         fi
-        cat session_timeouts.qout${i} session_timeouts.rout${i} | ${DIFF} ${ofile} -
+        cat session_timeouts.qout${i} session_timeouts.rout${i} > session_timeouts.fout${i}
+        ${DIFF} ${ofile} session_timeouts.fout${i}
         report "checking rtpp_query.py #${i} stdout"
       done
     fi
