@@ -116,13 +116,15 @@ usage(void)
 static struct cfg *_sig_cf;
 
 static void
-rtpp_exit(void)
+rtpp_exit(int memdeb)
 {
     int ecode;
 
     ecode = 0;
 #ifdef RTPP_CHECK_LEAKS
-    ecode = rtpp_memdeb_dumpstats(_sig_cf) == 0 ? 0 : 1;
+    if (memdeb) {
+        ecode = rtpp_memdeb_dumpstats(_sig_cf) == 0 ? 0 : 1;
+    }
     rtpp_memdeb_releaselog();
 #ifdef RTPP_MEMDEB_STDOUT
     fclose(stdout);
@@ -144,7 +146,7 @@ fatsignal(int sig)
      * Got second signal while already in the fastshutdown mode, something
      * probably jammed, do quick exit right from sighandler.
      */
-    rtpp_exit();
+    rtpp_exit(1);
 }
 
 static void
@@ -343,7 +345,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 		printf("Extension %s: %s\n", proto_caps[i].pc_id,
 		    proto_caps[i].pc_description);
 	    }
-	    rtpp_exit();
+	    rtpp_exit(1);
 	    break;
 
 	case 'r':
@@ -461,7 +463,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'V':
 	    printf("%s\n", RTPP_SW_VERSION);
-	    rtpp_exit();
+	    rtpp_exit(1);
 	    break;
 
         case 'W':
@@ -478,7 +480,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
         case 'C':
            printf("%s\n", get_mclock_name());
-           rtpp_exit();
+           rtpp_exit(0);
            break;
 
 	case '?':
@@ -874,5 +876,5 @@ main(int argc, char **argv)
     sd_notify(0, "STATUS=Exited");
 #endif
 
-    rtpp_exit();
+    rtpp_exit(1);
 }
