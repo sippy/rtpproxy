@@ -78,7 +78,7 @@ geninput() {
   cat session_timeouts.stats.input
 }
 
-RTPP0_ARGS="-d info -T10 -b -n ${RTPP_NOTIFY_SOCK_TCP} -n ${RTPP_NOTIFY_SOCK_WILD} -n ${RTPP_NOTIFY_SOCK_UNIX}"
+RTPP0_ARGS="-d dbug -T10 -b -n ${RTPP_NOTIFY_SOCK_TCP} -n ${RTPP_NOTIFY_SOCK_WILD} -n ${RTPP_NOTIFY_SOCK_UNIX}"
 RTPP1_ARGS="${RTPP0_ARGS} -m 12000 -W5"
 RTPP2_ARGS="${RTPP0_ARGS} -m 13000"
 RTPP3_ARGS="-6 ::1 ${RTPP1_ARGS}"
