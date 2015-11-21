@@ -114,6 +114,7 @@ do
 
   for socket in ${RTPP_TEST_SOCKETS}
   do
+    setup_tstart
     if [ "${socket}" = "stdio:" ]
     then
       (geninput | ${RTPPROXY} -f -s stdio: ${RTPP1_ARGS} > session_timeouts.rout1 2> session_timeouts.rlog1)&

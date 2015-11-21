@@ -19,14 +19,18 @@ RTPPROXY=${TOP_BUILDDIR}/src/rtpproxy_debug
 RTPP_QUERY=${TOP_BUILDDIR}/python/rtpp_query.py
 RTPP_NOTYFY_CLIENT=${TOP_BUILDDIR}/python/rtpp_notify_client.py
 
-if [ "${RTPP_LOG_TSTART}" = "" ]
-then
+setup_tstart() {
   RTPP_MCLOCK_NAME="`${RTPPROXY} -C 2>/dev/null`"
   RTPP_LOG_TSTART="`python ${PYTHON_DIR}/getmonotime.py -S ${SIPPY_DIR} \
    -C ${RTPP_MCLOCK_NAME}`"
   export RTPP_LOG_TSTART
   RTPP_LOG_TFORM="rel"
   export RTPP_LOG_TFORM
+}
+
+if [ "${RTPP_LOG_TSTART}" = "" ]
+then
+  setup_tstart
 fi
 
 RTPP_NOTIFY_SOCK_UNIX_SHRT="/tmp/rtpp_nc.sock"
