@@ -34,7 +34,8 @@ session_timeouts_EXTRA_DIST = session_timeouts session_timeouts.full.input \
   session_timeouts.stats.input session_timeouts6.output1 session_timeouts6.output2 \
   session_timeouts.tnotify.output
 session_timeouts_CLEANFILES = session_timeouts.rout[1234] session_timeouts.rlog[1234] \
-  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234]
+  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234] \
+  session_timeouts.fout[1234]
 EXTRA_DIST = Makefile.am ${startstop_EXTRA_DIST} ${basic_versions_EXTRA_DIST} \
     ${command_parser_EXTRA_DIST} \
     ringback.sln makeann makeann.output \
