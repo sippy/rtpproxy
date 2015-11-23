@@ -124,7 +124,8 @@ if __name__ == '__main__':
 
     from sippy.Rtp_proxy_client import Rtp_proxy_client
 
-    rc = Rtp_proxy_client(global_config, spath = spath, no_version_check = no_rtpp_version_check)
+    rc = Rtp_proxy_client(global_config, spath = spath, nworkers = 4, \
+      no_version_check = no_rtpp_version_check)
     #commands = ('VF 123456', 'G nsess_created', 'G ncmds_rcvd')
     crun = command_runner(rc, commands, file_in, file_out)
     reactor.run(installSignalHandlers = 1)
