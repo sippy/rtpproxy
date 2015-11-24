@@ -28,6 +28,7 @@ import ctypes.util
 
 CLOCK_REALTIME = 0
 CLOCK_MONOTONIC = 4 # see <linux/time.h> / <include/time.h>
+CLOCK_BOOTTIME = 7 # Linux-specific, see <linux/time.h>
 CLOCK_UPTIME = 5 # FreeBSD-specific. 
 CLOCK_UPTIME_PRECISE = 7 # FreeBSD-specific.
 CLOCK_UPTIME_FAST = 8 # FreeBSD-specific.
