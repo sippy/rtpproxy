@@ -13,8 +13,15 @@
 #include <time.h>
 #include <unistd.h>
 
+struct tconf {
+    int nthreads_max;
+    int nthreads_min;
+    const char *dstaddr;
+    int dstnetpref;
+};
+
 static int
-genrandomdest(const char *dstaddr, int dstnetpref, struct sockaddr_in *sin)
+genrandomdest(struct tconf *cfp, struct sockaddr_in *sin)
 {
     struct in_addr raddr;
     long rnum;
@@ -22,10 +29,10 @@ genrandomdest(const char *dstaddr, int dstnetpref, struct sockaddr_in *sin)
 
     assert(sin->sin_family == AF_INET);
 
-    if (inet_aton(dstaddr, &raddr) == 0) {
+    if (inet_aton(cfp->dstaddr, &raddr) == 0) {
         return (-1);
     }
-    rnum = random() >> dstnetpref;
+    rnum = random() >> cfp->dstnetpref;
     raddr.s_addr |= htonl(rnum);
     do {
         rport = (uint16_t)(random());
@@ -84,7 +91,7 @@ genrandombuf(struct destination *dp, int minlen, int maxlen)
 }
 
 static struct workset *
-generate_workset(int setsize, const char *dstaddr, int dstnetpref)
+generate_workset(int setsize, struct tconf *cfp)
 {
     struct workset *wp;
     struct destination *dp;
@@ -105,7 +112,7 @@ generate_workset(int setsize, const char *dstaddr, int dstnetpref)
         if (dp->s == -1) {
             goto e1;
         }
-        genrandomdest(dstaddr, dstnetpref, &dp->daddr);
+        genrandomdest(cfp, &dp->daddr);
         genrandombuf(dp, 30, 170);
         flags = fcntl(dp->s, F_GETFL);
         fcntl(dp->s, F_SETFL, flags | O_NONBLOCK);
@@ -287,9 +294,8 @@ struct tstats {
     double ploss_rate;
 };
 
-void
-run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref,
-  struct tstats *tsp)
+static void
+run_test(int nthreads, int connect, struct tconf *cfp, struct tstats *tsp)
 {
     int nreps = 120 * 100;
     int npkts = 2000;
@@ -300,7 +306,7 @@ run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref,
     uint64_t nrecvd_total, nsent_total;
 
     for (i = 0; i < nthreads; i++) {
-        wsp[i] = generate_workset(npkts, dstaddr, dstnetpref);
+        wsp[i] = generate_workset(npkts, cfp);
         wsp[i]->nreps = nreps;
         if (connect) {
             connect_workset(wsp[i]);
@@ -311,8 +317,6 @@ run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref,
         pthread_create(&wsp[i]->tid, NULL, (void *(*)(void *))process_workset, wsp[i]);
         pthread_create(&rsp[i]->tid, NULL, (void *(*)(void *))process_recvset, rsp[i]);
     }
-    tsp->total_pps = 0;
-    tsp->total_poll_rate = 0;
     nrecvd_total = 0;
     nsent_total = 0;
     for (i = 0; i < nthreads; i++) {
@@ -338,17 +342,21 @@ run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref,
 int
 main(void)
 {
-    int nthreads_max = 10;
-    int nthreads_min = 1;
+    struct tconf cfg;
     int i, j;
-    const char *dstaddr = "172.16.0.0";
-    int dstnetpref = 12;
     struct tstats tstats;
 
+    memset(&cfg, '\0', sizeof(struct tconf));
+    cfg.nthreads_max = 10;
+    cfg.nthreads_min = 1;
+    cfg.dstaddr = "172.16.0.0";
+    cfg.dstnetpref = 12;
+
     srandomdev();
-    for (i = nthreads_min; i <= nthreads_max; i++) {
+    for (i = cfg.nthreads_min; i <= cfg.nthreads_max; i++) {
         for (j = 0; j <= 1; j++) {
-            run_test(i, j, dstaddr, dstnetpref, &tstats);
+            memset(&tstats, '\0', sizeof(struct tstats));
+            run_test(i, j, &cfg, &tstats);
             printf("nthreads = %d, connected = %d: total PPS = %f, "
               "loss %f%%, poll rate %f\n", i, j, tstats.total_pps,
               tstats.ploss_rate * 100, tstats.total_poll_rate);
