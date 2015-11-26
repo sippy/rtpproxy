@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <assert.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <pthread.h>
 #include <signal.h>
@@ -27,8 +28,8 @@ genrandomdest(const char *dstaddr, int dstnetpref, struct sockaddr_in *sin)
     rnum = random() >> dstnetpref;
     raddr.s_addr |= htonl(rnum);
     do {
-        rport = (uint16_t)random();
-    } while (rport == 0);
+        rport = (uint16_t)(random());
+    } while (rport < 1000);
     sin->sin_addr = raddr;
     sin->sin_port = htons(rport);
     return (0);
@@ -59,6 +60,7 @@ struct recvset
     int ndest;
     uint64_t **nrecvd;
     uint64_t nrecvd_total;
+    uint64_t npolls;
     int done;
     struct pollfd pollset[0];
 };
@@ -87,7 +89,7 @@ generate_workset(int setsize, const char *dstaddr, int dstnetpref)
     struct workset *wp;
     struct destination *dp;
     size_t msize;
-    int i;
+    int i, flags;
 
     msize = sizeof(struct workset) + (setsize * sizeof(struct destination));
     wp = malloc(msize);
@@ -105,6 +107,8 @@ generate_workset(int setsize, const char *dstaddr, int dstnetpref)
         }
         genrandomdest(dstaddr, dstnetpref, &dp->daddr);
         genrandombuf(dp, 30, 170);
+        flags = fcntl(dp->s, F_GETFL);
+        fcntl(dp->s, F_SETFL, flags | O_NONBLOCK);
     }
     return (wp);
 e1:
@@ -202,7 +206,8 @@ process_recvset(struct recvset  *rp)
 
     for (;;) {
         nready = poll(rp->pollset, rp->ndest, 100);
-        if (rp->done != 0) {
+        rp->npolls++;
+        if (rp->done != 0 && nready == 0) {
             break;
         }
         if (nready <= 0) {
@@ -278,6 +283,7 @@ generate_recvset(struct workset *wp)
 
 struct tstats {
     double total_pps;
+    double total_poll_rate;
     double ploss_rate;
 };
 
@@ -290,7 +296,7 @@ run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref,
     struct workset *wsp[32];
     struct recvset *rsp[32];
     int i;
-    double pps;
+    double pps, tduration, poll_rate;
     uint64_t nrecvd_total, nsent_total;
 
     for (i = 0; i < nthreads; i++) {
@@ -306,6 +312,7 @@ run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref,
         pthread_create(&rsp[i]->tid, NULL, (void *(*)(void *))process_recvset, rsp[i]);
     }
     tsp->total_pps = 0;
+    tsp->total_poll_rate = 0;
     nrecvd_total = 0;
     nsent_total = 0;
     for (i = 0; i < nthreads; i++) {
@@ -314,9 +321,12 @@ run_test(int nthreads, int connect, const char *dstaddr, int dstnetpref,
         pthread_join(rsp[i]->tid, NULL);
         nsent_total += wsp[i]->nreps * wsp[i]->ndest;
         pps = wsp[i]->nreps * wsp[i]->ndest;
-        pps /= wsp[i]->etime - wsp[i]->stime;
+        tduration = wsp[i]->etime - wsp[i]->stime;
+        pps /= tduration;
         tsp->total_pps += pps;
         nrecvd_total += rsp[i]->nrecvd_total;
+        poll_rate = ((double)rsp[i]->npolls) / tduration;
+        tsp->total_poll_rate += poll_rate / (double)nthreads;
         release_workset(wsp[i]);
         release_recvset(rsp[i]);
     }
@@ -339,8 +349,9 @@ main(void)
     for (i = nthreads_min; i <= nthreads_max; i++) {
         for (j = 0; j <= 1; j++) {
             run_test(i, j, dstaddr, dstnetpref, &tstats);
-            printf("nthreads = %d, connected = %d: total PPS = %f, loss %f%%\n",
-              i, j, tstats.total_pps, tstats.ploss_rate * 100);
+            printf("nthreads = %d, connected = %d: total PPS = %f, "
+              "loss %f%%, poll rate %f\n", i, j, tstats.total_pps,
+              tstats.ploss_rate * 100, tstats.total_poll_rate);
         }
     }
     exit(0);
