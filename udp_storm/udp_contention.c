@@ -13,11 +13,16 @@
 #include <time.h>
 #include <unistd.h>
 
+#define TEST_KIND_ALL         0
+#define TEST_KIND_CONNECTED   1
+#define TEST_KIND_UNCONNECTED 2
+
 struct tconf {
     int nthreads_max;
     int nthreads_min;
     const char *dstaddr;
     int dstnetpref;
+    int test_kind;
 };
 
 static int
@@ -339,11 +344,18 @@ run_test(int nthreads, int connect, struct tconf *cfp, struct tstats *tsp)
     return;
 }
 
+static void
+usage(void)
+{
+
+    exit(1);
+}
+
 int
-main(void)
+main(int argc, char **argv)
 {
     struct tconf cfg;
-    int i, j;
+    int i, j, ch;
     struct tstats tstats;
 
     memset(&cfg, '\0', sizeof(struct tconf));
@@ -352,9 +364,37 @@ main(void)
     cfg.dstaddr = "172.16.0.0";
     cfg.dstnetpref = 12;
 
+    while ((ch = getopt(argc, argv, "m:M:k:")) != -1) {
+        switch (ch) {
+        case 'm':
+            cfg.nthreads_min = atoi(optarg);
+            break;
+
+        case 'M':
+            cfg.nthreads_max = atoi(optarg);
+            break;
+
+        case 'k':
+            cfg.test_kind = atoi(optarg);
+            break;
+
+        case '?':
+        default:
+            usage();
+        }
+    }
+    argc -= optind;
+    argv += optind;
+
     srandomdev();
     for (i = cfg.nthreads_min; i <= cfg.nthreads_max; i++) {
         for (j = 0; j <= 1; j++) {
+            if (j == 1 && cfg.test_kind == TEST_KIND_UNCONNECTED) {
+                continue;
+            }
+            if (j == 0 && cfg.test_kind == TEST_KIND_CONNECTED) {
+                continue;
+            }
             memset(&tstats, '\0', sizeof(struct tstats));
             run_test(i, j, &cfg, &tstats);
             printf("nthreads = %d, connected = %d: total PPS = %f, "
