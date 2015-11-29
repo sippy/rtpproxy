@@ -83,7 +83,7 @@ controlfd_init_systemd(void)
 static int
 controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
 {
-    int controlfd;
+    int controlfd, reuse;
     struct sockaddr_un *ifsun;
 
     unlink(csp->cmd_sock);
@@ -97,8 +97,8 @@ controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     controlfd = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (controlfd == -1)
         err(1, "can't create socket");
-    setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &controlfd,
-      sizeof controlfd);
+    reuse = 1;
+    setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
     if (bind(controlfd, sstosa(ifsun), sizeof(struct sockaddr_un)) < 0)
         err(1, "can't bind to a socket: %s", csp->cmd_sock);
     if ((cf->stable->run_uname != NULL || cf->stable->run_gname != NULL) &&
