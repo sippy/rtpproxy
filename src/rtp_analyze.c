@@ -47,6 +47,13 @@ rtp_ts2dtime(uint32_t ts)
     return ((double)ts) / ((double)8000);
 }
 
+static uint64_t
+rtp_dtime2time_ts64(double dtime)
+{
+
+    return (uint64_t)(dtime * 8000.0);
+}
+
 /* rlog can be null in this context, when compiled for the extractaudio context */
 #define LOGD_IF_NOT_NULL(log, args...) \
     if ((log) != NULL) { \
@@ -57,6 +64,54 @@ rtp_ts2dtime(uint32_t ts)
         RTPP_LOG((log), RTPP_LOG_INFO, ## args); \
     }
 
+static void
+update_jitter_stats(struct rtpp_session_stat_jitter *jp,
+  struct rtp_info *rinfo, double rtime)
+{
+    int64_t dval, rtime_ts_delta;
+    uint64_t rtime_ts, wrcorr;
+
+    rtime_ts = rtp_dtime2time_ts64(rtime);
+    if (jp->prev_rtime_ts != 0) {
+        rtime_ts_delta = jp->prev_rtime_ts - rtime_ts;
+        if (jp->prev_ts > rinfo->ts) {
+            if ((jp->prev_ts - rinfo->ts) > (1 << 31)) {
+                /* Normal case, timestamp wrap */
+                wrcorr = (uint64_t)1 << 32;
+            } else if (rtime_ts_delta != 0 && (jp->prev_ts - rinfo->ts) >
+              ABS(rtime_ts_delta) * 10) {
+                /* Timestamp reset */
+                jp->ts_rcount++;
+                goto saveandexit;
+            } else {
+                wrcorr = 0;
+            }
+        } else {
+            if (rtime_ts_delta != 0 && (rinfo->ts - jp->prev_ts) >
+              ABS(rtime_ts_delta) * 1024) {
+                /* Timestamp jump */
+                jp->ts_jcount++;
+                goto saveandexit;
+            }
+            wrcorr = 0;
+        }
+        dval = (rtime_ts - ((uint64_t)rinfo->ts + wrcorr)) -
+          (jp->prev_rtime_ts - jp->prev_ts);
+        jp->jval = jp->jval + (double)(ABS(dval) - jp->jval) / 16.0;
+        if (jp->jval > jp->jmax) {
+            jp->jmax = jp->jval;
+        }
+        jp->jtotal += jp->jval;
+    }
+    fprintf(stderr, "0x%.8X,%lld,%llu,%u,%f\n", rinfo->ssrc, jp->pcount,
+      rtime_ts, rinfo->ts, jp->jval);
+    jp->pcount++;
+saveandexit:
+    jp->prev_rtime_ts = rtime_ts;
+    jp->prev_ts = rinfo->ts;
+}
+
+
 enum update_rtpp_stats_rval
 update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr_t *header,
   struct rtp_info *rinfo, double rtime)
@@ -65,6 +120,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
     uint16_t idx;
     uint32_t mask;
 
+    update_jitter_stats(&stat->jitter, rinfo, rtime);
     seq = rinfo->seq;
     if (stat->ssrc_changes == 0) {
         assert(stat->last.pcount == 0);

@@ -31,6 +31,17 @@
 
 struct rtpp_log;
 
+struct rtpp_session_stat_jitter {
+    uint64_t prev_rtime_ts;
+    uint32_t prev_ts;
+    double jval;
+    double jmax;
+    double jtotal;
+    long long pcount;
+    long long ts_rcount;
+    long long ts_jcount;
+};
+
 struct rtpp_session_stat_last {
     long long pcount;
     uint32_t min_seq;
@@ -52,6 +63,7 @@ struct rtpp_session_stat {
     uint32_t desync_count;
     uint32_t seq_res_count;
     struct rtpp_session_stat_last last;
+    struct rtpp_session_stat_jitter jitter;
 };
 
 enum update_rtpp_stats_rval {UPDATE_OK = 0, UPDATE_SSRC_CHG = 1, UPDATE_ERR = -1};

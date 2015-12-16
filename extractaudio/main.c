@@ -116,6 +116,9 @@ load_session(const char *path, struct channels *channels, enum origin origin)
       (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc, (unsigned int)stat.last.duplicates);
     printf("ssrc_changes=%u, psent=%u, precvd=%u, plost=%d\n", stat.ssrc_changes, stat.psent, stat.precvd,
       stat.psent - stat.precvd);
+    printf("last_jitter=%f,average_jitter=%f,max_jitter=%f\n",
+      stat.jitter.jval,stat.jitter.jtotal / (double)(stat.jitter.pcount - 1),
+      stat.jitter.jmax);
 
     loader->destroy(loader);
 
