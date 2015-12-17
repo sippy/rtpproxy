@@ -33,6 +33,7 @@
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_ringbuf.h"
+#include "rtpp_ringbuf_fin.h"
 #include "rtpp_util.h"
 
 struct rtpp_ringbuf_priv
@@ -88,6 +89,7 @@ static void
 rtpp_ringbuf_dtor(struct rtpp_ringbuf_priv *pvt)
 {
 
+    rtpp_ringbuf_fin(&(pvt->pub));
     free(pvt->elements);
     free(pvt);
 }
