@@ -107,7 +107,7 @@ load_session(const char *path, struct channels *channels, enum origin origin)
     if (loader == NULL)
         return -1;
 
-    memset(&stat, '\0', sizeof(stat));
+    rtpp_stats_init(&stat);
     pcount = loader->load(loader, channels, &stat, origin);
 
     update_rtpp_totals(&stat, &stat);
@@ -121,6 +121,7 @@ load_session(const char *path, struct channels *channels, enum origin origin)
       stat.jitter.jmax);
 
     loader->destroy(loader);
+    rtpp_stats_destroy(&stat);
 
     return pcount;
 }
