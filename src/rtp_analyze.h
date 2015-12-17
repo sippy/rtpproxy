@@ -38,8 +38,13 @@ struct rtpp_session_stat_jitter {
     double jmax;
     double jtotal;
     long long pcount;
+#if 0
     long long ts_rcount;
     long long ts_jcount;
+#endif
+    long long ts_dcount;
+    long long seq_rcount;
+    struct rtpp_ringbuf *ts_dedup;
 };
 
 struct rtpp_session_stat_last {
@@ -68,6 +73,8 @@ struct rtpp_session_stat {
 
 enum update_rtpp_stats_rval {UPDATE_OK = 0, UPDATE_SSRC_CHG = 1, UPDATE_ERR = -1};
 
+int rtpp_stats_init(struct rtpp_session_stat *);
+void rtpp_stats_destroy(struct rtpp_session_stat *);
 enum update_rtpp_stats_rval update_rtpp_stats(struct rtpp_log *,
   struct rtpp_session_stat *, rtp_hdr_t *, struct rtp_info *, double);
 void update_rtpp_totals(struct rtpp_session_stat *, struct rtpp_session_stat *);
