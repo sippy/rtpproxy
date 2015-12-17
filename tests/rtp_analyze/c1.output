@@ -1,0 +1,3 @@
+pcount=1192, min_seq=152, max_seq=1343, seq_offset=0, ssrc=0x00000000, duplicates=0
+ssrc_changes=1, psent=1192, precvd=1192, plost=0
+last_jitter=0.195235,average_jitter=0.383771,max_jitter=0.708600

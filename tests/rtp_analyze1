@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# checksum tests to verify that rtp_analyze routines work correctly
+
+. $(dirname $0)/functions
+
+SNAMES="p12 sess6 p23 c1 weird dups lost dups1"
+
+for sname in ${SNAMES}
+do
+  ${EXTRACTAUDIO} -s rtp_analyze/${sname} rtp_analyze_${sname}.wav > rtp_analyze_${sname}.tout 2>rtp_analyze_${sname}.tlog
+  ${DIFF} rtp_analyze/${sname}.output rtp_analyze_${sname}.tout
+  report "checking stats for the ${sname}"
+done
