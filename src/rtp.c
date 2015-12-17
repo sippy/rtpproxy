@@ -37,6 +37,31 @@
 #include "rtp_packet.h"
 #include "rtpp_util.h"
 
+#define RTP_PROFILE_AUDIO(s, nc) {.ts_rate = (s), .sample_rate = (s), \
+  .pt_kind = RTP_PTK_AUDIO, .nchannels = (nc)}
+
+const struct rtp_profile rtp_profiles[128] = {
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_PCMU */
+    {.pt_kind = RTP_PTK_RES},    /* Reserved */
+    {.pt_kind = RTP_PTK_RES},    /* Reserved */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_GSM */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_G723 */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_DVI4_8000 */
+    RTP_PROFILE_AUDIO(16000, 1), /* RTP_DVI4_16000 */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_LPC */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_PCMA */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_G722 */
+    RTP_PROFILE_AUDIO(44100, 1), /* RTP_L16_MONO */
+    RTP_PROFILE_AUDIO(44100, 2), /* RTP_L16_STEREO */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_QCELP */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_CN */
+    RTP_PROFILE_AUDIO(90000, 2), /* RTP_MPA */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_G728 */
+    RTP_PROFILE_AUDIO(11025, 1), /* RTP_DVI4_11025 */
+    RTP_PROFILE_AUDIO(22050, 1), /* RTP_DVI4_22050 */
+    RTP_PROFILE_AUDIO(8000,  1)  /* RTP_G729 */
+};
+
 struct rtp_packet_full;
 
 struct rtp_packet_priv {
@@ -312,6 +337,7 @@ rtp_packet_parse_raw(unsigned char *buf, size_t size, struct rtp_info *rinfo)
     rinfo->ts = ntohl(header->ts);
     rinfo->seq = ntohs(header->seq);
     rinfo->ssrc = ntohl(header->ssrc);
+    rinfo->rtp_profile = &rtp_profiles[header->pt];
 
     if (rinfo->data_size == 0)
         return RTP_PARSER_OK;
