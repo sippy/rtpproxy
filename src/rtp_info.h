@@ -37,6 +37,7 @@ struct rtp_info {
     uint16_t    seq;
     uint32_t    ssrc;
     int         appendable;
+    const struct rtp_profile *rtp_profile;
 };
 
 #endif
