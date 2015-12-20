@@ -44,7 +44,7 @@
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_socket.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 static void rtpp_sinfo_append(struct rtpp_sessinfo *, struct rtpp_session *,
   int index);
