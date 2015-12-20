@@ -48,7 +48,8 @@ struct rtpp_refcnt_priv
     int pa_flag;
 };
 
-static void rtpp_refcnt_reg(struct rtpp_refcnt *, rtpp_refcnt_dtor_t, void *);
+static void rtpp_refcnt_attach(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
+  void *);
 static void rtpp_refcnt_incref(struct rtpp_refcnt *);
 static void rtpp_refcnt_decref(struct rtpp_refcnt *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt *);
@@ -74,7 +75,7 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     } else {
         pvt->dtor_f = free;
     }
-    pvt->pub.reg = &rtpp_refcnt_reg;
+    pvt->pub.attach = &rtpp_refcnt_attach;
     pvt->pub.incref = &rtpp_refcnt_incref;
     pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
@@ -99,7 +100,7 @@ rtpp_refcnt_ctor_pa(void *pap)
     if (pthread_mutex_init(&pvt->cnt_lock, NULL) != 0) {
         return (NULL);
     }
-    pvt->pub.reg = &rtpp_refcnt_reg;
+    pvt->pub.attach = &rtpp_refcnt_attach;
     pvt->pub.incref = &rtpp_refcnt_incref;
     pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
@@ -110,7 +111,8 @@ rtpp_refcnt_ctor_pa(void *pap)
 }
 
 static void
-rtpp_refcnt_reg(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f, void *data)
+rtpp_refcnt_attach(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f,
+  void *data)
 {
     struct rtpp_refcnt_priv *pvt;
 
