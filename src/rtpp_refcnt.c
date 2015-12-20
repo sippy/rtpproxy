@@ -36,10 +36,16 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_refcnt_fin.h"
 
+/*
+ * Somewhat arbitrary cap on the maximum value of the references. Just here
+ * to catch any runaway situations, i.e. bugs in the code.
+ */
+#define RC_ABS_MAX 2000000
+
 struct rtpp_refcnt_priv
 {
     struct rtpp_refcnt pub;
-    int64_t cnt;
+    int32_t cnt;
     pthread_mutex_t cnt_lock;
     rtpp_refcnt_dtor_t dtor_f;
     void *data;
@@ -128,7 +134,7 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
 
     pvt = (struct rtpp_refcnt_priv *)pub;
     pthread_mutex_lock(&pvt->cnt_lock);
-    assert(pvt->cnt > 0);
+    assert(pvt->cnt > 0 && pvt->cnt < RC_ABS_MAX);
     pvt->cnt += 1;
     pthread_mutex_unlock(&pvt->cnt_lock);
 }
