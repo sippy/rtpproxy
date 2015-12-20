@@ -32,16 +32,15 @@
 #include <string.h>
 
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_pcount.h"
 #include "rtpp_pcount_fin.h"
-#include "rtpp_util.h"
 
 struct rtpp_pcount_priv {
     struct rtpp_pcount pub;
     struct rtpps_pcount cnt;
     pthread_mutex_t lock;
-    void *rco[0];
 };
 
 static void rtpp_pcount_dtor(struct rtpp_pcount_priv *);
@@ -57,28 +56,26 @@ struct rtpp_pcount *
 rtpp_pcount_ctor(void)
 {
     struct rtpp_pcount_priv *pvt;
+    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_pcount_priv) + rtpp_refcnt_osize());
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_pcount_priv), &rcnt);
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->pub.rcnt = rcnt;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
-    }
-    pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
-      (rtpp_refcnt_dtor_t)&rtpp_pcount_dtor);
-    if (pvt->pub.rcnt == NULL) {
-        goto e2;
     }
     pvt->pub.reg_reld = &rtpp_pcount_reg_reld;
     pvt->pub.reg_drop = &rtpp_pcount_reg_drop;
     pvt->pub.reg_ignr = &rtpp_pcount_reg_ignr;
     pvt->pub.get_stats = &rtpp_pcount_get_stats;
+    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcount_dtor,
+      pvt);
     return ((&pvt->pub));
 
-e2:
-    pthread_mutex_destroy(&pvt->lock);
 e1:
+    CALL_METHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

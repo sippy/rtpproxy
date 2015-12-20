@@ -47,6 +47,7 @@
 #include "rtpp_genuid_singlet.h"
 #include "rtp_info.h"
 #include "rtp_packet.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_network.h"
 #include "rtpp_pcount.h"
@@ -57,7 +58,6 @@
 #include "rtpp_server.h"
 #include "rtpp_session.h"
 #include "rtpp_socket.h"
-#include "rtpp_util.h"
 #include "rtpp_weakref.h"
 #include "rtpp_ttl.h"
 
@@ -70,7 +70,6 @@ struct rtpp_stream_priv
     /* Weak reference to the "rtpp_server" (player) */
     uint64_t rtps;
     enum rtpp_stream_side side;
-    void *rco[0];
 };
 
 #define PUB2PVT(pubp) \
@@ -103,19 +102,15 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
   int session_type, uint64_t seuid)
 {
     struct rtpp_stream_priv *pvt;
+    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_stream_priv) +
-      rtpp_refcnt_osize());
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_stream_priv), &rcnt);
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->pub.rcnt = rcnt;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
-    }
-    pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
-      (rtpp_refcnt_dtor_t)&rtpp_stream_dtor);
-    if (pvt->pub.rcnt == NULL) {
-        goto e2;
     }
     if (session_type == SESS_RTP) {
         pvt->pub.analyzer = rtpp_analyzer_ctor(log);
@@ -146,13 +141,14 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     }
     rtpp_gen_uid(&pvt->pub.stuid);
     pvt->pub.seuid = seuid;
+    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_dtor,
+      pvt);
     return (&pvt->pub);
 
 e3:
-    CALL_METHOD(pvt->pub.rcnt, abort);
-e2:
     pthread_mutex_destroy(&pvt->lock);
 e1:
+    CALL_METHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

@@ -36,10 +36,10 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
-#include "rtpp_util.h"
 #include "rtpp_time.h"
 #include "rtpp_timed.h"
 #include "rtpp_timed_fin.h"
@@ -53,7 +53,6 @@ struct rtpp_timed_cf {
     pthread_t thread_id;
     struct rtpp_wi *sigterm;
     int wi_dsize;
-    void *rco[0];
 };
 
 struct rtpp_timed_wi {
@@ -123,11 +122,13 @@ struct rtpp_timed *
 rtpp_timed_ctor(double run_period)
 {
     struct rtpp_timed_cf *rtcp;
+    struct rtpp_refcnt *rcnt;
 
-    rtcp = rtpp_zmalloc(sizeof(struct rtpp_timed_cf) + rtpp_refcnt_osize());
+    rtcp = rtpp_rzmalloc(sizeof(struct rtpp_timed_cf), &rcnt);
     if (rtcp == NULL) {
         goto e0;
     }
+    rtcp->pub.rcnt = rcnt;
     rtcp->q = rtpp_queue_init(0, "rtpp_timed(requests)");
     if (rtcp->q == NULL) {
         goto e1;
@@ -144,11 +145,6 @@ rtpp_timed_ctor(double run_period)
     if (rtcp->sigterm == NULL) {
         goto e3;
     }
-    rtcp->pub.rcnt = rtpp_refcnt_ctor_pa(&rtcp->rco[0], rtcp,
-      (rtpp_refcnt_dtor_t)&rtpp_timed_destroy);
-    if (rtcp->pub.rcnt == NULL) {
-        goto e4;
-    }
     if (pthread_create(&rtcp->thread_id, NULL,
       (void *(*)(void *))&rtpp_timed_queue_run, rtcp) != 0) {
         goto e5;
@@ -159,17 +155,18 @@ rtpp_timed_ctor(double run_period)
     rtcp->pub.wakeup = &rtpp_timed_wakeup;
     rtcp->pub.schedule = &rtpp_timed_schedule;
     rtcp->pub.schedule_rc = &rtpp_timed_schedule_rc;
+    CALL_METHOD(rtcp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_destroy,
+      rtcp);
     return (&rtcp->pub);
 
 e5:
-    CALL_METHOD(rtcp->pub.rcnt, abort);
-e4:
     rtpp_wi_free(rtcp->sigterm);
 e3:
     rtpp_queue_destroy(rtcp->cmd_q);
 e2:
     rtpp_queue_destroy(rtcp->q);
 e1:
+    CALL_METHOD(rtcp->pub.rcnt, decref);
     free(rtcp);
 e0:
     return (NULL);
@@ -205,8 +202,7 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
     }
     memset(wi_data, '\0', rtpp_timed_cf->wi_dsize);
     wi_data->wi = wi;
-    wi_data->pub.rcnt = rtpp_refcnt_ctor_pa(&wi_data->rco[0], wi_data,
-      (rtpp_refcnt_dtor_t)&rtpp_timed_task_dtor);
+    wi_data->pub.rcnt = rtpp_refcnt_ctor_pa(&wi_data->rco[0]);
     if (wi_data->pub.rcnt == NULL) {
         rtpp_wi_free(wi);
         return (NULL);
@@ -227,6 +223,8 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
     }
     CALL_METHOD(wi_data->pub.rcnt, incref);
     rtpp_queue_put_item(wi, rtpp_timed_cf->q);
+    CALL_METHOD(wi_data->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_task_dtor,
+      wi_data);
     return (&(wi_data->pub));
 }
 

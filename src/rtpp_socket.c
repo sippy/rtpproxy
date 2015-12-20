@@ -39,8 +39,8 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_socket.h"
 #include "rtpp_socket_fin.h"
-#include "rtpp_util.h"
 #include "rtpp_netio_async.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_monotime.h"
 #include "rtpp_time.h"
 #include "rtpp_network.h"
@@ -50,7 +50,6 @@
 struct rtpp_socket_priv {
     struct rtpp_socket pub;
     int fd;
-    void *rco[0];
 };
 
 static void rtpp_socket_dtor(struct rtpp_socket_priv *);
@@ -75,19 +74,16 @@ struct rtpp_socket *
 rtpp_socket_ctor(int domain, int type)
 {
     struct rtpp_socket_priv *pvt;
+    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_socket_priv) + rtpp_refcnt_osize());
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_socket_priv), &rcnt);
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->pub.rcnt = rcnt;
     pvt->fd = socket(domain, type, 0);
     if (pvt->fd < 0) {
         goto e1;
-    }
-    pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
-      (rtpp_refcnt_dtor_t)&rtpp_socket_dtor);
-    if (pvt->pub.rcnt == NULL) {
-        goto e2;
     }
     pvt->pub.bind = &rtpp_socket_bind;
     pvt->pub.settos = &rtpp_socket_settos;
@@ -97,10 +93,11 @@ rtpp_socket_ctor(int domain, int type)
     pvt->pub.send_pkt = &rtpp_socket_send_pkt;
     pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_simple;
     pvt->pub.getfd = &rtpp_socket_getfd;
+    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_dtor,
+      pvt);
     return (&pvt->pub);
-e2:
-    close(pvt->fd);
 e1:
+    CALL_METHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

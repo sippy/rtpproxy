@@ -26,6 +26,7 @@
  *
  */
 
+struct cfg;
 struct rtpp_socket;
 struct sockaddr;
 struct rtp_packet;

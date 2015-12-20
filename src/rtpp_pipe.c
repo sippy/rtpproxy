@@ -32,12 +32,12 @@
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_weakref.h"
 #include "rtpp_stream.h"
 #include "rtpp_pipe.h"
-#include "rtpp_util.h"
 #include "rtpp_ttl.h"
 #include "rtpp_math.h"
 
@@ -46,7 +46,6 @@ struct rtpp_pipe_priv
     struct rtpp_pipe pub;
     struct rtpp_weakref_obj *streams_wrt;
     int session_type;
-    void *rco[0];
 };
 
 static void rtpp_pipe_dtor(struct rtpp_pipe_priv *);
@@ -59,12 +58,14 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
   struct rtpp_stats *rtpp_stats, int session_type)
 {
     struct rtpp_pipe_priv *pvt;
+    struct rtpp_refcnt *rcnt;
     int i;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_pipe_priv) + rtpp_refcnt_osize());
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_pipe_priv), &rcnt);
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->pub.rcnt = rcnt;
 
     pvt->streams_wrt = streams_wrt;
 
@@ -82,11 +83,6 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
     }
     pvt->pub.stream[0]->stuid_sendr = pvt->pub.stream[1]->stuid;
     pvt->pub.stream[1]->stuid_sendr = pvt->pub.stream[0]->stuid;
-    pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
-      (rtpp_refcnt_dtor_t)&rtpp_pipe_dtor);
-    if (pvt->pub.rcnt == NULL) {
-        goto e1;
-    }
     pvt->pub.pcount = rtpp_pcount_ctor();
     if (pvt->pub.pcount == NULL) {
         goto e2;
@@ -101,10 +97,10 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
     pvt->pub.get_ttl = &rtpp_pipe_get_ttl;
     pvt->pub.decr_ttl = &rtpp_pipe_decr_ttl;
     CALL_METHOD(log->rcnt, incref);
+    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pipe_dtor, pvt);
     return (&pvt->pub);
 
 e2:
-    CALL_METHOD(pvt->pub.rcnt, abort);
 e1:
     for (i = 0; i < 2; i++) {
         if (pvt->pub.stream[i] != NULL) {
@@ -112,6 +108,7 @@ e1:
             CALL_METHOD(pvt->pub.stream[i]->rcnt, decref);
         }
     }
+    CALL_METHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

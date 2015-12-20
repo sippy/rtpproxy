@@ -36,14 +36,13 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_log_obj_fin.h"
 #include "rtpp_genuid_singlet.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
-#include "rtpp_util.h"
 
 struct rtpp_log_priv
 {
     struct rtpp_log pub;
     rtpp_log_t log;
-    void *rco[0];
 };
 
 #define PUB2PVT(pubp) \
@@ -59,23 +58,20 @@ rtpp_log_ctor(struct rtpp_cfg_stable *cfs, const char *app,
   const char *call_id, int flags)
 {
     struct rtpp_log_priv *pvt;
+    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_log_priv) +
-      rtpp_refcnt_osize());
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_log_priv), &rcnt);
     if (pvt == NULL) {
         return (NULL);
     }
+    pvt->pub.rcnt = rcnt;
     pvt->log = rtpp_log_open(cfs, app, call_id, flags);
-    pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
-      (rtpp_refcnt_dtor_t)&rtpp_log_obj_dtor);
-    if (pvt->pub.rcnt == NULL) {
-        free(pvt);
-        return (NULL);
-    }
     rtpp_gen_uid(&pvt->pub.lguid);
     pvt->pub.setlevel = &rtpp_log_obj_setlevel;
     pvt->pub.write = rtpp_log_obj_write;
     pvt->pub.ewrite = rtpp_log_obj_ewrite;
+    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_log_obj_dtor,
+      pvt);
     return (&pvt->pub);
 }
 

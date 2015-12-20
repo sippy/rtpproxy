@@ -54,6 +54,7 @@
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_monotime.h"
 #include "rtpp_network.h"
 #include "rtpp_record.h"
@@ -62,7 +63,6 @@
 #include "rtpp_session.h"
 #include "rtpp_stream.h"
 #include "rtpp_time.h"
-#include "rtpp_util.h"
 
 enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP, MODE_LOCAL_PCAP}; /* MODE_LOCAL_RTP/MODE_REMOTE_PKT? */
 
@@ -78,7 +78,6 @@ struct rtpp_record_channel {
     int record_single_file;
     const char *proto;
     struct rtpp_log *log;
-    void *rco[0];
 };
 
 static void rtpp_record_write(struct rtpp_record *, struct rtpp_stream *, struct rtp_packet *);
@@ -150,22 +149,19 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
   int record_type)
 {
     struct rtpp_record_channel *rrc;
+    struct rtpp_refcnt *rcnt;
     const char *sdir, *suffix1, *suffix2;
     int rval, remote;
     pcap_hdr_t pcap_hdr;
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0) ? 1 : 0;
 
-    rrc = rtpp_zmalloc(sizeof(*rrc) + rtpp_refcnt_osize());
+    rrc = rtpp_rzmalloc(sizeof(*rrc), &rcnt);
     if (rrc == NULL) {
 	RTPP_ELOG(sp->log, RTPP_LOG_ERR, "can't allocate memory");
 	goto e0;
     }
-    rrc->pub.rcnt = rtpp_refcnt_ctor_pa(&rrc->rco[0], rrc,
-      (rtpp_refcnt_dtor_t)&rtpp_record_close);
-    if (rrc->pub.rcnt == NULL) {
-        goto e1;
-    }
+    rrc->pub.rcnt = rcnt;
 
     rrc->record_single_file = (record_type == RECORD_BOTH) ? 1 : 0;
     if (rrc->record_single_file != 0) {
@@ -181,6 +177,8 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
         if (rval < 0) {
             goto e2;
         }
+        CALL_METHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
+          rrc);
         return (&rrc->pub);
     }
 
@@ -248,14 +246,15 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
 	}
     }
 
+    CALL_METHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
+      rrc);
     return (&rrc->pub);
 
 e3:
     close(rrc->fd);
 e2:
     CALL_METHOD(rrc->log->rcnt, decref);
-    CALL_METHOD(rrc->pub.rcnt, abort);
-e1:
+    CALL_METHOD(rrc->pub.rcnt, decref);
     free(rrc);
 e0:
     return NULL;
