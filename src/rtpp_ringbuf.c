@@ -34,7 +34,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_ringbuf.h"
 #include "rtpp_ringbuf_fin.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 struct rtpp_ringbuf_priv
 {
@@ -44,7 +44,6 @@ struct rtpp_ringbuf_priv
     size_t el_size;
     int c_elem;
     int b_full;
-    void *rco[0];
 };
 
 static void rtpp_ringbuf_dtor(struct rtpp_ringbuf_priv *);
@@ -58,28 +57,26 @@ struct rtpp_ringbuf *
 rtpp_ringbuf_ctor(size_t el_size, int nelements)
 {
     struct rtpp_ringbuf_priv *pvt;
+    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_ringbuf_priv) + rtpp_refcnt_osize());
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_ringbuf_priv), &rcnt);
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->pub.rcnt = rcnt;
     pvt->elements = rtpp_zmalloc(el_size * nelements);
     if (pvt->elements == NULL) {
         goto e1;
     }
     pvt->el_size = el_size;
     pvt->nelements = nelements;
-    pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
-      (rtpp_refcnt_dtor_t)&rtpp_ringbuf_dtor);
-    if (pvt->pub.rcnt == NULL) {
-        goto e2;
-    }
     pvt->pub.push = rtpp_ringbuf_push;
     pvt->pub.locate = rtpp_ringbuf_locate;
+    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ringbuf_dtor,
+      pvt);
     return (&pvt->pub);
-e2:
-    free(pvt->elements);
 e1:
+    CALL_METHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);
