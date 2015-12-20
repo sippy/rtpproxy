@@ -32,9 +32,9 @@
 #include <string.h>
 
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_refcnt_fin.h"
-#include "rtpp_util.h"
 
 struct rtpp_refcnt_priv
 {
@@ -48,9 +48,9 @@ struct rtpp_refcnt_priv
     int pa_flag;
 };
 
+static void rtpp_refcnt_reg(struct rtpp_refcnt *, rtpp_refcnt_dtor_t, void *);
 static void rtpp_refcnt_incref(struct rtpp_refcnt *);
 static void rtpp_refcnt_decref(struct rtpp_refcnt *);
-static void rtpp_refcnt_abort(struct rtpp_refcnt *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt *);
 static void rtpp_refcnt_reg_pd(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *);
@@ -74,11 +74,11 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     } else {
         pvt->dtor_f = free;
     }
+    pvt->pub.reg = &rtpp_refcnt_reg;
     pvt->pub.incref = &rtpp_refcnt_incref;
     pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
     pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
-    pvt->pub.abort = &rtpp_refcnt_abort;
     pvt->cnt = 1;
     return (&pvt->pub);
 }
@@ -91,7 +91,7 @@ rtpp_refcnt_osize(void)
 }
 
 struct rtpp_refcnt *
-rtpp_refcnt_ctor_pa(void *pap, void *data, rtpp_refcnt_dtor_t dtor_f)
+rtpp_refcnt_ctor_pa(void *pap)
 {
     struct rtpp_refcnt_priv *pvt;
 
@@ -99,20 +99,24 @@ rtpp_refcnt_ctor_pa(void *pap, void *data, rtpp_refcnt_dtor_t dtor_f)
     if (pthread_mutex_init(&pvt->cnt_lock, NULL) != 0) {
         return (NULL);
     }
-    pvt->data = data;
-    if (dtor_f != NULL) {
-        pvt->dtor_f = dtor_f;
-    } else {
-        pvt->dtor_f = free;
-    }
+    pvt->pub.reg = &rtpp_refcnt_reg;
     pvt->pub.incref = &rtpp_refcnt_incref;
     pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
     pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
-    pvt->pub.abort = &rtpp_refcnt_abort;
     pvt->cnt = 1;
     pvt->pa_flag = 1;
     return (&pvt->pub);
+}
+
+static void
+rtpp_refcnt_reg(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f, void *data)
+{
+    struct rtpp_refcnt_priv *pvt;
+
+    pvt = (struct rtpp_refcnt_priv *)pub;
+    pvt->data = data;
+    pvt->dtor_f = dtor_f;
 }
 
 static void
@@ -152,7 +156,9 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
             if (pvt->pre_dtor_f != NULL) {
                 pvt->pre_dtor_f(pvt->pd_data);
             }
-            pvt->dtor_f(pvt->data);
+            if (pvt->dtor_f != NULL) {
+                pvt->dtor_f(pvt->data);
+            }
         }
 
         return;
@@ -161,6 +167,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
     pthread_mutex_unlock(&pvt->cnt_lock);
 }
 
+#if 0
 /*
  * Special case destructor, only when we want to abort object without
  * calling any registered callbacks, i.e. when rolling back failed
@@ -181,6 +188,7 @@ rtpp_refcnt_abort(struct rtpp_refcnt *pub)
     }
     return;
 }
+#endif
 
 static void *
 rtpp_refcnt_getdata(struct rtpp_refcnt *pub)
