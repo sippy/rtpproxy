@@ -40,11 +40,11 @@
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_server.h"
 #include "rtpp_server_fin.h"
 #include "rtpp_genuid_singlet.h"
-#include "rtpp_util.h"
 
 /*
  * Minimum length of each RTP packet in ms.
@@ -64,7 +64,6 @@ struct rtpp_server_priv {
     int loop;
     uint64_t dts;
     int ptime;
-    void *rco[0];
 };
 
 #define PUB2PVT(pubp)      ((struct rtpp_server_priv *)((char *)(pubp) - offsetof(struct rtpp_server_priv, pub)))
@@ -79,6 +78,7 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
   int ptime)
 {
     struct rtpp_server_priv *rp;
+    struct rtpp_refcnt *rcnt;
     int fd;
     char path[PATH_MAX + 1];
 
@@ -87,16 +87,11 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     if (fd == -1)
 	goto e0;
 
-    rp = rtpp_zmalloc(sizeof(struct rtpp_server_priv) + rtpp_refcnt_osize());
+    rp = rtpp_rzmalloc(sizeof(struct rtpp_server_priv), &rcnt);
     if (rp == NULL) {
 	goto e1;
     }
-
-    rp->pub.rcnt = rtpp_refcnt_ctor_pa(&rp->rco[0], rp,
-      (rtpp_refcnt_dtor_t)&rtpp_server_dtor);
-    if (rp->pub.rcnt == NULL) {
-        goto e2;
-    }
+    rp->pub.rcnt = rcnt;
 
     rp->btime = dtime;
     rp->dts = 0;
@@ -121,9 +116,8 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     rp->pub.get_seq = &rtpp_server_get_seq;
     rtpp_gen_uid(&rp->pub.sruid);
 
+    CALL_METHOD(rp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_dtor, rp);
     return (&rp->pub);
-e2:
-    free(rp);
 e1:
     close(fd);
 e0:

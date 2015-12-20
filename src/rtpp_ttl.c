@@ -31,17 +31,16 @@
 #include <stdlib.h>
 
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_ttl.h"
 #include "rtpp_ttl_fin.h"
-#include "rtpp_util.h"
 
 struct rtpp_ttl_priv {
     struct rtpp_ttl pub;
     int max_ttl;
     int ttl;
     pthread_mutex_t lock;
-    void *rco[0];
 };
 
 static void rtpp_ttl_dtor(struct rtpp_ttl_priv *);
@@ -57,29 +56,27 @@ struct rtpp_ttl *
 rtpp_ttl_ctor(int max_ttl)
 {
     struct rtpp_ttl_priv *pvt;
+    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_ttl_priv) + rtpp_refcnt_osize());
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_ttl_priv), &rcnt);
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->pub.rcnt = rcnt;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
-    }
-    pvt->pub.rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
-      (rtpp_refcnt_dtor_t)&rtpp_ttl_dtor);
-    if (pvt->pub.rcnt == NULL) {
-        goto e2;
     }
     pvt->pub.reset = &rtpp_ttl_reset;
     pvt->pub.reset_with = &rtpp_ttl_reset_with;
     pvt->pub.get_remaining = &rtpp_ttl_get_remaining;
     pvt->pub.decr = &rtpp_ttl_decr;
     pvt->ttl = pvt->max_ttl = max_ttl;
+    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ttl_dtor,
+      pvt);
     return ((&pvt->pub));
 
-e2:
-    pthread_mutex_destroy(&pvt->lock);
 e1:
+    CALL_METHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

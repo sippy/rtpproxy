@@ -42,12 +42,12 @@
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_math.h"
 #include "rtpp_pthread.h"
 #include "rtpp_pipe.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
-#include "rtpp_util.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
@@ -59,7 +59,6 @@ struct rtpp_session_priv
     struct rtpp_session pub;
     struct rtpp_sessinfo *sessinfo;
     struct rtpp_hash_table *sessions_ht;
-    void *rco[0];
 };
 
 #define PUB2PVT(pubp) \
@@ -107,15 +106,17 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     struct rtpp_session_priv *pvt;
     struct rtpp_session *pub;
     struct rtpp_log *log;
+    struct rtpp_refcnt *rcnt;
     int i;
     char *cp;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_session_priv) + rtpp_refcnt_osize());
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_session_priv), &rcnt);
     if (pvt == NULL) {
         goto e0;
     }
 
     pub = &(pvt->pub);
+    pub->rcnt = rcnt;
     rtpp_gen_uid(&pub->seuid);
 
     log = rtpp_log_ctor(cfs, "rtpproxy", ccap->call_id, 0);
@@ -188,12 +189,6 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
         goto e7;
     }
 
-    pub->rcnt = rtpp_refcnt_ctor_pa(&pvt->rco[0], pvt,
-      (rtpp_refcnt_dtor_t)&rtpp_session_dtor);
-    if (pub->rcnt == NULL) {
-        goto e8;
-    }
-
     pvt->pub.rtpp_stats = cfs->rtpp_stats;
     pvt->pub.log = log;
     pvt->sessinfo = cfs->sessinfo;
@@ -201,10 +196,13 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
 
     CALL_METHOD(cfs->sessinfo, append, pub, 0);
 
+    CALL_METHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor, pvt);
     return (&pvt->pub);
 
+#if 0
 e8:
     CALL_METHOD(cfs->sessions_ht, remove, pub->call_id, pub->hte);
+#endif
 e7:
     free(pub->tag_nomedianum);
 e6:
@@ -218,6 +216,7 @@ e3:
 e2:
     CALL_METHOD(log->rcnt, decref);
 e1:
+    CALL_METHOD(pub->rcnt, decref);
     free(pvt);
 e0:
     return (NULL);
