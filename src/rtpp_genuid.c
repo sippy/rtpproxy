@@ -33,7 +33,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_genuid.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 struct rtpp_genuid_priv {
     struct rtpp_genuid_obj pub;

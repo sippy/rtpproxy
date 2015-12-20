@@ -34,7 +34,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 struct rtpp_weakref_priv {
     struct rtpp_weakref_obj pub;

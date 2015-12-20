@@ -45,6 +45,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_controlfd.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_network.h"
 
 #include "config_pp.h"

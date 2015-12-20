@@ -37,7 +37,7 @@
 #include "rtp_packet.h"
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 struct rtpp_analyzer {
     struct rtpp_session_stat rstat;

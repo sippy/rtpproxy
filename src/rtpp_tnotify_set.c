@@ -47,7 +47,7 @@
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_tnotify_tgt.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 #define RTPP_TNOTIFY_TARGETS_MAX 64
 #define RTPP_TNOTIFY_WILDCARDS_MAX 2
