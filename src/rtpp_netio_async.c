@@ -49,7 +49,7 @@
 #include "rtpp_network.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_time.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_debug.h"
 #ifdef RTPP_DEBUG
 #include "rtpp_math.h"

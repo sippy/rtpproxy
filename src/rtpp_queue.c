@@ -41,7 +41,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_queue.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 

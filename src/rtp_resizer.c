@@ -46,7 +46,7 @@
 #include "rtpp_proc.h"
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 struct rtp_resizer {
     int         nsamples_total;

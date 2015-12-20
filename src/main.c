@@ -77,6 +77,7 @@
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
 #include "rtpp_math.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_stats.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_list.h"

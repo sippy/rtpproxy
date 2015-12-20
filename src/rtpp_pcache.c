@@ -8,7 +8,7 @@
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_pcache.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 struct rtpp_pcache_priv {
   struct rtpp_pcache *real;

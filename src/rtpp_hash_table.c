@@ -36,7 +36,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_pearson.h"
 #include "rtpp_refcnt.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 enum rtpp_hte_types {rtpp_hte_naive_t = 0, rtpp_hte_refcnt_t};
 

@@ -35,7 +35,7 @@
 #include "rtp.h"
 #include "rtp_info.h"
 #include "rtp_packet.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 #define RTP_PROFILE_AUDIO(s, nc) {.ts_rate = (s), .sample_rate = (s), \
   .pt_kind = RTP_PTK_AUDIO, .nchannels = (nc)}

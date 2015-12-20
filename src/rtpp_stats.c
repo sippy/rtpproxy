@@ -38,7 +38,7 @@
 #include "rtpp_pearson.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 struct rtpp_stat_derived;
 

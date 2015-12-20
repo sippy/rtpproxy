@@ -54,6 +54,7 @@
 #include "rtpp_sessinfo.h"
 #include "rtpp_socket.h"
 #include "rtp_resizer.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_util.h"

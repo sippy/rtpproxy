@@ -31,7 +31,7 @@
 #include <string.h>
 
 #include "rtpp_pearson.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 struct rtpp_pearson_perfect
 {

@@ -55,6 +55,7 @@
 #include "rtpp_command_query.h"
 #include "rtpp_command_stats.h"
 #include "rtpp_command_ul.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"

@@ -43,7 +43,7 @@
 #include "rtpp_syslog_async.h"
 #endif
 #include "rtpp_time.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 #ifdef RTPP_LOG_ADVANCED
 static int syslog_async_opened = 0;
