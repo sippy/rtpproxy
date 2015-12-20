@@ -108,7 +108,9 @@ am_extractaudio_OBJECTS = main.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_loader.$(OBJEXT) rtp.$(OBJEXT) rtp_analyze.$(OBJEXT) \
 	rtpp_util.$(OBJEXT) rtpp_time.$(OBJEXT) \
 	rtpp_log_stand.$(OBJEXT) g729_compat.$(OBJEXT) \
-	rtpp_network.$(OBJEXT) rtpp_monotime.$(OBJEXT)
+	rtpp_network.$(OBJEXT) rtpp_monotime.$(OBJEXT) \
+	rtpp_mallocs.$(OBJEXT) rtpp_refcnt.$(OBJEXT) \
+	rtpp_refcnt_fin.$(OBJEXT)
 extractaudio_OBJECTS = $(am_extractaudio_OBJECTS)
 extractaudio_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -307,7 +309,9 @@ extractaudio_SOURCES = main.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c \
   ${MAINSRCDIR}/rtp_analyze.c ${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
   ${MAINSRCDIR}/rtpp_log_stand.c decoder.h format_au.h g711.h rtpp_loader.h \
   session.h g729_compat.c g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
-  ${MAINSRCDIR}/rtpp_monotime.c
+  ${MAINSRCDIR}/rtpp_monotime.c ${MAINSRCDIR}/rtpp_mallocs.c \
+  ${MAINSRCDIR}/rtpp_refcnt.c ${MAINSRCDIR}/rtpp_refcnt_fin.c \
+  ${MAINSRCDIR}/rtpp_refcnt_fin.h
 
 extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
 all: all-am
@@ -410,8 +414,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp_analyze.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_loader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_log_stand.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_mallocs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_monotime.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_network.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_refcnt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_refcnt_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_util.Po@am__quote@
 
@@ -533,6 +540,48 @@ rtpp_monotime.obj: ${MAINSRCDIR}/rtpp_monotime.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_monotime.c' object='rtpp_monotime.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_monotime.obj `if test -f '${MAINSRCDIR}/rtpp_monotime.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_monotime.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_monotime.c'; fi`
+
+rtpp_mallocs.o: ${MAINSRCDIR}/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_mallocs.o -MD -MP -MF $(DEPDIR)/rtpp_mallocs.Tpo -c -o rtpp_mallocs.o `test -f '${MAINSRCDIR}/rtpp_mallocs.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_mallocs.Tpo $(DEPDIR)/rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_mallocs.c' object='rtpp_mallocs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_mallocs.o `test -f '${MAINSRCDIR}/rtpp_mallocs.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_mallocs.c
+
+rtpp_mallocs.obj: ${MAINSRCDIR}/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_mallocs.obj -MD -MP -MF $(DEPDIR)/rtpp_mallocs.Tpo -c -o rtpp_mallocs.obj `if test -f '${MAINSRCDIR}/rtpp_mallocs.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_mallocs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_mallocs.Tpo $(DEPDIR)/rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_mallocs.c' object='rtpp_mallocs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_mallocs.obj `if test -f '${MAINSRCDIR}/rtpp_mallocs.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_mallocs.c'; fi`
+
+rtpp_refcnt.o: ${MAINSRCDIR}/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_refcnt.o -MD -MP -MF $(DEPDIR)/rtpp_refcnt.Tpo -c -o rtpp_refcnt.o `test -f '${MAINSRCDIR}/rtpp_refcnt.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_refcnt.Tpo $(DEPDIR)/rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_refcnt.c' object='rtpp_refcnt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_refcnt.o `test -f '${MAINSRCDIR}/rtpp_refcnt.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_refcnt.c
+
+rtpp_refcnt.obj: ${MAINSRCDIR}/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_refcnt.obj -MD -MP -MF $(DEPDIR)/rtpp_refcnt.Tpo -c -o rtpp_refcnt.obj `if test -f '${MAINSRCDIR}/rtpp_refcnt.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_refcnt.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_refcnt.Tpo $(DEPDIR)/rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_refcnt.c' object='rtpp_refcnt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_refcnt.obj `if test -f '${MAINSRCDIR}/rtpp_refcnt.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_refcnt.c'; fi`
+
+rtpp_refcnt_fin.o: ${MAINSRCDIR}/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_refcnt_fin.o -MD -MP -MF $(DEPDIR)/rtpp_refcnt_fin.Tpo -c -o rtpp_refcnt_fin.o `test -f '${MAINSRCDIR}/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_refcnt_fin.Tpo $(DEPDIR)/rtpp_refcnt_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_refcnt_fin.c' object='rtpp_refcnt_fin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_refcnt_fin.o `test -f '${MAINSRCDIR}/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_refcnt_fin.c
+
+rtpp_refcnt_fin.obj: ${MAINSRCDIR}/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_refcnt_fin.obj -MD -MP -MF $(DEPDIR)/rtpp_refcnt_fin.Tpo -c -o rtpp_refcnt_fin.obj `if test -f '${MAINSRCDIR}/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_refcnt_fin.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_refcnt_fin.Tpo $(DEPDIR)/rtpp_refcnt_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_refcnt_fin.c' object='rtpp_refcnt_fin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_refcnt_fin.obj `if test -f '${MAINSRCDIR}/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_refcnt_fin.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -747,6 +796,12 @@ uninstall-am: uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
 
+
+${MAINSRCDIR}/rtpp_refcnt_fin.c:
+	$(MAKE) -C ${MAINSRCDIR} rtpp_refcnt_fin.c
+
+${MAINSRCDIR}/rtpp_refcnt_fin.h:
+	$(MAKE) -C ${MAINSRCDIR} rtpp_refcnt_fin.h
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
