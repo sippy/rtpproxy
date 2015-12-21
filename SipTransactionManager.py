@@ -202,6 +202,21 @@ class local4remote(object):
         self.cache_r2l_old = self.cache_r2l
         self.cache_r2l = {}
 
+class SipTMRetransmitO(object):
+    userv = None
+    data = None
+    address = None
+    call_id = None
+    lossemul = None
+
+    def __init__(self, userv = None, data = None, address = None,
+      call_id = None, lossemul = None):
+        self.userv = userv
+        self.data = data
+        self.address = address
+        self.call_id = call_id
+        self.lossemul = lossemul
+
 class SipTransactionManager(object):
     global_config = None
     l4r = None
@@ -239,10 +254,10 @@ class SipTransactionManager(object):
         if retrans == None:
             retrans = self.l2rcache.get(checksum, None)
         if retrans != None:
-            userv, data, address = retrans
-            if data == None:
+            if retrans.data == None:
                 return
-            self.transmitData(userv, data, address)
+            self.transmitData(retrans.userv, retrans.data, retrans.address, \
+              lossemul = retrans.lossemul)
             return
         if data.startswith('SIP/2.0 '):
             try:
@@ -256,18 +271,18 @@ class SipTransactionManager(object):
                 print data
                 print '-' * 70
                 sys.stdout.flush()
-                self.l1rcache[checksum] = (None, None, None)
+                self.l1rcache[checksum] = SipTMRetransmitO()
                 return
             if resp.getSCode()[0] < 100 or resp.getSCode()[0] > 999:
                 print datetime.now(), 'invalid status code in SIP response from %s:%d:' % address
                 print data
                 sys.stdout.flush()
-                self.l1rcache[checksum] = (None, None, None)
+                self.l1rcache[checksum] = SipTMRetransmitO()
                 return
             resp.rtime = rtime
             if not self.tclient.has_key(tid):
                 #print 'no transaction with tid of %s in progress' % str(tid)
-                self.l1rcache[checksum] = (None, None, None)
+                self.l1rcache[checksum] = SipTMRetransmitO()
                 return
             t = self.tclient[tid]
             if self.nat_traversal and resp.countHFs('contact') > 0 and not check1918(t.address[0]):
@@ -292,7 +307,7 @@ class SipTransactionManager(object):
                 print data
                 print '-' * 70
                 sys.stdout.flush()
-                self.l1rcache[checksum] = (None, None, None)
+                self.l1rcache[checksum] = SipTMRetransmitO()
                 return
             req.rtime = rtime
             via0 = req.getHFBody('via')
@@ -315,7 +330,7 @@ class SipTransactionManager(object):
                     print data
                     print '-' * 70
                     sys.stdout.flush()
-                    self.l1rcache[checksum] = (None, None, None)
+                    self.l1rcache[checksum] = SipTMRetransmitO()
                     return
                 if not cbody.asterisk:
                     curl = cbody.getUrl()
@@ -410,7 +425,7 @@ class SipTransactionManager(object):
                         self.newTransaction(t.cancel, userv = t.userv)
                         t.cancelPending = False
                 t.teB = Timeout(self.timerB, t.expires, 1, t)
-                self.l1rcache[checksum] = (None, None, None)
+                self.l1rcache[checksum] = SipTMRetransmitO()
                 if t.resp_cb != None:
                     if t.cb_ifver == 1:
                         t.resp_cb(msg)
@@ -464,11 +479,11 @@ class SipTransactionManager(object):
                         t.state = UACK
                         t.ack_rAddr = rAddr
                         t.ack_checksum = checksum
-                        self.l1rcache[checksum] = (None, None, None)
+                        self.l1rcache[checksum] = SipTMRetransmitO()
                         t.teG = Timeout(self.timerG, 64, 1, t)
                         return
                 else:
-                    self.l1rcache[checksum] = (None, None, None)
+                    self.l1rcache[checksum] = SipTMRetransmitO()
                 del self.tclient[t.tid]
                 t.cleanup()
 
@@ -547,14 +562,14 @@ class SipTransactionManager(object):
                 if t.ack_cb != None:
                     t.ack_cb(msg)
                 t.cleanup()
-                self.l1rcache[checksum] = (None, None, None)
+                self.l1rcache[checksum] = SipTMRetransmitO()
         elif msg.getMethod() == 'ACK':
             # Some ACK that doesn't match any existing transaction.
             # Drop and forget it - upper layer is unlikely to be interested
             # to seeing this anyway.
             print datetime.now(), 'unmatched ACK transaction - ignoring'
             sys.stdout.flush()
-            self.l1rcache[checksum] = (None, None, None)
+            self.l1rcache[checksum] = SipTMRetransmitO()
         elif msg.getMethod() == 'CANCEL':
             resp = msg.genResponse(481, 'Call Leg/Transaction Does Not Exist')
             self.transmitMsg(server, resp, resp.getHFBody('via').getTAddr(), checksum)
@@ -638,7 +653,8 @@ class SipTransactionManager(object):
             raise IndexError('unregConsumer: consumer %s for call-id %s is not registered' % \
               (str(consumer), call_id))
 
-    def sendResponse(self, resp, t = None, retrans = False, ack_cb = None):
+    def sendResponse(self, resp, t = None, retrans = False, ack_cb = None,
+      lossemul = 0):
         #print self.tserver
         if t == None:
             tid = resp.getTId(wBRN = True)
@@ -651,7 +667,7 @@ class SipTransactionManager(object):
             toHF.genTag()
         t.data = resp.localStr(*t.userv.uopts.laddress, compact = t.compact)
         t.address = resp.getHFBody('via').getTAddr()
-        self.transmitData(t.userv, t.data, t.address, t.checksum)
+        self.transmitData(t.userv, t.data, t.address, t.checksum, lossemul)
         if scode < 200:
             t.state = RINGING
             if self.provisional_retr > 0 and scode > 100:
@@ -742,11 +758,20 @@ class SipTransactionManager(object):
         data = msg.localStr(*userv.uopts.laddress, compact = compact)
         self.transmitData(userv, data, address, cachesum)
 
-    def transmitData(self, userv, data, address, cachesum = None):
-        userv.send_to(data, address)
-        self.global_config['_sip_logger'].write('SENDING message to %s:%d:\n' % address, data)
+    def transmitData(self, userv, data, address, cachesum = None, \
+      lossemul = 0):
+        if lossemul == 0:
+            userv.send_to(data, address)
+            logop = 'SENDING'
+        else:
+            logop = 'DISCARDING'
+        self.global_config['_sip_logger'].write('%s message to %s:%d:\n' % \
+          (logop, address[0], address[1]), data)
         if cachesum != None:
-            self.l1rcache[cachesum] = (userv, data, address)
+            if lossemul > 0:
+                lossemul -= 1
+            self.l1rcache[cachesum] = SipTMRetransmitO(userv, data, address, \
+              None, lossemul)
 
     def sendACK(self, t):
         #print 'sendACK', t.state
