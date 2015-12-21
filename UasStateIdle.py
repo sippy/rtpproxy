@@ -77,7 +77,7 @@ class UasStateIdle(UaStateGeneric):
         else:
             self.ua.rAddr = self.ua.rTarget.getAddr()
         self.ua.rAddr0 = self.ua.rAddr
-        self.ua.global_config['_sip_tm'].sendResponse(self.ua.uasResp, self.ua.uas_lossemul)
+        self.ua.global_config['_sip_tm'].sendResponse(self.ua.uasResp, lossemul = self.ua.uas_lossemul)
         self.ua.uasResp.getHFBody('to').setTag(self.ua.lTag)
         self.ua.lUri = SipFrom(address = self.ua.uasResp.getHFBody('to').getUri())
         self.ua.rUri = SipTo(address = self.ua.uasResp.getHFBody('from').getUri())
