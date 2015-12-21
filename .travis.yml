@@ -1,3 +1,4 @@
+# force run: 1
 language: c
 compiler:
   - clang
