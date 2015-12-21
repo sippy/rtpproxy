@@ -104,6 +104,7 @@ class UA(object):
     late_media = False
     godead_timeout = 32.0
     compact_sip = False
+    uas_lossemul = 0
 
     def __init__(self, global_config, event_cb = None, username = None, password = None, nh_address = None, credit_time = None, \
       conn_cbs = None, disc_cbs = None, fail_cbs = None, ring_cbs = None, dead_cbs = None, ltag = None, extra_headers = None, \
