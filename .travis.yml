@@ -7,8 +7,8 @@ python:
   - "2.7"
 sudo: required
 before_install:
-    - find / -name clang -type f
-    - find / -name gcc -type f
+    - sudo find / -name clang -type f
+    - sudo find / -name gcc -type f
     - sudo -H pip install -r requirements.txt
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
 script:
