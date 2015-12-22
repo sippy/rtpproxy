@@ -8,8 +8,9 @@ python:
 sudo: required
 before_install:
     - sudo find / -name clang -type f
+    - sudo find / -name ${CC} -type f
     - sudo find / -name gcc -type f
-    - sudo -H pip install -r requirements.txt
+    - sudo -H PATH="/usr/local/clang-3.4/bin" pip install -r requirements.txt
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
 script:
     sh -x ./scripts/do-test.sh
