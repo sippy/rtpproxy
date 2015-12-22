@@ -3,6 +3,7 @@
 set -e
 
 uname -a
+which ${CC}
 ${CC} --version
 python --version
 pip --version
