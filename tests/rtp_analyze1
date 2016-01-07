@@ -4,7 +4,7 @@
 
 . $(dirname $0)/functions
 
-SNAMES="p12 sess6 p23 c1 weird dups lost dups1"
+SNAMES="sess6 c1 weird dups lost p12 p23 dups1"
 
 for sname in ${SNAMES}
 do
