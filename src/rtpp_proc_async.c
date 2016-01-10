@@ -179,14 +179,8 @@ rtpp_proc_async_run(void *arg)
                 rtpp_wi_free(wis[i - 1]);
                 i -= 1;
             }
-            if (ptbl_rtp.pfds != NULL) {
-                free(ptbl_rtp.pfds);
-                free(ptbl_rtp.stuids);
-            }
-            if (ptbl_rtcp.pfds != NULL) {
-                free(ptbl_rtcp.pfds);
-                free(ptbl_rtcp.stuids);
-            }
+            rtpp_polltbl_free(&ptbl_rtp);
+            rtpp_polltbl_free(&ptbl_rtcp);
             return;
         }   
         i -= 1;
@@ -239,11 +233,11 @@ rtpp_proc_async_run(void *arg)
             rtp_only = 1;
         }
 
-        CALL_METHOD(cf->stable->sessinfo, copy_polltbl, &ptbl_rtp, SESS_RTP);
+        CALL_METHOD(cf->stable->sessinfo, sync_polltbl, &ptbl_rtp, SESS_RTP);
         nready_rtp = nready_rtcp = 0;
         if (ptbl_rtp.curlen > 0) {
             if (rtp_only == 0) {
-                CALL_METHOD(cf->stable->sessinfo, copy_polltbl, &ptbl_rtcp, SESS_RTCP);
+                CALL_METHOD(cf->stable->sessinfo, sync_polltbl, &ptbl_rtcp, SESS_RTCP);
 #if RTPP_DEBUG_netio
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for %d RTCP file descriptors", \
