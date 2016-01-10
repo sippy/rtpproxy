@@ -37,7 +37,7 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h rtpp_socket_fin.c \
   rtpp_socket_fin.h rtpp_record_fin.c rtpp_record_fin.h rtpp_ttl_fin.c \
   rtpp_ttl_fin.h rtpp_pipe_fin.c rtpp_pipe_fin.h rtpp_pcount_fin.c \
-  rtpp_pcount_fin.h
+  rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h
 rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
@@ -110,3 +110,8 @@ rtpp_pcount_fin.c: $(GENFINCODE) rtpp_pcount.h
 	$(GENFINCODE) rtpp_pcount.h rtpp_pcount_fin.h rtpp_pcount_fin.c
 
 rtpp_pcount_fin.h: rtpp_pcount_fin.c
+
+rtpp_sessinfo_fin.c: $(GENFINCODE) rtpp_sessinfo.h
+	$(GENFINCODE) rtpp_sessinfo.h rtpp_sessinfo_fin.h rtpp_sessinfo_fin.c
+
+rtpp_sessinfo_fin.h: rtpp_sessinfo_fin.c
