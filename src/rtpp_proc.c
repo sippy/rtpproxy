@@ -276,7 +276,7 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
         if ((ptbl->pfds[readyfd].revents & POLLIN) == 0)
             continue;
         stp = CALL_METHOD(ptbl->streams_wrt, get_by_idx,
-          ptbl->stuids[readyfd]);
+          ptbl->mds[readyfd].stuid);
         if (stp == NULL)
             continue;
         sp = CALL_METHOD(cf->stable->sessions_wrt, get_by_idx, stp->seuid);

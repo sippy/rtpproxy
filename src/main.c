@@ -873,6 +873,7 @@ main(int argc, char **argv)
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
     CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
+    CALL_METHOD(cf.stable->sessinfo->rcnt, decref);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif
