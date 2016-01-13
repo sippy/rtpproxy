@@ -75,8 +75,6 @@ struct rtpp_stream {
     struct rtpp_ttl *ttl;
     /* Remote source address */
     struct sockaddr *addr;
-    /* Save previous address when doing update */
-    struct sockaddr *prev_addr;
     /* Flag which tells if we are allowed to update address with RTP src IP */
     struct rtpps_latch latch_info;
     /* Local listen address/port */
@@ -89,12 +87,8 @@ struct rtpp_stream {
     int weak;
     /* Pointer to rtpp_record's opaque data type */
     struct rtpp_record *rrc;
-    /* Flag that indicates whether or not address supplied by client can't be trusted */
-    int untrusted_addr;
     struct rtp_resizer *resizer;
     struct rtpp_analyzer *analyzer;
-    /* Timestamp of the last session update */
-    double last_update;
     /* Supported codecs */
     char *codecs;
     /* Requested ptime */

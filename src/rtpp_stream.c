@@ -70,6 +70,12 @@ struct rtpp_stream_priv
     /* Weak reference to the "rtpp_server" (player) */
     uint64_t rtps;
     enum rtpp_stream_side side;
+    /* Timestamp of the last session update */
+    double last_update;
+    /* Flag that indicates whether or not address supplied by client can't be trusted */
+    int untrusted_addr;
+    /* Save previous address when doing update */
+    struct sockaddr *prev_addr;
 };
 
 #define PUB2PVT(pubp) \
@@ -196,8 +202,8 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
         CALL_METHOD(pub->fd->rcnt, decref);
     if (pub->addr != NULL)
         free(pub->addr);
-    if (pub->prev_addr != NULL)
-        free(pub->prev_addr);
+    if (pvt->prev_addr != NULL)
+        free(pvt->prev_addr);
     if (pub->codecs != NULL)
         free(pub->codecs);
     if (pvt->rtps != RTPP_UID_NONE)
@@ -340,8 +346,8 @@ rtpp_stream_latch(struct rtpp_stream *self, double dtime,
     char saddr[MAX_AP_STRBUF];
 
     pvt = PUB2PVT(self);
-    if (self->last_update != 0 && \
-      dtime - self->last_update < UPDATE_WINDOW) {
+    if (pvt->last_update != 0 && \
+      dtime - pvt->last_update < UPDATE_WINDOW) {
         return (0);
     }
 
@@ -419,9 +425,9 @@ rtpp_stream_fill_addr(struct rtpp_stream *self,
 
     pvt = PUB2PVT(self);
 
-    self->untrusted_addr = 1;
+    pvt->untrusted_addr = 1;
     memcpy(self->addr, &packet->raddr, packet->rlen);
-    if (self->prev_addr == NULL || memcmp(self->prev_addr,
+    if (pvt->prev_addr == NULL || memcmp(pvt->prev_addr,
       &packet->raddr, packet->rlen) != 0) {
         self->latch_info.latched = 1;
     }
@@ -480,14 +486,14 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
     pvt = PUB2PVT(self);
 
     if (self->addr != NULL)
-        self->last_update = dtime;
+        pvt->last_update = dtime;
 
     /*
      * Unless the address provided by client historically
      * cannot be trusted and address is different from one
      * that we recorded update it.
      */
-    if (self->untrusted_addr != 0)
+    if (pvt->untrusted_addr != 0)
         return;
     if (self->addr != NULL && isaddrseq(self->addr, *iapp)) {
         return;
@@ -500,9 +506,9 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
       "with %s", actor, ptype, saddr);
     if (self->addr != NULL) {
         if (self->latch_info.latched != 0) {
-            if (self->prev_addr != NULL)
-                 free(self->prev_addr);
-            self->prev_addr = self->addr;
+            if (pvt->prev_addr != NULL)
+                 free(pvt->prev_addr);
+            pvt->prev_addr = self->addr;
         } else {
             free(self->addr);
         }
