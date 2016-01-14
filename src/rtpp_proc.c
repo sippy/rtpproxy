@@ -51,6 +51,7 @@
 #include "rtpp_socket.h"
 #include "rtpp_stream.h"
 #include "rtpp_pcount.h"
+#include "rtpp_pcnt_strm.h"
 #include "rtpp_session.h"
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
@@ -145,9 +146,9 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
 		    goto discard_and_continue;
                 }
 	    }
-	    stp->npkts_in++;
+	    CALL_METHOD(stp->pcnt_strm, reg_pktin, packet);
 	} else {
-	    stp->npkts_in++;
+	    CALL_METHOD(stp->pcnt_strm, reg_pktin, packet);
 	    stp->addr = malloc(packet->rlen);
 	    if (stp->addr == NULL) {
 		CALL_METHOD(stp->pcount, reg_drop);
