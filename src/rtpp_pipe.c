@@ -33,6 +33,7 @@
 #include "rtpp_log.h"
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_pcount.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_weakref.h"
