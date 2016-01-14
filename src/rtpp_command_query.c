@@ -37,6 +37,8 @@
 #include "rtpp_analyzer.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
+#include "rtpp_pcount.h"
+#include "rtpp_pcnt_strm.h"
 #include "rtpp_pipe.h"
 #include "rtpp_stream.h"
 #include "rtpp_util.h"
@@ -55,18 +57,19 @@ handle_query_simple(struct cfg *cf, struct rtpp_command *cmd,
 {
     int len, ttl;
     struct rtpps_pcount pcnts;
+    struct rtpp_pcnts_strm pst[2];
 
     ttl = CALL_METHOD(spp, get_ttl);
     CALL_METHOD(spp->pcount, get_stats, &pcnts);
+    CALL_METHOD(spp->stream[idx]->pcnt_strm, get_stats, &pst[0]);
+    CALL_METHOD(spp->stream[NOT(idx)]->pcnt_strm, get_stats, &pst[1]);
     if (verbose == 0) {
         len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n",
-          ttl, spp->stream[idx]->npkts_in, spp->stream[NOT(idx)]->npkts_in,
-          pcnts.nrelayed, pcnts.ndropped);
+          ttl, pst[0].npkts_in, pst[1].npkts_in, pcnts.nrelayed, pcnts.ndropped);
     } else {
         len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "ttl=%d npkts_ina=%lu "
           "npkts_ino=%lu nrelayed=%lu ndropped=%lu\n", ttl,
-          spp->stream[idx]->npkts_in, spp->stream[NOT(idx)]->npkts_in,
-          pcnts.nrelayed, pcnts.ndropped);
+          pst[0].npkts_in, pst[1].npkts_in, pcnts.nrelayed, pcnts.ndropped);
     }
     rtpc_doreply(cmd, cmd->buf_t, len, 0);
     return (0);
@@ -84,14 +87,22 @@ handle_query_simple(struct cfg *cf, struct rtpp_command *cmd,
         pcnt_pulled = 1; \
     }
 
+#define PULL_PCNT_STRM() \
+    if (pcnt_strm_pulled == 0) { \
+        CALL_METHOD(spp->stream[idx]->pcnt_strm, get_stats, &pst[0]); \
+        CALL_METHOD(spp->stream[NOT(idx)]->pcnt_strm, get_stats, &pst[1]); \
+        pcnt_strm_pulled = 1; \
+    }
+
 int
 handle_query(struct cfg *cf, struct rtpp_command *cmd,
   struct rtpp_pipe *spp, int idx)
 {
-    int len, i, verbose, rst_pulled, pcnt_pulled;
+    int len, i, verbose, rst_pulled, pcnt_pulled, pcnt_strm_pulled;
     char *cp;
     struct rtpp_analyzer_stats rst;
     struct rtpps_pcount pcnts;
+    struct rtpp_pcnts_strm pst[2];
 
     verbose = 0;
     for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
@@ -111,7 +122,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
         return (handle_query_simple(cf, cmd, spp, idx, verbose));
     }
     len = 0;
-    rst_pulled = pcnt_pulled = 0;
+    rst_pulled = pcnt_pulled = pcnt_strm_pulled = 0;
     for (i = 4; i < cmd->argc && len < (sizeof(cmd->buf_t) - 2); i++) {
         if (i > 4) {
             CHECK_OVERFLOW();
@@ -130,13 +141,15 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
             continue;
         }
         if (strcmp(cmd->argv[i], "npkts_ina") == 0) {
+            PULL_PCNT_STRM();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
-              spp->stream[idx]->npkts_in);
+              pst[0].npkts_in);
             continue;
         }
         if (strcmp(cmd->argv[i], "npkts_ino") == 0) {
+            PULL_PCNT_STRM();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
-              spp->stream[NOT(idx)]->npkts_in);
+              pst[1].npkts_in);
             continue;
         }
         if (strcmp(cmd->argv[i], "nrelayed") == 0) {
