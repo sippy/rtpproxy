@@ -436,3 +436,21 @@ dtime2rtimeval(double dtime, struct timeval *rtimeval)
     timespecadd2(&rtimespec, &mtime, &r2m_conv1.cval);
     timespec2timeval(rtimeval, &rtimespec);
 }
+
+double
+dtime2rtime(double dtime)
+{
+    struct timespec rtimespec, mtime, timediff;
+
+    dtime2mtimespec(dtime, &mtime);
+    if (timespeciszero(&r2m_conv1.cval)) {
+        r2m_calibrate(&r2m_conv1);
+    } else {
+        timespecsub2(&timediff, &mtime, &r2m_conv1.lastcal_mtime);
+        if (timespeccmp(&timediff, >, &recal_ival)) {
+            r2m_calibrate(&r2m_conv1);
+        }
+    }
+    timespecadd2(&rtimespec, &mtime, &r2m_conv1.cval);
+    return (timespec2dtime(&rtimespec));
+}
