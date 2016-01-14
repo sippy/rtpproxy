@@ -32,8 +32,6 @@
 struct rtpp_stats;
 struct rtpp_pipe;
 
-#include "rtpp_pcount.h"
-
 DEFINE_METHOD(rtpp_pipe, rtpp_pipe_get_ttl, int);
 DEFINE_METHOD(rtpp_pipe, rtpp_pipe_decr_ttl, void);
 
