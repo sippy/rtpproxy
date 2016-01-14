@@ -30,3 +30,4 @@ struct timeval;
 
 double rtimeval2dtime(struct timeval *);
 void dtime2rtimeval(double, struct timeval *);
+double dtime2rtime(double);
