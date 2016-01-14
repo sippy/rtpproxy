@@ -51,6 +51,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_network.h"
 #include "rtpp_pcount.h"
+#include "rtpp_pcnt_strm.h"
 #include "rtpp_record.h"
 #include "rtpp_stats.h"
 #include "rtpp_stream.h"
@@ -124,6 +125,10 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
             goto e3;
         }
     }
+    pvt->pub.pcnt_strm = rtpp_pcnt_strm_ctor();
+    if (pvt->pub.pcnt_strm == NULL) {
+        goto e4;
+    }
     pvt->servers_wrt = servers_wrt;
     pvt->rtpp_stats = rtpp_stats;
     pvt->pub.log = log;
@@ -151,6 +156,10 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
       pvt);
     return (&pvt->pub);
 
+e4:
+    if (session_type == SESS_RTP) {
+         rtpp_analyzer_dtor(pvt->pub.analyzer);
+    }
 e3:
     pthread_mutex_destroy(&pvt->lock);
 e1:
@@ -214,9 +223,11 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
         CALL_METHOD(pub->rrc->rcnt, decref);
     if (pub->pcount != NULL)
         CALL_METHOD(pub->pcount->rcnt, decref);
-    CALL_METHOD(pub->ttl->rcnt, decref);
 
+    CALL_METHOD(pub->ttl->rcnt, decref);
+    CALL_METHOD(pub->pcnt_strm->rcnt, decref);
     CALL_METHOD(pvt->pub.log->rcnt, decref);
+
     pthread_mutex_destroy(&pvt->lock);
     free(pvt);
 }

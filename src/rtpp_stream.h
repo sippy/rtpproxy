@@ -93,8 +93,6 @@ struct rtpp_stream {
     char *codecs;
     /* Requested ptime */
     int ptime;
-    /* Packets received */
-    unsigned long npkts_in;
     /* Refcounter */
     struct rtpp_refcnt *rcnt;
     /* UID, read-only */
@@ -110,7 +108,10 @@ struct rtpp_stream {
     /* Type of session we are associated with, read-only */
     int session_type;
     struct rtpp_log *log;
+    /* Copy of the per-pipe counters */
     struct rtpp_pcount *pcount;
+    /* Per-stream counters */
+    struct rtpp_pcnt_strm *pcnt_strm;
     /* Public methods */
     METHOD_ENTRY(rtpp_stream_handle_play, handle_play);
     METHOD_ENTRY(rtpp_stream_handle_noplay, handle_noplay);
