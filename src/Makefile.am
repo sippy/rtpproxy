@@ -26,7 +26,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h \
   rtpp_ttl.c rtpp_ttl.h rtpp_proc_ttl.h rtpp_proc_ttl.c rtpp_pipe.h \
   rtpp_pipe.c rtpp_pcount.h rtpp_pcount.c rtpp_debug.h rtpp_monotime.h \
-  rtpp_monotime.c rtpp_mallocs.c rtpp_mallocs.h
+  rtpp_monotime.c rtpp_mallocs.c rtpp_mallocs.h rtpp_pcnt_strm.h \
+  rtpp_pcnt_strm.c rtpp_endian.h
 
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
   rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
@@ -37,7 +38,8 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h rtpp_socket_fin.c \
   rtpp_socket_fin.h rtpp_record_fin.c rtpp_record_fin.h rtpp_ttl_fin.c \
   rtpp_ttl_fin.h rtpp_pipe_fin.c rtpp_pipe_fin.h rtpp_pcount_fin.c \
-  rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h
+  rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h \
+  rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c
 rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
@@ -115,3 +117,8 @@ rtpp_sessinfo_fin.c: $(GENFINCODE) rtpp_sessinfo.h
 	$(GENFINCODE) rtpp_sessinfo.h rtpp_sessinfo_fin.h rtpp_sessinfo_fin.c
 
 rtpp_sessinfo_fin.h: rtpp_sessinfo_fin.c
+
+rtpp_pcnt_strm_fin.c: $(GENFINCODE) rtpp_pcnt_strm.h
+	$(GENFINCODE) rtpp_pcnt_strm.h rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c
+
+rtpp_pcnt_strm_fin.h: rtpp_pcnt_strm_fin.c
