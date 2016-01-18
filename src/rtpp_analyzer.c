@@ -55,9 +55,15 @@ rtpp_analyzer_ctor(struct rtpp_log *log)
     if (rap == NULL) {
         return (NULL);
     }
+    if (rtpp_stats_init(&rap->rstat) != 0) {
+        goto e0;
+    }
     rap->log = log;
     CALL_METHOD(log->rcnt, incref);
     return (rap);
+e0:
+    free(rap);
+    return (NULL);
 }
 
 enum update_rtpp_stats_rval
@@ -96,6 +102,7 @@ void
 rtpp_analyzer_dtor(struct rtpp_analyzer *rap)
 {
 
+    rtpp_stats_destroy(&rap->rstat);
     CALL_METHOD(rap->log->rcnt, decref);
     free(rap);
 }

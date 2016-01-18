@@ -37,13 +37,34 @@ enum rtp_type {
     RTP_PCMU = 0,
     RTP_GSM = 3,
     RTP_G723 = 4,
+    RTP_DVI4_8000 = 5,
+    RTP_DVI4_16000 = 6,
+    RTP_LPC = 7,
     RTP_PCMA = 8,
     RTP_G722 = 9,
+    RTP_L16_MONO = 10,
+    RTP_L16_STEREO = 11,
+    RTP_QCELP = 12,
     RTP_CN = 13,
+    RTP_MPA = 14,
+    RTP_G728 = 15,
+    RTP_DVI4_11025 = 16,
+    RTP_DVI4_22050 = 17,
     RTP_G729 = 18,
     RTP_TSE = 100,
     RTP_TSE_CISCO = 101
 };
+
+enum rtp_pt_kind {RTP_PTK_AUDIO, RTP_PTK_VIDEO, RTP_PTK_SIGN, RTP_PTK_RES, RTP_PTK_UNK = 0};
+
+struct rtp_profile {
+    int ts_rate;
+    int sample_rate;
+    int nchannels;
+    enum rtp_pt_kind pt_kind;
+};
+
+extern const struct rtp_profile rtp_profiles[];
 
 typedef enum rtp_type rtp_type_t;
 
