@@ -26,6 +26,6 @@
  *
  */
 
-void rtpp_proc_ttl(struct rtpp_weakref_obj *, struct rtpp_notify *,
-  struct rtpp_stats *);
+void rtpp_proc_ttl(struct rtpp_hash_table *, struct rtpp_weakref_obj *,
+  struct rtpp_notify *, struct rtpp_stats *);
 
