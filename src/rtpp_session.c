@@ -88,9 +88,6 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     pub = &(pvt->pub);
     pub->rcnt = rcnt;
     rtpp_gen_uid(&pub->seuid);
-#if RTPP_DEBUG_refcnt
-    CALL_METHOD(rcnt, traceen);
-#endif
 
     log = rtpp_log_ctor(cfs, "rtpproxy", ccap->call_id, 0);
     if (log == NULL) {
