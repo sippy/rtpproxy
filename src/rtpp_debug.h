@@ -36,10 +36,20 @@
 #define RTPP_DEBUG_timers     0
 /* Catch fatal signals and try to pring backtrace */
 #define RTPP_DEBUG_catchtrace 0
+#define RTPP_DEBUG_refcnt     0
 #else
 #define RTPP_DEBUG_netio      0
 #define RTPP_DEBUG_timers     0
 #define RTPP_DEBUG_catchtrace 0
+#define RTPP_DEBUG_refcnt     0
+#endif
+
+#if defined(RTPP_DEBUG)
+#include <assert.h>
+
+#define RTPP_DBG_ASSERT(...)  assert(__VA_ARGS__)
+#else
+#define RTPP_DBG_ASSERT(...)
 #endif
 
 #endif
