@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <assert.h>
 #include <ctype.h>
 #include <netdb.h>
 #include <pthread.h>
@@ -37,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_debug.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
@@ -48,6 +48,7 @@
 #include "rtpp_command_copy.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_ul.h"
+#include "rtpp_hash_table.h"
 #include "rtpp_pipe.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
@@ -370,7 +371,7 @@ handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
 
 int
 rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
-  struct ul_opts *ulop, struct rtpp_session *sp, int sidx)
+  struct ul_opts *ulop, int sidx)
 {
     int pidx, lport, sessions_active;
     struct rtpp_socket *fds[2];
@@ -382,8 +383,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     spa = spb = NULL;
     fds[0] = fds[1] = NULL;
     if (sidx != -1) {
-        assert(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
-        spa = sp;
+        RTPP_DBG_ASSERT(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
+        spa = cmd->sp;
         if (spa->rtp->stream[sidx]->fd == NULL || ulop->new_port != 0) {
             if (ulop->local_addr != NULL) {
                 spa->rtp->stream[sidx]->laddr = ulop->local_addr;
@@ -399,9 +400,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
                   spa->rtp->stream[sidx]->port, spa->rtcp->stream[sidx]->port, lport, lport + 1);
                 CALL_METHOD(cf->stable->sessinfo, update, spa, sidx, fds);
             } else {
-                assert(spa->rtp->stream[sidx]->fd == NULL);
+                RTPP_DBG_ASSERT(spa->rtp->stream[sidx]->fd == NULL);
                 spa->rtp->stream[sidx]->fd = fds[0];
-                assert(spa->rtcp->stream[sidx]->fd == NULL);
+                RTPP_DBG_ASSERT(spa->rtcp->stream[sidx]->fd == NULL);
                 spa->rtcp->stream[sidx]->fd = fds[1];
                 CALL_METHOD(cf->stable->sessinfo, append, spa, sidx);
             }
@@ -436,7 +437,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
           "lookup on ports %d/%d, session timer restarted", spa->rtp->stream[0]->port,
           spa->rtp->stream[1]->port);
     } else {
-        assert(cmd->cca.op == UPDATE);
+        struct rtpp_hash_table_entry *hte;
+
+        RTPP_DBG_ASSERT(cmd->cca.op == UPDATE);
         RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO,
           "new session %s, tag %s requested, type %s",
           cmd->cca.call_id, cmd->cca.from_tag, ulop->weak ? "weak" : "strong");
@@ -467,7 +470,14 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             return (-1);
         }
 
+        hte = CALL_METHOD(cf->stable->sessions_ht, append_refcnt, spa->call_id,
+          spa->rcnt);
+        if (hte == NULL) {
+            handle_nomem(cf, cmd, ECODE_NOMEM_5, ulop, NULL, spa);
+            return (-1);
+        }
         if (CALL_METHOD(cf->stable->sessions_wrt, reg, spa->rcnt, spa->seuid) != 0) {
+            CALL_METHOD(cf->stable->sessions_ht, remove, spa->call_id, hte);
             handle_nomem(cf, cmd, ECODE_NOMEM_8, ulop, NULL, spa);
             return (-1);
         }
@@ -495,8 +505,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             handle_copy(cf, spa, 0, NULL, 0);
             handle_copy(cf, spa, 1, NULL, 0);
         }
-        /* Move that down to the bottom once we update everything to grab ref */
-        CALL_METHOD(spa->rcnt, decref);
+        /* Save ref, it will be decref'd by the command disposal code */
+        RTPP_DBG_ASSERT(cmd->sp == NULL);
+        cmd->sp = spa;
     }
 
     if (cmd->cca.op == UPDATE) {
@@ -561,7 +572,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         spa->rtp->stream[pidx]->resizer = NULL;
     }
 
-    assert(lport != 0);
+    RTPP_DBG_ASSERT(lport != 0);
     ulop->reply.port = lport;
     ulop->reply.ia = ulop->lia[0];
     if (cf->stable->advaddr[0] != NULL) {
