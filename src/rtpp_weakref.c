@@ -152,23 +152,10 @@ rtpp_wref_get_length(struct rtpp_weakref_obj *pub)
 }
 
 static int
-rtpp_wref_purge_f(void *dp, void *ap)
-{
-    int *npurgedp;
-
-    npurgedp = (int *)ap;
-    *npurgedp += 1;
-    return (RTPP_WR_MATCH_DEL);
-}
-
-static int
 rtpp_wref_purge(struct rtpp_weakref_obj *pub)
 {
     struct rtpp_weakref_priv *pvt;
-    int npurged;
 
     pvt = PUB2PVT(pub);
-    npurged = 0;
-    CALL_METHOD(pvt->ht, foreach, rtpp_wref_purge_f, &npurged);
-    return (npurged);
+    return (CALL_METHOD(pvt->ht, purge));
 }
