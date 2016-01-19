@@ -39,8 +39,6 @@ struct rtpp_timeout_data {
     struct rtpp_tnotify_target *notify_target;
 };
 
-struct rtpp_hash_table_entry;
-
 struct rtpp_session {
     char *call_id;
     char *tag;
@@ -55,7 +53,6 @@ struct rtpp_session {
     struct rtpp_timeout_data timeout_data;
     /* Timestamp of session instantiation time */
     double init_ts;
-    struct rtpp_hash_table_entry *hte;
     /* UID */
     uint64_t seuid;
 
@@ -72,12 +69,9 @@ struct cfg_stable;
 #define	SESS_RTP	1
 #define	SESS_RTCP	2
 
-void init_hash_table(struct cfg_stable *);
-struct rtpp_session *session_findfirst(struct cfg *, const char *);
-struct rtpp_session *session_findnext(struct cfg *cf, struct rtpp_session *);
-void hash_table_append(struct cfg *, struct rtpp_session *);
 int compare_session_tags(const char *, const char *, unsigned *);
-int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session **);
+int find_stream(struct cfg *, const char *, const char *, const char *,
+  struct rtpp_session **);
 
 struct rtpp_session *rtpp_session_ctor(struct rtpp_cfg_stable *,
   struct common_cmd_args *, double, struct sockaddr **, int, int,

@@ -28,12 +28,12 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_debug.h"
 #include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
@@ -61,45 +61,12 @@ struct rtpp_session_priv
 {
     struct rtpp_session pub;
     struct rtpp_sessinfo *sessinfo;
-    struct rtpp_hash_table *sessions_ht;
 };
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_session_priv *)((char *)(pubp) - offsetof(struct rtpp_session_priv, pub)))
 
 static void rtpp_session_dtor(struct rtpp_session_priv *);
-
-struct rtpp_session *
-session_findfirst(struct cfg *cf, const char *call_id)
-{
-    struct rtpp_session *sp;
-    struct rtpp_hash_table_entry *he;
-
-    /* Make sure structure is properly locked */
-    assert(rtpp_mutex_islocked(&cf->glock) == 1);
-
-    he = CALL_METHOD(cf->stable->sessions_ht, findfirst, call_id, (void **)&sp);
-    if (he == NULL) {
-        return (NULL);
-    }
-    return (sp);
-}
-
-struct rtpp_session *
-session_findnext(struct cfg *cf, struct rtpp_session *psp)
-{
-    struct rtpp_session *sp;
-    struct rtpp_hash_table_entry *he;
-
-    /* Make sure structure is properly locked */
-    assert(rtpp_mutex_islocked(&cf->glock) == 1);
-
-    he = CALL_METHOD(cf->stable->sessions_ht, findnext, psp->hte, (void **)&sp); 
-    if (he == NULL) {
-        return (NULL);
-    }
-    return (sp);
-}
 
 struct rtpp_session *
 rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
@@ -121,6 +88,9 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     pub = &(pvt->pub);
     pub->rcnt = rcnt;
     rtpp_gen_uid(&pub->seuid);
+#if RTPP_DEBUG_refcnt
+    CALL_METHOD(rcnt, traceen);
+#endif
 
     log = rtpp_log_ctor(cfs, "rtpproxy", ccap->call_id, 0);
     if (log == NULL) {
@@ -187,25 +157,15 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
         pub->rtcp->stream[i]->stuid_rtp = pub->rtp->stream[i]->stuid;
     }
 
-    pub->hte = CALL_METHOD(cfs->sessions_ht, append, pub->call_id, pub);
-    if (pub->hte == NULL) {
-        goto e7;
-    }
-
     pvt->pub.rtpp_stats = cfs->rtpp_stats;
     pvt->pub.log = log;
     pvt->sessinfo = cfs->sessinfo;
-    pvt->sessions_ht = cfs->sessions_ht;
 
     CALL_METHOD(cfs->sessinfo, append, pub, 0);
 
     CALL_METHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor, pvt);
     return (&pvt->pub);
 
-#if 0
-e8:
-    CALL_METHOD(cfs->sessions_ht, remove, pub->call_id, pub->hte);
-#endif
 e7:
     free(pub->tag_nomedianum);
 e6:
@@ -281,7 +241,6 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     for (i = 0; i < 2; i++) {
         CALL_METHOD(pvt->sessinfo, remove, pub, i);
     }
-    CALL_METHOD(pvt->sessions_ht, remove, pub->call_id, pub->hte);
     CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_destroyed", 1);
     CALL_METHOD(pub->rtpp_stats, updatebyname_d, "total_duration",
       session_time);
@@ -319,39 +278,75 @@ compare_session_tags(const char *tag1, const char *tag0, unsigned *medianum_p)
     return 0;
 }
 
+struct session_match_args {
+    const char *from_tag;
+    const char *to_tag;
+    struct rtpp_session *sp;
+    int rval;
+};
+
+static int
+rtpp_session_ematch(void *dp, void *ap)
+{
+    struct rtpp_session *rsp;
+    struct session_match_args *map;
+    const char *cp1, *cp2;
+
+    rsp = (struct rtpp_session *)dp;
+    map = (struct session_match_args *)ap;
+
+    if (strcmp(rsp->tag, map->from_tag) == 0) {
+        map->rval = 0;
+        goto found;
+    }
+    if (map->to_tag != NULL) {
+        switch (compare_session_tags(rsp->tag, map->to_tag, NULL)) {
+        case 1:
+            /* Exact tag match */
+            map->rval = 1;
+            goto found;
+
+        case 2:
+            /*
+             * Reverse tag match without medianum. Medianum is always
+             * applied to the from tag, verify that.
+             */
+            cp1 = strrchr(rsp->tag, ';');
+            cp2 = strrchr(map->from_tag, ';');
+            if (cp2 != NULL && strcmp(cp1, cp2) == 0) {
+                map->rval = 1;
+                goto found;
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+    return (RTPP_HT_MATCH_CONT);
+
+found:
+    CALL_METHOD(rsp->rcnt, incref);
+    RTPP_DBG_ASSERT(map->sp == NULL);
+    map->sp = rsp;
+    return (RTPP_HT_MATCH_BRK);
+}
+
 int
 find_stream(struct cfg *cf, const char *call_id, const char *from_tag,
   const char *to_tag, struct rtpp_session **spp)
 {
-    const char *cp1, *cp2;
+    struct session_match_args ma;
 
-    /* Make sure structure is properly locked */
-    assert(rtpp_mutex_islocked(&cf->glock) == 1);
+    memset(&ma, '\0', sizeof(ma));
+    ma.from_tag = from_tag;
+    ma.to_tag = to_tag;
+    ma.rval = -1;
 
-    for (*spp = session_findfirst(cf, call_id); *spp != NULL; *spp = session_findnext(cf, *spp)) {
-	if (strcmp((*spp)->tag, from_tag) == 0) {
-	    return 0;
-	} else if (to_tag != NULL) {
-	    switch (compare_session_tags((*spp)->tag, to_tag, NULL)) {
-	    case 1:
-		/* Exact tag match */
-		return 1;
-
-	    case 2:
-		/*
-		 * Reverse tag match without medianum. Medianum is always
-		 * applied to the from tag, verify that.
-		 */
-		cp1 = strrchr((*spp)->tag, ';');
-		cp2 = strrchr(from_tag, ';');
-		if (cp2 != NULL && strcmp(cp1, cp2) == 0)
-		    return 1;
-		break;
-
-	    default:
-		break;
-	    }
-	}
+    CALL_METHOD(cf->stable->sessions_ht, foreach_key, call_id,
+      rtpp_session_ematch, &ma);
+    if (ma.rval != -1) {
+        *spp = ma.sp;
     }
-    return -1;
+    return ma.rval;
 }
