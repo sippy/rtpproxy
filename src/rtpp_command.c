@@ -40,6 +40,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpp_debug.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
@@ -49,12 +50,15 @@
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_copy.h"
+#include "rtpp_command_delete.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_record.h"
 #include "rtpp_command_rcache.h"
 #include "rtpp_command_query.h"
 #include "rtpp_command_stats.h"
 #include "rtpp_command_ul.h"
+#include "rtpp_hash_table.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_network.h"
@@ -107,8 +111,6 @@ struct d_opts;
 
 static int create_twinlistener(struct rtpp_cfg_stable *, struct sockaddr *, int,
   struct rtpp_socket **);
-static int handle_delete(struct cfg *, struct common_cmd_args *, int);
-static int handle_record(struct cfg *, struct common_cmd_args *, int);
 static void handle_info(struct cfg *, struct rtpp_command *,
   const char *);
 static void handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd);
@@ -255,6 +257,9 @@ free_command(struct rtpp_command *cmd)
     pvt = PUB2PVT(cmd);
     if (pvt->rcache_obj != NULL) {
         CALL_METHOD(pvt->rcache_obj->rcnt, decref);
+    }
+    if (cmd->sp != NULL) {
+        CALL_METHOD(cmd->sp->rcnt, decref);
     }
     free(pvt);
 }
@@ -409,6 +414,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
         /* Delete all active sessions */
         RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO, "deleting all active sessions");
         CALL_METHOD(cf->stable->sessions_wrt, purge);
+        CALL_METHOD(cf->stable->sessions_ht, purge);
         reply_ok(cmd);
         return 0;
 
@@ -526,9 +532,14 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     default:
-	i = find_stream(cf, cmd->cca.call_id, cmd->cca.from_tag, cmd->cca.to_tag, &spa);
-	if (i != -1 && cmd->cca.op != UPDATE)
-	    i = NOT(i);
+	i = find_stream(cf, cmd->cca.call_id, cmd->cca.from_tag,
+	  cmd->cca.to_tag, &spa);
+	if (i != -1) {
+	    if (cmd->cca.op != UPDATE)
+		i = NOT(i);
+	    RTPP_DBG_ASSERT(cmd->sp == NULL);
+	    cmd->sp = spa;
+	}
 	break;
     }
 
@@ -598,7 +609,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case LOOKUP:
     case UPDATE:
-        rtpp_command_ul_handle(cf, cmd, ulop, spa, i);
+	rtpp_command_ul_handle(cf, cmd, ulop, i);
 	break;
 
     default:
@@ -607,94 +618,6 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     }
 
     return 0;
-}
-
-static int
-handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
-{
-    int ndeleted;
-    unsigned int medianum;
-    struct rtpp_session *spa, *spb;
-    int cmpr, cmpr1, idx;
-
-    ndeleted = 0;
-    for (spa = session_findfirst(cf, ccap->call_id); spa != NULL;) {
-	medianum = 0;
-	if ((cmpr1 = compare_session_tags(spa->tag, ccap->from_tag, &medianum)) != 0) {
-	    idx = 1;
-	    cmpr = cmpr1;
-	} else if (ccap->to_tag != NULL &&
-	  (cmpr1 = compare_session_tags(spa->tag, ccap->to_tag, &medianum)) != 0) {
-	    idx = 0;
-	    cmpr = cmpr1;
-	} else {
-	    spa = session_findnext(cf, spa);
-	    continue;
-	}
-
-	if (weak)
-	    spa->rtp->stream[idx]->weak = 0;
-	else
-	    spa->strong = 0;
-
-	/*
-	 * This seems to be stable from reiterations, the only side
-	 * effect is less efficient work.
-	 */
-	if (spa->strong || spa->rtp->stream[0]->weak || spa->rtp->stream[1]->weak) {
-	    RTPP_LOG(spa->log, RTPP_LOG_INFO,
-	      "delete: medianum=%u: removing %s flag, seeing flags to"
-	      " continue session (strong=%d, weak=%d/%d)",
-	      medianum,
-	      weak ? ( idx ? "weak[1]" : "weak[0]" ) : "strong",
-	      spa->strong, spa->rtp->stream[0]->weak, spa->rtp->stream[1]->weak);
-	    /* Skipping to next possible stream for this call */
-	    ++ndeleted;
-	    spa = session_findnext(cf, spa);
-	    continue;
-	}
-	RTPP_LOG(spa->log, RTPP_LOG_INFO,
-	  "forcefully deleting session %u on ports %d/%d",
-	   medianum, spa->rtp->stream[0]->port, spa->rtp->stream[1]->port);
-	/* Search forward before we do removal */
-	spb = spa;
-	spa = session_findnext(cf, spa);
-        if (CALL_METHOD(cf->stable->sessions_wrt, unreg, spb->seuid) != NULL) {
-	    ++ndeleted;
-        }
-	if (cmpr != 2) {
-	    break;
-	}
-    }
-    if (ndeleted == 0) {
-	return -1;
-    }
-    return 0;
-}
-
-static int
-handle_record(struct cfg *cf, struct common_cmd_args *ccap,
-  int record_single_file)
-{
-    int nrecorded, idx;
-    struct rtpp_session *spa;
-
-    nrecorded = 0;
-    for (spa = session_findfirst(cf, ccap->call_id); spa != NULL;
-      spa = session_findnext(cf, spa)) {
-	if (compare_session_tags(spa->tag, ccap->from_tag, NULL) != 0) {
-	    idx = 1;
-	} else if (ccap->to_tag != NULL &&
-	  (compare_session_tags(spa->tag, ccap->to_tag, NULL)) != 0) {
-	    idx = 0;
-	} else {
-	    continue;
-	}
-	if (handle_copy(cf, spa, idx, NULL, record_single_file) == 0) {
-            nrecorded++;
-        }
-    }
-    return (nrecorded == 0 ? -1 : 0);
 }
 
 static void
