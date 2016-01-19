@@ -278,8 +278,8 @@ rtpp_proc_async_run(void *arg)
             process_rtp_only(cf, &ptbl_rtcp, tp[2], ndrain, sender, rstats);
         }
         if (alarm_tick != 0) {
-            rtpp_proc_ttl(cf->stable->sessions_wrt, cf->stable->rtpp_notify_cf,
-              cf->stable->rtpp_stats);
+            rtpp_proc_ttl(cf->stable->sessions_ht, cf->stable->sessions_wrt,
+              cf->stable->rtpp_notify_cf, cf->stable->rtpp_stats);
         }
 
         if (CALL_METHOD(cf->stable->servers_wrt, get_length) > 0) {
