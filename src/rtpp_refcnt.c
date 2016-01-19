@@ -31,16 +31,28 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_debug.h"
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_refcnt_fin.h"
+
+#if RTPP_DEBUG_refcnt
+#include <stdio.h>
+#ifdef RTPP_DEBUG
+#include "rtpp_stacktrace.h"
+#endif
+#endif
+
 
 /*
  * Somewhat arbitrary cap on the maximum value of the references. Just here
  * to catch any runaway situations, i.e. bugs in the code.
  */
 #define RC_ABS_MAX 2000000
+
+#define RC_FLAG_PA    (1 << 0)
+#define RC_FLAG_TRACE (1 << 1)
 
 struct rtpp_refcnt_priv
 {
@@ -51,7 +63,7 @@ struct rtpp_refcnt_priv
     void *data;
     rtpp_refcnt_dtor_t pre_dtor_f;
     void *pd_data;
-    int pa_flag;
+    int flags;
 };
 
 static void rtpp_refcnt_attach(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
@@ -61,6 +73,9 @@ static void rtpp_refcnt_decref(struct rtpp_refcnt *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt *);
 static void rtpp_refcnt_reg_pd(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *);
+#if RTPP_DEBUG_refcnt
+static void rtpp_refcnt_traceen(struct rtpp_refcnt *);
+#endif
 
 struct rtpp_refcnt *
 rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
@@ -86,6 +101,9 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
     pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
+#if RTPP_DEBUG_refcnt
+    pvt->pub.traceen = &rtpp_refcnt_traceen;
+#endif
     pvt->cnt = 1;
     return (&pvt->pub);
 }
@@ -111,8 +129,11 @@ rtpp_refcnt_ctor_pa(void *pap)
     pvt->pub.decref = &rtpp_refcnt_decref;
     pvt->pub.getdata = &rtpp_refcnt_getdata;
     pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
+#if RTPP_DEBUG_refcnt
+    pvt->pub.traceen = &rtpp_refcnt_traceen;
+#endif
     pvt->cnt = 1;
-    pvt->pa_flag = 1;
+    pvt->flags |= RC_FLAG_PA;
     return (&pvt->pub);
 }
 
@@ -134,6 +155,20 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
 
     pvt = (struct rtpp_refcnt_priv *)pub;
     pthread_mutex_lock(&pvt->cnt_lock);
+#if RTPP_DEBUG_refcnt
+    if (pvt->flags & RC_FLAG_TRACE) {
+        char *dbuf;
+        asprintf(&dbuf, "rtpp_refcnt(%p, %u).incref()", pub, pvt->cnt);
+        if (dbuf != NULL) {
+#ifdef RTPP_DEBUG
+            rtpp_stacktrace_print(dbuf);
+#else
+            fprintf(stderr, "%s\n", dbuf);
+#endif
+            free(dbuf);
+        }
+    }
+#endif
     assert(pvt->cnt > 0 && pvt->cnt < RC_ABS_MAX);
     pvt->cnt += 1;
     pthread_mutex_unlock(&pvt->cnt_lock);
@@ -146,9 +181,23 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
 
     pvt = (struct rtpp_refcnt_priv *)pub;
     pthread_mutex_lock(&pvt->cnt_lock);
+#if RTPP_DEBUG_refcnt
+    if (pvt->flags & RC_FLAG_TRACE) {
+        char *dbuf;
+        asprintf(&dbuf, "rtpp_refcnt(%p, %u).decref()", pub, pvt->cnt);
+        if (dbuf != NULL) {
+#ifdef RTPP_DEBUG
+            rtpp_stacktrace_print(dbuf);
+#else
+            fprintf(stderr, "%s\n", dbuf);
+#endif
+            free(dbuf);
+        }
+    }
+#endif
     pvt->cnt -= 1;
     if (pvt->cnt == 0) {
-        if (pvt->pa_flag == 0) {
+        if ((pvt->flags & RC_FLAG_PA) == 0) {
             if (pvt->pre_dtor_f != NULL) {
                 pvt->pre_dtor_f(pvt->pd_data);
             }
@@ -191,7 +240,7 @@ rtpp_refcnt_abort(struct rtpp_refcnt *pub)
     assert(pvt->cnt == 1);
     pthread_mutex_unlock(&pvt->cnt_lock);
     pthread_mutex_destroy(&pvt->cnt_lock);
-    if (pvt->pa_flag == 0) {
+    if ((pvt->flags & RC_FLAG_PA) == 0) {
         free(pvt);
     }
     return;
@@ -219,3 +268,14 @@ rtpp_refcnt_reg_pd(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t pre_dtor_f,
     pvt->pre_dtor_f = pre_dtor_f;
     pvt->pd_data = pd_data;
 }
+
+#if RTPP_DEBUG_refcnt
+static void
+rtpp_refcnt_traceen(struct rtpp_refcnt *pub)
+{
+    struct rtpp_refcnt_priv *pvt;
+
+    pvt = (struct rtpp_refcnt_priv *)pub;
+    pvt->flags |= RC_FLAG_TRACE;
+}
+#endif
