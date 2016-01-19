@@ -456,7 +456,9 @@ startstop_CLEANFILES = startstop.rout
 basic_versions_EXTRA_DIST = basic_versions basic_versions.input basic_versions.output
 basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout
 command_parser_EXTRA_DIST = command_parser command_parser.input command_parser.output
-command_parser_CLEANFILES = command_parser.rout 238uwedguw.rtcp 238uwedguw.rtp
+command_parser_CLEANFILES = command_parser.rout 238uwedguw.rtcp 238uwedguw.rtp \
+  command_parser.rlog
+
 extractaudio_EXTRA_DIST = extractaudio call1_alaw.a.rtp call1_alaw.o.rtp call1_g722.a.rtp \
   call1_g722.o.rtp call1_g729.a.rtp call1_g729.o.rtp call1_ulaw.a.rtp \
   call1_ulaw.o.rtp call1_gsm.a.rtp call1_gsm.o.rtp extractaudio.checksums
