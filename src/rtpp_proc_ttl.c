@@ -43,6 +43,7 @@
 struct foreach_args {
     struct rtpp_notify *rtpp_notify_cf;
     struct rtpp_stats *rtpp_stats;
+    struct rtpp_weakref_obj *sessions_wrt;
 };  
 
 static int
@@ -65,21 +66,23 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
               sp->timeout_data.notify_target, sp->timeout_data.notify_tag);
         }
         CALL_METHOD(fap->rtpp_stats, updatebyname, "nsess_timeout", 1);
-        return (RTPP_WR_MATCH_DEL);
+        CALL_METHOD(fap->sessions_wrt, unreg, sp->seuid);
+        return (RTPP_HT_MATCH_DEL);
     } else {
         CALL_METHOD(sp->rtp, decr_ttl);
     }
-    return (RTPP_WR_MATCH_CONT);
+    return (RTPP_HT_MATCH_CONT);
 }
 
 void
-rtpp_proc_ttl(struct rtpp_weakref_obj *sessions_wrt,
-  struct rtpp_notify *rtpp_notify_cf, struct rtpp_stats *rtpp_stats)
+rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct rtpp_weakref_obj
+  *sessions_wrt, struct rtpp_notify *rtpp_notify_cf, struct rtpp_stats
+  *rtpp_stats)
 {
     struct foreach_args fargs;
 
     fargs.rtpp_notify_cf = rtpp_notify_cf;
     fargs.rtpp_stats = rtpp_stats;
-    CALL_METHOD(sessions_wrt, foreach, rtpp_proc_ttl_foreach,
-      &fargs);
+    fargs.sessions_wrt = sessions_wrt;
+    CALL_METHOD(sessions_ht, foreach, rtpp_proc_ttl_foreach, &fargs);
 }
