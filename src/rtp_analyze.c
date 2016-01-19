@@ -27,11 +27,11 @@
 
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_debug.h"
 #include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
@@ -126,8 +126,10 @@ update_jitter_stats(struct rtpp_session_stat_jitter *jp,
         }
         jp->jtotal += jp->jval;
     }
+#if RTPP_DEBUG_analyze
     fprintf(stderr, "0x%.8X,%lld,%llu,%u,%f\n", rinfo->ssrc, jp->pcount,
       rtime_ts, rinfo->ts, jp->jval);
+#endif
     jp->pcount++;
 saveandexit:
     if (rinfo->rtp_profile->pt_kind == RTP_PTK_AUDIO) {
@@ -171,9 +173,9 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
 
     rpp = rinfo->rtp_profile;
     if (stat->ssrc_changes == 0) {
-        assert(stat->last.pcount == 0);
-        assert(stat->psent == 0);
-        assert(stat->precvd == 0);
+        RTPP_DBG_ASSERT(stat->last.pcount == 0);
+        RTPP_DBG_ASSERT(stat->psent == 0);
+        RTPP_DBG_ASSERT(stat->precvd == 0);
         stat->last.ssrc = rinfo->ssrc;
         stat->last.max_seq = stat->last.min_seq = rinfo->seq;
         stat->last.base_ts = rinfo->ts;
