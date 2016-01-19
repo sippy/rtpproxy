@@ -43,8 +43,10 @@ DEFINE_METHOD(rtpp_hash_table, hash_table_findnext,  struct rtpp_hash_table_entr
   struct rtpp_hash_table_entry *, void **);
 DEFINE_METHOD(rtpp_hash_table, hash_table_find, struct rtpp_refcnt *, const void *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_foreach, void, rtpp_hash_table_match_t, void *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_foreach_key, void, const void *, rtpp_hash_table_match_t, void *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_dtor, void);
 DEFINE_METHOD(rtpp_hash_table, hash_table_get_length, int);
+DEFINE_METHOD(rtpp_hash_table, hash_table_purge, int);
 
 struct rtpp_hash_table_priv;
 
@@ -54,9 +56,9 @@ enum rtpp_ht_key_types {rtpp_ht_key_str_t = 0, rtpp_ht_key_u64_t,
 #define RTPP_HT_NODUPS    0x1
 #define RTPP_HT_DUP_ABRT  0x2
 
-#define RTPP_HT_MATCH_BRK  -1
-#define RTPP_HT_MATCH_CONT  0
-#define RTPP_HT_MATCH_DEL   1
+#define RTPP_HT_MATCH_CONT  (0 << 0)
+#define RTPP_HT_MATCH_BRK   (1 << 0)
+#define RTPP_HT_MATCH_DEL   (1 << 1)
 
 struct rtpp_hash_table
 {
@@ -69,8 +71,10 @@ struct rtpp_hash_table
     hash_table_findnext_t findnext;
     hash_table_find_t find;
     hash_table_foreach_t foreach;
+    hash_table_foreach_key_t foreach_key;
     hash_table_dtor_t dtor;
     hash_table_get_length_t get_length;
+    hash_table_purge_t purge;
     struct rtpp_hash_table_priv *pvt;
 };
 
