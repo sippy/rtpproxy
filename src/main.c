@@ -78,7 +78,9 @@
 #include "rtpp_notify.h"
 #include "rtpp_math.h"
 #include "rtpp_mallocs.h"
+#if ENABLE_MODULE_IF
 #include "rtpp_module_if.h"
+#endif
 #include "rtpp_stats.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_list.h"
@@ -779,8 +781,10 @@ main(int argc, char **argv)
         exit(1);
     }
 
+#if ENABLE_MODULE_IF
     cf.stable->modules_cf = rtpp_module_if_ctor(cf.stable, cf.stable->glog,
       "../modules/acct_csv/.libs/rtpp_csv_acct.so");
+#endif
 
     cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
     if (cf.stable->rtpp_cmd_cf == NULL) {
@@ -873,9 +877,11 @@ main(int argc, char **argv)
     }
 
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
+#if ENABLE_MODULE_IF
     if (cf.stable->modules_cf != NULL) {
         CALL_METHOD(cf.stable->modules_cf->rcnt, decref);
     }
+#endif
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
