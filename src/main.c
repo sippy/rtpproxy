@@ -78,6 +78,7 @@
 #include "rtpp_notify.h"
 #include "rtpp_math.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_module_if.h"
 #include "rtpp_stats.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_list.h"
@@ -778,6 +779,8 @@ main(int argc, char **argv)
         exit(1);
     }
 
+    cf.stable->modules_cf = rtpp_module_if_ctor("rtpp_acct.so");
+
     cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
     if (cf.stable->rtpp_cmd_cf == NULL) {
         RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
@@ -869,6 +872,9 @@ main(int argc, char **argv)
     }
 
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
+    if (cf.stable->modules_cf != NULL) {
+        CALL_METHOD(cf.stable->modules_cf->rcnt, decref);
+    }
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_timed_cf->rcnt, decref);

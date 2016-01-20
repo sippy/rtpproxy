@@ -44,6 +44,7 @@ typedef enum rtpp_ttl_mode rtpp_ttl_mode;
 struct rtpp_timed;
 struct rtpp_sessinfo;
 struct rtpp_log;
+struct rtpp_module_if;
 
 struct rtpp_cfg_stable {
     const char *pid_file;
@@ -117,6 +118,8 @@ struct rtpp_cfg_stable {
     struct rtpp_timed *rtpp_timed_cf;
 
     struct rtpp_sessinfo *sessinfo;
+
+    struct rtpp_module_if *modules_cf;
 };
 
 #endif
