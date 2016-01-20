@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS=	-I m4
 
 AUTOMAKE_OPTIONS=	foreign
 
-SUBDIRS=	libexecinfo src makeann tests
+SUBDIRS=	libexecinfo src makeann modules tests
 
 if BUILD_EXTRACTAUDIO
 SUBDIRS+=	extractaudio
