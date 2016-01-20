@@ -25,16 +25,24 @@
  *
  */
 
+#include <dlfcn.h>
+#include <stdint.h>
 #include <stdlib.h>
 
+#include "rtpp_log.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_types.h"
+#include "rtpp_log_obj.h"
+#include "rtpp_module.h"
 #include "rtpp_module_if.h"
 #include "rtpp_module_if_fin.h"
 #include "rtpp_refcnt.h"
 
 struct rtpp_module_if_priv {
     struct rtpp_module_if pub;
+    void *dmp;
+    struct moduleinfo *mip;
+    struct rtpp_module_priv *mpvt;
 };
 
 static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
@@ -43,7 +51,8 @@ static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
   ((struct rtpp_module_if_priv *)((char *)(pubp) - offsetof(struct rtpp_module_if_priv, pub)))
 
 struct rtpp_module_if *
-rtpp_module_if_ctor(const char *mpath)
+rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
+  const char *mpath)
 {
     struct rtpp_refcnt *rcnt;
     struct rtpp_module_if_priv *pvt;
@@ -53,10 +62,38 @@ rtpp_module_if_ctor(const char *mpath)
         goto e0;
     }
     pvt->pub.rcnt = rcnt;
+    pvt->dmp = dlopen(mpath, RTLD_NOW);
+    if (pvt->dmp == NULL) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen(%s): %s", mpath, dlerror());
+        goto e1;
+    }
+    pvt->mip = dlsym(pvt->dmp, "rtpp_module");
+    if (pvt->mip == NULL) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol in the %s"
+          ": %s", mpath, dlerror());
+        goto e2;
+    }
+    if (!MI_VER_CHCK(struct moduleinfo, pvt->mip)) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
+          "consider recompiling the module", mpath);
+        goto e2;
+    }
+    if (pvt->mip->ctor != NULL) {
+        pvt->mpvt = pvt->mip->ctor(cfsp);
+        if (pvt->mpvt == NULL) {
+            RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' failed to initialize",
+              pvt->mip->name);
+            goto e2;
+        }
+    }
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
-
+e2:
+    dlclose(pvt->dmp);
+e1:
+    CALL_METHOD(rcnt, decref);
+    free(pvt);
 e0:
     return (NULL);
 }
@@ -66,5 +103,9 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
 {
 
     rtpp_module_if_fin(&(pvt->pub));
+    if (pvt->mip->dtor != NULL) {
+        pvt->mip->dtor(pvt->mpvt);
+    }
+    dlclose(pvt->dmp);
     free(pvt);
 }
