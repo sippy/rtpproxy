@@ -29,7 +29,17 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_monotime.c rtpp_mallocs.c rtpp_mallocs.h rtpp_pcnt_strm.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c rtpp_ringbuf.h \
   rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
-  rtpp_command_record.h rtpp_module_if.c rtpp_module_if.h rtpp_module.h
+  rtpp_command_record.h
+
+rtpproxy_LDADD=-lm -lpthread
+rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
+  @LIBS_DL@
+rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
+
+if ENABLE_MODULE_IF
+BASE_SOURCES+=rtpp_module_if.c rtpp_module_if.h rtpp_module.h
+rtpproxy_LDADD+=@LIBS_DL@
+endif
 
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
   rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
@@ -46,10 +56,6 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
 rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
-rtpproxy_LDADD=-lm -lpthread
-rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
-  @LIBS_DL@
-rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
 rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
   -include rtpp_memdeb.h
 rtpproxy_debug_CFLAGS=-g3 -O0 -fno-omit-frame-pointer
