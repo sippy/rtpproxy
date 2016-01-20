@@ -779,7 +779,8 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    cf.stable->modules_cf = rtpp_module_if_ctor("rtpp_acct.so");
+    cf.stable->modules_cf = rtpp_module_if_ctor(cf.stable, cf.stable->glog,
+      "../modules/acct_csv/.libs/rtpp_csv_acct.so");
 
     cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
     if (cf.stable->rtpp_cmd_cf == NULL) {
