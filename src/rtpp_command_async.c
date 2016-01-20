@@ -638,7 +638,8 @@ rtpp_command_async_ctor(struct cfg *cf)
         goto e4;
     }
     assert(cf->stable->rtpp_timed_cf != NULL);
-    cmd_cf->rcache = rtpp_cmd_rcache_ctor(cf->stable->rtpp_timed_cf, 30.0);
+    cmd_cf->rcache = rtpp_cmd_rcache_ctor(cf->stable->rtpp_timed_cf,
+      32.0 + 3.0);
     if (cmd_cf->rcache == NULL) {
         goto e5;
     }
