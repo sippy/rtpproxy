@@ -2,11 +2,16 @@ ACLOCAL_AMFLAGS=	-I m4
 
 AUTOMAKE_OPTIONS=	foreign
 
-SUBDIRS=	libexecinfo src makeann modules tests
+SUBDIRS=	libexecinfo src makeann
 
+if BUILD_MODULES
+SUBDIRS+=	modules
+endif
 if BUILD_EXTRACTAUDIO
 SUBDIRS+=	extractaudio
 endif
+
+SUBDIRS+=	tests
 
 dist_man_MANS=	rtpproxy.8
 EXTRA_DIST=	README.remote manpage.xml debian/README.Debian debian/changelog \
