@@ -28,6 +28,8 @@
 struct rtpp_module_if;
 struct rtpp_refcnt;
 struct rtpp_acct;
+struct rtpp_log;
+struct rtpp_cfg_stable;
 
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct, void,
   struct rtpp_acct *);
@@ -37,4 +39,5 @@ struct rtpp_module_if {
     METHOD_ENTRY(rtpp_module_if_do_acct, do_acct);
 };
 
-struct rtpp_module_if *rtpp_module_if_ctor(const char *);
+struct rtpp_module_if *rtpp_module_if_ctor(struct rtpp_cfg_stable *,
+  struct rtpp_log *, const char *);
