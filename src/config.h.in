@@ -20,6 +20,9 @@
 /* Define if you have libgsm library installed */
 #undef ENABLE_GSM
 
+/* Define to enable dymanic modules */
+#undef ENABLE_MODULE_IF
+
 /* Define if you have libsndfile library installed */
 #undef ENABLE_SNDFILE
 

@@ -89,6 +89,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = rtpproxy$(EXEEXT) rtpproxy_debug$(EXEEXT)
+@ENABLE_MODULE_IF_TRUE@am__append_1 = rtpp_module_if.c rtpp_module_if.h rtpp_module.h
+@ENABLE_MODULE_IF_TRUE@am__append_2 = @LIBS_DL@
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -104,7 +106,56 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__objects_1 = main.$(OBJEXT) rtpp_server.$(OBJEXT) \
+am__rtpproxy_SOURCES_DIST = main.c rtp.h rtpp_server.c rtpp_server.h \
+	rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h \
+	rtpp_session.h rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c \
+	rtp_resizer.h rtpp_session.c rtpp_command.c rtpp_command.h \
+	rtpp_network.h rtpp_network.c rtpp_syslog_async.c \
+	rtpp_syslog_async.h rtpp_notify.c rtpp_notify.h \
+	rtpp_command_async.h rtpp_command_async.c rtpp_proc_async.c \
+	rtpp_proc_async.h rtpp_proc.h rtpp_proc.c rtpp_version.h \
+	rtpp_math.c rtpp_math.h rtpp_wi.c rtpp_wi.h rtpp_wi_private.h \
+	rtpp_queue.c rtpp_queue.h rtpp_netio_async.c \
+	rtpp_netio_async.h rtpp_record_private.h rtpp_command_parse.c \
+	rtpp_command_parse.h rtpp_command_copy.c rtpp_command_copy.h \
+	rtpp_command_ul.c rtpp_command_ul.h rtpp_log_stand.c \
+	rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
+	rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h \
+	rtpp_stats.c rtpp_stats.h rtpp_cfg_stable.h \
+	rtpp_command_stats.h rtpp_command_stats.c rtp_info.h \
+	rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
+	rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c \
+	rtpp_timed.c rtpp_timed.h rtpp_analyzer.c rtpp_analyzer.h \
+	rtp_analyze.c rtp_analyze.h rtpp_command_query.c \
+	rtpp_command_query.h rtpp_pearson.c rtpp_pearson.h \
+	rtpp_refcnt.c rtpp_refcnt.h rtpp_command_rcache.c \
+	rtpp_command_rcache.h rtpp_tnotify_set.c rtpp_tnotify_set.h \
+	rtpp_tnotify_tgt.h rtp_packet.h rtpp_pthread.c rtpp_pthread.h \
+	rtpp_time.c rtpp_time.h rtpp_sessinfo.c rtpp_sessinfo.h \
+	rtpp_weakref.c rtpp_weakref.h rtpp_proc_servers.h \
+	rtpp_proc_servers.c rtpp_stream.h rtpp_stream.c rtpp_genuid.h \
+	rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
+	rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h \
+	rtpp_ttl.c rtpp_ttl.h rtpp_proc_ttl.h rtpp_proc_ttl.c \
+	rtpp_pipe.h rtpp_pipe.c rtpp_pcount.h rtpp_pcount.c \
+	rtpp_debug.h rtpp_monotime.h rtpp_monotime.c rtpp_mallocs.c \
+	rtpp_mallocs.h rtpp_pcnt_strm.h rtpp_pcnt_strm.c rtpp_endian.h \
+	rtpp_ringbuf.c rtpp_ringbuf.h rtpp_command_delete.c \
+	rtpp_command_delete.h rtpp_command_record.c \
+	rtpp_command_record.h rtpp_module_if.c rtpp_module_if.h \
+	rtpp_module.h rtpp_timed_fin.c rtpp_timed_fin.h \
+	rtpp_stream_fin.c rtpp_stream_fin.h rtpp_server_fin.c \
+	rtpp_server_fin.h rtpp_refcnt_fin.c rtpp_refcnt_fin.h \
+	rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
+	rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h \
+	rtpp_socket_fin.c rtpp_socket_fin.h rtpp_record_fin.c \
+	rtpp_record_fin.h rtpp_ttl_fin.c rtpp_ttl_fin.h \
+	rtpp_pipe_fin.c rtpp_pipe_fin.h rtpp_pcount_fin.c \
+	rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h \
+	rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c rtpp_ringbuf_fin.c \
+	rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c
+@ENABLE_MODULE_IF_TRUE@am__objects_1 = rtpp_module_if.$(OBJEXT)
+am__objects_2 = main.$(OBJEXT) rtpp_server.$(OBJEXT) \
 	rtpp_record.$(OBJEXT) rtpp_util.$(OBJEXT) rtp.$(OBJEXT) \
 	rtp_resizer.$(OBJEXT) rtpp_session.$(OBJEXT) \
 	rtpp_command.$(OBJEXT) rtpp_network.$(OBJEXT) \
@@ -130,8 +181,8 @@ am__objects_1 = main.$(OBJEXT) rtpp_server.$(OBJEXT) \
 	rtpp_pcount.$(OBJEXT) rtpp_monotime.$(OBJEXT) \
 	rtpp_mallocs.$(OBJEXT) rtpp_pcnt_strm.$(OBJEXT) \
 	rtpp_ringbuf.$(OBJEXT) rtpp_command_delete.$(OBJEXT) \
-	rtpp_command_record.$(OBJEXT) rtpp_module_if.$(OBJEXT)
-am__objects_2 = rtpp_timed_fin.$(OBJEXT) rtpp_stream_fin.$(OBJEXT) \
+	rtpp_command_record.$(OBJEXT) $(am__objects_1)
+am__objects_3 = rtpp_timed_fin.$(OBJEXT) rtpp_stream_fin.$(OBJEXT) \
 	rtpp_server_fin.$(OBJEXT) rtpp_refcnt_fin.$(OBJEXT) \
 	rtpp_log_obj_fin.$(OBJEXT) rtpp_command_rcache_fin.$(OBJEXT) \
 	rtpp_socket_fin.$(OBJEXT) rtpp_record_fin.$(OBJEXT) \
@@ -139,14 +190,67 @@ am__objects_2 = rtpp_timed_fin.$(OBJEXT) rtpp_stream_fin.$(OBJEXT) \
 	rtpp_pcount_fin.$(OBJEXT) rtpp_sessinfo_fin.$(OBJEXT) \
 	rtpp_pcnt_strm_fin.$(OBJEXT) rtpp_ringbuf_fin.$(OBJEXT) \
 	rtpp_module_if_fin.$(OBJEXT)
-am_rtpproxy_OBJECTS = $(am__objects_1) $(am__objects_2)
+am_rtpproxy_OBJECTS = $(am__objects_2) $(am__objects_3)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
-rtpproxy_DEPENDENCIES =
+am__DEPENDENCIES_1 =
+rtpproxy_DEPENDENCIES = $(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am__objects_3 = rtpproxy_debug-main.$(OBJEXT) \
+am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
+	rtpp_server.h rtpp_defines.h rtpp_log.h rtpp_record.c \
+	rtpp_record.h rtpp_session.h rtpp_util.c rtpp_util.h rtp.c \
+	rtp_resizer.c rtp_resizer.h rtpp_session.c rtpp_command.c \
+	rtpp_command.h rtpp_network.h rtpp_network.c \
+	rtpp_syslog_async.c rtpp_syslog_async.h rtpp_notify.c \
+	rtpp_notify.h rtpp_command_async.h rtpp_command_async.c \
+	rtpp_proc_async.c rtpp_proc_async.h rtpp_proc.h rtpp_proc.c \
+	rtpp_version.h rtpp_math.c rtpp_math.h rtpp_wi.c rtpp_wi.h \
+	rtpp_wi_private.h rtpp_queue.c rtpp_queue.h rtpp_netio_async.c \
+	rtpp_netio_async.h rtpp_record_private.h rtpp_command_parse.c \
+	rtpp_command_parse.h rtpp_command_copy.c rtpp_command_copy.h \
+	rtpp_command_ul.c rtpp_command_ul.h rtpp_log_stand.c \
+	rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
+	rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h \
+	rtpp_stats.c rtpp_stats.h rtpp_cfg_stable.h \
+	rtpp_command_stats.h rtpp_command_stats.c rtp_info.h \
+	rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
+	rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c \
+	rtpp_timed.c rtpp_timed.h rtpp_analyzer.c rtpp_analyzer.h \
+	rtp_analyze.c rtp_analyze.h rtpp_command_query.c \
+	rtpp_command_query.h rtpp_pearson.c rtpp_pearson.h \
+	rtpp_refcnt.c rtpp_refcnt.h rtpp_command_rcache.c \
+	rtpp_command_rcache.h rtpp_tnotify_set.c rtpp_tnotify_set.h \
+	rtpp_tnotify_tgt.h rtp_packet.h rtpp_pthread.c rtpp_pthread.h \
+	rtpp_time.c rtpp_time.h rtpp_sessinfo.c rtpp_sessinfo.h \
+	rtpp_weakref.c rtpp_weakref.h rtpp_proc_servers.h \
+	rtpp_proc_servers.c rtpp_stream.h rtpp_stream.c rtpp_genuid.h \
+	rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
+	rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h \
+	rtpp_ttl.c rtpp_ttl.h rtpp_proc_ttl.h rtpp_proc_ttl.c \
+	rtpp_pipe.h rtpp_pipe.c rtpp_pcount.h rtpp_pcount.c \
+	rtpp_debug.h rtpp_monotime.h rtpp_monotime.c rtpp_mallocs.c \
+	rtpp_mallocs.h rtpp_pcnt_strm.h rtpp_pcnt_strm.c rtpp_endian.h \
+	rtpp_ringbuf.c rtpp_ringbuf.h rtpp_command_delete.c \
+	rtpp_command_delete.h rtpp_command_record.c \
+	rtpp_command_record.h rtpp_module_if.c rtpp_module_if.h \
+	rtpp_module.h rtpp_timed_fin.c rtpp_timed_fin.h \
+	rtpp_stream_fin.c rtpp_stream_fin.h rtpp_server_fin.c \
+	rtpp_server_fin.h rtpp_refcnt_fin.c rtpp_refcnt_fin.h \
+	rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
+	rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h \
+	rtpp_socket_fin.c rtpp_socket_fin.h rtpp_record_fin.c \
+	rtpp_record_fin.h rtpp_ttl_fin.c rtpp_ttl_fin.h \
+	rtpp_pipe_fin.c rtpp_pipe_fin.h rtpp_pcount_fin.c \
+	rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h \
+	rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c rtpp_ringbuf_fin.c \
+	rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c \
+	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
+	rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c \
+	rtpp_stacktrace.h
+@ENABLE_MODULE_IF_TRUE@am__objects_4 = rtpproxy_debug-rtpp_module_if.$(OBJEXT)
+am__objects_5 = rtpproxy_debug-main.$(OBJEXT) \
 	rtpproxy_debug-rtpp_server.$(OBJEXT) \
 	rtpproxy_debug-rtpp_record.$(OBJEXT) \
 	rtpproxy_debug-rtpp_util.$(OBJEXT) \
@@ -201,9 +305,8 @@ am__objects_3 = rtpproxy_debug-main.$(OBJEXT) \
 	rtpproxy_debug-rtpp_pcnt_strm.$(OBJEXT) \
 	rtpproxy_debug-rtpp_ringbuf.$(OBJEXT) \
 	rtpproxy_debug-rtpp_command_delete.$(OBJEXT) \
-	rtpproxy_debug-rtpp_command_record.$(OBJEXT) \
-	rtpproxy_debug-rtpp_module_if.$(OBJEXT)
-am__objects_4 = rtpproxy_debug-rtpp_timed_fin.$(OBJEXT) \
+	rtpproxy_debug-rtpp_command_record.$(OBJEXT) $(am__objects_4)
+am__objects_6 = rtpproxy_debug-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_stream_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_server_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_refcnt_fin.$(OBJEXT) \
@@ -218,14 +321,14 @@ am__objects_4 = rtpproxy_debug-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_pcnt_strm_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_ringbuf_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_module_if_fin.$(OBJEXT)
-am__objects_5 = $(am__objects_3) $(am__objects_4)
-am__objects_6 = rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
+am__objects_7 = $(am__objects_5) $(am__objects_6)
+am__objects_8 = rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
 	rtpproxy_debug-rtpp_memdeb_test.$(OBJEXT) \
 	rtpproxy_debug-rtpp_stacktrace.$(OBJEXT)
-am_rtpproxy_debug_OBJECTS = $(am__objects_5) $(am__objects_6)
+am_rtpproxy_debug_OBJECTS = $(am__objects_7) $(am__objects_8)
 rtpproxy_debug_OBJECTS = $(am_rtpproxy_debug_OBJECTS)
-am__DEPENDENCIES_1 =
-rtpproxy_debug_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+rtpproxy_debug_DEPENDENCIES = $(am__DEPENDENCIES_2) \
 	$(top_srcdir)/libexecinfo/libexecinfo.a
 rtpproxy_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -266,7 +369,8 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(rtpproxy_SOURCES) $(rtpproxy_debug_SOURCES)
-DIST_SOURCES = $(rtpproxy_SOURCES) $(rtpproxy_debug_SOURCES)
+DIST_SOURCES = $(am__rtpproxy_SOURCES_DIST) \
+	$(am__rtpproxy_debug_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -417,38 +521,48 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_server.h \
-  rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
-  rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
-  rtpp_command.c rtpp_command.h rtpp_network.h rtpp_network.c \
-  rtpp_syslog_async.c rtpp_syslog_async.h rtpp_notify.c rtpp_notify.h \
-  rtpp_command_async.h rtpp_command_async.c rtpp_proc_async.c \
-  rtpp_proc_async.h rtpp_proc.h rtpp_proc.c rtpp_version.h rtpp_math.c \
-  rtpp_math.h rtpp_wi.c rtpp_wi.h rtpp_wi_private.h rtpp_queue.c rtpp_queue.h \
-  rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
-  rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
-  rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
-  rtpp_log_stand.c rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
-  rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h rtpp_stats.c \
-  rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
-  rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
-  rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c rtpp_timed.c \
-  rtpp_timed.h rtpp_analyzer.c rtpp_analyzer.h rtp_analyze.c rtp_analyze.h \
-  rtpp_command_query.c rtpp_command_query.h rtpp_pearson.c rtpp_pearson.h \
-  rtpp_refcnt.c rtpp_refcnt.h rtpp_command_rcache.c rtpp_command_rcache.h \
-  rtpp_tnotify_set.c rtpp_tnotify_set.h rtpp_tnotify_tgt.h rtp_packet.h \
-  rtpp_pthread.c rtpp_pthread.h rtpp_time.c rtpp_time.h \
-  rtpp_sessinfo.c rtpp_sessinfo.h rtpp_weakref.c rtpp_weakref.h \
-  rtpp_proc_servers.h rtpp_proc_servers.c rtpp_stream.h rtpp_stream.c \
-  rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
-  rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h \
-  rtpp_ttl.c rtpp_ttl.h rtpp_proc_ttl.h rtpp_proc_ttl.c rtpp_pipe.h \
-  rtpp_pipe.c rtpp_pcount.h rtpp_pcount.c rtpp_debug.h rtpp_monotime.h \
-  rtpp_monotime.c rtpp_mallocs.c rtpp_mallocs.h rtpp_pcnt_strm.h \
-  rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c rtpp_ringbuf.h \
-  rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
-  rtpp_command_record.h rtpp_module_if.c rtpp_module_if.h rtpp_module.h
+BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_server.h rtpp_defines.h \
+	rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
+	rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h \
+	rtpp_session.c rtpp_command.c rtpp_command.h rtpp_network.h \
+	rtpp_network.c rtpp_syslog_async.c rtpp_syslog_async.h \
+	rtpp_notify.c rtpp_notify.h rtpp_command_async.h \
+	rtpp_command_async.c rtpp_proc_async.c rtpp_proc_async.h \
+	rtpp_proc.h rtpp_proc.c rtpp_version.h rtpp_math.c rtpp_math.h \
+	rtpp_wi.c rtpp_wi.h rtpp_wi_private.h rtpp_queue.c \
+	rtpp_queue.h rtpp_netio_async.c rtpp_netio_async.h \
+	rtpp_record_private.h rtpp_command_parse.c \
+	rtpp_command_parse.h rtpp_command_copy.c rtpp_command_copy.h \
+	rtpp_command_ul.c rtpp_command_ul.h rtpp_log_stand.c \
+	rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
+	rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h \
+	rtpp_stats.c rtpp_stats.h rtpp_cfg_stable.h \
+	rtpp_command_stats.h rtpp_command_stats.c rtp_info.h \
+	rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
+	rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c \
+	rtpp_timed.c rtpp_timed.h rtpp_analyzer.c rtpp_analyzer.h \
+	rtp_analyze.c rtp_analyze.h rtpp_command_query.c \
+	rtpp_command_query.h rtpp_pearson.c rtpp_pearson.h \
+	rtpp_refcnt.c rtpp_refcnt.h rtpp_command_rcache.c \
+	rtpp_command_rcache.h rtpp_tnotify_set.c rtpp_tnotify_set.h \
+	rtpp_tnotify_tgt.h rtp_packet.h rtpp_pthread.c rtpp_pthread.h \
+	rtpp_time.c rtpp_time.h rtpp_sessinfo.c rtpp_sessinfo.h \
+	rtpp_weakref.c rtpp_weakref.h rtpp_proc_servers.h \
+	rtpp_proc_servers.c rtpp_stream.h rtpp_stream.c rtpp_genuid.h \
+	rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
+	rtpp_log_obj.h rtpp_log_obj.c rtpp_socket.c rtpp_socket.h \
+	rtpp_ttl.c rtpp_ttl.h rtpp_proc_ttl.h rtpp_proc_ttl.c \
+	rtpp_pipe.h rtpp_pipe.c rtpp_pcount.h rtpp_pcount.c \
+	rtpp_debug.h rtpp_monotime.h rtpp_monotime.c rtpp_mallocs.c \
+	rtpp_mallocs.h rtpp_pcnt_strm.h rtpp_pcnt_strm.c rtpp_endian.h \
+	rtpp_ringbuf.c rtpp_ringbuf.h rtpp_command_delete.c \
+	rtpp_command_delete.h rtpp_command_record.c \
+	rtpp_command_record.h $(am__append_1)
+rtpproxy_LDADD = -lm -lpthread $(am__append_2)
+rtpproxy_debug_LDADD = ${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
+  @LIBS_DL@
 
+rtpproxy_debug_LDFLAGS = -static -Wl,--export-dynamic
 SRCS_DEBUG = rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
   rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
 
@@ -464,11 +578,6 @@ SRCS_AUTOGEN = rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
 
 rtpproxy_SOURCES = ${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES = ${rtpproxy_SOURCES} ${SRCS_DEBUG}
-rtpproxy_LDADD = -lm -lpthread
-rtpproxy_debug_LDADD = ${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
-  @LIBS_DL@
-
-rtpproxy_debug_LDFLAGS = -static -Wl,--export-dynamic
 rtpproxy_debug_CPPFLAGS = -DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
   -include rtpp_memdeb.h
 
