@@ -90,7 +90,11 @@ rtpp_log_obj_setlevel(struct rtpp_log *self, int log_level)
     struct rtpp_log_priv *pvt;
 
     pvt = PUB2PVT(self);
-    rtpp_log_setlevel(pvt->log, log_level);
+    if (log_level != -1) {
+        rtpp_log_setlevel(pvt->log, log_level);
+    } else {
+        rtpp_log_setlevel(pvt->log, RTPP_LOG_ERR);
+    }
 }
 
 static void
