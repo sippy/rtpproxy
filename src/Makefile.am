@@ -29,7 +29,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_monotime.c rtpp_mallocs.c rtpp_mallocs.h rtpp_pcnt_strm.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c rtpp_ringbuf.h \
   rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
-  rtpp_command_record.h rtpp_module_if.c rtpp_module_if.h
+  rtpp_command_record.h rtpp_module_if.c rtpp_module_if.h rtpp_module.h
 
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
   rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
