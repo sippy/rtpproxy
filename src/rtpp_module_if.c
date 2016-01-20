@@ -41,7 +41,7 @@
 struct rtpp_module_if_priv {
     struct rtpp_module_if pub;
     void *dmp;
-    struct moduleinfo *mip;
+    struct rtpp_minfo *mip;
     struct rtpp_module_priv *mpvt;
 };
 
@@ -73,7 +73,7 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
           ": %s", mpath, dlerror());
         goto e2;
     }
-    if (!MI_VER_CHCK(struct moduleinfo, pvt->mip)) {
+    if (!MI_VER_CHCK(pvt->mip)) {
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
           "consider recompiling the module", mpath);
         goto e2;

@@ -14,7 +14,7 @@ struct api_version {
     size_t mi_size;
 };
 
-struct moduleinfo {
+struct rtpp_minfo {
     const char *name;
     struct api_version ver;
     rtpp_module_ctor_t ctor;
@@ -22,6 +22,6 @@ struct moduleinfo {
     rtpp_module_on_session_end_t on_session_end;
 };
 
-#define MI_VER_INIT(sname) {.rev = MODULE_API_REVISION, .mi_size = sizeof(sname)}
-#define MI_VER_CHCK(sname, sptr) ((sptr)->ver.rev == MODULE_API_REVISION && \
-  (sptr)->ver.mi_size == sizeof(sname))
+#define MI_VER_INIT() {.rev = MODULE_API_REVISION, .mi_size = sizeof(struct rtpp_minfo)}
+#define MI_VER_CHCK(sptr) ((sptr)->ver.rev == MODULE_API_REVISION && \
+  (sptr)->ver.mi_size == sizeof(struct rtpp_minfo))
