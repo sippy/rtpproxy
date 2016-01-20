@@ -22,6 +22,6 @@ struct rtpp_minfo {
     rtpp_module_on_session_end_t on_session_end;
 };
 
-#define MI_VER_INIT() {.rev = MODULE_API_REVISION, .mi_size = sizeof(struct rtpp_minfo)}
+#define MI_VER_INIT() {.rev = MODULE_API_REVISION, .mi_size = sizeof(rtpp_module)}
 #define MI_VER_CHCK(sptr) ((sptr)->ver.rev == MODULE_API_REVISION && \
   (sptr)->ver.mi_size == sizeof(struct rtpp_minfo))
