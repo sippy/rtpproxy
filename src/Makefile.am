@@ -42,7 +42,7 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_ttl_fin.h rtpp_pipe_fin.c rtpp_pipe_fin.h rtpp_pcount_fin.c \
   rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h \
   rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c rtpp_ringbuf_fin.c \
-  rtpp_ringbuf_fin.h
+  rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c
 rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
@@ -130,3 +130,8 @@ rtpp_pcnt_strm_fin.c: $(GENFINCODE) rtpp_pcnt_strm.h
 	$(GENFINCODE) rtpp_pcnt_strm.h rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c
 
 rtpp_pcnt_strm_fin.h: rtpp_pcnt_strm_fin.c
+
+rtpp_module_if_fin.c: $(GENFINCODE) rtpp_module_if.h
+	$(GENFINCODE) rtpp_module_if.h rtpp_module_if_fin.h rtpp_module_if_fin.c
+
+rtpp_module_if_fin.h: rtpp_module_if_fin.c

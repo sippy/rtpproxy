@@ -27,12 +27,44 @@
 
 #include <stdlib.h>
 
+#include "rtpp_mallocs.h"
 #include "rtpp_types.h"
 #include "rtpp_module_if.h"
+#include "rtpp_module_if_fin.h"
+#include "rtpp_refcnt.h"
+
+struct rtpp_module_if_priv {
+    struct rtpp_module_if pub;
+};
+
+static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
+
+#define PUB2PVT(pubp) \
+  ((struct rtpp_module_if_priv *)((char *)(pubp) - offsetof(struct rtpp_module_if_priv, pub)))
 
 struct rtpp_module_if *
 rtpp_module_if_ctor(const char *mpath)
 {
+    struct rtpp_refcnt *rcnt;
+    struct rtpp_module_if_priv *pvt;
 
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_module_if_priv), &rcnt);
+    if (pvt == NULL) {
+        goto e0;
+    }
+    pvt->pub.rcnt = rcnt;
+    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
+      pvt);
+    return ((&pvt->pub));
+
+e0:
     return (NULL);
+}
+
+static void
+rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
+{
+
+    rtpp_module_if_fin(&(pvt->pub));
+    free(pvt);
 }
