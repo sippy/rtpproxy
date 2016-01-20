@@ -257,9 +257,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             }
             c = t[len];
             t[len] = '\0';
-            pthread_mutex_unlock(&cf->glock);
             ulop->local_addr = host2bindaddr(cf, t, tpf, &errmsg);
-            pthread_mutex_lock(&cf->glock);
             if (ulop->local_addr == NULL) {
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR,
                   "invalid local address: %s: %s", t, errmsg);
@@ -281,9 +279,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             c = t[len];
             t[len] = '\0';
             ulop->local_addr = alloca(sizeof(struct sockaddr_storage));
-            pthread_mutex_unlock(&cf->glock);
             n = resolve(ulop->local_addr, tpf, t, SERVICE, AI_PASSIVE);
-            pthread_mutex_lock(&cf->glock);
             if (n != 0) {
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR,
                   "invalid remote address: %s: %s", t, gai_strerror(n));
@@ -319,9 +315,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
         }
     }
     if (ulop->addr != NULL && ulop->port != NULL && strlen(ulop->addr) >= 7) {
-        pthread_mutex_unlock(&cf->glock);
         n = resolve(sstosa(&tia), ulop->pf, ulop->addr, ulop->port, AI_NUMERICHOST);
-        pthread_mutex_lock(&cf->glock);
         if (n == 0) {
             if (!ishostnull(sstosa(&tia))) {
                 for (i = 0; i < 2; i++) {
