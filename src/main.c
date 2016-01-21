@@ -104,6 +104,10 @@
 
 static void usage(void);
 
+#ifdef RTPP_CHECK_LEAKS
+RTPP_MEMDEB_STATIC(rtpproxy);
+#endif
+
 static void
 usage(void)
 {
@@ -127,9 +131,8 @@ rtpp_exit(int memdeb)
     ecode = 0;
 #ifdef RTPP_CHECK_LEAKS
     if (memdeb) {
-        ecode = rtpp_memdeb_dumpstats(_sig_cf) == 0 ? 0 : 1;
+        ecode = rtpp_memdeb_dumpstats(_rtpproxy_memdeb, 0) == 0 ? 0 : 1;
     }
-    rtpp_memdeb_releaselog();
 #ifdef RTPP_MEMDEB_STDOUT
     fclose(stdout);
 #endif
@@ -179,6 +182,9 @@ ehandler(void)
     unlink(_sig_cf->stable->pid_file);
     RTPP_LOG(_sig_cf->stable->glog, RTPP_LOG_INFO, "rtpproxy ended");
     CALL_METHOD(_sig_cf->stable->glog->rcnt, decref);
+#ifdef RTPP_CHECK_LEAKS
+    RTPP_MEMDEB_FIN(rtpproxy);
+#endif
 }
 
 long long
@@ -627,16 +633,20 @@ main(int argc, char **argv)
     double sleep_time, filter_lastval;
 #endif
 
+#ifdef RTPP_CHECK_LEAKS
+    RTPP_MEMDEB_INIT(rtpproxy);
+#endif
     if (getdtime() == -1) {
         err(1, "timer self-test has failed: please check your build configuration");
         /* NOTREACHED */
     }
 
 #ifdef RTPP_CHECK_LEAKS
-    if (rtpp_memdeb_selftest() != 0) {
+    if (rtpp_memdeb_selftest(_rtpproxy_memdeb) != 0) {
         errx(1, "MEMDEB self-test has failed");
         /* NOTREACHED */
     }
+    rtpp_memdeb_approve(_rtpproxy_memdeb, "addr2bindaddr", 100, "Too busy to fix now");
 #endif
 
     memset(&cf, 0, sizeof(cf));
@@ -713,7 +723,7 @@ main(int argc, char **argv)
     }
 
 #ifdef RTPP_CHECK_LEAKS
-    rtpp_memdeb_setlog(cf.stable->glog);
+    rtpp_memdeb_setlog(_rtpproxy_memdeb, cf.stable->glog);
 #endif
     CALL_METHOD(cf.stable->glog, setlevel, cf.stable->log_level);
     _sig_cf = &cf;
@@ -721,7 +731,7 @@ main(int argc, char **argv)
     RTPP_LOG(cf.stable->glog, RTPP_LOG_INFO, "rtpproxy started, pid %d", getpid());
 
 #ifdef RTPP_CHECK_LEAKS
-    rtpp_memdeb_setbaseln();
+    rtpp_memdeb_setbaseln(_rtpproxy_memdeb);
 #endif
 
     i = open(cf.stable->pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
@@ -783,7 +793,11 @@ main(int argc, char **argv)
 
 #if ENABLE_MODULE_IF
     cf.stable->modules_cf = rtpp_module_if_ctor(cf.stable, cf.stable->glog,
+#if !RTPP_DEBUG
       "../modules/acct_csv/.libs/rtpp_csv_acct.so");
+#else
+      "../modules/acct_csv/.libs/rtpp_csv_acct_debug.so");
+#endif
 #endif
 
     cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
