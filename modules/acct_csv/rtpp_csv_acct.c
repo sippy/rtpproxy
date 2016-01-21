@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_types.h"
+#include "rtpp_module.h"
+
 struct rtpp_module_priv {
    int foo;
    char *baz;
