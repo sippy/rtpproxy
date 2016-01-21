@@ -49,6 +49,9 @@ struct rtpp_module_if_priv {
     void *dmp;
     struct rtpp_minfo *mip;
     struct rtpp_module_priv *mpvt;
+    /* Privary version of the module's memdeb_p, store it here */
+    /* just in case module screws it up                        */
+    void *memdeb_p;
 };
 
 static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
@@ -98,8 +101,8 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     pvt->mip->strdup = &rtpp_memdeb_strdup;
     pvt->mip->asprintf = &rtpp_memdeb_asprintf;
     pvt->mip->vasprintf = &rtpp_memdeb_vasprintf;
-    pvt->mip->memdeb_p = rtpp_memdeb_init();
-    rtpp_memdeb_setlog(pvt->mip->memdeb_p, log);
+    pvt->memdeb_p = rtpp_memdeb_init();
+    rtpp_memdeb_setlog(pvt->memdeb_p, log);
 #else
     pvt->mip->malloc = (rtpp_module_malloc_t)&malloc;
     pvt->mip->free = (rtpp_module_free_t)&free;
@@ -108,9 +111,10 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     pvt->mip->asprintf = rtpp_module_asprintf;
     pvt->mip->vasprintf = rtpp_module_vasprintf;
 #endif
-    if (pvt->mip->memdeb_p == NULL) {
+    if (pvt->memdeb_p == NULL) {
         goto e2;
     }
+    pvt->mip->memdeb_p = pvt->memdeb_p;
 
     if (pvt->mip->ctor != NULL) {
         pvt->mpvt = pvt->mip->ctor(cfsp);
@@ -125,7 +129,7 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     return ((&pvt->pub));
 e3:
 #if RTPP_CHECK_LEAKS
-    rtpp_memdeb_dtor(pvt->mip->memdeb_p);
+    rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
 e2:
     dlclose(pvt->dmp);
@@ -145,8 +149,8 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
         pvt->mip->dtor(pvt->mpvt);
     }
 #if RTPP_CHECK_LEAKS
-    rtpp_memdeb_dumpstats(pvt->mip->memdeb_p, 1);
-    rtpp_memdeb_dtor(pvt->mip->memdeb_p);
+    rtpp_memdeb_dumpstats(pvt->memdeb_p, 1);
+    rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
     dlclose(pvt->dmp);
     free(pvt);
