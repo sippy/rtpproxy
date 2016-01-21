@@ -108,7 +108,7 @@ rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int 
 #if !defined(RTPP_CHECK_LEAKS)
     wi = malloc(sizeof(struct rtpp_wi) + datalen);
 #else
-    wi = rtpp_memdeb_malloc(sizeof(struct rtpp_wi) + datalen, fname, linen, funcn);
+    wi = rtpp_memdeb_malloc(sizeof(struct rtpp_wi) + datalen, _rtpproxy_memdeb, fname, linen, funcn);
 #endif
     if (wi == NULL) {
         return (NULL);
