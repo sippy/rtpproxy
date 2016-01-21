@@ -26,17 +26,23 @@
  */
 
 #include <dlfcn.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "rtpp_log.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
+#define MODULE_IF_CODE
 #include "rtpp_module.h"
 #include "rtpp_module_if.h"
 #include "rtpp_module_if_fin.h"
 #include "rtpp_refcnt.h"
+#ifdef RTPP_CHECK_LEAKS
+#include "rtpp_memdeb_internal.h"
+#endif
 
 struct rtpp_module_if_priv {
     struct rtpp_module_if pub;
@@ -46,6 +52,12 @@ struct rtpp_module_if_priv {
 };
 
 static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
+#if !RTPP_CHECK_LEAKS
+static int rtpp_module_asprintf(char **, const char *, void *, const char *,
+  int, const char *, ...);
+static int rtpp_module_vasprintf(char **, const char *, void *, const char *,
+  int, const char *, va_list);
+#endif
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_module_if_priv *)((char *)(pubp) - offsetof(struct rtpp_module_if_priv, pub)))
@@ -78,17 +90,43 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
           "consider recompiling the module", mpath);
         goto e2;
     }
+
+#if RTPP_CHECK_LEAKS
+    pvt->mip->malloc = &rtpp_memdeb_malloc;
+    pvt->mip->free = &rtpp_memdeb_free;
+    pvt->mip->realloc = &rtpp_memdeb_realloc;
+    pvt->mip->strdup = &rtpp_memdeb_strdup;
+    pvt->mip->asprintf = &rtpp_memdeb_asprintf;
+    pvt->mip->vasprintf = &rtpp_memdeb_vasprintf;
+    pvt->mip->memdeb_p = rtpp_memdeb_init();
+    rtpp_memdeb_setlog(pvt->mip->memdeb_p, log);
+#else
+    pvt->mip->malloc = (rtpp_module_malloc_t)&malloc;
+    pvt->mip->free = (rtpp_module_free_t)&free;
+    pvt->mip->realloc = (rtpp_module_realloc_t)&realloc;
+    pvt->mip->strdup = (rtpp_module_strdup_t)&strdup;
+    pvt->mip->asprintf = rtpp_module_asprintf;
+    pvt->mip->vasprintf = rtpp_module_vasprintf;
+#endif
+    if (pvt->mip->memdeb_p == NULL) {
+        goto e2;
+    }
+
     if (pvt->mip->ctor != NULL) {
         pvt->mpvt = pvt->mip->ctor(cfsp);
         if (pvt->mpvt == NULL) {
             RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' failed to initialize",
               pvt->mip->name);
-            goto e2;
+            goto e3;
         }
     }
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
+e3:
+#if RTPP_CHECK_LEAKS
+    rtpp_memdeb_dtor(pvt->mip->memdeb_p);
+#endif
 e2:
     dlclose(pvt->dmp);
 e1:
@@ -106,6 +144,35 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
     if (pvt->mip->dtor != NULL) {
         pvt->mip->dtor(pvt->mpvt);
     }
+#if RTPP_CHECK_LEAKS
+    rtpp_memdeb_dumpstats(pvt->mip->memdeb_p, 1);
+    rtpp_memdeb_dtor(pvt->mip->memdeb_p);
+#endif
     dlclose(pvt->dmp);
     free(pvt);
 }
+
+#if !RTPP_CHECK_LEAKS
+static int
+rtpp_module_asprintf(char **pp, const char *fmt, void *p, const char *fname,
+  int linen, const char *funcn, ...)
+{
+    va_list ap;
+    int rval;
+
+    va_start(ap, funcn);
+    rval = vasprintf(pp, fmt, ap);
+    va_end(ap);
+    return (rval);
+}
+
+static int
+rtpp_module_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
+  int linen, const char *funcn, va_list ap)
+{
+    int rval;
+
+    rval = vasprintf(pp, fmt, ap);
+    return (rval);
+}
+#endif
