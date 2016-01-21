@@ -45,11 +45,16 @@ struct api_version {
 };
 
 struct rtpp_minfo {
-    const char *name;
+    /* Upper half, filled by the module */
     struct api_version ver;
+    const char *name;
+    const char *author;
+    const char *copyright;
+    const char *maintainer;
     rtpp_module_ctor_t ctor;
     rtpp_module_dtor_t dtor;
     rtpp_module_on_session_end_t on_session_end;
+    /* Lower half, filled by the core */
     rtpp_module_malloc_t malloc;
     rtpp_module_free_t free;
     rtpp_module_realloc_t realloc;
