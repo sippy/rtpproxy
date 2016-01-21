@@ -96,21 +96,21 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     }
 
 #if RTPP_CHECK_LEAKS
-    pvt->mip->malloc = &rtpp_memdeb_malloc;
-    pvt->mip->free = &rtpp_memdeb_free;
-    pvt->mip->realloc = &rtpp_memdeb_realloc;
-    pvt->mip->strdup = &rtpp_memdeb_strdup;
-    pvt->mip->asprintf = &rtpp_memdeb_asprintf;
-    pvt->mip->vasprintf = &rtpp_memdeb_vasprintf;
+    pvt->mip->_malloc = &rtpp_memdeb_malloc;
+    pvt->mip->_free = &rtpp_memdeb_free;
+    pvt->mip->_realloc = &rtpp_memdeb_realloc;
+    pvt->mip->_strdup = &rtpp_memdeb_strdup;
+    pvt->mip->_asprintf = &rtpp_memdeb_asprintf;
+    pvt->mip->_vasprintf = &rtpp_memdeb_vasprintf;
     pvt->memdeb_p = rtpp_memdeb_init();
     rtpp_memdeb_setlog(pvt->memdeb_p, log);
 #else
-    pvt->mip->malloc = (rtpp_module_malloc_t)&malloc;
-    pvt->mip->free = (rtpp_module_free_t)&free;
-    pvt->mip->realloc = (rtpp_module_realloc_t)&realloc;
-    pvt->mip->strdup = (rtpp_module_strdup_t)&strdup;
-    pvt->mip->asprintf = rtpp_module_asprintf;
-    pvt->mip->vasprintf = rtpp_module_vasprintf;
+    pvt->mip->_malloc = (rtpp_module_malloc_t)&malloc;
+    pvt->mip->_free = (rtpp_module_free_t)&free;
+    pvt->mip->_realloc = (rtpp_module_realloc_t)&realloc;
+    pvt->mip->_strdup = (rtpp_module_strdup_t)&strdup;
+    pvt->mip->_asprintf = rtpp_module_asprintf;
+    pvt->mip->_vasprintf = rtpp_module_vasprintf;
 #endif
     if (pvt->memdeb_p == NULL) {
         goto e2;
