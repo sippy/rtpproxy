@@ -4,6 +4,11 @@ struct rtpp_cfg_stable;
 struct rtpp_module_priv;
 struct rtpp_accounting;
 
+#if !defined(MODULE_IF_CODE)
+#include <sys/types.h>
+#include "rtpp_types.h"
+#endif
+
 DEFINE_METHOD(rtpp_cfg_stable, rtpp_module_ctor, struct rtpp_module_priv *);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_dtor, void);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_session_end, void,
