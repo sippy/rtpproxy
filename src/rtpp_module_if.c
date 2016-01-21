@@ -49,6 +49,7 @@ struct rtpp_module_if_priv {
     void *dmp;
     struct rtpp_minfo *mip;
     struct rtpp_module_priv *mpvt;
+    struct rtpp_log *log;
     /* Privary version of the module's memdeb_p, store it here */
     /* just in case module screws it up                        */
     void *memdeb_p;
@@ -124,11 +125,17 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
             goto e3;
         }
     }
+    CALL_METHOD(log->rcnt, incref);
+    pvt->log = log;
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
 e3:
 #if RTPP_CHECK_LEAKS
+    if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' leaked memory in the failed "
+          "constructor", pvt->mip->name);
+    }
     rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
 e2:
@@ -149,10 +156,14 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
         pvt->mip->dtor(pvt->mpvt);
     }
 #if RTPP_CHECK_LEAKS
-    rtpp_memdeb_dumpstats(pvt->memdeb_p, 1);
+    if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
+        RTPP_LOG(pvt->log, RTPP_LOG_ERR, "module '%s' leaked memory after "
+          "destruction", pvt->mip->name);
+    }
     rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
     dlclose(pvt->dmp);
+    CALL_METHOD(pvt->log->rcnt, decref);
     free(pvt);
 }
 
