@@ -18,3 +18,7 @@ makeann/makeann
 src/config.h
 src/config_std.h
 libexecinfo/libexecinfo.a
+.libs
+*.lo
+*.la
+.gdbinit*
