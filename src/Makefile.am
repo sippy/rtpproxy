@@ -57,7 +57,7 @@ rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
 rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
-  -include rtpp_memdeb.h
+  -DMEMDEB_APP=rtpproxy -include rtpp_memdeb.h
 rtpproxy_debug_CFLAGS=-g3 -O0 -fno-omit-frame-pointer
 
 DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
