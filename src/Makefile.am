@@ -29,7 +29,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_monotime.c rtpp_mallocs.c rtpp_mallocs.h rtpp_pcnt_strm.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c rtpp_ringbuf.h \
   rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
-  rtpp_command_record.h
+  rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h
 
 rtpproxy_LDADD=-lm -lpthread
 rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
@@ -52,7 +52,8 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_ttl_fin.h rtpp_pipe_fin.c rtpp_pipe_fin.h rtpp_pcount_fin.c \
   rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h \
   rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c rtpp_ringbuf_fin.c \
-  rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c
+  rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c \
+  rtpp_port_table_fin.c rtpp_port_table_fin.h
 rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
@@ -141,3 +142,8 @@ rtpp_module_if_fin.c: $(GENFINCODE) rtpp_module_if.h
 	$(GENFINCODE) rtpp_module_if.h rtpp_module_if_fin.h rtpp_module_if_fin.c
 
 rtpp_module_if_fin.h: rtpp_module_if_fin.c
+
+rtpp_port_table_fin.c: $(GENFINCODE) rtpp_port_table.h
+	$(GENFINCODE) rtpp_port_table.h rtpp_port_table_fin.h rtpp_port_table_fin.c
+
+rtpp_port_table_fin.h: rtpp_port_table_fin.c
