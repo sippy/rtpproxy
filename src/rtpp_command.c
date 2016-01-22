@@ -64,6 +64,7 @@
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_pipe.h"
+#include "rtpp_port_table.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_socket.h"
@@ -109,57 +110,66 @@ struct rtpp_command_priv {
 
 struct d_opts;
 
-static int create_twinlistener(struct rtpp_cfg_stable *, struct sockaddr *, int,
-  struct rtpp_socket **);
+static int create_twinlistener(uint16_t, void *);
 static void handle_info(struct cfg *, struct rtpp_command *,
   const char *);
 static void handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd);
 
+struct create_twinlistener_args {
+    struct rtpp_cfg_stable *cfs;
+    struct sockaddr *ia;
+    struct rtpp_socket **fds;
+    int *port;
+};
+
 static int
-create_twinlistener(struct rtpp_cfg_stable *cf, struct sockaddr *ia, int port,
-  struct rtpp_socket **fds)
+create_twinlistener(uint16_t port, void *ap)
 {
     struct sockaddr_storage iac;
     int rval, i, so_rcvbuf;
+    struct create_twinlistener_args *ctap;
 
-    fds[0] = fds[1] = NULL;
+    ctap = (struct create_twinlistener_args *)ap;
 
-    rval = -1;
+    ctap->fds[0] = ctap->fds[1] = NULL;
+
+    rval = RTPP_PTU_BRKERR;
     for (i = 0; i < 2; i++) {
-	fds[i] = rtpp_socket_ctor(ia->sa_family, SOCK_DGRAM);
-	if (fds[i] == NULL) {
-	    RTPP_ELOG(cf->glog, RTPP_LOG_ERR, "can't create %s socket",
-	      (ia->sa_family == AF_INET) ? "IPv4" : "IPv6");
+	ctap->fds[i] = rtpp_socket_ctor(ctap->ia->sa_family, SOCK_DGRAM);
+	if (ctap->fds[i] == NULL) {
+	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't create %s socket",
+	      (ctap->ia->sa_family == AF_INET) ? "IPv4" : "IPv6");
 	    goto failure;
 	}
-	memcpy(&iac, ia, SA_LEN(ia));
+	memcpy(&iac, ctap->ia, SA_LEN(ctap->ia));
 	satosin(&iac)->sin_port = htons(port);
-	if (CALL_METHOD(fds[i], bind, sstosa(&iac), SA_LEN(ia)) != 0) {
+	if (CALL_METHOD(ctap->fds[i], bind, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
 	    if (errno != EADDRINUSE && errno != EACCES) {
-		RTPP_ELOG(cf->glog, RTPP_LOG_ERR, "can't bind to the %s port %d",
-		  (ia->sa_family == AF_INET) ? "IPv4" : "IPv6", port);
+		RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't bind to the %s port %d",
+		  (ctap->ia->sa_family == AF_INET) ? "IPv4" : "IPv6", port);
 	    } else {
-		rval = -2;
+		rval = RTPP_PTU_ONEMORE;
 	    }
 	    goto failure;
 	}
 	port++;
-	if ((ia->sa_family == AF_INET) && (cf->tos >= 0) &&
-	  (CALL_METHOD(fds[i], settos, cf->tos) == -1))
-	    RTPP_ELOG(cf->glog, RTPP_LOG_ERR, "unable to set TOS to %d", cf->tos);
+	if ((ctap->ia->sa_family == AF_INET) && (ctap->cfs->tos >= 0) &&
+	  (CALL_METHOD(ctap->fds[i], settos, ctap->cfs->tos) == -1))
+	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set TOS to %d", ctap->cfs->tos);
 	so_rcvbuf = 256 * 1024;
-	if (CALL_METHOD(fds[i], setrbuf, so_rcvbuf) == -1)
-	    RTPP_ELOG(cf->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
-        CALL_METHOD(fds[i], setnonblock);
-        CALL_METHOD(fds[i], settimestamp);
+	if (CALL_METHOD(ctap->fds[i], setrbuf, so_rcvbuf) == -1)
+	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
+        CALL_METHOD(ctap->fds[i], setnonblock);
+        CALL_METHOD(ctap->fds[i], settimestamp);
     }
-    return 0;
+    *ctap->port = port - 2;
+    return RTPP_PTU_OK;
 
 failure:
     for (i = 0; i < 2; i++)
-	if (fds[i] != NULL) {
-            CALL_METHOD(fds[i]->rcnt, decref);
-	    fds[i] = NULL;
+	if (ctap->fds[i] != NULL) {
+            CALL_METHOD(ctap->fds[i]->rcnt, decref);
+	    ctap->fds[i] = NULL;
 	}
     return rval;
 }
@@ -168,25 +178,20 @@ int
 rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port,
   struct rtpp_socket **fds)
 {
-    int i, idx, rval;
+    struct create_twinlistener_args cta;
+    int i;
+
+    memset(&cta, '\0', sizeof(cta));
+    cta.cfs = cf->stable;
+    cta.fds = fds;
+    cta.ia = ia;
+    cta.port = port;
 
     for (i = 0; i < 2; i++)
-	fds[i] = NULL;
+        fds[i] = NULL;
 
-    for (i = 1; i < cf->stable->port_table_len; i++) {
-	idx = (cf->port_table_idx + i) % cf->stable->port_table_len;
-	*port = cf->stable->port_table[idx];
-	if (*port == cf->stable->port_ctl || *port == (cf->stable->port_ctl - 1))
-	    continue;
-	rval = create_twinlistener(cf->stable, ia, *port, fds);
-	if (rval == 0) {
-	    cf->port_table_idx = idx;
-	    return 0;
-	}
-	if (rval == -1)
-	    break;
-    }
-    return -1;
+    return (CALL_METHOD(cf->stable->port_table, get_port, create_twinlistener,
+      &cta));
 }
 
 void

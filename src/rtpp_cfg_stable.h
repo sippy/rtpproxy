@@ -90,8 +90,7 @@ struct rtpp_cfg_stable {
     int log_level;
     int log_facility;
 
-    uint16_t port_table[65536];
-    int port_table_len;
+    struct rtpp_port_table *port_table;
 
     struct rtpp_hash_table *sessions_ht;
     struct rtpp_weakref_obj *sessions_wrt;

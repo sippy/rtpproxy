@@ -102,32 +102,6 @@ drop_privileges(struct cfg *cf)
     return 0;
 }
 
-void
-init_port_table(struct cfg *cf)
-{
-    int i, j;
-    uint16_t portnum;
-
-    /* Generate linear table */
-    cf->stable->port_table_len = ((cf->stable->port_max - cf->stable->port_min) / 2) + 1;
-    portnum = cf->stable->port_min;
-    for (i = 0; i < cf->stable->port_table_len; i += 1) {
-	cf->stable->port_table[i] = portnum;
-	portnum += 2;
-    }
-    if (cf->stable->seq_ports == 0) {
-        /* Shuffle elements ramdomly */
-        for (i = 0; i < cf->stable->port_table_len; i += 1) {
-	    j = random() % cf->stable->port_table_len;
-	    portnum = cf->stable->port_table[i];
-	    cf->stable->port_table[i] = cf->stable->port_table[j];
-	    cf->stable->port_table[j] = portnum;
-        }
-    }
-    /* Set the last used element to be the last element */
-    cf->port_table_idx = cf->stable->port_table_len - 1;
-}
-
 /*
  * Portable strsep(3) implementation, borrowed from FreeBSD. For license
  * and other information see:

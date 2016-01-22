@@ -74,8 +74,6 @@ struct cfg {
 
     int nofile_limit_warned;
 
-    int port_table_idx;
-
     pthread_mutex_t glock;
 };
 

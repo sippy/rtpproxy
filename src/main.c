@@ -73,6 +73,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
+#include "rtpp_port_table.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
@@ -703,7 +704,8 @@ main(int argc, char **argv)
         err(1, "can't allocate memory for the stats data");
          /* NOTREACHED */
     }
-    init_port_table(&cf);
+    cf.stable->port_table = rtpp_port_table_ctor(cf.stable->port_min,
+      cf.stable->port_max, cf.stable->seq_ports, cf.stable->port_ctl);
 
     if (rtpp_controlfd_init(&cf) != 0) {
         err(1, "can't inilialize control socket%s",
@@ -901,6 +903,7 @@ main(int argc, char **argv)
     CALL_METHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
     CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
     CALL_METHOD(cf.stable->sessinfo->rcnt, decref);
+    CALL_METHOD(cf.stable->port_table->rcnt, decref);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif
