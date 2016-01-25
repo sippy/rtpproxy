@@ -31,6 +31,7 @@
 struct rtpp_wi;
 struct rtp_packet;
 struct rtpp_refcnt;
+struct sockaddr;
 
 enum rtpp_wi_type {RTPP_WI_TYPE_OPKT = 0, RTPP_WI_TYPE_SGNL = 1,
   RTPP_WI_TYPE_API_STR = 2, RTPP_WI_TYPE_DATA = 3};
