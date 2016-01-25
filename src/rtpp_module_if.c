@@ -26,6 +26,8 @@
  */
 
 #include <dlfcn.h>
+#include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -39,7 +41,9 @@
 #include "rtpp_module.h"
 #include "rtpp_module_if.h"
 #include "rtpp_module_if_fin.h"
+#include "rtpp_queue.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_wi.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -50,6 +54,9 @@ struct rtpp_module_if_priv {
     struct rtpp_minfo *mip;
     struct rtpp_module_priv *mpvt;
     struct rtpp_log *log;
+    struct rtpp_wi *sigterm;
+    pthread_t thread_id;
+    struct rtpp_queue *req_q;
     /* Privary version of the module's memdeb_p, store it here */
     /* just in case module screws it up                        */
     void *memdeb_p;
@@ -62,6 +69,7 @@ static int rtpp_module_asprintf(char **, const char *, void *, const char *,
 static int rtpp_module_vasprintf(char **, const char *, void *, const char *,
   int, const char *, va_list);
 #endif
+static void rtpp_mif_run(void *);
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_module_if_priv *)((char *)(pubp) - offsetof(struct rtpp_module_if_priv, pub)))
@@ -115,27 +123,49 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     if (pvt->memdeb_p == NULL) {
         goto e2;
     }
+    /* We make a copy, so that the module cannot screw us up */
     pvt->mip->memdeb_p = pvt->memdeb_p;
-
+    pvt->sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
+    if (pvt->sigterm == NULL) {
+        goto e3;
+    }
+    pvt->req_q = rtpp_queue_init(1, "rtpp_module_if(%s)", pvt->mip->name);
+    if (pvt->req_q == NULL) {
+        goto e4;
+    }
     if (pvt->mip->ctor != NULL) {
         pvt->mpvt = pvt->mip->ctor(cfsp);
         if (pvt->mpvt == NULL) {
             RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' failed to initialize",
               pvt->mip->name);
-            goto e3;
+            goto e5;
         }
+    }
+    if (pthread_create(&pvt->thread_id, NULL,
+      (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
+        goto e6;
     }
     CALL_METHOD(log->rcnt, incref);
     pvt->log = log;
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
-e3:
+e6:
+    if (pvt->mip->dtor != NULL) {
+        pvt->mip->dtor(pvt->mpvt);
+    }
+e5:
+    rtpp_queue_destroy(pvt->req_q);
 #if RTPP_CHECK_LEAKS
     if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' leaked memory in the failed "
           "constructor", pvt->mip->name);
     }
+#endif
+e4:
+    rtpp_wi_free(pvt->sigterm);
+e3:
+#if RTPP_CHECK_LEAKS
     rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
 e2:
@@ -152,19 +182,46 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
 {
 
     rtpp_module_if_fin(&(pvt->pub));
+    /* First, stop the worker thread and wait for it to terminate */
+    rtpp_queue_put_item(pvt->sigterm, pvt->req_q);
+    pthread_join(pvt->thread_id, NULL);
+    rtpp_queue_destroy(pvt->req_q);
+
+    /* Then run module destructor (if any) */
     if (pvt->mip->dtor != NULL) {
         pvt->mip->dtor(pvt->mpvt);
     }
+
 #if RTPP_CHECK_LEAKS
+    /* Check if module leaked any mem */
     if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
         RTPP_LOG(pvt->log, RTPP_LOG_ERR, "module '%s' leaked memory after "
           "destruction", pvt->mip->name);
     }
     rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
+    /* Unload and free everything */
     dlclose(pvt->dmp);
     CALL_METHOD(pvt->log->rcnt, decref);
     free(pvt);
+}
+
+static void
+rtpp_mif_run(void *argp)
+{
+    struct rtpp_module_if_priv *pvt;
+    struct rtpp_wi *wi;
+    int signum;
+
+    pvt = (struct rtpp_module_if_priv *)argp;
+    for (;;) {
+        wi = rtpp_queue_get_item(pvt->req_q, 0);
+        signum = rtpp_wi_sgnl_get_signum(wi);
+        rtpp_wi_free(wi);
+        if (signum == SIGTERM) {
+            break;
+        }
+    }
 }
 
 #if !RTPP_CHECK_LEAKS
