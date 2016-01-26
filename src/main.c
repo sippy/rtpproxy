@@ -796,9 +796,9 @@ main(int argc, char **argv)
 #if ENABLE_MODULE_IF
     cf.stable->modules_cf = rtpp_module_if_ctor(cf.stable, cf.stable->glog,
 #if !RTPP_DEBUG
-      "../modules/acct_csv/.libs/rtpp_csv_acct.so");
+      "../modules/acct_csv/.libs/rtpp_acct_csv.so");
 #else
-      "../modules/acct_csv/.libs/rtpp_csv_acct_debug.so");
+      "../modules/acct_csv/.libs/rtpp_acct_csv_debug.so");
 #endif
 #endif
 
