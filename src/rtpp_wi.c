@@ -230,7 +230,7 @@ rtpp_wi_apis_getnamearg(struct rtpp_wi *wi, void **datap, size_t datalen)
     assert(wi->wi_type == RTPP_WI_TYPE_API_STR);
     assert(wi->msg_len == datalen);
     if (datap != NULL && datalen > 0) {
-        *datap = wi->msg;
+        memcpy(datap, wi->data, datalen);
     }
     return ((const char *)wi->sendto);
 }
