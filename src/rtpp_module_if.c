@@ -38,6 +38,9 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_acct.h"
+#include "rtpp_pcount.h"
+#include "rtpp_pcnt_strm.h"
 #define MODULE_IF_CODE
 #include "rtpp_module.h"
 #include "rtpp_module_if.h"
@@ -147,6 +150,12 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
             goto e5;
         }
     }
+    if (pvt->mip->on_session_end.argsize != rtpp_acct_OSIZE()) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
+          "consider recompiling the module", mpath);
+        goto e6;
+    }
+
     if (pthread_create(&pvt->thread_id, NULL,
       (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
         goto e6;
@@ -235,8 +244,9 @@ rtpp_mif_run(void *argp)
         }
         aname = rtpp_wi_apis_getnamearg(wi, (void **)&rap, sizeof(rap));
         if (aname == do_acct_aname) {
-            pvt->mip->on_session_end(pvt->mpvt, rap);
+            pvt->mip->on_session_end.func(pvt->mpvt, rap);
         }
+        CALL_METHOD(rap->rcnt, decref);
         rtpp_wi_free(wi);
     }
 }
@@ -254,6 +264,7 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
           "memory", pvt->mip->name);
         return;
     }
+    CALL_METHOD(acct->rcnt, incref);
     rtpp_queue_put_item(wi, pvt->req_q);
 }
 
