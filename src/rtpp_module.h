@@ -53,6 +53,12 @@ struct api_version {
     size_t mi_size;
 };
 
+struct api_on_sess_end {
+   int rev;
+   size_t argsize;
+   rtpp_module_on_session_end_t func;
+};
+
 struct rtpp_minfo {
     /* Upper half, filled by the module */
     struct api_version ver;
@@ -62,7 +68,7 @@ struct rtpp_minfo {
     const char *maintainer;
     rtpp_module_ctor_t ctor;
     rtpp_module_dtor_t dtor;
-    rtpp_module_on_session_end_t on_session_end;
+    struct api_on_sess_end on_session_end;
     /* Lower half, filled by the core */
     rtpp_module_malloc_t _malloc;
     rtpp_module_zmalloc_t _zmalloc;
