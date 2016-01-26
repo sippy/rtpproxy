@@ -44,6 +44,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_math.h"
+#include "rtpp_module_if.h"
 #include "rtpp_monotime.h"
 #include "rtpp_pcount.h"
 #include "rtpp_pcnt_strm.h"
@@ -61,6 +62,7 @@ struct rtpp_session_priv
 {
     struct rtpp_session pub;
     struct rtpp_sessinfo *sessinfo;
+    struct rtpp_module_if *modules_cf;
 };
 
 #define PUB2PVT(pubp) \
@@ -157,6 +159,10 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     pvt->pub.rtpp_stats = cfs->rtpp_stats;
     pvt->pub.log = log;
     pvt->sessinfo = cfs->sessinfo;
+    if (cfs->modules_cf != NULL) {
+        CALL_METHOD(cfs->modules_cf->rcnt, incref);
+        pvt->modules_cf = cfs->modules_cf;
+    }
 
     CALL_METHOD(cfs->sessinfo, append, pub, 0);
 
@@ -241,6 +247,10 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_destroyed", 1);
     CALL_METHOD(pub->rtpp_stats, updatebyname_d, "total_duration",
       session_time);
+    if (pvt->modules_cf != NULL) {
+        CALL_METHOD(pvt->modules_cf, do_acct, (struct rtpp_acct *)pvt);
+        CALL_METHOD(pvt->modules_cf->rcnt, decref);
+    }
 
     CALL_METHOD(pvt->pub.log->rcnt, decref);
     if (pvt->pub.timeout_data.notify_tag != NULL)

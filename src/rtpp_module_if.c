@@ -28,6 +28,7 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -70,9 +71,12 @@ static int rtpp_module_vasprintf(char **, const char *, void *, const char *,
   int, const char *, va_list);
 #endif
 static void rtpp_mif_run(void *);
+static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_module_if_priv *)((char *)(pubp) - offsetof(struct rtpp_module_if_priv, pub)))
+
+static const char *do_acct_aname = "do_acct";
 
 struct rtpp_module_if *
 rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
@@ -149,6 +153,7 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     }
     CALL_METHOD(log->rcnt, incref);
     pvt->log = log;
+    pvt->pub.do_acct = &rtpp_mif_do_acct;
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
@@ -214,16 +219,42 @@ rtpp_mif_run(void *argp)
     struct rtpp_module_if_priv *pvt;
     struct rtpp_wi *wi;
     int signum;
+    const char *aname;
+    struct rtpp_acct *rap;
 
     pvt = (struct rtpp_module_if_priv *)argp;
     for (;;) {
         wi = rtpp_queue_get_item(pvt->req_q, 0);
-        signum = rtpp_wi_sgnl_get_signum(wi);
-        rtpp_wi_free(wi);
-        if (signum == SIGTERM) {
-            break;
+        if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
+            signum = rtpp_wi_sgnl_get_signum(wi);
+            rtpp_wi_free(wi);
+            if (signum == SIGTERM) {
+                break;
+            }
+            continue;
         }
+        aname = rtpp_wi_apis_getnamearg(wi, (void **)&rap, sizeof(rap));
+        if (aname == do_acct_aname) {
+            pvt->mip->on_session_end(pvt->mpvt, rap);
+        }
+        rtpp_wi_free(wi);
     }
+}
+
+static void
+rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
+{
+    struct rtpp_module_if_priv *pvt;
+    struct rtpp_wi *wi;
+
+    pvt = PUB2PVT(self);
+    wi = rtpp_wi_malloc_apis(do_acct_aname, &acct, sizeof(acct));
+    if (wi == NULL) {
+        RTPP_LOG(pvt->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
+          "memory", pvt->mip->name);
+        return;
+    }
+    rtpp_queue_put_item(wi, pvt->req_q);
 }
 
 #if !RTPP_CHECK_LEAKS
