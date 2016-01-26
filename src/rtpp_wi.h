@@ -47,6 +47,7 @@ struct rtpp_wi *rtpp_wi_malloc_apis(const char *, void *, size_t);
 struct rtpp_wi *rtpp_wi_malloc_data(void *, size_t);
 struct rtpp_wi *rtpp_wi_malloc_udata(void **, size_t);
 void *rtpp_wi_data_get_ptr(struct rtpp_wi *, size_t, size_t);
+const char * rtpp_wi_apis_getnamearg(struct rtpp_wi *, void **, size_t);
 
 void rtpp_wi_free(struct rtpp_wi *);
 
