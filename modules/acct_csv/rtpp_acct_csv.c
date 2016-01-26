@@ -122,8 +122,6 @@ rtpp_acct_csv_dtor(struct rtpp_module_priv *pvt)
 #define ES_IF_NULL(s) ((s) == NULL ? "" : s)
 #define MT2RT_NZ(mt) ((mt) == 0.0 ? 0.0 : dtime2rtime(mt))
 
-#include <stdio.h>
-
 static void
 rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
 {
