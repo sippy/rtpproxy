@@ -18,6 +18,8 @@ DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_session_end, void,
 
 DEFINE_RAW_METHOD(rtpp_module_malloc, void *, size_t,  void *, const char *,
   int, const char *);
+DEFINE_RAW_METHOD(rtpp_module_zmalloc, void *, size_t,  void *, const char *,
+  int, const char *);
 DEFINE_RAW_METHOD(rtpp_module_free, void, void *, void *, const char *, int,
   const char *);
 DEFINE_RAW_METHOD(rtpp_module_realloc, void *, void *, size_t,   void *,
@@ -30,17 +32,19 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
    void *, const char *, int, const char *, va_list);
 
 #if !defined(MODULE_IF_CODE)
-#define module_malloc(n) rtpp_module._malloc((n), rtpp_module.memdeb_p, \
+#define mod_malloc(n) rtpp_module._malloc((n), rtpp_module.memdeb_p, \
   __FILE__, __LINE__, __func__)
-#define module_free(p) rtpp_module._free((p), rtpp_module.memdeb_p, \
+#define mod_zmalloc(n) rtpp_module._zmalloc((n), rtpp_module.memdeb_p, \
   __FILE__, __LINE__, __func__)
-#define module_realloc(p,n) rtpp_module._realloc((p), (n), rtpp_module.memdeb_p, \
+#define mod_free(p) rtpp_module._free((p), rtpp_module.memdeb_p, \
   __FILE__, __LINE__, __func__)
-#define module_strdup(p) rtpp_module._strdup((p), rtpp_module.memdeb_p, \
+#define mod_realloc(p,n) rtpp_module._realloc((p), (n), rtpp_module.memdeb_p, \
   __FILE__, __LINE__, __func__)
-#define module_asprintf(pp, fmt, args...) rtpp_module._asprintf((pp), (fmt), \
+#define mod_strdup(p) rtpp_module._strdup((p), rtpp_module.memdeb_p, \
+  __FILE__, __LINE__, __func__)
+#define mod_asprintf(pp, fmt, args...) rtpp_module._asprintf((pp), (fmt), \
   rtpp_module.memdeb_p, __FILE__, __LINE__, __func__, ## args)
-#define module_vasprintf(pp, fmt, vl) rtpp_module._vasprintf((pp), (fmt), \
+#define mod_vasprintf(pp, fmt, vl) rtpp_module._vasprintf((pp), (fmt), \
   rtpp_module.memdeb_p, __FILE__, __LINE__, __func__, (vl))
 #endif
 
@@ -61,6 +65,7 @@ struct rtpp_minfo {
     rtpp_module_on_session_end_t on_session_end;
     /* Lower half, filled by the core */
     rtpp_module_malloc_t _malloc;
+    rtpp_module_zmalloc_t _zmalloc;
     rtpp_module_free_t _free;
     rtpp_module_realloc_t _realloc;
     rtpp_module_strdup_t _strdup;

@@ -31,8 +31,9 @@
 
 /* Function prototypes */
 #if defined(RTPP_CHECK_LEAKS)
-#define rtpp_zmalloc(args...) rtpp_zmalloc_memdeb(__FILE__, __LINE__, __func__, ## args)
-void *rtpp_zmalloc_memdeb(const char *, int, const char *, size_t);
+#define rtpp_zmalloc(s) rtpp_zmalloc_memdeb((s), _rtpproxy_memdeb, __FILE__, \
+  __LINE__, __func__)
+void *rtpp_zmalloc_memdeb(size_t, void *, const char *, int, const char *);
 #else
 void *rtpp_zmalloc(size_t);
 #endif

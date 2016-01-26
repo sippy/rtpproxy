@@ -105,6 +105,7 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
 
 #if RTPP_CHECK_LEAKS
     pvt->mip->_malloc = &rtpp_memdeb_malloc;
+    pvt->mip->_zmalloc = &rtpp_zmalloc_memdeb;
     pvt->mip->_free = &rtpp_memdeb_free;
     pvt->mip->_realloc = &rtpp_memdeb_realloc;
     pvt->mip->_strdup = &rtpp_memdeb_strdup;
@@ -114,6 +115,7 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     rtpp_memdeb_setlog(pvt->memdeb_p, log);
 #else
     pvt->mip->_malloc = (rtpp_module_malloc_t)&malloc;
+    pvt->mip->_zmalloc = (rtpp_module_zmalloc_t)&rtpp_zmalloc;
     pvt->mip->_free = (rtpp_module_free_t)&free;
     pvt->mip->_realloc = (rtpp_module_realloc_t)&realloc;
     pvt->mip->_strdup = (rtpp_module_strdup_t)&strdup;
