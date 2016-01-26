@@ -39,6 +39,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_acct.h"
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
@@ -63,6 +64,7 @@ struct rtpp_session_priv
     struct rtpp_session pub;
     struct rtpp_sessinfo *sessinfo;
     struct rtpp_module_if *modules_cf;
+    struct rtpp_acct *acct;
 };
 
 #define PUB2PVT(pubp) \
@@ -107,18 +109,22 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     if (pub->rtcp == NULL) {
         goto e3;
     }
-    pub->init_ts = dtime;
+    pvt->acct = rtpp_acct_ctor(pub->seuid);
+    if (pvt->acct == NULL) {
+        goto e4;
+    }
+    pvt->acct->init_ts = dtime;
     pub->call_id = strdup(ccap->call_id);
     if (pub->call_id == NULL) {
-        goto e4;
+        goto e5;
     }
     pub->tag = strdup(ccap->from_tag);
     if (pub->tag == NULL) {
-        goto e5;
+        goto e6;
     }
     pub->tag_nomedianum = strdup(ccap->from_tag);
     if (pub->tag_nomedianum == NULL) {
-        goto e6;
+        goto e7;
     }
     cp = strrchr(pub->tag_nomedianum, ';');
     if (cp != NULL)
@@ -141,7 +147,7 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
         if (i == 0 || cfs->ttl_mode == TTL_INDEPENDENT) {
             pub->rtp->stream[i]->ttl = rtpp_ttl_ctor(cfs->max_setup_ttl);
             if (pub->rtp->stream[i]->ttl == NULL) {
-                goto e7;
+                goto e8;
             }
         } else {
             pub->rtp->stream[i]->ttl = pub->rtp->stream[0]->ttl;
@@ -169,12 +175,14 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     CALL_METHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor, pvt);
     return (&pvt->pub);
 
-e7:
+e8:
     free(pub->tag_nomedianum);
-e6:
+e7:
     free(pub->tag);
-e5:
+e6:
     free(pub->call_id);
+e5:
+    CALL_METHOD(pvt->acct->rcnt, decref);
 e4:
     CALL_METHOD(pub->rtcp->rcnt, decref);
 e3:
@@ -194,48 +202,55 @@ e0:
 static void
 rtpp_session_dtor(struct rtpp_session_priv *pvt)
 {
-    struct rtpps_pcount pcnts;
-    struct rtpp_pcnts_strm pso_rtp, psa_rtp, pso_rtcp, psa_rtcp;
+    struct rtpps_pcount *pcnts;
+    struct rtpp_pcnts_strm *pso_rtp, *psa_rtp, *pso_rtcp, *psa_rtcp;
     int i;
     double session_time;
     struct rtpp_session *pub;
 
     pub = &(pvt->pub);
-    session_time = getdtime() - pub->init_ts;
+    pvt->acct->destroy_ts = getdtime();
+    session_time = pvt->acct->destroy_ts - pvt->acct->init_ts;
 
-    CALL_METHOD(pub->rtp->pcount, get_stats, &pcnts);
-    CALL_METHOD(pub->rtp->stream[0]->pcnt_strm, get_stats, &pso_rtp);
-    CALL_METHOD(pub->rtp->stream[1]->pcnt_strm, get_stats, &psa_rtp);
+    CALL_METHOD(pub->rtp->pcount, get_stats, pvt->acct->pcnts_rtp);
+    pcnts = pvt->acct->pcnts_rtp;
+    CALL_METHOD(pub->rtp->stream[0]->pcnt_strm, get_stats, pvt->acct->pso_rtp);
+    pso_rtp = pvt->acct->pso_rtp;
+    CALL_METHOD(pub->rtp->stream[1]->pcnt_strm, get_stats, pvt->acct->psa_rtp);
+    psa_rtp = pvt->acct->psa_rtp;
     RTPP_LOG(pub->log, RTPP_LOG_INFO, "RTP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped, %lu ignored", pso_rtp.npkts_in,
-      psa_rtp.npkts_in, pcnts.nrelayed, pcnts.ndropped, pcnts.nignored);
-    if (pso_rtp.first_pkt_rcv > 0.0) {
+      "in from caller, %lu relayed, %lu dropped, %lu ignored", pso_rtp->npkts_in,
+      psa_rtp->npkts_in, pcnts->nrelayed, pcnts->ndropped, pcnts->nignored);
+    if (pso_rtp->first_pkt_rcv > 0.0) {
         RTPP_LOG(pub->log, RTPP_LOG_INFO, "RTP times: caller: first in at %f, "
-          "duration %f, longest IPI %f", MT2RT_NZ(pso_rtp.first_pkt_rcv),
-          DRTN_NZ(pso_rtp.first_pkt_rcv, pso_rtp.last_pkt_rcv),
-          pso_rtp.longest_ipi);
+          "duration %f, longest IPI %f", MT2RT_NZ(pso_rtp->first_pkt_rcv),
+          DRTN_NZ(pso_rtp->first_pkt_rcv, pso_rtp->last_pkt_rcv),
+          pso_rtp->longest_ipi);
     }
-    if (psa_rtp.first_pkt_rcv > 0.0) {
+    if (psa_rtp->first_pkt_rcv > 0.0) {
         RTPP_LOG(pub->log, RTPP_LOG_INFO, "RTP times: callee: first in at %f, "
-          "duration %f, longest IPI %f", MT2RT_NZ(psa_rtp.first_pkt_rcv),
-          DRTN_NZ(psa_rtp.first_pkt_rcv, psa_rtp.last_pkt_rcv),
-          psa_rtp.longest_ipi);
+          "duration %f, longest IPI %f", MT2RT_NZ(psa_rtp->first_pkt_rcv),
+          DRTN_NZ(psa_rtp->first_pkt_rcv, psa_rtp->last_pkt_rcv),
+          psa_rtp->longest_ipi);
     }
-    CALL_METHOD(pub->rtcp->pcount, get_stats, &pcnts);
-    CALL_METHOD(pub->rtcp->stream[0]->pcnt_strm, get_stats, &pso_rtcp);
-    CALL_METHOD(pub->rtcp->stream[1]->pcnt_strm, get_stats, &psa_rtcp);
+    CALL_METHOD(pub->rtcp->pcount, get_stats, pvt->acct->pcnts_rtcp);
+    pcnts = pvt->acct->pcnts_rtcp;
+    CALL_METHOD(pub->rtcp->stream[0]->pcnt_strm, get_stats, pvt->acct->pso_rtcp);
+    pso_rtcp = pvt->acct->pso_rtcp;
+    CALL_METHOD(pub->rtcp->stream[1]->pcnt_strm, get_stats, pvt->acct->psa_rtcp);
+    psa_rtcp = pvt->acct->psa_rtcp;
     RTPP_LOG(pub->log, RTPP_LOG_INFO, "RTCP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped, %lu ignored", pso_rtcp.npkts_in,
-      psa_rtcp.npkts_in, pcnts.nrelayed, pcnts.ndropped, pcnts.nignored);
+      "in from caller, %lu relayed, %lu dropped, %lu ignored", pso_rtcp->npkts_in,
+      psa_rtcp->npkts_in, pcnts->nrelayed, pcnts->ndropped, pcnts->nignored);
     if (pub->complete != 0) {
-        if (pso_rtp.npkts_in == 0 && psa_rtp.npkts_in == 0) {
+        if (pso_rtp->npkts_in == 0 && psa_rtp->npkts_in == 0) {
             CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_nortp", 1);
-        } else if (pso_rtp.npkts_in == 0 || psa_rtp.npkts_in == 0) {
+        } else if (pso_rtp->npkts_in == 0 || psa_rtp->npkts_in == 0) {
             CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_owrtp", 1);
         }
-        if (pso_rtcp.npkts_in == 0 && psa_rtcp.npkts_in == 0) {
+        if (pso_rtcp->npkts_in == 0 && psa_rtcp->npkts_in == 0) {
             CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_nortcp", 1);
-        } else if (pso_rtcp.npkts_in == 0 || psa_rtcp.npkts_in == 0) {
+        } else if (pso_rtcp->npkts_in == 0 || psa_rtcp->npkts_in == 0) {
             CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_owrtcp", 1);
         }
     }
@@ -248,9 +263,15 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     CALL_METHOD(pub->rtpp_stats, updatebyname_d, "total_duration",
       session_time);
     if (pvt->modules_cf != NULL) {
-        CALL_METHOD(pvt->modules_cf, do_acct, (struct rtpp_acct *)pvt);
+        pvt->acct->call_id = pvt->pub.call_id;
+        pvt->pub.call_id = NULL;
+        pvt->acct->from_tag = pvt->pub.tag;
+        pvt->pub.tag = NULL;
+
+        CALL_METHOD(pvt->modules_cf, do_acct, pvt->acct);
         CALL_METHOD(pvt->modules_cf->rcnt, decref);
     }
+    CALL_METHOD(pvt->acct->rcnt, decref);
 
     CALL_METHOD(pvt->pub.log->rcnt, decref);
     if (pvt->pub.timeout_data.notify_tag != NULL)
