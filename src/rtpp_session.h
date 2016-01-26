@@ -51,8 +51,6 @@ struct rtpp_session {
     /* Flags: strong create/delete; weak ones */
     int strong;
     struct rtpp_timeout_data timeout_data;
-    /* Timestamp of session instantiation time */
-    double init_ts;
     /* UID */
     uint64_t seuid;
 
