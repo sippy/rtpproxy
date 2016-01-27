@@ -36,13 +36,13 @@ struct rtpp_refcnt;
 #define SSRC_FMT "0x%.8X"
 
 struct rtpp_analyzer_stats {
-    uint32_t psent;
-    uint32_t precvd;
-    uint32_t plost;
-    uint32_t pdups;
-    uint32_t ssrc_changes;
-    uint32_t pecount;
-    uint32_t aecount;
+    unsigned long psent;
+    unsigned long precvd;
+    unsigned long plost;
+    unsigned long pdups;
+    unsigned long ssrc_changes;
+    unsigned long pecount;
+    unsigned long aecount;
     uint32_t last_ssrc;
 };
 
