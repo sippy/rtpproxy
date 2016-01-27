@@ -40,6 +40,7 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_acct.h"
+#include "rtpp_analyzer.h"
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
@@ -267,6 +268,10 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
         pvt->pub.call_id = NULL;
         pvt->acct->from_tag = pvt->pub.tag;
         pvt->pub.tag = NULL;
+        CALL_METHOD(pub->rtp->stream[0]->analyzer, get_stats, \
+          pvt->acct->rasto);
+        CALL_METHOD(pub->rtp->stream[1]->analyzer, get_stats, \
+          pvt->acct->rasta);
 
         CALL_METHOD(pvt->modules_cf, do_acct, pvt->acct);
         CALL_METHOD(pvt->modules_cf->rcnt, decref);
