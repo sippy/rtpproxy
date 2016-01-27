@@ -158,7 +158,7 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
 
 e4:
     if (session_type == SESS_RTP) {
-         rtpp_analyzer_dtor(pvt->pub.analyzer);
+         CALL_METHOD(pvt->pub.analyzer->rcnt, decref);
     }
 e3:
     pthread_mutex_destroy(&pvt->lock);
@@ -182,9 +182,9 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          const char *actor, *ssrc;
 
          actor = rtpp_stream_get_actor(pub);
-         rtpp_analyzer_stat(pub->analyzer, &rst);
+         CALL_METHOD(pub->analyzer, get_stats, &rst);
          if (rst.ssrc_changes != 0) {
-             snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", rst.last_ssrc);
+             snprintf(ssrc_buf, sizeof(ssrc_buf), SSRC_FMT, rst.last_ssrc);
              ssrc = ssrc_buf;
          } else {
              ssrc = "NONE";
@@ -192,7 +192,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "RTP stream from %s: "
            "SSRC=%s, ssrc_changes=%u, psent=%u, precvd=%u, plost=%d, pdups=%u",
            actor, ssrc, rst.ssrc_changes, rst.psent, rst.precvd,
-           rst.psent - rst.precvd, rst.pdups);
+           rst.plost, rst.pdups);
          if (rst.psent > 0) {
              CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_nsent", rst.psent);
          }
@@ -205,7 +205,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          if (rst.pecount > 0) {
              CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
          }
-         rtpp_analyzer_dtor(pub->analyzer);
+         CALL_METHOD(pvt->pub.analyzer->rcnt, decref);
     }
     if (pub->fd != NULL)
         CALL_METHOD(pub->fd->rcnt, decref);
@@ -277,7 +277,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, char *codecs,
           pvt->rtpp_stats);
         CALL_METHOD(rsrv->rcnt, decref);
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
-          "%d times playing prompt %s codec %d: SSRC=0x%.8X, seq=%u",
+          "%d times playing prompt %s codec %d: SSRC=" SSRC_FMT ", seq=%u",
           playcount, pname, n, ssrc, seq);
         return 0;
     }
@@ -369,7 +369,7 @@ rtpp_stream_latch(struct rtpp_stream *self, double dtime,
         if (rtp_packet_parse(packet) == RTP_PARSER_OK) {
             self->latch_info.ssrc = packet->parsed->ssrc;
             self->latch_info.seq = packet->parsed->seq;
-            snprintf(ssrc_buf, sizeof(ssrc_buf), "0x%.8X", packet->parsed->ssrc);
+            snprintf(ssrc_buf, sizeof(ssrc_buf), SSRC_FMT, packet->parsed->ssrc);
             snprintf(seq_buf, sizeof(seq_buf), "%u", packet->parsed->seq);
             ssrc = ssrc_buf;
             seq = seq_buf;
@@ -418,7 +418,7 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
 
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
-      "%s's address re-latched: %s (%s), SSRC=0x%.8X, Seq=%u->%u", actor,
+      "%s's address re-latched: %s (%s), SSRC=" SSRC_FMT ", Seq=%u->%u", actor,
       saddr, "RTP", self->latch_info.ssrc, self->latch_info.seq,
       packet->parsed->seq);
 
