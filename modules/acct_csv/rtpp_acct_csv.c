@@ -1,3 +1,30 @@
+/*
+ * Copyright (c) 2006-2016 Sippy Software, Inc., http://www.sippysoft.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ */
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -10,6 +37,7 @@
 
 #include "rtpp_monotime.h"
 #include "rtpp_types.h"
+#include "rtpp_analyzer.h"
 #include "rtpp_pcount.h"
 #include "rtpp_pcnt_strm.h"
 #include "rtpp_acct.h"
@@ -64,7 +92,11 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
         len = mod_asprintf(&buf, "rtpp_pid,sess_uid,call_id,from_tag,setup_ts,"
           "teardown_ts,first_rtp_ts_ino,last_rtp_ts_ino,first_rtp_ts_ina,"
           "last_rtp_ts_ina,rtp_npkts_ina,rtp_npkts_ino,rtp_nrelayed,rtp_ndropped,"
-          "rtcp_npkts_ina,rtcp_npkts_ino,rtcp_nrelayed,rtcp_ndropped\n");
+          "rtcp_npkts_ina,rtcp_npkts_ino,rtcp_nrelayed,rtcp_ndropped,"
+          "rtpa_nsent_ino,rtpa_nrcvd_ino,rtpa_ndups_ino,rtpa_nlost_ino,"
+          "rtpa_perrs_ino,rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino,rtpa_nsent_ina,"
+          "rtpa_nrcvd_ina,rtpa_ndups_ina,rtpa_nlost_ina,rtpa_perrs_ina,"
+          "rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina\n");
         if (len <= 0) {
             if (len == 0 && buf != NULL) {
                 goto e3;
@@ -142,14 +174,20 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
     if (pos < 0) {
         return;
     }
+
     len = mod_asprintf(&buf, "%d,%" PRId64 ",%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
-      "%lu,%lu,%lu,%lu,%lu,%lu\n",
+      "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu," SSRC_FMT ",%lu,%lu,%lu,%lu,"
+      "%lu,%lu," SSRC_FMT ",%lu\n",
       pvt->pid, acct->seuid, ES_IF_NULL(acct->call_id), ES_IF_NULL(acct->from_tag),
       MT2RT_NZ(acct->init_ts), MT2RT_NZ(acct->destroy_ts), MT2RT_NZ(acct->pso_rtp->first_pkt_rcv),
       MT2RT_NZ(acct->pso_rtp->last_pkt_rcv), MT2RT_NZ(acct->psa_rtp->first_pkt_rcv),
       MT2RT_NZ(acct->psa_rtp->last_pkt_rcv), acct->psa_rtp->npkts_in, acct->pso_rtp->npkts_in,
       acct->pcnts_rtp->nrelayed, acct->pcnts_rtp->ndropped, acct->psa_rtcp->npkts_in,
-      acct->pso_rtcp->npkts_in, acct->pcnts_rtcp->nrelayed, acct->pcnts_rtcp->ndropped);
+      acct->pso_rtcp->npkts_in, acct->pcnts_rtcp->nrelayed, acct->pcnts_rtcp->ndropped,
+      acct->rasto->psent, acct->rasto->precvd, acct->rasto->pdups, acct->rasto->plost,
+      acct->rasto->pecount, acct->rasto->last_ssrc, acct->rasto->ssrc_changes,
+      acct->rasta->psent, acct->rasta->precvd, acct->rasta->pdups, acct->rasta->plost,
+      acct->rasta->pecount, acct->rasta->last_ssrc, acct->rasta->ssrc_changes);
     if (len <= 0) {
         if (len == 0 && buf != NULL) {
             mod_free(buf);
