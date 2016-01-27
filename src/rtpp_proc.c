@@ -162,7 +162,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
 	    fill_session_addr(cf, stp, packet);
 	}
         if (stp->analyzer != NULL) {
-            if (rtpp_analyzer_update(stp->analyzer, packet) == UPDATE_SSRC_CHG) {
+            if (CALL_METHOD(stp->analyzer, update, packet) == UPDATE_SSRC_CHG) {
                 CALL_METHOD(stp, latch, dtime, packet);
             }
         }
