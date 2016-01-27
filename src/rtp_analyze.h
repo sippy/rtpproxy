@@ -31,6 +31,8 @@
 
 struct rtpp_log;
 
+#define SSRC_FMT "0x%.8X"
+
 struct rtpp_session_stat_jitter {
     uint64_t prev_rtime_ts;
     uint32_t prev_ts;
