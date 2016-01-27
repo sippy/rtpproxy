@@ -77,7 +77,7 @@ handle_query_simple(struct cfg *cf, struct rtpp_command *cmd,
 
 #define PULL_RST() \
     if (rst_pulled == 0) { \
-        rtpp_analyzer_stat(spp->stream[idx]->analyzer, &rst); \
+        CALL_METHOD(spp->stream[idx]->analyzer, get_stats, &rst); \
         rst_pulled = 1; \
     }
 
@@ -166,31 +166,31 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
         }
         if (strcmp(cmd->argv[i], "rtpa_nsent") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%u",
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.psent);
             continue;
         }
         if (strcmp(cmd->argv[i], "rtpa_nrcvd") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%u",
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.precvd);
             continue;
         }
         if (strcmp(cmd->argv[i], "rtpa_ndups") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%u",
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.pdups);
             continue;
         }
         if (strcmp(cmd->argv[i], "rtpa_nlost") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
-              rst.psent - rst.precvd);
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
+              rst.plost);
             continue;
         }
         if (strcmp(cmd->argv[i], "rtpa_perrs") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.pecount);
             continue;
         }
