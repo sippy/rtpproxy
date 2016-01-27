@@ -57,7 +57,6 @@ static void rtpp_acct_dtor(struct rtpp_acct_priv *);
 #define PUB2PVT(pubp) \
   ((struct rtpp_acct_priv *)((char *)(pubp) - offsetof(struct rtpp_acct_priv, pub)))
 
-#if !defined(LIBMODULE)
 struct rtpp_acct *
 rtpp_acct_ctor(uint64_t seuid)
 {
@@ -97,7 +96,6 @@ rtpp_acct_dtor(struct rtpp_acct_priv *pvt)
         free(pvt->pub.from_tag);
     free(pvt);
 }
-#endif
 
 const unsigned int
 rtpp_acct_osize(void)
