@@ -25,9 +25,20 @@
  *
  */
 
+#if !defined(_RTPP_ANALYZER_H)
+#define _RTPP_ANALYZER_H
+
+struct rtpp_log;
+struct rtp_packet;
+struct rtpp_analyzer;
+struct rtpp_refcnt;
+
+#define SSRC_FMT "0x%.8X"
+
 struct rtpp_analyzer_stats {
     uint32_t psent;
     uint32_t precvd;
+    uint32_t plost;
     uint32_t pdups;
     uint32_t ssrc_changes;
     uint32_t pecount;
@@ -38,7 +49,17 @@ struct rtpp_analyzer_stats {
 struct rtpp_log;
 struct rtp_packet;
 
+DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_update, enum update_rtpp_stats_rval,
+  struct rtp_packet *);
+DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_stats, void,
+  struct rtpp_analyzer_stats *);
+
+struct rtpp_analyzer {
+    METHOD_ENTRY(rtpp_analyzer_update, update);
+    METHOD_ENTRY(rtpp_analyzer_get_stats, get_stats);
+    struct rtpp_refcnt *rcnt;
+};
+
 struct rtpp_analyzer * rtpp_analyzer_ctor(struct rtpp_log *);
-enum update_rtpp_stats_rval rtpp_analyzer_update(struct rtpp_analyzer *, struct rtp_packet *);
-void rtpp_analyzer_stat(struct rtpp_analyzer *, struct rtpp_analyzer_stats *);
-void rtpp_analyzer_dtor(struct rtpp_analyzer *);
+
+#endif
