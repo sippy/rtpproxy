@@ -48,6 +48,7 @@ struct rtpp_ringbuf_priv
 
 static void rtpp_ringbuf_dtor(struct rtpp_ringbuf_priv *);
 static void rtpp_ringbuf_push(struct rtpp_ringbuf *, void *);
+static void rtpp_ringbuf_flush(struct rtpp_ringbuf *);
 static int rtpp_ringbuf_locate(struct rtpp_ringbuf *, void *);
 
 #define PUB2PVT(pubp)      ((struct rtpp_ringbuf_priv *)((char *)(pubp) - \
@@ -71,6 +72,7 @@ rtpp_ringbuf_ctor(size_t el_size, int nelements)
     pvt->el_size = el_size;
     pvt->nelements = nelements;
     pvt->pub.push = rtpp_ringbuf_push;
+    pvt->pub.flush = rtpp_ringbuf_flush;
     pvt->pub.locate = rtpp_ringbuf_locate;
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ringbuf_dtor,
       pvt);
@@ -107,6 +109,16 @@ rtpp_ringbuf_push(struct rtpp_ringbuf *self, void *data)
         }
         pvt->c_elem = 0;
     }
+}
+
+static void
+rtpp_ringbuf_flush(struct rtpp_ringbuf *self)
+{
+    struct rtpp_ringbuf_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    pvt->b_full = 0;
+    pvt->c_elem = 0;
 }
 
 static int

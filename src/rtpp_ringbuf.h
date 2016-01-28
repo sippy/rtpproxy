@@ -32,6 +32,7 @@
 struct rtpp_ringbuf;
 
 DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_push, void, void *);
+DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_flush, void);
 DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_locate, int, void *);
 
 struct rtpp_ringbuf {
@@ -39,6 +40,7 @@ struct rtpp_ringbuf {
     struct rtpp_refcnt *rcnt;
 
     METHOD_ENTRY(rtpp_ringbuf_push, push);
+    METHOD_ENTRY(rtpp_ringbuf_flush, flush);
     METHOD_ENTRY(rtpp_ringbuf_locate, locate);
 };
 
