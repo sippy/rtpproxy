@@ -30,7 +30,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c rtpp_ringbuf.h \
   rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
   rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h rtpp_acct.c \
-  rtpp_acct.h
+  rtpp_acct.h rtpp_stats.h
 
 rtpproxy_LDADD=-lm -lpthread
 rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
