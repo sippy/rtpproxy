@@ -99,8 +99,9 @@ channel_insert(struct channels *channels, struct channel *channel)
 static int
 load_session(const char *path, struct channels *channels, enum origin origin)
 {
-    int pcount;
+    int pcount, jc;
     struct rtpp_session_stat stat;
+    struct rtpp_session_stat_jitter jstat;
     struct rtpp_loader *loader;
 
     loader = rtpp_load(path);
@@ -111,14 +112,16 @@ load_session(const char *path, struct channels *channels, enum origin origin)
     pcount = loader->load(loader, channels, &stat, origin);
 
     update_rtpp_totals(&stat, &stat);
+    jc = get_jitter_stats(stat.jdata, &jstat);
     printf("pcount=%u, min_seq=%u, max_seq=%u, seq_offset=%u, ssrc=0x%.8X, duplicates=%u\n",
       (unsigned int)stat.last.pcount, (unsigned int)stat.last.min_seq, (unsigned int)stat.last.max_seq,
       (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc, (unsigned int)stat.last.duplicates);
     printf("ssrc_changes=%u, psent=%u, precvd=%u, plost=%d\n", stat.ssrc_changes, stat.psent, stat.precvd,
       stat.psent - stat.precvd);
-    printf("last_jitter=%f,average_jitter=%f,max_jitter=%f\n",
-      stat.jitter.jval,stat.jitter.jtotal / (double)(stat.jitter.pcount - 1),
-      stat.jitter.jmax);
+    if (jc > 0) {
+        printf("last_jitter=%f,average_jitter=%f,max_jitter=%f\n",
+          jstat.jlast, jstat.javg, jstat.jmax);
+    }
 
     loader->destroy(loader);
     rtpp_stats_destroy(&stat);
