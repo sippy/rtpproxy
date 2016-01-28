@@ -61,4 +61,5 @@ struct rtpp_acct *rtpp_acct_ctor(uint64_t);
   sizeof(struct rtpps_pcount) + sizeof(struct rtpp_pcnts_strm) + \
   sizeof(struct rtpp_pcnts_strm) + sizeof(struct rtpp_pcnts_strm) + \
   sizeof(struct rtpp_pcnts_strm) + sizeof(struct rtpa_stats) + \
-  sizeof(struct rtpa_stats))
+  sizeof(struct rtpa_stats) + sizeof(struct rtpa_stats_jitter) + \
+  sizeof(struct rtpa_stats_jitter))
