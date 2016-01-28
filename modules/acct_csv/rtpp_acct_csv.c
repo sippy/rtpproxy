@@ -35,6 +35,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpa_stats.h"
 #include "rtpp_monotime.h"
 #include "rtpp_types.h"
 #include "rtpp_analyzer.h"
@@ -96,7 +97,9 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
           "rtpa_nsent_ino,rtpa_nrcvd_ino,rtpa_ndups_ino,rtpa_nlost_ino,"
           "rtpa_perrs_ino,rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino,rtpa_nsent_ina,"
           "rtpa_nrcvd_ina,rtpa_ndups_ina,rtpa_nlost_ina,rtpa_perrs_ina,"
-          "rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina\n");
+          "rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina,"
+          "rtpa_jitter_last_ino,rtpa_jitter_max_ino,rtpa_jitter_avg_ino,"
+          "rtpa_jitter_last_ina,rtpa_jitter_max_ina,rtpa_jitter_avg_ina\n");
         if (len <= 0) {
             if (len == 0 && buf != NULL) {
                 goto e3;
@@ -177,7 +180,7 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
 
     len = mod_asprintf(&buf, "%d,%" PRId64 ",%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
       "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu," SSRC_FMT ",%lu,%lu,%lu,%lu,"
-      "%lu,%lu," SSRC_FMT ",%lu\n",
+      "%lu,%lu," SSRC_FMT ",%lu" ",%f,%f,%f,%f,%f,%f" "\n",
       pvt->pid, acct->seuid, ES_IF_NULL(acct->call_id), ES_IF_NULL(acct->from_tag),
       MT2RT_NZ(acct->init_ts), MT2RT_NZ(acct->destroy_ts), MT2RT_NZ(acct->pso_rtp->first_pkt_rcv),
       MT2RT_NZ(acct->pso_rtp->last_pkt_rcv), MT2RT_NZ(acct->psa_rtp->first_pkt_rcv),
@@ -187,7 +190,9 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
       acct->rasto->psent, acct->rasto->precvd, acct->rasto->pdups, acct->rasto->plost,
       acct->rasto->pecount, acct->rasto->last_ssrc, acct->rasto->ssrc_changes,
       acct->rasta->psent, acct->rasta->precvd, acct->rasta->pdups, acct->rasta->plost,
-      acct->rasta->pecount, acct->rasta->last_ssrc, acct->rasta->ssrc_changes);
+      acct->rasta->pecount, acct->rasta->last_ssrc, acct->rasta->ssrc_changes,
+      acct->jrasto->jlast, acct->jrasto->jmax, acct->jrasto->javg,
+      acct->jrasta->jlast, acct->jrasta->jmax, acct->jrasta->javg);
     if (len <= 0) {
         if (len == 0 && buf != NULL) {
             mod_free(buf);
