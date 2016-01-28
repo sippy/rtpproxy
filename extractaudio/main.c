@@ -59,6 +59,7 @@
 #include "rtpp_loader.h"
 #include "rtp.h"
 #include "rtp_analyze.h"
+#include "rtpa_stats.h"
 
 static void
 usage(void)
@@ -101,7 +102,7 @@ load_session(const char *path, struct channels *channels, enum origin origin)
 {
     int pcount, jc;
     struct rtpp_session_stat stat;
-    struct rtpp_session_stat_jitter jstat;
+    struct rtpa_stats_jitter jstat;
     struct rtpp_loader *loader;
 
     loader = rtpp_load(path);
