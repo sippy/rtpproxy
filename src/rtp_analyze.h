@@ -30,20 +30,9 @@
 #define _RTP_ANALYZE_H_
 
 struct rtpp_log;
+struct rtpa_stats_jitter;
 
 #define SSRC_FMT "0x%.8X"
-
-struct rtpp_session_stat_jitter;
-
-struct rtpp_session_stat_jitter {
-    double jlast;
-    double jmax;
-    double javg;
-    /* Packets contributed towards the javg */
-    long long pcount;
-    /* Number of individual jitter values averaged */
-    long long jvcount;
-};
 
 struct rtpp_session_stat_last {
     long long pcount;
@@ -78,6 +67,6 @@ void rtpp_stats_destroy(struct rtpp_session_stat *);
 enum update_rtpp_stats_rval update_rtpp_stats(struct rtpp_log *,
   struct rtpp_session_stat *, rtp_hdr_t *, struct rtp_info *, double);
 void update_rtpp_totals(struct rtpp_session_stat *, struct rtpp_session_stat *);
-int get_jitter_stats(struct rtp_analyze_jitter *, struct rtpp_session_stat_jitter *);
+int get_jitter_stats(struct rtp_analyze_jitter *, struct rtpa_stats_jitter *);
 
 #endif

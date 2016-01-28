@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2014-2016 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,34 +25,24 @@
  *
  */
 
-#if !defined(_RTPP_ANALYZER_H)
-#define _RTPP_ANALYZER_H
-
-struct rtpp_log;
-struct rtp_packet;
-struct rtpp_analyzer;
-struct rtpp_refcnt;
-struct rtpa_stats;
-struct rtpa_stats_jitter;
-struct rtpp_log;
-struct rtp_packet;
-
-#define SSRC_FMT "0x%.8X"
-
-DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_update, enum update_rtpp_stats_rval,
-  struct rtp_packet *);
-DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_stats, void,
-  struct rtpa_stats *);
-DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_jstats, int,
-  struct rtpa_stats_jitter *);
-
-struct rtpp_analyzer {
-    METHOD_ENTRY(rtpp_analyzer_update, update);
-    METHOD_ENTRY(rtpp_analyzer_get_stats, get_stats);
-    METHOD_ENTRY(rtpp_analyzer_get_jstats, get_jstats);
-    struct rtpp_refcnt *rcnt;
+struct rtpa_stats {
+    unsigned long psent;
+    unsigned long precvd;
+    unsigned long plost;
+    unsigned long pdups;
+    unsigned long ssrc_changes;
+    unsigned long pecount;
+    unsigned long aecount;
+    uint32_t last_ssrc;
 };
 
-struct rtpp_analyzer * rtpp_analyzer_ctor(struct rtpp_log *);
+struct rtpa_stats_jitter {
+    double jlast;
+    double jmax;
+    double javg;
+    /* Packets contributed towards the javg */
+    unsigned long pcount;
+    /* Number of individual jitter values averaged */
+    unsigned long jvcount;
+};
 
-#endif
