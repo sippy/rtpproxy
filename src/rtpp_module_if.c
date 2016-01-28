@@ -88,6 +88,7 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
 {
     struct rtpp_refcnt *rcnt;
     struct rtpp_module_if_priv *pvt;
+    const char *derr;
 
     pvt = rtpp_rzmalloc(sizeof(struct rtpp_module_if_priv), &rcnt);
     if (pvt == NULL) {
@@ -96,13 +97,24 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     pvt->pub.rcnt = rcnt;
     pvt->dmp = dlopen(mpath, RTLD_NOW);
     if (pvt->dmp == NULL) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen(%s): %s", mpath, dlerror());
+        derr = dlerror();
+        if (strstr(derr, mpath) == NULL) {
+            RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen(%s): %s", mpath, derr);
+        } else {
+            RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen() module: %s", derr);
+        }
         goto e1;
     }
     pvt->mip = dlsym(pvt->dmp, "rtpp_module");
     if (pvt->mip == NULL) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol in the %s"
-          ": %s", mpath, dlerror());
+        derr = dlerror();
+        if (strstr(derr, mpath) == NULL) {
+            RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol in the %s"
+              ": %s", mpath, derr);
+        } else {
+            RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol: %s",
+              derr);
+        }
         goto e2;
     }
     if (!MI_VER_CHCK(pvt->mip)) {
