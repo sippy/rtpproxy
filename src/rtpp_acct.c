@@ -31,6 +31,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "rtpa_stats.h"
 #include "rtpp_types.h"
 #include "rtpp_analyzer.h"
 #include "rtpp_pcnt_strm.h"
@@ -47,8 +48,10 @@ struct rtpp_acct_priv {
     struct rtpp_pcnts_strm _psa_rtp;
     struct rtpp_pcnts_strm _pso_rtcp;
     struct rtpp_pcnts_strm _psa_rtcp;
-    struct rtpp_analyzer_stats _rasto;
-    struct rtpp_analyzer_stats _rasta;
+    struct rtpa_stats _rasto;
+    struct rtpa_stats _rasta;
+    struct rtpa_stats_jitter _jrasto;
+    struct rtpa_stats_jitter _jrasta;
     struct rtpp_acct pub;
 };
 
@@ -77,6 +80,8 @@ rtpp_acct_ctor(uint64_t seuid)
     pvt->pub.psa_rtcp = &pvt->_psa_rtcp;
     pvt->pub.rasto = &pvt->_rasto;
     pvt->pub.rasta = &pvt->_rasta;
+    pvt->pub.jrasto = &pvt->_jrasto;
+    pvt->pub.jrasta = &pvt->_jrasta;
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_acct_dtor,
       pvt);
     return ((&pvt->pub));

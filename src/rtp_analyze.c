@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpa_stats.h"
 #include "rtpp_debug.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_types.h"
@@ -488,7 +489,7 @@ update_rtpp_totals(struct rtpp_session_stat *wstat, struct rtpp_session_stat *os
 }
 
 int
-get_jitter_stats(struct rtp_analyze_jitter *jp, struct rtpp_session_stat_jitter *jst)
+get_jitter_stats(struct rtp_analyze_jitter *jp, struct rtpa_stats_jitter *jst)
 {
     int i;
     struct rtp_analyze_jdata *rjdp;

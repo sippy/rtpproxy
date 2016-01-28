@@ -272,6 +272,10 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
           pvt->acct->rasto);
         CALL_METHOD(pub->rtp->stream[1]->analyzer, get_stats, \
           pvt->acct->rasta);
+        CALL_METHOD(pub->rtp->stream[0]->analyzer, get_jstats, \
+          pvt->acct->jrasto);
+        CALL_METHOD(pub->rtp->stream[1]->analyzer, get_jstats, \
+          pvt->acct->jrasta);
 
         CALL_METHOD(pvt->modules_cf, do_acct, pvt->acct);
         CALL_METHOD(pvt->modules_cf->rcnt, decref);

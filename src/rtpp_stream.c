@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "rtpa_stats.h"
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
@@ -177,7 +178,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     pub = &(pvt->pub);
     rtpp_stream_fin(pub);
     if (pub->analyzer != NULL) {
-         struct rtpp_analyzer_stats rst;
+         struct rtpa_stats rst;
          char ssrc_buf[11];
          const char *actor, *ssrc;
 

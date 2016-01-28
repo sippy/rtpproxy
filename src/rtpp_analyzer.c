@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpa_stats.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
@@ -51,7 +52,9 @@ struct rtpp_analyzer_priv {
 static enum update_rtpp_stats_rval rtpp_analyzer_update(struct rtpp_analyzer *,
   struct rtp_packet *);
 static void rtpp_analyzer_get_stats(struct rtpp_analyzer *,
-  struct rtpp_analyzer_stats *);
+  struct rtpa_stats *);
+static int rtpp_analyzer_get_jstats(struct rtpp_analyzer *,
+  struct rtpa_stats_jitter *);
 static void rtpp_analyzer_dtor(struct rtpp_analyzer_priv *);
 
 #define PUB2PVT(pubp) \
@@ -76,6 +79,7 @@ rtpp_analyzer_ctor(struct rtpp_log *log)
     pvt->log = log;
     rap->update = &rtpp_analyzer_update;
     rap->get_stats = &rtpp_analyzer_get_stats;
+    rap->get_jstats = &rtpp_analyzer_get_jstats;
     CALL_METHOD(log->rcnt, incref);
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_analyzer_dtor,
       pvt);
@@ -105,7 +109,7 @@ rtpp_analyzer_update(struct rtpp_analyzer *rap, struct rtp_packet *pkt)
 }
 
 static void
-rtpp_analyzer_get_stats(struct rtpp_analyzer *rap, struct rtpp_analyzer_stats *rsp)
+rtpp_analyzer_get_stats(struct rtpp_analyzer *rap, struct rtpa_stats *rsp)
 {
     struct rtpp_session_stat ostat;
     struct rtpp_analyzer_priv *pvt;
@@ -121,6 +125,18 @@ rtpp_analyzer_get_stats(struct rtpp_analyzer *rap, struct rtpp_analyzer_stats *r
     rsp->ssrc_changes = pvt->rstat.ssrc_changes;
     rsp->last_ssrc = pvt->rstat.last.ssrc;
     rsp->plost = ostat.psent - ostat.precvd;
+}
+
+static int
+rtpp_analyzer_get_jstats(struct rtpp_analyzer *rap,
+  struct rtpa_stats_jitter *jrsp)
+{
+    struct rtpp_analyzer_priv *pvt;
+    int rval;
+
+    pvt = PUB2PVT(rap);
+    rval = get_jitter_stats(pvt->rstat.jdata, jrsp);
+    return (rval);
 }
 
 static void

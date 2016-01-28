@@ -30,7 +30,7 @@ struct rtpp_acct;
 struct rtpp_refcnt;
 struct rtpps_pcount;
 struct rtpp_pcnts_strm;
-struct rtpp_analyzer_stats;
+struct rtpa_stats;
 
 struct rtpp_acct {
     uint64_t seuid;
@@ -40,8 +40,10 @@ struct rtpp_acct {
     struct rtpp_pcnts_strm *psa_rtp;
     struct rtpp_pcnts_strm *pso_rtcp;
     struct rtpp_pcnts_strm *psa_rtcp;
-    struct rtpp_analyzer_stats *rasto;
-    struct rtpp_analyzer_stats *rasta;
+    struct rtpa_stats *rasto;
+    struct rtpa_stats *rasta;
+    struct rtpa_stats_jitter *jrasto;
+    struct rtpa_stats_jitter *jrasta;
     char *call_id;
     char *from_tag;
     char *to_tag;
@@ -58,5 +60,5 @@ struct rtpp_acct *rtpp_acct_ctor(uint64_t);
 #define rtpp_acct_OSIZE() (sizeof(struct rtpp_acct) + sizeof(struct rtpps_pcount) + \
   sizeof(struct rtpps_pcount) + sizeof(struct rtpp_pcnts_strm) + \
   sizeof(struct rtpp_pcnts_strm) + sizeof(struct rtpp_pcnts_strm) + \
-  sizeof(struct rtpp_pcnts_strm) + sizeof(struct rtpp_analyzer_stats) + \
-  sizeof(struct rtpp_analyzer_stats))
+  sizeof(struct rtpp_pcnts_strm) + sizeof(struct rtpa_stats) + \
+  sizeof(struct rtpa_stats))

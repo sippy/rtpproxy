@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "rtpa_stats.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
@@ -100,7 +101,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
 {
     int len, i, verbose, rst_pulled, pcnt_pulled, pcnt_strm_pulled;
     char *cp;
-    struct rtpp_analyzer_stats rst;
+    struct rtpa_stats rst;
     struct rtpps_pcount pcnts;
     struct rtpp_pcnts_strm pst[2];
 

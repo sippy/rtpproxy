@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpa_stats.h"
 #include "rtpp_log.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_types.h"
