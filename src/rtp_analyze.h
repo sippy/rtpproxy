@@ -33,20 +33,16 @@ struct rtpp_log;
 
 #define SSRC_FMT "0x%.8X"
 
+struct rtpp_session_stat_jitter;
+
 struct rtpp_session_stat_jitter {
-    uint64_t prev_rtime_ts;
-    uint32_t prev_ts;
-    double jval;
+    double jlast;
     double jmax;
-    double jtotal;
+    double javg;
+    /* Packets contributed towards the javg */
     long long pcount;
-#if 0
-    long long ts_rcount;
-    long long ts_jcount;
-#endif
-    long long ts_dcount;
-    long long seq_rcount;
-    struct rtpp_ringbuf *ts_dedup;
+    /* Number of individual jitter values averaged */
+    long long jvcount;
 };
 
 struct rtpp_session_stat_last {
@@ -62,6 +58,8 @@ struct rtpp_session_stat_last {
     double base_rtime;
 };
 
+struct rtp_analyze_jitter;
+
 struct rtpp_session_stat {
     uint32_t ssrc_changes;
     uint32_t psent;
@@ -70,7 +68,7 @@ struct rtpp_session_stat {
     uint32_t desync_count;
     uint32_t seq_res_count;
     struct rtpp_session_stat_last last;
-    struct rtpp_session_stat_jitter jitter;
+    struct rtp_analyze_jitter *jdata;
 };
 
 enum update_rtpp_stats_rval {UPDATE_OK = 0, UPDATE_SSRC_CHG = 1, UPDATE_ERR = -1};
@@ -80,5 +78,6 @@ void rtpp_stats_destroy(struct rtpp_session_stat *);
 enum update_rtpp_stats_rval update_rtpp_stats(struct rtpp_log *,
   struct rtpp_session_stat *, rtp_hdr_t *, struct rtp_info *, double);
 void update_rtpp_totals(struct rtpp_session_stat *, struct rtpp_session_stat *);
+int get_jitter_stats(struct rtp_analyze_jitter *, struct rtpp_session_stat_jitter *);
 
 #endif
