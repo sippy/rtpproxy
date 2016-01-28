@@ -249,24 +249,33 @@ rtpp_stream_handle_play(struct rtpp_stream *self, char *codecs,
     struct rtpp_server *rsrv;
     uint16_t seq;
     uint32_t ssrc;
+    const char *plerror;
 
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
+    plerror = "reason unknown";
     while (*codecs != '\0') {
         n = strtol(codecs, &cp, 10);
-        if (cp == codecs)
+        if (cp == codecs) {
+            plerror = "invalid codecs";
             break;
+        }
         codecs = cp;
         if (*codecs != '\0')
             codecs++;
         rsrv = rtpp_server_ctor(pname, n, playcount, cmd->dtime, ptime);
-        if (rsrv == NULL)
+        if (rsrv == NULL) {
+            RTPP_LOG(pvt->pub.log, RTPP_LOG_DBUG, "rtpp_server_ctor(\"%s\", %d, %d) failed",
+              pname, n, playcount);
+            plerror = "rtpp_server_ctor() failed";
             continue;
+        }
         rsrv->stuid = self->stuid;
         ssrc = CALL_METHOD(rsrv, get_ssrc);
         seq = CALL_METHOD(rsrv, get_seq);
         if (CALL_METHOD(pvt->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
             CALL_METHOD(rsrv->rcnt, decref);
+            plerror = "servers_wrt->reg() method failed";
             break;
         }
         assert(pvt->rtps == RTPP_UID_NONE);
@@ -282,7 +291,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, char *codecs,
         return 0;
     }
     pthread_mutex_unlock(&pvt->lock);
-    RTPP_LOG(pvt->pub.log, RTPP_LOG_ERR, "can't create player");
+    RTPP_LOG(pvt->pub.log, RTPP_LOG_ERR, "can't create player: %s", plerror);
     return -1;
 }
 
