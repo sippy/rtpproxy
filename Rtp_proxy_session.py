@@ -53,6 +53,7 @@ class Rtp_proxy_session(object):
     notify_tag = None
     global_config = None
     my_ident = None
+    insert_nortpp = False
 
     def __init__(self, global_config, call_id = None, from_tag = None, to_tag = None,
       notify_socket = None, notify_tag = None):
@@ -298,6 +299,8 @@ class Rtp_proxy_session(object):
                 sect.m_header.port = address_port[1]
         if len([x for x in sects if x.needs_update]) == 0:
             sdp_body.content.o_header = self.origin
+            if self.insert_nortpp:
+                sdp_body.content += 'a=nortpproxy:yes\r\n'
             sdp_body.needs_update = False
             result_callback(sdp_body)
 

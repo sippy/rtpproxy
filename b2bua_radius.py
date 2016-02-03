@@ -177,6 +177,7 @@ class CallController(object):
                       notify_socket = self.global_config['b2bua_socket'], \
                       notify_tag = quote('r %s' % str(self.id)))
                     self.rtp_proxy_session.callee_raddress = (self.remote_ip, 5060)
+                    self.rtp_proxy_session.insert_nortpp = True
                 self.eTry = event
                 self.state = CCStateWaitRoute
                 if not self.global_config['auth_enable']:
@@ -389,7 +390,6 @@ class CallController(object):
             self.rtp_proxy_session.caller_raddress = (host, port)
             if body != None:
                 body = body.getCopy()
-                body.content += 'a=nortpproxy:yes\r\n'
             self.proxied = True
         self.uaO.kaInterval = self.global_config['keepalive_orig']
         if parameters.has_key('group_timeout'):
