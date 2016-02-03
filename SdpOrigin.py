@@ -26,22 +26,25 @@
 
 from SipConf import SipConf
 from time import time
+from random import random
 
 class SdpOrigin(object):
+    _session_id = int(random() * time() * 1000.0)
     username = None
     session_id = None
     version = None
     network_type = None
     address_type = None
     address = None
-    session_id = int(time() * 1000.0)
+    session_id = None
 
     def __init__(self, body = None, cself = None):
         if body != None:
             self.username, self.session_id, self.version, self.network_type, self.address_type, self.address = body.split()
         elif cself == None:
             self.username = '-'
-            SdpOrigin.session_id += 1
+            self.session_id = SdpOrigin._session_id
+            SdpOrigin._session_id += 1
             self.version = self.session_id
             self.network_type = 'IN'
             self.address_type = 'IP4'
@@ -68,4 +71,4 @@ class SdpOrigin(object):
         return '%s %s %s %s %s %s' % (self.username, self.session_id, self.version, self.network_type, self.address_type, self.address)
 
     def getCopy(self):
-        return SdpOrigin(cself = self)
+        return self.__class__(cself = self)
