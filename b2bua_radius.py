@@ -176,7 +176,7 @@ class CallController(object):
                     self.rtp_proxy_session = Rtp_proxy_session(self.global_config, call_id = self.cId, \
                       notify_socket = self.global_config['b2bua_socket'], \
                       notify_tag = quote('r %s' % str(self.id)))
-                    self.rtp_proxy_session.callee_raddress = (self.remote_ip, 5060)
+                    self.rtp_proxy_session.callee.raddress = (self.remote_ip, 5060)
                     self.rtp_proxy_session.insert_nortpp = True
                 self.eTry = event
                 self.state = CCStateWaitRoute
@@ -387,7 +387,7 @@ class CallController(object):
         if self.rtp_proxy_session != None and parameters.get('rtpp', True):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
-            self.rtp_proxy_session.caller_raddress = (host, port)
+            self.rtp_proxy_session.caller.raddress = (host, port)
             if body != None:
                 body = body.getCopy()
             self.proxied = True
