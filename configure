@@ -12768,6 +12768,32 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for __sync_fetch_and_add" >&5
+$as_echo_n "checking for __sync_fetch_and_add... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+    int main(void) {
+        volatile int rcval = 1, rcval_pre;
+        rcval_pre = __sync_fetch_and_add(&rcval, -1);
+        return(rcval == 0 && rcval_pre == 1 ? 0 : 1);
+    }
+
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+$as_echo "#define HAVE_GCC_ATOMICS 1" >>confdefs.h
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
  if test "${LIBS_SNDFILE}" != ""; then
   BUILD_EXTRACTAUDIO_TRUE=
   BUILD_EXTRACTAUDIO_FALSE='#'
