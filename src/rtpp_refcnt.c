@@ -26,11 +26,14 @@
  */
 
 #include <assert.h>
+#ifndef HAVE_GCC_ATOMICS
 #include <pthread.h>
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "rtpp_debug.h"
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
@@ -57,8 +60,10 @@
 struct rtpp_refcnt_priv
 {
     struct rtpp_refcnt pub;
-    int32_t cnt;
+    volatile int32_t cnt;
+#ifndef HAVE_GCC_ATOMICS
     pthread_mutex_t cnt_lock;
+#endif
     rtpp_refcnt_dtor_t dtor_f;
     void *data;
     rtpp_refcnt_dtor_t pre_dtor_f;
@@ -86,10 +91,12 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     if (pvt == NULL) {
         return (NULL);
     }
+#ifndef HAVE_GCC_ATOMICS
     if (pthread_mutex_init(&pvt->cnt_lock, NULL) != 0) {
         free(pvt);
         return (NULL);
     }
+#endif
     pvt->data = data;
     if (dtor_f != NULL) {
         pvt->dtor_f = dtor_f;
@@ -121,9 +128,11 @@ rtpp_refcnt_ctor_pa(void *pap)
     struct rtpp_refcnt_priv *pvt;
 
     pvt = (struct rtpp_refcnt_priv *)pap;
+#ifndef HAVE_GCC_ATOMICS
     if (pthread_mutex_init(&pvt->cnt_lock, NULL) != 0) {
         return (NULL);
     }
+#endif
     pvt->pub.attach = &rtpp_refcnt_attach;
     pvt->pub.incref = &rtpp_refcnt_incref;
     pvt->pub.decref = &rtpp_refcnt_decref;
@@ -154,7 +163,9 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
     struct rtpp_refcnt_priv *pvt;
 
     pvt = (struct rtpp_refcnt_priv *)pub;
+#ifndef HAVE_GCC_ATOMICS
     pthread_mutex_lock(&pvt->cnt_lock);
+#endif
 #if RTPP_DEBUG_refcnt
     if (pvt->flags & RC_FLAG_TRACE) {
         char *dbuf;
@@ -170,21 +181,32 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
     }
 #endif
     assert(pvt->cnt > 0 && pvt->cnt < RC_ABS_MAX);
-    pvt->cnt += 1;
+#ifndef HAVE_GCC_ATOMICS
     pthread_mutex_unlock(&pvt->cnt_lock);
+    pvt->cnt += 1;
+#else
+    __sync_fetch_and_add(&pvt->cnt, 1);
+#endif
 }
 
 static void
 rtpp_refcnt_decref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
+    int oldcnt;
 
     pvt = (struct rtpp_refcnt_priv *)pub;
+#ifndef HAVE_GCC_ATOMICS
     pthread_mutex_lock(&pvt->cnt_lock);
+    oldcnt = pvt->cnt;
+    pvt->cnt -= 1;
+#else
+    oldcnt = __sync_fetch_and_add(&pvt->cnt, -1);
+#endif
 #if RTPP_DEBUG_refcnt
     if (pvt->flags & RC_FLAG_TRACE) {
         char *dbuf;
-        asprintf(&dbuf, "rtpp_refcnt(%p, %u).decref()", pub, pvt->cnt);
+        asprintf(&dbuf, "rtpp_refcnt(%p, %u).decref()", pub, oldcnt);
         if (dbuf != NULL) {
 #ifdef RTPP_DEBUG
             rtpp_stacktrace_print(dbuf);
@@ -195,20 +217,23 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
         }
     }
 #endif
-    pvt->cnt -= 1;
-    if (pvt->cnt == 0) {
+    if (oldcnt == 1) {
         if ((pvt->flags & RC_FLAG_PA) == 0) {
             if (pvt->pre_dtor_f != NULL) {
                 pvt->pre_dtor_f(pvt->pd_data);
             }
             pvt->dtor_f(pvt->data);
             rtpp_refcnt_fin(pub);
+#ifndef HAVE_GCC_ATOMICS
             pthread_mutex_unlock(&pvt->cnt_lock);
             pthread_mutex_destroy(&pvt->cnt_lock);
+#endif
             free(pvt);
         } else {
+#ifndef HAVE_GCC_ATOMICS
             pthread_mutex_unlock(&pvt->cnt_lock);
             pthread_mutex_destroy(&pvt->cnt_lock);
+#endif
             rtpp_refcnt_fin(pub);
             if (pvt->pre_dtor_f != NULL) {
                 pvt->pre_dtor_f(pvt->pd_data);
@@ -220,8 +245,10 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
 
         return;
     }
+#ifndef HAVE_GCC_ATOMICS
     assert(pvt->cnt > 0);
     pthread_mutex_unlock(&pvt->cnt_lock);
+#endif
 }
 
 #if 0
@@ -236,10 +263,14 @@ rtpp_refcnt_abort(struct rtpp_refcnt *pub)
     struct rtpp_refcnt_priv *pvt;
 
     pvt = (struct rtpp_refcnt_priv *)pub;
+#ifndef HAVE_GCC_ATOMICS
     pthread_mutex_lock(&pvt->cnt_lock);
+#endif
     assert(pvt->cnt == 1);
+#ifndef HAVE_GCC_ATOMICS
     pthread_mutex_unlock(&pvt->cnt_lock);
     pthread_mutex_destroy(&pvt->cnt_lock);
+#endif
     if ((pvt->flags & RC_FLAG_PA) == 0) {
         free(pvt);
     }
