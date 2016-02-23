@@ -150,7 +150,7 @@ class local4remote(object):
             laddresses = ((global_config['_sip_address'], global_config['_sip_port']),)
             self.fixed = True
         for laddress in laddresses:
-            sopts = self.Udp_server_opts(laddress, handleIncoming)
+            sopts = self.Udp_server_opts(laddress, self.handleIncoming)
             sopts.ploss_out_rate = self.ploss_out_rate
             sopts.pdelay_out_max = self.pdelay_out_max
             server = self.udp_server_class(global_config, sopts)
@@ -190,7 +190,7 @@ class local4remote(object):
             laddress = address
         server = self.cache_l2s.get(laddress, None)
         if server == None:
-            sopts = self.Udp_server_opts(laddress, handleIncoming)
+            sopts = self.Udp_server_opts(laddress, self.handleIncoming)
             sopts.ploss_out_rate = self.ploss_out_rate
             sopts.pdelay_out_max = self.pdelay_out_max
             server = self.udp_server_class(self.global_config, sopts)
