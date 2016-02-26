@@ -49,12 +49,12 @@ from sippy.Rtp_proxy_session import Rtp_proxy_session
 from sippy.Rtp_proxy_client import Rtp_proxy_client
 from signal import SIGHUP, SIGPROF, SIGUSR1, SIGUSR2
 from twisted.internet import reactor
-from urllib import unquote
 from sippy.Cli_server_local import Cli_server_local
 from sippy.SipTransactionManager import SipTransactionManager
 from sippy.SipCallId import SipCallId
 from sippy.StatefulProxy import StatefulProxy
 from sippy.misc import daemonize
+from sippy.B2BRoute import B2BRoute
 import gc, getopt, os, sys
 from re import sub
 from time import time
@@ -243,92 +243,33 @@ class CallController(object):
                 self.caller_name = None
         credit_time = [x for x in results[0] if x[0] == 'h323-credit-time']
         if len(credit_time) > 0:
-            global_credit_time = int(credit_time[0][1])
+            credit_time = int(credit_time[0][1])
         else:
-            global_credit_time = None
+            credit_time = None
         if not self.global_config.has_key('static_route'):
             routing = [x for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('Routing:')]
             if len(routing) == 0:
                 self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (2)')))
                 self.state = CCStateDead
                 return
-            routing = [x[1][8:].split(';') for x in routing]
+            routing = [x[1][8:] for x in routing]
         else:
-            routing = [self.global_config['static_route'].split(';')]
+            routing = [self.global_config['static_route']]
         rnum = 0
         for route in routing:
             rnum += 1
-            if route[0].find('@') != -1:
-                cld, host = route[0].split('@', 1)
-                if len(cld) == 0:
-                    # Allow CLD to be forcefully removed by sending `Routing:@host' entry,
-                    # as opposed to the Routing:host, which means that CLD should be obtained
-                    # from the incoming call leg.
-                    cld = None
+            oroute = B2BRoute(route, rnum, self.cld, self.cli, credit_time)
+            if oroute.params.has_key('extra_headers'):
+                oroute.params['extra_headers'].extend(self.pass_headers)
             else:
-                cld = self.cld
-                host = route[0]
-            credit_time = global_credit_time
-            expires = None
-            no_progress_expires = None
-            forward_on_fail = False
-            user = None
-            passw = None
-            cli = self.cli
-            parameters = {}
-            parameters['extra_headers'] = self.pass_headers[:]
-            for a, v in [x.split('=', 1) for x in route[1:]]:
-                if a == 'credit-time':
-                    credit_time = int(v)
-                    if credit_time < 0:
-                        credit_time = None
-                elif a == 'expires':
-                    expires = int(v)
-                    if expires < 0:
-                        expires = None
-                elif a == 'hs_scodes':
-                    parameters['huntstop_scodes'] = tuple([int(x) for x in v.split(',') if len(x.strip()) > 0])
-                elif a == 'np_expires':
-                    no_progress_expires = int(v)
-                    if no_progress_expires < 0:
-                        no_progress_expires = None
-                elif a == 'forward_on_fail':
-                    forward_on_fail = True
-                elif a == 'auth':
-                    user, passw = v.split(':', 1)
-                elif a == 'cli':
-                    cli = v
-                    if len(cli) == 0:
-                        cli = None
-                elif a == 'cnam':
-                    caller_name = unquote(v)
-                    if len(caller_name) == 0:
-                        caller_name = None
-                    parameters['caller_name'] = caller_name
-                elif a == 'ash':
-                    ash = SipHeader(unquote(v))
-                    parameters['extra_headers'].append(ash)
-                elif a == 'rtpp':
-                    parameters['rtpp'] = (int(v) != 0)
-                elif a == 'gt':
-                    timeout, skip = v.split(',', 1)
-                    parameters['group_timeout'] = (int(timeout), rnum + int(skip))
-                elif a == 'op':
-                    host_port = v.split(':', 1)
-                    if len(host_port) == 1:
-                        parameters['outbound_proxy'] = (v, 5060)
-                    else:
-                        parameters['outbound_proxy'] = (host_port[0], int(host_port[1]))
-                else:
-                    parameters[a] = v
+                oroute.params['extra_headers'] = self.pass_headers[:]
             if self.global_config.has_key('max_credit_time'):
-                if credit_time == None or credit_time > self.global_config['max_credit_time']:
-                    credit_time = self.global_config['max_credit_time']
-            if credit_time == 0 or expires == 0:
+                if oroute.credit_time == None or oroute.credit_time > self.global_config['max_credit_time']:
+                    oroute.credit_time = self.global_config['max_credit_time']
+            if oroute.credit_time == 0 or oroute.expires == 0:
                 continue
-            self.routes.append((rnum, host, cld, credit_time, expires, no_progress_expires, forward_on_fail, user, \
-              passw, cli, parameters))
-            #print 'Got route:', host, cld
+            self.routes.append(oroute)
+            #print 'Got route:', oroute.host, oroute.cld
         if len(self.routes) == 0:
             self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (3)')))
             self.state = CCStateDead
@@ -336,11 +277,10 @@ class CallController(object):
         self.state = CCStateARComplete
         self.placeOriginate(self.routes.pop(0))
 
-    def placeOriginate(self, args):
+    def placeOriginate(self, oroute):
         cId, cGUID, cli, cld, body, auth, caller_name = self.eTry.getData()
-        rnum, host, cld, credit_time, expires, no_progress_expires, forward_on_fail, user, passw, cli, \
-          parameters = args
-        self.huntstop_scodes = parameters.get('huntstop_scodes', ())
+        host, cld = oroute.host, oroute.cld
+        self.huntstop_scodes = oroute.params.get('huntstop_scodes', ())
         if self.global_config.has_key('static_tr_out'):
             cld = re_replace(self.global_config['static_tr_out'], cld)
         if host == 'sip-ua':
@@ -364,27 +304,27 @@ class CallController(object):
                 else:
                     port = SipConf.default_port
                 host = host[0]
-        if not forward_on_fail and self.global_config['acct_enable']:
+        if not oroute.forward_on_fail and self.global_config['acct_enable']:
             self.acctO = RadiusAccounting(self.global_config, 'originate', \
               send_start = self.global_config['start_acct_enable'], lperiod = \
               self.global_config.getdefault('alive_acct_int', None))
             self.acctO.ms_precision = self.global_config.getdefault('precise_acct', False)
-            self.acctO.setParams(parameters.get('bill-to', self.username), parameters.get('bill-cli', cli), \
-              parameters.get('bill-cld', cld), self.cGUID, self.cId, host)
+            self.acctO.setParams(oroute.params.get('bill-to', self.username), oroute.params.get('bill-cli', oroute.cli), \
+              oroute.params.get('bill-cld', cld), self.cGUID, self.cId, host)
         else:
             self.acctO = None
-        self.acctA.credit_time = credit_time
+        self.acctA.credit_time = oroute.credit_time
         conn_handlers = [self.oConn]
         disc_handlers = []
-        if not forward_on_fail and self.global_config['acct_enable']:
+        if not oroute.forward_on_fail and self.global_config['acct_enable']:
             disc_handlers.append(self.acctO.disc)
-        self.uaO = UA(self.global_config, self.recvEvent, user, passw, (host, port), credit_time, tuple(conn_handlers), \
-          tuple(disc_handlers), tuple(disc_handlers), dead_cbs = (self.oDead,), expire_time = expires, \
-          no_progress_time = no_progress_expires, extra_headers = parameters.get('extra_headers', None))
+        self.uaO = UA(self.global_config, self.recvEvent, oroute.user, oroute.passw, (host, port), oroute.credit_time, tuple(conn_handlers), \
+          tuple(disc_handlers), tuple(disc_handlers), dead_cbs = (self.oDead,), expire_time = oroute.expires, \
+          no_progress_time = oroute.no_progress_expires, extra_headers = oroute.params.get('extra_headers', None))
         self.uaO.local_ua = self.global_config['_uaname']
-        if self.source != parameters.get('outbound_proxy', None):
-            self.uaO.outbound_proxy = parameters.get('outbound_proxy', None)
-        if self.rtp_proxy_session != None and parameters.get('rtpp', True):
+        if self.source != oroute.params.get('outbound_proxy', None):
+            self.uaO.outbound_proxy = oroute.params.get('outbound_proxy', None)
+        if self.rtp_proxy_session != None and oroute.params.get('rtpp', True):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
             self.rtp_proxy_session.caller.raddress = (host, port)
@@ -392,15 +332,15 @@ class CallController(object):
                 body = body.getCopy()
             self.proxied = True
         self.uaO.kaInterval = self.global_config['keepalive_orig']
-        if parameters.has_key('group_timeout'):
-            timeout, skipto = parameters['group_timeout']
+        if oroute.params.has_key('group_timeout'):
+            timeout, skipto = oroute.params['group_timeout']
             Timeout(self.group_expires, timeout, 1, skipto)
         if self.global_config.getdefault('hide_call_id', False):
-            cId = SipCallId(md5(str(cId)).hexdigest() + ('-b2b_%d' % rnum))
+            cId = SipCallId(md5(str(cId)).hexdigest() + ('-b2b_%d' % oroute.rnum))
         else:
-            cId += '-b2b_%d' % rnum
-        event = CCEventTry((cId, cGUID, cli, cld, body, auth, \
-          parameters.get('caller_name', self.caller_name)))
+            cId += '-b2b_%d' % oroute.rnum
+        event = CCEventTry((cId, cGUID, oroute.cli, cld, body, auth, \
+          oroute.params.get('caller_name', self.caller_name)))
         event.reason = self.eTry.reason
         self.uaO.recvEvent(event)
 
