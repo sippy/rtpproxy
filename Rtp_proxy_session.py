@@ -36,6 +36,16 @@ import sys
 
 from twisted.internet import reactor
 
+class _rtpps_callback_params(object):
+    proxy_address = None
+    callback_parameters = None
+    atype = None
+
+    def __init__(self, proxy_address, callback_parameters, atype):
+        self.proxy_address = proxy_address
+        self.callback_parameters = callback_parameters
+        self.atype = atype
+
 class _rtpps_side(object):
     session_exists = False
     codecs = None
@@ -50,11 +60,11 @@ class _rtpps_side(object):
         command = 'U'
         rtpps.max_index = max(rtpps.max_index, index)
         rtpc = rtpps.rtp_proxy_client
-        if rtpc.sbind_supported and self.raddress != None and atype == 'IP4':
-            if rtpc.is_local:
+        if rtpc.sbind_supported and self.raddress != None:
+            if rtpc.is_local and atype == 'IP4':
                 options += 'L%s' % rtpps.global_config['_sip_tm'].l4r.getServer( \
                   self.raddress).uopts.laddress[0]
-            else:
+            elif not rtpc.is_local:
                 options += 'R%s' % self.raddress[0]
         command += options
         from_tag, to_tag = self.gettags(rtpps)
@@ -66,8 +76,8 @@ class _rtpps_side(object):
         if rtpps.notify_socket != None and index == 0 and \
           rtpc.tnot_supported:
             command += ' %s %s' % (rtpps.notify_socket, rtpps.notify_tag)
-        rtpc.send_command(command, self.update_result, (rtpps, result_callback, rtpc.proxy_address, \
-          callback_parameters))
+        cpo = _rtpps_callback_params(rtpc.proxy_address, callback_parameters, atype)
+        rtpc.send_command(command, self.update_result, (rtpps, result_callback, cpo))
 
     def gettags(self, rtpps):
         if self not in (rtpps.caller, rtpps.callee):
@@ -87,23 +97,23 @@ class _rtpps_side(object):
 
     def update_result(self, result, args):
         #print '%s.update_result(%s)' % (id(self), result)
-        rtpps, result_callback, proxy_address, callback_parameters = args
+        rtpps, result_callback, cpo = args
         self.session_exists = True
         if result == None:
-            result_callback(None, rtpps, *callback_parameters)
+            result_callback(None, rtpps, *cpo.callback_parameters)
             return
         t1 = result.split()
         rtpproxy_port = int(t1[0])
         if rtpproxy_port == 0:
-            result_callback(None, rtpps, *callback_parameters)
+            result_callback(None, rtpps, *cpo.callback_parameters)
         family = 'IP4'
         if len(t1) > 1:
             rtpproxy_address = t1[1]
             if len(t1) > 2 and t1[2] == '6':
                 family = 'IP6'
         else:
-            rtpproxy_address = proxy_address
-        result_callback((rtpproxy_address, rtpproxy_port, family), rtpps, *callback_parameters)
+            rtpproxy_address = cpo.proxy_address
+        result_callback((rtpproxy_address, rtpproxy_port, family), rtpps, *cpo.callback_parameters)
 
     def __play(self, result, rtpps, prompt_name, times, result_callback, index):
         from_tag, to_tag = self.gettags(rtpps)
