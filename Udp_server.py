@@ -159,6 +159,17 @@ class Udp_server_opts(object):
     def getCopy(self):
         return self.__class__(None, None, o = self)
 
+    def getSIPaddr(self):
+        if self.family == socket.AF_INET:
+            return self.laddress
+        return (('[%s]' % self.laddress[0], self.laddress[1]))
+
+    def isWildCard(self):
+        if (self.family, self.laddress[0]) in ((socket.AF_INET, '0.0.0.0'), \
+          (socket.AF_INET6, '::')):
+            return True
+        return False
+
 class Udp_server(object):
     skt = None
     uopts = None
