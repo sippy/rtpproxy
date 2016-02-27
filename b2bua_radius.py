@@ -246,30 +246,25 @@ class CallController(object):
             credit_time = int(credit_time[0][1])
         else:
             credit_time = None
-        if not self.global_config.has_key('static_route'):
+        if not self.global_config.has_key('_static_route'):
             routing = [x for x in results[0] if x[0] == 'h323-ivr-in' and x[1].startswith('Routing:')]
             if len(routing) == 0:
                 self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (2)')))
                 self.state = CCStateDead
                 return
-            routing = [x[1][8:] for x in routing]
+            routing = [B2BRoute(x[1][8:]) for x in routing]
         else:
-            routing = [self.global_config['static_route']]
+            routing = [self.global_config['_static_route'].getCopy(),]
         rnum = 0
-        for route in routing:
+        for oroute in routing:
             rnum += 1
-            oroute = B2BRoute(route, rnum, self.cld, self.cli, credit_time)
-            if oroute.params.has_key('extra_headers'):
-                oroute.params['extra_headers'].extend(self.pass_headers)
-            else:
-                oroute.params['extra_headers'] = self.pass_headers[:]
-            if self.global_config.has_key('max_credit_time'):
-                if oroute.credit_time == None or oroute.credit_time > self.global_config['max_credit_time']:
-                    oroute.credit_time = self.global_config['max_credit_time']
+            max_credit_time = self.global_config.getdefault('max_credit_time', None)
+            oroute.customize(rnum, self.cld, self.cli, credit_time, self.pass_headers, \
+              max_credit_time)
             if oroute.credit_time == 0 or oroute.expires == 0:
                 continue
             self.routes.append(oroute)
-            #print 'Got route:', oroute.host, oroute.cld
+            #print 'Got route:', oroute.hostport, oroute.cld
         if len(self.routes) == 0:
             self.uaA.recvEvent(CCEventFail((500, 'Internal Server Error (3)')))
             self.state = CCStateDead
@@ -279,31 +274,16 @@ class CallController(object):
 
     def placeOriginate(self, oroute):
         cId, cGUID, cli, cld, body, auth, caller_name = self.eTry.getData()
-        host, cld = oroute.host, oroute.cld
+        cld = oroute.cld
         self.huntstop_scodes = oroute.params.get('huntstop_scodes', ())
         if self.global_config.has_key('static_tr_out'):
             cld = re_replace(self.global_config['static_tr_out'], cld)
-        if host == 'sip-ua':
+        if oroute.hostport == 'sip-ua':
             host = self.source[0]
-            port = self.source[1]
+            nh_address, same_af = self.source, True
         else:
-            if host.startswith('['):
-                # IPv6
-                host = host.split(']', 1)
-                port = host[1].split(':', 1)
-                host = host[0] + ']'
-                if len(port) > 1:
-                    port = int(port[1])
-                else:
-                    port = SipConf.default_port
-            else:
-                # IPv4
-                host = host.split(':', 1)
-                if len(host) > 1:
-                    port = int(host[1])
-                else:
-                    port = SipConf.default_port
-                host = host[0]
+            host = oroute.hostonly
+            nh_address, same_af = oroute.getNHAddr(self.source)
         if not oroute.forward_on_fail and self.global_config['acct_enable']:
             self.acctO = RadiusAccounting(self.global_config, 'originate', \
               send_start = self.global_config['start_acct_enable'], lperiod = \
@@ -318,16 +298,16 @@ class CallController(object):
         disc_handlers = []
         if not oroute.forward_on_fail and self.global_config['acct_enable']:
             disc_handlers.append(self.acctO.disc)
-        self.uaO = UA(self.global_config, self.recvEvent, oroute.user, oroute.passw, (host, port), oroute.credit_time, tuple(conn_handlers), \
+        self.uaO = UA(self.global_config, self.recvEvent, oroute.user, oroute.passw, nh_address, oroute.credit_time, tuple(conn_handlers), \
           tuple(disc_handlers), tuple(disc_handlers), dead_cbs = (self.oDead,), expire_time = oroute.expires, \
-          no_progress_time = oroute.no_progress_expires, extra_headers = oroute.params.get('extra_headers', None))
+          no_progress_time = oroute.no_progress_expires, extra_headers = oroute.extra_headers)
         self.uaO.local_ua = self.global_config['_uaname']
         if self.source != oroute.params.get('outbound_proxy', None):
             self.uaO.outbound_proxy = oroute.params.get('outbound_proxy', None)
         if self.rtp_proxy_session != None and oroute.params.get('rtpp', True):
             self.uaO.on_local_sdp_change = self.rtp_proxy_session.on_caller_sdp_change
             self.uaO.on_remote_sdp_change = self.rtp_proxy_session.on_callee_sdp_change
-            self.rtp_proxy_session.caller.raddress = (host, port)
+            self.rtp_proxy_session.caller.raddress = nh_address
             if body != None:
                 body = body.getCopy()
             self.proxied = True
@@ -760,7 +740,9 @@ def main_func():
         for a in global_config['_rtp_proxy_clients']:
             rtp_proxy_clients.append(a)
 
-    if not global_config['auth_enable'] and not global_config.has_key('static_route'):
+    if global_config.has_key('static_route'):
+        global_config['_static_route'] = B2BRoute(global_config['static_route'])
+    elif not global_config['auth_enable']:
         sys.__stderr__.write('ERROR: static route should be specified when Radius auth is disabled\n')
         usage(global_config, True)
 
