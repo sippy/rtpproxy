@@ -361,7 +361,7 @@ class SipTransactionManager(object):
                 t.userv = self.l4r.getServer(laddress, is_local = True)
         else:
             t.userv = userv
-        t.data = msg.localStr(*t.userv.uopts.laddress, compact = t.compact)
+        t.data = msg.localStr(*t.userv.uopts.getSIPaddr(), compact = t.compact)
         if t.method == 'INVITE':
             try:
                 t.expires = msg.getHFBody('expires').getNum()
@@ -591,7 +591,7 @@ class SipTransactionManager(object):
             t.ack_cb = None
             t.cancel_cb = None
             t.checksum = checksum
-            if server.uopts.laddress[0] not in ('0.0.0.0', '[::]'):
+            if not server.uopts.isWildCard():
                 t.userv = server
             else:
                 # For messages received on the wildcard interface find
@@ -665,7 +665,7 @@ class SipTransactionManager(object):
         toHF = resp.getHFBody('to')
         if scode > 100 and toHF.getTag() == None:
             toHF.genTag()
-        t.data = resp.localStr(*t.userv.uopts.laddress, compact = t.compact)
+        t.data = resp.localStr(*t.userv.uopts.getSIPaddr(), compact = t.compact)
         t.address = resp.getHFBody('via').getTAddr()
         self.transmitData(t.userv, t.data, t.address, t.checksum, lossemul)
         if scode < 200:
@@ -755,7 +755,7 @@ class SipTransactionManager(object):
         self.l4r.rotateCache()
 
     def transmitMsg(self, userv, msg, address, cachesum, compact = False):
-        data = msg.localStr(*userv.uopts.laddress, compact = compact)
+        data = msg.localStr(*userv.uopts.getSIPaddr(), compact = compact)
         self.transmitData(userv, data, address, cachesum)
 
     def transmitData(self, userv, data, address, cachesum = None, \
