@@ -61,11 +61,11 @@ class _rtpps_side(object):
         rtpps.max_index = max(rtpps.max_index, index)
         rtpc = rtpps.rtp_proxy_client
         if rtpc.sbind_supported and self.raddress != None:
-            if rtpc.is_local and atype == 'IP4':
-                options += 'L%s' % rtpps.global_config['_sip_tm'].l4r.getServer( \
-                  self.raddress).uopts.laddress[0]
-            elif not rtpc.is_local:
-                options += 'R%s' % self.raddress[0]
+            #if rtpc.is_local and atype == 'IP4':
+            #    options += 'L%s' % rtpps.global_config['_sip_tm'].l4r.getServer( \
+            #      self.raddress).uopts.laddress[0]
+            #elif not rtpc.is_local:
+            options += 'R%s' % self.raddress[0]
         command += options
         from_tag, to_tag = self.gettags(rtpps)
         otherside = self.getother(rtpps)
