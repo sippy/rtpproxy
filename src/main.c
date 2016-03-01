@@ -124,6 +124,8 @@ usage(void)
 
 static struct cfg *_sig_cf;
 
+static void rtpp_exit(int) __attribute__ ((noreturn));
+
 static void
 rtpp_exit(int memdeb)
 {
