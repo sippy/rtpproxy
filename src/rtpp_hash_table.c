@@ -166,6 +166,9 @@ rtpp_ht_hashkey(struct rtpp_hash_table_priv *pvt, const void *key)
 
     case rtpp_ht_key_u64_t:
         return rtpp_pearson_hash8b(&pvt->rp, key, sizeof(uint64_t));
+
+    default:
+	abort();
     }
 }
 
@@ -185,6 +188,9 @@ rtpp_ht_cmpkey(struct rtpp_hash_table_priv *pvt,
 
     case rtpp_ht_key_u64_t:
         return (sp->key.u64 == *(const uint64_t *)key);
+
+    default:
+	abort();
     }
 }
 
@@ -204,6 +210,9 @@ rtpp_ht_cmpkey2(struct rtpp_hash_table_priv *pvt,
 
     case rtpp_ht_key_u64_t:
         return (sp1->key.u64 == sp2->key.u64);
+
+    default:
+        abort();
     }
 }
 
@@ -504,7 +513,7 @@ hash_table_foreach_key(struct rtpp_hash_table *self, const void *key,
         pthread_mutex_unlock(&pvt->hash_table_lock);
         return;
     }
-    for (sp = pvt->hash_table[hash]; sp != NULL; sp = sp->next) {
+    for (sp = pvt->hash_table[hash]; sp != NULL; sp = sp_next) {
         if (!rtpp_ht_cmpkey(pvt, sp, key)) {
             continue;
         }
