@@ -514,12 +514,12 @@ hash_table_foreach_key(struct rtpp_hash_table *self, const void *key,
         return;
     }
     for (sp = pvt->hash_table[hash]; sp != NULL; sp = sp_next) {
+        sp_next = sp->next;
         if (!rtpp_ht_cmpkey(pvt, sp, key)) {
             continue;
         }
         RTPP_DBG_ASSERT(sp->hte_type == rtpp_hte_refcnt_t);
         rptr = (struct rtpp_refcnt *)sp->sptr;
-	sp_next = sp->next;
         mval = hte_ematch(CALL_METHOD(rptr, getdata), marg);
         RTPP_DBG_ASSERT(VDTE_MVAL(mval));
         if (mval & RTPP_HT_MATCH_DEL) {
