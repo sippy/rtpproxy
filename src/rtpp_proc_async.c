@@ -131,7 +131,7 @@ rtpp_proc_async_run(void *arg)
 #if RTPP_DEBUG_timers
     int ncycles_ref_pre;
 #endif
-#if RTPP_DEBUG_timers || RTPP_DEBUG_netio
+#if RTPP_DEBUG_timers || RTPP_DEBUG_netio > 1
     int last_ctick;
 #endif
     struct sign_arg *s_a;
@@ -158,12 +158,10 @@ rtpp_proc_async_run(void *arg)
         return;
     }
     s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wi, NULL);
-#if RTPP_DEBUG_timers || RTPP_DEBUG_netio
+#if RTPP_DEBUG_timers || RTPP_DEBUG_netio > 1
     last_ctick = s_a->clock_tick;
 #endif
-#if RTPP_DEBUG_timers
-    ncycles_ref_pre = s_a->ncycles_ref;
-#endif
+    ncycles_ref = s_a->ncycles_ref;
     rtpp_wi_free(wi);
 
     tp[0] = getdtime();
@@ -186,7 +184,7 @@ rtpp_proc_async_run(void *arg)
         i -= 1;
         s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wis[i], NULL);
         ndrain = (s_a->ncycles_ref - ncycles_ref) / (cf->stable->target_pfreq / MAX_RTP_RATE);
-#if RTPP_DEBUG_timers || RTPP_DEBUG_netio
+#if RTPP_DEBUG_timers || RTPP_DEBUG_netio > 1
         last_ctick = s_a->clock_tick;
 #endif
 #if RTPP_DEBUG_timers
@@ -238,28 +236,28 @@ rtpp_proc_async_run(void *arg)
         if (ptbl_rtp.curlen > 0) {
             if (rtp_only == 0) {
                 CALL_METHOD(cf->stable->sessinfo, sync_polltbl, &ptbl_rtcp, SESS_RTCP);
-#if RTPP_DEBUG_netio
+#if RTPP_DEBUG_netio > 1
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for %d RTCP file descriptors", \
                   last_ctick, ptbl_rtcp.curlen);
 #endif
                 nready_rtcp = poll(ptbl_rtcp.pfds, ptbl_rtcp.curlen, 0);
-#if RTPP_DEBUG_netio
+#if RTPP_DEBUG_netio > 1 || (RTPP_DEBUG_netio && nready_rtcp > 0)
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
-                  "polling for RTCP file descriptors: %d descriptors are ready", \
-                  last_ctick, nready_rtcp);
+                  "polling for %d RTCP file descriptors: %d descriptors are ready", \
+                  ptbl_rtcp.curlen, last_ctick, nready_rtcp);
 #endif
             }
-#if RTPP_DEBUG_netio
+#if RTPP_DEBUG_netio > 1
            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
               "polling for %d RTP file descriptors", \
               last_ctick, ptbl_rtp.curlen);
 #endif
             nready_rtp = poll(ptbl_rtp.pfds, ptbl_rtp.curlen, 0);
-#if RTPP_DEBUG_netio
+#if RTPP_DEBUG_netio > 1 || (RTPP_DEBUG_netio && nready_rtp > 0)
             RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
-              "polling for RTP file descriptors: %d descriptors are ready", \
-              last_ctick, nready_rtp);
+              "polling for RTP %d file descriptors: %d descriptors are ready", \
+              ptbl_rtp.curlen, last_ctick, nready_rtp);
 #endif
             if (nready_rtp < 0 && errno == EINTR) {
                 CALL_METHOD(cf->stable->rtpp_cmd_cf, wakeup);
