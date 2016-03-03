@@ -134,6 +134,15 @@ rtpp_command_ul_opts_free(struct ul_opts *ulop)
     free(ulop);
 }
 
+#define	IPSTR_MIN_LENv4	7	/* "1.1.1.1" */
+#define	IPSTR_MAX_LENv4	15	/* "255.255.255.255" */
+#define	IPSTR_MIN_LENv6	3	/* "::1" */
+#define	IPSTR_MAX_LENv6	45
+
+#define	IS_IPSTR_VALID(ips, pf)	((pf) == AF_INET ? \
+  (strlen(ips) >= IPSTR_MIN_LENv4 && strlen(ips) <= IPSTR_MAX_LENv4) : \
+  (strlen(ips) >= IPSTR_MIN_LENv6 && strlen(ips) <= IPSTR_MAX_LENv6))
+
 struct ul_opts *
 rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
 {
@@ -314,7 +323,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             break;
         }
     }
-    if (ulop->addr != NULL && ulop->port != NULL && strlen(ulop->addr) >= 7) {
+    if (ulop->addr != NULL && ulop->port != NULL && IS_IPSTR_VALID(ulop->addr, ulop->pf)) {
         n = resolve(sstosa(&tia), ulop->pf, ulop->addr, ulop->port, AI_NUMERICHOST);
         if (n == 0) {
             if (!ishostnull(sstosa(&tia))) {
