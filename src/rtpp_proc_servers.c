@@ -94,6 +94,11 @@ process_rtp_servers_foreach(void *dp, void *ap)
             }
             break;
         }
+        if (rsop->addr == NULL) {
+            /* We have a packet, but nowhere to send it, drop */
+            CALL_METHOD(pkt->rcnt, decref);
+            continue;
+        }
         CALL_METHOD(rsop->fd, send_pkt, fap->sender, rsop->addr,
           SA_LEN(rsop->addr), pkt, rsop->log);
         fap->rsp->npkts_played.cnt++;
