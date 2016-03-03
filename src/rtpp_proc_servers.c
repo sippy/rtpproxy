@@ -40,6 +40,8 @@
 #include "rtpp_weakref.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_network.h"
+#include "rtp.h"
+#include "rtp_packet.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_servers.h"
 #include "rtpp_socket.h"
@@ -96,7 +98,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
         }
         if (rsop->addr == NULL) {
             /* We have a packet, but nowhere to send it, drop */
-            CALL_METHOD(pkt->rcnt, decref);
+            rtp_packet_free(pkt);
             continue;
         }
         CALL_METHOD(rsop->fd, send_pkt, fap->sender, rsop->addr,
