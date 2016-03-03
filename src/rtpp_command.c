@@ -180,6 +180,7 @@ rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port,
 {
     struct create_twinlistener_args cta;
     int i;
+    struct rtpp_port_table *rpp;
 
     memset(&cta, '\0', sizeof(cta));
     cta.cfs = cf->stable;
@@ -190,7 +191,8 @@ rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port,
     for (i = 0; i < 2; i++)
         fds[i] = NULL;
 
-    return (CALL_METHOD(cf->stable->port_table, get_port, create_twinlistener,
+    rpp = RTPP_PT_SELECT(cf->stable, ia->sa_family);
+    return (CALL_METHOD(rpp, get_port, create_twinlistener,
       &cta));
 }
 

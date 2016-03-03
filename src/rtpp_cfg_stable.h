@@ -46,6 +46,13 @@ struct rtpp_sessinfo;
 struct rtpp_log;
 struct rtpp_module_if;
 
+#define RTPP_PT_INET	0
+#define	RTPP_PT_INET6	1
+#define	RTPP_PT_MAX	RTPP_PT_INET6
+#define	RTPP_PT_LEN	(RTPP_PT_MAX + 1)
+#define	RTPP_PT_SELECT(cp, af) (((af) == AF_INET) ? \
+  (cp)->port_table[RTPP_PT_INET] : (cp)->port_table[RTPP_PT_INET6])
+
 struct rtpp_cfg_stable {
     const char *pid_file;
 
@@ -90,7 +97,7 @@ struct rtpp_cfg_stable {
     int log_level;
     int log_facility;
 
-    struct rtpp_port_table *port_table;
+    struct rtpp_port_table *port_table[RTPP_PT_LEN];
 
     struct rtpp_hash_table *sessions_ht;
     struct rtpp_weakref_obj *sessions_wrt;

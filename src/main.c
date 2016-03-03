@@ -706,8 +706,15 @@ main(int argc, char **argv)
         err(1, "can't allocate memory for the stats data");
          /* NOTREACHED */
     }
-    cf.stable->port_table = rtpp_port_table_ctor(cf.stable->port_min,
-      cf.stable->port_max, cf.stable->seq_ports, cf.stable->port_ctl);
+
+    for (i = 0; i <= RTPP_PT_MAX; i++) {
+        cf.stable->port_table[i] = rtpp_port_table_ctor(cf.stable->port_min,
+          cf.stable->port_max, cf.stable->seq_ports, cf.stable->port_ctl);
+        if (cf.stable->port_table[i] == NULL) {
+            err(1, "can't allocate memory for the ports data");
+            /* NOTREACHED */
+        }
+    }
 
     if (rtpp_controlfd_init(&cf) != 0) {
         err(1, "can't inilialize control socket%s",
@@ -905,7 +912,9 @@ main(int argc, char **argv)
     CALL_METHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
     CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
     CALL_METHOD(cf.stable->sessinfo->rcnt, decref);
-    CALL_METHOD(cf.stable->port_table->rcnt, decref);
+    for (i = 0; i <= RTPP_PT_MAX; i++) {
+        CALL_METHOD(cf.stable->port_table[i]->rcnt, decref);
+    }
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif
