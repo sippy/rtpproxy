@@ -75,6 +75,7 @@
 #include "rtpp_command_async.h"
 #include "rtpp_port_table.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_bindaddrs.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
 #include "rtpp_math.h"
