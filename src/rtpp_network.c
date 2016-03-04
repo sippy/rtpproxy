@@ -279,59 +279,6 @@ rtpp_in_cksum(void *p, int len)
     return (0xffff & ~sum);
 }
 
-struct bindaddr_list {
-    struct sockaddr_storage *bindaddr;
-    struct bindaddr_list *next;
-};
-
-struct sockaddr *
-addr2bindaddr(struct cfg *cf, struct sockaddr *ia, const char **ep)
-{
-    struct bindaddr_list *bl;
-
-    pthread_mutex_lock(&cf->bindaddr_lock);
-    for (bl = cf->bindaddr_list; bl != NULL; bl = bl->next) {
-        if (ishostseq(sstosa(bl->bindaddr), ia) != 0) {
-            pthread_mutex_unlock(&cf->bindaddr_lock);
-            return (sstosa(bl->bindaddr));
-        }
-    }
-    bl = malloc(sizeof(*bl) + sizeof(*bl->bindaddr));
-    if (bl == NULL) {
-        pthread_mutex_unlock(&cf->bindaddr_lock);
-        *ep = strerror(errno);
-        return (NULL);
-    }
-    bl->bindaddr = (struct sockaddr_storage *)((char *)bl + sizeof(*bl));
-    memcpy(bl->bindaddr, ia, SA_LEN(ia));
-    bl->next = cf->bindaddr_list;
-    cf->bindaddr_list = bl;
-    pthread_mutex_unlock(&cf->bindaddr_lock);
-    return (sstosa(bl->bindaddr));
-}
-
-struct sockaddr *
-host2bindaddr(struct cfg *cf, const char *host, int pf, const char **ep)
-{
-    int n;
-    struct sockaddr_storage ia;
-    struct sockaddr *rval;
-
-    /*
-     * If user specified * then change it to NULL,
-     * that will make getaddrinfo to return addr_any socket
-     */
-    if (host && (strcmp(host, "*") == 0))
-        host = NULL;
-
-    if ((n = resolve(sstosa(&ia), pf, host, SERVICE, AI_PASSIVE)) != 0) {
-        *ep = gai_strerror(n);
-        return (NULL);
-    }
-    rval = addr2bindaddr(cf, sstosa(&ia), ep);
-    return (rval);
-}
-
 int
 local4remote(struct sockaddr *ra, struct sockaddr_storage *la)
 {
