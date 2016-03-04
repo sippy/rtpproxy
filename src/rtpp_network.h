@@ -46,8 +46,6 @@ char *addr2char_r(struct sockaddr *, char *buf, int size);
 char *addrport2char_r(struct sockaddr *, char *buf, int size);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
-struct sockaddr *addr2bindaddr(struct cfg *, struct sockaddr *, const char **);
-struct sockaddr *host2bindaddr(struct cfg *, const char *, int, const char **);
 int local4remote(struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, char **, char **, int *);
 int setbindhost(struct sockaddr *, int, const char *, const char *);
@@ -69,6 +67,10 @@ ssize_t recvfromto(int, void *, size_t, struct sockaddr *,
   (((ss)->ss_family == AF_INET) ? \
   sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
 #endif
+
+#define AF2STR(af) 	((af) == AF_LOCAL ? "Unix-Domain" : \
+  ((af == AF_INET) ? "IPv4" : ((af == AF_INET6) ? "IPv6" : "Unknown (BUG?!)")))
+#define SA_AF2STR(sa)	AF2STR((sa)->sa_family)
 
 #if !defined(satosin)
 #define	satosin(sa)	((struct sockaddr_in *)(sa))
