@@ -138,7 +138,7 @@ create_twinlistener(uint16_t port, void *ap)
 	ctap->fds[i] = rtpp_socket_ctor(ctap->ia->sa_family, SOCK_DGRAM);
 	if (ctap->fds[i] == NULL) {
 	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't create %s socket",
-	      (ctap->ia->sa_family == AF_INET) ? "IPv4" : "IPv6");
+	      SA_AF2STR(ctap->ia));
 	    goto failure;
 	}
 	memcpy(&iac, ctap->ia, SA_LEN(ctap->ia));
@@ -146,7 +146,7 @@ create_twinlistener(uint16_t port, void *ap)
 	if (CALL_METHOD(ctap->fds[i], bind, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
 	    if (errno != EADDRINUSE && errno != EACCES) {
 		RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't bind to the %s port %d",
-		  (ctap->ia->sa_family == AF_INET) ? "IPv4" : "IPv6", port);
+		  SA_AF2STR(ctap->ia), port);
 	    } else {
 		rval = RTPP_PTU_ONEMORE;
 	    }
