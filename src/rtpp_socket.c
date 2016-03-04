@@ -85,6 +85,12 @@ rtpp_socket_ctor(int domain, int type)
     if (pvt->fd < 0) {
         goto e1;
     }
+    if (domain == AF_INET6) {
+        /* Disable any automatic IPv4->IPv6 gatewaying */
+        int yes = 1;
+
+        setsockopt(pvt->fd, IPPROTO_IPV6, IPV6_V6ONLY, &yes, sizeof(yes));
+    }
     pvt->pub.bind = &rtpp_socket_bind;
     pvt->pub.settos = &rtpp_socket_settos;
     pvt->pub.setrbuf = &rtpp_socket_setrbuf;
