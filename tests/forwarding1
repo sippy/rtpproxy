@@ -164,18 +164,20 @@ setup_buffers
 
 witness_start forwarding1 "forwarding1.rout forwarding1.geno.rout forwarding1.gena.rout forwarding1.rlog forwarding1.geno.rlog forwarding1.gena.rlog"
 
+RTPPROXY_ARGS="-T5 -b -s stdio: -f -d ${RTPP_DEBUG_LVL} -l 0.0.0.0 -6 /::"
+
 #sts=`date "+%Y%m%d%H%M%S"`
 (setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
-  ${RTPPROXY} -i -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -f \
-   -d ${RTPP_DEBUG_LVL} -m ${FWD_SPORT} > forwarding1.rout 2>forwarding1.rlog) &
+  ${RTPPROXY} -i -s cunix:/tmp/forwarding1.sock ${RTPPROXY_ARGS} \
+   -m ${FWD_SPORT} > forwarding1.rout 2>forwarding1.rlog) &
 FWD_PID=${!}
 (setup_gen "o" ${FWD_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
-  ${RTPPROXY} -P -r "${RECORD_DIR}" -T5 -b -m ${GENO_SPORT} -s stdio: -f \
-   -d ${RTPP_DEBUG_LVL} > forwarding1.geno.rout 2>forwarding1.geno.rlog) &
+  ${RTPPROXY} -P -r "${RECORD_DIR}" -m ${GENO_SPORT} ${RTPPROXY_ARGS} \
+   > forwarding1.geno.rout 2>forwarding1.geno.rlog) &
 GENO_PID=${!}
 (setup_gen "a" ${PORTO} "${CODECSA}" "${REPACK_CODECSA}" | \
-  ${RTPPROXY} -r "${RECORD_DIR}" -T5 -b -m ${GENA_SPORT} -s stdio: -f \
-    -d ${RTPP_DEBUG_LVL} > forwarding1.gena.rout 2>forwarding1.gena.rlog) &
+  ${RTPPROXY} -r "${RECORD_DIR}" -m ${GENA_SPORT} ${RTPPROXY_ARGS} \
+   > forwarding1.gena.rout 2>forwarding1.gena.rlog) &
 GENA_PID=${!}
 wait ${FWD_PID}
 #ets=`date "+%Y%m%d%H%M%S"`
