@@ -107,6 +107,7 @@ struct rtpp_command
 #define ECODE_INVLARG_3   33
 #define ECODE_INVLARG_4   34
 #define ECODE_INVLARG_5   35
+#define ECODE_INVLARG_6   36
 
 #define ECODE_SESUNKN     50
 

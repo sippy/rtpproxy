@@ -44,6 +44,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_bindaddrs.h"
 #include "rtpp_command.h"
 #include "rtpp_command_copy.h"
 #include "rtpp_command_private.h"
@@ -323,6 +324,21 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             break;
         }
     }
+    if (ulop->local_addr == NULL && ulop->lidx == 1 &&
+      ulop->pf != ulop->lia[0]->sa_family) {
+        /*
+         * When there is no explicit direction specified via "E"/"I" and no
+         * local/remote address provided either via "R" or "L" make sure we
+         * pick up address that matches the address family of the stream.
+         */
+        ulop->local_addr = bindaddr4af(cf, ulop->pf);
+        if (ulop->local_addr == NULL) {
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "cannot match local "
+              "address for the %s session", AF2STR(ulop->pf));
+            reply_error(cmd, ECODE_INVLARG_6);
+            goto err_undo_1;
+        }
+    }
     if (ulop->addr != NULL && ulop->port != NULL && IS_IPSTR_VALID(ulop->addr, ulop->pf)) {
         n = resolve(sstosa(&tia), ulop->pf, ulop->addr, ulop->port, AI_NUMERICHOST);
         if (n == 0) {
@@ -443,17 +459,18 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         struct rtpp_hash_table_entry *hte;
 
         RTPP_DBG_ASSERT(cmd->cca.op == UPDATE);
+        if (ulop->local_addr != NULL) {
+            ulop->lia[0] = ulop->lia[1] = ulop->local_addr;
+        }
         RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO,
-          "new session %s, tag %s requested, type %s",
+          "new %s/%s session %s, tag %s requested, type %s",
+          SA_AF2STR(ulop->lia[0]), SA_AF2STR(ulop->lia[1]),
           cmd->cca.call_id, cmd->cca.from_tag, ulop->weak ? "weak" : "strong");
         if (cf->stable->slowshutdown != 0) {
             RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO,
               "proxy is in the deorbiting-burn mode, new session rejected");
             reply_error(cmd, ECODE_SLOWSHTDN);
             goto err_undo_0;
-        }
-        if (ulop->local_addr != NULL) {
-            ulop->lia[0] = ulop->lia[1] = ulop->local_addr;
         }
         if (rtpp_create_listener(cf, ulop->lia[0], &lport, fds) == -1) {
             RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't create listener");
@@ -502,8 +519,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
               "option", (int)rtpp_rlim_max(cf));
         }
 
-        RTPP_LOG(spa->log, RTPP_LOG_INFO, "new session on a port %d created, "
-          "tag %s", lport, cmd->cca.from_tag);
+        RTPP_LOG(spa->log, RTPP_LOG_INFO, "new session on %s port %d created, "
+          "tag %s", AF2STR(ulop->pf), lport, cmd->cca.from_tag);
         if (cf->stable->record_all != 0) {
             handle_copy(cf, spa, 0, NULL, 0);
             handle_copy(cf, spa, 1, NULL, 0);
