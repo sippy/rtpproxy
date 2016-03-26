@@ -36,6 +36,7 @@
 #include <sys/uio.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <netinet/udp.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -82,6 +83,7 @@ struct rtpp_record_channel {
 
 static void rtpp_record_write(struct rtpp_record *, struct rtpp_stream *, struct rtp_packet *);
 static void rtpp_record_close(struct rtpp_record_channel *);
+static int get_hdr_size(struct sockaddr *);
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_record_channel *)((char *)(pubp) - offsetof(struct rtpp_record_channel, pub)))
@@ -314,6 +316,34 @@ prepare_pkt_hdr_adhoc(struct rtpp_log *log, struct rtp_packet *packet,
 
 static uint16_t ip_id = 0;
 
+#if (PCAP_FORMAT != DLT_NULL)
+static void
+fake_ether_addr(struct sockaddr *addr, uint8_t *eaddr)
+{
+    uint8_t *ra;
+    int i;
+
+    switch (addr->sa_family) {
+    case AF_INET:
+        eaddr[0] = eaddr[1] = 0;
+        memcpy(eaddr + 2, &(satosin(addr)->sin_addr), 4);
+        return;
+
+    case AF_INET6:
+        ra = &satosin6(addr)->sin6_addr.s6_addr[0];
+        memcpy(eaddr, ra, 6);
+        for (i = 6; i < sizeof(struct in6_addr); i++) {
+            eaddr[i % 6] ^= ra[i];
+        }
+        return;
+
+    default:
+        break;
+    }
+    abort();
+}
+#endif
+
 static int
 prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
   union pkt_hdr_pcap *hdrp, struct sockaddr *daddr, struct sockaddr *ldaddr,
@@ -321,11 +351,18 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
 {
     struct sockaddr *src_addr, *dst_addr;
     uint16_t src_port, dst_port;
-    pcaprec_hdr_t pcaprec_hdr;
-    struct udpip *udpip;
+    pcaprec_hdr_t *php;
+    union {
+        struct ip6_hdr *v6;
+        struct ip *v4;
+    } ipp;
+    struct udphdr *udp;
     int pcap_size;
-    struct sockaddr_storage tmp_addr;
     struct timeval rtimeval;
+#if (PCAP_FORMAT != DLT_NULL)
+    struct sockaddr_storage tmp_addr;
+    struct layer2_hdr *ether;
+#endif
 
     if (packet->rtime == -1) {
 	RTPP_ELOG(log, RTPP_LOG_ERR, "can't get current time");
@@ -334,76 +371,121 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
 
     if (face == 0) {
         src_addr = sstosa(&(packet->raddr));
-        src_port = satosin(src_addr)->sin_port;
+        src_port = getnport(src_addr);
         dst_addr = packet->laddr;
         dst_port = htons(packet->lport);
     } else {
         src_addr = ldaddr;
         src_port = htons(ldport);
         dst_addr = daddr;
-        dst_port = satosin(dst_addr)->sin_port;
+        dst_port = getnport(dst_addr);
     }
 
-    if (sstosa(src_addr)->sa_family != AF_INET) {
+#if 0
+    if (src_addr->sa_family != AF_INET) {
 	RTPP_ELOG(log, RTPP_LOG_ERR, "only AF_INET pcap format is supported");
 	return -1;
     }
+#endif
 
-    memset(hdrp, 0, sizeof(*hdrp));
-    memset(&pcaprec_hdr, 0, sizeof(pcaprec_hdr));
+    memset(hdrp, 0, get_hdr_size(src_addr));
 
 #if (PCAP_FORMAT == DLT_NULL)
-    hdrp->null.family = sstosa(src_addr)->sa_family;
-    udpip = &(hdrp->null.udpip);
-    pcap_size = sizeof(hdrp->null);
+    if (src_addr->sa_family == AF_INET) {
+        php = &hdrp->null.pcaprec_hdr;
+        hdrp->null.family = src_addr->sa_family;
+        ipp.v4 = &(hdrp->null.udpip.iphdr);
+        udp = &(hdrp->null.udpip.udphdr);
+        pcap_size = sizeof(hdrp->null);
+    } else {
+        php = &hdrp->null_v6.pcaprec_hdr;
+        hdrp->null_v6.family = src_addr->sa_family;
+        ipp.v6 = &(hdrp->null_v6.udpip6.iphdr);
+        udp = &(hdrp->null_v6.udpip6.udphdr);
+        pcap_size = sizeof(hdrp->null_v6);
+    }
 #else
     /* Prepare fake ethernet header */
-    hdrp->en10t.ether_type = htons(0x800);
+    if (src_addr->sa_family == AF_INET) {
+        php = &hdrp->en10t.pcaprec_hdr;
+        ether = &hdrp->en10t.ether;
+        ether->type = ETHERTYPE_INET;
+        udp = &(hdrp->en10t.udpip.udphdr);
+        pcap_size = sizeof(hdrp->en10t);
+        ipp.v4 = &(hdrp->en10t.udpip.iphdr);
+    } else {
+        php = &hdrp->en10t_v6.pcaprec_hdr;
+        ether = &hdrp->en10t_v6.ether;
+        ether->type = ETHERTYPE_INET6;
+        udp = &(hdrp->en10t_v6.udpip6.udphdr);
+        pcap_size = sizeof(hdrp->en10t_v6);
+        ipp.v6 = &(hdrp->en10t_v6.udpip6.iphdr);
+    }
     if (face == 0 && ishostnull(dst_addr) && !ishostnull(src_addr)) {
         if (local4remote(src_addr, &tmp_addr) == 0) {
             dst_addr = sstosa(&tmp_addr);
         }
     }
-    memcpy(hdrp->en10t.ether_dhost + 2, &(satosin(dst_addr)->sin_addr), 4);
+    fake_ether_addr(dst_addr, ether->dhost);
     if (face != 0 && ishostnull(src_addr) && !ishostnull(dst_addr)) {
         if (local4remote(dst_addr, &tmp_addr) == 0) {
             src_addr = sstosa(&tmp_addr);
         }
     }
-    memcpy(hdrp->en10t.ether_shost + 2, &(satosin(src_addr)->sin_addr), 4);
-    udpip = &(hdrp->en10t.udpip);
-    pcap_size = sizeof(hdrp->en10t);
+    fake_ether_addr(src_addr, ether->shost);
 #endif
 
     dtime2rtimeval(packet->rtime, &rtimeval);
-    pcaprec_hdr.ts_sec = SEC(&rtimeval);
-    pcaprec_hdr.ts_usec = USEC(&rtimeval);
-    pcaprec_hdr.orig_len = pcaprec_hdr.incl_len = pcap_size -
-      sizeof(pcaprec_hdr) + packet->size;
+    php->ts_sec = SEC(&rtimeval);
+    php->ts_usec = USEC(&rtimeval);
+    php->orig_len = php->incl_len = pcap_size -
+      sizeof(*php) + packet->size;
 
     /* Prepare fake IP header */
-    udpip->iphdr.ip_v = 4;
-    udpip->iphdr.ip_hl = sizeof(udpip->iphdr) >> 2;
-    udpip->iphdr.ip_len = htons(sizeof(udpip->iphdr) + sizeof(udpip->udphdr) + packet->size);
-    udpip->iphdr.ip_src = satosin(src_addr)->sin_addr;
-    udpip->iphdr.ip_dst = satosin(dst_addr)->sin_addr;
-    udpip->iphdr.ip_p = IPPROTO_UDP;
-    udpip->iphdr.ip_id = htons(ip_id++);
-    udpip->iphdr.ip_ttl = 127;
-    udpip->iphdr.ip_sum = rtpp_in_cksum(&(udpip->iphdr), sizeof(udpip->iphdr));
+    if (src_addr->sa_family == AF_INET) {
+        ipp.v4->ip_v = 4;
+        ipp.v4->ip_hl = sizeof(*ipp.v4) >> 2;
+        ipp.v4->ip_len = htons(sizeof(*ipp.v4) + sizeof(*udp) + packet->size);
+        ipp.v4->ip_src = satosin(src_addr)->sin_addr;
+        ipp.v4->ip_dst = satosin(dst_addr)->sin_addr;
+        ipp.v4->ip_p = IPPROTO_UDP;
+        ipp.v4->ip_id = htons(ip_id++);
+        ipp.v4->ip_ttl = 127;
+        ipp.v4->ip_sum = rtpp_in_cksum(ipp.v4, sizeof(*ipp.v4));
+    } else {
+        ipp.v6->ip6_vfc |= IPV6_VERSION;
+        ipp.v6->ip6_hlim = IPV6_DEFHLIM;
+        ipp.v6->ip6_nxt = IPPROTO_UDP;
+        ipp.v6->ip6_plen = htons(sizeof(*udp) + packet->size);
+    }
 
     /* Prepare fake UDP header */
-    udpip->udphdr.uh_sport = src_port;
-    udpip->udphdr.uh_dport = dst_port;
-    udpip->udphdr.uh_ulen = htons(sizeof(udpip->udphdr) + packet->size);
-
-#if (PCAP_FORMAT == DLT_NULL)
-    memcpy(&(hdrp->null.pcaprec_hdr), &pcaprec_hdr, sizeof(pcaprec_hdr));
-#else
-    memcpy(&(hdrp->en10t.pcaprec_hdr), &pcaprec_hdr, sizeof(pcaprec_hdr));
-#endif
+    udp->uh_sport = src_port;
+    udp->uh_dport = dst_port;
+    udp->uh_ulen = htons(sizeof(*udp) + packet->size);
 
     return 0;
+}
+
+static int
+get_hdr_size(struct sockaddr *raddr)
+{
+    int hdr_size;
+
+#if (PCAP_FORMAT == DLT_NULL)
+    if (raddr->sa_family == AF_INET) {
+        hdr_size = sizeof(struct pkt_hdr_pcap_null);
+    } else {
+        hdr_size = sizeof(struct pkt_hdr_pcap_null_v6);
+    }
+#else
+    if (raddr->sa_family == AF_INET) {
+        hdr_size = sizeof(struct pkt_hdr_pcap_en10t);
+    } else {
+        hdr_size = sizeof(struct pkt_hdr_pcap_en10t_v6);
+    }
+#endif
+    return (hdr_size);
 }
 
 static void
@@ -443,13 +525,13 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
 	break;
 
     case MODE_LOCAL_PCAP:
-#if (PCAP_FORMAT == DLT_NULL)
-	hdr_size = sizeof(hdr.pcap.null);
-#else
-        hdr_size = sizeof(hdr.pcap.en10t);
-#endif
+        hdr_size = get_hdr_size(sstosa(&packet->raddr));
 	prepare_pkt_hdr = (void *)&prepare_pkt_hdr_pcap;
 	break;
+
+    default:
+        /* Should not happen */
+        abort();
     }
 
     /* Check if the write buffer has necessary space, and flush if not */
