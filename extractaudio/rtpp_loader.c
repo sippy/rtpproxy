@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <netinet/udp.h>
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -196,7 +197,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
     struct packet *pack, *pp;
     struct channel *channel;
     struct session *sess;
-    union pkt_hdr_pcap pcap;
+    union pkt_hdr_pcap pcap, *pcp;
     int rtp_len;
     off_t st_size;
     int pcap_size, network;
@@ -208,12 +209,21 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
 
     pcount = 0;
     for (cp = loader->ibuf; cp < loader->ibuf + st_size; cp += rtp_len) {
+        pcp = (union pkt_hdr_pcap *)cp;
         if (network == DLT_NULL) {
+            if (pcp->null.family != AF_INET) {
+                rtp_len = sizeof(pcaprec_hdr_t) + pcp->null.pcaprec_hdr.incl_len;
+                continue;
+            }
             pcap_size = sizeof(struct pkt_hdr_pcap_null);
             memcpy(&pcap, cp, pcap_size);
             pcaprec_hdr = &(pcap.null.pcaprec_hdr);
             udpip = &(pcap.null.udpip);
         } else {
+            if (pcp->en10t.ether.type != ETHERTYPE_INET) {
+                rtp_len = sizeof(pcaprec_hdr_t) + pcp->en10t.pcaprec_hdr.incl_len;
+                continue;
+            }
             pcap_size = sizeof(struct pkt_hdr_pcap_en10t);
             memcpy(&pcap, cp, pcap_size);
             pcaprec_hdr = &(pcap.en10t.pcaprec_hdr);
