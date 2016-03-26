@@ -45,6 +45,7 @@ do
     then
       NPKTS=100
     fi
+    NPKTS=$((${NPKTS} * 2)) # IPv6
     for retry in 1 2 3 4 5 6
     do
       for fname in playback1.tout playback1.${codec}.a.rtp
@@ -65,7 +66,7 @@ do
         sleep 1
       fi
       setup_playback ${delay} ${codec} ${TARGET_PORT} "${PIFILE}" | \
-       ${RTPPROXY} -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>playback1.rlog&
+       ${RTPPROXY} -l 0.0.0.0 -6 /:: -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>playback1.rlog&
       PLB_PID=${!}
       ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace
       ##echo ${TCPD_PID}
