@@ -62,6 +62,13 @@ struct udpip {
     struct udphdr udphdr;
 } __attribute__((__packed__));
 
+#if !defined(IPV6_DEFHLIM)
+# define 	IPV6_DEFHLIM   64 /* default hlim */
+#endif
+#if !defined(IPV6_VERSION)
+# define 	IPV6_VERSION   0x60
+#endif
+
 struct udpip6 {
     struct ip6_hdr iphdr;
     struct udphdr udphdr;
