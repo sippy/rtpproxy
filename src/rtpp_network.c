@@ -95,12 +95,19 @@ uint16_t
 getport(struct sockaddr *ia)
 {
 
+    return (ntohs(getnport(ia)));
+}
+
+uint16_t
+getnport(struct sockaddr *ia)
+{
+
     switch (ia->sa_family) {
     case AF_INET:
-        return (ntohs(satosin(ia)->sin_port));
+        return (satosin(ia)->sin_port);
 
     case AF_INET6:
-        return (ntohs(satosin6(ia)->sin6_port));
+        return (satosin6(ia)->sin6_port);
 
     default:
         break;

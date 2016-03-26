@@ -38,6 +38,7 @@ struct timeval;
 int ishostseq(struct sockaddr *, struct sockaddr *);
 int ishostnull(struct sockaddr *);
 uint16_t getport(struct sockaddr *);
+uint16_t getnport(struct sockaddr *);
 int isaddrseq(struct sockaddr *ia1, struct sockaddr *ia2);
 int isaddreq(struct sockaddr *ia1, struct sockaddr *ia2);
 void setport(struct sockaddr *, int);
