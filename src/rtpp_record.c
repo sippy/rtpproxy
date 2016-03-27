@@ -51,6 +51,8 @@
 #include "rtp_packet.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
+#include "rtpp_ip_chksum.h"
+#include "rtpp_debug.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
@@ -456,6 +458,8 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
         ipp.v6->ip6_vfc |= IPV6_VERSION;
         ipp.v6->ip6_hlim = IPV6_DEFHLIM;
         ipp.v6->ip6_nxt = IPPROTO_UDP;
+        ipp.v6->ip6_src = satosin6(src_addr)->sin6_addr;
+        ipp.v6->ip6_dst = satosin6(dst_addr)->sin6_addr;
         ipp.v6->ip6_plen = htons(sizeof(*udp) + packet->size);
     }
 
@@ -463,6 +467,27 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
     udp->uh_sport = src_port;
     udp->uh_dport = dst_port;
     udp->uh_ulen = htons(sizeof(*udp) + packet->size);
+
+    rtpp_ip_chksum_start();
+    if (src_addr->sa_family == AF_INET) {
+        rtpp_ip_chksum_update(&(ipp.v4->ip_src), sizeof(ipp.v4->ip_src));
+        rtpp_ip_chksum_update(&(ipp.v4->ip_dst), sizeof(ipp.v4->ip_dst));
+        rtpp_ip_chksum_pad_v4();
+        rtpp_ip_chksum_update(&(udp->uh_ulen), sizeof(udp->uh_ulen));
+    } else {
+        uint32_t ulen32;
+
+        rtpp_ip_chksum_update(&ipp.v6->ip6_src, sizeof(ipp.v6->ip6_src));
+        rtpp_ip_chksum_update(&ipp.v6->ip6_dst, sizeof(ipp.v6->ip6_dst));
+        ulen32 = htonl(sizeof(*udp) + packet->size);
+        rtpp_ip_chksum_update(&ulen32, sizeof(ulen32));
+        rtpp_ip_chksum_pad_v6();
+    }
+    rtpp_ip_chksum_update(&(udp->uh_sport), sizeof(udp->uh_sport));
+    rtpp_ip_chksum_update(&(udp->uh_dport), sizeof(udp->uh_dport));
+    rtpp_ip_chksum_update(&(udp->uh_ulen), sizeof(udp->uh_ulen));
+    rtpp_ip_chksum_update_data(packet->data.buf, packet->size);
+    rtpp_ip_chksum_fin(udp->uh_sum);
 
     return 0;
 }
