@@ -74,7 +74,15 @@ class UacStateUpdating(UaStateGeneric):
         if code in (301, 302) and resp.countHFs('contact') > 0:
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
             self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))
-        elif code in (408, 481):
+        else:
+            event = CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin)
+            try:
+                event.reason = resp.getHFBody('reason')
+            except:
+                pass
+            self.ua.equeue.append(event)
+
+        if code in (408, 481):
             # If the response for a request within a dialog is a 481
             # (Call/Transaction Does Not Exist) or a 408 (Request Timeout), the UAC
             # SHOULD terminate the dialog.  A UAC SHOULD also terminate a dialog if
@@ -85,17 +93,17 @@ class UacStateUpdating(UaStateGeneric):
                 event.reason = resp.getHFBody('reason')
             except:
                 pass
+
+            req = self.ua.genRequest('BYE', reason = event.reason)
+            self.ua.lCSeq += 1
+            self.ua.global_config['_sip_tm'].newTransaction(req, \
+              laddress = self.ua.source_address, compact = self.ua.compact_sip)
+
             self.ua.equeue.append(event)
             self.ua.cancelCreditTimer()
             self.ua.disconnect_ts = resp.rtime
             return (UaStateDisconnected, self.ua.disc_cbs, resp.rtime, self.ua.origin)
-        else:
-            event = CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin)
-            try:
-                event.reason = resp.getHFBody('reason')
-            except:
-                pass
-            self.ua.equeue.append(event)
+
         return (UaStateConnected,)
 
     def recvEvent(self, event):
