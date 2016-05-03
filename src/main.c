@@ -665,7 +665,7 @@ main(int argc, char **argv)
          err(1, "can't allocate memory for the struct rtpp_cfg_stable");
          /* NOTREACHED */
     }
-    RTPP_LIST_RESET(cf.stable->ctrl_socks);    
+    RTPP_LIST_RESET(cf.stable->ctrl_socks);
 
     init_config(&cf, argc, argv);
 
