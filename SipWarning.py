@@ -38,8 +38,8 @@ class SipWarning(SipGenericHF):
         SipGenericHF.__init__(self, body)
         self.parsed = True
         if body != None:
-            code, self.agent, text = body.split(2)
-            self.text = text.sprip('"')
+            code, self.agent, text = body.split(None, 2)
+            self.text = text.strip('"')
             self.code = int(code)
         elif cself != None:
             self.code, self.agent, self.text = \
@@ -48,7 +48,7 @@ class SipWarning(SipGenericHF):
             self.agent = socket.gethostname()
             if code != None:
                 self.code = code
-            self.text = text
+            self.text = text.replace('"', "'")
 
     def __str__(self):
         return '%d %s "%s"' % (self.code, self.agent, self.text)
