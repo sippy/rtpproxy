@@ -51,6 +51,7 @@ class _rtpps_side(object):
     codecs = None
     raddress = None
     origin = None
+    on_sdp_change_exceptions = False
 
     def __init__(self):
         self.origin = SdpOrigin()
@@ -148,7 +149,10 @@ class _rtpps_side(object):
             print sdp_body.content
             print '-' * 70
             sys.stdout.flush()
-            return
+            if self.on_sdp_change_exceptions:
+                raise exception
+            else:
+                return
         for i in range(0, len(sdp_body.content.sections)):
             sect = sdp_body.content.sections[i]
             if sect.m_header.transport.lower() not in ('udp', 'udptl', 'rtp/avp'):
