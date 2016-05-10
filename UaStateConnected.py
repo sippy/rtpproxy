@@ -180,7 +180,12 @@ class UaStateConnected(UaStateGeneric):
                       origin = event.origin))
                 return None
             if body != None and self.ua.on_local_sdp_change != None and body.needs_update:
-                self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event))
+                try:
+                    self.ua.on_local_sdp_change(body, lambda x: self.ua.recvEvent(event), en_excpt = True)
+                except Exception, e:
+                    event = CCEventFail((400, 'Malformed SDP Body'), rtime = event.rtime)
+                    event.setWarning(str(e))
+                    self.ua.equeue.append(event)
                 return None
             req = self.ua.genRequest('INVITE', body, reason = event.reason)
             self.ua.lCSeq += 1
