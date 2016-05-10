@@ -36,12 +36,10 @@ class SipWarning(SipGenericHF):
 
     def __init__(self, body = None, cself = None, code = None, text = None):
         SipGenericHF.__init__(self, body)
-        self.parsed = True
         if body != None:
-            code, self.agent, text = body.split(None, 2)
-            self.text = text.strip('"')
-            self.code = int(code)
-        elif cself != None:
+            return
+        self.parsed = True
+        if cself != None:
             self.code, self.agent, self.text = \
               cself.code, cself.agent, cself.text
         else:
@@ -50,7 +48,15 @@ class SipWarning(SipGenericHF):
                 self.code = code
             self.text = text.replace('"', "'")
 
+    def parse(self):
+        code, self.agent, text = self.body.split(None, 2)
+        self.text = text.strip('"')
+        self.code = int(code)
+        self.parsed = True
+
     def __str__(self):
+        if not self.parsed:
+            return self.body
         return '%d %s "%s"' % (self.code, self.agent, self.text)
 
     def getCopy(self):
