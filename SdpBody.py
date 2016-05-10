@@ -96,7 +96,7 @@ class SdpBody(object):
         # Do some sanity checking, RFC4566
         for header_name in [x + '_header' for x in self.top_hdrs_req]:
             if getattr(self, header_name) == None:
-                raise Exception('Mandatory "%=" session header is missing' % header_name[0])
+                raise Exception('Mandatory "%s=" session header is missing' % header_name[0])
         for section in self.sections:
             for header_name in [x + '_header' for x in self.sect_hdrs_req]:
                 if getattr(section, header_name) == None:
