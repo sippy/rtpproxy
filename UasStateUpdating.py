@@ -94,7 +94,12 @@ class UasStateUpdating(UaStateGeneric):
             scode = event.getData()
             if scode == None:
                 scode = (500, 'Failed')
-            self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason)
+            if event.warning != None:
+                extra_headers = (event.warning,)
+            else:
+                extra_headers = None
+            self.ua.sendUasResponse(scode[0], scode[1], reason_rfc3326 = event.reason, \
+              extra_headers = extra_headers)
             return (UaStateConnected,)
         elif isinstance(event, CCEventDisconnect):
             self.ua.sendUasResponse(487, 'Request Terminated', reason_rfc3326 = event.reason)

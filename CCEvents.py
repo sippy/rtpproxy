@@ -87,15 +87,22 @@ class CCEventDisconnect(CCEventGeneric):
     name = 'CCEventDisconnect'
     pass
 
+from SipHeader import SipHeader
+from SipWarning import SipWarning
+
 class CCEventFail(CCEventGeneric):
     name = 'CCEventFail'
     challenge = None
+    warning = None
 
     def getCopy(self):
         cself = CCEventGeneric.getCopy(self)
         if self.challenge != None:
             cself.challenge = self.challenge.getCopy()
         return cself
+
+    def setWarning(self, eistr):
+        self.warning = SipHeader(body = SipWarning(text = eistr))
 
 class CCEventRedirect(CCEventGeneric):
     name = 'CCEventRedirect'
