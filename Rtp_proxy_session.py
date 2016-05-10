@@ -51,7 +51,6 @@ class _rtpps_side(object):
     codecs = None
     raddress = None
     origin = None
-    on_sdp_change_exceptions = False
 
     def __init__(self):
         self.origin = SdpOrigin()
@@ -137,7 +136,7 @@ class _rtpps_side(object):
         command = 'S %s %s %s' % ('%s-%d' % (rtpps.call_id, index), from_tag, to_tag)
         rtpps.rtp_proxy_client.send_command(command, rtpps.command_result, result_callback)
 
-    def _on_sdp_change(self, rtpps, sdp_body, result_callback):
+    def _on_sdp_change(self, rtpps, sdp_body, result_callback, en_excpt):
         sects = []
         try:
             sdp_body.parse()
@@ -149,7 +148,7 @@ class _rtpps_side(object):
             print sdp_body.content
             print '-' * 70
             sys.stdout.flush()
-            if self.on_sdp_change_exceptions:
+            if en_excpt:
                 raise exception
             else:
                 return
@@ -303,11 +302,11 @@ class Rtp_proxy_session(object):
             self.max_index -= 1
         self.rtp_proxy_client = None
 
-    def on_caller_sdp_change(self, sdp_body, result_callback):
-        self.caller._on_sdp_change(self, sdp_body, result_callback)
+    def on_caller_sdp_change(self, sdp_body, result_callback, en_excpt = False):
+        self.caller._on_sdp_change(self, sdp_body, result_callback, en_excpt)
 
-    def on_callee_sdp_change(self, sdp_body, result_callback):
-        self.callee._on_sdp_change(self, sdp_body, result_callback)
+    def on_callee_sdp_change(self, sdp_body, result_callback, en_excpt = False):
+        self.callee._on_sdp_change(self, sdp_body, result_callback, en_excpt)
 
     def __del__(self):
         if self.my_ident != get_ident():
