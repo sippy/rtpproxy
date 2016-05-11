@@ -1,5 +1,5 @@
 # Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
-# Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
+# Copyright (c) 2006-2016 Sippy Software, Inc. All rights reserved.
 #
 # All rights reserved.
 #
@@ -63,7 +63,14 @@ class UacStateUpdating(UaStateGeneric):
             event = CCEventConnect(scode, rtime = resp.rtime, origin = self.ua.origin)
             if body != None:
                 if self.ua.on_remote_sdp_change != None:
-                    self.ua.on_remote_sdp_change(body, lambda x: self.ua.delayed_remote_sdp_update(event, x))
+                    cb_func = lambda x: self.ua.delayed_remote_sdp_update(event, x)
+                    try:
+                        self.ua.on_remote_sdp_change(body, cb_func, en_excpt = True)
+                    except Exception, e:
+                        event = CCEventFail((502, 'Bad Gateway'), rtime = event.rtime)
+                        event.setWarning('Malformed SDP Body received from ' \
+                          'downstream: "%s"' % str(e))
+                        return self.updateFailed(event)
                     return (UaStateConnected,)
                 else:
                     self.ua.rSDP = body.getCopy()
@@ -94,17 +101,19 @@ class UacStateUpdating(UaStateGeneric):
             except:
                 pass
 
-            req = self.ua.genRequest('BYE', reason = event.reason)
-            self.ua.lCSeq += 1
-            self.ua.global_config['_sip_tm'].newTransaction(req, \
-              laddress = self.ua.source_address, compact = self.ua.compact_sip)
-
-            self.ua.equeue.append(event)
-            self.ua.cancelCreditTimer()
-            self.ua.disconnect_ts = resp.rtime
-            return (UaStateDisconnected, self.ua.disc_cbs, resp.rtime, self.ua.origin)
+            return self.updateFailed(event)
 
         return (UaStateConnected,)
+
+    def updateFailed(self, event):
+        self.ua.equeue.append(event)
+        req = self.ua.genRequest('BYE', reason = event.reason)
+        self.ua.lCSeq += 1
+        self.ua.global_config['_sip_tm'].newTransaction(req, \
+          laddress = self.ua.source_address, compact = self.ua.compact_sip)
+        self.ua.cancelCreditTimer()
+        self.ua.disconnect_ts = event.rtime
+        return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin)
 
     def recvEvent(self, event):
         if isinstance(event, CCEventDisconnect) or isinstance(event, CCEventFail) or isinstance(event, CCEventRedirect):
