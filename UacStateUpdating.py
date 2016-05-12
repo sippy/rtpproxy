@@ -80,29 +80,23 @@ class UacStateUpdating(UaStateGeneric):
             return (UaStateConnected,)
         if code in (301, 302) and resp.countHFs('contact') > 0:
             scode = (code, reason, body, resp.getHFBody('contact').getUrl().getCopy())
-            self.ua.equeue.append(CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin))
+            event = CCEventRedirect(scode, rtime = resp.rtime, origin = self.ua.origin)
         else:
             event = CCEventFail(scode, rtime = resp.rtime, origin = self.ua.origin)
             try:
                 event.reason = resp.getHFBody('reason')
             except:
                 pass
-            self.ua.equeue.append(event)
 
         if code in (408, 481):
             # If the response for a request within a dialog is a 481
-            # (Call/Transaction Does Not Exist) or a 408 (Request Timeout), the UAC
-            # SHOULD terminate the dialog.  A UAC SHOULD also terminate a dialog if
-            # no response at all is received for the request (the client
-            # transaction would inform the TU about the timeout.)
-            event = CCEventDisconnect(rtime = resp.rtime, origin = self.ua.origin)
-            try:
-                event.reason = resp.getHFBody('reason')
-            except:
-                pass
-
+            # (Call/Transaction Does Not Exist) or a 408 (Request Timeout), the
+            # UAC SHOULD terminate the dialog.  A UAC SHOULD also terminate a
+            # dialog if no response at all is received for the request (the
+            # client transaction would inform the TU about the timeout.)
             return self.updateFailed(event)
 
+        self.ua.equeue.append(event)
         return (UaStateConnected,)
 
     def updateFailed(self, event):
@@ -113,7 +107,10 @@ class UacStateUpdating(UaStateGeneric):
           laddress = self.ua.source_address, compact = self.ua.compact_sip)
         self.ua.cancelCreditTimer()
         self.ua.disconnect_ts = event.rtime
-        return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, event.origin)
+        self.ua.equeue.append(CCEventDisconnect(rtime = event.rtime, \
+          origin = self.ua.origin))
+        return (UaStateDisconnected, self.ua.disc_cbs, event.rtime, \
+          event.origin)
 
     def recvEvent(self, event):
         if isinstance(event, CCEventDisconnect) or isinstance(event, CCEventFail) or isinstance(event, CCEventRedirect):
