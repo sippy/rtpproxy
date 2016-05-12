@@ -429,6 +429,10 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             spa->rtcp->stream[sidx]->port = lport + 1;
             if (spa->complete == 0) {
                 cmd->csp->nsess_complete.cnt++;
+                CALL_METHOD(spa->rtp->stream[0]->ttl, reset_with,
+                  cf->stable->max_ttl);
+                CALL_METHOD(spa->rtp->stream[1]->ttl, reset_with,
+                  cf->stable->max_ttl);
             }
             spa->complete = 1;
         }
@@ -440,18 +444,13 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         ulop->lia[0] = spa->rtp->stream[sidx]->laddr;
         pidx = (sidx == 0) ? 1 : 0;
         if (cmd->cca.op == UPDATE) {
-            CALL_METHOD(spa->rtp->stream[0]->ttl, reset_with,
-              cf->stable->max_setup_ttl);
-            CALL_METHOD(spa->rtp->stream[1]->ttl, reset_with,
-              cf->stable->max_setup_ttl);
             RTPP_LOG(spa->log, RTPP_LOG_INFO,
               "adding %s flag to existing session, new=%d/%d/%d",
               ulop->weak ? ( sidx ? "weak[1]" : "weak[0]" ) : "strong",
               spa->strong, spa->rtp->stream[0]->weak, spa->rtp->stream[1]->weak);
-        } else {
-            CALL_METHOD(spa->rtp->stream[0]->ttl, reset_with, cf->stable->max_ttl);
-            CALL_METHOD(spa->rtp->stream[1]->ttl, reset_with, cf->stable->max_ttl);
         }
+        CALL_METHOD(spa->rtp->stream[0]->ttl, reset);
+        CALL_METHOD(spa->rtp->stream[1]->ttl, reset);
         RTPP_LOG(spa->log, RTPP_LOG_INFO,
           "lookup on ports %d/%d, session timer restarted", spa->rtp->stream[0]->port,
           spa->rtp->stream[1]->port);
