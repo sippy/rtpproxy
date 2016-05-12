@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,7 +50,11 @@ struct rtpp_module_priv {
    pid_t pid;
    struct stat stt;
    const char *fname;
+   double next_hupd_ts;
+   char node_id[_POSIX_HOST_NAME_MAX + 1];
 };
+
+#define HNAME_REFRESH_IVAL	1.0
 
 static struct rtpp_module_priv *rtpp_acct_csv_ctor(struct rtpp_cfg_stable *);
 static void rtpp_acct_csv_dtor(struct rtpp_module_priv *);
@@ -67,6 +72,32 @@ struct rtpp_minfo rtpp_module = {
     .on_session_end = API_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
 };
 
+static int
+gethostname_test(char *name, size_t namelen)
+{
+    static int i = 0;
+
+    if (i < 2) {
+        strcpy(name, "foo.bar.com");
+        i++;
+        return 0;
+    }
+    return (gethostname(name, namelen));
+}
+
+#define gethostname gethostname_test
+
+static const char *
+rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)
+{
+
+    if (pvt->next_hupd_ts == 0.0 || pvt->next_hupd_ts < ap->destroy_ts) {
+        if (gethostname(pvt->node_id, sizeof(pvt->node_id)) == 0) {
+            pvt->next_hupd_ts = ap->destroy_ts + HNAME_REFRESH_IVAL;
+        }
+    }
+    return (pvt->node_id);
+}
 
 static int
 rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
@@ -90,12 +121,13 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
     }
     if (pvt->stt.st_size == 0) {
         buf = NULL;
-        len = mod_asprintf(&buf, "rtpp_pid,sess_uid,call_id,from_tag,setup_ts,"
-          "teardown_ts,first_rtp_ts_ino,last_rtp_ts_ino,first_rtp_ts_ina,"
-          "last_rtp_ts_ina,rtp_npkts_ina,rtp_npkts_ino,rtp_nrelayed,rtp_ndropped,"
-          "rtcp_npkts_ina,rtcp_npkts_ino,rtcp_nrelayed,rtcp_ndropped,"
-          "rtpa_nsent_ino,rtpa_nrcvd_ino,rtpa_ndups_ino,rtpa_nlost_ino,"
-          "rtpa_perrs_ino,rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino,rtpa_nsent_ina,"
+        len = mod_asprintf(&buf, "rtpp_node_id,rtpp_pid,sess_uid,call_id,"
+          "from_tag,setup_ts,teardown_ts,first_rtp_ts_ino,last_rtp_ts_ino,"
+          "first_rtp_ts_ina,last_rtp_ts_ina,rtp_npkts_ina,rtp_npkts_ino,"
+          "rtp_nrelayed,rtp_ndropped,rtcp_npkts_ina,rtcp_npkts_ino,"
+          "rtcp_nrelayed,rtcp_ndropped,rtpa_nsent_ino,rtpa_nrcvd_ino,"
+          "rtpa_ndups_ino,rtpa_nlost_ino,rtpa_perrs_ino,"
+          "rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino,rtpa_nsent_ina,"
           "rtpa_nrcvd_ina,rtpa_ndups_ina,rtpa_nlost_ina,rtpa_perrs_ina,"
           "rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina,"
           "rtpa_jitter_last_ino,rtpa_jitter_max_ino,rtpa_jitter_avg_ino,"
@@ -133,6 +165,9 @@ rtpp_acct_csv_ctor(struct rtpp_cfg_stable *cfsp)
     }
     pvt->pid = getpid();
     pvt->fname = "rtpproxy_acct.csv";
+    if (gethostname(pvt->node_id, sizeof(pvt->node_id)) != 0) {
+        strcpy(pvt->node_id, "UNKNOWN");
+    }
     pvt->fd = -1;
     if (rtpp_acct_csv_open(pvt) == -1) {
         goto e1;
@@ -178,9 +213,9 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
         return;
     }
 
-    len = mod_asprintf(&buf, "%d,%" PRId64 ",%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
+    len = mod_asprintf(&buf, "%s,%d,%" PRId64 ",%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
       "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu," SSRC_FMT ",%lu,%lu,%lu,%lu,"
-      "%lu,%lu," SSRC_FMT ",%lu" ",%f,%f,%f,%f,%f,%f" "\n",
+      "%lu,%lu," SSRC_FMT ",%lu" ",%f,%f,%f,%f,%f,%f" "\n", rtpp_acct_get_nid(pvt, acct),
       pvt->pid, acct->seuid, ES_IF_NULL(acct->call_id), ES_IF_NULL(acct->from_tag),
       MT2RT_NZ(acct->init_ts), MT2RT_NZ(acct->destroy_ts), MT2RT_NZ(acct->pso_rtp->first_pkt_rcv),
       MT2RT_NZ(acct->pso_rtp->last_pkt_rcv), MT2RT_NZ(acct->psa_rtp->first_pkt_rcv),
