@@ -188,6 +188,7 @@ rtpp_stats_init(struct rtpp_session_stat *stat)
     if (stat->jdata == NULL) {
         return (-1);
     }
+    stat->last.pt = PT_UNKN;
     return (0);
 }
 

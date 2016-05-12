@@ -34,6 +34,7 @@ struct rtpa_stats {
     unsigned long pecount;
     unsigned long aecount;
     uint32_t last_ssrc;
+    int8_t last_pt;
 };
 
 struct rtpa_stats_jitter {

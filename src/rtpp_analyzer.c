@@ -105,6 +105,7 @@ rtpp_analyzer_update(struct rtpp_analyzer *rap, struct rtp_packet *pkt)
     if (rval == UPDATE_ERR) {
         pvt->aecount++;
     }
+    pvt->rstat.last.pt = pkt->data.header.pt;
     return (rval);
 }
 
@@ -125,6 +126,11 @@ rtpp_analyzer_get_stats(struct rtpp_analyzer *rap, struct rtpa_stats *rsp)
     rsp->ssrc_changes = pvt->rstat.ssrc_changes;
     rsp->last_ssrc = pvt->rstat.last.ssrc;
     rsp->plost = ostat.psent - ostat.precvd;
+    if (pvt->rstat.last.pt != PT_UNKN) {
+        rsp->last_pt = pvt->rstat.last.pt;
+    } else {
+        rsp->last_pt = -1;
+    }
 }
 
 static int

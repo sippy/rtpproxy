@@ -33,6 +33,7 @@ struct rtpp_log;
 struct rtpa_stats_jitter;
 
 #define SSRC_FMT "0x%.8X"
+#define PT_UNKN 128
 
 struct rtpp_session_stat_last {
     long long pcount;
@@ -44,6 +45,7 @@ struct rtpp_session_stat_last {
     uint32_t duplicates;
     uint32_t base_ts;
     uint16_t seq;
+    uint8_t pt;
     double base_rtime;
 };
 
