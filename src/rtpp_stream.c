@@ -354,7 +354,7 @@ static const char *
 rtpp_stream_get_proto(struct rtpp_stream *self)
 {
 
-    return ((self->session_type == SESS_RTP) ? "RTP" : "RTCP");
+    return (ST_NAME(self->session_type));
 }
 
 static int
