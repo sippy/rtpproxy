@@ -99,6 +99,17 @@ rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)
     return (pvt->node_id);
 }
 
+#define SFX_O "_ino"
+#define SFX_A "_ina"
+
+#define PT_NAME "rtpa_pt_last"
+#define PT_NAME_O PT_NAME SFX_O
+#define PT_NAME_A PT_NAME SFX_A
+
+#define PT_FMT "%d"
+#define SNCHG_FMT "%lu"
+#define SEP ","
+
 static int
 rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
 {
@@ -127,9 +138,9 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
           "rtp_nrelayed,rtp_ndropped,rtcp_npkts_ina,rtcp_npkts_ino,"
           "rtcp_nrelayed,rtcp_ndropped,rtpa_nsent_ino,rtpa_nrcvd_ino,"
           "rtpa_ndups_ino,rtpa_nlost_ino,rtpa_perrs_ino,"
-          "rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino,rtpa_nsent_ina,"
-          "rtpa_nrcvd_ina,rtpa_ndups_ina,rtpa_nlost_ina,rtpa_perrs_ina,"
-          "rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina,"
+          "rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino" SEP PT_NAME_O SEP
+          "rtpa_nsent_ina,rtpa_nrcvd_ina,rtpa_ndups_ina,rtpa_nlost_ina,"
+          "rtpa_perrs_ina,rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina" SEP PT_NAME_A SEP
           "rtpa_jitter_last_ino,rtpa_jitter_max_ino,rtpa_jitter_avg_ino,"
           "rtpa_jitter_last_ina,rtpa_jitter_max_ina,rtpa_jitter_avg_ina\n");
         if (len <= 0) {
@@ -214,8 +225,9 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
     }
 
     len = mod_asprintf(&buf, "%s,%d,%" PRId64 ",%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
-      "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu," SSRC_FMT ",%lu,%lu,%lu,%lu,"
-      "%lu,%lu," SSRC_FMT ",%lu" ",%f,%f,%f,%f,%f,%f" "\n", rtpp_acct_get_nid(pvt, acct),
+      "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu" SEP SSRC_FMT SEP SNCHG_FMT SEP
+      PT_FMT SEP "%lu,%lu,%lu,%lu,%lu" SEP SSRC_FMT SEP SNCHG_FMT SEP PT_FMT SEP
+      "%f,%f,%f,%f,%f,%f" "\n", rtpp_acct_get_nid(pvt, acct),
       pvt->pid, acct->seuid, ES_IF_NULL(acct->call_id), ES_IF_NULL(acct->from_tag),
       MT2RT_NZ(acct->init_ts), MT2RT_NZ(acct->destroy_ts), MT2RT_NZ(acct->pso_rtp->first_pkt_rcv),
       MT2RT_NZ(acct->pso_rtp->last_pkt_rcv), MT2RT_NZ(acct->psa_rtp->first_pkt_rcv),
@@ -223,9 +235,9 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
       acct->pcnts_rtp->nrelayed, acct->pcnts_rtp->ndropped, acct->psa_rtcp->npkts_in,
       acct->pso_rtcp->npkts_in, acct->pcnts_rtcp->nrelayed, acct->pcnts_rtcp->ndropped,
       acct->rasto->psent, acct->rasto->precvd, acct->rasto->pdups, acct->rasto->plost,
-      acct->rasto->pecount, acct->rasto->last_ssrc, acct->rasto->ssrc_changes,
+      acct->rasto->pecount, acct->rasto->last_ssrc, acct->rasto->ssrc_changes, acct->rasto->last_pt,
       acct->rasta->psent, acct->rasta->precvd, acct->rasta->pdups, acct->rasta->plost,
-      acct->rasta->pecount, acct->rasta->last_ssrc, acct->rasta->ssrc_changes,
+      acct->rasta->pecount, acct->rasta->last_ssrc, acct->rasta->ssrc_changes, acct->rasta->last_pt,
       acct->jrasto->jlast, acct->jrasto->jmax, acct->jrasto->javg,
       acct->jrasta->jlast, acct->jrasta->jmax, acct->jrasta->javg);
     if (len <= 0) {
