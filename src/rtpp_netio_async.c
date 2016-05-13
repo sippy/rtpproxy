@@ -239,6 +239,43 @@ rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
     return (0);
 }
 
+int
+rtpp_anetio_send_pkt_na(struct sthread_args *sender, int sock, \
+  struct rtpp_netaddr *sendto, struct rtp_packet *pkt,
+  struct rtpp_refcnt *sock_rcnt, struct rtpp_log *plog)
+{
+    struct rtpp_wi *wi;
+    int nsend;
+
+    if (sender->dmode != 0 && pkt->size < LBR_THRS) {
+        nsend = 2;
+    } else {
+        nsend = 1;
+    }
+
+    wi = rtpp_wi_malloc_pkt_na(sock, pkt, sendto, nsend, sock_rcnt);
+    if (wi == NULL) {
+        rtp_packet_free(pkt);
+        return (-1);
+    }
+    /*
+     * rtpp_wi_malloc_pkt() consumes pkt and returns wi, so no need to
+     * call rtp_packet_free() here.
+     */
+#if RTPP_DEBUG_netio >= 2
+    wi->debug = 1;
+    if (plog == NULL) {
+        plog = sender->glog;
+    }
+    CALL_METHOD(plog->rcnt, incref);
+    wi->log = plog;
+    RTPP_LOG(plog, RTPP_LOG_DBUG, "send_pkt(%d, %p, %d, %d, %p, %d)",
+      wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
+#endif
+    rtpp_queue_put_item(wi, sender->out_q);
+    return (0);
+}
+
 struct sthread_args *
 rtpp_anetio_pick_sender(struct rtpp_anetio_cf *netio_cf)
 {
