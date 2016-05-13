@@ -32,6 +32,7 @@ struct rtpp_wi;
 struct rtp_packet;
 struct rtpp_refcnt;
 struct sockaddr;
+struct rtpp_netaddr;
 
 enum rtpp_wi_type {RTPP_WI_TYPE_OPKT = 0, RTPP_WI_TYPE_SGNL = 1,
   RTPP_WI_TYPE_API_STR = 2, RTPP_WI_TYPE_DATA = 3};
@@ -40,6 +41,8 @@ struct rtpp_wi *rtpp_wi_malloc(int, const void *, size_t, int,
   const struct sockaddr *, size_t);
 struct rtpp_wi *rtpp_wi_malloc_pkt(int, struct rtp_packet *,
   const struct sockaddr *, size_t, int, struct rtpp_refcnt *);
+struct rtpp_wi *rtpp_wi_malloc_pkt_na(int, struct rtp_packet *,
+  struct rtpp_netaddr *, int, struct rtpp_refcnt *);
 enum rtpp_wi_type rtpp_wi_get_type(struct rtpp_wi *);
 void *rtpp_wi_sgnl_get_data(struct rtpp_wi *, size_t *);
 int rtpp_wi_sgnl_get_signum(struct rtpp_wi *);

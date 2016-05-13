@@ -40,6 +40,7 @@
 #include "rtpp_network.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
+#include "rtpp_netaddr.h"
 
 struct rtpp_wi_sendto {
     struct rtpp_wi wi;
@@ -93,6 +94,30 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
     wi->sendto = sstosa(&pkt->raddr);
     wi->tolen = tolen;
     memcpy(wi->sendto, sendto, tolen);
+    wi->nsend = nsend;
+    return (wi);
+}
+
+struct rtpp_wi *
+rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
+  struct rtpp_netaddr *sendto, int nsend,
+  struct rtpp_refcnt *sock_rcnt)
+{
+    struct rtpp_wi *wi;
+
+    wi = &(pkt->wi);
+    wi->free_ptr = (struct rtpp_wi *)pkt;
+    wi->wi_type = RTPP_WI_TYPE_OPKT;
+    wi->sock = sock;
+    if (sock_rcnt != NULL) {
+        CALL_METHOD(sock_rcnt, incref);
+    }
+    wi->sock_rcnt = sock_rcnt;
+    wi->flags = 0;
+    wi->msg = pkt->data.buf;
+    wi->msg_len = pkt->size;
+    wi->sendto = sstosa(&pkt->raddr);
+    wi->tolen = CALL_SMETHOD(sendto, get, wi->sendto, sizeof(pkt->raddr));
     wi->nsend = nsend;
     return (wi);
 }
