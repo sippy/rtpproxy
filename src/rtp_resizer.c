@@ -40,6 +40,7 @@
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_ssrc.h"
 
 struct rtp_resizer {
     int         nsamples_total;
@@ -47,8 +48,7 @@ struct rtp_resizer {
     int         seq_initialized;
     uint16_t    seq;
 
-    int         ssrc_inited;
-    uint32_t    ssrc;
+    struct rtpp_ssrc ssrc;
 
     int         last_sent_ts_inited;
     uint32_t    last_sent_ts;
@@ -149,12 +149,12 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt,
     if ((*pkt)->parsed->nsamples == RTP_NSAMPLES_UNKNOWN)
         return;
 
-    if (!this->ssrc_inited) {
-        this->ssrc = p->parsed->ssrc;
-        this->ssrc_inited = 1;
-    } else if (this->ssrc != p->parsed->ssrc) {
+    if (!this->ssrc.inited) {
+        this->ssrc.val = p->parsed->ssrc;
+        this->ssrc.inited = 1;
+    } else if (this->ssrc.val != p->parsed->ssrc) {
         /* SSRC has been changed, TS and SEQ are no longer contiuous */
-        this->ssrc = p->parsed->ssrc;
+        this->ssrc.val = p->parsed->ssrc;
         this->last_sent_ts_inited = 0;
         this->tsdelta_inited = 0;
     }
