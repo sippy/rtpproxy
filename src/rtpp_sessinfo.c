@@ -77,7 +77,7 @@ static void rtpp_sinfo_update(struct rtpp_sessinfo *, struct rtpp_session *,
 static void rtpp_sinfo_remove(struct rtpp_sessinfo *, struct rtpp_session *,
   int);
 static int rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *, struct rtpp_polltbl *,
-  int session_type);
+  int);
 static void rtpp_sessinfo_dtor(struct rtpp_sessinfo_priv *);
 
 #define PUB2PVT(pubp) \
@@ -330,7 +330,7 @@ rtpp_polltbl_free(struct rtpp_polltbl *ptbl)
 
 static int
 rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
-  struct rtpp_polltbl *ptbl, int session_type)
+  struct rtpp_polltbl *ptbl, int pipe_type)
 {
     struct rtpp_sessinfo_priv *pvt;
     struct pollfd *pfds;
@@ -341,7 +341,7 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
     pvt = PUB2PVT(sessinfo);
 
     pthread_mutex_lock(&pvt->lock);
-    hp = (session_type == SESS_RTP) ? &pvt->hst_rtp : &pvt->hst_rtcp;
+    hp = (pipe_type == PIPE_RTP) ? &pvt->hst_rtp : &pvt->hst_rtcp;
 
     if (hp->ulen == 0) {
         pthread_mutex_unlock(&pvt->lock);
