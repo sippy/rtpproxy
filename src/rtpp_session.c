@@ -100,13 +100,13 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     }
     CALL_METHOD(log, setlevel, cfs->log_level);
     pub->rtp = rtpp_pipe_ctor(pub->seuid, cfs->rtp_streams_wrt,
-      cfs->servers_wrt, log, cfs->rtpp_stats, SESS_RTP);
+      cfs->servers_wrt, log, cfs->rtpp_stats, PIPE_RTP);
     if (pub->rtp == NULL) {
         goto e2;
     }
     /* spb is RTCP twin session for this one. */
     pub->rtcp = rtpp_pipe_ctor(pub->seuid, cfs->rtcp_streams_wrt,
-      cfs->servers_wrt, log, cfs->rtpp_stats, SESS_RTCP);
+      cfs->servers_wrt, log, cfs->rtpp_stats, PIPE_RTCP);
     if (pub->rtcp == NULL) {
         goto e3;
     }
@@ -203,8 +203,6 @@ e0:
 static void
 rtpp_session_dtor(struct rtpp_session_priv *pvt)
 {
-    struct rtpps_pcount *pcnts;
-    struct rtpp_pcnts_strm *pso_rtp, *psa_rtp, *pso_rtcp, *psa_rtcp;
     int i;
     double session_time;
     struct rtpp_session *pub;
@@ -213,47 +211,11 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     pvt->acct->destroy_ts = getdtime();
     session_time = pvt->acct->destroy_ts - pvt->acct->init_ts;
 
-    CALL_METHOD(pub->rtp->pcount, get_stats, pvt->acct->pcnts_rtp);
-    pcnts = pvt->acct->pcnts_rtp;
-    CALL_METHOD(pub->rtp->stream[0]->pcnt_strm, get_stats, pvt->acct->pso_rtp);
-    pso_rtp = pvt->acct->pso_rtp;
-    CALL_METHOD(pub->rtp->stream[1]->pcnt_strm, get_stats, pvt->acct->psa_rtp);
-    psa_rtp = pvt->acct->psa_rtp;
-    RTPP_LOG(pub->log, RTPP_LOG_INFO, "RTP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped, %lu ignored", pso_rtp->npkts_in,
-      psa_rtp->npkts_in, pcnts->nrelayed, pcnts->ndropped, pcnts->nignored);
-    if (pso_rtp->first_pkt_rcv > 0.0) {
-        RTPP_LOG(pub->log, RTPP_LOG_INFO, "RTP times: caller: first in at %f, "
-          "duration %f, longest IPI %f", MT2RT_NZ(pso_rtp->first_pkt_rcv),
-          DRTN_NZ(pso_rtp->first_pkt_rcv, pso_rtp->last_pkt_rcv),
-          pso_rtp->longest_ipi);
-    }
-    if (psa_rtp->first_pkt_rcv > 0.0) {
-        RTPP_LOG(pub->log, RTPP_LOG_INFO, "RTP times: callee: first in at %f, "
-          "duration %f, longest IPI %f", MT2RT_NZ(psa_rtp->first_pkt_rcv),
-          DRTN_NZ(psa_rtp->first_pkt_rcv, psa_rtp->last_pkt_rcv),
-          psa_rtp->longest_ipi);
-    }
-    CALL_METHOD(pub->rtcp->pcount, get_stats, pvt->acct->pcnts_rtcp);
-    pcnts = pvt->acct->pcnts_rtcp;
-    CALL_METHOD(pub->rtcp->stream[0]->pcnt_strm, get_stats, pvt->acct->pso_rtcp);
-    pso_rtcp = pvt->acct->pso_rtcp;
-    CALL_METHOD(pub->rtcp->stream[1]->pcnt_strm, get_stats, pvt->acct->psa_rtcp);
-    psa_rtcp = pvt->acct->psa_rtcp;
-    RTPP_LOG(pub->log, RTPP_LOG_INFO, "RTCP stats: %lu in from callee, %lu "
-      "in from caller, %lu relayed, %lu dropped, %lu ignored", pso_rtcp->npkts_in,
-      psa_rtcp->npkts_in, pcnts->nrelayed, pcnts->ndropped, pcnts->nignored);
+    CALL_METHOD(pub->rtp, get_stats, &pvt->acct->rtp);
+    CALL_METHOD(pub->rtcp, get_stats, &pvt->acct->rtcp);
     if (pub->complete != 0) {
-        if (pso_rtp->npkts_in == 0 && psa_rtp->npkts_in == 0) {
-            CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_nortp", 1);
-        } else if (pso_rtp->npkts_in == 0 || psa_rtp->npkts_in == 0) {
-            CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_owrtp", 1);
-        }
-        if (pso_rtcp->npkts_in == 0 && psa_rtcp->npkts_in == 0) {
-            CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_nortcp", 1);
-        } else if (pso_rtcp->npkts_in == 0 || psa_rtcp->npkts_in == 0) {
-            CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_owrtcp", 1);
-        }
+        CALL_METHOD(pub->rtp, upd_cntrs, &pvt->acct->rtp);
+        CALL_METHOD(pub->rtcp, upd_cntrs, &pvt->acct->rtcp);
     }
     RTPP_LOG(pub->log, RTPP_LOG_INFO, "session on ports %d/%d is cleaned up",
       pub->rtp->stream[0]->port, pub->rtp->stream[1]->port);
