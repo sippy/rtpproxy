@@ -61,6 +61,8 @@ static int rtpp_socket_setnonblock(struct rtpp_socket *);
 static int rtpp_socket_settimestamp(struct rtpp_socket *);
 static int rtpp_socket_send_pkt(struct rtpp_socket *, struct sthread_args *,
   const struct sockaddr *, int, struct rtp_packet *, struct rtpp_log *);
+static int rtpp_socket_send_pkt_na(struct rtpp_socket *, struct sthread_args *,
+  struct rtpp_netaddr *, struct rtp_packet *, struct rtpp_log *);
 static struct rtp_packet * rtpp_socket_rtp_recv_simple(struct rtpp_socket *,
   double, struct sockaddr *, int);
 static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *, double,
@@ -97,6 +99,7 @@ rtpp_socket_ctor(int domain, int type)
     pvt->pub.setnonblock = &rtpp_socket_setnonblock;
     pvt->pub.settimestamp = &rtpp_socket_settimestamp;
     pvt->pub.send_pkt = &rtpp_socket_send_pkt;
+    pvt->pub.send_pkt_na = &rtpp_socket_send_pkt_na;
     pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_simple;
     pvt->pub.getfd = &rtpp_socket_getfd;
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_dtor,
@@ -185,6 +188,18 @@ rtpp_socket_send_pkt(struct rtpp_socket *self, struct sthread_args *str,
 
     pvt = PUB2PVT(self);
     return (rtpp_anetio_send_pkt(str, pvt->fd, daddr, addrlen, pkt,
+      self->rcnt, log));
+}
+
+static int
+rtpp_socket_send_pkt_na(struct rtpp_socket *self, struct sthread_args *str,
+  struct rtpp_netaddr *daddr, struct rtp_packet *pkt,
+  struct rtpp_log *log)
+{
+    struct rtpp_socket_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    return (rtpp_anetio_send_pkt_na(str, pvt->fd, daddr, pkt,
       self->rcnt, log));
 }
 
