@@ -144,20 +144,21 @@ am__rtpproxy_SOURCES_DIST = main.c rtp.h rtpp_server.c rtpp_server.h \
 	rtpp_command_delete.h rtpp_command_record.c \
 	rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h \
 	rtpp_acct.c rtpp_acct.h rtpp_bindaddrs.c rtpp_bindaddrs.h \
-	rtpp_ssrc.h rtpp_netaddr.c rtpp_netaddr.h rtpp_module_if.c \
-	rtpp_module_if.h rtpp_module.h rtpp_timed_fin.c \
-	rtpp_timed_fin.h rtpp_stream_fin.c rtpp_stream_fin.h \
-	rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
-	rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
-	rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h \
-	rtpp_socket_fin.c rtpp_socket_fin.h rtpp_record_fin.c \
-	rtpp_record_fin.h rtpp_ttl_fin.c rtpp_ttl_fin.h \
-	rtpp_pipe_fin.c rtpp_pipe_fin.h rtpp_pcount_fin.c \
-	rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h \
-	rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c rtpp_ringbuf_fin.c \
-	rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c \
-	rtpp_port_table_fin.c rtpp_port_table_fin.h rtpp_acct_fin.c \
-	rtpp_acct_fin.h rtpp_netaddr_fin.c rtpp_netaddr_fin.h
+	rtpp_ssrc.h rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h \
+	rtpp_module_if.c rtpp_module_if.h rtpp_module.h \
+	rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
+	rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h \
+	rtpp_refcnt_fin.c rtpp_refcnt_fin.h rtpp_log_obj_fin.c \
+	rtpp_log_obj_fin.h rtpp_command_rcache_fin.c \
+	rtpp_command_rcache_fin.h rtpp_socket_fin.c rtpp_socket_fin.h \
+	rtpp_record_fin.c rtpp_record_fin.h rtpp_ttl_fin.c \
+	rtpp_ttl_fin.h rtpp_pipe_fin.c rtpp_pipe_fin.h \
+	rtpp_pcount_fin.c rtpp_pcount_fin.h rtpp_sessinfo_fin.c \
+	rtpp_sessinfo_fin.h rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c \
+	rtpp_ringbuf_fin.c rtpp_ringbuf_fin.h rtpp_module_if_fin.h \
+	rtpp_module_if_fin.c rtpp_port_table_fin.c \
+	rtpp_port_table_fin.h rtpp_acct_fin.c rtpp_acct_fin.h \
+	rtpp_netaddr_fin.c rtpp_netaddr_fin.h
 @ENABLE_MODULE_IF_TRUE@am__objects_1 = rtpp_module_if.$(OBJEXT)
 am__objects_2 = main.$(OBJEXT) rtpp_server.$(OBJEXT) \
 	rtpp_record.$(OBJEXT) rtpp_util.$(OBJEXT) rtp.$(OBJEXT) \
@@ -246,23 +247,23 @@ am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_command_delete.h rtpp_command_record.c \
 	rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h \
 	rtpp_acct.c rtpp_acct.h rtpp_bindaddrs.c rtpp_bindaddrs.h \
-	rtpp_ssrc.h rtpp_netaddr.c rtpp_netaddr.h rtpp_module_if.c \
-	rtpp_module_if.h rtpp_module.h rtpp_timed_fin.c \
-	rtpp_timed_fin.h rtpp_stream_fin.c rtpp_stream_fin.h \
-	rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
-	rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
-	rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h \
-	rtpp_socket_fin.c rtpp_socket_fin.h rtpp_record_fin.c \
-	rtpp_record_fin.h rtpp_ttl_fin.c rtpp_ttl_fin.h \
-	rtpp_pipe_fin.c rtpp_pipe_fin.h rtpp_pcount_fin.c \
-	rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h \
-	rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c rtpp_ringbuf_fin.c \
-	rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c \
-	rtpp_port_table_fin.c rtpp_port_table_fin.h rtpp_acct_fin.c \
-	rtpp_acct_fin.h rtpp_netaddr_fin.c rtpp_netaddr_fin.h \
-	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
-	rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c \
-	rtpp_stacktrace.h
+	rtpp_ssrc.h rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h \
+	rtpp_module_if.c rtpp_module_if.h rtpp_module.h \
+	rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
+	rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h \
+	rtpp_refcnt_fin.c rtpp_refcnt_fin.h rtpp_log_obj_fin.c \
+	rtpp_log_obj_fin.h rtpp_command_rcache_fin.c \
+	rtpp_command_rcache_fin.h rtpp_socket_fin.c rtpp_socket_fin.h \
+	rtpp_record_fin.c rtpp_record_fin.h rtpp_ttl_fin.c \
+	rtpp_ttl_fin.h rtpp_pipe_fin.c rtpp_pipe_fin.h \
+	rtpp_pcount_fin.c rtpp_pcount_fin.h rtpp_sessinfo_fin.c \
+	rtpp_sessinfo_fin.h rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c \
+	rtpp_ringbuf_fin.c rtpp_ringbuf_fin.h rtpp_module_if_fin.h \
+	rtpp_module_if_fin.c rtpp_port_table_fin.c \
+	rtpp_port_table_fin.h rtpp_acct_fin.c rtpp_acct_fin.h \
+	rtpp_netaddr_fin.c rtpp_netaddr_fin.h rtpp_memdeb.c \
+	rtpp_memdeb.h rtpp_memdeb_internal.h rtpp_memdeb_stats.h \
+	rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
 @ENABLE_MODULE_IF_TRUE@am__objects_4 = rtpproxy_debug-rtpp_module_if.$(OBJEXT)
 am__objects_5 = rtpproxy_debug-main.$(OBJEXT) \
 	rtpproxy_debug-rtpp_server.$(OBJEXT) \
@@ -581,7 +582,7 @@ BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h \
 	rtpp_acct.c rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c \
 	rtpp_bindaddrs.h rtpp_ssrc.h rtpp_netaddr.c rtpp_netaddr.h \
-	$(am__append_1)
+	rtpp_acct_pipe.h $(am__append_1)
 rtpproxy_LDADD = -lm -lpthread $(am__append_2)
 rtpproxy_debug_LDADD = ${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
   @LIBS_DL@
