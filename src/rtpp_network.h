@@ -35,11 +35,11 @@ struct cfg;
 struct timeval;
 
 /* Function prototypes */
-int ishostseq(struct sockaddr *, struct sockaddr *);
-int ishostnull(struct sockaddr *);
-uint16_t getport(struct sockaddr *);
-uint16_t getnport(struct sockaddr *);
-int isaddrseq(struct sockaddr *ia1, struct sockaddr *ia2);
+int ishostseq(const struct sockaddr *, const struct sockaddr *);
+int ishostnull(const struct sockaddr *);
+uint16_t getport(const struct sockaddr *);
+uint16_t getnport(const struct sockaddr *);
+int isaddrseq(const struct sockaddr *ia1, const struct sockaddr *ia2);
 int isaddreq(struct sockaddr *ia1, struct sockaddr *ia2);
 void setport(struct sockaddr *, int);
 void setanyport(struct sockaddr *);
@@ -47,7 +47,7 @@ char *addr2char_r(struct sockaddr *, char *buf, int size);
 char *addrport2char_r(struct sockaddr *, char *buf, int size);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
-int local4remote(struct sockaddr *, struct sockaddr_storage *);
+int local4remote(const struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, char **, char **, int *);
 int setbindhost(struct sockaddr *, int, const char *, const char *);
 ssize_t recvfromto(int, void *, size_t, struct sockaddr *,

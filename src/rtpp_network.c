@@ -45,7 +45,7 @@
 #include "rtpp_util.h"
 
 int
-ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
+ishostseq(const struct sockaddr *ia1, const struct sockaddr *ia2)
 {
 
     if (ia1->sa_family != ia2->sa_family)
@@ -69,7 +69,7 @@ ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
 }
 
 int
-ishostnull(struct sockaddr *ia)
+ishostnull(const struct sockaddr *ia)
 {
     struct in6_addr *ap;
 
@@ -92,14 +92,14 @@ ishostnull(struct sockaddr *ia)
 }
 
 uint16_t
-getport(struct sockaddr *ia)
+getport(const struct sockaddr *ia)
 {
 
     return (ntohs(getnport(ia)));
 }
 
 uint16_t
-getnport(struct sockaddr *ia)
+getnport(const struct sockaddr *ia)
 {
 
     switch (ia->sa_family) {
@@ -117,7 +117,7 @@ getnport(struct sockaddr *ia)
 }
 
 int
-isaddrseq(struct sockaddr *ia1, struct sockaddr *ia2)
+isaddrseq(const struct sockaddr *ia1, const struct sockaddr *ia2)
 {
 
     if (ishostseq(ia1, ia2) == 0)
@@ -287,7 +287,7 @@ rtpp_in_cksum(void *p, int len)
 }
 
 int
-local4remote(struct sockaddr *ra, struct sockaddr_storage *la)
+local4remote(const struct sockaddr *ra, struct sockaddr_storage *la)
 {
     int s, r;
     socklen_t llen;
