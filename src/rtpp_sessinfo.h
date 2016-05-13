@@ -41,7 +41,7 @@ DEFINE_METHOD(rtpp_sessinfo, rtpp_si_update, void, struct rtpp_session *,
 DEFINE_METHOD(rtpp_sessinfo, rtpp_si_remove, void, struct rtpp_session *,
   int);
 DEFINE_METHOD(rtpp_sessinfo, rtpp_si_sync_polltbl, int, struct rtpp_polltbl *,
-  int session_type);
+  int);
 
 struct rtpp_polltbl_mdata;
 
