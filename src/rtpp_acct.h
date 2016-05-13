@@ -32,14 +32,14 @@ struct rtpps_pcount;
 struct rtpp_pcnts_strm;
 struct rtpa_stats;
 
+#if rtpp_acct_h_fin
+#include "rtpp_acct_pipe.h"
+#endif
+
 struct rtpp_acct {
     uint64_t seuid;
-    struct rtpps_pcount *pcnts_rtp;
-    struct rtpps_pcount *pcnts_rtcp;
-    struct rtpp_pcnts_strm *pso_rtp;
-    struct rtpp_pcnts_strm *psa_rtp;
-    struct rtpp_pcnts_strm *pso_rtcp;
-    struct rtpp_pcnts_strm *psa_rtcp;
+    struct rtpp_acct_pipe rtp;
+    struct rtpp_acct_pipe rtcp;
     struct rtpa_stats *rasto;
     struct rtpa_stats *rasta;
     struct rtpa_stats_jitter *jrasto;
