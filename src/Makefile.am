@@ -78,8 +78,8 @@ rtpp_timed_fin.c: genfincode.sh rtpp_timed.h
 
 rtpp_timed_fin.h: rtpp_timed_fin.c
 
-rtpp_stream_fin.c: $(GENFINCODE) rtpp_stream.h
-	$(GENFINCODE) rtpp_stream.h rtpp_stream_fin.h rtpp_stream_fin.c
+rtpp_stream_fin.c: $(GENFINCODE_S) rtpp_stream.h
+	$(GENFINCODE_S) rtpp_stream.h rtpp_stream_fin.h rtpp_stream_fin.c
 
 rtpp_stream_fin.h: rtpp_stream_fin.c
 
