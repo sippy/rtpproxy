@@ -33,7 +33,7 @@ struct rtpa_stats {
     unsigned long ssrc_changes;
     unsigned long pecount;
     unsigned long aecount;
-    uint32_t last_ssrc;
+    struct rtpp_ssrc last_ssrc;
     int8_t last_pt;
 };
 
