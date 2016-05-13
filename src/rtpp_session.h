@@ -64,11 +64,6 @@ struct rtpp_session {
 struct cfg;
 struct cfg_stable;
 
-#define	SESS_RTP	1
-#define	SESS_RTCP	2
-
-#define ST_NAME(s)      (((s) == SESS_RTP) ? "RTP" : "RTCP")
-
 int compare_session_tags(const char *, const char *, unsigned *);
 int find_stream(struct cfg *, const char *, const char *, const char *,
   struct rtpp_session **);
