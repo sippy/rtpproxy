@@ -31,6 +31,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_types.h"
 #include "rtpp_analyzer.h"
@@ -41,13 +42,22 @@
 #include "rtpp_acct.h"
 #include "rtpp_acct_fin.h"
 
+struct rtpp_acct_face_s {
+    struct rtpp_pcnts_strm ps;
+#if 0
+    struct rtpp_rinfo_strm pri;
+#endif
+};
+
+struct rtpp_acct_pipe_s {
+    struct rtpp_acct_face_s o;
+    struct rtpp_acct_face_s a;
+    struct rtpps_pcount pcnts;
+};
+
 struct rtpp_acct_priv {
-    struct rtpps_pcount _pcnts_rtp;
-    struct rtpps_pcount _pcnts_rtcp;
-    struct rtpp_pcnts_strm _pso_rtp;
-    struct rtpp_pcnts_strm _psa_rtp;
-    struct rtpp_pcnts_strm _pso_rtcp;
-    struct rtpp_pcnts_strm _psa_rtcp;
+    struct rtpp_acct_pipe_s _rtp;
+    struct rtpp_acct_pipe_s _rtcp;
     struct rtpa_stats _rasto;
     struct rtpa_stats _rasta;
     struct rtpa_stats_jitter _jrasto;
@@ -72,12 +82,12 @@ rtpp_acct_ctor(uint64_t seuid)
     }
     pvt->pub.seuid = seuid;
     pvt->pub.rcnt = rcnt;
-    pvt->pub.pcnts_rtp = &pvt->_pcnts_rtp;
-    pvt->pub.pcnts_rtcp = &pvt->_pcnts_rtcp;
-    pvt->pub.pso_rtp = &pvt->_pso_rtp;
-    pvt->pub.psa_rtp = &pvt->_psa_rtp;
-    pvt->pub.pso_rtcp = &pvt->_pso_rtcp;
-    pvt->pub.psa_rtcp = &pvt->_psa_rtcp;
+    pvt->pub.rtp.pcnts = &pvt->_rtp.pcnts;
+    pvt->pub.rtcp.pcnts = &pvt->_rtcp.pcnts;
+    pvt->pub.rtp.o.ps = &pvt->_rtp.o.ps;
+    pvt->pub.rtp.a.ps = &pvt->_rtp.a.ps;
+    pvt->pub.rtcp.o.ps = &pvt->_rtcp.o.ps;
+    pvt->pub.rtcp.a.ps = &pvt->_rtcp.a.ps;
     pvt->pub.rasto = &pvt->_rasto;
     pvt->pub.rasta = &pvt->_rasta;
     pvt->pub.jrasto = &pvt->_jrasto;
