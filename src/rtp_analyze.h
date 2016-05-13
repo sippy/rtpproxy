@@ -32,7 +32,6 @@
 struct rtpp_log;
 struct rtpa_stats_jitter;
 
-#define SSRC_FMT "0x%.8X"
 #define PT_UNKN 128
 
 struct rtpp_session_stat_last {
@@ -40,7 +39,7 @@ struct rtpp_session_stat_last {
     uint32_t min_seq;
     uint32_t max_seq;
     uint32_t seq_offset;
-    uint32_t ssrc;
+    struct rtpp_ssrc ssrc;
     uint32_t seen[4096];
     uint32_t duplicates;
     uint32_t base_ts;
