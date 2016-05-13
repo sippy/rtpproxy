@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_debug.h"
 #include "rtpp_mallocs.h"
@@ -39,7 +40,6 @@
 #include "rtpp_log_obj.h"
 #include "rtp_info.h"
 #include "rtp.h"
-#include "rtpp_ssrc.h"
 #include "rtp_analyze.h"
 #include "rtpp_math.h"
 #include "rtpp_refcnt.h"
