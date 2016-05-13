@@ -42,5 +42,6 @@ struct rtpp_type_linkable {
 #define DEFINE_RAW_METHOD(func, rval, args...) typedef rval (*func##_t)(args)
 #define METHOD_ENTRY(func, epname) func##_t epname
 #define CALL_METHOD(obj, method, args...) (obj)->method(obj, ## args)
+#define CALL_SMETHOD(obj, method, args...) (obj)->smethods->method(obj, ## args)
 
 #endif
