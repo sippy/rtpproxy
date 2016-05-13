@@ -26,6 +26,8 @@
  *
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -36,6 +38,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_defines.h"
 #include "rtpp_log.h"
@@ -62,6 +65,15 @@
 #include "rtpp_socket.h"
 #include "rtpp_weakref.h"
 #include "rtpp_ttl.h"
+#include "rtpp_pipe.h"
+#include "rtpp_netaddr.h"
+#include "rtpp_debug.h"
+
+struct rtpps_latch {
+    int latched;
+    struct rtpp_ssrc ssrc;
+    int seq;
+};
 
 struct rtpp_stream_priv
 {
@@ -77,7 +89,9 @@ struct rtpp_stream_priv
     /* Flag that indicates whether or not address supplied by client can't be trusted */
     int untrusted_addr;
     /* Save previous address when doing update */
-    struct sockaddr *prev_addr;
+    struct rtpp_netaddr *raddr_prev;
+    /* Flag which tells if we are allowed to update address with RTP src IP */
+    struct rtpps_latch latch_info;
 };
 
 #define PUB2PVT(pubp) \
@@ -103,11 +117,34 @@ static void rtpp_stream_prefill_addr(struct rtpp_stream *,
   struct sockaddr **, double);
 static uint64_t rtpp_stream_get_rtps(struct rtpp_stream *);
 static void rtpp_stream_replace_rtps(struct rtpp_stream *, uint64_t, uint64_t);
+static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
+  struct rtp_packet *);
+static int rtpp_stream_islatched(struct rtpp_stream *);
+static void rtpp_stream_locklatch(struct rtpp_stream *);
+
+static const struct rtpp_stream_smethods rtpp_stream_smethods = {
+    .handle_play = &rtpp_stream_handle_play,
+    .handle_noplay = &rtpp_stream_handle_noplay,
+    .isplayer_active = &rtpp_stream_isplayer_active,
+    .finish_playback = &rtpp_stream_finish_playback,
+    .get_actor = &rtpp_stream_get_actor,
+    .get_proto = &rtpp_stream_get_proto,
+    .latch = &rtpp_stream_latch,
+    .check_latch_override = &rtpp_stream_check_latch_override,
+    .fill_addr = &rtpp_stream_fill_addr,
+    .prefill_addr = &rtpp_stream_prefill_addr,
+    .get_rtps = &rtpp_stream_get_rtps,
+    .replace_rtps = &rtpp_stream_replace_rtps,
+    .send_pkt = &rtpp_stream_send_pkt,
+    .guess_addr = &rtpp_stream_guess_addr,
+    .islatched = &rtpp_stream_islatched,
+    .locklatch = &rtpp_stream_locklatch
+};
 
 struct rtpp_stream *
 rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
   struct rtpp_stats *rtpp_stats, enum rtpp_stream_side side,
-  int session_type, uint64_t seuid)
+  int pipe_type, uint64_t seuid)
 {
     struct rtpp_stream_priv *pvt;
     struct rtpp_refcnt *rcnt;
@@ -120,7 +157,7 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
-    if (session_type == SESS_RTP) {
+    if (pipe_type == PIPE_RTP) {
         pvt->pub.analyzer = rtpp_analyzer_ctor(log);
         if (pvt->pub.analyzer == NULL) {
             goto e3;
@@ -130,35 +167,34 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     if (pvt->pub.pcnt_strm == NULL) {
         goto e4;
     }
+    pvt->raddr_prev = rtpp_netaddr_ctor();
+    if (pvt->raddr_prev == NULL) {
+        goto e5;
+    }
+    pvt->pub.rem_addr = rtpp_netaddr_ctor();
+    if (pvt->pub.rem_addr == NULL) {
+        goto e6;
+    }
     pvt->servers_wrt = servers_wrt;
     pvt->rtpp_stats = rtpp_stats;
     pvt->pub.log = log;
     CALL_METHOD(log->rcnt, incref);
     pvt->side = side;
-    pvt->pub.session_type = session_type;
-    pvt->pub.handle_play = &rtpp_stream_handle_play;
-    pvt->pub.handle_noplay = &rtpp_stream_handle_noplay;
-    pvt->pub.isplayer_active = &rtpp_stream_isplayer_active;
-    pvt->pub.finish_playback = &rtpp_stream_finish_playback;
-    pvt->pub.get_actor = &rtpp_stream_get_actor;
-    pvt->pub.get_proto = &rtpp_stream_get_proto;
-    pvt->pub.latch = &rtpp_stream_latch;
-    pvt->pub.check_latch_override = &rtpp_stream_check_latch_override;
-    pvt->pub.fill_addr = &rtpp_stream_fill_addr;
-    pvt->pub.prefill_addr = &rtpp_stream_prefill_addr;
-    pvt->pub.get_rtps = &rtpp_stream_get_rtps;
-    pvt->pub.replace_rtps = &rtpp_stream_replace_rtps;
-    if (session_type == SESS_RTCP) {
-        pvt->pub.guess_addr = &rtpp_stream_guess_addr;
-    }
+    pvt->pub.pipe_type = pipe_type;
+    pvt->pub.smethods = &rtpp_stream_smethods;
+
     rtpp_gen_uid(&pvt->pub.stuid);
     pvt->pub.seuid = seuid;
     CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_dtor,
       pvt);
     return (&pvt->pub);
 
+e6:
+    CALL_METHOD(pvt->raddr_prev->rcnt, decref);
+e5:
+    CALL_METHOD(pvt->pub.pcnt_strm->rcnt, decref);
 e4:
-    if (session_type == SESS_RTP) {
+    if (pipe_type == PIPE_RTP) {
          CALL_METHOD(pvt->pub.analyzer->rcnt, decref);
     }
 e3:
@@ -185,7 +221,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          actor = rtpp_stream_get_actor(pub);
          CALL_METHOD(pub->analyzer, get_stats, &rst);
          if (rst.ssrc_changes != 0) {
-             snprintf(ssrc_buf, sizeof(ssrc_buf), SSRC_FMT, rst.last_ssrc);
+             snprintf(ssrc_buf, sizeof(ssrc_buf), SSRC_FMT, rst.last_ssrc.val);
              ssrc = ssrc_buf;
          } else {
              ssrc = "NONE";
@@ -210,10 +246,6 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     }
     if (pub->fd != NULL)
         CALL_METHOD(pub->fd->rcnt, decref);
-    if (pub->addr != NULL)
-        free(pub->addr);
-    if (pvt->prev_addr != NULL)
-        free(pvt->prev_addr);
     if (pub->codecs != NULL)
         free(pub->codecs);
     if (pvt->rtps != RTPP_UID_NONE)
@@ -228,6 +260,8 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     CALL_METHOD(pub->ttl->rcnt, decref);
     CALL_METHOD(pub->pcnt_strm->rcnt, decref);
     CALL_METHOD(pvt->pub.log->rcnt, decref);
+    CALL_METHOD(pvt->pub.rem_addr->rcnt, decref);
+    CALL_METHOD(pvt->raddr_prev->rcnt, decref);
 
     pthread_mutex_destroy(&pvt->lock);
     free(pvt);
@@ -354,7 +388,7 @@ static const char *
 rtpp_stream_get_proto(struct rtpp_stream *self)
 {
 
-    return (ST_NAME(self->session_type));
+    return (PP_NAME(self->pipe_type));
 }
 
 static int
@@ -375,25 +409,27 @@ rtpp_stream_latch(struct rtpp_stream *self, double dtime,
     actor = rtpp_stream_get_actor(self);
     ptype = rtpp_stream_get_proto(self);
 
-    if (self->session_type == SESS_RTP) {
+    if (self->pipe_type == PIPE_RTP) {
         if (rtp_packet_parse(packet) == RTP_PARSER_OK) {
-            self->latch_info.ssrc = packet->parsed->ssrc;
-            self->latch_info.seq = packet->parsed->seq;
+            pvt->latch_info.ssrc.val = packet->parsed->ssrc;
+            pvt->latch_info.ssrc.inited = 1;
+            pvt->latch_info.seq = packet->parsed->seq;
             snprintf(ssrc_buf, sizeof(ssrc_buf), SSRC_FMT, packet->parsed->ssrc);
             snprintf(seq_buf, sizeof(seq_buf), "%u", packet->parsed->seq);
             ssrc = ssrc_buf;
             seq = seq_buf;
         } else {
-            self->latch_info.ssrc = 0;
+            pvt->latch_info.ssrc.val = 0;
+            pvt->latch_info.ssrc.inited = 0;
             ssrc = seq = "INVALID";
         }
     } else {
-        self->latch_info.ssrc = 0;
+        pvt->latch_info.ssrc.inited = 0;
         ssrc = seq = "UNKNOWN";
     }
 
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
-    if (self->latch_info.latched == 0) {
+    if (pvt->latch_info.latched == 0) {
         relatch = "";
     } else {
         relatch = "re-";
@@ -401,7 +437,7 @@ rtpp_stream_latch(struct rtpp_stream *self, double dtime,
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address %slatched in: %s (%s), SSRC=%s, Seq=%s", actor, relatch,
       saddr, ptype, ssrc, seq);
-    self->latch_info.latched = 1;
+    pvt->latch_info.latched = 1;
     return (1);
 }
 
@@ -415,13 +451,13 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
 
     pvt = PUB2PVT(self);
 
-    if (self->session_type == SESS_RTCP || self->latch_info.ssrc == 0)
+    if (self->pipe_type == PIPE_RTCP || pvt->latch_info.ssrc.inited == 0)
         return (0);
     if (rtp_packet_parse(packet) != RTP_PARSER_OK)
         return (0);
-    if (packet->parsed->ssrc != self->latch_info.ssrc)
+    if (packet->parsed->ssrc != pvt->latch_info.ssrc.val)
         return (0);
-    if (packet->parsed->seq < self->latch_info.seq && self->latch_info.seq - packet->parsed->seq < 536)
+    if (packet->parsed->seq < pvt->latch_info.seq && pvt->latch_info.seq - packet->parsed->seq < 536)
         return (0);
 
     actor = rtpp_stream_get_actor(self);
@@ -429,10 +465,10 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address re-latched: %s (%s), SSRC=" SSRC_FMT ", Seq=%u->%u", actor,
-      saddr, "RTP", self->latch_info.ssrc, self->latch_info.seq,
+      saddr, "RTP", pvt->latch_info.ssrc.val, pvt->latch_info.seq,
       packet->parsed->seq);
 
-    self->latch_info.seq = packet->parsed->seq;
+    pvt->latch_info.seq = packet->parsed->seq;
     return (1);
 }
 
@@ -447,10 +483,10 @@ rtpp_stream_fill_addr(struct rtpp_stream *self,
     pvt = PUB2PVT(self);
 
     pvt->untrusted_addr = 1;
-    memcpy(self->addr, &packet->raddr, packet->rlen);
-    if (pvt->prev_addr == NULL || memcmp(pvt->prev_addr,
-      &packet->raddr, packet->rlen) != 0) {
-        self->latch_info.latched = 1;
+    CALL_SMETHOD(self->rem_addr, set, sstosa(&packet->raddr), packet->rlen);
+    if (CALL_SMETHOD(pvt->raddr_prev, isempty) ||
+      CALL_SMETHOD(pvt->raddr_prev, cmp, sstosa(&packet->raddr), packet->rlen) != 0) {
+        pvt->latch_info.latched = 1;
     }
 
     actor = rtpp_stream_get_actor(self);
@@ -468,28 +504,36 @@ rtpp_stream_guess_addr(struct rtpp_stream *self,
     int rport;
     const char *actor, *ptype;
     struct rtpp_stream_priv *pvt;
+    struct sockaddr_storage ta;
 
+    RTPP_DBG_ASSERT(self->pipe_type == PIPE_RTCP);
     pvt = PUB2PVT(self);
 
-    if (self->addr != NULL && ishostseq(self->addr, sstosa(&packet->raddr))) {
+    if (!CALL_SMETHOD(self->rem_addr, isempty) &&
+      CALL_SMETHOD(self->rem_addr, cmphost, sstosa(&packet->raddr))) {
         return (0);
     }
+#if 0
     if (self->addr == NULL) {
         self->addr = malloc(packet->rlen);
         if (self->addr == NULL) {
             return (-1);
         }
     }
+#endif
     actor = rtpp_stream_get_actor(self);
     ptype =  rtpp_stream_get_proto(self);
     rport = ntohs(satosin(&packet->raddr)->sin_port);
     if (IS_LAST_PORT(rport)) {
         return (-1);
     }
-    memcpy(self->addr, &packet->raddr, packet->rlen);
-    satosin(self->addr)->sin_port = htons(rport + 1);
+
+    memcpy(&ta, &packet->raddr, packet->rlen);
+    setport(sstosa(&ta), rport + 1);
+    
+    CALL_SMETHOD(self->rem_addr, set, sstosa(&ta), packet->rlen);
     /* Use guessed value as the only true one for asymmetric clients */
-    self->latch_info.latched = self->asymmetric;
+    pvt->latch_info.latched = self->asymmetric;
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "guessing %s port "
       "for %s to be %d", ptype, actor, rport + 1);
 
@@ -506,7 +550,7 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
 
     pvt = PUB2PVT(self);
 
-    if (self->addr != NULL)
+    if (!CALL_SMETHOD(self->rem_addr, isempty))
         pvt->last_update = dtime;
 
     /*
@@ -516,7 +560,8 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
      */
     if (pvt->untrusted_addr != 0)
         return;
-    if (self->addr != NULL && isaddrseq(self->addr, *iapp)) {
+    if (!CALL_SMETHOD(self->rem_addr, isempty) && CALL_SMETHOD(self->rem_addr,
+      isaddrseq, *iapp)) {
         return;
     }
 
@@ -525,17 +570,12 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
     ptype =  rtpp_stream_get_proto(self);
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "pre-filling %s's %s address "
       "with %s", actor, ptype, saddr);
-    if (self->addr != NULL) {
-        if (self->latch_info.latched != 0) {
-            if (pvt->prev_addr != NULL)
-                 free(pvt->prev_addr);
-            pvt->prev_addr = self->addr;
-        } else {
-            free(self->addr);
+    if (!CALL_SMETHOD(self->rem_addr, isempty)) {
+        if (pvt->latch_info.latched != 0) {
+            CALL_SMETHOD(pvt->raddr_prev, copy, self->rem_addr);
         }
     }
-    self->addr = *iapp;
-    *iapp = NULL;
+    CALL_SMETHOD(self->rem_addr, set, *iapp, SA_LEN(*iapp));
 }
 
 static uint64_t
@@ -561,5 +601,38 @@ rtpp_stream_replace_rtps(struct rtpp_stream *self, uint64_t rtps_old,
     if (pvt->rtps == rtps_old) {
         pvt->rtps = rtps_new;
     }
+    pthread_mutex_unlock(&pvt->lock);
+}
+
+static int
+rtpp_stream_send_pkt(struct rtpp_stream *self, struct sthread_args *sap,
+  struct rtp_packet *pkt)
+{
+
+    return (CALL_METHOD(self->fd, send_pkt_na, sap, self->rem_addr, pkt,
+      self->log));
+}
+
+static int
+rtpp_stream_islatched(struct rtpp_stream *self)
+{
+    struct rtpp_stream_priv *pvt;
+    int rval;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    rval = pvt->latch_info.latched;
+    pthread_mutex_unlock(&pvt->lock);
+    return (rval);
+}
+
+static void
+rtpp_stream_locklatch(struct rtpp_stream *self)
+{
+    struct rtpp_stream_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    pvt->latch_info.latched = 1;
     pthread_mutex_unlock(&pvt->lock);
 }
