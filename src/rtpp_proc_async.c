@@ -58,6 +58,7 @@
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
+#include "rtpp_pipe.h"
 
 struct rtpp_proc_async_cf {
     struct rtpp_proc_async pub;
@@ -231,11 +232,11 @@ rtpp_proc_async_run(void *arg)
             rtp_only = 1;
         }
 
-        CALL_METHOD(cf->stable->sessinfo, sync_polltbl, &ptbl_rtp, SESS_RTP);
+        CALL_METHOD(cf->stable->sessinfo, sync_polltbl, &ptbl_rtp, PIPE_RTP);
         nready_rtp = nready_rtcp = 0;
         if (ptbl_rtp.curlen > 0) {
             if (rtp_only == 0) {
-                CALL_METHOD(cf->stable->sessinfo, sync_polltbl, &ptbl_rtcp, SESS_RTCP);
+                CALL_METHOD(cf->stable->sessinfo, sync_polltbl, &ptbl_rtcp, PIPE_RTCP);
 #if RTPP_DEBUG_netio > 1
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for %d RTCP file descriptors", \
