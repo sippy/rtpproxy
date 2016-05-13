@@ -44,6 +44,7 @@
 #include "rtpp_analyzer.h"
 #include "rtpp_pcount.h"
 #include "rtpp_pcnt_strm.h"
+#include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
 #include "rtpp_module.h"
 
