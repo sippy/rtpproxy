@@ -31,9 +31,17 @@
 
 struct rtpp_stats;
 struct rtpp_pipe;
+struct rtpp_acct_pipe;
+
+#define PIPE_RTP        1
+#define PIPE_RTCP       2
+
+#define PP_NAME(t)      (((t) == PIPE_RTP) ? "RTP" : "RTCP")
 
 DEFINE_METHOD(rtpp_pipe, rtpp_pipe_get_ttl, int);
 DEFINE_METHOD(rtpp_pipe, rtpp_pipe_decr_ttl, void);
+DEFINE_METHOD(rtpp_pipe, rtpp_pipe_get_stats, void, struct rtpp_acct_pipe *);
+DEFINE_METHOD(rtpp_pipe, rtpp_pipe_upd_cntrs, void, struct rtpp_acct_pipe *);
 
 struct rtpp_pipe {
     /* Session for caller [0] and callee [1] */
@@ -52,6 +60,8 @@ struct rtpp_pipe {
 
     METHOD_ENTRY(rtpp_pipe_get_ttl, get_ttl);
     METHOD_ENTRY(rtpp_pipe_decr_ttl, decr_ttl);
+    METHOD_ENTRY(rtpp_pipe_get_stats, get_stats);
+    METHOD_ENTRY(rtpp_pipe_upd_cntrs, upd_cntrs);
 };
 
 struct rtpp_pipe *rtpp_pipe_ctor(uint64_t, struct rtpp_weakref_obj *,
