@@ -39,6 +39,7 @@
 #include "rtpp_pcount.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
 #include "rtpp_acct_fin.h"
 
