@@ -11,6 +11,8 @@ gen_fin_c() {
   echo "#include <stdint.h>"
   echo "#include <stdlib.h>"
   echo "#include \"rtpp_types.h\""
+  DEFNAME=`echo ${1} | sed 's|[.]|_|g'`
+  echo "#define ${DEFNAME}_fin 1"
   echo "#include \"${1}\""
 
   for mname in ${MNAMES_ALL}
