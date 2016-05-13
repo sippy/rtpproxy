@@ -37,8 +37,6 @@ struct rtpa_stats_jitter;
 struct rtpp_log;
 struct rtp_packet;
 
-#define SSRC_FMT "0x%.8X"
-
 DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_update, enum update_rtpp_stats_rval,
   struct rtp_packet *);
 DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_stats, void,
