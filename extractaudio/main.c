@@ -57,6 +57,7 @@
 #include "decoder.h"
 #include "session.h"
 #include "rtpp_record_private.h"
+#include "rtpp_ssrc.h"
 #include "rtpp_loader.h"
 #include "rtp.h"
 #include "rtp_analyze.h"
@@ -117,7 +118,7 @@ load_session(const char *path, struct channels *channels, enum origin origin)
     jc = get_jitter_stats(stat.jdata, &jstat);
     printf("pcount=%u, min_seq=%u, max_seq=%u, seq_offset=%u, ssrc=0x%.8X, duplicates=%u\n",
       (unsigned int)stat.last.pcount, (unsigned int)stat.last.min_seq, (unsigned int)stat.last.max_seq,
-      (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc, (unsigned int)stat.last.duplicates);
+      (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc.val, (unsigned int)stat.last.duplicates);
     printf("ssrc_changes=%u, psent=%u, precvd=%u, plost=%d\n", stat.ssrc_changes, stat.psent, stat.precvd,
       stat.psent - stat.precvd);
     if (jc > 0) {
