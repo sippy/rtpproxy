@@ -39,6 +39,7 @@
 #include "rtpp_log_obj.h"
 #include "rtp_info.h"
 #include "rtp.h"
+#include "rtpp_ssrc.h"
 #include "rtp_analyze.h"
 #include "rtpp_math.h"
 #include "rtpp_refcnt.h"
@@ -73,8 +74,7 @@ struct rtp_analyze_jdata_ssrc {
 struct rtp_analyze_jdata {
     struct rtp_analyze_jdata_ssrc jss;
     struct rtpp_ringbuf *ts_dedup;
-    uint32_t ssrc;
-    int ssrc_inited;
+    struct rtpp_ssrc ssrc;
     struct rtp_analyze_jdata *next;
 };
 
@@ -112,8 +112,11 @@ static void
 update_jitter_stats(struct rtp_analyze_jdata *jdp,
   struct rtp_info *rinfo, double rtime, int hint)
 {
-    int64_t dval, rtime_ts_delta;
+    int64_t dval;
     uint64_t rtime_ts, wrcorr;
+#if 0
+    int64_t rtime_ts_delta;
+#endif
 
     rtime_ts = rtp_dtime2time_ts64(rinfo->rtp_profile->ts_rate, rtime);
     if (rinfo->rtp_profile->pt_kind == RTP_PTK_AUDIO &&
@@ -130,7 +133,9 @@ update_jitter_stats(struct rtp_analyze_jdata *jdp,
             jdp->jss.seq_rcount++;
             goto saveandexit;
         }
+#if 0
         rtime_ts_delta = jdp->jss.prev_rtime_ts - rtime_ts;
+#endif
         if (jdp->jss.prev_ts > rinfo->ts) {
             if ((jdp->jss.prev_ts - rinfo->ts) > (1 << 31)) {
                 /* Normal case, timestamp wrap */
@@ -265,15 +270,15 @@ jdata_by_ssrc(struct rtp_analyze_jitter *jp, uint32_t ssrc)
 {
     struct rtp_analyze_jdata *rjdp, *jdp_last, *jdp_prelast;
 
-    if (jp->first->ssrc_inited == 0) {
-        jp->first->ssrc = ssrc;
-        jp->first->ssrc_inited = 1;
+    if (jp->first->ssrc.inited == 0) {
+        jp->first->ssrc.val = ssrc;
+        jp->first->ssrc.inited = 1;
         return (jp->first);
     }
 
     jdp_last = jdp_prelast = NULL;
     for (rjdp = jp->first; rjdp != NULL; rjdp = rjdp->next) {
-        if (rjdp->ssrc == ssrc) {
+        if (rjdp->ssrc.val == ssrc) {
             return (rjdp);
         }
         jdp_prelast = jdp_last;
@@ -299,17 +304,17 @@ jdata_by_ssrc(struct rtp_analyze_jitter *jp, uint32_t ssrc)
             jp->pcount_acum += rjdp->jss.pcount;
         }
         memset(&rjdp->jss, '\0', sizeof(rjdp->jss));
-        RTPP_DBG_ASSERT(rjdp->ssrc_inited == 1);
+        RTPP_DBG_ASSERT(rjdp->ssrc.inited == 1);
     } else {
         /* Allocate per-ssrc data */
         rjdp = rtp_analyze_jdata_ctor();
         if (rjdp == NULL) {
             return (NULL);
         }
-        rjdp->ssrc_inited = 1;
+        rjdp->ssrc.inited = 1;
         jp->jdlen += 1;
     }
-    rjdp->ssrc = ssrc;
+    rjdp->ssrc.val = ssrc;
     rjdp->next = jp->first;
     jp->first = rjdp;
     return (rjdp);
@@ -331,7 +336,8 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         RTPP_DBG_ASSERT(stat->last.pcount == 0);
         RTPP_DBG_ASSERT(stat->psent == 0);
         RTPP_DBG_ASSERT(stat->precvd == 0);
-        stat->last.ssrc = rinfo->ssrc;
+        stat->last.ssrc.val = rinfo->ssrc;
+        stat->last.ssrc.inited = 1;
         stat->last.max_seq = stat->last.min_seq = rinfo->seq;
         stat->last.base_ts = rinfo->ts;
         stat->last.base_rtime = rtime;
@@ -345,14 +351,15 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         }
         return (UPDATE_OK);
     }
-    if (stat->last.ssrc != rinfo->ssrc) {
+    RTPP_DBG_ASSERT(stat->last.ssrc.inited == 1);
+    if (stat->last.ssrc.val != rinfo->ssrc) {
         update_rtpp_totals(stat, stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
         LOGI_IF_NOT_NULL(rlog, "SSRC changed from " SSRC_FMT "/%d to "
-          SSRC_FMT "/%d", stat->last.ssrc, stat->last.seq, rinfo->ssrc,
+          SSRC_FMT "/%d", stat->last.ssrc.val, stat->last.seq, rinfo->ssrc,
           rinfo->seq); 
-        stat->last.ssrc = rinfo->ssrc;
+        stat->last.ssrc.val = rinfo->ssrc;
         stat->last.max_seq = stat->last.min_seq = rinfo->seq;
         stat->last.base_ts = rinfo->ts;
         stat->last.base_rtime = rtime;
@@ -497,7 +504,7 @@ get_jitter_stats(struct rtp_analyze_jitter *jp, struct rtpa_stats_jitter *jst)
     double jtotal;
 
     i = 0;
-    for (rjdp = jp->first; rjdp != NULL && rjdp->ssrc_inited == 1; rjdp = rjdp->next) {
+    for (rjdp = jp->first; rjdp != NULL && rjdp->ssrc.inited == 1; rjdp = rjdp->next) {
         if (rjdp->jss.pcount < 2) {
             continue;
         }
