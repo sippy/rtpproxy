@@ -47,6 +47,7 @@
 #include "rtpp_socket.h"
 #include "rtpp_server.h"
 #include "rtpp_stream.h"
+#include "rtpp_netaddr.h"
 
 struct foreach_args {
     double dtime;
@@ -81,12 +82,12 @@ process_rtp_servers_foreach(void *dp, void *ap)
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
                 struct rtpp_stream *rsop_rtcp;
-                CALL_METHOD(rsop, finish_playback, rsrv->sruid);
+                CALL_SMETHOD(rsop, finish_playback, rsrv->sruid);
                 rtps_old = rsrv->sruid;
                 rsop_rtcp = CALL_METHOD(fap->rtcp_streams_wrt, get_by_idx,
                   rsop->stuid_rtcp);
                 if (rsop_rtcp != NULL) {
-                    CALL_METHOD(rsop_rtcp, replace_rtps, rtps_old, RTPP_UID_NONE);
+                    CALL_SMETHOD(rsop_rtcp, replace_rtps, rtps_old, RTPP_UID_NONE);
                     CALL_METHOD(rsop_rtcp->rcnt, decref);
                 }
                 CALL_METHOD(rsop->rcnt, decref);
@@ -96,13 +97,12 @@ process_rtp_servers_foreach(void *dp, void *ap)
             }
             break;
         }
-        if (rsop->addr == NULL) {
+        if (CALL_SMETHOD(rsop->rem_addr, isempty)) {
             /* We have a packet, but nowhere to send it, drop */
             rtp_packet_free(pkt);
             continue;
         }
-        CALL_METHOD(rsop->fd, send_pkt, fap->sender, rsop->addr,
-          SA_LEN(rsop->addr), pkt, rsop->log);
+        CALL_SMETHOD(rsop, send_pkt, fap->sender, pkt);
         fap->rsp->npkts_played.cnt++;
     }
     CALL_METHOD(rsop->rcnt, decref);
