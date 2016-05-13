@@ -30,7 +30,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c rtpp_ringbuf.h \
   rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
   rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h rtpp_acct.c \
-  rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddrs.h
+  rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddrs.h rtpp_ssrc.h \
+  rtpp_netaddr.c rtpp_netaddr.h
 
 rtpproxy_LDADD=-lm -lpthread
 rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
@@ -56,7 +57,7 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c rtpp_ringbuf_fin.c \
   rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c \
   rtpp_port_table_fin.c rtpp_port_table_fin.h rtpp_acct_fin.c \
-  rtpp_acct_fin.h
+  rtpp_acct_fin.h rtpp_netaddr_fin.c rtpp_netaddr_fin.h
 rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
@@ -70,6 +71,7 @@ CLEANFILES= ${SRCS_AUTOGEN}
 BUILT_SOURCES= ${SRCS_AUTOGEN}
 
 GENFINCODE= $(top_srcdir)/src/genfincode.sh
+GENFINCODE_S= $(top_srcdir)/src/genfincode_stat.sh
 
 rtpp_timed_fin.c: genfincode.sh rtpp_timed.h
 	$(GENFINCODE) rtpp_timed.h rtpp_timed_fin.h rtpp_timed_fin.c
@@ -155,3 +157,8 @@ rtpp_acct_fin.c: $(GENFINCODE) rtpp_acct.h
 	$(GENFINCODE) rtpp_acct.h rtpp_acct_fin.h rtpp_acct_fin.c
 
 rtpp_acct_fin.h: rtpp_acct_fin.c
+
+rtpp_netaddr_fin.c: $(GENFINCODE_S) rtpp_netaddr.h
+	$(GENFINCODE_S) rtpp_netaddr.h rtpp_netaddr_fin.h rtpp_netaddr_fin.c
+
+rtpp_netaddr_fin.h: rtpp_netaddr_fin.c
