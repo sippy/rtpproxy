@@ -37,7 +37,7 @@
 /* Catch fatal signals and try to pring backtrace */
 #define RTPP_DEBUG_catchtrace 0
 #define RTPP_DEBUG_refcnt     0
-#define RTPP_DEBUG_analyze    1
+#define RTPP_DEBUG_analyze    0
 #else
 #define RTPP_DEBUG_netio      0
 #define RTPP_DEBUG_timers     0
