@@ -66,6 +66,8 @@
 #include "rtpp_session.h"
 #include "rtpp_stream.h"
 #include "rtpp_time.h"
+#include "rtpp_pipe.h"
+#include "rtpp_netaddr.h"
 
 enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP, MODE_LOCAL_PCAP}; /* MODE_LOCAL_RTP/MODE_REMOTE_PKT? */
 
@@ -85,7 +87,7 @@ struct rtpp_record_channel {
 
 static void rtpp_record_write(struct rtpp_record *, struct rtpp_stream *, struct rtp_packet *);
 static void rtpp_record_close(struct rtpp_record_channel *);
-static int get_hdr_size(struct sockaddr *);
+static int get_hdr_size(const struct sockaddr *);
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_record_channel *)((char *)(pubp) - offsetof(struct rtpp_record_channel, pub)))
@@ -285,7 +287,7 @@ flush_rbuf(struct rtpp_record_channel *rrc)
 
 static int
 prepare_pkt_hdr_adhoc(struct rtpp_log *log, struct rtp_packet *packet,
-  struct pkt_hdr_adhoc *hdrp, struct sockaddr *daddr, struct sockaddr *ldaddr,
+  struct pkt_hdr_adhoc *hdrp, const struct sockaddr *daddr, struct sockaddr *ldaddr,
   int ldport, int face)
 {
 
@@ -320,7 +322,7 @@ static uint16_t ip_id = 0;
 
 #if (PCAP_FORMAT != DLT_NULL)
 static void
-fake_ether_addr(struct sockaddr *addr, uint8_t *eaddr)
+fake_ether_addr(const struct sockaddr *addr, uint8_t *eaddr)
 {
     uint8_t *ra;
     int i;
@@ -348,10 +350,10 @@ fake_ether_addr(struct sockaddr *addr, uint8_t *eaddr)
 
 static int
 prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
-  union pkt_hdr_pcap *hdrp, struct sockaddr *daddr, struct sockaddr *ldaddr,
+  union pkt_hdr_pcap *hdrp, const struct sockaddr *daddr, struct sockaddr *ldaddr,
   int ldport, int face)
 {
-    struct sockaddr *src_addr, *dst_addr;
+    const struct sockaddr *src_addr, *dst_addr;
     uint16_t src_port, dst_port;
     pcaprec_hdr_t *php;
     union {
@@ -493,7 +495,7 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
 }
 
 static int
-get_hdr_size(struct sockaddr *raddr)
+get_hdr_size(const struct sockaddr *raddr)
 {
     int hdr_size;
 
@@ -523,19 +525,20 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     } hdr;
     int rval, hdr_size;
     int (*prepare_pkt_hdr)(struct rtpp_log *, struct rtp_packet *, void *,
-      struct sockaddr *, struct sockaddr *, int, int);
+      const struct sockaddr *, struct sockaddr *, int, int);
     const char *proto;
-    struct sockaddr *daddr;
+    struct sockaddr daddr;
     struct sockaddr *ldaddr;
     int ldport, face;
     struct rtpp_record_channel *rrc;
+    socklen_t dalen;
 
     rrc = PUB2PVT(self);
 
     if (rrc->fd == -1)
 	return;
 
-    daddr = stp->addr;
+    dalen = CALL_SMETHOD(stp->rem_addr, get, &daddr, sizeof(daddr));
     ldaddr = stp->laddr;
     ldport = stp->port;
 
@@ -564,11 +567,11 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
 	if (flush_rbuf(rrc) != 0)
 	    return;
 
-    face = (rrc->record_single_file == 0) ? 0 : (stp->session_type != SESS_RTP);
+    face = (rrc->record_single_file == 0) ? 0 : (stp->pipe_type != PIPE_RTP);
 
     /* Check if received packet doesn't fit into the buffer, do synchronous write  if so */
     if (rrc->rbuf_len + hdr_size + packet->size > sizeof(rrc->rbuf)) {
-	if (prepare_pkt_hdr(stp->log, packet, (void *)&hdr, daddr, ldaddr, ldport, face) != 0)
+	if (prepare_pkt_hdr(stp->log, packet, (void *)&hdr, &daddr, ldaddr, ldport, face) != 0)
 	    return;
 
 	v[0].iov_base = (void *)&hdr;
@@ -580,7 +583,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
 	if (rval != -1)
 	    return;
 
-        proto = CALL_METHOD(stp, get_proto);
+        proto = CALL_SMETHOD(stp, get_proto);
 	RTPP_ELOG(stp->log, RTPP_LOG_ERR, "error while recording session (%s)",
 	  proto);
 	/* Prevent futher writing if error happens */
@@ -589,7 +592,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
 	return;
     }
     if (prepare_pkt_hdr(stp->log, packet, (void *)rrc->rbuf + rrc->rbuf_len,
-      daddr, ldaddr, ldport, face) != 0)
+      &daddr, ldaddr, ldport, face) != 0)
 	return;
     rrc->rbuf_len += hdr_size;
     memcpy(rrc->rbuf + rrc->rbuf_len, packet->data.buf, packet->size);
