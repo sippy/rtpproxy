@@ -527,7 +527,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     int (*prepare_pkt_hdr)(struct rtpp_log *, struct rtp_packet *, void *,
       const struct sockaddr *, struct sockaddr *, int, int);
     const char *proto;
-    struct sockaddr daddr;
+    struct sockaddr_storage daddr;
     struct sockaddr *ldaddr;
     int ldport, face;
     struct rtpp_record_channel *rrc;
@@ -538,7 +538,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     if (rrc->fd == -1)
 	return;
 
-    dalen = CALL_SMETHOD(stp->rem_addr, get, &daddr, sizeof(daddr));
+    dalen = CALL_SMETHOD(stp->rem_addr, get, sstosa(&daddr), sizeof(daddr));
     ldaddr = stp->laddr;
     ldport = stp->port;
 
@@ -571,7 +571,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
 
     /* Check if received packet doesn't fit into the buffer, do synchronous write  if so */
     if (rrc->rbuf_len + hdr_size + packet->size > sizeof(rrc->rbuf)) {
-	if (prepare_pkt_hdr(stp->log, packet, (void *)&hdr, &daddr, ldaddr, ldport, face) != 0)
+	if (prepare_pkt_hdr(stp->log, packet, (void *)&hdr, sstosa(&daddr), ldaddr, ldport, face) != 0)
 	    return;
 
 	v[0].iov_base = (void *)&hdr;
@@ -592,7 +592,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
 	return;
     }
     if (prepare_pkt_hdr(stp->log, packet, (void *)rrc->rbuf + rrc->rbuf_len,
-      &daddr, ldaddr, ldport, face) != 0)
+      sstosa(&daddr), ldaddr, ldport, face) != 0)
 	return;
     rrc->rbuf_len += hdr_size;
     memcpy(rrc->rbuf + rrc->rbuf_len, packet->data.buf, packet->size);
