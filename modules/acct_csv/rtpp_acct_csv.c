@@ -32,10 +32,12 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_monotime.h"
 #include "rtpp_types.h"
@@ -105,13 +107,21 @@ rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)
 #define SFX_O "_ino"
 #define SFX_A "_ina"
 
-#define PT_NAME "rtpa_pt_last"
-#define PT_NAME_O PT_NAME SFX_O
-#define PT_NAME_A PT_NAME SFX_A
+#define NID_NM    "rtpp_node_id"
+#define PID_NM    "rtpp_pid"
+#define SID_NM    "sess_uid"
+#define CID_NM    "call_id"
+#define PT_NAME   "rtpa_pt_last"
+#define PT_NM_O   PT_NAME SFX_O
+#define PT_NM_A   PT_NAME SFX_A
 
-#define PT_FMT "%d"
+#define NID_FMT   "%s"
+#define PID_FMT   "%d"
+#define SID_FMT   "%" PRId64
+#define PT_FMT    "%d"
+#define LSSRC_FMT "%s"
 #define SNCHG_FMT "%lu"
-#define SEP ","
+#define SEP       ","
 
 static int
 rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
@@ -135,15 +145,15 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
     }
     if (pvt->stt.st_size == 0) {
         buf = NULL;
-        len = mod_asprintf(&buf, "rtpp_node_id,rtpp_pid,sess_uid,call_id,"
+        len = mod_asprintf(&buf, NID_NM SEP PID_NM SEP SID_NM SEP CID_NM SEP
           "from_tag,setup_ts,teardown_ts,first_rtp_ts_ino,last_rtp_ts_ino,"
           "first_rtp_ts_ina,last_rtp_ts_ina,rtp_npkts_ina,rtp_npkts_ino,"
           "rtp_nrelayed,rtp_ndropped,rtcp_npkts_ina,rtcp_npkts_ino,"
           "rtcp_nrelayed,rtcp_ndropped,rtpa_nsent_ino,rtpa_nrcvd_ino,"
           "rtpa_ndups_ino,rtpa_nlost_ino,rtpa_perrs_ino,"
-          "rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino" SEP PT_NAME_O SEP
+          "rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino" SEP PT_NM_O SEP
           "rtpa_nsent_ina,rtpa_nrcvd_ina,rtpa_ndups_ina,rtpa_nlost_ina,"
-          "rtpa_perrs_ina,rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina" SEP PT_NAME_A SEP
+          "rtpa_perrs_ina,rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina" SEP PT_NM_A SEP
           "rtpa_jitter_last_ino,rtpa_jitter_max_ino,rtpa_jitter_avg_ino,"
           "rtpa_jitter_last_ina,rtpa_jitter_max_ina,rtpa_jitter_avg_ina\n");
         if (len <= 0) {
@@ -206,12 +216,26 @@ rtpp_acct_csv_dtor(struct rtpp_module_priv *pvt)
 #define ES_IF_NULL(s) ((s) == NULL ? "" : s)
 #define MT2RT_NZ(mt) ((mt) == 0.0 ? 0.0 : dtime2rtime(mt))
 
+#define SSRC_STRLEN 11
+
+static void
+format_ssrc(struct rtpp_ssrc *sp, char *sbuf, size_t sblen)
+{
+
+    if (sp->inited) {
+        snprintf(sbuf, sblen, SSRC_FMT, sp->val);
+    } else {
+        sbuf[0] = '\0';
+    }
+}
+
 static void
 rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
 {
     char *buf;
     int len, pos, rval;
     struct stat stt;
+    char ssrc_a[SSRC_STRLEN], ssrc_o[SSRC_STRLEN];
 
     buf = NULL;
     rval = stat(pvt->fname, &stt);
@@ -227,20 +251,22 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
         return;
     }
 
-    len = mod_asprintf(&buf, "%s,%d,%" PRId64 ",%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
-      "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu" SEP SSRC_FMT SEP SNCHG_FMT SEP
-      PT_FMT SEP "%lu,%lu,%lu,%lu,%lu" SEP SSRC_FMT SEP SNCHG_FMT SEP PT_FMT SEP
+    format_ssrc(&acct->rasta->last_ssrc, ssrc_a, sizeof(ssrc_a));
+    format_ssrc(&acct->rasto->last_ssrc, ssrc_o, sizeof(ssrc_o));
+    len = mod_asprintf(&buf, NID_FMT SEP PID_FMT SEP SID_FMT SEP "%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
+      "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu" SEP LSSRC_FMT SEP SNCHG_FMT SEP
+      PT_FMT SEP "%lu,%lu,%lu,%lu,%lu" SEP LSSRC_FMT SEP SNCHG_FMT SEP PT_FMT SEP
       "%f,%f,%f,%f,%f,%f" "\n", rtpp_acct_get_nid(pvt, acct),
       pvt->pid, acct->seuid, ES_IF_NULL(acct->call_id), ES_IF_NULL(acct->from_tag),
-      MT2RT_NZ(acct->init_ts), MT2RT_NZ(acct->destroy_ts), MT2RT_NZ(acct->pso_rtp->first_pkt_rcv),
-      MT2RT_NZ(acct->pso_rtp->last_pkt_rcv), MT2RT_NZ(acct->psa_rtp->first_pkt_rcv),
-      MT2RT_NZ(acct->psa_rtp->last_pkt_rcv), acct->psa_rtp->npkts_in, acct->pso_rtp->npkts_in,
-      acct->pcnts_rtp->nrelayed, acct->pcnts_rtp->ndropped, acct->psa_rtcp->npkts_in,
-      acct->pso_rtcp->npkts_in, acct->pcnts_rtcp->nrelayed, acct->pcnts_rtcp->ndropped,
+      MT2RT_NZ(acct->init_ts), MT2RT_NZ(acct->destroy_ts), MT2RT_NZ(acct->rtp.o.ps->first_pkt_rcv),
+      MT2RT_NZ(acct->rtp.o.ps->last_pkt_rcv), MT2RT_NZ(acct->rtp.a.ps->first_pkt_rcv),
+      MT2RT_NZ(acct->rtp.a.ps->last_pkt_rcv), acct->rtp.a.ps->npkts_in, acct->rtp.o.ps->npkts_in,
+      acct->rtp.pcnts->nrelayed, acct->rtp.pcnts->ndropped, acct->rtcp.a.ps->npkts_in,
+      acct->rtcp.o.ps->npkts_in, acct->rtcp.pcnts->nrelayed, acct->rtcp.pcnts->ndropped,
       acct->rasto->psent, acct->rasto->precvd, acct->rasto->pdups, acct->rasto->plost,
-      acct->rasto->pecount, acct->rasto->last_ssrc, acct->rasto->ssrc_changes, acct->rasto->last_pt,
+      acct->rasto->pecount, ssrc_o, acct->rasto->ssrc_changes, acct->rasto->last_pt,
       acct->rasta->psent, acct->rasta->precvd, acct->rasta->pdups, acct->rasta->plost,
-      acct->rasta->pecount, acct->rasta->last_ssrc, acct->rasta->ssrc_changes, acct->rasta->last_pt,
+      acct->rasta->pecount, ssrc_a, acct->rasta->ssrc_changes, acct->rasta->last_pt,
       acct->jrasto->jlast, acct->jrasto->jmax, acct->jrasto->javg,
       acct->jrasta->jlast, acct->jrasta->jmax, acct->jrasta->javg);
     if (len <= 0) {
