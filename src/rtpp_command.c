@@ -570,16 +570,16 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case NOPLAY:
-        rtps_old = CALL_METHOD(spa->rtp->stream[i], get_rtps);
-	CALL_METHOD(spa->rtp->stream[i], handle_noplay);
-        CALL_METHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, RTPP_UID_NONE);
+	rtps_old = CALL_SMETHOD(spa->rtp->stream[i], get_rtps);
+	CALL_SMETHOD(spa->rtp->stream[i], handle_noplay);
+	CALL_SMETHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, RTPP_UID_NONE);
 	reply_ok(cmd);
 	break;
 
     case PLAY:
-        rtps_old = CALL_METHOD(spa->rtp->stream[i], get_rtps);
-	CALL_METHOD(spa->rtp->stream[i], handle_noplay);
-        CALL_METHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, RTPP_UID_NONE);
+	rtps_old = CALL_SMETHOD(spa->rtp->stream[i], get_rtps);
+	CALL_SMETHOD(spa->rtp->stream[i], handle_noplay);
+	CALL_SMETHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, RTPP_UID_NONE);
 	ptime = -1;
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->rtp->stream[i]->codecs == NULL) {
@@ -589,13 +589,13 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	    codecs = spa->rtp->stream[i]->codecs;
 	    ptime = spa->rtp->stream[i]->ptime;
 	}
-	if (playcount != 0 && CALL_METHOD(spa->rtp->stream[i], handle_play, codecs,
+	if (playcount != 0 && CALL_SMETHOD(spa->rtp->stream[i], handle_play, codecs,
           pname, playcount, cmd, ptime) != 0) {
 	    reply_error(cmd, ECODE_PLRFAIL);
 	    return 0;
 	}
-        rtps = CALL_METHOD(spa->rtp->stream[i], get_rtps);
-        CALL_METHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, rtps);
+	rtps = CALL_SMETHOD(spa->rtp->stream[i], get_rtps);
+	CALL_SMETHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, rtps);
 	reply_ok(cmd);
 	break;
 
