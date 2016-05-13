@@ -556,13 +556,16 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     }
 
     if (ulop->ia[0] != NULL && ulop->ia[1] != NULL) {
-        CALL_METHOD(spa->rtp->stream[pidx], prefill_addr, &(ulop->ia[0]),
+        CALL_SMETHOD(spa->rtp->stream[pidx], prefill_addr, &(ulop->ia[0]),
           cmd->dtime);
-        CALL_METHOD(spa->rtcp->stream[pidx], prefill_addr, &(ulop->ia[1]),
+        CALL_SMETHOD(spa->rtcp->stream[pidx], prefill_addr, &(ulop->ia[1]),
           cmd->dtime);
     }
     spa->rtp->stream[pidx]->asymmetric = spa->rtcp->stream[pidx]->asymmetric = ulop->asymmetric;
-    spa->rtp->stream[pidx]->latch_info.latched = spa->rtcp->stream[pidx]->latch_info.latched = ulop->asymmetric;
+    if (ulop->asymmetric) {
+        CALL_SMETHOD(spa->rtp->stream[pidx], locklatch);
+        CALL_SMETHOD(spa->rtcp->stream[pidx], locklatch);
+    }
     if (spa->rtp->stream[pidx]->codecs != NULL) {
         free(spa->rtp->stream[pidx]->codecs);
         spa->rtp->stream[pidx]->codecs = NULL;
@@ -572,7 +575,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         ulop->codecs = NULL;
     }
     spa->rtp->stream[NOT(pidx)]->ptime = ulop->requested_ptime;
-    actor = CALL_METHOD(spa->rtp->stream[pidx], get_actor);
+    actor = CALL_SMETHOD(spa->rtp->stream[pidx], get_actor);
     if (ulop->requested_ptime > 0) {
         RTPP_LOG(spa->log, RTPP_LOG_INFO, "RTP packets from %s "
           "will be resized to %d milliseconds", actor, ulop->requested_ptime);
