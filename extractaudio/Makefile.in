@@ -111,7 +111,7 @@ am_extractaudio_OBJECTS = main.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_network.$(OBJEXT) rtpp_monotime.$(OBJEXT) \
 	rtpp_mallocs.$(OBJEXT) rtpp_refcnt.$(OBJEXT) \
 	rtpp_refcnt_fin.$(OBJEXT) rtpp_ringbuf.$(OBJEXT) \
-	rtpp_ringbuf_fin.$(OBJEXT)
+	rtpp_ringbuf_fin.$(OBJEXT) eaud_oformats.$(OBJEXT)
 extractaudio_OBJECTS = $(am_extractaudio_OBJECTS)
 extractaudio_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -313,7 +313,8 @@ extractaudio_SOURCES = main.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c \
   ${MAINSRCDIR}/rtpp_monotime.c ${MAINSRCDIR}/rtpp_mallocs.c \
   ${MAINSRCDIR}/rtpp_refcnt.c ${MAINSRCDIR}/rtpp_refcnt_fin.c \
   ${MAINSRCDIR}/rtpp_refcnt_fin.h ${MAINSRCDIR}/rtpp_ringbuf.c \
-  ${MAINSRCDIR}/rtpp_ringbuf_fin.c ${MAINSRCDIR}/rtpp_ringbuf_fin.h
+  ${MAINSRCDIR}/rtpp_ringbuf_fin.c ${MAINSRCDIR}/rtpp_ringbuf_fin.h \
+  eaud_oformats.c eaud_oformats.h
 
 extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
 all: all-am
@@ -410,6 +411,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/decoder.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaud_oformats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g729_compat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp.Po@am__quote@
