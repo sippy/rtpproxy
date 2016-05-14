@@ -57,6 +57,9 @@ struct rtpp_module_priv {
    char node_id[_POSIX_HOST_NAME_MAX + 1];
 };
 
+/* Bump this when some changes are made */
+#define RTPP_METRICS_VERSION	"1.0"
+
 #define HNAME_REFRESH_IVAL	1.0
 
 static struct rtpp_module_priv *rtpp_acct_csv_ctor(struct rtpp_cfg_stable *);
@@ -108,6 +111,7 @@ rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)
 #define SFX_O "_ino"
 #define SFX_A "_ina"
 
+#define RVER_NM   "rec_ver"
 #define NID_NM    "rtpp_node_id"
 #define PID_NM    "rtpp_pid"
 #define SID_NM    "sess_uid"
@@ -116,6 +120,7 @@ rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)
 #define PT_NM_O   PT_NAME SFX_O
 #define PT_NM_A   PT_NAME SFX_A
 
+#define RVER_FMT  "%s"
 #define NID_FMT   "%s"
 #define PID_FMT   "%d"
 #define SID_FMT   "%" PRId64
@@ -146,7 +151,8 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
     }
     if (pvt->stt.st_size == 0) {
         buf = NULL;
-        len = mod_asprintf(&buf, NID_NM SEP PID_NM SEP SID_NM SEP CID_NM SEP
+        len = mod_asprintf(&buf, RVER_NM SEP NID_NM SEP PID_NM SEP SID_NM
+          SEP CID_NM SEP
           "from_tag,setup_ts,teardown_ts,first_rtp_ts_ino,last_rtp_ts_ino,"
           "first_rtp_ts_ina,last_rtp_ts_ina,rtp_npkts_ina,rtp_npkts_ino,"
           "rtp_nrelayed,rtp_ndropped,rtcp_npkts_ina,rtcp_npkts_ino,"
@@ -254,10 +260,11 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
 
     format_ssrc(&acct->rasta->last_ssrc, ssrc_a, sizeof(ssrc_a));
     format_ssrc(&acct->rasto->last_ssrc, ssrc_o, sizeof(ssrc_o));
-    len = mod_asprintf(&buf, NID_FMT SEP PID_FMT SEP SID_FMT SEP "%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
+    len = mod_asprintf(&buf, RVER_FMT SEP NID_FMT SEP PID_FMT SEP SID_FMT SEP
+      "%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
       "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu" SEP LSSRC_FMT SEP SNCHG_FMT SEP
       PT_FMT SEP "%lu,%lu,%lu,%lu,%lu" SEP LSSRC_FMT SEP SNCHG_FMT SEP PT_FMT SEP
-      "%f,%f,%f,%f,%f,%f" "\n", rtpp_acct_get_nid(pvt, acct),
+      "%f,%f,%f,%f,%f,%f" "\n", RTPP_METRICS_VERSION, rtpp_acct_get_nid(pvt, acct),
       pvt->pid, acct->seuid, ES_IF_NULL(acct->call_id), ES_IF_NULL(acct->from_tag),
       MT2RT_NZ(acct->init_ts), MT2RT_NZ(acct->destroy_ts), MT2RT_NZ(acct->rtp.o.ps->first_pkt_rcv),
       MT2RT_NZ(acct->rtp.o.ps->last_pkt_rcv), MT2RT_NZ(acct->rtp.a.ps->first_pkt_rcv),
