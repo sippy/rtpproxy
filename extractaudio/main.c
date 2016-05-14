@@ -62,12 +62,14 @@
 #include "rtp.h"
 #include "rtp_analyze.h"
 #include "rtpa_stats.h"
+#include "eaud_oformats.h"
 
 static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: extractaudio [-idsn] rdir outfile [link1] ... [linkN]\n");
+    fprintf(stderr, "usage: extractaudio [-idsn] [-F file_fmt] [-D data_fmt] "
+      "rdir outfile [link1] ... [linkN]\n");
     exit(1);
 }
 
@@ -150,13 +152,19 @@ main(int argc, char **argv)
     SF_INFO sfinfo;
     SNDFILE *sffile;
     int dflags;
+    const struct supported_fmt *sf_of;
+    uint32_t use_file_fmt, use_data_fmt;
 
     MYQ_INIT(&channels);
     memset(&sfinfo, 0, sizeof(sfinfo));
+    sfinfo.samplerate = 8000;
+    sfinfo.channels = 1;
+    use_file_fmt = SF_FORMAT_WAV;
+    use_data_fmt = SF_FORMAT_GSM610;
 
     delete = stereo = idprio = 0;
     dflags = D_FLAG_NONE;
-    while ((ch = getopt(argc, argv, "dsin")) != -1)
+    while ((ch = getopt(argc, argv, "dsinF:D:")) != -1)
         switch (ch) {
         case 'd':
             delete = 1;
@@ -164,6 +172,11 @@ main(int argc, char **argv)
 
         case 's':
             stereo = 1;
+            sfinfo.channels = 2;
+            /* GSM+WAV doesn't work with more than 1 channels */
+            if (use_data_fmt == SF_FORMAT_GSM610 && use_file_fmt == SF_FORMAT_WAV) {
+                use_data_fmt = SF_FORMAT_MS_ADPCM;
+            }
             break;
 
         case 'i':
@@ -172,6 +185,26 @@ main(int argc, char **argv)
 
         case 'n':
             dflags |= D_FLAG_NOSYNC;
+            break;
+
+        case 'F':
+            sf_of = pick_format(optarg, eaud_file_fmts);
+            if (sf_of == NULL) {
+                warnx("unknown output file format: \"%s\"", optarg);
+                dump_formats_descr("Supported file formats:\n", eaud_file_fmts);
+                exit(1);
+            }
+            use_file_fmt = sf_of->id;
+            break;
+
+        case 'D':
+            sf_of = pick_format(optarg, eaud_data_fmts);
+            if (sf_of == NULL) {
+                warnx("unknown output data format: \"%s\"", optarg);
+                dump_formats_descr("Supported data formats:\n", eaud_data_fmts);
+                exit(1);
+            }
+            use_data_fmt = sf_of->id;
             break;
 
         case '?':
@@ -217,15 +250,7 @@ main(int argc, char **argv)
 
     oblen = 0;
 
-    sfinfo.samplerate = 8000;
-    if (stereo == 0) {
-        sfinfo.channels = 1;
-        sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_GSM610;
-    } else {
-        /* GSM+WAV doesn't work with more than 1 channels */
-        sfinfo.channels = 2;
-        sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_MS_ADPCM;
-    }
+    sfinfo.format = use_file_fmt | use_data_fmt;
 
     sffile = sf_open(argv[1], SFM_WRITE, &sfinfo);
     if (sffile == NULL)
