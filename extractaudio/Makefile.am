@@ -7,7 +7,8 @@ extractaudio_SOURCES=main.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c \
   ${MAINSRCDIR}/rtpp_monotime.c ${MAINSRCDIR}/rtpp_mallocs.c \
   ${MAINSRCDIR}/rtpp_refcnt.c ${MAINSRCDIR}/rtpp_refcnt_fin.c \
   ${MAINSRCDIR}/rtpp_refcnt_fin.h ${MAINSRCDIR}/rtpp_ringbuf.c \
-  ${MAINSRCDIR}/rtpp_ringbuf_fin.c ${MAINSRCDIR}/rtpp_ringbuf_fin.h
+  ${MAINSRCDIR}/rtpp_ringbuf_fin.c ${MAINSRCDIR}/rtpp_ringbuf_fin.h \
+  eaud_oformats.c eaud_oformats.h
 extractaudio_LDADD=@LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
 
 DEFS=   -DWITHOUT_SIPLOG -Wall -D"rtpp_log_t=void *" \
