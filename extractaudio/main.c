@@ -64,6 +64,8 @@
 #include "rtpa_stats.h"
 #include "eaud_oformats.h"
 
+/*#define EAUD_DUMPRAW "/tmp/eaud.raw"*/
+
 static void
 usage(void)
 {
@@ -255,6 +257,9 @@ main(int argc, char **argv)
     sffile = sf_open(argv[1], SFM_WRITE, &sfinfo);
     if (sffile == NULL)
         errx(2, "%s: can't open output file", argv[1]);
+#if defined(EAUD_DUMPRAW)
+    FILE *raw_file = fopen(EAUD_DUMPRAW, "w");
+#endif
 
     nasamples = nosamples = nwsamples = 0;
     do {
@@ -310,6 +315,9 @@ main(int argc, char **argv)
             }
         }
         if (neof == nch || oblen == sizeof(obuf) / sizeof(obuf[0])) {
+#if defined(EAUD_DUMPRAW)
+            fwrite(obuf, sizeof(int16_t), oblen, raw_file);
+#endif
             sf_write_short(sffile, obuf, oblen);
             nwsamples += oblen / sizeof(obuf[0]);
             oblen = 0;
@@ -318,6 +326,9 @@ main(int argc, char **argv)
     fprintf(stderr, "samples decoded: O: %" PRIu64 ", A: %" PRIu64
       ", written: %" PRIu64 "\n", nosamples, nasamples, nwsamples);
 
+#if defined(EAUD_DUMPRAW)
+    fclose(raw_file);
+#endif
     sf_close(sffile);
 
     while (argc > 2) {
