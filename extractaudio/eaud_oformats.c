@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <strings.h>
 #include <sndfile.h>
 
@@ -85,7 +86,7 @@ dump_formats_descr(const char *msg, const struct supported_fmt ftable[])
 {
     int i;
 
-    fprintf(stderr, msg);
+    fprintf(stderr, "%s", msg);
     for (i = 0; ftable[i].name != NULL; i++) {
         fprintf(stderr, "    \"%s\"\t- %s\n", ftable[i].name, ftable[i].descr);
     }
