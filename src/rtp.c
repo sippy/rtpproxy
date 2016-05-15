@@ -37,6 +37,9 @@
 #include "rtp_packet.h"
 #include "rtpp_mallocs.h"
 
+#include "rtpp_wi.h"
+#include "rtpp_wi_private.h"
+
 #define RTP_PROFILE_AUDIO(s, nc) {.ts_rate = (s), .sample_rate = (s), \
   .pt_kind = RTP_PTK_AUDIO, .nchannels = (nc)}
 
@@ -66,6 +69,7 @@ struct rtp_packet_full;
 
 struct rtp_packet_priv {
     struct rtp_info rinfo;
+    struct rtpp_wi wi;
 };
 
 struct rtp_packet_full {
@@ -407,6 +411,7 @@ rtp_packet_alloc()
     struct rtp_packet_full *pkt;
 
     pkt = rtpp_zmalloc(sizeof(*pkt));
+    pkt->pub.wi = &pkt->pvt.wi;
 
     return &(pkt->pub);
 }

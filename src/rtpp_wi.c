@@ -28,7 +28,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <assert.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -80,7 +79,7 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
 {
     struct rtpp_wi *wi;
 
-    wi = &(pkt->wi);
+    wi = pkt->wi;
     wi->free_ptr = (struct rtpp_wi *)pkt;
     wi->wi_type = RTPP_WI_TYPE_OPKT;
     wi->sock = sock;
@@ -105,7 +104,7 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
 {
     struct rtpp_wi *wi;
 
-    wi = &(pkt->wi);
+    wi = pkt->wi;
     wi->free_ptr = (struct rtpp_wi *)pkt;
     wi->wi_type = RTPP_WI_TYPE_OPKT;
     wi->sock = sock;
