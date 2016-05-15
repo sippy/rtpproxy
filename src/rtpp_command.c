@@ -634,20 +634,25 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
 #if 0
     struct rtpp_session *spa, *spb;
     char addrs[4][256];
+    int brief;
 #endif
-    int len, i, brief, load;
+    int len, i, load;
     char buf[1024 * 8];
     unsigned long long packets_in, packets_out;
     unsigned long long sessions_created;
     int sessions_active, rtp_streams_active;
 
+#if 0
     brief = 0;
+#endif
     load = 0;
     for (i = 0; opts[i] != '\0'; i++) {
         switch (opts[i]) {
         case 'b':
         case 'B':
+#if 0
             brief = 1;
+#endif
             break;
 
         case 'l':
