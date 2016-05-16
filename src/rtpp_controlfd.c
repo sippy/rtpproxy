@@ -31,7 +31,6 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <netinet/in.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -52,10 +51,8 @@
 
 #if !defined(NO_ERR_H)
 #include <err.h>
-#include "rtpp_util.h"
-#else
-#include "rtpp_util.h"
 #endif
+#include "rtpp_util.h"
 
 #ifdef HAVE_SYSTEMD_DAEMON
 #include <systemd/sd-daemon.h>
