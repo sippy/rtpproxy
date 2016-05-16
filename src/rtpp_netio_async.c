@@ -31,7 +31,6 @@
 #include <pthread.h>
 #include <sched.h>
 #include <signal.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
