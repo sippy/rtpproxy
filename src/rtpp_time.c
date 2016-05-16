@@ -27,7 +27,6 @@
  */
 
 #include <math.h>
-#include <stdint.h>
 #include <time.h>
 
 #include "rtpp_time.h"
