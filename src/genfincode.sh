@@ -11,6 +11,7 @@ gen_fin_c() {
   echo "#include <stdint.h>"
   echo "#include <stdlib.h>"
   echo "#include \"rtpp_types.h\""
+  echo "#include \"rtpp_debug.h\""
   DEFNAME=`echo ${1} | sed 's|[.]|_|g'`
   echo "#define ${DEFNAME}_fin 1"
   echo "#include \"${1}\""
@@ -29,6 +30,8 @@ gen_fin_c() {
     for mname in ${MNAMES}
     do
       epname=`get_epname "${1}" "${mname}"`
+      echo "    RTPP_DBG_ASSERT(pub->${epname} != (${mname}_t)&${mname}_fin &&"
+      echo "      pub->${epname} != NULL);"
       echo "    pub->${epname} = (${mname}_t)&${mname}_fin;"
     done
     echo "}"

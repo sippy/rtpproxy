@@ -11,6 +11,7 @@ gen_fin_c() {
   echo "#include <stdint.h>"
   echo "#include <stdlib.h>"
   echo "#include \"rtpp_types.h\""
+  echo "#include \"rtpp_debug.h\""
   echo "#include \"${1}\""
 
   for mname in ${MNAMES_ALL}
@@ -33,10 +34,13 @@ gen_fin_c() {
     echo "};"
   done
 
+  epname=smethods
   for oname in ${ONAMES}
   do
     echo "void ${oname}_fin(struct ${oname} *pub) {"
-    echo "    pub->smethods = &${oname}_smethods_fin;"
+    echo "    RTPP_DBG_ASSERT(pub->${epname} != &${oname}_${epname}_fin &&"
+    echo "      pub->${epname} != NULL);"
+    echo "    pub->${epname} = &${oname}_${epname}_fin;"
     echo "}"
   done
 }
