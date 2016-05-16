@@ -54,7 +54,6 @@
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
