@@ -448,7 +448,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = startstop basic_versions command_parser makeann extractaudio \
+TESTS = startstop basic_versions command_parser makeann extractaudio1 \
   session_timeouts playback1 forwarding1 rtp_analyze1
 
 startstop_EXTRA_DIST = startstop startstop.output
@@ -461,12 +461,11 @@ command_parser_CLEANFILES = command_parser.rout 238uwedguw.rtcp 238uwedguw.rtp \
 
 extractaudio_EXTRA_DIST = extractaudio call1_alaw.a.rtp call1_alaw.o.rtp call1_g722.a.rtp \
   call1_g722.o.rtp call1_g729.a.rtp call1_g729.o.rtp call1_ulaw.a.rtp \
-  call1_ulaw.o.rtp call1_gsm.a.rtp call1_gsm.o.rtp extractaudio.checksums
+  call1_ulaw.o.rtp call1_gsm.a.rtp call1_gsm.o.rtp \
+  extractaudio1
 
-extractaudio_CLEANFILES = call1_alaw.mono.wav call1_alaw.stereo.wav \
-  call1_g722.mono.wav call1_g722.stereo.wav call1_g729.mono.wav \
-  call1_g729.stereo.wav call1_ulaw.mono.wav call1_ulaw.stereo.wav \
-  call1_gsm.mono.wav call1_gsm.stereo.wav
+extractaudio_CLEANFILES = call1_*.mono.*.wav call1_*.stereo.*.wav \
+  call1_*.mono.*.raw call1_*.mono.*.w64 call1_*.stereo.*.w64
 
 playback1_EXTRA_DIST = playback1 playback1.output playback1.checksums \
   playback1.type1.input playback1.type2.input
@@ -732,9 +731,9 @@ makeann.log: makeann
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-extractaudio.log: extractaudio
-	@p='extractaudio'; \
-	b='extractaudio'; \
+extractaudio1.log: extractaudio1
+	@p='extractaudio1'; \
+	b='extractaudio1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
