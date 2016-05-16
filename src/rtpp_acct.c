@@ -26,15 +26,12 @@
  *
  */
 
-#include <pthread.h>
 #include <stdint.h>
-#include <stddef.h>
 #include <stdlib.h>
 
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_types.h"
-#include "rtpp_analyzer.h"
 #include "rtpp_pcnt_strm.h"
 #include "rtpp_pcount.h"
 #include "rtpp_mallocs.h"
