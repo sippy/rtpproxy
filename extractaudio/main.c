@@ -156,13 +156,15 @@ main(int argc, char **argv)
     int dflags;
     const struct supported_fmt *sf_of;
     uint32_t use_file_fmt, use_data_fmt;
+    uint32_t dflt_file_fmt, dflt_data_fmt;
 
     MYQ_INIT(&channels);
     memset(&sfinfo, 0, sizeof(sfinfo));
     sfinfo.samplerate = 8000;
     sfinfo.channels = 1;
-    use_file_fmt = SF_FORMAT_WAV;
-    use_data_fmt = SF_FORMAT_GSM610;
+    use_file_fmt = use_data_fmt = 0;
+    dflt_file_fmt = SF_FORMAT_WAV;
+    dflt_data_fmt = SF_FORMAT_GSM610;
 
     delete = stereo = idprio = 0;
     dflags = D_FLAG_NONE;
@@ -176,9 +178,7 @@ main(int argc, char **argv)
             stereo = 1;
             sfinfo.channels = 2;
             /* GSM+WAV doesn't work with more than 1 channels */
-            if (use_data_fmt == SF_FORMAT_GSM610 && use_file_fmt == SF_FORMAT_WAV) {
-                use_data_fmt = SF_FORMAT_MS_ADPCM;
-            }
+            dflt_data_fmt = SF_FORMAT_MS_ADPCM;
             break;
 
         case 'i':
@@ -218,6 +218,13 @@ main(int argc, char **argv)
 
     if (argc < 2)
         usage();
+
+    if (use_file_fmt == 0) {
+        use_file_fmt = dflt_file_fmt;
+    }
+    if (use_data_fmt == 0) {
+        use_data_fmt = dflt_data_fmt;
+    }
 
     if (idprio != 0) {
 #if defined(__FreeBSD__)
