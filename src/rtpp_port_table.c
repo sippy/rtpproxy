@@ -113,6 +113,7 @@ static void
 rtpp_ptbl_dtor(struct rtpp_ptbl_priv *pvt)
 {
 
+    rtpp_port_table_fin(&pvt->pub);
     pthread_mutex_destroy(&pvt->lock);
     free(pvt->port_table);
     free(pvt);
