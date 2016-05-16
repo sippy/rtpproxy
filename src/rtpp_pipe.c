@@ -44,7 +44,6 @@
 #include "rtpp_math.h"
 #include "rtpp_acct_pipe.h"
 #include "rtpp_pcnt_strm.h"
-#include "rtpp_session.h"
 #include "rtpp_stats.h"
 #include "rtpp_monotime.h"
 
