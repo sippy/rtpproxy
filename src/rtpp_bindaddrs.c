@@ -37,7 +37,6 @@
 
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
-#include "rtpp_util.h"
 
 struct bindaddr_list {
     struct sockaddr_storage *bindaddr;
