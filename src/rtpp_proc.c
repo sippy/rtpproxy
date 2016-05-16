@@ -28,10 +28,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <poll.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "rtpp_types.h"
@@ -271,13 +268,13 @@ void
 process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
   int drain_repeat, struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
 {
-    int readyfd, ndrained;
+    int readyfd;
     struct rtpp_session *sp;
     struct rtpp_stream *stp;
     struct rtp_packet *packet;
 #if RTPP_DEBUG
     const char *proto;
-    int fd;
+    int fd, ndrained;
 #endif
 
     for (readyfd = 0; readyfd < ptbl->curlen; readyfd++) {
@@ -309,13 +306,13 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
             fd = CALL_METHOD(stp->fd, getfd);
             RTPP_LOG(stp->log, RTPP_LOG_DBUG, "Draining %s socket %d", fd,
               proto);
-#endif
             ndrained = drain_socket(stp->fd, rsp);
-#if RTPP_DEBUG
             if (ndrained > 0) {
                 RTPP_LOG(stp->log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
                   "packets discarded", fd, proto, ndrained);
             }
+#else
+            drain_socket(stp->fd, rsp);
 #endif
 
         }
