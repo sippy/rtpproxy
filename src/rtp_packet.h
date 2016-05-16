@@ -29,10 +29,8 @@
 #ifndef _RTP_PACKET_H_
 #define _RTP_PACKET_H_
 
-#include "rtpp_wi.h"
-#include "rtpp_wi_private.h"
-
 struct rtp_info;
+struct rtpp_wi;
 
 struct rtp_packet {
     size_t      size;
@@ -51,6 +49,8 @@ struct rtp_packet {
     struct rtp_info *parsed;
     rtp_parser_err_t parse_result;
 
+    struct rtpp_wi *wi;
+
     /*
      * The packet, keep it the last member so that we can use
      * memcpy() only on portion that it's actually being
@@ -60,8 +60,6 @@ struct rtp_packet {
         rtp_hdr_t       header;
         unsigned char   buf[8192];
     } data;
-
-    struct rtpp_wi wi;
 };
 
 struct rtp_packet *rtp_packet_alloc();
