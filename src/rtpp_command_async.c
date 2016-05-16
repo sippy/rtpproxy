@@ -33,11 +33,9 @@
 #include <poll.h>
 #include <pthread.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/un.h>
 
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
@@ -50,7 +48,9 @@
 #include "rtpp_command_private.h"
 #include "rtpp_command_rcache.h"
 #include "rtpp_command_stream.h"
+#if 0
 #include "rtpp_math.h"
+#endif
 #include "rtpp_network.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_mallocs.h"
