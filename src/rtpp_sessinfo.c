@@ -35,7 +35,6 @@
 #include <poll.h>
 #include <pthread.h>
 
-#include "rtpp_log.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_cfg_stable.h"
