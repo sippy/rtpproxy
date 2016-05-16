@@ -28,7 +28,6 @@
 
 #include <sys/types.h>
 #include <assert.h>
-#include <stdint.h>
 #include <string.h>
 
 #include "rtpp_log.h"

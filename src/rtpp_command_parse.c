@@ -28,7 +28,6 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <stdint.h>
 #include <stdlib.h>
 
 #include "rtpp_log.h"

@@ -28,7 +28,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 
 #include "rtpp_ssrc.h"
