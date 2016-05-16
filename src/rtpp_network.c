@@ -32,15 +32,12 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <ctype.h>
-#include <errno.h>
 #include <netdb.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"
 
