@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <sys/stat.h>
 #include <assert.h>
 #include <pthread.h>
 #include <stddef.h>
@@ -61,7 +60,6 @@
 #include "rtpp_stream.h"
 #include "rtpp_stream_fin.h"
 #include "rtpp_server.h"
-#include "rtpp_session.h"
 #include "rtpp_socket.h"
 #include "rtpp_weakref.h"
 #include "rtpp_ttl.h"
