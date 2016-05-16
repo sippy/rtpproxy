@@ -1,4 +1,4 @@
-TESTS = startstop basic_versions command_parser makeann extractaudio \
+TESTS = startstop basic_versions command_parser makeann extractaudio1 \
   session_timeouts playback1 forwarding1 rtp_analyze1
 startstop_EXTRA_DIST = startstop startstop.output
 startstop_CLEANFILES = startstop.rout
@@ -9,11 +9,10 @@ command_parser_CLEANFILES = command_parser.rout 238uwedguw.rtcp 238uwedguw.rtp \
   command_parser.rlog
 extractaudio_EXTRA_DIST = extractaudio call1_alaw.a.rtp call1_alaw.o.rtp call1_g722.a.rtp \
   call1_g722.o.rtp call1_g729.a.rtp call1_g729.o.rtp call1_ulaw.a.rtp \
-  call1_ulaw.o.rtp call1_gsm.a.rtp call1_gsm.o.rtp extractaudio.checksums
-extractaudio_CLEANFILES = call1_alaw.mono.wav call1_alaw.stereo.wav \
-  call1_g722.mono.wav call1_g722.stereo.wav call1_g729.mono.wav \
-  call1_g729.stereo.wav call1_ulaw.mono.wav call1_ulaw.stereo.wav \
-  call1_gsm.mono.wav call1_gsm.stereo.wav
+  call1_ulaw.o.rtp call1_gsm.a.rtp call1_gsm.o.rtp \
+  extractaudio1
+extractaudio_CLEANFILES = call1_*.mono.*.wav call1_*.stereo.*.wav \
+  call1_*.mono.*.raw call1_*.mono.*.w64 call1_*.stereo.*.w64
 playback1_EXTRA_DIST = playback1 playback1.output playback1.checksums \
   playback1.type1.input playback1.type2.input
 playback1_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
