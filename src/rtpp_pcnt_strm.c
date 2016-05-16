@@ -32,7 +32,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
