@@ -32,7 +32,6 @@
 #include <sys/resource.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <math.h>
 #include <stdint.h>
 #include <signal.h>
 #include <stdlib.h>
