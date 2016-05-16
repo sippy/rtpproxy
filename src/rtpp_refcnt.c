@@ -25,7 +25,6 @@
  *
  */
 
-#include <assert.h>
 #ifndef HAVE_GCC_ATOMICS
 #include <pthread.h>
 #endif
@@ -46,7 +45,6 @@
 #include "rtpp_stacktrace.h"
 #endif
 #endif
-
 
 /*
  * Somewhat arbitrary cap on the maximum value of the references. Just here
@@ -180,7 +178,7 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
         }
     }
 #endif
-    assert(pvt->cnt > 0 && pvt->cnt < RC_ABS_MAX);
+    RTPP_DBG_ASSERT(pvt->cnt > 0 && pvt->cnt < RC_ABS_MAX);
 #ifndef HAVE_GCC_ATOMICS
     pthread_mutex_unlock(&pvt->cnt_lock);
     pvt->cnt += 1;
@@ -246,7 +244,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
         return;
     }
 #ifndef HAVE_GCC_ATOMICS
-    assert(pvt->cnt > 0);
+    RTPP_DBG_ASSERT(pvt->cnt > 0);
     pthread_mutex_unlock(&pvt->cnt_lock);
 #endif
 }
@@ -266,7 +264,7 @@ rtpp_refcnt_abort(struct rtpp_refcnt *pub)
 #ifndef HAVE_GCC_ATOMICS
     pthread_mutex_lock(&pvt->cnt_lock);
 #endif
-    assert(pvt->cnt == 1);
+    RTPP_DBG_ASSERT(pvt->cnt == 1);
 #ifndef HAVE_GCC_ATOMICS
     pthread_mutex_unlock(&pvt->cnt_lock);
     pthread_mutex_destroy(&pvt->cnt_lock);
@@ -284,7 +282,7 @@ rtpp_refcnt_getdata(struct rtpp_refcnt *pub)
     struct rtpp_refcnt_priv *pvt;
 
     pvt = (struct rtpp_refcnt_priv *)pub;
-    assert(pvt->cnt > 0);
+    RTPP_DBG_ASSERT(pvt->cnt > 0);
     return (pvt->data);
 }
 
@@ -295,7 +293,7 @@ rtpp_refcnt_reg_pd(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t pre_dtor_f,
     struct rtpp_refcnt_priv *pvt;
 
     pvt = (struct rtpp_refcnt_priv *)pub;
-    assert(pvt->pre_dtor_f == NULL);
+    RTPP_DBG_ASSERT(pvt->pre_dtor_f == NULL);
     pvt->pre_dtor_f = pre_dtor_f;
     pvt->pd_data = pd_data;
 }
