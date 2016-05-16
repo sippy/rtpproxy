@@ -28,17 +28,14 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <math.h>
-#include <pthread.h>
 #include <syslog.h>
 #include <stdarg.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
-#include "rtpp_defines.h"
 #ifdef RTPP_LOG_ADVANCED
 #include "rtpp_syslog_async.h"
 #endif
