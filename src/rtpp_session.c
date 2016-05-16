@@ -28,8 +28,6 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -46,12 +44,7 @@
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_math.h"
 #include "rtpp_module_if.h"
-#include "rtpp_monotime.h"
-#include "rtpp_pcount.h"
-#include "rtpp_pcnt_strm.h"
-#include "rtpp_pthread.h"
 #include "rtpp_pipe.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
