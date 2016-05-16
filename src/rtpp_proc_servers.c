@@ -27,24 +27,19 @@
  */
 
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
-#include <stdint.h>
 #include <stdlib.h>
 
 #include "rtpp_defines.h"
-#include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
 #include "rtpp_hash_table.h"
-#include "rtpp_network.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_servers.h"
-#include "rtpp_socket.h"
 #include "rtpp_server.h"
 #include "rtpp_stream.h"
 #include "rtpp_netaddr.h"
