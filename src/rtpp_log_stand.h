@@ -39,10 +39,6 @@ struct rtpp_cfg_stable;
 #define	rtpp_log_t	struct rtpp_log_inst *
 #endif
 
-#if 0
-#include "rtpp_defines.h"
-#endif
-
 #define LF_REOPEN 0
 
 #define	RTPP_LOG_DBUG	LOG_DEBUG
