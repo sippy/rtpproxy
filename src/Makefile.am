@@ -63,7 +63,9 @@ rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
 rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
   -DMEMDEB_APP=rtpproxy -include rtpp_memdeb.h
-rtpproxy_debug_CFLAGS=-g3 -O0 -fno-omit-frame-pointer
+EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
+rtpproxy_CFLAGS=${EXTRA_CFLAGS}
+rtpproxy_debug_CFLAGS=${EXTRA_CFLAGS} -g3 -O0 -fno-omit-frame-pointer
 
 DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
 
@@ -162,3 +164,14 @@ rtpp_netaddr_fin.c: $(GENFINCODE_S) rtpp_netaddr.h
 	$(GENFINCODE_S) rtpp_netaddr.h rtpp_netaddr_fin.h rtpp_netaddr_fin.c
 
 rtpp_netaddr_fin.h: rtpp_netaddr_fin.c
+
+includepolice:
+	@nfiles=`echo ${BASE_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); i=1; \
+	for file in ${BASE_SOURCES}; \
+	do \
+	  echo "  policing file $${i} of $${nfiles} -> $${file}"; \
+	  SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
+	   python ../misc/includepolice.py $${file} \
+	   > ipol/$${file}.txt && rm -f ipol/$${file}.txt ipol/$${file}.iout; \
+	  i=$$(($${i} + 1)); \
+	done
