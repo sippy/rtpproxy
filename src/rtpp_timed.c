@@ -25,16 +25,12 @@
  *
  */
 
-#include <sys/stat.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
