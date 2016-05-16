@@ -166,12 +166,23 @@ rtpp_netaddr_fin.c: $(GENFINCODE_S) rtpp_netaddr.h
 rtpp_netaddr_fin.h: rtpp_netaddr_fin.c
 
 includepolice:
-	@nfiles=`echo ${BASE_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); i=1; \
-	for file in ${BASE_SOURCES}; \
-	do \
-	  echo "  policing file $${i} of $${nfiles} -> $${file}"; \
-	  SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
-	   python ../misc/includepolice.py $${file} \
-	   > ipol/$${file}.txt && rm -f ipol/$${file}.txt ipol/$${file}.iout; \
-	  i=$$(($${i} + 1)); \
-	done
+	@nfiles=`echo ${BASE_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); \
+	 i=1; nwarns=0; \
+	 for file in ${BASE_SOURCES}; \
+	 do \
+	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
+	   set +e; set +x; \
+	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
+	    python ../misc/includepolice.py $${file} > ipol/$${file}.txt; \
+	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
+	   if [ $${RC} -eq 0 ]; then \
+	     rm -f ipol/$${file}.txt ipol/$${file}.iout; \
+	     echo "all clean"; \
+	   else \
+	     echo "$${RC} warning(s)"; \
+	     nwarns=$$(($${nwarns} + $${RC})); \
+	   fi; \
+	   i=$$(($${i} + 1)); \
+	 done; \
+	 echo "=========="; \
+	 echo "Total warnings: $${nwarns}"
