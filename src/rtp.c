@@ -380,7 +380,7 @@ void
 rtp_packet_dup(struct rtp_packet *dpkt, struct rtp_packet *spkt, int flags)
 {
     int csize;
-    struct rtp_packet_full *pkt_full;
+    struct rtp_packet_full *dpkt_full, *spkt_full;
     struct rtp_info *drinfo, *srinfo;
 
     csize = offsetof(struct rtp_packet, data.buf) + spkt->size;
@@ -392,12 +392,13 @@ rtp_packet_dup(struct rtp_packet *dpkt, struct rtp_packet *spkt, int flags)
     if (dpkt->parsed == NULL) {
         return;
     }
-    pkt_full = (void *)dpkt;
-    drinfo = &(pkt_full->pvt.rinfo);    
-    pkt_full = (void *)spkt;
-    srinfo = &(pkt_full->pvt.rinfo);
+    dpkt_full = (struct rtp_packet_full *)dpkt;
+    drinfo = &(dpkt_full->pvt.rinfo);    
+    spkt_full = (struct rtp_packet_full *)spkt;
+    srinfo = &(spkt_full->pvt.rinfo);
     memcpy(drinfo, srinfo, sizeof(struct rtp_info));
     dpkt->parsed = drinfo;
+    dpkt->wi = &(dpkt_full->pvt.wi);
     if ((flags & RTPP_DUP_HDRONLY) != 0) {
         dpkt->size -= dpkt->parsed->data_size;
         dpkt->parsed->data_size = 0;
