@@ -25,6 +25,10 @@
  *
  */
 
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+
 #include <dlfcn.h>
 #include <pthread.h>
 #include <signal.h>
