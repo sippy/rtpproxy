@@ -3,7 +3,8 @@
 ## About
 
 The RTPproxy is a high-performance software proxy for RTP streams that can
-work together with OpenSIPS, Kamailio or Sippy B2BUA.
+work together with OpenSIPS, Kamailio or [Sippy B2BUA]
+(https://github.com/sippy/b2bua).
 
 Originally created for handling NAT scenarios it can also act as a generic
 media relay as well as gateway RTP sessions between IPv4 and IPv6 networks.
@@ -14,10 +15,11 @@ included into the OpenSIPS or Kamailio SIP Proxy software allows using multiple
 RTPproxy instances running on remote machines for fault-tolerance and
 load-balancing purposes.
 
-Advance high-capacity clustering and load balancing is available through the
+Advanced high-capacity clustering and load balancing is available through the
 use of [RTP Cluster](https://github.com/sippy/rtp_cluster) middleware.
 
-The software also supports video relaying and RTP session recording.
+The software also supports MOH/pre-recorded prompts injection,  video relaying
+and RTP session recording to a local file or remote UDP listener(s).
 
 RTPproxy was developed by Maxim Sobolev and now is being actively maintained
 by the [Sippy Software, Inc](http://www.sippysoft.com).
