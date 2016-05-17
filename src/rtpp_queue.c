@@ -25,7 +25,7 @@
  *
  */
 
-#ifdef LINUX_XXX
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
 /* Apparently needed for vasprintf(3) */
 #define _GNU_SOURCE
 #endif
