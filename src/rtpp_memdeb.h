@@ -28,6 +28,13 @@
 #if !defined(_RTPP_MEMDEB_H)
 #define _RTPP_MEMDEB_H
 
+#ifdef LINUX_XXX
+/* vasprintf() etc */
+#define _GNU_SOURCE    1
+/* Apparently needed for drand48(3) */
+#define _SVID_SOURCE    1
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
