@@ -30,6 +30,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "rtpp_monotime.h"
 #include "rtpp_time.h"

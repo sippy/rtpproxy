@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <poll.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "rtpp_types.h"
