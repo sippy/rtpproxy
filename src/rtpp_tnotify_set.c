@@ -29,6 +29,11 @@
 #include "config_pp.h"
 #endif
 
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
+/* asprintf(3) */
+#define _GNU_SOURCE
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
