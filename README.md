@@ -3,19 +3,24 @@
 ## About
 
 The RTPproxy is a high-performance software proxy for RTP streams that can
-work together with SER or OpenSER. Originally created for handling NAT
-scenarios it can also act as a generic media relay as well as gateway RTP
-sessions between IPv4 and IPv6 networks. RTPproxy was developed by Maxim
-Sobolev and now is being actively maintained by the Sippy Software, Inc.
+work together with OpenSIPS, Kamailio or Sippy B2BUA.
+
+Originally created for handling NAT scenarios it can also act as a generic
+media relay as well as gateway RTP sessions between IPv4 and IPv6 networks.
 
 The RTPproxy supports some advanced features, such as remote control mode,
 allowing building scalable distributed SIP VoIP networks. The nathelper module
-included into the SER or OpenSER SIP Proxy software allows using multiple
+included into the OpenSIPS or Kamailio SIP Proxy software allows using multiple
 RTPproxy instances running on remote machines for fault-tolerance and
 load-balancing purposes.
 
+Advance high-capacity clustering and load balancing is available through the
+use of [RTP Cluster](https://github.com/sippy/rtp_cluster) middleware.
+
 The software also supports video relaying and RTP session recording.
 
+RTPproxy was developed by Maxim Sobolev and now is being actively maintained
+by the [Sippy Software, Inc](http://www.sippysoft.com).
 
 ## How it works
 
