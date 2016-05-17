@@ -28,6 +28,7 @@
 
 #if defined(LINUX_XXX)
 #undef _GNU_SOURCE
+#define __FAVOR_BSD
 #endif
 
 #include <sys/types.h>
