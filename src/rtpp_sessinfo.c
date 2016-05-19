@@ -103,7 +103,7 @@ rtpp_polltbl_hst_dtor(struct rtpp_polltbl_hst *hp)
     for (i = 0; i < hp->ulen; i++) {
         hep = hp->clog + i;
         if (hep->skt != NULL) {
-            CALL_METHOD(hep->skt->rcnt, decref);
+            CALL_SMETHOD(hep->skt->rcnt, decref);
         }
     }
     if (hp->alen > 0) {
@@ -138,7 +138,7 @@ rtpp_polltbl_hst_record(struct rtpp_polltbl_hst *hp, enum polltbl_hst_ops op,
     hpe->skt = skt;
     hp->ulen += 1;
     if (skt != NULL) {
-        CALL_METHOD(skt->rcnt, incref);
+        CALL_SMETHOD(skt->rcnt, incref);
     }
 }
 
@@ -172,7 +172,7 @@ rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
     sessinfo->remove = &rtpp_sinfo_remove;
     sessinfo->sync_polltbl = &rtpp_sinfo_sync_polltbl;
 
-    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_sessinfo_dtor,
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_sessinfo_dtor,
       pvt);
     return (sessinfo);
 
@@ -181,7 +181,7 @@ e7:
 e6:
     pthread_mutex_destroy(&pvt->lock);
 e5:
-    CALL_METHOD(pvt->pub.rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
     return (NULL);
 }
@@ -260,7 +260,7 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     }
     rtp = sp->rtp->stream[index];
     if (rtp->fd != NULL) {
-        CALL_METHOD(rtp->fd->rcnt, decref);
+        CALL_SMETHOD(rtp->fd->rcnt, decref);
         rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_UPD, rtp->stuid, new_fds[0]);
     } else {
         rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_ADD, rtp->stuid, new_fds[0]);
@@ -268,7 +268,7 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     rtp->fd = new_fds[0];
     rtcp = sp->rtcp->stream[index];
     if (rtcp->fd != NULL) {
-        CALL_METHOD(rtcp->fd->rcnt, decref);
+        CALL_SMETHOD(rtcp->fd->rcnt, decref);
         rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_UPD, rtcp->stuid, new_fds[1]);
     } else {
         rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_ADD, rtcp->stuid, new_fds[1]);
@@ -320,7 +320,7 @@ rtpp_polltbl_free(struct rtpp_polltbl *ptbl)
     }
     if (ptbl->curlen > 0) {
         for (i = 0; i < ptbl->curlen; i++) {
-            CALL_METHOD(ptbl->mds[i].skt->rcnt, decref);
+            CALL_SMETHOD(ptbl->mds[i].skt->rcnt, decref);
         }
     }
     free(ptbl->pfds);
@@ -386,7 +386,7 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
         case HST_DEL:
             session_index = find_polltbl_idx(ptbl, hep->stuid);
             assert(session_index > -1);
-            CALL_METHOD(ptbl->mds[session_index].skt->rcnt, decref);
+            CALL_SMETHOD(ptbl->mds[session_index].skt->rcnt, decref);
             movelen = (ptbl->curlen - session_index - 1);
             if (movelen > 0) {
                 memmove(&ptbl->pfds[session_index], &ptbl->pfds[session_index + 1],
@@ -401,7 +401,7 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
         case HST_UPD:
             session_index = find_polltbl_idx(ptbl, hep->stuid);
             assert(session_index > -1);
-            CALL_METHOD(ptbl->mds[session_index].skt->rcnt, decref);
+            CALL_SMETHOD(ptbl->mds[session_index].skt->rcnt, decref);
             ptbl->pfds[session_index].fd = CALL_METHOD(hep->skt, getfd);
             ptbl->pfds[session_index].events = POLLIN;
             ptbl->pfds[session_index].revents = 0;

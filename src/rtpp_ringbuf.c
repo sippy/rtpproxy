@@ -74,11 +74,11 @@ rtpp_ringbuf_ctor(size_t el_size, int nelements)
     pvt->pub.push = rtpp_ringbuf_push;
     pvt->pub.flush = rtpp_ringbuf_flush;
     pvt->pub.locate = rtpp_ringbuf_locate;
-    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ringbuf_dtor,
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ringbuf_dtor,
       pvt);
     return (&pvt->pub);
 e1:
-    CALL_METHOD(pvt->pub.rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

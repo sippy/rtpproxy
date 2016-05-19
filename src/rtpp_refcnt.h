@@ -36,7 +36,7 @@ DEFINE_METHOD(rtpp_refcnt, refcnt_reg_pd, void, rtpp_refcnt_dtor_t, void *);
 DEFINE_METHOD(rtpp_refcnt, refcnt_attach, void, rtpp_refcnt_dtor_t, void *);
 DEFINE_METHOD(rtpp_refcnt, refcnt_traceen, void);
 
-struct rtpp_refcnt
+struct rtpp_refcnt_smethods
 {
     METHOD_ENTRY(refcnt_incref, incref);
     METHOD_ENTRY(refcnt_decref, decref);
@@ -44,6 +44,11 @@ struct rtpp_refcnt
     METHOD_ENTRY(refcnt_reg_pd, reg_pd);
     METHOD_ENTRY(refcnt_attach, attach);
     METHOD_ENTRY(refcnt_traceen, traceen);
+};
+
+struct rtpp_refcnt
+{
+    const struct rtpp_refcnt_smethods *smethods;
 };
 
 struct rtpp_refcnt *rtpp_refcnt_ctor(void *, rtpp_refcnt_dtor_t);

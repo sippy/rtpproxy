@@ -177,14 +177,14 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
         rrc->proto = (record_type == RECORD_RTP) ? "RTP" : "RTCP";
     }
     rrc->log = sp->log;
-    CALL_METHOD(sp->log->rcnt, incref);
+    CALL_SMETHOD(sp->log->rcnt, incref);
     rrc->pub.write = &rtpp_record_write;
     if (remote) {
 	rval = ropen_remote_ctor_pa(rrc, sp->log, rname, (record_type == RECORD_RTCP));
         if (rval < 0) {
             goto e2;
         }
-        CALL_METHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
+        CALL_SMETHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
           rrc);
         return (&rrc->pub);
     }
@@ -253,15 +253,15 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
 	}
     }
 
-    CALL_METHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
+    CALL_SMETHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
       rrc);
     return (&rrc->pub);
 
 e3:
     close(rrc->fd);
 e2:
-    CALL_METHOD(rrc->log->rcnt, decref);
-    CALL_METHOD(rrc->pub.rcnt, decref);
+    CALL_SMETHOD(rrc->log->rcnt, decref);
+    CALL_SMETHOD(rrc->pub.rcnt, decref);
     free(rrc);
 e0:
     return NULL;
@@ -625,7 +625,7 @@ rtpp_record_close(struct rtpp_record_channel *rrc)
 	      "session record from spool into permanent storage");
     }
 done:
-    CALL_METHOD(rrc->log->rcnt, decref);
+    CALL_SMETHOD(rrc->log->rcnt, decref);
 
     free(rrc);
 }

@@ -116,7 +116,8 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     rp->pub.get_seq = &rtpp_server_get_seq;
     rtpp_gen_uid(&rp->pub.sruid);
 
-    CALL_METHOD(rp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_dtor, rp);
+    CALL_SMETHOD(rp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_dtor,
+      rp);
     return (&rp->pub);
 e1:
     close(fd);

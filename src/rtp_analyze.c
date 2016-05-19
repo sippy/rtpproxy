@@ -257,7 +257,7 @@ rtp_analyze_jt_destroy(struct rtp_analyze_jitter *jp)
 
     for (jdp = jp->first; jdp != NULL; jdp = jdp_next) {
         jdp_next = jdp->next;
-        CALL_METHOD(jdp->ts_dedup->rcnt, decref);
+        CALL_SMETHOD(jdp->ts_dedup->rcnt, decref);
         free(jdp);
         jp->jdlen -= 1;
     }

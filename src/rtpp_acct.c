@@ -90,7 +90,7 @@ rtpp_acct_ctor(uint64_t seuid)
     pvt->pub.rasta = &pvt->_rasta;
     pvt->pub.jrasto = &pvt->_jrasto;
     pvt->pub.jrasta = &pvt->_jrasta;
-    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_acct_dtor,
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_acct_dtor,
       pvt);
     return ((&pvt->pub));
 

@@ -83,9 +83,9 @@ process_rtp_servers_foreach(void *dp, void *ap)
                   rsop->stuid_rtcp);
                 if (rsop_rtcp != NULL) {
                     CALL_SMETHOD(rsop_rtcp, replace_rtps, rtps_old, RTPP_UID_NONE);
-                    CALL_METHOD(rsop_rtcp->rcnt, decref);
+                    CALL_SMETHOD(rsop_rtcp->rcnt, decref);
                 }
-                CALL_METHOD(rsop->rcnt, decref);
+                CALL_SMETHOD(rsop->rcnt, decref);
                 return (RTPP_WR_MATCH_DEL);
             } else if (len != RTPS_LATER) {
                 /* XXX some error, brag to logs */
@@ -100,7 +100,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
         CALL_SMETHOD(rsop, send_pkt, fap->sender, pkt);
         fap->rsp->npkts_played.cnt++;
     }
-    CALL_METHOD(rsop->rcnt, decref);
+    CALL_SMETHOD(rsop->rcnt, decref);
     return (RTPP_WR_MATCH_CONT);
 }
 

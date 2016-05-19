@@ -80,6 +80,17 @@ static void rtpp_refcnt_reg_pd(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
 static void rtpp_refcnt_traceen(struct rtpp_refcnt *);
 #endif
 
+const struct rtpp_refcnt_smethods rtpp_refcnt_smethods = {
+    .incref = &rtpp_refcnt_incref,
+    .decref = &rtpp_refcnt_decref,
+    .getdata = &rtpp_refcnt_getdata,
+    .reg_pd = &rtpp_refcnt_reg_pd,
+#if RTPP_DEBUG_refcnt
+    .traceen = rtpp_refcnt_traceen,
+#endif
+    .attach = &rtpp_refcnt_attach
+};
+
 struct rtpp_refcnt *
 rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
 {
@@ -101,14 +112,7 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     } else {
         pvt->dtor_f = free;
     }
-    pvt->pub.attach = &rtpp_refcnt_attach;
-    pvt->pub.incref = &rtpp_refcnt_incref;
-    pvt->pub.decref = &rtpp_refcnt_decref;
-    pvt->pub.getdata = &rtpp_refcnt_getdata;
-    pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
-#if RTPP_DEBUG_refcnt
-    pvt->pub.traceen = &rtpp_refcnt_traceen;
-#endif
+    pvt->pub.smethods = &rtpp_refcnt_smethods;
     pvt->cnt = 1;
     return (&pvt->pub);
 }
@@ -131,14 +135,7 @@ rtpp_refcnt_ctor_pa(void *pap)
         return (NULL);
     }
 #endif
-    pvt->pub.attach = &rtpp_refcnt_attach;
-    pvt->pub.incref = &rtpp_refcnt_incref;
-    pvt->pub.decref = &rtpp_refcnt_decref;
-    pvt->pub.getdata = &rtpp_refcnt_getdata;
-    pvt->pub.reg_pd = &rtpp_refcnt_reg_pd;
-#if RTPP_DEBUG_refcnt
-    pvt->pub.traceen = &rtpp_refcnt_traceen;
-#endif
+    pvt->pub.smethods = &rtpp_refcnt_smethods;
     pvt->cnt = 1;
     pvt->flags |= RC_FLAG_PA;
     return (&pvt->pub);

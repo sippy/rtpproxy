@@ -129,7 +129,7 @@ rtpp_wref_get_by_idx(struct rtpp_weakref_obj *pub, uint64_t suid)
     if (rco == NULL) {
         return (NULL);
     }
-    return (CALL_METHOD(rco, getdata));
+    return (CALL_SMETHOD(rco, getdata));
 }
 
 static void

@@ -147,11 +147,11 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
             }
         } else {
             pub->rtp->stream[i]->ttl = pub->rtp->stream[0]->ttl;
-            CALL_METHOD(pub->rtp->stream[0]->ttl->rcnt, incref);
+            CALL_SMETHOD(pub->rtp->stream[0]->ttl->rcnt, incref);
         }
         /* RTCP shares the same TTL */
         pub->rtcp->stream[i]->ttl = pub->rtp->stream[i]->ttl;
-        CALL_METHOD(pub->rtp->stream[i]->ttl->rcnt, incref);
+        CALL_SMETHOD(pub->rtp->stream[i]->ttl->rcnt, incref);
     }
     for (i = 0; i < 2; i++) {
         pub->rtp->stream[i]->stuid_rtcp = pub->rtcp->stream[i]->stuid;
@@ -162,13 +162,14 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     pvt->pub.log = log;
     pvt->sessinfo = cfs->sessinfo;
     if (cfs->modules_cf != NULL) {
-        CALL_METHOD(cfs->modules_cf->rcnt, incref);
+        CALL_SMETHOD(cfs->modules_cf->rcnt, incref);
         pvt->modules_cf = cfs->modules_cf;
     }
 
     CALL_METHOD(cfs->sessinfo, append, pub, 0);
 
-    CALL_METHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor, pvt);
+    CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor,
+      pvt);
     return (&pvt->pub);
 
 e8:
@@ -178,15 +179,15 @@ e7:
 e6:
     free(pub->call_id);
 e5:
-    CALL_METHOD(pvt->acct->rcnt, decref);
+    CALL_SMETHOD(pvt->acct->rcnt, decref);
 e4:
-    CALL_METHOD(pub->rtcp->rcnt, decref);
+    CALL_SMETHOD(pub->rtcp->rcnt, decref);
 e3:
-    CALL_METHOD(pub->rtp->rcnt, decref);
+    CALL_SMETHOD(pub->rtp->rcnt, decref);
 e2:
-    CALL_METHOD(log->rcnt, decref);
+    CALL_SMETHOD(log->rcnt, decref);
 e1:
-    CALL_METHOD(pub->rcnt, decref);
+    CALL_SMETHOD(pub->rcnt, decref);
     free(pvt);
 e0:
     return (NULL);
@@ -235,11 +236,11 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
           pvt->acct->jrasta);
 
         CALL_METHOD(pvt->modules_cf, do_acct, pvt->acct);
-        CALL_METHOD(pvt->modules_cf->rcnt, decref);
+        CALL_SMETHOD(pvt->modules_cf->rcnt, decref);
     }
-    CALL_METHOD(pvt->acct->rcnt, decref);
+    CALL_SMETHOD(pvt->acct->rcnt, decref);
 
-    CALL_METHOD(pvt->pub.log->rcnt, decref);
+    CALL_SMETHOD(pvt->pub.log->rcnt, decref);
     if (pvt->pub.timeout_data.notify_tag != NULL)
         free(pvt->pub.timeout_data.notify_tag);
     if (pvt->pub.call_id != NULL)
@@ -249,8 +250,8 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     if (pvt->pub.tag_nomedianum != NULL)
         free(pvt->pub.tag_nomedianum);
 
-    CALL_METHOD(pvt->pub.rtcp->rcnt, decref);
-    CALL_METHOD(pvt->pub.rtp->rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rtcp->rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rtp->rcnt, decref);
     free(pvt);
 }
 
@@ -320,7 +321,7 @@ rtpp_session_ematch(void *dp, void *ap)
     return (RTPP_HT_MATCH_CONT);
 
 found:
-    CALL_METHOD(rsp->rcnt, incref);
+    CALL_SMETHOD(rsp->rcnt, incref);
     RTPP_DBG_ASSERT(map->sp == NULL);
     map->sp = rsp;
     return (RTPP_HT_MATCH_BRK);

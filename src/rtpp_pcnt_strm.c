@@ -74,12 +74,12 @@ rtpp_pcnt_strm_ctor(void)
     }
     pvt->pub.get_stats = &rtpp_pcnt_strm_get_stats;
     pvt->pub.reg_pktin = &rtpp_pcnt_strm_reg_pktin;
-    CALL_METHOD(pvt->pub.rcnt, attach,
+    CALL_SMETHOD(pvt->pub.rcnt, attach,
       (rtpp_refcnt_dtor_t)&rtpp_pcnt_strm_dtor, pvt);
     return ((&pvt->pub));
 
 e1:
-    CALL_METHOD(pvt->pub.rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

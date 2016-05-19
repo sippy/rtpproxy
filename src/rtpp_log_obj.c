@@ -70,7 +70,7 @@ rtpp_log_ctor(struct rtpp_cfg_stable *cfs, const char *app,
     pvt->pub.setlevel = &rtpp_log_obj_setlevel;
     pvt->pub.write = rtpp_log_obj_write;
     pvt->pub.ewrite = rtpp_log_obj_ewrite;
-    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_log_obj_dtor,
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_log_obj_dtor,
       pvt);
     return (&pvt->pub);
 }

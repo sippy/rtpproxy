@@ -102,11 +102,11 @@ rtpp_socket_ctor(int domain, int type)
     pvt->pub.send_pkt_na = &rtpp_socket_send_pkt_na;
     pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_simple;
     pvt->pub.getfd = &rtpp_socket_getfd;
-    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_dtor,
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_dtor,
       pvt);
     return (&pvt->pub);
 e1:
-    CALL_METHOD(pvt->pub.rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

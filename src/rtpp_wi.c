@@ -85,7 +85,7 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
     wi->wi_type = RTPP_WI_TYPE_OPKT;
     wi->sock = sock;
     if (sock_rcnt != NULL) {
-        CALL_METHOD(sock_rcnt, incref);
+        CALL_SMETHOD(sock_rcnt, incref);
     }
     wi->sock_rcnt = sock_rcnt;
     wi->flags = 0;
@@ -110,7 +110,7 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
     wi->wi_type = RTPP_WI_TYPE_OPKT;
     wi->sock = sock;
     if (sock_rcnt != NULL) {
-        CALL_METHOD(sock_rcnt, incref);
+        CALL_SMETHOD(sock_rcnt, incref);
     }
     wi->sock_rcnt = sock_rcnt;
     wi->flags = 0;
@@ -265,10 +265,10 @@ rtpp_wi_free(struct rtpp_wi *wi)
 {
 
     if (wi->sock_rcnt != NULL) {
-        CALL_METHOD(wi->sock_rcnt, decref);
+        CALL_SMETHOD(wi->sock_rcnt, decref);
     }
     if (wi->log != NULL) {
-        CALL_METHOD(wi->log->rcnt, decref);
+        CALL_SMETHOD(wi->log->rcnt, decref);
     }
     free(wi->free_ptr);
 }

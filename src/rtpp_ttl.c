@@ -71,12 +71,12 @@ rtpp_ttl_ctor(int max_ttl)
     pvt->pub.get_remaining = &rtpp_ttl_get_remaining;
     pvt->pub.decr = &rtpp_ttl_decr;
     pvt->ttl = pvt->max_ttl = max_ttl;
-    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ttl_dtor,
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ttl_dtor,
       pvt);
     return ((&pvt->pub));
 
 e1:
-    CALL_METHOD(pvt->pub.rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

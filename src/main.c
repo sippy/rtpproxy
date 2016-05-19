@@ -184,7 +184,7 @@ ehandler(void)
     rtpp_controlfd_cleanup(_sig_cf);
     unlink(_sig_cf->stable->pid_file);
     RTPP_LOG(_sig_cf->stable->glog, RTPP_LOG_INFO, "rtpproxy ended");
-    CALL_METHOD(_sig_cf->stable->glog->rcnt, decref);
+    CALL_SMETHOD(_sig_cf->stable->glog->rcnt, decref);
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_FIN(rtpproxy);
 #endif
@@ -904,16 +904,16 @@ main(int argc, char **argv)
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
 #if ENABLE_MODULE_IF
     if (cf.stable->modules_cf != NULL) {
-        CALL_METHOD(cf.stable->modules_cf->rcnt, decref);
+        CALL_SMETHOD(cf.stable->modules_cf->rcnt, decref);
     }
 #endif
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
-    CALL_METHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
+    CALL_SMETHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
     CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
-    CALL_METHOD(cf.stable->sessinfo->rcnt, decref);
+    CALL_SMETHOD(cf.stable->sessinfo->rcnt, decref);
     for (i = 0; i <= RTPP_PT_MAX; i++) {
-        CALL_METHOD(cf.stable->port_table[i]->rcnt, decref);
+        CALL_SMETHOD(cf.stable->port_table[i]->rcnt, decref);
     }
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");

@@ -90,8 +90,8 @@ rtpp_server_fin.c: $(GENFINCODE) rtpp_server.h
 
 rtpp_server_fin.h: rtpp_server_fin.c
 
-rtpp_refcnt_fin.c: $(GENFINCODE) rtpp_refcnt.h
-	$(GENFINCODE) rtpp_refcnt.h rtpp_refcnt_fin.h rtpp_refcnt_fin.c
+rtpp_refcnt_fin.c: $(GENFINCODE_S) rtpp_refcnt.h
+	$(GENFINCODE_S) rtpp_refcnt.h rtpp_refcnt_fin.h rtpp_refcnt_fin.c
 
 rtpp_refcnt_fin.h: rtpp_refcnt_fin.c
 

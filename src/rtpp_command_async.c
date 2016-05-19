@@ -674,7 +674,7 @@ e7:
     }
 e6:
     CALL_METHOD(cmd_cf->rcache, shutdown);
-    CALL_METHOD(cmd_cf->rcache->rcnt, decref);
+    CALL_SMETHOD(cmd_cf->rcache->rcnt, decref);
 e5:
     pthread_mutex_destroy(&cmd_cf->cmd_mutex);
 e4:
@@ -714,7 +714,7 @@ rtpp_command_async_dtor(struct rtpp_cmd_async *pub)
         pthread_join(cmd_cf->acpt_thread_id, NULL);
     }
     CALL_METHOD(cmd_cf->rcache, shutdown);
-    CALL_METHOD(cmd_cf->rcache->rcnt, decref);
+    CALL_SMETHOD(cmd_cf->rcache->rcnt, decref);
     pthread_cond_destroy(&cmd_cf->cmd_cond);
     pthread_mutex_destroy(&cmd_cf->cmd_mutex);
     free_pollset(&cmd_cf->pset);

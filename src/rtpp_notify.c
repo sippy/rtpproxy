@@ -124,7 +124,7 @@ rtpp_notify_ctor(struct rtpp_log *glog)
         goto e3;
     }
 
-    CALL_METHOD(glog->rcnt, incref);
+    CALL_SMETHOD(glog->rcnt, incref);
     pvt->glog = glog;
     pvt->pub.schedule = &rtpp_notify_schedule;
     pvt->pub.dtor = &rtpp_notify_dtor;
@@ -151,7 +151,7 @@ rtpp_notify_dtor(struct rtpp_notify *pub)
     rtpp_queue_put_item(pvt->sigterm, pvt->nqueue);
     pthread_join(pvt->thread_id, NULL);
     rtpp_queue_destroy(pvt->nqueue);
-    CALL_METHOD(pvt->glog->rcnt, decref);
+    CALL_SMETHOD(pvt->glog->rcnt, decref);
     free(pvt);
 }
 
@@ -181,7 +181,7 @@ rtpp_notify_schedule(struct rtpp_notify *pub,
 
     len = snprintf(wi_data->notify_buf, len, "%s\n", notify_tag);
 
-    CALL_METHOD(pvt->glog->rcnt, incref);
+    CALL_SMETHOD(pvt->glog->rcnt, incref);
     wi->log = pvt->glog;
 
     rtpp_queue_put_item(wi, pvt->nqueue);

@@ -89,14 +89,14 @@ rtpp_cmd_rcache_ctor(struct rtpp_timed *rtpp_timed_cf, double min_ttl)
     pvt->pub.insert = &rtpp_cmd_rcache_insert;
     pvt->pub.lookup = &rtpp_cmd_rcache_lookup;
     pvt->pub.shutdown = &rtpp_cmd_rcache_shutdown;
-    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_cmd_rcache_dtor,
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_cmd_rcache_dtor,
       pvt);
     return (&pvt->pub);
 
 e2:
     CALL_METHOD(pvt->ht, dtor);
 e0:
-    CALL_METHOD(pvt->pub.rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
     return (NULL);
 }
@@ -130,16 +130,16 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const char *cookie,
     }
     rep->etime = ctime + pvt->min_ttl;
     CALL_METHOD(pvt->ht, append_refcnt, cookie, rcnt);
-    CALL_METHOD(rcnt, attach, rtpp_cmd_rcache_entry_free, rep);
+    CALL_SMETHOD(rcnt, attach, rtpp_cmd_rcache_entry_free, rep);
     /*
      * append_refcnt() either takes ownership in which case it incs refcount
      * or it drops the ball in which it does not, so we release rco and set
      * it free.
      */
-    CALL_METHOD(rcnt, decref);
+    CALL_SMETHOD(rcnt, decref);
     return;
 e1:
-    CALL_METHOD(rcnt, decref);
+    CALL_SMETHOD(rcnt, decref);
     free(rep);
 }
 
@@ -160,9 +160,9 @@ rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *pub, const char *cookie,
      * "find" method returns object that has been incref'ed, so make sure
      * to decref when we've done with it.
      */
-    rep = CALL_METHOD(rco, getdata);
+    rep = CALL_SMETHOD(rco, getdata);
     strncpy(rbuf, rep->reply, rblen);
-    CALL_METHOD(rco, decref);
+    CALL_SMETHOD(rco, decref);
     return (1);
 }
 
@@ -174,7 +174,7 @@ rtpp_cmd_rcache_shutdown(struct rtpp_cmd_rcache *pub)
     pvt = (struct rtpp_cmd_rcache_pvt *)pub;
     pvt->timeout_rval = CB_LAST;
     CALL_METHOD(pvt->timeout, cancel);
-    CALL_METHOD(pvt->timeout->rcnt, decref);
+    CALL_SMETHOD(pvt->timeout->rcnt, decref);
     pvt->timeout = NULL;
 }
 

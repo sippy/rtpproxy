@@ -108,9 +108,9 @@ rtpp_timed_queue_run(void *argp)
             wi_data->cancel_cb_func(wi_data->cb_func_arg);
         }
         if (wi_data->callback_rcnt != NULL) {
-            CALL_METHOD(wi_data->callback_rcnt, decref);
+            CALL_SMETHOD(wi_data->callback_rcnt, decref);
         }
-        CALL_METHOD(wi_data->pub.rcnt, decref);
+        CALL_SMETHOD(wi_data->pub.rcnt, decref);
     }
 }
 
@@ -151,7 +151,7 @@ rtpp_timed_ctor(double run_period)
     rtcp->pub.wakeup = &rtpp_timed_wakeup;
     rtcp->pub.schedule = &rtpp_timed_schedule;
     rtcp->pub.schedule_rc = &rtpp_timed_schedule_rc;
-    CALL_METHOD(rtcp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_destroy,
+    CALL_SMETHOD(rtcp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_destroy,
       rtcp);
     return (&rtcp->pub);
 
@@ -162,7 +162,7 @@ e3:
 e2:
     rtpp_queue_destroy(rtcp->q);
 e1:
-    CALL_METHOD(rtcp->pub.rcnt, decref);
+    CALL_SMETHOD(rtcp->pub.rcnt, decref);
     free(rtcp);
 e0:
     return (NULL);
@@ -210,16 +210,16 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
     wi_data->offset = offset;
     wi_data->callback_rcnt = callback_rcnt;
     if (callback_rcnt != NULL) {
-        CALL_METHOD(callback_rcnt, incref);
+        CALL_SMETHOD(callback_rcnt, incref);
     }
     if (support_cancel != 0) {
         wi_data->pub.cancel = &rtpp_timed_cancel;
         wi_data->timed_cf = rtpp_timed_cf;
-        CALL_METHOD(pub->rcnt, incref);
+        CALL_SMETHOD(pub->rcnt, incref);
     }
-    CALL_METHOD(wi_data->pub.rcnt, incref);
+    CALL_SMETHOD(wi_data->pub.rcnt, incref);
     rtpp_queue_put_item(wi, rtpp_timed_cf->q);
-    CALL_METHOD(wi_data->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_task_dtor,
+    CALL_SMETHOD(wi_data->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_task_dtor,
       wi_data);
     return (&(wi_data->pub));
 }
@@ -251,7 +251,7 @@ rtpp_timed_schedule(struct rtpp_timed *pub, double offset,
     if (tpub == NULL) {
         return (-1);
     }
-    CALL_METHOD(tpub->rcnt, decref);
+    CALL_SMETHOD(tpub->rcnt, decref);
     return (0);
 }
 
@@ -320,9 +320,9 @@ rtpp_timed_process(struct rtpp_timed_cf *rtcp, double ctime)
             continue;
         }
         if (wi_data->callback_rcnt != NULL) {
-            CALL_METHOD(wi_data->callback_rcnt, decref);
+            CALL_SMETHOD(wi_data->callback_rcnt, decref);
         }
-        CALL_METHOD(wi_data->pub.rcnt, decref);
+        CALL_SMETHOD(wi_data->pub.rcnt, decref);
     }
 }
 
@@ -351,7 +351,7 @@ rtpp_timed_task_dtor(struct rtpp_timed_wi *wi_data)
 
     rtpp_timed_task_fin(&(wi_data->pub));
     if (wi_data->timed_cf != NULL) {
-        CALL_METHOD(wi_data->timed_cf->pub.rcnt, decref);
+        CALL_SMETHOD(wi_data->timed_cf->pub.rcnt, decref);
     }
     rtpp_wi_free(wi_data->wi);
 }
@@ -378,8 +378,8 @@ rtpp_timed_cancel(struct rtpp_timed_task *taskpub)
         wi_data->cancel_cb_func(wi_data->cb_func_arg);
     }
     if (wi_data->callback_rcnt != NULL) {
-        CALL_METHOD(wi_data->callback_rcnt, decref);
+        CALL_SMETHOD(wi_data->callback_rcnt, decref);
     }
-    CALL_METHOD(wi_data->pub.rcnt, decref);
+    CALL_SMETHOD(wi_data->pub.rcnt, decref);
     return (1);
 }

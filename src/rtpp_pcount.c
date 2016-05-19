@@ -70,12 +70,12 @@ rtpp_pcount_ctor(void)
     pvt->pub.reg_drop = &rtpp_pcount_reg_drop;
     pvt->pub.reg_ignr = &rtpp_pcount_reg_ignr;
     pvt->pub.get_stats = &rtpp_pcount_get_stats;
-    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcount_dtor,
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcount_dtor,
       pvt);
     return ((&pvt->pub));
 
 e1:
-    CALL_METHOD(pvt->pub.rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

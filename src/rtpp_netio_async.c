@@ -176,7 +176,7 @@ rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
 #if RTPP_DEBUG_netio >= 1
     wi->debug = 1;
     wi->log = netio_cf->args[0].glog;
-    CALL_METHOD(wi->log->rcnt, incref);
+    CALL_SMETHOD(wi->log->rcnt, incref);
 #if RTPP_DEBUG_netio >= 2
     RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "malloc(%d, %p, %d, %d, %p, %d) = %p",
       sock, msg, msg_len, flags, sendto, tolen, wi);
@@ -230,7 +230,7 @@ rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
     if (plog == NULL) {
         plog = sender->glog;
     }
-    CALL_METHOD(plog->rcnt, incref);
+    CALL_SMETHOD(plog->rcnt, incref);
     wi->log = plog;
     RTPP_LOG(plog, RTPP_LOG_DBUG, "send_pkt(%d, %p, %d, %d, %p, %d)",
       wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
@@ -267,7 +267,7 @@ rtpp_anetio_send_pkt_na(struct sthread_args *sender, int sock, \
     if (plog == NULL) {
         plog = sender->glog;
     }
-    CALL_METHOD(plog->rcnt, incref);
+    CALL_SMETHOD(plog->rcnt, incref);
     wi->log = plog;
     RTPP_LOG(plog, RTPP_LOG_DBUG, "send_pkt(%d, %p, %d, %d, %p, %d)",
       wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
@@ -312,11 +312,11 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
         if (netio_cf->args[i].out_q == NULL) {
             for (ri = i - 1; ri >= 0; ri--) {
                 rtpp_queue_destroy(netio_cf->args[ri].out_q);
-                CALL_METHOD(netio_cf->args[ri].glog->rcnt, decref);
+                CALL_SMETHOD(netio_cf->args[ri].glog->rcnt, decref);
             }
             goto e0;
         }
-        CALL_METHOD(cf->stable->glog->rcnt, incref);
+        CALL_SMETHOD(cf->stable->glog->rcnt, incref);
         netio_cf->args[i].glog = cf->stable->glog;
         netio_cf->args[i].dmode = cf->stable->dmode;
 #if RTPP_DEBUG_timers
@@ -359,7 +359,7 @@ e2:
 e1:
     for (i = 0; i < SEND_THREADS; i++) {
         rtpp_queue_destroy(netio_cf->args[i].out_q);
-        CALL_METHOD(netio_cf->args[i].glog->rcnt, decref);
+        CALL_SMETHOD(netio_cf->args[i].glog->rcnt, decref);
     }
 e0:
     free(netio_cf);
@@ -377,7 +377,7 @@ rtpp_netio_async_destroy(struct rtpp_anetio_cf *netio_cf)
     for (i = 0; i < SEND_THREADS; i++) {
         pthread_join(netio_cf->thread_id[i], NULL);
         rtpp_queue_destroy(netio_cf->args[i].out_q);
-        CALL_METHOD(netio_cf->args[i].glog->rcnt, decref);
+        CALL_SMETHOD(netio_cf->args[i].glog->rcnt, decref);
     }
     free(netio_cf);
 }

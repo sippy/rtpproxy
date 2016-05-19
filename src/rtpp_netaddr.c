@@ -86,12 +86,12 @@ rtpp_netaddr_ctor(void)
         goto e1;
     }
     pvt->pub.smethods = &rtpp_netaddr_smethods;
-    CALL_METHOD(pvt->pub.rcnt, attach,
+    CALL_SMETHOD(pvt->pub.rcnt, attach,
       (rtpp_refcnt_dtor_t)&rtpp_netaddr_dtor, pvt);
     return ((&pvt->pub));
 
 e1:
-    CALL_METHOD(pvt->pub.rcnt, decref);
+    CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
 e0:
     return (NULL);

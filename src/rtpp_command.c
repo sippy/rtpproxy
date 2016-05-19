@@ -168,7 +168,7 @@ create_twinlistener(uint16_t port, void *ap)
 failure:
     for (i = 0; i < 2; i++)
 	if (ctap->fds[i] != NULL) {
-            CALL_METHOD(ctap->fds[i]->rcnt, decref);
+            CALL_SMETHOD(ctap->fds[i]->rcnt, decref);
 	    ctap->fds[i] = NULL;
 	}
     return rval;
@@ -263,10 +263,10 @@ free_command(struct rtpp_command *cmd)
 
     pvt = PUB2PVT(cmd);
     if (pvt->rcache_obj != NULL) {
-        CALL_METHOD(pvt->rcache_obj->rcnt, decref);
+        CALL_SMETHOD(pvt->rcache_obj->rcnt, decref);
     }
     if (cmd->sp != NULL) {
-        CALL_METHOD(cmd->sp->rcnt, decref);
+        CALL_SMETHOD(cmd->sp->rcnt, decref);
     }
     free(pvt);
 }
@@ -366,7 +366,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
             free_command(cmd);
             return (NULL);
         }
-        CALL_METHOD(rcache_obj->rcnt, incref);
+        CALL_SMETHOD(rcache_obj->rcnt, incref);
         pvt->rcache_obj = rcache_obj;
         for (i = 1; i < cmd->argc; i++)
             cmd->argv[i - 1] = cmd->argv[i];

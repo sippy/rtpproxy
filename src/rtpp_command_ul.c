@@ -377,12 +377,12 @@ handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
     RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't allocate memory");
     rtpp_command_ul_opts_free(ulop);
     if (spa != NULL) {
-        CALL_METHOD(spa->rcnt, decref);
+        CALL_SMETHOD(spa->rcnt, decref);
     }
     if (fds != NULL) {
         for (i = 0; i < 2; i++)
             if (fds[i] != NULL)
-                CALL_METHOD(fds[i]->rcnt, decref);
+                CALL_SMETHOD(fds[i]->rcnt, decref);
     }
     reply_error(cmd, ecode);
 }

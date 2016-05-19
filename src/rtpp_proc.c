@@ -83,7 +83,7 @@ fill_session_addr(struct cfg *cf, struct rtpp_stream *stp,
         return (0);
     }
     rval = CALL_SMETHOD(stp_rtcp, guess_addr, packet);
-    CALL_METHOD(stp_rtcp->rcnt, decref);
+    CALL_SMETHOD(stp_rtcp->rcnt, decref);
     return (rval);
 }
 
@@ -236,11 +236,11 @@ send_packet(struct cfg *cf, struct rtpp_stream *stp_in,
         CALL_METHOD(stp_in->pcount, reg_reld);
         rsp->npkts_relayed.cnt++;
     }
-    CALL_METHOD(stp_out->rcnt, decref);
+    CALL_SMETHOD(stp_out->rcnt, decref);
     return;
 
 e1:
-    CALL_METHOD(stp_out->rcnt, decref);
+    CALL_SMETHOD(stp_out->rcnt, decref);
 e0:
     rtp_packet_free(packet);
     CALL_METHOD(stp_in->pcount, reg_drop);
@@ -287,12 +287,12 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
             continue;
         sp = CALL_METHOD(cf->stable->sessions_wrt, get_by_idx, stp->seuid);
         if (sp == NULL) {
-            CALL_METHOD(stp->rcnt, decref);
+            CALL_SMETHOD(stp->rcnt, decref);
             continue;
         }
         if (sp->complete != 0) {
             rxmit_packets(cf, stp, dtime, drain_repeat, sender, rsp);
-            CALL_METHOD(sp->rcnt, decref);
+            CALL_SMETHOD(sp->rcnt, decref);
             if (stp->resizer != NULL) {
                 while ((packet = rtp_resizer_get(stp->resizer, dtime)) != NULL) {
                     send_packet(cf, stp, packet, sender, rsp);
@@ -301,7 +301,7 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
                 }
             }
         } else {
-            CALL_METHOD(sp->rcnt, decref);
+            CALL_SMETHOD(sp->rcnt, decref);
 #if RTPP_DEBUG
             proto = CALL_SMETHOD(stp, get_proto);
             fd = CALL_METHOD(stp->fd, getfd);
@@ -317,6 +317,6 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
 #endif
 
         }
-        CALL_METHOD(stp->rcnt, decref);
+        CALL_SMETHOD(stp->rcnt, decref);
     }
 }

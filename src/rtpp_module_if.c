@@ -179,10 +179,10 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
       (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
         goto e6;
     }
-    CALL_METHOD(log->rcnt, incref);
+    CALL_SMETHOD(log->rcnt, incref);
     pvt->log = log;
     pvt->pub.do_acct = &rtpp_mif_do_acct;
-    CALL_METHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
 e6:
@@ -206,7 +206,7 @@ e3:
 e2:
     dlclose(pvt->dmp);
 e1:
-    CALL_METHOD(rcnt, decref);
+    CALL_SMETHOD(rcnt, decref);
     free(pvt);
 e0:
     return (NULL);
@@ -237,7 +237,7 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
 #endif
     /* Unload and free everything */
     dlclose(pvt->dmp);
-    CALL_METHOD(pvt->log->rcnt, decref);
+    CALL_SMETHOD(pvt->log->rcnt, decref);
     free(pvt);
 }
 
@@ -265,7 +265,7 @@ rtpp_mif_run(void *argp)
         if (aname == do_acct_aname) {
             pvt->mip->on_session_end.func(pvt->mpvt, rap);
         }
-        CALL_METHOD(rap->rcnt, decref);
+        CALL_SMETHOD(rap->rcnt, decref);
         rtpp_wi_free(wi);
     }
 }
@@ -283,7 +283,7 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
           "memory", pvt->mip->name);
         return;
     }
-    CALL_METHOD(acct->rcnt, incref);
+    CALL_SMETHOD(acct->rcnt, incref);
     rtpp_queue_put_item(wi, pvt->req_q);
 }
 
