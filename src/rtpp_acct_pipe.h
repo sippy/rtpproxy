@@ -27,7 +27,7 @@
 
 struct rtpp_acct_face {
     struct rtpp_pcnts_strm *ps;
-    struct rtpp_rinfo_strm *pri;
+    struct rtpp_netaddr *rem_addr;
 };
 
 struct rtpp_acct_pipe {

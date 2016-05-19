@@ -39,12 +39,10 @@
 #include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
 #include "rtpp_acct_fin.h"
+#include "rtpp_netaddr.h"
 
 struct rtpp_acct_face_s {
     struct rtpp_pcnts_strm ps;
-#if 0
-    struct rtpp_rinfo_strm pri;
-#endif
 };
 
 struct rtpp_acct_pipe_s {
@@ -107,6 +105,14 @@ rtpp_acct_dtor(struct rtpp_acct_priv *pvt)
         free(pvt->pub.call_id);
     if (pvt->pub.from_tag != NULL)
         free(pvt->pub.from_tag);
+    if (pvt->pub.rtp.a.rem_addr != NULL)
+        CALL_SMETHOD(pvt->pub.rtp.a.rem_addr->rcnt, decref);
+    if (pvt->pub.rtp.o.rem_addr != NULL)
+        CALL_SMETHOD(pvt->pub.rtp.o.rem_addr->rcnt, decref);
+    if (pvt->pub.rtcp.a.rem_addr != NULL)
+        CALL_SMETHOD(pvt->pub.rtcp.a.rem_addr->rcnt, decref);
+    if (pvt->pub.rtcp.o.rem_addr != NULL)
+        CALL_SMETHOD(pvt->pub.rtcp.o.rem_addr->rcnt, decref);
     free(pvt);
 }
 

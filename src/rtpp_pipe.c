@@ -46,6 +46,7 @@
 #include "rtpp_pcnt_strm.h"
 #include "rtpp_stats.h"
 #include "rtpp_monotime.h"
+#include "rtpp_netaddr.h"
 
 struct rtpp_pipe_priv
 {
@@ -175,6 +176,10 @@ rtpp_pipe_get_stats(struct rtpp_pipe *self, struct rtpp_acct_pipe *rapp)
     CALL_METHOD(self->pcount, get_stats, rapp->pcnts);
     CALL_METHOD(self->stream[0]->pcnt_strm, get_stats, rapp->o.ps);
     CALL_METHOD(self->stream[1]->pcnt_strm, get_stats, rapp->a.ps);
+    rapp->o.rem_addr = self->stream[0]->rem_addr;
+    CALL_SMETHOD(rapp->o.rem_addr->rcnt, incref);
+    rapp->a.rem_addr = self->stream[1]->rem_addr;
+    CALL_SMETHOD(rapp->a.rem_addr->rcnt, incref);
     RTPP_LOG(self->log, RTPP_LOG_INFO, "%s stats: %lu in from callee, %lu "
       "in from caller, %lu relayed, %lu dropped, %lu ignored",
       PP_NAME(pvt->pipe_type), rapp->o.ps->npkts_in,
