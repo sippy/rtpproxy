@@ -57,6 +57,7 @@ static int rtpp_netaddr_isaddrseq(struct rtpp_netaddr *, const struct sockaddr *
 static int rtpp_netaddr_cmphost(struct rtpp_netaddr *, const struct sockaddr *);
 static void rtpp_netaddr_copy(struct rtpp_netaddr *, struct rtpp_netaddr *);
 static size_t rtpp_netaddr_get(struct rtpp_netaddr *, struct sockaddr *, size_t);
+static size_t rtpp_netaddr_sip_print(struct rtpp_netaddr *, char *, size_t);
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_netaddr_priv *)((char *)(pubp) - offsetof(struct rtpp_netaddr_priv, pub)))
@@ -68,7 +69,8 @@ static const struct rtpp_netaddr_smethods rtpp_netaddr_smethods = {
     .isaddrseq = &rtpp_netaddr_isaddrseq,
     .cmphost = &rtpp_netaddr_cmphost,
     .copy = &rtpp_netaddr_copy,
-    .get = &rtpp_netaddr_get
+    .get = &rtpp_netaddr_get,
+    .sip_print = &rtpp_netaddr_sip_print
 };
 
 struct rtpp_netaddr *
@@ -201,4 +203,19 @@ rtpp_netaddr_get(struct rtpp_netaddr *self, struct sockaddr *sap, size_t salen)
     memcpy(sap, &pvt->sas, pvt->rlen);
     pthread_mutex_unlock(&pvt->lock);
     return (pvt->rlen);
+}
+
+static size_t
+rtpp_netaddr_sip_print(struct rtpp_netaddr *self, char *buf, size_t blen)
+{
+    char *rval;
+    struct rtpp_netaddr_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    RTPP_DBG_ASSERT(pvt->rlen > 0);
+    rval = addrport2char_r(sstosa(&pvt->sas), buf, blen);
+    pthread_mutex_unlock(&pvt->lock);
+    RTPP_DBG_ASSERT(rval != NULL);
+    return (strlen(rval));
 }
