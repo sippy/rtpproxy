@@ -358,7 +358,7 @@ setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
 
 ssize_t
 recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
-  socklen_t *fromlen, struct sockaddr *to, socklen_t *tolen,
+  size_t *fromlen, struct sockaddr *to, size_t *tolen,
   struct timeval *timeptr)
 {
     /* We use a union to make sure hdr is aligned */

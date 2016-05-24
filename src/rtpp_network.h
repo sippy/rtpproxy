@@ -33,6 +33,8 @@
 
 struct cfg;
 struct timeval;
+struct sockaddr;
+struct sockaddr_storage;
 
 /* Function prototypes */
 int ishostseq(const struct sockaddr *, const struct sockaddr *);
@@ -51,7 +53,7 @@ int local4remote(const struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, char **, char **, int *);
 int setbindhost(struct sockaddr *, int, const char *, const char *);
 ssize_t recvfromto(int, void *, size_t, struct sockaddr *,
-  socklen_t *, struct sockaddr *, socklen_t *, struct timeval *);
+  size_t *, struct sockaddr *, size_t *, struct timeval *);
 
 /* Some handy/compat macros */
 #if !defined(AF_LOCAL)
@@ -59,14 +61,14 @@ ssize_t recvfromto(int, void *, size_t, struct sockaddr *,
 #endif
 
 #if !defined(SA_LEN)
-#define SA_LEN(sa) \
-  (((sa)->sa_family == AF_INET) ? \
-  sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
+# define SA_LEN(sa) \
+   (((sa)->sa_family == AF_INET) ? \
+   sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
 #endif
 #if !defined(SS_LEN)
-#define SS_LEN(ss) \
-  (((ss)->ss_family == AF_INET) ? \
-  sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
+# define SS_LEN(ss) \
+   (((ss)->ss_family == AF_INET) ? \
+   sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
 #endif
 
 #define AF2STR(af) 	((af) == AF_LOCAL ? "Unix-Domain" : \
