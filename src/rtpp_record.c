@@ -532,7 +532,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     struct sockaddr *ldaddr;
     int ldport, face;
     struct rtpp_record_channel *rrc;
-    socklen_t dalen;
+    size_t dalen;
 
     rrc = PUB2PVT(self);
 
