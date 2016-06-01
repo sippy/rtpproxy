@@ -40,6 +40,7 @@ class _rtpps_callback_params(object):
     proxy_address = None
     callback_parameters = None
     atype = None
+    remote_ip = None
 
     def __init__(self, proxy_address, callback_parameters, atype):
         self.proxy_address = proxy_address
@@ -77,6 +78,7 @@ class _rtpps_side(object):
           rtpc.tnot_supported:
             command += ' %s %s' % (rtpps.notify_socket, rtpps.notify_tag)
         cpo = _rtpps_callback_params(rtpc.proxy_address, callback_parameters, atype)
+        cpo.remote_ip = remote_ip
         rtpc.send_command(command, self.update_result, (rtpps, result_callback, cpo))
 
     def gettags(self, rtpps):
@@ -113,7 +115,16 @@ class _rtpps_side(object):
                 family = 'IP6'
         else:
             rtpproxy_address = cpo.proxy_address
-        result_callback((rtpproxy_address, rtpproxy_port, family), rtpps, *cpo.callback_parameters)
+        # Old-style request to put session on hold, convert it into
+        # a new-style request.
+        if cpo.atype == 'IP4' and cpo.remote_ip == '0.0.0.0':
+            sendonly = True
+        elif cpo.atype == 'IP6' and cpo.remote_ip == '::':
+            sendonly = True
+        else:
+            sendonly = False
+        cb_args = (rtpproxy_address, rtpproxy_port, family, sendonly)
+        result_callback(cb_args, rtpps, *cpo.callback_parameters)
 
     def __play(self, result, rtpps, prompt_name, times, result_callback, index):
         from_tag, to_tag = self.gettags(rtpps)
@@ -174,13 +185,19 @@ class _rtpps_side(object):
               sects.index(sect), sect.c_header.atype, sdp_body, sect, sects, result_callback)
         return
 
-    def _sdp_change_finish(self, address_port, rtpps, sdp_body, sect, sects, result_callback):
+    def _sdp_change_finish(self, cb_args, rtpps, sdp_body, sect, sects, result_callback):
         sect.needs_update = False
-        if address_port != None:
-            sect.c_header.atype = address_port[2]
-            sect.c_header.addr = address_port[0]
+        if cb_args != None:
+            rtpproxy_address, rtpproxy_port, family, sendonly = cb_args
+            sect.c_header.atype = family
+            sect.c_header.addr = rtpproxy_address
             if sect.m_header.port != 0:
-                sect.m_header.port = address_port[1]
+                sect.m_header.port = rtpproxy_port
+            if sendonly:
+                while 'sendrecv' in sect.a_headers:
+                    sect.a_headers.remove('sendrecv')
+                if 'sendonly' not in sect.a_headers:
+                    sect.a_headers.append('sendonly')
         if len([x for x in sects if x.needs_update]) == 0:
             sdp_body.content.o_header = self.origin.getCopy()
             self.origin.version += 1
