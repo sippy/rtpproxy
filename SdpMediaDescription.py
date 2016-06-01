@@ -102,3 +102,13 @@ class SdpMediaDescription(object):
                 continue
             new_a_headers.append(ah)
         self.a_headers = new_a_headers
+
+    def isOnHold(self):
+        if self.c_header.atype == 'IP4' and self.c_header.addr == '0.0.0.0':
+            return True
+        if self.c_header.atype == 'IP6' and self.c_header.addr == '::':
+            return True
+        for aname in ('sendonly', 'inactive'):
+            if aname in self.a_headers:
+                return True
+        return False
