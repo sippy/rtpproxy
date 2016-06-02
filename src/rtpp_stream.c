@@ -90,6 +90,10 @@ struct rtpp_stream_priv
     struct rtpp_netaddr *raddr_prev;
     /* Flag which tells if we are allowed to update address with RTP src IP */
     struct rtpps_latch latch_info;
+    /* True if the stream is on-hold */
+    int onhold_status;
+    /* Total number of onhold requests received */
+    int onhold_cnt;
 };
 
 #define PUB2PVT(pubp) \
@@ -119,6 +123,7 @@ static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
   struct rtp_packet *);
 static int rtpp_stream_islatched(struct rtpp_stream *);
 static void rtpp_stream_locklatch(struct rtpp_stream *);
+static void rtpp_stream_reg_onhold(struct rtpp_stream *);
 
 static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .handle_play = &rtpp_stream_handle_play,
@@ -136,7 +141,8 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .send_pkt = &rtpp_stream_send_pkt,
     .guess_addr = &rtpp_stream_guess_addr,
     .islatched = &rtpp_stream_islatched,
-    .locklatch = &rtpp_stream_locklatch
+    .locklatch = &rtpp_stream_locklatch,
+    .reg_onhold = &rtpp_stream_reg_onhold
 };
 
 struct rtpp_stream *
@@ -548,6 +554,14 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
 
     pvt = PUB2PVT(self);
 
+    actor = rtpp_stream_get_actor(self);
+    pthread_mutex_lock(&pvt->lock);
+    if (pvt->onhold_status != 0) {
+        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "taking %s's stream off-hold",
+            actor);
+        pvt->onhold_status = 0;
+    }
+
     if (!CALL_SMETHOD(self->rem_addr, isempty))
         pvt->last_update = dtime;
 
@@ -556,15 +570,17 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
      * cannot be trusted and address is different from one
      * that we recorded update it.
      */
-    if (pvt->untrusted_addr != 0)
+    if (pvt->untrusted_addr != 0) {
+        pthread_mutex_unlock(&pvt->lock);
         return;
+    }
     if (!CALL_SMETHOD(self->rem_addr, isempty) && CALL_SMETHOD(self->rem_addr,
       isaddrseq, *iapp)) {
+        pthread_mutex_unlock(&pvt->lock);
         return;
     }
 
     addrport2char_r(*iapp, saddr, sizeof(saddr));
-    actor = rtpp_stream_get_actor(self);
     ptype =  rtpp_stream_get_proto(self);
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "pre-filling %s's %s address "
       "with %s", actor, ptype, saddr);
@@ -574,6 +590,24 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
         }
     }
     CALL_SMETHOD(self->rem_addr, set, *iapp, SA_LEN(*iapp));
+    pthread_mutex_unlock(&pvt->lock);
+}
+
+static void rtpp_stream_reg_onhold(struct rtpp_stream *self)
+{
+    struct rtpp_stream_priv *pvt;
+    const char *actor;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    if (pvt->onhold_status != 0) {
+        actor = rtpp_stream_get_actor(self);
+        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "putting %s's stream on hold",
+           actor);
+        pvt->onhold_status = 1;
+    }
+    pvt->onhold_cnt++;
+    pthread_mutex_unlock(&pvt->lock);
 }
 
 static uint64_t

@@ -87,6 +87,8 @@ struct ul_opts {
     char *notify_tag;
     int pf;
     int new_port;
+
+    int onhold;
 };
 
 void
@@ -353,6 +355,8 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
                 /* Set port for RTCP, will work both for IPv4 and IPv6 */
                 n = ntohs(satosin(ulop->ia[1])->sin_port);
                 satosin(ulop->ia[1])->sin_port = htons(n + 1);
+            } else {
+                ulop->onhold = 1;
             }
         } else {
             RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "getaddrinfo(pf=%d, addr=%s, port=%s): %s",
@@ -559,6 +563,10 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
           cmd->dtime);
         CALL_SMETHOD(spa->rtcp->stream[pidx], prefill_addr, &(ulop->ia[1]),
           cmd->dtime);
+    }
+    if (ulop->onhold != 0) {
+        CALL_SMETHOD(spa->rtp->stream[pidx], reg_onhold);
+        CALL_SMETHOD(spa->rtcp->stream[pidx], reg_onhold);
     }
     spa->rtp->stream[pidx]->asymmetric = spa->rtcp->stream[pidx]->asymmetric = ulop->asymmetric;
     if (ulop->asymmetric) {

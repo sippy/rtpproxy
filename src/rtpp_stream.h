@@ -67,6 +67,7 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_send_pkt, int, struct sthread_args *,
   struct rtp_packet *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_islatched, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_locklatch, void);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_reg_onhold, void);
 
 enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
 
@@ -88,6 +89,7 @@ struct rtpp_stream_smethods {
     METHOD_ENTRY(rtpp_stream_send_pkt, send_pkt);
     METHOD_ENTRY(rtpp_stream_islatched, islatched);
     METHOD_ENTRY(rtpp_stream_locklatch, locklatch);
+    METHOD_ENTRY(rtpp_stream_reg_onhold, reg_onhold);
 };
 
 struct rtpp_stream {
