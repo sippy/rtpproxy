@@ -559,7 +559,7 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
     pthread_mutex_lock(&pvt->lock);
     if (pvt->onhold_status != 0) {
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "taking %s's %s stream off-hold",
-            actor);
+            actor, ptype);
         pvt->onhold_status = 0;
     }
 
