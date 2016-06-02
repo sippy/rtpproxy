@@ -44,6 +44,23 @@ def getnretrans(first_rert, timeout):
         n += 1
     return n
 
+class Rtp_proxy_pending_req(object):
+    retransmits = 0
+    next_retr = None
+    triesleft = None
+    timer = None
+    command = None
+    result_callback = None
+    stime = None
+    callback_parameters = None
+
+    def __init__(self, next_retr, nretr, timer, command, result_callback, \
+      callback_parameters):
+        self.stime = MonoTime()
+        self.next_retr, self.nretr, self.timer, self.command, self.result_callback, \
+          self.callback_parameters = next_retr, nretr, timer, command, \
+          result_callback, callback_parameters
+
 class Rtp_proxy_client_udp(object):
     pending_requests = None
     is_local = False
@@ -89,26 +106,30 @@ class Rtp_proxy_client_udp(object):
             nretr = getnretrans(next_retr, rtime)
         command = '%s %s' % (cookie, command)
         timer = Timeout(self.retransmit, next_retr, 1, cookie)
-        stime = MonoTime()
         self.worker.send_to(command, self.address)
         nretr -= 1
-        self.pending_requests[cookie] = (next_retr, nretr, timer, command, result_callback, stime, callback_parameters)
+        preq = Rtp_proxy_pending_req(next_retr, nretr, timer, command, result_callback, \
+          callback_parameters)
+        self.pending_requests[cookie] = preq
 
     def retransmit(self, cookie):
-        next_retr, triesleft, timer, command, result_callback, stime, callback_parameters = self.pending_requests[cookie]
-        #print 'command to %s timeout %s cookie %s triesleft %d' % (str(self.address), command, cookie, triesleft)
-        if triesleft <= 0 or self.worker == None:
+        preq = self.pending_requests[cookie]
+        #print 'command to %s timeout %s cookie %s triesleft %d' % (str(self.address), preq.command, cookie, preq.triesleft)
+        if preq.triesleft <= 0 or self.worker == None:
             del self.pending_requests[cookie]
             self.go_offline()
-            if result_callback != None:
-                result_callback(None, *callback_parameters)
+            if preq.result_callback != None:
+                preq.result_callback(None, *preq.callback_parameters)
             return
-        next_retr *= 2
-        timer = Timeout(self.retransmit, next_retr, 1, cookie)
-        stime = MonoTime()
-        self.worker.send_to(command, self.address)
-        triesleft -= 1
-        self.pending_requests[cookie] = (next_retr, triesleft, timer, command, result_callback, stime, callback_parameters)
+        preq.retransmits += 1
+        preq.next_retr *= 2
+        preq.timer = Timeout(self.retransmit, preq.next_retr, 1, cookie)
+        self.worker.send_to(preq.command, self.address)
+        preq.triesleft -= 1
+
+    def go_offline(self):
+        # To be replaced in the upper level class
+        pass
 
     def process_reply(self, data, address, worker, rtime):
         try:
@@ -116,15 +137,22 @@ class Rtp_proxy_client_udp(object):
         except:
             print('Rtp_proxy_client_udp.process_reply(): invalid response %s' % data)
             return
-        parameters = self.pending_requests.pop(cookie, None)
-        if parameters == None:
+        preq = self.pending_requests.pop(cookie, None)
+        if preq == None:
             return
-        next_retr, triesleft, timer, command, result_callback, stime, callback_parameters = parameters
-        timer.cancel()
-        if result_callback != None:
-            result_callback(result.strip(), *callback_parameters)
-        self.delay_flt.apply(rtime - stime)
-        #print 'Rtp_proxy_client_udp.process_reply(): delay %f' % (rtime - stime)
+        preq.timer.cancel()
+        if preq.result_callback != None:
+            preq.result_callback(result.strip(), *preq.callback_parameters)
+        if preq.retransmits == 0:
+            # When we had to do retransmit it is not possible to figure out whether
+            # or not this reply is related to the original request or one of the
+            # retransmits. Therefore, using it to estimate delay could easily produce
+            # bogus value that is too low or even negative if we cook up retransmit
+            # while the original response is already in the queue waiting to be
+            # processed. This should not be a big issue since UDP command channel does
+            # not work very well if the packet loss goes to more than 30-40%.
+            self.delay_flt.apply(rtime - preq.stime)
+            #print 'Rtp_proxy_client_udp.process_reply(): delay %f' % (rtime - preq.stime)
 
     def reconnect(self, address, bind_address = None):
         self.address = address
