@@ -30,9 +30,9 @@ struct rtpp_cfg_stable;
 struct rtpp_log;
 
 DEFINE_METHOD(rtpp_log, rtpp_log_write, void, const char *, int,
-  const char *, ...);
+  const char *, ...) __attribute__ ((format (printf, 4, 5)));
 DEFINE_METHOD(rtpp_log, rtpp_log_ewrite, void, const char *, int,
-  const char *, ...);
+  const char *, ...) __attribute__ ((format (printf, 4, 5)));
 DEFINE_METHOD(rtpp_log, rtpp_log_setlevel, void, int);
 
 struct rtpp_log {
