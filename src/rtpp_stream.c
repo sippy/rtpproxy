@@ -494,7 +494,7 @@ rtpp_stream_fill_addr(struct rtpp_stream *self,
     }
 
     actor = rtpp_stream_get_actor(self);
-    ptype =  rtpp_stream_get_proto(self);
+    ptype = rtpp_stream_get_proto(self);
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address filled in: %s (%s)", actor, saddr, ptype);
@@ -526,7 +526,7 @@ rtpp_stream_guess_addr(struct rtpp_stream *self,
     }
 #endif
     actor = rtpp_stream_get_actor(self);
-    ptype =  rtpp_stream_get_proto(self);
+    ptype = rtpp_stream_get_proto(self);
     rport = ntohs(satosin(&packet->raddr)->sin_port);
     if (IS_LAST_PORT(rport)) {
         return (-1);
@@ -555,9 +555,10 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
     pvt = PUB2PVT(self);
 
     actor = rtpp_stream_get_actor(self);
+    ptype = rtpp_stream_get_proto(self);
     pthread_mutex_lock(&pvt->lock);
     if (pvt->onhold_status != 0) {
-        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "taking %s's stream off-hold",
+        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "taking %s's %s stream off-hold",
             actor);
         pvt->onhold_status = 0;
     }
@@ -581,7 +582,6 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
     }
 
     addrport2char_r(*iapp, saddr, sizeof(saddr));
-    ptype =  rtpp_stream_get_proto(self);
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "pre-filling %s's %s address "
       "with %s", actor, ptype, saddr);
     if (!CALL_SMETHOD(self->rem_addr, isempty)) {
@@ -596,14 +596,15 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
 static void rtpp_stream_reg_onhold(struct rtpp_stream *self)
 {
     struct rtpp_stream_priv *pvt;
-    const char *actor;
+    const char *actor, *ptype;
 
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
-    if (pvt->onhold_status != 0) {
+    if (pvt->onhold_status == 0) {
         actor = rtpp_stream_get_actor(self);
-        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "putting %s's stream on hold",
-           actor);
+        ptype = rtpp_stream_get_proto(self);
+        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "putting %s's %s stream on hold",
+           actor, ptype);
         pvt->onhold_status = 1;
     }
     pvt->onhold_cnt++;
