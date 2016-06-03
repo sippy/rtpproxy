@@ -57,7 +57,7 @@ class Rtp_proxy_pending_req(object):
     def __init__(self, next_retr, nretr, timer, command, result_callback, \
       callback_parameters):
         self.stime = MonoTime()
-        self.next_retr, self.nretr, self.timer, self.command, self.result_callback, \
+        self.next_retr, self.triesleft, self.timer, self.command, self.result_callback, \
           self.callback_parameters = next_retr, nretr, timer, command, \
           result_callback, callback_parameters
 
