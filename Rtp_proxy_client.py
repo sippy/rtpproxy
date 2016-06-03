@@ -157,7 +157,7 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
             self.rtpp_class = Rtp_proxy_client_udp
             Rtp_proxy_client_udp.__init__(self, global_config, *address, \
               **kwargs)
-            self.proxy_address = address[0]
+            self.proxy_address = address[0][0]
         else:
             self.rtpp_class = Rtp_proxy_client_stream
             Rtp_proxy_client_stream.__init__(self, global_config, *address, \
