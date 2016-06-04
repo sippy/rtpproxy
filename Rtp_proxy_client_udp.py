@@ -35,6 +35,8 @@ from hashlib import md5
 from random import random
 
 def getnretrans(first_rert, timeout):
+    if first_rert <= 0:
+        raise ValueError('getnretrans(%f, %f)' % (first_rert, timeout))
     n = 0
     while True:
         timeout -= first_rert
@@ -88,28 +90,27 @@ class Rtp_proxy_client_udp(object):
     def send_command(self, command, result_callback = None, *callback_parameters):
         cookie = md5(str(random()) + str(time())).hexdigest()
         next_retr = self.delay_flt.lastval * 4.0
-        rtime = 3.0
+        exp_time = 3.0
         if isinstance(command, Rtp_proxy_cmd):
             if command.type == 'I':
-                rtime = 10.0
+                exp_time = 10.0
             if command.type == 'G':
-                rtime = 1.0
+                exp_time = 1.0
             nretr = command.nretr
             command = str(command)
         else:
             if command.startswith('I'):
-                rtime = 10.0
+                exp_time = 10.0
             elif command.startswith('G'):
-                rtime = 1.0
+                exp_time = 1.0
             nretr = None
         if nretr == None:
-            nretr = getnretrans(next_retr, rtime)
+            nretr = getnretrans(next_retr, exp_time)
         command = '%s %s' % (cookie, command)
         timer = Timeout(self.retransmit, next_retr, 1, cookie)
+        preq = Rtp_proxy_pending_req(next_retr, nretr - 1, timer, command, \
+          result_callback, callback_parameters)
         self.worker.send_to(command, self.address)
-        nretr -= 1
-        preq = Rtp_proxy_pending_req(next_retr, nretr, timer, command, result_callback, \
-          callback_parameters)
         self.pending_requests[cookie] = preq
 
     def retransmit(self, cookie):
@@ -135,22 +136,32 @@ class Rtp_proxy_client_udp(object):
         try:
             cookie, result = data.split(None, 1)
         except:
-            print('Rtp_proxy_client_udp.process_reply(): invalid response %s' % data)
+            print('Rtp_proxy_client_udp.process_reply(): invalid response from %s: "%s"' % \
+              (str(address), data))
             return
         preq = self.pending_requests.pop(cookie, None)
         if preq == None:
             return
         preq.timer.cancel()
+        if rtime <= preq.stime:
+            # MonoTime as the name suggests is supposed to be monotonic,
+            # so if we get response earlier than request went out something
+            # is very wrong. Fail immediately.
+            rtime_fix = MonoTime()
+            raise AssertionError('cookie=%s: MonoTime stale/went' \
+              ' backwards (%f <= %f, now=%f)' % (cookie, rtime.monot, \
+              preq.stime.monot, rtime_fix.monot))
         if preq.result_callback != None:
             preq.result_callback(result.strip(), *preq.callback_parameters)
+
+        # When we had to do retransmit it is not possible to figure out whether
+        # or not this reply is related to the original request or one of the
+        # retransmits. Therefore, using it to estimate delay could easily produce
+        # bogus value that is too low or even negative if we cook up retransmit
+        # while the original response is already in the queue waiting to be
+        # processed. This should not be a big issue since UDP command channel does
+        # not work very well if the packet loss goes to more than 30-40%.
         if preq.retransmits == 0:
-            # When we had to do retransmit it is not possible to figure out whether
-            # or not this reply is related to the original request or one of the
-            # retransmits. Therefore, using it to estimate delay could easily produce
-            # bogus value that is too low or even negative if we cook up retransmit
-            # while the original response is already in the queue waiting to be
-            # processed. This should not be a big issue since UDP command channel does
-            # not work very well if the packet loss goes to more than 30-40%.
             self.delay_flt.apply(rtime - preq.stime)
             #print 'Rtp_proxy_client_udp.process_reply(): delay %f' % (rtime - preq.stime)
 
