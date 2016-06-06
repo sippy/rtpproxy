@@ -31,7 +31,8 @@
 struct rtpp_proc_async;
 
 DEFINE_METHOD(rtpp_proc_async, rtpp_proc_async_dtor, void);
-DEFINE_METHOD(rtpp_proc_async, rtpp_proc_async_wakeup, void, int, long long);
+DEFINE_METHOD(rtpp_proc_async, rtpp_proc_async_wakeup, void, long long,
+  long long);
 
 struct rtpp_proc_async {
     rtpp_proc_async_dtor_t dtor;

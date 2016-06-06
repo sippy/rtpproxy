@@ -62,7 +62,7 @@
 struct rtpp_proc_async_cf {
     struct rtpp_proc_async pub;
     pthread_t thread_id;
-    int clock_tick;
+    long long clock_tick;
     long long ncycles_ref;
     struct rtpp_anetio_cf *op;
     struct rtpp_queue *time_q;
@@ -77,12 +77,12 @@ struct rtpp_proc_async_cf {
 };
 
 struct sign_arg {
-    int clock_tick;
+    long long clock_tick;
     long long ncycles_ref;
 };
 
 static void rtpp_proc_async_dtor(struct rtpp_proc_async *);
-static void rtpp_proc_async_wakeup(struct rtpp_proc_async *, int, long long);
+static void rtpp_proc_async_wakeup(struct rtpp_proc_async *, long long, long long);
 
 #define PUB2PVT(pubp)      ((struct rtpp_proc_async_cf *)((char *)(pubp) - offsetof(struct rtpp_proc_async_cf, pub)))
 
@@ -132,7 +132,7 @@ rtpp_proc_async_run(void *arg)
     int ncycles_ref_pre;
 #endif
 #if RTPP_DEBUG_timers || RTPP_DEBUG_netio
-    int last_ctick;
+    long long last_ctick;
 #endif
     struct sign_arg *s_a;
     struct rtpp_wi *wi, *wis[10];
@@ -246,7 +246,7 @@ rtpp_proc_async_run(void *arg)
                 if (RTPP_DEBUG_netio > 1 || nready_rtcp > 0) {
                     RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
                       "polling for %d RTCP file descriptors: %d descriptors are ready", \
-                      ptbl_rtcp.curlen, last_ctick, nready_rtcp);
+                      last_ctick, ptbl_rtcp.curlen, nready_rtcp);
                 }
 #endif
             }
@@ -260,7 +260,7 @@ rtpp_proc_async_run(void *arg)
             if (RTPP_DEBUG_netio > 1 || nready_rtp > 0) {
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for RTP %d file descriptors: %d descriptors are ready", \
-                  ptbl_rtp.curlen, last_ctick, nready_rtp);
+                  last_ctick, ptbl_rtp.curlen, nready_rtp);
             }
 #endif
             if (nready_rtp < 0 && errno == EINTR) {
@@ -315,7 +315,8 @@ rtpp_proc_async_run(void *arg)
 }
 
 static void
-rtpp_proc_async_wakeup(struct rtpp_proc_async *pub, int clock, long long ncycles_ref)
+rtpp_proc_async_wakeup(struct rtpp_proc_async *pub, long long clock,
+  long long ncycles_ref)
 {
     struct sign_arg s_a;
     struct rtpp_wi *wi;
