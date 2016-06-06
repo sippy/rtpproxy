@@ -25,9 +25,17 @@
  *
  */
 
+struct rtpp_acct_hold {
+    /* True if the stream is on-hold */
+    int onhold_status;
+    /* Total number of onhold requests received */
+    int onhold_cnt;
+};
+
 struct rtpp_acct_face {
     struct rtpp_pcnts_strm *ps;
     struct rtpp_netaddr *rem_addr;
+    struct rtpp_acct_hold hld_stat;
 };
 
 struct rtpp_acct_pipe {
