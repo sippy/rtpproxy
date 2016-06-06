@@ -139,6 +139,11 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     pvt->mip->_vasprintf = &rtpp_memdeb_vasprintf;
     pvt->memdeb_p = rtpp_memdeb_init();
     rtpp_memdeb_setlog(pvt->memdeb_p, log);
+    if (pvt->memdeb_p == NULL) {
+        goto e2;
+    }
+    /* We make a copy, so that the module cannot screw us up */
+    pvt->mip->memdeb_p = pvt->memdeb_p;
 #else
     pvt->mip->_malloc = (rtpp_module_malloc_t)&malloc;
     pvt->mip->_zmalloc = (rtpp_module_zmalloc_t)&rtpp_zmalloc;
@@ -148,11 +153,6 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     pvt->mip->_asprintf = rtpp_module_asprintf;
     pvt->mip->_vasprintf = rtpp_module_vasprintf;
 #endif
-    if (pvt->memdeb_p == NULL) {
-        goto e2;
-    }
-    /* We make a copy, so that the module cannot screw us up */
-    pvt->mip->memdeb_p = pvt->memdeb_p;
     pvt->sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
     if (pvt->sigterm == NULL) {
         goto e3;
