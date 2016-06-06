@@ -125,6 +125,7 @@ struct rtpp_cfg_stable {
 
     struct rtpp_sessinfo *sessinfo;
 
+    char *mpath;
     struct rtpp_module_if *modules_cf;
 };
 

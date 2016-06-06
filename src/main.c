@@ -37,6 +37,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <grp.h>
 #include <math.h>
 #include <pthread.h>
@@ -197,6 +198,26 @@ rtpp_rlim_max(struct cfg *cf)
     return (long long)(cf->stable->nofile_limit->rlim_max);
 }
 
+const static struct option longopts[] = {
+    { "dso", required_argument, NULL, 0 },
+    { NULL,  0,                 NULL, 0 }
+};
+
+static void
+handle_longopt(struct rtpp_cfg_stable *cfsp, const char *on, const char *optarg)
+{
+
+    if (strcmp(on, "dso") == 0) {
+        if (cfsp->mpath != NULL) {
+             errx(1, "this version of the rtpproxy only supports loading a "
+               "single module");
+        }
+        cfsp->mpath = strdup(optarg);
+        return;
+    }
+    errx(1, "unknown option: --%s", on);
+}
+
 static void
 init_config(struct cfg *cf, int argc, char **argv)
 {
@@ -207,6 +228,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     struct group *gp;
     double x, y;
     struct rtpp_ctrl_sock *ctrl_sock;
+    int option_index;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -252,8 +274,15 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
 	err(1, "getrlimit");
 
-    while ((ch = getopt(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:VN:c:A:w:bW:DC")) != -1) {
+    option_index = -1;
+    while ((ch = getopt_long(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:"
+      "VN:c:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
+        case 0:
+            RTPP_DBG_ASSERT(option_index >= 0);
+            handle_longopt(cf->stable, longopts[option_index].name, optarg);
+            break;
+
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
                  cf->stable->sched_policy = SCHED_FIFO;
@@ -722,6 +751,20 @@ main(int argc, char **argv)
     }
 
     if (cf.stable->nodaemon == 0) {
+	if (cf.stable->no_chdir == 0 && cf.stable->mpath != NULL) {
+	    char *cwd, *mpath_abs;
+
+	    cwd = getcwd(NULL, 0);
+	    if (cwd == NULL) {
+		err(1, "getcwd");
+	    }
+	    asprintf(&mpath_abs, "%s/%s", cwd, cf.stable->mpath);
+	    if (mpath_abs == NULL) {
+		err(1, "asprintf");
+	    }
+	    free(cf.stable->mpath);
+	    cf.stable->mpath = mpath_abs;
+	}
 	if (rtpp_daemon(cf.stable->no_chdir, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
@@ -803,12 +846,15 @@ main(int argc, char **argv)
     }
 
 #if ENABLE_MODULE_IF
-    cf.stable->modules_cf = rtpp_module_if_ctor(cf.stable, cf.stable->glog,
-#if !RTPP_DEBUG
-      "../modules/acct_csv/.libs/rtpp_acct_csv.so");
-#else
-      "../modules/acct_csv/.libs/rtpp_acct_csv_debug.so");
-#endif
+    if (cf.stable->mpath != NULL) {
+        cf.stable->modules_cf = rtpp_module_if_ctor(cf.stable, cf.stable->glog,
+          cf.stable->mpath);
+        if (cf.stable->modules_cf == NULL) {
+            RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
+              "%s: dymanic module load has failed", cf.stable->mpath);
+            exit(1);
+        }
+    }
 #endif
 
     cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
