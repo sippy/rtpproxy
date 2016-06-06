@@ -305,12 +305,12 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
 #if RTPP_DEBUG
             proto = CALL_SMETHOD(stp, get_proto);
             fd = CALL_METHOD(stp->fd, getfd);
-            RTPP_LOG(stp->log, RTPP_LOG_DBUG, "Draining %s socket %d", fd,
-              proto);
+            RTPP_LOG(stp->log, RTPP_LOG_DBUG, "Draining %s socket %d", proto,
+              fd);
             ndrained = drain_socket(stp->fd, rsp);
             if (ndrained > 0) {
                 RTPP_LOG(stp->log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
-                  "packets discarded", fd, proto, ndrained);
+                  "packets discarded", proto, fd, ndrained);
             }
 #else
             drain_socket(stp->fd, rsp);
