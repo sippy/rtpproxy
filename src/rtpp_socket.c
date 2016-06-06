@@ -239,7 +239,7 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, double dtime,
     struct rtpp_socket_priv *pvt;
     struct rtp_packet *packet;
     struct timeval rtime;
-    socklen_t llen;
+    size_t llen;
 
     packet = rtp_packet_alloc();
     if (packet == NULL) {
