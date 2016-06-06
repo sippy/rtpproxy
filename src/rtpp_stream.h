@@ -42,6 +42,7 @@ struct rtpp_ttl;
 struct rtpp_pcount;
 struct rtpp_netaddr;
 struct sthread_args;
+struct rtpp_acct_hold;
 
 DEFINE_METHOD(rtpp_stream, rtpp_stream_handle_play, int, char *,
   char *, int, struct rtpp_command *, int);
@@ -68,6 +69,8 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_send_pkt, int, struct sthread_args *,
 DEFINE_METHOD(rtpp_stream, rtpp_stream_islatched, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_locklatch, void);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_reg_onhold, void);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_get_stats, void,
+  struct rtpp_acct_hold *);
 
 enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
 
@@ -90,6 +93,7 @@ struct rtpp_stream_smethods {
     METHOD_ENTRY(rtpp_stream_islatched, islatched);
     METHOD_ENTRY(rtpp_stream_locklatch, locklatch);
     METHOD_ENTRY(rtpp_stream_reg_onhold, reg_onhold);
+    METHOD_ENTRY(rtpp_stream_get_stats, get_stats);
 };
 
 struct rtpp_stream {
