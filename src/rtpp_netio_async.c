@@ -111,14 +111,14 @@ rtpp_anetio_sthread(struct sthread_args *args)
                     addrport2char_r(wi->sendto, daddr, sizeof(daddr));
                     if (n < 0) {
                         RTPP_ELOG(wi->log, RTPP_LOG_DBUG,
-                          "sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
-                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
-                          wi->tolen, n);
+                          "sendto(%d, %p, %lld, %d, %p (%s), %d) = %d",
+                          wi->sock, wi->msg, (long long)wi->msg_len, wi->flags,
+                          wi->sendto, daddr, wi->tolen, n);
                     } else if (n < wi->msg_len) {
                         RTPP_LOG(wi->log, RTPP_LOG_DBUG,
-                          "sendto(%d, %p, %d, %d, %p (%s), %d) = %d: short write",
-                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
-                          wi->tolen, n);
+                          "sendto(%d, %p, %lld, %d, %p (%s), %d) = %d: short write",
+                          wi->sock, wi->msg, (long long)wi->msg_len, wi->flags,
+                          wi->sendto, daddr, wi->tolen, n);
 #if RTPP_DEBUG_netio >= 2
                     } else {
                         RTPP_LOG(wi->log, RTPP_LOG_DBUG,
