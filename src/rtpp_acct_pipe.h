@@ -27,9 +27,9 @@
 
 struct rtpp_acct_hold {
     /* True if the stream is on-hold */
-    int onhold_status;
+    int status;
     /* Total number of onhold requests received */
-    int onhold_cnt;
+    int cnt;
 };
 
 struct rtpp_acct_face {

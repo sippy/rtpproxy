@@ -558,10 +558,10 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
     actor = rtpp_stream_get_actor(self);
     ptype = rtpp_stream_get_proto(self);
     pthread_mutex_lock(&pvt->lock);
-    if (pvt->hld_stat.onhold_status != 0) {
+    if (pvt->hld_stat.status != 0) {
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "taking %s's %s stream off-hold",
             actor, ptype);
-        pvt->hld_stat.onhold_status = 0;
+        pvt->hld_stat.status = 0;
     }
 
     if (!CALL_SMETHOD(self->rem_addr, isempty))
@@ -601,14 +601,14 @@ static void rtpp_stream_reg_onhold(struct rtpp_stream *self)
 
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
-    if (pvt->hld_stat.onhold_status == 0) {
+    if (pvt->hld_stat.status == 0) {
         actor = rtpp_stream_get_actor(self);
         ptype = rtpp_stream_get_proto(self);
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "putting %s's %s stream on hold",
            actor, ptype);
-        pvt->hld_stat.onhold_status = 1;
+        pvt->hld_stat.status = 1;
     }
-    pvt->hld_stat.onhold_cnt++;
+    pvt->hld_stat.cnt++;
     pthread_mutex_unlock(&pvt->lock);
 }
 
