@@ -70,7 +70,7 @@ struct rtpp_module_priv {
 };
 
 /* Bump this when some changes are made */
-#define RTPP_METRICS_VERSION	"1.1"
+#define RTPP_METRICS_VERSION	"1.2"
 
 #define HNAME_REFRESH_IVAL	1.0
 
@@ -120,33 +120,48 @@ rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)
     return (pvt->node_id);
 }
 
-#define SFX_O "_ino"
-#define SFX_A "_ina"
+#define SFX_INO "_ino"
+#define SFX_INA "_ina"
+
+#define SFX_O   "_o"
+#define SFX_A   "_a"
+
+#define PFX_GEN "rtpp_"
+
 
 #define RVER_NM     "rec_ver"
-#define NID_NM      "rtpp_node_id"
-#define PID_NM      "rtpp_pid"
+#define NID_NM      PFX_GEN "node_id"
+#define PID_NM      PFX_GEN "pid"
 #define SID_NM      "sess_uid"
 #define CID_NM      "call_id"
 #define PT_NAME     "rtpa_pt_last"
-#define PT_NM_O     PT_NAME SFX_O
-#define PT_NM_A     PT_NAME SFX_A
+#define PT_NM_O     PT_NAME SFX_INO
+#define PT_NM_A     PT_NAME SFX_INA
 #define PFX_RTP     "rtp_"
-#define PFX_RTCP    "rtp_"
-#define R_RM_NM_O "rtpp_" PFX_RTP "rmt" SFX_O
-#define R_RM_NM_A "rtpp_" PFX_RTP "rmt" SFX_A
-#define C_RM_NM_O "rtpp_" PFX_RTCP "rmt" SFX_O
-#define C_RM_NM_A "rtpp_" PFX_RTCP "rmt" SFX_A
+#define PFX_RTCP    "rtcp_"
+#define R_RM_NM_O PFX_GEN PFX_RTP "rmt" SFX_O
+#define R_RM_NM_A PFX_GEN PFX_RTP "rmt" SFX_A
+#define C_RM_NM_O PFX_GEN PFX_RTCP "rmt" SFX_O
+#define C_RM_NM_A PFX_GEN PFX_RTCP "rmt" SFX_A
 
-#define RVER_FMT  "%s"
-#define NID_FMT   "%s"
-#define PID_FMT   "%d"
-#define SID_FMT   "%" PRId64
-#define PT_FMT    "%d"
-#define LSSRC_FMT "%s"
-#define SNCHG_FMT "%lu"
-#define RM_FMT    "%s"
-#define SEP       ","
+#define HLD_CNT_NM   "hld_cnt"
+#define HLD_STS_NM   "hld_sts"
+#define HLD_CNT_NM_O PFX_GEN HLD_CNT_NM SFX_O
+#define HLD_CNT_NM_A PFX_GEN HLD_CNT_NM SFX_A
+#define HLD_STS_NM_O PFX_GEN HLD_STS_NM SFX_O
+#define HLD_STS_NM_A PFX_GEN HLD_STS_NM SFX_A
+
+#define RVER_FMT    "%s"
+#define NID_FMT     "%s"
+#define PID_FMT     "%d"
+#define SID_FMT     "%" PRId64
+#define PT_FMT      "%d"
+#define LSSRC_FMT   "%s"
+#define SNCHG_FMT   "%lu"
+#define RM_FMT      "%s"
+#define SEP         ","
+#define HLD_STS_FMT "%s"
+#define HLD_CNT_FMT "%d"
 
 static int
 rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
@@ -182,7 +197,8 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
           "rtpa_perrs_ina,rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina" SEP PT_NM_A SEP
           "rtpa_jitter_last_ino,rtpa_jitter_max_ino,rtpa_jitter_avg_ino,"
           "rtpa_jitter_last_ina,rtpa_jitter_max_ina,rtpa_jitter_avg_ina" SEP
-          R_RM_NM_O SEP R_RM_NM_A SEP C_RM_NM_O SEP C_RM_NM_A "\n");
+          R_RM_NM_O SEP R_RM_NM_A SEP C_RM_NM_O SEP C_RM_NM_A SEP
+          HLD_STS_NM_O SEP HLD_STS_NM_A SEP HLD_CNT_NM_O SEP HLD_CNT_NM_A "\n");
         if (len <= 0) {
             if (len == 0 && buf != NULL) {
                 goto e3;
@@ -271,6 +287,8 @@ format_netaddr(struct rtpp_netaddr *nap_rtp, struct rtpp_netaddr *nap_rtcp,
     }
 }
 
+#define FMT_BOOL(x) ((x == 0) ? "f" : "t")
+
 static void
 rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
 {
@@ -300,7 +318,8 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
       "%s,%s,%f,%f,%f,%f,%f,%f,%lu,%lu,"
       "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu" SEP LSSRC_FMT SEP SNCHG_FMT SEP
       PT_FMT SEP "%lu,%lu,%lu,%lu,%lu" SEP LSSRC_FMT SEP SNCHG_FMT SEP PT_FMT SEP
-      "%f,%f,%f,%f,%f,%f" SEP RM_FMT SEP RM_FMT SEP RM_FMT SEP RM_FMT "\n",
+      "%f,%f,%f,%f,%f,%f" SEP RM_FMT SEP RM_FMT SEP RM_FMT SEP RM_FMT SEP
+      HLD_STS_FMT SEP HLD_STS_FMT SEP HLD_CNT_FMT SEP HLD_CNT_FMT "\n",
       RTPP_METRICS_VERSION, rtpp_acct_get_nid(pvt, acct),
       pvt->pid, acct->seuid, ES_IF_NULL(acct->call_id), ES_IF_NULL(acct->from_tag),
       MT2RT_NZ(acct->init_ts), MT2RT_NZ(acct->destroy_ts), MT2RT_NZ(acct->rtp.o.ps->first_pkt_rcv),
@@ -314,7 +333,9 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
       acct->rasta->pecount, pvt->a.ssrc, acct->rasta->ssrc_changes, acct->rasta->last_pt,
       acct->jrasto->jlast, acct->jrasto->jmax, acct->jrasto->javg,
       acct->jrasta->jlast, acct->jrasta->jmax, acct->jrasta->javg,
-      pvt->o.rtp_adr, pvt->a.rtp_adr, pvt->o.rtcp_adr, pvt->a.rtcp_adr);
+      pvt->o.rtp_adr, pvt->a.rtp_adr, pvt->o.rtcp_adr, pvt->a.rtcp_adr,
+      FMT_BOOL(acct->rtp.o.hld_stat.status), FMT_BOOL(acct->rtp.a.hld_stat.status),
+      acct->rtp.o.hld_stat.cnt, acct->rtp.a.hld_stat.cnt);
     if (len <= 0) {
         if (len == 0 && buf != NULL) {
             mod_free(buf);
