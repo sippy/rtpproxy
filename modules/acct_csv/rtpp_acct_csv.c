@@ -25,6 +25,7 @@
  *
  */
 
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -49,6 +50,7 @@
 #include "rtpp_module.h"
 #include "rtpp_netaddr.h"
 #include "rtpp_network.h"
+#include "rtpp_cfg_stable.h"
 
 #define SSRC_STRLEN 11
 
@@ -62,7 +64,7 @@ struct rtpp_module_priv {
    int fd;
    pid_t pid;
    struct stat stt;
-   const char *fname;
+   char fname[MAXPATHLEN + 1];
    double next_hupd_ts;
    char node_id[_POSIX_HOST_NAME_MAX + 1];
    struct rtpp_mod_acct_face o;
@@ -231,7 +233,12 @@ rtpp_acct_csv_ctor(struct rtpp_cfg_stable *cfsp)
         goto e0;
     }
     pvt->pid = getpid();
-    pvt->fname = "rtpproxy_acct.csv";
+    if (cfsp->cwd_orig == NULL) {
+        snprintf(pvt->fname, sizeof(pvt->fname), "%s", "rtpproxy_acct.csv");
+    } else {
+        snprintf(pvt->fname, sizeof(pvt->fname), "%s/%s", cfsp->cwd_orig,
+          "rtpproxy_acct.csv");
+    }
     if (gethostname(pvt->node_id, sizeof(pvt->node_id)) != 0) {
         strcpy(pvt->node_id, "UNKNOWN");
     }
