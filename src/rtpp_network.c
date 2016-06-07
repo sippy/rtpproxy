@@ -186,7 +186,7 @@ addr2char_r(struct sockaddr *ia, char *buf, int size)
 }
 
 char *
-addrport2char_r(struct sockaddr *ia, char *buf, int size)
+addrport2char_r(struct sockaddr *ia, char *buf, int size, char portsep)
 {
     char abuf[MAX_ADDR_STRLEN];
     const char *bs, *es;
@@ -207,7 +207,7 @@ addrport2char_r(struct sockaddr *ia, char *buf, int size)
 
     if (addr2char_r(ia, abuf, MAX_ADDR_STRLEN) == NULL)
         return (NULL);
-    snprintf(buf, size, "%s%s%s:%u", bs, abuf, es, getport(ia));
+    snprintf(buf, size, "%s%s%s%c%u", bs, abuf, es, portsep, getport(ia));
     return (buf);
 }
 
