@@ -753,20 +753,23 @@ main(int argc, char **argv)
     }
 
     if (cf.stable->nodaemon == 0) {
-	if (cf.stable->no_chdir == 0 && cf.stable->mpath != NULL) {
-	    char *cwd, *mpath_abs;
+        if (cf.stable->no_chdir == 0) {
+            cf.stable->cwd_orig = getcwd(NULL, 0);
+            if (cf.stable->cwd_orig == NULL) {
+                err(1, "getcwd");
+            }
+            if (cf.stable->mpath != NULL) {
+                char *mpath_abs;
 
-	    cwd = getcwd(NULL, 0);
-	    if (cwd == NULL) {
-		err(1, "getcwd");
-	    }
-	    asprintf(&mpath_abs, "%s/%s", cwd, cf.stable->mpath);
-	    if (mpath_abs == NULL) {
-		err(1, "asprintf");
-	    }
-	    free(cf.stable->mpath);
-	    cf.stable->mpath = mpath_abs;
-	}
+                asprintf(&mpath_abs, "%s/%s", cf.stable->cwd_orig,
+                  cf.stable->mpath);
+                if (mpath_abs == NULL) {
+                    err(1, "asprintf");
+                }
+                free(cf.stable->mpath);
+                cf.stable->mpath = mpath_abs;
+            }
+        }
 	if (rtpp_daemon(cf.stable->no_chdir, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
