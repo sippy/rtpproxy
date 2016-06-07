@@ -29,6 +29,8 @@
 #ifdef LINUX_XXX
 /* Apparently needed for drand48(3) */
 #define _SVID_SOURCE	1
+/* Needed for the asprintf(3) */
+#define _GNU_SOURCE	1
 #endif
 
 #include <sys/types.h>
