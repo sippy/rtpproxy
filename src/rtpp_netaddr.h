@@ -45,7 +45,8 @@ DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_cmphost, int,
 DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_copy, void, struct rtpp_netaddr *);
 DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_get, size_t, struct sockaddr *,
   size_t);
-DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_sip_print, size_t, char *, size_t);
+DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_sip_print, size_t, char *, size_t,
+  char);
 
 struct rtpp_netaddr_smethods {
     METHOD_ENTRY(rtpp_netaddr_set, set);
