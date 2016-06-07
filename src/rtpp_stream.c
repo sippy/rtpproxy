@@ -433,7 +433,7 @@ rtpp_stream_latch(struct rtpp_stream *self, double dtime,
         ssrc = seq = "UNKNOWN";
     }
 
-    addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
+    addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr), ':');
     if (pvt->latch_info.latched == 0) {
         relatch = "";
     } else {
@@ -467,7 +467,7 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
 
     actor = rtpp_stream_get_actor(self);
 
-    addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
+    addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr), ':');
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address re-latched: %s (%s), SSRC=" SSRC_FMT ", Seq=%u->%u", actor,
       saddr, "RTP", pvt->latch_info.ssrc.val, pvt->latch_info.seq,
@@ -496,7 +496,7 @@ rtpp_stream_fill_addr(struct rtpp_stream *self,
 
     actor = rtpp_stream_get_actor(self);
     ptype = rtpp_stream_get_proto(self);
-    addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr));
+    addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr), ':');
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address filled in: %s (%s)", actor, saddr, ptype);
     return;
@@ -582,7 +582,7 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
         return;
     }
 
-    addrport2char_r(*iapp, saddr, sizeof(saddr));
+    addrport2char_r(*iapp, saddr, sizeof(saddr), ':');
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "pre-filling %s's %s address "
       "with %s", actor, ptype, saddr);
     if (!CALL_SMETHOD(self->rem_addr, isempty)) {

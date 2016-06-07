@@ -108,7 +108,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
                 if (wi->debug != 0) {
                     char daddr[MAX_AP_STRBUF];
 
-                    addrport2char_r(wi->sendto, daddr, sizeof(daddr));
+                    addrport2char_r(wi->sendto, daddr, sizeof(daddr), ':');
                     if (n < 0) {
                         RTPP_ELOG(wi->log, RTPP_LOG_DBUG,
                           "sendto(%d, %p, %lld, %d, %p (%s), %d) = %d",
