@@ -141,10 +141,16 @@ rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)
 #define PT_NM_A     PT_NAME SFX_INA
 #define PFX_RTP     "rtp_"
 #define PFX_RTCP    "rtcp_"
-#define R_RM_NM_O PFX_GEN PFX_RTP "rmt" SFX_O
-#define R_RM_NM_A PFX_GEN PFX_RTP "rmt" SFX_A
-#define C_RM_NM_O PFX_GEN PFX_RTCP "rmt" SFX_O
-#define C_RM_NM_A PFX_GEN PFX_RTCP "rmt" SFX_A
+#define RM_IP_NM "rmt_ip"
+#define RM_PT_NM "rmt_pt"
+#define R_RM_NM_O PFX_GEN PFX_RTP RM_IP_NM SFX_O
+#define R_RM_NM_A PFX_GEN PFX_RTP RM_IP_NM SFX_A
+#define C_RM_NM_O PFX_GEN PFX_RTCP RM_IP_NM SFX_O
+#define C_RM_NM_A PFX_GEN PFX_RTCP RM_IP_NM SFX_A
+#define R_RM_PT_NM_O PFX_GEN PFX_RTP RM_PT_NM SFX_O
+#define R_RM_PT_NM_A PFX_GEN PFX_RTP RM_PT_NM SFX_A
+#define C_RM_PT_NM_O PFX_GEN PFX_RTCP RM_PT_NM SFX_O
+#define C_RM_PT_NM_A PFX_GEN PFX_RTCP RM_PT_NM SFX_A
 
 #define HLD_CNT_NM   "hld_cnt"
 #define HLD_STS_NM   "hld_sts"
@@ -199,7 +205,8 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
           "rtpa_perrs_ina,rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina" SEP PT_NM_A SEP
           "rtpa_jitter_last_ino,rtpa_jitter_max_ino,rtpa_jitter_avg_ino,"
           "rtpa_jitter_last_ina,rtpa_jitter_max_ina,rtpa_jitter_avg_ina" SEP
-          R_RM_NM_O SEP R_RM_NM_A SEP C_RM_NM_O SEP C_RM_NM_A SEP
+          R_RM_NM_O SEP R_RM_PT_NM_O SEP R_RM_NM_A SEP R_RM_PT_NM_A SEP
+          C_RM_NM_O SEP C_RM_PT_NM_O SEP C_RM_NM_A SEP C_RM_PT_NM_A SEP
           HLD_STS_NM_O SEP HLD_STS_NM_A SEP HLD_CNT_NM_O SEP HLD_CNT_NM_A "\n");
         if (len <= 0) {
             if (len == 0 && buf != NULL) {
@@ -283,14 +290,16 @@ format_netaddr(struct rtpp_netaddr *nap_rtp, struct rtpp_netaddr *nap_rtcp,
 {
 
     if (CALL_SMETHOD(nap_rtp, isempty)) {
-        afp->rtp_adr[0] = '\0';
+        sprintf(afp->rtp_adr, ",");
     } else {
-        CALL_SMETHOD(nap_rtp, sip_print, afp->rtp_adr, sizeof(afp->rtp_adr));
+        CALL_SMETHOD(nap_rtp, sip_print, afp->rtp_adr, sizeof(afp->rtp_adr),
+          ',');
     }
     if (CALL_SMETHOD(nap_rtcp, isempty)) {
-        afp->rtcp_adr[0] = '\0';
+        sprintf(afp->rtcp_adr, ",");
     } else {
-        CALL_SMETHOD(nap_rtcp, sip_print, afp->rtcp_adr, sizeof(afp->rtcp_adr));
+        CALL_SMETHOD(nap_rtcp, sip_print, afp->rtcp_adr, sizeof(afp->rtcp_adr),
+          ',');
     }
 }
 
