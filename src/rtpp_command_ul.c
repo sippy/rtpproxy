@@ -138,7 +138,7 @@ rtpp_command_ul_opts_free(struct ul_opts *ulop)
 
 #define	IPSTR_MIN_LENv4	7	/* "1.1.1.1" */
 #define	IPSTR_MAX_LENv4	15	/* "255.255.255.255" */
-#define	IPSTR_MIN_LENv6	3	/* "::1" */
+#define	IPSTR_MIN_LENv6	2	/* "::" */
 #define	IPSTR_MAX_LENv6	45
 
 #define	IS_IPSTR_VALID(ips, pf)	((pf) == AF_INET ? \
