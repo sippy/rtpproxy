@@ -25,6 +25,8 @@
 struct tconf {
     int nthreads_max;
     int nthreads_min;
+    int paylen_min;
+    int paylen_max;
     const char *dstaddr;
     int dstnetpref;
     int test_kind;
@@ -152,7 +154,7 @@ generate_workset(int setsize, struct tconf *cfp)
             goto e1;
         }
         genrandomdest(cfp, &dp->daddr);
-        genrandombuf(dp, 30, 170);
+        genrandombuf(dp, cfp->paylen_min, cfp->paylen_max);
         dp->buf.pd.magic = cfp->magic;
         dp->buf.pd.idx = i;
     }
@@ -467,8 +469,8 @@ struct tstats {
 static void
 run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
 {
-    int nreps = 120 * 100;
-    int npkts = 2000;
+    int nreps = 10 * 100;
+    int npkts = 4000;
     struct workset *wsp[32];
     struct recvset *rsp[32];
     int i;
@@ -477,6 +479,7 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
 
     for (i = 0; i < nthreads; i++) {
         wsp[i] = generate_workset(npkts, cfp);
+        assert(wsp[i] != NULL);
         wsp[i]->nreps = nreps;
         if (test_type == TEST_KIND_CONNECTED || test_type == TEST_KIND_HALFCONN) {
             if (connect_workset(wsp[i], test_type) != 0) {
@@ -528,15 +531,18 @@ main(int argc, char **argv)
     struct tconf cfg;
     int i, j, ch;
     struct tstats tstats;
+    char *cp;
 
     memset(&cfg, '\0', sizeof(struct tconf));
     cfg.nthreads_max = 10;
     cfg.nthreads_min = 1;
-    cfg.dstaddr = "172.16.0.0";
-    cfg.dstnetpref = 12;
+    cfg.dstaddr = "170.178.193.146";
+    cfg.dstnetpref = 32;
     cfg.magic = ((uint64_t)random() << 32) | (uint64_t)random();
+    cfg.paylen_min = 30;
+    cfg.paylen_max = 170;
 
-    while ((ch = getopt(argc, argv, "m:M:k:")) != -1) {
+    while ((ch = getopt(argc, argv, "m:M:k:p:P:")) != -1) {
         switch (ch) {
         case 'm':
             cfg.nthreads_min = atoi(optarg);
@@ -550,13 +556,40 @@ main(int argc, char **argv)
             cfg.test_kind = atoi(optarg);
             break;
 
+        case 'p':
+            cfg.paylen_min = atoi(optarg);
+            if (cfg.paylen_min < sizeof(struct pktdata)) {
+                usage();
+            }
+            break;
+
+        case 'P':
+            cfg.paylen_max = atoi(optarg);
+            break;
+
         case '?':
         default:
             usage();
         }
     }
+    if (cfg.paylen_max < cfg.paylen_min) {
+        usage();
+    }
     argc -= optind;
     argv += optind;
+
+    if (argc != 1) {
+        usage();
+    }
+    cfg.dstaddr = argv[0];
+    cp = strrchr(cfg.dstaddr, '/');
+    if (cp != NULL) {
+        cp[0] = '\0';
+        cfg.dstnetpref = atoi(cp + 1);
+        if (cfg.dstnetpref < 1 || cfg.dstnetpref > 32) {
+            usage();
+        }
+    }
 
     srandomdev();
     for (i = cfg.nthreads_min; i <= cfg.nthreads_max; i++) {
