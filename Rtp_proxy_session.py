@@ -51,7 +51,9 @@ class _rtpps_side(object):
     session_exists = False
     codecs = None
     raddress = None
+    laddress = None
     origin = None
+    repacketize = None
 
     def __init__(self):
         self.origin = SdpOrigin()
@@ -61,12 +63,15 @@ class _rtpps_side(object):
         command = 'U'
         rtpps.max_index = max(rtpps.max_index, index)
         rtpc = rtpps.rtp_proxy_client
-        if rtpc.sbind_supported and self.raddress != None:
-            #if rtpc.is_local and atype == 'IP4':
-            #    options += 'L%s' % rtpps.global_config['_sip_tm'].l4r.getServer( \
-            #      self.raddress).uopts.laddress[0]
-            #elif not rtpc.is_local:
-            options += 'R%s' % self.raddress[0]
+        if rtpc.sbind_supported:
+            if self.raddress != None:
+                #if rtpc.is_local and atype == 'IP4':
+                #    options += 'L%s' % rtpps.global_config['_sip_tm'].l4r.getServer( \
+                #      self.raddress).uopts.laddress[0]
+                #elif not rtpc.is_local:
+                options += 'R%s' % self.raddress[0]
+            elif self.laddress != None and rtpc.is_local:
+                options += 'L%s' % self.laddress
         command += options
         from_tag, to_tag = self.gettags(rtpps)
         otherside = self.getother(rtpps)
@@ -105,9 +110,13 @@ class _rtpps_side(object):
             result_callback(None, rtpps, *cpo.callback_parameters)
             return
         t1 = result.split()
+        if t1[0][0] == 'E':
+            result_callback(None, rtpps, *cpo.callback_parameters)
+            return
         rtpproxy_port = int(t1[0])
         if rtpproxy_port == 0:
             result_callback(None, rtpps, *cpo.callback_parameters)
+            return
         family = 'IP4'
         if len(t1) > 1:
             rtpproxy_address = t1[1]
@@ -165,7 +174,7 @@ class _rtpps_side(object):
                 return
         for i in range(0, len(sdp_body.content.sections)):
             sect = sdp_body.content.sections[i]
-            if sect.m_header.transport.lower() not in ('udp', 'udptl', 'rtp/avp'):
+            if sect.m_header.transport.lower() not in ('udp', 'udptl', 'rtp/avp', 'rtp/savp'):
                 continue
             sects.append(sect)
         if len(sects) == 0:
@@ -173,15 +182,17 @@ class _rtpps_side(object):
             result_callback(sdp_body)
             return
         formats = sects[0].m_header.formats
-        if len(formats) > 1:
-            self.codecs = reduce(lambda x, y: str(x) + ',' + str(y), formats)
+        self.codecs = ','.join([ str(x) for x in formats ])
+        if self.repacketize != None:
+            options = 'z%d' % self.repacketize
         else:
-            self.codecs = str(formats[0])
-        for sect in sects:
             options = ''
+        for sect in sects:
             if sect.c_header.atype == 'IP6':
-                options = '6'
-            self.update(rtpps, sect.c_header.addr, sect.m_header.port, self._sdp_change_finish, options, \
+                sect_options = '6' + options
+            else:
+                sect_options = options
+            self.update(rtpps, sect.c_header.addr, sect.m_header.port, self._sdp_change_finish, sect_options, \
               sects.index(sect), sect.c_header.atype, sdp_body, sect, sects, result_callback)
         return
 
@@ -198,6 +209,15 @@ class _rtpps_side(object):
                     sect.a_headers.remove('sendrecv')
                 if 'sendonly' not in sect.a_headers:
                     sect.a_headers.append('sendonly')
+            if self.repacketize != None:
+                fidx = -1
+                for a_header in sect.a_headers[:]:
+                    if a_header.startswith('ptime:'):
+                        fidx = sect.a_headers.index(a_header)
+                        sect.a_headers.remove(a_header)
+                    if fidx == -1 and a_header.startswith('fmtp:'):
+                        fidx = sect.a_headers.index(a_header) + 1
+                sect.a_headers.insert(fidx, 'ptime:%d' % self.repacketize)
         if len([x for x in sects if x.needs_update]) == 0:
             sdp_body.content.o_header = self.origin.getCopy()
             self.origin.version += 1
@@ -324,6 +344,19 @@ class Rtp_proxy_session(object):
 
     def on_callee_sdp_change(self, sdp_body, result_callback, en_excpt = False):
         self.callee._on_sdp_change(self, sdp_body, result_callback, en_excpt)
+
+    def stats(self, result_callback, index = 0, *callback_parameters):
+        command = 'Q %s %s %s' % ('%s-%d' % (self.call_id, index), self.from_tag, self.to_tag)
+        self.rtp_proxy_client.send_command(command, self.stats_result, (result_callback, callback_parameters))
+
+    def stats_result(self, result, args):
+        t1 = result.split()
+        result_callback, callback_parameters = args
+        if len(t1) == 1:
+            result_callback(None, *callback_parameters)
+            return
+        ttl, caller_rcount, callee_rcount, fwd_rcount, drop_rcount = [int(x) for x in t1]
+        result_callback((ttl, caller_rcount, callee_rcount, fwd_rcount, drop_rcount), *callback_parameters)
 
     def __del__(self):
         if self.my_ident != get_ident():
