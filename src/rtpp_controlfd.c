@@ -285,6 +285,10 @@ rtpp_ctrl_sock_parse(const char *optarg)
     } else if (strncmp("stdio:", optarg, 6) == 0) {
         rcsp->type= RTPC_STDIO;
         optarg += 6;
+    } else if (strncmp("stdioc:", optarg, 7) == 0) {
+        rcsp->type= RTPC_STDIO;
+        rcsp->exit_on_close = 1;
+        optarg += 7;
     } else if (strncmp("tcp:", optarg, 4) == 0) {
         rcsp->type= RTPC_TCP4;
         optarg += 4;
