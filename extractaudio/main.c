@@ -149,7 +149,8 @@ main(int argc, char **argv)
     struct rtprio rt;
 #endif
     int16_t obuf[1024];
-    char aname[MAXPATHLEN], oname[MAXPATHLEN];
+    char aname_s[MAXPATHLEN], oname_s[MAXPATHLEN];
+    const char *aname, *oname;
     double basetime;
     SF_INFO sfinfo;
     SNDFILE *sffile;
@@ -168,7 +169,8 @@ main(int argc, char **argv)
 
     delete = stereo = idprio = 0;
     dflags = D_FLAG_NONE;
-    while ((ch = getopt(argc, argv, "dsinF:D:")) != -1)
+    aname = oname = NULL;
+    while ((ch = getopt(argc, argv, "dsinF:D:A:B:")) != -1)
         switch (ch) {
         case 'd':
             delete = 1;
@@ -209,6 +211,14 @@ main(int argc, char **argv)
             use_data_fmt = sf_of->id;
             break;
 
+        case 'A':
+            aname = optarg;
+            break;
+
+        case 'B':
+            oname = optarg;
+            break;
+
         case '?':
         default:
             usage();
@@ -216,7 +226,7 @@ main(int argc, char **argv)
     argc -= optind;
     argv += optind;
 
-    if (argc < 2)
+    if (aname == NULL && oname == NULL && argc < 2)
         usage();
 
     if (use_file_fmt == 0) {
@@ -236,11 +246,21 @@ main(int argc, char **argv)
 #endif
     }
 
-    sprintf(aname, "%s.a.rtp", argv[0]);
-    sprintf(oname, "%s.o.rtp", argv[0]);
+    if (aname == NULL && oname == NULL) {
+        sprintf(aname_s, "%s.a.rtp", argv[0]);
+        aname = aname_s;
+        sprintf(oname_s, "%s.o.rtp", argv[0]);
+        oname = oname_s;
+        argv += 1;
+        argc -= 1;
+    }
 
-    load_session(aname, &channels, A_CH);
-    load_session(oname, &channels, O_CH);
+    if (aname != NULL) {
+        load_session(aname, &channels, A_CH);
+    }
+    if (oname != NULL) {
+        load_session(oname, &channels, O_CH);
+    }
 
     if (MYQ_EMPTY(&channels))
         goto theend;
@@ -261,9 +281,9 @@ main(int argc, char **argv)
 
     sfinfo.format = use_file_fmt | use_data_fmt;
 
-    sffile = sf_open(argv[1], SFM_WRITE, &sfinfo);
+    sffile = sf_open(argv[0], SFM_WRITE, &sfinfo);
     if (sffile == NULL)
-        errx(2, "%s: can't open output file", argv[1]);
+        errx(2, "%s: can't open output file", argv[0]);
 #if defined(EAUD_DUMPRAW)
     FILE *raw_file = fopen(EAUD_DUMPRAW, "w");
 #endif
@@ -338,15 +358,19 @@ main(int argc, char **argv)
 #endif
     sf_close(sffile);
 
-    while (argc > 2) {
-        link(argv[1], argv[argc - 1]);
+    while (argc > 1) {
+        link(argv[0], argv[argc - 1]);
         argc--;
     }
 
 theend:
     if (delete != 0) {
-        unlink(aname);
-        unlink(oname);
+        if (aname != NULL) {
+            unlink(aname);
+        }
+        if (oname != NULL) {
+            unlink(oname);
+        }
     }
 
     return 0;
