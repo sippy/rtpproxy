@@ -32,11 +32,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_log_obj.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_network.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
+#include "rtpp_netaddr.h"
 
 struct rtpp_wi_sendto {
     struct rtpp_wi wi;
@@ -54,6 +58,7 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
     if (wis == NULL) {
         return (NULL);
     }
+    memset(wis, '\0', sizeof(struct rtpp_wi_sendto));
     wis->wi.free_ptr = &(wis->wi);
     wis->wi.wi_type = RTPP_WI_TYPE_OPKT;
     wis->wi.sock = sock;
@@ -70,20 +75,49 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
 
 struct rtpp_wi *
 rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
-  const struct sockaddr *sendto, size_t tolen, int nsend)
+  const struct sockaddr *sendto, size_t tolen, int nsend,
+  struct rtpp_refcnt *sock_rcnt)
 {
     struct rtpp_wi *wi;
 
-    wi = &(pkt->wi);
+    wi = pkt->wi;
     wi->free_ptr = (struct rtpp_wi *)pkt;
     wi->wi_type = RTPP_WI_TYPE_OPKT;
     wi->sock = sock;
+    if (sock_rcnt != NULL) {
+        CALL_SMETHOD(sock_rcnt, incref);
+    }
+    wi->sock_rcnt = sock_rcnt;
     wi->flags = 0;
     wi->msg = pkt->data.buf;
     wi->msg_len = pkt->size;
     wi->sendto = sstosa(&pkt->raddr);
     wi->tolen = tolen;
     memcpy(wi->sendto, sendto, tolen);
+    wi->nsend = nsend;
+    return (wi);
+}
+
+struct rtpp_wi *
+rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
+  struct rtpp_netaddr *sendto, int nsend,
+  struct rtpp_refcnt *sock_rcnt)
+{
+    struct rtpp_wi *wi;
+
+    wi = pkt->wi;
+    wi->free_ptr = (struct rtpp_wi *)pkt;
+    wi->wi_type = RTPP_WI_TYPE_OPKT;
+    wi->sock = sock;
+    if (sock_rcnt != NULL) {
+        CALL_SMETHOD(sock_rcnt, incref);
+    }
+    wi->sock_rcnt = sock_rcnt;
+    wi->flags = 0;
+    wi->msg = pkt->data.buf;
+    wi->msg_len = pkt->size;
+    wi->sendto = sstosa(&pkt->raddr);
+    wi->tolen = CALL_SMETHOD(sendto, get, wi->sendto, sizeof(pkt->raddr));
     wi->nsend = nsend;
     return (wi);
 }
@@ -99,7 +133,7 @@ rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int 
 #if !defined(RTPP_CHECK_LEAKS)
     wi = malloc(sizeof(struct rtpp_wi) + datalen);
 #else
-    wi = rtpp_memdeb_malloc(sizeof(struct rtpp_wi) + datalen, fname, linen, funcn);
+    wi = rtpp_memdeb_malloc(sizeof(struct rtpp_wi) + datalen, _rtpproxy_memdeb, fname, linen, funcn);
 #endif
     if (wi == NULL) {
         return (NULL);
@@ -214,9 +248,27 @@ rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t min_len, size_t max_len)
     return(wi->msg);
 }
 
+const char *
+rtpp_wi_apis_getnamearg(struct rtpp_wi *wi, void **datap, size_t datalen)
+{
+
+    assert(wi->wi_type == RTPP_WI_TYPE_API_STR);
+    assert(wi->msg_len == datalen);
+    if (datap != NULL && datalen > 0) {
+        memcpy(datap, wi->data, datalen);
+    }
+    return ((const char *)wi->sendto);
+}
+
 void
 rtpp_wi_free(struct rtpp_wi *wi)
 {
 
+    if (wi->sock_rcnt != NULL) {
+        CALL_SMETHOD(wi->sock_rcnt, decref);
+    }
+    if (wi->log != NULL) {
+        CALL_SMETHOD(wi->log->rcnt, decref);
+    }
     free(wi->free_ptr);
 }

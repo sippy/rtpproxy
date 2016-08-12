@@ -32,11 +32,17 @@ struct rtpp_anetio_cf;
 struct rtp_packet;
 struct rtpp_queue;
 struct sthread_args;
+struct rtpp_log;
+struct rtpp_netaddr;
 
 int rtpp_anetio_sendto(struct rtpp_anetio_cf *, int, const void *, \
   size_t, int, const struct sockaddr *, socklen_t);
 int rtpp_anetio_send_pkt(struct sthread_args *, int, \
-  const struct sockaddr *, socklen_t, struct rtp_packet *);
+  const struct sockaddr *, socklen_t, struct rtp_packet *,
+  struct rtpp_refcnt *, struct rtpp_log *);
+int rtpp_anetio_send_pkt_na(struct sthread_args *, int, \
+  struct rtpp_netaddr *, struct rtp_packet *,
+  struct rtpp_refcnt *, struct rtpp_log *);
 void rtpp_anetio_pump(struct rtpp_anetio_cf *);
 void rtpp_anetio_pump_q(struct sthread_args *);
 struct sthread_args *rtpp_anetio_pick_sender(struct rtpp_anetio_cf *);

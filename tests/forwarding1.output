@@ -1,128 +1,248 @@
 13342
 13344
+13342
+13344
+13346
+13348
 13346
 13348
 13350
 13352
+13350
+13352
+13354
+13356
 13354
 13356
 13358
 13360
+13358
+13360
+13362
+13364
 13362
 13364
 13366
 13368
+13366
+13368
+13370
+13372
 13370
 13372
 13374
 13376
+13374
+13376
+13378
+13380
 13378
 13380
 13382
 13384
+13382
+13384
+13386
+13388
 13386
 13388
 13390
 13392
+13390
+13392
+13394
+13396
 13394
 13396
 13398
 13400
+13398
+13400
+13402
+13404
 13402
 13404
 13406
 13408
+13406
+13408
+13410
+13412
 13410
 13412
 13414
 13416
+13414
+13416
+13418
+13420
 13418
 13420
 13422
 13424
+13422
+13424
+13426
+13428
 13426
 13428
 13430
 13432
+13430
+13432
+13434
+13436
 13434
 13436
 13438
 13440
+13438
+13440
+13442
+13444
 13442
 13444
 13446
 13448
+13446
+13448
+13450
+13452
 13450
 13452
 13454
 13456
+13454
+13456
+13458
+13460
 13458
 13460
 npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
 rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-0
 npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
 rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
-npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
-rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-0
-npkts_ina=500 npkts_ino=1500 nrelayed=2000 ndropped=0
-rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
 npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
 rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-0
-npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
 rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
-npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+0
+npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
 rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
-npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
-rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
 npkts_ina=500 npkts_ino=1500 nrelayed=2000 ndropped=0
 rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-0
-npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
-rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-0
-npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
-rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-0
-npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
-rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-0
-npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
-rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-0
 npkts_ina=500 npkts_ino=1500 nrelayed=2000 ndropped=0
 rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
+0
+npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
 rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
-nsess_created=30 nsess_destroyed=15 nsess_timeout=0 nsess_complete=30 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=15 nsess_owrtcp=0
-ncmds_rcvd=122 ncmds_succd=121 ncmds_errs=0 ncmds_repld=121
-npkts_rcvd=96000 npkts_played=0 npkts_relayed=90000 npkts_discard=0 nplrs_created=0 nplrs_destroyed=0
-npkts_resizer_in=16000 npkts_resizer_out=10000 npkts_resizer_discard=0
-rtpa_nsent=48000 rtpa_nrcvd=48000 rtpa_ndups=0 rtpa_perrs=0
 0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+npkts_ina=500 npkts_ino=1500 nrelayed=2000 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=1500 nrelayed=2000 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+npkts_ina=500 npkts_ino=1500 nrelayed=2000 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=1500 nrelayed=2000 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=3000 nrelayed=3500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+nsess_created=60 nsess_destroyed=30 nsess_timeout=0 nsess_complete=60 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=30 nsess_owrtcp=0
+ncmds_rcvd=242 ncmds_succd=241 ncmds_errs=0 ncmds_repld=241
+npkts_rcvd=192000 npkts_played=0 npkts_relayed=180000 npkts_discard=0 nplrs_created=0 nplrs_destroyed=0
+npkts_resizer_in=32000 npkts_resizer_out=20000 npkts_resizer_discard=0
 rtpa_nsent=96000 rtpa_nrcvd=96000 rtpa_ndups=0 rtpa_perrs=0
+0
+rtpa_nsent=192000 rtpa_nrcvd=192000 rtpa_ndups=0 rtpa_perrs=0
 MEMDEB: all clear

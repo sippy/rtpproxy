@@ -33,25 +33,27 @@
 #include <poll.h>
 #include <pthread.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/un.h>
 
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_rcache.h"
 #include "rtpp_command_stream.h"
+#if 0
 #include "rtpp_math.h"
+#endif
 #include "rtpp_network.h"
 #include "rtpp_netio_async.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_stats.h"
 #include "rtpp_list.h"
 #include "rtpp_controlfd.h"
@@ -73,7 +75,7 @@ struct rtpp_cmd_accptset {
 };
 
 struct rtpp_cmd_async_cf {
-    struct rtpp_cmd_async_obj pub;
+    struct rtpp_cmd_async pub;
     pthread_t thread_id;
     pthread_t acpt_thread_id;
     pthread_cond_t cmd_cond;
@@ -90,7 +92,7 @@ struct rtpp_cmd_async_cf {
     struct rtpp_cmd_pollset pset;
     struct rtpp_cmd_accptset aset;
     struct cfg *cf_save;
-    struct rtpp_cmd_rcache_obj *rcache;
+    struct rtpp_cmd_rcache *rcache;
 };
 
 #define PUB2PVT(pubp)	((struct rtpp_cmd_async_cf *)((char *)(pubp) - offsetof(struct rtpp_cmd_async_cf, pub)))
@@ -98,12 +100,12 @@ struct rtpp_cmd_async_cf {
 #define TSTATE_RUN   0x0
 #define TSTATE_CEASE 0x1
 
-static double rtpp_command_async_get_aload(struct rtpp_cmd_async_obj *);
-static int rtpp_command_async_wakeup(struct rtpp_cmd_async_obj *);
-static void rtpp_command_async_dtor(struct rtpp_cmd_async_obj *);
+static double rtpp_command_async_get_aload(struct rtpp_cmd_async *);
+static int rtpp_command_async_wakeup(struct rtpp_cmd_async *);
+static void rtpp_command_async_dtor(struct rtpp_cmd_async *);
 
 static void
-init_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
+init_cstats(struct rtpp_stats *sobj, struct rtpp_command_stats *csp)
 {
 
     csp->ncmds_rcvd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_rcvd");
@@ -127,7 +129,7 @@ init_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
 }
 
 static void
-flush_cstats(struct rtpp_stats_obj *sobj, struct rtpp_command_stats *csp)
+flush_cstats(struct rtpp_stats *sobj, struct rtpp_command_stats *csp)
 {
 
     FLUSH_CSTAT(sobj, csp->ncmds_rcvd);
@@ -154,7 +156,7 @@ accept_connection(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, struct sockaddr *
     controlfd = accept(rcsp->controlfd_in, rap, &rlen);
     if (controlfd == -1) {
         if (errno != EWOULDBLOCK) {
-            rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog,
+            RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR,
               "can't accept connection on control socket");
         }
         return (-1);
@@ -164,8 +166,8 @@ accept_connection(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, struct sockaddr *
 
 static int
 process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, double dtime,
-  struct rtpp_command_stats *csp, struct rtpp_stats_obj *rsc,
-  struct rtpp_cmd_rcache_obj *rcp)
+  struct rtpp_command_stats *csp, struct rtpp_stats *rsc,
+  struct rtpp_cmd_rcache *rcp)
 {
     int i, rval;
     struct rtpp_command *cmd;
@@ -185,7 +187,7 @@ process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, do
         }
         if (cmd != NULL) {
             cmd->laddr = sstosa(&csock->bindaddr);
-            if (cmd->cca.op == GET_STATS) {
+            if (cmd->cca.op == GET_STATS || cmd->cca.op == INFO) {
                 flush_cstats(rsc, csp);
             }
             if (cmd->no_glock == 0) {
@@ -205,7 +207,7 @@ process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, do
 
 static int
 process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
-  double dtime, struct rtpp_command_stats *csp, struct rtpp_stats_obj *rsc)
+  double dtime, struct rtpp_command_stats *csp, struct rtpp_stats *rsc)
 {
     int rval;
     struct rtpp_command *cmd;
@@ -223,7 +225,7 @@ process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
             continue;
         }
         cmd->laddr = sstosa(&rcc->csock->bindaddr);
-        if (cmd->cca.op == GET_STATS) {
+        if (cmd->cca.op == GET_STATS || cmd->cca.op == INFO) {
             flush_cstats(rsc, csp);
         }
         if (cmd->no_glock == 0) {
@@ -370,7 +372,7 @@ rtpp_cmd_queue_run(void *arg)
     double eptime, tused;
 #endif
     struct rtpp_command_stats *csp;
-    struct rtpp_stats_obj *rtpp_stats_cf;
+    struct rtpp_stats *rtpp_stats_cf;
 
     cmd_cf = (struct rtpp_cmd_async_cf *)arg;
     rtpp_stats_cf = cmd_cf->cf_save->stable->rtpp_stats;
@@ -455,10 +457,10 @@ closefd:
 #if 0
 #if RTPP_DEBUG
         if (last_ctick % (unsigned int)cmd_cf->cf_save->stable->target_pfreq == 0 || last_ctick < 1000) {
-            rtpp_log_write(RTPP_LOG_DBUG, cmd_cf->cf_save->stable->glog, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
+            RTPP_LOG(cmd_cf->cf_save->stable->glog, RTPP_LOG_DBUG, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
               last_ctick, sptime, eptime, (double)last_ctick / cmd_cf->cf_save->stable->target_pfreq, \
               eptime - sptime + tused, eptime, sptime, tused);
-            rtpp_log_write(RTPP_LOG_DBUG, cmd_cf->cf_save->stable->glog, "run %lld average load %f, CSV: %f,%f", last_ctick, \
+            RTPP_LOG(cmd_cf->cf_save->stable->glog, RTPP_LOG_DBUG, "run %lld average load %f, CSV: %f,%f", last_ctick, \
               cmd_cf->average_load.lastval * 100.0, (double)last_ctick / cmd_cf->cf_save->stable->target_pfreq, cmd_cf->average_load.lastval);
         }
 #endif
@@ -467,7 +469,7 @@ closefd:
 }
 
 static double
-rtpp_command_async_get_aload(struct rtpp_cmd_async_obj *pub)
+rtpp_command_async_get_aload(struct rtpp_cmd_async *pub)
 {
 #if 0
     double aload;
@@ -486,7 +488,7 @@ rtpp_command_async_get_aload(struct rtpp_cmd_async_obj *pub)
 }
 
 static int
-rtpp_command_async_wakeup(struct rtpp_cmd_async_obj *pub)
+rtpp_command_async_wakeup(struct rtpp_cmd_async *pub)
 {
     int old_clock;
     struct rtpp_cmd_async_cf *cmd_cf;
@@ -609,7 +611,7 @@ free_accptset(struct rtpp_cmd_accptset *asp)
     }
 }
 
-struct rtpp_cmd_async_obj *
+struct rtpp_cmd_async *
 rtpp_command_async_ctor(struct cfg *cf)
 {
     struct rtpp_cmd_async_cf *cmd_cf;
@@ -636,7 +638,8 @@ rtpp_command_async_ctor(struct cfg *cf)
         goto e4;
     }
     assert(cf->stable->rtpp_timed_cf != NULL);
-    cmd_cf->rcache = rtpp_cmd_rcache_ctor(cf->stable->rtpp_timed_cf, 30.0);
+    cmd_cf->rcache = rtpp_cmd_rcache_ctor(cf->stable->rtpp_timed_cf,
+      32.0 + 3.0);
     if (cmd_cf->rcache == NULL) {
         goto e5;
     }
@@ -670,7 +673,8 @@ e7:
         pthread_join(cmd_cf->acpt_thread_id, NULL);
     }
 e6:
-    CALL_METHOD(cmd_cf->rcache, dtor);
+    CALL_METHOD(cmd_cf->rcache, shutdown);
+    CALL_SMETHOD(cmd_cf->rcache->rcnt, decref);
 e5:
     pthread_mutex_destroy(&cmd_cf->cmd_mutex);
 e4:
@@ -686,7 +690,7 @@ e0:
 }
 
 static void
-rtpp_command_async_dtor(struct rtpp_cmd_async_obj *pub)
+rtpp_command_async_dtor(struct rtpp_cmd_async *pub)
 {
     struct rtpp_cmd_async_cf *cmd_cf;
     int i;
@@ -709,8 +713,8 @@ rtpp_command_async_dtor(struct rtpp_cmd_async_obj *pub)
     if (cmd_cf->acceptor_started != 0) {
         pthread_join(cmd_cf->acpt_thread_id, NULL);
     }
-
-    CALL_METHOD(cmd_cf->rcache, dtor);
+    CALL_METHOD(cmd_cf->rcache, shutdown);
+    CALL_SMETHOD(cmd_cf->rcache->rcnt, decref);
     pthread_cond_destroy(&cmd_cf->cmd_cond);
     pthread_mutex_destroy(&cmd_cf->cmd_mutex);
     free_pollset(&cmd_cf->pset);

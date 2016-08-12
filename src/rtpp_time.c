@@ -27,12 +27,9 @@
  */
 
 #include <math.h>
-#include <stdint.h>
 #include <time.h>
 
 #include "rtpp_time.h"
-
-static double timespec2dtime(time_t, long);
 
 double
 getdtime(void)
@@ -42,27 +39,20 @@ getdtime(void)
     if (clock_gettime(RTPP_CLOCK_MONO, &tp) == -1)
         return (-1);
 
-    return timespec2dtime(tp.tv_sec, tp.tv_nsec);
-}
-
-static double
-timespec2dtime(time_t tv_sec, long tv_nsec)
-{
-
-    return (double)tv_sec + (double)tv_nsec / 1000000000.0;
-}
-
-double
-ts2dtime(uint32_t ts_sec, uint32_t ts_usec)
-{
-
-    return ts_sec + ((double)ts_usec) / 1000000.0;
+    return timespec2dtime(&tp);
 }
 
 void
-dtime2ts(double dtime, uint32_t *ts_sec, uint32_t *ts_usec)
+dtime2mtimespec(double dtime, struct timespec *mtime)
 {
 
-    *ts_sec = trunc(dtime);
-    *ts_usec = round(1000000.0 * (dtime - ((double)*ts_sec)));
+    SEC(mtime) = trunc(dtime);
+    NSEC(mtime) = round((double)NSEC_MAX * (dtime - (double)SEC(mtime)));
+}
+
+const char *
+get_mclock_name(void)
+{
+
+    return (RTPP_MCLOCK_NAME);
 }

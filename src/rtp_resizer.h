@@ -30,14 +30,15 @@
 
 struct rtp_resizer;
 struct rtpp_proc_rstats;
-struct rtpp_stats_obj;
+struct rtpp_stats;
+struct rtp_packet;
 
 void rtp_resizer_enqueue(struct rtp_resizer *, struct rtp_packet **,
   struct rtpp_proc_rstats *);
 struct rtp_packet *rtp_resizer_get(struct rtp_resizer *, double);
 
 struct rtp_resizer *rtp_resizer_new(int);
-void rtp_resizer_free(struct rtpp_stats_obj *, struct rtp_resizer *);
+void rtp_resizer_free(struct rtpp_stats *, struct rtp_resizer *);
 
 #define is_rtp_resizer_enabled(resizer) ((resizer).output_nsamples > 0)
 

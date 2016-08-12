@@ -25,19 +25,32 @@
  *
  */
 
-struct rtpp_refcnt_obj;
+struct rtpp_refcnt;
 
 typedef void (*rtpp_refcnt_dtor_t)(void *);
 
-DEFINE_METHOD(rtpp_refcnt_obj, refcnt_incref, void);
-DEFINE_METHOD(rtpp_refcnt_obj, refcnt_decref, void);
-DEFINE_METHOD(rtpp_refcnt_obj, refcnt_getdata, void *);
+DEFINE_METHOD(rtpp_refcnt, refcnt_incref, void);
+DEFINE_METHOD(rtpp_refcnt, refcnt_decref, void);
+DEFINE_METHOD(rtpp_refcnt, refcnt_getdata, void *);
+DEFINE_METHOD(rtpp_refcnt, refcnt_reg_pd, void, rtpp_refcnt_dtor_t, void *);
+DEFINE_METHOD(rtpp_refcnt, refcnt_attach, void, rtpp_refcnt_dtor_t, void *);
+DEFINE_METHOD(rtpp_refcnt, refcnt_traceen, void);
 
-struct rtpp_refcnt_obj
+struct rtpp_refcnt_smethods
 {
-    refcnt_incref_t incref;
-    refcnt_decref_t decref;
-    refcnt_getdata_t getdata;
+    METHOD_ENTRY(refcnt_incref, incref);
+    METHOD_ENTRY(refcnt_decref, decref);
+    METHOD_ENTRY(refcnt_getdata, getdata);
+    METHOD_ENTRY(refcnt_reg_pd, reg_pd);
+    METHOD_ENTRY(refcnt_attach, attach);
+    METHOD_ENTRY(refcnt_traceen, traceen);
 };
 
-struct rtpp_refcnt_obj *rtpp_refcnt_ctor(void *, rtpp_refcnt_dtor_t);
+struct rtpp_refcnt
+{
+    const struct rtpp_refcnt_smethods *smethods;
+};
+
+struct rtpp_refcnt *rtpp_refcnt_ctor(void *, rtpp_refcnt_dtor_t);
+const unsigned int rtpp_refcnt_osize(void);
+struct rtpp_refcnt *rtpp_refcnt_ctor_pa(void *);

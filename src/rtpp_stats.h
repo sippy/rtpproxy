@@ -25,36 +25,36 @@
  *
  */
 
-struct rtpp_stats_obj;
+struct rtpp_stats;
 
 #if !defined(DEFINE_METHOD)
 #error "rtpp_types.h" needs to be included
 #endif
 
-DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_dtor, void);
-DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_getidxbyname, int, const char *);
-DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_updatebyidx, int, int, uint64_t);
-DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_updatebyname, int, const char *, uint64_t);
-DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_updatebyname_d, int, const char *, double);
-DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_getlvalbyname, int64_t, const char *);
-DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_nstr, int, char *, int, const char *);
-DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_getnstats, int);
-DEFINE_METHOD(rtpp_stats_obj, rtpp_stats_obj_update_derived, void, double);
+DEFINE_METHOD(rtpp_stats, rtpp_stats_dtor, void);
+DEFINE_METHOD(rtpp_stats, rtpp_stats_getidxbyname, int, const char *);
+DEFINE_METHOD(rtpp_stats, rtpp_stats_updatebyidx, int, int, uint64_t);
+DEFINE_METHOD(rtpp_stats, rtpp_stats_updatebyname, int, const char *, uint64_t);
+DEFINE_METHOD(rtpp_stats, rtpp_stats_updatebyname_d, int, const char *, double);
+DEFINE_METHOD(rtpp_stats, rtpp_stats_getlvalbyname, int64_t, const char *);
+DEFINE_METHOD(rtpp_stats, rtpp_stats_nstr, int, char *, int, const char *);
+DEFINE_METHOD(rtpp_stats, rtpp_stats_getnstats, int);
+DEFINE_METHOD(rtpp_stats, rtpp_stats_update_derived, void, double);
 
-struct rtpp_stats_obj_priv;
+struct rtpp_stats_priv;
 
-struct rtpp_stats_obj
+struct rtpp_stats
 {
-    rtpp_stats_obj_dtor_t dtor;
-    rtpp_stats_obj_getidxbyname_t getidxbyname;
-    rtpp_stats_obj_updatebyidx_t updatebyidx;
-    rtpp_stats_obj_updatebyname_t updatebyname;
-    rtpp_stats_obj_updatebyname_d_t updatebyname_d;
-    rtpp_stats_obj_getlvalbyname_t getlvalbyname;
-    rtpp_stats_obj_getnstats_t getnstats;
-    rtpp_stats_obj_nstr_t nstr;
-    rtpp_stats_obj_update_derived_t update_derived;
-    struct rtpp_stats_obj_priv *pvt;
+    rtpp_stats_dtor_t dtor;
+    rtpp_stats_getidxbyname_t getidxbyname;
+    rtpp_stats_updatebyidx_t updatebyidx;
+    rtpp_stats_updatebyname_t updatebyname;
+    rtpp_stats_updatebyname_d_t updatebyname_d;
+    rtpp_stats_getlvalbyname_t getlvalbyname;
+    rtpp_stats_getnstats_t getnstats;
+    rtpp_stats_nstr_t nstr;
+    rtpp_stats_update_derived_t update_derived;
+    struct rtpp_stats_priv *pvt;
 };
 
-struct rtpp_stats_obj *rtpp_stats_ctor(void);
+struct rtpp_stats *rtpp_stats_ctor(void);

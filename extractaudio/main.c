@@ -39,6 +39,7 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <netinet/udp.h>
 #include <err.h>
 #include <fcntl.h>
@@ -56,15 +57,21 @@
 #include "decoder.h"
 #include "session.h"
 #include "rtpp_record_private.h"
+#include "rtpp_ssrc.h"
 #include "rtpp_loader.h"
 #include "rtp.h"
 #include "rtp_analyze.h"
+#include "rtpa_stats.h"
+#include "eaud_oformats.h"
+
+/*#define EAUD_DUMPRAW "/tmp/eaud.raw"*/
 
 static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: extractaudio [-idsn] rdir outfile [link1] ... [linkN]\n");
+    fprintf(stderr, "usage: extractaudio [-idsn] [-F file_fmt] [-D data_fmt] "
+      "rdir outfile [link1] ... [linkN]\n");
     exit(1);
 }
 
@@ -99,25 +106,32 @@ channel_insert(struct channels *channels, struct channel *channel)
 static int
 load_session(const char *path, struct channels *channels, enum origin origin)
 {
-    int pcount;
+    int pcount, jc;
     struct rtpp_session_stat stat;
+    struct rtpa_stats_jitter jstat;
     struct rtpp_loader *loader;
 
     loader = rtpp_load(path);
     if (loader == NULL)
         return -1;
 
-    memset(&stat, '\0', sizeof(stat));
+    rtpp_stats_init(&stat);
     pcount = loader->load(loader, channels, &stat, origin);
 
     update_rtpp_totals(&stat, &stat);
+    jc = get_jitter_stats(stat.jdata, &jstat);
     printf("pcount=%u, min_seq=%u, max_seq=%u, seq_offset=%u, ssrc=0x%.8X, duplicates=%u\n",
       (unsigned int)stat.last.pcount, (unsigned int)stat.last.min_seq, (unsigned int)stat.last.max_seq,
-      (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc, (unsigned int)stat.last.duplicates);
+      (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc.val, (unsigned int)stat.last.duplicates);
     printf("ssrc_changes=%u, psent=%u, precvd=%u, plost=%d\n", stat.ssrc_changes, stat.psent, stat.precvd,
       stat.psent - stat.precvd);
+    if (jc > 0) {
+        printf("last_jitter=%f,average_jitter=%f,max_jitter=%f\n",
+          jstat.jlast, jstat.javg, jstat.jmax);
+    }
 
     loader->destroy(loader);
+    rtpp_stats_destroy(&stat);
 
     return pcount;
 }
@@ -140,13 +154,21 @@ main(int argc, char **argv)
     SF_INFO sfinfo;
     SNDFILE *sffile;
     int dflags;
+    const struct supported_fmt *sf_of;
+    uint32_t use_file_fmt, use_data_fmt;
+    uint32_t dflt_file_fmt, dflt_data_fmt;
 
     MYQ_INIT(&channels);
     memset(&sfinfo, 0, sizeof(sfinfo));
+    sfinfo.samplerate = 8000;
+    sfinfo.channels = 1;
+    use_file_fmt = use_data_fmt = 0;
+    dflt_file_fmt = SF_FORMAT_WAV;
+    dflt_data_fmt = SF_FORMAT_GSM610;
 
     delete = stereo = idprio = 0;
     dflags = D_FLAG_NONE;
-    while ((ch = getopt(argc, argv, "dsin")) != -1)
+    while ((ch = getopt(argc, argv, "dsinF:D:")) != -1)
         switch (ch) {
         case 'd':
             delete = 1;
@@ -154,6 +176,9 @@ main(int argc, char **argv)
 
         case 's':
             stereo = 1;
+            sfinfo.channels = 2;
+            /* GSM+WAV doesn't work with more than 1 channels */
+            dflt_data_fmt = SF_FORMAT_MS_ADPCM;
             break;
 
         case 'i':
@@ -162,6 +187,26 @@ main(int argc, char **argv)
 
         case 'n':
             dflags |= D_FLAG_NOSYNC;
+            break;
+
+        case 'F':
+            sf_of = pick_format(optarg, eaud_file_fmts);
+            if (sf_of == NULL) {
+                warnx("unknown output file format: \"%s\"", optarg);
+                dump_formats_descr("Supported file formats:\n", eaud_file_fmts);
+                exit(1);
+            }
+            use_file_fmt = sf_of->id;
+            break;
+
+        case 'D':
+            sf_of = pick_format(optarg, eaud_data_fmts);
+            if (sf_of == NULL) {
+                warnx("unknown output data format: \"%s\"", optarg);
+                dump_formats_descr("Supported data formats:\n", eaud_data_fmts);
+                exit(1);
+            }
+            use_data_fmt = sf_of->id;
             break;
 
         case '?':
@@ -173,6 +218,13 @@ main(int argc, char **argv)
 
     if (argc < 2)
         usage();
+
+    if (use_file_fmt == 0) {
+        use_file_fmt = dflt_file_fmt;
+    }
+    if (use_data_fmt == 0) {
+        use_data_fmt = dflt_data_fmt;
+    }
 
     if (idprio != 0) {
 #if defined(__FreeBSD__)
@@ -207,19 +259,14 @@ main(int argc, char **argv)
 
     oblen = 0;
 
-    sfinfo.samplerate = 8000;
-    if (stereo == 0) {
-        sfinfo.channels = 1;
-        sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_GSM610;
-    } else {
-        /* GSM+WAV doesn't work with more than 1 channels */
-        sfinfo.channels = 2;
-        sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_MS_ADPCM;
-    }
+    sfinfo.format = use_file_fmt | use_data_fmt;
 
     sffile = sf_open(argv[1], SFM_WRITE, &sfinfo);
     if (sffile == NULL)
         errx(2, "%s: can't open output file", argv[1]);
+#if defined(EAUD_DUMPRAW)
+    FILE *raw_file = fopen(EAUD_DUMPRAW, "w");
+#endif
 
     nasamples = nosamples = nwsamples = 0;
     do {
@@ -275,6 +322,9 @@ main(int argc, char **argv)
             }
         }
         if (neof == nch || oblen == sizeof(obuf) / sizeof(obuf[0])) {
+#if defined(EAUD_DUMPRAW)
+            fwrite(obuf, sizeof(int16_t), oblen, raw_file);
+#endif
             sf_write_short(sffile, obuf, oblen);
             nwsamples += oblen / sizeof(obuf[0]);
             oblen = 0;
@@ -283,6 +333,9 @@ main(int argc, char **argv)
     fprintf(stderr, "samples decoded: O: %" PRIu64 ", A: %" PRIu64
       ", written: %" PRIu64 "\n", nosamples, nasamples, nwsamples);
 
+#if defined(EAUD_DUMPRAW)
+    fclose(raw_file);
+#endif
     sf_close(sffile);
 
     while (argc > 2) {

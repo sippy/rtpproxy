@@ -8,3 +8,5 @@ Makefile
 rtpproxy
 ktrace.out
 rtpproxy_debug
+*_fin.c
+*_fin.h

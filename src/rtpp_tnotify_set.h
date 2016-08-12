@@ -25,20 +25,20 @@
  *
  */
 
-struct rtpp_tnotify_set_obj;
+struct rtpp_tnotify_set;
 struct rtpp_tnotify_target;
 
-DEFINE_METHOD(rtpp_tnotify_set_obj, rtpp_tn_set_dtor, void);
-DEFINE_METHOD(rtpp_tnotify_set_obj, rtpp_tn_set_append, int, const char *, const char **);
-DEFINE_METHOD(rtpp_tnotify_set_obj, rtpp_tn_set_lookup, struct rtpp_tnotify_target *,
+DEFINE_METHOD(rtpp_tnotify_set, rtpp_tn_set_dtor, void);
+DEFINE_METHOD(rtpp_tnotify_set, rtpp_tn_set_append, int, const char *, const char **);
+DEFINE_METHOD(rtpp_tnotify_set, rtpp_tn_set_lookup, struct rtpp_tnotify_target *,
   const char *, struct sockaddr *, struct sockaddr *);
-DEFINE_METHOD(rtpp_tnotify_set_obj, rtpp_tn_set_isenabled, int);
+DEFINE_METHOD(rtpp_tnotify_set, rtpp_tn_set_isenabled, int);
 
-struct rtpp_tnotify_set_obj {
+struct rtpp_tnotify_set {
     rtpp_tn_set_dtor_t dtor;
     rtpp_tn_set_append_t append;
     rtpp_tn_set_lookup_t lookup;
     rtpp_tn_set_isenabled_t isenabled;
 };
 
-struct rtpp_tnotify_set_obj *rtpp_tnotify_set_ctor(void);
+struct rtpp_tnotify_set *rtpp_tnotify_set_ctor(void);

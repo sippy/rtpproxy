@@ -32,20 +32,17 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <ctype.h>
-#include <errno.h>
 #include <netdb.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"
 
 int
-ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
+ishostseq(const struct sockaddr *ia1, const struct sockaddr *ia2)
 {
 
     if (ia1->sa_family != ia2->sa_family)
@@ -69,7 +66,7 @@ ishostseq(struct sockaddr *ia1, struct sockaddr *ia2)
 }
 
 int
-ishostnull(struct sockaddr *ia)
+ishostnull(const struct sockaddr *ia)
 {
     struct in6_addr *ap;
 
@@ -91,22 +88,38 @@ ishostnull(struct sockaddr *ia)
     abort();
 }
 
-int
-getport(struct sockaddr *ia)
+uint16_t
+getport(const struct sockaddr *ia)
+{
+
+    return (ntohs(getnport(ia)));
+}
+
+uint16_t
+getnport(const struct sockaddr *ia)
 {
 
     switch (ia->sa_family) {
     case AF_INET:
-        return (ntohs(satosin(ia)->sin_port));
+        return (satosin(ia)->sin_port);
 
     case AF_INET6:
-        return (ntohs(satosin6(ia)->sin6_port));
+        return (satosin6(ia)->sin6_port);
 
     default:
         break;
     }
     /* Can't happen */
     abort();
+}
+
+int
+isaddrseq(const struct sockaddr *ia1, const struct sockaddr *ia2)
+{
+
+    if (ishostseq(ia1, ia2) == 0)
+        return (0);
+    return (getport(ia1) == getport(ia2));
 }
 
 void
@@ -172,12 +185,30 @@ addr2char_r(struct sockaddr *ia, char *buf, int size)
     return (char *)((void *)inet_ntop(ia->sa_family, addr, buf, size));
 }
 
-const char *
-addr2char(struct sockaddr *ia)
+char *
+addrport2char_r(struct sockaddr *ia, char *buf, int size, char portsep)
 {
-    static char buf[256];
+    char abuf[MAX_ADDR_STRLEN];
+    const char *bs, *es;
 
-    return(addr2char_r(ia, buf, sizeof(buf)));
+    switch (ia->sa_family) {
+    case AF_INET:
+        bs = es = "";
+        break;
+
+    case AF_INET6:
+        bs = "[";
+        es = "]";
+        break;
+
+    default:
+        abort();
+    }
+
+    if (addr2char_r(ia, abuf, MAX_ADDR_STRLEN) == NULL)
+        return (NULL);
+    snprintf(buf, size, "%s%s%s%c%u", bs, abuf, es, portsep, getport(ia));
+    return (buf);
 }
 
 int
@@ -252,61 +283,8 @@ rtpp_in_cksum(void *p, int len)
     return (0xffff & ~sum);
 }
 
-struct bindaddr_list {
-    struct sockaddr_storage *bindaddr;
-    struct bindaddr_list *next;
-};
-
-struct sockaddr *
-addr2bindaddr(struct cfg *cf, struct sockaddr *ia, const char **ep)
-{
-    struct bindaddr_list *bl;
-
-    pthread_mutex_lock(&cf->bindaddr_lock);
-    for (bl = cf->bindaddr_list; bl != NULL; bl = bl->next) {
-        if (ishostseq(sstosa(bl->bindaddr), ia) != 0) {
-            pthread_mutex_unlock(&cf->bindaddr_lock);
-            return (sstosa(bl->bindaddr));
-        }
-    }
-    bl = malloc(sizeof(*bl) + sizeof(*bl->bindaddr));
-    if (bl == NULL) {
-        pthread_mutex_unlock(&cf->bindaddr_lock);
-        *ep = strerror(errno);
-        return (NULL);
-    }
-    bl->bindaddr = (struct sockaddr_storage *)((char *)bl + sizeof(*bl));
-    memcpy(bl->bindaddr, ia, SA_LEN(ia));
-    bl->next = cf->bindaddr_list;
-    cf->bindaddr_list = bl;
-    pthread_mutex_unlock(&cf->bindaddr_lock);
-    return (sstosa(bl->bindaddr));
-}
-
-struct sockaddr *
-host2bindaddr(struct cfg *cf, const char *host, int pf, const char **ep)
-{
-    int n;
-    struct sockaddr_storage ia;
-    struct sockaddr *rval;
-
-    /*
-     * If user specified * then change it to NULL,
-     * that will make getaddrinfo to return addr_any socket
-     */
-    if (host && (strcmp(host, "*") == 0))
-        host = NULL;
-
-    if ((n = resolve(sstosa(&ia), pf, host, SERVICE, AI_PASSIVE)) != 0) {
-        *ep = gai_strerror(n);
-        return (NULL);
-    }
-    rval = addr2bindaddr(cf, sstosa(&ia), ep);
-    return (rval);
-}
-
 int
-local4remote(struct sockaddr *ra, struct sockaddr_storage *la)
+local4remote(const struct sockaddr *ra, struct sockaddr_storage *la)
 {
     int s, r;
     socklen_t llen;
@@ -376,4 +354,68 @@ setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
 	return -1;
     }
     return 0;
+}
+
+ssize_t
+recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
+  size_t *fromlen, struct sockaddr *to, size_t *tolen,
+  struct timeval *timeptr)
+{
+    /* We use a union to make sure hdr is aligned */
+    union {
+        struct cmsghdr hdr;
+        unsigned char buf[CMSG_SPACE(1024)];
+    } cmsgbuf;
+#if !defined(__FreeBSD__)
+    struct in_pktinfo *pktinfo;
+#endif
+    struct cmsghdr *cmsg;
+    struct msghdr msg;
+    struct iovec iov;
+    ssize_t rval;
+
+    memset(&msg, '\0', sizeof(msg));
+    iov.iov_base = buf;
+    iov.iov_len = len;
+    msg.msg_name = from;
+    msg.msg_namelen = *fromlen;
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_control = cmsgbuf.buf;
+    msg.msg_controllen = sizeof(cmsgbuf.buf);
+
+    rval = recvmsg(s, &msg, 0);
+    if (rval < 0)
+        return (rval);
+
+    *tolen = 0;
+    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
+      cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+#if defined(__FreeBSD__)
+        if (cmsg->cmsg_level == IPPROTO_IP &&
+          cmsg->cmsg_type == IP_RECVDSTADDR) {
+            memcpy(&satosin(to)->sin_addr, CMSG_DATA(cmsg),
+              sizeof(struct in_addr));
+            to->sa_family = AF_INET;
+            *tolen = sizeof(struct sockaddr_in);
+            break;
+        }
+#else
+        if (cmsg->cmsg_level == SOL_IP &&
+          cmsg->cmsg_type == IP_PKTINFO) {
+            pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
+            memcpy(&satosin(to)->sin_addr, &pktinfo->ipi_addr,
+              sizeof(struct in_addr));
+            to->sa_family = AF_INET;
+            *tolen = sizeof(struct sockaddr_in);
+            break;
+        }
+#endif
+        if ((cmsg->cmsg_level == SOL_SOCKET)
+          && (cmsg->cmsg_type == SCM_TIMESTAMP)) {
+            memcpy(timeptr, CMSG_DATA(cmsg), sizeof(struct timeval));
+        }
+    }
+    *fromlen = msg.msg_namelen;
+    return (rval);
 }

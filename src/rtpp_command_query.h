@@ -27,4 +27,6 @@
 
 #define RTPP_QUERY_NSTATS    5
 
-int handle_query(struct cfg *, struct rtpp_command *, struct rtpp_session *, int);
+struct rtpp_pipe;
+
+int handle_query(struct cfg *, struct rtpp_command *, struct rtpp_pipe *, int);

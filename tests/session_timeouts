@@ -23,7 +23,7 @@ geninput() {
   i=0
   while [ ${i} -lt ${NFULL} ]
   do
-    substinput session_timeouts.full.input
+    substinput session_timeouts.full${IPV6}.input
     i=$((${i} + 1))
   done
   cat session_timeouts.stats.input
@@ -78,7 +78,7 @@ geninput() {
   cat session_timeouts.stats.input
 }
 
-RTPP0_ARGS="-d info -T10 -b -n ${RTPP_NOTIFY_SOCK_TCP} -n ${RTPP_NOTIFY_SOCK_WILD} -n ${RTPP_NOTIFY_SOCK_UNIX}"
+RTPP0_ARGS="-d dbug -T10 -b -n ${RTPP_NOTIFY_SOCK_TCP} -n ${RTPP_NOTIFY_SOCK_WILD} -n ${RTPP_NOTIFY_SOCK_UNIX}"
 RTPP1_ARGS="${RTPP0_ARGS} -m 12000 -W5"
 RTPP2_ARGS="${RTPP0_ARGS} -m 13000"
 RTPP3_ARGS="-6 ::1 ${RTPP1_ARGS}"
@@ -114,6 +114,7 @@ do
 
   for socket in ${RTPP_TEST_SOCKETS}
   do
+    setup_tstart
     if [ "${socket}" = "stdio:" ]
     then
       (geninput | ${RTPPROXY} -f -s stdio: ${RTPP1_ARGS} > session_timeouts.rout1 2> session_timeouts.rlog1)&
@@ -184,7 +185,13 @@ do
       for i in 1 2 3 4
       do
         advance_sockidx
-        (geninput | ${RTPP_QUERY} -b -s "${_socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i - \
+        if [ ${i} -gt 2 ]
+        then
+          garg="6"
+        else
+          garg=""
+        fi
+        (geninput ${garg} | ${RTPP_QUERY} -b -s "${_socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i - \
           > session_timeouts.qout${i})&
         eval RTPQ${i}_PID=${!}
       done
@@ -212,7 +219,8 @@ do
         else
           ofile=session_timeouts6.output$((${i} - 2))
         fi
-        cat session_timeouts.qout${i} session_timeouts.rout${i} | ${DIFF} ${ofile} -
+        cat session_timeouts.qout${i} session_timeouts.rout${i} > session_timeouts.fout${i}
+        ${DIFF} ${ofile} session_timeouts.fout${i}
         report "checking rtpp_query.py #${i} stdout"
       done
     fi

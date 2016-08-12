@@ -27,8 +27,8 @@
 
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "rtpp_log.h"
 #include "rtpp_defines.h"
@@ -37,10 +37,11 @@
 #include "rtpp_command_private.h"
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
+#include "rtpp_log_obj.h"
 
 #define CHECK_OVERFLOW() \
     if (len > sizeof(cmd->buf_t) - 2) { \
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, \
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, \
           "STATS: output buffer overflow"); \
         return (ECODE_RTOOBIG_1); \
     }
@@ -71,6 +72,6 @@ handle_get_stats(struct cfg *cf, struct rtpp_command *cmd, int verbose)
     }
     CHECK_OVERFLOW();
     len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "\n");
-    rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
+    rtpc_doreply(cmd, cmd->buf_t, len, 0);
     return (0);
 }

@@ -34,17 +34,30 @@
  * in either direction.  When the counter reaches 0, the call timeout
  * occurs.
  */
-typedef enum {
+enum rtpp_ttl_mode {
     TTL_UNIFIED = 0,            /* all TTL counters must reach 0 */
     TTL_INDEPENDENT = 1         /* any TTL counter reaches 0 */
-} rtpp_ttl_mode;
+};
 
-struct rtpp_timed_obj;
+typedef enum rtpp_ttl_mode rtpp_ttl_mode;
+
+struct rtpp_timed;
+struct rtpp_sessinfo;
+struct rtpp_log;
+struct rtpp_module_if;
+
+#define RTPP_PT_INET	0
+#define	RTPP_PT_INET6	1
+#define	RTPP_PT_MAX	RTPP_PT_INET6
+#define	RTPP_PT_LEN	(RTPP_PT_MAX + 1)
+#define	RTPP_PT_SELECT(cp, af) (((af) == AF_INET) ? \
+  (cp)->port_table[RTPP_PT_INET] : (cp)->port_table[RTPP_PT_INET6])
 
 struct rtpp_cfg_stable {
     const char *pid_file;
 
     int nodaemon;
+    int no_chdir;
     int dmode;
     int bmode;                  /* Bridge mode */
     int port_min;               /* Lowest UDP port for RTP */
@@ -68,7 +81,7 @@ struct rtpp_cfg_stable {
     int record_all;                 /* Record everything */
 
     int rrtcp;                      /* Whether or not to relay RTCP? */
-    rtpp_log_t glog;
+    struct rtpp_log *glog;
 
     struct rlimit *nofile_limit;
     char *run_uname;
@@ -84,28 +97,38 @@ struct rtpp_cfg_stable {
     int log_level;
     int log_facility;
 
-    uint16_t port_table[65536];
-    int port_table_len;
+    struct rtpp_port_table *port_table[RTPP_PT_LEN];
 
-    struct rtpp_hash_table_obj *sessions_ht;
+    struct rtpp_hash_table *sessions_ht;
+    struct rtpp_weakref_obj *sessions_wrt;
+    struct rtpp_weakref_obj *servers_wrt;
+    struct rtpp_weakref_obj *rtp_streams_wrt;
+    struct rtpp_weakref_obj *rtcp_streams_wrt;
 
     double sched_offset;
     int sched_policy;
     int sched_hz;
     double target_pfreq;
-    struct rtpp_cmd_async_obj *rtpp_cmd_cf;
-    struct rtpp_proc_async_obj *rtpp_proc_cf;
+    struct rtpp_cmd_async *rtpp_cmd_cf;
+    struct rtpp_proc_async *rtpp_proc_cf;
     struct rtpp_anetio_cf *rtpp_netio_cf;
-    struct rtpp_tnotify_set_obj *rtpp_tnset_cf;
-    struct rtpp_notify_obj *rtpp_notify_cf;
+    struct rtpp_tnotify_set *rtpp_tnset_cf;
+    struct rtpp_notify *rtpp_notify_cf;
     int slowshutdown;
     int fastshutdown;
 
-    struct rtpp_stats_obj *rtpp_stats;
+    struct rtpp_stats *rtpp_stats;
 
     struct rtpp_list *ctrl_socks;
 
-    struct rtpp_timed_obj *rtpp_timed_cf;
+    struct rtpp_timed *rtpp_timed_cf;
+
+    struct rtpp_sessinfo *sessinfo;
+
+    const char *cwd_orig;
+
+    char *mpath;
+    struct rtpp_module_if *modules_cf;
 };
 
 #endif

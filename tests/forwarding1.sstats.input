@@ -1,0 +1,6 @@
+Qv %%CALLID%% from_tag_1 to_tag_1 npkts_ina npkts_ino nrelayed ndropped
+Qv %%CALLID%% from_tag_1 to_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+Qv %%CALLID%% to_tag_1 from_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+Qv %%CALLID%%_ipv6 from_tag_1 to_tag_1 npkts_ina npkts_ino nrelayed ndropped
+Qv %%CALLID%%_ipv6 from_tag_1 to_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+Qv %%CALLID%%_ipv6 to_tag_1 from_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs

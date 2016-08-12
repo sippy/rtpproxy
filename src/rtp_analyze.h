@@ -29,17 +29,26 @@
 #ifndef _RTP_ANALYZE_H_
 #define _RTP_ANALYZE_H_
 
+struct rtpp_log;
+struct rtpa_stats_jitter;
+
+#define PT_UNKN 128
+
 struct rtpp_session_stat_last {
     long long pcount;
     uint32_t min_seq;
     uint32_t max_seq;
     uint32_t seq_offset;
-    uint32_t ssrc;
+    struct rtpp_ssrc ssrc;
     uint32_t seen[4096];
     uint32_t duplicates;
     uint32_t base_ts;
+    uint16_t seq;
+    uint8_t pt;
     double base_rtime;
 };
+
+struct rtp_analyze_jitter;
 
 struct rtpp_session_stat {
     uint32_t ssrc_changes;
@@ -49,10 +58,16 @@ struct rtpp_session_stat {
     uint32_t desync_count;
     uint32_t seq_res_count;
     struct rtpp_session_stat_last last;
+    struct rtp_analyze_jitter *jdata;
 };
 
-int update_rtpp_stats(rtpp_log_t, struct rtpp_session_stat *, rtp_hdr_t *, struct rtp_info *,
-  double);
+enum update_rtpp_stats_rval {UPDATE_OK = 0, UPDATE_SSRC_CHG = 1, UPDATE_ERR = -1};
+
+int rtpp_stats_init(struct rtpp_session_stat *);
+void rtpp_stats_destroy(struct rtpp_session_stat *);
+enum update_rtpp_stats_rval update_rtpp_stats(struct rtpp_log *,
+  struct rtpp_session_stat *, rtp_hdr_t *, struct rtp_info *, double);
 void update_rtpp_totals(struct rtpp_session_stat *, struct rtpp_session_stat *);
+int get_jitter_stats(struct rtp_analyze_jitter *, struct rtpa_stats_jitter *);
 
 #endif

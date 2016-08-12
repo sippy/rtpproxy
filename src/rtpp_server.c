@@ -30,21 +30,32 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stddef.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "rtp.h"
 #include "rtp_packet.h"
-#include "rtp_server.h"
-#include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
-#include "rtpp_defines.h"
-#include "rtpp_session.h"
-#include "rtpp_util.h"
+#include "rtpp_types.h"
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_server.h"
+#include "rtpp_server_fin.h"
+#include "rtpp_genuid_singlet.h"
 
-struct rtp_server {
+/*
+ * Minimum length of each RTP packet in ms.
+ * Actual length may differ due to codec's framing constrains.
+ */
+#define RTPS_TICKS_MIN  10
+
+#define RTPS_SRATE      8000
+
+struct rtpp_server_priv {
+    struct rtpp_server pub;
     double btime;
     unsigned char buf[1024];
     rtp_hdr_t *rtp;
@@ -55,24 +66,32 @@ struct rtp_server {
     int ptime;
 };
 
-struct rtp_server *
-rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime,
+#define PUB2PVT(pubp)      ((struct rtpp_server_priv *)((char *)(pubp) - offsetof(struct rtpp_server_priv, pub)))
+
+static void rtpp_server_dtor(struct rtpp_server_priv *);
+static struct rtp_packet *rtpp_server_get(struct rtpp_server *, double, int *);
+static uint32_t rtpp_server_get_ssrc(struct rtpp_server *);
+static uint16_t rtpp_server_get_seq(struct rtpp_server *);
+
+struct rtpp_server *
+rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
   int ptime)
 {
-    struct rtp_server *rp;
+    struct rtpp_server_priv *rp;
+    struct rtpp_refcnt *rcnt;
     int fd;
     char path[PATH_MAX + 1];
 
     sprintf(path, "%s.%d", name, codec);
     fd = open(path, O_RDONLY);
     if (fd == -1)
-	return NULL;
+	goto e0;
 
-    rp = rtpp_zmalloc(sizeof(*rp));
+    rp = rtpp_rzmalloc(sizeof(struct rtpp_server_priv), &rcnt);
     if (rp == NULL) {
-	close(fd);
-	return NULL;
+	goto e1;
     }
+    rp->pub.rcnt = rcnt;
 
     rp->btime = dtime;
     rp->dts = 0;
@@ -92,25 +111,39 @@ rtp_server_new(const char *name, rtp_type_t codec, int loop, double dtime,
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
-    return rp;
+    rp->pub.get = &rtpp_server_get;
+    rp->pub.get_ssrc = &rtpp_server_get_ssrc;
+    rp->pub.get_seq = &rtpp_server_get_seq;
+    rtpp_gen_uid(&rp->pub.sruid);
+
+    CALL_SMETHOD(rp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_dtor,
+      rp);
+    return (&rp->pub);
+e1:
+    close(fd);
+e0:
+    return (NULL);
 }
 
-void
-rtp_server_free(struct rtp_server *rp)
+static void
+rtpp_server_dtor(struct rtpp_server_priv *rp)
 {
 
+    rtpp_server_fin(&rp->pub);
     close(rp->fd);
     free(rp);
 }
 
-struct rtp_packet *
-rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
+static struct rtp_packet *
+rtpp_server_get(struct rtpp_server *self, double dtime, int *rval)
 {
     struct rtp_packet *pkt;
     uint32_t ts;
     int rlen, rticks, bytes_per_frame, ticks_per_frame, number_of_frames;
     int hlen;
+    struct rtpp_server_priv *rp;
 
+    rp = PUB2PVT(self);
 
     if (rp->btime + ((double)rp->dts / 1000.0) > dtime) {
         *rval = RTPS_LATER;
@@ -192,17 +225,20 @@ rtp_server_get(struct rtp_server *rp, double dtime, int *rval)
     return (pkt);
 }
 
-void
-append_server(struct cfg *cf, struct rtpp_session *sp)
+static uint32_t
+rtpp_server_get_ssrc(struct rtpp_server *self)
 {
+    struct rtpp_server_priv *rp;
 
-    if (sp->rtps[0] != NULL || sp->rtps[1] != NULL) {
-	if (sp->sridx == -1) {
-	    cf->rtp_servers[cf->rtp_nsessions] = sp;
-	    sp->sridx = cf->rtp_nsessions;
-	    cf->rtp_nsessions++;
-	}
-    } else {
-	sp->sridx = -1;
-    }
+    rp = PUB2PVT(self);
+    return (ntohl(rp->rtp->ssrc));
+}
+
+static uint16_t
+rtpp_server_get_seq(struct rtpp_server *self)
+{
+    struct rtpp_server_priv *rp;
+
+    rp = PUB2PVT(self);
+    return (ntohs(rp->rtp->seq));
 }

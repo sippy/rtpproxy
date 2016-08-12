@@ -12,10 +12,10 @@ run_command_parser() {
   shift
   for extra_opts in "${@}"
   do
-    RTPP_ARGS="-b -m 23820 -M 23823 ${extra_opts}"
+    RTPP_ARGS="-d dbug -b -m 23820 -M 23823 ${extra_opts}"
     if [ "${socket}" = "stdio:" ]
     then
-      ${RTPPROXY} -f -s "${socket}" ${RTPP_ARGS} < $BASEDIR/command_parser.input || return 1
+      ${RTPPROXY} -f -s "${socket}" ${RTPP_ARGS} < $BASEDIR/command_parser.input 2>command_parser.rlog || return 1
     else
       RTPP_SOCKFILE="${socket}" rtpproxy_start || return 1
       if ! ${RTPP_QUERY} -b -s "${socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/command_parser.input

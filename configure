@@ -639,7 +639,12 @@ LIBS_SNDFILE
 LIBS_G722
 LIBS_G729
 LIBS_GSM
+LIBS_DL
 AM_CFLAGS
+ENABLE_MODULE_IF_FALSE
+ENABLE_MODULE_IF_TRUE
+BUILD_MODULES_FALSE
+BUILD_MODULES_TRUE
 BUILD_EXTRACTAUDIO_FALSE
 BUILD_EXTRACTAUDIO_TRUE
 LIBOBJS
@@ -2354,7 +2359,7 @@ fi
 
 
 
-am__api_version='1.14'
+am__api_version='1.15'
 
 ac_aux_dir=
 for ac_dir in "$srcdir" "$srcdir/.." "$srcdir/../.."; do
@@ -2555,8 +2560,8 @@ test "$program_suffix" != NONE &&
 ac_script='s/[\\$]/&&/g;s/;s,x,x,$//'
 program_transform_name=`$as_echo "$program_transform_name" | sed "$ac_script"`
 
-# expand $ac_aux_dir to an absolute path
-am_aux_dir=`cd $ac_aux_dir && pwd`
+# Expand $ac_aux_dir to an absolute path.
+am_aux_dir=`cd "$ac_aux_dir" && pwd`
 
 if test x"${MISSING+set}" != xset; then
   case $am_aux_dir in
@@ -2575,7 +2580,7 @@ else
 $as_echo "$as_me: WARNING: 'missing' script is too old or missing" >&2;}
 fi
 
-if test x"${install_sh}" != xset; then
+if test x"${install_sh+set}" != xset; then
   case $am_aux_dir in
   *\ * | *\	*)
     install_sh="\${SHELL} '$am_aux_dir/install-sh'" ;;
@@ -2903,8 +2908,8 @@ MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
 # <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
 mkdir_p='$(MKDIR_P)'
 
-# We need awk for the "check" target.  The system "awk" is bad on
-# some platforms.
+# We need awk for the "check" target (and possibly the TAP driver).  The
+# system "awk" is bad on some platforms.
 # Always define AMTAR for backward compatibility.  Yes, it's still used
 # in the wild :-(  We should find a proper way to deprecate it ...
 AMTAR='$${TAR-tar}'
@@ -2961,6 +2966,7 @@ END
     as_fn_error $? "Your 'rm' program is bad, sorry." "$LINENO" 5
   fi
 fi
+
 ac_config_headers="$ac_config_headers src/config.h"
 
 
@@ -11779,19 +11785,13 @@ else
   as_fn_error $? "Cannot find sd_listen_fds function" "$LINENO" 5
 fi
 
-  for ac_header in systemd/sd-daemon.h
-do :
   ac_fn_c_check_header_mongrel "$LINENO" "systemd/sd-daemon.h" "ac_cv_header_systemd_sd_daemon_h" "$ac_includes_default"
 if test "x$ac_cv_header_systemd_sd_daemon_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SYSTEMD_SD_DAEMON_H 1
-_ACEOF
- have_systemd_sd_daemon_h=yes
+  have_systemd_sd_daemon_h=yes
 else
   as_fn_error $? "Cannot find <systemd/sd-daemon.h> header" "$LINENO" 5
 fi
 
-done
 
   if test x"$have_sd_listen_fds" = x"yes" && \
      test x"$have_systemd_sd_daemon_h" = x"yes"
@@ -11803,18 +11803,69 @@ $as_echo "#define HAVE_SYSTEMD_DAEMON 1" >>confdefs.h
 
 fi
 
-# GSM
-for ac_header in gsm.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "gsm.h" "ac_cv_header_gsm_h" "$ac_includes_default"
-if test "x$ac_cv_header_gsm_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_GSM_H 1
-_ACEOF
- found_libgsm=yes
+# dlopen et al
+ac_fn_c_check_header_mongrel "$LINENO" "dlfcn.h" "ac_cv_header_dlfcn_h" "$ac_includes_default"
+if test "x$ac_cv_header_dlfcn_h" = xyes; then :
+  found_dlfcn=yes
 fi
 
-done
+
+if test "$found_dlfcn" = yes
+then
+  ENABLE_MODULE_IF=1
+
+$as_echo "#define ENABLE_MODULE_IF 1" >>confdefs.h
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dladdr in -ldl" >&5
+$as_echo_n "checking for dladdr in -ldl... " >&6; }
+if ${ac_cv_lib_dl_dladdr+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ldl  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char dladdr ();
+int
+main ()
+{
+return dladdr ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_dl_dladdr=yes
+else
+  ac_cv_lib_dl_dladdr=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_dl_dladdr" >&5
+$as_echo "$ac_cv_lib_dl_dladdr" >&6; }
+if test "x$ac_cv_lib_dl_dladdr" = xyes; then :
+  LIBS_DL=-ldl
+else
+  LIBS_DL=
+fi
+
+fi
+
+# GSM
+ac_fn_c_check_header_mongrel "$LINENO" "gsm.h" "ac_cv_header_gsm_h" "$ac_includes_default"
+if test "x$ac_cv_header_gsm_h" = xyes; then :
+  found_libgsm=yes
+fi
+
 
 if test "$found_libgsm" = yes
 then
@@ -11864,17 +11915,11 @@ fi
 fi
 
 # G.729
-for ac_header in g729_encoder.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "g729_encoder.h" "ac_cv_header_g729_encoder_h" "$ac_includes_default"
+ac_fn_c_check_header_mongrel "$LINENO" "g729_encoder.h" "ac_cv_header_g729_encoder_h" "$ac_includes_default"
 if test "x$ac_cv_header_g729_encoder_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_G729_ENCODER_H 1
-_ACEOF
- found_libg729=yes
+  found_libg729=yes
 fi
 
-done
 
 if test "$found_libg729" = yes
 then
@@ -11923,17 +11968,11 @@ $as_echo "#define ENABLE_G729 1" >>confdefs.h
 fi
 
 else
-  for ac_header in bcg729/encoder.h
-do :
   ac_fn_c_check_header_mongrel "$LINENO" "bcg729/encoder.h" "ac_cv_header_bcg729_encoder_h" "$ac_includes_default"
 if test "x$ac_cv_header_bcg729_encoder_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BCG729_ENCODER_H 1
-_ACEOF
- found_libbcg729=yes
+  found_libbcg729=yes
 fi
 
-done
 
   if test "$found_libbcg729" = yes
   then
@@ -11988,17 +12027,11 @@ fi
 fi
 
 # G.722
-for ac_header in g722.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "g722.h" "ac_cv_header_g722_h" "$ac_includes_default"
+ac_fn_c_check_header_mongrel "$LINENO" "g722.h" "ac_cv_header_g722_h" "$ac_includes_default"
 if test "x$ac_cv_header_g722_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_G722_H 1
-_ACEOF
- found_libg722=yes
+  found_libg722=yes
 fi
 
-done
 
 if test "$found_libg722" = yes
 then
@@ -12048,17 +12081,11 @@ fi
 fi
 
 # libsndfile
-for ac_header in sndfile.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sndfile.h" "ac_cv_header_sndfile_h" "$ac_includes_default"
+ac_fn_c_check_header_mongrel "$LINENO" "sndfile.h" "ac_cv_header_sndfile_h" "$ac_includes_default"
 if test "x$ac_cv_header_sndfile_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SNDFILE_H 1
-_ACEOF
- found_libsndfile=yes
+  found_libsndfile=yes
 fi
 
-done
 
 if test "$found_libsndfile" = yes
 then
@@ -12741,6 +12768,32 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for __sync_fetch_and_add" >&5
+$as_echo_n "checking for __sync_fetch_and_add... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+    int main(void) {
+        volatile int rcval = 1, rcval_pre;
+        rcval_pre = __sync_fetch_and_add(&rcval, -1);
+        return(rcval == 0 && rcval_pre == 1 ? 0 : 1);
+    }
+
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+$as_echo "#define HAVE_GCC_ATOMICS 1" >>confdefs.h
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
  if test "${LIBS_SNDFILE}" != ""; then
   BUILD_EXTRACTAUDIO_TRUE=
   BUILD_EXTRACTAUDIO_FALSE='#'
@@ -12749,8 +12802,26 @@ else
   BUILD_EXTRACTAUDIO_FALSE=
 fi
 
+ if test "${ENABLE_MODULE_IF}" = 1; then
+  BUILD_MODULES_TRUE=
+  BUILD_MODULES_FALSE='#'
+else
+  BUILD_MODULES_TRUE='#'
+  BUILD_MODULES_FALSE=
+fi
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile"
+ if test "${ENABLE_MODULE_IF}" = 1; then
+  ENABLE_MODULE_IF_TRUE=
+  ENABLE_MODULE_IF_FALSE='#'
+else
+  ENABLE_MODULE_IF_TRUE='#'
+  ENABLE_MODULE_IF_FALSE=
+fi
+
+
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile"
+
+
 
 
 
@@ -12895,6 +12966,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_EXTRACTAUDIO_TRUE}" && test -z "${BUILD_EXTRACTAUDIO_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_EXTRACTAUDIO\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_MODULES_TRUE}" && test -z "${BUILD_MODULES_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_MODULES\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${ENABLE_MODULE_IF_TRUE}" && test -z "${ENABLE_MODULE_IF_FALSE}"; then
+  as_fn_error $? "conditional \"ENABLE_MODULE_IF\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -13775,6 +13854,9 @@ do
     "makeann/Makefile") CONFIG_FILES="$CONFIG_FILES makeann/Makefile" ;;
     "tests/Makefile") CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
     "extractaudio/Makefile") CONFIG_FILES="$CONFIG_FILES extractaudio/Makefile" ;;
+    "libexecinfo/Makefile") CONFIG_FILES="$CONFIG_FILES libexecinfo/Makefile" ;;
+    "modules/Makefile") CONFIG_FILES="$CONFIG_FILES modules/Makefile" ;;
+    "modules/acct_csv/Makefile") CONFIG_FILES="$CONFIG_FILES modules/acct_csv/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

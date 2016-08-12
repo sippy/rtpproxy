@@ -2,10 +2,18 @@
 
 set -e
 
+BCG729_VER=1.0.1
+
 uname -a
+which ${CC}
 ${CC} --version
 python --version
 pip --version
+sudo iptables -L OUTPUT
+sudo iptables -L INPUT
+sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
+echo -n "/proc/sys/kernel/core_pattern: "
+cat /proc/sys/kernel/core_pattern
 ./configure
 make
 make clean
@@ -15,10 +23,10 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install libgsm1-dev libsndfile1-dev 
 tcpdump --version || true
 mkdir deps
 cd deps
-wget http://download-mirror.savannah.gnu.org/releases/linphone/plugins/sources/bcg729-1.0.0.tar.gz
-tar xfz bcg729-1.0.0.tar.gz
-cd bcg729-1.0.0
-perl -pi -e 's|BASICOPERATIONSMACROS__H|BASICOPERATIONSMACROS_H|g' include/basicOperationsMacros.h
+wget http://download-mirror.savannah.gnu.org/releases/linphone/plugins/sources/bcg729-${BCG729_VER}.tar.gz
+tar xfz bcg729-${BCG729_VER}.tar.gz
+cd bcg729-${BCG729_VER}
+#perl -pi -e 's|BASICOPERATIONSMACROS__H|BASICOPERATIONSMACROS_H|g' include/basicOperationsMacros.h
 ./configure
 make
 sudo make install

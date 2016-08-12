@@ -29,11 +29,12 @@
 #include <sys/socket.h>
 #include <errno.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "rtpp_log.h"
+#include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
@@ -79,7 +80,7 @@ rtpp_command_stream_doio(struct cfg *cf, struct rtpp_cmd_connection *rcs)
     }
     if (len == -1) {
         if (errno != EAGAIN && errno != EINTR)
-            rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "can't read from control socket");
+            RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't read from control socket");
         return (-1);
     }
     rcs->inbuf_epos += len;
@@ -107,16 +108,11 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
         return (NULL);
     }
 
-    cmd = rtpp_zmalloc(sizeof(struct rtpp_command));
+    cmd = rtpp_command_ctor(cf, rcs->controlfd_out, dtime, rval, csp, 0);
     if (cmd == NULL) {
-        *rval = ENOMEM;
         return (NULL);
     }
 
-    cmd->controlfd = rcs->controlfd_out;
-    cmd->dtime = dtime;
-    cmd->csp = csp;
-    cmd->umode = 0;
     if (rcs->rlen > 0) {
         cmd->rlen = rcs->rlen;
         memcpy(&cmd->raddr, &rcs->raddr, rcs->rlen);
@@ -127,7 +123,7 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     cmd->buf[len] = '\0';
     rcs->inbuf_ppos += len + 1;
 
-    rtpp_log_write(RTPP_LOG_DBUG, cf->stable->glog, "received command \"%s\"", cmd->buf);
+    RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "received command \"%s\"", cmd->buf);
     csp->ncmds_rcvd.cnt++;
 
     cp = cmd->buf;
@@ -140,10 +136,10 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     }
 
     if (cmd->argc < 1) {
-        rtpp_log_write(RTPP_LOG_ERR, cf->stable->glog, "command syntax error");
-        reply_error(cf, cmd, ECODE_PARSE_1);
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
+        reply_error(cmd, ECODE_PARSE_1);
         *rval = EINVAL;
-        free(cmd);
+        free_command(cmd);
         return (NULL);
     }
 
@@ -151,7 +147,7 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     if (rtpp_command_pre_parse(cf, cmd) != 0) {
         /* Error reply is handled by the rtpp_command_pre_parse() */
         *rval = 0;
-        free(cmd);
+        free_command(cmd);
         return (NULL);
     }
 

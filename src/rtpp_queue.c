@@ -25,7 +25,7 @@
  *
  */
 
-#ifdef LINUX_XXX
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
 /* Apparently needed for vasprintf(3) */
 #define _GNU_SOURCE
 #endif
@@ -34,14 +34,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 
 #include "rtpp_types.h"
 #include "rtpp_queue.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 

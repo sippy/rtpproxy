@@ -32,7 +32,6 @@
 #include <sys/resource.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <math.h>
 #include <stdint.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -43,6 +42,8 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_util.h"
+#include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 
 void
 seedrandom(void)
@@ -69,13 +70,13 @@ set_rlimits(struct cfg *cf)
     struct rlimit rlp;
 
     if (getrlimit(RLIMIT_CORE, &rlp) < 0) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "getrlimit(RLIMIT_CORE)");
+        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "getrlimit(RLIMIT_CORE)");
         return (-1);
     }
     rlp.rlim_cur = RLIM_INFINITY;
     rlp.rlim_max = RLIM_INFINITY;
     if (setrlimit(RLIMIT_CORE, &rlp) < 0) {
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "setrlimit(RLIMIT_CORE)");
+        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "setrlimit(RLIMIT_CORE)");
         return (-1);
     }
     return (0);
@@ -87,43 +88,17 @@ drop_privileges(struct cfg *cf)
 
     if (cf->stable->run_gname != NULL) {
 	if (setgid(cf->stable->run_gid) != 0) {
-	    rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "can't set current group ID: %d", cf->stable->run_gid);
+	    RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't set current group ID: %d", cf->stable->run_gid);
 	    return -1;
 	}
     }
     if (cf->stable->run_uname == NULL)
 	return 0;
     if (setuid(cf->stable->run_uid) != 0) {
-	rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "can't set current user ID: %d", cf->stable->run_uid);
+	RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't set current user ID: %d", cf->stable->run_uid);
 	return -1;
     }
     return 0;
-}
-
-void
-init_port_table(struct cfg *cf)
-{
-    int i, j;
-    uint16_t portnum;
-
-    /* Generate linear table */
-    cf->stable->port_table_len = ((cf->stable->port_max - cf->stable->port_min) / 2) + 1;
-    portnum = cf->stable->port_min;
-    for (i = 0; i < cf->stable->port_table_len; i += 1) {
-	cf->stable->port_table[i] = portnum;
-	portnum += 2;
-    }
-    if (cf->stable->seq_ports == 0) {
-        /* Shuffle elements ramdomly */
-        for (i = 0; i < cf->stable->port_table_len; i += 1) {
-	    j = random() % cf->stable->port_table_len;
-	    portnum = cf->stable->port_table[i];
-	    cf->stable->port_table[i] = cf->stable->port_table[j];
-	    cf->stable->port_table[j] = portnum;
-        }
-    }
-    /* Set the last used element to be the last element */
-    cf->port_table_idx = cf->stable->port_table_len - 1;
 }
 
 /*
@@ -305,23 +280,3 @@ rtpp_get_sched_hz(void)
     return (sched_hz);
 }
 #endif
-
-void *
-#if !defined(RTPP_CHECK_LEAKS)
-rtpp_zmalloc(size_t msize)
-#else
-rtpp_zmalloc_memdeb(const char *fname, int linen, const char *funcn, size_t msize)
-#endif
-{
-    void *rval;
-
-#if !defined(RTPP_CHECK_LEAKS)
-    rval = malloc(msize);
-#else
-    rval = rtpp_memdeb_malloc(msize, fname, linen, funcn);
-#endif
-    if (rval != NULL) {
-        memset(rval, '\0', msize);
-    }
-    return (rval);
-}

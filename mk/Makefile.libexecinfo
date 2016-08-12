@@ -1,0 +1,19 @@
+# $Id$
+
+LIB=		execinfo
+LIBTHREAD?=	pthread
+SRCS+=		execinfo.c execinfo.h stacktraverse.c stacktraverse.h
+
+LDADD=		-l${LIBTHREAD}
+
+NO_SHARED?=	YES
+NO_PROFILE?=	YES
+
+WARNS?=		4
+
+includepolice:
+	for file in ${SRCS}; do \
+	  python misc/includepolice.py $${file} || sleep 5; \
+	done
+
+.include <bsd.lib.mk>

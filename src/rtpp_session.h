@@ -29,95 +29,47 @@
 #ifndef _RTPP_SESSION_H_
 #define _RTPP_SESSION_H_
 
+struct rtpp_session;
+struct rtpp_socket;
+struct common_cmd_args;
+struct sockaddr;
+
 struct rtpp_timeout_data {
     char *notify_tag;
     struct rtpp_tnotify_target *notify_target;
 };
 
-struct rtpp_hash_table_entry;
-
-struct rtpps_latch {
-    int latched;
-    unsigned int ssrc;
-    int seq;
-};
-
-struct rtpps_pcount {
-    unsigned long npkts_in[2];
-    unsigned long nrelayed;
-    unsigned long ndropped;
-    unsigned long nignored;
-};
-
 struct rtpp_session {
-    /* ttl for caller [0] and callee [1] */
-    int ttl[2];
-    rtpp_ttl_mode ttl_mode;
-    struct rtpps_pcount pcount;
     char *call_id;
     char *tag;
     char *tag_nomedianum;
-    rtpp_log_t log;
-    struct rtpp_session* rtcp;
-    struct rtpp_session* rtp;
-    /* Remote source addresses, one for caller and one for callee */
-    struct sockaddr *addr[2];
-    /* Save previous address when doing update */
-    struct sockaddr *prev_addr[2];
-    /* Flag which tells if we are allowed to update address with RTP src IP */
-    struct rtpps_latch latch_info[2];
-    /* Local listen addresses/ports */
-    struct sockaddr *laddr[2];
-    int ports[2];
-    /* Descriptors */
-    int fds[2];
+    struct rtpp_log *log;
+    struct rtpp_pipe *rtp;
+    struct rtpp_pipe *rtcp;
     /* Session is complete, that is we received both request and reply */
     int complete;
-    int asymmetric[2];
     /* Flags: strong create/delete; weak ones */
     int strong;
-    int weak[2];
-    /* Pointers to rtpp_record's opaque data type */
-    void *rrcs[2];
-    int record_single_file;
-    struct rtp_server *rtps[2];
-    /* References to fd-to-session table */
-    int sidx[2];
-    /* Reference to active RTP generators table */
-    int sridx;
-    /* Flag that indicates whether or not address supplied by client can't be trusted */
-    int untrusted_addr[2];
-    struct rtp_resizer *resizers[2];
-    struct rtpp_analyzer *analyzers[2];
-    struct rtpp_session *prev;
-    struct rtpp_session *next;
     struct rtpp_timeout_data timeout_data;
-    /* Timestamp of session instantiation time */
-    double init_ts;
-    /* Timestamp of the last session update */
-    double last_update[2];
-    /* Supported codecs */
-    char *codecs[2];
-    /* Requested ptime */
-    int ptime[2];
-    struct rtpp_hash_table_entry *hte;
+    /* UID */
+    uint64_t seuid;
+
+    struct rtpp_stats *rtpp_stats;
+    struct rtpp_weakref_obj *servers_wrt;
+
+    /* Refcounter */
+    struct rtpp_refcnt *rcnt;
 };
 
 struct cfg;
 struct cfg_stable;
 
-#define	SESS_RTP	1
-#define	SESS_RTCP	2
-
-void init_hash_table(struct cfg_stable *);
-struct rtpp_session *session_findfirst(struct cfg *, const char *);
-struct rtpp_session *session_findnext(struct cfg *cf, struct rtpp_session *);
-void hash_table_append(struct cfg *, struct rtpp_session *);
-void append_session(struct cfg *, struct rtpp_session *, int);
-void update_sessions(struct cfg *, struct rtpp_session *, int, int *);
-void remove_session(struct cfg *, struct rtpp_session *);
 int compare_session_tags(const char *, const char *, unsigned *);
-int find_stream(struct cfg *, const char *, const char *, const char *, struct rtpp_session **);
-int get_ttl(struct rtpp_session *);
+int find_stream(struct cfg *, const char *, const char *, const char *,
+  struct rtpp_session **);
+
+struct rtpp_session *rtpp_session_ctor(struct rtpp_cfg_stable *,
+  struct common_cmd_args *, double, struct sockaddr **, int, int,
+  struct rtpp_socket **);
 
 #endif

@@ -31,13 +31,22 @@
 
 struct cfg;
 struct rtpp_session;
+struct rtpp_stream;
 struct rtp_packet;
-struct sockaddr;
+struct rtpp_record;
+
+DEFINE_METHOD(rtpp_record, rtpp_record_write, void, struct rtpp_stream *, struct rtp_packet *);
+
+struct rtpp_record {
+    struct rtpp_refcnt *rcnt;
+    METHOD_ENTRY(rtpp_record_write, write);
+};
+
+#define RECORD_RTP  0
+#define RECORD_RTCP 1
+#define RECORD_BOTH 2
 
 /* Function prototypes */
-void *ropen(struct cfg *cf, struct rtpp_session *, char *, int);
-void rwrite(struct rtpp_session *, void *, struct rtp_packet *,
-  struct sockaddr *, struct sockaddr *, int, int);
-void rclose(struct rtpp_session *, void *, int);
+struct rtpp_record *rtpp_record_open(struct cfg *cf, struct rtpp_session *, char *, int, int);
 
 #endif

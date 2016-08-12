@@ -31,7 +31,6 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <netinet/in.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -42,18 +41,18 @@
 #include "rtpp_defines.h"
 #include "rtpp_list.h"
 #include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_controlfd.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_network.h"
 
 #include "config_pp.h"
 
 #if !defined(NO_ERR_H)
 #include <err.h>
-#include "rtpp_util.h"
-#else
-#include "rtpp_util.h"
 #endif
+#include "rtpp_util.h"
 
 #ifdef HAVE_SYSTEMD_DAEMON
 #include <systemd/sd-daemon.h>
@@ -82,7 +81,7 @@ controlfd_init_systemd(void)
 static int
 controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
 {
-    int controlfd;
+    int controlfd, reuse;
     struct sockaddr_un *ifsun;
 
     unlink(csp->cmd_sock);
@@ -96,8 +95,8 @@ controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     controlfd = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (controlfd == -1)
         err(1, "can't create socket");
-    setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &controlfd,
-      sizeof controlfd);
+    reuse = 1;
+    setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
     if (bind(controlfd, sstosa(ifsun), sizeof(struct sockaddr_un)) < 0)
         err(1, "can't bind to a socket: %s", csp->cmd_sock);
     if ((cf->stable->run_uname != NULL || cf->stable->run_gname != NULL) &&
@@ -136,7 +135,7 @@ controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
         err(1, "can't create socket");
     so_rcvbuf = 16 * 1024;
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "unable to set 16K receive buffer size on controlfd");
+        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
     if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0)
         err(1, "can't bind to a socket");
 
@@ -167,7 +166,7 @@ controlfd_init_tcp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
         err(1, "can't create socket");
     so_rcvbuf = 16 * 1024;
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
-        rtpp_log_ewrite(RTPP_LOG_ERR, cf->stable->glog, "unable to set 16K receive buffer size on controlfd");
+        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
     if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0)
         err(1, "can't bind to a socket");
     if (listen(controlfd, 32) != 0)
@@ -286,6 +285,10 @@ rtpp_ctrl_sock_parse(const char *optarg)
     } else if (strncmp("stdio:", optarg, 6) == 0) {
         rcsp->type= RTPC_STDIO;
         optarg += 6;
+    } else if (strncmp("stdioc:", optarg, 7) == 0) {
+        rcsp->type= RTPC_STDIO;
+        rcsp->exit_on_close = 1;
+        optarg += 7;
     } else if (strncmp("tcp:", optarg, 4) == 0) {
         rcsp->type= RTPC_TCP4;
         optarg += 4;

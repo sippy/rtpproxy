@@ -28,10 +28,14 @@
 #ifndef _RTPP_WI_PRIVATE_H_
 #define _RTPP_WI_PRIVATE_H_
 
+struct rtpp_refcnt;
+struct rtpp_log;
+
 struct rtpp_wi {
     struct rtpp_wi *next;
     enum rtpp_wi_type wi_type;
     int sock;
+    struct rtpp_refcnt *sock_rcnt;
     size_t msg_len;
     int flags;
     struct sockaddr *sendto;
@@ -40,6 +44,7 @@ struct rtpp_wi {
     void *msg;
     int nsend;
     int debug;
+    struct rtpp_log *log;
     char data[0];
 };
 

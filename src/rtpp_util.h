@@ -29,7 +29,6 @@
 #ifndef _RTPP_UTIL_H_
 #define _RTPP_UTIL_H_
 
-#define	GET_RTP(sp)	(((sp)->rtp != NULL) ? (sp)->rtp : (sp))
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
 
 struct cfg;
@@ -38,19 +37,11 @@ struct cfg;
 void seedrandom(void);
 int set_rlimits(struct cfg *);
 int drop_privileges(struct cfg *);
-void init_port_table(struct cfg *);
 char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
 int url_unquote(unsigned char *, int);
 int rtpp_get_sched_hz(void);
 long long rtpp_rlim_max(struct cfg *cf);
-
-#if defined(RTPP_CHECK_LEAKS)
-#define rtpp_zmalloc(args...) rtpp_zmalloc_memdeb(__FILE__, __LINE__, __func__, ## args)
-void *rtpp_zmalloc_memdeb(const char *, int, const char *, size_t);
-#else
-void *rtpp_zmalloc(size_t);
-#endif
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)

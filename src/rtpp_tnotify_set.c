@@ -29,6 +29,11 @@
 #include "config_pp.h"
 #endif
 
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
+/* asprintf(3) */
+#define _GNU_SOURCE
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -47,7 +52,7 @@
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_tnotify_tgt.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
 #define RTPP_TNOTIFY_TARGETS_MAX 64
 #define RTPP_TNOTIFY_WILDCARDS_MAX 2
@@ -65,28 +70,28 @@ union rtpp_tnotify_entry {
     struct rtpp_tnotify_wildcard rtw;
 };
 
-struct rtpp_tnotify_set {
-    struct rtpp_tnotify_set_obj pub;
+struct rtpp_tnotify_set_priv {
+    struct rtpp_tnotify_set pub;
     struct rtpp_tnotify_target *tp[RTPP_TNOTIFY_TARGETS_MAX];
     int tp_len;
     struct rtpp_tnotify_wildcard *wp[RTPP_TNOTIFY_WILDCARDS_MAX];
     int wp_len;
 };
 
-#define PUB2PVT(pubp)      ((struct rtpp_tnotify_set *)((char *)(pubp) - offsetof(struct rtpp_tnotify_set, pub)))
+#define PUB2PVT(pubp)      ((struct rtpp_tnotify_set_priv *)((char *)(pubp) - offsetof(struct rtpp_tnotify_set_priv, pub)))
 
-static void rtpp_tnotify_set_dtor(struct rtpp_tnotify_set_obj *);
-static int rtpp_tnotify_set_append(struct rtpp_tnotify_set_obj *, const char *, const char **);
-static struct rtpp_tnotify_target *rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *,
+static void rtpp_tnotify_set_dtor(struct rtpp_tnotify_set *);
+static int rtpp_tnotify_set_append(struct rtpp_tnotify_set *, const char *, const char **);
+static struct rtpp_tnotify_target *rtpp_tnotify_set_lookup(struct rtpp_tnotify_set *,
   const char *, struct sockaddr *, struct sockaddr *);
-static int rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set_obj *);
+static int rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set *);
 
-struct rtpp_tnotify_set_obj *
+struct rtpp_tnotify_set *
 rtpp_tnotify_set_ctor(void)
 {
-    struct rtpp_tnotify_set *pvt;
+    struct rtpp_tnotify_set_priv *pvt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_tnotify_set));
+    pvt = rtpp_zmalloc(sizeof(struct rtpp_tnotify_set_priv));
     if (pvt == NULL) {
         return (NULL);
     }
@@ -99,9 +104,9 @@ rtpp_tnotify_set_ctor(void)
 }
 
 static void
-rtpp_tnotify_set_dtor(struct rtpp_tnotify_set_obj *pub)
+rtpp_tnotify_set_dtor(struct rtpp_tnotify_set *pub)
 {
-    struct rtpp_tnotify_set *pvt;
+    struct rtpp_tnotify_set_priv *pvt;
     struct rtpp_tnotify_target *tp;
     int i;
 
@@ -226,11 +231,11 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
 }
 
 static int
-rtpp_tnotify_set_append(struct rtpp_tnotify_set_obj *pub,
+rtpp_tnotify_set_append(struct rtpp_tnotify_set *pub,
   const char *socket_name, const char **e)
 {
     int rval;
-    struct rtpp_tnotify_set *pvt;
+    struct rtpp_tnotify_set_priv *pvt;
     struct rtpp_tnotify_target *tntp;
     struct rtpp_tnotify_wildcard *tnwp;
     union rtpp_tnotify_entry rte;
@@ -285,7 +290,7 @@ e0:
 }
 
 static struct rtpp_tnotify_target *
-get_tp4wp(struct rtpp_tnotify_set *pvt, struct rtpp_tnotify_wildcard *wp,
+get_tp4wp(struct rtpp_tnotify_set_priv *pvt, struct rtpp_tnotify_wildcard *wp,
   struct sockaddr *ccaddr, struct sockaddr *laddr)
 {
     int i;
@@ -343,10 +348,10 @@ get_tp4wp(struct rtpp_tnotify_set *pvt, struct rtpp_tnotify_wildcard *wp,
 }
 
 static struct rtpp_tnotify_target *
-rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *pub, const char *socket_name,
+rtpp_tnotify_set_lookup(struct rtpp_tnotify_set *pub, const char *socket_name,
   struct sockaddr *ccaddr, struct sockaddr *laddr)
 {
-    struct rtpp_tnotify_set *pvt;
+    struct rtpp_tnotify_set_priv *pvt;
     struct rtpp_tnotify_wildcard *wp;
     int i;
     char *sep;
@@ -394,9 +399,9 @@ rtpp_tnotify_set_lookup(struct rtpp_tnotify_set_obj *pub, const char *socket_nam
 }
 
 static int
-rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set_obj *pub)
+rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set *pub)
 {
-    struct rtpp_tnotify_set *pvt;
+    struct rtpp_tnotify_set_priv *pvt;
 
     pvt = PUB2PVT(pub);
     return (pvt->wp_len > 0 || pvt->tp_len > 0);

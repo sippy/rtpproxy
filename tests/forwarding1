@@ -27,6 +27,7 @@ TEST_CODECS="0 3 8 18 9"
 FWD_SPORT=13342
 GENO_SPORT=12000
 GENA_SPORT=15000
+RTPP_DEBUG_LVL="dbug"
 
 rotate_CODECSA() {
   first_codec="${1}"
@@ -67,6 +68,14 @@ setup_gen() {
     i=$((${i}+1))
   done
   sleep 8
+  i=1
+  for codec in ${1} ${2}
+  do
+    CID="forwarding1_${direction}_${i}"
+    SED_TRANS="s|%%CALLID%%|${CID}|"
+    ${SED} "${SED_TRANS}" forwarding1.sstats.input
+    i=$((${i}+1))
+  done
   cat session_timeouts.stats.input forwarding1.stats.input
 }
 
@@ -99,7 +108,7 @@ setup_fwd() {
   do
     CID="forwarding1_${j}"
     SED_TRANS="s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.delete.input
+    ${SED} "${SED_TRANS}" forwarding1.sstats.input forwarding1.delete.input
     j=$((${j} - 1))
   done  
   cat session_timeouts.stats.input forwarding1.stats.input
@@ -155,15 +164,20 @@ setup_buffers
 
 witness_start forwarding1 "forwarding1.rout forwarding1.geno.rout forwarding1.gena.rout forwarding1.rlog forwarding1.geno.rlog forwarding1.gena.rlog"
 
+RTPPROXY_ARGS="-T5 -b -s stdio: -f -d ${RTPP_DEBUG_LVL} -l 0.0.0.0 -6 /::"
+
 #sts=`date "+%Y%m%d%H%M%S"`
 (setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
-  ${RTPPROXY} -i -T5 -b -s stdio: -s cunix:/tmp/forwarding1.sock -f -d info -m ${FWD_SPORT} > forwarding1.rout 2>forwarding1.rlog) &
+  ${RTPPROXY} -i -s cunix:/tmp/forwarding1.sock ${RTPPROXY_ARGS} \
+   -m ${FWD_SPORT} > forwarding1.rout 2>forwarding1.rlog) &
 FWD_PID=${!}
 (setup_gen "o" ${FWD_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
-  ${RTPPROXY} -P -r "${RECORD_DIR}" -T5 -b -m ${GENO_SPORT} -s stdio: -f -d info > forwarding1.geno.rout 2>forwarding1.geno.rlog) &
+  ${RTPPROXY} -P -r "${RECORD_DIR}" -m ${GENO_SPORT} ${RTPPROXY_ARGS} \
+   > forwarding1.geno.rout 2>forwarding1.geno.rlog) &
 GENO_PID=${!}
 (setup_gen "a" ${PORTO} "${CODECSA}" "${REPACK_CODECSA}" | \
-  ${RTPPROXY} -r "${RECORD_DIR}" -T5 -b -m ${GENA_SPORT} -s stdio: -f -d info > forwarding1.gena.rout 2>forwarding1.gena.rlog) &
+  ${RTPPROXY} -r "${RECORD_DIR}" -m ${GENA_SPORT} ${RTPPROXY_ARGS} \
+   > forwarding1.gena.rout 2>forwarding1.gena.rlog) &
 GENA_PID=${!}
 wait ${FWD_PID}
 #ets=`date "+%Y%m%d%H%M%S"`
@@ -183,8 +197,8 @@ DIFF_GENA_RC=${?}
 verify_results "o" "${CODECSA}" "${REPACK_CODECSA}"
 verify_results "a" "${CODECSO}" "${REPACK_CODECSO}"
 
-#report_rc ${DIFF_FWD_RC} "checking rtpproxy.fwd stdout"
-#report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
-#report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
+report_rc ${DIFF_FWD_RC} "checking rtpproxy.fwd stdout"
+report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
+report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
 
 witness_stop

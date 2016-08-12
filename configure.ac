@@ -49,7 +49,7 @@ then
   AC_SEARCH_LIBS(sd_listen_fds,[systemd systemd-daemon],
    [have_sd_listen_fds=yes],
    [AC_MSG_ERROR([Cannot find sd_listen_fds function])],)
-  AC_CHECK_HEADERS(systemd/sd-daemon.h,
+  AC_CHECK_HEADER(systemd/sd-daemon.h,
    [have_systemd_sd_daemon_h=yes],
    [AC_MSG_ERROR([Cannot find <systemd/sd-daemon.h> header])])
   if test x"$have_sd_listen_fds" = x"yes" && \
@@ -60,8 +60,17 @@ then
 
 fi
 
+# dlopen et al
+AC_CHECK_HEADER(dlfcn.h, found_dlfcn=yes)
+if test "$found_dlfcn" = yes
+then
+  ENABLE_MODULE_IF=1
+  AC_DEFINE([ENABLE_MODULE_IF], 1, [Define to enable dymanic modules])
+  AC_CHECK_LIB([dl], [dladdr], [LIBS_DL=-ldl], [LIBS_DL=])
+fi
+
 # GSM
-AC_CHECK_HEADERS(gsm.h, found_libgsm=yes)
+AC_CHECK_HEADER(gsm.h, found_libgsm=yes)
 if test "$found_libgsm" = yes
 then
   AC_CHECK_LIB(gsm, gsm_create,
@@ -70,7 +79,7 @@ then
 fi
 
 # G.729
-AC_CHECK_HEADERS(g729_encoder.h, found_libg729=yes)
+AC_CHECK_HEADER(g729_encoder.h, found_libg729=yes)
 if test "$found_libg729" = yes
 then
   AC_CHECK_LIB(g729, g729_encoder_new,
@@ -79,7 +88,7 @@ then
    -lm
   )
 else
-  AC_CHECK_HEADERS(bcg729/encoder.h, found_libbcg729=yes)
+  AC_CHECK_HEADER(bcg729/encoder.h, found_libbcg729=yes)
   if test "$found_libbcg729" = yes
   then
     AC_CHECK_LIB(bcg729, initBcg729EncoderChannel,
@@ -91,7 +100,7 @@ else
 fi
 
 # G.722
-AC_CHECK_HEADERS(g722.h, found_libg722=yes)
+AC_CHECK_HEADER(g722.h, found_libg722=yes)
 if test "$found_libg722" = yes
 then
   AC_CHECK_LIB(g722, g722_encoder_new,
@@ -100,7 +109,7 @@ then
 fi
 
 # libsndfile
-AC_CHECK_HEADERS(sndfile.h, found_libsndfile=yes)
+AC_CHECK_HEADER(sndfile.h, found_libsndfile=yes)
 if test "$found_libsndfile" = yes
 then
   AC_CHECK_LIB(sndfile, sf_open,
@@ -136,12 +145,32 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
-AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
+AC_MSG_CHECKING([for __sync_fetch_and_add])
+AC_LINK_IFELSE(
+   [AC_LANG_SOURCE([
+    int main(void) {
+        volatile int rcval = 1, rcval_pre;
+        rcval_pre = __sync_fetch_and_add(&rcval, -1);
+        return(rcval == 0 && rcval_pre == 1 ? 0 : 1);
+    }
+   ])],
+     [AC_MSG_RESULT([yes])
+     AC_DEFINE([HAVE_GCC_ATOMICS],[1],[Define if you have gcc-style atomic operations])],
+   [AC_MSG_RESULT([no])]
+)
 
-AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile])
+AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
+AM_CONDITIONAL(BUILD_MODULES, [test "${ENABLE_MODULE_IF}" = 1])
+AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
+
+AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
+ extractaudio/Makefile libexecinfo/Makefile modules/Makefile
+ modules/acct_csv/Makefile])
 AC_SUBST(AM_CFLAGS)
+AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_GSM)
 AC_SUBST(LIBS_G729)
 AC_SUBST(LIBS_G722)
 AC_SUBST(LIBS_SNDFILE)
+AC_SUBST(LIBS_DL)
 AC_OUTPUT

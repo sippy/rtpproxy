@@ -25,20 +25,12 @@
  *
  */
 
-#include "config.h"
-
-#if defined(HAVE_SYS_ENDIAN_H)
-#include <sys/endian.h>
-#endif
 #include <sys/socket.h>
-#if defined(HAVE_ENDIAN_H)
-#include <endian.h>
-#endif
-#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 
+#include "rtpp_endian.h"
 #include "rtp.h"
 #include "rtp_info.h"
 #include "rtp_packet.h"
@@ -46,7 +38,8 @@
 #include "rtpp_proc.h"
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
+#include "rtpp_ssrc.h"
 
 struct rtp_resizer {
     int         nsamples_total;
@@ -54,8 +47,7 @@ struct rtp_resizer {
     int         seq_initialized;
     uint16_t    seq;
 
-    int         ssrc_inited;
-    uint32_t    ssrc;
+    struct rtpp_ssrc ssrc;
 
     int         last_sent_ts_inited;
     uint32_t    last_sent_ts;
@@ -100,7 +92,7 @@ rtp_resizer_new(int output_ptime)
 }
 
 void 
-rtp_resizer_free(struct rtpp_stats_obj *rtpp_stats, struct rtp_resizer *this)
+rtp_resizer_free(struct rtpp_stats *rtpp_stats, struct rtp_resizer *this)
 {
     struct rtp_packet *p;
     struct rtp_packet *p1;
@@ -156,12 +148,12 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt,
     if ((*pkt)->parsed->nsamples == RTP_NSAMPLES_UNKNOWN)
         return;
 
-    if (!this->ssrc_inited) {
-        this->ssrc = p->parsed->ssrc;
-        this->ssrc_inited = 1;
-    } else if (this->ssrc != p->parsed->ssrc) {
+    if (!this->ssrc.inited) {
+        this->ssrc.val = p->parsed->ssrc;
+        this->ssrc.inited = 1;
+    } else if (this->ssrc.val != p->parsed->ssrc) {
         /* SSRC has been changed, TS and SEQ are no longer contiuous */
-        this->ssrc = p->parsed->ssrc;
+        this->ssrc.val = p->parsed->ssrc;
         this->last_sent_ts_inited = 0;
         this->tsdelta_inited = 0;
     }

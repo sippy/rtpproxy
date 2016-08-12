@@ -27,58 +27,84 @@
 
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
+#include "rtpp_ssrc.h"
+#include "rtpa_stats.h"
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_analyzer.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
-#include "rtpp_session.h"
+#include "rtpp_pcount.h"
+#include "rtpp_pcnt_strm.h"
+#include "rtpp_pipe.h"
+#include "rtpp_stream.h"
 #include "rtpp_util.h"
+#include "rtpp_command_query.h"
 
 #define CHECK_OVERFLOW() \
     if (len > sizeof(cmd->buf_t) - 2) { \
-        rtpp_log_write(RTPP_LOG_ERR, spa->log, \
+        RTPP_LOG(spp->log, RTPP_LOG_ERR, \
           "QUERY: output buffer overflow"); \
         return (ECODE_RTOOBIG_2); \
     }
 
 static int
 handle_query_simple(struct cfg *cf, struct rtpp_command *cmd,
-  struct rtpp_session *spa, int idx, int verbose)
+  struct rtpp_pipe *spp, int idx, int verbose)
 {
-    int len;
+    int len, ttl;
+    struct rtpps_pcount pcnts;
+    struct rtpp_pcnts_strm pst[2];
 
+    ttl = CALL_METHOD(spp, get_ttl);
+    CALL_METHOD(spp->pcount, get_stats, &pcnts);
+    CALL_METHOD(spp->stream[idx]->pcnt_strm, get_stats, &pst[0]);
+    CALL_METHOD(spp->stream[NOT(idx)]->pcnt_strm, get_stats, &pst[1]);
     if (verbose == 0) {
-        len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n", get_ttl(spa),
-          spa->pcount.npkts_in[idx], spa->pcount.npkts_in[NOT(idx)],
-          spa->pcount.nrelayed, spa->pcount.ndropped);
+        len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n",
+          ttl, pst[0].npkts_in, pst[1].npkts_in, pcnts.nrelayed, pcnts.ndropped);
     } else {
         len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "ttl=%d npkts_ina=%lu "
-          "npkts_ino=%lu nrelayed=%lu ndropped=%lu\n", get_ttl(spa),
-          spa->pcount.npkts_in[idx], spa->pcount.npkts_in[NOT(idx)],
-          spa->pcount.nrelayed, spa->pcount.ndropped);
+          "npkts_ino=%lu nrelayed=%lu ndropped=%lu\n", ttl,
+          pst[0].npkts_in, pst[1].npkts_in, pcnts.nrelayed, pcnts.ndropped);
     }
-    rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
+    rtpc_doreply(cmd, cmd->buf_t, len, 0);
     return (0);
 }
 
 #define PULL_RST() \
     if (rst_pulled == 0) { \
-        rtpp_analyzer_stat(spa->analyzers[idx], &rst); \
+        CALL_METHOD(spp->stream[idx]->analyzer, get_stats, &rst); \
         rst_pulled = 1; \
+    }
+
+#define PULL_PCNT() \
+    if (pcnt_pulled == 0) { \
+        CALL_METHOD(spp->pcount, get_stats, &pcnts); \
+        pcnt_pulled = 1; \
+    }
+
+#define PULL_PCNT_STRM() \
+    if (pcnt_strm_pulled == 0) { \
+        CALL_METHOD(spp->stream[idx]->pcnt_strm, get_stats, &pst[0]); \
+        CALL_METHOD(spp->stream[NOT(idx)]->pcnt_strm, get_stats, &pst[1]); \
+        pcnt_strm_pulled = 1; \
     }
 
 int
 handle_query(struct cfg *cf, struct rtpp_command *cmd,
-  struct rtpp_session *spa, int idx)
+  struct rtpp_pipe *spp, int idx)
 {
-    int len, i, verbose, rst_pulled;
+    int len, i, verbose, rst_pulled, pcnt_pulled, pcnt_strm_pulled;
     char *cp;
-    struct rtpp_analyzer_stats rst;
+    struct rtpa_stats rst;
+    struct rtpps_pcount pcnts;
+    struct rtpp_pcnts_strm pst[2];
 
     verbose = 0;
     for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
@@ -89,16 +115,16 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
             break;
 
         default:
-            rtpp_log_write(RTPP_LOG_ERR, spa->log,
+            RTPP_LOG(spp->log, RTPP_LOG_ERR,
               "QUERY: unknown command modifier `%c'", *cp);
             return (ECODE_PARSE_8);
         }
     }
     if (cmd->argc <= 4) {
-        return (handle_query_simple(cf, cmd, spa, idx, verbose));
+        return (handle_query_simple(cf, cmd, spp, idx, verbose));
     }
     len = 0;
-    rst_pulled = 0;
+    rst_pulled = pcnt_pulled = pcnt_strm_pulled = 0;
     for (i = 4; i < cmd->argc && len < (sizeof(cmd->buf_t) - 2); i++) {
         if (i > 4) {
             CHECK_OVERFLOW();
@@ -111,66 +137,71 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
         }
         CHECK_OVERFLOW();
         if (strcmp(cmd->argv[i], "ttl") == 0) {
+            int ttl = CALL_METHOD(spp, get_ttl);
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
-              get_ttl(spa));
+              ttl);
             continue;
         }
         if (strcmp(cmd->argv[i], "npkts_ina") == 0) {
+            PULL_PCNT_STRM();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
-              spa->pcount.npkts_in[idx]);
+              pst[0].npkts_in);
             continue;
         }
         if (strcmp(cmd->argv[i], "npkts_ino") == 0) {
+            PULL_PCNT_STRM();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
-              spa->pcount.npkts_in[NOT(idx)]);
+              pst[1].npkts_in);
             continue;
         }
         if (strcmp(cmd->argv[i], "nrelayed") == 0) {
+            PULL_PCNT();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
-              spa->pcount.nrelayed);
+              pcnts.nrelayed);
             continue;
         }
         if (strcmp(cmd->argv[i], "ndropped") == 0) {
+            PULL_PCNT();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
-              spa->pcount.ndropped);
+              pcnts.ndropped);
             continue;
         }
         if (strcmp(cmd->argv[i], "rtpa_nsent") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%u",
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.psent);
             continue;
         }
         if (strcmp(cmd->argv[i], "rtpa_nrcvd") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%u",
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.precvd);
             continue;
         }
         if (strcmp(cmd->argv[i], "rtpa_ndups") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%u",
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.pdups);
             continue;
         }
         if (strcmp(cmd->argv[i], "rtpa_nlost") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
-              rst.psent - rst.precvd);
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
+              rst.plost);
             continue;
         }
         if (strcmp(cmd->argv[i], "rtpa_perrs") == 0) {
             PULL_RST();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.pecount);
             continue;
         }
-        rtpp_log_write(RTPP_LOG_ERR, spa->log,
+        RTPP_LOG(spp->log, RTPP_LOG_ERR,
               "QUERY: unsupported/invalid counter name `%s'", cmd->argv[i]);
         return (ECODE_QRYFAIL);
     }
     CHECK_OVERFLOW();
     len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "\n");
-    rtpc_doreply(cf, cmd->buf_t, len, cmd, 0);
+    rtpc_doreply(cmd, cmd->buf_t, len, 0);
     return (0);
 }

@@ -25,31 +25,60 @@
  *
  */
 
+#if !defined(_RTPP_MEMDEB_H)
+#define _RTPP_MEMDEB_H
+
+#ifdef LINUX_XXX
+/* vasprintf() etc */
+#define _GNU_SOURCE    1
+/* Apparently needed for drand48(3) */
+#define _SVID_SOURCE    1
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-#undef malloc
-#define malloc(n) rtpp_memdeb_malloc((n), __FILE__, __LINE__, __func__)
-#undef free
-#define free(p) rtpp_memdeb_free((p), __FILE__, __LINE__, __func__)
-#undef realloc
-#define realloc(p,n) rtpp_memdeb_realloc((p), (n), __FILE__, __LINE__, __func__)
-#undef strdup
-#define strdup(p) rtpp_memdeb_strdup((p), __FILE__, __LINE__, __func__)
-#undef asprintf
-#define asprintf(pp, fmt, args...) rtpp_memdeb_asprintf((pp), (fmt), __FILE__, __LINE__, __func__, ## args)
-#undef vasprintf
-#define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), __FILE__, __LINE__, __func__, (vl))
+#if !defined(MEMDEB_APP)
+#error MEMDEB_APP has to be defined
+#endif
 
-void *rtpp_memdeb_malloc(size_t, const char *, int, const char *);
-void rtpp_memdeb_free(void *, const char *, int, const char *);
-void *rtpp_memdeb_realloc(void *, size_t,  const char *, int, const char *);
-char *rtpp_memdeb_strdup(const char *, const char *, int, const char *);
-int rtpp_memdeb_asprintf(char **, const char *, const char *, int, const char *, ...);
+#define CONCAT2(a, b) a ## b
+#define CONCAT(a, b) CONCAT2(a, b)
+
+CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
+
+#undef malloc
+#define malloc(n) rtpp_memdeb_malloc((n), CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), \
+  __FILE__, __LINE__, __func__)
+#undef free
+#define free(p) rtpp_memdeb_free((p), CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), \
+  __FILE__, __LINE__, __func__)
+#undef realloc
+#define realloc(p,n) rtpp_memdeb_realloc((p), (n), \
+  CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), __FILE__, __LINE__, __func__)
+#undef strdup
+#define strdup(p) rtpp_memdeb_strdup((p), CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), \
+  __FILE__, __LINE__, __func__)
+#undef asprintf
+#define asprintf(pp, fmt, args...) rtpp_memdeb_asprintf((pp), (fmt), \
+  CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), __FILE__, __LINE__, __func__, ## args)
+#undef vasprintf
+#define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), \
+  CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), __FILE__, __LINE__, __func__, (vl))
+
+void *rtpp_memdeb_malloc(size_t, void *, const char *, int, const char *);
+void rtpp_memdeb_free(void *, void *, const char *, int, const char *);
+void *rtpp_memdeb_realloc(void *, size_t, void *, const char *, int, const char *);
+char *rtpp_memdeb_strdup(const char *, void *, const char *, int, const char *);
+int rtpp_memdeb_asprintf(char **, const char *, void *, const char *, int, \
+  const char *, ...);
 
 #include <stdarg.h>
 
-int rtpp_memdeb_vasprintf(char **, const char *, const char *, int, const char *, va_list);
+int rtpp_memdeb_vasprintf(char **, const char *, void *, const char *, int, \
+  const char *, va_list);
 
 #define RTPP_CHECK_LEAKS 	1
+
+#endif

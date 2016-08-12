@@ -27,7 +27,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <assert.h>
 #include <stddef.h>
@@ -35,13 +35,41 @@
 #include "rtp.h"
 #include "rtp_info.h"
 #include "rtp_packet.h"
-#include "rtpp_network.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
+
+#include "rtpp_wi.h"
+#include "rtpp_wi_private.h"
+
+#define RTP_PROFILE_AUDIO(s, nc) {.ts_rate = (s), .sample_rate = (s), \
+  .pt_kind = RTP_PTK_AUDIO, .nchannels = (nc)}
+
+const struct rtp_profile rtp_profiles[128] = {
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_PCMU */
+    {.pt_kind = RTP_PTK_RES},    /* Reserved */
+    {.pt_kind = RTP_PTK_RES},    /* Reserved */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_GSM */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_G723 */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_DVI4_8000 */
+    RTP_PROFILE_AUDIO(16000, 1), /* RTP_DVI4_16000 */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_LPC */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_PCMA */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_G722 */
+    RTP_PROFILE_AUDIO(44100, 1), /* RTP_L16_MONO */
+    RTP_PROFILE_AUDIO(44100, 2), /* RTP_L16_STEREO */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_QCELP */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_CN */
+    RTP_PROFILE_AUDIO(90000, 2), /* RTP_MPA */
+    RTP_PROFILE_AUDIO(8000,  1), /* RTP_G728 */
+    RTP_PROFILE_AUDIO(11025, 1), /* RTP_DVI4_11025 */
+    RTP_PROFILE_AUDIO(22050, 1), /* RTP_DVI4_22050 */
+    RTP_PROFILE_AUDIO(8000,  1)  /* RTP_G729 */
+};
 
 struct rtp_packet_full;
 
 struct rtp_packet_priv {
     struct rtp_info rinfo;
+    struct rtpp_wi wi;
 };
 
 struct rtp_packet_full {
@@ -313,6 +341,7 @@ rtp_packet_parse_raw(unsigned char *buf, size_t size, struct rtp_info *rinfo)
     rinfo->ts = ntohl(header->ts);
     rinfo->seq = ntohs(header->seq);
     rinfo->ssrc = ntohl(header->ssrc);
+    rinfo->rtp_profile = &rtp_profiles[header->pt];
 
     if (rinfo->data_size == 0)
         return RTP_PARSER_OK;
@@ -351,7 +380,7 @@ void
 rtp_packet_dup(struct rtp_packet *dpkt, struct rtp_packet *spkt, int flags)
 {
     int csize;
-    struct rtp_packet_full *pkt_full;
+    struct rtp_packet_full *dpkt_full, *spkt_full;
     struct rtp_info *drinfo, *srinfo;
 
     csize = offsetof(struct rtp_packet, data.buf) + spkt->size;
@@ -363,12 +392,13 @@ rtp_packet_dup(struct rtp_packet *dpkt, struct rtp_packet *spkt, int flags)
     if (dpkt->parsed == NULL) {
         return;
     }
-    pkt_full = (void *)dpkt;
-    drinfo = &(pkt_full->pvt.rinfo);    
-    pkt_full = (void *)spkt;
-    srinfo = &(pkt_full->pvt.rinfo);
+    dpkt_full = (struct rtp_packet_full *)dpkt;
+    drinfo = &(dpkt_full->pvt.rinfo);    
+    spkt_full = (struct rtp_packet_full *)spkt;
+    srinfo = &(spkt_full->pvt.rinfo);
     memcpy(drinfo, srinfo, sizeof(struct rtp_info));
     dpkt->parsed = drinfo;
+    dpkt->wi = &(dpkt_full->pvt.wi);
     if ((flags & RTPP_DUP_HDRONLY) != 0) {
         dpkt->size -= dpkt->parsed->data_size;
         dpkt->parsed->data_size = 0;
@@ -382,6 +412,7 @@ rtp_packet_alloc()
     struct rtp_packet_full *pkt;
 
     pkt = rtpp_zmalloc(sizeof(*pkt));
+    pkt->pub.wi = &pkt->pvt.wi;
 
     return &(pkt->pub);
 }
@@ -391,28 +422,6 @@ rtp_packet_free(struct rtp_packet *pkt)
 {
 
     free(pkt);
-}
-
-struct rtp_packet *
-rtp_recv(int fd)
-{
-    struct rtp_packet *pkt;
-
-    pkt = rtp_packet_alloc();
-
-    if (pkt == NULL)
-        return NULL;
-
-    pkt->rlen = sizeof(pkt->raddr);
-    pkt->size = recvfrom(fd, pkt->data.buf, sizeof(pkt->data.buf), 0, 
-      sstosa(&pkt->raddr), &pkt->rlen);
-
-    if (pkt->size == -1) {
-	rtp_packet_free(pkt);
-	return NULL;
-    }
-
-    return pkt;
 }
 
 void 

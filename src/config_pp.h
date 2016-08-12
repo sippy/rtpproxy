@@ -1,3 +1,5 @@
+/* IPOLICE_FLAGS: DONT_REMOVE */
+
 #ifndef _CONFIG_PP_H
 #define _CONFIG_PP_H
 

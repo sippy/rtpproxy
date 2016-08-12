@@ -32,22 +32,28 @@
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 
 struct cfg;
+struct timeval;
+struct sockaddr;
+struct sockaddr_storage;
 
 /* Function prototypes */
-int ishostseq(struct sockaddr *, struct sockaddr *);
-int ishostnull(struct sockaddr *);
-int getport(struct sockaddr *);
+int ishostseq(const struct sockaddr *, const struct sockaddr *);
+int ishostnull(const struct sockaddr *);
+uint16_t getport(const struct sockaddr *);
+uint16_t getnport(const struct sockaddr *);
+int isaddrseq(const struct sockaddr *ia1, const struct sockaddr *ia2);
+int isaddreq(struct sockaddr *ia1, struct sockaddr *ia2);
 void setport(struct sockaddr *, int);
 void setanyport(struct sockaddr *);
 char *addr2char_r(struct sockaddr *, char *buf, int size);
-const char *addr2char(struct sockaddr *);
+char *addrport2char_r(struct sockaddr *, char *buf, int size, char);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
-struct sockaddr *addr2bindaddr(struct cfg *, struct sockaddr *, const char **);
-struct sockaddr *host2bindaddr(struct cfg *, const char *, int, const char **);
-int local4remote(struct sockaddr *, struct sockaddr_storage *);
+int local4remote(const struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, char **, char **, int *);
 int setbindhost(struct sockaddr *, int, const char *, const char *);
+ssize_t recvfromto(int, void *, size_t, struct sockaddr *,
+  size_t *, struct sockaddr *, size_t *, struct timeval *);
 
 /* Some handy/compat macros */
 #if !defined(AF_LOCAL)
@@ -55,15 +61,19 @@ int setbindhost(struct sockaddr *, int, const char *, const char *);
 #endif
 
 #if !defined(SA_LEN)
-#define SA_LEN(sa) \
-  (((sa)->sa_family == AF_INET) ? \
-  sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
+# define SA_LEN(sa) \
+   (((sa)->sa_family == AF_INET) ? \
+   sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
 #endif
 #if !defined(SS_LEN)
-#define SS_LEN(ss) \
-  (((ss)->ss_family == AF_INET) ? \
-  sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
+# define SS_LEN(ss) \
+   (((ss)->ss_family == AF_INET) ? \
+   sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
 #endif
+
+#define AF2STR(af) 	((af) == AF_LOCAL ? "Unix-Domain" : \
+  ((af == AF_INET) ? "IPv4" : ((af == AF_INET6) ? "IPv6" : "Unknown (BUG?!)")))
+#define SA_AF2STR(sa)	AF2STR((sa)->sa_family)
 
 #if !defined(satosin)
 #define	satosin(sa)	((struct sockaddr_in *)(sa))
@@ -82,5 +92,22 @@ int setbindhost(struct sockaddr *, int, const char *, const char *);
 #endif
 
 #define	IS_VALID_PORT(p)	((p) > 0 && (p) < 65536)
+#define	IS_LAST_PORT(p)		((p) == 65535)
+
+
+/*
+ * > len('0000:0000:0000:0000:0000:0000:127.127.127.127')
+ * 45
+ */
+#define INET6_ADDR_STRLEN 46
+#define MAX_ADDR_STRLEN INET6_ADDR_STRLEN
+
+/*
+ * > len('[0000:0000:0000:0000:0000:0000:127.127.127.127]:65535')
+ * 53
+ * > len('127.127.127.127:65535')
+ * 21
+ */
+#define MAX_AP_STRBUF 54
 
 #endif

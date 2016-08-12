@@ -35,7 +35,6 @@
 #include <sys/socket.h>
 
 #include "rtp.h"
-#include "rtpp_record.h"
 
 #define MYQ_INIT(headp) {(headp)->first = (headp)->last = NULL;}
 #define MYQ_FIRST(headp) ((headp)->first)

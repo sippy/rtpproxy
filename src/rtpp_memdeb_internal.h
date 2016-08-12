@@ -28,19 +28,42 @@
 #ifndef RTPP_MEMDEB_STDOUT
 #  define RTPP_MEMDEB_REPORT(handle, format, args...) \
     if (handle != NULL) { \
-        rtpp_log_write(RTPP_LOG_DBUG, ((rtpp_log_t)handle), format, ## args); \
+        RTPP_LOG(((struct rtpp_log *)handle), RTPP_LOG_DBUG, format, ## args); \
     }
 #else
-#  define RTPP_MEMDEB_REPORT(handle, format, args...) { \
-    if (handle != NULL) { \
-        rtpp_log_write(RTPP_LOG_DBUG, ((rtpp_log_t)handle), format, ## args); \
+#  define RTPP_MEMDEB_REPORT2(handle, nostdout, format, args...) { \
+    if (!nostdout) { \
+        printf((format "\n"), ## args); \
+        fflush(stdout); \
     }; \
-    printf((format "\n"), ## args); \
-    fflush(stdout); }
+    if (handle != NULL) { \
+        RTPP_LOG(((struct rtpp_log *)handle), RTPP_LOG_DBUG, format, ## args); \
+    } \
+}
+#  define RTPP_MEMDEB_REPORT(handle, format, args...) \
+    RTPP_MEMDEB_REPORT2(handle, 0, format, ## args)
 #endif
 
-struct cfg;
+#define RTPP_MEMDEB_STATIC(appname) void *_##appname##_memdeb
 
-int rtpp_memdeb_dumpstats(struct cfg *);
-void rtpp_memdeb_setbaseln(void);
-int rtpp_memdeb_selftest(void);
+#define RTPP_MEMDEB_INIT(appname) { \
+        _##appname##_memdeb = rtpp_memdeb_init(); \
+        assert(_##appname##_memdeb != NULL); \
+    }
+
+#define RTPP_MEMDEB_FIN(appname) { \
+        assert(_##appname##_memdeb != NULL); \
+        rtpp_memdeb_dtor(_##appname##_memdeb); \
+        _##appname##_memdeb = NULL; \
+    }
+
+struct rtpp_log;
+
+int rtpp_memdeb_dumpstats(void *, int);
+void rtpp_memdeb_setbaseln(void *);
+int rtpp_memdeb_selftest(void *);
+void rtpp_memdeb_setlog(void *, struct rtpp_log *);
+void rtpp_memdeb_approve(void *, const char *, int, const char *);
+
+void *rtpp_memdeb_init();
+void rtpp_memdeb_dtor(void *);

@@ -34,7 +34,12 @@
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_log_obj.h"
+#include "rtpp_pipe.h"
 #include "rtpp_record.h"
+#include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
 
@@ -46,44 +51,45 @@ handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0)? 1 : 0;
 
-    if (remote == 0 && (record_single_file != 0 || spa->record_single_file != 0)) {
-        if (spa->rrcs[idx] != NULL)
+    if (remote == 0 && record_single_file != 0) {
+        if (spa->rtp->stream[idx]->rrc != NULL)
             return (-1);
-        spa->record_single_file = 1;
-        if (spa->rrcs[NOT(idx)] != NULL) {
-            spa->rrcs[idx] = spa->rrcs[NOT(idx)];
-        } else{
-            spa->rrcs[idx] = ropen(cf, spa, rname, idx);
-            if (spa->rrcs[idx] == NULL) {
+        if (spa->rtp->stream[NOT(idx)]->rrc != NULL) {
+            CALL_SMETHOD(spa->rtp->stream[NOT(idx)]->rrc->rcnt, incref);
+            spa->rtp->stream[idx]->rrc = spa->rtp->stream[NOT(idx)]->rrc;
+        } else {
+            spa->rtp->stream[idx]->rrc = rtpp_record_open(cf, spa, rname, idx, RECORD_BOTH);
+            if (spa->rtp->stream[idx]->rrc == NULL) {
                 return (-1);
             }
-            rtpp_log_write(RTPP_LOG_INFO, spa->log,
-              "starting recording RTP session on port %d", spa->ports[idx]);
+            RTPP_LOG(spa->log, RTPP_LOG_INFO,
+              "starting recording RTP session on port %d", spa->rtp->stream[idx]->port);
         }
-        assert(spa->rtcp->rrcs[idx] == NULL);
+        assert(spa->rtcp->stream[idx]->rrc == NULL);
         if (cf->stable->rrtcp != 0) {
-            spa->rtcp->rrcs[idx] = spa->rrcs[idx];
-            rtpp_log_write(RTPP_LOG_INFO, spa->log,
-              "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
+            CALL_SMETHOD(spa->rtp->stream[idx]->rrc->rcnt, incref);
+            spa->rtcp->stream[idx]->rrc = spa->rtp->stream[idx]->rrc;
+            RTPP_LOG(spa->log, RTPP_LOG_INFO,
+              "starting recording RTCP session on port %d", spa->rtcp->stream[idx]->port);
         }
         return (0);
     }
 
-    if (spa->rrcs[idx] == NULL) {
-        spa->rrcs[idx] = ropen(cf, spa, rname, idx);
-        if (spa->rrcs[idx] == NULL) {
+    if (spa->rtp->stream[idx]->rrc == NULL) {
+        spa->rtp->stream[idx]->rrc = rtpp_record_open(cf, spa, rname, idx, RECORD_RTP);
+        if (spa->rtp->stream[idx]->rrc == NULL) {
             return (-1);
         }
-        rtpp_log_write(RTPP_LOG_INFO, spa->log,
-          "starting recording RTP session on port %d", spa->ports[idx]);
+        RTPP_LOG(spa->log, RTPP_LOG_INFO,
+          "starting recording RTP session on port %d", spa->rtp->stream[idx]->port);
     }
-    if (spa->rtcp->rrcs[idx] == NULL && cf->stable->rrtcp != 0) {
-        spa->rtcp->rrcs[idx] = ropen(cf, spa->rtcp, rname, idx);
-        if (spa->rtcp->rrcs[idx] == NULL) {
+    if (spa->rtcp->stream[idx]->rrc == NULL && cf->stable->rrtcp != 0) {
+        spa->rtcp->stream[idx]->rrc = rtpp_record_open(cf, spa, rname, idx, RECORD_RTCP);
+        if (spa->rtcp->stream[idx]->rrc == NULL) {
             return (-1);
         }
-        rtpp_log_write(RTPP_LOG_INFO, spa->log,
-          "starting recording RTCP session on port %d", spa->rtcp->ports[idx]);
+        RTPP_LOG(spa->log, RTPP_LOG_INFO,
+          "starting recording RTCP session on port %d", spa->rtcp->stream[idx]->port);
     }
     return (0);
 }

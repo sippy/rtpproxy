@@ -1,0 +1,9 @@
+*.fout[1234]
+*.qout
+*.qout[1234]
+*.rout
+*.rout[1234]
+*.rlog
+*.rlog[1234]
+*.tout
+*.tlog

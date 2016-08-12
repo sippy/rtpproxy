@@ -32,12 +32,13 @@
 #include <string.h>
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_memdeb_internal.h"
 #include "rtpp_memdeb_stats.h"
 
 int
-rtpp_memdeb_selftest(void)
+rtpp_memdeb_selftest(void *pvt)
 {
     void *p;
     int i;
@@ -47,7 +48,7 @@ rtpp_memdeb_selftest(void)
     memset(&mds_a, '\0', sizeof(mds_a));
     p = malloc(50);
     free(p);
-    if (rtpp_memdeb_get_stats(__FILE__, __func__, &mds_b) < 1) {
+    if (rtpp_memdeb_get_stats(pvt, __FILE__, __func__, &mds_b) < 1) {
         RTPP_MEMDEB_REPORT(NULL, "MEMDEB is compiled in but is not working");
         return (-1);
     }
@@ -60,7 +61,7 @@ rtpp_memdeb_selftest(void)
         p = malloc(16);
         free(p);
     }
-    if (rtpp_memdeb_get_stats(__FILE__, __func__, &mds_a) < 2) {
+    if (rtpp_memdeb_get_stats(pvt, __FILE__, __func__, &mds_a) < 2) {
         RTPP_MEMDEB_REPORT(NULL, "MEMDEB is compiled in but is not working");
         return (-1);
     }

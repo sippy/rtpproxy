@@ -31,23 +31,43 @@
 
 #if defined(CLOCK_UPTIME_PRECISE)
 # define RTPP_CLOCK_MONO CLOCK_UPTIME_PRECISE
+# define RTPP_MCLOCK_NAME "CLOCK_UPTIME_PRECISE"
 #else
 # if defined(CLOCK_BOOTTIME)
 #  define RTPP_CLOCK_MONO CLOCK_BOOTTIME
+#  define RTPP_MCLOCK_NAME "CLOCK_BOOTTIME"
 # else
 #  define RTPP_CLOCK_MONO CLOCK_MONOTONIC
+#  define RTPP_MCLOCK_NAME "CLOCK_MONOTONIC"
 # endif
 #endif
 
 #if defined(CLOCK_REALTIME_PRECISE)
 # define RTPP_CLOCK_REAL CLOCK_REALTIME_PRECISE
+# define RTPP_RCLOCK_NAME "CLOCK_REALTIME_PRECISE"
 #else
 # define RTPP_CLOCK_REAL CLOCK_REALTIME
+# define RTPP_RCLOCK_NAME "CLOCK_REALTIME"
 #endif
+
+#define SEC(x)   ((x)->tv_sec)
+#define NSEC(x)  ((x)->tv_nsec)
+#define NSEC_MAX 1000000000L
+#define USEC(x)  ((x)->tv_usec)
+
+#define timespeciszero(t)                                          \
+    (SEC(t) == 0 && NSEC(t) == 0)
+#define timevaliszero(v)                                           \
+    (SEC(v) == 0 && USEC(v) == 0)
+
+#define timespec2dtime(s) ((double)SEC(s) + \
+  (double)NSEC(s) / 1000000000.0)
+#define ts2dtime(ts_sec, ts_usec) ((double)(ts_sec) + \
+  (double)(ts_usec) / 1000000.0)
 
 /* Function prototypes */
 double getdtime(void);
-double ts2dtime(uint32_t, uint32_t);
-void dtime2ts(double, uint32_t *, uint32_t *);
+void dtime2mtimespec(double, struct timespec *);
+const char *get_mclock_name(void);
 
 #endif

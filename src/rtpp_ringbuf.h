@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,31 +26,24 @@
  *
  */
 
-#ifndef _RTP_SERVER_H_
-#define _RTP_SERVER_H_
+#ifndef _RTPP_RINGBUF_H_
+#define _RTPP_RINGBUF_H_
 
-struct rtp_server;
+struct rtpp_ringbuf;
 
-#define	RTPS_LATER	(0)
-#define	RTPS_EOF	(-1)
-#define	RTPS_ERROR	(-2)
-#define	RTPS_ENOMEM	(-3)
+DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_push, void, void *);
+DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_flush, void);
+DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_locate, int, void *);
 
-/*
- * Minimum length of each RTP packet in ms.
- * Actual length may differ due to codec's framing constrains.
- */
-#define	RTPS_TICKS_MIN	10
+struct rtpp_ringbuf {
+    /* Refcounter */
+    struct rtpp_refcnt *rcnt;
 
-#define	RTPS_SRATE	8000
+    METHOD_ENTRY(rtpp_ringbuf_push, push);
+    METHOD_ENTRY(rtpp_ringbuf_flush, flush);
+    METHOD_ENTRY(rtpp_ringbuf_locate, locate);
+};
 
-struct rtpp_session;
-struct cfg;
-
-struct rtp_server *rtp_server_new(const char *, rtp_type_t, int, double,
-  int);
-void rtp_server_free(struct rtp_server *);
-struct rtp_packet *rtp_server_get(struct rtp_server *, double, int *);
-void append_server(struct cfg *, struct rtpp_session *);
+struct rtpp_ringbuf *rtpp_ringbuf_ctor(size_t, int);
 
 #endif

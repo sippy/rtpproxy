@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <netinet/udp.h>
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -36,6 +37,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpp_ssrc.h"
 #include "rtp_info.h"
 #include "rtpp_record_private.h"
 #include "rtpp_loader.h"
@@ -143,7 +145,7 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
         }
         pack->pkt = pkt;
         pack->rpkt = RPKT(pack);
-        if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pkt->time) != 0) {
+        if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pkt->time) == UPDATE_ERR) {
             /* XXX error handling */
             abort();
         }
@@ -196,7 +198,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
     struct packet *pack, *pp;
     struct channel *channel;
     struct session *sess;
-    union pkt_hdr_pcap pcap;
+    union pkt_hdr_pcap pcap, *pcp;
     int rtp_len;
     off_t st_size;
     int pcap_size, network;
@@ -208,12 +210,21 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
 
     pcount = 0;
     for (cp = loader->ibuf; cp < loader->ibuf + st_size; cp += rtp_len) {
+        pcp = (union pkt_hdr_pcap *)cp;
         if (network == DLT_NULL) {
+            if (pcp->null.family != AF_INET) {
+                rtp_len = sizeof(pcaprec_hdr_t) + pcp->null.pcaprec_hdr.incl_len;
+                continue;
+            }
             pcap_size = sizeof(struct pkt_hdr_pcap_null);
             memcpy(&pcap, cp, pcap_size);
             pcaprec_hdr = &(pcap.null.pcaprec_hdr);
             udpip = &(pcap.null.udpip);
         } else {
+            if (pcp->en10t.ether.type != ETHERTYPE_INET) {
+                rtp_len = sizeof(pcaprec_hdr_t) + pcp->en10t.pcaprec_hdr.incl_len;
+                continue;
+            }
             pcap_size = sizeof(struct pkt_hdr_pcap_en10t);
             memcpy(&pcap, cp, pcap_size);
             pcaprec_hdr = &(pcap.en10t.pcaprec_hdr);
@@ -246,7 +257,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
             pack->pkt->addr.in4.sin_port = ntohs(udpip->udphdr.uh_sport);
             pack->pkt->addr.in4.sin_addr = udpip->iphdr.ip_src;
         }
-        if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pack->pkt->time) != 0) {
+        if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pack->pkt->time) == UPDATE_ERR) {
             /* XXX error handling */
             abort();
         }

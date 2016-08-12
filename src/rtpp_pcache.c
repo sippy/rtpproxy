@@ -8,16 +8,16 @@
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_pcache.h"
-#include "rtpp_util.h"
+#include "rtpp_mallocs.h"
 
-struct rtpp_pcache_obj_priv {
-  struct rtpp_pcache_obj *real;
-  struct rtpp_hash_table_obj *hash_table;
+struct rtpp_pcache_priv {
+  struct rtpp_pcache *real;
+  struct rtpp_hash_table *hash_table;
 };
 
-struct rtpp_pcache_obj_full {
-  struct rtpp_pcache_obj pub;
-  struct rtpp_pcache_obj_priv pvt;
+struct rtpp_pcache_full {
+  struct rtpp_pcache pub;
+  struct rtpp_pcache_priv pvt;
 };
 
 struct rtpp_pcache_fd {
@@ -25,34 +25,34 @@ struct rtpp_pcache_fd {
   struct rtpp_hash_table_entry *hte;
 };
 
-static void rtpp_pcache_obj_dtor(struct rtpp_pcache_obj *);
-static struct rtpp_pcache_fd *rtpp_pcache_obj_open(struct rtpp_pcache_obj *, const char *);
-static int rtpp_pcache_obj_read(struct rtpp_pcache_obj *, struct rtpp_pcache_fd *, void *, size_t);
-static void rtpp_pcache_obj_close(struct rtpp_pcache_obj *, struct rtpp_pcache_fd *);
+static void rtpp_pcache_dtor(struct rtpp_pcache *);
+static struct rtpp_pcache_fd *rtpp_pcache_open(struct rtpp_pcache *, const char *);
+static int rtpp_pcache_read(struct rtpp_pcache *, struct rtpp_pcache_fd *, void *, size_t);
+static void rtpp_pcache_close(struct rtpp_pcache *, struct rtpp_pcache_fd *);
 
-struct rtpp_pcache_obj *
+struct rtpp_pcache *
 rtpp_pcache_ctor(void)
 {
-    struct rtpp_pcache_obj_full *fp;
-    struct rtpp_pcache_obj *pub;
-    struct rtpp_pcache_obj_priv *pvt;
+    struct rtpp_pcache_full *fp;
+    struct rtpp_pcache *pub;
+    struct rtpp_pcache_priv *pvt;
 
-    fp = rtpp_zmalloc(sizeof(struct rtpp_pcache_obj_full));
+    fp = rtpp_zmalloc(sizeof(struct rtpp_pcache_full));
     if (fp == NULL) {
         return (NULL);
     }
     pub = &(fp->pub);
     pvt = &(fp->pvt);
-    pvt->hash_table = rtpp_hash_table_ctor();
+    pvt->hash_table = rtpp_hash_table_ctor(rtpp_ht_key_str_t, 0);
     if (pvt->hash_table == NULL) {
         free(fp);
         return (NULL);
     }
     pub->pvt = pvt;
-    pub->open = &rtpp_pcache_obj_open;
-    pub->read = &rtpp_pcache_obj_read;
-    pub->close = &rtpp_pcache_obj_close;
-    pub->dtor = &rtpp_pcache_obj_dtor;
+    pub->open = &rtpp_pcache_open;
+    pub->read = &rtpp_pcache_read;
+    pub->close = &rtpp_pcache_close;
+    pub->dtor = &rtpp_pcache_dtor;
 #if defined(RTPP_DEBUG)
     assert((void *)fp == (void *)pub);
 #endif
@@ -60,10 +60,10 @@ rtpp_pcache_ctor(void)
 }
 
 struct rtpp_pcache_fd *
-rtpp_pcache_obj_open(struct rtpp_pcache_obj *self, const char *fname)
+rtpp_pcache_open(struct rtpp_pcache *self, const char *fname)
 {
     struct rtpp_pcache_fd *p_fd;
-    struct rtpp_pcache_obj_priv *pvt;
+    struct rtpp_pcache_priv *pvt;
 
     p_fd = rtpp_zmalloc(sizeof(struct rtpp_pcache_fd));
     if (p_fd == NULL) {
@@ -75,7 +75,7 @@ rtpp_pcache_obj_open(struct rtpp_pcache_obj *self, const char *fname)
 }
 
 static void
-rtpp_pcache_obj_close(struct rtpp_pcache_obj *self, struct rtpp_pcache_fd *p_fd)
+rtpp_pcache_close(struct rtpp_pcache *self, struct rtpp_pcache_fd *p_fd)
 {
 
     CALL_METHOD(self->pvt->hash_table, remove_nc, p_fd->hte);
@@ -83,7 +83,7 @@ rtpp_pcache_obj_close(struct rtpp_pcache_obj *self, struct rtpp_pcache_fd *p_fd)
 }
 
 static int
-rtpp_pcache_obj_read(struct rtpp_pcache_obj *self, struct rtpp_pcache_fd *p_fd, void *buf, size_t len)
+rtpp_pcache_read(struct rtpp_pcache *self, struct rtpp_pcache_fd *p_fd, void *buf, size_t len)
 {
 
     p_fd->cpos += len;
@@ -92,7 +92,7 @@ rtpp_pcache_obj_read(struct rtpp_pcache_obj *self, struct rtpp_pcache_fd *p_fd, 
 }
 
 static void
-rtpp_pcache_obj_dtor(struct rtpp_pcache_obj *self)
+rtpp_pcache_dtor(struct rtpp_pcache *self)
 {
 
     free(self);

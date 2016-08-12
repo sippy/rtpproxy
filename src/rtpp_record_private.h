@@ -35,6 +35,9 @@
 #define	PCAP_VER_MAJR	2
 #define	PCAP_VER_MINR	4
 
+#define	ETHERTYPE_INET	htons(0x0800)
+#define	ETHERTYPE_INET6	htons(0x86DD)
+
 /* Global PCAP Header */
 typedef struct pcap_hdr_s {
     uint32_t magic_number;   /* magic number */
@@ -59,6 +62,25 @@ struct udpip {
     struct udphdr udphdr;
 } __attribute__((__packed__));
 
+#if !defined(IPV6_DEFHLIM)
+# define 	IPV6_DEFHLIM   64 /* default hlim */
+#endif
+#if !defined(IPV6_VERSION)
+# define 	IPV6_VERSION   0x60
+#endif
+
+struct udpip6 {
+    struct ip6_hdr iphdr;
+    struct udphdr udphdr;
+} __attribute__((__packed__));
+
+
+struct layer2_hdr {
+    uint8_t dhost[6];
+    uint8_t shost[6];
+    uint16_t type;
+} __attribute__((__packed__));
+
 /*
  * Recorded data header
  */
@@ -67,18 +89,27 @@ struct pkt_hdr_pcap_null {
     uint32_t family;
     struct udpip udpip;
 } __attribute__((__packed__));
-
+struct pkt_hdr_pcap_null_v6 {
+    pcaprec_hdr_t pcaprec_hdr;
+    uint32_t family;
+    struct udpip6 udpip6;
+} __attribute__((__packed__));
 struct pkt_hdr_pcap_en10t {
     pcaprec_hdr_t pcaprec_hdr;
-    uint8_t ether_dhost[6];
-    uint8_t ether_shost[6];
-    uint16_t ether_type;
+    struct layer2_hdr ether;
     struct udpip udpip;
+} __attribute__((__packed__));
+struct pkt_hdr_pcap_en10t_v6 {
+    pcaprec_hdr_t pcaprec_hdr;
+    struct layer2_hdr ether;
+    struct udpip6 udpip6;
 } __attribute__((__packed__));
 
 union pkt_hdr_pcap {
     struct pkt_hdr_pcap_null null;
+    struct pkt_hdr_pcap_null_v6 null_v6;
     struct pkt_hdr_pcap_en10t en10t;
+    struct pkt_hdr_pcap_en10t_v6 en10t_v6;
 };
 
 /* Stripped down version of sockaddr_in* for saving space */

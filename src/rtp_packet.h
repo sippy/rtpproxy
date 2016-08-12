@@ -29,26 +29,27 @@
 #ifndef _RTP_PACKET_H_
 #define _RTP_PACKET_H_
 
-#include "rtpp_wi.h"
-#include "rtpp_wi_private.h"
-
 struct rtp_info;
+struct rtpp_wi;
 
 struct rtp_packet {
     size_t      size;
 
     struct sockaddr_storage raddr;
+    struct sockaddr_storage _laddr;
     struct sockaddr *laddr;
+    int         lport;
 
     socklen_t   rlen;
     double      rtime;
-    int         rport;
 
     struct rtp_packet *next;
     struct rtp_packet *prev;
 
     struct rtp_info *parsed;
     rtp_parser_err_t parse_result;
+
+    struct rtpp_wi *wi;
 
     /*
      * The packet, keep it the last member so that we can use
@@ -59,11 +60,7 @@ struct rtp_packet {
         rtp_hdr_t       header;
         unsigned char   buf[8192];
     } data;
-
-    struct rtpp_wi wi;
 };
-
-struct rtp_packet *rtp_recv(int);
 
 struct rtp_packet *rtp_packet_alloc();
 void rtp_packet_free(struct rtp_packet *);

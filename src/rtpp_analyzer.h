@@ -25,20 +25,32 @@
  *
  */
 
-struct rtpp_analyzer_stats {
-    uint32_t psent;
-    uint32_t precvd;
-    uint32_t pdups;
-    uint32_t ssrc_changes;
-    uint32_t pecount;
-    uint32_t aecount;
-    uint32_t last_ssrc;
-};
+#if !defined(_RTPP_ANALYZER_H)
+#define _RTPP_ANALYZER_H
 
-struct rtpp_session;
+struct rtpp_log;
+struct rtp_packet;
+struct rtpp_analyzer;
+struct rtpp_refcnt;
+struct rtpa_stats;
+struct rtpa_stats_jitter;
+struct rtpp_log;
 struct rtp_packet;
 
-struct rtpp_analyzer * rtpp_analyzer_ctor(void);
-int rtpp_analyzer_update(struct rtpp_session *, struct rtpp_analyzer *, struct rtp_packet *);
-void rtpp_analyzer_stat(struct rtpp_analyzer *, struct rtpp_analyzer_stats *);
-void rtpp_analyzer_dtor(struct rtpp_analyzer *);
+DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_update, enum update_rtpp_stats_rval,
+  struct rtp_packet *);
+DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_stats, void,
+  struct rtpa_stats *);
+DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_jstats, int,
+  struct rtpa_stats_jitter *);
+
+struct rtpp_analyzer {
+    METHOD_ENTRY(rtpp_analyzer_update, update);
+    METHOD_ENTRY(rtpp_analyzer_get_stats, get_stats);
+    METHOD_ENTRY(rtpp_analyzer_get_jstats, get_jstats);
+    struct rtpp_refcnt *rcnt;
+};
+
+struct rtpp_analyzer * rtpp_analyzer_ctor(struct rtpp_log *);
+
+#endif

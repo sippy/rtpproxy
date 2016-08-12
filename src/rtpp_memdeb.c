@@ -44,8 +44,9 @@
 #include <string.h>
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
-#include "rtpp_defines.h"
+#include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_memdeb.h"
 #include "rtpp_memdeb_internal.h"
 #include "rtpp_memdeb_stats.h"
@@ -63,6 +64,10 @@
 
 #define MEMDEB_SIGNATURE_ALLOC(x) (MEMDEB_SIGNATURE ^ (uint64_t)(x))
 #define MEMDEB_SIGNATURE_FREE(x) (~MEMDEB_SIGNATURE_ALLOC(x))
+
+#define MEMDEB_SIG_PRIV_SALT 0x7d442e4532bb9ef0UL
+#define MEMDEB_SIGNATURE_PRIV(x) \
+  (MEMDEB_SIG_PRIV_SALT ^ (uint64_t)(x))
 
 #define MEMDEB_GUARD_SIZE 8
 
@@ -85,34 +90,101 @@ struct memdeb_pfx
     long long real_data[0];
 };
 
-static struct {
+struct rtpp_memdeb_au {
     const char *funcn;
     int max_nunalloc;
     const char *why;
-} approved_unallocated[] = {
-    {.funcn = "addr2bindaddr", .max_nunalloc = 100, .why = "Too busy to fix now"},
-    {.funcn = NULL}
 };
 
-static struct memdeb_node *nodes;
-static pthread_mutex_t *memdeb_mutex;
+#define MAX_APPROVED 10
+
+struct rtpp_memdeb_priv {
+    uint64_t magic;
+    struct memdeb_node *nodes;
+    pthread_mutex_t mutex;
+    struct rtpp_memdeb_au au[MAX_APPROVED];
+    struct rtpp_log *_md_glog;
+};
+
+void *
+rtpp_memdeb_init()
+{
+    struct rtpp_memdeb_priv *pvt;
+
+    pvt = malloc(sizeof(struct rtpp_memdeb_priv));
+    if (pvt == NULL) {
+        return (NULL);
+    }
+    memset(pvt, '\0', sizeof(struct rtpp_memdeb_priv));
+    pthread_mutex_init(&pvt->mutex, NULL);
+    pvt->magic = MEMDEB_SIGNATURE_PRIV(pvt);
+    return (pvt);
+}
+
+#define CHK_PRIV(pvt, p) { \
+        (pvt) = (struct rtpp_memdeb_priv *)(p); \
+        if (pvt->magic != MEMDEB_SIGNATURE_PRIV(pvt)) { \
+            RTPP_MEMDEB_REPORT(NULL, "%s(): bogus private pointer: %p", \
+              __func__, pvt); \
+            abort(); \
+        } \
+    }
+
+void
+rtpp_memdeb_dtor(void *p)
+{
+    struct rtpp_memdeb_priv *pvt;
+
+    CHK_PRIV(pvt, p);
+    if (pvt->_md_glog != NULL) {
+        CALL_SMETHOD(pvt->_md_glog->rcnt, decref);
+    }
+    pvt->magic = MEMDEB_SIGNATURE_FREE(pvt);
+    pthread_mutex_destroy(&pvt->mutex);
+    free(pvt);
+    return;
+}
+
+void
+rtpp_memdeb_setlog(void *p, struct rtpp_log *log)
+{
+    struct rtpp_memdeb_priv *pvt;
+
+    CHK_PRIV(pvt, p);
+    CALL_SMETHOD(log->rcnt, incref);
+    pvt->_md_glog = log;
+}
+
+void
+rtpp_memdeb_approve(void *p, const char *funcn, int max_nunalloc,
+  const char *why)
+{
+    int i;
+    struct rtpp_memdeb_priv *pvt;
+
+    CHK_PRIV(pvt, p);
+    for (i = 0; i < MAX_APPROVED; i++) {
+        if (pvt->au[i].funcn != NULL)
+            continue;
+        pvt->au[i].funcn = funcn;
+        pvt->au[i].max_nunalloc = max_nunalloc;
+        pvt->au[i].why = why;
+        return;
+    }
+}
 
 static struct memdeb_node *
-rtpp_memdeb_nget(const char *fname, int linen, const char *funcn, int doalloc)
+rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const char *fname, int linen,
+  const char *funcn, int doalloc)
 {
     struct memdeb_node *rval, *mnp, *lastnode;
 
-    if (memdeb_mutex == NULL) {
-        memdeb_mutex = malloc(sizeof(pthread_mutex_t));
-        if (memdeb_mutex == NULL)
-            abort();
-        pthread_mutex_init(memdeb_mutex, NULL);
-    }
-    pthread_mutex_lock(memdeb_mutex);
+    pthread_mutex_lock(&pvt->mutex);
     lastnode = NULL;
-    for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
+    for (mnp = pvt->nodes; mnp != NULL; mnp = mnp->next) {
         if (mnp->magic != MEMDEB_SIGNATURE) {
             /* nodelist is corrupt */
+            RTPP_MEMDEB_REPORT(pvt->_md_glog, "Nodelist %p is corrupt", mnp);
             abort();
         }
         if (mnp->fname == fname && mnp->linen == linen && mnp->funcn == funcn)
@@ -120,11 +192,12 @@ rtpp_memdeb_nget(const char *fname, int linen, const char *funcn, int doalloc)
         lastnode = mnp;
     }
     if (doalloc == 0) {
-        pthread_mutex_unlock(memdeb_mutex);
+        pthread_mutex_unlock(&pvt->mutex);
         return (NULL);
     }
     rval = malloc(sizeof(struct memdeb_node));
     if (rval == NULL) {
+        RTPP_MEMDEB_REPORT(pvt->_md_glog, "Allocation for the new nodelist failed");
         abort();
     }
     memset(rval, '\0', sizeof(struct memdeb_node));
@@ -132,33 +205,46 @@ rtpp_memdeb_nget(const char *fname, int linen, const char *funcn, int doalloc)
     rval->fname = fname;
     rval->linen = linen;
     rval->funcn = funcn;
-    if (nodes == NULL) {
-        nodes = rval;
+    if (pvt->nodes == NULL) {
+        pvt->nodes = rval;
     } else {
         lastnode->next = rval;
     }
     return (rval);
 }
 
+#define CHK_PRIV_VRB(pvt, p, fname, linen, funcn) { \
+        (pvt) = (struct rtpp_memdeb_priv *)(p); \
+        if (pvt->magic != MEMDEB_SIGNATURE_PRIV(pvt)) { \
+            RTPP_MEMDEB_REPORT(NULL, "%s(): bogus private pointer: %p", \
+              __func__, pvt); \
+            RTPP_MEMDEB_REPORT(NULL, "    called from %s+%d, %s()", \
+              fname, linen, funcn); \
+            abort(); \
+        } \
+    }
+
 void *
-rtpp_memdeb_malloc(size_t size, const char *fname, int linen, const char *funcn)
+rtpp_memdeb_malloc(size_t size, void *p, const char *fname, int linen, const char *funcn)
 {
     struct memdeb_node *mnp;
     struct memdeb_pfx *mpf;
     unsigned char *gp;
     uint64_t guard;
+    struct rtpp_memdeb_priv *pvt;
 
+    CHK_PRIV_VRB(pvt, p, fname, linen, funcn);
     mpf = malloc(offsetof(struct memdeb_pfx, real_data) + size + MEMDEB_GUARD_SIZE);
-    mnp = rtpp_memdeb_nget(fname, linen, funcn, 1);
+    mnp = rtpp_memdeb_nget(pvt, fname, linen, funcn, 1);
     if (mpf == NULL) {
         mnp->mstats.afails++;
-        pthread_mutex_unlock(memdeb_mutex);
+        pthread_mutex_unlock(&pvt->mutex);
         return (NULL);
     }
     mnp->mstats.nalloc++;
     mnp->mstats.balloc += size;
     mpf->magic = MEMDEB_SIGNATURE_ALLOC(mpf);
-    pthread_mutex_unlock(memdeb_mutex);
+    pthread_mutex_unlock(&pvt->mutex);
     mpf->asize = size;
     mpf->mnp = mnp;
     gp = (unsigned char *)mpf->real_data + size;
@@ -168,7 +254,7 @@ rtpp_memdeb_malloc(size_t size, const char *fname, int linen, const char *funcn)
 }
 
 static struct memdeb_pfx *
-ptr2mpf(void *ptr)
+ptr2mpf(struct rtpp_memdeb_priv *pvt, void *ptr)
 {
     char *cp;
     struct memdeb_pfx *mpf;
@@ -176,15 +262,22 @@ ptr2mpf(void *ptr)
     cp = ptr;
     cp -= offsetof(struct memdeb_pfx, real_data);
     mpf = (struct memdeb_pfx *)cp;
+
+    if (mpf->magic != MEMDEB_SIGNATURE_ALLOC(mpf)) {
+        /* Random of de-allocated pointer */
+        RTPP_MEMDEB_REPORT(pvt->_md_glog, "Random of de-allocated pointer");
+        abort();
+    }
     if (mpf->mnp->magic != MEMDEB_SIGNATURE) {
         /* Free of unallocated pointer or nodelist is corrupt */
+        RTPP_MEMDEB_REPORT(pvt->_md_glog, "Nodelist %p is corrupt", mpf->mnp);
         abort();
     }
     return (mpf);
 }
 
 void
-rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
+rtpp_memdeb_free(void *ptr, void *p, const char *fname, int linen, const char *funcn)
 {
     UNUSED(fname);
     UNUSED(linen);
@@ -192,28 +285,28 @@ rtpp_memdeb_free(void *ptr, const char *fname, int linen, const char *funcn)
     struct memdeb_pfx *mpf;
     unsigned char *gp;
     uint64_t guard;
+    struct rtpp_memdeb_priv *pvt;
 
-    mpf = ptr2mpf(ptr);
+    CHK_PRIV_VRB(pvt, p, fname, linen, funcn);
+    mpf = ptr2mpf(pvt, ptr);
     gp = (unsigned char *)mpf->real_data + mpf->asize;
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
     if (memcmp(gp, &guard, MEMDEB_GUARD_SIZE) != 0) {
         /* Guard is b0rken, probably out-of-bound write */
+        RTPP_MEMDEB_REPORT(pvt->_md_glog, "Guard is b0rken, probably out-of-bound write");
         abort();
     }
-    pthread_mutex_lock(memdeb_mutex);
-    if (mpf->magic != MEMDEB_SIGNATURE_ALLOC(mpf)) {
-        /* Random of de-allocated pointer */
-        abort();
-    }
+    pthread_mutex_lock(&pvt->mutex);
     mpf->mnp->mstats.nfree++;
     mpf->mnp->mstats.bfree += mpf->asize;
     mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
-    pthread_mutex_unlock(memdeb_mutex);
+    pthread_mutex_unlock(&pvt->mutex);
     return free(mpf);
 }
 
 void *
-rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const char *funcn)
+rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int linen,
+  const char *funcn)
 {
     UNUSED(fname);
     UNUSED(linen);
@@ -223,34 +316,35 @@ rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const
     uint64_t sig_save;
     unsigned char *gp;
     uint64_t guard;
+    struct rtpp_memdeb_priv *pvt;
 
-    mpf = ptr2mpf(ptr);
-    pthread_mutex_lock(memdeb_mutex);
-    sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
-    if (mpf->magic != sig_save) {
-        /* Random of de-allocated pointer */
-        abort();
+    CHK_PRIV_VRB(pvt, p, fname, linen, funcn);
+    if (ptr == NULL) {
+        return (rtpp_memdeb_malloc(size, pvt, fname, linen, funcn));
     }
+    mpf = ptr2mpf(pvt, ptr);
+    sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
+    pthread_mutex_lock(&pvt->mutex);
     mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
-    pthread_mutex_unlock(memdeb_mutex);
+    pthread_mutex_unlock(&pvt->mutex);
     cp = realloc(mpf, size + offsetof(struct memdeb_pfx, real_data) + MEMDEB_GUARD_SIZE);
     if (cp == NULL) {
-        pthread_mutex_lock(memdeb_mutex);
+        pthread_mutex_lock(&pvt->mutex);
         mpf->magic = sig_save;
         mpf->mnp->mstats.afails++;
-        pthread_mutex_unlock(memdeb_mutex);
+        pthread_mutex_unlock(&pvt->mutex);
         return (cp);
     }
     new_mpf = (struct memdeb_pfx *)cp;
     if (new_mpf != mpf) {
         sig_save = MEMDEB_SIGNATURE_ALLOC(new_mpf);
     }
-    pthread_mutex_lock(memdeb_mutex);
+    pthread_mutex_lock(&pvt->mutex);
     new_mpf->magic = sig_save;
     new_mpf->mnp->mstats.nrealloc++;
     new_mpf->mnp->mstats.brealloc += size;
     new_mpf->mnp->mstats.balloc += size - new_mpf->asize;
-    pthread_mutex_unlock(memdeb_mutex);
+    pthread_mutex_unlock(&pvt->mutex);
     new_mpf->asize = size;
     gp = (unsigned char *)new_mpf->real_data + size;
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
@@ -259,25 +353,28 @@ rtpp_memdeb_realloc(void *ptr, size_t size,  const char *fname, int linen, const
 }
 
 char *
-rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *funcn)
+rtpp_memdeb_strdup(const char *ptr, void *p, const char *fname, int linen, \
+  const char *funcn)
 {
     struct memdeb_node *mnp;
     struct memdeb_pfx *mpf;
     size_t size;
     unsigned char *gp;
     uint64_t guard;
+    struct rtpp_memdeb_priv *pvt;
 
+    CHK_PRIV_VRB(pvt, p, fname, linen, funcn);
     size = strlen(ptr) + 1;
     mpf = malloc(size + offsetof(struct memdeb_pfx, real_data) + MEMDEB_GUARD_SIZE);
-    mnp = rtpp_memdeb_nget(fname, linen, funcn, 1);
+    mnp = rtpp_memdeb_nget(pvt, fname, linen, funcn, 1);
     if (mpf == NULL) {
         mnp->mstats.afails++;
-        pthread_mutex_unlock(memdeb_mutex);
+        pthread_mutex_unlock(&pvt->mutex);
         return (NULL);
     }
     mnp->mstats.nalloc++;
     mnp->mstats.balloc += size;
-    pthread_mutex_unlock(memdeb_mutex);
+    pthread_mutex_unlock(&pvt->mutex);
     mpf->mnp = mnp;
     mpf->asize = size;
     memcpy(mpf->real_data, ptr, size);
@@ -289,20 +386,20 @@ rtpp_memdeb_strdup(const char *ptr, const char *fname, int linen, const char *fu
 }
 
 int
-rtpp_memdeb_asprintf(char **pp, const char *fmt, const char *fname,
+rtpp_memdeb_asprintf(char **pp, const char *fmt, void *p, const char *fname,
   int linen, const char *funcn, ...)
 {
     va_list ap;
     int rval;
 
     va_start(ap, funcn);
-    rval = rtpp_memdeb_vasprintf(pp, fmt, fname, linen, funcn, ap);
+    rval = rtpp_memdeb_vasprintf(pp, fmt, p, fname, linen, funcn, ap);
     va_end(ap);
     return (rval);
 }
 
 int
-rtpp_memdeb_vasprintf(char **pp, const char *fmt, const char *fname,
+rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
   int linen, const char *funcn, va_list ap)
 {
     int rval;
@@ -312,7 +409,7 @@ rtpp_memdeb_vasprintf(char **pp, const char *fmt, const char *fname,
     if (rval <= 0) {
         return (rval);
     }
-    tp = rtpp_memdeb_malloc(rval + 1, fname, linen, funcn);
+    tp = rtpp_memdeb_malloc(rval + 1, p, fname, linen, funcn);
     if (tp == NULL) {
         free(*pp);
         *pp = NULL;
@@ -325,34 +422,32 @@ rtpp_memdeb_vasprintf(char **pp, const char *fmt, const char *fname,
 }
 
 static int
-is_approved(const char *funcn)
+is_approved(struct rtpp_memdeb_priv *pvt, const char *funcn)
 {
     int i;
 
-    for (i = 0; approved_unallocated[i].funcn != NULL; i++) {
-        if (strcmp(approved_unallocated[i].funcn, funcn) != 0)
+    for (i = 0; pvt->au[i].funcn != NULL && i < MAX_APPROVED; i++) {
+        if (strcmp(pvt->au[i].funcn, funcn) != 0)
             continue;
-        return (approved_unallocated[i].max_nunalloc);
+        return (pvt->au[i].max_nunalloc);
     }
     return (0);
 }
 
 int
-rtpp_memdeb_dumpstats(struct cfg *cf)
+rtpp_memdeb_dumpstats(void *p, int nostdout)
 {
     struct memdeb_node *mnp;
     int errors_found, max_nunalloc;
     int64_t nunalloc;
-    rtpp_log_t glog;
+    struct rtpp_log *log;
+    struct rtpp_memdeb_priv *pvt;
 
+    CHK_PRIV(pvt, p);
     errors_found = 0;
-    if (cf != NULL) {
-        glog = cf->stable->glog;
-    } else {
-        memset(&glog, '\0', sizeof(glog));
-    }
-    pthread_mutex_lock(memdeb_mutex);
-    for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
+    log = pvt->_md_glog;
+    pthread_mutex_lock(&pvt->mutex);
+    for (mnp = pvt->nodes; mnp != NULL; mnp = mnp->next) {
         nunalloc = mnp->mstats.nalloc - mnp->mstats.nfree;
         if (mnp->mstats.afails == 0) {
             if (mnp->mstats.nalloc == 0)
@@ -363,43 +458,46 @@ rtpp_memdeb_dumpstats(struct cfg *cf)
                 continue;
         }
         if (nunalloc > 0) {
-            max_nunalloc = is_approved(mnp->funcn);
+            max_nunalloc = is_approved(pvt, mnp->funcn);
             if (max_nunalloc > 0 && nunalloc <= max_nunalloc)
                 continue;
         }
         if (errors_found == 0) {
-            RTPP_MEMDEB_REPORT(glog,
+            RTPP_MEMDEB_REPORT2(log, nostdout,
               "MEMDEB suspicious allocations:");
         }
         errors_found++;
-        RTPP_MEMDEB_REPORT(glog,
+        RTPP_MEMDEB_REPORT2(log, nostdout,
           "  %s+%d, %s(): nalloc = %" PRId64 ", balloc = %" PRId64 ", nfree = %"
           PRId64 ", bfree = %" PRId64 ", afails = %" PRId64 ", nunalloc_baseln"
           " = %" PRId64, mnp->fname, mnp->linen, mnp->funcn, mnp->mstats.nalloc,
           mnp->mstats.balloc, mnp->mstats.nfree, mnp->mstats.bfree,
           mnp->mstats.afails, mnp->mstats.nunalloc_baseln);
     }
-    pthread_mutex_unlock(memdeb_mutex);
+    pthread_mutex_unlock(&pvt->mutex);
     if (errors_found == 0) {
-        RTPP_MEMDEB_REPORT(glog,
+        RTPP_MEMDEB_REPORT2(log, nostdout,
           "MEMDEB: all clear");
     } else {
-        RTPP_MEMDEB_REPORT(glog,
+        RTPP_MEMDEB_REPORT2(log, nostdout,
           "MEMDEB: errors found: %d", errors_found);
     }
     return (errors_found);
 }
 
 void
-rtpp_memdeb_setbaseln(void)
+rtpp_memdeb_setbaseln(void *p)
 {
 
     struct memdeb_node *mnp;
+    struct rtpp_memdeb_priv *pvt;
 
-    pthread_mutex_lock(memdeb_mutex);
-    for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
+    CHK_PRIV(pvt, p);
+    pthread_mutex_lock(&pvt->mutex);
+    for (mnp = pvt->nodes; mnp != NULL; mnp = mnp->next) {
         if (mnp->magic != MEMDEB_SIGNATURE) {
             /* Nodelist is corrupt */
+            RTPP_MEMDEB_REPORT(pvt->_md_glog, "Nodelist %p is corrupt", mnp);
             abort();
         }
         if (mnp->mstats.nalloc == 0)
@@ -407,21 +505,24 @@ rtpp_memdeb_setbaseln(void)
         mnp->mstats.nunalloc_baseln = mnp->mstats.nalloc - mnp->mstats.nfree;
         mnp->mstats.bunalloc_baseln = mnp->mstats.balloc - mnp->mstats.bfree;
     }
-    pthread_mutex_unlock(memdeb_mutex);
+    pthread_mutex_unlock(&pvt->mutex);
 }
 
 int
-rtpp_memdeb_get_stats(const char *fname, const char *funcn,
+rtpp_memdeb_get_stats(void *p, const char *fname, const char *funcn,
   struct memdeb_stats *mstatp)
 {
     struct memdeb_node *mnp;
     int nmatches;
+    struct rtpp_memdeb_priv *pvt;
 
+    CHK_PRIV(pvt, p);
     nmatches = 0;
-    pthread_mutex_lock(memdeb_mutex);
-    for (mnp = nodes; mnp != NULL; mnp = mnp->next) {
+    pthread_mutex_lock(&pvt->mutex);
+    for (mnp = pvt->nodes; mnp != NULL; mnp = mnp->next) {
         if (mnp->magic != MEMDEB_SIGNATURE) {
             /* Nodelist is corrupt */
+            RTPP_MEMDEB_REPORT(pvt->_md_glog, "Nodelist %p is corrupt", mnp);
             abort();
         }
         if (funcn != NULL && strcmp(funcn, mnp->funcn) != 0) {
@@ -433,6 +534,6 @@ rtpp_memdeb_get_stats(const char *fname, const char *funcn,
         RTPP_MD_STATS_ADD(mstatp, &mnp->mstats);
         nmatches += 1;
     }
-    pthread_mutex_unlock(memdeb_mutex);
+    pthread_mutex_unlock(&pvt->mutex);
     return (nmatches);
 }
