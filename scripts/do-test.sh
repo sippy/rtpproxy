@@ -36,6 +36,11 @@ cd libg722
 make
 sudo make install
 cd ../..
+git clone https://github.com/sippy/libsrtp
+cd libsrtp
+./configure
+make
+cd ..
 sudo ldconfig
 autoreconf --force --install --verbose
 ./configure
