@@ -515,9 +515,9 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
       (uintmax_t)nrecvd_total);
     tsp->ploss_ratio = (double)(nsent_total - nrecvd_total) /
       (double)(nsent_total);
-    tsp->send_nerrs_ratio = (double)(nsent_total - send_nerrs_total) /
+    tsp->send_nerrs_ratio = (double)(send_nerrs_total) /
       (double)(nsent_total);
-     tsp->send_nshrts_ratio = (double)(nsent_total - send_nshrts_total) /
+     tsp->send_nshrts_ratio = (double)(send_nshrts_total) /
       (double)(nsent_total);
     return;
 }
@@ -538,7 +538,7 @@ print_test_stats(int nthreads, int test_kind, struct tstats *tp)
       tp->ploss_ratio * 100, tp->total_poll_rate);
     if (tp->send_nerrs_ratio != 0.0 || tp->send_nshrts_ratio != 0.0) {
         printf("  send channel issues: error = %f%%, short send %f%%\n",
-          tp->send_nerrs_ratio, tp->send_nshrts_ratio);
+          tp->send_nerrs_ratio * 100.0, tp->send_nshrts_ratio * 100.0);
     }
 }
 
