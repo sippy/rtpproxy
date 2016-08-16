@@ -106,9 +106,9 @@ struct workset
     int ndest;
     double stime;
     double etime;
-    struct destination dests[0];
     uint64_t send_nerrs;
     uint64_t send_nshrts;
+    struct destination dests[0]; /* <- keep this the last member! */
 };
 
 struct recvset
