@@ -107,6 +107,8 @@ struct workset
     double stime;
     double etime;
     struct destination dests[0];
+    uint64_t send_nerrs;
+    uint64_t send_nshrts;
 };
 
 struct recvset
@@ -333,7 +335,7 @@ timespec2dtime(time_t tv_sec, long tv_nsec)
 static void
 process_workset(struct workset *wp)
 {
-    int i, j;
+    int i, j, r;
     struct destination *dp;
 
     wp->stime = getdtime();
@@ -342,10 +344,15 @@ process_workset(struct workset *wp)
             dp = &(wp->dests[j]);
             dp->buf.pd.send_ts = rdtsc();
             if (dp->sconnected == 0) {
-                sendto(dp->sout, dp->buf.d, dp->buflen, 0, sstosa(&dp->daddr),
-                  SS_LEN(&dp->daddr));
+                r = sendto(dp->sout, dp->buf.d, dp->buflen, 0,
+                  sstosa(&dp->daddr), SS_LEN(&dp->daddr));
             } else {
-                send(dp->sout, dp->buf.d, dp->buflen, 0);
+                r = send(dp->sout, dp->buf.d, dp->buflen, 0);
+            }
+            if (r <= 0) {
+                wp->send_nerrs += 1;
+            } else if (r < dp->buflen) {
+                wp->send_nshrts += 1;
             }
         }
     }
@@ -452,7 +459,9 @@ generate_recvset(struct workset *wp, struct tconf *cfp)
 struct tstats {
     double total_pps;
     double total_poll_rate;
-    double ploss_rate;
+    double ploss_ratio;
+    double send_nerrs_ratio;
+    double send_nshrts_ratio;
 };
 
 static void
@@ -465,6 +474,7 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
     int i;
     double pps, tduration, poll_rate;
     uint64_t nrecvd_total, nsent_total, rtt_total;
+    uint64_t send_nerrs_total, send_nshrts_total;
 
     for (i = 0; i < nthreads; i++) {
         wsp[i] = generate_workset(npkts, cfp);
@@ -482,8 +492,7 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         pthread_create(&wsp[i]->tid, NULL, (void *(*)(void *))process_workset, wsp[i]);
         pthread_create(&rsp[i]->tid, NULL, (void *(*)(void *))process_recvset, rsp[i]);
     }
-    nrecvd_total = 0;
-    nsent_total = 0;
+    nrecvd_total = nsent_total = send_nerrs_total = send_nshrts_total = 0;
     for (i = 0; i < nthreads; i++) {
         pthread_join(wsp[i]->tid, NULL);
         rsp[i]->done = 1;
@@ -491,6 +500,8 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         nsent_total += wsp[i]->nreps * wsp[i]->ndest;
         pps = wsp[i]->nreps * wsp[i]->ndest;
         tduration = wsp[i]->etime - wsp[i]->stime;
+        send_nerrs_total += wsp[i]->send_nerrs;
+        send_nshrts_total += wsp[i]->send_nshrts;
         pps /= tduration;
         tsp->total_pps += pps;
         nrecvd_total += rsp[i]->nrecvd_total;
@@ -502,7 +513,11 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
     }
     fprintf(stderr, "nsent_total=%ju, nrecvd_total=%ju\n", (uintmax_t)nsent_total,
       (uintmax_t)nrecvd_total);
-    tsp->ploss_rate = (double)(nsent_total - nrecvd_total) /
+    tsp->ploss_ratio = (double)(nsent_total - nrecvd_total) /
+      (double)(nsent_total);
+    tsp->send_nerrs_ratio = (double)(nsent_total - send_nerrs_total) /
+      (double)(nsent_total);
+     tsp->send_nshrts_ratio = (double)(nsent_total - send_nshrts_total) /
       (double)(nsent_total);
     return;
 }
@@ -512,6 +527,19 @@ usage(void)
 {
 
     exit(1);
+}
+
+static void
+print_test_stats(int nthreads, int test_kind, struct tstats *tp)
+{
+
+    printf("nthreads = %d, connected = %d: total PPS = %f, "
+      "loss %f%%, poll %f\n", nthreads, test_kind, tp->total_pps,
+      tp->ploss_ratio * 100, tp->total_poll_rate);
+    if (tp->send_nerrs_ratio != 0.0 || tp->send_nshrts_ratio != 0.0) {
+        printf("  send channel issues: error = %f%%, short send %f%%\n",
+          tp->send_nerrs_ratio, tp->send_nshrts_ratio);
+    }
 }
 
 int
@@ -612,17 +640,13 @@ main(int argc, char **argv)
         if (cfg.test_kind != TEST_KIND_ALL) {
             memset(&tstats, '\0', sizeof(struct tstats));
             run_test(i, cfg.test_kind, &cfg, &tstats);
-            printf("nthreads = %d, connected = %d: total PPS = %f, "
-              "loss %f%%, poll rate %f\n", i, cfg.test_kind, tstats.total_pps,
-              tstats.ploss_rate * 100, tstats.total_poll_rate);
+            print_test_stats(i, cfg.test_kind, &tstats);
             continue;
         }
         for (j = TEST_KIND_ALL + 1; j <= TEST_KIND_MAX; j++) {
             memset(&tstats, '\0', sizeof(struct tstats));
             run_test(i, j, &cfg, &tstats);
-            printf("nthreads = %d, connected = %d: total PPS = %f, "
-              "loss %f%%, poll rate %f\n", i, j, tstats.total_pps,
-              tstats.ploss_rate * 100, tstats.total_poll_rate);
+            print_test_stats(i, j, &tstats);
         }
     }
     exit(0);
