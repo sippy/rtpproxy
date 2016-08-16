@@ -473,7 +473,7 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
     struct recvset *rsp[32];
     int i;
     double pps, tduration, poll_rate;
-    uint64_t nrecvd_total, nsent_total, rtt_total;
+    uint64_t nrecvd_total, nsent_total, nsent_succ_total, rtt_total;
     uint64_t send_nerrs_total, send_nshrts_total;
 
     for (i = 0; i < nthreads; i++) {
@@ -498,10 +498,10 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         rsp[i]->done = 1;
         pthread_join(rsp[i]->tid, NULL);
         nsent_total += wsp[i]->nreps * wsp[i]->ndest;
-        pps = wsp[i]->nreps * wsp[i]->ndest;
         tduration = wsp[i]->etime - wsp[i]->stime;
         send_nerrs_total += wsp[i]->send_nerrs;
         send_nshrts_total += wsp[i]->send_nshrts;
+        pps = (wsp[i]->nreps * wsp[i]->ndest) - wsp[i]->send_nerrs;
         pps /= tduration;
         tsp->total_pps += pps;
         nrecvd_total += rsp[i]->nrecvd_total;
@@ -511,10 +511,12 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         release_workset(wsp[i]);
         release_recvset(rsp[i]);
     }
-    fprintf(stderr, "nsent_total=%ju, nrecvd_total=%ju\n", (uintmax_t)nsent_total,
+    nsent_succ_total = nsent_total -= send_nerrs_total;
+    fprintf(stderr, "nsent_total=%ju, nsent_succ_total=%ju, nrecvd_total=%ju\n",
+      (uintmax_t)nsent_total, (uintmax_t)nsent_succ_total,
       (uintmax_t)nrecvd_total);
-    tsp->ploss_ratio = (double)(nsent_total - nrecvd_total) /
-      (double)(nsent_total);
+    tsp->ploss_ratio = (double)(nsent_succ_total - nrecvd_total) /
+      (double)(nsent_succ_total);
     tsp->send_nerrs_ratio = (double)(send_nerrs_total) /
       (double)(nsent_total);
      tsp->send_nshrts_ratio = (double)(send_nshrts_total) /
