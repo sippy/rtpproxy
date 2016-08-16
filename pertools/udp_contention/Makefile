@@ -36,5 +36,6 @@ BINDIR?=	${LOCALBASE}/bin
 
 #CFLAGS+=	-I../siplog -I${LOCALBASE}/include
 LDADD+=		-lpthread -lm
+CFLAGS+=	-I../../src
 
 .include <bsd.prog.mk>
