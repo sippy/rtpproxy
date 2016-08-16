@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <fcntl.h>
+#include <netdb.h>
 #include <poll.h>
 #include <pthread.h>
 #include <signal.h>
@@ -16,6 +17,8 @@
 
 #include <machine/cpufunc.h>
 
+#include "rtpp_network.h"
+
 #define TEST_KIND_ALL         0
 #define TEST_KIND_UNCONNECTED 1
 #define TEST_KIND_CONNECTED   2
@@ -27,6 +30,8 @@ struct tconf {
     int nthreads_min;
     int paylen_min;
     int paylen_max;
+    struct addrinfo *dstaddrs;
+    int ndstaddrs;
     const char *dstaddr;
     int dstnetpref;
     int test_kind;
@@ -34,25 +39,43 @@ struct tconf {
 };
 
 static int
-genrandomdest(struct tconf *cfp, struct sockaddr_in *s_in)
+genrandomdest(struct tconf *cfp, struct sockaddr *sap)
 {
-    struct in_addr raddr;
     long rnum;
     uint16_t rport;
 
-    assert(s_in->sin_family == AF_INET);
-
-    if (inet_aton(cfp->dstaddr, &raddr) == 0) {
-        return (-1);
-    }
-    rnum = random() >> cfp->dstnetpref;
-    raddr.s_addr |= htonl(rnum);
     do {
         rport = (uint16_t)(random());
     } while (rport < 1000);
-    s_in->sin_addr = raddr;
-    s_in->sin_port = htons(rport);
-    return (0);
+    if (cfp->dstaddrs == NULL) {
+        struct in_addr raddr;
+        struct sockaddr_in *s_in;
+
+        if (inet_aton(cfp->dstaddr, &raddr) == 0) {
+            return (-1);
+        }
+        rnum = random() >> cfp->dstnetpref;
+        raddr.s_addr |= htonl(rnum);
+        s_in = satosin(sap);
+        s_in->sin_addr = raddr;
+        s_in->sin_port = htons(rport);
+        s_in->sin_family = AF_INET;
+        return (0);
+    } else {
+        struct addrinfo *i_res;
+
+        rnum = random() % cfp->ndstaddrs;
+
+        for (i_res = cfp->dstaddrs; i_res != NULL; i_res = i_res->ai_next) {
+            if (rnum != 0) {
+                rnum--;
+                continue;
+            }
+            memcpy(sap, i_res->ai_addr, i_res->ai_addrlen);
+            return (0);
+        }
+    }
+    abort();
 }
 
 struct pktdata {
@@ -71,7 +94,7 @@ struct destination
     int sin;
     int sout;
     int sconnected;
-    struct sockaddr_in daddr;
+    struct sockaddr_storage daddr;
     int buflen;
     union pkt buf;
 };
@@ -148,12 +171,11 @@ generate_workset(int setsize, struct tconf *cfp)
     wp->ndest = setsize;
     for (i = 0; i < setsize; i++) {
         dp = &(wp->dests[i]);
-        dp->daddr.sin_family = AF_INET;
-        dp->sout = dp->sin = socket_ctor(dp->daddr.sin_family);
+        genrandomdest(cfp, sstosa(&dp->daddr));
+        dp->sout = dp->sin = socket_ctor(sstosa(&dp->daddr)->sa_family);
         if (dp->sin == -1) {
             goto e1;
         }
-        genrandomdest(cfp, &dp->daddr);
         genrandombuf(dp, cfp->paylen_min, cfp->paylen_max);
         dp->buf.pd.magic = cfp->magic;
         dp->buf.pd.idx = i;
@@ -167,43 +189,10 @@ e1:
     return (NULL);
 }
 
-#if !defined(sstosa)
-#define sstosa(ss)      ((struct sockaddr *)(ss))
-#endif
 #if !defined(sstosin)
+/* This should go, once we make it protocol-agnostic */
 #define sstosin(ss)      ((struct sockaddr_in *)(ss))
 #endif
-
-#if !defined(SA_LEN)
-#define SA_LEN(sa) \
-  (((sa)->sa_family == AF_INET) ? \
-  sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
-#endif
-#if !defined(SS_LEN)
-#define SS_LEN(ss) \
-  (((ss)->ss_family == AF_INET) ? \
-  sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
-#endif
-
-int
-local4remote(struct sockaddr *ra, struct sockaddr_storage *la)
-{
-    int s, r;
-    socklen_t llen;
-
-    s = socket(ra->sa_family, SOCK_DGRAM, 0);
-    if (s == -1) {
-        return (-1);
-    }
-    if (connect(s, ra, SA_LEN(ra)) == -1) {
-        close(s);
-        return (-1);
-    }
-    llen = sizeof(*la);
-    r = getsockname(s, sstosa(la), &llen);
-    close(s);
-    return (r);
-}
 
 static int
 connect_workset(struct workset *wp, int test_type)
@@ -220,7 +209,7 @@ connect_workset(struct workset *wp, int test_type)
         dp = &(wp->dests[i]);
         if (dp->sconnected == 0) {
             if (test_type == TEST_KIND_HALFCONN) {
-                dp->sout = socket_ctor(dp->daddr.sin_family);
+                dp->sout = socket_ctor(sstosa(&dp->daddr)->sa_family);
                 if (dp->sout == -1) {
                     rval -= 1;
                     dp->sout = dp->sin;
@@ -272,7 +261,7 @@ connect_workset(struct workset *wp, int test_type)
                     continue;
                 }
             }
-            if (connect(dp->sout, sstosa(&dp->daddr), sizeof(dp->daddr)) != 0) {
+            if (connect(dp->sout, sstosa(&dp->daddr), SS_LEN(&dp->daddr)) != 0) {
                 rval -= 1;
                 continue;
             }
@@ -354,7 +343,7 @@ process_workset(struct workset *wp)
             dp->buf.pd.send_ts = rdtsc();
             if (dp->sconnected == 0) {
                 sendto(dp->sout, dp->buf.d, dp->buflen, 0, sstosa(&dp->daddr),
-                  sizeof(dp->daddr));
+                  SS_LEN(&dp->daddr));
             } else {
                 send(dp->sout, dp->buf.d, dp->buflen, 0);
             }
@@ -529,11 +518,12 @@ int
 main(int argc, char **argv)
 {
     struct tconf cfg;
-    int i, j, ch;
+    int i, j, ch, dstishost;
     struct tstats tstats;
     char *cp;
 
     memset(&cfg, '\0', sizeof(struct tconf));
+    dstishost = 0;
     cfg.nthreads_max = 10;
     cfg.nthreads_min = 1;
     cfg.dstaddr = "170.178.193.146";
@@ -542,7 +532,7 @@ main(int argc, char **argv)
     cfg.paylen_min = 30;
     cfg.paylen_max = 170;
 
-    while ((ch = getopt(argc, argv, "m:M:k:p:P:")) != -1) {
+    while ((ch = getopt(argc, argv, "m:M:k:p:P:h")) != -1) {
         switch (ch) {
         case 'm':
             cfg.nthreads_min = atoi(optarg);
@@ -567,6 +557,10 @@ main(int argc, char **argv)
             cfg.paylen_max = atoi(optarg);
             break;
 
+        case 'h':
+            dstishost = 1;
+            break;
+
         case '?':
         default:
             usage();
@@ -581,13 +575,35 @@ main(int argc, char **argv)
     if (argc != 1) {
         usage();
     }
-    cfg.dstaddr = argv[0];
-    cp = strrchr(cfg.dstaddr, '/');
-    if (cp != NULL) {
-        cp[0] = '\0';
-        cfg.dstnetpref = atoi(cp + 1);
-        if (cfg.dstnetpref < 1 || cfg.dstnetpref > 32) {
-            usage();
+    if (dstishost == 0) {
+        cfg.dstaddr = argv[0];
+        cp = strrchr(cfg.dstaddr, '/');
+        if (cp != NULL) {
+            cp[0] = '\0';
+            cfg.dstnetpref = atoi(cp + 1);
+            if (cfg.dstnetpref < 1 || cfg.dstnetpref > 32) {
+                usage();
+            }
+        }
+    } else {
+        struct addrinfo hints, *i_res;
+
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_flags = 0;
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_DGRAM;     /* UDP */
+        i = getaddrinfo(argv[0], "5060", &hints, &cfg.dstaddrs);
+        if (i != 0) {
+            fprintf(stderr, "%s: %s\n", argv[0], gai_strerror(i));
+            exit(1);
+        }
+        for (i_res = cfg.dstaddrs; i_res != NULL; i_res = i_res->ai_next) {
+            cfg.ndstaddrs++;
+        }
+        if (cfg.ndstaddrs == 0) {
+            fprintf(stderr, "getaddrinfo() returned no error but list is "
+              "empty!\n");
+            abort();
         }
     }
 
