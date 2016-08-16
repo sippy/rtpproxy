@@ -511,7 +511,7 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         release_workset(wsp[i]);
         release_recvset(rsp[i]);
     }
-    nsent_succ_total = nsent_total -= send_nerrs_total;
+    nsent_succ_total = nsent_total - send_nerrs_total;
     fprintf(stderr, "nsent_total=%ju, nsent_succ_total=%ju, nrecvd_total=%ju\n",
       (uintmax_t)nsent_total, (uintmax_t)nsent_succ_total,
       (uintmax_t)nrecvd_total);
