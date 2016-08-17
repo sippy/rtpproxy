@@ -68,6 +68,7 @@ struct tconf {
     int dstnetpref;
     int test_kind;
     uint64_t magic;
+    int sock_block; /* Test with blocking sockets */
 };
 
 static int
@@ -175,7 +176,7 @@ genrandombuf(struct destination *dp, int minlen, int maxlen)
 }
 
 static int
-socket_ctor(int domain)
+socket_ctor(int domain, struct tconf *cfp)
 {
     int s, flags;
 
@@ -183,8 +184,10 @@ socket_ctor(int domain)
     if (s == -1) {
         return (-1);
     }
-    flags = fcntl(s, F_GETFL);
-    fcntl(s, F_SETFL, flags | O_NONBLOCK);
+    if (cfp->sock_block == 0) {
+        flags = fcntl(s, F_GETFL);
+        fcntl(s, F_SETFL, flags | O_NONBLOCK);
+    }
     return (s);
 }
 
@@ -206,7 +209,7 @@ generate_workset(int setsize, struct tconf *cfp)
     for (i = 0; i < setsize; i++) {
         dp = &(wp->dests[i]);
         genrandomdest(cfp, sstosa(&dp->daddr));
-        dp->sout = dp->sin = socket_ctor(sstosa(&dp->daddr)->sa_family);
+        dp->sout = dp->sin = socket_ctor(sstosa(&dp->daddr)->sa_family, cfp);
         if (dp->sin == -1) {
             goto e1;
         }
@@ -229,7 +232,7 @@ e1:
 #endif
 
 static int
-connect_workset(struct workset *wp, int test_type)
+connect_workset(struct workset *wp, int test_type, struct tconf *cfp)
 {
     int i, r, reuse;
     int rval;
@@ -243,7 +246,7 @@ connect_workset(struct workset *wp, int test_type)
         dp = &(wp->dests[i]);
         if (dp->sconnected == 0) {
             if (test_type == TEST_KIND_HALFCONN) {
-                dp->sout = socket_ctor(sstosa(&dp->daddr)->sa_family);
+                dp->sout = socket_ctor(sstosa(&dp->daddr)->sa_family, cfp);
                 if (dp->sout == -1) {
                     rval -= 1;
                     dp->sout = dp->sin;
@@ -513,7 +516,7 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         assert(wsp[i] != NULL);
         wsp[i]->nreps = nreps;
         if (test_type == TEST_KIND_CONNECTED || test_type == TEST_KIND_HALFCONN) {
-            if (connect_workset(wsp[i], test_type) != 0) {
+            if (connect_workset(wsp[i], test_type, cfp) != 0) {
                 fprintf(stderr, "connect_workset() failed\n");
                 abort();
             }
@@ -594,7 +597,7 @@ main(int argc, char **argv)
     cfg.paylen_min = 30;
     cfg.paylen_max = 170;
 
-    while ((ch = getopt(argc, argv, "m:M:k:p:P:h")) != -1) {
+    while ((ch = getopt(argc, argv, "m:M:k:p:P:hb")) != -1) {
         switch (ch) {
         case 'm':
             cfg.nthreads_min = atoi(optarg);
@@ -621,6 +624,10 @@ main(int argc, char **argv)
 
         case 'h':
             dstishost = 1;
+            break;
+
+        case 'b':
+            cfg.sock_block = 1;
             break;
 
         case '?':
