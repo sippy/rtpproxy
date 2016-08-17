@@ -26,6 +26,25 @@ rdtsc(void)
     __asm __volatile("rdtsc" : "=a" (low), "=d" (high));
     return (low | ((uint64_t)high << 32));
 }
+
+void
+srandomdev(void)
+{
+    int fd;
+    unsigned long junk;
+    struct timeval tv;
+
+    fd = open("/dev/urandom", O_RDONLY, 0);
+    if (fd >= 0) {
+        read(fd, &junk, sizeof(junk));
+        close(fd);
+    } else {
+        junk = 0;
+    }
+
+    gettimeofday(&tv, NULL);
+    srandom((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
+}
 #endif
 
 #include "rtpp_network.h"
