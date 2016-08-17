@@ -66,7 +66,7 @@ do
         sleep 1
       fi
       setup_playback ${delay} ${codec} ${TARGET_PORT} "${PIFILE}" | \
-       ${RTPPROXY} -l 0.0.0.0 -6 /:: -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>playback1.rlog&
+       ${RTPPROXY} -l 0.0.0.0 -6 /:: -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d dbug > playback1.rout 2>playback1.rlog&
       PLB_PID=${!}
       ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace
       ##echo ${TCPD_PID}
