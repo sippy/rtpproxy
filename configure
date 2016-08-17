@@ -12819,7 +12819,7 @@ else
 fi
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile"
 
 
 
@@ -13857,6 +13857,8 @@ do
     "libexecinfo/Makefile") CONFIG_FILES="$CONFIG_FILES libexecinfo/Makefile" ;;
     "modules/Makefile") CONFIG_FILES="$CONFIG_FILES modules/Makefile" ;;
     "modules/acct_csv/Makefile") CONFIG_FILES="$CONFIG_FILES modules/acct_csv/Makefile" ;;
+    "pertools/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/Makefile" ;;
+    "pertools/udp_contention/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/udp_contention/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
