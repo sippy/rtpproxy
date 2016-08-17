@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <netinet/in.h>
@@ -46,7 +47,9 @@ srandomdev(void)
     gettimeofday(&tv, NULL);
     srandom((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
 }
-#define SO_REUSEPORT SO_REUSEADDR
+# if !defined(SO_REUSEPORT)
+#  define SO_REUSEPORT SO_REUSEADDR
+# endif
 #endif
 
 #include "rtpp_network.h"
@@ -512,6 +515,14 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
     double pps, tduration, poll_rate;
     uint64_t nrecvd_total, nsent_total, nsent_succ_total, rtt_total;
     uint64_t send_nerrs_total, send_nshrts_total;
+    struct rlimit nofile_limit; 
+
+    nofile_limit.rlim_cur = nofile_limit.rlim_max = (npkts * nthreads) + 10;
+    if (setrlimit(RLIMIT_NOFILE, &nofile_limit) != 0) {
+        fprintf(stderr, "setrlimit(RLIMIT_NOFILE, %d) failed\n",
+          npkts * nthreads);
+        exit(1);
+    }
 
     for (i = 0; i < nthreads; i++) {
         wsp[i] = generate_workset(npkts, cfp);
