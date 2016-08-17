@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <assert.h>
@@ -45,6 +46,7 @@ srandomdev(void)
     gettimeofday(&tv, NULL);
     srandom((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
 }
+#define SO_REUSEPORT SO_REUSEADDR
 #endif
 
 #include "rtpp_network.h"
