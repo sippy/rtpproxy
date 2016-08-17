@@ -211,6 +211,8 @@ generate_workset(int setsize, struct tconf *cfp)
         genrandomdest(cfp, sstosa(&dp->daddr));
         dp->sout = dp->sin = socket_ctor(sstosa(&dp->daddr)->sa_family, cfp);
         if (dp->sin == -1) {
+            fprintf(stderr, "generate_workset: cannot create socket #%d out"
+              " of %d\n", i, setsize);
             goto e1;
         }
         genrandombuf(dp, cfp->paylen_min, cfp->paylen_max);
