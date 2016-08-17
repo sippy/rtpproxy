@@ -15,7 +15,18 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <machine/cpufunc.h>
+#if defined(__FreeBSD__)
+# include <machine/cpufunc.h>
+#else
+static __inline uint64_t
+rdtsc(void)
+{
+    uint32_t low, high;
+
+    __asm __volatile("rdtsc" : "=a" (low), "=d" (high));
+    return (low | ((uint64_t)high << 32));
+}
+#endif
 
 #include "rtpp_network.h"
 
