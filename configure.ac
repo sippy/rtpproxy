@@ -117,6 +117,24 @@ then
    AC_DEFINE([ENABLE_SNDFILE], 1, [Define if you have libsndfile library installed]))
 fi
 
+# libsrtp
+AC_CHECK_HEADER(srtp/srtp.h, found_libsrtp=yes)
+if test "$found_libsrtp" = yes
+then
+  AC_CHECK_LIB(srtp, srtp_init,
+   LIBS_SRTP="-lsrtp"
+   AC_DEFINE([ENABLE_SRTP], 1, [Define if you have libsrtp library installed]))
+fi
+
+# libelperiodic
+AC_CHECK_HEADER(elperiodic.h, found_libelperiodic=yes)
+if test "$found_libelperiodic" = yes
+then
+  AC_CHECK_LIB(elperiodic, prdic_init,
+   LIBS_SRTP="-lelperiodic"
+   AC_DEFINE([ENABLE_ELPERIODIC], 1, [Define if you have libelperiodic library installed]))
+fi
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h sys/time.h unistd.h err.h endian.h sys/endian.h])
