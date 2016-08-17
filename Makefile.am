@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS=	-I m4
 
 AUTOMAKE_OPTIONS=	foreign
 
-SUBDIRS=	libexecinfo src makeann
+SUBDIRS=	libexecinfo src makeann pertools
 
 if BUILD_MODULES
 SUBDIRS+=	modules

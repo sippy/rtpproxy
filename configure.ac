@@ -165,7 +165,7 @@ AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
- modules/acct_csv/Makefile])
+ modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile])
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_GSM)
