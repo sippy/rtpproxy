@@ -11,6 +11,9 @@
 /* Define if you have bcg729 library */
 #undef ENABLE_BCG729
 
+/* Define if you have libelperiodic library installed */
+#undef ENABLE_ELPERIODIC
+
 /* Define if you have libg722 library installed */
 #undef ENABLE_G722
 
@@ -25,6 +28,9 @@
 
 /* Define if you have libsndfile library installed */
 #undef ENABLE_SNDFILE
+
+/* Define if you have libsrtp library installed */
+#undef ENABLE_SRTP
 
 /* Define to 1 if you have `alloca', as a function or macro. */
 #undef HAVE_ALLOCA
