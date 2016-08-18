@@ -635,7 +635,6 @@ ac_includes_default="\
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
-LIBS_ELPERIODIC
 LIBS_SRTP
 LIBS_SNDFILE
 LIBS_G722
@@ -643,6 +642,8 @@ LIBS_G729
 LIBS_GSM
 LIBS_DL
 AM_CFLAGS
+BUILD_ELPERIODIC_FALSE
+BUILD_ELPERIODIC_TRUE
 ENABLE_MODULE_IF_FALSE
 ENABLE_MODULE_IF_TRUE
 BUILD_MODULES_FALSE
@@ -12237,8 +12238,7 @@ fi
 $as_echo "$ac_cv_lib_elperiodic_prdic_init" >&6; }
 if test "x$ac_cv_lib_elperiodic_prdic_init" = xyes; then :
   LIBS_ELPERIODIC="-lelperiodic -lm"
-
-$as_echo "#define ENABLE_ELPERIODIC 1" >>confdefs.h
+   EXTERNAL_ELPERIODIC=1
 
 fi
 
@@ -12928,9 +12928,16 @@ else
   ENABLE_MODULE_IF_FALSE=
 fi
 
+ if test "${EXTERNAL_ELPERIODIC}" != 1; then
+  BUILD_ELPERIODIC_TRUE=
+  BUILD_ELPERIODIC_FALSE='#'
+else
+  BUILD_ELPERIODIC_TRUE='#'
+  BUILD_ELPERIODIC_FALSE=
+fi
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile"
 
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile libelperiodic/Makefile"
 
 
 
@@ -13086,6 +13093,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${ENABLE_MODULE_IF_TRUE}" && test -z "${ENABLE_MODULE_IF_FALSE}"; then
   as_fn_error $? "conditional \"ENABLE_MODULE_IF\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_ELPERIODIC_TRUE}" && test -z "${BUILD_ELPERIODIC_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_ELPERIODIC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -13971,6 +13982,7 @@ do
     "modules/acct_csv/Makefile") CONFIG_FILES="$CONFIG_FILES modules/acct_csv/Makefile" ;;
     "pertools/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/Makefile" ;;
     "pertools/udp_contention/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/udp_contention/Makefile" ;;
+    "libelperiodic/Makefile") CONFIG_FILES="$CONFIG_FILES libelperiodic/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

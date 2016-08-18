@@ -1,6 +1,13 @@
 bin_PROGRAMS=udp_contention
 MAINSRCDIR=$(top_srcdir)/src
 udp_contention_SOURCES=udp_contention.c
-udp_contention_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
-
+udp_contention_LDADD=-lm -lpthread
 DEFS=   -I$(MAINSRCDIR) @DEFS@
+
+if BUILD_ELPERIODIC
+udp_contention_SOURCES+=${MAINSRCDIR}/rtpp_math.c
+udp_contention_LDADD+=$(top_srcdir)/libelperiodic/libelperiodic.a
+DEFS+=	-I$(top_srcdir)/libelperiodic
+else
+udp_contention_LDADD+=@LIBS_ELPERIODIC@
+endif

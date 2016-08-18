@@ -1,0 +1,3 @@
+[submodule "libelperiodic"]
+	path = libelperiodic
+	url = git@github.com:sobomax/libelperiodic.git

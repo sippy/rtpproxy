@@ -11,9 +11,6 @@
 /* Define if you have bcg729 library */
 #undef ENABLE_BCG729
 
-/* Define if you have libelperiodic library installed */
-#undef ENABLE_ELPERIODIC
-
 /* Define if you have libg722 library installed */
 #undef ENABLE_G722
 

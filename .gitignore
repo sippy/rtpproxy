@@ -18,6 +18,7 @@ makeann/makeann
 src/config.h
 src/config_std.h
 libexecinfo/libexecinfo.a
+libelperiodic/Makefile
 .libs
 *.lo
 *.la

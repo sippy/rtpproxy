@@ -89,6 +89,10 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = udp_contention$(EXEEXT)
+@BUILD_ELPERIODIC_TRUE@am__append_1 = ${MAINSRCDIR}/rtpp_math.c
+@BUILD_ELPERIODIC_TRUE@am__append_2 = $(top_srcdir)/libelperiodic/libelperiodic.a
+@BUILD_ELPERIODIC_TRUE@am__append_3 = -I$(top_srcdir)/libelperiodic
+@BUILD_ELPERIODIC_FALSE@am__append_4 = @LIBS_ELPERIODIC@
 subdir = pertools/udp_contention
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -104,9 +108,13 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_udp_contention_OBJECTS = udp_contention.$(OBJEXT)
+am__udp_contention_SOURCES_DIST = udp_contention.c \
+	${MAINSRCDIR}/rtpp_math.c
+@BUILD_ELPERIODIC_TRUE@am__objects_1 = rtpp_math.$(OBJEXT)
+am_udp_contention_OBJECTS = udp_contention.$(OBJEXT) $(am__objects_1)
 udp_contention_OBJECTS = $(am_udp_contention_OBJECTS)
-udp_contention_DEPENDENCIES =
+am__DEPENDENCIES_1 =
+udp_contention_DEPENDENCIES = $(am__append_2) $(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -146,7 +154,7 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(udp_contention_SOURCES)
-DIST_SOURCES = $(udp_contention_SOURCES)
+DIST_SOURCES = $(am__udp_contention_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -189,7 +197,7 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DEFS = -I$(MAINSRCDIR) @DEFS@
+DEFS = -I$(MAINSRCDIR) @DEFS@ $(am__append_3)
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
@@ -298,8 +306,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 MAINSRCDIR = $(top_srcdir)/src
-udp_contention_SOURCES = udp_contention.c
-udp_contention_LDADD = -lm -lpthread @LIBS_ELPERIODIC@
+udp_contention_SOURCES = udp_contention.c $(am__append_1)
+udp_contention_LDADD = -lm -lpthread $(am__append_2) $(am__append_4)
 all: all-am
 
 .SUFFIXES:
@@ -393,6 +401,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_math.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udp_contention.Po@am__quote@
 
 .c.o:
@@ -415,6 +424,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+rtpp_math.o: ${MAINSRCDIR}/rtpp_math.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_math.o -MD -MP -MF $(DEPDIR)/rtpp_math.Tpo -c -o rtpp_math.o `test -f '${MAINSRCDIR}/rtpp_math.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_math.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_math.Tpo $(DEPDIR)/rtpp_math.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_math.c' object='rtpp_math.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_math.o `test -f '${MAINSRCDIR}/rtpp_math.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_math.c
+
+rtpp_math.obj: ${MAINSRCDIR}/rtpp_math.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_math.obj -MD -MP -MF $(DEPDIR)/rtpp_math.Tpo -c -o rtpp_math.obj `if test -f '${MAINSRCDIR}/rtpp_math.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_math.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_math.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_math.Tpo $(DEPDIR)/rtpp_math.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_math.c' object='rtpp_math.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_math.obj `if test -f '${MAINSRCDIR}/rtpp_math.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_math.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_math.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

@@ -56,9 +56,7 @@ srandomdev(void)
 
 #include "config.h"
 
-#if ENABLE_ELPERIODIC
 #include "elperiodic.h"
-#endif
 
 #include "rtpp_network.h"
 
@@ -403,7 +401,6 @@ process_workset(struct workset *wp)
 {
     int i, j, r;
     struct destination *dp;
-#if ENABLE_ELPERIODIC
     void *prdc;
 
     if (wp->max_pps > 0.0) {
@@ -411,7 +408,6 @@ process_workset(struct workset *wp)
     } else {
         prdc = NULL;
     }
-#endif
     wp->stime = getdtime();
     for (i = 0; i < wp->nreps; i++) {
         for (j = 0; j < wp->ndest; j++) {
@@ -429,18 +425,14 @@ process_workset(struct workset *wp)
                 wp->send_nshrts += 1;
             }
         }
-#if ENABLE_ELPERIODIC
         if (prdc != NULL) {
             prdic_procrastinate(prdc);
         }
-#endif
     }
     wp->etime = getdtime();
-#if ENABLE_ELPERIODIC
     if (prdc != NULL) {
         prdic_free(prdc);
     }
-#endif
 }
 
 static void
@@ -453,7 +445,6 @@ process_recvset(struct recvset  *rp)
     socklen_t fromlen;
     uint64_t rtime, rtt;
     int pollto;
-#if ENABLE_ELPERIODIC
     void *prdc;
 
     if (rp->max_pollps > 0.0) {
@@ -463,9 +454,6 @@ process_recvset(struct recvset  *rp)
         prdc = NULL;
         pollto = 100;
     }
-#else
-    pollto = 100;
-#endif
 
     rp->stime = getdtime();
     for (;;) {
@@ -498,20 +486,14 @@ process_recvset(struct recvset  *rp)
             nready -= 1;
         }
 procrastinate:
-#if ENABLE_ELPERIODIC
         if (prdc != NULL) {
             prdic_procrastinate(prdc);
         }
-#else
-        continue;
-#endif
     }
     rp->etime = getdtime();
-#if ENABLE_ELPERIODIC
     if (prdc != NULL) {
         prdic_free(prdc);
     }
-#endif
 }
 
 
@@ -759,12 +741,10 @@ main(int argc, char **argv)
             cfg.sock_block = 1;
             break;
 
-#if ENABLE_ELPERIODIC
         case 'N':
             cfg.nsess_per_thr = atoi(optarg);
             cfg.max_sess_pps = 100.0;
             break;
-#endif
 
         case '?':
         default:

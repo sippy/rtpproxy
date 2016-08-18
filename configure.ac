@@ -132,7 +132,8 @@ if test "$found_libelperiodic" = yes
 then
   AC_CHECK_LIB(elperiodic, prdic_init,
    LIBS_ELPERIODIC="-lelperiodic -lm"
-   AC_DEFINE([ENABLE_ELPERIODIC], 1, [Define if you have libelperiodic library installed]),,-lm)
+   EXTERNAL_ELPERIODIC=1
+   ,,-lm)
 fi
 
 # Checks for header files.
@@ -180,10 +181,12 @@ AC_LINK_IFELSE(
 AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
 AM_CONDITIONAL(BUILD_MODULES, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
+AM_CONDITIONAL(BUILD_ELPERIODIC, [test "${EXTERNAL_ELPERIODIC}" != 1])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
- modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile])
+ modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile
+ libelperiodic/Makefile])
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_GSM)
@@ -192,5 +195,4 @@ AC_SUBST(LIBS_G722)
 AC_SUBST(LIBS_SNDFILE)
 AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_SRTP)
-AC_SUBST(LIBS_ELPERIODIC)
 AC_OUTPUT

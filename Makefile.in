@@ -89,6 +89,7 @@ build_triplet = @build@
 host_triplet = @host@
 @BUILD_MODULES_TRUE@am__append_1 = modules
 @BUILD_EXTRACTAUDIO_TRUE@am__append_2 = extractaudio
+@BUILD_ELPERIODIC_TRUE@am__append_3 = libelperiodic
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -191,8 +192,8 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = libexecinfo src makeann pertools modules extractaudio \
-	tests
+DIST_SUBDIRS = libexecinfo src makeann modules extractaudio \
+	libelperiodic pertools tests
 am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in AUTHORS \
 	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
 	install-sh ltmain.sh missing
@@ -364,8 +365,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = libexecinfo src makeann pertools $(am__append_1) \
-	$(am__append_2) tests
+SUBDIRS = libexecinfo src makeann $(am__append_1) $(am__append_2) \
+	$(am__append_3) pertools tests
 dist_man_MANS = rtpproxy.8
 EXTRA_DIST = README.remote manpage.xml debian/README.Debian debian/changelog \
   debian/compat debian/conffiles.ex debian/control debian/copyright \
