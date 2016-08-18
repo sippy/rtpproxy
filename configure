@@ -635,6 +635,8 @@ ac_includes_default="\
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+LIBS_ELPERIODIC
+LIBS_SRTP
 LIBS_SNDFILE
 LIBS_G722
 LIBS_G729
@@ -12203,7 +12205,7 @@ if ${ac_cv_lib_elperiodic_prdic_init+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lelperiodic  $LIBS"
+LIBS="-lelperiodic -lm $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -12234,7 +12236,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_elperiodic_prdic_init" >&5
 $as_echo "$ac_cv_lib_elperiodic_prdic_init" >&6; }
 if test "x$ac_cv_lib_elperiodic_prdic_init" = xyes; then :
-  LIBS_ELPERIODIC="-lelperiodic"
+  LIBS_ELPERIODIC="-lelperiodic -lm"
 
 $as_echo "#define ENABLE_ELPERIODIC 1" >>confdefs.h
 
@@ -12928,6 +12930,8 @@ fi
 
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile"
+
+
 
 
 

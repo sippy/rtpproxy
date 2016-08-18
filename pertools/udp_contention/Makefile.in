@@ -211,10 +211,12 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBS_DL = @LIBS_DL@
+LIBS_ELPERIODIC = @LIBS_ELPERIODIC@
 LIBS_G722 = @LIBS_G722@
 LIBS_G729 = @LIBS_G729@
 LIBS_GSM = @LIBS_GSM@
 LIBS_SNDFILE = @LIBS_SNDFILE@
+LIBS_SRTP = @LIBS_SRTP@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
@@ -297,7 +299,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 MAINSRCDIR = $(top_srcdir)/src
 udp_contention_SOURCES = udp_contention.c
-udp_contention_LDADD = -lm -lpthread
+udp_contention_LDADD = -lm -lpthread @LIBS_ELPERIODIC@
 all: all-am
 
 .SUFFIXES:
