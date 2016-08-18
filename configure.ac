@@ -131,8 +131,8 @@ AC_CHECK_HEADER(elperiodic.h, found_libelperiodic=yes)
 if test "$found_libelperiodic" = yes
 then
   AC_CHECK_LIB(elperiodic, prdic_init,
-   LIBS_ELPERIODIC="-lelperiodic"
-   AC_DEFINE([ENABLE_ELPERIODIC], 1, [Define if you have libelperiodic library installed]))
+   LIBS_ELPERIODIC="-lelperiodic -lm"
+   AC_DEFINE([ENABLE_ELPERIODIC], 1, [Define if you have libelperiodic library installed]),,-lm)
 fi
 
 # Checks for header files.
