@@ -17,6 +17,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#define UC_MAX_THREADS 64
+
 #if defined(__FreeBSD__)
 # include <machine/cpufunc.h>
 #else
@@ -66,6 +68,16 @@ srandomdev(void)
 #define TEST_KIND_HALFCONN    3
 #define TEST_KIND_MAX         TEST_KIND_CONNECTED
 
+static struct {
+    const char *name;
+    const char *nm_shrt;
+    int tk;
+} test_kinds[] = {
+    {.name = "unconnected", .nm_shrt = "unconn.", .tk = TEST_KIND_UNCONNECTED},
+    {.name = "connected", .nm_shrt = "conn.", .tk = TEST_KIND_CONNECTED},
+    {.name = "half-connected", .nm_shrt = "hlf.conn.", .tk = TEST_KIND_HALFCONN},
+    {.name = NULL}
+};
 
 struct tconf {
     int nthreads_max;
@@ -569,25 +581,46 @@ struct tstats {
 };
 
 static void
+setrlimits(struct tconf *cfp)
+{
+    struct rlimit nofile_limit;
+    int fds_needed;
+
+    if (getrlimit(RLIMIT_NOFILE, &nofile_limit) != 0) {
+        fprintf(stderr, "getrlimit(RLIMIT_NOFILE) failed\n");
+        exit(1);
+    }
+    fds_needed = (cfp->nsess_per_thr * cfp->nthreads_max) + 10;
+    if (nofile_limit.rlim_cur != RLIM_INFINITY &&
+      nofile_limit.rlim_cur < fds_needed) {
+        nofile_limit.rlim_cur = fds_needed;
+        if (nofile_limit.rlim_max != RLIM_INFINITY &&
+          nofile_limit.rlim_max < nofile_limit.rlim_cur) {
+            nofile_limit.rlim_max = nofile_limit.rlim_cur;
+        }
+        if (setrlimit(RLIMIT_NOFILE, &nofile_limit) != 0) {
+            fprintf(stderr, "setrlimit(RLIMIT_NOFILE, %d) failed\n",
+              fds_needed);
+            exit(1);
+        }
+    }
+}
+
+
+static void
 run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
 {
     int nreps = 10 * 100;
-    struct workset *wsp[32];
-    struct recvset *rsp[32];
+    struct workset *wsp[UC_MAX_THREADS];
+    struct recvset *rsp[UC_MAX_THREADS];
     int i;
     double pps, tduration_s, tduration_r, poll_rate;
     uint64_t nrecvd_total, nsent_total, nsent_succ_total, rtt_total;
     uint64_t send_nerrs_total, send_nshrts_total;
-    struct rlimit nofile_limit; 
+    static int test_run_n;
 
-    nofile_limit.rlim_cur = nofile_limit.rlim_max =
-      (cfp->nsess_per_thr * nthreads) + 10;
-    if (setrlimit(RLIMIT_NOFILE, &nofile_limit) != 0) {
-        fprintf(stderr, "setrlimit(RLIMIT_NOFILE, %d) failed\n",
-          cfp->nsess_per_thr * nthreads + 10);
-        exit(1);
-    }
-
+    fprintf(stdout, "Test run #%d: ", ++test_run_n);
+    fflush(stdout);
     for (i = 0; i < nthreads; i++) {
         wsp[i] = generate_workset(cfp);
         assert(wsp[i] != NULL);
@@ -625,7 +658,7 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         release_recvset(rsp[i]);
     }
     nsent_succ_total = nsent_total - send_nerrs_total;
-    fprintf(stderr, "nsent_total=%ju, nsent_succ_total=%ju, nrecvd_total=%ju\n",
+    fprintf(stdout, "nsent_total=%ju, nsent_succ_total=%ju, nrecvd_total=%ju\n",
       (uintmax_t)nsent_total, (uintmax_t)nsent_succ_total,
       (uintmax_t)nrecvd_total);
     tsp->ploss_ratio = (double)(nsent_succ_total - nrecvd_total) /
@@ -644,13 +677,25 @@ usage(void)
     exit(1);
 }
 
+static const char *
+tk2str(int test_kind, int get_shrt)
+{
+    int i;
+
+    for (i = 0; test_kinds[i].name != NULL; i++) {
+        if (test_kinds[i].tk == test_kind)
+            return (get_shrt ? test_kinds[i].nm_shrt : test_kinds[i].name);
+    }
+    abort();
+}
+
 static void
 print_test_stats(int nthreads, int test_kind, struct tstats *tp)
 {
 
-    printf("nthreads = %d, connected = %d: total PPS = %f, "
-      "loss %f%%, poll %f\n", nthreads, test_kind, tp->total_pps,
-      tp->ploss_ratio * 100, tp->total_poll_rate);
+    printf(" nthreads = %d, type = %s: total PPS = %.1f, "
+      "loss %.2f%%, poll %.2fhz\n", nthreads, tk2str(test_kind, 1),
+      tp->total_pps, tp->ploss_ratio * 100, tp->total_poll_rate);
     if (tp->send_nerrs_ratio != 0.0 || tp->send_nshrts_ratio != 0.0) {
         printf("  send channel issues: error = %f%%, short send %f%%\n",
           tp->send_nerrs_ratio * 100.0, tp->send_nshrts_ratio * 100.0);
@@ -684,6 +729,11 @@ main(int argc, char **argv)
 
         case 'M':
             cfg.nthreads_max = atoi(optarg);
+            if (cfg.nthreads_max > UC_MAX_THREADS) {
+                fprintf(stderr, "max supported threads is %d\n",
+                  UC_MAX_THREADS);
+                exit(1);
+            }
             break;
 
         case 'k':
@@ -763,6 +813,7 @@ main(int argc, char **argv)
     }
 
     srandomdev();
+    setrlimits(&cfg);
     for (i = cfg.nthreads_min; i <= cfg.nthreads_max; i++) {
         if (cfg.test_kind != TEST_KIND_ALL) {
             memset(&tstats, '\0', sizeof(struct tstats));
