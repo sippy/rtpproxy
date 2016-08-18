@@ -66,6 +66,7 @@ srandomdev(void)
 #define TEST_KIND_HALFCONN    3
 #define TEST_KIND_MAX         TEST_KIND_CONNECTED
 
+
 struct tconf {
     int nthreads_max;
     int nthreads_min;
@@ -165,6 +166,8 @@ struct recvset
     uint64_t nrecvd_total;
     uint64_t npolls;
     uint64_t rtt_total;
+    double stime;
+    double etime;
     int done;
     uint64_t magic;
     struct pollfd pollset[0]; /* <- keep this the last member! */
@@ -452,6 +455,7 @@ process_recvset(struct recvset  *rp)
     pollto = 100;
 #endif
 
+    rp->stime = getdtime();
     for (;;) {
         nready = poll(rp->pollset, rp->ndest, pollto);
         rp->npolls++;
@@ -490,6 +494,7 @@ procrastinate:
         continue;
 #endif
     }
+    rp->etime = getdtime();
 #if ENABLE_ELPERIODIC
     if (prdc != NULL) {
         prdic_free(prdc);
@@ -570,7 +575,7 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
     struct workset *wsp[32];
     struct recvset *rsp[32];
     int i;
-    double pps, tduration, poll_rate;
+    double pps, tduration_s, tduration_r, poll_rate;
     uint64_t nrecvd_total, nsent_total, nsent_succ_total, rtt_total;
     uint64_t send_nerrs_total, send_nshrts_total;
     struct rlimit nofile_limit; 
@@ -605,15 +610,16 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         rsp[i]->done = 1;
         pthread_join(rsp[i]->tid, NULL);
         nsent_total += wsp[i]->nreps * wsp[i]->ndest;
-        tduration = wsp[i]->etime - wsp[i]->stime;
+        tduration_s = wsp[i]->etime - wsp[i]->stime;
+        tduration_r = rsp[i]->etime - rsp[i]->stime;
         send_nerrs_total += wsp[i]->send_nerrs;
         send_nshrts_total += wsp[i]->send_nshrts;
         pps = (wsp[i]->nreps * wsp[i]->ndest) - wsp[i]->send_nerrs;
-        pps /= tduration;
+        pps /= tduration_s;
         tsp->total_pps += pps;
         nrecvd_total += rsp[i]->nrecvd_total;
         rtt_total += rsp[i]->rtt_total;
-        poll_rate = ((double)rsp[i]->npolls) / tduration;
+        poll_rate = ((double)rsp[i]->npolls) / tduration_r;
         tsp->total_poll_rate += poll_rate / (double)nthreads;
         release_workset(wsp[i]);
         release_recvset(rsp[i]);
