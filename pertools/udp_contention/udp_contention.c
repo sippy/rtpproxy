@@ -52,6 +52,12 @@ srandomdev(void)
 # endif
 #endif
 
+#include "config.h"
+
+#if ENABLE_ELPERIODIC
+#include "elperiodic.h"
+#endif
+
 #include "rtpp_network.h"
 
 #define TEST_KIND_ALL         0
@@ -72,6 +78,8 @@ struct tconf {
     int test_kind;
     uint64_t magic;
     int sock_block; /* Test with blocking sockets */
+    int nsess_per_thr; /* Test as many sessions per thread */
+    double max_sess_pps; /* Limit max PPS rate per sesion */
 };
 
 static int
@@ -140,6 +148,7 @@ struct workset
     pthread_t tid;
     int nreps;
     int ndest;
+    double max_pps;
     double stime;
     double etime;
     uint64_t send_nerrs;
@@ -151,13 +160,14 @@ struct recvset
 {
     pthread_t tid;
     int ndest;
+    double max_pollps;
     uint64_t **nrecvd;
     uint64_t nrecvd_total;
     uint64_t npolls;
     uint64_t rtt_total;
     int done;
     uint64_t magic;
-    struct pollfd pollset[0];
+    struct pollfd pollset[0]; /* <- keep this the last member! */
 };
 
 static void
@@ -195,27 +205,28 @@ socket_ctor(int domain, struct tconf *cfp)
 }
 
 static struct workset *
-generate_workset(int setsize, struct tconf *cfp)
+generate_workset(struct tconf *cfp)
 {
     struct workset *wp;
     struct destination *dp;
     size_t msize;
     int i;
 
-    msize = sizeof(struct workset) + (setsize * sizeof(struct destination));
+    msize = sizeof(struct workset) + (cfp->nsess_per_thr * sizeof(struct destination));
     wp = malloc(msize);
     if (wp == NULL) {
         return (NULL);
     }
     memset(wp, '\0', msize);
-    wp->ndest = setsize;
-    for (i = 0; i < setsize; i++) {
+    wp->ndest = cfp->nsess_per_thr;
+    wp->max_pps = cfp->max_sess_pps;
+    for (i = 0; i < cfp->nsess_per_thr; i++) {
         dp = &(wp->dests[i]);
         genrandomdest(cfp, sstosa(&dp->daddr));
         dp->sout = dp->sin = socket_ctor(sstosa(&dp->daddr)->sa_family, cfp);
         if (dp->sin == -1) {
             fprintf(stderr, "generate_workset: cannot create socket #%d out"
-              " of %d\n", i, setsize);
+              " of %d\n", i, cfp->nsess_per_thr);
             goto e1;
         }
         genrandombuf(dp, cfp->paylen_min, cfp->paylen_max);
@@ -377,7 +388,15 @@ process_workset(struct workset *wp)
 {
     int i, j, r;
     struct destination *dp;
+#if ENABLE_ELPERIODIC
+    void *prdc;
 
+    if (wp->max_pps > 0.0) {
+        prdc = prdic_init(wp->max_pps, 0.0);
+    } else {
+        prdc = NULL;
+    }
+#endif
     wp->stime = getdtime();
     for (i = 0; i < wp->nreps; i++) {
         for (j = 0; j < wp->ndest; j++) {
@@ -395,8 +414,18 @@ process_workset(struct workset *wp)
                 wp->send_nshrts += 1;
             }
         }
+#if ENABLE_ELPERIODIC
+        if (prdc != NULL) {
+            prdic_procrastinate(prdc);
+        }
+#endif
     }
     wp->etime = getdtime();
+#if ENABLE_ELPERIODIC
+    if (prdc != NULL) {
+        prdic_free(prdc);
+    }
+#endif
 }
 
 static void
@@ -408,15 +437,29 @@ process_recvset(struct recvset  *rp)
     struct sockaddr_storage raddr;
     socklen_t fromlen;
     uint64_t rtime, rtt;
+    int pollto;
+#if ENABLE_ELPERIODIC
+    void *prdc;
+
+    if (rp->max_pollps > 0.0) {
+        prdc = prdic_init(rp->max_pollps, 0.0);
+        pollto = 0;
+    } else {
+        prdc = NULL;
+        pollto = 100;
+    }
+#else
+    pollto = 100;
+#endif
 
     for (;;) {
-        nready = poll(rp->pollset, rp->ndest, 100);
+        nready = poll(rp->pollset, rp->ndest, pollto);
         rp->npolls++;
         if (rp->done != 0 && nready == 0) {
             break;
         }
         if (nready <= 0) {
-            continue;
+            goto procrastinate;
         }
         for (i = 0; i < rp->ndest && nready > 0; i++) {
             pdp = &rp->pollset[i];
@@ -438,7 +481,20 @@ process_recvset(struct recvset  *rp)
             }
             nready -= 1;
         }
+procrastinate:
+#if ENABLE_ELPERIODIC
+        if (prdc != NULL) {
+            prdic_procrastinate(prdc);
+        }
+#else
+        continue;
+#endif
     }
+#if ENABLE_ELPERIODIC
+    if (prdc != NULL) {
+        prdic_free(prdc);
+    }
+#endif
 }
 
 
@@ -493,6 +549,9 @@ generate_recvset(struct workset *wp, struct tconf *cfp)
     }
     rp->ndest = wp->ndest;
     rp->magic = cfp->magic;
+    if (cfp->max_sess_pps != 0.0) {
+        rp->max_pollps = cfp->max_sess_pps * 2.0;
+    }
     return (rp);
 }
 
@@ -508,7 +567,6 @@ static void
 run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
 {
     int nreps = 10 * 100;
-    int npkts = 4000;
     struct workset *wsp[32];
     struct recvset *rsp[32];
     int i;
@@ -517,15 +575,16 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
     uint64_t send_nerrs_total, send_nshrts_total;
     struct rlimit nofile_limit; 
 
-    nofile_limit.rlim_cur = nofile_limit.rlim_max = (npkts * nthreads) + 10;
+    nofile_limit.rlim_cur = nofile_limit.rlim_max =
+      (cfp->nsess_per_thr * nthreads) + 10;
     if (setrlimit(RLIMIT_NOFILE, &nofile_limit) != 0) {
         fprintf(stderr, "setrlimit(RLIMIT_NOFILE, %d) failed\n",
-          npkts * nthreads);
+          cfp->nsess_per_thr * nthreads + 10);
         exit(1);
     }
 
     for (i = 0; i < nthreads; i++) {
-        wsp[i] = generate_workset(npkts, cfp);
+        wsp[i] = generate_workset(cfp);
         assert(wsp[i] != NULL);
         wsp[i]->nreps = nreps;
         if (test_type == TEST_KIND_CONNECTED || test_type == TEST_KIND_HALFCONN) {
@@ -609,8 +668,9 @@ main(int argc, char **argv)
     cfg.magic = ((uint64_t)random() << 32) | (uint64_t)random();
     cfg.paylen_min = 30;
     cfg.paylen_max = 170;
+    cfg.nsess_per_thr = 4000;
 
-    while ((ch = getopt(argc, argv, "m:M:k:p:P:hb")) != -1) {
+    while ((ch = getopt(argc, argv, "m:M:k:p:P:hbN:")) != -1) {
         switch (ch) {
         case 'm':
             cfg.nthreads_min = atoi(optarg);
@@ -642,6 +702,13 @@ main(int argc, char **argv)
         case 'b':
             cfg.sock_block = 1;
             break;
+
+#if ENABLE_ELPERIODIC
+        case 'N':
+            cfg.nsess_per_thr = atoi(optarg);
+            cfg.max_sess_pps = 100.0;
+            break;
+#endif
 
         case '?':
         default:
