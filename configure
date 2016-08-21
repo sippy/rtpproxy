@@ -642,6 +642,8 @@ LIBS_G729
 LIBS_GSM
 LIBS_DL
 AM_CFLAGS
+BUILD_CRYPTO_FALSE
+BUILD_CRYPTO_TRUE
 BUILD_ELPERIODIC_FALSE
 BUILD_ELPERIODIC_TRUE
 ENABLE_MODULE_IF_FALSE
@@ -12936,6 +12938,14 @@ else
   BUILD_ELPERIODIC_FALSE=
 fi
 
+ if test "${LIBS_SRTP}" != ""; then
+  BUILD_CRYPTO_TRUE=
+  BUILD_CRYPTO_FALSE='#'
+else
+  BUILD_CRYPTO_TRUE='#'
+  BUILD_CRYPTO_FALSE=
+fi
+
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile libelperiodic/Makefile"
 
@@ -13097,6 +13107,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_ELPERIODIC_TRUE}" && test -z "${BUILD_ELPERIODIC_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_ELPERIODIC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_CRYPTO_TRUE}" && test -z "${BUILD_CRYPTO_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_CRYPTO\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
