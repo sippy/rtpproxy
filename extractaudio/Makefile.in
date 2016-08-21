@@ -89,6 +89,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = extractaudio$(EXEEXT)
+@BUILD_CRYPTO_TRUE@am__append_1 = eaud_crypto.c eaud_crypto.h
 subdir = extractaudio
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -104,6 +105,19 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
+am__extractaudio_SOURCES_DIST = extractaudio.c decoder.c rtpp_loader.c \
+	${MAINSRCDIR}/rtp.c ${MAINSRCDIR}/rtp_analyze.c \
+	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
+	${MAINSRCDIR}/rtpp_log_stand.c decoder.h format_au.h g711.h \
+	rtpp_loader.h session.h g729_compat.c g729_compat.h \
+	${MAINSRCDIR}/rtpp_network.c ${MAINSRCDIR}/rtpp_monotime.c \
+	${MAINSRCDIR}/rtpp_mallocs.c ${MAINSRCDIR}/rtpp_refcnt.c \
+	${MAINSRCDIR}/rtpp_refcnt_fin.c \
+	${MAINSRCDIR}/rtpp_refcnt_fin.h ${MAINSRCDIR}/rtpp_ringbuf.c \
+	${MAINSRCDIR}/rtpp_ringbuf_fin.c \
+	${MAINSRCDIR}/rtpp_ringbuf_fin.h eaud_oformats.c \
+	eaud_oformats.h eaud_crypto.c eaud_crypto.h
+@BUILD_CRYPTO_TRUE@am__objects_1 = eaud_crypto.$(OBJEXT)
 am_extractaudio_OBJECTS = extractaudio.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_loader.$(OBJEXT) rtp.$(OBJEXT) rtp_analyze.$(OBJEXT) \
 	rtpp_util.$(OBJEXT) rtpp_time.$(OBJEXT) \
@@ -111,7 +125,8 @@ am_extractaudio_OBJECTS = extractaudio.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_network.$(OBJEXT) rtpp_monotime.$(OBJEXT) \
 	rtpp_mallocs.$(OBJEXT) rtpp_refcnt.$(OBJEXT) \
 	rtpp_refcnt_fin.$(OBJEXT) rtpp_ringbuf.$(OBJEXT) \
-	rtpp_ringbuf_fin.$(OBJEXT) eaud_oformats.$(OBJEXT)
+	rtpp_ringbuf_fin.$(OBJEXT) eaud_oformats.$(OBJEXT) \
+	$(am__objects_1)
 extractaudio_OBJECTS = $(am_extractaudio_OBJECTS)
 extractaudio_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -153,7 +168,7 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(extractaudio_SOURCES)
-DIST_SOURCES = $(extractaudio_SOURCES)
+DIST_SOURCES = $(am__extractaudio_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -221,7 +236,6 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBS_DL = @LIBS_DL@
-LIBS_ELPERIODIC = @LIBS_ELPERIODIC@
 LIBS_G722 = @LIBS_G722@
 LIBS_G729 = @LIBS_G729@
 LIBS_GSM = @LIBS_GSM@
@@ -308,16 +322,18 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 MAINSRCDIR = $(top_srcdir)/src
-extractaudio_SOURCES = extractaudio.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c \
-  ${MAINSRCDIR}/rtp_analyze.c ${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
-  ${MAINSRCDIR}/rtpp_log_stand.c decoder.h format_au.h g711.h rtpp_loader.h \
-  session.h g729_compat.c g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
-  ${MAINSRCDIR}/rtpp_monotime.c ${MAINSRCDIR}/rtpp_mallocs.c \
-  ${MAINSRCDIR}/rtpp_refcnt.c ${MAINSRCDIR}/rtpp_refcnt_fin.c \
-  ${MAINSRCDIR}/rtpp_refcnt_fin.h ${MAINSRCDIR}/rtpp_ringbuf.c \
-  ${MAINSRCDIR}/rtpp_ringbuf_fin.c ${MAINSRCDIR}/rtpp_ringbuf_fin.h \
-  eaud_oformats.c eaud_oformats.h
-
+extractaudio_SOURCES = extractaudio.c decoder.c rtpp_loader.c \
+	${MAINSRCDIR}/rtp.c ${MAINSRCDIR}/rtp_analyze.c \
+	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
+	${MAINSRCDIR}/rtpp_log_stand.c decoder.h format_au.h g711.h \
+	rtpp_loader.h session.h g729_compat.c g729_compat.h \
+	${MAINSRCDIR}/rtpp_network.c ${MAINSRCDIR}/rtpp_monotime.c \
+	${MAINSRCDIR}/rtpp_mallocs.c ${MAINSRCDIR}/rtpp_refcnt.c \
+	${MAINSRCDIR}/rtpp_refcnt_fin.c \
+	${MAINSRCDIR}/rtpp_refcnt_fin.h ${MAINSRCDIR}/rtpp_ringbuf.c \
+	${MAINSRCDIR}/rtpp_ringbuf_fin.c \
+	${MAINSRCDIR}/rtpp_ringbuf_fin.h eaud_oformats.c \
+	eaud_oformats.h $(am__append_1)
 extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
 all: all-am
 
@@ -413,6 +429,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/decoder.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaud_crypto.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaud_oformats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g729_compat.Po@am__quote@
