@@ -182,6 +182,7 @@ AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
 AM_CONDITIONAL(BUILD_MODULES, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(BUILD_ELPERIODIC, [test "${EXTERNAL_ELPERIODIC}" != 1])
+AM_CONDITIONAL(BUILD_CRYPTO, [test "${LIBS_SRTP}" != ""])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
