@@ -9,6 +9,9 @@ extractaudio_SOURCES=extractaudio.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c 
   ${MAINSRCDIR}/rtpp_refcnt_fin.h ${MAINSRCDIR}/rtpp_ringbuf.c \
   ${MAINSRCDIR}/rtpp_ringbuf_fin.c ${MAINSRCDIR}/rtpp_ringbuf_fin.h \
   eaud_oformats.c eaud_oformats.h
+if BUILD_CRYPTO
+extractaudio_SOURCES+=eaud_crypto.c eaud_crypto.h
+endif
 extractaudio_LDADD=@LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
 
 DEFS=   -DWITHOUT_SIPLOG -Wall -D"rtpp_log_t=void *" \

@@ -41,6 +41,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/udp.h>
+#include <getopt.h>
 #include <err.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -50,6 +51,8 @@
 #include <unistd.h>
 
 #include <sndfile.h>
+
+#include "config.h"
 
 #include "format_au.h"
 #include "g711.h"
@@ -63,8 +66,24 @@
 #include "rtp_analyze.h"
 #include "rtpa_stats.h"
 #include "eaud_oformats.h"
+#if ENABLE_SRTP
+# include "eaud_crypto.h"
+#endif
 
 /*#define EAUD_DUMPRAW "/tmp/eaud.raw"*/
+
+#if ENABLE_SRTP
+#define LOPT_ALICE_CRYPTO 256
+#define LOPT_BOB_CRYPTO   257
+#endif
+
+const static struct option longopts[] = {
+#if ENABLE_SRTP
+    { "alice-crypto", required_argument, NULL, LOPT_ALICE_CRYPTO },
+    { "bob-crypto",   required_argument, NULL, LOPT_BOB_CRYPTO },
+#endif
+    { NULL,           0,                 NULL, 0 }
+};
 
 static void
 usage(void)
@@ -158,6 +177,10 @@ main(int argc, char **argv)
     const struct supported_fmt *sf_of;
     uint32_t use_file_fmt, use_data_fmt;
     uint32_t dflt_file_fmt, dflt_data_fmt;
+    int option_index;
+#if ENABLE_SRTP
+    struct eaud_crypto *alice_crypto, *bob_crypto;
+#endif
 
     MYQ_INIT(&channels);
     memset(&sfinfo, 0, sizeof(sfinfo));
@@ -170,7 +193,11 @@ main(int argc, char **argv)
     delete = stereo = idprio = 0;
     dflags = D_FLAG_NONE;
     aname = oname = NULL;
-    while ((ch = getopt(argc, argv, "dsinF:D:A:B:")) != -1)
+#if ENABLE_SRTP
+    alice_crypto = bob_crypto = NULL;
+#endif
+    while ((ch = getopt_long(argc, argv, "dsinF:D:A:B:", longopts,
+      &option_index)) != -1)
         switch (ch) {
         case 'd':
             delete = 1;
@@ -218,6 +245,22 @@ main(int argc, char **argv)
         case 'B':
             oname = optarg;
             break;
+
+#if ENABLE_SRTP
+        case LOPT_ALICE_CRYPTO:
+            alice_crypto = eaud_crypto_getopt_parse(optarg);
+            if (alice_crypto == NULL) {
+                exit(1);
+            }
+            break;
+
+        case LOPT_BOB_CRYPTO:
+            bob_crypto = eaud_crypto_getopt_parse(optarg);
+            if (bob_crypto == NULL) {
+                exit(1);
+            }
+            break;
+#endif
 
         case '?':
         default:
