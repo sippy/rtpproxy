@@ -89,7 +89,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = extractaudio$(EXEEXT)
-@BUILD_CRYPTO_TRUE@am__append_1 = eaud_crypto.c eaud_crypto.h
+@BUILD_CRYPTO_TRUE@am__append_1 = eaud_crypto.c eaud_crypto.h srtp_util.c srtp_util.h
+@BUILD_CRYPTO_TRUE@am__append_2 = @LIBS_SRTP@
 subdir = extractaudio
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -116,8 +117,10 @@ am__extractaudio_SOURCES_DIST = extractaudio.c decoder.c rtpp_loader.c \
 	${MAINSRCDIR}/rtpp_refcnt_fin.h ${MAINSRCDIR}/rtpp_ringbuf.c \
 	${MAINSRCDIR}/rtpp_ringbuf_fin.c \
 	${MAINSRCDIR}/rtpp_ringbuf_fin.h eaud_oformats.c \
-	eaud_oformats.h eaud_crypto.c eaud_crypto.h
-@BUILD_CRYPTO_TRUE@am__objects_1 = eaud_crypto.$(OBJEXT)
+	eaud_oformats.h eaud_crypto.c eaud_crypto.h srtp_util.c \
+	srtp_util.h
+@BUILD_CRYPTO_TRUE@am__objects_1 = eaud_crypto.$(OBJEXT) \
+@BUILD_CRYPTO_TRUE@	srtp_util.$(OBJEXT)
 am_extractaudio_OBJECTS = extractaudio.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_loader.$(OBJEXT) rtp.$(OBJEXT) rtp_analyze.$(OBJEXT) \
 	rtpp_util.$(OBJEXT) rtpp_time.$(OBJEXT) \
@@ -128,7 +131,8 @@ am_extractaudio_OBJECTS = extractaudio.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_ringbuf_fin.$(OBJEXT) eaud_oformats.$(OBJEXT) \
 	$(am__objects_1)
 extractaudio_OBJECTS = $(am_extractaudio_OBJECTS)
-extractaudio_DEPENDENCIES =
+am__DEPENDENCIES_1 =
+extractaudio_DEPENDENCIES = $(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -334,7 +338,8 @@ extractaudio_SOURCES = extractaudio.c decoder.c rtpp_loader.c \
 	${MAINSRCDIR}/rtpp_ringbuf_fin.c \
 	${MAINSRCDIR}/rtpp_ringbuf_fin.h eaud_oformats.c \
 	eaud_oformats.h $(am__append_1)
-extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
+extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ \
+	-lm -lpthread $(am__append_2)
 all: all-am
 
 .SUFFIXES:
@@ -446,6 +451,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_ringbuf_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_util.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/srtp_util.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

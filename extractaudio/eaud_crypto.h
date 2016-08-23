@@ -24,9 +24,8 @@
  * SUCH DAMAGE.
  */
 
-struct eaud_crypto {
-    const char *suite;
-    const char *b64_key;
-};
+struct eaud_crypto;
 
 struct eaud_crypto *eaud_crypto_getopt_parse(char *);
+int eaud_crypto_decrypt(struct eaud_crypto *, uint8_t *, int);
+

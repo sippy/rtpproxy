@@ -123,7 +123,8 @@ channel_insert(struct channels *channels, struct channel *channel)
 }
 
 static int
-load_session(const char *path, struct channels *channels, enum origin origin)
+load_session(const char *path, struct channels *channels, enum origin origin,
+  struct eaud_crypto *crypto)
 {
     int pcount, jc;
     struct rtpp_session_stat stat;
@@ -135,7 +136,7 @@ load_session(const char *path, struct channels *channels, enum origin origin)
         return -1;
 
     rtpp_stats_init(&stat);
-    pcount = loader->load(loader, channels, &stat, origin);
+    pcount = loader->load(loader, channels, &stat, origin, crypto);
 
     update_rtpp_totals(&stat, &stat);
     jc = get_jitter_stats(stat.jdata, &jstat);
@@ -178,9 +179,7 @@ main(int argc, char **argv)
     uint32_t use_file_fmt, use_data_fmt;
     uint32_t dflt_file_fmt, dflt_data_fmt;
     int option_index;
-#if ENABLE_SRTP
     struct eaud_crypto *alice_crypto, *bob_crypto;
-#endif
 
     MYQ_INIT(&channels);
     memset(&sfinfo, 0, sizeof(sfinfo));
@@ -193,9 +192,8 @@ main(int argc, char **argv)
     delete = stereo = idprio = 0;
     dflags = D_FLAG_NONE;
     aname = oname = NULL;
-#if ENABLE_SRTP
     alice_crypto = bob_crypto = NULL;
-#endif
+
     while ((ch = getopt_long(argc, argv, "dsinF:D:A:B:", longopts,
       &option_index)) != -1)
         switch (ch) {
@@ -299,10 +297,10 @@ main(int argc, char **argv)
     }
 
     if (aname != NULL) {
-        load_session(aname, &channels, A_CH);
+        load_session(aname, &channels, A_CH, alice_crypto);
     }
     if (oname != NULL) {
-        load_session(oname, &channels, O_CH);
+        load_session(oname, &channels, O_CH, bob_crypto);
     }
 
     if (MYQ_EMPTY(&channels))

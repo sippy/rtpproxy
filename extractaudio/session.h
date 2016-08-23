@@ -87,6 +87,7 @@ struct channel {
     void *decoder;
     unsigned int skip;
     enum origin origin;
+    struct eaud_crypto *crypto;
     struct channel *prev;
     struct channel *next;
 };

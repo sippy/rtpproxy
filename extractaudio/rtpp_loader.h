@@ -42,7 +42,8 @@ struct rtpp_loader {
     int ifd;
     struct stat sb;
     unsigned char *ibuf;    
-    int (*load)(struct rtpp_loader *, struct channels *, struct rtpp_session_stat *, enum origin);
+    int (*load)(struct rtpp_loader *, struct channels *,
+      struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
     void (*destroy)(struct rtpp_loader *);
 
     union {

@@ -31,11 +31,18 @@
 #include <netinet/ip6.h>
 #include <netinet/udp.h>
 #include <sys/mman.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "config.h"
+
+#if HAVE_ERR_H
+# include <err.h>
+#endif
 
 #include "rtpp_ssrc.h"
 #include "rtp_info.h"
@@ -43,11 +50,14 @@
 #include "rtpp_loader.h"
 #include "rtpp_time.h"
 #include "rtpp_util.h"
+#if ENABLE_SRTP
+#include "eaud_crypto.h"
+#endif
 
 static int load_adhoc(struct rtpp_loader *loader, struct channels *,
-  struct rtpp_session_stat *, enum origin);
+  struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
 static int load_pcap(struct rtpp_loader *loader, struct channels *,
-  struct rtpp_session_stat *, enum origin);
+  struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
 
 static void
 rtpp_loader_destroy(struct rtpp_loader *loader)
@@ -81,7 +91,14 @@ rtpp_load(const char *path)
         return NULL;
     }
 
-    rval->ibuf = mmap(NULL, rval->sb.st_size, PROT_READ, MAP_SHARED, rval->ifd, 0);
+#if !ENABLE_SRTP
+    rval->ibuf = mmap(NULL, rval->sb.st_size, PROT_READ, MAP_SHARED,
+      rval->ifd, 0);
+#else
+    /* Decryption is done in place, which is why PROT_WRITE */
+    rval->ibuf = mmap(NULL, rval->sb.st_size, PROT_READ | PROT_WRITE,
+      MAP_PRIVATE, rval->ifd, 0);
+#endif
     if (rval->ibuf == MAP_FAILED) {
         close(rval->ifd);
         free(rval);
@@ -118,9 +135,21 @@ rtpp_load(const char *path)
     return rval;
 }
 
+static struct channel *
+channel_alloc(enum origin origin)
+{
+    struct channel *channel;
+
+    channel = malloc(sizeof(*channel));
+    memset(channel, 0, sizeof(*channel));
+    channel->origin = origin;
+    return (channel);
+}
+
 static int
 load_adhoc(struct rtpp_loader *loader, struct channels *channels,
-  struct rtpp_session_stat *stat, enum origin origin)
+  struct rtpp_session_stat *stat, enum origin origin,
+  struct eaud_crypto *crypto)
 {
     int pcount;
     unsigned char *cp;
@@ -152,9 +181,7 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
 
         sess = session_lookup(channels, pack->rpkt->ssrc);
         if (sess == NULL) {
-            channel = malloc(sizeof(*channel));
-            memset(channel, 0, sizeof(*channel));
-            channel->origin = origin;
+            channel = channel_alloc(origin);
             sess = &(channel->session);
             MYQ_INIT(sess);
             MYQ_INSERT_HEAD(sess, pack);
@@ -191,7 +218,8 @@ endloop:
 
 static int
 load_pcap(struct rtpp_loader *loader, struct channels *channels,
-  struct rtpp_session_stat *stat, enum origin origin)
+  struct rtpp_session_stat *stat, enum origin origin,
+  struct eaud_crypto *crypto)
 {
     int pcount;
     unsigned char *cp;
@@ -199,7 +227,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
     struct channel *channel;
     struct session *sess;
     union pkt_hdr_pcap pcap, *pcp;
-    int rtp_len;
+    int rtp_len, rtp_pkt_len;
     off_t st_size;
     int pcap_size, network;
     pcaprec_hdr_t *pcaprec_hdr;
@@ -238,8 +266,25 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
         cp += pcap_size;
         if (rtp_len < sizeof(rtp_hdr_t))
             continue;
+
+#if ENABLE_SRTP
+        if (crypto != NULL) {
+            rtp_pkt_len = eaud_crypto_decrypt(crypto, cp, rtp_len);
+            if (rtp_pkt_len <= 0) {
+                warnx("decryption failed");
+                free(pack);
+                continue;
+            }
+            assert(rtp_pkt_len <= rtp_len);
+        } else {
+            rtp_pkt_len = rtp_len;
+        }
+#else
+        rtp_pkt_len = rtp_len;
+#endif
+
         pack = malloc(sizeof(*pack) + sizeof(*pack->pkt));
-        if (rtp_packet_parse_raw(cp, rtp_len, &(pack->parsed)) != RTP_PARSER_OK) {
+        if (rtp_packet_parse_raw(cp, rtp_pkt_len, &(pack->parsed)) != RTP_PARSER_OK) {
             /* XXX error handling */
             free(pack);
             continue;
@@ -247,7 +292,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
         pack->pkt = (struct pkt_hdr_adhoc *)&pack[1];
         pack->rpkt = (rtp_hdr_t *)cp;
         pack->pkt->time = ts2dtime(pcaprec_hdr->ts_sec, pcaprec_hdr->ts_usec);
-        pack->pkt->plen = rtp_len;
+        pack->pkt->plen = rtp_pkt_len;
         if (origin == O_CH) {
             pack->pkt->addr.in4.sin_family = AF_INET;
             pack->pkt->addr.in4.sin_port = ntohs(udpip->udphdr.uh_dport);
@@ -264,9 +309,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
 
         sess = session_lookup(channels, pack->rpkt->ssrc);
         if (sess == NULL) {
-            channel = malloc(sizeof(*channel));
-            memset(channel, 0, sizeof(*channel));
-            channel->origin = origin;
+            channel = channel_alloc(origin);
             sess = &(channel->session);
             MYQ_INIT(sess);
             MYQ_INSERT_HEAD(sess, pack);
