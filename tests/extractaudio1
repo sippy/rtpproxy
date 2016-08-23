@@ -9,7 +9,8 @@ OFMTS_mono="wav raw w64"
 OFMTS_stereo="wav w64"
 
 ofiles=""
-extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729 call1_gsm"
+extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729 call1_gsm \
+ call1_g722_srtp"
 
 for tkind in ${TKINDS}
 do
@@ -35,7 +36,14 @@ do
         then
           rm "${wfile}"
         fi
-        ${EXTRACTAUDIO} -F ${ofmt} -D ${dfmt} ${EXTRACTAUDIO_ARGS} ${rfile} ${wfile} 2>/dev/null >/dev/null || continue
+        if [ -e "${rfile}.args" ]
+        then
+          EXTRACTAUDIO_EARGS=`cat "${rfile}.args"`
+        else
+          EXTRACTAUDIO_EARGS=""
+        fi
+        ${EXTRACTAUDIO} -F ${ofmt} -D ${dfmt} ${EXTRACTAUDIO_ARGS} \
+         ${EXTRACTAUDIO_EARGS} ${rfile} ${wfile} 2>/dev/null >/dev/null || continue
         test -s ${wfile}
         report "${rfile} -> ${wfile}"
         sha256_verify ${wfile} extractaudio/extractaudio.checksums
