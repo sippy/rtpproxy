@@ -32,6 +32,15 @@
 
 #include <srtp/srtp.h>
 
+/* XXX: srtp.h defines those, undef to avoid warnings */
+#undef PACKAGE
+#undef PACKAGE_BUGREPORT
+#undef PACKAGE_NAME
+#undef PACKAGE_STRING
+#undef PACKAGE_TARNAME
+#undef PACKAGE_URL
+#undef PACKAGE_VERSION
+
 #include "rtpp_endian.h"
 #include "rtp.h"
 #include "rtp_info.h"
