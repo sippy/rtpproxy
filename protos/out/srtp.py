@@ -2,8 +2,9 @@ from crypto_pb2 import crypto_offer, crypto_answer, AES_CM_128_HMAC_SHA1_80
 from crypto_pb2 import km_inline
 
 co = crypto_offer()
-co.sinfo.from_tag = 'from_tag1'
-co.sinfo.call_id = 'call_id1'
+sinfo = co.stream_info
+sinfo.from_tag = 'from_tag1'
+sinfo.call_id = 'call_id1'
 cat = co.attributes.add()
 cat.inb.tag = 1
 cat.inb.suite = AES_CM_128_HMAC_SHA1_80
@@ -18,9 +19,10 @@ print(len(co.SerializeToString()))
 #print(co.SerializeToString())
 
 ca = crypto_answer()
-ca.sinfo.from_tag = 'from_tag1'
-ca.sinfo.to_tag = 'to_tag1'
-ca.sinfo.call_id = 'call_id1'
+sinfo = ca.stream_info
+sinfo.from_tag = 'from_tag1'
+sinfo.to_tag = 'to_tag1'
+sinfo.call_id = 'call_id1'
 ca.attribute.inb.tag = 4
 ca.attribute.inb.suite = AES_CM_128_HMAC_SHA1_80
 ca.attribute.inb.key_method = km_inline

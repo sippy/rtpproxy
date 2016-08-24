@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-import "sinfo.proto";
+import "stream_info.proto";
 
 enum crypto_suites {
     AES_CM_128_HMAC_SHA1_80 = 1;	/* [RFC4568] */
@@ -69,13 +69,13 @@ message crypto_attribute {
 }
 
 message crypto_offer {
-    required sinfo_offer sinfo = 1;
+    required sinfo_offer stream_info = 1;
 
     repeated crypto_attribute attributes = 2;
 }
 
 message crypto_answer {
-    required sinfo_answer sinfo = 1;
+    required sinfo_answer stream_info = 1;
 
     required crypto_attribute attribute = 2;
 }
