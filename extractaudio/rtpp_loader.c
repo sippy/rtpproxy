@@ -272,7 +272,6 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
             rtp_pkt_len = eaud_crypto_decrypt(crypto, cp, rtp_len);
             if (rtp_pkt_len <= 0) {
                 warnx("decryption failed");
-                free(pack);
                 continue;
             }
             assert(rtp_pkt_len <= rtp_len);
