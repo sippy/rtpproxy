@@ -4,13 +4,21 @@
 
 . $(dirname $0)/functions
 
-SNAMES="sess6 c1 weird dups lost srtp1"
+SNAMES="sess6 c1 weird dups lost srtp1 alice_to_bob alice_to_bob_out"
+
+RTPA_SUBDR="rtp_analyze"
 
 for sname in ${SNAMES}
 do
   wfile="rtp_analyze_${sname}.wav"
-  ${EXTRACTAUDIO} -s rtp_analyze/${sname} "${wfile}" > rtp_analyze_${sname}.tout 2>rtp_analyze_${sname}.tlog
-  ${DIFF} rtp_analyze/${sname}.output rtp_analyze_${sname}.tout
+  if [ -e ${RTPA_SUBDR}/${sname}.args ]
+  then
+    EAUD_ARGS=`cat ${RTPA_SUBDR}/${sname}.args`
+  else
+    EAUD_ARGS="${RTPA_SUBDR}/${sname}"
+  fi
+  ${EXTRACTAUDIO} -s ${EAUD_ARGS} "${wfile}" > rtp_analyze_${sname}.tout 2>rtp_analyze_${sname}.tlog
+  ${DIFF} ${RTPA_SUBDR}/${sname}.output rtp_analyze_${sname}.tout
   report "checking stats for the ${sname}"
-  sha256_verify "${wfile}" rtp_analyze/rtp_analyze1.checksums
+  sha256_verify "${wfile}" ${RTPA_SUBDR}/rtp_analyze1.checksums
 done
