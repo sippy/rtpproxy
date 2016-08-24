@@ -55,6 +55,7 @@ enum session_parameters {
     WSH = 7;				/* [RFC4568] */
 }
 
+/* Crypto face with respect to the RTPproxy */
 message crypto_attribute_face {
     required int32 tag = 1;
     required crypto_suites suite = 2;
@@ -64,13 +65,18 @@ message crypto_attribute_face {
 }
 
 message crypto_attribute {
+    /* Inbound encryption, always provided */
     required crypto_attribute_face inb = 1;
+    /* Outbound encryption, may be omitted for pass-through */
     optional crypto_attribute_face outb = 2;
 }
 
 message crypto_offer {
     required sinfo_offer stream_info = 1;
-
+    /*
+     * Offerer can put in more than one attribute and let answered to pick one
+     * and signal back via tag field in the answer
+     */
     repeated crypto_attribute attributes = 2;
 }
 
