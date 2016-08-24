@@ -1,0 +1,11 @@
+message sinfo_offer {
+    required string call_id = 1;
+    required string from_tag = 2;
+    optional string to_tag = 3;
+}
+
+message sinfo_answer {
+    required string call_id = 1;
+    required string from_tag = 2;
+    required string to_tag = 3;
+}

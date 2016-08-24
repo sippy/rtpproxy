@@ -1,0 +1,55 @@
+import "sinfo.proto";
+
+enum crypto_suites {
+    AES_CM_128_HMAC_SHA1_80 = 1;	/* [RFC4568] */
+    AES_CM_128_HMAC_SHA1_32 = 2;	/* [RFC4568] */
+    F8_128_HMAC_SHA1_80 = 3;		/* [RFC4568] */
+    SEED_CTR_128_HMAC_SHA1_80 = 4;	/* [RFC5669] */
+    SEED_128_CCM_80 = 5;		/* [RFC5669] */
+    SEED_128_GCM_96 = 6;		/* [RFC5669] */
+    AES_192_CM_HMAC_SHA1_80 = 7;	/* [RFC6188] */
+    AES_192_CM_HMAC_SHA1_32 = 8;	/* [RFC6188] */
+    AES_256_CM_HMAC_SHA1_80 = 9;	/* [RFC6188] */
+    AES_256_CM_HMAC_SHA1_32 = 10;	/* [RFC6188] */
+    AEAD_AES_128_GCM = 11;		/* [RFC7714] */
+    AEAD_AES_256_GCM = 12;		/* [RFC7714] */
+}
+
+enum key_methods {
+    km_inline = 1;			/* [RFC4568] */
+}
+
+enum session_parameters {
+    KDR = 1;				/* [RFC4568] */
+    UNENCRYPTED_SRTP = 2;		/* [RFC4568] */
+    UNENCRYPTED_SRTCP = 3;		/* [RFC4568] */
+    UNAUTHENTICATED_SRTP = 4;		/* [RFC4568] */
+    FEC_ORDER = 5;			/* [RFC4568] */
+    FEC_KEY = 6;			/* [RFC4568] */
+    WSH = 7;				/* [RFC4568] */
+}
+
+message crypto_attribute_face {
+    required int32 tag = 1;
+    required crypto_suites suite = 2;
+    required key_methods key_method = 3;
+    required string key_info = 4;
+    repeated session_parameters session_parameters = 5;
+}
+
+message crypto_attribute {
+    required crypto_attribute_face inb = 1;
+    optional crypto_attribute_face outb = 2;
+}
+
+message crypto_offer {
+    required sinfo_offer sinfo = 1;
+
+    repeated crypto_attribute attributes = 2;
+}
+
+message crypto_answer {
+    required sinfo_answer sinfo = 1;
+
+    required crypto_attribute attribute = 2;
+}
