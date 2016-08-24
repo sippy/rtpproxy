@@ -1,0 +1,20 @@
+enum rtpc_result {
+    RTPC_SUCCESS = 1;
+    RTPC_FAILURE = 2;
+}
+
+enum address_families {
+    AF_INET = 1;
+    AF_INET6 = 2;
+}
+
+message ip_address {
+    required int32 port = 1;
+    required string ip = 2;
+    required address_families af = 3;
+}
+
+message rtpp_response {
+    required rtpc_result result = 1;
+    optional ip_address local_addr = 2;
+}
