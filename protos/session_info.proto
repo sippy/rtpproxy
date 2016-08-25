@@ -24,6 +24,12 @@
  * SUCH DAMAGE.
  */
 
-message stream_info {
-    required uint32 idx = 1 [default = 0];
+message sess_info_offer {
+    required string from_tag = 1;
+    optional string to_tag = 2;
+}
+
+message sess_info_answer {
+    required string from_tag = 1;
+    required string to_tag = 2;
 }

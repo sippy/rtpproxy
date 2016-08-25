@@ -38,4 +38,5 @@ message rtpp_request {
     optional rtpp_id id = 1;
     required cmd_destination dest = 2;
     required bytes cmd_pb = 3;
+    optional string call_id = 4;
 }

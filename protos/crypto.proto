@@ -24,6 +24,7 @@
  * SUCH DAMAGE.
  */
 
+import "session_info.proto";
 import "stream_info.proto";
 
 enum crypto_suites {
@@ -41,18 +42,52 @@ enum crypto_suites {
     AEAD_AES_256_GCM = 12;		/* [RFC7714] */
 }
 
+enum fec_types {
+    FEC_SRTP = 1;
+    SRTP_FEC = 2;
+}
+
 enum key_methods {
     km_inline = 1;			/* [RFC4568] */
 }
 
-enum session_parameters {
-    KDR = 1;				/* [RFC4568] */
-    UNENCRYPTED_SRTP = 2;		/* [RFC4568] */
-    UNENCRYPTED_SRTCP = 3;		/* [RFC4568] */
-    UNAUTHENTICATED_SRTP = 4;		/* [RFC4568] */
-    FEC_ORDER = 5;			/* [RFC4568] */
-    FEC_KEY = 6;			/* [RFC4568] */
-    WSH = 7;				/* [RFC4568] */
+enum srtp_session_parameters {
+    UNENCRYPTED_SRTP = 1;		/* [RFC4568] */
+    UNENCRYPTED_SRTCP = 2;		/* [RFC4568] */
+    UNAUTHENTICATED_SRTP = 3;		/* [RFC4568] */
+}
+
+message av_u32 {
+    required uint32 value = 1;
+}
+
+message fec_order {
+    required fec_types fec_type = 1;
+}
+
+message fec_key {
+    required string key_params = 1;
+}
+
+message session_parameters {
+    oneof type {
+        av_u32 kdr = 1;
+        srtp_session_parameters flag = 2;
+        fec_order fec_order = 3;
+        fec_key fec_key = 4;
+        av_u32 wsh = 5;
+    }
+}
+
+message mki_params {
+    required uint32 value = 1;
+    required uint32 length = 2;
+}
+
+message key_info {
+    required string key_salt = 1;
+    optional string lifetime = 2;
+    optional mki_params mki = 3;
 }
 
 /* Crypto face with respect to the RTPproxy */
@@ -60,7 +95,7 @@ message crypto_attribute_face {
     required int32 tag = 1;
     required crypto_suites suite = 2;
     required key_methods key_method = 3;
-    required string key_info = 4;
+    repeated key_info keys = 4;
     repeated session_parameters session_parameters = 5;
 }
 
@@ -72,7 +107,7 @@ message crypto_attribute {
 }
 
 message crypto_offer {
-    required sinfo_offer stream_info = 1;
+    required stream_info info = 1;
     /*
      * Offerer can put in more than one attribute and let answered to pick one
      * and signal back via tag field in the answer
@@ -81,14 +116,24 @@ message crypto_offer {
 }
 
 message crypto_answer {
-    required sinfo_answer stream_info = 1;
+    required stream_info info = 1;
 
     required crypto_attribute attribute = 2;
 }
 
+message crypto_offer_bundle {
+    required sess_info_offer session = 1;
+    repeated crypto_offer streams = 2;
+}
+
+message crypto_answer_bundle {
+    required sess_info_answer session = 1;
+    repeated crypto_answer streams = 2;
+}
+
 message crypto_request {
     oneof type {
-        crypto_offer offer = 2;
-        crypto_answer answer = 3;
+        crypto_offer_bundle offer = 1;
+        crypto_answer_bundle answer = 2;
     }
 }
