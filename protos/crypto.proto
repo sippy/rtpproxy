@@ -85,3 +85,10 @@ message crypto_answer {
 
     required crypto_attribute attribute = 2;
 }
+
+message crypto_request {
+    oneof type {
+        crypto_offer offer = 2;
+        crypto_answer answer = 3;
+    }
+}

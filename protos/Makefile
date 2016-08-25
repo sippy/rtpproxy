@@ -1,13 +1,12 @@
-all: out/crypto_pb2.py out/stream_info_pb2.py out/rtpp_response.py
+.for proto in crypto stream_info rtpp_response network rtpp_request rtpp_id
+__ALL_TGTS+=out/${proto}_pb2.py
+CLEANFILES+=out/${proto}_pb2.py*
+out/${proto}_pb2.py: ${proto}.proto
+	protoc --python_out=out ${.ALLSRC}
+.endfor
 
-out/crypto_pb2.py: crypto.proto stream_info.proto
-	protoc --python_out=out crypto.proto
-
-out/stream_info_pb2.py: stream_info.proto
-	protoc --python_out=out stream_info.proto
-
-out/rtpp_response.py: rtpp_response.proto
-	protoc --python_out=out rtpp_response.proto
+__ALL_TGTS := ${__ALL_TGTS}
+all: ${__ALL_TGTS} 
 
 clean:
-	rm -f out/crypto_pb2.py out/stream_info_pb2.py
+	rm -f ${CLEANFILES}

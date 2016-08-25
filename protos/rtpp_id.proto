@@ -24,16 +24,6 @@
  * SUCH DAMAGE.
  */
 
-import "network.proto";
-import "rtpp_id.proto";
-
-enum rtpc_result {
-    RTPC_SUCCESS = 1;
-    RTPC_FAILURE = 2;
-}
-
-message rtpp_response {
-    optional rtpp_id id = 1;
-    required rtpc_result result = 2;
-    optional udp_address local_addr = 3;
+message rtpp_id {
+    required string cookie = 1;
 }

@@ -24,16 +24,18 @@
  * SUCH DAMAGE.
  */
 
-import "network.proto";
 import "rtpp_id.proto";
 
-enum rtpc_result {
-    RTPC_SUCCESS = 1;
-    RTPC_FAILURE = 2;
+enum module_classes {
+    CLS_MOD_CRYPTO = 1;
 }
 
-message rtpp_response {
+message cmd_destination {
+    required module_classes mclass = 1;
+}
+
+message rtpp_request {
     optional rtpp_id id = 1;
-    required rtpc_result result = 2;
-    optional udp_address local_addr = 3;
+    required cmd_destination dest = 2;
+    required bytes cmd_pb = 3;
 }

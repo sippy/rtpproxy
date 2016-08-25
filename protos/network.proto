@@ -24,16 +24,17 @@
  * SUCH DAMAGE.
  */
 
-import "network.proto";
-import "rtpp_id.proto";
-
-enum rtpc_result {
-    RTPC_SUCCESS = 1;
-    RTPC_FAILURE = 2;
+enum address_families {
+    AF_INET = 1;
+    AF_INET6 = 2;
 }
 
-message rtpp_response {
-    optional rtpp_id id = 1;
-    required rtpc_result result = 2;
-    optional udp_address local_addr = 3;
+message ip_address {
+    required string ip = 1;
+    required address_families af = 2;
+}
+
+message udp_address {
+    required ip_address dst = 1;
+    required uint32 port = 2;
 }
