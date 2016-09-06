@@ -51,6 +51,8 @@
 #include "rtpp_netaddr.h"
 #include "rtpp_network.h"
 #include "rtpp_cfg_stable.h"
+#include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 
 #define SSRC_STRLEN 11
 
@@ -182,13 +184,16 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
     }
     pvt->fd = open(pvt->fname, O_WRONLY | O_APPEND | O_CREAT, DEFFILEMODE);
     if (pvt->fd == -1) {
+        mod_elog(RTPP_LOG_ERR, "can't open '%s' for writing", pvt->fname);
         goto e0;
     }
     pos = rtpp_acct_csv_lockf(pvt->fd);
     if (pos < 0) {
+        mod_elog(RTPP_LOG_ERR, "can't lock '%s'", pvt->fname);
         goto e1;
     }
     if (fstat(pvt->fd, &pvt->stt) < 0) {
+        mod_elog(RTPP_LOG_ERR, "can't get stats for '%s'", pvt->fname);
         goto e2;
     }
     if (pvt->stt.st_size == 0) {
