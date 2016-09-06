@@ -48,6 +48,11 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
   rtpp_module.memdeb_p, __FILE__, __LINE__, __func__, (vl))
 #endif
 
+#define mod_log(args...) CALL_METHOD(rtpp_module.log, write, __FUNCTION__, \
+  ## args)
+#define mod_elog(args...) CALL_METHOD(rtpp_module.log, ewrite, __FUNCTION__, \
+  ## args)
+
 struct api_version {
     int rev;
     size_t mi_size;
@@ -78,6 +83,7 @@ struct rtpp_minfo {
     rtpp_module_asprintf_t _asprintf;
     rtpp_module_vasprintf_t _vasprintf;
     void *memdeb_p;
+    struct rtpp_log *log;
 };
 
 #define MI_VER_INIT() {.rev = MODULE_API_REVISION, .mi_size = sizeof(rtpp_module)}

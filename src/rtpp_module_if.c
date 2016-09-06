@@ -161,6 +161,8 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
     if (pvt->req_q == NULL) {
         goto e4;
     }
+    CALL_SMETHOD(log->rcnt, incref);
+    pvt->mip->log = log;
     if (pvt->mip->ctor != NULL) {
         pvt->mpvt = pvt->mip->ctor(cfsp);
         if (pvt->mpvt == NULL) {
@@ -179,8 +181,6 @@ rtpp_module_if_ctor(struct rtpp_cfg_stable *cfsp, struct rtpp_log *log,
       (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
         goto e6;
     }
-    CALL_SMETHOD(log->rcnt, incref);
-    pvt->log = log;
     pvt->pub.do_acct = &rtpp_mif_do_acct;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
@@ -190,6 +190,7 @@ e6:
         pvt->mip->dtor(pvt->mpvt);
     }
 e5:
+    CALL_SMETHOD(pvt->mip->log->rcnt, decref);
     rtpp_queue_destroy(pvt->req_q);
 #if RTPP_CHECK_LEAKS
     if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
@@ -226,18 +227,18 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
     if (pvt->mip->dtor != NULL) {
         pvt->mip->dtor(pvt->mpvt);
     }
+    CALL_SMETHOD(pvt->mip->log->rcnt, decref);
 
 #if RTPP_CHECK_LEAKS
     /* Check if module leaked any mem */
     if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
-        RTPP_LOG(pvt->log, RTPP_LOG_ERR, "module '%s' leaked memory after "
+        RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s' leaked memory after "
           "destruction", pvt->mip->name);
     }
     rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
     /* Unload and free everything */
     dlclose(pvt->dmp);
-    CALL_SMETHOD(pvt->log->rcnt, decref);
     free(pvt);
 }
 
@@ -279,7 +280,7 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
     pvt = PUB2PVT(self);
     wi = rtpp_wi_malloc_apis(do_acct_aname, &acct, sizeof(acct));
     if (wi == NULL) {
-        RTPP_LOG(pvt->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
+        RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
           "memory", pvt->mip->name);
         return;
     }
