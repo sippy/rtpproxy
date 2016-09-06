@@ -100,7 +100,7 @@ rtpp_wi_malloc_sgnl(int signum, const void *data, size_t datalen)
     wi->wi_type = RTPP_WI_TYPE_SGNL;
     wi->flags = signum;
     if (datalen > 0) {
-        wi->msg = (char *)wi + datalen;
+        wi->msg = (char *)wi + sizeof(struct rtpp_wi);
         wi->msg_len = datalen;
         memcpy(wi->msg, data, datalen);
     }
