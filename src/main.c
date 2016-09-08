@@ -200,25 +200,14 @@ rtpp_rlim_max(struct cfg *cf)
     return (long long)(cf->stable->nofile_limit->rlim_max);
 }
 
+#define LOPT_DSO     256
+#define LOPT_BRSYM   257
+
 const static struct option longopts[] = {
-    { "dso", required_argument, NULL, 0 },
+    { "dso", required_argument, NULL, LOPT_DSO },
+    { "bridge_symmetric", no_argument, NULL, LOPT_BRSYM },
     { NULL,  0,                 NULL, 0 }
 };
-
-static void
-handle_longopt(struct rtpp_cfg_stable *cfsp, const char *on, const char *optarg)
-{
-
-    if (strcmp(on, "dso") == 0) {
-        if (cfsp->mpath != NULL) {
-             errx(1, "this version of the rtpproxy only supports loading a "
-               "single module");
-        }
-        cfsp->mpath = strdup(optarg);
-        return;
-    }
-    errx(1, "unknown option: --%s", on);
-}
 
 static void
 init_config(struct cfg *cf, int argc, char **argv)
@@ -230,7 +219,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     struct group *gp;
     double x, y;
     struct rtpp_ctrl_sock *ctrl_sock;
-    int option_index;
+    int option_index, brsym;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -277,12 +266,20 @@ init_config(struct cfg *cf, int argc, char **argv)
 	err(1, "getrlimit");
 
     option_index = -1;
+    brsym = 0;
     while ((ch = getopt_long(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:"
       "VN:c:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
-        case 0:
-            RTPP_DBG_ASSERT(option_index >= 0);
-            handle_longopt(cf->stable, longopts[option_index].name, optarg);
+        case LOPT_DSO:
+            if (cf->stable->mpath != NULL) {
+                 errx(1, "this version of the rtpproxy only supports loading a "
+                   "single module");
+            }
+            cf->stable->mpath = strdup(optarg);
+            break;
+
+        case LOPT_BRSYM:
+            brsym = 1;
             break;
 
         case 'c':
@@ -331,6 +328,11 @@ init_config(struct cfg *cf, int argc, char **argv)
 		*bh[1] = '\0';
 		bh[1]++;
 		cf->stable->bmode = 1;
+		/*
+		 * Historically, in bridge mode all clients are assumed to
+		 * be asymmetric
+		 */
+		cf->stable->aforce = 1;
 	    }
 	    break;
 
@@ -341,6 +343,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 		*bh6[1] = '\0';
 		bh6[1]++;
 		cf->stable->bmode = 1;
+		cf->stable->aforce = 1;
 	    }
 	    break;
 
@@ -531,6 +534,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 	default:
 	    usage();
 	}
+    }
+
+    if (cf->stable->bmode != 0 && brsym != 0) {
+        cf->stable->aforce = 0;
     }
 
     if (cf->stable->max_setup_ttl == 0) {

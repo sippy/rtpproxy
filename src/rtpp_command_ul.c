@@ -118,8 +118,7 @@ static void
 ul_opts_init(struct cfg *cf, struct ul_opts *ulop)
 {
 
-    /* In bridge mode all clients are assumed to be asymmetric */
-    ulop->asymmetric = (cf->stable->bmode != 0) ? 1 : 0;
+    ulop->asymmetric = (cf->stable->aforce != 0) ? 1 : 0;
     ulop->requested_ptime = -1;
     ulop->lia[0] = ulop->lia[1] = ulop->reply.ia = cf->stable->bindaddr[0];
     ulop->lidx = 1;
