@@ -80,10 +80,12 @@ setup_gen() {
 }
 
 setup_fwd() {
-  PORTO=$((${1} + 2))
-  PORTA=$((${2} + 2))
+  START_PORTO=$((${1} + 2))
+  START_PORTA=$((${2} + 2))
   shift 2
   i=1
+  PORTO=${START_PORTO}
+  PORTA=${START_PORTA}
   for codec in ${1}
   do
     CID="forwarding1_${i}"
@@ -102,7 +104,29 @@ setup_fwd() {
     PORTA=$((${PORTA} + 4))
     i=$((${i}+1))
   done
-  sleep 36
+  sleep 6
+  i=1
+  PORTO=${START_PORTO}
+  PORTA=${START_PORTA}
+  for codec in ${1}
+  do
+    CID="forwarding1_${i}"
+    SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
+    ${SED} "${SED_TRANS}" forwarding1.relatch.input
+    PORTO=$((${PORTO} + 4))
+    PORTA=$((${PORTA} + 4))
+    i=$((${i}+1))
+  done
+  for codec in ${2}
+  do
+    CID="forwarding1_${i}"
+    SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
+    ${SED} "${SED_TRANS}" forwarding1.repack.input
+    PORTO=$((${PORTO} + 4))
+    PORTA=$((${PORTA} + 4))
+    i=$((${i}+1))
+  done
+  sleep 30
   j=$((${i}-1))
   while [ ${j} -gt $((${i}/2)) ]
   do
@@ -164,7 +188,7 @@ setup_buffers
 
 witness_start forwarding1 "forwarding1.rout forwarding1.geno.rout forwarding1.gena.rout forwarding1.rlog forwarding1.geno.rlog forwarding1.gena.rlog"
 
-RTPPROXY_ARGS="-T5 -b -s stdio: -f -d ${RTPP_DEBUG_LVL} -l 0.0.0.0 -6 /::"
+RTPPROXY_ARGS="-T5 --bridge_symmetric -b -s stdio: -f -d ${RTPP_DEBUG_LVL} -l 0.0.0.0 -6 /::"
 
 #sts=`date "+%Y%m%d%H%M%S"`
 (setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \

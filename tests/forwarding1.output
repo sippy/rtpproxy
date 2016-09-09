@@ -118,6 +118,76 @@
 13460
 13458
 13460
+13344
+13342
+13348
+13346
+13352
+13350
+13356
+13354
+13360
+13358
+13364
+13362
+13368
+13366
+13372
+13370
+13376
+13374
+13380
+13378
+13384
+13382
+13388
+13386
+13392
+13390
+13396
+13394
+13400
+13398
+13404
+13402
+13408
+13406
+13412
+13410
+13416
+13414
+13420
+13418
+13424
+13422
+13428
+13426
+13432
+13430
+13436
+13434
+13440
+13438
+13442
+13444
+13442
+13444
+13446
+13448
+13446
+13448
+13450
+13452
+13450
+13452
+13454
+13456
+13454
+13456
+13458
+13460
+13458
+13460
 npkts_ina=500 npkts_ino=3000 nrelayed=2000 ndropped=0
 rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
@@ -239,7 +309,7 @@ rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
 0
 nsess_created=60 nsess_destroyed=30 nsess_timeout=0 nsess_complete=60 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=30 nsess_owrtcp=0
-ncmds_rcvd=242 ncmds_succd=241 ncmds_errs=0 ncmds_repld=241
+ncmds_rcvd=312 ncmds_succd=311 ncmds_errs=0 ncmds_repld=311
 npkts_rcvd=192000 npkts_played=0 npkts_relayed=180000 npkts_discard=0 nplrs_created=0 nplrs_destroyed=0
 npkts_resizer_in=32000 npkts_resizer_out=20000 npkts_resizer_discard=0
 rtpa_nsent=96000 rtpa_nrcvd=96000 rtpa_ndups=0 rtpa_perrs=0
