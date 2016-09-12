@@ -61,7 +61,12 @@ class CCEventGeneric(object):
 
 class CCEventTry(CCEventGeneric):
     name = 'CCEventTry'
-    pass
+    max_forwards = None
+
+    def getCopy(self):
+        cself = CCEventGeneric.getCopy(self)
+        cself.max_forwards = self.max_forwards
+        return cself
 
 class CCEventRing(CCEventGeneric):
     name = 'CCEventRing'

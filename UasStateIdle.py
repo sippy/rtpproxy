@@ -95,6 +95,10 @@ class UasStateIdle(UaStateGeneric):
             event.reason = req.getHFBody('reason')
         except:
             pass
+        try:
+            event.max_forwards = req.getHFBody('max-forwards').getNum()
+        except:
+            pass
         if self.ua.expire_time != None:
             self.ua.expire_time += event.rtime
         if self.ua.no_progress_time != None:

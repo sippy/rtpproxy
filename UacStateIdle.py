@@ -73,7 +73,8 @@ class UacStateIdle(UaStateGeneric):
             self.ua.routes = []
             self.ua.cGUID = cGUID
             self.ua.lSDP = body
-            req = self.ua.genRequest('INVITE', body, reason = event.reason)
+            req = self.ua.genRequest('INVITE', body, reason = event.reason, \
+              max_forwards = event.max_forwards)
             self.ua.lCSeq += 1
             self.ua.tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.ua.recvResponse, \
               laddress = self.ua.source_address, cb_ifver = 2, compact = self.ua.compact_sip)

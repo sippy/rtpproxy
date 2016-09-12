@@ -31,6 +31,7 @@ from UacStateIdle import UacStateIdle
 from SipRequest import SipRequest
 from SipContentType import SipContentType
 from SipProxyAuthorization import SipProxyAuthorization
+from SipMaxForwards import SipMaxForwards
 from CCEvents import CCEventTry, CCEventFail, CCEventDisconnect, CCEventInfo
 from MsgBody import MsgBody
 from hashlib import md5
@@ -264,15 +265,19 @@ class UA(object):
             self.event_cb(event, self)
 
     def genRequest(self, method, body = None, nonce = None, realm = None, SipXXXAuthorization = SipAuthorization, \
-      reason = None):
+      reason = None, max_forwards = None):
         if self.outbound_proxy != None:
             target = self.outbound_proxy
         else:
             target = self.rAddr
+        if max_forwards != None:
+            max_forwards_hf = SipMaxForwards(number = max_forwards)
+        else:
+            max_forwards_hf = None
         req = SipRequest(method = method, ruri = self.rTarget, to = self.rUri, fr0m = self.lUri,
                          cseq = self.lCSeq, callid = self.cId, contact = self.lContact,
                          routes = self.routes, target = target, cguid = self.cGUID,
-                         user_agent = self.local_ua)
+                         user_agent = self.local_ua, maxforwards = max_forwards_hf)
         if nonce != None and realm != None and self.username != None and self.password != None:
             auth = SipXXXAuthorization(realm = realm, nonce = nonce, method = method, uri = str(self.rTarget),
               username = self.username, password = self.password)

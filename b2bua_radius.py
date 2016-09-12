@@ -321,6 +321,8 @@ class CallController(object):
             cId += '-b2b_%d' % oroute.rnum
         event = CCEventTry((cId, cGUID, oroute.cli, cld, body, auth, \
           oroute.params.get('caller_name', self.caller_name)))
+        if self.eTry.max_forwards != None:
+            event.max_forwards = self.eTry.max_forwards - 1
         event.reason = self.eTry.reason
         self.uaO.recvEvent(event)
 
