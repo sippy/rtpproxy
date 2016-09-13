@@ -82,7 +82,12 @@ class CCEventConnect(CCEventGeneric):
 
 class CCEventUpdate(CCEventGeneric):
     name = 'CCEventUpdate'
-    pass
+    max_forwards = None
+
+    def getCopy(self):
+        cself = CCEventGeneric.getCopy(self)
+        cself.max_forwards = self.max_forwards
+        return cself
 
 class CCEventInfo(CCEventGeneric):
     name = 'CCEventInfo'

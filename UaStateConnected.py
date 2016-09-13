@@ -32,6 +32,7 @@ from SipHeader import SipHeader
 from SipReferTo import SipReferTo
 from SipReferredBy import SipReferredBy
 from SipProxyAuthorization import SipProxyAuthorization
+from SipMaxForwards import SipMaxForwards
 from CCEvents import CCEventDisconnect, CCEventFail, CCEventRedirect, CCEventUpdate, CCEventInfo, CCEventConnect
 
 class UaStateConnected(UaStateGeneric):
@@ -77,6 +78,10 @@ class UaStateConnected(UaStateGeneric):
             event = CCEventUpdate(body, rtime = req.rtime, origin = self.ua.origin)
             try:
                 event.reason = req.getHFBody('reason')
+            except:
+                pass
+            try:
+                event.max_forwards = req.getHFBody('max-forwards').getNum()
             except:
                 pass
             if body != None:
@@ -187,7 +192,12 @@ class UaStateConnected(UaStateGeneric):
                     event.setWarning(str(e))
                     self.ua.equeue.append(event)
                 return None
-            req = self.ua.genRequest('INVITE', body, reason = event.reason)
+            if event.max_forwards != None:
+                max_forwards_hf = SipMaxForwards(number = event.max_forwards - 1)
+            else:
+                max_forwards_hf = None
+            req = self.ua.genRequest('INVITE', body, reason = event.reason, \
+              maxforwards = max_forwards_hf)
             self.ua.lCSeq += 1
             self.ua.lSDP = body
             self.ua.tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.ua.recvResponse, \
