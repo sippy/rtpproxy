@@ -323,6 +323,10 @@ class CallController(object):
           oroute.params.get('caller_name', self.caller_name)))
         if self.eTry.max_forwards != None:
             event.max_forwards = self.eTry.max_forwards - 1
+            if event.max_forwards <= 0:
+                self.uaA.recvEvent(CCEventFail((483, 'Too Many Hops')))
+                self.state = CCStateDead
+                return
         event.reason = self.eTry.reason
         self.uaO.recvEvent(event)
 
