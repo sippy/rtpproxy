@@ -306,7 +306,8 @@ class UA(object):
             ack_cb = self.recvACK
         else:
             ack_cb = None
-        self.global_config['_sip_tm'].sendResponse(uasResp, ack_cb = ack_cb)
+        self.global_config['_sip_tm'].sendResponse(uasResp, ack_cb = ack_cb, \
+          lossemul = self.uas_lossemul)
 
     def recvACK(self, req):
         if not self.isConnected():
