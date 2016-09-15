@@ -88,7 +88,7 @@ class B2BRoute(object):
             af = 0
             self.hostonly = hostport[0]
         else:
-            hostport = host[1:].split(']', 1)
+            hostport = self.hostport[1:].split(']', 1)
             if len(hostport) > 1:
                 if len(hostport[1]) == 0:
                     del hostport[1]
