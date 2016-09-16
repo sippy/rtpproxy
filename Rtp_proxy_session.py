@@ -174,7 +174,8 @@ class _rtpps_side(object):
                 return
         for i in range(0, len(sdp_body.content.sections)):
             sect = sdp_body.content.sections[i]
-            if sect.m_header.transport.lower() not in ('udp', 'udptl', 'rtp/avp', 'rtp/savp'):
+            if sect.m_header.transport.lower() not in ('udp', 'udptl', 'rtp/avp', \
+              'rtp/savp', 'udp/bfcp'):
                 continue
             sects.append(sect)
         if len(sects) == 0:
