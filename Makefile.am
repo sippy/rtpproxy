@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS=	-I m4
 
 AUTOMAKE_OPTIONS=	foreign
 
-SUBDIRS=	libexecinfo src makeann
+SUBDIRS=	libexecinfo makeann
 
 if BUILD_MODULES
 SUBDIRS+=	modules
@@ -14,7 +14,7 @@ if BUILD_ELPERIODIC
 SUBDIRS+=       libelperiodic
 endif
 
-SUBDIRS+=	pertools tests
+SUBDIRS+=	src pertools tests
 
 dist_man_MANS=	rtpproxy.8
 EXTRA_DIST=	README.remote manpage.xml debian/README.Debian debian/changelog \
