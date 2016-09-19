@@ -7,14 +7,15 @@ SUBDIRS=	libexecinfo makeann
 if BUILD_MODULES
 SUBDIRS+=	modules
 endif
-if BUILD_EXTRACTAUDIO
-SUBDIRS+=	extractaudio
-endif
 if BUILD_ELPERIODIC
 SUBDIRS+=       libelperiodic
 endif
 
 SUBDIRS+=	src pertools tests
+
+if BUILD_EXTRACTAUDIO
+SUBDIRS+=       extractaudio
+endif
 
 dist_man_MANS=	rtpproxy.8
 EXTRA_DIST=	README.remote manpage.xml debian/README.Debian debian/changelog \
