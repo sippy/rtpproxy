@@ -40,6 +40,8 @@
 #include "rtpp_timed.h"
 #include "rtpp_timed_fin.h"
 
+#include "elperiodic.h"
+
 struct rtpp_timed_cf {
     struct rtpp_timed pub;
     struct rtpp_queue *q;
@@ -49,6 +51,7 @@ struct rtpp_timed_cf {
     pthread_t thread_id;
     struct rtpp_wi *sigterm;
     int wi_dsize;
+    void *elp;
 };
 
 struct rtpp_timed_wi {
@@ -74,7 +77,6 @@ static int rtpp_timed_schedule(struct rtpp_timed *,
 static struct rtpp_timed_task *rtpp_timed_schedule_rc(struct rtpp_timed *,
   double offset, struct rtpp_refcnt *, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t,
   void *);
-static void rtpp_timed_wakeup(struct rtpp_timed *, double);
 static void rtpp_timed_process(struct rtpp_timed_cf *, double);
 static int rtpp_timed_cancel(struct rtpp_timed_task *);
 
@@ -91,14 +93,17 @@ rtpp_timed_queue_run(void *argp)
 
     rtcp = (struct rtpp_timed_cf *)argp;
     for (;;) {
-        wi = rtpp_queue_get_item(rtcp->cmd_q, 0);
-        signum = rtpp_wi_sgnl_get_signum(wi);
-        rtpp_wi_free(wi);
-        if (signum == SIGTERM) {
-            break;
+        if (rtpp_queue_get_length(rtcp->cmd_q) > 0) {
+            wi = rtpp_queue_get_item(rtcp->cmd_q, 0);
+            signum = rtpp_wi_sgnl_get_signum(wi);
+            rtpp_wi_free(wi);
+            if (signum == SIGTERM) {
+                break;
+            }
         }
         ctime = getdtime();
         rtpp_timed_process(rtcp, ctime);
+        prdic_procrastinate(rtcp->elp);
     }
     /* We are terminating, get rid of all requests */
     while (rtpp_queue_get_length(rtcp->q) > 0) {
@@ -112,6 +117,7 @@ rtpp_timed_queue_run(void *argp)
         }
         CALL_SMETHOD(wi_data->pub.rcnt, decref);
     }
+    prdic_free(rtcp->elp);
 }
 
 struct rtpp_timed *
@@ -141,6 +147,10 @@ rtpp_timed_ctor(double run_period)
     if (rtcp->sigterm == NULL) {
         goto e3;
     }
+    rtcp->elp = prdic_init(1.0 / run_period, 0.0);
+    if (rtcp->elp == NULL) {
+        goto e4;
+    }
     if (pthread_create(&rtcp->thread_id, NULL,
       (void *(*)(void *))&rtpp_timed_queue_run, rtcp) != 0) {
         goto e5;
@@ -148,14 +158,14 @@ rtpp_timed_ctor(double run_period)
     rtcp->last_run = getdtime();
     rtcp->period = run_period;
     rtcp->wi_dsize = sizeof(struct rtpp_timed_wi) + rtpp_refcnt_osize();
-    rtcp->pub.wakeup = &rtpp_timed_wakeup;
     rtcp->pub.schedule = &rtpp_timed_schedule;
     rtcp->pub.schedule_rc = &rtpp_timed_schedule_rc;
     CALL_SMETHOD(rtcp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_destroy,
       rtcp);
     return (&rtcp->pub);
-
 e5:
+    prdic_free(rtcp->elp);
+e4:
     rtpp_wi_free(rtcp->sigterm);
 e3:
     rtpp_queue_destroy(rtcp->cmd_q);
@@ -272,25 +282,6 @@ rtpp_timed_istime(struct rtpp_wi *wi, void *p)
        return (0);
     }
     return (1);
-}
-
-static void
-rtpp_timed_wakeup(struct rtpp_timed *pub, double ctime)
-{
-    struct rtpp_timed_cf *rtcp;
-    struct rtpp_wi *wi;
-
-    rtcp = (struct rtpp_timed_cf *)pub;
-
-    if (rtcp->last_run + rtcp->period > ctime)
-        return;
-
-    wi = rtpp_wi_malloc_sgnl(SIGALRM, NULL, 0);
-    if (wi == NULL) {
-        return;
-    }
-    rtpp_queue_put_item(wi, rtcp->cmd_q);
-    rtcp->last_run = ctime;
 }
 
 static void

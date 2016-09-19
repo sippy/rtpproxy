@@ -41,14 +41,12 @@ struct rtpp_timed_task {
     METHOD_ENTRY(rtpp_timed_task_cancel, cancel);
 };
 
-DEFINE_METHOD(rtpp_timed, rtpp_timed_wakeup, void, double);
 DEFINE_METHOD(rtpp_timed, rtpp_timed_schedule, int, double,
   rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
 DEFINE_METHOD(rtpp_timed, rtpp_timed_schedule_rc, struct rtpp_timed_task *,
   double, struct rtpp_refcnt *, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
 
 struct rtpp_timed {
-    METHOD_ENTRY(rtpp_timed_wakeup, wakeup);
     METHOD_ENTRY(rtpp_timed_schedule, schedule);
     METHOD_ENTRY(rtpp_timed_schedule_rc, schedule_rc);
     struct rtpp_refcnt *rcnt;
