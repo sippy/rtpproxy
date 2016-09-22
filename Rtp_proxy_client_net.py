@@ -30,6 +30,8 @@ class Rtp_proxy_client_net(object):
 
     def getdestbyaddr(self, address, af):
         #print 'getaddrinfo', address[0], address[1], af, self.sock_type
+        if af == AF_INET6 and address[0].startswith('['):
+            return address
         ainfo = getaddrinfo(address[0], address[1], af, self.sock_type)
         amatch = [x[4] for x in ainfo if x[0] == af]
         if len(amatch) == 0:
