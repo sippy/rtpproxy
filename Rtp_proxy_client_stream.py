@@ -30,6 +30,7 @@ from errno import EINTR, EPIPE, ENOTCONN, ECONNRESET
 from twisted.internet import reactor
 from Time.MonoTime import MonoTime
 from Math.recfilter import recfilter
+from Rtp_proxy_client_net import Rtp_proxy_client_net
 
 from datetime import datetime
 import socket
@@ -124,32 +125,41 @@ class _RTPPLWorker(Thread):
             print '-' * 70
             sys.stdout.flush()
 
-class Rtp_proxy_client_stream(object):
+class Rtp_proxy_client_stream(Rtp_proxy_client_net):
     is_local = None
     wi_available = None
     wi = None
     nworkers = None
+    nworkers_act = None
     workers = None
     delay_flt = None
     family = None
+    sock_type = socket.SOCK_STREAM
 
     def __init__(self, global_config, address = '/var/run/rtpproxy.sock', \
       bind_address = None, nworkers = 1, family = socket.AF_UNIX):
         if family == socket.AF_UNIX:
             self.is_local = True
+            self.address = address
         else:
             self.is_local = False
+            self.address = self.getdestbyaddr(address, family)
         self.family = family
-        self.address = address
         self.wi_available = Condition()
         self.wi = []
         self.nworkers = nworkers
         self.workers = []
         for i in range(0, self.nworkers):
-            self.workers.append(_RTPPLWorker(self))
+            try:
+                self.workers.append(_RTPPLWorker(self))
+            except:
+                break
+        self.nworkers_act = i + 1
         self.delay_flt = recfilter(0.95, 0.25)
 
     def send_command(self, command, result_callback = None, *callback_parameters):
+        if self.nworkers_act == 0:
+            self.rtpp_class._reconnect(self, self.address)
         if not command.endswith('\n'):
             command += '\n'
         self.wi_available.acquire()
@@ -158,11 +168,20 @@ class Rtp_proxy_client_stream(object):
         self.wi_available.release()
 
     def reconnect(self, address, bind_address = None):
+        if not self.is_local:
+            address = self.getdestbyaddr(address, family)
+        self.rtpp_class._reconnect(self, address, bind_address)
+
+    def _reconnect(self, address, bind_address = None):
         self.shutdown()
         self.address = address
         self.workers = []
         for i in range(0, self.nworkers):
-            self.workers.append(_RTPPLWorker(self))
+            try:
+                self.workers.append(_RTPPLWorker(self))
+            except:
+                break
+        self.nworkers_act = i + 1
         self.delay_flt = recfilter(0.95, 0.25)
 
     def shutdown(self):
