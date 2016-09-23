@@ -200,7 +200,7 @@ class UaStateConnected(UaStateGeneric):
             else:
                 max_forwards_hf = None
             req = self.ua.genRequest('INVITE', body, reason = event.reason, \
-              maxforwards = max_forwards_hf)
+              max_forwards = max_forwards_hf)
             self.ua.lCSeq += 1
             self.ua.lSDP = body
             self.ua.tr = self.ua.global_config['_sip_tm'].newTransaction(req, self.ua.recvResponse, \
