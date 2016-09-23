@@ -193,6 +193,9 @@ class UaStateConnected(UaStateGeneric):
                     self.ua.equeue.append(event)
                 return None
             if event.max_forwards != None:
+                if event.max_forwards <= 0:
+                    self.ua.equeue.append(CCEventFail((483, 'Too Many Hops'), rtime = event.rtime))
+                    return None
                 max_forwards_hf = SipMaxForwards(number = event.max_forwards - 1)
             else:
                 max_forwards_hf = None
