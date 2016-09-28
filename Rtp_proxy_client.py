@@ -255,4 +255,4 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
         self.rtpp_class = None
 
     def get_rtpc_delay(self):
-        self.rtpp_class.get_rtpc_delay(self)
+        return self.rtpp_class.get_rtpc_delay(self)
