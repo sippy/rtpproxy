@@ -59,6 +59,13 @@ This proxy works as follows:
   up a sessions whose idle times exceed the value specified at compile
   time (60 seconds by default).
 
+## Building from github
+
+`$ git clone -b master https://github.com/sippy/rtpproxy.git`
+`$ git -C rtpproxy submodule update --init --recursive`
+`$ cd rtpproxy`
+`$ ./configure`
+`$ make`
 
 ## Support
 
