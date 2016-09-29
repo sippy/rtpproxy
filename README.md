@@ -61,11 +61,13 @@ This proxy works as follows:
 
 ## Building from github
 
-`$ git clone -b master https://github.com/sippy/rtpproxy.git`
-`$ git -C rtpproxy submodule update --init --recursive`
-`$ cd rtpproxy`
-`$ ./configure`
-`$ make`
+```
+$ git clone -b master https://github.com/sippy/rtpproxy.git
+$ git -C rtpproxy submodule update --init --recursive
+$ cd rtpproxy
+$ ./configure
+$ make
+```
 
 ## Support
 
