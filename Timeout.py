@@ -28,22 +28,50 @@ from datetime import datetime
 from twisted.internet import task, reactor
 from traceback import print_exc, format_list, extract_stack
 from sys import stdout
+from random import random
 
-class Timeout(object):
+class TimeoutInact(object):
     _task = None
+    _interval = None
     _ticks_left = None
     _timeout_callback = None
+    _timeout_cb_args = None
+    _randomize_runs = None
 
     def __init__(self, timeout_callback, interval, ticks = 1, *callback_arguments):
+        #print('TimeoutInact.__init__(%s)' % (str(callback_arguments),))
         self._timeout_callback = timeout_callback
-        if ticks == 1:
-            # Special case for just one call
-            self._task = reactor.callLater(interval, self._run_once, *callback_arguments)
-            self.cancel = self.cancel_callLater
-            return
+        self._interval = interval
         self._ticks_left = ticks
-        self._task = task.LoopingCall(self._run, *callback_arguments)
-        self._task.start(interval, False)
+        self._timeout_cb_args = callback_arguments
+
+    def _get_randomizer(self, p):
+        return lambda x: x * (1.0 + p * (1.0 - 2.0 * random()))
+
+    def spread_runs(self, p):
+        self._randomize_runs = self._get_randomizer(p)
+
+    def go(self):
+        if self._ticks_left == 1 or self._randomize_runs != None:
+            # Special case for just one call, we also use it when we need
+            # to add some random noise into a schedule so that LoopingCall()
+            # is not very convinient
+            self._schedule_call_later()
+            self.cancel = self.cancel_callLater
+            if self._randomize_runs == None:
+                self._timeout_cb_args = None
+            return
+        self._task = task.LoopingCall(self._run, *self._timeout_cb_args)
+        self._timeout_cb_args = None
+        self._task.start(self._interval, False)
+
+    def _schedule_call_later(self):
+        if self._randomize_runs == None:
+            ival = self._interval
+        else:
+            ival = self._randomize_runs(self._interval)
+        self._task = reactor.callLater(ival, self._run_once, \
+          *self._timeout_cb_args)
 
     def _run(self, *callback_arguments):
         try:
@@ -68,18 +96,29 @@ class Timeout(object):
             print_exc(file = stdout)
             print '-' * 70
             stdout.flush()
-        self._task = None
-        self._timeout_callback = None
+        if self._ticks_left == 1:
+            self._cleanup()
+            return
+        self._ticks_left -= 1
+        self._schedule_call_later()
 
     def cancel(self):
         self._task.stop()
-        self._task = None
-        self._timeout_callback = None
+        self._cleanup()
 
     def cancel_callLater(self):
         self._task.cancel()
+        self._cleanup()
+
+    def _cleanup(self):
         self._task = None
         self._timeout_callback = None
+        self._timeout_cb_args = None
+
+class Timeout(TimeoutInact):
+    def __init__(self, *args):
+        TimeoutInact.__init__(self, *args)
+        self.go()
 
 class TimeoutAbs:
     _task = None
