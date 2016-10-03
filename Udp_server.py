@@ -103,6 +103,7 @@ class AsyncReceiver(Thread):
                     continue
                 else:
                     maxemptydata = 100
+                rtime = MonoTime()
             except Exception, why:
                 if isinstance(why, socket.error) and why[0] in (ECONNRESET, ENOTCONN, ESHUTDOWN):
                     break
@@ -116,7 +117,6 @@ class AsyncReceiver(Thread):
                     sys.stdout.flush()
                     sleep(1)
                     continue
-            rtime = MonoTime()
             if self.userv.uopts.family == socket.AF_INET6:
                 address = ('[%s]' % address[0], address[1])
             reactor.callFromThread(self.userv.handle_read, data, address, rtime)
