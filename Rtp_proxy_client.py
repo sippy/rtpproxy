@@ -24,15 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from Timeout import Timeout
+from Timeout import TimeoutInact
 from Rtp_proxy_client_udp import Rtp_proxy_client_udp
 from Rtp_proxy_client_stream import Rtp_proxy_client_stream
 
-from random import random
 import socket
-
-def randomize(x, p):
-    return x * (1.0 + p * (1.0 - 2.0 * random()))
 
 CAPSTABLE = {'20071218':'copy_supported', '20080403':'stat_supported', \
   '20081224':'tnot_supported', '20090810':'sbind_supported', \
@@ -188,7 +184,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
         elif self.online:
             self.go_offline()
         else:
-            Timeout(self.version_check, randomize(self.hrtb_retr_ival, 0.1))
+            to = TimeoutInact(self.version_check, self.hrtb_retr_ival)
+            to.spread_runs(0.1)
+            to.go()
 
     def heartbeat(self):
         #print 'heartbeat', self, self.address
@@ -220,7 +218,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
                 elif line_parts[0] == 'packets transmitted':
                     ptransmitted = int(line_parts[1])
                 self.update_active(active_sessions, sessions_created, active_streams, preceived, ptransmitted)
-        Timeout(self.heartbeat, randomize(self.hrtb_ival, 0.1))
+        to = TimeoutInact(self.heartbeat, self.hrtb_ival)
+        to.spread_runs(0.1)
+        to.go()
 
     def go_online(self):
         if self.shut_down:
@@ -238,7 +238,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
         #print 'go_offline', self.address, self.online
         if self.online:
             self.online = False
-            Timeout(self.version_check, randomize(self.hrtb_retr_ival, 0.1))
+            to = TimeoutInact(self.version_check, self.hrtb_retr_ival)
+            to.spread_runs(0.1)
+            to.go()
 
     def update_active(self, active_sessions, sessions_created, active_streams, preceived, ptransmitted):
         self.sessions_created = sessions_created
