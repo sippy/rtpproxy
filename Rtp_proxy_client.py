@@ -151,14 +151,14 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
             self.rtpp_class.__init__(self, global_config, rtppa, **kwargs)
         elif len(address) > 0 and type(address[0]) in (tuple, list):
             self.rtpp_class = Rtp_proxy_client_udp
+            self.proxy_address = address[0][0]
             Rtp_proxy_client_udp.__init__(self, global_config, *address, \
               **kwargs)
-            self.proxy_address = address[0][0]
         else:
             self.rtpp_class = Rtp_proxy_client_stream
+            self.proxy_address = global_config['_sip_address']
             Rtp_proxy_client_stream.__init__(self, global_config, *address, \
               **kwargs)
-            self.proxy_address = global_config['_sip_address']
         if not no_version_check:
             self.version_check()
         else:
