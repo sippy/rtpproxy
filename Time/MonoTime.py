@@ -151,6 +151,24 @@ class MonoTime(object):
             otime = other.monot
         return cmp(self.monot, otime)
 
+    def __lt__(self, other):
+        return (self.monot < other.monot)
+
+    def __le__(self, other):
+        return (self.monot <= other.monot)
+
+    def __eq__(self, other):
+        return (self.monot == other.monot)
+
+    def __ne__(self, other):
+        return (self.monot != other.monot)
+
+    def __gt__(self, other):
+        return (self.monot > other.monot)
+
+    def __ge__(self, other):
+        return (self.monot >= other.monot)
+
     def offsetFromNow(self):
         now = clock_getdtime(CLOCK_MONOTONIC)
         return (now - self.monot)
@@ -186,6 +204,7 @@ class selftest(object):
                 print(m1.ftime(), m2.ftime())
             #print (m1.getdiff() - m2.getdiff())
         print(m1, m2)
+        print(m1 < m2, m1 > m2, m1 == m2, m1 <= m2, m1 >= m2, m1 != m2)
         print(m1.ftime(), m2.ftime())
         ms1 = str(m1)
         ms2 = str(m2)
