@@ -25,8 +25,15 @@
 
 from time import strftime, gmtime, localtime
 
-from sippy.Math.recfilter import recfilter
-from sippy.Time.clock_dtime import clock_getdtime, CLOCK_REALTIME, CLOCK_MONOTONIC
+import sys
+from os.path import dirname, abspath
+from inspect import getfile, currentframe
+currentdir = dirname(abspath(getfile(currentframe())))
+parentdir = dirname(currentdir)
+sys.path.insert(0, parentdir)
+from Math.recfilter import recfilter
+from Time.clock_dtime import clock_getdtime, CLOCK_REALTIME, CLOCK_MONOTONIC
+sys.path.pop(0)
 from threading import local
 
 class MonoGlobals(local):
@@ -175,21 +182,21 @@ class selftest(object):
             m1 = MonoTime()
             m2 = MonoTime()
             if x == 0:
-                print m1, m2
-                print m1.ftime(), m2.ftime()
-            #print m1.getdiff() - m2.getdiff()
-        print m1, m2
-        print m1.ftime(), m2.ftime()
+                print(m1, m2)
+                print(m1.ftime(), m2.ftime())
+            #print (m1.getdiff() - m2.getdiff())
+        print(m1, m2)
+        print(m1.ftime(), m2.ftime())
         ms1 = str(m1)
         ms2 = str(m2)
         m3 = MonoTime(s = ms1)
         m4 = MonoTime(s = ms2)
-        print m3, m4
-        print m3.ftime(), m4.ftime()
+        print(m3, m4)
+        print(m3.ftime(), m4.ftime())
         m5 = MonoTime(realt = m3.realt)
         m6 = MonoTime(monot = m4.monot)
-        print m5.ftime(), m6.ftime()
-        print m5.globals.realt_flt == m1.globals.realt_flt
+        print(m5.ftime(), m6.ftime())
+        print(m5.globals.realt_flt == m1.globals.realt_flt)
         from threading import Thread
         t1 = Thread(target = self.run_t1)
         t2 = Thread(target = self.run_t2)
