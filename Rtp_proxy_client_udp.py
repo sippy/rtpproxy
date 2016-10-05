@@ -24,6 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 from Timeout import Timeout
 from Udp_server import Udp_server, Udp_server_opts
 from Time.MonoTime import MonoTime
@@ -31,7 +33,7 @@ from Math.recfilter import recfilter
 from Rtp_proxy_cmd import Rtp_proxy_cmd
 from Rtp_proxy_client_net import Rtp_proxy_client_net
 
-from socket import SOCK_DGRAM
+from socket import SOCK_DGRAM, AF_INET
 from time import time
 from hashlib import md5
 from random import random
@@ -76,7 +78,7 @@ class Rtp_proxy_client_udp(Rtp_proxy_client_net):
     pdelay_out_max = 0.0
     sock_type = SOCK_DGRAM
 
-    def __init__(self, global_config, address, bind_address = None, family = None, nworkers = None):
+    def __init__(self, global_config, address, bind_address = None, family = AF_INET, nworkers = None):
         #print('Rtp_proxy_client_udp(family=%s)' % family)
         self.address = self.getdestbyaddr(address, family)
         self.is_local = False
@@ -92,7 +94,8 @@ class Rtp_proxy_client_udp(Rtp_proxy_client_net):
         self.delay_flt = recfilter(0.95, 0.25)
 
     def send_command(self, command, result_callback = None, *callback_parameters):
-        cookie = md5(str(random()) + str(time())).hexdigest()
+        entropy = str(random()) + str(time())
+        cookie = md5(entropy.encode()).hexdigest()
         next_retr = self.delay_flt.lastval * 4.0
         exp_time = 3.0
         if isinstance(command, Rtp_proxy_cmd):
@@ -119,7 +122,7 @@ class Rtp_proxy_client_udp(Rtp_proxy_client_net):
 
     def retransmit(self, cookie):
         preq = self.pending_requests[cookie]
-        #print 'command to %s timeout %s cookie %s triesleft %d' % (str(self.address), preq.command, cookie, preq.triesleft)
+        #print('command to %s timeout %s cookie %s triesleft %d' % (str(self.address), preq.command, cookie, preq.triesleft))
         if preq.triesleft <= 0 or self.worker == None:
             del self.pending_requests[cookie]
             self.go_offline()
@@ -167,10 +170,10 @@ class Rtp_proxy_client_udp(Rtp_proxy_client_net):
         # not work very well if the packet loss goes to more than 30-40%.
         if preq.retransmits == 0:
             self.delay_flt.apply(rtime - preq.stime)
-            #print 'Rtp_proxy_client_udp.process_reply(): delay %f' % (rtime - preq.stime)
+            #print('Rtp_proxy_client_udp.process_reply(): delay %f' % (rtime - preq.stime))
 
     def reconnect(self, address, bind_address = None):
-        #print 'reconnect', address
+        #print('reconnect', address)
         address = self.getdestbyaddr(address, self.uopts.family)
         self.rtpp_class._reconnect(self, address, bind_address)
 
@@ -192,7 +195,7 @@ class Rtp_proxy_client_udp(Rtp_proxy_client_net):
 class selftest(object):
     def gotreply(self, *args):
         from twisted.internet import reactor
-        print args
+        print(args)
         reactor.crash()
 
     def run(self):
@@ -201,6 +204,7 @@ class selftest(object):
         global_config = {}
         global_config['my_pid'] = os.getpid()
         rtpc = Rtp_proxy_client_udp(global_config, ('127.0.0.1', 22226), None)
+        rtpc.rtpp_class = Rtp_proxy_client_udp
         os.system('sockstat | grep -w %d' % global_config['my_pid'])
         rtpc.send_command('Ib', self.gotreply)
         reactor.run()

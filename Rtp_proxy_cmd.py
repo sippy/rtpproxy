@@ -24,6 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 def extract_to_next_token(s, match, invert = False):
     i = 0
     while i < len(s):
@@ -208,10 +210,10 @@ class Rtpp_stats(object):
 
 if __name__ == '__main__':
     rc = Rtp_proxy_cmd('G nsess_created total_duration')
-    print rc
-    print rc.args
-    print rc.command_opts
+    print(rc)
+    print(rc.args)
+    print(rc.command_opts)
     rc = Rtp_proxy_cmd('Gv nsess_created total_duration')
-    print rc
-    print rc.args
-    print rc.command_opts
+    print(rc)
+    print(rc.args)
+    print(rc.command_opts)

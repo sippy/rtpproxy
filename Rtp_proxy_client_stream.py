@@ -24,6 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 from Timeout import Timeout
 from threading import Thread, Condition
 from errno import EINTR, EPIPE, ENOTCONN, ECONNRESET
@@ -54,17 +56,17 @@ class _RTPPLWorker(Thread):
 
     def send_raw(self, command, _recurse = 0, stime = None):
         if _recurse > _MAX_RECURSE:
-            raise Exception('Cannot reconnect: %s', self.userv.address)
+            raise Exception('Cannot reconnect: %s' % (str(self.userv.address),))
         if not command.endswith('\n'):
             command += '\n'
-        #print '%s.send_raw(%s)' % (id(self), command)
+        #print('%s.send_raw(%s)' % (id(self), command))
         if stime == None:
             stime = MonoTime()
         while True:
             try:
                 self.s.send(command)
                 break
-            except socket.error, why:
+            except socket.error as why:
                 if why[0] == EINTR:
                     continue
                 elif why[0] in (EPIPE, ENOTCONN, ECONNRESET):
@@ -79,7 +81,7 @@ class _RTPPLWorker(Thread):
                     return self.send_raw(command, _MAX_RECURSE, stime)
                 rval = rval.strip()
                 break
-            except socket.error, why:
+            except socket.error as why:
                 if why[0] == EINTR:
                     continue
                 elif why[0] in (EPIPE, ENOTCONN, ECONNRESET):
@@ -107,8 +109,8 @@ class _RTPPLWorker(Thread):
                 data, rtpc_delay = self.send_raw(command)
                 if len(data) == 0:
                     data, rtpc_delay = None, None
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 data, rtpc_delay = None, None
             if result_callback != None:
                 reactor.callFromThread(self.dispatch, result_callback, data, callback_parameters)
@@ -119,10 +121,10 @@ class _RTPPLWorker(Thread):
         try:
             result_callback(data, *callback_parameters)
         except:
-            print datetime.now(), 'Rtp_proxy_client_stream: unhandled exception when processing RTPproxy reply'
-            print '-' * 70
+            print(datetime.now(), 'Rtp_proxy_client_stream: unhandled exception when processing RTPproxy reply')
+            print('-' * 70)
             traceback.print_exc(file = sys.stdout)
-            print '-' * 70
+            print('-' * 70)
             sys.stdout.flush()
 
 class Rtp_proxy_client_stream(Rtp_proxy_client_net):
@@ -202,7 +204,7 @@ class Rtp_proxy_client_stream(Rtp_proxy_client_net):
 if __name__ == '__main__':
     from twisted.internet import reactor
     def display(*args):
-        print args
+        print(args)
         reactor.crash()
     r = Rtp_proxy_client_stream({'_sip_address':'1.2.3.4'})
     r.send_command('VF 123456', display, 'abcd')

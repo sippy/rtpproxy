@@ -24,6 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 from twisted.internet import reactor
 from errno import ECONNRESET, ENOTCONN, ESHUTDOWN, EWOULDBLOCK, ENOBUFS, EAGAIN, \
   EINTR
@@ -72,7 +74,7 @@ class AsyncSender(Thread):
                 try:
                     if self.userv.skt.sendto(data, address) == len(data):
                         break
-                except socket.error, why:
+                except socket.error as why:
                     if why[0] not in (EWOULDBLOCK, ENOBUFS, EAGAIN):
                         break
                 sleep(0.01)
@@ -104,16 +106,16 @@ class AsyncReceiver(Thread):
                 else:
                     maxemptydata = 100
                 rtime = MonoTime()
-            except Exception, why:
+            except Exception as why:
                 if isinstance(why, socket.error) and why[0] in (ECONNRESET, ENOTCONN, ESHUTDOWN):
                     break
                 if isinstance(why, socket.error) and why[0] in (EINTR,):
                     continue
                 else:
-                    print datetime.now(), 'Udp_server: unhandled exception when receiving incoming data'
-                    print '-' * 70
+                    print(datetime.now(), 'Udp_server: unhandled exception when receiving incoming data')
+                    print('-' * 70)
                     traceback.print_exc(file = sys.stdout)
-                    print '-' * 70
+                    print('-' * 70)
                     sys.stdout.flush()
                     sleep(1)
                     continue
@@ -208,6 +210,8 @@ class Udp_server(object):
     def send_to(self, data, address, delayed = False):
         if not isinstance(address, tuple):
             raise Exception('Invalid address, not a tuple: %s' % str(address))
+        if not isinstance(data, bytes):
+            data = data.encode('utf-8')
         if self.uopts.ploss_out_rate > 0.0 and not delayed:
             if random() < self.uopts.ploss_out_rate:
                 return
@@ -238,10 +242,10 @@ class Udp_server(object):
             try:
                 self.uopts.data_callback(data, address, self, rtime)
             except:
-                print datetime.now(), 'Udp_server: unhandled exception when processing incoming data'
-                print '-' * 70
+                print(datetime.now(), 'Udp_server: unhandled exception when processing incoming data')
+                print('-' * 70)
                 traceback.print_exc(file = sys.stdout)
-                print '-' * 70
+                print('-' * 70)
                 sys.stdout.flush()
 
     def shutdown(self):
@@ -262,8 +266,8 @@ class Udp_server(object):
 class self_test(object):
     from sys import exit
     npongs = 2
-    ping_data = 'ping!'
-    ping_data6 = 'ping6!'
+    ping_data = b'ping!'
+    ping_data6 = b'ping6!'
     pong_laddr = None
     pong_laddr6 = None
     pong_data = 'pong!'
@@ -277,24 +281,24 @@ class self_test(object):
 
     def ping_received(self, data, address, udp_server, rtime):
         if udp_server.uopts.family == socket.AF_INET:
-            print 'ping_received'
+            print('ping_received')
             if data != self.ping_data or address != self.pong_raddr:
-                print data, address, self.ping_data, self.pong_raddr
+                print(data, address, self.ping_data, self.pong_raddr)
                 exit(1)
             udp_server.send_to(self.pong_data, address)
         else:
-            print 'ping_received6'
+            print('ping_received6')
             if data != self.ping_data6 or address != self.pong_raddr6:
                 exit(1)
             udp_server.send_to(self.pong_data6, address)
 
     def pong_received(self, data, address, udp_server, rtime):
         if udp_server.uopts.family == socket.AF_INET:
-            print 'pong_received'
+            print('pong_received')
             if data != self.pong_data or address != self.ping_raddr:
                 exit(1)
         else:
-            print 'pong_received6'
+            print('pong_received6')
             if data != self.pong_data6 or address != self.ping_raddr6:
                 exit(1)
         self.npongs -= 1
