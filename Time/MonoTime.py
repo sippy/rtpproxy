@@ -164,7 +164,7 @@ class MonoTime(object):
 
     def __ne__(self, other):
         if other == None:
-            return (False)
+            return (True)
         return (self.monot != other.monot)
 
     def __gt__(self, other):
