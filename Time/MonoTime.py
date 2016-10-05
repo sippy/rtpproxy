@@ -158,9 +158,13 @@ class MonoTime(object):
         return (self.monot <= other.monot)
 
     def __eq__(self, other):
+        if other == None:
+            return (False)
         return (self.monot == other.monot)
 
     def __ne__(self, other):
+        if other == None:
+            return (False)
         return (self.monot != other.monot)
 
     def __gt__(self, other):
