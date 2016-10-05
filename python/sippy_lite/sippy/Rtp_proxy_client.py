@@ -24,15 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from Timeout import Timeout
+from Timeout import TimeoutInact
 from Rtp_proxy_client_udp import Rtp_proxy_client_udp
 from Rtp_proxy_client_stream import Rtp_proxy_client_stream
 
-from random import random
 import socket
-
-def randomize(x, p):
-    return x * (1.0 + p * (1.0 - 2.0 * random()))
 
 CAPSTABLE = {'20071218':'copy_supported', '20080403':'stat_supported', \
   '20081224':'tnot_supported', '20090810':'sbind_supported', \
@@ -51,14 +47,15 @@ class Rtpp_caps_checker(object):
             rtpc.send_command('VF %s' % vers, self.caps_query_done, vers)
 
     def caps_query_done(self, result, vers):
-        self.caps_received -= 1
+        self.caps_received += 1
         vname = CAPSTABLE[vers]
         if result == '1':
             setattr(self.rtpc, vname, True)
         else:
             setattr(self.rtpc, vname, False)
-        if self.caps_received == 0:
+        if self.caps_received == self.caps_requested:
             self.rtpc.caps_done = True
+            self.rtpc.go_online()
             self.rtpc = None
 
 class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
@@ -154,14 +151,14 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
             self.rtpp_class.__init__(self, global_config, rtppa, **kwargs)
         elif len(address) > 0 and type(address[0]) in (tuple, list):
             self.rtpp_class = Rtp_proxy_client_udp
+            self.proxy_address = address[0][0]
             Rtp_proxy_client_udp.__init__(self, global_config, *address, \
               **kwargs)
-            self.proxy_address = address[0]
         else:
             self.rtpp_class = Rtp_proxy_client_stream
+            self.proxy_address = global_config['_sip_address']
             Rtp_proxy_client_stream.__init__(self, global_config, *address, \
               **kwargs)
-            self.proxy_address = global_config['_sip_address']
         if not no_version_check:
             self.version_check()
         else:
@@ -187,7 +184,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
         elif self.online:
             self.go_offline()
         else:
-            Timeout(self.version_check, randomize(self.hrtb_retr_ival, 0.1))
+            to = TimeoutInact(self.version_check, self.hrtb_retr_ival)
+            to.spread_runs(0.1)
+            to.go()
 
     def heartbeat(self):
         #print 'heartbeat', self, self.address
@@ -219,13 +218,17 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
                 elif line_parts[0] == 'packets transmitted':
                     ptransmitted = int(line_parts[1])
                 self.update_active(active_sessions, sessions_created, active_streams, preceived, ptransmitted)
-        Timeout(self.heartbeat, randomize(self.hrtb_ival, 0.1))
+        to = TimeoutInact(self.heartbeat, self.hrtb_ival)
+        to.spread_runs(0.1)
+        to.go()
 
     def go_online(self):
         if self.shut_down:
             return
         if not self.online:
-            rtpp_cc = Rtpp_caps_checker(self)
+            if not self.caps_done:
+                rtpp_cc = Rtpp_caps_checker(self)
+                return
             self.online = True
             self.heartbeat()
 
@@ -235,7 +238,9 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
         #print 'go_offline', self.address, self.online
         if self.online:
             self.online = False
-            Timeout(self.version_check, randomize(self.hrtb_retr_ival, 0.1))
+            to = TimeoutInact(self.version_check, self.hrtb_retr_ival)
+            to.spread_runs(0.1)
+            to.go()
 
     def update_active(self, active_sessions, sessions_created, active_streams, preceived, ptransmitted):
         self.sessions_created = sessions_created
@@ -252,4 +257,4 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
         self.rtpp_class = None
 
     def get_rtpc_delay(self):
-        self.rtpp_class.get_rtpc_delay(self)
+        return self.rtpp_class.get_rtpc_delay(self)
