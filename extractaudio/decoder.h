@@ -81,7 +81,8 @@ struct decoder_stream {
 
 void *decoder_new(struct session *, int);
 int32_t decoder_get(struct decoder_stream *);
-int decode_frame(struct decoder_stream *, int16_t *, unsigned char *, unsigned int);
+int decode_frame(struct decoder_stream *, int16_t *, unsigned char *,
+  unsigned int, unsigned int);
 int generate_silence(struct decoder_stream *, int16_t *, unsigned int);
 
 #endif

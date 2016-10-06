@@ -128,7 +128,8 @@ decoder_get(struct decoder_stream *dp)
             dp->oblen = j / 2;
             dp->obp = dp->obuf;
         } else {
-            j = decode_frame(dp, dp->obuf, RPLOAD(dp->pp), RPLEN(dp->pp));
+            j = decode_frame(dp, dp->obuf, RPLOAD(dp->pp), RPLEN(dp->pp), \
+              sizeof(dp->obuf));
             if (j > 0)
                 dp->lpt = dp->pp->rpkt->pt;
             dp->pp = MYQ_NEXT(dp->pp);
@@ -144,18 +145,25 @@ decoder_get(struct decoder_stream *dp)
 }
 
 int
-decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf, unsigned int ibytes)
+decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf,
+  unsigned int ibytes, unsigned int obytes_max)
 {
     unsigned int obytes;
 
     switch (dp->pp->rpkt->pt) {
     case RTP_PCMU:
+        if (obytes_max < (ibytes * 2)) {
+            ibytes = obytes_max / 2;
+        }
         ULAW2SL(obuf, ibuf, ibytes);
         dp->nticks += ibytes;
         dp->dticks += ibytes;
         return ibytes * 2;
 
     case RTP_PCMA:
+        if (obytes_max < (ibytes * 2)) {
+            ibytes = obytes_max / 2;
+        }
         ALAW2SL(obuf, ibuf, ibytes);
         dp->nticks += ibytes;
         dp->dticks += ibytes;
@@ -182,7 +190,7 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf, unsi
             dp->g729_ctx = G729_DINIT();
         if (dp->g729_ctx == NULL)
             return -1;
-        for (obytes = 0; ibytes > 0; ibytes -= fsize) {
+        for (obytes = 0; ibytes > 0 && obytes <= obytes_max - 160; ibytes -= fsize) {
             bp = G729_DECODE(dp->g729_ctx, ibuf, fsize);
             ibuf += fsize;
             memcpy(obuf, bp, 160);
@@ -201,6 +209,9 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf, unsi
             dp->g722_ctx = g722_decoder_new(64000, G722_SAMPLE_RATE_8000);
         if (dp->g722_ctx == NULL)
             return -1;
+        if (obytes_max < (ibytes * 2)) {
+            ibytes = obytes_max / 2;
+        }
         g722_decode(dp->g722_ctx, ibuf, ibytes, obuf);
         dp->nticks += ibytes;
         dp->dticks += ibytes;
@@ -219,7 +230,7 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf, unsi
         if (ibytes < 33) {
             return (-1);
         }
-        for (obytes = 0; ibytes > 0; ibytes -= 33) {
+        for (obytes = 0; ibytes > 0 && obytes <= obytes_max - 320; ibytes -= 33) {
             gsm_decode(dp->ctx_gsm, ibuf, obuf);
             ibuf += 33;
             obuf += 160;
