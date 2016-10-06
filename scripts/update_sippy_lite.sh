@@ -12,7 +12,7 @@ mkdir -p python/sippy_lite/Math
 mkdir -p python/sippy_lite/Time
 for f in ${SLITE_LIST}
 do
-  git mv ${f} python/sippy_lite/${f}
+  git mv ${f} python/sippy_lite/sippy/${f}
 done
 git rm .gitignore dictionary *.py
 git commit -m "Move files in place."
