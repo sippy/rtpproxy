@@ -18,6 +18,7 @@ do
     EAUD_ARGS="${RTPA_SUBDR}/${sname}"
   fi
   ${EXTRACTAUDIO} -s ${EAUD_ARGS} "${wfile}" > rtp_analyze_${sname}.tout 2>rtp_analyze_${sname}.tlog
+  report "extracting/analyzing for the ${sname}"
   ${DIFF} ${RTPA_SUBDR}/${sname}.output rtp_analyze_${sname}.tout
   report "checking stats for the ${sname}"
   sha256_verify "${wfile}" ${RTPA_SUBDR}/rtp_analyze1.checksums
