@@ -29,11 +29,15 @@ import ctypes.util
 CLOCK_REALTIME = 0
 CLOCK_MONOTONIC = 4 # see <linux/time.h> / <include/time.h>
 if platform.system() == 'FreeBSD':
-    CLOCK_UPTIME = 5 # FreeBSD-specific. 
-    CLOCK_UPTIME_PRECISE = 7 # FreeBSD-specific.
-    CLOCK_UPTIME_FAST = 8 # FreeBSD-specific.
-    CLOCK_MONOTONIC_PRECISE = 11 # FreeBSD-specific.
-    CLOCK_MONOTONIC_FAST = 12 # FreeBSD-specific.
+    # FreeBSD-specific
+    CLOCK_UPTIME = 5
+    CLOCK_UPTIME_PRECISE = 7
+    CLOCK_UPTIME_FAST = 8
+    CLOCK_MONOTONIC_PRECISE = 11
+    CLOCK_MONOTONIC_FAST = 12
+elif platform.system() == 'Linux':
+    # Linux-specific
+    CLOCK_BOOTTIME = 7
 
 class timespec(ctypes.Structure):
     _fields_ = [
