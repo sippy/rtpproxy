@@ -116,8 +116,6 @@ struct rtpp_stream {
     /* Local listen address/port */
     struct sockaddr *laddr;
     int port;
-    /* Descriptors */
-    struct rtpp_socket *__fd;
     int asymmetric;
     /* Flags: strong create/delete; weak ones */
     int weak;

@@ -93,6 +93,8 @@ struct rtpp_stream_priv
     struct rtpps_latch latch_info;
     /* Structure to track hold requests */
     struct rtpp_acct_hold hld_stat;
+    /* Descriptor */
+    struct rtpp_socket *fd;
 };
 
 #define PUB2PVT(pubp) \
@@ -260,8 +262,8 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          }
          CALL_SMETHOD(pvt->pub.analyzer->rcnt, decref);
     }
-    if (pub->__fd != NULL)
-        CALL_SMETHOD(pub->__fd->rcnt, decref);
+    if (pvt->fd != NULL)
+        CALL_SMETHOD(pvt->fd->rcnt, decref);
     if (pub->codecs != NULL)
         free(pub->codecs);
     if (pvt->rtps != RTPP_UID_NONE)
@@ -653,38 +655,54 @@ rtpp_stream_replace_rtps(struct rtpp_stream *self, uint64_t rtps_old,
 static void
 rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
 {
+    struct rtpp_stream_priv *pvt;
 
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
     if (new_skt == NULL) {
-        RTPP_DBG_ASSERT(self->__fd != NULL);
-        CALL_SMETHOD(self->__fd->rcnt, decref);
-        self->__fd = NULL;
+        RTPP_DBG_ASSERT(pvt->fd != NULL);
+        CALL_SMETHOD(pvt->fd->rcnt, decref);
+        pvt->fd = NULL;
+        pthread_mutex_unlock(&pvt->lock);
         return;
     }
-    RTPP_DBG_ASSERT(self->__fd == NULL);
-    self->__fd = new_skt;
-    CALL_SMETHOD(self->__fd->rcnt, incref);
+    RTPP_DBG_ASSERT(pvt->fd == NULL);
+    pvt->fd = new_skt;
+    CALL_SMETHOD(pvt->fd->rcnt, incref);
+    pthread_mutex_unlock(&pvt->lock);
 }
 
 static struct rtpp_socket *
 rtpp_stream_get_skt(struct rtpp_stream *self)
 {
+    struct rtpp_stream_priv *pvt;
+    struct rtpp_socket *rval;
 
-    if (self->__fd == NULL) {
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    if (pvt->fd == NULL) {
+        pthread_mutex_unlock(&pvt->lock);
         return (NULL);
     }
-    CALL_SMETHOD(self->__fd->rcnt, incref);
-    return (self->__fd);
+    CALL_SMETHOD(pvt->fd->rcnt, incref);
+    rval = pvt->fd;
+    pthread_mutex_unlock(&pvt->lock);
+    return (rval);
 }
 
 static struct rtpp_socket *
 rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
 {
     struct rtpp_socket *old_skt;
+    struct rtpp_stream_priv *pvt;
 
     RTPP_DBG_ASSERT(new_skt != NULL);
-    old_skt = self->__fd;
-    self->__fd = new_skt;
-    CALL_SMETHOD(self->__fd->rcnt, incref);
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    old_skt = pvt->fd;
+    pvt->fd = new_skt;
+    CALL_SMETHOD(pvt->fd->rcnt, incref);
+    pthread_mutex_unlock(&pvt->lock);
     return (old_skt);
 }
 
@@ -693,25 +711,29 @@ rtpp_stream_drain_skt(struct rtpp_stream *self)
 {
     struct rtp_packet *packet;
     int ndrained;
+    struct rtpp_stream_priv *pvt;
 #if RTPP_DEBUG
     const char *ptype;
     int fd;
 #endif
 
+    pvt = PUB2PVT(self);
     ndrained = 0;
+    pthread_mutex_lock(&pvt->lock);
 #if RTPP_DEBUG
     ptype = rtpp_stream_get_proto(self);
-    fd = CALL_METHOD(self->__fd, getfd);
+    fd = CALL_METHOD(pvt->fd, getfd);
     RTPP_LOG(self->log, RTPP_LOG_DBUG, "Draining %s socket %d", ptype,
       fd);
 #endif
     for (;;) {
-        packet = CALL_METHOD(self->__fd, rtp_recv, 0.0, NULL, 0);
+        packet = CALL_METHOD(pvt->fd, rtp_recv, 0.0, NULL, 0);
         if (packet == NULL)
             break;
         ndrained++;
         rtp_packet_free(packet);
     }
+    pthread_mutex_unlock(&pvt->lock);
 #if RTPP_DEBUG
     if (ndrained > 0) {
         RTPP_LOG(self->log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
@@ -725,17 +747,27 @@ static int
 rtpp_stream_send_pkt(struct rtpp_stream *self, struct sthread_args *sap,
   struct rtp_packet *pkt)
 {
+    struct rtpp_stream_priv *pvt;
+    int rval;
 
-    return (CALL_METHOD(self->__fd, send_pkt_na, sap, self->rem_addr, pkt,
-      self->log));
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    rval = CALL_METHOD(pvt->fd, send_pkt_na, sap, self->rem_addr, pkt,
+      self->log);
+    pthread_mutex_unlock(&pvt->lock);
+    return (rval);
 }
 
 static struct rtp_packet *
 rtpp_stream_recv_pkt(struct rtpp_stream *self, double dtime)
 {
     struct rtp_packet *pkt;
+    struct rtpp_stream_priv *pvt;
 
-    pkt = CALL_METHOD(self->__fd, rtp_recv, dtime, self->laddr, self->port);
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    pkt = CALL_METHOD(pvt->fd, rtp_recv, dtime, self->laddr, self->port);
+    pthread_mutex_unlock(&pvt->lock);
     return (pkt);
 }
 
