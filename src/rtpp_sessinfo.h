@@ -35,7 +35,7 @@ struct rtpp_weakref_obj;
 struct rtpp_cfg_stable;
 
 DEFINE_METHOD(rtpp_sessinfo, rtpp_si_append, int, struct rtpp_session *,
-  int);
+  int, struct rtpp_socket **);
 DEFINE_METHOD(rtpp_sessinfo, rtpp_si_update, void, struct rtpp_session *,
   int, struct rtpp_socket **);
 DEFINE_METHOD(rtpp_sessinfo, rtpp_si_remove, void, struct rtpp_session *,

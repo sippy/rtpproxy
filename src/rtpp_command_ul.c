@@ -372,20 +372,13 @@ err_undo_0:
 
 static void
 handle_nomem(struct cfg *cf, struct rtpp_command *cmd,
-  int ecode, struct ul_opts *ulop, struct rtpp_socket **fds,
-  struct rtpp_session *spa)
+  int ecode, struct ul_opts *ulop, struct rtpp_session *spa)
 {
-    int i;
 
     RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't allocate memory");
     rtpp_command_ul_opts_free(ulop);
     if (spa != NULL) {
         CALL_SMETHOD(spa->rcnt, decref);
-    }
-    if (fds != NULL) {
-        for (i = 0; i < 2; i++)
-            if (fds[i] != NULL)
-                CALL_SMETHOD(fds[i]->rcnt, decref);
     }
     reply_error(cmd, ecode);
 }
@@ -398,6 +391,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     struct rtpp_socket *fds[2];
     const char *actor;
     struct rtpp_session *spa, *spb;
+    struct rtpp_socket *fd;
 
     pidx = 1;
     lport = 0;
@@ -406,26 +400,31 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     if (sidx != -1) {
         RTPP_DBG_ASSERT(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = cmd->sp;
-        if (spa->rtp->stream[sidx]->fd == NULL || ulop->new_port != 0) {
+        fd = CALL_SMETHOD(spa->rtp->stream[sidx], get_skt);
+        if (fd == NULL || ulop->new_port != 0) {
             if (ulop->local_addr != NULL) {
                 spa->rtp->stream[sidx]->laddr = ulop->local_addr;
             }
             if (rtpp_create_listener(cf, spa->rtp->stream[sidx]->laddr, &lport, fds) == -1) {
                 RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
                 reply_error(cmd, ECODE_LSTFAIL_1);
+                if (fd != NULL) {
+                    CALL_SMETHOD(fd->rcnt, decref);
+                }
                 goto err_undo_0;
             }
-            if (spa->rtp->stream[sidx]->fd != NULL && ulop->new_port != 0) {
+            if (fd != NULL && ulop->new_port != 0) {
                 RTPP_LOG(spa->log, RTPP_LOG_INFO,
                   "new port requested, releasing %d/%d, replacing with %d/%d",
                   spa->rtp->stream[sidx]->port, spa->rtcp->stream[sidx]->port, lport, lport + 1);
                 CALL_METHOD(cf->stable->sessinfo, update, spa, sidx, fds);
             } else {
-                RTPP_DBG_ASSERT(spa->rtp->stream[sidx]->fd == NULL);
-                spa->rtp->stream[sidx]->fd = fds[0];
-                RTPP_DBG_ASSERT(spa->rtcp->stream[sidx]->fd == NULL);
-                spa->rtcp->stream[sidx]->fd = fds[1];
-                CALL_METHOD(cf->stable->sessinfo, append, spa, sidx);
+                CALL_METHOD(cf->stable->sessinfo, append, spa, sidx, fds);
+            }
+            CALL_SMETHOD(fds[0]->rcnt, decref);
+            CALL_SMETHOD(fds[1]->rcnt, decref);
+            if (fd != NULL) {
+                CALL_SMETHOD(fd->rcnt, decref);
             }
             spa->rtp->stream[sidx]->port = lport;
             spa->rtcp->stream[sidx]->port = lport + 1;
@@ -485,21 +484,22 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
          */
         spa = rtpp_session_ctor(cf->stable, &cmd->cca, cmd->dtime, ulop->lia,
           ulop->weak, lport, fds);
+        CALL_SMETHOD(fds[0]->rcnt, decref);
+        CALL_SMETHOD(fds[1]->rcnt, decref);
         if (spa == NULL) {
-            handle_nomem(cf, cmd, ECODE_NOMEM_4, ulop,
-              fds, NULL);
+            handle_nomem(cf, cmd, ECODE_NOMEM_4, ulop, NULL);
             return (-1);
         }
 
         hte = CALL_METHOD(cf->stable->sessions_ht, append_refcnt, spa->call_id,
           spa->rcnt);
         if (hte == NULL) {
-            handle_nomem(cf, cmd, ECODE_NOMEM_5, ulop, NULL, spa);
+            handle_nomem(cf, cmd, ECODE_NOMEM_5, ulop, spa);
             return (-1);
         }
         if (CALL_METHOD(cf->stable->sessions_wrt, reg, spa->rcnt, spa->seuid) != 0) {
             CALL_METHOD(cf->stable->sessions_ht, remove, spa->call_id, hte);
-            handle_nomem(cf, cmd, ECODE_NOMEM_8, ulop, NULL, spa);
+            handle_nomem(cf, cmd, ECODE_NOMEM_8, ulop, spa);
             return (-1);
         }
 

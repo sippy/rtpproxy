@@ -70,7 +70,7 @@ struct rtpp_sessinfo_priv {
 };
 
 static int rtpp_sinfo_append(struct rtpp_sessinfo *, struct rtpp_session *,
-  int index);
+  int, struct rtpp_socket **);
 static void rtpp_sinfo_update(struct rtpp_sessinfo *, struct rtpp_session *,
   int, struct rtpp_socket **);
 static void rtpp_sinfo_remove(struct rtpp_sessinfo *, struct rtpp_session *,
@@ -199,7 +199,7 @@ rtpp_sessinfo_dtor(struct rtpp_sessinfo_priv *pvt)
 
 static int
 rtpp_sinfo_append(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
-  int index)
+  int index, struct rtpp_socket **new_fds)
 {
     struct rtpp_sessinfo_priv *pvt;
     struct rtpp_stream *rtp, *rtcp;
@@ -217,9 +217,11 @@ rtpp_sinfo_append(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
         }
     }
     rtp = sp->rtp->stream[index];
-    rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_ADD, rtp->stuid, rtp->fd);
+    CALL_SMETHOD(rtp, set_skt, new_fds[0]);
+    rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_ADD, rtp->stuid, new_fds[0]);
     rtcp = sp->rtcp->stream[index];
-    rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_ADD, rtcp->stuid, rtcp->fd);
+    CALL_SMETHOD(rtcp, set_skt, new_fds[1]);
+    rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_ADD, rtcp->stuid, new_fds[1]);
 
     pthread_mutex_unlock(&pvt->lock);
     return (0);
@@ -244,6 +246,7 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
 {
     struct rtpp_sessinfo_priv *pvt;
     struct rtpp_stream *rtp, *rtcp;
+    struct rtpp_socket *old_fd;
 
     pvt = PUB2PVT(sessinfo);
 
@@ -259,21 +262,21 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
         }
     }
     rtp = sp->rtp->stream[index];
-    if (rtp->fd != NULL) {
-        CALL_SMETHOD(rtp->fd->rcnt, decref);
+    old_fd = CALL_SMETHOD(rtp, update_skt, new_fds[0]);
+    if (old_fd != NULL) {
         rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_UPD, rtp->stuid, new_fds[0]);
+        CALL_SMETHOD(old_fd->rcnt, decref);
     } else {
         rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_ADD, rtp->stuid, new_fds[0]);
     }
-    rtp->fd = new_fds[0];
     rtcp = sp->rtcp->stream[index];
-    if (rtcp->fd != NULL) {
-        CALL_SMETHOD(rtcp->fd->rcnt, decref);
+    old_fd = CALL_SMETHOD(rtcp, update_skt, new_fds[1]);
+    if (old_fd != NULL) {
         rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_UPD, rtcp->stuid, new_fds[1]);
+        CALL_SMETHOD(old_fd->rcnt, decref);
     } else {
         rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_ADD, rtcp->stuid, new_fds[1]);
     }
-    rtcp->fd = new_fds[1];
 
     pthread_mutex_unlock(&pvt->lock);
 }
@@ -284,6 +287,7 @@ rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
 {
     struct rtpp_sessinfo_priv *pvt;
     struct rtpp_stream *rtp, *rtcp;
+    struct rtpp_socket *fd;
 
     pvt = PUB2PVT(sessinfo);
 
@@ -299,12 +303,16 @@ rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
         }
     }
     rtp = sp->rtp->stream[index];
-    if (rtp->fd != NULL) {
+    fd = CALL_SMETHOD(rtp, get_skt);
+    if (fd != NULL) {
         rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_DEL, rtp->stuid, NULL);
+        CALL_SMETHOD(fd->rcnt, decref);
     }
     rtcp = sp->rtcp->stream[index];
-    if (rtcp->fd != NULL) {
+    fd = CALL_SMETHOD(rtcp, get_skt);
+    if (fd != NULL) {
         rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_DEL, rtcp->stuid, NULL);
+        CALL_SMETHOD(fd->rcnt, decref);
     }
 
     pthread_mutex_unlock(&pvt->lock);
