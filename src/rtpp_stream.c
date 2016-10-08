@@ -118,8 +118,14 @@ static void rtpp_stream_prefill_addr(struct rtpp_stream *,
   struct sockaddr **, double);
 static uint64_t rtpp_stream_get_rtps(struct rtpp_stream *);
 static void rtpp_stream_replace_rtps(struct rtpp_stream *, uint64_t, uint64_t);
+static void rtpp_stream_set_skt(struct rtpp_stream *, struct rtpp_socket *);
+static struct rtpp_socket *rtpp_stream_get_skt(struct rtpp_stream *);
+static struct rtpp_socket *rtpp_stream_update_skt(struct rtpp_stream *,
+  struct rtpp_socket *);
+static int rtpp_stream_drain_skt(struct rtpp_stream *);
 static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
   struct rtp_packet *);
+static struct rtp_packet *rtpp_stream_recv_pkt(struct rtpp_stream *, double);
 static int rtpp_stream_islatched(struct rtpp_stream *);
 static void rtpp_stream_locklatch(struct rtpp_stream *);
 static void rtpp_stream_reg_onhold(struct rtpp_stream *);
@@ -138,7 +144,12 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .prefill_addr = &rtpp_stream_prefill_addr,
     .get_rtps = &rtpp_stream_get_rtps,
     .replace_rtps = &rtpp_stream_replace_rtps,
+    .set_skt = &rtpp_stream_set_skt,
+    .get_skt = &rtpp_stream_get_skt,
+    .update_skt = &rtpp_stream_update_skt,
+    .drain_skt = &rtpp_stream_drain_skt,
     .send_pkt = &rtpp_stream_send_pkt,
+    .recv_pkt = &rtpp_stream_recv_pkt,
     .guess_addr = &rtpp_stream_guess_addr,
     .islatched = &rtpp_stream_islatched,
     .locklatch = &rtpp_stream_locklatch,
@@ -249,8 +260,8 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          }
          CALL_SMETHOD(pvt->pub.analyzer->rcnt, decref);
     }
-    if (pub->fd != NULL)
-        CALL_SMETHOD(pub->fd->rcnt, decref);
+    if (pub->__fd != NULL)
+        CALL_SMETHOD(pub->__fd->rcnt, decref);
     if (pub->codecs != NULL)
         free(pub->codecs);
     if (pvt->rtps != RTPP_UID_NONE)
@@ -639,13 +650,93 @@ rtpp_stream_replace_rtps(struct rtpp_stream *self, uint64_t rtps_old,
     pthread_mutex_unlock(&pvt->lock);
 }
 
+static void
+rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
+{
+
+    if (new_skt == NULL) {
+        RTPP_DBG_ASSERT(self->__fd != NULL);
+        CALL_SMETHOD(self->__fd->rcnt, decref);
+        self->__fd = NULL;
+        return;
+    }
+    RTPP_DBG_ASSERT(self->__fd == NULL);
+    self->__fd = new_skt;
+    CALL_SMETHOD(self->__fd->rcnt, incref);
+}
+
+static struct rtpp_socket *
+rtpp_stream_get_skt(struct rtpp_stream *self)
+{
+
+    if (self->__fd == NULL) {
+        return (NULL);
+    }
+    CALL_SMETHOD(self->__fd->rcnt, incref);
+    return (self->__fd);
+}
+
+static struct rtpp_socket *
+rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
+{
+    struct rtpp_socket *old_skt;
+
+    RTPP_DBG_ASSERT(new_skt != NULL);
+    old_skt = self->__fd;
+    self->__fd = new_skt;
+    CALL_SMETHOD(self->__fd->rcnt, incref);
+    return (old_skt);
+}
+
+static int
+rtpp_stream_drain_skt(struct rtpp_stream *self)
+{
+    struct rtp_packet *packet;
+    int ndrained;
+#if RTPP_DEBUG
+    const char *ptype;
+    int fd;
+#endif
+
+    ndrained = 0;
+#if RTPP_DEBUG
+    ptype = rtpp_stream_get_proto(self);
+    fd = CALL_METHOD(self->__fd, getfd);
+    RTPP_LOG(self->log, RTPP_LOG_DBUG, "Draining %s socket %d", ptype,
+      fd);
+#endif
+    for (;;) {
+        packet = CALL_METHOD(self->__fd, rtp_recv, 0.0, NULL, 0);
+        if (packet == NULL)
+            break;
+        ndrained++;
+        rtp_packet_free(packet);
+    }
+#if RTPP_DEBUG
+    if (ndrained > 0) {
+        RTPP_LOG(self->log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
+          "packets discarded", ptype, fd, ndrained);
+    }
+#endif
+    return (ndrained);
+}
+
 static int
 rtpp_stream_send_pkt(struct rtpp_stream *self, struct sthread_args *sap,
   struct rtp_packet *pkt)
 {
 
-    return (CALL_METHOD(self->fd, send_pkt_na, sap, self->rem_addr, pkt,
+    return (CALL_METHOD(self->__fd, send_pkt_na, sap, self->rem_addr, pkt,
       self->log));
+}
+
+static struct rtp_packet *
+rtpp_stream_recv_pkt(struct rtpp_stream *self, double dtime)
+{
+    struct rtp_packet *pkt;
+
+    pkt = CALL_METHOD(self->__fd, rtp_recv, dtime, self->laddr, self->port);
+    return (pkt);
 }
 
 static int

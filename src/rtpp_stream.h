@@ -64,8 +64,15 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_prefill_addr, void,
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_rtps, uint64_t);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_replace_rtps, void, uint64_t,
   uint64_t);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_set_skt, void, struct rtpp_socket *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_get_skt, struct rtpp_socket *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_update_skt, struct rtpp_socket *,
+  struct rtpp_socket *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_drain_skt, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_send_pkt, int, struct sthread_args *,
   struct rtp_packet *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_recv_pkt, struct rtp_packet *,
+  double);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_islatched, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_locklatch, void);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_reg_onhold, void);
@@ -89,7 +96,12 @@ struct rtpp_stream_smethods {
     METHOD_ENTRY(rtpp_stream_prefill_addr, prefill_addr);
     METHOD_ENTRY(rtpp_stream_get_rtps, get_rtps);
     METHOD_ENTRY(rtpp_stream_replace_rtps, replace_rtps);
+    METHOD_ENTRY(rtpp_stream_set_skt, set_skt);
+    METHOD_ENTRY(rtpp_stream_get_skt, get_skt);
+    METHOD_ENTRY(rtpp_stream_update_skt, update_skt);
+    METHOD_ENTRY(rtpp_stream_drain_skt, drain_skt);
     METHOD_ENTRY(rtpp_stream_send_pkt, send_pkt);
+    METHOD_ENTRY(rtpp_stream_recv_pkt, recv_pkt);
     METHOD_ENTRY(rtpp_stream_islatched, islatched);
     METHOD_ENTRY(rtpp_stream_locklatch, locklatch);
     METHOD_ENTRY(rtpp_stream_reg_onhold, reg_onhold);
@@ -105,7 +117,7 @@ struct rtpp_stream {
     struct sockaddr *laddr;
     int port;
     /* Descriptors */
-    struct rtpp_socket *fd;
+    struct rtpp_socket *__fd;
     int asymmetric;
     /* Flags: strong create/delete; weak ones */
     int weak;

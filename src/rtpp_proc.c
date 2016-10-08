@@ -104,7 +104,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             ndrain -= 1;
         }
 
-	packet = CALL_METHOD(stp->fd, rtp_recv, dtime, stp->laddr, stp->port);
+	packet = CALL_SMETHOD(stp, recv_pkt, dtime);
 	if (packet == NULL) {
             /* Move on to the next session */
             return;
@@ -247,36 +247,14 @@ e0:
     rsp->npkts_discard.cnt++;
 }
 
-static int
-drain_socket(struct rtpp_socket *rfd, struct rtpp_proc_rstats *rsp)
-{
-    struct rtp_packet *packet;
-    int ndrained;
-
-    ndrained = 0;
-    for (;;) {
-        packet = CALL_METHOD(rfd, rtp_recv, 0.0, NULL, 0);
-        if (packet == NULL)
-            break;
-        rsp->npkts_discard.cnt++;
-        ndrained++;
-        rtp_packet_free(packet);
-    }
-    return (ndrained);
-}
-
 void
 process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
   int drain_repeat, struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
 {
-    int readyfd;
+    int readyfd, ndrained;
     struct rtpp_session *sp;
     struct rtpp_stream *stp;
     struct rtp_packet *packet;
-#if RTPP_DEBUG
-    const char *proto;
-    int fd, ndrained;
-#endif
 
     for (readyfd = 0; readyfd < ptbl->curlen; readyfd++) {
         if ((ptbl->pfds[readyfd].revents & POLLIN) == 0)
@@ -302,20 +280,10 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
             }
         } else {
             CALL_SMETHOD(sp->rcnt, decref);
-#if RTPP_DEBUG
-            proto = CALL_SMETHOD(stp, get_proto);
-            fd = CALL_METHOD(stp->fd, getfd);
-            RTPP_LOG(stp->log, RTPP_LOG_DBUG, "Draining %s socket %d", proto,
-              fd);
-            ndrained = drain_socket(stp->fd, rsp);
+            ndrained = CALL_SMETHOD(stp, drain_skt);
             if (ndrained > 0) {
-                RTPP_LOG(stp->log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
-                  "packets discarded", proto, fd, ndrained);
+                rsp->npkts_discard.cnt += ndrained;
             }
-#else
-            drain_socket(stp->fd, rsp);
-#endif
-
         }
         CALL_SMETHOD(stp->rcnt, decref);
     }

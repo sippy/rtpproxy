@@ -47,6 +47,7 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_module_if.h"
 #include "rtpp_pipe.h"
+#include "rtpp_socket.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
@@ -135,8 +136,6 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
         pub->strong = 1;
     }
 
-    pub->rtp->stream[0]->fd = fds[0];
-    pub->rtcp->stream[0]->fd = fds[1];
     pub->rtp->stream[0]->port = lport;
     pub->rtcp->stream[0]->port = lport + 1;
     for (i = 0; i < 2; i++) {
@@ -166,7 +165,7 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
         pvt->modules_cf = cfs->modules_cf;
     }
 
-    CALL_METHOD(cfs->sessinfo, append, pub, 0);
+    CALL_METHOD(cfs->sessinfo, append, pub, 0, fds);
 
     CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor,
       pvt);
