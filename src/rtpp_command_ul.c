@@ -424,9 +424,6 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
             }
             CALL_SMETHOD(fds[0]->rcnt, decref);
             CALL_SMETHOD(fds[1]->rcnt, decref);
-            if (fd != NULL) {
-                CALL_SMETHOD(fd->rcnt, decref);
-            }
             spa->rtp->stream[sidx]->port = lport;
             spa->rtcp->stream[sidx]->port = lport + 1;
             if (spa->complete == 0) {
@@ -437,6 +434,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
                   cf->stable->max_ttl);
             }
             spa->complete = 1;
+        }
+        if (fd != NULL) {
+            CALL_SMETHOD(fd->rcnt, decref);
         }
         if (ulop->weak)
             spa->rtp->stream[sidx]->weak = 1;
