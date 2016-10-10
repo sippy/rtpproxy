@@ -92,7 +92,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
             }
             break;
         }
-        if (CALL_SMETHOD(rsop, issendable)) {
+        if (CALL_SMETHOD(rsop, issendable) == 0) {
             /* We have a packet, but nowhere to send it, drop */
             rtp_packet_free(pkt);
             continue;
