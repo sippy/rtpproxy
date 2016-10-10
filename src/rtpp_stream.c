@@ -128,6 +128,7 @@ static int rtpp_stream_drain_skt(struct rtpp_stream *);
 static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
   struct rtp_packet *);
 static struct rtp_packet *rtpp_stream_recv_pkt(struct rtpp_stream *, double);
+static int rtpp_stream_issendable(struct rtpp_stream *);
 static int rtpp_stream_islatched(struct rtpp_stream *);
 static void rtpp_stream_locklatch(struct rtpp_stream *);
 static void rtpp_stream_reg_onhold(struct rtpp_stream *);
@@ -153,6 +154,7 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .send_pkt = &rtpp_stream_send_pkt,
     .recv_pkt = &rtpp_stream_recv_pkt,
     .guess_addr = &rtpp_stream_guess_addr,
+    .issendable = &rtpp_stream_issendable,
     .islatched = &rtpp_stream_islatched,
     .locklatch = &rtpp_stream_locklatch,
     .reg_onhold = &rtpp_stream_reg_onhold,
@@ -769,6 +771,24 @@ rtpp_stream_recv_pkt(struct rtpp_stream *self, double dtime)
     pkt = CALL_METHOD(pvt->fd, rtp_recv, dtime, self->laddr, self->port);
     pthread_mutex_unlock(&pvt->lock);
     return (pkt);
+}
+
+static int
+rtpp_stream_issendable(struct rtpp_stream *self)
+{
+    struct rtpp_stream_priv *pvt;
+
+    if (CALL_SMETHOD(self->rem_addr, isempty)) {
+        return (0);
+    }
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    if (pvt->fd == NULL) {
+        pthread_mutex_unlock(&pvt->lock);
+        return (0);
+    }
+    pthread_mutex_unlock(&pvt->lock);
+    return (1);
 }
 
 static int

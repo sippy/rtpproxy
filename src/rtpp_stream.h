@@ -73,6 +73,7 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_send_pkt, int, struct sthread_args *,
   struct rtp_packet *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_recv_pkt, struct rtp_packet *,
   double);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_issendable, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_islatched, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_locklatch, void);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_reg_onhold, void);
@@ -102,6 +103,7 @@ struct rtpp_stream_smethods {
     METHOD_ENTRY(rtpp_stream_drain_skt, drain_skt);
     METHOD_ENTRY(rtpp_stream_send_pkt, send_pkt);
     METHOD_ENTRY(rtpp_stream_recv_pkt, recv_pkt);
+    METHOD_ENTRY(rtpp_stream_issendable, issendable);
     METHOD_ENTRY(rtpp_stream_islatched, islatched);
     METHOD_ENTRY(rtpp_stream_locklatch, locklatch);
     METHOD_ENTRY(rtpp_stream_reg_onhold, reg_onhold);
