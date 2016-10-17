@@ -532,6 +532,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     struct sockaddr *ldaddr;
     int ldport, face;
     struct rtpp_record_channel *rrc;
+    struct rtpp_netaddr *rem_addr;
     size_t dalen;
 
     rrc = PUB2PVT(self);
@@ -539,7 +540,12 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     if (rrc->fd == -1)
 	return;
 
-    dalen = CALL_SMETHOD(stp->rem_addr, get, sstosa(&daddr), sizeof(daddr));
+    rem_addr = CALL_SMETHOD(stp, get_rem_addr, 0);
+    if (rem_addr == NULL) {
+        return;
+    }
+    dalen = CALL_SMETHOD(rem_addr, get, sstosa(&daddr), sizeof(daddr));
+    CALL_SMETHOD(rem_addr->rcnt, decref);
     ldaddr = stp->laddr;
     ldport = stp->port;
 
