@@ -66,27 +66,6 @@ struct rtpp_proc_ready_lst {
 static void send_packet(struct cfg *, struct rtpp_stream *,
   struct rtp_packet *, struct sthread_args *, struct rtpp_proc_rstats *);
 
-static int
-fill_session_addr(struct cfg *cf, struct rtpp_stream *stp,
-  struct rtp_packet *packet)
-{
-    struct rtpp_stream *stp_rtcp;
-    int rval;
-
-    CALL_SMETHOD(stp, fill_addr, packet);
-    if (stp->stuid_rtcp == RTPP_UID_NONE) {
-        return (0);
-    }
-    stp_rtcp = CALL_METHOD(cf->stable->rtcp_streams_wrt, get_by_idx,
-      stp->stuid_rtcp);
-    if (stp_rtcp == NULL) {
-        return (0);
-    }
-    rval = CALL_SMETHOD(stp_rtcp, guess_addr, packet);
-    CALL_SMETHOD(stp_rtcp->rcnt, decref);
-    return (rval);
-}
-
 static void
 rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
   double dtime, int drain_repeat, struct sthread_args *sender,
@@ -104,94 +83,19 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             ndrain -= 1;
         }
 
-	packet = CALL_SMETHOD(stp, recv_pkt, dtime);
+	packet = CALL_SMETHOD(stp, rx, cf->stable->rtcp_streams_wrt, dtime,
+          rsp);
 	if (packet == NULL) {
             /* Move on to the next session */
             return;
         }
-        rsp->npkts_rcvd.cnt++;
-
-	if (!CALL_SMETHOD(stp->rem_addr, isempty)) {
-	    /* Check that the packet is authentic, drop if it isn't */
-	    if (stp->asymmetric == 0) {
-                if (CALL_SMETHOD(stp->rem_addr, cmp, sstosa(&packet->raddr),
-                  packet->rlen) != 0) {
-		    if (CALL_SMETHOD(stp, islatched) && \
-                      CALL_SMETHOD(stp, check_latch_override, packet) == 0) {
-			/*
-			 * Continue, since there could be good packets in
-			 * queue.
-			 */
-                        ndrain += 1;
-                        CALL_METHOD(stp->pcount, reg_ignr);
-                        rsp->npkts_discard.cnt++;
-			goto discard_and_continue;
-		    }
-		    /* Signal that an address has to be updated */
-		    fill_session_addr(cf, stp, packet);
-		} else if (!CALL_SMETHOD(stp, islatched)) {
-                    CALL_SMETHOD(stp, latch, dtime, packet);
-		}
-	    } else {
-		/*
-		 * For asymmetric clients don't check
-		 * source port since it may be different.
-		 */
-                if (!CALL_SMETHOD(stp->rem_addr, cmphost, sstosa(&packet->raddr))) {
-		    /*
-		     * Continue, since there could be good packets in
-		     * queue.
-		     */
-                    ndrain += 1;
-                    CALL_METHOD(stp->pcount, reg_ignr);
-                    rsp->npkts_discard.cnt++;
-		    goto discard_and_continue;
-                }
-	    }
-	    CALL_METHOD(stp->pcnt_strm, reg_pktin, packet);
-	} else {
-	    CALL_METHOD(stp->pcnt_strm, reg_pktin, packet);
-#if 0
-	    stp->addr = malloc(packet->rlen);
-	    if (stp->addr == NULL) {
-		CALL_METHOD(stp->pcount, reg_drop);
-		RTPP_LOG(stp->log, RTPP_LOG_ERR,
-		  "can't allocate memory for remote address - "
-		  "discarding packet");
-                rsp->npkts_discard.cnt++;
-		goto discard;
-	    }
-#endif
-	    /* Update address recorded in the session */
-	    fill_session_addr(cf, stp, packet);
-	}
-        if (stp->analyzer != NULL) {
-            if (CALL_METHOD(stp->analyzer, update, packet) == UPDATE_SSRC_CHG) {
-                CALL_SMETHOD(stp, latch, dtime, packet);
-            }
+        if (packet == RTPP_S_RX_DCONT) {
+            ndrain += 1;
+            continue;
         }
-	if (stp->resizer != NULL) {
-	    rtp_resizer_enqueue(stp->resizer, &packet, rsp);
-            if (packet == NULL) {
-                rsp->npkts_resizer_in.cnt++;
-            }
-        }
-	if (packet != NULL) {
-	    send_packet(cf, stp, packet, sender, rsp);
-            packet = NULL;
-        }
-discard_and_continue:
-        if (packet != NULL) {
-            rtp_packet_free(packet);
-        }
+        send_packet(cf, stp, packet, sender, rsp);
     } while (ndrain > 0);
     return;
-
-#if 0
-discard:
-    rtp_packet_free(packet);
-    return;
-#endif
 }
 
 static struct rtpp_stream *
@@ -229,7 +133,7 @@ send_packet(struct cfg *cf, struct rtpp_stream *stp_in,
      * Check that we have some address to which packet is to be
      * sent out, drop otherwise.
      */
-    if (CALL_SMETHOD(stp_out->rem_addr, isempty) || CALL_SMETHOD(stp_out, isplayer_active)) {
+    if (!CALL_SMETHOD(stp_out, issendable) || CALL_SMETHOD(stp_out, isplayer_active)) {
         goto e1;
     } else {
         CALL_SMETHOD(stp_out, send_pkt, sender, packet);
