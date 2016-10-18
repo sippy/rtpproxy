@@ -73,7 +73,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
         return (RTPP_WR_MATCH_CONT);
     }
     for (;;) {
-        pkt = CALL_METHOD(rsrv, get, fap->dtime, &len);
+        pkt = CALL_SMETHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
                 struct rtpp_stream *rsop_rtcp;
