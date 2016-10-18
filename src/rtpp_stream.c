@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <assert.h>
 #include <pthread.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -128,7 +127,6 @@ static int rtpp_stream_guess_addr(struct rtpp_stream *,
   struct rtp_packet *);
 static void rtpp_stream_prefill_addr(struct rtpp_stream *,
   struct sockaddr **, double);
-static uint64_t rtpp_stream_get_rtps(struct rtpp_stream *);
 static void rtpp_stream_replace_rtps(struct rtpp_stream *, uint64_t, uint64_t);
 static void rtpp_stream_set_skt(struct rtpp_stream *, struct rtpp_socket *);
 static struct rtpp_socket *rtpp_stream_get_skt(struct rtpp_stream *);
@@ -155,7 +153,6 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .get_actor = &rtpp_stream_get_actor,
     .get_proto = &rtpp_stream_get_proto,
     .prefill_addr = &rtpp_stream_prefill_addr,
-    .get_rtps = &rtpp_stream_get_rtps,
     .replace_rtps = &rtpp_stream_replace_rtps,
     .set_skt = &rtpp_stream_set_skt,
     .get_skt = &rtpp_stream_get_skt,
@@ -240,8 +237,9 @@ static inline void
 _s_rtps(struct rtpp_stream_priv *pvt, uint64_t rtps, int replace)
 {
 
+    RTPP_DBG_ASSERT(pvt->pub.pipe_type == PIPE_RTP);
     if (replace == 0) {
-        assert(pvt->rtps.uid == RTPP_UID_NONE);
+        RTPP_DBG_ASSERT(pvt->rtps.uid == RTPP_UID_NONE);
     }
     pvt->rtps.uid = rtps;
     if (CALL_SMETHOD(pvt->rem_addr, isempty) || pvt->fd == NULL) {
@@ -532,7 +530,7 @@ _rtpp_stream_plr_start(struct rtpp_stream_priv *pvt, double dtime)
 {
     struct rtpp_server *rsrv;
 
-    assert(pvt->rtps.inact != 0);
+    RTPP_DBG_ASSERT(pvt->rtps.inact != 0);
     rsrv = CALL_METHOD(pvt->servers_wrt, get_by_idx, pvt->rtps.uid);
     if (rsrv == NULL) {
         return;
@@ -554,7 +552,7 @@ __rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt, struct rtp_packet *packet)
       CALL_SMETHOD(pvt->raddr_prev, cmp, sstosa(&packet->raddr), packet->rlen) != 0) {
         pvt->latch_info.latched = 1;
     }
-    if (pvt->rtps.inact != 0) {
+    if (pvt->rtps.inact != 0 && pvt->fd != NULL) {
         _rtpp_stream_plr_start(pvt, packet->rtime);
     }
 
@@ -655,7 +653,7 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
         }
     }
     CALL_SMETHOD(pvt->rem_addr, set, *iapp, SA_LEN(*iapp));
-    if (pvt->rtps.inact != 0) {
+    if (pvt->rtps.inact != 0 && pvt->fd != NULL) {
         _rtpp_stream_plr_start(pvt, dtime);
     }
     pthread_mutex_unlock(&pvt->lock);
@@ -677,19 +675,6 @@ static void rtpp_stream_reg_onhold(struct rtpp_stream *self)
     }
     pvt->hld_stat.cnt++;
     pthread_mutex_unlock(&pvt->lock);
-}
-
-static uint64_t
-rtpp_stream_get_rtps(struct rtpp_stream *self)
-{
-    struct rtpp_stream_priv *pvt;
-    uint64_t rval;
-
-    pvt = PUB2PVT(self);
-    pthread_mutex_lock(&pvt->lock);
-    rval = pvt->rtps.uid;
-    pthread_mutex_unlock(&pvt->lock);
-    return (rval);
 }
 
 static void
@@ -723,7 +708,7 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     RTPP_DBG_ASSERT(pvt->fd == NULL);
     pvt->fd = new_skt;
     CALL_SMETHOD(pvt->fd->rcnt, incref);
-    if (pvt->rtps.inact != 0) {
+    if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
         _rtpp_stream_plr_start(pvt, getdtime());
     }
     pthread_mutex_unlock(&pvt->lock);
@@ -759,7 +744,7 @@ rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     old_skt = pvt->fd;
     pvt->fd = new_skt;
     CALL_SMETHOD(pvt->fd->rcnt, incref);
-    if (pvt->rtps.inact != 0) {
+    if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
         _rtpp_stream_plr_start(pvt, getdtime());
     }
     pthread_mutex_unlock(&pvt->lock);
