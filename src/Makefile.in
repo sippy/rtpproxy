@@ -3423,7 +3423,7 @@ rtpp_stream_fin.c: $(GENFINCODE_S) rtpp_stream.h
 rtpp_stream_fin.h: rtpp_stream_fin.c
 
 rtpp_server_fin.c: $(GENFINCODE) rtpp_server.h
-	$(GENFINCODE) rtpp_server.h rtpp_server_fin.h rtpp_server_fin.c
+	$(GENFINCODE_S) rtpp_server.h rtpp_server_fin.h rtpp_server_fin.c
 
 rtpp_server_fin.h: rtpp_server_fin.c
 
