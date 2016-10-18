@@ -28,7 +28,6 @@
 
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <assert.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stddef.h>
@@ -46,6 +45,7 @@
 #include "rtpp_server.h"
 #include "rtpp_server_fin.h"
 #include "rtpp_genuid_singlet.h"
+#include "rtpp_debug.h"
 
 /*
  * Minimum length of each RTP packet in ms.
@@ -257,7 +257,7 @@ rtpp_server_start(struct rtpp_server *self, double dtime)
     struct rtpp_server_priv *rp;
 
     rp = PUB2PVT(self);
-    assert(rp->active == 0);
+    RTPP_DBG_ASSERT(rp->active == 0);
     rp->btime = dtime;
     rp->active = 1;
 }
