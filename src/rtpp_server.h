@@ -37,6 +37,15 @@ enum rtp_type;
 DEFINE_METHOD(rtpp_server, rtpp_server_get, struct rtp_packet *, double, int *);
 DEFINE_METHOD(rtpp_server, rtpp_server_get_ssrc, uint32_t);
 DEFINE_METHOD(rtpp_server, rtpp_server_get_seq, uint16_t);
+DEFINE_METHOD(rtpp_server, rtpp_server_start, void, double);
+
+struct rtpp_server_smethods {
+    /* Static methods */
+    METHOD_ENTRY(rtpp_server_get, get);
+    METHOD_ENTRY(rtpp_server_get_ssrc, get_ssrc);
+    METHOD_ENTRY(rtpp_server_get_seq, get_seq);
+    METHOD_ENTRY(rtpp_server_start, start);
+};
 
 #define	RTPS_LATER	(0)
 #define	RTPS_EOF	(-1)
@@ -45,9 +54,7 @@ DEFINE_METHOD(rtpp_server, rtpp_server_get_seq, uint16_t);
 
 struct rtpp_server {
     /* Public methods */
-    METHOD_ENTRY(rtpp_server_get, get);
-    METHOD_ENTRY(rtpp_server_get_ssrc, get_ssrc);
-    METHOD_ENTRY(rtpp_server_get_seq, get_seq);
+    const struct rtpp_server_smethods *smethods;
     /* Refcounter */
     struct rtpp_refcnt *rcnt;
     /* UID */
@@ -56,7 +63,6 @@ struct rtpp_server {
     uint64_t stuid;
 };
 
-struct rtpp_server *rtpp_server_ctor(const char *, enum rtp_type, int, double,
-  int);
+struct rtpp_server *rtpp_server_ctor(const char *, enum rtp_type, int,  int);
 
 #endif

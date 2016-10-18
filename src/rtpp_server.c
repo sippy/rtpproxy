@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2016 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@
 #include "rtpp_server.h"
 #include "rtpp_server_fin.h"
 #include "rtpp_genuid_singlet.h"
+#include "rtpp_debug.h"
 
 /*
  * Minimum length of each RTP packet in ms.
@@ -64,6 +65,7 @@ struct rtpp_server_priv {
     int loop;
     uint64_t dts;
     int ptime;
+    int started;
 };
 
 #define PUB2PVT(pubp)      ((struct rtpp_server_priv *)((char *)(pubp) - offsetof(struct rtpp_server_priv, pub)))
@@ -72,10 +74,17 @@ static void rtpp_server_dtor(struct rtpp_server_priv *);
 static struct rtp_packet *rtpp_server_get(struct rtpp_server *, double, int *);
 static uint32_t rtpp_server_get_ssrc(struct rtpp_server *);
 static uint16_t rtpp_server_get_seq(struct rtpp_server *);
+static void rtpp_server_start(struct rtpp_server *, double);
+
+static const struct rtpp_server_smethods rtpp_server_smethods = {
+    .get = &rtpp_server_get,
+    .get_ssrc = &rtpp_server_get_ssrc,
+    .get_seq = &rtpp_server_get_seq,
+    .start = &rtpp_server_start
+};
 
 struct rtpp_server *
-rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
-  int ptime)
+rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, int ptime)
 {
     struct rtpp_server_priv *rp;
     struct rtpp_refcnt *rcnt;
@@ -93,7 +102,6 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     }
     rp->pub.rcnt = rcnt;
 
-    rp->btime = dtime;
     rp->dts = 0;
     rp->fd = fd;
     rp->loop = (loop > 0) ? loop - 1 : loop;
@@ -111,9 +119,7 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
-    rp->pub.get = &rtpp_server_get;
-    rp->pub.get_ssrc = &rtpp_server_get_ssrc;
-    rp->pub.get_seq = &rtpp_server_get_seq;
+    rp->pub.smethods = &rtpp_server_smethods;
     rtpp_gen_uid(&rp->pub.sruid);
 
     CALL_SMETHOD(rp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_dtor,
@@ -241,4 +247,15 @@ rtpp_server_get_seq(struct rtpp_server *self)
 
     rp = PUB2PVT(self);
     return (ntohs(rp->rtp->seq));
+}
+
+static void
+rtpp_server_start(struct rtpp_server *self, double dtime)
+{
+    struct rtpp_server_priv *rp;
+
+    rp = PUB2PVT(self);
+    RTPP_DBG_ASSERT(rp->started == 0);
+    rp->btime = dtime;
+    rp->started = 1;
 }

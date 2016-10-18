@@ -43,6 +43,7 @@ struct rtpp_pcount;
 struct rtpp_netaddr;
 struct sthread_args;
 struct rtpp_acct_hold;
+struct rtpp_proc_rstats;
 
 DEFINE_METHOD(rtpp_stream, rtpp_stream_handle_play, int, char *,
   char *, int, struct rtpp_command *, int);
@@ -51,28 +52,30 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_isplayer_active, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_finish_playback, void, uint64_t);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_actor, const char *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_proto, const char *);
-DEFINE_METHOD(rtpp_stream, rtpp_stream_latch, int, double,
-  struct rtp_packet *);
-DEFINE_METHOD(rtpp_stream, rtpp_stream_check_latch_override, int,
-  struct rtp_packet *);
-DEFINE_METHOD(rtpp_stream, rtpp_stream_fill_addr, void,
-  struct rtp_packet *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_guess_addr, int,
   struct rtp_packet *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_prefill_addr, void,
   struct sockaddr **, double);
-DEFINE_METHOD(rtpp_stream, rtpp_stream_get_rtps, uint64_t);
-DEFINE_METHOD(rtpp_stream, rtpp_stream_replace_rtps, void, uint64_t,
-  uint64_t);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_set_skt, void, struct rtpp_socket *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_get_skt, struct rtpp_socket *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_update_skt, struct rtpp_socket *,
+  struct rtpp_socket *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_drain_skt, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_send_pkt, int, struct sthread_args *,
   struct rtp_packet *);
-DEFINE_METHOD(rtpp_stream, rtpp_stream_islatched, int);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_issendable, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_locklatch, void);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_reg_onhold, void);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_stats, void,
   struct rtpp_acct_hold *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_rx, struct rtp_packet *,
+  struct rtpp_weakref_obj *, double, struct rtpp_proc_rstats *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
+  int);
 
 enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
+
+#define RTPP_S_RX_DCONT (void *)((char *)NULL + 1)
 
 struct rtpp_stream_smethods {
     /* Static methods */
@@ -82,30 +85,27 @@ struct rtpp_stream_smethods {
     METHOD_ENTRY(rtpp_stream_finish_playback, finish_playback);
     METHOD_ENTRY(rtpp_stream_get_actor, get_actor);
     METHOD_ENTRY(rtpp_stream_get_proto, get_proto);
-    METHOD_ENTRY(rtpp_stream_latch, latch);
-    METHOD_ENTRY(rtpp_stream_check_latch_override, check_latch_override);
-    METHOD_ENTRY(rtpp_stream_fill_addr, fill_addr);
     METHOD_ENTRY(rtpp_stream_guess_addr, guess_addr);
     METHOD_ENTRY(rtpp_stream_prefill_addr, prefill_addr);
-    METHOD_ENTRY(rtpp_stream_get_rtps, get_rtps);
-    METHOD_ENTRY(rtpp_stream_replace_rtps, replace_rtps);
+    METHOD_ENTRY(rtpp_stream_set_skt, set_skt);
+    METHOD_ENTRY(rtpp_stream_get_skt, get_skt);
+    METHOD_ENTRY(rtpp_stream_update_skt, update_skt);
+    METHOD_ENTRY(rtpp_stream_drain_skt, drain_skt);
     METHOD_ENTRY(rtpp_stream_send_pkt, send_pkt);
-    METHOD_ENTRY(rtpp_stream_islatched, islatched);
+    METHOD_ENTRY(rtpp_stream_issendable, issendable);
     METHOD_ENTRY(rtpp_stream_locklatch, locklatch);
     METHOD_ENTRY(rtpp_stream_reg_onhold, reg_onhold);
     METHOD_ENTRY(rtpp_stream_get_stats, get_stats);
+    METHOD_ENTRY(rtpp_stream_rx, rx);
+    METHOD_ENTRY(rtpp_stream_get_rem_addr, get_rem_addr);
 };
 
 struct rtpp_stream {
     /* ttl for stream */
     struct rtpp_ttl *ttl;
-    /* Remote source address */
-    struct rtpp_netaddr *rem_addr;
     /* Local listen address/port */
     struct sockaddr *laddr;
     int port;
-    /* Descriptors */
-    struct rtpp_socket *fd;
     int asymmetric;
     /* Flags: strong create/delete; weak ones */
     int weak;

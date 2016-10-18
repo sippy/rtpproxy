@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <assert.h>
 #include <pthread.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -44,6 +43,7 @@
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtp.h"
+#include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
 #include "rtp_resizer.h"
 #include "rtpp_command_private.h"
@@ -55,6 +55,7 @@
 #include "rtpp_network.h"
 #include "rtpp_pcount.h"
 #include "rtpp_pcnt_strm.h"
+#include "rtpp_proc.h"
 #include "rtpp_record.h"
 #include "rtpp_stats.h"
 #include "rtpp_stream.h"
@@ -67,11 +68,17 @@
 #include "rtpp_netaddr.h"
 #include "rtpp_debug.h"
 #include "rtpp_acct_pipe.h"
+#include "rtpp_time.h"
 
 struct rtpps_latch {
     int latched;
     struct rtpp_ssrc ssrc;
     int seq;
+};
+
+struct rtps {
+    uint64_t uid;
+    int inact;
 };
 
 struct rtpp_stream_priv
@@ -81,7 +88,7 @@ struct rtpp_stream_priv
     struct rtpp_stats *rtpp_stats;
     pthread_mutex_t lock;
     /* Weak reference to the "rtpp_server" (player) */
-    uint64_t rtps;
+    struct rtps rtps;
     enum rtpp_stream_side side;
     /* Timestamp of the last session update */
     double last_update;
@@ -93,6 +100,10 @@ struct rtpp_stream_priv
     struct rtpps_latch latch_info;
     /* Structure to track hold requests */
     struct rtpp_acct_hold hld_stat;
+    /* Descriptor */
+    struct rtpp_socket *fd;
+    /* Remote source address */
+    struct rtpp_netaddr *rem_addr;
 };
 
 #define PUB2PVT(pubp) \
@@ -106,24 +117,32 @@ static int rtpp_stream_isplayer_active(struct rtpp_stream *);
 static void rtpp_stream_finish_playback(struct rtpp_stream *, uint64_t);
 static const char *rtpp_stream_get_actor(struct rtpp_stream *);
 static const char *rtpp_stream_get_proto(struct rtpp_stream *);
-static int rtpp_stream_latch(struct rtpp_stream *, double,
+static int _rtpp_stream_latch(struct rtpp_stream_priv *, double,
   struct rtp_packet *);
-static int rtpp_stream_check_latch_override(struct rtpp_stream *,
+static int _rtpp_stream_check_latch_override(struct rtpp_stream_priv *,
   struct rtp_packet *);
-static void rtpp_stream_fill_addr(struct rtpp_stream *,
+static void __rtpp_stream_fill_addr(struct rtpp_stream_priv *,
   struct rtp_packet *);
 static int rtpp_stream_guess_addr(struct rtpp_stream *,
   struct rtp_packet *);
 static void rtpp_stream_prefill_addr(struct rtpp_stream *,
   struct sockaddr **, double);
-static uint64_t rtpp_stream_get_rtps(struct rtpp_stream *);
-static void rtpp_stream_replace_rtps(struct rtpp_stream *, uint64_t, uint64_t);
+static void rtpp_stream_set_skt(struct rtpp_stream *, struct rtpp_socket *);
+static struct rtpp_socket *rtpp_stream_get_skt(struct rtpp_stream *);
+static struct rtpp_socket *rtpp_stream_update_skt(struct rtpp_stream *,
+  struct rtpp_socket *);
+static int rtpp_stream_drain_skt(struct rtpp_stream *);
 static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
   struct rtp_packet *);
-static int rtpp_stream_islatched(struct rtpp_stream *);
+static struct rtp_packet *_rtpp_stream_recv_pkt(struct rtpp_stream_priv *, double);
+static int rtpp_stream_issendable(struct rtpp_stream *);
+static int _rtpp_stream_islatched(struct rtpp_stream_priv *);
 static void rtpp_stream_locklatch(struct rtpp_stream *);
 static void rtpp_stream_reg_onhold(struct rtpp_stream *);
 void rtpp_stream_get_stats(struct rtpp_stream *, struct rtpp_acct_hold *);
+static struct rtp_packet *rtpp_stream_rx(struct rtpp_stream *,
+  struct rtpp_weakref_obj *, double, struct rtpp_proc_rstats *);
+static struct rtpp_netaddr *rtpp_stream_get_rem_addr(struct rtpp_stream *, int);
 
 static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .handle_play = &rtpp_stream_handle_play,
@@ -132,18 +151,19 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .finish_playback = &rtpp_stream_finish_playback,
     .get_actor = &rtpp_stream_get_actor,
     .get_proto = &rtpp_stream_get_proto,
-    .latch = &rtpp_stream_latch,
-    .check_latch_override = &rtpp_stream_check_latch_override,
-    .fill_addr = &rtpp_stream_fill_addr,
     .prefill_addr = &rtpp_stream_prefill_addr,
-    .get_rtps = &rtpp_stream_get_rtps,
-    .replace_rtps = &rtpp_stream_replace_rtps,
+    .set_skt = &rtpp_stream_set_skt,
+    .get_skt = &rtpp_stream_get_skt,
+    .update_skt = &rtpp_stream_update_skt,
+    .drain_skt = &rtpp_stream_drain_skt,
     .send_pkt = &rtpp_stream_send_pkt,
     .guess_addr = &rtpp_stream_guess_addr,
-    .islatched = &rtpp_stream_islatched,
+    .issendable = &rtpp_stream_issendable,
     .locklatch = &rtpp_stream_locklatch,
     .reg_onhold = &rtpp_stream_reg_onhold,
-    .get_stats = &rtpp_stream_get_stats
+    .get_stats = &rtpp_stream_get_stats,
+    .rx = &rtpp_stream_rx,
+    .get_rem_addr = &rtpp_stream_get_rem_addr
 };
 
 struct rtpp_stream *
@@ -176,8 +196,8 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     if (pvt->raddr_prev == NULL) {
         goto e5;
     }
-    pvt->pub.rem_addr = rtpp_netaddr_ctor();
-    if (pvt->pub.rem_addr == NULL) {
+    pvt->rem_addr = rtpp_netaddr_ctor();
+    if (pvt->rem_addr == NULL) {
         goto e6;
     }
     pvt->servers_wrt = servers_wrt;
@@ -211,6 +231,34 @@ e0:
     return (NULL);
 }
 
+static inline void
+_s_rtps(struct rtpp_stream_priv *pvt, uint64_t rtps, int replace)
+{
+
+    RTPP_DBG_ASSERT(pvt->pub.pipe_type == PIPE_RTP);
+    if (replace == 0) {
+        RTPP_DBG_ASSERT(pvt->rtps.uid == RTPP_UID_NONE);
+    }
+    pvt->rtps.uid = rtps;
+    if (CALL_SMETHOD(pvt->rem_addr, isempty) || pvt->fd == NULL) {
+        pvt->rtps.inact = 1;
+    }
+}
+
+static const char *
+_rtpp_stream_get_actor(struct rtpp_stream_priv *pvt)
+{
+
+    return ((pvt->side == RTPP_SSIDE_CALLER) ? "caller" : "callee");
+}
+
+static const char *
+_rtpp_stream_get_proto(struct rtpp_stream_priv *pvt)
+{
+
+    return (PP_NAME(pvt->pub.pipe_type));
+}
+
 static void
 rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
 {
@@ -223,7 +271,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          char ssrc_buf[11];
          const char *actor, *ssrc;
 
-         actor = rtpp_stream_get_actor(pub);
+         actor = _rtpp_stream_get_actor(pvt);
          CALL_METHOD(pub->analyzer, get_stats, &rst);
          if (rst.ssrc_changes != 0) {
              snprintf(ssrc_buf, sizeof(ssrc_buf), SSRC_FMT, rst.last_ssrc.val);
@@ -249,12 +297,12 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          }
          CALL_SMETHOD(pvt->pub.analyzer->rcnt, decref);
     }
-    if (pub->fd != NULL)
-        CALL_SMETHOD(pub->fd->rcnt, decref);
+    if (pvt->fd != NULL)
+        CALL_SMETHOD(pvt->fd->rcnt, decref);
     if (pub->codecs != NULL)
         free(pub->codecs);
-    if (pvt->rtps != RTPP_UID_NONE)
-        CALL_METHOD(pvt->servers_wrt, unreg, pvt->rtps);
+    if (pvt->rtps.uid != RTPP_UID_NONE)
+        CALL_METHOD(pvt->servers_wrt, unreg, pvt->rtps.uid);
     if (pub->resizer != NULL)
         rtp_resizer_free(pvt->rtpp_stats, pub->resizer);
     if (pub->rrc != NULL)
@@ -265,7 +313,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     CALL_SMETHOD(pub->ttl->rcnt, decref);
     CALL_SMETHOD(pub->pcnt_strm->rcnt, decref);
     CALL_SMETHOD(pvt->pub.log->rcnt, decref);
-    CALL_SMETHOD(pvt->pub.rem_addr->rcnt, decref);
+    CALL_SMETHOD(pvt->rem_addr->rcnt, decref);
     CALL_SMETHOD(pvt->raddr_prev->rcnt, decref);
 
     pthread_mutex_destroy(&pvt->lock);
@@ -303,7 +351,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, char *codecs,
         codecs = cp;
         if (*codecs != '\0')
             codecs++;
-        rsrv = rtpp_server_ctor(pname, n, playcount, cmd->dtime, ptime);
+        rsrv = rtpp_server_ctor(pname, n, playcount, ptime);
         if (rsrv == NULL) {
             RTPP_LOG(pvt->pub.log, RTPP_LOG_DBUG, "rtpp_server_ctor(\"%s\", %d, %d) failed",
               pname, n, playcount);
@@ -311,15 +359,17 @@ rtpp_stream_handle_play(struct rtpp_stream *self, char *codecs,
             continue;
         }
         rsrv->stuid = self->stuid;
-        ssrc = CALL_METHOD(rsrv, get_ssrc);
-        seq = CALL_METHOD(rsrv, get_seq);
+        ssrc = CALL_SMETHOD(rsrv, get_ssrc);
+        seq = CALL_SMETHOD(rsrv, get_seq);
+        _s_rtps(pvt, rsrv->sruid, 0);
         if (CALL_METHOD(pvt->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
             CALL_SMETHOD(rsrv->rcnt, decref);
             plerror = "servers_wrt->reg() method failed";
             break;
         }
-        assert(pvt->rtps == RTPP_UID_NONE);
-        pvt->rtps = rsrv->sruid;
+        if (pvt->rtps.inact == 0) {
+            CALL_SMETHOD(rsrv, start, cmd->dtime);
+        }
         pthread_mutex_unlock(&pvt->lock);
         cmd->csp->nplrs_created.cnt++;
         CALL_SMETHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
@@ -342,9 +392,10 @@ rtpp_stream_handle_noplay(struct rtpp_stream *self)
 
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
-    if (pvt->rtps != RTPP_UID_NONE) {
-        if (CALL_METHOD(pvt->servers_wrt, unreg, pvt->rtps) != NULL) {
-            pvt->rtps = RTPP_UID_NONE;
+    if (pvt->rtps.uid != RTPP_UID_NONE) {
+        if (CALL_METHOD(pvt->servers_wrt, unreg, pvt->rtps.uid) != NULL) {
+            pvt->rtps.uid = RTPP_UID_NONE;
+            pvt->rtps.inact = 0;
         }
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
           "stopping player at port %d", self->port);
@@ -360,7 +411,7 @@ rtpp_stream_isplayer_active(struct rtpp_stream *self)
 
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
-    rval = (pvt->rtps != RTPP_UID_NONE) ? 1 : 0;
+    rval = (pvt->rtps.uid != RTPP_UID_NONE) ? 1 : 0;
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
 }
@@ -372,8 +423,8 @@ rtpp_stream_finish_playback(struct rtpp_stream *self, uint64_t sruid)
 
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
-    if (pvt->rtps != RTPP_UID_NONE && pvt->rtps == sruid) {
-        pvt->rtps = RTPP_UID_NONE;
+    if (pvt->rtps.uid != RTPP_UID_NONE && pvt->rtps.uid == sruid) {
+        _s_rtps(pvt, RTPP_UID_NONE, 1);
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
           "player at port %d has finished", self->port);
     }
@@ -386,7 +437,7 @@ rtpp_stream_get_actor(struct rtpp_stream *self)
     struct rtpp_stream_priv *pvt;
 
     pvt = PUB2PVT(self);
-    return ((pvt->side == RTPP_SSIDE_CALLER) ? "caller" : "callee");
+    return (_rtpp_stream_get_actor(pvt));
 }
 
 static const char *
@@ -397,24 +448,22 @@ rtpp_stream_get_proto(struct rtpp_stream *self)
 }
 
 static int
-rtpp_stream_latch(struct rtpp_stream *self, double dtime,
+_rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
   struct rtp_packet *packet)
 {
     const char *actor, *ptype, *ssrc, *seq, *relatch;
     char ssrc_buf[11], seq_buf[6];
-    struct rtpp_stream_priv *pvt;
     char saddr[MAX_AP_STRBUF];
 
-    pvt = PUB2PVT(self);
     if (pvt->last_update != 0 && \
       dtime - pvt->last_update < UPDATE_WINDOW) {
         return (0);
     }
 
-    actor = rtpp_stream_get_actor(self);
-    ptype = rtpp_stream_get_proto(self);
+    actor = _rtpp_stream_get_actor(pvt);
+    ptype = _rtpp_stream_get_proto(pvt);
 
-    if (self->pipe_type == PIPE_RTP) {
+    if (pvt->pub.pipe_type == PIPE_RTP) {
         if (rtp_packet_parse(packet) == RTP_PARSER_OK) {
             pvt->latch_info.ssrc.val = packet->parsed->ssrc;
             pvt->latch_info.ssrc.inited = 1;
@@ -447,16 +496,13 @@ rtpp_stream_latch(struct rtpp_stream *self, double dtime,
 }
 
 static int
-rtpp_stream_check_latch_override(struct rtpp_stream *self,
+_rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
   struct rtp_packet *packet)
 {
     const char *actor;
-    struct rtpp_stream_priv *pvt;
     char saddr[MAX_AP_STRBUF];
 
-    pvt = PUB2PVT(self);
-
-    if (self->pipe_type == PIPE_RTCP || pvt->latch_info.ssrc.inited == 0)
+    if (pvt->pub.pipe_type == PIPE_RTCP || pvt->latch_info.ssrc.inited == 0)
         return (0);
     if (rtp_packet_parse(packet) != RTP_PARSER_OK)
         return (0);
@@ -465,7 +511,7 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
     if (packet->parsed->seq < pvt->latch_info.seq && pvt->latch_info.seq - packet->parsed->seq < 536)
         return (0);
 
-    actor = rtpp_stream_get_actor(self);
+    actor = _rtpp_stream_get_actor(pvt);
 
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr), ':');
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
@@ -478,24 +524,38 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
 }
 
 static void
-rtpp_stream_fill_addr(struct rtpp_stream *self,
-  struct rtp_packet *packet)
+_rtpp_stream_plr_start(struct rtpp_stream_priv *pvt, double dtime)
+{
+    struct rtpp_server *rsrv;
+
+    RTPP_DBG_ASSERT(pvt->rtps.inact != 0);
+    rsrv = CALL_METHOD(pvt->servers_wrt, get_by_idx, pvt->rtps.uid);
+    if (rsrv == NULL) {
+        return;
+    }
+    CALL_SMETHOD(rsrv, start, dtime);
+    CALL_SMETHOD(rsrv->rcnt, decref);
+    pvt->rtps.inact = 0;
+}
+
+static void
+__rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt, struct rtp_packet *packet)
 {
     const char *actor, *ptype;
-    struct rtpp_stream_priv *pvt;
     char saddr[MAX_AP_STRBUF];
 
-    pvt = PUB2PVT(self);
-
     pvt->untrusted_addr = 1;
-    CALL_SMETHOD(self->rem_addr, set, sstosa(&packet->raddr), packet->rlen);
+    CALL_SMETHOD(pvt->rem_addr, set, sstosa(&packet->raddr), packet->rlen);
     if (CALL_SMETHOD(pvt->raddr_prev, isempty) ||
       CALL_SMETHOD(pvt->raddr_prev, cmp, sstosa(&packet->raddr), packet->rlen) != 0) {
         pvt->latch_info.latched = 1;
     }
+    if (pvt->rtps.inact != 0 && pvt->fd != NULL) {
+        _rtpp_stream_plr_start(pvt, packet->rtime);
+    }
 
-    actor = rtpp_stream_get_actor(self);
-    ptype = rtpp_stream_get_proto(self);
+    actor = _rtpp_stream_get_actor(pvt);
+    ptype = _rtpp_stream_get_proto(pvt);
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr), ':');
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address filled in: %s (%s)", actor, saddr, ptype);
@@ -514,8 +574,8 @@ rtpp_stream_guess_addr(struct rtpp_stream *self,
     RTPP_DBG_ASSERT(self->pipe_type == PIPE_RTCP);
     pvt = PUB2PVT(self);
 
-    if (!CALL_SMETHOD(self->rem_addr, isempty) &&
-      CALL_SMETHOD(self->rem_addr, cmphost, sstosa(&packet->raddr))) {
+    if (!CALL_SMETHOD(pvt->rem_addr, isempty) &&
+      CALL_SMETHOD(pvt->rem_addr, cmphost, sstosa(&packet->raddr))) {
         return (0);
     }
 #if 0
@@ -535,8 +595,8 @@ rtpp_stream_guess_addr(struct rtpp_stream *self,
 
     memcpy(&ta, &packet->raddr, packet->rlen);
     setport(sstosa(&ta), rport + 1);
-    
-    CALL_SMETHOD(self->rem_addr, set, sstosa(&ta), packet->rlen);
+
+    CALL_SMETHOD(pvt->rem_addr, set, sstosa(&ta), packet->rlen);
     /* Use guessed value as the only true one for asymmetric clients */
     pvt->latch_info.latched = self->asymmetric;
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "guessing %s port "
@@ -564,7 +624,7 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
         pvt->hld_stat.status = 0;
     }
 
-    if (!CALL_SMETHOD(self->rem_addr, isempty))
+    if (!CALL_SMETHOD(pvt->rem_addr, isempty))
         pvt->last_update = dtime;
 
     /*
@@ -576,7 +636,7 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
         pthread_mutex_unlock(&pvt->lock);
         return;
     }
-    if (!CALL_SMETHOD(self->rem_addr, isempty) && CALL_SMETHOD(self->rem_addr,
+    if (!CALL_SMETHOD(pvt->rem_addr, isempty) && CALL_SMETHOD(pvt->rem_addr,
       isaddrseq, *iapp)) {
         pthread_mutex_unlock(&pvt->lock);
         return;
@@ -585,12 +645,15 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
     addrport2char_r(*iapp, saddr, sizeof(saddr), ':');
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "pre-filling %s's %s address "
       "with %s", actor, ptype, saddr);
-    if (!CALL_SMETHOD(self->rem_addr, isempty)) {
+    if (!CALL_SMETHOD(pvt->rem_addr, isempty)) {
         if (pvt->latch_info.latched != 0) {
-            CALL_SMETHOD(pvt->raddr_prev, copy, self->rem_addr);
+            CALL_SMETHOD(pvt->raddr_prev, copy, pvt->rem_addr);
         }
     }
-    CALL_SMETHOD(self->rem_addr, set, *iapp, SA_LEN(*iapp));
+    CALL_SMETHOD(pvt->rem_addr, set, *iapp, SA_LEN(*iapp));
+    if (pvt->rtps.inact != 0 && pvt->fd != NULL) {
+        _rtpp_stream_plr_start(pvt, dtime);
+    }
     pthread_mutex_unlock(&pvt->lock);
 }
 
@@ -612,52 +675,152 @@ static void rtpp_stream_reg_onhold(struct rtpp_stream *self)
     pthread_mutex_unlock(&pvt->lock);
 }
 
-static uint64_t
-rtpp_stream_get_rtps(struct rtpp_stream *self)
+static void
+rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
 {
     struct rtpp_stream_priv *pvt;
-    uint64_t rval;
 
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
-    rval = pvt->rtps;
+    if (new_skt == NULL) {
+        RTPP_DBG_ASSERT(pvt->fd != NULL);
+        CALL_SMETHOD(pvt->fd->rcnt, decref);
+        pvt->fd = NULL;
+        pthread_mutex_unlock(&pvt->lock);
+        return;
+    }
+    RTPP_DBG_ASSERT(pvt->fd == NULL);
+    pvt->fd = new_skt;
+    CALL_SMETHOD(pvt->fd->rcnt, incref);
+    if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
+        _rtpp_stream_plr_start(pvt, getdtime());
+    }
+    pthread_mutex_unlock(&pvt->lock);
+}
+
+static struct rtpp_socket *
+rtpp_stream_get_skt(struct rtpp_stream *self)
+{
+    struct rtpp_stream_priv *pvt;
+    struct rtpp_socket *rval;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    if (pvt->fd == NULL) {
+        pthread_mutex_unlock(&pvt->lock);
+        return (NULL);
+    }
+    CALL_SMETHOD(pvt->fd->rcnt, incref);
+    rval = pvt->fd;
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
 }
 
-static void
-rtpp_stream_replace_rtps(struct rtpp_stream *self, uint64_t rtps_old,
-  uint64_t rtps_new)
+static struct rtpp_socket *
+rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
 {
+    struct rtpp_socket *old_skt;
     struct rtpp_stream_priv *pvt;
 
+    RTPP_DBG_ASSERT(new_skt != NULL);
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
-    if (pvt->rtps == rtps_old) {
-        pvt->rtps = rtps_new;
+    old_skt = pvt->fd;
+    pvt->fd = new_skt;
+    CALL_SMETHOD(pvt->fd->rcnt, incref);
+    if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
+        _rtpp_stream_plr_start(pvt, getdtime());
     }
     pthread_mutex_unlock(&pvt->lock);
+    return (old_skt);
+}
+
+static int
+rtpp_stream_drain_skt(struct rtpp_stream *self)
+{
+    struct rtp_packet *packet;
+    int ndrained;
+    struct rtpp_stream_priv *pvt;
+#if RTPP_DEBUG
+    const char *ptype;
+    int fd;
+#endif
+
+    pvt = PUB2PVT(self);
+    ndrained = 0;
+    pthread_mutex_lock(&pvt->lock);
+#if RTPP_DEBUG
+    ptype = rtpp_stream_get_proto(self);
+    fd = CALL_METHOD(pvt->fd, getfd);
+    RTPP_LOG(self->log, RTPP_LOG_DBUG, "Draining %s socket %d", ptype,
+      fd);
+#endif
+    for (;;) {
+        packet = CALL_METHOD(pvt->fd, rtp_recv, 0.0, NULL, 0);
+        if (packet == NULL)
+            break;
+        ndrained++;
+        rtp_packet_free(packet);
+    }
+    pthread_mutex_unlock(&pvt->lock);
+#if RTPP_DEBUG
+    if (ndrained > 0) {
+        RTPP_LOG(self->log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
+          "packets discarded", ptype, fd, ndrained);
+    }
+#endif
+    return (ndrained);
 }
 
 static int
 rtpp_stream_send_pkt(struct rtpp_stream *self, struct sthread_args *sap,
   struct rtp_packet *pkt)
 {
-
-    return (CALL_METHOD(self->fd, send_pkt_na, sap, self->rem_addr, pkt,
-      self->log));
-}
-
-static int
-rtpp_stream_islatched(struct rtpp_stream *self)
-{
     struct rtpp_stream_priv *pvt;
     int rval;
 
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
-    rval = pvt->latch_info.latched;
+    rval = CALL_METHOD(pvt->fd, send_pkt_na, sap, pvt->rem_addr, pkt,
+      self->log);
     pthread_mutex_unlock(&pvt->lock);
+    return (rval);
+}
+
+static struct rtp_packet *
+_rtpp_stream_recv_pkt(struct rtpp_stream_priv *pvt, double dtime)
+{
+    struct rtp_packet *pkt;
+
+    pkt = CALL_METHOD(pvt->fd, rtp_recv, dtime, pvt->pub.laddr, pvt->pub.port);
+    return (pkt);
+}
+
+static int
+rtpp_stream_issendable(struct rtpp_stream *self)
+{
+    struct rtpp_stream_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    if (CALL_SMETHOD(pvt->rem_addr, isempty)) {
+        pthread_mutex_unlock(&pvt->lock);
+        return (0);
+    }
+    if (pvt->fd == NULL) {
+        pthread_mutex_unlock(&pvt->lock);
+        return (0);
+    }
+    pthread_mutex_unlock(&pvt->lock);
+    return (1);
+}
+
+static int
+_rtpp_stream_islatched(struct rtpp_stream_priv *pvt)
+{
+    int rval;
+
+    rval = pvt->latch_info.latched;
     return (rval);
 }
 
@@ -681,4 +844,120 @@ rtpp_stream_get_stats(struct rtpp_stream *self, struct rtpp_acct_hold *ahp)
     pthread_mutex_lock(&pvt->lock);
     *ahp = pvt->hld_stat;
     pthread_mutex_unlock(&pvt->lock);
+}
+
+static int
+_rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt,
+  struct rtpp_weakref_obj *rtcps_wrt, struct rtp_packet *packet)
+{
+    struct rtpp_stream *stp_rtcp;
+    int rval;
+
+    __rtpp_stream_fill_addr(pvt, packet);
+    if (pvt->pub.stuid_rtcp == RTPP_UID_NONE) {
+        return (0);
+    }
+    stp_rtcp = CALL_METHOD(rtcps_wrt, get_by_idx,
+      pvt->pub.stuid_rtcp);
+    if (stp_rtcp == NULL) {
+        return (0);
+    }
+    rval = CALL_SMETHOD(stp_rtcp, guess_addr, packet);
+    CALL_SMETHOD(stp_rtcp->rcnt, decref);
+    return (rval);
+}
+
+static struct rtp_packet *
+rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
+  double dtime, struct rtpp_proc_rstats *rsp)
+{
+    struct rtp_packet *packet = NULL;
+    struct rtpp_stream_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    packet = _rtpp_stream_recv_pkt(pvt, dtime);
+    if (packet == NULL) {
+        /* Move on to the next session */
+        pthread_mutex_unlock(&pvt->lock);
+        return (NULL);
+    }
+    rsp->npkts_rcvd.cnt++;
+
+    if (!CALL_SMETHOD(pvt->rem_addr, isempty)) {
+        /* Check that the packet is authentic, drop if it isn't */
+        if (self->asymmetric == 0) {
+            if (CALL_SMETHOD(pvt->rem_addr, cmp, sstosa(&packet->raddr),
+              packet->rlen) != 0) {
+                if (_rtpp_stream_islatched(pvt) && \
+                  _rtpp_stream_check_latch_override(pvt, packet) == 0) {
+                    /*
+                     * Continue, since there could be good packets in
+                     * queue.
+                     */
+                    CALL_METHOD(self->pcount, reg_ignr);
+                    goto discard_and_continue;
+                }
+                /* Signal that an address has to be updated */
+                _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
+            } else if (!_rtpp_stream_islatched(pvt)) {
+                _rtpp_stream_latch(pvt, dtime, packet);
+            }
+        } else {
+            /*
+             * For asymmetric clients don't check
+             * source port since it may be different.
+             */
+            if (!CALL_SMETHOD(pvt->rem_addr, cmphost, sstosa(&packet->raddr))) {
+                /*
+                 * Continue, since there could be good packets in
+                 * queue.
+                 */
+                CALL_METHOD(self->pcount, reg_ignr);
+                goto discard_and_continue;
+            }
+        }
+        CALL_METHOD(self->pcnt_strm, reg_pktin, packet);
+    } else {
+        CALL_METHOD(self->pcnt_strm, reg_pktin, packet);
+        /* Update address recorded in the session */
+        _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
+    }
+    if (self->analyzer != NULL) {
+        if (CALL_METHOD(self->analyzer, update, packet) == UPDATE_SSRC_CHG) {
+            _rtpp_stream_latch(pvt, dtime, packet);
+        }
+    }
+    if (self->resizer != NULL) {
+        rtp_resizer_enqueue(self->resizer, &packet, rsp);
+        if (packet == NULL) {
+            rsp->npkts_resizer_in.cnt++;
+        }
+    }
+    pthread_mutex_unlock(&pvt->lock);
+    return (packet);
+
+discard_and_continue:
+    pthread_mutex_unlock(&pvt->lock);
+    rtp_packet_free(packet);
+    rsp->npkts_discard.cnt++;
+    return (RTPP_S_RX_DCONT);
+}
+
+static struct rtpp_netaddr *
+rtpp_stream_get_rem_addr(struct rtpp_stream *self, int retempty)
+{
+    struct rtpp_stream_priv *pvt;
+    struct rtpp_netaddr *rval;
+
+    pvt = PUB2PVT(self);
+    pthread_mutex_lock(&pvt->lock);
+    if (retempty == 0 && CALL_SMETHOD(pvt->rem_addr, isempty)) {
+        pthread_mutex_unlock(&pvt->lock);
+        return (NULL);
+    }
+    rval = pvt->rem_addr;
+    CALL_SMETHOD(rval->rcnt, incref);
+    pthread_mutex_unlock(&pvt->lock);
+    return (rval);
 }

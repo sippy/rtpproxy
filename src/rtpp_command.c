@@ -400,7 +400,6 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     int record_single_file;
     struct ul_opts *ulop;
     struct d_opts dopt;
-    uint64_t rtps, rtps_old;
 
     spa = NULL;
     recording_name = NULL;
@@ -570,16 +569,12 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case NOPLAY:
-	rtps_old = CALL_SMETHOD(spa->rtp->stream[i], get_rtps);
 	CALL_SMETHOD(spa->rtp->stream[i], handle_noplay);
-	CALL_SMETHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, RTPP_UID_NONE);
 	reply_ok(cmd);
 	break;
 
     case PLAY:
-	rtps_old = CALL_SMETHOD(spa->rtp->stream[i], get_rtps);
 	CALL_SMETHOD(spa->rtp->stream[i], handle_noplay);
-	CALL_SMETHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, RTPP_UID_NONE);
 	ptime = -1;
 	if (strcmp(codecs, "session") == 0) {
 	    if (spa->rtp->stream[i]->codecs == NULL) {
@@ -594,8 +589,6 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	    reply_error(cmd, ECODE_PLRFAIL);
 	    return 0;
 	}
-	rtps = CALL_SMETHOD(spa->rtp->stream[i], get_rtps);
-	CALL_SMETHOD(spa->rtcp->stream[i], replace_rtps, rtps_old, rtps);
 	reply_ok(cmd);
 	break;
 

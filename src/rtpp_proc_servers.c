@@ -60,7 +60,6 @@ process_rtp_servers_foreach(void *dp, void *ap)
     struct rtp_packet *pkt;
     int len;
     struct rtpp_stream *rsop;
-    uint64_t rtps_old;
 
     fap = (struct foreach_args *)ap;
     /*
@@ -73,18 +72,10 @@ process_rtp_servers_foreach(void *dp, void *ap)
         return (RTPP_WR_MATCH_CONT);
     }
     for (;;) {
-        pkt = CALL_METHOD(rsrv, get, fap->dtime, &len);
+        pkt = CALL_SMETHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
-                struct rtpp_stream *rsop_rtcp;
                 CALL_SMETHOD(rsop, finish_playback, rsrv->sruid);
-                rtps_old = rsrv->sruid;
-                rsop_rtcp = CALL_METHOD(fap->rtcp_streams_wrt, get_by_idx,
-                  rsop->stuid_rtcp);
-                if (rsop_rtcp != NULL) {
-                    CALL_SMETHOD(rsop_rtcp, replace_rtps, rtps_old, RTPP_UID_NONE);
-                    CALL_SMETHOD(rsop_rtcp->rcnt, decref);
-                }
                 CALL_SMETHOD(rsop->rcnt, decref);
                 return (RTPP_WR_MATCH_DEL);
             } else if (len != RTPS_LATER) {
@@ -92,7 +83,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
             }
             break;
         }
-        if (CALL_SMETHOD(rsop->rem_addr, isempty)) {
+        if (CALL_SMETHOD(rsop, issendable) == 0) {
             /* We have a packet, but nowhere to send it, drop */
             rtp_packet_free(pkt);
             continue;
