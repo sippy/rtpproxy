@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2016 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,6 +73,12 @@ static struct rtp_packet *rtpp_server_get(struct rtpp_server *, double, int *);
 static uint32_t rtpp_server_get_ssrc(struct rtpp_server *);
 static uint16_t rtpp_server_get_seq(struct rtpp_server *);
 
+static const struct rtpp_server_smethods rtpp_server_smethods = {
+    .get = &rtpp_server_get,
+    .get_ssrc = &rtpp_server_get_ssrc,
+    .get_seq = &rtpp_server_get_seq
+};
+
 struct rtpp_server *
 rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
   int ptime)
@@ -111,9 +117,7 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
-    rp->pub.get = &rtpp_server_get;
-    rp->pub.get_ssrc = &rtpp_server_get_ssrc;
-    rp->pub.get_seq = &rtpp_server_get_seq;
+    rp->pub.smethods = &rtpp_server_smethods;
     rtpp_gen_uid(&rp->pub.sruid);
 
     CALL_SMETHOD(rp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_dtor,

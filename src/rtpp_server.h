@@ -38,6 +38,13 @@ DEFINE_METHOD(rtpp_server, rtpp_server_get, struct rtp_packet *, double, int *);
 DEFINE_METHOD(rtpp_server, rtpp_server_get_ssrc, uint32_t);
 DEFINE_METHOD(rtpp_server, rtpp_server_get_seq, uint16_t);
 
+struct rtpp_server_smethods {
+    /* Static methods */
+    METHOD_ENTRY(rtpp_server_get, get);
+    METHOD_ENTRY(rtpp_server_get_ssrc, get_ssrc);
+    METHOD_ENTRY(rtpp_server_get_seq, get_seq);
+};
+
 #define	RTPS_LATER	(0)
 #define	RTPS_EOF	(-1)
 #define	RTPS_ERROR	(-2)
@@ -45,9 +52,7 @@ DEFINE_METHOD(rtpp_server, rtpp_server_get_seq, uint16_t);
 
 struct rtpp_server {
     /* Public methods */
-    METHOD_ENTRY(rtpp_server_get, get);
-    METHOD_ENTRY(rtpp_server_get_ssrc, get_ssrc);
-    METHOD_ENTRY(rtpp_server_get_seq, get_seq);
+    const struct rtpp_server_smethods *smethods;
     /* Refcounter */
     struct rtpp_refcnt *rcnt;
     /* UID */
