@@ -28,6 +28,7 @@
 
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stddef.h>
@@ -64,6 +65,7 @@ struct rtpp_server_priv {
     int loop;
     uint64_t dts;
     int ptime;
+    int active;
 };
 
 #define PUB2PVT(pubp)      ((struct rtpp_server_priv *)((char *)(pubp) - offsetof(struct rtpp_server_priv, pub)))
@@ -72,16 +74,19 @@ static void rtpp_server_dtor(struct rtpp_server_priv *);
 static struct rtp_packet *rtpp_server_get(struct rtpp_server *, double, int *);
 static uint32_t rtpp_server_get_ssrc(struct rtpp_server *);
 static uint16_t rtpp_server_get_seq(struct rtpp_server *);
+static void rtpp_server_start(struct rtpp_server *, double);
+static int rtpp_server_isactive(struct rtpp_server *);
 
 static const struct rtpp_server_smethods rtpp_server_smethods = {
     .get = &rtpp_server_get,
     .get_ssrc = &rtpp_server_get_ssrc,
-    .get_seq = &rtpp_server_get_seq
+    .get_seq = &rtpp_server_get_seq,
+    .start = &rtpp_server_start,
+    .isactive = &rtpp_server_isactive
 };
 
 struct rtpp_server *
-rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
-  int ptime)
+rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, int ptime)
 {
     struct rtpp_server_priv *rp;
     struct rtpp_refcnt *rcnt;
@@ -99,7 +104,6 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, double dtime,
     }
     rp->pub.rcnt = rcnt;
 
-    rp->btime = dtime;
     rp->dts = 0;
     rp->fd = fd;
     rp->loop = (loop > 0) ? loop - 1 : loop;
@@ -245,4 +249,24 @@ rtpp_server_get_seq(struct rtpp_server *self)
 
     rp = PUB2PVT(self);
     return (ntohs(rp->rtp->seq));
+}
+
+static void
+rtpp_server_start(struct rtpp_server *self, double dtime)
+{
+    struct rtpp_server_priv *rp;
+
+    rp = PUB2PVT(self);
+    assert(rp->active == 0);
+    rp->btime = dtime;
+    rp->active = 1;
+}
+
+static int
+rtpp_server_isactive(struct rtpp_server *self)
+{
+    struct rtpp_server_priv *rp;
+
+    rp = PUB2PVT(self);
+    return (rp->active);
 }
