@@ -1,0 +1,6 @@
+U callid_1 127.0.0.1 %%PORT1%% from_tag_1
+P callid_1 playback1 %%CODEC%% from_tag_1
+L callid_1 127.0.0.1 %%PORT2%% from_tag_1 to_tag_1
+U6 callid_1_ipv6 ::1 %%PORT1%% from_tag_1
+P callid_1_ipv6 playback1 %%CODEC%% from_tag_1
+L6 callid_1_ipv6 ::1 %%PORT2%% from_tag_1 to_tag_1
