@@ -56,8 +56,6 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_guess_addr, int,
   struct rtp_packet *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_prefill_addr, void,
   struct sockaddr **, double);
-DEFINE_METHOD(rtpp_stream, rtpp_stream_replace_rtps, void, uint64_t,
-  uint64_t);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_set_skt, void, struct rtpp_socket *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_skt, struct rtpp_socket *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_update_skt, struct rtpp_socket *,
@@ -89,7 +87,6 @@ struct rtpp_stream_smethods {
     METHOD_ENTRY(rtpp_stream_get_proto, get_proto);
     METHOD_ENTRY(rtpp_stream_guess_addr, guess_addr);
     METHOD_ENTRY(rtpp_stream_prefill_addr, prefill_addr);
-    METHOD_ENTRY(rtpp_stream_replace_rtps, replace_rtps);
     METHOD_ENTRY(rtpp_stream_set_skt, set_skt);
     METHOD_ENTRY(rtpp_stream_get_skt, get_skt);
     METHOD_ENTRY(rtpp_stream_update_skt, update_skt);
