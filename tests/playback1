@@ -24,7 +24,7 @@ setup_playback() {
   ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" playback1.nat.input
 }
 
-for ttype in 1 2 3
+for ttype in 1 2 3 4
 do
   if [ ${ttype} -eq 1 ]
   then
@@ -104,7 +104,13 @@ do
     #sha256 ${ofile}
     #report "sha256 ${ofile}"
     #wait
-    ${DIFF} playback1.output playback1.rout
+    if [ -e playback1.test${ttype}.output ]
+    then
+      MODEL_ROUT=playback1.test${ttype}.output
+    else
+      MODEL_ROUT=playback1.output
+    fi
+    ${DIFF} playback1.rout ${MODEL_ROUT}
     report "checking rtpproxy stdout"
     sha256_verify ${ofile} playback1.checksums
   done
