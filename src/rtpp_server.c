@@ -65,7 +65,7 @@ struct rtpp_server_priv {
     int loop;
     uint64_t dts;
     int ptime;
-    int active;
+    int started;
 };
 
 #define PUB2PVT(pubp)      ((struct rtpp_server_priv *)((char *)(pubp) - offsetof(struct rtpp_server_priv, pub)))
@@ -75,14 +75,12 @@ static struct rtp_packet *rtpp_server_get(struct rtpp_server *, double, int *);
 static uint32_t rtpp_server_get_ssrc(struct rtpp_server *);
 static uint16_t rtpp_server_get_seq(struct rtpp_server *);
 static void rtpp_server_start(struct rtpp_server *, double);
-static int rtpp_server_isactive(struct rtpp_server *);
 
 static const struct rtpp_server_smethods rtpp_server_smethods = {
     .get = &rtpp_server_get,
     .get_ssrc = &rtpp_server_get_ssrc,
     .get_seq = &rtpp_server_get_seq,
-    .start = &rtpp_server_start,
-    .isactive = &rtpp_server_isactive
+    .start = &rtpp_server_start
 };
 
 struct rtpp_server *
@@ -257,16 +255,7 @@ rtpp_server_start(struct rtpp_server *self, double dtime)
     struct rtpp_server_priv *rp;
 
     rp = PUB2PVT(self);
-    RTPP_DBG_ASSERT(rp->active == 0);
+    RTPP_DBG_ASSERT(rp->started == 0);
     rp->btime = dtime;
-    rp->active = 1;
-}
-
-static int
-rtpp_server_isactive(struct rtpp_server *self)
-{
-    struct rtpp_server_priv *rp;
-
-    rp = PUB2PVT(self);
-    return (rp->active);
+    rp->started = 1;
 }
