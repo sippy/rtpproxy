@@ -127,7 +127,6 @@ static int rtpp_stream_guess_addr(struct rtpp_stream *,
   struct rtp_packet *);
 static void rtpp_stream_prefill_addr(struct rtpp_stream *,
   struct sockaddr **, double);
-static void rtpp_stream_replace_rtps(struct rtpp_stream *, uint64_t, uint64_t);
 static void rtpp_stream_set_skt(struct rtpp_stream *, struct rtpp_socket *);
 static struct rtpp_socket *rtpp_stream_get_skt(struct rtpp_stream *);
 static struct rtpp_socket *rtpp_stream_update_skt(struct rtpp_stream *,
@@ -153,7 +152,6 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .get_actor = &rtpp_stream_get_actor,
     .get_proto = &rtpp_stream_get_proto,
     .prefill_addr = &rtpp_stream_prefill_addr,
-    .replace_rtps = &rtpp_stream_replace_rtps,
     .set_skt = &rtpp_stream_set_skt,
     .get_skt = &rtpp_stream_get_skt,
     .update_skt = &rtpp_stream_update_skt,
@@ -674,20 +672,6 @@ static void rtpp_stream_reg_onhold(struct rtpp_stream *self)
         pvt->hld_stat.status = 1;
     }
     pvt->hld_stat.cnt++;
-    pthread_mutex_unlock(&pvt->lock);
-}
-
-static void
-rtpp_stream_replace_rtps(struct rtpp_stream *self, uint64_t rtps_old,
-  uint64_t rtps_new)
-{
-    struct rtpp_stream_priv *pvt;
-
-    pvt = PUB2PVT(self);
-    pthread_mutex_lock(&pvt->lock);
-    if (pvt->rtps.uid == rtps_old) {
-        _s_rtps(pvt, rtps_new, 1);
-    }
     pthread_mutex_unlock(&pvt->lock);
 }
 
