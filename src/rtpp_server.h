@@ -38,7 +38,6 @@ DEFINE_METHOD(rtpp_server, rtpp_server_get, struct rtp_packet *, double, int *);
 DEFINE_METHOD(rtpp_server, rtpp_server_get_ssrc, uint32_t);
 DEFINE_METHOD(rtpp_server, rtpp_server_get_seq, uint16_t);
 DEFINE_METHOD(rtpp_server, rtpp_server_start, void, double);
-DEFINE_METHOD(rtpp_server, rtpp_server_isactive, int);
 
 struct rtpp_server_smethods {
     /* Static methods */
@@ -46,7 +45,6 @@ struct rtpp_server_smethods {
     METHOD_ENTRY(rtpp_server_get_ssrc, get_ssrc);
     METHOD_ENTRY(rtpp_server_get_seq, get_seq);
     METHOD_ENTRY(rtpp_server_start, start);
-    METHOD_ENTRY(rtpp_server_isactive, isactive);
 };
 
 #define	RTPS_LATER	(0)
