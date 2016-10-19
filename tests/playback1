@@ -18,13 +18,19 @@ setup_playback() {
   codec="${2}"
   target_port="${3}"
   pifile="${4}"
+  p2ifile="${5}"
   sleep ${delay}
   ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" "${pifile}"
+  if [ "${p2ifile}" != "" ]
+  then
+    sleep 1
+    ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" "${p2ifile}"
+  fi
   sleep 1
   ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" playback1.nat.input
 }
 
-for ttype in 1 2 3 4
+for ttype in 1 2 3 4 5
 do
   if [ ${ttype} -eq 1 ]
   then
@@ -33,6 +39,12 @@ do
     delay=1
   fi
   PIFILE="playback1.type${ttype}.input"
+  if [ -e "playback1.type${ttype}.s2.input" ]
+  then
+    P2IFILE="playback1.type${ttype}.s2.input"
+  else
+    P2IFILE=""
+  fi
   for codec in 0 3 8 18 9
   do
     if [ ${codec} -ne 3 ]
@@ -65,7 +77,7 @@ do
       then
         sleep 1
       fi
-      setup_playback ${delay} ${codec} ${TARGET_PORT} "${PIFILE}" | \
+      setup_playback ${delay} ${codec} ${TARGET_PORT} "${PIFILE}" "${P2IFILE}" | \
        ${RTPPROXY} -l 0.0.0.0 -6 /:: -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>playback1.rlog&
       PLB_PID=${!}
       ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace
@@ -104,9 +116,9 @@ do
     #sha256 ${ofile}
     #report "sha256 ${ofile}"
     #wait
-    if [ -e playback1.test${ttype}.output ]
+    if [ -e playback1.type${ttype}.output ]
     then
-      MODEL_ROUT=playback1.test${ttype}.output
+      MODEL_ROUT=playback1.type${ttype}.output
     else
       MODEL_ROUT=playback1.output
     fi
