@@ -151,7 +151,7 @@ rtpp_server_get(struct rtpp_server *self, double dtime, int *rval)
 
     rp = PUB2PVT(self);
 
-    if (rp->btime + ((double)rp->dts / 1000.0) > dtime) {
+    if (rp->started == 0 || (rp->btime + ((double)rp->dts / 1000.0) > dtime)) {
         *rval = RTPS_LATER;
 	return (NULL);
     }
