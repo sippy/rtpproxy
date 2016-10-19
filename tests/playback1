@@ -39,9 +39,9 @@ do
     delay=1
   fi
   PIFILE="playback1.type${ttype}.input"
-  if [ -e "playback1.type${ttype}.s2.input" ]
+  if [ -e "playback1.type${ttype}.st2.input" ]
   then
-    P2IFILE="playback1.type${ttype}.s2.input"
+    P2IFILE="playback1.type${ttype}.st2.input"
   else
     P2IFILE=""
   fi
