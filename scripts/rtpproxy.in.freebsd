@@ -45,4 +45,4 @@ pidfile=/var/run/rtpproxy.pid
 command_args="-u ${rtpproxy_usr}:${rtpproxy_grp} -A ${rtpproxy_paddr} -F -l ${rtpproxy_laddr} \
   -s ${rtpproxy_ctrl_socket} -d INFO -p /var/run/rtpproxy.pid ${rtpproxy_args}"
 
-run_rc_command $1
+run_rc_command "$1"
