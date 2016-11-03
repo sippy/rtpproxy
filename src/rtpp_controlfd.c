@@ -197,13 +197,13 @@ struct rtpp_ctrl_sock *
 rtpp_ctrl_sock_parse(const char *optarg)
 {
     struct rtpp_ctrl_sock *rcsp;
+    const char *cp;
 
     rcsp = malloc(sizeof(struct rtpp_ctrl_sock));
     if (rcsp == NULL) {
         return (NULL);
     }
     memset(rcsp, '\0', sizeof(struct rtpp_ctrl_sock));
-    rcsp->type= RTPC_IFSUN;
     if (strncmp("udp:", optarg, 4) == 0) {
         rcsp->type= RTPC_UDP4;
         optarg += 4;
@@ -222,7 +222,15 @@ rtpp_ctrl_sock_parse(const char *optarg)
     } else if (strncmp("stdio:", optarg, 6) == 0) {
         rcsp->type= RTPC_STDIO;
         optarg += 6;
+    } else {
+        cp = strchr(optarg, ':');
+        if (cp != NULL && cp[1] == '\0') {
+            free(rcsp);
+            return (NULL);
+        }
+        rcsp->type= RTPC_IFSUN;
     }
+
     rcsp->cmd_sock = optarg;
 
     return (rcsp);
