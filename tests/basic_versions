@@ -15,7 +15,7 @@ do
   else
     RTPP_SOCKFILE="${socket}" RTPP_OUTFILE="basic_versions.rout" rtpproxy_start
     report "rtpproxy start on ${socket}"
-    ${TOP_BUILDDIR}/python/rtpp_query.py -b -s "${socket}" \
+    ${RTPP_QUERY} -b -s "${socket}" \
       -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions.input -o basic_versions.qout
     report "rtpp_query on ${socket}"
     rtpproxy_stop HUP
