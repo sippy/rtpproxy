@@ -16,7 +16,7 @@ PYTHON_DIR="${TOP_BUILDDIR}/python"
 SIPPY_DIR="${PYTHON_DIR}/sippy_lite"
 
 RTPPROXY=${TOP_BUILDDIR}/src/rtpproxy_debug
-RTPP_QUERY=${TOP_BUILDDIR}/python/rtpp_query.py
+RTPP_QUERY=${TOP_BUILDDIR}/python/sippy/sippy_lite/tools/rtpp_query.py
 RTPP_NOTYFY_CLIENT=${TOP_BUILDDIR}/python/rtpp_notify_client.py
 
 setup_tstart() {
