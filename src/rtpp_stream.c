@@ -70,10 +70,13 @@
 #include "rtpp_acct_pipe.h"
 #include "rtpp_time.h"
 
+#define  SEQ_SYNC_IVAL   1.0    /* in seconds */
+
 struct rtpps_latch {
     int latched;
     struct rtpp_ssrc ssrc;
     int seq;
+    double last_sync;
 };
 
 struct rtps {
@@ -468,6 +471,7 @@ _rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
             pvt->latch_info.ssrc.val = packet->parsed->ssrc;
             pvt->latch_info.ssrc.inited = 1;
             pvt->latch_info.seq = packet->parsed->seq;
+            pvt->latch_info.last_sync = dtime;
             snprintf(ssrc_buf, sizeof(ssrc_buf), SSRC_FMT, packet->parsed->ssrc);
             snprintf(seq_buf, sizeof(seq_buf), "%u", packet->parsed->seq);
             ssrc = ssrc_buf;
@@ -495,6 +499,25 @@ _rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
     return (1);
 }
 
+static void
+_rtpp_stream_latch_sync(struct rtpp_stream_priv *pvt, double dtime,
+  struct rtp_packet *packet)
+{
+    struct rtpps_latch *lip;
+
+    lip = &pvt->latch_info;
+    if (pvt->pub.pipe_type != PIPE_RTP || lip->ssrc.inited == 0)
+        return;
+    if (dtime - lip->last_sync < SEQ_SYNC_IVAL)
+        return;
+    if (rtp_packet_parse(packet) != RTP_PARSER_OK)
+        return;
+    if (lip->ssrc.val != packet->parsed->ssrc)
+        return;
+    lip->seq = packet->parsed->seq;
+    lip->last_sync = dtime;
+}
+
 static int
 _rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
   struct rtp_packet *packet)
@@ -508,7 +531,7 @@ _rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
         return (0);
     if (packet->parsed->ssrc != pvt->latch_info.ssrc.val)
         return (0);
-    if (packet->parsed->seq < pvt->latch_info.seq && pvt->latch_info.seq - packet->parsed->seq < 536)
+    if (SEQ_DIST(pvt->latch_info.seq, packet->parsed->seq) > 536)
         return (0);
 
     actor = _rtpp_stream_get_actor(pvt);
@@ -928,6 +951,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
             _rtpp_stream_latch(pvt, dtime, packet);
         }
     }
+    _rtpp_stream_latch_sync(pvt, dtime, packet);
     if (self->resizer != NULL) {
         rtp_resizer_enqueue(self->resizer, &packet, rsp);
         if (packet == NULL) {
