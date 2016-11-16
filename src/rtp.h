@@ -131,6 +131,8 @@ struct rtp_packet_chunk {
 };
 
 #define	RTP_HDR_LEN(rhp)	(sizeof(*(rhp)) + ((rhp)->cc * sizeof((rhp)->csrc[0])))
+#define	SEQ_DIST(seq1, seq2) \
+  ((seq2) >= (seq1) ? ((seq2) - (seq1)) : ((int)(seq2) + 65536 - (int)(seq1)))
 
 const char *rtp_packet_parse_errstr(rtp_parser_err_t);
 rtp_parser_err_t rtp_packet_parse_raw(unsigned char *, size_t, struct rtp_info *);

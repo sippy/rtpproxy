@@ -143,5 +143,7 @@ struct rtpp_stream {
 struct rtpp_stream *rtpp_stream_ctor(struct rtpp_log *,
   struct rtpp_weakref_obj *, struct rtpp_stats *, enum rtpp_stream_side,
   int, uint64_t);
+void rtpp_stream_latch_sync(struct rtpp_stream *, double,
+  struct rtp_packet *);
 
 #endif

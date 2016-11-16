@@ -170,6 +170,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
                 CALL_SMETHOD(stp, latch, dtime, packet);
             }
         }
+        rtpp_stream_latch_sync(stp, dtime, packet);
 	if (stp->resizer != NULL) {
 	    rtp_resizer_enqueue(stp->resizer, &packet, rsp);
             if (packet == NULL) {

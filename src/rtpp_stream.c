@@ -68,10 +68,13 @@
 #include "rtpp_debug.h"
 #include "rtpp_acct_pipe.h"
 
+#define  SEQ_SYNC_IVAL   1.0    /* in seconds */
+
 struct rtpps_latch {
     int latched;
     struct rtpp_ssrc ssrc;
     int seq;
+    double last_sync;
 };
 
 struct rtpp_stream_priv
@@ -396,6 +399,27 @@ rtpp_stream_get_proto(struct rtpp_stream *self)
     return (PP_NAME(self->pipe_type));
 }
 
+void
+rtpp_stream_latch_sync(struct rtpp_stream *self, double dtime,
+  struct rtp_packet *packet)
+{
+    struct rtpp_stream_priv *pvt;
+    struct rtpps_latch *lip;
+
+    pvt = PUB2PVT(self);
+    lip = &pvt->latch_info;
+    if (pvt->pub.pipe_type != PIPE_RTP || lip->ssrc.inited == 0)
+        return;
+    if (dtime - lip->last_sync < SEQ_SYNC_IVAL)
+        return;
+    if (rtp_packet_parse(packet) != RTP_PARSER_OK)
+        return;
+    if (lip->ssrc.val != packet->parsed->ssrc)
+        return;
+    lip->seq = packet->parsed->seq;
+    lip->last_sync = dtime;
+}
+
 static int
 rtpp_stream_latch(struct rtpp_stream *self, double dtime,
   struct rtp_packet *packet)
@@ -419,6 +443,7 @@ rtpp_stream_latch(struct rtpp_stream *self, double dtime,
             pvt->latch_info.ssrc.val = packet->parsed->ssrc;
             pvt->latch_info.ssrc.inited = 1;
             pvt->latch_info.seq = packet->parsed->seq;
+            pvt->latch_info.last_sync = dtime;
             snprintf(ssrc_buf, sizeof(ssrc_buf), SSRC_FMT, packet->parsed->ssrc);
             snprintf(seq_buf, sizeof(seq_buf), "%u", packet->parsed->seq);
             ssrc = ssrc_buf;
@@ -462,7 +487,7 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
         return (0);
     if (packet->parsed->ssrc != pvt->latch_info.ssrc.val)
         return (0);
-    if (packet->parsed->seq < pvt->latch_info.seq && pvt->latch_info.seq - packet->parsed->seq < 536)
+    if (SEQ_DIST(pvt->latch_info.seq, packet->parsed->seq) > 536)
         return (0);
 
     actor = rtpp_stream_get_actor(self);
@@ -474,6 +499,7 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
       packet->parsed->seq);
 
     pvt->latch_info.seq = packet->parsed->seq;
+    pvt->latch_info.last_sync = packet->rtime;
     return (1);
 }
 
