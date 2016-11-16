@@ -543,6 +543,7 @@ _rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
       packet->parsed->seq);
 
     pvt->latch_info.seq = packet->parsed->seq;
+    pvt->latch_info.last_sync = packet->rtime;
     return (1);
 }
 
