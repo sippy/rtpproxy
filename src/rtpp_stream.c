@@ -597,30 +597,34 @@ rtpp_stream_prefill_addr(struct rtpp_stream *self, struct sockaddr **iapp,
     if (!CALL_SMETHOD(self->rem_addr, isempty))
         pvt->last_update = dtime;
 
-    /*
-     * Unless the address provided by client historically
-     * cannot be trusted and address is different from one
-     * that we recorded update it.
-     */
-    if (pvt->untrusted_addr != 0) {
-        pthread_mutex_unlock(&pvt->lock);
-        return;
-    }
     if (!CALL_SMETHOD(self->rem_addr, isempty) && CALL_SMETHOD(self->rem_addr,
       isaddrseq, *iapp)) {
         pthread_mutex_unlock(&pvt->lock);
         return;
     }
 
-    addrport2char_r(*iapp, saddr, sizeof(saddr), ':');
-    RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "pre-filling %s's %s address "
-      "with %s", actor, ptype, saddr);
-    if (!CALL_SMETHOD(self->rem_addr, isempty)) {
+    /*
+     * Unless the address provided by client historically
+     * cannot be trusted and address is different from one
+     * that we recorded update it, otherwise just unlatch.
+     */
+    if (pvt->untrusted_addr == 0) {
+        addrport2char_r(*iapp, saddr, sizeof(saddr), ':');
+        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "pre-filling %s's %s address "
+          "with %s", actor, ptype, saddr);
+        if (!CALL_SMETHOD(self->rem_addr, isempty)) {
+            if (pvt->latch_info.latched != 0) {
+                CALL_SMETHOD(pvt->raddr_prev, copy, self->rem_addr);
+            }
+        }
+        CALL_SMETHOD(self->rem_addr, set, *iapp, SA_LEN(*iapp));
+    } else {
         if (pvt->latch_info.latched != 0) {
-            CALL_SMETHOD(pvt->raddr_prev, copy, self->rem_addr);
+            RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "un-latching %s's %s address",
+              actor, ptype);
+            pvt->latch_info.latched = self->asymmetric;;
         }
     }
-    CALL_SMETHOD(self->rem_addr, set, *iapp, SA_LEN(*iapp));
     pthread_mutex_unlock(&pvt->lock);
 }
 
