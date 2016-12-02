@@ -375,7 +375,7 @@ handle_nomem(struct rtpp_command *cmd, int ecode, struct rtpp_session *spa)
 {
 
     RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "can't allocate memory");
-    rtpp_command_ul_opts_free(cmd->opts.ul);
+    rtpp_command_ul_opts_free(cmd->cca.opts.ul);
     if (spa != NULL) {
         CALL_SMETHOD(spa->rcnt, decref);
     }
@@ -396,7 +396,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
     lport = 0;
     spa = spb = NULL;
     fds[0] = fds[1] = NULL;
-    ulop = cmd->opts.ul;
+    ulop = cmd->cca.opts.ul;
     if (sidx != -1) {
         RTPP_DBG_ASSERT(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = cmd->sp;

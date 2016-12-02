@@ -118,8 +118,8 @@ struct rtpp_stream_priv
   ((struct rtpp_stream_priv *)((char *)(pubp) - offsetof(struct rtpp_stream_priv, pub)))
 
 static void rtpp_stream_dtor(struct rtpp_stream_priv *);
-static int rtpp_stream_handle_play(struct rtpp_stream *, const char *, const char *,
-  int, struct rtpp_command *, int);
+static int rtpp_stream_handle_play(struct rtpp_stream *, const char *,
+  const char *, int, struct rtpp_command *, int);
 static void rtpp_stream_handle_noplay(struct rtpp_stream *);
 static int rtpp_stream_isplayer_active(struct rtpp_stream *);
 static void rtpp_stream_finish_playback(struct rtpp_stream *, uint64_t);
