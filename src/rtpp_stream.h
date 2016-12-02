@@ -45,8 +45,8 @@ struct sthread_args;
 struct rtpp_acct_hold;
 struct rtpp_proc_rstats;
 
-DEFINE_METHOD(rtpp_stream, rtpp_stream_handle_play, int, char *,
-  char *, int, struct rtpp_command *, int);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_handle_play, int, const char *,
+  const char *, int, struct rtpp_command *, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_handle_noplay, void);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_isplayer_active, int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_finish_playback, void, uint64_t);
