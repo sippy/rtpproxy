@@ -75,6 +75,7 @@ static struct rtp_packet *rtpp_server_get(struct rtpp_server *, double, int *);
 static uint32_t rtpp_server_get_ssrc(struct rtpp_server *);
 static void rtpp_server_set_ssrc(struct rtpp_server *, uint32_t);
 static uint16_t rtpp_server_get_seq(struct rtpp_server *);
+static void rtpp_server_set_seq(struct rtpp_server *, uint16_t);
 static void rtpp_server_start(struct rtpp_server *, double);
 
 static const struct rtpp_server_smethods rtpp_server_smethods = {
@@ -82,6 +83,7 @@ static const struct rtpp_server_smethods rtpp_server_smethods = {
     .get_ssrc = &rtpp_server_get_ssrc,
     .set_ssrc = &rtpp_server_set_ssrc,
     .get_seq = &rtpp_server_get_seq,
+    .set_seq = &rtpp_server_set_seq,
     .start = &rtpp_server_start
 };
 
@@ -258,6 +260,15 @@ rtpp_server_get_seq(struct rtpp_server *self)
 
     rp = PUB2PVT(self);
     return (ntohs(rp->rtp->seq));
+}
+
+static void
+rtpp_server_set_seq(struct rtpp_server *self, uint16_t seq)
+{
+    struct rtpp_server_priv *rp;
+
+    rp = PUB2PVT(self);
+    rp->rtp->seq = htons(seq);
 }
 
 static void
