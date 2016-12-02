@@ -127,6 +127,7 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap)
     CALL_METHOD(cf->stable->sessions_ht, foreach_key, ccap->call_id,
       rtpp_cmd_delete_ematch, &dea);
     rtpp_command_del_opts_free(ccap->opts.delete);
+    ccap->opts.delete = NULL;
     return (dea.ndeleted == 0) ? -1 : 0;
 }
 
