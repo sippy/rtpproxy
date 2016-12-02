@@ -485,6 +485,10 @@ rtpp_stream_check_latch_override(struct rtpp_stream *self,
         return (0);
     if (rtp_packet_parse(packet) != RTP_PARSER_OK)
         return (0);
+    RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO, "check_latch_override(SSRC=" SSRC_FMT
+      ", SEQ=%d): %d %d", pvt->latch_info.ssrc.val, pvt->latch_info.seq,
+      (packet->parsed->ssrc != pvt->latch_info.ssrc.val),
+      SEQ_DIST(pvt->latch_info.seq, packet->parsed->seq));
     if (packet->parsed->ssrc != pvt->latch_info.ssrc.val)
         return (0);
     if (SEQ_DIST(pvt->latch_info.seq, packet->parsed->seq) > 536)
