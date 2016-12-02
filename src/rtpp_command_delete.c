@@ -29,15 +29,19 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "rtpp_defines.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_log.h"
+#include "rtpp_command.h"
+#include "rtpp_command_delete.h"
 #include "rtpp_command_private.h"
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_pipe.h"
 #include "rtpp_session.h"
 #include "rtpp_stream.h"
@@ -106,20 +110,62 @@ rtpp_cmd_delete_ematch(void *dp, void *ap)
     return (RTPP_HT_MATCH_DEL);
 }
 
+struct delete_opts {
+    int weak;
+};
+
 int
-handle_delete(struct cfg *cf, struct common_cmd_args *ccap, int weak)
+handle_delete(struct cfg *cf, struct common_cmd_args *ccap)
 {
     struct delete_ematch_arg dea;
 
     memset(&dea, '\0', sizeof(dea));
     dea.from_tag = ccap->from_tag;
     dea.to_tag = ccap->to_tag;
-    dea.weak = weak;
+    dea.weak = ccap->opts.delete->weak;
     dea.sessions_wrt = cf->stable->sessions_wrt;
     CALL_METHOD(cf->stable->sessions_ht, foreach_key, ccap->call_id,
       rtpp_cmd_delete_ematch, &dea);
-    if (dea.ndeleted == 0) {
-        return -1;
+    rtpp_command_del_opts_free(ccap->opts.delete);
+    return (dea.ndeleted == 0) ? -1 : 0;
+}
+
+struct delete_opts *
+rtpp_command_del_opts_parse(struct rtpp_command *cmd)
+{
+    struct delete_opts *dlop;
+    const char *cp;
+
+    dlop = rtpp_zmalloc(sizeof(struct delete_opts));
+    if (dlop == NULL) {
+        reply_error(cmd, ECODE_NOMEM_1);
+        goto err_undo_0;
     }
-    return 0;
+    for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
+        switch (*cp) {
+        case 'w':
+        case 'W':
+            dlop->weak = 1;
+            break;
+
+        default:
+            RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
+              "DELETE: unknown command modifier `%c'", *cp);
+            reply_error(cmd, ECODE_PARSE_4);
+            goto err_undo_1;
+        }
+    }
+    return (dlop);
+
+err_undo_1:
+    rtpp_command_del_opts_free(dlop);
+err_undo_0:
+    return (NULL);
+}
+
+void
+rtpp_command_del_opts_free(struct delete_opts *dlop)
+{
+
+    free(dlop);
 }

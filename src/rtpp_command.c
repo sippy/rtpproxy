@@ -387,10 +387,6 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     return (cmd);
 }
 
-struct d_opts {
-    int weak;
-};
-
 int
 handle_command(struct cfg *cf, struct rtpp_command *cmd)
 {
@@ -399,7 +395,6 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     char *recording_name;
     struct rtpp_session *spa;
     int record_single_file;
-    struct d_opts dopt;
 
     spa = NULL;
     recording_name = NULL;
@@ -435,8 +430,8 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
          *   payload types or word "session" (without quotes), in which
          *   case list saved on last session update will be used instead.
          */
-        cmd->opts.play = rtpp_command_play_opts_parse(cmd);
-        if (cmd->opts.play == NULL) {
+        cmd->cca.opts.play = rtpp_command_play_opts_parse(cmd);
+        if (cmd->cca.opts.play == NULL) {
             RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
         }
@@ -465,27 +460,18 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case DELETE:
         /* D[w] call_id from_tag [to_tag] */
-        dopt.weak = 0;
-        for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
-            switch (*cp) {
-            case 'w':
-            case 'W':
-                dopt.weak = 1;
-                break;
-
-            default:
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR,
-                  "DELETE: unknown command modifier `%c'", *cp);
-                reply_error(cmd, ECODE_PARSE_4);
-                return 0;
-            }
+        cmd->cca.opts.delete = rtpp_command_del_opts_parse(cmd);
+        if (cmd->cca.opts.delete == NULL) {
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't parse options");
+            return 0;
         }
         break;
 
     case UPDATE:
     case LOOKUP:
-        cmd->opts.ul = rtpp_command_ul_opts_parse(cf, cmd);
-        if (cmd->opts.ul == NULL) {
+        cmd->cca.opts.ul = rtpp_command_ul_opts_parse(cf, cmd);
+        if (cmd->cca.opts.ul == NULL) {
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
         }
 	break;
@@ -522,7 +508,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
      */
     switch (cmd->cca.op) {
     case DELETE:
-	i = handle_delete(cf, &cmd->cca, dopt.weak);
+	i = handle_delete(cf, &cmd->cca);
 	break;
 
     case RECORD:
@@ -547,16 +533,16 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	  cmd->cca.call_id, cmd->cca.from_tag, cmd->cca.to_tag != NULL ? cmd->cca.to_tag : "NONE");
 	switch (cmd->cca.op) {
 	case LOOKUP:
-	    rtpp_command_ul_opts_free(cmd->opts.ul);
+	    rtpp_command_ul_opts_free(cmd->cca.opts.ul);
 	    ul_reply_port(cmd, NULL);
 	    return 0;
 
 	case PLAY:
-	    rtpp_command_play_opts_free(cmd->opts.play);
+	    rtpp_command_play_opts_free(cmd->cca.opts.play);
 	    break;
 
 	default:
-	    RTPP_DBG_ASSERT(cmd->opts.ptr == NULL);
+	    RTPP_DBG_ASSERT(cmd->cca.opts.ptr == NULL);
 	    break;
 	}
 	reply_error(cmd, ECODE_SESUNKN);

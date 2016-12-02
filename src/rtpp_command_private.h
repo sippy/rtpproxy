@@ -60,6 +60,12 @@ struct common_cmd_args {
     char *call_id;
     char *from_tag;
     char *to_tag;
+    union {
+        struct ul_opts *ul;
+        struct play_opts *play;
+        struct delete_opts *delete;
+        void *ptr;
+    } opts;
 };
 
 struct rtpp_command
@@ -76,11 +82,6 @@ struct rtpp_command
     struct common_cmd_args cca;
     int no_glock;
     struct rtpp_session *sp;
-    union {
-        struct ul_opts *ul;
-        struct play_opts *play;
-        void *ptr;
-    } opts;
     struct rtpp_log *glog;
 };
 

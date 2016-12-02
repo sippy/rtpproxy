@@ -93,7 +93,7 @@ rtpp_command_play_handle(struct rtpp_stream *rsp, struct rtpp_command *cmd)
     struct play_opts *plop;
 
     CALL_SMETHOD(rsp, handle_noplay);
-    plop = cmd->opts.play;
+    plop = cmd->cca.opts.play;
     if (strcmp(plop->codecs, "session") == 0) {
         if (rsp->codecs == NULL) {
             reply_error(cmd, ECODE_INVLARG_5);
