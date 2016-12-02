@@ -76,6 +76,12 @@ struct rtpp_command
     struct common_cmd_args cca;
     int no_glock;
     struct rtpp_session *sp;
+    union {
+        struct ul_opts *ul;
+        struct play_opts *play;
+        void *ptr;
+    } opts;
+    struct rtpp_log *glog;
 };
 
 #define ECODE_CMDUNKN      0

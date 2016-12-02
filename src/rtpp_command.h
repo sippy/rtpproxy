@@ -49,6 +49,7 @@ void free_command(struct rtpp_command *);
 struct rtpp_command *get_command(struct cfg *, int, int *, double,
   struct rtpp_command_stats *csp, int umode, struct rtpp_cmd_rcache *);
 void reply_error(struct rtpp_command *cmd, int ecode);
+void reply_ok(struct rtpp_command *cmd);
 void reply_port(struct rtpp_command *cmd, int lport,
   struct sockaddr **lia);
 int rtpp_create_listener(struct cfg *, struct sockaddr *, int *,

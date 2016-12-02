@@ -52,6 +52,7 @@
 #include "rtpp_command_copy.h"
 #include "rtpp_command_delete.h"
 #include "rtpp_command_parse.h"
+#include "rtpp_command_play.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_record.h"
 #include "rtpp_command_rcache.h"
@@ -239,7 +240,7 @@ reply_number(struct rtpp_command *cmd, int number)
     rtpc_doreply(cmd, cmd->buf_t, len, 0);
 }
 
-static void
+void
 reply_ok(struct rtpp_command *cmd)
 {
 
@@ -288,6 +289,7 @@ rtpp_command_ctor(struct cfg *cf, int controlfd, double dtime, int *rval,
     pvt->cfs = cf->stable;
     cmd->dtime = dtime;
     cmd->csp = csp;
+    cmd->glog = cf->stable->glog;
     pvt->umode = umode;
     return (cmd);
 }
@@ -393,17 +395,14 @@ int
 handle_command(struct cfg *cf, struct rtpp_command *cmd)
 {
     int i, verbose, rval;
-    int playcount, ptime;
-    char *cp, *tcp;
-    char *pname, *codecs, *recording_name;
+    char *cp;
+    char *recording_name;
     struct rtpp_session *spa;
     int record_single_file;
-    struct ul_opts *ulop;
     struct d_opts dopt;
 
     spa = NULL;
     recording_name = NULL;
-    codecs = NULL;
 
     /* Step II: parse parameters that are specific to a particular op and run simple ops */
     switch (cmd->cca.op) {
@@ -436,17 +435,10 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
          *   payload types or word "session" (without quotes), in which
          *   case list saved on last session update will be used instead.
          */
-        playcount = 1;
-        pname = cmd->argv[2];
-        codecs = cmd->argv[3];
-        tcp = &(cmd->argv[0][1]);
-	if (*tcp != '\0') {
-	    playcount = strtol(tcp, &cp, 10);
-            if (cp == tcp || *cp != '\0') {
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
-                reply_error(cmd, ECODE_PARSE_6);
-                return 0;
-            }
+        cmd->opts.play = rtpp_command_play_opts_parse(cmd);
+        if (cmd->opts.play == NULL) {
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't parse options");
+            return 0;
         }
         break;
 
@@ -492,8 +484,8 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case UPDATE:
     case LOOKUP:
-        ulop = rtpp_command_ul_opts_parse(cf, cmd);
-        if (ulop == NULL) {
+        cmd->opts.ul = rtpp_command_ul_opts_parse(cf, cmd);
+        if (cmd->opts.ul == NULL) {
             return 0;
         }
 	break;
@@ -514,7 +506,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
                 return 0;
             }
         }
-        i = handle_get_stats(cf, cmd, verbose);
+        i = handle_get_stats(cf->stable->rtpp_stats, cmd, verbose);
         if (i != 0) {
             reply_error(cmd, i);
         }
@@ -553,10 +545,19 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO,
 	  "%s request failed: session %s, tags %s/%s not found", cmd->cca.rname,
 	  cmd->cca.call_id, cmd->cca.from_tag, cmd->cca.to_tag != NULL ? cmd->cca.to_tag : "NONE");
-	if (cmd->cca.op == LOOKUP) {
-            rtpp_command_ul_opts_free(ulop);
+	switch (cmd->cca.op) {
+	case LOOKUP:
+	    rtpp_command_ul_opts_free(cmd->opts.ul);
 	    ul_reply_port(cmd, NULL);
 	    return 0;
+
+	case PLAY:
+	    rtpp_command_play_opts_free(cmd->opts.play);
+	    break;
+
+	default:
+	    RTPP_DBG_ASSERT(cmd->opts.ptr == NULL);
+	    break;
 	}
 	reply_error(cmd, ECODE_SESUNKN);
 	return 0;
@@ -574,22 +575,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case PLAY:
-	CALL_SMETHOD(spa->rtp->stream[i], handle_noplay);
-	ptime = -1;
-	if (strcmp(codecs, "session") == 0) {
-	    if (spa->rtp->stream[i]->codecs == NULL) {
-		reply_error(cmd, ECODE_INVLARG_5);
-		return 0;
-	    }
-	    codecs = spa->rtp->stream[i]->codecs;
-	    ptime = spa->rtp->stream[i]->ptime;
-	}
-	if (playcount != 0 && CALL_SMETHOD(spa->rtp->stream[i], handle_play, codecs,
-          pname, playcount, cmd, ptime) != 0) {
-	    reply_error(cmd, ECODE_PLRFAIL);
-	    return 0;
-	}
-	reply_ok(cmd);
+        rtpp_command_play_handle(spa->rtp->stream[i], cmd);
 	break;
 
     case COPY:
@@ -609,7 +595,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case LOOKUP:
     case UPDATE:
-	rtpp_command_ul_handle(cf, cmd, ulop, i);
+	rtpp_command_ul_handle(cf, cmd, i);
 	break;
 
     default:

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,4 +26,16 @@
  *
  */
 
-int handle_get_stats(struct rtpp_stats *, struct rtpp_command *, int);
+#ifndef _RTPP_COMMAND_PLAY_H_
+#define _RTPP_COMMAND_PLAY_H_
+
+struct rtpp_log;
+struct play_opts;
+struct rtpp_command;
+struct rtpp_stream;
+
+struct play_opts *rtpp_command_play_opts_parse(struct rtpp_command *);
+void rtpp_command_play_handle(struct rtpp_stream *, struct rtpp_command *);
+void rtpp_command_play_opts_free(struct play_opts *);
+
+#endif

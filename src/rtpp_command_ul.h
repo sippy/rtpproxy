@@ -37,7 +37,7 @@ struct ul_opts *rtpp_command_ul_opts_parse(struct cfg *cf,
   struct rtpp_command *cmd);
 void rtpp_command_ul_opts_free(struct ul_opts *ulop);
 int rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
-  struct ul_opts *ulop, int sidx);
+  int sidx);
 void ul_reply_port(struct rtpp_command *cmd,
   struct ul_reply *ulr);
 

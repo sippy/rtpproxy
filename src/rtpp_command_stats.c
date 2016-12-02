@@ -41,13 +41,13 @@
 
 #define CHECK_OVERFLOW() \
     if (len > sizeof(cmd->buf_t) - 2) { \
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, \
+        RTPP_LOG(cmd->glog, RTPP_LOG_ERR, \
           "STATS: output buffer overflow"); \
         return (ECODE_RTOOBIG_1); \
     }
 
 int
-handle_get_stats(struct cfg *cf, struct rtpp_command *cmd, int verbose)
+handle_get_stats(struct rtpp_stats *rsp, struct rtpp_command *cmd, int verbose)
 {
     int len, i, rval;
 
@@ -63,7 +63,7 @@ handle_get_stats(struct cfg *cf, struct rtpp_command *cmd, int verbose)
               cmd->argv[i]);
         }
         CHECK_OVERFLOW();
-        rval = CALL_METHOD(cf->stable->rtpp_stats, nstr, cmd->buf_t + len,
+        rval = CALL_METHOD(rsp, nstr, cmd->buf_t + len,
           sizeof(cmd->buf_t) - len, cmd->argv[i]);
         if (rval < 0) {
             return (ECODE_STSFAIL);
