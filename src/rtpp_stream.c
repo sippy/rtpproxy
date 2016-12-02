@@ -467,7 +467,7 @@ rtpp_stream_latch(struct rtpp_stream *self, double dtime,
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address %slatched in: %s (%s), SSRC=%s, Seq=%s", actor, relatch,
       saddr, ptype, ssrc, seq);
-    pvt->latch_info.latched = 1;
+    pvt->latch_info.latched = SSRC_IS_BAD(&pvt->latch_info.ssrc) ? 0 : 1;
     return (1);
 }
 

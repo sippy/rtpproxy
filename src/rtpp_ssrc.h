@@ -29,6 +29,9 @@
 #define _RTPP_SSRC_H_
 
 #define SSRC_FMT "0x%.8X"
+#define SSRC_BAD 0x0
+
+#define SSRC_IS_BAD(sp) ((sp)->inited && (sp)->val == SSRC_BAD)
 
 struct rtpp_ssrc {
     uint32_t val:32;
