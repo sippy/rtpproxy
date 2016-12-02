@@ -118,7 +118,7 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, int ptime)
     rp->rtp->cc = 0;
     rp->rtp->mbt = 1;
     rp->rtp->pt = codec;
-    rp->rtp->ts = 0;
+    rp->rtp->ts = random() & 0xfffffffe;
     rp->rtp->seq = random() & 0xffff;
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
@@ -221,15 +221,15 @@ rtpp_server_get(struct rtpp_server *self, double dtime, int *rval)
 	    rp->loop -= 1;
     }
 
-    if (rp->rtp->mbt != 0 && ntohs(rp->rtp->seq) != 0) {
-	rp->rtp->mbt = 0;
+    memcpy(&pkt->data.header, rp->rtp, hlen);
+
+    if (rp->rtp->mbt != 0) {
+        rp->rtp->mbt = 0;
     }
 
     ts = ntohl(rp->rtp->ts);
     rp->rtp->ts = htonl(ts + (RTPS_SRATE * rticks / 1000));
     rp->rtp->seq = htons(ntohs(rp->rtp->seq) + 1);
-
-    memcpy(&pkt->data.header, rp->rtp, hlen);
 
     pkt->size = hlen + rlen;
     return (pkt);
