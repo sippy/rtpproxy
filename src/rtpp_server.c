@@ -73,13 +73,17 @@ struct rtpp_server_priv {
 static void rtpp_server_dtor(struct rtpp_server_priv *);
 static struct rtp_packet *rtpp_server_get(struct rtpp_server *, double, int *);
 static uint32_t rtpp_server_get_ssrc(struct rtpp_server *);
+static void rtpp_server_set_ssrc(struct rtpp_server *, uint32_t);
 static uint16_t rtpp_server_get_seq(struct rtpp_server *);
+static void rtpp_server_set_seq(struct rtpp_server *, uint16_t);
 static void rtpp_server_start(struct rtpp_server *, double);
 
 static const struct rtpp_server_smethods rtpp_server_smethods = {
     .get = &rtpp_server_get,
     .get_ssrc = &rtpp_server_get_ssrc,
+    .set_ssrc = &rtpp_server_set_ssrc,
     .get_seq = &rtpp_server_get_seq,
+    .set_seq = &rtpp_server_set_seq,
     .start = &rtpp_server_start
 };
 
@@ -114,7 +118,7 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, int ptime)
     rp->rtp->cc = 0;
     rp->rtp->mbt = 1;
     rp->rtp->pt = codec;
-    rp->rtp->ts = 0;
+    rp->rtp->ts = random() & 0xfffffffe;
     rp->rtp->seq = random() & 0xffff;
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
@@ -217,15 +221,15 @@ rtpp_server_get(struct rtpp_server *self, double dtime, int *rval)
 	    rp->loop -= 1;
     }
 
-    if (rp->rtp->mbt != 0 && ntohs(rp->rtp->seq) != 0) {
-	rp->rtp->mbt = 0;
+    memcpy(&pkt->data.header, rp->rtp, hlen);
+
+    if (rp->rtp->mbt != 0) {
+        rp->rtp->mbt = 0;
     }
 
     ts = ntohl(rp->rtp->ts);
     rp->rtp->ts = htonl(ts + (RTPS_SRATE * rticks / 1000));
     rp->rtp->seq = htons(ntohs(rp->rtp->seq) + 1);
-
-    memcpy(&pkt->data.header, rp->rtp, hlen);
 
     pkt->size = hlen + rlen;
     return (pkt);
@@ -240,6 +244,15 @@ rtpp_server_get_ssrc(struct rtpp_server *self)
     return (ntohl(rp->rtp->ssrc));
 }
 
+static void
+rtpp_server_set_ssrc(struct rtpp_server *self, uint32_t ssrc)
+{
+    struct rtpp_server_priv *rp;
+
+    rp = PUB2PVT(self);
+    rp->rtp->ssrc = htonl(ssrc);
+}
+
 static uint16_t
 rtpp_server_get_seq(struct rtpp_server *self)
 {
@@ -247,6 +260,15 @@ rtpp_server_get_seq(struct rtpp_server *self)
 
     rp = PUB2PVT(self);
     return (ntohs(rp->rtp->seq));
+}
+
+static void
+rtpp_server_set_seq(struct rtpp_server *self, uint16_t seq)
+{
+    struct rtpp_server_priv *rp;
+
+    rp = PUB2PVT(self);
+    rp->rtp->seq = htons(seq);
 }
 
 static void

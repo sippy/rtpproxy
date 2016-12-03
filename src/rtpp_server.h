@@ -36,14 +36,18 @@ enum rtp_type;
 
 DEFINE_METHOD(rtpp_server, rtpp_server_get, struct rtp_packet *, double, int *);
 DEFINE_METHOD(rtpp_server, rtpp_server_get_ssrc, uint32_t);
+DEFINE_METHOD(rtpp_server, rtpp_server_set_ssrc, void, uint32_t);
 DEFINE_METHOD(rtpp_server, rtpp_server_get_seq, uint16_t);
+DEFINE_METHOD(rtpp_server, rtpp_server_set_seq, void, uint16_t);
 DEFINE_METHOD(rtpp_server, rtpp_server_start, void, double);
 
 struct rtpp_server_smethods {
     /* Static methods */
     METHOD_ENTRY(rtpp_server_get, get);
     METHOD_ENTRY(rtpp_server_get_ssrc, get_ssrc);
+    METHOD_ENTRY(rtpp_server_set_ssrc, set_ssrc);
     METHOD_ENTRY(rtpp_server_get_seq, get_seq);
+    METHOD_ENTRY(rtpp_server_set_seq, set_seq);
     METHOD_ENTRY(rtpp_server_start, start);
 };
 
