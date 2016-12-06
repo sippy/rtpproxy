@@ -457,6 +457,7 @@ _rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
     const char *actor, *ptype, *ssrc, *seq, *relatch;
     char ssrc_buf[11], seq_buf[6];
     char saddr[MAX_AP_STRBUF];
+    int newlatch;
 
     if (pvt->last_update != 0 && \
       dtime - pvt->last_update < UPDATE_WINDOW) {
@@ -487,15 +488,16 @@ _rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
     }
 
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr), ':');
+    newlatch = SSRC_IS_BAD(&pvt->latch_info.ssrc) ? 0 : 1;
     if (pvt->latch_info.latched == 0) {
-        relatch = "";
+        relatch = (newlatch != 0) ? "latched in" : "not latched (bad SSRC)";
     } else {
-        relatch = "re-";
+        relatch = "re-latched";
     }
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
-      "%s's address %slatched in: %s (%s), SSRC=%s, Seq=%s", actor, relatch,
+      "%s's address %s: %s (%s), SSRC=%s, Seq=%s", actor, relatch,
       saddr, ptype, ssrc, seq);
-    pvt->latch_info.latched = SSRC_IS_BAD(&pvt->latch_info.ssrc) ? 0 : 1;
+    pvt->latch_info.latched = newlatch;
     return (1);
 }
 
