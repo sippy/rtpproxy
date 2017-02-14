@@ -42,7 +42,6 @@
 #include "rtpp_proc_servers.h"
 #include "rtpp_server.h"
 #include "rtpp_stream.h"
-#include "rtpp_netaddr.h"
 
 struct foreach_args {
     double dtime;
