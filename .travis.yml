@@ -7,6 +7,7 @@ python:
   - "2.7"
 sudo: required
 before_install:
+    - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
     - sudo -H PATH="${PATH}:/usr/local/clang-3.4/bin" pip install -r requirements.txt
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
 #    - sudo brew update
