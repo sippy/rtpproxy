@@ -46,7 +46,6 @@
 #include "rtpp_pcnt_strm.h"
 #include "rtpp_stats.h"
 #include "rtpp_monotime.h"
-#include "rtpp_netaddr.h"
 
 struct rtpp_pipe_priv
 {
