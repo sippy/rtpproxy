@@ -47,7 +47,6 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_module_if.h"
 #include "rtpp_pipe.h"
-#include "rtpp_socket.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
