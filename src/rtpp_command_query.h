@@ -25,7 +25,7 @@
  *
  */
 
-#define RTPP_QUERY_NSTATS    10
+#define RTPP_QUERY_NSTATS    5
 
 struct rtpp_pipe;
 
