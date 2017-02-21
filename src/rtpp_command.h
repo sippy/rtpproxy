@@ -29,11 +29,6 @@
 #ifndef _RTPP_COMMAND_H_
 #define _RTPP_COMMAND_H_
 
-struct proto_cap {
-    const char  *pc_id;
-    const char  *pc_description;
-};
-
 struct rtpp_command;
 struct rtpp_command_stats;
 struct cfg;
@@ -41,8 +36,6 @@ struct cfg_stable;
 struct sockaddr;
 struct rtpp_cmd_rcache;
 struct rtpp_socket;
-
-extern struct proto_cap proto_caps[];
 
 int handle_command(struct cfg *, struct rtpp_command *);
 void free_command(struct rtpp_command *);
@@ -52,6 +45,7 @@ void reply_error(struct rtpp_command *cmd, int ecode);
 void reply_ok(struct rtpp_command *cmd);
 void reply_port(struct rtpp_command *cmd, int lport,
   struct sockaddr **lia);
+void reply_number(struct rtpp_command *cmd, int number);
 int rtpp_create_listener(struct cfg *, struct sockaddr *, int *,
   struct rtpp_socket **);
 struct rtpp_command *rtpp_command_ctor(struct cfg *, int, double, int *,
