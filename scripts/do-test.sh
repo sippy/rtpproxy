@@ -19,7 +19,7 @@ make
 make clean
 #sudo pip install -r requirements.txt
 #sudo DEBIAN_FRONTEND=noninteractive apt-get update
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libgsm1-dev \
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libgsm1-dev \
  libsndfile1-dev tcpdump curl wireshark-common libsrtp0-dev
 tcpdump --version || true
 mkdir deps
