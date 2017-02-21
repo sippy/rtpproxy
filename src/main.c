@@ -73,7 +73,7 @@
 #include "rtpp_controlfd.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
-#include "rtpp_command.h"
+#include "rtpp_command_ver.h"
 #include "rtpp_command_async.h"
 #include "rtpp_port_table.h"
 #include "rtpp_proc_async.h"
@@ -210,6 +210,17 @@ const static struct option longopts[] = {
 };
 
 static void
+init_config_bail(struct rtpp_cfg_stable *cfsp, int rval)
+{
+
+    CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
+    free(cfsp->nofile_limit);
+    free(cfsp->ctrl_socks);
+    free(cfsp);
+    rtpp_exit(rval);
+}
+
+static void
 init_config(struct cfg *cf, int argc, char **argv)
 {
     int ch, i, umode, stdio_mode;
@@ -220,6 +231,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     double x, y;
     struct rtpp_ctrl_sock *ctrl_sock;
     int option_index, brsym;
+    struct proto_cap *pcp;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -388,11 +400,10 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'v':
 	    printf("Basic version: %d\n", CPROTOVER);
-	    for (i = 1; proto_caps[i].pc_id != NULL; ++i) {
-		printf("Extension %s: %s\n", proto_caps[i].pc_id,
-		    proto_caps[i].pc_description);
+	    for (pcp = iterate_proto_caps(NULL); pcp != NULL; pcp = iterate_proto_caps(pcp)) {
+		printf("Extension %s: %s\n", pcp->pc_id, pcp->pc_description);
 	    }
-	    rtpp_exit(1);
+	    init_config_bail(cf->stable, 1);
 	    break;
 
 	case 'r':
@@ -510,7 +521,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'V':
 	    printf("%s\n", RTPP_SW_VERSION);
-	    rtpp_exit(1);
+	    init_config_bail(cf->stable, 1);
 	    break;
 
         case 'W':
@@ -522,13 +533,13 @@ init_config(struct cfg *cf, int argc, char **argv)
             break;
 
         case 'D':
-           cf->stable->no_chdir = 1;
-           break;
+	    cf->stable->no_chdir = 1;
+	    break;
 
         case 'C':
-           printf("%s\n", get_mclock_name());
-           rtpp_exit(0);
-           break;
+	    printf("%s\n", get_mclock_name());
+	    init_config_bail(cf->stable, 0);
+	    break;
 
 	case '?':
 	default:

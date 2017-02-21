@@ -59,11 +59,11 @@
 #include "rtpp_command_query.h"
 #include "rtpp_command_stats.h"
 #include "rtpp_command_ul.h"
+#include "rtpp_command_ver.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_network.h"
-#include "rtpp_tnotify_set.h"
 #include "rtpp_pipe.h"
 #include "rtpp_port_table.h"
 #include "rtpp_stream.h"
@@ -72,29 +72,6 @@
 #include "rtpp_util.h"
 #include "rtpp_stats.h"
 #include "rtpp_weakref.h"
-
-struct proto_cap proto_caps[] = {
-    /*
-     * The first entry must be basic protocol version and isn't shown
-     * as extension on -v.
-     */
-    { "20040107", "Basic RTP proxy functionality" },
-    { "20050322", "Support for multiple RTP streams and MOH" },
-    { "20060704", "Support for extra parameter in the V command" },
-    { "20071116", "Support for RTP re-packetization" },
-    { "20071218", "Support for forking (copying) RTP stream" },
-    { "20080403", "Support for RTP statistics querying" },
-    { "20081102", "Support for setting codecs in the update/lookup command" },
-    { "20081224", "Support for session timeout notifications" },
-    { "20090810", "Support for automatic bridging" },
-    { "20140323", "Support for tracking/reporting load" },
-    { "20140617", "Support for anchoring session connect time" },
-    { "20141004", "Support for extendable performance counters" },
-    { "20150330", "Support for allocating a new port (\"Un\"/\"Ln\" commands)" },
-    { "20150420", "Support for SEQ tracking and new rtpa_ counters; Q command extended" },
-    { "20150617", "Support for the wildcard %%CC_SELF%% as a disconnect notify target" },
-    { NULL, NULL }
-};
 
 struct rtpp_command_priv {
     struct rtpp_command pub;
@@ -112,9 +89,7 @@ struct rtpp_command_priv {
 struct d_opts;
 
 static int create_twinlistener(uint16_t, void *);
-static void handle_info(struct cfg *, struct rtpp_command *,
-  const char *);
-static void handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd);
+static void handle_info(struct cfg *, struct rtpp_command *);
 
 struct create_twinlistener_args {
     struct rtpp_cfg_stable *cfs;
@@ -231,7 +206,7 @@ rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
     }
 }
 
-static void
+void
 reply_number(struct rtpp_command *cmd, int number)
 {
     int len;
@@ -419,7 +394,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
         return 0;
 
     case INFO:
-        handle_info(cf, cmd, &cmd->argv[0][1]);
+        handle_info(cf, cmd);
         return 0;
 
     case PLAY:
@@ -593,8 +568,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 }
 
 static void
-handle_info(struct cfg *cf, struct rtpp_command *cmd,
-  const char *opts)
+handle_info(struct cfg *cf, struct rtpp_command *cmd)
 {
 #if 0
     struct rtpp_session *spa, *spb;
@@ -606,7 +580,9 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd,
     unsigned long long packets_in, packets_out;
     unsigned long long sessions_created;
     int sessions_active, rtp_streams_active;
+    const char *opts;
 
+    opts = &cmd->argv[0][1];
 #if 0
     brief = 0;
 #endif
@@ -694,31 +670,4 @@ XXX this needs work to fix it after rtp/rtcp split
     if (len > 0) {
         rtpc_doreply(cmd, buf, len, 0);
     }
-}
-
-static void
-handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd)
-{
-    int i, known;
-
-    /*
-     * Wait for protocol version datestamp and check whether we
-     * know it.
-     */
-    /*
-     * Only list 20081224 protocol mod as supported if
-     * user actually enabled notification with -n
-     */
-    if (strcmp(cmd->argv[1], "20081224") == 0 &&
-      !CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled)) {
-        reply_number(cmd, 0);
-        return;
-    }
-    for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
-        if (!strcmp(cmd->argv[1], proto_caps[i].pc_id)) {
-            known = 1;
-            break;
-        }
-    }
-    reply_number(cmd, known);
 }
