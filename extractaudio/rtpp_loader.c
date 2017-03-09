@@ -117,7 +117,7 @@ rtpp_load(const char *path)
             return NULL;
         }
         pcap_hdr = (pcap_hdr_t *)rval->ibuf;
-        if (pcap_hdr->network != DLT_EN10MB && pcap_hdr->network != DLT_NULL) {
+        if (pcap_hdr->network != DLT_EN10MB && pcap_hdr->network != DLT_RAW && pcap_hdr->network != DLT_NULL) {
             warnx("unsupported data-link type in the PCAP: %d", pcap_hdr->network);
             rval->destroy(rval);
             return NULL;
@@ -248,6 +248,11 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
             memcpy(&pcap, cp, pcap_size);
             pcaprec_hdr = &(pcap.null.pcaprec_hdr);
             udpip = &(pcap.null.udpip);
+        } else if (network == DLT_RAW) {
+            pcap_size = sizeof(struct pkt_hdr_pcap_raw);
+            memcpy(&pcap, cp, pcap_size);
+            pcaprec_hdr = &(pcap.raw.pcaprec_hdr);
+            udpip = &(pcap.raw.udpip);
         } else {
             if (pcp->en10t.ether.type != ETHERTYPE_INET) {
                 rtp_len = sizeof(pcaprec_hdr_t) + pcp->en10t.pcaprec_hdr.incl_len;
