@@ -130,8 +130,8 @@ fi
 AC_CHECK_HEADER(srtp2/srtp.h, found_libsrtp2=yes)
 if test "$found_libsrtp2" = yes
 then
-  AC_CHECK_LIB(srtp, srtp_init,
-   LIBS_SRTP="-lsrtp"
+  AC_CHECK_LIB(srtp2, srtp_init,
+   LIBS_SRTP="-lsrtp2"
    AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed]))
 fi
 
