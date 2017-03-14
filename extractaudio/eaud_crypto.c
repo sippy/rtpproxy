@@ -30,7 +30,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <srtp/srtp.h>
+#include "config.h"
+
+#if ENABLE_SRTP
+#	include <srtp/srtp.h>
+#	define srtp_crypto_policy_set_rtp_default crypto_policy_set_rtp_default
+#	define srtp_crypto_policy_set_rtcp_default crypto_policy_set_rtcp_default
+#	define srtp_sec_serv_t sec_serv_t
+#	define srtp_err_status_ok err_status_ok
+#elif ENABLE_SRTP2
+#	include <srtp2/srtp.h>
+#else
+#	error "One of srtp or srtp2 must be configured."
+#endif
 
 /* XXX: srtp.h defines those, undef to avoid warnings */
 #undef PACKAGE
@@ -52,7 +64,7 @@ struct srtp_crypto_suite {
     int key_size;
     int tag_size;
     int ckey_len;
-    sec_serv_t sec_serv;
+    srtp_sec_serv_t sec_serv;
 };
 
 #define MAX_KEY_LEN      96
@@ -138,8 +150,8 @@ eaud_crypto_getopt_parse(char *optarg)
         goto e0;;
     }
     rval->suite = suite;
-    crypto_policy_set_rtp_default(&rval->policy.rtp);
-    crypto_policy_set_rtcp_default(&rval->policy.rtcp);
+    srtp_crypto_policy_set_rtp_default(&rval->policy.rtp);
+    srtp_crypto_policy_set_rtcp_default(&rval->policy.rtcp);
     rval->policy.key = (uint8_t *)rval->key;
     rval->policy.ekt = NULL; rval->policy.next = NULL;
     rval->policy.window_size = 128;
@@ -172,7 +184,7 @@ eaud_crypto_decrypt(struct eaud_crypto *crypto, uint8_t *pkt_raw, int pkt_len)
         crypto->policy.ssrc.value = ntohl(rpkt->ssrc);
         crypto->policy.ssrc.type  = ssrc_specific;
         status = srtp_create(&crypto->srtp_ctx, &crypto->policy);
-        if (status != err_status_ok || crypto->srtp_ctx == NULL) {
+        if (status != srtp_err_status_ok || crypto->srtp_ctx == NULL) {
             return (-1);
         }
     }

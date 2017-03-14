@@ -126,6 +126,15 @@ then
    AC_DEFINE([ENABLE_SRTP], 1, [Define if you have libsrtp library installed]))
 fi
 
+# libsrtp2
+AC_CHECK_HEADER(srtp2/srtp.h, found_libsrtp2=yes)
+if test "$found_libsrtp2" = yes
+then
+  AC_CHECK_LIB(srtp, srtp_init,
+   LIBS_SRTP="-lsrtp"
+   AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed]))
+fi
+
 # libelperiodic
 AC_CHECK_HEADER(elperiodic.h, found_libelperiodic=yes)
 if test "$found_libelperiodic" = yes
