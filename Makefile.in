@@ -88,7 +88,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @BUILD_MODULES_TRUE@am__append_1 = modules
-@BUILD_ELPERIODIC_TRUE@am__append_2 = libelperiodic
+@BUILD_ELPERIODIC_TRUE@am__append_2 = libelperiodic/src
 @BUILD_EXTRACTAUDIO_TRUE@am__append_3 = extractaudio
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -192,8 +192,8 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = libexecinfo makeann modules libelperiodic src pertools \
-	tests extractaudio
+DIST_SUBDIRS = libexecinfo makeann modules libelperiodic/src src \
+	pertools tests extractaudio
 am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in AUTHORS \
 	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
 	install-sh ltmain.sh missing
@@ -305,6 +305,7 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
+RT_LIB = @RT_LIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@

@@ -652,6 +652,7 @@ BUILD_MODULES_FALSE
 BUILD_MODULES_TRUE
 BUILD_EXTRACTAUDIO_FALSE
 BUILD_EXTRACTAUDIO_TRUE
+RT_LIB
 LIBOBJS
 ALLOCA
 OTOOL64
@@ -12880,6 +12881,57 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
+ac_fn_c_check_func "$LINENO" "clock_gettime" "ac_cv_func_clock_gettime"
+if test "x$ac_cv_func_clock_gettime" = xyes; then :
+
+else
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for clock_gettime in -lrt" >&5
+$as_echo_n "checking for clock_gettime in -lrt... " >&6; }
+if ${ac_cv_lib_rt_clock_gettime+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lrt  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char clock_gettime ();
+int
+main ()
+{
+return clock_gettime ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_rt_clock_gettime=yes
+else
+  ac_cv_lib_rt_clock_gettime=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_rt_clock_gettime" >&5
+$as_echo "$ac_cv_lib_rt_clock_gettime" >&6; }
+if test "x$ac_cv_lib_rt_clock_gettime" = xyes; then :
+  RT_LIB="-lrt"
+else
+  as_fn_error $? "Unable to find clock_gettime function; required by ocount" "$LINENO" 5
+fi
+
+fi
+
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for __sync_fetch_and_add" >&5
 $as_echo_n "checking for __sync_fetch_and_add... " >&6; }
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -12947,7 +12999,7 @@ else
 fi
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile libelperiodic/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile libelperiodic/src/Makefile"
 
 
 
@@ -13996,7 +14048,7 @@ do
     "modules/acct_csv/Makefile") CONFIG_FILES="$CONFIG_FILES modules/acct_csv/Makefile" ;;
     "pertools/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/Makefile" ;;
     "pertools/udp_contention/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/udp_contention/Makefile" ;;
-    "libelperiodic/Makefile") CONFIG_FILES="$CONFIG_FILES libelperiodic/Makefile" ;;
+    "libelperiodic/src/Makefile") CONFIG_FILES="$CONFIG_FILES libelperiodic/src/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
