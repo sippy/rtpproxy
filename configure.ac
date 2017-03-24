@@ -164,6 +164,11 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
+AC_CHECK_FUNC(clock_gettime, [], [
+  AC_CHECK_LIB(rt, clock_gettime, RT_LIB="-lrt",
+    AC_MSG_ERROR(Unable to find clock_gettime function; required by ocount))])
+AC_SUBST(RT_LIB)
+
 AC_MSG_CHECKING([for __sync_fetch_and_add])
 AC_LINK_IFELSE(
    [AC_LANG_SOURCE([
@@ -187,7 +192,7 @@ AM_CONDITIONAL(BUILD_CRYPTO, [test "${LIBS_SRTP}" != ""])
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
  modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile
- libelperiodic/Makefile])
+ libelperiodic/src/Makefile])
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_GSM)
