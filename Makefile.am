@@ -8,7 +8,7 @@ if BUILD_MODULES
 SUBDIRS+=	modules
 endif
 if BUILD_ELPERIODIC
-SUBDIRS+=       libelperiodic
+SUBDIRS+=       libelperiodic/src
 endif
 
 SUBDIRS+=	src pertools tests
