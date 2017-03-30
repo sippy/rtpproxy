@@ -157,6 +157,15 @@ then
    ,,-lm)
 fi
 
+# libsiplog
+AC_CHECK_HEADER(siplog.h, found_libsiplog=yes)
+if test "$found_libsiplog" = yes
+then
+  AC_CHECK_LIB(siplog, siplog_open,
+   LIBS_SIPLOG="-lsiplog"
+   AC_DEFINE([ENABLE_SIPLOG], 1, [Define if you have libsiplog library installed]))
+fi
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h sys/time.h unistd.h err.h endian.h sys/endian.h])
@@ -209,6 +218,7 @@ AM_CONDITIONAL(BUILD_MODULES, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(BUILD_ELPERIODIC, [test "${EXTERNAL_ELPERIODIC}" != 1])
 AM_CONDITIONAL(BUILD_CRYPTO, [test "${LIBS_SRTP}" != ""])
+AM_CONDITIONAL(BUILD_LOG_STAND, [test "${LIBS_SIPLOG}" = ""])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
@@ -222,4 +232,5 @@ AC_SUBST(LIBS_G722)
 AC_SUBST(LIBS_SNDFILE)
 AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_SRTP)
+AC_SUBST(LIBS_SIPLOG)
 AC_OUTPUT
