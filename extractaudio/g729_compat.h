@@ -7,11 +7,12 @@
 #  define G729_EINIT() initBcg729EncoderChannel(0)
 #  define G729_ECLOSE closeBcg729EncoderChannel
 #  define G729_DINIT initBcg729DecoderChannel
-#  define G729_ENCODE(ctx, ibuf, obuf, bl) bcg729Encoder((ctx), (ibuf), \
+#  define G729_ENCODE(ctx, ibuf, obuf, bl) g279_compat_encode((ctx), (ibuf), \
     (obuf), (bl))
 #  define G729_DECODE(ctx, ibuf, isize) g279_compat_decode((ctx), (ibuf), (isize))
 
-   int16_t *g279_compat_decode(G729_DCTX *, uint8_t *, size_t);
+int16_t *g279_compat_decode(G729_DCTX *, uint8_t *, size_t);
+void g279_compat_encode(G729_ECTX *, int16_t [], uint8_t [], uint8_t *);
 
 # else
 #  include <g729_encoder.h>

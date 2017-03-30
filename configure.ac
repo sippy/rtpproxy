@@ -98,6 +98,18 @@ else
     )
   fi
 fi
+if test "$found_libbcg729" = yes
+then
+  AC_TRY_COMPILE([#include <bcg729/encoder.h>],
+   [initBcg729EncoderChannel();],
+   new_bcg729_api=no,
+   new_bcg729_api=yes)
+  if test "$new_bcg729_api" = yes
+  then
+    AC_DEFINE(HAVE_NEW_BCG729_API, 1,
+     [define to 1 if bcg729 new API have to be used])
+  fi
+fi
 
 # G.722
 AC_CHECK_HEADER(g722.h, found_libg722=yes)
