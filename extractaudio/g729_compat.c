@@ -13,7 +13,7 @@ g279_compat_decode(G729_DCTX *ctx, uint8_t *ibuf, size_t ibsize)
 
     assert(ibsize <= 10);
 
-    bcg729Decoder(ctx, ibuf, 0, obuf);
+    bcg729Decoder(ctx, ibuf, ibsize, 0, 0, 0, obuf);
 
     return (obuf);
 }

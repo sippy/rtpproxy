@@ -200,10 +200,14 @@ int main(int argc, char **argv)
 
 #ifdef ENABLE_G729
             case RTP_G729:
+                wsize = 0;
                 for (j = 0; j < 2; j++) {
-                    G729_ENCODE(ctx_g729, &(slbuf[j * 80]), &(lawbuf[j * 10]));
+                    uint8_t bl;
+
+                    G729_ENCODE(ctx_g729, &(slbuf[j * 80]), &(lawbuf[j * 10]),
+                        &bl);
+                    wsize += bl;
                 }
-                wsize = 20;
                 break;
 #endif
 
