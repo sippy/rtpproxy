@@ -4,7 +4,7 @@
 #  include <bcg729/decoder.h>
 #  define G729_ECTX bcg729EncoderChannelContextStruct
 #  define G729_DCTX bcg729DecoderChannelContextStruct
-#  define G729_EINIT() initBcg729EncoderChannel(0)
+#  define G729_EINIT(vad) initBcg729EncoderChannel((vad))
 #  define G729_ECLOSE closeBcg729EncoderChannel
 #  define G729_DINIT initBcg729DecoderChannel
 #  define G729_DECODE(ctx, ibuf, isize) g279_compat_decode((ctx), (ibuf), (isize))
