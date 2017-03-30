@@ -27,6 +27,8 @@
 
 #include <strings.h>
 
+#include "config.h"
+
 #include "rtpp_log.h"
 
 int

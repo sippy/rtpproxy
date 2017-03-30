@@ -29,6 +29,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "config.h"
+
 #include "rtpp_log.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"

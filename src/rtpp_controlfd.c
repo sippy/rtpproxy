@@ -37,6 +37,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "config.h"
+
 #include "rtpp_types.h"
 #include "rtpp_defines.h"
 #include "rtpp_list.h"

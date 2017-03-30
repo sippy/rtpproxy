@@ -43,6 +43,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
+
 #include "rtpp_log.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"

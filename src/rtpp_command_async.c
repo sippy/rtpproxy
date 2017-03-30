@@ -37,6 +37,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "config.h"
+
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
