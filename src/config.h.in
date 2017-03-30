@@ -23,6 +23,9 @@
 /* Define to enable dymanic modules */
 #undef ENABLE_MODULE_IF
 
+/* Define if you have libsiplog library installed */
+#undef ENABLE_SIPLOG
+
 /* Define if you have libsndfile library installed */
 #undef ENABLE_SNDFILE
 
