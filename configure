@@ -12031,6 +12031,32 @@ fi
 
   fi
 fi
+if test "$found_libbcg729" = yes
+then
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <bcg729/encoder.h>
+int
+main ()
+{
+initBcg729EncoderChannel();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  new_bcg729_api=no
+else
+  new_bcg729_api=yes
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  if test "$new_bcg729_api" = yes
+  then
+
+$as_echo "#define HAVE_NEW_BCG729_API 1" >>confdefs.h
+
+  fi
+fi
 
 # G.722
 ac_fn_c_check_header_mongrel "$LINENO" "g722.h" "ac_cv_header_g722_h" "$ac_includes_default"
