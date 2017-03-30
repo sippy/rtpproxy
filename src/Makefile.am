@@ -34,8 +34,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h rtpp_command_play.c \
   rtpp_command_play.h rtpp_command_ver.h rtpp_command_ver.c
 
-rtpproxy_LDADD=-lm -lpthread $(top_srcdir)/libelperiodic/src/libelperiodic.a
-rtpproxy_debug_LDADD=-lm -lpthread $(top_srcdir)/libelperiodic/src/libelperiodic.a \
+rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
+rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ \
   $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
 
@@ -72,8 +72,12 @@ rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
 rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
   -DMEMDEB_APP=rtpproxy -include rtpp_memdeb.h
-EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall \
-  -I$(top_srcdir)/libelperiodic/src
+EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
+
+if BUILD_ELPERIODIC
+EXTRA_CFLAGS+=-I$(top_srcdir)/libelperiodic/src
+endif
+
 rtpproxy_CFLAGS=${EXTRA_CFLAGS}
 rtpproxy_debug_CFLAGS=${EXTRA_CFLAGS} -g3 -O0 -fno-omit-frame-pointer
 

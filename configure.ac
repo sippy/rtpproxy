@@ -155,6 +155,13 @@ then
    LIBS_ELPERIODIC="-lelperiodic -lm"
    EXTERNAL_ELPERIODIC=1
    ,,-lm)
+else
+  SUBD_ELP="libelperiodic/src"
+fi
+
+if test "${EXTERNAL_ELPERIODIC}" != 1
+then
+  LIBS_ELPERIODIC="\$(top_srcdir)/libelperiodic/src/libelperiodic.a"
 fi
 
 # libsiplog
@@ -223,8 +230,10 @@ AM_CONDITIONAL(BUILD_LOG_STAND, [test "${LIBS_SIPLOG}" = ""])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
- modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile
- libelperiodic/src/Makefile])
+ modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile])
+
+AM_COND_IF([BUILD_ELPERIODIC], [AC_CONFIG_SUBDIRS([libelperiodic])])
+
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_GSM)
@@ -235,4 +244,5 @@ AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_SRTP)
 AC_SUBST(LIBS_SIPLOG)
 AC_SUBST(LIBS_SIPLOG_DBG)
+AC_SUBST(LIBS_ELPERIODIC)
 AC_OUTPUT
