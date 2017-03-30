@@ -635,6 +635,7 @@ ac_includes_default="\
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+LIBS_SIPLOG
 LIBS_SRTP
 LIBS_SNDFILE
 LIBS_G722
@@ -642,6 +643,8 @@ LIBS_G729
 LIBS_GSM
 LIBS_DL
 AM_CFLAGS
+BUILD_LOG_STAND_FALSE
+BUILD_LOG_STAND_TRUE
 BUILD_CRYPTO_FALSE
 BUILD_CRYPTO_TRUE
 BUILD_ELPERIODIC_FALSE
@@ -12327,6 +12330,60 @@ fi
 
 fi
 
+# libsiplog
+ac_fn_c_check_header_mongrel "$LINENO" "siplog.h" "ac_cv_header_siplog_h" "$ac_includes_default"
+if test "x$ac_cv_header_siplog_h" = xyes; then :
+  found_libsiplog=yes
+fi
+
+
+if test "$found_libsiplog" = yes
+then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for siplog_open in -lsiplog" >&5
+$as_echo_n "checking for siplog_open in -lsiplog... " >&6; }
+if ${ac_cv_lib_siplog_siplog_open+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsiplog  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char siplog_open ();
+int
+main ()
+{
+return siplog_open ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_siplog_siplog_open=yes
+else
+  ac_cv_lib_siplog_siplog_open=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_siplog_siplog_open" >&5
+$as_echo "$ac_cv_lib_siplog_siplog_open" >&6; }
+if test "x$ac_cv_lib_siplog_siplog_open" = xyes; then :
+  LIBS_SIPLOG="-lsiplog"
+
+$as_echo "#define ENABLE_SIPLOG 1" >>confdefs.h
+
+fi
+
+fi
+
 # Checks for header files.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
 $as_echo_n "checking for ANSI C header files... " >&6; }
@@ -13078,8 +13135,17 @@ else
   BUILD_CRYPTO_FALSE=
 fi
 
+ if test "${LIBS_SIPLOG}" = ""; then
+  BUILD_LOG_STAND_TRUE=
+  BUILD_LOG_STAND_FALSE='#'
+else
+  BUILD_LOG_STAND_TRUE='#'
+  BUILD_LOG_STAND_FALSE=
+fi
+
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile libelperiodic/src/Makefile"
+
 
 
 
@@ -13243,6 +13309,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_CRYPTO_TRUE}" && test -z "${BUILD_CRYPTO_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_CRYPTO\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_LOG_STAND_TRUE}" && test -z "${BUILD_LOG_STAND_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_LOG_STAND\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
