@@ -50,7 +50,7 @@
 #include "rtpp_loader.h"
 #include "rtpp_time.h"
 #include "rtpp_util.h"
-#if ENABLE_SRTP
+#if ENABLE_SRTP || ENABLE_SRTP2
 #include "eaud_crypto.h"
 #endif
 
@@ -91,7 +91,7 @@ rtpp_load(const char *path)
         return NULL;
     }
 
-#if !ENABLE_SRTP
+#if !ENABLE_SRTP && !ENABLE_SRTP2
     rval->ibuf = mmap(NULL, rval->sb.st_size, PROT_READ, MAP_SHARED,
       rval->ifd, 0);
 #else
@@ -267,7 +267,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
         if (rtp_len < sizeof(rtp_hdr_t))
             continue;
 
-#if ENABLE_SRTP
+#if ENABLE_SRTP || ENABLE_SRTP2
         if (crypto != NULL) {
             rtp_pkt_len = eaud_crypto_decrypt(crypto, cp, rtp_len);
             if (rtp_pkt_len <= 0) {
