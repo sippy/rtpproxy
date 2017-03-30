@@ -94,6 +94,7 @@ bin_PROGRAMS = rtpproxy$(EXEEXT) rtpproxy_debug$(EXEEXT)
 @BUILD_LOG_STAND_TRUE@am__append_3 = rtpp_log_stand.c rtpp_log_stand.h
 @BUILD_LOG_STAND_FALSE@am__append_4 = rtpp_log.c rtpp_log.h
 @BUILD_LOG_STAND_FALSE@am__append_5 = @LIBS_SIPLOG@
+@BUILD_LOG_STAND_FALSE@am__append_6 = @LIBS_SIPLOG_DBG@
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -394,10 +395,9 @@ am__objects_12 = rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
 	rtpproxy_debug-rtpp_stacktrace.$(OBJEXT)
 am_rtpproxy_debug_OBJECTS = $(am__objects_11) $(am__objects_12)
 rtpproxy_debug_OBJECTS = $(am_rtpproxy_debug_OBJECTS)
-am__DEPENDENCIES_2 = $(top_srcdir)/libelperiodic/src/libelperiodic.a \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-rtpproxy_debug_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	$(top_srcdir)/libexecinfo/libexecinfo.a
+rtpproxy_debug_DEPENDENCIES =  \
+	$(top_srcdir)/libelperiodic/src/libelperiodic.a \
+	$(top_srcdir)/libexecinfo/libexecinfo.a $(am__DEPENDENCIES_1)
 rtpproxy_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpproxy_debug_CFLAGS) $(CFLAGS) $(rtpproxy_debug_LDFLAGS) \
@@ -509,6 +509,7 @@ LIBS_G722 = @LIBS_G722@
 LIBS_G729 = @LIBS_G729@
 LIBS_GSM = @LIBS_GSM@
 LIBS_SIPLOG = @LIBS_SIPLOG@
+LIBS_SIPLOG_DBG = @LIBS_SIPLOG_DBG@
 LIBS_SNDFILE = @LIBS_SNDFILE@
 LIBS_SRTP = @LIBS_SRTP@
 LIBTOOL = @LIBTOOL@
@@ -636,9 +637,10 @@ BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_server.h rtpp_defines.h \
 rtpproxy_LDADD = -lm -lpthread \
 	$(top_srcdir)/libelperiodic/src/libelperiodic.a \
 	$(am__append_2) $(am__append_5)
-rtpproxy_debug_LDADD = ${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
-  @LIBS_DL@
-
+rtpproxy_debug_LDADD = -lm -lpthread \
+	$(top_srcdir)/libelperiodic/src/libelperiodic.a \
+	$(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ \
+	$(am__append_6)
 rtpproxy_debug_LDFLAGS = -static -Wl,--export-dynamic
 @ENABLE_MODULE_IF_TRUE@rtpproxy_LDFLAGS = -Wl,--export-dynamic
 SRCS_DEBUG = rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \

@@ -635,6 +635,7 @@ ac_includes_default="\
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+LIBS_SIPLOG_DBG
 LIBS_SIPLOG
 LIBS_SRTP
 LIBS_SNDFILE
@@ -12377,6 +12378,7 @@ fi
 $as_echo "$ac_cv_lib_siplog_siplog_open" >&6; }
 if test "x$ac_cv_lib_siplog_siplog_open" = xyes; then :
   LIBS_SIPLOG="-lsiplog"
+   LIBS_SIPLOG_DBG="-lsiplog_debug"
 
 $as_echo "#define ENABLE_SIPLOG 1" >>confdefs.h
 
@@ -13145,6 +13147,7 @@ fi
 
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile libelperiodic/src/Makefile"
+
 
 
 
