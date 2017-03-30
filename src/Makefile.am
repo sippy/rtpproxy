@@ -10,7 +10,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
   rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
   rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
-  rtpp_log_stand.c rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
+  rtpp_hash_table.c rtpp_hash_table.h \
   rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h rtpp_stats.c \
   rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
@@ -45,6 +45,13 @@ rtpproxy_LDADD+=@LIBS_DL@
 rtpproxy_LDFLAGS=-Wl,--export-dynamic
 endif
 
+if BUILD_LOG_STAND
+BASE_SOURCES+=rtpp_log_stand.c rtpp_log_stand.h
+else
+BASE_SOURCES+=rtpp_log.c rtpp_log.h
+rtpproxy_LDADD+=@LIBS_SIPLOG@
+endif
+
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
   rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
 
@@ -69,7 +76,7 @@ EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall \
 rtpproxy_CFLAGS=${EXTRA_CFLAGS}
 rtpproxy_debug_CFLAGS=${EXTRA_CFLAGS} -g3 -O0 -fno-omit-frame-pointer
 
-DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
+DEFS=	-Wall @DEFS@
 
 CLEANFILES= ${SRCS_AUTOGEN}
 BUILT_SOURCES= ${SRCS_AUTOGEN}
