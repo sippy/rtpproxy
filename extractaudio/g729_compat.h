@@ -16,7 +16,7 @@ int16_t *g279_compat_decode(G729_DCTX *, uint8_t *, size_t);
 #  include <g729_decoder.h>
 #  define G729_ECTX G729_CTX
 #  define G729_DCTX G729_CTX
-#  define G729_EINIT() g729_encoder_new()
+#  define G729_EINIT(vad) g729_encoder_new()
 #  define G729_ECLOSE g729_encoder_destroy
 #  define G729_DINIT g729_decoder_new
 #  define G729_DECODE(ctx, ibuf, isize) g729_decode_frame((ctx), (ibuf), (isize))
