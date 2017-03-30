@@ -33,4 +33,12 @@ g279_compat_encode(G729_ECTX *ctx, int16_t ibuf[], uint8_t obuf[], uint8_t *bl)
     *bl = 10;
 #endif
 }
+#else
+void
+g279_compat_encode(G729_ECTX *ctx, int16_t ibuf[], uint8_t obuf[], uint8_t *bl)
+{
+
+    g729_encode_frame(ctx, ibuf, obuf);
+    *bl = 10;
+}
 #endif
