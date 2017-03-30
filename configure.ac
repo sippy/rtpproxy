@@ -163,6 +163,7 @@ if test "$found_libsiplog" = yes
 then
   AC_CHECK_LIB(siplog, siplog_open,
    LIBS_SIPLOG="-lsiplog"
+   LIBS_SIPLOG_DBG="-lsiplog_debug"
    AC_DEFINE([ENABLE_SIPLOG], 1, [Define if you have libsiplog library installed]))
 fi
 
@@ -233,4 +234,5 @@ AC_SUBST(LIBS_SNDFILE)
 AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_SRTP)
 AC_SUBST(LIBS_SIPLOG)
+AC_SUBST(LIBS_SIPLOG_DBG)
 AC_OUTPUT

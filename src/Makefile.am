@@ -35,8 +35,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_command_play.h rtpp_command_ver.h rtpp_command_ver.c
 
 rtpproxy_LDADD=-lm -lpthread $(top_srcdir)/libelperiodic/src/libelperiodic.a
-rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
-  @LIBS_DL@
+rtpproxy_debug_LDADD=-lm -lpthread $(top_srcdir)/libelperiodic/src/libelperiodic.a \
+  $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
 
 if ENABLE_MODULE_IF
@@ -50,6 +50,7 @@ BASE_SOURCES+=rtpp_log_stand.c rtpp_log_stand.h
 else
 BASE_SOURCES+=rtpp_log.c rtpp_log.h
 rtpproxy_LDADD+=@LIBS_SIPLOG@
+rtpproxy_debug_LDADD+=@LIBS_SIPLOG_DBG@
 endif
 
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
