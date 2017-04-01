@@ -98,6 +98,18 @@ else
     )
   fi
 fi
+if test "$found_libbcg729" = yes
+then
+  AC_TRY_COMPILE([#include <bcg729/encoder.h>],
+   [initBcg729EncoderChannel();],
+   new_bcg729_api=no,
+   new_bcg729_api=yes)
+  if test "$new_bcg729_api" = yes
+  then
+    AC_DEFINE(HAVE_NEW_BCG729_API, 1,
+     [define to 1 if bcg729 new API have to be used])
+  fi
+fi
 
 # G.722
 AC_CHECK_HEADER(g722.h, found_libg722=yes)
@@ -126,6 +138,15 @@ then
    AC_DEFINE([ENABLE_SRTP], 1, [Define if you have libsrtp library installed]))
 fi
 
+# libsrtp2
+AC_CHECK_HEADER(srtp2/srtp.h, found_libsrtp2=yes)
+if test "$found_libsrtp2" = yes
+then
+  AC_CHECK_LIB(srtp2, srtp_init,
+   LIBS_SRTP="-lsrtp2"
+   AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed]))
+fi
+
 # libelperiodic
 AC_CHECK_HEADER(elperiodic.h, found_libelperiodic=yes)
 if test "$found_libelperiodic" = yes
@@ -134,6 +155,23 @@ then
    LIBS_ELPERIODIC="-lelperiodic -lm"
    EXTERNAL_ELPERIODIC=1
    ,,-lm)
+else
+  SUBD_ELP="libelperiodic/src"
+fi
+
+if test "${EXTERNAL_ELPERIODIC}" != 1
+then
+  LIBS_ELPERIODIC="\$(top_srcdir)/libelperiodic/src/libelperiodic.a"
+fi
+
+# libsiplog
+AC_CHECK_HEADER(siplog.h, found_libsiplog=yes)
+if test "$found_libsiplog" = yes
+then
+  AC_CHECK_LIB(siplog, siplog_open,
+   LIBS_SIPLOG="-lsiplog"
+   LIBS_SIPLOG_DBG="-lsiplog_debug"
+   AC_DEFINE([ENABLE_SIPLOG], 1, [Define if you have libsiplog library installed]))
 fi
 
 # Checks for header files.
@@ -164,6 +202,11 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
+AC_CHECK_FUNC(clock_gettime, [], [
+  AC_CHECK_LIB(rt, clock_gettime, RT_LIB="-lrt",
+    AC_MSG_ERROR(Unable to find clock_gettime function; required by ocount))])
+AC_SUBST(RT_LIB)
+
 AC_MSG_CHECKING([for __sync_fetch_and_add])
 AC_LINK_IFELSE(
    [AC_LANG_SOURCE([
@@ -183,11 +226,14 @@ AM_CONDITIONAL(BUILD_MODULES, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(BUILD_ELPERIODIC, [test "${EXTERNAL_ELPERIODIC}" != 1])
 AM_CONDITIONAL(BUILD_CRYPTO, [test "${LIBS_SRTP}" != ""])
+AM_CONDITIONAL(BUILD_LOG_STAND, [test "${LIBS_SIPLOG}" = ""])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
- modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile
- libelperiodic/Makefile])
+ modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile])
+
+AM_COND_IF([BUILD_ELPERIODIC], [AC_CONFIG_SUBDIRS([libelperiodic])])
+
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_GSM)
@@ -196,4 +242,7 @@ AC_SUBST(LIBS_G722)
 AC_SUBST(LIBS_SNDFILE)
 AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_SRTP)
+AC_SUBST(LIBS_SIPLOG)
+AC_SUBST(LIBS_SIPLOG_DBG)
+AC_SUBST(LIBS_ELPERIODIC)
 AC_OUTPUT

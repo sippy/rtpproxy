@@ -96,6 +96,7 @@ int main(int argc, char **argv)
     uint8_t lawbuf[160];
     int16_t slbuf[160];
     int i, j, k, rsize, wsize, loop, limit, rlimit, ch;
+    int vad_enable;
 #ifdef ENABLE_G729
     G729_ECTX *ctx_g729;
 #endif
@@ -112,7 +113,8 @@ int main(int argc, char **argv)
 
     loop = 0;
     limit = -1;
-    while ((ch = getopt(argc, argv, "l:L")) != -1)
+    vad_enable = 0;
+    while ((ch = getopt(argc, argv, "l:Lv")) != -1)
         switch (ch) {
         case 'l':
             limit = atoi(optarg);
@@ -120,6 +122,12 @@ int main(int argc, char **argv)
 
         case 'L':
             loop = 1;
+            break;
+
+        case 'v':
+            vad_enable = 1;
+            warnx("VAD enable (-v) is for debugging purposes only, "
+              "produced stream may not play correctly");
             break;
 
         case '?':
@@ -141,7 +149,7 @@ int main(int argc, char **argv)
         template = argv[0];
 
 #ifdef ENABLE_G729
-    ctx_g729 = G729_EINIT();
+    ctx_g729 = G729_EINIT(vad_enable);
     if (ctx_g729 == NULL)
         errx(1, "can't create G.729 encoder");
 #endif
@@ -202,9 +210,11 @@ int main(int argc, char **argv)
             case RTP_G729:
                 wsize = 0;
                 for (j = 0; j < 2; j++) {
-                    uint8_t l;
-                    G729_ENCODE(ctx_g729, &(slbuf[j * 80]), &(lawbuf[j * 10]), &l);
-                    wsize += l;
+                    uint8_t bl;
+
+                    G729_ENCODE(ctx_g729, &(slbuf[j * 80]), &(lawbuf[j * 10]),
+                        &bl);
+                    wsize += bl;
                 }
                 break;
 #endif

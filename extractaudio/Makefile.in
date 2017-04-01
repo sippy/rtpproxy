@@ -108,12 +108,11 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__extractaudio_SOURCES_DIST = extractaudio.c decoder.c rtpp_loader.c \
 	${MAINSRCDIR}/rtp.c ${MAINSRCDIR}/rtp_analyze.c \
-	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
-	${MAINSRCDIR}/rtpp_log_stand.c decoder.h format_au.h g711.h \
-	rtpp_loader.h session.h g729_compat.c g729_compat.h \
-	${MAINSRCDIR}/rtpp_network.c ${MAINSRCDIR}/rtpp_monotime.c \
-	${MAINSRCDIR}/rtpp_mallocs.c ${MAINSRCDIR}/rtpp_refcnt.c \
-	${MAINSRCDIR}/rtpp_refcnt_fin.c \
+	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c decoder.h \
+	format_au.h g711.h rtpp_loader.h session.h g729_compat.c \
+	g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
+	${MAINSRCDIR}/rtpp_monotime.c ${MAINSRCDIR}/rtpp_mallocs.c \
+	${MAINSRCDIR}/rtpp_refcnt.c ${MAINSRCDIR}/rtpp_refcnt_fin.c \
 	${MAINSRCDIR}/rtpp_refcnt_fin.h ${MAINSRCDIR}/rtpp_ringbuf.c \
 	${MAINSRCDIR}/rtpp_ringbuf_fin.c \
 	${MAINSRCDIR}/rtpp_ringbuf_fin.h eaud_oformats.c \
@@ -123,8 +122,7 @@ am__extractaudio_SOURCES_DIST = extractaudio.c decoder.c rtpp_loader.c \
 @BUILD_CRYPTO_TRUE@	srtp_util.$(OBJEXT)
 am_extractaudio_OBJECTS = extractaudio.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_loader.$(OBJEXT) rtp.$(OBJEXT) rtp_analyze.$(OBJEXT) \
-	rtpp_util.$(OBJEXT) rtpp_time.$(OBJEXT) \
-	rtpp_log_stand.$(OBJEXT) g729_compat.$(OBJEXT) \
+	rtpp_util.$(OBJEXT) rtpp_time.$(OBJEXT) g729_compat.$(OBJEXT) \
 	rtpp_network.$(OBJEXT) rtpp_monotime.$(OBJEXT) \
 	rtpp_mallocs.$(OBJEXT) rtpp_refcnt.$(OBJEXT) \
 	rtpp_refcnt_fin.$(OBJEXT) rtpp_ringbuf.$(OBJEXT) \
@@ -215,10 +213,7 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DEFS = -DWITHOUT_SIPLOG -Wall -D"rtpp_log_t=void *" \
-  -D"rtpp_log_write(lvl, ld, format, args...)=fprintf(stderr, format, \#\# args)" \
-  @DEFS@
-
+DEFS = -DWITHOUT_RTPPLOG -Wall @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
@@ -240,9 +235,12 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBS_DL = @LIBS_DL@
+LIBS_ELPERIODIC = @LIBS_ELPERIODIC@
 LIBS_G722 = @LIBS_G722@
 LIBS_G729 = @LIBS_G729@
 LIBS_GSM = @LIBS_GSM@
+LIBS_SIPLOG = @LIBS_SIPLOG@
+LIBS_SIPLOG_DBG = @LIBS_SIPLOG_DBG@
 LIBS_SNDFILE = @LIBS_SNDFILE@
 LIBS_SRTP = @LIBS_SRTP@
 LIBTOOL = @LIBTOOL@
@@ -268,6 +266,7 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
+RT_LIB = @RT_LIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -320,6 +319,7 @@ psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
@@ -328,12 +328,11 @@ top_srcdir = @top_srcdir@
 MAINSRCDIR = $(top_srcdir)/src
 extractaudio_SOURCES = extractaudio.c decoder.c rtpp_loader.c \
 	${MAINSRCDIR}/rtp.c ${MAINSRCDIR}/rtp_analyze.c \
-	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
-	${MAINSRCDIR}/rtpp_log_stand.c decoder.h format_au.h g711.h \
-	rtpp_loader.h session.h g729_compat.c g729_compat.h \
-	${MAINSRCDIR}/rtpp_network.c ${MAINSRCDIR}/rtpp_monotime.c \
-	${MAINSRCDIR}/rtpp_mallocs.c ${MAINSRCDIR}/rtpp_refcnt.c \
-	${MAINSRCDIR}/rtpp_refcnt_fin.c \
+	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c decoder.h \
+	format_au.h g711.h rtpp_loader.h session.h g729_compat.c \
+	g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
+	${MAINSRCDIR}/rtpp_monotime.c ${MAINSRCDIR}/rtpp_mallocs.c \
+	${MAINSRCDIR}/rtpp_refcnt.c ${MAINSRCDIR}/rtpp_refcnt_fin.c \
 	${MAINSRCDIR}/rtpp_refcnt_fin.h ${MAINSRCDIR}/rtpp_ringbuf.c \
 	${MAINSRCDIR}/rtpp_ringbuf_fin.c \
 	${MAINSRCDIR}/rtpp_ringbuf_fin.h eaud_oformats.c \
@@ -441,7 +440,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp_analyze.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_loader.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_log_stand.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_mallocs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_monotime.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_network.Po@am__quote@
@@ -529,20 +527,6 @@ rtpp_time.obj: ${MAINSRCDIR}/rtpp_time.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_time.c' object='rtpp_time.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_time.obj `if test -f '${MAINSRCDIR}/rtpp_time.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_time.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_time.c'; fi`
-
-rtpp_log_stand.o: ${MAINSRCDIR}/rtpp_log_stand.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_log_stand.o -MD -MP -MF $(DEPDIR)/rtpp_log_stand.Tpo -c -o rtpp_log_stand.o `test -f '${MAINSRCDIR}/rtpp_log_stand.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_log_stand.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_log_stand.Tpo $(DEPDIR)/rtpp_log_stand.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_log_stand.c' object='rtpp_log_stand.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_log_stand.o `test -f '${MAINSRCDIR}/rtpp_log_stand.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_log_stand.c
-
-rtpp_log_stand.obj: ${MAINSRCDIR}/rtpp_log_stand.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_log_stand.obj -MD -MP -MF $(DEPDIR)/rtpp_log_stand.Tpo -c -o rtpp_log_stand.obj `if test -f '${MAINSRCDIR}/rtpp_log_stand.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_log_stand.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_log_stand.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_log_stand.Tpo $(DEPDIR)/rtpp_log_stand.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_log_stand.c' object='rtpp_log_stand.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_log_stand.obj `if test -f '${MAINSRCDIR}/rtpp_log_stand.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_log_stand.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_log_stand.c'; fi`
 
 rtpp_network.o: ${MAINSRCDIR}/rtpp_network.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_network.o -MD -MP -MF $(DEPDIR)/rtpp_network.Tpo -c -o rtpp_network.o `test -f '${MAINSRCDIR}/rtpp_network.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_network.c

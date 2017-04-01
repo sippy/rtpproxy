@@ -87,9 +87,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@BUILD_MODULES_TRUE@am__append_1 = modules
-@BUILD_ELPERIODIC_TRUE@am__append_2 = libelperiodic
-@BUILD_EXTRACTAUDIO_TRUE@am__append_3 = extractaudio
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -192,8 +189,8 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = libexecinfo makeann modules libelperiodic src pertools \
-	tests extractaudio
+DIST_SUBDIRS = libexecinfo makeann modules libelperiodic/src src \
+	pertools tests extractaudio
 am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in AUTHORS \
 	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
 	install-sh ltmain.sh missing
@@ -277,9 +274,12 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBS_DL = @LIBS_DL@
+LIBS_ELPERIODIC = @LIBS_ELPERIODIC@
 LIBS_G722 = @LIBS_G722@
 LIBS_G729 = @LIBS_G729@
 LIBS_GSM = @LIBS_GSM@
+LIBS_SIPLOG = @LIBS_SIPLOG@
+LIBS_SIPLOG_DBG = @LIBS_SIPLOG_DBG@
 LIBS_SNDFILE = @LIBS_SNDFILE@
 LIBS_SRTP = @LIBS_SRTP@
 LIBTOOL = @LIBTOOL@
@@ -305,6 +305,7 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
+RT_LIB = @RT_LIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -357,6 +358,7 @@ psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
@@ -364,8 +366,12 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = libexecinfo makeann $(am__append_1) $(am__append_2) src \
-	pertools tests $(am__append_3)
+@BUILD_MODULES_TRUE@SUBD_MOD = modules
+@BUILD_ELPERIODIC_TRUE@SUBD_ELP = libelperiodic/src
+@BUILD_EXTRACTAUDIO_TRUE@SUBD_EAUD = extractaudio
+SUBDIRS = libexecinfo makeann $(SUBD_MOD) $(SUBD_ELP) src pertools tests \
+  $(SUBD_EAUD)
+
 dist_man_MANS = rtpproxy.8
 EXTRA_DIST = README.remote manpage.xml debian/README.Debian debian/changelog \
   debian/compat debian/conffiles.ex debian/control debian/copyright \

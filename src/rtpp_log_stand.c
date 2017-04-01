@@ -34,6 +34,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
+
+#define RTPP_LOG_ADVANCED 1
+
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
 #ifdef RTPP_LOG_ADVANCED

@@ -66,19 +66,19 @@
 #include "rtp_analyze.h"
 #include "rtpa_stats.h"
 #include "eaud_oformats.h"
-#if ENABLE_SRTP
+#if ENABLE_SRTP || ENABLE_SRTP2
 # include "eaud_crypto.h"
 #endif
 
 /*#define EAUD_DUMPRAW "/tmp/eaud.raw"*/
 
-#if ENABLE_SRTP
+#if ENABLE_SRTP || ENABLE_SRTP2
 #define LOPT_ALICE_CRYPTO 256
 #define LOPT_BOB_CRYPTO   257
 #endif
 
 const static struct option longopts[] = {
-#if ENABLE_SRTP
+#if ENABLE_SRTP || ENABLE_SRTP2
     { "alice-crypto", required_argument, NULL, LOPT_ALICE_CRYPTO },
     { "bob-crypto",   required_argument, NULL, LOPT_BOB_CRYPTO },
 #endif
@@ -244,7 +244,7 @@ main(int argc, char **argv)
             oname = optarg;
             break;
 
-#if ENABLE_SRTP
+#if ENABLE_SRTP || ENABLE_SRTP2
         case LOPT_ALICE_CRYPTO:
             alice_crypto = eaud_crypto_getopt_parse(optarg);
             if (alice_crypto == NULL) {

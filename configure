@@ -632,9 +632,13 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
+enable_option_checking=no
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+LIBS_ELPERIODIC
+LIBS_SIPLOG_DBG
+LIBS_SIPLOG
 LIBS_SRTP
 LIBS_SNDFILE
 LIBS_G722
@@ -642,6 +646,9 @@ LIBS_G729
 LIBS_GSM
 LIBS_DL
 AM_CFLAGS
+subdirs
+BUILD_LOG_STAND_FALSE
+BUILD_LOG_STAND_TRUE
 BUILD_CRYPTO_FALSE
 BUILD_CRYPTO_TRUE
 BUILD_ELPERIODIC_FALSE
@@ -652,6 +659,7 @@ BUILD_MODULES_FALSE
 BUILD_MODULES_TRUE
 BUILD_EXTRACTAUDIO_FALSE
 BUILD_EXTRACTAUDIO_TRUE
+RT_LIB
 LIBOBJS
 ALLOCA
 OTOOL64
@@ -793,7 +801,7 @@ LDFLAGS
 LIBS
 CPPFLAGS
 CPP'
-
+ac_subdirs_all='libelperiodic'
 
 # Initialize some variables set by options.
 ac_init_help=
@@ -12030,6 +12038,32 @@ fi
 
   fi
 fi
+if test "$found_libbcg729" = yes
+then
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <bcg729/encoder.h>
+int
+main ()
+{
+initBcg729EncoderChannel();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  new_bcg729_api=no
+else
+  new_bcg729_api=yes
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  if test "$new_bcg729_api" = yes
+  then
+
+$as_echo "#define HAVE_NEW_BCG729_API 1" >>confdefs.h
+
+  fi
+fi
 
 # G.722
 ac_fn_c_check_header_mongrel "$LINENO" "g722.h" "ac_cv_header_g722_h" "$ac_includes_default"
@@ -12193,6 +12227,60 @@ fi
 
 fi
 
+# libsrtp2
+ac_fn_c_check_header_mongrel "$LINENO" "srtp2/srtp.h" "ac_cv_header_srtp2_srtp_h" "$ac_includes_default"
+if test "x$ac_cv_header_srtp2_srtp_h" = xyes; then :
+  found_libsrtp2=yes
+fi
+
+
+if test "$found_libsrtp2" = yes
+then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for srtp_init in -lsrtp2" >&5
+$as_echo_n "checking for srtp_init in -lsrtp2... " >&6; }
+if ${ac_cv_lib_srtp2_srtp_init+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsrtp2  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char srtp_init ();
+int
+main ()
+{
+return srtp_init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_srtp2_srtp_init=yes
+else
+  ac_cv_lib_srtp2_srtp_init=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_srtp2_srtp_init" >&5
+$as_echo "$ac_cv_lib_srtp2_srtp_init" >&6; }
+if test "x$ac_cv_lib_srtp2_srtp_init" = xyes; then :
+  LIBS_SRTP="-lsrtp2"
+
+$as_echo "#define ENABLE_SRTP2 1" >>confdefs.h
+
+fi
+
+fi
+
 # libelperiodic
 ac_fn_c_check_header_mongrel "$LINENO" "elperiodic.h" "ac_cv_header_elperiodic_h" "$ac_includes_default"
 if test "x$ac_cv_header_elperiodic_h" = xyes; then :
@@ -12241,6 +12329,68 @@ $as_echo "$ac_cv_lib_elperiodic_prdic_init" >&6; }
 if test "x$ac_cv_lib_elperiodic_prdic_init" = xyes; then :
   LIBS_ELPERIODIC="-lelperiodic -lm"
    EXTERNAL_ELPERIODIC=1
+
+fi
+
+else
+  SUBD_ELP="libelperiodic/src"
+fi
+
+if test "${EXTERNAL_ELPERIODIC}" != 1
+then
+  LIBS_ELPERIODIC="\$(top_srcdir)/libelperiodic/src/libelperiodic.a"
+fi
+
+# libsiplog
+ac_fn_c_check_header_mongrel "$LINENO" "siplog.h" "ac_cv_header_siplog_h" "$ac_includes_default"
+if test "x$ac_cv_header_siplog_h" = xyes; then :
+  found_libsiplog=yes
+fi
+
+
+if test "$found_libsiplog" = yes
+then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for siplog_open in -lsiplog" >&5
+$as_echo_n "checking for siplog_open in -lsiplog... " >&6; }
+if ${ac_cv_lib_siplog_siplog_open+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsiplog  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char siplog_open ();
+int
+main ()
+{
+return siplog_open ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_siplog_siplog_open=yes
+else
+  ac_cv_lib_siplog_siplog_open=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_siplog_siplog_open" >&5
+$as_echo "$ac_cv_lib_siplog_siplog_open" >&6; }
+if test "x$ac_cv_lib_siplog_siplog_open" = xyes; then :
+  LIBS_SIPLOG="-lsiplog"
+   LIBS_SIPLOG_DBG="-lsiplog_debug"
+
+$as_echo "#define ENABLE_SIPLOG 1" >>confdefs.h
 
 fi
 
@@ -12880,6 +13030,57 @@ if test "x$GCC" = "xyes"; then
   AM_CFLAGS="-std=gnu99 -Wall -Wno-uninitialized"
 fi
 
+ac_fn_c_check_func "$LINENO" "clock_gettime" "ac_cv_func_clock_gettime"
+if test "x$ac_cv_func_clock_gettime" = xyes; then :
+
+else
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for clock_gettime in -lrt" >&5
+$as_echo_n "checking for clock_gettime in -lrt... " >&6; }
+if ${ac_cv_lib_rt_clock_gettime+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lrt  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char clock_gettime ();
+int
+main ()
+{
+return clock_gettime ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_rt_clock_gettime=yes
+else
+  ac_cv_lib_rt_clock_gettime=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_rt_clock_gettime" >&5
+$as_echo "$ac_cv_lib_rt_clock_gettime" >&6; }
+if test "x$ac_cv_lib_rt_clock_gettime" = xyes; then :
+  RT_LIB="-lrt"
+else
+  as_fn_error $? "Unable to find clock_gettime function; required by ocount" "$LINENO" 5
+fi
+
+fi
+
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for __sync_fetch_and_add" >&5
 $as_echo_n "checking for __sync_fetch_and_add... " >&6; }
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -12946,8 +13147,27 @@ else
   BUILD_CRYPTO_FALSE=
 fi
 
+ if test "${LIBS_SIPLOG}" = ""; then
+  BUILD_LOG_STAND_TRUE=
+  BUILD_LOG_STAND_FALSE='#'
+else
+  BUILD_LOG_STAND_TRUE='#'
+  BUILD_LOG_STAND_FALSE=
+fi
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile libelperiodic/Makefile"
+
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile"
+
+
+
+
+if test -z "$BUILD_ELPERIODIC_TRUE"; then :
+  subdirs="$subdirs libelperiodic"
+
+fi
+
+
+
 
 
 
@@ -13111,6 +13331,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_CRYPTO_TRUE}" && test -z "${BUILD_CRYPTO_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_CRYPTO\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_LOG_STAND_TRUE}" && test -z "${BUILD_LOG_STAND_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_LOG_STAND\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -13996,7 +14220,6 @@ do
     "modules/acct_csv/Makefile") CONFIG_FILES="$CONFIG_FILES modules/acct_csv/Makefile" ;;
     "pertools/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/Makefile" ;;
     "pertools/udp_contention/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/udp_contention/Makefile" ;;
-    "libelperiodic/Makefile") CONFIG_FILES="$CONFIG_FILES libelperiodic/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -15194,6 +15417,151 @@ if test "$no_create" != yes; then
   # Use ||, not &&, to avoid exiting from the if with $? = 1, which
   # would make configure fail if this is the last instruction.
   $ac_cs_success || as_fn_exit 1
+fi
+
+#
+# CONFIG_SUBDIRS section.
+#
+if test "$no_recursion" != yes; then
+
+  # Remove --cache-file, --srcdir, and --disable-option-checking arguments
+  # so they do not pile up.
+  ac_sub_configure_args=
+  ac_prev=
+  eval "set x $ac_configure_args"
+  shift
+  for ac_arg
+  do
+    if test -n "$ac_prev"; then
+      ac_prev=
+      continue
+    fi
+    case $ac_arg in
+    -cache-file | --cache-file | --cache-fil | --cache-fi \
+    | --cache-f | --cache- | --cache | --cach | --cac | --ca | --c)
+      ac_prev=cache_file ;;
+    -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
+    | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* \
+    | --c=*)
+      ;;
+    --config-cache | -C)
+      ;;
+    -srcdir | --srcdir | --srcdi | --srcd | --src | --sr)
+      ac_prev=srcdir ;;
+    -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*)
+      ;;
+    -prefix | --prefix | --prefi | --pref | --pre | --pr | --p)
+      ac_prev=prefix ;;
+    -prefix=* | --prefix=* | --prefi=* | --pref=* | --pre=* | --pr=* | --p=*)
+      ;;
+    --disable-option-checking)
+      ;;
+    *)
+      case $ac_arg in
+      *\'*) ac_arg=`$as_echo "$ac_arg" | sed "s/'/'\\\\\\\\''/g"` ;;
+      esac
+      as_fn_append ac_sub_configure_args " '$ac_arg'" ;;
+    esac
+  done
+
+  # Always prepend --prefix to ensure using the same prefix
+  # in subdir configurations.
+  ac_arg="--prefix=$prefix"
+  case $ac_arg in
+  *\'*) ac_arg=`$as_echo "$ac_arg" | sed "s/'/'\\\\\\\\''/g"` ;;
+  esac
+  ac_sub_configure_args="'$ac_arg' $ac_sub_configure_args"
+
+  # Pass --silent
+  if test "$silent" = yes; then
+    ac_sub_configure_args="--silent $ac_sub_configure_args"
+  fi
+
+  # Always prepend --disable-option-checking to silence warnings, since
+  # different subdirs can have different --enable and --with options.
+  ac_sub_configure_args="--disable-option-checking $ac_sub_configure_args"
+
+  ac_popdir=`pwd`
+  for ac_dir in : $subdirs; do test "x$ac_dir" = x: && continue
+
+    # Do not complain, so a configure script can configure whichever
+    # parts of a large source tree are present.
+    test -d "$srcdir/$ac_dir" || continue
+
+    ac_msg="=== configuring in $ac_dir (`pwd`/$ac_dir)"
+    $as_echo "$as_me:${as_lineno-$LINENO}: $ac_msg" >&5
+    $as_echo "$ac_msg" >&6
+    as_dir="$ac_dir"; as_fn_mkdir_p
+    ac_builddir=.
+
+case "$ac_dir" in
+.) ac_dir_suffix= ac_top_builddir_sub=. ac_top_build_prefix= ;;
+*)
+  ac_dir_suffix=/`$as_echo "$ac_dir" | sed 's|^\.[\\/]||'`
+  # A ".." for each directory in $ac_dir_suffix.
+  ac_top_builddir_sub=`$as_echo "$ac_dir_suffix" | sed 's|/[^\\/]*|/..|g;s|/||'`
+  case $ac_top_builddir_sub in
+  "") ac_top_builddir_sub=. ac_top_build_prefix= ;;
+  *)  ac_top_build_prefix=$ac_top_builddir_sub/ ;;
+  esac ;;
+esac
+ac_abs_top_builddir=$ac_pwd
+ac_abs_builddir=$ac_pwd$ac_dir_suffix
+# for backward compatibility:
+ac_top_builddir=$ac_top_build_prefix
+
+case $srcdir in
+  .)  # We are building in place.
+    ac_srcdir=.
+    ac_top_srcdir=$ac_top_builddir_sub
+    ac_abs_top_srcdir=$ac_pwd ;;
+  [\\/]* | ?:[\\/]* )  # Absolute name.
+    ac_srcdir=$srcdir$ac_dir_suffix;
+    ac_top_srcdir=$srcdir
+    ac_abs_top_srcdir=$srcdir ;;
+  *) # Relative name.
+    ac_srcdir=$ac_top_build_prefix$srcdir$ac_dir_suffix
+    ac_top_srcdir=$ac_top_build_prefix$srcdir
+    ac_abs_top_srcdir=$ac_pwd/$srcdir ;;
+esac
+ac_abs_srcdir=$ac_abs_top_srcdir$ac_dir_suffix
+
+
+    cd "$ac_dir"
+
+    # Check for guested configure; otherwise get Cygnus style configure.
+    if test -f "$ac_srcdir/configure.gnu"; then
+      ac_sub_configure=$ac_srcdir/configure.gnu
+    elif test -f "$ac_srcdir/configure"; then
+      ac_sub_configure=$ac_srcdir/configure
+    elif test -f "$ac_srcdir/configure.in"; then
+      # This should be Cygnus configure.
+      ac_sub_configure=$ac_aux_dir/configure
+    else
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: no configuration information is in $ac_dir" >&5
+$as_echo "$as_me: WARNING: no configuration information is in $ac_dir" >&2;}
+      ac_sub_configure=
+    fi
+
+    # The recursion is here.
+    if test -n "$ac_sub_configure"; then
+      # Make the cache file name correct relative to the subdirectory.
+      case $cache_file in
+      [\\/]* | ?:[\\/]* ) ac_sub_cache_file=$cache_file ;;
+      *) # Relative name.
+	ac_sub_cache_file=$ac_top_build_prefix$cache_file ;;
+      esac
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: running $SHELL $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_srcdir" >&5
+$as_echo "$as_me: running $SHELL $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_srcdir" >&6;}
+      # The eval makes quoting arguments work.
+      eval "\$SHELL \"\$ac_sub_configure\" $ac_sub_configure_args \
+	   --cache-file=\"\$ac_sub_cache_file\" --srcdir=\"\$ac_srcdir\"" ||
+	as_fn_error $? "$ac_sub_configure failed for $ac_dir" "$LINENO" 5
+    fi
+
+    cd "$ac_popdir"
+  done
 fi
 if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5

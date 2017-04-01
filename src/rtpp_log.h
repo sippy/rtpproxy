@@ -29,9 +29,14 @@
 #ifndef _RTPP_LOG_H_
 #define _RTPP_LOG_H_
 
-#ifdef WITHOUT_SIPLOG
+#if !defined(WITHOUT_RTPPLOG)
+# if !defined(PACKAGE_VERSION)
+#  error config.h needs to be included to use rtpp_log.h
+# endif
+
+# if ! ENABLE_SIPLOG
 #include "rtpp_log_stand.h"
-#else
+# else
 #include <stdarg.h>
 #include <siplog.h>
 
@@ -52,7 +57,14 @@
 #define	rtpp_log_ewrite_va(level, handle, format, va) siplog_ewrite(level, handle, format, va)
 #define	_rtpp_log_ewrite_va(handle, level, fname, format, va) siplog_ewrite(level, handle, format, va)
 #define	rtpp_log_close(handle) siplog_close(handle)
-#endif /* !WITHOUT_SIPLOG */
+# endif /* !ENABLE_SIPLOG */
+#else /* WITHOUT_RTPPLOG */
+#define RTPP_LOG_DBUG	-1
+#define RTPP_LOG_INFO	-2
+#define RTPP_LOG_ERR	-3
+#define rtpp_log_t	void *
+#define rtpp_log_write(lvl, ld, format, args...) fprintf(stderr, format, ## args)
+#endif /* !WITHOUT_RTPPLOG */
 
 int rtpp_log_str2lvl(const char *);
 int rtpp_log_str2fac(const char *);

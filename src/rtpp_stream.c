@@ -36,6 +36,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
+
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_defines.h"

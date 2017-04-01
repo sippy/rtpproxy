@@ -10,4 +10,4 @@ rtpp_acct_csv_debug_la_LDFLAGS=${rtpp_acct_csv_la_LDFLAGS}
 rtpp_acct_csv_debug_la_CPPFLAGS=-DRTPP_DEBUG
 rtpp_acct_csv_debug_la_CFLAGS=-g3 -O0 -fno-omit-frame-pointer
 
-DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
+DEFS=	-Wall @DEFS@

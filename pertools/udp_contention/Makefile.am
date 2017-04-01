@@ -6,8 +6,6 @@ DEFS=   -I$(MAINSRCDIR) @DEFS@
 
 if BUILD_ELPERIODIC
 udp_contention_SOURCES+=${MAINSRCDIR}/rtpp_math.c
-udp_contention_LDADD+=$(top_srcdir)/libelperiodic/libelperiodic.a
-DEFS+=	-I$(top_srcdir)/libelperiodic
-else
-udp_contention_LDADD+=@LIBS_ELPERIODIC@
+DEFS+=	-I$(top_srcdir)/libelperiodic/src
 endif
+udp_contention_LDADD+=@LIBS_ELPERIODIC@

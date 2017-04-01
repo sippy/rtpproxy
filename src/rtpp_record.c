@@ -48,6 +48,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "config.h"
+
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_log.h"

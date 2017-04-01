@@ -10,7 +10,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
   rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
   rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
-  rtpp_log_stand.c rtpp_log_stand.h rtpp_hash_table.c rtpp_hash_table.h \
+  rtpp_hash_table.c rtpp_hash_table.h \
   rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h rtpp_stats.c \
   rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
@@ -34,15 +34,23 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h rtpp_command_play.c \
   rtpp_command_play.h rtpp_command_ver.h rtpp_command_ver.c
 
-rtpproxy_LDADD=-lm -lpthread $(top_srcdir)/libelperiodic/libelperiodic.a
-rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
-  @LIBS_DL@
+rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
+rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ \
+  $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
 
 if ENABLE_MODULE_IF
 BASE_SOURCES+=rtpp_module_if.c rtpp_module_if.h rtpp_module.h
 rtpproxy_LDADD+=@LIBS_DL@
 rtpproxy_LDFLAGS=-Wl,--export-dynamic
+endif
+
+if BUILD_LOG_STAND
+BASE_SOURCES+=rtpp_log_stand.c rtpp_log_stand.h
+else
+BASE_SOURCES+=rtpp_log.c rtpp_log.h
+rtpproxy_LDADD+=@LIBS_SIPLOG@
+rtpproxy_debug_LDADD+=@LIBS_SIPLOG_DBG@
 endif
 
 SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
@@ -64,12 +72,16 @@ rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
 rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
   -DMEMDEB_APP=rtpproxy -include rtpp_memdeb.h
-EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall \
-  -I$(top_srcdir)/libelperiodic
+EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
+
+if BUILD_ELPERIODIC
+EXTRA_CFLAGS+=-I$(top_srcdir)/libelperiodic/src
+endif
+
 rtpproxy_CFLAGS=${EXTRA_CFLAGS}
 rtpproxy_debug_CFLAGS=${EXTRA_CFLAGS} -g3 -O0 -fno-omit-frame-pointer
 
-DEFS=	-DWITHOUT_SIPLOG -Wall -DRTPP_LOG_ADVANCED @DEFS@
+DEFS=	-Wall @DEFS@
 
 CLEANFILES= ${SRCS_AUTOGEN}
 BUILT_SOURCES= ${SRCS_AUTOGEN}

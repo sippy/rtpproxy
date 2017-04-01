@@ -2,7 +2,7 @@
 
 set -e
 
-BCG729_VER=1.0.1
+BCG729_VER=1.0.2
 
 uname -a
 which ${CC}
@@ -20,7 +20,7 @@ make clean
 #sudo pip install -r requirements.txt
 #sudo DEBIAN_FRONTEND=noninteractive apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
- install -y libgsm1-dev libsndfile1-dev tcpdump curl wireshark-common libsrtp0-dev
+ install -y libgsm1-dev libsndfile1-dev tcpdump curl wireshark-common
 tcpdump --version || true
 mkdir deps
 cd deps
@@ -37,10 +37,11 @@ cd libg722
 make
 sudo make install
 cd ../..
-git clone https://github.com/sippy/libsrtp
+git clone https://github.com/cisco/libsrtp.git
 cd libsrtp
 ./configure
 make
+sudo make install
 cd ..
 sudo ldconfig
 autoreconf --force --install --verbose

@@ -30,6 +30,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "config.h"
+
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
