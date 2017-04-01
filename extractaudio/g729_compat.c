@@ -15,7 +15,7 @@ g279_compat_decode(G729_DCTX *ctx, uint8_t *ibuf, size_t ibsize)
     assert(ibsize <= 10);
 
 #  if defined(HAVE_NEW_BCG729_API)
-    bcg729Decoder(ctx, ibuf, ibsize, 0, 0, 0, obuf);
+    bcg729Decoder(ctx, ibuf, ibsize, 0 /*no erasure*/, 0 /*not SID*/, 0 /*not RFC3389*/, obuf);
 #  else
     bcg729Decoder(ctx, ibuf, 0, obuf);
 #  endif
