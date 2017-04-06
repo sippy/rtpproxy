@@ -179,19 +179,19 @@ rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
 
     pvt = PUB2PVT(cmd);
 
-    buf[len] = '\0';
     if (len > 0 && buf[len - 1] == '\n') {
         RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "sending reply \"%.*s\\n\"",
           len - 1, buf);
     } else {
-        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "sending reply \"%s\"", buf);
+        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "sending reply \"%.*s\"",
+          len, buf);
     }
     if (pvt->umode == 0) {
 	write(pvt->controlfd, buf, len);
     } else {
         if (pvt->cookie != NULL) {
-            len = snprintf(pvt->buf_r, sizeof(pvt->buf_r), "%s %s", pvt->cookie,
-              buf);
+            len = snprintf(pvt->buf_r, sizeof(pvt->buf_r), "%s %.*s", pvt->cookie,
+              len, buf);
             buf = pvt->buf_r;
             CALL_METHOD(pvt->rcache_obj, insert, pvt->cookie, pvt->buf_r, cmd->dtime);
         }
