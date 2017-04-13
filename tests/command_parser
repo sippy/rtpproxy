@@ -7,6 +7,8 @@
 
 . $(dirname $0)/functions
 
+set -x
+
 run_command_parser() {
   socket=${1}
   shift
