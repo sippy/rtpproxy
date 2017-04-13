@@ -64,6 +64,8 @@
 #include <systemd/sd-daemon.h>
 #endif
 
+#include <elperiodic.h>
+
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log.h"
@@ -671,16 +673,11 @@ int
 main(int argc, char **argv)
 {
     int i, len;
-    double eval, clk;
     long long ncycles_ref, counter;
-    double eptime;
-    double add_delay;
     struct cfg cf;
     char buf[256];
-    struct recfilter loop_error;
-    struct PFD phase_detector;
-    useconds_t usleep_time;
     struct sched_param sparam;
+    void *elp;
 #if RTPP_DEBUG_timers
     double sleep_time, filter_lastval;
 #endif
@@ -845,8 +842,6 @@ main(int argc, char **argv)
     }
 
     counter = 0;
-    recfilter_init(&loop_error, 0.96, 0.0, 0);
-    PFD_init(&phase_detector, 0.0);
 
     cf.stable->rtpp_timed_cf = rtpp_timed_ctor(0.1);
     if (cf.stable->rtpp_timed_cf == NULL) {
@@ -915,49 +910,13 @@ main(int argc, char **argv)
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "READY=1");
 #endif
+
+    counter = 0;
+    elp = prdic_init(cf.stable->target_pfreq, cf.stable->sched_offset);
     for (;;) {
-	eptime = getdtime();
+        ncycles_ref = (long long)prdic_getncycles_ref(elp);
 
-        clk = (eptime + cf.stable->sched_offset) * cf.stable->target_pfreq;
-
-        ncycles_ref = llrint(clk);
-
-        eval = PFD_get_error(&phase_detector, clk);
-
-#if RTPP_DEBUG_timers
-        filter_lastval = loop_error.lastval;
-#endif
-
-        if (eval != 0.0) {
-            recfilter_apply(&loop_error, sigmoid(eval));
-        }
-
-#if RTPP_DEBUG_timers
-        if (counter % (unsigned int)cf.stable->target_pfreq == 0 || counter < 1000) {
-          RTPP_LOG(cf.stable->glog, RTPP_LOG_DBUG, "run %lld ncycles %f raw error1 %f, filter lastval %f, filter nextval %f",
-            counter, clk, eval, filter_lastval, loop_error.lastval);
-        }
-#endif
-        add_delay = freqoff_to_period(cf.stable->target_pfreq, 1.0, loop_error.lastval);
-        usleep_time = add_delay * 1000000.0;
-#if RTPP_DEBUG_timers
-        if (counter % (unsigned int)cf.stable->target_pfreq == 0 || counter < 1000) {
-            RTPP_LOG(cf.stable->glog, RTPP_LOG_DBUG, "run %lld filter lastval %f, filter nextval %f, error %f",
-              counter, filter_lastval, loop_error.lastval, sigmoid(eval));
-            RTPP_LOG(cf.stable->glog, RTPP_LOG_DBUG, "run %lld extra sleeping time %llu", counter, usleep_time);
-        }
-        sleep_time = getdtime();
-#endif
         CALL_METHOD(cf.stable->rtpp_proc_cf, wakeup, counter, ncycles_ref);
-        usleep(usleep_time);
-#if RTPP_DEBUG_timers
-        sleep_time = getdtime() - sleep_time;
-        if (counter % (unsigned int)cf.stable->target_pfreq == 0 || counter < 1000 || sleep_time > add_delay * 2.0) {
-            RTPP_LOG(cf.stable->glog, RTPP_LOG_DBUG, "run %lld sleeping time required %llu sleeping time actual %f, CSV: %f,%f,%f", \
-              counter, usleep_time, sleep_time, (double)counter / cf.stable->target_pfreq, ((double)usleep_time) / 1000.0, sleep_time * 1000.0);
-        }
-#endif
-        counter += 1;
         if (cf.stable->fastshutdown != 0) {
             break;
         }
@@ -967,7 +926,10 @@ main(int argc, char **argv)
               "deorbiting-burn sequence completed, exiting");
             break;
         }
+        prdic_procrastinate(elp);
+        counter++;
     }
+    prdic_free(elp);
 
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
 #if ENABLE_MODULE_IF
