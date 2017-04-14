@@ -911,12 +911,12 @@ main(int argc, char **argv)
     sd_notify(0, "READY=1");
 #endif
 
-    counter = 0;
     elp = prdic_init(cf.stable->target_pfreq, cf.stable->sched_offset);
     for (;;) {
         ncycles_ref = (long long)prdic_getncycles_ref(elp);
 
         CALL_METHOD(cf.stable->rtpp_proc_cf, wakeup, counter, ncycles_ref);
+        CALL_METHOD(cf.stable->rtpp_cmd_cf, wakeup);
         if (cf.stable->fastshutdown != 0) {
             break;
         }

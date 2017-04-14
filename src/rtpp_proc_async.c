@@ -266,7 +266,9 @@ rtpp_proc_async_run(void *arg)
             }
 #endif
             if (nready_rtp < 0 && errno == EINTR) {
+#if 0
                 CALL_METHOD(cf->stable->rtpp_cmd_cf, wakeup);
+#endif
                 tp[0] = getdtime();
                 continue;
             }
@@ -291,7 +293,9 @@ rtpp_proc_async_run(void *arg)
         }
 
         rtpp_anetio_pump_q(sender);
+#if 0
         CALL_METHOD(cf->stable->rtpp_cmd_cf, wakeup);
+#endif
         tp[3] = getdtime();
         flush_rstats(stats_cf, rstats);
 
