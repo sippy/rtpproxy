@@ -31,6 +31,12 @@
 
 struct rtpp_log;
 struct rtpa_stats_jitter;
+struct rtp_hdr;
+
+#if !defined(rtp_hdr_t_DEFINED)
+typedef struct rtp_hdr rtp_hdr_t;
+#define rtp_hdr_t_DEFINED 1
+#endif
 
 #define PT_UNKN 128
 

@@ -105,7 +105,10 @@ struct rtp_hdr_ext {
     uint32_t extension[0];	/* actual extension data */
 } __attribute__((__packed__));
 
+#if !defined(rtp_hdr_t_DEFINED)
 typedef struct rtp_hdr rtp_hdr_t;
+#define rtp_hdr_t_DEFINED 1
+#endif
 
 typedef struct rtp_hdr_ext rtp_hdr_ext_t;
 
