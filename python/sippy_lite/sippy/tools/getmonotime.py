@@ -1,4 +1,10 @@
 import getopt, sys
+import os.path
+
+def usage():
+    sys.stderr.write('Usage: %s [-r] [-S sippy_path] [-C clock_name]\n' % \
+      (os.path.basename(sys.argv[0])))
+    sys.exit(1)
 
 if __name__ == '__main__':
     sippy_path = None
