@@ -21,6 +21,11 @@ RTPP_NOTYFY_CLIENT=${TOP_BUILDDIR}/python/rtpp_notify_client.py
 
 setup_tstart() {
   RTPP_MCLOCK_NAME="`${RTPPROXY} -C 2>/dev/null`"
+  if [ "${RTPP_MCLOCK_NAME}" = "" ]
+  then
+    echo "oops, cannot determine clock name to synchronize logs!" 1>&2
+    exit 1
+  fi
   RTPP_LOG_TSTART="`python ${SIPPY_DIR}/sippy/tools/getmonotime.py -S ${SIPPY_DIR} \
    -C ${RTPP_MCLOCK_NAME}`"
   export RTPP_LOG_TSTART
