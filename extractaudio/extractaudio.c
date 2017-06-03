@@ -42,7 +42,6 @@
 #include <netinet/ip6.h>
 #include <netinet/udp.h>
 #include <getopt.h>
-#include <err.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -54,6 +53,10 @@
 
 #include "config.h"
 
+#if HAVE_ERR_H
+# include <err.h>
+#endif
+
 #include "format_au.h"
 #include "g711.h"
 #include "rtp_info.h"
@@ -61,9 +64,9 @@
 #include "session.h"
 #include "rtpp_record_private.h"
 #include "rtpp_ssrc.h"
+#include "rtp_analyze.h"
 #include "rtpp_loader.h"
 #include "rtp.h"
-#include "rtp_analyze.h"
 #include "rtpa_stats.h"
 #include "eaud_oformats.h"
 #if ENABLE_SRTP || ENABLE_SRTP2
@@ -90,19 +93,24 @@ usage(void)
 {
 
     fprintf(stderr, "usage: extractaudio [-idsn] [-F file_fmt] [-D data_fmt] "
-      "rdir outfile [link1] ... [linkN]\n");
+      "rdir outfile [link1] ... [linkN]\n"
+                    "       extractaudio [-idsn] [-F file_fmt] [-D data_fmt] "
+      "[-A answer_cap] [-B originate_cap] [--alice-crypto CSPEC] [--bob-crypto CSPEC] "
+      "outfile [link1] ... [linkN]\n");
     exit(1);
 }
 
 /* Lookup session given ssrc */
 struct session *
-session_lookup(struct channels *channels, uint32_t ssrc)
+session_lookup(struct channels *channels, uint32_t ssrc, struct channel **cpp)
 {
     struct channel *cp;
 
     MYQ_FOREACH(cp, channels) {
-        if (MYQ_FIRST(&(cp->session))->rpkt->ssrc == ssrc)
+        if (MYQ_FIRST(&(cp->session))->rpkt->ssrc == ssrc) {
+            *cpp = cp;
             return &(cp->session);
+        }
     }
     return NULL;
 }
@@ -159,18 +167,18 @@ load_session(const char *path, struct channels *channels, enum origin origin,
 int
 main(int argc, char **argv)
 {
-    int ch, seen_a, seen_o;
+    int ch, seen_a, seen_b;
     int oblen, delete, stereo, idprio, nch, neof;
-    int32_t osample, asample, csample;
-    uint64_t nasamples, nosamples, nwsamples;
+    int32_t bsample, asample, csample;
+    uint64_t nasamples, nbsamples, nwsamples;
     struct channels channels;
     struct channel *cp;
 #if defined(__FreeBSD__)
     struct rtprio rt;
 #endif
     int16_t obuf[1024];
-    char aname_s[MAXPATHLEN], oname_s[MAXPATHLEN];
-    const char *aname, *oname;
+    char aname_s[MAXPATHLEN], bname_s[MAXPATHLEN];
+    const char *aname, *bname, *uname;
     double basetime;
     SF_INFO sfinfo;
     SNDFILE *sffile;
@@ -191,10 +199,10 @@ main(int argc, char **argv)
 
     delete = stereo = idprio = 0;
     dflags = D_FLAG_NONE;
-    aname = oname = NULL;
+    aname = bname = NULL;
     alice_crypto = bob_crypto = NULL;
 
-    while ((ch = getopt_long(argc, argv, "dsinF:D:A:B:", longopts,
+    while ((ch = getopt_long(argc, argv, "dsinF:D:A:B:U:", longopts,
       &option_index)) != -1)
         switch (ch) {
         case 'd':
@@ -241,7 +249,11 @@ main(int argc, char **argv)
             break;
 
         case 'B':
-            oname = optarg;
+            bname = optarg;
+            break;
+
+        case 'U':
+            uname = optarg;
             break;
 
 #if ENABLE_SRTP || ENABLE_SRTP2
@@ -267,7 +279,7 @@ main(int argc, char **argv)
     argc -= optind;
     argv += optind;
 
-    if (aname == NULL && oname == NULL && argc < 2)
+    if (aname == NULL && bname == NULL && argc < 2)
         usage();
 
     if (use_file_fmt == 0) {
@@ -287,11 +299,11 @@ main(int argc, char **argv)
 #endif
     }
 
-    if (aname == NULL && oname == NULL) {
+    if (aname == NULL && bname == NULL) {
         sprintf(aname_s, "%s.a.rtp", argv[0]);
         aname = aname_s;
-        sprintf(oname_s, "%s.o.rtp", argv[0]);
-        oname = oname_s;
+        sprintf(bname_s, "%s.o.rtp", argv[0]);
+        bname = bname_s;
         argv += 1;
         argc -= 1;
     }
@@ -299,21 +311,29 @@ main(int argc, char **argv)
     if (aname != NULL) {
         load_session(aname, &channels, A_CH, alice_crypto);
     }
-    if (oname != NULL) {
-        load_session(oname, &channels, O_CH, bob_crypto);
+    if (bname != NULL) {
+        load_session(bname, &channels, B_CH, bob_crypto);
     }
 
     if (MYQ_EMPTY(&channels))
         goto theend;
 
-    nch = 0;
-    basetime = MYQ_FIRST(&(MYQ_FIRST(&channels)->session))->pkt->time;
     MYQ_FOREACH(cp, &channels) {
-        if (basetime > MYQ_FIRST(&(cp->session))->pkt->time)
-            basetime = MYQ_FIRST(&(cp->session))->pkt->time;
+        cp->btime = MYQ_FIRST(&(cp->session))->pkt->time;
+        cp->etime = MYQ_LAST(&(cp->session))->pkt->time;
+    }
+
+    nch = 0;
+    basetime = MYQ_FIRST(&channels)->btime;
+#if 0
+    fprintf(stderr, "%f %f\n", MYQ_FIRST(&(MYQ_FIRST(&channels)->session))->pkt->time, MYQ_FIRST(&channels)->btime);
+#endif
+    MYQ_FOREACH(cp, &channels) {
+        if (basetime > cp->btime)
+            basetime = cp->btime;
     }
     MYQ_FOREACH(cp, &channels) {
-        cp->skip = (MYQ_FIRST(&(cp->session))->pkt->time - basetime) * 8000;
+        cp->skip = (cp->btime - basetime) * 8000;
         cp->decoder = decoder_new(&(cp->session), dflags);
         nch++;
     }
@@ -329,12 +349,13 @@ main(int argc, char **argv)
     FILE *raw_file = fopen(EAUD_DUMPRAW, "w");
 #endif
 
-    nasamples = nosamples = nwsamples = 0;
+    nasamples = nbsamples = nwsamples = 0;
     do {
         neof = 0;
-        asample = osample = 0;
-        seen_a = seen_o = 0;
+        asample = bsample = 0;
+        seen_a = seen_b = 0;
         MYQ_FOREACH(cp, &channels) {
+restart:
             if ((dflags & D_FLAG_NOSYNC) == 0) {
                 if (cp->skip > 0) {
                     cp->skip--;
@@ -343,13 +364,21 @@ main(int argc, char **argv)
             } else {
                 if (cp->origin == A_CH && seen_a != 0)
                     continue;
-                if (cp->origin == O_CH && seen_o != 0)
+                if (cp->origin == B_CH && seen_b != 0)
                     continue;
             }
             do {
                 csample = decoder_get(cp->decoder);
             } while (csample == DECODER_SKIP);
-            if (csample == DECODER_EOF || csample == DECODER_ERROR) {
+            if (csample == DECODER_EOF) {
+                MYQ_REMOVE(&channels, cp);
+                nch -= 1;
+                cp = MYQ_NEXT(cp);
+                if (cp == NULL)
+                    goto out;
+                goto restart;
+            }
+            if (csample == DECODER_ERROR) {
                 neof++;
                 continue;
             }
@@ -362,23 +391,24 @@ main(int argc, char **argv)
                     seen_a = 1;
                 }
             } else {
-                osample += csample;
-                nosamples++;
-                if (seen_o != 0) {
-                    osample /= 2;
+                bsample += csample;
+                nbsamples++;
+                if (seen_b != 0) {
+                    bsample /= 2;
                 } else {
-                    seen_o = 1;
+                    seen_b = 1;
                 }
             }
         }
+out:
         if (neof < nch) {
             if (stereo == 0) {
-                obuf[oblen] = (asample + osample) / 2;
+                obuf[oblen] = (asample + bsample) / 2;
                 oblen += 1;
             } else {
                 obuf[oblen] = asample;
                 oblen += 1;
-                obuf[oblen] = osample;
+                obuf[oblen] = bsample;
                 oblen += 1;
             }
         }
@@ -392,7 +422,7 @@ main(int argc, char **argv)
         }
     } while (neof < nch);
     fprintf(stderr, "samples decoded: O: %" PRIu64 ", A: %" PRIu64
-      ", written: %" PRIu64 "\n", nosamples, nasamples, nwsamples);
+      ", written: %" PRIu64 "\n", nbsamples, nasamples, nwsamples);
 
 #if defined(EAUD_DUMPRAW)
     fclose(raw_file);
@@ -409,8 +439,8 @@ theend:
         if (aname != NULL) {
             unlink(aname);
         }
-        if (oname != NULL) {
-            unlink(oname);
+        if (bname != NULL) {
+            unlink(bname);
         }
     }
 

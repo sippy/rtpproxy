@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2017 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,46 +23,53 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id$
- *
  */
 
-#ifndef _RTP_LOADER_H_
-#define _RTP_LOADER_H_
-
 #include <sys/types.h>
-#include <sys/stat.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
+#include <netinet/udp.h>
 
-struct rtpp_loader;
-struct streams;
-struct channels;
-struct rtpp_session_stat;
-struct eaud_crypto;
+#include "config.h"
 
-enum origin;
-
-#if !defined(pcap_hdr_t_DEFINED)
-typedef struct pcap_hdr_s pcap_hdr_t;
-#define pcap_hdr_t_DEFINED 1
+#if HAVE_ERR_H
+# include <err.h>
 #endif
 
-struct rtpp_loader {
-    int ifd;
-    struct stat sb;
-    unsigned char *ibuf;
-    int (*scan)(struct rtpp_loader *, struct streams *);
-    int (*load)(struct rtpp_loader *, struct channels *,
-      struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
-    void (*destroy)(struct rtpp_loader *);
+#include "rtpp_loader.h"
+#include "rtpp_record_private.h"
+#include "eaud_pcap.h"
+#include "rtpp_scan_pcap.h"
 
-    union {
-        struct {
-            pcap_hdr_t *pcap_hdr;
-        } pcap_data;
-        struct {} adhoc_data;
-    } private;
-};
+int
+rtpp_scan_pcap(struct rtpp_loader *loader, struct sessions *sessions)
+{
+    int pcount;
+    unsigned char *cp, *ep;
+    off_t st_size;
+    int network;
+    struct pcap_dissect pd;
+    int rval;
 
-struct rtpp_loader *rtpp_load(const char *);
+    st_size = loader->sb.st_size;
+    network = loader->private.pcap_data.pcap_hdr->network;
+    ep = loader->ibuf + st_size;
 
-#endif
+    pcount = 0;
+    for (cp = loader->ibuf; cp < ep; cp += PCAP_REC_LEN(&pd)) {
+        rval = eaud_pcap_dissect(cp, ep - cp, network, &pd);
+        if (rval < 0) {
+            if (rval == PCP_DSCT_UNKN)
+                continue;
+            warnx("broken or truncated PCAP file");
+            return -1;
+        }
+    }
+    if (cp != loader->ibuf + st_size) {
+        warnx("invalid format, %d packets loaded", pcount);
+        return -1;
+    }
+    return pcount;
+}

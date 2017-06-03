@@ -40,33 +40,47 @@
 #define MYQ_FIRST(headp) ((headp)->first)
 #define MYQ_LAST(headp) ((headp)->last)
 #define MYQ_NEXT(itemp) ((itemp)->next)
+#define MYQ_PREV(itemp) ((itemp)->prev)
 #define MYQ_EMPTY(headp) ((headp)->first == NULL)
 #define MYQ_FOREACH(itemp, headp) \
-  for ((itemp) = (headp)->first; (itemp) != NULL; (itemp) = (itemp)->next)
+  for ((itemp) = (headp)->first; (itemp) != NULL; (itemp) = MYQ_NEXT(itemp))
 #define MYQ_FOREACH_REVERSE(itemp, headp) \
-  for ((itemp) = (headp)->last; (itemp) != NULL; (itemp) = (itemp)->prev)
+  for ((itemp) = (headp)->last; (itemp) != NULL; (itemp) = MYQ_PREV(itemp))
 #define MYQ_INSERT_HEAD(headp, new_itemp) { \
-    (new_itemp)->prev = NULL; \
-    (new_itemp)->next = (headp)->first; \
+    MYQ_PREV(new_itemp) = NULL; \
+    MYQ_NEXT(new_itemp) = (headp)->first; \
     if ((headp)->first != NULL) { \
-      (headp)->first->prev = (new_itemp); \
+      MYQ_PREV((headp)->first) = (new_itemp); \
     } else { \
       (headp)->last = (new_itemp); \
     } \
     (headp)->first = (new_itemp); \
   }
 #define MYQ_INSERT_AFTER(headp, itemp, new_itemp) { \
-    (new_itemp)->next = (itemp)->next; \
-    (new_itemp)->prev = (itemp); \
-    (itemp)->next = (new_itemp); \
-    if ((new_itemp)->next == NULL) { \
+    MYQ_NEXT(new_itemp) = MYQ_NEXT(itemp); \
+    MYQ_PREV(new_itemp) = (itemp); \
+    MYQ_NEXT(itemp) = (new_itemp); \
+    if (MYQ_NEXT(new_itemp) == NULL) { \
       (headp)->last = (new_itemp); \
     } else { \
-      (new_itemp)->next->prev = (new_itemp); \
+      MYQ_PREV(MYQ_NEXT(new_itemp)) = (new_itemp); \
     } \
   }
+#define MYQ_REMOVE(headp, itemp) do { \
+    if (MYQ_NEXT(itemp) != NULL) \
+        MYQ_PREV(MYQ_NEXT(itemp)) = MYQ_PREV(itemp); \
+    else { \
+        MYQ_LAST(headp) = MYQ_PREV(itemp); \
+    } \
+    if (MYQ_PREV(itemp) != NULL) \
+        MYQ_NEXT(MYQ_PREV(itemp)) = MYQ_NEXT(itemp); \
+    else { \
+        MYQ_FIRST(headp) = MYQ_NEXT(itemp); \
+    } \
+} while (0)
 
 struct pkt_hdr_adhoc;
+struct rtpp_netaddr;
 
 struct packet {
     struct pkt_hdr_adhoc *pkt;
@@ -80,7 +94,7 @@ struct session {
     struct packet *last;
 };
 
-enum origin {O_CH, A_CH};
+enum origin {B_CH, A_CH};
 
 struct channel {
     struct session session;
@@ -88,6 +102,8 @@ struct channel {
     unsigned int skip;
     enum origin origin;
     struct eaud_crypto *crypto;
+    double btime;
+    double etime;
     struct channel *prev;
     struct channel *next;
 };
@@ -95,12 +111,20 @@ struct channels {
     struct channel *first;
     struct channel *last;
 };
+struct stream {
+    struct rtpp_netaddr *src;
+    struct rtpp_netaddr *dst;
+};
+struct streams {
+    struct stream *first;
+    struct stream *last;
+};
 
 #define	RPKT(packet)	((rtp_hdr_t *)((packet)->pkt + 1))
 #define RPLOAD(packet)	(((unsigned char *)(packet)->rpkt) + (packet)->parsed.data_offset)
 #define RPLEN(packet)	((packet)->parsed.data_size)
 
-struct session *session_lookup(struct channels *, uint32_t);
+struct session *session_lookup(struct channels *, uint32_t, struct channel **);
 void channel_insert(struct channels *, struct channel *);
 
 #endif

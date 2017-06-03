@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2017 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,46 +23,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id$
- *
  */
 
-#ifndef _RTP_LOADER_H_
-#define _RTP_LOADER_H_
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
 struct rtpp_loader;
-struct streams;
-struct channels;
-struct rtpp_session_stat;
-struct eaud_crypto;
+struct sessions;
 
-enum origin;
+int rtpp_scan_pcap(struct rtpp_loader *, struct sessions *);
 
-#if !defined(pcap_hdr_t_DEFINED)
-typedef struct pcap_hdr_s pcap_hdr_t;
-#define pcap_hdr_t_DEFINED 1
-#endif
-
-struct rtpp_loader {
-    int ifd;
-    struct stat sb;
-    unsigned char *ibuf;
-    int (*scan)(struct rtpp_loader *, struct streams *);
-    int (*load)(struct rtpp_loader *, struct channels *,
-      struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
-    void (*destroy)(struct rtpp_loader *);
-
-    union {
-        struct {
-            pcap_hdr_t *pcap_hdr;
-        } pcap_data;
-        struct {} adhoc_data;
-    } private;
-};
-
-struct rtpp_loader *rtpp_load(const char *);
-
-#endif

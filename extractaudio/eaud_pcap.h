@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2017 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,46 +23,30 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id$
- *
  */
 
-#ifndef _RTP_LOADER_H_
-#define _RTP_LOADER_H_
+#include "sys/types.h"
+#include "stdint.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
+struct udpip;
 
-struct rtpp_loader;
-struct streams;
-struct channels;
-struct rtpp_session_stat;
-struct eaud_crypto;
-
-enum origin;
-
-#if !defined(pcap_hdr_t_DEFINED)
-typedef struct pcap_hdr_s pcap_hdr_t;
-#define pcap_hdr_t_DEFINED 1
-#endif
-
-struct rtpp_loader {
-    int ifd;
-    struct stat sb;
-    unsigned char *ibuf;
-    int (*scan)(struct rtpp_loader *, struct streams *);
-    int (*load)(struct rtpp_loader *, struct channels *,
-      struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
-    void (*destroy)(struct rtpp_loader *);
-
-    union {
-        struct {
-            pcap_hdr_t *pcap_hdr;
-        } pcap_data;
-        struct {} adhoc_data;
-    } private;
+struct pcap_dissect {
+    pcaprec_hdr_t pcaprec_hdr;
+    int pcap_hdr_len;
+    int l5_len;
+    uint16_t dport;
+    uint16_t sport;
+    /* Points to unaligned data, use with caution! */
+    struct udpip *udpip;
+    struct in_addr *src;
+    struct in_addr *dst;
+    unsigned char *l5_data;
 };
 
-struct rtpp_loader *rtpp_load(const char *);
+#define PCP_DSCT_OK   (0)
+#define PCP_DSCT_UNKN (-1)
+#define PCP_DSCT_TRNK (-2)
 
-#endif
+#define PCAP_REC_LEN(pdp) ((pdp)->pcap_hdr_len + (pdp)->l5_len)
+
+int eaud_pcap_dissect(unsigned char *, size_t, int, struct pcap_dissect *);
