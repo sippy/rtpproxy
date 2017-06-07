@@ -303,7 +303,7 @@ rtpp_timed_process(struct rtpp_timed_cf *rtcp, double ctime)
         wi_data = rtpp_wi_data_get_ptr(wi, rtcp->wi_dsize, rtcp->wi_dsize);
         cb_rval = wi_data->cb_func(ctime, wi_data->cb_func_arg);
         if (cb_rval == CB_MORE) {
-            while (wi_data->when < ctime) {
+            while (wi_data->when <= ctime) {
                 /* Make sure next run is in the future */
                 wi_data->when += wi_data->offset;
             }
