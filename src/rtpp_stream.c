@@ -394,18 +394,29 @@ static void
 rtpp_stream_handle_noplay(struct rtpp_stream *self)
 {
     struct rtpp_stream_priv *pvt;
+    uint64_t ruid;
+    int stopped;
 
+    stopped = 0;
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
-    if (pvt->rtps.uid != RTPP_UID_NONE) {
-        if (CALL_METHOD(pvt->servers_wrt, unreg, pvt->rtps.uid) != NULL) {
-            pvt->rtps.uid = RTPP_UID_NONE;
-            pvt->rtps.inact = 0;
-        }
-        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
-          "stopping player at port %d", self->port);
-    }
+    ruid = pvt->rtps.uid;
     pthread_mutex_unlock(&pvt->lock);
+    if (ruid != RTPP_UID_NONE) {
+        if (CALL_METHOD(pvt->servers_wrt, unreg, ruid) != NULL) {
+            pthread_mutex_lock(&pvt->lock);
+            if (pvt->rtps.uid == ruid) {
+                pvt->rtps.uid = RTPP_UID_NONE;
+                pvt->rtps.inact = 0;
+                stopped = 1;
+            }
+            pthread_mutex_unlock(&pvt->lock);
+        }
+        if (stopped != 0) {
+            RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
+              "stopping player at port %d", self->port);
+        }
+    }
 }
 
 static int
