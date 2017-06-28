@@ -119,8 +119,8 @@ am__extractaudio_SOURCES_DIST = extractaudio.c decoder.c rtpp_loader.c \
 	${MAINSRCDIR}/rtpp_netaddr.h ${MAINSRCDIR}/rtpp_netaddr_fin.c \
 	${MAINSRCDIR}/rtpp_netaddr_fin.h eaud_oformats.c \
 	eaud_oformats.h rtpp_scan_pcap.c rtpp_scan_pcap.h eaud_pcap.c \
-	eaud_pcap.h eaud_crypto.c eaud_crypto.h srtp_util.c \
-	srtp_util.h
+	eaud_pcap.h eaud_substreams.c eaud_substreams.h eaud_crypto.c \
+	eaud_crypto.h srtp_util.c srtp_util.h
 @BUILD_CRYPTO_TRUE@am__objects_1 = eaud_crypto.$(OBJEXT) \
 @BUILD_CRYPTO_TRUE@	srtp_util.$(OBJEXT)
 am_extractaudio_OBJECTS = extractaudio.$(OBJEXT) decoder.$(OBJEXT) \
@@ -131,7 +131,8 @@ am_extractaudio_OBJECTS = extractaudio.$(OBJEXT) decoder.$(OBJEXT) \
 	rtpp_refcnt_fin.$(OBJEXT) rtpp_ringbuf.$(OBJEXT) \
 	rtpp_ringbuf_fin.$(OBJEXT) rtpp_netaddr.$(OBJEXT) \
 	rtpp_netaddr_fin.$(OBJEXT) eaud_oformats.$(OBJEXT) \
-	rtpp_scan_pcap.$(OBJEXT) eaud_pcap.$(OBJEXT) $(am__objects_1)
+	rtpp_scan_pcap.$(OBJEXT) eaud_pcap.$(OBJEXT) \
+	eaud_substreams.$(OBJEXT) $(am__objects_1)
 extractaudio_OBJECTS = $(am_extractaudio_OBJECTS)
 am__DEPENDENCIES_1 =
 extractaudio_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -343,7 +344,8 @@ extractaudio_SOURCES = extractaudio.c decoder.c rtpp_loader.c \
 	${MAINSRCDIR}/rtpp_netaddr.h ${MAINSRCDIR}/rtpp_netaddr_fin.c \
 	${MAINSRCDIR}/rtpp_netaddr_fin.h eaud_oformats.c \
 	eaud_oformats.h rtpp_scan_pcap.c rtpp_scan_pcap.h eaud_pcap.c \
-	eaud_pcap.h $(am__append_1)
+	eaud_pcap.h eaud_substreams.c eaud_substreams.h \
+	$(am__append_1)
 extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ \
 	-lm -lpthread $(am__append_2)
 all: all-am
@@ -443,6 +445,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaud_crypto.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaud_oformats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaud_pcap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaud_substreams.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g729_compat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp.Po@am__quote@
