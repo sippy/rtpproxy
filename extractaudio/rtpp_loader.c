@@ -138,19 +138,15 @@ rtpp_load(const char *path)
     return rval;
 }
 
-static struct cnode *
+static struct channel *
 channel_alloc(enum origin origin)
 {
-    struct cnode *cnp;
     struct channel *channel;
 
-    cnp = malloc(sizeof(*cnp));
     channel = malloc(sizeof(*channel));
-    memset(cnp, 0, sizeof(*cnp));
     memset(channel, 0, sizeof(*channel));
-    cnp->cp = channel;
     channel->origin = origin;
-    return (cnp);
+    return (channel);
 }
 
 static int
@@ -163,7 +159,6 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
     struct pkt_hdr_adhoc *pkt;
     struct packet *pack, *pp;
     struct channel *channel;
-    struct cnode *cnp;
     struct session *sess;
     off_t st_size;
 
@@ -189,12 +184,11 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
 
         sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
         if (sess == NULL) {
-            cnp = channel_alloc(origin);
-            channel = cnp->cp;
+            channel = channel_alloc(origin);
             sess = &(channel->session);
             MYQ_INIT(sess);
             MYQ_INSERT_HEAD(sess, pack);
-            channel_insert(channels, cnp);
+            channel_insert(channels, channel);
             pcount++;
             goto endloop;
         }
@@ -234,7 +228,6 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
     unsigned char *cp, *ep;
     struct packet *pack, *pp;
     struct channel *channel;
-    struct cnode *cnp;
     struct session *sess;
     int rtp_pkt_len, rval;
     off_t st_size;
@@ -299,12 +292,11 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
 
         sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
         if (sess == NULL) {
-            cnp = channel_alloc(origin);
-            channel = cnp->cp;
+            channel = channel_alloc(origin);
             sess = &(channel->session);
             MYQ_INIT(sess);
             MYQ_INSERT_HEAD(sess, pack);
-            channel_insert(channels, cnp);
+            channel_insert(channels, channel);
             pcount++;
             goto endloop;
         }

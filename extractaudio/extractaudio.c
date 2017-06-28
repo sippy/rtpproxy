@@ -41,6 +41,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/udp.h>
+#include <assert.h>
 #include <getopt.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -72,6 +73,7 @@
 #if ENABLE_SRTP || ENABLE_SRTP2
 # include "eaud_crypto.h"
 #endif
+#include "eaud_substreams.h"
 
 /*#define EAUD_DUMPRAW "/tmp/eaud.raw"*/
 
@@ -117,17 +119,30 @@ session_lookup(struct channels *channels, uint32_t ssrc, struct channel **cpp)
 
 /* Insert channel keeping them ordered by time of first packet arrival */
 void
-channel_insert(struct channels *channels, struct cnode *channel)
+channel_insert(struct channels *channels, struct channel *channel)
 {
-    struct cnode *cnp;
+    struct cnode *cnp, *nnp;
+
+    nnp = malloc(sizeof(*nnp));
+    assert(nnp != NULL);
+    memset(nnp, 0, sizeof(*nnp));
+    nnp->cp = channel;
 
     MYQ_FOREACH_REVERSE(cnp, channels)
         if (MYQ_FIRST(&(cnp->cp->session))->pkt->time <
-          MYQ_FIRST(&(channel->cp->session))->pkt->time) {
-            MYQ_INSERT_AFTER(channels, cnp, channel);
+          MYQ_FIRST(&(channel->session))->pkt->time) {
+            MYQ_INSERT_AFTER(channels, cnp, nnp);
             return;
         }
-    MYQ_INSERT_HEAD(channels, channel);
+    MYQ_INSERT_HEAD(channels, nnp);
+}
+
+void
+channel_remove(struct channels *channels, struct cnode *cnp)
+{
+
+    MYQ_REMOVE(channels, cnp);
+    free(cnp);
 }
 
 static int
@@ -171,7 +186,7 @@ main(int argc, char **argv)
     int oblen, delete, stereo, idprio, nch, neof;
     int32_t bsample, asample, csample;
     uint64_t nasamples, nbsamples, nwsamples;
-    struct channels channels;
+    struct channels channels, act_subset;
     struct cnode *cnp;
 #if defined(__FreeBSD__)
     struct rtprio rt;
@@ -188,9 +203,10 @@ main(int argc, char **argv)
     uint32_t dflt_file_fmt, dflt_data_fmt;
     int option_index;
     struct eaud_crypto *alice_crypto, *bob_crypto;
-    int64_t isample;
+    int64_t isample, sync_sample;
 
     MYQ_INIT(&channels);
+    MYQ_INIT(&act_subset);
     memset(&sfinfo, 0, sizeof(sfinfo));
     sfinfo.samplerate = 8000;
     sfinfo.channels = 1;
@@ -203,6 +219,7 @@ main(int argc, char **argv)
     aname = bname = NULL;
     alice_crypto = bob_crypto = NULL;
     isample = -1;
+    sync_sample = 0;
 
     while ((ch = getopt_long(argc, argv, "dsinF:D:A:B:U:", longopts,
       &option_index)) != -1)
@@ -357,7 +374,10 @@ main(int argc, char **argv)
         asample = bsample = 0;
         seen_a = seen_b = 0;
         isample += 1;
-        MYQ_FOREACH(cnp, &channels) {
+        if (sync_sample == isample) {
+            eaud_ss_syncactive(&channels, &act_subset, isample, &sync_sample);
+        }
+        MYQ_FOREACH(cnp, &act_subset) {
 restart:
             if ((dflags & D_FLAG_NOSYNC) == 0) {
                 if (cnp->cp->skip > isample) {
@@ -373,7 +393,12 @@ restart:
                 csample = decoder_get(cnp->cp->decoder);
             } while (csample == DECODER_SKIP);
             if (csample == DECODER_EOF) {
-                MYQ_REMOVE(&channels, cnp);
+                struct cnode *tnp;
+
+                tnp = eaud_ss_find(&channels, cnp->cp);
+                assert(tnp != NULL);
+                channel_remove(&channels, tnp);
+                channel_remove(&act_subset, cnp);
                 nch -= 1;
                 cnp = MYQ_NEXT(cnp);
                 if (cnp == NULL)
