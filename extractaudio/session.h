@@ -104,12 +104,15 @@ struct channel {
     struct eaud_crypto *crypto;
     double btime;
     double etime;
-    struct channel *prev;
-    struct channel *next;
+};
+struct cnode {
+    struct channel *cp;
+    struct cnode *prev;
+    struct cnode *next;
 };
 struct channels {
-    struct channel *first;
-    struct channel *last;
+    struct cnode *first;
+    struct cnode *last;
 };
 struct stream {
     struct rtpp_netaddr *src;
@@ -125,6 +128,6 @@ struct streams {
 #define RPLEN(packet)	((packet)->parsed.data_size)
 
 struct session *session_lookup(struct channels *, uint32_t, struct channel **);
-void channel_insert(struct channels *, struct channel *);
+void channel_insert(struct channels *, struct cnode *);
 
 #endif

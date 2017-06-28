@@ -104,12 +104,12 @@ usage(void)
 struct session *
 session_lookup(struct channels *channels, uint32_t ssrc, struct channel **cpp)
 {
-    struct channel *cp;
+    struct cnode *cnp;
 
-    MYQ_FOREACH(cp, channels) {
-        if (MYQ_FIRST(&(cp->session))->rpkt->ssrc == ssrc) {
-            *cpp = cp;
-            return &(cp->session);
+    MYQ_FOREACH(cnp, channels) {
+        if (MYQ_FIRST(&(cnp->cp->session))->rpkt->ssrc == ssrc) {
+            *cpp = cnp->cp;
+            return &(cnp->cp->session);
         }
     }
     return NULL;
@@ -117,14 +117,14 @@ session_lookup(struct channels *channels, uint32_t ssrc, struct channel **cpp)
 
 /* Insert channel keeping them ordered by time of first packet arrival */
 void
-channel_insert(struct channels *channels, struct channel *channel)
+channel_insert(struct channels *channels, struct cnode *channel)
 {
-    struct channel *cp;
+    struct cnode *cnp;
 
-    MYQ_FOREACH_REVERSE(cp, channels)
-        if (MYQ_FIRST(&(cp->session))->pkt->time <
-          MYQ_FIRST(&(channel->session))->pkt->time) {
-            MYQ_INSERT_AFTER(channels, cp, channel);
+    MYQ_FOREACH_REVERSE(cnp, channels)
+        if (MYQ_FIRST(&(cnp->cp->session))->pkt->time <
+          MYQ_FIRST(&(channel->cp->session))->pkt->time) {
+            MYQ_INSERT_AFTER(channels, cnp, channel);
             return;
         }
     MYQ_INSERT_HEAD(channels, channel);
@@ -172,7 +172,7 @@ main(int argc, char **argv)
     int32_t bsample, asample, csample;
     uint64_t nasamples, nbsamples, nwsamples;
     struct channels channels;
-    struct channel *cp;
+    struct cnode *cnp;
 #if defined(__FreeBSD__)
     struct rtprio rt;
 #endif
@@ -188,6 +188,7 @@ main(int argc, char **argv)
     uint32_t dflt_file_fmt, dflt_data_fmt;
     int option_index;
     struct eaud_crypto *alice_crypto, *bob_crypto;
+    int64_t isample;
 
     MYQ_INIT(&channels);
     memset(&sfinfo, 0, sizeof(sfinfo));
@@ -201,6 +202,7 @@ main(int argc, char **argv)
     dflags = D_FLAG_NONE;
     aname = bname = NULL;
     alice_crypto = bob_crypto = NULL;
+    isample = -1;
 
     while ((ch = getopt_long(argc, argv, "dsinF:D:A:B:U:", longopts,
       &option_index)) != -1)
@@ -318,23 +320,23 @@ main(int argc, char **argv)
     if (MYQ_EMPTY(&channels))
         goto theend;
 
-    MYQ_FOREACH(cp, &channels) {
-        cp->btime = MYQ_FIRST(&(cp->session))->pkt->time;
-        cp->etime = MYQ_LAST(&(cp->session))->pkt->time;
+    MYQ_FOREACH(cnp, &channels) {
+        cnp->cp->btime = MYQ_FIRST(&(cnp->cp->session))->pkt->time;
+        cnp->cp->etime = MYQ_LAST(&(cnp->cp->session))->pkt->time;
     }
 
     nch = 0;
-    basetime = MYQ_FIRST(&channels)->btime;
+    basetime = MYQ_FIRST(&channels)->cp->btime;
 #if 0
     fprintf(stderr, "%f %f\n", MYQ_FIRST(&(MYQ_FIRST(&channels)->session))->pkt->time, MYQ_FIRST(&channels)->btime);
 #endif
-    MYQ_FOREACH(cp, &channels) {
-        if (basetime > cp->btime)
-            basetime = cp->btime;
+    MYQ_FOREACH(cnp, &channels) {
+        if (basetime > cnp->cp->btime)
+            basetime = cnp->cp->btime;
     }
-    MYQ_FOREACH(cp, &channels) {
-        cp->skip = (cp->btime - basetime) * 8000;
-        cp->decoder = decoder_new(&(cp->session), dflags);
+    MYQ_FOREACH(cnp, &channels) {
+        cnp->cp->skip = (cnp->cp->btime - basetime) * 8000;
+        cnp->cp->decoder = decoder_new(&(cnp->cp->session), dflags);
         nch++;
     }
 
@@ -354,27 +356,27 @@ main(int argc, char **argv)
         neof = 0;
         asample = bsample = 0;
         seen_a = seen_b = 0;
-        MYQ_FOREACH(cp, &channels) {
+        isample += 1;
+        MYQ_FOREACH(cnp, &channels) {
 restart:
             if ((dflags & D_FLAG_NOSYNC) == 0) {
-                if (cp->skip > 0) {
-                    cp->skip--;
+                if (cnp->cp->skip > isample) {
                     continue;
                 }
             } else {
-                if (cp->origin == A_CH && seen_a != 0)
+                if (cnp->cp->origin == A_CH && seen_a != 0)
                     continue;
-                if (cp->origin == B_CH && seen_b != 0)
+                if (cnp->cp->origin == B_CH && seen_b != 0)
                     continue;
             }
             do {
-                csample = decoder_get(cp->decoder);
+                csample = decoder_get(cnp->cp->decoder);
             } while (csample == DECODER_SKIP);
             if (csample == DECODER_EOF) {
-                MYQ_REMOVE(&channels, cp);
+                MYQ_REMOVE(&channels, cnp);
                 nch -= 1;
-                cp = MYQ_NEXT(cp);
-                if (cp == NULL)
+                cnp = MYQ_NEXT(cnp);
+                if (cnp == NULL)
                     goto out;
                 goto restart;
             }
@@ -382,7 +384,7 @@ restart:
                 neof++;
                 continue;
             }
-            if (cp->origin == A_CH) {
+            if (cnp->cp->origin == A_CH) {
                 asample += csample;
                 nasamples++;
                 if (seen_a != 0) {
