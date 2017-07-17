@@ -186,7 +186,7 @@ main(int argc, char **argv)
     int oblen, delete, stereo, idprio, nch, neof;
     int32_t bsample, asample, csample;
     uint64_t nasamples, nbsamples, nwsamples;
-    struct channels channels, act_subset;
+    struct channels channels, act_subset, *ap;
     struct cnode *cnp;
 #if defined(__FreeBSD__)
     struct rtprio rt;
@@ -374,10 +374,13 @@ main(int argc, char **argv)
         asample = bsample = 0;
         seen_a = seen_b = 0;
         isample += 1;
-        if (sync_sample == isample) {
+        if ((dflags & D_FLAG_NOSYNC) == 1) {
+            ap = &channels;
+        } else if (sync_sample == isample) {
             eaud_ss_syncactive(&channels, &act_subset, isample, &sync_sample);
+            ap = &act_subset;
         }
-        MYQ_FOREACH(cnp, &act_subset) {
+        MYQ_FOREACH(cnp, ap) {
 restart:
             if ((dflags & D_FLAG_NOSYNC) == 0) {
                 if (cnp->cp->skip > isample) {
@@ -398,7 +401,9 @@ restart:
                 tnp = eaud_ss_find(&channels, cnp->cp);
                 assert(tnp != NULL);
                 channel_remove(&channels, tnp);
-                channel_remove(&act_subset, cnp);
+                if (ap != &channels) {
+                    channel_remove(ap, cnp);
+                }
                 nch -= 1;
                 cnp = MYQ_NEXT(cnp);
                 if (cnp == NULL)
