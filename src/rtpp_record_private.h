@@ -31,6 +31,7 @@
 
 #define	DLT_NULL	0
 #define	DLT_EN10MB	1
+#define	DLT_RAW		101
 #define	PCAP_MAGIC	0xa1b2c3d4
 #define	PCAP_VER_MAJR	2
 #define	PCAP_VER_MINR	4
@@ -99,6 +100,14 @@ struct pkt_hdr_pcap_null_v6 {
     uint32_t family;
     struct udpip6 udpip6;
 } __attribute__((__packed__));
+struct pkt_hdr_pcap_raw {
+    pcaprec_hdr_t pcaprec_hdr;
+    struct udpip udpip;
+} __attribute__((__packed__));
+struct pkt_hdr_pcap_raw_v6 {
+    pcaprec_hdr_t pcaprec_hdr;
+    struct udpip6 udpip6;
+} __attribute__((__packed__));
 struct pkt_hdr_pcap_en10t {
     pcaprec_hdr_t pcaprec_hdr;
     struct layer2_hdr ether;
@@ -113,6 +122,8 @@ struct pkt_hdr_pcap_en10t_v6 {
 union pkt_hdr_pcap {
     struct pkt_hdr_pcap_null null;
     struct pkt_hdr_pcap_null_v6 null_v6;
+    struct pkt_hdr_pcap_raw raw;
+    struct pkt_hdr_pcap_raw_v6 raw_v6;
     struct pkt_hdr_pcap_en10t en10t;
     struct pkt_hdr_pcap_en10t_v6 en10t_v6;
 };

@@ -9,7 +9,7 @@ OFMTS_mono="wav raw w64"
 OFMTS_stereo="wav w64"
 
 ofiles=""
-extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729 call1_gsm \
+extractaudio_RFILES="call2_ulaw call1_alaw call1_ulaw call1_g722 call1_g729 call1_gsm \
  call1_g722_srtp"
 
 for tkind in ${TKINDS}
