@@ -47,12 +47,15 @@
 #include "rtpp_ssrc.h"
 #include "rtp_info.h"
 #include "rtpp_record_private.h"
+#include "session.h"
+#include "rtp_analyze.h"
 #include "rtpp_loader.h"
 #include "rtpp_time.h"
 #include "rtpp_util.h"
 #if ENABLE_SRTP || ENABLE_SRTP2
 #include "eaud_crypto.h"
 #endif
+#include "eaud_pcap.h"
 
 static int load_adhoc(struct rtpp_loader *loader, struct channels *,
   struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
@@ -179,7 +182,7 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
             abort();
         }
 
-        sess = session_lookup(channels, pack->rpkt->ssrc);
+        sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
         if (sess == NULL) {
             channel = channel_alloc(origin);
             sess = &(channel->session);
@@ -200,11 +203,11 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
             if (pp->parsed.ts < pack->parsed.ts ||
               pp->parsed.seq < pack->parsed.seq) {
                 MYQ_INSERT_AFTER(sess, pp, pack);
-                pcount++;
-                goto endloop;
+                goto reg_pack;
             }
         }
         MYQ_INSERT_HEAD(sess, pack);
+reg_pack:
         pcount++;
 endloop:
         continue;
@@ -222,91 +225,72 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
   struct eaud_crypto *crypto)
 {
     int pcount;
-    unsigned char *cp;
+    unsigned char *cp, *ep;
     struct packet *pack, *pp;
     struct channel *channel;
     struct session *sess;
-    union pkt_hdr_pcap pcap, *pcp;
-    int rtp_len, rtp_pkt_len;
+    int rtp_pkt_len, rval;
     off_t st_size;
-    int pcap_size, network;
-    pcaprec_hdr_t *pcaprec_hdr;
-    struct udpip *udpip;
+    int network;
+    struct pcap_dissect pd;
 
     st_size = loader->sb.st_size;
     network = loader->private.pcap_data.pcap_hdr->network;
+    ep = loader->ibuf + st_size;
 
     pcount = 0;
-    for (cp = loader->ibuf; cp < loader->ibuf + st_size; cp += rtp_len) {
-        pcp = (union pkt_hdr_pcap *)cp;
-        if (network == DLT_NULL) {
-            if (pcp->null.family != AF_INET) {
-                rtp_len = sizeof(pcaprec_hdr_t) + pcp->null.pcaprec_hdr.incl_len;
+    for (cp = loader->ibuf; cp < ep; cp += PCAP_REC_LEN(&pd)) {
+        rval = eaud_pcap_dissect(cp, ep - cp, network, &pd);
+        if (rval < 0) {
+            if (rval == PCP_DSCT_UNKN)
                 continue;
-            }
-            pcap_size = sizeof(struct pkt_hdr_pcap_null);
-            memcpy(&pcap, cp, pcap_size);
-            pcaprec_hdr = &(pcap.null.pcaprec_hdr);
-            udpip = &(pcap.null.udpip);
-        } else {
-            if (pcp->en10t.ether.type != ETHERTYPE_INET) {
-                rtp_len = sizeof(pcaprec_hdr_t) + pcp->en10t.pcaprec_hdr.incl_len;
-                continue;
-            }
-            pcap_size = sizeof(struct pkt_hdr_pcap_en10t);
-            memcpy(&pcap, cp, pcap_size);
-            pcaprec_hdr = &(pcap.en10t.pcaprec_hdr);
-            udpip = &(pcap.en10t.udpip);
-        }
-        rtp_len = pcaprec_hdr->incl_len - (pcap_size - sizeof(*pcaprec_hdr));
-        if (rtp_len < 0) {
             warnx("broken or truncated PCAP file");
             return -1;
         }
-        cp += pcap_size;
-        if (rtp_len < sizeof(rtp_hdr_t))
+        if (pd.l5_len < sizeof(rtp_hdr_t))
             continue;
 
 #if ENABLE_SRTP || ENABLE_SRTP2
         if (crypto != NULL) {
-            rtp_pkt_len = eaud_crypto_decrypt(crypto, cp, rtp_len);
+            rtp_pkt_len = eaud_crypto_decrypt(crypto, pd.l5_data, pd.l5_len);
             if (rtp_pkt_len <= 0) {
                 warnx("decryption failed");
                 continue;
             }
-            assert(rtp_pkt_len <= rtp_len);
+            assert(rtp_pkt_len <= pd.l5_len);
         } else {
-            rtp_pkt_len = rtp_len;
+            rtp_pkt_len = pd.l5_len;
         }
 #else
-        rtp_pkt_len = rtp_len;
+        rtp_pkt_len = pd.l5_len;
 #endif
 
         pack = malloc(sizeof(*pack) + sizeof(*pack->pkt));
-        if (rtp_packet_parse_raw(cp, rtp_pkt_len, &(pack->parsed)) != RTP_PARSER_OK) {
+        if (rtp_packet_parse_raw(pd.l5_data, rtp_pkt_len, &(pack->parsed)) != RTP_PARSER_OK) {
             /* XXX error handling */
             free(pack);
             continue;
         }
         pack->pkt = (struct pkt_hdr_adhoc *)&pack[1];
-        pack->rpkt = (rtp_hdr_t *)cp;
-        pack->pkt->time = ts2dtime(pcaprec_hdr->ts_sec, pcaprec_hdr->ts_usec);
+        pack->rpkt = (rtp_hdr_t *)pd.l5_data;
+        pack->pkt->time = ts2dtime(pd.pcaprec_hdr.ts_sec, pd.pcaprec_hdr.ts_usec);
         pack->pkt->plen = rtp_pkt_len;
-        if (origin == O_CH) {
-            pack->pkt->addr.in4.sin_family = AF_INET;
-            pack->pkt->addr.in4.sin_port = ntohs(udpip->udphdr.uh_dport);
-            pack->pkt->addr.in4.sin_addr = udpip->iphdr.ip_dst;
+        pack->pkt->addr.in4.sin_family = AF_INET;
+        if (origin == B_CH) {
+            pack->pkt->addr.in4.sin_port = pd.dport;
+            memcpy(&pack->pkt->addr.in4.sin_addr, pd.dst,
+              sizeof(pack->pkt->addr.in4.sin_addr));
         } else {
-            pack->pkt->addr.in4.sin_family = AF_INET;
-            pack->pkt->addr.in4.sin_port = ntohs(udpip->udphdr.uh_sport);
-            pack->pkt->addr.in4.sin_addr = udpip->iphdr.ip_src;
+            pack->pkt->addr.in4.sin_port = pd.sport;
+            memcpy(&pack->pkt->addr.in4.sin_addr, pd.src,
+              sizeof(pack->pkt->addr.in4.sin_addr));
         }
         if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pack->pkt->time) == UPDATE_ERR) {
             /* XXX error handling */
             abort();
         }
 
-        sess = session_lookup(channels, pack->rpkt->ssrc);
+        sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
         if (sess == NULL) {
             channel = channel_alloc(origin);
             sess = &(channel->session);
@@ -327,11 +311,11 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
             if (pp->parsed.ts < pack->parsed.ts ||
               pp->parsed.seq < pack->parsed.seq) {
                 MYQ_INSERT_AFTER(sess, pp, pack);
-                pcount++;
-                goto endloop;
+                goto reg_pack;
             }
         }
         MYQ_INSERT_HEAD(sess, pack);
+reg_pack:
         pcount++;
 endloop:
         continue;

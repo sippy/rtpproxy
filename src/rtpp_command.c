@@ -172,6 +172,8 @@ rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port,
       &cta));
 }
 
+#define IS_WEIRD_ERRNO(e) ((e) == EINTR || (e) == EAGAIN || (e) == ENOBUFS)
+
 void
 rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
 {
@@ -187,7 +189,9 @@ rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
           len, buf);
     }
     if (pvt->umode == 0) {
-	write(pvt->controlfd, buf, len);
+        if (write(pvt->controlfd, buf, len) < 0 && IS_WEIRD_ERRNO(errno)) {
+            abort();
+        }
     } else {
         if (pvt->cookie != NULL) {
             len = snprintf(pvt->buf_r, sizeof(pvt->buf_r), "%s %.*s", pvt->cookie,

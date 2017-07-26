@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2017 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,46 +23,51 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id$
- *
  */
 
-#ifndef _RTP_LOADER_H_
-#define _RTP_LOADER_H_
+#include <stdlib.h>
+#include <stdint.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "rtp_info.h"
+#include "session.h"
 
-struct rtpp_loader;
-struct streams;
-struct channels;
-struct rtpp_session_stat;
-struct eaud_crypto;
+struct cnode *
+eaud_ss_find(struct channels *ssp, struct channel *cp)
+{
+    struct cnode *cnp;
 
-enum origin;
+    MYQ_FOREACH(cnp, ssp) {
+        if (cnp->cp == cp) {
+            return (cnp);
+        }
+    }
+    return (NULL);
+}
 
-#if !defined(pcap_hdr_t_DEFINED)
-typedef struct pcap_hdr_s pcap_hdr_t;
-#define pcap_hdr_t_DEFINED 1
-#endif
+int
+eaud_ss_syncactive(struct channels *all_ssp, struct channels *act_ssp,
+  int64_t csample, int64_t *nsample)
+{
+    struct cnode *cnp;
+    int64_t min_nsample;
+    int nadded;
 
-struct rtpp_loader {
-    int ifd;
-    struct stat sb;
-    unsigned char *ibuf;
-    int (*scan)(struct rtpp_loader *, struct streams *);
-    int (*load)(struct rtpp_loader *, struct channels *,
-      struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
-    void (*destroy)(struct rtpp_loader *);
-
-    union {
-        struct {
-            pcap_hdr_t *pcap_hdr;
-        } pcap_data;
-        struct {} adhoc_data;
-    } private;
-};
-
-struct rtpp_loader *rtpp_load(const char *);
-
-#endif
+    min_nsample = -1;
+    nadded = 0;
+    MYQ_FOREACH(cnp, all_ssp) {
+        if (cnp->cp->skip > csample) {
+            if (min_nsample < 0) {
+                min_nsample = cnp->cp->skip;
+            } else if (min_nsample > cnp->cp->skip) {
+                min_nsample = cnp->cp->skip;
+            }
+            continue;
+        }
+        if (eaud_ss_find(act_ssp, cnp->cp) == NULL) {
+            channel_insert(act_ssp, cnp->cp);
+            nadded += 1;
+        }
+    }
+    *nsample = min_nsample;
+    return (nadded);
+}
