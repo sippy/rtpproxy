@@ -30,7 +30,6 @@
 #include <netinet/in.h>
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <poll.h>
 #include <pthread.h>
 #include <stddef.h>
@@ -153,7 +152,6 @@ accept_connection(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, struct sockaddr *
 {
     int controlfd;
     socklen_t rlen;
-    int flags;
 
     rlen = rtpp_csock_addrlen(rcsp);
     assert(rlen > 0);
@@ -165,21 +163,7 @@ accept_connection(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, struct sockaddr *
         }
         return (-1);
     }
-    flags = fcntl(controlfd, F_GETFL);
-    if (flags < 0) {
-        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR,
-           "fcntl(F_GETFL) failed on control socket");
-        goto closeonerr;
-    }
-    if (fcntl(controlfd, F_SETFL, flags & ~O_NONBLOCK) < 0) {
-        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR,
-           "fcntl(F_SETFL) failed on control socket");
-        goto closeonerr;
-    }
     return (controlfd);
-closeonerr:
-    close(controlfd);
-    return (-1);
 }
 
 static int
