@@ -189,8 +189,8 @@ rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
           len, buf);
     }
     if (pvt->umode == 0) {
-        if (write(pvt->controlfd, buf, len) < 0 && IS_WEIRD_ERRNO(errno)) {
-            abort();
+        if (write(pvt->controlfd, buf, len) < 0) {
+            RTPP_DBG_ASSERT(!IS_WEIRD_ERRNO(errno));
         }
     } else {
         if (pvt->cookie != NULL) {
