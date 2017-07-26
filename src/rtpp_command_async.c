@@ -152,7 +152,6 @@ accept_connection(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, struct sockaddr *
 {
     int controlfd;
     socklen_t rlen;
-    struct linger so_linger;
 
     rlen = rtpp_csock_addrlen(rcsp);
     assert(rlen > 0);
@@ -162,15 +161,6 @@ accept_connection(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, struct sockaddr *
             RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR,
               "can't accept connection on control socket");
         }
-        return (-1);
-    }
-    so_linger.l_onoff = 1;
-    so_linger.l_linger = 1;
-    if (setsockopt(controlfd, SOL_SOCKET, SO_LINGER, &so_linger,
-      sizeof(so_linger)) < 0) {
-        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR,
-          "setsockopt(SO_LINGER) failed");
-        close(controlfd);
         return (-1);
     }
     return (controlfd);
