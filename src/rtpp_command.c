@@ -260,7 +260,7 @@ rtpp_command_ctor(struct cfg *cf, int controlfd, double dtime, int *rval,
 
     pvt = rtpp_zmalloc(sizeof(struct rtpp_command_priv));
     if (pvt == NULL) {
-        *rval = ENOMEM;
+        *rval = GET_CMD_ENOMEM;
         return (NULL);
     }
     cmd = &(pvt->pub);
@@ -292,6 +292,10 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     if (umode == 0) {
         for (;;) {
             len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
+            if (len == 0) {
+                *rval = GET_CMD_EOF;
+                return (NULL);
+            }
             if (len != -1 || (errno != EAGAIN && errno != EINTR))
                 break;
         }
@@ -304,7 +308,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
         if (errno != EAGAIN && errno != EINTR)
             RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't read from control socket");
         free_command(cmd);
-        *rval = -1;
+        *rval = GET_CMD_IOERR;
         return (NULL);
     }
     cmd->buf[len] = '\0';
@@ -329,7 +333,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     if (cmd->argc < 1 || (umode != 0 && cmd->argc < 2)) {
         RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
         reply_error(cmd, ECODE_PARSE_1);
-        *rval = 0;
+        *rval = GET_CMD_OK;
         free_command(cmd);
         return (NULL);
     }
@@ -343,7 +347,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
               sstosa(&cmd->raddr), cmd->rlen);
             csp->ncmds_rcvd.cnt--;
             csp->ncmds_rcvd_ndups.cnt++;
-            *rval = 0;
+            *rval = GET_CMD_OK;
             free_command(cmd);
             return (NULL);
         }
@@ -358,7 +362,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     /* Step I: parse parameters that are common to all ops */
     if (rtpp_command_pre_parse(cf, cmd) != 0) {
         /* Error reply is handled by the rtpp_command_pre_parse() */
-        *rval = 0;
+        *rval = GET_CMD_OK;
         free_command(cmd);
         return (NULL);
     }

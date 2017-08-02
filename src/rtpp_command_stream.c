@@ -99,14 +99,14 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     struct rtpp_command *cmd;
 
     if (rcs->inbuf_epos == rcs->inbuf_ppos) {
-        *rval = EAGAIN;
+        *rval = GET_CMD_EAGAIN;
         return (NULL);
     }
     cp = &(rcs->inbuf[rcs->inbuf_ppos]);
     len = rcs->inbuf_epos - rcs->inbuf_ppos;
     cp1 = memchr(cp, '\n', len);
     if (cp1 == NULL) {
-        *rval = EAGAIN;
+        *rval = GET_CMD_EAGAIN;
         return (NULL);
     }
 
@@ -140,7 +140,7 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     if (cmd->argc < 1) {
         RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
         reply_error(cmd, ECODE_PARSE_1);
-        *rval = EINVAL;
+        *rval = GET_CMD_INVAL;
         free_command(cmd);
         return (NULL);
     }
@@ -148,7 +148,7 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     /* Step I: parse parameters that are common to all ops */
     if (rtpp_command_pre_parse(cf, cmd) != 0) {
         /* Error reply is handled by the rtpp_command_pre_parse() */
-        *rval = 0;
+        *rval = GET_CMD_OK;
         free_command(cmd);
         return (NULL);
     }

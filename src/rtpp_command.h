@@ -37,6 +37,13 @@ struct sockaddr;
 struct rtpp_cmd_rcache;
 struct rtpp_socket;
 
+#define GET_CMD_OK     (0)
+#define GET_CMD_IOERR  (-1)
+#define GET_CMD_EOF    (-2)
+#define GET_CMD_ENOMEM (-3)
+#define GET_CMD_EAGAIN (-4)
+#define GET_CMD_INVAL (-5)
+
 int handle_command(struct cfg *, struct rtpp_command *);
 void free_command(struct rtpp_command *);
 struct rtpp_command *get_command(struct cfg *, int, int *, double,

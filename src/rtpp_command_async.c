@@ -179,15 +179,20 @@ process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, do
     i = 0;
     do {
         cmd = get_command(cf, controlfd, &rval, dtime, csp, umode, rcp);
-        if (cmd == NULL && rval == 0) {
-            /*
-             * get_command() failed with error other than I/O error
-             * or something, there might be some good commands in
-             * the queue.
-             */
-            continue;
-        }
-        if (cmd != NULL) {
+        if (cmd == NULL) {
+            if (rval == GET_CMD_OK) {
+                /*
+                 * get_command() failed with error other than I/O error
+                 * or something, there might be some good commands in
+                 * the queue.
+                 */
+                continue;
+            }
+            if (rval == GET_CMD_EOF) {
+                break;
+            }
+            i = -1;
+        } else {
             cmd->laddr = sstosa(&csock->bindaddr);
             if (cmd->cca.op == GET_STATS || cmd->cca.op == INFO) {
                 flush_cstats(rsc, csp);
@@ -200,8 +205,6 @@ process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, do
                 pthread_mutex_unlock(&cf->glock);
             }
             free_command(cmd);
-        } else {
-            i = -1;
         }
     } while (i == 0 && umode != 0);
     return (i);
@@ -221,8 +224,11 @@ process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
     do {
         cmd = rtpp_command_stream_get(cf, rcc, &rval, dtime, csp);
         if (cmd == NULL) {
-            if (rval != 0) {
-                break;
+            if (rval == GET_CMD_EAGAIN) {
+                return (0);
+            }
+            if (rval != GET_CMD_OK) {
+                return (-1);
             }
             continue;
         }
