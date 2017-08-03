@@ -293,6 +293,9 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
         for (;;) {
             len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
             if (len == 0) {
+                RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG,
+                  "EOF before receiving any command data");
+                free_command(cmd);
                 *rval = GET_CMD_EOF;
                 return (NULL);
             }
