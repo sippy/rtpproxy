@@ -155,7 +155,7 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
   struct eaud_crypto *crypto)
 {
     int pcount;
-    unsigned char *cp;
+    unsigned char *cp, *ep;
     struct pkt_hdr_adhoc *pkt;
     struct packet *pack, *pp;
     struct channel *channel;
@@ -164,11 +164,17 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
 
     pcount = 0;
     st_size = loader->sb.st_size;
-    for (cp = loader->ibuf; cp < loader->ibuf + st_size; cp += pkt->plen) {
+    ep = loader->ibuf + st_size;
+    for (cp = loader->ibuf; cp < ep; cp += pkt->plen) {
         pkt = (struct pkt_hdr_adhoc *)cp;
         cp += sizeof(*pkt);
         if (pkt->plen < sizeof(rtp_hdr_t))
             continue;
+        if (cp + pkt->plen > ep) {
+            warnx("input file truncated, %ld bytes are missing",
+              cp + pkt->plen - ep);
+            continue;
+        }
         pack = malloc(sizeof(*pack));
         if (rtp_packet_parse_raw(cp, pkt->plen, &(pack->parsed)) != RTP_PARSER_OK) {
             /* XXX error handling */
@@ -180,6 +186,11 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
         if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pkt->time) == UPDATE_ERR) {
             /* XXX error handling */
             abort();
+        }
+        if (pack->parsed.nsamples <= 0) {
+            warnx("pack->parsed.nsamples = %d", pack->parsed.nsamples);
+            free(pack);
+            continue;
         }
 
         sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
@@ -212,7 +223,7 @@ reg_pack:
 endloop:
         continue;
     }
-    if (cp != loader->ibuf + st_size) {
+    if (cp != ep) {
         warnx("invalid format, %d packets loaded", pcount);
         return -1;
     }
@@ -288,6 +299,11 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
         if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pack->pkt->time) == UPDATE_ERR) {
             /* XXX error handling */
             abort();
+        }
+        if (pack->parsed.nsamples <= 0) {
+            warnx("pack->parsed.nsamples = %d", pack->parsed.nsamples);
+            free(pack);
+            continue;
         }
 
         sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
