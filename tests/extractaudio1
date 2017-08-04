@@ -36,14 +36,15 @@ do
         then
           rm "${wfile}"
         fi
-        if [ -e "${rfile}.args" ]
+        afile="extractaudio/${rfile}.args"
+        if [ -e "${afile}" ]
         then
-          EXTRACTAUDIO_EARGS=`cat "${rfile}.args"`
+          EXTRACTAUDIO_EARGS=`cat "${afile}"`
         else
           EXTRACTAUDIO_EARGS=""
         fi
         ${EXTRACTAUDIO} -F ${ofmt} -D ${dfmt} ${EXTRACTAUDIO_ARGS} \
-         ${EXTRACTAUDIO_EARGS} ${rfile} ${wfile} 2>/dev/null >/dev/null || continue
+         ${EXTRACTAUDIO_EARGS} extractaudio/${rfile} ${wfile} 2>/dev/null >/dev/null || continue
         test -s ${wfile}
         report "${rfile} -> ${wfile}"
         sha256_verify ${wfile} extractaudio/extractaudio.checksums
