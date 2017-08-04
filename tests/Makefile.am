@@ -10,7 +10,7 @@ command_parser_CLEANFILES = command_parser.rout 238uwedguw.rtcp 238uwedguw.rtp \
 extractaudio_EXTRA_DIST = extractaudio extractaudio1
 extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
   *.stereo.*.wav.tout *.mono.*.raw *.mono.*.raw.tout *.mono.*.w64 \
-  *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout \
+  *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout
 playback1_EXTRA_DIST = playback1 playback1.output playback1.checksums \
   playback1.type1.input playback1.type2.input
 playback1_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
