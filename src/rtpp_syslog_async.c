@@ -32,6 +32,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_debug.h"
+#include "rtpp_syslog_async.h"
+
 #define SYSLOG_WI_POOL_SIZE     64
 #define SYSLOG_WI_DATA_LEN      2048
 
@@ -214,25 +217,46 @@ syslog_async_init(const char *app, int facility)
 }
 
 void
-vsyslog_async(int priority, const char *format, va_list ap)
+vsyslog_async(int priority, const char *pre, const char *post,
+  const char *user_fmt, va_list ap)
 {
     struct syslog_wi *wi;
     char *p;
-    int s1, s2;
+    int s1, s2, s3, l, m;
 
     wi = syslog_queue_get_free_item(SYSLOG_WI_NOWAIT);
     if (wi == NULL)
         return;
 
-    p = wi->data;
-    s1 = sizeof(wi->data);
-    s2 = vsnprintf(p, s1, format, ap);
-    if (s2 >= s1) {
+    m = l = sizeof(wi->data);
+    s1 = strlcpy(wi->data, pre, l);
+    if (s1 >= l) {
+        s1 = l - 1;
+    }
+    p = wi->data + s1;
+    l -= s1;
+    if (l <= 1)
+        goto truncate;
+    s2 = vsnprintf(p, l, user_fmt, ap);
+    if (s2 >= l) {
         /* message was truncated */
-        s2 = s1 - 1;
+        s2 = l - 1;
         p[s2] = '\0';
     }
-    wi->len = s2;
+    p += s2;
+    l -= s2;
+    if (l <= 1 || post == NULL)
+        goto truncate;
+    s3 = strlcpy(p, post, l);
+    if (s3 >= l) {
+        /* message was truncated */
+        s3 = l - 1;
+    }
+    l -= s3;
+truncate:
+    RTPP_DBG_ASSERT(l >= 0 && l <= m);
+    wi->len = m - l;
+    RTPP_DBG_ASSERT(wi->data[wi->len] == '\0' && strlen(wi->data) == wi->len);
     wi->priority = priority;
     wi->item_type = SYSLOG_ITEM_ASYNC_WRITE;
     syslog_queue_put_item(wi);
