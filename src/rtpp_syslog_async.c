@@ -32,6 +32,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
+
+#ifndef HAVE_STRLCPY
+#include "rtpp_util.h"
+#endif
+
 #include "rtpp_debug.h"
 #include "rtpp_syslog_async.h"
 
