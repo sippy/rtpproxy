@@ -31,6 +31,6 @@
 #include <stdarg.h>
 
 int syslog_async_init(const char *, int);
-void vsyslog_async(int, const char *, va_list);
+void vsyslog_async(int, const char *, const char *, const char *, va_list);
 
 #endif
