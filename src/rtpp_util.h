@@ -29,6 +29,10 @@
 #ifndef _RTPP_UTIL_H_
 #define _RTPP_UTIL_H_
 
+#if !defined(PACKAGE_VERSION)
+# error "config.h" needs to be included
+#endif
+
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
 
 struct cfg;
@@ -42,6 +46,10 @@ int rtpp_daemon(int, int);
 int url_unquote(unsigned char *, int);
 int rtpp_get_sched_hz(void);
 long long rtpp_rlim_max(struct cfg *cf);
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char *, const char *, size_t);
+#endif
+
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)

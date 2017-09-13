@@ -38,8 +38,16 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "rtpp_network.h"
+#include "config_pp.h"
+
+#if !defined(NO_ERR_H)
+#include <err.h>
 #include "rtpp_util.h"
+#else
+#include "rtpp_util.h"
+#endif
+
+#include "rtpp_network.h"
 
 int
 ishostseq(const struct sockaddr *ia1, const struct sockaddr *ia2)

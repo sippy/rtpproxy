@@ -138,7 +138,7 @@ AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
-AC_CHECK_FUNCS([atexit gettimeofday memset mkdir socket strchr strdup strerror])
+AC_CHECK_FUNCS([atexit gettimeofday memset mkdir socket strchr strdup strerror strlcpy])
 if test "x$GCC" = "xyes"; then
   ## We like to use C99 routines when available.  This makes sure that
   ## __STDC_VERSION__ is set such that libc includes make them available.
