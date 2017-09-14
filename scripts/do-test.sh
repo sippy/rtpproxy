@@ -20,7 +20,7 @@ make clean
 #sudo pip install -r requirements.txt
 #sudo DEBIAN_FRONTEND=noninteractive apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
- install -y libgsm1-dev libsndfile1-dev tcpdump curl wireshark-common
+ install -y libgsm1-dev libsndfile1-dev tcpdump curl wireshark-common gdb
 tcpdump --version || true
 mkdir deps
 cd deps
