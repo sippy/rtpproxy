@@ -189,6 +189,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* Git hash */
+#undef VERSION_GIT
+
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 
