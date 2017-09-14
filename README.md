@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/sippy/rtpproxy.svg?branch=master)](https://travis-ci.org/sippy/rtpproxy)
+[![Build Status](https://travis-ci.org/sippy/rtpproxy.svg?branch=rtpp_2_1)](https://travis-ci.org/sippy/rtpproxy)
 
 ## About
 
