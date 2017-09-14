@@ -66,6 +66,9 @@ CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
 #undef vasprintf
 #define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), \
   CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), __FILE__, __LINE__, __func__, (vl))
+#undef memcpy
+#define memcpy(dp, sp, len) rtpp_memdeb_memcpy((dp), (sp), (len), \
+  CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), __FILE__, __LINE__, __func__)
 
 void *rtpp_memdeb_malloc(size_t, void *, const char *, int, const char *);
 void rtpp_memdeb_free(void *, void *, const char *, int, const char *);
@@ -73,6 +76,8 @@ void *rtpp_memdeb_realloc(void *, size_t, void *, const char *, int, const char 
 char *rtpp_memdeb_strdup(const char *, void *, const char *, int, const char *);
 int rtpp_memdeb_asprintf(char **, const char *, void *, const char *, int, \
   const char *, ...);
+void *rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *, \
+  const char *, int, const char *);
 
 #include <stdarg.h>
 
