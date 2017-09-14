@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.58)
-AC_INIT(rtpproxy, 2.2.alpha.20160822, sobomax@sippysoft.com)
+AC_INIT(rtpproxy, 2.2.alpha, sobomax@sippysoft.com)
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([src/main.c])
 AM_INIT_AUTOMAKE
@@ -19,6 +19,10 @@ AC_PROG_CPP
 AC_PROG_MKDIR_P
 AM_PROG_CC_C_O
 LT_INIT
+
+mydef_version=`git describe --always --dirty || date "+%Y%m%d%H%M%S"`
+AC_DEFINE([VERSION_GIT], [], [Git hash])
+AC_DEFINE_UNQUOTED([VERSION_GIT],["$mydef_version"])
 
 case "${host_os}" in
 freebsd*)

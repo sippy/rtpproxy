@@ -7,7 +7,7 @@
 #include "rtpp_version.h"
 #else
 #include "config.h"
-#define RTPP_SW_VERSION PACKAGE_VERSION
+#define RTPP_SW_VERSION (PACKAGE_VERSION "." VERSION_GIT)
 #endif
 
 #if defined(HAVE_ERR_H)
