@@ -204,7 +204,7 @@ do
       for i in 1 2 3 4
       do
         eval "RTPP_PID=\${RTPP${i}_PID} RTPP_LOG=\${RTPP${i}_LOG}"
-        TMP_PIDFILE=${RTPP_PID} TMP_LOGFILE="" rtpproxy_stop HUP
+        TMP_PIDFILE=${RTPP_PID} TMP_LOGFILE="${RTPP_LOG}" rtpproxy_stop HUP
         eval RTPP${i}_STOP_RC=${?}
       done
       report_rc ${RTPP1_STOP_RC} "wait for rtpproxy #1 shutdown"
