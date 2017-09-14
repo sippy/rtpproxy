@@ -71,12 +71,16 @@
 
 #define MEMDEB_GUARD_SIZE 8
 
-struct memdeb_node
-{
-    uint64_t magic;
+struct memdeb_loc {
     const char *fname;
     int linen;
     const char *funcn;
+};
+
+struct memdeb_node
+{
+    uint64_t magic;
+    struct memdeb_loc loc;
     struct memdeb_stats mstats;
     struct memdeb_node *next;
 };
@@ -173,9 +177,15 @@ rtpp_memdeb_approve(void *p, const char *funcn, int max_nunalloc,
     }
 }
 
+#define RTPP_MEMDEB_REPORT_LOC(handle, mlp, format, args...) { \
+        RTPP_MEMDEB_REPORT(handle, format, ## args); \
+        RTPP_MEMDEB_REPORT(handle, "    called from %s+%d, %s()", \
+          (mlp)->fname, (mlp)->linen, (mlp)->funcn); \
+    }
+
 static struct memdeb_node *
-rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const char *fname, int linen,
-  const char *funcn, int doalloc)
+rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, struct memdeb_loc *mlp,
+  int doalloc)
 {
     struct memdeb_node *rval, *mnp, *lastnode;
 
@@ -184,10 +194,11 @@ rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const char *fname, int linen,
     for (mnp = pvt->nodes; mnp != NULL; mnp = mnp->next) {
         if (mnp->magic != MEMDEB_SIGNATURE) {
             /* nodelist is corrupt */
-            RTPP_MEMDEB_REPORT(pvt->_md_glog, "Nodelist %p is corrupt", mnp);
+            RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, mlp, "Nodelist %p is corrupt", mnp);
             abort();
         }
-        if (mnp->fname == fname && mnp->linen == linen && mnp->funcn == funcn)
+        if (mnp->loc.fname == mlp->fname && mnp->loc.linen == mlp->linen && \
+          mnp->loc.funcn == mlp->funcn)
             return (mnp);
         lastnode = mnp;
     }
@@ -197,14 +208,12 @@ rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const char *fname, int linen,
     }
     rval = malloc(sizeof(struct memdeb_node));
     if (rval == NULL) {
-        RTPP_MEMDEB_REPORT(pvt->_md_glog, "Allocation for the new nodelist failed");
+        RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, mlp, "Allocation for the new nodelist failed");
         abort();
     }
     memset(rval, '\0', sizeof(struct memdeb_node));
     rval->magic = MEMDEB_SIGNATURE;
-    rval->fname = fname;
-    rval->linen = linen;
-    rval->funcn = funcn;
+    rval->loc = *mlp;
     if (pvt->nodes == NULL) {
         pvt->nodes = rval;
     } else {
@@ -213,13 +222,11 @@ rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const char *fname, int linen,
     return (rval);
 }
 
-#define CHK_PRIV_VRB(pvt, p, fname, linen, funcn) { \
+#define CHK_PRIV_VRB(pvt, p, mlp) { \
         (pvt) = (struct rtpp_memdeb_priv *)(p); \
         if (pvt->magic != MEMDEB_SIGNATURE_PRIV(pvt)) { \
-            RTPP_MEMDEB_REPORT(NULL, "%s(): bogus private pointer: %p", \
+            RTPP_MEMDEB_REPORT_LOC(NULL, mlp, "%s(): bogus private pointer: %p", \
               __func__, pvt); \
-            RTPP_MEMDEB_REPORT(NULL, "    called from %s+%d, %s()", \
-              fname, linen, funcn); \
             abort(); \
         } \
     }
@@ -232,10 +239,15 @@ rtpp_memdeb_malloc(size_t size, void *p, const char *fname, int linen, const cha
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
+    struct memdeb_loc ml;
 
-    CHK_PRIV_VRB(pvt, p, fname, linen, funcn);
+    ml.fname = fname;
+    ml.linen = linen;
+    ml.funcn = funcn;
+
+    CHK_PRIV_VRB(pvt, p, &ml);
     mpf = malloc(offsetof(struct memdeb_pfx, real_data) + size + MEMDEB_GUARD_SIZE);
-    mnp = rtpp_memdeb_nget(pvt, fname, linen, funcn, 1);
+    mnp = rtpp_memdeb_nget(pvt, &ml, 1);
     if (mpf == NULL) {
         mnp->mstats.afails++;
         pthread_mutex_unlock(&pvt->mutex);
@@ -254,7 +266,7 @@ rtpp_memdeb_malloc(size_t size, void *p, const char *fname, int linen, const cha
 }
 
 static struct memdeb_pfx *
-ptr2mpf(struct rtpp_memdeb_priv *pvt, void *ptr)
+ptr2mpf(struct rtpp_memdeb_priv *pvt, void *ptr, struct memdeb_loc *mlp)
 {
     char *cp;
     struct memdeb_pfx *mpf;
@@ -264,13 +276,13 @@ ptr2mpf(struct rtpp_memdeb_priv *pvt, void *ptr)
     mpf = (struct memdeb_pfx *)cp;
 
     if (mpf->magic != MEMDEB_SIGNATURE_ALLOC(mpf)) {
-        /* Random of de-allocated pointer */
-        RTPP_MEMDEB_REPORT(pvt->_md_glog, "Random of de-allocated pointer");
+        /* Random or de-allocated pointer */
+        RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, mlp, "Random or de-allocated pointer");
         abort();
     }
     if (mpf->mnp->magic != MEMDEB_SIGNATURE) {
         /* Free of unallocated pointer or nodelist is corrupt */
-        RTPP_MEMDEB_REPORT(pvt->_md_glog, "Nodelist %p is corrupt", mpf->mnp);
+        RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, mlp, "Nodelist %p is corrupt", mpf->mnp);
         abort();
     }
     return (mpf);
@@ -286,14 +298,19 @@ rtpp_memdeb_free(void *ptr, void *p, const char *fname, int linen, const char *f
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
+    struct memdeb_loc ml;
 
-    CHK_PRIV_VRB(pvt, p, fname, linen, funcn);
-    mpf = ptr2mpf(pvt, ptr);
+    ml.fname = fname;
+    ml.linen = linen;
+    ml.funcn = funcn;
+
+    CHK_PRIV_VRB(pvt, p, &ml);
+    mpf = ptr2mpf(pvt, ptr, &ml);
     gp = (unsigned char *)mpf->real_data + mpf->asize;
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
     if (memcmp(gp, &guard, MEMDEB_GUARD_SIZE) != 0) {
         /* Guard is b0rken, probably out-of-bound write */
-        RTPP_MEMDEB_REPORT(pvt->_md_glog, "Guard is b0rken, probably out-of-bound write");
+        RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, &ml, "Guard is b0rken, probably out-of-bound write");
         abort();
     }
     pthread_mutex_lock(&pvt->mutex);
@@ -317,12 +334,17 @@ rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int line
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
+    struct memdeb_loc ml;
 
-    CHK_PRIV_VRB(pvt, p, fname, linen, funcn);
+    ml.fname = fname;
+    ml.linen = linen;
+    ml.funcn = funcn;
+
+    CHK_PRIV_VRB(pvt, p, &ml);
     if (ptr == NULL) {
         return (rtpp_memdeb_malloc(size, pvt, fname, linen, funcn));
     }
-    mpf = ptr2mpf(pvt, ptr);
+    mpf = ptr2mpf(pvt, ptr, &ml);
     sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
     pthread_mutex_lock(&pvt->mutex);
     mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
@@ -362,11 +384,16 @@ rtpp_memdeb_strdup(const char *ptr, void *p, const char *fname, int linen, \
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
+    struct memdeb_loc ml;
 
-    CHK_PRIV_VRB(pvt, p, fname, linen, funcn);
+    ml.fname = fname;
+    ml.linen = linen;
+    ml.funcn = funcn;
+
+    CHK_PRIV_VRB(pvt, p, &ml);
     size = strlen(ptr) + 1;
     mpf = malloc(size + offsetof(struct memdeb_pfx, real_data) + MEMDEB_GUARD_SIZE);
-    mnp = rtpp_memdeb_nget(pvt, fname, linen, funcn, 1);
+    mnp = rtpp_memdeb_nget(pvt, &ml, 1);
     if (mpf == NULL) {
         mnp->mstats.afails++;
         pthread_mutex_unlock(&pvt->mutex);
@@ -458,7 +485,7 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
                 continue;
         }
         if (nunalloc > 0) {
-            max_nunalloc = is_approved(pvt, mnp->funcn);
+            max_nunalloc = is_approved(pvt, mnp->loc.funcn);
             if (max_nunalloc > 0 && nunalloc <= max_nunalloc)
                 continue;
         }
@@ -470,7 +497,7 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
         RTPP_MEMDEB_REPORT2(log, nostdout,
           "  %s+%d, %s(): nalloc = %" PRId64 ", balloc = %" PRId64 ", nfree = %"
           PRId64 ", bfree = %" PRId64 ", afails = %" PRId64 ", nunalloc_baseln"
-          " = %" PRId64, mnp->fname, mnp->linen, mnp->funcn, mnp->mstats.nalloc,
+          " = %" PRId64, mnp->loc.fname, mnp->loc.linen, mnp->loc.funcn, mnp->mstats.nalloc,
           mnp->mstats.balloc, mnp->mstats.nfree, mnp->mstats.bfree,
           mnp->mstats.afails, mnp->mstats.nunalloc_baseln);
     }
@@ -525,10 +552,10 @@ rtpp_memdeb_get_stats(void *p, const char *fname, const char *funcn,
             RTPP_MEMDEB_REPORT(pvt->_md_glog, "Nodelist %p is corrupt", mnp);
             abort();
         }
-        if (funcn != NULL && strcmp(funcn, mnp->funcn) != 0) {
+        if (funcn != NULL && strcmp(funcn, mnp->loc.funcn) != 0) {
             continue;
         }
-        if (fname != NULL && strcmp(fname, mnp->fname) != 0) {
+        if (fname != NULL && strcmp(fname, mnp->loc.fname) != 0) {
             continue;
         }
         RTPP_MD_STATS_ADD(mstatp, &mnp->mstats);
