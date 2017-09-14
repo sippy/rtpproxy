@@ -457,12 +457,15 @@ rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *p,
   const char *fname, int linen, const char *funcn)
 {
     struct memdeb_loc ml;
+    struct rtpp_memdeb_priv *pvt;
+
+    CHK_PRIV(pvt, p);
 
     if ((dst < src && src < (dst + len)) || (src < dst && dst < (src + len))) {
         ml.fname = fname;
         ml.linen = linen;
         ml.funcn = funcn;
-        RTPP_MEMDEB_REPORT_LOC(NULL, &ml, "memcpy(%p, %p, %ld) overlapping regions, use memmove()",
+        RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, &ml, "memcpy(%p, %p, %ld) overlapping regions, use memmove()",
           dst, src, (long)len);
         abort();
     }
