@@ -443,11 +443,10 @@ closefd:
                     rtpp_cmd_connection_dtor(psp->rccs[i]);
                     psp->pfds_used--;
                     if (psp->pfds_used > 0 && i < psp->pfds_used) {
-                        memmove(&psp->pfds[i], &psp->pfds[i + 1],
+                        memcpy(&psp->pfds[i], &psp->pfds[i + 1],
                           (psp->pfds_used - i) * sizeof(struct pollfd));
-                        memmove(&psp->rccs[i], &psp->rccs[i + 1],
+                        memcpy(&psp->rccs[i], &psp->rccs[i + 1],
                           (psp->pfds_used - i) * sizeof(struct rtpp_ctrl_connection *));
-                        i--;
                     }
                 }
             }
