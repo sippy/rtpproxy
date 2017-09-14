@@ -178,7 +178,7 @@ rtpproxy_stop() {
   then
     if [ -e ${RTPP_RUNDIR}/core ]
     then
-      gdb --command=${BUILDDIR}/gdb.gettrace ${RTPPROXY} ${RTPP_RUNDIR}/core >&2
+      gdb --command=${BUILDDIR}/gdb.gettrace ${RTPPROXY} ${RTPP_RUNDIR}/core >&2 && rm ${RTPP_RUNDIR}/core
     fi
     cat ${TMP_LOGFILE} >&2
     false
