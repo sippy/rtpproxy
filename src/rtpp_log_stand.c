@@ -211,10 +211,10 @@ void
 _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
   const char *format, va_list ap)
 {
-    char rtpp_log_buff[2048];
     char rtpp_time_buff[32];
     const char *call_id;
 #ifdef RTPP_LOG_ADVANCED
+    char rtpp_log_buff[2048];
     va_list apc;
 #endif
 
@@ -261,10 +261,10 @@ void
 _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
   const char *format, va_list ap)
 {
-    char rtpp_log_buff[2048];
     char rtpp_time_buff[32];
     const char *call_id;
 #ifdef RTPP_LOG_ADVANCED
+    char rtpp_log_buff[2048];
     va_list apc;
     char *post;
 #endif

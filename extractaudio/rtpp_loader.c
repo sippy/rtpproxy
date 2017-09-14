@@ -37,6 +37,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "config.h"
+
 #include "rtpp_ssrc.h"
 #include "rtp_info.h"
 #include "rtpp_record_private.h"
