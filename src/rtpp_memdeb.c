@@ -57,6 +57,10 @@
 #undef strdup
 #undef asprintf
 #undef vasprintf
+#undef memcpy
+
+#define _memcpy(dp, sp, len) rtpp_memdeb_memcpy((dp), (sp), (len), \
+  p, __FILE__, __LINE__, __func__)
 
 #define UNUSED(x) (void)(x)
 
@@ -261,7 +265,7 @@ rtpp_memdeb_malloc(size_t size, void *p, const char *fname, int linen, const cha
     mpf->mnp = mnp;
     gp = (unsigned char *)mpf->real_data + size;
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
-    memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
+    _memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
     return (mpf->real_data);
 }
 
@@ -370,7 +374,7 @@ rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int line
     new_mpf->asize = size;
     gp = (unsigned char *)new_mpf->real_data + size;
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
-    memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
+    _memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
     return (new_mpf->real_data);
 }
 
@@ -404,11 +408,11 @@ rtpp_memdeb_strdup(const char *ptr, void *p, const char *fname, int linen, \
     pthread_mutex_unlock(&pvt->mutex);
     mpf->mnp = mnp;
     mpf->asize = size;
-    memcpy(mpf->real_data, ptr, size);
+    _memcpy(mpf->real_data, ptr, size);
     mpf->magic = MEMDEB_SIGNATURE_ALLOC(mpf);
     gp = (unsigned char *)mpf->real_data + size;
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
-    memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
+    _memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
     return ((char *)mpf->real_data);
 }
 
@@ -442,10 +446,27 @@ rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
         *pp = NULL;
         return (-1);
     }
-    memcpy(tp, *pp, rval + 1);
+    _memcpy(tp, *pp, rval + 1);
     free(*pp);
     *pp = tp;
     return (rval);
+}
+
+void *
+rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *p,
+  const char *fname, int linen, const char *funcn)
+{
+    struct memdeb_loc ml;
+
+    if ((dst < src && src < (dst + len)) || (src < dst && dst < (src + len))) {
+        ml.fname = fname;
+        ml.linen = linen;
+        ml.funcn = funcn;
+        RTPP_MEMDEB_REPORT_LOC(NULL, &ml, "memcpy(%p, %p, %ld) overlapping regions, use memmove()",
+          dst, src, (long)len);
+        abort();
+    }
+    return (memcpy(dst, src, len));
 }
 
 static int
