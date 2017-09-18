@@ -138,6 +138,9 @@ setup_fwd() {
   cat session_timeouts.stats.input forwarding1.stats.input
 }
 
+cumnlost=0
+MAX_CUMNLOST=20
+
 verify_results()
 {
   direction="${1}"
@@ -146,9 +149,22 @@ verify_results()
   for codec in ${1} ${2}
   do
     rm -f forwarding1.${codec}.wav
-    ${EXTRACTAUDIO} -n -s forwarding1_${direction}_${i}=from_tag_1 forwarding1.${codec}.wav | grep -v 'delta '
+    ${EXTRACTAUDIO} -n -s forwarding1_${direction}_${i}=from_tag_1 forwarding1.${codec}.wav | \
+      grep -v 'delta ' | tee forwarding1.${codec}.eout
     report "extractaudio forwarding1_${direction}_${i} forwarding1.${codec}.wav"
-    sha256_verify forwarding1.${codec}.wav forwarding1.checksums
+    nlost=`grep plost= forwarding1.${codec}.eout | sed 's|.* plost=||'`
+    if [ ${nlost} -eq 0 ]
+    then
+      sha256_verify forwarding1.${codec}.wav forwarding1.checksums
+    else
+      cumnlost=$((${cumnlost} + ${nlost}))
+      if [ ${cumnlost} -lt ${MAX_CUMNLOST} ]
+      then
+        ok "Some packet loss detected, skipping checksum validation for the forwarding1.${codec}.wav"
+      else
+        fail "Cumulative packet loss is too high ${cumnlost} current, ${MAX_CUMNLOST} max"
+      fi
+    fi
     i=$((${i}+1))
   done
 }
