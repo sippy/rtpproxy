@@ -413,6 +413,7 @@ rtpp_cmd_queue_run(void *arg)
         }
         if (nready > 0) {
             for (i = 0; i < psp->pfds_used; i++) {
+again:
                 if ((psp->pfds[i].revents & (POLLERR | POLLHUP)) != 0) {
                     if (RTPP_CTRL_ACCEPTABLE(psp->rccs[i]->csock)) {
                         goto closefd;
@@ -447,7 +448,7 @@ closefd:
                           (psp->pfds_used - i) * sizeof(struct pollfd));
                         memmove(&psp->rccs[i], &psp->rccs[i + 1],
                           (psp->pfds_used - i) * sizeof(struct rtpp_ctrl_connection *));
-                        i--;
+                        goto again;
                     }
                 }
             }
