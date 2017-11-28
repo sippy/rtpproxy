@@ -129,8 +129,8 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const char *cookie,
         goto e1;
     }
     rep->etime = ctime + pvt->min_ttl;
-    CALL_METHOD(pvt->ht, append_refcnt, cookie, rcnt);
     CALL_SMETHOD(rcnt, attach, rtpp_cmd_rcache_entry_free, rep);
+    CALL_METHOD(pvt->ht, append_refcnt, cookie, rcnt);
     /*
      * append_refcnt() either takes ownership in which case it incs refcount
      * or it drops the ball in which it does not, so we release rco and set
