@@ -139,7 +139,7 @@ setup_fwd() {
 }
 
 cumnlost=0
-MAX_CUMNLOST=3
+MAX_CUMNLOST=4
 
 verify_results()
 {
