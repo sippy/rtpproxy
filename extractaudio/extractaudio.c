@@ -298,8 +298,12 @@ main(int argc, char **argv)
     argc -= optind;
     argv += optind;
 
-    if (aname == NULL && bname == NULL && argc < 2)
+    if (aname == NULL && bname == NULL) {
+        if (argc < 2)
+            usage();
+    } else if (argc == 0) {
         usage();
+    }
 
     if (use_file_fmt == 0) {
         use_file_fmt = dflt_file_fmt;
