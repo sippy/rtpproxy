@@ -495,13 +495,14 @@ _rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
             pvt->latch_info.ssrc.inited = 0;
             ssrc = seq = "INVALID";
         }
+        newlatch = SSRC_IS_BAD(&pvt->latch_info.ssrc) ? 0 : 1;
     } else {
         pvt->latch_info.ssrc.inited = 0;
         ssrc = seq = "UNKNOWN";
+        newlatch = 1;
     }
 
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr), ':');
-    newlatch = SSRC_IS_BAD(&pvt->latch_info.ssrc) ? 0 : 1;
     if (pvt->latch_info.latched == 0) {
         relatch = (newlatch != 0) ? "latched in" : "not latched (bad SSRC)";
     } else {
