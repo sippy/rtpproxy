@@ -110,22 +110,22 @@ static void
 init_cstats(struct rtpp_stats *sobj, struct rtpp_command_stats *csp)
 {
 
-    csp->ncmds_rcvd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_rcvd");
-    csp->ncmds_rcvd_ndups.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_rcvd_ndups");
-    csp->ncmds_succd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_succd");
-    csp->ncmds_errs.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_errs");
-    csp->ncmds_repld.cnt_idx = CALL_METHOD(sobj, getidxbyname, "ncmds_repld");
+    csp->ncmds_rcvd.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "ncmds_rcvd");
+    csp->ncmds_rcvd_ndups.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "ncmds_rcvd_ndups");
+    csp->ncmds_succd.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "ncmds_succd");
+    csp->ncmds_errs.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "ncmds_errs");
+    csp->ncmds_repld.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "ncmds_repld");
 
-    csp->nsess_complete.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nsess_complete");
-    csp->nsess_created.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nsess_created");
+    csp->nsess_complete.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "nsess_complete");
+    csp->nsess_created.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "nsess_created");
 
-    csp->nplrs_created.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nplrs_created");
-    csp->nplrs_destroyed.cnt_idx = CALL_METHOD(sobj, getidxbyname, "nplrs_destroyed");
+    csp->nplrs_created.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "nplrs_created");
+    csp->nplrs_destroyed.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "nplrs_destroyed");
 }
 
 #define FLUSH_CSTAT(sobj, st)    { \
     if ((st).cnt > 0) { \
-        CALL_METHOD(sobj, updatebyidx, (st).cnt_idx, (st).cnt); \
+        CALL_SMETHOD(sobj, updatebyidx, (st).cnt_idx, (st).cnt); \
         (st).cnt = 0; \
     } \
 }

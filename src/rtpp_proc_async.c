@@ -90,7 +90,7 @@ static void rtpp_proc_async_wakeup(struct rtpp_proc_async *, long long, long lon
 
 #define FLUSH_STAT(sobj, st)	{ \
     if ((st).cnt > 0) { \
-        CALL_METHOD(sobj, updatebyidx, (st).cnt_idx, (st).cnt); \
+        CALL_SMETHOD(sobj, updatebyidx, (st).cnt_idx, (st).cnt); \
         (st).cnt = 0; \
     } \
 }
@@ -112,13 +112,13 @@ static void
 init_rstats(struct rtpp_stats *sobj, struct rtpp_proc_rstats *rsp)
 {
 
-    rsp->npkts_rcvd.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_rcvd");
-    rsp->npkts_played.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_played");
-    rsp->npkts_relayed.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_relayed");
-    rsp->npkts_resizer_in.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_resizer_in");
-    rsp->npkts_resizer_out.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_resizer_out");
-    rsp->npkts_resizer_discard.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_resizer_discard");
-    rsp->npkts_discard.cnt_idx = CALL_METHOD(sobj, getidxbyname, "npkts_discard");
+    rsp->npkts_rcvd.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_rcvd");
+    rsp->npkts_played.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_played");
+    rsp->npkts_relayed.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_relayed");
+    rsp->npkts_resizer_in.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_resizer_in");
+    rsp->npkts_resizer_out.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_resizer_out");
+    rsp->npkts_resizer_discard.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_resizer_discard");
+    rsp->npkts_discard.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_discard");
 }
 
 static void

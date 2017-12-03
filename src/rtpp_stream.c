@@ -289,16 +289,16 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
            actor, ssrc, rst.ssrc_changes, rst.psent, rst.precvd,
            rst.plost, rst.pdups);
          if (rst.psent > 0) {
-             CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_nsent", rst.psent);
+             CALL_SMETHOD(pvt->rtpp_stats, updatebyname, "rtpa_nsent", rst.psent);
          }
          if (rst.precvd > 0) {
-             CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_nrcvd", rst.precvd);
+             CALL_SMETHOD(pvt->rtpp_stats, updatebyname, "rtpa_nrcvd", rst.precvd);
          }
          if (rst.pdups > 0) {
-             CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_ndups", rst.pdups);
+             CALL_SMETHOD(pvt->rtpp_stats, updatebyname, "rtpa_ndups", rst.pdups);
          }
          if (rst.pecount > 0) {
-             CALL_METHOD(pvt->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
+             CALL_SMETHOD(pvt->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
          }
          CALL_SMETHOD(pvt->pub.analyzer->rcnt, decref);
     }
@@ -329,7 +329,7 @@ static void
 player_predestroy_cb(struct rtpp_stats *rtpp_stats)
 {
 
-    CALL_METHOD(rtpp_stats, updatebyname, "nplrs_destroyed", 1);
+    CALL_SMETHOD(rtpp_stats, updatebyname, "nplrs_destroyed", 1);
 }
 
 static int

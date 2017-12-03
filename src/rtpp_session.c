@@ -218,8 +218,8 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     for (i = 0; i < 2; i++) {
         CALL_METHOD(pvt->sessinfo, remove, pub, i);
     }
-    CALL_METHOD(pub->rtpp_stats, updatebyname, "nsess_destroyed", 1);
-    CALL_METHOD(pub->rtpp_stats, updatebyname_d, "total_duration",
+    CALL_SMETHOD(pub->rtpp_stats, updatebyname, "nsess_destroyed", 1);
+    CALL_SMETHOD(pub->rtpp_stats, updatebyname_d, "total_duration",
       session_time);
     if (pvt->modules_cf != NULL) {
         pvt->acct->call_id = pvt->pub.call_id;

@@ -108,7 +108,7 @@ rtp_resizer_free(struct rtpp_stats *rtpp_stats, struct rtp_resizer *this)
     }
     free(this);
     if (nfree > 0) {
-        CALL_METHOD(rtpp_stats, updatebyname, "npkts_resizer_discard", nfree);
+        CALL_SMETHOD(rtpp_stats, updatebyname, "npkts_resizer_discard", nfree);
     }
 }
 

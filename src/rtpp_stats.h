@@ -31,7 +31,6 @@ struct rtpp_stats;
 #error "rtpp_types.h" needs to be included
 #endif
 
-DEFINE_METHOD(rtpp_stats, rtpp_stats_dtor, void);
 DEFINE_METHOD(rtpp_stats, rtpp_stats_getidxbyname, int, const char *);
 DEFINE_METHOD(rtpp_stats, rtpp_stats_updatebyidx, int, int, uint64_t);
 DEFINE_METHOD(rtpp_stats, rtpp_stats_updatebyname, int, const char *, uint64_t);
@@ -41,19 +40,24 @@ DEFINE_METHOD(rtpp_stats, rtpp_stats_nstr, int, char *, int, const char *);
 DEFINE_METHOD(rtpp_stats, rtpp_stats_getnstats, int);
 DEFINE_METHOD(rtpp_stats, rtpp_stats_update_derived, void, double);
 
+struct rtpp_stats_smethods
+{
+    METHOD_ENTRY(rtpp_stats_getidxbyname, getidxbyname);
+    METHOD_ENTRY(rtpp_stats_updatebyidx, updatebyidx);
+    METHOD_ENTRY(rtpp_stats_updatebyname, updatebyname);
+    METHOD_ENTRY(rtpp_stats_updatebyname_d, updatebyname_d);
+    METHOD_ENTRY(rtpp_stats_getlvalbyname, getlvalbyname);
+    METHOD_ENTRY(rtpp_stats_getnstats, getnstats);
+    METHOD_ENTRY(rtpp_stats_nstr, nstr);
+    METHOD_ENTRY(rtpp_stats_update_derived, update_derived);
+};
+
 struct rtpp_stats_priv;
 
 struct rtpp_stats
 {
-    rtpp_stats_dtor_t dtor;
-    rtpp_stats_getidxbyname_t getidxbyname;
-    rtpp_stats_updatebyidx_t updatebyidx;
-    rtpp_stats_updatebyname_t updatebyname;
-    rtpp_stats_updatebyname_d_t updatebyname_d;
-    rtpp_stats_getlvalbyname_t getlvalbyname;
-    rtpp_stats_getnstats_t getnstats;
-    rtpp_stats_nstr_t nstr;
-    rtpp_stats_update_derived_t update_derived;
+    struct rtpp_refcnt *rcnt;
+    const struct rtpp_stats_smethods *smethods;
     struct rtpp_stats_priv *pvt;
 };
 

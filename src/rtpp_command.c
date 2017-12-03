@@ -619,12 +619,12 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd)
         }
     }
 
-    packets_in = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_rcvd");
-    packets_out = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_relayed") +
-      CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_played");
-    sessions_created = CALL_METHOD(cf->stable->rtpp_stats, getlvalbyname,
+    packets_in = CALL_SMETHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_rcvd");
+    packets_out = CALL_SMETHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_relayed") +
+      CALL_SMETHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_played");
+    sessions_created = CALL_SMETHOD(cf->stable->rtpp_stats, getlvalbyname,
       "nsess_created");
-    sessions_active = sessions_created - CALL_METHOD(cf->stable->rtpp_stats,
+    sessions_active = sessions_created - CALL_SMETHOD(cf->stable->rtpp_stats,
       getlvalbyname, "nsess_destroyed");
     rtp_streams_active = CALL_METHOD(cf->stable->rtp_streams_wrt, get_length);
     len = snprintf(buf, sizeof(buf), "sessions created: %llu\nactive sessions: %d\n"

@@ -171,7 +171,7 @@ update_jitter_stats(struct rtp_analyze_jdata *jdp,
         }
         jdp->jss.jtotal += jdp->jss.jlast;
     }
-#if RTPP_DEBUG_analyze
+#if RTPP_DEBUG_analyze || 1
     fprintf(stderr, SSRC_FMT ",%lld,%llu,%u,%f\n", rinfo->ssrc, jdp->jss.pcount,
       rtime_ts, rinfo->ts, jdp->jss.jlast);
 #endif

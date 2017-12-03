@@ -36,7 +36,9 @@
 
 #include "rtpp_types.h"
 #include "rtpp_pearson.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_stats.h"
+#include "rtpp_stats_fin.h"
 #include "rtpp_time.h"
 #include "rtpp_mallocs.h"
 
@@ -122,7 +124,7 @@ struct rtpp_stats_full
     struct rtpp_stats_priv pvt;
 };
 
-static void rtpp_stats_dtor(struct rtpp_stats *);
+static void rtpp_stats_dtor(struct rtpp_stats_full *);
 static int rtpp_stats_getidxbyname(struct rtpp_stats *, const char *);
 static int rtpp_stats_updatebyidx(struct rtpp_stats *, int, uint64_t);
 static int rtpp_stats_updatebyname(struct rtpp_stats *, const char *, uint64_t);
@@ -131,6 +133,17 @@ static int64_t rtpp_stats_getlvalbyname(struct rtpp_stats *, const char *);
 static int rtpp_stats_nstr(struct rtpp_stats *, char *, int, const char *);
 static int rtpp_stats_getnstats(struct rtpp_stats *);
 static void rtpp_stats_update_derived(struct rtpp_stats *, double);
+
+const struct rtpp_stats_smethods rtpp_stats_smethods = {
+    .getidxbyname = &rtpp_stats_getidxbyname,
+    .updatebyidx = &rtpp_stats_updatebyidx,
+    .updatebyname = &rtpp_stats_updatebyname,
+    .updatebyname_d = &rtpp_stats_updatebyname_d,
+    .getlvalbyname = &rtpp_stats_getlvalbyname,
+    .getnstats = &rtpp_stats_getnstats,
+    .nstr = &rtpp_stats_nstr,
+    .update_derived = &rtpp_stats_update_derived
+};
 
 static const char *
 getdstat(void *p, int n)
@@ -180,12 +193,14 @@ rtpp_stats_ctor(void)
     struct rtpp_stat *st;
     struct rtpp_stat_derived *dst;
     int i, idx;
+    struct rtpp_refcnt *rcnt;
 
-    fp = rtpp_zmalloc(sizeof(struct rtpp_stats_full));
+    fp = rtpp_rzmalloc(sizeof(struct rtpp_stats_full), &rcnt);
     if (fp == NULL) {
         goto e0;
     }
     pub = &(fp->pub);
+    pub->rcnt = rcnt;
     pvt = &(fp->pvt);
     pvt->stats = rtpp_zmalloc(sizeof(struct rtpp_stat) *
       count_rtpp_stats(default_stats));
@@ -232,21 +247,16 @@ rtpp_stats_ctor(void)
         pvt->nstats_derived += 1;
         dst->last_ts = getdtime();
     }
-    pub->dtor = &rtpp_stats_dtor;
-    pub->getidxbyname = &rtpp_stats_getidxbyname;
-    pub->updatebyidx = &rtpp_stats_updatebyidx;
-    pub->updatebyname = &rtpp_stats_updatebyname;
-    pub->updatebyname_d = &rtpp_stats_updatebyname_d;
-    pub->getlvalbyname = &rtpp_stats_getlvalbyname;
-    pub->nstr = &rtpp_stats_nstr;
-    pub->getnstats = &rtpp_stats_getnstats;
-    pub->update_derived = &rtpp_stats_update_derived;
+    pub->smethods = &rtpp_stats_smethods;
+    CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stats_dtor,
+      fp);
     return (pub);
 e2:
     if (pvt->dstats != NULL)
         free(pvt->dstats);
     free(pvt->stats);
 e1:
+    CALL_SMETHOD(pub->rcnt, decref);
     free(fp);
 e0:
     return (NULL);
@@ -357,13 +367,13 @@ rtpp_stats_nstr(struct rtpp_stats *self, char *buf, int len, const char *name)
 }
 
 static void
-rtpp_stats_dtor(struct rtpp_stats *self)
+rtpp_stats_dtor(struct rtpp_stats_full *fp)
 {
     int i;
     struct rtpp_stats_priv *pvt;
     struct rtpp_stat *st;
 
-    pvt = self->pvt;
+    pvt = &fp->pvt;
     for (i = 0; i < pvt->nstats; i++) {
         st = &pvt->stats[i];
         pthread_mutex_destroy(&st->mutex);
@@ -373,7 +383,8 @@ rtpp_stats_dtor(struct rtpp_stats *self)
         free(pvt->dstats);
     }
     free(pvt->stats);
-    free(self);
+    rtpp_stats_fin(&fp->pub);
+    free(fp);
 }
 
 static int

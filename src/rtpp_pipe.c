@@ -212,10 +212,10 @@ rtpp_pipe_upd_cntrs(struct rtpp_pipe *self, struct rtpp_acct_pipe *rapp)
     pvt = PUB2PVT(self);
 
     if (rapp->o.ps->npkts_in == 0 && rapp->a.ps->npkts_in == 0) {
-        CALL_METHOD(self->rtpp_stats, updatebyname, NO_MED_NM(pvt->pipe_type),
+        CALL_SMETHOD(self->rtpp_stats, updatebyname, NO_MED_NM(pvt->pipe_type),
           1);
     } else if (rapp->o.ps->npkts_in == 0 || rapp->a.ps->npkts_in == 0) {
-        CALL_METHOD(self->rtpp_stats, updatebyname, OW_MED_NM(pvt->pipe_type),
+        CALL_SMETHOD(self->rtpp_stats, updatebyname, OW_MED_NM(pvt->pipe_type),
           1);
     }
 }

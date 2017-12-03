@@ -665,7 +665,7 @@ update_derived_stats(double dtime, void *argp)
     struct rtpp_stats *rtpp_stats;
 
     rtpp_stats = (struct rtpp_stats *)argp;
-    CALL_METHOD(rtpp_stats, update_derived, dtime);
+    CALL_SMETHOD(rtpp_stats, update_derived, dtime);
     return (CB_MORE);
 }
 
@@ -942,6 +942,7 @@ main(int argc, char **argv)
     CALL_SMETHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
     CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
     CALL_SMETHOD(cf.stable->sessinfo->rcnt, decref);
+    CALL_SMETHOD(cf.stable->rtpp_stats->rcnt, decref);
     for (i = 0; i <= RTPP_PT_MAX; i++) {
         CALL_SMETHOD(cf.stable->port_table[i]->rcnt, decref);
     }
