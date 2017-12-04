@@ -150,7 +150,8 @@ am__rtpproxy_SOURCES_DIST = main.c rtp.h rtpp_server.c rtpp_server.h \
 	rtpp_acct.c rtpp_acct.h rtpp_bindaddrs.c rtpp_bindaddrs.h \
 	rtpp_ssrc.h rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h \
 	rtpp_command_play.c rtpp_command_play.h rtpp_command_ver.h \
-	rtpp_command_ver.c rtpp_module_if.c rtpp_module_if.h \
+	rtpp_command_ver.c rtpp_pearson_perfect.c \
+	rtpp_pearson_perfect.h rtpp_module_if.c rtpp_module_if.h \
 	rtpp_module.h rtpp_log_stand.c rtpp_log_stand.h rtpp_log.c \
 	rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
 	rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h \
@@ -217,7 +218,8 @@ am__objects_4 = rtpproxy-main.$(OBJEXT) rtpproxy-rtpp_server.$(OBJEXT) \
 	rtpproxy-rtpp_acct.$(OBJEXT) rtpproxy-rtpp_bindaddrs.$(OBJEXT) \
 	rtpproxy-rtpp_netaddr.$(OBJEXT) \
 	rtpproxy-rtpp_command_play.$(OBJEXT) \
-	rtpproxy-rtpp_command_ver.$(OBJEXT) $(am__objects_1) \
+	rtpproxy-rtpp_command_ver.$(OBJEXT) \
+	rtpproxy-rtpp_pearson_perfect.$(OBJEXT) $(am__objects_1) \
 	$(am__objects_2) $(am__objects_3)
 am__objects_5 = rtpproxy-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy-rtpp_stream_fin.$(OBJEXT) \
@@ -288,7 +290,8 @@ am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_acct.c rtpp_acct.h rtpp_bindaddrs.c rtpp_bindaddrs.h \
 	rtpp_ssrc.h rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h \
 	rtpp_command_play.c rtpp_command_play.h rtpp_command_ver.h \
-	rtpp_command_ver.c rtpp_module_if.c rtpp_module_if.h \
+	rtpp_command_ver.c rtpp_pearson_perfect.c \
+	rtpp_pearson_perfect.h rtpp_module_if.c rtpp_module_if.h \
 	rtpp_module.h rtpp_log_stand.c rtpp_log_stand.h rtpp_log.c \
 	rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
 	rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h \
@@ -371,7 +374,8 @@ am__objects_9 = rtpproxy_debug-main.$(OBJEXT) \
 	rtpproxy_debug-rtpp_bindaddrs.$(OBJEXT) \
 	rtpproxy_debug-rtpp_netaddr.$(OBJEXT) \
 	rtpproxy_debug-rtpp_command_play.$(OBJEXT) \
-	rtpproxy_debug-rtpp_command_ver.$(OBJEXT) $(am__objects_6) \
+	rtpproxy_debug-rtpp_command_ver.$(OBJEXT) \
+	rtpproxy_debug-rtpp_pearson_perfect.$(OBJEXT) $(am__objects_6) \
 	$(am__objects_7) $(am__objects_8)
 am__objects_10 = rtpproxy_debug-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_stream_fin.$(OBJEXT) \
@@ -636,8 +640,9 @@ BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_acct.c rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c \
 	rtpp_bindaddrs.h rtpp_ssrc.h rtpp_netaddr.c rtpp_netaddr.h \
 	rtpp_acct_pipe.h rtpp_command_play.c rtpp_command_play.h \
-	rtpp_command_ver.h rtpp_command_ver.c $(am__append_1) \
-	$(am__append_3) $(am__append_4)
+	rtpp_command_ver.h rtpp_command_ver.c rtpp_pearson_perfect.c \
+	rtpp_pearson_perfect.h $(am__append_1) $(am__append_3) \
+	$(am__append_4)
 rtpproxy_LDADD = -lm -lpthread @LIBS_ELPERIODIC@ $(am__append_2) \
 	$(am__append_5)
 rtpproxy_debug_LDADD = -lm -lpthread @LIBS_ELPERIODIC@ \
@@ -833,6 +838,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_pcount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_pcount_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_pearson.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_pearson_perfect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_pipe.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_pipe_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_port_table.Po@am__quote@
@@ -918,6 +924,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_pcount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_pcount_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_pearson.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_pearson_perfect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_pipe.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_pipe_fin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_port_table.Po@am__quote@
@@ -1831,6 +1838,20 @@ rtpproxy-rtpp_command_ver.obj: rtpp_command_ver.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_command_ver.c' object='rtpproxy-rtpp_command_ver.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -c -o rtpproxy-rtpp_command_ver.obj `if test -f 'rtpp_command_ver.c'; then $(CYGPATH_W) 'rtpp_command_ver.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_command_ver.c'; fi`
+
+rtpproxy-rtpp_pearson_perfect.o: rtpp_pearson_perfect.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -MT rtpproxy-rtpp_pearson_perfect.o -MD -MP -MF $(DEPDIR)/rtpproxy-rtpp_pearson_perfect.Tpo -c -o rtpproxy-rtpp_pearson_perfect.o `test -f 'rtpp_pearson_perfect.c' || echo '$(srcdir)/'`rtpp_pearson_perfect.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy-rtpp_pearson_perfect.Tpo $(DEPDIR)/rtpproxy-rtpp_pearson_perfect.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_pearson_perfect.c' object='rtpproxy-rtpp_pearson_perfect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -c -o rtpproxy-rtpp_pearson_perfect.o `test -f 'rtpp_pearson_perfect.c' || echo '$(srcdir)/'`rtpp_pearson_perfect.c
+
+rtpproxy-rtpp_pearson_perfect.obj: rtpp_pearson_perfect.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -MT rtpproxy-rtpp_pearson_perfect.obj -MD -MP -MF $(DEPDIR)/rtpproxy-rtpp_pearson_perfect.Tpo -c -o rtpproxy-rtpp_pearson_perfect.obj `if test -f 'rtpp_pearson_perfect.c'; then $(CYGPATH_W) 'rtpp_pearson_perfect.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_pearson_perfect.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy-rtpp_pearson_perfect.Tpo $(DEPDIR)/rtpproxy-rtpp_pearson_perfect.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_pearson_perfect.c' object='rtpproxy-rtpp_pearson_perfect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -c -o rtpproxy-rtpp_pearson_perfect.obj `if test -f 'rtpp_pearson_perfect.c'; then $(CYGPATH_W) 'rtpp_pearson_perfect.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_pearson_perfect.c'; fi`
 
 rtpproxy-rtpp_module_if.o: rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -MT rtpproxy-rtpp_module_if.o -MD -MP -MF $(DEPDIR)/rtpproxy-rtpp_module_if.Tpo -c -o rtpproxy-rtpp_module_if.o `test -f 'rtpp_module_if.c' || echo '$(srcdir)/'`rtpp_module_if.c
@@ -2993,6 +3014,20 @@ rtpproxy_debug-rtpp_command_ver.obj: rtpp_command_ver.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_command_ver.c' object='rtpproxy_debug-rtpp_command_ver.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_command_ver.obj `if test -f 'rtpp_command_ver.c'; then $(CYGPATH_W) 'rtpp_command_ver.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_command_ver.c'; fi`
+
+rtpproxy_debug-rtpp_pearson_perfect.o: rtpp_pearson_perfect.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_pearson_perfect.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_pearson_perfect.Tpo -c -o rtpproxy_debug-rtpp_pearson_perfect.o `test -f 'rtpp_pearson_perfect.c' || echo '$(srcdir)/'`rtpp_pearson_perfect.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_pearson_perfect.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_pearson_perfect.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_pearson_perfect.c' object='rtpproxy_debug-rtpp_pearson_perfect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_pearson_perfect.o `test -f 'rtpp_pearson_perfect.c' || echo '$(srcdir)/'`rtpp_pearson_perfect.c
+
+rtpproxy_debug-rtpp_pearson_perfect.obj: rtpp_pearson_perfect.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_pearson_perfect.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_pearson_perfect.Tpo -c -o rtpproxy_debug-rtpp_pearson_perfect.obj `if test -f 'rtpp_pearson_perfect.c'; then $(CYGPATH_W) 'rtpp_pearson_perfect.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_pearson_perfect.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_pearson_perfect.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_pearson_perfect.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_pearson_perfect.c' object='rtpproxy_debug-rtpp_pearson_perfect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_pearson_perfect.obj `if test -f 'rtpp_pearson_perfect.c'; then $(CYGPATH_W) 'rtpp_pearson_perfect.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_pearson_perfect.c'; fi`
 
 rtpproxy_debug-rtpp_module_if.o: rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_module_if.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Tpo -c -o rtpproxy_debug-rtpp_module_if.o `test -f 'rtpp_module_if.c' || echo '$(srcdir)/'`rtpp_module_if.c
