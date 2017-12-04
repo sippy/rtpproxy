@@ -87,7 +87,7 @@ rtpp_rzmalloc_memdeb(const char *fname, int linen, const char *funcn,
 #if !defined(RTPP_CHECK_LEAKS)
     rval = malloc(asize);
 #else
-    rval = rtpp_memdeb_malloc(asize, _rtpproxy_memdeb, fname, linen, funcn);
+    rval = rtpp_memdeb_malloc(asize, MEMDEB_SYM, fname, linen, funcn);
 #endif
     if (rval == NULL) {
         return (NULL);

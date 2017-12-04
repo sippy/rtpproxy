@@ -48,27 +48,29 @@
 
 CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
 
+#define MEMDEB_SYM CONCAT(CONCAT(_, MEMDEB_APP), _memdeb)
+
 #undef malloc
-#define malloc(n) rtpp_memdeb_malloc((n), CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), \
+#define malloc(n) rtpp_memdeb_malloc((n), MEMDEB_SYM, \
   __FILE__, __LINE__, __func__)
 #undef free
-#define free(p) rtpp_memdeb_free((p), CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), \
+#define free(p) rtpp_memdeb_free((p), MEMDEB_SYM, \
   __FILE__, __LINE__, __func__)
 #undef realloc
 #define realloc(p,n) rtpp_memdeb_realloc((p), (n), \
-  CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), __FILE__, __LINE__, __func__)
+  MEMDEB_SYM, __FILE__, __LINE__, __func__)
 #undef strdup
-#define strdup(p) rtpp_memdeb_strdup((p), CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), \
+#define strdup(p) rtpp_memdeb_strdup((p), MEMDEB_SYM, \
   __FILE__, __LINE__, __func__)
 #undef asprintf
 #define asprintf(pp, fmt, args...) rtpp_memdeb_asprintf((pp), (fmt), \
-  CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), __FILE__, __LINE__, __func__, ## args)
+  MEMDEB_SYM, __FILE__, __LINE__, __func__, ## args)
 #undef vasprintf
 #define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), \
-  CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), __FILE__, __LINE__, __func__, (vl))
+  MEMDEB_SYM, __FILE__, __LINE__, __func__, (vl))
 #undef memcpy
 #define memcpy(dp, sp, len) rtpp_memdeb_memcpy((dp), (sp), (len), \
-  CONCAT(CONCAT(_, MEMDEB_APP), _memdeb), __FILE__, __LINE__, __func__)
+  MEMDEB_SYM, __FILE__, __LINE__, __func__)
 
 void *rtpp_memdeb_malloc(size_t, void *, const char *, int, const char *);
 void rtpp_memdeb_free(void *, void *, const char *, int, const char *);
