@@ -26,47 +26,9 @@
  *
  */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+struct rtpp_pearson_perfect;
+typedef const char * (*rtpp_pearson_getval_t)(void *, int);
 
-#include "rtpp_pearson.h"
-
-void
-rtpp_pearson_shuffle(struct rtpp_pearson *rpp)
-{
-    int i;
-    uint8_t rval;
-
-    memset(rpp->rand_table, '\0', sizeof(rpp->rand_table));
-    for (i = 1; i < 256; i++) {
-        do {
-            rval = random() & 0xff;
-        } while (rpp->rand_table[rval] != 0);
-        rpp->rand_table[rval] = i;
-    }
-}
-
-uint8_t
-rtpp_pearson_hash8(struct rtpp_pearson *rpp, const char *bp, const char *ep)
-{
-    uint8_t res;
-
-    for (res = rpp->rand_table[0]; bp[0] != '\0' && bp != ep; bp++) {
-        res = rpp->rand_table[res ^ bp[0]];
-    }
-    return res;
-}
-
-uint8_t
-rtpp_pearson_hash8b(struct rtpp_pearson *rpp, const uint8_t *bp, size_t blen)
-{
-    uint8_t res;
-    const uint8_t *ep;
-
-    ep = bp + blen;
-    for (res = rpp->rand_table[0]; bp != ep; bp++) {
-        res = rpp->rand_table[res ^ bp[0]];
-    }
-    return res;
-}
+struct rtpp_pearson_perfect *rtpp_pearson_perfect_ctor(rtpp_pearson_getval_t, void *);
+int rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *, const char *);
+void rtpp_pearson_perfect_dtor(struct rtpp_pearson_perfect *);

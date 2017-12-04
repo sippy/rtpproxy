@@ -32,7 +32,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h rtpp_acct.c \
   rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddrs.h rtpp_ssrc.h \
   rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h rtpp_command_play.c \
-  rtpp_command_play.h rtpp_command_ver.h rtpp_command_ver.c
+  rtpp_command_play.h rtpp_command_ver.h rtpp_command_ver.c \
+  rtpp_pearson_perfect.c rtpp_pearson_perfect.h
 
 rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ \
