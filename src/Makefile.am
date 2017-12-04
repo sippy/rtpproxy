@@ -69,7 +69,7 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_port_table_fin.c rtpp_port_table_fin.h rtpp_acct_fin.c \
   rtpp_acct_fin.h rtpp_netaddr_fin.c rtpp_netaddr_fin.h \
   rtpp_stats_fin.c rtpp_stats_fin.h rtpp_pearson_perfect_fin.c \
-  rtpp_pearson_perfect_fin.h
+  rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h
 rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
@@ -92,10 +92,15 @@ BUILT_SOURCES= ${SRCS_AUTOGEN}
 GENFINCODE= $(top_srcdir)/src/genfincode.sh
 GENFINCODE_S= $(top_srcdir)/src/genfincode_stat.sh
 
-rtpp_timed_fin.c: genfincode.sh rtpp_timed.h
-	$(GENFINCODE) rtpp_timed.h rtpp_timed_fin.h rtpp_timed_fin.c
+rtpp_timed_fin.c: $(GENFINCODE_S) rtpp_timed.h
+	$(GENFINCODE_S) rtpp_timed.h rtpp_timed_fin.h rtpp_timed_fin.c
 
 rtpp_timed_fin.h: rtpp_timed_fin.c
+
+rtpp_timed_task_fin.c: $(GENFINCODE) rtpp_timed_task.h
+	$(GENFINCODE) rtpp_timed_task.h rtpp_timed_task_fin.h rtpp_timed_task_fin.c
+
+rtpp_timed_task_fin.h: rtpp_timed_task_fin.c
 
 rtpp_stream_fin.c: $(GENFINCODE_S) rtpp_stream.h
 	$(GENFINCODE_S) rtpp_stream.h rtpp_stream_fin.h rtpp_stream_fin.c
