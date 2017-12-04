@@ -678,6 +678,7 @@ main(int argc, char **argv)
     char buf[256];
     struct sched_param sparam;
     void *elp;
+    struct rtpp_timed_task *tp;
 #if RTPP_DEBUG_timers
     double sleep_time, filter_lastval;
 #endif
@@ -850,11 +851,14 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    if (CALL_METHOD(cf.stable->rtpp_timed_cf, schedule, 1.0,
-      update_derived_stats, NULL, cf.stable->rtpp_stats) != 0) {
+    tp = CALL_METHOD(cf.stable->rtpp_timed_cf, schedule_rc, 1.0,
+      cf.stable->rtpp_stats->rcnt, update_derived_stats, NULL,
+      cf.stable->rtpp_stats);
+    if (tp == NULL) {
         RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
           "can't schedule notification to derive stats");
     }
+    CALL_SMETHOD(tp->rcnt, decref);
 
     cf.stable->rtpp_notify_cf = rtpp_notify_ctor(cf.stable->glog);
     if (cf.stable->rtpp_notify_cf == NULL) {
