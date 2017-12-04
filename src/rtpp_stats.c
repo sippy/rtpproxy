@@ -268,7 +268,7 @@ rtpp_stats_getidxbyname(struct rtpp_stats *self, const char *name)
     struct rtpp_stats_priv *pvt;
 
     pvt = self->pvt;
-    return (rtpp_pearson_perfect_hash(pvt->rppp, name));
+    return (CALL_SMETHOD(pvt->rppp, hash, name));
 }
 
 static int
@@ -378,7 +378,7 @@ rtpp_stats_dtor(struct rtpp_stats_full *fp)
         st = &pvt->stats[i];
         pthread_mutex_destroy(&st->mutex);
     }
-    rtpp_pearson_perfect_dtor(pvt->rppp);
+    CALL_SMETHOD(pvt->rppp->rcnt, decref);
     if (pvt->dstats != NULL) {
         free(pvt->dstats);
     }

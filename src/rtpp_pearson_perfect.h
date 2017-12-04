@@ -27,8 +27,20 @@
  */
 
 struct rtpp_pearson_perfect;
+
+DEFINE_METHOD(rtpp_pearson_perfect, rtpp_pearson_perfect_hash, int, const char *);
+
+struct rtpp_pearson_perfect_smethods
+{
+    METHOD_ENTRY(rtpp_pearson_perfect_hash, hash);
+};
+
+struct rtpp_pearson_perfect
+{
+    struct rtpp_refcnt *rcnt;
+    const struct rtpp_pearson_perfect_smethods *smethods;
+};
+
 typedef const char * (*rtpp_pearson_getval_t)(void *, int);
 
 struct rtpp_pearson_perfect *rtpp_pearson_perfect_ctor(rtpp_pearson_getval_t, void *);
-int rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *, const char *);
-void rtpp_pearson_perfect_dtor(struct rtpp_pearson_perfect *);

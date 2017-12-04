@@ -26,24 +26,39 @@
  *
  */
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_types.h"
 #include "rtpp_pearson.h"
 #include "rtpp_pearson_perfect.h"
+#include "rtpp_pearson_perfect_fin.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_mallocs.h"
 
-struct rtpp_pearson_perfect
+struct rtpp_pearson_perfect_priv
 {
+    struct rtpp_pearson_perfect pub;
     struct rtpp_pearson rp;
     uint8_t omap_table[256];
     rtpp_pearson_getval_t gv;
     void *gv_arg;
 };
 
+static int rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *, const char *);
+static void rtpp_pearson_perfect_dtor(struct rtpp_pearson_perfect_priv *);
+
+static const struct rtpp_pearson_perfect_smethods rtpp_pearson_perfect_smethods = {
+    .hash = &rtpp_pearson_perfect_hash
+};
+
+#define PUB2PVT(pubp) \
+  ((struct rtpp_pearson_perfect_priv *)((char *)(pubp) - offsetof(struct rtpp_pearson_perfect_priv, pub)))
+
 static void
-compute_perfect_hash(struct rtpp_pearson_perfect *rppp)
+compute_perfect_hash(struct rtpp_pearson_perfect_priv *rppp)
 {
     int i;
     const char *sval;
@@ -66,25 +81,34 @@ again:
 struct rtpp_pearson_perfect *
 rtpp_pearson_perfect_ctor(rtpp_pearson_getval_t gv, void *gv_arg)
 {
-    struct rtpp_pearson_perfect *rppp;
+    struct rtpp_pearson_perfect_priv *rppp;
+    struct rtpp_pearson_perfect *pub;
+    struct rtpp_refcnt *rcnt;
 
-    rppp = rtpp_zmalloc(sizeof(struct rtpp_pearson_perfect));
+    rppp = rtpp_rzmalloc(sizeof(struct rtpp_pearson_perfect_priv), &rcnt);
     if (rppp == NULL) {
         return (NULL);
     }
     rppp->gv = gv;
     rppp->gv_arg = gv_arg;
+    pub = &rppp->pub;
+    pub->rcnt = rcnt;
 
     compute_perfect_hash(rppp);
-    return(rppp);
+    pub->smethods = &rtpp_pearson_perfect_smethods;
+    CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pearson_perfect_dtor,
+      rppp);
+    return(pub);
 }
 
-int
-rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *rppp, const char *isval)
+static int
+rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *self, const char *isval)
 {
     int rval;
     const char *sval;
+    struct rtpp_pearson_perfect_priv *rppp;
 
+    rppp = PUB2PVT(self);
     rval = rppp->omap_table[rtpp_pearson_hash8(&rppp->rp, isval, NULL)] - 1;
     if (rval == -1) {
         return (-1);
@@ -96,9 +120,10 @@ rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *rppp, const char *isval)
     return (rval);
 }
 
-void
-rtpp_pearson_perfect_dtor(struct rtpp_pearson_perfect *rppp)
+static void
+rtpp_pearson_perfect_dtor(struct rtpp_pearson_perfect_priv *rppp)
 {
 
+    rtpp_pearson_perfect_fin(&rppp->pub);
     free(rppp);
 }
