@@ -92,6 +92,7 @@
 #include "rtpp_list.h"
 #include "rtpp_time.h"
 #include "rtpp_timed.h"
+#include "rtpp_timed_task.h"
 #include "rtpp_tnotify_set.h"
 #include "rtpp_weakref.h"
 #include "rtpp_debug.h"
@@ -851,7 +852,7 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    tp = CALL_METHOD(cf.stable->rtpp_timed_cf, schedule_rc, 1.0,
+    tp = CALL_SMETHOD(cf.stable->rtpp_timed_cf, schedule_rc, 1.0,
       cf.stable->rtpp_stats->rcnt, update_derived_stats, NULL,
       cf.stable->rtpp_stats);
     if (tp == NULL) {
@@ -943,6 +944,7 @@ main(int argc, char **argv)
 #endif
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
+    CALL_SMETHOD(cf.stable->rtpp_timed_cf, shutdown);
     CALL_SMETHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
     CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
     CALL_SMETHOD(cf.stable->sessinfo->rcnt, decref);

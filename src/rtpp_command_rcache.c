@@ -35,6 +35,7 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_timed.h"
+#include "rtpp_timed_task.h"
 
 #define	RTPP_RCACHE_CPERD	3.0
 
@@ -79,7 +80,7 @@ rtpp_cmd_rcache_ctor(struct rtpp_timed *rtpp_timed_cf, double min_ttl)
     if (pvt->ht == NULL) {
         goto e0;
     }
-    pvt->timeout = CALL_METHOD(rtpp_timed_cf, schedule_rc, RTPP_RCACHE_CPERD,
+    pvt->timeout = CALL_SMETHOD(rtpp_timed_cf, schedule_rc, RTPP_RCACHE_CPERD,
       pvt->pub.rcnt, rtpp_cmd_rcache_cleanup, NULL, pvt);
     if (pvt->timeout == NULL) {
         goto e2;
