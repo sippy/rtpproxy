@@ -25,31 +25,13 @@
  *
  */
 
-enum rtpp_timed_cb_rvals {CB_LAST, CB_MORE};
-
-typedef enum rtpp_timed_cb_rvals (*rtpp_timed_cb_t)(double, void *);
-typedef void (*rtpp_timed_cancel_cb_t)(void *);
-
 struct rtpp_timed;
 struct rtpp_timed_task;
 struct rtpp_refcnt;
 
-DEFINE_METHOD(rtpp_timed, rtpp_timed_schedule, int, double,
-  rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
-DEFINE_METHOD(rtpp_timed, rtpp_timed_schedule_rc, struct rtpp_timed_task *,
-  double, struct rtpp_refcnt *, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
-DEFINE_METHOD(rtpp_timed, rtpp_timed_shutdown, void);
+DEFINE_METHOD(rtpp_timed_task, rtpp_timed_task_cancel, int);
 
-struct rtpp_timed_smethods
-{
-    METHOD_ENTRY(rtpp_timed_schedule, schedule);
-    METHOD_ENTRY(rtpp_timed_schedule_rc, schedule_rc);
-    METHOD_ENTRY(rtpp_timed_shutdown, shutdown);
-};
-
-struct rtpp_timed {
+struct rtpp_timed_task {
     struct rtpp_refcnt *rcnt;
-    const struct rtpp_timed_smethods *smethods;
+    METHOD_ENTRY(rtpp_timed_task_cancel, cancel);
 };
-
-struct rtpp_timed *rtpp_timed_ctor(double);

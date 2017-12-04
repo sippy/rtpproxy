@@ -25,6 +25,7 @@
  *
  */
 
+#include <assert.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stddef.h>
@@ -38,7 +39,9 @@
 #include "rtpp_wi.h"
 #include "rtpp_time.h"
 #include "rtpp_timed.h"
+#include "rtpp_timed_task.h"
 #include "rtpp_timed_fin.h"
+#include "rtpp_timed_task_fin.h"
 
 #include "elperiodic.h"
 
@@ -52,7 +55,11 @@ struct rtpp_timed_cf {
     struct rtpp_wi *sigterm;
     int wi_dsize;
     void *elp;
+    int state;
 };
+
+#define RT_ST_RUNNING 0
+#define RT_ST_SHTDOWN 1
 
 struct rtpp_timed_wi {
     struct rtpp_timed_task pub;
@@ -67,6 +74,10 @@ struct rtpp_timed_wi {
     void *rco[0];
 };
 
+#define PUB2PVT(pubp) \
+  ((struct rtpp_timed_cf *)((char *)(pubp) - \
+  offsetof(struct rtpp_timed_cf, pub)))
+
 #define TASKPUB2PVT(pubp) \
   ((struct rtpp_timed_wi *)((char *)(pubp) - \
   offsetof(struct rtpp_timed_wi, pub)))
@@ -79,8 +90,15 @@ static struct rtpp_timed_task *rtpp_timed_schedule_rc(struct rtpp_timed *,
   void *);
 static void rtpp_timed_process(struct rtpp_timed_cf *, double);
 static int rtpp_timed_cancel(struct rtpp_timed_task *);
+static void rtpp_timed_shutdown(struct rtpp_timed *);
 
 static void rtpp_timed_task_dtor(struct rtpp_timed_wi *);
+
+const struct rtpp_timed_smethods rtpp_timed_smethods = {
+    .schedule = &rtpp_timed_schedule,
+    .schedule_rc = rtpp_timed_schedule_rc,
+    .shutdown = &rtpp_timed_shutdown
+};
 
 static void
 rtpp_timed_queue_run(void *argp)
@@ -158,8 +176,7 @@ rtpp_timed_ctor(double run_period)
     rtcp->last_run = getdtime();
     rtcp->period = run_period;
     rtcp->wi_dsize = sizeof(struct rtpp_timed_wi) + rtpp_refcnt_osize();
-    rtcp->pub.schedule = &rtpp_timed_schedule;
-    rtcp->pub.schedule_rc = &rtpp_timed_schedule_rc;
+    rtcp->pub.smethods = &rtpp_timed_smethods;
     CALL_SMETHOD(rtcp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_destroy,
       rtcp);
     return (&rtcp->pub);
@@ -179,12 +196,25 @@ e0:
 }
 
 static void
+rtpp_timed_shutdown(struct rtpp_timed *self)
+{
+    struct rtpp_timed_cf *rtpp_timed_cf;
+
+    rtpp_timed_cf = PUB2PVT(self);
+    assert(rtpp_timed_cf->state == RT_ST_RUNNING);
+    rtpp_queue_put_item(rtpp_timed_cf->sigterm, rtpp_timed_cf->cmd_q);
+    pthread_join(rtpp_timed_cf->thread_id, NULL);
+    rtpp_timed_cf->state = RT_ST_SHTDOWN;
+}
+
+static void
 rtpp_timed_destroy(struct rtpp_timed_cf *rtpp_timed_cf)
 {
 
-    rtpp_queue_put_item(rtpp_timed_cf->sigterm, rtpp_timed_cf->cmd_q);
+    if (rtpp_timed_cf->state == RT_ST_RUNNING) {
+        rtpp_timed_shutdown(&rtpp_timed_cf->pub);
+    }
     rtpp_timed_fin(&(rtpp_timed_cf->pub));
-    pthread_join(rtpp_timed_cf->thread_id, NULL);
     rtpp_queue_destroy(rtpp_timed_cf->cmd_q);
     rtpp_queue_destroy(rtpp_timed_cf->q);
     free(rtpp_timed_cf);
