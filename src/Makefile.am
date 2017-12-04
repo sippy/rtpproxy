@@ -68,7 +68,8 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c \
   rtpp_port_table_fin.c rtpp_port_table_fin.h rtpp_acct_fin.c \
   rtpp_acct_fin.h rtpp_netaddr_fin.c rtpp_netaddr_fin.h \
-  rtpp_stats_fin.c rtpp_stats_fin.h
+  rtpp_stats_fin.c rtpp_stats_fin.h rtpp_pearson_perfect_fin.c \
+  rtpp_pearson_perfect_fin.h
 rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
 rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
@@ -185,6 +186,11 @@ rtpp_stats_fin.c: $(GENFINCODE_S) rtpp_stats.h
 	$(GENFINCODE_S) rtpp_stats.h rtpp_stats_fin.h rtpp_stats_fin.c
 
 rtpp_stats_fin.h: rtpp_stats_fin.c
+
+rtpp_pearson_perfect_fin.c: $(GENFINCODE_S) rtpp_pearson_perfect.h
+	$(GENFINCODE_S) rtpp_pearson_perfect.h rtpp_pearson_perfect_fin.h rtpp_pearson_perfect_fin.c
+
+rtpp_pearson_perfect_fin.h: rtpp_pearson_perfect_fin.c
 
 includepolice:
 	@nfiles=`echo ${BASE_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); \
