@@ -165,7 +165,7 @@ fi
 
 if test "${EXTERNAL_ELPERIODIC}" != 1
 then
-  LIBS_ELPERIODIC="\$(top_srcdir)/libelperiodic/src/libelperiodic.a"
+  LIBS_ELPERIODIC="\$(top_srcdir)/libelperiodic/src/libelperiodic.la"
 fi
 
 # libsiplog
