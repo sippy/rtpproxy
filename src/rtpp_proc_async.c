@@ -31,7 +31,6 @@
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
-#include <signal.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
