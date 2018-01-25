@@ -211,7 +211,37 @@ AC_CHECK_FUNC(clock_gettime, [], [
     AC_MSG_ERROR(Unable to find clock_gettime function; required by ocount))])
 AC_SUBST(RT_LIB)
 
-AC_CHECK_DECL([rdtsc], [found_rdtsc=yes], [], [[#include <cpufunc.h>]])
+AC_MSG_CHECKING([for rdtsc])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+  [[
+   #include <sys/types.h>
+   #include <stdint.h>
+   #if defined(__FreeBSD__)
+   # include <sys/cdefs.h>
+   # include <machine/cpufunc.h>
+   #else
+   static uint64_t
+   rdtsc(void)
+   {
+     uint32_t low, high;
+
+      __asm __volatile("rdtsc" : "=a" (low), "=d" (high));
+      return (low | ((uint64_t)high << 32));
+   }
+   #endif
+  ]],
+  [[
+   rdtsc();
+  ]])],
+  [
+   AC_MSG_RESULT([yes])
+   found_rdtsc=yes
+  ],
+  [
+   AC_MSG_RESULT([no])
+  ]
+)
+
 if test "$found_rdtsc" = yes
 then
   ENABLE_UDP_CONTENTION=1
