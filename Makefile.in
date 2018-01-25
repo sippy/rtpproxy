@@ -369,7 +369,8 @@ AUTOMAKE_OPTIONS = foreign
 @BUILD_MODULES_TRUE@SUBD_MOD = modules
 @BUILD_ELPERIODIC_TRUE@SUBD_ELP = libelperiodic/src
 @BUILD_EXTRACTAUDIO_TRUE@SUBD_EAUD = extractaudio
-SUBDIRS = libexecinfo makeann $(SUBD_MOD) $(SUBD_ELP) src pertools tests \
+@BUILD_UDP_CONTENTION_TRUE@SUBD_UDCNT = pertools
+SUBDIRS = libexecinfo makeann $(SUBD_MOD) $(SUBD_ELP) src $(SUBD_UDCNT) tests \
   $(SUBD_EAUD)
 
 dist_man_MANS = rtpproxy.8
