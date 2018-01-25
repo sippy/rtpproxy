@@ -11,8 +11,11 @@ endif
 if BUILD_EXTRACTAUDIO
 SUBD_EAUD=       extractaudio
 endif
+if BUILD_UDP_CONTENTION
+SUBD_UDCNT=	pertools
+endif
 
-SUBDIRS=	libexecinfo makeann $(SUBD_MOD) $(SUBD_ELP) src pertools tests \
+SUBDIRS=	libexecinfo makeann $(SUBD_MOD) $(SUBD_ELP) src $(SUBD_UDCNT) tests \
   $(SUBD_EAUD)
 
 dist_man_MANS=	rtpproxy.8

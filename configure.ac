@@ -211,6 +211,13 @@ AC_CHECK_FUNC(clock_gettime, [], [
     AC_MSG_ERROR(Unable to find clock_gettime function; required by ocount))])
 AC_SUBST(RT_LIB)
 
+AC_CHECK_DECL([rdtsc], [found_rdtsc=yes], [], [[#include <cpufunc.h>]])
+if test "$found_rdtsc" = yes
+then
+  ENABLE_UDP_CONTENTION=1
+  AC_DEFINE([ENABLE_UDP_CONTENTION], 1, [Define to build udp_contention utility])
+fi
+
 AC_MSG_CHECKING([for __sync_fetch_and_add])
 AC_LINK_IFELSE(
    [AC_LANG_SOURCE([
@@ -231,6 +238,7 @@ AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(BUILD_ELPERIODIC, [test "${EXTERNAL_ELPERIODIC}" != 1])
 AM_CONDITIONAL(BUILD_CRYPTO, [test "${LIBS_SRTP}" != ""])
 AM_CONDITIONAL(BUILD_LOG_STAND, [test "${LIBS_SIPLOG}" = ""])
+AM_CONDITIONAL(BUILD_UDP_CONTENTION, [test "${ENABLE_UDP_CONTENTION}" = 1])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
