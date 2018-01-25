@@ -212,7 +212,7 @@ AC_CHECK_FUNC(clock_gettime, [], [
 AC_SUBST(RT_LIB)
 
 AC_MSG_CHECKING([for rdtsc])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
   [[
    #include <sys/types.h>
    #include <stdint.h>
