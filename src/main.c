@@ -109,6 +109,8 @@
 # define RTPP_DEBUG	1
 #endif
 
+#define PRIO_UNSET (PRIO_MIN - 1)
+
 static void usage(void);
 
 #ifdef RTPP_CHECK_LEAKS
@@ -205,10 +207,12 @@ rtpp_rlim_max(struct cfg *cf)
 
 #define LOPT_DSO     256
 #define LOPT_BRSYM   257
+#define LOPT_NICE    258
 
 const static struct option longopts[] = {
     { "dso", required_argument, NULL, LOPT_DSO },
     { "bridge_symmetric", no_argument, NULL, LOPT_BRSYM },
+    { "nice", required_argument, NULL, LOPT_NICE },
     { NULL,  0,                 NULL, 0 }
 };
 
@@ -259,6 +263,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable->sched_offset = 0.0;
     cf->stable->sched_hz = rtpp_get_sched_hz();
     cf->stable->sched_policy = SCHED_OTHER;
+    cf->stable->sched_nice = PRIO_UNSET;
     cf->stable->target_pfreq = MIN(POLL_RATE, cf->stable->sched_hz);
 #if RTPP_DEBUG
     fprintf(stderr, "target_pfreq = %f\n", cf->stable->target_pfreq);
@@ -296,6 +301,15 @@ init_config(struct cfg *cf, int argc, char **argv)
         case LOPT_BRSYM:
             brsym = 1;
             break;
+
+        case LOPT_NICE:
+            cf->stable->sched_nice = atoi(optarg);
+            if (cf->stable->sched_nice > PRIO_MAX || cf->stable->sched_nice < PRIO_MIN) {
+                errx(1, "%d: nice level is out of range %d..%d",
+                  cf->stable->sched_nice, PRIO_MIN, PRIO_MAX);
+            }
+            break;
+
 
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
@@ -765,7 +779,7 @@ main(int argc, char **argv)
     }
 
     if (rtpp_controlfd_init(&cf) != 0) {
-        err(1, "can't inilialize control socket%s",
+        err(1, "can't initialize control socket%s",
           cf.stable->ctrl_socks->len > 1 ? "s" : "");
     }
 
@@ -794,7 +808,7 @@ main(int argc, char **argv)
 
     cf.stable->glog = rtpp_log_ctor(cf.stable, "rtpproxy", NULL, LF_REOPEN);
     if (cf.stable->glog == NULL) {
-        err(1, "can't inilialize logging subsystem");
+        err(1, "can't initialize logging subsystem");
             /* NOTREACHED */
     }
 
@@ -824,6 +838,13 @@ main(int argc, char **argv)
         if (sched_setscheduler(0, cf.stable->sched_policy, &sparam) == -1) {
             RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR, "sched_setscheduler(SCHED_%s, %d)",
               (cf.stable->sched_policy == SCHED_FIFO) ? "FIFO" : "RR", sparam.sched_priority);
+        }
+    }
+    if (cf.stable->sched_nice != PRIO_UNSET) {
+        if (setpriority(PRIO_PROCESS, 0, cf.stable->sched_nice) == -1) {
+            RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR, "can't set scheduling "
+              "priority to %d", cf.stable->sched_nice);
+            exit(1);
         }
     }
 

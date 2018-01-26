@@ -109,6 +109,7 @@ struct rtpp_cfg_stable {
     double sched_offset;
     int sched_policy;
     int sched_hz;
+    int sched_nice;
     double target_pfreq;
     struct rtpp_cmd_async *rtpp_cmd_cf;
     struct rtpp_proc_async *rtpp_proc_cf;
