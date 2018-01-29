@@ -45,8 +45,8 @@ rtpp_stacktrace(int sig)
     size = backtrace(array, 10);
     strings = backtrace_symbols(array, size);
 
-    fprintf(stderr, "Died on signal %d, obtained %ld stack frames.\n",
-      sig, size);
+    fprintf(stderr, "Died on signal %d, obtained %lu stack frames.\n",
+      sig, (unsigned long)size);
 
     for (i = 0; i < size; i++)
         fprintf(stderr, "%s\n", strings[i]);
