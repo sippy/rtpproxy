@@ -47,6 +47,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_bindaddrs.h"
 #include "rtpp_command.h"
+#include "rtpp_command_async.h"
 #include "rtpp_command_copy.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_ul.h"
@@ -472,6 +473,13 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
             RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
               "proxy is in the deorbiting-burn mode, new session rejected");
             reply_error(cmd, ECODE_SLOWSHTDN);
+            goto err_undo_0;
+        }
+        if (cf->stable->overload_prot.ecode != 0 &&
+          CALL_METHOD(cf->stable->rtpp_cmd_cf, chk_overload) != 0) {
+            RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
+              "proxy is overloaded, new session rejected");
+            reply_error(cmd, cf->stable->overload_prot.ecode);
             goto err_undo_0;
         }
         if (rtpp_create_listener(cf, ulop->lia[0], &lport, fds) == -1) {

@@ -135,6 +135,7 @@ struct rtpp_command
 #define ECODE_NOMEM_7     87
 #define ECODE_NOMEM_8     88
 
+#define ECODE_OVERLOAD    98
 #define ECODE_SLOWSHTDN   99
 
 #endif

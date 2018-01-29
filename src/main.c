@@ -77,6 +77,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_command_ver.h"
 #include "rtpp_command_async.h"
+#include "rtpp_command_private.h"
 #include "rtpp_port_table.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_bindaddrs.h"
@@ -205,14 +206,16 @@ rtpp_rlim_max(struct cfg *cf)
     return (long long)(cf->stable->nofile_limit->rlim_max);
 }
 
-#define LOPT_DSO     256
-#define LOPT_BRSYM   257
-#define LOPT_NICE    258
+#define LOPT_DSO      256
+#define LOPT_BRSYM    257
+#define LOPT_NICE     258
+#define LOPT_OVL_PROT 259
 
 const static struct option longopts[] = {
     { "dso", required_argument, NULL, LOPT_DSO },
     { "bridge_symmetric", no_argument, NULL, LOPT_BRSYM },
     { "nice", required_argument, NULL, LOPT_NICE },
+    { "overload_prot", optional_argument, NULL, LOPT_OVL_PROT },
     { NULL,  0,                 NULL, 0 }
 };
 
@@ -310,6 +313,11 @@ init_config(struct cfg *cf, int argc, char **argv)
             }
             break;
 
+        case LOPT_OVL_PROT:
+            cf->stable->overload_prot.low_trs = 0.85;
+            cf->stable->overload_prot.high_trs = 0.90;
+            cf->stable->overload_prot.ecode = ECODE_OVERLOAD;
+            break;
 
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {

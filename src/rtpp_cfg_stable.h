@@ -53,6 +53,12 @@ struct rtpp_module_if;
 #define	RTPP_PT_SELECT(cp, af) (((af) == AF_INET) ? \
   (cp)->port_table[RTPP_PT_INET] : (cp)->port_table[RTPP_PT_INET6])
 
+struct overload_prot {
+    double low_trs;
+    double high_trs;
+    int ecode;
+};
+
 struct rtpp_cfg_stable {
     const char *pid_file;
 
@@ -120,17 +126,15 @@ struct rtpp_cfg_stable {
     int fastshutdown;
 
     struct rtpp_stats *rtpp_stats;
-
     struct rtpp_list *ctrl_socks;
-
     struct rtpp_timed *rtpp_timed_cf;
-
     struct rtpp_sessinfo *sessinfo;
-
     const char *cwd_orig;
 
     char *mpath;
     struct rtpp_module_if *modules_cf;
+
+    struct overload_prot overload_prot;
 };
 
 #endif

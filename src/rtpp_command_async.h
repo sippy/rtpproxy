@@ -33,11 +33,15 @@ struct rtpp_cmd_async;
 DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_async_dtor, void);
 DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_async_wakeup, int);
 DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_async_get_aload, double);
+DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_reg_overload, void, int);
+DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_chk_overload, int);
 
 struct rtpp_cmd_async {
     rtpp_cmd_async_dtor_t dtor;
     rtpp_cmd_async_wakeup_t wakeup;
     rtpp_cmd_async_get_aload_t get_aload;
+    rtpp_cmd_reg_overload_t reg_overload;
+    rtpp_cmd_chk_overload_t chk_overload;
 };
 
 struct rtpp_cmd_async *rtpp_command_async_ctor(struct cfg *);

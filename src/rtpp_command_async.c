@@ -87,6 +87,7 @@ struct rtpp_cmd_async_cf {
     int tstate_queue;
     int tstate_acceptor;
     int acceptor_started;
+    int overload;
 #if 0
     struct recfilter average_load;
 #endif
@@ -104,6 +105,8 @@ struct rtpp_cmd_async_cf {
 
 static double rtpp_command_async_get_aload(struct rtpp_cmd_async *);
 static int rtpp_command_async_wakeup(struct rtpp_cmd_async *);
+static void rtpp_command_async_reg_overload(struct rtpp_cmd_async *, int);
+static int rtpp_command_async_chk_overload(struct rtpp_cmd_async *);
 static void rtpp_command_async_dtor(struct rtpp_cmd_async *);
 
 static void
@@ -518,6 +521,32 @@ rtpp_command_async_wakeup(struct rtpp_cmd_async *pub)
     return (old_clock);
 }
 
+static void
+rtpp_command_async_reg_overload(struct rtpp_cmd_async *pub, int overload)
+{
+    struct rtpp_cmd_async_cf *cmd_cf;
+
+    cmd_cf = PUB2PVT(pub);
+
+    pthread_mutex_lock(&cmd_cf->cmd_mutex);
+    cmd_cf->overload = overload;
+    pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+}
+
+static int
+rtpp_command_async_chk_overload(struct rtpp_cmd_async *pub)
+{
+    struct rtpp_cmd_async_cf *cmd_cf;
+    int rval;
+
+    cmd_cf = PUB2PVT(pub);
+
+    pthread_mutex_lock(&cmd_cf->cmd_mutex);
+    rval = cmd_cf->overload;
+    pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+    return (rval);
+}
+
 static int
 init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp)
 {
@@ -673,6 +702,8 @@ rtpp_command_async_ctor(struct cfg *cf)
     cmd_cf->pub.dtor = &rtpp_command_async_dtor;
     cmd_cf->pub.wakeup = &rtpp_command_async_wakeup;
     cmd_cf->pub.get_aload = &rtpp_command_async_get_aload;
+    cmd_cf->pub.reg_overload = &rtpp_command_async_reg_overload;
+    cmd_cf->pub.chk_overload = &rtpp_command_async_chk_overload;
     return (&cmd_cf->pub);
 
 e7:
