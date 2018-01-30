@@ -127,7 +127,7 @@ rtpp_proc_async_run(void *arg)
     int alarm_tick, ndrain, rtp_only;
     int nready_rtp, nready_rtcp;
     struct rtpp_proc_async_cf *proc_cf;
-    long long ncycles_ref, ncycles_ref_last;
+    long long ncycles_ref, ncycles_ref_last, ncycles_chk_ol;
 #if RTPP_DEBUG_timers
     int ncycles_ref_pre;
 #endif
@@ -155,6 +155,7 @@ rtpp_proc_async_run(void *arg)
     last_ctick = 0;
 #endif
     ncycles_ref_last = 0;
+    ncycles_chk_ol = 0;
     overload = 0;
 
     tp[0] = getdtime();
@@ -168,7 +169,7 @@ rtpp_proc_async_run(void *arg)
                 break;
             }
         }
-        if (cf->stable->overload_prot.ecode != 0 && ncycles_ref % 20 == 0) {
+        if (cf->stable->overload_prot.ecode != 0 && ncycles_chk_ol <= ncycles_ref) {
             lv = prdic_getload(proc_cf->elp);
             if (overload  && lv < 0.85) {
                 overload = 0;
@@ -177,10 +178,9 @@ rtpp_proc_async_run(void *arg)
                 overload = 1;
                 CALL_METHOD(cf->stable->rtpp_cmd_cf, reg_overload, 1);
             }
-            if (ncycles_ref % 200 == 0) {
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO, "ncycles=%lld load=%f",
-                  ncycles_ref, lv);
-            }
+            RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO, "ncycles=%lld load=%f",
+              ncycles_ref, lv);
+            ncycles_chk_ol = ((ncycles_ref / 200) + 1) * 200;
         }
         ndrain = (ncycles_ref - ncycles_ref_last) / (cf->stable->target_pfreq / MAX_RTP_RATE);
 #if RTPP_DEBUG_timers
