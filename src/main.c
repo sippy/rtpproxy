@@ -226,6 +226,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval)
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     free(cfsp->nofile_limit);
     free(cfsp->ctrl_socks);
+    free(cfsp->mpaths);
     free(cfsp);
     rtpp_exit(rval);
 }
@@ -294,11 +295,15 @@ init_config(struct cfg *cf, int argc, char **argv)
       "VN:c:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
         case LOPT_DSO:
-            if (cf->stable->mpath != NULL) {
+            if (!RTPP_LIST_IS_EMPTY(cf->stable->mpaths)) {
                  errx(1, "this version of the rtpproxy only supports loading a "
                    "single module");
             }
-            cf->stable->mpath = strdup(optarg);
+            cp = realpath(optarg, NULL);
+            if (cp == NULL) {
+                 err(1, "realpath");
+            }
+            rtpp_list_append(cf->stable->mpaths, cp);
             break;
 
         case LOPT_BRSYM:
@@ -731,10 +736,15 @@ main(int argc, char **argv)
     }
     cf.stable->ctrl_socks = rtpp_zmalloc(sizeof(struct rtpp_list));
     if (cf.stable->ctrl_socks == NULL) {
-         err(1, "can't allocate memory for the struct rtpp_cfg_stable");
+         err(1, "can't allocate memory for the struct ctrl_socks");
          /* NOTREACHED */
     }
-    RTPP_LIST_RESET(cf.stable->ctrl_socks);
+
+    cf.stable->mpaths = rtpp_zmalloc(sizeof(struct rtpp_list));
+    if (cf.stable->mpaths == NULL) {
+         err(1, "can't allocate memory for the struct mpaths");
+         /* NOTREACHED */
+    }
 
     init_config(&cf, argc, argv);
 
@@ -796,17 +806,6 @@ main(int argc, char **argv)
             cf.stable->cwd_orig = getcwd(NULL, 0);
             if (cf.stable->cwd_orig == NULL) {
                 err(1, "getcwd");
-            }
-            if (cf.stable->mpath != NULL) {
-                char *mpath_abs;
-
-                asprintf(&mpath_abs, "%s/%s", cf.stable->cwd_orig,
-                  cf.stable->mpath);
-                if (mpath_abs == NULL) {
-                    err(1, "asprintf");
-                }
-                free(cf.stable->mpath);
-                cf.stable->mpath = mpath_abs;
             }
         }
 	if (rtpp_daemon(cf.stable->no_chdir, 0) == -1)
@@ -898,12 +897,15 @@ main(int argc, char **argv)
     }
 
 #if ENABLE_MODULE_IF
-    if (cf.stable->mpath != NULL) {
+    if (!RTPP_LIST_IS_EMPTY(cf.stable->mpaths)) {
+        const char *mp;
+
+        mp = RTPP_LIST_HEAD(cf.stable->mpaths);
         cf.stable->modules_cf = rtpp_module_if_ctor(cf.stable, cf.stable->glog,
-          cf.stable->mpath);
+          mp);
         if (cf.stable->modules_cf == NULL) {
             RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
-              "%s: dymanic module load has failed", cf.stable->mpath);
+              "%s: dymanic module load has failed", mp);
             exit(1);
         }
     }

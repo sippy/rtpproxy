@@ -131,7 +131,7 @@ struct rtpp_cfg_stable {
     struct rtpp_sessinfo *sessinfo;
     const char *cwd_orig;
 
-    char *mpath;
+    struct rtpp_list *mpaths;
     struct rtpp_module_if *modules_cf;
 
     struct overload_prot overload_prot;
