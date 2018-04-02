@@ -46,6 +46,7 @@
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
+#include "rtpp_list.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_module_if.h"
 #include "rtpp_pipe.h"
@@ -161,9 +162,12 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     pvt->pub.rtpp_stats = cfs->rtpp_stats;
     pvt->pub.log = log;
     pvt->sessinfo = cfs->sessinfo;
-    if (cfs->modules_cf != NULL) {
-        CALL_SMETHOD(cfs->modules_cf->rcnt, incref);
-        pvt->modules_cf = cfs->modules_cf;
+    if (!RTPP_LIST_IS_EMPTY(cfs->modules_cf)) {
+        struct rtpp_module_if *mif;
+
+        mif = RTPP_LIST_HEAD(cfs->modules_cf);
+        CALL_SMETHOD(mif->rcnt, incref);
+        pvt->modules_cf = mif;
     }
 
     CALL_METHOD(cfs->sessinfo, append, pub, 0, fds);

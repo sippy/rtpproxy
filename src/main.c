@@ -41,6 +41,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <grp.h>
+#include <limits.h>
 #include <math.h>
 #include <pthread.h>
 #include <pwd.h>
@@ -226,7 +227,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval)
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     free(cfsp->nofile_limit);
     free(cfsp->ctrl_socks);
-    free(cfsp->mpaths);
+    free(cfsp->modules_cf);
     free(cfsp);
     rtpp_exit(rval);
 }
@@ -243,6 +244,8 @@ init_config(struct cfg *cf, int argc, char **argv)
     struct rtpp_ctrl_sock *ctrl_sock;
     int option_index, brsym;
     struct proto_cap *pcp;
+    struct rtpp_module_if *mif;
+    char mpath[PATH_MAX + 1];
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -295,15 +298,19 @@ init_config(struct cfg *cf, int argc, char **argv)
       "VN:c:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
         case LOPT_DSO:
-            if (!RTPP_LIST_IS_EMPTY(cf->stable->mpaths)) {
+            if (!RTPP_LIST_IS_EMPTY(cf->stable->modules_cf)) {
                  errx(1, "this version of the rtpproxy only supports loading a "
                    "single module");
             }
-            cp = realpath(optarg, NULL);
+            cp = realpath(optarg, mpath);
             if (cp == NULL) {
                  err(1, "realpath");
             }
-            rtpp_list_append(cf->stable->mpaths, cp);
+            mif = rtpp_module_if_ctor(cp);
+            if (mif == NULL) {
+                err(1, "%s: dymanic module constructor has failed", cp);
+            }
+            rtpp_list_append(cf->stable->modules_cf, mif);
             break;
 
         case LOPT_BRSYM:
@@ -710,6 +717,7 @@ main(int argc, char **argv)
 #if RTPP_DEBUG_timers
     double sleep_time, filter_lastval;
 #endif
+    struct rtpp_module_if *mif;
 
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_INIT(rtpproxy);
@@ -740,9 +748,9 @@ main(int argc, char **argv)
          /* NOTREACHED */
     }
 
-    cf.stable->mpaths = rtpp_zmalloc(sizeof(struct rtpp_list));
-    if (cf.stable->mpaths == NULL) {
-         err(1, "can't allocate memory for the struct mpaths");
+    cf.stable->modules_cf = rtpp_zmalloc(sizeof(struct rtpp_list));
+    if (cf.stable->modules_cf == NULL) {
+         err(1, "can't allocate memory for the struct modules_cf");
          /* NOTREACHED */
     }
 
@@ -897,15 +905,18 @@ main(int argc, char **argv)
     }
 
 #if ENABLE_MODULE_IF
-    if (!RTPP_LIST_IS_EMPTY(cf.stable->mpaths)) {
-        const char *mp;
+    if (!RTPP_LIST_IS_EMPTY(cf.stable->modules_cf)) {
+        struct rtpp_module_if *mif;
 
-        mp = RTPP_LIST_HEAD(cf.stable->mpaths);
-        cf.stable->modules_cf = rtpp_module_if_ctor(cf.stable, cf.stable->glog,
-          mp);
-        if (cf.stable->modules_cf == NULL) {
+        mif = RTPP_LIST_HEAD(cf.stable->modules_cf);
+        if (CALL_METHOD(mif, load, cf.stable, cf.stable->glog) != 0) {
             RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
-              "%s: dymanic module load has failed", mp);
+              "%p: dymanic module load has failed", mif);
+            exit(1);
+        }
+        if (CALL_METHOD(mif, start) != 0) {
+            RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
+              "%p: dymanic module start has failed", mif);
             exit(1);
         }
     }
@@ -968,8 +979,8 @@ main(int argc, char **argv)
 
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
 #if ENABLE_MODULE_IF
-    if (cf.stable->modules_cf != NULL) {
-        CALL_SMETHOD(cf.stable->modules_cf->rcnt, decref);
+    for (mif = RTPP_LIST_HEAD(cf.stable->modules_cf); mif != NULL; mif = RTPP_ITER_NEXT(mif)) {
+        CALL_SMETHOD(mif->rcnt, decref);
     }
 #endif
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);

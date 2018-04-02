@@ -31,13 +31,18 @@ struct rtpp_acct;
 struct rtpp_log;
 struct rtpp_cfg_stable;
 
+DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, struct rtpp_cfg_stable *,
+  struct rtpp_log *);
+DEFINE_METHOD(rtpp_module_if, rtpp_module_if_start, int);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct, void,
   struct rtpp_acct *);
 
 struct rtpp_module_if {
+    struct rtpp_type_linkable t;
     struct rtpp_refcnt *rcnt;
+    METHOD_ENTRY(rtpp_module_if_load, load);
+    METHOD_ENTRY(rtpp_module_if_start, start);
     METHOD_ENTRY(rtpp_module_if_do_acct, do_acct);
 };
 
-struct rtpp_module_if *rtpp_module_if_ctor(struct rtpp_cfg_stable *,
-  struct rtpp_log *, const char *);
+struct rtpp_module_if *rtpp_module_if_ctor(char *);
