@@ -33,7 +33,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddrs.h rtpp_ssrc.h \
   rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h rtpp_command_play.c \
   rtpp_command_play.h rtpp_command_ver.h rtpp_command_ver.c \
-  rtpp_pearson_perfect.c rtpp_pearson_perfect.h
+  rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_acct_rtcp.h \
+  rtpp_acct_rtcp.c
 
 rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ \
@@ -70,7 +71,8 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_port_table_fin.c rtpp_port_table_fin.h rtpp_acct_fin.c \
   rtpp_acct_fin.h rtpp_netaddr_fin.c rtpp_netaddr_fin.h \
   rtpp_stats_fin.c rtpp_stats_fin.h rtpp_pearson_perfect_fin.c \
-  rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h
+  rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h \
+  rtpp_acct_rtcp_fin.c rtpp_acct_rtcp_fin.h
 rtpproxy_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN)
 rtpproxy_debug_SOURCES=$(rtpproxy_SOURCES) $(SRCS_DEBUG)
 rtpp_objck_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
@@ -192,6 +194,11 @@ rtpp_acct_fin.c: $(GENFINCODE) rtpp_acct.h
 	$(GENFINCODE) rtpp_acct.h rtpp_acct_fin.h rtpp_acct_fin.c
 
 rtpp_acct_fin.h: rtpp_acct_fin.c
+
+rtpp_acct_rtcp_fin.c: $(GENFINCODE) rtpp_acct_rtcp.h
+	$(GENFINCODE) rtpp_acct_rtcp.h rtpp_acct_rtcp_fin.h rtpp_acct_rtcp_fin.c
+
+rtpp_acct_rtcp_fin.h: rtpp_acct_rtcp_fin.c
 
 rtpp_netaddr_fin.c: $(GENFINCODE_S) rtpp_netaddr.h
 	$(GENFINCODE_S) rtpp_netaddr.h rtpp_netaddr_fin.h rtpp_netaddr_fin.c
