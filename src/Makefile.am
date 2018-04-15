@@ -1,4 +1,4 @@
-bin_PROGRAMS=rtpproxy rtpproxy_debug
+bin_PROGRAMS=rtpproxy rtpproxy_debug rtpp_objck
 BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
@@ -54,8 +54,9 @@ rtpproxy_LDADD+=@LIBS_SIPLOG@
 rtpproxy_debug_LDADD+=@LIBS_SIPLOG_DBG@
 endif
 
-SRCS_DEBUG=	rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
-  rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
+SRGC_MEMDEB_CORE=rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
+  rtpp_memdeb_stats.h rtpp_memdeb_test.c
+SRCS_DEBUG=	$(SRGC_MEMDEB_CORE) rtpp_stacktrace.c rtpp_stacktrace.h
 
 SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
@@ -70,24 +71,34 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_acct_fin.h rtpp_netaddr_fin.c rtpp_netaddr_fin.h \
   rtpp_stats_fin.c rtpp_stats_fin.h rtpp_pearson_perfect_fin.c \
   rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h
-rtpproxy_SOURCES=${BASE_SOURCES} ${SRCS_AUTOGEN}
-rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
+rtpproxy_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN)
+rtpproxy_debug_SOURCES=$(rtpproxy_SOURCES) $(SRCS_DEBUG)
+rtpp_objck_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
+rtpp_objck_SOURCES=rtpp_objck.c $(SRCS_AUTOGEN) $(SRGC_MEMDEB_CORE) \
+  rtpp_stats.c rtpp_stats.h rtpp_mallocs.c rtpp_mallocs.h \
+  rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_pearson.c rtpp_pearson.h \
+  rtpp_refcnt.c rtpp_refcnt.h rtpp_time.c rtpp_time.h rtpp_timed.c rtpp_timed.h \
+  rtpp_queue.c rtpp_queue.h rtpp_wi.c rtpp_wi.h
+rtpp_objck_CPPFLAGS=$(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
 
-rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
-  -DMEMDEB_APP=rtpproxy -include rtpp_memdeb.h
+RTPP_MEMDEB_CPPFLAGS=-DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
+
+rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -I$(top_srcdir) $(RTPP_MEMDEB_CPPFLAGS) \
+  -DMEMDEB_APP=rtpproxy
 EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
 
 if BUILD_ELPERIODIC
 EXTRA_CFLAGS+=-I$(top_srcdir)/libelperiodic/src
 endif
 
-rtpproxy_CFLAGS=${EXTRA_CFLAGS}
-rtpproxy_debug_CFLAGS=${EXTRA_CFLAGS} -g3 -O0 -fno-omit-frame-pointer
+rtpproxy_CFLAGS=$(EXTRA_CFLAGS)
+rtpproxy_debug_CFLAGS=$(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
+rtpp_objck_CFLAGS=$(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
 
 DEFS=	-Wall @DEFS@
 
-CLEANFILES= ${SRCS_AUTOGEN}
-BUILT_SOURCES= ${SRCS_AUTOGEN}
+CLEANFILES= $(SRCS_AUTOGEN)
+BUILT_SOURCES= $(SRCS_AUTOGEN)
 
 GENFINCODE= $(top_srcdir)/src/genfincode.sh
 GENFINCODE_S= $(top_srcdir)/src/genfincode_stat.sh
