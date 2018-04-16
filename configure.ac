@@ -272,7 +272,8 @@ AM_CONDITIONAL(BUILD_UDP_CONTENTION, [test "${ENABLE_UDP_CONTENTION}" = 1])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
- modules/acct_csv/Makefile pertools/Makefile pertools/udp_contention/Makefile])
+ modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile
+ pertools/Makefile pertools/udp_contention/Makefile])
 
 AM_COND_IF([BUILD_ELPERIODIC], [AC_CONFIG_SUBDIRS([libelperiodic])])
 
