@@ -14,6 +14,7 @@ libtool
 extractaudio/extractaudio
 src/rtpproxy
 src/rtpproxy_debug
+src/rtpp_objck
 makeann/makeann
 src/config.h
 src/config_std.h
