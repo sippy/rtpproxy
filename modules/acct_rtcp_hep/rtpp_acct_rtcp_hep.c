@@ -32,6 +32,9 @@
 #include "rtpp_types.h"
 #include "rtpp_module.h"
 #include "rtpp_cfg_stable.h"
+#include "rtpp_acct_rtcp.h"
+#include "rtpp_ssrc.h"
+#include "rtpa_stats.h"
 
 struct rtpp_module_priv {
    int dummy;
@@ -39,9 +42,7 @@ struct rtpp_module_priv {
 
 static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *);
 static void rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *);
-#if 0
-static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct *);
-#endif
+static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct_rtcp *);
 
 #define API_FUNC(fname, asize) {.func = (fname), .argsize = (asize)}
 
@@ -50,9 +51,7 @@ struct rtpp_minfo rtpp_module = {
     .ver = MI_VER_INIT(),
     .ctor = rtpp_acct_rtcp_hep_ctor,
     .dtor = rtpp_acct_rtcp_hep_dtor,
-#if 0
-    .on_session_end = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_OSIZE())
-#endif
+    .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
 static struct rtpp_module_priv *
@@ -79,5 +78,12 @@ rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *pvt)
 {
 
     mod_free(pvt);
+    return;
+}
+
+static void
+rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
+{
+
     return;
 }
