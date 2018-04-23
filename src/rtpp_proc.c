@@ -48,6 +48,9 @@
 #include "rtpp_session.h"
 #include "rtpp_ttl.h"
 #include "rtpp_pipe.h"
+#include "rtpp_acct_rtcp.h"
+#include "rtpp_list.h"
+#include "rtpp_module_if.h"
 
 struct rtpp_proc_ready_lst {
     struct rtpp_session *sp;
@@ -85,6 +88,17 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             continue;
         }
         send_packet(cf, stp, packet, sender, rsp);
+        if (stp->pipe_type == PIPE_RTCP && !RTPP_LIST_IS_EMPTY(cf->stable->modules_cf)) {
+            struct rtpp_acct_rtcp *rarp;
+            struct rtpp_module_if *mif;
+
+            rarp = rtpp_acct_rtcp_ctor(0);
+            if (rarp == NULL) {
+                continue;
+            }
+            mif = RTPP_LIST_HEAD(cf->stable->modules_cf);
+            CALL_METHOD(mif, do_acct_rtcp, rarp);
+        }
     } while (ndrain > 0);
     return;
 }

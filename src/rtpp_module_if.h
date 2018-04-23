@@ -28,6 +28,7 @@
 struct rtpp_module_if;
 struct rtpp_refcnt;
 struct rtpp_acct;
+struct rtpp_acct_rtcp;
 struct rtpp_log;
 struct rtpp_cfg_stable;
 
@@ -36,6 +37,8 @@ DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, struct rtpp_cfg_stable *
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_start, int);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct, void,
   struct rtpp_acct *);
+DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct_rtcp, void,
+  struct rtpp_acct_rtcp *);
 
 struct rtpp_module_if {
     struct rtpp_type_linkable t;
@@ -43,6 +46,7 @@ struct rtpp_module_if {
     METHOD_ENTRY(rtpp_module_if_load, load);
     METHOD_ENTRY(rtpp_module_if_start, start);
     METHOD_ENTRY(rtpp_module_if_do_acct, do_acct);
+    METHOD_ENTRY(rtpp_module_if_do_acct_rtcp, do_acct_rtcp);
 };
 
 struct rtpp_module_if *rtpp_module_if_ctor(char *);

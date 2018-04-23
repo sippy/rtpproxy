@@ -48,6 +48,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
+#include "rtpp_acct_rtcp.h"
 #include "rtpp_pcount.h"
 #include "rtpp_pcnt_strm.h"
 #define MODULE_IF_CODE
@@ -88,11 +89,13 @@ static void rtpp_mif_run(void *);
 static int rtpp_mif_load(struct rtpp_module_if *, struct rtpp_cfg_stable *, struct rtpp_log *);
 static int rtpp_mif_start(struct rtpp_module_if *);
 static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
+static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp *);
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_module_if_priv *)((char *)(pubp) - offsetof(struct rtpp_module_if_priv, pub)))
 
 static const char *do_acct_aname = "do_acct";
+static const char *do_acct_rtcp_aname = "do_acct_rtcp";
 
 struct rtpp_module_if *
 rtpp_module_if_ctor(char *mpath)
@@ -111,6 +114,7 @@ rtpp_module_if_ctor(char *mpath)
     pvt->pub.rcnt = rcnt;
     pvt->pub.load = &rtpp_mif_load;
     pvt->pub.do_acct = &rtpp_mif_do_acct;
+    pvt->pub.do_acct_rtcp = &rtpp_mif_do_acct_rtcp;
     pvt->pub.start = &rtpp_mif_start;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
@@ -200,7 +204,14 @@ rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp, struct 
             goto e5;
         }
     }
-    if (pvt->mip->on_session_end.argsize != rtpp_acct_OSIZE()) {
+    if (pvt->mip->on_session_end.func != NULL &&
+      pvt->mip->on_session_end.argsize != rtpp_acct_OSIZE()) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
+          "consider recompiling the module", pvt->mpath);
+        goto e6;
+    }
+    if (pvt->mip->on_rtcp_rcvd.func != NULL &&
+      pvt->mip->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
           "consider recompiling the module", pvt->mpath);
         goto e6;
@@ -273,7 +284,6 @@ rtpp_mif_run(void *argp)
     struct rtpp_wi *wi;
     int signum;
     const char *aname;
-    struct rtpp_acct *rap;
 
     pvt = (struct rtpp_module_if_priv *)argp;
     for (;;) {
@@ -286,11 +296,23 @@ rtpp_mif_run(void *argp)
             }
             continue;
         }
-        aname = rtpp_wi_apis_getnamearg(wi, (void **)&rap, sizeof(rap));
+        aname = rtpp_wi_apis_getname(wi);
         if (aname == do_acct_aname) {
-            pvt->mip->on_session_end.func(pvt->mpvt, rap);
+            struct rtpp_acct *rap;
+
+            rtpp_wi_apis_getnamearg(wi, (void **)&rap, sizeof(rap));
+            if (pvt->mip->on_session_end.func != NULL)
+                pvt->mip->on_session_end.func(pvt->mpvt, rap);
+            CALL_SMETHOD(rap->rcnt, decref);
         }
-        CALL_SMETHOD(rap->rcnt, decref);
+        if (aname == do_acct_rtcp_aname) {
+            struct rtpp_acct_rtcp *rapr;
+
+            rtpp_wi_apis_getnamearg(wi, (void **)&rapr, sizeof(rapr));
+            if (pvt->mip->on_rtcp_rcvd.func != NULL)
+                pvt->mip->on_rtcp_rcvd.func(pvt->mpvt, rapr);
+            CALL_SMETHOD(rapr->rcnt, decref);
+        }
         rtpp_wi_free(wi);
     }
 }
@@ -303,6 +325,23 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
 
     pvt = PUB2PVT(self);
     wi = rtpp_wi_malloc_apis(do_acct_aname, &acct, sizeof(acct));
+    if (wi == NULL) {
+        RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
+          "memory", pvt->mip->name);
+        return;
+    }
+    CALL_SMETHOD(acct->rcnt, incref);
+    rtpp_queue_put_item(wi, pvt->req_q);
+}
+
+static void
+rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
+{
+    struct rtpp_module_if_priv *pvt;
+    struct rtpp_wi *wi;
+
+    pvt = PUB2PVT(self);
+    wi = rtpp_wi_malloc_apis(do_acct_rtcp_aname, &acct, sizeof(acct));
     if (wi == NULL) {
         RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
           "memory", pvt->mip->name);
