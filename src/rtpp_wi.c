@@ -249,6 +249,14 @@ rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t min_len, size_t max_len)
 }
 
 const char *
+rtpp_wi_apis_getname(struct rtpp_wi *wi)
+{
+
+    assert(wi->wi_type == RTPP_WI_TYPE_API_STR);
+    return ((const char *)wi->sendto);
+}
+
+const char *
 rtpp_wi_apis_getnamearg(struct rtpp_wi *wi, void **datap, size_t datalen)
 {
 
