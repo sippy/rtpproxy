@@ -377,7 +377,7 @@ rtp_packet_parse(struct rtp_packet *pkt)
 }
 
 void
-rtp_packet_dup(struct rtp_packet *dpkt, struct rtp_packet *spkt, int flags)
+rtp_packet_dup(struct rtp_packet *dpkt, const struct rtp_packet *spkt, int flags)
 {
     int csize;
     struct rtp_packet_full *dpkt_full, *spkt_full;
