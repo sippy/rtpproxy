@@ -28,16 +28,18 @@
 
 struct rtpp_refcnt;
 struct rtpa_stats;
+struct rtp_packet;
 
 struct rtpp_acct_rtcp {
     uint64_t seuid;
     struct rtpa_stats_jitter *jt;
     char *call_id;
+    struct rtp_packet *pkt;
 
     struct rtpp_refcnt *rcnt;
 };
 
-struct rtpp_acct_rtcp *rtpp_acct_rtcp_ctor(uint64_t);
+struct rtpp_acct_rtcp *rtpp_acct_rtcp_ctor(uint64_t, const struct rtp_packet *);
 
 #define rtpp_acct_rtcp_OSIZE() (sizeof(struct rtpp_acct_rtcp) + \
   sizeof(struct rtpa_stats_jitter))

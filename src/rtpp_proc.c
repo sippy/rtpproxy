@@ -92,7 +92,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             struct rtpp_acct_rtcp *rarp;
             struct rtpp_module_if *mif;
 
-            rarp = rtpp_acct_rtcp_ctor(0);
+            rarp = rtpp_acct_rtcp_ctor(0, packet);
             if (rarp == NULL) {
                 continue;
             }
