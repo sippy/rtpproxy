@@ -32,6 +32,8 @@
 
 #include "rtpp_types.h"
 #include "rtpp_module.h"
+#include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_acct_rtcp.h"
 #include "rtpp_ssrc.h"
@@ -54,6 +56,14 @@ struct rtpp_minfo rtpp_module = {
     .dtor = rtpp_acct_rtcp_hep_dtor,
     .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
+
+void
+handler(int param)
+{
+    mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep: handler(%d)", param);
+
+    return;
+}
 
 static struct rtpp_module_priv *
 rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *cfsp)
@@ -85,6 +95,8 @@ rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *pvt)
 static void
 rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
 {
+
+    mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep_do");
 
     return;
 }

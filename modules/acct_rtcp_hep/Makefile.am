@@ -1,6 +1,8 @@
+HEPSRCDIR=$(top_srcdir)/hep-c
+
 pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
 
-rtpp_acct_rtcp_hep_la_SOURCES = rtpp_acct_rtcp_hep.c
+rtpp_acct_rtcp_hep_la_SOURCES = rtpp_acct_rtcp_hep.c ${HEPSRCDIR}/core_hep.c
 rtpp_acct_rtcp_hep_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 rtpp_acct_rtcp_hep_debug_la_SOURCES = ${rtpp_acct_rtcp_hep_la_SOURCES}
