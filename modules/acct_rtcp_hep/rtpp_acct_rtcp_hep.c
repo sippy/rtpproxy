@@ -25,6 +25,11 @@
  *
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+#include <netdb.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -38,6 +43,22 @@
 #include "rtpp_acct_rtcp.h"
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
+
+#include "core_hep.h"
+#include "hep_api.h"
+
+static struct hep_ctx ctx = {
+        .initfails = 0,
+        .hints = {{ 0 }},
+        .capt_host  = "10.0.0.1",
+        .capt_port  = "9060",
+        .capt_proto = "udp",
+        .capt_id = 101,
+        .hep_version = 3,
+        .usessl = 0,
+        .pl_compress = 0,
+        .sendPacketsCount = 0
+};
 
 struct rtpp_module_priv {
    int dummy;
@@ -74,12 +95,13 @@ rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *cfsp)
     if (pvt == NULL) {
         goto e0;
     }
+    if (init_hepsocket(&ctx) != 0) {
+        goto e1;
+    }
     return (pvt);
 
-#if 0
 e1:
     mod_free(pvt);
-#endif
 e0:
     return (NULL);
 }

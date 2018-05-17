@@ -12,4 +12,4 @@ rtpp_acct_rtcp_hep_debug_la_LDFLAGS=${rtpp_acct_rtcp_hep_la_LDFLAGS}
 rtpp_acct_rtcp_hep_debug_la_CPPFLAGS=-DRTPP_DEBUG
 rtpp_acct_rtcp_hep_debug_la_CFLAGS=-g3 -O0 -fno-omit-frame-pointer
 
-DEFS=	-Wall @DEFS@
+DEFS=	-Wall @DEFS@ -I${HEPSRCDIR}
