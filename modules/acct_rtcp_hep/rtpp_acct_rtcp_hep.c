@@ -32,6 +32,7 @@
 #include <netdb.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "config.h"
 
@@ -41,6 +42,9 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_acct_rtcp.h"
+#include "rtpp_network.h"
+#include "rtp.h"
+#include "rtp_packet.h"
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 
@@ -106,8 +110,26 @@ rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *pvt)
 static void
 rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
 {
+    struct rc_info ri;
+    char src_ip[256], dst_ip[256];
+    struct sockaddr *src_addr, *dst_addr;
 
-    mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep_do");
+    memset(&ri, '\0', sizeof(ri));
 
+    src_addr = sstosa(&(rarp->pkt->raddr));
+    dst_addr = rarp->pkt->laddr;
+    addr2char_r(src_addr, src_ip, sizeof(src_ip));
+    addr2char_r(dst_addr, dst_ip, sizeof(dst_ip));
+    ri.ip_family = AF_INET;
+    ri.ip_proto = 17; /* UDP */
+    ri.proto_type = 5; /* RTCP */
+    ri.src_ip = src_ip;
+    ri.dst_ip = dst_ip;
+    ri.src_port = getnport(src_addr);
+    ri.dst_port = getnport(dst_addr);
+    
+
+    mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep_do: send_hepv3 = %d", send_hepv3(&ctx, &ri, "foobar", 6, 0));
+    
     return;
 }
