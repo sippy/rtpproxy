@@ -129,7 +129,8 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
     ri.dst_port = getnport(dst_addr);
     
 
-    mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep_do: send_hepv3 = %d", send_hepv3(&ctx, &ri, "foobar", 6, 0));
+    mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep_do: send_hepv3 = %d",
+      send_hepv3(&ctx, &ri, rarp->pkt->data.buf, rarp->pkt->size, 0));
     
     return;
 }
