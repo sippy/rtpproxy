@@ -42,7 +42,9 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_acct_rtcp.h"
+#include "rtpp_monotime.h"
 #include "rtpp_network.h"
+#include "rtpp_time.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_ssrc.h"
@@ -113,6 +115,7 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
     struct rc_info ri;
     char src_ip[256], dst_ip[256];
     struct sockaddr *src_addr, *dst_addr;
+    struct timeval rtimeval;
 
     memset(&ri, '\0', sizeof(ri));
 
@@ -127,7 +130,9 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
     ri.dst_ip = dst_ip;
     ri.src_port = getnport(src_addr);
     ri.dst_port = getnport(dst_addr);
-    
+    dtime2rtimeval(rarp->pkt->rtime, &rtimeval);
+    ri.time_sec = SEC(&rtimeval);
+    ri.time_usec = USEC(&rtimeval);
 
     mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep_do: send_hepv3 = %d",
       send_hepv3(&ctx, &ri, rarp->pkt->data.buf, rarp->pkt->size, 0));
