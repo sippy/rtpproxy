@@ -162,7 +162,7 @@ load_session(const char *path, struct channels *channels, enum origin origin,
     pcount = loader->load(loader, channels, &stat, origin, crypto);
 
     update_rtpp_totals(&stat, &stat);
-    jc = get_jitter_stats(stat.jdata, &jstat);
+    jc = get_jitter_stats(stat.jdata, &jstat, NULL);
     printf("pcount=%u, min_seq=%u, max_seq=%u, seq_offset=%u, ssrc=0x%.8X, duplicates=%u\n",
       (unsigned int)stat.last.pcount, (unsigned int)stat.last.min_seq, (unsigned int)stat.last.max_seq,
       (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc.val, (unsigned int)stat.last.duplicates);
