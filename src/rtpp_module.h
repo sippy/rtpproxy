@@ -123,6 +123,8 @@ struct rtpp_minfo {
     struct rtpp_log *log;
 };
 
+extern struct rtpp_minfo rtpp_module;
+
 #define MI_VER_INIT() {.rev = MODULE_API_REVISION, .mi_size = sizeof(rtpp_module)}
 #define MI_VER_CHCK(sptr) ((sptr)->ver.rev == MODULE_API_REVISION && \
   (sptr)->ver.mi_size == sizeof(struct rtpp_minfo))
