@@ -105,6 +105,7 @@ static void
 rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *pvt)
 {
 
+    hep_gen_dtor(&ctx);
     mod_free(pvt);
     return;
 }
@@ -133,9 +134,12 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
     dtime2rtimeval(rarp->pkt->rtime, &rtimeval);
     ri.time_sec = SEC(&rtimeval);
     ri.time_usec = USEC(&rtimeval);
+    if (hep_gen_fill(&ctx, &ri) < 0)
+      goto out;
 
     mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep_do: send_hepv3 = %d",
       send_hepv3(&ctx, &ri, rarp->pkt->data.buf, rarp->pkt->size, 0));
-    
+
+out:
     return;
 }
