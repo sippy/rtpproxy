@@ -63,7 +63,7 @@ static void send_packet(struct cfg *, struct rtpp_stream *,
 static void
 rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
   double dtime, int drain_repeat, struct sthread_args *sender,
-  struct rtpp_proc_rstats *rsp)
+  struct rtpp_proc_rstats *rsp, const char *call_id)
 {
     int ndrain;
     struct rtp_packet *packet = NULL;
@@ -92,7 +92,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             struct rtpp_acct_rtcp *rarp;
             struct rtpp_module_if *mif;
 
-            rarp = rtpp_acct_rtcp_ctor(0, packet);
+            rarp = rtpp_acct_rtcp_ctor(call_id, packet);
             if (rarp == NULL) {
                 continue;
             }
@@ -178,7 +178,7 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
             continue;
         }
         if (sp->complete != 0) {
-            rxmit_packets(cf, stp, dtime, drain_repeat, sender, rsp);
+            rxmit_packets(cf, stp, dtime, drain_repeat, sender, rsp, sp->call_id);
             CALL_SMETHOD(sp->rcnt, decref);
             if (stp->resizer != NULL) {
                 while ((packet = rtp_resizer_get(stp->resizer, dtime)) != NULL) {

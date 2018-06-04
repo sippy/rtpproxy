@@ -134,10 +134,18 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
     dtime2rtimeval(rarp->pkt->rtime, &rtimeval);
     ri.time_sec = SEC(&rtimeval);
     ri.time_usec = USEC(&rtimeval);
-    if (hep_gen_fill(&ctx, &ri) < 0)
-      goto out;
+    if (hep_gen_fill(&ctx, &ri) < 0) {
+      mod_log(RTPP_LOG_ERR, "hep_gen_fill() failed");
+        goto out;
+    }
 
-    mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep_do: send_hepv3 = %d",
+    if (hep_gen_append(&ctx, 0x0000, 0x0011, rarp->call_id,
+      strlen(rarp->call_id)) < 0) {
+        mod_log(RTPP_LOG_ERR, "hep_gen_append() failed");
+        goto out;
+    }
+
+    mod_log(RTPP_LOG_INFO, "send_hepv3 = %d",
       send_hepv3(&ctx, &ri, rarp->pkt->data.buf, rarp->pkt->size, 0));
 
 out:

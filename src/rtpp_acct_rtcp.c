@@ -30,6 +30,7 @@
 #include <sys/socket.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
@@ -53,7 +54,7 @@ static void rtpp_acct_rtcp_dtor(struct rtpp_acct_rtcp_priv *);
   ((struct rtpp_acct_rtcp_priv *)((char *)(pubp) - offsetof(struct rtpp_acct_rtcp_priv, pub)))
 
 struct rtpp_acct_rtcp *
-rtpp_acct_rtcp_ctor(uint64_t seuid, const struct rtp_packet *pp)
+rtpp_acct_rtcp_ctor(const char *call_id, const struct rtp_packet *pp)
 {
     struct rtpp_acct_rtcp_priv *pvt;
     struct rtpp_refcnt *rcnt;
@@ -68,12 +69,17 @@ rtpp_acct_rtcp_ctor(uint64_t seuid, const struct rtp_packet *pp)
         goto e1;
     }
     rtp_packet_dup(pvt->pub.pkt, pp, 0);
-    pvt->pub.seuid = seuid;
+    pvt->pub.call_id = strdup(call_id);
+    if (pvt->pub.call_id == NULL) {
+        goto e2;
+    }
     pvt->pub.jt = &pvt->_jt;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_acct_rtcp_dtor,
       pvt);
     return ((&pvt->pub));
 
+e2:
+    rtp_packet_free(pvt->pub.pkt);
 e1:
     CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
@@ -86,8 +92,7 @@ rtpp_acct_rtcp_dtor(struct rtpp_acct_rtcp_priv *pvt)
 {
 
     /*rtpp_acct_rtcp_fin(&(pvt->pub));*/
-    if (pvt->pub.call_id != NULL)
-        free(pvt->pub.call_id);
+    free(pvt->pub.call_id);
     rtp_packet_free(pvt->pub.pkt);
     free(pvt);
 }
