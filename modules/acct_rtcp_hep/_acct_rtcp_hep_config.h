@@ -3,6 +3,7 @@ static struct hep_ctx ctx = {
         .hints = {{ 0 }},
         .capt_host  = "10.0.0.1",
         .capt_port  = "9060",
+        .hints = {{ .ai_socktype = SOCK_DGRAM }},
         .capt_id = 101,
         .hep_version = 3,
         .usessl = 0,
