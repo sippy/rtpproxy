@@ -232,7 +232,7 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DEFS = -Wall @DEFS@ -I${HEPSRCDIR}
+DEFS = -Wall -DRTPP_MODULE -Dmalloc=mod_malloc -Dfree=mod_free -Drealloc=mod_realloc @DEFS@ -I${HEPSRCDIR}
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
