@@ -347,7 +347,6 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
           "memory", pvt->mip->name);
         return;
     }
-    CALL_SMETHOD(acct->rcnt, incref);
     rtpp_queue_put_item(wi, pvt->req_q);
 }
 
