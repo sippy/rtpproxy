@@ -74,6 +74,6 @@ void rtpp_stats_destroy(struct rtpp_session_stat *);
 enum update_rtpp_stats_rval update_rtpp_stats(struct rtpp_log *,
   struct rtpp_session_stat *, rtp_hdr_t *, struct rtp_info *, double);
 void update_rtpp_totals(struct rtpp_session_stat *, struct rtpp_session_stat *);
-int get_jitter_stats(struct rtp_analyze_jitter *, struct rtpa_stats_jitter *);
+int get_jitter_stats(struct rtp_analyze_jitter *, struct rtpa_stats_jitter *, struct rtpp_log *);
 
 #endif

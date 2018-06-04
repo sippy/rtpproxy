@@ -142,7 +142,7 @@ rtpp_analyzer_get_jstats(struct rtpp_analyzer *rap,
     int rval;
 
     pvt = PUB2PVT(rap);
-    rval = get_jitter_stats(pvt->rstat.jdata, jrsp);
+    rval = get_jitter_stats(pvt->rstat.jdata, jrsp, pvt->log);
     return (rval);
 }
 
