@@ -139,7 +139,7 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
         goto out;
     }
 
-    if (hep_gen_append(&ctx, 0x0000, 0x0011, rarp->call_id,
+    if (hep_gen_append(&ctx, HEP_VID_GEN, HEP_TID_CID, rarp->call_id,
       strlen(rarp->call_id)) < 0) {
         mod_log(RTPP_LOG_ERR, "hep_gen_append() failed");
         goto out;
