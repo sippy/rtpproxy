@@ -145,8 +145,8 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
         goto out;
     }
 
-    mod_log(RTPP_LOG_INFO, "send_hepv3 = %d",
-      send_hepv3(&ctx, &ri, rarp->pkt->data.buf, rarp->pkt->size, 0));
+    mod_log(RTPP_LOG_INFO, "send_hep = %d",
+      send_hep(&ctx, &ri, rarp->pkt->data.buf, rarp->pkt->size));
 
 out:
     return;
