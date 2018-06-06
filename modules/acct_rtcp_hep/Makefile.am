@@ -1,4 +1,4 @@
-HEPSRCDIR=$(top_srcdir)/hep-c
+HEPSRCDIR=$(top_srcdir)/hepconnector
 
 pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
 
