@@ -50,13 +50,15 @@
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 
+#include "rtcp2json.h"
 #include "core_hep.h"
 #include "hep_api.h"
+#include "rtpp_sbuf.h"
 
 #include "_acct_rtcp_hep_config.h"
 
 struct rtpp_module_priv {
-   int dummy;
+   struct rtpp_sbuf *sbp;
 };
 
 static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *);
@@ -86,15 +88,23 @@ rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *cfsp)
 {
     struct rtpp_module_priv *pvt;
 
+    rtpp_sbuf_selftest();
+
     pvt = mod_zmalloc(sizeof(struct rtpp_module_priv));
     if (pvt == NULL) {
         goto e0;
     }
-    if (init_hepsocket(&ctx) != 0) {
+    pvt->sbp = rtpp_sbuf_ctor(512);
+    if (pvt->sbp == NULL) {
         goto e1;
+    }
+    if (init_hepsocket(&ctx) != 0) {
+        goto e2;
     }
     return (pvt);
 
+e2:
+    rtpp_sbuf_dtor(pvt->sbp);
 e1:
     mod_free(pvt);
 e0:
@@ -106,6 +116,7 @@ rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *pvt)
 {
 
     hep_gen_dtor(&ctx);
+    rtpp_sbuf_dtor(pvt->sbp);
     mod_free(pvt);
     return;
 }
@@ -117,6 +128,7 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
     char src_ip[256], dst_ip[256];
     struct sockaddr *src_addr, *dst_addr;
     struct timeval rtimeval;
+    int rval;
 
     memset(&ri, '\0', sizeof(ri));
 
@@ -129,8 +141,8 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
     ri.proto_type = 5; /* RTCP */
     ri.src_ip = src_ip;
     ri.dst_ip = dst_ip;
-    ri.src_port = getnport(src_addr);
-    ri.dst_port = getnport(dst_addr);
+    ri.src_port = getport(src_addr);
+    ri.dst_port = rarp->pkt->lport;
     dtime2rtimeval(rarp->pkt->rtime, &rtimeval);
     ri.time_sec = SEC(&rtimeval);
     ri.time_usec = USEC(&rtimeval);
@@ -145,8 +157,17 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
         goto out;
     }
 
-    mod_log(RTPP_LOG_INFO, "send_hep = %d",
-      send_hep(&ctx, &ri, rarp->pkt->data.buf, rarp->pkt->size));
+    rtpp_sbuf_reset(pvt->sbp);
+    rval = rtcp2json(pvt->sbp, rarp->pkt->data.buf, rarp->pkt->size);
+    if (rval < 0) {
+        mod_log(RTPP_LOG_ERR, "rtcp2json() failed: %d", rval);
+        goto out;
+    }
+
+    rval = send_hep(&ctx, &ri, pvt->sbp->bp, RS_ULEN(pvt->sbp));
+    if (rval < 0) {
+        mod_log(RTPP_LOG_INFO, "send_hep() failed: %d", rval);
+    }
 
 out:
     return;
