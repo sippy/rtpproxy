@@ -179,10 +179,10 @@ int rtcp2json(struct rtpp_sbuf *out, void *buf, int len)
       for (i = 0; i < r->common.count; i++) {
         if (i > 0)
           RSW_REST(-1, out, "  ,\n");
-        RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %lu,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
+        RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %ld,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
          (unsigned long)ntohl(r->r.sr.rr[i].ssrc),
          (unsigned long)r->r.sr.rr[i].fraction,
-         (unsigned long)ntohl(r->r.sr.rr[i].lost),
+         (long)ntohl(r->r.sr.rr[i].lost),
          (unsigned long)ntohl(r->r.sr.rr[i].last_seq),
          (unsigned long)ntohl(r->r.sr.rr[i].jitter),
          (unsigned long)ntohl(r->r.sr.rr[i].lsr),
@@ -203,10 +203,10 @@ int rtcp2json(struct rtpp_sbuf *out, void *buf, int len)
       for (i = 0; i < r->common.count; i++) {
         if (i > 0)
           RSW_REST(-1, out, "  ,\n");
-        RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %lu,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
+        RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %ld,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
           (unsigned long)ntohl(r->r.rr.rr[i].ssrc),
           (unsigned long)r->r.sr.rr[i].fraction,
-          (unsigned long)ntohl(r->r.rr.rr[i].lost),
+          (long)ntohl(r->r.rr.rr[i].lost),
           (unsigned long)ntohl(r->r.rr.rr[i].last_seq),
           (unsigned long)ntohl(r->r.rr.rr[i].jitter),
           (unsigned long)ntohl(r->r.rr.rr[i].lsr),
