@@ -125,7 +125,6 @@ static void
 rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
 {
     struct rc_info ri;
-    char src_ip[256], dst_ip[256];
     struct sockaddr *src_addr, *dst_addr;
     struct timeval rtimeval;
     int rval;
@@ -134,13 +133,25 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
 
     src_addr = sstosa(&(rarp->pkt->raddr));
     dst_addr = rarp->pkt->laddr;
-    addr2char_r(src_addr, src_ip, sizeof(src_ip));
-    addr2char_r(dst_addr, dst_ip, sizeof(dst_ip));
-    ri.ip_family = AF_INET;
     ri.ip_proto = 17; /* UDP */
     ri.proto_type = 5; /* RTCP */
-    ri.src_ip = src_ip;
-    ri.dst_ip = dst_ip;
+
+    ri.ip_family = dst_addr->sa_family;
+    switch (ri.ip_family) {
+    case AF_INET:
+        ri.src.p4 = &(satosin(src_addr)->sin_addr);
+        ri.dst.p4 = &(satosin(dst_addr)->sin_addr);
+        break;
+
+    case AF_INET6:
+        ri.src.p6 = &(satosin6(src_addr)->sin6_addr);
+        ri.dst.p6 = &(satosin6(dst_addr)->sin6_addr);
+        break;
+
+    default:
+        abort();
+    }
+
     ri.src_port = getport(src_addr);
     ri.dst_port = rarp->pkt->lport;
     dtime2rtimeval(rarp->pkt->rtime, &rtimeval);
