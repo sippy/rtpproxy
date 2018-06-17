@@ -1,5 +1,5 @@
 TESTS = startstop basic_versions command_parser makeann extractaudio1 \
-  session_timeouts playback1 forwarding1 rtp_analyze1
+  session_timeouts playback1 forwarding1 rtp_analyze1 rtcp2json1
 startstop_EXTRA_DIST = startstop startstop.output
 startstop_CLEANFILES = startstop.rout
 basic_versions_EXTRA_DIST = basic_versions basic_versions.input basic_versions.output
@@ -36,6 +36,8 @@ session_timeouts_CLEANFILES = session_timeouts.rout[1234] session_timeouts.rlog[
   session_timeouts.fout[1234]
 rtp_analyze1_EXTRA_DIST = rtp_analyze1 rtp_analyze
 rtp_analyze1_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
+rtcp2json1_EXTRA_DIST = rtcp2json1 rtcp2json
+rtcp2json1_CLEANFILES = rtcp1.output
 EXTRA_DIST = Makefile.am ${startstop_EXTRA_DIST} ${basic_versions_EXTRA_DIST} \
     ${command_parser_EXTRA_DIST} \
     ringback.sln makeann makeann.output \
@@ -50,4 +52,4 @@ TESTS_ENVIRONMENT = \
 CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9 ${startstop_CLEANFILES} \
   ${extractaudio_CLEANFILES} ${playback1_CLEANFILES} ${forwarding1_CLEANFILES} \
   ${session_timeouts_CLEANFILES} ${command_parser_CLEANFILES} ${basic_versions_CLEANFILES} \
-  ${rtp_analyze1_CLEANFILES} *.core
+  ${rtp_analyze1_CLEANFILES} ${rtcp2json1_CLEANFILES} *.core

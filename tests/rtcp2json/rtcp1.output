@@ -1,0 +1,23 @@
+{
+ "ssrc": 1309239164,
+ "sender_information": {
+  "ntp_timestamp_sec": 3738098587,
+  "ntp_timestamp_usec": 3798737781,
+  "rtp_timestamp": 191072,
+  "packets": 1190,
+  "octets": 23800
+ },
+ "type": 200,
+ "report_blocks": [
+  {
+   "source_ssrc": 2005674503,
+   "fraction_lost": 0,
+   "packets_lost": 2,
+   "highest_seq_no": 31520,
+   "ia_jitter": 2,
+   "lsr": 2976541490,
+   "dlsr": 252406
+  }
+ ],
+ "report_count": 1
+}
