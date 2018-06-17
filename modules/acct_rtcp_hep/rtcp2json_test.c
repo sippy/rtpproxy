@@ -45,9 +45,24 @@ main(void)
     path = "rtcp.raw";
 
     fd = open(path, O_RDONLY);
+    if (fd < 0) {
+        fprintf(stderr, "open() failed\n");
+        exit(1);
+    }
     rtcp_dlen = read(fd, rtcp_data, sizeof(rtcp_data));
+    if (rtcp_dlen < 0) {
+        fprintf(stderr, "read() failed\n");
+        exit(1);
+    }
     sbp = rtpp_sbuf_ctor(1024);
-    rtcp2json(sbp, rtcp_data, rtcp_dlen);
+    if (sbp == NULL) {
+        fprintf(stderr, "rtpp_sbuf_ctor() failed\n");
+        exit(1);
+    }
+    if (rtcp2json(sbp, rtcp_data, rtcp_dlen) != 0) {
+        fprintf(stderr, "rtcp2json() failed\n");
+        exit(1);
+    }
     printf("%s\n", sbp->bp);
 
     exit(0);
