@@ -34,7 +34,7 @@
 #include "rtcp2json.h"
 
 int
-main(void)
+main(int argc, char **argv)
 {
     int fd;
     const char *path;
@@ -42,7 +42,11 @@ main(void)
     char rtcp_data[1024];
     ssize_t rtcp_dlen;
 
-    path = "rtcp.raw";
+    if (argc == 1) {
+        path = "rtcp.raw";
+    } else {
+        path = argv[1];
+    }
 
     fd = open(path, O_RDONLY);
     if (fd < 0) {
