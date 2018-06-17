@@ -182,7 +182,7 @@ int rtcp2json(struct rtpp_sbuf *out, void *buf, int len)
         RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %ld,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
          (unsigned long)ntohl(r->r.sr.rr[i].ssrc),
          (unsigned long)r->r.sr.rr[i].fraction,
-         (long)ntohl(r->r.sr.rr[i].lost),
+         (long)RTCP_GET_LOST(&r->r.sr.rr[i]),
          (unsigned long)ntohl(r->r.sr.rr[i].last_seq),
          (unsigned long)ntohl(r->r.sr.rr[i].jitter),
          (unsigned long)ntohl(r->r.sr.rr[i].lsr),
@@ -191,7 +191,7 @@ int rtcp2json(struct rtpp_sbuf *out, void *buf, int len)
       if (r->common.count > 0)
         RSW_REST(-1, out, " ],\n");
       RSW_REST(-1, out, " \"report_count\": %lu\n", (unsigned long)r->common.count);
-      RSW_REST(-1, out, "}\n");
+      RSW_REST(-1, out, "}");
       break;
 
     case RTCP_RR:
@@ -206,7 +206,7 @@ int rtcp2json(struct rtpp_sbuf *out, void *buf, int len)
         RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %ld,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
           (unsigned long)ntohl(r->r.rr.rr[i].ssrc),
           (unsigned long)r->r.sr.rr[i].fraction,
-          (long)ntohl(r->r.rr.rr[i].lost),
+          (long)RTCP_GET_LOST(&r->r.rr.rr[i]),
           (unsigned long)ntohl(r->r.rr.rr[i].last_seq),
           (unsigned long)ntohl(r->r.rr.rr[i].jitter),
           (unsigned long)ntohl(r->r.rr.rr[i].lsr),
@@ -215,7 +215,7 @@ int rtcp2json(struct rtpp_sbuf *out, void *buf, int len)
       if (r->common.count > 0)
         RSW_REST(-1, out, " ],\n");
       RSW_REST(-1, out, " \"report_count\": %lu,\n", (unsigned long)r->common.count);
-      RSW_REST(-1, out, "}\n");
+      RSW_REST(-1, out, "}");
       break;
 
     case RTCP_SDES:

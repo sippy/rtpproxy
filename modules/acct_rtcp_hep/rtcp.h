@@ -93,12 +93,17 @@ typedef struct {
 typedef struct {
     uint32_t ssrc;             /* data source being reported */
     unsigned int fraction:8;  /* fraction lost since last SR/RR */
-    int lost:24;              /* cumul. no. pkts lost (signed!) */
+    unsigned int lost_sb:1;    /* cumul. no. pkts lost: sign */
+    unsigned int lost_b2:7;    /* cumul. no. pkts lost: MSB */
+    unsigned int lost_b1:8;    /* cumul. no. pkts lost: byte 1 */
+    unsigned int lost_b0:8;    /* cumul. no. pkts lost: LSB */
     uint32_t last_seq;         /* extended last seq. no. received */
     uint32_t jitter;           /* interarrival jitter */
     uint32_t lsr;              /* last SR packet from this source */
     uint32_t dlsr;             /* delay since last SR packet */
 } rtcp_rr_t;
+
+#define RTCP_GET_LOST(rp) ((rp)->lost_sb ? (-1) : (1) * (((rp)->lost_b2 << 16) + ((rp)->lost_b1 << 8) + (rp)->lost_b0))
 
 /*
  * SDES item
