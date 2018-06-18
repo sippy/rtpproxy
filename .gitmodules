@@ -4,3 +4,6 @@
 [submodule "hepconnector"]
 	path = hepconnector
 	url = https://github.com/sippy/hepconnector.git
+[submodule "libucl"]
+	path = libucl
+	url = https://github.com/vstakhov/libucl.git
