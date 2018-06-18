@@ -36,8 +36,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_acct_rtcp.h \
   rtpp_acct_rtcp.c
 
-rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
-rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ \
+rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl.a
+rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.a \
   $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
 
