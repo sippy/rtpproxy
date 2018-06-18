@@ -103,7 +103,7 @@ typedef struct {
     uint32_t dlsr;             /* delay since last SR packet */
 } rtcp_rr_t;
 
-#define RTCP_GET_LOST(rp) ((rp)->lost_sb ? (-1) : (1) * (((rp)->lost_b2 << 16) + ((rp)->lost_b1 << 8) + (rp)->lost_b0))
+#define RTCP_GET_LOST(rp) ((rp)->lost_sb ? (-1) : (1) * (((rp)->lost_b2 << 16) | ((rp)->lost_b1 << 8) | (rp)->lost_b0))
 
 /*
  * SDES item
