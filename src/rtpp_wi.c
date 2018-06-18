@@ -91,7 +91,7 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
     wi->flags = 0;
     wi->msg = pkt->data.buf;
     wi->msg_len = pkt->size;
-    wi->sendto = sstosa(&pkt->raddr);
+    wi->sendto = sstosa(&pkt->sendto);
     wi->tolen = tolen;
     memcpy(wi->sendto, sendto, tolen);
     wi->nsend = nsend;
@@ -116,7 +116,7 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
     wi->flags = 0;
     wi->msg = pkt->data.buf;
     wi->msg_len = pkt->size;
-    wi->sendto = sstosa(&pkt->raddr);
+    wi->sendto = sstosa(&pkt->sendto);
     wi->tolen = CALL_SMETHOD(sendto, get, wi->sendto, sizeof(pkt->raddr));
     wi->nsend = nsend;
     return (wi);
