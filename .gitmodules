@@ -5,5 +5,5 @@
 	path = hepconnector
 	url = https://github.com/sippy/hepconnector.git
 [submodule "libucl"]
-	path = libucl
+	path = external/libucl
 	url = https://github.com/vstakhov/libucl.git
