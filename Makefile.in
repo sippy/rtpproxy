@@ -189,11 +189,11 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = libexecinfo makeann modules libelperiodic/src src \
-	pertools tests extractaudio
+DIST_SUBDIRS = libexecinfo libucl makeann modules libelperiodic/src \
+	src pertools tests extractaudio
 am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in AUTHORS \
-	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
-	install-sh ltmain.sh missing
+	ChangeLog INSTALL NEWS ar-lib compile config.guess config.sub \
+	depcomp install-sh ltmain.sh missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -370,7 +370,7 @@ AUTOMAKE_OPTIONS = foreign
 @BUILD_ELPERIODIC_TRUE@SUBD_ELP = libelperiodic/src
 @BUILD_EXTRACTAUDIO_TRUE@SUBD_EAUD = extractaudio
 @BUILD_UDP_CONTENTION_TRUE@SUBD_UDCNT = pertools
-SUBDIRS = libexecinfo makeann $(SUBD_MOD) $(SUBD_ELP) src $(SUBD_UDCNT) tests \
+SUBDIRS = libexecinfo libucl makeann $(SUBD_MOD) $(SUBD_ELP) src $(SUBD_UDCNT) tests \
   $(SUBD_EAUD)
 
 dist_man_MANS = rtpproxy.8

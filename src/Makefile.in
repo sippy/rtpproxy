@@ -293,7 +293,8 @@ am__objects_7 = rtpproxy-rtpp_timed_fin.$(OBJEXT) \
 am_rtpproxy_OBJECTS = $(am__objects_6) $(am__objects_7)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
 am__DEPENDENCIES_1 =
-rtpproxy_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+rtpproxy_DEPENDENCIES = $(top_srcdir)/libucl/libucl.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 rtpproxy_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rtpproxy_CFLAGS) \
 	$(CFLAGS) $(rtpproxy_LDFLAGS) $(LDFLAGS) -o $@
@@ -456,8 +457,8 @@ am__objects_15 = $(am__objects_14) \
 	rtpproxy_debug-rtpp_stacktrace.$(OBJEXT)
 am_rtpproxy_debug_OBJECTS = $(am__objects_13) $(am__objects_15)
 rtpproxy_debug_OBJECTS = $(am_rtpproxy_debug_OBJECTS)
-rtpproxy_debug_DEPENDENCIES = $(top_srcdir)/libexecinfo/libexecinfo.a \
-	$(am__DEPENDENCIES_1)
+rtpproxy_debug_DEPENDENCIES = $(top_srcdir)/libucl/libucl_debug.a \
+	$(top_srcdir)/libexecinfo/libexecinfo.a $(am__DEPENDENCIES_1)
 rtpproxy_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpproxy_debug_CFLAGS) $(CFLAGS) $(rtpproxy_debug_LDFLAGS) \
@@ -698,9 +699,10 @@ BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_command_ver.h rtpp_command_ver.c rtpp_pearson_perfect.c \
 	rtpp_pearson_perfect.h rtpp_acct_rtcp.h rtpp_acct_rtcp.c \
 	$(am__append_1) $(am__append_3) $(am__append_4)
-rtpproxy_LDADD = -lm -lpthread @LIBS_ELPERIODIC@ $(am__append_2) \
-	$(am__append_5)
+rtpproxy_LDADD = -lm -lpthread @LIBS_ELPERIODIC@ \
+	$(top_srcdir)/libucl/libucl.a $(am__append_2) $(am__append_5)
 rtpproxy_debug_LDADD = -lm -lpthread @LIBS_ELPERIODIC@ \
+	$(top_srcdir)/libucl/libucl_debug.a \
 	$(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ \
 	$(am__append_6)
 rtpproxy_debug_LDFLAGS = -static -Wl,--export-dynamic
