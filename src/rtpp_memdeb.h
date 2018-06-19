@@ -54,8 +54,13 @@ CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
 #define malloc(n) rtpp_memdeb_malloc((n), MEMDEB_SYM, \
   __FILE__, __LINE__, __func__)
 #undef free
+#if !defined(RTPP_MEMDEB_FREE_NULL)
 #define free(p) rtpp_memdeb_free((p), MEMDEB_SYM, \
   __FILE__, __LINE__, __func__)
+#else
+#define free(p) rtpp_memdeb_free_n((p), MEMDEB_SYM, \
+  __FILE__, __LINE__, __func__)
+#endif
 #undef realloc
 #define realloc(p,n) rtpp_memdeb_realloc((p), (n), \
   MEMDEB_SYM, __FILE__, __LINE__, __func__)
@@ -76,6 +81,7 @@ CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
 
 void *rtpp_memdeb_malloc(size_t, void *, const char *, int, const char *);
 void rtpp_memdeb_free(void *, void *, const char *, int, const char *);
+void rtpp_memdeb_free_n(void *, void *, const char *, int, const char *);
 void *rtpp_memdeb_realloc(void *, size_t, void *, const char *, int, const char *);
 char *rtpp_memdeb_strdup(const char *, void *, const char *, int, const char *);
 int rtpp_memdeb_asprintf(char **, const char *, void *, const char *, int, \

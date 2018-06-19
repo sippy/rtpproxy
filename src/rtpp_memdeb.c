@@ -327,6 +327,15 @@ rtpp_memdeb_free(void *ptr, void *p, const char *fname, int linen, const char *f
     return free(mpf);
 }
 
+void
+rtpp_memdeb_free_n(void *ptr, void *p, const char *fname, int linen, const char *funcn)
+{
+
+    if (ptr == NULL)
+        return;
+    rtpp_memdeb_free(ptr, p, fname, linen, funcn);
+}
+
 void *
 rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int linen,
   const char *funcn)
