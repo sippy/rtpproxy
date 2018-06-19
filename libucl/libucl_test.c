@@ -23,7 +23,15 @@ main(int argc, char **argv)
 
     ecode = 0;
 
-    cfile = "libucl_test.conf";
+    if (argc < 2) {
+        cfile = "libucl_test.conf";
+    } else if (argc == 2) {
+        cfile = argv[1];
+    } else {
+        fprintf(stderr, "usage: libucl_test [conffile]\n");
+        ecode = 1;
+        goto e0;
+    }
     fd = open(cfile, O_RDONLY);
     if (fd < 0) {
         fprintf(stderr, "open(\"%s\") failed\n", cfile);
@@ -65,4 +73,3 @@ e0:
 
     return (ecode);
 }
-
