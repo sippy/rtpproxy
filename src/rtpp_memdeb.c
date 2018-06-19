@@ -474,6 +474,19 @@ rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *p,
     return (memcpy(dst, src, len));
 }
 
+void *
+rtpp_memdeb_calloc(size_t number, size_t size, void *p, \
+  const char *fname, int linen, const char *funcn)
+{
+    void *rp;
+
+    rp = rtpp_memdeb_malloc(number * size, p, fname, linen, funcn);
+    if (rp == NULL)
+        return (NULL);
+    memset(rp, '\0', number * size);
+    return (rp);
+}
+
 static int
 is_approved(struct rtpp_memdeb_priv *pvt, const char *funcn)
 {

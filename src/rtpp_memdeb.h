@@ -71,6 +71,8 @@ CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
 #undef memcpy
 #define memcpy(dp, sp, len) rtpp_memdeb_memcpy((dp), (sp), (len), \
   MEMDEB_SYM, __FILE__, __LINE__, __func__)
+#define calloc(nm, sz) rtpp_memdeb_calloc((nm), (sz), \
+  MEMDEB_SYM, __FILE__, __LINE__, __func__)
 
 void *rtpp_memdeb_malloc(size_t, void *, const char *, int, const char *);
 void rtpp_memdeb_free(void *, void *, const char *, int, const char *);
@@ -79,6 +81,8 @@ char *rtpp_memdeb_strdup(const char *, void *, const char *, int, const char *);
 int rtpp_memdeb_asprintf(char **, const char *, void *, const char *, int, \
   const char *, ...);
 void *rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *, \
+  const char *, int, const char *);
+void *rtpp_memdeb_calloc(size_t number, size_t size, void *, \
   const char *, int, const char *);
 
 #include <stdarg.h>
