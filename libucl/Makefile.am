@@ -18,7 +18,7 @@ libucl_a_CFLAGS = -Wno-pointer-sign -std=c99 -DHAVE_MATH_H -DHAVE_FLOAT_H -DHAVE
   -I$(UCL_DIR)/src/ \
   -Wno-unused-parameter
 libucl_debug_a_SOURCES = $(libucl_a_SOURCES)
-libucl_debug_a_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=rtpproxy -include $(top_srcdir)/src/rtpp_memdeb.h
+libucl_debug_a_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DRTPP_MEMDEB_FREE_NULL -DMEMDEB_APP=rtpproxy -include $(top_srcdir)/src/rtpp_memdeb.h
 libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS)
 
 noinst_PROGRAMS = libucl_test
