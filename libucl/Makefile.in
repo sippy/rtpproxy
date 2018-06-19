@@ -348,8 +348,8 @@ libucl_a_SOURCES = $(UCL_SDIR)/ucl_emitter_streamline.c \
   $(UCL_SDIR)/ucl_sexp.c \
   $(UCL_SDIR)/ucl_util.c
 
-libucl_a_CFLAGS = -Wno-pointer-sign -std=c99 -DHAVE_MATH_H -DHAVE_FLOAT_H -DHAVE_CTYPE_H -DHAVE_ERRNO_H \
-  -DHAVE_SYS_MMAN_H -I$(UCL_DIR)/include \
+libucl_a_CFLAGS = -Wno-pointer-sign -std=c99 -DHAVE_CONFIG_H \
+  -I$(UCL_DIR)/include \
   -I$(UCL_DIR)/uthash \
   -I$(UCL_DIR)/klib \
   -I$(UCL_DIR)/src/ \
