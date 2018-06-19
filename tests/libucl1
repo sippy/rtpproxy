@@ -1,0 +1,9 @@
+#!/bin/sh
+
+. $(dirname $0)/functions
+
+${TOP_BUILDDIR}/libucl/libucl_test libucl/libucl_test.conf > libucl1.output
+report "running libucl_test"
+${DIFF} libucl1.output libucl/libucl1.output
+report "checking libucl1.output"
+
