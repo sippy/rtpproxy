@@ -16,6 +16,7 @@ main(int argc, char **argv)
     struct ucl_parser *parser;
     ucl_object_t *conf_root;
     ucl_object_iter_t it_conf;
+    const ucl_object_t *obj_file;
     int fd;
     const char *cfile;
 
@@ -60,6 +61,9 @@ main(int argc, char **argv)
     }
 
     it_conf = ucl_object_iterate_new(conf_root);
+    while ((obj_file = ucl_object_iterate_safe(it_conf, true)) != NULL) {
+        continue;
+    }
     ucl_object_iterate_free(it_conf);
 
 e3:
