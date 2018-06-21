@@ -1,3 +1,5 @@
+/* Copyright (c) 2014, 2015 Allan Jude <allanjude@FreeBSD.org>. */
+
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -6,8 +8,16 @@
 #include "ucl.h"
 
 #include "rtpp_memdeb_internal.h"
+#include "rtpp_ucl.h"
 
 RTPP_MEMDEB_STATIC(rtpproxy);
+
+struct conf_entry;
+
+static bool conf_helper_mapper(const ucl_object_t *obj,
+  conf_helper_map *map, void *target, conf_helper_map **failed);
+
+extern conf_helper_map *rtpp_arh_conf_map;
 
 static int
 parse_modules(const ucl_object_t *wop)
@@ -16,7 +26,10 @@ parse_modules(const ucl_object_t *wop)
     const ucl_object_t *obj_file;
     const char *cf_key;
     const ucl_object_t *obj_key;
-    int ecode;
+    int ecode, success;
+    void *confp;
+    conf_helper_map *map = rtpp_arh_conf_map;
+    conf_helper_map *fent;
 
     it_conf = ucl_object_iterate_new(wop);
     if (it_conf == NULL)
@@ -28,6 +41,18 @@ parse_modules(const ucl_object_t *wop)
         obj_key = ucl_object_find_key(obj_file, "load");
         if (obj_key == NULL) {
             fprintf(stderr, "Error: Unable to find load parameter in module: %s\n", cf_key);
+            ecode = -1;
+            goto e0;
+        }
+        fent = NULL;
+        success = conf_helper_mapper(obj_file, map, confp, &fent);
+        if (!success) {
+            fprintf(stderr, "Config parsing issue in section %s",
+              cf_key);
+            if (fent != NULL && fent->conf_key != NULL) {
+                fprintf(stderr, ", parameter %s", fent->conf_key);
+            }
+            fprintf(stderr, "\n");
             ecode = -1;
             goto e0;
         }
@@ -118,4 +143,48 @@ e0:
     ecode = rtpp_memdeb_dumpstats(_rtpproxy_memdeb, 0) == 0 ? ecode : 1;
 
     return (ecode);
+}
+
+static bool
+conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
+  void *target, conf_helper_map **fentrpp)
+{
+    ucl_object_iter_t it;
+    const ucl_object_t *cur;
+    const char *key = NULL;
+    int i;
+    bool ret = true, found = false;
+
+    it = ucl_object_iterate_new(obj);
+    while ((cur = ucl_object_iterate_safe(it, true)) != NULL && ret) {
+        key = ucl_object_key(cur);
+        found = false;
+        for (i = 0; map[i].conf_key; i++) {
+            if (strcasecmp(map[i].conf_key, key) != 0)
+                continue;
+            found = true;
+            if (map[i].callback != NULL) {
+                ret = map[i].callback(obj, cur, target);
+                if (!ret && fentrpp != NULL)
+                    *fentrpp = &map[i];
+            }
+            break;
+        }
+        if (!found && map[i].callback != NULL) {
+            /* Call default handler if there is one */
+            ret = map[i].callback(obj, cur, target);
+            if (!ret && fentrpp != NULL)
+                *fentrpp = &map[i];
+        }
+    }
+    ucl_object_iterate_free(it);
+    return (ret);
+}
+
+bool
+rtpp_ucl_set_unknown(const ucl_object_t *top, const ucl_object_t *obj, struct conf_entry *target __unused)
+{
+    fprintf(stderr, "Unknown key '%s' in section '%s'\n",
+        ucl_object_key(obj), ucl_object_key(top));
+    return (false);
 }

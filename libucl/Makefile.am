@@ -25,5 +25,6 @@ noinst_PROGRAMS = libucl_test
 libucl_test_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=rtpproxy
 libucl_test_CFLAGS = -I$(UCL_DIR)/include
 libucl_test_SOURCES = libucl_test.c \
+  $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
   $(top_srcdir)/src/rtpp_memdeb.c
 libucl_test_LDADD=libucl_debug.a
