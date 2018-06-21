@@ -9,6 +9,34 @@
 
 RTPP_MEMDEB_STATIC(rtpproxy);
 
+static int
+parse_modules(const ucl_object_t *wop)
+{
+    ucl_object_iter_t it_conf;
+    const ucl_object_t *obj_file;
+    const char *cf_key;
+    const ucl_object_t *obj_key;
+    int ecode;
+
+    it_conf = ucl_object_iterate_new(wop);
+    if (it_conf == NULL)
+        return (-1);
+    ecode = 0;
+    while ((obj_file = ucl_object_iterate_safe(it_conf, true)) != NULL) {
+        cf_key = ucl_object_key(obj_file);
+        printf("\tmodule: %s\n", cf_key);
+        obj_key = ucl_object_find_key(obj_file, "load");
+        if (obj_key == NULL) {
+            fprintf(stderr, "Error: Unable to find load parameter in module: %s\n", cf_key);
+            ecode = -1;
+            goto e0;
+        }
+    }
+e0:
+    ucl_object_iterate_free(it_conf);
+    return (ecode);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -17,6 +45,7 @@ main(int argc, char **argv)
     ucl_object_t *conf_root;
     ucl_object_iter_t it_conf;
     const ucl_object_t *obj_file;
+    const char *cf_key;
     int fd;
     const char *cfile;
 
@@ -61,11 +90,24 @@ main(int argc, char **argv)
     }
 
     it_conf = ucl_object_iterate_new(conf_root);
-    while ((obj_file = ucl_object_iterate_safe(it_conf, true)) != NULL) {
-        continue;
+    if (it_conf == NULL) {
+        fprintf(stderr, "ucl_object_iterate_new() failed\n");
+        ecode = 1;
+        goto e3;
     }
+    while ((obj_file = ucl_object_iterate_safe(it_conf, true)) != NULL) {
+        cf_key = ucl_object_key(obj_file);
+        printf("Entry: %s\n", cf_key);
+        if (strcasecmp(cf_key, "modules") == 0) {
+            if (parse_modules(obj_file) < 0) {
+                fprintf(stderr, "parse_modules() failed\n");
+                ecode = 1;
+                goto e4;
+            }
+        }
+    }
+e4:
     ucl_object_iterate_free(it_conf);
-
 e3:
     ucl_object_unref(conf_root);
 e2:

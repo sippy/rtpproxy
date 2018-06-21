@@ -1,1 +1,4 @@
+Entry: modules
+	module: acct_rtcp_hep
+	module: acct_csv
 MEMDEB: all clear
