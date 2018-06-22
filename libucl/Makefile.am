@@ -24,7 +24,7 @@ libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS)
 HEPSRCDIR=$(top_srcdir)/hepconnector
 
 noinst_PROGRAMS = libucl_test
-libucl_test_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=rtpproxy
+libucl_test_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=rtpproxy -DMODULE_IF_CODE -Dmod_strdup=strdup
 libucl_test_CFLAGS = -I$(UCL_DIR)/include -I$(HEPSRCDIR)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
