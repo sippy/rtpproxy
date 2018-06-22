@@ -28,12 +28,13 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <strings.h>
 
-#include "ucl.h"
-
 #include "rtpp_ucl.h"
+
+#include "ucl.h"
 
 #include "hepconnector.h"
 
@@ -122,14 +123,16 @@ conf_set_capt_id(const ucl_object_t *top, const ucl_object_t *obj, struct hep_ct
     return (true);
 }
 
-static conf_helper_map _rtpp_arh_conf_map[] =
-{
-    { "load", NULL }, /* The "load" is set when the hep_ctx is created */
-    { "capt_host", (conf_helper_func) conf_set_capt_host },
-    { "capt_port", (conf_helper_func) conf_set_capt_port },
-    { "capt_ptype", (conf_helper_func) conf_set_capt_ptype },
-    { "capt_id", (conf_helper_func) conf_set_capt_id },
-    { NULL, (conf_helper_func) rtpp_ucl_set_unknown }
+static struct rtpp_module_conf _rtpp_arh_conf = {
+    .conf_data = NULL,
+    .conf_map = {
+        { "load", NULL }, /* The "load" is set when the hep_ctx is created */
+        { "capt_host", (conf_helper_func) conf_set_capt_host },
+        { "capt_port", (conf_helper_func) conf_set_capt_port },
+        { "capt_ptype", (conf_helper_func) conf_set_capt_ptype },
+        { "capt_id", (conf_helper_func) conf_set_capt_id },
+        { NULL, (conf_helper_func) rtpp_ucl_set_unknown }
+    }
 };
 
-conf_helper_map *rtpp_arh_conf_map = _rtpp_arh_conf_map;
+struct rtpp_module_conf *rtpp_arh_conf = &_rtpp_arh_conf;

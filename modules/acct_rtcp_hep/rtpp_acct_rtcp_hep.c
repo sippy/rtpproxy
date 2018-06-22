@@ -30,6 +30,7 @@
 #include <netinet/in.h>
 
 #include <netdb.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,6 +49,7 @@
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_ssrc.h"
+#include "rtpp_ucl.h"
 #include "rtpa_stats.h"
 
 #include "rtcp2json.h"
@@ -65,14 +67,18 @@ struct rtpp_module_priv {
 static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *);
 static void rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct_rtcp *);
+static struct rtpp_module_conf *rtpp_acct_rtcp_hep_get_cmap(struct rtpp_module_priv *);
 
 #define API_FUNC(fname, asize) {.func = (fname), .argsize = (asize)}
+
+extern struct rtpp_module_conf *rtpp_arh_conf;
 
 struct rtpp_minfo rtpp_module = {
     .name = "acct_rtcp_hep",
     .ver = MI_VER_INIT(),
     .ctor = rtpp_acct_rtcp_hep_ctor,
     .dtor = rtpp_acct_rtcp_hep_dtor,
+    .get_cmap = rtpp_acct_rtcp_hep_get_cmap,
     .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
@@ -183,4 +189,13 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
 
 out:
     return;
+}
+
+static struct rtpp_module_conf *
+rtpp_acct_rtcp_hep_get_cmap(struct rtpp_module_priv *pvt)
+{
+
+    rtpp_arh_conf->conf_data = &ctx;
+
+    return (rtpp_arh_conf);
 }

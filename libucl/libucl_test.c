@@ -12,12 +12,10 @@
 
 RTPP_MEMDEB_STATIC(rtpproxy);
 
-struct conf_entry;
-
 static bool conf_helper_mapper(const ucl_object_t *obj,
   conf_helper_map *map, void *target, conf_helper_map **failed);
 
-extern conf_helper_map *rtpp_arh_conf_map;
+extern struct rtpp_module_conf *rtpp_arh_conf;
 
 static int
 parse_modules(const ucl_object_t *wop)
@@ -29,7 +27,7 @@ parse_modules(const ucl_object_t *wop)
     int ecode, success;
     void *confp;
     char buf[4096];
-    conf_helper_map *map = rtpp_arh_conf_map;
+    conf_helper_map *map = rtpp_arh_conf->conf_map;
     conf_helper_map *fent;
 
     it_conf = ucl_object_iterate_new(wop);

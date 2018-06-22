@@ -25,6 +25,9 @@
  *
  */
 
+struct ucl_object_s;
+typedef struct ucl_object_s ucl_object_t;
+
 /*
  * Config parser helper callback function pointer alias
  */
@@ -40,7 +43,10 @@ typedef struct conf_helper_callback_map {
     conf_helper_func callback;
 } conf_helper_map;
 
-struct conf_entry;
+struct rtpp_module_conf {
+    void *conf_data;
+    conf_helper_map conf_map[];
+};
 
 bool rtpp_ucl_set_unknown(const ucl_object_t *top, const ucl_object_t *obj,
   void *target);
