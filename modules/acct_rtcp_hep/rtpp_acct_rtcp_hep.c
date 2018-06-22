@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2018 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@
 #include "rtcp2json.h"
 #include "core_hep.h"
 #include "hep_api.h"
+#include "hepconnector.h"
 #include "rtpp_sbuf.h"
 
 #include "_acct_rtcp_hep_config.h"
