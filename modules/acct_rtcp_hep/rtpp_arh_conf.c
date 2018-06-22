@@ -43,8 +43,8 @@
 
 struct hep_ctx;
 
-static const struct addrinfo udp_hints[1] = {{ .ai_socktype = SOCK_DGRAM }};
-static const struct addrinfo tcp_hints[1] = {{ .ai_socktype = SOCK_STREAM }};
+static const struct addrinfo udp_hints = { .ai_socktype = SOCK_DGRAM };
+static const struct addrinfo tcp_hints = { .ai_socktype = SOCK_STREAM };
 
 static bool
 conf_set_capt_host(const ucl_object_t *top, const ucl_object_t *obj, struct hep_ctx *target)
@@ -90,10 +90,10 @@ conf_set_capt_ptype(const ucl_object_t *top, const ucl_object_t *obj, struct hep
 
     val = ucl_object_tostring_forced(obj);
     if (strcasecmp(val, "udp") == 0) {
-        target->hints = udp_hints;
+        target->hints = &udp_hints;
         return (true);
     } else if (strcasecmp(val, "tcp") == 0) {
-        target->hints = tcp_hints;
+        target->hints = &tcp_hints;
         return (true);
     }
 
