@@ -146,8 +146,8 @@ am__v_lt_0 = --silent
 am__v_lt_1 = 
 rtpp_acct_rtcp_hep_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(rtpp_acct_rtcp_hep_la_LDFLAGS) \
-	$(LDFLAGS) -o $@
+	$(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) \
+	$(rtpp_acct_rtcp_hep_la_LDFLAGS) $(LDFLAGS) -o $@
 am__DEPENDENCIES_1 =
 rtpp_acct_rtcp_hep_debug_la_DEPENDENCIES =  \
 	$(top_srcdir)/libexecinfo/libexecinfo.a $(am__DEPENDENCIES_1)
@@ -379,6 +379,7 @@ rtpp_acct_rtcp_hep_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 rtpp_acct_rtcp_hep_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
   -Dfree=mod_free -Drealloc=mod_realloc -I$(HEPSRCDIR) -I$(UCLSRCDIR)/include
 
+rtpp_acct_rtcp_hep_la_CFLAGS = -std=c11
 #rtpp_acct_rtcp_hep_la_LIBADD = -lz
 rtpp_acct_rtcp_hep_debug_la_SOURCES = $(rtpp_acct_rtcp_hep_la_SOURCES)
 rtpp_acct_rtcp_hep_debug_la_LIBADD = $(top_srcdir)/libexecinfo/libexecinfo.a \
@@ -386,7 +387,7 @@ rtpp_acct_rtcp_hep_debug_la_LIBADD = $(top_srcdir)/libexecinfo/libexecinfo.a \
 
 rtpp_acct_rtcp_hep_debug_la_LDFLAGS = $(rtpp_acct_rtcp_hep_la_LDFLAGS)
 rtpp_acct_rtcp_hep_debug_la_CPPFLAGS = $(rtpp_acct_rtcp_hep_la_CPPFLAGS) -DRTPP_DEBUG
-rtpp_acct_rtcp_hep_debug_la_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
+rtpp_acct_rtcp_hep_debug_la_CFLAGS = -g3 -O0 -fno-omit-frame-pointer -std=c11
 all: all-am
 
 .SUFFIXES:
@@ -517,39 +518,39 @@ distclean-compile:
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo: rtpp_acct_rtcp_hep.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Tpo -c -o rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo `test -f 'rtpp_acct_rtcp_hep.c' || echo '$(srcdir)/'`rtpp_acct_rtcp_hep.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Tpo -c -o rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo `test -f 'rtpp_acct_rtcp_hep.c' || echo '$(srcdir)/'`rtpp_acct_rtcp_hep.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Tpo $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_acct_rtcp_hep.c' object='rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo `test -f 'rtpp_acct_rtcp_hep.c' || echo '$(srcdir)/'`rtpp_acct_rtcp_hep.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo `test -f 'rtpp_acct_rtcp_hep.c' || echo '$(srcdir)/'`rtpp_acct_rtcp_hep.c
 
 rtpp_acct_rtcp_hep_la-rtcp2json.lo: rtcp2json.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtcp2json.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtcp2json.Tpo -c -o rtpp_acct_rtcp_hep_la-rtcp2json.lo `test -f 'rtcp2json.c' || echo '$(srcdir)/'`rtcp2json.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtcp2json.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtcp2json.Tpo -c -o rtpp_acct_rtcp_hep_la-rtcp2json.lo `test -f 'rtcp2json.c' || echo '$(srcdir)/'`rtcp2json.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtcp2json.Tpo $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtcp2json.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtcp2json.c' object='rtpp_acct_rtcp_hep_la-rtcp2json.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtcp2json.lo `test -f 'rtcp2json.c' || echo '$(srcdir)/'`rtcp2json.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtcp2json.lo `test -f 'rtcp2json.c' || echo '$(srcdir)/'`rtcp2json.c
 
 rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo: rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Tpo -c -o rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Tpo -c -o rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Tpo $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_sbuf.c' object='rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
 
 rtpp_acct_rtcp_hep_la-core_hep.lo: $(HEPSRCDIR)/core_hep.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-core_hep.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Tpo -c -o rtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-core_hep.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Tpo -c -o rtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Tpo $(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(HEPSRCDIR)/core_hep.c' object='rtpp_acct_rtcp_hep_la-core_hep.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
 
 rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo: rtpp_arh_conf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Tpo -c -o rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo `test -f 'rtpp_arh_conf.c' || echo '$(srcdir)/'`rtpp_arh_conf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Tpo -c -o rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo `test -f 'rtpp_arh_conf.c' || echo '$(srcdir)/'`rtpp_arh_conf.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Tpo $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_arh_conf.c' object='rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo `test -f 'rtpp_arh_conf.c' || echo '$(srcdir)/'`rtpp_arh_conf.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo `test -f 'rtpp_arh_conf.c' || echo '$(srcdir)/'`rtpp_arh_conf.c
 
 rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.lo: rtpp_acct_rtcp_hep.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.Tpo -c -o rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.lo `test -f 'rtpp_acct_rtcp_hep.c' || echo '$(srcdir)/'`rtpp_acct_rtcp_hep.c
