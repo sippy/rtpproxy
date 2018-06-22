@@ -28,6 +28,7 @@ parse_modules(const ucl_object_t *wop)
     const ucl_object_t *obj_key;
     int ecode, success;
     void *confp;
+    char buf[4096];
     conf_helper_map *map = rtpp_arh_conf_map;
     conf_helper_map *fent;
 
@@ -45,6 +46,7 @@ parse_modules(const ucl_object_t *wop)
             goto e0;
         }
         fent = NULL;
+        confp = buf;
         success = conf_helper_mapper(obj_file, map, confp, &fent);
         if (!success) {
             fprintf(stderr, "Config parsing issue in section %s",
