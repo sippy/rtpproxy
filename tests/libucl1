@@ -4,8 +4,10 @@
 
 TESTDDIR="${BASEDIR}/libucl"
 
-${TOP_BUILDDIR}/libucl/libucl_test ${TESTDDIR}/libucl_test.conf > ${BASEDIR}/libucl1.output
+TCONF="libucl_test.conf"
+TOUT="${TCONF%.conf}.output"
+${TOP_BUILDDIR}/libucl/libucl_test ${TESTDDIR}/${TCONF} > ${BASEDIR}/${TOUT}
 report "running libucl_test"
-${DIFF} ${BASEDIR}/libucl1.output ${TESTDDIR}/libucl1.output
-report "checking libucl1.output"
+${DIFF} ${BASEDIR}/${TOUT} ${TESTDDIR}/${TOUT}
+report "checking ${TOUT}"
 
