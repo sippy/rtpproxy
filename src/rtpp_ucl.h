@@ -42,5 +42,5 @@ typedef struct conf_helper_callback_map {
 
 struct conf_entry;
 
-bool rtpp_ucl_set_unknown(const ucl_object_t *top,
-  const ucl_object_t *obj, struct conf_entry *target __unused);
+bool rtpp_ucl_set_unknown(const ucl_object_t *top, const ucl_object_t *obj,
+  void *target);
