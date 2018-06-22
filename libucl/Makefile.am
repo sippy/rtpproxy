@@ -21,9 +21,11 @@ libucl_debug_a_SOURCES = $(libucl_a_SOURCES)
 libucl_debug_a_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DRTPP_MEMDEB_FREE_NULL -DMEMDEB_APP=rtpproxy -include $(top_srcdir)/src/rtpp_memdeb.h
 libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS)
 
+HEPSRCDIR=$(top_srcdir)/hepconnector
+
 noinst_PROGRAMS = libucl_test
 libucl_test_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=rtpproxy
-libucl_test_CFLAGS = -I$(UCL_DIR)/include
+libucl_test_CFLAGS = -I$(UCL_DIR)/include -I$(HEPSRCDIR)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
   $(top_srcdir)/src/rtpp_memdeb.c
