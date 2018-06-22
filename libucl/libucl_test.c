@@ -156,6 +156,8 @@ conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
     bool ret = true, found = false;
 
     it = ucl_object_iterate_new(obj);
+    if (it == NULL)
+        return (false);
     while ((cur = ucl_object_iterate_safe(it, true)) != NULL && ret) {
         key = ucl_object_key(cur);
         found = false;
