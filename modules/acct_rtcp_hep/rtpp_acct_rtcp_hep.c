@@ -122,6 +122,9 @@ static void
 rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *pvt)
 {
 
+    if (ctx.capt_host != NULL) {
+        mod_free(ctx.capt_host);
+    }
     hep_gen_dtor(&ctx);
     rtpp_sbuf_dtor(pvt->sbp);
     mod_free(pvt);

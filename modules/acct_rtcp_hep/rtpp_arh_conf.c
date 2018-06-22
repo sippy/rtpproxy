@@ -30,8 +30,11 @@
 #include <netdb.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <strings.h>
 
+#include "rtpp_types.h"
+#include "rtpp_module.h"
 #include "rtpp_ucl.h"
 
 #include "ucl.h"
@@ -50,7 +53,7 @@ conf_set_capt_host(const ucl_object_t *top, const ucl_object_t *obj, struct hep_
     const char *val = NULL;
 
     val = ucl_object_tostring_forced(obj);
-    target->capt_host = strdup(val);
+    target->capt_host = mod_strdup(val);
 
     return (true);
 }
