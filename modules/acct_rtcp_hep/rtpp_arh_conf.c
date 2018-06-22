@@ -25,6 +25,9 @@
  *
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <strings.h>
 
@@ -32,7 +35,12 @@
 
 #include "rtpp_ucl.h"
 
+#include "hepconnector.h"
+
 struct hep_ctx;
+
+static const struct addrinfo udp_hints[1] = {{ .ai_socktype = SOCK_DGRAM }};
+static const struct addrinfo tcp_hints[1] = {{ .ai_socktype = SOCK_STREAM }};
 
 static bool
 conf_set_capt_host(const ucl_object_t *top, const ucl_object_t *obj, struct hep_ctx *target)
@@ -41,7 +49,7 @@ conf_set_capt_host(const ucl_object_t *top, const ucl_object_t *obj, struct hep_
     const char *val = NULL;
 
     val = ucl_object_tostring_forced(obj);
-    //target->capt_host = strdup(val);
+    target->capt_host = strdup(val);
 
     return (true);
 }
@@ -66,7 +74,7 @@ conf_set_capt_port(const ucl_object_t *top, const ucl_object_t *obj, struct hep_
             ucl_object_key(obj), rport);
         return (false);
     }
-    //target->capt_port = rport;
+    snprintf(target->capt_port, sizeof(target->capt_port), "%d", rport);
     return (true);
 }
 
@@ -78,10 +86,10 @@ conf_set_capt_ptype(const ucl_object_t *top, const ucl_object_t *obj, struct hep
 
     val = ucl_object_tostring_forced(obj);
     if (strcasecmp(val, "udp") == 0) {
-        //target->hints = {{ .ai_socktype = SOCK_DGRAM }};
+        target->hints = udp_hints;
         return (true);
     } else if (strcasecmp(val, "tcp") == 0) {
-        //target->hints = {{ .ai_socktype = SOCK_STREAM }};
+        target->hints = tcp_hints;
         return (true);
     }
 
@@ -110,7 +118,7 @@ conf_set_capt_id(const ucl_object_t *top, const ucl_object_t *obj, struct hep_ct
             ucl_object_key(obj), capt_id);
         return (false);
     }
-    //target->capt_id = capt_id;
+    target->capt_id = capt_id;
     return (true);
 }
 
