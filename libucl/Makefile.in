@@ -133,6 +133,7 @@ am_libucl_debug_a_OBJECTS = $(am__objects_1)
 libucl_debug_a_OBJECTS = $(am_libucl_debug_a_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_libucl_test_OBJECTS = libucl_test-libucl_test.$(OBJEXT) \
+	libucl_test-rtpp_arh_conf.$(OBJEXT) \
 	libucl_test-rtpp_memdeb.$(OBJEXT)
 libucl_test_OBJECTS = $(am_libucl_test_OBJECTS)
 libucl_test_DEPENDENCIES = libucl_debug.a
@@ -361,6 +362,7 @@ libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS)
 libucl_test_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=rtpproxy
 libucl_test_CFLAGS = -I$(UCL_DIR)/include
 libucl_test_SOURCES = libucl_test.c \
+  $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
   $(top_srcdir)/src/rtpp_memdeb.c
 
 libucl_test_LDADD = libucl_debug.a
@@ -449,6 +451,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_a-ucl_sexp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_a-ucl_util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-libucl_test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_arh_conf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_memdeb.Po@am__quote@
 
 .c.o:
@@ -737,6 +740,20 @@ libucl_test-libucl_test.obj: libucl_test.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libucl_test.c' object='libucl_test-libucl_test.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-libucl_test.obj `if test -f 'libucl_test.c'; then $(CYGPATH_W) 'libucl_test.c'; else $(CYGPATH_W) '$(srcdir)/libucl_test.c'; fi`
+
+libucl_test-rtpp_arh_conf.o: $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_arh_conf.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo -c -o libucl_test-rtpp_arh_conf.o `test -f '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' || echo '$(srcdir)/'`$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo $(DEPDIR)/libucl_test-rtpp_arh_conf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' object='libucl_test-rtpp_arh_conf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_arh_conf.o `test -f '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' || echo '$(srcdir)/'`$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
+
+libucl_test-rtpp_arh_conf.obj: $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_arh_conf.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo -c -o libucl_test-rtpp_arh_conf.obj `if test -f '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; then $(CYGPATH_W) '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo $(DEPDIR)/libucl_test-rtpp_arh_conf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' object='libucl_test-rtpp_arh_conf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_arh_conf.obj `if test -f '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; then $(CYGPATH_W) '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; fi`
 
 libucl_test-rtpp_memdeb.o: $(top_srcdir)/src/rtpp_memdeb.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_memdeb.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_memdeb.Tpo -c -o libucl_test-rtpp_memdeb.o `test -f '$(top_srcdir)/src/rtpp_memdeb.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb.c
