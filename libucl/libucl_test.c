@@ -182,11 +182,3 @@ conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
     ucl_object_iterate_free(it);
     return (ret);
 }
-
-bool
-rtpp_ucl_set_unknown(const ucl_object_t *top, const ucl_object_t *obj, void *target __attribute__((unused)))
-{
-    fprintf(stderr, "Unknown key '%s' in section '%s'\n",
-        ucl_object_key(obj), ucl_object_key(top));
-    return (false);
-}
