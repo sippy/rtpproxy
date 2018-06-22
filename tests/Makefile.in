@@ -504,7 +504,7 @@ rtp_analyze1_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlo
 rtcp2json1_EXTRA_DIST = rtcp2json1 rtcp2json
 rtcp2json1_CLEANFILES = rtcp1.output
 libucl1_EXTRA_DIST = libucl1 libucl
-libucl1_CLEANFILES = libucl1.output
+libucl1_CLEANFILES = libucl_test.output
 EXTRA_DIST = Makefile.am ${startstop_EXTRA_DIST} ${basic_versions_EXTRA_DIST} \
     ${command_parser_EXTRA_DIST} \
     ringback.sln makeann makeann.output \
