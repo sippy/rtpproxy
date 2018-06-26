@@ -29,47 +29,6 @@
 
 #include "rtpp_math.h"
 
-void
-PFD_init(struct PFD *pfd_p, double phi_round)
-{
-
-    pfd_p->target_clk = 0.0;
-    pfd_p->phi_round = phi_round;
-}
-
-double
-PFD_get_error(struct PFD *pfd_p, double dtime)
-{
-    double next_clk, err0r;
-
-    if (pfd_p->phi_round > 0.0) {
-        dtime = trunc(dtime * pfd_p->phi_round) / pfd_p->phi_round;
-    }
-
-    next_clk = trunc(dtime) + 1.0;
-    if (pfd_p->target_clk == 0.0) {
-        pfd_p->target_clk = next_clk;
-        return (0.0);
-    }
-
-    err0r = pfd_p->target_clk - dtime;
-
-    if (err0r > 0) {
-        pfd_p->target_clk = next_clk + 1.0;
-    } else {
-        pfd_p->target_clk = next_clk;
-    }
-
-    return (err0r);
-}
-
-double
-sigmoid(double x)
-{
-
-    return (x / (1 + fabs(x)));
-}
-
 double
 recfilter_apply(struct recfilter *f, double x)
 {
@@ -116,11 +75,4 @@ recfilter_init(struct recfilter *f, double fcoef, double initval, int peak_detec
         f->maxval = 0;
         f->minval = 0;
     }
-}
-
-double
-freqoff_to_period(double freq_0, double foff_c, double foff_x)
-{
-
-    return (1.0 / freq_0 * (1 + foff_c * foff_x));
 }
