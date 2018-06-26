@@ -114,7 +114,11 @@ struct rtpp_memdeb_priv {
     pthread_mutex_t mutex;
     struct rtpp_memdeb_au au[MAX_APPROVED];
     struct rtpp_log *_md_glog;
+    const char *inst_name;
 };
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 
 void *
 rtpp_memdeb_init()
@@ -128,6 +132,7 @@ rtpp_memdeb_init()
     memset(pvt, '\0', sizeof(struct rtpp_memdeb_priv));
     pthread_mutex_init(&pvt->mutex, NULL);
     pvt->magic = MEMDEB_SIGNATURE_PRIV(pvt);
+    pvt->inst_name = TOSTRING(MEMDEB_APP);
     return (pvt);
 }
 
@@ -163,6 +168,15 @@ rtpp_memdeb_setlog(void *p, struct rtpp_log *log)
     CHK_PRIV(pvt, p);
     CALL_SMETHOD(log->rcnt, incref);
     pvt->_md_glog = log;
+}
+
+void
+rtpp_memdeb_setname(void *p, const char *inst_name)
+{
+    struct rtpp_memdeb_priv *pvt;
+
+    CHK_PRIV(pvt, p);
+    pvt->inst_name = inst_name;
 }
 
 void
@@ -552,10 +566,10 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
     pthread_mutex_unlock(&pvt->mutex);
     if (errors_found == 0) {
         RTPP_MEMDEB_REPORT2(log, nostdout,
-          "MEMDEB: all clear");
+          "MEMDEB(%s): all clear", pvt->inst_name);
     } else {
         RTPP_MEMDEB_REPORT2(log, nostdout,
-          "MEMDEB: errors found: %d", errors_found);
+          "MEMDEB(%s): errors found: %d", pvt->inst_name, errors_found);
     }
     return (errors_found);
 }
