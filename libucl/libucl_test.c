@@ -166,7 +166,7 @@ conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
                 continue;
             found = true;
             if (map[i].callback != NULL) {
-                ret = map[i].callback(obj, cur, target);
+                ret = map[i].callback(NULL, obj, cur, target);
                 if (!ret && fentrpp != NULL)
                     *fentrpp = &map[i];
             }
@@ -174,7 +174,7 @@ conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
         }
         if (!found && map[i].callback != NULL) {
             /* Call default handler if there is one */
-            ret = map[i].callback(obj, cur, target);
+            ret = map[i].callback(NULL, obj, cur, target);
             if (!ret && fentrpp != NULL)
                 *fentrpp = &map[i];
         }
