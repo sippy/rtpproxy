@@ -67,7 +67,7 @@ struct rtpp_module_priv {
 static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *);
 static void rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct_rtcp *);
-static struct rtpp_module_conf *rtpp_acct_rtcp_hep_get_cmap(struct rtpp_module_priv *);
+static struct rtpp_module_conf *rtpp_acct_rtcp_hep_get_mconf(struct rtpp_module_priv *);
 
 #define API_FUNC(fname, asize) {.func = (fname), .argsize = (asize)}
 
@@ -78,7 +78,7 @@ struct rtpp_minfo rtpp_module = {
     .ver = MI_VER_INIT(),
     .ctor = rtpp_acct_rtcp_hep_ctor,
     .dtor = rtpp_acct_rtcp_hep_dtor,
-    .get_cmap = rtpp_acct_rtcp_hep_get_cmap,
+    .get_mconf = rtpp_acct_rtcp_hep_get_mconf,
     .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
@@ -195,7 +195,7 @@ out:
 }
 
 static struct rtpp_module_conf *
-rtpp_acct_rtcp_hep_get_cmap(struct rtpp_module_priv *pvt)
+rtpp_acct_rtcp_hep_get_mconf(struct rtpp_module_priv *pvt)
 {
 
     rtpp_arh_conf->conf_data = &ctx;
