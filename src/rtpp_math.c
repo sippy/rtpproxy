@@ -28,3 +28,99 @@
 #include <math.h>
 
 #include "rtpp_math.h"
+
+void
+PFD_init(struct PFD *pfd_p, double phi_round)
+{
+
+    pfd_p->target_clk = 0.0;
+    pfd_p->phi_round = phi_round;
+}
+
+double
+PFD_get_error(struct PFD *pfd_p, double dtime)
+{
+    double next_clk, err0r;
+
+    if (pfd_p->phi_round > 0.0) {
+        dtime = trunc(dtime * pfd_p->phi_round) / pfd_p->phi_round;
+    }
+
+    next_clk = trunc(dtime) + 1.0;
+    if (pfd_p->target_clk == 0.0) {
+        pfd_p->target_clk = next_clk;
+        return (0.0);
+    }
+
+    err0r = pfd_p->target_clk - dtime;
+
+    if (err0r > 0) {
+        pfd_p->target_clk = next_clk + 1.0;
+    } else {
+        pfd_p->target_clk = next_clk;
+    }
+
+    return (err0r);
+}
+
+double
+sigmoid(double x)
+{
+
+    return (x / (1 + fabs(x)));
+}
+
+double
+recfilter_apply(struct recfilter *f, double x)
+{
+
+    f->lastval = f->a * x + f->b * f->lastval;
+    if (f->peak_detect != 0) {
+        if (f->lastval > f->maxval) {
+            f->maxval = f->lastval;
+        } if (f->lastval < f->minval) {
+            f->minval = f->maxval;
+        }
+    }
+    return f->lastval;
+}
+
+double
+recfilter_apply_int(struct recfilter *f, int x)
+{
+
+    f->lastval = f->a * (double)(x) + f->b * f->lastval;
+    if (f->peak_detect != 0) {
+        if (f->lastval > f->maxval) {
+            f->maxval = f->lastval;
+        } if (f->lastval < f->minval) {
+            f->minval = f->lastval;
+        }
+    }
+    return f->lastval;
+}
+
+void
+recfilter_init(struct recfilter *f, double fcoef, double initval, int peak_detect)
+{
+
+    f->lastval = initval;
+    f->a = 1.0 - fcoef;
+    f->b = fcoef;
+    if (peak_detect != 0) {
+        f->peak_detect = 1;
+        f->maxval = initval;
+        f->minval = initval;
+    } else {
+        f->peak_detect = 0;
+        f->maxval = 0;
+        f->minval = 0;
+    }
+}
+
+double
+freqoff_to_period(double freq_0, double foff_c, double foff_x)
+{
+
+    return (1.0 / freq_0 * (1 + foff_c * foff_x));
+}
