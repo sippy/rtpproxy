@@ -657,6 +657,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+UCL_DIR = $(top_srcdir)/external/libucl
 BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
 	rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h \
@@ -4420,6 +4421,7 @@ includepolice:
 	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
 	   set +e; set +x; \
 	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
+            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src" \
 	    python ../misc/includepolice.py $${file} > ipol/$${file}.txt; \
 	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
 	   if [ $${RC} -eq 0 ]; then \
