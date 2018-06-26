@@ -1,4 +1,4 @@
 Entry: modules
 	module: acct_rtcp_hep
 	module: acct_csv
-MEMDEB: all clear
+MEMDEB(libucl_test): all clear
