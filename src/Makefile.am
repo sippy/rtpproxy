@@ -82,21 +82,25 @@ rtpp_objck_SOURCES=rtpp_objck.c $(SRCS_AUTOGEN) $(SRGC_MEMDEB_CORE) \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_pearson.c rtpp_pearson.h \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_time.c rtpp_time.h rtpp_timed.c rtpp_timed.h \
   rtpp_queue.c rtpp_queue.h rtpp_wi.c rtpp_wi.h
-rtpp_objck_CPPFLAGS=$(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
 
 RTPP_MEMDEB_CPPFLAGS=-DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
-
-rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -I$(top_srcdir) $(RTPP_MEMDEB_CPPFLAGS) \
-  -DMEMDEB_APP=rtpproxy
-EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall -I$(UCL_DIR)/include
+RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
+  -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include
+EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
 
 if BUILD_ELPERIODIC
-EXTRA_CFLAGS+=-I$(top_srcdir)/libelperiodic/src
+EXTRA_CPPFLAGS=-I$(top_srcdir)/libelperiodic/src
 endif
 
-rtpproxy_CFLAGS=$(EXTRA_CFLAGS)
 rtpproxy_debug_CFLAGS=$(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
+rtpproxy_debug_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS) -DRTPP_DEBUG $(RTPP_MEMDEB_CPPFLAGS) \
+  -DMEMDEB_APP=@PACKAGE@ -I$(top_srcdir)
+
+rtpproxy_CFLAGS=$(EXTRA_CFLAGS)
+rtpproxy_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS)
+
 rtpp_objck_CFLAGS=$(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
+rtpp_objck_CPPFLAGS=$(EXTRA_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
 
 DEFS=	-Wall @DEFS@
 
