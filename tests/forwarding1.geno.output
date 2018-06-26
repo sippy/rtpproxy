@@ -485,4 +485,4 @@ npkts_resizer_in=0 npkts_resizer_out=0 npkts_resizer_discard=0
 rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_perrs=0
 0
 rtpa_nsent=40000 rtpa_nrcvd=40000 rtpa_ndups=0 rtpa_perrs=0
-MEMDEB: all clear
+MEMDEB(rtpproxy): all clear
