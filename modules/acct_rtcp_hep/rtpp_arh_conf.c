@@ -33,7 +33,11 @@
 #include <stdlib.h>
 #include <strings.h>
 
+#include "config.h"
+
 #include "rtpp_types.h"
+#include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_module.h"
 #include "rtpp_ucl.h"
 
@@ -47,7 +51,8 @@ static const struct addrinfo udp_hints = { .ai_socktype = SOCK_DGRAM };
 static const struct addrinfo tcp_hints = { .ai_socktype = SOCK_STREAM };
 
 static bool
-conf_set_capt_host(const ucl_object_t *top, const ucl_object_t *obj, struct hep_ctx *target)
+conf_set_capt_host(struct rtpp_log *log, const ucl_object_t *top,
+  const ucl_object_t *obj, struct hep_ctx *target)
 {
 
     const char *val = NULL;
@@ -59,7 +64,8 @@ conf_set_capt_host(const ucl_object_t *top, const ucl_object_t *obj, struct hep_
 }
 
 static bool
-conf_set_capt_port(const ucl_object_t *top, const ucl_object_t *obj, struct hep_ctx *target)
+conf_set_capt_port(struct rtpp_log *log, const ucl_object_t *top,
+  const ucl_object_t *obj, struct hep_ctx *target)
 {
 
     const char *val = NULL;
@@ -69,12 +75,12 @@ conf_set_capt_port(const ucl_object_t *top, const ucl_object_t *obj, struct hep_
         rport = ucl_object_toint(obj);
     } else {
         val = ucl_object_tostring_forced(obj);
-        fprintf(stderr, "error in config file; invalid value for port in section '%s': '%s'\n",
+        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for port in section '%s': '%s'",
             ucl_object_key(obj), val);
 	return (false);
     }
     if (rport <= 0 || rport > 0xffff) {
-        fprintf(stderr, "error in config file; invalid value for port in section '%s': %d\n",
+        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for port in section '%s': %d",
             ucl_object_key(obj), rport);
         return (false);
     }
@@ -83,7 +89,8 @@ conf_set_capt_port(const ucl_object_t *top, const ucl_object_t *obj, struct hep_
 }
 
 static bool
-conf_set_capt_ptype(const ucl_object_t *top, const ucl_object_t *obj, struct hep_ctx *target)
+conf_set_capt_ptype(struct rtpp_log *log, const ucl_object_t *top,
+  const ucl_object_t *obj, struct hep_ctx *target)
 {
 
     const char *val = NULL;
@@ -97,13 +104,14 @@ conf_set_capt_ptype(const ucl_object_t *top, const ucl_object_t *obj, struct hep
         return (true);
     }
 
-    fprintf(stderr, "error in config file; invalid value for ptype in section '%s': '%s'\n",
+    RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for ptype in section '%s': '%s'",
       ucl_object_key(obj), val);
     return (false);
 }
 
 static bool
-conf_set_capt_id(const ucl_object_t *top, const ucl_object_t *obj, struct hep_ctx *target)
+conf_set_capt_id(struct rtpp_log *log, const ucl_object_t *top,
+  const ucl_object_t *obj, struct hep_ctx *target)
 {
 
     const char *val = NULL;
@@ -113,12 +121,12 @@ conf_set_capt_id(const ucl_object_t *top, const ucl_object_t *obj, struct hep_ct
         capt_id = ucl_object_toint(obj);
     } else {
         val = ucl_object_tostring_forced(obj);
-        fprintf(stderr, "error in config file; invalid value for capt_id in section '%s': '%s'\n",
+        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for capt_id in section '%s': '%s'",
             ucl_object_key(obj), val);
         return (false);
     }
     if (capt_id < 0 || capt_id > 0xffffffff) {
-        fprintf(stderr, "error in config file; invalid value for capt_id in section '%s': %d\n",
+        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for capt_id in section '%s': %d",
             ucl_object_key(obj), capt_id);
         return (false);
     }
