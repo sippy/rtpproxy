@@ -203,6 +203,6 @@ rtpp_log_obj_start(struct rtpp_log *self, struct rtpp_cfg_stable *cfs)
     pvt->pub.ewrite = rtpp_log_obj_ewrite;
     pvt->pub.setlevel = rtpp_log_obj_setlevel;
     if (pvt->level != -1) {
-        rtpp_log_setlevel(self, pvt->level);
+        rtpp_log_setlevel(pvt->log, pvt->level);
     }
 }
