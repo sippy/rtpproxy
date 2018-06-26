@@ -25,17 +25,23 @@
  *
  */
 
+#include <inttypes.h>
 #include <stdbool.h>
-#include <stdio.h>
 
+#include "config.h"
+
+#include "rtpp_types.h"
+#include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_ucl.h"
 
 #include "ucl.h"
 
 bool
-rtpp_ucl_set_unknown(const ucl_object_t *top, const ucl_object_t *obj, void *target __attribute__((unused)))
+rtpp_ucl_set_unknown(struct rtpp_log *log, const ucl_object_t *top,
+  const ucl_object_t *obj, void *target __attribute__((unused)))
 {
-    fprintf(stderr, "Unknown key '%s' in section '%s'\n",
+    RTPP_LOG(log, RTPP_LOG_ERR, "Unknown key '%s' in section '%s'",
         ucl_object_key(obj), ucl_object_key(top));
     return (false);
 }
