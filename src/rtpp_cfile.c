@@ -28,6 +28,7 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include "config_pp.h"
