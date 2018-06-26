@@ -1,3 +1,5 @@
+UCL_DIR=$(top_srcdir)/external/libucl
+
 bin_PROGRAMS=rtpproxy rtpproxy_debug rtpp_objck
 BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
@@ -223,6 +225,7 @@ includepolice:
 	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
 	   set +e; set +x; \
 	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
+            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src" \
 	    python ../misc/includepolice.py $${file} > ipol/$${file}.txt; \
 	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
 	   if [ $${RC} -eq 0 ]; then \
