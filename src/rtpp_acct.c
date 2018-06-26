@@ -38,7 +38,6 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
-#include "rtpp_acct_fin.h"
 #include "rtpp_netaddr.h"
 
 struct rtpp_acct_face_s {
