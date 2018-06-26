@@ -92,10 +92,11 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     pub->rcnt = rcnt;
     rtpp_gen_uid(&pub->seuid);
 
-    log = rtpp_log_ctor(cfs, "rtpproxy", ccap->call_id, 0);
+    log = rtpp_log_ctor("rtpproxy", ccap->call_id, 0);
     if (log == NULL) {
         goto e1;
     }
+    CALL_METHOD(log, start, cfs);
     CALL_METHOD(log, setlevel, cfs->log_level);
     pub->rtp = rtpp_pipe_ctor(pub->seuid, cfs->rtp_streams_wrt,
       cfs->servers_wrt, log, cfs->rtpp_stats, PIPE_RTP);
