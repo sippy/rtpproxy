@@ -36,7 +36,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h rtpp_command_play.c \
   rtpp_command_play.h rtpp_command_ver.h rtpp_command_ver.c \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_acct_rtcp.h \
-  rtpp_acct_rtcp.c
+  rtpp_acct_rtcp.c rtpp_cfile.c rtpp_cfile.h rtpp_ucl.c rtpp_ucl.h
 
 rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl.a
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.a \
@@ -70,11 +70,10 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h \
   rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c rtpp_ringbuf_fin.c \
   rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c \
-  rtpp_port_table_fin.c rtpp_port_table_fin.h rtpp_acct_fin.c \
-  rtpp_acct_fin.h rtpp_netaddr_fin.c rtpp_netaddr_fin.h \
+  rtpp_port_table_fin.c rtpp_port_table_fin.h \
+  rtpp_netaddr_fin.c rtpp_netaddr_fin.h \
   rtpp_stats_fin.c rtpp_stats_fin.h rtpp_pearson_perfect_fin.c \
-  rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h \
-  rtpp_acct_rtcp_fin.c rtpp_acct_rtcp_fin.h
+  rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h
 rtpproxy_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN)
 rtpproxy_debug_SOURCES=$(rtpproxy_SOURCES) $(SRCS_DEBUG)
 rtpp_objck_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
@@ -89,7 +88,7 @@ RTPP_MEMDEB_CPPFLAGS=-DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
 
 rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -I$(top_srcdir) $(RTPP_MEMDEB_CPPFLAGS) \
   -DMEMDEB_APP=rtpproxy
-EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
+EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall -I$(UCL_DIR)/include
 
 if BUILD_ELPERIODIC
 EXTRA_CFLAGS+=-I$(top_srcdir)/libelperiodic/src
@@ -192,15 +191,15 @@ rtpp_port_table_fin.c: $(GENFINCODE) rtpp_port_table.h
 
 rtpp_port_table_fin.h: rtpp_port_table_fin.c
 
-rtpp_acct_fin.c: $(GENFINCODE) rtpp_acct.h
-	$(GENFINCODE) rtpp_acct.h rtpp_acct_fin.h rtpp_acct_fin.c
+#rtpp_acct_fin.c: $(GENFINCODE) rtpp_acct.h
+#	$(GENFINCODE) rtpp_acct.h rtpp_acct_fin.h rtpp_acct_fin.c
 
-rtpp_acct_fin.h: rtpp_acct_fin.c
+#rtpp_acct_fin.h: rtpp_acct_fin.c
 
-rtpp_acct_rtcp_fin.c: $(GENFINCODE) rtpp_acct_rtcp.h
-	$(GENFINCODE) rtpp_acct_rtcp.h rtpp_acct_rtcp_fin.h rtpp_acct_rtcp_fin.c
+#rtpp_acct_rtcp_fin.c: $(GENFINCODE) rtpp_acct_rtcp.h
+#	$(GENFINCODE) rtpp_acct_rtcp.h rtpp_acct_rtcp_fin.h rtpp_acct_rtcp_fin.c
 
-rtpp_acct_rtcp_fin.h: rtpp_acct_rtcp_fin.c
+#rtpp_acct_rtcp_fin.h: rtpp_acct_rtcp_fin.c
 
 rtpp_netaddr_fin.c: $(GENFINCODE_S) rtpp_netaddr.h
 	$(GENFINCODE_S) rtpp_netaddr.h rtpp_netaddr_fin.h rtpp_netaddr_fin.c
@@ -217,7 +216,10 @@ rtpp_pearson_perfect_fin.c: $(GENFINCODE_S) rtpp_pearson_perfect.h
 
 rtpp_pearson_perfect_fin.h: rtpp_pearson_perfect_fin.c
 
+IPLDIR=$(top_srcdir)/src/ipol
+
 includepolice:
+	@rm -f $(IPLDIR)/*.txt $(IPLDIR)/*.iout
 	@nfiles=`echo ${BASE_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); \
 	 i=1; nwarns=0; \
 	 for file in ${BASE_SOURCES}; \
@@ -226,10 +228,10 @@ includepolice:
 	   set +e; set +x; \
 	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
             SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src" \
-	    python ../misc/includepolice.py $${file} > ipol/$${file}.txt; \
+	    python ../misc/includepolice.py $${file} > $(IPLDIR)/$${file}.txt; \
 	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
 	   if [ $${RC} -eq 0 ]; then \
-	     rm -f ipol/$${file}.txt ipol/$${file}.iout; \
+	     rm -f $(IPLDIR)/$${file}.txt $(IPLDIR)/$${file}.iout; \
 	     echo "all clean"; \
 	   else \
 	     echo "$${RC} warning(s)"; \
