@@ -37,7 +37,6 @@
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <grp.h>
@@ -69,6 +68,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_cfile.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
@@ -134,10 +134,10 @@ usage(void)
 
 static struct cfg *_sig_cf;
 
-static void rtpp_exit(int) __attribute__ ((noreturn));
+static void rtpp_exit(int, int) __attribute__ ((noreturn));
 
 static void
-rtpp_exit(int memdeb)
+rtpp_exit(int memdeb, int rval)
 {
     int ecode;
 
@@ -150,7 +150,7 @@ rtpp_exit(int memdeb)
     fclose(stdout);
 #endif
 #endif
-    exit(ecode);
+    exit(rval == 0 ? ecode : rval);
 }
 
 static void
@@ -166,7 +166,7 @@ fatsignal(int sig)
      * Got second signal while already in the fastshutdown mode, something
      * probably jammed, do quick exit right from sighandler.
      */
-    rtpp_exit(1);
+    rtpp_exit(1, 0);
 }
 
 static void
@@ -211,25 +211,37 @@ rtpp_rlim_max(struct cfg *cf)
 #define LOPT_BRSYM    257
 #define LOPT_NICE     258
 #define LOPT_OVL_PROT 259
+#define LOPT_CONFIG   260
 
 const static struct option longopts[] = {
     { "dso", required_argument, NULL, LOPT_DSO },
     { "bridge_symmetric", no_argument, NULL, LOPT_BRSYM },
     { "nice", required_argument, NULL, LOPT_NICE },
     { "overload_prot", optional_argument, NULL, LOPT_OVL_PROT },
+    { "config", required_argument, NULL, LOPT_CONFIG },
     { NULL,  0,                 NULL, 0 }
 };
 
 static void
-init_config_bail(struct rtpp_cfg_stable *cfsp, int rval)
+init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg)
 {
+    struct rtpp_module_if *mif;
 
+    if (msg != NULL) {
+        RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s", msg);
+    }
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     free(cfsp->nofile_limit);
     free(cfsp->ctrl_socks);
+#if ENABLE_MODULE_IF
+    for (mif = RTPP_LIST_HEAD(cfsp->modules_cf); mif != NULL; mif = RTPP_ITER_NEXT(mif)) {
+        CALL_SMETHOD(mif->rcnt, decref);
+    }
+#endif
     free(cfsp->modules_cf);
+    CALL_SMETHOD(cfsp->glog->rcnt, decref);
     free(cfsp);
-    rtpp_exit(rval);
+    rtpp_exit(1, rval);
 }
 
 static void
@@ -329,6 +341,10 @@ init_config(struct cfg *cf, int argc, char **argv)
             cf->stable->overload_prot.low_trs = 0.85;
             cf->stable->overload_prot.high_trs = 0.90;
             cf->stable->overload_prot.ecode = ECODE_OVERLOAD;
+            break;
+
+        case LOPT_CONFIG:
+            cf->stable->cfile = optarg;
             break;
 
         case 'c':
@@ -440,7 +456,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    for (pcp = iterate_proto_caps(NULL); pcp != NULL; pcp = iterate_proto_caps(pcp)) {
 		printf("Extension %s: %s\n", pcp->pc_id, pcp->pc_description);
 	    }
-	    init_config_bail(cf->stable, 1);
+	    init_config_bail(cf->stable, 0, NULL);
 	    break;
 
 	case 'r':
@@ -554,11 +570,12 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    cf->stable->log_level = rtpp_log_str2lvl(optarg);
 	    if (cf->stable->log_level == -1)
 		errx(1, "%s: invalid log level", optarg);
+            CALL_METHOD(cf->stable->glog, setlevel, cf->stable->log_level);
 	    break;
 
 	case 'V':
 	    printf("%s\n", RTPP_SW_VERSION);
-	    init_config_bail(cf->stable, 1);
+	    init_config_bail(cf->stable, 0, NULL);
 	    break;
 
         case 'W':
@@ -575,13 +592,19 @@ init_config(struct cfg *cf, int argc, char **argv)
 
         case 'C':
 	    printf("%s\n", get_mclock_name());
-	    init_config_bail(cf->stable, 0);
+	    init_config_bail(cf->stable, 0, NULL);
 	    break;
 
 	case '?':
 	default:
 	    usage();
 	}
+    }
+
+    if (cf->stable->cfile != NULL) {
+        if (rtpp_cfile_process(cf->stable) < 0) {
+            init_config_bail(cf->stable, 1, "rtpp_cfile_process() failed");
+        }
     }
 
     if (cf->stable->bmode != 0 && brsym != 0) {
@@ -754,10 +777,19 @@ main(int argc, char **argv)
          /* NOTREACHED */
     }
 
-    init_config(&cf, argc, argv);
-
     seedrandom();
     rtpp_gen_uid_init();
+
+    cf.stable->glog = rtpp_log_ctor("rtpproxy", NULL, LF_REOPEN);
+    if (cf.stable->glog == NULL) {
+        err(1, "can't initialize logging subsystem");
+        /* NOTREACHED */
+    }
+ #ifdef RTPP_CHECK_LEAKS
+    rtpp_memdeb_setlog(_rtpproxy_memdeb, cf.stable->glog);
+ #endif
+
+    init_config(&cf, argc, argv);
 
     cf.stable->sessions_ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, 0);
     if (cf.stable->sessions_ht == NULL) {
@@ -821,16 +853,8 @@ main(int argc, char **argv)
 	    /* NOTREACHED */
     }
 
-    cf.stable->glog = rtpp_log_ctor(cf.stable, "rtpproxy", NULL, LF_REOPEN);
-    if (cf.stable->glog == NULL) {
-        err(1, "can't initialize logging subsystem");
-            /* NOTREACHED */
-    }
+    CALL_METHOD(cf.stable->glog, start, cf.stable);
 
-#ifdef RTPP_CHECK_LEAKS
-    rtpp_memdeb_setlog(_rtpproxy_memdeb, cf.stable->glog);
-#endif
-    CALL_METHOD(cf.stable->glog, setlevel, cf.stable->log_level);
     _sig_cf = &cf;
     atexit(ehandler);
     RTPP_LOG(cf.stable->glog, RTPP_LOG_INFO, "rtpproxy started, pid %d", getpid());
@@ -997,5 +1021,5 @@ main(int argc, char **argv)
     sd_notify(0, "STATUS=Exited");
 #endif
 
-    rtpp_exit(1);
+    rtpp_exit(1, 0);
 }
