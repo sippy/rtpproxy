@@ -25,7 +25,7 @@
  *
  */
 
-#define MODULE_API_REVISION 3
+#define MODULE_API_REVISION 4
 
 struct rtpp_cfg_stable;
 struct rtpp_module_priv;
@@ -39,7 +39,7 @@ struct rtpp_module_conf;
 #endif
 
 DEFINE_METHOD(rtpp_cfg_stable, rtpp_module_ctor, struct rtpp_module_priv *);
-DEFINE_METHOD(rtpp_module_priv, rtpp_module_get_cmap, struct rtpp_module_conf *);
+DEFINE_METHOD(rtpp_module_priv, rtpp_module_get_mconf, struct rtpp_module_conf *);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_dtor, void);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_session_end, void,
   struct rtpp_acct *);
@@ -111,7 +111,7 @@ struct rtpp_minfo {
     const char *maintainer;
     rtpp_module_ctor_t ctor;
     rtpp_module_dtor_t dtor;
-    rtpp_module_get_cmap_t get_cmap;
+    rtpp_module_get_mconf_t get_mconf;
     struct api_on_sess_end on_session_end;
     struct api_on_rtcp_rcvd on_rtcp_rcvd;
     /* Lower half, filled by the core */
