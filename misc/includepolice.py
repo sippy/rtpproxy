@@ -4,8 +4,17 @@ from random import random
 from subprocess import call
 import sys, os
 
-def get_ip_flags(iname):
-    for line in file(iname).readlines():
+def get_ip_flags(iname, includedirs):
+    includedirs = ['.',] + includedirs
+    for dname in includedirs:
+        try:
+            f = file('%s/%s' % (dname, iname))
+            break
+        except IOError:
+            continue
+    else:
+        raise Exception('%s is not found in %s' % (iname, includedirs))
+    for line in f.readlines():
         line = line.strip()
         if not line.startswith('/*') and line.endswith('*/'):
             continue
@@ -21,26 +30,26 @@ class header_file(object):
     ifname = None
     ip_flags = None
 
-    def __init__(self, ifname):
+    def __init__(self, ifname, includedirs):
         self.ifname = ifname
         if not ifname.startswith('"'):
             return
         iname = ifname.strip('"')
-        self.ip_flags = get_ip_flags(iname)
+        self.ip_flags = get_ip_flags(iname, includedirs)
 
     def isflset(self, flname):
         if self.ip_flags == None:
             return False
         return (flname in self.ip_flags)
 
-def first_pass(fname):
+def first_pass(fname, includedirs):
     includes = []
     for line in file(fname).readlines():
         line = line.strip()
         lparts = line.split(None, 1)
         if len(lparts) < 2 or not lparts[0].startswith('#include'):
             continue
-        includes.append(header_file(lparts[1]))
+        includes.append(header_file(lparts[1], includedirs))
     if len(includes) > 0:
         return tuple(includes)
     return None
@@ -74,8 +83,9 @@ def second_pass(fname_in, fname_out, filter):
 
 if __name__ == '__main__':
     make = os.environ['SMAKE']
-    cleanbuild_targets = ('-DRTPP_DEBUG', 'clean', 'all')
-    build_targets = ('-DRTPP_DEBUG', 'all')
+    includedirs = os.environ['SIPATH'].split(':')
+    cleanbuild_targets = ('clean', 'all')
+    build_targets = ('all',)
     try:
         make_flags = os.environ['SMAKEFLAGS'].split()
     except KeyError:
@@ -86,7 +96,7 @@ if __name__ == '__main__':
     if fname.endswith('.c'):
         ignore.append('"%s.h"' % fname[:-2])
     print 'processing %s' % fname
-    includes = first_pass(fname)
+    includes = first_pass(fname, includedirs)
     if includes == None:
         print '  ...no includes found'
         sys.exit(0)
@@ -113,6 +123,7 @@ if __name__ == '__main__':
     os.rename(fname, fname_bak)
     print ' ..renamed "%s" into "%s"' % (fname, fname_bak)
     while True:
+        #print 'sfl_includes:', [x.ifname for x in sfl_includes]
         sfl_includes_bak = sfl_includes[:]
         for include in includes:
             if include in sfl_includes:
@@ -144,8 +155,6 @@ if __name__ == '__main__':
         if len(sfl_includes_bak) == len(sfl_includes):
             break
     os.rename(fname_bak, fname)
-    if len(sfl_includes) == 0:
-        sys.exit(0)
     for include in sfl_includes:
         print '"#include %s" is superfluous in %s' % (include.ifname, fname)
-    sys.exit(1)
+    sys.exit(len(sfl_includes))
