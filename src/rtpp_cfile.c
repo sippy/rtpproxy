@@ -49,6 +49,21 @@ static int parse_modules(struct rtpp_cfg_stable *, const ucl_object_t *);
 static bool conf_helper_mapper(struct rtpp_log *, const ucl_object_t *,
   const conf_helper_map *, void *, const conf_helper_map **);
 
+static char *
+rtpp_module_dsop_canonic(const char *mname, char *buf, size_t blen)
+{
+     const char *dbug;
+
+#if defined(RTPP_DEBUG)
+     dbug = "_debug";
+#else
+     dbug = "";
+#endif
+
+     snprintf(buf, blen, "%s/%s%s.so", MDDIR_PATH, mname, dbug);
+     return (buf);
+}
+
 int
 rtpp_cfile_process(struct rtpp_cfg_stable *csp)
 {
@@ -146,21 +161,25 @@ parse_modules(struct rtpp_cfg_stable *csp, const ucl_object_t *wop)
         RTPP_LOG(csp->glog, RTPP_LOG_DBUG, "\tmodule: %s", cf_key);
         obj_key = ucl_object_find_key(obj_file, "load");
         if (obj_key == NULL) {
-            RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: Unable to find load parameter in module: %s", cf_key);
-            ecode = -1;
-            goto e0;
-        }
-        if (obj_key->type != UCL_STRING) {
-            RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: \"load\" parameter in %s has a wrong type, string is expected", cf_key);
-            ecode = -1;
-            goto e0;
-        }
-        mp = ucl_object_tostring(obj_key);
-        cp = realpath(mp, mpath);
-        if (cp == NULL) {
-            RTPP_ELOG(csp->glog, RTPP_LOG_ERR, "realpath() failed: %s", mp);
-            ecode = -1;
-            goto e0;
+            cp = rtpp_module_dsop_canonic(cf_key, mpath, sizeof(mpath));
+            if (cp == NULL) {
+                RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: Unable to find load parameter in module: %s", cf_key);
+                ecode = -1;
+                goto e0;
+            }
+        } else {
+            if (obj_key->type != UCL_STRING) {
+                RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: \"load\" parameter in %s has a wrong type, string is expected", cf_key);
+                ecode = -1;
+                goto e0;
+            }
+            mp = ucl_object_tostring(obj_key);
+            cp = realpath(mp, mpath);
+            if (cp == NULL) {
+                RTPP_ELOG(csp->glog, RTPP_LOG_ERR, "realpath() failed: %s", mp);
+                ecode = -1;
+                goto e0;
+            }
         }
         mif = rtpp_module_if_ctor(cp);
         if (mif == NULL) {
