@@ -553,7 +553,7 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
         }
         if (errors_found == 0) {
             RTPP_MEMDEB_REPORT2(log, nostdout,
-              "MEMDEB suspicious allocations:");
+              "MEMDEB(%s) suspicious allocations:", pvt->inst_name);
         }
         errors_found++;
         RTPP_MEMDEB_REPORT2(log, nostdout,
