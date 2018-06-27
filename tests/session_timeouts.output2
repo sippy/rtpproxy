@@ -73,4 +73,4 @@ ncmds_rcvd=61 ncmds_succd=55 ncmds_errs=5 ncmds_repld=60
 0
 nsess_created=12 nsess_destroyed=12 nsess_timeout=12 nsess_complete=12 nsess_nortp=12 nsess_owrtp=0 nsess_nortcp=12 nsess_owrtcp=0
 ncmds_rcvd=75 ncmds_succd=57 ncmds_errs=17 ncmds_repld=74
-MEMDEB: all clear
+MEMDEB(rtpproxy): all clear

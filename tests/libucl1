@@ -1,0 +1,13 @@
+#!/bin/sh
+
+. $(dirname $0)/functions
+
+TESTDDIR="${BASEDIR}/libucl"
+
+TCONF="libucl_test.conf"
+TOUT="${TCONF%.conf}.output"
+${TOP_BUILDDIR}/libucl/libucl_test ${TESTDDIR}/${TCONF} > ${BASEDIR}/${TOUT}
+report "running libucl_test"
+${DIFF} ${BASEDIR}/${TOUT} ${TESTDDIR}/${TOUT}
+report "checking ${TOUT}"
+

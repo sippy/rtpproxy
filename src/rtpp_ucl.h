@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2018 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,32 +25,30 @@
  *
  */
 
-struct rtpp_module_if;
-struct rtpp_refcnt;
-struct rtpp_acct;
-struct rtpp_acct_rtcp;
+struct ucl_object_s;
 struct rtpp_log;
-struct rtpp_cfg_stable;
-struct rtpp_module_conf;
 
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, struct rtpp_cfg_stable *,
-  struct rtpp_log *);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_start, int);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct, void,
-  struct rtpp_acct *);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct_rtcp, void,
-  struct rtpp_acct_rtcp *);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_get_mconf, int,
-  struct rtpp_module_conf **);
+typedef struct ucl_object_s ucl_object_t;
 
-struct rtpp_module_if {
-    struct rtpp_type_linkable t;
-    struct rtpp_refcnt *rcnt;
-    METHOD_ENTRY(rtpp_module_if_load, load);
-    METHOD_ENTRY(rtpp_module_if_start, start);
-    METHOD_ENTRY(rtpp_module_if_do_acct, do_acct);
-    METHOD_ENTRY(rtpp_module_if_do_acct_rtcp, do_acct_rtcp);
-    METHOD_ENTRY(rtpp_module_if_get_mconf, get_mconf);
+/*
+ * Config parser helper callback function pointer alias
+ */
+typedef bool (*conf_helper_func)(struct rtpp_log *, const ucl_object_t *,
+  const ucl_object_t *, void *);
+
+/*
+ * Config parser helper callback map. Maps UCL keys to callback functions that
+ * parse the key and store the value in the correct struct member
+ */
+typedef struct conf_helper_callback_map {
+    const char *conf_key;
+    conf_helper_func callback;
+} conf_helper_map;
+
+struct rtpp_module_conf {
+    void *conf_data;
+    conf_helper_map conf_map[];
 };
 
-struct rtpp_module_if *rtpp_module_if_ctor(const char *);
+bool rtpp_ucl_set_unknown(struct rtpp_log *, const ucl_object_t *top,
+  const ucl_object_t *obj, void *target);

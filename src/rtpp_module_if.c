@@ -90,6 +90,7 @@ static int rtpp_mif_load(struct rtpp_module_if *, struct rtpp_cfg_stable *, stru
 static int rtpp_mif_start(struct rtpp_module_if *);
 static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
 static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp *);
+static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **);
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_module_if_priv *)((char *)(pubp) - offsetof(struct rtpp_module_if_priv, pub)))
@@ -98,7 +99,7 @@ static const char *do_acct_aname = "do_acct";
 static const char *do_acct_rtcp_aname = "do_acct_rtcp";
 
 struct rtpp_module_if *
-rtpp_module_if_ctor(char *mpath)
+rtpp_module_if_ctor(const char *mpath)
 {
     struct rtpp_refcnt *rcnt;
     struct rtpp_module_if_priv *pvt;
@@ -116,6 +117,7 @@ rtpp_module_if_ctor(char *mpath)
     pvt->pub.do_acct = &rtpp_mif_do_acct;
     pvt->pub.do_acct_rtcp = &rtpp_mif_do_acct_rtcp;
     pvt->pub.start = &rtpp_mif_start;
+    pvt->pub.get_mconf = &rtpp_mif_get_mconf;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
@@ -175,6 +177,7 @@ rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp, struct 
     if (pvt->memdeb_p == NULL) {
         goto e2;
     }
+    rtpp_memdeb_setname(pvt->memdeb_p, pvt->mip->name);
     /* We make a copy, so that the module cannot screw us up */
     pvt->mip->memdeb_p = pvt->memdeb_p;
 #else
@@ -253,6 +256,8 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
             /* First, stop the worker thread and wait for it to terminate */
             rtpp_queue_put_item(pvt->sigterm, pvt->req_q);
             pthread_join(pvt->thread_id, NULL);
+        } else {
+            rtpp_wi_free(pvt->sigterm);
         }
         rtpp_queue_destroy(pvt->req_q);
 
@@ -386,5 +391,24 @@ rtpp_mif_start(struct rtpp_module_if *self)
         return (-1);
     }
     pvt->started = 1;
+    return (0);
+}
+
+static int
+rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
+{
+    struct rtpp_module_if_priv *pvt;
+    struct rtpp_module_conf *rval;
+
+    pvt = PUB2PVT(self);
+    if (pvt->mip->get_mconf == NULL) {
+        *mcpp = NULL;
+        return (0);
+    }
+    rval = pvt->mip->get_mconf(pvt->mpvt);
+    if (rval == NULL) {
+        return (-1);
+    }
+    *mcpp = rval;
     return (0);
 }

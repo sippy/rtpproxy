@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2018 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,32 +25,6 @@
  *
  */
 
-struct rtpp_module_if;
-struct rtpp_refcnt;
-struct rtpp_acct;
-struct rtpp_acct_rtcp;
-struct rtpp_log;
 struct rtpp_cfg_stable;
-struct rtpp_module_conf;
 
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, struct rtpp_cfg_stable *,
-  struct rtpp_log *);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_start, int);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct, void,
-  struct rtpp_acct *);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct_rtcp, void,
-  struct rtpp_acct_rtcp *);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_get_mconf, int,
-  struct rtpp_module_conf **);
-
-struct rtpp_module_if {
-    struct rtpp_type_linkable t;
-    struct rtpp_refcnt *rcnt;
-    METHOD_ENTRY(rtpp_module_if_load, load);
-    METHOD_ENTRY(rtpp_module_if_start, start);
-    METHOD_ENTRY(rtpp_module_if_do_acct, do_acct);
-    METHOD_ENTRY(rtpp_module_if_do_acct_rtcp, do_acct_rtcp);
-    METHOD_ENTRY(rtpp_module_if_get_mconf, get_mconf);
-};
-
-struct rtpp_module_if *rtpp_module_if_ctor(const char *);
+int rtpp_cfile_process(struct rtpp_cfg_stable *);

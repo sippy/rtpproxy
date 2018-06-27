@@ -15,7 +15,7 @@ if BUILD_UDP_CONTENTION
 SUBD_UDCNT=	pertools
 endif
 
-SUBDIRS=	libexecinfo makeann $(SUBD_MOD) $(SUBD_ELP) src $(SUBD_UDCNT) tests \
+SUBDIRS=	libexecinfo libucl makeann $(SUBD_MOD) $(SUBD_ELP) src $(SUBD_UDCNT) tests \
   $(SUBD_EAUD)
 
 dist_man_MANS=	rtpproxy.8

@@ -1,4 +1,7 @@
-bin_PROGRAMS=rtpproxy rtpproxy_debug rtpp_objck
+UCL_DIR=$(top_srcdir)/external/libucl
+
+bin_PROGRAMS=rtpproxy rtpproxy_debug
+noinst_PROGRAMS=rtpp_objck
 BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
@@ -34,10 +37,10 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h rtpp_command_play.c \
   rtpp_command_play.h rtpp_command_ver.h rtpp_command_ver.c \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_acct_rtcp.h \
-  rtpp_acct_rtcp.c
+  rtpp_acct_rtcp.c rtpp_cfile.c rtpp_cfile.h rtpp_ucl.c rtpp_ucl.h
 
-rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
-rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ \
+rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl.a
+rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.a \
   $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
 
@@ -68,11 +71,10 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_pcount_fin.h rtpp_sessinfo_fin.c rtpp_sessinfo_fin.h \
   rtpp_pcnt_strm_fin.h rtpp_pcnt_strm_fin.c rtpp_ringbuf_fin.c \
   rtpp_ringbuf_fin.h rtpp_module_if_fin.h rtpp_module_if_fin.c \
-  rtpp_port_table_fin.c rtpp_port_table_fin.h rtpp_acct_fin.c \
-  rtpp_acct_fin.h rtpp_netaddr_fin.c rtpp_netaddr_fin.h \
+  rtpp_port_table_fin.c rtpp_port_table_fin.h \
+  rtpp_netaddr_fin.c rtpp_netaddr_fin.h \
   rtpp_stats_fin.c rtpp_stats_fin.h rtpp_pearson_perfect_fin.c \
-  rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h \
-  rtpp_acct_rtcp_fin.c rtpp_acct_rtcp_fin.h
+  rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h
 rtpproxy_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN)
 rtpproxy_debug_SOURCES=$(rtpproxy_SOURCES) $(SRCS_DEBUG)
 rtpp_objck_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
@@ -81,21 +83,25 @@ rtpp_objck_SOURCES=rtpp_objck.c $(SRCS_AUTOGEN) $(SRGC_MEMDEB_CORE) \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_pearson.c rtpp_pearson.h \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_time.c rtpp_time.h rtpp_timed.c rtpp_timed.h \
   rtpp_queue.c rtpp_queue.h rtpp_wi.c rtpp_wi.h
-rtpp_objck_CPPFLAGS=$(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
 
 RTPP_MEMDEB_CPPFLAGS=-DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
-
-rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -I$(top_srcdir) $(RTPP_MEMDEB_CPPFLAGS) \
-  -DMEMDEB_APP=rtpproxy
+RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
+  -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include
 EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
 
 if BUILD_ELPERIODIC
-EXTRA_CFLAGS+=-I$(top_srcdir)/libelperiodic/src
+EXTRA_CPPFLAGS=-I$(top_srcdir)/libelperiodic/src
 endif
 
-rtpproxy_CFLAGS=$(EXTRA_CFLAGS)
 rtpproxy_debug_CFLAGS=$(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
+rtpproxy_debug_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS) -DRTPP_DEBUG $(RTPP_MEMDEB_CPPFLAGS) \
+  -DMEMDEB_APP=@PACKAGE@ -I$(top_srcdir)
+
+rtpproxy_CFLAGS=$(EXTRA_CFLAGS)
+rtpproxy_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS)
+
 rtpp_objck_CFLAGS=$(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
+rtpp_objck_CPPFLAGS=$(EXTRA_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
 
 DEFS=	-Wall @DEFS@
 
@@ -190,15 +196,15 @@ rtpp_port_table_fin.c: $(GENFINCODE) rtpp_port_table.h
 
 rtpp_port_table_fin.h: rtpp_port_table_fin.c
 
-rtpp_acct_fin.c: $(GENFINCODE) rtpp_acct.h
-	$(GENFINCODE) rtpp_acct.h rtpp_acct_fin.h rtpp_acct_fin.c
+#rtpp_acct_fin.c: $(GENFINCODE) rtpp_acct.h
+#	$(GENFINCODE) rtpp_acct.h rtpp_acct_fin.h rtpp_acct_fin.c
 
-rtpp_acct_fin.h: rtpp_acct_fin.c
+#rtpp_acct_fin.h: rtpp_acct_fin.c
 
-rtpp_acct_rtcp_fin.c: $(GENFINCODE) rtpp_acct_rtcp.h
-	$(GENFINCODE) rtpp_acct_rtcp.h rtpp_acct_rtcp_fin.h rtpp_acct_rtcp_fin.c
+#rtpp_acct_rtcp_fin.c: $(GENFINCODE) rtpp_acct_rtcp.h
+#	$(GENFINCODE) rtpp_acct_rtcp.h rtpp_acct_rtcp_fin.h rtpp_acct_rtcp_fin.c
 
-rtpp_acct_rtcp_fin.h: rtpp_acct_rtcp_fin.c
+#rtpp_acct_rtcp_fin.h: rtpp_acct_rtcp_fin.c
 
 rtpp_netaddr_fin.c: $(GENFINCODE_S) rtpp_netaddr.h
 	$(GENFINCODE_S) rtpp_netaddr.h rtpp_netaddr_fin.h rtpp_netaddr_fin.c
@@ -215,7 +221,10 @@ rtpp_pearson_perfect_fin.c: $(GENFINCODE_S) rtpp_pearson_perfect.h
 
 rtpp_pearson_perfect_fin.h: rtpp_pearson_perfect_fin.c
 
+IPLDIR=$(top_srcdir)/src/ipol
+
 includepolice:
+	@rm -f $(IPLDIR)/*.txt $(IPLDIR)/*.iout
 	@nfiles=`echo ${BASE_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); \
 	 i=1; nwarns=0; \
 	 for file in ${BASE_SOURCES}; \
@@ -223,10 +232,11 @@ includepolice:
 	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
 	   set +e; set +x; \
 	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
-	    python ../misc/includepolice.py $${file} > ipol/$${file}.txt; \
+            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src" \
+	    python ../misc/includepolice.py $${file} > $(IPLDIR)/$${file}.txt; \
 	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
 	   if [ $${RC} -eq 0 ]; then \
-	     rm -f ipol/$${file}.txt ipol/$${file}.iout; \
+	     rm -f $(IPLDIR)/$${file}.txt $(IPLDIR)/$${file}.iout; \
 	     echo "all clean"; \
 	   else \
 	     echo "$${RC} warning(s)"; \

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2018 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,32 +25,23 @@
  *
  */
 
-struct rtpp_module_if;
-struct rtpp_refcnt;
-struct rtpp_acct;
-struct rtpp_acct_rtcp;
-struct rtpp_log;
-struct rtpp_cfg_stable;
-struct rtpp_module_conf;
+#include <inttypes.h>
+#include <stdbool.h>
 
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, struct rtpp_cfg_stable *,
-  struct rtpp_log *);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_start, int);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct, void,
-  struct rtpp_acct *);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct_rtcp, void,
-  struct rtpp_acct_rtcp *);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_get_mconf, int,
-  struct rtpp_module_conf **);
+#include "config.h"
 
-struct rtpp_module_if {
-    struct rtpp_type_linkable t;
-    struct rtpp_refcnt *rcnt;
-    METHOD_ENTRY(rtpp_module_if_load, load);
-    METHOD_ENTRY(rtpp_module_if_start, start);
-    METHOD_ENTRY(rtpp_module_if_do_acct, do_acct);
-    METHOD_ENTRY(rtpp_module_if_do_acct_rtcp, do_acct_rtcp);
-    METHOD_ENTRY(rtpp_module_if_get_mconf, get_mconf);
-};
+#include "rtpp_types.h"
+#include "rtpp_log.h"
+#include "rtpp_log_obj.h"
+#include "rtpp_ucl.h"
 
-struct rtpp_module_if *rtpp_module_if_ctor(const char *);
+#include "ucl.h"
+
+bool
+rtpp_ucl_set_unknown(struct rtpp_log *log, const ucl_object_t *top,
+  const ucl_object_t *obj, void *target __attribute__((unused)))
+{
+    RTPP_LOG(log, RTPP_LOG_ERR, "Unknown key '%s' in section '%s'",
+        ucl_object_key(obj), ucl_object_key(top));
+    return (false);
+}

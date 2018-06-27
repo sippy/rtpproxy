@@ -19,4 +19,4 @@ packets transmitted: 0
 1
 0
 nsess_created=0 nsess_destroyed=0 nsess_complete=0 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=0 nsess_owrtcp=0 ncmds_rcvd=17 ncmds_succd=16 ncmds_errs=0 ncmds_repld=16
-MEMDEB: all clear
+MEMDEB(rtpproxy): all clear

@@ -315,4 +315,4 @@ npkts_resizer_in=32000 npkts_resizer_out=20000 npkts_resizer_discard=0
 rtpa_nsent=96000 rtpa_nrcvd=96000 rtpa_ndups=0 rtpa_perrs=0
 0
 rtpa_nsent=192000 rtpa_nrcvd=192000 rtpa_ndups=0 rtpa_perrs=0
-MEMDEB: all clear
+MEMDEB(rtpproxy): all clear

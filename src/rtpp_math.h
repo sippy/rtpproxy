@@ -41,6 +41,18 @@
 #define MAX(x, y)       (((x) > (y)) ? (x) : (y))
 #define ABS(x)          ((x) > 0 ? (x) : (-x))
 
+struct recfilter {
+    double a;
+    double b;
+    double lastval;
+    double minval;
+    double maxval;
+    int peak_detect;
+};
+
 /* Function prototypes */
+double recfilter_apply(struct recfilter *, double);
+double recfilter_apply_int(struct recfilter *, int);
+void recfilter_init(struct recfilter *, double, double, int);
 
 #endif /* _RTPP_MATH_H_ */

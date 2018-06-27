@@ -134,6 +134,8 @@ struct rtpp_cfg_stable {
     struct rtpp_list *modules_cf;
 
     struct overload_prot overload_prot;
+
+    const char *cfile;
 };
 
 #endif

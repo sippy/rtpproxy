@@ -6,4 +6,4 @@
 	url = https://github.com/sippy/hepconnector.git
 [submodule "libucl"]
 	path = external/libucl
-	url = https://github.com/vstakhov/libucl.git
+	url = https://github.com/sippy/libucl.git

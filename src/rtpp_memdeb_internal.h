@@ -63,6 +63,7 @@ int rtpp_memdeb_dumpstats(void *, int);
 void rtpp_memdeb_setbaseln(void *);
 int rtpp_memdeb_selftest(void *);
 void rtpp_memdeb_setlog(void *, struct rtpp_log *);
+void rtpp_memdeb_setname(void *, const char *);
 void rtpp_memdeb_approve(void *, const char *, int, const char *);
 
 void *rtpp_memdeb_init();
