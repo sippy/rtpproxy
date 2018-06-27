@@ -60,7 +60,7 @@ rtpp_module_dsop_canonic(const char *mname, char *buf, size_t blen)
      dbug = "";
 #endif
 
-     snprintf(buf, blen, "%s/%s%s.so", MDDIR_PATH, mname, dbug);
+     snprintf(buf, blen, "%s/rtpp_%s%s.so", MDDIR_PATH, mname, dbug);
      return (buf);
 }
 
