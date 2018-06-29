@@ -212,6 +212,10 @@ parse_modules(struct rtpp_cfg_stable *csp, const ucl_object_t *wop)
             }
             goto e1;
         }
+        if (CALL_METHOD(mif, config) < 0) {
+            RTPP_LOG(csp->glog, RTPP_LOG_ERR, "%p->config() method has failed: %s", mif, cp);
+            goto e1;
+        }
         rtpp_list_append(csp->modules_cf, mif);
         continue;
 e1:

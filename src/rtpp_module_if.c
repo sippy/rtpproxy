@@ -91,6 +91,7 @@ static int rtpp_mif_start(struct rtpp_module_if *);
 static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
 static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp *);
 static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **);
+static int rtpp_mif_config(struct rtpp_module_if *);
 
 #define PUB2PVT(pubp) \
   ((struct rtpp_module_if_priv *)((char *)(pubp) - offsetof(struct rtpp_module_if_priv, pub)))
@@ -118,6 +119,7 @@ rtpp_module_if_ctor(const char *mpath)
     pvt->pub.do_acct_rtcp = &rtpp_mif_do_acct_rtcp;
     pvt->pub.start = &rtpp_mif_start;
     pvt->pub.get_mconf = &rtpp_mif_get_mconf;
+    pvt->pub.config = &rtpp_mif_config;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
@@ -411,4 +413,16 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
     }
     *mcpp = rval;
     return (0);
+}
+
+static int
+rtpp_mif_config(struct rtpp_module_if *self)
+{
+    struct rtpp_module_if_priv *pvt;
+
+    pvt = PUB2PVT(self);
+    if (pvt->mip->config == NULL) {
+        return (0);
+    }
+    return (pvt->mip->config(pvt->mpvt));
 }

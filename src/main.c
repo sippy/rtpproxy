@@ -322,6 +322,11 @@ init_config(struct cfg *cf, int argc, char **argv)
             if (mif == NULL) {
                 err(1, "%s: dymanic module constructor has failed", cp);
             }
+            if (CALL_METHOD(mif, load, cf->stable, cf->stable->glog) != 0) {
+                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR,
+                  "%p: dymanic module load has failed", mif);
+                exit(1);
+            }
             rtpp_list_append(cf->stable->modules_cf, mif);
             break;
 
@@ -933,11 +938,6 @@ main(int argc, char **argv)
         struct rtpp_module_if *mif;
 
         mif = RTPP_LIST_HEAD(cf.stable->modules_cf);
-        if (CALL_METHOD(mif, load, cf.stable, cf.stable->glog) != 0) {
-            RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
-              "%p: dymanic module load has failed", mif);
-            exit(1);
-        }
         if (CALL_METHOD(mif, start) != 0) {
             RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
               "%p: dymanic module start has failed", mif);
