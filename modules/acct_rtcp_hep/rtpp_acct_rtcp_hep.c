@@ -62,12 +62,14 @@
 
 struct rtpp_module_priv {
    struct rtpp_sbuf *sbp;
+   struct hep_ctx ctx;
 };
 
 static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *);
 static void rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct_rtcp *);
 static struct rtpp_module_conf *rtpp_acct_rtcp_hep_get_mconf(struct rtpp_module_priv *);
+static int rtpp_acct_rtcp_hep_config(struct rtpp_module_priv *);
 
 #define API_FUNC(fname, asize) {.func = (fname), .argsize = (asize)}
 
@@ -79,6 +81,7 @@ struct rtpp_minfo rtpp_module = {
     .ctor = rtpp_acct_rtcp_hep_ctor,
     .dtor = rtpp_acct_rtcp_hep_dtor,
     .get_mconf = rtpp_acct_rtcp_hep_get_mconf,
+    .config = rtpp_acct_rtcp_hep_config,
     .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
@@ -105,27 +108,36 @@ rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *cfsp)
     if (pvt->sbp == NULL) {
         goto e1;
     }
-    if (init_hepsocket(&ctx) != 0) {
-        goto e2;
-    }
+    pvt->ctx = default_ctx;
     return (pvt);
 
+#if 0
 e2:
     rtpp_sbuf_dtor(pvt->sbp);
+#endif
 e1:
     mod_free(pvt);
 e0:
     return (NULL);
 }
 
+static int
+rtpp_acct_rtcp_hep_config(struct rtpp_module_priv *pvt)
+{
+    if (init_hepsocket(&pvt->ctx) != 0) {
+        return (-1);
+    }
+    return (0);
+}
+
 static void
 rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *pvt)
 {
 
-    if (ctx.capt_host != NULL) {
-        mod_free(ctx.capt_host);
+    if (pvt->ctx.capt_host != NULL) {
+        mod_free(pvt->ctx.capt_host);
     }
-    hep_gen_dtor(&ctx);
+    hep_gen_dtor(&pvt->ctx);
     rtpp_sbuf_dtor(pvt->sbp);
     mod_free(pvt);
     return;
@@ -167,12 +179,12 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
     dtime2rtimeval(rarp->pkt->rtime, &rtimeval);
     ri.time_sec = SEC(&rtimeval);
     ri.time_usec = USEC(&rtimeval);
-    if (hep_gen_fill(&ctx, &ri) < 0) {
+    if (hep_gen_fill(&pvt->ctx, &ri) < 0) {
       mod_log(RTPP_LOG_ERR, "hep_gen_fill() failed");
         goto out;
     }
 
-    if (hep_gen_append(&ctx, HEP_VID_GEN, HEP_TID_CID, rarp->call_id,
+    if (hep_gen_append(&pvt->ctx, HEP_VID_GEN, HEP_TID_CID, rarp->call_id,
       strlen(rarp->call_id)) < 0) {
         mod_log(RTPP_LOG_ERR, "hep_gen_append() failed");
         goto out;
@@ -185,7 +197,7 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
         goto out;
     }
 
-    rval = send_hep(&ctx, &ri, pvt->sbp->bp, RS_ULEN(pvt->sbp));
+    rval = send_hep(&pvt->ctx, &ri, pvt->sbp->bp, RS_ULEN(pvt->sbp));
     if (rval < 0) {
         mod_log(RTPP_LOG_INFO, "send_hep() failed: %d", rval);
     }
@@ -198,7 +210,7 @@ static struct rtpp_module_conf *
 rtpp_acct_rtcp_hep_get_mconf(struct rtpp_module_priv *pvt)
 {
 
-    rtpp_arh_conf->conf_data = &ctx;
+    rtpp_arh_conf->conf_data = &pvt->ctx;
 
     return (rtpp_arh_conf);
 }

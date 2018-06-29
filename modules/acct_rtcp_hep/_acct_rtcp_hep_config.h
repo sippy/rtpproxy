@@ -1,6 +1,6 @@
 static const struct addrinfo _hints = { .ai_socktype = SOCK_DGRAM };
 
-static struct hep_ctx ctx = {
+static const struct hep_ctx default_ctx = {
         .initfails = 0,
         .hints = &_hints,
         .capt_host  = "10.0.0.1",
