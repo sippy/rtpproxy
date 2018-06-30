@@ -1,7 +1,7 @@
 UCL_DIR=$(top_srcdir)/external/libucl
 
 bin_PROGRAMS=rtpproxy rtpproxy_debug
-noinst_PROGRAMS=rtpp_objck
+noinst_PROGRAMS=rtpp_objck rtpp_objck_perf
 BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
@@ -77,12 +77,14 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h
 rtpproxy_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN)
 rtpproxy_debug_SOURCES=$(rtpproxy_SOURCES) $(SRCS_DEBUG)
-rtpp_objck_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
-rtpp_objck_SOURCES=rtpp_objck.c $(SRCS_AUTOGEN) $(SRGC_MEMDEB_CORE) \
+rtpp_objck_perf_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
+rtpp_objck_perf_SOURCES=rtpp_objck.c $(SRCS_AUTOGEN) \
   rtpp_stats.c rtpp_stats.h rtpp_mallocs.c rtpp_mallocs.h \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_pearson.c rtpp_pearson.h \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_time.c rtpp_time.h rtpp_timed.c rtpp_timed.h \
   rtpp_queue.c rtpp_queue.h rtpp_wi.c rtpp_wi.h
+rtpp_objck_LDADD=$(rtpp_objck_perf_LDADD)
+rtpp_objck_SOURCES=$(rtpp_objck_perf_SOURCES) $(SRGC_MEMDEB_CORE)
 
 RTPP_MEMDEB_CPPFLAGS=-DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
@@ -100,6 +102,7 @@ rtpproxy_debug_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS) -DRTPP_DEBUG $
 rtpproxy_CFLAGS=$(EXTRA_CFLAGS)
 rtpproxy_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS)
 
+rtpp_objck_perf_CPPFLAGS=$(EXTRA_CPPFLAGS)
 rtpp_objck_CFLAGS=$(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
 rtpp_objck_CPPFLAGS=$(EXTRA_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
 
