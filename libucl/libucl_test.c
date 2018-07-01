@@ -1,6 +1,7 @@
 /* Copyright (c) 2014, 2015 Allan Jude <allanjude@FreeBSD.org>. */
 
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -8,6 +9,8 @@
 #include "ucl.h"
 
 #include "rtpp_memdeb_internal.h"
+#include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_ucl.h"
 
 RTPP_MEMDEB_STATIC(rtpproxy);
@@ -16,6 +19,36 @@ static bool conf_helper_mapper(const ucl_object_t *obj,
   conf_helper_map *map, void *target, conf_helper_map **failed);
 
 extern struct rtpp_module_conf *rtpp_arh_conf;
+
+static void
+rtpp_log_obj_write_early(struct rtpp_log *self, const char *fname, int level,
+  const char *fmt, ...)
+{
+    va_list ap;
+
+    fprintf(stderr, "%s: ", fname);
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
+    fflush(stderr);
+    return;
+}
+
+static void
+rtpp_log_obj_ewrite_early(struct rtpp_log *self, const char *fname, int level,
+  const char *fmt, ...)
+{
+    va_list ap;
+
+    fprintf(stderr, "%s: ", fname);
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, ": %s\n", strerror(errno));
+    fflush(stderr);
+    return;
+}
 
 static int
 parse_modules(const ucl_object_t *wop)
@@ -154,6 +187,7 @@ conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
     const char *key = NULL;
     int i;
     bool ret = true, found = false;
+    static struct rtpp_log log = {.write = rtpp_log_obj_write_early, .ewrite = rtpp_log_obj_ewrite_early};
 
     it = ucl_object_iterate_new(obj);
     if (it == NULL)
@@ -166,7 +200,7 @@ conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
                 continue;
             found = true;
             if (map[i].callback != NULL) {
-                ret = map[i].callback(NULL, obj, cur, target);
+                ret = map[i].callback(&log, obj, cur, target);
                 if (!ret && fentrpp != NULL)
                     *fentrpp = &map[i];
             }
@@ -174,7 +208,7 @@ conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
         }
         if (!found && map[i].callback != NULL) {
             /* Call default handler if there is one */
-            ret = map[i].callback(NULL, obj, cur, target);
+            ret = map[i].callback(&log, obj, cur, target);
             if (!ret && fentrpp != NULL)
                 *fentrpp = &map[i];
         }
