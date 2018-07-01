@@ -191,7 +191,7 @@ rtpp_log_obj_ewrite_early(struct rtpp_log *self, const char *fname, int level,
     return;
 }
 
-void
+static void
 rtpp_log_obj_start(struct rtpp_log *self, struct rtpp_cfg_stable *cfs)
 {
     struct rtpp_log_priv *pvt;
