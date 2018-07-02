@@ -204,6 +204,9 @@ rtpp_timed_shutdown(struct rtpp_timed *self)
     assert(rtpp_timed_cf->state == RT_ST_RUNNING);
     rtpp_queue_put_item(rtpp_timed_cf->sigterm, rtpp_timed_cf->cmd_q);
     pthread_join(rtpp_timed_cf->thread_id, NULL);
+    while (rtpp_queue_get_length(rtpp_timed_cf->cmd_q) > 0) {
+        rtpp_wi_free(rtpp_queue_get_item(rtpp_timed_cf->cmd_q, 0));
+    }
     rtpp_timed_cf->state = RT_ST_SHTDOWN;
 }
 

@@ -342,6 +342,9 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
              for (ri = i - 1; ri >= 0; ri--) {
                  rtpp_queue_put_item(netio_cf->args[ri].sigterm, netio_cf->args[ri].out_q);
                  pthread_join(netio_cf->thread_id[ri], NULL);
+                 while (rtpp_queue_get_length(netio_cf->args[ri].out_q) > 0) {
+                    rtpp_wi_free(rtpp_queue_get_item(netio_cf->args[ri].out_q, 0));
+                 }
              }
              for (ri = i; ri < SEND_THREADS; ri++) {
                  rtpp_wi_free(netio_cf->args[ri].sigterm);
@@ -378,6 +381,9 @@ rtpp_netio_async_destroy(struct rtpp_anetio_cf *netio_cf)
     }
     for (i = 0; i < SEND_THREADS; i++) {
         pthread_join(netio_cf->thread_id[i], NULL);
+        while (rtpp_queue_get_length(netio_cf->args[i].out_q) > 0) {
+            rtpp_wi_free(rtpp_queue_get_item(netio_cf->args[i].out_q, 0));
+        }
         rtpp_queue_destroy(netio_cf->args[i].out_q);
         CALL_SMETHOD(netio_cf->args[i].glog->rcnt, decref);
     }
