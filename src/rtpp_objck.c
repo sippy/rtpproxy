@@ -28,9 +28,11 @@
 #include <assert.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "config_pp.h"
 
@@ -57,11 +59,23 @@
 RTPP_MEMDEB_STATIC(rtpp_objck);
 #endif
 
+struct test_data {
+    uint64_t nitems;
+    double runtime;
+    atomic_bool done;
+};
+
+struct tests {
+    struct test_data queue;
+    struct test_data wi_malloc;
+};
+
 struct thr_args {
     struct rtpp_stats *rsp;
     struct rtpp_queue *rqp;
     struct rtpp_wi *sigterm;
-    int done;
+    int tick;
+    struct tests tests;
 };
 
 static enum rtpp_timed_cb_rvals
@@ -71,8 +85,20 @@ update_derived_stats(double dtime, void *argp)
 
     tap = (struct thr_args *)argp;
     CALL_SMETHOD(tap->rsp, update_derived, dtime);
-    rtpp_queue_put_item(tap->sigterm, tap->rqp);
-    tap->done = 1;
+    switch (tap->tick) {
+    case 0:
+        rtpp_queue_put_item(tap->sigterm, tap->rqp);
+        tap->tests.queue.done = 1;
+        break;
+
+    case 1:
+        tap->tests.wi_malloc.done = 1;
+        break;
+
+    default:
+        abort();
+    }
+    tap->tick++;
     return (CB_MORE);
 }
 
@@ -94,18 +120,31 @@ worker_run(void *argp)
     }
 }
 
+#define RPRINT(trp, trn, pls) \
+    printf("%s(%d): processed %llu items in %f sec, %f items/sec\n", trn, pls, (unsigned long long)(trp)->nitems, \
+      (trp)->runtime, (double)(trp)->nitems / (trp)->runtime)
+
 int
 main(int argc, char **argv)
 {
-    int ecode;
+    int ecode, tsize;
     struct rtpp_timed *rtp;
     struct rtpp_timed_task *ttp;
     struct thr_args targs;
     pthread_t thread_id;
     struct rtpp_wi *wi;
     void *wi_data;
-    int nitems;
-    double stime, etime;
+    double stime;
+
+    memset(&targs, '\0', sizeof(targs));
+    targs.tests.queue.done = ATOMIC_VAR_INIT(0);
+    targs.tests.wi_malloc.done = ATOMIC_VAR_INIT(0);
+
+    tsize = 1256;
+    if (argc > 1) {
+        tsize = atoi(argv[1]);
+        assert(tsize > 0);
+    }
 
 #if defined(_RTPP_MEMDEB_H)
     RTPP_MEMDEB_INIT(rtpp_objck);
@@ -118,32 +157,41 @@ main(int argc, char **argv)
     targs.rsp = rtpp_stats_ctor();
     targs.rqp = rtpp_queue_init(1, "perftest");
     targs.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
-    targs.done = 0;
     ttp = CALL_SMETHOD(rtp, schedule_rc, 10.0, targs.rsp->rcnt, update_derived_stats, NULL, &targs);
     if (pthread_create(&thread_id, NULL, (void *(*)(void *))&worker_run, &targs) != 0) {
         err(1, "pthread_create() failed");
         /* NOTREACHED */
     }
-    nitems = 0;
+
     stime = getdtime();
     do {
-        wi = rtpp_wi_malloc_udata((void **)&wi_data, 256);
+        wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
         rtpp_queue_put_item(wi, targs.rqp);
-        nitems++;
-    } while(!targs.done);
-    etime = getdtime();
+        targs.tests.queue.nitems++;
+    } while(!targs.tests.queue.done);
+    targs.tests.queue.runtime = getdtime() - stime;
     pthread_join(thread_id, NULL);
+    while (rtpp_queue_get_length(targs.rqp) > 0) {
+        wi = rtpp_queue_get_item(targs.rqp, 0);
+        rtpp_wi_free(wi);
+        targs.tests.queue.nitems--;
+    }
+    RPRINT(&targs.tests.queue, "rtpp_queue", tsize);
+
+    stime = getdtime();
+    do {
+        wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
+        rtpp_wi_free(wi);
+        targs.tests.wi_malloc.nitems++;
+    } while(!targs.tests.wi_malloc.done);
+    targs.tests.wi_malloc.runtime = getdtime() - stime;
+    RPRINT(&targs.tests.wi_malloc, "rtpp_wi", tsize);
+
     CALL_SMETHOD(ttp->rcnt, decref);
     CALL_SMETHOD(targs.rsp->rcnt, decref);
     CALL_SMETHOD(rtp, shutdown);
     CALL_SMETHOD(rtp->rcnt, decref);
-    while (rtpp_queue_get_length(targs.rqp) > 0) {
-        wi = rtpp_queue_get_item(targs.rqp, 0);
-        rtpp_wi_free(wi);
-        nitems--;
-    }
     rtpp_queue_destroy(targs.rqp);
-    printf("Processed %d items, %f items/sec\n", nitems, (double)nitems / (etime - stime));
 
 #if defined(_RTPP_MEMDEB_H)
     ecode = rtpp_memdeb_dumpstats(_rtpp_objck_memdeb, 0) == 0 ? 0 : 1;
