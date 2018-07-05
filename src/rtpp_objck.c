@@ -47,7 +47,7 @@
 #if defined(_RTPP_MEMDEB_H)
 #include "rtpp_memdeb_internal.h"
 #endif
-#include "rtpp_queue.h"
+#include "rtpp_queueng.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
@@ -72,7 +72,7 @@ struct tests {
 
 struct thr_args {
     struct rtpp_stats *rsp;
-    struct rtpp_queue *rqp;
+    struct rtpp_queueng *rqp;
     struct rtpp_wi *sigterm;
     int tick;
     struct tests tests;
@@ -87,7 +87,7 @@ update_derived_stats(double dtime, void *argp)
     CALL_SMETHOD(tap->rsp, update_derived, dtime);
     switch (tap->tick) {
     case 0:
-        rtpp_queue_put_item(tap->sigterm, tap->rqp);
+        rtpp_queueng_put_item(tap->sigterm, tap->rqp);
         tap->tests.queue.done = 1;
         break;
 
@@ -110,7 +110,7 @@ worker_run(void *argp)
 
     tap = (struct thr_args *)argp;
     for (;;) {
-        wi = rtpp_queue_get_item(tap->rqp, 0);
+        wi = rtpp_queueng_get_item(tap->rqp, 0);
         if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
             rtpp_wi_free(wi);
             break;
@@ -123,6 +123,28 @@ worker_run(void *argp)
 #define RPRINT(trp, trn, pls) \
     printf("%s(%d): processed %llu items in %f sec, %f items/sec\n", trn, pls, (unsigned long long)(trp)->nitems, \
       (trp)->runtime, (double)(trp)->nitems / (trp)->runtime)
+#define CMP_H(rqhp1, rqhp2) ((rqhp1)->gen == (rqhp2)->gen && (rqhp1)->pos == (rqhp2)->pos)
+#define _RUN_CHK(op, x, y) \
+    assert(rtpp_queueng_findtail(targs.rqp, &cons_h, &tail1) op (x)); \
+    assert(rtpp_queueng_findtail(targs.rqp, &zero_h, &tail2) op (x)); \
+    assert(CMP_H(&tail1, &tail2)); \
+    assert(rtpp_queueng_findhead(targs.rqp, &prod_h, &head1) == (y)); \
+    assert(rtpp_queueng_findhead(targs.rqp, &zero_h, &head2) == (y)); \
+    assert(CMP_H(&head1, &head2));
+#define RUN_CHK() _RUN_CHK(!=, NULL, 0)
+#define RUN_CHK_FULL() _RUN_CHK(!=, NULL, -1)
+#define RUN_CHK_EMPTY() _RUN_CHK(==, NULL, 0)
+
+static char one[] = "one";
+static char two[] = "two";
+static char three[] = "three";
+static char four[] = "four";
+static char five[] = "five";
+static char six[] = "six";
+static char seven[] = "seven";
+static char eight[] = "eight";
+static char nine[] = "nine";
+static char ten[] = "ten";
 
 int
 main(int argc, char **argv)
@@ -135,6 +157,8 @@ main(int argc, char **argv)
     struct rtpp_wi *wi;
     void *wi_data;
     double stime;
+    struct rtpp_queueng_hint prod_h, cons_h, tail1, tail2, head1, head2, zero_h;
+    const char *cp;
 
     memset(&targs, '\0', sizeof(targs));
     targs.tests.queue.done = ATOMIC_VAR_INIT(0);
@@ -155,7 +179,47 @@ main(int argc, char **argv)
 #endif
     rtp = rtpp_timed_ctor(0.1);
     targs.rsp = rtpp_stats_ctor();
-    targs.rqp = rtpp_queue_init(1, "perftest");
+    targs.rqp = rtpp_queueng_init(8, "perftest");
+
+    memset(&prod_h, '\0', sizeof(prod_h));
+    memset(&cons_h, '\0', sizeof(cons_h));
+    memset(&zero_h, '\0', sizeof(zero_h));
+
+    rtpp_queueng_push(targs.rqp, one, &prod_h);
+    RUN_CHK();
+    rtpp_queueng_push(targs.rqp, two, &prod_h);
+    RUN_CHK();
+    rtpp_queueng_push(targs.rqp, three, &prod_h);
+    RUN_CHK();
+    rtpp_queueng_push(targs.rqp, four, &prod_h);
+    RUN_CHK();
+    rtpp_queueng_push(targs.rqp, five, &prod_h);
+    RUN_CHK();
+    rtpp_queueng_push(targs.rqp, six, &prod_h);
+    RUN_CHK();
+    printf("%s\n", (const char *)rtpp_queueng_pop(targs.rqp, &cons_h));
+    RUN_CHK();
+    rtpp_queueng_push(targs.rqp, seven, &prod_h);
+    RUN_CHK();
+    rtpp_queueng_push(targs.rqp, eight, &prod_h);
+    RUN_CHK();
+    rtpp_queueng_push(targs.rqp, nine, &prod_h);
+    RUN_CHK_FULL();
+    assert(rtpp_queueng_push(targs.rqp, ten, &prod_h) == -1);
+    RUN_CHK_FULL();
+    printf("%s\n", (const char *)rtpp_queueng_pop(targs.rqp, &cons_h));
+    RUN_CHK();
+    assert(rtpp_queueng_push(targs.rqp, ten, &prod_h) == 0);
+    RUN_CHK_FULL();
+    while ((cp = (const char *)rtpp_queueng_pop(targs.rqp, &cons_h)) != NULL) {
+         if (cp != ten) {
+             RUN_CHK();
+         } else {
+             RUN_CHK_EMPTY();
+         }
+         printf("%s\n", cp);
+    }
+
     targs.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
     ttp = CALL_SMETHOD(rtp, schedule_rc, 10.0, targs.rsp->rcnt, update_derived_stats, NULL, &targs);
     if (pthread_create(&thread_id, NULL, (void *(*)(void *))&worker_run, &targs) != 0) {
@@ -166,17 +230,17 @@ main(int argc, char **argv)
     stime = getdtime();
     do {
         wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
-        rtpp_queue_put_item(wi, targs.rqp);
+        rtpp_queueng_put_item(wi, targs.rqp);
         targs.tests.queue.nitems++;
     } while(!targs.tests.queue.done);
     targs.tests.queue.runtime = getdtime() - stime;
     pthread_join(thread_id, NULL);
-    while (rtpp_queue_get_length(targs.rqp) > 0) {
-        wi = rtpp_queue_get_item(targs.rqp, 0);
+    while (rtpp_queueng_get_length(targs.rqp) > 0) {
+        wi = rtpp_queueng_get_item(targs.rqp, 0);
         rtpp_wi_free(wi);
         targs.tests.queue.nitems--;
     }
-    RPRINT(&targs.tests.queue, "rtpp_queue", tsize);
+    RPRINT(&targs.tests.queue, "rtpp_queueng", tsize);
 
     stime = getdtime();
     do {
@@ -191,7 +255,7 @@ main(int argc, char **argv)
     CALL_SMETHOD(targs.rsp->rcnt, decref);
     CALL_SMETHOD(rtp, shutdown);
     CALL_SMETHOD(rtp->rcnt, decref);
-    rtpp_queue_destroy(targs.rqp);
+    rtpp_queueng_destroy(targs.rqp);
 
 #if defined(_RTPP_MEMDEB_H)
     ecode = rtpp_memdeb_dumpstats(_rtpp_objck_memdeb, 0) == 0 ? 0 : 1;
