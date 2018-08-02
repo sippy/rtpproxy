@@ -89,7 +89,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = rtpproxy$(EXEEXT) rtpproxy_debug$(EXEEXT)
-noinst_PROGRAMS = rtpp_objck$(EXEEXT) rtpp_objck_perf$(EXEEXT)
+@BUILD_OBJCK_TRUE@noinst_PROGRAMS = rtpp_objck$(EXEEXT) \
+@BUILD_OBJCK_TRUE@	rtpp_objck_perf$(EXEEXT)
 @ENABLE_MODULE_IF_TRUE@am__append_1 = rtpp_module_if.c rtpp_module_if.h rtpp_module.h
 @ENABLE_MODULE_IF_TRUE@am__append_2 = @LIBS_DL@
 @BUILD_LOG_STAND_TRUE@am__append_3 = rtpp_log_stand.c rtpp_log_stand.h
