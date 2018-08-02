@@ -647,6 +647,8 @@ LIBS_GSM
 LIBS_DL
 AM_CFLAGS
 subdirs
+BUILD_OBJCK_FALSE
+BUILD_OBJCK_TRUE
 BUILD_UDP_CONTENTION_FALSE
 BUILD_UDP_CONTENTION_TRUE
 BUILD_LOG_STAND_FALSE
@@ -12407,6 +12409,19 @@ fi
 
 fi
 
+ac_fn_c_check_header_mongrel "$LINENO" "stdatomic.h" "ac_cv_header_stdatomic_h" "$ac_includes_default"
+if test "x$ac_cv_header_stdatomic_h" = xyes; then :
+  found_stdatomic=yes
+fi
+
+
+if test "$found_stdatomic" = yes
+then
+
+$as_echo "#define ENABLE_OBJCK 1" >>confdefs.h
+
+fi
+
 # Checks for header files.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
 $as_echo_n "checking for ANSI C header files... " >&6; }
@@ -13255,6 +13270,14 @@ else
   BUILD_UDP_CONTENTION_FALSE=
 fi
 
+ if test "${ENABLE_OBJCK}" = 1; then
+  BUILD_OBJCK_TRUE=
+  BUILD_OBJCK_FALSE='#'
+else
+  BUILD_OBJCK_TRUE='#'
+  BUILD_OBJCK_FALSE=
+fi
+
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile"
 
@@ -13439,6 +13462,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_UDP_CONTENTION_TRUE}" && test -z "${BUILD_UDP_CONTENTION_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_UDP_CONTENTION\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_OBJCK_TRUE}" && test -z "${BUILD_OBJCK_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_OBJCK\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
