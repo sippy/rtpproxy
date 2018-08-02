@@ -178,6 +178,12 @@ then
    AC_DEFINE([ENABLE_SIPLOG], 1, [Define if you have libsiplog library installed]))
 fi
 
+AC_CHECK_HEADER(stdatomic.h, found_stdatomic=yes)
+if test "$found_stdatomic" = yes
+then
+  AC_DEFINE([ENABLE_OBJCK], 1, [Define if you want to build rtpp_objck test app])
+fi
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdlib.h])
@@ -271,6 +277,7 @@ AM_CONDITIONAL(BUILD_ELPERIODIC, [test "${EXTERNAL_ELPERIODIC}" != 1])
 AM_CONDITIONAL(BUILD_CRYPTO, [test "${LIBS_SRTP}" != ""])
 AM_CONDITIONAL(BUILD_LOG_STAND, [test "${LIBS_SIPLOG}" = ""])
 AM_CONDITIONAL(BUILD_UDP_CONTENTION, [test "${ENABLE_UDP_CONTENTION}" = 1])
+AM_CONDITIONAL(BUILD_OBJCK, [test "${ENABLE_OBJCK}" = 1])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
