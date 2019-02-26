@@ -11,6 +11,9 @@
 /* Define if you have bcg729 library */
 #undef ENABLE_BCG729
 
+/* Test coverage support is enabled */
+#undef ENABLE_COVERAGE
+
 /* Define if you have libg722 library installed */
 #undef ENABLE_G722
 
@@ -22,6 +25,9 @@
 
 /* Define to enable dymanic modules */
 #undef ENABLE_MODULE_IF
+
+/* Define if you want to build rtpp_objck test app */
+#undef ENABLE_OBJCK
 
 /* Define if you have libsiplog library installed */
 #undef ENABLE_SIPLOG
