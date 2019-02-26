@@ -46,6 +46,11 @@ AS_HELP_STRING([--enable-systemd], [enable systemd support in rtpproxy]),
 [],
 [enable_systemd=no])
 
+AC_ARG_ENABLE(coverage,
+  AC_HELP_STRING([--enable-coverage], [enable test coverage support]),
+  [AC_DEFINE([ENABLE_COVERAGE])
+  CFLAGS="${CFLAGS} --coverage"; LDFLAGS="${LDFLAGS} --coverage"; break], [])
+
 # Checks for libraries.
 
 if test "$enable_systemd" = 'yes'
