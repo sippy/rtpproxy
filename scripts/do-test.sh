@@ -46,5 +46,7 @@ cd ..
 sudo ldconfig
 autoreconf --force --install --verbose
 ./configure
-make
+make cleal all
+./configure --enable-coverage
+make cleal all
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
