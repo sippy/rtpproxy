@@ -13,5 +13,14 @@ before_install:
 #    - sudo brew update
 #    - sudo brew install openssl
 #    - sudo brew install python --with-brewed-openssl
+    - pip install --user cpp-coveralls
+env:
+  global:
+    - COVERALLS_PARALLEL=true
 script:
     sh -x ./scripts/do-test.sh
+after_success:
+  - if [ "${CC}" = "gcc" ];
+    then
+      coveralls --gcov gcov --gcov-options '\-lp';
+    fi
