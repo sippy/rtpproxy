@@ -1,4 +1,5 @@
 # force run: 1
+dist: xenial
 language: c
 compiler:
   - clang
