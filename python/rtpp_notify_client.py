@@ -1,5 +1,3 @@
-#!/usr/bin/env python2
-#
 # Copyright (c) 2015 Sippy Software, Inc. All rights reserved.
 #
 # All rights reserved.
@@ -92,16 +90,15 @@ if __name__ == '__main__':
     if sippy_path != None:
         sys.path.insert(0, sippy_path)
 
-    from sippy.Cli_server_local import Cli_server_local
-    from sippy.Cli_server_tcp import Cli_server_tcp
+    from sippy.CLIManager import CLIConnectionManager
     from sippy.Timeout import Timeout
     from sippy.Core.EventDispatcher import ED2
 
     ch = cli_handler(file_out)
     if stype == 'unix':
-        cs = Cli_server_local(ch.command_received, spath)
+        cs = CLIConnectionManager(ch.command_received, spath, tcp = False)
     else:
-        cs = Cli_server_tcp(ch.command_received, spath)
+        cs = CLIConnectionManager(ch.command_received, spath, tcp = True)
     if timeout != None:
         Timeout(ch.done, timeout)
     ED2.loop()
