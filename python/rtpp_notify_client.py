@@ -28,8 +28,6 @@
 import sys
 import getopt
 
-from twisted.internet import reactor
-
 DEFAULT_RTPP_SPATH = 'unix:/var/run/rtpproxy.sock'
 
 class cli_handler(object):
@@ -45,11 +43,11 @@ class cli_handler(object):
             self.file_out.flush()
         except:
             self.rval = 1
-            reactor.crash()
+            ED2.breakLoop()
             return
 
     def done(self):
-        reactor.crash()
+        ED2.breakLoop()
 
 if __name__ == '__main__':
     spath = DEFAULT_RTPP_SPATH
@@ -97,6 +95,7 @@ if __name__ == '__main__':
     from sippy.Cli_server_local import Cli_server_local
     from sippy.Cli_server_tcp import Cli_server_tcp
     from sippy.Timeout import Timeout
+    from sippy.Core.EventDispatcher import ED2
 
     ch = cli_handler(file_out)
     if stype == 'unix':
@@ -105,5 +104,5 @@ if __name__ == '__main__':
         cs = Cli_server_tcp(ch.command_received, spath)
     if timeout != None:
         Timeout(ch.done, timeout)
-    reactor.run(installSignalHandlers = 1)
+    ED2.loop()
     sys.exit(ch.rval)
