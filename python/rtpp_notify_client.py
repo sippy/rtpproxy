@@ -82,7 +82,7 @@ if __name__ == '__main__':
            if fname == '-':
                file_out = sys.stdout
            else:
-               file_out = file(fname, 'w')
+               file_out = open(fname, 'w')
         if o == '-t':
            timeout = float(a.strip())
            continue
