@@ -104,13 +104,13 @@ if __name__ == '__main__':
             if fname == '-':
                 file_in = sys.stdin
             else:
-                file_in = file(fname, 'r')
+                file_in = open(fname, 'r')
         if o == '-o':
            fname = a.strip()
            if fname == '-':
                file_out = sys.stdout
            else:
-               file_out = file(fname, 'w')
+               file_out = open(fname, 'w')
         if o == '-b':
            no_rtpp_version_check = True
 
