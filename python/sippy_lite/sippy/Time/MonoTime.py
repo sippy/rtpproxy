@@ -31,8 +31,8 @@ from inspect import getfile, currentframe
 currentdir = dirname(abspath(getfile(currentframe())))
 parentdir = dirname(currentdir)
 sys.path.insert(0, parentdir)
-from Math.recfilter import recfilter
-from Time.clock_dtime import clock_getdtime, CLOCK_REALTIME, CLOCK_MONOTONIC
+from sippy.Math.recfilter import recfilter
+from sippy.Time.clock_dtime import clock_getdtime, CLOCK_REALTIME, CLOCK_MONOTONIC
 sys.path.pop(0)
 from threading import local
 

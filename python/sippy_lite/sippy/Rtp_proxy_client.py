@@ -24,9 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from Timeout import TimeoutInact
-from Rtp_proxy_client_udp import Rtp_proxy_client_udp
-from Rtp_proxy_client_stream import Rtp_proxy_client_stream
+from sippy.Time.Timeout import TimeoutInact
+from sippy.Rtp_proxy_client_udp import Rtp_proxy_client_udp
+from sippy.Rtp_proxy_client_stream import Rtp_proxy_client_stream
 
 import socket
 
@@ -42,7 +42,7 @@ class Rtpp_caps_checker(object):
     def __init__(self, rtpc):
         self.rtpc = rtpc
         rtpc.caps_done = False
-        for vers in CAPSTABLE.iterkeys():
+        for vers in CAPSTABLE.keys():
             self.caps_requested += 1
             rtpc.send_command('VF %s' % vers, self.caps_query_done, vers)
 
@@ -75,17 +75,17 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
     active_streams = None
     preceived = None
     ptransmitted = None
-    hrtb_ival = 10.0
+    hrtb_ival = 1.0
     hrtb_retr_ival = 60.0
     rtpp_class = None
 
     def __init__(self, global_config, *address, **kwargs):
         #print 'Rtp_proxy_client', address
         no_version_check = False
-        if kwargs.has_key('no_version_check'):
+        if 'no_version_check' in kwargs:
             no_version_check = kwargs['no_version_check']
             del kwargs['no_version_check']
-        if len(address) == 0 and kwargs.has_key('spath'):
+        if len(address) == 0 and 'spath' in kwargs:
             a = kwargs['spath']
             del kwargs['spath']
             if a.startswith('udp:'):
@@ -258,3 +258,22 @@ class Rtp_proxy_client(Rtp_proxy_client_udp, Rtp_proxy_client_stream):
 
     def get_rtpc_delay(self):
         return self.rtpp_class.get_rtpc_delay(self)
+
+if __name__ == '__main__':
+    from sippy.Core.EventDispatcher import ED2
+    from sippy.Time.Timeout import Timeout
+    def display(*args):
+        print(args)
+        ED2.breakLoop()
+    def waitonline(rpc):
+        if rpc.online:
+            ED2.breakLoop()
+    r = Rtp_proxy_client({'_sip_address':'1.2.3.4'})
+    t = Timeout(waitonline, 0.1, 10, r)
+    ED2.loop(2.0)
+    assert(r.online)
+    t.cancel()
+    r.send_command('VF 123456', display, 'abcd')
+    ED2.loop()
+    r.shutdown()
+    print('passed')

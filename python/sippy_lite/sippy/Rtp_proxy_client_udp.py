@@ -26,12 +26,12 @@
 
 from __future__ import print_function
 
-from Timeout import Timeout
-from Udp_server import Udp_server, Udp_server_opts
-from Time.MonoTime import MonoTime
-from Math.recfilter import recfilter
-from Rtp_proxy_cmd import Rtp_proxy_cmd
-from Rtp_proxy_client_net import Rtp_proxy_client_net
+from sippy.Time.Timeout import Timeout
+from sippy.Udp_server import Udp_server, Udp_server_opts
+from sippy.Time.MonoTime import MonoTime
+from sippy.Math.recfilter import recfilter
+from sippy.Rtp_proxy_cmd import Rtp_proxy_cmd
+from sippy.Rtp_proxy_client_net import Rtp_proxy_client_net
 
 from socket import SOCK_DGRAM, AF_INET
 from time import time
@@ -146,6 +146,7 @@ class Rtp_proxy_client_udp(Rtp_proxy_client_net):
             print('Rtp_proxy_client_udp.process_reply(): invalid response from %s: "%s"' % \
               (str(address), data))
             return
+        cookie = cookie.decode()
         preq = self.pending_requests.pop(cookie, None)
         if preq == None:
             return
@@ -159,6 +160,7 @@ class Rtp_proxy_client_udp(Rtp_proxy_client_net):
               ' backwards (%f <= %f, now=%f)' % (cookie, rtime.monot, \
               preq.stime.monot, rtime_fix.monot))
         if preq.result_callback != None:
+            result = result.decode()
             preq.result_callback(result.strip(), *preq.callback_parameters)
 
         # When we had to do retransmit it is not possible to figure out whether
@@ -192,30 +194,31 @@ class Rtp_proxy_client_udp(Rtp_proxy_client_net):
     def get_rtpc_delay(self):
         return self.delay_flt.lastval
 
+from sippy.Core.EventDispatcher import ED2
+
 class selftest(object):
+
     def gotreply(self, *args):
-        from twisted.internet import reactor
         print(args)
-        reactor.crash()
+        ED2.breakLoop()
 
     def run(self):
         import os
-        from twisted.internet import reactor
         global_config = {}
         global_config['my_pid'] = os.getpid()
         rtpc = Rtp_proxy_client_udp(global_config, ('127.0.0.1', 22226), None)
         rtpc.rtpp_class = Rtp_proxy_client_udp
         os.system('sockstat | grep -w %d' % global_config['my_pid'])
         rtpc.send_command('Ib', self.gotreply)
-        reactor.run()
+        ED2.loop()
         rtpc.reconnect(('localhost', 22226), ('0.0.0.0', 34222))
         os.system('sockstat | grep -w %d' % global_config['my_pid'])
         rtpc.send_command('V', self.gotreply)
-        reactor.run()
+        ED2.loop()
         rtpc.reconnect(('localhost', 22226), ('127.0.0.1', 57535))
         os.system('sockstat | grep -w %d' % global_config['my_pid'])
         rtpc.send_command('V', self.gotreply)
-        reactor.run()
+        ED2.loop()
         rtpc.shutdown()
 
 if __name__ == '__main__':

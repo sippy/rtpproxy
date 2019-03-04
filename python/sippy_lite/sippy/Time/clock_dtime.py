@@ -41,7 +41,7 @@ elif platform.system() == 'Linux':
 
 class timespec(ctypes.Structure):
     _fields_ = [
-        ('tv_sec', ctypes.c_long),
+        ('tv_sec', ctypes.c_longlong),
         ('tv_nsec', ctypes.c_long)
     ]
 

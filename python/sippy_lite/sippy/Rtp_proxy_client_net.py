@@ -35,7 +35,7 @@ class Rtp_proxy_client_net(object):
         ainfo = getaddrinfo(address[0], address[1], af, self.sock_type)
         amatch = [x[4] for x in ainfo if x[0] == af]
         if len(amatch) == 0:
-            raise Exeption('no match for the %s in AF %s' % (address, af))
+            raise Exception('no match for the %s in AF %s' % (address, af))
         amatch = amatch[0]
         if af == AF_INET6:
             return (('[%s]' % amatch[0], amatch[1]))

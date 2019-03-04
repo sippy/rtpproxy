@@ -26,73 +26,80 @@
 
 from __future__ import print_function
 
-from Timeout import Timeout
+from sippy.Time.Timeout import Timeout
 from threading import Thread, Condition
 from errno import EINTR, EPIPE, ENOTCONN, ECONNRESET
-from twisted.internet import reactor
-from Time.MonoTime import MonoTime
-from Math.recfilter import recfilter
-from Rtp_proxy_client_net import Rtp_proxy_client_net
+from sippy.Time.MonoTime import MonoTime
+from sippy.Math.recfilter import recfilter
+from sippy.Rtp_proxy_client_net import Rtp_proxy_client_net
+from sippy.Rtp_proxy_cmd import Rtp_proxy_cmd
 
-from datetime import datetime
 import socket
-import sys, traceback
+
+from sippy.Core.Exceptions import dump_exception
+from sippy.Core.EventDispatcher import ED2
 
 _MAX_RECURSE = 10
 
 class _RTPPLWorker(Thread):
     userv = None
+    s = None
 
     def __init__(self, userv):
         Thread.__init__(self)
         self.userv = userv
         self.setDaemon(True)
-        self.connect()
         self.start()
 
     def connect(self):
         self.s = socket.socket(self.userv.family, socket.SOCK_STREAM)
-        self.s.connect(self.userv.address)
+        if self.userv.family == socket.AF_INET6:
+            address = (self.userv.address[0][1:-1], self.userv.address[1])
+        else:
+            address = self.userv.address
+        self.s.connect(address)
 
     def send_raw(self, command, _recurse = 0, stime = None):
         if _recurse > _MAX_RECURSE:
             raise Exception('Cannot reconnect: %s' % (str(self.userv.address),))
-        if not command.endswith('\n'):
-            command += '\n'
+        if self.s == None:
+            self.connect()
         #print('%s.send_raw(%s)' % (id(self), command))
         if stime == None:
             stime = MonoTime()
         while True:
             try:
-                self.s.send(command)
+                self.s.send(command.encode())
                 break
             except socket.error as why:
-                if why[0] == EINTR:
+                if why.errno == EINTR:
                     continue
-                elif why[0] in (EPIPE, ENOTCONN, ECONNRESET):
-                    self.connect()
+                elif why.errno in (EPIPE, ENOTCONN, ECONNRESET):
+                    self.s = None
                     return self.send_raw(command, _recurse + 1, stime)
                 raise why
         while True:
             try:
                 rval = self.s.recv(1024)
                 if len(rval) == 0:
-                    self.connect()
+                    self.s = None
                     return self.send_raw(command, _MAX_RECURSE, stime)
-                rval = rval.strip()
+                rval = rval.decode().strip()
                 break
             except socket.error as why:
-                if why[0] == EINTR:
+                if why.errno == EINTR:
                     continue
-                elif why[0] in (EPIPE, ENOTCONN, ECONNRESET):
-                    self.connect()
+                elif why.errno in (EPIPE, ENOTCONN, ECONNRESET):
+                    self.s = None
                     return self.send_raw(command, _recurse + 1, stime)
                 raise why
         rtpc_delay = stime.offsetFromNow()
         return (rval, rtpc_delay)
 
     def run(self):
+        #print(self.run, 'enter')
         while True:
+            #print(self.run, 'spin')
             self.userv.wi_available.acquire()
             while len(self.userv.wi) == 0:
                 self.userv.wi_available.wait()
@@ -110,22 +117,19 @@ class _RTPPLWorker(Thread):
                 if len(data) == 0:
                     data, rtpc_delay = None, None
             except Exception as e:
-                print(e)
+                dump_exception('Rtp_proxy_client_stream: unhandled exception I/O RTPproxy')
                 data, rtpc_delay = None, None
             if result_callback != None:
-                reactor.callFromThread(self.dispatch, result_callback, data, callback_parameters)
+                ED2.callFromThread(self.dispatch, result_callback, data, callback_parameters)
             if rtpc_delay != None:
-                reactor.callFromThread(self.userv.register_delay, rtpc_delay)
+                ED2.callFromThread(self.userv.register_delay, rtpc_delay)
+        self.userv = None
 
     def dispatch(self, result_callback, data, callback_parameters):
         try:
             result_callback(data, *callback_parameters)
         except:
-            print(datetime.now(), 'Rtp_proxy_client_stream: unhandled exception when processing RTPproxy reply')
-            print('-' * 70)
-            traceback.print_exc(file = sys.stdout)
-            print('-' * 70)
-            sys.stdout.flush()
+            dump_exception('Rtp_proxy_client_stream: unhandled exception when processing RTPproxy reply')
 
 class Rtp_proxy_client_stream(Rtp_proxy_client_net):
     is_local = None
@@ -140,6 +144,7 @@ class Rtp_proxy_client_stream(Rtp_proxy_client_net):
 
     def __init__(self, global_config, address = '/var/run/rtpproxy.sock', \
       bind_address = None, nworkers = 1, family = socket.AF_UNIX):
+        #print('Rtp_proxy_client_stream.__init__', address, bind_address, nworkers, family)
         if family == socket.AF_UNIX:
             self.is_local = True
             self.address = address
@@ -162,7 +167,9 @@ class Rtp_proxy_client_stream(Rtp_proxy_client_net):
     def send_command(self, command, result_callback = None, *callback_parameters):
         if self.nworkers_act == 0:
             self.rtpp_class._reconnect(self, self.address)
-        if not command.endswith('\n'):
+        if isinstance(command, Rtp_proxy_cmd):
+            command = str(command)
+        elif not command.endswith('\n'):
             command += '\n'
         self.wi_available.acquire()
         self.wi.append((command, result_callback, callback_parameters))
@@ -175,7 +182,7 @@ class Rtp_proxy_client_stream(Rtp_proxy_client_net):
         self.rtpp_class._reconnect(self, address, bind_address)
 
     def _reconnect(self, address, bind_address = None):
-        self.shutdown()
+        Rtp_proxy_client_stream.shutdown(self)
         self.address = address
         self.workers = []
         for i in range(0, self.nworkers):
@@ -202,11 +209,17 @@ class Rtp_proxy_client_stream(Rtp_proxy_client_net):
         return self.delay_flt.lastval
 
 if __name__ == '__main__':
-    from twisted.internet import reactor
-    def display(*args):
-        print(args)
-        reactor.crash()
+    class robj(object):
+        rval = None
+    r = robj()
+    def display(res, ro, arg):
+        print(res, arg)
+        ro.rval = (res, arg)
+        ED2.breakLoop()
     r = Rtp_proxy_client_stream({'_sip_address':'1.2.3.4'})
-    r.send_command('VF 123456', display, 'abcd')
-    reactor.run(installSignalHandlers = 1)
+    r.send_command('VF 123456', display, r, 'abcd')
+    ED2.loop()
     r.shutdown()
+    print(r.rval)
+    assert(r.rval == (u'0', 'abcd'))
+    print('passed')

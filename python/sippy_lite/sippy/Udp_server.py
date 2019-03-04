@@ -26,7 +26,6 @@
 
 from __future__ import print_function
 
-from twisted.internet import reactor
 from errno import ECONNRESET, ENOTCONN, ESHUTDOWN, EWOULDBLOCK, ENOBUFS, EAGAIN, \
   EINTR
 from datetime import datetime
@@ -36,8 +35,9 @@ from random import random
 import socket
 import sys, traceback
 
-from Timeout import Timeout
-from Time.MonoTime import MonoTime
+from sippy.Core.EventDispatcher import ED2
+from sippy.Time.Timeout import Timeout
+from sippy.Time.MonoTime import MonoTime
 
 class AsyncSender(Thread):
     userv = None
@@ -75,6 +75,9 @@ class AsyncSender(Thread):
                     if self.userv.skt.sendto(data, address) == len(data):
                         break
                 except socket.error as why:
+                    if isinstance(why, BrokenPipeError):
+                        self.userv = None
+                        return
                     if why[0] not in (EWOULDBLOCK, ENOBUFS, EAGAIN):
                         break
                 sleep(0.01)
@@ -94,7 +97,7 @@ class AsyncReceiver(Thread):
         while True:
             try:
                 data, address = self.userv.skt.recvfrom(8192)
-                if not data:
+                if not data and address == None:
                     # Ugly hack to detect socket being closed under us on Linux.
                     # The problem is that even call on non-closed socket can
                     # sometimes return empty data buffer, making AsyncReceiver
@@ -121,7 +124,7 @@ class AsyncReceiver(Thread):
                     continue
             if self.userv.uopts.family == socket.AF_INET6:
                 address = ('[%s]' % address[0], address[1])
-            reactor.callFromThread(self.userv.handle_read, data, address, rtime)
+            ED2.callFromThread(self.userv.handle_read, data, address, rtime)
         self.userv = None
 
 _DEFAULT_FLAGS = socket.SO_REUSEADDR
@@ -134,7 +137,7 @@ class Udp_server_opts(object):
     data_callback = None
     family = None
     flags = _DEFAULT_FLAGS
-    nworkers = _DEFAULT_NWORKERS
+    nworkers = None
     ploss_out_rate = 0.0
     pdelay_out_max = 0.0
     ploss_in_rate = 0.0
@@ -197,13 +200,19 @@ class Udp_server(object):
               (self.uopts.flags & socket.SO_REUSEPORT) != 0:
                 self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             self.skt.bind(address)
+            if self.uopts.laddress[1] == 0:
+                self.uopts.laddress = self.skt.getsockname()
         self.sendqueue = []
         self.stats = [0, 0, 0]
         self.wi_available = Condition()
         self.wi = []
         self.asenders = []
         self.areceivers = []
-        for i in range(0, self.uopts.nworkers):
+        if self.uopts.nworkers == None:
+            nworkers = _DEFAULT_NWORKERS
+        else:
+            nworkers = self.uopts.nworkers
+        for i in range(0, nworkers):
             self.asenders.append(AsyncSender(self))
             self.areceivers.append(AsyncReceiver(self))
 
@@ -237,11 +246,13 @@ class Udp_server(object):
                     return
             if self.uopts.pdelay_in_max > 0.0 and not delayed:
                 pdelay = self.uopts.pdelay_in_max * random()
-                Timeout(self.handle_read, pdelay, 1, data, address, rtime + pdelay, True)
+                Timeout(self.handle_read, pdelay, 1, data, address, rtime.getOffsetCopy(pdelay), True)
                 return
             try:
                 self.uopts.data_callback(data, address, self, rtime)
-            except:
+            except Exception as ex:
+                if isinstance(ex, SystemExit):
+                    raise 
                 print(datetime.now(), 'Udp_server: unhandled exception when processing incoming data')
                 print('-' * 70)
                 traceback.print_exc(file = sys.stdout)
@@ -270,8 +281,8 @@ class self_test(object):
     ping_data6 = b'ping6!'
     pong_laddr = None
     pong_laddr6 = None
-    pong_data = 'pong!'
-    pong_data6 = 'pong6!'
+    pong_data = b'pong!'
+    pong_data6 = b'pong6!'
     ping_laddr = None
     ping_laddr6 = None
     ping_raddr = None
@@ -289,6 +300,7 @@ class self_test(object):
         else:
             print('ping_received6')
             if data != self.ping_data6 or address != self.pong_raddr6:
+                print(data, address, self.ping_data6, self.pong_raddr6)
                 exit(1)
             udp_server.send_to(self.pong_data6, address)
 
@@ -296,14 +308,16 @@ class self_test(object):
         if udp_server.uopts.family == socket.AF_INET:
             print('pong_received')
             if data != self.pong_data or address != self.ping_raddr:
+                print(data, address, self.pong_data, self.ping_raddr)
                 exit(1)
         else:
             print('pong_received6')
             if data != self.pong_data6 or address != self.ping_raddr6:
+                print(data, address, self.pong_data6, self.ping_raddr6)
                 exit(1)
         self.npongs -= 1
         if self.npongs == 0:
-            reactor.stop()
+            ED2.breakLoop()
 
     def run(self):
         local_host = '127.0.0.1'
@@ -328,7 +342,7 @@ class self_test(object):
         udp_server_ping6 = Udp_server({}, uopts_ping6)
         udp_server_pong6 = Udp_server({}, uopts_pong6)
         udp_server_pong6.send_to(self.ping_data6, self.ping_laddr6)
-        reactor.run()
+        ED2.loop()
         udp_server_ping.shutdown()
         udp_server_pong.shutdown()
         udp_server_ping6.shutdown()

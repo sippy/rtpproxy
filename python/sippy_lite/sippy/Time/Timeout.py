@@ -24,59 +24,78 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime
-from twisted.internet import task, reactor
-from traceback import print_exc, format_list, extract_stack
-from sys import stdout
+from __future__ import print_function
 
-class TimeoutAbsMono:
-    _task = None
-    _timeout_callback = None
+#import sys
+#sys.path.append('..')
 
-    def __init__(self, timeout_callback, etime, *callback_arguments):
-        etime = -etime.offsetFromNow()
-        if etime < 0:
-            etime = 0
-        self._timeout_callback = timeout_callback
-        self._task = reactor.callLater(etime, self._run_once, *callback_arguments)
+from sippy.Core.EventDispatcher import ED2
+from sippy.Time.MonoTime import MonoTime
 
-    def _run_once(self, *callback_arguments):
-        try:
-            self._timeout_callback(*callback_arguments)
-        except:
-            print datetime.now(), 'TimeoutAbsMono: unhandled exception in timeout callback'
-            print '-' * 70
-            print_exc(file = stdout)
-            print '-' * 70
-            stdout.flush()
-        self._task = None
-        self._timeout_callback = None
+def Timeout(timeout_cb, ival, nticks = 1, *cb_params):
+    el = ED2.regTimer(timeout_cb, ival, nticks, False, *cb_params)
+    el.go()
+    return el
 
-    def cancel(self):
-        self._task.cancel()
-        self._task = None
-        self._timeout_callback = None
+def TimeoutInact(timeout_cb, ival, nticks = 1, *cb_params):
+    return ED2.regTimer(timeout_cb, ival, nticks, False, *cb_params)
 
-if __name__ == '__main__':
-    from twisted.internet import reactor
-    from sippy.Time.MonoTime import MonoTime
-    
+def TimeoutAbsMono(timeout_cb, mtime, *cb_params):
+    if not isinstance(mtime, MonoTime):
+        raise TypeError('mtime is not MonoTime')
+    el = ED2.regTimer(timeout_cb, mtime, None, True, *cb_params)
+    el.go()
+    return el
+
+def testTimeout():
+    def test1(arguments, testnum):
+        print(testnum)
+        arguments['test'] = True
+        ED2.breakLoop()
+
+    def test2(arguments, testnum):
+        print(testnum)
+        arguments['test'] = 'bar'
+        ED2.breakLoop()
+
+    arguments = {'test':False}
+    timeout_1 = Timeout(test1, 0, 1, arguments, 'test1')
+    ED2.loop()
+    assert(arguments['test'])
+    timeout_1 = Timeout(test1, 0.1, 1, arguments, 'test2')
+    timeout_2 = Timeout(test2, 0.2, 1, arguments, 'test3')
+    timeout_1.cancel()
+    ED2.loop()
+    assert(arguments['test'] == 'bar')
+
+    arguments = {'test':False}
+    timeout_1 = TimeoutAbsMono(test1, MonoTime(), arguments, 'test4')
+    ED2.loop()
+    assert(arguments['test'])
+
+    timeout_1 = TimeoutAbsMono(test1, MonoTime().getOffsetCopy(0.1), arguments, 'test5')
+    timeout_2 = TimeoutAbsMono(test2, MonoTime().getOffsetCopy(0.2), arguments, 'test6')
+    timeout_1.cancel()
+    ED2.loop()
+    assert(arguments['test'] == 'bar')
+
+def testTimeoutAbsMono():
     def test1(arguments, testnum, mtm):
         arguments['delay'] = mtm.offsetFromNow()
-        print testnum, arguments['delay']
+        print(testnum, arguments['delay'])
         arguments['test'] = True
-        reactor.crash()
+        ED2.breakLoop()
 
     def test2(arguments, testnum, mtm):
         arguments['delay'] = mtm.offsetFromNow()
-        print testnum, arguments['delay']
+        print(testnum, arguments['delay'])
         arguments['test'] = 'bar'
-        reactor.crash()
+        ED2.breakLoop()
 
     mt = MonoTime()
     arguments = {'test':False, 'delay':None}
     timeout_1 = TimeoutAbsMono(test1, mt, arguments, 'test1', mt)
-    reactor.run()
+    ED2.loop()
     assert(arguments['test'])
     assert(arguments['delay'] < 0.1)
     mt1 = mt.getOffsetCopy(0.1)
@@ -85,6 +104,10 @@ if __name__ == '__main__':
     timeout_1 = TimeoutAbsMono(test1, mt1, arguments, 'test2', mt1)
     timeout_2 = TimeoutAbsMono(test2, mt2, arguments, 'test3', mt2)
     timeout_1.cancel()
-    reactor.run()
+    ED2.loop()
     assert(arguments['test'] == 'bar')
     assert(arguments['delay'] < 0.1)
+
+if __name__ == '__main__':
+    testTimeout()
+    testTimeoutAbsMono()
