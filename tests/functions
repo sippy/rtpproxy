@@ -15,9 +15,11 @@ TOP_BUILDDIR="${TOP_BUILDDIR:-${BASEDIR}/..}"
 PYTHON_DIR="${TOP_BUILDDIR}/python"
 SIPPY_DIR="${PYTHON_DIR}/sippy_lite"
 
+PYINT=python3
+
 RTPPROXY=${TOP_BUILDDIR}/src/rtpproxy_debug
-RTPP_QUERY=${SIPPY_DIR}/sippy/tools/rtpp_query.py
-RTPP_NOTYFY_CLIENT=${TOP_BUILDDIR}/python/rtpp_notify_client.py
+RTPP_QUERY="${PYINT} ${SIPPY_DIR}/sippy/tools/rtpp_query.py"
+RTPP_NOTYFY_CLIENT="${PYINT} ${TOP_BUILDDIR}/python/rtpp_notify_client.py"
 
 setup_tstart() {
   RTPP_MCLOCK_NAME="`${RTPPROXY} -C 2>/dev/null`"
@@ -26,7 +28,7 @@ setup_tstart() {
     echo "oops, cannot determine clock name to synchronize logs!" 1>&2
     exit 1
   fi
-  RTPP_LOG_TSTART="`python ${SIPPY_DIR}/sippy/tools/getmonotime.py -S ${SIPPY_DIR} \
+  RTPP_LOG_TSTART="`${PYINT} ${SIPPY_DIR}/sippy/tools/getmonotime.py -S ${SIPPY_DIR} \
    -C ${RTPP_MCLOCK_NAME}`"
   export RTPP_LOG_TSTART
   RTPP_LOG_TFORM="rel"
