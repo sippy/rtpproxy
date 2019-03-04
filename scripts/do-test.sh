@@ -7,7 +7,7 @@ BCG729_VER=1.0.2
 uname -a
 which ${CC}
 ${CC} --version
-python --version
+python3 --version
 pip --version
 sudo iptables -L OUTPUT
 sudo iptables -L INPUT
@@ -36,13 +36,21 @@ git clone git://github.com/sippy/libg722 libg722
 cd libg722
 make
 sudo make install
-cd ../..
+cd ..
 git clone https://github.com/cisco/libsrtp.git
 cd libsrtp
 ./configure
 make
 sudo make install
 cd ..
+git clone git://github.com/sobomax/libelperiodic.git
+cd libelperiodic
+./configure
+${MAKE_CMD} all
+sudo ${MAKE_CMD} install
+sudo ldconfig
+python3 setup.py build install
+cd ../..
 sudo ldconfig
 autoreconf --force --install --verbose
 ./configure
