@@ -1,2 +1,1 @@
-twisted-core
 service_identity
