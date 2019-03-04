@@ -46,10 +46,9 @@ cd ..
 git clone git://github.com/sobomax/libelperiodic.git
 cd libelperiodic
 ./configure
-${MAKE_CMD} all
-sudo ${MAKE_CMD} install
-sudo ldconfig
-python3 setup.py build install
+make all
+sudo make install
+sudo python3 setup.py build install
 cd ../..
 sudo ldconfig
 autoreconf --force --install --verbose
