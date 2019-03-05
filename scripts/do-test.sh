@@ -8,7 +8,6 @@ uname -a
 which ${CC}
 ${CC} --version
 python3 --version
-pip --version
 sudo iptables -L OUTPUT
 sudo iptables -L INPUT
 sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
@@ -17,7 +16,6 @@ cat /proc/sys/kernel/core_pattern
 ./configure
 make
 make clean
-#sudo pip install -r requirements.txt
 #sudo DEBIAN_FRONTEND=noninteractive apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
  install -y libgsm1-dev libsndfile1-dev tcpdump curl wireshark-common gdb
