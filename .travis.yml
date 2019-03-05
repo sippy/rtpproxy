@@ -9,6 +9,7 @@ python:
 sudo: required
 before_install:
     - which python
+    - python --version
     - sudo -H PATH="${PATH}:/usr/local/clang-3.4/bin" pip install -r requirements.txt
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
     - pip install --user cpp-coveralls
