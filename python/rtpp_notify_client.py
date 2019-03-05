@@ -35,9 +35,9 @@ class cli_handler(object):
     def __init__(self, file_out):
         self.file_out = file_out
 
-    def command_received(self, clm, cmd):
+    def command_received(self, x, clm, cmd):
         try:
-            self.file_out.write(cmd + '\n')
+            self.file_out.write('%s: %s\n' % (x, cmd))
             self.file_out.flush()
         except:
             self.rval = 1
@@ -96,9 +96,11 @@ if __name__ == '__main__':
 
     ch = cli_handler(file_out)
     if stype == 'unix':
-        cs = CLIConnectionManager(ch.command_received, spath, tcp = False)
+        rep = lambda x, y: ch.command_received(spath, x, y)
+        cs = CLIConnectionManager(rep, spath, tcp = False)
     else:
-        cs = CLIConnectionManager(ch.command_received, tuple(spath), tcp = True)
+        rep = lambda x, y: ch.command_received(spath[0], x, y)
+        cs = CLIConnectionManager(rep, tuple(spath), tcp = True)
     if timeout != None:
         Timeout(ch.done, timeout)
     ED2.loop()
