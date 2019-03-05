@@ -223,7 +223,7 @@ const static struct option longopts[] = {
 };
 
 static void
-init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg)
+init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int memdeb)
 {
     struct rtpp_module_if *mif;
 
@@ -241,7 +241,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg)
     free(cfsp->modules_cf);
     CALL_SMETHOD(cfsp->glog->rcnt, decref);
     free(cfsp);
-    rtpp_exit(1, rval);
+    rtpp_exit(memdeb, rval);
 }
 
 static void
@@ -461,7 +461,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    for (pcp = iterate_proto_caps(NULL); pcp != NULL; pcp = iterate_proto_caps(pcp)) {
 		printf("Extension %s: %s\n", pcp->pc_id, pcp->pc_description);
 	    }
-	    init_config_bail(cf->stable, 0, NULL);
+	    init_config_bail(cf->stable, 0, NULL, 0);
 	    break;
 
 	case 'r':
@@ -580,7 +580,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	case 'V':
 	    printf("%s\n", RTPP_SW_VERSION);
-	    init_config_bail(cf->stable, 0, NULL);
+	    init_config_bail(cf->stable, 0, NULL, 0);
 	    break;
 
         case 'W':
@@ -597,7 +597,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
         case 'C':
 	    printf("%s\n", get_mclock_name());
-	    init_config_bail(cf->stable, 0, NULL);
+	    init_config_bail(cf->stable, 0, NULL, 0);
 	    break;
 
 	case '?':
@@ -608,7 +608,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 
     if (cf->stable->cfile != NULL) {
         if (rtpp_cfile_process(cf->stable) < 0) {
-            init_config_bail(cf->stable, 1, "rtpp_cfile_process() failed");
+            init_config_bail(cf->stable, 1, "rtpp_cfile_process() failed", 1);
         }
     }
 
