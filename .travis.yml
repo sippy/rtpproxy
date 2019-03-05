@@ -8,11 +8,14 @@ python:
   - "3.6"
 sudo: required
 before_install:
+    - sudo apt-get -y install python3-pip python-dev
+    - sudo pip3 install -U setuptools
+    - sudo pip3 install -U virtualenvwrapper
     - which python
     - python --version
-    - sudo -H PATH="${PATH}:/usr/local/clang-3.4/bin" pip install -r requirements.txt
+    - sudo -H PATH="${PATH}:/usr/local/clang-3.4/bin" pip3 install -r requirements.txt
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
-    - pip install --user cpp-coveralls
+    - pip3 install --user cpp-coveralls
 env:
   global:
     - COVERALLS_PARALLEL=true
