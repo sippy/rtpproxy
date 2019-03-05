@@ -127,7 +127,6 @@ class EventDispatcher2(Singleton):
     my_ident = None
     state_lock = Lock()
     ed_inum = 0
-    elp = None
 
     def __init__(self):
         EventDispatcher2.state_lock.acquire()
@@ -143,7 +142,6 @@ class EventDispatcher2(Singleton):
         self.thread_cbs = []
         self.last_ts = MonoTime()
         self.my_ident = get_ident()
-        self.elp = ElPeriodic(100.0)
 
     def signal(self, signum, frame):
         self.signals_pending.append(signum)
@@ -260,7 +258,8 @@ class EventDispatcher2(Singleton):
             if self.endloop:
                 return
 
-    def loop(self, timeout = None):
+    def loop(self, timeout = None, freq = 100.0):
+        elp = ElPeriodic(freq)
         self.endloop = False
         self.last_ts = MonoTime()
         if timeout != None:
@@ -284,7 +283,7 @@ class EventDispatcher2(Singleton):
             if (timeout != None and self.last_ts > etime) or self.endloop:
                 self.endloop = False
                 break
-            self.elp.procrastinate()
+            elp.procrastinate()
             self.last_ts = MonoTime()
 
     def breakLoop(self):
