@@ -42,13 +42,6 @@ cd libsrtp
 ./configure
 make
 sudo make install
-cd ..
-git clone git://github.com/sobomax/libelperiodic.git
-cd libelperiodic
-./configure
-make all
-sudo make install
-sudo python3 setup.py build install
 cd ../..
 sudo ldconfig
 autoreconf --force --install --verbose
@@ -56,4 +49,14 @@ autoreconf --force --install --verbose
 make clean all
 ./configure --enable-coverage
 make clean all
+
+cd deps
+git clone git://github.com/sobomax/libelperiodic.git
+cd libelperiodic
+./configure
+make all
+sudo make install
+sudo python3 setup.py build install
+cd ..
+
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
