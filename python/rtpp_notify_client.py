@@ -91,7 +91,7 @@ if __name__ == '__main__':
         sys.path.insert(0, sippy_path)
 
     from sippy.CLIManager import CLIConnectionManager
-    from sippy.Timeout import Timeout
+    from sippy.Time.Timeout import Timeout
     from sippy.Core.EventDispatcher import ED2
 
     ch = cli_handler(file_out)
