@@ -74,7 +74,8 @@ class command_runner(object):
         self.issue_next_cmd()
 
 def usage():
-    print('usage: rtpp_query.py [-s rtpp_socket_path] [-S sippy_root_path] [-i infile] [-o outfile] [cmd1 [cmd2]..[cmdN]]')
+    print('usage: rtpp_query.py [-s rtpp_socket_path] [-S sippy_root_path] [-i infile] ' \
+      '[-o outfile] [-n nworkers] [cmd1 [cmd2]..[cmdN]]')
     sys.exit(1)
 
 if __name__ == '__main__':
@@ -88,31 +89,32 @@ if __name__ == '__main__':
     no_rtpp_version_check = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 's:S:i:o:b')
+        opts, args = getopt.getopt(sys.argv[1:], 's:S:i:o:bn:')
     except getopt.GetoptError:
         usage()
 
+    nwrks = 4
     for o, a in opts:
         if o == '-s':
             spath = a.strip()
-            continue
-        if o == '-S':
+        elif o == '-S':
             sippy_path = a.strip()
-            continue
-        if o == '-i':
+        elif o == '-i':
             fname = a.strip()
             if fname == '-':
                 file_in = sys.stdin
             else:
                 file_in = open(fname, 'r')
-        if o == '-o':
+        elif o == '-o':
            fname = a.strip()
            if fname == '-':
                file_out = sys.stdout
            else:
                file_out = open(fname, 'w')
-        if o == '-b':
+        elif o == '-b':
            no_rtpp_version_check = True
+        elif o == '-n':
+           nwrks = int(a)
 
     if len(args) > 0:
         commands = args
@@ -123,7 +125,7 @@ if __name__ == '__main__':
     from sippy.Rtp_proxy_client import Rtp_proxy_client
     from sippy.Core.EventDispatcher import ED2
 
-    rc = Rtp_proxy_client(global_config, spath = spath, nworkers = 4, \
+    rc = Rtp_proxy_client(global_config, spath = spath, nworkers = nwrks, \
       no_version_check = no_rtpp_version_check)
     #commands = ('VF 123456', 'G nsess_created', 'G ncmds_rcvd')
     crun = command_runner(rc, commands, file_in, file_out)
