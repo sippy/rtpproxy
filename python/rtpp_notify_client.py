@@ -98,7 +98,7 @@ if __name__ == '__main__':
     if stype == 'unix':
         cs = CLIConnectionManager(ch.command_received, spath, tcp = False)
     else:
-        cs = CLIConnectionManager(ch.command_received, spath, tcp = True)
+        cs = CLIConnectionManager(ch.command_received, tuple(spath), tcp = True)
     if timeout != None:
         Timeout(ch.done, timeout)
     ED2.loop()
