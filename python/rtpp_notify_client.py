@@ -103,5 +103,5 @@ if __name__ == '__main__':
         cs = CLIConnectionManager(rep, tuple(spath), tcp = True)
     if timeout != None:
         Timeout(ch.done, timeout)
-    ED2.loop()
+    ED2.loop(freq = 1000.0)
     sys.exit(ch.rval)

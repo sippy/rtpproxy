@@ -127,6 +127,6 @@ if __name__ == '__main__':
       no_version_check = no_rtpp_version_check)
     #commands = ('VF 123456', 'G nsess_created', 'G ncmds_rcvd')
     crun = command_runner(rc, commands, file_in, file_out)
-    ED2.loop()
+    ED2.loop(freq = 1000.0)
     rc.shutdown()
     sys.exit(crun.rval)
