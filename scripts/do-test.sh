@@ -55,6 +55,6 @@ cd libelperiodic
 make all
 sudo make install
 sudo python3 setup.py build install
-cd ..
+cd ../..
 
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
