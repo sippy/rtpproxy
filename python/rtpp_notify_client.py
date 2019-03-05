@@ -37,7 +37,7 @@ class cli_handler(object):
 
     def command_received(self, x, clm, cmd):
         try:
-            self.file_out.write('%s: %s\n' % (x, cmd))
+            self.file_out.write('%s\n' % (cmd,))
             self.file_out.flush()
         except:
             self.rval = 1
