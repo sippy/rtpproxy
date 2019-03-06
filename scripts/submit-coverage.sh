@@ -2,10 +2,13 @@
 
 set -e
 
-for dir in external hepconnector libelperiodic
+for ext in gcda gcno
 do
-  find ${dir} -name '*.gcda' -delete
+  for dir in external hepconnector libelperiodic
+  do
+    find ${dir} -name "*.${ext}"' -delete
+  done
+  find src -name "*_fin.${ext}" -delete
 done
-find src -name '*_fin.gcda' -delete
 
 coveralls --gcov gcov --gcov-options '\-lp';
