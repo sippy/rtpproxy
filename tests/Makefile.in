@@ -496,9 +496,9 @@ session_timeouts_EXTRA_DIST = session_timeouts session_timeouts.full.input \
   session_timeouts.stats.input session_timeouts6.output1 session_timeouts6.output2 \
   session_timeouts.tnotify.output
 
-session_timeouts_CLEANFILES = session_timeouts.rout[1234] session_timeouts.rlog[1234] \
-  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234] \
-  session_timeouts.fout[1234]
+session_timeouts_CLEANFILES = session_timeouts.rout[12345].[1234] session_timeouts.rlog[12345].[1234] \
+  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[12345].[1234] \
+  session_timeouts.fout[12345].[1234]
 
 rtp_analyze1_EXTRA_DIST = rtp_analyze1 rtp_analyze
 rtp_analyze1_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
