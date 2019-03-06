@@ -26,3 +26,5 @@ after_success:
     then
       sh -x ./scripts/submit-coverage.sh ;
     fi
+notifications:
+  webhooks: https://coveralls.io/webhook
