@@ -1023,7 +1023,7 @@ rtpproxy_CPPFLAGS = $(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS)
 rtpp_objck_perf_CPPFLAGS = $(EXTRA_CPPFLAGS)
 rtpp_objck_CFLAGS = $(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
 rtpp_objck_CPPFLAGS = $(EXTRA_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
-CLEANFILES = $(SRCS_AUTOGEN)
+CLEANFILES = $(SRCS_AUTOGEN) *.gcda
 BUILT_SOURCES = $(SRCS_AUTOGEN)
 GENFINCODE = $(top_srcdir)/src/genfincode.sh
 GENFINCODE_S = $(top_srcdir)/src/genfincode_stat.sh
