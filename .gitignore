@@ -3,6 +3,7 @@
 *.rej
 *.o
 *.gcno
+*.gcda
 .deps
 .gdbinit
 autom4te.cache
