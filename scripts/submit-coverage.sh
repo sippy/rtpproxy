@@ -8,4 +8,4 @@ do
 done
 
 coveralls --exclude external --exclude hepconnector --exclude libelperiodic \
-  --gcov gcov --gcov-options '\-lp'
+  --exclude bench --exclude perftools --gcov gcov --gcov-options '\-lp'
