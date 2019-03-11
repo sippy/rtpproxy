@@ -30,7 +30,7 @@ setup_playback() {
   ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" playback1.nat.input
 }
 
-for ttype in 1 2 3 4 5
+for ttype in 1 2 3 4 5 6
 do
   if [ ${ttype} -eq 1 ]
   then
@@ -67,6 +67,7 @@ do
           rm -f "${fname}"
         fi
       done
+      ${SUDO} true || return 1
       ${SUDO} ${TCPDUMP} -B 4096 -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} 2>playback1.tout &
       TCPD_PID=${!}
       while [ ! -e playback1.${codec}.a.rtp ]
