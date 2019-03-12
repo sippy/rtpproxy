@@ -1,0 +1,6 @@
+#!/bin/sh
+
+. $(dirname $0)/functions
+
+${TOP_BUILDDIR}/libexecinfo/execinfo_test
+report "running execinfo_test"

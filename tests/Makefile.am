@@ -1,5 +1,6 @@
 TESTS = startstop basic_versions command_parser makeann extractaudio1 \
-  session_timeouts playback1 forwarding1 rtp_analyze1 rtcp2json1 libucl1
+  session_timeouts playback1 forwarding1 rtp_analyze1 rtcp2json1 libucl1 \
+  libexecinfo1
 startstop_EXTRA_DIST = startstop startstop.output
 startstop_CLEANFILES = startstop.rout
 basic_versions_EXTRA_DIST = basic_versions basic_versions.input basic_versions.output
@@ -40,13 +41,14 @@ rtcp2json1_EXTRA_DIST = rtcp2json1 rtcp2json
 rtcp2json1_CLEANFILES = rtcp1.output
 libucl1_EXTRA_DIST = libucl1 libucl
 libucl1_CLEANFILES = libucl_test.output
+libexecinfo1_EXTRA_DIST = libexecinfo1
 EXTRA_DIST = Makefile.am ${startstop_EXTRA_DIST} ${basic_versions_EXTRA_DIST} \
     ${command_parser_EXTRA_DIST} \
     ringback.sln makeann makeann.output \
     ${extractaudio_EXTRA_DIST} ${playback1_EXTRA_DIST} \
     ${forwarding1_EXTRA_DIST} ${session_timeouts_EXTRA_DIST} \
     ${rtp_analyze1_EXTRA_DIST} ${rtcp2json1_EXTRA_DIST} \
-    ${libucl1_EXTRA_DIST}
+    ${libucl1_EXTRA_DIST} ${libexecinfo1_EXTRA_DIST}
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
