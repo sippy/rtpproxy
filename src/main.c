@@ -783,7 +783,10 @@ main(int argc, char **argv)
     }
 
     seedrandom();
-    rtpp_gen_uid_init();
+    if (rtpp_gen_uid_init() != 0) {
+        err(1, "rtpp_gen_uid_init() failed");
+        /* NOTREACHED */
+    }
 
     cf.stable->glog = rtpp_log_ctor("rtpproxy", NULL, LF_REOPEN);
     if (cf.stable->glog == NULL) {
@@ -923,6 +926,7 @@ main(int argc, char **argv)
     if (tp == NULL) {
         RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
           "can't schedule notification to derive stats");
+        exit(1);
     }
     CALL_SMETHOD(tp->rcnt, decref);
 
