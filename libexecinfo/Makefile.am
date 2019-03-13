@@ -10,4 +10,5 @@ execinfo_test_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 
 execinfo_TEST_CPPFLAGS = ${execinfo_test_CPPFLAGS} -Dexecinfo_TEST=main
 execinfo_TEST_SOURCES = execinfo.c stacktraverse.c
+execinfo_TEST_LDADD = @LIBS_DL@
 execinfo_TEST_CFLAGS = ${execinfo_test_CFLAGS}
