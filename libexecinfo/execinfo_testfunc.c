@@ -44,6 +44,8 @@ testfunc(const void *caller, int rnum)
   size = backtrace(array, STACKTRAVERSE_MAX_LEVELS);
   assert(size > 0);
   assert(array[0] > caller);
+  if (size == STACKTRAVERSE_MAX_LEVELS)
+    assert(getreturnaddr(128) != NULL);
   strings = backtrace_symbols(array, size);
   assert(strings != NULL);
   backtrace_symbols_fd(array, size, fileno(stdout));
