@@ -26,15 +26,22 @@
  */
 
 #include <assert.h>
+#include <string.h>
 
+#include "execinfo.h"
 #include "execinfo_testfunc.h"
 #include "execinfo_testfunc1.h"
 
 int
 main()
 {
+  void *topframe[1];
   int r;
 
+  memset(topframe, '\0', sizeof(topframe));
+  assert(backtrace(topframe, 1) == 1);
+  assert(topframe[0] != NULL);
+  assert(execinfo_set_topframe(topframe[0]) == NULL);
   r = testfunc(main);
   assert(r == 2);
   r = testfunc1(main);
