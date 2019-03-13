@@ -104,6 +104,18 @@ setup_fwd() {
     PORTA=$((${PORTA} + 4))
     i=$((${i}+1))
   done
+  while [ ${i} -gt 1 ]
+  do
+    i=$((${i}-1))
+    CID="forwarding1_${i}"
+    PORTA=$((1024 + (${i} * 8)))
+    PORTO=$((${PORTA} + 2))
+    PORT6A=$((${PORTA} + 4))
+    PORT6O=$((${PORTA} + 6))
+    SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; \
+     s|%%PORT6O%%|${PORT6O}| ; s|%%PORT6A%%|${PORT6A}| ; s|%%CALLID%%|${CID}|"
+    ${SED} "${SED_TRANS}" forwarding1.copy.input
+  done
   sleep 6
   i=1
   PORTO=${START_PORTO}
