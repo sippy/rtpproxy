@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "execinfo.h"
+#include "stacktraverse.h"
 #include "execinfo_testfunc.h"
 #include "execinfo_testfunc1.h"
 
@@ -42,9 +43,11 @@ main()
   assert(backtrace(topframe, 1) == 1);
   assert(topframe[0] != NULL);
   assert(execinfo_set_topframe(topframe[0]) == NULL);
-  r = testfunc(main);
+  r = testfunc(main, 0);
   assert(r == 2);
-  r = testfunc1(main);
+  r = testfunc1(main, 0);
   assert(r == 3);
+  r = testfunc1(main, STACKTRAVERSE_MAX_LEVELS - 3);
+  assert(r == STACKTRAVERSE_MAX_LEVELS);
   return (0);
 }

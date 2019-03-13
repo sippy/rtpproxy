@@ -25,5 +25,5 @@
  *
  */
 
-int testfunc1(void *caller);
+int testfunc1(const void *caller, int rlev);
 

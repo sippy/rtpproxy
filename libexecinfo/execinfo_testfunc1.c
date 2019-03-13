@@ -25,17 +25,21 @@
  *
  */
 
-#include <stdio.h>
+#include <stdlib.h>
 
 #include "execinfo_testfunc1.h"
 #include "execinfo_testfunc.h"
 
 int
-testfunc1(void *caller)
+testfunc1(const void *caller, int rlev)
 {
-  int rval;
+  int rval, rnd;
 
-  rval = testfunc(testfunc1);
-  printf("testfunc1(%p) = %d\n", caller, rval);
-  return (rval);
+  rnd = random() % 1024;
+  if (rlev > 0) {
+    rval = testfunc1(testfunc1, rlev - 1);
+  } else {
+    rval = testfunc(testfunc1, rnd);
+  }
+  return (rval & 0x000000ff);
 }

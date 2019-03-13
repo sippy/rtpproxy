@@ -25,4 +25,4 @@
  *
  */
 
-int testfunc(void *);
+int testfunc(const void *, int);

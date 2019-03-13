@@ -30,21 +30,22 @@
 #include <string.h>
 
 #include "execinfo.h"
+#include "stacktraverse.h"
 #include "execinfo_testfunc.h"
 
 int
-testfunc(void *caller)
+testfunc(const void *caller, int rnum)
 {
-  void *array[10];
+  void *array[STACKTRAVERSE_MAX_LEVELS];
   size_t size;
   char **strings;
 
   memset(array, '\0', sizeof(array));
-  size = backtrace(array, 10);
+  size = backtrace(array, STACKTRAVERSE_MAX_LEVELS);
   assert(size > 0);
   assert(array[0] > caller);
   strings = backtrace_symbols(array, size);
   assert(strings != NULL);
   backtrace_symbols_fd(array, size, fileno(stdout));
-  return (size);
+  return ((rnum << 8) | size);
 }
