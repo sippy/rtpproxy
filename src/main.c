@@ -965,6 +965,12 @@ main(int argc, char **argv)
     signal(SIGUSR1, fatsignal);
     signal(SIGUSR2, fatsignal);
 #if RTPP_DEBUG_catchtrace
+    void *topframe = NULL;
+
+    assert(backtrace(&topframe, 1) == 1);
+    assert(topframe != NULL);
+    assert(execinfo_set_topframe(topframe) == NULL);
+
     signal(SIGQUIT, rtpp_stacktrace);
     signal(SIGILL, rtpp_stacktrace);
     signal(SIGTRAP, rtpp_stacktrace);
