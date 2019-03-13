@@ -112,7 +112,8 @@ backtrace_symbols(void *const *buffer, int size)
                 info.dli_saddr = buffer[i];
             offset = (char *)buffer[i] - (char *)info.dli_saddr;
             /* "0x01234567 <function+offset> at filename" */
-            alen = 2 +                      /* "0x" */
+            alen = 1 + get_d10(i) + 1 +     /* "#0\t" */
+                   2 +                      /* "0x" */
                    (sizeof(void *) * 2) +   /* "01234567" */
                    2 +                      /* " <" */
                    strlen(info.dli_sname) + /* "function" */
@@ -121,13 +122,14 @@ backtrace_symbols(void *const *buffer, int size)
                    5 +                      /* "> at " */
                    strlen(info.dli_fname) + /* "filename" */
                    1;                       /* "\0" */
-            snprintf(bp, bsize, "%p <%s+%d> at %s",
+            snprintf(bp, bsize, "#%d\t%p <%s+%d> at %s", i,
               buffer[i], info.dli_sname, offset, info.dli_fname);
         } else {
-            alen = 2 +                      /* "0x" */
+            alen = 1 + get_d10(i) + 1 +     /* "#0\t" */
+                   2 +                      /* "0x" */
                    (sizeof(void *) * 2) +   /* "01234567" */
                    1;                       /* "\0" */
-            snprintf(bp, bsize, "%p", buffer[i]);
+            snprintf(bp, bsize, "#%d\t%p", i, buffer[i]);
         }
         bt_rvals[i] = bp;
         bp += alen;
@@ -160,7 +162,8 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd)
                 info.dli_saddr = buffer[i];
             offset = (char *)buffer[i] - (char *)info.dli_saddr;
             /* "0x01234567 <function+offset> at filename" */
-            len = 2 +                      /* "0x" */
+            len = 1 + get_d10(i) + 1 +     /* "#0\t" */
+                  2 +                      /* "0x" */
                   (sizeof(void *) * 2) +   /* "01234567" */
                   2 +                      /* " <" */
                   strlen(info.dli_sname) + /* "function" */
@@ -172,17 +175,34 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd)
             buf = alloca(len);
             if (buf == NULL)
                 return;
-            snprintf(buf, len, "%p <%s+%d> at %s\n",
+            snprintf(buf, len, "#%d\t%p <%s+%d> at %s\n", i,
               buffer[i], info.dli_sname, offset, info.dli_fname);
         } else {
-            len = 2 +                      /* "0x" */
+            len = 1 + get_d10(i) + 1 +     /* "#0 " */
+                  2 +                      /* "0x" */
                   (sizeof(void *) * 2) +   /* "01234567" */
                   2;                       /* "\n\0" */
             buf = alloca(len);
             if (buf == NULL)
                 return;
-            snprintf(buf, len, "%p\n", buffer[i]);
+            snprintf(buf, len, "#%d\t%p\n", i, buffer[i]);
         }
         write(fd, buf, strlen(buf));
     }
 }
+
+#if defined(execinfo_TEST)
+#include <assert.h>
+#include <stdio.h>
+
+int
+execinfo_TEST(void)
+{
+  void *faketrace[] = {(void *)0xdeadbeef, (void *)0xbadc00de, execinfo_TEST};
+
+  assert(get_d10(-1) == 2);
+  assert(get_d10(-100) == 4);
+  backtrace_symbols_fd(faketrace, 3, fileno(stdout));
+  assert(backtrace_symbols(faketrace, 3) != NULL);
+}
+#endif
