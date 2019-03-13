@@ -34,11 +34,12 @@
 
 static struct rtpp_genuid_obj *gup = NULL;
 
-void
+int
 rtpp_gen_uid_init(void)
 {
 
     gup = rtpp_genuid_ctor();
+    return (gup != NULL ? 0: -1);
 }
 
 void
