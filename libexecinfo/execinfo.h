@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2003-2019 Maxim Sobolev <sobomax@FreeBSD.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@ extern "C" {
 int     backtrace(void **, int);
 char ** backtrace_symbols(void *const *, int);
 void    backtrace_symbols_fd(void *const *, int, int);
+const void *execinfo_set_topframe(const void *);
 
 #ifdef __cplusplus
 }

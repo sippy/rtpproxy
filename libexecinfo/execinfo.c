@@ -63,6 +63,18 @@ get_d10(int val)
     return (c);
 }
 
+static const void *topframe;
+
+const void *
+execinfo_set_topframe(const void *tfp)
+{
+    const void *otfp;
+
+    otfp = topframe;
+    topframe = tfp;
+    return (otfp);
+}
+
 int
 backtrace(void **buffer, int size)
 {
@@ -70,10 +82,12 @@ backtrace(void **buffer, int size)
 
     if (size > STACKTRAVERSE_MAX_LEVELS)
         size = STACKTRAVERSE_MAX_LEVELS;
-    for (i = 1; getframeaddr(i + 1) != NULL && i != size + 1; i++) {
+    for (i = 1; i < size + 1 && getframeaddr(i + 1) != NULL; i++) {
         buffer[i - 1] = getreturnaddr(i);
         if (buffer[i - 1] == NULL)
             break;
+	if (buffer[i - 1] == topframe)
+	    return i;
     }
 
     return i - 1;
