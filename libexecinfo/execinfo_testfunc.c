@@ -36,12 +36,12 @@
 int
 testfunc(const void *caller, int rnum)
 {
-  void *array[STACKTRAVERSE_MAX_LEVELS];
+  void *array[STACKTRAVERSE_MAX_LEVELS + 1];
   size_t size;
   char **strings;
 
   memset(array, '\0', sizeof(array));
-  size = backtrace(array, STACKTRAVERSE_MAX_LEVELS);
+  size = backtrace(array, STACKTRAVERSE_MAX_LEVELS + 1);
   assert(size > 0);
   assert(array[0] > caller);
   if (size == STACKTRAVERSE_MAX_LEVELS)
