@@ -198,11 +198,11 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd)
 int
 execinfo_TEST(void)
 {
-  void *faketrace[] = {(void *)0xdeadbeef, (void *)0xbadc00de, execinfo_TEST};
+  void *faketrace[] = {(void *)0xdeadbeef, (void *)0xbadc00de, execinfo_TEST, NULL};
 
   assert(get_d10(-1) == 2);
   assert(get_d10(-100) == 4);
-  backtrace_symbols_fd(faketrace, 3, fileno(stdout));
-  assert(backtrace_symbols(faketrace, 3) != NULL);
+  backtrace_symbols_fd(faketrace, 4, fileno(stdout));
+  assert(backtrace_symbols(faketrace, 4) != NULL);
 }
 #endif
