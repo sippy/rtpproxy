@@ -49,5 +49,9 @@ main()
   assert(r == 3);
   r = testfunc1(main, STACKTRAVERSE_MAX_LEVELS - 3);
   assert(r == STACKTRAVERSE_MAX_LEVELS);
+  assert(getframeaddr(0) != NULL);
+  assert(getframeaddr(1) != NULL);
+  assert(getreturnaddr(0) != NULL);
+
   return (0);
 }
