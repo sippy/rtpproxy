@@ -118,7 +118,7 @@ libexecinfo_a_OBJECTS = $(am_libexecinfo_a_OBJECTS)
 am_execinfo_TEST_OBJECTS = execinfo_TEST-execinfo.$(OBJEXT) \
 	execinfo_TEST-stacktraverse.$(OBJEXT)
 execinfo_TEST_OBJECTS = $(am_execinfo_TEST_OBJECTS)
-execinfo_TEST_LDADD = $(LDADD)
+execinfo_TEST_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -343,6 +343,7 @@ execinfo_test_LDADD = libexecinfo.a @LIBS_DL@
 execinfo_test_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 execinfo_TEST_CPPFLAGS = ${execinfo_test_CPPFLAGS} -Dexecinfo_TEST=main
 execinfo_TEST_SOURCES = execinfo.c stacktraverse.c
+execinfo_TEST_LDADD = @LIBS_DL@
 execinfo_TEST_CFLAGS = ${execinfo_test_CFLAGS}
 all: all-am
 
