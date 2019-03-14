@@ -54,6 +54,9 @@
 #define	CMD_SOCK	"/var/run/rtpproxy.sock"
 #define	PID_FILE	"/var/run/rtpproxy.pid"
 
+#define STRINGIFY(x) #x
+#define STR(x) STRINGIFY(x)
+
 struct pollfd;
 struct bindaddr_list;
 struct rtpp_timeout_handler;
