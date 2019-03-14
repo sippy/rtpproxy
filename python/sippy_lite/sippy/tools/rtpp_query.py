@@ -36,6 +36,7 @@ class command_runner(object):
     fin = None
     fout = None
     rval = 0
+    maxfails = 5
 
     def __init__(self, rc, commands = None, fin = None, fout = None):
         self.responses = []
@@ -62,6 +63,12 @@ class command_runner(object):
         self.rc.send_command(command, self.got_result)
 
     def got_result(self, result):
+        if result == None:
+            if self.maxfails == 0:
+                self.rval = 2
+                ED2.breakLoop()
+                return
+            self.maxfails -= 1
         if self.fout != None:
             try:
                 self.fout.write('%s\n' % result)
