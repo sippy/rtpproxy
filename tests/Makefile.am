@@ -4,7 +4,8 @@ TESTS = startstop basic_versions command_parser makeann extractaudio1 \
 startstop_EXTRA_DIST = startstop startstop.output
 startstop_CLEANFILES = startstop.rout
 basic_versions_EXTRA_DIST = basic_versions basic_versions.input basic_versions.output
-basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout
+basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
+  basic_versions.rlog _basic_versions.rlog
 command_parser_EXTRA_DIST = command_parser command_parser.input command_parser.output
 command_parser_CLEANFILES = command_parser.rout W3.IT2Nl*.rtcp W3.IT2Nl*.rtp \
   command_parser.rlog

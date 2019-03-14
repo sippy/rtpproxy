@@ -5,15 +5,28 @@
 
 . $(dirname $0)/functions
 
+BV_LOGFILE=basic_versions.rlog
+BV_TLFILE="_${BV_LOGFILE}"
+
+__beforeexit_cleanup()
+{
+  if [ -f ${BV_TLFILE} ]
+  then
+    cat ${BV_TLFILE} >>${BV_LOGFILE}
+    rm ${BV_TLFILE}
+  fi
+}
+
+truncate -s 0 ${BV_LOGFILE}
 for socket in ${RTPP_TEST_SOCKETS}
 do
   if [ "${socket}" = "stdio:" ]
   then
-    ${RTPPROXY} -f -s "${socket}" < $BASEDIR/basic_versions.input | \
+    ${RTPPROXY} -f -s "${socket}" < $BASEDIR/basic_versions.input 2>>${BV_LOGFILE} | \
       ${DIFF} ${BASEDIR}/basic_versions.output -
     report "basic_versions on ${socket}"
   else
-    RTPP_SOCKFILE="${socket}" RTPP_OUTFILE="basic_versions.rout" rtpproxy_start
+    RTPP_SOCKFILE="${socket}" RTPP_OUTFILE="basic_versions.rout" RTPP_LOGFILE="${BV_TLFILE}" rtpproxy_start
     report "rtpproxy start on ${socket}"
     ${RTPP_QUERY} -b -s "${socket}" \
       -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions.input -o basic_versions.qout
@@ -22,5 +35,7 @@ do
     report "rtpproxy stop (SIGHUP) on ${socket}"
     cat basic_versions.qout basic_versions.rout | ${DIFF} ${BASEDIR}/basic_versions.output -
     report "basic_versions on ${socket}"
+    cat ${BV_TLFILE} >>${BV_LOGFILE}
+    rm ${BV_TLFILE}
   fi
 done
