@@ -265,6 +265,7 @@ forcefail() {
     fi
   fi
   witness_stop
+  __beforeexit_cleanup 2>/dev/null || true
   exit $RC
 }
 
