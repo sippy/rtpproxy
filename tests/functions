@@ -153,9 +153,7 @@ rtpproxy_start() {
     then
       cat ${TMP_LOGFILE} >&2
     fi
-    rm ${TMP_LOGFILE}
-    false
-    return
+    return 1
   fi  
   export TMP_PIDFILE
   export TMP_SOCKFILE
@@ -167,11 +165,10 @@ rtpproxy_start() {
     if [ ${_i} -eq 3 ]
     then
       cat ${TMP_LOGFILE} >&2
-      rm ${TMP_LOGFILE}
-      false
-      return
+      return 1
     fi
   done
+  return 0
 }
 
 rtpproxy_stop() {
