@@ -501,6 +501,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
             return (-1);
         }
 
+        cmd->csp->nsess_created.cnt++;
+
         hte = CALL_METHOD(cf->stable->sessions_ht, append_refcnt, spa->call_id,
           spa->rcnt);
         if (hte == NULL) {
@@ -512,8 +514,6 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
             handle_nomem(cmd, ECODE_NOMEM_8, spa);
             return (-1);
         }
-
-        cmd->csp->nsess_created.cnt++;
 
         /*
          * Each session can consume up to 5 open file descriptors (2 RTP,
