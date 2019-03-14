@@ -582,7 +582,9 @@ init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp)
         psp->rccs[i] = rtpp_cmd_connection_ctor(ctrl_sock->controlfd_in, 
           ctrl_sock->controlfd_out, ctrl_sock, NULL);
         if (psp->rccs[i] == NULL) {
-            for (int j = i - 1; j >= 0; j --)
+            int j;
+
+            for (j = i - 1; j >= 0; j --)
                 rtpp_cmd_connection_dtor(psp->rccs[j]);
             goto e1;
         }
