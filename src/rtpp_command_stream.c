@@ -110,8 +110,9 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
         return (NULL);
     }
 
-    cmd = rtpp_command_ctor(cf, rcs->controlfd_out, dtime, rval, csp, 0);
+    cmd = rtpp_command_ctor(cf, rcs->controlfd_out, dtime, csp, 0);
     if (cmd == NULL) {
+        *rval = GET_CMD_ENOMEM;
         return (NULL);
     }
 
