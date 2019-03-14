@@ -314,8 +314,8 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
         CALL_SMETHOD(pub->rrc->rcnt, decref);
     if (pub->pcount != NULL)
         CALL_SMETHOD(pub->pcount->rcnt, decref);
-
-    CALL_SMETHOD(pub->ttl->rcnt, decref);
+    if (pub->ttl != NULL)
+        CALL_SMETHOD(pub->ttl->rcnt, decref);
     CALL_SMETHOD(pub->pcnt_strm->rcnt, decref);
     CALL_SMETHOD(pvt->pub.log->rcnt, decref);
     CALL_SMETHOD(pvt->rem_addr->rcnt, decref);
