@@ -34,7 +34,7 @@ DEFINE_METHOD(rtpp_log, rtpp_log_write, void, const char *, int,
 DEFINE_METHOD(rtpp_log, rtpp_log_ewrite, void, const char *, int,
   const char *, ...) __attribute__ ((format (printf, 4, 5)));
 DEFINE_METHOD(rtpp_log, rtpp_log_setlevel, void, int);
-DEFINE_METHOD(rtpp_log, rtpp_log_start, void, struct rtpp_cfg_stable *);
+DEFINE_METHOD(rtpp_log, rtpp_log_start, int, struct rtpp_cfg_stable *);
 
 struct rtpp_log {
     struct rtpp_refcnt *rcnt;

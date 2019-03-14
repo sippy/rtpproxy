@@ -66,7 +66,7 @@ static void rtpp_log_obj_write_early(struct rtpp_log *, const char *, int, const
 static void rtpp_log_obj_ewrite_early(struct rtpp_log *, const char *, int, const char *, ...);
 static void rtpp_log_obj_setlevel_early(struct rtpp_log *, int);
 
-static void rtpp_log_obj_start(struct rtpp_log *, struct rtpp_cfg_stable *);
+static int rtpp_log_obj_start(struct rtpp_log *, struct rtpp_cfg_stable *);
 
 struct rtpp_log *
 rtpp_log_ctor(const char *app, const char *call_id, int flags)
@@ -191,7 +191,7 @@ rtpp_log_obj_ewrite_early(struct rtpp_log *self, const char *fname, int level,
     return;
 }
 
-static void
+static int
 rtpp_log_obj_start(struct rtpp_log *self, struct rtpp_cfg_stable *cfs)
 {
     struct rtpp_log_priv *pvt;
@@ -199,10 +199,13 @@ rtpp_log_obj_start(struct rtpp_log *self, struct rtpp_cfg_stable *cfs)
     pvt = PUB2PVT(self);
 
     pvt->log = rtpp_log_open(cfs, pvt->app, pvt->call_id, pvt->flags);
+    if (pvt->log == NULL)
+        return (-1);
     pvt->pub.write = rtpp_log_obj_write;
     pvt->pub.ewrite = rtpp_log_obj_ewrite;
     pvt->pub.setlevel = rtpp_log_obj_setlevel;
     if (pvt->level != -1) {
         rtpp_log_setlevel(pvt->log, pvt->level);
     }
+    return (0);
 }
