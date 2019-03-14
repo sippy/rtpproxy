@@ -60,7 +60,7 @@ rtpp_command_stream_compact(struct rtpp_cmd_connection *rcs)
     }
     cp = &rcs->inbuf[rcs->inbuf_ppos];
     clen = rcs->inbuf_epos - rcs->inbuf_ppos;
-    memcpy(rcs->inbuf, cp, clen);
+    memmove(rcs->inbuf, cp, clen);
     rcs->inbuf_epos = clen;
     rcs->inbuf_ppos = 0;
 }   
