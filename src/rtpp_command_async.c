@@ -566,8 +566,7 @@ init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp)
         return (-1);
     }
     if (pthread_mutex_init(&psp->pfds_mutex, NULL) != 0) {
-        free(psp->pfds);
-        return (-1);
+        goto e1;
     }
     psp->pfds_used = pfds_used;
     if (psp->pfds_used == 0) {
@@ -582,12 +581,20 @@ init_pollset(struct cfg *cf, struct rtpp_cmd_pollset *psp)
         psp->pfds[i].revents = 0;
         psp->rccs[i] = rtpp_cmd_connection_ctor(ctrl_sock->controlfd_in, 
           ctrl_sock->controlfd_out, ctrl_sock, NULL);
+        if (psp->rccs[i] == NULL) {
+            for (int j = i - 1; j >= 0; j --)
+                rtpp_cmd_connection_dtor(psp->rccs[j]);
+            goto e1;
+        }
         i++;
     }
     if (i == 1 && RTPP_CTRL_ISSTREAM(psp->rccs[0]->csock)) {
         psp->rccs[0]->csock->exit_on_close = 1;
     }
     return (0);
+e1:
+    free(psp->pfds);
+    return (-1);
 }
 
 static void
