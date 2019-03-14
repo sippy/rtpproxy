@@ -861,7 +861,7 @@ main(int argc, char **argv)
 	    /* NOTREACHED */
     }
 
-    CALL_METHOD(cf.stable->glog, start, cf.stable);
+    RTPP_DBG_ASSERT(CALL_METHOD(cf.stable->glog, start, cf.stable) == 0);
 
     _sig_cf = &cf;
     atexit(ehandler);
