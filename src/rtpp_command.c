@@ -172,8 +172,6 @@ rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port,
       &cta));
 }
 
-#define IS_WEIRD_ERRNO(e) ((e) == EINTR || (e) == EAGAIN || (e) == ENOBUFS)
-
 void
 rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
 {
@@ -252,15 +250,14 @@ free_command(struct rtpp_command *cmd)
 }
 
 struct rtpp_command *
-rtpp_command_ctor(struct cfg *cf, int controlfd, double dtime, int *rval,
- struct rtpp_command_stats *csp, int umode)
+rtpp_command_ctor(struct cfg *cf, int controlfd, double dtime,
+  struct rtpp_command_stats *csp, int umode)
 {
     struct rtpp_command_priv *pvt;
     struct rtpp_command *cmd;
 
     pvt = rtpp_zmalloc(sizeof(struct rtpp_command_priv));
     if (pvt == NULL) {
-        *rval = GET_CMD_ENOMEM;
         return (NULL);
     }
     cmd = &(pvt->pub);
@@ -284,8 +281,9 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     struct rtpp_command *cmd;
     struct rtpp_command_priv *pvt;
 
-    cmd = rtpp_command_ctor(cf, controlfd, dtime, rval, csp, umode);
+    cmd = rtpp_command_ctor(cf, controlfd, dtime, csp, umode);
     if (cmd == NULL) {
+        *rval = GET_CMD_ENOMEM;
         return (NULL);
     }
     pvt = PUB2PVT(cmd);

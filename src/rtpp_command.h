@@ -44,6 +44,8 @@ struct rtpp_socket;
 #define GET_CMD_EAGAIN (-4)
 #define GET_CMD_INVAL (-5)
 
+#define IS_WEIRD_ERRNO(e) ((e) == EINTR || (e) == EAGAIN || (e) == ENOBUFS)
+
 int handle_command(struct cfg *, struct rtpp_command *);
 void free_command(struct rtpp_command *);
 struct rtpp_command *get_command(struct cfg *, int, int *, double,
@@ -55,7 +57,7 @@ void reply_port(struct rtpp_command *cmd, int lport,
 void reply_number(struct rtpp_command *cmd, int number);
 int rtpp_create_listener(struct cfg *, struct sockaddr *, int *,
   struct rtpp_socket **);
-struct rtpp_command *rtpp_command_ctor(struct cfg *, int, double, int *,
+struct rtpp_command *rtpp_command_ctor(struct cfg *, int, double,
   struct rtpp_command_stats *, int);
 
 void rtpc_doreply(struct rtpp_command *, char *, int, int);
