@@ -111,18 +111,18 @@ backtrace_symbols(void *const *buffer, int size)
             if (info.dli_saddr == NULL)
                 info.dli_saddr = buffer[i];
             offset = (char *)buffer[i] - (char *)info.dli_saddr;
-            /* "0x01234567 <function+offset> at filename" */
+            /* "#0      0x01234567 in <function+offset> at filename" */
             alen = 1 + get_d10(i) + 1 +     /* "#0\t" */
                    2 +                      /* "0x" */
                    (sizeof(void *) * 2) +   /* "01234567" */
-                   2 +                      /* " <" */
+                   5 +                      /* " in <" */
                    strlen(info.dli_sname) + /* "function" */
                    1 +                      /* "+" */
                    get_d10(offset) +        /* "offset" */
                    5 +                      /* "> at " */
                    strlen(info.dli_fname) + /* "filename" */
                    1;                       /* "\0" */
-            snprintf(bp, bsize, "#%d\t%p <%s+%d> at %s", i,
+            snprintf(bp, bsize, "#%d\t%p in <%s+%d> at %s", i,
               buffer[i], info.dli_sname, offset, info.dli_fname);
         } else {
             alen = 1 + get_d10(i) + 1 +     /* "#0\t" */
@@ -161,11 +161,11 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd)
             if (info.dli_saddr == NULL)
                 info.dli_saddr = buffer[i];
             offset = (char *)buffer[i] - (char *)info.dli_saddr;
-            /* "0x01234567 <function+offset> at filename" */
+            /* "#0      0x01234567 in <function+offset> at filename" */
             len = 1 + get_d10(i) + 1 +     /* "#0\t" */
                   2 +                      /* "0x" */
                   (sizeof(void *) * 2) +   /* "01234567" */
-                  2 +                      /* " <" */
+                  5 +                      /* " in <" */
                   strlen(info.dli_sname) + /* "function" */
                   1 +                      /* "+" */
                   get_d10(offset) +        /* "offset" */
@@ -175,7 +175,7 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd)
             buf = alloca(len);
             if (buf == NULL)
                 return;
-            snprintf(buf, len, "#%d\t%p <%s+%d> at %s\n", i,
+            snprintf(buf, len, "#%d\t%p in <%s+%d> at %s\n", i,
               buffer[i], info.dli_sname, offset, info.dli_fname);
         } else {
             len = 1 + get_d10(i) + 1 +     /* "#0 " */
