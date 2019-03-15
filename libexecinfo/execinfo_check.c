@@ -26,6 +26,7 @@
  */
 
 #include <assert.h>
+#include <pthread.h>
 #include <string.h>
 
 #include "execinfo.h"
@@ -33,25 +34,47 @@
 #include "execinfo_testfunc.h"
 #include "execinfo_testfunc1.h"
 
-int
-main()
+static void *wrkthr(void *pa);
+
+static int
+testbody(void *cp)
 {
-  void *topframe[1];
   int r;
 
-  memset(topframe, '\0', sizeof(topframe));
-  assert(backtrace(topframe, 1) == 1);
-  assert(topframe[0] != NULL);
-  assert(execinfo_set_topframe(topframe[0]) == NULL);
-  r = testfunc(main, 0);
-  assert(r == 2);
-  r = testfunc1(main, 0);
+  r = testfunc(testbody, 0);
   assert(r == 3);
-  r = testfunc1(main, STACKTRAVERSE_MAX_LEVELS - 2);
+  r = testfunc1(testbody, 0);
+  assert(r == 4);
+  r = testfunc1(testbody, STACKTRAVERSE_MAX_LEVELS - ((cp == wrkthr) ? 2 : 3));
   assert(r == STACKTRAVERSE_MAX_LEVELS);
   assert(getframeaddr(0) != NULL);
   assert(getframeaddr(1) != NULL);
   assert(getreturnaddr(0) != NULL);
 
+  return (0);
+}
+
+static void *
+wrkthr(void *pa)
+{
+
+  testbody(wrkthr);
+  return ((void *)42);
+}
+
+int
+main()
+{
+  void *topframe[1], *jp;
+  pthread_t tp;
+
+  memset(topframe, '\0', sizeof(topframe));
+  assert(backtrace(topframe, 1) == 1);
+  assert(topframe[0] != NULL);
+  assert(execinfo_set_topframe(topframe[0]) == NULL);
+  assert(testbody(main) == 0);
+  assert(pthread_create(&tp, NULL, wrkthr, NULL) == 0);
+  assert(pthread_join(tp, &jp) == 0);
+  assert(jp == (void *)42);
   return (0);
 }
