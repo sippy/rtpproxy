@@ -27,6 +27,7 @@
 
 #include <assert.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "execinfo.h"
@@ -40,12 +41,21 @@ static int
 testbody(void *cp)
 {
   int r;
+  bool inthread;
+
+  inthread = (cp == wrkthr);
 
   r = testfunc(testbody, 0);
-  assert(r == 3);
+  if (inthread)
+    assert(r >= 2);
+  else
+    assert(r == 3);
   r = testfunc1(testbody, 0);
-  assert(r == 4);
-  r = testfunc1(testbody, STACKTRAVERSE_MAX_LEVELS - ((cp == wrkthr) ? 2 : 3));
+  if (inthread)
+    assert(r >= 3);
+  else
+    assert(r == 4);
+  r = testfunc1(testbody, STACKTRAVERSE_MAX_LEVELS - (inthread ? 2 : 3));
   assert(r == STACKTRAVERSE_MAX_LEVELS);
   assert(getframeaddr(0) != NULL);
   assert(getframeaddr(1) != NULL);
