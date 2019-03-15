@@ -4,7 +4,7 @@ libexecinfo_a_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 
 noinst_PROGRAMS = execinfo_check execinfo_TEST
 execinfo_check_CPPFLAGS = -Werror=implicit-function-declaration -Wall
-execinfo_check_SOURCES = execinfo_check.c execinfo_checkfunc.c execinfo_checkfunc1.c
+execinfo_check_SOURCES = execinfo_check.c execinfo_testfunc.c execinfo_testfunc1.c
 execinfo_check_LDADD = libexecinfo.a @LIBS_DL@
 execinfo_check_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 
