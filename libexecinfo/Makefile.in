@@ -345,6 +345,7 @@ execinfo_TEST_CPPFLAGS = ${execinfo_test_CPPFLAGS} -Dexecinfo_TEST=main
 execinfo_TEST_SOURCES = execinfo.c stacktraverse.c
 execinfo_TEST_LDADD = @LIBS_DL@
 execinfo_TEST_CFLAGS = ${execinfo_test_CFLAGS}
+CLEANFILES = *.gcda *.gcno
 all: all-am
 
 .SUFFIXES:
@@ -660,6 +661,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
