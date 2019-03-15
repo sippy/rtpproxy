@@ -2,7 +2,7 @@
 
 . $(dirname $0)/functions
 
-for t in execinfo_test execinfo_TEST
+for t in execinfo_check execinfo_TEST
 do
   ${TOP_BUILDDIR}/libexecinfo/${t}
   report "running ${t}"
