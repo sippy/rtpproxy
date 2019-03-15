@@ -99,6 +99,36 @@ advance_sockidx() {
     RTPP_OUTFILE="session_timeouts.rout${j}.${socket_idx}"
 }
 
+run_rtpp_on_stdout()
+{
+  GI_ARG="${1}"
+  RIDX="${2}"
+  shift 2
+  tempfoo="`basename $0`.XXXXX"
+  TMP_PIDFILE=`mktemp -t ${tempfoo}` || return 1
+  (geninput "${GI_ARG}" RTPP${RIDX} | "${RTPPROXY}" -p "${TMP_PIDFILE}" -f \
+   -s stdio: "${@}" > session_timeouts.rout${RIDX} 2> session_timeouts.rlog${RIDX})&
+  RTPP_PID=${!}
+  _i=0
+  while [ ! -s ${TMP_PIDFILE} ]
+  do
+    sleep 1
+    _i=$((${_i} + 1))
+    if [ ${_i} -eq 3 ]
+    then
+      return 1
+    fi
+  done
+}
+
+__beforeexit_cleanup()
+{
+  if [ ! -z "${RTPP_NC_PID}" ]
+  then
+    kill "${RTPP_NC_PID}"
+  fi
+}
+
 for notify_sock in ${RTPP_NOTIFY_SOCK_UNIX} ${RTPP_NOTIFY_SOCK_TCP} ${RTPP_NOTIFY_SOCK_WILD}
 do
   if [ "${notify_sock}" = "${RTPP_NOTIFY_SOCK_WILD}" ]
@@ -108,7 +138,7 @@ do
     client_notify_sock="${notify_sock}"
   fi
   ${RTPP_NOTYFY_CLIENT} -s ${client_notify_sock} \
-   -S "${TOP_BUILDDIR}/python/sippy_lite" -o session_timeouts.tlog -t 160&
+   -S "${TOP_BUILDDIR}/python/sippy_lite" -o session_timeouts.tlog -t 165&
   RTPP_NC_RC=${?}
   RTPP_NC_PID=${!}
   report_rc ${RTPP_NC_RC} "Starting rtpp_notify_client.py on ${client_notify_sock}"
@@ -119,18 +149,18 @@ do
     setup_tstart
     if [ "${socket}" = "stdio:" ]
     then
-      (geninput "" RTPP${j}.1 | ${RTPPROXY} -f -s stdio: ${RTPP1_ARGS} > session_timeouts.rout${j}.1 2> session_timeouts.rlog${j}.1)&
-      RTPP1_PID=${!}
+      run_rtpp_on_stdout "" ${j}.1 ${RTPP1_ARGS}
       report "rtpproxy #${j}.1 start on ${socket}"
-      (geninput "" RTPP${j}.2 | ${RTPPROXY} -f -s stdio: ${RTPP2_ARGS} > session_timeouts.rout${j}.2 2> session_timeouts.rlog${j}.2)&
-      RTPP2_PID=${!}
+      RTPP1_PID=${RTPP_PID}
+      run_rtpp_on_stdout "" ${j}.2 ${RTPP2_ARGS}
       report "rtpproxy #${j}.2 start on ${socket}"
-      (geninput "6" RTPP${j}.3 | ${RTPPROXY} -f -s stdio: ${RTPP3_ARGS} > session_timeouts.rout${j}.3 2> session_timeouts.rlog${j}.3)&
-      RTPP3_PID=${!}
+      RTPP2_PID=${RTPP_PID}
+      run_rtpp_on_stdout "6" ${j}.3 ${RTPP3_ARGS}
       report "rtpproxy #${j}.3 start on ${socket}"
-      (geninput "6" RTPP${j}.4 | ${RTPPROXY} -f -s stdio: ${RTPP4_ARGS} > session_timeouts.rout${j}.4 2> session_timeouts.rlog${j}.4)&
-      RTPP4_PID=${!}
+      RTPP3_PID=${RTPP_PID}
+      run_rtpp_on_stdout "6" ${j}.4 ${RTPP4_ARGS}
       report "rtpproxy #${j}.4 start on ${socket}"
+      RTPP4_PID=${RTPP_PID}
       wait ${RTPP1_PID}
       report "wait for rtpproxy #${j}.1 shutdown"
       wait ${RTPP2_PID}
