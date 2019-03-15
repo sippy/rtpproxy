@@ -49,6 +49,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
 #include "config_pp.h"
@@ -861,7 +862,12 @@ main(int argc, char **argv)
 	    /* NOTREACHED */
     }
 
-    RTPP_DBG_ASSERT(CALL_METHOD(cf.stable->glog, start, cf.stable) == 0);
+    if (CALL_METHOD(cf.stable->glog, start, cf.stable) != 0) {
+        /* We cannot possibly function with broken logs, bail out */
+        syslog(LOG_CRIT, "rtpproxy pid %d has failed to initialize logging"
+            " facilities: crash", getpid());
+        err(1, "rtpproxy has failed to initialize logging facilities");
+    }
 
     _sig_cf = &cf;
     atexit(ehandler);
