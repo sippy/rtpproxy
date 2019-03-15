@@ -4,16 +4,33 @@
 
 . $(dirname $0)/functions
 
+TS_LOGFILE="startstop.rlog"
+
+__beforeexit_cleanup()
+{
+  if [ -f "${TMP_LOGFILE}" ]
+  then
+    cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+    rm "${TMP_LOGFILE}"
+  fi
+}
+
 RTPP_OUTFILE="startstop.rout"
+
+truncate -s 0 "${TS_LOGFILE}"
 rtpproxy_start
 report "rtpproxy start"
-rtpproxy_stop TERM
+TMP_LOGFILE="" rtpproxy_stop TERM
 report "rtpproxy stop (SIGTERM)"
+cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+rm "${TMP_LOGFILE}"
 ${DIFF} startstop.output startstop.rout
 report "rtpproxy output"
 rtpproxy_start
 report "rtpproxy start"
-rtpproxy_stop HUP
+TMP_LOGFILE="" rtpproxy_stop HUP
 report "rtpproxy stop (SIGHUP)"
+cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+rm "${TMP_LOGFILE}"
 ${DIFF} startstop.output startstop.rout
 report "rtpproxy output"

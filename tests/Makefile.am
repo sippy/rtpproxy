@@ -2,7 +2,7 @@ TESTS = startstop basic_versions command_parser makeann extractaudio1 \
   session_timeouts playback1 forwarding1 rtp_analyze1 rtcp2json1 libucl1 \
   libexecinfo1
 startstop_EXTRA_DIST = startstop startstop.output
-startstop_CLEANFILES = startstop.rout
+startstop_CLEANFILES = startstop.rout startstop.rlog
 basic_versions_EXTRA_DIST = basic_versions basic_versions.input basic_versions.output
 basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
   basic_versions.rlog _basic_versions.rlog
