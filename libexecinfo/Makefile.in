@@ -127,8 +127,8 @@ execinfo_TEST_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(execinfo_TEST_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_execinfo_check_OBJECTS = execinfo_check-execinfo_check.$(OBJEXT) \
-	execinfo_check-execinfo_checkfunc.$(OBJEXT) \
-	execinfo_check-execinfo_checkfunc1.$(OBJEXT)
+	execinfo_check-execinfo_testfunc.$(OBJEXT) \
+	execinfo_check-execinfo_testfunc1.$(OBJEXT)
 execinfo_check_OBJECTS = $(am_execinfo_check_OBJECTS)
 execinfo_check_DEPENDENCIES = libexecinfo.a
 execinfo_check_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -153,8 +153,8 @@ am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/execinfo_TEST-execinfo.Po \
 	./$(DEPDIR)/execinfo_TEST-stacktraverse.Po \
 	./$(DEPDIR)/execinfo_check-execinfo_check.Po \
-	./$(DEPDIR)/execinfo_check-execinfo_checkfunc.Po \
-	./$(DEPDIR)/execinfo_check-execinfo_checkfunc1.Po \
+	./$(DEPDIR)/execinfo_check-execinfo_testfunc.Po \
+	./$(DEPDIR)/execinfo_check-execinfo_testfunc1.Po \
 	./$(DEPDIR)/libexecinfo_a-execinfo.Po \
 	./$(DEPDIR)/libexecinfo_a-stacktraverse.Po
 am__mv = mv -f
@@ -339,7 +339,7 @@ noinst_LIBRARIES = libexecinfo.a
 libexecinfo_a_SOURCES = execinfo.c execinfo.h stacktraverse.c stacktraverse.h
 libexecinfo_a_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 execinfo_check_CPPFLAGS = -Werror=implicit-function-declaration -Wall
-execinfo_check_SOURCES = execinfo_check.c execinfo_checkfunc.c execinfo_checkfunc1.c
+execinfo_check_SOURCES = execinfo_check.c execinfo_testfunc.c execinfo_testfunc1.c
 execinfo_check_LDADD = libexecinfo.a @LIBS_DL@
 execinfo_check_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 execinfo_TEST_CPPFLAGS = ${execinfo_check_CPPFLAGS} -Dexecinfo_TEST=main
@@ -415,8 +415,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execinfo_TEST-execinfo.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execinfo_TEST-stacktraverse.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execinfo_check-execinfo_check.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execinfo_check-execinfo_checkfunc.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execinfo_check-execinfo_checkfunc1.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execinfo_check-execinfo_testfunc.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execinfo_check-execinfo_testfunc1.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libexecinfo_a-execinfo.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libexecinfo_a-stacktraverse.Po@am__quote@ # am--include-marker
 
@@ -517,33 +517,33 @@ execinfo_check-execinfo_check.obj: execinfo_check.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -c -o execinfo_check-execinfo_check.obj `if test -f 'execinfo_check.c'; then $(CYGPATH_W) 'execinfo_check.c'; else $(CYGPATH_W) '$(srcdir)/execinfo_check.c'; fi`
 
-execinfo_check-execinfo_checkfunc.o: execinfo_checkfunc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -MT execinfo_check-execinfo_checkfunc.o -MD -MP -MF $(DEPDIR)/execinfo_check-execinfo_checkfunc.Tpo -c -o execinfo_check-execinfo_checkfunc.o `test -f 'execinfo_checkfunc.c' || echo '$(srcdir)/'`execinfo_checkfunc.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/execinfo_check-execinfo_checkfunc.Tpo $(DEPDIR)/execinfo_check-execinfo_checkfunc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo_checkfunc.c' object='execinfo_check-execinfo_checkfunc.o' libtool=no @AMDEPBACKSLASH@
+execinfo_check-execinfo_testfunc.o: execinfo_testfunc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -MT execinfo_check-execinfo_testfunc.o -MD -MP -MF $(DEPDIR)/execinfo_check-execinfo_testfunc.Tpo -c -o execinfo_check-execinfo_testfunc.o `test -f 'execinfo_testfunc.c' || echo '$(srcdir)/'`execinfo_testfunc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/execinfo_check-execinfo_testfunc.Tpo $(DEPDIR)/execinfo_check-execinfo_testfunc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo_testfunc.c' object='execinfo_check-execinfo_testfunc.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -c -o execinfo_check-execinfo_checkfunc.o `test -f 'execinfo_checkfunc.c' || echo '$(srcdir)/'`execinfo_checkfunc.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -c -o execinfo_check-execinfo_testfunc.o `test -f 'execinfo_testfunc.c' || echo '$(srcdir)/'`execinfo_testfunc.c
 
-execinfo_check-execinfo_checkfunc.obj: execinfo_checkfunc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -MT execinfo_check-execinfo_checkfunc.obj -MD -MP -MF $(DEPDIR)/execinfo_check-execinfo_checkfunc.Tpo -c -o execinfo_check-execinfo_checkfunc.obj `if test -f 'execinfo_checkfunc.c'; then $(CYGPATH_W) 'execinfo_checkfunc.c'; else $(CYGPATH_W) '$(srcdir)/execinfo_checkfunc.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/execinfo_check-execinfo_checkfunc.Tpo $(DEPDIR)/execinfo_check-execinfo_checkfunc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo_checkfunc.c' object='execinfo_check-execinfo_checkfunc.obj' libtool=no @AMDEPBACKSLASH@
+execinfo_check-execinfo_testfunc.obj: execinfo_testfunc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -MT execinfo_check-execinfo_testfunc.obj -MD -MP -MF $(DEPDIR)/execinfo_check-execinfo_testfunc.Tpo -c -o execinfo_check-execinfo_testfunc.obj `if test -f 'execinfo_testfunc.c'; then $(CYGPATH_W) 'execinfo_testfunc.c'; else $(CYGPATH_W) '$(srcdir)/execinfo_testfunc.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/execinfo_check-execinfo_testfunc.Tpo $(DEPDIR)/execinfo_check-execinfo_testfunc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo_testfunc.c' object='execinfo_check-execinfo_testfunc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -c -o execinfo_check-execinfo_checkfunc.obj `if test -f 'execinfo_checkfunc.c'; then $(CYGPATH_W) 'execinfo_checkfunc.c'; else $(CYGPATH_W) '$(srcdir)/execinfo_checkfunc.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -c -o execinfo_check-execinfo_testfunc.obj `if test -f 'execinfo_testfunc.c'; then $(CYGPATH_W) 'execinfo_testfunc.c'; else $(CYGPATH_W) '$(srcdir)/execinfo_testfunc.c'; fi`
 
-execinfo_check-execinfo_checkfunc1.o: execinfo_checkfunc1.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -MT execinfo_check-execinfo_checkfunc1.o -MD -MP -MF $(DEPDIR)/execinfo_check-execinfo_checkfunc1.Tpo -c -o execinfo_check-execinfo_checkfunc1.o `test -f 'execinfo_checkfunc1.c' || echo '$(srcdir)/'`execinfo_checkfunc1.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/execinfo_check-execinfo_checkfunc1.Tpo $(DEPDIR)/execinfo_check-execinfo_checkfunc1.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo_checkfunc1.c' object='execinfo_check-execinfo_checkfunc1.o' libtool=no @AMDEPBACKSLASH@
+execinfo_check-execinfo_testfunc1.o: execinfo_testfunc1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -MT execinfo_check-execinfo_testfunc1.o -MD -MP -MF $(DEPDIR)/execinfo_check-execinfo_testfunc1.Tpo -c -o execinfo_check-execinfo_testfunc1.o `test -f 'execinfo_testfunc1.c' || echo '$(srcdir)/'`execinfo_testfunc1.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/execinfo_check-execinfo_testfunc1.Tpo $(DEPDIR)/execinfo_check-execinfo_testfunc1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo_testfunc1.c' object='execinfo_check-execinfo_testfunc1.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -c -o execinfo_check-execinfo_checkfunc1.o `test -f 'execinfo_checkfunc1.c' || echo '$(srcdir)/'`execinfo_checkfunc1.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -c -o execinfo_check-execinfo_testfunc1.o `test -f 'execinfo_testfunc1.c' || echo '$(srcdir)/'`execinfo_testfunc1.c
 
-execinfo_check-execinfo_checkfunc1.obj: execinfo_checkfunc1.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -MT execinfo_check-execinfo_checkfunc1.obj -MD -MP -MF $(DEPDIR)/execinfo_check-execinfo_checkfunc1.Tpo -c -o execinfo_check-execinfo_checkfunc1.obj `if test -f 'execinfo_checkfunc1.c'; then $(CYGPATH_W) 'execinfo_checkfunc1.c'; else $(CYGPATH_W) '$(srcdir)/execinfo_checkfunc1.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/execinfo_check-execinfo_checkfunc1.Tpo $(DEPDIR)/execinfo_check-execinfo_checkfunc1.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo_checkfunc1.c' object='execinfo_check-execinfo_checkfunc1.obj' libtool=no @AMDEPBACKSLASH@
+execinfo_check-execinfo_testfunc1.obj: execinfo_testfunc1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -MT execinfo_check-execinfo_testfunc1.obj -MD -MP -MF $(DEPDIR)/execinfo_check-execinfo_testfunc1.Tpo -c -o execinfo_check-execinfo_testfunc1.obj `if test -f 'execinfo_testfunc1.c'; then $(CYGPATH_W) 'execinfo_testfunc1.c'; else $(CYGPATH_W) '$(srcdir)/execinfo_testfunc1.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/execinfo_check-execinfo_testfunc1.Tpo $(DEPDIR)/execinfo_check-execinfo_testfunc1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execinfo_testfunc1.c' object='execinfo_check-execinfo_testfunc1.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -c -o execinfo_check-execinfo_checkfunc1.obj `if test -f 'execinfo_checkfunc1.c'; then $(CYGPATH_W) 'execinfo_checkfunc1.c'; else $(CYGPATH_W) '$(srcdir)/execinfo_checkfunc1.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(execinfo_check_CPPFLAGS) $(CPPFLAGS) $(execinfo_check_CFLAGS) $(CFLAGS) -c -o execinfo_check-execinfo_testfunc1.obj `if test -f 'execinfo_testfunc1.c'; then $(CYGPATH_W) 'execinfo_testfunc1.c'; else $(CYGPATH_W) '$(srcdir)/execinfo_testfunc1.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -680,8 +680,8 @@ distclean: distclean-am
 		-rm -f ./$(DEPDIR)/execinfo_TEST-execinfo.Po
 	-rm -f ./$(DEPDIR)/execinfo_TEST-stacktraverse.Po
 	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_check.Po
-	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_checkfunc.Po
-	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_checkfunc1.Po
+	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_testfunc.Po
+	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_testfunc1.Po
 	-rm -f ./$(DEPDIR)/libexecinfo_a-execinfo.Po
 	-rm -f ./$(DEPDIR)/libexecinfo_a-stacktraverse.Po
 	-rm -f Makefile
@@ -732,8 +732,8 @@ maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/execinfo_TEST-execinfo.Po
 	-rm -f ./$(DEPDIR)/execinfo_TEST-stacktraverse.Po
 	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_check.Po
-	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_checkfunc.Po
-	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_checkfunc1.Po
+	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_testfunc.Po
+	-rm -f ./$(DEPDIR)/execinfo_check-execinfo_testfunc1.Po
 	-rm -f ./$(DEPDIR)/libexecinfo_a-execinfo.Po
 	-rm -f ./$(DEPDIR)/libexecinfo_a-stacktraverse.Po
 	-rm -f Makefile
