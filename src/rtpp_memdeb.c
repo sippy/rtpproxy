@@ -45,6 +45,7 @@
 
 #include "config.h"
 
+#include "rtpp_defines.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
@@ -117,9 +118,6 @@ struct rtpp_memdeb_priv {
     const char *inst_name;
 };
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
 void *
 rtpp_memdeb_init()
 {
@@ -132,7 +130,7 @@ rtpp_memdeb_init()
     memset(pvt, '\0', sizeof(struct rtpp_memdeb_priv));
     pthread_mutex_init(&pvt->mutex, NULL);
     pvt->magic = MEMDEB_SIGNATURE_PRIV(pvt);
-    pvt->inst_name = TOSTRING(MEMDEB_APP);
+    pvt->inst_name = STR(MEMDEB_APP);
     return (pvt);
 }
 
