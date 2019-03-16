@@ -190,7 +190,7 @@ do
       RTPP2_START_RC=${?}
       if [ ${RTPP2_START_RC} -ne 0 ]
       then
-        TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE="" rtpproxy_stop TERM
+        TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
       fi
       report_rc ${RTPP2_START_RC} "rtpproxy #${j}.2 start on ${_socket}"
       RTPP2_PID="${TMP_PIDFILE}"
@@ -200,8 +200,8 @@ do
       RTPP3_START_RC=${?}
       if [ ${RTPP3_START_RC} -ne 0 ]
       then
-        TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE="" rtpproxy_stop TERM
-        TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE="" rtpproxy_stop TERM
+        TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
+        TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
       fi
       report_rc ${RTPP3_START_RC}  "rtpproxy #${j}.3 start on ${_socket}"
       RTPP3_PID="${TMP_PIDFILE}"
@@ -211,9 +211,9 @@ do
       RTPP4_START_RC=${?}
       if [ ${RTPP4_START_RC} -ne 0 ]
       then
-        TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE="" rtpproxy_stop TERM
-        TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE="" rtpproxy_stop TERM
-        TMP_PIDFILE=${RTPP3_PID} TMP_LOGFILE="" rtpproxy_stop TERM
+        TMP_PIDFILE=${RTPP1_PID} TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
+        TMP_PIDFILE=${RTPP2_PID} TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
+        TMP_PIDFILE=${RTPP3_PID} TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
       fi
       report_rc ${RTPP4_START_RC} "rtpproxy #${j}.4 start on ${_socket}"
       RTPP4_PID="${TMP_PIDFILE}"
