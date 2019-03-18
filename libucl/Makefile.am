@@ -29,6 +29,6 @@ libucl_test_CFLAGS = -I$(UCL_DIR)/include -I$(HEPSRCDIR) -I$(top_srcdir)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
   $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb_glitch.c $(top_srcdir)/src/rtpp_ucl.c
-libucl_test_LDADD=libucl_debug.a $(top_srcdir)/libexecinfo/libexecinfo.a
+libucl_test_LDADD=libucl_debug.a $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 
 CLEANFILES = *.gcda *.gcno
