@@ -93,6 +93,23 @@ backtrace(void **buffer, int size)
     return i - 1;
 }
 
+uintptr_t
+getstackcookie(void)
+{
+    int i;
+    uintptr_t r;
+    void *p;
+
+    r = 0;
+    for (i = 1; i < STACKTRAVERSE_MAX_LEVELS + 1 && getframeaddr(i + 1) != NULL; i++) {
+        p = getreturnaddr(i);
+        r ^= (uintptr_t)p;
+        if (p == topframe)
+            break;
+    }
+    return (r);
+}
+
 char **
 backtrace_symbols(void *const *buffer, int size)
 {
@@ -199,10 +216,12 @@ int
 execinfo_TEST(void)
 {
   void *faketrace[] = {(void *)0xdeadbeef, (void *)0xbadc00de, execinfo_TEST, NULL};
+  uintptr_t sc;
 
   assert(get_d10(-1) == 2);
   assert(get_d10(-100) == 4);
   backtrace_symbols_fd(faketrace, 4, fileno(stdout));
   assert(backtrace_symbols(faketrace, 4) != NULL);
+  sc = getstackcookie();
 }
 #endif
