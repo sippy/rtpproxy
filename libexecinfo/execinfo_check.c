@@ -43,6 +43,7 @@ testbody(void *cp)
 {
   int r;
   bool inthread;
+  uintptr_t sc;
 
   inthread = (cp == wrkthr);
 
@@ -61,6 +62,7 @@ testbody(void *cp)
   assert(getframeaddr(0) != NULL);
   assert(getframeaddr(1) != NULL);
   assert(getreturnaddr(0) != NULL);
+  sc = getstackcookie();
 
   return (0);
 }
@@ -87,5 +89,6 @@ main()
   assert(pthread_create(&tp, NULL, wrkthr, NULL) == 0);
   assert(pthread_join(tp, &jp) == 0);
   assert(jp == (void *)42);
+
   return (0);
 }

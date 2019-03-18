@@ -217,12 +217,10 @@ int
 execinfo_TEST(void)
 {
   void *faketrace[] = {(void *)0xdeadbeef, (void *)0xbadc00de, execinfo_TEST, NULL};
-  uintptr_t sc;
 
   assert(get_d10(-1) == 2);
   assert(get_d10(-100) == 4);
   backtrace_symbols_fd(faketrace, 4, fileno(stdout));
   assert(backtrace_symbols(faketrace, 4) != NULL);
-  sc = getstackcookie();
 }
 #endif
