@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <dlfcn.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>

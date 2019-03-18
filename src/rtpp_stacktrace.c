@@ -27,6 +27,7 @@
  */
 
 #include <sys/types.h>
+#include <stdint.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
