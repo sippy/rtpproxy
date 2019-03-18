@@ -61,8 +61,7 @@ rtpproxy_debug_LDADD+=@LIBS_SIPLOG_DBG@
 endif
 
 SRGC_MEMDEB_CORE=rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
-  rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_memdeb_glitch.c \
-  rtpp_memdeb_glitch.h
+  rtpp_memdeb_stats.h rtpp_memdeb_test.c
 SRCS_DEBUG=	$(SRGC_MEMDEB_CORE) rtpp_stacktrace.c rtpp_stacktrace.h
 
 SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \

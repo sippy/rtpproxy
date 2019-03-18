@@ -28,7 +28,7 @@ libucl_test_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=libucl_test -DMODULE_IF
 libucl_test_CFLAGS = -I$(UCL_DIR)/include -I$(HEPSRCDIR)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
-  $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb_glitch.c $(top_srcdir)/src/rtpp_ucl.c
+  $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_ucl.c
 libucl_test_LDADD=libucl_debug.a
 
 CLEANFILES = *.gcda *.gcno
