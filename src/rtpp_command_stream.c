@@ -39,6 +39,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_debug.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_parse.h"
@@ -89,6 +90,24 @@ rtpp_command_stream_doio(struct cfg *cf, struct rtpp_cmd_connection *rcs)
     return (len);
 }
 
+#define ENM_STR "E" STR(ECODE_NOMEM_9)
+#define ENM_PSTR ENM_STR "\\n"
+
+static void
+rcs_reply_nomem(struct rtpp_log *log, int controlfd, struct rtpp_command_stats *csp)
+{
+    const char buf[4] = ENM_STR "\n";
+
+    if (write(controlfd, buf, sizeof(buf)) < 0) {
+        RTPP_DBG_ASSERT(!IS_WEIRD_ERRNO(errno));
+        RTPP_ELOG(log, RTPP_LOG_ERR, "ENOMEM: failure sending \"" ENM_PSTR "\"");
+    } else {
+        RTPP_LOG(log, RTPP_LOG_ERR, "ENOMEM: sending \"" ENM_PSTR "\"");
+        csp->ncmds_repld.cnt++;
+    }
+    csp->ncmds_errs.cnt++;
+}
+
 struct rtpp_command *
 rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
   int *rval, double dtime, struct rtpp_command_stats *csp)
@@ -110,9 +129,15 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
         return (NULL);
     }
 
+    len = cp1 - cp;
+
     cmd = rtpp_command_ctor(cf, rcs->controlfd_out, dtime, csp, 0);
     if (cmd == NULL) {
         *rval = GET_CMD_ENOMEM;
+        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "ENOMEM: command \"%.*s\""
+          " could not be processed", len, cp);
+        rcs_reply_nomem(cf->stable->glog, rcs->controlfd_out, csp);
+        rcs->inbuf_ppos += len + 1;
         return (NULL);
     }
 
@@ -121,7 +146,6 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
         memcpy(&cmd->raddr, &rcs->raddr, rcs->rlen);
     }
 
-    len = cp1 - cp;
     memcpy(cmd->buf, cp, len);
     cmd->buf[len] = '\0';
     rcs->inbuf_ppos += len + 1;

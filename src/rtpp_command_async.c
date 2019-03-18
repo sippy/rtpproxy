@@ -225,15 +225,18 @@ process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
         return (-1);
     }
     do {
+again:
         cmd = rtpp_command_stream_get(cf, rcc, &rval, dtime, csp);
         if (cmd == NULL) {
-            if (rval == GET_CMD_EAGAIN) {
+            switch (rval) {
+            case GET_CMD_EAGAIN:
                 return (0);
-            }
-            if (rval != GET_CMD_OK) {
+            case GET_CMD_OK:
+            case GET_CMD_ENOMEM:
+                goto again;
+            default:
                 return (-1);
             }
-            continue;
         }
         cmd->laddr = sstosa(&rcc->csock->bindaddr);
         if (cmd->cca.op == GET_STATS || cmd->cca.op == INFO) {
