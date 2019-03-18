@@ -59,3 +59,5 @@ CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9 ${startstop
   ${extractaudio_CLEANFILES} ${playback1_CLEANFILES} ${forwarding1_CLEANFILES} \
   ${session_timeouts_CLEANFILES} ${command_parser_CLEANFILES} ${basic_versions_CLEANFILES} \
   ${rtp_analyze1_CLEANFILES} ${rtcp2json1_CLEANFILES} ${libucl1_CLEANFILES} *.core
+
+include $(srcdir)/memdeb/memdeb.ami

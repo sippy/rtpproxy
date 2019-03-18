@@ -1,0 +1,71 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+__beforeexit_cleanup()
+{
+  if [ -f "${TMP_LOGFILE}" ]
+  then
+    rtpproxy_stop TERM
+  fi
+  kill ${NC_PID} 2>/dev/null
+}
+
+spin_nc()
+{
+  NC_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
+  (nc -l 127.0.0.1 ${NC_PORT} > glitch1.ncout)&
+  NC_PID=${!}
+  report "starting nc on port ${NC_PORT}"
+}
+
+stop_nc()
+{
+  kill ${NC_PID} 2>/dev/null
+  wait ${NC_PID}
+  report "waiting for nc to exit"
+  cat glitch1.ncout
+  test -s glitch1.ncout
+  report "checking CallHome data"
+}
+
+rtpp_glitch()
+{
+    export MEMDEB_GLITCH_TRIG="${1}"
+    export MEMDEB_GLITCH_ACT="${2}"
+    export MEMDEB_GLITCH_CH_PORT="${3}"
+    rtpproxy_start
+    reportifnotfail "glitch rtpproxy using ${1}, action ${2}"
+}
+
+spin_nc
+export MEMDEB_GLITCH_TRIG="*"
+export MEMDEB_GLITCH_ACT="r"
+export MEMDEB_GLITCH_CH_PORT="${NC_PORT}"
+rtpproxy_start
+report "surveying rtpproxy using *, action r"
+rtpproxy_stop TERM
+report "stopping rtpproxy"
+stop_nc
+
+NLN=`wc -l < glitch1.ncout`
+test ${NLN} -gt 45
+report "make sure CallHome has enough data"
+
+STRIG="`awk -F : '{print $1}' glitch1.ncout | tail -n 30 | head -n 1`"
+test -z "${STRIG}"
+reportifnotfail "Extracting glitch step at [-30]"
+SCOOK="`awk '{print $2}' glitch1.ncout | tail -n 45 | head -n 2`"
+test -z "${SCOOK}"
+reportifnotfail "Extracting stack cookie at [-45]"
+
+for trig in "s0" "${STRIG}" "${SCOOK}" "*"
+do
+  spin_nc
+  for act in "a" "e" "rg"
+  do
+    rtpp_glitch "${trig}" "${act}" "${NC_PORT}"
+  done
+  stop_nc
+done

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2014-2019 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,14 +34,17 @@
  */
 
 #include <sys/types.h>
+#include <errno.h>
 #include <pthread.h>
 #include <inttypes.h>
 #include <stdarg.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "config.h"
 
@@ -53,6 +56,8 @@
 #include "rtpp_memdeb.h"
 #include "rtpp_memdeb_internal.h"
 #include "rtpp_memdeb_stats.h"
+#include "rtpp_memdeb_glitch.h"
+#include "libexecinfo/execinfo.h"
 
 #undef malloc
 #undef free
@@ -77,12 +82,6 @@
   (MEMDEB_SIG_PRIV_SALT ^ (uint64_t)(x))
 
 #define MEMDEB_GUARD_SIZE 8
-
-struct memdeb_loc {
-    const char *fname;
-    int linen;
-    const char *funcn;
-};
 
 struct memdeb_node
 {
@@ -131,6 +130,7 @@ rtpp_memdeb_init()
     pthread_mutex_init(&pvt->mutex, NULL);
     pvt->magic = MEMDEB_SIGNATURE_PRIV(pvt);
     pvt->inst_name = STR(MEMDEB_APP);
+    rtpp_memdeb_glitch_init();
     return (pvt);
 }
 
@@ -263,6 +263,8 @@ rtpp_memdeb_malloc(size_t size, void *p, const char *fname, int linen, const cha
     ml.linen = linen;
     ml.funcn = funcn;
 
+    GLITCH_INJECT1();
+
     CHK_PRIV_VRB(pvt, p, &ml);
     mpf = malloc(offsetof(struct memdeb_pfx, real_data) + size + MEMDEB_GUARD_SIZE);
     mnp = rtpp_memdeb_nget(pvt, &ml, 1);
@@ -367,6 +369,8 @@ rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int line
     ml.linen = linen;
     ml.funcn = funcn;
 
+    GLITCH_INJECT1();
+
     CHK_PRIV_VRB(pvt, p, &ml);
     if (ptr == NULL) {
         return (rtpp_memdeb_malloc(size, pvt, fname, linen, funcn));
@@ -417,6 +421,8 @@ rtpp_memdeb_strdup(const char *ptr, void *p, const char *fname, int linen, \
     ml.linen = linen;
     ml.funcn = funcn;
 
+    GLITCH_INJECT1();
+
     CHK_PRIV_VRB(pvt, p, &ml);
     size = strlen(ptr) + 1;
     mpf = malloc(size + offsetof(struct memdeb_pfx, real_data) + MEMDEB_GUARD_SIZE);
@@ -446,6 +452,8 @@ rtpp_memdeb_asprintf(char **pp, const char *fmt, void *p, const char *fname,
     va_list ap;
     int rval;
 
+    GLITCH_INJECT2(pp);
+
     va_start(ap, funcn);
     rval = rtpp_memdeb_vasprintf(pp, fmt, p, fname, linen, funcn, ap);
     va_end(ap);
@@ -458,6 +466,8 @@ rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
 {
     int rval;
     void *tp;
+
+    GLITCH_INJECT2(pp);
 
     rval = vasprintf(pp, fmt, ap);
     if (rval <= 0) {

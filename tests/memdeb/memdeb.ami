@@ -1,0 +1,5 @@
+memdeb_EXTRA_DIST = memdeb
+memdeb_CLEANFILES = glitch1.ncout
+TESTS += memdeb/glitch1
+CLEANFILES += ${memdeb_CLEANFILES}
+EXTRA_DIST += ${memdeb_EXTRA_DIST}
