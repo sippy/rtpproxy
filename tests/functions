@@ -121,6 +121,13 @@ sha256_verify() {
   fi
 }
 
+disable_aslr() {
+  if [ "${OS}" != "FreeBSD" ]
+  then
+    echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
+  fi
+}
+
 if [ "${OS}" != "FreeBSD" ]
 then
   LOOPBACK_INTERFACE="lo"
