@@ -1,0 +1,5 @@
+rtp_analyze_EXTRA_DIST = rtp_analyze
+rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
+TESTS += rtp_analyze/rtp_analyze1
+CLEANFILES += ${rtp_analyze_CLEANFILES}
+EXTRA_DIST += ${rtp_analyze_EXTRA_DIST}
