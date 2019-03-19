@@ -327,6 +327,7 @@ TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
 am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(srcdir)/basic_versions/Makefile.ami \
 	$(srcdir)/command_parser/Makefile.ami \
+	$(srcdir)/extractaudio/Makefile.ami \
 	$(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami \
 	$(srcdir)/startstop/Makefile.ami $(top_srcdir)/test-driver
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -463,8 +464,9 @@ startstop_EXTRA_DIST = startstop
 startstop_CLEANFILES = startstop.rout startstop.rlog
 TESTS = startstop/startstop1 memdeb/glitch1 \
 	basic_versions/basic_versions1 command_parser/command_parser1 \
-	makeann/makeann1 extractaudio1 session_timeouts playback1 \
-	forwarding1 rtp_analyze1 rtcp2json1 libucl1 libexecinfo1
+	makeann/makeann1 extractaudio/extractaudio1 session_timeouts \
+	playback1 forwarding1 rtp_analyze1 rtcp2json1 libucl1 \
+	libexecinfo1
 CLEANFILES = ${startstop_CLEANFILES} ${memdeb_CLEANFILES} \
 	${basic_versions_CLEANFILES} ${command_parser_CLEANFILES} \
 	${makeann_CLEANFILES} ${extractaudio_CLEANFILES} \
@@ -473,11 +475,11 @@ CLEANFILES = ${startstop_CLEANFILES} ${memdeb_CLEANFILES} \
 	${rtcp2json1_CLEANFILES} ${libucl1_CLEANFILES} *.core
 EXTRA_DIST = ${startstop_EXTRA_DIST} ${memdeb_EXTRA_DIST} \
 	${basic_versions_EXTRA_DIST} ${command_parser_EXTRA_DIST} \
-	${makeann_EXTRA_DIST} Makefile.am ringback.sln \
-	${extractaudio_EXTRA_DIST} ${playback1_EXTRA_DIST} \
-	${forwarding1_EXTRA_DIST} ${session_timeouts_EXTRA_DIST} \
-	${rtp_analyze1_EXTRA_DIST} ${rtcp2json1_EXTRA_DIST} \
-	${libucl1_EXTRA_DIST} ${libexecinfo1_EXTRA_DIST}
+	${makeann_EXTRA_DIST} ${extractaudio_EXTRA_DIST} Makefile.am \
+	ringback.sln ${playback1_EXTRA_DIST} ${forwarding1_EXTRA_DIST} \
+	${session_timeouts_EXTRA_DIST} ${rtp_analyze1_EXTRA_DIST} \
+	${rtcp2json1_EXTRA_DIST} ${libucl1_EXTRA_DIST} \
+	${libexecinfo1_EXTRA_DIST}
 memdeb_EXTRA_DIST = memdeb
 memdeb_CLEANFILES = glitch1.ncout
 basic_versions_EXTRA_DIST = basic_versions
@@ -490,7 +492,7 @@ command_parser_CLEANFILES = command_parser.rout W3.IT2Nl*.rtcp W3.IT2Nl*.rtp \
 
 makeann_EXTRA_DIST = makeann
 makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
-extractaudio_EXTRA_DIST = extractaudio extractaudio1
+extractaudio_EXTRA_DIST = extractaudio
 extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
   *.stereo.*.wav.tout *.mono.*.raw *.mono.*.raw.tout *.mono.*.w64 \
   *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout
@@ -541,7 +543,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .log .test .test$(EXEEXT) .trs
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -561,7 +563,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(am__empty):
+$(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -760,9 +762,9 @@ makeann/makeann1.log: makeann/makeann1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-extractaudio1.log: extractaudio1
-	@p='extractaudio1'; \
-	b='extractaudio1'; \
+extractaudio/extractaudio1.log: extractaudio/extractaudio1
+	@p='extractaudio/extractaudio1'; \
+	b='extractaudio/extractaudio1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
