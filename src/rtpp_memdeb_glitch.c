@@ -131,6 +131,13 @@ rtpp_memdeb_glitch_init()
             assert(iport > 0 && iport < 65536);
             assert(unsetenv(MDG_CH_PORT) == 0);
             mgd.mysocket = socket(AF_INET, SOCK_STREAM, 0);
+            assert(mgd.mysocket >= 0);
+
+            memset(&dest, 0, sizeof(dest));                /* zero the struct */
+            dest.sin_family = AF_INET;
+            dest.sin_addr.s_addr = htonl(INADDR_LOOPBACK); /* set destination IP number - localhost, 127.0.0.1*/
+            assert(bind(mgd.mysocket, (struct sockaddr *)&dest,
+              sizeof(struct sockaddr_in)) == 0);
 
             memset(&dest, 0, sizeof(dest));                /* zero the struct */
             dest.sin_family = AF_INET;
