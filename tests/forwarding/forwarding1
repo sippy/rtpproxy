@@ -20,7 +20,8 @@
 # re-packetization from 10ms for most codecs (20ms for GSM) to 40ms in one
 # direction and 60ms in the other.
 
-. $(dirname $0)/functions
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
 
 TEST_CODECS="0 3 8 18 9"
 #TEST_CODECS="9 9 9 9 9"
@@ -45,7 +46,7 @@ setup_gen() {
   do
     CID="forwarding1_${direction}_${i}"
     SED_TRANS="s|%%PORT1%%|${PORT}| ; s|%%PORT2%%|${TRASH_PORT1}| ; s|%%CALLID%%|${CID}| ; s|%%CODEC%%|${codec}|"
-    ${SED} "${SED_TRANS}" forwarding1.rec${direction}.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.rec${direction}.input
     PORT=$((${PORT} + 4))
     i=$((${i}+1))
   done
@@ -55,7 +56,7 @@ setup_gen() {
   do
     CID="forwarding1_${direction}_${i}"
     SED_TRANS="s|%%CODEC%%|${codec}| ; s|%%CALLID%%|${CID}| ; s|%%NTIMES%%|4|"
-    ${SED} "${SED_TRANS}" forwarding1.gen${direction}.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.gen${direction}.input
     i=$((${i}+1))
   done
   sleep 25
@@ -64,7 +65,7 @@ setup_gen() {
   do
     CID="forwarding1_${direction}_${i}"
     SED_TRANS="s|%%CODEC%%|${codec}| ; s|%%CALLID%%|${CID}| ; s|%%NTIMES%%|1|"
-    ${SED} "${SED_TRANS}" forwarding1.gen${direction}.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.gen${direction}.input
     i=$((${i}+1))
   done
   sleep 8
@@ -73,10 +74,10 @@ setup_gen() {
   do
     CID="forwarding1_${direction}_${i}"
     SED_TRANS="s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.sstats.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.sstats.input
     i=$((${i}+1))
   done
-  cat session_timeouts.stats.input forwarding1.stats.input
+  cat forwarding/session_timeouts.stats.input forwarding/forwarding1.stats.input
 }
 
 setup_fwd() {
@@ -90,7 +91,7 @@ setup_fwd() {
   do
     CID="forwarding1_${i}"
     SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.input
     PORTO=$((${PORTO} + 4))
     PORTA=$((${PORTA} + 4))
     i=$((${i}+1))
@@ -99,7 +100,7 @@ setup_fwd() {
   do
     CID="forwarding1_${i}"
     SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.repack.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.repack.input
     PORTO=$((${PORTO} + 4))
     PORTA=$((${PORTA} + 4))
     i=$((${i}+1))
@@ -114,7 +115,7 @@ setup_fwd() {
     PORT6O=$((${PORTA} + 6))
     SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; \
      s|%%PORT6O%%|${PORT6O}| ; s|%%PORT6A%%|${PORT6A}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.copy.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.copy.input
   done
   sleep 6
   i=1
@@ -124,7 +125,7 @@ setup_fwd() {
   do
     CID="forwarding1_${i}"
     SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.relatch.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.relatch.input
     PORTO=$((${PORTO} + 4))
     PORTA=$((${PORTA} + 4))
     i=$((${i}+1))
@@ -133,7 +134,7 @@ setup_fwd() {
   do
     CID="forwarding1_${i}"
     SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.repack.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.repack.input
     PORTO=$((${PORTO} + 4))
     PORTA=$((${PORTA} + 4))
     i=$((${i}+1))
@@ -144,10 +145,10 @@ setup_fwd() {
   do
     CID="forwarding1_${j}"
     SED_TRANS="s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding1.sstats.input forwarding1.delete.input
+    ${SED} "${SED_TRANS}" forwarding/forwarding1.sstats.input forwarding/forwarding1.delete.input
     j=$((${j} - 1))
   done  
-  cat session_timeouts.stats.input forwarding1.stats.input
+  cat forwarding/session_timeouts.stats.input forwarding/forwarding1.stats.input
 }
 
 cumnlost=0
@@ -167,7 +168,7 @@ verify_results()
     nlost=`grep plost= forwarding1.${codec}.eout | sed 's|.* plost=||'`
     if [ ${nlost} -eq 0 ]
     then
-      sha256_verify forwarding1.${codec}.wav forwarding1.checksums
+      sha256_verify forwarding1.${codec}.wav forwarding/forwarding1.checksums
     else
       cumnlost=$((${cumnlost} + ${nlost}))
       if [ ${cumnlost} -lt ${MAX_CUMNLOST} ]
@@ -239,11 +240,11 @@ wait ${GENO_PID}
 report "wait for rtpproxy Gen.O shutdown, PID: ${GENO_PID}"
 wait ${GENA_PID}
 report "wait for rtpproxy Gen.A shutdown, PID: ${GENA_PID}"
-${DIFF} forwarding1.output forwarding1.rout
+${DIFF} forwarding/forwarding1.output forwarding1.rout
 DIFF_FWD_RC=${?}
-${DIFF} forwarding1.geno.output forwarding1.geno.rout
+${DIFF} forwarding/forwarding1.geno.output forwarding1.geno.rout
 DIFF_GENO_RC=${?}
-${DIFF} forwarding1.gena.output forwarding1.gena.rout
+${DIFF} forwarding/forwarding1.gena.output forwarding1.gena.rout
 DIFF_GENA_RC=${?}
 
 verify_results "o" "${CODECSA}" "${REPACK_CODECSA}"
