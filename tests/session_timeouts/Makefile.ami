@@ -1,0 +1,7 @@
+session_timeouts_EXTRA_DIST = session_timeouts
+session_timeouts_CLEANFILES = session_timeouts.rout[12345].[1234] session_timeouts.rlog[12345].[1234] \
+  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[12345].[1234] \
+  session_timeouts.fout[12345].[1234]
+TESTS += session_timeouts/session_timeouts1
+CLEANFILES += ${session_timeouts_CLEANFILES}
+EXTRA_DIST += ${session_timeouts_EXTRA_DIST}
