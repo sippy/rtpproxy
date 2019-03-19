@@ -8,7 +8,8 @@ RTPP_TEST_SOCK_UDP6_PORT="%%UDP6_PORT%%"
 RTPP_TEST_SOCK_UNIX="%%LOCAL_SOCK%%"
 RTPP_TEST_SOCK_CUNIX="%%LOCAL_SOCK%%"
 
-. $(dirname $0)/functions
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
 
 substinput() {
   ${SED} "s|%%CALLID%%|call_id_${i}| ; s|%%RTPP_NS%%|${notify_sock}| ; s|%%RTPP_NS_MSG%%|call${i}_${IPV6}_disconnected_${RTPPID}|" ${1}
@@ -24,59 +25,59 @@ geninput() {
   i=0
   while [ ${i} -lt ${NFULL} ]
   do
-    substinput session_timeouts.full${IPV6}.input
+    substinput session_timeouts/session_timeouts.full${IPV6}.input
     i=$((${i} + 1))
   done
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   sleep 2
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   i=0
   while [ ${i} -lt ${NFULL} ]
   do
-    substinput session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts/session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
   while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
   do
-    substinput session_timeouts.half${IPV6}.input
+    substinput session_timeouts/session_timeouts.half${IPV6}.input
     i=$((${i} + 1))
   done
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   sleep 3
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   i=${NFULL}
   while [ ${i} -lt $((${NFULL} + ${NHALF} - ${NHALF_LATE})) ]
   do
-    substinput session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts/session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   sleep 6
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
   do
-    substinput session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts/session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   sleep 3
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   i=0
   while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
   do
-    substinput session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts/session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   sleep 12
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
   i=0
   while [ ${i} -lt $((${NFULL} + ${NHALF})) ]
   do
-    substinput session_timeouts.lookup${IPV6}.input
+    substinput session_timeouts/session_timeouts.lookup${IPV6}.input
     i=$((${i} + 1))
   done
-  cat session_timeouts.stats.input
+  cat session_timeouts/session_timeouts.stats.input
 }
 
 RTPP0_ARGS="-d dbug -T10 -b -n ${RTPP_NOTIFY_SOCK_TCP} -n ${RTPP_NOTIFY_SOCK_WILD} -n ${RTPP_NOTIFY_SOCK_UNIX}"
@@ -169,13 +170,13 @@ do
       report "wait for rtpproxy #${j}.3 shutdown"
       wait ${RTPP4_PID}
       report "wait for rtpproxy #${j}.4 shutdown"
-      ${DIFF} session_timeouts.output1 session_timeouts.rout${j}.1
+      ${DIFF} session_timeouts/session_timeouts.output1 session_timeouts.rout${j}.1
       report "checking rtpproxy #${j}.1 stdout"
-      ${DIFF} session_timeouts.output2 session_timeouts.rout${j}.2
+      ${DIFF} session_timeouts/session_timeouts.output2 session_timeouts.rout${j}.2
       report "checking rtpproxy #${j}.2 stdout"
-      ${DIFF} session_timeouts6.output1 session_timeouts.rout${j}.3
+      ${DIFF} session_timeouts/session_timeouts6.output1 session_timeouts.rout${j}.3
       report "checking rtpproxy #${j}.3 stdout"
-      ${DIFF} session_timeouts6.output2 session_timeouts.rout${j}.4
+      ${DIFF} session_timeouts/session_timeouts6.output2 session_timeouts.rout${j}.4
       report "checking rtpproxy #${j}.4 stdout"
     else
       socket_idx=0
@@ -251,9 +252,9 @@ do
       do
         if [ ${i} -eq 1 -o ${i} -eq 2 ]
         then
-          ofile=session_timeouts.output${i}
+          ofile=session_timeouts/session_timeouts.output${i}
         else
-          ofile=session_timeouts6.output$((${i} - 2))
+          ofile=session_timeouts/session_timeouts6.output$((${i} - 2))
         fi
         cat session_timeouts.qout${j}.${i} session_timeouts.rout${j}.${i} > session_timeouts.fout${j}.${i}
         ${DIFF} ${ofile} session_timeouts.fout${j}.${i}
@@ -266,6 +267,6 @@ do
   wait ${RTPP_NC_PID}
   report "wait for rtpp_notify_client.py on ${client_notify_sock} shutdown"
   sort session_timeouts.tlog > session_timeouts.tlog.sorted
-  sort session_timeouts.tnotify.output | ${DIFF} - session_timeouts.tlog.sorted
+  sort session_timeouts/session_timeouts.tnotify.output | ${DIFF} - session_timeouts.tlog.sorted
   report "checking rtpp_notify_client.py on ${client_notify_sock} output"
 done

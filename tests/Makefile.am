@@ -4,8 +4,9 @@ include $(srcdir)/basic_versions/Makefile.ami
 include $(srcdir)/command_parser/Makefile.ami
 include $(srcdir)/makeann/Makefile.ami
 include $(srcdir)/extractaudio/Makefile.ami
+include $(srcdir)/session_timeouts/Makefile.ami
 
-TESTS += session_timeouts playback1 forwarding1 rtp_analyze1 rtcp2json1 libucl1 \
+TESTS += playback1 forwarding1 rtp_analyze1 rtcp2json1 libucl1 \
   libexecinfo1
 playback1_EXTRA_DIST = playback1 playback1.output playback1.checksums \
   playback1.type1.input playback1.type2.input
@@ -21,15 +22,6 @@ forwarding1_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav 
   forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
   forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
   forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog
-session_timeouts_EXTRA_DIST = session_timeouts session_timeouts.full.input \
-  session_timeouts.full6.input session_timeouts.half.input \
-  session_timeouts.half6.input session_timeouts.lookup.input \
-  session_timeouts.lookup6.input session_timeouts.output1 session_timeouts.output2 \
-  session_timeouts.stats.input session_timeouts6.output1 session_timeouts6.output2 \
-  session_timeouts.tnotify.output
-session_timeouts_CLEANFILES = session_timeouts.rout[12345].[1234] session_timeouts.rlog[12345].[1234] \
-  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[12345].[1234] \
-  session_timeouts.fout[12345].[1234]
 rtp_analyze1_EXTRA_DIST = rtp_analyze1 rtp_analyze
 rtp_analyze1_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
 rtcp2json1_EXTRA_DIST = rtcp2json1 rtcp2json
@@ -40,7 +32,7 @@ libexecinfo1_EXTRA_DIST = libexecinfo1
 EXTRA_DIST += Makefile.am \
     ringback.sln \
     ${playback1_EXTRA_DIST} \
-    ${forwarding1_EXTRA_DIST} ${session_timeouts_EXTRA_DIST} \
+    ${forwarding1_EXTRA_DIST} \
     ${rtp_analyze1_EXTRA_DIST} ${rtcp2json1_EXTRA_DIST} \
     ${libucl1_EXTRA_DIST} ${libexecinfo1_EXTRA_DIST}
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
@@ -49,7 +41,6 @@ TESTS_ENVIRONMENT = \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
 CLEANFILES += ${playback1_CLEANFILES} ${forwarding1_CLEANFILES} \
-  ${session_timeouts_CLEANFILES} \
   ${rtp_analyze1_CLEANFILES} ${rtcp2json1_CLEANFILES} ${libucl1_CLEANFILES} *.core
 
 list_tests:
