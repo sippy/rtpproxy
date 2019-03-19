@@ -19,19 +19,22 @@ __beforeexit_cleanup()
 RTPP_OUTFILE="startstop.rout"
 
 truncate -s 0 "${TS_LOGFILE}"
-rtpproxy_start
-report "rtpproxy start"
-TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
-report "rtpproxy stop (SIGTERM)"
-cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
-rm "${TMP_LOGFILE}"
-${DIFF} startstop/startstop.output startstop.rout
-report "rtpproxy output"
-rtpproxy_start
-report "rtpproxy start"
-TMP_LOGFILE="/dev/null" rtpproxy_stop HUP
-report "rtpproxy stop (SIGHUP)"
-cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
-rm "${TMP_LOGFILE}"
-${DIFF} startstop/startstop.output startstop.rout
-report "rtpproxy output"
+for rargs in "" "--config libucl/libucl_test.conf"
+do
+  RTPP_ARGS="${rargs}" rtpproxy_start
+  report "rtpproxy start"
+  TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
+  report "rtpproxy stop (SIGTERM)"
+  cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+  rm "${TMP_LOGFILE}"
+  ${DIFF} startstop/startstop.output startstop.rout
+  report "rtpproxy output"
+  RTPP_ARGS="${rargs}" rtpproxy_start
+  report "rtpproxy start"
+  TMP_LOGFILE="/dev/null" rtpproxy_stop HUP
+  report "rtpproxy stop (SIGHUP)"
+  cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+  rm "${TMP_LOGFILE}"
+  ${DIFF} startstop/startstop.output startstop.rout
+  report "rtpproxy output"
+done
