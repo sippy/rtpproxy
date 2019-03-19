@@ -1,5 +1,6 @@
-memdeb_EXTRA_DIST = memdeb
-memdeb_CLEANFILES = glitch1.ncout
-TESTS += memdeb/glitch1
-CLEANFILES += ${memdeb_CLEANFILES}
-EXTRA_DIST += ${memdeb_EXTRA_DIST}
+basic_versions_EXTRA_DIST = basic_versions
+basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
+  basic_versions.rlog _basic_versions.rlog
+TESTS += basic_versions/basic_versions1
+CLEANFILES += ${basic_versions_CLEANFILES}
+EXTRA_DIST += ${basic_versions_EXTRA_DIST}
