@@ -4,7 +4,8 @@
 # capture and decode packers them with extractaudio and verifies the
 # checksums for all supported codecs.
 
-. $(dirname $0)/functions
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
 
 TARGET_PORT=12344
 RTPP_TIMEOUT=8
@@ -27,7 +28,7 @@ setup_playback() {
     ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" "${p2ifile}"
   fi
   sleep 1
-  ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" playback1.nat.input
+  ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" playback/playback1.nat.input
 }
 
 for ttype in 1 2 3 4 5 6 7
@@ -38,10 +39,10 @@ do
   else
     delay=1
   fi
-  PIFILE="playback1.type${ttype}.input"
-  if [ -e "playback1.type${ttype}.st2.input" ]
+  PIFILE="playback/playback1.type${ttype}.input"
+  if [ -e "playback/playback1.type${ttype}.st2.input" ]
   then
-    P2IFILE="playback1.type${ttype}.st2.input"
+    P2IFILE="playback/playback1.type${ttype}.st2.input"
   else
     P2IFILE=""
   fi
@@ -117,14 +118,14 @@ do
     #sha256 ${ofile}
     #report "sha256 ${ofile}"
     #wait
-    if [ -e playback1.type${ttype}.output ]
+    if [ -e playback/playback1.type${ttype}.output ]
     then
-      MODEL_ROUT=playback1.type${ttype}.output
+      MODEL_ROUT=playback/playback1.type${ttype}.output
     else
-      MODEL_ROUT=playback1.output
+      MODEL_ROUT=playback/playback1.output
     fi
     ${DIFF} playback1.rout ${MODEL_ROUT}
     report "checking rtpproxy stdout"
-    sha256_verify ${ofile} playback1.checksums
+    sha256_verify ${ofile} playback/playback1.checksums
   done
 done

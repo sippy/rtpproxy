@@ -1,0 +1,8 @@
+playback_EXTRA_DIST = playback
+playback_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
+  playback1.8.a.rtp playback1.9.a.rtp playback1.0 playback1.18 playback1.3 \
+  playback1.8 playback1.9 playback1.rout playback1.0.wav playback1.18.wav \
+  playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout playback1.rlog
+TESTS += playback/playback1
+CLEANFILES += ${playback_CLEANFILES}
+EXTRA_DIST += ${playback_EXTRA_DIST}
