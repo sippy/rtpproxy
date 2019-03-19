@@ -2,7 +2,8 @@
 
 # test start up of rtpproxy and handling of SIGTERM and SIGHUP
 
-. $(dirname $0)/functions
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
 
 TS_LOGFILE="startstop.rlog"
 
@@ -24,7 +25,7 @@ TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
 report "rtpproxy stop (SIGTERM)"
 cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
 rm "${TMP_LOGFILE}"
-${DIFF} startstop.output startstop.rout
+${DIFF} startstop/startstop.output startstop.rout
 report "rtpproxy output"
 rtpproxy_start
 report "rtpproxy start"
@@ -32,5 +33,5 @@ TMP_LOGFILE="/dev/null" rtpproxy_stop HUP
 report "rtpproxy stop (SIGHUP)"
 cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
 rm "${TMP_LOGFILE}"
-${DIFF} startstop.output startstop.rout
+${DIFF} startstop/startstop.output startstop.rout
 report "rtpproxy output"

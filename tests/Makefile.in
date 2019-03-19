@@ -324,8 +324,8 @@ TEST_LOGS = $(am__test_logs2:.test.log=.log)
 TEST_LOG_DRIVER = $(SHELL) $(top_srcdir)/test-driver
 TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
 	$(TEST_LOG_FLAGS)
-am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/memdeb/memdeb.ami \
-	$(top_srcdir)/test-driver
+am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/memdeb/Makefile.ami \
+	$(srcdir)/startstop/Makefile.ami $(top_srcdir)/test-driver
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -456,11 +456,28 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = startstop basic_versions command_parser makeann extractaudio1 \
-	session_timeouts playback1 forwarding1 rtp_analyze1 rtcp2json1 \
-	libucl1 libexecinfo1 memdeb/glitch1
-startstop_EXTRA_DIST = startstop startstop.output
+startstop_EXTRA_DIST = startstop
 startstop_CLEANFILES = startstop.rout startstop.rlog
+TESTS = startstop/startstop1 memdeb/glitch1 basic_versions \
+	command_parser makeann extractaudio1 session_timeouts \
+	playback1 forwarding1 rtp_analyze1 rtcp2json1 libucl1 \
+	libexecinfo1
+CLEANFILES = ${startstop_CLEANFILES} ${memdeb_CLEANFILES} ringback.0 \
+	ringback.3 ringback.8 ringback.18 ringback.9 \
+	${extractaudio_CLEANFILES} ${playback1_CLEANFILES} \
+	${forwarding1_CLEANFILES} ${session_timeouts_CLEANFILES} \
+	${command_parser_CLEANFILES} ${basic_versions_CLEANFILES} \
+	${rtp_analyze1_CLEANFILES} ${rtcp2json1_CLEANFILES} \
+	${libucl1_CLEANFILES} *.core
+EXTRA_DIST = ${startstop_EXTRA_DIST} ${memdeb_EXTRA_DIST} Makefile.am \
+	${basic_versions_EXTRA_DIST} ${command_parser_EXTRA_DIST} \
+	ringback.sln makeann makeann.output ${extractaudio_EXTRA_DIST} \
+	${playback1_EXTRA_DIST} ${forwarding1_EXTRA_DIST} \
+	${session_timeouts_EXTRA_DIST} ${rtp_analyze1_EXTRA_DIST} \
+	${rtcp2json1_EXTRA_DIST} ${libucl1_EXTRA_DIST} \
+	${libexecinfo1_EXTRA_DIST}
+memdeb_EXTRA_DIST = memdeb
+memdeb_CLEANFILES = glitch1.ncout
 basic_versions_EXTRA_DIST = basic_versions basic_versions.input basic_versions.output
 basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
   basic_versions.rlog _basic_versions.rlog
@@ -510,33 +527,17 @@ rtcp2json1_CLEANFILES = rtcp1.output
 libucl1_EXTRA_DIST = libucl1 libucl
 libucl1_CLEANFILES = libucl_test.output
 libexecinfo1_EXTRA_DIST = libexecinfo1
-EXTRA_DIST = Makefile.am ${startstop_EXTRA_DIST} \
-	${basic_versions_EXTRA_DIST} ${command_parser_EXTRA_DIST} \
-	ringback.sln makeann makeann.output ${extractaudio_EXTRA_DIST} \
-	${playback1_EXTRA_DIST} ${forwarding1_EXTRA_DIST} \
-	${session_timeouts_EXTRA_DIST} ${rtp_analyze1_EXTRA_DIST} \
-	${rtcp2json1_EXTRA_DIST} ${libucl1_EXTRA_DIST} \
-	${libexecinfo1_EXTRA_DIST} ${memdeb_EXTRA_DIST}
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
 
-CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9 \
-	${startstop_CLEANFILES} ${extractaudio_CLEANFILES} \
-	${playback1_CLEANFILES} ${forwarding1_CLEANFILES} \
-	${session_timeouts_CLEANFILES} ${command_parser_CLEANFILES} \
-	${basic_versions_CLEANFILES} ${rtp_analyze1_CLEANFILES} \
-	${rtcp2json1_CLEANFILES} ${libucl1_CLEANFILES} *.core \
-	${memdeb_CLEANFILES}
-memdeb_EXTRA_DIST = memdeb
-memdeb_CLEANFILES = glitch1.ncout
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .log .test .test$(EXEEXT) .trs
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/memdeb/memdeb.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -556,7 +557,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/memdeb/memdeb.ami $(am__empty):
+$(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -720,9 +721,16 @@ recheck: all
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
-startstop.log: startstop
-	@p='startstop'; \
-	b='startstop'; \
+startstop/startstop1.log: startstop/startstop1
+	@p='startstop/startstop1'; \
+	b='startstop/startstop1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch1.log: memdeb/glitch1
+	@p='memdeb/glitch1'; \
+	b='memdeb/glitch1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -800,13 +808,6 @@ libucl1.log: libucl1
 libexecinfo1.log: libexecinfo1
 	@p='libexecinfo1'; \
 	b='libexecinfo1'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-memdeb/glitch1.log: memdeb/glitch1
-	@p='memdeb/glitch1'; \
-	b='memdeb/glitch1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
