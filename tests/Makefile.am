@@ -61,3 +61,6 @@ CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9 ${startstop
   ${rtp_analyze1_CLEANFILES} ${rtcp2json1_CLEANFILES} ${libucl1_CLEANFILES} *.core
 
 include $(srcdir)/memdeb/memdeb.ami
+
+list_tests:
+	@echo ${TESTS}
