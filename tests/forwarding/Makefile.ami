@@ -1,0 +1,9 @@
+forwarding_EXTRA_DIST = forwarding
+forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
+  forwarding1.8.wav forwarding1.9.wav forwarding1.gena.rout forwarding1.geno.rout \
+  forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
+  forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
+  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog
+TESTS += forwarding/forwarding1
+CLEANFILES += ${forwarding_CLEANFILES}
+EXTRA_DIST += ${forwarding_EXTRA_DIST}
