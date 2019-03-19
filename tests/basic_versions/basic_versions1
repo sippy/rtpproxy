@@ -3,7 +3,8 @@
 # Test basic control protocol info commands. See basic_versions.input and
 # basic_versions.output files for commands and expected results.
 
-. $(dirname $0)/functions
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
 
 BV_LOGFILE=basic_versions.rlog
 BV_TLFILE="_${BV_LOGFILE}"
@@ -22,18 +23,18 @@ for socket in ${RTPP_TEST_SOCKETS}
 do
   if [ "${socket}" = "stdio:" ]
   then
-    ${RTPPROXY} -f -s "${socket}" < $BASEDIR/basic_versions.input 2>>${BV_LOGFILE} | \
-      ${DIFF} ${BASEDIR}/basic_versions.output -
+    ${RTPPROXY} -f -s "${socket}" < $BASEDIR/basic_versions/basic_versions.input 2>>${BV_LOGFILE} | \
+      ${DIFF} ${BASEDIR}/basic_versions/basic_versions.output -
     report "basic_versions on ${socket}"
   else
     RTPP_SOCKFILE="${socket}" RTPP_OUTFILE="basic_versions.rout" RTPP_LOGFILE="${BV_TLFILE}" rtpproxy_start
     report "rtpproxy start on ${socket}"
     ${RTPP_QUERY} -b -s "${socket}" \
-      -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions.input -o basic_versions.qout
+      -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions/basic_versions.input -o basic_versions.qout
     report "rtpp_query on ${socket}"
     rtpproxy_stop HUP
     report "rtpproxy stop (SIGHUP) on ${socket}"
-    cat basic_versions.qout basic_versions.rout | ${DIFF} ${BASEDIR}/basic_versions.output -
+    cat basic_versions.qout basic_versions.rout | ${DIFF} ${BASEDIR}/basic_versions/basic_versions.output -
     report "basic_versions on ${socket}"
     cat ${BV_TLFILE} >>${BV_LOGFILE}
     rm ${BV_TLFILE}
