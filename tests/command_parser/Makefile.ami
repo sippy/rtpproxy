@@ -1,0 +1,6 @@
+command_parser_EXTRA_DIST = command_parser
+command_parser_CLEANFILES = command_parser.rout W3.IT2Nl*.rtcp W3.IT2Nl*.rtp \
+  command_parser.rlog
+TESTS += command_parser/command_parser1
+CLEANFILES += ${command_parser_CLEANFILES}
+EXTRA_DIST += ${command_parser_EXTRA_DIST}

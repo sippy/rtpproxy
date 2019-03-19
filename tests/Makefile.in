@@ -326,6 +326,7 @@ TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
 	$(TEST_LOG_FLAGS)
 am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(srcdir)/basic_versions/Makefile.ami \
+	$(srcdir)/command_parser/Makefile.ami \
 	$(srcdir)/memdeb/Makefile.ami $(srcdir)/startstop/Makefile.ami \
 	$(top_srcdir)/test-driver
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -460,31 +461,31 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 startstop_EXTRA_DIST = startstop
 startstop_CLEANFILES = startstop.rout startstop.rlog
-TESTS = startstop/startstop1 basic_versions/basic_versions1 \
-	memdeb/glitch1 command_parser makeann extractaudio1 \
-	session_timeouts playback1 forwarding1 rtp_analyze1 rtcp2json1 \
-	libucl1 libexecinfo1
-CLEANFILES = ${startstop_CLEANFILES} ${basic_versions_CLEANFILES} \
-	${memdeb_CLEANFILES} ringback.0 ringback.3 ringback.8 \
-	ringback.18 ringback.9 ${extractaudio_CLEANFILES} \
-	${playback1_CLEANFILES} ${forwarding1_CLEANFILES} \
-	${session_timeouts_CLEANFILES} ${command_parser_CLEANFILES} \
+TESTS = startstop/startstop1 memdeb/glitch1 \
+	basic_versions/basic_versions1 command_parser/command_parser1 \
+	makeann extractaudio1 session_timeouts playback1 forwarding1 \
+	rtp_analyze1 rtcp2json1 libucl1 libexecinfo1
+CLEANFILES = ${startstop_CLEANFILES} ${memdeb_CLEANFILES} \
+	${basic_versions_CLEANFILES} ${command_parser_CLEANFILES} \
+	ringback.0 ringback.3 ringback.8 ringback.18 ringback.9 \
+	${extractaudio_CLEANFILES} ${playback1_CLEANFILES} \
+	${forwarding1_CLEANFILES} ${session_timeouts_CLEANFILES} \
 	${rtp_analyze1_CLEANFILES} ${rtcp2json1_CLEANFILES} \
 	${libucl1_CLEANFILES} *.core
-EXTRA_DIST = ${startstop_EXTRA_DIST} ${basic_versions_EXTRA_DIST} \
-	${memdeb_EXTRA_DIST} Makefile.am ${command_parser_EXTRA_DIST} \
-	ringback.sln makeann makeann.output ${extractaudio_EXTRA_DIST} \
-	${playback1_EXTRA_DIST} ${forwarding1_EXTRA_DIST} \
-	${session_timeouts_EXTRA_DIST} ${rtp_analyze1_EXTRA_DIST} \
-	${rtcp2json1_EXTRA_DIST} ${libucl1_EXTRA_DIST} \
-	${libexecinfo1_EXTRA_DIST}
+EXTRA_DIST = ${startstop_EXTRA_DIST} ${memdeb_EXTRA_DIST} \
+	${basic_versions_EXTRA_DIST} ${command_parser_EXTRA_DIST} \
+	Makefile.am ringback.sln makeann makeann.output \
+	${extractaudio_EXTRA_DIST} ${playback1_EXTRA_DIST} \
+	${forwarding1_EXTRA_DIST} ${session_timeouts_EXTRA_DIST} \
+	${rtp_analyze1_EXTRA_DIST} ${rtcp2json1_EXTRA_DIST} \
+	${libucl1_EXTRA_DIST} ${libexecinfo1_EXTRA_DIST}
+memdeb_EXTRA_DIST = memdeb
+memdeb_CLEANFILES = glitch1.ncout
 basic_versions_EXTRA_DIST = basic_versions
 basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
   basic_versions.rlog _basic_versions.rlog
 
-memdeb_EXTRA_DIST = memdeb
-memdeb_CLEANFILES = glitch1.ncout
-command_parser_EXTRA_DIST = command_parser command_parser.input command_parser.output
+command_parser_EXTRA_DIST = command_parser
 command_parser_CLEANFILES = command_parser.rout W3.IT2Nl*.rtcp W3.IT2Nl*.rtp \
   command_parser.rlog
 
@@ -539,7 +540,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .log .test .test$(EXEEXT) .trs
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -559,7 +560,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(am__empty):
+$(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -730,13 +731,6 @@ startstop/startstop1.log: startstop/startstop1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-basic_versions/basic_versions1.log: basic_versions/basic_versions1
-	@p='basic_versions/basic_versions1'; \
-	b='basic_versions/basic_versions1'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
 memdeb/glitch1.log: memdeb/glitch1
 	@p='memdeb/glitch1'; \
 	b='memdeb/glitch1'; \
@@ -744,9 +738,16 @@ memdeb/glitch1.log: memdeb/glitch1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-command_parser.log: command_parser
-	@p='command_parser'; \
-	b='command_parser'; \
+basic_versions/basic_versions1.log: basic_versions/basic_versions1
+	@p='basic_versions/basic_versions1'; \
+	b='basic_versions/basic_versions1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+command_parser/command_parser1.log: command_parser/command_parser1
+	@p='command_parser/command_parser1'; \
+	b='command_parser/command_parser1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
