@@ -8,24 +8,22 @@ include $(srcdir)/session_timeouts/Makefile.ami
 include $(srcdir)/forwarding/Makefile.ami
 include $(srcdir)/playback/Makefile.ami
 include $(srcdir)/rtp_analyze/Makefile.ami
+include $(srcdir)/rtcp2json/Makefile.ami
 
-TESTS += rtcp2json1 libucl1 \
+TESTS += libucl1 \
   libexecinfo1
-rtcp2json1_EXTRA_DIST = rtcp2json1 rtcp2json
-rtcp2json1_CLEANFILES = rtcp1.output
 libucl1_EXTRA_DIST = libucl1 libucl
 libucl1_CLEANFILES = libucl_test.output
 libexecinfo1_EXTRA_DIST = libexecinfo1
 EXTRA_DIST += Makefile.am \
     ringback.sln \
-    ${rtcp2json1_EXTRA_DIST} \
     ${libucl1_EXTRA_DIST} ${libexecinfo1_EXTRA_DIST}
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
-CLEANFILES += ${rtcp2json1_CLEANFILES} ${libucl1_CLEANFILES} *.core
+CLEANFILES += ${libucl1_CLEANFILES} *.core
 
 list_tests:
 	@echo ${TESTS}

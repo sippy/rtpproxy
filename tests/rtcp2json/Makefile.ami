@@ -1,0 +1,5 @@
+rtcp2json_EXTRA_DIST = rtcp2json
+rtcp2json_CLEANFILES = rtcp1.output
+TESTS += rtcp2json/rtcp2json1
+CLEANFILES += ${rtcp2json_CLEANFILES}
+EXTRA_DIST += ${rtcp2json_EXTRA_DIST}
