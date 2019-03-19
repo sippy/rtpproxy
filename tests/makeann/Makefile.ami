@@ -1,0 +1,5 @@
+makeann_EXTRA_DIST = makeann
+makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
+TESTS += makeann/makeann1
+CLEANFILES += ${makeann_CLEANFILES}
+EXTRA_DIST += ${makeann_EXTRA_DIST}

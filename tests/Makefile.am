@@ -2,8 +2,9 @@ include $(srcdir)/startstop/Makefile.ami
 include $(srcdir)/memdeb/Makefile.ami
 include $(srcdir)/basic_versions/Makefile.ami
 include $(srcdir)/command_parser/Makefile.ami
+include $(srcdir)/makeann/Makefile.ami
 
-TESTS += makeann extractaudio1 \
+TESTS += extractaudio1 \
   session_timeouts playback1 forwarding1 rtp_analyze1 rtcp2json1 libucl1 \
   libexecinfo1
 extractaudio_EXTRA_DIST = extractaudio extractaudio1
@@ -41,7 +42,7 @@ libucl1_EXTRA_DIST = libucl1 libucl
 libucl1_CLEANFILES = libucl_test.output
 libexecinfo1_EXTRA_DIST = libexecinfo1
 EXTRA_DIST += Makefile.am \
-    ringback.sln makeann makeann.output \
+    ringback.sln \
     ${extractaudio_EXTRA_DIST} ${playback1_EXTRA_DIST} \
     ${forwarding1_EXTRA_DIST} ${session_timeouts_EXTRA_DIST} \
     ${rtp_analyze1_EXTRA_DIST} ${rtcp2json1_EXTRA_DIST} \
@@ -51,7 +52,7 @@ TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
-CLEANFILES += ringback.0 ringback.3 ringback.8 ringback.18 ringback.9 \
+CLEANFILES += \
   ${extractaudio_CLEANFILES} ${playback1_CLEANFILES} ${forwarding1_CLEANFILES} \
   ${session_timeouts_CLEANFILES} \
   ${rtp_analyze1_CLEANFILES} ${rtcp2json1_CLEANFILES} ${libucl1_CLEANFILES} *.core
