@@ -2,7 +2,8 @@
 
 # checksum tests to verify that rtp_analyze routines work correctly
 
-. $(dirname $0)/functions
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
 
 SNAMES="sess6 c1 weird dups lost srtp1 alice_to_bob alice_to_bob_out"
 
