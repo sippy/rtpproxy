@@ -40,6 +40,8 @@ rtpp_glitch()
     reportifnotfail "glitch rtpproxy using ${1}, action ${2}"
 }
 
+disable_aslr
+
 spin_nc
 export MEMDEB_GLITCH_TRIG="*"
 export MEMDEB_GLITCH_ACT="r"
