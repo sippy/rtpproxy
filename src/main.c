@@ -100,6 +100,7 @@
 #include "rtpp_weakref.h"
 #include "rtpp_debug.h"
 #ifdef RTPP_CHECK_LEAKS
+#include "libexecinfo/execinfo.h"
 #include "rtpp_memdeb_internal.h"
 #endif
 #if RTPP_DEBUG_catchtrace
@@ -749,6 +750,12 @@ main(int argc, char **argv)
     struct rtpp_module_if *mif;
 
 #ifdef RTPP_CHECK_LEAKS
+    void *topframe = NULL;
+
+    assert(backtrace(&topframe, 1) == 1);
+    assert(topframe != NULL);
+    assert(execinfo_set_topframe(topframe) == NULL);
+
     RTPP_MEMDEB_INIT(rtpproxy);
 #endif
     if (getdtime() == -1) {
@@ -975,12 +982,6 @@ main(int argc, char **argv)
     signal(SIGUSR1, fatsignal);
     signal(SIGUSR2, fatsignal);
 #if RTPP_DEBUG_catchtrace
-    void *topframe = NULL;
-
-    assert(backtrace(&topframe, 1) == 1);
-    assert(topframe != NULL);
-    assert(execinfo_set_topframe(topframe) == NULL);
-
     signal(SIGQUIT, rtpp_stacktrace);
     signal(SIGILL, rtpp_stacktrace);
     signal(SIGTRAP, rtpp_stacktrace);
