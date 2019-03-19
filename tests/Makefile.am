@@ -1,16 +1,16 @@
 include $(srcdir)/startstop/Makefile.ami
 include $(srcdir)/memdeb/Makefile.ami
+include $(srcdir)/libucl/Makefile.ami
+include $(srcdir)/libexecinfo/Makefile.ami
 include $(srcdir)/basic_versions/Makefile.ami
 include $(srcdir)/command_parser/Makefile.ami
 include $(srcdir)/makeann/Makefile.ami
 include $(srcdir)/extractaudio/Makefile.ami
 include $(srcdir)/session_timeouts/Makefile.ami
-include $(srcdir)/forwarding/Makefile.ami
 include $(srcdir)/playback/Makefile.ami
+include $(srcdir)/forwarding/Makefile.ami
 include $(srcdir)/rtp_analyze/Makefile.ami
 include $(srcdir)/rtcp2json/Makefile.ami
-include $(srcdir)/libucl/Makefile.ami
-include $(srcdir)/libexecinfo/Makefile.ami
 
 EXTRA_DIST += Makefile.am ringback.sln
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
