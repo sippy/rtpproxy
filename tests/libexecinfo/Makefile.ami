@@ -1,0 +1,5 @@
+libexecinfo_EXTRA_DIST = libexecinfo
+libexecinfo_CLEANFILES =
+TESTS += libexecinfo/libexecinfo1
+CLEANFILES += ${libexecinfo_CLEANFILES}
+EXTRA_DIST += ${libexecinfo_EXTRA_DIST}

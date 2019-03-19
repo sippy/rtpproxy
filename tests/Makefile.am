@@ -10,12 +10,9 @@ include $(srcdir)/playback/Makefile.ami
 include $(srcdir)/rtp_analyze/Makefile.ami
 include $(srcdir)/rtcp2json/Makefile.ami
 include $(srcdir)/libucl/Makefile.ami
+include $(srcdir)/libexecinfo/Makefile.ami
 
-TESTS += libexecinfo1
-libexecinfo1_EXTRA_DIST = libexecinfo1
-EXTRA_DIST += Makefile.am \
-    ringback.sln \
-    ${libexecinfo1_EXTRA_DIST}
+EXTRA_DIST += Makefile.am ringback.sln
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
