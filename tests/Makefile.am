@@ -9,21 +9,19 @@ include $(srcdir)/forwarding/Makefile.ami
 include $(srcdir)/playback/Makefile.ami
 include $(srcdir)/rtp_analyze/Makefile.ami
 include $(srcdir)/rtcp2json/Makefile.ami
+include $(srcdir)/libucl/Makefile.ami
 
-TESTS += libucl1 \
-  libexecinfo1
-libucl1_EXTRA_DIST = libucl1 libucl
-libucl1_CLEANFILES = libucl_test.output
+TESTS += libexecinfo1
 libexecinfo1_EXTRA_DIST = libexecinfo1
 EXTRA_DIST += Makefile.am \
     ringback.sln \
-    ${libucl1_EXTRA_DIST} ${libexecinfo1_EXTRA_DIST}
+    ${libexecinfo1_EXTRA_DIST}
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
-CLEANFILES += ${libucl1_CLEANFILES} *.core
+CLEANFILES += *.core
 
 list_tests:
 	@echo ${TESTS}

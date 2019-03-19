@@ -1,6 +1,7 @@
 #!/bin/sh
 
-. $(dirname $0)/functions
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
 
 TESTDDIR="${BASEDIR}/libucl"
 

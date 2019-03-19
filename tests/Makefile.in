@@ -329,8 +329,8 @@ am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(srcdir)/command_parser/Makefile.ami \
 	$(srcdir)/extractaudio/Makefile.ami \
 	$(srcdir)/forwarding/Makefile.ami \
-	$(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami \
-	$(srcdir)/playback/Makefile.ami \
+	$(srcdir)/libucl/Makefile.ami $(srcdir)/makeann/Makefile.ami \
+	$(srcdir)/memdeb/Makefile.ami $(srcdir)/playback/Makefile.ami \
 	$(srcdir)/rtcp2json/Makefile.ami \
 	$(srcdir)/rtp_analyze/Makefile.ami \
 	$(srcdir)/session_timeouts/Makefile.ami \
@@ -472,20 +472,20 @@ TESTS = startstop/startstop1 memdeb/glitch1 \
 	makeann/makeann1 extractaudio/extractaudio1 \
 	session_timeouts/session_timeouts1 forwarding/forwarding1 \
 	playback/playback1 rtp_analyze/rtp_analyze1 \
-	rtcp2json/rtcp2json1 libucl1 libexecinfo1
+	rtcp2json/rtcp2json1 libucl/libucl1 libexecinfo1
 CLEANFILES = ${startstop_CLEANFILES} ${memdeb_CLEANFILES} \
 	${basic_versions_CLEANFILES} ${command_parser_CLEANFILES} \
 	${makeann_CLEANFILES} ${extractaudio_CLEANFILES} \
 	${session_timeouts_CLEANFILES} ${forwarding_CLEANFILES} \
 	${playback_CLEANFILES} ${rtp_analyze_CLEANFILES} \
-	${rtcp2json_CLEANFILES} ${libucl1_CLEANFILES} *.core
+	${rtcp2json_CLEANFILES} ${libucl_CLEANFILES} *.core
 EXTRA_DIST = ${startstop_EXTRA_DIST} ${memdeb_EXTRA_DIST} \
 	${basic_versions_EXTRA_DIST} ${command_parser_EXTRA_DIST} \
 	${makeann_EXTRA_DIST} ${extractaudio_EXTRA_DIST} \
 	${session_timeouts_EXTRA_DIST} ${forwarding_EXTRA_DIST} \
 	${playback_EXTRA_DIST} ${rtp_analyze_EXTRA_DIST} \
-	${rtcp2json_EXTRA_DIST} Makefile.am ringback.sln \
-	${libucl1_EXTRA_DIST} ${libexecinfo1_EXTRA_DIST}
+	${rtcp2json_EXTRA_DIST} ${libucl_EXTRA_DIST} Makefile.am \
+	ringback.sln ${libexecinfo1_EXTRA_DIST}
 memdeb_EXTRA_DIST = memdeb
 memdeb_CLEANFILES = glitch1.ncout
 basic_versions_EXTRA_DIST = basic_versions
@@ -525,8 +525,8 @@ rtp_analyze_EXTRA_DIST = rtp_analyze
 rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
 rtcp2json_EXTRA_DIST = rtcp2json
 rtcp2json_CLEANFILES = rtcp1.output
-libucl1_EXTRA_DIST = libucl1 libucl
-libucl1_CLEANFILES = libucl_test.output
+libucl_EXTRA_DIST = libucl
+libucl_CLEANFILES = libucl_test.output
 libexecinfo1_EXTRA_DIST = libexecinfo1
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
@@ -538,7 +538,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .log .test .test$(EXEEXT) .trs
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/rtcp2json/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/rtcp2json/Makefile.ami $(srcdir)/libucl/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -558,7 +558,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/rtcp2json/Makefile.ami $(am__empty):
+$(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/rtcp2json/Makefile.ami $(srcdir)/libucl/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -799,9 +799,9 @@ rtcp2json/rtcp2json1.log: rtcp2json/rtcp2json1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-libucl1.log: libucl1
-	@p='libucl1'; \
-	b='libucl1'; \
+libucl/libucl1.log: libucl/libucl1
+	@p='libucl/libucl1'; \
+	b='libucl/libucl1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
