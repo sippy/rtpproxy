@@ -43,6 +43,15 @@ rtpp_gen_uid_init(void)
 }
 
 void
+rtpp_gen_uid_free(void)
+{
+
+    if (gup != NULL) {
+        CALL_METHOD(gup, dtor);
+    }
+}
+
+void
 rtpp_gen_uid(uint64_t *uip)
 {
 
