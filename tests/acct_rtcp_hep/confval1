@@ -3,7 +3,7 @@
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
-for i in 1 2 3 4 5
+for i in 1 2 3 4 5 6
 do
   cfile="acct_rtcp_hep/broken${i}.conf"
   ${RTPPROXY} -f --config ${cfile} -s stdio: < /dev/null

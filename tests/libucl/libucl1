@@ -12,3 +12,9 @@ report "running libucl_test"
 ${DIFF} ${BASEDIR}/${TOUT} ${TESTDDIR}/${TOUT}
 report "checking ${TOUT}"
 
+for i in 1 2 3 4 5 6 none "some nonsense"
+do
+  cfile="acct_rtcp_hep/broken${i}.conf"
+  ${TOP_BUILDDIR}/libucl/libucl_test ${cfile}
+  reportifnotfail "configuration validation"
+done
