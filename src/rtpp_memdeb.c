@@ -546,6 +546,20 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
     pthread_mutex_lock(&pvt->mutex);
     for (mnp = pvt->nodes; mnp != NULL; mnp = mnp->next) {
         nunalloc = mnp->mstats.nalloc - mnp->mstats.nfree;
+        /*
+         * A bit of hackish code below to compensate for logging object
+         * which we (obviously) cannot deallocate prior to call to this
+         * function.
+         */
+        if (pvt->_md_glog != NULL) {
+            struct memdeb_loc ml;
+
+            ml.fname = __FILE__;
+            ml.linen = __LINE__;
+            ml.funcn = __func__;
+            if (ptr2mpf(pvt, pvt->_md_glog, &ml)->mnp == mnp && nunalloc > 0)
+                nunalloc--;
+        }
         if (mnp->mstats.afails == 0) {
             if (mnp->mstats.nalloc == 0)
                 continue;
