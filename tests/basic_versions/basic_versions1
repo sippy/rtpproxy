@@ -11,6 +11,10 @@ BV_TLFILE="_${BV_LOGFILE}"
 
 __beforeexit_cleanup()
 {
+  if [ ! -z "${TMP_PIDFILE}" ]
+  then
+    rtpproxy_stop TERM
+  fi
   if [ -f ${BV_TLFILE} ]
   then
     cat ${BV_TLFILE} >>${BV_LOGFILE}
