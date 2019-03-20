@@ -85,14 +85,6 @@ struct rtpp_minfo rtpp_module = {
     .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
-void
-handler(int param)
-{
-    mod_log(RTPP_LOG_ERR, "rtpp_acct_rtcp_hep: handler(%d)", param);
-
-    return;
-}
-
 static struct rtpp_module_priv *
 rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *cfsp)
 {
