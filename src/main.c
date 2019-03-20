@@ -74,6 +74,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
+#include "rtpp_command.h"
 #include "rtpp_controlfd.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
@@ -148,11 +149,21 @@ rtpp_exit(int memdeb, int rval)
     if (memdeb) {
         ecode = rtpp_memdeb_dumpstats(_rtpproxy_memdeb, 0) == 0 ? 0 : 1;
     }
+#endif
+    exit(rval == 0 ? ecode : rval);
+}
+
+static void
+rtpp_glog_fin(void)
+{
+
+    CALL_SMETHOD(_sig_cf->stable->glog->rcnt, decref);
+#ifdef RTPP_CHECK_LEAKS
+    RTPP_MEMDEB_FIN(rtpproxy);
 #ifdef RTPP_MEMDEB_STDOUT
     fclose(stdout);
 #endif
 #endif
-    exit(rval == 0 ? ecode : rval);
 }
 
 static void
@@ -186,20 +197,12 @@ static void
 ehandler(void)
 {
 
-#ifdef MP_MPATROL_H
-    __mp_leaktable(0, MP_LT_UNFREED, 0);
-#endif
-
 #if RTPP_DEBUG_catchtrace 
     rtpp_stacktrace_print("Exiting from: ehandler()");
 #endif
     rtpp_controlfd_cleanup(_sig_cf);
     unlink(_sig_cf->stable->pid_file);
     RTPP_LOG(_sig_cf->stable->glog, RTPP_LOG_INFO, "rtpproxy ended");
-    CALL_SMETHOD(_sig_cf->stable->glog->rcnt, decref);
-#ifdef RTPP_CHECK_LEAKS
-    RTPP_MEMDEB_FIN(rtpproxy);
-#endif
 }
 
 long long
@@ -228,12 +231,18 @@ static void
 init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int memdeb)
 {
     struct rtpp_module_if *mif;
+    struct rtpp_ctrl_sock *ctrl_sock;
 
     if (msg != NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s", msg);
     }
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     free(cfsp->nofile_limit);
+
+    for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
+      ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
+        free(ctrl_sock);
+    }
     free(cfsp->ctrl_socks);
 #if ENABLE_MODULE_IF
     for (mif = RTPP_LIST_HEAD(cfsp->modules_cf); mif != NULL; mif = RTPP_ITER_NEXT(mif)) {
@@ -241,7 +250,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
     }
 #endif
     free(cfsp->modules_cf);
-    CALL_SMETHOD(cfsp->glog->rcnt, decref);
+    rtpp_gen_uid_free();
     free(cfsp);
     rtpp_exit(memdeb, rval);
 }
@@ -805,6 +814,9 @@ main(int argc, char **argv)
     rtpp_memdeb_setlog(_rtpproxy_memdeb, cf.stable->glog);
  #endif
 
+    _sig_cf = &cf;
+    atexit(rtpp_glog_fin);
+
     init_config(&cf, argc, argv);
 
     cf.stable->sessions_ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, 0);
@@ -876,7 +888,6 @@ main(int argc, char **argv)
         err(1, "rtpproxy has failed to initialize logging facilities");
     }
 
-    _sig_cf = &cf;
     atexit(ehandler);
     RTPP_LOG(cf.stable->glog, RTPP_LOG_INFO, "rtpproxy started, pid %d", getpid());
 
