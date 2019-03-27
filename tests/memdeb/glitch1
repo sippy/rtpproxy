@@ -63,7 +63,7 @@ SCOOK="`awk '{print $2}' glitch1.ncout | tail -n 45 | head -n 2`"
 test -z "${SCOOK}"
 reportifnotfail "Extracting stack cookie at [-45]"
 
-for trig in "s0" "${STRIG}" "${SCOOK}" "*"
+for trig in "s0" "${STRIG}" "${SCOOK}" "${SCOOK}:*" "*"
 do
   spin_nc
   for act in "a" "e" "rg"
