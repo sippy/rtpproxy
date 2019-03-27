@@ -29,6 +29,7 @@ struct memdeb_loc;
 
 struct _glav_trig {
     atomic_intmax_t step;
+    atomic_intmax_t hits;
     uintptr_t stack;
     int wild;
     char act[16];
@@ -73,17 +74,21 @@ void rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *);
 
 #define TRIG_CHCK1() (step == -1 || _glav_trig.wild != 0 || _glav_trig.stack != 0)
 #define TRIG_CHCK2() (_glav_trig.stack == 0 || stack_cook == _glav_trig.stack)
+#define TRIG_CHCK3() (_glav_trig.stack == 0 || (nhit == 0 || _glav_trig.wild != 0))
 
 #define GLITCH_INJECT1() { \
     intmax_t step = atomic_fetch_add(&_glav_trig.step, 1); \
     if (TRIG_CHCK1()) { \
         uintptr_t stack_cook =  getstackcookie(); \
         if (TRIG_CHCK2()) { \
-            int _do_glitch = 0; \
-            GLITCH_ACTION(); \
-            if (_do_glitch) { \
-                errno = ENOMEM; \
-               return (NULL); \
+            intmax_t nhit = atomic_fetch_add(&_glav_trig.hits, 1); \
+            if (TRIG_CHCK3()) { \
+                int _do_glitch = 0; \
+                GLITCH_ACTION(); \
+                if (_do_glitch) { \
+                    errno = ENOMEM; \
+                   return (NULL); \
+                } \
             } \
         } \
     } \
@@ -94,16 +99,19 @@ void rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *);
     if (TRIG_CHCK1()) { \
         uintptr_t stack_cook =  getstackcookie(); \
         if (TRIG_CHCK2()) { \
-            int _do_glitch = 0; \
-            struct memdeb_loc ml; \
-            ml.fname = fname; \
-            ml.linen = linen; \
-            ml.funcn = funcn; \
-            GLITCH_ACTION(); \
-            if (_do_glitch) { \
-                *(pp) = NULL; \
-                errno = ENOMEM; \
-                return (-1); \
+            intmax_t nhit = atomic_fetch_add(&_glav_trig.hits, 1); \
+            if (TRIG_CHCK3()) { \
+                int _do_glitch = 0; \
+                struct memdeb_loc ml; \
+                ml.fname = fname; \
+                ml.linen = linen; \
+                ml.funcn = funcn; \
+                GLITCH_ACTION(); \
+                if (_do_glitch) { \
+                    *(pp) = NULL; \
+                    errno = ENOMEM; \
+                    return (-1); \
+                } \
             } \
         } \
     } \

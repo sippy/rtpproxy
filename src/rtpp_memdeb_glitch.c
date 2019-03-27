@@ -45,6 +45,12 @@ struct _glav_trig _glav_trig = {.wild = 0, .stack = 0};
 #define MDG_ACT_ENAME "MEMDEB_GLITCH_ACT"
 #define MDG_CH_PORT "MEMDEB_GLITCH_CH_PORT"
 
+enum {
+  TRIG_STEP = 's',
+  TRIG_WC = '*',
+  TRIG_COOK = 'c'
+};
+
 struct mg_data {
     int _glav_orig;
     int mysocket;
@@ -62,8 +68,6 @@ rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *mlp)
      mgd._glav_orig + step + 1, hash, mlp->funcn, mlp->fname, mlp->linen);
    assert(send(mgd.mysocket, buffer, len, 0) == len);
 }
-
-enum {TRIG_STEP = 's', TRIG_WC = '*', TRIG_COOK = 'c'};
 
 void
 rtpp_memdeb_glitch_init()
@@ -88,6 +92,10 @@ rtpp_memdeb_glitch_init()
         case TRIG_COOK:
             u = 0;
             glav += 1;
+            cp = strchr(glav, ':');
+            if (cp != NULL && cp[1] == TRIG_WC) {
+                _glav_trig.wild = 1;
+            }
             assert(sscanf(glav, "%" SCNu64 "\n", &u) == 1);
             assert(u != 0);
             _glav_trig.stack = u;
@@ -98,6 +106,7 @@ rtpp_memdeb_glitch_init()
 
         assert(unsetenv(MDG_ENAME) == 0);
         atomic_init(&_glav_trig.step, -(iglav + 1));
+        atomic_init(&_glav_trig.hits, 0);
         mgd._glav_orig = iglav;
 
         int do_report = 0;
