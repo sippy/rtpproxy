@@ -55,7 +55,6 @@
 #if !defined(NO_ERR_H)
 #include <err.h>
 #endif
-#include "rtpp_util.h"
 
 #ifdef HAVE_SYSTEMD_DAEMON
 #include <systemd/sd-daemon.h>
