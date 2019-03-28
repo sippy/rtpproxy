@@ -60,6 +60,7 @@
 #include "rtpp_command_stats.h"
 #include "rtpp_command_ul.h"
 #include "rtpp_command_ver.h"
+#include "rtpp_controlfd.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_netio_async.h"
@@ -271,29 +272,35 @@ rtpp_command_ctor(struct cfg *cf, int controlfd, double dtime,
 }
 
 struct rtpp_command *
-get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
-  struct rtpp_command_stats *csp, int umode,
-  struct rtpp_cmd_rcache *rcache_obj)
+get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rval,
+  double dtime, struct rtpp_command_stats *csp, struct rtpp_cmd_rcache *rcache_obj)
 {
     char **ap;
-    char *cp;
+    char *cp, *bp;
     int len, i;
     struct rtpp_command *cmd;
     struct rtpp_command_priv *pvt;
+    int umode = RTPP_CTRL_ISDG(rcsp);
+    size_t bsize;
+    socklen_t asize, *lp;
+    struct sockaddr *raddr;
 
     cmd = rtpp_command_ctor(cf, controlfd, dtime, csp, umode);
     if (cmd == NULL) {
-        *rval = GET_CMD_ENOMEM;
-        return (NULL);
+        bp = rcsp->emrg.buf;
+        bsize = sizeof(rcsp->emrg.buf);
+    } else {
+        bp = cmd->buf;
+        bsize = sizeof(cmd->buf);
     }
-    pvt = PUB2PVT(cmd);
     if (umode == 0) {
         for (;;) {
-            len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
+            len = read(controlfd, bp, bsize - 1);
             if (len == 0) {
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG,
                   "EOF before receiving any command data");
-                free_command(cmd);
+                if (cmd != NULL)
+                    free_command(cmd);
                 *rval = GET_CMD_EOF;
                 return (NULL);
             }
@@ -301,15 +308,29 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
                 break;
         }
     } else {
-        cmd->rlen = sizeof(cmd->raddr);
-        len = recvfrom(controlfd, cmd->buf, sizeof(cmd->buf) - 1, 0,
-          sstosa(&cmd->raddr), &cmd->rlen);
+        if (cmd == NULL) {
+            asize = sizeof(rcsp->emrg.addr);
+            lp = &asize;
+            raddr = sstosa(&rcsp->emrg.addr);
+        } else {
+            cmd->rlen = sizeof(cmd->raddr);
+            lp = &cmd->rlen;
+            raddr = sstosa(&cmd->raddr);
+        }
+        len = recvfrom(controlfd, bp, bsize - 1, 0, raddr, lp);
     }
     if (len == -1) {
         if (errno != EAGAIN && errno != EINTR)
             RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't read from control socket");
-        free_command(cmd);
+        if (cmd != NULL)
+            free_command(cmd);
         *rval = GET_CMD_IOERR;
+        return (NULL);
+    }
+    if (cmd == NULL) {
+        *rval = GET_CMD_ENOMEM;
+        csp->ncmds_rcvd.cnt++;
+        csp->ncmds_errs.cnt++;
         return (NULL);
     }
     cmd->buf[len] = '\0';
@@ -341,6 +362,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
 
     /* Stream communication mode doesn't use cookie */
     if (umode != 0) {
+        pvt = PUB2PVT(cmd);
         pvt->cookie = cmd->argv[0];
         if (CALL_METHOD(rcache_obj, lookup, pvt->cookie, pvt->buf_r, sizeof(pvt->buf_r)) == 1) {
             len = strlen(pvt->buf_r);

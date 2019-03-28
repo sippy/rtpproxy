@@ -43,6 +43,7 @@
 #include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
 #include "rtpp_analyzer.h"
+#include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"

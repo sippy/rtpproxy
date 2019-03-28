@@ -36,6 +36,7 @@ struct cfg_stable;
 struct sockaddr;
 struct rtpp_cmd_rcache;
 struct rtpp_socket;
+struct rtpp_ctrl_sock;
 
 #define GET_CMD_OK     (0)
 #define GET_CMD_IOERR  (-1)
@@ -45,11 +46,12 @@ struct rtpp_socket;
 #define GET_CMD_INVAL (-5)
 
 #define IS_WEIRD_ERRNO(e) ((e) == EINTR || (e) == EAGAIN || (e) == ENOBUFS)
+#define RTPP_CMD_BUFLEN (8 * 1024)
 
 int handle_command(struct cfg *, struct rtpp_command *);
 void free_command(struct rtpp_command *);
-struct rtpp_command *get_command(struct cfg *, int, int *, double,
-  struct rtpp_command_stats *csp, int umode, struct rtpp_cmd_rcache *);
+struct rtpp_command *get_command(struct cfg *, struct rtpp_ctrl_sock *, int, int *, double,
+  struct rtpp_command_stats *csp, struct rtpp_cmd_rcache *);
 void reply_error(struct rtpp_command *cmd, int ecode);
 void reply_ok(struct rtpp_command *cmd);
 void reply_port(struct rtpp_command *cmd, int lport,

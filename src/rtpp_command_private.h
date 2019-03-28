@@ -70,7 +70,7 @@ struct common_cmd_args {
 
 struct rtpp_command
 {
-    char buf[1024 * 8];
+    char buf[RTPP_CMD_BUFLEN];
     char buf_t[256];
     char *argv[RTPC_MAX_ARGC];
     int argc;

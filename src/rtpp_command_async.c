@@ -181,18 +181,20 @@ process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, do
     umode = RTPP_CTRL_ISDG(csock);
     i = 0;
     do {
-        cmd = get_command(cf, controlfd, &rval, dtime, csp, umode, rcp);
+again:
+        cmd = get_command(cf, csock, controlfd, &rval, dtime, csp, rcp);
         if (cmd == NULL) {
-            if (rval == GET_CMD_OK) {
+            switch (rval) {
+            case GET_CMD_OK:
+            case GET_CMD_ENOMEM:
                 /*
                  * get_command() failed with error other than I/O error
                  * or something, there might be some good commands in
                  * the queue.
                  */
-                continue;
-            }
-            if (rval == GET_CMD_EOF) {
-                break;
+                goto again;
+            case GET_CMD_EOF:
+                goto out;
             }
             i = -1;
         } else {
@@ -210,6 +212,7 @@ process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, do
             free_command(cmd);
         }
     } while (i == 0 && umode != 0);
+out:
     return (i);
 }
 

@@ -48,6 +48,7 @@
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
 #include "rtp_resizer.h"
+#include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtp_info.h"
