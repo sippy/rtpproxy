@@ -50,9 +50,6 @@
 #include "rtpp_command_private.h"
 #include "rtpp_command_rcache.h"
 #include "rtpp_command_stream.h"
-#if 0
-#include "rtpp_math.h"
-#endif
 #include "rtpp_network.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_mallocs.h"
