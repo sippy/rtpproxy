@@ -42,9 +42,6 @@
 
 #if !defined(NO_ERR_H)
 #include <err.h>
-#include "rtpp_util.h"
-#else
-#include "rtpp_util.h"
 #endif
 
 #include "rtpp_network.h"
