@@ -238,7 +238,7 @@ includepolice:
 	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
 	   set +e; set +x; \
 	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
-            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src" \
+            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src:$(top_srcdir)" \
 	    python ../misc/includepolice.py $${file} > $(IPLDIR)/$${file}.txt; \
 	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
 	   if [ $${RC} -eq 0 ]; then \
