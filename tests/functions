@@ -19,7 +19,7 @@ PYINT=${PYINT:-"python3"}
 
 RTPPROXY=${TOP_BUILDDIR}/src/rtpproxy_debug
 RTPP_QUERY="${PYINT} ${SIPPY_DIR}/sippy/tools/rtpp_query.py -n 1"
-RTPP_NOTYFY_CLIENT="${PYINT} ${TOP_BUILDDIR}/python/rtpp_notify_client.py"
+RTPP_NOTYFY_CLIENT="${PYINT} ${TOP_BUILDDIR}/python/rtpp_notify_client.py -S ${TOP_BUILDDIR}/python/sippy_lite"
 
 setup_tstart() {
   RTPP_MCLOCK_NAME="`MEMDEB_GLITCH_AFTER=-1 ${RTPPROXY} -C 2>/dev/null`"
