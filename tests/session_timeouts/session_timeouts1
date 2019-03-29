@@ -138,8 +138,7 @@ do
   else
     client_notify_sock="${notify_sock}"
   fi
-  ${RTPP_NOTYFY_CLIENT} -s ${client_notify_sock} \
-   -S "${TOP_BUILDDIR}/python/sippy_lite" -o session_timeouts.tlog -t 165&
+  ${RTPP_NOTYFY_CLIENT} -s ${client_notify_sock} -o session_timeouts.tlog -t 165&
   RTPP_NC_RC=${?}
   RTPP_NC_PID=${!}
   report_rc ${RTPP_NC_RC} "Starting rtpp_notify_client.py on ${client_notify_sock}"
@@ -236,7 +235,7 @@ do
       do
         eval "RTPQ_PID=\${RTPQ${i}_PID}"
         wait ${RTPQ_PID}
-        report "wait for rtpp_query.py #${j}.${i} shutdown"
+        RTPQ_WAIT_RC=${?}
       done
       for i in 1 2 3 4
       do
@@ -244,6 +243,7 @@ do
         TMP_PIDFILE=${RTPP_PID} TMP_LOGFILE="${RTPP_LOG}" rtpproxy_stop HUP
         eval RTPP${i}_STOP_RC=${?}
       done
+      report_rc ${RTPQ_WAIT_RC} "wait for rtpp_query.py #${j}.${i} shutdown"
       report_rc ${RTPP1_STOP_RC} "wait for rtpproxy #${j}.1 shutdown"
       report_rc ${RTPP2_STOP_RC} "wait for rtpproxy #${j}.2 shutdown"
       report_rc ${RTPP3_STOP_RC} "wait for rtpproxy #${j}.3 shutdown"
