@@ -132,6 +132,7 @@ void
 rtpp_command_ul_opts_free(struct ul_opts *ulop)
 {
 
+    FREE_IF_NULL(ulop->notify_tag);
     FREE_IF_NULL(ulop->codecs);
     FREE_IF_NULL(ulop->ia[0]);
     FREE_IF_NULL(ulop->ia[1]);
@@ -180,6 +181,11 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             goto err_undo_1;
         }
         ulop->notify_tag[len] = '\0';
+        ulop->notify_tag = strdup(ulop->notify_tag);
+        if (ulop->notify_tag == NULL) {
+            reply_error(cmd, ECODE_NOMEM_1);
+            goto err_undo_1;
+        }
     }
     ulop->addr = cmd->argv[2];
     ulop->port = cmd->argv[3];
@@ -196,7 +202,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             if (ulop->lidx < 0 || cf->stable->bindaddr[1] == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_11);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             ulop->lia[ulop->lidx] = cf->stable->bindaddr[1];
             ulop->lidx--;
@@ -207,7 +213,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             if (ulop->lidx < 0 || cf->stable->bindaddr[1] == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_12);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             ulop->lia[ulop->lidx] = cf->stable->bindaddr[0];
             ulop->lidx--;
@@ -233,7 +239,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             if (ulop->requested_ptime <= 0) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_13);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             cp--;
             break;
@@ -248,12 +254,12 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             if (t == cp) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_14);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             ulop->codecs = malloc(cp - t + 1);
             if (ulop->codecs == NULL) {
                 reply_error(cmd, ECODE_NOMEM_2);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             memcpy(ulop->codecs, t, cp - t);
             ulop->codecs[cp - t] = '\0';
@@ -266,7 +272,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             if (len == -1) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_15);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             c = t[len];
             t[len] = '\0';
@@ -275,7 +281,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "invalid local address: %s: %s", t, errmsg);
                 reply_error(cmd, ECODE_INVLARG_1);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             t[len] = c;
             cp--;
@@ -287,7 +293,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             if (len == -1) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_16);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             c = t[len];
             t[len] = '\0';
@@ -297,20 +303,20 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "invalid remote address: %s: %s", t, gai_strerror(n));
                 reply_error(cmd, ECODE_INVLARG_2);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             if (local4remote(ulop->local_addr, satoss(ulop->local_addr)) == -1) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "can't find local address for remote address: %s", t);
                 reply_error(cmd, ECODE_INVLARG_3);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             ulop->local_addr = addr2bindaddr(cf, ulop->local_addr, &errmsg);
             if (ulop->local_addr == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "invalid local address: %s", errmsg);
                 reply_error(cmd, ECODE_INVLARG_4);
-                goto err_undo_1;
+                goto err_undo_2;
             }
             t[len] = c;
             cp--;
@@ -339,7 +345,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "cannot match local "
               "address for the %s session", AF2STR(ulop->pf));
             reply_error(cmd, ECODE_INVLARG_6);
-            goto err_undo_1;
+            goto err_undo_2;
         }
     }
     if (ulop->addr != NULL && ulop->port != NULL && IS_IPSTR_VALID(ulop->addr, ulop->pf)) {
@@ -350,7 +356,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
                     ulop->ia[i] = malloc(SS_LEN(&tia));
                     if (ulop->ia[i] == NULL) {
                         reply_error(cmd, ECODE_NOMEM_3);
-                        goto err_undo_1;
+                        goto err_undo_2;
                     }
                     memcpy(ulop->ia[i], &tia, SS_LEN(&tia));
                 }
@@ -367,6 +373,8 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
     }
     return (ulop);
 
+err_undo_2:
+    FREE_IF_NULL(ulop->notify_tag);
 err_undo_1:
     rtpp_command_ul_opts_free(ulop);
 err_undo_0:
@@ -400,6 +408,15 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
     spa = spb = NULL;
     fds[0] = fds[1] = NULL;
     ulop = cmd->cca.opts.ul;
+
+    if (cmd->cca.op == UPDATE) {
+        if (!CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled) && ulop->notify_socket != NULL) {
+            RTPP_LOG(spa->log, RTPP_LOG_ERR, "must permit notification socket with -n");
+            reply_error(cmd, ECODE_NSOFF);
+            goto err_undo_0;
+        }
+    }
+
     if (sidx != -1) {
         RTPP_DBG_ASSERT(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = cmd->sp;
@@ -542,8 +559,6 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
     }
 
     if (cmd->cca.op == UPDATE) {
-        if (!CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled) && ulop->notify_socket != NULL)
-            RTPP_LOG(spa->log, RTPP_LOG_ERR, "must permit notification socket with -n");
         if (spa->timeout_data.notify_tag != NULL) {
             free(spa->timeout_data.notify_tag);
             spa->timeout_data.notify_tag = NULL;
@@ -559,7 +574,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
             } else {
                 RTPP_LOG(spa->log, RTPP_LOG_INFO, "setting timeout handler");
                 spa->timeout_data.notify_target = rttp;
-                spa->timeout_data.notify_tag = strdup(ulop->notify_tag);
+                RTPP_DBG_ASSERT(ulop->notify_tag != NULL);
+                spa->timeout_data.notify_tag = ulop->notify_tag;
+                ulop->notify_tag = NULL;
             }
         } else if (spa->timeout_data.notify_target != NULL) {
             spa->timeout_data.notify_target = NULL;

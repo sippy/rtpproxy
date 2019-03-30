@@ -126,6 +126,8 @@ struct rtpp_command
 #define ECODE_LSTFAIL_1   71
 #define ECODE_LSTFAIL_2   72
 
+#define ECODE_NSOFF       75
+
 #define ECODE_NOMEM_1     81
 #define ECODE_NOMEM_2     82
 #define ECODE_NOMEM_3     83
