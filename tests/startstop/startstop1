@@ -19,7 +19,7 @@ __beforeexit_cleanup()
 RTPP_OUTFILE="startstop.rout"
 
 truncate -s 0 "${TS_LOGFILE}"
-for rargs in "" "--config libucl/libucl_test.conf"
+for rargs in "--config libucl/libucl_test.conf" ""
 do
   RTPP_ARGS="${rargs}" rtpproxy_start
   report "rtpproxy start"
