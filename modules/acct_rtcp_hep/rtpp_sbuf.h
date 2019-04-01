@@ -42,5 +42,3 @@ struct rtpp_sbuf *rtpp_sbuf_ctor(int ilen);
 void rtpp_sbuf_dtor(struct rtpp_sbuf *sbp);
 int rtpp_sbuf_extend(struct rtpp_sbuf *sbp, int nlen);
 void rtpp_sbuf_reset(struct rtpp_sbuf *sbp);
-
-void rtpp_sbuf_selftest(void);
