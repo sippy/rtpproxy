@@ -90,8 +90,6 @@ rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *cfsp)
 {
     struct rtpp_module_priv *pvt;
 
-    rtpp_sbuf_selftest();
-
     pvt = mod_zmalloc(sizeof(struct rtpp_module_priv));
     if (pvt == NULL) {
         goto e0;
@@ -126,7 +124,7 @@ static void
 rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *pvt)
 {
 
-    if (pvt->ctx.capt_host != NULL) {
+    if (pvt->ctx.capt_host != default_ctx.capt_host && pvt->ctx.capt_host != NULL) {
         mod_free(pvt->ctx.capt_host);
     }
     hep_gen_dtor(&pvt->ctx);
