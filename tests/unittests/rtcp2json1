@@ -1,13 +1,14 @@
 #!/bin/sh
 
-BASEDIR="`dirname "${0}"`/.."
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
 . "${BASEDIR}/functions"
 
 for t in rtcp1
 do
-  ${TOP_BUILDDIR}/modules/acct_rtcp_hep/rtcp2json_test rtcp2json/${t}.raw > ${t}.output
+  ${TOP_BUILDDIR}/modules/acct_rtcp_hep/rtcp2json_test ${TDIR}/${t}.raw > ${t}.output
   report "decoding ${t}.raw"
-  ${DIFF} ${t}.output rtcp2json/${t}.output
+  ${DIFF} ${t}.output ${TDIR}/${t}.output
   report "checking ${t}.output"
 done
 
