@@ -11,7 +11,7 @@ include $(srcdir)/session_timeouts/Makefile.ami
 include $(srcdir)/playback/Makefile.ami
 include $(srcdir)/forwarding/Makefile.ami
 include $(srcdir)/rtp_analyze/Makefile.ami
-include $(srcdir)/rtcp2json/Makefile.ami
+include $(srcdir)/unittests/Makefile.ami
 
 EXTRA_DIST += Makefile.am ringback.sln
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
