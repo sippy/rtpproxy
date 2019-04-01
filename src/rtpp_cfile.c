@@ -120,6 +120,9 @@ rtpp_cfile_process(struct rtpp_cfg_stable *csp)
             }
         }
     }
+    if (ucl_object_iter_chk_excpn(it_conf)) {
+        ecode = -1;
+    }
 e4:
     ucl_object_iterate_free(it_conf);
 e3:
@@ -224,6 +227,10 @@ e1:
         goto e0;
     }
 e0:
+    if (ucl_object_iter_chk_excpn(it_conf)) {
+        RTPP_LOG(csp->glog, RTPP_LOG_ERR, "UCL has failed with an internal error");
+        ecode = -1;
+    }
     ucl_object_iterate_free(it_conf);
     return (ecode);
 }
@@ -262,6 +269,8 @@ conf_helper_mapper(struct rtpp_log *log, const ucl_object_t *obj, const conf_hel
                 *fentrpp = &map[i];
         }
     }
+    if (cur == NULL && ucl_object_iter_chk_excpn(it))
+        ret = false;
     ucl_object_iterate_free(it);
     return (ret);
 }
