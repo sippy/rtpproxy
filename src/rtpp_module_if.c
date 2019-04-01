@@ -109,11 +109,11 @@ rtpp_module_if_ctor(const char *mpath)
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->pub.rcnt = rcnt;
     pvt->mpath = strdup(mpath);
     if (pvt->mpath == NULL) {
         goto e1;
     }
-    pvt->pub.rcnt = rcnt;
     pvt->pub.load = &rtpp_mif_load;
     pvt->pub.do_acct = &rtpp_mif_do_acct;
     pvt->pub.do_acct_rtcp = &rtpp_mif_do_acct_rtcp;
@@ -230,6 +230,7 @@ e6:
 e5:
     CALL_SMETHOD(pvt->mip->log->rcnt, decref);
     rtpp_queue_destroy(pvt->req_q);
+    pvt->req_q = NULL;
 #if RTPP_CHECK_LEAKS
     if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' leaked memory in the failed "
@@ -238,12 +239,14 @@ e5:
 #endif
 e4:
     rtpp_wi_free(pvt->sigterm);
+    pvt->sigterm = NULL;
 e3:
 #if RTPP_CHECK_LEAKS
     rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
 e2:
     dlclose(pvt->dmp);
+    pvt->mip = NULL;
 e1:
     return (-1);
 }
@@ -261,27 +264,30 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
             while (rtpp_queue_get_length(pvt->req_q) > 0) {
                 rtpp_wi_free(rtpp_queue_get_item(pvt->req_q, 0));
             }
-        } else {
+        } else if (pvt->sigterm != NULL) {
             rtpp_wi_free(pvt->sigterm);
         }
-        rtpp_queue_destroy(pvt->req_q);
+        if (pvt->req_q != NULL)
+            rtpp_queue_destroy(pvt->req_q);
 
-        /* Then run module destructor (if any) */
-        if (pvt->mip->dtor != NULL) {
-            pvt->mip->dtor(pvt->mpvt);
-        }
-        CALL_SMETHOD(pvt->mip->log->rcnt, decref);
+        if (pvt->mip != NULL) {
+            /* Then run module destructor (if any) */
+            if (pvt->mip->dtor != NULL) {
+                pvt->mip->dtor(pvt->mpvt);
+            }
+            CALL_SMETHOD(pvt->mip->log->rcnt, decref);
 
 #if RTPP_CHECK_LEAKS
-        /* Check if module leaked any mem */
-        if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
-            RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s' leaked memory after "
-              "destruction", pvt->mip->name);
-        }
-        rtpp_memdeb_dtor(pvt->memdeb_p);
+            /* Check if module leaked any mem */
+            if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
+                RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s' leaked memory after "
+                  "destruction", pvt->mip->name);
+            }
+            rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
-        /* Unload and free everything */
-        dlclose(pvt->dmp);
+            /* Unload and free everything */
+            dlclose(pvt->dmp);
+        }
     }
     free(pvt->mpath);
     free(pvt);
