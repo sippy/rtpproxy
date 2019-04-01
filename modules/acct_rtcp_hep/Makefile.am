@@ -23,3 +23,11 @@ rtpp_acct_rtcp_hep_debug_la_CPPFLAGS=$(rtpp_acct_rtcp_hep_la_CPPFLAGS) -DRTPP_DE
 rtpp_acct_rtcp_hep_debug_la_CFLAGS=-g3 -O0 -fno-omit-frame-pointer -std=c11 -D_XOPEN_SOURCE
 
 DEFS=	-Wall @DEFS@
+
+noinst_PROGRAMS += rtpp_sbuf_selftest
+rtpp_sbuf_selftest_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=rtpp_sbuf -Drtpp_sbuf_selftest=main \
+  -include $(top_srcdir)/src/rtpp_memdeb.h -I$(top_srcdir)
+rtpp_sbuf_selftest_CFLAGS =
+rtpp_sbuf_selftest_SOURCES = rtpp_sbuf.c rtpp_sbuf.h \
+  $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb_glitch.c
+rtpp_sbuf_selftest_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
