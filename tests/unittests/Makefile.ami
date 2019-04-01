@@ -1,5 +1,5 @@
-rtcp2json_EXTRA_DIST = rtcp2json
+unittests_EXTRA_DIST = unittests
 rtcp2json_CLEANFILES = rtcp1.output
-TESTS += rtcp2json/rtcp2json1
+TESTS += unittests/rtcp2json1 unittests/rtpp_sbuf
 CLEANFILES += ${rtcp2json_CLEANFILES}
-EXTRA_DIST += ${rtcp2json_EXTRA_DIST}
+EXTRA_DIST += ${unittests_EXTRA_DIST}

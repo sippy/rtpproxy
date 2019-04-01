@@ -1,0 +1,7 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+${TOP_BUILDDIR}/modules/acct_rtcp_hep/rtpp_sbuf_selftest
+report "rtpp_sbuf_selftest"
