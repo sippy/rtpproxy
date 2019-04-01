@@ -54,11 +54,12 @@ static bool
 conf_set_capt_host(struct rtpp_log *log, const ucl_object_t *top,
   const ucl_object_t *obj, struct hep_ctx *target)
 {
-
     const char *val = NULL;
 
     val = ucl_object_tostring_forced(obj);
     target->capt_host = mod_strdup(val);
+    if (target->capt_host == NULL)
+        return (false);
 
     return (true);
 }
