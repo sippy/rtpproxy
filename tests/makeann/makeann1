@@ -6,15 +6,31 @@
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
-MAKEANN_RFILES="ringback.0 ringback.3 ringback.8 ringback.18 ringback.9"
-rm -f ${MAKEANN_RFILES}
-${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/ringback
-report "makeann ringback.sln"
-for rfile in ${MAKEANN_RFILES}
+RB_BASE="${BASEDIR}/ringback"
+RB_SLN="${RB_BASE}.sln"
+
+MA_FLAFS_CMN="${RB_SLN} ${RB_BASE}"
+NONEX="/nonsense/nonexisting/crap"
+for bad_ma_flags in "" "-L ${MA_FLAFS_CMN}" "-l foobar ${MA_FLAFS_CMN}" "-? ${MA_FLAFS_CMN}" "foo ${MA_FLAFS_CMN}" "${RB_SLN} ${NONEX}" "${NONEX} ${RB_SLN}"
 do
-  test -s ${rfile}
-  report "${rfile}"
+  ${MAKEANN} ${bad_ma_flags}
+  reportifnotfail "Testing makeann with invalid flags: ${bad_ma_flags}"
 done
-sha256_compute ${MAKEANN_RFILES} | \
-  ${DIFF} ${BASEDIR}/makeann/makeann.output -
-report "G.711[ua], GSM, G.729a, G.722 data"
+
+i=1
+MAKEANN_RFILES="ringback.0 ringback.3 ringback.8 ringback.18 ringback.9"
+for ma_flags in "" "-v" "-L -l 100"
+do
+  rm -f ${MAKEANN_RFILES}
+  ${MAKEANN} ${ma_flags} ${RB_SLN} ${RB_BASE}
+  report "makeann ringback.sln"
+  for rfile in ${MAKEANN_RFILES}
+  do
+    test -s ${rfile}
+    report "${rfile}"
+  done
+  sha256_compute ${MAKEANN_RFILES} | \
+    ${DIFF} ${BASEDIR}/makeann/makeann.${i}.output -
+  report "G.711[ua], GSM, G.729a, G.722 data"
+  i=$((${i} + 1))
+done
