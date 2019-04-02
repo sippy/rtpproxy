@@ -517,9 +517,9 @@ extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
 memdeb_EXTRA_DIST = memdeb
 memdeb_CLEANFILES = glitch1.ncout
 session_timeouts_EXTRA_DIST = session_timeouts
-session_timeouts_CLEANFILES = session_timeouts.rout[12345].[1234] session_timeouts.rlog[12345].[1234] \
-  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[12345].[1234] \
-  session_timeouts.fout[12345].[1234]
+session_timeouts_CLEANFILES = session_timeouts.rout[123456].[1234] session_timeouts.rlog[123456].[1234] \
+  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[123456].[1234] \
+  session_timeouts.fout[123456].[1234]
 
 playback_EXTRA_DIST = playback
 playback_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \

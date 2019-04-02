@@ -150,8 +150,9 @@ rtpp_acct_rtcp_hep_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_acct_rtcp_hep_la_LDFLAGS) $(LDFLAGS) -o $@
 am__DEPENDENCIES_1 =
-rtpp_acct_rtcp_hep_debug_la_DEPENDENCIES =  \
-	$(top_srcdir)/libexecinfo/libexecinfo.a $(am__DEPENDENCIES_1)
+am__DEPENDENCIES_2 = $(top_srcdir)/libexecinfo/libexecinfo.a
+rtpp_acct_rtcp_hep_debug_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 am__objects_1 = rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.lo \
 	rtpp_acct_rtcp_hep_debug_la-rtcp2json.lo \
 	rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.lo \
@@ -173,13 +174,12 @@ rtcp2json_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtcp2json_test_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
 	$@
-am_rtpp_sbuf_selftest_OBJECTS =  \
-	rtpp_sbuf_selftest-rtpp_sbuf.$(OBJEXT) \
-	rtpp_sbuf_selftest-rtpp_memdeb.$(OBJEXT) \
+am__objects_2 = rtpp_sbuf_selftest-rtpp_memdeb.$(OBJEXT) \
 	rtpp_sbuf_selftest-rtpp_memdeb_glitch.$(OBJEXT)
+am_rtpp_sbuf_selftest_OBJECTS =  \
+	rtpp_sbuf_selftest-rtpp_sbuf.$(OBJEXT) $(am__objects_2)
 rtpp_sbuf_selftest_OBJECTS = $(am_rtpp_sbuf_selftest_OBJECTS)
-rtpp_sbuf_selftest_DEPENDENCIES =  \
-	$(top_srcdir)/libexecinfo/libexecinfo.a
+rtpp_sbuf_selftest_DEPENDENCIES = $(am__DEPENDENCIES_2)
 rtpp_sbuf_selftest_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -264,7 +264,8 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
+am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
+	$(top_srcdir)/m4/memdeb.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -395,6 +396,13 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h -I$(top_srcdir)
+RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
+  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_memdeb_glitch.c \
+  $(top_srcdir)/src/rtpp_memdeb_glitch.h
+
+RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 HEPSRCDIR = $(top_srcdir)/hepconnector
 UCLSRCDIR = $(top_srcdir)/external/libucl
 pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
@@ -410,25 +418,23 @@ rtpp_acct_rtcp_hep_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
 rtpp_acct_rtcp_hep_la_CFLAGS = -std=c11 -D_XOPEN_SOURCE
 #rtpp_acct_rtcp_hep_la_LIBADD = -lz
 rtpp_acct_rtcp_hep_debug_la_SOURCES = $(rtpp_acct_rtcp_hep_la_SOURCES)
-rtpp_acct_rtcp_hep_debug_la_LIBADD = $(top_srcdir)/libexecinfo/libexecinfo.a \
-  @LIBS_DL@ $(rtpp_acct_rtcp_hep_la_LIBADD)
-
+rtpp_acct_rtcp_hep_debug_la_LIBADD = $(rtpp_acct_rtcp_hep_la_LIBADD) $(RTPP_MEMDEB_LDADD)
 rtpp_acct_rtcp_hep_debug_la_LDFLAGS = $(rtpp_acct_rtcp_hep_la_LDFLAGS)
 rtpp_acct_rtcp_hep_debug_la_CPPFLAGS = $(rtpp_acct_rtcp_hep_la_CPPFLAGS) -DRTPP_DEBUG
-rtpp_acct_rtcp_hep_debug_la_CFLAGS = -g3 -O0 -fno-omit-frame-pointer -std=c11 -D_XOPEN_SOURCE
-rtpp_sbuf_selftest_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=rtpp_sbuf -Drtpp_sbuf_selftest=main \
-  -include $(top_srcdir)/src/rtpp_memdeb.h -I$(top_srcdir)
+rtpp_acct_rtcp_hep_debug_la_CFLAGS = $(RTPP_MEMDEB_CFLAGS) -std=c11 -D_XOPEN_SOURCE
+rtpp_sbuf_selftest_CPPFLAGS = -Drtpp_sbuf_selftest=main \
+  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_sbuf
 
-rtpp_sbuf_selftest_CFLAGS = 
+rtpp_sbuf_selftest_CFLAGS = $(RTPP_MEMDEB_CFLAGS)
 rtpp_sbuf_selftest_SOURCES = rtpp_sbuf.c rtpp_sbuf.h \
-  $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb_glitch.c
+  $(RTPP_MEMDEB_CORESRCS)
 
-rtpp_sbuf_selftest_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
+rtpp_sbuf_selftest_LDADD = $(RTPP_MEMDEB_LDADD)
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -448,6 +454,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
+$(top_srcdir)/m4/memdeb.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh

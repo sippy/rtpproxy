@@ -141,8 +141,8 @@ rtpp_acct_csv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(rtpp_acct_csv_la_LDFLAGS) $(LDFLAGS) \
 	-o $@
-rtpp_acct_csv_debug_la_DEPENDENCIES =  \
-	$(top_srcdir)/libexecinfo/libexecinfo.a
+am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.a
+rtpp_acct_csv_debug_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = rtpp_acct_csv_debug_la-rtpp_acct_csv.lo
 am_rtpp_acct_csv_debug_la_OBJECTS = $(am__objects_1)
 rtpp_acct_csv_debug_la_OBJECTS = $(am_rtpp_acct_csv_debug_la_OBJECTS)
@@ -214,7 +214,8 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
+am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
+	$(top_srcdir)/m4/memdeb.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -345,21 +346,26 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h -I$(top_srcdir)
+RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
+  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_memdeb_glitch.c \
+  $(top_srcdir)/src/rtpp_memdeb_glitch.h
+
+RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 pkglib_LTLIBRARIES = rtpp_acct_csv.la rtpp_acct_csv_debug.la
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
 rtpp_acct_csv_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 rtpp_acct_csv_debug_la_SOURCES = ${rtpp_acct_csv_la_SOURCES}
-rtpp_acct_csv_debug_la_LIBADD = $(top_srcdir)/libexecinfo/libexecinfo.a \
-  @LIBS_DL@
-
+rtpp_acct_csv_debug_la_LIBADD = $(RTPP_MEMDEB_LDADD)
 rtpp_acct_csv_debug_la_LDFLAGS = ${rtpp_acct_csv_la_LDFLAGS}
 rtpp_acct_csv_debug_la_CPPFLAGS = -DRTPP_DEBUG
-rtpp_acct_csv_debug_la_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
+rtpp_acct_csv_debug_la_CFLAGS = $(RTPP_MEMDEB_CFLAGS)
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -379,6 +385,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
+$(top_srcdir)/m4/memdeb.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
