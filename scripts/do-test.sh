@@ -26,6 +26,7 @@ wget https://linphone.org/releases/sources/bcg729/bcg729-${BCG729_VER}.tar.gz
 tar xfz bcg729-${BCG729_VER}.tar.gz
 cd bcg729-${BCG729_VER}
 #perl -pi -e 's|BASICOPERATIONSMACROS__H|BASICOPERATIONSMACROS_H|g' include/basicOperationsMacros.h
+./autogen.sh
 ./configure
 make
 sudo make install
