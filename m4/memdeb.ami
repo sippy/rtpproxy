@@ -1,0 +1,6 @@
+RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h -I$(top_srcdir)
+RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
+  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_memdeb_glitch.c \
+  $(top_srcdir)/src/rtpp_memdeb_glitch.h
+RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
