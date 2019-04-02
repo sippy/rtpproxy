@@ -1,3 +1,5 @@
+include $(top_srcdir)/m4/memdeb.ami
+
 UCL_DIR=$(top_srcdir)/external/libucl
 UCL_SDIR=$(UCL_DIR)/src
 
@@ -18,17 +20,17 @@ libucl_a_CFLAGS = -Wno-pointer-sign -std=c99 -DHAVE_CONFIG_H \
   -I$(UCL_DIR)/src/ \
   -Wno-unused-parameter
 libucl_debug_a_SOURCES = $(libucl_a_SOURCES)
-libucl_debug_a_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DRTPP_MEMDEB_FREE_NULL -DMEMDEB_APP=rtpproxy -include $(top_srcdir)/src/rtpp_memdeb.h
-libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
+libucl_debug_a_CPPFLAGS = -DRTPP_MEMDEB_FREE_NULL $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpproxy
+libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 
 HEPSRCDIR=$(top_srcdir)/hepconnector
 
 noinst_PROGRAMS = libucl_test
-libucl_test_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DMEMDEB_APP=libucl_test -DMODULE_IF_CODE -Dmod_strdup=strdup
+libucl_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpproxy
 libucl_test_CFLAGS = -I$(UCL_DIR)/include -I$(HEPSRCDIR) -I$(top_srcdir)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
-  $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb_glitch.c $(top_srcdir)/src/rtpp_ucl.c
-libucl_test_LDADD=libucl_debug.a $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
+  $(top_srcdir)/src/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS)
+libucl_test_LDADD=libucl_debug.a $(RTPP_MEMDEB_LDADD)
 
 CLEANFILES = *.gcda *.gcno
