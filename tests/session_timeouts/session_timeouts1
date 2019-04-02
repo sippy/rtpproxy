@@ -5,6 +5,7 @@
 
 RTPP_TEST_SOCK_UDP4_PORT="%%UDP4_PORT%%"
 RTPP_TEST_SOCK_UDP6_PORT="%%UDP6_PORT%%"
+RTPP_TEST_SOCK_TCP4_PORT="%%TCP4_PORT%%"
 RTPP_TEST_SOCK_UNIX="%%LOCAL_SOCK%%"
 RTPP_TEST_SOCK_CUNIX="%%LOCAL_SOCK%%"
 
@@ -88,13 +89,16 @@ RTPP4_ARGS="-6 ::1 ${RTPP2_ARGS}"
 
 UDP4_STARTPORT=37223
 UDP6_STARTPORT=43863
+TCP4_STARTPORT=32273
 
 advance_sockidx() {
     udp4_port=$((${UDP4_STARTPORT} + ${socket_idx}))
     udp6_port=$((${UDP6_STARTPORT} + ${socket_idx}))
+    tcp4_port=$((${TCP4_STARTPORT} + ${socket_idx}))
     local_sock="/tmp/rtpproxy${socket_idx}.sock"
     _socket=`echo ${socket} | sed "s|%%UDP4_PORT%%|${udp4_port}|g ; \
-      s|%%UDP6_PORT%%|${udp6_port}|g ; s|%%LOCAL_SOCK%%|${local_sock}|g"`
+      s|%%UDP6_PORT%%|${udp6_port}|g ; s|%%TCP4_PORT%%|${tcp4_port}|g ; \
+      s|%%LOCAL_SOCK%%|${local_sock}|g"`
     socket_idx=$((${socket_idx} + 1))
     RTPP_LOGFILE="session_timeouts.rlog${j}.${socket_idx}"
     RTPP_OUTFILE="session_timeouts.rout${j}.${socket_idx}"
