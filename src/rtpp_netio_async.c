@@ -204,6 +204,7 @@ rtpp_anetio_pump_q(struct sthread_args *sender)
     rtpp_queue_pump(sender->out_q);
 }
 
+#if 0
 int
 rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
   const struct sockaddr *sendto, socklen_t tolen, struct rtp_packet *pkt,
@@ -240,6 +241,7 @@ rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
     rtpp_queue_put_item(wi, sender->out_q);
     return (0);
 }
+#endif
 
 int
 rtpp_anetio_send_pkt_na(struct sthread_args *sender, int sock, \

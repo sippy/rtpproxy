@@ -59,8 +59,10 @@ static int rtpp_socket_settos(struct rtpp_socket *, int);
 static int rtpp_socket_setrbuf(struct rtpp_socket *, int);
 static int rtpp_socket_setnonblock(struct rtpp_socket *);
 static int rtpp_socket_settimestamp(struct rtpp_socket *);
+#if 0
 static int rtpp_socket_send_pkt(struct rtpp_socket *, struct sthread_args *,
   const struct sockaddr *, int, struct rtp_packet *, struct rtpp_log *);
+#endif
 static int rtpp_socket_send_pkt_na(struct rtpp_socket *, struct sthread_args *,
   struct rtpp_netaddr *, struct rtp_packet *, struct rtpp_log *);
 static struct rtp_packet * rtpp_socket_rtp_recv_simple(struct rtpp_socket *,
@@ -98,7 +100,9 @@ rtpp_socket_ctor(int domain, int type)
     pvt->pub.setrbuf = &rtpp_socket_setrbuf;
     pvt->pub.setnonblock = &rtpp_socket_setnonblock;
     pvt->pub.settimestamp = &rtpp_socket_settimestamp;
+#if 0
     pvt->pub.send_pkt = &rtpp_socket_send_pkt;
+#endif
     pvt->pub.send_pkt_na = &rtpp_socket_send_pkt_na;
     pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_simple;
     pvt->pub.getfd = &rtpp_socket_getfd;
@@ -179,6 +183,7 @@ rtpp_socket_settimestamp(struct rtpp_socket *self)
     return (0);
 }
 
+#if 0
 static int 
 rtpp_socket_send_pkt(struct rtpp_socket *self, struct sthread_args *str,
   const struct sockaddr *daddr, int addrlen, struct rtp_packet *pkt,
@@ -190,6 +195,7 @@ rtpp_socket_send_pkt(struct rtpp_socket *self, struct sthread_args *str,
     return (rtpp_anetio_send_pkt(str, pvt->fd, daddr, addrlen, pkt,
       self->rcnt, log));
 }
+#endif
 
 static int
 rtpp_socket_send_pkt_na(struct rtpp_socket *self, struct sthread_args *str,
