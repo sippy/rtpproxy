@@ -118,6 +118,8 @@ int main(int argc, char **argv)
         switch (ch) {
         case 'l':
             limit = atoi(optarg);
+            if (limit <= 0)
+                errx(1, "limit parameter have to be a number greater than zero");
             break;
 
         case 'L':
