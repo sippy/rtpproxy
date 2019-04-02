@@ -2,7 +2,7 @@
 
 set -e
 
-BCG729_VER=1.0.2
+BCG729_VER=1.0.4
 
 uname -a
 which ${CC}
@@ -22,7 +22,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew"
 tcpdump --version || true
 mkdir deps
 cd deps
-wget http://download-mirror.savannah.gnu.org/releases/linphone/plugins/sources/bcg729-${BCG729_VER}.tar.gz
+wget https://linphone.org/releases/sources/bcg729/bcg729-${BCG729_VER}.tar.gz
 tar xfz bcg729-${BCG729_VER}.tar.gz
 cd bcg729-${BCG729_VER}
 #perl -pi -e 's|BASICOPERATIONSMACROS__H|BASICOPERATIONSMACROS_H|g' include/basicOperationsMacros.h
