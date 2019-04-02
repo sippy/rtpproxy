@@ -1,3 +1,5 @@
+include $(top_srcdir)/m4/memdeb.ami
+
 UCL_DIR=$(top_srcdir)/external/libucl
 
 bin_PROGRAMS=rtpproxy rtpproxy_debug
@@ -10,13 +12,12 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_command.c rtpp_command.h rtpp_network.h rtpp_network.c \
   rtpp_syslog_async.c rtpp_syslog_async.h rtpp_notify.c rtpp_notify.h \
   rtpp_command_async.h rtpp_command_async.c rtpp_proc_async.c \
-  rtpp_proc_async.h rtpp_proc.h rtpp_proc.c rtpp_version.h rtpp_math.c \
+  rtpp_proc_async.h rtpp_proc.h rtpp_proc.c rtpp_version.h \
   rtpp_math.h rtpp_wi.c rtpp_wi.h rtpp_wi_private.h rtpp_queue.c rtpp_queue.h \
   rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
   rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
   rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
-  rtpp_hash_table.c rtpp_hash_table.h \
-  rtpp_types.h rtpp_pcache.c rtpp_pcache.h config_pp.h rtpp_stats.c \
+  rtpp_hash_table.c rtpp_hash_table.h rtpp_types.h config_pp.h rtpp_stats.c \
   rtpp_stats.h rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
   rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c rtpp_timed.c \
@@ -24,7 +25,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_command_query.c rtpp_command_query.h rtpp_pearson.c rtpp_pearson.h \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_command_rcache.c rtpp_command_rcache.h \
   rtpp_tnotify_set.c rtpp_tnotify_set.h rtpp_tnotify_tgt.h rtp_packet.h \
-  rtpp_pthread.c rtpp_pthread.h rtpp_time.c rtpp_time.h \
+  rtpp_time.c rtpp_time.h \
   rtpp_sessinfo.c rtpp_sessinfo.h rtpp_weakref.c rtpp_weakref.h \
   rtpp_proc_servers.h rtpp_proc_servers.c rtpp_stream.h rtpp_stream.c \
   rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
@@ -43,7 +44,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
 
 rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl.a
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.a \
-  $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
+  $(RTPP_MEMDEB_LDADD)
 rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
 
 if ENABLE_MODULE_IF
@@ -60,10 +61,8 @@ rtpproxy_LDADD+=@LIBS_SIPLOG@
 rtpproxy_debug_LDADD+=@LIBS_SIPLOG_DBG@
 endif
 
-SRGC_MEMDEB_CORE=rtpp_memdeb.c rtpp_memdeb.h rtpp_memdeb_internal.h \
-  rtpp_memdeb_stats.h rtpp_memdeb_test.c rtpp_memdeb_glitch.c \
-  rtpp_memdeb_glitch.h
-SRCS_DEBUG=	$(SRGC_MEMDEB_CORE) rtpp_stacktrace.c rtpp_stacktrace.h
+SRCS_MEMDEB_CORE = $(RTPP_MEMDEB_CORESRCS) rtpp_memdeb_stats.h rtpp_memdeb_test.c
+SRCS_DEBUG=	$(SRCS_MEMDEB_CORE) rtpp_stacktrace.c rtpp_stacktrace.h
 
 SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_stream_fin.h rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
@@ -87,9 +86,8 @@ rtpp_objck_perf_SOURCES=rtpp_objck.c $(SRCS_AUTOGEN) \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_time.c rtpp_time.h rtpp_timed.c rtpp_timed.h \
   rtpp_queue.c rtpp_queue.h rtpp_wi.c rtpp_wi.h
 rtpp_objck_LDADD=$(rtpp_objck_perf_LDADD)
-rtpp_objck_SOURCES=$(rtpp_objck_perf_SOURCES) $(SRGC_MEMDEB_CORE)
+rtpp_objck_SOURCES=$(rtpp_objck_perf_SOURCES) $(SRCS_MEMDEB_CORE)
 
-RTPP_MEMDEB_CPPFLAGS=-DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include
 EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
@@ -98,7 +96,7 @@ if BUILD_ELPERIODIC
 EXTRA_CPPFLAGS=-I$(top_srcdir)/libelperiodic/src
 endif
 
-rtpproxy_debug_CFLAGS=$(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
+rtpproxy_debug_CFLAGS=$(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 rtpproxy_debug_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS) -DRTPP_DEBUG $(RTPP_MEMDEB_CPPFLAGS) \
   -DMEMDEB_APP=@PACKAGE@ -I$(top_srcdir)
 
@@ -106,7 +104,7 @@ rtpproxy_CFLAGS=$(EXTRA_CFLAGS)
 rtpproxy_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS)
 
 rtpp_objck_perf_CPPFLAGS=$(EXTRA_CPPFLAGS)
-rtpp_objck_CFLAGS=$(EXTRA_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
+rtpp_objck_CFLAGS=$(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 rtpp_objck_CPPFLAGS=$(EXTRA_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
 
 DEFS=	-Wall @DEFS@
