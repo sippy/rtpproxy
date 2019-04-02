@@ -1,0 +1,12 @@
+#!/bin/sh
+
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
+. "${BASEDIR}/functions"
+
+. "${TDIR}/glitch.sub"
+
+disable_aslr
+
+glitch_test basic_versions/basic_versions1 19
+report "glitching basic_versions/basic_versions1"

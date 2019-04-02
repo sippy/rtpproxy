@@ -1,0 +1,50 @@
+spin_nc()
+{
+  NC_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
+#  (nc -k -l 127.0.0.1 ${NC_PORT} > glitch1.ncout)&
+  (${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600)&
+  NC_PID=${!}
+  echo "starting nc on port ${NC_PORT}"
+  sleep 1
+}
+
+glitch_test()
+{
+  test="${1}"
+  nok_expected="${2}"
+
+  spin_nc
+
+  if MEMDEB_GLITCH_ACT="r" MEMDEB_GLITCH_TRIG="*" MEMDEB_GLITCH_CH_PORT="${NC_PORT}" ./${test} >/dev/null
+  then
+    kill -TERM ${NC_PID}
+  else
+    kill -TERM ${NC_PID}
+    echo "glitch data cannot be collected"
+    return 1
+  fi
+  echo "Collected glitch data, OK, $((`wc -l < glitch1.ncout`)) total points"
+  echo "                       ....$((`awk '{print $2}' glitch1.ncout | sort -u | wc -l`)) unique points"
+  nfail=0
+  nok=0
+  for gp in `awk '{print $2}' glitch1.ncout | sort -u`
+  do
+    glline="`grep -w ${gp} glitch1.ncout | awk '{print $7}' | uniq`"
+    tp="${gp}:*"
+    if MEMDEB_GLITCH_ACT="g" MEMDEB_GLITCH_TRIG="${tp}" ./${test} 2>/dev/null >/dev/null
+    then
+       nok=$((${nok} + 1))
+       echo "${tp}: test OK at ${glline}"
+    else
+       nfail=$((${nfail} + 1))
+       echo "${tp}: test FAIL at ${glline}"
+    fi
+  done
+  echo "${nok} times OK, ${nfail} times FAIL"
+  if [ ${nok} -gt ${nok_expected} ]
+  then
+    echo "Test went OK ${nok} times vs expected ${nok_expected}"
+    return 1
+  fi
+  return 0
+}
