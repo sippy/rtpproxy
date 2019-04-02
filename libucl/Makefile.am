@@ -19,7 +19,7 @@ libucl_a_CFLAGS = -Wno-pointer-sign -std=c99 -DHAVE_CONFIG_H \
   -Wno-unused-parameter
 libucl_debug_a_SOURCES = $(libucl_a_SOURCES)
 libucl_debug_a_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -DRTPP_MEMDEB_FREE_NULL -DMEMDEB_APP=rtpproxy -include $(top_srcdir)/src/rtpp_memdeb.h
-libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS)
+libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS) -g3 -O0 -fno-omit-frame-pointer
 
 HEPSRCDIR=$(top_srcdir)/hepconnector
 
