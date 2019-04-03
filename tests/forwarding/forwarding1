@@ -77,7 +77,7 @@ setup_gen() {
     ${SED} "${SED_TRANS}" forwarding/forwarding1.sstats.input
     i=$((${i}+1))
   done
-  cat session_timeouts/session_timeouts.stats.input forwarding/forwarding1.stats.input
+  cat session_timeouts/stats.input forwarding/forwarding1.stats.input
 }
 
 setup_fwd() {
@@ -148,7 +148,7 @@ setup_fwd() {
     ${SED} "${SED_TRANS}" forwarding/forwarding1.sstats.input forwarding/forwarding1.delete.input
     j=$((${j} - 1))
   done  
-  cat session_timeouts/session_timeouts.stats.input forwarding/forwarding1.stats.input
+  cat session_timeouts/stats.input forwarding/forwarding1.stats.input
 }
 
 cumnlost=0
