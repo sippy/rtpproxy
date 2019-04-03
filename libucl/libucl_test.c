@@ -91,9 +91,10 @@ parse_modules(const ucl_object_t *wop)
             }
             fprintf(stderr, "\n");
             ecode = -1;
-            goto e0;
+            goto e1;
         }
     }
+e1:
     if (cbuf.capt_host != NULL) {
         free(cbuf.capt_host);
     }
