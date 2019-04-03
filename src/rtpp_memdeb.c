@@ -37,9 +37,11 @@
 #include <errno.h>
 #include <pthread.h>
 #include <inttypes.h>
+#include <assert.h>
 #include <stdarg.h>
 #include <stdatomic.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -118,9 +120,10 @@ struct rtpp_memdeb_priv {
 };
 
 void *
-rtpp_memdeb_init()
+rtpp_memdeb_init(bool is_main)
 {
     struct rtpp_memdeb_priv *pvt;
+    void *topframes[2] = {NULL, NULL};
 
     pvt = malloc(sizeof(struct rtpp_memdeb_priv));
     if (pvt == NULL) {
@@ -130,7 +133,14 @@ rtpp_memdeb_init()
     pthread_mutex_init(&pvt->mutex, NULL);
     pvt->magic = MEMDEB_SIGNATURE_PRIV(pvt);
     pvt->inst_name = STR(MEMDEB_APP);
-    rtpp_memdeb_glitch_init();
+
+    if (is_main) {
+        assert(backtrace(topframes, 2) == 2);
+        assert(topframes[0] != NULL);
+        assert(execinfo_set_topframe(topframes[0]) == NULL);
+        rtpp_memdeb_glitch_init();
+   }
+
     return (pvt);
 }
 

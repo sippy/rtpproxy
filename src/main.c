@@ -44,6 +44,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <pwd.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -759,12 +760,6 @@ main(int argc, char **argv)
     struct rtpp_module_if *mif;
 
 #ifdef RTPP_CHECK_LEAKS
-    void *topframe = NULL;
-
-    assert(backtrace(&topframe, 1) == 1);
-    assert(topframe != NULL);
-    assert(execinfo_set_topframe(topframe) == NULL);
-
     RTPP_MEMDEB_INIT(rtpproxy);
 #endif
     if (getdtime() == -1) {
