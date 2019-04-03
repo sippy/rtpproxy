@@ -116,7 +116,7 @@ main(int argc, char **argv)
     const char *cfile;
 
     RTPP_MEMDEB_INIT(rtpproxy);
-    RTPP_MEMDEB_INIT(libucl_test);
+    RTPP_MEMDEB_INIT1(libucl_test);
 
     ecode = 0;
 
