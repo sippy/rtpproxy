@@ -1,0 +1,12 @@
+#!/bin/sh
+
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
+. "${BASEDIR}/functions"
+
+. "${TDIR}/glitch.sub"
+
+disable_aslr
+
+glitch_test libucl/libucl1 0
+report "glitching libucl/libucl1"
