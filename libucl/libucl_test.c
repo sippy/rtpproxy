@@ -8,12 +8,15 @@
 
 #include "ucl.h"
 
+#include "hepconnector.h"
+
 #include "rtpp_memdeb_internal.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_ucl.h"
 
 RTPP_MEMDEB_STATIC(rtpproxy);
+RTPP_MEMDEB_STATIC(libucl_test);
 
 static bool conf_helper_mapper(const ucl_object_t *obj,
   conf_helper_map *map, void *target, conf_helper_map **failed);
@@ -59,14 +62,16 @@ parse_modules(const ucl_object_t *wop)
     const ucl_object_t *obj_key;
     int ecode, success;
     void *confp;
-    char buf[4096];
     conf_helper_map *map = rtpp_arh_conf->conf_map;
     conf_helper_map *fent;
+    struct hep_ctx cbuf;
 
     it_conf = ucl_object_iterate_new(wop);
     if (it_conf == NULL)
         return (-1);
     ecode = 0;
+    memset(&cbuf, '\0', sizeof(cbuf));
+    confp = &cbuf;
     while ((obj_file = ucl_object_iterate_safe(it_conf, true)) != NULL) {
         cf_key = ucl_object_key(obj_file);
         printf("\tmodule: %s\n", cf_key);
@@ -77,7 +82,6 @@ parse_modules(const ucl_object_t *wop)
             goto e0;
         }
         fent = NULL;
-        confp = buf;
         success = conf_helper_mapper(obj_file, map, confp, &fent);
         if (!success) {
             fprintf(stderr, "Config parsing issue in section %s",
@@ -89,6 +93,9 @@ parse_modules(const ucl_object_t *wop)
             ecode = -1;
             goto e0;
         }
+    }
+    if (cbuf.capt_host != NULL) {
+        free(cbuf.capt_host);
     }
 e0:
     ucl_object_iterate_free(it_conf);
@@ -108,6 +115,7 @@ main(int argc, char **argv)
     const char *cfile;
 
     RTPP_MEMDEB_INIT(rtpproxy);
+    RTPP_MEMDEB_INIT(libucl_test);
 
     ecode = 0;
 
@@ -173,7 +181,8 @@ e2:
 e1:
     close(fd);
 e0:
-    ecode = rtpp_memdeb_dumpstats(_rtpproxy_memdeb, 0) == 0 ? ecode : 1;
+    if ((rtpp_memdeb_dumpstats(_rtpproxy_memdeb, 0) != 0) || (rtpp_memdeb_dumpstats(_libucl_test_memdeb, 0) != 0))
+        ecode = 1;
 
     return (ecode);
 }
