@@ -303,6 +303,7 @@ rtpp_ctrl_sock_parse(const char *optarg)
     return (rcsp);
 }
 
+#if 0
 const char *
 rtpp_ctrl_sock_describe(struct rtpp_ctrl_sock *rcsp)
 {
@@ -336,3 +337,4 @@ rtpp_ctrl_sock_describe(struct rtpp_ctrl_sock *rcsp)
         abort();
     }
 }
+#endif
