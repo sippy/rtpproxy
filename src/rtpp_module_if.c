@@ -33,6 +33,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -174,7 +175,7 @@ rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp, struct 
     pvt->mip->_strdup = &rtpp_memdeb_strdup;
     pvt->mip->_asprintf = &rtpp_memdeb_asprintf;
     pvt->mip->_vasprintf = &rtpp_memdeb_vasprintf;
-    pvt->memdeb_p = rtpp_memdeb_init();
+    pvt->memdeb_p = rtpp_memdeb_init(false);
     rtpp_memdeb_setlog(pvt->memdeb_p, log);
     if (pvt->memdeb_p == NULL) {
         goto e2;
