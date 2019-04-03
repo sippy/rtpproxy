@@ -474,7 +474,8 @@ TESTS = startstop/startstop1 unittests/rtcp2json1 unittests/rtpp_sbuf \
 	basic_versions/basic_versions1 command_parser/command_parser1 \
 	makeann/makeann1 extractaudio/extractaudio1 memdeb/glitch1 \
 	memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
-	session_timeouts/session_timeouts1 playback/playback1 \
+	session_timeouts/notify_tcp session_timeouts/notify_tcp_wild \
+	session_timeouts/notify_unix playback/playback1 \
 	forwarding/forwarding1 rtp_analyze/rtp_analyze1
 CLEANFILES = ${startstop_CLEANFILES} ${rtcp2json_CLEANFILES} \
 	${libucl_CLEANFILES} ${libexecinfo_CLEANFILES} \
@@ -532,7 +533,8 @@ forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
   forwarding1.8.wav forwarding1.9.wav forwarding1.gena.rout forwarding1.geno.rout \
   forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
   forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
-  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog
+  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog \
+  forwarding1.*.eout
 
 rtp_analyze_EXTRA_DIST = rtp_analyze
 rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
@@ -821,9 +823,23 @@ memdeb/glitch_basic_versions1.log: memdeb/glitch_basic_versions1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-session_timeouts/session_timeouts1.log: session_timeouts/session_timeouts1
-	@p='session_timeouts/session_timeouts1'; \
-	b='session_timeouts/session_timeouts1'; \
+session_timeouts/notify_tcp.log: session_timeouts/notify_tcp
+	@p='session_timeouts/notify_tcp'; \
+	b='session_timeouts/notify_tcp'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+session_timeouts/notify_tcp_wild.log: session_timeouts/notify_tcp_wild
+	@p='session_timeouts/notify_tcp_wild'; \
+	b='session_timeouts/notify_tcp_wild'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+session_timeouts/notify_unix.log: session_timeouts/notify_unix
+	@p='session_timeouts/notify_unix'; \
+	b='session_timeouts/notify_unix'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
