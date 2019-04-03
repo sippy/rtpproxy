@@ -39,7 +39,7 @@
 /*  2 - debug on every packet                                        */
 #  define RTPP_DEBUG_netio      2
 /* Supported levels 0, 1. */
-#  define RTPP_DEBUG_timers     1
+#  define RTPP_DEBUG_timers     RTPP_DBG_NO
 /* Catch fatal signals and try to pring backtrace */
 /* Supported levels 0, 1. */
 #  define RTPP_DEBUG_catchtrace 1
