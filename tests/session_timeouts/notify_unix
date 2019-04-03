@@ -1,0 +1,8 @@
+#!/bin/sh
+
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
+
+. "${TDIR}/test.sub"
+
+run_test "${RTPP_NOTIFY_SOCK_UNIX}"

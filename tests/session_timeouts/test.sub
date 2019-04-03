@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # Test that session timeouts for fully setup sessions and half-setup sessions
 # work correctly and there is no early/late destruction of sessions.
 
@@ -9,7 +7,6 @@ RTPP_TEST_SOCK_TCP4_PORT="%%TCP4_PORT%%"
 RTPP_TEST_SOCK_UNIX="%%LOCAL_SOCK%%"
 RTPP_TEST_SOCK_CUNIX="%%LOCAL_SOCK%%"
 
-BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
 substinput() {
@@ -134,8 +131,9 @@ __beforeexit_cleanup()
   fi
 }
 
-for notify_sock in ${RTPP_NOTIFY_SOCK_UNIX} ${RTPP_NOTIFY_SOCK_TCP} ${RTPP_NOTIFY_SOCK_WILD}
-do
+run_test()
+{
+  notify_sock="${1}"
   if [ "${notify_sock}" = "${RTPP_NOTIFY_SOCK_WILD}" ]
   then
     client_notify_sock="${RTPP_NOTIFY_SOCK_WILD_BIND}"
@@ -273,4 +271,4 @@ do
   sort session_timeouts.tlog > session_timeouts.tlog.sorted
   sort session_timeouts/tnotify.output | ${DIFF} - session_timeouts.tlog.sorted
   report "checking rtpp_notify_client.py on ${client_notify_sock} output"
-done
+}
