@@ -142,15 +142,15 @@ do
   else
     client_notify_sock="${notify_sock}"
   fi
-  ${RTPP_NOTYFY_CLIENT} -s ${client_notify_sock} -o session_timeouts.tlog -t 165&
+  ${RTPP_NOTYFY_CLIENT} -s ${client_notify_sock} -o session_timeouts.tlog -t 210&
   RTPP_NC_RC=${?}
   RTPP_NC_PID=${!}
   report_rc ${RTPP_NC_RC} "Starting rtpp_notify_client.py on ${client_notify_sock}"
 
+  setup_tstart
   j=1
   for socket in ${RTPP_TEST_SOCKETS}
   do
-    setup_tstart
     if [ "${socket}" = "stdio:" ]
     then
       run_rtpp_on_stdout "" ${j}.1 ${RTPP1_ARGS}
