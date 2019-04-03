@@ -50,10 +50,10 @@
 #include "rtpp_queue.h"
 #include "rtpp_network.h"
 #include "rtpp_netio_async.h"
-#include "rtpp_time.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_debug.h"
-#ifdef RTPP_DEBUG
+#ifdef RTPP_DEBUG_timers
+#include "rtpp_time.h"
 #include "rtpp_math.h"
 #endif
 
