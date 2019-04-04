@@ -45,6 +45,7 @@
 #include <getopt.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -90,6 +91,14 @@ const static struct option longopts[] = {
     { NULL,           0,                 NULL, 0 }
 };
 
+#ifdef RTPP_CHECK_LEAKS
+#include "libexecinfo/stacktraverse.h"
+#include "libexecinfo/execinfo.h"
+#include "rtpp_memdeb_internal.h"
+
+RTPP_MEMDEB_APP_STATIC;
+#endif
+
 static void
 usage(void)
 {
@@ -118,13 +127,14 @@ session_lookup(struct channels *channels, uint32_t ssrc, struct channel **cpp)
 }
 
 /* Insert channel keeping them ordered by time of first packet arrival */
-void
+int
 channel_insert(struct channels *channels, struct channel *channel)
 {
     struct cnode *cnp, *nnp;
 
     nnp = malloc(sizeof(*nnp));
-    assert(nnp != NULL);
+    if (nnp == NULL)
+        return (-1);
     memset(nnp, 0, sizeof(*nnp));
     nnp->cp = channel;
 
@@ -132,9 +142,10 @@ channel_insert(struct channels *channels, struct channel *channel)
         if (MYQ_FIRST(&(cnp->cp->session))->pkt->time <
           MYQ_FIRST(&(channel->session))->pkt->time) {
             MYQ_INSERT_AFTER(channels, cnp, nnp);
-            return;
+            return 0;
         }
     MYQ_INSERT_HEAD(channels, nnp);
+    return 0;
 }
 
 void
@@ -158,7 +169,8 @@ load_session(const char *path, struct channels *channels, enum origin origin,
     if (loader == NULL)
         return -1;
 
-    rtpp_stats_init(&stat);
+    if (rtpp_stats_init(&stat) < 0)
+        goto e0;
     pcount = loader->load(loader, channels, &stat, origin, crypto);
 
     update_rtpp_totals(&stat, &stat);
@@ -177,6 +189,9 @@ load_session(const char *path, struct channels *channels, enum origin origin,
     rtpp_stats_destroy(&stat);
 
     return pcount;
+e0:
+    loader->destroy(loader);
+    return -1;
 }
 
 int
@@ -204,6 +219,10 @@ main(int argc, char **argv)
     int option_index;
     struct eaud_crypto *alice_crypto, *bob_crypto;
     int64_t isample, sync_sample;
+
+#ifdef RTPP_CHECK_LEAKS
+    RTPP_MEMDEB_APP_INIT();
+#endif
 
     MYQ_INIT(&channels);
     MYQ_INIT(&act_subset);
@@ -358,6 +377,8 @@ main(int argc, char **argv)
     MYQ_FOREACH(cnp, &channels) {
         cnp->cp->skip = (cnp->cp->btime - basetime) * 8000;
         cnp->cp->decoder = decoder_new(&(cnp->cp->session), dflags);
+        if (cnp->cp->decoder == NULL)
+            err(1, "decoder_new() failed");
         nch++;
     }
 
@@ -381,7 +402,8 @@ main(int argc, char **argv)
         if ((dflags & D_FLAG_NOSYNC) == 1) {
             ap = &channels;
         } else if (sync_sample == isample) {
-            eaud_ss_syncactive(&channels, &act_subset, isample, &sync_sample);
+            if (eaud_ss_syncactive(&channels, &act_subset, isample, &sync_sample) < 0)
+                errx(1, "eaud_ss_syncactive() failed");
             ap = &act_subset;
         }
         MYQ_FOREACH(cnp, ap) {
