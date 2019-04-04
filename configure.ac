@@ -186,6 +186,7 @@ fi
 AC_CHECK_HEADER(stdatomic.h, found_stdatomic=yes)
 if test "$found_stdatomic" = yes
 then
+  ENABLE_OBJCK=1
   AC_DEFINE([ENABLE_OBJCK], 1, [Define if you want to build rtpp_objck test app])
 fi
 
