@@ -144,6 +144,8 @@ channel_alloc(enum origin origin)
     struct channel *channel;
 
     channel = malloc(sizeof(*channel));
+    if (channel == NULL)
+        return (NULL);
     memset(channel, 0, sizeof(*channel));
     channel->origin = origin;
     return (channel);
@@ -154,7 +156,7 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
   struct rtpp_session_stat *stat, enum origin origin,
   struct eaud_crypto *crypto)
 {
-    int pcount;
+    int pcount, rcode;
     unsigned char *cp, *ep;
     struct pkt_hdr_adhoc *pkt;
     struct packet *pack, *pp;
@@ -176,8 +178,14 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
             continue;
         }
         pack = malloc(sizeof(*pack));
-        if (rtp_packet_parse_raw(cp, pkt->plen, &(pack->parsed)) != RTP_PARSER_OK) {
+        if (pack == NULL) {
+            warn("malloc() failed");
+            return -1;
+        }
+        rcode = rtp_packet_parse_raw(cp, pkt->plen, &(pack->parsed));
+        if (rcode != RTP_PARSER_OK) {
             /* XXX error handling */
+            warnx("rtp_packet_parse_raw() failed: %s", rtp_packet_parse_errstr(rcode));
             free(pack);
             continue;
         }
@@ -196,10 +204,16 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
         sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
         if (sess == NULL) {
             channel = channel_alloc(origin);
+            if (channel == NULL) {
+                goto e0;
+            }
             sess = &(channel->session);
             MYQ_INIT(sess);
             MYQ_INSERT_HEAD(sess, pack);
-            channel_insert(channels, channel);
+            if (channel_insert(channels, channel) < 0) {
+                warn("channel_insert() failed");
+                goto e0;
+            }
             pcount++;
             goto endloop;
         }
@@ -228,6 +242,9 @@ endloop:
         return -1;
     }
     return pcount;
+e0:
+    free(pack);
+    return (-1);
 }
 
 static int
@@ -235,7 +252,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
   struct rtpp_session_stat *stat, enum origin origin,
   struct eaud_crypto *crypto)
 {
-    int pcount;
+    int pcount, rcode;
     unsigned char *cp, *ep;
     struct packet *pack, *pp;
     struct channel *channel;
@@ -277,8 +294,14 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
 #endif
 
         pack = malloc(sizeof(*pack) + sizeof(*pack->pkt));
-        if (rtp_packet_parse_raw(pd.l5_data, rtp_pkt_len, &(pack->parsed)) != RTP_PARSER_OK) {
+        if (pack == NULL) {
+            warn("malloc() failed");
+            return -1;
+        }
+        rcode = rtp_packet_parse_raw(pd.l5_data, rtp_pkt_len, &(pack->parsed));
+        if (rcode != RTP_PARSER_OK) {
             /* XXX error handling */
+            warnx("rtp_packet_parse_raw() failed: %s", rtp_packet_parse_errstr(rcode));
             free(pack);
             continue;
         }
@@ -309,10 +332,17 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
         sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
         if (sess == NULL) {
             channel = channel_alloc(origin);
+            if (channel == NULL) {
+                warn("channel_alloc() failed");
+                goto e0;
+            }
             sess = &(channel->session);
             MYQ_INIT(sess);
             MYQ_INSERT_HEAD(sess, pack);
-            channel_insert(channels, channel);
+            if (channel_insert(channels, channel) < 0) {
+                warn("channel_insert() failed");
+                goto e0;
+            }
             pcount++;
             goto endloop;
         }
@@ -341,4 +371,7 @@ endloop:
         return -1;
     }
     return pcount;
+e0:
+    free(pack);
+    return (-1);
 }
