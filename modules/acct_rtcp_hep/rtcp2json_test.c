@@ -54,7 +54,7 @@ main(int argc, char **argv)
         exit(1);
     }
     rtcp_dlen = read(fd, rtcp_data, sizeof(rtcp_data));
-    if (rtcp_dlen < 0) {
+    if (rtcp_dlen <= 0) {
         fprintf(stderr, "read() failed\n");
         exit(1);
     }
