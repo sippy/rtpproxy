@@ -63,6 +63,7 @@ testbody(void *cp)
   assert(getframeaddr(1) != NULL);
   assert(getreturnaddr(0) != NULL);
   sc = getstackcookie();
+  assert(sc != 0);
 
   return (0);
 }
