@@ -106,7 +106,7 @@ rtpproxy_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS)
 rtpp_objck_perf_CFLAGS=$(EXTRA_CFLAGS)
 rtpp_objck_perf_CPPFLAGS=$(EXTRA_CPPFLAGS)
 rtpp_objck_CFLAGS=$(rtpp_objck_perf_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
-rtpp_objck_CPPFLAGS=$(rtpp_objck_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
+rtpp_objck_CPPFLAGS=$(rtpp_objck_perf_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
 
 DEFS=	-Wall @DEFS@
 
