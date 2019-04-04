@@ -128,6 +128,6 @@ struct streams {
 #define RPLEN(packet)	((packet)->parsed.data_size)
 
 struct session *session_lookup(struct channels *, uint32_t, struct channel **);
-void channel_insert(struct channels *, struct channel *);
+int channel_insert(struct channels *, struct channel *);
 
 #endif
