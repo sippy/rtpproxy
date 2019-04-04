@@ -110,7 +110,7 @@ rtpp_sbuf_extend(struct rtpp_sbuf *sbp, int nlen)
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
 
-RTPP_MEMDEB_STATIC(rtpp_sbuf);
+RTPP_MEMDEB_APP_STATIC;
 
 int
 rtpp_sbuf_selftest(void)
@@ -119,7 +119,7 @@ rtpp_sbuf_selftest(void)
     int rval;
     const char *longtest = "INFO:GLOBAL:rtpp_proc_async_run: ncycles=2600 load=0.068641";
 
-    RTPP_MEMDEB_INIT(rtpp_sbuf);
+    RTPP_MEMDEB_APP_INIT();
 
     sbp = rtpp_sbuf_ctor(6);
     assert(sbp != NULL);
@@ -160,7 +160,7 @@ rtpp_sbuf_selftest(void)
     assert(sbp->alen == rval + 1);
     rtpp_sbuf_dtor(sbp);
 
-    rval = rtpp_memdeb_dumpstats(_rtpp_sbuf_memdeb, 0);
+    rval = rtpp_memdeb_dumpstats(MEMDEB_SYM, 0);
     return (rval);
 }
 #endif /* rtpp_sbuf_selftest */
