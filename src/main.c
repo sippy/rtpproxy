@@ -532,7 +532,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    if (cf->stable->run_uname != NULL) {
 		pp = getpwnam(cf->stable->run_uname);
 		if (pp == NULL)
-		    err(1, "can't find ID for the user: %s", cf->stable->run_uname);
+		    errx(1, "can't find ID for the user: %s", cf->stable->run_uname);
 		cf->stable->run_uid = pp->pw_uid;
 		if (cf->stable->run_gname == NULL)
 		    cf->stable->run_gid = pp->pw_gid;
@@ -540,7 +540,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    if (cf->stable->run_gname != NULL) {
 		gp = getgrnam(cf->stable->run_gname);
 		if (gp == NULL)
-		    err(1, "can't find ID for the group: %s", cf->stable->run_gname);
+		    errx(1, "can't find ID for the group: %s", cf->stable->run_gname);
 		cf->stable->run_gid = gp->gr_gid;
                 if (cf->stable->sock_mode == 0) {
                     cf->stable->sock_mode = 0755;
