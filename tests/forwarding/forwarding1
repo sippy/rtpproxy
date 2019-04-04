@@ -217,7 +217,12 @@ setup_buffers
 
 witness_start forwarding1 "forwarding1.rout forwarding1.geno.rout forwarding1.gena.rout forwarding1.rlog forwarding1.geno.rlog forwarding1.gena.rlog"
 
-RTPPROXY_ARGS="-T5 --bridge_symmetric -b -s stdio: -f -d ${RTPP_DEBUG_LVL} -l 0.0.0.0 -6 /::"
+RTPPROXY_ARGS="-T5 --bridge_symmetric -b -s stdio: -f -d ${RTPP_DEBUG_LVL} -l 0.0.0.0 -6 /:: --config forwarding/rtpproxy.conf"
+
+if [ -e rtpproxy_acct.csv ]
+then
+  rm rtpproxy_acct.csv
+fi
 
 #sts=`date "+%Y%m%d%H%M%S"`
 (setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
@@ -255,3 +260,11 @@ report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
 report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
 
 witness_stop
+
+test -e rtpproxy_acct.csv
+report "checking if rtpproxy_acct.csv is present"
+
+nlexpected="181"
+anlines=$((`wc -l < rtpproxy_acct.csv`))
+test ${anlines} -eq ${nlexpected}
+report "checking number of lines in rtpproxy_acct.csv: ${anlines} vs ${nlexpected}"
