@@ -9,6 +9,10 @@ TS_LOGFILE="startstop.rlog"
 
 __beforeexit_cleanup()
 {
+  if [ ! -z "${TMP_PIDFILE}" ]
+  then
+    rtpproxy_stop TERM
+  fi
   if [ -f "${TMP_LOGFILE}" ]
   then
     cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
@@ -19,6 +23,13 @@ __beforeexit_cleanup()
 RTPP_OUTFILE="startstop.rout"
 
 truncate -s 0 "${TS_LOGFILE}"
+
+for bad_rargs in '-?' "-u nobody:nogroup" "randomgarbage" "more random garbage"
+do
+  RTPP_ARGS="${bad_rargs}" rtpproxy_start
+  reportifnotfail "rtpproxy start with bad argumens: ${bad_rargs}"
+done
+
 for rargs in "--config libucl/libucl_test.conf" ""
 do
   RTPP_ARGS="${rargs}" rtpproxy_start
