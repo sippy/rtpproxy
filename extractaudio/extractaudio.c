@@ -212,7 +212,7 @@ main(int argc, char **argv)
     double basetime;
     SF_INFO sfinfo;
     SNDFILE *sffile;
-    int dflags;
+    int dflags, nloaded;
     const struct supported_fmt *sf_of;
     uint32_t use_file_fmt, use_data_fmt;
     uint32_t dflt_file_fmt, dflt_data_fmt;
@@ -350,11 +350,19 @@ main(int argc, char **argv)
         argc -= 1;
     }
 
+    nloaded = 0;
     if (aname != NULL) {
-        load_session(aname, &channels, A_CH, alice_crypto);
+        if (load_session(aname, &channels, A_CH, alice_crypto) >= 0) {
+            nloaded += 1;
+        }
     }
     if (bname != NULL) {
-        load_session(bname, &channels, B_CH, bob_crypto);
+        if (load_session(bname, &channels, B_CH, bob_crypto) >= 0) {
+            nloaded += 1;
+        }
+    }
+    if (nloaded == 0) {
+       errx(1, "cannot load neither %s nor %s", aname, bname);
     }
 
     if (MYQ_EMPTY(&channels))
