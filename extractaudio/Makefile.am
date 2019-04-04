@@ -1,4 +1,8 @@
+include $(top_srcdir)/m4/memdeb.ami
+
 bin_PROGRAMS=extractaudio
+noinst_PROGRAMS=extractaudio_debug
+
 MAINSRCDIR=$(top_srcdir)/src
 extractaudio_SOURCES=extractaudio.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c \
   ${MAINSRCDIR}/rtp_analyze.c ${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
@@ -17,6 +21,11 @@ if BUILD_CRYPTO
 extractaudio_SOURCES+=eaud_crypto.c eaud_crypto.h srtp_util.c srtp_util.h
 extractaudio_LDADD+=@LIBS_SRTP@
 endif
+
+extractaudio_debug_SOURCES = $(extractaudio_SOURCES) $(RTPP_MEMDEB_CORESRCS)
+extractaudio_debug_LDADD = $(extractaudio_LDADD) $(RTPP_MEMDEB_LDADD)
+extractaudio_debug_CPPFLAGS = $(extractaudio_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=extractaudio
+extractaudio_debug_CFLAGS = $(RTPP_MEMDEB_CFLAGS)
 
 DEFS=   -DWITHOUT_RTPPLOG -Wall @DEFS@
 
