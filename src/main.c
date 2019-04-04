@@ -619,6 +619,12 @@ init_config(struct cfg *cf, int argc, char **argv)
 	}
     }
 
+    if (optind != argc) {
+       warnx("%d extra unhandled argument%s at the end of the command line",
+         argc - optind, (argc - optind) > 1 ? "s" : "");
+       usage();
+    }
+
     if (cf->stable->cfile != NULL) {
         if (rtpp_cfile_process(cf->stable) < 0) {
             init_config_bail(cf->stable, 1, "rtpp_cfile_process() failed", 1);
