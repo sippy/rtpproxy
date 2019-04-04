@@ -153,7 +153,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
 {
     int len, tpf, n, i;
     char c;
-    char *cp, *t;
+    char *cp, *t, *notify_tag;
     const char *errmsg;
     struct sockaddr_storage tia;
     struct ul_opts *ulop;
@@ -167,21 +167,21 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
     if (cmd->cca.op == UPDATE && cmd->argc > 6) {
         if (cmd->argc == 8) {
             ulop->notify_socket = cmd->argv[6];
-            ulop->notify_tag = cmd->argv[7];
+            notify_tag = cmd->argv[7];
         } else {
             ulop->notify_socket = cmd->argv[5];
-            ulop->notify_tag = cmd->argv[6];
+            notify_tag = cmd->argv[6];
             cmd->cca.to_tag = NULL;
         }
-        len = url_unquote((uint8_t *)ulop->notify_tag, strlen(ulop->notify_tag));
+        len = url_unquote((uint8_t *)notify_tag, strlen(notify_tag));
         if (len == -1) {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
               "command syntax error - invalid URL encoding");
             reply_error(cmd, ECODE_PARSE_10);
             goto err_undo_1;
         }
-        ulop->notify_tag[len] = '\0';
-        ulop->notify_tag = strdup(ulop->notify_tag);
+        notify_tag[len] = '\0';
+        ulop->notify_tag = strdup(notify_tag);
         if (ulop->notify_tag == NULL) {
             reply_error(cmd, ECODE_NOMEM_1);
             goto err_undo_1;
@@ -411,7 +411,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
 
     if (cmd->cca.op == UPDATE) {
         if (!CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled) && ulop->notify_socket != NULL) {
-            RTPP_LOG(spa->log, RTPP_LOG_ERR, "must permit notification socket with -n");
+            RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "must permit notification socket with -n");
             reply_error(cmd, ECODE_NSOFF);
             goto err_undo_0;
         }
