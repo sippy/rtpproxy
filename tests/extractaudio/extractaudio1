@@ -13,6 +13,12 @@ ofiles=""
 extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729 call1_gsm \
  call1_g722_srtp corrupted_g722"
 
+for bad_args in "-F foo" "-D bar"
+do
+  ${EXTRACTAUDIO} ${bad_args}
+  reportifnotfail "extractaudio start with bad argumens: ${bad_args}"
+done
+
 for tkind in ${TKINDS}
 do
   if [ ${tkind} = "mono" ]
