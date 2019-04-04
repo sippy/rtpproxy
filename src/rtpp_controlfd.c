@@ -68,13 +68,14 @@ controlfd_init_systemd(void)
 
     nfd = sd_listen_fds(0);
     if (nfd > 1) {
-        errx(1, "Too many file descriptors received.");
+        warnx("Too many file descriptors received.");
+        return (-1);
     }
     if (nfd == 1) {
         return (SD_LISTEN_FDS_START + 0);
     }
 #else
-    errx(1, "systemd is not supported or not detected on your system, "
+    warnx("systemd is not supported or not detected on your system, "
       "please consider filing report or submitting a patch");
 #endif
     return (-1);
@@ -95,22 +96,35 @@ controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     ifsun->sun_family = AF_LOCAL;
     strcpy(ifsun->sun_path, csp->cmd_sock);
     controlfd = socket(AF_LOCAL, SOCK_STREAM, 0);
-    if (controlfd == -1)
-        err(1, "can't create socket");
+    if (controlfd == -1) {
+        warn("can't create socket");
+        return (-1);
+    }
     reuse = 1;
     setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
-    if (bind(controlfd, sstosa(ifsun), sizeof(struct sockaddr_un)) < 0)
-        err(1, "can't bind to a socket: %s", csp->cmd_sock);
+    if (bind(controlfd, sstosa(ifsun), sizeof(struct sockaddr_un)) < 0) {
+        warn("can't bind to a socket: %s", csp->cmd_sock);
+        goto e0;
+    }
     if ((cf->stable->run_uname != NULL || cf->stable->run_gname != NULL) &&
-      chown(csp->cmd_sock, cf->stable->run_uid, cf->stable->run_gid) == -1)
-        err(1, "can't set owner of the socket: %s", csp->cmd_sock);
+      chown(csp->cmd_sock, cf->stable->run_uid, cf->stable->run_gid) == -1) {
+        warn("can't set owner of the socket: %s", csp->cmd_sock);
+        goto e0;
+    }
     if ((cf->stable->run_gname != NULL) && cf->stable->sock_mode != 0 &&
-      (chmod(csp->cmd_sock, cf->stable->sock_mode) == -1))
-        err(1, "can't allow rw acces to group");
-    if (listen(controlfd, 32) != 0)
-        err(1, "can't listen on a socket: %s", csp->cmd_sock);
+      (chmod(csp->cmd_sock, cf->stable->sock_mode) == -1)) {
+        warn("can't allow rw acces to group");
+        goto e0;
+    }
+    if (listen(controlfd, 32) != 0) {
+        warn("can't listen on a socket: %s", csp->cmd_sock);
+        goto e0;
+    }
 
     return (controlfd);
+e0:
+    close(controlfd);
+    return (-1);
 }
 
 static int
@@ -130,16 +144,23 @@ controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     csp->port_ctl = atoi(cp);
     i = (csp->type == RTPC_UDP6) ? AF_INET6 : AF_INET;
     ifsin = sstosa(&csp->bindaddr);
-    if (setbindhost(ifsin, i, csp->cmd_sock, cp) != 0)
-        exit(1);
+    if (setbindhost(ifsin, i, csp->cmd_sock, cp) != 0) {
+        warnx("setbindhost failed");
+        return (-1);
+    }
     controlfd = socket(i, SOCK_DGRAM, 0);
-    if (controlfd == -1)
-        err(1, "can't create socket");
+    if (controlfd == -1) {
+        warn("can't create socket");
+        return (-1);
+    }
     so_rcvbuf = 16 * 1024;
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
         RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
-    if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0)
-        err(1, "can't bind to a socket");
+    if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0) {
+        warn("can't bind to a socket");
+        close(controlfd);
+        return (-1);
+    }
 
     return (controlfd);
 }
@@ -161,20 +182,31 @@ controlfd_init_tcp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     csp->port_ctl = atoi(cp);
     i = (csp->type == RTPC_TCP6) ? AF_INET6 : AF_INET;
     ifsin = sstosa(&csp->bindaddr);
-    if (setbindhost(ifsin, i, csp->cmd_sock, cp) != 0)
-        exit(1);
+    if (setbindhost(ifsin, i, csp->cmd_sock, cp) != 0) {
+        warnx("setbindhost failed");
+        return (-1);
+    }
     controlfd = socket(i, SOCK_STREAM, 0);
-    if (controlfd == -1)
-        err(1, "can't create socket");
+    if (controlfd == -1) {
+        warn("can't create socket");
+        return (-1);
+    }
     so_rcvbuf = 16 * 1024;
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
         RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
-    if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0)
-        err(1, "can't bind to a socket");
-    if (listen(controlfd, 32) != 0)
-        err(1, "can't listen on a socket: %s", csp->cmd_sock);
+    if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0) {
+        warn("can't bind to a socket");
+        goto e0;
+    }
+    if (listen(controlfd, 32) != 0) {
+        warn("can't listen on a socket: %s", csp->cmd_sock);
+        goto e0;
+    }
 
     return (controlfd);
+e0:
+    close(controlfd);
+    return (-1);
 }
 
 int
