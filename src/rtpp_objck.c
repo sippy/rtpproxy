@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -58,7 +59,7 @@
 #include "rtpp_wi.h"
 
 #if defined(_RTPP_MEMDEB_H)
-RTPP_MEMDEB_STATIC(rtpp_objck);
+RTPP_MEMDEB_APP_STATIC;
 #endif
 
 struct test_data {
@@ -149,8 +150,8 @@ main(int argc, char **argv)
     }
 
 #if defined(_RTPP_MEMDEB_H)
-    RTPP_MEMDEB_INIT(rtpp_objck);
-    if (rtpp_memdeb_selftest(_rtpp_objck_memdeb) != 0) {
+    RTPP_MEMDEB_APP_INIT();
+    if (rtpp_memdeb_selftest(MEMDEB_SYM) != 0) {
         errx(1, "MEMDEB self-test has failed");
         /* NOTREACHED */
     }
@@ -196,7 +197,7 @@ main(int argc, char **argv)
     rtpp_queue_destroy(targs.rqp);
 
 #if defined(_RTPP_MEMDEB_H)
-    ecode = rtpp_memdeb_dumpstats(_rtpp_objck_memdeb, 0) == 0 ? 0 : 1;
+    ecode = rtpp_memdeb_dumpstats(MEMDEB_SYM, 0) == 0 ? 0 : 1;
 #endif
 
     exit(ecode);
