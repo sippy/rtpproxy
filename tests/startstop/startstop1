@@ -30,7 +30,10 @@ do
   reportifnotfail "rtpproxy start with bad argumens: ${bad_rargs}"
 done
 
-for rargs in "--config libucl/libucl_test.conf" ""
+myuid="`id -un`"
+mygid="`id -gn`"
+
+for rargs in "--config libucl/libucl_test.conf" "-u ${myuid}:${mygid}" ""
 do
   RTPP_ARGS="${rargs}" rtpproxy_start
   report "rtpproxy start"
