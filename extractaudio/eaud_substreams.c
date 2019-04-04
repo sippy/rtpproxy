@@ -64,7 +64,8 @@ eaud_ss_syncactive(struct channels *all_ssp, struct channels *act_ssp,
             continue;
         }
         if (eaud_ss_find(act_ssp, cnp->cp) == NULL) {
-            channel_insert(act_ssp, cnp->cp);
+            if (channel_insert(act_ssp, cnp->cp) < 0)
+               return (-1);
             nadded += 1;
         }
     }
