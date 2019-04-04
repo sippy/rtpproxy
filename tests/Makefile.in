@@ -474,9 +474,10 @@ TESTS = startstop/startstop1 unittests/rtcp2json1 unittests/rtpp_sbuf \
 	basic_versions/basic_versions1 command_parser/command_parser1 \
 	makeann/makeann1 extractaudio/extractaudio1 memdeb/glitch1 \
 	memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
-	session_timeouts/notify_tcp session_timeouts/notify_tcp_wild \
-	session_timeouts/notify_unix playback/playback1 \
-	forwarding/forwarding1 rtp_analyze/rtp_analyze1
+	memdeb/glitch_libucl1 session_timeouts/notify_tcp \
+	session_timeouts/notify_tcp_wild session_timeouts/notify_unix \
+	playback/playback1 forwarding/forwarding1 \
+	rtp_analyze/rtp_analyze1
 CLEANFILES = ${startstop_CLEANFILES} ${rtcp2json_CLEANFILES} \
 	${libucl_CLEANFILES} ${libexecinfo_CLEANFILES} \
 	${acct_rtcp_hep_CLEANFILES} ${basic_versions_CLEANFILES} \
@@ -819,6 +820,13 @@ memdeb/glitch_startstop1.log: memdeb/glitch_startstop1
 memdeb/glitch_basic_versions1.log: memdeb/glitch_basic_versions1
 	@p='memdeb/glitch_basic_versions1'; \
 	b='memdeb/glitch_basic_versions1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch_libucl1.log: memdeb/glitch_libucl1
+	@p='memdeb/glitch_libucl1'; \
+	b='memdeb/glitch_libucl1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
