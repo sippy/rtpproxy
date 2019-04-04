@@ -1,0 +1,10 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+for t in "" "_perf"
+do
+  "${TOP_BUILDDIR}/src/rtpp_objck${t}"
+  report "Running rtpp_objck${t}"
+done

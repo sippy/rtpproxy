@@ -1,5 +1,5 @@
 unittests_EXTRA_DIST = unittests
 rtcp2json_CLEANFILES = rtcp1.output
-TESTS += unittests/rtcp2json1 unittests/rtpp_sbuf
+TESTS += unittests/rtcp2json1 unittests/rtpp_sbuf unittests/rtpp_objck
 CLEANFILES += ${rtcp2json_CLEANFILES}
 EXTRA_DIST += ${unittests_EXTRA_DIST}
