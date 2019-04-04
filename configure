@@ -12823,6 +12823,7 @@ fi
 
 if test "$found_stdatomic" = yes
 then
+  ENABLE_OBJCK=1
 
 $as_echo "#define ENABLE_OBJCK 1" >>confdefs.h
 

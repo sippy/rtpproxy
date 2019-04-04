@@ -514,7 +514,8 @@ makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
 extractaudio_EXTRA_DIST = extractaudio
 extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
   *.stereo.*.wav.tout *.mono.*.raw *.mono.*.raw.tout *.mono.*.w64 \
-  *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout
+  *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout \
+  *.mono.*.rlog *.stereo.*.rlog
 
 memdeb_EXTRA_DIST = memdeb
 memdeb_CLEANFILES = glitch1.ncout

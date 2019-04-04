@@ -145,8 +145,9 @@ am__objects_3 = rtpp_objck-rtpp_memdeb.$(OBJEXT) \
 am__objects_4 = $(am__objects_3) rtpp_objck-rtpp_memdeb_test.$(OBJEXT)
 am_rtpp_objck_OBJECTS = $(am__objects_2) $(am__objects_4)
 rtpp_objck_OBJECTS = $(am_rtpp_objck_OBJECTS)
-am__DEPENDENCIES_1 =
-rtpp_objck_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.a
+am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+rtpp_objck_DEPENDENCIES = $(am__DEPENDENCIES_2)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -185,7 +186,7 @@ am_rtpp_objck_perf_OBJECTS = rtpp_objck_perf-rtpp_objck.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_queue.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_wi.$(OBJEXT)
 rtpp_objck_perf_OBJECTS = $(am_rtpp_objck_perf_OBJECTS)
-rtpp_objck_perf_DEPENDENCIES =
+rtpp_objck_perf_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__rtpproxy_SOURCES_DIST = main.c rtp.h rtpp_server.c rtpp_server.h \
 	rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_record.h \
 	rtpp_session.h rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c \
@@ -319,8 +320,9 @@ am__objects_10 = rtpproxy-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy-rtpp_timed_task_fin.$(OBJEXT)
 am_rtpproxy_OBJECTS = $(am__objects_9) $(am__objects_10)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
+am__DEPENDENCIES_3 =
 rtpproxy_DEPENDENCIES = $(top_srcdir)/libucl/libucl.a \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_3)
 rtpproxy_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rtpproxy_CFLAGS) \
 	$(CFLAGS) $(rtpproxy_LDFLAGS) $(LDFLAGS) -o $@
@@ -483,9 +485,8 @@ am__objects_19 = $(am__objects_18) \
 	rtpproxy_debug-rtpp_stacktrace.$(OBJEXT)
 am_rtpproxy_debug_OBJECTS = $(am__objects_16) $(am__objects_19)
 rtpproxy_debug_OBJECTS = $(am_rtpproxy_debug_OBJECTS)
-am__DEPENDENCIES_2 = $(top_srcdir)/libexecinfo/libexecinfo.a
 rtpproxy_debug_DEPENDENCIES = $(top_srcdir)/libucl/libucl_debug.a \
-	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_3)
 rtpproxy_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpproxy_debug_CFLAGS) $(CFLAGS) $(rtpproxy_debug_LDFLAGS) \
@@ -997,7 +998,7 @@ SRCS_AUTOGEN = rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
 
 rtpproxy_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN)
 rtpproxy_debug_SOURCES = $(rtpproxy_SOURCES) $(SRCS_DEBUG)
-rtpp_objck_perf_LDADD = -lm -lpthread @LIBS_ELPERIODIC@
+rtpp_objck_perf_LDADD = -lm -lpthread @LIBS_ELPERIODIC@ $(RTPP_MEMDEB_LDADD)
 rtpp_objck_perf_SOURCES = rtpp_objck.c $(SRCS_AUTOGEN) \
   rtpp_stats.c rtpp_stats.h rtpp_mallocs.c rtpp_mallocs.h \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_pearson.c rtpp_pearson.h \

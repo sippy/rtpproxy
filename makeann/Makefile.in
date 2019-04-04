@@ -89,6 +89,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = makeann$(EXEEXT)
+noinst_PROGRAMS = makeann_debug$(EXEEXT)
 subdir = makeann
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -103,7 +104,7 @@ CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
-PROGRAMS = $(bin_PROGRAMS)
+PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_makeann_OBJECTS = makeann-makeann.$(OBJEXT) \
 	makeann-g729_compat.$(OBJEXT)
 makeann_OBJECTS = $(am_makeann_OBJECTS)
@@ -112,6 +113,19 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am__objects_1 = makeann_debug-makeann.$(OBJEXT) \
+	makeann_debug-g729_compat.$(OBJEXT)
+am__objects_2 = makeann_debug-rtpp_memdeb.$(OBJEXT) \
+	makeann_debug-rtpp_memdeb_glitch.$(OBJEXT)
+am_makeann_debug_OBJECTS = $(am__objects_1) $(am__objects_2)
+makeann_debug_OBJECTS = $(am_makeann_debug_OBJECTS)
+am__DEPENDENCIES_1 =
+am__DEPENDENCIES_2 = $(top_srcdir)/libexecinfo/libexecinfo.a
+makeann_debug_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
+makeann_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(makeann_debug_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -128,7 +142,11 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/makeann-g729_compat.Po \
-	./$(DEPDIR)/makeann-makeann.Po
+	./$(DEPDIR)/makeann-makeann.Po \
+	./$(DEPDIR)/makeann_debug-g729_compat.Po \
+	./$(DEPDIR)/makeann_debug-makeann.Po \
+	./$(DEPDIR)/makeann_debug-rtpp_memdeb.Po \
+	./$(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -148,8 +166,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(makeann_SOURCES)
-DIST_SOURCES = $(makeann_SOURCES)
+SOURCES = $(makeann_SOURCES) $(makeann_debug_SOURCES)
+DIST_SOURCES = $(makeann_SOURCES) $(makeann_debug_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -174,7 +192,8 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
+am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
+	$(top_srcdir)/m4/memdeb.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -305,17 +324,28 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h -I$(top_srcdir)
+RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
+  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_memdeb_glitch.c \
+  $(top_srcdir)/src/rtpp_memdeb_glitch.h
+
+RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 extractaudio_SRCDIR = $(top_srcdir)/extractaudio
-makeann_SOURCES = makeann.c rtp.h g711.h ${extractaudio_SRCDIR}/g729_compat.c \
-  ${extractaudio_SRCDIR}/g729_compat.h
+makeann_SOURCES = makeann.c rtp.h g711.h $(extractaudio_SRCDIR)/g729_compat.c \
+  $(extractaudio_SRCDIR)/g729_compat.h
 
 makeann_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@
-makeann_CPPFLAGS = -I${extractaudio_SRCDIR}
+makeann_CPPFLAGS = -I$(extractaudio_SRCDIR)
+makeann_debug_SOURCES = $(makeann_SOURCES) $(RTPP_MEMDEB_CORESRCS)
+makeann_debug_LDADD = $(makeann_LDADD) $(RTPP_MEMDEB_LDADD)
+makeann_debug_CPPFLAGS = $(makeann_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=makeann
+makeann_debug_CFLAGS = $(RTPP_MEMDEB_CFLAGS)
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -335,6 +365,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
+$(top_srcdir)/m4/memdeb.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -394,9 +425,22 @@ clean-binPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
+
 makeann$(EXEEXT): $(makeann_OBJECTS) $(makeann_DEPENDENCIES) $(EXTRA_makeann_DEPENDENCIES) 
 	@rm -f makeann$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(makeann_OBJECTS) $(makeann_LDADD) $(LIBS)
+
+makeann_debug$(EXEEXT): $(makeann_debug_OBJECTS) $(makeann_debug_DEPENDENCIES) $(EXTRA_makeann_debug_DEPENDENCIES) 
+	@rm -f makeann_debug$(EXEEXT)
+	$(AM_V_CCLD)$(makeann_debug_LINK) $(makeann_debug_OBJECTS) $(makeann_debug_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -406,6 +450,10 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann-g729_compat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann-makeann.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann_debug-g729_compat.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann_debug-makeann.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann_debug-rtpp_memdeb.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -448,19 +496,75 @@ makeann-makeann.obj: makeann.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o makeann-makeann.obj `if test -f 'makeann.c'; then $(CYGPATH_W) 'makeann.c'; else $(CYGPATH_W) '$(srcdir)/makeann.c'; fi`
 
-makeann-g729_compat.o: ${extractaudio_SRCDIR}/g729_compat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT makeann-g729_compat.o -MD -MP -MF $(DEPDIR)/makeann-g729_compat.Tpo -c -o makeann-g729_compat.o `test -f '${extractaudio_SRCDIR}/g729_compat.c' || echo '$(srcdir)/'`${extractaudio_SRCDIR}/g729_compat.c
+makeann-g729_compat.o: $(extractaudio_SRCDIR)/g729_compat.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT makeann-g729_compat.o -MD -MP -MF $(DEPDIR)/makeann-g729_compat.Tpo -c -o makeann-g729_compat.o `test -f '$(extractaudio_SRCDIR)/g729_compat.c' || echo '$(srcdir)/'`$(extractaudio_SRCDIR)/g729_compat.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann-g729_compat.Tpo $(DEPDIR)/makeann-g729_compat.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${extractaudio_SRCDIR}/g729_compat.c' object='makeann-g729_compat.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(extractaudio_SRCDIR)/g729_compat.c' object='makeann-g729_compat.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o makeann-g729_compat.o `test -f '${extractaudio_SRCDIR}/g729_compat.c' || echo '$(srcdir)/'`${extractaudio_SRCDIR}/g729_compat.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o makeann-g729_compat.o `test -f '$(extractaudio_SRCDIR)/g729_compat.c' || echo '$(srcdir)/'`$(extractaudio_SRCDIR)/g729_compat.c
 
-makeann-g729_compat.obj: ${extractaudio_SRCDIR}/g729_compat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT makeann-g729_compat.obj -MD -MP -MF $(DEPDIR)/makeann-g729_compat.Tpo -c -o makeann-g729_compat.obj `if test -f '${extractaudio_SRCDIR}/g729_compat.c'; then $(CYGPATH_W) '${extractaudio_SRCDIR}/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/${extractaudio_SRCDIR}/g729_compat.c'; fi`
+makeann-g729_compat.obj: $(extractaudio_SRCDIR)/g729_compat.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT makeann-g729_compat.obj -MD -MP -MF $(DEPDIR)/makeann-g729_compat.Tpo -c -o makeann-g729_compat.obj `if test -f '$(extractaudio_SRCDIR)/g729_compat.c'; then $(CYGPATH_W) '$(extractaudio_SRCDIR)/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/$(extractaudio_SRCDIR)/g729_compat.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann-g729_compat.Tpo $(DEPDIR)/makeann-g729_compat.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${extractaudio_SRCDIR}/g729_compat.c' object='makeann-g729_compat.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(extractaudio_SRCDIR)/g729_compat.c' object='makeann-g729_compat.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o makeann-g729_compat.obj `if test -f '${extractaudio_SRCDIR}/g729_compat.c'; then $(CYGPATH_W) '${extractaudio_SRCDIR}/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/${extractaudio_SRCDIR}/g729_compat.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o makeann-g729_compat.obj `if test -f '$(extractaudio_SRCDIR)/g729_compat.c'; then $(CYGPATH_W) '$(extractaudio_SRCDIR)/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/$(extractaudio_SRCDIR)/g729_compat.c'; fi`
+
+makeann_debug-makeann.o: makeann.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-makeann.o -MD -MP -MF $(DEPDIR)/makeann_debug-makeann.Tpo -c -o makeann_debug-makeann.o `test -f 'makeann.c' || echo '$(srcdir)/'`makeann.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-makeann.Tpo $(DEPDIR)/makeann_debug-makeann.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='makeann.c' object='makeann_debug-makeann.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-makeann.o `test -f 'makeann.c' || echo '$(srcdir)/'`makeann.c
+
+makeann_debug-makeann.obj: makeann.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-makeann.obj -MD -MP -MF $(DEPDIR)/makeann_debug-makeann.Tpo -c -o makeann_debug-makeann.obj `if test -f 'makeann.c'; then $(CYGPATH_W) 'makeann.c'; else $(CYGPATH_W) '$(srcdir)/makeann.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-makeann.Tpo $(DEPDIR)/makeann_debug-makeann.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='makeann.c' object='makeann_debug-makeann.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-makeann.obj `if test -f 'makeann.c'; then $(CYGPATH_W) 'makeann.c'; else $(CYGPATH_W) '$(srcdir)/makeann.c'; fi`
+
+makeann_debug-g729_compat.o: $(extractaudio_SRCDIR)/g729_compat.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-g729_compat.o -MD -MP -MF $(DEPDIR)/makeann_debug-g729_compat.Tpo -c -o makeann_debug-g729_compat.o `test -f '$(extractaudio_SRCDIR)/g729_compat.c' || echo '$(srcdir)/'`$(extractaudio_SRCDIR)/g729_compat.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-g729_compat.Tpo $(DEPDIR)/makeann_debug-g729_compat.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(extractaudio_SRCDIR)/g729_compat.c' object='makeann_debug-g729_compat.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-g729_compat.o `test -f '$(extractaudio_SRCDIR)/g729_compat.c' || echo '$(srcdir)/'`$(extractaudio_SRCDIR)/g729_compat.c
+
+makeann_debug-g729_compat.obj: $(extractaudio_SRCDIR)/g729_compat.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-g729_compat.obj -MD -MP -MF $(DEPDIR)/makeann_debug-g729_compat.Tpo -c -o makeann_debug-g729_compat.obj `if test -f '$(extractaudio_SRCDIR)/g729_compat.c'; then $(CYGPATH_W) '$(extractaudio_SRCDIR)/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/$(extractaudio_SRCDIR)/g729_compat.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-g729_compat.Tpo $(DEPDIR)/makeann_debug-g729_compat.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(extractaudio_SRCDIR)/g729_compat.c' object='makeann_debug-g729_compat.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-g729_compat.obj `if test -f '$(extractaudio_SRCDIR)/g729_compat.c'; then $(CYGPATH_W) '$(extractaudio_SRCDIR)/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/$(extractaudio_SRCDIR)/g729_compat.c'; fi`
+
+makeann_debug-rtpp_memdeb.o: $(top_srcdir)/src/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-rtpp_memdeb.o -MD -MP -MF $(DEPDIR)/makeann_debug-rtpp_memdeb.Tpo -c -o makeann_debug-rtpp_memdeb.o `test -f '$(top_srcdir)/src/rtpp_memdeb.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-rtpp_memdeb.Tpo $(DEPDIR)/makeann_debug-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb.c' object='makeann_debug-rtpp_memdeb.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-rtpp_memdeb.o `test -f '$(top_srcdir)/src/rtpp_memdeb.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb.c
+
+makeann_debug-rtpp_memdeb.obj: $(top_srcdir)/src/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-rtpp_memdeb.obj -MD -MP -MF $(DEPDIR)/makeann_debug-rtpp_memdeb.Tpo -c -o makeann_debug-rtpp_memdeb.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-rtpp_memdeb.Tpo $(DEPDIR)/makeann_debug-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb.c' object='makeann_debug-rtpp_memdeb.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-rtpp_memdeb.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb.c'; fi`
+
+makeann_debug-rtpp_memdeb_glitch.o: $(top_srcdir)/src/rtpp_memdeb_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-rtpp_memdeb_glitch.o -MD -MP -MF $(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Tpo -c -o makeann_debug-rtpp_memdeb_glitch.o `test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Tpo $(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb_glitch.c' object='makeann_debug-rtpp_memdeb_glitch.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-rtpp_memdeb_glitch.o `test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb_glitch.c
+
+makeann_debug-rtpp_memdeb_glitch.obj: $(top_srcdir)/src/rtpp_memdeb_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-rtpp_memdeb_glitch.obj -MD -MP -MF $(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Tpo -c -o makeann_debug-rtpp_memdeb_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb_glitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Tpo $(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb_glitch.c' object='makeann_debug-rtpp_memdeb_glitch.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-rtpp_memdeb_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb_glitch.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -592,11 +696,16 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libtool \
+	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/makeann-g729_compat.Po
 	-rm -f ./$(DEPDIR)/makeann-makeann.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-g729_compat.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-makeann.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_memdeb.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -644,6 +753,10 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/makeann-g729_compat.Po
 	-rm -f ./$(DEPDIR)/makeann-makeann.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-g729_compat.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-makeann.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_memdeb.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_memdeb_glitch.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -665,15 +778,16 @@ uninstall-am: uninstall-binPROGRAMS
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-am clean \
-	clean-binPROGRAMS clean-generic clean-libtool cscopelist-am \
-	ctags ctags-am distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	clean-binPROGRAMS clean-generic clean-libtool \
+	clean-noinstPROGRAMS cscopelist-am ctags ctags-am distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-binPROGRAMS install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS
