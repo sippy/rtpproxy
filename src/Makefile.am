@@ -79,7 +79,7 @@ SRCS_AUTOGEN=rtpp_timed_fin.c rtpp_timed_fin.h rtpp_stream_fin.c \
   rtpp_pearson_perfect_fin.h rtpp_timed_task_fin.c rtpp_timed_task_fin.h
 rtpproxy_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN)
 rtpproxy_debug_SOURCES=$(rtpproxy_SOURCES) $(SRCS_DEBUG)
-rtpp_objck_perf_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
+rtpp_objck_perf_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(RTPP_MEMDEB_LDADD)
 rtpp_objck_perf_SOURCES=rtpp_objck.c $(SRCS_AUTOGEN) \
   rtpp_stats.c rtpp_stats.h rtpp_mallocs.c rtpp_mallocs.h \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_pearson.c rtpp_pearson.h \
