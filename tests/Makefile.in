@@ -473,8 +473,8 @@ TESTS = startstop/startstop1 unittests/rtcp2json1 unittests/rtpp_sbuf \
 	libucl/libucl1 libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
 	basic_versions/basic_versions1 command_parser/command_parser1 \
 	makeann/makeann1 extractaudio/extractaudio1 memdeb/glitch1 \
-	memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
-	memdeb/glitch_libucl1 session_timeouts/notify_tcp \
+	memdeb/glitch_libucl1 memdeb/glitch_startstop1 \
+	memdeb/glitch_basic_versions1 session_timeouts/notify_tcp \
 	session_timeouts/notify_tcp_wild session_timeouts/notify_unix \
 	playback/playback1 forwarding/forwarding1 \
 	rtp_analyze/rtp_analyze1
@@ -519,9 +519,9 @@ extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
 memdeb_EXTRA_DIST = memdeb
 memdeb_CLEANFILES = glitch1.ncout
 session_timeouts_EXTRA_DIST = session_timeouts
-session_timeouts_CLEANFILES = session_timeouts.rout[123456].[1234] session_timeouts.rlog[123456].[1234] \
-  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[123456].[1234] \
-  session_timeouts.fout[123456].[1234]
+session_timeouts_CLEANFILES = session_timeouts.rout[1234567].[1234] session_timeouts.rlog[1234567].[1234] \
+  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234567].[1234] \
+  session_timeouts.fout[1234567].[1234]
 
 playback_EXTRA_DIST = playback
 playback_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
@@ -810,6 +810,13 @@ memdeb/glitch1.log: memdeb/glitch1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch_libucl1.log: memdeb/glitch_libucl1
+	@p='memdeb/glitch_libucl1'; \
+	b='memdeb/glitch_libucl1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 memdeb/glitch_startstop1.log: memdeb/glitch_startstop1
 	@p='memdeb/glitch_startstop1'; \
 	b='memdeb/glitch_startstop1'; \
@@ -820,13 +827,6 @@ memdeb/glitch_startstop1.log: memdeb/glitch_startstop1
 memdeb/glitch_basic_versions1.log: memdeb/glitch_basic_versions1
 	@p='memdeb/glitch_basic_versions1'; \
 	b='memdeb/glitch_basic_versions1'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-memdeb/glitch_libucl1.log: memdeb/glitch_libucl1
-	@p='memdeb/glitch_libucl1'; \
-	b='memdeb/glitch_libucl1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
