@@ -42,6 +42,7 @@ cd libsrtp
 ./configure
 make
 sudo make install
+cd ..
 wget http://www.mega-nerd.com/libsndfile/files/libsndfile-${SNDFILE_VER}.tar.gz
 tar xfz libsndfile-${SNDFILE_VER}.tar.gz
 cd libsndfile-${SNDFILE_VER}
