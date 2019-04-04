@@ -156,6 +156,7 @@ main(int argc, char **argv)
         /* NOTREACHED */
     }
 #endif
+    ecode = 0;
     rtp = rtpp_timed_ctor(0.1);
     targs.rsp = rtpp_stats_ctor();
     targs.rqp = rtpp_queue_init(1, "perftest");
