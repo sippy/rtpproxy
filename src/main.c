@@ -121,7 +121,7 @@
 static void usage(void);
 
 #ifdef RTPP_CHECK_LEAKS
-RTPP_MEMDEB_STATIC(rtpproxy);
+RTPP_MEMDEB_APP_STATIC;
 #endif
 
 static void
@@ -149,7 +149,7 @@ rtpp_exit(int memdeb, int rval)
     ecode = 0;
 #ifdef RTPP_CHECK_LEAKS
     if (memdeb) {
-        ecode = rtpp_memdeb_dumpstats(_rtpproxy_memdeb, 0) == 0 ? 0 : 1;
+        ecode = rtpp_memdeb_dumpstats(MEMDEB_SYM, 0) == 0 ? 0 : 1;
     }
 #endif
     exit(rval == 0 ? ecode : rval);
@@ -767,7 +767,7 @@ main(int argc, char **argv)
     struct rtpp_module_if *mif;
 
 #ifdef RTPP_CHECK_LEAKS
-    RTPP_MEMDEB_INIT(rtpproxy);
+    RTPP_MEMDEB_APP_INIT();
 #endif
     if (getdtime() == -1) {
         err(1, "timer self-test has failed: please check your build configuration");
@@ -775,11 +775,11 @@ main(int argc, char **argv)
     }
 
 #ifdef RTPP_CHECK_LEAKS
-    if (rtpp_memdeb_selftest(_rtpproxy_memdeb) != 0) {
+    if (rtpp_memdeb_selftest(MEMDEB_SYM) != 0) {
         errx(1, "MEMDEB self-test has failed");
         /* NOTREACHED */
     }
-    rtpp_memdeb_approve(_rtpproxy_memdeb, "addr2bindaddr", 100, "Too busy to fix now");
+    rtpp_memdeb_approve(MEMDEB_SYM, "addr2bindaddr", 100, "Too busy to fix now");
 #endif
 
     memset(&cf, 0, sizeof(cf));
@@ -813,7 +813,7 @@ main(int argc, char **argv)
         /* NOTREACHED */
     }
  #ifdef RTPP_CHECK_LEAKS
-    rtpp_memdeb_setlog(_rtpproxy_memdeb, cf.stable->glog);
+    rtpp_memdeb_setlog(MEMDEB_SYM, cf.stable->glog);
  #endif
 
     _sig_cf = &cf;
@@ -894,7 +894,7 @@ main(int argc, char **argv)
     RTPP_LOG(cf.stable->glog, RTPP_LOG_INFO, "rtpproxy started, pid %d", getpid());
 
 #ifdef RTPP_CHECK_LEAKS
-    rtpp_memdeb_setbaseln(_rtpproxy_memdeb);
+    rtpp_memdeb_setbaseln(MEMDEB_SYM);
 #endif
 
     i = open(cf.stable->pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
