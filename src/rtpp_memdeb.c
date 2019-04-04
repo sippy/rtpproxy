@@ -59,6 +59,7 @@
 #include "rtpp_memdeb_internal.h"
 #include "rtpp_memdeb_stats.h"
 #include "rtpp_memdeb_glitch.h"
+#include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
 
 #undef malloc
@@ -123,7 +124,6 @@ void *
 rtpp_memdeb_init(bool is_main)
 {
     struct rtpp_memdeb_priv *pvt;
-    void *topframes[2] = {NULL, NULL};
 
     pvt = malloc(sizeof(struct rtpp_memdeb_priv));
     if (pvt == NULL) {
@@ -135,9 +135,6 @@ rtpp_memdeb_init(bool is_main)
     pvt->inst_name = STR(MEMDEB_APP);
 
     if (is_main) {
-        assert(backtrace(topframes, 2) == 2);
-        assert(topframes[0] != NULL);
-        assert(execinfo_set_topframe(topframes[0]) == NULL);
         rtpp_memdeb_glitch_init();
    }
 

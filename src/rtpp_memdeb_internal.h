@@ -47,6 +47,9 @@
 #define RTPP_MEMDEB_STATIC(appname) void *_##appname##_memdeb
 
 #define RTPP_MEMDEB_INIT(appname) { \
+	void *_trp = getreturnaddr(1); \
+	assert(_trp != NULL); \
+	assert(execinfo_set_topframe(_trp) == NULL); \
         _##appname##_memdeb = rtpp_memdeb_init(true); \
         assert(_##appname##_memdeb != NULL); \
     }
