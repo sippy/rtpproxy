@@ -3,6 +3,7 @@
 set -e
 
 BCG729_VER=1.0.4
+SNDFILE_VER=1.0.28
 
 uname -a
 which ${CC}
@@ -18,7 +19,7 @@ make
 make clean
 #sudo DEBIAN_FRONTEND=noninteractive apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
- install -y libgsm1-dev libsndfile1-dev tcpdump curl wireshark-common gdb
+ install -y libgsm1-dev tcpdump curl wireshark-common gdb
 tcpdump --version || true
 mkdir deps
 cd deps
@@ -38,6 +39,12 @@ sudo make install
 cd ..
 git clone https://github.com/cisco/libsrtp.git
 cd libsrtp
+./configure
+make
+sudo make install
+wget http://www.mega-nerd.com/libsndfile/files/libsndfile-${SNDFILE_VER}.tar.gz
+tar xfz libsndfile-${SNDFILE_VER}.tar.gz
+cd libsndfile-${SNDFILE_VER}
 ./configure
 make
 sudo make install
