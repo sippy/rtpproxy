@@ -35,6 +35,7 @@ do
       do
         wfile="${rfile}.${tkind}.${dfmt}.${ofmt}"
         sfile="${rfile}.${tkind}.${dfmt}.${ofmt}.tout"
+        logfile="${rfile}.${tkind}.${dfmt}.${ofmt}.rlog"
         if [ -e "${wfile}" ]
         then
           rm "${wfile}"
@@ -47,7 +48,7 @@ do
           EXTRACTAUDIO_EARGS=""
         fi
         ${EXTRACTAUDIO} -F ${ofmt} -D ${dfmt} ${EXTRACTAUDIO_ARGS} \
-         ${EXTRACTAUDIO_EARGS} extractaudio/${rfile} ${wfile} 2>/dev/null >${sfile} || continue
+         ${EXTRACTAUDIO_EARGS} extractaudio/${rfile} ${wfile} 2>${logfile} >${sfile} || continue
         test -s ${wfile}
         report "${rfile} -> ${wfile}"
         sha256_verify ${wfile} extractaudio/extractaudio.checksums
