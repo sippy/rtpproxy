@@ -105,7 +105,10 @@ rtpp_sbuf_extend(struct rtpp_sbuf *sbp, int nlen)
 }
 
 #if defined(rtpp_sbuf_selftest)
+#include <stdint.h>
 #include "rtpp_memdeb_internal.h"
+#include "libexecinfo/stacktraverse.h"
+#include "libexecinfo/execinfo.h"
 
 RTPP_MEMDEB_STATIC(rtpp_sbuf);
 

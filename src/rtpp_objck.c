@@ -45,6 +45,8 @@
 
 #include "rtpp_types.h"
 #if defined(_RTPP_MEMDEB_H)
+#include "libexecinfo/stacktraverse.h"
+#include "libexecinfo/execinfo.h"
 #include "rtpp_memdeb_internal.h"
 #endif
 #include "rtpp_queue.h"
