@@ -60,7 +60,7 @@ RTPP_TEST_SOCKETS="stdio: udp:${IPV4_LHOST}:${RTPP_TEST_SOCK_UDP4_PORT} \
   cunix:${RTPP_TEST_SOCK_CUNIX} udp6:${IPV6_LHOST}:${RTPP_TEST_SOCK_UDP6_PORT} \
   tcp6:${IPV6_LHOST}:${RTPP_TEST_SOCK_TCP6_PORT}"
 MAKEANN=${TOP_BUILDDIR}/makeann/makeann
-EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio
+EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio_debug
 DIFF="diff -u"
 TCPDUMP="tcpdump"
 TAR="tar"
