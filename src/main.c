@@ -102,6 +102,7 @@
 #include "rtpp_weakref.h"
 #include "rtpp_debug.h"
 #ifdef RTPP_CHECK_LEAKS
+#include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
 #include "rtpp_memdeb_internal.h"
 #endif

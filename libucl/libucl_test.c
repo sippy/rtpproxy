@@ -14,6 +14,8 @@
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_ucl.h"
+#include "libexecinfo/stacktraverse.h"
+#include "libexecinfo/execinfo.h"
 
 RTPP_MEMDEB_STATIC(rtpproxy);
 RTPP_MEMDEB_STATIC(libucl_test);
