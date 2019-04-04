@@ -470,9 +470,10 @@ top_srcdir = @top_srcdir@
 startstop_EXTRA_DIST = startstop
 startstop_CLEANFILES = startstop.rout startstop.rlog
 TESTS = startstop/startstop1 unittests/rtcp2json1 unittests/rtpp_sbuf \
-	libucl/libucl1 libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
-	basic_versions/basic_versions1 command_parser/command_parser1 \
-	makeann/makeann1 extractaudio/extractaudio1 memdeb/glitch1 \
+	unittests/rtpp_objck libucl/libucl1 libexecinfo/libexecinfo1 \
+	acct_rtcp_hep/confval1 basic_versions/basic_versions1 \
+	command_parser/command_parser1 makeann/makeann1 \
+	extractaudio/extractaudio1 memdeb/glitch1 \
 	memdeb/glitch_libucl1 memdeb/glitch_startstop1 \
 	memdeb/glitch_basic_versions1 session_timeouts/notify_tcp \
 	session_timeouts/notify_tcp_wild session_timeouts/notify_unix \
@@ -751,6 +752,13 @@ unittests/rtcp2json1.log: unittests/rtcp2json1
 unittests/rtpp_sbuf.log: unittests/rtpp_sbuf
 	@p='unittests/rtpp_sbuf'; \
 	b='unittests/rtpp_sbuf'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+unittests/rtpp_objck.log: unittests/rtpp_objck
+	@p='unittests/rtpp_objck'; \
+	b='unittests/rtpp_objck'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
