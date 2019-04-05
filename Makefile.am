@@ -30,3 +30,6 @@ EXTRA_DIST=	README.remote manpage.xml debian/README.Debian debian/changelog \
 
 rtpproxy.8: manpage.xml
 	xsltproc /usr/local/share/xsl/docbook/manpages/docbook.xsl manpage.xml
+
+update_autosrc:
+	${MAKE} -C src ${.TARGET}
