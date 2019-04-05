@@ -1,5 +1,5 @@
 startstop_EXTRA_DIST = startstop
 startstop_CLEANFILES = startstop.rout startstop.rlog
-TESTS += startstop/startstop1
+TESTS += startstop/startstop1 startstop/badargs
 CLEANFILES += ${startstop_CLEANFILES}
 EXTRA_DIST += ${startstop_EXTRA_DIST}

@@ -27,13 +27,6 @@ truncate -s 0 "${TS_LOGFILE}"
 myuid="`id -un`"
 mygid="`id -gn`"
 
-for bad_rargs in '-?' "-u nobody:nogroup" "-u nahh:dooh" "-u ${myuid}:dooh" \
- "-u nahh:${mygid}" "randomgarbage" "more random garbage" "-v"
-do
-  RTPP_ARGS="${bad_rargs}" rtpproxy_start
-  reportifnotfail "rtpproxy start with bad argumens: ${bad_rargs}"
-done
-
 for rargs in "--config libucl/libucl_test.conf" "-u ${myuid}:${mygid}" ""
 do
   RTPP_ARGS="${rargs}" rtpproxy_start

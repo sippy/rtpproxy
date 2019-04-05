@@ -1,0 +1,35 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+TS_LOGFILE="startstop.rlog"
+
+__beforeexit_cleanup()
+{
+  if [ ! -z "${TMP_PIDFILE}" ]
+  then
+    rtpproxy_stop TERM
+  fi
+  if [ -f "${TMP_LOGFILE}" ]
+  then
+    cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+    rm "${TMP_LOGFILE}"
+  fi
+}
+
+RTPP_OUTFILE="startstop.rout"
+
+truncate -s 0 "${TS_LOGFILE}"
+
+myuid="`id -un`"
+mygid="`id -gn`"
+
+for bad_rargs in '-?' "-u nobody:nogroup" "-u nahh:dooh" "-u ${myuid}:dooh" \
+ "-u nahh:${mygid}" "randomgarbage" "more random garbage" "-v"
+do
+  RTPP_ARGS="${bad_rargs}" rtpproxy_start
+  reportifnotfail "rtpproxy start with bad argumens: ${bad_rargs}"
+  cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+  rm "${TMP_LOGFILE}"
+done
