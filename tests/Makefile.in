@@ -468,36 +468,37 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = autosrc/chk_up2date startstop/startstop1 startstop/badargs \
-	unittests/rtcp2json1 unittests/rtpp_sbuf unittests/rtpp_objck \
-	libucl/libucl1 libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
+TESTS = autosrc/chk_up2date makeann/makeann1 unittests/rtcp2json1 \
+	unittests/rtpp_sbuf unittests/rtpp_objck libucl/libucl1 \
+	libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
+	rtp_analyze/rtp_analyze1 extractaudio/extractaudio1 \
+	startstop/startstop1 startstop/badargs \
 	basic_versions/basic_versions1 command_parser/command_parser1 \
-	makeann/makeann1 extractaudio/extractaudio1 memdeb/glitch1 \
-	memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
-	memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
-	session_timeouts/notify_tcp session_timeouts/notify_tcp_wild \
-	session_timeouts/notify_unix playback/playback1 \
-	forwarding/forwarding1 rtp_analyze/rtp_analyze1
-CLEANFILES = ${autosrc_CLEANFILES} ${startstop_CLEANFILES} \
+	forwarding/forwarding1 memdeb/glitch1 memdeb/glitch_libucl1 \
+	memdeb/glitch_extractaudio memdeb/glitch_startstop1 \
+	memdeb/glitch_basic_versions1 session_timeouts/notify_tcp \
+	session_timeouts/notify_tcp_wild session_timeouts/notify_unix \
+	playback/playback1
+CLEANFILES = ${autosrc_CLEANFILES} ${makeann_CLEANFILES} \
 	${rtcp2json_CLEANFILES} ${libucl_CLEANFILES} \
 	${libexecinfo_CLEANFILES} ${acct_rtcp_hep_CLEANFILES} \
-	${basic_versions_CLEANFILES} ${command_parser_CLEANFILES} \
-	${makeann_CLEANFILES} ${extractaudio_CLEANFILES} \
+	${rtp_analyze_CLEANFILES} ${extractaudio_CLEANFILES} \
+	${startstop_CLEANFILES} ${basic_versions_CLEANFILES} \
+	${command_parser_CLEANFILES} ${forwarding_CLEANFILES} \
 	${memdeb_CLEANFILES} ${session_timeouts_CLEANFILES} \
-	${playback_CLEANFILES} ${forwarding_CLEANFILES} \
-	${rtp_analyze_CLEANFILES} *.core
-EXTRA_DIST = ${autosrc_EXTRA_DIST} ${startstop_EXTRA_DIST} \
+	${playback_CLEANFILES} *.core
+EXTRA_DIST = ${autosrc_EXTRA_DIST} ${makeann_EXTRA_DIST} \
 	${unittests_EXTRA_DIST} ${libucl_EXTRA_DIST} \
 	${libexecinfo_EXTRA_DIST} ${acct_rtcp_hep_EXTRA_DIST} \
-	${basic_versions_EXTRA_DIST} ${command_parser_EXTRA_DIST} \
-	${makeann_EXTRA_DIST} ${extractaudio_EXTRA_DIST} \
+	${rtp_analyze_EXTRA_DIST} ${extractaudio_EXTRA_DIST} \
+	${startstop_EXTRA_DIST} ${basic_versions_EXTRA_DIST} \
+	${command_parser_EXTRA_DIST} ${forwarding_EXTRA_DIST} \
 	${memdeb_EXTRA_DIST} ${session_timeouts_EXTRA_DIST} \
-	${playback_EXTRA_DIST} ${forwarding_EXTRA_DIST} \
-	${rtp_analyze_EXTRA_DIST} Makefile.am ringback.sln
+	${playback_EXTRA_DIST} Makefile.am ringback.sln
 autosrc_EXTRA_DIST = autosrc
 autosrc_CLEANFILES = 
-startstop_EXTRA_DIST = startstop
-startstop_CLEANFILES = startstop.rout startstop.rlog
+makeann_EXTRA_DIST = makeann
+makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
 unittests_EXTRA_DIST = unittests
 rtcp2json_CLEANFILES = rtcp1.output
 libucl_EXTRA_DIST = libucl
@@ -506,6 +507,16 @@ libexecinfo_EXTRA_DIST = libexecinfo
 libexecinfo_CLEANFILES = 
 acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
 acct_rtcp_hep_CLEANFILES = 
+rtp_analyze_EXTRA_DIST = rtp_analyze
+rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
+extractaudio_EXTRA_DIST = extractaudio
+extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
+  *.stereo.*.wav.tout *.mono.*.raw *.mono.*.raw.tout *.mono.*.w64 \
+  *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout \
+  *.mono.*.rlog *.stereo.*.rlog
+
+startstop_EXTRA_DIST = startstop
+startstop_CLEANFILES = startstop.rout startstop.rlog
 basic_versions_EXTRA_DIST = basic_versions
 basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
   basic_versions.rlog _basic_versions.rlog
@@ -514,13 +525,13 @@ command_parser_EXTRA_DIST = command_parser
 command_parser_CLEANFILES = command_parser.rout W3.IT2Nl*.rtcp W3.IT2Nl*.rtp \
   command_parser.rlog
 
-makeann_EXTRA_DIST = makeann
-makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
-extractaudio_EXTRA_DIST = extractaudio
-extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
-  *.stereo.*.wav.tout *.mono.*.raw *.mono.*.raw.tout *.mono.*.w64 \
-  *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout \
-  *.mono.*.rlog *.stereo.*.rlog
+forwarding_EXTRA_DIST = forwarding
+forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
+  forwarding1.8.wav forwarding1.9.wav forwarding1.gena.rout forwarding1.geno.rout \
+  forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
+  forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
+  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog \
+  forwarding1.*.eout rtpproxy_acct.csv
 
 memdeb_EXTRA_DIST = memdeb
 memdeb_CLEANFILES = glitch1.ncout
@@ -535,16 +546,6 @@ playback_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
   playback1.8 playback1.9 playback1.rout playback1.0.wav playback1.18.wav \
   playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout playback1.rlog
 
-forwarding_EXTRA_DIST = forwarding
-forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
-  forwarding1.8.wav forwarding1.9.wav forwarding1.gena.rout forwarding1.geno.rout \
-  forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
-  forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
-  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog \
-  forwarding1.*.eout rtpproxy_acct.csv
-
-rtp_analyze_EXTRA_DIST = rtp_analyze
-rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
@@ -555,7 +556,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .log .test .test$(EXEEXT) .trs
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/autosrc/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/autosrc/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -575,7 +576,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/autosrc/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(am__empty):
+$(srcdir)/autosrc/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -746,16 +747,9 @@ autosrc/chk_up2date.log: autosrc/chk_up2date
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-startstop/startstop1.log: startstop/startstop1
-	@p='startstop/startstop1'; \
-	b='startstop/startstop1'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-startstop/badargs.log: startstop/badargs
-	@p='startstop/badargs'; \
-	b='startstop/badargs'; \
+makeann/makeann1.log: makeann/makeann1
+	@p='makeann/makeann1'; \
+	b='makeann/makeann1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -802,6 +796,34 @@ acct_rtcp_hep/confval1.log: acct_rtcp_hep/confval1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+rtp_analyze/rtp_analyze1.log: rtp_analyze/rtp_analyze1
+	@p='rtp_analyze/rtp_analyze1'; \
+	b='rtp_analyze/rtp_analyze1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+extractaudio/extractaudio1.log: extractaudio/extractaudio1
+	@p='extractaudio/extractaudio1'; \
+	b='extractaudio/extractaudio1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+startstop/startstop1.log: startstop/startstop1
+	@p='startstop/startstop1'; \
+	b='startstop/startstop1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+startstop/badargs.log: startstop/badargs
+	@p='startstop/badargs'; \
+	b='startstop/badargs'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 basic_versions/basic_versions1.log: basic_versions/basic_versions1
 	@p='basic_versions/basic_versions1'; \
 	b='basic_versions/basic_versions1'; \
@@ -816,16 +838,9 @@ command_parser/command_parser1.log: command_parser/command_parser1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-makeann/makeann1.log: makeann/makeann1
-	@p='makeann/makeann1'; \
-	b='makeann/makeann1'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-extractaudio/extractaudio1.log: extractaudio/extractaudio1
-	@p='extractaudio/extractaudio1'; \
-	b='extractaudio/extractaudio1'; \
+forwarding/forwarding1.log: forwarding/forwarding1
+	@p='forwarding/forwarding1'; \
+	b='forwarding/forwarding1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -889,20 +904,6 @@ session_timeouts/notify_unix.log: session_timeouts/notify_unix
 playback/playback1.log: playback/playback1
 	@p='playback/playback1'; \
 	b='playback/playback1'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-forwarding/forwarding1.log: forwarding/forwarding1
-	@p='forwarding/forwarding1'; \
-	b='forwarding/forwarding1'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-rtp_analyze/rtp_analyze1.log: rtp_analyze/rtp_analyze1
-	@p='rtp_analyze/rtp_analyze1'; \
-	b='rtp_analyze/rtp_analyze1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
