@@ -78,13 +78,11 @@ struct rtpp_socket *
 rtpp_socket_ctor(int domain, int type)
 {
     struct rtpp_socket_priv *pvt;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_socket_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_socket_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->pub.rcnt = rcnt;
     pvt->fd = socket(domain, type, 0);
     if (pvt->fd < 0) {
         goto e1;

@@ -38,14 +38,11 @@ void *rtpp_zmalloc_memdeb(size_t, void *, const char *, int, const char *);
 void *rtpp_zmalloc(size_t);
 #endif
 
-struct rtpp_refcnt;
-
 #if defined(RTPP_CHECK_LEAKS)
 #define rtpp_rzmalloc(args...) rtpp_rzmalloc_memdeb(__FILE__, __LINE__, __func__, ## args)
-void *rtpp_rzmalloc_memdeb(const char *, int, const char *, size_t,
-  struct rtpp_refcnt **);
+void *rtpp_rzmalloc_memdeb(const char *, int, const char *, size_t, size_t);
 #else
-void *rtpp_rzmalloc(size_t, struct rtpp_refcnt **);
+void *rtpp_rzmalloc(size_t, size_t);
 #endif
 
 #endif

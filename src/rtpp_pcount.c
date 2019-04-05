@@ -56,13 +56,11 @@ struct rtpp_pcount *
 rtpp_pcount_ctor(void)
 {
     struct rtpp_pcount_priv *pvt;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_pcount_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_pcount_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->pub.rcnt = rcnt;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }

@@ -55,13 +55,11 @@ struct rtpp_acct_rtcp *
 rtpp_acct_rtcp_ctor(const char *call_id, const struct rtp_packet *pp)
 {
     struct rtpp_acct_rtcp_priv *pvt;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_acct_rtcp_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_acct_rtcp_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->pub.rcnt = rcnt;
     pvt->pub.pkt = rtp_packet_alloc();
     if (pvt->pub.pkt == NULL) {
         goto e1;

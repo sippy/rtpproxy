@@ -80,17 +80,15 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     struct rtpp_session_priv *pvt;
     struct rtpp_session *pub;
     struct rtpp_log *log;
-    struct rtpp_refcnt *rcnt;
     int i;
     char *cp;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_session_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_session_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
 
     pub = &(pvt->pub);
-    pub->rcnt = rcnt;
     rtpp_gen_uid(&pub->seuid);
 
     log = rtpp_log_ctor("rtpproxy", ccap->call_id, 0);

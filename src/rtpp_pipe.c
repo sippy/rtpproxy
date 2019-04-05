@@ -76,14 +76,12 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
   struct rtpp_stats *rtpp_stats, int pipe_type)
 {
     struct rtpp_pipe_priv *pvt;
-    struct rtpp_refcnt *rcnt;
     int i;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_pipe_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_pipe_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->pub.rcnt = rcnt;
 
     pvt->streams_wrt = streams_wrt;
 

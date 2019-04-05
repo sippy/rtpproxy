@@ -58,13 +58,11 @@ struct rtpp_ringbuf *
 rtpp_ringbuf_ctor(size_t el_size, int nelements)
 {
     struct rtpp_ringbuf_priv *pvt;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_ringbuf_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_ringbuf_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->pub.rcnt = rcnt;
     pvt->elements = rtpp_zmalloc(el_size * nelements);
     if (pvt->elements == NULL) {
         goto e1;

@@ -193,14 +193,12 @@ rtpp_stats_ctor(void)
     struct rtpp_stat *st;
     struct rtpp_stat_derived *dst;
     int i, idx;
-    struct rtpp_refcnt *rcnt;
 
-    fp = rtpp_rzmalloc(sizeof(struct rtpp_stats_full), &rcnt);
+    fp = rtpp_rzmalloc(sizeof(struct rtpp_stats_full), PVT_RCOFFS(fp));
     if (fp == NULL) {
         goto e0;
     }
     pub = &(fp->pub);
-    pub->rcnt = rcnt;
     pvt = &(fp->pvt);
     pvt->stats = rtpp_zmalloc(sizeof(struct rtpp_stat) *
       count_rtpp_stats(default_stats));

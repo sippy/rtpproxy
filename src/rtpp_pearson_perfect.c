@@ -83,16 +83,14 @@ rtpp_pearson_perfect_ctor(rtpp_pearson_getval_t gv, void *gv_arg)
 {
     struct rtpp_pearson_perfect_priv *rppp;
     struct rtpp_pearson_perfect *pub;
-    struct rtpp_refcnt *rcnt;
 
-    rppp = rtpp_rzmalloc(sizeof(struct rtpp_pearson_perfect_priv), &rcnt);
+    rppp = rtpp_rzmalloc(sizeof(struct rtpp_pearson_perfect_priv), PVT_RCOFFS(rppp));
     if (rppp == NULL) {
         return (NULL);
     }
     rppp->gv = gv;
     rppp->gv_arg = gv_arg;
     pub = &rppp->pub;
-    pub->rcnt = rcnt;
 
     compute_perfect_hash(rppp);
     pub->smethods = &rtpp_pearson_perfect_smethods;

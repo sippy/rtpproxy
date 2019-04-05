@@ -32,6 +32,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "rtpp_debug.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
@@ -62,12 +63,14 @@ struct alig_help {
     intmax_t b;
 };
 
+#define PpP(p1, p2, type) (type)(((char *)p1) + ((size_t)p2))
+
 void *
 #if !defined(RTPP_CHECK_LEAKS)
-rtpp_rzmalloc(size_t msize, struct rtpp_refcnt **rcntp)
+rtpp_rzmalloc(size_t msize, size_t rcntp_offs)
 #else
 rtpp_rzmalloc_memdeb(const char *fname, int linen, const char *funcn,
-  size_t msize, struct rtpp_refcnt **rcntp)
+  size_t msize, size_t rcntp_offs)
 #endif
 {
     void *rval;
@@ -75,6 +78,7 @@ rtpp_rzmalloc_memdeb(const char *fname, int linen, const char *funcn,
     size_t pad_size, asize;
     void *rco;
 
+    RTPP_DBG_ASSERT(msize >= rcntp_offs + sizeof(struct rtpp_refcnt *));
     if (offsetof(struct alig_help, b) > 1) {
         pad_size = msize % offsetof(struct alig_help, b);
         if (pad_size != 0) {
@@ -98,7 +102,7 @@ rtpp_rzmalloc_memdeb(const char *fname, int linen, const char *funcn,
     if (rcnt == NULL) {
         goto e1;
     }
-    *rcntp = rcnt;
+    *PpP(rval, rcntp_offs, struct rtpp_refcnt **) = rcnt;
 
     return (rval);
 e1:

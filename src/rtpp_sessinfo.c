@@ -147,13 +147,11 @@ rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
 {
     struct rtpp_sessinfo *sessinfo;
     struct rtpp_sessinfo_priv *pvt;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_sessinfo_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_sessinfo_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         return (NULL);
     }
-    pvt->pub.rcnt = rcnt;
     sessinfo = &(pvt->pub);
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e5;

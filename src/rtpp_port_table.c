@@ -57,15 +57,13 @@ struct rtpp_port_table *
 rtpp_port_table_ctor(int port_min, int port_max, int seq_ports, uint16_t port_ctl)
 {
     struct rtpp_ptbl_priv *pvt;
-    struct rtpp_refcnt *rcnt;
     int i, j;
     uint16_t portnum;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_ptbl_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_ptbl_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->pub.rcnt = rcnt;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }

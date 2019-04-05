@@ -66,13 +66,11 @@ rtpp_analyzer_ctor(struct rtpp_log *log)
 {
     struct rtpp_analyzer_priv *pvt;
     struct rtpp_analyzer *rap;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_analyzer_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_analyzer_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         return (NULL);
     }
-    pvt->pub.rcnt = rcnt;
     rap = &pvt->pub;
     if (rtpp_stats_init(&pvt->rstat) != 0) {
         goto e0;

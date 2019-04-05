@@ -158,19 +158,17 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
   int record_type)
 {
     struct rtpp_record_channel *rrc;
-    struct rtpp_refcnt *rcnt;
     const char *sdir, *suffix1, *suffix2;
     int rval, remote;
     pcap_hdr_t pcap_hdr;
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0) ? 1 : 0;
 
-    rrc = rtpp_rzmalloc(sizeof(*rrc), &rcnt);
+    rrc = rtpp_rzmalloc(sizeof(*rrc), PVT_RCOFFS(rrc));
     if (rrc == NULL) {
 	RTPP_ELOG(sp->log, RTPP_LOG_ERR, "can't allocate memory");
 	goto e0;
     }
-    rrc->pub.rcnt = rcnt;
 
     rrc->record_single_file = (record_type == RECORD_BOTH) ? 1 : 0;
     if (rrc->record_single_file != 0) {

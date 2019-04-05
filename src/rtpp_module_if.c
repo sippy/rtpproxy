@@ -103,14 +103,12 @@ static const char *do_acct_rtcp_aname = "do_acct_rtcp";
 struct rtpp_module_if *
 rtpp_module_if_ctor(const char *mpath)
 {
-    struct rtpp_refcnt *rcnt;
     struct rtpp_module_if_priv *pvt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_module_if_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_module_if_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->pub.rcnt = rcnt;
     pvt->mpath = strdup(mpath);
     if (pvt->mpath == NULL) {
         goto e1;

@@ -69,14 +69,12 @@ struct rtpp_acct *
 rtpp_acct_ctor(uint64_t seuid)
 {
     struct rtpp_acct_priv *pvt;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_acct_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_acct_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
     pvt->pub.seuid = seuid;
-    pvt->pub.rcnt = rcnt;
     pvt->pub.rtp.pcnts = &pvt->_rtp.pcnts;
     pvt->pub.rtcp.pcnts = &pvt->_rtcp.pcnts;
     pvt->pub.rtp.o.ps = &pvt->_rtp.o.ps;

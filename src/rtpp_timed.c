@@ -142,13 +142,11 @@ struct rtpp_timed *
 rtpp_timed_ctor(double run_period)
 {
     struct rtpp_timed_cf *rtcp;
-    struct rtpp_refcnt *rcnt;
 
-    rtcp = rtpp_rzmalloc(sizeof(struct rtpp_timed_cf), &rcnt);
+    rtcp = rtpp_rzmalloc(sizeof(struct rtpp_timed_cf), PVT_RCOFFS(rtcp));
     if (rtcp == NULL) {
         goto e0;
     }
-    rtcp->pub.rcnt = rcnt;
     rtcp->q = rtpp_queue_init(0, "rtpp_timed(requests)");
     if (rtcp->q == NULL) {
         goto e1;

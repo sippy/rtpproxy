@@ -50,6 +50,9 @@ struct rtpp_cmd_rcache_pvt {
 struct rtpp_cmd_rcache_entry {
     char *reply;
     double etime;
+    struct {
+        struct rtpp_refcnt *rcnt;
+    } pub;
 };
 
 static enum rtpp_timed_cb_rvals rtpp_cmd_rcache_cleanup(double, void *);
@@ -64,13 +67,11 @@ struct rtpp_cmd_rcache *
 rtpp_cmd_rcache_ctor(struct rtpp_timed *rtpp_timed_cf, double min_ttl)
 {
     struct rtpp_cmd_rcache_pvt *pvt;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_cmd_rcache_pvt), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_cmd_rcache_pvt), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         return (NULL);
     }
-    pvt->pub.rcnt = rcnt;
 #if !defined(RTPP_DEBUG)
     pvt->ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, RTPP_HT_NODUPS);
 #else
@@ -118,10 +119,9 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const char *cookie,
 {
     struct rtpp_cmd_rcache_pvt *pvt;
     struct rtpp_cmd_rcache_entry *rep;
-    struct rtpp_refcnt *rcnt;
 
     pvt = (struct rtpp_cmd_rcache_pvt *)pub;
-    rep = rtpp_rzmalloc(sizeof(struct rtpp_cmd_rcache_entry), &rcnt);
+    rep = rtpp_rzmalloc(sizeof(struct rtpp_cmd_rcache_entry), PVT_RCOFFS(rep));
     if (rep == NULL) {
         return;
     }
@@ -130,17 +130,17 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const char *cookie,
         goto e1;
     }
     rep->etime = ctime + pvt->min_ttl;
-    CALL_SMETHOD(rcnt, attach, rtpp_cmd_rcache_entry_free, rep);
-    CALL_METHOD(pvt->ht, append_refcnt, cookie, rcnt);
+    CALL_SMETHOD(rep->pub.rcnt, attach, rtpp_cmd_rcache_entry_free, rep);
+    CALL_METHOD(pvt->ht, append_refcnt, cookie, rep->pub.rcnt);
     /*
      * append_refcnt() either takes ownership in which case it incs refcount
      * or it drops the ball in which it does not, so we release rco and set
      * it free.
      */
-    CALL_SMETHOD(rcnt, decref);
+    CALL_SMETHOD(rep->pub.rcnt, decref);
     return;
 e1:
-    CALL_SMETHOD(rcnt, decref);
+    CALL_SMETHOD(rep->pub.rcnt, decref);
     free(rep);
 }
 

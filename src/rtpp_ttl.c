@@ -56,13 +56,11 @@ struct rtpp_ttl *
 rtpp_ttl_ctor(int max_ttl)
 {
     struct rtpp_ttl_priv *pvt;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_ttl_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_ttl_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->pub.rcnt = rcnt;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }

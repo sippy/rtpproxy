@@ -44,4 +44,6 @@ struct rtpp_type_linkable {
 #define CALL_METHOD(obj, method, args...) (obj)->method(obj, ## args)
 #define CALL_SMETHOD(obj, method, args...) (obj)->smethods->method(obj, ## args)
 
+#define PVT_RCOFFS(pvt) (size_t)(&(((typeof(pvt))NULL)->pub.rcnt))
+
 #endif

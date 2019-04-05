@@ -72,13 +72,11 @@ struct rtpp_log *
 rtpp_log_ctor(const char *app, const char *call_id, int flags)
 {
     struct rtpp_log_priv *pvt;
-    struct rtpp_refcnt *rcnt;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_log_priv), &rcnt);
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_log_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         return (NULL);
     }
-    pvt->pub.rcnt = rcnt;
     rtpp_gen_uid(&pvt->pub.lguid);
     pvt->pub.write = rtpp_log_obj_write_early;
     pvt->pub.ewrite = rtpp_log_obj_ewrite_early;

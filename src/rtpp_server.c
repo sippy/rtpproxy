@@ -90,7 +90,6 @@ struct rtpp_server *
 rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, int ptime)
 {
     struct rtpp_server_priv *rp;
-    struct rtpp_refcnt *rcnt;
     int fd;
     char path[PATH_MAX + 1];
 
@@ -99,11 +98,10 @@ rtpp_server_ctor(const char *name, rtp_type_t codec, int loop, int ptime)
     if (fd == -1)
 	goto e0;
 
-    rp = rtpp_rzmalloc(sizeof(struct rtpp_server_priv), &rcnt);
+    rp = rtpp_rzmalloc(sizeof(struct rtpp_server_priv), PVT_RCOFFS(rp));
     if (rp == NULL) {
 	goto e1;
     }
-    rp->pub.rcnt = rcnt;
 
     rp->dts = 0;
     rp->fd = fd;
