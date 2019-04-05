@@ -4,6 +4,11 @@ TDIR="`dirname "${0}"`"
 BASEDIR="${TDIR}/.."
 . "${BASEDIR}/functions"
 
+__beforeexit_cleanup()
+{
+  git diff ../autosrc
+}
+
 make -C ../src update_autosrc
 report "running update_autosrc"
 chlines=$((`git diff ../autosrc | wc -l`))
