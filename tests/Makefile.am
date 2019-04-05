@@ -1,3 +1,7 @@
+TESTS = # empty
+CLEANFILES = # empty
+EXTRA_DIST = # empty
+
 include $(srcdir)/autosrc/Makefile.ami
 include $(srcdir)/startstop/Makefile.ami
 include $(srcdir)/unittests/Makefile.ami
