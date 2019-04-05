@@ -7,22 +7,22 @@
 #define rtpp_ringbuf_h_fin 1
 #include "rtpp_ringbuf.h"
 static void rtpp_ringbuf_flush_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_ringbuf_flush is called after destruction\x0a");
+    fprintf(stderr, "Method %p->flush (rtpp_ringbuf_flush) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_ringbuf_locate_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_ringbuf_locate is called after destruction\x0a");
+    fprintf(stderr, "Method %p->locate (rtpp_ringbuf_locate) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_ringbuf_push_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_ringbuf_push is called after destruction\x0a");
+    fprintf(stderr, "Method %p->push (rtpp_ringbuf_push) is invoked after destruction\x0a", pub);
     abort();
 }
 void rtpp_ringbuf_fin(struct rtpp_ringbuf *pub) {
-    RTPP_DBG_ASSERT(pub-> flush != (rtpp_ringbuf_flush_t)&rtpp_ringbuf_flush_fin);
-    pub-> flush = (rtpp_ringbuf_flush_t)&rtpp_ringbuf_flush_fin;
-    RTPP_DBG_ASSERT(pub-> locate != (rtpp_ringbuf_locate_t)&rtpp_ringbuf_locate_fin);
-    pub-> locate = (rtpp_ringbuf_locate_t)&rtpp_ringbuf_locate_fin;
-    RTPP_DBG_ASSERT(pub-> push != (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin);
-    pub-> push = (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin;
+    RTPP_DBG_ASSERT(pub->flush != (rtpp_ringbuf_flush_t)&rtpp_ringbuf_flush_fin);
+    pub->flush = (rtpp_ringbuf_flush_t)&rtpp_ringbuf_flush_fin;
+    RTPP_DBG_ASSERT(pub->locate != (rtpp_ringbuf_locate_t)&rtpp_ringbuf_locate_fin);
+    pub->locate = (rtpp_ringbuf_locate_t)&rtpp_ringbuf_locate_fin;
+    RTPP_DBG_ASSERT(pub->push != (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin);
+    pub->push = (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin;
 }

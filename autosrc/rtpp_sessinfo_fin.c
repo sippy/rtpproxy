@@ -7,28 +7,28 @@
 #define rtpp_sessinfo_h_fin 1
 #include "rtpp_sessinfo.h"
 static void rtpp_si_append_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_si_append is called after destruction\x0a");
+    fprintf(stderr, "Method %p->append (rtpp_si_append) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_si_remove_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_si_remove is called after destruction\x0a");
+    fprintf(stderr, "Method %p->remove (rtpp_si_remove) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_si_sync_polltbl_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_si_sync_polltbl is called after destruction\x0a");
+    fprintf(stderr, "Method %p->sync_polltbl (rtpp_si_sync_polltbl) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_si_update_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_si_update is called after destruction\x0a");
+    fprintf(stderr, "Method %p->update (rtpp_si_update) is invoked after destruction\x0a", pub);
     abort();
 }
 void rtpp_sessinfo_fin(struct rtpp_sessinfo *pub) {
-    RTPP_DBG_ASSERT(pub-> append != (rtpp_si_append_t)&rtpp_si_append_fin);
-    pub-> append = (rtpp_si_append_t)&rtpp_si_append_fin;
-    RTPP_DBG_ASSERT(pub-> remove != (rtpp_si_remove_t)&rtpp_si_remove_fin);
-    pub-> remove = (rtpp_si_remove_t)&rtpp_si_remove_fin;
-    RTPP_DBG_ASSERT(pub-> sync_polltbl != (rtpp_si_sync_polltbl_t)&rtpp_si_sync_polltbl_fin);
-    pub-> sync_polltbl = (rtpp_si_sync_polltbl_t)&rtpp_si_sync_polltbl_fin;
-    RTPP_DBG_ASSERT(pub-> update != (rtpp_si_update_t)&rtpp_si_update_fin);
-    pub-> update = (rtpp_si_update_t)&rtpp_si_update_fin;
+    RTPP_DBG_ASSERT(pub->append != (rtpp_si_append_t)&rtpp_si_append_fin);
+    pub->append = (rtpp_si_append_t)&rtpp_si_append_fin;
+    RTPP_DBG_ASSERT(pub->remove != (rtpp_si_remove_t)&rtpp_si_remove_fin);
+    pub->remove = (rtpp_si_remove_t)&rtpp_si_remove_fin;
+    RTPP_DBG_ASSERT(pub->sync_polltbl != (rtpp_si_sync_polltbl_t)&rtpp_si_sync_polltbl_fin);
+    pub->sync_polltbl = (rtpp_si_sync_polltbl_t)&rtpp_si_sync_polltbl_fin;
+    RTPP_DBG_ASSERT(pub->update != (rtpp_si_update_t)&rtpp_si_update_fin);
+    pub->update = (rtpp_si_update_t)&rtpp_si_update_fin;
 }

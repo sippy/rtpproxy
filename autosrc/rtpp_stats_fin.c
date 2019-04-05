@@ -6,46 +6,46 @@
 #include "rtpp_debug.h"
 #include "rtpp_stats.h"
 static void rtpp_stats_getidxbyname_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_stats_getidxbyname is called after destruction\x0a");
+    fprintf(stderr, "Method %p->getidxbyname (rtpp_stats_getidxbyname) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_stats_getlvalbyname_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_stats_getlvalbyname is called after destruction\x0a");
+    fprintf(stderr, "Method %p->getlvalbyname (rtpp_stats_getlvalbyname) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_stats_getnstats_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_stats_getnstats is called after destruction\x0a");
+    fprintf(stderr, "Method %p->getnstats (rtpp_stats_getnstats) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_stats_nstr_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_stats_nstr is called after destruction\x0a");
+    fprintf(stderr, "Method %p->nstr (rtpp_stats_nstr) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_stats_update_derived_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_stats_update_derived is called after destruction\x0a");
+    fprintf(stderr, "Method %p->update_derived (rtpp_stats_update_derived) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_stats_updatebyidx_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_stats_updatebyidx is called after destruction\x0a");
+    fprintf(stderr, "Method %p->updatebyidx (rtpp_stats_updatebyidx) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_stats_updatebyname_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_stats_updatebyname is called after destruction\x0a");
+    fprintf(stderr, "Method %p->updatebyname (rtpp_stats_updatebyname) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_stats_updatebyname_d_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_stats_updatebyname_d is called after destruction\x0a");
+    fprintf(stderr, "Method %p->updatebyname_d (rtpp_stats_updatebyname_d) is invoked after destruction\x0a", pub);
     abort();
 }
 static const struct rtpp_stats_smethods rtpp_stats_smethods_fin = {
-    . getidxbyname = (rtpp_stats_getidxbyname_t)&rtpp_stats_getidxbyname_fin,
-    . getlvalbyname = (rtpp_stats_getlvalbyname_t)&rtpp_stats_getlvalbyname_fin,
-    . getnstats = (rtpp_stats_getnstats_t)&rtpp_stats_getnstats_fin,
-    . nstr = (rtpp_stats_nstr_t)&rtpp_stats_nstr_fin,
-    . update_derived = (rtpp_stats_update_derived_t)&rtpp_stats_update_derived_fin,
-    . updatebyidx = (rtpp_stats_updatebyidx_t)&rtpp_stats_updatebyidx_fin,
-    . updatebyname = (rtpp_stats_updatebyname_t)&rtpp_stats_updatebyname_fin,
-    . updatebyname_d = (rtpp_stats_updatebyname_d_t)&rtpp_stats_updatebyname_d_fin,
+    .getidxbyname = (rtpp_stats_getidxbyname_t)&rtpp_stats_getidxbyname_fin,
+    .getlvalbyname = (rtpp_stats_getlvalbyname_t)&rtpp_stats_getlvalbyname_fin,
+    .getnstats = (rtpp_stats_getnstats_t)&rtpp_stats_getnstats_fin,
+    .nstr = (rtpp_stats_nstr_t)&rtpp_stats_nstr_fin,
+    .update_derived = (rtpp_stats_update_derived_t)&rtpp_stats_update_derived_fin,
+    .updatebyidx = (rtpp_stats_updatebyidx_t)&rtpp_stats_updatebyidx_fin,
+    .updatebyname = (rtpp_stats_updatebyname_t)&rtpp_stats_updatebyname_fin,
+    .updatebyname_d = (rtpp_stats_updatebyname_d_t)&rtpp_stats_updatebyname_d_fin,
 };
 void rtpp_stats_fin(struct rtpp_stats *pub) {
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_stats_smethods_fin &&

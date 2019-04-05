@@ -7,16 +7,16 @@
 #define rtpp_pcnt_strm_h_fin 1
 #include "rtpp_pcnt_strm.h"
 static void rtpp_pcnt_strm_get_stats_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_pcnt_strm_get_stats is called after destruction\x0a");
+    fprintf(stderr, "Method %p->get_stats (rtpp_pcnt_strm_get_stats) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_pcnt_strm_reg_pktin_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_pcnt_strm_reg_pktin is called after destruction\x0a");
+    fprintf(stderr, "Method %p->reg_pktin (rtpp_pcnt_strm_reg_pktin) is invoked after destruction\x0a", pub);
     abort();
 }
 void rtpp_pcnt_strm_fin(struct rtpp_pcnt_strm *pub) {
-    RTPP_DBG_ASSERT(pub-> get_stats != (rtpp_pcnt_strm_get_stats_t)&rtpp_pcnt_strm_get_stats_fin);
-    pub-> get_stats = (rtpp_pcnt_strm_get_stats_t)&rtpp_pcnt_strm_get_stats_fin;
-    RTPP_DBG_ASSERT(pub-> reg_pktin != (rtpp_pcnt_strm_reg_pktin_t)&rtpp_pcnt_strm_reg_pktin_fin);
-    pub-> reg_pktin = (rtpp_pcnt_strm_reg_pktin_t)&rtpp_pcnt_strm_reg_pktin_fin;
+    RTPP_DBG_ASSERT(pub->get_stats != (rtpp_pcnt_strm_get_stats_t)&rtpp_pcnt_strm_get_stats_fin);
+    pub->get_stats = (rtpp_pcnt_strm_get_stats_t)&rtpp_pcnt_strm_get_stats_fin;
+    RTPP_DBG_ASSERT(pub->reg_pktin != (rtpp_pcnt_strm_reg_pktin_t)&rtpp_pcnt_strm_reg_pktin_fin);
+    pub->reg_pktin = (rtpp_pcnt_strm_reg_pktin_t)&rtpp_pcnt_strm_reg_pktin_fin;
 }

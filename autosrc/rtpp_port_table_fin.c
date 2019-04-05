@@ -7,10 +7,10 @@
 #define rtpp_port_table_h_fin 1
 #include "rtpp_port_table.h"
 static void rtpp_ptbl_get_port_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_ptbl_get_port is called after destruction\x0a");
+    fprintf(stderr, "Method %p->get_port (rtpp_ptbl_get_port) is invoked after destruction\x0a", pub);
     abort();
 }
 void rtpp_port_table_fin(struct rtpp_port_table *pub) {
-    RTPP_DBG_ASSERT(pub-> get_port != (rtpp_ptbl_get_port_t)&rtpp_ptbl_get_port_fin);
-    pub-> get_port = (rtpp_ptbl_get_port_t)&rtpp_ptbl_get_port_fin;
+    RTPP_DBG_ASSERT(pub->get_port != (rtpp_ptbl_get_port_t)&rtpp_ptbl_get_port_fin);
+    pub->get_port = (rtpp_ptbl_get_port_t)&rtpp_ptbl_get_port_fin;
 }

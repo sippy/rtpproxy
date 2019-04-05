@@ -7,10 +7,10 @@
 #define rtpp_timed_task_h_fin 1
 #include "rtpp_timed_task.h"
 static void rtpp_timed_task_cancel_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_timed_task_cancel is called after destruction\x0a");
+    fprintf(stderr, "Method %p->cancel (rtpp_timed_task_cancel) is invoked after destruction\x0a", pub);
     abort();
 }
 void rtpp_timed_task_fin(struct rtpp_timed_task *pub) {
-    RTPP_DBG_ASSERT(pub-> cancel != (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin);
-    pub-> cancel = (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin;
+    RTPP_DBG_ASSERT(pub->cancel != (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin);
+    pub->cancel = (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin;
 }

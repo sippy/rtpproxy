@@ -7,10 +7,10 @@
 #define rtpp_record_h_fin 1
 #include "rtpp_record.h"
 static void rtpp_record_write_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_record_write is called after destruction\x0a");
+    fprintf(stderr, "Method %p->write (rtpp_record_write) is invoked after destruction\x0a", pub);
     abort();
 }
 void rtpp_record_fin(struct rtpp_record *pub) {
-    RTPP_DBG_ASSERT(pub-> write != (rtpp_record_write_t)&rtpp_record_write_fin);
-    pub-> write = (rtpp_record_write_t)&rtpp_record_write_fin;
+    RTPP_DBG_ASSERT(pub->write != (rtpp_record_write_t)&rtpp_record_write_fin);
+    pub->write = (rtpp_record_write_t)&rtpp_record_write_fin;
 }

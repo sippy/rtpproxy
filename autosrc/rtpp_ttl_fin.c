@@ -7,28 +7,28 @@
 #define rtpp_ttl_h_fin 1
 #include "rtpp_ttl.h"
 static void rtpp_ttl_decr_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_ttl_decr is called after destruction\x0a");
+    fprintf(stderr, "Method %p->decr (rtpp_ttl_decr) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_ttl_get_remaining_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_ttl_get_remaining is called after destruction\x0a");
+    fprintf(stderr, "Method %p->get_remaining (rtpp_ttl_get_remaining) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_ttl_reset_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_ttl_reset is called after destruction\x0a");
+    fprintf(stderr, "Method %p->reset (rtpp_ttl_reset) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_ttl_reset_with_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_ttl_reset_with is called after destruction\x0a");
+    fprintf(stderr, "Method %p->reset_with (rtpp_ttl_reset_with) is invoked after destruction\x0a", pub);
     abort();
 }
 void rtpp_ttl_fin(struct rtpp_ttl *pub) {
-    RTPP_DBG_ASSERT(pub-> decr != (rtpp_ttl_decr_t)&rtpp_ttl_decr_fin);
-    pub-> decr = (rtpp_ttl_decr_t)&rtpp_ttl_decr_fin;
-    RTPP_DBG_ASSERT(pub-> get_remaining != (rtpp_ttl_get_remaining_t)&rtpp_ttl_get_remaining_fin);
-    pub-> get_remaining = (rtpp_ttl_get_remaining_t)&rtpp_ttl_get_remaining_fin;
-    RTPP_DBG_ASSERT(pub-> reset != (rtpp_ttl_reset_t)&rtpp_ttl_reset_fin);
-    pub-> reset = (rtpp_ttl_reset_t)&rtpp_ttl_reset_fin;
-    RTPP_DBG_ASSERT(pub-> reset_with != (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin);
-    pub-> reset_with = (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin;
+    RTPP_DBG_ASSERT(pub->decr != (rtpp_ttl_decr_t)&rtpp_ttl_decr_fin);
+    pub->decr = (rtpp_ttl_decr_t)&rtpp_ttl_decr_fin;
+    RTPP_DBG_ASSERT(pub->get_remaining != (rtpp_ttl_get_remaining_t)&rtpp_ttl_get_remaining_fin);
+    pub->get_remaining = (rtpp_ttl_get_remaining_t)&rtpp_ttl_get_remaining_fin;
+    RTPP_DBG_ASSERT(pub->reset != (rtpp_ttl_reset_t)&rtpp_ttl_reset_fin);
+    pub->reset = (rtpp_ttl_reset_t)&rtpp_ttl_reset_fin;
+    RTPP_DBG_ASSERT(pub->reset_with != (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin);
+    pub->reset_with = (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin;
 }

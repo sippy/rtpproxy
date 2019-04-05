@@ -7,28 +7,28 @@
 #define rtpp_pipe_h_fin 1
 #include "rtpp_pipe.h"
 static void rtpp_pipe_decr_ttl_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_pipe_decr_ttl is called after destruction\x0a");
+    fprintf(stderr, "Method %p->decr_ttl (rtpp_pipe_decr_ttl) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_pipe_get_stats_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_pipe_get_stats is called after destruction\x0a");
+    fprintf(stderr, "Method %p->get_stats (rtpp_pipe_get_stats) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_pipe_get_ttl_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_pipe_get_ttl is called after destruction\x0a");
+    fprintf(stderr, "Method %p->get_ttl (rtpp_pipe_get_ttl) is invoked after destruction\x0a", pub);
     abort();
 }
 static void rtpp_pipe_upd_cntrs_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_pipe_upd_cntrs is called after destruction\x0a");
+    fprintf(stderr, "Method %p->upd_cntrs (rtpp_pipe_upd_cntrs) is invoked after destruction\x0a", pub);
     abort();
 }
 void rtpp_pipe_fin(struct rtpp_pipe *pub) {
-    RTPP_DBG_ASSERT(pub-> decr_ttl != (rtpp_pipe_decr_ttl_t)&rtpp_pipe_decr_ttl_fin);
-    pub-> decr_ttl = (rtpp_pipe_decr_ttl_t)&rtpp_pipe_decr_ttl_fin;
-    RTPP_DBG_ASSERT(pub-> get_stats != (rtpp_pipe_get_stats_t)&rtpp_pipe_get_stats_fin);
-    pub-> get_stats = (rtpp_pipe_get_stats_t)&rtpp_pipe_get_stats_fin;
-    RTPP_DBG_ASSERT(pub-> get_ttl != (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin);
-    pub-> get_ttl = (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin;
-    RTPP_DBG_ASSERT(pub-> upd_cntrs != (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin);
-    pub-> upd_cntrs = (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin;
+    RTPP_DBG_ASSERT(pub->decr_ttl != (rtpp_pipe_decr_ttl_t)&rtpp_pipe_decr_ttl_fin);
+    pub->decr_ttl = (rtpp_pipe_decr_ttl_t)&rtpp_pipe_decr_ttl_fin;
+    RTPP_DBG_ASSERT(pub->get_stats != (rtpp_pipe_get_stats_t)&rtpp_pipe_get_stats_fin);
+    pub->get_stats = (rtpp_pipe_get_stats_t)&rtpp_pipe_get_stats_fin;
+    RTPP_DBG_ASSERT(pub->get_ttl != (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin);
+    pub->get_ttl = (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin;
+    RTPP_DBG_ASSERT(pub->upd_cntrs != (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin);
+    pub->upd_cntrs = (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin;
 }

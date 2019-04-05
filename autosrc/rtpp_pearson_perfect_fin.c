@@ -6,11 +6,11 @@
 #include "rtpp_debug.h"
 #include "rtpp_pearson_perfect.h"
 static void rtpp_pearson_perfect_hash_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_pearson_perfect_hash is called after destruction\x0a");
+    fprintf(stderr, "Method %p->hash (rtpp_pearson_perfect_hash) is invoked after destruction\x0a", pub);
     abort();
 }
 static const struct rtpp_pearson_perfect_smethods rtpp_pearson_perfect_smethods_fin = {
-    . hash = (rtpp_pearson_perfect_hash_t)&rtpp_pearson_perfect_hash_fin,
+    .hash = (rtpp_pearson_perfect_hash_t)&rtpp_pearson_perfect_hash_fin,
 };
 void rtpp_pearson_perfect_fin(struct rtpp_pearson_perfect *pub) {
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_pearson_perfect_smethods_fin &&
