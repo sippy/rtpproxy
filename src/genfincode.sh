@@ -27,7 +27,8 @@ gen_fin_c() {
   for oname in ${ONAMES}
   do
     echo "void ${oname}_fin(struct ${oname} *pub) {"
-    MNAMES=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | grep "${oname}," | awk -F ',' '{print $2}' | sort`
+    MNAMES=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | \
+     grep "${oname}," | awk -F ',' '{print $2}' | LC_COLLATE=C sort`
     for mname in ${MNAMES}
     do
       epname=`get_epname "${1}" "${mname}"`
@@ -46,8 +47,10 @@ gen_fin_h() {
   done
 }
 
-ONAMES=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | awk -F ',' '{print $1}' | sort -u`
-MNAMES_ALL=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | awk -F ',' '{print $2}' | sort -u`
+ONAMES=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | \
+ awk -F ',' '{print $1}' | LC_COLLATE=C sort -u`
+MNAMES_ALL=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | \
+ awk -F ',' '{print $2}' | LC_COLLATE=C sort -u`
 
 GENRNAME="`basename "${0}"`"
 
