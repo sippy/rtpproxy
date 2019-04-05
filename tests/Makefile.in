@@ -326,6 +326,7 @@ TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
 	$(TEST_LOG_FLAGS)
 am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(srcdir)/acct_rtcp_hep/Makefile.ami \
+	$(srcdir)/autosrc/Makefile.ami \
 	$(srcdir)/basic_versions/Makefile.ami \
 	$(srcdir)/command_parser/Makefile.ami \
 	$(srcdir)/extractaudio/Makefile.ami \
@@ -467,33 +468,36 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-startstop_EXTRA_DIST = startstop
-startstop_CLEANFILES = startstop.rout startstop.rlog
-TESTS = startstop/startstop1 unittests/rtcp2json1 unittests/rtpp_sbuf \
-	unittests/rtpp_objck libucl/libucl1 libexecinfo/libexecinfo1 \
-	acct_rtcp_hep/confval1 basic_versions/basic_versions1 \
-	command_parser/command_parser1 makeann/makeann1 \
-	extractaudio/extractaudio1 memdeb/glitch1 \
+autosrc_EXTRA_DIST = autosrc
+autosrc_CLEANFILES = 
+TESTS = autosrc/chk_up2date startstop/startstop1 unittests/rtcp2json1 \
+	unittests/rtpp_sbuf unittests/rtpp_objck libucl/libucl1 \
+	libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
+	basic_versions/basic_versions1 command_parser/command_parser1 \
+	makeann/makeann1 extractaudio/extractaudio1 memdeb/glitch1 \
 	memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
 	memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
 	session_timeouts/notify_tcp session_timeouts/notify_tcp_wild \
 	session_timeouts/notify_unix playback/playback1 \
 	forwarding/forwarding1 rtp_analyze/rtp_analyze1
-CLEANFILES = ${startstop_CLEANFILES} ${rtcp2json_CLEANFILES} \
-	${libucl_CLEANFILES} ${libexecinfo_CLEANFILES} \
-	${acct_rtcp_hep_CLEANFILES} ${basic_versions_CLEANFILES} \
-	${command_parser_CLEANFILES} ${makeann_CLEANFILES} \
-	${extractaudio_CLEANFILES} ${memdeb_CLEANFILES} \
-	${session_timeouts_CLEANFILES} ${playback_CLEANFILES} \
-	${forwarding_CLEANFILES} ${rtp_analyze_CLEANFILES} *.core
-EXTRA_DIST = ${startstop_EXTRA_DIST} ${unittests_EXTRA_DIST} \
-	${libucl_EXTRA_DIST} ${libexecinfo_EXTRA_DIST} \
-	${acct_rtcp_hep_EXTRA_DIST} ${basic_versions_EXTRA_DIST} \
-	${command_parser_EXTRA_DIST} ${makeann_EXTRA_DIST} \
-	${extractaudio_EXTRA_DIST} ${memdeb_EXTRA_DIST} \
-	${session_timeouts_EXTRA_DIST} ${playback_EXTRA_DIST} \
-	${forwarding_EXTRA_DIST} ${rtp_analyze_EXTRA_DIST} Makefile.am \
-	ringback.sln
+CLEANFILES = ${autosrc_CLEANFILES} ${startstop_CLEANFILES} \
+	${rtcp2json_CLEANFILES} ${libucl_CLEANFILES} \
+	${libexecinfo_CLEANFILES} ${acct_rtcp_hep_CLEANFILES} \
+	${basic_versions_CLEANFILES} ${command_parser_CLEANFILES} \
+	${makeann_CLEANFILES} ${extractaudio_CLEANFILES} \
+	${memdeb_CLEANFILES} ${session_timeouts_CLEANFILES} \
+	${playback_CLEANFILES} ${forwarding_CLEANFILES} \
+	${rtp_analyze_CLEANFILES} *.core
+EXTRA_DIST = ${autosrc_EXTRA_DIST} ${startstop_EXTRA_DIST} \
+	${unittests_EXTRA_DIST} ${libucl_EXTRA_DIST} \
+	${libexecinfo_EXTRA_DIST} ${acct_rtcp_hep_EXTRA_DIST} \
+	${basic_versions_EXTRA_DIST} ${command_parser_EXTRA_DIST} \
+	${makeann_EXTRA_DIST} ${extractaudio_EXTRA_DIST} \
+	${memdeb_EXTRA_DIST} ${session_timeouts_EXTRA_DIST} \
+	${playback_EXTRA_DIST} ${forwarding_EXTRA_DIST} \
+	${rtp_analyze_EXTRA_DIST} Makefile.am ringback.sln
+startstop_EXTRA_DIST = startstop
+startstop_CLEANFILES = startstop.rout startstop.rlog
 unittests_EXTRA_DIST = unittests
 rtcp2json_CLEANFILES = rtcp1.output
 libucl_EXTRA_DIST = libucl
@@ -551,7 +555,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .log .test .test$(EXEEXT) .trs
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/startstop/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/autosrc/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -571,7 +575,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/startstop/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(am__empty):
+$(srcdir)/autosrc/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -735,6 +739,13 @@ recheck: all
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
+autosrc/chk_up2date.log: autosrc/chk_up2date
+	@p='autosrc/chk_up2date'; \
+	b='autosrc/chk_up2date'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 startstop/startstop1.log: startstop/startstop1
 	@p='startstop/startstop1'; \
 	b='startstop/startstop1'; \
