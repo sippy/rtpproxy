@@ -54,7 +54,8 @@ do
           EXTRACTAUDIO_EARGS=""
         fi
         ${EXTRACTAUDIO} -F ${ofmt} -D ${dfmt} ${EXTRACTAUDIO_ARGS} \
-         ${EXTRACTAUDIO_EARGS} extractaudio/${rfile} ${wfile} 2>${logfile} >${sfile} || continue
+         ${EXTRACTAUDIO_EARGS} extractaudio/${rfile} ${wfile} 2>${logfile} >${sfile}
+        report "${EXTRACTAUDIO} extractaudio/${rfile}"
         test -s ${wfile}
         report "${rfile} -> ${wfile}"
         sha256_verify ${wfile} extractaudio/extractaudio.checksums
