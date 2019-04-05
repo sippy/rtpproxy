@@ -27,7 +27,7 @@ gen_fin_c() {
   do
     echo "static const struct ${oname}_smethods ${oname}_smethods_fin = {"
     MNAMES=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | grep "${oname}," | \
-     awk -F ',' '{print $2}' | LC_COLLATE=C sort`
+     awk -F ',' '{print $2}' | LC_ALL=C sort`
     for mname in ${MNAMES}
     do
       epname=`get_epname "${1}" "${mname}"`
@@ -56,9 +56,9 @@ gen_fin_h() {
 }
 
 ONAMES=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | \
- awk -F ',' '{print $1}' | LC_COLLATE=C sort -u`
+ awk -F ',' '{print $1}' | LC_ALL=C sort -u`
 MNAMES_ALL=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | \
- awk -F ',' '{print $2}' | LC_COLLATE=C sort -u`
+ awk -F ',' '{print $2}' | LC_ALL=C sort -u`
 
 GENRNAME="`basename "${0}"`"
 
