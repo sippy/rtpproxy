@@ -8,5 +8,5 @@ BASEDIR="${TDIR}/.."
 
 disable_aslr
 
-glitch_test extractaudio/extractaudio1 7
+glitch_test extractaudio/extractaudio1 3
 report "glitching extractaudio/extractaudio1"
