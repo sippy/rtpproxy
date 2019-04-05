@@ -1,0 +1,11 @@
+#!/bin/sh
+
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
+. "${BASEDIR}/functions"
+
+make -C ../src update_autosrc
+report "running update_autosrc"
+chlines=$((`git diff ../autosrc | wc -l`))
+test ${chlines} -eq 0
+report "checking if autosrcs are up to date"

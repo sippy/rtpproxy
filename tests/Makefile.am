@@ -1,3 +1,4 @@
+include $(srcdir)/autosrc/Makefile.ami
 include $(srcdir)/startstop/Makefile.ami
 include $(srcdir)/unittests/Makefile.ami
 include $(srcdir)/libucl/Makefile.ami

@@ -1,0 +1,5 @@
+autosrc_EXTRA_DIST = autosrc
+autosrc_CLEANFILES = 
+TESTS = autosrc/chk_up2date
+CLEANFILES = ${autosrc_CLEANFILES}
+EXTRA_DIST = ${autosrc_EXTRA_DIST}
