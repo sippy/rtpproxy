@@ -26,7 +26,7 @@ gen_fin_c() {
   for oname in ${ONAMES}
   do
     echo "static const struct ${oname}_smethods ${oname}_smethods_fin = {"
-    MNAMES=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | grep "${oname}," | awk -F ',' '{print $2}'`
+    MNAMES=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | grep "${oname}," | awk -F ',' '{print $2}' | sort`
     for mname in ${MNAMES}
     do
       epname=`get_epname "${1}" "${mname}"`
