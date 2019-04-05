@@ -41,18 +41,18 @@ static void rtpp_socket_settos_fin(void *pub) {
 void rtpp_socket_fin(struct rtpp_socket *pub) {
     RTPP_DBG_ASSERT(pub-> bind != (rtpp_socket_bind_t)&rtpp_socket_bind_fin);
     pub-> bind = (rtpp_socket_bind_t)&rtpp_socket_bind_fin;
-    RTPP_DBG_ASSERT(pub-> settos != (rtpp_socket_settos_t)&rtpp_socket_settos_fin);
-    pub-> settos = (rtpp_socket_settos_t)&rtpp_socket_settos_fin;
-    RTPP_DBG_ASSERT(pub-> setrbuf != (rtpp_socket_setrbuf_t)&rtpp_socket_setrbuf_fin);
-    pub-> setrbuf = (rtpp_socket_setrbuf_t)&rtpp_socket_setrbuf_fin;
-    RTPP_DBG_ASSERT(pub-> setnonblock != (rtpp_socket_setnonblock_t)&rtpp_socket_setnonblock_fin);
-    pub-> setnonblock = (rtpp_socket_setnonblock_t)&rtpp_socket_setnonblock_fin;
-    RTPP_DBG_ASSERT(pub-> settimestamp != (rtpp_socket_settimestamp_t)&rtpp_socket_settimestamp_fin);
-    pub-> settimestamp = (rtpp_socket_settimestamp_t)&rtpp_socket_settimestamp_fin;
-    RTPP_DBG_ASSERT(pub-> send_pkt_na != (rtpp_socket_send_pkt_na_t)&rtpp_socket_send_pkt_na_fin);
-    pub-> send_pkt_na = (rtpp_socket_send_pkt_na_t)&rtpp_socket_send_pkt_na_fin;
-    RTPP_DBG_ASSERT(pub-> rtp_recv != (rtpp_socket_rtp_recv_t)&rtpp_socket_rtp_recv_fin);
-    pub-> rtp_recv = (rtpp_socket_rtp_recv_t)&rtpp_socket_rtp_recv_fin;
     RTPP_DBG_ASSERT(pub-> getfd != (rtpp_socket_getfd_t)&rtpp_socket_getfd_fin);
     pub-> getfd = (rtpp_socket_getfd_t)&rtpp_socket_getfd_fin;
+    RTPP_DBG_ASSERT(pub-> rtp_recv != (rtpp_socket_rtp_recv_t)&rtpp_socket_rtp_recv_fin);
+    pub-> rtp_recv = (rtpp_socket_rtp_recv_t)&rtpp_socket_rtp_recv_fin;
+    RTPP_DBG_ASSERT(pub-> send_pkt_na != (rtpp_socket_send_pkt_na_t)&rtpp_socket_send_pkt_na_fin);
+    pub-> send_pkt_na = (rtpp_socket_send_pkt_na_t)&rtpp_socket_send_pkt_na_fin;
+    RTPP_DBG_ASSERT(pub-> setnonblock != (rtpp_socket_setnonblock_t)&rtpp_socket_setnonblock_fin);
+    pub-> setnonblock = (rtpp_socket_setnonblock_t)&rtpp_socket_setnonblock_fin;
+    RTPP_DBG_ASSERT(pub-> setrbuf != (rtpp_socket_setrbuf_t)&rtpp_socket_setrbuf_fin);
+    pub-> setrbuf = (rtpp_socket_setrbuf_t)&rtpp_socket_setrbuf_fin;
+    RTPP_DBG_ASSERT(pub-> settimestamp != (rtpp_socket_settimestamp_t)&rtpp_socket_settimestamp_fin);
+    pub-> settimestamp = (rtpp_socket_settimestamp_t)&rtpp_socket_settimestamp_fin;
+    RTPP_DBG_ASSERT(pub-> settos != (rtpp_socket_settos_t)&rtpp_socket_settos_fin);
+    pub-> settos = (rtpp_socket_settos_t)&rtpp_socket_settos_fin;
 }

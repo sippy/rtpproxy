@@ -25,10 +25,10 @@ static void rtpp_si_update_fin(void *pub) {
 void rtpp_sessinfo_fin(struct rtpp_sessinfo *pub) {
     RTPP_DBG_ASSERT(pub-> append != (rtpp_si_append_t)&rtpp_si_append_fin);
     pub-> append = (rtpp_si_append_t)&rtpp_si_append_fin;
-    RTPP_DBG_ASSERT(pub-> update != (rtpp_si_update_t)&rtpp_si_update_fin);
-    pub-> update = (rtpp_si_update_t)&rtpp_si_update_fin;
     RTPP_DBG_ASSERT(pub-> remove != (rtpp_si_remove_t)&rtpp_si_remove_fin);
     pub-> remove = (rtpp_si_remove_t)&rtpp_si_remove_fin;
     RTPP_DBG_ASSERT(pub-> sync_polltbl != (rtpp_si_sync_polltbl_t)&rtpp_si_sync_polltbl_fin);
     pub-> sync_polltbl = (rtpp_si_sync_polltbl_t)&rtpp_si_sync_polltbl_fin;
+    RTPP_DBG_ASSERT(pub-> update != (rtpp_si_update_t)&rtpp_si_update_fin);
+    pub-> update = (rtpp_si_update_t)&rtpp_si_update_fin;
 }

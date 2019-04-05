@@ -30,11 +30,11 @@ static void refcnt_traceen_fin(void *pub) {
     abort();
 }
 static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
-    . incref = (refcnt_incref_t)&refcnt_incref_fin,
+    . attach = (refcnt_attach_t)&refcnt_attach_fin,
     . decref = (refcnt_decref_t)&refcnt_decref_fin,
     . getdata = (refcnt_getdata_t)&refcnt_getdata_fin,
+    . incref = (refcnt_incref_t)&refcnt_incref_fin,
     . reg_pd = (refcnt_reg_pd_t)&refcnt_reg_pd_fin,
-    . attach = (refcnt_attach_t)&refcnt_attach_fin,
     . traceen = (refcnt_traceen_t)&refcnt_traceen_fin,
 };
 void rtpp_refcnt_fin(struct rtpp_refcnt *pub) {

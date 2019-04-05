@@ -23,12 +23,12 @@ static void rtpp_pcount_reg_reld_fin(void *pub) {
     abort();
 }
 void rtpp_pcount_fin(struct rtpp_pcount *pub) {
-    RTPP_DBG_ASSERT(pub-> reg_reld != (rtpp_pcount_reg_reld_t)&rtpp_pcount_reg_reld_fin);
-    pub-> reg_reld = (rtpp_pcount_reg_reld_t)&rtpp_pcount_reg_reld_fin;
+    RTPP_DBG_ASSERT(pub-> get_stats != (rtpp_pcount_get_stats_t)&rtpp_pcount_get_stats_fin);
+    pub-> get_stats = (rtpp_pcount_get_stats_t)&rtpp_pcount_get_stats_fin;
     RTPP_DBG_ASSERT(pub-> reg_drop != (rtpp_pcount_reg_drop_t)&rtpp_pcount_reg_drop_fin);
     pub-> reg_drop = (rtpp_pcount_reg_drop_t)&rtpp_pcount_reg_drop_fin;
     RTPP_DBG_ASSERT(pub-> reg_ignr != (rtpp_pcount_reg_ignr_t)&rtpp_pcount_reg_ignr_fin);
     pub-> reg_ignr = (rtpp_pcount_reg_ignr_t)&rtpp_pcount_reg_ignr_fin;
-    RTPP_DBG_ASSERT(pub-> get_stats != (rtpp_pcount_get_stats_t)&rtpp_pcount_get_stats_fin);
-    pub-> get_stats = (rtpp_pcount_get_stats_t)&rtpp_pcount_get_stats_fin;
+    RTPP_DBG_ASSERT(pub-> reg_reld != (rtpp_pcount_reg_reld_t)&rtpp_pcount_reg_reld_fin);
+    pub-> reg_reld = (rtpp_pcount_reg_reld_t)&rtpp_pcount_reg_reld_fin;
 }

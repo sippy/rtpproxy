@@ -31,16 +31,16 @@ static void rtpp_module_if_start_fin(void *pub) {
     abort();
 }
 void rtpp_module_if_fin(struct rtpp_module_if *pub) {
-    RTPP_DBG_ASSERT(pub-> load != (rtpp_module_if_load_t)&rtpp_module_if_load_fin);
-    pub-> load = (rtpp_module_if_load_t)&rtpp_module_if_load_fin;
     RTPP_DBG_ASSERT(pub-> config != (rtpp_module_if_config_t)&rtpp_module_if_config_fin);
     pub-> config = (rtpp_module_if_config_t)&rtpp_module_if_config_fin;
-    RTPP_DBG_ASSERT(pub-> start != (rtpp_module_if_start_t)&rtpp_module_if_start_fin);
-    pub-> start = (rtpp_module_if_start_t)&rtpp_module_if_start_fin;
     RTPP_DBG_ASSERT(pub-> do_acct != (rtpp_module_if_do_acct_t)&rtpp_module_if_do_acct_fin);
     pub-> do_acct = (rtpp_module_if_do_acct_t)&rtpp_module_if_do_acct_fin;
     RTPP_DBG_ASSERT(pub-> do_acct_rtcp != (rtpp_module_if_do_acct_rtcp_t)&rtpp_module_if_do_acct_rtcp_fin);
     pub-> do_acct_rtcp = (rtpp_module_if_do_acct_rtcp_t)&rtpp_module_if_do_acct_rtcp_fin;
     RTPP_DBG_ASSERT(pub-> get_mconf != (rtpp_module_if_get_mconf_t)&rtpp_module_if_get_mconf_fin);
     pub-> get_mconf = (rtpp_module_if_get_mconf_t)&rtpp_module_if_get_mconf_fin;
+    RTPP_DBG_ASSERT(pub-> load != (rtpp_module_if_load_t)&rtpp_module_if_load_fin);
+    pub-> load = (rtpp_module_if_load_t)&rtpp_module_if_load_fin;
+    RTPP_DBG_ASSERT(pub-> start != (rtpp_module_if_start_t)&rtpp_module_if_start_fin);
+    pub-> start = (rtpp_module_if_start_t)&rtpp_module_if_start_fin;
 }

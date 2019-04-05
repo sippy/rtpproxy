@@ -23,12 +23,12 @@ static void rtpp_pipe_upd_cntrs_fin(void *pub) {
     abort();
 }
 void rtpp_pipe_fin(struct rtpp_pipe *pub) {
-    RTPP_DBG_ASSERT(pub-> get_ttl != (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin);
-    pub-> get_ttl = (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin;
     RTPP_DBG_ASSERT(pub-> decr_ttl != (rtpp_pipe_decr_ttl_t)&rtpp_pipe_decr_ttl_fin);
     pub-> decr_ttl = (rtpp_pipe_decr_ttl_t)&rtpp_pipe_decr_ttl_fin;
     RTPP_DBG_ASSERT(pub-> get_stats != (rtpp_pipe_get_stats_t)&rtpp_pipe_get_stats_fin);
     pub-> get_stats = (rtpp_pipe_get_stats_t)&rtpp_pipe_get_stats_fin;
+    RTPP_DBG_ASSERT(pub-> get_ttl != (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin);
+    pub-> get_ttl = (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin;
     RTPP_DBG_ASSERT(pub-> upd_cntrs != (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin);
     pub-> upd_cntrs = (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin;
 }

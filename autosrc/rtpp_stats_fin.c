@@ -39,13 +39,13 @@ static void rtpp_stats_updatebyname_d_fin(void *pub) {
 }
 static const struct rtpp_stats_smethods rtpp_stats_smethods_fin = {
     . getidxbyname = (rtpp_stats_getidxbyname_t)&rtpp_stats_getidxbyname_fin,
+    . getlvalbyname = (rtpp_stats_getlvalbyname_t)&rtpp_stats_getlvalbyname_fin,
+    . getnstats = (rtpp_stats_getnstats_t)&rtpp_stats_getnstats_fin,
+    . nstr = (rtpp_stats_nstr_t)&rtpp_stats_nstr_fin,
+    . update_derived = (rtpp_stats_update_derived_t)&rtpp_stats_update_derived_fin,
     . updatebyidx = (rtpp_stats_updatebyidx_t)&rtpp_stats_updatebyidx_fin,
     . updatebyname = (rtpp_stats_updatebyname_t)&rtpp_stats_updatebyname_fin,
     . updatebyname_d = (rtpp_stats_updatebyname_d_t)&rtpp_stats_updatebyname_d_fin,
-    . getlvalbyname = (rtpp_stats_getlvalbyname_t)&rtpp_stats_getlvalbyname_fin,
-    . nstr = (rtpp_stats_nstr_t)&rtpp_stats_nstr_fin,
-    . getnstats = (rtpp_stats_getnstats_t)&rtpp_stats_getnstats_fin,
-    . update_derived = (rtpp_stats_update_derived_t)&rtpp_stats_update_derived_fin,
 };
 void rtpp_stats_fin(struct rtpp_stats *pub) {
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_stats_smethods_fin &&

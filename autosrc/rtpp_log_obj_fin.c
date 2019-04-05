@@ -23,12 +23,12 @@ static void rtpp_log_write_fin(void *pub) {
     abort();
 }
 void rtpp_log_fin(struct rtpp_log *pub) {
-    RTPP_DBG_ASSERT(pub-> write != (rtpp_log_write_t)&rtpp_log_write_fin);
-    pub-> write = (rtpp_log_write_t)&rtpp_log_write_fin;
     RTPP_DBG_ASSERT(pub-> ewrite != (rtpp_log_ewrite_t)&rtpp_log_ewrite_fin);
     pub-> ewrite = (rtpp_log_ewrite_t)&rtpp_log_ewrite_fin;
     RTPP_DBG_ASSERT(pub-> setlevel != (rtpp_log_setlevel_t)&rtpp_log_setlevel_fin);
     pub-> setlevel = (rtpp_log_setlevel_t)&rtpp_log_setlevel_fin;
     RTPP_DBG_ASSERT(pub-> start != (rtpp_log_start_t)&rtpp_log_start_fin);
     pub-> start = (rtpp_log_start_t)&rtpp_log_start_fin;
+    RTPP_DBG_ASSERT(pub-> write != (rtpp_log_write_t)&rtpp_log_write_fin);
+    pub-> write = (rtpp_log_write_t)&rtpp_log_write_fin;
 }

@@ -31,10 +31,10 @@ static void rtpp_server_start_fin(void *pub) {
 }
 static const struct rtpp_server_smethods rtpp_server_smethods_fin = {
     . get = (rtpp_server_get_t)&rtpp_server_get_fin,
-    . get_ssrc = (rtpp_server_get_ssrc_t)&rtpp_server_get_ssrc_fin,
-    . set_ssrc = (rtpp_server_set_ssrc_t)&rtpp_server_set_ssrc_fin,
     . get_seq = (rtpp_server_get_seq_t)&rtpp_server_get_seq_fin,
+    . get_ssrc = (rtpp_server_get_ssrc_t)&rtpp_server_get_ssrc_fin,
     . set_seq = (rtpp_server_set_seq_t)&rtpp_server_set_seq_fin,
+    . set_ssrc = (rtpp_server_set_ssrc_t)&rtpp_server_set_ssrc_fin,
     . start = (rtpp_server_start_t)&rtpp_server_start_fin,
 };
 void rtpp_server_fin(struct rtpp_server *pub) {

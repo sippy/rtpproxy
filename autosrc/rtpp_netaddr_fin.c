@@ -38,13 +38,13 @@ static void rtpp_netaddr_sip_print_fin(void *pub) {
     abort();
 }
 static const struct rtpp_netaddr_smethods rtpp_netaddr_smethods_fin = {
-    . set = (rtpp_netaddr_set_t)&rtpp_netaddr_set_fin,
-    . isempty = (rtpp_netaddr_isempty_t)&rtpp_netaddr_isempty_fin,
     . cmp = (rtpp_netaddr_cmp_t)&rtpp_netaddr_cmp_fin,
-    . isaddrseq = (rtpp_netaddr_isaddrseq_t)&rtpp_netaddr_isaddrseq_fin,
     . cmphost = (rtpp_netaddr_cmphost_t)&rtpp_netaddr_cmphost_fin,
     . copy = (rtpp_netaddr_copy_t)&rtpp_netaddr_copy_fin,
     . get = (rtpp_netaddr_get_t)&rtpp_netaddr_get_fin,
+    . isaddrseq = (rtpp_netaddr_isaddrseq_t)&rtpp_netaddr_isaddrseq_fin,
+    . isempty = (rtpp_netaddr_isempty_t)&rtpp_netaddr_isempty_fin,
+    . set = (rtpp_netaddr_set_t)&rtpp_netaddr_set_fin,
     . sip_print = (rtpp_netaddr_sip_print_t)&rtpp_netaddr_sip_print_fin,
 };
 void rtpp_netaddr_fin(struct rtpp_netaddr *pub) {

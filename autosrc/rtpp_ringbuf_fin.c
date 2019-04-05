@@ -19,10 +19,10 @@ static void rtpp_ringbuf_push_fin(void *pub) {
     abort();
 }
 void rtpp_ringbuf_fin(struct rtpp_ringbuf *pub) {
-    RTPP_DBG_ASSERT(pub-> push != (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin);
-    pub-> push = (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin;
     RTPP_DBG_ASSERT(pub-> flush != (rtpp_ringbuf_flush_t)&rtpp_ringbuf_flush_fin);
     pub-> flush = (rtpp_ringbuf_flush_t)&rtpp_ringbuf_flush_fin;
     RTPP_DBG_ASSERT(pub-> locate != (rtpp_ringbuf_locate_t)&rtpp_ringbuf_locate_fin);
     pub-> locate = (rtpp_ringbuf_locate_t)&rtpp_ringbuf_locate_fin;
+    RTPP_DBG_ASSERT(pub-> push != (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin);
+    pub-> push = (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin;
 }
