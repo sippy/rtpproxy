@@ -468,8 +468,6 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-autosrc_EXTRA_DIST = autosrc
-autosrc_CLEANFILES = 
 TESTS = autosrc/chk_up2date startstop/startstop1 unittests/rtcp2json1 \
 	unittests/rtpp_sbuf unittests/rtpp_objck libucl/libucl1 \
 	libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
@@ -496,6 +494,8 @@ EXTRA_DIST = ${autosrc_EXTRA_DIST} ${startstop_EXTRA_DIST} \
 	${memdeb_EXTRA_DIST} ${session_timeouts_EXTRA_DIST} \
 	${playback_EXTRA_DIST} ${forwarding_EXTRA_DIST} \
 	${rtp_analyze_EXTRA_DIST} Makefile.am ringback.sln
+autosrc_EXTRA_DIST = autosrc
+autosrc_CLEANFILES = 
 startstop_EXTRA_DIST = startstop
 startstop_CLEANFILES = startstop.rout startstop.rlog
 unittests_EXTRA_DIST = unittests
