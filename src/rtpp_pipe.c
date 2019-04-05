@@ -42,6 +42,7 @@
 #include "rtpp_weakref.h"
 #include "rtpp_stream.h"
 #include "rtpp_pipe.h"
+#include "rtpp_pipe_fin.h"
 #include "rtpp_ttl.h"
 #include "rtpp_math.h"
 #include "rtpp_acct_pipe.h"
@@ -137,6 +138,7 @@ rtpp_pipe_dtor(struct rtpp_pipe_priv *pvt)
 {
     int i;
 
+    rtpp_pipe_fin(&(pvt->pub));
     for (i = 0; i < 2; i++) {
         CALL_METHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
         CALL_SMETHOD(pvt->pub.stream[i]->rcnt, decref);
