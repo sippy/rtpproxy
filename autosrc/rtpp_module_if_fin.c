@@ -4,31 +4,31 @@
 #include <stdlib.h>
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
-#define rtpp_module_if_h_fin 1
 #include "rtpp_module_if.h"
+#include "rtpp_module_if_fin.h"
 static void rtpp_module_if_config_fin(void *pub) {
     fprintf(stderr, "Method %p->config (rtpp_module_if_config) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_module_if_do_acct_fin(void *pub) {
     fprintf(stderr, "Method %p->do_acct (rtpp_module_if_do_acct) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_module_if_do_acct_rtcp_fin(void *pub) {
     fprintf(stderr, "Method %p->do_acct_rtcp (rtpp_module_if_do_acct_rtcp) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_module_if_get_mconf_fin(void *pub) {
     fprintf(stderr, "Method %p->get_mconf (rtpp_module_if_get_mconf) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_module_if_load_fin(void *pub) {
     fprintf(stderr, "Method %p->load (rtpp_module_if_load) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_module_if_start_fin(void *pub) {
     fprintf(stderr, "Method %p->start (rtpp_module_if_start) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 void rtpp_module_if_fin(struct rtpp_module_if *pub) {
     RTPP_DBG_ASSERT(pub->config != (rtpp_module_if_config_t)&rtpp_module_if_config_fin);

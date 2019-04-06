@@ -4,23 +4,23 @@
 #include <stdlib.h>
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
-#define rtpp_sessinfo_h_fin 1
 #include "rtpp_sessinfo.h"
+#include "rtpp_sessinfo_fin.h"
 static void rtpp_si_append_fin(void *pub) {
     fprintf(stderr, "Method %p->append (rtpp_si_append) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_si_remove_fin(void *pub) {
     fprintf(stderr, "Method %p->remove (rtpp_si_remove) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_si_sync_polltbl_fin(void *pub) {
     fprintf(stderr, "Method %p->sync_polltbl (rtpp_si_sync_polltbl) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_si_update_fin(void *pub) {
     fprintf(stderr, "Method %p->update (rtpp_si_update) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 void rtpp_sessinfo_fin(struct rtpp_sessinfo *pub) {
     RTPP_DBG_ASSERT(pub->append != (rtpp_si_append_t)&rtpp_si_append_fin);

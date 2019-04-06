@@ -4,39 +4,39 @@
 #include <stdlib.h>
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
-#define rtpp_socket_h_fin 1
 #include "rtpp_socket.h"
+#include "rtpp_socket_fin.h"
 static void rtpp_socket_bind_fin(void *pub) {
     fprintf(stderr, "Method %p->bind (rtpp_socket_bind) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_socket_getfd_fin(void *pub) {
     fprintf(stderr, "Method %p->getfd (rtpp_socket_getfd) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_socket_rtp_recv_fin(void *pub) {
     fprintf(stderr, "Method %p->rtp_recv (rtpp_socket_rtp_recv) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_socket_send_pkt_na_fin(void *pub) {
     fprintf(stderr, "Method %p->send_pkt_na (rtpp_socket_send_pkt_na) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_socket_setnonblock_fin(void *pub) {
     fprintf(stderr, "Method %p->setnonblock (rtpp_socket_setnonblock) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_socket_setrbuf_fin(void *pub) {
     fprintf(stderr, "Method %p->setrbuf (rtpp_socket_setrbuf) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_socket_settimestamp_fin(void *pub) {
     fprintf(stderr, "Method %p->settimestamp (rtpp_socket_settimestamp) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_socket_settos_fin(void *pub) {
     fprintf(stderr, "Method %p->settos (rtpp_socket_settos) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 void rtpp_socket_fin(struct rtpp_socket *pub) {
     RTPP_DBG_ASSERT(pub->bind != (rtpp_socket_bind_t)&rtpp_socket_bind_fin);

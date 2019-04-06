@@ -5,37 +5,38 @@
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
 #include "rtpp_netaddr.h"
+#include "rtpp_netaddr_fin.h"
 static void rtpp_netaddr_cmp_fin(void *pub) {
     fprintf(stderr, "Method %p->cmp (rtpp_netaddr_cmp) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_netaddr_cmphost_fin(void *pub) {
     fprintf(stderr, "Method %p->cmphost (rtpp_netaddr_cmphost) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_netaddr_copy_fin(void *pub) {
     fprintf(stderr, "Method %p->copy (rtpp_netaddr_copy) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_netaddr_get_fin(void *pub) {
     fprintf(stderr, "Method %p->get (rtpp_netaddr_get) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_netaddr_isaddrseq_fin(void *pub) {
     fprintf(stderr, "Method %p->isaddrseq (rtpp_netaddr_isaddrseq) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_netaddr_isempty_fin(void *pub) {
     fprintf(stderr, "Method %p->isempty (rtpp_netaddr_isempty) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_netaddr_set_fin(void *pub) {
     fprintf(stderr, "Method %p->set (rtpp_netaddr_set) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_netaddr_sip_print_fin(void *pub) {
     fprintf(stderr, "Method %p->sip_print (rtpp_netaddr_sip_print) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static const struct rtpp_netaddr_smethods rtpp_netaddr_smethods_fin = {
     .cmp = (rtpp_netaddr_cmp_t)&rtpp_netaddr_cmp_fin,

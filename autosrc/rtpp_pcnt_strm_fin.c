@@ -4,15 +4,15 @@
 #include <stdlib.h>
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
-#define rtpp_pcnt_strm_h_fin 1
 #include "rtpp_pcnt_strm.h"
+#include "rtpp_pcnt_strm_fin.h"
 static void rtpp_pcnt_strm_get_stats_fin(void *pub) {
     fprintf(stderr, "Method %p->get_stats (rtpp_pcnt_strm_get_stats) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_pcnt_strm_reg_pktin_fin(void *pub) {
     fprintf(stderr, "Method %p->reg_pktin (rtpp_pcnt_strm_reg_pktin) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 void rtpp_pcnt_strm_fin(struct rtpp_pcnt_strm *pub) {
     RTPP_DBG_ASSERT(pub->get_stats != (rtpp_pcnt_strm_get_stats_t)&rtpp_pcnt_strm_get_stats_fin);

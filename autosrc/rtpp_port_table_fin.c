@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
-#define rtpp_port_table_h_fin 1
 #include "rtpp_port_table.h"
+#include "rtpp_port_table_fin.h"
 static void rtpp_ptbl_get_port_fin(void *pub) {
     fprintf(stderr, "Method %p->get_port (rtpp_ptbl_get_port) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 void rtpp_port_table_fin(struct rtpp_port_table *pub) {
     RTPP_DBG_ASSERT(pub->get_port != (rtpp_ptbl_get_port_t)&rtpp_ptbl_get_port_fin);

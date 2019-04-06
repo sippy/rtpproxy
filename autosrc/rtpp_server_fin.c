@@ -5,29 +5,30 @@
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
 #include "rtpp_server.h"
+#include "rtpp_server_fin.h"
 static void rtpp_server_get_fin(void *pub) {
     fprintf(stderr, "Method %p->get (rtpp_server_get) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_server_get_seq_fin(void *pub) {
     fprintf(stderr, "Method %p->get_seq (rtpp_server_get_seq) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_server_get_ssrc_fin(void *pub) {
     fprintf(stderr, "Method %p->get_ssrc (rtpp_server_get_ssrc) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_server_set_seq_fin(void *pub) {
     fprintf(stderr, "Method %p->set_seq (rtpp_server_set_seq) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_server_set_ssrc_fin(void *pub) {
     fprintf(stderr, "Method %p->set_ssrc (rtpp_server_set_ssrc) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_server_start_fin(void *pub) {
     fprintf(stderr, "Method %p->start (rtpp_server_start) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static const struct rtpp_server_smethods rtpp_server_smethods_fin = {
     .get = (rtpp_server_get_t)&rtpp_server_get_fin,

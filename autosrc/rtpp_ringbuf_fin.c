@@ -4,19 +4,19 @@
 #include <stdlib.h>
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
-#define rtpp_ringbuf_h_fin 1
 #include "rtpp_ringbuf.h"
+#include "rtpp_ringbuf_fin.h"
 static void rtpp_ringbuf_flush_fin(void *pub) {
     fprintf(stderr, "Method %p->flush (rtpp_ringbuf_flush) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_ringbuf_locate_fin(void *pub) {
     fprintf(stderr, "Method %p->locate (rtpp_ringbuf_locate) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_ringbuf_push_fin(void *pub) {
     fprintf(stderr, "Method %p->push (rtpp_ringbuf_push) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 void rtpp_ringbuf_fin(struct rtpp_ringbuf *pub) {
     RTPP_DBG_ASSERT(pub->flush != (rtpp_ringbuf_flush_t)&rtpp_ringbuf_flush_fin);

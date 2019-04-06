@@ -5,29 +5,30 @@
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_refcnt_fin.h"
 static void refcnt_attach_fin(void *pub) {
     fprintf(stderr, "Method %p->attach (refcnt_attach) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void refcnt_decref_fin(void *pub) {
     fprintf(stderr, "Method %p->decref (refcnt_decref) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void refcnt_getdata_fin(void *pub) {
     fprintf(stderr, "Method %p->getdata (refcnt_getdata) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void refcnt_incref_fin(void *pub) {
     fprintf(stderr, "Method %p->incref (refcnt_incref) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void refcnt_reg_pd_fin(void *pub) {
     fprintf(stderr, "Method %p->reg_pd (refcnt_reg_pd) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void refcnt_traceen_fin(void *pub) {
     fprintf(stderr, "Method %p->traceen (refcnt_traceen) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
     .attach = (refcnt_attach_t)&refcnt_attach_fin,

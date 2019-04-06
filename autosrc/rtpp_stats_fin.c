@@ -5,37 +5,38 @@
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
 #include "rtpp_stats.h"
+#include "rtpp_stats_fin.h"
 static void rtpp_stats_getidxbyname_fin(void *pub) {
     fprintf(stderr, "Method %p->getidxbyname (rtpp_stats_getidxbyname) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_stats_getlvalbyname_fin(void *pub) {
     fprintf(stderr, "Method %p->getlvalbyname (rtpp_stats_getlvalbyname) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_stats_getnstats_fin(void *pub) {
     fprintf(stderr, "Method %p->getnstats (rtpp_stats_getnstats) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_stats_nstr_fin(void *pub) {
     fprintf(stderr, "Method %p->nstr (rtpp_stats_nstr) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_stats_update_derived_fin(void *pub) {
     fprintf(stderr, "Method %p->update_derived (rtpp_stats_update_derived) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_stats_updatebyidx_fin(void *pub) {
     fprintf(stderr, "Method %p->updatebyidx (rtpp_stats_updatebyidx) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_stats_updatebyname_fin(void *pub) {
     fprintf(stderr, "Method %p->updatebyname (rtpp_stats_updatebyname) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_stats_updatebyname_d_fin(void *pub) {
     fprintf(stderr, "Method %p->updatebyname_d (rtpp_stats_updatebyname_d) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static const struct rtpp_stats_smethods rtpp_stats_smethods_fin = {
     .getidxbyname = (rtpp_stats_getidxbyname_t)&rtpp_stats_getidxbyname_fin,

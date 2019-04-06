@@ -4,23 +4,23 @@
 #include <stdlib.h>
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
-#define rtpp_log_obj_h_fin 1
 #include "rtpp_log_obj.h"
+#include "rtpp_log_obj_fin.h"
 static void rtpp_log_ewrite_fin(void *pub) {
     fprintf(stderr, "Method %p->ewrite (rtpp_log_ewrite) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_log_setlevel_fin(void *pub) {
     fprintf(stderr, "Method %p->setlevel (rtpp_log_setlevel) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_log_start_fin(void *pub) {
     fprintf(stderr, "Method %p->start (rtpp_log_start) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static void rtpp_log_write_fin(void *pub) {
     fprintf(stderr, "Method %p->write (rtpp_log_write) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 void rtpp_log_fin(struct rtpp_log *pub) {
     RTPP_DBG_ASSERT(pub->ewrite != (rtpp_log_ewrite_t)&rtpp_log_ewrite_fin);

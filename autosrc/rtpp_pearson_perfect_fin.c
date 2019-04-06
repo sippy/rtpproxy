@@ -5,9 +5,10 @@
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
 #include "rtpp_pearson_perfect.h"
+#include "rtpp_pearson_perfect_fin.h"
 static void rtpp_pearson_perfect_hash_fin(void *pub) {
     fprintf(stderr, "Method %p->hash (rtpp_pearson_perfect_hash) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 static const struct rtpp_pearson_perfect_smethods rtpp_pearson_perfect_smethods_fin = {
     .hash = (rtpp_pearson_perfect_hash_t)&rtpp_pearson_perfect_hash_fin,

@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
-#define rtpp_timed_task_h_fin 1
 #include "rtpp_timed_task.h"
+#include "rtpp_timed_task_fin.h"
 static void rtpp_timed_task_cancel_fin(void *pub) {
     fprintf(stderr, "Method %p->cancel (rtpp_timed_task_cancel) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 void rtpp_timed_task_fin(struct rtpp_timed_task *pub) {
     RTPP_DBG_ASSERT(pub->cancel != (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin);

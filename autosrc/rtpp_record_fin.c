@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
-#define rtpp_record_h_fin 1
 #include "rtpp_record.h"
+#include "rtpp_record_fin.h"
 static void rtpp_record_write_fin(void *pub) {
     fprintf(stderr, "Method %p->write (rtpp_record_write) is invoked after destruction\x0a", pub);
-    abort();
+    RTPP_AUTOTRAP();
 }
 void rtpp_record_fin(struct rtpp_record *pub) {
     RTPP_DBG_ASSERT(pub->write != (rtpp_record_write_t)&rtpp_record_write_fin);
