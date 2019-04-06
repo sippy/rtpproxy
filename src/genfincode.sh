@@ -12,9 +12,10 @@ gen_fin_c() {
   echo "#include <stdlib.h>"
   echo "#include \"rtpp_types.h\""
   echo "#include \"rtpp_debug.h\""
-  DEFNAME=`echo ${1} | sed 's|[.]|_|g'`
-  echo "#define ${DEFNAME}_fin 1"
+#  DEFNAME=`echo ${1} | sed 's|[.]|_|g'`
+#  echo "#define ${DEFNAME}_fin 1"
   echo "#include \"${1}\""
+  echo "#include \"${2}\""
 
   for mname in ${MNAMES_ALL}
   do
@@ -37,5 +38,6 @@ gen_fin_c() {
   done
 }
 
-emit_fin_h "${1}" > "${2}"
-gen_fin_c "${1}" > "${3}"
+hname=`basename "${2}"`
+emit_fin_h "${1}" "${hname}" > "${2}"
+gen_fin_c "${1}" "${hname}" > "${3}"
