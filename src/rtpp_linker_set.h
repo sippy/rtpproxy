@@ -30,9 +30,11 @@
 #ifndef _SYS_LINKER_SET_H_
 #define _SYS_LINKER_SET_H_
 
-#ifndef _SYS_CDEFS_H_
-#error this file needs sys/cdefs.h as a prerequisite
-#endif
+#define __CONCAT1(x,y)  x ## y
+#define __CONCAT(x,y)   __CONCAT1(x,y)
+
+#define __GLOBL1(sym)   __asm__(".globl " #sym)
+#define __GLOBL(sym)    __GLOBL1(sym)
 
 /*
  * The following macros are used to declare global sets of objects, which
@@ -53,19 +55,12 @@
 /*
  * Private macros, not to be used outside this header file.
  */
-#ifdef __GNUCLIKE___SECTION
 #define __MAKE_SET(set, sym)				\
 	__GLOBL(__CONCAT(__start_set_,set));		\
 	__GLOBL(__CONCAT(__stop_set_,set));		\
 	static void const * __MAKE_SET_CONST		\
 	__set_##set##_sym_##sym __section("set_" #set)	\
 	__used = &(sym)
-#else /* !__GNUCLIKE___SECTION */
-#ifndef lint
-#error this file needs to be ported to your compiler
-#endif /* lint */
-#define __MAKE_SET(set, sym)	extern void const * const (__set_##set##_sym_##sym)
-#endif /* __GNUCLIKE___SECTION */
 
 /*
  * Public macros.
