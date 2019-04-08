@@ -7,35 +7,35 @@
 #include "rtpp_stats.h"
 #include "rtpp_stats_fin.h"
 static void rtpp_stats_getidxbyname_fin(void *pub) {
-    fprintf(stderr, "Method %p->getidxbyname (rtpp_stats_getidxbyname) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stats@%p::getidxbyname (rtpp_stats_getidxbyname) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stats_getlvalbyname_fin(void *pub) {
-    fprintf(stderr, "Method %p->getlvalbyname (rtpp_stats_getlvalbyname) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stats@%p::getlvalbyname (rtpp_stats_getlvalbyname) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stats_getnstats_fin(void *pub) {
-    fprintf(stderr, "Method %p->getnstats (rtpp_stats_getnstats) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stats@%p::getnstats (rtpp_stats_getnstats) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stats_nstr_fin(void *pub) {
-    fprintf(stderr, "Method %p->nstr (rtpp_stats_nstr) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stats@%p::nstr (rtpp_stats_nstr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stats_update_derived_fin(void *pub) {
-    fprintf(stderr, "Method %p->update_derived (rtpp_stats_update_derived) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stats@%p::update_derived (rtpp_stats_update_derived) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stats_updatebyidx_fin(void *pub) {
-    fprintf(stderr, "Method %p->updatebyidx (rtpp_stats_updatebyidx) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stats@%p::updatebyidx (rtpp_stats_updatebyidx) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stats_updatebyname_fin(void *pub) {
-    fprintf(stderr, "Method %p->updatebyname (rtpp_stats_updatebyname) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stats@%p::updatebyname (rtpp_stats_updatebyname) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stats_updatebyname_d_fin(void *pub) {
-    fprintf(stderr, "Method %p->updatebyname_d (rtpp_stats_updatebyname_d) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stats@%p::updatebyname_d (rtpp_stats_updatebyname_d) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static const struct rtpp_stats_smethods rtpp_stats_smethods_fin = {
@@ -53,3 +53,40 @@ void rtpp_stats_fin(struct rtpp_stats *pub) {
       pub->smethods != NULL);
     pub->smethods = &rtpp_stats_smethods_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->smethods->fn))(pub)
+
+void
+rtpp_stats_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_stats pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stats_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, getidxbyname);
+    CALL_TFIN(&tp->pub, getlvalbyname);
+    CALL_TFIN(&tp->pub, getnstats);
+    CALL_TFIN(&tp->pub, nstr);
+    CALL_TFIN(&tp->pub, update_derived);
+    CALL_TFIN(&tp->pub, updatebyidx);
+    CALL_TFIN(&tp->pub, updatebyname);
+    CALL_TFIN(&tp->pub, updatebyname_d);
+    assert((_naborts - naborts_s) == 8);
+}
+const static void *_rtpp_stats_ftp = (void *)&rtpp_stats_fintest;
+DATA_SET(rtpp_fintests, _rtpp_stats_ftp);
+#endif /* RTPP_FINTEST */

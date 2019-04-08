@@ -7,10 +7,40 @@
 #include "rtpp_timed_task.h"
 #include "rtpp_timed_task_fin.h"
 static void rtpp_timed_task_cancel_fin(void *pub) {
-    fprintf(stderr, "Method %p->cancel (rtpp_timed_task_cancel) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_timed_task@%p::cancel (rtpp_timed_task_cancel) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 void rtpp_timed_task_fin(struct rtpp_timed_task *pub) {
     RTPP_DBG_ASSERT(pub->cancel != (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin);
     pub->cancel = (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->fn))(pub)
+
+void
+rtpp_timed_task_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_timed_task pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_task_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, cancel);
+    assert((_naborts - naborts_s) == 1);
+}
+const static void *_rtpp_timed_task_ftp = (void *)&rtpp_timed_task_fintest;
+DATA_SET(rtpp_fintests, _rtpp_timed_task_ftp);
+#endif /* RTPP_FINTEST */

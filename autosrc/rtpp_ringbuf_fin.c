@@ -7,15 +7,15 @@
 #include "rtpp_ringbuf.h"
 #include "rtpp_ringbuf_fin.h"
 static void rtpp_ringbuf_flush_fin(void *pub) {
-    fprintf(stderr, "Method %p->flush (rtpp_ringbuf_flush) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_ringbuf@%p::flush (rtpp_ringbuf_flush) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_ringbuf_locate_fin(void *pub) {
-    fprintf(stderr, "Method %p->locate (rtpp_ringbuf_locate) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_ringbuf@%p::locate (rtpp_ringbuf_locate) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_ringbuf_push_fin(void *pub) {
-    fprintf(stderr, "Method %p->push (rtpp_ringbuf_push) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_ringbuf@%p::push (rtpp_ringbuf_push) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 void rtpp_ringbuf_fin(struct rtpp_ringbuf *pub) {
@@ -26,3 +26,35 @@ void rtpp_ringbuf_fin(struct rtpp_ringbuf *pub) {
     RTPP_DBG_ASSERT(pub->push != (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin);
     pub->push = (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->fn))(pub)
+
+void
+rtpp_ringbuf_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_ringbuf pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ringbuf_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, flush);
+    CALL_TFIN(&tp->pub, locate);
+    CALL_TFIN(&tp->pub, push);
+    assert((_naborts - naborts_s) == 3);
+}
+const static void *_rtpp_ringbuf_ftp = (void *)&rtpp_ringbuf_fintest;
+DATA_SET(rtpp_fintests, _rtpp_ringbuf_ftp);
+#endif /* RTPP_FINTEST */

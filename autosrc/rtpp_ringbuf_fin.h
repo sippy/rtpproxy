@@ -7,4 +7,7 @@
 extern int _naborts;
 #endif
 void rtpp_ringbuf_fin(struct rtpp_ringbuf *);
+#if defined(RTPP_FINTEST)
+void rtpp_ringbuf_fintest(void);
+#endif /* RTPP_FINTEST */
 #endif /* _rtpp_ringbuf_fin_h */

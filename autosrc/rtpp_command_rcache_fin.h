@@ -7,4 +7,7 @@
 extern int _naborts;
 #endif
 void rtpp_cmd_rcache_fin(struct rtpp_cmd_rcache *);
+#if defined(RTPP_FINTEST)
+void rtpp_cmd_rcache_fintest(void);
+#endif /* RTPP_FINTEST */
 #endif /* _rtpp_command_rcache_fin_h */

@@ -7,19 +7,19 @@
 #include "rtpp_ttl.h"
 #include "rtpp_ttl_fin.h"
 static void rtpp_ttl_decr_fin(void *pub) {
-    fprintf(stderr, "Method %p->decr (rtpp_ttl_decr) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_ttl@%p::decr (rtpp_ttl_decr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_ttl_get_remaining_fin(void *pub) {
-    fprintf(stderr, "Method %p->get_remaining (rtpp_ttl_get_remaining) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_ttl@%p::get_remaining (rtpp_ttl_get_remaining) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_ttl_reset_fin(void *pub) {
-    fprintf(stderr, "Method %p->reset (rtpp_ttl_reset) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_ttl@%p::reset (rtpp_ttl_reset) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_ttl_reset_with_fin(void *pub) {
-    fprintf(stderr, "Method %p->reset_with (rtpp_ttl_reset_with) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_ttl@%p::reset_with (rtpp_ttl_reset_with) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 void rtpp_ttl_fin(struct rtpp_ttl *pub) {
@@ -32,3 +32,36 @@ void rtpp_ttl_fin(struct rtpp_ttl *pub) {
     RTPP_DBG_ASSERT(pub->reset_with != (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin);
     pub->reset_with = (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->fn))(pub)
+
+void
+rtpp_ttl_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_ttl pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ttl_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, decr);
+    CALL_TFIN(&tp->pub, get_remaining);
+    CALL_TFIN(&tp->pub, reset);
+    CALL_TFIN(&tp->pub, reset_with);
+    assert((_naborts - naborts_s) == 4);
+}
+const static void *_rtpp_ttl_ftp = (void *)&rtpp_ttl_fintest;
+DATA_SET(rtpp_fintests, _rtpp_ttl_ftp);
+#endif /* RTPP_FINTEST */

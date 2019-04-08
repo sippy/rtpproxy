@@ -7,4 +7,7 @@
 extern int _naborts;
 #endif
 void rtpp_pearson_perfect_fin(struct rtpp_pearson_perfect *);
+#if defined(RTPP_FINTEST)
+void rtpp_pearson_perfect_fintest(void);
+#endif /* RTPP_FINTEST */
 #endif /* _rtpp_pearson_perfect_fin_h */

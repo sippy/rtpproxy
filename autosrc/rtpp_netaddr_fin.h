@@ -7,4 +7,7 @@
 extern int _naborts;
 #endif
 void rtpp_netaddr_fin(struct rtpp_netaddr *);
+#if defined(RTPP_FINTEST)
+void rtpp_netaddr_fintest(void);
+#endif /* RTPP_FINTEST */
 #endif /* _rtpp_netaddr_fin_h */

@@ -7,19 +7,19 @@
 #include "rtpp_pcount.h"
 #include "rtpp_pcount_fin.h"
 static void rtpp_pcount_get_stats_fin(void *pub) {
-    fprintf(stderr, "Method %p->get_stats (rtpp_pcount_get_stats) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_pcount@%p::get_stats (rtpp_pcount_get_stats) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_pcount_reg_drop_fin(void *pub) {
-    fprintf(stderr, "Method %p->reg_drop (rtpp_pcount_reg_drop) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_pcount@%p::reg_drop (rtpp_pcount_reg_drop) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_pcount_reg_ignr_fin(void *pub) {
-    fprintf(stderr, "Method %p->reg_ignr (rtpp_pcount_reg_ignr) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_pcount@%p::reg_ignr (rtpp_pcount_reg_ignr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_pcount_reg_reld_fin(void *pub) {
-    fprintf(stderr, "Method %p->reg_reld (rtpp_pcount_reg_reld) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_pcount@%p::reg_reld (rtpp_pcount_reg_reld) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 void rtpp_pcount_fin(struct rtpp_pcount *pub) {
@@ -32,3 +32,36 @@ void rtpp_pcount_fin(struct rtpp_pcount *pub) {
     RTPP_DBG_ASSERT(pub->reg_reld != (rtpp_pcount_reg_reld_t)&rtpp_pcount_reg_reld_fin);
     pub->reg_reld = (rtpp_pcount_reg_reld_t)&rtpp_pcount_reg_reld_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->fn))(pub)
+
+void
+rtpp_pcount_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_pcount pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcount_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, get_stats);
+    CALL_TFIN(&tp->pub, reg_drop);
+    CALL_TFIN(&tp->pub, reg_ignr);
+    CALL_TFIN(&tp->pub, reg_reld);
+    assert((_naborts - naborts_s) == 4);
+}
+const static void *_rtpp_pcount_ftp = (void *)&rtpp_pcount_fintest;
+DATA_SET(rtpp_fintests, _rtpp_pcount_ftp);
+#endif /* RTPP_FINTEST */

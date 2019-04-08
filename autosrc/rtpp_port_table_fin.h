@@ -7,4 +7,7 @@
 extern int _naborts;
 #endif
 void rtpp_port_table_fin(struct rtpp_port_table *);
+#if defined(RTPP_FINTEST)
+void rtpp_port_table_fintest(void);
+#endif /* RTPP_FINTEST */
 #endif /* _rtpp_port_table_fin_h */

@@ -7,19 +7,19 @@
 #include "rtpp_pipe.h"
 #include "rtpp_pipe_fin.h"
 static void rtpp_pipe_decr_ttl_fin(void *pub) {
-    fprintf(stderr, "Method %p->decr_ttl (rtpp_pipe_decr_ttl) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_pipe@%p::decr_ttl (rtpp_pipe_decr_ttl) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_pipe_get_stats_fin(void *pub) {
-    fprintf(stderr, "Method %p->get_stats (rtpp_pipe_get_stats) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_pipe@%p::get_stats (rtpp_pipe_get_stats) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_pipe_get_ttl_fin(void *pub) {
-    fprintf(stderr, "Method %p->get_ttl (rtpp_pipe_get_ttl) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_pipe@%p::get_ttl (rtpp_pipe_get_ttl) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_pipe_upd_cntrs_fin(void *pub) {
-    fprintf(stderr, "Method %p->upd_cntrs (rtpp_pipe_upd_cntrs) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_pipe@%p::upd_cntrs (rtpp_pipe_upd_cntrs) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 void rtpp_pipe_fin(struct rtpp_pipe *pub) {
@@ -32,3 +32,36 @@ void rtpp_pipe_fin(struct rtpp_pipe *pub) {
     RTPP_DBG_ASSERT(pub->upd_cntrs != (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin);
     pub->upd_cntrs = (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->fn))(pub)
+
+void
+rtpp_pipe_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_pipe pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pipe_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, decr_ttl);
+    CALL_TFIN(&tp->pub, get_stats);
+    CALL_TFIN(&tp->pub, get_ttl);
+    CALL_TFIN(&tp->pub, upd_cntrs);
+    assert((_naborts - naborts_s) == 4);
+}
+const static void *_rtpp_pipe_ftp = (void *)&rtpp_pipe_fintest;
+DATA_SET(rtpp_fintests, _rtpp_pipe_ftp);
+#endif /* RTPP_FINTEST */

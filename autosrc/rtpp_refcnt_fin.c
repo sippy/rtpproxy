@@ -7,27 +7,27 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_refcnt_fin.h"
 static void refcnt_attach_fin(void *pub) {
-    fprintf(stderr, "Method %p->attach (refcnt_attach) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_refcnt@%p::attach (refcnt_attach) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void refcnt_decref_fin(void *pub) {
-    fprintf(stderr, "Method %p->decref (refcnt_decref) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_refcnt@%p::decref (refcnt_decref) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void refcnt_getdata_fin(void *pub) {
-    fprintf(stderr, "Method %p->getdata (refcnt_getdata) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_refcnt@%p::getdata (refcnt_getdata) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void refcnt_incref_fin(void *pub) {
-    fprintf(stderr, "Method %p->incref (refcnt_incref) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_refcnt@%p::incref (refcnt_incref) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void refcnt_reg_pd_fin(void *pub) {
-    fprintf(stderr, "Method %p->reg_pd (refcnt_reg_pd) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_refcnt@%p::reg_pd (refcnt_reg_pd) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void refcnt_traceen_fin(void *pub) {
-    fprintf(stderr, "Method %p->traceen (refcnt_traceen) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_refcnt@%p::traceen (refcnt_traceen) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
@@ -43,3 +43,38 @@ void rtpp_refcnt_fin(struct rtpp_refcnt *pub) {
       pub->smethods != NULL);
     pub->smethods = &rtpp_refcnt_smethods_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->smethods->fn))(pub)
+
+void
+rtpp_refcnt_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_refcnt pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_refcnt_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, attach);
+    CALL_TFIN(&tp->pub, decref);
+    CALL_TFIN(&tp->pub, getdata);
+    CALL_TFIN(&tp->pub, incref);
+    CALL_TFIN(&tp->pub, reg_pd);
+    CALL_TFIN(&tp->pub, traceen);
+    assert((_naborts - naborts_s) == 6);
+}
+const static void *_rtpp_refcnt_ftp = (void *)&rtpp_refcnt_fintest;
+DATA_SET(rtpp_fintests, _rtpp_refcnt_ftp);
+#endif /* RTPP_FINTEST */

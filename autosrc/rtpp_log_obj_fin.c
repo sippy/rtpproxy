@@ -7,19 +7,19 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_log_obj_fin.h"
 static void rtpp_log_ewrite_fin(void *pub) {
-    fprintf(stderr, "Method %p->ewrite (rtpp_log_ewrite) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_log@%p::ewrite (rtpp_log_ewrite) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_log_setlevel_fin(void *pub) {
-    fprintf(stderr, "Method %p->setlevel (rtpp_log_setlevel) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_log@%p::setlevel (rtpp_log_setlevel) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_log_start_fin(void *pub) {
-    fprintf(stderr, "Method %p->start (rtpp_log_start) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_log@%p::start (rtpp_log_start) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_log_write_fin(void *pub) {
-    fprintf(stderr, "Method %p->write (rtpp_log_write) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_log@%p::write (rtpp_log_write) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 void rtpp_log_fin(struct rtpp_log *pub) {
@@ -32,3 +32,36 @@ void rtpp_log_fin(struct rtpp_log *pub) {
     RTPP_DBG_ASSERT(pub->write != (rtpp_log_write_t)&rtpp_log_write_fin);
     pub->write = (rtpp_log_write_t)&rtpp_log_write_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->fn))(pub)
+
+void
+rtpp_log_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_log pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_log_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, ewrite);
+    CALL_TFIN(&tp->pub, setlevel);
+    CALL_TFIN(&tp->pub, start);
+    CALL_TFIN(&tp->pub, write);
+    assert((_naborts - naborts_s) == 4);
+}
+const static void *_rtpp_log_ftp = (void *)&rtpp_log_fintest;
+DATA_SET(rtpp_fintests, _rtpp_log_ftp);
+#endif /* RTPP_FINTEST */

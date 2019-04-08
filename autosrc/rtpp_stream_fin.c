@@ -7,79 +7,79 @@
 #include "rtpp_stream.h"
 #include "rtpp_stream_fin.h"
 static void rtpp_stream_drain_skt_fin(void *pub) {
-    fprintf(stderr, "Method %p->drain_skt (rtpp_stream_drain_skt) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::drain_skt (rtpp_stream_drain_skt) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_finish_playback_fin(void *pub) {
-    fprintf(stderr, "Method %p->finish_playback (rtpp_stream_finish_playback) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::finish_playback (rtpp_stream_finish_playback) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_get_actor_fin(void *pub) {
-    fprintf(stderr, "Method %p->get_actor (rtpp_stream_get_actor) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::get_actor (rtpp_stream_get_actor) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_get_proto_fin(void *pub) {
-    fprintf(stderr, "Method %p->get_proto (rtpp_stream_get_proto) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::get_proto (rtpp_stream_get_proto) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_get_rem_addr_fin(void *pub) {
-    fprintf(stderr, "Method %p->get_rem_addr (rtpp_stream_get_rem_addr) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::get_rem_addr (rtpp_stream_get_rem_addr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_get_skt_fin(void *pub) {
-    fprintf(stderr, "Method %p->get_skt (rtpp_stream_get_skt) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::get_skt (rtpp_stream_get_skt) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_get_stats_fin(void *pub) {
-    fprintf(stderr, "Method %p->get_stats (rtpp_stream_get_stats) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::get_stats (rtpp_stream_get_stats) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_guess_addr_fin(void *pub) {
-    fprintf(stderr, "Method %p->guess_addr (rtpp_stream_guess_addr) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::guess_addr (rtpp_stream_guess_addr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_handle_noplay_fin(void *pub) {
-    fprintf(stderr, "Method %p->handle_noplay (rtpp_stream_handle_noplay) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::handle_noplay (rtpp_stream_handle_noplay) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_handle_play_fin(void *pub) {
-    fprintf(stderr, "Method %p->handle_play (rtpp_stream_handle_play) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::handle_play (rtpp_stream_handle_play) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_isplayer_active_fin(void *pub) {
-    fprintf(stderr, "Method %p->isplayer_active (rtpp_stream_isplayer_active) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::isplayer_active (rtpp_stream_isplayer_active) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_issendable_fin(void *pub) {
-    fprintf(stderr, "Method %p->issendable (rtpp_stream_issendable) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::issendable (rtpp_stream_issendable) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_locklatch_fin(void *pub) {
-    fprintf(stderr, "Method %p->locklatch (rtpp_stream_locklatch) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::locklatch (rtpp_stream_locklatch) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_prefill_addr_fin(void *pub) {
-    fprintf(stderr, "Method %p->prefill_addr (rtpp_stream_prefill_addr) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::prefill_addr (rtpp_stream_prefill_addr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_reg_onhold_fin(void *pub) {
-    fprintf(stderr, "Method %p->reg_onhold (rtpp_stream_reg_onhold) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::reg_onhold (rtpp_stream_reg_onhold) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_rx_fin(void *pub) {
-    fprintf(stderr, "Method %p->rx (rtpp_stream_rx) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::rx (rtpp_stream_rx) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_send_pkt_fin(void *pub) {
-    fprintf(stderr, "Method %p->send_pkt (rtpp_stream_send_pkt) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::send_pkt (rtpp_stream_send_pkt) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_set_skt_fin(void *pub) {
-    fprintf(stderr, "Method %p->set_skt (rtpp_stream_set_skt) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::set_skt (rtpp_stream_set_skt) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_update_skt_fin(void *pub) {
-    fprintf(stderr, "Method %p->update_skt (rtpp_stream_update_skt) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_stream@%p::update_skt (rtpp_stream_update_skt) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static const struct rtpp_stream_smethods rtpp_stream_smethods_fin = {
@@ -108,3 +108,51 @@ void rtpp_stream_fin(struct rtpp_stream *pub) {
       pub->smethods != NULL);
     pub->smethods = &rtpp_stream_smethods_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->smethods->fn))(pub)
+
+void
+rtpp_stream_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_stream pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, drain_skt);
+    CALL_TFIN(&tp->pub, finish_playback);
+    CALL_TFIN(&tp->pub, get_actor);
+    CALL_TFIN(&tp->pub, get_proto);
+    CALL_TFIN(&tp->pub, get_rem_addr);
+    CALL_TFIN(&tp->pub, get_skt);
+    CALL_TFIN(&tp->pub, get_stats);
+    CALL_TFIN(&tp->pub, guess_addr);
+    CALL_TFIN(&tp->pub, handle_noplay);
+    CALL_TFIN(&tp->pub, handle_play);
+    CALL_TFIN(&tp->pub, isplayer_active);
+    CALL_TFIN(&tp->pub, issendable);
+    CALL_TFIN(&tp->pub, locklatch);
+    CALL_TFIN(&tp->pub, prefill_addr);
+    CALL_TFIN(&tp->pub, reg_onhold);
+    CALL_TFIN(&tp->pub, rx);
+    CALL_TFIN(&tp->pub, send_pkt);
+    CALL_TFIN(&tp->pub, set_skt);
+    CALL_TFIN(&tp->pub, update_skt);
+    assert((_naborts - naborts_s) == 19);
+}
+const static void *_rtpp_stream_ftp = (void *)&rtpp_stream_fintest;
+DATA_SET(rtpp_fintests, _rtpp_stream_ftp);
+#endif /* RTPP_FINTEST */

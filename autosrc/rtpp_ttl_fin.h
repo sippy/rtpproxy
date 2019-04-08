@@ -7,4 +7,7 @@
 extern int _naborts;
 #endif
 void rtpp_ttl_fin(struct rtpp_ttl *);
+#if defined(RTPP_FINTEST)
+void rtpp_ttl_fintest(void);
+#endif /* RTPP_FINTEST */
 #endif /* _rtpp_ttl_fin_h */

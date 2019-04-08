@@ -7,4 +7,7 @@
 extern int _naborts;
 #endif
 void rtpp_timed_task_fin(struct rtpp_timed_task *);
+#if defined(RTPP_FINTEST)
+void rtpp_timed_task_fintest(void);
+#endif /* RTPP_FINTEST */
 #endif /* _rtpp_timed_task_fin_h */

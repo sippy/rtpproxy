@@ -7,7 +7,7 @@
 #include "rtpp_pearson_perfect.h"
 #include "rtpp_pearson_perfect_fin.h"
 static void rtpp_pearson_perfect_hash_fin(void *pub) {
-    fprintf(stderr, "Method %p->hash (rtpp_pearson_perfect_hash) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_pearson_perfect@%p::hash (rtpp_pearson_perfect_hash) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static const struct rtpp_pearson_perfect_smethods rtpp_pearson_perfect_smethods_fin = {
@@ -18,3 +18,33 @@ void rtpp_pearson_perfect_fin(struct rtpp_pearson_perfect *pub) {
       pub->smethods != NULL);
     pub->smethods = &rtpp_pearson_perfect_smethods_fin;
 }
+#if defined(RTPP_FINTEST)
+#include <assert.h>
+#include <stddef.h>
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_linker_set.h"
+#define CALL_TFIN(pub, fn) ((void (*)(typeof(pub)))((pub)->smethods->fn))(pub)
+
+void
+rtpp_pearson_perfect_fintest()
+{
+    int naborts_s;
+
+    struct {
+        struct rtpp_pearson_perfect pub;
+    } *tp;
+
+    naborts_s = _naborts;
+    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
+    assert(tp != NULL);
+    assert(tp->pub.rcnt != NULL);
+    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pearson_perfect_fin,
+      &tp->pub);
+    CALL_SMETHOD(tp->pub.rcnt, decref);
+    CALL_TFIN(&tp->pub, hash);
+    assert((_naborts - naborts_s) == 1);
+}
+const static void *_rtpp_pearson_perfect_ftp = (void *)&rtpp_pearson_perfect_fintest;
+DATA_SET(rtpp_fintests, _rtpp_pearson_perfect_ftp);
+#endif /* RTPP_FINTEST */

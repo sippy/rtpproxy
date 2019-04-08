@@ -7,4 +7,7 @@
 extern int _naborts;
 #endif
 void rtpp_sessinfo_fin(struct rtpp_sessinfo *);
+#if defined(RTPP_FINTEST)
+void rtpp_sessinfo_fintest(void);
+#endif /* RTPP_FINTEST */
 #endif /* _rtpp_sessinfo_fin_h */
