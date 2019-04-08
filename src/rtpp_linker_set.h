@@ -40,6 +40,11 @@
 #endif
 #define __section(x)    __attribute__((__section__(x)))
 
+#if defined(__used)
+#undef __used
+#endif
+#define __used          __attribute__((__used__))
+
 #define __CONCAT421(x,y)  x ## y
 #define __CONCAT42(x,y)   __CONCAT421(x,y)
 
