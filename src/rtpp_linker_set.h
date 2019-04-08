@@ -30,8 +30,8 @@
 #ifndef _SYS_LINKER_SET_H_
 #define _SYS_LINKER_SET_H_
 
-#define __CONCAT1(x,y)  x ## y
-#define __CONCAT(x,y)   __CONCAT1(x,y)
+#define __CONCAT421(x,y)  x ## y
+#define __CONCAT42(x,y)   __CONCAT421(x,y)
 
 #define __GLOBL1(sym)   __asm__(".globl " #sym)
 #define __GLOBL(sym)    __GLOBL1(sym)
@@ -56,8 +56,8 @@
  * Private macros, not to be used outside this header file.
  */
 #define __MAKE_SET(set, sym)				\
-	__GLOBL(__CONCAT(__start_set_,set));		\
-	__GLOBL(__CONCAT(__stop_set_,set));		\
+	__GLOBL(__CONCAT42(__start_set_,set));		\
+	__GLOBL(__CONCAT42(__stop_set_,set));		\
 	static void const * __MAKE_SET_CONST		\
 	__set_##set##_sym_##sym __section("set_" #set)	\
 	__used = &(sym)
@@ -75,13 +75,13 @@
  * Initialize before referring to a given linker set.
  */
 #define SET_DECLARE(set, ptype)					\
-	extern ptype __weak_symbol *__CONCAT(__start_set_,set);	\
-	extern ptype __weak_symbol *__CONCAT(__stop_set_,set)
+	extern ptype __weak_symbol *__CONCAT42(__start_set_,set);	\
+	extern ptype __weak_symbol *__CONCAT42(__stop_set_,set)
 
 #define SET_BEGIN(set)							\
-	(&__CONCAT(__start_set_,set))
+	(&__CONCAT42(__start_set_,set))
 #define SET_LIMIT(set)							\
-	(&__CONCAT(__stop_set_,set))
+	(&__CONCAT42(__stop_set_,set))
 
 /*
  * Iterate over all the elements of a set.
