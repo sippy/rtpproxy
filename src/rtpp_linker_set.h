@@ -30,6 +30,10 @@
 #ifndef _SYS_LINKER_SET_H_
 #define _SYS_LINKER_SET_H_
 
+#if !defined(__weak_symbol)
+#define __weak_symbol __attribute__((__weak__))
+#endif
+
 #define __CONCAT421(x,y)  x ## y
 #define __CONCAT42(x,y)   __CONCAT421(x,y)
 
