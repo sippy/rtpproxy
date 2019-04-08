@@ -15,17 +15,15 @@ gen_fin_c() {
   echo "#include \"${1}\""
   echo "#include \"${2}\""
 
-  for mname in ${MNAMES_ALL}
-  do
-    epname=`get_epname "${1}" "${mname}"`
-    emit_finfunction "${mname}" "${epname}"
-  done
-
   for oname in ${ONAMES}
   do
+    MNAMES=`get_mnames "${1}" "${oname}"`
+    for mname in ${MNAMES}
+    do
+      epname=`get_epname "${1}" "${mname}"`
+      emit_finfunction "${mname}" "${epname}" "${oname}"
+    done
     echo "static const struct ${oname}_smethods ${oname}_smethods_fin = {"
-    MNAMES=`grep ^DEFINE_METHOD "${1}" | sed 's|^DEFINE_METHOD[(]||' | grep "${oname}," | \
-     awk -F ',' '{print $2}' | sed 's|^[ ]*||' | LC_ALL=C sort`
     for mname in ${MNAMES}
     do
       epname=`get_epname "${1}" "${mname}"`
@@ -43,6 +41,7 @@ gen_fin_c() {
     echo "    pub->${epname} = &${oname}_${epname}_fin;"
     echo "}"
   done
+  emit_fintestsection ${1} "${ONAMES}" 1
 }
 
 hname=`basename "${2}"`
