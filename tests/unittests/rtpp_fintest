@@ -1,0 +1,8 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+"${TOP_BUILDDIR}/src/rtpp_fintest"
+report "Running rtpp_fintest"
+

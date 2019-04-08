@@ -1,0 +1,7 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+"${TOP_BUILDDIR}/src/rtpp_rzmalloc_perf"
+report "Running rtpp_rzmalloc_perf"
