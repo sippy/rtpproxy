@@ -469,8 +469,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 TESTS = autosrc/chk_up2date makeann/makeann1 unittests/rtcp2json1 \
-	unittests/rtpp_sbuf unittests/rtpp_objck libucl/libucl1 \
-	libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
+	unittests/rtpp_sbuf unittests/rtpp_objck \
+	unittests/rtpp_rzmalloc_perf unittests/rtpp_fintest \
+	libucl/libucl1 libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
 	rtp_analyze/rtp_analyze1 extractaudio/extractaudio1 \
 	startstop/startstop1 startstop/badargs \
 	basic_versions/basic_versions1 command_parser/command_parser1 \
@@ -771,6 +772,20 @@ unittests/rtpp_sbuf.log: unittests/rtpp_sbuf
 unittests/rtpp_objck.log: unittests/rtpp_objck
 	@p='unittests/rtpp_objck'; \
 	b='unittests/rtpp_objck'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+unittests/rtpp_rzmalloc_perf.log: unittests/rtpp_rzmalloc_perf
+	@p='unittests/rtpp_rzmalloc_perf'; \
+	b='unittests/rtpp_rzmalloc_perf'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+unittests/rtpp_fintest.log: unittests/rtpp_fintest
+	@p='unittests/rtpp_fintest'; \
+	b='unittests/rtpp_fintest'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
