@@ -19,7 +19,7 @@ done
 
 i=1
 MAKEANN_RFILES="ringback.0 ringback.3 ringback.8 ringback.18 ringback.9"
-for ma_flags in "" "-v" "-L -l 100"
+for ma_flags in "" "-v" "-L -l 2"
 do
   rm -f ${MAKEANN_RFILES}
   ${MAKEANN} ${ma_flags} ${RB_SLN} ${RB_BASE}
