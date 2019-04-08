@@ -25,6 +25,9 @@
  *
  */
 
+#if !defined(_RTPP_REFCNT_H)
+#define _RTPP_REFCNT_H
+
 struct rtpp_refcnt;
 
 typedef void (*rtpp_refcnt_dtor_t)(void *);
@@ -48,9 +51,14 @@ struct rtpp_refcnt_smethods
 
 struct rtpp_refcnt
 {
+#if defined(RTPP_FINTEST)
+    struct rtpp_refcnt *rcnt;
+#endif
     const struct rtpp_refcnt_smethods *smethods;
 };
 
 struct rtpp_refcnt *rtpp_refcnt_ctor(void *, rtpp_refcnt_dtor_t);
 const unsigned int rtpp_refcnt_osize(void);
 struct rtpp_refcnt *rtpp_refcnt_ctor_pa(void *);
+
+#endif /* _RTPP_REFCNT_H */
