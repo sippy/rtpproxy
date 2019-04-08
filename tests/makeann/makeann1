@@ -11,7 +11,9 @@ RB_SLN="${RB_BASE}.sln"
 
 MA_FLAFS_CMN="${RB_SLN} ${RB_BASE}"
 NONEX="/nonsense/nonexisting/crap"
-for bad_ma_flags in "" "-L ${MA_FLAFS_CMN}" "-l foobar ${MA_FLAFS_CMN}" "-? ${MA_FLAFS_CMN}" "foo ${MA_FLAFS_CMN}" "${RB_SLN} ${NONEX}" "${NONEX} ${RB_SLN}"
+for bad_ma_flags in "" "-L ${MA_FLAFS_CMN}" "-l foobar ${MA_FLAFS_CMN}" \
+ "-? ${MA_FLAFS_CMN}" "foo ${MA_FLAFS_CMN}" "${RB_SLN} ${NONEX}" \
+ "${NONEX} ${RB_SLN}"
 do
   ${MAKEANN} ${bad_ma_flags}
   reportifnotfail "Testing makeann with invalid flags: ${bad_ma_flags}"
