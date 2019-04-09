@@ -1,0 +1,12 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+for bad_args in "-F foo" "-D bar" "--alice-crypto" "--alice-crypto=invalid" \
+ "--alice-crypto=invalid:bar" "--alice-crypto=AES_CM_128_HMAC_SHA1_80:garbage" \
+ "--bob-crypto=AES_CM_128_HMAC_SHA1_80:UBFc5R7tK5f91V8j1da++z3h/3H2yS5WaN819nJ-"
+do
+  ${EXTRACTAUDIO} ${bad_args}
+  reportifnotfail "extractaudio start with bad argumens: ${bad_args}"
+done
