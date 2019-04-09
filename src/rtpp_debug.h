@@ -51,7 +51,7 @@
 #  define RTPP_DEBUG_netio      RTPP_DBG_YES
 #  define RTPP_DEBUG_timers     RTPP_DBG_NO
 #  define RTPP_DEBUG_catchtrace RTPP_DBG_YES
-#  define RTPP_DEBUG_refcnt     RTPP_DBG_NO
+#  define RTPP_DEBUG_refcnt     RTPP_DBG_YES
 #  define RTPP_DEBUG_analyze    RTPP_DBG_NO
 # endif /* RTPP_DEBUG_MAX */
 #else /* !RTPP_DEBUG */
