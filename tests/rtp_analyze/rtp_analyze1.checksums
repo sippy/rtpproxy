@@ -9,3 +9,5 @@ SHA256 (rtp_analyze_dups1.wav) = 61899d42eb3543e26dd9177b45d8bcfa98d3f609ee4e42d
 SHA256 (rtp_analyze_srtp1.wav) = ca175aae62a5d22f5bb4a4d3ea2ee7410017160b54c5056a4bde9766527d5d67
 SHA256 (rtp_analyze_alice_to_bob.wav) = 86666de5473374c27eb0f87820e710d169759b2e011cb6300f8a749ec424a129
 SHA256 (rtp_analyze_alice_to_bob_out.wav) = fc094f1c0114e3b08271f13e772d02bd62793eb5d5f1b4b79efd69d3761734d3
+SHA256 (rtp_analyze_G723_1.wav) = 1ce82328184847481a966be564afc13a678d66a8457000ece7e9ea909a5b3ac0
+SHA256 (rtp_analyze_DLT_NULL.wav) = 713dae37b7c2e817fcdb4dfaed1731f4579d4df1da7a898290b87868cb230315

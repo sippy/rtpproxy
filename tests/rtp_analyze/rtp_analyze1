@@ -5,7 +5,8 @@
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
-SNAMES="sess6 c1 weird dups lost srtp1 alice_to_bob alice_to_bob_out"
+SNAMES="sess6 c1 weird dups lost srtp1 alice_to_bob alice_to_bob_out G723_1 \
+ DLT_NULL"
 
 RTPA_SUBDR="rtp_analyze"
 
