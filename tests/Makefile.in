@@ -473,13 +473,13 @@ TESTS = autosrc/chk_up2date makeann/makeann1 unittests/rtcp2json1 \
 	unittests/rtpp_rzmalloc_perf unittests/rtpp_fintest \
 	libucl/libucl1 libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
 	rtp_analyze/rtp_analyze1 extractaudio/extractaudio1 \
-	startstop/startstop1 startstop/badargs \
+	extractaudio/badargs startstop/startstop1 startstop/badargs \
 	basic_versions/basic_versions1 command_parser/command_parser1 \
 	forwarding/forwarding1 memdeb/glitch1 memdeb/glitch_libucl1 \
 	memdeb/glitch_extractaudio memdeb/glitch_startstop1 \
-	memdeb/glitch_basic_versions1 session_timeouts/notify_tcp \
-	session_timeouts/notify_tcp_wild session_timeouts/notify_unix \
-	playback/playback1
+	memdeb/glitch_basic_versions1 memdeb/glitch_command_parser1 \
+	session_timeouts/notify_tcp session_timeouts/notify_tcp_wild \
+	session_timeouts/notify_unix playback/playback1
 CLEANFILES = ${autosrc_CLEANFILES} ${makeann_CLEANFILES} \
 	${rtcp2json_CLEANFILES} ${libucl_CLEANFILES} \
 	${libexecinfo_CLEANFILES} ${acct_rtcp_hep_CLEANFILES} \
@@ -825,6 +825,13 @@ extractaudio/extractaudio1.log: extractaudio/extractaudio1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+extractaudio/badargs.log: extractaudio/badargs
+	@p='extractaudio/badargs'; \
+	b='extractaudio/badargs'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 startstop/startstop1.log: startstop/startstop1
 	@p='startstop/startstop1'; \
 	b='startstop/startstop1'; \
@@ -891,6 +898,13 @@ memdeb/glitch_startstop1.log: memdeb/glitch_startstop1
 memdeb/glitch_basic_versions1.log: memdeb/glitch_basic_versions1
 	@p='memdeb/glitch_basic_versions1'; \
 	b='memdeb/glitch_basic_versions1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch_command_parser1.log: memdeb/glitch_command_parser1
+	@p='memdeb/glitch_command_parser1'; \
+	b='memdeb/glitch_command_parser1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
