@@ -9,5 +9,5 @@ BASEDIR="${TDIR}/.."
 disable_aslr
 
 export RTPP_TEST_SOCKETS="stdio:"
-glitch_test "command_parser/command_parser1" 5
+glitch_test "command_parser/command_parser1" 6
 report "glitching command_parser/command_parser1"
