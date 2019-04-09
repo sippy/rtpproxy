@@ -189,6 +189,7 @@ rtpp_queue_get_length(struct rtpp_queue *queue)
     return (length);
 }
 
+#if 0
 int
 rtpp_queue_count_matching(struct rtpp_queue *queue, rtpp_queue_match_fn_t match_fn, void *fn_args)
 {
@@ -205,6 +206,7 @@ rtpp_queue_count_matching(struct rtpp_queue *queue, rtpp_queue_match_fn_t match_
     pthread_mutex_unlock(&queue->mutex);
     return (mcnt);
 }
+#endif
 
 struct rtpp_wi *
 rtpp_queue_get_first_matching(struct rtpp_queue *queue, rtpp_queue_match_fn_t match_fn, void *fn_args)
