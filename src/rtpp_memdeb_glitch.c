@@ -65,8 +65,8 @@ rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *mlp)
    char buffer[512]; /* +1 so we can \n */
    int len;
  
-   len = snprintf(buffer, sizeof(buffer), "s%ld: c%"PRIu64"\tcalled from %s() at %s:%d\n",
-     mgd._glav_orig + step + 1, hash, mlp->funcn, mlp->fname, mlp->linen);
+   len = snprintf(buffer, sizeof(buffer), "s%lld: c%lu\tcalled from %s() at %s:%d\n",
+     mgd._glav_orig + step + 1, (unsigned long)hash, mlp->funcn, mlp->fname, mlp->linen);
    assert(send(mgd.mysocket, buffer, len, 0) == len);
 }
 
@@ -78,7 +78,7 @@ rtpp_memdeb_glitch_init()
     glav = getenv(MDG_ENAME);
     if (glav != NULL) {
         int iglav = -1;
-        uintptr_t u;
+        unsigned long u;
 
         switch (glav[0]) {
         case TRIG_STEP:
@@ -97,7 +97,7 @@ rtpp_memdeb_glitch_init()
             if (cp != NULL && cp[1] == TRIG_WC) {
                 _glav_trig.wild = 1;
             }
-            assert(sscanf(glav, "%" SCNu64 "\n", &u) == 1);
+            assert(sscanf(glav, "%lu\n", &u) == 1);
             assert(u != 0);
             _glav_trig.stack = u;
             break;
