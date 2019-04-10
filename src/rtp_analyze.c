@@ -150,7 +150,7 @@ update_jitter_stats(struct rtp_analyze_jdata *jdp, struct rtp_info *rinfo,
               ABS(rtime_ts_delta) * 50) {
                 /* Timestamp reset */
 #if DEBUG_TIMESTAMP_RESET
-                LOGD_IF_NOT_NULL(rlog, "update_jitter_stats() : timestamp reset : " SSRC_FMT ", %ld, %ld",
+                LOGD_IF_NOT_NULL(rlog, "update_jitter_stats() : timestamp reset : " SSRC_FMT ", %lld, %lld",
                   rinfo->ssrc, ABS(rtime_ts_delta), (uint64_t)jdp->jss.prev_ts - (uint64_t)rinfo->ts);
 #endif
                 jdp->jss.ts_rcount++;
@@ -165,7 +165,7 @@ update_jitter_stats(struct rtp_analyze_jdata *jdp, struct rtp_info *rinfo,
               ABS(rtime_ts_delta) * 1024) {
                 /* Timestamp jump */
 #if DEBUG_TIMESTAMP_RESET
-                LOGD_IF_NOT_NULL(rlog,"update_jitter_stats() : timestamp jump : " SSRC_FMT ", %ld, %ld",
+                LOGD_IF_NOT_NULL(rlog,"update_jitter_stats() : timestamp jump : " SSRC_FMT ", %lld, %lld",
                   rinfo->ssrc, ABS(rtime_ts_delta), (uint64_t)rinfo->ts - (uint64_t)jdp->jss.prev_ts);
 #endif
                 jdp->jss.ts_jcount++;
@@ -178,7 +178,7 @@ update_jitter_stats(struct rtp_analyze_jdata *jdp, struct rtp_info *rinfo,
           (jdp->jss.prev_rtime_ts - (uint64_t)jdp->jss.prev_ts);
 #if DEBUG_TIMESTAMP_RESET
         if (dval > 10000)
-            LOGD_IF_NOT_NULL(rlog, "##### LARGE VALUE #####" SSRC_FMT ",%lld,%ld,%u,%ld,%u,%ld,%ld",
+            LOGD_IF_NOT_NULL(rlog, "##### LARGE VALUE #####" SSRC_FMT ",%lld,%lld,%u,%lld,%u,%lld,%lld",
               rinfo->ssrc, jdp->jss.pcount, rtime_ts, rinfo->ts, jdp->jss.prev_rtime_ts,
               jdp->jss.prev_ts, wrcorr, dval);
 #endif
