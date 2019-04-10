@@ -83,7 +83,7 @@ backtrace(void **buffer, int size)
 
     if (size > STACKTRAVERSE_MAX_LEVELS)
         size = STACKTRAVERSE_MAX_LEVELS;
-    for (i = 1; i < size + 1 && getframeaddr(i + 1) != NULL; i++) {
+    for (i = 1; i < size + 1; i++) {
         buffer[i - 1] = getreturnaddr(i);
         if (buffer[i - 1] == NULL)
             break;
@@ -102,10 +102,10 @@ getstackcookie(void)
     void *p;
 
     r = 0;
-    for (i = 1; i < STACKTRAVERSE_MAX_LEVELS + 1 && getframeaddr(i + 1) != NULL; i++) {
+    for (i = 1; i < STACKTRAVERSE_MAX_LEVELS + 1; i++) {
         p = getreturnaddr(i);
         r ^= (uintptr_t)p;
-        if (p == topframe)
+        if (p == topframe || p == NULL)
             break;
     }
     return (r);
