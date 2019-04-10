@@ -30,6 +30,7 @@
 #define _STACKTRAVERSE_H_
 
 void *getreturnaddr(int);
+void *getframeaddr(int);
 
 #define STACKTRAVERSE_MAX_LEVELS 127
 
