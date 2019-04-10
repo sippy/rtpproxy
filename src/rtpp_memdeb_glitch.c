@@ -66,7 +66,8 @@ rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *mlp)
    int len;
  
    len = snprintf(buffer, sizeof(buffer), "s%lld: c%lu\tcalled from %s() at %s:%d\n",
-     mgd._glav_orig + step + 1, (unsigned long)hash, mlp->funcn, mlp->fname, mlp->linen);
+     (long long)mgd._glav_orig + step + 1, (unsigned long)hash, mlp->funcn, mlp->fname,
+     mlp->linen);
    assert(send(mgd.mysocket, buffer, len, 0) == len);
 }
 
