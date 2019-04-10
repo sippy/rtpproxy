@@ -41,6 +41,8 @@ solaris*)
   ;;
 esac
 
+AX_COMPILE_CHECK_SIZEOF(time_t, [#include <time.h>])
+
 AC_ARG_ENABLE(systemd,
 AS_HELP_STRING([--enable-systemd], [enable systemd support in rtpproxy]),
 [],
@@ -288,7 +290,8 @@ AM_CONDITIONAL(BUILD_OBJCK, [test "${ENABLE_OBJCK}" = 1])
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
  modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile
- pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile])
+ pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile
+ python/sippy_lite/sippy/Time/clock_dtime.py])
 
 AM_COND_IF([BUILD_ELPERIODIC], [AC_CONFIG_SUBDIRS([libelperiodic])])
 
@@ -298,9 +301,9 @@ AC_SUBST(LIBS_GSM)
 AC_SUBST(LIBS_G729)
 AC_SUBST(LIBS_G722)
 AC_SUBST(LIBS_SNDFILE)
-AC_SUBST(LIBS_DL)
 AC_SUBST(LIBS_SRTP)
 AC_SUBST(LIBS_SIPLOG)
 AC_SUBST(LIBS_SIPLOG_DBG)
 AC_SUBST(LIBS_ELPERIODIC)
+AC_SUBST(SIZEOF_TIME_T)
 AC_OUTPUT
