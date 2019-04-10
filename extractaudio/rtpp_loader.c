@@ -174,7 +174,7 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
             continue;
         if (cp + pkt->plen > ep) {
             warnx("input file truncated, %ld bytes are missing",
-              cp + pkt->plen - ep);
+              (long)(cp + pkt->plen - ep));
             continue;
         }
         pack = malloc(sizeof(*pack));
