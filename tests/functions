@@ -103,14 +103,15 @@ sha256_compute() {
 setup_buffers() {
   if [ "${OS}" != "FreeBSD" ]
   then
-    ${SUDO} -s "echo 49600 > /proc/sys/net/ipv4/udp_rmem_min"
-    ${SUDO} sysctl -w net.ipv4.udp_rmem_min=49600
-    ${SUDO} -s "echo 49600 > /proc/sys/net/ipv4/udp_wmem_min"
-    ${SUDO} sysctl -w net.ipv4.udp_wmem_min=49600
-    ${SUDO} -s "echo 33554432 > /proc/sys/net/core/rmem_max"
-    ${SUDO} sysctl -w net.core.rmem_max=33554432
-    ${SUDO} -s "echo 33554432 > /proc/sys/net/core/rmem_default"
-    ${SUDO} sysctl -w net.core.rmem_default=33554432
+    for rwmod in "r" "w"
+    do
+      ${SUDO} -s "echo 4194304 > /proc/sys/net/ipv4/udp_${rwmod}mem_min"
+      ${SUDO} sysctl -w net.ipv4.udp_${rwmod}mem_min=4194304
+      ${SUDO} -s "echo 33554432 > /proc/sys/net/core/${rwmod}mem_max"
+      ${SUDO} sysctl -w net.core.${rwmod}mem_max=33554432
+      ${SUDO} -s "echo 33554432 > /proc/sys/net/core/${rwmod}mem_default"
+      ${SUDO} sysctl -w net.core.${rwmod}mem_default=33554432
+    done
   fi
 }
 
