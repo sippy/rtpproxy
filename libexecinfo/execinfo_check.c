@@ -59,8 +59,6 @@ testbody(void *cp)
     assert(r == 4);
   r = testfunc1(testbody, STACKTRAVERSE_MAX_LEVELS - (inthread ? 2 : 3));
   assert(r == STACKTRAVERSE_MAX_LEVELS);
-  assert(getframeaddr(0) != NULL);
-  assert(getframeaddr(1) != NULL);
   assert(getreturnaddr(0) != NULL);
   sc = getstackcookie();
   assert(sc != 0);
