@@ -2,6 +2,8 @@
 
 #include "stacktraverse.h"
 
+#pragma GCC diagnostic ignored "-Wframe-address"
+
 void *
 getreturnaddr(int level)
 {
