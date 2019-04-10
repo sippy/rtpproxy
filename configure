@@ -636,6 +636,7 @@ enable_option_checking=no
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+SIZEOF_TIME_T
 LIBS_ELPERIODIC
 LIBS_SIPLOG_DBG
 LIBS_SIPLOG
@@ -12138,6 +12139,48 @@ solaris*)
   ;;
 esac
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking size of time_t" >&5
+$as_echo_n "checking size of time_t... " >&6; }
+if ${ac_cv_sizeof_time_t+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  for ac_size in 4 8 1 2 16  ; do # List sizes in rough order of prevalence.
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <sys/types.h>
+#include <time.h>
+
+int
+main ()
+{
+switch (0) case 0: case (sizeof (time_t) == $ac_size):;
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_sizeof_time_t=$ac_size
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  if test x$ac_cv_sizeof_time_t != x ; then break; fi
+done
+
+fi
+
+if test x$ac_cv_sizeof_time_t = x ; then
+  as_fn_error $? "cannot determine a size for time_t" "$LINENO" 5
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_sizeof_time_t" >&5
+$as_echo "$ac_cv_sizeof_time_t" >&6; }
+
+cat >>confdefs.h <<_ACEOF
+#define SIZEOF_TIME_T $ac_cv_sizeof_time_t
+_ACEOF
+
+SIZEOF_TIME_T=$ac_cv_sizeof_time_t
+
+
 # Check whether --enable-systemd was given.
 if test "${enable_systemd+set}" = set; then :
   enableval=$enable_systemd;
@@ -13686,7 +13729,7 @@ else
 fi
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py"
 
 
 
@@ -14765,6 +14808,7 @@ do
     "pertools/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/Makefile" ;;
     "pertools/udp_contention/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/udp_contention/Makefile" ;;
     "libucl/Makefile") CONFIG_FILES="$CONFIG_FILES libucl/Makefile" ;;
+    "python/sippy_lite/sippy/Time/clock_dtime.py") CONFIG_FILES="$CONFIG_FILES python/sippy_lite/sippy/Time/clock_dtime.py" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
