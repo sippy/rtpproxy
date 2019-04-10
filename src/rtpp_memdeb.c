@@ -77,12 +77,12 @@
 
 #define MEMDEB_SIGNATURE 0x8b26e00041dfdec6UL
 
-#define MEMDEB_SIGNATURE_ALLOC(x) (MEMDEB_SIGNATURE ^ (uint64_t)(x))
+#define MEMDEB_SIGNATURE_ALLOC(x) (uint64_t)(MEMDEB_SIGNATURE ^ (uintptr_t)(x))
 #define MEMDEB_SIGNATURE_FREE(x) (~MEMDEB_SIGNATURE_ALLOC(x))
 
 #define MEMDEB_SIG_PRIV_SALT 0x7d442e4532bb9ef0UL
 #define MEMDEB_SIGNATURE_PRIV(x) \
-  (MEMDEB_SIG_PRIV_SALT ^ (uint64_t)(x))
+  (uint64_t)(MEMDEB_SIG_PRIV_SALT ^ (uintptr_t)(x))
 
 #define MEMDEB_GUARD_SIZE 8
 
