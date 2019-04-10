@@ -40,8 +40,14 @@ elif platform.system() == 'Linux':
     CLOCK_BOOTTIME = 7
 
 class timespec(ctypes.Structure):
+    right_size = @SIZEOF_TIME_T@
+    for tp in (ctypes.c_int, ctypes.c_long, ctypes.c_longlong):
+        if ctypes.sizeof(tp) == right_size:
+            break
+    else:
+        raise Exception("Cannot determine size of the time_t type")
     _fields_ = [
-        ('tv_sec', ctypes.c_longlong),
+        ('tv_sec', tp),
         ('tv_nsec', ctypes.c_long)
     ]
 
