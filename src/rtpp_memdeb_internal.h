@@ -49,7 +49,7 @@
 #define RTPP_MEMDEB_APP_STATIC void * MEMDEB_SYM
 
 #define RTPP_MEMDEB_INIT(appname) { \
-	void *_trp = getreturnaddr(1); \
+	void *_trp = getreturnaddr(0); \
 	assert(_trp != NULL); \
 	assert(execinfo_set_topframe(_trp) == NULL); \
         _##appname##_memdeb = rtpp_memdeb_init(true); \
@@ -57,7 +57,7 @@
     }
 
 #define RTPP_MEMDEB_APP_INIT() { \
-        void *_trp = getreturnaddr(1); \
+        void *_trp = getreturnaddr(0); \
         assert(_trp != NULL); \
         assert(execinfo_set_topframe(_trp) == NULL); \
         MEMDEB_SYM = rtpp_memdeb_init(true); \
