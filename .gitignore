@@ -26,3 +26,4 @@ libelperiodic/Makefile
 *.lo
 *.la
 .gdbinit*
+python/sippy_lite/sippy/Time/clock_dtime.py
