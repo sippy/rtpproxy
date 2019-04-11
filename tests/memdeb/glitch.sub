@@ -2,10 +2,18 @@ spin_nc()
 {
   NC_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
 #  (nc -k -l 127.0.0.1 ${NC_PORT} > glitch1.ncout)&
-  (${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600)&
+#  (strace -o glitch1.nctrace -f ${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
+  (${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
   NC_PID=${!}
   echo "starting nc on port ${NC_PORT}"
   sleep 1
+}
+
+stop_nc()
+{
+  kill ${NC_PID} 2>/dev/null
+  wait ${NC_PID}
+  report "waiting for nc to exit"
 }
 
 glitch_test()
@@ -17,9 +25,9 @@ glitch_test()
 
   if MEMDEB_GLITCH_ACT="r" MEMDEB_GLITCH_TRIG="*" MEMDEB_GLITCH_CH_PORT="${NC_PORT}" ./${test} >/dev/null
   then
-    kill -TERM ${NC_PID}
+    stop_nc
   else
-    kill -TERM ${NC_PID}
+    stop_nc
     echo "glitch data cannot be collected"
     return 1
   fi

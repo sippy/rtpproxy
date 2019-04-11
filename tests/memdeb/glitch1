@@ -1,7 +1,10 @@
 #!/bin/sh
 
-BASEDIR="`dirname "${0}"`/.."
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
 . "${BASEDIR}/functions"
+
+. "${TDIR}/glitch.sub"
 
 __beforeexit_cleanup()
 {
@@ -12,20 +15,9 @@ __beforeexit_cleanup()
   kill ${NC_PID} 2>/dev/null
 }
 
-spin_nc()
+my_stop_nc()
 {
-  NC_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
-  (nc -l 127.0.0.1 ${NC_PORT} > glitch1.ncout)&
-  NC_PID=${!}
-  report "starting nc on port ${NC_PORT}"
-  sleep 1
-}
-
-stop_nc()
-{
-  kill ${NC_PID} 2>/dev/null
-  wait ${NC_PID}
-  report "waiting for nc to exit"
+  stop_nc
   cat glitch1.ncout
   test -s glitch1.ncout
   report "checking CallHome data"
@@ -50,7 +42,7 @@ rtpproxy_start
 report "surveying rtpproxy using *, action r"
 rtpproxy_stop TERM
 report "stopping rtpproxy"
-stop_nc
+my_stop_nc
 
 NLN=`wc -l < glitch1.ncout`
 test ${NLN} -gt 45
@@ -70,5 +62,5 @@ do
   do
     rtpp_glitch "${trig}" "${act}" "${NC_PORT}"
   done
-  stop_nc
+  my_stop_nc
 done
