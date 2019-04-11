@@ -42,6 +42,7 @@ class cli_handler(object):
             self.file_out.flush()
         except:
             self.rval = 1
+            clm.shutdown()
             ED2.breakLoop()
             return
 
@@ -49,7 +50,7 @@ class cli_handler(object):
         ED2.breakLoop()
 
     def sigin(self):
-        ED2.breakLoop()
+        Timeout(self.done, 0.125)
 
 if __name__ == '__main__':
     spath = DEFAULT_RTPP_SPATH
