@@ -25,6 +25,7 @@
 
 import sys
 import getopt
+from signal import SIGTERM
 
 DEFAULT_RTPP_SPATH = 'unix:/var/run/rtpproxy.sock'
 
@@ -45,6 +46,9 @@ class cli_handler(object):
             return
 
     def done(self):
+        ED2.breakLoop()
+
+    def sigin(self):
         ED2.breakLoop()
 
 if __name__ == '__main__':
@@ -103,5 +107,6 @@ if __name__ == '__main__':
         cs = CLIConnectionManager(rep, tuple(spath), tcp = True)
     if timeout != None:
         Timeout(ch.done, timeout)
+    ED2.regSignal(SIGTERM, ch.sigin)
     ED2.loop(freq = 1000.0)
     sys.exit(ch.rval)
