@@ -80,6 +80,10 @@ class command_runner(object):
         self.responses.append(result)
         self.issue_next_cmd()
 
+    def timeout(self):
+        self.rval = 3
+        ED2.breakLoop()
+
 def usage():
     print('usage: rtpp_query.py [-s rtpp_socket_path] [-S sippy_root_path] [-i infile] ' \
       '[-o outfile] [-n nworkers] [cmd1 [cmd2]..[cmdN]]')
@@ -94,9 +98,10 @@ if __name__ == '__main__':
     file_out = sys.stdout
     commands = None
     no_rtpp_version_check = False
+    timeout = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 's:S:i:o:bn:')
+        opts, args = getopt.getopt(sys.argv[1:], 's:S:i:o:bn:t:')
     except getopt.GetoptError:
         usage()
 
@@ -122,6 +127,8 @@ if __name__ == '__main__':
            no_rtpp_version_check = True
         elif o == '-n':
            nwrks = int(a)
+        elif o == '-t':
+           timeout = float(a.strip())
 
     if len(args) > 0:
         commands = args
@@ -130,12 +137,15 @@ if __name__ == '__main__':
         sys.path.insert(0, sippy_path)
 
     from sippy.Rtp_proxy_client import Rtp_proxy_client
+    from sippy.Time.Timeout import Timeout
     from sippy.Core.EventDispatcher import ED2
 
     rc = Rtp_proxy_client(global_config, spath = spath, nworkers = nwrks, \
       no_version_check = no_rtpp_version_check)
     #commands = ('VF 123456', 'G nsess_created', 'G ncmds_rcvd')
     crun = command_runner(rc, commands, file_in, file_out)
+    if timeout != None:
+        Timeout(crun.timeout, timeout)
     ED2.loop(freq = 1000.0)
     rc.shutdown()
     sys.exit(crun.rval)
