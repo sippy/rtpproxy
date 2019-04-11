@@ -105,13 +105,33 @@ setup_buffers() {
   then
     for rwmod in "r" "w"
     do
-      ${SUDO} -s "echo 4194304 > /proc/sys/net/ipv4/udp_${rwmod}mem_min"
-      ${SUDO} sysctl -w net.ipv4.udp_${rwmod}mem_min=4194304
-      ${SUDO} -s "echo 33554432 > /proc/sys/net/core/${rwmod}mem_max"
-      ${SUDO} sysctl -w net.core.${rwmod}mem_max=33554432
-      ${SUDO} -s "echo 33554432 > /proc/sys/net/core/${rwmod}mem_default"
-      ${SUDO} sysctl -w net.core.${rwmod}mem_default=33554432
+      if [ -e "/proc/sys/net/ipv4/udp_${rwmod}mem_min" ]
+      then
+        ${SUDO} -s "echo 4194304 > /proc/sys/net/ipv4/udp_${rwmod}mem_min"
+      else
+        ${SUDO} sysctl -w net.ipv4.udp_${rwmod}mem_min=4194304
+      fi
+      if [ -e "/proc/sys/net/core/${rwmod}mem_max" ]
+      then
+        ${SUDO} -s "echo 33554432 > /proc/sys/net/core/${rwmod}mem_max"
+      else
+        ${SUDO} sysctl -w net.core.${rwmod}mem_max=33554432
+      fi
+      if [ -e "/proc/sys/net/core/${rwmod}mem_default" ]
+      then
+        ${SUDO} -s "echo 33554432 > /proc/sys/net/core/${rwmod}mem_default"
+      else
+        ${SUDO} sysctl -w net.core.${rwmod}mem_default=33554432
+      fi
     done
+  fi
+}
+
+setup_test_net_3() {
+  if [ "${OS}" != "FreeBSD" ]
+  then
+    ${SUDO} iptables -I INPUT -s 203.0.113.0/24 -j DROP
+    ${SUDO} iptables -I OUTPUT  -d 203.0.113.0/24 -j DROP
   fi
 }
 
@@ -134,7 +154,14 @@ sha256_verify() {
 disable_aslr() {
   if [ "${OS}" != "FreeBSD" ]
   then
-    echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
+    if [ -e /proc/sys/kernel/randomize_va_space ]
+    then
+      cval=$((`cat /proc/sys/kernel/randomize_va_space`))
+      if [ ${cval} -ne 0 ]
+      then
+        ${SUDO} -s "echo 0 > /proc/sys/kernel/randomize_va_space"
+      fi
+    fi
   fi
 }
 
