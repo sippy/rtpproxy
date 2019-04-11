@@ -75,7 +75,13 @@ then
   SUDO=""
 else
   SUDO="sudo -n"
+  if ! ${SUDO} true
+  then
+    echo "\"${SUDO}\" is not working"
+    exit 1
+  fi
 fi
+SUDO_SHCMD="${SUDO} sh -c"
 
 if [ "${OS}" != "FreeBSD" ]
 then
@@ -107,19 +113,19 @@ setup_buffers() {
     do
       if [ -e "/proc/sys/net/ipv4/udp_${rwmod}mem_min" ]
       then
-        ${SUDO} -s "echo 4194304 > /proc/sys/net/ipv4/udp_${rwmod}mem_min"
+        ${SUDO_SHCMD} "echo 4194304 > /proc/sys/net/ipv4/udp_${rwmod}mem_min"
       else
         ${SUDO} sysctl -w net.ipv4.udp_${rwmod}mem_min=4194304
       fi
       if [ -e "/proc/sys/net/core/${rwmod}mem_max" ]
       then
-        ${SUDO} -s "echo 33554432 > /proc/sys/net/core/${rwmod}mem_max"
+        ${SUDO_SHCMD} "echo 33554432 > /proc/sys/net/core/${rwmod}mem_max"
       else
         ${SUDO} sysctl -w net.core.${rwmod}mem_max=33554432
       fi
       if [ -e "/proc/sys/net/core/${rwmod}mem_default" ]
       then
-        ${SUDO} -s "echo 33554432 > /proc/sys/net/core/${rwmod}mem_default"
+        ${SUDO_SHCMD} "echo 33554432 > /proc/sys/net/core/${rwmod}mem_default"
       else
         ${SUDO} sysctl -w net.core.${rwmod}mem_default=33554432
       fi
@@ -159,7 +165,7 @@ disable_aslr() {
       cval=$((`cat /proc/sys/kernel/randomize_va_space`))
       if [ ${cval} -ne 0 ]
       then
-        ${SUDO} -s "echo 0 > /proc/sys/kernel/randomize_va_space"
+        ${SUDO_SHCMD} "echo 0 > /proc/sys/kernel/randomize_va_space"
       fi
     fi
   fi
@@ -260,7 +266,7 @@ witness_start() {
         ${SUDO} rm ${file}
       fi
     done
-    ${SUDO} sh -c "echo \${$} > /tmp/witness.pid && exec ${TCPDUMP} -B 4096 -w ${PCAP_NAME} -s0 -ni ${LOOPBACK_INTERFACE} udp and not port ${TRASH_PORT1} 2>/dev/null" &
+    ${SUDO_SHCMD} "echo \${$} > /tmp/witness.pid && exec ${TCPDUMP} -B 4096 -w ${PCAP_NAME} -s0 -ni ${LOOPBACK_INTERFACE} udp and not port ${TRASH_PORT1} 2>/dev/null" &
     while [ ! -e ${PCAP_NAME} ]
     do
       sleep 1
