@@ -214,6 +214,7 @@ CODECSA="${_CODECSA}"
 RECORD_DIR="${BUILDDIR}"
 
 setup_buffers
+setup_test_net_3
 
 witness_start forwarding1 "forwarding1.rout forwarding1.geno.rout forwarding1.gena.rout forwarding1.rlog forwarding1.geno.rlog forwarding1.gena.rlog"
 
