@@ -91,11 +91,11 @@ update_derived_stats(double dtime, void *argp)
     switch (tap->tick) {
     case 0:
         rtpp_queue_put_item(tap->sigterm, tap->rqp);
-        tap->tests.queue.done = 1;
+        atomic_store(&tap->tests.queue.done, true);
         break;
 
     case 1:
-        tap->tests.wi_malloc.done = 1;
+        atomic_store(&tap->tests.wi_malloc.done, true);
         break;
 
     default:
@@ -140,8 +140,8 @@ main(int argc, char **argv)
     double stime;
 
     memset(&targs, '\0', sizeof(targs));
-    targs.tests.queue.done = ATOMIC_VAR_INIT(0);
-    targs.tests.wi_malloc.done = ATOMIC_VAR_INIT(0);
+    targs.tests.queue.done = ATOMIC_VAR_INIT(false);
+    targs.tests.wi_malloc.done = ATOMIC_VAR_INIT(false);
 
     tsize = 1256;
     if (argc > 1) {
@@ -172,8 +172,10 @@ main(int argc, char **argv)
         wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
         rtpp_queue_put_item(wi, targs.rqp);
         targs.tests.queue.nitems++;
-    } while(!targs.tests.queue.done);
+    } while(!atomic_load(&targs.tests.queue.done));
     targs.tests.queue.runtime = getdtime() - stime;
+    CALL_METHOD(ttp, cancel);
+    CALL_SMETHOD(ttp->rcnt, decref);
     pthread_join(thread_id, NULL);
     while (rtpp_queue_get_length(targs.rqp) > 0) {
         wi = rtpp_queue_get_item(targs.rqp, 0);
@@ -182,15 +184,17 @@ main(int argc, char **argv)
     }
     RPRINT(&targs.tests.queue, "rtpp_queue", tsize);
 
+    ttp = CALL_SMETHOD(rtp, schedule_rc, 10.0, targs.rsp->rcnt, update_derived_stats, NULL, &targs);
     stime = getdtime();
     do {
         wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
         rtpp_wi_free(wi);
         targs.tests.wi_malloc.nitems++;
-    } while(!targs.tests.wi_malloc.done);
+    } while(!atomic_load(&targs.tests.wi_malloc.done));
     targs.tests.wi_malloc.runtime = getdtime() - stime;
     RPRINT(&targs.tests.wi_malloc, "rtpp_wi", tsize);
 
+    CALL_METHOD(ttp, cancel);
     CALL_SMETHOD(ttp->rcnt, decref);
     CALL_SMETHOD(targs.rsp->rcnt, decref);
     CALL_SMETHOD(rtp, shutdown);
