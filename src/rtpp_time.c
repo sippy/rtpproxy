@@ -26,20 +26,36 @@
  *
  */
 
+#include <sys/time.h>
 #include <math.h>
 #include <time.h>
 
 #include "rtpp_time.h"
 
-double
-getdtime(void)
+static double
+_getdtime(clockid_t clock_id)
 {
     struct timespec tp;
 
-    if (clock_gettime(RTPP_CLOCK_MONO, &tp) == -1)
+    if (clock_gettime(clock_id, &tp) == -1)
         return (-1);
 
     return timespec2dtime(&tp);
+}
+
+double
+getdtime(void)
+{
+
+    return (_getdtime(RTPP_CLOCK_MONO));
+}
+
+void
+rtpp_timestamp_get(struct rtpp_timestamp *tp)
+{
+
+    tp->wall = _getdtime(RTPP_CLOCK_REAL);
+    tp->mono = _getdtime(RTPP_CLOCK_MONO);
 }
 
 void
@@ -48,6 +64,14 @@ dtime2mtimespec(double dtime, struct timespec *mtime)
 
     SEC(mtime) = trunc(dtime);
     NSEC(mtime) = round((double)NSEC_MAX * (dtime - (double)SEC(mtime)));
+}
+
+void
+dtime2timeval(double dtime, struct timeval *tvp)
+{
+
+    SEC(tvp) = trunc(dtime);
+    USEC(tvp) = round((double)USEC_MAX * (dtime - (double)SEC(tvp)));
 }
 
 const char *

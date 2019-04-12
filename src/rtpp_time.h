@@ -26,6 +26,9 @@
  *
  */
 
+struct timeval;
+struct timespec;
+
 #ifndef _RTPP_TIME_H_
 #define _RTPP_TIME_H_
 
@@ -53,6 +56,7 @@
 #define SEC(x)   ((x)->tv_sec)
 #define NSEC(x)  ((x)->tv_nsec)
 #define NSEC_MAX 1000000000L
+#define USEC_MAX 1000000L
 #define USEC(x)  ((x)->tv_usec)
 
 #define timespeciszero(t)                                          \
@@ -64,10 +68,19 @@
   (double)NSEC(s) / 1000000000.0)
 #define ts2dtime(ts_sec, ts_usec) ((double)(ts_sec) + \
   (double)(ts_usec) / 1000000.0)
+#define timeval2dtime(s) ((double)SEC(s) + \
+  (double)USEC(s) / 1000000.0)
+
+struct rtpp_timestamp {
+   double wall;
+   double mono;
+};
 
 /* Function prototypes */
 double getdtime(void);
 void dtime2mtimespec(double, struct timespec *);
 const char *get_mclock_name(void);
+void rtpp_timestamp_get(struct rtpp_timestamp *);
+void dtime2timeval(double dtime, struct timeval *tvp);
 
 #endif
