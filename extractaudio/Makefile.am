@@ -11,7 +11,7 @@ extractaudio_SOURCES=extractaudio.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c 
   ${MAINSRCDIR}/rtp_analyze.c ${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
   decoder.h format_au.h g711.h rtpp_loader.h \
   session.h g729_compat.c g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
-  ${MAINSRCDIR}/rtpp_monotime.c ${MAINSRCDIR}/rtpp_mallocs.c \
+  ${MAINSRCDIR}/rtpp_mallocs.c \
   ${MAINSRCDIR}/rtpp_refcnt.c $(rtpp_refcnt_AUTOSRCS) \
   ${MAINSRCDIR}/rtpp_ringbuf.c $(rtpp_ringbuf_AUTOSRCS) \
   ${MAINSRCDIR}/rtpp_netaddr.c ${MAINSRCDIR}/rtpp_netaddr.h \
