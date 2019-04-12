@@ -37,6 +37,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtp.h"
+#include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
@@ -100,7 +101,8 @@ rtpp_analyzer_update(struct rtpp_analyzer *rap, struct rtp_packet *pkt)
         pvt->pecount++;
         return (UPDATE_ERR);
     }
-    rval = update_rtpp_stats(pvt->log, &(pvt->rstat), &(pkt->data.header), pkt->parsed, pkt->rtime);
+    rval = update_rtpp_stats(pvt->log, &(pvt->rstat), &(pkt->data.header),
+      pkt->parsed, pkt->rtime.mono);
     if (rval == UPDATE_ERR) {
         pvt->aecount++;
     }

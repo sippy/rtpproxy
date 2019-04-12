@@ -33,6 +33,7 @@ struct rtpp_session;
 struct rtpp_socket;
 struct common_cmd_args;
 struct sockaddr;
+struct rtpp_timestamp;
 
 struct rtpp_timeout_data {
     char *notify_tag;
@@ -69,7 +70,7 @@ int find_stream(struct cfg *, const char *, const char *, const char *,
   struct rtpp_session **);
 
 struct rtpp_session *rtpp_session_ctor(struct rtpp_cfg_stable *,
-  struct common_cmd_args *, double, struct sockaddr **, int, int,
-  struct rtpp_socket **);
+  struct common_cmd_args *, const struct rtpp_timestamp *,
+  struct sockaddr **, int, int, struct rtpp_socket **);
 
 #endif

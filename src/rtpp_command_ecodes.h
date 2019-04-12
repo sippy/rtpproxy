@@ -26,63 +26,63 @@
  *
  */
 
-#ifndef _RTPP_COMMAND_PRIVATE_H_
-#define _RTPP_COMMAND_PRIVATE_H_
+#ifndef _RTPP_COMMAND_ECODES_H_
+#define _RTPP_COMMAND_ECODES_H_
 
-struct rtpp_command_stat {
-    uint64_t cnt;
-    int cnt_idx;
-};
+#define ECODE_CMDUNKN      0
 
-struct rtpp_command_stats {
-    struct rtpp_command_stat ncmds_rcvd;
-    struct rtpp_command_stat ncmds_rcvd_ndups;
-    struct rtpp_command_stat ncmds_succd;
-    struct rtpp_command_stat ncmds_errs;
-    struct rtpp_command_stat ncmds_repld;
+#define ECODE_PARSE_NARGS  1
+#define ECODE_PARSE_MODS   2
 
-    struct rtpp_command_stat nsess_complete;
-    struct rtpp_command_stat nsess_created;
+#define ECODE_PARSE_1      5
+#define ECODE_PARSE_2      6
+#define ECODE_PARSE_3      7
+#define ECODE_PARSE_4      8
+#define ECODE_PARSE_5      9
+#define ECODE_PARSE_10    10
+#define ECODE_PARSE_11    11
+#define ECODE_PARSE_12    12
+#define ECODE_PARSE_13    13
+#define ECODE_PARSE_14    14
+#define ECODE_PARSE_15    15
+#define ECODE_PARSE_16    16
+#define ECODE_PARSE_6     17
+#define ECODE_PARSE_7     18
+#define ECODE_PARSE_8     19
 
-    struct rtpp_command_stat nplrs_created;
-    struct rtpp_command_stat nplrs_destroyed;
-};
+#define ECODE_RTOOBIG_1   25
+#define ECODE_RTOOBIG_2   26
 
-#define RTPC_MAX_ARGC   20
+#define ECODE_INVLARG_1   31
+#define ECODE_INVLARG_2   32
+#define ECODE_INVLARG_3   33
+#define ECODE_INVLARG_4   34
+#define ECODE_INVLARG_5   35
+#define ECODE_INVLARG_6   36
 
-enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
-  QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS};
+#define ECODE_SESUNKN     50
 
-struct common_cmd_args {
-    enum rtpp_cmd_op op;
-    const char *rname;
-    const char *hint;
-    char *call_id;
-    char *from_tag;
-    char *to_tag;
-    union {
-        struct ul_opts *ul;
-        struct play_opts *play;
-        struct delete_opts *delete;
-        void *ptr;
-    } opts;
-};
+#define ECODE_PLRFAIL     60
+#define ECODE_QRYFAIL     62
+#define ECODE_CPYFAIL     65
+#define ECODE_STSFAIL     68
 
-struct rtpp_command
-{
-    char buf[RTPP_CMD_BUFLEN];
-    char buf_t[256];
-    char *argv[RTPC_MAX_ARGC];
-    int argc;
-    struct sockaddr_storage raddr;
-    struct sockaddr *laddr;
-    socklen_t rlen;
-    struct rtpp_timestamp dtime;
-    struct rtpp_command_stats *csp;
-    struct common_cmd_args cca;
-    int no_glock;
-    struct rtpp_session *sp;
-    struct rtpp_log *glog;
-};
+#define ECODE_LSTFAIL_1   71
+#define ECODE_LSTFAIL_2   72
+
+#define ECODE_NSOFF       75
+
+#define ECODE_NOMEM_1     81
+#define ECODE_NOMEM_2     82
+#define ECODE_NOMEM_3     83
+#define ECODE_NOMEM_4     84
+#define ECODE_NOMEM_5     85
+#define ECODE_NOMEM_6     86
+#define ECODE_NOMEM_7     87
+#define ECODE_NOMEM_8     88
+#define ECODE_NOMEM_9     89
+
+#define ECODE_OVERLOAD    98
+#define ECODE_SLOWSHTDN   99
 
 #endif

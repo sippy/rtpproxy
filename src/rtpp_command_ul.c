@@ -46,9 +46,11 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_bindaddrs.h"
+#include "rtpp_time.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_copy.h"
+#include "rtpp_command_ecodes.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_ul.h"
 #include "rtpp_hash_table.h"
@@ -509,7 +511,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
          * Session creation. If creation is requested with weak flag,
          * set weak[0].
          */
-        spa = rtpp_session_ctor(cf->stable, &cmd->cca, cmd->dtime, ulop->lia,
+        spa = rtpp_session_ctor(cf->stable, &cmd->cca, &cmd->dtime, ulop->lia,
           ulop->weak, lport, fds);
         CALL_SMETHOD(fds[0]->rcnt, decref);
         CALL_SMETHOD(fds[1]->rcnt, decref);
@@ -586,9 +588,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
 
     if (ulop->ia[0] != NULL && ulop->ia[1] != NULL) {
         CALL_SMETHOD(spa->rtp->stream[pidx], prefill_addr, &(ulop->ia[0]),
-          cmd->dtime);
+          cmd->dtime.mono);
         CALL_SMETHOD(spa->rtcp->stream[pidx], prefill_addr, &(ulop->ia[1]),
-          cmd->dtime);
+          cmd->dtime.mono);
     }
     if (ulop->onhold != 0) {
         CALL_SMETHOD(spa->rtp->stream[pidx], reg_onhold);

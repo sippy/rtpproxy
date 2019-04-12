@@ -47,12 +47,14 @@
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_time.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_copy.h"
 #include "rtpp_command_delete.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_play.h"
+#include "rtpp_command_ecodes.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_record.h"
 #include "rtpp_command_rcache.h"
@@ -196,7 +198,7 @@ rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
             len = snprintf(pvt->buf_r, sizeof(pvt->buf_r), "%s %.*s", pvt->cookie,
               len, buf);
             buf = pvt->buf_r;
-            CALL_METHOD(pvt->rcache_obj, insert, pvt->cookie, pvt->buf_r, cmd->dtime);
+            CALL_METHOD(pvt->rcache_obj, insert, pvt->cookie, pvt->buf_r, cmd->dtime.mono);
         }
         rtpp_anetio_sendto(pvt->cfs->rtpp_netio_cf, pvt->controlfd, buf, len, 0,
           sstosa(&cmd->raddr), cmd->rlen);
@@ -251,7 +253,7 @@ free_command(struct rtpp_command *cmd)
 }
 
 struct rtpp_command *
-rtpp_command_ctor(struct cfg *cf, int controlfd, double dtime,
+rtpp_command_ctor(struct cfg *cf, int controlfd, const struct rtpp_timestamp *dtime,
   struct rtpp_command_stats *csp, int umode)
 {
     struct rtpp_command_priv *pvt;
@@ -264,7 +266,8 @@ rtpp_command_ctor(struct cfg *cf, int controlfd, double dtime,
     cmd = &(pvt->pub);
     pvt->controlfd = controlfd;
     pvt->cfs = cf->stable;
-    cmd->dtime = dtime;
+    cmd->dtime.wall = dtime->wall;
+    cmd->dtime.mono = dtime->mono;
     cmd->csp = csp;
     cmd->glog = cf->stable->glog;
     pvt->umode = umode;
@@ -273,7 +276,8 @@ rtpp_command_ctor(struct cfg *cf, int controlfd, double dtime,
 
 struct rtpp_command *
 get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rval,
-  double dtime, struct rtpp_command_stats *csp, struct rtpp_cmd_rcache *rcache_obj)
+  const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp,
+  struct rtpp_cmd_rcache *rcache_obj)
 {
     char **ap;
     char *cp, *bp;

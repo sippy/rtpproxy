@@ -81,7 +81,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_command_ver.h"
 #include "rtpp_command_async.h"
-#include "rtpp_command_private.h"
+#include "rtpp_command_ecodes.h"
 #include "rtpp_port_table.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_bindaddrs.h"

@@ -46,7 +46,9 @@
 #include "rtpp_types.h"
 #include "rtpp_analyzer.h"
 #include "rtpp_pcount.h"
+#include "rtpp_time.h"
 #include "rtpp_pcnt_strm.h"
+#include "rtpp_pcnts_strm.h"
 #include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
 #include "rtpp_module.h"
@@ -118,9 +120,9 @@ static const char *
 rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)
 {
 
-    if (pvt->next_hupd_ts == 0.0 || pvt->next_hupd_ts < ap->destroy_ts) {
+    if (pvt->next_hupd_ts == 0.0 || pvt->next_hupd_ts < ap->destroy_ts->mono) {
         if (gethostname(pvt->node_id, sizeof(pvt->node_id)) == 0) {
-            pvt->next_hupd_ts = ap->destroy_ts + HNAME_REFRESH_IVAL;
+            pvt->next_hupd_ts = ap->destroy_ts->mono + HNAME_REFRESH_IVAL;
         }
     }
     return (pvt->node_id);
@@ -278,7 +280,7 @@ rtpp_acct_csv_dtor(struct rtpp_module_priv *pvt)
 }
 
 #define ES_IF_NULL(s) ((s) == NULL ? "" : s)
-#define MT2RT_NZ(mt) ((mt) == 0.0 ? 0.0 : dtime2rtime(mt))
+#define TS2RT(ts) ((ts).wall)
 
 static void
 format_ssrc(struct rtpp_ssrc *sp, char *sbuf, size_t sblen)
@@ -345,9 +347,9 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
       HLD_STS_FMT SEP HLD_STS_FMT SEP HLD_CNT_FMT SEP HLD_CNT_FMT "\n",
       RTPP_METRICS_VERSION, rtpp_acct_get_nid(pvt, acct),
       pvt->pid, acct->seuid, ES_IF_NULL(acct->call_id), ES_IF_NULL(acct->from_tag),
-      MT2RT_NZ(acct->init_ts), MT2RT_NZ(acct->destroy_ts), MT2RT_NZ(acct->rtp.o.ps->first_pkt_rcv),
-      MT2RT_NZ(acct->rtp.o.ps->last_pkt_rcv), MT2RT_NZ(acct->rtp.a.ps->first_pkt_rcv),
-      MT2RT_NZ(acct->rtp.a.ps->last_pkt_rcv), acct->rtp.a.ps->npkts_in, acct->rtp.o.ps->npkts_in,
+      TS2RT(*acct->init_ts), TS2RT(*acct->destroy_ts), TS2RT(acct->rtp.o.ps->first_pkt_rcv),
+      TS2RT(acct->rtp.o.ps->last_pkt_rcv), TS2RT(acct->rtp.a.ps->first_pkt_rcv),
+      TS2RT(acct->rtp.a.ps->last_pkt_rcv), acct->rtp.a.ps->npkts_in, acct->rtp.o.ps->npkts_in,
       acct->rtp.pcnts->nrelayed, acct->rtp.pcnts->ndropped, acct->rtcp.a.ps->npkts_in,
       acct->rtcp.o.ps->npkts_in, acct->rtcp.pcnts->nrelayed, acct->rtcp.pcnts->ndropped,
       acct->rasto->psent, acct->rasto->precvd, acct->rasto->pdups, acct->rasto->plost,

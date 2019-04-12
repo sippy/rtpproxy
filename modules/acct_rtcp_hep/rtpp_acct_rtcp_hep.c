@@ -166,7 +166,7 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
 
     ri.src_port = getport(src_addr);
     ri.dst_port = rarp->pkt->lport;
-    dtime2rtimeval(rarp->pkt->rtime, &rtimeval);
+    dtime2timeval(rarp->pkt->rtime.wall, &rtimeval);
     ri.time_sec = SEC(&rtimeval);
     ri.time_usec = USEC(&rtimeval);
     if (hep_gen_fill(&pvt->ctx, &ri) < 0) {

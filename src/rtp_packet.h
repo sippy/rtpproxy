@@ -42,7 +42,7 @@ struct rtp_packet {
     int         lport;
 
     socklen_t   rlen;
-    double      rtime;
+    struct rtpp_timestamp rtime;
 
     struct rtp_packet *next;
     struct rtp_packet *prev;

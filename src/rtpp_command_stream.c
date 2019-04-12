@@ -40,7 +40,9 @@
 #include "rtpp_cfg_stable.h"
 #include "rtpp_defines.h"
 #include "rtpp_debug.h"
+#include "rtpp_time.h"
 #include "rtpp_command.h"
+#include "rtpp_command_ecodes.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_stream.h"
@@ -110,7 +112,7 @@ rcs_reply_nomem(struct rtpp_log *log, int controlfd, struct rtpp_command_stats *
 
 struct rtpp_command *
 rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
-  int *rval, double dtime, struct rtpp_command_stats *csp)
+  int *rval, const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp)
 {
     char **ap;
     char *cp, *cp1;

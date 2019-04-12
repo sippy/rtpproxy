@@ -31,6 +31,7 @@ struct rtpp_refcnt;
 struct rtpps_pcount;
 struct rtpp_pcnts_strm;
 struct rtpa_stats;
+struct rtpp_timestamp;
 
 #if rtpp_acct_h_fin
 #include "rtpp_acct_pipe.h"
@@ -48,9 +49,9 @@ struct rtpp_acct {
     char *from_tag;
     char *to_tag;
     /* Timestamp of session instantiation time */
-    double init_ts;
+    struct rtpp_timestamp *init_ts;
     /* Timestamp of session destruction time */
-    double destroy_ts;
+    struct rtpp_timestamp *destroy_ts;
 
     struct rtpp_refcnt *rcnt;
 };

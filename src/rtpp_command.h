@@ -37,6 +37,7 @@ struct sockaddr;
 struct rtpp_cmd_rcache;
 struct rtpp_socket;
 struct rtpp_ctrl_sock;
+struct rtpp_timestamp;
 
 #define GET_CMD_OK     (0)
 #define GET_CMD_IOERR  (-1)
@@ -50,8 +51,9 @@ struct rtpp_ctrl_sock;
 
 int handle_command(struct cfg *, struct rtpp_command *);
 void free_command(struct rtpp_command *);
-struct rtpp_command *get_command(struct cfg *, struct rtpp_ctrl_sock *, int, int *, double,
-  struct rtpp_command_stats *csp, struct rtpp_cmd_rcache *);
+struct rtpp_command *get_command(struct cfg *, struct rtpp_ctrl_sock *, int, int *,
+  const struct rtpp_timestamp *, struct rtpp_command_stats *csp,
+  struct rtpp_cmd_rcache *);
 void reply_error(struct rtpp_command *cmd, int ecode);
 void reply_ok(struct rtpp_command *cmd);
 void reply_port(struct rtpp_command *cmd, int lport,
@@ -59,7 +61,7 @@ void reply_port(struct rtpp_command *cmd, int lport,
 void reply_number(struct rtpp_command *cmd, int number);
 int rtpp_create_listener(struct cfg *, struct sockaddr *, int *,
   struct rtpp_socket **);
-struct rtpp_command *rtpp_command_ctor(struct cfg *, int, double,
+struct rtpp_command *rtpp_command_ctor(struct cfg *, int, const struct rtpp_timestamp *,
   struct rtpp_command_stats *, int);
 
 void rtpc_doreply(struct rtpp_command *, char *, int, int);

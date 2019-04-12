@@ -44,6 +44,7 @@ struct rtpp_netaddr;
 struct sthread_args;
 struct rtpp_acct_hold;
 struct rtpp_proc_rstats;
+struct rtpp_timestamp;
 
 DEFINE_METHOD(rtpp_stream, rtpp_stream_handle_play, int, const char *,
   const char *, int, struct rtpp_command *, int);
@@ -69,7 +70,7 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_reg_onhold, void);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_stats, void,
   struct rtpp_acct_hold *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_rx, struct rtp_packet *,
-  struct rtpp_weakref_obj *, double, struct rtpp_proc_rstats *);
+  struct rtpp_weakref_obj *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
   int);
 

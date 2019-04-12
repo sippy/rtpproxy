@@ -51,6 +51,7 @@
 #include "config.h"
 
 #include "rtp.h"
+#include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
@@ -61,7 +62,6 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_monotime.h"
 #include "rtpp_network.h"
 #include "rtpp_record.h"
 #include "rtpp_record_fin.h"
@@ -293,7 +293,7 @@ prepare_pkt_hdr_adhoc(struct rtpp_log *log, struct rtp_packet *packet,
 {
 
     memset(hdrp, 0, sizeof(*hdrp));
-    hdrp->time = packet->rtime;
+    hdrp->time = packet->rtime.wall;
     if (hdrp->time == -1) {
 	RTPP_ELOG(log, RTPP_LOG_ERR, "can't get current time");
 	return -1;
@@ -369,7 +369,7 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
     struct layer2_hdr *ether;
 #endif
 
-    if (packet->rtime == -1) {
+    if (packet->rtime.wall == -1) {
 	RTPP_ELOG(log, RTPP_LOG_ERR, "can't get current time");
 	return -1;
     }
@@ -404,7 +404,7 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
        sizeof(hdrp->en10t_v6);
 #endif
 
-    dtime2rtimeval(packet->rtime, &rtimeval);
+    dtime2timeval(packet->rtime.wall, &rtimeval);
     phd.ts_sec = SEC(&rtimeval);
     phd.ts_usec = USEC(&rtimeval);
     phd.orig_len = phd.incl_len = pcap_size -

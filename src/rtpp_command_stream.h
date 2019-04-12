@@ -25,6 +25,8 @@
  *
  */
 
+struct rtpp_timestamp;
+
 struct rtpp_cmd_connection {
     int controlfd_in;
     int controlfd_out;
@@ -38,4 +40,5 @@ struct rtpp_cmd_connection {
 
 int rtpp_command_stream_doio(struct cfg *cf, struct rtpp_cmd_connection *rcs);
 struct rtpp_command *rtpp_command_stream_get(struct cfg *cf, 
-  struct rtpp_cmd_connection *rcs, int *rval, double dtime, struct rtpp_command_stats *csp);
+  struct rtpp_cmd_connection *rcs, int *rval, const struct rtpp_timestamp *,
+  struct rtpp_command_stats *csp);

@@ -32,7 +32,8 @@
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_types.h"
-#include "rtpp_pcnt_strm.h"
+#include "rtpp_time.h"
+#include "rtpp_pcnts_strm.h"
 #include "rtpp_pcount.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
@@ -57,6 +58,8 @@ struct rtpp_acct_priv {
     struct rtpa_stats _rasta;
     struct rtpa_stats_jitter _jrasto;
     struct rtpa_stats_jitter _jrasta;
+    struct rtpp_timestamp _init_ts;
+    struct rtpp_timestamp _destroy_ts;
     struct rtpp_acct pub;
 };
 
@@ -85,6 +88,8 @@ rtpp_acct_ctor(uint64_t seuid)
     pvt->pub.rasta = &pvt->_rasta;
     pvt->pub.jrasto = &pvt->_jrasto;
     pvt->pub.jrasta = &pvt->_jrasta;
+    pvt->pub.init_ts = &pvt->_init_ts;
+    pvt->pub.destroy_ts = &pvt->_destroy_ts;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_acct_dtor,
       pvt);
     return ((&pvt->pub));

@@ -48,6 +48,7 @@
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
 #include "rtp_resizer.h"
+#include "rtpp_time.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
@@ -71,7 +72,6 @@
 #include "rtpp_netaddr.h"
 #include "rtpp_debug.h"
 #include "rtpp_acct_pipe.h"
-#include "rtpp_time.h"
 
 #define  SEQ_SYNC_IVAL   1.0    /* in seconds */
 
@@ -140,14 +140,15 @@ static struct rtpp_socket *rtpp_stream_update_skt(struct rtpp_stream *,
 static int rtpp_stream_drain_skt(struct rtpp_stream *);
 static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
   struct rtp_packet *);
-static struct rtp_packet *_rtpp_stream_recv_pkt(struct rtpp_stream_priv *, double);
+static struct rtp_packet *_rtpp_stream_recv_pkt(struct rtpp_stream_priv *,
+  const struct rtpp_timestamp *);
 static int rtpp_stream_issendable(struct rtpp_stream *);
 static int _rtpp_stream_islatched(struct rtpp_stream_priv *);
 static void rtpp_stream_locklatch(struct rtpp_stream *);
 static void rtpp_stream_reg_onhold(struct rtpp_stream *);
 void rtpp_stream_get_stats(struct rtpp_stream *, struct rtpp_acct_hold *);
 static struct rtp_packet *rtpp_stream_rx(struct rtpp_stream *,
-  struct rtpp_weakref_obj *, double, struct rtpp_proc_rstats *);
+  struct rtpp_weakref_obj *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
 static struct rtpp_netaddr *rtpp_stream_get_rem_addr(struct rtpp_stream *, int);
 
 static const struct rtpp_stream_smethods rtpp_stream_smethods = {
@@ -372,7 +373,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
             break;
         }
         if (pvt->rtps.inact == 0) {
-            CALL_SMETHOD(rsrv, start, cmd->dtime);
+            CALL_SMETHOD(rsrv, start, cmd->dtime.mono);
         }
         pthread_mutex_unlock(&pvt->lock);
         cmd->csp->nplrs_created.cnt++;
@@ -557,7 +558,7 @@ _rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
       packet->parsed->seq);
 
     pvt->latch_info.seq = packet->parsed->seq;
-    pvt->latch_info.last_sync = packet->rtime;
+    pvt->latch_info.last_sync = packet->rtime.mono;
     return (1);
 }
 
@@ -589,7 +590,7 @@ __rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt, struct rtp_packet *packet)
         pvt->latch_info.latched = 1;
     }
     if (pvt->rtps.inact != 0 && pvt->fd != NULL) {
-        _rtpp_stream_plr_start(pvt, packet->rtime);
+        _rtpp_stream_plr_start(pvt, packet->rtime.mono);
     }
 
     actor = _rtpp_stream_get_actor(pvt);
@@ -794,7 +795,7 @@ rtpp_stream_drain_skt(struct rtpp_stream *self)
       fd);
 #endif
     for (;;) {
-        packet = CALL_METHOD(pvt->fd, rtp_recv, 0.0, NULL, 0);
+        packet = CALL_METHOD(pvt->fd, rtp_recv, NULL, NULL, 0);
         if (packet == NULL)
             break;
         ndrained++;
@@ -826,7 +827,8 @@ rtpp_stream_send_pkt(struct rtpp_stream *self, struct sthread_args *sap,
 }
 
 static struct rtp_packet *
-_rtpp_stream_recv_pkt(struct rtpp_stream_priv *pvt, double dtime)
+_rtpp_stream_recv_pkt(struct rtpp_stream_priv *pvt,
+  const struct rtpp_timestamp *dtime)
 {
     struct rtp_packet *pkt;
 
@@ -907,7 +909,7 @@ _rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt,
 
 static struct rtp_packet *
 rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
-  double dtime, struct rtpp_proc_rstats *rsp)
+  const struct rtpp_timestamp *dtime, struct rtpp_proc_rstats *rsp)
 {
     struct rtp_packet *packet = NULL;
     struct rtpp_stream_priv *pvt;
@@ -939,7 +941,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
                 /* Signal that an address has to be updated */
                 _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
             } else if (!_rtpp_stream_islatched(pvt)) {
-                _rtpp_stream_latch(pvt, dtime, packet);
+                _rtpp_stream_latch(pvt, dtime->mono, packet);
             }
         } else {
             /*
@@ -963,10 +965,10 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
     }
     if (self->analyzer != NULL) {
         if (CALL_METHOD(self->analyzer, update, packet) == UPDATE_SSRC_CHG) {
-            _rtpp_stream_latch(pvt, dtime, packet);
+            _rtpp_stream_latch(pvt, dtime->mono, packet);
         }
     }
-    _rtpp_stream_latch_sync(pvt, dtime, packet);
+    _rtpp_stream_latch_sync(pvt, dtime->mono, packet);
     if (self->resizer != NULL) {
         rtp_resizer_enqueue(self->resizer, &packet, rsp);
         if (packet == NULL) {

@@ -45,6 +45,7 @@
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_time.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_private.h"
@@ -56,7 +57,6 @@
 #include "rtpp_stats.h"
 #include "rtpp_list.h"
 #include "rtpp_controlfd.h"
-#include "rtpp_time.h"
 
 #define RTPC_MAX_CONNECTIONS 100
 
@@ -167,9 +167,9 @@ accept_connection(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, struct sockaddr *
 }
 
 static int
-process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd, double dtime,
-  struct rtpp_command_stats *csp, struct rtpp_stats *rsc,
-  struct rtpp_cmd_rcache *rcp)
+process_commands(struct rtpp_ctrl_sock *csock, struct cfg *cf, int controlfd,
+  const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp,
+  struct rtpp_stats *rsc, struct rtpp_cmd_rcache *rcp)
 {
     int i, rval;
     struct rtpp_command *cmd;
@@ -215,7 +215,7 @@ out:
 
 static int
 process_commands_stream(struct cfg *cf, struct rtpp_cmd_connection *rcc,
-  double dtime, struct rtpp_command_stats *csp, struct rtpp_stats *rsc)
+  const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp, struct rtpp_stats *rsc)
 {
     int rval;
     struct rtpp_command *cmd;
@@ -381,7 +381,7 @@ rtpp_cmd_queue_run(void *arg)
     struct rtpp_cmd_async_cf *cmd_cf;
     struct rtpp_cmd_pollset *psp;
     int i, nready, rval;
-    double sptime;
+    struct rtpp_timestamp sptime;
 #if 0
     double eptime, tused;
 #endif
@@ -395,7 +395,7 @@ rtpp_cmd_queue_run(void *arg)
     psp = &cmd_cf->pset;
 
     for (;;) {
-        sptime = getdtime();
+        rtpp_timestamp_get(&sptime);
 
         pthread_mutex_lock(&psp->pfds_mutex);
         if (psp->pfds_used == 0) {
@@ -432,10 +432,10 @@ again:
                     continue;
                 }
                 if (RTPP_CTRL_ISSTREAM(psp->rccs[i]->csock)) {
-                    rval = process_commands_stream(cmd_cf->cf_save, psp->rccs[i], sptime, csp, rtpp_stats_cf);
+                    rval = process_commands_stream(cmd_cf->cf_save, psp->rccs[i], &sptime, csp, rtpp_stats_cf);
                 } else {
                     rval = process_commands(psp->rccs[i]->csock, cmd_cf->cf_save, psp->pfds[i].fd,
-                      sptime, csp, rtpp_stats_cf, cmd_cf->rcache);
+                      &sptime, csp, rtpp_stats_cf, cmd_cf->rcache);
                 }
                 /*
                  * Shut down non-datagram sockets that got I/O error
@@ -466,7 +466,7 @@ closefd:
 #if 0
         eptime = getdtime();
         pthread_mutex_lock(&cmd_cf->cmd_mutex);
-        recfilter_apply(&cmd_cf->average_load, (eptime - sptime + tused) * cmd_cf->cf_save->stable->target_pfreq);
+        recfilter_apply(&cmd_cf->average_load, (eptime - sptime.mono + tused) * cmd_cf->cf_save->stable->target_pfreq);
         pthread_mutex_unlock(&cmd_cf->cmd_mutex);
 #endif
         flush_cstats(rtpp_stats_cf, csp);
@@ -474,8 +474,8 @@ closefd:
 #if RTPP_DEBUG
         if (last_ctick % (unsigned int)cmd_cf->cf_save->stable->target_pfreq == 0 || last_ctick < 1000) {
             RTPP_LOG(cmd_cf->cf_save->stable->glog, RTPP_LOG_DBUG, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
-              last_ctick, sptime, eptime, (double)last_ctick / cmd_cf->cf_save->stable->target_pfreq, \
-              eptime - sptime + tused, eptime, sptime, tused);
+              last_ctick, sptime.mono, eptime, (double)last_ctick / cmd_cf->cf_save->stable->target_pfreq, \
+              eptime - sptime.mono + tused, eptime, sptime.mono, tused);
             RTPP_LOG(cmd_cf->cf_save->stable->glog, RTPP_LOG_DBUG, "run %lld average load %f, CSV: %f,%f", last_ctick, \
               cmd_cf->average_load.lastval * 100.0, (double)last_ctick / cmd_cf->cf_save->stable->target_pfreq, cmd_cf->average_load.lastval);
         }

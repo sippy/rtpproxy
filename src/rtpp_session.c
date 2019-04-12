@@ -44,6 +44,7 @@
 #include "rtpp_acct.h"
 #include "rtpp_analyzer.h"
 #include "rtpp_command.h"
+#include "rtpp_time.h"
 #include "rtpp_command_private.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
@@ -55,7 +56,6 @@
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
-#include "rtpp_time.h"
 #include "rtpp_ttl.h"
 #include "rtpp_refcnt.h"
 
@@ -74,7 +74,7 @@ static void rtpp_session_dtor(struct rtpp_session_priv *);
 
 struct rtpp_session *
 rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
-  double dtime, struct sockaddr **lia, int weak, int lport,
+  const struct rtpp_timestamp *dtime, struct sockaddr **lia, int weak, int lport,
   struct rtpp_socket **fds)
 {
     struct rtpp_session_priv *pvt;
@@ -112,7 +112,8 @@ rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
     if (pvt->acct == NULL) {
         goto e4;
     }
-    pvt->acct->init_ts = dtime;
+    pvt->acct->init_ts->wall = dtime->wall;
+    pvt->acct->init_ts->mono = dtime->mono;
     pub->call_id = strdup(ccap->call_id);
     if (pub->call_id == NULL) {
         goto e5;
@@ -197,9 +198,6 @@ e0:
     return (NULL);
 }
 
-#define MT2RT_NZ(mt) ((mt) == 0.0 ? 0.0 : dtime2rtime(mt))
-#define DRTN_NZ(bmt, emt) ((emt) == 0.0 || (bmt) == 0.0 ? 0.0 : ((emt) - (bmt)))
-
 static void
 rtpp_session_dtor(struct rtpp_session_priv *pvt)
 {
@@ -208,8 +206,8 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     struct rtpp_session *pub;
 
     pub = &(pvt->pub);
-    pvt->acct->destroy_ts = getdtime();
-    session_time = pvt->acct->destroy_ts - pvt->acct->init_ts;
+    rtpp_timestamp_get(pvt->acct->destroy_ts);
+    session_time = pvt->acct->destroy_ts->mono - pvt->acct->init_ts->mono;
 
     CALL_METHOD(pub->rtp, get_stats, &pvt->acct->rtp);
     CALL_METHOD(pub->rtcp, get_stats, &pvt->acct->rtcp);

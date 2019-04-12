@@ -39,6 +39,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_acct_rtcp.h"
 #include "rtp.h"
+#include "rtpp_time.h"
 #include "rtp_packet.h"
 
 struct rtpp_acct_rtcp_priv {

@@ -37,10 +37,13 @@
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_time.h"
 #include "rtpp_pcnt_strm.h"
+#include "rtpp_pcnts_strm.h"
 #include "rtpp_pcnt_strm_fin.h"
 #include "rtpp_endian.h"
 #include "rtp.h"
+#include "rtpp_time.h"
 #include "rtp_packet.h"
 
 struct rtpp_pcnt_strm_priv {
@@ -114,16 +117,18 @@ rtpp_pcnt_strm_reg_pktin(struct rtpp_pcnt_strm *self,
     pvt = PUB2PVT(self);
     pthread_mutex_lock(&pvt->lock);
     pvt->cnt.npkts_in++;
-    if (pvt->cnt.first_pkt_rcv == 0.0) {
-        pvt->cnt.first_pkt_rcv = pkt->rtime;
+    if (pvt->cnt.first_pkt_rcv.mono == 0.0) {
+        pvt->cnt.first_pkt_rcv.mono = pkt->rtime.mono;
+        pvt->cnt.first_pkt_rcv.wall = pkt->rtime.wall;
     } else {
-        ipi = fabs(pkt->rtime - pvt->cnt.last_pkt_rcv);
+        ipi = fabs(pkt->rtime.mono - pvt->cnt.last_pkt_rcv.mono);
         if (pvt->cnt.longest_ipi < ipi) {
             pvt->cnt.longest_ipi = ipi;
         }
     }
-    if (pvt->cnt.last_pkt_rcv < pkt->rtime) {
-        pvt->cnt.last_pkt_rcv = pkt->rtime;
+    if (pvt->cnt.last_pkt_rcv.mono < pkt->rtime.mono) {
+        pvt->cnt.last_pkt_rcv.mono = pkt->rtime.mono;
+        pvt->cnt.last_pkt_rcv.wall = pkt->rtime.wall;
     }
     pthread_mutex_unlock(&pvt->lock);
 }

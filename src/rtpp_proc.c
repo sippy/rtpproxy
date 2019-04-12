@@ -35,6 +35,7 @@
 #include "rtpp_types.h"
 #include "rtpp_weakref.h"
 #include "rtp.h"
+#include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtp_resizer.h"
 #include "rtpp_cfg_stable.h"
@@ -62,7 +63,7 @@ static void send_packet(struct cfg *, struct rtpp_stream *,
 
 static void
 rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
-  double dtime, int drain_repeat, struct sthread_args *sender,
+  const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp, const char *call_id)
 {
     int ndrain;
@@ -157,8 +158,9 @@ e0:
 }
 
 void
-process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
-  int drain_repeat, struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
+process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl,
+  const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
+  struct rtpp_proc_rstats *rsp)
 {
     int readyfd, ndrained;
     struct rtpp_session *sp;
@@ -181,7 +183,7 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl, double dtime,
             rxmit_packets(cf, stp, dtime, drain_repeat, sender, rsp, sp->call_id);
             CALL_SMETHOD(sp->rcnt, decref);
             if (stp->resizer != NULL) {
-                while ((packet = rtp_resizer_get(stp->resizer, dtime)) != NULL) {
+                while ((packet = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
                     send_packet(cf, stp, packet, sender, rsp);
                     rsp->npkts_resizer_out.cnt++;
                     packet = NULL;

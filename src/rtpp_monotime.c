@@ -1,3 +1,4 @@
+#if 0
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
  * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
@@ -453,3 +454,4 @@ dtime2rtime(double dtime)
     timespecadd2(&rtimespec, &mtime, &r2m_conv1.cval);
     return (timespec2dtime(&rtimespec));
 }
+#endif

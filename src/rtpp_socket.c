@@ -41,11 +41,11 @@
 #include "rtpp_socket_fin.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_monotime.h"
 #include "rtpp_time.h"
 #include "rtpp_network.h"
 #include "rtp.h"
 #include "rtp_packet.h"
+#include "rtpp_debug.h"
 
 struct rtpp_socket_priv {
     struct rtpp_socket pub;
@@ -66,9 +66,9 @@ static int rtpp_socket_send_pkt(struct rtpp_socket *, struct sthread_args *,
 static int rtpp_socket_send_pkt_na(struct rtpp_socket *, struct sthread_args *,
   struct rtpp_netaddr *, struct rtp_packet *, struct rtpp_log *);
 static struct rtp_packet * rtpp_socket_rtp_recv_simple(struct rtpp_socket *,
-  double, struct sockaddr *, int);
-static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *, double,
-  struct sockaddr *, int);
+  const struct rtpp_timestamp *, struct sockaddr *, int);
+static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *,
+  const struct rtpp_timestamp *, struct sockaddr *, int);
 static int rtpp_socket_getfd(struct rtpp_socket *);
 
 #define PUB2PVT(pubp) \
@@ -208,7 +208,7 @@ rtpp_socket_send_pkt_na(struct rtpp_socket *self, struct sthread_args *str,
 }
 
 static struct rtp_packet *
-rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, double dtime,
+rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
   struct sockaddr *laddr, int port)
 {
     struct rtpp_socket_priv *pvt;
@@ -231,13 +231,16 @@ rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, double dtime,
     }
     packet->laddr = laddr;
     packet->lport = port;
-    packet->rtime = dtime;
+    if (dtime != NULL) {
+        packet->rtime.wall = dtime->wall;
+        packet->rtime.mono = dtime->mono;
+    }
 
     return (packet);
 }
 
 static struct rtp_packet *
-rtpp_socket_rtp_recv(struct rtpp_socket *self, double dtime,
+rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
   struct sockaddr *laddr, int port)
 {
     struct rtpp_socket_priv *pvt;
@@ -271,10 +274,12 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, double dtime,
         packet->lport = port;
     }
     if (!timevaliszero(&rtime)) {
-        packet->rtime = rtimeval2dtime(&rtime);
+        packet->rtime.wall = timeval2dtime(&rtime);
     } else {
-        packet->rtime = dtime;
+        packet->rtime.wall = dtime->wall;
     }
+    RTPP_DBG_ASSERT(packet->rtime.wall > 0);
+    packet->rtime.mono = dtime->mono;
 
     return (packet);
 }

@@ -26,24 +26,18 @@
  *
  */
 
-#ifndef _RTPP_PCNT_STRM_H_
-#define _RTPP_PCNT_STRM_H_
+#ifndef _RTPP_PCNTS_STRM_H_
+#define _RTPP_PCNTS_STRM_H_
 
-struct rtpp_pcnt_strm;
-struct rtpp_refcnt;
-struct rtp_packet;
-struct rtpp_pcnts_strm;
-
-DEFINE_METHOD(rtpp_pcnt_strm, rtpp_pcnt_strm_get_stats, void,
-  struct rtpp_pcnts_strm *);
-DEFINE_METHOD(rtpp_pcnt_strm, rtpp_pcnt_strm_reg_pktin, void,
-  struct rtp_packet *);
-
-struct rtpp_pcnt_strm {
-    struct rtpp_refcnt *rcnt;
-    METHOD_ENTRY(rtpp_pcnt_strm_get_stats, get_stats);
-    METHOD_ENTRY(rtpp_pcnt_strm_reg_pktin, reg_pktin);
+struct rtpp_pcnts_strm {
+    /* Number of packets received */
+    unsigned long npkts_in;
+    /* TS of the first packet */
+    struct rtpp_timestamp first_pkt_rcv;
+    /* TS of the last packet */
+    struct rtpp_timestamp last_pkt_rcv;
+    /* Longest inter-packet interval */
+    double longest_ipi;
 };
 
-struct rtpp_pcnt_strm *rtpp_pcnt_strm_ctor(void);
 #endif

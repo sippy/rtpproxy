@@ -33,6 +33,7 @@
 #include "rtpp_endian.h"
 #include "rtp.h"
 #include "rtp_info.h"
+#include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtp_resizer.h"
 #include "rtpp_proc.h"
@@ -166,7 +167,7 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt,
         rsp->npkts_resizer_discard.cnt++;
         return;
     }
-    internal_ts = (*pkt)->rtime * 8000.0;
+    internal_ts = (*pkt)->rtime.mono * 8000.0;
     if (!this->tsdelta_inited) {
         this->tsdelta = (*pkt)->parsed->ts - internal_ts + 40;
         this->tsdelta_inited = 1;

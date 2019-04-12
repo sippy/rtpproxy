@@ -141,6 +141,7 @@ rtpp_proc_async_run(void *arg)
     struct rtpp_polltbl ptbl_rtp;
     struct rtpp_polltbl ptbl_rtcp;
     int tstate, overload;
+    struct rtpp_timestamp rtime;
 
     proc_cf = (struct rtpp_proc_async_cf *)arg;
     cf = proc_cf->cf_save;
@@ -149,6 +150,8 @@ rtpp_proc_async_run(void *arg)
 
     memset(&ptbl_rtp, '\0', sizeof(struct rtpp_polltbl));
     memset(&ptbl_rtcp, '\0', sizeof(struct rtpp_polltbl));
+
+    memset(&rtime, '\0', sizeof(rtime));
 
     last_tick_time = 0;
 #if RTPP_DEBUG_timers || RTPP_DEBUG_netio
@@ -262,14 +265,15 @@ rtpp_proc_async_run(void *arg)
             }
         }
 
-        tp[2] = getdtime();
+        rtpp_timestamp_get(&rtime);
+        RTPP_DBG_ASSERT(rtime.wall > 0 && rtime.mono > 0);
 
         sender = rtpp_anetio_pick_sender(proc_cf->op);
         if (nready_rtp > 0) {
-            process_rtp_only(cf, &ptbl_rtp, tp[2], ndrain, sender, rstats);
+            process_rtp_only(cf, &ptbl_rtp, &rtime, ndrain, sender, rstats);
         }
         if (nready_rtcp > 0 && rtp_only == 0) {
-            process_rtp_only(cf, &ptbl_rtcp, tp[2], ndrain, sender, rstats);
+            process_rtp_only(cf, &ptbl_rtcp, &rtime, ndrain, sender, rstats);
         }
         if (alarm_tick != 0) {
             rtpp_proc_ttl(cf->stable->sessions_ht, cf->stable->sessions_wrt,
@@ -277,7 +281,7 @@ rtpp_proc_async_run(void *arg)
         }
 
         if (CALL_METHOD(cf->stable->servers_wrt, get_length) > 0) {
-            rtpp_proc_servers(cf, tp[2], sender, rstats);
+            rtpp_proc_servers(cf, rtime.mono, sender, rstats);
         }
 
         rtpp_anetio_pump_q(sender);
@@ -286,8 +290,8 @@ rtpp_proc_async_run(void *arg)
 
 #if RTPP_DEBUG_timers
         recfilter_apply(&proc_cf->sleep_time, tp[1] - tp[0]);
-        recfilter_apply(&proc_cf->poll_time, tp[2] - tp[1]);
-        recfilter_apply(&proc_cf->proc_time, tp[3] - tp[2]);
+        recfilter_apply(&proc_cf->poll_time, rtime.mono - tp[1]);
+        recfilter_apply(&proc_cf->proc_time, tp[3] - rtime.mono);
 #endif
         tp[0] = tp[3];
 #if RTPP_DEBUG_timers
