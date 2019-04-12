@@ -36,16 +36,16 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c rtpp_timed.c \
   rtpp_analyzer.c rtpp_analyzer.h rtp_analyze.c rtp_analyze.h \
   rtpp_command_query.c rtpp_command_query.h rtpp_pearson.c rtpp_pearson.h \
-  rtpp_refcnt.c rtpp_command_rcache.c \
+  rtpp_refcnt.c rtpp_command_rcache.c rtpp_command_ecodes.h \
   rtpp_tnotify_set.c rtpp_tnotify_set.h rtpp_tnotify_tgt.h rtp_packet.h \
-  rtpp_time.c rtpp_time.h \
+  rtpp_time.c rtpp_time.h rtpp_pcnts_strm.h \
   rtpp_sessinfo.c rtpp_weakref.c rtpp_weakref.h \
   rtpp_proc_servers.h rtpp_proc_servers.c rtpp_stream.c \
   rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
   rtpp_log_obj.c rtpp_socket.c \
   rtpp_ttl.c rtpp_proc_ttl.h rtpp_proc_ttl.c \
-  rtpp_pipe.c rtpp_pcount.c rtpp_debug.h rtpp_monotime.h \
-  rtpp_monotime.c rtpp_mallocs.c rtpp_mallocs.h \
+  rtpp_pipe.c rtpp_pcount.c rtpp_debug.h \
+  rtpp_mallocs.c rtpp_mallocs.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c \
   rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
   rtpp_command_record.h rtpp_port_table.c rtpp_acct.c \
@@ -174,7 +174,7 @@ includepolice:
 	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
 	   set +e; set +x; \
 	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
-            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src:$(top_srcdir)" \
+            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src:$(RTPP_AUTOSRC_DIR):$(top_srcdir)" \
 	    python ../misc/includepolice.py $${file} > $(IPLDIR)/$${file}.txt; \
 	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
 	   if [ $${RC} -eq 0 ]; then \
