@@ -2,7 +2,9 @@
 
 #include "stacktraverse.h"
 
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic ignored "-Wframe-address"
+#endif
 
 void *
 getreturnaddr(int level)
@@ -137,7 +139,6 @@ getreturnaddr(int level)
     case 125: return __builtin_return_address(126);
     case 126: return __builtin_return_address(127);
     case 127: return __builtin_return_address(128);
-    case 128: return __builtin_return_address(129);
     default: return NULL;
     }
 }
@@ -275,7 +276,6 @@ getframeaddr(int level)
     case 125: return __builtin_frame_address(126);
     case 126: return __builtin_frame_address(127);
     case 127: return __builtin_frame_address(128);
-    case 128: return __builtin_frame_address(129);
     default: return NULL;
     }
 }
