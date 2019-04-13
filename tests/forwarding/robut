@@ -1,0 +1,17 @@
+#!/bin/sh
+
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
+. "${BASEDIR}/functions"
+
+i=0
+while [ ${i} -lt 5 ]
+do
+  if ${TDIR}/forwarding1
+  then
+    ok "Forwarding succeded after ${i} tries"
+    exit 0
+  fi
+  i=$((${i} + 1))
+done
+forcefail 1 "Cannot get Forwarding work after ${i} tries"
