@@ -59,6 +59,7 @@ emit_fin_h() {
 emit_fintestfunction() {
   oname="${2}"
   mnames="${3}"
+  static="${4}"
 
   echo   "void"
   echo   "${oname}_fintest()"
@@ -73,6 +74,25 @@ emit_fintestfunction() {
   echo   "    tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));"
   echo   "    assert(tp != NULL);"
   echo   "    assert(tp->pub.rcnt != NULL);"
+  if [ ${static} -ne 0 ]
+  then
+    echo "    static const struct ${oname}_smethods dummy = {"
+  fi
+  for mname in ${mnames}
+  do
+    epname=`get_epname "${1}" "${mname}"`
+    if [ ${static} -eq 0 ]
+    then
+      echo "    tp->pub.${epname} = (${mname}_t)((void *)0x1);"
+    else
+      echo "        .${epname} = (${mname}_t)((void *)0x1),"
+    fi
+  done
+  if [ ${static} -ne 0 ]
+  then
+    echo "    };"
+    echo "    tp->pub.smethods = &dummy;"
+  fi
   echo   "    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&${oname}_fin,"
   echo   "      &tp->pub);"
   echo   "    CALL_SMETHOD(tp->pub.rcnt, decref);"
@@ -108,7 +128,7 @@ emit_fintestsection() {
   for oname in ${ONAMES}
   do
     MNAMES=`get_mnames ${1} ${oname}`
-    emit_fintestfunction ${1} "${oname}" "${MNAMES}"
+    emit_fintestfunction ${1} "${oname}" "${MNAMES}" "${static}"
   done
   echo   "#endif /* RTPP_FINTEST */"
 }

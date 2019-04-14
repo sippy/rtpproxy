@@ -32,14 +32,20 @@ gen_fin_c() {
     echo "};"
   done
 
-  epname=smethods
+  smname=smethods
   for oname in ${ONAMES}
   do
-    echo "void ${oname}_fin(struct ${oname} *pub) {"
-    echo "    RTPP_DBG_ASSERT(pub->${epname} != &${oname}_${epname}_fin &&"
-    echo "      pub->${epname} != NULL);"
-    echo "    pub->${epname} = &${oname}_${epname}_fin;"
-    echo "}"
+    echo   "void ${oname}_fin(struct ${oname} *pub) {"
+    MNAMES=`get_mnames ${1} ${oname}`
+    for mname in ${MNAMES}
+    do
+      epname=`get_epname "${1}" "${mname}"`
+      echo "    RTPP_DBG_ASSERT(pub->${smname}->${epname} != (${mname}_t)NULL);"
+    done
+    echo   "    RTPP_DBG_ASSERT(pub->${smname} != &${oname}_${smname}_fin &&"
+    echo   "      pub->${smname} != NULL);"
+    echo   "    pub->${smname} = &${oname}_${smname}_fin;"
+    echo   "}"
   done
   emit_fintestsection ${1} "${ONAMES}" 1
 }

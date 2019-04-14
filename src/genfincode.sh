@@ -31,6 +31,7 @@ gen_fin_c() {
     for mname in ${MNAMES}
     do
       epname=`get_epname "${1}" "${mname}"`
+      echo "    RTPP_DBG_ASSERT(pub->${epname} != (${mname}_t)NULL);"
       echo "    RTPP_DBG_ASSERT(pub->${epname} != (${mname}_t)&${mname}_fin);"
       echo "    pub->${epname} = (${mname}_t)&${mname}_fin;"
     done
