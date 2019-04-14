@@ -52,7 +52,6 @@
 #include "rtpp_acct_rtcp.h"
 #include "rtpp_pcount.h"
 #include "rtpp_time.h"
-#include "rtpp_pcnt_strm.h"
 #include "rtpp_pcnts_strm.h"
 #define MODULE_IF_CODE
 #include "rtpp_module.h"
