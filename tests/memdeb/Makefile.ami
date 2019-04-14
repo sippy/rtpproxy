@@ -1,5 +1,5 @@
 memdeb_EXTRA_DIST = memdeb
-memdeb_CLEANFILES = glitch1.ncout
+memdeb_CLEANFILES = glitch1.ncout glitch1.nclog
 TESTS += memdeb/glitch1 memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
   memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
   memdeb/glitch_command_parser1
