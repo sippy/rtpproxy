@@ -232,7 +232,7 @@ const static struct option longopts[] = {
 static void
 init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int memdeb)
 {
-    struct rtpp_module_if *mif;
+    struct rtpp_module_if *mif, *tmp;
     struct rtpp_ctrl_sock *ctrl_sock;
 
     if (msg != NULL) {
@@ -247,7 +247,8 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
     }
     free(cfsp->ctrl_socks);
 #if ENABLE_MODULE_IF
-    for (mif = RTPP_LIST_HEAD(cfsp->modules_cf); mif != NULL; mif = RTPP_ITER_NEXT(mif)) {
+    for (mif = RTPP_LIST_HEAD(cfsp->modules_cf); mif != NULL; mif = tmp) {
+        tmp = RTPP_ITER_NEXT(mif);
         CALL_SMETHOD(mif->rcnt, decref);
     }
 #endif
@@ -764,7 +765,7 @@ main(int argc, char **argv)
 #if RTPP_DEBUG_timers
     double sleep_time, filter_lastval;
 #endif
-    struct rtpp_module_if *mif;
+    struct rtpp_module_if *mif, *tmp;
 
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_APP_INIT();
@@ -965,8 +966,6 @@ main(int argc, char **argv)
 
 #if ENABLE_MODULE_IF
     if (!RTPP_LIST_IS_EMPTY(cf.stable->modules_cf)) {
-        struct rtpp_module_if *mif;
-
         mif = RTPP_LIST_HEAD(cf.stable->modules_cf);
         if (CALL_METHOD(mif, start) != 0) {
             RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
@@ -1033,10 +1032,12 @@ main(int argc, char **argv)
 
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
 #if ENABLE_MODULE_IF
-    for (mif = RTPP_LIST_HEAD(cf.stable->modules_cf); mif != NULL; mif = RTPP_ITER_NEXT(mif)) {
+    for (mif = RTPP_LIST_HEAD(cf.stable->modules_cf); mif != NULL; mif = tmp) {
+        tmp = RTPP_ITER_NEXT(mif);
         CALL_SMETHOD(mif->rcnt, decref);
     }
 #endif
+    free(cf.stable->modules_cf);
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
     CALL_SMETHOD(cf.stable->rtpp_timed_cf, shutdown);

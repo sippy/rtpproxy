@@ -405,6 +405,10 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
 #endif
 
     dtime2timeval(packet->rtime.wall, &rtimeval);
+
+    RTPP_DBG_ASSERT(SEC(&rtimeval) > 0 && SEC(&rtimeval) <= UINT32_MAX);
+    RTPP_DBG_ASSERT(USEC(&rtimeval) < USEC_MAX);
+
     phd.ts_sec = SEC(&rtimeval);
     phd.ts_usec = USEC(&rtimeval);
     phd.orig_len = phd.incl_len = pcap_size -
