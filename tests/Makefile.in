@@ -473,10 +473,11 @@ TESTS = autosrc/chk_up2date makeann/makeann1 unittests/rtcp2json1 \
 	unittests/rtpp_sbuf unittests/rtpp_objck \
 	unittests/rtpp_rzmalloc_perf unittests/rtpp_fintest \
 	libucl/libucl1 libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
-	rtp_analyze/rtp_analyze1 extractaudio/extractaudio1 \
-	extractaudio/badargs startstop/startstop1 startstop/badargs \
-	basic_versions/basic_versions1 command_parser/command_parser1 \
-	forwarding/forwarding1 memdeb/glitch1 memdeb/glitch_libucl1 \
+	rtp_analyze/rtp_analyze1 extractaudio/badargs \
+	extractaudio/extractaudio1 startstop/badargs \
+	startstop/startstop1 basic_versions/basic_versions1 \
+	command_parser/command_parser1 forwarding/forwarding1 \
+	memdeb/glitch1 memdeb/glitch_libucl1 \
 	memdeb/glitch_extractaudio memdeb/glitch_startstop1 \
 	memdeb/glitch_basic_versions1 memdeb/glitch_command_parser1 \
 	session_timeouts/notify_tcp session_timeouts/notify_tcp_wild \
@@ -536,7 +537,7 @@ forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
   forwarding1.*.eout rtpproxy_acct.csv
 
 memdeb_EXTRA_DIST = memdeb
-memdeb_CLEANFILES = glitch1.ncout
+memdeb_CLEANFILES = glitch1.ncout glitch1.nclog
 session_timeouts_EXTRA_DIST = session_timeouts
 session_timeouts_CLEANFILES = session_timeouts.rout[1234567].[1234] session_timeouts.rlog[1234567].[1234] \
   session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234567].[1234] \
@@ -819,13 +820,6 @@ rtp_analyze/rtp_analyze1.log: rtp_analyze/rtp_analyze1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-extractaudio/extractaudio1.log: extractaudio/extractaudio1
-	@p='extractaudio/extractaudio1'; \
-	b='extractaudio/extractaudio1'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
 extractaudio/badargs.log: extractaudio/badargs
 	@p='extractaudio/badargs'; \
 	b='extractaudio/badargs'; \
@@ -833,9 +827,9 @@ extractaudio/badargs.log: extractaudio/badargs
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-startstop/startstop1.log: startstop/startstop1
-	@p='startstop/startstop1'; \
-	b='startstop/startstop1'; \
+extractaudio/extractaudio1.log: extractaudio/extractaudio1
+	@p='extractaudio/extractaudio1'; \
+	b='extractaudio/extractaudio1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -843,6 +837,13 @@ startstop/startstop1.log: startstop/startstop1
 startstop/badargs.log: startstop/badargs
 	@p='startstop/badargs'; \
 	b='startstop/badargs'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+startstop/startstop1.log: startstop/startstop1
+	@p='startstop/startstop1'; \
+	b='startstop/startstop1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
