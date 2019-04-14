@@ -373,7 +373,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
             break;
         }
         if (pvt->rtps.inact == 0) {
-            CALL_SMETHOD(rsrv, start, cmd->dtime.mono);
+            CALL_SMETHOD(rsrv, start, cmd->dtime->mono);
         }
         pthread_mutex_unlock(&pvt->lock);
         cmd->csp->nplrs_created.cnt++;

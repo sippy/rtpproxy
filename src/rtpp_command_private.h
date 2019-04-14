@@ -29,6 +29,8 @@
 #ifndef _RTPP_COMMAND_PRIVATE_H_
 #define _RTPP_COMMAND_PRIVATE_H_
 
+struct rtpp_timestamp;
+
 struct rtpp_command_stat {
     uint64_t cnt;
     int cnt_idx;
@@ -77,7 +79,7 @@ struct rtpp_command
     struct sockaddr_storage raddr;
     struct sockaddr *laddr;
     socklen_t rlen;
-    struct rtpp_timestamp dtime;
+    const struct rtpp_timestamp *dtime;
     struct rtpp_command_stats *csp;
     struct common_cmd_args cca;
     int no_glock;

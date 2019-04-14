@@ -84,6 +84,7 @@ struct rtpp_command_priv {
     int umode;
     char buf_r[256];
     struct rtpp_cmd_rcache *rcache_obj;
+    struct rtpp_timestamp dtime;
 };
 
 #define PUB2PVT(pubp) \
@@ -198,7 +199,8 @@ rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
             len = snprintf(pvt->buf_r, sizeof(pvt->buf_r), "%s %.*s", pvt->cookie,
               len, buf);
             buf = pvt->buf_r;
-            CALL_METHOD(pvt->rcache_obj, insert, pvt->cookie, pvt->buf_r, cmd->dtime.mono);
+            CALL_METHOD(pvt->rcache_obj, insert, pvt->cookie, pvt->buf_r,
+              cmd->dtime->mono);
         }
         rtpp_anetio_sendto(pvt->cfs->rtpp_netio_cf, pvt->controlfd, buf, len, 0,
           sstosa(&cmd->raddr), cmd->rlen);
@@ -266,8 +268,9 @@ rtpp_command_ctor(struct cfg *cf, int controlfd, const struct rtpp_timestamp *dt
     cmd = &(pvt->pub);
     pvt->controlfd = controlfd;
     pvt->cfs = cf->stable;
-    cmd->dtime.wall = dtime->wall;
-    cmd->dtime.mono = dtime->mono;
+    pvt->dtime.wall = dtime->wall;
+    pvt->dtime.mono = dtime->mono;
+    cmd->dtime = &pvt->dtime;
     cmd->csp = csp;
     cmd->glog = cf->stable->glog;
     pvt->umode = umode;

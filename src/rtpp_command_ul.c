@@ -511,7 +511,7 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
          * Session creation. If creation is requested with weak flag,
          * set weak[0].
          */
-        spa = rtpp_session_ctor(cf->stable, &cmd->cca, &cmd->dtime, ulop->lia,
+        spa = rtpp_session_ctor(cf->stable, &cmd->cca, cmd->dtime, ulop->lia,
           ulop->weak, lport, fds);
         CALL_SMETHOD(fds[0]->rcnt, decref);
         CALL_SMETHOD(fds[1]->rcnt, decref);
@@ -588,9 +588,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
 
     if (ulop->ia[0] != NULL && ulop->ia[1] != NULL) {
         CALL_SMETHOD(spa->rtp->stream[pidx], prefill_addr, &(ulop->ia[0]),
-          cmd->dtime.mono);
+          cmd->dtime->mono);
         CALL_SMETHOD(spa->rtcp->stream[pidx], prefill_addr, &(ulop->ia[1]),
-          cmd->dtime.mono);
+          cmd->dtime->mono);
     }
     if (ulop->onhold != 0) {
         CALL_SMETHOD(spa->rtp->stream[pidx], reg_onhold);
