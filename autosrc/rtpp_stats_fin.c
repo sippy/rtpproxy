@@ -49,6 +49,14 @@ static const struct rtpp_stats_smethods rtpp_stats_smethods_fin = {
     .updatebyname_d = (rtpp_stats_updatebyname_d_t)&rtpp_stats_updatebyname_d_fin,
 };
 void rtpp_stats_fin(struct rtpp_stats *pub) {
+    RTPP_DBG_ASSERT(pub->smethods->getidxbyname != (rtpp_stats_getidxbyname_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->getlvalbyname != (rtpp_stats_getlvalbyname_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->getnstats != (rtpp_stats_getnstats_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->nstr != (rtpp_stats_nstr_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->update_derived != (rtpp_stats_update_derived_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->updatebyidx != (rtpp_stats_updatebyidx_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->updatebyname != (rtpp_stats_updatebyname_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->updatebyname_d != (rtpp_stats_updatebyname_d_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_stats_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_stats_smethods_fin;
@@ -74,6 +82,17 @@ rtpp_stats_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    static const struct rtpp_stats_smethods dummy = {
+        .getidxbyname = (rtpp_stats_getidxbyname_t)((void *)0x1),
+        .getlvalbyname = (rtpp_stats_getlvalbyname_t)((void *)0x1),
+        .getnstats = (rtpp_stats_getnstats_t)((void *)0x1),
+        .nstr = (rtpp_stats_nstr_t)((void *)0x1),
+        .update_derived = (rtpp_stats_update_derived_t)((void *)0x1),
+        .updatebyidx = (rtpp_stats_updatebyidx_t)((void *)0x1),
+        .updatebyname = (rtpp_stats_updatebyname_t)((void *)0x1),
+        .updatebyname_d = (rtpp_stats_updatebyname_d_t)((void *)0x1),
+    };
+    tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stats_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

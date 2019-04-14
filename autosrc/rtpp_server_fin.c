@@ -39,6 +39,12 @@ static const struct rtpp_server_smethods rtpp_server_smethods_fin = {
     .start = (rtpp_server_start_t)&rtpp_server_start_fin,
 };
 void rtpp_server_fin(struct rtpp_server *pub) {
+    RTPP_DBG_ASSERT(pub->smethods->get != (rtpp_server_get_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_seq != (rtpp_server_get_seq_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_ssrc != (rtpp_server_get_ssrc_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->set_seq != (rtpp_server_set_seq_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->set_ssrc != (rtpp_server_set_ssrc_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->start != (rtpp_server_start_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_server_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_server_smethods_fin;
@@ -64,6 +70,15 @@ rtpp_server_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    static const struct rtpp_server_smethods dummy = {
+        .get = (rtpp_server_get_t)((void *)0x1),
+        .get_seq = (rtpp_server_get_seq_t)((void *)0x1),
+        .get_ssrc = (rtpp_server_get_ssrc_t)((void *)0x1),
+        .set_seq = (rtpp_server_set_seq_t)((void *)0x1),
+        .set_ssrc = (rtpp_server_set_ssrc_t)((void *)0x1),
+        .start = (rtpp_server_start_t)((void *)0x1),
+    };
+    tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

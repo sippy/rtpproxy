@@ -24,6 +24,9 @@ static const struct rtpp_timed_smethods rtpp_timed_smethods_fin = {
     .shutdown = (rtpp_timed_shutdown_t)&rtpp_timed_shutdown_fin,
 };
 void rtpp_timed_fin(struct rtpp_timed *pub) {
+    RTPP_DBG_ASSERT(pub->smethods->schedule != (rtpp_timed_schedule_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->schedule_rc != (rtpp_timed_schedule_rc_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->shutdown != (rtpp_timed_shutdown_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_timed_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_timed_smethods_fin;
@@ -49,6 +52,12 @@ rtpp_timed_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    static const struct rtpp_timed_smethods dummy = {
+        .schedule = (rtpp_timed_schedule_t)((void *)0x1),
+        .schedule_rc = (rtpp_timed_schedule_rc_t)((void *)0x1),
+        .shutdown = (rtpp_timed_shutdown_t)((void *)0x1),
+    };
+    tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

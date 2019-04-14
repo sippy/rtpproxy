@@ -39,6 +39,12 @@ static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
     .traceen = (refcnt_traceen_t)&refcnt_traceen_fin,
 };
 void rtpp_refcnt_fin(struct rtpp_refcnt *pub) {
+    RTPP_DBG_ASSERT(pub->smethods->attach != (refcnt_attach_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->decref != (refcnt_decref_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->getdata != (refcnt_getdata_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->incref != (refcnt_incref_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->reg_pd != (refcnt_reg_pd_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->traceen != (refcnt_traceen_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_refcnt_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_refcnt_smethods_fin;
@@ -64,6 +70,15 @@ rtpp_refcnt_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    static const struct rtpp_refcnt_smethods dummy = {
+        .attach = (refcnt_attach_t)((void *)0x1),
+        .decref = (refcnt_decref_t)((void *)0x1),
+        .getdata = (refcnt_getdata_t)((void *)0x1),
+        .incref = (refcnt_incref_t)((void *)0x1),
+        .reg_pd = (refcnt_reg_pd_t)((void *)0x1),
+        .traceen = (refcnt_traceen_t)((void *)0x1),
+    };
+    tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_refcnt_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

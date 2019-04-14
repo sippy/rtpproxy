@@ -23,12 +23,16 @@ static void rtpp_si_update_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_sessinfo_fin(struct rtpp_sessinfo *pub) {
+    RTPP_DBG_ASSERT(pub->append != (rtpp_si_append_t)NULL);
     RTPP_DBG_ASSERT(pub->append != (rtpp_si_append_t)&rtpp_si_append_fin);
     pub->append = (rtpp_si_append_t)&rtpp_si_append_fin;
+    RTPP_DBG_ASSERT(pub->remove != (rtpp_si_remove_t)NULL);
     RTPP_DBG_ASSERT(pub->remove != (rtpp_si_remove_t)&rtpp_si_remove_fin);
     pub->remove = (rtpp_si_remove_t)&rtpp_si_remove_fin;
+    RTPP_DBG_ASSERT(pub->sync_polltbl != (rtpp_si_sync_polltbl_t)NULL);
     RTPP_DBG_ASSERT(pub->sync_polltbl != (rtpp_si_sync_polltbl_t)&rtpp_si_sync_polltbl_fin);
     pub->sync_polltbl = (rtpp_si_sync_polltbl_t)&rtpp_si_sync_polltbl_fin;
+    RTPP_DBG_ASSERT(pub->update != (rtpp_si_update_t)NULL);
     RTPP_DBG_ASSERT(pub->update != (rtpp_si_update_t)&rtpp_si_update_fin);
     pub->update = (rtpp_si_update_t)&rtpp_si_update_fin;
 }
@@ -53,6 +57,10 @@ rtpp_sessinfo_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.append = (rtpp_si_append_t)((void *)0x1);
+    tp->pub.remove = (rtpp_si_remove_t)((void *)0x1);
+    tp->pub.sync_polltbl = (rtpp_si_sync_polltbl_t)((void *)0x1);
+    tp->pub.update = (rtpp_si_update_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_sessinfo_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

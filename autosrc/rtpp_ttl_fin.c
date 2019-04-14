@@ -23,12 +23,16 @@ static void rtpp_ttl_reset_with_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_ttl_fin(struct rtpp_ttl *pub) {
+    RTPP_DBG_ASSERT(pub->decr != (rtpp_ttl_decr_t)NULL);
     RTPP_DBG_ASSERT(pub->decr != (rtpp_ttl_decr_t)&rtpp_ttl_decr_fin);
     pub->decr = (rtpp_ttl_decr_t)&rtpp_ttl_decr_fin;
+    RTPP_DBG_ASSERT(pub->get_remaining != (rtpp_ttl_get_remaining_t)NULL);
     RTPP_DBG_ASSERT(pub->get_remaining != (rtpp_ttl_get_remaining_t)&rtpp_ttl_get_remaining_fin);
     pub->get_remaining = (rtpp_ttl_get_remaining_t)&rtpp_ttl_get_remaining_fin;
+    RTPP_DBG_ASSERT(pub->reset != (rtpp_ttl_reset_t)NULL);
     RTPP_DBG_ASSERT(pub->reset != (rtpp_ttl_reset_t)&rtpp_ttl_reset_fin);
     pub->reset = (rtpp_ttl_reset_t)&rtpp_ttl_reset_fin;
+    RTPP_DBG_ASSERT(pub->reset_with != (rtpp_ttl_reset_with_t)NULL);
     RTPP_DBG_ASSERT(pub->reset_with != (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin);
     pub->reset_with = (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin;
 }
@@ -53,6 +57,10 @@ rtpp_ttl_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.decr = (rtpp_ttl_decr_t)((void *)0x1);
+    tp->pub.get_remaining = (rtpp_ttl_get_remaining_t)((void *)0x1);
+    tp->pub.reset = (rtpp_ttl_reset_t)((void *)0x1);
+    tp->pub.reset_with = (rtpp_ttl_reset_with_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ttl_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

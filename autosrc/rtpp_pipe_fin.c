@@ -23,12 +23,16 @@ static void rtpp_pipe_upd_cntrs_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_pipe_fin(struct rtpp_pipe *pub) {
+    RTPP_DBG_ASSERT(pub->decr_ttl != (rtpp_pipe_decr_ttl_t)NULL);
     RTPP_DBG_ASSERT(pub->decr_ttl != (rtpp_pipe_decr_ttl_t)&rtpp_pipe_decr_ttl_fin);
     pub->decr_ttl = (rtpp_pipe_decr_ttl_t)&rtpp_pipe_decr_ttl_fin;
+    RTPP_DBG_ASSERT(pub->get_stats != (rtpp_pipe_get_stats_t)NULL);
     RTPP_DBG_ASSERT(pub->get_stats != (rtpp_pipe_get_stats_t)&rtpp_pipe_get_stats_fin);
     pub->get_stats = (rtpp_pipe_get_stats_t)&rtpp_pipe_get_stats_fin;
+    RTPP_DBG_ASSERT(pub->get_ttl != (rtpp_pipe_get_ttl_t)NULL);
     RTPP_DBG_ASSERT(pub->get_ttl != (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin);
     pub->get_ttl = (rtpp_pipe_get_ttl_t)&rtpp_pipe_get_ttl_fin;
+    RTPP_DBG_ASSERT(pub->upd_cntrs != (rtpp_pipe_upd_cntrs_t)NULL);
     RTPP_DBG_ASSERT(pub->upd_cntrs != (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin);
     pub->upd_cntrs = (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin;
 }
@@ -53,6 +57,10 @@ rtpp_pipe_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.decr_ttl = (rtpp_pipe_decr_ttl_t)((void *)0x1);
+    tp->pub.get_stats = (rtpp_pipe_get_stats_t)((void *)0x1);
+    tp->pub.get_ttl = (rtpp_pipe_get_ttl_t)((void *)0x1);
+    tp->pub.upd_cntrs = (rtpp_pipe_upd_cntrs_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pipe_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

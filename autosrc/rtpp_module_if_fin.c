@@ -31,16 +31,22 @@ static void rtpp_module_if_start_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_module_if_fin(struct rtpp_module_if *pub) {
+    RTPP_DBG_ASSERT(pub->config != (rtpp_module_if_config_t)NULL);
     RTPP_DBG_ASSERT(pub->config != (rtpp_module_if_config_t)&rtpp_module_if_config_fin);
     pub->config = (rtpp_module_if_config_t)&rtpp_module_if_config_fin;
+    RTPP_DBG_ASSERT(pub->do_acct != (rtpp_module_if_do_acct_t)NULL);
     RTPP_DBG_ASSERT(pub->do_acct != (rtpp_module_if_do_acct_t)&rtpp_module_if_do_acct_fin);
     pub->do_acct = (rtpp_module_if_do_acct_t)&rtpp_module_if_do_acct_fin;
+    RTPP_DBG_ASSERT(pub->do_acct_rtcp != (rtpp_module_if_do_acct_rtcp_t)NULL);
     RTPP_DBG_ASSERT(pub->do_acct_rtcp != (rtpp_module_if_do_acct_rtcp_t)&rtpp_module_if_do_acct_rtcp_fin);
     pub->do_acct_rtcp = (rtpp_module_if_do_acct_rtcp_t)&rtpp_module_if_do_acct_rtcp_fin;
+    RTPP_DBG_ASSERT(pub->get_mconf != (rtpp_module_if_get_mconf_t)NULL);
     RTPP_DBG_ASSERT(pub->get_mconf != (rtpp_module_if_get_mconf_t)&rtpp_module_if_get_mconf_fin);
     pub->get_mconf = (rtpp_module_if_get_mconf_t)&rtpp_module_if_get_mconf_fin;
+    RTPP_DBG_ASSERT(pub->load != (rtpp_module_if_load_t)NULL);
     RTPP_DBG_ASSERT(pub->load != (rtpp_module_if_load_t)&rtpp_module_if_load_fin);
     pub->load = (rtpp_module_if_load_t)&rtpp_module_if_load_fin;
+    RTPP_DBG_ASSERT(pub->start != (rtpp_module_if_start_t)NULL);
     RTPP_DBG_ASSERT(pub->start != (rtpp_module_if_start_t)&rtpp_module_if_start_fin);
     pub->start = (rtpp_module_if_start_t)&rtpp_module_if_start_fin;
 }
@@ -65,6 +71,12 @@ rtpp_module_if_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.config = (rtpp_module_if_config_t)((void *)0x1);
+    tp->pub.do_acct = (rtpp_module_if_do_acct_t)((void *)0x1);
+    tp->pub.do_acct_rtcp = (rtpp_module_if_do_acct_rtcp_t)((void *)0x1);
+    tp->pub.get_mconf = (rtpp_module_if_get_mconf_t)((void *)0x1);
+    tp->pub.load = (rtpp_module_if_load_t)((void *)0x1);
+    tp->pub.start = (rtpp_module_if_start_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_module_if_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

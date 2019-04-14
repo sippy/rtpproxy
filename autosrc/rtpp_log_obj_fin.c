@@ -23,12 +23,16 @@ static void rtpp_log_write_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_log_fin(struct rtpp_log *pub) {
+    RTPP_DBG_ASSERT(pub->ewrite != (rtpp_log_ewrite_t)NULL);
     RTPP_DBG_ASSERT(pub->ewrite != (rtpp_log_ewrite_t)&rtpp_log_ewrite_fin);
     pub->ewrite = (rtpp_log_ewrite_t)&rtpp_log_ewrite_fin;
+    RTPP_DBG_ASSERT(pub->setlevel != (rtpp_log_setlevel_t)NULL);
     RTPP_DBG_ASSERT(pub->setlevel != (rtpp_log_setlevel_t)&rtpp_log_setlevel_fin);
     pub->setlevel = (rtpp_log_setlevel_t)&rtpp_log_setlevel_fin;
+    RTPP_DBG_ASSERT(pub->start != (rtpp_log_start_t)NULL);
     RTPP_DBG_ASSERT(pub->start != (rtpp_log_start_t)&rtpp_log_start_fin);
     pub->start = (rtpp_log_start_t)&rtpp_log_start_fin;
+    RTPP_DBG_ASSERT(pub->write != (rtpp_log_write_t)NULL);
     RTPP_DBG_ASSERT(pub->write != (rtpp_log_write_t)&rtpp_log_write_fin);
     pub->write = (rtpp_log_write_t)&rtpp_log_write_fin;
 }
@@ -53,6 +57,10 @@ rtpp_log_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.ewrite = (rtpp_log_ewrite_t)((void *)0x1);
+    tp->pub.setlevel = (rtpp_log_setlevel_t)((void *)0x1);
+    tp->pub.start = (rtpp_log_start_t)((void *)0x1);
+    tp->pub.write = (rtpp_log_write_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_log_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

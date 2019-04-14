@@ -11,6 +11,7 @@ static void rtpp_timed_task_cancel_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_timed_task_fin(struct rtpp_timed_task *pub) {
+    RTPP_DBG_ASSERT(pub->cancel != (rtpp_timed_task_cancel_t)NULL);
     RTPP_DBG_ASSERT(pub->cancel != (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin);
     pub->cancel = (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin;
 }
@@ -35,6 +36,7 @@ rtpp_timed_task_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.cancel = (rtpp_timed_task_cancel_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_task_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

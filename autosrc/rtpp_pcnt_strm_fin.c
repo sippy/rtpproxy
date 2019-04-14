@@ -15,8 +15,10 @@ static void rtpp_pcnt_strm_reg_pktin_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_pcnt_strm_fin(struct rtpp_pcnt_strm *pub) {
+    RTPP_DBG_ASSERT(pub->get_stats != (rtpp_pcnt_strm_get_stats_t)NULL);
     RTPP_DBG_ASSERT(pub->get_stats != (rtpp_pcnt_strm_get_stats_t)&rtpp_pcnt_strm_get_stats_fin);
     pub->get_stats = (rtpp_pcnt_strm_get_stats_t)&rtpp_pcnt_strm_get_stats_fin;
+    RTPP_DBG_ASSERT(pub->reg_pktin != (rtpp_pcnt_strm_reg_pktin_t)NULL);
     RTPP_DBG_ASSERT(pub->reg_pktin != (rtpp_pcnt_strm_reg_pktin_t)&rtpp_pcnt_strm_reg_pktin_fin);
     pub->reg_pktin = (rtpp_pcnt_strm_reg_pktin_t)&rtpp_pcnt_strm_reg_pktin_fin;
 }
@@ -41,6 +43,8 @@ rtpp_pcnt_strm_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.get_stats = (rtpp_pcnt_strm_get_stats_t)((void *)0x1);
+    tp->pub.reg_pktin = (rtpp_pcnt_strm_reg_pktin_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcnt_strm_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

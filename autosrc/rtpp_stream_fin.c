@@ -104,6 +104,25 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods_fin = {
     .update_skt = (rtpp_stream_update_skt_t)&rtpp_stream_update_skt_fin,
 };
 void rtpp_stream_fin(struct rtpp_stream *pub) {
+    RTPP_DBG_ASSERT(pub->smethods->drain_skt != (rtpp_stream_drain_skt_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->finish_playback != (rtpp_stream_finish_playback_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_actor != (rtpp_stream_get_actor_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_proto != (rtpp_stream_get_proto_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_rem_addr != (rtpp_stream_get_rem_addr_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_skt != (rtpp_stream_get_skt_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_stats != (rtpp_stream_get_stats_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->guess_addr != (rtpp_stream_guess_addr_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->handle_noplay != (rtpp_stream_handle_noplay_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->handle_play != (rtpp_stream_handle_play_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->isplayer_active != (rtpp_stream_isplayer_active_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->issendable != (rtpp_stream_issendable_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->locklatch != (rtpp_stream_locklatch_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->prefill_addr != (rtpp_stream_prefill_addr_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->reg_onhold != (rtpp_stream_reg_onhold_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->rx != (rtpp_stream_rx_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->send_pkt != (rtpp_stream_send_pkt_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->set_skt != (rtpp_stream_set_skt_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->update_skt != (rtpp_stream_update_skt_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_stream_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_stream_smethods_fin;
@@ -129,6 +148,28 @@ rtpp_stream_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    static const struct rtpp_stream_smethods dummy = {
+        .drain_skt = (rtpp_stream_drain_skt_t)((void *)0x1),
+        .finish_playback = (rtpp_stream_finish_playback_t)((void *)0x1),
+        .get_actor = (rtpp_stream_get_actor_t)((void *)0x1),
+        .get_proto = (rtpp_stream_get_proto_t)((void *)0x1),
+        .get_rem_addr = (rtpp_stream_get_rem_addr_t)((void *)0x1),
+        .get_skt = (rtpp_stream_get_skt_t)((void *)0x1),
+        .get_stats = (rtpp_stream_get_stats_t)((void *)0x1),
+        .guess_addr = (rtpp_stream_guess_addr_t)((void *)0x1),
+        .handle_noplay = (rtpp_stream_handle_noplay_t)((void *)0x1),
+        .handle_play = (rtpp_stream_handle_play_t)((void *)0x1),
+        .isplayer_active = (rtpp_stream_isplayer_active_t)((void *)0x1),
+        .issendable = (rtpp_stream_issendable_t)((void *)0x1),
+        .locklatch = (rtpp_stream_locklatch_t)((void *)0x1),
+        .prefill_addr = (rtpp_stream_prefill_addr_t)((void *)0x1),
+        .reg_onhold = (rtpp_stream_reg_onhold_t)((void *)0x1),
+        .rx = (rtpp_stream_rx_t)((void *)0x1),
+        .send_pkt = (rtpp_stream_send_pkt_t)((void *)0x1),
+        .set_skt = (rtpp_stream_set_skt_t)((void *)0x1),
+        .update_skt = (rtpp_stream_update_skt_t)((void *)0x1),
+    };
+    tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

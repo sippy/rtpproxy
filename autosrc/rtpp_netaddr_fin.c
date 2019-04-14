@@ -49,6 +49,14 @@ static const struct rtpp_netaddr_smethods rtpp_netaddr_smethods_fin = {
     .sip_print = (rtpp_netaddr_sip_print_t)&rtpp_netaddr_sip_print_fin,
 };
 void rtpp_netaddr_fin(struct rtpp_netaddr *pub) {
+    RTPP_DBG_ASSERT(pub->smethods->cmp != (rtpp_netaddr_cmp_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->cmphost != (rtpp_netaddr_cmphost_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->copy != (rtpp_netaddr_copy_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get != (rtpp_netaddr_get_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->isaddrseq != (rtpp_netaddr_isaddrseq_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->isempty != (rtpp_netaddr_isempty_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->set != (rtpp_netaddr_set_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->sip_print != (rtpp_netaddr_sip_print_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_netaddr_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_netaddr_smethods_fin;
@@ -74,6 +82,17 @@ rtpp_netaddr_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    static const struct rtpp_netaddr_smethods dummy = {
+        .cmp = (rtpp_netaddr_cmp_t)((void *)0x1),
+        .cmphost = (rtpp_netaddr_cmphost_t)((void *)0x1),
+        .copy = (rtpp_netaddr_copy_t)((void *)0x1),
+        .get = (rtpp_netaddr_get_t)((void *)0x1),
+        .isaddrseq = (rtpp_netaddr_isaddrseq_t)((void *)0x1),
+        .isempty = (rtpp_netaddr_isempty_t)((void *)0x1),
+        .set = (rtpp_netaddr_set_t)((void *)0x1),
+        .sip_print = (rtpp_netaddr_sip_print_t)((void *)0x1),
+    };
+    tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_netaddr_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

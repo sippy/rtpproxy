@@ -23,12 +23,16 @@ static void rtpp_pcount_reg_reld_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_pcount_fin(struct rtpp_pcount *pub) {
+    RTPP_DBG_ASSERT(pub->get_stats != (rtpp_pcount_get_stats_t)NULL);
     RTPP_DBG_ASSERT(pub->get_stats != (rtpp_pcount_get_stats_t)&rtpp_pcount_get_stats_fin);
     pub->get_stats = (rtpp_pcount_get_stats_t)&rtpp_pcount_get_stats_fin;
+    RTPP_DBG_ASSERT(pub->reg_drop != (rtpp_pcount_reg_drop_t)NULL);
     RTPP_DBG_ASSERT(pub->reg_drop != (rtpp_pcount_reg_drop_t)&rtpp_pcount_reg_drop_fin);
     pub->reg_drop = (rtpp_pcount_reg_drop_t)&rtpp_pcount_reg_drop_fin;
+    RTPP_DBG_ASSERT(pub->reg_ignr != (rtpp_pcount_reg_ignr_t)NULL);
     RTPP_DBG_ASSERT(pub->reg_ignr != (rtpp_pcount_reg_ignr_t)&rtpp_pcount_reg_ignr_fin);
     pub->reg_ignr = (rtpp_pcount_reg_ignr_t)&rtpp_pcount_reg_ignr_fin;
+    RTPP_DBG_ASSERT(pub->reg_reld != (rtpp_pcount_reg_reld_t)NULL);
     RTPP_DBG_ASSERT(pub->reg_reld != (rtpp_pcount_reg_reld_t)&rtpp_pcount_reg_reld_fin);
     pub->reg_reld = (rtpp_pcount_reg_reld_t)&rtpp_pcount_reg_reld_fin;
 }
@@ -53,6 +57,10 @@ rtpp_pcount_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.get_stats = (rtpp_pcount_get_stats_t)((void *)0x1);
+    tp->pub.reg_drop = (rtpp_pcount_reg_drop_t)((void *)0x1);
+    tp->pub.reg_ignr = (rtpp_pcount_reg_ignr_t)((void *)0x1);
+    tp->pub.reg_reld = (rtpp_pcount_reg_reld_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcount_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

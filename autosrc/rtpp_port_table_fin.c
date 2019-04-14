@@ -11,6 +11,7 @@ static void rtpp_ptbl_get_port_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_port_table_fin(struct rtpp_port_table *pub) {
+    RTPP_DBG_ASSERT(pub->get_port != (rtpp_ptbl_get_port_t)NULL);
     RTPP_DBG_ASSERT(pub->get_port != (rtpp_ptbl_get_port_t)&rtpp_ptbl_get_port_fin);
     pub->get_port = (rtpp_ptbl_get_port_t)&rtpp_ptbl_get_port_fin;
 }
@@ -35,6 +36,7 @@ rtpp_port_table_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.get_port = (rtpp_ptbl_get_port_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_port_table_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

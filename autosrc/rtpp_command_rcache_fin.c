@@ -19,10 +19,13 @@ static void rcache_shutdown_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_cmd_rcache_fin(struct rtpp_cmd_rcache *pub) {
+    RTPP_DBG_ASSERT(pub->insert != (rcache_insert_t)NULL);
     RTPP_DBG_ASSERT(pub->insert != (rcache_insert_t)&rcache_insert_fin);
     pub->insert = (rcache_insert_t)&rcache_insert_fin;
+    RTPP_DBG_ASSERT(pub->lookup != (rcache_lookup_t)NULL);
     RTPP_DBG_ASSERT(pub->lookup != (rcache_lookup_t)&rcache_lookup_fin);
     pub->lookup = (rcache_lookup_t)&rcache_lookup_fin;
+    RTPP_DBG_ASSERT(pub->shutdown != (rcache_shutdown_t)NULL);
     RTPP_DBG_ASSERT(pub->shutdown != (rcache_shutdown_t)&rcache_shutdown_fin);
     pub->shutdown = (rcache_shutdown_t)&rcache_shutdown_fin;
 }
@@ -47,6 +50,9 @@ rtpp_cmd_rcache_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.insert = (rcache_insert_t)((void *)0x1);
+    tp->pub.lookup = (rcache_lookup_t)((void *)0x1);
+    tp->pub.shutdown = (rcache_shutdown_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_cmd_rcache_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

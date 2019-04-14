@@ -19,10 +19,13 @@ static void rtpp_ringbuf_push_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_ringbuf_fin(struct rtpp_ringbuf *pub) {
+    RTPP_DBG_ASSERT(pub->flush != (rtpp_ringbuf_flush_t)NULL);
     RTPP_DBG_ASSERT(pub->flush != (rtpp_ringbuf_flush_t)&rtpp_ringbuf_flush_fin);
     pub->flush = (rtpp_ringbuf_flush_t)&rtpp_ringbuf_flush_fin;
+    RTPP_DBG_ASSERT(pub->locate != (rtpp_ringbuf_locate_t)NULL);
     RTPP_DBG_ASSERT(pub->locate != (rtpp_ringbuf_locate_t)&rtpp_ringbuf_locate_fin);
     pub->locate = (rtpp_ringbuf_locate_t)&rtpp_ringbuf_locate_fin;
+    RTPP_DBG_ASSERT(pub->push != (rtpp_ringbuf_push_t)NULL);
     RTPP_DBG_ASSERT(pub->push != (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin);
     pub->push = (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin;
 }
@@ -47,6 +50,9 @@ rtpp_ringbuf_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.flush = (rtpp_ringbuf_flush_t)((void *)0x1);
+    tp->pub.locate = (rtpp_ringbuf_locate_t)((void *)0x1);
+    tp->pub.push = (rtpp_ringbuf_push_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ringbuf_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

@@ -11,6 +11,7 @@ static void rtpp_record_write_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_record_fin(struct rtpp_record *pub) {
+    RTPP_DBG_ASSERT(pub->write != (rtpp_record_write_t)NULL);
     RTPP_DBG_ASSERT(pub->write != (rtpp_record_write_t)&rtpp_record_write_fin);
     pub->write = (rtpp_record_write_t)&rtpp_record_write_fin;
 }
@@ -35,6 +36,7 @@ rtpp_record_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.write = (rtpp_record_write_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

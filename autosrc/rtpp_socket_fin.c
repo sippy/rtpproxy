@@ -39,20 +39,28 @@ static void rtpp_socket_settos_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_socket_fin(struct rtpp_socket *pub) {
+    RTPP_DBG_ASSERT(pub->bind != (rtpp_socket_bind_t)NULL);
     RTPP_DBG_ASSERT(pub->bind != (rtpp_socket_bind_t)&rtpp_socket_bind_fin);
     pub->bind = (rtpp_socket_bind_t)&rtpp_socket_bind_fin;
+    RTPP_DBG_ASSERT(pub->getfd != (rtpp_socket_getfd_t)NULL);
     RTPP_DBG_ASSERT(pub->getfd != (rtpp_socket_getfd_t)&rtpp_socket_getfd_fin);
     pub->getfd = (rtpp_socket_getfd_t)&rtpp_socket_getfd_fin;
+    RTPP_DBG_ASSERT(pub->rtp_recv != (rtpp_socket_rtp_recv_t)NULL);
     RTPP_DBG_ASSERT(pub->rtp_recv != (rtpp_socket_rtp_recv_t)&rtpp_socket_rtp_recv_fin);
     pub->rtp_recv = (rtpp_socket_rtp_recv_t)&rtpp_socket_rtp_recv_fin;
+    RTPP_DBG_ASSERT(pub->send_pkt_na != (rtpp_socket_send_pkt_na_t)NULL);
     RTPP_DBG_ASSERT(pub->send_pkt_na != (rtpp_socket_send_pkt_na_t)&rtpp_socket_send_pkt_na_fin);
     pub->send_pkt_na = (rtpp_socket_send_pkt_na_t)&rtpp_socket_send_pkt_na_fin;
+    RTPP_DBG_ASSERT(pub->setnonblock != (rtpp_socket_setnonblock_t)NULL);
     RTPP_DBG_ASSERT(pub->setnonblock != (rtpp_socket_setnonblock_t)&rtpp_socket_setnonblock_fin);
     pub->setnonblock = (rtpp_socket_setnonblock_t)&rtpp_socket_setnonblock_fin;
+    RTPP_DBG_ASSERT(pub->setrbuf != (rtpp_socket_setrbuf_t)NULL);
     RTPP_DBG_ASSERT(pub->setrbuf != (rtpp_socket_setrbuf_t)&rtpp_socket_setrbuf_fin);
     pub->setrbuf = (rtpp_socket_setrbuf_t)&rtpp_socket_setrbuf_fin;
+    RTPP_DBG_ASSERT(pub->settimestamp != (rtpp_socket_settimestamp_t)NULL);
     RTPP_DBG_ASSERT(pub->settimestamp != (rtpp_socket_settimestamp_t)&rtpp_socket_settimestamp_fin);
     pub->settimestamp = (rtpp_socket_settimestamp_t)&rtpp_socket_settimestamp_fin;
+    RTPP_DBG_ASSERT(pub->settos != (rtpp_socket_settos_t)NULL);
     RTPP_DBG_ASSERT(pub->settos != (rtpp_socket_settos_t)&rtpp_socket_settos_fin);
     pub->settos = (rtpp_socket_settos_t)&rtpp_socket_settos_fin;
 }
@@ -77,6 +85,14 @@ rtpp_socket_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    tp->pub.bind = (rtpp_socket_bind_t)((void *)0x1);
+    tp->pub.getfd = (rtpp_socket_getfd_t)((void *)0x1);
+    tp->pub.rtp_recv = (rtpp_socket_rtp_recv_t)((void *)0x1);
+    tp->pub.send_pkt_na = (rtpp_socket_send_pkt_na_t)((void *)0x1);
+    tp->pub.setnonblock = (rtpp_socket_setnonblock_t)((void *)0x1);
+    tp->pub.setrbuf = (rtpp_socket_setrbuf_t)((void *)0x1);
+    tp->pub.settimestamp = (rtpp_socket_settimestamp_t)((void *)0x1);
+    tp->pub.settos = (rtpp_socket_settos_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);

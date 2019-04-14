@@ -14,6 +14,7 @@ static const struct rtpp_pearson_perfect_smethods rtpp_pearson_perfect_smethods_
     .hash = (rtpp_pearson_perfect_hash_t)&rtpp_pearson_perfect_hash_fin,
 };
 void rtpp_pearson_perfect_fin(struct rtpp_pearson_perfect *pub) {
+    RTPP_DBG_ASSERT(pub->smethods->hash != (rtpp_pearson_perfect_hash_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_pearson_perfect_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_pearson_perfect_smethods_fin;
@@ -39,6 +40,10 @@ rtpp_pearson_perfect_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
+    static const struct rtpp_pearson_perfect_smethods dummy = {
+        .hash = (rtpp_pearson_perfect_hash_t)((void *)0x1),
+    };
+    tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pearson_perfect_fin,
       &tp->pub);
     CALL_SMETHOD(tp->pub.rcnt, decref);
