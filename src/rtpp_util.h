@@ -36,11 +36,12 @@
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
 
 struct cfg;
+struct rtpp_cfg_stable;
 
 /* Function prototypes */
 void seedrandom(void);
 int set_rlimits(struct cfg *);
-int drop_privileges(struct cfg *);
+int drop_privileges(const struct rtpp_cfg_stable *);
 char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
 int url_unquote(unsigned char *, int);

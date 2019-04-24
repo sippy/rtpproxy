@@ -46,6 +46,7 @@
 #include "rtpp_util.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_runcreds.h"
 
 void
 seedrandom(void)
@@ -85,19 +86,19 @@ set_rlimits(struct cfg *cf)
 }
 
 int
-drop_privileges(struct cfg *cf)
+drop_privileges(const struct rtpp_cfg_stable *cfsp)
 {
 
-    if (cf->stable->run_gname != NULL) {
-	if (setgid(cf->stable->run_gid) != 0) {
-	    RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't set current group ID: %d", cf->stable->run_gid);
+    if (cfsp->runcreds->gname != NULL) {
+	if (setgid(cfsp->runcreds->gid) != 0) {
+	    RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't set current group ID: %d", cfsp->runcreds->gid);
 	    return -1;
 	}
     }
-    if (cf->stable->run_uname == NULL)
+    if (cfsp->runcreds->uname == NULL)
 	return 0;
-    if (setuid(cf->stable->run_uid) != 0) {
-	RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't set current user ID: %d", cf->stable->run_uid);
+    if (setuid(cfsp->runcreds->uid) != 0) {
+	RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't set current user ID: %d", cfsp->runcreds->uid);
 	return -1;
     }
     return 0;
