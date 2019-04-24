@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2019 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,8 @@ struct rtpp_timed;
 struct rtpp_sessinfo;
 struct rtpp_log;
 struct rtpp_module_if;
+struct rtpp_runcreds;
+struct rtpp_proc_ttl;
 
 #define RTPP_PT_INET	0
 #define	RTPP_PT_INET6	1
@@ -91,15 +93,11 @@ struct rtpp_cfg_stable {
     struct rtpp_log *glog;
 
     struct rlimit *nofile_limit;
-    char *run_uname;
-    char *run_gname;
-    mode_t sock_mode;
     int no_check;
 
     rtpp_ttl_mode ttl_mode;
 
-    uid_t run_uid;
-    gid_t run_gid;
+    struct rtpp_runcreds *runcreds;
 
     int log_level;
     int log_facility;
@@ -119,6 +117,7 @@ struct rtpp_cfg_stable {
     double target_pfreq;
     struct rtpp_cmd_async *rtpp_cmd_cf;
     struct rtpp_proc_async *rtpp_proc_cf;
+    struct rtpp_proc_ttl *rtpp_proc_ttl_cf;
     struct rtpp_anetio_cf *rtpp_netio_cf;
     struct rtpp_tnotify_set *rtpp_tnset_cf;
     struct rtpp_notify *rtpp_notify_cf;
