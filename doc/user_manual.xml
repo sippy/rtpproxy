@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<book>
+  <bookinfo>
+    <title>RTPProxy 2.2 Manual</title>
+
+    <author>
+      <firstname>Maksym</firstname>
+
+      <surname>Sobolyev</surname>
+
+      <affiliation>
+        <orgname>Sippy Labs</orgname>
+      </affiliation>
+
+      <email>sobomax@gmail.com</email>
+    </author>
+
+    <pubdate>16 May 2019</pubdate>
+
+    <copyright>
+      <year>2003-2019</year>
+
+      <holder>Maksym Sobolyev &lt;sobomax@gmail.com&gt;</holder>
+    </copyright>
+  </bookinfo>
+
+  <chapter>
+    <title>Introduction</title>
+
+    <xi:include href="manpage.xml" xpointer="DESCRIPTION"
+                xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+    <section>
+      <title>Content of the Package</title>
+
+      <para>The RTPProxy package by default provides the following
+      components:</para>
+
+      <informaltable>
+        <tgroup cols="2">
+          <colspec colwidth="170*"/>
+
+          <colspec colwidth="830*"/>
+
+          <thead>
+            <row>
+              <entry align="center">Binary Name</entry>
+
+              <entry align="center">Description</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry><command>rtpproxy</command></entry>
+
+              <entry>Main RTP proxy server binary (production build).</entry>
+            </row>
+
+            <row>
+              <entry><command>rtpproxy_debug</command></entry>
+
+              <entry>Main RTP proxy server binary (debug and profiling
+              build).</entry>
+            </row>
+
+            <row>
+              <entry><command>makeann</command></entry>
+
+              <entry>Utility to pre-encode prompts and announcements
+              (production build).</entry>
+            </row>
+
+            <row>
+              <entry><command>makeann_debug</command></entry>
+
+              <entry>Utility to pre-encode prompts and announcements (debug
+              and profiling build).</entry>
+            </row>
+
+            <row>
+              <entry><command>extractaudio</command></entry>
+
+              <entry>Utility to convert recorded sessions into plain audio
+              files (production build).</entry>
+            </row>
+
+            <row>
+              <entry><command>extractaudio_debug</command></entry>
+
+              <entry>Utility to convert recorded sessions into plain audio
+              files (debug and profiling build).</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Installation</title>
+
+    <highlights>
+      <para>The following section of the manual is aimed to users that want to
+      compile and install RTPProxy from sources.</para>
+
+      <para>If you want to use per-built RTPProxy package, than please feel
+      free to <link linkend="CONFIGURATION">skip this chapter</link>, and
+      install your package according to your platform (<package>dpkg</package>
+      for <productname>Debian</productname>, <package>rpm</package> for
+      <productname>CentOS</productname>, <package>apt</package> for
+      <productname>Ubuntu</productname>, <package>pkg</package> for
+      <productname>FreeBSD</productname> etc).</para>
+    </highlights>
+
+    <section>
+      <title>Download RTPProxy</title>
+
+      <para>GitHub hosts the main repository for RTPProxy. To checkout the
+      latest RTPProxy 2.2, you can run:</para>
+
+      <programlisting>$ git clone -b master https://github.com/sippy/rtpproxy.git
+$ git -C rtpproxy submodule update --init --recursive</programlisting>
+    </section>
+
+    <section>
+      <title>Compile and Install</title>
+
+      <orderedlist numeration="lowerroman">
+        <listitem>
+          <para>Download and install dependencies.</para>
+
+          <para>The RTPProxy package has several optional dependencies that
+          are detected at the configure stage and appropriate functionality is
+          enabled. Those dependencies and their effects on the RTPProxy build
+          are listed below:</para>
+
+          <informaltable>
+            <tgroup cols="4">
+              <colspec colwidth="89*"/>
+
+              <colspec colwidth="288*"/>
+
+              <colspec colwidth="170*"/>
+
+              <colspec colwidth="453*"/>
+
+              <thead>
+                <row>
+                  <entry align="center">Dependency Name</entry>
+
+                  <entry align="center">Obtained From</entry>
+
+                  <entry align="center">Affected Binaries</entry>
+
+                  <entry align="center">Description / Notes</entry>
+                </row>
+              </thead>
+
+              <tbody>
+                <row>
+                  <entry><package>bcg729</package></entry>
+
+                  <entry><ulink
+                  url="https://linphone.org/releases/sources/bcg729/">https://linphone.org/releases/sources/bcg729/</ulink></entry>
+
+                  <entry><command>extractaudio</command>,
+                  <command>makeann</command></entry>
+
+                  <entry>Enables G.729 support in several tools.</entry>
+                </row>
+
+                <row>
+                  <entry><package>libsndfile</package></entry>
+
+                  <entry><ulink
+                  url="http://www.mega-nerd.com/libsndfile/files/">http://www.mega-nerd.com/libsndfile/files/</ulink></entry>
+
+                  <entry><command>extractaudio</command></entry>
+
+                  <entry>Allows decoded audio to be saved in a number of
+                  popular audio formats instead of just RAW signed-linear
+                  16bit.</entry>
+                </row>
+
+                <row>
+                  <entry><package>libg722</package></entry>
+
+                  <entry><ulink
+                  url="https://github.com/sippy/libg722">https://github.com/sippy/libg722</ulink></entry>
+
+                  <entry><command>extractaudio</command>,
+                  <command>makeann</command></entry>
+
+                  <entry>Enables G.722 support in several tools.</entry>
+                </row>
+
+                <row>
+                  <entry><package>libsrtp</package></entry>
+
+                  <entry><ulink
+                  url="https://github.com/cisco/libsrtp.git">https://github.com/cisco/libsrtp.git</ulink></entry>
+
+                  <entry><command>extractaudio</command></entry>
+
+                  <entry>Enables decoding recordings of SRTP streams.</entry>
+                </row>
+
+                <row>
+                  <entry><package>libelperiodic</package></entry>
+
+                  <entry><ulink
+                  url="https://github.com/sobomax/libelperiodic.git">https://github.com/sobomax/libelperiodic.git</ulink></entry>
+
+                  <entry><command>rtpp_notify_client.py</command>,
+                  <command>rtpp_query.py</command>,
+                  <command>getmonotime.py</command></entry>
+
+                  <entry>Required by several auxiliary tools that are used by
+                  the automated testing framework. <command>make
+                  check</command> would fail if it's not installed. Both
+                  shared library and python module needs to be installed into
+                  either system location or python environment.</entry>
+                </row>
+
+                <row>
+                  <entry><package>tcpdump</package></entry>
+
+                  <entry><ulink
+                  url="http://www.tcpdump.org/release/">http://www.tcpdump.org/release/</ulink></entry>
+
+                  <entry>N/A</entry>
+
+                  <entry>Test framework requires it to capture traffic and
+                  verify PCAP decoding features. <command>make check</command>
+                  would fail if it's not installed.</entry>
+                </row>
+
+                <row>
+                  <entry><package>sudo</package></entry>
+
+                  <entry><ulink
+                  url="http://www.sudo.ws/">http://www.sudo.ws/</ulink></entry>
+
+                  <entry>N/A</entry>
+
+                  <entry>Test framework requires it to run the rtpproxy and
+                  tcpdump at elevated privileges. <command>make
+                  check</command> would fail if it's not installed.</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </informaltable>
+        </listitem>
+
+        <listitem>
+          <para>Configure</para>
+
+          <programlisting>$ cd rtpproxy
+$ ./configure</programlisting>
+        </listitem>
+
+        <listitem>
+          <para>Compile</para>
+
+          <programlisting>$ make clean all</programlisting>
+        </listitem>
+
+        <listitem>
+          <para>Test</para>
+
+          <programlisting>$ make check</programlisting>
+        </listitem>
+
+        <listitem>
+          <para>Install</para>
+
+          <programlisting># make install</programlisting>
+        </listitem>
+      </orderedlist>
+    </section>
+  </chapter>
+
+  <chapter id="CONFIGURATION">
+    <title>Configuration</title>
+
+    <para>Historically, primary configuration method for the RTPProxy is done
+    via command-line parameters. Starting with version 2.2 certain advanced
+    parameters (particularly loadable modules configuration) have been moved
+    into configuration file.</para>
+
+    <section>
+      <title>Command Line Parameters</title>
+
+      <para>The following command-line parameters are supported:</para>
+
+      <xi:include href="manpage.xml" xpointer="OPTIONS"
+                  xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    </section>
+
+    <section>
+      <title>Configuration File</title>
+
+      <para>TODO</para>
+    </section>
+
+    <section>
+      <title>Startup Script</title>
+
+      <para>TODO</para>
+    </section>
+  </chapter>
+</book>
