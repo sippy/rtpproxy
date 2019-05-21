@@ -156,7 +156,7 @@
   <refsect1>
     <title>DESCRIPTION</title>
 
-    <abstract id="DESCRIPTION">
+    <highlights id="DESCRIPTION">
       <para>The <command>&dhpackage;</command> is a generic-purpose RTP proxy
       server designed to be used in conjunction with a SIP Controller capable
       of rewriting SDP contents. OpenSIPS, Kamailio, and Sippy B2BUA support
@@ -186,7 +186,7 @@
       RTP sessions (calls), such as number of packets sent, received, lost,
       forwarded and so forth. Real-time metrics can then be retrieved by
       issuing appropriate command via control socket interface.</para>
-    </abstract>
+    </highlights>
   </refsect1>
 
   <refsect1>
