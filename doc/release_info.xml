@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<book>
+  <bookinfo>
+    <title>RTPProxy 2.2 Release Information</title>
+
+    <author>
+      <firstname>Maksym</firstname>
+
+      <surname>Sobolyev</surname>
+
+      <affiliation>
+        <orgname>Sippy Labs</orgname>
+      </affiliation>
+
+      <email>sobomax@gmail.com</email>
+    </author>
+
+    <pubdate>16 May 2019</pubdate>
+
+    <copyright>
+      <year>2019</year>
+
+      <holder>Maksym Sobolyev &lt;sobomax@gmail.com&gt;</holder>
+    </copyright>
+  </bookinfo>
+
+  <chapter>
+    <title>Introduction</title>
+
+    <section>
+      <title/>
+
+      <para/>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Release Highlights</title>
+
+    <section>
+      <title/>
+
+      <para/>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>New Features</title>
+
+    <section>
+      <title/>
+
+      <para/>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Fixed Bugs</title>
+
+    <section>
+      <title/>
+
+      <para/>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Configuration Changes</title>
+
+    <section>
+      <title/>
+
+      <para/>
+    </section>
+  </chapter>
+</book>
