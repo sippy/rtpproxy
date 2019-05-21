@@ -49,6 +49,7 @@
 #include "rtpp_controlfd.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_network.h"
+#include "rtpp_runcreds.h"
 
 #include "config_pp.h"
 
@@ -106,13 +107,13 @@ controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
         warn("can't bind to a socket: %s", csp->cmd_sock);
         goto e0;
     }
-    if ((cf->stable->run_uname != NULL || cf->stable->run_gname != NULL) &&
-      chown(csp->cmd_sock, cf->stable->run_uid, cf->stable->run_gid) == -1) {
+    if ((cf->stable->runcreds->uname != NULL || cf->stable->runcreds->gname != NULL) &&
+      chown(csp->cmd_sock, cf->stable->runcreds->uid, cf->stable->runcreds->gid) == -1) {
         warn("can't set owner of the socket: %s", csp->cmd_sock);
         goto e0;
     }
-    if ((cf->stable->run_gname != NULL) && cf->stable->sock_mode != 0 &&
-      (chmod(csp->cmd_sock, cf->stable->sock_mode) == -1)) {
+    if ((cf->stable->runcreds->gname != NULL) && cf->stable->runcreds->sock_mode != 0 &&
+      (chmod(csp->cmd_sock, cf->stable->runcreds->sock_mode) == -1)) {
         warn("can't allow rw acces to group");
         goto e0;
     }

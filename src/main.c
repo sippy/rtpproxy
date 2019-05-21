@@ -70,6 +70,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_runcreds.h"
 #include "rtpp_cfile.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
@@ -246,6 +247,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
         free(ctrl_sock);
     }
     free(cfsp->ctrl_socks);
+    free(cfsp->runcreds);
 #if ENABLE_MODULE_IF
     for (mif = RTPP_LIST_HEAD(cfsp->modules_cf); mif != NULL; mif = tmp) {
         tmp = RTPP_ITER_NEXT(mif);
@@ -289,7 +291,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     cf->stable->max_ttl = SESSION_TIMEOUT;
     cf->stable->tos = TOS;
     cf->stable->rrtcp = 1;
-    cf->stable->sock_mode = 0;
+    cf->stable->runcreds->sock_mode = 0;
     cf->stable->ttl_mode = TTL_UNIFIED;
     cf->stable->log_level = -1;
     cf->stable->log_facility = -1;
@@ -519,38 +521,38 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'u':
-	    cf->stable->run_uname = optarg;
+	    cf->stable->runcreds->uname = optarg;
 	    cp = strchr(optarg, ':');
 	    if (cp != NULL) {
 		if (cp == optarg)
-		    cf->stable->run_uname = NULL;
+		    cf->stable->runcreds->uname = NULL;
 		cp[0] = '\0';
 		cp++;
 	    }
-	    cf->stable->run_gname = cp;
-	    cf->stable->run_uid = -1;
-	    cf->stable->run_gid = -1;
-	    if (cf->stable->run_uname != NULL) {
-		pp = getpwnam(cf->stable->run_uname);
+	    cf->stable->runcreds->gname = cp;
+	    cf->stable->runcreds->uid = -1;
+	    cf->stable->runcreds->gid = -1;
+	    if (cf->stable->runcreds->uname != NULL) {
+		pp = getpwnam(cf->stable->runcreds->uname);
 		if (pp == NULL)
-		    errx(1, "can't find ID for the user: %s", cf->stable->run_uname);
-		cf->stable->run_uid = pp->pw_uid;
-		if (cf->stable->run_gname == NULL)
-		    cf->stable->run_gid = pp->pw_gid;
+		    errx(1, "can't find ID for the user: %s", cf->stable->runcreds->uname);
+		cf->stable->runcreds->uid = pp->pw_uid;
+		if (cf->stable->runcreds->gname == NULL)
+		    cf->stable->runcreds->gid = pp->pw_gid;
 	    }
-	    if (cf->stable->run_gname != NULL) {
-		gp = getgrnam(cf->stable->run_gname);
+	    if (cf->stable->runcreds->gname != NULL) {
+		gp = getgrnam(cf->stable->runcreds->gname);
 		if (gp == NULL)
-		    errx(1, "can't find ID for the group: %s", cf->stable->run_gname);
-		cf->stable->run_gid = gp->gr_gid;
-                if (cf->stable->sock_mode == 0) {
-                    cf->stable->sock_mode = 0755;
+		    errx(1, "can't find ID for the group: %s", cf->stable->runcreds->gname);
+		cf->stable->runcreds->gid = gp->gr_gid;
+                if (cf->stable->runcreds->sock_mode == 0) {
+                    cf->stable->runcreds->sock_mode = 0755;
                 }
 	    }
 	    break;
 
 	case 'w':
-	    cf->stable->sock_mode = atoi(optarg);
+	    cf->stable->runcreds->sock_mode = atoi(optarg);
 	    break;
 
 	case 'F':
@@ -655,7 +657,7 @@ init_config(struct cfg *cf, int argc, char **argv)
     if (cf->stable->nodaemon == 0 && stdio_mode != 0)
         errx(1, "stdio command mode requires -f switch");
 
-    if (cf->stable->no_check == 0 && getuid() == 0 && cf->stable->run_uname == NULL) {
+    if (cf->stable->no_check == 0 && getuid() == 0 && cf->stable->runcreds->uname == NULL) {
 	if (umode != 0) {
 	    errx(1, "running this program as superuser in a remote control "
 	      "mode is strongly not recommended, as it poses serious security "
@@ -802,6 +804,12 @@ main(int argc, char **argv)
          /* NOTREACHED */
     }
 
+    cf.stable->runcreds = rtpp_zmalloc(sizeof(struct rtpp_runcreds));
+    if (cf.stable->runcreds == NULL) {
+         err(1, "can't allocate memory for the struct runcreds");
+         /* NOTREACHED */
+    }
+
     seedrandom();
     if (rtpp_gen_uid_init() != 0) {
         err(1, "rtpp_gen_uid_init() failed");
@@ -922,8 +930,8 @@ main(int argc, char **argv)
         }
     }
 
-    if (cf.stable->run_uname != NULL || cf.stable->run_gname != NULL) {
-	if (drop_privileges(&cf) != 0) {
+    if (cf.stable->runcreds->uname != NULL || cf.stable->runcreds->gname != NULL) {
+	if (drop_privileges(cf.stable) != 0) {
 	    RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
 	      "can't switch to requested user/group");
 	    exit(1);
@@ -1038,6 +1046,7 @@ main(int argc, char **argv)
     }
 #endif
     free(cf.stable->modules_cf);
+    free(cf.stable->runcreds);
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
     CALL_SMETHOD(cf.stable->rtpp_timed_cf, shutdown);
