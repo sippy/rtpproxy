@@ -40,9 +40,9 @@
 
       <informaltable>
         <tgroup cols="2">
-          <colspec colwidth="170*"/>
+          <colspec colwidth="200*"/>
 
-          <colspec colwidth="830*"/>
+          <colspec colwidth="800*"/>
 
           <thead>
             <row>
