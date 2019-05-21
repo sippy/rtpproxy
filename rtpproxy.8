@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: rtpproxy
-.\"    Author: Maxim Sobolev
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: Jun 16, 2008
+.\"    Author: Jan Janak <janakj@users.berlios.de>
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: May 16, 2019
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "RTPPROXY" "8" "Jun 16, 2008" "[FIXME: source]" "[FIXME: manual]"
+.TH "RTPPROXY" "8" "May 16, 2019" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,17 +34,18 @@ rtpproxy \- RTP (Real\-time Transport Protocol) Proxy Server
 \fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-V\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-L\fR\ \fInofile_limit\fR] [\fB\-A\fR\ \fIadvaddr1\fR\fI[/advaddr2]\fR] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-w\fR\ \fIsock_mode\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR] [\fB\-W\fR\ \fIsetup_ttl\fR]
 .SH "DESCRIPTION"
 .PP
+The
 \fBrtpproxy\fR
-is a symmetric RTP proxy designed to be used in conjunction with a SIP Controller capable of rewriting SDP contents\&. OpenSIPs, Kamailio, and Sippy B2BUA support
-\fBrtpproxy\fR
+is a generic\-purpose RTP proxy server designed to be used in conjunction with a SIP Controller capable of rewriting SDP contents\&. OpenSIPS, Kamailio, and Sippy B2BUA support
+\fBrtpproxy\fR\&.
 .PP
-rtpproxy can be used to facilitate RTP sessions between SIP user agents that are behind a NAT(s) (Network Address Translator) firewall\&. Several cases exists when direct end\-to\-end communication is not possible and RTP streams have to be relayed through another host\&. rtpproxy can be used to setup such a relaying host\&.
+The rtpproxy can be used to facilitate RTP sessions between SIP user agents that are behind a NAT(s) (Network Address Translator) firewall\&. Several cases exists when direct end\-to\-end communication is not possible and RTP streams have to be relayed through another host\&. rtpproxy can be used to setup such a relaying host\&.
 .PP
-rtpproxy can operate as a application level bridge by specifying two interfaces to listen on\&. In bridging mode rtpproxy forwards RTP packets received on one interface to the other interface and vice versa\&. This mode can be used to forward RTP packets between networks without direct network level connectivity (provided that the host running rtpproxy has an interface connected to both networks)\&. One particular application of bridging mode is IPv4/IPv6 traversal of RTP packets\&.
+The rtpproxy can also operate as a application level bridge by specifying two interfaces to listen on\&. In bridging mode rtpproxy forwards RTP packets received on one interface to the other interface and vice versa\&. This mode can be used to forward RTP packets between networks without direct network level connectivity (provided that the host running rtpproxy has an interface connected to both networks)\&. One particular application of bridging mode is IPv4/IPv6 traversal of RTP packets\&.
 .PP
-When instructed by the call controller rtpproxy will record the entire RTP session to the local hard disk or play a pre\-recorded file to the user agent (comfort ring replacement, Music\-on\-Hold, disclaimer announcements)\&.
+When instructed by the call controller rtpproxy will record the entire RTP session to the local hard disk, fork\-off (copy) to a remote server and/or play a pre\-recorded file to the user agent (comfort ring replacement, Music\-on\-Hold, disclaimer announcements etc)\&.
 .PP
-rtpproxy tracks various metrics about call sessions, such as packets sent, packets received, packets lost and so fort\&.
+The rtpproxy tracks various important operational metrics about RTP sessions (calls), such as number of packets sent, received, lost, forwarded and so forth\&. Real\-time metrics can then be retrieved by issuing appropriate command via control socket interface\&.
 .SH "OPTIONS"
 .PP
 \fB\-?\fR
@@ -62,14 +63,14 @@ Send every RTP packet twice in sessions that use low\-bitrate codecs\&. Only pac
 rtpproxy will stay in foreground mode if this option is set\&.
 .RE
 .PP
-\fB\-v\fR
+\fB\-V\fR
 .RS 4
 Show version of program\&.
 .RE
 .PP
-\fB\-V\fR
+\fB\-v\fR
 .RS 4
-Show rtpp command protocol version\&.
+Show supported rtpp command protocol revisions\&.
 .RE
 .PP
 \fB\-l\fR \fIaddr1\fR\fI[/addr2]\fR
@@ -141,15 +142,58 @@ Example: \-s udp6:::1:9000
 .sp -1
 .IP \(bu 2.3
 .\}
-\fIunix:\fR
-Create UNIX domain socket for control interface\&. In this mode the SIP Controller and rtpproxy must be running on the same host\&.
+\fItcp:\fR
+Create IPv4 TCP control socket\&. In this mode rtpproxy will listen on TCP/IPv4 for control messages from the SIP Controller\&.
 .sp
-Example: \-s unix:/var/run/rtpproxy\&.sock
-.sp
-Default value is
-/var/run/rtpproxy\&.sock\&.
+Example: \-s tcp:192\&.168\&.0\&.1:9001
 .RE
 .sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fItcp6:\fR
+Create IPv6 TCP control socket\&. In this mode rtpproxy will listen on TCP/IPv6 for control messages from the SIP Controller\&.
+.sp
+Example: \-s tcp6:::1:9002
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIunix:\fR
+Create UNIX domain socket in a datagram\-like mode for control interface\&. In this mode the SIP Controller and rtpproxy must be running on the same host\&. This is traditional mode when rtpproxy would close connection after processing each command and sending reply\&.
+.sp
+Example: \-s unix:/var/run/rtpproxy\&.sock
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIcunix:\fR
+Create UNIX domain socket for control interface\&. In this mode the SIP Controller and rtpproxy must be running on the same host\&. Similar to
+\fIunix:\fR
+above, but the rtpproxy would keep control socket open and accept multiple commands via the same connection\&.
+.sp
+Example: \-s cunix:/var/run/rtpproxy\&.sock
+.RE
+.sp
+Default value is
+unix:/var/run/rtpproxy\&.sock\&.
 .RE
 .PP
 \fB\-t\fR \fItos\fR
@@ -191,11 +235,11 @@ it will then delete the session\&.
 .PP
 \fB\-L\fR \fInofile_limit\fR
 .RS 4
-Set the maximum number of open connections per process\&. The default maximum is set by the operating system, and can be overridden using the
+Set the maximum number of open file descriptors per process\&. The default maximum is set by the operating system, and can be overridden using the
 \fB\-L\fR
 flag\&.
 .sp
-rtpproxy requires four connections per media stream to ensure that it can reliably identify where a stream is coming from in a NAT firewall scenario\&.
+The rtpproxy requires four file descriptors per session to ensure that it can reliably identify where each stream is coming from in a NAT firewall scenario\&.
 .RE
 .PP
 \fB\-A\fR \fIadvaddr1\fR\fI[/advaddr2]\fR
@@ -265,7 +309,8 @@ is <type>:<socket>\&. Following types are supported:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fIunix:\fRConnect to UNIX domain socket for sending timeout notifications\&. In this mode B2BUA and rtpproxy must be running on the same host\&.
+\fIunix:\fR
+Connect to UNIX domain socket for sending timeout notifications\&. In this mode B2BUA and rtpproxy must be running on the same host\&.
 .sp
 Example: \-n unix:/var/run/rtpproxy_timeout\&.sock
 .RE
@@ -278,7 +323,8 @@ Example: \-n unix:/var/run/rtpproxy_timeout\&.sock
 .sp -1
 .IP \(bu 2.3
 .\}
-\fItcp:\fRConnect to a remote host using TCP/IP for sending timeout notifications\&. Format of the
+\fItcp:\fR
+Connect to a remote host using TCP/IP for sending timeout notifications\&. Format of the
 \fIsocket\fR
 parameter in this case is <host>:<port>\&.
 .sp
@@ -314,7 +360,7 @@ Example: \-d WARN:LOG_LOCAL5
 .sp
 The default level in foreground mode is is DBUG, in background \- WARN and facility is LOG_DAEMON\&.
 .RE
-.SH "HOWITWORKS"
+.SH "PRINCIPLES OF OPERATION"
 .PP
 When the SIP controller receives an INVITE request, it extracts the Call\-ID and from_tag from INVITE\&. The call controller communicates it with the rtpproxy via Unix domain socket or a UDP socket\&. rtpproxy looks for an existing session with the given Call\-ID and from_tag\&.
 .PP
@@ -330,28 +376,39 @@ The rtpproxy looks for an existing session based on the Call\-ID and from_tag, w
 .PP
 When the SIP controller recieves the new port number from the rtpproxy, the SIP controller is expected to rewrite the SDP in the SIP message body by replacing the ip:port to that of the IP address and new udp port number provided by rtpproxy\&. The SIP controller is expected to send the reply to the user agent that initiated the call\&.
 .PP
-After the session has been created, the proxy listens on the ports it has allocated for that session and waits for receiving at least one UDP packet from each of the two parties participating in the call\&. Once a packet is received, the proxy fills one of two ip:port structures associated with respective stream with the source ip:port of that packet\&. When both structures are filled in, the proxy starts relaying UDP packets between the parties\&.
+After the session has been created, the proxy listens on the ports it has allocated for that session and waits for receiving at least one UDP packet from each of the two parties participating in the call\&. Once a packet is received, the proxy fills one of two IP:port structures associated with respective stream with the source IP:port of that packet\&. When both structures are filled in, the proxy starts relaying UDP packets between the parties\&.
 .PP
-The rtpproxy tracks idle time for each of existing sessions (i\&.e\&. the time within which there were no packets relayed), and automatically cleans up a sessions whose idle times exceed the idle time (60 seconds by default)\&.
+The rtpproxy tracks idle time for each of existing sessions (i\&.e\&. time interval within which there were no packets relayed), and automatically cleans up a sessions whose idle times exceed the idle time (60 seconds by default)\&.
 .SH "FILES"
 .PP
-/usr/sbin/rtpproxy
+rtpproxy
+.PP
+makeann
+.PP
+extractaudio
 .SH "LICENSE"
 .PP
-This program is licensed under the BSD license\&. See
-COPYING
-file in the rtpproxy sources for details\&.
+All components of the rtpproxy are licensed under the BSD 2\-Clause License\&. See
+LICENSE
+file in the top of source tree for details\&.
 .SH "AVAILABILITY"
 .PP
-The latest version of this program can be found at
+The latest version of this program and its components can be found at
 \m[blue]\fBhttp://www\&.rtpproxy\&.org/\fR\m[]\&.
-.SH "AUTHOR"
+.SH "AUTHORS"
 .PP
-\fBMaxim Sobolev\fR
+\fBJan Janak\fR <\&janakj@users\&.berlios\&.de\&>
+.RS 4
+Author.
+.RE
+.PP
+\fBMaksym Sobolyev\fR <\&sobomax@gmail\&.com\&>
 .RS 4
 Author.
 .RE
 .SH "COPYRIGHT"
 .br
-Copyright \(co 2006 janakj
+Copyright \(co 2006-20019 Maksym Sobolyev \m[blue]\fB<sobomax@gmail\&.com>\fR\m[]
+.br
+Copyright \(co 2006 Jan Janak \m[blue]\fB<janakj@users\&.berlios\&.de>\fR\m[]
 .br
