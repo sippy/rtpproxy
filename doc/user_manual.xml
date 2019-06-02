@@ -17,7 +17,11 @@
       <email>sobomax@gmail.com</email>
     </author>
 
-    <pubdate>16 May 2019</pubdate>
+    <author>
+      <surname>Donat Zenichev</surname>
+    </author>
+
+    <pubdate>30 May 2019</pubdate>
 
     <copyright>
       <year>2003-2019</year>
@@ -29,258 +33,529 @@
   <chapter>
     <title>Introduction</title>
 
-    <xi:include href="manpage.xml" xpointer="DESCRIPTION"
-                xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <section>
+      <title>What is RTPproxy</title>
+
+      <para>The RTPproxy is a high-performance software proxy for RTP streams
+      that can work together with Sippy B2BUA, Kamailio, OpenSIPs and SER (SIP
+      Express Router).</para>
+
+      <note>
+        <para>For the current moment the newest stable version is -
+        <emphasis>RTPproxy 2.2</emphasis></para>
+      </note>
+    </section>
 
     <section>
-      <title>Content of the Package</title>
+      <title>Backstory</title>
 
-      <para>The RTPProxy package by default provides the following
-      components:</para>
+      <para>RTPProxy was originally developed by <authorinitials>Maxim
+      Sobolyev</authorinitials> in 2003 with a purpose of VoIP calls
+      facilitation to/from SIP User Agents located behind NAT or firewalls.
+      That time, there were a few cases where direct end-to-end communication
+      between users behind the NAT was not possible. RTPProxy, in common with
+      a SIP proxy, overcomes those obstacles by acting as an intermediary
+      point for the RTP streams.</para>
 
-      <informaltable>
-        <tgroup cols="2">
-          <colspec colwidth="200*"/>
+      <para>Afterwards, the RTPProxy has become widely used by VoIP service
+      providers that are in a demand for optimizing a traffic flow in their
+      networks.</para>
 
-          <colspec colwidth="800*"/>
+      <para>Later on it became apparent that there are many other possible
+      uses of this software. It can be used in common with a signaling element
+      (SIP Proxy or SIP B2BUA) to build complex VoIP networks, to optimize a
+      traffic flow, to collect voice quality information and so on.</para>
 
-          <thead>
-            <row>
-              <entry align="center">Binary Name</entry>
+      <para>RTPproxy is now actively maintained by <emphasis role="bold">the
+      Sippy Software, Inc</emphasis>. and is available on GitHub of Sippy Labs
+      - <ulink
+      url="https://github.com/sippy/rtpproxy">https://github.com/sippy/rtpproxy</ulink></para>
+    </section>
 
-              <entry align="center">Description</entry>
-            </row>
-          </thead>
+    <section>
+      <title>Capabilities</title>
 
-          <tbody>
-            <row>
-              <entry><command>rtpproxy</command></entry>
+      <para>Originally it was designed for handling of NAT scenarios. It can
+      also act as a generic media relay, as well as a gateway for RTP sessions
+      between IPv4 and IPv6 networks.</para>
 
-              <entry>Main RTP proxy server binary (production build).</entry>
-            </row>
+      <para>It can perform number of additional functions on RTP streams,
+      including call recording, playing pre-recorded announcements, real-time
+      stream copying and RTP payload re-framing.</para>
 
-            <row>
-              <entry><command>rtpproxy_debug</command></entry>
+      <para>The RTPproxy supports some advanced features, such as remote
+      control mode, allowing a building of scalable distributed SIP VoIP
+      networks. The nathelper module included into the SIP Express Router (now
+      known as OpenSIPS or Kamailio, both are forks of SER), as well as Sippy
+      B2BUA allow using multiple RTPproxy instances running on remote machines
+      for fault-tolerance and load-balancing purposes.</para>
 
-              <entry>Main RTP proxy server binary (debug and profiling
-              build).</entry>
-            </row>
+      <para>An advanced high-capacity clustering and a load balancing is
+      available through the use of RTP Cluster middleware.</para>
 
-            <row>
-              <entry><command>makeann</command></entry>
+      <para>The software also supports MOH/pre-recorded prompts injection,
+      video relaying and RTP session recording to a local file or remote UDP
+      listener(s).</para>
+    </section>
 
-              <entry>Utility to pre-encode prompts and announcements
-              (production build).</entry>
-            </row>
+    <section>
+      <title>How it works</title>
 
-            <row>
-              <entry><command>makeann_debug</command></entry>
+      <para><emphasis role="bold"> 1. </emphasis>Firstly, when a SIP proxy
+      receives an INVITE request, it extracts a call-id from it and hands it
+      to the proxy via Unix domain socket. Then, in its turn, a proxy looks
+      for an existing session with the same id. If the session exists, it
+      returns a UDP port for that session. In case it doesn't exist, it
+      creates a new session and binds it to a first empty UDP port from the
+      range specified at the start time and returns the number of that port to
+      a SIP proxy called it. Upon receiving a reply from the proxy, SIP Proxy
+      (Sippy B2BUA, OpenSIPS or Kamailio) in its turn replaces media ip:port
+      in the SDP body, in order to point to the media proxy and then it
+      forwards a request as usually.</para>
 
-              <entry>Utility to pre-encode prompts and announcements (debug
-              and profiling build).</entry>
-            </row>
+      <para><emphasis role="bold"> 2. </emphasis>When it comes to receiving of
+      non-negative SIP reply with the SDP body, then SIP proxy again extracts
+      call-id from it and hands it to the rtpproxy. In this case the rtpproxy
+      does not allocate a new session, if it doesn't exist. But simply
+      performs a lookup among existing sessions and returns either a port
+      number if the session is found, or an error code indicating that there
+      is no session with such id. Upon receiving a positive reply from the
+      rtpproxy, SIP Proxy (Sippy B2BUA, OpenSIPS or Kamailio) replaces media
+      ip:port in the SDP body of that SIP reply, in order to point to the
+      rtpproxy and then forwards this reply as usually.</para>
 
-            <row>
-              <entry><command>extractaudio</command></entry>
+      <para><emphasis role="bold"> 3. </emphasis>After the session has been
+      created, the rtpproxy listens on the port it has allocated for that
+      session. It also waits for receiving at least one UDP packet from each
+      of two parties participating in the call. Once such packet was received,
+      the proxy fills one of two ip:port structures associated with each call,
+      using source ip:port of that packet as a value. When both structures are
+      filled in, the proxy starts relaying UDP packets between call
+      parties.</para>
 
-              <entry>Utility to convert recorded sessions into plain audio
-              files (production build).</entry>
-            </row>
-
-            <row>
-              <entry><command>extractaudio_debug</command></entry>
-
-              <entry>Utility to convert recorded sessions into plain audio
-              files (debug and profiling build).</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </informaltable>
+      <important>
+        <para> A good advantage of the RTPproxy is, that it tracks idle time
+        for each existing session (the period of time within which no packets
+        were relayed) and automatically cleans up a session, idle time of
+        which exceed the value specified at the compilation time (60 seconds
+        by default).</para>
+      </important>
     </section>
   </chapter>
 
   <chapter>
-    <title>Installation</title>
+    <title>Installation of RTPproxy</title>
+
+    <section>
+      <title>Pre-built RTPproxy</title>
+
+      <para>In case you want to use pre-built RTPproxy package, then use your
+      system's package manager to set this up:</para>
+
+      <programlisting><application>     dpkg</application> - for <productname>Debian</productname> based systems(including <productname>Ubuntu</productname>), when installing .deb packages</programlisting>
+
+      <programlisting><application><application>     apt-get</application> / <package>aptitude</package></application> - for <productname>Debian</productname> based systems (including <productname>Ubuntu</productname>), when installing from a repository</programlisting>
+
+      <programlisting><application>     rpm</application> - for <productname>CentOS</productname> when installing .rpm packages</programlisting>
+
+      <address>
+     In case you want to compile RTPproxy from sources, use the following section "Compilation from sources".
+ </address>
+    </section>
+
+    <section>
+      <title>Compilation from sources</title>
+
+      <section>
+        <title>Dependencies required for RTPproxy</title>
+
+        <para>The RTPProxy package has several optional dependencies that are
+        detected at the configure stage and an appropriate functionality is
+        enabled.</para>
+
+        <para>Those dependencies and their impact on the RTPProxy build are
+        listed below:</para>
+
+        <programlisting>     bcg729 - Enables G.729 support in several tools
+     <ulink url="https://linphone.org/releases/sources/bcg729/">https://linphone.org/releases/sources/bcg729/</ulink>
+
+     <emphasis role="bold">Affected binaries:</emphasis>
+         <emphasis>extractaudio
+         makeann</emphasis></programlisting>
+
+        <programlisting>     libsndfile - Allows decoded audio to be saved in a number of popular audio formats instead of just RAW signed-linear 16bit
+     <ulink url="http://www.mega-nerd.com/libsndfile/files/">http://www.mega-nerd.com/libsndfile/files/</ulink>
+
+ <emphasis role="bold">     Affected binaries:</emphasis>
+         <emphasis>extractaudio</emphasis></programlisting>
+
+        <programlisting>     libg722 - Enables G.722 support in several tools
+     <ulink url="https://github.com/sippy/libg722">https://github.com/sippy/libg722</ulink>
+
+     <emphasis role="bold">Affected binaries:</emphasis>
+        <emphasis>extractaudio
+        makeann</emphasis></programlisting>
+
+        <programlisting>     libsrtp - Enables decoding recordings of SRTP streams.
+     <ulink url="https://github.com/cisco/libsrtp.git">https://github.com/cisco/libsrtp.git</ulink>
+
+     <emphasis role="bold">Affected binaries:</emphasis>
+         <emphasis>extractaudio</emphasis></programlisting>
+
+        <programlisting>     libelperiodic - Required by several auxiliary tools that are used by an automated testing framework.
+                    Both shared library and python module needs to be installed into either system location or python environment.
+                    make check will fail if it's not installed.
+     <ulink url="https://github.com/sobomax/libelperiodic.git">https://github.com/sobomax/libelperiodic.git</ulink>
+
+     <emphasis role="bold">Affected binaries:</emphasis>
+         <emphasis>rtpp_notify_client.py
+         rtpp_query.py
+         getmonotime.py</emphasis></programlisting>
+
+        <programlisting>     tcpdump - Test framework requires it to capture traffic and verify PCAP decoding features. make check will fail if it's not installed.
+     <ulink url="http://www.tcpdump.org/release/">http://www.tcpdump.org/release/</ulink></programlisting>
+
+        <programlisting>     sudo - Test framework requires it to run the rtpproxy and tcpdump at elevated privileges. &lt;make check&gt; will fail if it's not installed.
+     <ulink url="http://www.sudo.ws/">http://www.sudo.ws/</ulink></programlisting>
+
+        <important>
+          <para>Do not forget about dependencies required by your
+          compiler!</para>
+
+          <para>For e.g. in case you use GCC linux compiler, you need to
+          install in advance:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>bison</para>
+            </listitem>
+
+            <listitem>
+              <para>flex</para>
+            </listitem>
+
+            <listitem>
+              <para>automake</para>
+            </listitem>
+
+            <listitem>
+              <para>GCC compiler</para>
+            </listitem>
+          </itemizedlist>
+        </important>
+      </section>
+
+      <section>
+        <title>Compilation of sources</title>
+
+        <para> Pull the latest stable version from a git master branch (into a
+        directory where you want to store compilation sources, usually it's
+        /usr/src/ ):</para>
+
+        <programlisting>     cd /usr/src
+     git clone -b master https://github.com/sippy/rtpproxy.git</programlisting>
+
+        <para> Make sure you bring rtpprpoxy git submodules:</para>
+
+        <programlisting>     git -C rtpproxy submodule update --init --recursive</programlisting>
+
+        <para>Now compile a binary file using sources gotten (you may need to
+        use <emphasis role="bold">sudo </emphasis>rights for a proper
+        compilation)</para>
+
+        <para>A sequence for users:</para>
+
+        <programlisting>     cd rtpproxy
+     ./configure
+     make clean all
+     make install</programlisting>
+
+        <para>For developers might also be useful to include &lt;make
+        check&gt; in the sequence:</para>
+
+        <programlisting>     cd rtpproxy
+     ./configure
+     make clean all
+     make check
+     make install</programlisting>
+
+        <para>After a successful compilation, you have the following
+        binaries</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>Main RTP proxy server binary - <emphasis
+            role="bold">production</emphasis> build.</para>
+          </listitem>
+        </itemizedlist>
+
+        <programlisting>     After the compilation is done, you have a binary file stored in the /usr/local/bin/ folder.
+     You can test this out, checking the version of the rtpproxy:
+     <emphasis role="bold">/usr/local/bin/rtpproxy -V</emphasis></programlisting>
+
+        <itemizedlist>
+          <listitem>
+            <para>Main RTP proxy server binary - <emphasis
+            role="bold">debug</emphasis> and profiling build.</para>
+          </listitem>
+        </itemizedlist>
+
+        <programlisting>     You will also have a second binary file for debug and profiling:
+     <emphasis role="bold">/usr/local/bin/rtpproxy_debug</emphasis></programlisting>
+
+        <para> </para>
+      </section>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Maintenance</title>
 
     <highlights>
-      <para>The following section of the manual is aimed to users that want to
-      compile and install RTPProxy from sources.</para>
+      <para>A good way to maintain your RTPproxy is to start it using a
+      certain Service Manager, such as systemd.</para>
 
-      <para>If you want to use per-built RTPProxy package, than please feel
-      free to <link linkend="CONFIGURATION">skip this chapter</link>, and
-      install your package according to your platform (<package>dpkg</package>
-      for <productname>Debian</productname>, <package>rpm</package> for
-      <productname>CentOS</productname>, <package>apt</package> for
-      <productname>Ubuntu</productname>, <package>pkg</package> for
-      <productname>FreeBSD</productname> etc).</para>
+      <para>Systemd is a latest and the most known Service Manager application
+      in most UNIX based systems:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Ubuntu 15.04 is the first version (of Ubuntu) that uses
+          systemd by default;</para>
+        </listitem>
+
+        <listitem>
+          <para>Debian 8 (Jessie) is the first version (of Debian) that uses
+          systemd by default;</para>
+        </listitem>
+
+        <listitem>
+          <para>Red Hat-based distributions are migrating to systemd as well.
+          It has been the default system and services manager in Red Hat 7,
+          CentOs7 and Fedora since the release of Fedora 15;</para>
+        </listitem>
+
+        <listitem>
+          <para>There is huge list of other distributions, that use the
+          systemd as a System Manager by default now as well (OpenSUSE, Mint,
+          Mageia etc.) .</para>
+        </listitem>
+      </itemizedlist>
     </highlights>
 
-    <section>
-      <title>Download RTPProxy</title>
+    <para>In case you have a system, that doesn't support the <emphasis
+    role="bold">systemd</emphasis>, you can use any other Service Managers as
+    you want to (for e.g. init.d start scripts in Debian systems older than
+    8th one).</para>
 
-      <para>GitHub hosts the main repository for RTPProxy. To checkout the
-      latest RTPProxy 2.2, you can run:</para>
+    <para>Link to an <emphasis role="bold">init.d start/stop
+    script</emphasis>: <ulink
+    url="https://link.here.com">https://link.here.com</ulink> (TO DO)</para>
 
-      <programlisting>$ git clone -b master https://github.com/sippy/rtpproxy.git
-$ git -C rtpproxy submodule update --init --recursive</programlisting>
-    </section>
+    <para>But, as it was said that the systemd is the most relevant solution
+    for this, because it provides the following capabilities:</para>
 
-    <section>
-      <title>Compile and Install</title>
+    <itemizedlist>
+      <listitem>
+        <para>Define a list of options in a separate environment file, and use
+        those options as a variable in the start row 'ExecStart='</para>
+      </listitem>
 
-      <orderedlist numeration="lowerroman">
-        <listitem>
-          <para>Download and install dependencies.</para>
+      <listitem>
+        <para>You're able to react on a failure of an application using a
+        special parameter 'OnFailure=' (and to send notification for
+        e.g.)</para>
+      </listitem>
 
-          <para>The RTPProxy package has several optional dependencies that
-          are detected at the configure stage and appropriate functionality is
-          enabled. Those dependencies and their effects on the RTPProxy build
-          are listed below:</para>
+      <listitem>
+        <para>You can specify a list of pre-actions to be performed, before
+        systemd launches binary file 'ExecStartPre=' (for e.g. creation of
+        /var/run/rtproxy directory and adding user/group rights to it)</para>
+      </listitem>
 
-          <informaltable>
-            <tgroup cols="4">
-              <colspec colwidth="89*"/>
+      <listitem>
+        <para>As well as you can add pre-start actions, you can perform
+        post-stop actions for cases when application stops running
+        'ExecStopPost=' (for e.g. deletion of the /var/run/rtpproxy
+        directory)</para>
+      </listitem>
 
-              <colspec colwidth="288*"/>
+      <listitem>
+        <para>You can set a policy for cases when application stops improperly
+        (not a manual stop of the application), for e.g. restarting always
+        with 'Restart=always'</para>
+      </listitem>
 
-              <colspec colwidth="170*"/>
+      <listitem>
+        <para>You may also want to add a time delay between restart attempts
+        with 'RestartSec=5'</para>
+      </listitem>
 
-              <colspec colwidth="453*"/>
+      <listitem>
+        <para>You can deal with different things related to logging or
+        syslogging (for e.g. changing of a name identifier when writing to a
+        syslog 'SyslogIdentifier=' or specifying a different logfacility level
+        with 'StandardOutput=' and 'StandardError=' )</para>
+      </listitem>
 
-              <thead>
-                <row>
-                  <entry align="center">Dependency Name</entry>
+      <listitem>
+        <para>User/Group to be used for running an application</para>
+      </listitem>
 
-                  <entry align="center">Obtained From</entry>
+      <listitem>
+        <para>and many many other things..</para>
+      </listitem>
+    </itemizedlist>
 
-                  <entry align="center">Affected Binaries</entry>
+    <para>The link to an instance of the systemd service file (for the
+    RTPproxy): <emphasis role="bold"><link linkend="CONFIGURATION">systemd
+    configuration file instance</link></emphasis> -&gt; <emphasis
+    role="bold">5 Instance of the systemd service file</emphasis></para>
 
-                  <entry align="center">Description / Notes</entry>
-                </row>
-              </thead>
+    <para>After you downloaded your systemd service file, adjust OPTIONS
+    parameters.</para>
 
-              <tbody>
-                <row>
-                  <entry><package>bcg729</package></entry>
+    <para>Set you own IP address for listening, or leave it with 0.0.0.0
+    (manual way)</para>
 
-                  <entry><ulink
-                  url="https://linphone.org/releases/sources/bcg729/">https://linphone.org/releases/sources/bcg729/</ulink></entry>
+    <programlisting>-l 0.0.0.0</programlisting>
 
-                  <entry><command>extractaudio</command>,
-                  <command>makeann</command></entry>
+    <para>You may also want to change a port range for opening ports:</para>
 
-                  <entry>Enables G.729 support in several tools.</entry>
-                </row>
+    <programlisting>-m &lt;min number&gt; -M &lt;max number&gt;
 
-                <row>
-                  <entry><package>libsndfile</package></entry>
+e.g.: -m 9000 -M 20000</programlisting>
 
-                  <entry><ulink
-                  url="http://www.mega-nerd.com/libsndfile/files/">http://www.mega-nerd.com/libsndfile/files/</ulink></entry>
+    <para>Change you log facility level if you want to:</para>
 
-                  <entry><command>extractaudio</command></entry>
+    <programlisting>-d INFO:&lt;LOG_LOCAL_NUMBER&gt;
 
-                  <entry>Allows decoded audio to be saved in a number of
-                  popular audio formats instead of just RAW signed-linear
-                  16bit.</entry>
-                </row>
+e.g.: -d INFO:LOG_LOCAL5
+      -d DBUG:LOG_LOCAL5</programlisting>
 
-                <row>
-                  <entry><package>libg722</package></entry>
+    <para>For better view of how to configure your startup line, use a <link
+    linkend="CONFIGURATION"><guibutton>Configuration
+    section</guibutton>.</link></para>
 
-                  <entry><ulink
-                  url="https://github.com/sippy/libg722">https://github.com/sippy/libg722</ulink></entry>
+    <para>After you're done with customizing of your systemd service file for
+    RTPproxy, follow this sequence to finish it:</para>
 
-                  <entry><command>extractaudio</command>,
-                  <command>makeann</command></entry>
+    <itemizedlist>
+      <listitem>
+        <para>copy it to the /lib/systemd/system/ directory</para>
+      </listitem>
 
-                  <entry>Enables G.722 support in several tools.</entry>
-                </row>
+      <listitem>
+        <para>give a symlink: bash&gt; sudo ln -s
+        /lib/systemd/system/rtpproxy.service
+        /etc/systemd/system/multi-user.target.wants/</para>
+      </listitem>
 
-                <row>
-                  <entry><package>libsrtp</package></entry>
+      <listitem>
+        <para>reload systemd configuration with: bash&gt; sudo systemctl
+        daemon-reload</para>
+      </listitem>
 
-                  <entry><ulink
-                  url="https://github.com/cisco/libsrtp.git">https://github.com/cisco/libsrtp.git</ulink></entry>
+      <listitem>
+        <para>Now you can start your RTPproxy using the commands given
+        below</para>
+      </listitem>
+    </itemizedlist>
 
-                  <entry><command>extractaudio</command></entry>
+    <para>Working with a systemd, you may need to know a list of general
+    commands to manage with your RTPproxy service, here they are:</para>
 
-                  <entry>Enables decoding recordings of SRTP streams.</entry>
-                </row>
+    <para>Start of the service:</para>
 
-                <row>
-                  <entry><package>libelperiodic</package></entry>
+    <programlisting>bash&gt; sudo systemctl start rtpproxy.service</programlisting>
 
-                  <entry><ulink
-                  url="https://github.com/sobomax/libelperiodic.git">https://github.com/sobomax/libelperiodic.git</ulink></entry>
+    <para>Stop of the service:</para>
 
-                  <entry><command>rtpp_notify_client.py</command>,
-                  <command>rtpp_query.py</command>,
-                  <command>getmonotime.py</command></entry>
+    <programlisting>bash&gt; sudo systemctl stop rtpproxy.service</programlisting>
 
-                  <entry>Required by several auxiliary tools that are used by
-                  the automated testing framework. <command>make
-                  check</command> would fail if it's not installed. Both
-                  shared library and python module needs to be installed into
-                  either system location or python environment.</entry>
-                </row>
+    <para>Restart of the service:</para>
 
-                <row>
-                  <entry><package>tcpdump</package></entry>
+    <programlisting>bash&gt; sudo systemctl restart rtpproxy.service</programlisting>
 
-                  <entry><ulink
-                  url="http://www.tcpdump.org/release/">http://www.tcpdump.org/release/</ulink></entry>
+    <para>Status of the service:</para>
 
-                  <entry>N/A</entry>
+    <programlisting>bash&gt; sudo systemctl status rtpproxy.service</programlisting>
 
-                  <entry>Test framework requires it to capture traffic and
-                  verify PCAP decoding features. <command>make check</command>
-                  would fail if it's not installed.</entry>
-                </row>
+    <para>Show systemd configuration file of the service:</para>
 
-                <row>
-                  <entry><package>sudo</package></entry>
+    <programlisting>bash&gt; sudo systemctl show rtpproxy.service</programlisting>
 
-                  <entry><ulink
-                  url="http://www.sudo.ws/">http://www.sudo.ws/</ulink></entry>
+    <para> </para>
 
-                  <entry>N/A</entry>
+    <para>To see an output after you started you RTPproxy, or even just to
+    keep a track on how it's working, you can: </para>
 
-                  <entry>Test framework requires it to run the rtpproxy and
-                  tcpdump at elevated privileges. <command>make
-                  check</command> would fail if it's not installed.</entry>
-                </row>
-              </tbody>
-            </tgroup>
-          </informaltable>
-        </listitem>
+    <para>1. Look into a journal:</para>
 
-        <listitem>
-          <para>Configure</para>
+    <programlisting>bash&gt; sudo journalctl -xe -u rtpproxy.service</programlisting>
 
-          <programlisting>$ cd rtpproxy
-$ ./configure</programlisting>
-        </listitem>
+    <para>2. You can configure logging to a separate logfile, to do this,
+    follow the manual (or you can use manual logging to a syslog file) listed
+    in the:</para>
 
-        <listitem>
-          <para>Compile</para>
+    <para><link linkend="CONFIGURATION"><emphasis role="bold">Configuration
+    section</emphasis></link> -&gt; <emphasis role="bold">4 Logging to a
+    separate file</emphasis></para>
 
-          <programlisting>$ make clean all</programlisting>
-        </listitem>
+    <para>3. You can see an output of the systemctl tool:</para>
 
-        <listitem>
-          <para>Test</para>
+    <programlisting>bash&gt; sudo systemctl status rtpproxy.service</programlisting>
 
-          <programlisting>$ make check</programlisting>
-        </listitem>
+    <important>
+      <para>Interaction of SIP proxy server with RTPproxy application is
+      supported via</para>
 
-        <listitem>
-          <para>Install</para>
+      <para>rtpproxy.sock - control socket</para>
 
-          <programlisting># make install</programlisting>
-        </listitem>
-      </orderedlist>
-    </section>
+      <para>rtpproxy_timeout.sock - a socket for timeout notifications</para>
+    </important>
+  </chapter>
+
+  <chapter>
+    <title>Content of the Package</title>
+
+    <para>The RTPProxy package by default provides the following
+    components:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">rtpproxy</emphasis> - main RTP proxy
+        server binary (production build)</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">rtpproxy_debug</emphasis> - Main RTP proxy
+        server binary (debug and profiling build)</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">makeann </emphasis>- Utility to pre-encode
+        prompts and announcements (production build)</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">makeann_debug</emphasis> - Utility to
+        pre-encode prompts and announcements (debug and profiling
+        build)</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">extractaudio </emphasis>- Utility to
+        convert recorded sessions into plain audio files (production
+        build)</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">extractaudio_debug</emphasis> - Utility to
+        convert recorded sessions into plain audio files (debug and profiling
+        build)</para>
+      </listitem>
+    </itemizedlist>
   </chapter>
 
   <chapter id="CONFIGURATION">
@@ -296,8 +571,120 @@ $ ./configure</programlisting>
 
       <para>The following command-line parameters are supported:</para>
 
-      <xi:include href="manpage.xml" xpointer="OPTIONS"
-                  xmlns:xi="http://www.w3.org/2001/XInclude"/>
+      <para><emphasis role="bold">Synopsis</emphasis></para>
+
+      <programlisting>rtpproxy [-?] [-2] [-f] [-v] [-R] [-l addr1[/addr2]] [-6 addr1[/addr2]] [-s ctrl_socket] [-t tos] [-p pidfile] [-T max_ttl] [-r rdir [-S sdir]] [-m min_port]
+          [-M max_port] [-u uname[:gname]] [-F] [-i] [-n timeout_socket] [-P] [-a] [-d log_level[:log_facility]]</programlisting>
+
+      <para><emphasis role="bold">Options</emphasis></para>
+
+      <programlisting>-?
+    Show summary of options. </programlisting>
+
+      <programlisting>-2
+    Send every RTP packet twice in sessions that use low-bitrate codecs.
+    Only packets that are smaller than 128 bytes will be sent twice. This option can improve audio quality on lossy links. </programlisting>
+
+      <programlisting>-f
+    Rtpproxy will stay in foreground mode if this option is set. </programlisting>
+
+      <programlisting>-v
+    Show version of program.</programlisting>
+
+      <programlisting>-l addr1[/addr2]
+    IPv4 listen IP address(es). You can specify either one or two addresses. If two addresses have been specified then rtpproxy will work in bridging mode.</programlisting>
+
+      <programlisting>-6 addr1[/addr2]
+    IPv6 listen IP address(es). You can specify either one or two addresses. If two addresses have been specified then rtpproxy will work in bridging mode. </programlisting>
+
+      <programlisting>-s ctrl_socket
+    This parameter configures rtpproxy control socket. The control socket is used by nathelper module of SER to create/modify/delete RTP sessions to be relayed.
+    Format of ctrl_socket is &lt;type&gt;:&lt;socket&gt;. Following types are supported: 
+    â€¢ udp: Create UDP control socket. In this mode RTPProxy will listen on UDP for control messages from SER/nathelper.
+
+    Example: -s udp:127.0.0.1:9000
+
+    IP address can be '*' in which case rtpproxy will listen on all local interfaces. If omitted port 22222 is used. 
+    Note
+    RTPProxy control protocol has no built-in security mechanisms.
+    Make sure that you protect the listening IP and port properly when using RTPProxy with UDP control socket. 
+    â€¢ udp6: Create IPv6 UDP control socket. In this mode RTPProxy will listen on UDP/IPv6 for control messages from SER/nathelper.
+
+    Example: -s udp6:::1:9000 
+    â€¢ unix: Create UNIX domain socket for control interface. In this mode SER/nathelper and RTPProxy must be running on the same host.
+    This is the default setting for both SER/nathelper and rtpproxy.
+
+    Example: -s unix:/var/run/rtpproxy.sock
+
+    Default value is /var/run/rtpproxy.sock</programlisting>
+
+      <programlisting>    -t tos 
+    Set ToS (Type of Service) in the outgoing UDP packets to this value. Default value is 0xB8.
+    Setting this parameter to -1 disables setting ToS resulting in operating system default ToS being used instead.</programlisting>
+
+      <programlisting>    -r rec_dir 
+    Directory where recorded RTP sessions will be stored.</programlisting>
+
+      <programlisting>    -S spool_dir 
+    Spool directory for RTP sessions being recorded. The file will be moved to directory configured in -r option after the session finishes. </programlisting>
+
+      <programlisting>    -R 
+    Do not record RTCP when recording an RTP session. This option is disabled (rtpproxy will record RTCP) by default. </programlisting>
+
+      <programlisting>    -p pid_file 
+    This parameter configures the name of the file where PID of running rtpproxy will be stored. Default is /var/run/rtpproxy.pid. </programlisting>
+
+      <programlisting>    -T max_ttl 
+    Limit the maximum TTL (Time To Live) of outgoing IP packets to the value of max_ttl. </programlisting>
+
+      <programlisting>    -m min_port 
+    Set lower limit on UDP ports range that the RTPproxy uses for RTP/RTCP sessions to min_port. Default is 35000. </programlisting>
+
+      <programlisting>    -M max_port 
+    Set upper limit on UDP ports range that the RTPproxy uses for RTP/RTCP sessions to max_port. Default is 65000. </programlisting>
+
+      <programlisting>    -u uname[:gname] 
+    Switch RTPproxy to UID identified by the uname and optional GID identified by gname when proxy is up and running. </programlisting>
+
+      <programlisting>    -F 
+    By default the RTPproxy will warn user if running as superuser (UID 0) in local control mode and refuse to run in remote control mode at all.
+    This switch removes the check. </programlisting>
+
+      <programlisting>    -i 
+    Enable independent timeout mode. By default, a timeout (which results in automatic destruction of the session) can only occur if no RTP packets are received
+    on any of the session's ports. This option if set varies that behaviour,
+    such that a timeout will occur if packets are still being received on one port but not the other.
+    The option should be used with caution since in some cases it's perfectly fine to have packets coming from only one side of conversation
+    (i.e. when the second party has muted its audio). </programlisting>
+
+      <programlisting>    -n timeout_socket 
+    This parameter configures the optional timeout notification socket. The socket should be created by another application, preferably before starting rtpproxy.
+    For those sessions where the timeout mechanism is enabled, notifications are sent on this socket if the session times out.
+
+    Example: -n unix:/var/run/rtpproxy_timeout.sock
+
+    There is no default value, notifications are not sent and not permitted unless a value is specified explicitly. </programlisting>
+
+      <programlisting>    -P 
+    Record sessions using PCAP file format instead of non-standard ad-hoc format.
+    The PCAP format, which is the de-facto standard for packet capturing software, has the advantage of being compatible with numerous third-party tools and utilities,
+    such as Wireshark (Ethereal) for example. The drawback of PCAP is sligtly larger overhead (extra 12 bytes for every saved RTP packet for IPv4).
+    Also, recording IPv6 sessions in PCAP format is not supported at the moment. </programlisting>
+
+      <programlisting>    -a 
+    Record all sessions going through the RTPproxy unconditionally.
+    By default the RTPproxy requires call control software (i.e. SER, OpenSER or B2BUA) to enable recording explicitly on per-session basis by sending appropriate
+    record command. </programlisting>
+
+      <programlisting>    -d log_level[:log_facility] 
+    This parameter configures the verbosity level of the log output.
+    Possible log_level values in the order from the most verboe to the least verbose are: DBUG, INFO, WARN, ERR and CRIT.
+
+    The optional log_facility parameter sets syslog(3) facility assigned to log messages.
+
+    Example: -d WARN:LOG_LOCAL5
+
+    The default level in foreground mode is is DBUG, in background - WARN and facility is LOG_DAEMON.</programlisting>
     </section>
 
     <section>
@@ -310,6 +697,112 @@ $ ./configure</programlisting>
       <title>Startup Script</title>
 
       <para>TODO</para>
+    </section>
+
+    <section>
+      <title>Logging to a separate file</title>
+
+      <itemizedlist>
+        <listitem>
+          <para>First of all you need to create a file you will use for
+          logging and give it proper permissions (according to a user/group
+          starting RTPproxy):</para>
+
+          <programlisting>touch /var/log/rtpproxy.log
+chown rtpproxy:rtpproxy /var/log/rtpproxy.log</programlisting>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para>Then define a log facility for it in rsyslog configuration
+          file (add a row at the bottom of the file) and restart rsyslog
+          server:</para>
+
+          <programlisting>vim /etc/rsyslog.d/50-default.conf
+ local5.*        /var/log/rtpproxy.log
+
+systemctl restart rsyslog.service</programlisting>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para>next step add a log rotation configuration for this log file
+          (that's a good way of handling overfilled log files):</para>
+
+          <programlisting>vim /etc/logrotate.d/rtpproxy</programlisting>
+
+          <programlisting>/var/log/rtpproxy.log {
+  missingok
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+  rotate 5
+  daily
+}</programlisting>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para>Now add a log facility level to your start row of the
+          RTPproxy:</para>
+
+          <programlisting>-d INFO:LOG_LOCAL5</programlisting>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para>Reload systemd configuration (to apply previous change) and
+          restart your RTPproxy server. Now logging should be done using new
+          output file:</para>
+
+          <programlisting>systemctl daemon reload
+
+systemctl restart rtpproxy.service</programlisting>
+        </listitem>
+      </itemizedlist>
+
+      <para> </para>
+    </section>
+
+    <section>
+      <title>Instance of the systemd service file</title>
+
+      <programlisting>[Unit]
+Description=RTPProxy media server
+After=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+PIDFile=/var/run/rtpproxy/rtpproxy.pid
+Environment='OPTIONS= -f -l 0.0.0.0 -m 10000 -M 20000 -d INFO:LOG_LOCAL5'
+
+Restart=always
+RestartSec=5
+
+ExecStartPre=-/bin/mkdir /var/run/rtpproxy
+ExecStartPre=-/bin/chown rtpproxy:rtpproxy /var/run/rtpproxy
+
+ExecStart=/usr/local/bin/rtpproxy -p /var/run/rtpproxy/rtpproxy.pid -s unix:/var/run/rtpproxy/rtpproxy.sock -u rtpproxy rtpproxy -n unix:/var/run/rtpproxy/rtpproxy_timeout.sock $OPTIONS
+ExecStop=/usr/bin/pkill -F /var/run/rtpproxy/rtpproxy.pid
+
+ExecStopPost=-/bin/rm -R /var/run/rtpproxy
+
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=rtpproxy
+SyslogFacility=local5
+
+TimeoutStartSec=10
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target</programlisting>
     </section>
   </chapter>
 </book>
