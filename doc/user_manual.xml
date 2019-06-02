@@ -134,7 +134,7 @@
       parties.</para>
 
       <important>
-        <para> A good advantage of the RTPproxy is, that it tracks idle time
+        <para>A good advantage of the RTPproxy is, that it tracks idle time
         for each existing session (the period of time within which no packets
         were relayed) and automatically cleans up a session, idle time of
         which exceed the value specified at the compilation time (60 seconds
@@ -248,14 +248,14 @@
       <section>
         <title>Compilation of sources</title>
 
-        <para> Pull the latest stable version from a git master branch (into a
+        <para>Pull the latest stable version from a git master branch (into a
         directory where you want to store compilation sources, usually it's
         /usr/src/ ):</para>
 
         <programlisting>     cd /usr/src
      git clone -b master https://github.com/sippy/rtpproxy.git</programlisting>
 
-        <para> Make sure you bring rtpprpoxy git submodules:</para>
+        <para>Make sure you bring rtpprpoxy git submodules:</para>
 
         <programlisting>     git -C rtpproxy submodule update --init --recursive</programlisting>
 
@@ -303,7 +303,7 @@
         <programlisting>     You will also have a second binary file for debug and profiling:
      <emphasis role="bold">/usr/local/bin/rtpproxy_debug</emphasis></programlisting>
 
-        <para> </para>
+        <para/>
       </section>
     </section>
   </chapter>
@@ -485,10 +485,10 @@ e.g.: -d INFO:LOG_LOCAL5
 
     <programlisting>bash&gt; sudo systemctl show rtpproxy.service</programlisting>
 
-    <para> </para>
+    <para/>
 
     <para>To see an output after you started you RTPproxy, or even just to
-    keep a track on how it's working, you can: </para>
+    keep a track on how it's working, you can:</para>
 
     <para>1. Look into a journal:</para>
 
@@ -766,7 +766,7 @@ systemctl restart rtpproxy.service</programlisting>
         </listitem>
       </itemizedlist>
 
-      <para> </para>
+      <para/>
     </section>
 
     <section>
@@ -788,7 +788,8 @@ RestartSec=5
 ExecStartPre=-/bin/mkdir /var/run/rtpproxy
 ExecStartPre=-/bin/chown rtpproxy:rtpproxy /var/run/rtpproxy
 
-ExecStart=/usr/local/bin/rtpproxy -p /var/run/rtpproxy/rtpproxy.pid -s unix:/var/run/rtpproxy/rtpproxy.sock -u rtpproxy rtpproxy -n unix:/var/run/rtpproxy/rtpproxy_timeout.sock $OPTIONS
+ExecStart=/usr/local/bin/rtpproxy -p /var/run/rtpproxy/rtpproxy.pid -s unix:/var/run/rtpproxy/rtpproxy.sock \
+ -u rtpproxy rtpproxy -n unix:/var/run/rtpproxy/rtpproxy_timeout.sock $OPTIONS
 ExecStop=/usr/bin/pkill -F /var/run/rtpproxy/rtpproxy.pid
 
 ExecStopPost=-/bin/rm -R /var/run/rtpproxy
