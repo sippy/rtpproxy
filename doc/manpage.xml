@@ -47,14 +47,14 @@
       &sobomax_emtag;
     </author>
 
-    <copyright>
+    <copyright id="c.sobomax">
       <year>2006-20019</year>
 
       <holder>&dhfirstname; &dhsurname; <ulink
       url="mailto:sobomax@gmail.com">&lt;&sobomax_email;&gt;</ulink></holder>
     </copyright>
 
-    <copyright>
+    <copyright id="c.janjanak">
       <year>2006</year>
 
       <holder>&janakj_firstname; &janakj_surname; <ulink
@@ -77,7 +77,7 @@
   </refnamediv>
 
   <refsynopsisdiv>
-    <cmdsynopsis>
+    <cmdsynopsis id="SYNOPSIS">
       <command>&dhpackage;</command>
 
       <!-- TODO "N:c:" -->
