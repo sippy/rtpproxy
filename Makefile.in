@@ -89,7 +89,9 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_compile_check_sizeof.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
+	$(top_srcdir)/m4/ax_compile_check_sizeof.m4 \
+	$(top_srcdir)/m4/ax_prog_xsltproc.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
 	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
@@ -190,7 +192,7 @@ ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
 DIST_SUBDIRS = libexecinfo libucl makeann modules libelperiodic/src \
-	src pertools tests extractaudio
+	src pertools tests extractaudio doc
 am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in \
 	$(top_srcdir)/python/sippy_lite/sippy/Time/clock_dtime.py.in \
 	AUTHORS ChangeLog INSTALL NEWS compile config.guess config.sub \
@@ -265,6 +267,7 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
+HAVE_FOP = @HAVE_FOP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -314,6 +317,8 @@ SHELL = @SHELL@
 SIZEOF_TIME_T = @SIZEOF_TIME_T@
 STRIP = @STRIP@
 VERSION = @VERSION@
+XSLTPROC = @XSLTPROC@
+XSLTPROC_FLAGS = @XSLTPROC_FLAGS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -373,8 +378,9 @@ AUTOMAKE_OPTIONS = foreign
 @BUILD_ELPERIODIC_TRUE@SUBD_ELP = libelperiodic/src
 @BUILD_EXTRACTAUDIO_TRUE@SUBD_EAUD = extractaudio
 @BUILD_UDP_CONTENTION_TRUE@SUBD_UDCNT = pertools
+@BUILD_DOCS_TRUE@SUBD_DOCS = doc
 SUBDIRS = libexecinfo libucl makeann $(SUBD_MOD) $(SUBD_ELP) src $(SUBD_UDCNT) tests \
-  $(SUBD_EAUD)
+  $(SUBD_EAUD) ${SUBD_DOCS}
 
 dist_man_MANS = rtpproxy.8
 EXTRA_DIST = README.remote doc rpm/rtpproxy.init rpm/rtpproxy.spec \
@@ -900,8 +906,8 @@ uninstall-man: uninstall-man8
 .PRECIOUS: Makefile
 
 
-rtpproxy.8: doc/manpage.xml
-	xsltproc /usr/local/share/xsl/docbook/manpages/docbook.xsl doc/manpage.xml
+@BUILD_DOCS_TRUE@rtpproxy.8: doc/manpage.xml
+@BUILD_DOCS_TRUE@	${XSLTPROC} ${XSLTPROC_FLAGS} http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl doc/manpage.xml
 
 update_autosrc:
 	${MAKE} -C src ${.TARGET}
