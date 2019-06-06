@@ -32,11 +32,14 @@ after_success:
     fi
 deploy:
   provider: pages
-  file: doc/user_manual.html
+  condition: $CC == "gcc"
+  file: doc/*.html
+  file_glob: true
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
   keep_history: true
-  repo: sobomax/rtptestdoc.git
+  repo: sobomax/rtptestdoc
+  target_branch: $TRAVIS_BRANCH
   on:
     branch: master
 
