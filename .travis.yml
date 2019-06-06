@@ -13,7 +13,7 @@ addons:
       - ./doc/user_manual.html
       - ./doc/release_info.html
     target_paths:
-      - /$TRAVIS_BRANCH/
+      - /master/
 before_install:
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
     - sudo apt-get -y install python3-pip python-dev
