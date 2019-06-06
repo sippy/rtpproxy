@@ -278,6 +278,15 @@ AC_LINK_IFELSE(
    [AC_MSG_RESULT([no])]
 )
 
+
+# <DocBook & friends>
+AX_CHECK_DOCBOOK_DTD(4.5)
+if test "x$HAVE_DOCBOOK_DTD_4_5" = "xyes"
+then
+  AC_CHECK_PROG(HAVE_FOP, fop, yes)
+fi
+# </DocBook & friends>
+
 AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
 AM_CONDITIONAL(BUILD_MODULES, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
@@ -286,12 +295,13 @@ AM_CONDITIONAL(BUILD_CRYPTO, [test "${LIBS_SRTP}" != ""])
 AM_CONDITIONAL(BUILD_LOG_STAND, [test "${LIBS_SIPLOG}" = ""])
 AM_CONDITIONAL(BUILD_UDP_CONTENTION, [test "${ENABLE_UDP_CONTENTION}" = 1])
 AM_CONDITIONAL(BUILD_OBJCK, [test "${ENABLE_OBJCK}" = 1])
+AM_CONDITIONAL(BUILD_DOCS, [test "x${HAVE_DOCBOOK_DTD_4_5}" = "xyes" ])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
  modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile
  pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile
- python/sippy_lite/sippy/Time/clock_dtime.py])
+ python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile])
 
 AM_COND_IF([BUILD_ELPERIODIC], [AC_CONFIG_SUBDIRS([libelperiodic])])
 
