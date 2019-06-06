@@ -36,7 +36,7 @@ deploy:
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
   keep_history: true
-  repo: https://github.com/sobomax/rtptestdoc.git
+  repo: sobomax/rtptestdoc.git
   on:
     branch: master
 
