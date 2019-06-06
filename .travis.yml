@@ -7,6 +7,11 @@ compiler:
 python:
   - "3.6"
 sudo: required
+addons:
+  artifacts: true
+    paths:
+      - ./doc/user_manual.html
+      - ./doc/release_info.html
 before_install:
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
     - sudo apt-get -y install python3-pip python-dev
