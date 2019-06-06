@@ -30,5 +30,18 @@ after_success:
     then
       sh -x ./scripts/submit-coverage.sh ;
     fi
+deploy:
+  provider: pages
+  condition: $CC == "gcc"
+  file: doc/*.html
+  file_glob: true
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  keep_history: true
+  repo: sobomax/rtptestdoc
+  target_branch: $TRAVIS_BRANCH
+  on:
+    branch: master
+
 notifications:
   webhooks: https://coveralls.io/webhook
