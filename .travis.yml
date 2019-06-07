@@ -39,6 +39,7 @@ deploy:
   api_key: $GITHUB_TOKEN
   repo: sobomax/rtptestdoc
   release-number: v2.2
+  target_commitish: ${TRAVIS_COMMIT}
   prerelease: true
   on:
     branch: master
