@@ -33,6 +33,7 @@ script:
 deploy:
   provider: pages
   condition: $CC == "gcc"
+  local_dir: doc
   file: doc/user_manual.xml doc/release_info.xml
 #  file_glob: true
   skip_cleanup: true
