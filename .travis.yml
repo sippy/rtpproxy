@@ -39,6 +39,7 @@ deploy:
   keep_history: true
   repo: sobomax/rtptestdoc
   target_branch: $TRAVIS_BRANCH
+  committer_from_gh: true
   on:
     branch: master
   on:
