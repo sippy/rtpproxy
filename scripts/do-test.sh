@@ -14,9 +14,9 @@ sudo iptables -L INPUT
 sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
-./configure
-make
-make clean
+##./configure
+##make
+##make clean
 #sudo DEBIAN_FRONTEND=noninteractive apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
  install -y libgsm1-dev tcpdump curl wireshark-common gdb xsltproc fop
@@ -56,8 +56,8 @@ sudo ldconfig
 autoreconf --force --install --verbose
 ./configure
 make clean all
-./configure --enable-coverage
-make clean all
+##./configure --enable-coverage
+##make clean all
 
 cd deps
 git clone git://github.com/sobomax/libelperiodic.git
