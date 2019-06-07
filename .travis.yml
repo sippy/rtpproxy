@@ -32,7 +32,7 @@ script:
 #    fi
 deploy:
   provider: releases
-  file: docdeploy/*.html
+  file: docdeploy/${TRAVIS_BRANCH}/*.html
   file_glob: true
   overwrite: true
   skip_cleanup: true
