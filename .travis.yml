@@ -31,15 +31,15 @@ script:
 #      sh -x ./scripts/submit-coverage.sh ;
 #    fi
 deploy:
-  provider: pages
-  condition: $CC == "gcc"
-  local_dir: docdeploy
+  provider: releases
+  file: docdeploy/*.html
+  file_glob: true
+  overwrite: true
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
-  keep_history: true
   repo: sobomax/rtptestdoc
-  target_branch: $TRAVIS_BRANCH
-  committer_from_gh: true
+  release-number: v2.2
+  prerelease: true
   on:
     branch: master
   on:
