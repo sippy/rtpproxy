@@ -17,5 +17,26 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew"
 
 ./configure
 make -C doc clean all
-mkdir -p docdeploy/${TRAVIS_BRANCH}
-cp doc/*.html docdeploy/${TRAVIS_BRANCH}
+
+DDP_REPO_SLUG=sobomax/docdeploy
+DDP_SDIR=docdeploy
+DDP_GIT="git -C ${DDP_SDIR}"
+git clone https://${GITHUB_TOKEN}@github.com/${DDP_REPO_SLUG}.git ${DDP_SDIR}
+for f in doc/*.html
+do
+  dname="`basename ${f}`"
+  DDP_PDIR="doc/${TRAVIS_BRANCH}"
+  DDP_PTH="${DDP_PDIR}/${dname}"
+  DDP_TGT="${DDP_SDIR}/${DDP_PTH}"
+  DDP_TGTDIR="${DDP_SDIR}/${DDP_PDIR}"
+  if [ -e "${DDP_TGT}" ]
+  then
+    ${DDP_GIT} rm "${DDP_PTH}"
+  fi
+  if [ ! -e "${DDP_TGTDIR}" ]
+  then
+    mkdir -p "${DDP_TGTDIR}"
+  fi
+  cp ${f} "${DDP_TGT}"
+  ${DDP_GIT} add "${DDP_PTH}"
+done

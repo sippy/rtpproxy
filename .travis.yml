@@ -30,22 +30,20 @@ script:
 #    then
 #      sh -x ./scripts/submit-coverage.sh ;
 #    fi
-deploy:
-  provider: releases
-  file: docdeploy/${TRAVIS_BRANCH}/*.html
-  file_glob: true
-  overwrite: true
-  skip_cleanup: true
-  api_key: $GITHUB_TOKEN
-  repo: sobomax/rtptestdoc
-  release-number: v2.2
-  tag_name: v2.2
-  target_commitish: ${TRAVIS_COMMIT}
-  prerelease: true
-  on:
-    branch: master
-  on:
-    branch: docdeploy
+##deploy:
+##  provider: releases
+##  file: docdeploy/${TRAVIS_BRANCH}/*.html
+##  file_glob: true
+##  overwrite: true
+##  skip_cleanup: true
+##  api_key: $GITHUB_TOKEN
+##  repo: sobomax/rtptestdoc
+##  release-number: v2.2
+##  tag_name: v2.2
+##  target_commitish: ${TRAVIS_COMMIT}
+##  prerelease: true
+##  on:
+##    tag: false
 
 notifications:
   webhooks: https://coveralls.io/webhook
