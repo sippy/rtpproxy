@@ -33,8 +33,8 @@ script:
 deploy:
   provider: pages
   condition: $CC == "gcc"
-  file: doc/*.html
-  file_glob: true
+  file: doc/user_manual.xml doc/release_info.xml
+#  file_glob: true
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
   keep_history: true
