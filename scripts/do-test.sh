@@ -21,11 +21,11 @@ make -C doc clean all
 DDP_REPO_SLUG=sobomax/rtptestdoc
 DDP_SDIR=docdeploy
 DDP_GIT="git -C ${DDP_SDIR}"
+DDP_PDIR="doc/${TRAVIS_BRANCH}"
 git clone https://${GITHUB_TOKEN}@github.com/${DDP_REPO_SLUG}.git ${DDP_SDIR}
 for f in doc/*.html
 do
   dname="`basename ${f}`"
-  DDP_PDIR="doc/${TRAVIS_BRANCH}"
   DDP_PTH="${DDP_PDIR}/${dname}"
   DDP_TGT="${DDP_SDIR}/${DDP_PTH}"
   DDP_TGTDIR="${DDP_SDIR}/${DDP_PDIR}"
@@ -40,3 +40,5 @@ do
   cp ${f} "${DDP_TGT}"
   ${DDP_GIT} add "${DDP_PTH}"
 done
+${DDP_GIT} commit -m "Re-gen by job {TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
+ ${DDP_PDIR}
