@@ -33,9 +33,7 @@ script:
 deploy:
   provider: pages
   condition: $CC == "gcc"
-  local_dir: doc
-  file: doc/user_manual.xml doc/release_info.xml
-#  file_glob: true
+  local_dir: docdeploy
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
   keep_history: true
