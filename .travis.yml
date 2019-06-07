@@ -42,6 +42,8 @@ deploy:
   target_branch: $TRAVIS_BRANCH
   on:
     branch: master
+  on:
+    branch: docdeploy
 
 notifications:
   webhooks: https://coveralls.io/webhook
