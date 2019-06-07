@@ -2,7 +2,7 @@
 dist: xenial
 language: c
 compiler:
-  - clang
+#  - clang
   - gcc
 python:
   - "3.6"
