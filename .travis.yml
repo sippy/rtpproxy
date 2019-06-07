@@ -21,15 +21,15 @@ env:
     - COVERALLS_PARALLEL=true
 script:
     sh -x ./scripts/do-test.sh
-after_success:
-  - for f in `make -f tests/Makefile list_tests`;
-    do
-      cat tests/${f}.log;
-    done
-  - if [ "${CC}" = "gcc" ];
-    then
-      sh -x ./scripts/submit-coverage.sh ;
-    fi
+#after_success:
+#  - for f in `make -f tests/Makefile list_tests`;
+#    do
+#      cat tests/${f}.log;
+#    done
+#  - if [ "${CC}" = "gcc" ];
+#    then
+#      sh -x ./scripts/submit-coverage.sh ;
+#    fi
 deploy:
   provider: pages
   condition: $CC == "gcc"
