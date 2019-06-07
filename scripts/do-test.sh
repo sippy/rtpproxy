@@ -18,7 +18,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew"
 ./configure
 make -C doc clean all
 
-DDP_REPO_SLUG=sobomax/docdeploy
+DDP_REPO_SLUG=sobomax/rtptestdoc
 DDP_SDIR=docdeploy
 DDP_GIT="git -C ${DDP_SDIR}"
 git clone https://${GITHUB_TOKEN}@github.com/${DDP_REPO_SLUG}.git ${DDP_SDIR}
