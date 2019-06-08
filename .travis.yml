@@ -19,8 +19,11 @@ before_install:
 env:
   global:
     - COVERALLS_PARALLEL=true
+env:
+  - BUILD_TYPE=do-test
+  - BUILD_TYPE=do-docdeploy
 script:
-    sh -x ./scripts/do-test.sh
+    sh -x ./scripts/${BUILD_TYPE}.sh
 after_success:
   - for f in `make -f tests/Makefile list_tests`;
     do
