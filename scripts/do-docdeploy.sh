@@ -15,7 +15,9 @@ DDP_REPO_SLUG=sobomax/rtptestdoc
 DDP_SDIR=docdeploy
 DDP_GIT="git -C ${DDP_SDIR}"
 DDP_PDIR="doc/${TRAVIS_BRANCH}"
-git clone https://${GITHUB_TOKEN}@github.com/${DDP_REPO_SLUG}.git ${DDP_SDIR}
+DDP_BRANCH="gh-pages"
+git clone -b "${DDP_BRANCH}" --single-branch --depth 1 \
+ https://${GITHUB_TOKEN}@github.com/${DDP_REPO_SLUG}.git ${DDP_SDIR}
 for f in doc/*.html
 do
   dname="`basename ${f}`"
@@ -34,7 +36,7 @@ do
   tidy -qmi "${DDP_TGT}" || true
   ${DDP_GIT} add "${DDP_PTH}"
 done
-${DDP_GIT} diff origin/master | wc -l
+${DDP_GIT} diff origin/${DDP_BRANCH} | wc -l
 ${DDP_GIT} commit -m "Re-gen by job ${TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
  --author="${AUTHOR_NAME} <${COMMITTER_EMAIL}>" ${DDP_PDIR}
 ${DDP_GIT} push
