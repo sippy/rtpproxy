@@ -14,8 +14,8 @@ AUTHOR_NAME="`git log -1 ${TRAVIS_COMMIT} --pretty="%aN"`"
 DDP_REPO_SLUG=sobomax/rtptestdoc
 DDP_SDIR=docdeploy
 DDP_GIT="git -C ${DDP_SDIR}"
-DDP_PDIR="doc/${TRAVIS_BRANCH}"
-DDP_BRANCH="gh-pages"
+DDP_PDIR="public/doc/${TRAVIS_BRANCH}"
+DDP_BRANCH="master"
 git clone -b "${DDP_BRANCH}" --single-branch --depth 1 \
  https://${GITHUB_TOKEN}@github.com/${DDP_REPO_SLUG}.git ${DDP_SDIR}
 for f in doc/*.html
