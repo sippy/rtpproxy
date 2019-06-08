@@ -41,7 +41,7 @@ do
     mkdir -p "${DDP_TGTDIR}"
   fi
   cp ${f} "${DDP_TGT}"
-  tidy -mi "${DDP_PTH}"
+  tidy -mi "${DDP_TGT}"
   ${DDP_GIT} add "${DDP_PTH}"
 done
 ${DDP_GIT} commit -m "Re-gen by job ${TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
