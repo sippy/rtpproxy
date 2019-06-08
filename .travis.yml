@@ -19,23 +19,24 @@ before_install:
 env:
   global:
     - COVERALLS_PARALLEL=true
+script: sh -x ./scripts/do-test.sh
+after_success:
+  - for f in `make -f tests/Makefile list_tests`;
+    do
+      cat tests/${f}.log;
+    done
+  - if [ "${CC}" = "gcc" ];
+    then
+      sh -x ./scripts/submit-coverage.sh ;
+    fi
+notifications:
+  webhooks: https://coveralls.io/webhook
+
+stages:
+  - name: Deploy Documentation
+    if: branch = master AND type != push
 jobs:
   include:
-    - stage: Unit Tests
-      env: COVERALLS_PARALLEL=true
-      install: ./install_unit_tests_dependencies
-      script: sh -x ./scripts/do-test.sh
-      after_success:
-        - for f in `make -f tests/Makefile list_tests`;
-          do
-            cat tests/${f}.log;
-          done
-        - if [ "${CC}" = "gcc" -a "${BUILD_TYPE}" = "do-test" ];
-          then
-            sh -x ./scripts/submit-coverage.sh ;
-          fi
-      notifications:
-        webhooks: https://coveralls.io/webhook
     - stage: Deploy Documentation
-      name: Deploy Documentation to the web site repo
+      name: Deploy Documentation to the rtpproxy.org repo
       script: sh -x ./scripts/do-docdeploy.sh
