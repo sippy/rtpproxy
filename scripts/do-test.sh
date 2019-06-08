@@ -18,6 +18,9 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew"
 ./configure
 make -C doc clean all
 
+COMMITTER_EMAIL="`git log -1 ${TRAVIS_COMMIT} --pretty="%cE"`"
+AUTHOR_NAME="`git log -1 ${TRAVIS_COMMIT} --pretty="%aN"`"
+
 DDP_REPO_SLUG=sobomax/rtptestdoc
 DDP_SDIR=docdeploy
 DDP_GIT="git -C ${DDP_SDIR}"
@@ -41,5 +44,5 @@ do
   ${DDP_GIT} add "${DDP_PTH}"
 done
 ${DDP_GIT} commit -m "Re-gen by job {TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
- ${DDP_PDIR}
+ --author="${AUTHOR_NAME} <${COMMITTER_EMAIL}>" ${DDP_PDIR}
 ${DDP_GIT} push
