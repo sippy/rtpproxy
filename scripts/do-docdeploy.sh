@@ -11,7 +11,7 @@ make -C doc clean all
 COMMITTER_EMAIL="`git log -1 ${TRAVIS_COMMIT} --pretty="%cE"`"
 AUTHOR_NAME="`git log -1 ${TRAVIS_COMMIT} --pretty="%aN"`"
 
-DDP_REPO_SLUG=sobomax/rtptestdoc
+DDP_REPO_SLUG=sippy/www.rtpproxy.org
 DDP_SDIR=docdeploy
 DDP_GIT="git -C ${DDP_SDIR}"
 DDP_PDIR="public/doc/${TRAVIS_BRANCH}"
