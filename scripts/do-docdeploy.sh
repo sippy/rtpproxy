@@ -2,16 +2,6 @@
 
 set -e
 
-uname -a
-which ${CC}
-${CC} --version
-python3 --version
-sudo iptables -L OUTPUT
-sudo iptables -L INPUT
-sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
-echo -n "/proc/sys/kernel/core_pattern: "
-cat /proc/sys/kernel/core_pattern
-
 sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
  install -y xsltproc fop tidy
 
@@ -44,6 +34,7 @@ do
   tidy -qmi "${DDP_TGT}" || true
   ${DDP_GIT} add "${DDP_PTH}"
 done
+${DDP_GIT} diff origin/master | wc -l
 ${DDP_GIT} commit -m "Re-gen by job ${TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
  --author="${AUTHOR_NAME} <${COMMITTER_EMAIL}>" ${DDP_PDIR}
 ${DDP_GIT} push
