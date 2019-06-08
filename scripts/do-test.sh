@@ -43,6 +43,6 @@ do
   cp ${f} "${DDP_TGT}"
   ${DDP_GIT} add "${DDP_PTH}"
 done
-${DDP_GIT} commit -m "Re-gen by job {TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
+${DDP_GIT} commit -m "Re-gen by job ${TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
  --author="${AUTHOR_NAME} <${COMMITTER_EMAIL}>" ${DDP_PDIR}
 ${DDP_GIT} push
