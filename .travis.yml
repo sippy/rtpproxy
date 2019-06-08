@@ -40,3 +40,4 @@ jobs:
     - stage: Deploy Documentation
       name: Deploy Documentation to the rtpproxy.org repo
       script: sh -x ./scripts/do-docdeploy.sh
+      after_success:
