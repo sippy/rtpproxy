@@ -42,3 +42,4 @@ do
 done
 ${DDP_GIT} commit -m "Re-gen by job {TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
  ${DDP_PDIR}
+${DDP_GIT} push
