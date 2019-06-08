@@ -13,7 +13,7 @@ echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
 
 sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
- install -y xsltproc fop
+ install -y xsltproc fop tidy
 
 ./configure
 make -C doc clean all
@@ -41,6 +41,7 @@ do
     mkdir -p "${DDP_TGTDIR}"
   fi
   cp ${f} "${DDP_TGT}"
+  tidy -mi "${DDP_PTH}"
   ${DDP_GIT} add "${DDP_PTH}"
 done
 ${DDP_GIT} commit -m "Re-gen by job ${TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
