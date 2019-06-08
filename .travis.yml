@@ -34,7 +34,7 @@ notifications:
 
 stages:
   - name: Deploy Documentation
-    if: branch = master AND type != push
+    if: branch = master AND type = push
 jobs:
   include:
     - stage: Deploy Documentation
