@@ -33,7 +33,7 @@ do
     mkdir -p "${DDP_TGTDIR}"
   fi
   cp ${f} "${DDP_TGT}"
-  tidy -qmi "${DDP_TGT}" || true
+  tidy -utf8 -qmi "${DDP_TGT}" || true
   ${DDP_GIT} add "${DDP_PTH}"
 done
 ${DDP_GIT} diff origin/${DDP_BRANCH} | wc -l
