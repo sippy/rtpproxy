@@ -14,7 +14,7 @@ AUTHOR_NAME="`git log -1 ${TRAVIS_COMMIT} --pretty="%aN"`"
 DDP_REPO_SLUG=sippy/www.rtpproxy.org
 DDP_SDIR=docdeploy
 DDP_GIT="git -C ${DDP_SDIR}"
-DDP_PDIR="public/doc/${TRAVIS_BRANCH}"
+DDP_PDIR="static/doc/${TRAVIS_BRANCH}"
 DDP_BRANCH="master"
 git clone -b "${DDP_BRANCH}" --single-branch --depth 1 \
  https://${GITHUB_TOKEN}@github.com/${DDP_REPO_SLUG}.git ${DDP_SDIR}
