@@ -334,27 +334,15 @@
         </itemizedlist>
 
         <important>
-          <para>Do not forget about dependencies required by your
-          compiler!</para>
-
-          <para>For e.g. in case you use GCC linux compiler, you need to
-          install in advance:</para>
-
+          <para>Do not forget about your compiler! To build this version of the
+             RTPProxy you would need either:</para>
           <itemizedlist>
             <listitem>
-              <para>bison</para>
+              <para>GCC compiler, version 5.0 or higher, or</para>
             </listitem>
 
             <listitem>
-              <para>flex</para>
-            </listitem>
-
-            <listitem>
-              <para>automake</para>
-            </listitem>
-
-            <listitem>
-              <para>GCC compiler</para>
+              <para>Clang compiler, version 6.0 or higher</para>
             </listitem>
           </itemizedlist>
         </important>
