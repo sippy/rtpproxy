@@ -271,7 +271,10 @@ rtpp_csock_addrlen(struct rtpp_ctrl_sock *ctrl_sock)
     case RTPC_UDP6:
     case RTPC_TCP6:
         return (sizeof(struct sockaddr_in6));
-
+            
+    case RTPC_SYSD:
+        return (sizeof(struct sockaddr_un));
+            
     default:
         break;
     }
