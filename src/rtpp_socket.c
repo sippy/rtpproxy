@@ -273,6 +273,10 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtim
         packet->laddr = laddr;
         packet->lport = port;
     }
+    if (dtime == NULL) {
+        goto out;
+    }
+
     if (!timevaliszero(&rtime)) {
         packet->rtime.wall = timeval2dtime(&rtime);
     } else {
@@ -281,6 +285,7 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtim
     RTPP_DBG_ASSERT(packet->rtime.wall > 0);
     packet->rtime.mono = dtime->mono;
 
+out:
     return (packet);
 }
 
