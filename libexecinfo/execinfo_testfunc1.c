@@ -25,6 +25,7 @@
  *
  */
 
+#define _BSD_SOURCE
 #include <stdlib.h>
 
 #include "execinfo_testfunc1.h"

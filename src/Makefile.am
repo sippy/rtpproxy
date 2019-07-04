@@ -96,7 +96,8 @@ rtpp_rzmalloc_perf_CFLAGS = $(EXTRA_CFLAGS)
 rtpp_rzmalloc_perf_CPPFLAGS = $(EXTRA_CPPFLAGS)
 
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
-  -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include
+  -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \
+  -D_BSD_SOURCE
 EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
 
 EXTRA_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR)
@@ -113,7 +114,7 @@ rtpproxy_CFLAGS=$(EXTRA_CFLAGS)
 rtpproxy_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS)
 
 rtpp_objck_perf_CFLAGS=$(EXTRA_CFLAGS)
-rtpp_objck_perf_CPPFLAGS=$(EXTRA_CPPFLAGS)
+rtpp_objck_perf_CPPFLAGS=$(EXTRA_CPPFLAGS) -D_BSD_SOURCE
 rtpp_objck_CFLAGS=$(rtpp_objck_perf_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 rtpp_objck_CPPFLAGS=$(rtpp_objck_perf_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck
 

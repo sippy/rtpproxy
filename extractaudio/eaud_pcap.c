@@ -25,6 +25,10 @@
  *
  */
 
+#ifndef __FAVOR_BSD
+#define __FAVOR_BSD
+#endif /* __FAVOR_BSD */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

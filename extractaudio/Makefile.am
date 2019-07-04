@@ -18,7 +18,7 @@ extractaudio_SOURCES=extractaudio.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c 
   $(rtpp_netaddr_AUTOSRCS) eaud_oformats.c eaud_oformats.h rtpp_scan_pcap.c rtpp_scan_pcap.h \
   eaud_pcap.c eaud_pcap.h eaud_substreams.c eaud_substreams.h
 extractaudio_LDADD=@LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
-extractaudio_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR)
+extractaudio_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) -D_BSD_SOURCE
 if BUILD_CRYPTO
 extractaudio_SOURCES+=eaud_crypto.c eaud_crypto.h srtp_util.c srtp_util.h
 extractaudio_LDADD+=@LIBS_SRTP@
