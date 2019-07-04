@@ -241,8 +241,11 @@ rtpproxy_stop() {
     if [ ${_i} -eq 3 ]
     then
       kill -KILL `cat ${TMP_PIDFILE}`
-      cat ${TMP_LOGFILE} >&2
-      rm ${TMP_LOGFILE}
+      if [ "${TMP_LOGFILE}" != "/dev/null" ]
+      then
+        cat "${TMP_LOGFILE}" >&2
+        rm "${TMP_LOGFILE}"
+      fi
       false
       return
     fi

@@ -13,7 +13,7 @@ __beforeexit_cleanup()
   then
     rtpproxy_stop TERM
   fi
-  if [ -f "${TMP_LOGFILE}" ]
+  if [ -f "${TMP_LOGFILE}" -a "${TMP_LOGFILE}" != "/dev/null" ]
   then
     cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
     rm "${TMP_LOGFILE}"
