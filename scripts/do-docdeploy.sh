@@ -2,12 +2,6 @@
 
 set -e
 
-sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
- install -y xsltproc fop tidy
-
-./configure
-make -C doc clean all
-
 COMMITTER_EMAIL="`git log -1 ${TRAVIS_COMMIT} --pretty="%cE"`"
 AUTHOR_NAME="`git log -1 ${TRAVIS_COMMIT} --pretty="%aN"`"
 

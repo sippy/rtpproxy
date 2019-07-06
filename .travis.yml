@@ -33,10 +33,14 @@ notifications:
   webhooks: https://coveralls.io/webhook
 
 stages:
+  - name: Build Documentation
   - name: Deploy Documentation
     if: branch = master AND type = push
 jobs:
   include:
+    - stage: Build Documentation
+      name: Build Documentation
+      script: sh -x ./scripts/do-docbuild.sh
     - stage: Deploy Documentation
       name: Deploy Documentation to the rtpproxy.org repo
       script: sh -x ./scripts/do-docdeploy.sh
