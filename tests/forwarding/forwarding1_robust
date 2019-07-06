@@ -1,0 +1,31 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+NTRIES=4
+
+i=0
+testok=0
+fcmd="${BASEDIR}/forwarding/forwarding1"
+while [ ${i} -lt ${NTRIES} ]
+do
+  echo -n "Running ${fcmd}, try ${i} of ${NTRIES}..."
+  if ${fcmd} > forwarding1_robust.rout 2>&1
+  then
+    testok=1
+    echo " success"
+    break
+  fi
+  echo " failure"
+  if [ ${i} == 0 ]
+  then
+    fcmd="env GCOV_PREFIX=/tmp ${fcmd}"
+  fi
+  i=$((${i} + 1))
+done
+cat forwarding1_robust.rout
+if [ ${testok} -eq 0 ]
+then
+  forcefail 1 "forwarding1 has failed after ${NTRIES}"
+fi

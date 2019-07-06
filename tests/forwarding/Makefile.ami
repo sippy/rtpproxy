@@ -4,7 +4,7 @@ forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
   forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
   forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
   forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog \
-  forwarding1.*.eout rtpproxy_acct.csv
-TESTS += forwarding/forwarding1
+  forwarding1.*.eout rtpproxy_acct.csv forwarding1_robust.rout
+TESTS += forwarding/forwarding1_robust
 CLEANFILES += ${forwarding_CLEANFILES}
 EXTRA_DIST += ${forwarding_EXTRA_DIST}
