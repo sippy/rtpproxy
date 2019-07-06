@@ -34,14 +34,18 @@ notifications:
 
 stages:
   - name: Build Documentation
-  - name: Deploy Documentation
+    if: branch != master OR type != push
+  - name: Build & Deploy Documentation
     if: branch = master AND type = push
 jobs:
   include:
     - stage: Build Documentation
       name: Build Documentation
       script: sh -x ./scripts/do-docbuild.sh
-    - stage: Deploy Documentation
-      name: Deploy Documentation to the rtpproxy.org repo
-      script: sh -x ./scripts/do-docdeploy.sh
+      after_success:
+    - stage: Build & Deploy Documentation
+      name: Build Documentation and Deploy it to the rtpproxy.org repo
+      script:
+        - sh -x ./scripts/do-docbuild.sh
+        - sh -x ./scripts/do-docdeploy.sh
       after_success:
