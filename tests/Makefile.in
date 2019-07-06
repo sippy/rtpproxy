@@ -481,7 +481,7 @@ TESTS = autosrc/chk_up2date makeann/makeann1 unittests/rtcp2json1 \
 	rtp_analyze/rtp_analyze1 extractaudio/badargs \
 	extractaudio/extractaudio1 startstop/badargs \
 	startstop/startstop1 basic_versions/basic_versions1 \
-	command_parser/command_parser1 forwarding/forwarding1 \
+	command_parser/command_parser1 forwarding/forwarding1_robust \
 	memdeb/glitch1 memdeb/glitch_libucl1 \
 	memdeb/glitch_extractaudio memdeb/glitch_startstop1 \
 	memdeb/glitch_basic_versions1 memdeb/glitch_command_parser1 \
@@ -539,7 +539,7 @@ forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
   forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
   forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
   forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog \
-  forwarding1.*.eout rtpproxy_acct.csv
+  forwarding1.*.eout rtpproxy_acct.csv forwarding1_robust.rout
 
 memdeb_EXTRA_DIST = memdeb
 memdeb_CLEANFILES = glitch1.ncout glitch1.nclog
@@ -867,9 +867,9 @@ command_parser/command_parser1.log: command_parser/command_parser1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-forwarding/forwarding1.log: forwarding/forwarding1
-	@p='forwarding/forwarding1'; \
-	b='forwarding/forwarding1'; \
+forwarding/forwarding1_robust.log: forwarding/forwarding1_robust
+	@p='forwarding/forwarding1_robust'; \
+	b='forwarding/forwarding1_robust'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

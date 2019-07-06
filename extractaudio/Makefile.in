@@ -511,7 +511,7 @@ extractaudio_SOURCES = extractaudio.c decoder.c rtpp_loader.c \
 	eaud_substreams.h $(am__append_1)
 extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ \
 	-lm -lpthread $(am__append_2)
-extractaudio_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR)
+extractaudio_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) -D_BSD_SOURCE
 extractaudio_debug_SOURCES = $(extractaudio_SOURCES) $(RTPP_MEMDEB_CORESRCS)
 extractaudio_debug_LDADD = $(extractaudio_LDADD) $(RTPP_MEMDEB_LDADD)
 extractaudio_debug_CPPFLAGS = $(extractaudio_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=extractaudio

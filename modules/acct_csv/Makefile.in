@@ -133,7 +133,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 rtpp_acct_csv_la_LIBADD =
-am_rtpp_acct_csv_la_OBJECTS = rtpp_acct_csv.lo
+am_rtpp_acct_csv_la_OBJECTS = rtpp_acct_csv_la-rtpp_acct_csv.lo
 rtpp_acct_csv_la_OBJECTS = $(am_rtpp_acct_csv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -167,8 +167,9 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/rtpp_acct_csv.Plo \
-	./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo
+am__depfiles_remade =  \
+	./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo \
+	./$(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -362,10 +363,11 @@ RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
 pkglib_LTLIBRARIES = rtpp_acct_csv.la rtpp_acct_csv_debug.la
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
 rtpp_acct_csv_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
+rtpp_acct_csv_la_CPPFLAGS = -D_BSD_SOURCE
 rtpp_acct_csv_debug_la_SOURCES = ${rtpp_acct_csv_la_SOURCES}
 rtpp_acct_csv_debug_la_LIBADD = $(RTPP_MEMDEB_LDADD)
 rtpp_acct_csv_debug_la_LDFLAGS = ${rtpp_acct_csv_la_LDFLAGS}
-rtpp_acct_csv_debug_la_CPPFLAGS = -DRTPP_DEBUG
+rtpp_acct_csv_debug_la_CPPFLAGS = $(rtpp_acct_csv_la_CPPFLAGS) -DRTPP_DEBUG
 rtpp_acct_csv_debug_la_CFLAGS = $(RTPP_MEMDEB_CFLAGS)
 all: all-am
 
@@ -449,8 +451,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_csv.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Plo@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -478,6 +480,13 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+rtpp_acct_csv_la-rtpp_acct_csv.lo: rtpp_acct_csv.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_csv_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_acct_csv_la-rtpp_acct_csv.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Tpo -c -o rtpp_acct_csv_la-rtpp_acct_csv.lo `test -f 'rtpp_acct_csv.c' || echo '$(srcdir)/'`rtpp_acct_csv.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Tpo $(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_acct_csv.c' object='rtpp_acct_csv_la-rtpp_acct_csv.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_csv_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_acct_csv_la-rtpp_acct_csv.lo `test -f 'rtpp_acct_csv.c' || echo '$(srcdir)/'`rtpp_acct_csv.c
 
 rtpp_acct_csv_debug_la-rtpp_acct_csv.lo: rtpp_acct_csv.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_csv_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_csv_debug_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_csv_debug_la-rtpp_acct_csv.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Tpo -c -o rtpp_acct_csv_debug_la-rtpp_acct_csv.lo `test -f 'rtpp_acct_csv.c' || echo '$(srcdir)/'`rtpp_acct_csv.c
@@ -620,8 +629,8 @@ clean-am: clean-generic clean-libtool clean-pkglibLTLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/rtpp_acct_csv.Plo
-	-rm -f ./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo
+		-rm -f ./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo
+	-rm -f ./$(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -667,8 +676,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/rtpp_acct_csv.Plo
-	-rm -f ./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo
+		-rm -f ./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo
+	-rm -f ./$(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
