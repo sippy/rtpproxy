@@ -33,6 +33,8 @@
 #define RTPP_DBG_YES	1
 #define RTPP_DBG_NO	0
 
+#define RTPP_DEBUG_MAX
+
 #if defined(RTPP_DEBUG)
 # if defined(RTPP_DEBUG_MAX)
 /* Supported levels 0, 1, 2. 1 - basic debug & debug when I/O fails, */

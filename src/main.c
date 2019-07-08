@@ -85,6 +85,7 @@
 #include "rtpp_command_ecodes.h"
 #include "rtpp_port_table.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_proc_ttl.h"
 #include "rtpp_bindaddrs.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
@@ -946,6 +947,13 @@ main(int argc, char **argv)
         exit(1);
     }
 
+    cf.stable->rtpp_proc_ttl_cf = rtpp_proc_ttl_ctor(cf.stable);
+    if (cf.stable->rtpp_proc_ttl_cf == NULL) {
+        RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
+          "can't init TTL processing subsystem");
+        exit(1);
+    }
+
     counter = 0;
 
     cf.stable->rtpp_timed_cf = rtpp_timed_ctor(0.1);
@@ -1052,6 +1060,7 @@ main(int argc, char **argv)
     CALL_SMETHOD(cf.stable->rtpp_timed_cf, shutdown);
     CALL_SMETHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
     CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
+    CALL_METHOD(cf.stable->rtpp_proc_ttl_cf, dtor);
     CALL_SMETHOD(cf.stable->sessinfo->rcnt, decref);
     CALL_SMETHOD(cf.stable->rtpp_stats->rcnt, decref);
     for (i = 0; i <= RTPP_PT_MAX; i++) {

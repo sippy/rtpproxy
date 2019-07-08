@@ -26,11 +26,18 @@
  *
  */
 
+#include <assert.h>
+#include <pthread.h>
+#include <stdatomic.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <elperiodic.h>
+
 #include "config.h"
 
+#include "rtpp_cfg_stable.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
@@ -40,7 +47,25 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_weakref.h"
 #include "rtpp_proc_ttl.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_pipe.h"
+
+struct rtpp_proc_ttl_pvt {
+    struct rtpp_proc_ttl pub;
+    pthread_t thread_id;
+    struct rtpp_anetio_cf *op;
+    const struct rtpp_cfg_stable *cfsp_save;
+    atomic_int tstate;
+    void *elp;
+};
+
+#define TSTATE_RUN   0x0
+#define TSTATE_CEASE 0x1
+
+#define PUB2PVT(pubp)      ((struct rtpp_proc_ttl_pvt *)((char *)(pubp) - offsetof(struct rtpp_proc_ttl_pvt, pub)))
+
+static void rtpp_proc_ttl(struct rtpp_hash_table *, struct rtpp_weakref_obj *,
+  struct rtpp_notify *, struct rtpp_stats *);
 
 struct foreach_args {
     struct rtpp_notify *rtpp_notify_cf;
@@ -76,7 +101,7 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
     return (RTPP_HT_MATCH_CONT);
 }
 
-void
+static void
 rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct rtpp_weakref_obj
   *sessions_wrt, struct rtpp_notify *rtpp_notify_cf, struct rtpp_stats
   *rtpp_stats)
@@ -87,4 +112,70 @@ rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct rtpp_weakref_obj
     fargs.rtpp_stats = rtpp_stats;
     fargs.sessions_wrt = sessions_wrt;
     CALL_METHOD(sessions_ht, foreach, rtpp_proc_ttl_foreach, &fargs);
+}
+
+static void
+rtpp_proc_ttl_run(void *arg)
+{
+    const struct rtpp_cfg_stable *cfsp;
+    struct rtpp_proc_ttl_pvt *proc_cf;
+    struct rtpp_stats *stats_cf;
+    int tstate;
+
+    proc_cf = (struct rtpp_proc_ttl_pvt *)arg;
+    cfsp = proc_cf->cfsp_save;
+    stats_cf = cfsp->rtpp_stats;
+
+    for (;;) {
+        tstate = atomic_load(&proc_cf->tstate);
+        if (tstate == TSTATE_CEASE) {
+            break;
+        }
+        prdic_procrastinate(proc_cf->elp);
+        rtpp_proc_ttl(cfsp->sessions_ht, cfsp->sessions_wrt,
+          cfsp->rtpp_notify_cf, stats_cf);
+    }
+}
+
+static void
+rtpp_proc_ttl_dtor(struct rtpp_proc_ttl *pub)
+{
+    struct rtpp_proc_ttl_pvt *proc_cf;
+    int tstate;
+
+    proc_cf = PUB2PVT(pub);
+    tstate = atomic_load(&proc_cf->tstate);
+    assert(tstate == TSTATE_RUN);
+    atomic_store(&proc_cf->tstate, TSTATE_CEASE);
+    pthread_join(proc_cf->thread_id, NULL);
+    prdic_free(proc_cf->elp);
+    free(proc_cf);
+}
+
+struct rtpp_proc_ttl *
+rtpp_proc_ttl_ctor(const struct rtpp_cfg_stable *cfsp)
+{
+    struct rtpp_proc_ttl_pvt *proc_cf;
+
+    proc_cf = rtpp_zmalloc(sizeof(*proc_cf));
+    if (proc_cf == NULL)
+        return (NULL);
+
+    proc_cf->cfsp_save = cfsp;
+
+    proc_cf->elp = prdic_init(1.0, cfsp->sched_offset);
+    if (proc_cf->elp == NULL) {
+        goto e0;
+    }
+
+    if (pthread_create(&proc_cf->thread_id, NULL, (void *(*)(void *))&rtpp_proc_ttl_run, proc_cf) != 0) {
+        goto e1;
+    }
+    proc_cf->pub.dtor = &rtpp_proc_ttl_dtor;
+    return (&proc_cf->pub);
+e1:
+    prdic_free(proc_cf->elp);
+e0:
+    free(proc_cf);
+    return (NULL);
 }

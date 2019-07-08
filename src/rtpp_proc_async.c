@@ -55,7 +55,6 @@
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_proc_servers.h"
-#include "rtpp_proc_ttl.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
@@ -68,20 +67,12 @@ struct elp_data {
     long long ncycles_ref_last;
     long long ncycles_chk_ol;
     double target_pfreq;
-#if RTPP_DEBUG_timers
-    long long ncycles_ref_pre;
-#endif
 };
 
 struct rtpp_proc_async_cf {
     struct rtpp_proc_async pub;
     pthread_t thread_id;
     struct rtpp_anetio_cf *op;
-#if RTPP_DEBUG_timers
-    struct recfilter sleep_time;
-    struct recfilter poll_time;
-    struct recfilter proc_time;
-#endif
     struct rtpp_proc_rstats rstats;
     struct cfg *cf_save;
     atomic_int tstate;
@@ -133,15 +124,13 @@ static void
 rtpp_proc_async_run(void *arg)
 {
     struct cfg *cf;
-    double last_tick_time, lv;
-    int alarm_tick, ndrain, rtp_only;
+    int ndrain, rtp_only;
     int nready_rtp, nready_rtcp;
     struct rtpp_proc_async_cf *proc_cf;
-#if RTPP_DEBUG_timers || RTPP_DEBUG_netio
+#if RTPP_DEBUG_netio
     long long last_ctick;
 #endif
     struct sthread_args *sender;
-    double tp[4];
     struct rtpp_proc_rstats *rstats;
     struct rtpp_stats *stats_cf;
     struct rtpp_polltbl ptbl_rtp;
@@ -160,15 +149,13 @@ rtpp_proc_async_run(void *arg)
 
     memset(&rtime, '\0', sizeof(rtime));
 
-    last_tick_time = 0;
-#if RTPP_DEBUG_timers || RTPP_DEBUG_netio
+#if RTPP_DEBUG_netio
     last_ctick = 0;
 #endif
     overload = 0;
 
     edp = &proc_cf->elp_lz;
 
-    tp[0] = getdtime();
     for (;;) {
         tstate = atomic_load(&proc_cf->tstate);
         if (tstate == TSTATE_CEASE) {
@@ -176,7 +163,8 @@ rtpp_proc_async_run(void *arg)
         }
         edp->ncycles_ref = (long long)prdic_getncycles_ref(edp->obj);
         if (cf->stable->overload_prot.ecode != 0 && edp->ncycles_chk_ol <= edp->ncycles_ref) {
-            lv = prdic_getload(edp->obj);
+            double lv = prdic_getload(edp->obj);
+
             if (overload  && lv < 0.85) {
                 overload = 0;
                 CALL_METHOD(cf->stable->rtpp_cmd_cf, reg_overload, 0);
@@ -189,42 +177,13 @@ rtpp_proc_async_run(void *arg)
             edp->ncycles_chk_ol = ((edp->ncycles_ref / 200) + 1) * 200;
         }
         ndrain = ((edp->ncycles_ref - edp->ncycles_ref_last) * MAX_RTP_RATE) / edp->target_pfreq;
-#if RTPP_DEBUG_timers
-        edp->ncycles_ref_pre = edp->ncycles_ref_last;
-#endif
         edp->ncycles_ref_last = edp->ncycles_ref;
-
-        tp[1] = getdtime();
-#if RTPP_DEBUG_timers
-        if (last_ctick % (unsigned int)edp->target_pfreq == 0 || last_ctick < 1000) {
-            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld sptime %f, CSV: %f,%f,%f", \
-              last_ctick, tp[1], (double)last_ctick / edp->target_pfreq, \
-              ((double)edp->ncycles_ref_last / edp->target_pfreq) - tp[1], tp[1]);
-        }
-#endif
 
         if (ndrain < 1) {
             ndrain = 1;
         }
 
-#if RTPP_DEBUG_timers
-        if (ndrain > 1) {
-            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
-              "ncycles_ref %lld, ncycles_ref_pre %lld, ndrain %d CSV: %f,%f,%d", \
-              last_ctick, edp->ncycles_ref_last, edp->ncycles_ref_pre, ndrain, \
-              (double)last_ctick / edp->target_pfreq, ndrain);
-        }
-#endif
-
-        alarm_tick = 0;
-        if (last_tick_time == 0 || last_tick_time > tp[1]) {
-            last_tick_time = tp[1];
-        } else if (last_tick_time + (double)TIMETICK < tp[1]) {
-            alarm_tick = 1;
-            last_tick_time = tp[1];
-        }
-
-        if (alarm_tick || (edp->ncycles_ref_last % 7) == 0) {
+        if ((edp->ncycles_ref_last % 7) == 0) {
             rtp_only = 0;
         } else {
             rtp_only = 1;
@@ -263,7 +222,6 @@ rtpp_proc_async_run(void *arg)
             }
 #endif
             if (nready_rtp < 0 && errno == EINTR) {
-                tp[0] = getdtime();
                 continue;
             }
         }
@@ -278,36 +236,14 @@ rtpp_proc_async_run(void *arg)
         if (nready_rtcp > 0 && rtp_only == 0) {
             process_rtp_only(cf, &ptbl_rtcp, &rtime, ndrain, sender, rstats);
         }
-        if (alarm_tick != 0) {
-            rtpp_proc_ttl(cf->stable->sessions_ht, cf->stable->sessions_wrt,
-              cf->stable->rtpp_notify_cf, cf->stable->rtpp_stats);
-        }
 
         if (CALL_METHOD(cf->stable->servers_wrt, get_length) > 0) {
             rtpp_proc_servers(cf, rtime.mono, sender, rstats);
         }
 
         rtpp_anetio_pump_q(sender);
-        tp[3] = getdtime();
         flush_rstats(stats_cf, rstats);
 
-#if RTPP_DEBUG_timers
-        recfilter_apply(&proc_cf->sleep_time, tp[1] - tp[0]);
-        recfilter_apply(&proc_cf->poll_time, rtime.mono - tp[1]);
-        recfilter_apply(&proc_cf->proc_time, tp[3] - rtime.mono);
-#endif
-        tp[0] = tp[3];
-#if RTPP_DEBUG_timers
-        if (last_ctick % (unsigned int)edp->target_pfreq == 0 || last_ctick < 1000) {
-#if 0
-            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld eptime %f, CSV: %f,%f,%f", \
-              last_ctick, tp[3], (double)last_ctick / edp->target_pfreq, tp[3] - tp[1], tp[3]);
-#endif
-            RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld eptime %f sleep_time %f poll_time %f proc_time %f CSV: %f,%f,%f,%f", \
-              last_ctick, tp[3], proc_cf->sleep_time.lastval, proc_cf->poll_time.lastval, proc_cf->proc_time.lastval, \
-              (double)last_ctick / edp->target_pfreq, proc_cf->sleep_time.lastval, proc_cf->poll_time.lastval, proc_cf->proc_time.lastval);
-        }
-#endif
         if (ptbl_rtp.curlen > 0 || ptbl_rtcp.curlen > 0) {
             if (edp == &proc_cf->elp_lz) {
                 edp = &proc_cf->elp_fs;
@@ -318,7 +254,7 @@ rtpp_proc_async_run(void *arg)
             }
         }
         prdic_procrastinate(edp->obj);
-#if RTPP_DEBUG_timers || RTPP_DEBUG_netio
+#if RTPP_DEBUG_netio
         last_ctick++;
 #endif
     }
@@ -336,12 +272,6 @@ rtpp_proc_async_ctor(struct cfg *cf)
         return (NULL);
 
     init_rstats(cf->stable->rtpp_stats, &proc_cf->rstats);
-
-#if RTPP_DEBUG_timers
-    recfilter_init(&proc_cf->sleep_time, 0.999, 0.0, 0);
-    recfilter_init(&proc_cf->poll_time, 0.999, 0.0, 0);
-    recfilter_init(&proc_cf->proc_time, 0.999, 0.0, 0);
-#endif
 
     proc_cf->op = rtpp_netio_async_init(cf, 1);
     if (proc_cf->op == NULL) {

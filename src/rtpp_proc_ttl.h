@@ -26,6 +26,18 @@
  *
  */
 
-void rtpp_proc_ttl(struct rtpp_hash_table *, struct rtpp_weakref_obj *,
-  struct rtpp_notify *, struct rtpp_stats *);
+#ifndef _RTPP_PROC_TTL_H_
+#define _RTPP_PROC_TTL_H_
 
+struct rtpp_proc_ttl;
+struct rtpp_cfg_stable;
+
+DEFINE_METHOD(rtpp_proc_ttl, rtpp_proc_ttl_dtor, void);
+
+struct rtpp_proc_ttl {
+    rtpp_proc_ttl_dtor_t dtor;
+};
+
+struct rtpp_proc_ttl *rtpp_proc_ttl_ctor(const struct rtpp_cfg_stable *);
+
+#endif
