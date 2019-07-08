@@ -571,8 +571,6 @@ e.g.: -d INFO:LOG_LOCAL5
     linkend="CONFIGURATION"><guibutton>Configuration section -&gt; 5.
     Configuration of control socket</guibutton>.</link></para>
 
-    <para/>
-
     <para>Other than that, for better view of how to configure your startup
     line, you can use this <link
     linkend="CONFIGURATION"><guibutton>Configuration
@@ -877,10 +875,7 @@ systemctl restart rtpproxy.service</programlisting>
         <para/>
       </simplesect>
     </section>
-  </chapter>
-</book>
-
-
+    
     <section>
       <title>Configuration of control socket (using systemd)</title>
 
@@ -931,8 +926,6 @@ WantedBy=sockets.target
 
       <para><programlisting id="rtpproxy.service">ExecStart=/usr/local/bin/rtpproxy -p /var/run/rtpproxy/rtpproxy.pid -s systemd: -u rtpproxy:rtpproxy -n unix:/var/run/rtpproxy/rtpproxy_timeout.sock -f -l 0.0.0.0 -m 10000 -M 20000 -d INFO:LOG_DAEMON</programlisting></para>
 
-      <para/>
-
       <para>When you're done with all above, do not forget to reload systemd
       configuration and enable socket unit:</para>
 
@@ -943,9 +936,7 @@ bash&gt; sudo systemctl enable rtpproxy.socket</programlisting>
       <para>(btw here is a nice article of how to configure systemd socket
       unit files - <ulink
       url="http://0pointer.de/blog/projects/socket-activation.html?fbclid=IwAR2aIYwttyFOc_7rXarlYaz0SexTxMverWF42Xpg5yX96eytkmhFhtsI49M">http://0pointer.de/blog/projects/socket-activation.html?fbclid=IwAR2aIYwttyFOc_7rXarlYaz0SexTxMverWF42Xpg5yX96eytkmhFhtsI49M</ulink>)</para>
-
-      <para/>
-
+      
       <para>Now start <emphasis role="bold">rtpproxy.socket</emphasis> and
       <emphasis role="bold">rtpproxy,service</emphasis> just after
       that:</para>
@@ -957,7 +948,6 @@ bash&gt; sudo systemctl start rtpproxy.service</programlisting>At this stage,
       start working properly. If you see some kind of errors, then you're
       missing one of the steps defined above.</para>
 
-      <para/>
     </section>
   </chapter>
 </book>
