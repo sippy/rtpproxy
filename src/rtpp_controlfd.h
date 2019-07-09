@@ -49,7 +49,7 @@ struct rtpp_ctrl_sock {
 #define RTPP_CTRL_ISSTREAM(rcsp) ((rcsp)->type == RTPC_IFSUN_C || (rcsp)->type == RTPC_STDIO \
   || (rcsp)->type == RTPC_TCP4 || (rcsp)->type == RTPC_TCP6)
 #define RTPP_CTRL_ACCEPTABLE(rcsp) ((rcsp)->type == RTPC_IFSUN || (rcsp)->type == RTPC_IFSUN_C \
-  || (rcsp)->type == RTPC_TCP4 || (rcsp)->type == RTPC_TCP6)
+  || (rcsp)->type == RTPC_TCP4 || (rcsp)->type == RTPC_TCP6 || (rcsp)->type == RTPC_SYSD)
 
 int rtpp_controlfd_init(struct cfg *cf);
 struct rtpp_ctrl_sock *rtpp_ctrl_sock_parse(const char *);
