@@ -18,7 +18,7 @@ do
     break
   fi
   echo " failure"
-  if [ ${i} == 0 ]
+  if [ ${i} -eq 0 ]
   then
     fcmd="env GCOV_PREFIX=/tmp ${fcmd}"
   fi
