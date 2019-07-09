@@ -552,11 +552,30 @@ e.g.: -m 10000 -M 40000</programlisting>
 
 e.g.: -d INFO:LOG_LOCAL5
       -d DBUG:LOG_LOCAL5</programlisting>
+    
+    <para>Another great reason to use systemd, is a possibility of systemd to
+    create control sockets for rtpproxy.</para>
 
-    <para>For better view of how to configure your startup line, use a <link
+    <para>The benefit of this is, that even rtpproxy is down for some reason,
+    remote daemons (such as OpenSIPS or Kamailio) do not lose a connection
+    with a control file descriptor, thus do not throw any errors related to a
+    connection loss with rtpproxy (still you can get timeout errors, but they
+    can be not that critical as a complete loss of control socket
+    connection).</para>
+
+    <para>During the period of time rtpproxy is down, all control commands
+    sent to it, are to be caught after rtpproxy is back. Thus systemd keeps
+    all commands in a buffer for future usage.</para>
+
+    <para>To let this be working, follow this guide: <link
+    linkend="CONFIGURATION"><guibutton>Configuration section -&gt; 5.
+    Configuration of control socket</guibutton>.</link></para>
+
+    <para>Other than that, for better view of how to configure your startup
+    line, you can use this <link
     linkend="CONFIGURATION"><guibutton>Configuration
     section</guibutton>.</link></para>
-
+    
     <para>After you're done with customizing of your systemd service file for
     RTPProxy, follow this sequence to finish it:</para>
 
@@ -855,6 +874,80 @@ systemctl restart rtpproxy.service</programlisting>
 
         <para/>
       </simplesect>
+    </section>
+    
+    <section>
+      <title>Configuration of control socket (using systemd)</title>
+
+      <para>As it was said earlier, keeping of the control socket using
+      systemd, is a good reason to start using systemd.</para>
+
+      <para>A configuration process is pretty simple, there are just a few
+      steps you need to implement to start using of it.</para>
+
+      <para><emphasis role="bold">1. </emphasis>Firstly, you need to install
+      package requirements: <package>libsystemd-dev</package></para>
+
+      <para><emphasis role="bold">2. </emphasis>Secondly, you need to compile
+      rtpproxy with a systemd flag (a usual compilation process, just add an
+      option to a <emphasis>configure</emphasis> execution):<programlisting
+      id="rtpproxy.service">./configure --enable-systemd
+</programlisting></para>
+
+      <para><emphasis role="bold">3.</emphasis> A third step, you need to
+      create <emphasis role="bold">rtpproxy.socket</emphasis> systemd unit
+      file, that will be responsible for keeping your control socket:</para>
+
+      <para>An example:</para>
+
+      <para><emphasis
+      role="bold">/etc/systemd/system/sockets.target.wants/rtpproxy.socket
+      (better to create it in /lib/systemd/system/sockets.target.wants/ and
+      symlink it)</emphasis></para>
+
+      <para><programlisting id="rtpproxy.service">[Socket]
+ListenStream=/var/run/rtpproxy/rtpproxy.sock
+SocketUser=rtpproxy
+SocketGroup=rtpproxy
+SocketMode=755
+ExecStartPost=-/bin/chown rtpproxy:rtpproxy /var/run/rtpproxy
+
+[Install]
+WantedBy=sockets.target
+</programlisting></para>
+
+      <para><emphasis role="bold">4.</emphasis> Set a parameter in startup row
+      of <emphasis role="bold">rtpproxy.service</emphasis> unit (you don't
+      need to provide a path to socket file):</para>
+
+      <para><programlisting id="rtpproxy.service">-s systemd:</programlisting></para>
+
+      <para>an example:</para>
+
+      <para><programlisting id="rtpproxy.service">ExecStart=/usr/local/bin/rtpproxy -p /var/run/rtpproxy/rtpproxy.pid -s systemd: -u rtpproxy:rtpproxy -n unix:/var/run/rtpproxy/rtpproxy_timeout.sock -f -l 0.0.0.0 -m 10000 -M 20000 -d INFO:LOG_DAEMON</programlisting></para>
+
+      <para>When you're done with all above, do not forget to reload systemd
+      configuration and enable socket unit:</para>
+
+      <programlisting id="rtpproxy.service">bash&gt; sudo systemctl daemon-reload
+
+bash&gt; sudo systemctl enable rtpproxy.socket</programlisting>
+
+      <para>(btw here is a nice article of how to configure systemd socket
+      unit files - <ulink
+      url="http://0pointer.de/blog/projects/socket-activation.html?fbclid=IwAR2aIYwttyFOc_7rXarlYaz0SexTxMverWF42Xpg5yX96eytkmhFhtsI49M">http://0pointer.de/blog/projects/socket-activation.html?fbclid=IwAR2aIYwttyFOc_7rXarlYaz0SexTxMverWF42Xpg5yX96eytkmhFhtsI49M</ulink>)</para>
+      
+      <para>Now start <emphasis role="bold">rtpproxy.socket</emphasis> and
+      <emphasis role="bold">rtpproxy,service</emphasis> just after
+      that:</para>
+
+      <para><programlisting id="rtpproxy.service">bash&gt; sudo systemctl start rtpproxy.socket
+
+bash&gt; sudo systemctl start rtpproxy.service</programlisting>At this stage,
+      your rtpproxy.service should catch up a socket created by systemd and
+      start working properly. If you see some kind of errors, then you're
+      missing one of the steps defined above.</para>
+
     </section>
   </chapter>
 </book>
