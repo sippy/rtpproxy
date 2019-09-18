@@ -60,6 +60,7 @@ static struct proto_cap proto_caps[] = {
     { "20150330", "Support for allocating a new port (\"Un\"/\"Ln\" commands)" },
     { "20150420", "Support for SEQ tracking and new rtpa_ counters; Q command extended" },
     { "20150617", "Support for the wildcard %%CC_SELF%% as a disconnect notify target" },
+    { "20170313", "Support for changing session's ttl" },
     { NULL, NULL }
 };
 

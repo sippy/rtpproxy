@@ -78,6 +78,8 @@ struct ul_opts {
     int asymmetric;
     int weak;
     int requested_ptime;
+    int requested_sttl;
+    int requested_pttl;
     char *codecs;
     char *addr;
     char *port;
@@ -124,6 +126,8 @@ ul_opts_init(struct cfg *cf, struct ul_opts *ulop)
 {
 
     ulop->asymmetric = (cf->stable->aforce != 0) ? 1 : 0;
+    ulop->requested_sttl = 0;
+    ulop->requested_pttl = 0;
     ulop->requested_ptime = -1;
     ulop->lia[0] = ulop->lia[1] = ulop->reply.ia = cf->stable->bindaddr[0];
     ulop->lidx = 1;
@@ -329,6 +333,22 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             ulop->new_port = 1;
             break;
 
+        case 't':
+        case 'T':
+            c = *cp;
+            n = strtol(cp + 1, &cp, 10);
+            if (n <= 0) {
+                RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
+                reply_error(cmd, ECODE_PARSE_13);
+                goto err_undo_1;
+            }
+            if (c == 't')
+                ulop->requested_sttl = n;
+            else
+                ulop->requested_pttl = n;
+            cp--;
+            break;
+
         default:
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "unknown command modifier `%c'",
               *cp);
@@ -472,8 +492,18 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
               ulop->weak ? ( sidx ? "weak[1]" : "weak[0]" ) : "strong",
               spa->strong, spa->rtp->stream[0]->weak, spa->rtp->stream[1]->weak);
         }
-        CALL_METHOD(spa->rtp->stream[0]->ttl, reset);
-        CALL_METHOD(spa->rtp->stream[1]->ttl, reset);
+        if (ulop->requested_sttl)
+            CALL_METHOD(spa->rtp->stream[sidx]->ttl, reset_with,
+                    ulop->requested_sttl);
+        else
+            CALL_METHOD(spa->rtp->stream[sidx]->ttl, reset_with,
+                    cf->stable->max_ttl);
+        if (ulop->requested_pttl)
+            CALL_METHOD(spa->rtp->stream[pidx]->ttl, reset_with,
+                    ulop->requested_pttl);
+        else
+            CALL_METHOD(spa->rtp->stream[pidx]->ttl, reset_with,
+                    cf->stable->max_ttl);
         RTPP_LOG(spa->log, RTPP_LOG_INFO,
           "lookup on ports %d/%d, session timer restarted", spa->rtp->stream[0]->port,
           spa->rtp->stream[1]->port);
@@ -558,6 +588,11 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
         /* Save ref, it will be decref'd by the command disposal code */
         RTPP_DBG_ASSERT(cmd->sp == NULL);
         cmd->sp = spa;
+
+        if (ulop->requested_sttl)
+            CALL_METHOD(spa->rtp->stream[0]->ttl, reset_with, ulop->requested_sttl);
+        if (ulop->requested_pttl)
+            CALL_METHOD(spa->rtp->stream[1]->ttl, reset_with, ulop->requested_pttl);
     }
 
     if (cmd->cca.op == UPDATE) {
