@@ -39,6 +39,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <pthread.h>
+
 #if !defined(MEMDEB_APP)
 #error MEMDEB_APP has to be defined
 #endif
