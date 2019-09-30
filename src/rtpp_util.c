@@ -28,7 +28,9 @@
 
 #include <sys/time.h>
 #include <sys/types.h>
+#ifdef __GLIBC__
 #include <sys/sysctl.h>
+#endif
 #include <sys/resource.h>
 #include <errno.h>
 #include <fcntl.h>
