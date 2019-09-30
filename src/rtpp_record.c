@@ -70,6 +70,7 @@
 #include "rtpp_session.h"
 #include "rtpp_stream.h"
 #include "rtpp_time.h"
+#include "rtpp_util.h"
 #include "rtpp_pipe.h"
 #include "rtpp_netaddr.h"
 
