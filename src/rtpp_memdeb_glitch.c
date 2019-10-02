@@ -128,7 +128,7 @@ rtpp_memdeb_glitch_init()
                     abort();
                 }
             }
-            assert(cp - act <= sizeof(_glav_trig.act));
+            assert(cp - act < sizeof(_glav_trig.act));
             strncpy(_glav_trig.act, act, sizeof(_glav_trig.act));
             assert(unsetenv(MDG_ACT_ENAME) == 0);
         } else {
