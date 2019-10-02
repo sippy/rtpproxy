@@ -390,7 +390,7 @@ libucl_a_SOURCES = $(UCL_SDIR)/ucl_emitter_streamline.c \
   $(UCL_SDIR)/ucl_sexp.c \
   $(UCL_SDIR)/ucl_util.c
 
-libucl_a_CFLAGS = -Wno-pointer-sign -std=c99 -DHAVE_CONFIG_H \
+libucl_a_CFLAGS = -Wno-pointer-sign -std=c99 -DHAVE_CONFIG_H -D_BSD_SOURCE \
   -I$(UCL_DIR)/include \
   -I$(UCL_DIR)/uthash \
   -I$(UCL_DIR)/klib \
