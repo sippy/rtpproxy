@@ -28,9 +28,6 @@
 
 #include <sys/time.h>
 #include <sys/types.h>
-#ifdef __GLIBC__
-#include <sys/sysctl.h>
-#endif
 #include <sys/resource.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -41,6 +38,10 @@
 #include <unistd.h>
 
 #include "config.h"
+
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
 
 #include "rtpp_log.h"
 #include "rtpp_cfg_stable.h"
