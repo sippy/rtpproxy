@@ -248,7 +248,7 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
     fprintf(stderr, rli->format_se[0], rtpp_time_buff, strlvl(level),
       call_id, function);
     vfprintf(stderr, format, ap);
-    fprintf(stderr, rli->format_se[1]);
+    fprintf(stderr, "%s", rli->format_se[1]);
 }
 
 void

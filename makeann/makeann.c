@@ -66,6 +66,7 @@
 #define G722_ENABLED 0
 #endif
 
+#include "rtpp_endian.h"
 #include "rtp.h"
 
 #if BYTE_ORDER == BIG_ENDIAN

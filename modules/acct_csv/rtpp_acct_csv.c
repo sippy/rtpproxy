@@ -53,6 +53,7 @@
 #include "rtpp_module.h"
 #include "rtpp_netaddr.h"
 #include "rtpp_network.h"
+#include "rtpp_util.h"
 #include "rtpp_cfg_stable.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"

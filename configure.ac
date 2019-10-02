@@ -278,6 +278,21 @@ AC_LINK_IFELSE(
    [AC_MSG_RESULT([no])]
 )
 
+AC_MSG_CHECKING([whether -latomic is needed for __atomic builtins])
+AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM([[#include <stdint.h>]],
+    [[uint64_t val = 0; __atomic_add_fetch(&val, 1, __ATOMIC_RELAXED);]]
+  )],
+  [AC_MSG_RESULT([no])],
+  [LIBS="$LIBS -latomic"
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([[#include <stdint.h>]],
+                       [[uint64_t val = 0; __atomic_add_fetch(&val, 1, __ATOMIC_RELAXED);]]
+      )],
+      [AC_MSG_RESULT([yes])],
+      [AC_MSG_FAILURE([libatomic needed, but linking with -latomic failed, cannot continue])]
+  )]
+)
 
 # <DocBook & friends>
 AX_CHECK_DOCBOOK_DTD(4.5)
