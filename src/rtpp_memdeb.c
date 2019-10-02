@@ -530,7 +530,7 @@ is_approved(struct rtpp_memdeb_priv *pvt, const char *funcn)
 {
     int i;
 
-    for (i = 0; pvt->au[i].funcn != NULL && i < MAX_APPROVED; i++) {
+    for (i = 0; i < MAX_APPROVED && pvt->au[i].funcn != NULL; i++) {
         if (strcmp(pvt->au[i].funcn, funcn) != 0)
             continue;
         return (pvt->au[i].max_nunalloc);
