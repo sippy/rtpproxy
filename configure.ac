@@ -140,22 +140,22 @@ then
    AC_DEFINE([ENABLE_SNDFILE], 1, [Define if you have libsndfile library installed]))
 fi
 
-# libsrtp
-AC_CHECK_HEADER(srtp/srtp.h, found_libsrtp=yes)
-if test "$found_libsrtp" = yes
-then
-  AC_CHECK_LIB(srtp, srtp_init,
-   LIBS_SRTP="-lsrtp"
-   AC_DEFINE([ENABLE_SRTP], 1, [Define if you have libsrtp library installed]))
-fi
-
-# libsrtp2
+# libsrtp2 (preferred)
 AC_CHECK_HEADER(srtp2/srtp.h, found_libsrtp2=yes)
 if test "$found_libsrtp2" = yes
 then
   AC_CHECK_LIB(srtp2, srtp_init,
    LIBS_SRTP="-lsrtp2"
    AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed]))
+else
+  # libsrtp
+  AC_CHECK_HEADER(srtp/srtp.h, found_libsrtp=yes)
+  if test "$found_libsrtp" = yes
+  then
+    AC_CHECK_LIB(srtp, srtp_init,
+     LIBS_SRTP="-lsrtp"
+     AC_DEFINE([ENABLE_SRTP], 1, [Define if you have libsrtp library installed]))
+  fi
 fi
 
 # libelperiodic
