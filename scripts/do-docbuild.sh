@@ -2,8 +2,10 @@
 
 set -e
 
-sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
- install -y xsltproc fop tidy
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/scripts/functions.sub"
+
+${APT_GET} install -y xsltproc fop tidy
 
 ./configure
 make -C doc clean all

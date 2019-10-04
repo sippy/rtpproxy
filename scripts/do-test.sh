@@ -2,6 +2,9 @@
 
 set -e
 
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/scripts/functions.sub"
+
 BCG729_VER=1.0.4
 SNDFILE_VER=1.0.28
 
@@ -17,9 +20,8 @@ cat /proc/sys/kernel/core_pattern
 ./configure
 make
 make clean
-#sudo DEBIAN_FRONTEND=noninteractive apt-get update
-sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
- install -y libgsm1-dev tcpdump curl wireshark-common gdb
+#${APT_GET} update
+${APT_GET} install -y libgsm1-dev tcpdump curl wireshark-common gdb
 tcpdump --version || true
 mkdir deps
 cd deps

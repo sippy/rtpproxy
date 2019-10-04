@@ -1,0 +1,2 @@
+SUDO="sudo"
+APT_GET="${SUDO} DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confnew'"
