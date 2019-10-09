@@ -154,6 +154,18 @@ fill_cmd_props(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
         cpp->tpos = 3;
         break;
 
+    case 'n':
+    case 'N':
+        cmd->cca.op = NORECORD;
+        cmd->cca.rname = "norecord";
+        cmd->cca.hint = "N call_id from_tag [to_tag]";
+        cpp->max_argc = 4;
+        cpp->min_argc = 3;
+        cpp->has_cmods = 0;
+        cpp->fpos = 2;
+        cpp->tpos = 3;
+        break;
+
     case 'v':
     case 'V':
         if (cpp->cmods[0] == 'F' || cpp->cmods[0] == 'f') {
