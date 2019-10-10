@@ -2,7 +2,7 @@
 
 set -e
 
-BCG729_VER=1.0.1
+BCG729_VER=1.0.2
 
 uname -a
 which ${CC}
