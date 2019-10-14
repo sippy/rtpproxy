@@ -145,7 +145,7 @@ rtpp_command_del_opts_parse(struct rtpp_command *cmd)
         reply_error(cmd, ECODE_NOMEM_1);
         goto err_undo_0;
     }
-    for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
+    for (cp = cmd->args.v[0] + 1; *cp != '\0'; cp++) {
         switch (*cp) {
         case 'w':
         case 'W':

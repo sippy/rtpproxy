@@ -70,12 +70,16 @@ struct common_cmd_args {
     } opts;
 };
 
+struct rtpp_command_args {
+    int c;
+    char *v[RTPC_MAX_ARGC];
+};
+
 struct rtpp_command
 {
     char buf[RTPP_CMD_BUFLEN];
     char buf_t[256];
-    char *argv[RTPC_MAX_ARGC];
-    int argc;
+    struct rtpp_command_args args;
     struct sockaddr_storage raddr;
     struct sockaddr *laddr;
     socklen_t rlen;

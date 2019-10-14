@@ -62,9 +62,9 @@ rtpp_command_play_opts_parse(struct rtpp_command *cmd)
         goto err_undo_0;
     }
     plop->count = 1;
-    plop->pname = cmd->argv[2];
-    plop->codecs = cmd->argv[3];
-    tcp = &(cmd->argv[0][1]);
+    plop->pname = cmd->args.v[2];
+    plop->codecs = cmd->args.v[3];
+    tcp = &(cmd->args.v[0][1]);
     if (*tcp != '\0') {
         plop->count = strtol(tcp, &cp, 10);
         if (cp == tcp || *cp != '\0') {
