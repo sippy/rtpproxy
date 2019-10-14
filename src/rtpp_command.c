@@ -338,14 +338,14 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     csp->ncmds_rcvd.cnt++;
 
     cp = cmd->buf;
-    for (ap = cmd->argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
+    for (ap = cmd->args.v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
         if (**ap != '\0') {
-            cmd->argc++;
-            if (++ap >= &cmd->argv[RTPC_MAX_ARGC])
+            cmd->args.c++;
+            if (++ap >= &cmd->args.v[RTPC_MAX_ARGC])
                 break;
         }
     }
-    if (cmd->argc < 1 || (umode != 0 && cmd->argc < 2)) {
+    if (cmd->args.c < 1 || (umode != 0 && cmd->args.c < 2)) {
         RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
         reply_error(cmd, ECODE_PARSE_1);
         *rval = 0;
@@ -355,7 +355,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
 
     /* Stream communication mode doesn't use cookie */
     if (umode != 0) {
-        pvt->cookie = cmd->argv[0];
+        pvt->cookie = cmd->args.v[0];
         if (CALL_METHOD(rcache_obj, lookup, pvt->cookie, pvt->buf_r, sizeof(pvt->buf_r)) == 1) {
             len = strlen(pvt->buf_r);
             rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, controlfd, pvt->buf_r, len, 0,
@@ -368,10 +368,10 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
         }
         CALL_SMETHOD(rcache_obj->rcnt, incref);
         pvt->rcache_obj = rcache_obj;
-        for (i = 1; i < cmd->argc; i++)
-            cmd->argv[i - 1] = cmd->argv[i];
-        cmd->argc--;
-        cmd->argv[cmd->argc] = NULL;
+        for (i = 1; i < cmd->args.c; i++)
+            cmd->args.v[i - 1] = cmd->args.v[i];
+        cmd->args.c--;
+        cmd->args.v[cmd->args.c] = NULL;
     }
 
     /* Step I: parse parameters that are common to all ops */
@@ -425,7 +425,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
         return 0;
 
     case INFO:
-        handle_info(cf, cmd, &cmd->argv[0][1]);
+        handle_info(cf, cmd, &cmd->args.v[0][1]);
         return 0;
 
     case PLAY:
@@ -437,9 +437,9 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
          *   case list saved on last session update will be used instead.
          */
         playcount = 1;
-        pname = cmd->argv[2];
-        codecs = cmd->argv[3];
-        tcp = &(cmd->argv[0][1]);
+        pname = cmd->args.v[2];
+        codecs = cmd->args.v[3];
+        tcp = &(cmd->args.v[0][1]);
 	if (*tcp != '\0') {
 	    playcount = strtol(tcp, &cp, 10);
             if (cp == tcp || *cp != '\0') {
@@ -451,18 +451,18 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
         break;
 
     case COPY:
-        recording_name = cmd->argv[2];
+        recording_name = cmd->args.v[2];
         /* Fallthrough */
     case RECORD:
-        if (cmd->argv[0][1] == 'S' || cmd->argv[0][1] == 's') {
-            if (cmd->argv[0][2] != '\0') {
+        if (cmd->args.v[0][1] == 'S' || cmd->args.v[0][1] == 's') {
+            if (cmd->args.v[0][2] != '\0') {
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_2);
                 return 0;
             }
             record_single_file = (cf->stable->record_pcap == 0) ? 0 : 1;
         } else {
-            if (cmd->argv[0][1] != '\0') {
+            if (cmd->args.v[0][1] != '\0') {
                 RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_3);
                 return 0;
@@ -474,7 +474,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     case DELETE:
         /* D[w] call_id from_tag [to_tag] */
         dopt.weak = 0;
-        for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
+        for (cp = cmd->args.v[0] + 1; *cp != '\0'; cp++) {
             switch (*cp) {
             case 'w':
             case 'W':
@@ -500,7 +500,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case GET_STATS:
         verbose = 0;
-        for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
+        for (cp = cmd->args.v[0] + 1; *cp != '\0'; cp++) {
             switch (*cp) {
             case 'v':
             case 'V':
@@ -737,13 +737,13 @@ handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd)
      * Only list 20081224 protocol mod as supported if
      * user actually enabled notification with -n
      */
-    if (strcmp(cmd->argv[1], "20081224") == 0 &&
+    if (strcmp(cmd->args.v[1], "20081224") == 0 &&
       !CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled)) {
         reply_number(cmd, 0);
         return;
     }
     for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
-        if (!strcmp(cmd->argv[1], proto_caps[i].pc_id)) {
+        if (!strcmp(cmd->args.v[1], proto_caps[i].pc_id)) {
             known = 1;
             break;
         }

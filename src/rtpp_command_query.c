@@ -109,7 +109,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
     struct rtpp_pcnts_strm pst[2];
 
     verbose = 0;
-    for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
+    for (cp = cmd->args.v[0] + 1; *cp != '\0'; cp++) {
         switch (*cp) {
         case 'v':
         case 'V':
@@ -122,12 +122,12 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
             return (ECODE_PARSE_8);
         }
     }
-    if (cmd->argc <= 4) {
+    if (cmd->args.c <= 4) {
         return (handle_query_simple(cf, cmd, spp, idx, verbose));
     }
     len = 0;
     rst_pulled = pcnt_pulled = pcnt_strm_pulled = 0;
-    for (i = 4; i < cmd->argc && len < (sizeof(cmd->buf_t) - 2); i++) {
+    for (i = 4; i < cmd->args.c && len < (sizeof(cmd->buf_t) - 2); i++) {
         if (i > 4) {
             CHECK_OVERFLOW();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, " ");
@@ -135,71 +135,71 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
         if (verbose != 0) {
             CHECK_OVERFLOW();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%s=", \
-              cmd->argv[i]);
+              cmd->args.v[i]);
         }
         CHECK_OVERFLOW();
-        if (strcmp(cmd->argv[i], "ttl") == 0) {
+        if (strcmp(cmd->args.v[i], "ttl") == 0) {
             int ttl = CALL_METHOD(spp, get_ttl);
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
               ttl);
             continue;
         }
-        if (strcmp(cmd->argv[i], "npkts_ina") == 0) {
+        if (strcmp(cmd->args.v[i], "npkts_ina") == 0) {
             PULL_PCNT_STRM();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               pst[0].npkts_in);
             continue;
         }
-        if (strcmp(cmd->argv[i], "npkts_ino") == 0) {
+        if (strcmp(cmd->args.v[i], "npkts_ino") == 0) {
             PULL_PCNT_STRM();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               pst[1].npkts_in);
             continue;
         }
-        if (strcmp(cmd->argv[i], "nrelayed") == 0) {
+        if (strcmp(cmd->args.v[i], "nrelayed") == 0) {
             PULL_PCNT();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               pcnts.nrelayed);
             continue;
         }
-        if (strcmp(cmd->argv[i], "ndropped") == 0) {
+        if (strcmp(cmd->args.v[i], "ndropped") == 0) {
             PULL_PCNT();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               pcnts.ndropped);
             continue;
         }
-        if (strcmp(cmd->argv[i], "rtpa_nsent") == 0) {
+        if (strcmp(cmd->args.v[i], "rtpa_nsent") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.psent);
             continue;
         }
-        if (strcmp(cmd->argv[i], "rtpa_nrcvd") == 0) {
+        if (strcmp(cmd->args.v[i], "rtpa_nrcvd") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.precvd);
             continue;
         }
-        if (strcmp(cmd->argv[i], "rtpa_ndups") == 0) {
+        if (strcmp(cmd->args.v[i], "rtpa_ndups") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.pdups);
             continue;
         }
-        if (strcmp(cmd->argv[i], "rtpa_nlost") == 0) {
+        if (strcmp(cmd->args.v[i], "rtpa_nlost") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.plost);
             continue;
         }
-        if (strcmp(cmd->argv[i], "rtpa_perrs") == 0) {
+        if (strcmp(cmd->args.v[i], "rtpa_perrs") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.pecount);
             continue;
         }
         RTPP_LOG(spp->log, RTPP_LOG_ERR,
-              "QUERY: unsupported/invalid counter name `%s'", cmd->argv[i]);
+              "QUERY: unsupported/invalid counter name `%s'", cmd->args.v[i]);
         return (ECODE_QRYFAIL);
     }
     CHECK_OVERFLOW();

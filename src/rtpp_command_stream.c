@@ -129,15 +129,15 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     csp->ncmds_rcvd.cnt++;
 
     cp = cmd->buf;
-    for (ap = cmd->argv; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
+    for (ap = cmd->args.v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
         if (**ap != '\0') {
-            cmd->argc++;
-            if (++ap >= &cmd->argv[RTPC_MAX_ARGC])
+            cmd->args.c++;
+            if (++ap >= &cmd->args.v[RTPC_MAX_ARGC])
                 break;
         }
     }
 
-    if (cmd->argc < 1) {
+    if (cmd->args.c < 1) {
         RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
         reply_error(cmd, ECODE_PARSE_1);
         *rval = EINVAL;

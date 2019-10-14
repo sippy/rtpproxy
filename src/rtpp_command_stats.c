@@ -52,7 +52,7 @@ handle_get_stats(struct cfg *cf, struct rtpp_command *cmd, int verbose)
     int len, i, rval;
 
     len = 0;
-    for (i = 1; i < cmd->argc && len < (sizeof(cmd->buf_t) - 2); i++) {
+    for (i = 1; i < cmd->args.c && len < (sizeof(cmd->buf_t) - 2); i++) {
         if (i > 1) {
             CHECK_OVERFLOW();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, " ");
@@ -60,11 +60,11 @@ handle_get_stats(struct cfg *cf, struct rtpp_command *cmd, int verbose)
         if (verbose != 0) {
             CHECK_OVERFLOW();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%s=", \
-              cmd->argv[i]);
+              cmd->args.v[i]);
         }
         CHECK_OVERFLOW();
         rval = CALL_METHOD(cf->stable->rtpp_stats, nstr, cmd->buf_t + len,
-          sizeof(cmd->buf_t) - len, cmd->argv[i]);
+          sizeof(cmd->buf_t) - len, cmd->args.v[i]);
         if (rval < 0) {
             return (ECODE_STSFAIL);
         }

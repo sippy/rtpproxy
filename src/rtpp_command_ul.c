@@ -163,13 +163,13 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
         goto err_undo_0;
     }
     ul_opts_init(cf, ulop);
-    if (cmd->cca.op == UPDATE && cmd->argc > 6) {
-        if (cmd->argc == 8) {
-            ulop->notify_socket = cmd->argv[6];
-            ulop->notify_tag = cmd->argv[7];
+    if (cmd->cca.op == UPDATE && cmd->args.c > 6) {
+        if (cmd->args.c == 8) {
+            ulop->notify_socket = cmd->args.v[6];
+            ulop->notify_tag = cmd->args.v[7];
         } else {
-            ulop->notify_socket = cmd->argv[5];
-            ulop->notify_tag = cmd->argv[6];
+            ulop->notify_socket = cmd->args.v[5];
+            ulop->notify_tag = cmd->args.v[6];
             cmd->cca.to_tag = NULL;
         }
         len = url_unquote((uint8_t *)ulop->notify_tag, strlen(ulop->notify_tag));
@@ -181,10 +181,10 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
         }
         ulop->notify_tag[len] = '\0';
     }
-    ulop->addr = cmd->argv[2];
-    ulop->port = cmd->argv[3];
+    ulop->addr = cmd->args.v[2];
+    ulop->port = cmd->args.v[3];
     /* Process additional command modifiers */
-    for (cp = cmd->argv[0] + 1; *cp != '\0'; cp++) {
+    for (cp = cmd->args.v[0] + 1; *cp != '\0'; cp++) {
         switch (*cp) {
         case 'a':
         case 'A':

@@ -60,8 +60,8 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
     cpp->has_call_id = 1;
     cpp->fpos = -1;
     cpp->tpos = -1;
-    cpp->cmods = &(cmd->argv[0][1]);
-    switch (cmd->argv[0][0]) {
+    cpp->cmods = &(cmd->args.v[0][1]);
+    switch (cmd->args.v[0][0]) {
     case 'u':
     case 'U':
         cmd->cca.op = UPDATE;
@@ -233,13 +233,13 @@ rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd)
 
     if (fill_cmd_props(cf, cmd, &cprops) != 0) {
         RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "unknown command \"%c\"",
-          cmd->argv[0][0]);
+          cmd->args.v[0][0]);
         reply_error(cmd, ECODE_CMDUNKN);
         return (-1);
     }
-    if (cmd->argc < cprops.min_argc || cmd->argc > cprops.max_argc) {
+    if (cmd->args.c < cprops.min_argc || cmd->args.c > cprops.max_argc) {
         RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "%s command syntax error"
-          ": invalid number of arguments (%d)", cmd->cca.rname, cmd->argc);
+          ": invalid number of arguments (%d)", cmd->cca.rname, cmd->args.c);
         reply_error(cmd, ECODE_PARSE_NARGS);
         return (-1);
     }
@@ -249,8 +249,8 @@ rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd)
         reply_error(cmd, ECODE_PARSE_MODS);
         return (-1);
     }
-    cmd->cca.call_id = cprops.has_call_id ? cmd->argv[1] : NULL;
-    cmd->cca.from_tag = cprops.fpos > 0 ? cmd->argv[cprops.fpos] : NULL;
-    cmd->cca.to_tag = cprops.tpos > 0 ? cmd->argv[cprops.tpos] : NULL;
+    cmd->cca.call_id = cprops.has_call_id ? cmd->args.v[1] : NULL;
+    cmd->cca.from_tag = cprops.fpos > 0 ? cmd->args.v[cprops.fpos] : NULL;
+    cmd->cca.to_tag = cprops.tpos > 0 ? cmd->args.v[cprops.tpos] : NULL;
     return (0);
 }
