@@ -340,7 +340,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     cp = cmd->buf;
     for (ap = cmd->args.v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
         if (**ap != '\0') {
-            if (cmd->args.c == 0 && umode != 0) {
+            if (cmd->args.c == 0 && pvt->cookie == NULL && umode != 0) {
                 pvt->cookie = *ap;
                 continue;
             }
