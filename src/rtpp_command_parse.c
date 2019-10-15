@@ -56,7 +56,7 @@ struct cmd_props {
 };
 
 static int 
-fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
+fill_cmd_props(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd,
   struct cmd_props *cpp)
 {
 
@@ -117,7 +117,7 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
     case 'R':
         cmd->cca.op = RECORD;
         cmd->cca.rname = "record";
-        if (cf->stable->record_pcap != 0) {
+        if (cfsp->record_pcap != 0) {
             cmd->cca.hint = "R[s] call_id from_tag [to_tag]";
         } else {
             cmd->cca.hint = "R call_id from_tag [to_tag]";
@@ -217,7 +217,7 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
         cmd->cca.rname = "get_stats";
         cmd->cca.hint = "G[v] [stat_name1 [stat_name2 [stat_name3 ...[stat_nameN]]]]";
         cmd->no_glock = 1;
-        cpp->max_argc = CALL_SMETHOD(cf->stable->rtpp_stats, getnstats) + 1;
+        cpp->max_argc = CALL_SMETHOD(cfsp->rtpp_stats, getnstats) + 1;
         cpp->min_argc = 1;
         cpp->has_cmods = 1;
         cpp->has_call_id = 0;
@@ -230,24 +230,24 @@ fill_cmd_props(struct cfg *cf, struct rtpp_command *cmd,
 }
 
 int
-rtpp_command_pre_parse(struct cfg *cf, struct rtpp_command *cmd)
+rtpp_command_pre_parse(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
 {
     struct cmd_props cprops;
 
-    if (fill_cmd_props(cf, cmd, &cprops) != 0) {
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "unknown command \"%c\"",
+    if (fill_cmd_props(cfsp, cmd, &cprops) != 0) {
+        RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "unknown command \"%c\"",
           cmd->args.v[0][0]);
         reply_error(cmd, ECODE_CMDUNKN);
         return (-1);
     }
     if (cmd->args.c < cprops.min_argc || cmd->args.c > cprops.max_argc) {
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "%s command syntax error"
+        RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s command syntax error"
           ": invalid number of arguments (%d)", cmd->cca.rname, cmd->args.c);
         reply_error(cmd, ECODE_PARSE_NARGS);
         return (-1);
     }
     if (cprops.has_cmods == 0 && cprops.cmods[0] != '\0') {
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "%s command syntax error"
+        RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s command syntax error"
           ": modifiers are not supported by the command", cmd->cca.rname);
         reply_error(cmd, ECODE_PARSE_MODS);
         return (-1);

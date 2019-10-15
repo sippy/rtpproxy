@@ -389,7 +389,7 @@ get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rva
     }
 
     /* Step I: parse parameters that are common to all ops */
-    if (rtpp_command_pre_parse(cf, cmd) != 0) {
+    if (rtpp_command_pre_parse(cf->stable, cmd) != 0) {
         /* Error reply is handled by the rtpp_command_pre_parse() */
         *rval = GET_CMD_OK;
         free_command(cmd);
