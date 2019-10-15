@@ -80,7 +80,7 @@ struct rtpp_command_priv {
     struct rtpp_command pub;
     struct rtpp_cfg_stable *cfs;
     int controlfd;
-    char *cookie;
+    const char *cookie;
     int umode;
     char buf_r[256];
     struct rtpp_cmd_rcache *rcache_obj;
@@ -284,7 +284,7 @@ get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rva
 {
     char **ap;
     char *cp, *bp;
-    int len, i;
+    int len;
     struct rtpp_command *cmd;
     struct rtpp_command_priv *pvt;
     int umode = RTPP_CTRL_ISDG(rcsp);
