@@ -374,7 +374,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     }
 
     /* Step I: parse parameters that are common to all ops */
-    if (rtpp_command_pre_parse(cf, cmd) != 0) {
+    if (rtpp_command_pre_parse(cf->stable, cmd) != 0) {
         /* Error reply is handled by the rtpp_command_pre_parse() */
         *rval = 0;
         free_command(cmd);
