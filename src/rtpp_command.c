@@ -340,12 +340,16 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     cp = cmd->buf;
     for (ap = cmd->args.v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
         if (**ap != '\0') {
+            if (cmd->args.c == 0 && umode != 0) {
+                pvt->cookie = *ap;
+                continue;
+            }
             cmd->args.c++;
             if (++ap >= &cmd->args.v[RTPC_MAX_ARGC])
                 break;
         }
     }
-    if (cmd->args.c < 1 || (umode != 0 && cmd->args.c < 2)) {
+    if (cmd->args.c < 1 || (umode != 0 && pvt->cookie == NULL)) {
         RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
         reply_error(cmd, ECODE_PARSE_1);
         *rval = 0;
@@ -355,7 +359,6 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
 
     /* Stream communication mode doesn't use cookie */
     if (umode != 0) {
-        pvt->cookie = cmd->args.v[0];
         if (CALL_METHOD(rcache_obj, lookup, pvt->cookie, pvt->buf_r, sizeof(pvt->buf_r)) == 1) {
             len = strlen(pvt->buf_r);
             rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, controlfd, pvt->buf_r, len, 0,
@@ -368,10 +371,6 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
         }
         CALL_SMETHOD(rcache_obj->rcnt, incref);
         pvt->rcache_obj = rcache_obj;
-        for (i = 1; i < cmd->args.c; i++)
-            cmd->args.v[i - 1] = cmd->args.v[i];
-        cmd->args.c--;
-        cmd->args.v[cmd->args.c] = NULL;
     }
 
     /* Step I: parse parameters that are common to all ops */
