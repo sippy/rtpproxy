@@ -99,7 +99,7 @@ struct rtpp_command_priv {
     struct rtpp_command pub;
     struct rtpp_cfg_stable *cfs;
     int controlfd;
-    char *cookie;
+    const char *cookie;
     int umode;
     char buf_r[256];
     struct rtpp_cmd_rcache *rcache_obj;
@@ -299,7 +299,7 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
 {
     char **ap;
     char *cp;
-    int len, i;
+    int len;
     struct rtpp_command *cmd;
     struct rtpp_command_priv *pvt;
 
