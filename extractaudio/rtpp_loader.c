@@ -39,6 +39,10 @@
 
 #include "config.h"
 
+#if HAVE_ERR_H
+# include <err.h>
+#endif
+
 #include "rtpp_ssrc.h"
 #include "rtp_info.h"
 #include "rtpp_record_private.h"
