@@ -46,4 +46,7 @@ struct rtpp_type_linkable {
 
 #define PVT_RCOFFS(pvt) (size_t)(&(((typeof(pvt))NULL)->pub.rcnt))
 
+#define PUB2PVT(pubp, pvtp) \
+  (pvtp) = (typeof(pvtp))((char *)(pubp) - offsetof(typeof(*(pvtp)), pub))
+
 #endif

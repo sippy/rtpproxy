@@ -74,14 +74,6 @@ struct rtpp_timed_wi {
     void *rco[0];
 };
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_timed_cf *)((char *)(pubp) - \
-  offsetof(struct rtpp_timed_cf, pub)))
-
-#define TASKPUB2PVT(pubp) \
-  ((struct rtpp_timed_wi *)((char *)(pubp) - \
-  offsetof(struct rtpp_timed_wi, pub)))
-
 static void rtpp_timed_destroy(struct rtpp_timed_cf *);
 static int rtpp_timed_schedule(struct rtpp_timed *,
   double offset, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
@@ -198,7 +190,7 @@ rtpp_timed_shutdown(struct rtpp_timed *self)
 {
     struct rtpp_timed_cf *rtpp_timed_cf;
 
-    rtpp_timed_cf = PUB2PVT(self);
+    PUB2PVT(self, rtpp_timed_cf);
     assert(rtpp_timed_cf->state == RT_ST_RUNNING);
     rtpp_queue_put_item(rtpp_timed_cf->sigterm, rtpp_timed_cf->cmd_q);
     pthread_join(rtpp_timed_cf->thread_id, NULL);
@@ -386,7 +378,7 @@ rtpp_timed_cancel(struct rtpp_timed_task *taskpub)
     struct rtpp_timed_match_wi_arg match_arg;
     struct rtpp_timed_wi *wi_data;
 
-    wi_data = TASKPUB2PVT(taskpub);
+    PUB2PVT(taskpub, wi_data);
 
     rtcp = wi_data->timed_cf;
     match_arg.wi_dsize = rtcp->wi_dsize;

@@ -58,8 +58,6 @@ struct rtpp_pipe_priv
     int pipe_type;
 };
 
-#define PUB2PVT(pubp)      ((struct rtpp_pipe_priv *)((char *)(pubp) - offsetof(struct rtpp_pipe_priv, pub)))
-
 static void rtpp_pipe_dtor(struct rtpp_pipe_priv *);
 static int rtpp_pipe_get_ttl(struct rtpp_pipe *);
 static void rtpp_pipe_decr_ttl(struct rtpp_pipe *);
@@ -173,7 +171,7 @@ rtpp_pipe_get_stats(struct rtpp_pipe *self, struct rtpp_acct_pipe *rapp)
 {
     struct rtpp_pipe_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
 
     CALL_METHOD(self->pcount, get_stats, rapp->pcnts);
     CALL_SMETHOD(self->stream[0], get_stats, &rapp->o.hld_stat);
@@ -210,7 +208,7 @@ rtpp_pipe_upd_cntrs(struct rtpp_pipe *self, struct rtpp_acct_pipe *rapp)
 {
     struct rtpp_pipe_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
 
     if (rapp->o.ps->npkts_in == 0 && rapp->a.ps->npkts_in == 0) {
         CALL_SMETHOD(self->rtpp_stats, updatebyname, NO_MED_NM(pvt->pipe_type),

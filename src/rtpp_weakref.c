@@ -41,8 +41,6 @@ struct rtpp_weakref_priv {
     struct rtpp_hash_table *ht;
 };
 
-#define PUB2PVT(pubp)      ((struct rtpp_weakref_priv *)((char *)(pubp) - offsetof(struct rtpp_weakref_priv, pub)))
-
 static void rtpp_weakref_dtor(struct rtpp_weakref_obj *);
 static int rtpp_weakref_reg(struct rtpp_weakref_obj *, struct rtpp_refcnt *, uint64_t);
 static void *rtpp_wref_get_by_idx(struct rtpp_weakref_obj *, uint64_t);
@@ -86,7 +84,7 @@ rtpp_weakref_reg(struct rtpp_weakref_obj *pub, struct rtpp_refcnt *sp,
 {
     struct rtpp_weakref_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
 
     if (CALL_METHOD(pvt->ht, append_refcnt, &suid, sp) == NULL) {
         return (-1);
@@ -100,7 +98,7 @@ rtpp_weakref_unreg(struct rtpp_weakref_obj *pub, uint64_t suid)
     struct rtpp_weakref_priv *pvt;
     struct rtpp_refcnt *sp;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
 
     sp = CALL_METHOD(pvt->ht, remove_by_key, &suid);
     return (sp);
@@ -111,7 +109,7 @@ rtpp_weakref_dtor(struct rtpp_weakref_obj *pub)
 {
     struct rtpp_weakref_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
 
     CALL_METHOD(pvt->ht, dtor);
     free(pvt);
@@ -123,7 +121,7 @@ rtpp_wref_get_by_idx(struct rtpp_weakref_obj *pub, uint64_t suid)
     struct rtpp_weakref_priv *pvt;
     struct rtpp_refcnt *rco;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
 
     rco = CALL_METHOD(pvt->ht, find, &suid);
     if (rco == NULL) {
@@ -138,7 +136,7 @@ rtpp_wref_foreach(struct rtpp_weakref_obj *pub, rtpp_weakref_foreach_t foreach_f
 {
     struct rtpp_weakref_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
     CALL_METHOD(pvt->ht, foreach, foreach_f, foreach_d);
 }
 
@@ -147,7 +145,7 @@ rtpp_wref_get_length(struct rtpp_weakref_obj *pub)
 {
     struct rtpp_weakref_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
     return (CALL_METHOD(pvt->ht, get_length));
 }
 
@@ -156,6 +154,6 @@ rtpp_wref_purge(struct rtpp_weakref_obj *pub)
 {
     struct rtpp_weakref_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
     return (CALL_METHOD(pvt->ht, purge));
 }

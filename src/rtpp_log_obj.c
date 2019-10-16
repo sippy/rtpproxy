@@ -54,9 +54,6 @@ struct rtpp_log_priv
     rtpp_log_t log;
 };
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_log_priv *)((char *)(pubp) - offsetof(struct rtpp_log_priv, pub)))
-
 static void rtpp_log_obj_dtor(struct rtpp_log_priv *);
 static void rtpp_log_obj_setlevel(struct rtpp_log *, int);
 static void rtpp_log_obj_write(struct rtpp_log *, const char *, int, const char *, ...);
@@ -106,7 +103,7 @@ rtpp_log_obj_setlevel(struct rtpp_log *self, int log_level)
 {
     struct rtpp_log_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     if (log_level != -1) {
         rtpp_log_setlevel(pvt->log, log_level);
     } else {
@@ -119,7 +116,7 @@ rtpp_log_obj_setlevel_early(struct rtpp_log *self, int log_level)
 {
     struct rtpp_log_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pvt->level = log_level;
 }
 
@@ -130,7 +127,7 @@ rtpp_log_obj_write(struct rtpp_log *self, const char *fname, int level,
     va_list ap;
     struct rtpp_log_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     va_start(ap, fmt);
     _rtpp_log_write_va(pvt->log, level, fname, fmt, ap);
     va_end(ap);
@@ -144,7 +141,7 @@ rtpp_log_obj_ewrite(struct rtpp_log *self, const char *fname, int level,
     va_list ap;
     struct rtpp_log_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     va_start(ap, fmt);
     _rtpp_log_ewrite_va(pvt->log, level, fname, fmt, ap);
     va_end(ap);
@@ -158,7 +155,7 @@ rtpp_log_obj_write_early(struct rtpp_log *self, const char *fname, int level,
     va_list ap;
     struct rtpp_log_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     if (level < pvt->level)
         return;
     fprintf(stderr, "%s: ", fname);
@@ -177,7 +174,7 @@ rtpp_log_obj_ewrite_early(struct rtpp_log *self, const char *fname, int level,
     va_list ap;
     struct rtpp_log_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     if (level < pvt->level)
         return;
     fprintf(stderr, "%s: ", fname);
@@ -194,7 +191,7 @@ rtpp_log_obj_start(struct rtpp_log *self, struct rtpp_cfg_stable *cfs)
 {
     struct rtpp_log_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
 
     pvt->log = rtpp_log_open(cfs, pvt->app, pvt->call_id, pvt->flags);
     if (pvt->log == NULL)

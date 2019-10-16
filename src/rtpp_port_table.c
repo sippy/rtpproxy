@@ -50,9 +50,6 @@ struct rtpp_ptbl_priv {
 static void rtpp_ptbl_dtor(struct rtpp_ptbl_priv *);
 static int rtpp_ptbl_get_port(struct rtpp_port_table *, rtpp_pt_use_t, void *);
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_ptbl_priv *)((char *)(pubp) - offsetof(struct rtpp_ptbl_priv, pub)))
-
 struct rtpp_port_table *
 rtpp_port_table_ctor(int port_min, int port_max, int seq_ports, uint16_t port_ctl)
 {
@@ -124,7 +121,7 @@ rtpp_ptbl_get_port(struct rtpp_port_table *self, rtpp_pt_use_t use_port, void *u
     int i, j, idx, rval;
     uint16_t port;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
 
     pthread_mutex_lock(&pvt->lock);
     for (i = 1; i < pvt->port_table_len; i++) {

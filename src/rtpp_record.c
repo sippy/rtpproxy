@@ -94,9 +94,6 @@ static void rtpp_record_write(struct rtpp_record *, struct rtpp_stream *, struct
 static void rtpp_record_close(struct rtpp_record_channel *);
 static int get_hdr_size(const struct sockaddr *);
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_record_channel *)((char *)(pubp) - offsetof(struct rtpp_record_channel, pub)))
-
 static int
 ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
   char *rname, int is_rtcp)
@@ -546,7 +543,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     struct rtpp_netaddr *rem_addr;
     size_t dalen;
 
-    rrc = PUB2PVT(self);
+    PUB2PVT(self, rrc);
 
     if (rrc->fd == -1)
 	return;

@@ -43,14 +43,11 @@
 #include "rtp_packet.h"
 
 struct rtpp_acct_rtcp_priv {
-    struct rtpa_stats_jitter _jt;
     struct rtpp_acct_rtcp pub;
+    struct rtpa_stats_jitter _jt;
 };
 
 static void rtpp_acct_rtcp_dtor(struct rtpp_acct_rtcp_priv *);
-
-#define PUB2PVT(pubp) \
-  ((struct rtpp_acct_rtcp_priv *)((char *)(pubp) - offsetof(struct rtpp_acct_rtcp_priv, pub)))
 
 struct rtpp_acct_rtcp *
 rtpp_acct_rtcp_ctor(const char *call_id, const struct rtp_packet *pp)

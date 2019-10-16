@@ -58,9 +58,6 @@ static void rtpp_pcnt_strm_get_stats(struct rtpp_pcnt_strm *,
 static void rtpp_pcnt_strm_reg_pktin(struct rtpp_pcnt_strm *,
   struct rtp_packet *);
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_pcnt_strm_priv *)((char *)(pubp) - offsetof(struct rtpp_pcnt_strm_priv, pub)))
-
 struct rtpp_pcnt_strm *
 rtpp_pcnt_strm_ctor(void)
 {
@@ -101,7 +98,7 @@ rtpp_pcnt_strm_get_stats(struct rtpp_pcnt_strm *self,
 {
     struct rtpp_pcnt_strm_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     memcpy(ocnt, &pvt->cnt, sizeof(struct rtpp_pcnts_strm));
     pthread_mutex_unlock(&pvt->lock);
@@ -114,7 +111,7 @@ rtpp_pcnt_strm_reg_pktin(struct rtpp_pcnt_strm *self,
     struct rtpp_pcnt_strm_priv *pvt;
     double ipi;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     pvt->cnt.npkts_in++;
     if (pvt->cnt.first_pkt_rcv.mono == 0.0) {

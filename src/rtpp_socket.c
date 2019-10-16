@@ -71,9 +71,6 @@ static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *,
   const struct rtpp_timestamp *, struct sockaddr *, int);
 static int rtpp_socket_getfd(struct rtpp_socket *);
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_socket_priv *)((char *)(pubp) - offsetof(struct rtpp_socket_priv, pub)))
-
 struct rtpp_socket *
 rtpp_socket_ctor(int domain, int type)
 {
@@ -130,7 +127,7 @@ rtpp_socket_bind(struct rtpp_socket *self, const struct sockaddr *addr,
 {
     struct rtpp_socket_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     return (bind(pvt->fd, addr, addrlen));
 }
 
@@ -139,7 +136,7 @@ rtpp_socket_settos(struct rtpp_socket *self, int tos)
 {
     struct rtpp_socket_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     return (setsockopt(pvt->fd, IPPROTO_IP, IP_TOS, &tos, sizeof(tos)));
 }
 
@@ -148,7 +145,7 @@ rtpp_socket_setrbuf(struct rtpp_socket *self, int so_rcvbuf)
 {
     struct rtpp_socket_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     return (setsockopt(pvt->fd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf,
       sizeof(so_rcvbuf)));
 }
@@ -159,7 +156,7 @@ rtpp_socket_setnonblock(struct rtpp_socket *self)
     int flags;
     struct rtpp_socket_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     flags = fcntl(pvt->fd, F_GETFL);
     return (fcntl(pvt->fd, F_SETFL, flags | O_NONBLOCK));
 }
@@ -170,7 +167,7 @@ rtpp_socket_settimestamp(struct rtpp_socket *self)
     struct rtpp_socket_priv *pvt;
     int sval, rval;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     sval = 1;
     rval = setsockopt(pvt->fd, SOL_SOCKET, SO_TIMESTAMP, &sval,
       sizeof(sval));
@@ -189,7 +186,7 @@ rtpp_socket_send_pkt(struct rtpp_socket *self, struct sthread_args *str,
 {
     struct rtpp_socket_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     return (rtpp_anetio_send_pkt(str, pvt->fd, daddr, addrlen, pkt,
       self->rcnt, log));
 }
@@ -202,7 +199,7 @@ rtpp_socket_send_pkt_na(struct rtpp_socket *self, struct sthread_args *str,
 {
     struct rtpp_socket_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     return (rtpp_anetio_send_pkt_na(str, pvt->fd, daddr, pkt,
       self->rcnt, log));
 }
@@ -219,7 +216,7 @@ rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, const struct rtpp_timestam
         return NULL;
     }
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
 
     packet->rlen = sizeof(packet->raddr);
     packet->size = recvfrom(pvt->fd, packet->data.buf, sizeof(packet->data.buf), 0, 
@@ -253,7 +250,7 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtim
         return NULL;
     }
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
 
     packet->rlen = sizeof(packet->raddr);
     llen = sizeof(packet->_laddr);
@@ -294,6 +291,6 @@ rtpp_socket_getfd(struct rtpp_socket *self)
 {
     struct rtpp_socket_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     return (pvt->fd);
 }

@@ -68,8 +68,6 @@ struct rtpp_server_priv {
     int started;
 };
 
-#define PUB2PVT(pubp)      ((struct rtpp_server_priv *)((char *)(pubp) - offsetof(struct rtpp_server_priv, pub)))
-
 static void rtpp_server_dtor(struct rtpp_server_priv *);
 static struct rtp_packet *rtpp_server_get(struct rtpp_server *, double, int *);
 static uint32_t rtpp_server_get_ssrc(struct rtpp_server *);
@@ -151,7 +149,7 @@ rtpp_server_get(struct rtpp_server *self, double dtime, int *rval)
     int hlen;
     struct rtpp_server_priv *rp;
 
-    rp = PUB2PVT(self);
+    PUB2PVT(self, rp);
 
     if (rp->started == 0 || (rp->btime + ((double)rp->dts / 1000.0) > dtime)) {
         *rval = RTPS_LATER;
@@ -238,7 +236,7 @@ rtpp_server_get_ssrc(struct rtpp_server *self)
 {
     struct rtpp_server_priv *rp;
 
-    rp = PUB2PVT(self);
+    PUB2PVT(self, rp);
     return (ntohl(rp->rtp->ssrc));
 }
 
@@ -247,7 +245,7 @@ rtpp_server_set_ssrc(struct rtpp_server *self, uint32_t ssrc)
 {
     struct rtpp_server_priv *rp;
 
-    rp = PUB2PVT(self);
+    PUB2PVT(self, rp);
     rp->rtp->ssrc = htonl(ssrc);
 }
 
@@ -256,7 +254,7 @@ rtpp_server_get_seq(struct rtpp_server *self)
 {
     struct rtpp_server_priv *rp;
 
-    rp = PUB2PVT(self);
+    PUB2PVT(self, rp);
     return (ntohs(rp->rtp->seq));
 }
 
@@ -265,7 +263,7 @@ rtpp_server_set_seq(struct rtpp_server *self, uint16_t seq)
 {
     struct rtpp_server_priv *rp;
 
-    rp = PUB2PVT(self);
+    PUB2PVT(self, rp);
     rp->rtp->seq = htons(seq);
 }
 
@@ -274,7 +272,7 @@ rtpp_server_start(struct rtpp_server *self, double dtime)
 {
     struct rtpp_server_priv *rp;
 
-    rp = PUB2PVT(self);
+    PUB2PVT(self, rp);
     RTPP_DBG_ASSERT(rp->started == 0);
     rp->btime = dtime;
     rp->started = 1;

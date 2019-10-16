@@ -59,9 +59,6 @@ static int rtpp_analyzer_get_jstats(struct rtpp_analyzer *,
   struct rtpa_stats_jitter *);
 static void rtpp_analyzer_dtor(struct rtpp_analyzer_priv *);
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_analyzer_priv *)((char *)(pubp) - offsetof(struct rtpp_analyzer_priv, pub)))
-
 struct rtpp_analyzer *
 rtpp_analyzer_ctor(struct rtpp_log *log)
 {
@@ -96,7 +93,7 @@ rtpp_analyzer_update(struct rtpp_analyzer *rap, struct rtp_packet *pkt)
     struct rtpp_analyzer_priv *pvt;
     enum update_rtpp_stats_rval rval;
 
-    pvt = PUB2PVT(rap);
+    PUB2PVT(rap, pvt);
     if (rtp_packet_parse(pkt) != RTP_PARSER_OK) {
         pvt->pecount++;
         return (UPDATE_ERR);
@@ -116,7 +113,7 @@ rtpp_analyzer_get_stats(struct rtpp_analyzer *rap, struct rtpa_stats *rsp)
     struct rtpp_session_stat ostat;
     struct rtpp_analyzer_priv *pvt;
 
-    pvt = PUB2PVT(rap);
+    PUB2PVT(rap, pvt);
     rsp->pecount = pvt->pecount;
     rsp->aecount = pvt->aecount;
     memset(&ostat, '\0', sizeof(ostat));
@@ -141,7 +138,7 @@ rtpp_analyzer_get_jstats(struct rtpp_analyzer *rap,
     struct rtpp_analyzer_priv *pvt;
     int rval;
 
-    pvt = PUB2PVT(rap);
+    PUB2PVT(rap, pvt);
     rval = get_jitter_stats(pvt->rstat.jdata, jrsp, pvt->log);
     return (rval);
 }

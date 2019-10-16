@@ -41,8 +41,6 @@ struct rtpp_genuid_priv {
     pthread_mutex_t lastsuid_lock;
 };
 
-#define PUB2PVT(pubp)      ((struct rtpp_genuid_priv *)((char *)(pubp) - offsetof(struct rtpp_genuid_priv, pub)))
-
 static void rtpp_genuid_gen(struct rtpp_genuid_obj *, uint64_t *vp);
 static void rtpp_genuid_dtor(struct rtpp_genuid_obj *);
 
@@ -72,7 +70,7 @@ rtpp_genuid_dtor(struct rtpp_genuid_obj *pub)
 {
     struct rtpp_genuid_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
 
     pthread_mutex_destroy(&pvt->lastsuid_lock);
     free(pvt);
@@ -83,7 +81,7 @@ rtpp_genuid_gen(struct rtpp_genuid_obj *pub, uint64_t *vp)
 {
     struct rtpp_genuid_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
 
     pthread_mutex_lock(&pvt->lastsuid_lock);
     *vp = ++(pvt->lastsuid);

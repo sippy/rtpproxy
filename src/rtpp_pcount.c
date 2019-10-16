@@ -49,9 +49,6 @@ static void rtpp_pcount_reg_drop(struct rtpp_pcount *);
 static void rtpp_pcount_reg_ignr(struct rtpp_pcount *);
 static void rtpp_pcount_get_stats(struct rtpp_pcount *, struct rtpps_pcount *);
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_pcount_priv *)((char *)(pubp) - offsetof(struct rtpp_pcount_priv, pub)))
-
 struct rtpp_pcount *
 rtpp_pcount_ctor(void)
 {
@@ -93,7 +90,7 @@ rtpp_pcount_reg_reld(struct rtpp_pcount *self)
 {
     struct rtpp_pcount_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     pvt->cnt.nrelayed++;
     pthread_mutex_unlock(&pvt->lock);
@@ -104,7 +101,7 @@ rtpp_pcount_reg_drop(struct rtpp_pcount *self)
 {
     struct rtpp_pcount_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     pvt->cnt.ndropped++;
     pthread_mutex_unlock(&pvt->lock);
@@ -115,7 +112,7 @@ rtpp_pcount_reg_ignr(struct rtpp_pcount *self)
 {
     struct rtpp_pcount_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     pvt->cnt.nignored++;
     pthread_mutex_unlock(&pvt->lock);
@@ -126,7 +123,7 @@ rtpp_pcount_get_stats(struct rtpp_pcount *self, struct rtpps_pcount *ocnt)
 {
     struct rtpp_pcount_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     memcpy(ocnt, &pvt->cnt, sizeof(struct rtpps_pcount));
     pthread_mutex_unlock(&pvt->lock);

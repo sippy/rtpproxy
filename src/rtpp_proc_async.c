@@ -85,8 +85,6 @@ struct rtpp_proc_async_cf {
 
 static void rtpp_proc_async_dtor(struct rtpp_proc_async *);
 
-#define PUB2PVT(pubp)      ((struct rtpp_proc_async_cf *)((char *)(pubp) - offsetof(struct rtpp_proc_async_cf, pub)))
-
 #define FLUSH_STAT(sobj, st)	{ \
     if ((st).cnt > 0) { \
         CALL_SMETHOD(sobj, updatebyidx, (st).cnt_idx, (st).cnt); \
@@ -313,7 +311,7 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     struct rtpp_proc_async_cf *proc_cf;
     int tstate;
 
-    proc_cf = PUB2PVT(pub);
+    PUB2PVT(pub, proc_cf);
     tstate = atomic_load(&proc_cf->tstate);
     assert(tstate == TSTATE_RUN);
     atomic_store(&proc_cf->tstate, TSTATE_CEASE);

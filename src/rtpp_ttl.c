@@ -49,9 +49,6 @@ static void rtpp_ttl_reset_with(struct rtpp_ttl *, int);
 static int rtpp_ttl_get_remaining(struct rtpp_ttl *);
 static int rtpp_ttl_decr(struct rtpp_ttl *);
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_ttl_priv *)((char *)(pubp) - offsetof(struct rtpp_ttl_priv, pub)))
-
 struct rtpp_ttl *
 rtpp_ttl_ctor(int max_ttl)
 {
@@ -94,7 +91,7 @@ rtpp_ttl_reset(struct rtpp_ttl *self)
 {
     struct rtpp_ttl_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     pvt->ttl = pvt->max_ttl;
     pthread_mutex_unlock(&pvt->lock);
@@ -105,7 +102,7 @@ rtpp_ttl_reset_with(struct rtpp_ttl *self, int max_ttl)
 {
     struct rtpp_ttl_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     pvt->ttl = max_ttl;
     pvt->max_ttl = max_ttl;
@@ -118,7 +115,7 @@ rtpp_ttl_get_remaining(struct rtpp_ttl *self)
     struct rtpp_ttl_priv *pvt;
     int rval;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     rval = pvt->ttl;
     pthread_mutex_unlock(&pvt->lock);
@@ -131,7 +128,7 @@ rtpp_ttl_decr(struct rtpp_ttl *self)
     struct rtpp_ttl_priv *pvt;
     int rval;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     rval = pvt->ttl;
     if (pvt->ttl > 0)

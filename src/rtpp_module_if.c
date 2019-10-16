@@ -95,9 +95,6 @@ static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp
 static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **);
 static int rtpp_mif_config(struct rtpp_module_if *);
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_module_if_priv *)((char *)(pubp) - offsetof(struct rtpp_module_if_priv, pub)))
-
 static const char *do_acct_aname = "do_acct";
 static const char *do_acct_rtcp_aname = "do_acct_rtcp";
 
@@ -137,7 +134,7 @@ rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp, struct 
     struct rtpp_module_if_priv *pvt;
     const char *derr;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     pvt->dmp = dlopen(pvt->mpath, RTLD_NOW);
     if (pvt->dmp == NULL) {
         derr = dlerror();
@@ -339,7 +336,7 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
     struct rtpp_module_if_priv *pvt;
     struct rtpp_wi *wi;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     wi = rtpp_wi_malloc_apis(do_acct_aname, &acct, sizeof(acct));
     if (wi == NULL) {
         RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
@@ -356,7 +353,7 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
     struct rtpp_module_if_priv *pvt;
     struct rtpp_wi *wi;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     wi = rtpp_wi_malloc_apis(do_acct_rtcp_aname, &acct, sizeof(acct));
     if (wi == NULL) {
         RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
@@ -396,7 +393,7 @@ rtpp_mif_start(struct rtpp_module_if *self)
 {
     struct rtpp_module_if_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     if (pthread_create(&pvt->thread_id, NULL,
       (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
         return (-1);
@@ -411,7 +408,7 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
     struct rtpp_module_if_priv *pvt;
     struct rtpp_module_conf *rval;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     if (pvt->mip->get_mconf == NULL) {
         *mcpp = NULL;
         return (0);
@@ -429,7 +426,7 @@ rtpp_mif_config(struct rtpp_module_if *self)
 {
     struct rtpp_module_if_priv *pvt;
 
-    pvt = PUB2PVT(self);
+    PUB2PVT(self, pvt);
     if (pvt->mip->config == NULL) {
         return (0);
     }

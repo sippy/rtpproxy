@@ -52,6 +52,7 @@ struct rtpp_acct_pipe_s {
 };
 
 struct rtpp_acct_priv {
+    struct rtpp_acct pub;
     struct rtpp_acct_pipe_s _rtp;
     struct rtpp_acct_pipe_s _rtcp;
     struct rtpa_stats _rasto;
@@ -60,13 +61,9 @@ struct rtpp_acct_priv {
     struct rtpa_stats_jitter _jrasta;
     struct rtpp_timestamp _init_ts;
     struct rtpp_timestamp _destroy_ts;
-    struct rtpp_acct pub;
 };
 
 static void rtpp_acct_dtor(struct rtpp_acct_priv *);
-
-#define PUB2PVT(pubp) \
-  ((struct rtpp_acct_priv *)((char *)(pubp) - offsetof(struct rtpp_acct_priv, pub)))
 
 struct rtpp_acct *
 rtpp_acct_ctor(uint64_t seuid)

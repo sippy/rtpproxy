@@ -87,9 +87,6 @@ struct rtpp_command_priv {
     struct rtpp_timestamp dtime;
 };
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_command_priv *)((char *)(pubp) - offsetof(struct rtpp_command_priv, pub)))
-
 struct d_opts;
 
 static int create_twinlistener(uint16_t, void *);
@@ -181,7 +178,7 @@ rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
 {
     struct rtpp_command_priv *pvt;
 
-    pvt = PUB2PVT(cmd);
+    PUB2PVT(cmd, pvt);
 
     if (len > 0 && buf[len - 1] == '\n') {
         RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "sending reply \"%.*s\\n\"",
@@ -244,7 +241,7 @@ free_command(struct rtpp_command *cmd)
 {
     struct rtpp_command_priv *pvt;
 
-    pvt = PUB2PVT(cmd);
+    PUB2PVT(cmd, pvt);
     if (pvt->rcache_obj != NULL) {
         CALL_SMETHOD(pvt->rcache_obj->rcnt, decref);
     }
@@ -315,7 +312,7 @@ get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rva
                 break;
         }
     } else {
-	pvt = PUB2PVT(cmd);
+	PUB2PVT(cmd, pvt);
         if (cmd == NULL) {
             asize = sizeof(rcsp->emrg.addr);
             lp = &asize;

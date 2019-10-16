@@ -95,8 +95,6 @@ struct rtpp_cmd_async_cf {
     struct rtpp_cmd_rcache *rcache;
 };
 
-#define PUB2PVT(pubp)	((struct rtpp_cmd_async_cf *)((char *)(pubp) - offsetof(struct rtpp_cmd_async_cf, pub)))
-
 #define TSTATE_RUN   0x0
 #define TSTATE_CEASE 0x1
 
@@ -491,7 +489,7 @@ rtpp_command_async_get_aload(struct rtpp_cmd_async *pub)
     double aload;
     struct rtpp_cmd_async_cf *cmd_cf;
 
-    cmd_cf = PUB2PVT(pub);
+    PUB2PVT(pub, cmd_cf);
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
     aload = cmd_cf->average_load.lastval;
@@ -509,7 +507,7 @@ rtpp_command_async_wakeup(struct rtpp_cmd_async *pub)
     int old_clock;
     struct rtpp_cmd_async_cf *cmd_cf;
 
-    cmd_cf = PUB2PVT(pub);
+    PUB2PVT(pub, cmd_cf);
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
 
@@ -529,7 +527,7 @@ rtpp_command_async_reg_overload(struct rtpp_cmd_async *pub, int overload)
 {
     struct rtpp_cmd_async_cf *cmd_cf;
 
-    cmd_cf = PUB2PVT(pub);
+    PUB2PVT(pub, cmd_cf);
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
     cmd_cf->overload = overload;
@@ -542,7 +540,7 @@ rtpp_command_async_chk_overload(struct rtpp_cmd_async *pub)
     struct rtpp_cmd_async_cf *cmd_cf;
     int rval;
 
-    cmd_cf = PUB2PVT(pub);
+    PUB2PVT(pub, cmd_cf);
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
     rval = cmd_cf->overload;
@@ -748,7 +746,7 @@ rtpp_command_async_dtor(struct rtpp_cmd_async *pub)
     struct rtpp_cmd_async_cf *cmd_cf;
     int i;
 
-    cmd_cf = PUB2PVT(pub);
+    PUB2PVT(pub, cmd_cf);
 
     pthread_mutex_lock(&cmd_cf->cmd_mutex);
     cmd_cf->tstate_queue = TSTATE_CEASE;

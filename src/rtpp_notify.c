@@ -69,8 +69,6 @@ struct rtpp_notify_priv {
     struct rtpp_log *glog;
 };
 
-#define PUB2PVT(pubp)      ((struct rtpp_notify_priv *)((char *)(pubp) - offsetof(struct rtpp_notify_priv, pub)))
-
 static int rtpp_notify_schedule(struct rtpp_notify *,
   struct rtpp_tnotify_target *, const char *);
 static void rtpp_notify_dtor(struct rtpp_notify *);
@@ -146,7 +144,7 @@ rtpp_notify_dtor(struct rtpp_notify *pub)
 {
     struct rtpp_notify_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
 
     rtpp_queue_put_item(pvt->sigterm, pvt->nqueue);
     pthread_join(pvt->thread_id, NULL);
@@ -167,7 +165,7 @@ rtpp_notify_schedule(struct rtpp_notify *pub,
     int len;
     struct rtpp_notify_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
 
     /* string, \0 and \n */
     len = strlen(notify_tag) + 2;

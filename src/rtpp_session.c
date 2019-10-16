@@ -67,9 +67,6 @@ struct rtpp_session_priv
     struct rtpp_acct *acct;
 };
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_session_priv *)((char *)(pubp) - offsetof(struct rtpp_session_priv, pub)))
-
 static void rtpp_session_dtor(struct rtpp_session_priv *);
 
 struct rtpp_session *

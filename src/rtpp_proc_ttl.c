@@ -62,8 +62,6 @@ struct rtpp_proc_ttl_pvt {
 #define TSTATE_RUN   0x0
 #define TSTATE_CEASE 0x1
 
-#define PUB2PVT(pubp)      ((struct rtpp_proc_ttl_pvt *)((char *)(pubp) - offsetof(struct rtpp_proc_ttl_pvt, pub)))
-
 static void rtpp_proc_ttl(struct rtpp_hash_table *, struct rtpp_weakref_obj *,
   struct rtpp_notify *, struct rtpp_stats *);
 
@@ -143,7 +141,7 @@ rtpp_proc_ttl_dtor(struct rtpp_proc_ttl *pub)
     struct rtpp_proc_ttl_pvt *proc_cf;
     int tstate;
 
-    proc_cf = PUB2PVT(pub);
+    PUB2PVT(pub, proc_cf);
     tstate = atomic_load(&proc_cf->tstate);
     assert(tstate == TSTATE_RUN);
     atomic_store(&proc_cf->tstate, TSTATE_CEASE);

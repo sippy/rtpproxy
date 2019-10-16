@@ -79,9 +79,6 @@ static int rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *, struct rtpp_polltbl *
   int);
 static void rtpp_sessinfo_dtor(struct rtpp_sessinfo_priv *);
 
-#define PUB2PVT(pubp) \
-  ((struct rtpp_sessinfo_priv *)((char *)(pubp) - offsetof(struct rtpp_sessinfo_priv, pub)))
-
 static int
 rtpp_polltbl_hst_alloc(struct rtpp_polltbl_hst *hp, int alen)
 {
@@ -202,7 +199,7 @@ rtpp_sinfo_append(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     struct rtpp_sessinfo_priv *pvt;
     struct rtpp_stream *rtp, *rtcp;
 
-    pvt = PUB2PVT(sessinfo);
+    PUB2PVT(sessinfo, pvt);
     pthread_mutex_lock(&pvt->lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
@@ -246,7 +243,7 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     struct rtpp_stream *rtp, *rtcp;
     struct rtpp_socket *old_fd;
 
-    pvt = PUB2PVT(sessinfo);
+    PUB2PVT(sessinfo, pvt);
 
     pthread_mutex_lock(&pvt->lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
@@ -287,7 +284,7 @@ rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     struct rtpp_stream *rtp, *rtcp;
     struct rtpp_socket *fd;
 
-    pvt = PUB2PVT(sessinfo);
+    PUB2PVT(sessinfo, pvt);
 
     pthread_mutex_lock(&pvt->lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
@@ -343,7 +340,7 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
     struct rtpp_polltbl_hst *hp;
     int i;
 
-    pvt = PUB2PVT(sessinfo);
+    PUB2PVT(sessinfo, pvt);
 
     pthread_mutex_lock(&pvt->lock);
     hp = (pipe_type == PIPE_RTP) ? &pvt->hst_rtp : &pvt->hst_rtcp;

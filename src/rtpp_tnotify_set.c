@@ -78,8 +78,6 @@ struct rtpp_tnotify_set_priv {
     int wp_len;
 };
 
-#define PUB2PVT(pubp)      ((struct rtpp_tnotify_set_priv *)((char *)(pubp) - offsetof(struct rtpp_tnotify_set_priv, pub)))
-
 static void rtpp_tnotify_set_dtor(struct rtpp_tnotify_set *);
 static int rtpp_tnotify_set_append(struct rtpp_tnotify_set *, const char *, const char **);
 static struct rtpp_tnotify_target *rtpp_tnotify_set_lookup(struct rtpp_tnotify_set *,
@@ -110,7 +108,7 @@ rtpp_tnotify_set_dtor(struct rtpp_tnotify_set *pub)
     struct rtpp_tnotify_target *tp;
     int i;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
     for (i = 0; i < pvt->tp_len; i++) {
         tp = pvt->tp[i];
         if (tp->socket_name != NULL)
@@ -240,7 +238,7 @@ rtpp_tnotify_set_append(struct rtpp_tnotify_set *pub,
     struct rtpp_tnotify_wildcard *tnwp;
     union rtpp_tnotify_entry rte;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
     memset(&rte, '\0', sizeof(union rtpp_tnotify_entry));
     rval = parse_timeout_sock(socket_name, &rte, e);
     if (rval < 0) {
@@ -356,7 +354,7 @@ rtpp_tnotify_set_lookup(struct rtpp_tnotify_set *pub, const char *socket_name,
     int i;
     char *sep;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
     for (i = 0; i < pvt->tp_len; i++) {
         if (pvt->tp[i]->socket_name == NULL)
             continue;
@@ -403,6 +401,6 @@ rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set *pub)
 {
     struct rtpp_tnotify_set_priv *pvt;
 
-    pvt = PUB2PVT(pub);
+    PUB2PVT(pub, pvt);
     return (pvt->wp_len > 0 || pvt->tp_len > 0);
 }
