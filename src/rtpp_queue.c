@@ -51,10 +51,10 @@
 #define RTPQ_DEBUG 0
 
 typedef struct {
-    int head;
-    int tail;
-    int buflen;
-    struct rtpp_wi *buffer[CB_BUFLEN];
+    unsigned int buflen;
+    unsigned int head;
+    unsigned int tail;
+    struct rtpp_wi *buffer[0];
 } circ_bbuf_t;
 
 static int
@@ -67,10 +67,10 @@ circ_bbuf_isempty(const circ_bbuf_t *c)
 static int
 circ_bbuf_push(circ_bbuf_t *c, struct rtpp_wi *data)
 {
-    int next;
+    unsigned int next;
 
     next = c->head + 1;  // next is where head will point to after this write.
-    if (next == CB_BUFLEN)
+    if (next == c->buflen)
         next = 0;
 
     if (next == c->tail)  // if the head + 1 == tail, circular buffer is full
@@ -87,16 +87,16 @@ circ_bbuf_push(circ_bbuf_t *c, struct rtpp_wi *data)
 static int
 circ_bbuf_pop(circ_bbuf_t *c, struct rtpp_wi **data)
 {
-    int next;
+    unsigned int next;
 
     if (circ_bbuf_isempty(c))
         return(-1);
 
     next = c->tail + 1;  // next is where tail will point to after this read.
-    if (next == CB_BUFLEN)
+    if (next == c->buflen)
         next = 0;
 #ifdef RTPQ_DEBUG
-    assert(c->tail >= 0 && c->tail < CB_BUFLEN);
+    assert(c->tail >= 0 && c->tail < c->buflen);
 #endif
 
     *data = c->buffer[c->tail];  // Read data and then move
@@ -108,15 +108,15 @@ circ_bbuf_pop(circ_bbuf_t *c, struct rtpp_wi **data)
 }
 
 static int
-circ_bbuf_peek(const circ_bbuf_t *c, int offset, struct rtpp_wi **data)
+circ_bbuf_peek(const circ_bbuf_t *c, unsigned int offset, struct rtpp_wi **data)
 {
-    int itmidx, clen;
+    unsigned int itmidx, clen;
 
     if (circ_bbuf_isempty(c))
         return(-1);
 
     if (c->head < c->tail) {
-       clen = (c->head + CB_BUFLEN) - c->tail;
+       clen = (c->head + c->buflen) - c->tail;
     } else {
        clen = c->head - c->tail;
     }
@@ -124,10 +124,10 @@ circ_bbuf_peek(const circ_bbuf_t *c, int offset, struct rtpp_wi **data)
         return(-1);
 
     itmidx = c->tail + offset;  // itmidx points to the item in question
-    if(itmidx >= CB_BUFLEN)
-        itmidx -= CB_BUFLEN;
+    if(itmidx >= c->buflen)
+        itmidx -= c->buflen;
 #ifdef RTPQ_DEBUG
-    assert(itmidx >= 0 && itmidx < CB_BUFLEN);
+    assert(itmidx >= 0 && itmidx < c->buflen);
     assert(c->buffer[itmidx] != NULL);
 #endif
 
@@ -136,16 +136,16 @@ circ_bbuf_peek(const circ_bbuf_t *c, int offset, struct rtpp_wi **data)
 }
 
 static int
-circ_bbuf_replace(circ_bbuf_t *c, int offset, struct rtpp_wi **data)
+circ_bbuf_replace(circ_bbuf_t *c, unsigned int offset, struct rtpp_wi **data)
 {
-    int itmidx, clen;
+    unsigned int itmidx, clen;
     struct rtpp_wi *tdata;
 
     if (circ_bbuf_isempty(c))
         return(-1);
 
     if (c->head < c->tail) {
-       clen = (c->head + CB_BUFLEN) - c->tail;
+       clen = (c->head + c->buflen) - c->tail;
     } else {
        clen = c->head - c->tail;
     }
@@ -153,10 +153,10 @@ circ_bbuf_replace(circ_bbuf_t *c, int offset, struct rtpp_wi **data)
         return(-1);
 
     itmidx = c->tail + offset;  // itmidx points to the item in question
-    if(itmidx >= CB_BUFLEN)
-        itmidx -= CB_BUFLEN;
+    if(itmidx >= c->buflen)
+        itmidx -= c->buflen;
 #ifdef RTPQ_DEBUG
-    assert(itmidx >= 0 && itmidx < CB_BUFLEN);
+    assert(itmidx >= 0 && itmidx < c->buflen);
     assert(c->buffer[itmidx] != NULL);
 #endif
     tdata = c->buffer[itmidx];
@@ -169,16 +169,16 @@ circ_bbuf_replace(circ_bbuf_t *c, int offset, struct rtpp_wi **data)
 }
 
 static int
-circ_bbuf_remove(circ_bbuf_t *c, int offset)
+circ_bbuf_remove(circ_bbuf_t *c, unsigned int offset)
 {
-    int clen;
+    unsigned int clen;
     struct rtpp_wi *data;
 
     if (circ_bbuf_isempty(c))
         return(-1);
 
     if (c->head < c->tail) {
-       clen = (c->head + CB_BUFLEN) - c->tail;
+       clen = (c->head + c->buflen) - c->tail;
     } else {
        clen = c->head - c->tail;
     }
@@ -194,31 +194,32 @@ circ_bbuf_remove(circ_bbuf_t *c, int offset)
     c->buffer[c->tail] = NULL;
 #endif
     c->tail += 1;
-    if (c->tail == CB_BUFLEN)
+    if (c->tail == c->buflen)
         c->tail = 0;
     return(0);  // return success to indicate successful removal.
 }
 
 struct rtpp_queue
 {
+    char const *name;
     struct rtpp_wi *head;
     struct rtpp_wi *tail;
     pthread_cond_t cond;
     pthread_mutex_t mutex;
-    int length;
-    char *name;
-    int qlen;
+    unsigned int length;
+    unsigned int qlen;
     circ_bbuf_t circb;
 };
 
 struct rtpp_queue *
-rtpp_queue_init(int qlen, const char *fmt, ...)
+rtpp_queue_init(unsigned int qlen, const char *fmt, ...)
 {
     struct rtpp_queue *queue;
+    char *name;
     va_list ap;
     int eval;
 
-    queue = rtpp_zmalloc(sizeof(*queue));
+    queue = rtpp_zmalloc(sizeof(*queue) + (sizeof(queue->circb.buffer[0]) * CB_BUFLEN));
     if (queue == NULL)
         goto e0;
     queue->qlen = qlen;
@@ -229,11 +230,12 @@ rtpp_queue_init(int qlen, const char *fmt, ...)
         goto e2;
     }
     va_start(ap, fmt);
-    vasprintf(&queue->name, fmt, ap);
+    vasprintf(&name, fmt, ap);
     va_end(ap);
-    if (queue->name == NULL) {
+    if (name == NULL) {
         goto e3;
     }
+    queue->name = name;
     queue->circb.buflen = CB_BUFLEN;
     return (queue);
 e3:
@@ -252,7 +254,7 @@ rtpp_queue_destroy(struct rtpp_queue *queue)
 
     pthread_cond_destroy(&queue->cond);
     pthread_mutex_destroy(&queue->mutex);
-    free(queue->name);
+    free((void *)queue->name);
     free(queue);
 }
 
@@ -263,7 +265,7 @@ rtpp_queue_getclen(const struct rtpp_queue *queue)
 
     clen = queue->length;
     if (queue->circb.head < queue->circb.tail) {
-       clen += (queue->circb.head + CB_BUFLEN) - queue->circb.tail;
+       clen += (queue->circb.head + queue->circb.buflen) - queue->circb.tail;
     } else if (queue->circb.head > queue->circb.tail) {
        clen += queue->circb.head - queue->circb.tail;
     }

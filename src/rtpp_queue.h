@@ -69,7 +69,7 @@ struct rtpp_wi;
     (rqp)->length += 1;                      \
 }
 
-struct rtpp_queue *rtpp_queue_init(int, const char *format, ...);
+struct rtpp_queue *rtpp_queue_init(unsigned int, const char *format, ...);
 void rtpp_queue_destroy(struct rtpp_queue *queue);
 
 void rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *);
