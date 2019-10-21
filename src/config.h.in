@@ -118,6 +118,9 @@
 /* define to 1 if bcg729 new API have to be used */
 #undef HAVE_NEW_BCG729_API
 
+/* Define to 1 if you have the `pthread_yield' function. */
+#undef HAVE_PTHREAD_YIELD
+
 /* Have the sockaddr_un.sun_len member. */
 #undef HAVE_SOCKADDR_SUN_LEN
 
