@@ -293,6 +293,7 @@ AC_LINK_IFELSE(
       [AC_MSG_FAILURE([libatomic needed, but linking with -latomic failed, cannot continue])]
   )]
 )
+AC_CHECK_FUNCS([pthread_yield])
 
 # <DocBook & friends>
 AX_CHECK_DOCBOOK_DTD(4.5)
