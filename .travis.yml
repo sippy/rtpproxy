@@ -1,4 +1,5 @@
 # force run: 1
+os: linux
 dist: xenial
 language: c
 compiler:
