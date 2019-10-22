@@ -6,15 +6,13 @@ compiler:
   - gcc
 python:
   - "3.6"
-rvm:
-  - 1.9.3
 arch:
   - amd64
   - arm64
 sudo: required
 before_install:
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
-    - sudo apt-get -y install python3-pip python-dev
+    - sudo apt-get -y install python3-pip python-dev ruby
     - sudo pip3 install -U setuptools
     - sudo pip3 install -U virtualenvwrapper
     - which python
