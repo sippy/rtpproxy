@@ -6,6 +6,9 @@ compiler:
   - gcc
 python:
   - "3.6"
+arch:
+  - amd64
+  - arm64
 sudo: required
 before_install:
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
