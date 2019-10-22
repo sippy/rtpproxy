@@ -313,7 +313,7 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
         return (NULL);
 
     for (i = 0; i < SEND_THREADS; i++) {
-        netio_cf->args[i].out_q = rtpp_queue_init(qlen, "RTPP->NET%.2d", i);
+        netio_cf->args[i].out_q = rtpp_queue_init("RTPP->NET%.2d", i);
         if (netio_cf->args[i].out_q == NULL) {
             for (ri = i - 1; ri >= 0; ri--) {
                 rtpp_queue_destroy(netio_cf->args[ri].out_q);
@@ -321,6 +321,7 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
             }
             goto e0;
         }
+        rtpp_queue_setqlen(netio_cf->args[i].out_q, qlen);
         CALL_SMETHOD(cf->stable->glog->rcnt, incref);
         netio_cf->args[i].glog = cf->stable->glog;
         netio_cf->args[i].dmode = cf->stable->dmode;

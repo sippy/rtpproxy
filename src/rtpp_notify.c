@@ -107,7 +107,7 @@ rtpp_notify_ctor(struct rtpp_log *glog)
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->nqueue = rtpp_queue_init(1, "rtpp_notify");
+    pvt->nqueue = rtpp_queue_init("rtpp_notify");
     if (pvt->nqueue == NULL) {
         goto e1;
     }

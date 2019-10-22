@@ -192,7 +192,7 @@ rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp, struct 
     if (pvt->sigterm == NULL) {
         goto e3;
     }
-    pvt->req_q = rtpp_queue_init(1, "rtpp_module_if(%s)", pvt->mip->name);
+    pvt->req_q = rtpp_queue_init("rtpp_module_if(%s)", pvt->mip->name);
     if (pvt->req_q == NULL) {
         goto e4;
     }

@@ -69,7 +69,7 @@ struct rtpp_wi;
     (rqp)->length += 1;                      \
 }
 
-struct rtpp_queue *rtpp_queue_init(unsigned int, const char *format, ...);
+struct rtpp_queue *rtpp_queue_init(const char *format, ...);
 void rtpp_queue_destroy(struct rtpp_queue *queue);
 
 void rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *);
@@ -78,6 +78,7 @@ void rtpp_queue_pump(struct rtpp_queue *);
 struct rtpp_wi *rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake);
 int rtpp_queue_get_items(struct rtpp_queue *, struct rtpp_wi **, int, int);
 int rtpp_queue_get_length(struct rtpp_queue *);
+unsigned int rtpp_queue_setqlen(struct rtpp_queue *, unsigned int);
 
 DEFINE_METHOD(rtpp_wi, rtpp_queue_match_fn, int, void *);
 

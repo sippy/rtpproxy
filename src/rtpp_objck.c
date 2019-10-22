@@ -217,8 +217,8 @@ main(int argc, char **argv)
     ecode = 0;
     rtp = rtpp_timed_ctor(0.1);
     targs.rsp = rtpp_stats_ctor();
-    targs.fqp = rtpp_queue_init(1, "perftest main->worker");
-    targs.bqp = rtpp_queue_init(1, "perftest worker->main");
+    targs.fqp = rtpp_queue_init("perftest main->worker");
+    targs.bqp = rtpp_queue_init("perftest worker->main");
     targs.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
     targs.tdp = &tests.queue_p2c;
     ttp = CALL_SMETHOD(rtp, schedule_rc, 10.0, targs.rsp->rcnt, update_derived_stats, NULL, &targs);

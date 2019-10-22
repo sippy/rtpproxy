@@ -212,7 +212,7 @@ struct rtpp_queue
 };
 
 struct rtpp_queue *
-rtpp_queue_init(unsigned int qlen, const char *fmt, ...)
+rtpp_queue_init(const char *fmt, ...)
 {
     struct rtpp_queue *queue;
     char *name;
@@ -222,7 +222,6 @@ rtpp_queue_init(unsigned int qlen, const char *fmt, ...)
     queue = rtpp_zmalloc(sizeof(*queue) + (sizeof(queue->circb.buffer[0]) * CB_BUFLEN));
     if (queue == NULL)
         goto e0;
-    queue->qlen = qlen;
     if ((eval = pthread_cond_init(&queue->cond, NULL)) != 0) {
         goto e1;
     }
@@ -235,6 +234,7 @@ rtpp_queue_init(unsigned int qlen, const char *fmt, ...)
     if (name == NULL) {
         goto e3;
     }
+    queue->qlen = 1;
     queue->name = name;
     queue->circb.buflen = CB_BUFLEN;
     return (queue);
@@ -271,6 +271,18 @@ rtpp_queue_getclen(const struct rtpp_queue *queue)
     }
 
     return (clen);
+}
+
+unsigned int
+rtpp_queue_setqlen(struct rtpp_queue *queue, unsigned int qlen)
+{
+    unsigned int rval;
+
+    pthread_mutex_lock(&queue->mutex);
+    rval = queue->qlen;
+    queue->qlen = qlen;
+    pthread_mutex_unlock(&queue->mutex);
+    return (rval);
 }
 
 void
