@@ -217,8 +217,8 @@ main(int argc, char **argv)
     ecode = 0;
     rtp = rtpp_timed_ctor(0.1);
     targs.rsp = rtpp_stats_ctor();
-    targs.fqp = rtpp_queue_init("perftest main->worker");
-    targs.bqp = rtpp_queue_init("perftest worker->main");
+    targs.fqp = rtpp_queue_init(RTPQ_LARGE_CB_LEN, "perftest main->worker");
+    targs.bqp = rtpp_queue_init(RTPQ_LARGE_CB_LEN, "perftest worker->main");
     targs.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
     targs.tdp = &tests.queue_p2c;
     ttp = CALL_SMETHOD(rtp, schedule_rc, 10.0, targs.rsp->rcnt, update_derived_stats, NULL, &targs);
@@ -235,12 +235,16 @@ main(int argc, char **argv)
 #endif
         rtpp_queue_put_item(wi, targs.fqp);
         tests.queue_p2c.nitems++;
-        if ((tests.queue_p2c.nitems % 1024) && rtpp_queue_get_length(targs.fqp) > (10 * 1024)) {
+        if ((tests.queue_p2c.nitems % RTPQ_LARGE_CB_LEN) == 0) {
+            while(rtpp_queue_get_length(targs.fqp) > RTPQ_LARGE_CB_LEN) {
 #if HAVE_PTHREAD_YIELD
-            pthread_yield();
+                pthread_yield();
 #else
-            sched_yield();
+                sched_yield();
 #endif
+                if (atomic_load(&tests.queue_p2c.done))
+                    break;
+            }
         }
     } while(!atomic_load(&tests.queue_p2c.done));
     tests.queue_p2c.runtime = getdtime() - stime;

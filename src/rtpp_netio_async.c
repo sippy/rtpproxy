@@ -313,7 +313,7 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
         return (NULL);
 
     for (i = 0; i < SEND_THREADS; i++) {
-        netio_cf->args[i].out_q = rtpp_queue_init("RTPP->NET%.2d", i);
+        netio_cf->args[i].out_q = rtpp_queue_init(RTPQ_LARGE_CB_LEN, "RTPP->NET%.2d", i);
         if (netio_cf->args[i].out_q == NULL) {
             for (ri = i - 1; ri >= 0; ri--) {
                 rtpp_queue_destroy(netio_cf->args[ri].out_q);

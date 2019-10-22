@@ -45,9 +45,6 @@
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 
-#define CB_CAPACITY (1 * 1024)
-#define CB_BUFLEN  (CB_CAPACITY + 1)
-
 #define RTPQ_DEBUG 0
 
 typedef struct {
@@ -212,14 +209,16 @@ struct rtpp_queue
 };
 
 struct rtpp_queue *
-rtpp_queue_init(const char *fmt, ...)
+rtpp_queue_init(unsigned int cb_capacity, const char *fmt, ...)
 {
     struct rtpp_queue *queue;
+    unsigned int cb_buflen;
     char *name;
     va_list ap;
     int eval;
 
-    queue = rtpp_zmalloc(sizeof(*queue) + (sizeof(queue->circb.buffer[0]) * CB_BUFLEN));
+    cb_buflen = cb_capacity + 1;
+    queue = rtpp_zmalloc(sizeof(*queue) + (sizeof(queue->circb.buffer[0]) * cb_buflen));
     if (queue == NULL)
         goto e0;
     if ((eval = pthread_cond_init(&queue->cond, NULL)) != 0) {
@@ -236,7 +235,7 @@ rtpp_queue_init(const char *fmt, ...)
     }
     queue->qlen = 1;
     queue->name = name;
-    queue->circb.buflen = CB_BUFLEN;
+    queue->circb.buflen = cb_buflen;
     return (queue);
 e3:
     pthread_mutex_destroy(&queue->mutex);

@@ -139,12 +139,12 @@ rtpp_timed_ctor(double run_period)
     if (rtcp == NULL) {
         goto e0;
     }
-    rtcp->q = rtpp_queue_init("rtpp_timed(requests)");
+    rtcp->q = rtpp_queue_init(RTPQ_SMALL_CB_LEN, "rtpp_timed(requests)");
     if (rtcp->q == NULL) {
         goto e1;
     }
     rtpp_queue_setqlen(rtcp->q, 0);
-    rtcp->cmd_q = rtpp_queue_init("rtpp_timed(commands)");
+    rtcp->cmd_q = rtpp_queue_init(RTPQ_TYNY_CB_LEN, "rtpp_timed(commands)");
     if (rtcp->cmd_q == NULL) {
         goto e2;
     }
