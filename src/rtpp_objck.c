@@ -235,12 +235,16 @@ main(int argc, char **argv)
 #endif
         rtpp_queue_put_item(wi, targs.fqp);
         tests.queue_p2c.nitems++;
-        if ((tests.queue_p2c.nitems % 1024) && rtpp_queue_get_length(targs.fqp) > (10 * 1024)) {
+        if ((tests.queue_p2c.nitems % 1024) == 0) {
+            while(rtpp_queue_get_length(targs.fqp) > 1024) {
 #if HAVE_PTHREAD_YIELD
-            pthread_yield();
+                pthread_yield();
 #else
-            sched_yield();
+                sched_yield();
 #endif
+                if (atomic_load(&tests.queue_p2c.done))
+                    break;
+            }
         }
     } while(!atomic_load(&tests.queue_p2c.done));
     tests.queue_p2c.runtime = getdtime() - stime;
