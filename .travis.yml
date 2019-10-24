@@ -37,6 +37,8 @@ stages:
     if: branch != master OR type != push
   - name: Build & Deploy Documentation
     if: branch = master AND type = push
+  - name: Update Coverity Report
+    if: branch = master AND type = push
 jobs:
   include:
     - stage: Build Documentation
@@ -48,4 +50,25 @@ jobs:
       script:
         - sh -x ./scripts/do-docbuild.sh
         - sh -x ./scripts/do-docdeploy.sh
+      after_success:
+    - state: Update Coverity Report
+      name: Push latest code to scan.coverity.com for analysis
+      env:
+        global:
+         # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+         #   via the "travis encrypt" command using the project repo's public key
+         - secure: "wEpzELQ4i/kfKj2E5x9xFCU30c1l1L57moqhn7OmGqAVsbQ7k9Mwg5WWCkjAzx8VLmJUcKwgA6qJYCoodeMwgLyTf/JSJHkJJDHkp5nPMEWlZRx2u5pIzsXCu92Hb+Sf44+UMQ1YnMGbcgPZIVEQ8sbB+SSfsN44RVdDgsd5p4LkNb2VLs6NSz02unp/bGJImbPIV073g/n9nCibnOr3y/NTO6dN+55fHFuR6N6F6/ivvypBw2D0DcVcZbVDoIv9PzP34VUVZQ8wXPBr6IWHmybOPBo6uo0HjOEi1+vQ1NDZBWjxNhIcmRoznbBAj1PXloMwjCFAKqjL7yxiof1yAZf4IfAkauuzmhEtn57AtmEyfnE1qIpLbWW1AzfhjAfqkvcZZHvP93kd5GC/lWG+F5qb0T64u3AI4wadBUOsaSJ5nPVesciAzi4rTgWhH5aNV0KyzTTgDtgmAzZlA6Lg8iFvNc6pB5ttpF1oGGbH4lxovrKbjzgXai0Mny6dPMIfyr/ynsbB0X81zL++tfzM5mNOSbLsszEEw5I6cC2FddtnFiHlfa4eB4NPlVjgD8kKoTbR6hmB5Z1J8HcIJv5DVvJVBkkvJtj/tltuL9N2moUMlF6VDColGXQjtFeqKenyAxiBkkcBoSSI7rr9ZjMGag5yfabyWq1UqLwTL5SDiPs="
+      addons:
+        coverity_scan:
+          project:
+            name: "sippy/rtpproxy"
+            description: "A high-performance software proxy for RTP streams"
+          notification_email: sobomax@sippysoft.com
+          build_command_prepend: "./configure"
+          build_command: "make all"
+          branch_pattern: master
+      before_install:
+        - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+      script:
+        - make check
       after_success:
