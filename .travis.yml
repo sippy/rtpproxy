@@ -21,7 +21,7 @@ env:
     - COVERALLS_PARALLEL=true
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
     #   via the "travis encrypt" command using the project repo's public key
-    - secure: "ocrcwCLSoR8gvVuH3Qk4hc8y4m9gN896jiakrET1Xn9RjO4+rb35ik4Vv5uaYCKWvSEwztln0rUaPpLzNgLfLHO9BAupnSE4JTPRiCh5Ms0+QXi0DoIhiRdWJt52GngFPRGZWuKZD+wQlf4EQBXJusTI5UXXZJEbkphMIzB6z5k7zJDV5ArwYrhXkeJKgLuJymx6bV/M2FxcCFf0migEg0fxrcyjTqtM+P0KxSq6rgtEwI24YibEbG6AZrU+d9pNbDby7qp+AKdpny8qkwlSy4Otd9soLSIWz7M6vKq1fiqrb+NkNCb8uMKV7DR9qwSy6Vf66JeeyMnBKvj1NDCUpiQcQSI0xYtLcv3SBwZAaWGvxP2/DwEdVq23T55LfQume1C+ORFhFh1OUELkV+3vypG2j/TK07DVvuZAbrnxu1PwDT8KGj9nR5HoOS6m08vwidp/uajM/gxkGQpC2itXFf5ZSxW2Ibp4b6p3g3nV52jQlrVfd6WvgITfnTzj6Zc72z2KHFMTlgarv0KV8o4JbCqRq+WfZr/kh06cR+D4336nI/3ewBllHvPeDYy6qOT7GoZUWYhLsfyssNSQx4XUSJ7W+ygTpBgCA3oKDL5BMilGzHg28bIt60OpDEg4rGS88r2DLMsX4X4upyudo+xBYNRF6bYIYANFTGG1vAfePyg="
+    - secure: "MUzUSD/uRmjvh0oKBSlKfNkQnPGiN0l4TeKY1nehQQB4h6WiOlVbAu1PCUxR9G/DOmVMLUasWTEB9j5H9hWsvR1MwNge7woHtuW6YmUxw4/+Sh2pOqMIjwpqywFXtY/zfXa8AGpQI0ZOR0eg1mMq/6OV23pkOz9XnfqwvHtVvxs="
 script: sh -x ./scripts/do-test.sh
 after_success:
   - for f in `make -f tests/Makefile list_tests`;
