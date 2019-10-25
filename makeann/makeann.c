@@ -174,7 +174,8 @@ int main(int argc, char **argv)
     for (k = 0; efiles[k].pt != RTP_UNKN; k++) {
         if (efiles[k].enabled == 0)
             continue;
-        sprintf(efiles[k].path, "%s.%d", template, efiles[k].pt);
+        snprintf(efiles[k].path, sizeof(efiles[k].path), "%s.%d", template,
+          efiles[k].pt);
         efiles[k].f = fopen(efiles[k].path, "w");
         if (efiles[k].f == NULL)
             err(1, "can't open %s for writing", efiles[k].path);
