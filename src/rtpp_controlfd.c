@@ -255,7 +255,7 @@ rtpp_controlfd_init(struct cfg *cf)
     return (0);
 }
 
-int
+socklen_t
 rtpp_csock_addrlen(struct rtpp_ctrl_sock *ctrl_sock)
 {
 
@@ -279,7 +279,7 @@ rtpp_csock_addrlen(struct rtpp_ctrl_sock *ctrl_sock)
         break;
     }
 
-    return (-1);
+    return (0);
 }
 
 void
