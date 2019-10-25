@@ -54,6 +54,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_command_play.h rtpp_command_ver.h rtpp_command_ver.c \
   rtpp_pearson_perfect.c rtpp_acct_rtcp.h \
   rtpp_acct_rtcp.c rtpp_cfile.c rtpp_cfile.h rtpp_ucl.c rtpp_ucl.h \
+  rtpp_network_io.c rtpp_network_io.h \
   $(RTPP_AUTOSRC_SOURCES) $(RTPP_AUTOSRC_SOURCES_S)
 
 rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl.a
