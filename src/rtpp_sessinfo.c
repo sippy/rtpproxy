@@ -293,12 +293,12 @@ rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     pthread_mutex_lock(&pvt->lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
-            return;
+            goto e0;
         }
     }
     if (pvt->hst_rtcp.ulen == pvt->hst_rtcp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtcp) < 0) {
-            return;
+            goto e0;
         }
     }
     rtp = sp->rtp->stream[index];
@@ -314,6 +314,7 @@ rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
         CALL_SMETHOD(fd->rcnt, decref);
     }
 
+e0:
     pthread_mutex_unlock(&pvt->lock);
 }
 
