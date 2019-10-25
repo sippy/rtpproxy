@@ -172,10 +172,10 @@ rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp, struct 
     pvt->mip->_asprintf = &rtpp_memdeb_asprintf;
     pvt->mip->_vasprintf = &rtpp_memdeb_vasprintf;
     pvt->memdeb_p = rtpp_memdeb_init(false);
-    rtpp_memdeb_setlog(pvt->memdeb_p, log);
     if (pvt->memdeb_p == NULL) {
         goto e2;
     }
+    rtpp_memdeb_setlog(pvt->memdeb_p, log);
     rtpp_memdeb_setname(pvt->memdeb_p, pvt->mip->name);
     /* We make a copy, so that the module cannot screw us up */
     pvt->mip->memdeb_p = pvt->memdeb_p;
