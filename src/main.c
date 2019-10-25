@@ -235,7 +235,7 @@ static void
 init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int memdeb)
 {
     struct rtpp_module_if *mif, *tmp;
-    struct rtpp_ctrl_sock *ctrl_sock;
+    struct rtpp_ctrl_sock *ctrl_sock, *ctrl_sock_next;
 
     if (msg != NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s", msg);
@@ -244,7 +244,8 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
     free(cfsp->nofile_limit);
 
     for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
-      ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
+      ctrl_sock != NULL; ctrl_sock = ctrl_sock_next) {
+        ctrl_sock_next = RTPP_ITER_NEXT(ctrl_sock);
         free(ctrl_sock);
     }
     free(cfsp->ctrl_socks);
