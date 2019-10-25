@@ -251,12 +251,12 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     pthread_mutex_lock(&pvt->lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
-            return;
+            goto e0;
         }
     }
     if (pvt->hst_rtcp.ulen == pvt->hst_rtcp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtcp) < 0) {
-            return;
+            goto e0;
         }
     }
     rtp = sp->rtp->stream[index];
@@ -276,6 +276,7 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
         rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_ADD, rtcp->stuid, new_fds[1]);
     }
 
+e0:
     pthread_mutex_unlock(&pvt->lock);
 }
 
