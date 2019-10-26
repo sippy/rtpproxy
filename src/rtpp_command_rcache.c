@@ -25,6 +25,10 @@
  *
  */
 
+#if defined(HAVE_CONFIG_H)
+#include "config_pp.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -36,6 +40,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_timed.h"
 #include "rtpp_timed_task.h"
+#include "rtpp_util.h"
 
 #define	RTPP_RCACHE_CPERD	3.0
 
@@ -162,7 +167,7 @@ rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *pub, const char *cookie,
      * to decref when we've done with it.
      */
     rep = CALL_SMETHOD(rco, getdata);
-    strncpy(rbuf, rep->reply, rblen);
+    strlcpy(rbuf, rep->reply, rblen);
     CALL_SMETHOD(rco, decref);
     return (1);
 }
