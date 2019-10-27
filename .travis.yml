@@ -19,6 +19,9 @@ before_install:
 env:
   global:
     - COVERALLS_PARALLEL=true
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    #   via the "travis encrypt" command using the project repo's public key
+    - secure: "MUzUSD/uRmjvh0oKBSlKfNkQnPGiN0l4TeKY1nehQQB4h6WiOlVbAu1PCUxR9G/DOmVMLUasWTEB9j5H9hWsvR1MwNge7woHtuW6YmUxw4/+Sh2pOqMIjwpqywFXtY/zfXa8AGpQI0ZOR0eg1mMq/6OV23pkOz9XnfqwvHtVvxs="
 script: sh -x ./scripts/do-test.sh
 after_success:
   - for f in `make -f tests/Makefile list_tests`;
@@ -37,6 +40,8 @@ stages:
     if: branch != master OR type != push
   - name: Build & Deploy Documentation
     if: branch = master AND type = push
+  - name: Update Coverity Report
+    if: branch = master AND type = push
 jobs:
   include:
     - stage: Build Documentation
@@ -48,4 +53,20 @@ jobs:
       script:
         - sh -x ./scripts/do-docbuild.sh
         - sh -x ./scripts/do-docdeploy.sh
+      after_success:
+    - stage: Update Coverity Report
+      name: Push latest code to scan.coverity.com for analysis
+      addons:
+        coverity_scan:
+          project:
+            name: "sippy/rtpproxy"
+            description: "A high-performance software proxy for RTP streams"
+          notification_email: sobomax@sippysoft.com
+          build_command_prepend: "./configure"
+          build_command: "make all"
+          branch_pattern: master
+      before_install:
+        - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+      script:
+        - true
       after_success:

@@ -620,6 +620,7 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         pthread_create(&rsp[i]->tid, NULL, (void *(*)(void *))process_recvset, rsp[i]);
     }
     nrecvd_total = nsent_total = send_nerrs_total = send_nshrts_total = 0;
+    rtt_total = 0;
     for (i = 0; i < nthreads; i++) {
         pthread_join(wsp[i]->tid, NULL);
         rsp[i]->done = 1;

@@ -55,4 +55,4 @@ int rtpp_controlfd_init(struct cfg *cf);
 struct rtpp_ctrl_sock *rtpp_ctrl_sock_parse(const char *);
 const char *rtpp_ctrl_sock_describe(struct rtpp_ctrl_sock *);
 void rtpp_controlfd_cleanup(struct cfg *cf);
-int rtpp_csock_addrlen(struct rtpp_ctrl_sock *);
+socklen_t rtpp_csock_addrlen(struct rtpp_ctrl_sock *);

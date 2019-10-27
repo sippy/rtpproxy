@@ -88,7 +88,6 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             ndrain += 1;
             continue;
         }
-        send_packet(cf, stp, packet, sender, rsp);
         if (stp->pipe_type == PIPE_RTCP && !RTPP_LIST_IS_EMPTY(cf->stable->modules_cf)) {
             struct rtpp_acct_rtcp *rarp;
             struct rtpp_module_if *mif;
@@ -100,6 +99,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             mif = RTPP_LIST_HEAD(cf->stable->modules_cf);
             CALL_METHOD(mif, do_acct_rtcp, rarp);
         }
+        send_packet(cf, stp, packet, sender, rsp);
     } while (ndrain > 0);
     return;
 }

@@ -94,17 +94,35 @@ backtrace(void **buffer, int size)
     return i - 1;
 }
 
+const static unsigned int sc_randtable[STACKTRAVERSE_MAX_LEVELS + 1] = {
+    23,  3, 50, 54,  6, 63, 58, 61, 12,  4, 46, 36, 52, 35, 28, 55, 11, 29, 60,
+    38, 37, 53,  7, 26,  2, 39,  0, 30, 14, 56, 48, 27, 33, 47, 24, 57, 20, 34,
+    31, 15, 51, 13, 32,  8,  1, 49, 22, 21, 45, 41, 62, 40, 19, 44, 17, 10, 59,
+    18,  5, 16,  9, 25, 43, 42, 55, 14, 46,  6, 20, 29, 48, 12, 63, 31, 60, 34,
+    61, 32, 37, 36, 22, 45, 58,  8, 54, 24, 44, 49, 41, 11,  5, 15,  1, 56,  4,
+    21, 10,  3,  9,  2, 13, 47, 50, 57, 51, 26, 17, 35, 18,  0, 53, 59, 43, 52,
+    30, 27, 19, 38, 42, 23, 25, 40,  7, 62, 33, 28, 39, 16
+};
+
+static uintptr_t
+ROR(uintptr_t x, unsigned int sft)
+{
+
+    return ((x >> sft) | (x << ((sizeof(x) * 8) - sft)));
+}
+
 uintptr_t
 getstackcookie(void)
 {
     int i;
-    uintptr_t r;
+    uintptr_t r, tr;
     void *p;
 
     r = 0;
     for (i = 1; i < STACKTRAVERSE_MAX_LEVELS + 1 && getframeaddr(i) != NULL; i++) {
         p = getreturnaddr(i);
-        r ^= (uintptr_t)p;
+        tr = ROR((uintptr_t)p, sc_randtable[i - 1]);
+        r ^= tr;
         if (p == topframe || p == NULL)
             break;
     }

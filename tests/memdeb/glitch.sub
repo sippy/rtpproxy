@@ -35,7 +35,18 @@ glitch_test()
   echo "                       ....$((`awk '{print $2}' glitch1.ncout | sort -u | wc -l`)) unique points"
   nfail=0
   nok=0
-  for gp in `awk '{print $2}' glitch1.ncout | sort -u`
+  GPS="`awk '{print $2}' glitch1.ncout | sort -u`"
+  for gp in ${GPS}
+  do
+    glline_c="`grep -w ${gp} glitch1.ncout | awk '{print $7}' | sort -u | wc -l`"
+    if [ ${glline_c} -gt 1 ]
+    then
+      echo "${gp} collision detected, $((${glline_c})) hits:"
+      grep -w ${gp} glitch1.ncout | awk '{print "    "$2" "$7}' | sort -u
+      return 1
+    fi
+  done
+  for gp in ${GPS}
   do
     glline="`grep -w ${gp} glitch1.ncout | awk '{print $7}' | uniq`"
     tp="${gp}:*"

@@ -52,8 +52,6 @@ uint16_t rtpp_in_cksum(void *, int);
 int local4remote(const struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, char **, char **, int *);
 int setbindhost(struct sockaddr *, int, const char *, const char *);
-ssize_t recvfromto(int, void *, size_t, struct sockaddr *,
-  size_t *, struct sockaddr *, size_t *, struct timeval *);
 
 /* Some handy/compat macros */
 #if !defined(AF_LOCAL)
