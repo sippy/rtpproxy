@@ -349,6 +349,28 @@ get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rva
 
 #define ISAMPAMP(v) ((v)[0] == '&' && (v)[1] == '&' && (v)[2] == '\0')
 
+static int
+rtpp_command_guard_retrans(struct rtpp_command *cmd,
+  struct rtpp_cmd_rcache *rcache_obj)
+{
+    size_t len;
+    struct rtpp_command_priv *pvt;
+
+    PUB2PVT(cmd, pvt);
+    if (CALL_METHOD(rcache_obj, lookup, pvt->cookie, pvt->buf_r,
+      sizeof(pvt->buf_r)) == 1) {
+        len = strlen(pvt->buf_r);
+        rtpp_anetio_sendto(pvt->cfs->rtpp_netio_cf, pvt->controlfd,
+          pvt->buf_r, len, 0, sstosa(&cmd->raddr), cmd->rlen);
+        cmd->csp->ncmds_rcvd.cnt--;
+        cmd->csp->ncmds_rcvd_ndups.cnt++;
+        return (1);
+    }
+    CALL_SMETHOD(rcache_obj->rcnt, incref);
+    pvt->rcache_obj = rcache_obj;
+    return (0);
+}
+
 int
 rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
   struct rtpp_cmd_rcache *rcache_obj)
@@ -373,8 +395,13 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
     for (ap = cap->v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
         if (**ap != '\0') {
             if (cap == &cmd->args) {
+                /* Stream communication mode doesn't use cookie */
                 if (pvt->umode != 0 && cap->c == 0 && pvt->cookie == NULL) {
                     pvt->cookie = *ap;
+                    if (rtpp_command_guard_retrans(cmd, rcache_obj)) {
+                        *rval = GET_CMD_OK;
+                        return (1);
+                    }
                     continue;
                 }
                 if (ISAMPAMP(*ap)) {
@@ -396,22 +423,6 @@ etoomany:
         reply_error(cmd, ECODE_PARSE_1);
         *rval = GET_CMD_INVAL;
         return (1);
-    }
-
-    /* Stream communication mode doesn't use cookie */
-    if (pvt->umode != 0) {
-        if (CALL_METHOD(rcache_obj, lookup, pvt->cookie, pvt->buf_r,
-          sizeof(pvt->buf_r)) == 1) {
-            len = strlen(pvt->buf_r);
-            rtpp_anetio_sendto(pvt->cfs->rtpp_netio_cf, pvt->controlfd,
-              pvt->buf_r, len, 0, sstosa(&cmd->raddr), cmd->rlen);
-            cmd->csp->ncmds_rcvd.cnt--;
-            cmd->csp->ncmds_rcvd_ndups.cnt++;
-            *rval = GET_CMD_OK;
-            return (1);
-        }
-        CALL_SMETHOD(rcache_obj->rcnt, incref);
-        pvt->rcache_obj = rcache_obj;
     }
 
     /* Step I: parse parameters that are common to all ops */
