@@ -230,6 +230,7 @@ again:
             case GET_CMD_EAGAIN:
                 return (0);
             case GET_CMD_OK:
+            case GET_CMD_INVAL:
             case GET_CMD_ENOMEM:
                 goto again;
             default:
