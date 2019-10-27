@@ -340,6 +340,7 @@ get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rva
     cmd->buf[len] = '\0';
 
     if (rtpp_command_split(cmd, len, rval, rcache_obj) != 0) {
+        /* Error reply is handled by the rtpp_command_split() */
         free_command(cmd);
         return (NULL);
     }
