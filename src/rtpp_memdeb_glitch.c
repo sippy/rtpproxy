@@ -25,10 +25,6 @@
  *
  */
 
-#if defined(HAVE_CONFIG_H)
-#include "config_pp.h"
-#endif
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -43,7 +39,6 @@
 
 #include "rtpp_memdeb_internal.h"
 #include "rtpp_memdeb_glitch.h"
-#include "rtpp_util.h"
 
 struct _glav_trig _glav_trig = {.wild = 0, .stack = 0};
 
@@ -133,11 +128,11 @@ rtpp_memdeb_glitch_init()
                     abort();
                 }
             }
-            assert(cp - act < sizeof(_glav_trig.act));
-            strlcpy(_glav_trig.act, act, sizeof(_glav_trig.act));
+            assert(strlen(act) < sizeof(_glav_trig.act));
+            strncpy(_glav_trig.act, act, sizeof(_glav_trig.act));
             assert(unsetenv(MDG_ACT_ENAME) == 0);
         } else {
-            strlcpy(_glav_trig.act, "g", sizeof(_glav_trig.act));
+            strncpy(_glav_trig.act, "g", sizeof(_glav_trig.act));
         }
         if (do_report != 0) {
             struct sockaddr_in dest;
