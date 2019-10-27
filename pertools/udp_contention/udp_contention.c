@@ -208,13 +208,18 @@ socket_ctor(int domain, struct tconf *cfp)
 
     s = socket(domain, SOCK_DGRAM, 0);
     if (s == -1) {
-        return (-1);
+        goto e0;
     }
     if (cfp->sock_block == 0) {
         flags = fcntl(s, F_GETFL);
-        fcntl(s, F_SETFL, flags | O_NONBLOCK);
+        if (flags < 0 || fcntl(s, F_SETFL, flags | O_NONBLOCK) < 0)
+            goto e1;
     }
     return (s);
+e1:
+    close(s);
+e0:
+    return (-1);
 }
 
 static struct workset *
