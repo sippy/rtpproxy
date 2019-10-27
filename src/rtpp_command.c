@@ -347,6 +347,8 @@ get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rva
     return (cmd);
 }
 
+#define ISAMPAMP(v) ((v)[0] == '&' && (v)[1] == '&' && (v)[2] == '\0')
+
 int
 rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
   struct rtpp_cmd_rcache *rcache_obj)
@@ -354,6 +356,7 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
     char **ap;
     char *cp;
     struct rtpp_command_priv *pvt;
+    struct rtpp_command_args *cap;
 
     PUB2PVT(cmd, pvt);
     if (len > 0 && cmd->buf[len - 1] == '\n') {
@@ -366,18 +369,29 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
     cmd->csp->ncmds_rcvd.cnt++;
 
     cp = cmd->buf;
-    for (ap = cmd->args.v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
+    cap = &cmd->args;
+    for (ap = cap->v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
         if (**ap != '\0') {
-            if (pvt->umode != 0 && cmd->args.c == 0 && pvt->cookie == NULL) {
-                pvt->cookie = *ap;
-                continue;
+            if (cap == &cmd->args) {
+                if (pvt->umode != 0 && cap->c == 0 && pvt->cookie == NULL) {
+                    pvt->cookie = *ap;
+                    continue;
+                }
+                if (ISAMPAMP(*ap)) {
+                    *ap = NULL;
+                    cap = &cmd->subc_args;
+                    ap = cap->v;
+                    continue;
+                }
             }
-            cmd->args.c++;
-            if (++ap >= &cmd->args.v[RTPC_MAX_ARGC])
-                break;
+            cap->c++;
+            if (++ap >= &cap->v[RTPC_MAX_ARGC])
+                goto etoomany;
         }
     }
-    if (cmd->args.c < 1 || (pvt->umode != 0 && pvt->cookie == NULL)) {
+    if (cmd->args.c < 1 || (pvt->umode != 0 && pvt->cookie == NULL) ||
+      (cap == &cmd->subc_args && cap->c < 1)) {
+etoomany:
         RTPP_LOG(pvt->cfs->glog, RTPP_LOG_ERR, "command syntax error");
         reply_error(cmd, ECODE_PARSE_1);
         *rval = GET_CMD_INVAL;

@@ -50,6 +50,7 @@ struct cmd_props {
     int min_argc;
     int has_cmods;
     int has_call_id;
+    int has_subc;
     int fpos;
     int tpos;
     char *cmods;
@@ -61,6 +62,7 @@ fill_cmd_props(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd,
 {
 
     cpp->has_call_id = 1;
+    cpp->has_subc = 0;
     cpp->fpos = -1;
     cpp->tpos = -1;
     cpp->cmods = &(cmd->args.v[0][1]);
@@ -250,6 +252,12 @@ rtpp_command_pre_parse(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s command syntax error"
           ": modifiers are not supported by the command", cmd->cca.rname);
         reply_error(cmd, ECODE_PARSE_MODS);
+        return (-1);
+    }
+    if (cprops.has_subc == 0 && cmd->subc_args.c > 0) {
+        RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s command syntax error"
+          ": subcommand is not supported", cmd->cca.rname);
+        reply_error(cmd, ECODE_PARSE_SUBC);
         return (-1);
     }
     cmd->cca.call_id = cprops.has_call_id ? cmd->args.v[1] : NULL;
