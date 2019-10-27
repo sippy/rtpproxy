@@ -616,8 +616,8 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         rsp[i] = generate_recvset(wsp[i], cfp);
     }
     for (i = 0; i < nthreads; i++) {
-        pthread_create(&wsp[i]->tid, NULL, (void *(*)(void *))process_workset, wsp[i]);
-        pthread_create(&rsp[i]->tid, NULL, (void *(*)(void *))process_recvset, rsp[i]);
+        assert(pthread_create(&wsp[i]->tid, NULL, (void *(*)(void *))process_workset, wsp[i]) == 0);
+        assert(pthread_create(&rsp[i]->tid, NULL, (void *(*)(void *))process_recvset, rsp[i]) == 0);
     }
     nrecvd_total = nsent_total = send_nerrs_total = send_nshrts_total = 0;
     rtt_total = 0;
