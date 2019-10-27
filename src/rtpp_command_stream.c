@@ -113,7 +113,6 @@ struct rtpp_command *
 rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
   int *rval, const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp)
 {
-    char **ap;
     char *cp, *cp1;
     int len;
     struct rtpp_command *cmd;
@@ -151,30 +150,8 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
     cmd->buf[len] = '\0';
     rcs->inbuf_ppos += len + 1;
 
-    RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "received command \"%s\"", cmd->buf);
-    csp->ncmds_rcvd.cnt++;
-
-    cp = cmd->buf;
-    for (ap = cmd->args.v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
-        if (**ap != '\0') {
-            cmd->args.c++;
-            if (++ap >= &cmd->args.v[RTPC_MAX_ARGC])
-                break;
-        }
-    }
-
-    if (cmd->args.c < 1) {
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
-        reply_error(cmd, ECODE_PARSE_1);
-        *rval = GET_CMD_INVAL;
-        free_command(cmd);
-        return (NULL);
-    }
-
-    /* Step I: parse parameters that are common to all ops */
-    if (rtpp_command_pre_parse(cf->stable, cmd) != 0) {
-        /* Error reply is handled by the rtpp_command_pre_parse() */
-        *rval = GET_CMD_OK;
+    if (rtpp_command_split(cmd, len, rval, NULL) != 0) {
+        /* Error reply is handled by the rtpp_command_split() */
         free_command(cmd);
         return (NULL);
     }
