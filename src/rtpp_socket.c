@@ -44,6 +44,7 @@
 #include "rtpp_monotime.h"
 #include "rtpp_time.h"
 #include "rtpp_network.h"
+#include "rtpp_network_io.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 
@@ -239,7 +240,7 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, double dtime,
     struct rtpp_socket_priv *pvt;
     struct rtp_packet *packet;
     struct timeval rtime;
-    size_t llen;
+    socklen_t llen;
 
     packet = rtp_packet_alloc();
     if (packet == NULL) {
