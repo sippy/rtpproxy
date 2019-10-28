@@ -92,6 +92,7 @@ struct proto_cap proto_caps[] = {
     { "20150330", "Support for allocating a new port (\"Un\"/\"Ln\" commands)" },
     { "20150420", "Support for SEQ tracking and new rtpa_ counters; Q command extended" },
     { "20150617", "Support for the wildcard %%CC_SELF%% as a disconnect notify target" },
+    { "20191015", "Support for the && sub-command specifier" },
     { NULL, NULL }
 };
 
@@ -297,17 +298,13 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
   struct rtpp_command_stats *csp, int umode,
   struct rtpp_cmd_rcache *rcache_obj)
 {
-    char **ap;
-    char *cp;
     int len;
     struct rtpp_command *cmd;
-    struct rtpp_command_priv *pvt;
 
     cmd = rtpp_command_ctor(cf, controlfd, dtime, rval, csp, umode);
     if (cmd == NULL) {
         return (NULL);
     }
-    pvt = PUB2PVT(cmd);
     if (umode == 0) {
         for (;;) {
             len = read(controlfd, cmd->buf, sizeof(cmd->buf) - 1);
@@ -328,60 +325,96 @@ get_command(struct cfg *cf, int controlfd, int *rval, double dtime,
     }
     cmd->buf[len] = '\0';
 
-    if (len > 0 && cmd->buf[len - 1] == '\n') {
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "received command \"%.*s\\n\"",
-          len - 1, cmd->buf);
-    } else {
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "received command \"%s\"",
-          cmd->buf);
-    }
-    csp->ncmds_rcvd.cnt++;
-
-    cp = cmd->buf;
-    for (ap = cmd->args.v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
-        if (**ap != '\0') {
-            if (umode != 0 && cmd->args.c == 0 && pvt->cookie == NULL) {
-                pvt->cookie = *ap;
-                continue;
-            }
-            cmd->args.c++;
-            if (++ap >= &cmd->args.v[RTPC_MAX_ARGC])
-                break;
-        }
-    }
-    if (cmd->args.c < 1 || (umode != 0 && pvt->cookie == NULL)) {
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
-        reply_error(cmd, ECODE_PARSE_1);
-        *rval = 0;
+    if (rtpp_command_split(cmd, len, rcache_obj) != 0) {
         free_command(cmd);
+        *rval = 0;
         return (NULL);
     }
+    return (cmd);
+}
 
-    /* Stream communication mode doesn't use cookie */
-    if (umode != 0) {
-        if (CALL_METHOD(rcache_obj, lookup, pvt->cookie, pvt->buf_r, sizeof(pvt->buf_r)) == 1) {
-            len = strlen(pvt->buf_r);
-            rtpp_anetio_sendto(cf->stable->rtpp_netio_cf, controlfd, pvt->buf_r, len, 0,
-              sstosa(&cmd->raddr), cmd->rlen);
-            csp->ncmds_rcvd.cnt--;
-            csp->ncmds_rcvd_ndups.cnt++;
-            *rval = 0;
-            free_command(cmd);
-            return (NULL);
+static int
+rtpp_command_guard_retrans(struct rtpp_command *cmd,
+  struct rtpp_cmd_rcache *rcache_obj)
+{
+    size_t len;
+    struct rtpp_command_priv *pvt;
+
+    pvt = PUB2PVT(cmd);
+    if (CALL_METHOD(rcache_obj, lookup, pvt->cookie, pvt->buf_r,
+      sizeof(pvt->buf_r)) == 1) {
+        len = strlen(pvt->buf_r);
+        rtpp_anetio_sendto(pvt->cfs->rtpp_netio_cf, pvt->controlfd,
+          pvt->buf_r, len, 0, sstosa(&cmd->raddr), cmd->rlen);
+        cmd->csp->ncmds_rcvd.cnt--;
+        cmd->csp->ncmds_rcvd_ndups.cnt++;
+        return (1);
+    }
+    CALL_SMETHOD(rcache_obj->rcnt, incref);
+    pvt->rcache_obj = rcache_obj;
+    return (0);
+}
+
+#define ISAMPAMP(v) ((v)[0] == '&' && (v)[1] == '&' && (v)[2] == '\0')
+
+int
+rtpp_command_split(struct rtpp_command *cmd, int len, struct rtpp_cmd_rcache *rcache_obj)
+{
+    char **ap;
+    char *cp;
+    struct rtpp_command_priv *pvt;
+    struct rtpp_command_args *cap;
+
+    pvt = PUB2PVT(cmd);
+    if (len > 0 && cmd->buf[len - 1] == '\n') {
+        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "received command \"%.*s\\n\"",
+          len - 1, cmd->buf);
+    } else {
+        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "received command \"%s\"",
+          cmd->buf);
+    }
+    cmd->csp->ncmds_rcvd.cnt++;
+
+    cp = cmd->buf;
+    cap = &cmd->args;
+    for (ap = cap->v; (*ap = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
+        if (**ap != '\0') {
+            if (cap == &cmd->args) {
+                /* Stream communication mode doesn't use cookie */
+                if (pvt->umode != 0 && cap->c == 0 && pvt->cookie == NULL) {
+                    pvt->cookie = *ap;
+                    if (rtpp_command_guard_retrans(cmd, rcache_obj)) {
+                        return (1);
+                    }
+                    continue;
+                }
+                if (ISAMPAMP(*ap)) {
+                    *ap = NULL;
+                    cap = &cmd->subc_args;
+                    ap = cap->v;
+                    continue;
+                }
+            }
+            cap->c++;
+            if (++ap >= &cap->v[RTPC_MAX_ARGC])
+                goto etoomany;
         }
-        CALL_SMETHOD(rcache_obj->rcnt, incref);
-        pvt->rcache_obj = rcache_obj;
+    }
+    if (cmd->args.c < 1 || (pvt->umode != 0 && pvt->cookie == NULL) ||
+      (cap == &cmd->subc_args && cap->c < 1)) {
+etoomany:
+        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_ERR, "command syntax error");
+        reply_error(cmd, ECODE_PARSE_1);
+        return (1);
     }
 
     /* Step I: parse parameters that are common to all ops */
-    if (rtpp_command_pre_parse(cf->stable, cmd) != 0) {
+    if (rtpp_command_pre_parse(pvt->cfs, cmd) != 0) {
         /* Error reply is handled by the rtpp_command_pre_parse() */
-        *rval = 0;
-        free_command(cmd);
-        return (NULL);
+        return (1);
     }
 
-    return (cmd);
+    return (0);
 }
 
 struct d_opts {

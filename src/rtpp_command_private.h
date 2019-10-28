@@ -72,6 +72,7 @@ struct rtpp_command
     char buf[1024 * 8];
     char buf_t[256];
     struct rtpp_command_args args;
+    struct rtpp_command_args subc_args;
     struct sockaddr_storage raddr;
     struct sockaddr *laddr;
     socklen_t rlen;
@@ -86,6 +87,7 @@ struct rtpp_command
 
 #define ECODE_PARSE_NARGS  1
 #define ECODE_PARSE_MODS   2
+#define ECODE_PARSE_SUBC   3
 
 #define ECODE_PARSE_1      5
 #define ECODE_PARSE_2      6
