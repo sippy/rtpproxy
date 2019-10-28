@@ -184,13 +184,19 @@ rtpp_daemon(int nochdir, int noclose)
         (void)chdir("/");
 
     if (!noclose && (fd = open("/dev/null", O_RDWR, 0)) != -1) {
-        (void)dup2(fd, STDIN_FILENO);
-#if !defined(RTPP_DEBUG)
-        (void)dup2(fd, STDOUT_FILENO);
-        (void)dup2(fd, STDERR_FILENO);
-#endif
-        if (fd > 2)
+        if (fd != STDIN_FILENO) {
+            if (dup2(fd, STDIN_FILENO) < 0) {
+                (void)close(fd);
+                return (-1);
+            }
             (void)close(fd);
+        }
+#if !defined(RTPP_DEBUG)
+        if (dup2(STDIN_FILENO, STDOUT_FILENO) < 0)
+            return (-1);
+        if (dup2(STDIN_FILENO, STDERR_FILENO) < 0)
+            return (-1);
+#endif
     }
     return (0);
 }
