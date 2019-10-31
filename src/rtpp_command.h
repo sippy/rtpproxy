@@ -63,6 +63,7 @@ int rtpp_create_listener(struct cfg *, struct sockaddr *, int *,
   struct rtpp_socket **);
 struct rtpp_command *rtpp_command_ctor(struct cfg *, int, const struct rtpp_timestamp *,
   struct rtpp_command_stats *, int);
+int rtpp_command_split(struct rtpp_command *, int, int *, struct rtpp_cmd_rcache *);
 
 void rtpc_doreply(struct rtpp_command *, char *, int, int);
 

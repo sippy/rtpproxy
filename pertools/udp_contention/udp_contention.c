@@ -208,13 +208,18 @@ socket_ctor(int domain, struct tconf *cfp)
 
     s = socket(domain, SOCK_DGRAM, 0);
     if (s == -1) {
-        return (-1);
+        goto e0;
     }
     if (cfp->sock_block == 0) {
         flags = fcntl(s, F_GETFL);
-        fcntl(s, F_SETFL, flags | O_NONBLOCK);
+        if (flags < 0 || fcntl(s, F_SETFL, flags | O_NONBLOCK) < 0)
+            goto e1;
     }
     return (s);
+e1:
+    close(s);
+e0:
+    return (-1);
 }
 
 static struct workset *
@@ -616,8 +621,8 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         rsp[i] = generate_recvset(wsp[i], cfp);
     }
     for (i = 0; i < nthreads; i++) {
-        pthread_create(&wsp[i]->tid, NULL, (void *(*)(void *))process_workset, wsp[i]);
-        pthread_create(&rsp[i]->tid, NULL, (void *(*)(void *))process_recvset, rsp[i]);
+        assert(pthread_create(&wsp[i]->tid, NULL, (void *(*)(void *))process_workset, wsp[i]) == 0);
+        assert(pthread_create(&rsp[i]->tid, NULL, (void *(*)(void *))process_recvset, rsp[i]) == 0);
     }
     nrecvd_total = nsent_total = send_nerrs_total = send_nshrts_total = 0;
     rtt_total = 0;

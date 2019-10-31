@@ -33,6 +33,7 @@
 
 #define ECODE_PARSE_NARGS  1
 #define ECODE_PARSE_MODS   2
+#define ECODE_PARSE_SUBC   3
 
 #define ECODE_PARSE_1      5
 #define ECODE_PARSE_2      6
