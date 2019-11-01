@@ -264,20 +264,6 @@ then
   AC_DEFINE([ENABLE_UDP_CONTENTION], 1, [Define to build udp_contention utility])
 fi
 
-AC_MSG_CHECKING([for __sync_fetch_and_add])
-AC_LINK_IFELSE(
-   [AC_LANG_SOURCE([
-    int main(void) {
-        volatile int rcval = 1, rcval_pre;
-        rcval_pre = __sync_fetch_and_add(&rcval, -1);
-        return(rcval == 0 && rcval_pre == 1 ? 0 : 1);
-    }
-   ])],
-     [AC_MSG_RESULT([yes])
-     AC_DEFINE([HAVE_GCC_ATOMICS],[1],[Define if you have gcc-style atomic operations])],
-   [AC_MSG_RESULT([no])]
-)
-
 AC_MSG_CHECKING([whether -latomic is needed for __atomic builtins])
 AC_LINK_IFELSE(
   [AC_LANG_PROGRAM([[#include <stdint.h>]],
