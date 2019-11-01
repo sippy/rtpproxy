@@ -57,6 +57,9 @@ struct rtp_packet_full {
     struct rtp_packet_priv pvt;
 };
 
+#define PUB2PVT(pubp, pvtp) \
+    (pvtp) = (typeof(pvtp))((char *)(pubp) - offsetof(typeof(*(pvtp)), pub))
+
 void
 rtp_packet_dup(struct rtp_packet *dpkt, const struct rtp_packet *spkt, int flags)
 {
@@ -88,11 +91,13 @@ struct rtp_packet *
 rtp_packet_alloc()
 {
     struct rtp_packet_full *pkt;
+    struct rtpp_refcnt *rcnt;
 
-    pkt = rtpp_rzmalloc(sizeof(*pkt), PVT_RCOFFS(pkt));
+    pkt = rtpp_rzmalloc(sizeof(*pkt), &rcnt);
     if (pkt == NULL) {
         return (NULL);
     }
+    pkt->pub.rcnt = rcnt;
     pkt->pub.wi = &(pkt->pvt.wip.pub);
     CALL_SMETHOD(pkt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtp_packet_free,
       pkt);
