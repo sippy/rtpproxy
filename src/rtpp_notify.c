@@ -52,6 +52,7 @@
 #include "rtpp_tnotify_tgt.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_wi.h"
+#include "rtpp_wi_data.h"
 
 struct rtpp_notify_wi
 {

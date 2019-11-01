@@ -28,7 +28,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_pipe.c rtpp_pcount.h rtpp_pcount.c rtpp_debug.h rtpp_monotime.h \
   rtpp_monotime.c rtpp_mallocs.c rtpp_mallocs.h rtpp_pcnt_strm.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c rtpp_ringbuf.h \
-  rtpp_wi_apis.c rtpp_wi_apis.h \
+  rtpp_wi_apis.c rtpp_wi_apis.h rtpp_wi_data.c rtpp_wi_data.h \
   rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
   rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h rtpp_acct.c \
   rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddrs.h rtpp_ssrc.h \
