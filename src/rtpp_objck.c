@@ -58,6 +58,7 @@
 #include "rtpp_timed_task.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_data.h"
+#include "rtpp_wi_sgnl.h"
 
 #if defined(_RTPP_MEMDEB_H)
 RTPP_MEMDEB_APP_STATIC;
