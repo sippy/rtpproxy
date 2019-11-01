@@ -6,7 +6,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_syslog_async.c rtpp_syslog_async.h rtpp_notify.c rtpp_notify.h \
   rtpp_command_async.h rtpp_command_async.c rtpp_proc_async.c \
   rtpp_proc_async.h rtpp_proc.h rtpp_proc.c rtpp_version.h rtpp_math.c \
-  rtpp_math.h rtpp_wi.c rtpp_wi.h rtpp_wi_private.h rtpp_queue.c rtpp_queue.h \
+  rtpp_math.h rtpp_wi.h rtpp_wi_private.h rtpp_queue.c rtpp_queue.h \
   rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
   rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
   rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
@@ -33,7 +33,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
   rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h rtpp_acct.c \
   rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddrs.h rtpp_ssrc.h \
-  rtpp_network_io.c rtpp_network_io.h \
+  rtpp_network_io.c rtpp_network_io.h rtpp_wi_pkt.c rtpp_wi_pkt.h \
   rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h
 
 RTPP_CD_PATH=$(top_srcdir)/modules/catch_dtmf
