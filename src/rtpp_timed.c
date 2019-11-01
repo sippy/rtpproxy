@@ -37,6 +37,7 @@
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_data.h"
+#include "rtpp_wi_sgnl.h"
 #include "rtpp_time.h"
 #include "rtpp_timed.h"
 #include "rtpp_timed_fin.h"

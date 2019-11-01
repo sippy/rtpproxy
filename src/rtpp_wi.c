@@ -137,59 +137,6 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
     return (&(wipp->pub));
 }
 
-struct rtpp_wi *
-#if !defined(RTPP_CHECK_LEAKS)
-rtpp_wi_malloc_sgnl(int signum, const void *data, size_t datalen)
-#else
-rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int signum, const void *data, size_t datalen)
-#endif
-{
-    struct rtpp_wi_pvt *wipp;
-#if !defined(RTPP_CHECK_LEAKS)
-    wipp = malloc(sizeof(struct rtpp_wi_pvt) + datalen);
-#else
-    wipp = rtpp_memdeb_malloc(sizeof(struct rtpp_wi_pvt) + datalen,
-      _rtpproxy_memdeb, fname, linen, funcn);
-#endif
-    if (wipp == NULL) {
-        return (NULL);
-    }
-    memset(wipp, '\0', sizeof(struct rtpp_wi_pvt));
-    wipp->pub.dtor = rtpp_wi_free;
-    wipp->pub.wi_type = RTPP_WI_TYPE_SGNL;
-    wipp->free_ptr = wipp;
-    wipp->flags = signum;
-    if (datalen > 0) {
-        wipp->msg = wipp->data;
-        wipp->msg_len = datalen;
-        memcpy(wipp->data, data, datalen);
-    }
-    return (&(wipp->pub));
-}
-
-void *
-rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
-{
-    struct rtpp_wi_pvt *wipp;
-
-    assert(wi->wi_type == RTPP_WI_TYPE_SGNL);
-    wipp = PUB2PVT(wi);
-    if (datalen != NULL) {
-        *datalen = wipp->msg_len;
-    }
-    return(wipp->msg);
-}
-
-int
-rtpp_wi_sgnl_get_signum(struct rtpp_wi *wi)
-{
-    struct rtpp_wi_pvt *wipp;
-
-    assert(wi->wi_type == RTPP_WI_TYPE_SGNL);
-    wipp = PUB2PVT(wi);
-    return (wipp->flags);
-}
-
 static void
 rtpp_wi_free(struct rtpp_wi *wi)
 {

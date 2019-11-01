@@ -53,6 +53,7 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_data.h"
+#include "rtpp_wi_sgnl.h"
 
 struct rtpp_notify_wi
 {

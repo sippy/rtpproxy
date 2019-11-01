@@ -56,6 +56,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_apis.h"
+#include "rtpp_wi_sgnl.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
