@@ -46,6 +46,7 @@
 #include "rtp_packet.h"
 #include "rtpp_types.h"
 #include "rtpp_wi.h"
+#include "rtpp_wi_pkt.h"
 #include "rtpp_wi_sgnl.h"
 #include "rtpp_wi_private.h"
 #include "rtpp_refcnt.h"
