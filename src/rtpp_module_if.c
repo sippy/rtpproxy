@@ -198,7 +198,7 @@ e5:
     }
 #endif
 e4:
-    rtpp_wi_free(pvt->sigterm);
+    CALL_METHOD(pvt->sigterm, dtor);
 e3:
 #if RTPP_CHECK_LEAKS
     rtpp_memdeb_dtor(pvt->memdeb_p);
@@ -221,6 +221,7 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
     rtpp_queue_put_item(pvt->sigterm, pvt->req_q);
     pthread_join(pvt->thread_id, NULL);
     rtpp_queue_destroy(pvt->req_q);
+    CALL_METHOD(pvt->sigterm, dtor);
 
     /* Then run module destructor (if any) */
     if (pvt->mip->dtor != NULL) {
@@ -255,7 +256,7 @@ rtpp_mif_run(void *argp)
         wi = rtpp_queue_get_item(pvt->req_q, 0);
         if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
             signum = rtpp_wi_sgnl_get_signum(wi);
-            rtpp_wi_free(wi);
+            CALL_METHOD(wi, dtor);
             if (signum == SIGTERM) {
                 break;
             }
@@ -266,7 +267,7 @@ rtpp_mif_run(void *argp)
             pvt->mip->on_session_end.func(pvt->mpvt, rap);
         }
         CALL_SMETHOD(rap->rcnt, decref);
-        rtpp_wi_free(wi);
+        CALL_METHOD(wi, dtor);
     }
 }
 

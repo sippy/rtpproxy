@@ -42,7 +42,6 @@
 #include "rtpp_queue.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_wi.h"
-#include "rtpp_wi_private.h"
 
 struct rtpp_queue
 {

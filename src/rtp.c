@@ -35,6 +35,7 @@
 #include "rtp.h"
 #include "rtp_info.h"
 #include "rtp_packet.h"
+#include "rtpp_types.h"
 #include "rtpp_mallocs.h"
 
 #include "rtpp_wi.h"
@@ -69,7 +70,7 @@ struct rtp_packet_full;
 
 struct rtp_packet_priv {
     struct rtp_info rinfo;
-    struct rtpp_wi wi;
+    struct rtpp_wi_pvt wip;
 };
 
 struct rtp_packet_full {
@@ -390,7 +391,7 @@ rtp_packet_dup(struct rtp_packet *dpkt, struct rtp_packet *spkt, int flags)
     }
     memcpy(dpkt, spkt, csize);
     dpkt_full = (struct rtp_packet_full *)dpkt;
-    dpkt->wi = &(dpkt_full->pvt.wi);
+    dpkt->wi = &(dpkt_full->pvt.wip.pub);
     if (dpkt->parsed == NULL) {
         return;
     }
@@ -415,7 +416,7 @@ rtp_packet_alloc()
     if (pkt == NULL) {
         return (NULL);
     }
-    pkt->pub.wi = &pkt->pvt.wi;
+    pkt->pub.wi = &(pkt->pvt.wip.pub);
 
     return &(pkt->pub);
 }

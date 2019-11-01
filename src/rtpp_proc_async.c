@@ -154,7 +154,7 @@ rtpp_proc_async_run(void *arg)
     last_tick_time = 0;
     wi = rtpp_queue_get_item(proc_cf->time_q, 0);
     if (rtpp_wi_sgnl_get_signum(wi) == SIGTERM) {
-        rtpp_wi_free(wi);
+        CALL_METHOD(wi, dtor);
         return;
     }
     s_a = (struct sign_arg *)rtpp_wi_sgnl_get_data(wi, NULL);
@@ -162,7 +162,7 @@ rtpp_proc_async_run(void *arg)
     last_ctick = s_a->clock_tick;
 #endif
     ncycles_ref = s_a->ncycles_ref;
-    rtpp_wi_free(wi);
+    CALL_METHOD(wi, dtor);
 
     tp[0] = getdtime();
     for (;;) {
@@ -174,7 +174,7 @@ rtpp_proc_async_run(void *arg)
             if (rtpp_wi_sgnl_get_signum(wis[j]) != SIGTERM)
                 continue;
             while (i > 0) {
-                rtpp_wi_free(wis[i - 1]);
+                CALL_METHOD(wis[i - 1], dtor);
                 i -= 1;
             }
             rtpp_polltbl_free(&ptbl_rtp);
@@ -192,7 +192,7 @@ rtpp_proc_async_run(void *arg)
 #endif
         ncycles_ref = s_a->ncycles_ref;
         for(; i > -1; i--) {
-            rtpp_wi_free(wis[i]);
+            CALL_METHOD(wis[i], dtor);
         }
 
         tp[1] = getdtime();
@@ -375,7 +375,7 @@ rtpp_proc_async_ctor(struct cfg *cf)
     return (&proc_cf->pub);
 
 e3:
-    rtpp_wi_free(proc_cf->sigterm);
+    CALL_METHOD(proc_cf->sigterm, dtor);
 e2:
     rtpp_netio_async_destroy(proc_cf->op);
 e1:

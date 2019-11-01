@@ -31,6 +31,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,9 +41,9 @@
 #include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtp_packet.h"
+#include "rtpp_types.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
-#include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_queue.h"
@@ -67,6 +68,8 @@ struct sthread_args {
 
 #define SEND_THREADS 1
 
+#define PUB2PVT(pubp)      ((struct rtpp_wi_pvt *)((char *)(pubp) - offsetof(struct rtpp_wi_pvt, pub)))
+
 struct rtpp_anetio_cf {
     pthread_t thread_id[SEND_THREADS];
     struct sthread_args args[SEND_THREADS];
@@ -79,6 +82,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
 {
     int n, nsend, i, send_errno, nretry;
     struct rtpp_wi *wi, *wis[100];
+    struct rtpp_wi_pvt *wipp;
 #if RTPP_DEBUG_timers
     double tp[3], runtime, sleeptime;
     long run_n;
@@ -95,42 +99,43 @@ rtpp_anetio_sthread(struct sthread_args *args)
 
         for (i = 0; i < nsend; i++) {
 	    wi = wis[i];
+            wipp = PUB2PVT(wi);
             if (wi->wi_type == RTPP_WI_TYPE_SGNL) {
-                rtpp_wi_free(wi);
+                CALL_METHOD(wi, dtor);
                 goto out;
             }
             nretry = 0;
             do {
-                n = sendto(wi->sock, wi->msg, wi->msg_len, wi->flags,
-                  wi->sendto, wi->tolen);
+                n = sendto(wipp->sock, wipp->msg, wipp->msg_len, wipp->flags,
+                  wipp->sendto, wipp->tolen);
                 send_errno = (n < 0) ? errno : 0;
 #if RTPP_DEBUG_netio >= 1
-                if (wi->debug != 0) {
+                if (wipp->debug != 0) {
                     char daddr[MAX_AP_STRBUF];
 
-                    addrport2char_r(wi->sendto, daddr, sizeof(daddr), ':');
+                    addrport2char_r(wipp->sendto, daddr, sizeof(daddr), ':');
                     if (n < 0) {
-                        RTPP_ELOG(wi->log, RTPP_LOG_DBUG,
+                        RTPP_ELOG(wipp->log, RTPP_LOG_DBUG,
                           "sendto(%d, %p, %lld, %d, %p (%s), %d) = %d",
-                          wi->sock, wi->msg, (long long)wi->msg_len, wi->flags,
-                          wi->sendto, daddr, wi->tolen, n);
-                    } else if (n < wi->msg_len) {
-                        RTPP_LOG(wi->log, RTPP_LOG_DBUG,
+                          wipp->sock, wipp->msg, (long long)wipp->msg_len, wipp->flags,
+                          wipp->sendto, daddr, wipp->tolen, n);
+                    } else if (n < wipp->msg_len) {
+                        RTPP_LOG(wipp->log, RTPP_LOG_DBUG,
                           "sendto(%d, %p, %lld, %d, %p (%s), %d) = %d: short write",
-                          wi->sock, wi->msg, (long long)wi->msg_len, wi->flags,
-                          wi->sendto, daddr, wi->tolen, n);
+                          wipp->sock, wipp->msg, (long long)wipp->msg_len, wipp->flags,
+                          wipp->sendto, daddr, wipp->tolen, n);
 #if RTPP_DEBUG_netio >= 2
                     } else {
-                        RTPP_LOG(wi->log, RTPP_LOG_DBUG,
+                        RTPP_LOG(wipp->log, RTPP_LOG_DBUG,
                           "sendto(%d, %p, %d, %d, %p (%s), %d) = %d",
-                          wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, daddr,
-                          wi->tolen, n);
+                          wipp->sock, wipp->msg, wipp->msg_len, wipp->flags, wipp->sendto, daddr,
+                          wipp->tolen, n);
 #endif
                     }
                 }
 #endif
                 if (n >= 0) {
-                    wi->nsend--;
+                    wipp->nsend--;
                 } else {
                     /* "EPERM" is Linux thing, yield and retry */
                     if ((send_errno == EPERM || send_errno == ENOBUFS)
@@ -141,8 +146,8 @@ rtpp_anetio_sthread(struct sthread_args *args)
                         break;
                     }
                 }
-            } while (wi->nsend > 0);
-            rtpp_wi_free(wi);
+            } while (wipp->nsend > 0);
+            CALL_METHOD(wi, dtor);
         }
 #if RTPP_DEBUG_timers
         sleeptime += tp[1] - tp[0];
@@ -174,14 +179,16 @@ rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
         return (-1);
     }
 #if RTPP_DEBUG_netio >= 1
-    wi->debug = 1;
-    wi->log = netio_cf->args[0].glog;
-    CALL_SMETHOD(wi->log->rcnt, incref);
+    struct rtpp_wi_pvt *wipp;
+    wipp = PUB2PVT(wi);
+    wipp->debug = 1;
+    wipp->log = netio_cf->args[0].glog;
+    CALL_SMETHOD(wipp->log->rcnt, incref);
 #if RTPP_DEBUG_netio >= 2
     RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "malloc(%d, %p, %d, %d, %p, %d) = %p",
       sock, msg, msg_len, flags, sendto, tolen, wi);
     RTPP_LOG(netio_cf->args[0].glog, RTPP_LOG_DBUG, "sendto(%d, %p, %d, %d, %p, %d)",
-      wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
+      wipp->sock, wipp->msg, wipp->msg_len, wipp->flags, wipp->sendto, wipp->tolen);
 #endif
 #endif
     rtpp_queue_put_item(wi, netio_cf->args[0].out_q);
@@ -226,14 +233,16 @@ rtpp_anetio_send_pkt(struct sthread_args *sender, int sock, \
      * call rtp_packet_free() here.
      */
 #if RTPP_DEBUG_netio >= 2
-    wi->debug = 1;
+    struct rtpp_wi_pvt *wipp;
+    wipp = PUB2PVT(wi);
+    wipp->debug = 1;
     if (plog == NULL) {
         plog = sender->glog;
     }
     CALL_SMETHOD(plog->rcnt, incref);
-    wi->log = plog;
+    wipp->log = plog;
     RTPP_LOG(plog, RTPP_LOG_DBUG, "send_pkt(%d, %p, %d, %d, %p, %d)",
-      wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
+      wipp->sock, wipp->msg, wipp->msg_len, wipp->flags, wipp->sendto, wipp->tolen);
 #endif
     rtpp_queue_put_item(wi, sender->out_q);
     return (0);
@@ -263,14 +272,16 @@ rtpp_anetio_send_pkt_na(struct sthread_args *sender, int sock, \
      * call rtp_packet_free() here.
      */
 #if RTPP_DEBUG_netio >= 2
-    wi->debug = 1;
+    struct rtpp_wi_pvt *wipp;
+    wipp = PUB2PVT(wi);
+    wipp->debug = 1;
     if (plog == NULL) {
         plog = sender->glog;
     }
     CALL_SMETHOD(plog->rcnt, incref);
-    wi->log = plog;
+    wipp->log = plog;
     RTPP_LOG(plog, RTPP_LOG_DBUG, "send_pkt(%d, %p, %d, %d, %p, %d)",
-      wi->sock, wi->msg, wi->msg_len, wi->flags, wi->sendto, wi->tolen);
+      wipp->sock, wipp->msg, wipp->msg_len, wipp->flags, wipp->sendto, wipp->tolen);
 #endif
     rtpp_queue_put_item(wi, sender->out_q);
     return (0);
@@ -328,7 +339,7 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
         netio_cf->args[i].sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
         if (netio_cf->args[i].sigterm == NULL) {
             for (ri = i - 1; ri >= 0; ri--) {
-                rtpp_wi_free(netio_cf->args[ri].sigterm);
+                CALL_METHOD(netio_cf->args[ri].sigterm, dtor);
             }
             goto e1;
         }
@@ -340,9 +351,12 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
              for (ri = i - 1; ri >= 0; ri--) {
                  rtpp_queue_put_item(netio_cf->args[ri].sigterm, netio_cf->args[ri].out_q);
                  pthread_join(netio_cf->thread_id[ri], NULL);
+                 while (rtpp_queue_get_length(netio_cf->args[ri].out_q) > 0) {
+                    CALL_METHOD(rtpp_queue_get_item(netio_cf->args[ri].out_q, 0), dtor);
+                 }
              }
              for (ri = i; ri < SEND_THREADS; ri++) {
-                 rtpp_wi_free(netio_cf->args[ri].sigterm);
+                 CALL_METHOD(netio_cf->args[ri].sigterm, dtor);
              }
              goto e1;
         }
@@ -353,7 +367,7 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
 #if 0
 e2:
     for (i = 0; i < SEND_THREADS; i++) {
-        rtpp_wi_free(netio_cf->args[i].sigterm);
+        CALL_METHOD(netio_cf->args[i].sigterm, dtor);
     }
 #endif
 e1:
@@ -376,6 +390,9 @@ rtpp_netio_async_destroy(struct rtpp_anetio_cf *netio_cf)
     }
     for (i = 0; i < SEND_THREADS; i++) {
         pthread_join(netio_cf->thread_id[i], NULL);
+        while (rtpp_queue_get_length(netio_cf->args[i].out_q) > 0) {
+            CALL_METHOD(rtpp_queue_get_item(netio_cf->args[i].out_q, 0), dtor);
+        }
         rtpp_queue_destroy(netio_cf->args[i].out_q);
         CALL_SMETHOD(netio_cf->args[i].glog->rcnt, decref);
     }
