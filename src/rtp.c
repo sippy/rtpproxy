@@ -37,10 +37,6 @@
 #include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtpp_types.h"
-#include "rtpp_mallocs.h"
-
-#include "rtpp_wi.h"
-#include "rtpp_wi_private.h"
 
 #define RTP_PROFILE_AUDIO(s, nc) {.ts_rate = (s), .sample_rate = (s), \
   .pt_kind = RTP_PTK_AUDIO, .nchannels = (nc)}
@@ -65,18 +61,6 @@ const struct rtp_profile rtp_profiles[128] = {
     RTP_PROFILE_AUDIO(11025, 1), /* RTP_DVI4_11025 */
     RTP_PROFILE_AUDIO(22050, 1), /* RTP_DVI4_22050 */
     RTP_PROFILE_AUDIO(8000,  1)  /* RTP_G729 */
-};
-
-struct rtp_packet_full;
-
-struct rtp_packet_priv {
-    struct rtp_info rinfo;
-    struct rtpp_wi_pvt wip;
-};
-
-struct rtp_packet_full {
-    struct rtp_packet pub;
-    struct rtp_packet_priv pvt;
 };
 
 static int 
@@ -357,87 +341,4 @@ rtp_packet_parse_raw(unsigned char *buf, size_t size, struct rtp_info *rinfo)
     if (header->pt == RTP_G729 && (rinfo->data_size % 10) != 0)
         rinfo->appendable = 0;
     return RTP_PARSER_OK;
-}
-
-rtp_parser_err_t
-rtp_packet_parse(struct rtp_packet *pkt)
-{
-    struct rtp_packet_full *pkt_full;
-    struct rtp_info *rinfo;    
-
-    if (pkt->parse_result != RTP_PARSER_NOTPARSED) {
-        return (pkt->parse_result);
-    }
-    assert(pkt->parsed == NULL);
-    pkt_full = (void *)pkt;
-    rinfo = &(pkt_full->pvt.rinfo);
-    pkt->parse_result = rtp_packet_parse_raw(pkt->data.buf, pkt->size, rinfo);
-    if (pkt->parse_result == RTP_PARSER_OK) {
-        pkt->parsed = rinfo;
-    }
-    return (pkt->parse_result);
-}
-
-void
-rtp_packet_dup(struct rtp_packet *dpkt, const struct rtp_packet *spkt, int flags)
-{
-    int csize;
-    struct rtp_packet_full *dpkt_full, *spkt_full;
-    struct rtp_info *drinfo, *srinfo;
-
-    csize = offsetof(struct rtp_packet, data.buf) + spkt->size;
-    if ((flags & RTPP_DUP_HDRONLY) != 0) {
-        assert(spkt->parse_result == RTP_PARSER_OK);
-        csize -= spkt->parsed->data_size;
-    }
-    memcpy(dpkt, spkt, csize);
-    dpkt_full = (struct rtp_packet_full *)dpkt;
-    dpkt->wi = &(dpkt_full->pvt.wip.pub);
-    if (dpkt->parsed == NULL) {
-        return;
-    }
-    drinfo = &(dpkt_full->pvt.rinfo);    
-    spkt_full = (struct rtp_packet_full *)spkt;
-    srinfo = &(spkt_full->pvt.rinfo);
-    memcpy(drinfo, srinfo, sizeof(struct rtp_info));
-    dpkt->parsed = drinfo;
-    if ((flags & RTPP_DUP_HDRONLY) != 0) {
-        dpkt->size -= dpkt->parsed->data_size;
-        dpkt->parsed->data_size = 0;
-        dpkt->parsed->nsamples = 0;
-    }
-}
-
-struct rtp_packet *
-rtp_packet_alloc()
-{
-    struct rtp_packet_full *pkt;
-
-    pkt = rtpp_zmalloc(sizeof(*pkt));
-    pkt->pub.wi = &(pkt->pvt.wip.pub);
-
-    return &(pkt->pub);
-}
-
-void
-rtp_packet_free(struct rtp_packet *pkt)
-{
-
-    free(pkt);
-}
-
-void 
-rtp_packet_set_seq(struct rtp_packet *p, uint16_t seq)
-{
-
-    p->parsed->seq = seq;
-    p->data.header.seq = htons(seq);
-}
-
-void 
-rtp_packet_set_ts(struct rtp_packet *p, uint32_t ts)
-{
-
-    p->parsed->ts = ts;
-    p->data.header.ts = htonl(ts);
 }
