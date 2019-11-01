@@ -106,7 +106,7 @@ rtpp_timed_queue_run(void *argp)
         if (rtpp_queue_get_length(rtcp->cmd_q) > 0) {
             wi = rtpp_queue_get_item(rtcp->cmd_q, 0);
             signum = rtpp_wi_sgnl_get_signum(wi);
-            rtpp_wi_free(wi);
+            CALL_METHOD(wi, dtor);
             if (signum == SIGTERM) {
                 break;
             }
@@ -173,7 +173,7 @@ rtpp_timed_ctor(double run_period)
 e5:
     prdic_free(rtcp->elp);
 e4:
-    rtpp_wi_free(rtcp->sigterm);
+    CALL_METHOD(rtcp->sigterm, dtor);
 e3:
     rtpp_queue_destroy(rtcp->cmd_q);
 e2:
@@ -195,7 +195,7 @@ rtpp_timed_shutdown(struct rtpp_timed *self)
     rtpp_queue_put_item(rtpp_timed_cf->sigterm, rtpp_timed_cf->cmd_q);
     pthread_join(rtpp_timed_cf->thread_id, NULL);
     while (rtpp_queue_get_length(rtpp_timed_cf->cmd_q) > 0) {
-        rtpp_wi_free(rtpp_queue_get_item(rtpp_timed_cf->cmd_q, 0));
+        CALL_METHOD(rtpp_queue_get_item(rtpp_timed_cf->cmd_q, 0), dtor);
     }
     rtpp_timed_cf->state = RT_ST_SHTDOWN;
 }
@@ -233,7 +233,7 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
     wi_data->wi = wi;
     wi_data->pub.rcnt = rtpp_refcnt_ctor_pa(&wi_data->rco[0]);
     if (wi_data->pub.rcnt == NULL) {
-        rtpp_wi_free(wi);
+        CALL_METHOD(wi, dtor);
         return (NULL);
     }
     wi_data->cb_func = cb_func;
@@ -367,7 +367,7 @@ rtpp_timed_task_dtor(struct rtpp_timed_wi *wi_data)
     if (wi_data->timed_cf != NULL) {
         CALL_SMETHOD(wi_data->timed_cf->pub.rcnt, decref);
     }
-    rtpp_wi_free(wi_data->wi);
+    CALL_METHOD(wi_data->wi, dtor);
 }
 
 static int

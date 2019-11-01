@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,10 +45,12 @@
 #include "rtpp_netaddr.h"
 
 struct rtpp_wi_sendto {
-    struct rtpp_wi wi;
+    struct rtpp_wi_pvt wip;
     struct sockaddr_storage to;
     char msg[0];
 };
+
+static void rtpp_wi_free(struct rtpp_wi *);
 
 struct rtpp_wi *
 rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
@@ -60,18 +63,19 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
         return (NULL);
     }
     memset(wis, '\0', sizeof(struct rtpp_wi_sendto));
-    wis->wi.free_ptr = &(wis->wi);
-    wis->wi.wi_type = RTPP_WI_TYPE_OPKT;
-    wis->wi.sock = sock;
-    wis->wi.flags = flags;
-    wis->wi.msg = &(wis->msg);
-    wis->wi.sendto = sstosa(&(wis->to));
-    wis->wi.msg_len = msg_len;
-    wis->wi.nsend = 1;
+    wis->wip.pub.dtor = rtpp_wi_free;
+    wis->wip.pub.wi_type = RTPP_WI_TYPE_OPKT;
+    wis->wip.free_ptr = wis;
+    wis->wip.sock = sock;
+    wis->wip.flags = flags;
+    wis->wip.msg = &(wis->msg);
+    wis->wip.sendto = sstosa(&(wis->to));
+    wis->wip.msg_len = msg_len;
+    wis->wip.nsend = 1;
     memcpy(wis->msg, msg, msg_len);
-    wis->wi.tolen = tolen;
+    wis->wip.tolen = tolen;
     memcpy(&(wis->to), sendto, tolen);
-    return (&(wis->wi));
+    return (&(wis->wip.pub));
 }
 
 struct rtpp_wi *
@@ -79,24 +83,25 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
   const struct sockaddr *sendto, size_t tolen, int nsend,
   struct rtpp_refcnt *sock_rcnt)
 {
-    struct rtpp_wi *wi;
+    struct rtpp_wi_pvt *wipp;
 
-    wi = pkt->wi;
-    wi->free_ptr = (struct rtpp_wi *)pkt;
-    wi->wi_type = RTPP_WI_TYPE_OPKT;
-    wi->sock = sock;
+    PUB2PVT(pkt->wi, wipp);
+    wipp->pub.dtor = rtpp_wi_free;
+    wipp->pub.wi_type = RTPP_WI_TYPE_OPKT;
+    wipp->free_ptr = (struct rtpp_wi *)pkt;
+    wipp->sock = sock;
     if (sock_rcnt != NULL) {
         CALL_SMETHOD(sock_rcnt, incref);
     }
-    wi->sock_rcnt = sock_rcnt;
-    wi->flags = 0;
-    wi->msg = pkt->data.buf;
-    wi->msg_len = pkt->size;
-    wi->sendto = sstosa(&pkt->sendto);
-    wi->tolen = tolen;
-    memcpy(wi->sendto, sendto, tolen);
-    wi->nsend = nsend;
-    return (wi);
+    wipp->sock_rcnt = sock_rcnt;
+    wipp->flags = 0;
+    wipp->msg = pkt->data.buf;
+    wipp->msg_len = pkt->size;
+    wipp->sendto = sstosa(&pkt->sendto);
+    wipp->tolen = tolen;
+    memcpy(wipp->sendto, sendto, tolen);
+    wipp->nsend = nsend;
+    return (&(wipp->pub));
 }
 
 struct rtpp_wi *
@@ -104,23 +109,24 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
   struct rtpp_netaddr *sendto, int nsend,
   struct rtpp_refcnt *sock_rcnt)
 {
-    struct rtpp_wi *wi;
+    struct rtpp_wi_pvt *wipp;
 
-    wi = pkt->wi;
-    wi->free_ptr = (struct rtpp_wi *)pkt;
-    wi->wi_type = RTPP_WI_TYPE_OPKT;
-    wi->sock = sock;
+    PUB2PVT(pkt->wi, wipp);
+    wipp->pub.dtor = rtpp_wi_free;
+    wipp->pub.wi_type = RTPP_WI_TYPE_OPKT;
+    wipp->free_ptr = (struct rtpp_wi *)pkt;
+    wipp->sock = sock;
     if (sock_rcnt != NULL) {
         CALL_SMETHOD(sock_rcnt, incref);
     }
-    wi->sock_rcnt = sock_rcnt;
-    wi->flags = 0;
-    wi->msg = pkt->data.buf;
-    wi->msg_len = pkt->size;
-    wi->sendto = sstosa(&pkt->sendto);
-    wi->tolen = CALL_SMETHOD(sendto, get, wi->sendto, sizeof(pkt->raddr));
-    wi->nsend = nsend;
-    return (wi);
+    wipp->sock_rcnt = sock_rcnt;
+    wipp->flags = 0;
+    wipp->msg = pkt->data.buf;
+    wipp->msg_len = pkt->size;
+    wipp->sendto = sstosa(&pkt->sendto);
+    wipp->tolen = CALL_SMETHOD(sendto, get, wipp->sendto, sizeof(pkt->raddr));
+    wipp->nsend = nsend;
+    return (&(wipp->pub));
 }
 
 struct rtpp_wi *
@@ -130,154 +136,164 @@ rtpp_wi_malloc_sgnl(int signum, const void *data, size_t datalen)
 rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int signum, const void *data, size_t datalen)
 #endif
 {
-    struct rtpp_wi *wi;
+    struct rtpp_wi_pvt *wipp;
 #if !defined(RTPP_CHECK_LEAKS)
-    wi = malloc(sizeof(struct rtpp_wi) + datalen);
+    wipp = malloc(sizeof(struct rtpp_wi_pvt) + datalen);
 #else
-    wi = rtpp_memdeb_malloc(sizeof(struct rtpp_wi) + datalen, MEMDEB_SYM, fname, linen, funcn);
+    wipp = rtpp_memdeb_malloc(sizeof(struct rtpp_wi_pvt) + datalen,
+      MEMDEB_SYM, fname, linen, funcn);
 #endif
-    if (wi == NULL) {
+    if (wipp == NULL) {
         return (NULL);
     }
-    memset(wi, '\0', sizeof(struct rtpp_wi));
-    wi->free_ptr = wi;
-    wi->wi_type = RTPP_WI_TYPE_SGNL;
-    wi->flags = signum;
+    memset(wipp, '\0', sizeof(struct rtpp_wi_pvt));
+    wipp->pub.dtor = rtpp_wi_free;
+    wipp->pub.wi_type = RTPP_WI_TYPE_SGNL;
+    wipp->free_ptr = wipp;
+    wipp->flags = signum;
     if (datalen > 0) {
-        wi->msg = wi->data;
-        wi->msg_len = datalen;
-        memcpy(wi->data, data, datalen);
+        wipp->msg = wipp->data;
+        wipp->msg_len = datalen;
+        memcpy(wipp->data, data, datalen);
     }
-    return (wi);
+    return (&(wipp->pub));
 }
 
 struct rtpp_wi *
 rtpp_wi_malloc_apis(const char *apiname, void *data, size_t datalen)
 {
-    struct rtpp_wi *wi;
+    struct rtpp_wi_pvt *wipp;
 
-    wi = malloc(sizeof(struct rtpp_wi) + datalen);
-    if (wi == NULL) {
+    wipp = malloc(sizeof(struct rtpp_wi_pvt) + datalen);
+    if (wipp == NULL) {
         return (NULL);
     }
-    memset(wi, '\0', sizeof(struct rtpp_wi));
-    wi->free_ptr = wi;
-    wi->wi_type = RTPP_WI_TYPE_API_STR;
-    wi->sendto = (void *)apiname;
+    memset(wipp, '\0', sizeof(struct rtpp_wi_pvt));
+    wipp->pub.dtor = rtpp_wi_free;
+    wipp->pub.wi_type = RTPP_WI_TYPE_API_STR;
+    wipp->free_ptr = wipp;
+    wipp->sendto = (void *)apiname;
     if (datalen > 0) {
-        wi->msg = wi->data;
-        wi->msg_len = datalen;
-        memcpy(wi->data, data, datalen);
+        wipp->msg = wipp->data;
+        wipp->msg_len = datalen;
+        memcpy(wipp->data, data, datalen);
     }
-    return (wi);
+    return (&(wipp->pub));
 }
 
 struct rtpp_wi *
 rtpp_wi_malloc_data(void *dataptr, size_t datalen)
 {
-    struct rtpp_wi *wi;
+    struct rtpp_wi_pvt *wipp;
 
-    wi = malloc(sizeof(struct rtpp_wi) + datalen);
-    if (wi == NULL) {
+    wipp = malloc(sizeof(struct rtpp_wi_pvt) + datalen);
+    if (wipp == NULL) {
         return (NULL);
     }
-    memset(wi, '\0', sizeof(struct rtpp_wi));
-    wi->free_ptr = wi;
-    wi->wi_type = RTPP_WI_TYPE_DATA;
+    memset(wipp, '\0', sizeof(struct rtpp_wi_pvt));
+    wipp->pub.dtor = rtpp_wi_free;
+    wipp->pub.wi_type = RTPP_WI_TYPE_DATA;
+    wipp->free_ptr = wipp;
     if (datalen > 0) {
-        wi->msg = wi->data;
-        wi->msg_len = datalen;
-        memcpy(wi->data, dataptr, datalen);
+        wipp->msg = wipp->data;
+        wipp->msg_len = datalen;
+        memcpy(wipp->data, dataptr, datalen);
     }
-    return (wi);
+    return (&(wipp->pub));
 }
 
 struct rtpp_wi *
 rtpp_wi_malloc_udata(void **dataptr, size_t datalen)
 {
-    struct rtpp_wi *wi;
+    struct rtpp_wi_pvt *wipp;
 
-    wi = malloc(sizeof(struct rtpp_wi) + datalen);
-    if (wi == NULL) {
+    wipp = malloc(sizeof(struct rtpp_wi_pvt) + datalen);
+    if (wipp == NULL) {
         return (NULL);
     }
-    memset(wi, '\0', sizeof(struct rtpp_wi));
-    wi->free_ptr = wi;
-    wi->wi_type = RTPP_WI_TYPE_DATA;
+    memset(wipp, '\0', sizeof(struct rtpp_wi_pvt));
+    wipp->pub.dtor = rtpp_wi_free;
+    wipp->pub.wi_type = RTPP_WI_TYPE_DATA;
+    wipp->free_ptr = wipp;
     if (datalen > 0) {
-        wi->msg = wi->data;
-        wi->msg_len = datalen;
-        *dataptr = wi->data;
+        wipp->msg = wipp->data;
+        wipp->msg_len = datalen;
+        *dataptr = wipp->data;
     }
-    return (wi);
-}
-
-enum rtpp_wi_type
-rtpp_wi_get_type(struct rtpp_wi *wi)
-{
-
-    return (wi->wi_type);
+    return (&(wipp->pub));
 }
 
 void *
 rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
 {
+    struct rtpp_wi_pvt *wipp;
 
     assert(wi->wi_type == RTPP_WI_TYPE_SGNL);
+    PUB2PVT(wi, wipp);
     if (datalen != NULL) {
-        *datalen = wi->msg_len;
+        *datalen = wipp->msg_len;
     }
-    return(wi->msg);
+    return(wipp->msg);
 }
 
 int
 rtpp_wi_sgnl_get_signum(struct rtpp_wi *wi)
 {
+    struct rtpp_wi_pvt *wipp;
 
     assert(wi->wi_type == RTPP_WI_TYPE_SGNL);
-    return (wi->flags);
+    PUB2PVT(wi, wipp);
+    return (wipp->flags);
 }
 
 void *
 rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t min_len, size_t max_len)
 {
+    struct rtpp_wi_pvt *wipp;
 
     assert(wi->wi_type == RTPP_WI_TYPE_DATA);
-    assert(wi->msg_len >= min_len);
-    assert(max_len == 0 || wi->msg_len <= max_len);
+    PUB2PVT(wi, wipp);
+    assert(wipp->msg_len >= min_len);
+    assert(max_len == 0 || wipp->msg_len <= max_len);
 
-    return(wi->msg);
+    return(wipp->msg);
 }
 
 const char *
 rtpp_wi_apis_getname(struct rtpp_wi *wi)
 {
+    struct rtpp_wi_pvt *wipp;
 
     assert(wi->wi_type == RTPP_WI_TYPE_API_STR);
-    return ((const char *)wi->sendto);
+    PUB2PVT(wi, wipp);
+    return ((const char *)wipp->sendto);
 }
 
 const char *
 rtpp_wi_apis_getnamearg(struct rtpp_wi *wi, void **datap, size_t datalen)
 {
+    struct rtpp_wi_pvt *wipp;
 
     assert(wi->wi_type == RTPP_WI_TYPE_API_STR);
-    assert(wi->msg_len == datalen);
+    PUB2PVT(wi, wipp);
+    assert(wipp->msg_len == datalen);
     if (datap != NULL && datalen > 0) {
-        memcpy(datap, wi->data, datalen);
+        memcpy(datap, wipp->data, datalen);
     }
-    return ((const char *)wi->sendto);
+    return ((const char *)wipp->sendto);
 }
 
-void
+static void
 rtpp_wi_free(struct rtpp_wi *wi)
 {
+    struct rtpp_wi_pvt *wipp;
 
-    if (wi->sock_rcnt != NULL) {
-        CALL_SMETHOD(wi->sock_rcnt, decref);
+    PUB2PVT(wi, wipp);
+    if (wipp->sock_rcnt != NULL) {
+        CALL_SMETHOD(wipp->sock_rcnt, decref);
     }
-    if (wi->log != NULL) {
-        CALL_SMETHOD(wi->log->rcnt, decref);
+    if (wipp->log != NULL) {
+        CALL_SMETHOD(wipp->log->rcnt, decref);
     }
-    free(wi->free_ptr);
+    free(wipp->free_ptr);
 }
