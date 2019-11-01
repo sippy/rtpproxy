@@ -166,48 +166,6 @@ rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int 
     return (&(wipp->pub));
 }
 
-struct rtpp_wi *
-rtpp_wi_malloc_data(void *dataptr, size_t datalen)
-{
-    struct rtpp_wi_pvt *wipp;
-
-    wipp = malloc(sizeof(struct rtpp_wi_pvt) + datalen);
-    if (wipp == NULL) {
-        return (NULL);
-    }
-    memset(wipp, '\0', sizeof(struct rtpp_wi_pvt));
-    wipp->pub.dtor = rtpp_wi_free;
-    wipp->pub.wi_type = RTPP_WI_TYPE_DATA;
-    wipp->free_ptr = wipp;
-    if (datalen > 0) {
-        wipp->msg = wipp->data;
-        wipp->msg_len = datalen;
-        memcpy(wipp->data, dataptr, datalen);
-    }
-    return (&(wipp->pub));
-}
-
-struct rtpp_wi *
-rtpp_wi_malloc_udata(void **dataptr, size_t datalen)
-{
-    struct rtpp_wi_pvt *wipp;
-
-    wipp = malloc(sizeof(struct rtpp_wi_pvt) + datalen);
-    if (wipp == NULL) {
-        return (NULL);
-    }
-    memset(wipp, '\0', sizeof(struct rtpp_wi_pvt));
-    wipp->pub.dtor = rtpp_wi_free;
-    wipp->pub.wi_type = RTPP_WI_TYPE_DATA;
-    wipp->free_ptr = wipp;
-    if (datalen > 0) {
-        wipp->msg = wipp->data;
-        wipp->msg_len = datalen;
-        *dataptr = wipp->data;
-    }
-    return (&(wipp->pub));
-}
-
 void *
 rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
 {
@@ -229,19 +187,6 @@ rtpp_wi_sgnl_get_signum(struct rtpp_wi *wi)
     assert(wi->wi_type == RTPP_WI_TYPE_SGNL);
     PUB2PVT(wi, wipp);
     return (wipp->flags);
-}
-
-void *
-rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t min_len, size_t max_len)
-{
-    struct rtpp_wi_pvt *wipp;
-
-    assert(wi->wi_type == RTPP_WI_TYPE_DATA);
-    PUB2PVT(wi, wipp);
-    assert(wipp->msg_len >= min_len);
-    assert(max_len == 0 || wipp->msg_len <= max_len);
-
-    return(wipp->msg);
 }
 
 static void

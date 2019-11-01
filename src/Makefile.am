@@ -45,7 +45,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_log_obj.c rtpp_socket.c rtpp_wi_apis.c rtpp_wi_apis.h \
   rtpp_ttl.c rtpp_proc_ttl.h rtpp_proc_ttl.c \
   rtpp_pipe.c rtpp_pcount.c rtpp_debug.h \
-  rtpp_mallocs.c rtpp_mallocs.h \
+  rtpp_mallocs.c rtpp_mallocs.h rtpp_wi_data.c rtpp_wi_data.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c \
   rtpp_command_delete.c rtpp_command_delete.h rtpp_command_record.c \
   rtpp_command_record.h rtpp_port_table.c rtpp_acct.c \
@@ -87,7 +87,7 @@ rtpp_objck_perf_SOURCES=rtpp_objck.c $(SRCS_AUTOGEN) \
   rtpp_stats.c rtpp_stats.h rtpp_mallocs.c rtpp_mallocs.h \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_pearson.c rtpp_pearson.h \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_time.c rtpp_time.h rtpp_timed.c rtpp_timed.h \
-  rtpp_queue.c rtpp_queue.h rtpp_wi.c rtpp_wi.h
+  rtpp_queue.c rtpp_queue.h rtpp_wi.c rtpp_wi.h rtpp_wi_data.c rtpp_wi_data.h
 rtpp_objck_LDADD=$(rtpp_objck_perf_LDADD) $(RTPP_MEMDEB_LDADD)
 rtpp_objck_SOURCES=$(rtpp_objck_perf_SOURCES) $(SRCS_MEMDEB_CORE)
 
