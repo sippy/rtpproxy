@@ -276,7 +276,7 @@ rtp_packet_parse_errstr(rtp_parser_err_t ecode)
        return "packet is too short for extended RTP header";
 
     case RTP_PARSER_PTOOSHRTPS:
-        return "packet is too short for RTP padding size";
+       return "packet is too short for RTP padding size";
 
     case RTP_PARSER_PTOOSHRTP:
        return "packet is too short for RTP padding";
