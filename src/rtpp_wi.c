@@ -166,47 +166,6 @@ rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int 
     return (&(wipp->pub));
 }
 
-struct rtpp_wi_apis {
-   struct rtpp_wi pub;
-   const char *apiname;
-   size_t msg_len;
-   char msg[0];
-};
-
-static void
-rtpp_wi_free_apis(struct rtpp_wi *wi)
-{
-    struct rtpp_wi_apis *wipp;
-
-    PUB2PVT(wi, wipp);
-    free(wipp);
-}
-
-static const struct rtpp_wi_apis rtpp_wi_apis_i = {
-   .pub = {
-       .dtor = rtpp_wi_free_apis,
-       .wi_type = RTPP_WI_TYPE_API_STR
-   }
-};
-
-struct rtpp_wi *
-rtpp_wi_malloc_apis(const char *apiname, void *data, size_t datalen)
-{
-    struct rtpp_wi_apis *wipp;
-
-    wipp = malloc(sizeof(struct rtpp_wi_apis) + datalen);
-    if (wipp == NULL) {
-        return (NULL);
-    }
-    *wipp = rtpp_wi_apis_i;
-    wipp->apiname = apiname;
-    if (datalen > 0) {
-        wipp->msg_len = datalen;
-        memcpy(wipp->msg, data, datalen);
-    }
-    return (&(wipp->pub));
-}
-
 struct rtpp_wi *
 rtpp_wi_malloc_data(void *dataptr, size_t datalen)
 {
@@ -283,30 +242,6 @@ rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t min_len, size_t max_len)
     assert(max_len == 0 || wipp->msg_len <= max_len);
 
     return(wipp->msg);
-}
-
-const char *
-rtpp_wi_apis_getname(struct rtpp_wi *wi)
-{
-    struct rtpp_wi_apis *wipp;
-
-    assert(wi->wi_type == RTPP_WI_TYPE_API_STR);
-    PUB2PVT(wi, wipp);
-    return (wipp->apiname);
-}
-
-const char *
-rtpp_wi_apis_getnamearg(struct rtpp_wi *wi, void **datap, size_t datalen)
-{
-    struct rtpp_wi_apis *wipp;
-
-    assert(wi->wi_type == RTPP_WI_TYPE_API_STR);
-    PUB2PVT(wi, wipp);
-    assert(wipp->msg_len == datalen);
-    if (datap != NULL && datalen > 0) {
-        memcpy(datap, wipp->msg, datalen);
-    }
-    return (wipp->apiname);
 }
 
 static void

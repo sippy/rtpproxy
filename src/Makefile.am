@@ -42,7 +42,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_sessinfo.c rtpp_weakref.c rtpp_weakref.h \
   rtpp_proc_servers.h rtpp_proc_servers.c rtpp_stream.c \
   rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
-  rtpp_log_obj.c rtpp_socket.c \
+  rtpp_log_obj.c rtpp_socket.c rtpp_wi_apis.c rtpp_wi_apis.h \
   rtpp_ttl.c rtpp_proc_ttl.h rtpp_proc_ttl.c \
   rtpp_pipe.c rtpp_pcount.c rtpp_debug.h \
   rtpp_mallocs.c rtpp_mallocs.h \

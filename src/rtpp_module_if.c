@@ -60,6 +60,7 @@
 #include "rtpp_queue.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_wi.h"
+#include "rtpp_wi_apis.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
