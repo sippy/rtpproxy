@@ -78,9 +78,6 @@
 /* Define to 1 if you have the <float.h> header file. */
 #undef HAVE_FLOAT_H
 
-/* Define if you have gcc-style atomic operations */
-#undef HAVE_GCC_ATOMICS
-
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
 
