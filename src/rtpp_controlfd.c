@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "config.h"
+#include "config_pp.h"
 
 #include "rtpp_types.h"
 #include "rtpp_defines.h"
@@ -50,8 +50,7 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_network.h"
 #include "rtpp_runcreds.h"
-
-#include "config_pp.h"
+#include "rtpp_util.h"
 
 #if !defined(NO_ERR_H)
 #include <err.h>
@@ -88,6 +87,10 @@ controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     int controlfd, reuse;
     struct sockaddr_un *ifsun;
 
+    if (strlen(csp->cmd_sock) >= sizeof(ifsun->sun_path)) {
+        warnx("socket name is too long: %s", csp->cmd_sock);
+        return (-1);
+    }
     unlink(csp->cmd_sock);
     ifsun = sstosun(&csp->bindaddr);
     memset(ifsun, '\0', sizeof(struct sockaddr_un));
@@ -95,7 +98,7 @@ controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     ifsun->sun_len = strlen(csp->cmd_sock);
 #endif
     ifsun->sun_family = AF_LOCAL;
-    strcpy(ifsun->sun_path, csp->cmd_sock);
+    strlcpy(ifsun->sun_path, csp->cmd_sock, sizeof(ifsun->sun_path));
     controlfd = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (controlfd == -1) {
         warn("can't create socket");
