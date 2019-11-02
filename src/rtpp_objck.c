@@ -57,6 +57,8 @@
 #include "rtpp_timed.h"
 #include "rtpp_timed_task.h"
 #include "rtpp_wi.h"
+#include "rtpp_wi_data.h"
+#include "rtpp_wi_sgnl.h"
 
 #if defined(_RTPP_MEMDEB_H)
 RTPP_MEMDEB_APP_STATIC;
@@ -133,7 +135,7 @@ worker_run(void *argp)
         assert(wi_id > wi_id_prev);
 #endif
         /* deallocate wi */
-        rtpp_wi_free(wi);
+        CALL_METHOD(wi, dtor);
 #if defined(RTPQ_CHECK_SEQ)
         wi_id_prev = wi_id;
 #endif
@@ -253,7 +255,7 @@ main(int argc, char **argv)
     pthread_join(thread_id, NULL);
     while (rtpp_queue_get_length(targs.fqp) > 0) {
         wi = rtpp_queue_get_item(targs.fqp, 0);
-        rtpp_wi_free(wi);
+        CALL_METHOD(wi, dtor);
         tests.queue_p2c.nitems--;
     }
     RPRINT(&tests.queue_p2c, "rtpp_queue (p2c)", tsize);
@@ -297,11 +299,11 @@ main(int argc, char **argv)
     pthread_join(thread_id, NULL);
     while (rtpp_queue_get_length(targs.fqp) > 0) {
         wi = rtpp_queue_get_item(targs.fqp, 0);
-        rtpp_wi_free(wi);
+        CALL_METHOD(wi, dtor);
     }
     while (rtpp_queue_get_length(targs.bqp) > 0) {
         wi = rtpp_queue_get_item(targs.bqp, 0);
-        rtpp_wi_free(wi);
+        CALL_METHOD(wi, dtor);
     }
     RPRINT(&tests.queue_b2b, "rtpp_queue (b2b)", tsize);
 
@@ -310,7 +312,7 @@ main(int argc, char **argv)
     stime = getdtime();
     do {
         wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
-        rtpp_wi_free(wi);
+        CALL_METHOD(wi, dtor);
         tests.wi_malloc.nitems++;
     } while(!atomic_load(&tests.wi_malloc.done));
     tests.wi_malloc.runtime = getdtime() - stime;

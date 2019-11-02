@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2014-2019 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,22 +25,13 @@
  *
  */
 
-#ifndef _RTPP_WI_H_
-#define _RTPP_WI_H_
+#ifndef _RTPP_WI_APIS_H_
+#define _RTPP_WI_APIS_H_
 
 struct rtpp_wi;
 
-DEFINE_METHOD(rtpp_wi, rtpp_wi_dtor, void);
-
-enum rtpp_wi_type {RTPP_WI_TYPE_OPKT = 0, RTPP_WI_TYPE_SGNL = 1,
-  RTPP_WI_TYPE_API_STR = 2, RTPP_WI_TYPE_DATA = 3};
-
-#define rtpp_wi_get_type(wip) ((wip)->wi_type)
-
-struct rtpp_wi {
-    struct rtpp_wi *next;
-    enum rtpp_wi_type wi_type;
-    METHOD_ENTRY(rtpp_wi_dtor, dtor);
-};
+struct rtpp_wi *rtpp_wi_malloc_apis(const char *, void *, size_t);
+const char *rtpp_wi_apis_getname(struct rtpp_wi *);
+const char * rtpp_wi_apis_getnamearg(struct rtpp_wi *, void **, size_t);
 
 #endif

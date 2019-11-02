@@ -36,14 +36,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-
 #include "rtpp_types.h"
 #include "rtpp_queue.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_wi.h"
-#include "rtpp_wi_private.h"
 
 #define RTPQ_DEBUG 0
 

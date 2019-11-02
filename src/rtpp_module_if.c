@@ -60,6 +60,8 @@
 #include "rtpp_queue.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_wi.h"
+#include "rtpp_wi_apis.h"
+#include "rtpp_wi_sgnl.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -235,7 +237,7 @@ e5:
     }
 #endif
 e4:
-    rtpp_wi_free(pvt->sigterm);
+    CALL_METHOD(pvt->sigterm, dtor);
     pvt->sigterm = NULL;
 e3:
 #if RTPP_CHECK_LEAKS
@@ -259,10 +261,10 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
             rtpp_queue_put_item(pvt->sigterm, pvt->req_q);
             pthread_join(pvt->thread_id, NULL);
             while (rtpp_queue_get_length(pvt->req_q) > 0) {
-                rtpp_wi_free(rtpp_queue_get_item(pvt->req_q, 0));
+                CALL_METHOD(rtpp_queue_get_item(pvt->req_q, 0), dtor);
             }
         } else if (pvt->sigterm != NULL) {
-            rtpp_wi_free(pvt->sigterm);
+            CALL_METHOD(pvt->sigterm, dtor);
         }
         if (pvt->req_q != NULL)
             rtpp_queue_destroy(pvt->req_q);
@@ -303,7 +305,7 @@ rtpp_mif_run(void *argp)
         wi = rtpp_queue_get_item(pvt->req_q, 0);
         if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
             signum = rtpp_wi_sgnl_get_signum(wi);
-            rtpp_wi_free(wi);
+            CALL_METHOD(wi, dtor);
             if (signum == SIGTERM) {
                 break;
             }
@@ -326,7 +328,7 @@ rtpp_mif_run(void *argp)
                 pvt->mip->on_rtcp_rcvd.func(pvt->mpvt, rapr);
             CALL_SMETHOD(rapr->rcnt, decref);
         }
-        rtpp_wi_free(wi);
+        CALL_METHOD(wi, dtor);
     }
 }
 
