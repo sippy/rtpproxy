@@ -760,7 +760,7 @@ rtpp_stream_drain_skt(struct rtpp_stream *self)
         if (packet == NULL)
             break;
         ndrained++;
-        rtp_packet_free(packet);
+        CALL_SMETHOD(packet->rcnt, decref);
     }
     pthread_mutex_unlock(&pvt->lock);
 #if RTPP_DEBUG
@@ -939,7 +939,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
 
 discard_and_continue:
     pthread_mutex_unlock(&pvt->lock);
-    rtp_packet_free(packet);
+    CALL_SMETHOD(packet->rcnt, decref);
     rsp->npkts_discard.cnt++;
     return (RTPP_S_RX_DCONT);
 }

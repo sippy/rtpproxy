@@ -223,7 +223,7 @@ rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, double dtime,
       sstosa(&packet->raddr), &packet->rlen);
 
     if (packet->size == -1) {
-        rtp_packet_free(packet);
+        CALL_SMETHOD(packet->rcnt, decref);
         return (NULL);
     }
     packet->laddr = laddr;
@@ -257,7 +257,7 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, double dtime,
       &rtime);
 
     if (packet->size == -1) {
-        rtp_packet_free(packet);
+        CALL_SMETHOD(packet->rcnt, decref);
         return (NULL);
     }
     if (llen > 0) {
