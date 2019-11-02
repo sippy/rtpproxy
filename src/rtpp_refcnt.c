@@ -26,6 +26,7 @@
  */
 
 #include <stdatomic.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -131,7 +132,7 @@ rtpp_refcnt_attach(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f,
 {
     struct rtpp_refcnt_priv *pvt;
 
-    pvt = (struct rtpp_refcnt_priv *)pub;
+    PUB2PVT(pub, pvt);
     pvt->data = data;
     pvt->dtor_f = dtor_f;
 }
@@ -141,7 +142,7 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
 
-    pvt = (struct rtpp_refcnt_priv *)pub;
+    PUB2PVT(pub, pvt);
 #if RTPP_DEBUG_refcnt
     if (pvt->flags & RC_FLAG_TRACE) {
         char *dbuf;
@@ -167,7 +168,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
     struct rtpp_refcnt_priv *pvt;
     int oldcnt;
 
-    pvt = (struct rtpp_refcnt_priv *)pub;
+    PUB2PVT(pub, pvt);
     oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release);
 #if RTPP_DEBUG_refcnt
     if (pvt->flags & RC_FLAG_TRACE) {
@@ -211,7 +212,7 @@ rtpp_refcnt_getdata(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
 
-    pvt = (struct rtpp_refcnt_priv *)pub;
+    PUB2PVT(pub, pvt);
     RTPP_DBG_ASSERT(atomic_load(&pvt->cnt) > 0);
     return (pvt->data);
 }
@@ -222,7 +223,7 @@ rtpp_refcnt_reg_pd(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t pre_dtor_f,
 {
     struct rtpp_refcnt_priv *pvt;
 
-    pvt = (struct rtpp_refcnt_priv *)pub;
+    PUB2PVT(pub, pvt);
     RTPP_DBG_ASSERT(pvt->pre_dtor_f == NULL);
     pvt->pre_dtor_f = pre_dtor_f;
     pvt->pd_data = pd_data;
@@ -234,7 +235,7 @@ rtpp_refcnt_traceen(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
 
-    pvt = (struct rtpp_refcnt_priv *)pub;
+    PUB2PVT(pub, pvt);
     pvt->flags |= RC_FLAG_TRACE;
 }
 #endif
