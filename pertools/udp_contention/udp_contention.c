@@ -649,12 +649,16 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
     fprintf(stdout, "nsent_total=%ju, nsent_succ_total=%ju, nrecvd_total=%ju\n",
       (uintmax_t)nsent_total, (uintmax_t)nsent_succ_total,
       (uintmax_t)nrecvd_total);
-    tsp->ploss_ratio = (double)(nsent_succ_total - nrecvd_total) /
-      (double)(nsent_succ_total);
-    tsp->send_nerrs_ratio = (double)(send_nerrs_total) /
-      (double)(nsent_total);
-     tsp->send_nshrts_ratio = (double)(send_nshrts_total) /
-      (double)(nsent_total);
+    if (nsent_succ_total > 0) {
+        tsp->ploss_ratio = (double)(nsent_succ_total - nrecvd_total) /
+          (double)(nsent_succ_total);
+    }
+    if (nsent_total > 0) {
+        tsp->send_nerrs_ratio = (double)(send_nerrs_total) /
+          (double)(nsent_total);
+        tsp->send_nshrts_ratio = (double)(send_nshrts_total) /
+          (double)(nsent_total);
+    }
     return;
 }
 
