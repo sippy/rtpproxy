@@ -40,7 +40,9 @@ srandomdev(void)
 
     fd = open("/dev/urandom", O_RDONLY, 0);
     if (fd >= 0) {
-        read(fd, &junk, sizeof(junk));
+        if (read(fd, &junk, sizeof(junk)) < 0) {
+            warn("read(\"/dev/urandom\")");
+        }
         close(fd);
     } else {
         junk = 0;
