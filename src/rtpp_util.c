@@ -261,6 +261,9 @@ rtpp_get_sched_hz_linux(void)
     if (cp == buf) {
         return (-1);
     }
+    if (n <= 0) {
+        return (-1);
+    }
     return ((int64_t)1000000000 / n);
 }
 #endif
