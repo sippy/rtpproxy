@@ -41,7 +41,6 @@
 #include "rtpp_stats.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_ssrc.h"
-#include "rtpp_refcnt.h"
 
 struct rtp_resizer {
     int         nsamples_total;
@@ -105,7 +104,7 @@ rtp_resizer_free(struct rtpp_stats *rtpp_stats, struct rtp_resizer *this)
     while (p != NULL) {
         p1 = p;
         p = p->next;
-        CALL_SMETHOD(p1->rcnt, decref);
+        rtp_packet_free(p1);
         nfree++;
     }
     free(this);
@@ -163,7 +162,7 @@ rtp_resizer_enqueue(struct rtp_resizer *this, struct rtp_packet **pkt,
     if (this->last_sent_ts_inited && ts_less((*pkt)->parsed->ts, this->last_sent_ts))
     {
         /* Packet arrived too late. Drop it. */
-        CALL_SMETHOD((*pkt)->rcnt, decref);
+        rtp_packet_free(*pkt);
         *pkt = NULL;
         rsp->npkts_resizer_discard.cnt++;
         return;
@@ -364,7 +363,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 			break;
 		    append_packet(ret, p);
 		    detach_queue_head(this);
-		    CALL_SMETHOD(p->rcnt, decref);
+		    rtp_packet_free(p);
 		}
 		else {
 		    /* Prevent RTP packet buffer overflow */
@@ -401,7 +400,7 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
         }
         else {
 	    append_packet(ret, p);
-            CALL_SMETHOD(p->rcnt, decref);
+            rtp_packet_free(p);
         }
 	/* Send non-appendable packet immediately */
 	if (!ret->parsed->appendable)

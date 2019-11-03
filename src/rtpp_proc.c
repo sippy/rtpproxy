@@ -152,7 +152,7 @@ send_packet(struct cfg *cf, struct rtpp_stream *stp_in,
 e1:
     CALL_SMETHOD(stp_out->rcnt, decref);
 e0:
-    CALL_SMETHOD(packet->rcnt, decref);
+    rtp_packet_free(packet);
     CALL_METHOD(stp_in->pcount, reg_drop);
     rsp->npkts_discard.cnt++;
 }
