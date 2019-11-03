@@ -45,6 +45,8 @@ struct rtpp_timed;
 struct rtpp_sessinfo;
 struct rtpp_log;
 struct rtpp_module_if;
+struct po_manager;
+struct rtpp_catch_dtmf;
 
 #define RTPP_PT_INET	0
 #define	RTPP_PT_INET6	1
@@ -129,6 +131,9 @@ struct rtpp_cfg_stable {
 
     char *mpath;
     struct rtpp_module_if *modules_cf;
+
+    struct po_manager *observers;
+    struct rtpp_catch_dtmf *catcher;
 };
 
 #endif

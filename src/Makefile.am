@@ -34,6 +34,10 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_network_io.c rtpp_network_io.h \
   rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h
 
+RTPP_CD_PATH=$(top_srcdir)/modules/catch_dtmf
+BASE_SOURCES+=advanced/po_manager.c advanced/po_manager.h \
+  ${RTPP_CD_PATH}/rtpp_catch_dtmf.c ${RTPP_CD_PATH}/rtpp_catch_dtmf.h
+
 rtpproxy_LDADD=-lm -lpthread
 rtpproxy_debug_LDADD=${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
   @LIBS_DL@

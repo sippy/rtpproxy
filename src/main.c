@@ -93,6 +93,8 @@
 #include "rtpp_tnotify_set.h"
 #include "rtpp_weakref.h"
 #include "rtpp_debug.h"
+#include "advanced/po_manager.h"
+#include "../modules/catch_dtmf/rtpp_catch_dtmf.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -862,6 +864,19 @@ main(int argc, char **argv)
     }
 #endif
 
+    cf.stable->observers = rtpp_po_mgr_ctor();
+    if (cf.stable->observers == NULL) {
+        RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
+          "can't init packet inspection subsystem");
+        exit(1);
+    }
+    cf.stable->catcher = rtpp_catch_dtmf_ctor(cf.stable->observers);
+    if (cf.stable->catcher == NULL) {
+        RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
+          "can't init DTMF catcher subsystem");
+        exit(1);
+    }
+
     cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
     if (cf.stable->rtpp_cmd_cf == NULL) {
         RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
@@ -953,6 +968,8 @@ main(int argc, char **argv)
     }
 
     CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
+    CALL_SMETHOD(cf.stable->catcher->rcnt, decref);
+    CALL_SMETHOD(cf.stable->observers->rcnt, decref);
 #if ENABLE_MODULE_IF
     if (cf.stable->modules_cf != NULL) {
         CALL_SMETHOD(cf.stable->modules_cf->rcnt, decref);
