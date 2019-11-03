@@ -228,7 +228,7 @@ rtpp_anetio_send_pkt_na(struct sthread_args *sender, int sock, \
 
     wi = rtpp_wi_malloc_pkt_na(sock, pkt, sendto, nsend, sock_rcnt);
     if (wi == NULL) {
-        CALL_SMETHOD(pkt->rcnt, decref);
+        rtp_packet_free(pkt);
         return (-1);
     }
     /*

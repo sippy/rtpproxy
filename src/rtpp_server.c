@@ -210,7 +210,7 @@ rtpp_server_get(struct rtpp_server *self, double dtime, int *rval)
 	if (rp->loop == 0 || lseek(rp->fd, 0, SEEK_SET) == -1 ||
 	  read(rp->fd, pkt->data.buf + hlen, rlen) != rlen) {
 	    *rval = RTPS_EOF;
-            CALL_SMETHOD(pkt->rcnt, decref);
+            rtp_packet_free(pkt);
             return (NULL);
         }
 	if (rp->loop != -1)

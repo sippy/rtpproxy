@@ -73,7 +73,7 @@ rtpp_acct_rtcp_ctor(const char *call_id, const struct rtp_packet *pp)
     return ((&pvt->pub));
 
 e2:
-    CALL_SMETHOD(pvt->pub.pkt->rcnt, decref);
+    rtp_packet_free(pvt->pub.pkt);
 e1:
     CALL_SMETHOD(pvt->pub.rcnt, decref);
     free(pvt);
@@ -87,7 +87,7 @@ rtpp_acct_rtcp_dtor(struct rtpp_acct_rtcp_priv *pvt)
 
     /*rtpp_acct_rtcp_fin(&(pvt->pub));*/
     free(pvt->pub.call_id);
-    CALL_SMETHOD(pvt->pub.pkt->rcnt, decref);
+    rtp_packet_free(pvt->pub.pkt);
     free(pvt);
 }
 
