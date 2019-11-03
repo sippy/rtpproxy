@@ -69,7 +69,7 @@ rtp_packet_dup(struct rtp_packet *dpkt, const struct rtp_packet *spkt, int flags
         csize -= spkt->parsed->data_size;
     }
     offst = RTP_PKT_COPYOFF(spkt);
-    memcpy(dpkt + offst, spkt + offst, csize - offst);
+    memcpy(((char *)dpkt) + offst, ((char *)spkt) + offst, csize - offst);
     if (spkt->parsed == NULL) {
         return;
     }
