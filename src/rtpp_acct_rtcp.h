@@ -31,9 +31,9 @@ struct rtpa_stats;
 struct rtp_packet;
 
 struct rtpp_acct_rtcp {
-    struct rtpa_stats_jitter *jt;
-    char *call_id;
-    struct rtp_packet *pkt;
+    const struct rtpa_stats_jitter *jt;
+    const char *call_id;
+    const struct rtp_packet *pkt;
 
     struct rtpp_refcnt *rcnt;
 };

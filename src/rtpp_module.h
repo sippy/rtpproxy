@@ -25,7 +25,7 @@
  *
  */
 
-#define MODULE_API_REVISION 6
+#define MODULE_API_REVISION 7
 
 struct rtpp_cfg_stable;
 struct rtpp_module_priv;
