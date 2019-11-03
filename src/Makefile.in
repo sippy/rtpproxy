@@ -145,11 +145,12 @@ am__rtpproxy_SOURCES_DIST = main.c rtp.h rtpp_server.c rtpp_server.h \
 	rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h \
 	rtpp_acct.c rtpp_acct.h rtpp_bindaddrs.c rtpp_bindaddrs.h \
 	rtpp_ssrc.h rtpp_network_io.c rtpp_network_io.h rtpp_netaddr.c \
-	rtpp_netaddr.h rtpp_acct_pipe.h rtpp_module_if.c \
-	rtpp_module_if.h rtpp_module.h rtpp_timed_fin.c \
-	rtpp_timed_fin.h rtpp_stream_fin.c rtpp_stream_fin.h \
-	rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
-	rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
+	rtpp_netaddr.h rtpp_acct_pipe.h advanced/po_manager.c \
+	advanced/po_manager.h rtpp_module_if.c rtpp_module_if.h \
+	rtpp_module.h rtpp_timed_fin.c rtpp_timed_fin.h \
+	rtpp_stream_fin.c rtpp_stream_fin.h rtpp_server_fin.c \
+	rtpp_server_fin.h rtpp_refcnt_fin.c rtpp_refcnt_fin.h \
+	rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
 	rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h \
 	rtpp_socket_fin.c rtpp_socket_fin.h rtpp_record_fin.c \
 	rtpp_record_fin.h rtpp_ttl_fin.c rtpp_ttl_fin.h \
@@ -207,7 +208,8 @@ am__objects_2 = rtpproxy-main.$(OBJEXT) rtpproxy-rtpp_server.$(OBJEXT) \
 	rtpproxy-rtpp_port_table.$(OBJEXT) \
 	rtpproxy-rtpp_acct.$(OBJEXT) rtpproxy-rtpp_bindaddrs.$(OBJEXT) \
 	rtpproxy-rtpp_network_io.$(OBJEXT) \
-	rtpproxy-rtpp_netaddr.$(OBJEXT) $(am__objects_1)
+	rtpproxy-rtpp_netaddr.$(OBJEXT) rtpproxy-po_manager.$(OBJEXT) \
+	$(am__objects_1)
 am__objects_3 = rtpproxy-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy-rtpp_stream_fin.$(OBJEXT) \
 	rtpproxy-rtpp_server_fin.$(OBJEXT) \
@@ -276,11 +278,12 @@ am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h \
 	rtpp_acct.c rtpp_acct.h rtpp_bindaddrs.c rtpp_bindaddrs.h \
 	rtpp_ssrc.h rtpp_network_io.c rtpp_network_io.h rtpp_netaddr.c \
-	rtpp_netaddr.h rtpp_acct_pipe.h rtpp_module_if.c \
-	rtpp_module_if.h rtpp_module.h rtpp_timed_fin.c \
-	rtpp_timed_fin.h rtpp_stream_fin.c rtpp_stream_fin.h \
-	rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
-	rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
+	rtpp_netaddr.h rtpp_acct_pipe.h advanced/po_manager.c \
+	advanced/po_manager.h rtpp_module_if.c rtpp_module_if.h \
+	rtpp_module.h rtpp_timed_fin.c rtpp_timed_fin.h \
+	rtpp_stream_fin.c rtpp_stream_fin.h rtpp_server_fin.c \
+	rtpp_server_fin.h rtpp_refcnt_fin.c rtpp_refcnt_fin.h \
+	rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
 	rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h \
 	rtpp_socket_fin.c rtpp_socket_fin.h rtpp_record_fin.c \
 	rtpp_record_fin.h rtpp_ttl_fin.c rtpp_ttl_fin.h \
@@ -354,7 +357,8 @@ am__objects_5 = rtpproxy_debug-main.$(OBJEXT) \
 	rtpproxy_debug-rtpp_acct.$(OBJEXT) \
 	rtpproxy_debug-rtpp_bindaddrs.$(OBJEXT) \
 	rtpproxy_debug-rtpp_network_io.$(OBJEXT) \
-	rtpproxy_debug-rtpp_netaddr.$(OBJEXT) $(am__objects_4)
+	rtpproxy_debug-rtpp_netaddr.$(OBJEXT) \
+	rtpproxy_debug-po_manager.$(OBJEXT) $(am__objects_4)
 am__objects_6 = rtpproxy_debug-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_stream_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_server_fin.$(OBJEXT) \
@@ -402,7 +406,7 @@ DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/rtpproxy-main.Po \
-	./$(DEPDIR)/rtpproxy-rtp.Po \
+	./$(DEPDIR)/rtpproxy-po_manager.Po ./$(DEPDIR)/rtpproxy-rtp.Po \
 	./$(DEPDIR)/rtpproxy-rtp_analyze.Po \
 	./$(DEPDIR)/rtpproxy-rtp_resizer.Po \
 	./$(DEPDIR)/rtpproxy-rtpp_acct.Po \
@@ -482,6 +486,7 @@ am__depfiles_remade = ./$(DEPDIR)/rtpproxy-main.Po \
 	./$(DEPDIR)/rtpproxy-rtpp_weakref.Po \
 	./$(DEPDIR)/rtpproxy-rtpp_wi.Po \
 	./$(DEPDIR)/rtpproxy_debug-main.Po \
+	./$(DEPDIR)/rtpproxy_debug-po_manager.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtp.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtp_analyze.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtp_resizer.Po \
@@ -776,7 +781,8 @@ BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_acct.c rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c \
 	rtpp_bindaddrs.h rtpp_ssrc.h rtpp_network_io.c \
 	rtpp_network_io.h rtpp_netaddr.c rtpp_netaddr.h \
-	rtpp_acct_pipe.h $(am__append_1)
+	rtpp_acct_pipe.h advanced/po_manager.c advanced/po_manager.h \
+	$(am__append_1)
 rtpproxy_LDADD = -lm -lpthread $(am__append_2)
 rtpproxy_debug_LDADD = ${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
   @LIBS_DL@
@@ -924,6 +930,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-main.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-po_manager.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtp_analyze.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtp_resizer.Po@am__quote@ # am--include-marker
@@ -1004,6 +1011,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_weakref.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_wi.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-main.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-po_manager.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtp_analyze.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtp_resizer.Po@am__quote@ # am--include-marker
@@ -1967,6 +1975,20 @@ rtpproxy-rtpp_netaddr.obj: rtpp_netaddr.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_netaddr.c' object='rtpproxy-rtpp_netaddr.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -c -o rtpproxy-rtpp_netaddr.obj `if test -f 'rtpp_netaddr.c'; then $(CYGPATH_W) 'rtpp_netaddr.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_netaddr.c'; fi`
+
+rtpproxy-po_manager.o: advanced/po_manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -MT rtpproxy-po_manager.o -MD -MP -MF $(DEPDIR)/rtpproxy-po_manager.Tpo -c -o rtpproxy-po_manager.o `test -f 'advanced/po_manager.c' || echo '$(srcdir)/'`advanced/po_manager.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy-po_manager.Tpo $(DEPDIR)/rtpproxy-po_manager.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='advanced/po_manager.c' object='rtpproxy-po_manager.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -c -o rtpproxy-po_manager.o `test -f 'advanced/po_manager.c' || echo '$(srcdir)/'`advanced/po_manager.c
+
+rtpproxy-po_manager.obj: advanced/po_manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -MT rtpproxy-po_manager.obj -MD -MP -MF $(DEPDIR)/rtpproxy-po_manager.Tpo -c -o rtpproxy-po_manager.obj `if test -f 'advanced/po_manager.c'; then $(CYGPATH_W) 'advanced/po_manager.c'; else $(CYGPATH_W) '$(srcdir)/advanced/po_manager.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy-po_manager.Tpo $(DEPDIR)/rtpproxy-po_manager.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='advanced/po_manager.c' object='rtpproxy-po_manager.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -c -o rtpproxy-po_manager.obj `if test -f 'advanced/po_manager.c'; then $(CYGPATH_W) 'advanced/po_manager.c'; else $(CYGPATH_W) '$(srcdir)/advanced/po_manager.c'; fi`
 
 rtpproxy-rtpp_module_if.o: rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -MT rtpproxy-rtpp_module_if.o -MD -MP -MF $(DEPDIR)/rtpproxy-rtpp_module_if.Tpo -c -o rtpproxy-rtpp_module_if.o `test -f 'rtpp_module_if.c' || echo '$(srcdir)/'`rtpp_module_if.c
@@ -3088,6 +3110,20 @@ rtpproxy_debug-rtpp_netaddr.obj: rtpp_netaddr.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_netaddr.obj `if test -f 'rtpp_netaddr.c'; then $(CYGPATH_W) 'rtpp_netaddr.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_netaddr.c'; fi`
 
+rtpproxy_debug-po_manager.o: advanced/po_manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-po_manager.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-po_manager.Tpo -c -o rtpproxy_debug-po_manager.o `test -f 'advanced/po_manager.c' || echo '$(srcdir)/'`advanced/po_manager.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-po_manager.Tpo $(DEPDIR)/rtpproxy_debug-po_manager.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='advanced/po_manager.c' object='rtpproxy_debug-po_manager.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-po_manager.o `test -f 'advanced/po_manager.c' || echo '$(srcdir)/'`advanced/po_manager.c
+
+rtpproxy_debug-po_manager.obj: advanced/po_manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-po_manager.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-po_manager.Tpo -c -o rtpproxy_debug-po_manager.obj `if test -f 'advanced/po_manager.c'; then $(CYGPATH_W) 'advanced/po_manager.c'; else $(CYGPATH_W) '$(srcdir)/advanced/po_manager.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-po_manager.Tpo $(DEPDIR)/rtpproxy_debug-po_manager.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='advanced/po_manager.c' object='rtpproxy_debug-po_manager.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-po_manager.obj `if test -f 'advanced/po_manager.c'; then $(CYGPATH_W) 'advanced/po_manager.c'; else $(CYGPATH_W) '$(srcdir)/advanced/po_manager.c'; fi`
+
 rtpproxy_debug-rtpp_module_if.o: rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_module_if.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Tpo -c -o rtpproxy_debug-rtpp_module_if.o `test -f 'rtpp_module_if.c' || echo '$(srcdir)/'`rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po
@@ -3534,6 +3570,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/rtpproxy-main.Po
+	-rm -f ./$(DEPDIR)/rtpproxy-po_manager.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtp.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtp_analyze.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtp_resizer.Po
@@ -3614,6 +3651,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_weakref.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_wi.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-main.Po
+	-rm -f ./$(DEPDIR)/rtpproxy_debug-po_manager.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtp.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtp_analyze.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtp_resizer.Po
@@ -3742,6 +3780,7 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/rtpproxy-main.Po
+	-rm -f ./$(DEPDIR)/rtpproxy-po_manager.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtp.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtp_analyze.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtp_resizer.Po
@@ -3822,6 +3861,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_weakref.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_wi.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-main.Po
+	-rm -f ./$(DEPDIR)/rtpproxy_debug-po_manager.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtp.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtp_analyze.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtp_resizer.Po
