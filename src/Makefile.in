@@ -146,11 +146,12 @@ am__rtpproxy_SOURCES_DIST = main.c rtp.h rtpp_server.c rtpp_server.h \
 	rtpp_acct.c rtpp_acct.h rtpp_bindaddrs.c rtpp_bindaddrs.h \
 	rtpp_ssrc.h rtpp_network_io.c rtpp_network_io.h rtpp_netaddr.c \
 	rtpp_netaddr.h rtpp_acct_pipe.h advanced/po_manager.c \
-	advanced/po_manager.h rtpp_module_if.c rtpp_module_if.h \
-	rtpp_module.h rtpp_timed_fin.c rtpp_timed_fin.h \
-	rtpp_stream_fin.c rtpp_stream_fin.h rtpp_server_fin.c \
-	rtpp_server_fin.h rtpp_refcnt_fin.c rtpp_refcnt_fin.h \
-	rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
+	advanced/po_manager.h ${RTPP_CD_PATH}/rtpp_catch_dtmf.c \
+	${RTPP_CD_PATH}/rtpp_catch_dtmf.h rtpp_module_if.c \
+	rtpp_module_if.h rtpp_module.h rtpp_timed_fin.c \
+	rtpp_timed_fin.h rtpp_stream_fin.c rtpp_stream_fin.h \
+	rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
+	rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
 	rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h \
 	rtpp_socket_fin.c rtpp_socket_fin.h rtpp_record_fin.c \
 	rtpp_record_fin.h rtpp_ttl_fin.c rtpp_ttl_fin.h \
@@ -209,7 +210,7 @@ am__objects_2 = rtpproxy-main.$(OBJEXT) rtpproxy-rtpp_server.$(OBJEXT) \
 	rtpproxy-rtpp_acct.$(OBJEXT) rtpproxy-rtpp_bindaddrs.$(OBJEXT) \
 	rtpproxy-rtpp_network_io.$(OBJEXT) \
 	rtpproxy-rtpp_netaddr.$(OBJEXT) rtpproxy-po_manager.$(OBJEXT) \
-	$(am__objects_1)
+	rtpproxy-rtpp_catch_dtmf.$(OBJEXT) $(am__objects_1)
 am__objects_3 = rtpproxy-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy-rtpp_stream_fin.$(OBJEXT) \
 	rtpproxy-rtpp_server_fin.$(OBJEXT) \
@@ -279,11 +280,12 @@ am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_acct.c rtpp_acct.h rtpp_bindaddrs.c rtpp_bindaddrs.h \
 	rtpp_ssrc.h rtpp_network_io.c rtpp_network_io.h rtpp_netaddr.c \
 	rtpp_netaddr.h rtpp_acct_pipe.h advanced/po_manager.c \
-	advanced/po_manager.h rtpp_module_if.c rtpp_module_if.h \
-	rtpp_module.h rtpp_timed_fin.c rtpp_timed_fin.h \
-	rtpp_stream_fin.c rtpp_stream_fin.h rtpp_server_fin.c \
-	rtpp_server_fin.h rtpp_refcnt_fin.c rtpp_refcnt_fin.h \
-	rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
+	advanced/po_manager.h ${RTPP_CD_PATH}/rtpp_catch_dtmf.c \
+	${RTPP_CD_PATH}/rtpp_catch_dtmf.h rtpp_module_if.c \
+	rtpp_module_if.h rtpp_module.h rtpp_timed_fin.c \
+	rtpp_timed_fin.h rtpp_stream_fin.c rtpp_stream_fin.h \
+	rtpp_server_fin.c rtpp_server_fin.h rtpp_refcnt_fin.c \
+	rtpp_refcnt_fin.h rtpp_log_obj_fin.c rtpp_log_obj_fin.h \
 	rtpp_command_rcache_fin.c rtpp_command_rcache_fin.h \
 	rtpp_socket_fin.c rtpp_socket_fin.h rtpp_record_fin.c \
 	rtpp_record_fin.h rtpp_ttl_fin.c rtpp_ttl_fin.h \
@@ -358,7 +360,8 @@ am__objects_5 = rtpproxy_debug-main.$(OBJEXT) \
 	rtpproxy_debug-rtpp_bindaddrs.$(OBJEXT) \
 	rtpproxy_debug-rtpp_network_io.$(OBJEXT) \
 	rtpproxy_debug-rtpp_netaddr.$(OBJEXT) \
-	rtpproxy_debug-po_manager.$(OBJEXT) $(am__objects_4)
+	rtpproxy_debug-po_manager.$(OBJEXT) \
+	rtpproxy_debug-rtpp_catch_dtmf.$(OBJEXT) $(am__objects_4)
 am__objects_6 = rtpproxy_debug-rtpp_timed_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_stream_fin.$(OBJEXT) \
 	rtpproxy_debug-rtpp_server_fin.$(OBJEXT) \
@@ -413,6 +416,7 @@ am__depfiles_remade = ./$(DEPDIR)/rtpproxy-main.Po \
 	./$(DEPDIR)/rtpproxy-rtpp_acct_fin.Po \
 	./$(DEPDIR)/rtpproxy-rtpp_analyzer.Po \
 	./$(DEPDIR)/rtpproxy-rtpp_bindaddrs.Po \
+	./$(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Po \
 	./$(DEPDIR)/rtpproxy-rtpp_command.Po \
 	./$(DEPDIR)/rtpproxy-rtpp_command_async.Po \
 	./$(DEPDIR)/rtpproxy-rtpp_command_copy.Po \
@@ -494,6 +498,7 @@ am__depfiles_remade = ./$(DEPDIR)/rtpproxy-main.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_acct_fin.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_analyzer.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_bindaddrs.Po \
+	./$(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_command.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_command_async.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_command_copy.Po \
@@ -782,7 +787,9 @@ BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_server.h rtpp_defines.h \
 	rtpp_bindaddrs.h rtpp_ssrc.h rtpp_network_io.c \
 	rtpp_network_io.h rtpp_netaddr.c rtpp_netaddr.h \
 	rtpp_acct_pipe.h advanced/po_manager.c advanced/po_manager.h \
-	$(am__append_1)
+	${RTPP_CD_PATH}/rtpp_catch_dtmf.c \
+	${RTPP_CD_PATH}/rtpp_catch_dtmf.h $(am__append_1)
+RTPP_CD_PATH = $(top_srcdir)/modules/catch_dtmf
 rtpproxy_LDADD = -lm -lpthread $(am__append_2)
 rtpproxy_debug_LDADD = ${rtpproxy_LDADD} $(top_srcdir)/libexecinfo/libexecinfo.a \
   @LIBS_DL@
@@ -938,6 +945,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_acct_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_analyzer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_bindaddrs.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_command.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_command_async.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rtpp_command_copy.Po@am__quote@ # am--include-marker
@@ -1019,6 +1027,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_acct_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_analyzer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_bindaddrs.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_command.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_command_async.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_command_copy.Po@am__quote@ # am--include-marker
@@ -1989,6 +1998,20 @@ rtpproxy-po_manager.obj: advanced/po_manager.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='advanced/po_manager.c' object='rtpproxy-po_manager.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -c -o rtpproxy-po_manager.obj `if test -f 'advanced/po_manager.c'; then $(CYGPATH_W) 'advanced/po_manager.c'; else $(CYGPATH_W) '$(srcdir)/advanced/po_manager.c'; fi`
+
+rtpproxy-rtpp_catch_dtmf.o: ${RTPP_CD_PATH}/rtpp_catch_dtmf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -MT rtpproxy-rtpp_catch_dtmf.o -MD -MP -MF $(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Tpo -c -o rtpproxy-rtpp_catch_dtmf.o `test -f '${RTPP_CD_PATH}/rtpp_catch_dtmf.c' || echo '$(srcdir)/'`${RTPP_CD_PATH}/rtpp_catch_dtmf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Tpo $(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${RTPP_CD_PATH}/rtpp_catch_dtmf.c' object='rtpproxy-rtpp_catch_dtmf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -c -o rtpproxy-rtpp_catch_dtmf.o `test -f '${RTPP_CD_PATH}/rtpp_catch_dtmf.c' || echo '$(srcdir)/'`${RTPP_CD_PATH}/rtpp_catch_dtmf.c
+
+rtpproxy-rtpp_catch_dtmf.obj: ${RTPP_CD_PATH}/rtpp_catch_dtmf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -MT rtpproxy-rtpp_catch_dtmf.obj -MD -MP -MF $(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Tpo -c -o rtpproxy-rtpp_catch_dtmf.obj `if test -f '${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; then $(CYGPATH_W) '${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; else $(CYGPATH_W) '$(srcdir)/${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Tpo $(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${RTPP_CD_PATH}/rtpp_catch_dtmf.c' object='rtpproxy-rtpp_catch_dtmf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -c -o rtpproxy-rtpp_catch_dtmf.obj `if test -f '${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; then $(CYGPATH_W) '${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; else $(CYGPATH_W) '$(srcdir)/${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; fi`
 
 rtpproxy-rtpp_module_if.o: rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_CFLAGS) $(CFLAGS) -MT rtpproxy-rtpp_module_if.o -MD -MP -MF $(DEPDIR)/rtpproxy-rtpp_module_if.Tpo -c -o rtpproxy-rtpp_module_if.o `test -f 'rtpp_module_if.c' || echo '$(srcdir)/'`rtpp_module_if.c
@@ -3124,6 +3147,20 @@ rtpproxy_debug-po_manager.obj: advanced/po_manager.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-po_manager.obj `if test -f 'advanced/po_manager.c'; then $(CYGPATH_W) 'advanced/po_manager.c'; else $(CYGPATH_W) '$(srcdir)/advanced/po_manager.c'; fi`
 
+rtpproxy_debug-rtpp_catch_dtmf.o: ${RTPP_CD_PATH}/rtpp_catch_dtmf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_catch_dtmf.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Tpo -c -o rtpproxy_debug-rtpp_catch_dtmf.o `test -f '${RTPP_CD_PATH}/rtpp_catch_dtmf.c' || echo '$(srcdir)/'`${RTPP_CD_PATH}/rtpp_catch_dtmf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${RTPP_CD_PATH}/rtpp_catch_dtmf.c' object='rtpproxy_debug-rtpp_catch_dtmf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_catch_dtmf.o `test -f '${RTPP_CD_PATH}/rtpp_catch_dtmf.c' || echo '$(srcdir)/'`${RTPP_CD_PATH}/rtpp_catch_dtmf.c
+
+rtpproxy_debug-rtpp_catch_dtmf.obj: ${RTPP_CD_PATH}/rtpp_catch_dtmf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_catch_dtmf.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Tpo -c -o rtpproxy_debug-rtpp_catch_dtmf.obj `if test -f '${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; then $(CYGPATH_W) '${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; else $(CYGPATH_W) '$(srcdir)/${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${RTPP_CD_PATH}/rtpp_catch_dtmf.c' object='rtpproxy_debug-rtpp_catch_dtmf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_catch_dtmf.obj `if test -f '${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; then $(CYGPATH_W) '${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; else $(CYGPATH_W) '$(srcdir)/${RTPP_CD_PATH}/rtpp_catch_dtmf.c'; fi`
+
 rtpproxy_debug-rtpp_module_if.o: rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_module_if.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Tpo -c -o rtpproxy_debug-rtpp_module_if.o `test -f 'rtpp_module_if.c' || echo '$(srcdir)/'`rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po
@@ -3578,6 +3615,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_acct_fin.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_analyzer.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_bindaddrs.Po
+	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_command.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_command_async.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_command_copy.Po
@@ -3659,6 +3697,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_acct_fin.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_analyzer.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_bindaddrs.Po
+	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_command.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_command_async.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_command_copy.Po
@@ -3788,6 +3827,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_acct_fin.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_analyzer.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_bindaddrs.Po
+	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_catch_dtmf.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_command.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_command_async.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rtpp_command_copy.Po
@@ -3869,6 +3909,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_acct_fin.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_analyzer.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_bindaddrs.Po
+	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_catch_dtmf.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_command.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_command_async.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_command_copy.Po
