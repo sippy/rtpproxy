@@ -38,11 +38,14 @@
 #include "rtp_packet.h"
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
 
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
 
 struct rtp_packet_full;
+
+static void rtp_packet_free(struct rtp_packet_full *);
 
 struct rtp_packet_priv {
     struct rtp_info rinfo;
@@ -57,26 +60,23 @@ struct rtp_packet_full {
 void
 rtp_packet_dup(struct rtp_packet *dpkt, const struct rtp_packet *spkt, int flags)
 {
-    int csize;
+    int csize, offst;
     struct rtp_packet_full *dpkt_full, *spkt_full;
-    struct rtp_info *drinfo, *srinfo;
 
     csize = offsetof(struct rtp_packet, data.buf) + spkt->size;
     if ((flags & RTPP_DUP_HDRONLY) != 0) {
         assert(spkt->parse_result == RTP_PARSER_OK);
         csize -= spkt->parsed->data_size;
     }
-    memcpy(dpkt, spkt, csize);
-    dpkt_full = (struct rtp_packet_full *)dpkt;
-    dpkt->wi = &(dpkt_full->pvt.wip.pub);
-    if (dpkt->parsed == NULL) {
+    offst = RTP_PKT_COPYOFF(spkt);
+    memcpy(((char *)dpkt) + offst, ((char *)spkt) + offst, csize - offst);
+    if (spkt->parsed == NULL) {
         return;
     }
-    drinfo = &(dpkt_full->pvt.rinfo);    
-    spkt_full = (struct rtp_packet_full *)spkt;
-    srinfo = &(spkt_full->pvt.rinfo);
-    memcpy(drinfo, srinfo, sizeof(struct rtp_info));
-    dpkt->parsed = drinfo;
+    PUB2PVT(dpkt, dpkt_full);
+    PUB2PVT(spkt, spkt_full);
+    dpkt_full->pvt.rinfo = spkt_full->pvt.rinfo;
+    dpkt->parsed = &(dpkt_full->pvt.rinfo);
     if ((flags & RTPP_DUP_HDRONLY) != 0) {
         dpkt->size -= dpkt->parsed->data_size;
         dpkt->parsed->data_size = 0;
@@ -89,14 +89,19 @@ rtp_packet_alloc()
 {
     struct rtp_packet_full *pkt;
 
-    pkt = rtpp_zmalloc(sizeof(*pkt));
+    pkt = rtpp_rzmalloc(sizeof(*pkt), PVT_RCOFFS(pkt));
+    if (pkt == NULL) {
+        return (NULL);
+    }
     pkt->pub.wi = &(pkt->pvt.wip.pub);
+    CALL_SMETHOD(pkt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtp_packet_free,
+      pkt);
 
     return &(pkt->pub);
 }
 
-void
-rtp_packet_free(struct rtp_packet *pkt)
+static void
+rtp_packet_free(struct rtp_packet_full *pkt)
 {
 
     free(pkt);
