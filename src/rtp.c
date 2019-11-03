@@ -412,6 +412,9 @@ rtp_packet_alloc()
     struct rtp_packet_full *pkt;
 
     pkt = rtpp_zmalloc(sizeof(*pkt));
+    if (pkt == NULL) {
+        return (NULL);
+    }
     pkt->pub.wi = &pkt->pvt.wi;
 
     return &(pkt->pub);
