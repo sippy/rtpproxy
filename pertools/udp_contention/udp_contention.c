@@ -34,14 +34,18 @@ rdtsc(void)
 void
 srandomdev(void)
 {
-    int fd;
+    int fd, rlen;
     unsigned long junk;
     struct timeval tv;
 
     fd = open("/dev/urandom", O_RDONLY, 0);
     if (fd >= 0) {
-        if (read(fd, &junk, sizeof(junk)) < 0) {
+        rlen = read(fd, &junk, sizeof(junk));
+        if (rlen < 0) {
             warn("read(\"/dev/urandom\")");
+        } else if (rlen < sizeof(junk)) {
+            warnx("read(\"/dev/urandom\": short read %d bytes not %d)",
+              rlen, sizeof(junk));
         }
         close(fd);
     } else {
