@@ -27,4 +27,4 @@
 
 struct rtpp_sbuf;
 
-int rtcp2json(struct rtpp_sbuf *out, void *buf, int len);
+int rtcp2json(struct rtpp_sbuf *out, const void *buf, int len);

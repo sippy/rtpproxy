@@ -132,9 +132,9 @@ static char *rtp_read_sdes(FILE *out, char *b, int len)
 /*
 * Return length parsed, -1 on error.
 */
-int rtcp2json(struct rtpp_sbuf *out, void *buf, int len)
+int rtcp2json(struct rtpp_sbuf *out, const void *buf, int len)
 {
-  rtcp_t *r;         /* RTCP header */
+  const rtcp_t *r;         /* RTCP header */
   int i;
 #if 0
   char *cp;
