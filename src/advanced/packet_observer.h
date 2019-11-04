@@ -2,7 +2,7 @@ struct packet_observer_if;
 struct rtp_packet;
 struct rtpp_stream;
 
-DEFINE_RAW_METHOD(po_taste, int, const struct rtpp_stream *,
+DEFINE_RAW_METHOD(po_taste, int, struct rtpp_stream *,
   const struct rtp_packet *);
 DEFINE_RAW_METHOD(po_enqueue, void, void *,
   const struct rtpp_stream *, const struct rtp_packet *);
