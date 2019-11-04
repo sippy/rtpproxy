@@ -19,6 +19,8 @@ struct po_manager_pvt {
 };
 
 static int rtpp_po_mgr_register(struct po_manager *, const struct packet_observer_if *);
+static void rtpp_po_mgr_observe(struct po_manager *, const struct rtpp_stream *,
+  const struct rtp_packet *);
 
 static void
 rtpp_po_mgr_dtor(struct po_manager_pvt *pvt)
@@ -38,6 +40,7 @@ rtpp_po_mgr_ctor(void)
         return (NULL);
     pvt->pub.rcnt = rcnt;
     pvt->pub.reg = rtpp_po_mgr_register;
+    pvt->pub.observe = rtpp_po_mgr_observe;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_po_mgr_dtor,
       pvt);
     return (&(pvt->pub));
@@ -57,4 +60,21 @@ rtpp_po_mgr_register(struct po_manager *pub, const struct packet_observer_if *ip
         return (-1);
     pvt->observers[i] = *ip;
     return (0);
+}
+
+static void
+rtpp_po_mgr_observe(struct po_manager *pub, const struct rtpp_stream *rsp,
+  const struct rtp_packet *pkt)
+{
+    int i;
+    struct po_manager_pvt *pvt;
+
+    PUB2PVT(pub, pvt);
+    for (i = 0; i < MAX_OBSERVERS; i++) {
+        if (pvt->observers[i].taste == NULL)
+            break;
+        if (pvt->observers[i].taste(rsp, pkt) == 0)
+            continue;
+        pvt->observers[i].enqueue(pvt->observers[i].arg, rsp, pkt);
+    }
 }

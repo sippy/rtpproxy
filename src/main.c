@@ -870,7 +870,7 @@ main(int argc, char **argv)
           "can't init packet inspection subsystem");
         exit(1);
     }
-    cf.stable->catcher = rtpp_catch_dtmf_ctor(cf.stable->observers);
+    cf.stable->catcher = rtpp_catch_dtmf_ctor(cf.stable->glog, cf.stable->observers);
     if (cf.stable->catcher == NULL) {
         RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
           "can't init DTMF catcher subsystem");

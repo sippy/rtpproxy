@@ -58,6 +58,8 @@
 #include "rtpp_pipe.h"
 #include "rtpp_netaddr.h"
 
+#include "advanced/po_manager.h"
+
 struct rtpp_proc_ready_lst {
     struct rtpp_session *sp;
     struct rtpp_stream *stp;
@@ -93,6 +95,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             ndrain += 1;
             continue;
         }
+        CALL_METHOD(cf->stable->observers, observe, stp, packet);
         send_packet(cf, stp, packet, sender, rsp);
     } while (ndrain > 0);
     return;
