@@ -207,6 +207,7 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     pvt->side = side;
     pvt->pub.pipe_type = pipe_type;
     pvt->pub.smethods = &rtpp_stream_smethods;
+    pvt->pub.catch_dtmf_pt = 101;
 
     rtpp_gen_uid(&pvt->pub.stuid);
     pvt->pub.seuid = seuid;

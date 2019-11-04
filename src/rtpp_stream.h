@@ -138,6 +138,8 @@ struct rtpp_stream {
     struct rtpp_pcnt_strm *pcnt_strm;
     /* Public methods */
     const struct rtpp_stream_smethods *smethods;
+    /* PT for packets to be intercepted */
+    int catch_dtmf_pt;
 };
 
 struct rtpp_stream *rtpp_stream_ctor(struct rtpp_log *,

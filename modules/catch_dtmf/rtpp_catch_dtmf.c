@@ -76,7 +76,7 @@ rtp_packet_is_dtmf(const struct rtpp_stream *rtps, const struct rtp_packet *pkt)
 
     if (rtps->pipe_type != PIPE_RTP)
         return (0);
-    if (pkt->data.header.pt != 101)
+    if (pkt->data.header.pt != rtps->catch_dtmf_pt)
         return (0);
     return (1);
 }
