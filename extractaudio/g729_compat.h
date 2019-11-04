@@ -21,7 +21,7 @@
 #  define G729_EINIT() g729_encoder_new()
 #  define G729_ECLOSE g729_encoder_destroy
 #  define G729_DINIT g729_decoder_new
-#  define G729_ENCODE(ctx, ibuf, obuf) g729_encode_frame((ctx), (ibuf), (obuf))
+#  define G729_ENCODE(ctx, ibuf, obuf, bl) g729_encode_frame((ctx), (ibuf), (obuf))
 #  define G729_DECODE(ctx, ibuf, isize) g729_decode_frame((ctx), (ibuf), (isize))
 # endif
 
