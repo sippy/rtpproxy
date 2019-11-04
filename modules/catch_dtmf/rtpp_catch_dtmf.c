@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include <signal.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -71,12 +72,12 @@ rtpp_catch_dtmf_worker(void *arg)
 }
 
 static int
-rtp_packet_is_dtmf(const struct rtpp_stream *rtps, const struct rtp_packet *pkt)
+rtp_packet_is_dtmf(struct rtpp_stream *rtps, const struct rtp_packet *pkt)
 {
 
     if (rtps->pipe_type != PIPE_RTP)
         return (0);
-    if (pkt->data.header.pt != rtps->catch_dtmf_pt)
+    if (pkt->data.header.pt != atomic_load(&(rtps->catch_dtmf_pt)))
         return (0);
     return (1);
 }

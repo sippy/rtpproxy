@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <poll.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <string.h>
 

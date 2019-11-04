@@ -139,7 +139,7 @@ struct rtpp_stream {
     /* Public methods */
     const struct rtpp_stream_smethods *smethods;
     /* PT for packets to be intercepted */
-    int catch_dtmf_pt;
+    atomic_int catch_dtmf_pt;
 };
 
 struct rtpp_stream *rtpp_stream_ctor(struct rtpp_log *,

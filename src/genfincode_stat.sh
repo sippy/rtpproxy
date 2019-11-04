@@ -7,6 +7,7 @@ get_epname() {
 }
 
 gen_fin_c() {
+  echo "#include <stdatomic.h>"
   echo "#include <stdio.h>"
   echo "#include <stdint.h>"
   echo "#include <stdlib.h>"

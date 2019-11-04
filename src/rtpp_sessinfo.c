@@ -28,6 +28,7 @@
 
 #include <sys/stat.h>
 #include <assert.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>

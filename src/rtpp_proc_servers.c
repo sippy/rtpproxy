@@ -28,6 +28,7 @@
 
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 
 #include "rtpp_defines.h"

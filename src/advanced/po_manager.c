@@ -19,7 +19,7 @@ struct po_manager_pvt {
 };
 
 static int rtpp_po_mgr_register(struct po_manager *, const struct packet_observer_if *);
-static void rtpp_po_mgr_observe(struct po_manager *, const struct rtpp_stream *,
+static void rtpp_po_mgr_observe(struct po_manager *, struct rtpp_stream *,
   const struct rtp_packet *);
 
 static void
@@ -63,7 +63,7 @@ rtpp_po_mgr_register(struct po_manager *pub, const struct packet_observer_if *ip
 }
 
 static void
-rtpp_po_mgr_observe(struct po_manager *pub, const struct rtpp_stream *rsp,
+rtpp_po_mgr_observe(struct po_manager *pub, struct rtpp_stream *rsp,
   const struct rtp_packet *pkt)
 {
     int i;
