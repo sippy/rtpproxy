@@ -74,6 +74,7 @@ fill_cmd_props(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd,
         cpp->has_cmods = 1;
         cpp->fpos = 4;
         cpp->tpos = 5;
+        cpp->has_subc = 1;
         break;
 
     case 'l':
@@ -86,6 +87,7 @@ fill_cmd_props(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd,
         cpp->has_cmods = 1;
         cpp->fpos = 4;
         cpp->tpos = 5;
+        cpp->has_subc = 1;
         break;
 
     case 'd':

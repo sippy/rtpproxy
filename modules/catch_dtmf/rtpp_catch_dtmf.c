@@ -35,6 +35,9 @@ struct rtpp_catch_dtmf_pvt {
     struct rtpp_log *log;
 };
 
+#define PUB2PVT(pubp, pvtp) \
+    (pvtp) = (typeof(pvtp))((char *)(pubp) - offsetof(typeof(*(pvtp)), pub))
+
 static void
 rtpp_catch_dtmf_dtor(struct rtpp_catch_dtmf_pvt *pvt)
 {
@@ -69,6 +72,19 @@ rtpp_catch_dtmf_worker(void *arg)
         CALL_SMETHOD(wip->pkt->rcnt, decref);
         CALL_METHOD(wi, dtor);
     }
+}
+
+static int
+rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub,
+  struct rtpp_stream *rsp, const struct rtpp_command_args *subc_args)
+{
+    struct rtpp_catch_dtmf_pvt *pvt;
+
+    PUB2PVT(pub, pvt);
+    RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), pt=%d",
+      rsp, atomic_load(&(rsp->catch_dtmf_pt)));
+    atomic_store(&(rsp->catch_dtmf_pt), 101);
+    return (0);
 }
 
 static int
@@ -110,6 +126,7 @@ rtpp_catch_dtmf_ctor(struct rtpp_log *log, struct po_manager *pomp)
     if (pvt == NULL)
         goto e0;
     pvt->pub.rcnt = rcnt;
+    pvt->pub.handle_command = rtpp_catch_dtmf_handle_command;
     pvt->sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
     if (pvt->sigterm == NULL)
         goto e1;

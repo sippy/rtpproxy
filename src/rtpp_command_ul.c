@@ -64,12 +64,22 @@
 #include "rtpp_util.h"
 #include "rtpp_ttl.h"
 
+#include "../modules/catch_dtmf/rtpp_catch_dtmf.h"
+
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
 struct ul_reply {
     struct sockaddr *ia;
     const char *ia_ov;
     int port;
+};
+
+DEFINE_RAW_METHOD(after_success, int, void *, struct rtpp_stream *,
+  const struct rtpp_command_args *);
+
+struct success_h {
+    after_success_t handler;
+    void *arg;
 };
 
 struct ul_opts {
@@ -92,6 +102,8 @@ struct ul_opts {
     int new_port;
 
     int onhold;
+
+    struct success_h after_success;
 };
 
 void
@@ -366,6 +378,14 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
               ulop->pf, ulop->addr, ulop->port, gai_strerror(n));
         }
     }
+    if (cmd->subc_args.c > 0) {
+        if (strcasecmp(cmd->subc_args.v[0], "M0:0") != 0) {
+            reply_error(cmd, ECODE_PARSE_SUBC);
+            goto err_undo_1;
+        }
+        ulop->after_success.handler = cf->stable->catcher->handle_command;
+        ulop->after_success.arg = cf->stable->catcher;
+    }
     return (ulop);
 
 err_undo_1:
@@ -614,6 +634,10 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         } else {
             ulop->reply.ia_ov = cf->stable->advaddr[0];
         }
+    }
+    if (ulop->after_success.handler != NULL) {
+        ulop->after_success.handler(ulop->after_success.arg,
+          spa->rtp->stream[pidx], &cmd->subc_args);
     }
     ul_reply_port(cmd, &ulop->reply);
     rtpp_command_ul_opts_free(ulop);
