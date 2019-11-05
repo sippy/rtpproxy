@@ -74,7 +74,6 @@ rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int 
     if (wipp == NULL) {
         return (NULL);
     }
-    memset(wipp, '\0', sizeof(struct rtpp_wi_sgnl));
     *wipp = rtpp_wi_sgnl_i;
     wipp->signum = signum;
     if (datalen > 0) {
