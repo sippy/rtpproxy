@@ -35,11 +35,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "rtpp_types.h"
 #include "rtpp_queue.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_wi.h"
+#include "rtpp_debug.h"
 
 #define RTPQ_DEBUG 0
 
@@ -98,6 +100,48 @@ circ_bbuf_pop(circ_bbuf_t *c, struct rtpp_wi **data)
 #endif
     c->tail = next;              // tail to next offset.
     return(0);  // return success to indicate successful pop.
+}
+
+static unsigned int
+circ_bbuf_popmany(circ_bbuf_t *c, struct rtpp_wi *data[], unsigned int howmany)
+{
+    unsigned int next;
+    unsigned int last;
+    unsigned int copyn;
+    unsigned int rval;
+
+    rval = 0;
+    RTPP_DBG_ASSERT(howmany > 0);
+    while (!circ_bbuf_isempty(c)) {
+        next = last = c->tail + howmany - rval;
+        if (c->head < c->tail) {
+            if (last >= c->buflen) {
+                last = c->buflen;
+                next = 0;
+            }
+        } else {
+            if (last > c->head) {
+                last = c->head;
+                next = c->head;
+            }
+        }
+        copyn = last - c->tail;
+        memcpy(data, &(c->buffer[c->tail]), copyn * sizeof(data[0]));
+#ifdef RTPQ_DEBUG
+        memset(&(c->buffer[c->tail]), '\0', copyn * sizeof(data[0]));
+#endif
+        c->tail = next;
+        rval += copyn;
+        if (rval == howmany)
+            break;
+        data += copyn;
+    }
+#ifdef RTPQ_DEBUG
+    assert(rval <= howmany);
+    assert(c->tail >= 0 && c->tail < c->buflen);
+#endif
+
+    return(rval); /* Return number of objects popped */
 }
 
 static int
@@ -365,10 +409,7 @@ rtpp_queue_get_items(struct rtpp_queue *queue, struct rtpp_wi **items, int ilen,
         }
     }
     /* Pull out of circular buffer first */
-    for (i = 0; i < ilen; i++) {
-        if (circ_bbuf_pop(&queue->circb, &items[i]) != 0)
-            break;
-    }
+    i = circ_bbuf_popmany(&queue->circb, items, ilen);
     if ((i == ilen) || (queue->length == 0))
         goto done;
     items += i;
