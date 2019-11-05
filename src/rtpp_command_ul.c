@@ -379,7 +379,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
         }
     }
     if (cmd->subc_args.c > 0) {
-        if (strcasecmp(cmd->subc_args.v[0], "M0:0") != 0) {
+        if (strcasecmp(cmd->subc_args.v[0], "M3:1") != 0) {
             reply_error(cmd, ECODE_PARSE_SUBC);
             goto err_undo_1;
         }
