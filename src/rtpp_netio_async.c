@@ -79,12 +79,13 @@ struct rtpp_anetio_cf {
 };
 
 #define RTPP_ANETIO_MAX_RETRY 3
+#define RTPP_ANETIO_BATCH_LEN (RTPQ_LARGE_CB_LEN / 8)
 
 static void
 rtpp_anetio_sthread(struct sthread_args *args)
 {
     int n, nsend, i, send_errno, nretry;
-    struct rtpp_wi *wi, *wis[100];
+    struct rtpp_wi *wi, *wis[RTPQ_LARGE_CB_LEN / 8];
     struct rtpp_wi_pvt *wipp;
 #if RTPP_DEBUG_timers
     double tp[3], runtime, sleeptime;
@@ -95,7 +96,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
     tp[0] = getdtime();
 #endif
     for (;;) {
-        nsend = rtpp_queue_get_items(args->out_q, wis, 100, 0);
+        nsend = rtpp_queue_get_items(args->out_q, wis, RTPP_ANETIO_BATCH_LEN, 0);
 #if RTPP_DEBUG_timers
         tp[1] = getdtime();
 #endif
