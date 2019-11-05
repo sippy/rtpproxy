@@ -99,8 +99,8 @@ rtp_packet_is_dtmf(struct rtpp_stream *rtps, const struct rtp_packet *pkt)
 }
 
 static void
-rtpp_catch_dtmf_enqueue(void *arg, const struct rtpp_stream *rsp,
-  const struct rtp_packet *pkt)
+rtpp_catch_dtmf_enqueue(void *arg, const struct rtpp_session *sp,
+  const struct rtpp_stream *rsp, const struct rtp_packet *pkt)
 {
     struct rtpp_catch_dtmf_pvt *pvt;
     struct rtpp_wi *wi;
