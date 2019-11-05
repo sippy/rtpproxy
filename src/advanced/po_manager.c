@@ -43,8 +43,8 @@ struct po_manager_pvt {
 };
 
 static int rtpp_po_mgr_register(struct po_manager *, const struct packet_observer_if *);
-static void rtpp_po_mgr_observe(struct po_manager *, struct rtpp_stream *,
-  const struct rtp_packet *);
+static void rtpp_po_mgr_observe(struct po_manager *, const struct rtpp_session *,
+  struct rtpp_stream *, const struct rtp_packet *);
 
 static void
 rtpp_po_mgr_dtor(struct po_manager_pvt *pvt)
@@ -85,8 +85,8 @@ rtpp_po_mgr_register(struct po_manager *pub, const struct packet_observer_if *ip
 }
 
 static void
-rtpp_po_mgr_observe(struct po_manager *pub, struct rtpp_stream *rsp,
-  const struct rtp_packet *pkt)
+rtpp_po_mgr_observe(struct po_manager *pub, const struct rtpp_session *sp,
+  struct rtpp_stream *rsp, const struct rtp_packet *pkt)
 {
     int i;
     struct po_manager_pvt *pvt;
@@ -97,6 +97,6 @@ rtpp_po_mgr_observe(struct po_manager *pub, struct rtpp_stream *rsp,
             break;
         if (pvt->observers[i].taste(rsp, pkt) == 0)
             continue;
-        pvt->observers[i].enqueue(pvt->observers[i].arg, rsp, pkt);
+        pvt->observers[i].enqueue(pvt->observers[i].arg, sp, rsp, pkt);
     }
 }

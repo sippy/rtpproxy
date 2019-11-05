@@ -27,12 +27,13 @@
 
 struct po_manager;
 struct packet_observer_if;
+struct rtpp_session;
 struct rtpp_stream;
 struct rtp_packet;
 
 DEFINE_METHOD(po_manager, po_manager_reg, int, const struct packet_observer_if *);
-DEFINE_METHOD(po_manager, po_manager_observe, void, struct rtpp_stream *,
-  const struct rtp_packet *);
+DEFINE_METHOD(po_manager, po_manager_observe, void, const struct rtpp_session *,
+  struct rtpp_stream *, const struct rtp_packet *);
 
 struct po_manager {
     struct rtpp_refcnt *rcnt;
