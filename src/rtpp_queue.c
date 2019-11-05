@@ -86,7 +86,9 @@ rtpp_queue_init(int qlen, const char *fmt, ...)
 void
 rtpp_queue_destroy(struct rtpp_queue *queue)
 {
-
+    while (rtpp_queue_get_length(queue) > 0) {
+        CALL_METHOD(rtpp_queue_get_item(queue, 0), dtor);
+    }
     pthread_cond_destroy(&queue->cond);
     pthread_mutex_destroy(&queue->mutex);
     free(queue->name);

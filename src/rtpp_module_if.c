@@ -260,9 +260,6 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
             /* First, stop the worker thread and wait for it to terminate */
             rtpp_queue_put_item(pvt->sigterm, pvt->req_q);
             pthread_join(pvt->thread_id, NULL);
-            while (rtpp_queue_get_length(pvt->req_q) > 0) {
-                CALL_METHOD(rtpp_queue_get_item(pvt->req_q, 0), dtor);
-            }
         } else if (pvt->sigterm != NULL) {
             CALL_METHOD(pvt->sigterm, dtor);
         }
