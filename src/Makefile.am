@@ -56,6 +56,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_acct_rtcp.c rtpp_cfile.c rtpp_cfile.h rtpp_ucl.c rtpp_ucl.h \
   rtpp_network_io.c rtpp_network_io.h rtpp_wi_pkt.c rtpp_wi_pkt.h \
   $(RTPP_AUTOSRC_SOURCES) $(RTPP_AUTOSRC_SOURCES_S)
+BASE_SOURCES+=advanced/packet_observer.h advanced/po_manager.c \
+  advanced/po_manager.h
 
 rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl.a
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.a \

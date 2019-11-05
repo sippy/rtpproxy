@@ -103,6 +103,7 @@
 #include "rtpp_tnotify_set.h"
 #include "rtpp_weakref.h"
 #include "rtpp_debug.h"
+#include "advanced/po_manager.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
@@ -256,6 +257,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
         CALL_SMETHOD(mif->rcnt, decref);
     }
 #endif
+    CALL_SMETHOD(cfsp->observers->rcnt, decref);
     free(cfsp->modules_cf);
     rtpp_gen_uid_free();
     free(cfsp);
@@ -981,6 +983,13 @@ main(int argc, char **argv)
         exit(1);
     }
 
+    cf.stable->observers = rtpp_po_mgr_ctor();
+    if (cf.stable->observers == NULL) {
+        RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
+          "can't init packet inspection subsystem");
+        exit(1);
+    }
+
 #if ENABLE_MODULE_IF
     if (!RTPP_LIST_IS_EMPTY(cf.stable->modules_cf)) {
         mif = RTPP_LIST_HEAD(cf.stable->modules_cf);
@@ -1054,6 +1063,7 @@ main(int argc, char **argv)
         CALL_SMETHOD(mif->rcnt, decref);
     }
 #endif
+    CALL_SMETHOD(cf.stable->observers->rcnt, decref);
     free(cf.stable->modules_cf);
     free(cf.stable->runcreds);
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
