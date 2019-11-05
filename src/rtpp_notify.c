@@ -151,9 +151,6 @@ rtpp_notify_dtor(struct rtpp_notify *pub)
 
     rtpp_queue_put_item(pvt->sigterm, pvt->nqueue);
     pthread_join(pvt->thread_id, NULL);
-    while (rtpp_queue_get_length(pvt->nqueue) > 0) {
-        CALL_METHOD(rtpp_queue_get_item(pvt->nqueue, 0), dtor);
-    }
     rtpp_queue_destroy(pvt->nqueue);
     CALL_SMETHOD(pvt->glog->rcnt, decref);
     free(pvt);
