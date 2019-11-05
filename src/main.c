@@ -257,7 +257,6 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
         CALL_SMETHOD(mif->rcnt, decref);
     }
 #endif
-    CALL_SMETHOD(cfsp->observers->rcnt, decref);
     free(cfsp->modules_cf);
     rtpp_gen_uid_free();
     free(cfsp);

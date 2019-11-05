@@ -49,9 +49,7 @@
 #include "rtpp_session.h"
 #include "rtpp_ttl.h"
 #include "rtpp_pipe.h"
-#include "rtpp_acct_rtcp.h"
-#include "rtpp_list.h"
-#include "rtpp_module_if.h"
+#include "advanced/po_manager.h"
 
 struct rtpp_proc_ready_lst {
     struct rtpp_session *sp;
@@ -64,7 +62,7 @@ static void send_packet(struct cfg *, struct rtpp_stream *,
 static void
 rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
   const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
-  struct rtpp_proc_rstats *rsp, const char *call_id)
+  struct rtpp_proc_rstats *rsp, const struct rtpp_session *sp)
 {
     int ndrain;
     struct rtp_packet *packet = NULL;
@@ -88,17 +86,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             ndrain += 1;
             continue;
         }
-        if (stp->pipe_type == PIPE_RTCP && !RTPP_LIST_IS_EMPTY(cf->stable->modules_cf)) {
-            struct rtpp_acct_rtcp *rarp;
-            struct rtpp_module_if *mif;
-
-            rarp = rtpp_acct_rtcp_ctor(call_id, packet);
-            if (rarp == NULL) {
-                continue;
-            }
-            mif = RTPP_LIST_HEAD(cf->stable->modules_cf);
-            CALL_METHOD(mif, do_acct_rtcp, rarp);
-        }
+        CALL_METHOD(cf->stable->observers, observe, sp, stp, packet);
         send_packet(cf, stp, packet, sender, rsp);
     } while (ndrain > 0);
     return;
@@ -180,7 +168,7 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl,
             continue;
         }
         if (sp->complete != 0) {
-            rxmit_packets(cf, stp, dtime, drain_repeat, sender, rsp, sp->call_id);
+            rxmit_packets(cf, stp, dtime, drain_repeat, sender, rsp, sp);
             CALL_SMETHOD(sp->rcnt, decref);
             if (stp->resizer != NULL) {
                 while ((packet = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {

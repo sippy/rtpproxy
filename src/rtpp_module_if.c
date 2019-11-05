@@ -41,6 +41,7 @@
 
 #include "config.h"
 
+#include "rtpp_cfg_stable.h"
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_log.h"
@@ -53,6 +54,11 @@
 #include "rtpp_pcount.h"
 #include "rtpp_time.h"
 #include "rtpp_pcnts_strm.h"
+#include "rtpp_stream.h"
+#include "rtpp_pipe.h"
+#include "rtpp_session.h"
+#include "advanced/packet_observer.h"
+#include "advanced/po_manager.h"
 #define MODULE_IF_CODE
 #include "rtpp_module.h"
 #include "rtpp_module_if.h"
@@ -128,6 +134,30 @@ e1:
     free(pvt);
 e0:
     return (NULL);
+}
+
+static int
+packet_is_rtcp(struct rtpp_stream *rtps, const struct rtp_packet *pkt)
+{
+
+    if (rtps->pipe_type != PIPE_RTCP)
+        return (0);
+    return (1);
+}
+
+static void
+acct_rtcp_enqueue(void *arg, const struct rtpp_session *sp,
+  const struct rtpp_stream *rsp, const struct rtp_packet *pkt)
+{
+    struct rtpp_module_if_priv *pvt;
+    struct rtpp_acct_rtcp *rarp;
+
+    pvt = (struct rtpp_module_if_priv *)arg;
+    rarp = rtpp_acct_rtcp_ctor(sp->call_id, pkt);
+    if (rarp == NULL) {
+        return;
+    }
+    rtpp_mif_do_acct_rtcp(&(pvt->pub), rarp);
 }
 
 static int
@@ -214,11 +244,19 @@ rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp, struct 
           "consider recompiling the module", pvt->mpath);
         goto e6;
     }
-    if (pvt->mip->on_rtcp_rcvd.func != NULL &&
-      pvt->mip->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
-          "consider recompiling the module", pvt->mpath);
-        goto e6;
+    if (pvt->mip->on_rtcp_rcvd.func != NULL) {
+        struct packet_observer_if acct_rtcp_poi;
+
+        if (pvt->mip->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
+            RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
+              "consider recompiling the module", pvt->mpath);
+            goto e6;
+        }
+        acct_rtcp_poi.taste = packet_is_rtcp;
+        acct_rtcp_poi.enqueue = acct_rtcp_enqueue;
+        acct_rtcp_poi.arg = pvt;
+        if (CALL_METHOD(cfsp->observers, reg, &acct_rtcp_poi) < 0)
+            goto e6;
     }
 
     return (0);
