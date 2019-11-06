@@ -992,7 +992,7 @@ main(int argc, char **argv)
 #if ENABLE_MODULE_IF
     if (!RTPP_LIST_IS_EMPTY(cf.stable->modules_cf)) {
         mif = RTPP_LIST_HEAD(cf.stable->modules_cf);
-        if (CALL_METHOD(mif, start) != 0) {
+        if (CALL_METHOD(mif, start, cf.stable) != 0) {
             RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
               "%p: dymanic module start has failed", mif);
             exit(1);

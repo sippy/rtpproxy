@@ -97,7 +97,7 @@ static int rtpp_module_vasprintf(char **, const char *, void *, const char *,
 #endif
 static void rtpp_mif_run(void *);
 static int rtpp_mif_load(struct rtpp_module_if *, struct rtpp_cfg_stable *, struct rtpp_log *);
-static int rtpp_mif_start(struct rtpp_module_if *);
+static int rtpp_mif_start(struct rtpp_module_if *, struct rtpp_cfg_stable *);
 static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
 static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp *);
 static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **);
@@ -244,19 +244,11 @@ rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp, struct 
           "consider recompiling the module", pvt->mpath);
         goto e6;
     }
-    if (pvt->mip->on_rtcp_rcvd.func != NULL) {
-        struct packet_observer_if acct_rtcp_poi;
-
-        if (pvt->mip->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
-            RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
-              "consider recompiling the module", pvt->mpath);
-            goto e6;
-        }
-        acct_rtcp_poi.taste = packet_is_rtcp;
-        acct_rtcp_poi.enqueue = acct_rtcp_enqueue;
-        acct_rtcp_poi.arg = pvt;
-        if (CALL_METHOD(cfsp->observers, reg, &acct_rtcp_poi) < 0)
-            goto e6;
+    if (pvt->mip->on_rtcp_rcvd.func != NULL &&
+      pvt->mip->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
+          "consider recompiling the module", pvt->mpath);
+        goto e6;
     }
 
     return (0);
@@ -426,11 +418,20 @@ rtpp_module_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
 #endif
 
 static int
-rtpp_mif_start(struct rtpp_module_if *self)
+rtpp_mif_start(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp)
 {
     struct rtpp_module_if_priv *pvt;
 
     PUB2PVT(self, pvt);
+    if (pvt->mip->on_rtcp_rcvd.func != NULL) {
+        struct packet_observer_if acct_rtcp_poi;
+
+        acct_rtcp_poi.taste = packet_is_rtcp;
+        acct_rtcp_poi.enqueue = acct_rtcp_enqueue;
+        acct_rtcp_poi.arg = pvt;
+        if (CALL_METHOD(cfsp->observers, reg, &acct_rtcp_poi) < 0)
+            return (-1);
+    }
     if (pthread_create(&pvt->thread_id, NULL,
       (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
         return (-1);
