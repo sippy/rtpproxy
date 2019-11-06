@@ -29,7 +29,7 @@ mygid="`id -gn`"
 
 for rargs in "--config libucl/libucl_test.conf" "-u ${myuid}:${mygid}" ""
 do
-  RTPP_ARGS="${rargs}" rtpproxy_start
+  rtpproxy_start ${rargs}
   report "rtpproxy start"
   TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
   report "rtpproxy stop (SIGTERM)"
@@ -37,7 +37,7 @@ do
   rm "${TMP_LOGFILE}"
   ${DIFF} startstop/startstop.output startstop.rout
   report "rtpproxy output"
-  RTPP_ARGS="${rargs}" rtpproxy_start
+  rtpproxy_start ${rargs}
   report "rtpproxy start"
   TMP_LOGFILE="/dev/null" rtpproxy_stop HUP
   report "rtpproxy stop (SIGHUP)"

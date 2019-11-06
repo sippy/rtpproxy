@@ -186,12 +186,12 @@ run_test()
       socket_idx=0
       advance_sockidx
       RTPP1_LOG=${RTPP_LOGFILE}
-      RTPP_SOCKFILE="${_socket}" RTPP_ARGS="${RTPP1_ARGS}" rtpproxy_start
+      RTPP_SOCKFILE="${_socket}" rtpproxy_start ${RTPP1_ARGS}
       report "rtpproxy #${j}.1 start on ${_socket}"
       RTPP1_PID="${TMP_PIDFILE}"
       advance_sockidx
       RTPP2_LOG=${RTPP_LOGFILE}
-      RTPP_SOCKFILE="${_socket}" RTPP_ARGS="${RTPP2_ARGS}" rtpproxy_start
+      RTPP_SOCKFILE="${_socket}" rtpproxy_start ${RTPP2_ARGS}
       RTPP2_START_RC=${?}
       if [ ${RTPP2_START_RC} -ne 0 ]
       then
@@ -201,7 +201,7 @@ run_test()
       RTPP2_PID="${TMP_PIDFILE}"
       advance_sockidx
       RTPP3_LOG=${RTPP_LOGFILE}
-      RTPP_SOCKFILE="${_socket}" RTPP_ARGS="${RTPP3_ARGS}" rtpproxy_start
+      RTPP_SOCKFILE="${_socket}" rtpproxy_start ${RTPP3_ARGS}
       RTPP3_START_RC=${?}
       if [ ${RTPP3_START_RC} -ne 0 ]
       then
@@ -212,7 +212,7 @@ run_test()
       RTPP3_PID="${TMP_PIDFILE}"
       advance_sockidx
       RTPP4_LOG=${RTPP_LOGFILE}
-      RTPP_SOCKFILE="${_socket}" RTPP_ARGS="${RTPP4_ARGS}" rtpproxy_start
+      RTPP_SOCKFILE="${_socket}" rtpproxy_start ${RTPP4_ARGS}
       RTPP4_START_RC=${?}
       if [ ${RTPP4_START_RC} -ne 0 ]
       then
