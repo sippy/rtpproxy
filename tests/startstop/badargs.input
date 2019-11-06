@@ -1,0 +1,11 @@
+-?
+-u&nobody:nogroup
+-u&nahh:dooh
+-u&${myuid}:dooh
+-u&nahh:${mygid}
+randomgarbage
+more&random&garbage
+-v
+-A
+-A&/
+-A&&
