@@ -212,6 +212,7 @@ CODECSO="${_CODECSO}"
 CODECSA="${_CODECSA}"
 
 RECORD_DIR="${BUILDDIR}"
+RECORD_SPL_DIR="${BUILDDIR}/forwarding"
 
 setup_buffers
 setup_test_net_3
@@ -231,7 +232,7 @@ fi
    -m ${FWD_SPORT} > forwarding1.rout 2>forwarding1.rlog) &
 FWD_PID=${!}
 (setup_gen "o" ${FWD_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
-  ${RTPPROXY} -P -r "${RECORD_DIR}" -m ${GENO_SPORT} ${RTPPROXY_ARGS} \
+  ${RTPPROXY} -P -r "${RECORD_DIR}" -S "${RECORD_SPL_DIR}" -m ${GENO_SPORT} ${RTPPROXY_ARGS} \
    > forwarding1.geno.rout 2>forwarding1.geno.rlog) &
 GENO_PID=${!}
 (setup_gen "a" ${PORTO} "${CODECSA}" "${REPACK_CODECSA}" | \
