@@ -20,6 +20,8 @@
 -W&&
 -W&100500garbage
 -W&garbage
+-c&&
+-c&garbage
 -d&&
 -d&:&&
 -m&&
