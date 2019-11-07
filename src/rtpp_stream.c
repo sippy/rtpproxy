@@ -208,7 +208,7 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     pvt->side = side;
     pvt->pub.pipe_type = pipe_type;
     pvt->pub.smethods = &rtpp_stream_smethods;
-    atomic_init(&(pvt->pub.catch_dtmf_pt), -1);
+    atomic_init(&(pvt->pub.catch_dtmf_data), NULL);
 
     rtpp_gen_uid(&pvt->pub.stuid);
     pvt->pub.seuid = seuid;
@@ -311,6 +311,11 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
         CALL_SMETHOD(pub->rrc->rcnt, decref);
     if (pub->pcount != NULL)
         CALL_SMETHOD(pub->pcount->rcnt, decref);
+
+    void *rtps_c = atomic_load(&(pub->catch_dtmf_data));
+    if (rtps_c != NULL) {
+        free(rtps_c);
+    }
 
     CALL_SMETHOD(pub->ttl->rcnt, decref);
     CALL_SMETHOD(pub->pcnt_strm->rcnt, decref);

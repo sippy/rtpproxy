@@ -35,6 +35,10 @@ struct rtpp_catch_dtmf_pvt {
     struct rtpp_log *log;
 };
 
+struct catch_dtmf_stream_cfg {
+    atomic_int pt;
+};
+
 #define PUB2PVT(pubp, pvtp) \
     (pvtp) = (typeof(pvtp))((char *)(pubp) - offsetof(typeof(*(pvtp)), pub))
 
@@ -79,22 +83,46 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub,
   struct rtpp_stream *rsp, const struct rtpp_command_args *subc_args)
 {
     struct rtpp_catch_dtmf_pvt *pvt;
+    struct catch_dtmf_stream_cfg *rtps_c;
+    void *rtps_c_prev;
+    int new_pt = 101;
+    int old_pt = -1;
 
+    rtps_c_prev = NULL;
+
+    rtps_c = atomic_load(&(rsp->catch_dtmf_data));
+    if (rtps_c == NULL) {
+        rtps_c = rtpp_zmalloc(sizeof(*rtps_c));
+        if (rtps_c == NULL) {
+            return (-1);
+        }
+        atomic_init(&(rtps_c->pt), new_pt);
+        if (!atomic_compare_exchange_strong(&(rsp->catch_dtmf_data),
+          &rtps_c_prev, rtps_c)) {
+            free(rtps_c);
+            rtps_c = (typeof(rtps_c))rtps_c_prev;
+            old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
+        }
+    }
     PUB2PVT(pub, pvt);
-    RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), pt=%d",
-      rsp, atomic_load(&(rsp->catch_dtmf_pt)));
-    atomic_store(&(rsp->catch_dtmf_pt), 101);
+    RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), pt=%d->%d",
+      rsp, old_pt, new_pt);
     return (0);
 }
 
 static int
 rtp_packet_is_dtmf(struct rtpp_stream *rtps, const struct rtp_packet *pkt)
 {
+    struct catch_dtmf_stream_cfg *rtps_c;
 
     if (rtps->pipe_type != PIPE_RTP)
         return (0);
-    if (pkt->data.header.pt != atomic_load(&(rtps->catch_dtmf_pt)))
+    rtps_c = atomic_load(&(rtps->catch_dtmf_data));
+    if (rtps_c == NULL)
         return (0);
+    if (atomic_load(&(rtps_c->pt)) != pkt->data.header.pt)
+        return (0);
+
     return (1);
 }
 
