@@ -27,7 +27,7 @@ truncate -s 0 "${TS_LOGFILE}"
 myuid="`id -un`"
 mygid="`id -gn`"
 
-for rargs in "--config libucl/libucl_test.conf" "-u ${myuid}:${mygid}" ""
+for rargs in "--config libucl/libucl_test.conf" "-u ${myuid}:${mygid} --dso ../modules/acct_rtcp_hep/.libs/rtpp_acct_rtcp_hep_debug.so" ""
 do
   rtpproxy_start ${rargs}
   report "rtpproxy start"
