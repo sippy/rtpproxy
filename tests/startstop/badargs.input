@@ -14,6 +14,7 @@
 -M&100500
 -M&100500garbage
 -M&garbage
+-S
 -T&&
 -T&100500garbage
 -W&&
