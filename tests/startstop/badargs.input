@@ -9,3 +9,12 @@ more&random&garbage
 -A
 -A&/
 -A&&
+-t&&
+-t&100500
+--nice&&
+--nice&garbage
+--nice&100500
+-T&&
+-T&100500garbage
+-L&&
+-L&garbage
