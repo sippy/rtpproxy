@@ -354,7 +354,8 @@ init_config(struct cfg *cf, int argc, char **argv)
             break;
 
         case LOPT_NICE:
-            cf->stable->sched_nice = atoi(optarg);
+            if (atoi_safe(optarg, &cf->stable->sched_nice))
+                errx(1, "%s: nice level argument is invalid", optarg);
             if (cf->stable->sched_nice > PRIO_MAX || cf->stable->sched_nice < PRIO_MIN) {
                 errx(1, "%d: nice level is out of range %d..%d",
                   cf->stable->sched_nice, PRIO_MIN, PRIO_MAX);
@@ -466,7 +467,8 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 't':
-	    cf->stable->tos = atoi(optarg);
+            if (atoi_safe(optarg, &cf->stable->tos))
+                errx(1, "%s: TOS argument is invalid", optarg);
 	    if (cf->stable->tos > 255)
 		errx(1, "%d: TOS is too large", cf->stable->tos);
 	    break;
@@ -500,27 +502,36 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 'T':
-	    cf->stable->max_ttl = atoi(optarg);
+	    if (atoi_safe(optarg, &cf->stable->max_ttl))
+                errx(1, "%s: max TTL argument is invalid", optarg);
 	    break;
 
-	case 'L':
-	    cf->stable->nofile_limit->rlim_cur = cf->stable->nofile_limit->rlim_max = atoi(optarg);
+	case 'L': {
+            int rlim_max_opt;
+
+            if (atoi_safe(optarg, &rlim_max_opt))
+                errx(1, "%s: max file rlimit argument is invalid", optarg);
+	    cf->stable->nofile_limit->rlim_cur = rlim_max_opt;
+	    cf->stable->nofile_limit->rlim_max = rlim_max_opt;
 	    if (setrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
 		err(1, "setrlimit");
 	    if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
 		err(1, "getrlimit");
-	    if (cf->stable->nofile_limit->rlim_max < atoi(optarg))
+	    if (cf->stable->nofile_limit->rlim_max < rlim_max_opt)
 		warnx("limit allocated by setrlimit (%d) is less than "
 		  "requested (%d)", (int) cf->stable->nofile_limit->rlim_max,
-		  atoi(optarg));
+		  rlim_max_opt);
 	    break;
+            }
 
 	case 'm':
-	    cf->stable->port_min = atoi(optarg);
+	    if (atoi_safe(optarg, &cf->stable->port_min))
+                errx(1, "%s: min port argument is invalid", optarg);
 	    break;
 
 	case 'M':
-	    cf->stable->port_max = atoi(optarg);
+	    if (atoi_safe(optarg, &cf->stable->port_max))
+                errx(1, "%s: max port argument is invalid", optarg);
 	    break;
 
 	case 'u':
@@ -554,9 +565,14 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    }
 	    break;
 
-	case 'w':
-	    cf->stable->runcreds->sock_mode = atoi(optarg);
+	case 'w': {
+            int sock_mode;
+
+	    if (atoi_safe(optarg, &sock_mode))
+                errx(1, "%s: socket mode argument is invalid", optarg);
+            cf->stable->runcreds->sock_mode = sock_mode;
 	    break;
+            }
 
 	case 'F':
 	    cf->stable->no_check = 1;
@@ -603,7 +619,8 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
         case 'W':
-            cf->stable->max_setup_ttl = atoi(optarg);
+            if (atoi_safe(optarg, &cf->stable->max_setup_ttl))
+                errx(1, "%s: max setup TTL argument is invalid", optarg);
             break;
 
         case 'b':

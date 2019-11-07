@@ -238,6 +238,19 @@ url_unquote(unsigned char *buf, int len)
     return (outlen);
 }
 
+int atoi_safe(const char *s, int *res)
+{
+    int rval;
+    char *cp;
+
+    rval = strtol(s, &cp, 10);
+    if (cp == s || *cp != '\0') {
+        return (-1);
+    }
+    *res = rval;
+    return (0);
+}
+
 #if defined(_SC_CLK_TCK) && !defined(__FreeBSD__)
 #if defined(LINUX_XXX)
 static int

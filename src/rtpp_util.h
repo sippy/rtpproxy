@@ -50,7 +50,7 @@ long long rtpp_rlim_max(struct cfg *cf);
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
 #endif
-
+int atoi_safe(const char *, int *);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)
