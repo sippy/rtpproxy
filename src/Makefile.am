@@ -70,7 +70,7 @@ rtpproxy_debug_SOURCES=${rtpproxy_SOURCES} ${SRCS_DEBUG}
 
 rtpproxy_debug_CPPFLAGS=-DRTPP_DEBUG -DRTPP_MEMDEB_STDOUT -I$(top_srcdir) \
   -DMEMDEB_APP=rtpproxy -include rtpp_memdeb.h
-EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
+EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall -Werror=incompatible-pointer-types
 rtpproxy_CFLAGS=${EXTRA_CFLAGS}
 rtpproxy_debug_CFLAGS=${EXTRA_CFLAGS} -g3 -O0 -fno-omit-frame-pointer
 
