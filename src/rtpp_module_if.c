@@ -137,7 +137,7 @@ e0:
 }
 
 static int
-packet_is_rtcp(const struct po_mgr_pkt_ctx *pktx)
+packet_is_rtcp(struct po_mgr_pkt_ctx *pktx)
 {
 
     if (pktx->strmp->pipe_type != PIPE_RTCP)
