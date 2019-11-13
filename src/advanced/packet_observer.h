@@ -26,14 +26,10 @@
  */
 
 struct packet_observer_if;
-struct rtp_packet;
-struct rtpp_session;
-struct rtpp_stream;
+struct po_mgr_pkt_ctx;
 
-DEFINE_RAW_METHOD(po_taste, int, struct rtpp_stream *,
-  const struct rtp_packet *);
-DEFINE_RAW_METHOD(po_enqueue, void, void *, const struct rtpp_session *,
-  const struct rtpp_stream *, const struct rtp_packet *);
+DEFINE_RAW_METHOD(po_taste, int, const struct po_mgr_pkt_ctx *);
+DEFINE_RAW_METHOD(po_enqueue, void, void *, const struct po_mgr_pkt_ctx *);
 DEFINE_RAW_METHOD(po_control, void);
 
 struct packet_observer_if {
