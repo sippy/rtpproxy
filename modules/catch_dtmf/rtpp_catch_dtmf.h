@@ -14,3 +14,5 @@ struct rtpp_catch_dtmf {
 
 struct rtpp_catch_dtmf *rtpp_catch_dtmf_ctor(struct rtpp_log *,
   struct po_manager *, struct rtpp_notify *);
+
+void catch_dtmf_data_free(void *);

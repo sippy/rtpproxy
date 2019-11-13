@@ -214,3 +214,13 @@ e1:
 e0:
     return (NULL);
 }
+
+void
+catch_dtmf_data_free(void *p)
+{
+    struct catch_dtmf_stream_cfg *rtps_c;
+
+    rtps_c = (struct catch_dtmf_stream_cfg *)p;
+    CALL_SMETHOD(rtps_c->rtdp->rcnt, decref);
+    free(rtps_c);
+}

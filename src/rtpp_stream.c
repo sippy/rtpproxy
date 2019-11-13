@@ -71,6 +71,8 @@
 #include "rtpp_acct_pipe.h"
 #include "rtpp_time.h"
 
+#include "../modules/catch_dtmf/rtpp_catch_dtmf.h"
+
 struct rtpps_latch {
     int latched;
     struct rtpp_ssrc ssrc;
@@ -314,7 +316,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
 
     void *rtps_c = atomic_load(&(pub->catch_dtmf_data));
     if (rtps_c != NULL) {
-        free(rtps_c);
+        catch_dtmf_data_free(rtps_c);
     }
 
     CALL_SMETHOD(pub->ttl->rcnt, decref);
