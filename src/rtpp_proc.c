@@ -76,6 +76,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
 {
     int ndrain;
     struct rtp_packet *packet = NULL;
+    struct po_mgr_pkt_ctx pktx;
 
     /* Repeat since we may have several packets queued on the same socket */
     ndrain = -1;
@@ -96,7 +97,10 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             ndrain += 1;
             continue;
         }
-        CALL_METHOD(cf->stable->observers, observe, sp, stp, packet);
+        pktx.sessp = sp;
+        pktx.strmp = stp;
+        pktx.pktp = packet;
+        CALL_METHOD(cf->stable->observers, observe, &pktx);
         send_packet(cf, stp, packet, sender, rsp);
     } while (ndrain > 0);
     return;
