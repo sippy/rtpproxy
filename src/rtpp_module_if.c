@@ -137,23 +137,22 @@ e0:
 }
 
 static int
-packet_is_rtcp(struct rtpp_stream *rtps, const struct rtp_packet *pkt)
+packet_is_rtcp(const struct po_mgr_pkt_ctx *pktx)
 {
 
-    if (rtps->pipe_type != PIPE_RTCP)
+    if (pktx->strmp->pipe_type != PIPE_RTCP)
         return (0);
     return (1);
 }
 
 static void
-acct_rtcp_enqueue(void *arg, const struct rtpp_session *sp,
-  const struct rtpp_stream *rsp, const struct rtp_packet *pkt)
+acct_rtcp_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
 {
     struct rtpp_module_if_priv *pvt;
     struct rtpp_acct_rtcp *rarp;
 
     pvt = (struct rtpp_module_if_priv *)arg;
-    rarp = rtpp_acct_rtcp_ctor(sp->call_id, pkt);
+    rarp = rtpp_acct_rtcp_ctor(pktx->sessp->call_id, pktx->pktp);
     if (rarp == NULL) {
         return;
     }
