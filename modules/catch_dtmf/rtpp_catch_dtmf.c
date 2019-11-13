@@ -61,6 +61,7 @@ rtpp_catch_dtmf_dtor(struct rtpp_catch_dtmf_pvt *pvt)
 
 struct wipkt {
     const struct rtp_packet *pkt;
+    const struct rtpp_timeout_data *rtdp;
 };
 
 static void
@@ -78,10 +79,7 @@ rtpp_catch_dtmf_worker(void *arg)
         }
         wip = rtpp_wi_data_get_ptr(wi, sizeof(*wip), sizeof(*wip));
         RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_worker(%p)", wip->pkt);
-#if 0
-        CALL_METHOD(pvt->notifier, schedule, sp->timeout_data.notify_target, sp->timeout_data.notify_tag);
-#endif
-
+        CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target, wip->rtdp->notify_tag);
         CALL_SMETHOD(wip->pkt->rcnt, decref);
         CALL_METHOD(wi, dtor);
     }
@@ -126,7 +124,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
 }
 
 static int
-rtp_packet_is_dtmf(const struct po_mgr_pkt_ctx *pktx)
+rtp_packet_is_dtmf(struct po_mgr_pkt_ctx *pktx)
 {
     struct catch_dtmf_stream_cfg *rtps_c;
 
@@ -137,6 +135,7 @@ rtp_packet_is_dtmf(const struct po_mgr_pkt_ctx *pktx)
         return (0);
     if (atomic_load(&(rtps_c->pt)) != pktx->pktp->data.header.pt)
         return (0);
+    pktx->auxp = rtps_c;
 
     return (1);
 }
@@ -147,13 +146,16 @@ rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
     struct rtpp_catch_dtmf_pvt *pvt;
     struct rtpp_wi *wi;
     struct wipkt *wip;
+    struct catch_dtmf_stream_cfg *rtps_c;
 
     pvt = (struct rtpp_catch_dtmf_pvt *)arg;
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
         return;
+    rtps_c = (struct catch_dtmf_stream_cfg *)pktx->auxp;
     CALL_SMETHOD(pktx->pktp->rcnt, incref);
     wip->pkt = pktx->pktp;
+    wip->rtdp = rtps_c->rtdp;
     rtpp_queue_put_item(wi, pvt->q);
 }
 
