@@ -62,6 +62,12 @@ struct common_cmd_args {
     char *to_tag;
 };
 
+struct rtpp_subc_ctx {
+    struct rtpp_session *sessp;
+    struct rtpp_stream *strmp;
+    const struct rtpp_command_args *subc_args;
+};
+
 struct rtpp_command_args {
     int c;
     char *v[RTPC_MAX_ARGC];

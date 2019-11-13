@@ -74,8 +74,7 @@ struct ul_reply {
     int port;
 };
 
-DEFINE_RAW_METHOD(after_success, int, void *, struct rtpp_stream *,
-  const struct rtpp_command_args *);
+DEFINE_RAW_METHOD(after_success, int, void *, const struct rtpp_subc_ctx *);
 
 struct success_h {
     after_success_t handler;
@@ -383,7 +382,7 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             reply_error(cmd, ECODE_PARSE_SUBC);
             goto err_undo_1;
         }
-        ulop->after_success.handler = cf->stable->catcher->handle_command;
+        ulop->after_success.handler = (after_success_t)cf->stable->catcher->handle_command;
         ulop->after_success.arg = cf->stable->catcher;
     }
     return (ulop);
@@ -636,8 +635,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
         }
     }
     if (ulop->after_success.handler != NULL) {
-        ulop->after_success.handler(ulop->after_success.arg,
-          spa->rtp->stream[pidx], &cmd->subc_args);
+        struct rtpp_subc_ctx rsc = {.sessp = spa, .strmp = spa->rtp->stream[pidx],
+          .subc_args = &(cmd->subc_args)};
+        ulop->after_success.handler(ulop->after_success.arg, &rsc);
     }
     ul_reply_port(cmd, &ulop->reply);
     rtpp_command_ul_opts_free(ulop);
