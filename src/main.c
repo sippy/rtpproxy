@@ -241,6 +241,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
     if (msg != NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s", msg);
     }
+    free(cfsp->glock);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     free(cfsp->nofile_limit);
 
@@ -314,7 +315,11 @@ init_config(struct cfg *cf, int argc, char **argv)
         err(1, "rtpp_tnotify_set_ctor");
     }
 
-    pthread_mutex_init(&cf->glock, NULL);
+    cf->stable->glock = malloc(sizeof(pthread_mutex_t));
+    if (cf->stable->glock == NULL) {
+        err(1, "malloc(stable->glock)");
+    }
+    pthread_mutex_init(cf->stable->glock, NULL);
     pthread_mutex_init(&cf->bindaddr_lock, NULL);
 
     cf->stable->nofile_limit = malloc(sizeof(*cf->stable->nofile_limit));
@@ -1083,6 +1088,7 @@ main(int argc, char **argv)
     free(cf.stable->modules_cf);
     free(cf.stable->runcreds);
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
+    free(cf.stable->glock);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
     CALL_SMETHOD(cf.stable->rtpp_timed_cf, shutdown);
     CALL_SMETHOD(cf.stable->rtpp_timed_cf->rcnt, decref);

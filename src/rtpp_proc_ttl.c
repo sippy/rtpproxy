@@ -131,8 +131,10 @@ rtpp_proc_ttl_run(void *arg)
             break;
         }
         prdic_procrastinate(proc_cf->elp);
+        pthread_mutex_lock(cfsp->glock);
         rtpp_proc_ttl(cfsp->sessions_ht, cfsp->sessions_wrt,
           cfsp->rtpp_notify_cf, stats_cf);
+        pthread_mutex_unlock(cfsp->glock);
     }
 }
 

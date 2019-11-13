@@ -138,6 +138,8 @@ struct rtpp_cfg_stable {
     const char *cfile;
 
     struct po_manager *observers;
+
+    pthread_mutex_t *glock;
 };
 
 #endif
