@@ -22,6 +22,9 @@
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_session.h"
+#include "rtpp_notify.h"
+#include "rtpp_command_private.h"
 
 #include "advanced/packet_observer.h"
 #include "advanced/po_manager.h"
@@ -33,10 +36,12 @@ struct rtpp_catch_dtmf_pvt {
     struct rtpp_queue *q;
     pthread_t worker;
     struct rtpp_log *log;
+    struct rtpp_notify *notifier;
 };
 
 struct catch_dtmf_stream_cfg {
     atomic_int pt;
+    const struct rtpp_timeout_data *rtdp;
 };
 
 #define PUB2PVT(pubp, pvtp) \
@@ -73,14 +78,17 @@ rtpp_catch_dtmf_worker(void *arg)
         }
         wip = rtpp_wi_data_get_ptr(wi, sizeof(*wip), sizeof(*wip));
         RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_worker(%p)", wip->pkt);
+#if 0
+        CALL_METHOD(pvt->notifier, schedule, sp->timeout_data.notify_target, sp->timeout_data.notify_tag);
+#endif
+
         CALL_SMETHOD(wip->pkt->rcnt, decref);
         CALL_METHOD(wi, dtor);
     }
 }
 
 static int
-rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub,
-  struct rtpp_stream *rsp, const struct rtpp_command_args *subc_args)
+rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_subc_ctx *ctxp)
 {
     struct rtpp_catch_dtmf_pvt *pvt;
     struct catch_dtmf_stream_cfg *rtps_c;
@@ -90,45 +98,51 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub,
 
     rtps_c_prev = NULL;
 
-    rtps_c = atomic_load(&(rsp->catch_dtmf_data));
+    PUB2PVT(pub, pvt);
+    if (ctxp->sessp->timeout_data.notify_target == NULL) {
+        RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(sp=%p): "
+          "notification is not enabled", ctxp->sessp);
+        return (-1);
+    }
+
+    rtps_c = atomic_load(&(ctxp->strmp->catch_dtmf_data));
     if (rtps_c == NULL) {
         rtps_c = rtpp_zmalloc(sizeof(*rtps_c));
         if (rtps_c == NULL) {
             return (-1);
         }
+        rtps_c->rtdp = &(ctxp->sessp->timeout_data);
         atomic_init(&(rtps_c->pt), new_pt);
-        if (!atomic_compare_exchange_strong(&(rsp->catch_dtmf_data),
+        if (!atomic_compare_exchange_strong(&(ctxp->strmp->catch_dtmf_data),
           &rtps_c_prev, rtps_c)) {
             free(rtps_c);
             rtps_c = (typeof(rtps_c))rtps_c_prev;
             old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
         }
     }
-    PUB2PVT(pub, pvt);
     RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), pt=%d->%d",
-      rsp, old_pt, new_pt);
+      ctxp->strmp, old_pt, new_pt);
     return (0);
 }
 
 static int
-rtp_packet_is_dtmf(struct rtpp_stream *rtps, const struct rtp_packet *pkt)
+rtp_packet_is_dtmf(const struct po_mgr_pkt_ctx *pktx)
 {
     struct catch_dtmf_stream_cfg *rtps_c;
 
-    if (rtps->pipe_type != PIPE_RTP)
+    if (pktx->strmp->pipe_type != PIPE_RTP)
         return (0);
-    rtps_c = atomic_load(&(rtps->catch_dtmf_data));
+    rtps_c = atomic_load(&(pktx->strmp->catch_dtmf_data));
     if (rtps_c == NULL)
         return (0);
-    if (atomic_load(&(rtps_c->pt)) != pkt->data.header.pt)
+    if (atomic_load(&(rtps_c->pt)) != pktx->pktp->data.header.pt)
         return (0);
 
     return (1);
 }
 
 static void
-rtpp_catch_dtmf_enqueue(void *arg, const struct rtpp_session *sp,
-  const struct rtpp_stream *rsp, const struct rtp_packet *pkt)
+rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
 {
     struct rtpp_catch_dtmf_pvt *pvt;
     struct rtpp_wi *wi;
@@ -138,13 +152,14 @@ rtpp_catch_dtmf_enqueue(void *arg, const struct rtpp_session *sp,
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
         return;
-    CALL_SMETHOD(pkt->rcnt, incref);
-    wip->pkt = pkt;
+    CALL_SMETHOD(pktx->pktp->rcnt, incref);
+    wip->pkt = pktx->pktp;
     rtpp_queue_put_item(wi, pvt->q);
 }
 
 struct rtpp_catch_dtmf *
-rtpp_catch_dtmf_ctor(struct rtpp_log *log, struct po_manager *pomp)
+rtpp_catch_dtmf_ctor(struct rtpp_log *log, struct po_manager *pomp,
+  struct rtpp_notify *rnp)
 {
     struct rtpp_catch_dtmf_pvt *pvt;
     struct rtpp_refcnt *rcnt;
@@ -159,6 +174,7 @@ rtpp_catch_dtmf_ctor(struct rtpp_log *log, struct po_manager *pomp)
     if (pvt->sigterm == NULL)
         goto e1;
     pvt->q = rtpp_queue_init(1, "rtpp_catch_dtmf(%p)", pvt);
+    pvt->notifier = rnp;
     if (pvt->q == NULL)
         goto e2;
     /*
