@@ -39,6 +39,7 @@
 #include "rtpp_weakref.h"
 #include "rtpp_proc_ttl.h"
 #include "rtpp_pipe.h"
+#include "rtpp_timeout_data.h"
 
 struct foreach_args {
     struct rtpp_notify *rtpp_notify_cf;
@@ -61,9 +62,9 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
 
     if (CALL_METHOD(sp->rtp, get_ttl) == 0) {
         RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
-        if (sp->timeout_data.notify_target != NULL) {
+        if (sp->timeout_data != NULL) {
             CALL_METHOD(fap->rtpp_notify_cf, schedule,
-              sp->timeout_data.notify_target, sp->timeout_data.notify_tag);
+              sp->timeout_data->notify_target, sp->timeout_data->notify_tag);
         }
         CALL_METHOD(fap->rtpp_stats, updatebyname, "nsess_timeout", 1);
         CALL_METHOD(fap->sessions_wrt, unreg, sp->seuid);

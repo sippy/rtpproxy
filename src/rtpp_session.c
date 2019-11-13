@@ -56,6 +56,7 @@
 #include "rtpp_time.h"
 #include "rtpp_ttl.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_timeout_data.h"
 
 struct rtpp_session_priv
 {
@@ -241,8 +242,8 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     CALL_SMETHOD(pvt->acct->rcnt, decref);
 
     CALL_SMETHOD(pvt->pub.log->rcnt, decref);
-    if (pvt->pub.timeout_data.notify_tag != NULL)
-        free(pvt->pub.timeout_data.notify_tag);
+    if (pvt->pub.timeout_data != NULL)
+        CALL_SMETHOD(pvt->pub.timeout_data->rcnt, decref);
     if (pvt->pub.call_id != NULL)
         free(pvt->pub.call_id);
     if (pvt->pub.tag != NULL)

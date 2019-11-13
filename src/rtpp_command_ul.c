@@ -61,6 +61,7 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_network.h"
 #include "rtpp_tnotify_set.h"
+#include "rtpp_timeout_data.h"
 #include "rtpp_util.h"
 #include "rtpp_ttl.h"
 
@@ -557,9 +558,9 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
     if (cmd->cca.op == UPDATE) {
         if (!CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled) && ulop->notify_socket != NULL)
             RTPP_LOG(spa->log, RTPP_LOG_ERR, "must permit notification socket with -n");
-        if (spa->timeout_data.notify_tag != NULL) {
-            free(spa->timeout_data.notify_tag);
-            spa->timeout_data.notify_tag = NULL;
+        if (spa->timeout_data != NULL) {
+            CALL_SMETHOD(spa->timeout_data->rcnt, decref);
+            spa->timeout_data = NULL;
         }
         if (ulop->notify_socket != NULL) {
             struct rtpp_tnotify_target *rttp;
@@ -571,11 +572,15 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd,
                 ulop->notify_socket = NULL;
             } else {
                 RTPP_LOG(spa->log, RTPP_LOG_INFO, "setting timeout handler");
-                spa->timeout_data.notify_target = rttp;
-                spa->timeout_data.notify_tag = strdup(ulop->notify_tag);
+                RTPP_DBG_ASSERT(ulop->notify_tag != NULL);
+                spa->timeout_data = rtpp_timeout_data_ctor(rttp, ulop->notify_tag);
+                if (spa->timeout_data != NULL) {
+                    ulop->notify_tag = NULL;
+                }
             }
-        } else if (spa->timeout_data.notify_target != NULL) {
-            spa->timeout_data.notify_target = NULL;
+        } else if (spa->timeout_data != NULL) {
+            CALL_SMETHOD(spa->timeout_data->rcnt, decref);
+            spa->timeout_data = NULL;
             RTPP_LOG(spa->log, RTPP_LOG_INFO, "disabling timeout handler");
         }
     }

@@ -34,6 +34,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_server.h \
   rtpp_command_record.h rtpp_port_table.c rtpp_port_table.h rtpp_acct.c \
   rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddrs.h rtpp_ssrc.h \
   rtpp_network_io.c rtpp_network_io.h rtpp_wi_pkt.c rtpp_wi_pkt.h \
+  rtpp_timeout_data.c rtpp_timeout_data.h \
   rtpp_netaddr.c rtpp_netaddr.h rtpp_acct_pipe.h
 
 RTPP_CD_PATH=$(top_srcdir)/modules/catch_dtmf

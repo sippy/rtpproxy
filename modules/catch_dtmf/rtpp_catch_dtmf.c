@@ -25,6 +25,7 @@
 #include "rtpp_session.h"
 #include "rtpp_notify.h"
 #include "rtpp_command_private.h"
+#include "rtpp_timeout_data.h"
 
 #include "advanced/packet_observer.h"
 #include "advanced/po_manager.h"
@@ -80,6 +81,7 @@ rtpp_catch_dtmf_worker(void *arg)
         wip = rtpp_wi_data_get_ptr(wi, sizeof(*wip), sizeof(*wip));
         RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_worker(%p)", wip->pkt);
         CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target, wip->rtdp->notify_tag);
+        CALL_SMETHOD(wip->rtdp->rcnt, decref);
         CALL_SMETHOD(wip->pkt->rcnt, decref);
         CALL_METHOD(wi, dtor);
     }
@@ -97,7 +99,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
     rtps_c_prev = NULL;
 
     PUB2PVT(pub, pvt);
-    if (ctxp->sessp->timeout_data.notify_target == NULL) {
+    if (ctxp->sessp->timeout_data == NULL) {
         RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(sp=%p): "
           "notification is not enabled", ctxp->sessp);
         return (-1);
@@ -109,13 +111,15 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
         if (rtps_c == NULL) {
             return (-1);
         }
-        rtps_c->rtdp = &(ctxp->sessp->timeout_data);
+        rtps_c->rtdp = ctxp->sessp->timeout_data;
         atomic_init(&(rtps_c->pt), new_pt);
         if (!atomic_compare_exchange_strong(&(ctxp->strmp->catch_dtmf_data),
           &rtps_c_prev, rtps_c)) {
             free(rtps_c);
             rtps_c = (typeof(rtps_c))rtps_c_prev;
             old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
+        } else {
+            CALL_SMETHOD(rtps_c->rtdp->rcnt, incref);
         }
     }
     RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), pt=%d->%d",
@@ -155,6 +159,7 @@ rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
     rtps_c = (struct catch_dtmf_stream_cfg *)pktx->auxp;
     CALL_SMETHOD(pktx->pktp->rcnt, incref);
     wip->pkt = pktx->pktp;
+    CALL_SMETHOD(rtps_c->rtdp->rcnt, incref);
     wip->rtdp = rtps_c->rtdp;
     rtpp_queue_put_item(wi, pvt->q);
 }
