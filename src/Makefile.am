@@ -103,7 +103,7 @@ rtpp_rzmalloc_perf_CPPFLAGS = $(EXTRA_CPPFLAGS)
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \
   -D_BSD_SOURCE
-EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall
+EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall -Werror=incompatible-pointer-types
 
 EXTRA_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR)
 
