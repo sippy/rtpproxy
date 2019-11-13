@@ -35,10 +35,11 @@ struct po_mgr_pkt_ctx {
   const struct rtpp_session *sessp;
   struct rtpp_stream *strmp;
   const struct rtp_packet *pktp;
+  void *auxp;
 };
 
 DEFINE_METHOD(po_manager, po_manager_reg, int, const struct packet_observer_if *);
-DEFINE_METHOD(po_manager, po_manager_observe, void, const struct po_mgr_pkt_ctx *);
+DEFINE_METHOD(po_manager, po_manager_observe, void, struct po_mgr_pkt_ctx *);
 
 struct po_manager {
     struct rtpp_refcnt *rcnt;
