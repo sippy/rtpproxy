@@ -143,9 +143,6 @@ rtpp_wi_free(struct rtpp_wi *wi)
     struct rtpp_wi_pvt *wipp;
 
     PUB2PVT(wi, wipp);
-    if (wipp->sock_rcnt != NULL) {
-        CALL_SMETHOD(wipp->sock_rcnt, decref);
-    }
     if (wipp->log != NULL) {
         CALL_SMETHOD(wipp->log->rcnt, decref);
     }

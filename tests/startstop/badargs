@@ -25,11 +25,14 @@ truncate -s 0 "${TS_LOGFILE}"
 myuid="`id -un`"
 mygid="`id -gn`"
 
-for bad_rargs in '-?' "-u nobody:nogroup" "-u nahh:dooh" "-u ${myuid}:dooh" \
- "-u nahh:${mygid}" "randomgarbage" "more random garbage" "-v"
+bad_rargs_all=`cat ${BASEDIR}/startstop/badargs.input`
+for bad_rargs in ${bad_rargs_all}
 do
-  RTPP_ARGS="${bad_rargs}" rtpproxy_start
-  reportifnotfail "rtpproxy start with bad argumens: ${bad_rargs}"
+  IFS=\&$'\n'
+  set -o noglob
+  RTPP_ARGS=`eval "echo \"${bad_rargs}\""`
+  rtpproxy_start ${RTPP_ARGS}
+  reportifnotfail "rtpproxy don't start with bad argumens: \""${RTPP_ARGS}"\""
   cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
   rm "${TMP_LOGFILE}"
 done

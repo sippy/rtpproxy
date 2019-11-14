@@ -198,11 +198,11 @@ again:
                 flush_cstats(rsc, csp);
             }
             if (cmd->no_glock == 0) {
-                pthread_mutex_lock(&cf->glock);
+                pthread_mutex_lock(cf->stable->glock);
             }
             i = handle_command(cf, cmd);
             if (cmd->no_glock == 0) {
-                pthread_mutex_unlock(&cf->glock);
+                pthread_mutex_unlock(cf->stable->glock);
             }
             free_command(cmd);
         }
@@ -242,11 +242,11 @@ again:
             flush_cstats(rsc, csp);
         }
         if (cmd->no_glock == 0) {
-            pthread_mutex_lock(&cf->glock);
+            pthread_mutex_lock(cf->stable->glock);
         }
         rval = handle_command(cf, cmd);
         if (cmd->no_glock == 0) {
-            pthread_mutex_unlock(&cf->glock);
+            pthread_mutex_unlock(cf->stable->glock);
         }
         free_command(cmd);
     } while (rval == 0);

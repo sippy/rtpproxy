@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2019 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,47 +25,26 @@
  *
  */
 
-#ifndef _RTPP_SESSION_H_
-#define _RTPP_SESSION_H_
-
+struct po_manager;
+struct packet_observer_if;
 struct rtpp_session;
-struct rtpp_socket;
-struct common_cmd_args;
-struct sockaddr;
-struct rtpp_timestamp;
-struct rtpp_timeout_data;
+struct rtpp_stream;
+struct rtp_packet;
 
-struct rtpp_session {
-    char *call_id;
-    char *tag;
-    char *tag_nomedianum;
-    struct rtpp_log *log;
-    struct rtpp_pipe *rtp;
-    struct rtpp_pipe *rtcp;
-    /* Session is complete, that is we received both request and reply */
-    int complete;
-    /* Flags: strong create/delete; weak ones */
-    int strong;
-    struct rtpp_timeout_data *timeout_data;
-    /* UID */
-    uint64_t seuid;
-
-    struct rtpp_stats *rtpp_stats;
-    struct rtpp_weakref_obj *servers_wrt;
-
-    /* Refcounter */
-    struct rtpp_refcnt *rcnt;
+struct po_mgr_pkt_ctx {
+  const struct rtpp_session *sessp;
+  struct rtpp_stream *strmp;
+  const struct rtp_packet *pktp;
+  void *auxp;
 };
 
-struct cfg;
-struct cfg_stable;
+DEFINE_METHOD(po_manager, po_manager_reg, int, const struct packet_observer_if *);
+DEFINE_METHOD(po_manager, po_manager_observe, void, struct po_mgr_pkt_ctx *);
 
-int compare_session_tags(const char *, const char *, unsigned *);
-int find_stream(struct cfg *, const char *, const char *, const char *,
-  struct rtpp_session **);
+struct po_manager {
+    struct rtpp_refcnt *rcnt;
+    po_manager_reg_t reg;
+    po_manager_observe_t observe;
+};
 
-struct rtpp_session *rtpp_session_ctor(struct rtpp_cfg_stable *,
-  struct common_cmd_args *, const struct rtpp_timestamp *,
-  struct sockaddr **, int, int, struct rtpp_socket **);
-
-#endif
+struct po_manager *rtpp_po_mgr_ctor(void);

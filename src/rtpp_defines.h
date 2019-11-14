@@ -76,8 +76,6 @@ struct cfg {
     pthread_mutex_t bindaddr_lock;
 
     int nofile_limit_warned;
-
-    pthread_mutex_t glock;
 };
 
 #endif

@@ -85,6 +85,13 @@ struct thr_args {
     struct test_data *tdp;
 };
 
+struct sgnl_pload {
+    const char *cp;
+    unsigned long long *answerp;
+};
+
+static const char *MLQ = "meaning of life?";
+
 static enum rtpp_timed_cb_rvals
 update_derived_stats(double dtime, void *argp)
 {
@@ -117,6 +124,8 @@ worker_run(void *argp)
 {
     const struct thr_args *tap;
     struct rtpp_wi *wi;
+    size_t dtl;
+    struct sgnl_pload *tplp;
 #if defined(RTPQ_CHECK_SEQ)
     int64_t wi_id, wi_id_prev;
 #endif
@@ -140,6 +149,10 @@ worker_run(void *argp)
         wi_id_prev = wi_id;
 #endif
     }
+    tplp = (struct sgnl_pload *)rtpp_wi_sgnl_get_data(wi, &dtl);
+    assert(dtl == sizeof(*tplp));
+    assert(tplp->cp == MLQ);
+    *tplp->answerp = 42;
     atomic_store(&tap->tdp->done, true);
 }
 
@@ -191,6 +204,8 @@ main(int argc, char **argv)
     struct rtpp_wi *wi;
     void *wi_data;
     double stime;
+    struct sgnl_pload tpl;
+    unsigned long long answer;
 #if defined(RTPQ_CHECK_SEQ)
     int64_t wi_id = 0x222222, wi_id_prev;
 #endif
@@ -221,7 +236,9 @@ main(int argc, char **argv)
     targs.rsp = rtpp_stats_ctor();
     targs.fqp = rtpp_queue_init(RTPQ_LARGE_CB_LEN, "perftest main->worker");
     targs.bqp = rtpp_queue_init(RTPQ_LARGE_CB_LEN, "perftest worker->main");
-    targs.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
+    tpl.cp = MLQ;
+    tpl.answerp = &answer;
+    targs.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, &tpl, sizeof(tpl));
     targs.tdp = &tests.queue_p2c;
     ttp = CALL_SMETHOD(rtp, schedule_rc, 10.0, targs.rsp->rcnt, update_derived_stats, NULL, &targs);
     if (pthread_create(&thread_id, NULL, (void *(*)(void *))&worker_run, &targs) != 0) {
@@ -325,6 +342,9 @@ main(int argc, char **argv)
     CALL_SMETHOD(rtp->rcnt, decref);
     rtpp_queue_destroy(targs.fqp);
     rtpp_queue_destroy(targs.bqp);
+
+    assert(tpl.cp == MLQ);
+    assert(answer == 42);
 
 #if defined(_RTPP_MEMDEB_H)
     ecode = rtpp_memdeb_dumpstats(MEMDEB_SYM, 0) == 0 ? 0 : 1;

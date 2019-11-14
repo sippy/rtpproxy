@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <netinet/in.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -89,6 +90,7 @@ controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
 
     if (strlen(csp->cmd_sock) >= sizeof(ifsun->sun_path)) {
         warnx("socket name is too long: %s", csp->cmd_sock);
+        errno = ENAMETOOLONG;
         return (-1);
     }
     unlink(csp->cmd_sock);

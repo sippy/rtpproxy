@@ -47,6 +47,7 @@ struct rtpp_log;
 struct rtpp_module_if;
 struct rtpp_runcreds;
 struct rtpp_proc_ttl;
+struct po_manager;
 
 #define RTPP_PT_INET	0
 #define	RTPP_PT_INET6	1
@@ -135,6 +136,10 @@ struct rtpp_cfg_stable {
     struct overload_prot overload_prot;
 
     const char *cfile;
+
+    struct po_manager *observers;
+
+    pthread_mutex_t *glock;
 };
 
 #endif

@@ -94,14 +94,16 @@ drop_privileges(const struct rtpp_cfg_stable *cfsp)
 
     if (cfsp->runcreds->gname != NULL) {
 	if (setgid(cfsp->runcreds->gid) != 0) {
-	    RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't set current group ID: %d", cfsp->runcreds->gid);
+	    RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't set current group ID: %d",
+	      (int)cfsp->runcreds->gid);
 	    return -1;
 	}
     }
     if (cfsp->runcreds->uname == NULL)
 	return 0;
     if (setuid(cfsp->runcreds->uid) != 0) {
-	RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't set current user ID: %d", cfsp->runcreds->uid);
+	RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't set current user ID: %d",
+	  (int)cfsp->runcreds->uid);
 	return -1;
     }
     return 0;
@@ -236,6 +238,19 @@ url_unquote(unsigned char *buf, int len)
         outlen -= 2;
     }
     return (outlen);
+}
+
+int atoi_safe(const char *s, int *res)
+{
+    int rval;
+    char *cp;
+
+    rval = strtol(s, &cp, 10);
+    if (cp == s || *cp != '\0') {
+        return (-1);
+    }
+    *res = rval;
+    return (0);
 }
 
 #if defined(_SC_CLK_TCK) && !defined(__FreeBSD__)

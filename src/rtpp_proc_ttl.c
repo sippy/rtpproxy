@@ -49,6 +49,7 @@
 #include "rtpp_proc_ttl.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_pipe.h"
+#include "rtpp_timeout_data.h"
 
 struct rtpp_proc_ttl_pvt {
     struct rtpp_proc_ttl pub;
@@ -86,9 +87,9 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
 
     if (CALL_METHOD(sp->rtp, get_ttl) == 0) {
         RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
-        if (sp->timeout_data.notify_target != NULL) {
+        if (sp->timeout_data != NULL) {
             CALL_METHOD(fap->rtpp_notify_cf, schedule,
-              sp->timeout_data.notify_target, sp->timeout_data.notify_tag);
+              sp->timeout_data->notify_target, sp->timeout_data->notify_tag);
         }
         CALL_SMETHOD(fap->rtpp_stats, updatebyname, "nsess_timeout", 1);
         CALL_METHOD(fap->sessions_wrt, unreg, sp->seuid);
@@ -130,8 +131,10 @@ rtpp_proc_ttl_run(void *arg)
             break;
         }
         prdic_procrastinate(proc_cf->elp);
+        pthread_mutex_lock(cfsp->glock);
         rtpp_proc_ttl(cfsp->sessions_ht, cfsp->sessions_wrt,
           cfsp->rtpp_notify_cf, stats_cf);
+        pthread_mutex_unlock(cfsp->glock);
     }
 }
 

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2019 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,47 +25,16 @@
  *
  */
 
-#ifndef _RTPP_SESSION_H_
-#define _RTPP_SESSION_H_
+struct packet_observer_if;
+struct po_mgr_pkt_ctx;
 
-struct rtpp_session;
-struct rtpp_socket;
-struct common_cmd_args;
-struct sockaddr;
-struct rtpp_timestamp;
-struct rtpp_timeout_data;
+DEFINE_RAW_METHOD(po_taste, int, struct po_mgr_pkt_ctx *);
+DEFINE_RAW_METHOD(po_enqueue, void, void *, const struct po_mgr_pkt_ctx *);
+DEFINE_RAW_METHOD(po_control, void);
 
-struct rtpp_session {
-    char *call_id;
-    char *tag;
-    char *tag_nomedianum;
-    struct rtpp_log *log;
-    struct rtpp_pipe *rtp;
-    struct rtpp_pipe *rtcp;
-    /* Session is complete, that is we received both request and reply */
-    int complete;
-    /* Flags: strong create/delete; weak ones */
-    int strong;
-    struct rtpp_timeout_data *timeout_data;
-    /* UID */
-    uint64_t seuid;
-
-    struct rtpp_stats *rtpp_stats;
-    struct rtpp_weakref_obj *servers_wrt;
-
-    /* Refcounter */
-    struct rtpp_refcnt *rcnt;
+struct packet_observer_if {
+    void *arg;
+    po_taste_t taste;
+    po_enqueue_t enqueue;
+    po_control_t control;
 };
-
-struct cfg;
-struct cfg_stable;
-
-int compare_session_tags(const char *, const char *, unsigned *);
-int find_stream(struct cfg *, const char *, const char *, const char *,
-  struct rtpp_session **);
-
-struct rtpp_session *rtpp_session_ctor(struct rtpp_cfg_stable *,
-  struct common_cmd_args *, const struct rtpp_timestamp *,
-  struct sockaddr **, int, int, struct rtpp_socket **);
-
-#endif
