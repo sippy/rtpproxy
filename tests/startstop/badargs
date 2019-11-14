@@ -28,7 +28,7 @@ mygid="`id -gn`"
 bad_rargs_all=`cat ${BASEDIR}/startstop/badargs.input`
 for bad_rargs in ${bad_rargs_all}
 do
-  IFS=\&$'\n'
+  IFS=\&
   set -o noglob
   RTPP_ARGS=`eval "echo \"${bad_rargs}\""`
   rtpproxy_start ${RTPP_ARGS}
