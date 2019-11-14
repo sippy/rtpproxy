@@ -27,6 +27,7 @@
 
 #include <limits.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <unistd.h>
