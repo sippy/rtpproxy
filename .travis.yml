@@ -41,7 +41,7 @@ stages:
   - name: Build & Deploy Documentation
     if: branch = master AND type = push
   - name: Update Coverity Report
-    if: branch = master AND type = push
+    if: branch = master AND type = cron
 jobs:
   include:
     - stage: Build Documentation
