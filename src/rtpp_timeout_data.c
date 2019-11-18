@@ -61,7 +61,6 @@ rtpp_timeout_data_ctor(struct rtpp_tnotify_target *ttp, const char *tag)
     }
     pvt->pub.rcnt = rcnt;
     pvt->pub.notify_target = ttp;
-    pvt->pub.notify_tag = tag;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timeout_data_dtor,
       pvt);
     return ((&pvt->pub));
