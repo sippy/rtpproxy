@@ -26,6 +26,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
@@ -54,6 +55,10 @@ rtpp_timeout_data_ctor(struct rtpp_tnotify_target *ttp, const char *tag)
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->pub.notify_tag = strdup(tag);
+    if (pvt->pub.notify_tag == NULL) {
+        goto e1;
+    }
     pvt->pub.rcnt = rcnt;
     pvt->pub.notify_target = ttp;
     pvt->pub.notify_tag = tag;
@@ -61,11 +66,9 @@ rtpp_timeout_data_ctor(struct rtpp_tnotify_target *ttp, const char *tag)
       pvt);
     return ((&pvt->pub));
 
-#if 0
 e1:
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    CALL_SMETHOD(rcnt, decref);
     free(pvt);
-#endif
 e0:
     return (NULL);
 }
