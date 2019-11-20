@@ -50,7 +50,7 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_send_pkt_na, int,
   struct sthread_args *, struct rtpp_netaddr *, struct rtp_packet *,
   struct rtpp_log *);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_rtp_recv, struct rtp_packet *,
-  const struct rtpp_timestamp *, struct sockaddr *, int);
+  const struct rtpp_timestamp *, const struct sockaddr *, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_getfd, int);
 
 struct rtpp_socket {
