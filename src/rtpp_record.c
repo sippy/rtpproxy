@@ -287,8 +287,8 @@ flush_rbuf(struct rtpp_record_channel *rrc)
 
 static int
 prepare_pkt_hdr_adhoc(struct rtpp_log *log, struct rtp_packet *packet,
-  struct pkt_hdr_adhoc *hdrp, const struct sockaddr *daddr, struct sockaddr *ldaddr,
-  int ldport, int face)
+  struct pkt_hdr_adhoc *hdrp, const struct sockaddr *daddr,
+  const struct sockaddr *ldaddr, int ldport, int face)
 {
 
     memset(hdrp, 0, sizeof(*hdrp));
@@ -350,8 +350,8 @@ fake_ether_addr(const struct sockaddr *addr, uint8_t *eaddr)
 
 static int
 prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
-  union pkt_hdr_pcap *hdrp, const struct sockaddr *daddr, struct sockaddr *ldaddr,
-  int ldport, int face)
+  union pkt_hdr_pcap *hdrp, const struct sockaddr *daddr,
+  const struct sockaddr *ldaddr, int ldport, int face)
 {
     const struct sockaddr *src_addr, *dst_addr;
     uint16_t src_port, dst_port;
@@ -534,10 +534,10 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     } hdr;
     int rval, hdr_size;
     int (*prepare_pkt_hdr)(struct rtpp_log *, struct rtp_packet *, void *,
-      const struct sockaddr *, struct sockaddr *, int, int);
+      const struct sockaddr *, const struct sockaddr *, int, int);
     const char *proto;
     struct sockaddr_storage daddr;
-    struct sockaddr *ldaddr;
+    const struct sockaddr *ldaddr;
     int ldport, face;
     struct rtpp_record_channel *rrc;
     struct rtpp_netaddr *rem_addr;
