@@ -49,4 +49,6 @@ struct rtpp_type_linkable {
 #define PUB2PVT(pubp, pvtp) \
   (pvtp) = (typeof(pvtp))((char *)(pubp) - offsetof(typeof(*(pvtp)), pub))
 
+#define CONST(p) ((const typeof(*p) *)(p))
+
 #endif
