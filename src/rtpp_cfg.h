@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef _RTPP_CFG_STABLE_H_
-#define _RTPP_CFG_STABLE_H_
+#ifndef _RTPP_CFG_H_
+#define _RTPP_CFG_H_
 
 /*
  * TTL counters are used to detect the absence of audio packets
@@ -64,7 +64,7 @@ struct overload_prot {
     int ecode;
 };
 
-struct rtpp_cfg_stable {
+struct rtpp_cfg {
     const char *pid_file;
 
     int nodaemon;

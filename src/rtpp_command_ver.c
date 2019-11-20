@@ -33,7 +33,7 @@
 #include <string.h>
 
 #include "rtpp_defines.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_types.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
@@ -65,7 +65,7 @@ static struct proto_cap proto_caps[] = {
 };
 
 void
-handle_ver_feature(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
+handle_ver_feature(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     int i, known;
 

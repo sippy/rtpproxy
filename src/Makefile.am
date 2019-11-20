@@ -31,7 +31,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
   rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
   rtpp_hash_table.c rtpp_hash_table.h rtpp_types.h config_pp.h rtpp_stats.c \
-  rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
+  rtpp_cfg.h rtpp_command_stats.h rtpp_command_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
   rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c rtpp_timed.c \
   rtpp_analyzer.c rtpp_analyzer.h rtp_analyze.c rtp_analyze.h \

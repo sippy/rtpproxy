@@ -34,7 +34,7 @@ struct rtpp_queue;
 struct sthread_args;
 struct rtpp_log;
 struct rtpp_netaddr;
-struct rtpp_cfg_stable;
+struct rtpp_cfg;
 
 int rtpp_anetio_sendto(struct rtpp_anetio_cf *, int, const void *, \
   size_t, int, const struct sockaddr *, socklen_t);
@@ -50,7 +50,7 @@ void rtpp_anetio_pump(struct rtpp_anetio_cf *);
 void rtpp_anetio_pump_q(struct sthread_args *);
 struct sthread_args *rtpp_anetio_pick_sender(struct rtpp_anetio_cf *);
 
-struct rtpp_anetio_cf *rtpp_netio_async_init(struct rtpp_cfg_stable *, int);
+struct rtpp_anetio_cf *rtpp_netio_async_init(struct rtpp_cfg *, int);
 void rtpp_netio_async_destroy(struct rtpp_anetio_cf *);
 
 #endif

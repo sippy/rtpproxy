@@ -41,7 +41,7 @@
 #include "config.h"
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
 #include "rtpp_weakref.h"
@@ -74,7 +74,7 @@ struct rtpp_proc_async_cf {
     pthread_t thread_id;
     struct rtpp_anetio_cf *op;
     struct rtpp_proc_rstats rstats;
-    struct rtpp_cfg_stable *cf_save;
+    struct rtpp_cfg *cf_save;
     atomic_int tstate;
     struct elp_data elp_fs;
     struct elp_data elp_lz;
@@ -121,7 +121,7 @@ init_rstats(struct rtpp_stats *sobj, struct rtpp_proc_rstats *rsp)
 static void
 rtpp_proc_async_run(void *arg)
 {
-    struct rtpp_cfg_stable *cfsp;
+    struct rtpp_cfg *cfsp;
     int ndrain, rtp_only;
     int nready_rtp, nready_rtcp;
     struct rtpp_proc_async_cf *proc_cf;
@@ -261,7 +261,7 @@ rtpp_proc_async_run(void *arg)
 }
 
 struct rtpp_proc_async *
-rtpp_proc_async_ctor(struct rtpp_cfg_stable *cfsp)
+rtpp_proc_async_ctor(struct rtpp_cfg *cfsp)
 {
     struct rtpp_proc_async_cf *proc_cf;
 

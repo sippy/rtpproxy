@@ -31,7 +31,7 @@
 struct sthread_args;
 struct rtpp_polltbl;
 struct rtpp_timestamp;
-struct rtpp_cfg_stable;
+struct rtpp_cfg;
 
 struct rtpp_proc_stat {
     uint64_t cnt;
@@ -48,9 +48,9 @@ struct rtpp_proc_rstats {
     struct rtpp_proc_stat npkts_discard;
 };
 
-void process_rtp_servers(struct rtpp_cfg_stable *, double,
+void process_rtp_servers(struct rtpp_cfg *, double,
   struct sthread_args *, struct rtpp_proc_rstats *);
-void process_rtp_only(struct rtpp_cfg_stable *,
+void process_rtp_only(struct rtpp_cfg *,
   struct rtpp_polltbl *, const struct rtpp_timestamp *, int,
   struct sthread_args *sender, struct rtpp_proc_rstats *);
 

@@ -41,7 +41,7 @@
 #include "rtpp_module.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_acct_rtcp.h"
 #include "rtpp_network.h"
 #include "rtpp_time.h"
@@ -64,7 +64,7 @@ struct rtpp_module_priv {
    struct hep_ctx ctx;
 };
 
-static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *);
+static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg *);
 static void rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct_rtcp *);
 static struct rtpp_module_conf *rtpp_acct_rtcp_hep_get_mconf(struct rtpp_module_priv *);
@@ -85,7 +85,7 @@ struct rtpp_minfo rtpp_module = {
 };
 
 static struct rtpp_module_priv *
-rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg_stable *cfsp)
+rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_priv *pvt;
 

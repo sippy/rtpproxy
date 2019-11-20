@@ -37,7 +37,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_sessinfo_fin.h"
 #include "rtpp_pipe.h"
@@ -140,7 +140,7 @@ rtpp_polltbl_hst_record(struct rtpp_polltbl_hst *hp, enum polltbl_hst_ops op,
 }
 
 struct rtpp_sessinfo *
-rtpp_sessinfo_ctor(struct rtpp_cfg_stable *cfsp)
+rtpp_sessinfo_ctor(struct rtpp_cfg *cfsp)
 {
     struct rtpp_sessinfo *sessinfo;
     struct rtpp_sessinfo_priv *pvt;

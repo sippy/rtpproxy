@@ -45,7 +45,7 @@
 #include "rtpp_list.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_command.h"
 #include "rtpp_controlfd.h"
 #include "rtpp_mallocs.h"
@@ -83,7 +83,7 @@ controlfd_init_systemd(void)
 }
 
 static int
-controlfd_init_ifsun(struct rtpp_cfg_stable *cfsp, struct rtpp_ctrl_sock *csp)
+controlfd_init_ifsun(struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
     int controlfd, reuse;
     struct sockaddr_un *ifsun;
@@ -134,7 +134,7 @@ e0:
 }
 
 static int
-controlfd_init_udp(struct rtpp_cfg_stable *cfsp, struct rtpp_ctrl_sock *csp)
+controlfd_init_udp(struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
     struct sockaddr *ifsin;
     char *cp;
@@ -172,7 +172,7 @@ controlfd_init_udp(struct rtpp_cfg_stable *cfsp, struct rtpp_ctrl_sock *csp)
 }
 
 static int
-controlfd_init_tcp(struct rtpp_cfg_stable *cfsp, struct rtpp_ctrl_sock *csp)
+controlfd_init_tcp(struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
     struct sockaddr *ifsin;
     char *cp;
@@ -216,7 +216,7 @@ e0:
 }
 
 int
-rtpp_controlfd_init(struct rtpp_cfg_stable *cfsp)
+rtpp_controlfd_init(struct rtpp_cfg *cfsp)
 {
     int controlfd_in, controlfd_out, flags;
     struct rtpp_ctrl_sock *ctrl_sock;
@@ -291,7 +291,7 @@ rtpp_csock_addrlen(struct rtpp_ctrl_sock *ctrl_sock)
 }
 
 void
-rtpp_controlfd_cleanup(struct rtpp_cfg_stable *cfsp)
+rtpp_controlfd_cleanup(struct rtpp_cfg *cfsp)
 {
     struct rtpp_ctrl_sock *ctrl_sock;
 

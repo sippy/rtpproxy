@@ -38,8 +38,8 @@ struct rtpp_cmd_connection {
     socklen_t rlen;
 };
 
-int rtpp_command_stream_doio(struct rtpp_cfg_stable *,
+int rtpp_command_stream_doio(struct rtpp_cfg *,
   struct rtpp_cmd_connection *);
-struct rtpp_command *rtpp_command_stream_get(struct rtpp_cfg_stable *,
+struct rtpp_command *rtpp_command_stream_get(struct rtpp_cfg *,
   struct rtpp_cmd_connection *rcs, int *rval, const struct rtpp_timestamp *,
   struct rtpp_command_stats *csp);

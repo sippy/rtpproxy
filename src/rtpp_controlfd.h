@@ -51,8 +51,8 @@ struct rtpp_ctrl_sock {
 #define RTPP_CTRL_ACCEPTABLE(rcsp) ((rcsp)->type == RTPC_IFSUN || (rcsp)->type == RTPC_IFSUN_C \
   || (rcsp)->type == RTPC_TCP4 || (rcsp)->type == RTPC_TCP6 || (rcsp)->type == RTPC_SYSD)
 
-int rtpp_controlfd_init(struct rtpp_cfg_stable *);
+int rtpp_controlfd_init(struct rtpp_cfg *);
 struct rtpp_ctrl_sock *rtpp_ctrl_sock_parse(const char *);
 const char *rtpp_ctrl_sock_describe(struct rtpp_ctrl_sock *);
-void rtpp_controlfd_cleanup(struct rtpp_cfg_stable *);
+void rtpp_controlfd_cleanup(struct rtpp_cfg *);
 socklen_t rtpp_csock_addrlen(struct rtpp_ctrl_sock *);

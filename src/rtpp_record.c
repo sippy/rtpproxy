@@ -55,7 +55,7 @@
 #include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_ip_chksum.h"
 #include "rtpp_debug.h"
 #include "rtpp_defines.h"
@@ -153,7 +153,7 @@ e0:
 }
 
 struct rtpp_record *
-rtpp_record_open(const struct rtpp_cfg_stable *cfsp, struct rtpp_session *sp,
+rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
   char *rname, int orig, int record_type)
 {
     struct rtpp_record_channel *rrc;

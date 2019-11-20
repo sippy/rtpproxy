@@ -30,14 +30,14 @@ struct rtpp_refcnt;
 struct rtpp_acct;
 struct rtpp_acct_rtcp;
 struct rtpp_log;
-struct rtpp_cfg_stable;
+struct rtpp_cfg;
 struct rtpp_module_conf;
 
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, struct rtpp_cfg_stable *,
+DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, struct rtpp_cfg *,
   struct rtpp_log *);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_config, int);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_start, int,
-  struct rtpp_cfg_stable *);
+  struct rtpp_cfg *);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct, void,
   struct rtpp_acct *);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct_rtcp, void,

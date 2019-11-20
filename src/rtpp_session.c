@@ -38,7 +38,7 @@
 #include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
@@ -71,7 +71,7 @@ struct rtpp_session_priv
 static void rtpp_session_dtor(struct rtpp_session_priv *);
 
 struct rtpp_session *
-rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
+rtpp_session_ctor(struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
   const struct rtpp_timestamp *dtime, const struct sockaddr **lia, int weak,
   int lport, struct rtpp_socket **fds)
 {
@@ -328,7 +328,7 @@ found:
 }
 
 int
-find_stream(const struct rtpp_cfg_stable *cfsp, const char *call_id,
+find_stream(const struct rtpp_cfg *cfsp, const char *call_id,
   const char *from_tag, const char *to_tag, struct rtpp_session **spp)
 {
     struct session_match_args ma;

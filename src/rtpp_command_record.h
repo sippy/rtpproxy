@@ -28,5 +28,5 @@
 
 struct common_cmd_args;
 
-int handle_record(struct rtpp_cfg_stable *, struct common_cmd_args *, int);
+int handle_record(struct rtpp_cfg *, struct common_cmd_args *, int);
 

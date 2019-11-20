@@ -39,7 +39,7 @@
 #include "config.h"
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_time.h"
@@ -273,7 +273,7 @@ rtpp_anetio_pick_sender(struct rtpp_anetio_cf *netio_cf)
 }
 
 struct rtpp_anetio_cf *
-rtpp_netio_async_init(struct rtpp_cfg_stable *cfsp, int qlen)
+rtpp_netio_async_init(struct rtpp_cfg *cfsp, int qlen)
 {
     struct rtpp_anetio_cf *netio_cf;
     int i, ri;

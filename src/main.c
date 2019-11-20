@@ -75,7 +75,7 @@
 #include "rtpp_cfile.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_controlfd.h"
@@ -143,7 +143,7 @@ usage(void)
     exit(1);
 }
 
-static struct rtpp_cfg_stable *_sig_cf;
+static struct rtpp_cfg *_sig_cf;
 
 static void rtpp_exit(int, int) __attribute__ ((noreturn));
 
@@ -214,7 +214,7 @@ ehandler(void)
 }
 
 long long
-rtpp_rlim_max(struct rtpp_cfg_stable *cfsp)
+rtpp_rlim_max(struct rtpp_cfg *cfsp)
 {
 
     return (long long)(cfsp->nofile->limit->rlim_max);
@@ -236,7 +236,7 @@ const static struct option longopts[] = {
 };
 
 static void
-init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int memdeb)
+init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
 {
     struct rtpp_module_if *mif, *tmp;
     struct rtpp_ctrl_sock *ctrl_sock, *ctrl_sock_next;
@@ -268,7 +268,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
 }
 
 static void
-init_config(struct rtpp_cfg_stable *cfsp, int argc, char **argv)
+init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 {
     int ch, i, umode, stdio_mode;
     char *bh[2], *bh6[2], *cp, *tp[2];
@@ -790,7 +790,7 @@ main(int argc, char **argv)
 {
     int i, len;
     long long ncycles_ref, counter;
-    struct rtpp_cfg_stable cfs;
+    struct rtpp_cfg cfs;
     char buf[256];
     struct sched_param sparam;
     void *elp;

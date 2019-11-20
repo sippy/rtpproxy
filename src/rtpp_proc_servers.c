@@ -31,7 +31,7 @@
 #include <stdlib.h>
 
 #include "rtpp_defines.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
@@ -96,7 +96,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
 }
 
 void
-rtpp_proc_servers(struct rtpp_cfg_stable *cfsp, double dtime, struct sthread_args *sender,
+rtpp_proc_servers(struct rtpp_cfg *cfsp, double dtime, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
     struct foreach_args fargs;

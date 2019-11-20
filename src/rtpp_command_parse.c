@@ -34,7 +34,7 @@
 #include "config.h"
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_command_parse.h"
@@ -57,7 +57,7 @@ struct cmd_props {
 };
 
 static int 
-fill_cmd_props(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd,
+fill_cmd_props(struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
   struct cmd_props *cpp)
 {
 
@@ -232,7 +232,7 @@ fill_cmd_props(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd,
 }
 
 int
-rtpp_command_pre_parse(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
+rtpp_command_pre_parse(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     struct cmd_props cprops;
 

@@ -34,7 +34,7 @@
 #include "config.h"
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
@@ -46,7 +46,7 @@
 #include "rtpp_util.h"
 
 int
-handle_copy(struct rtpp_cfg_stable *cfsp, struct rtpp_session *spa, int idx, char *rname,
+handle_copy(struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx, char *rname,
   int record_single_file)
 {
     int remote;

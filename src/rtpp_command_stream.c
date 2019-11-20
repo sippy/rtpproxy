@@ -37,7 +37,7 @@
 #include "rtpp_log.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_debug.h"
 #include "rtpp_command.h"
@@ -66,7 +66,7 @@ rtpp_command_stream_compact(struct rtpp_cmd_connection *rcs)
 }   
 
 int
-rtpp_command_stream_doio(struct rtpp_cfg_stable *cfsp, struct rtpp_cmd_connection *rcs)
+rtpp_command_stream_doio(struct rtpp_cfg *cfsp, struct rtpp_cmd_connection *rcs)
 {
     int len, blen;
     char *cp;
@@ -108,7 +108,7 @@ rcs_reply_nomem(struct rtpp_log *log, int controlfd, struct rtpp_command_stats *
 }
 
 struct rtpp_command *
-rtpp_command_stream_get(struct rtpp_cfg_stable *cfsp, struct rtpp_cmd_connection *rcs,
+rtpp_command_stream_get(struct rtpp_cfg *cfsp, struct rtpp_cmd_connection *rcs,
   int *rval, const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp)
 {
     char *cp, *cp1;

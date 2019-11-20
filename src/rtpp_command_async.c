@@ -40,7 +40,7 @@
 #include "config.h"
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
@@ -92,7 +92,7 @@ struct rtpp_cmd_async_cf {
     struct rtpp_command_stats cstats;
     struct rtpp_cmd_pollset pset;
     struct rtpp_cmd_accptset aset;
-    struct rtpp_cfg_stable *cf_save;
+    struct rtpp_cfg *cf_save;
     struct rtpp_cmd_rcache *rcache;
 };
 
@@ -147,7 +147,7 @@ flush_cstats(struct rtpp_stats *sobj, struct rtpp_command_stats *csp)
 }
 
 static int
-accept_connection(struct rtpp_cfg_stable *cfsp, struct rtpp_ctrl_sock *rcsp,
+accept_connection(struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp,
   struct sockaddr *rap)
 {
     int controlfd;
@@ -167,7 +167,7 @@ accept_connection(struct rtpp_cfg_stable *cfsp, struct rtpp_ctrl_sock *rcsp,
 }
 
 static int
-process_commands(struct rtpp_ctrl_sock *csock, struct rtpp_cfg_stable *cfsp, int controlfd,
+process_commands(struct rtpp_ctrl_sock *csock, struct rtpp_cfg *cfsp, int controlfd,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp,
   struct rtpp_stats *rsc, struct rtpp_cmd_rcache *rcp)
 {
@@ -214,7 +214,7 @@ out:
 }
 
 static int
-process_commands_stream(struct rtpp_cfg_stable *cfsp, struct rtpp_cmd_connection *rcc,
+process_commands_stream(struct rtpp_cfg *cfsp, struct rtpp_cmd_connection *rcc,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp, struct rtpp_stats *rsc)
 {
     int rval;
@@ -552,7 +552,7 @@ rtpp_command_async_chk_overload(struct rtpp_cmd_async *pub)
 }
 
 static int
-init_pollset(struct rtpp_cfg_stable *cfsp, struct rtpp_cmd_pollset *psp)
+init_pollset(struct rtpp_cfg *cfsp, struct rtpp_cmd_pollset *psp)
 {
     struct rtpp_ctrl_sock *ctrl_sock;
     int pfds_used, msize, i;
@@ -615,7 +615,7 @@ free_pollset(struct rtpp_cmd_pollset *psp)
 }
 
 static int
-init_accptset(struct rtpp_cfg_stable *cfsp, struct rtpp_cmd_accptset *asp)
+init_accptset(struct rtpp_cfg *cfsp, struct rtpp_cmd_accptset *asp)
 {
     int i, pfds_used;
     struct rtpp_ctrl_sock *ctrl_sock;
@@ -664,7 +664,7 @@ free_accptset(struct rtpp_cmd_accptset *asp)
 }
 
 struct rtpp_cmd_async *
-rtpp_command_async_ctor(struct rtpp_cfg_stable *cfsp)
+rtpp_command_async_ctor(struct rtpp_cfg *cfsp)
 {
     struct rtpp_cmd_async_cf *cmd_cf;
     int need_acptr, i;

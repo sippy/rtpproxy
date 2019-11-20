@@ -36,6 +36,6 @@ struct rtpp_proc_async {
     rtpp_proc_async_dtor_t dtor;
 };
 
-struct rtpp_proc_async *rtpp_proc_async_ctor(struct rtpp_cfg_stable *);
+struct rtpp_proc_async *rtpp_proc_async_ctor(struct rtpp_cfg *);
 
 #endif

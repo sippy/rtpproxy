@@ -42,7 +42,7 @@
 
 #include "rtpp_debug.h"
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
@@ -78,7 +78,7 @@
 
 struct rtpp_command_priv {
     struct rtpp_command pub;
-    struct rtpp_cfg_stable *cfs;
+    struct rtpp_cfg *cfs;
     int controlfd;
     const char *cookie;
     int umode;
@@ -90,10 +90,10 @@ struct rtpp_command_priv {
 struct d_opts;
 
 static int create_twinlistener(uint16_t, void *);
-static void handle_info(struct rtpp_cfg_stable *, struct rtpp_command *);
+static void handle_info(struct rtpp_cfg *, struct rtpp_command *);
 
 struct create_twinlistener_args {
-    struct rtpp_cfg_stable *cfs;
+    struct rtpp_cfg *cfs;
     const struct sockaddr *ia;
     struct rtpp_socket **fds;
     int *port;
@@ -152,7 +152,7 @@ failure:
 }
 
 int
-rtpp_create_listener(struct rtpp_cfg_stable *cfsp, const struct sockaddr *ia, int *port,
+rtpp_create_listener(struct rtpp_cfg *cfsp, const struct sockaddr *ia, int *port,
   struct rtpp_socket **fds)
 {
     struct create_twinlistener_args cta;
@@ -252,7 +252,7 @@ free_command(struct rtpp_command *cmd)
 }
 
 struct rtpp_command *
-rtpp_command_ctor(struct rtpp_cfg_stable *cfsp, int controlfd,
+rtpp_command_ctor(struct rtpp_cfg *cfsp, int controlfd,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp, int umode)
 {
     struct rtpp_command_priv *pvt;
@@ -275,7 +275,7 @@ rtpp_command_ctor(struct rtpp_cfg_stable *cfsp, int controlfd,
 }
 
 struct rtpp_command *
-get_command(struct rtpp_cfg_stable *cfsp, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rval,
+get_command(struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rval,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp,
   struct rtpp_cmd_rcache *rcache_obj)
 {
@@ -436,7 +436,7 @@ etoomany:
 }
 
 int
-handle_command(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
+handle_command(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     int i, verbose, rval;
     char *cp;
@@ -641,7 +641,7 @@ handle_command(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
 }
 
 static void
-handle_info(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
+handle_info(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
 #if 0
     struct rtpp_session *spa, *spb;

@@ -32,7 +32,7 @@
 #include <string.h>
 
 #include "rtpp_defines.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_copy.h"
@@ -45,7 +45,7 @@ struct record_ematch_arg {
     const char *from_tag;
     const char *to_tag;
     int record_single_file;
-    struct rtpp_cfg_stable *cfsp;
+    struct rtpp_cfg *cfsp;
 };
 
 static int
@@ -73,7 +73,7 @@ rtpp_cmd_record_ematch(void *dp, void *ap)
 }
 
 int
-handle_record(struct rtpp_cfg_stable *cfsp, struct common_cmd_args *ccap,
+handle_record(struct rtpp_cfg *cfsp, struct common_cmd_args *ccap,
   int record_single_file)
 {
     struct record_ematch_arg rea;

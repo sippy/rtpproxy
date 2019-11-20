@@ -44,7 +44,7 @@
 #include "rtpp_weakref.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_bindaddrs.h"
 #include "rtpp_time.h"
@@ -123,7 +123,7 @@ ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
 }
 
 static void
-ul_opts_init(const struct rtpp_cfg_stable *cfsp, struct ul_opts *ulop)
+ul_opts_init(const struct rtpp_cfg *cfsp, struct ul_opts *ulop)
 {
 
     ulop->asymmetric = (cfsp->aforce != 0) ? 1 : 0;
@@ -153,7 +153,7 @@ rtpp_command_ul_opts_free(struct ul_opts *ulop)
   (strlen(ips) >= IPSTR_MIN_LENv6 && strlen(ips) <= IPSTR_MAX_LENv6))
 
 struct ul_opts *
-rtpp_command_ul_opts_parse(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
+rtpp_command_ul_opts_parse(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     int len, tpf, n, i;
     char c;
@@ -395,7 +395,7 @@ handle_nomem(struct rtpp_command *cmd, int ecode, struct rtpp_session *spa)
 }
 
 int
-rtpp_command_ul_handle(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd, int sidx)
+rtpp_command_ul_handle(struct rtpp_cfg *cfsp, struct rtpp_command *cmd, int sidx)
 {
     int pidx, lport, sessions_active;
     struct rtpp_socket *fds[2];

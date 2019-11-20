@@ -44,7 +44,7 @@
 #endif
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_util.h"
 #include "rtpp_types.h"
@@ -71,7 +71,7 @@ seedrandom(void)
 }
 
 int
-set_rlimits(const struct rtpp_cfg_stable *cfsp)
+set_rlimits(const struct rtpp_cfg *cfsp)
 {
     struct rlimit rlp;
 
@@ -89,7 +89,7 @@ set_rlimits(const struct rtpp_cfg_stable *cfsp)
 }
 
 int
-drop_privileges(const struct rtpp_cfg_stable *cfsp)
+drop_privileges(const struct rtpp_cfg *cfsp)
 {
 
     if (cfsp->runcreds->gname != NULL) {

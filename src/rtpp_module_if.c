@@ -41,7 +41,7 @@
 
 #include "config.h"
 
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_log.h"
@@ -96,8 +96,8 @@ static int rtpp_module_vasprintf(char **, const char *, void *, const char *,
   int, const char *, va_list);
 #endif
 static void rtpp_mif_run(void *);
-static int rtpp_mif_load(struct rtpp_module_if *, struct rtpp_cfg_stable *, struct rtpp_log *);
-static int rtpp_mif_start(struct rtpp_module_if *, struct rtpp_cfg_stable *);
+static int rtpp_mif_load(struct rtpp_module_if *, struct rtpp_cfg *, struct rtpp_log *);
+static int rtpp_mif_start(struct rtpp_module_if *, struct rtpp_cfg *);
 static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
 static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp *);
 static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **);
@@ -160,7 +160,7 @@ acct_rtcp_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
 }
 
 static int
-rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp, struct rtpp_log *log)
+rtpp_mif_load(struct rtpp_module_if *self, struct rtpp_cfg *cfsp, struct rtpp_log *log)
 {
     struct rtpp_module_if_priv *pvt;
     const char *derr;
@@ -417,7 +417,7 @@ rtpp_module_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
 #endif
 
 static int
-rtpp_mif_start(struct rtpp_module_if *self, struct rtpp_cfg_stable *cfsp)
+rtpp_mif_start(struct rtpp_module_if *self, struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_if_priv *pvt;
 
