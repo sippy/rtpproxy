@@ -29,4 +29,5 @@
 
 struct rtpp_pipe;
 
-int handle_query(struct cfg *, struct rtpp_command *, struct rtpp_pipe *, int);
+int handle_query(const struct rtpp_cfg *, struct rtpp_command *,
+  struct rtpp_pipe *, int);

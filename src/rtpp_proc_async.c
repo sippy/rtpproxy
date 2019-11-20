@@ -41,7 +41,7 @@
 #include "config.h"
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
 #include "rtpp_weakref.h"
@@ -72,9 +72,8 @@ struct elp_data {
 struct rtpp_proc_async_cf {
     struct rtpp_proc_async pub;
     pthread_t thread_id;
-    struct rtpp_anetio_cf *op;
     struct rtpp_proc_rstats rstats;
-    struct cfg *cf_save;
+    const struct rtpp_cfg *cf_save;
     atomic_int tstate;
     struct elp_data elp_fs;
     struct elp_data elp_lz;
@@ -121,7 +120,7 @@ init_rstats(struct rtpp_stats *sobj, struct rtpp_proc_rstats *rsp)
 static void
 rtpp_proc_async_run(void *arg)
 {
-    struct cfg *cf;
+    const struct rtpp_cfg *cfsp;
     int ndrain, rtp_only;
     int nready_rtp, nready_rtcp;
     struct rtpp_proc_async_cf *proc_cf;
@@ -138,8 +137,8 @@ rtpp_proc_async_run(void *arg)
     struct elp_data *edp;
 
     proc_cf = (struct rtpp_proc_async_cf *)arg;
-    cf = proc_cf->cf_save;
-    stats_cf = cf->stable->rtpp_stats;
+    cfsp = proc_cf->cf_save;
+    stats_cf = cfsp->rtpp_stats;
     rstats = &proc_cf->rstats;
 
     memset(&ptbl_rtp, '\0', sizeof(struct rtpp_polltbl));
@@ -160,17 +159,17 @@ rtpp_proc_async_run(void *arg)
             break;
         }
         edp->ncycles_ref = (long long)prdic_getncycles_ref(edp->obj);
-        if (cf->stable->overload_prot.ecode != 0 && edp->ncycles_chk_ol <= edp->ncycles_ref) {
+        if (cfsp->overload_prot.ecode != 0 && edp->ncycles_chk_ol <= edp->ncycles_ref) {
             double lv = prdic_getload(edp->obj);
 
             if (overload  && lv < 0.85) {
                 overload = 0;
-                CALL_METHOD(cf->stable->rtpp_cmd_cf, reg_overload, 0);
+                CALL_METHOD(cfsp->rtpp_cmd_cf, reg_overload, 0);
             } else if (overload == 0 && lv > 0.9) {
                 overload = 1;
-                CALL_METHOD(cf->stable->rtpp_cmd_cf, reg_overload, 1);
+                CALL_METHOD(cfsp->rtpp_cmd_cf, reg_overload, 1);
             }
-            RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO, "ncycles=%lld load=%f",
+            RTPP_LOG(cfsp->glog, RTPP_LOG_INFO, "ncycles=%lld load=%f",
               edp->ncycles_ref, lv);
             edp->ncycles_chk_ol = ((edp->ncycles_ref / 200) + 1) * 200;
         }
@@ -187,34 +186,34 @@ rtpp_proc_async_run(void *arg)
             rtp_only = 1;
         }
 
-        CALL_METHOD(cf->stable->sessinfo, sync_polltbl, &ptbl_rtp, PIPE_RTP);
+        CALL_METHOD(cfsp->sessinfo, sync_polltbl, &ptbl_rtp, PIPE_RTP);
         nready_rtp = nready_rtcp = 0;
         if (ptbl_rtp.curlen > 0) {
             if (rtp_only == 0) {
-                CALL_METHOD(cf->stable->sessinfo, sync_polltbl, &ptbl_rtcp, PIPE_RTCP);
+                CALL_METHOD(cfsp->sessinfo, sync_polltbl, &ptbl_rtcp, PIPE_RTCP);
 #if RTPP_DEBUG_netio > 1
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
+                RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for %d RTCP file descriptors", \
                   last_ctick, ptbl_rtcp.curlen);
 #endif
                 nready_rtcp = poll(ptbl_rtcp.pfds, ptbl_rtcp.curlen, 0);
 #if RTPP_DEBUG_netio
                 if (RTPP_DEBUG_netio > 1 || nready_rtcp > 0) {
-                    RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
+                    RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
                       "polling for %d RTCP file descriptors: %d descriptors are ready", \
                       last_ctick, ptbl_rtcp.curlen, nready_rtcp);
                 }
 #endif
             }
 #if RTPP_DEBUG_netio > 1
-           RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
+           RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
               "polling for %d RTP file descriptors", \
               last_ctick, ptbl_rtp.curlen);
 #endif
             nready_rtp = poll(ptbl_rtp.pfds, ptbl_rtp.curlen, 0);
 #if RTPP_DEBUG_netio
             if (RTPP_DEBUG_netio > 1 || nready_rtp > 0) {
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG, "run %lld " \
+                RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for RTP %d file descriptors: %d descriptors are ready", \
                   last_ctick, ptbl_rtp.curlen, nready_rtp);
             }
@@ -227,16 +226,16 @@ rtpp_proc_async_run(void *arg)
         rtpp_timestamp_get(&rtime);
         RTPP_DBG_ASSERT(rtime.wall > 0 && rtime.mono > 0);
 
-        sender = rtpp_anetio_pick_sender(proc_cf->op);
+        sender = rtpp_anetio_pick_sender(proc_cf->pub.netio);
         if (nready_rtp > 0) {
-            process_rtp_only(cf, &ptbl_rtp, &rtime, ndrain, sender, rstats);
+            process_rtp_only(cfsp, &ptbl_rtp, &rtime, ndrain, sender, rstats);
         }
         if (nready_rtcp > 0 && rtp_only == 0) {
-            process_rtp_only(cf, &ptbl_rtcp, &rtime, ndrain, sender, rstats);
+            process_rtp_only(cfsp, &ptbl_rtcp, &rtime, ndrain, sender, rstats);
         }
 
-        if (CALL_METHOD(cf->stable->servers_wrt, get_length) > 0) {
-            rtpp_proc_servers(cf, rtime.mono, sender, rstats);
+        if (CALL_METHOD(cfsp->servers_wrt, get_length) > 0) {
+            rtpp_proc_servers(cfsp, rtime.mono, sender, rstats);
         }
 
         rtpp_anetio_pump_q(sender);
@@ -261,7 +260,7 @@ rtpp_proc_async_run(void *arg)
 }
 
 struct rtpp_proc_async *
-rtpp_proc_async_ctor(struct cfg *cf)
+rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_proc_async_cf *proc_cf;
 
@@ -269,21 +268,21 @@ rtpp_proc_async_ctor(struct cfg *cf)
     if (proc_cf == NULL)
         return (NULL);
 
-    init_rstats(cf->stable->rtpp_stats, &proc_cf->rstats);
+    init_rstats(cfsp->rtpp_stats, &proc_cf->rstats);
 
-    proc_cf->op = rtpp_netio_async_init(cf, 1);
-    if (proc_cf->op == NULL) {
+    proc_cf->pub.netio = rtpp_netio_async_init(cfsp, 1);
+    if (proc_cf->pub.netio == NULL) {
         goto e0;
     }
 
-    proc_cf->cf_save = cf;
+    proc_cf->cf_save = cfsp;
 
-    proc_cf->elp_fs.obj = prdic_init(cf->stable->target_pfreq, cf->stable->sched_offset);
+    proc_cf->elp_fs.obj = prdic_init(cfsp->target_pfreq, cfsp->sched_offset);
     if (proc_cf->elp_fs.obj == NULL) {
         goto e1;
     }
-    proc_cf->elp_fs.target_pfreq = cf->stable->target_pfreq;
-    proc_cf->elp_lz.obj = prdic_init(10.0, cf->stable->sched_offset);
+    proc_cf->elp_fs.target_pfreq = cfsp->target_pfreq;
+    proc_cf->elp_lz.obj = prdic_init(10.0, cfsp->sched_offset);
     if (proc_cf->elp_lz.obj == NULL) {
         goto e2;
     }
@@ -299,7 +298,7 @@ e3:
 e2:
     prdic_free(proc_cf->elp_fs.obj);
 e1:
-    rtpp_netio_async_destroy(proc_cf->op);
+    rtpp_netio_async_destroy(proc_cf->pub.netio);
 e0:
     free(proc_cf);
     return (NULL);
@@ -318,6 +317,6 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     pthread_join(proc_cf->thread_id, NULL);
     prdic_free(proc_cf->elp_lz.obj);
     prdic_free(proc_cf->elp_fs.obj);
-    rtpp_netio_async_destroy(proc_cf->op);
+    rtpp_netio_async_destroy(proc_cf->pub.netio);
     free(proc_cf);
 }

@@ -32,10 +32,11 @@
 #include <string.h>
 
 #include "rtpp_defines.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_copy.h"
+#include "rtpp_command_record.h"
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_session.h"
@@ -45,7 +46,7 @@ struct record_ematch_arg {
     const char *from_tag;
     const char *to_tag;
     int record_single_file;
-    struct cfg *cf;
+    const struct rtpp_cfg *cfsp;
 };
 
 static int
@@ -66,14 +67,14 @@ rtpp_cmd_record_ematch(void *dp, void *ap)
     } else {
         return(RTPP_HT_MATCH_CONT);
     }
-    if (handle_copy(rep->cf, spa, idx, NULL, rep->record_single_file) == 0) {
+    if (handle_copy(rep->cfsp, spa, idx, NULL, rep->record_single_file) == 0) {
         rep->nrecorded++;
     }
     return(RTPP_HT_MATCH_CONT);
 }
 
 int
-handle_record(struct cfg *cf, struct common_cmd_args *ccap,
+handle_record(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap,
   int record_single_file)
 {
     struct record_ematch_arg rea;
@@ -82,8 +83,8 @@ handle_record(struct cfg *cf, struct common_cmd_args *ccap,
     rea.from_tag = ccap->from_tag;
     rea.to_tag = ccap->to_tag;
     rea.record_single_file = record_single_file;
-    rea.cf = cf;
-    CALL_METHOD(cf->stable->sessions_ht, foreach_key, ccap->call_id,
+    rea.cfsp = cfsp;
+    CALL_METHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
       rtpp_cmd_record_ematch, &rea);
     if (rea.nrecorded == 0) {
         return -1;

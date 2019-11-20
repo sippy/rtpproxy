@@ -25,6 +25,6 @@
  *
  */
 
-struct rtpp_cfg_stable;
+struct rtpp_cfg;
 
-int rtpp_cfile_process(struct rtpp_cfg_stable *);
+int rtpp_cfile_process(const struct rtpp_cfg *);

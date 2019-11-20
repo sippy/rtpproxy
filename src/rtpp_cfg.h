@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef _RTPP_CFG_STABLE_H_
-#define _RTPP_CFG_STABLE_H_
+#ifndef _RTPP_CFG_H_
+#define _RTPP_CFG_H_
 
 /*
  * TTL counters are used to detect the absence of audio packets
@@ -49,6 +49,7 @@ struct rtpp_runcreds;
 struct rtpp_proc_ttl;
 struct po_manager;
 struct rtpp_locking;
+struct rtpp_nofile;
 
 #define RTPP_PT_INET	0
 #define	RTPP_PT_INET6	1
@@ -63,7 +64,7 @@ struct overload_prot {
     int ecode;
 };
 
-struct rtpp_cfg_stable {
+struct rtpp_cfg {
     const char *pid_file;
 
     int nodaemon;
@@ -82,7 +83,7 @@ struct rtpp_cfg_stable {
      * internal one. Second can be NULL, in this case there is no bridge
      * mode enabled.
      */
-    struct sockaddr *bindaddr[2];   /* RTP socket(s) addresses */
+    const struct sockaddr *bindaddr[2];   /* RTP socket(s) addresses */
     char const * advaddr[2];        /* advertised addresses */
     int tos;
 
@@ -94,7 +95,7 @@ struct rtpp_cfg_stable {
     int rrtcp;                      /* Whether or not to relay RTCP? */
     struct rtpp_log *glog;
 
-    struct rlimit *nofile_limit;
+    struct rtpp_nofile *nofile;
     int no_check;
 
     rtpp_ttl_mode ttl_mode;
@@ -120,9 +121,9 @@ struct rtpp_cfg_stable {
     struct rtpp_cmd_async *rtpp_cmd_cf;
     struct rtpp_proc_async *rtpp_proc_cf;
     struct rtpp_proc_ttl *rtpp_proc_ttl_cf;
-    struct rtpp_anetio_cf *rtpp_netio_cf;
     struct rtpp_tnotify_set *rtpp_tnset_cf;
     struct rtpp_notify *rtpp_notify_cf;
+    struct rtpp_bindaddrs *bindaddrs_cf;
     int slowshutdown;
     int fastshutdown;
 

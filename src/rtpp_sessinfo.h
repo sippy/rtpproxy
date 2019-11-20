@@ -32,7 +32,7 @@ struct rtpp_sessinfo;
 struct rtpp_socket;
 struct rtpp_polltbl;
 struct rtpp_weakref_obj;
-struct rtpp_cfg_stable;
+struct rtpp_cfg;
 
 DEFINE_METHOD(rtpp_sessinfo, rtpp_si_append, int, struct rtpp_session *,
   int, struct rtpp_socket **);
@@ -67,6 +67,6 @@ struct rtpp_sessinfo {
     METHOD_ENTRY(rtpp_si_sync_polltbl, sync_polltbl);
 };
 
-struct rtpp_sessinfo *rtpp_sessinfo_ctor(struct rtpp_cfg_stable *);
+struct rtpp_sessinfo *rtpp_sessinfo_ctor(const struct rtpp_cfg *);
 
 void rtpp_polltbl_free(struct rtpp_polltbl *);

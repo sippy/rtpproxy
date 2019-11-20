@@ -44,7 +44,7 @@
 #endif
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_util.h"
 #include "rtpp_types.h"
@@ -71,25 +71,25 @@ seedrandom(void)
 }
 
 int
-set_rlimits(struct cfg *cf)
+set_rlimits(const struct rtpp_cfg *cfsp)
 {
     struct rlimit rlp;
 
     if (getrlimit(RLIMIT_CORE, &rlp) < 0) {
-        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "getrlimit(RLIMIT_CORE)");
+        RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "getrlimit(RLIMIT_CORE)");
         return (-1);
     }
     rlp.rlim_cur = RLIM_INFINITY;
     rlp.rlim_max = RLIM_INFINITY;
     if (setrlimit(RLIMIT_CORE, &rlp) < 0) {
-        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "setrlimit(RLIMIT_CORE)");
+        RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "setrlimit(RLIMIT_CORE)");
         return (-1);
     }
     return (0);
 }
 
 int
-drop_privileges(const struct rtpp_cfg_stable *cfsp)
+drop_privileges(const struct rtpp_cfg *cfsp)
 {
 
     if (cfsp->runcreds->gname != NULL) {

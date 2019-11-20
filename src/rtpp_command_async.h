@@ -44,6 +44,6 @@ struct rtpp_cmd_async {
     rtpp_cmd_chk_overload_t chk_overload;
 };
 
-struct rtpp_cmd_async *rtpp_command_async_ctor(struct cfg *);
+struct rtpp_cmd_async *rtpp_command_async_ctor(struct rtpp_cfg *);
 
 #endif

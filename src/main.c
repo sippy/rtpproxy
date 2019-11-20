@@ -44,6 +44,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <pwd.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -74,7 +75,7 @@
 #include "rtpp_cfile.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_controlfd.h"
@@ -104,6 +105,7 @@
 #include "rtpp_weakref.h"
 #include "rtpp_debug.h"
 #include "rtpp_locking.h"
+#include "rtpp_nofile.h"
 #include "advanced/po_manager.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "libexecinfo/stacktraverse.h"
@@ -141,7 +143,7 @@ usage(void)
     exit(1);
 }
 
-static struct cfg *_sig_cf;
+static struct rtpp_cfg *_sig_cf;
 
 static void rtpp_exit(int, int) __attribute__ ((noreturn));
 
@@ -163,7 +165,7 @@ static void
 rtpp_glog_fin(void)
 {
 
-    CALL_SMETHOD(_sig_cf->stable->glog->rcnt, decref);
+    CALL_SMETHOD(_sig_cf->glog->rcnt, decref);
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_FIN(rtpproxy);
 #ifdef RTPP_MEMDEB_STDOUT
@@ -176,9 +178,9 @@ static void
 fatsignal(int sig)
 {
 
-    RTPP_LOG(_sig_cf->stable->glog, RTPP_LOG_INFO, "got signal %d", sig);
-    if (_sig_cf->stable->fastshutdown == 0) {
-        _sig_cf->stable->fastshutdown = 1;
+    RTPP_LOG(_sig_cf->glog, RTPP_LOG_INFO, "got signal %d", sig);
+    if (_sig_cf->fastshutdown == 0) {
+        _sig_cf->fastshutdown = 1;
         return;
     }
     /*
@@ -192,11 +194,11 @@ static void
 sighup(int sig)
 {
 
-    if (_sig_cf->stable->slowshutdown == 0) {
-        RTPP_LOG(_sig_cf->stable->glog, RTPP_LOG_INFO,
+    if (_sig_cf->slowshutdown == 0) {
+        RTPP_LOG(_sig_cf->glog, RTPP_LOG_INFO,
           "got SIGHUP, initiating deorbiting-burn sequence");
     }
-    _sig_cf->stable->slowshutdown = 1;
+    _sig_cf->slowshutdown = 1;
 }
 
 static void
@@ -207,15 +209,15 @@ ehandler(void)
     rtpp_stacktrace_print("Exiting from: ehandler()");
 #endif
     rtpp_controlfd_cleanup(_sig_cf);
-    unlink(_sig_cf->stable->pid_file);
-    RTPP_LOG(_sig_cf->stable->glog, RTPP_LOG_INFO, "rtpproxy ended");
+    unlink(_sig_cf->pid_file);
+    RTPP_LOG(_sig_cf->glog, RTPP_LOG_INFO, "rtpproxy ended");
 }
 
 long long
-rtpp_rlim_max(struct cfg *cf)
+rtpp_rlim_max(const struct rtpp_cfg *cfsp)
 {
 
-    return (long long)(cf->stable->nofile_limit->rlim_max);
+    return (long long)(cfsp->nofile->limit->rlim_max);
 }
 
 #define LOPT_DSO      256
@@ -234,7 +236,7 @@ const static struct option longopts[] = {
 };
 
 static void
-init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int memdeb)
+init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
 {
     struct rtpp_module_if *mif, *tmp;
     struct rtpp_ctrl_sock *ctrl_sock, *ctrl_sock_next;
@@ -244,7 +246,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
     }
     free(cfsp->locks);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
-    free(cfsp->nofile_limit);
+    CALL_METHOD(cfsp->nofile, dtor);
 
     for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = ctrl_sock_next) {
@@ -266,7 +268,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
 }
 
 static void
-init_config(struct cfg *cf, int argc, char **argv)
+init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 {
     int ch, i, umode, stdio_mode;
     char *bh[2], *bh6[2], *cp, *tp[2];
@@ -284,50 +286,51 @@ init_config(struct cfg *cf, int argc, char **argv)
 
     umode = stdio_mode = 0;
 
-    cf->stable->pid_file = PID_FILE;
+    cfsp->pid_file = PID_FILE;
 
-    cf->stable->port_min = PORT_MIN;
-    cf->stable->port_max = PORT_MAX;
-    cf->stable->port_ctl = 0;
+    cfsp->port_min = PORT_MIN;
+    cfsp->port_max = PORT_MAX;
+    cfsp->port_ctl = 0;
 
-    cf->stable->advaddr[0] = NULL;
-    cf->stable->advaddr[1] = NULL;
+    cfsp->advaddr[0] = NULL;
+    cfsp->advaddr[1] = NULL;
 
-    cf->stable->max_ttl = SESSION_TIMEOUT;
-    cf->stable->tos = TOS;
-    cf->stable->rrtcp = 1;
-    cf->stable->runcreds->sock_mode = 0;
-    cf->stable->ttl_mode = TTL_UNIFIED;
-    cf->stable->log_level = -1;
-    cf->stable->log_facility = -1;
-    cf->stable->sched_offset = 0.0;
-    cf->stable->sched_hz = rtpp_get_sched_hz();
-    cf->stable->sched_policy = SCHED_OTHER;
-    cf->stable->sched_nice = PRIO_UNSET;
-    cf->stable->target_pfreq = MIN(POLL_RATE, cf->stable->sched_hz);
+    cfsp->max_ttl = SESSION_TIMEOUT;
+    cfsp->tos = TOS;
+    cfsp->rrtcp = 1;
+    cfsp->runcreds->sock_mode = 0;
+    cfsp->ttl_mode = TTL_UNIFIED;
+    cfsp->log_level = -1;
+    cfsp->log_facility = -1;
+    cfsp->sched_offset = 0.0;
+    cfsp->sched_hz = rtpp_get_sched_hz();
+    cfsp->sched_policy = SCHED_OTHER;
+    cfsp->sched_nice = PRIO_UNSET;
+    cfsp->target_pfreq = MIN(POLL_RATE, cfsp->sched_hz);
 #if RTPP_DEBUG
-    fprintf(stderr, "target_pfreq = %f\n", cf->stable->target_pfreq);
+    fprintf(stderr, "target_pfreq = %f\n", cfsp->target_pfreq);
 #endif
-    cf->stable->slowshutdown = 0;
-    cf->stable->fastshutdown = 0;
+    cfsp->slowshutdown = 0;
+    cfsp->fastshutdown = 0;
 
-    cf->stable->rtpp_tnset_cf = rtpp_tnotify_set_ctor();
-    if (cf->stable->rtpp_tnset_cf == NULL) {
+    cfsp->rtpp_tnset_cf = rtpp_tnotify_set_ctor();
+    if (cfsp->rtpp_tnset_cf == NULL) {
         err(1, "rtpp_tnotify_set_ctor");
     }
 
-    cf->stable->locks = malloc(sizeof(*cf->stable->locks));
-    if (cf->stable->locks == NULL) {
-        err(1, "malloc(stable->locks)");
+    cfsp->locks = malloc(sizeof(*cfsp->locks));
+    if (cfsp->locks == NULL) {
+        err(1, "malloc(rtpp_cfg->locks)");
     }
-    pthread_mutex_init(&(cf->stable->locks->glob), NULL);
-    pthread_mutex_init(&cf->bindaddr_lock, NULL);
+    pthread_mutex_init(&(cfsp->locks->glob), NULL);
+    cfsp->bindaddrs_cf = rtpp_bindaddrs_ctor();
+    if (cfsp->bindaddrs_cf == NULL) {
+        err(1, "malloc(rtpp_cfg->bindaddrs_cf)");
+    }
 
-    cf->stable->nofile_limit = malloc(sizeof(*cf->stable->nofile_limit));
-    if (cf->stable->nofile_limit == NULL)
-        err(1, "malloc");
-    if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
-	err(1, "getrlimit");
+    cfsp->nofile = rtpp_nofile_ctor();
+    if (cfsp->nofile == NULL)
+        err(1, "malloc(rtpp_cfg->nofile)");
 
     option_index = -1;
     brsym = 0;
@@ -335,7 +338,7 @@ init_config(struct cfg *cf, int argc, char **argv)
       "VN:c:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
         case LOPT_DSO:
-            if (!RTPP_LIST_IS_EMPTY(cf->stable->modules_cf)) {
+            if (!RTPP_LIST_IS_EMPTY(cfsp->modules_cf)) {
                  errx(1, "this version of the rtpproxy only supports loading a "
                    "single module");
             }
@@ -347,12 +350,12 @@ init_config(struct cfg *cf, int argc, char **argv)
             if (mif == NULL) {
                 err(1, "%s: dymanic module constructor has failed", cp);
             }
-            if (CALL_METHOD(mif, load, cf->stable, cf->stable->glog) != 0) {
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR,
+            if (CALL_METHOD(mif, load, cfsp, cfsp->glog) != 0) {
+                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
                   "%p: dymanic module load has failed", mif);
                 exit(1);
             }
-            rtpp_list_append(cf->stable->modules_cf, mif);
+            rtpp_list_append(cfsp->modules_cf, mif);
             break;
 
         case LOPT_BRSYM:
@@ -360,31 +363,31 @@ init_config(struct cfg *cf, int argc, char **argv)
             break;
 
         case LOPT_NICE:
-            if (atoi_safe(optarg, &cf->stable->sched_nice))
+            if (atoi_safe(optarg, &cfsp->sched_nice))
                 errx(1, "%s: nice level argument is invalid", optarg);
-            if (cf->stable->sched_nice > PRIO_MAX || cf->stable->sched_nice < PRIO_MIN) {
+            if (cfsp->sched_nice > PRIO_MAX || cfsp->sched_nice < PRIO_MIN) {
                 errx(1, "%d: nice level is out of range %d..%d",
-                  cf->stable->sched_nice, PRIO_MIN, PRIO_MAX);
+                  cfsp->sched_nice, PRIO_MIN, PRIO_MAX);
             }
             break;
 
         case LOPT_OVL_PROT:
-            cf->stable->overload_prot.low_trs = 0.85;
-            cf->stable->overload_prot.high_trs = 0.90;
-            cf->stable->overload_prot.ecode = ECODE_OVERLOAD;
+            cfsp->overload_prot.low_trs = 0.85;
+            cfsp->overload_prot.high_trs = 0.90;
+            cfsp->overload_prot.ecode = ECODE_OVERLOAD;
             break;
 
         case LOPT_CONFIG:
-            cf->stable->cfile = optarg;
+            cfsp->cfile = optarg;
             break;
 
         case 'c':
             if (strcmp(optarg, "fifo") == 0) {
-                 cf->stable->sched_policy = SCHED_FIFO;
+                 cfsp->sched_policy = SCHED_FIFO;
                  break;
             }
             if (strcmp(optarg, "rr") == 0) {
-                 cf->stable->sched_policy = SCHED_RR;
+                 cfsp->sched_policy = SCHED_RR;
                  break;
             }
             errx(1, "%s: unknown scheduling policy", optarg);
@@ -394,7 +397,7 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    if (strcmp(optarg, "random") == 0) {
                 x = getdtime() * 1000000.0;
                 srand48((long)x);
-                cf->stable->sched_offset = drand48();
+                cfsp->sched_offset = drand48();
             } else {
                 tp[0] = optarg;
                 tp[1] = strchr(tp[0], '/');
@@ -405,16 +408,16 @@ init_config(struct cfg *cf, int argc, char **argv)
                 tp[1]++;
                 x = (double)strtol(tp[0], &tp[0], 10);
                 y = (double)strtol(tp[1], &tp[1], 10);
-                cf->stable->sched_offset = x / y;
+                cfsp->sched_offset = x / y;
             }
-            x = (double)cf->stable->sched_hz / cf->stable->target_pfreq;
-            cf->stable->sched_offset = trunc(x * cf->stable->sched_offset) / x;
-            cf->stable->sched_offset /= cf->stable->target_pfreq;
-            warnx("sched_offset = %f",  cf->stable->sched_offset);
+            x = (double)cfsp->sched_hz / cfsp->target_pfreq;
+            cfsp->sched_offset = trunc(x * cfsp->sched_offset) / x;
+            cfsp->sched_offset /= cfsp->target_pfreq;
+            warnx("sched_offset = %f",  cfsp->sched_offset);
             break;
 
 	case 'f':
-	    cf->stable->nodaemon = 1;
+	    cfsp->nodaemon = 1;
 	    break;
 
 	case 'l':
@@ -423,12 +426,12 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    if (bh[1] != NULL) {
 		*bh[1] = '\0';
 		bh[1]++;
-		cf->stable->bmode = 1;
+		cfsp->bmode = 1;
 		/*
 		 * Historically, in bridge mode all clients are assumed to
 		 * be asymmetric
 		 */
-		cf->stable->aforce = 1;
+		cfsp->aforce = 1;
 	    }
 	    break;
 
@@ -438,8 +441,8 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    if (bh6[1] != NULL) {
 		*bh6[1] = '\0';
 		bh6[1]++;
-		cf->stable->bmode = 1;
-		cf->stable->aforce = 1;
+		cfsp->bmode = 1;
+		cfsp->aforce = 1;
 	    }
 	    break;
 
@@ -447,7 +450,7 @@ init_config(struct cfg *cf, int argc, char **argv)
         if (*optarg == '\0') {
             errx(1, "first advertised address is invalid");
         }
-        cf->stable->advaddr[0] = optarg;
+        cfsp->advaddr[0] = optarg;
         cp = strchr(optarg, '/');
         if (cp != NULL) {
             *cp = '\0';
@@ -456,7 +459,7 @@ init_config(struct cfg *cf, int argc, char **argv)
                 errx(1, "second advertised address is invalid");
             }
         }
-        cf->stable->advaddr[1] = cp;
+        cfsp->advaddr[1] = cp;
         break;
 
 	case 's':
@@ -464,7 +467,7 @@ init_config(struct cfg *cf, int argc, char **argv)
             if (ctrl_sock == NULL) {
                 errx(1, "can't parse control socket argument");
             }
-            rtpp_list_append(cf->stable->ctrl_socks, ctrl_sock);
+            rtpp_list_append(cfsp->ctrl_socks, ctrl_sock);
             if (RTPP_CTRL_ISDG(ctrl_sock)) {
                 umode = 1;
             } else if (ctrl_sock->type == RTPC_STDIO) {
@@ -473,14 +476,14 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    break;
 
 	case 't':
-            if (atoi_safe(optarg, &cf->stable->tos))
+            if (atoi_safe(optarg, &cfsp->tos))
                 errx(1, "%s: TOS argument is invalid", optarg);
-	    if (cf->stable->tos > 255)
-		errx(1, "%d: TOS is too large", cf->stable->tos);
+	    if (cfsp->tos > 255)
+		errx(1, "%d: TOS is too large", cfsp->tos);
 	    break;
 
 	case '2':
-	    cf->stable->dmode = 1;
+	    cfsp->dmode = 1;
 	    break;
 
 	case 'v':
@@ -488,27 +491,27 @@ init_config(struct cfg *cf, int argc, char **argv)
 	    for (pcp = iterate_proto_caps(NULL); pcp != NULL; pcp = iterate_proto_caps(pcp)) {
 		printf("Extension %s: %s\n", pcp->pc_id, pcp->pc_description);
 	    }
-	    init_config_bail(cf->stable, 0, NULL, 0);
+	    init_config_bail(cfsp, 0, NULL, 0);
 	    break;
 
 	case 'r':
-	    cf->stable->rdir = optarg;
+	    cfsp->rdir = optarg;
 	    break;
 
 	case 'S':
-	    cf->stable->sdir = optarg;
+	    cfsp->sdir = optarg;
 	    break;
 
 	case 'R':
-	    cf->stable->rrtcp = 0;
+	    cfsp->rrtcp = 0;
 	    break;
 
 	case 'p':
-	    cf->stable->pid_file = optarg;
+	    cfsp->pid_file = optarg;
 	    break;
 
 	case 'T':
-	    if (atoi_safe(optarg, &cf->stable->max_ttl))
+	    if (atoi_safe(optarg, &cfsp->max_ttl))
                 errx(1, "%s: max TTL argument is invalid", optarg);
 	    break;
 
@@ -517,56 +520,56 @@ init_config(struct cfg *cf, int argc, char **argv)
 
             if (atoi_safe(optarg, &rlim_max_opt))
                 errx(1, "%s: max file rlimit argument is invalid", optarg);
-	    cf->stable->nofile_limit->rlim_cur = rlim_max_opt;
-	    cf->stable->nofile_limit->rlim_max = rlim_max_opt;
-	    if (setrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
+	    cfsp->nofile->limit->rlim_cur = rlim_max_opt;
+	    cfsp->nofile->limit->rlim_max = rlim_max_opt;
+	    if (setrlimit(RLIMIT_NOFILE, cfsp->nofile->limit) != 0)
 		err(1, "setrlimit");
-	    if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
+	    if (getrlimit(RLIMIT_NOFILE, cfsp->nofile->limit) != 0)
 		err(1, "getrlimit");
-	    if (cf->stable->nofile_limit->rlim_max < rlim_max_opt)
+	    if (cfsp->nofile->limit->rlim_max < rlim_max_opt)
 		warnx("limit allocated by setrlimit (%d) is less than "
-		  "requested (%d)", (int) cf->stable->nofile_limit->rlim_max,
+		  "requested (%d)", (int) cfsp->nofile->limit->rlim_max,
 		  rlim_max_opt);
 	    break;
             }
 
 	case 'm':
-	    if (atoi_safe(optarg, &cf->stable->port_min))
+	    if (atoi_safe(optarg, &cfsp->port_min))
                 errx(1, "%s: min port argument is invalid", optarg);
 	    break;
 
 	case 'M':
-	    if (atoi_safe(optarg, &cf->stable->port_max))
+	    if (atoi_safe(optarg, &cfsp->port_max))
                 errx(1, "%s: max port argument is invalid", optarg);
 	    break;
 
 	case 'u':
-	    cf->stable->runcreds->uname = optarg;
+	    cfsp->runcreds->uname = optarg;
 	    cp = strchr(optarg, ':');
 	    if (cp != NULL) {
 		if (cp == optarg)
-		    cf->stable->runcreds->uname = NULL;
+		    cfsp->runcreds->uname = NULL;
 		cp[0] = '\0';
 		cp++;
 	    }
-	    cf->stable->runcreds->gname = cp;
-	    cf->stable->runcreds->uid = -1;
-	    cf->stable->runcreds->gid = -1;
-	    if (cf->stable->runcreds->uname != NULL) {
-		pp = getpwnam(cf->stable->runcreds->uname);
+	    cfsp->runcreds->gname = cp;
+	    cfsp->runcreds->uid = -1;
+	    cfsp->runcreds->gid = -1;
+	    if (cfsp->runcreds->uname != NULL) {
+		pp = getpwnam(cfsp->runcreds->uname);
 		if (pp == NULL)
-		    errx(1, "can't find ID for the user: %s", cf->stable->runcreds->uname);
-		cf->stable->runcreds->uid = pp->pw_uid;
-		if (cf->stable->runcreds->gname == NULL)
-		    cf->stable->runcreds->gid = pp->pw_gid;
+		    errx(1, "can't find ID for the user: %s", cfsp->runcreds->uname);
+		cfsp->runcreds->uid = pp->pw_uid;
+		if (cfsp->runcreds->gname == NULL)
+		    cfsp->runcreds->gid = pp->pw_gid;
 	    }
-	    if (cf->stable->runcreds->gname != NULL) {
-		gp = getgrnam(cf->stable->runcreds->gname);
+	    if (cfsp->runcreds->gname != NULL) {
+		gp = getgrnam(cfsp->runcreds->gname);
 		if (gp == NULL)
-		    errx(1, "can't find ID for the group: %s", cf->stable->runcreds->gname);
-		cf->stable->runcreds->gid = gp->gr_gid;
-                if (cf->stable->runcreds->sock_mode == 0) {
-                    cf->stable->runcreds->sock_mode = 0755;
+		    errx(1, "can't find ID for the group: %s", cfsp->runcreds->gname);
+		cfsp->runcreds->gid = gp->gr_gid;
+                if (cfsp->runcreds->sock_mode == 0) {
+                    cfsp->runcreds->sock_mode = 0755;
                 }
 	    }
 	    break;
@@ -576,70 +579,70 @@ init_config(struct cfg *cf, int argc, char **argv)
 
 	    if (atoi_safe(optarg, &sock_mode))
                 errx(1, "%s: socket mode argument is invalid", optarg);
-            cf->stable->runcreds->sock_mode = sock_mode;
+            cfsp->runcreds->sock_mode = sock_mode;
 	    break;
             }
 
 	case 'F':
-	    cf->stable->no_check = 1;
+	    cfsp->no_check = 1;
 	    break;
 
 	case 'i':
-	    cf->stable->ttl_mode = TTL_INDEPENDENT;
+	    cfsp->ttl_mode = TTL_INDEPENDENT;
 	    break;
 
 	case 'n':
 	    if(strlen(optarg) == 0)
 		errx(1, "timeout notification socket name too short");
-            if (CALL_METHOD(cf->stable->rtpp_tnset_cf, append, optarg,
+            if (CALL_METHOD(cfsp->rtpp_tnset_cf, append, optarg,
               &errmsg) != 0) {
                 errx(1, "error adding timeout notification: %s", errmsg);
             }
 	    break;
 
 	case 'P':
-	    cf->stable->record_pcap = 1;
+	    cfsp->record_pcap = 1;
 	    break;
 
 	case 'a':
-	    cf->stable->record_all = 1;
+	    cfsp->record_all = 1;
 	    break;
 
 	case 'd':
 	    cp = strchr(optarg, ':');
 	    if (cp != NULL) {
-		cf->stable->log_facility = rtpp_log_str2fac(cp + 1);
-		if (cf->stable->log_facility == -1)
+		cfsp->log_facility = rtpp_log_str2fac(cp + 1);
+		if (cfsp->log_facility == -1)
 		    errx(1, "%s: invalid log facility", cp + 1);
 		*cp = '\0';
 	    }
-	    cf->stable->log_level = rtpp_log_str2lvl(optarg);
-	    if (cf->stable->log_level == -1)
+	    cfsp->log_level = rtpp_log_str2lvl(optarg);
+	    if (cfsp->log_level == -1)
 		errx(1, "%s: invalid log level", optarg);
-            CALL_METHOD(cf->stable->glog, setlevel, cf->stable->log_level);
+            CALL_METHOD(cfsp->glog, setlevel, cfsp->log_level);
 	    break;
 
 	case 'V':
 	    printf("%s\n", RTPP_SW_VERSION);
-	    init_config_bail(cf->stable, 0, NULL, 0);
+	    init_config_bail(cfsp, 0, NULL, 0);
 	    break;
 
         case 'W':
-            if (atoi_safe(optarg, &cf->stable->max_setup_ttl))
+            if (atoi_safe(optarg, &cfsp->max_setup_ttl))
                 errx(1, "%s: max setup TTL argument is invalid", optarg);
             break;
 
         case 'b':
-            cf->stable->seq_ports = 1;
+            cfsp->seq_ports = 1;
             break;
 
         case 'D':
-	    cf->stable->no_chdir = 1;
+	    cfsp->no_chdir = 1;
 	    break;
 
         case 'C':
 	    printf("%s\n", get_mclock_name());
-	    init_config_bail(cf->stable, 0, NULL, 0);
+	    init_config_bail(cfsp, 0, NULL, 0);
 	    break;
 
 	case '?':
@@ -654,36 +657,36 @@ init_config(struct cfg *cf, int argc, char **argv)
        usage();
     }
 
-    if (cf->stable->cfile != NULL) {
-        if (rtpp_cfile_process(cf->stable) < 0) {
-            init_config_bail(cf->stable, 1, "rtpp_cfile_process() failed", 1);
+    if (cfsp->cfile != NULL) {
+        if (rtpp_cfile_process(cfsp) < 0) {
+            init_config_bail(cfsp, 1, "rtpp_cfile_process() failed", 1);
         }
     }
 
-    if (cf->stable->bmode != 0 && brsym != 0) {
-        cf->stable->aforce = 0;
+    if (cfsp->bmode != 0 && brsym != 0) {
+        cfsp->aforce = 0;
     }
 
-    if (cf->stable->max_setup_ttl == 0) {
-        cf->stable->max_setup_ttl = cf->stable->max_ttl;
+    if (cfsp->max_setup_ttl == 0) {
+        cfsp->max_setup_ttl = cfsp->max_ttl;
     }
 
     /* No control socket has been specified, add a default one */
-    if (RTPP_LIST_IS_EMPTY(cf->stable->ctrl_socks)) {
+    if (RTPP_LIST_IS_EMPTY(cfsp->ctrl_socks)) {
         ctrl_sock = rtpp_ctrl_sock_parse(CMD_SOCK);
         if (ctrl_sock == NULL) {
             errx(1, "can't parse control socket: \"%s\"", CMD_SOCK);
         }
-        rtpp_list_append(cf->stable->ctrl_socks, ctrl_sock);
+        rtpp_list_append(cfsp->ctrl_socks, ctrl_sock);
     }
 
-    if (cf->stable->rdir == NULL && cf->stable->sdir != NULL)
+    if (cfsp->rdir == NULL && cfsp->sdir != NULL)
 	errx(1, "-S switch requires -r switch");
 
-    if (cf->stable->nodaemon == 0 && stdio_mode != 0)
+    if (cfsp->nodaemon == 0 && stdio_mode != 0)
         errx(1, "stdio command mode requires -f switch");
 
-    if (cf->stable->no_check == 0 && getuid() == 0 && cf->stable->runcreds->uname == NULL) {
+    if (cfsp->no_check == 0 && getuid() == 0 && cfsp->runcreds->uname == NULL) {
 	if (umode != 0) {
 	    errx(1, "running this program as superuser in a remote control "
 	      "mode is strongly not recommended, as it poses serious security "
@@ -698,25 +701,25 @@ init_config(struct cfg *cf, int argc, char **argv)
     }
 
     /* make sure that port_min and port_max are even */
-    if ((cf->stable->port_min % 2) != 0)
-	cf->stable->port_min++;
-    if ((cf->stable->port_max % 2) != 0) {
-	cf->stable->port_max--;
+    if ((cfsp->port_min % 2) != 0)
+	cfsp->port_min++;
+    if ((cfsp->port_max % 2) != 0) {
+	cfsp->port_max--;
     } else {
 	/*
 	 * If port_max is already even then there is no
 	 * "room" for the RTCP port, go back by two ports.
 	 */
-	cf->stable->port_max -= 2;
+	cfsp->port_max -= 2;
     }
 
-    if (!IS_VALID_PORT(cf->stable->port_min))
+    if (!IS_VALID_PORT(cfsp->port_min))
 	errx(1, "invalid value of the port_min argument, "
 	  "not in the range 1-65535");
-    if (!IS_VALID_PORT(cf->stable->port_max))
+    if (!IS_VALID_PORT(cfsp->port_max))
 	errx(1, "invalid value of the port_max argument, "
 	  "not in the range 1-65535");
-    if (cf->stable->port_min > cf->stable->port_max)
+    if (cfsp->port_min > cfsp->port_max)
 	errx(1, "port_min should be less than port_max");
 
     if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
@@ -732,14 +735,14 @@ init_config(struct cfg *cf, int argc, char **argv)
 
     i = ((bh[0] == NULL) ? 0 : 1) + ((bh[1] == NULL) ? 0 : 1) +
       ((bh6[0] == NULL) ? 0 : 1) + ((bh6[1] == NULL) ? 0 : 1);
-    if (cf->stable->bmode != 0) {
+    if (cfsp->bmode != 0) {
 	if (bh[0] != NULL && bh6[0] != NULL)
 	    errx(1, "either IPv4 or IPv6 should be configured for external "
 	      "interface in bridging mode, not both");
 	if (bh[1] != NULL && bh6[1] != NULL)
 	    errx(1, "either IPv4 or IPv6 should be configured for internal "
 	      "interface in bridging mode, not both");
-    if (cf->stable->advaddr[0] != NULL && cf->stable->advaddr[1] == NULL)
+    if (cfsp->advaddr[0] != NULL && cfsp->advaddr[1] == NULL)
         errx(1, "two advertised addresses are required for internal "
           "and external interfaces in bridging mode");
 	if (i != 2)
@@ -750,23 +753,25 @@ init_config(struct cfg *cf, int argc, char **argv)
     }
 
     for (i = 0; i < 2; i++) {
-	cf->stable->bindaddr[i] = NULL;
+	cfsp->bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
-	    cf->stable->bindaddr[i] = host2bindaddr(cf, bh[i], AF_INET, &errmsg);
-	    if (cf->stable->bindaddr[i] == NULL)
+	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
+              host2, bh[i], AF_INET, &errmsg);
+	    if (cfsp->bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
-	    cf->stable->bindaddr[i] = host2bindaddr(cf, bh6[i], AF_INET6, &errmsg);
-	    if (cf->stable->bindaddr[i] == NULL)
+	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
+              host2, bh6[i], AF_INET6, &errmsg);
+	    if (cfsp->bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
     }
-    if (cf->stable->bindaddr[0] == NULL) {
-	cf->stable->bindaddr[0] = cf->stable->bindaddr[1];
-	cf->stable->bindaddr[1] = NULL;
+    if (cfsp->bindaddr[0] == NULL) {
+	cfsp->bindaddr[0] = cfsp->bindaddr[1];
+	cfsp->bindaddr[1] = NULL;
     }
 }
 
@@ -785,7 +790,7 @@ main(int argc, char **argv)
 {
     int i, len;
     long long ncycles_ref, counter;
-    struct cfg cf;
+    struct rtpp_cfg cfs;
     char buf[256];
     struct sched_param sparam;
     void *elp;
@@ -811,27 +816,22 @@ main(int argc, char **argv)
     rtpp_memdeb_approve(MEMDEB_SYM, "addr2bindaddr", 100, "Too busy to fix now");
 #endif
 
-    memset(&cf, 0, sizeof(cf));
+    memset(&cfs, 0, sizeof(cfs));
 
-    cf.stable = rtpp_zmalloc(sizeof(struct rtpp_cfg_stable));
-    if (cf.stable == NULL) {
-         err(1, "can't allocate memory for the struct rtpp_cfg_stable");
-         /* NOTREACHED */
-    }
-    cf.stable->ctrl_socks = rtpp_zmalloc(sizeof(struct rtpp_list));
-    if (cf.stable->ctrl_socks == NULL) {
+    cfs.ctrl_socks = rtpp_zmalloc(sizeof(struct rtpp_list));
+    if (cfs.ctrl_socks == NULL) {
          err(1, "can't allocate memory for the struct ctrl_socks");
          /* NOTREACHED */
     }
 
-    cf.stable->modules_cf = rtpp_zmalloc(sizeof(struct rtpp_list));
-    if (cf.stable->modules_cf == NULL) {
+    cfs.modules_cf = rtpp_zmalloc(sizeof(struct rtpp_list));
+    if (cfs.modules_cf == NULL) {
          err(1, "can't allocate memory for the struct modules_cf");
          /* NOTREACHED */
     }
 
-    cf.stable->runcreds = rtpp_zmalloc(sizeof(struct rtpp_runcreds));
-    if (cf.stable->runcreds == NULL) {
+    cfs.runcreds = rtpp_zmalloc(sizeof(struct rtpp_runcreds));
+    if (cfs.runcreds == NULL) {
          err(1, "can't allocate memory for the struct runcreds");
          /* NOTREACHED */
     }
@@ -842,83 +842,83 @@ main(int argc, char **argv)
         /* NOTREACHED */
     }
 
-    cf.stable->glog = rtpp_log_ctor("rtpproxy", NULL, LF_REOPEN);
-    if (cf.stable->glog == NULL) {
+    cfs.glog = rtpp_log_ctor("rtpproxy", NULL, LF_REOPEN);
+    if (cfs.glog == NULL) {
         err(1, "can't initialize logging subsystem");
         /* NOTREACHED */
     }
  #ifdef RTPP_CHECK_LEAKS
-    rtpp_memdeb_setlog(MEMDEB_SYM, cf.stable->glog);
+    rtpp_memdeb_setlog(MEMDEB_SYM, cfs.glog);
  #endif
 
-    _sig_cf = &cf;
+    _sig_cf = &cfs;
     atexit(rtpp_glog_fin);
 
-    init_config(&cf, argc, argv);
+    init_config(&cfs, argc, argv);
 
-    cf.stable->sessions_ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, 0);
-    if (cf.stable->sessions_ht == NULL) {
+    cfs.sessions_ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, 0);
+    if (cfs.sessions_ht == NULL) {
         err(1, "can't allocate memory for the hash table");
          /* NOTREACHED */
     }
-    cf.stable->sessions_wrt = rtpp_weakref_ctor();
-    if (cf.stable->sessions_wrt == NULL) {
+    cfs.sessions_wrt = rtpp_weakref_ctor();
+    if (cfs.sessions_wrt == NULL) {
         err(1, "can't allocate memory for the sessions weakref table");
          /* NOTREACHED */
     }
-    cf.stable->rtp_streams_wrt = rtpp_weakref_ctor();
-    if (cf.stable->rtp_streams_wrt == NULL) {
+    cfs.rtp_streams_wrt = rtpp_weakref_ctor();
+    if (cfs.rtp_streams_wrt == NULL) {
         err(1, "can't allocate memory for the RTP streams weakref table");
          /* NOTREACHED */
     }
-    cf.stable->rtcp_streams_wrt = rtpp_weakref_ctor();
-    if (cf.stable->rtcp_streams_wrt == NULL) {
+    cfs.rtcp_streams_wrt = rtpp_weakref_ctor();
+    if (cfs.rtcp_streams_wrt == NULL) {
         err(1, "can't allocate memory for the RTCP streams weakref table");
          /* NOTREACHED */
     }
-    cf.stable->servers_wrt = rtpp_weakref_ctor();
-    if (cf.stable->servers_wrt == NULL) {
+    cfs.servers_wrt = rtpp_weakref_ctor();
+    if (cfs.servers_wrt == NULL) {
         err(1, "can't allocate memory for the servers weakref table");
          /* NOTREACHED */
     }
-    cf.stable->sessinfo = rtpp_sessinfo_ctor(cf.stable);
-    if (cf.stable->sessinfo == NULL) {
+    cfs.sessinfo = rtpp_sessinfo_ctor(&cfs);
+    if (cfs.sessinfo == NULL) {
         errx(1, "cannot construct rtpp_sessinfo structure");
     }
 
-    cf.stable->rtpp_stats = rtpp_stats_ctor();
-    if (cf.stable->rtpp_stats == NULL) {
+    cfs.rtpp_stats = rtpp_stats_ctor();
+    if (cfs.rtpp_stats == NULL) {
         err(1, "can't allocate memory for the stats data");
          /* NOTREACHED */
     }
 
     for (i = 0; i <= RTPP_PT_MAX; i++) {
-        cf.stable->port_table[i] = rtpp_port_table_ctor(cf.stable->port_min,
-          cf.stable->port_max, cf.stable->seq_ports, cf.stable->port_ctl);
-        if (cf.stable->port_table[i] == NULL) {
+        cfs.port_table[i] = rtpp_port_table_ctor(cfs.port_min,
+          cfs.port_max, cfs.seq_ports, cfs.port_ctl);
+        if (cfs.port_table[i] == NULL) {
             err(1, "can't allocate memory for the ports data");
             /* NOTREACHED */
         }
     }
 
-    if (rtpp_controlfd_init(&cf) != 0) {
+    if (rtpp_controlfd_init(&cfs) != 0) {
         err(1, "can't initialize control socket%s",
-          cf.stable->ctrl_socks->len > 1 ? "s" : "");
+          cfs.ctrl_socks->len > 1 ? "s" : "");
     }
 
-    if (cf.stable->nodaemon == 0) {
-        if (cf.stable->no_chdir == 0) {
-            cf.stable->cwd_orig = getcwd(NULL, 0);
-            if (cf.stable->cwd_orig == NULL) {
+    if (cfs.nodaemon == 0) {
+        if (cfs.no_chdir == 0) {
+            cfs.cwd_orig = getcwd(NULL, 0);
+            if (cfs.cwd_orig == NULL) {
                 err(1, "getcwd");
             }
         }
-	if (rtpp_daemon(cf.stable->no_chdir, 0) == -1)
+	if (rtpp_daemon(cfs.no_chdir, 0) == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
     }
 
-    if (CALL_METHOD(cf.stable->glog, start, cf.stable) != 0) {
+    if (CALL_METHOD(cfs.glog, start, &cfs) != 0) {
         /* We cannot possibly function with broken logs, bail out */
         syslog(LOG_CRIT, "rtpproxy pid %d has failed to initialize logging"
             " facilities: crash", getpid());
@@ -926,106 +926,106 @@ main(int argc, char **argv)
     }
 
     atexit(ehandler);
-    RTPP_LOG(cf.stable->glog, RTPP_LOG_INFO, "rtpproxy started, pid %d", getpid());
+    RTPP_LOG(cfs.glog, RTPP_LOG_INFO, "rtpproxy started, pid %d", getpid());
 
 #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setbaseln(MEMDEB_SYM);
 #endif
 
-    i = open(cf.stable->pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
+    i = open(cfs.pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (i >= 0) {
 	len = sprintf(buf, "%u\n", (unsigned int)getpid());
 	write(i, buf, len);
 	close(i);
     } else {
-	RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR, "can't open pidfile for writing");
+	RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't open pidfile for writing");
     }
 
-    if (cf.stable->sched_policy != SCHED_OTHER) {
-        sparam.sched_priority = sched_get_priority_max(cf.stable->sched_policy);
-        if (sched_setscheduler(0, cf.stable->sched_policy, &sparam) == -1) {
-            RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR, "sched_setscheduler(SCHED_%s, %d)",
-              (cf.stable->sched_policy == SCHED_FIFO) ? "FIFO" : "RR", sparam.sched_priority);
+    if (cfs.sched_policy != SCHED_OTHER) {
+        sparam.sched_priority = sched_get_priority_max(cfs.sched_policy);
+        if (sched_setscheduler(0, cfs.sched_policy, &sparam) == -1) {
+            RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "sched_setscheduler(SCHED_%s, %d)",
+              (cfs.sched_policy == SCHED_FIFO) ? "FIFO" : "RR", sparam.sched_priority);
         }
     }
-    if (cf.stable->sched_nice != PRIO_UNSET) {
-        if (setpriority(PRIO_PROCESS, 0, cf.stable->sched_nice) == -1) {
-            RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR, "can't set scheduling "
-              "priority to %d", cf.stable->sched_nice);
+    if (cfs.sched_nice != PRIO_UNSET) {
+        if (setpriority(PRIO_PROCESS, 0, cfs.sched_nice) == -1) {
+            RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't set scheduling "
+              "priority to %d", cfs.sched_nice);
             exit(1);
         }
     }
 
-    if (cf.stable->runcreds->uname != NULL || cf.stable->runcreds->gname != NULL) {
-	if (drop_privileges(cf.stable) != 0) {
-	    RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
+    if (cfs.runcreds->uname != NULL || cfs.runcreds->gname != NULL) {
+	if (drop_privileges(&cfs) != 0) {
+	    RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
 	      "can't switch to requested user/group");
 	    exit(1);
 	}
     }
-    set_rlimits(&cf);
+    set_rlimits(&cfs);
 
-    cf.stable->rtpp_proc_cf = rtpp_proc_async_ctor(&cf);
-    if (cf.stable->rtpp_proc_cf == NULL) {
-        RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
+    cfs.rtpp_proc_cf = rtpp_proc_async_ctor(&cfs);
+    if (cfs.rtpp_proc_cf == NULL) {
+        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
           "can't init RTP processing subsystem");
         exit(1);
     }
 
-    cf.stable->rtpp_proc_ttl_cf = rtpp_proc_ttl_ctor(cf.stable);
-    if (cf.stable->rtpp_proc_ttl_cf == NULL) {
-        RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
+    cfs.rtpp_proc_ttl_cf = rtpp_proc_ttl_ctor(&cfs);
+    if (cfs.rtpp_proc_ttl_cf == NULL) {
+        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
           "can't init TTL processing subsystem");
         exit(1);
     }
 
     counter = 0;
 
-    cf.stable->rtpp_timed_cf = rtpp_timed_ctor(0.1);
-    if (cf.stable->rtpp_timed_cf == NULL) {
-        RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
+    cfs.rtpp_timed_cf = rtpp_timed_ctor(0.1);
+    if (cfs.rtpp_timed_cf == NULL) {
+        RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
           "can't init scheduling subsystem");
         exit(1);
     }
 
-    tp = CALL_SMETHOD(cf.stable->rtpp_timed_cf, schedule_rc, 1.0,
-      cf.stable->rtpp_stats->rcnt, update_derived_stats, NULL,
-      cf.stable->rtpp_stats);
+    tp = CALL_SMETHOD(cfs.rtpp_timed_cf, schedule_rc, 1.0,
+      cfs.rtpp_stats->rcnt, update_derived_stats, NULL,
+      cfs.rtpp_stats);
     if (tp == NULL) {
-        RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
+        RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
           "can't schedule notification to derive stats");
         exit(1);
     }
     CALL_SMETHOD(tp->rcnt, decref);
 
-    cf.stable->rtpp_notify_cf = rtpp_notify_ctor(cf.stable->glog);
-    if (cf.stable->rtpp_notify_cf == NULL) {
-        RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
+    cfs.rtpp_notify_cf = rtpp_notify_ctor(cfs.glog);
+    if (cfs.rtpp_notify_cf == NULL) {
+        RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
           "can't init timeout notification subsystem");
         exit(1);
     }
 
-    cf.stable->observers = rtpp_po_mgr_ctor();
-    if (cf.stable->observers == NULL) {
-        RTPP_LOG(cf.stable->glog, RTPP_LOG_ERR,
+    cfs.observers = rtpp_po_mgr_ctor();
+    if (cfs.observers == NULL) {
+        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
           "can't init packet inspection subsystem");
         exit(1);
     }
 
 #if ENABLE_MODULE_IF
-    if (!RTPP_LIST_IS_EMPTY(cf.stable->modules_cf)) {
-        mif = RTPP_LIST_HEAD(cf.stable->modules_cf);
-        if (CALL_METHOD(mif, start, cf.stable) != 0) {
-            RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
+    if (!RTPP_LIST_IS_EMPTY(cfs.modules_cf)) {
+        mif = RTPP_LIST_HEAD(cfs.modules_cf);
+        if (CALL_METHOD(mif, start, &cfs) != 0) {
+            RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
               "%p: dymanic module start has failed", mif);
             exit(1);
         }
     }
 #endif
 
-    cf.stable->rtpp_cmd_cf = rtpp_command_async_ctor(&cf);
-    if (cf.stable->rtpp_cmd_cf == NULL) {
-        RTPP_ELOG(cf.stable->glog, RTPP_LOG_ERR,
+    cfs.rtpp_cmd_cf = rtpp_command_async_ctor(&cfs);
+    if (cfs.rtpp_cmd_cf == NULL) {
+        RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
           "can't init command processing subsystem");
         exit(1);
     }
@@ -1059,17 +1059,17 @@ main(int argc, char **argv)
     sd_notify(0, "READY=1");
 #endif
 
-    elp = prdic_init(cf.stable->target_pfreq / 10.0, cf.stable->sched_offset);
+    elp = prdic_init(cfs.target_pfreq / 10.0, cfs.sched_offset);
     for (;;) {
         ncycles_ref = (long long)prdic_getncycles_ref(elp);
 
-        CALL_METHOD(cf.stable->rtpp_cmd_cf, wakeup);
-        if (cf.stable->fastshutdown != 0) {
+        CALL_METHOD(cfs.rtpp_cmd_cf, wakeup);
+        if (cfs.fastshutdown != 0) {
             break;
         }
-        if (cf.stable->slowshutdown != 0 &&
-          CALL_METHOD(cf.stable->sessions_wrt, get_length) == 0) {
-            RTPP_LOG(cf.stable->glog, RTPP_LOG_INFO,
+        if (cfs.slowshutdown != 0 &&
+          CALL_METHOD(cfs.sessions_wrt, get_length) == 0) {
+            RTPP_LOG(cfs.glog, RTPP_LOG_INFO,
               "deorbiting-burn sequence completed, exiting");
             break;
         }
@@ -1078,27 +1078,28 @@ main(int argc, char **argv)
     }
     prdic_free(elp);
 
-    CALL_METHOD(cf.stable->rtpp_cmd_cf, dtor);
+    CALL_METHOD(cfs.rtpp_cmd_cf, dtor);
 #if ENABLE_MODULE_IF
-    for (mif = RTPP_LIST_HEAD(cf.stable->modules_cf); mif != NULL; mif = tmp) {
+    for (mif = RTPP_LIST_HEAD(cfs.modules_cf); mif != NULL; mif = tmp) {
         tmp = RTPP_ITER_NEXT(mif);
         CALL_SMETHOD(mif->rcnt, decref);
     }
 #endif
-    CALL_SMETHOD(cf.stable->observers->rcnt, decref);
-    free(cf.stable->modules_cf);
-    free(cf.stable->runcreds);
-    CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
-    free(cf.stable->locks);
-    CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
-    CALL_SMETHOD(cf.stable->rtpp_timed_cf, shutdown);
-    CALL_SMETHOD(cf.stable->rtpp_timed_cf->rcnt, decref);
-    CALL_METHOD(cf.stable->rtpp_proc_cf, dtor);
-    CALL_METHOD(cf.stable->rtpp_proc_ttl_cf, dtor);
-    CALL_SMETHOD(cf.stable->sessinfo->rcnt, decref);
-    CALL_SMETHOD(cf.stable->rtpp_stats->rcnt, decref);
+    CALL_SMETHOD(cfs.observers->rcnt, decref);
+    free(cfs.modules_cf);
+    free(cfs.runcreds);
+    CALL_METHOD(cfs.rtpp_notify_cf, dtor);
+    CALL_METHOD(cfs.bindaddrs_cf, dtor);
+    free(cfs.locks);
+    CALL_METHOD(cfs.rtpp_tnset_cf, dtor);
+    CALL_SMETHOD(cfs.rtpp_timed_cf, shutdown);
+    CALL_SMETHOD(cfs.rtpp_timed_cf->rcnt, decref);
+    CALL_METHOD(cfs.rtpp_proc_cf, dtor);
+    CALL_METHOD(cfs.rtpp_proc_ttl_cf, dtor);
+    CALL_SMETHOD(cfs.sessinfo->rcnt, decref);
+    CALL_SMETHOD(cfs.rtpp_stats->rcnt, decref);
     for (i = 0; i <= RTPP_PT_MAX; i++) {
-        CALL_SMETHOD(cf.stable->port_table[i]->rcnt, decref);
+        CALL_SMETHOD(cfs.port_table[i]->rcnt, decref);
     }
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");

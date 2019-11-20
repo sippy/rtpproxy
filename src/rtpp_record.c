@@ -55,7 +55,7 @@
 #include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_ip_chksum.h"
 #include "rtpp_debug.h"
 #include "rtpp_defines.h"
@@ -153,8 +153,8 @@ e0:
 }
 
 struct rtpp_record *
-rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
-  int record_type)
+rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
+  char *rname, int orig, int record_type)
 {
     struct rtpp_record_channel *rrc;
     const char *sdir, *suffix1, *suffix2;
@@ -188,12 +188,12 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
         return (&rrc->pub);
     }
 
-    if (cf->stable->rdir == NULL) {
+    if (cfsp->rdir == NULL) {
 	RTPP_LOG(sp->log, RTPP_LOG_ERR, "directory for saving local recordings is not configured");
         goto e2;
     }
 
-    if (cf->stable->record_pcap != 0) {
+    if (cfsp->record_pcap != 0) {
 	rrc->mode = MODE_LOCAL_PCAP;
     } else {
 	rrc->mode = MODE_LOCAL_PKT;
@@ -205,17 +205,17 @@ rtpp_record_open(struct cfg *cf, struct rtpp_session *sp, char *rname, int orig,
         suffix1 = (orig != 0) ? ".o" : ".a";
         suffix2 = (record_type == RECORD_RTP) ? ".rtp" : ".rtcp";
     }
-    if (cf->stable->sdir == NULL) {
-	sdir = cf->stable->rdir;
+    if (cfsp->sdir == NULL) {
+	sdir = cfsp->rdir;
 	rrc->needspool = 0;
     } else {
-	sdir = cf->stable->sdir;
+	sdir = cfsp->sdir;
 	rrc->needspool = 1;
 	if (rname == NULL) {
-	    sprintf(rrc->rpath, "%s/%s=%s%s%s", cf->stable->rdir, sp->call_id, sp->tag_nomedianum,
+	    sprintf(rrc->rpath, "%s/%s=%s%s%s", cfsp->rdir, sp->call_id, sp->tag_nomedianum,
 	      suffix1, suffix2);
 	} else {
-	    sprintf(rrc->rpath, "%s/%s%s", cf->stable->rdir, rname, suffix2);
+	    sprintf(rrc->rpath, "%s/%s%s", cfsp->rdir, rname, suffix2);
 	}
     }
     if (rname == NULL) {
@@ -287,8 +287,8 @@ flush_rbuf(struct rtpp_record_channel *rrc)
 
 static int
 prepare_pkt_hdr_adhoc(struct rtpp_log *log, struct rtp_packet *packet,
-  struct pkt_hdr_adhoc *hdrp, const struct sockaddr *daddr, struct sockaddr *ldaddr,
-  int ldport, int face)
+  struct pkt_hdr_adhoc *hdrp, const struct sockaddr *daddr,
+  const struct sockaddr *ldaddr, int ldport, int face)
 {
 
     memset(hdrp, 0, sizeof(*hdrp));
@@ -350,8 +350,8 @@ fake_ether_addr(const struct sockaddr *addr, uint8_t *eaddr)
 
 static int
 prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
-  union pkt_hdr_pcap *hdrp, const struct sockaddr *daddr, struct sockaddr *ldaddr,
-  int ldport, int face)
+  union pkt_hdr_pcap *hdrp, const struct sockaddr *daddr,
+  const struct sockaddr *ldaddr, int ldport, int face)
 {
     const struct sockaddr *src_addr, *dst_addr;
     uint16_t src_port, dst_port;
@@ -534,10 +534,10 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     } hdr;
     int rval, hdr_size;
     int (*prepare_pkt_hdr)(struct rtpp_log *, struct rtp_packet *, void *,
-      const struct sockaddr *, struct sockaddr *, int, int);
+      const struct sockaddr *, const struct sockaddr *, int, int);
     const char *proto;
     struct sockaddr_storage daddr;
-    struct sockaddr *ldaddr;
+    const struct sockaddr *ldaddr;
     int ldport, face;
     struct rtpp_record_channel *rrc;
     struct rtpp_netaddr *rem_addr;

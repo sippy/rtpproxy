@@ -170,7 +170,7 @@ setanyport(struct sockaddr *ia)
 }
 
 char *
-addr2char_r(struct sockaddr *ia, char *buf, int size)
+addr2char_r(const struct sockaddr *ia, char *buf, int size)
 {
     void *addr;
 
@@ -191,7 +191,7 @@ addr2char_r(struct sockaddr *ia, char *buf, int size)
 }
 
 char *
-addrport2char_r(struct sockaddr *ia, char *buf, int size, char portsep)
+addrport2char_r(const struct sockaddr *ia, char *buf, int size, char portsep)
 {
     char abuf[MAX_ADDR_STRLEN];
     const char *bs, *es;

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2019 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +25,15 @@
  *
  */
 
-#ifndef _RTPP_COMMAND_UL_H_
-#define _RTPP_COMMAND_UL_H_
+struct rlimit;
+struct rtpp_nofile;
 
-struct ul_opts;
-struct ul_reply;
-struct rtpp_session;
+DEFINE_METHOD(rtpp_nofile, rtpp_nofile_dtor, void);
 
-struct ul_opts *rtpp_command_ul_opts_parse(const struct rtpp_cfg *,
-  struct rtpp_command *cmd);
-void rtpp_command_ul_opts_free(struct ul_opts *ulop);
-int rtpp_command_ul_handle(const struct rtpp_cfg *, struct rtpp_command *,
-  int);
-void ul_reply_port(struct rtpp_command *cmd,
-  struct ul_reply *ulr);
+struct rtpp_nofile {
+    struct rlimit *limit;
+    atomic_int warned;
+    rtpp_nofile_dtor_t dtor;
+};
 
-#endif
+struct rtpp_nofile *rtpp_nofile_ctor(void);

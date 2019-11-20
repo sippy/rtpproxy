@@ -31,7 +31,6 @@
 
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 
-struct cfg;
 struct timeval;
 struct sockaddr;
 struct sockaddr_storage;
@@ -45,8 +44,8 @@ int isaddrseq(const struct sockaddr *ia1, const struct sockaddr *ia2);
 int isaddreq(struct sockaddr *ia1, struct sockaddr *ia2);
 void setport(struct sockaddr *, int);
 void setanyport(struct sockaddr *);
-char *addr2char_r(struct sockaddr *, char *buf, int size);
-char *addrport2char_r(struct sockaddr *, char *buf, int size, char);
+char *addr2char_r(const struct sockaddr *, char *buf, int size);
+char *addrport2char_r(const struct sockaddr *, char *buf, int size, char);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
 int local4remote(const struct sockaddr *, struct sockaddr_storage *);

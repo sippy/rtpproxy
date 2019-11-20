@@ -39,7 +39,7 @@
 #include "config.h"
 
 #include "rtpp_log.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_time.h"
@@ -274,7 +274,7 @@ rtpp_anetio_pick_sender(struct rtpp_anetio_cf *netio_cf)
 }
 
 struct rtpp_anetio_cf *
-rtpp_netio_async_init(struct cfg *cf, int qlen)
+rtpp_netio_async_init(const struct rtpp_cfg *cfsp, int qlen)
 {
     struct rtpp_anetio_cf *netio_cf;
     int i, ri;
@@ -293,9 +293,9 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
             goto e0;
         }
         rtpp_queue_setqlen(netio_cf->args[i].out_q, qlen);
-        CALL_SMETHOD(cf->stable->glog->rcnt, incref);
-        netio_cf->args[i].glog = cf->stable->glog;
-        netio_cf->args[i].dmode = cf->stable->dmode;
+        CALL_SMETHOD(cfsp->glog->rcnt, incref);
+        netio_cf->args[i].glog = cfsp->glog;
+        netio_cf->args[i].dmode = cfsp->dmode;
 #if RTPP_DEBUG_timers
         recfilter_init(&netio_cf->args[i].average_load, 0.9, 0.0, 0);
 #endif
@@ -311,7 +311,6 @@ rtpp_netio_async_init(struct cfg *cf, int qlen)
         }
     }
 
-    cf->stable->rtpp_netio_cf = netio_cf;
     for (i = 0; i < SEND_THREADS; i++) {
         if (pthread_create(&(netio_cf->thread_id[i]), NULL, (void *(*)(void *))&rtpp_anetio_sthread, &netio_cf->args[i]) != 0) {
              for (ri = i - 1; ri >= 0; ri--) {

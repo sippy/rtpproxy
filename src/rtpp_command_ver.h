@@ -33,5 +33,5 @@ struct proto_cap {
 
 struct rtpp_command;
 
-void handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd);
+void handle_ver_feature(const struct rtpp_cfg *, struct rtpp_command *);
 struct proto_cap *iterate_proto_caps(struct proto_cap *prevp);

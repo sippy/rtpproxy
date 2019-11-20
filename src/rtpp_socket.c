@@ -67,9 +67,9 @@ static int rtpp_socket_send_pkt(struct rtpp_socket *, struct sthread_args *,
 static int rtpp_socket_send_pkt_na(struct rtpp_socket *, struct sthread_args *,
   struct rtpp_netaddr *, struct rtp_packet *, struct rtpp_log *);
 static struct rtp_packet * rtpp_socket_rtp_recv_simple(struct rtpp_socket *,
-  const struct rtpp_timestamp *, struct sockaddr *, int);
+  const struct rtpp_timestamp *, const struct sockaddr *, int);
 static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *,
-  const struct rtpp_timestamp *, struct sockaddr *, int);
+  const struct rtpp_timestamp *, const struct sockaddr *, int);
 static int rtpp_socket_getfd(struct rtpp_socket *);
 
 struct rtpp_socket *
@@ -207,7 +207,7 @@ rtpp_socket_send_pkt_na(struct rtpp_socket *self, struct sthread_args *str,
 
 static struct rtp_packet *
 rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
-  struct sockaddr *laddr, int port)
+  const struct sockaddr *laddr, int port)
 {
     struct rtpp_socket_priv *pvt;
     struct rtp_packet *packet;
@@ -239,7 +239,7 @@ rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, const struct rtpp_timestam
 
 static struct rtp_packet *
 rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
-  struct sockaddr *laddr, int port)
+  const struct sockaddr *laddr, int port)
 {
     struct rtpp_socket_priv *pvt;
     struct rtp_packet *packet;

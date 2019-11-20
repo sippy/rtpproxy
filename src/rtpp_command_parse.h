@@ -30,9 +30,9 @@
 #define _RTPP_COMMAND_PARSE_H_    
 
 struct rtpp_command;
-struct rtpp_cfg_stable;
+struct rtpp_cfg;
 struct common_cmd_args;
 
-int rtpp_command_pre_parse(struct rtpp_cfg_stable *, struct rtpp_command *);
+int rtpp_command_pre_parse(const struct rtpp_cfg *, struct rtpp_command *);
 
 #endif

@@ -1,5 +1,6 @@
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/autosrc.ami
+include $(top_srcdir)/m4/ccflags.ami
 
 include $(top_srcdir)/autosrc/Makefile.ami
 
@@ -31,7 +32,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_command_parse.c rtpp_command_parse.h rtpp_command_copy.c \
   rtpp_command_copy.h rtpp_command_ul.c rtpp_command_ul.h \
   rtpp_hash_table.c rtpp_hash_table.h rtpp_types.h config_pp.h rtpp_stats.c \
-  rtpp_cfg_stable.h rtpp_command_stats.h rtpp_command_stats.c \
+  rtpp_cfg.h rtpp_command_stats.h rtpp_command_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
   rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c rtpp_timed.c \
   rtpp_analyzer.c rtpp_analyzer.h rtp_analyze.c rtp_analyze.h \
@@ -56,6 +57,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_acct_rtcp.c rtpp_cfile.c rtpp_cfile.h rtpp_ucl.c rtpp_ucl.h \
   rtpp_network_io.c rtpp_network_io.h rtpp_wi_pkt.c rtpp_wi_pkt.h \
   rtpp_timeout_data.c rtpp_timeout_data.h rtpp_locking.h \
+  rtpp_nofile.c rtpp_nofile.h \
   $(RTPP_AUTOSRC_SOURCES) $(RTPP_AUTOSRC_SOURCES_S)
 ADV_DIR=$(top_srcdir)/src/advanced
 BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/po_manager.c \
@@ -104,7 +106,7 @@ rtpp_rzmalloc_perf_CPPFLAGS = $(EXTRA_CPPFLAGS)
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \
   -D_BSD_SOURCE
-EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall -Werror=incompatible-pointer-types
+EXTRA_CFLAGS = $(CC_WFLAGS)
 
 EXTRA_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR)
 

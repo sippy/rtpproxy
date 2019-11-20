@@ -57,25 +57,4 @@
 #define STRINGIFY(x) #x
 #define STR(x) STRINGIFY(x)
 
-struct pollfd;
-struct bindaddr_list;
-struct rtpp_timeout_handler;
-
-struct rtpp_hash_table;
-struct rtpp_cfg_stable;
-
-struct cfg {
-    struct rtpp_cfg_stable *stable;
-
-    /*
-     * Data fields that must be locked separately from the main configuration
-     * structure below.
-     */
-
-    struct bindaddr_list *bindaddr_list;
-    pthread_mutex_t bindaddr_lock;
-
-    int nofile_limit_warned;
-};
-
 #endif

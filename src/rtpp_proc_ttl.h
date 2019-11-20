@@ -30,7 +30,7 @@
 #define _RTPP_PROC_TTL_H_
 
 struct rtpp_proc_ttl;
-struct rtpp_cfg_stable;
+struct rtpp_cfg;
 
 DEFINE_METHOD(rtpp_proc_ttl, rtpp_proc_ttl_dtor, void);
 
@@ -38,6 +38,6 @@ struct rtpp_proc_ttl {
     rtpp_proc_ttl_dtor_t dtor;
 };
 
-struct rtpp_proc_ttl *rtpp_proc_ttl_ctor(const struct rtpp_cfg_stable *);
+struct rtpp_proc_ttl *rtpp_proc_ttl_ctor(const struct rtpp_cfg *);
 
 #endif

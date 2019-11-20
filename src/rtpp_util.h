@@ -35,18 +35,17 @@
 
 #define	NOT(x)		(((x) == 0) ? 1 : 0)
 
-struct cfg;
-struct rtpp_cfg_stable;
+struct rtpp_cfg;
 
 /* Function prototypes */
 void seedrandom(void);
-int set_rlimits(struct cfg *);
-int drop_privileges(const struct rtpp_cfg_stable *);
+int set_rlimits(const struct rtpp_cfg *);
+int drop_privileges(const struct rtpp_cfg *);
 char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
 int url_unquote(unsigned char *, int);
 int rtpp_get_sched_hz(void);
-long long rtpp_rlim_max(struct cfg *cf);
+long long rtpp_rlim_max(const struct rtpp_cfg *);
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
 #endif

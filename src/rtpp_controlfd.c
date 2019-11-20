@@ -45,7 +45,7 @@
 #include "rtpp_list.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_command.h"
 #include "rtpp_controlfd.h"
 #include "rtpp_mallocs.h"
@@ -83,7 +83,7 @@ controlfd_init_systemd(void)
 }
 
 static int
-controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
+controlfd_init_ifsun(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
     int controlfd, reuse;
     struct sockaddr_un *ifsun;
@@ -112,13 +112,13 @@ controlfd_init_ifsun(struct cfg *cf, struct rtpp_ctrl_sock *csp)
         warn("can't bind to a socket: %s", csp->cmd_sock);
         goto e0;
     }
-    if ((cf->stable->runcreds->uname != NULL || cf->stable->runcreds->gname != NULL) &&
-      chown(csp->cmd_sock, cf->stable->runcreds->uid, cf->stable->runcreds->gid) == -1) {
+    if ((cfsp->runcreds->uname != NULL || cfsp->runcreds->gname != NULL) &&
+      chown(csp->cmd_sock, cfsp->runcreds->uid, cfsp->runcreds->gid) == -1) {
         warn("can't set owner of the socket: %s", csp->cmd_sock);
         goto e0;
     }
-    if ((cf->stable->runcreds->gname != NULL) && cf->stable->runcreds->sock_mode != 0 &&
-      (chmod(csp->cmd_sock, cf->stable->runcreds->sock_mode) == -1)) {
+    if ((cfsp->runcreds->gname != NULL) && cfsp->runcreds->sock_mode != 0 &&
+      (chmod(csp->cmd_sock, cfsp->runcreds->sock_mode) == -1)) {
         warn("can't allow rw acces to group");
         goto e0;
     }
@@ -134,7 +134,7 @@ e0:
 }
 
 static int
-controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
+controlfd_init_udp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
     struct sockaddr *ifsin;
     char *cp;
@@ -161,7 +161,7 @@ controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     }
     so_rcvbuf = 16 * 1024;
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
-        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
+        RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
     if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0) {
         warn("can't bind to a socket");
         close(controlfd);
@@ -172,7 +172,7 @@ controlfd_init_udp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
 }
 
 static int
-controlfd_init_tcp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
+controlfd_init_tcp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
     struct sockaddr *ifsin;
     char *cp;
@@ -199,7 +199,7 @@ controlfd_init_tcp(struct cfg *cf, struct rtpp_ctrl_sock *csp)
     }
     so_rcvbuf = 16 * 1024;
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
-        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
+        RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
     if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0) {
         warn("can't bind to a socket");
         goto e0;
@@ -216,12 +216,12 @@ e0:
 }
 
 int
-rtpp_controlfd_init(struct cfg *cf)
+rtpp_controlfd_init(const struct rtpp_cfg *cfsp)
 {
     int controlfd_in, controlfd_out, flags;
     struct rtpp_ctrl_sock *ctrl_sock;
 
-    for (ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
+    for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
         switch (ctrl_sock->type) {
         case RTPC_SYSD:
@@ -230,17 +230,17 @@ rtpp_controlfd_init(struct cfg *cf)
 
         case RTPC_IFSUN:
         case RTPC_IFSUN_C:
-            controlfd_in = controlfd_out = controlfd_init_ifsun(cf, ctrl_sock);
+            controlfd_in = controlfd_out = controlfd_init_ifsun(cfsp, ctrl_sock);
             break;
 
         case RTPC_UDP4:
         case RTPC_UDP6:
-            controlfd_in = controlfd_out = controlfd_init_udp(cf, ctrl_sock);
+            controlfd_in = controlfd_out = controlfd_init_udp(cfsp, ctrl_sock);
             break;
 
         case RTPC_TCP4:
         case RTPC_TCP6:
-            controlfd_in = controlfd_out = controlfd_init_tcp(cf, ctrl_sock);
+            controlfd_in = controlfd_out = controlfd_init_tcp(cfsp, ctrl_sock);
             break;
 
         case RTPC_STDIO:
@@ -291,11 +291,11 @@ rtpp_csock_addrlen(struct rtpp_ctrl_sock *ctrl_sock)
 }
 
 void
-rtpp_controlfd_cleanup(struct cfg *cf)
+rtpp_controlfd_cleanup(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_ctrl_sock *ctrl_sock;
 
-    for (ctrl_sock = RTPP_LIST_HEAD(cf->stable->ctrl_socks);
+    for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
         if (RTPP_CTRL_ISUNIX(ctrl_sock) == 0)
             continue;

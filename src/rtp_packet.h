@@ -48,7 +48,7 @@ struct rtp_packet {
     struct sockaddr_storage raddr;
     struct sockaddr_storage sendto;
     struct sockaddr_storage _laddr;
-    struct sockaddr *laddr;
+    const struct sockaddr *laddr;
     int         lport;
 
     socklen_t   rlen;

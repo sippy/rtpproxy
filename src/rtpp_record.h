@@ -29,11 +29,11 @@
 #ifndef _RTPP_RECORD_H_
 #define _RTPP_RECORD_H_
 
-struct cfg;
 struct rtpp_session;
 struct rtpp_stream;
 struct rtp_packet;
 struct rtpp_record;
+struct rtpp_cfg;
 
 DEFINE_METHOD(rtpp_record, rtpp_record_write, void, struct rtpp_stream *, struct rtp_packet *);
 
@@ -47,6 +47,7 @@ struct rtpp_record {
 #define RECORD_BOTH 2
 
 /* Function prototypes */
-struct rtpp_record *rtpp_record_open(struct cfg *cf, struct rtpp_session *, char *, int, int);
+struct rtpp_record *rtpp_record_open(const struct rtpp_cfg *,
+  struct rtpp_session *, char *, int, int);
 
 #endif

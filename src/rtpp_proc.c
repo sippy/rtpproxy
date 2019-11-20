@@ -38,7 +38,7 @@
 #include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtp_resizer.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtpp_proc.h"
 #include "rtpp_record.h"
@@ -56,11 +56,11 @@ struct rtpp_proc_ready_lst {
     struct rtpp_stream *stp;
 };
 
-static void send_packet(struct cfg *, struct rtpp_stream *,
+static void send_packet(const struct rtpp_cfg *, struct rtpp_stream *,
   struct rtp_packet *, struct sthread_args *, struct rtpp_proc_rstats *);
 
 static void
-rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
+rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
   const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp, const struct rtpp_session *sp)
 {
@@ -77,7 +77,7 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
             ndrain -= 1;
         }
 
-	packet = CALL_SMETHOD(stp, rx, cf->stable->rtcp_streams_wrt, dtime,
+	packet = CALL_SMETHOD(stp, rx, cfsp->rtcp_streams_wrt, dtime,
           rsp);
 	if (packet == NULL) {
             /* Move on to the next session */
@@ -90,25 +90,25 @@ rxmit_packets(struct cfg *cf, struct rtpp_stream *stp,
         pktx.sessp = sp;
         pktx.strmp = stp;
         pktx.pktp = packet;
-        CALL_METHOD(cf->stable->observers, observe, &pktx);
-        send_packet(cf, stp, packet, sender, rsp);
+        CALL_METHOD(cfsp->observers, observe, &pktx);
+        send_packet(cfsp, stp, packet, sender, rsp);
     } while (ndrain > 0);
     return;
 }
 
 static struct rtpp_stream *
-get_sender(struct cfg *cf, struct rtpp_stream *stp)
+get_sender(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp)
 {
     if (stp->pipe_type == PIPE_RTP) {
-       return (CALL_METHOD(cf->stable->rtp_streams_wrt, get_by_idx,
+       return (CALL_METHOD(cfsp->rtp_streams_wrt, get_by_idx,
          stp->stuid_sendr));
     }
-    return (CALL_METHOD(cf->stable->rtcp_streams_wrt, get_by_idx,
+    return (CALL_METHOD(cfsp->rtcp_streams_wrt, get_by_idx,
       stp->stuid_sendr));
 }
 
 static void
-send_packet(struct cfg *cf, struct rtpp_stream *stp_in,
+send_packet(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp_in,
   struct rtp_packet *packet, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
@@ -116,7 +116,7 @@ send_packet(struct cfg *cf, struct rtpp_stream *stp_in,
 
     CALL_METHOD(stp_in->ttl, reset);
 
-    stp_out = get_sender(cf, stp_in);
+    stp_out = get_sender(cfsp, stp_in);
     if (stp_out == NULL) {
         goto e0;
     }
@@ -150,7 +150,7 @@ e0:
 }
 
 void
-process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl,
+process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
   const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
@@ -166,17 +166,17 @@ process_rtp_only(struct cfg *cf, struct rtpp_polltbl *ptbl,
           ptbl->mds[readyfd].stuid);
         if (stp == NULL)
             continue;
-        sp = CALL_METHOD(cf->stable->sessions_wrt, get_by_idx, stp->seuid);
+        sp = CALL_METHOD(cfsp->sessions_wrt, get_by_idx, stp->seuid);
         if (sp == NULL) {
             CALL_SMETHOD(stp->rcnt, decref);
             continue;
         }
         if (sp->complete != 0) {
-            rxmit_packets(cf, stp, dtime, drain_repeat, sender, rsp, sp);
+            rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp, sp);
             CALL_SMETHOD(sp->rcnt, decref);
             if (stp->resizer != NULL) {
                 while ((packet = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
-                    send_packet(cf, stp, packet, sender, rsp);
+                    send_packet(cfsp, stp, packet, sender, rsp);
                     rsp->npkts_resizer_out.cnt++;
                     packet = NULL;
                 }

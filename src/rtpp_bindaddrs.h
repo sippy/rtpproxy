@@ -29,12 +29,24 @@
 #ifndef _RTPP_BINDADDRS_H_
 #define _RTPP_BINDADDRS_H_
 
-struct cfg;
 struct sockaddr;
+struct rtpp_bindaddrs;
+
+DEFINE_METHOD(rtpp_bindaddrs, addr2bindaddr, const struct sockaddr *,
+  const struct sockaddr *, const char **);
+DEFINE_METHOD(rtpp_bindaddrs, host2bindaddr, const struct sockaddr *,
+  const char *, int, const char **);
+DEFINE_METHOD(rtpp_bindaddrs, bindaddr4af, const struct sockaddr *, int);
+DEFINE_METHOD(rtpp_bindaddrs, rtpp_bindaddrs_dtor, void);
+
+struct rtpp_bindaddrs {
+    addr2bindaddr_t addr2;
+    host2bindaddr_t host2;
+    bindaddr4af_t foraf;
+    rtpp_bindaddrs_dtor_t dtor;
+};
 
 /* Function prototypes */
-struct sockaddr *addr2bindaddr(struct cfg *, struct sockaddr *, const char **);
-struct sockaddr *host2bindaddr(struct cfg *, const char *, int, const char **);
-struct sockaddr *bindaddr4af(struct cfg *, int);
+struct rtpp_bindaddrs *rtpp_bindaddrs_ctor(void);
 
 #endif

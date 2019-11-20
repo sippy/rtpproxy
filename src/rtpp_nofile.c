@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2019 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +25,52 @@
  *
  */
 
-#ifndef _RTPP_COMMAND_UL_H_
-#define _RTPP_COMMAND_UL_H_
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <stdatomic.h>
+#include <stddef.h>
+#include <stdlib.h>
 
-struct ul_opts;
-struct ul_reply;
-struct rtpp_session;
+#include "config_pp.h"
 
-struct ul_opts *rtpp_command_ul_opts_parse(const struct rtpp_cfg *,
-  struct rtpp_command *cmd);
-void rtpp_command_ul_opts_free(struct ul_opts *ulop);
-int rtpp_command_ul_handle(const struct rtpp_cfg *, struct rtpp_command *,
-  int);
-void ul_reply_port(struct rtpp_command *cmd,
-  struct ul_reply *ulr);
+#include "rtpp_mallocs.h"
+#include "rtpp_types.h"
+#include "rtpp_nofile.h"
 
+#if !defined(NO_ERR_H)
+#include <err.h>
+#include "rtpp_util.h"
+#else
+#include "rtpp_util.h"
 #endif
+
+struct rtpp_nofile_pvt {
+    struct rtpp_nofile pub;
+    struct rlimit limit_storage;
+};
+
+static void
+rtpp_nofile_dtor(struct rtpp_nofile *pub)
+{
+    struct rtpp_nofile_pvt *priv;
+
+    PUB2PVT(pub, priv);
+    free(priv);
+}
+
+struct rtpp_nofile *
+rtpp_nofile_ctor(void)
+{
+    struct rtpp_nofile_pvt *priv;
+
+    priv = rtpp_zmalloc(sizeof(*priv));
+    if (priv == NULL)
+        return (NULL);
+    if (getrlimit(RLIMIT_NOFILE, &(priv->limit_storage)) != 0)
+        err(1, "getrlimit");
+    atomic_init(&(priv->pub.warned), 0);
+    priv->pub.dtor = rtpp_nofile_dtor;
+    priv->pub.limit = &(priv->limit_storage);
+    return (&(priv->pub));
+}

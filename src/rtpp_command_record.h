@@ -26,8 +26,7 @@
  *
  */
 
-struct cfg;
 struct common_cmd_args;
 
-int handle_record(struct cfg *, struct common_cmd_args *, int);
+int handle_record(const struct rtpp_cfg *, struct common_cmd_args *, int);
 

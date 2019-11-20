@@ -37,7 +37,7 @@
 
 #include "config.h"
 
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
@@ -56,7 +56,7 @@ struct rtpp_proc_ttl_pvt {
     struct rtpp_proc_ttl pub;
     pthread_t thread_id;
     struct rtpp_anetio_cf *op;
-    const struct rtpp_cfg_stable *cfsp_save;
+    const struct rtpp_cfg *cfsp_save;
     atomic_int tstate;
     void *elp;
 };
@@ -117,7 +117,7 @@ rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct rtpp_weakref_obj
 static void
 rtpp_proc_ttl_run(void *arg)
 {
-    const struct rtpp_cfg_stable *cfsp;
+    const struct rtpp_cfg *cfsp;
     struct rtpp_proc_ttl_pvt *proc_cf;
     struct rtpp_stats *stats_cf;
     int tstate;
@@ -155,7 +155,7 @@ rtpp_proc_ttl_dtor(struct rtpp_proc_ttl *pub)
 }
 
 struct rtpp_proc_ttl *
-rtpp_proc_ttl_ctor(const struct rtpp_cfg_stable *cfsp)
+rtpp_proc_ttl_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_proc_ttl_pvt *proc_cf;
 

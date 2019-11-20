@@ -28,10 +28,10 @@
 #ifndef _RTPP_PROC_H_
 #define _RTPP_PROC_H_
 
-struct cfg;
 struct sthread_args;
 struct rtpp_polltbl;
 struct rtpp_timestamp;
+struct rtpp_cfg;
 
 struct rtpp_proc_stat {
     uint64_t cnt;
@@ -48,10 +48,10 @@ struct rtpp_proc_rstats {
     struct rtpp_proc_stat npkts_discard;
 };
 
-void process_rtp_servers(struct cfg *, double, struct sthread_args *,
-  struct rtpp_proc_rstats *);
-void process_rtp_only(struct cfg *, struct rtpp_polltbl *,
-  const struct rtpp_timestamp *, int,
+void process_rtp_servers(const struct rtpp_cfg *, double,
+  struct sthread_args *, struct rtpp_proc_rstats *);
+void process_rtp_only(const struct rtpp_cfg *,
+  struct rtpp_polltbl *, const struct rtpp_timestamp *, int,
   struct sthread_args *sender, struct rtpp_proc_rstats *);
 
 #endif

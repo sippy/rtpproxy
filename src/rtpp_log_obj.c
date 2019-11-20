@@ -63,7 +63,7 @@ static void rtpp_log_obj_write_early(struct rtpp_log *, const char *, int, const
 static void rtpp_log_obj_ewrite_early(struct rtpp_log *, const char *, int, const char *, ...);
 static void rtpp_log_obj_setlevel_early(struct rtpp_log *, int);
 
-static int rtpp_log_obj_start(struct rtpp_log *, struct rtpp_cfg_stable *);
+static int rtpp_log_obj_start(struct rtpp_log *, const struct rtpp_cfg *);
 
 struct rtpp_log *
 rtpp_log_ctor(const char *app, const char *call_id, int flags)
@@ -187,7 +187,7 @@ rtpp_log_obj_ewrite_early(struct rtpp_log *self, const char *fname, int level,
 }
 
 static int
-rtpp_log_obj_start(struct rtpp_log *self, struct rtpp_cfg_stable *cfs)
+rtpp_log_obj_start(struct rtpp_log *self, const struct rtpp_cfg *cfs)
 {
     struct rtpp_log_priv *pvt;
 

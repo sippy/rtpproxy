@@ -29,13 +29,15 @@
 #define _RTPP_PROC_ASYNC_H_
 
 struct rtpp_proc_async;
+struct rtpp_anetio_cf;
 
 DEFINE_METHOD(rtpp_proc_async, rtpp_proc_async_dtor, void);
 
 struct rtpp_proc_async {
+    struct rtpp_anetio_cf *netio;
     rtpp_proc_async_dtor_t dtor;
 };
 
-struct rtpp_proc_async *rtpp_proc_async_ctor(struct cfg *);
+struct rtpp_proc_async *rtpp_proc_async_ctor(const struct rtpp_cfg *);
 
 #endif

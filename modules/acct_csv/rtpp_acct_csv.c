@@ -54,7 +54,7 @@
 #include "rtpp_netaddr.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 
@@ -82,7 +82,7 @@ struct rtpp_module_priv {
 
 #define HNAME_REFRESH_IVAL	1.0
 
-static struct rtpp_module_priv *rtpp_acct_csv_ctor(struct rtpp_cfg_stable *);
+static struct rtpp_module_priv *rtpp_acct_csv_ctor(const struct rtpp_cfg *);
 static void rtpp_acct_csv_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_csv_do(struct rtpp_module_priv *, struct rtpp_acct *);
 static off_t rtpp_acct_csv_lockf(int);
@@ -240,7 +240,7 @@ e0:
 }
 
 static struct rtpp_module_priv *
-rtpp_acct_csv_ctor(struct rtpp_cfg_stable *cfsp)
+rtpp_acct_csv_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_priv *pvt;
 

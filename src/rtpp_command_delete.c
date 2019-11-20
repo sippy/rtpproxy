@@ -35,7 +35,7 @@
 #include "config.h"
 
 #include "rtpp_defines.h"
-#include "rtpp_cfg_stable.h"
+#include "rtpp_cfg.h"
 #include "rtpp_log.h"
 #include "rtpp_command.h"
 #include "rtpp_command_delete.h"
@@ -118,7 +118,7 @@ struct delete_opts {
 };
 
 int
-handle_delete(struct cfg *cf, struct common_cmd_args *ccap)
+handle_delete(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
 {
     struct delete_ematch_arg dea;
 
@@ -126,8 +126,8 @@ handle_delete(struct cfg *cf, struct common_cmd_args *ccap)
     dea.from_tag = ccap->from_tag;
     dea.to_tag = ccap->to_tag;
     dea.weak = ccap->opts.delete->weak;
-    dea.sessions_wrt = cf->stable->sessions_wrt;
-    CALL_METHOD(cf->stable->sessions_ht, foreach_key, ccap->call_id,
+    dea.sessions_wrt = cfsp->sessions_wrt;
+    CALL_METHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
       rtpp_cmd_delete_ematch, &dea);
     rtpp_command_del_opts_free(ccap->opts.delete);
     ccap->opts.delete = NULL;
