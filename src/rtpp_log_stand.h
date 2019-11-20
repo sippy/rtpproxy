@@ -64,7 +64,7 @@ void _rtpp_log_write(struct rtpp_log_inst *, int, const char *, const char *, ..
 void _rtpp_log_write_va(struct rtpp_log_inst *, int, const char *, const char *, va_list);
 void _rtpp_log_ewrite(struct rtpp_log_inst *, int, const char *, const char *, ...);
 void _rtpp_log_ewrite_va(struct rtpp_log_inst *, int, const char *, const char *, va_list);
-struct rtpp_log_inst *_rtpp_log_open(struct rtpp_cfg *, const char *, const char *);
+struct rtpp_log_inst *_rtpp_log_open(const struct rtpp_cfg *, const char *, const char *);
 void _rtpp_log_close(struct rtpp_log_inst *);
 int rtpp_log_str2lvl(const char *);
 int rtpp_log_str2fac(const char *);

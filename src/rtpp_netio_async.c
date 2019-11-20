@@ -273,7 +273,7 @@ rtpp_anetio_pick_sender(struct rtpp_anetio_cf *netio_cf)
 }
 
 struct rtpp_anetio_cf *
-rtpp_netio_async_init(struct rtpp_cfg *cfsp, int qlen)
+rtpp_netio_async_init(const struct rtpp_cfg *cfsp, int qlen)
 {
     struct rtpp_anetio_cf *netio_cf;
     int i, ri;
@@ -309,7 +309,6 @@ rtpp_netio_async_init(struct rtpp_cfg *cfsp, int qlen)
         }
     }
 
-    cfsp->rtpp_netio_cf = netio_cf;
     for (i = 0; i < SEND_THREADS; i++) {
         if (pthread_create(&(netio_cf->thread_id[i]), NULL, (void *(*)(void *))&rtpp_anetio_sthread, &netio_cf->args[i]) != 0) {
              for (ri = i - 1; ri >= 0; ri--) {

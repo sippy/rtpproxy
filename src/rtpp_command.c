@@ -75,10 +75,11 @@
 #include "rtpp_util.h"
 #include "rtpp_stats.h"
 #include "rtpp_weakref.h"
+#include "rtpp_proc_async.h"
 
 struct rtpp_command_priv {
     struct rtpp_command pub;
-    struct rtpp_cfg *cfs;
+    const struct rtpp_cfg *cfs;
     int controlfd;
     const char *cookie;
     int umode;
@@ -90,10 +91,10 @@ struct rtpp_command_priv {
 struct d_opts;
 
 static int create_twinlistener(uint16_t, void *);
-static void handle_info(struct rtpp_cfg *, struct rtpp_command *);
+static void handle_info(const struct rtpp_cfg *, struct rtpp_command *);
 
 struct create_twinlistener_args {
-    struct rtpp_cfg *cfs;
+    const struct rtpp_cfg *cfs;
     const struct sockaddr *ia;
     struct rtpp_socket **fds;
     int *port;
@@ -152,7 +153,7 @@ failure:
 }
 
 int
-rtpp_create_listener(struct rtpp_cfg *cfsp, const struct sockaddr *ia, int *port,
+rtpp_create_listener(const struct rtpp_cfg *cfsp, const struct sockaddr *ia, int *port,
   struct rtpp_socket **fds)
 {
     struct create_twinlistener_args cta;
@@ -199,8 +200,8 @@ rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
             CALL_METHOD(pvt->rcache_obj, insert, pvt->cookie, pvt->buf_r,
               cmd->dtime->mono);
         }
-        rtpp_anetio_sendto(pvt->cfs->rtpp_netio_cf, pvt->controlfd, buf, len, 0,
-          sstosa(&cmd->raddr), cmd->rlen);
+        rtpp_anetio_sendto(pvt->cfs->rtpp_proc_cf->netio, pvt->controlfd, buf,
+          len, 0, sstosa(&cmd->raddr), cmd->rlen);
     }
     cmd->csp->ncmds_repld.cnt++;
     if (errd == 0) {
@@ -252,7 +253,7 @@ free_command(struct rtpp_command *cmd)
 }
 
 struct rtpp_command *
-rtpp_command_ctor(struct rtpp_cfg *cfsp, int controlfd,
+rtpp_command_ctor(const struct rtpp_cfg *cfsp, int controlfd,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp, int umode)
 {
     struct rtpp_command_priv *pvt;
@@ -275,7 +276,7 @@ rtpp_command_ctor(struct rtpp_cfg *cfsp, int controlfd,
 }
 
 struct rtpp_command *
-get_command(struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rval,
+get_command(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rval,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp,
   struct rtpp_cmd_rcache *rcache_obj)
 {
@@ -360,7 +361,7 @@ rtpp_command_guard_retrans(struct rtpp_command *cmd,
     if (CALL_METHOD(rcache_obj, lookup, pvt->cookie, pvt->buf_r,
       sizeof(pvt->buf_r)) == 1) {
         len = strlen(pvt->buf_r);
-        rtpp_anetio_sendto(pvt->cfs->rtpp_netio_cf, pvt->controlfd,
+        rtpp_anetio_sendto(pvt->cfs->rtpp_proc_cf->netio, pvt->controlfd,
           pvt->buf_r, len, 0, sstosa(&cmd->raddr), cmd->rlen);
         cmd->csp->ncmds_rcvd.cnt--;
         cmd->csp->ncmds_rcvd_ndups.cnt++;
@@ -436,7 +437,7 @@ etoomany:
 }
 
 int
-handle_command(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
+handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     int i, verbose, rval;
     char *cp;
@@ -641,7 +642,7 @@ handle_command(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 }
 
 static void
-handle_info(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
+handle_info(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
 #if 0
     struct rtpp_session *spa, *spb;

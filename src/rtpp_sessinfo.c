@@ -140,7 +140,7 @@ rtpp_polltbl_hst_record(struct rtpp_polltbl_hst *hp, enum polltbl_hst_ops op,
 }
 
 struct rtpp_sessinfo *
-rtpp_sessinfo_ctor(struct rtpp_cfg *cfsp)
+rtpp_sessinfo_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_sessinfo *sessinfo;
     struct rtpp_sessinfo_priv *pvt;

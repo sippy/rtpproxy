@@ -96,7 +96,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
 }
 
 void
-rtpp_proc_servers(struct rtpp_cfg *cfsp, double dtime, struct sthread_args *sender,
+rtpp_proc_servers(const struct rtpp_cfg *cfsp, double dtime, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
     struct foreach_args fargs;

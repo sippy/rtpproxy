@@ -45,7 +45,7 @@
 
 #include "ucl.h"
 
-static int parse_modules(struct rtpp_cfg *, const ucl_object_t *);
+static int parse_modules(const struct rtpp_cfg *, const ucl_object_t *);
 static bool conf_helper_mapper(struct rtpp_log *, const ucl_object_t *,
   const conf_helper_map *, void *, const conf_helper_map **);
 
@@ -65,7 +65,7 @@ rtpp_module_dsop_canonic(const char *mname, char *buf, size_t blen)
 }
 
 int
-rtpp_cfile_process(struct rtpp_cfg *csp)
+rtpp_cfile_process(const struct rtpp_cfg *csp)
 {
     struct ucl_parser *parser;
     ucl_object_t *conf_root;
@@ -141,7 +141,7 @@ static const conf_helper_map default_module_map[] = {
 };
 
 static int
-parse_modules(struct rtpp_cfg *csp, const ucl_object_t *wop)
+parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
 {
     ucl_object_iter_t it_conf;
     const ucl_object_t *obj_file;

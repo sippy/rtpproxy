@@ -65,7 +65,7 @@ static struct proto_cap proto_caps[] = {
 };
 
 void
-handle_ver_feature(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
+handle_ver_feature(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     int i, known;
 

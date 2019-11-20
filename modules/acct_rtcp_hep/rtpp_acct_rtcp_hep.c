@@ -64,7 +64,7 @@ struct rtpp_module_priv {
    struct hep_ctx ctx;
 };
 
-static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg *);
+static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(const struct rtpp_cfg *);
 static void rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct_rtcp *);
 static struct rtpp_module_conf *rtpp_acct_rtcp_hep_get_mconf(struct rtpp_module_priv *);
@@ -85,7 +85,7 @@ struct rtpp_minfo rtpp_module = {
 };
 
 static struct rtpp_module_priv *
-rtpp_acct_rtcp_hep_ctor(struct rtpp_cfg *cfsp)
+rtpp_acct_rtcp_hep_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_priv *pvt;
 

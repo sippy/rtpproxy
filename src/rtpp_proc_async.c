@@ -72,9 +72,8 @@ struct elp_data {
 struct rtpp_proc_async_cf {
     struct rtpp_proc_async pub;
     pthread_t thread_id;
-    struct rtpp_anetio_cf *op;
     struct rtpp_proc_rstats rstats;
-    struct rtpp_cfg *cf_save;
+    const struct rtpp_cfg *cf_save;
     atomic_int tstate;
     struct elp_data elp_fs;
     struct elp_data elp_lz;
@@ -121,7 +120,7 @@ init_rstats(struct rtpp_stats *sobj, struct rtpp_proc_rstats *rsp)
 static void
 rtpp_proc_async_run(void *arg)
 {
-    struct rtpp_cfg *cfsp;
+    const struct rtpp_cfg *cfsp;
     int ndrain, rtp_only;
     int nready_rtp, nready_rtcp;
     struct rtpp_proc_async_cf *proc_cf;
@@ -227,7 +226,7 @@ rtpp_proc_async_run(void *arg)
         rtpp_timestamp_get(&rtime);
         RTPP_DBG_ASSERT(rtime.wall > 0 && rtime.mono > 0);
 
-        sender = rtpp_anetio_pick_sender(proc_cf->op);
+        sender = rtpp_anetio_pick_sender(proc_cf->pub.netio);
         if (nready_rtp > 0) {
             process_rtp_only(cfsp, &ptbl_rtp, &rtime, ndrain, sender, rstats);
         }
@@ -261,7 +260,7 @@ rtpp_proc_async_run(void *arg)
 }
 
 struct rtpp_proc_async *
-rtpp_proc_async_ctor(struct rtpp_cfg *cfsp)
+rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_proc_async_cf *proc_cf;
 
@@ -271,8 +270,8 @@ rtpp_proc_async_ctor(struct rtpp_cfg *cfsp)
 
     init_rstats(cfsp->rtpp_stats, &proc_cf->rstats);
 
-    proc_cf->op = rtpp_netio_async_init(cfsp, 1);
-    if (proc_cf->op == NULL) {
+    proc_cf->pub.netio = rtpp_netio_async_init(cfsp, 1);
+    if (proc_cf->pub.netio == NULL) {
         goto e0;
     }
 
@@ -299,7 +298,7 @@ e3:
 e2:
     prdic_free(proc_cf->elp_fs.obj);
 e1:
-    rtpp_netio_async_destroy(proc_cf->op);
+    rtpp_netio_async_destroy(proc_cf->pub.netio);
 e0:
     free(proc_cf);
     return (NULL);
@@ -318,6 +317,6 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     pthread_join(proc_cf->thread_id, NULL);
     prdic_free(proc_cf->elp_lz.obj);
     prdic_free(proc_cf->elp_fs.obj);
-    rtpp_netio_async_destroy(proc_cf->op);
+    rtpp_netio_async_destroy(proc_cf->pub.netio);
     free(proc_cf);
 }

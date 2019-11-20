@@ -118,7 +118,7 @@ struct delete_opts {
 };
 
 int
-handle_delete(struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
+handle_delete(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
 {
     struct delete_ematch_arg dea;
 

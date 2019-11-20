@@ -31,7 +31,7 @@
 
 struct rtpp_session;
 
-int handle_copy(struct rtpp_cfg *, struct rtpp_session *, int, char *,
+int handle_copy(const struct rtpp_cfg *, struct rtpp_session *, int, char *,
   int);
 
 #endif

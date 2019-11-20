@@ -45,7 +45,7 @@ char *rtpp_strsep(char **, const char *);
 int rtpp_daemon(int, int);
 int url_unquote(unsigned char *, int);
 int rtpp_get_sched_hz(void);
-long long rtpp_rlim_max(struct rtpp_cfg *);
+long long rtpp_rlim_max(const struct rtpp_cfg *);
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
 #endif

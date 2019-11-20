@@ -50,7 +50,7 @@ void rtpp_anetio_pump(struct rtpp_anetio_cf *);
 void rtpp_anetio_pump_q(struct sthread_args *);
 struct sthread_args *rtpp_anetio_pick_sender(struct rtpp_anetio_cf *);
 
-struct rtpp_anetio_cf *rtpp_netio_async_init(struct rtpp_cfg *, int);
+struct rtpp_anetio_cf *rtpp_netio_async_init(const struct rtpp_cfg *, int);
 void rtpp_netio_async_destroy(struct rtpp_anetio_cf *);
 
 #endif

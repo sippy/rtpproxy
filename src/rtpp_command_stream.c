@@ -66,7 +66,7 @@ rtpp_command_stream_compact(struct rtpp_cmd_connection *rcs)
 }   
 
 int
-rtpp_command_stream_doio(struct rtpp_cfg *cfsp, struct rtpp_cmd_connection *rcs)
+rtpp_command_stream_doio(const struct rtpp_cfg *cfsp, struct rtpp_cmd_connection *rcs)
 {
     int len, blen;
     char *cp;
@@ -108,7 +108,7 @@ rcs_reply_nomem(struct rtpp_log *log, int controlfd, struct rtpp_command_stats *
 }
 
 struct rtpp_command *
-rtpp_command_stream_get(struct rtpp_cfg *cfsp, struct rtpp_cmd_connection *rcs,
+rtpp_command_stream_get(const struct rtpp_cfg *cfsp, struct rtpp_cmd_connection *rcs,
   int *rval, const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp)
 {
     char *cp, *cp1;

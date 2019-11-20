@@ -64,7 +64,7 @@ int compare_session_tags(const char *, const char *, unsigned *);
 int find_stream(const struct rtpp_cfg *, const char *, const char *,
   const char *, struct rtpp_session **);
 
-struct rtpp_session *rtpp_session_ctor(struct rtpp_cfg *,
+struct rtpp_session *rtpp_session_ctor(const struct rtpp_cfg *,
   struct common_cmd_args *, const struct rtpp_timestamp *,
   const struct sockaddr **, int, int, struct rtpp_socket **);
 

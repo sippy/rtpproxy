@@ -58,6 +58,7 @@
 #include "rtpp_list.h"
 #include "rtpp_controlfd.h"
 #include "rtpp_locking.h"
+#include "rtpp_proc_async.h"
 
 #define RTPC_MAX_CONNECTIONS 100
 
@@ -147,7 +148,7 @@ flush_cstats(struct rtpp_stats *sobj, struct rtpp_command_stats *csp)
 }
 
 static int
-accept_connection(struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp,
+accept_connection(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp,
   struct sockaddr *rap)
 {
     int controlfd;
@@ -167,7 +168,7 @@ accept_connection(struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp,
 }
 
 static int
-process_commands(struct rtpp_ctrl_sock *csock, struct rtpp_cfg *cfsp, int controlfd,
+process_commands(struct rtpp_ctrl_sock *csock, const struct rtpp_cfg *cfsp, int controlfd,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp,
   struct rtpp_stats *rsc, struct rtpp_cmd_rcache *rcp)
 {
@@ -214,7 +215,7 @@ out:
 }
 
 static int
-process_commands_stream(struct rtpp_cfg *cfsp, struct rtpp_cmd_connection *rcc,
+process_commands_stream(const struct rtpp_cfg *cfsp, struct rtpp_cmd_connection *rcc,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp, struct rtpp_stats *rsc)
 {
     int rval;
@@ -326,7 +327,7 @@ rtpp_cmd_acceptor_run(void *arg)
                 pthread_mutex_unlock(&psp->pfds_mutex);
                 continue;
             }
-            controlfd = accept_connection(cmd_cf->cf_save, asp->csocks[i],
+            controlfd = accept_connection(CONST(cmd_cf->cf_save), asp->csocks[i],
               sstosa(&raddr));
             if (controlfd < 0) {
                 pthread_mutex_unlock(&psp->pfds_mutex);
@@ -433,9 +434,9 @@ again:
                     continue;
                 }
                 if (RTPP_CTRL_ISSTREAM(psp->rccs[i]->csock)) {
-                    rval = process_commands_stream(cmd_cf->cf_save, psp->rccs[i], &sptime, csp, rtpp_stats_cf);
+                    rval = process_commands_stream(CONST(cmd_cf->cf_save), psp->rccs[i], &sptime, csp, rtpp_stats_cf);
                 } else {
-                    rval = process_commands(psp->rccs[i]->csock, cmd_cf->cf_save, psp->pfds[i].fd,
+                    rval = process_commands(psp->rccs[i]->csock, CONST(cmd_cf->cf_save), psp->pfds[i].fd,
                       &sptime, csp, rtpp_stats_cf, cmd_cf->rcache);
                 }
                 /*
@@ -462,7 +463,7 @@ closefd:
         }
         pthread_mutex_unlock(&psp->pfds_mutex);
         if (nready > 0) {
-            rtpp_anetio_pump(cmd_cf->cf_save->rtpp_netio_cf);
+            rtpp_anetio_pump(cmd_cf->cf_save->rtpp_proc_cf->netio);
         }
 #if 0
         eptime = getdtime();
@@ -552,7 +553,7 @@ rtpp_command_async_chk_overload(struct rtpp_cmd_async *pub)
 }
 
 static int
-init_pollset(struct rtpp_cfg *cfsp, struct rtpp_cmd_pollset *psp)
+init_pollset(const struct rtpp_cfg *cfsp, struct rtpp_cmd_pollset *psp)
 {
     struct rtpp_ctrl_sock *ctrl_sock;
     int pfds_used, msize, i;
@@ -615,7 +616,7 @@ free_pollset(struct rtpp_cmd_pollset *psp)
 }
 
 static int
-init_accptset(struct rtpp_cfg *cfsp, struct rtpp_cmd_accptset *asp)
+init_accptset(const struct rtpp_cfg *cfsp, struct rtpp_cmd_accptset *asp)
 {
     int i, pfds_used;
     struct rtpp_ctrl_sock *ctrl_sock;

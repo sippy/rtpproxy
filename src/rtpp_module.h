@@ -38,7 +38,8 @@ struct rtpp_module_conf;
 #include "rtpp_types.h"
 #endif
 
-DEFINE_METHOD(rtpp_cfg, rtpp_module_ctor, struct rtpp_module_priv *);
+DEFINE_RAW_METHOD(rtpp_module_ctor, struct rtpp_module_priv *,
+  const struct rtpp_cfg *);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_get_mconf, struct rtpp_module_conf *);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_config, int);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_dtor, void);

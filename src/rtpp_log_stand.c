@@ -64,7 +64,7 @@ struct rtpp_log_inst {
 };
 
 struct rtpp_log_inst *
-_rtpp_log_open(struct rtpp_cfg *cf, const char *app, const char *call_id)
+_rtpp_log_open(const struct rtpp_cfg *cf, const char *app, const char *call_id)
 {
     const char *stritime;
     const char *tform;

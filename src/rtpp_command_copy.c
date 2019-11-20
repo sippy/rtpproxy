@@ -44,9 +44,10 @@
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
+#include "rtpp_command_copy.h"
 
 int
-handle_copy(struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx, char *rname,
+handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx, char *rname,
   int record_single_file)
 {
     int remote;

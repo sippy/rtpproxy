@@ -33,11 +33,11 @@ struct rtpp_log;
 struct rtpp_cfg;
 struct rtpp_module_conf;
 
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, struct rtpp_cfg *,
+DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, const struct rtpp_cfg *,
   struct rtpp_log *);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_config, int);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_start, int,
-  struct rtpp_cfg *);
+  const struct rtpp_cfg *);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct, void,
   struct rtpp_acct *);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct_rtcp, void,

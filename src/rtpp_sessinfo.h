@@ -67,6 +67,6 @@ struct rtpp_sessinfo {
     METHOD_ENTRY(rtpp_si_sync_polltbl, sync_polltbl);
 };
 
-struct rtpp_sessinfo *rtpp_sessinfo_ctor(struct rtpp_cfg *);
+struct rtpp_sessinfo *rtpp_sessinfo_ctor(const struct rtpp_cfg *);
 
 void rtpp_polltbl_free(struct rtpp_polltbl *);

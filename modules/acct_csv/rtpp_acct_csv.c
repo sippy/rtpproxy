@@ -82,7 +82,7 @@ struct rtpp_module_priv {
 
 #define HNAME_REFRESH_IVAL	1.0
 
-static struct rtpp_module_priv *rtpp_acct_csv_ctor(struct rtpp_cfg *);
+static struct rtpp_module_priv *rtpp_acct_csv_ctor(const struct rtpp_cfg *);
 static void rtpp_acct_csv_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_csv_do(struct rtpp_module_priv *, struct rtpp_acct *);
 static off_t rtpp_acct_csv_lockf(int);
@@ -240,7 +240,7 @@ e0:
 }
 
 static struct rtpp_module_priv *
-rtpp_acct_csv_ctor(struct rtpp_cfg *cfsp)
+rtpp_acct_csv_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_priv *pvt;
 

@@ -214,7 +214,7 @@ ehandler(void)
 }
 
 long long
-rtpp_rlim_max(struct rtpp_cfg *cfsp)
+rtpp_rlim_max(const struct rtpp_cfg *cfsp)
 {
 
     return (long long)(cfsp->nofile->limit->rlim_max);

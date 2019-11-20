@@ -57,7 +57,7 @@ struct cmd_props {
 };
 
 static int 
-fill_cmd_props(struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
+fill_cmd_props(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
   struct cmd_props *cpp)
 {
 
@@ -232,7 +232,7 @@ fill_cmd_props(struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
 }
 
 int
-rtpp_command_pre_parse(struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
+rtpp_command_pre_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     struct cmd_props cprops;
 

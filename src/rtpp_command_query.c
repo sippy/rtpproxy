@@ -60,7 +60,7 @@
     }
 
 static int
-handle_query_simple(struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
+handle_query_simple(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
   struct rtpp_pipe *spp, int idx, int verbose)
 {
     int len, ttl;
@@ -103,7 +103,7 @@ handle_query_simple(struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
     }
 
 int
-handle_query(struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
+handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
   struct rtpp_pipe *spp, int idx)
 {
     int len, i, verbose, rst_pulled, pcnt_pulled, pcnt_strm_pulled;

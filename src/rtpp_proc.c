@@ -56,11 +56,11 @@ struct rtpp_proc_ready_lst {
     struct rtpp_stream *stp;
 };
 
-static void send_packet(struct rtpp_cfg *, struct rtpp_stream *,
+static void send_packet(const struct rtpp_cfg *, struct rtpp_stream *,
   struct rtp_packet *, struct sthread_args *, struct rtpp_proc_rstats *);
 
 static void
-rxmit_packets(struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
+rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
   const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp, const struct rtpp_session *sp)
 {
@@ -97,7 +97,7 @@ rxmit_packets(struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
 }
 
 static struct rtpp_stream *
-get_sender(struct rtpp_cfg *cfsp, struct rtpp_stream *stp)
+get_sender(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp)
 {
     if (stp->pipe_type == PIPE_RTP) {
        return (CALL_METHOD(cfsp->rtp_streams_wrt, get_by_idx,
@@ -108,7 +108,7 @@ get_sender(struct rtpp_cfg *cfsp, struct rtpp_stream *stp)
 }
 
 static void
-send_packet(struct rtpp_cfg *cfsp, struct rtpp_stream *stp_in,
+send_packet(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp_in,
   struct rtp_packet *packet, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
@@ -150,7 +150,7 @@ e0:
 }
 
 void
-process_rtp_only(struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
+process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
   const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
