@@ -31,6 +31,7 @@
 #include <netinet/in.h>
 #include <ctype.h>
 #include <netdb.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,6 +67,7 @@
 #include "rtpp_timeout_data.h"
 #include "rtpp_util.h"
 #include "rtpp_ttl.h"
+#include "rtpp_nofile.h"
 
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
@@ -538,8 +540,8 @@ rtpp_command_ul_handle(struct cfg *cf, struct rtpp_command *cmd, int sidx)
          */
         sessions_active = CALL_METHOD(cf->stable->sessions_wrt, get_length);
         if (sessions_active > (rtpp_rlim_max(cf) * 80 / (100 * 5)) &&
-          cf->nofile_limit_warned == 0) {
-            cf->nofile_limit_warned = 1;
+          atomic_load(&cf->stable->nofile->warned) == 0) {
+            atomic_store(&(cf->stable->nofile->warned), 1);
             RTPP_LOG(cmd->glog, RTPP_LOG_WARN, "passed 80%% "
               "threshold on the open file descriptors limit (%d), "
               "consider increasing the limit using -L command line "

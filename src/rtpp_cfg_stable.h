@@ -49,6 +49,7 @@ struct rtpp_runcreds;
 struct rtpp_proc_ttl;
 struct po_manager;
 struct rtpp_locking;
+struct rtpp_nofile;
 
 #define RTPP_PT_INET	0
 #define	RTPP_PT_INET6	1
@@ -94,7 +95,7 @@ struct rtpp_cfg_stable {
     int rrtcp;                      /* Whether or not to relay RTCP? */
     struct rtpp_log *glog;
 
-    struct rlimit *nofile_limit;
+    struct rtpp_nofile *nofile;
     int no_check;
 
     rtpp_ttl_mode ttl_mode;

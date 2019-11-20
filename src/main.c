@@ -44,6 +44,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <pwd.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -104,6 +105,7 @@
 #include "rtpp_weakref.h"
 #include "rtpp_debug.h"
 #include "rtpp_locking.h"
+#include "rtpp_nofile.h"
 #include "advanced/po_manager.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "libexecinfo/stacktraverse.h"
@@ -215,7 +217,7 @@ long long
 rtpp_rlim_max(struct cfg *cf)
 {
 
-    return (long long)(cf->stable->nofile_limit->rlim_max);
+    return (long long)(cf->stable->nofile->limit->rlim_max);
 }
 
 #define LOPT_DSO      256
@@ -244,7 +246,7 @@ init_config_bail(struct rtpp_cfg_stable *cfsp, int rval, const char *msg, int me
     }
     free(cfsp->locks);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
-    free(cfsp->nofile_limit);
+    CALL_METHOD(cfsp->nofile, dtor);
 
     for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = ctrl_sock_next) {
@@ -326,11 +328,9 @@ init_config(struct cfg *cf, int argc, char **argv)
         err(1, "malloc(stable->bindaddrs_cf)");
     }
 
-    cf->stable->nofile_limit = malloc(sizeof(*cf->stable->nofile_limit));
-    if (cf->stable->nofile_limit == NULL)
-        err(1, "malloc");
-    if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
-	err(1, "getrlimit");
+    cf->stable->nofile = rtpp_nofile_ctor();
+    if (cf->stable->nofile == NULL)
+        err(1, "malloc(stable->nofile)");
 
     option_index = -1;
     brsym = 0;
@@ -520,15 +520,15 @@ init_config(struct cfg *cf, int argc, char **argv)
 
             if (atoi_safe(optarg, &rlim_max_opt))
                 errx(1, "%s: max file rlimit argument is invalid", optarg);
-	    cf->stable->nofile_limit->rlim_cur = rlim_max_opt;
-	    cf->stable->nofile_limit->rlim_max = rlim_max_opt;
-	    if (setrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
+	    cf->stable->nofile->limit->rlim_cur = rlim_max_opt;
+	    cf->stable->nofile->limit->rlim_max = rlim_max_opt;
+	    if (setrlimit(RLIMIT_NOFILE, cf->stable->nofile->limit) != 0)
 		err(1, "setrlimit");
-	    if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile_limit) != 0)
+	    if (getrlimit(RLIMIT_NOFILE, cf->stable->nofile->limit) != 0)
 		err(1, "getrlimit");
-	    if (cf->stable->nofile_limit->rlim_max < rlim_max_opt)
+	    if (cf->stable->nofile->limit->rlim_max < rlim_max_opt)
 		warnx("limit allocated by setrlimit (%d) is less than "
-		  "requested (%d)", (int) cf->stable->nofile_limit->rlim_max,
+		  "requested (%d)", (int) cf->stable->nofile->limit->rlim_max,
 		  rlim_max_opt);
 	    break;
             }

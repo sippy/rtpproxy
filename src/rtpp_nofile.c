@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2019 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,46 +25,52 @@
  *
  */
 
-#ifndef _RTPP_DEFINES_H_
-#define _RTPP_DEFINES_H_
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <stdatomic.h>
+#include <stddef.h>
+#include <stdlib.h>
 
-/*
- * Version of the command protocol, bump only when backward-incompatible
- * change is introduced
- */
-#define	CPROTOVER	20040107
+#include "config_pp.h"
 
-#define	PORT_MIN	35000
-#define	PORT_MAX	65000
-#define	TIMETICK	1	/* in seconds */
-#define	SESSION_TIMEOUT	60	/* in ticks */
-#define	TOS		0xb8
-#define	LBR_THRS	128	/* low-bitrate threshold */
-#define	CPORT		"22222"
-#define	MAX_RTP_RATE	100
-#define	POLL_RATE	(MAX_RTP_RATE * 2)	/* target number of poll(2) calls per second */
-#define	LOG_LEVEL	RTPP_LOG_DBUG
-#define	UPDATE_WINDOW	10.0	/* in seconds */
-#define	PCAP_FORMAT	DLT_EN10MB
+#include "rtpp_mallocs.h"
+#include "rtpp_types.h"
+#include "rtpp_nofile.h"
 
-/* Dummy service, getaddrinfo needs it */
-#define	SERVICE		"34999"
+#if !defined(NO_ERR_H)
+#include <err.h>
+#include "rtpp_util.h"
+#else
+#include "rtpp_util.h"
+#endif
 
-#define	CMD_SOCK	"/var/run/rtpproxy.sock"
-#define	PID_FILE	"/var/run/rtpproxy.pid"
-
-#define STRINGIFY(x) #x
-#define STR(x) STRINGIFY(x)
-
-struct pollfd;
-struct bindaddr_list;
-struct rtpp_timeout_handler;
-
-struct rtpp_hash_table;
-struct rtpp_cfg_stable;
-
-struct cfg {
-    struct rtpp_cfg_stable *stable;
+struct rtpp_nofile_pvt {
+    struct rtpp_nofile pub;
+    struct rlimit limit_storage;
 };
 
-#endif
+static void
+rtpp_nofile_dtor(struct rtpp_nofile *pub)
+{
+    struct rtpp_nofile_pvt *priv;
+
+    PUB2PVT(pub, priv);
+    free(priv);
+}
+
+struct rtpp_nofile *
+rtpp_nofile_ctor(void)
+{
+    struct rtpp_nofile_pvt *priv;
+
+    priv = rtpp_zmalloc(sizeof(*priv));
+    if (priv == NULL)
+        return (NULL);
+    if (getrlimit(RLIMIT_NOFILE, &(priv->limit_storage)) != 0)
+        err(1, "getrlimit");
+    atomic_init(&(priv->pub.warned), 0);
+    priv->pub.dtor = rtpp_nofile_dtor;
+    priv->pub.limit = &(priv->limit_storage);
+    return (&(priv->pub));
+}
