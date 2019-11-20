@@ -57,6 +57,7 @@
 #include "rtpp_stats.h"
 #include "rtpp_list.h"
 #include "rtpp_controlfd.h"
+#include "rtpp_locking.h"
 
 #define RTPC_MAX_CONNECTIONS 100
 
@@ -198,11 +199,11 @@ again:
                 flush_cstats(rsc, csp);
             }
             if (cmd->no_glock == 0) {
-                pthread_mutex_lock(cf->stable->glock);
+                pthread_mutex_lock(&(cf->stable->locks->glob));
             }
             i = handle_command(cf, cmd);
             if (cmd->no_glock == 0) {
-                pthread_mutex_unlock(cf->stable->glock);
+                pthread_mutex_unlock(&(cf->stable->locks->glob));
             }
             free_command(cmd);
         }
@@ -242,11 +243,11 @@ again:
             flush_cstats(rsc, csp);
         }
         if (cmd->no_glock == 0) {
-            pthread_mutex_lock(cf->stable->glock);
+            pthread_mutex_lock(&(cf->stable->locks->glob));
         }
         rval = handle_command(cf, cmd);
         if (cmd->no_glock == 0) {
-            pthread_mutex_unlock(cf->stable->glock);
+            pthread_mutex_unlock(&(cf->stable->locks->glob));
         }
         free_command(cmd);
     } while (rval == 0);

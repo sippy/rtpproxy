@@ -50,6 +50,7 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_pipe.h"
 #include "rtpp_timeout_data.h"
+#include "rtpp_locking.h"
 
 struct rtpp_proc_ttl_pvt {
     struct rtpp_proc_ttl pub;
@@ -131,10 +132,10 @@ rtpp_proc_ttl_run(void *arg)
             break;
         }
         prdic_procrastinate(proc_cf->elp);
-        pthread_mutex_lock(cfsp->glock);
+        pthread_mutex_lock(&(cfsp->locks->glob));
         rtpp_proc_ttl(cfsp->sessions_ht, cfsp->sessions_wrt,
           cfsp->rtpp_notify_cf, stats_cf);
-        pthread_mutex_unlock(cfsp->glock);
+        pthread_mutex_unlock(&(cfsp->locks->glob));
     }
 }
 

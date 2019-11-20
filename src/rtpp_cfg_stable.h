@@ -48,6 +48,7 @@ struct rtpp_module_if;
 struct rtpp_runcreds;
 struct rtpp_proc_ttl;
 struct po_manager;
+struct rtpp_locking;
 
 #define RTPP_PT_INET	0
 #define	RTPP_PT_INET6	1
@@ -139,7 +140,7 @@ struct rtpp_cfg_stable {
 
     struct po_manager *observers;
 
-    pthread_mutex_t *glock;
+    struct rtpp_locking *locks;
 };
 
 #endif
