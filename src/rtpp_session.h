@@ -67,6 +67,6 @@ int find_stream(struct cfg *, const char *, const char *, const char *,
 
 struct rtpp_session *rtpp_session_ctor(struct rtpp_cfg_stable *,
   struct common_cmd_args *, const struct rtpp_timestamp *,
-  struct sockaddr **, int, int, struct rtpp_socket **);
+  const struct sockaddr **, int, int, struct rtpp_socket **);
 
 #endif

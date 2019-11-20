@@ -72,8 +72,8 @@ static void rtpp_session_dtor(struct rtpp_session_priv *);
 
 struct rtpp_session *
 rtpp_session_ctor(struct rtpp_cfg_stable *cfs, struct common_cmd_args *ccap,
-  const struct rtpp_timestamp *dtime, struct sockaddr **lia, int weak, int lport,
-  struct rtpp_socket **fds)
+  const struct rtpp_timestamp *dtime, const struct sockaddr **lia, int weak,
+  int lport, struct rtpp_socket **fds)
 {
     struct rtpp_session_priv *pvt;
     struct rtpp_session *pub;
