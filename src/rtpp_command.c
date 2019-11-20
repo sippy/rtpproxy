@@ -90,7 +90,7 @@ struct rtpp_command_priv {
 struct d_opts;
 
 static int create_twinlistener(uint16_t, void *);
-static void handle_info(struct cfg *, struct rtpp_command *);
+static void handle_info(struct rtpp_cfg_stable *, struct rtpp_command *);
 
 struct create_twinlistener_args {
     struct rtpp_cfg_stable *cfs;
@@ -152,7 +152,7 @@ failure:
 }
 
 int
-rtpp_create_listener(struct cfg *cf, const struct sockaddr *ia, int *port,
+rtpp_create_listener(struct rtpp_cfg_stable *cfsp, const struct sockaddr *ia, int *port,
   struct rtpp_socket **fds)
 {
     struct create_twinlistener_args cta;
@@ -160,7 +160,7 @@ rtpp_create_listener(struct cfg *cf, const struct sockaddr *ia, int *port,
     struct rtpp_port_table *rpp;
 
     memset(&cta, '\0', sizeof(cta));
-    cta.cfs = cf->stable;
+    cta.cfs = cfsp;
     cta.fds = fds;
     cta.ia = ia;
     cta.port = port;
@@ -168,7 +168,7 @@ rtpp_create_listener(struct cfg *cf, const struct sockaddr *ia, int *port,
     for (i = 0; i < 2; i++)
         fds[i] = NULL;
 
-    rpp = RTPP_PT_SELECT(cf->stable, ia->sa_family);
+    rpp = RTPP_PT_SELECT(cfsp, ia->sa_family);
     return (CALL_METHOD(rpp, get_port, create_twinlistener,
       &cta));
 }
@@ -252,8 +252,8 @@ free_command(struct rtpp_command *cmd)
 }
 
 struct rtpp_command *
-rtpp_command_ctor(struct cfg *cf, int controlfd, const struct rtpp_timestamp *dtime,
-  struct rtpp_command_stats *csp, int umode)
+rtpp_command_ctor(struct rtpp_cfg_stable *cfsp, int controlfd,
+  const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp, int umode)
 {
     struct rtpp_command_priv *pvt;
     struct rtpp_command *cmd;
@@ -264,18 +264,18 @@ rtpp_command_ctor(struct cfg *cf, int controlfd, const struct rtpp_timestamp *dt
     }
     cmd = &(pvt->pub);
     pvt->controlfd = controlfd;
-    pvt->cfs = cf->stable;
+    pvt->cfs = cfsp;
     pvt->dtime.wall = dtime->wall;
     pvt->dtime.mono = dtime->mono;
     cmd->dtime = &pvt->dtime;
     cmd->csp = csp;
-    cmd->glog = cf->stable->glog;
+    cmd->glog = cfsp->glog;
     pvt->umode = umode;
     return (cmd);
 }
 
 struct rtpp_command *
-get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rval,
+get_command(struct rtpp_cfg_stable *cfsp, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rval,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp,
   struct rtpp_cmd_rcache *rcache_obj)
 {
@@ -288,7 +288,7 @@ get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rva
     socklen_t asize, *lp;
     struct sockaddr *raddr;
 
-    cmd = rtpp_command_ctor(cf, controlfd, dtime, csp, umode);
+    cmd = rtpp_command_ctor(cfsp, controlfd, dtime, csp, umode);
     if (cmd == NULL) {
         bp = rcsp->emrg.buf;
         bsize = sizeof(rcsp->emrg.buf);
@@ -300,7 +300,7 @@ get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rva
         for (;;) {
             len = read(controlfd, bp, bsize - 1);
             if (len == 0) {
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_DBUG,
+                RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG,
                   "EOF before receiving any command data");
                 if (cmd != NULL)
                     free_command(cmd);
@@ -325,7 +325,7 @@ get_command(struct cfg *cf, struct rtpp_ctrl_sock *rcsp, int controlfd, int *rva
     }
     if (len == -1) {
         if (errno != EAGAIN && errno != EINTR)
-            RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't read from control socket");
+            RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't read from control socket");
         if (cmd != NULL)
             free_command(cmd);
         *rval = GET_CMD_IOERR;
@@ -436,7 +436,7 @@ etoomany:
 }
 
 int
-handle_command(struct cfg *cf, struct rtpp_command *cmd)
+handle_command(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
 {
     int i, verbose, rval;
     char *cp;
@@ -450,7 +450,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     /* Step II: parse parameters that are specific to a particular op and run simple ops */
     switch (cmd->cca.op) {
     case VER_FEATURE:
-        handle_ver_feature(cf, cmd);
+        handle_ver_feature(cfsp, cmd);
         return 0;
 
     case GET_VER:
@@ -460,14 +460,14 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case DELETE_ALL:
         /* Delete all active sessions */
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO, "deleting all active sessions");
-        CALL_METHOD(cf->stable->sessions_wrt, purge);
-        CALL_METHOD(cf->stable->sessions_ht, purge);
+        RTPP_LOG(cfsp->glog, RTPP_LOG_INFO, "deleting all active sessions");
+        CALL_METHOD(cfsp->sessions_wrt, purge);
+        CALL_METHOD(cfsp->sessions_ht, purge);
         reply_ok(cmd);
         return 0;
 
     case INFO:
-        handle_info(cf, cmd);
+        handle_info(cfsp, cmd);
         return 0;
 
     case PLAY:
@@ -480,7 +480,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
          */
         cmd->cca.opts.play = rtpp_command_play_opts_parse(cmd);
         if (cmd->cca.opts.play == NULL) {
-            RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't parse options");
+            RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
         }
         break;
@@ -491,14 +491,14 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     case RECORD:
         if (cmd->args.v[0][1] == 'S' || cmd->args.v[0][1] == 's') {
             if (cmd->args.v[0][2] != '\0') {
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
+                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_2);
                 return 0;
             }
-            record_single_file = (cf->stable->record_pcap == 0) ? 0 : 1;
+            record_single_file = (cfsp->record_pcap == 0) ? 0 : 1;
         } else {
             if (cmd->args.v[0][1] != '\0') {
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
+                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_3);
                 return 0;
             }
@@ -510,16 +510,16 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
         /* D[w] call_id from_tag [to_tag] */
         cmd->cca.opts.delete = rtpp_command_del_opts_parse(cmd);
         if (cmd->cca.opts.delete == NULL) {
-            RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't parse options");
+            RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
         }
         break;
 
     case UPDATE:
     case LOOKUP:
-        cmd->cca.opts.ul = rtpp_command_ul_opts_parse(cf, cmd);
+        cmd->cca.opts.ul = rtpp_command_ul_opts_parse(cfsp, cmd);
         if (cmd->cca.opts.ul == NULL) {
-            RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "can't parse options");
+            RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
         }
 	break;
@@ -534,13 +534,13 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
                 break;
 
             default:
-                RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR,
+                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
                   "STATS: unknown command modifier `%c'", *cp);
                 reply_error(cmd, ECODE_PARSE_5);
                 return 0;
             }
         }
-        i = handle_get_stats(cf->stable->rtpp_stats, cmd, verbose);
+        i = handle_get_stats(cfsp->rtpp_stats, cmd, verbose);
         if (i != 0) {
             reply_error(cmd, i);
         }
@@ -556,15 +556,15 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
      */
     switch (cmd->cca.op) {
     case DELETE:
-	i = handle_delete(cf, &cmd->cca);
+	i = handle_delete(cfsp, &cmd->cca);
 	break;
 
     case RECORD:
-	i = handle_record(cf, &cmd->cca, record_single_file);
+	i = handle_record(cfsp, &cmd->cca, record_single_file);
 	break;
 
     default:
-	i = find_stream(cf, cmd->cca.call_id, cmd->cca.from_tag,
+	i = find_stream(cfsp, cmd->cca.call_id, cmd->cca.from_tag,
 	  cmd->cca.to_tag, &spa);
 	if (i != -1) {
 	    if (cmd->cca.op != UPDATE)
@@ -576,7 +576,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
     }
 
     if (i == -1 && cmd->cca.op != UPDATE) {
-	RTPP_LOG(cf->stable->glog, RTPP_LOG_INFO,
+	RTPP_LOG(cfsp->glog, RTPP_LOG_INFO,
 	  "%s request failed: session %s, tags %s/%s not found", cmd->cca.rname,
 	  cmd->cca.call_id, cmd->cca.from_tag, cmd->cca.to_tag != NULL ? cmd->cca.to_tag : "NONE");
 	switch (cmd->cca.op) {
@@ -613,7 +613,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case COPY:
-	if (handle_copy(cf, spa, i, recording_name, record_single_file) != 0) {
+	if (handle_copy(cfsp, spa, i, recording_name, record_single_file) != 0) {
             reply_error(cmd, ECODE_CPYFAIL);
             return 0;
         }
@@ -621,7 +621,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 	break;
 
     case QUERY:
-	rval = handle_query(cf, cmd, spa->rtp, i);
+	rval = handle_query(cfsp, cmd, spa->rtp, i);
 	if (rval != 0) {
 	    reply_error(cmd, rval);
 	}
@@ -629,7 +629,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 
     case LOOKUP:
     case UPDATE:
-	rtpp_command_ul_handle(cf, cmd, i);
+	rtpp_command_ul_handle(cfsp, cmd, i);
 	break;
 
     default:
@@ -641,7 +641,7 @@ handle_command(struct cfg *cf, struct rtpp_command *cmd)
 }
 
 static void
-handle_info(struct cfg *cf, struct rtpp_command *cmd)
+handle_info(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
 {
 #if 0
     struct rtpp_session *spa, *spb;
@@ -675,31 +675,31 @@ handle_info(struct cfg *cf, struct rtpp_command *cmd)
             break;
 
         default:
-            RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "command syntax error");
+            RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
             reply_error(cmd, ECODE_PARSE_7);
             return;
         }
     }
 
-    packets_in = CALL_SMETHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_rcvd");
-    packets_out = CALL_SMETHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_relayed") +
-      CALL_SMETHOD(cf->stable->rtpp_stats, getlvalbyname, "npkts_played");
-    sessions_created = CALL_SMETHOD(cf->stable->rtpp_stats, getlvalbyname,
+    packets_in = CALL_SMETHOD(cfsp->rtpp_stats, getlvalbyname, "npkts_rcvd");
+    packets_out = CALL_SMETHOD(cfsp->rtpp_stats, getlvalbyname, "npkts_relayed") +
+      CALL_SMETHOD(cfsp->rtpp_stats, getlvalbyname, "npkts_played");
+    sessions_created = CALL_SMETHOD(cfsp->rtpp_stats, getlvalbyname,
       "nsess_created");
-    sessions_active = sessions_created - CALL_SMETHOD(cf->stable->rtpp_stats,
+    sessions_active = sessions_created - CALL_SMETHOD(cfsp->rtpp_stats,
       getlvalbyname, "nsess_destroyed");
-    rtp_streams_active = CALL_METHOD(cf->stable->rtp_streams_wrt, get_length);
+    rtp_streams_active = CALL_METHOD(cfsp->rtp_streams_wrt, get_length);
     len = snprintf(buf, sizeof(buf), "sessions created: %llu\nactive sessions: %d\n"
       "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
       sessions_created, sessions_active, rtp_streams_active, packets_in, packets_out);
     if (load != 0) {
           len += snprintf(buf + len, sizeof(buf) - len, "average load: %f\n",
-            CALL_METHOD(cf->stable->rtpp_cmd_cf, get_aload));
+            CALL_METHOD(cfsp->rtpp_cmd_cf, get_aload));
     }
 #if 0
 XXX this needs work to fix it after rtp/rtcp split 
-    for (i = 0; i < cf->sessinfo->nsessions && brief == 0; i++) {
-        spa = cf->sessinfo->sessions[i];
+    for (i = 0; i < cfsp->nsessions && brief == 0; i++) {
+        spa = cfsp->sessions[i];
         if (spa == NULL || spa->stream[0]->sidx != i)
             continue;
         /* RTCP twin session */

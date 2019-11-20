@@ -57,15 +57,4 @@
 #define STRINGIFY(x) #x
 #define STR(x) STRINGIFY(x)
 
-struct pollfd;
-struct bindaddr_list;
-struct rtpp_timeout_handler;
-
-struct rtpp_hash_table;
-struct rtpp_cfg_stable;
-
-struct cfg {
-    struct rtpp_cfg_stable *stable;
-};
-
 #endif

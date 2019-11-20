@@ -96,7 +96,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
 }
 
 void
-rtpp_proc_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
+rtpp_proc_servers(struct rtpp_cfg_stable *cfsp, double dtime, struct sthread_args *sender,
   struct rtpp_proc_rstats *rsp)
 {
     struct foreach_args fargs;
@@ -104,9 +104,9 @@ rtpp_proc_servers(struct cfg *cf, double dtime, struct sthread_args *sender,
     fargs.dtime = dtime;
     fargs.sender = sender;
     fargs.rsp = rsp;
-    fargs.rtp_streams_wrt = cf->stable->rtp_streams_wrt;
-    fargs.rtcp_streams_wrt = cf->stable->rtcp_streams_wrt;
+    fargs.rtp_streams_wrt = cfsp->rtp_streams_wrt;
+    fargs.rtcp_streams_wrt = cfsp->rtcp_streams_wrt;
 
-    CALL_METHOD(cf->stable->servers_wrt, foreach, process_rtp_servers_foreach,
+    CALL_METHOD(cfsp->servers_wrt, foreach, process_rtp_servers_foreach,
       &fargs);
 }

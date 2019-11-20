@@ -71,18 +71,18 @@ seedrandom(void)
 }
 
 int
-set_rlimits(struct cfg *cf)
+set_rlimits(const struct rtpp_cfg_stable *cfsp)
 {
     struct rlimit rlp;
 
     if (getrlimit(RLIMIT_CORE, &rlp) < 0) {
-        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "getrlimit(RLIMIT_CORE)");
+        RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "getrlimit(RLIMIT_CORE)");
         return (-1);
     }
     rlp.rlim_cur = RLIM_INFINITY;
     rlp.rlim_max = RLIM_INFINITY;
     if (setrlimit(RLIMIT_CORE, &rlp) < 0) {
-        RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "setrlimit(RLIMIT_CORE)");
+        RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "setrlimit(RLIMIT_CORE)");
         return (-1);
     }
     return (0);

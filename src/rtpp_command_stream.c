@@ -66,7 +66,7 @@ rtpp_command_stream_compact(struct rtpp_cmd_connection *rcs)
 }   
 
 int
-rtpp_command_stream_doio(struct cfg *cf, struct rtpp_cmd_connection *rcs)
+rtpp_command_stream_doio(struct rtpp_cfg_stable *cfsp, struct rtpp_cmd_connection *rcs)
 {
     int len, blen;
     char *cp;
@@ -82,7 +82,7 @@ rtpp_command_stream_doio(struct cfg *cf, struct rtpp_cmd_connection *rcs)
     }
     if (len == -1) {
         if (errno != EAGAIN && errno != EINTR)
-            RTPP_ELOG(cf->stable->glog, RTPP_LOG_ERR, "can't read from control socket");
+            RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't read from control socket");
         return (-1);
     }
     rcs->inbuf_epos += len;
@@ -108,7 +108,7 @@ rcs_reply_nomem(struct rtpp_log *log, int controlfd, struct rtpp_command_stats *
 }
 
 struct rtpp_command *
-rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
+rtpp_command_stream_get(struct rtpp_cfg_stable *cfsp, struct rtpp_cmd_connection *rcs,
   int *rval, const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp)
 {
     char *cp, *cp1;
@@ -129,12 +129,12 @@ rtpp_command_stream_get(struct cfg *cf, struct rtpp_cmd_connection *rcs,
 
     len = cp1 - cp;
 
-    cmd = rtpp_command_ctor(cf, rcs->controlfd_out, dtime, csp, 0);
+    cmd = rtpp_command_ctor(cfsp, rcs->controlfd_out, dtime, csp, 0);
     if (cmd == NULL) {
         *rval = GET_CMD_ENOMEM;
-        RTPP_LOG(cf->stable->glog, RTPP_LOG_ERR, "ENOMEM: command \"%.*s\""
+        RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "ENOMEM: command \"%.*s\""
           " could not be processed", len, cp);
-        rcs_reply_nomem(cf->stable->glog, rcs->controlfd_out, csp);
+        rcs_reply_nomem(cfsp->glog, rcs->controlfd_out, csp);
         rcs->inbuf_ppos += len + 1;
         return (NULL);
     }

@@ -58,12 +58,11 @@ struct rtpp_session {
     struct rtpp_refcnt *rcnt;
 };
 
-struct cfg;
-struct cfg_stable;
+struct rtpp_cfg_stable;
 
 int compare_session_tags(const char *, const char *, unsigned *);
-int find_stream(struct cfg *, const char *, const char *, const char *,
-  struct rtpp_session **);
+int find_stream(const struct rtpp_cfg_stable *, const char *, const char *,
+  const char *, struct rtpp_session **);
 
 struct rtpp_session *rtpp_session_ctor(struct rtpp_cfg_stable *,
   struct common_cmd_args *, const struct rtpp_timestamp *,

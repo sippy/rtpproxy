@@ -46,7 +46,7 @@
 #include "rtpp_util.h"
 
 int
-handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
+handle_copy(struct rtpp_cfg_stable *cfsp, struct rtpp_session *spa, int idx, char *rname,
   int record_single_file)
 {
     int remote;
@@ -60,7 +60,7 @@ handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
             CALL_SMETHOD(spa->rtp->stream[NOT(idx)]->rrc->rcnt, incref);
             spa->rtp->stream[idx]->rrc = spa->rtp->stream[NOT(idx)]->rrc;
         } else {
-            spa->rtp->stream[idx]->rrc = rtpp_record_open(cf, spa, rname, idx, RECORD_BOTH);
+            spa->rtp->stream[idx]->rrc = rtpp_record_open(cfsp, spa, rname, idx, RECORD_BOTH);
             if (spa->rtp->stream[idx]->rrc == NULL) {
                 return (-1);
             }
@@ -68,7 +68,7 @@ handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
               "starting recording RTP session on port %d", spa->rtp->stream[idx]->port);
         }
         assert(spa->rtcp->stream[idx]->rrc == NULL);
-        if (cf->stable->rrtcp != 0) {
+        if (cfsp->rrtcp != 0) {
             CALL_SMETHOD(spa->rtp->stream[idx]->rrc->rcnt, incref);
             spa->rtcp->stream[idx]->rrc = spa->rtp->stream[idx]->rrc;
             RTPP_LOG(spa->log, RTPP_LOG_INFO,
@@ -78,15 +78,15 @@ handle_copy(struct cfg *cf, struct rtpp_session *spa, int idx, char *rname,
     }
 
     if (spa->rtp->stream[idx]->rrc == NULL) {
-        spa->rtp->stream[idx]->rrc = rtpp_record_open(cf, spa, rname, idx, RECORD_RTP);
+        spa->rtp->stream[idx]->rrc = rtpp_record_open(cfsp, spa, rname, idx, RECORD_RTP);
         if (spa->rtp->stream[idx]->rrc == NULL) {
             return (-1);
         }
         RTPP_LOG(spa->log, RTPP_LOG_INFO,
           "starting recording RTP session on port %d", spa->rtp->stream[idx]->port);
     }
-    if (spa->rtcp->stream[idx]->rrc == NULL && cf->stable->rrtcp != 0) {
-        spa->rtcp->stream[idx]->rrc = rtpp_record_open(cf, spa, rname, idx, RECORD_RTCP);
+    if (spa->rtcp->stream[idx]->rrc == NULL && cfsp->rrtcp != 0) {
+        spa->rtcp->stream[idx]->rrc = rtpp_record_open(cfsp, spa, rname, idx, RECORD_RTCP);
         if (spa->rtcp->stream[idx]->rrc == NULL) {
             return (-1);
         }

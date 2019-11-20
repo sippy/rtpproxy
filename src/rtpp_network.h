@@ -31,7 +31,6 @@
 
 #define	addr2port(sa)	ntohs(satosin(sa)->sin_port)
 
-struct cfg;
 struct timeval;
 struct sockaddr;
 struct sockaddr_storage;

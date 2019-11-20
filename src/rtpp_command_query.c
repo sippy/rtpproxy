@@ -60,7 +60,7 @@
     }
 
 static int
-handle_query_simple(struct cfg *cf, struct rtpp_command *cmd,
+handle_query_simple(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd,
   struct rtpp_pipe *spp, int idx, int verbose)
 {
     int len, ttl;
@@ -103,7 +103,7 @@ handle_query_simple(struct cfg *cf, struct rtpp_command *cmd,
     }
 
 int
-handle_query(struct cfg *cf, struct rtpp_command *cmd,
+handle_query(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd,
   struct rtpp_pipe *spp, int idx)
 {
     int len, i, verbose, rst_pulled, pcnt_pulled, pcnt_strm_pulled;
@@ -127,7 +127,7 @@ handle_query(struct cfg *cf, struct rtpp_command *cmd,
         }
     }
     if (cmd->args.c <= 4) {
-        return (handle_query_simple(cf, cmd, spp, idx, verbose));
+        return (handle_query_simple(cfsp, cmd, spp, idx, verbose));
     }
     len = 0;
     rst_pulled = pcnt_pulled = pcnt_strm_pulled = 0;

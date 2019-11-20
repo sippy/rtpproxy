@@ -328,8 +328,8 @@ found:
 }
 
 int
-find_stream(struct cfg *cf, const char *call_id, const char *from_tag,
-  const char *to_tag, struct rtpp_session **spp)
+find_stream(const struct rtpp_cfg_stable *cfsp, const char *call_id,
+  const char *from_tag, const char *to_tag, struct rtpp_session **spp)
 {
     struct session_match_args ma;
 
@@ -338,7 +338,7 @@ find_stream(struct cfg *cf, const char *call_id, const char *from_tag,
     ma.to_tag = to_tag;
     ma.rval = -1;
 
-    CALL_METHOD(cf->stable->sessions_ht, foreach_key, call_id,
+    CALL_METHOD(cfsp->sessions_ht, foreach_key, call_id,
       rtpp_session_ematch, &ma);
     if (ma.rval != -1) {
         *spp = ma.sp;

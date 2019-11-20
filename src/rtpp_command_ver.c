@@ -65,7 +65,7 @@ static struct proto_cap proto_caps[] = {
 };
 
 void
-handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd)
+handle_ver_feature(struct rtpp_cfg_stable *cfsp, struct rtpp_command *cmd)
 {
     int i, known;
 
@@ -78,7 +78,7 @@ handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd)
      * user actually enabled notification with -n
      */
     if (strcmp(cmd->args.v[1], "20081224") == 0 &&
-      !CALL_METHOD(cf->stable->rtpp_tnset_cf, isenabled)) {
+      !CALL_METHOD(cfsp->rtpp_tnset_cf, isenabled)) {
         reply_number(cmd, 0);
         return;
     }
