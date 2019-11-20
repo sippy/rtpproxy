@@ -1,4 +1,5 @@
 include $(top_srcdir)/m4/memdeb.ami
+include $(top_srcdir)/m4/ccflags.ami
 
 HEPSRCDIR=$(top_srcdir)/hepconnector
 UCLSRCDIR=$(top_srcdir)/external/libucl
@@ -23,7 +24,7 @@ rtpp_acct_rtcp_hep_debug_la_LDFLAGS=$(rtpp_acct_rtcp_hep_la_LDFLAGS)
 rtpp_acct_rtcp_hep_debug_la_CPPFLAGS=$(rtpp_acct_rtcp_hep_la_CPPFLAGS) -DRTPP_DEBUG
 rtpp_acct_rtcp_hep_debug_la_CFLAGS=$(RTPP_MEMDEB_CFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS)
 
-DEFS=	-Wall @DEFS@
+DEFS=	$(CC_WFLAGS) @DEFS@
 
 noinst_PROGRAMS += rtpp_sbuf_selftest
 rtpp_sbuf_selftest_CPPFLAGS = -Drtpp_sbuf_selftest=main \

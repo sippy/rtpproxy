@@ -1,0 +1,1 @@
+CC_WFLAGS = -Wall -Werror=implicit-function-declaration -Werror=incompatible-pointer-types

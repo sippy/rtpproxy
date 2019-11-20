@@ -1,5 +1,6 @@
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/autosrc.ami
+include $(top_srcdir)/m4/ccflags.ami
 
 include $(top_srcdir)/autosrc/Makefile.ami
 
@@ -105,7 +106,7 @@ rtpp_rzmalloc_perf_CPPFLAGS = $(EXTRA_CPPFLAGS)
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \
   -D_BSD_SOURCE
-EXTRA_CFLAGS=-Werror=implicit-function-declaration -Wall -Werror=incompatible-pointer-types
+EXTRA_CFLAGS = $(CC_WFLAGS)
 
 EXTRA_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR)
 
