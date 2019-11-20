@@ -94,7 +94,7 @@ static void handle_info(struct cfg *, struct rtpp_command *);
 
 struct create_twinlistener_args {
     struct rtpp_cfg_stable *cfs;
-    struct sockaddr *ia;
+    const struct sockaddr *ia;
     struct rtpp_socket **fds;
     int *port;
 };
@@ -152,7 +152,7 @@ failure:
 }
 
 int
-rtpp_create_listener(struct cfg *cf, struct sockaddr *ia, int *port,
+rtpp_create_listener(struct cfg *cf, const struct sockaddr *ia, int *port,
   struct rtpp_socket **fds)
 {
     struct create_twinlistener_args cta;
