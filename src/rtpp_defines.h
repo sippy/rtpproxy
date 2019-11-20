@@ -72,9 +72,6 @@ struct cfg {
      * structure below.
      */
 
-    struct bindaddr_list *bindaddr_list;
-    pthread_mutex_t bindaddr_lock;
-
     int nofile_limit_warned;
 };
 

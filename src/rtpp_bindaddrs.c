@@ -32,22 +32,34 @@
 #include <errno.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
+#include "rtpp_mallocs.h"
+#include "rtpp_types.h"
+#include "rtpp_bindaddrs.h"
 
 struct bindaddr_list {
     struct sockaddr_storage *bindaddr;
     struct bindaddr_list *next;
 };
 
-struct sockaddr *
-addr2bindaddr(struct cfg *cf, struct sockaddr *ia, const char **ep)
+struct rtpp_bindaddrs_pvt {
+    struct rtpp_bindaddrs pub;
+    struct bindaddr_list *bindaddr_list;
+    pthread_mutex_t bindaddr_lock;
+};
+
+static const struct sockaddr *
+addr2bindaddr(struct rtpp_bindaddrs *pub, const struct sockaddr *ia, const char **ep)
 {
     struct bindaddr_list *bl;
+    struct rtpp_bindaddrs_pvt *cf;
 
+    PUB2PVT(pub, cf);
     pthread_mutex_lock(&cf->bindaddr_lock);
     for (bl = cf->bindaddr_list; bl != NULL; bl = bl->next) {
         if (ishostseq(sstosa(bl->bindaddr), ia) != 0) {
@@ -69,12 +81,12 @@ addr2bindaddr(struct cfg *cf, struct sockaddr *ia, const char **ep)
     return (sstosa(bl->bindaddr));
 }
 
-struct sockaddr *
-host2bindaddr(struct cfg *cf, const char *host, int pf, const char **ep)
+static const struct sockaddr *
+host2bindaddr(struct rtpp_bindaddrs *pub, const char *host, int pf, const char **ep)
 {
     int n;
     struct sockaddr_storage ia;
-    struct sockaddr *rval;
+    const struct sockaddr *rval;
 
     /*
      * If user specified * then change it to NULL,
@@ -87,15 +99,17 @@ host2bindaddr(struct cfg *cf, const char *host, int pf, const char **ep)
         *ep = gai_strerror(n);
         return (NULL);
     }
-    rval = addr2bindaddr(cf, sstosa(&ia), ep);
+    rval = addr2bindaddr(pub, sstosa(&ia), ep);
     return (rval);
 }
 
-struct sockaddr *
-bindaddr4af(struct cfg *cf, int af)
+static const struct sockaddr *
+bindaddr4af(struct rtpp_bindaddrs *pub, int af)
 {
     struct bindaddr_list *bl;
+    struct rtpp_bindaddrs_pvt *cf;
 
+    PUB2PVT(pub, cf);
     pthread_mutex_lock(&cf->bindaddr_lock);
     for (bl = cf->bindaddr_list; bl != NULL; bl = bl->next) {
         if (sstosa(bl->bindaddr)->sa_family == af) {
@@ -105,4 +119,34 @@ bindaddr4af(struct cfg *cf, int af)
     }
     pthread_mutex_unlock(&cf->bindaddr_lock);
     return (NULL);
+}
+
+static void
+rtpp_bindaddrs_dtor(struct rtpp_bindaddrs *pub)
+{
+    struct rtpp_bindaddrs_pvt *cf;
+    struct bindaddr_list *bl, *bl_next;
+
+    PUB2PVT(pub, cf);
+    for (bl = cf->bindaddr_list; bl != NULL; bl = bl_next) {
+        bl_next = bl->next;
+        free(bl);
+    }
+    free(cf);
+}
+
+struct rtpp_bindaddrs *
+rtpp_bindaddrs_ctor(void)
+{
+    struct rtpp_bindaddrs_pvt *cf;
+
+    cf = rtpp_zmalloc(sizeof(*cf));
+    if (cf == NULL)
+        return (NULL);
+    cf->pub.addr2 = addr2bindaddr;
+    cf->pub.host2 = host2bindaddr;
+    cf->pub.foraf = bindaddr4af;
+    cf->pub.dtor = rtpp_bindaddrs_dtor;
+    pthread_mutex_init(&cf->bindaddr_lock, NULL);
+    return (&(cf->pub));
 }

@@ -82,7 +82,7 @@ struct rtpp_cfg_stable {
      * internal one. Second can be NULL, in this case there is no bridge
      * mode enabled.
      */
-    struct sockaddr *bindaddr[2];   /* RTP socket(s) addresses */
+    const struct sockaddr *bindaddr[2];   /* RTP socket(s) addresses */
     char const * advaddr[2];        /* advertised addresses */
     int tos;
 
@@ -123,6 +123,7 @@ struct rtpp_cfg_stable {
     struct rtpp_anetio_cf *rtpp_netio_cf;
     struct rtpp_tnotify_set *rtpp_tnset_cf;
     struct rtpp_notify *rtpp_notify_cf;
+    struct rtpp_bindaddrs *bindaddrs_cf;
     int slowshutdown;
     int fastshutdown;
 

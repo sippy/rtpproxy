@@ -321,7 +321,10 @@ init_config(struct cfg *cf, int argc, char **argv)
         err(1, "malloc(stable->locks)");
     }
     pthread_mutex_init(&(cf->stable->locks->glob), NULL);
-    pthread_mutex_init(&cf->bindaddr_lock, NULL);
+    cf->stable->bindaddrs_cf = rtpp_bindaddrs_ctor();
+    if (cf->stable->bindaddrs_cf == NULL) {
+        err(1, "malloc(stable->bindaddrs_cf)");
+    }
 
     cf->stable->nofile_limit = malloc(sizeof(*cf->stable->nofile_limit));
     if (cf->stable->nofile_limit == NULL)
@@ -752,13 +755,15 @@ init_config(struct cfg *cf, int argc, char **argv)
     for (i = 0; i < 2; i++) {
 	cf->stable->bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
-	    cf->stable->bindaddr[i] = host2bindaddr(cf, bh[i], AF_INET, &errmsg);
+	    cf->stable->bindaddr[i] = CALL_METHOD(cf->stable->bindaddrs_cf,
+              host2, bh[i], AF_INET, &errmsg);
 	    if (cf->stable->bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
-	    cf->stable->bindaddr[i] = host2bindaddr(cf, bh6[i], AF_INET6, &errmsg);
+	    cf->stable->bindaddr[i] = CALL_METHOD(cf->stable->bindaddrs_cf,
+              host2, bh6[i], AF_INET6, &errmsg);
 	    if (cf->stable->bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
@@ -1089,6 +1094,7 @@ main(int argc, char **argv)
     free(cf.stable->modules_cf);
     free(cf.stable->runcreds);
     CALL_METHOD(cf.stable->rtpp_notify_cf, dtor);
+    CALL_METHOD(cf.stable->bindaddrs_cf, dtor);
     free(cf.stable->locks);
     CALL_METHOD(cf.stable->rtpp_tnset_cf, dtor);
     CALL_SMETHOD(cf.stable->rtpp_timed_cf, shutdown);

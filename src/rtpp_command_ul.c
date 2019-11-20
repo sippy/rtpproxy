@@ -70,7 +70,7 @@
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
 struct ul_reply {
-    struct sockaddr *ia;
+    const struct sockaddr *ia;
     const char *ia_ov;
     int port;
 };
@@ -83,12 +83,12 @@ struct ul_opts {
     const char *addr;
     const char *port;
     struct sockaddr *ia[2];
-    struct sockaddr *lia[2];
+    const struct sockaddr *lia[2];
 
     struct ul_reply reply;
     
     int lidx;
-    struct sockaddr *local_addr;
+    const struct sockaddr *local_addr;
     const char *notify_socket;
     const char *notify_tag;
     int pf;
@@ -274,7 +274,8 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             }
             c = t[len];
             t[len] = '\0';
-            ulop->local_addr = host2bindaddr(cf, t, tpf, &errmsg);
+            ulop->local_addr = CALL_METHOD(cf->stable->bindaddrs_cf, host2, t,
+              tpf, &errmsg);
             if (ulop->local_addr == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "invalid local address: %s: %s", t, errmsg);
@@ -295,21 +296,22 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
             }
             c = t[len];
             t[len] = '\0';
-            ulop->local_addr = alloca(sizeof(struct sockaddr_storage));
-            n = resolve(ulop->local_addr, tpf, t, SERVICE, AI_PASSIVE);
+            struct sockaddr_storage local_addr;
+            n = resolve(sstosa(&local_addr), tpf, t, SERVICE, AI_PASSIVE);
             if (n != 0) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "invalid remote address: %s: %s", t, gai_strerror(n));
                 reply_error(cmd, ECODE_INVLARG_2);
                 goto err_undo_1;
             }
-            if (local4remote(ulop->local_addr, satoss(ulop->local_addr)) == -1) {
+            if (local4remote(sstosa(&local_addr), &local_addr) == -1) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "can't find local address for remote address: %s", t);
                 reply_error(cmd, ECODE_INVLARG_3);
                 goto err_undo_1;
             }
-            ulop->local_addr = addr2bindaddr(cf, ulop->local_addr, &errmsg);
+            ulop->local_addr = CALL_METHOD(cf->stable->bindaddrs_cf, addr2,
+              sstosa(&local_addr), &errmsg);
             if (ulop->local_addr == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "invalid local address: %s", errmsg);
@@ -338,7 +340,8 @@ rtpp_command_ul_opts_parse(struct cfg *cf, struct rtpp_command *cmd)
          * local/remote address provided either via "R" or "L" make sure we
          * pick up address that matches the address family of the stream.
          */
-        ulop->local_addr = bindaddr4af(cf, ulop->pf);
+        ulop->local_addr = CALL_METHOD(cf->stable->bindaddrs_cf, foraf,
+          ulop->pf);
         if (ulop->local_addr == NULL) {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "cannot match local "
               "address for the %s session", AF2STR(ulop->pf));
