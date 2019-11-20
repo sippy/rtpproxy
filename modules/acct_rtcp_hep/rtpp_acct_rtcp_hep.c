@@ -136,7 +136,7 @@ static void
 rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
 {
     struct rc_info ri;
-    struct sockaddr *src_addr, *dst_addr;
+    const struct sockaddr *src_addr, *dst_addr;
     struct timeval rtimeval;
     int rval;
 
