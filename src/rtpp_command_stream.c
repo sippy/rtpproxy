@@ -95,9 +95,9 @@ rtpp_command_stream_doio(struct cfg *cf, struct rtpp_cmd_connection *rcs)
 static void
 rcs_reply_nomem(struct rtpp_log *log, int controlfd, struct rtpp_command_stats *csp)
 {
-    const char buf[4] = ENM_STR "\n";
+    const char buf[] = ENM_STR "\n";
 
-    if (write(controlfd, buf, sizeof(buf)) < 0) {
+    if (write(controlfd, buf, sizeof(buf) - 1) < 0) {
         RTPP_DBG_ASSERT(!IS_WEIRD_ERRNO(errno));
         RTPP_ELOG(log, RTPP_LOG_ERR, "ENOMEM: failure sending \"" ENM_PSTR "\"");
     } else {
