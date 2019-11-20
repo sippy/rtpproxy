@@ -300,10 +300,10 @@ am__rtpproxy_SOURCES_DIST = main.c rtp.h rtpp_server.c rtpp_defines.h \
 	rtpp_acct_rtcp.c rtpp_cfile.c rtpp_cfile.h rtpp_ucl.c \
 	rtpp_ucl.h rtpp_network_io.c rtpp_network_io.h rtpp_wi_pkt.c \
 	rtpp_wi_pkt.h rtpp_timeout_data.c rtpp_timeout_data.h \
-	rtpp_command_rcache.h rtpp_log_obj.h rtpp_pcnt_strm.h \
-	rtpp_pcount.h rtpp_pipe.h rtpp_port_table.h rtpp_record.h \
-	rtpp_ringbuf.h rtpp_sessinfo.h rtpp_socket.h rtpp_timed_task.h \
-	rtpp_ttl.h rtpp_module_if.h rtpp_netaddr.h \
+	rtpp_locking.h rtpp_command_rcache.h rtpp_log_obj.h \
+	rtpp_pcnt_strm.h rtpp_pcount.h rtpp_pipe.h rtpp_port_table.h \
+	rtpp_record.h rtpp_ringbuf.h rtpp_sessinfo.h rtpp_socket.h \
+	rtpp_timed_task.h rtpp_ttl.h rtpp_module_if.h rtpp_netaddr.h \
 	rtpp_pearson_perfect.h rtpp_refcnt.h rtpp_server.h \
 	rtpp_stream.h rtpp_timed.h $(ADV_DIR)/packet_observer.h \
 	$(ADV_DIR)/po_manager.c $(ADV_DIR)/po_manager.h \
@@ -485,10 +485,10 @@ am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_acct_rtcp.c rtpp_cfile.c rtpp_cfile.h rtpp_ucl.c \
 	rtpp_ucl.h rtpp_network_io.c rtpp_network_io.h rtpp_wi_pkt.c \
 	rtpp_wi_pkt.h rtpp_timeout_data.c rtpp_timeout_data.h \
-	rtpp_command_rcache.h rtpp_log_obj.h rtpp_pcnt_strm.h \
-	rtpp_pcount.h rtpp_pipe.h rtpp_port_table.h rtpp_record.h \
-	rtpp_ringbuf.h rtpp_sessinfo.h rtpp_socket.h rtpp_timed_task.h \
-	rtpp_ttl.h rtpp_module_if.h rtpp_netaddr.h \
+	rtpp_locking.h rtpp_command_rcache.h rtpp_log_obj.h \
+	rtpp_pcnt_strm.h rtpp_pcount.h rtpp_pipe.h rtpp_port_table.h \
+	rtpp_record.h rtpp_ringbuf.h rtpp_sessinfo.h rtpp_socket.h \
+	rtpp_timed_task.h rtpp_ttl.h rtpp_module_if.h rtpp_netaddr.h \
 	rtpp_pearson_perfect.h rtpp_refcnt.h rtpp_server.h \
 	rtpp_stream.h rtpp_timed.h $(ADV_DIR)/packet_observer.h \
 	$(ADV_DIR)/po_manager.c $(ADV_DIR)/po_manager.h \
@@ -1227,10 +1227,10 @@ BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_defines.h rtpp_log.h \
 	rtpp_acct_rtcp.c rtpp_cfile.c rtpp_cfile.h rtpp_ucl.c \
 	rtpp_ucl.h rtpp_network_io.c rtpp_network_io.h rtpp_wi_pkt.c \
 	rtpp_wi_pkt.h rtpp_timeout_data.c rtpp_timeout_data.h \
-	$(RTPP_AUTOSRC_SOURCES) $(RTPP_AUTOSRC_SOURCES_S) \
-	$(ADV_DIR)/packet_observer.h $(ADV_DIR)/po_manager.c \
-	$(ADV_DIR)/po_manager.h $(am__append_3) $(am__append_5) \
-	$(am__append_6)
+	rtpp_locking.h $(RTPP_AUTOSRC_SOURCES) \
+	$(RTPP_AUTOSRC_SOURCES_S) $(ADV_DIR)/packet_observer.h \
+	$(ADV_DIR)/po_manager.c $(ADV_DIR)/po_manager.h \
+	$(am__append_3) $(am__append_5) $(am__append_6)
 ADV_DIR = $(top_srcdir)/src/advanced
 rtpproxy_LDADD = -lm -lpthread @LIBS_ELPERIODIC@ \
 	$(top_srcdir)/libucl/libucl.a $(am__append_4) $(am__append_7)
