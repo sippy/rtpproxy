@@ -105,7 +105,7 @@ struct rtpp_stream {
     /* ttl for stream */
     struct rtpp_ttl *ttl;
     /* Local listen address/port */
-    struct sockaddr *laddr;
+    const struct sockaddr *laddr;
     int port;
     int asymmetric;
     /* Flags: strong create/delete; weak ones */
