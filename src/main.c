@@ -138,7 +138,7 @@ usage(void)
       "[-6 addr1[/addr2]] [-s path]\n\t  [-t tos] [-r rdir [-S sdir]] [-T ttl] "
       "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] [-w sock_mode] "
       "[-n timeout_socket]\n\t  [-d log_level[:log_facility]] [-p pid_file]\n"
-      "\t  [-c fifo|rr] [-A addr1[/addr2] [-N random/sched_offset] [-W setup_ttl]\n"
+      "\t  [-c fifo|rr] [-A addr1[/addr2] [-W setup_ttl]\n"
       "\trtpproxy -V\n");
     exit(1);
 }
@@ -271,11 +271,10 @@ static void
 init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 {
     int ch, i, umode, stdio_mode;
-    char *bh[2], *bh6[2], *cp, *tp[2];
+    char *bh[2], *bh6[2], *cp;
     const char *errmsg;
     struct passwd *pp;
     struct group *gp;
-    double x, y;
     struct rtpp_ctrl_sock *ctrl_sock;
     int option_index, brsym;
     struct proto_cap *pcp;
@@ -302,7 +301,6 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     cfsp->ttl_mode = TTL_UNIFIED;
     cfsp->log_level = -1;
     cfsp->log_facility = -1;
-    cfsp->sched_offset = 0.0;
     cfsp->sched_hz = rtpp_get_sched_hz();
     cfsp->sched_policy = SCHED_OTHER;
     cfsp->sched_nice = PRIO_UNSET;
@@ -335,7 +333,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     option_index = -1;
     brsym = 0;
     while ((ch = getopt_long(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:"
-      "VN:c:A:w:bW:DC", longopts, &option_index)) != -1) {
+      "Vc:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
         case LOPT_DSO:
             if (!RTPP_LIST_IS_EMPTY(cfsp->modules_cf)) {
@@ -391,29 +389,6 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
                  break;
             }
             errx(1, "%s: unknown scheduling policy", optarg);
-            break;
-
-        case 'N':
-	    if (strcmp(optarg, "random") == 0) {
-                x = getdtime() * 1000000.0;
-                srand48((long)x);
-                cfsp->sched_offset = drand48();
-            } else {
-                tp[0] = optarg;
-                tp[1] = strchr(tp[0], '/');
-       	        if (tp[1] == NULL) {
-                    errx(1, "%s: -N should be in the format X/Y", optarg);
-                }
-                *tp[1] = '\0';
-                tp[1]++;
-                x = (double)strtol(tp[0], &tp[0], 10);
-                y = (double)strtol(tp[1], &tp[1], 10);
-                cfsp->sched_offset = x / y;
-            }
-            x = (double)cfsp->sched_hz / cfsp->target_pfreq;
-            cfsp->sched_offset = trunc(x * cfsp->sched_offset) / x;
-            cfsp->sched_offset /= cfsp->target_pfreq;
-            warnx("sched_offset = %f",  cfsp->sched_offset);
             break;
 
 	case 'f':
@@ -1059,7 +1034,7 @@ main(int argc, char **argv)
     sd_notify(0, "READY=1");
 #endif
 
-    elp = prdic_init(cfs.target_pfreq / 10.0, cfs.sched_offset);
+    elp = prdic_init(cfs.target_pfreq / 10.0, 0.0);
     for (;;) {
         ncycles_ref = (long long)prdic_getncycles_ref(elp);
 

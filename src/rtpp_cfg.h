@@ -113,7 +113,6 @@ struct rtpp_cfg {
     struct rtpp_weakref_obj *rtp_streams_wrt;
     struct rtpp_weakref_obj *rtcp_streams_wrt;
 
-    double sched_offset;
     int sched_policy;
     int sched_hz;
     int sched_nice;
