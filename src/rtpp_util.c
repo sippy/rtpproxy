@@ -45,7 +45,6 @@
 
 #include "rtpp_log.h"
 #include "rtpp_cfg.h"
-#include "rtpp_defines.h"
 #include "rtpp_util.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"

@@ -165,7 +165,7 @@ rtpp_proc_ttl_ctor(const struct rtpp_cfg *cfsp)
 
     proc_cf->cfsp_save = cfsp;
 
-    proc_cf->elp = prdic_init(1.0, cfsp->sched_offset);
+    proc_cf->elp = prdic_init(1.0, 0.0);
     if (proc_cf->elp == NULL) {
         goto e0;
     }

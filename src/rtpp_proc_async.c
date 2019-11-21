@@ -277,12 +277,12 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
 
     proc_cf->cf_save = cfsp;
 
-    proc_cf->elp_fs.obj = prdic_init(cfsp->target_pfreq, cfsp->sched_offset);
+    proc_cf->elp_fs.obj = prdic_init(cfsp->target_pfreq, 0.0);
     if (proc_cf->elp_fs.obj == NULL) {
         goto e1;
     }
     proc_cf->elp_fs.target_pfreq = cfsp->target_pfreq;
-    proc_cf->elp_lz.obj = prdic_init(10.0, cfsp->sched_offset);
+    proc_cf->elp_lz.obj = prdic_init(10.0, 0.0);
     if (proc_cf->elp_lz.obj == NULL) {
         goto e2;
     }

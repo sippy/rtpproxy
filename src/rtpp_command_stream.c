@@ -95,7 +95,7 @@ rtpp_command_stream_doio(const struct rtpp_cfg *cfsp, struct rtpp_cmd_connection
 static void
 rcs_reply_nomem(struct rtpp_log *log, int controlfd, struct rtpp_command_stats *csp)
 {
-    const char buf[] = ENM_STR "\n";
+    static const char buf[] = ENM_STR "\n";
 
     if (write(controlfd, buf, sizeof(buf) - 1) < 0) {
         RTPP_DBG_ASSERT(!IS_WEIRD_ERRNO(errno));

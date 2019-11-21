@@ -30,7 +30,6 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 
-#include "rtpp_defines.h"
 #include "rtpp_cfg.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"

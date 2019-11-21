@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rtpp_defines.h"
 #include "rtpp_cfg.h"
 #include "rtpp_types.h"
 #include "rtpp_command.h"

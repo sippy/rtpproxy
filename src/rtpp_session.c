@@ -39,7 +39,6 @@
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg.h"
-#include "rtpp_defines.h"
 #include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
 #include "rtpp_analyzer.h"
