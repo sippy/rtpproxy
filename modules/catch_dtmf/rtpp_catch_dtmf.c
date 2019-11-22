@@ -43,7 +43,7 @@ struct rtpp_catch_dtmf_pvt {
 
 struct catch_dtmf_event {
     struct rtpp_refcnt *rcnt;
-    atomic_int pending;
+    int pending;
     char digit;
 };
 
@@ -72,7 +72,6 @@ rtpp_catch_dtmf_event_ctor(void)
     if (event == NULL) {
         goto e0;
     }
-    atomic_init(&(event->pending), 0);
     event->rcnt = rcnt;
     event->digit = -1;
     CALL_SMETHOD(event->rcnt, attach, rtpp_catch_dtmf_event_dtor, event);
@@ -121,7 +120,6 @@ rtpp_catch_dtmf_worker(void *arg)
     struct rtpp_wi *wi;
     struct wipkt *wip;
     char digit;
-    unsigned int old;
     char buf[RTPP_MAX_NOTIFY_BUF];
     const char dtmf_events[] = "0123456789*#ABCD ";
 
@@ -142,17 +140,17 @@ rtpp_catch_dtmf_worker(void *arg)
         digit = dtmf_events[dtmf->event];
         if (wip->pkt->data.header.mbt == 1) {
             /* this is a new event */
-            old = 0;
-            if (!atomic_compare_exchange_strong(&wip->event->pending, &old, 1)) {
+            if (wip->event->pending) {
                 if (digit != wip->event->digit) {
                     RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Received DTMF start for %c "
                             "while processing %c!", digit, wip->event->digit);
                 }
                 goto skip;
             }
+            wip->event->pending = 1;
             wip->event->digit = digit;
             goto skip;
-        } else if (!atomic_load(&wip->event->pending)) {
+        } else if (!wip->event->pending) {
             if (!dtmf->end)
                 RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Received DTMF for %c without "
                         "start %d!", digit, wip->event->pending);
@@ -168,14 +166,14 @@ rtpp_catch_dtmf_worker(void *arg)
         if (!dtmf->end)
             goto skip;
         /* we received the end of the DTMF */
-        old = 1;
-        if (!atomic_compare_exchange_strong(&wip->event->pending, &old, 0)) {
+        if (!wip->event->pending) {
             /* check if we've sent a notification for this */
             RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Not processing any DTMF "
                     "when end for %c came", digit);
             goto skip;
         }
         /* all good - send the notification */
+        wip->event->pending = 0;
         snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%s %c %d %d",
                 wip->rtdp->notify_tag, digit, dtmf->volume, dtmf->duration);
         CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target, buf);
