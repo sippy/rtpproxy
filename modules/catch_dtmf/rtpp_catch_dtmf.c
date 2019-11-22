@@ -38,6 +38,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "config_pp.h"
+
 #include "rtpp_log.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_types.h"
@@ -55,6 +57,7 @@
 #include "rtpp_notify.h"
 #include "rtpp_command_private.h"
 #include "rtpp_timeout_data.h"
+#include "rtpp_util.h"
 
 #include "advanced/packet_observer.h"
 #include "advanced/po_manager.h"
@@ -220,6 +223,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
     struct rtpp_catch_dtmf_pvt *pvt;
     struct catch_dtmf_stream_cfg *rtps_c;
     void *rtps_c_prev;
+    int len;
     int new_pt = 101;
     int old_pt = -1;
     char *dtmf_tag;
@@ -241,7 +245,15 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
                     "no tag specified!", ctxp->sessp);
             return (-1);
         }
+
         dtmf_tag = ctxp->subc_args->v[1];
+        len = url_unquote((uint8_t *)dtmf_tag, strlen(dtmf_tag));
+        if (len == -1) {
+            RTPP_LOG(pvt->log, RTPP_LOG_ERR,
+              "rtpp_catch_dtmf_handle_command: syntax error - invalid URL encoding");
+            return (-1);
+        }
+        dtmf_tag[len] = '\0';
 
         if (ctxp->subc_args->c > 2)
             new_pt = strtol(ctxp->subc_args->v[2], NULL, 10);
