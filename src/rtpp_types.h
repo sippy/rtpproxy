@@ -51,4 +51,7 @@ struct rtpp_type_linkable {
 
 #define CONST(p) ((const typeof(*p) *)(p))
 
+#define RTPP_OBJ_INCREF(obj) RC_INCREF((obj)->rcnt)
+#define RTPP_OBJ_DECREF(obj) RC_DECREF((obj)->rcnt)
+
 #endif
