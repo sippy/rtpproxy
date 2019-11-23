@@ -254,7 +254,7 @@ e2:
         free(pvt->dstats);
     free(pvt->stats);
 e1:
-    CALL_SMETHOD(pub->rcnt, decref);
+    RTPP_OBJ_DECREF(pub);
     free(fp);
 e0:
     return (NULL);
@@ -376,7 +376,7 @@ rtpp_stats_dtor(struct rtpp_stats_full *fp)
         st = &pvt->stats[i];
         pthread_mutex_destroy(&st->mutex);
     }
-    CALL_SMETHOD(pvt->rppp->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->rppp);
     if (pvt->dstats != NULL) {
         free(pvt->dstats);
     }

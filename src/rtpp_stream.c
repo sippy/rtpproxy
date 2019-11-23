@@ -205,7 +205,7 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     pvt->servers_wrt = servers_wrt;
     pvt->rtpp_stats = rtpp_stats;
     pvt->pub.log = log;
-    CALL_SMETHOD(log->rcnt, incref);
+    RTPP_OBJ_INCREF(log);
     pvt->side = side;
     pvt->pub.pipe_type = pipe_type;
     pvt->pub.smethods = &rtpp_stream_smethods;
@@ -217,17 +217,17 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     return (&pvt->pub);
 
 e6:
-    CALL_SMETHOD(pvt->raddr_prev->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->raddr_prev);
 e5:
-    CALL_SMETHOD(pvt->pub.pcnt_strm->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->pub.pcnt_strm);
 e4:
     if (pipe_type == PIPE_RTP) {
-         CALL_SMETHOD(pvt->pub.analyzer->rcnt, decref);
+         RTPP_OBJ_DECREF(pvt->pub.analyzer);
     }
 e3:
     pthread_mutex_destroy(&pvt->lock);
 e1:
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);
@@ -297,10 +297,10 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          if (rst.pecount > 0) {
              CALL_SMETHOD(pvt->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
          }
-         CALL_SMETHOD(pvt->pub.analyzer->rcnt, decref);
+         RTPP_OBJ_DECREF(pvt->pub.analyzer);
     }
     if (pvt->fd != NULL)
-        CALL_SMETHOD(pvt->fd->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->fd);
     if (pub->codecs != NULL)
         free(pub->codecs);
     if (pvt->rtps.uid != RTPP_UID_NONE)
@@ -308,15 +308,15 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     if (pub->resizer != NULL)
         rtp_resizer_free(pvt->rtpp_stats, pub->resizer);
     if (pub->rrc != NULL)
-        CALL_SMETHOD(pub->rrc->rcnt, decref);
+        RTPP_OBJ_DECREF(pub->rrc);
     if (pub->pcount != NULL)
-        CALL_SMETHOD(pub->pcount->rcnt, decref);
+        RTPP_OBJ_DECREF(pub->pcount);
     if (pub->ttl != NULL)
-        CALL_SMETHOD(pub->ttl->rcnt, decref);
-    CALL_SMETHOD(pub->pcnt_strm->rcnt, decref);
-    CALL_SMETHOD(pvt->pub.log->rcnt, decref);
-    CALL_SMETHOD(pvt->rem_addr->rcnt, decref);
-    CALL_SMETHOD(pvt->raddr_prev->rcnt, decref);
+        RTPP_OBJ_DECREF(pub->ttl);
+    RTPP_OBJ_DECREF(pub->pcnt_strm);
+    RTPP_OBJ_DECREF(pvt->pub.log);
+    RTPP_OBJ_DECREF(pvt->rem_addr);
+    RTPP_OBJ_DECREF(pvt->raddr_prev);
 
     pthread_mutex_destroy(&pvt->lock);
     free(pvt);
@@ -365,7 +365,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
         seq = CALL_SMETHOD(rsrv, get_seq);
         _s_rtps(pvt, rsrv->sruid, 0);
         if (CALL_METHOD(pvt->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
-            CALL_SMETHOD(rsrv->rcnt, decref);
+            RTPP_OBJ_DECREF(rsrv);
             plerror = "servers_wrt->reg() method failed";
             break;
         }
@@ -376,7 +376,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
         cmd->csp->nplrs_created.cnt++;
         CALL_SMETHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           pvt->rtpp_stats);
-        CALL_SMETHOD(rsrv->rcnt, decref);
+        RTPP_OBJ_DECREF(rsrv);
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
           "%d times playing prompt %s codec %d: SSRC=" SSRC_FMT ", seq=%u",
           playcount, pname, n, ssrc, seq);
@@ -570,7 +570,7 @@ _rtpp_stream_plr_start(struct rtpp_stream_priv *pvt, double dtime)
         return;
     }
     CALL_SMETHOD(rsrv, start, dtime);
-    CALL_SMETHOD(rsrv->rcnt, decref);
+    RTPP_OBJ_DECREF(rsrv);
     pvt->rtps.inact = 0;
 }
 
@@ -720,14 +720,14 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     pthread_mutex_lock(&pvt->lock);
     if (new_skt == NULL) {
         RTPP_DBG_ASSERT(pvt->fd != NULL);
-        CALL_SMETHOD(pvt->fd->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->fd);
         pvt->fd = NULL;
         pthread_mutex_unlock(&pvt->lock);
         return;
     }
     RTPP_DBG_ASSERT(pvt->fd == NULL);
     pvt->fd = new_skt;
-    CALL_SMETHOD(pvt->fd->rcnt, incref);
+    RTPP_OBJ_INCREF(pvt->fd);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
         _rtpp_stream_plr_start(pvt, getdtime());
     }
@@ -746,7 +746,7 @@ rtpp_stream_get_skt(struct rtpp_stream *self)
         pthread_mutex_unlock(&pvt->lock);
         return (NULL);
     }
-    CALL_SMETHOD(pvt->fd->rcnt, incref);
+    RTPP_OBJ_INCREF(pvt->fd);
     rval = pvt->fd;
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
@@ -763,7 +763,7 @@ rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     pthread_mutex_lock(&pvt->lock);
     old_skt = pvt->fd;
     pvt->fd = new_skt;
-    CALL_SMETHOD(pvt->fd->rcnt, incref);
+    RTPP_OBJ_INCREF(pvt->fd);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
         _rtpp_stream_plr_start(pvt, getdtime());
     }
@@ -796,7 +796,7 @@ rtpp_stream_drain_skt(struct rtpp_stream *self)
         if (packet == NULL)
             break;
         ndrained++;
-        CALL_SMETHOD(packet->rcnt, decref);
+        RTPP_OBJ_DECREF(packet);
     }
     pthread_mutex_unlock(&pvt->lock);
 #if RTPP_DEBUG
@@ -900,7 +900,7 @@ _rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt,
         return (0);
     }
     rval = CALL_SMETHOD(stp_rtcp, guess_addr, packet);
-    CALL_SMETHOD(stp_rtcp->rcnt, decref);
+    RTPP_OBJ_DECREF(stp_rtcp);
     return (rval);
 }
 
@@ -977,7 +977,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
 
 discard_and_continue:
     pthread_mutex_unlock(&pvt->lock);
-    CALL_SMETHOD(packet->rcnt, decref);
+    RTPP_OBJ_DECREF(packet);
     rsp->npkts_discard.cnt++;
     return (RTPP_S_RX_DCONT);
 }
@@ -995,7 +995,7 @@ rtpp_stream_get_rem_addr(struct rtpp_stream *self, int retempty)
         return (NULL);
     }
     rval = pvt->rem_addr;
-    CALL_SMETHOD(rval->rcnt, incref);
+    RTPP_OBJ_INCREF(rval);
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
 }

@@ -64,17 +64,17 @@ main(int argc, char **argv)
         j = i % 1000;
         if (i >= 1000) {
             for (k = 0; k < 11; k++) {
-                CALL_SMETHOD(dpbuf[j]->pub.rcnt, decref);
+                RTPP_OBJ_DECREF(&(dpbuf[j]->pub));
             }
         }
         dpbuf[j] = rtpp_rzmalloc_perf_ctor();
         for (k = 0; k < 10; k++) {
-            CALL_SMETHOD(dpbuf[j]->pub.rcnt, incref);
+            RTPP_OBJ_INCREF(&(dpbuf[j]->pub));
         }
     }
     for (i = 0; i < 1000; i++) {
          for (k = 0; k < 11; k++) {
-             CALL_SMETHOD(dpbuf[i]->pub.rcnt, decref);
+             RTPP_OBJ_DECREF(&(dpbuf[i]->pub));
          }
     }
     return (0);

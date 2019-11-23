@@ -146,7 +146,7 @@ create_twinlistener(uint16_t port, void *ap)
 failure:
     for (i = 0; i < 2; i++)
 	if (ctap->fds[i] != NULL) {
-            CALL_SMETHOD(ctap->fds[i]->rcnt, decref);
+            RTPP_OBJ_DECREF(ctap->fds[i]);
 	    ctap->fds[i] = NULL;
 	}
     return rval;
@@ -244,10 +244,10 @@ free_command(struct rtpp_command *cmd)
 
     PUB2PVT(cmd, pvt);
     if (pvt->rcache_obj != NULL) {
-        CALL_SMETHOD(pvt->rcache_obj->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->rcache_obj);
     }
     if (cmd->sp != NULL) {
-        CALL_SMETHOD(cmd->sp->rcnt, decref);
+        RTPP_OBJ_DECREF(cmd->sp);
     }
     free(pvt);
 }
@@ -367,7 +367,7 @@ rtpp_command_guard_retrans(struct rtpp_command *cmd,
         cmd->csp->ncmds_rcvd_ndups.cnt++;
         return (1);
     }
-    CALL_SMETHOD(rcache_obj->rcnt, incref);
+    RTPP_OBJ_INCREF(rcache_obj);
     pvt->rcache_obj = rcache_obj;
     return (0);
 }

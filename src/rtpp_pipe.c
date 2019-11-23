@@ -104,7 +104,7 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
         goto e2;
     }
     for (i = 0; i < 2; i++) {
-        CALL_SMETHOD(pvt->pub.pcount->rcnt, incref);
+        RTPP_OBJ_INCREF(pvt->pub.pcount);
         pvt->pub.stream[i]->pcount = pvt->pub.pcount;
     }
     pvt->pipe_type = pipe_type;
@@ -114,7 +114,7 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
     pvt->pub.decr_ttl = &rtpp_pipe_decr_ttl;
     pvt->pub.get_stats = &rtpp_pipe_get_stats;
     pvt->pub.upd_cntrs = &rtpp_pipe_upd_cntrs;
-    CALL_SMETHOD(log->rcnt, incref);
+    RTPP_OBJ_INCREF(log);
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pipe_dtor, pvt);
     return (&pvt->pub);
 
@@ -123,10 +123,10 @@ e1:
     for (i = 0; i < 2; i++) {
         if (pvt->pub.stream[i] != NULL) {
             CALL_METHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
-            CALL_SMETHOD(pvt->pub.stream[i]->rcnt, decref);
+            RTPP_OBJ_DECREF(pvt->pub.stream[i]);
         }
     }
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);
@@ -140,10 +140,10 @@ rtpp_pipe_dtor(struct rtpp_pipe_priv *pvt)
     rtpp_pipe_fin(&(pvt->pub));
     for (i = 0; i < 2; i++) {
         CALL_METHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
-        CALL_SMETHOD(pvt->pub.stream[i]->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->pub.stream[i]);
     }
-    CALL_SMETHOD(pvt->pub.pcount->rcnt, decref);
-    CALL_SMETHOD(pvt->pub.log->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->pub.pcount);
+    RTPP_OBJ_DECREF(pvt->pub.log);
     free(pvt);
 }
 

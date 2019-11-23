@@ -176,7 +176,7 @@ rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
         rrc->proto = (record_type == RECORD_RTP) ? "RTP" : "RTCP";
     }
     rrc->log = sp->log;
-    CALL_SMETHOD(sp->log->rcnt, incref);
+    RTPP_OBJ_INCREF(sp->log);
     rrc->pub.write = &rtpp_record_write;
     if (remote) {
 	rval = ropen_remote_ctor_pa(rrc, sp->log, rname, (record_type == RECORD_RTCP));
@@ -259,8 +259,8 @@ rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
 e3:
     close(rrc->fd);
 e2:
-    CALL_SMETHOD(rrc->log->rcnt, decref);
-    CALL_SMETHOD(rrc->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(rrc->log);
+    RTPP_OBJ_DECREF(&(rrc->pub));
     free(rrc);
 e0:
     return NULL;
@@ -553,7 +553,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
         return;
     }
     dalen = CALL_SMETHOD(rem_addr, get, sstosa(&daddr), sizeof(daddr));
-    CALL_SMETHOD(rem_addr->rcnt, decref);
+    RTPP_OBJ_DECREF(rem_addr);
     ldaddr = stp->laddr;
     ldport = stp->port;
 
@@ -639,7 +639,7 @@ rtpp_record_close(struct rtpp_record_channel *rrc)
 	      "session record from spool into permanent storage");
     }
 done:
-    CALL_SMETHOD(rrc->log->rcnt, decref);
+    RTPP_OBJ_DECREF(rrc->log);
 
     free(rrc);
 }

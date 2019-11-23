@@ -98,7 +98,7 @@ rtpp_port_table_ctor(int port_min, int port_max, int seq_ports, uint16_t port_ct
 e2:
     pthread_mutex_destroy(&pvt->lock);
 e1:
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);

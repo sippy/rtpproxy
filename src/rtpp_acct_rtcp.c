@@ -58,7 +58,7 @@ rtpp_acct_rtcp_ctor(const char *call_id, const struct rtp_packet *pp)
     if (pvt == NULL) {
         goto e0;
     }
-    CALL_SMETHOD(pp->rcnt, incref);
+    RTPP_OBJ_INCREF(pp);
     pvt->pub.pkt = pp;
     pvt->pub.call_id = strdup(call_id);
     if (pvt->pub.call_id == NULL) {
@@ -70,8 +70,8 @@ rtpp_acct_rtcp_ctor(const char *call_id, const struct rtp_packet *pp)
     return ((&pvt->pub));
 
 e1:
-    CALL_SMETHOD(pvt->pub.pkt->rcnt, decref);
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->pub.pkt);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);
@@ -83,7 +83,7 @@ rtpp_acct_rtcp_dtor(struct rtpp_acct_rtcp_priv *pvt)
 
     /*rtpp_acct_rtcp_fin(&(pvt->pub));*/
     free((void *)pvt->pub.call_id);
-    CALL_SMETHOD(pvt->pub.pkt->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->pub.pkt);
     free(pvt);
 }
 

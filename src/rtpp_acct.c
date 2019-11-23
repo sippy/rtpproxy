@@ -105,13 +105,13 @@ rtpp_acct_dtor(struct rtpp_acct_priv *pvt)
     if (pvt->pub.from_tag != NULL)
         free(pvt->pub.from_tag);
     if (pvt->pub.rtp.a.rem_addr != NULL)
-        CALL_SMETHOD(pvt->pub.rtp.a.rem_addr->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->pub.rtp.a.rem_addr);
     if (pvt->pub.rtp.o.rem_addr != NULL)
-        CALL_SMETHOD(pvt->pub.rtp.o.rem_addr->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->pub.rtp.o.rem_addr);
     if (pvt->pub.rtcp.a.rem_addr != NULL)
-        CALL_SMETHOD(pvt->pub.rtcp.a.rem_addr->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->pub.rtcp.a.rem_addr);
     if (pvt->pub.rtcp.o.rem_addr != NULL)
-        CALL_SMETHOD(pvt->pub.rtcp.o.rem_addr->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->pub.rtcp.o.rem_addr);
     free(pvt);
 }
 

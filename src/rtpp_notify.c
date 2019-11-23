@@ -96,7 +96,7 @@ rtpp_notify_queue_run(void *arg)
         do_timeout_notification(wi_data, 3);
 
         /* deallocate wi */
-        CALL_SMETHOD(wi_data->glog->rcnt, decref);
+        RTPP_OBJ_DECREF(wi_data->glog);
         CALL_METHOD(wi, dtor);
     }
 }
@@ -125,7 +125,7 @@ rtpp_notify_ctor(struct rtpp_log *glog)
         goto e3;
     }
 
-    CALL_SMETHOD(glog->rcnt, incref);
+    RTPP_OBJ_INCREF(glog);
     pvt->glog = glog;
     pvt->pub.schedule = &rtpp_notify_schedule;
     pvt->pub.dtor = &rtpp_notify_dtor;
@@ -152,7 +152,7 @@ rtpp_notify_dtor(struct rtpp_notify *pub)
     rtpp_queue_put_item(pvt->sigterm, pvt->nqueue);
     pthread_join(pvt->thread_id, NULL);
     rtpp_queue_destroy(pvt->nqueue);
-    CALL_SMETHOD(pvt->glog->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->glog);
     free(pvt);
 }
 
@@ -179,7 +179,7 @@ rtpp_notify_schedule(struct rtpp_notify *pub,
 
     wi_data->rttp = rttp;
     wi_data->len = len;
-    CALL_SMETHOD(pvt->glog->rcnt, incref);
+    RTPP_OBJ_INCREF(pvt->glog);
     wi_data->glog = pvt->glog;
 
     len = snprintf(wi_data->notify_buf, len, "%s\n", notify_tag);
