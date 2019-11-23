@@ -138,13 +138,13 @@ send_packet(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp_in,
         CALL_METHOD(stp_in->pcount, reg_reld);
         rsp->npkts_relayed.cnt++;
     }
-    CALL_SMETHOD(stp_out->rcnt, decref);
+    RTPP_OBJ_DECREF(stp_out);
     return;
 
 e1:
-    CALL_SMETHOD(stp_out->rcnt, decref);
+    RTPP_OBJ_DECREF(stp_out);
 e0:
-    CALL_SMETHOD(packet->rcnt, decref);
+    RTPP_OBJ_DECREF(packet);
     CALL_METHOD(stp_in->pcount, reg_drop);
     rsp->npkts_discard.cnt++;
 }
@@ -168,12 +168,12 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
             continue;
         sp = CALL_METHOD(cfsp->sessions_wrt, get_by_idx, stp->seuid);
         if (sp == NULL) {
-            CALL_SMETHOD(stp->rcnt, decref);
+            RTPP_OBJ_DECREF(stp);
             continue;
         }
         if (sp->complete != 0) {
             rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp, sp);
-            CALL_SMETHOD(sp->rcnt, decref);
+            RTPP_OBJ_DECREF(sp);
             if (stp->resizer != NULL) {
                 while ((packet = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
                     send_packet(cfsp, stp, packet, sender, rsp);
@@ -182,12 +182,12 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
                 }
             }
         } else {
-            CALL_SMETHOD(sp->rcnt, decref);
+            RTPP_OBJ_DECREF(sp);
             ndrained = CALL_SMETHOD(stp, drain_skt);
             if (ndrained > 0) {
                 rsp->npkts_discard.cnt += ndrained;
             }
         }
-        CALL_SMETHOD(stp->rcnt, decref);
+        RTPP_OBJ_DECREF(stp);
     }
 }

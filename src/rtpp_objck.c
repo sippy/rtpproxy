@@ -268,7 +268,7 @@ main(int argc, char **argv)
     } while(!atomic_load(&tests.queue_p2c.done));
     tests.queue_p2c.runtime = getdtime() - stime;
     CALL_METHOD(ttp, cancel);
-    CALL_SMETHOD(ttp->rcnt, decref);
+    RTPP_OBJ_DECREF(ttp);
     pthread_join(thread_id, NULL);
     while (rtpp_queue_get_length(targs.fqp) > 0) {
         wi = rtpp_queue_get_item(targs.fqp, 0);
@@ -312,7 +312,7 @@ main(int argc, char **argv)
     } while (wi != targs.sigterm);
     tests.queue_b2b.runtime = getdtime() - stime;
     CALL_METHOD(ttp, cancel);
-    CALL_SMETHOD(ttp->rcnt, decref);
+    RTPP_OBJ_DECREF(ttp);
     pthread_join(thread_id, NULL);
     while (rtpp_queue_get_length(targs.fqp) > 0) {
         wi = rtpp_queue_get_item(targs.fqp, 0);
@@ -336,10 +336,10 @@ main(int argc, char **argv)
     RPRINT(&tests.wi_malloc, "rtpp_wi", tsize);
 
     CALL_METHOD(ttp, cancel);
-    CALL_SMETHOD(ttp->rcnt, decref);
-    CALL_SMETHOD(targs.rsp->rcnt, decref);
+    RTPP_OBJ_DECREF(ttp);
+    RTPP_OBJ_DECREF(targs.rsp);
     CALL_SMETHOD(rtp, shutdown);
-    CALL_SMETHOD(rtp->rcnt, decref);
+    RTPP_OBJ_DECREF(rtp);
     rtpp_queue_destroy(targs.fqp);
     rtpp_queue_destroy(targs.bqp);
 

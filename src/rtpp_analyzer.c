@@ -77,12 +77,12 @@ rtpp_analyzer_ctor(struct rtpp_log *log)
     rap->update = &rtpp_analyzer_update;
     rap->get_stats = &rtpp_analyzer_get_stats;
     rap->get_jstats = &rtpp_analyzer_get_jstats;
-    CALL_SMETHOD(log->rcnt, incref);
+    RTPP_OBJ_INCREF(log);
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_analyzer_dtor,
       pvt);
     return (rap);
 e0:
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
     return (NULL);
 }
@@ -148,6 +148,6 @@ rtpp_analyzer_dtor(struct rtpp_analyzer_priv *pvt)
 {
 
     rtpp_stats_destroy(&pvt->rstat);
-    CALL_SMETHOD(pvt->log->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->log);
     free(pvt);
 }

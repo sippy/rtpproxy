@@ -146,11 +146,11 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
             }
         } else {
             pub->rtp->stream[i]->ttl = pub->rtp->stream[0]->ttl;
-            CALL_SMETHOD(pub->rtp->stream[0]->ttl->rcnt, incref);
+            RTPP_OBJ_INCREF(pub->rtp->stream[0]->ttl);
         }
         /* RTCP shares the same TTL */
         pub->rtcp->stream[i]->ttl = pub->rtp->stream[i]->ttl;
-        CALL_SMETHOD(pub->rtp->stream[i]->ttl->rcnt, incref);
+        RTPP_OBJ_INCREF(pub->rtp->stream[i]->ttl);
     }
     for (i = 0; i < 2; i++) {
         pub->rtp->stream[i]->stuid_rtcp = pub->rtcp->stream[i]->stuid;
@@ -164,7 +164,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
         struct rtpp_module_if *mif;
 
         mif = RTPP_LIST_HEAD(cfs->modules_cf);
-        CALL_SMETHOD(mif->rcnt, incref);
+        RTPP_OBJ_INCREF(mif);
         pvt->modules_cf = mif;
     }
 
@@ -181,15 +181,15 @@ e7:
 e6:
     free(pub->call_id);
 e5:
-    CALL_SMETHOD(pvt->acct->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->acct);
 e4:
-    CALL_SMETHOD(pub->rtcp->rcnt, decref);
+    RTPP_OBJ_DECREF(pub->rtcp);
 e3:
-    CALL_SMETHOD(pub->rtp->rcnt, decref);
+    RTPP_OBJ_DECREF(pub->rtp);
 e2:
-    CALL_SMETHOD(log->rcnt, decref);
+    RTPP_OBJ_DECREF(log);
 e1:
-    CALL_SMETHOD(pub->rcnt, decref);
+    RTPP_OBJ_DECREF(pub);
     free(pvt);
 e0:
     return (NULL);
@@ -235,13 +235,13 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
           pvt->acct->jrasta);
 
         CALL_METHOD(pvt->modules_cf, do_acct, pvt->acct);
-        CALL_SMETHOD(pvt->modules_cf->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->modules_cf);
     }
-    CALL_SMETHOD(pvt->acct->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->acct);
 
-    CALL_SMETHOD(pvt->pub.log->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->pub.log);
     if (pvt->pub.timeout_data != NULL)
-        CALL_SMETHOD(pvt->pub.timeout_data->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt->pub.timeout_data);
     if (pvt->pub.call_id != NULL)
         free(pvt->pub.call_id);
     if (pvt->pub.tag != NULL)
@@ -249,8 +249,8 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     if (pvt->pub.tag_nomedianum != NULL)
         free(pvt->pub.tag_nomedianum);
 
-    CALL_SMETHOD(pvt->pub.rtcp->rcnt, decref);
-    CALL_SMETHOD(pvt->pub.rtp->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->pub.rtcp);
+    RTPP_OBJ_DECREF(pvt->pub.rtp);
     free(pvt);
 }
 
@@ -320,7 +320,7 @@ rtpp_session_ematch(void *dp, void *ap)
     return (RTPP_HT_MATCH_CONT);
 
 found:
-    CALL_SMETHOD(rsp->rcnt, incref);
+    RTPP_OBJ_INCREF(rsp);
     RTPP_DBG_ASSERT(map->sp == NULL);
     map->sp = rsp;
     return (RTPP_HT_MATCH_BRK);

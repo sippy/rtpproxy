@@ -77,7 +77,7 @@ rtpp_pcnt_strm_ctor(void)
     return ((&pvt->pub));
 
 e1:
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);

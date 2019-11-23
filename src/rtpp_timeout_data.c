@@ -64,7 +64,7 @@ rtpp_timeout_data_ctor(struct rtpp_tnotify_target *ttp, const char *tag)
     return ((&pvt->pub));
 
 e1:
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);

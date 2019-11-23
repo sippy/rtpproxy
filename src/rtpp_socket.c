@@ -106,7 +106,7 @@ rtpp_socket_ctor(int domain, int type)
       pvt);
     return (&pvt->pub);
 e1:
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);
@@ -224,7 +224,7 @@ rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, const struct rtpp_timestam
       sstosa(&packet->raddr), &packet->rlen);
 
     if (packet->size == -1) {
-        CALL_SMETHOD(packet->rcnt, decref);
+        RTPP_OBJ_DECREF(packet);
         return (NULL);
     }
     packet->laddr = laddr;
@@ -261,7 +261,7 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtim
       &rtime);
 
     if (packet->size == -1) {
-        CALL_SMETHOD(packet->rcnt, decref);
+        RTPP_OBJ_DECREF(packet);
         return (NULL);
     }
     if (llen > 0) {

@@ -75,7 +75,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
                 CALL_SMETHOD(rsop, finish_playback, rsrv->sruid);
-                CALL_SMETHOD(rsop->rcnt, decref);
+                RTPP_OBJ_DECREF(rsop);
                 return (RTPP_WR_MATCH_DEL);
             } else if (len != RTPS_LATER) {
                 /* XXX some error, brag to logs */
@@ -84,13 +84,13 @@ process_rtp_servers_foreach(void *dp, void *ap)
         }
         if (CALL_SMETHOD(rsop, issendable) == 0) {
             /* We have a packet, but nowhere to send it, drop */
-            CALL_SMETHOD(pkt->rcnt, decref);
+            RTPP_OBJ_DECREF(pkt);
             continue;
         }
         CALL_SMETHOD(rsop, send_pkt, fap->sender, pkt);
         fap->rsp->npkts_played.cnt++;
     }
-    CALL_SMETHOD(rsop->rcnt, decref);
+    RTPP_OBJ_DECREF(rsop);
     return (RTPP_WR_MATCH_CONT);
 }
 

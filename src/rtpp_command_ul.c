@@ -389,7 +389,7 @@ handle_nomem(struct rtpp_command *cmd, int ecode, struct rtpp_session *spa)
     RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "can't allocate memory");
     rtpp_command_ul_opts_free(cmd->cca.opts.ul);
     if (spa != NULL) {
-        CALL_SMETHOD(spa->rcnt, decref);
+        RTPP_OBJ_DECREF(spa);
     }
     reply_error(cmd, ecode);
 }
@@ -430,7 +430,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
                 RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
                 reply_error(cmd, ECODE_LSTFAIL_1);
                 if (fd != NULL) {
-                    CALL_SMETHOD(fd->rcnt, decref);
+                    RTPP_OBJ_DECREF(fd);
                 }
                 goto err_undo_0;
             }
@@ -442,8 +442,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             } else {
                 CALL_METHOD(cfsp->sessinfo, append, spa, sidx, fds);
             }
-            CALL_SMETHOD(fds[0]->rcnt, decref);
-            CALL_SMETHOD(fds[1]->rcnt, decref);
+            RTPP_OBJ_DECREF(fds[0]);
+            RTPP_OBJ_DECREF(fds[1]);
             spa->rtp->stream[sidx]->port = lport;
             spa->rtcp->stream[sidx]->port = lport + 1;
             if (spa->complete == 0) {
@@ -456,7 +456,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             spa->complete = 1;
         }
         if (fd != NULL) {
-            CALL_SMETHOD(fd->rcnt, decref);
+            RTPP_OBJ_DECREF(fd);
         }
         if (ulop->weak)
             spa->rtp->stream[sidx]->weak = 1;
@@ -512,8 +512,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
          */
         spa = rtpp_session_ctor(cfsp, &cmd->cca, cmd->dtime, ulop->lia,
           ulop->weak, lport, fds);
-        CALL_SMETHOD(fds[0]->rcnt, decref);
-        CALL_SMETHOD(fds[1]->rcnt, decref);
+        RTPP_OBJ_DECREF(fds[0]);
+        RTPP_OBJ_DECREF(fds[1]);
         if (spa == NULL) {
             handle_nomem(cmd, ECODE_NOMEM_4, NULL);
             return (-1);
@@ -561,7 +561,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
 
     if (cmd->cca.op == UPDATE) {
         if (spa->timeout_data != NULL) {
-            CALL_SMETHOD(spa->timeout_data->rcnt, decref);
+            RTPP_OBJ_DECREF(spa->timeout_data);
             spa->timeout_data = NULL;
         }
         if (ulop->notify_socket != NULL) {
@@ -582,7 +582,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
                 }
             }
         } else if (spa->timeout_data != NULL) {
-            CALL_SMETHOD(spa->timeout_data->rcnt, decref);
+            RTPP_OBJ_DECREF(spa->timeout_data);
             spa->timeout_data = NULL;
             RTPP_LOG(spa->log, RTPP_LOG_INFO, "disabling timeout handler");
         }

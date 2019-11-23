@@ -130,7 +130,7 @@ rtpp_module_if_ctor(const char *mpath)
     return ((&pvt->pub));
 
 e1:
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);
@@ -227,7 +227,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     if (pvt->req_q == NULL) {
         goto e4;
     }
-    CALL_SMETHOD(log->rcnt, incref);
+    RTPP_OBJ_INCREF(log);
     pvt->mip->log = log;
     if (pvt->mip->ctor != NULL) {
         pvt->mpvt = pvt->mip->ctor(cfsp);
@@ -256,7 +256,7 @@ e6:
         pvt->mip->dtor(pvt->mpvt);
     }
 e5:
-    CALL_SMETHOD(pvt->mip->log->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->mip->log);
     rtpp_queue_destroy(pvt->req_q);
     pvt->req_q = NULL;
 #if RTPP_CHECK_LEAKS
@@ -300,7 +300,7 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
             if (pvt->mip->dtor != NULL) {
                 pvt->mip->dtor(pvt->mpvt);
             }
-            CALL_SMETHOD(pvt->mip->log->rcnt, decref);
+            RTPP_OBJ_DECREF(pvt->mip->log);
 
 #if RTPP_CHECK_LEAKS
             /* Check if module leaked any mem */
@@ -344,7 +344,7 @@ rtpp_mif_run(void *argp)
             rtpp_wi_apis_getnamearg(wi, (void **)&rap, sizeof(rap));
             if (pvt->mip->on_session_end.func != NULL)
                 pvt->mip->on_session_end.func(pvt->mpvt, rap);
-            CALL_SMETHOD(rap->rcnt, decref);
+            RTPP_OBJ_DECREF(rap);
         }
         if (aname == do_acct_rtcp_aname) {
             struct rtpp_acct_rtcp *rapr;
@@ -352,7 +352,7 @@ rtpp_mif_run(void *argp)
             rtpp_wi_apis_getnamearg(wi, (void **)&rapr, sizeof(rapr));
             if (pvt->mip->on_rtcp_rcvd.func != NULL)
                 pvt->mip->on_rtcp_rcvd.func(pvt->mpvt, rapr);
-            CALL_SMETHOD(rapr->rcnt, decref);
+            RTPP_OBJ_DECREF(rapr);
         }
         CALL_METHOD(wi, dtor);
     }
@@ -371,7 +371,7 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
           "memory", pvt->mip->name);
         return;
     }
-    CALL_SMETHOD(acct->rcnt, incref);
+    RTPP_OBJ_INCREF(acct);
     rtpp_queue_put_item(wi, pvt->req_q);
 }
 

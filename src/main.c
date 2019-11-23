@@ -165,7 +165,7 @@ static void
 rtpp_glog_fin(void)
 {
 
-    CALL_SMETHOD(_sig_cf->glog->rcnt, decref);
+    RTPP_OBJ_DECREF(_sig_cf->glog);
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_FIN(rtpproxy);
 #ifdef RTPP_MEMDEB_STDOUT
@@ -258,7 +258,7 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
 #if ENABLE_MODULE_IF
     for (mif = RTPP_LIST_HEAD(cfsp->modules_cf); mif != NULL; mif = tmp) {
         tmp = RTPP_ITER_NEXT(mif);
-        CALL_SMETHOD(mif->rcnt, decref);
+        RTPP_OBJ_DECREF(mif);
     }
 #endif
     free(cfsp->modules_cf);
@@ -971,7 +971,7 @@ main(int argc, char **argv)
           "can't schedule notification to derive stats");
         exit(1);
     }
-    CALL_SMETHOD(tp->rcnt, decref);
+    RTPP_OBJ_DECREF(tp);
 
     cfs.rtpp_notify_cf = rtpp_notify_ctor(cfs.glog);
     if (cfs.rtpp_notify_cf == NULL) {
@@ -1057,10 +1057,10 @@ main(int argc, char **argv)
 #if ENABLE_MODULE_IF
     for (mif = RTPP_LIST_HEAD(cfs.modules_cf); mif != NULL; mif = tmp) {
         tmp = RTPP_ITER_NEXT(mif);
-        CALL_SMETHOD(mif->rcnt, decref);
+        RTPP_OBJ_DECREF(mif);
     }
 #endif
-    CALL_SMETHOD(cfs.observers->rcnt, decref);
+    RTPP_OBJ_DECREF(cfs.observers)
     free(cfs.modules_cf);
     free(cfs.runcreds);
     CALL_METHOD(cfs.rtpp_notify_cf, dtor);
@@ -1068,13 +1068,13 @@ main(int argc, char **argv)
     free(cfs.locks);
     CALL_METHOD(cfs.rtpp_tnset_cf, dtor);
     CALL_SMETHOD(cfs.rtpp_timed_cf, shutdown);
-    CALL_SMETHOD(cfs.rtpp_timed_cf->rcnt, decref);
+    RTPP_OBJ_DECREF(cfs.rtpp_timed_cf);
     CALL_METHOD(cfs.rtpp_proc_cf, dtor);
     CALL_METHOD(cfs.rtpp_proc_ttl_cf, dtor);
-    CALL_SMETHOD(cfs.sessinfo->rcnt, decref);
-    CALL_SMETHOD(cfs.rtpp_stats->rcnt, decref);
+    RTPP_OBJ_DECREF(cfs.sessinfo);
+    RTPP_OBJ_DECREF(cfs.rtpp_stats);
     for (i = 0; i <= RTPP_PT_MAX; i++) {
-        CALL_SMETHOD(cfs.port_table[i]->rcnt, decref);
+        RTPP_OBJ_DECREF(cfs.port_table[i]);
     }
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");

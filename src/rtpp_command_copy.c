@@ -57,7 +57,7 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx, char
         if (spa->rtp->stream[idx]->rrc != NULL)
             return (-1);
         if (spa->rtp->stream[NOT(idx)]->rrc != NULL) {
-            CALL_SMETHOD(spa->rtp->stream[NOT(idx)]->rrc->rcnt, incref);
+            RTPP_OBJ_INCREF(spa->rtp->stream[NOT(idx)]->rrc);
             spa->rtp->stream[idx]->rrc = spa->rtp->stream[NOT(idx)]->rrc;
         } else {
             spa->rtp->stream[idx]->rrc = rtpp_record_open(cfsp, spa, rname, idx, RECORD_BOTH);
@@ -69,7 +69,7 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx, char
         }
         assert(spa->rtcp->stream[idx]->rrc == NULL);
         if (cfsp->rrtcp != 0) {
-            CALL_SMETHOD(spa->rtp->stream[idx]->rrc->rcnt, incref);
+            RTPP_OBJ_INCREF(spa->rtp->stream[idx]->rrc);
             spa->rtcp->stream[idx]->rrc = spa->rtp->stream[idx]->rrc;
             RTPP_LOG(spa->log, RTPP_LOG_INFO,
               "starting recording RTCP session on port %d", spa->rtcp->stream[idx]->port);

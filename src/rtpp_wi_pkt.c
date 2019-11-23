@@ -99,7 +99,7 @@ rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
     wipp->free_ptr = (struct rtpp_wi *)pkt;
     wipp->sock = sock;
     if (sock_rcnt != NULL) {
-        CALL_SMETHOD(sock_rcnt, incref);
+        RC_INCREF(sock_rcnt);
     }
     wipp->sock_rcnt = sock_rcnt;
     wipp->flags = 0;
@@ -125,7 +125,7 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
     wipp->free_ptr = (struct rtpp_wi *)pkt;
     wipp->sock = sock;
     if (sock_rcnt != NULL) {
-        CALL_SMETHOD(sock_rcnt, incref);
+        RC_INCREF(sock_rcnt);
     }
     wipp->sock_rcnt = sock_rcnt;
     wipp->flags = 0;
@@ -144,7 +144,7 @@ rtpp_wi_free(struct rtpp_wi *wi)
 
     PUB2PVT(wi, wipp);
     if (wipp->log != NULL) {
-        CALL_SMETHOD(wipp->log->rcnt, decref);
+        RTPP_OBJ_DECREF(wipp->log);
     }
     free(wipp->free_ptr);
 }
@@ -157,11 +157,11 @@ rtpp_wi_pkt_free(struct rtpp_wi *wi)
 
     PUB2PVT(wi, wipp);
     if (wipp->sock_rcnt != NULL) {
-        CALL_SMETHOD(wipp->sock_rcnt, decref);
+        RC_DECREF(wipp->sock_rcnt);
     }
     if (wipp->log != NULL) {
-        CALL_SMETHOD(wipp->log->rcnt, decref);
+        RTPP_OBJ_DECREF(wipp->log);
     }
     pkt = (struct rtp_packet *)wipp->free_ptr;
-    CALL_SMETHOD(pkt->rcnt, decref);
+    RTPP_OBJ_DECREF(pkt);
 }

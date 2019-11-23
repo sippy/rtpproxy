@@ -103,7 +103,7 @@ rtpp_cmd_rcache_ctor(struct rtpp_timed *rtpp_timed_cf, double min_ttl)
 e2:
     CALL_METHOD(pvt->ht, dtor);
 e0:
-    CALL_SMETHOD(pvt->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
     return (NULL);
 }
@@ -142,10 +142,10 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const char *cookie,
      * or it drops the ball in which it does not, so we release rco and set
      * it free.
      */
-    CALL_SMETHOD(rep->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(rep->pub));
     return;
 e1:
-    CALL_SMETHOD(rep->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(rep->pub));
     free(rep);
 }
 
@@ -168,7 +168,7 @@ rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *pub, const char *cookie,
      */
     rep = CALL_SMETHOD(rco, getdata);
     strlcpy(rbuf, rep->reply, rblen);
-    CALL_SMETHOD(rco, decref);
+    RC_DECREF(rco);
     return (1);
 }
 
@@ -180,7 +180,7 @@ rtpp_cmd_rcache_shutdown(struct rtpp_cmd_rcache *pub)
     pvt = (struct rtpp_cmd_rcache_pvt *)pub;
     pvt->timeout_rval = CB_LAST;
     CALL_METHOD(pvt->timeout, cancel);
-    CALL_SMETHOD(pvt->timeout->rcnt, decref);
+    RTPP_OBJ_DECREF(pvt->timeout);
     pvt->timeout = NULL;
 }
 
