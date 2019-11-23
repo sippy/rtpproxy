@@ -95,7 +95,7 @@ emit_fintestfunction() {
   fi
   echo   "    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&${oname}_fin,"
   echo   "      &tp->pub);"
-  echo   "    CALL_SMETHOD(tp->pub.rcnt, decref);"
+  echo   "    RTPP_OBJ_DECREF(&(tp->pub));"
   i=0
   for mname in ${mnames}
   do
