@@ -81,6 +81,11 @@ U %%CALLID%% 127.0.0.1 12345 from_tag_1 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 1
 U %%CALLID%% 127.0.0.1 12345 from_tag_1 &&
 U %%CALLID%% 127.0.0.1 12345 from_tag_1 && 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
 U %%CALLID%% 127.0.0.1 12345 from_tag_1 && 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+U %%CALLID%% 127.0.0.1 12345 from_tag_1 && M3:1 my_dtmf_tag
+U %%CALLID%% 127.0.0.1 12345 from_tag_1 tcp:1.2.3.4:56789 DTAG && M3:1 my_dtmf_tag
+U %%CALLID%% 127.0.0.1 12345 from_tag_1 tcp:1.2.3.4:56789 DTAG && M3:1 my_dtmf_tag 101
+U %%CALLID%% 127.0.0.1 12345 from_tag_1 tcp:1.2.3.4:56789 DTAG && M3:1 Hello%20Razvan%21%20%3A-%29 99
+X
 G nonsense
 Ggarbage nonsense
 G nonsense1 nonsense2

@@ -85,15 +85,20 @@ E5
 E5
 E3
 E5
+23824
+23824
+23824
+23824
+0
 E68
 E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 89 6 82 88
+2 2 1 1 0 1 0 94 11 82 93
 E5
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=92 ncmds_succd=7 ncmds_errs=84 ncmds_repld=91
+nsess_created=2 nsess_destroyed=2 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=97 ncmds_succd=12 ncmds_errs=84 ncmds_repld=96
 MEMDEB: all clear
 E0
 E0
@@ -182,15 +187,20 @@ E5
 E5
 E3
 E5
+23824
+23824
+23824
+23824
+0
 E68
 E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 89 6 82 88
+2 2 1 1 0 1 0 94 11 82 93
 E5
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=92 ncmds_succd=7 ncmds_errs=84 ncmds_repld=91
+nsess_created=2 nsess_destroyed=2 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=97 ncmds_succd=12 ncmds_errs=84 ncmds_repld=96
 MEMDEB: all clear
 E0
 E0
@@ -279,15 +289,20 @@ E5
 E5
 E3
 E5
+23824
+23824
+23824
+23824
+0
 E68
 E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 89 7 81 88
+2 2 1 1 0 1 0 94 12 81 93
 E5
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=92 ncmds_succd=8 ncmds_errs=83 ncmds_repld=91
+nsess_created=2 nsess_destroyed=2 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=97 ncmds_succd=13 ncmds_errs=83 ncmds_repld=96
 MEMDEB: all clear
 E0
 E0
@@ -376,13 +391,18 @@ E5
 E5
 E3
 E5
+23824
+23824
+23824
+23824
+0
 E68
 E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 89 7 81 88
+2 2 1 1 0 1 0 94 12 81 93
 E5
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=92 ncmds_succd=8 ncmds_errs=83 ncmds_repld=91
+nsess_created=2 nsess_destroyed=2 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=97 ncmds_succd=13 ncmds_errs=83 ncmds_repld=96
 MEMDEB: all clear
