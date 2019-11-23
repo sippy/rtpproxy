@@ -95,7 +95,7 @@ rtpp_stats_fintest()
     tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stats_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, getidxbyname);
     CALL_TFIN(&tp->pub, getlvalbyname);
     CALL_TFIN(&tp->pub, getnstats);

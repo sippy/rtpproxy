@@ -55,7 +55,7 @@ rtpp_ringbuf_fintest()
     tp->pub.push = (rtpp_ringbuf_push_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ringbuf_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, flush);
     CALL_TFIN(&tp->pub, locate);
     CALL_TFIN(&tp->pub, push);
