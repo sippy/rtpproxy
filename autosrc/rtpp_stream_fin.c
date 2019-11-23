@@ -172,7 +172,7 @@ rtpp_stream_fintest()
     tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, drain_skt);
     CALL_TFIN(&tp->pub, finish_playback);
     CALL_TFIN(&tp->pub, get_actor);

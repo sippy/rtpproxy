@@ -60,7 +60,7 @@ rtpp_timed_fintest()
     tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, schedule);
     CALL_TFIN(&tp->pub, schedule_rc);
     CALL_TFIN(&tp->pub, shutdown);

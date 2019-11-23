@@ -63,7 +63,7 @@ rtpp_log_fintest()
     tp->pub.write = (rtpp_log_write_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_log_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, ewrite);
     CALL_TFIN(&tp->pub, setlevel);
     CALL_TFIN(&tp->pub, start);

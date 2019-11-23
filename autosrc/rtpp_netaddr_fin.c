@@ -95,7 +95,7 @@ rtpp_netaddr_fintest()
     tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_netaddr_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, cmp);
     CALL_TFIN(&tp->pub, cmphost);
     CALL_TFIN(&tp->pub, copy);

@@ -63,7 +63,7 @@ rtpp_sessinfo_fintest()
     tp->pub.update = (rtpp_si_update_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_sessinfo_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, append);
     CALL_TFIN(&tp->pub, remove);
     CALL_TFIN(&tp->pub, sync_polltbl);

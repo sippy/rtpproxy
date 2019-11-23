@@ -79,7 +79,7 @@ rtpp_module_if_fintest()
     tp->pub.start = (rtpp_module_if_start_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_module_if_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, config);
     CALL_TFIN(&tp->pub, do_acct);
     CALL_TFIN(&tp->pub, do_acct_rtcp);

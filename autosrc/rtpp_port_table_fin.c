@@ -39,7 +39,7 @@ rtpp_port_table_fintest()
     tp->pub.get_port = (rtpp_ptbl_get_port_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_port_table_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, get_port);
     assert((_naborts - naborts_s) == 1);
 }

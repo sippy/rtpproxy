@@ -63,7 +63,7 @@ rtpp_ttl_fintest()
     tp->pub.reset_with = (rtpp_ttl_reset_with_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ttl_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, decr);
     CALL_TFIN(&tp->pub, get_remaining);
     CALL_TFIN(&tp->pub, reset);

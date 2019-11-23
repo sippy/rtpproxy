@@ -47,7 +47,7 @@ rtpp_pcnt_strm_fintest()
     tp->pub.reg_pktin = (rtpp_pcnt_strm_reg_pktin_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcnt_strm_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, get_stats);
     CALL_TFIN(&tp->pub, reg_pktin);
     assert((_naborts - naborts_s) == 2);

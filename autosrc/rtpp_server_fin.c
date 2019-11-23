@@ -81,7 +81,7 @@ rtpp_server_fintest()
     tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, get);
     CALL_TFIN(&tp->pub, get_seq);
     CALL_TFIN(&tp->pub, get_ssrc);

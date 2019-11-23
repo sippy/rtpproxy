@@ -39,7 +39,7 @@ rtpp_record_fintest()
     tp->pub.write = (rtpp_record_write_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, write);
     assert((_naborts - naborts_s) == 1);
 }

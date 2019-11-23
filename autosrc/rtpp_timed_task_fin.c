@@ -39,7 +39,7 @@ rtpp_timed_task_fintest()
     tp->pub.cancel = (rtpp_timed_task_cancel_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_task_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, cancel);
     assert((_naborts - naborts_s) == 1);
 }

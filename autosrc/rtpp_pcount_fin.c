@@ -63,7 +63,7 @@ rtpp_pcount_fintest()
     tp->pub.reg_reld = (rtpp_pcount_reg_reld_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcount_fin,
       &tp->pub);
-    CALL_SMETHOD(tp->pub.rcnt, decref);
+    RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, get_stats);
     CALL_TFIN(&tp->pub, reg_drop);
     CALL_TFIN(&tp->pub, reg_ignr);
