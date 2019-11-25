@@ -30,7 +30,7 @@ ${RTPP_NOTYFY_CLIENT} -s ${RTPP_NOTIFY_SOCK_TCP} \
  -S "${TOP_BUILDDIR}/python/sippy_lite" -o catch_dtmf.tlog -t 20&
 run_udpreplay &
 run_catch_dtmf > catch_dtmf.rout
-report "wait for the rtproxy shutdown on ${socket}"
+report "wait for the rtproxy shutdown"
 ${DIFF} "${CD_DIR}/catch_dtmf.output" catch_dtmf.rout
 ${DIFF} "${CD_DIR}/catch_dtmf.tnotify.output" catch_dtmf.tlog
-report "catch_dtmf on ${socket}"
+report "catch_dtmf"
