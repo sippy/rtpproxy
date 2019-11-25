@@ -80,7 +80,7 @@ struct catch_dtmf_einfo {
     uint16_t duration;
 };
 
-#define EINFO_HST_DPTH 8
+#define EINFO_HST_DPTH 4
 
 struct catch_dtmf_edata {
     struct rtpp_refcnt *rcnt;
@@ -186,9 +186,12 @@ rtpp_catch_dtmf_worker(void *arg)
         ei.ts = ntohl(wip->pkt->data.header.ts);
         ei.duration = ntohs(dtmf->duration);
         eip = NULL;
-        for (i = 0; i < EINFO_HST_DPTH; i++) {
-            if (wip->edata->hst[i].ts == ei.ts && wip->edata->hst[i].digit != -1) {
-                eip = &wip->edata->hst[i];
+        for (i = 1; i <= EINFO_HST_DPTH; i++) {
+            int j = wip->edata->hst_next - i;
+            if (j < 0)
+                j = EINFO_HST_DPTH + j;
+            if (wip->edata->hst[j].ts == ei.ts && wip->edata->hst[j].digit != -1) {
+                eip = &wip->edata->hst[j];
                 break;
             }
         }
