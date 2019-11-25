@@ -46,7 +46,7 @@ cd udpreplay/build
 cmake ..
 make
 sudo make install
-cd ../..
+cd ../../..
 # -- End of 3rd party dependencies  install --
 
 sudo ldconfig
