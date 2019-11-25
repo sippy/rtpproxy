@@ -40,7 +40,7 @@ cd libg722
 make
 sudo make install
 cd ..
-git clone -b precise_timings git@github.com:sippy/udpreplay.git udpreplay
+git clone -b precise_timings https://github.com/sippy/udpreplay.git udpreplay
 mkdir udpreplay/build
 cd udpreplay/build
 cmake ..
