@@ -206,9 +206,9 @@ rtpp_catch_dtmf_worker(void *arg)
             goto skip;
         }
         if (!eip->pending) {
-            if (!dtmf->end)
+            if (!dtmf->end && eip->duration <= ei.duration)
                 RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Received DTMF for %c without "
-                        "start %d!", ei.digit, wip->edata->hst[0].pending);
+                        "start %d!", ei.digit, eip->pending);
             goto skip;
         }
 
