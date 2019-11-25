@@ -20,8 +20,11 @@ make clean
 #sudo pip install -r requirements.txt
 #sudo DEBIAN_FRONTEND=noninteractive apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" \
- install -y libgsm1-dev libsndfile1-dev tcpdump curl wireshark-common gdb
+ install -y libgsm1-dev libsndfile1-dev tcpdump curl wireshark-common gdb libpcap-dev \
+ cmake
 tcpdump --version || true
+
+# -- Install 3rd party dependencies --
 mkdir deps
 cd deps
 wget http://download-mirror.savannah.gnu.org/releases/linphone/plugins/sources/bcg729-${BCG729_VER}.tar.gz
@@ -36,9 +39,19 @@ git clone git://github.com/sippy/libg722 libg722
 cd libg722
 make
 sudo make install
+cd ..
+git clone -b precise_timings git@github.com:sippy/udpreplay.git udpreplay
+mkdir udpreplay/build
+cd udpreplay/build
+cmake ..
+make
+sudo make install
 cd ../..
+# -- End of 3rd party dependencies  install --
+
 sudo ldconfig
 autoreconf --force --install --verbose
 ./configure
 make
+
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
