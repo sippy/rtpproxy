@@ -225,8 +225,8 @@ rtpp_catch_dtmf_worker(void *arg)
         /* we received the end of the DTMF */
         /* all good - send the notification */
         eip->pending = 0;
-        snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%s %c %d %d",
-                wip->rtdp->notify_tag, ei.digit, dtmf->volume, dtmf->duration);
+        snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%s %c %u %u",
+                wip->rtdp->notify_tag, ei.digit, dtmf->volume, ei.duration);
         CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target, buf);
 
 skip:
