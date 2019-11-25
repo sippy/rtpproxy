@@ -28,6 +28,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <pthread.h>
 #include <signal.h>
@@ -72,15 +73,24 @@ struct rtpp_catch_dtmf_pvt {
     struct rtpp_notify *notifier;
 };
 
-struct catch_dtmf_event {
-    struct rtpp_refcnt *rcnt;
+struct catch_dtmf_einfo {
     int pending;
     char digit;
+    uint32_t ts;
+    uint16_t duration;
+};
+
+#define EINFO_HST_DPTH 8
+
+struct catch_dtmf_edata {
+    struct rtpp_refcnt *rcnt;
+    struct catch_dtmf_einfo hst[EINFO_HST_DPTH];
+    int hst_next;
 };
 
 struct catch_dtmf_stream_cfg {
     atomic_int pt;
-    struct catch_dtmf_event *event;
+    struct catch_dtmf_edata *edata;
     const struct rtpp_timeout_data *rtdp;
 };
 
@@ -88,25 +98,28 @@ struct catch_dtmf_stream_cfg {
     (pvtp) = (typeof(pvtp))((char *)(pubp) - offsetof(typeof(*(pvtp)), pub))
 
 static void
-rtpp_catch_dtmf_event_dtor(void *p)
+rtpp_catch_dtmf_edata_dtor(void *p)
 {
     free(p);
 }
 
-static struct catch_dtmf_event *
-rtpp_catch_dtmf_event_ctor(void)
+static struct catch_dtmf_edata *
+rtpp_catch_dtmf_edata_ctor(void)
 {
-    struct catch_dtmf_event *event;
+    struct catch_dtmf_edata *edata;
     struct rtpp_refcnt *rcnt;
+    int i;
 
-    event = rtpp_rzmalloc(sizeof(*event), &rcnt);
-    if (event == NULL) {
+    edata = rtpp_rzmalloc(sizeof(*edata), &rcnt);
+    if (edata == NULL) {
         goto e0;
     }
-    event->rcnt = rcnt;
-    event->digit = -1;
-    CALL_SMETHOD(event->rcnt, attach, rtpp_catch_dtmf_event_dtor, event);
-    return event;
+    edata->rcnt = rcnt;
+    for (i = 0; i < EINFO_HST_DPTH; i++) {
+        edata->hst[i].digit = -1;
+    }
+    CALL_SMETHOD(edata->rcnt, attach, rtpp_catch_dtmf_edata_dtor, edata);
+    return edata;
 e0:
     return (NULL);
 }
@@ -125,7 +138,7 @@ rtpp_catch_dtmf_dtor(struct rtpp_catch_dtmf_pvt *pvt)
 
 struct wipkt {
     const struct rtp_packet *pkt;
-    struct catch_dtmf_event *event;
+    struct catch_dtmf_edata *edata;
     const struct rtpp_timeout_data *rtdp;
 };
 
@@ -150,9 +163,10 @@ rtpp_catch_dtmf_worker(void *arg)
     struct rtpp_catch_dtmf_pvt *pvt;
     struct rtpp_wi *wi;
     struct wipkt *wip;
-    char digit;
     char buf[RTPP_MAX_NOTIFY_BUF];
     const char dtmf_events[] = "0123456789*#ABCD ";
+    struct catch_dtmf_einfo *eip, ei;
+    int i;
 
     pvt = (struct rtpp_catch_dtmf_pvt *)arg;
     for (;;) {
@@ -168,49 +182,55 @@ rtpp_catch_dtmf_worker(void *arg)
             RTPP_LOG(pvt->log, RTPP_LOG_DBUG, "Unhandled DTMF event %u!", dtmf->event);
             goto skip;
         }
-        digit = dtmf_events[dtmf->event];
-        if (wip->pkt->data.header.mbt == 1) {
-            /* this is a new event */
-            if (wip->event->pending) {
-                if (digit != wip->event->digit) {
-                    RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Received DTMF start for %c "
-                            "while processing %c!", digit, wip->event->digit);
-                }
-                goto skip;
+        ei.digit = dtmf_events[dtmf->event];
+        ei.ts = ntohl(wip->pkt->data.header.ts);
+        ei.duration = ntohs(dtmf->duration);
+        eip = NULL;
+        for (i = 0; i < EINFO_HST_DPTH; i++) {
+            if (wip->edata->hst[i].ts == ei.ts && wip->edata->hst[i].digit != -1) {
+                eip = &wip->edata->hst[i];
+                break;
             }
-            wip->event->pending = 1;
-            wip->event->digit = digit;
+        }
+
+        if (eip == NULL) {
+            /* this is a new event */
+            eip = &wip->edata->hst[wip->edata->hst_next];
+            eip->ts = ei.ts;
+            eip->pending = 1;
+            eip->digit = ei.digit;
+            eip->duration = ei.duration;
+            wip->edata->hst_next += 1;
+            if (wip->edata->hst_next == EINFO_HST_DPTH)
+                wip->edata->hst_next = 0;
             goto skip;
-        } else if (!wip->event->pending) {
+        }
+        if (!eip->pending) {
             if (!dtmf->end)
                 RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Received DTMF for %c without "
-                        "start %d!", digit, wip->event->pending);
+                        "start %d!", ei.digit, wip->edata->hst[0].pending);
             goto skip;
         }
 
-        if (digit != wip->event->digit) {
+        if (ei.digit != eip->digit) {
             RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Received DTMF for %c "
-                    "while processing %c!", digit, wip->event->digit);
+                    "while processing %c!", ei.digit, eip->digit);
             goto skip;
         }
+        if (eip->duration < ei.duration)
+            eip->duration = ei.duration;
 
         if (!dtmf->end)
             goto skip;
         /* we received the end of the DTMF */
-        if (!wip->event->pending) {
-            /* check if we've sent a notification for this */
-            RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Not processing any DTMF "
-                    "when end for %c came", digit);
-            goto skip;
-        }
         /* all good - send the notification */
-        wip->event->pending = 0;
+        eip->pending = 0;
         snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%s %c %d %d",
-                wip->rtdp->notify_tag, digit, dtmf->volume, dtmf->duration);
+                wip->rtdp->notify_tag, ei.digit, dtmf->volume, dtmf->duration);
         CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target, buf);
 
 skip:
-        CALL_SMETHOD(wip->event->rcnt, decref);
+        CALL_SMETHOD(wip->edata->rcnt, decref);
         CALL_SMETHOD(wip->rtdp->rcnt, decref);
         CALL_SMETHOD(wip->pkt->rcnt, decref);
         CALL_METHOD(wi, dtor);
@@ -265,15 +285,15 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
         rtps_c->rtdp = rtpp_timeout_data_ctor(
                 ctxp->sessp->timeout_data->notify_target, dtmf_tag);
         atomic_init(&(rtps_c->pt), new_pt);
-        rtps_c->event = rtpp_catch_dtmf_event_ctor();
-        if (!rtps_c->event) {
-            RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), cannot create event!", ctxp->strmp);
+        rtps_c->edata = rtpp_catch_dtmf_edata_ctor();
+        if (!rtps_c->edata) {
+            RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), cannot create edata!", ctxp->strmp);
             free(rtps_c);
             return (-1);
         }
         if (!atomic_compare_exchange_strong(&(ctxp->strmp->catch_dtmf_data),
           &rtps_c_prev, rtps_c)) {
-            CALL_SMETHOD(rtps_c->event->rcnt, decref);
+            CALL_SMETHOD(rtps_c->edata->rcnt, decref);
             free(rtps_c);
             rtps_c = (typeof(rtps_c))rtps_c_prev;
             old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
@@ -319,8 +339,8 @@ rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
         return;
     CALL_SMETHOD(pktx->pktp->rcnt, incref);
     /* we need to duplicate the tag and state */
-    wip->event = rtps_c->event;
-    CALL_SMETHOD(rtps_c->event->rcnt, incref);
+    wip->edata = rtps_c->edata;
+    CALL_SMETHOD(rtps_c->edata->rcnt, incref);
     wip->pkt = pktx->pktp;
     CALL_SMETHOD(rtps_c->rtdp->rcnt, incref);
     wip->rtdp = rtps_c->rtdp;
@@ -385,6 +405,6 @@ catch_dtmf_data_free(void *p)
 
     rtps_c = (struct catch_dtmf_stream_cfg *)p;
     CALL_SMETHOD(rtps_c->rtdp->rcnt, decref);
-    CALL_SMETHOD(rtps_c->event->rcnt, decref);
+    CALL_SMETHOD(rtps_c->edata->rcnt, decref);
     free(rtps_c);
 }
