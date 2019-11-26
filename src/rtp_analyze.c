@@ -366,7 +366,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         stat->last.pcount = 1;
         stat->ssrc_changes += 1;
         if ((stat->psent > 0 || stat->precvd > 0) && rlog != NULL) {
-            LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: ssrc_changes=%u, psent=%u, precvd=%u\n",
+            LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: ssrc_changes=%u, psent=%u, precvd=%u",
               rinfo->ssrc, rinfo->seq, stat->ssrc_changes, stat->psent, stat->precvd);
         }
         idx = (rinfo->seq % 131072) >> 5;
@@ -379,7 +379,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
     }
     seq = rinfo->seq + stat->last.seq_offset;
     if (header->mbt && (seq < stat->last.max_seq && (stat->last.max_seq & 0xffff) != 65535)) {
-        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: seq reset last->max_seq=%u, seq=%u, m=%u\n",
+        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: seq reset last->max_seq=%u, seq=%u, m=%u",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->mbt);
         /* Seq reset has happened. Treat it as a ssrc change */
         update_rtpp_totals(stat, stat);
@@ -408,7 +408,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
     }
     if (rpp->ts_rate != 0 && ABS(rtime - stat->last.base_rtime -
       rtp_ts2dtime(rpp->ts_rate, rinfo->ts - stat->last.base_ts)) > 0.1) {
-        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: delta rtime=%f, delta ts=%f\n",
+        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: delta rtime=%f, delta ts=%f",
           rinfo->ssrc, rinfo->seq, rtime - stat->last.base_rtime,
           rtp_ts2dtime(rpp->ts_rate, rinfo->ts - stat->last.base_ts));
         stat->last.base_rtime = rtime;
@@ -417,7 +417,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         /* Pre-wrap packet received after a wrap */
         seq -= 65536;
     } else if (stat->last.max_seq > 65000 && seq < stat->last.max_seq - 65000) {
-        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: wrap last->max_seq=%u, seq=%u\n",
+        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: wrap last->max_seq=%u, seq=%u",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq);
         /* Wrap up has happened */
         stat->last.seq_offset += 65536;
@@ -428,7 +428,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
             memset(stat->last.seen, '\0', sizeof(stat->last.seen) / 2);
         }
     } else if (seq + 536 < stat->last.max_seq || seq > stat->last.max_seq + 536) {
-        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: desync last->max_seq=%u, seq=%u, m=%u\n",
+        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: desync last->max_seq=%u, seq=%u, m=%u",
           rinfo->ssrc, rinfo->seq, stat->last.max_seq, seq, header->mbt);
         /* Desynchronization has happened. Treat it as a ssrc change */
         update_rtpp_totals(stat, stat);
@@ -446,7 +446,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
     idx = (seq % 131072) >> 5;
     mask = stat->last.seen[idx];
     if (((mask >> (seq & 31)) & 1) != 0) {
-        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: DUP\n",
+        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: DUP",
           rinfo->ssrc, rinfo->seq);
         stat->last.duplicates += 1;
         stat->last.seq = rinfo->seq;
@@ -454,7 +454,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
     }
     stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
     if (seq - stat->last.max_seq != 1)
-        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: delta = %d\n",
+        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: delta = %d",
           rinfo->ssrc, rinfo->seq, seq - stat->last.max_seq);
     if (seq >= stat->last.max_seq) {
         stat->last.max_seq = seq;
@@ -470,7 +470,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
     if (stat->last.seq_offset == 0 && seq < stat->last.min_seq) {
         stat->last.min_seq = seq;
         stat->last.pcount += 1;
-        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: last->min_seq=%u\n",
+        LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: last->min_seq=%u",
           rinfo->ssrc, rinfo->seq, stat->last.min_seq);
         stat->last.seq = rinfo->seq;
         return (UPDATE_OK);
