@@ -1,2 +1,2 @@
 U %%CALLID%% 127.0.0.1 12345 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29 101
-L %%CALLID%% 127.0.0.1 54321 from_tag_1 to_tag_1
+L %%CALLID%% 127.0.0.1 54321 from_tag_1 to_tag_1 && M3:1 Hello%2C%20Max%21%20%3AD 101
