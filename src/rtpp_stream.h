@@ -108,6 +108,7 @@ struct rtpp_stream {
     const struct sockaddr *laddr;
     int port;
     int asymmetric;
+    enum rtpp_stream_side side;
     /* Flags: strong create/delete; weak ones */
     int weak;
     /* Pointer to rtpp_record's opaque data type */

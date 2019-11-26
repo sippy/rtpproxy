@@ -95,7 +95,6 @@ struct rtpp_stream_priv
     pthread_mutex_t lock;
     /* Weak reference to the "rtpp_server" (player) */
     struct rtps rtps;
-    enum rtpp_stream_side side;
     /* Timestamp of the last session update */
     double last_update;
     /* Flag that indicates whether or not address supplied by client can't be trusted */
@@ -206,7 +205,7 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     pvt->rtpp_stats = rtpp_stats;
     pvt->pub.log = log;
     RTPP_OBJ_INCREF(log);
-    pvt->side = side;
+    pvt->pub.side = side;
     pvt->pub.pipe_type = pipe_type;
     pvt->pub.smethods = &rtpp_stream_smethods;
 
@@ -251,7 +250,7 @@ static const char *
 _rtpp_stream_get_actor(struct rtpp_stream_priv *pvt)
 {
 
-    return ((pvt->side == RTPP_SSIDE_CALLER) ? "caller" : "callee");
+    return ((pvt->pub.side == RTPP_SSIDE_CALLER) ? "caller" : "callee");
 }
 
 static const char *
