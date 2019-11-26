@@ -291,7 +291,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
         rtps_c->rtdp = rtpp_timeout_data_ctor(
                 ctxp->sessp->timeout_data->notify_target, dtmf_tag);
         atomic_init(&(rtps_c->pt), new_pt);
-        if (strcmp(CALL_SMETHOD(ctxp->strmp, get_actor), "caller") == 0)
+        if (ctxp->strmp->side == RTPP_SSIDE_CALLER)
             stream = 0;
         else
             stream = 1;
