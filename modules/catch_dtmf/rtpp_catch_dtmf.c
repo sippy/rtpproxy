@@ -86,6 +86,7 @@ struct catch_dtmf_edata {
     struct rtpp_refcnt *rcnt;
     struct catch_dtmf_einfo hst[EINFO_HST_DPTH];
     int hst_next;
+    int stream;
 };
 
 struct catch_dtmf_stream_cfg {
@@ -104,7 +105,7 @@ rtpp_catch_dtmf_edata_dtor(void *p)
 }
 
 static struct catch_dtmf_edata *
-rtpp_catch_dtmf_edata_ctor(void)
+rtpp_catch_dtmf_edata_ctor(int stream)
 {
     struct catch_dtmf_edata *edata;
     struct rtpp_refcnt *rcnt;
@@ -118,6 +119,7 @@ rtpp_catch_dtmf_edata_ctor(void)
     for (i = 0; i < EINFO_HST_DPTH; i++) {
         edata->hst[i].digit = -1;
     }
+    edata->stream = stream;
     CALL_SMETHOD(edata->rcnt, attach, rtpp_catch_dtmf_edata_dtor, edata);
     return edata;
 e0:
@@ -225,8 +227,8 @@ rtpp_catch_dtmf_worker(void *arg)
         /* we received the end of the DTMF */
         /* all good - send the notification */
         eip->pending = 0;
-        snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%s %c %u %u",
-                wip->rtdp->notify_tag, ei.digit, dtmf->volume, ei.duration);
+        snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%s %c %u %u %d",
+                wip->rtdp->notify_tag, ei.digit, dtmf->volume, ei.duration, wip->edata->stream);
         CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target, buf);
 
 skip:
@@ -247,6 +249,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
     int new_pt = 101;
     int old_pt = -1;
     char *dtmf_tag;
+    int stream;
 
     rtps_c_prev = NULL;
 
@@ -285,7 +288,11 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
         rtps_c->rtdp = rtpp_timeout_data_ctor(
                 ctxp->sessp->timeout_data->notify_target, dtmf_tag);
         atomic_init(&(rtps_c->pt), new_pt);
-        rtps_c->edata = rtpp_catch_dtmf_edata_ctor();
+        if (strcmp(CALL_SMETHOD(ctxp->strmp, get_actor), "caller") == 0)
+            stream = 0;
+        else
+            stream = 1;
+        rtps_c->edata = rtpp_catch_dtmf_edata_ctor(stream);
         if (!rtps_c->edata) {
             RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), cannot create edata!", ctxp->strmp);
             free(rtps_c);
