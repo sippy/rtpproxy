@@ -47,6 +47,8 @@ struct foreach_args {
     struct rtpp_weakref_obj *sessions_wrt;
 };  
 
+static const char *notyfy_type = "timeout";
+
 static int
 rtpp_proc_ttl_foreach(void *dp, void *ap)
 {
@@ -64,7 +66,8 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
         RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
         if (sp->timeout_data != NULL) {
             CALL_METHOD(fap->rtpp_notify_cf, schedule,
-              sp->timeout_data->notify_target, sp->timeout_data->notify_tag);
+              sp->timeout_data->notify_target, sp->timeout_data->notify_tag,
+              notyfy_type);
         }
         CALL_METHOD(fap->rtpp_stats, updatebyname, "nsess_timeout", 1);
         CALL_METHOD(fap->sessions_wrt, unreg, sp->seuid);
