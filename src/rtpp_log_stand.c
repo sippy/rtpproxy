@@ -29,10 +29,12 @@
 #include <errno.h>
 #include <math.h>
 #include <syslog.h>
+#include <stdatomic.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "config.h"
 
@@ -52,6 +54,11 @@ static int syslog_async_opened = 0;
 static double iitime = 0.0;
 
 #define CALL_ID_NONE "GLOBAL"
+
+static struct {
+    atomic_uint next_ticket;
+    atomic_uint now_serving;
+} _log_lock = {ATOMIC_VAR_INIT(0), ATOMIC_VAR_INIT(0)};
 
 struct rtpp_log_inst {
     char *call_id;
@@ -211,6 +218,27 @@ ftime(struct rtpp_log_inst *rli, double ltime, char *buf, int buflen)
     }
 }
 
+static void
+_rtpp_log_lock(void)
+{
+    unsigned int my_ticket;
+
+    my_ticket = atomic_fetch_add_explicit(&(_log_lock.next_ticket), 1,
+      memory_order_acq_rel);
+    while (atomic_load_explicit(&(_log_lock.now_serving),
+      memory_order_acquire) != my_ticket) {
+        usleep(1);
+    }
+}
+
+static void
+_rtpp_log_unlock(void)
+{
+
+    atomic_fetch_add_explicit(&(_log_lock.now_serving), 1,
+      memory_order_release);
+}
+
 void
 _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
   const char *format, va_list ap)
@@ -245,10 +273,13 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
 #endif
 
     ftime(rli, getdtime(), rtpp_time_buff, sizeof(rtpp_time_buff));
+    _rtpp_log_lock();
     fprintf(stderr, rli->format_se[0], rtpp_time_buff, strlvl(level),
       call_id, function);
     vfprintf(stderr, format, ap);
     fprintf(stderr, "%s", rli->format_se[1]);
+    fflush(stderr);
+    _rtpp_log_unlock();
 }
 
 void
@@ -305,10 +336,13 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
     }
 #endif
     ftime(rli, getdtime(), rtpp_time_buff, sizeof(rtpp_time_buff));
+    _rtpp_log_lock();
     fprintf(stderr, rli->eformat_se[0], rtpp_time_buff, strlvl(level), call_id,
       function);
     vfprintf(stderr, format, ap);
     fprintf(stderr, rli->eformat_se[1], strerror(errno), errno);
+    fflush(stderr);
+    _rtpp_log_unlock();
 }
 
 void
