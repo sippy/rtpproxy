@@ -2,6 +2,7 @@
 
 TDIR="`dirname "${0}"`"
 BASEDIR="${TDIR}/.."
+SUDO_REQUIRED=1
 . "${BASEDIR}/functions"
 
 . "${TDIR}/glitch.sub"

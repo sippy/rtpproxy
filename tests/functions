@@ -70,7 +70,8 @@ TAR="tar"
 
 TRASH_PORT1=38322
 
-if [ ${MYUID} -eq 0 ]
+SUDO_REQUIRED=${SUDO_REQUIRED:-0}
+if [ ${MYUID} -eq 0 -o ${SUDO_REQUIRED} -eq 0 ]
 then
   SUDO=""
 else

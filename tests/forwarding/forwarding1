@@ -21,6 +21,7 @@
 # direction and 60ms in the other.
 
 BASEDIR="`dirname "${0}"`/.."
+SUDO_REQUIRED=1
 . "${BASEDIR}/functions"
 
 TEST_CODECS="0 3 8 18 9"
