@@ -50,6 +50,7 @@ long long rtpp_rlim_max(const struct rtpp_cfg *);
 size_t strlcpy(char *, const char *, size_t);
 #endif
 int atoi_safe(const char *, int *);
+int atoi_saferange(const char *, int *, int, int);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)
