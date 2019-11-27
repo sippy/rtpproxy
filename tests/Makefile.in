@@ -479,14 +479,15 @@ TESTS = autosrc/chk_up2date makeann/makeann1 unittests/rtcp2json1 \
 	unittests/rtpp_rzmalloc_perf unittests/rtpp_fintest \
 	libucl/libucl1 libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
 	rtp_analyze/rtp_analyze1 extractaudio/badargs \
-	extractaudio/extractaudio1 startstop/badargs \
-	startstop/startstop1 basic_versions/basic_versions1 \
-	command_parser/command_parser1 forwarding/forwarding1_robust \
-	memdeb/glitch1 memdeb/glitch_libucl1 \
-	memdeb/glitch_extractaudio memdeb/glitch_startstop1 \
-	memdeb/glitch_basic_versions1 memdeb/glitch_command_parser1 \
-	session_timeouts/notify_tcp session_timeouts/notify_tcp_wild \
-	session_timeouts/notify_unix playback/playback1
+	extractaudio/extractaudio1 startstop/goodargs \
+	startstop/badargs startstop/startstop1 \
+	basic_versions/basic_versions1 command_parser/command_parser1 \
+	forwarding/forwarding1_robust memdeb/glitch1 \
+	memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
+	memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
+	memdeb/glitch_command_parser1 session_timeouts/notify_tcp \
+	session_timeouts/notify_tcp_wild session_timeouts/notify_unix \
+	playback/playback1
 CLEANFILES = ${autosrc_CLEANFILES} ${makeann_CLEANFILES} \
 	${rtcp2json_CLEANFILES} ${libucl_CLEANFILES} \
 	${libexecinfo_CLEANFILES} ${acct_rtcp_hep_CLEANFILES} \
@@ -835,6 +836,13 @@ extractaudio/badargs.log: extractaudio/badargs
 extractaudio/extractaudio1.log: extractaudio/extractaudio1
 	@p='extractaudio/extractaudio1'; \
 	b='extractaudio/extractaudio1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+startstop/goodargs.log: startstop/goodargs
+	@p='startstop/goodargs'; \
+	b='startstop/goodargs'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
