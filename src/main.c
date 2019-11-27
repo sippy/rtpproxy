@@ -244,6 +244,7 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     if (msg != NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s", msg);
     }
+    CALL_METHOD(cfsp->bindaddrs_cf, dtor);
     free(cfsp->locks);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     CALL_METHOD(cfsp->nofile, dtor);
