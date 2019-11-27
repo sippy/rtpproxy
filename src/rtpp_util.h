@@ -46,10 +46,11 @@ int rtpp_daemon(int, int);
 int url_unquote(unsigned char *, int);
 int rtpp_get_sched_hz(void);
 long long rtpp_rlim_max(struct cfg *cf);
+int atoi_safe(const char *, int *);
+int atoi_saferange(const char *, int *, int, int);
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
 #endif
-
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)

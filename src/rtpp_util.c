@@ -228,6 +228,35 @@ url_unquote(unsigned char *buf, int len)
     return (outlen);
 }
 
+int
+atoi_safe(const char *s, int *res)
+{
+    int rval;
+    char *cp;
+
+    rval = strtol(s, &cp, 10);
+    if (cp == s || *cp != '\0') {
+        return (-1);
+    }
+    *res = rval;
+    return (0);
+}
+
+int
+atoi_saferange(const char *s, int *res, int min, int max)
+{
+    int rval;
+
+    if (atoi_safe(s, &rval)) {
+        return (-1);
+    }
+    if (rval < min || rval > max) {
+        return (-1);
+    }
+    *res = rval;
+    return (0);
+}
+
 #if defined(_SC_CLK_TCK) && !defined(__FreeBSD__)
 #if defined(LINUX_XXX)
 static int
