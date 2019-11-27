@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# Tests a set of commands listed in the acct_rtcp_hep/basic.input file
+# and runs those commands through the rtpp control channel, comparing
+# the results with the expected results contained in the
+# acct_rtcp_hep/basic.output file.
+
+BASEDIR="${BASEDIR:-$(dirname -- $0)/..}"
+BASEDIR="$(readlink -f -- $BASEDIR)"
+
+. $(dirname $0)/../functions
+
+HEPSIZE=334
+CD_DIR="${BASEDIR}/acct_rtcp_hep"
+RTP_PORT=2006
+MIN_PORT=$((${RTP_PORT}))
+MAX_PORT=$((${RTP_PORT} + 3))
+RTPP_ARGS="-d dbug -f -s stdio: -b -n ${RTPP_NOTIFY_SOCK_TCP} -m ${MIN_PORT} \
+ -M ${MAX_PORT} -T2 -W2 --config ${CD_DIR}/basic.conf"
+
+run_udpreplay_o() {
+  sleep 1
+  exec udpreplay "${CD_DIR}/rtcp.o.pcap"
+}
+
+run_udpreplay_a() {
+  sleep 1
+  exec udpreplay "${CD_DIR}/rtcp.a.pcap"
+}
+
+run_acct_rtcp_hep() {
+  sed "s|%%RTPP_NOTIFY_SOCK_TCP%%|${RTPP_NOTIFY_SOCK_TCP}|g" "${CD_DIR}/basic.input" | \
+   ${RTPPROXY} ${RTPP_ARGS} 2>acct_rtcp_hep.rlog || return 1
+}
+
+nc -l 127.0.0.1 9642 > acct_rtcp_hep.tlog&
+RTPP_NC_RC=${?}
+RTPP_NC_PID=${!}
+report_rc ${RTPP_NC_RC} "Starting NetCat"
+run_udpreplay_a &
+UDPRPL_A_RC=${?}
+UDPRPL_A_PID=${!}
+report_rc ${UDPRPL_A_RC} "Starting udpreplay (answering)"
+run_udpreplay_o &
+UDPRPL_O_RC=${?}
+UDPRPL_O_PID=${!}
+report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate)"
+run_acct_rtcp_hep > acct_rtcp_hep.rout
+report "wait for the rtproxy shutdown"
+kill -TERM ${RTPP_NC_PID} 2>/dev/null
+wait ${RTPP_NC_PID}
+report "wait for NetCat shutdown"
+wait ${UDPRPL_A_PID}
+report "wait for udpreplay (answering) shutdown"
+wait ${UDPRPL_O_PID}
+report "wait for udpreplay (originate) shutdown"
+${DIFF} "${CD_DIR}/basic.output" acct_rtcp_hep.rout
+hepsize=`wc -c acct_rtcp_hep.tlog | awk '{print $1}'`
+if [ ${hepsize} -ne ${HEPSIZE} ]
+then
+  forcefail 1 "Incorrect HEP size, ${HEPSIZE} expected, ${hepsize} obtained"
+fi
+report "acct_rtcp_hep"
