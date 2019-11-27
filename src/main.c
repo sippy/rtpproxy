@@ -263,7 +263,6 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
 #endif
     free(cfsp->modules_cf);
     rtpp_gen_uid_free();
-    free(cfsp);
     rtpp_exit(memdeb, rval);
 }
 
@@ -764,7 +763,7 @@ int
 main(int argc, char **argv)
 {
     int i, len;
-    long long ncycles_ref, counter;
+    long long counter;
     struct rtpp_cfg cfs;
     char buf[256];
     struct sched_param sparam;
@@ -1036,8 +1035,6 @@ main(int argc, char **argv)
 
     elp = prdic_init(cfs.target_pfreq / 10.0, 0.0);
     for (;;) {
-        ncycles_ref = (long long)prdic_getncycles_ref(elp);
-
         CALL_METHOD(cfs.rtpp_cmd_cf, wakeup);
         if (cfs.fastshutdown != 0) {
             break;
