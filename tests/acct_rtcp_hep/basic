@@ -46,8 +46,13 @@ UDPRPL_O_RC=${?}
 UDPRPL_O_PID=${!}
 report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate)"
 run_acct_rtcp_hep > acct_rtcp_hep.rout
-report "wait for the rtproxy shutdown"
+RTPP_RC=${?}
 kill -TERM ${RTPP_NC_PID} 2>/dev/null
+if [ ${RTPP_RC} -ne 0 -a -e acct_rtcp_hep.rlog ]
+then
+  cat acct_rtcp_hep.rlog
+fi
+report_rc ${RTPP_RC} "wait for the rtproxy shutdown"
 wait ${RTPP_NC_PID}
 report "wait for NetCat shutdown"
 wait ${UDPRPL_A_PID}
