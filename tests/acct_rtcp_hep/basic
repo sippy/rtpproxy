@@ -36,7 +36,7 @@ run_acct_rtcp_hep() {
 nc -l 127.0.0.1 9642 > acct_rtcp_hep.tlog&
 RTPP_NC_RC=${?}
 RTPP_NC_PID=${!}
-sleep 1
+sleep 0.2
 report_rc ${RTPP_NC_RC} "Starting NetCat"
 run_udpreplay_a &
 UDPRPL_A_RC=${?}
