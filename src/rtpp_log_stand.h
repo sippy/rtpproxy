@@ -48,9 +48,7 @@ struct rtpp_cfg;
 #define	RTPP_LOG_CRIT	LOG_CRIT
 
 #define	rtpp_log_open(cf, app, call_id, flag) _rtpp_log_open(cf, app, call_id);
-#if !defined(rtpp_log_write)
-#define	rtpp_log_write(level, handle, format, args...)			\
-	_rtpp_log_write(handle, level, __FUNCTION__, format, ## args)
+#if !defined(rtpp_log_write_va)
 #define rtpp_log_write_va(level, handle, format, args...)                  \
         _rtpp_log_write_va(handle, level, __FUNCTION__, format, ## args)
 #endif
@@ -60,9 +58,7 @@ struct rtpp_cfg;
         _rtpp_log_ewrite_va(handle, level, __FUNCTION__, format, ## args)
 #define	rtpp_log_close(handle) _rtpp_log_close(handle)
 
-void _rtpp_log_write(struct rtpp_log_inst *, int, const char *, const char *, ...);
 void _rtpp_log_write_va(struct rtpp_log_inst *, int, const char *, const char *, va_list);
-void _rtpp_log_ewrite(struct rtpp_log_inst *, int, const char *, const char *, ...);
 void _rtpp_log_ewrite_va(struct rtpp_log_inst *, int, const char *, const char *, va_list);
 struct rtpp_log_inst *_rtpp_log_open(const struct rtpp_cfg *, const char *, const char *);
 void _rtpp_log_close(struct rtpp_log_inst *);

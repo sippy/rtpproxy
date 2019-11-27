@@ -478,15 +478,16 @@ TESTS = autosrc/chk_up2date makeann/makeann1 unittests/rtcp2json1 \
 	unittests/rtpp_sbuf unittests/rtpp_objck \
 	unittests/rtpp_rzmalloc_perf unittests/rtpp_fintest \
 	libucl/libucl1 libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
-	rtp_analyze/rtp_analyze1 extractaudio/badargs \
-	extractaudio/extractaudio1 startstop/badargs \
-	startstop/startstop1 basic_versions/basic_versions1 \
-	command_parser/command_parser1 forwarding/forwarding1_robust \
-	memdeb/glitch1 memdeb/glitch_libucl1 \
-	memdeb/glitch_extractaudio memdeb/glitch_startstop1 \
-	memdeb/glitch_basic_versions1 memdeb/glitch_command_parser1 \
-	session_timeouts/notify_tcp session_timeouts/notify_tcp_wild \
-	session_timeouts/notify_unix playback/playback1
+	acct_rtcp_hep/basic rtp_analyze/rtp_analyze1 \
+	extractaudio/badargs extractaudio/extractaudio1 \
+	startstop/goodargs startstop/badargs startstop/startstop1 \
+	basic_versions/basic_versions1 command_parser/command_parser1 \
+	forwarding/forwarding1_robust memdeb/glitch1 \
+	memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
+	memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
+	memdeb/glitch_command_parser1 session_timeouts/notify_tcp \
+	session_timeouts/notify_tcp_wild session_timeouts/notify_unix \
+	playback/playback1
 CLEANFILES = ${autosrc_CLEANFILES} ${makeann_CLEANFILES} \
 	${rtcp2json_CLEANFILES} ${libucl_CLEANFILES} \
 	${libexecinfo_CLEANFILES} ${acct_rtcp_hep_CLEANFILES} \
@@ -514,7 +515,7 @@ libucl_CLEANFILES = libucl_test.output
 libexecinfo_EXTRA_DIST = libexecinfo
 libexecinfo_CLEANFILES = 
 acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
-acct_rtcp_hep_CLEANFILES = 
+acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
 rtp_analyze_EXTRA_DIST = rtp_analyze
 rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
 extractaudio_EXTRA_DIST = extractaudio
@@ -818,6 +819,13 @@ acct_rtcp_hep/confval1.log: acct_rtcp_hep/confval1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+acct_rtcp_hep/basic.log: acct_rtcp_hep/basic
+	@p='acct_rtcp_hep/basic'; \
+	b='acct_rtcp_hep/basic'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 rtp_analyze/rtp_analyze1.log: rtp_analyze/rtp_analyze1
 	@p='rtp_analyze/rtp_analyze1'; \
 	b='rtp_analyze/rtp_analyze1'; \
@@ -835,6 +843,13 @@ extractaudio/badargs.log: extractaudio/badargs
 extractaudio/extractaudio1.log: extractaudio/extractaudio1
 	@p='extractaudio/extractaudio1'; \
 	b='extractaudio/extractaudio1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+startstop/goodargs.log: startstop/goodargs
+	@p='startstop/goodargs'; \
+	b='startstop/goodargs'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

@@ -239,17 +239,33 @@ url_unquote(unsigned char *buf, int len)
     return (outlen);
 }
 
-int atoi_safe(const char *s, int *res)
+enum atoi_rval
+atoi_safe(const char *s, int *res)
 {
     int rval;
     char *cp;
 
     rval = strtol(s, &cp, 10);
     if (cp == s || *cp != '\0') {
-        return (-1);
+        return (ATOI_NOTINT);
     }
     *res = rval;
-    return (0);
+    return (ATOI_OK);
+}
+
+enum atoi_rval
+atoi_saferange(const char *s, int *res, int min, int max)
+{
+    int rval;
+
+    if (atoi_safe(s, &rval)) {
+        return (ATOI_NOTINT);
+    }
+    if (rval < min || (max >= min && rval > max)) {
+        return (ATOI_OUTRANGE);
+    }
+    *res = rval;
+    return (ATOI_OK);
 }
 
 #if defined(_SC_CLK_TCK) && !defined(__FreeBSD__)

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+for good_rargs in '-V' '-v' '-C'
+do
+  ${RTPPROXY} ${good_rargs}
+  report "rtpproxy start with good argumens: \""${good_rargs}"\""
+done

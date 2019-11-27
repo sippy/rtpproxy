@@ -5,6 +5,7 @@
 # checksums for all supported codecs.
 
 BASEDIR="`dirname "${0}"`/.."
+SUDO_REQUIRED=1
 . "${BASEDIR}/functions"
 
 TARGET_PORT=12344

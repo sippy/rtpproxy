@@ -283,16 +283,6 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
 }
 
 void
-_rtpp_log_write(struct rtpp_log_inst *rli, int level, const char *function, const char *format, ...)
-{
-    va_list ap;
-
-    va_start(ap, format);
-    _rtpp_log_write_va(rli, level, function, format, ap);
-    va_end(ap);
-}
-
-void
 _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
   const char *format, va_list ap)
 {
@@ -343,16 +333,6 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
     fprintf(stderr, rli->eformat_se[1], strerror(errno), errno);
     fflush(stderr);
     _rtpp_log_unlock();
-}
-
-void
-_rtpp_log_ewrite(struct rtpp_log_inst *rli, int level, const char *function, const char *format, ...)
-{
-    va_list ap;
-
-    va_start(ap, format);
-    _rtpp_log_ewrite_va(rli, level, function, format, ap);
-    va_end(ap);
 }
 
 static struct {

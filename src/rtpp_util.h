@@ -49,7 +49,9 @@ long long rtpp_rlim_max(const struct rtpp_cfg *);
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
 #endif
-int atoi_safe(const char *, int *);
+enum atoi_rval {ATOI_OK = 0, ATOI_NOTINT = -1, ATOI_OUTRANGE = -2};
+enum atoi_rval atoi_safe(const char *, int *);
+enum atoi_rval atoi_saferange(const char *, int *, int, int);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)

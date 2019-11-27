@@ -263,7 +263,6 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
 #endif
     free(cfsp->modules_cf);
     rtpp_gen_uid_free();
-    free(cfsp);
     rtpp_exit(memdeb, rval);
 }
 
@@ -361,11 +360,14 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
             break;
 
         case LOPT_NICE:
-            if (atoi_safe(optarg, &cfsp->sched_nice))
+            switch (atoi_saferange(optarg, &cfsp->sched_nice, PRIO_MIN, PRIO_MAX)) {
+            case ATOI_OK:
+                break;
+            case ATOI_OUTRANGE:
+                errx(1, "%s: nice level is out of range %d..%d", optarg,
+                  PRIO_MIN, PRIO_MAX);
+            default:
                 errx(1, "%s: nice level argument is invalid", optarg);
-            if (cfsp->sched_nice > PRIO_MAX || cfsp->sched_nice < PRIO_MIN) {
-                errx(1, "%d: nice level is out of range %d..%d",
-                  cfsp->sched_nice, PRIO_MIN, PRIO_MAX);
             }
             break;
 
@@ -451,11 +453,15 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 	    break;
 
 	case 't':
-            if (atoi_safe(optarg, &cfsp->tos))
+            switch (atoi_saferange(optarg, &cfsp->tos, 0, 255)) {
+            case ATOI_OK:
+                break;
+            case ATOI_OUTRANGE:
+                errx(1, "%s: TOS is too small/large", optarg);
+            default:
                 errx(1, "%s: TOS argument is invalid", optarg);
-	    if (cfsp->tos > 255)
-		errx(1, "%d: TOS is too large", cfsp->tos);
-	    break;
+	    }
+            break;
 
 	case '2':
 	    cfsp->dmode = 1;
@@ -486,14 +492,14 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 	    break;
 
 	case 'T':
-	    if (atoi_safe(optarg, &cfsp->max_ttl))
+	    if (atoi_saferange(optarg, &cfsp->max_ttl, 1, -1))
                 errx(1, "%s: max TTL argument is invalid", optarg);
 	    break;
 
 	case 'L': {
             int rlim_max_opt;
 
-            if (atoi_safe(optarg, &rlim_max_opt))
+            if (atoi_saferange(optarg, &rlim_max_opt, 0, -1))
                 errx(1, "%s: max file rlimit argument is invalid", optarg);
 	    cfsp->nofile->limit->rlim_cur = rlim_max_opt;
 	    cfsp->nofile->limit->rlim_max = rlim_max_opt;
@@ -509,13 +515,27 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
             }
 
 	case 'm':
-	    if (atoi_safe(optarg, &cfsp->port_min))
+	    switch (atoi_saferange(optarg, &cfsp->port_min, 1, 65535)) {
+            case ATOI_OK:
+                break;
+            case ATOI_OUTRANGE:
+                errx(1, "invalid value of the port_min argument, "
+                  "not in the range 1-65535");
+            default:
                 errx(1, "%s: min port argument is invalid", optarg);
+            }
 	    break;
 
 	case 'M':
-	    if (atoi_safe(optarg, &cfsp->port_max))
+	    switch (atoi_saferange(optarg, &cfsp->port_max, 1, 65535)) {
+            case ATOI_OK:
+                break;
+            case ATOI_OUTRANGE:
+                errx(1, "invalid value of the port_max argument, "
+                  "not in the range 1-65535");
+            default:
                 errx(1, "%s: max port argument is invalid", optarg);
+            }
 	    break;
 
 	case 'u':
@@ -552,7 +572,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 	case 'w': {
             int sock_mode;
 
-	    if (atoi_safe(optarg, &sock_mode))
+	    if (atoi_saferange(optarg, &sock_mode, 0, 4095))
                 errx(1, "%s: socket mode argument is invalid", optarg);
             cfsp->runcreds->sock_mode = sock_mode;
 	    break;
@@ -603,7 +623,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 	    break;
 
         case 'W':
-            if (atoi_safe(optarg, &cfsp->max_setup_ttl))
+            if (atoi_saferange(optarg, &cfsp->max_setup_ttl, 1, -1))
                 errx(1, "%s: max setup TTL argument is invalid", optarg);
             break;
 
@@ -688,12 +708,6 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 	cfsp->port_max -= 2;
     }
 
-    if (!IS_VALID_PORT(cfsp->port_min))
-	errx(1, "invalid value of the port_min argument, "
-	  "not in the range 1-65535");
-    if (!IS_VALID_PORT(cfsp->port_max))
-	errx(1, "invalid value of the port_max argument, "
-	  "not in the range 1-65535");
     if (cfsp->port_min > cfsp->port_max)
 	errx(1, "port_min should be less than port_max");
 
@@ -764,7 +778,7 @@ int
 main(int argc, char **argv)
 {
     int i, len;
-    long long ncycles_ref, counter;
+    long long counter;
     struct rtpp_cfg cfs;
     char buf[256];
     struct sched_param sparam;
@@ -1036,8 +1050,6 @@ main(int argc, char **argv)
 
     elp = prdic_init(cfs.target_pfreq / 10.0, 0.0);
     for (;;) {
-        ncycles_ref = (long long)prdic_getncycles_ref(elp);
-
         CALL_METHOD(cfs.rtpp_cmd_cf, wakeup);
         if (cfs.fastshutdown != 0) {
             break;
