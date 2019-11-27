@@ -36,6 +36,7 @@ run_acct_rtcp_hep() {
 nc -l 127.0.0.1 9642 > acct_rtcp_hep.tlog&
 RTPP_NC_RC=${?}
 RTPP_NC_PID=${!}
+sleep 0.2
 report_rc ${RTPP_NC_RC} "Starting NetCat"
 run_udpreplay_a &
 UDPRPL_A_RC=${?}
@@ -46,8 +47,13 @@ UDPRPL_O_RC=${?}
 UDPRPL_O_PID=${!}
 report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate)"
 run_acct_rtcp_hep > acct_rtcp_hep.rout
-report "wait for the rtproxy shutdown"
+RTPP_RC=${?}
 kill -TERM ${RTPP_NC_PID} 2>/dev/null
+if [ ${RTPP_RC} -ne 0 -a -e acct_rtcp_hep.rlog ]
+then
+  cat acct_rtcp_hep.rlog
+fi
+report_rc ${RTPP_RC} "wait for the rtproxy shutdown"
 wait ${RTPP_NC_PID}
 report "wait for NetCat shutdown"
 wait ${UDPRPL_A_PID}
