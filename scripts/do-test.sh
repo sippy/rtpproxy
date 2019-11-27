@@ -17,10 +17,6 @@ sudo iptables -L INPUT
 sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
-./configure
-make
-make clean
-#${APT_GET} update
 ${APT_GET} install -y libgsm1-dev tcpdump curl wireshark-common gdb
 tcpdump --version || true
 mkdir deps
@@ -56,8 +52,6 @@ cd ../..
 sudo ldconfig
 
 autoreconf --force --install --verbose
-./configure
-make clean all
 ./configure --enable-coverage
 make clean all
 
