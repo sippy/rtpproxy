@@ -1,7 +1,10 @@
 --nice&&
 --nice&100500
 --nice&garbage
+--nice&-15
 -?
+-6&&
+-6&garbage
 -A
 -A&&
 -A&/
@@ -15,6 +18,7 @@
 -M&100500garbage
 -M&garbage
 -S
+-S&/
 -T&&
 -T&100500garbage
 -W&&
@@ -30,8 +34,11 @@
 -m&100500
 -m&100500garbage
 -m&garbage
+-m&10&-M&9
+-m&9&-M&9
 -n&&
 -s&cunix:/bin/sh
+-s&stdio:
 -s&tcp6:*:22
 -s&tcp:*:22
 -s&udp6:*:22
