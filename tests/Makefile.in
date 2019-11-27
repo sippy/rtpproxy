@@ -478,9 +478,9 @@ TESTS = autosrc/chk_up2date makeann/makeann1 unittests/rtcp2json1 \
 	unittests/rtpp_sbuf unittests/rtpp_objck \
 	unittests/rtpp_rzmalloc_perf unittests/rtpp_fintest \
 	libucl/libucl1 libexecinfo/libexecinfo1 acct_rtcp_hep/confval1 \
-	rtp_analyze/rtp_analyze1 extractaudio/badargs \
-	extractaudio/extractaudio1 startstop/goodargs \
-	startstop/badargs startstop/startstop1 \
+	acct_rtcp_hep/basic rtp_analyze/rtp_analyze1 \
+	extractaudio/badargs extractaudio/extractaudio1 \
+	startstop/goodargs startstop/badargs startstop/startstop1 \
 	basic_versions/basic_versions1 command_parser/command_parser1 \
 	forwarding/forwarding1_robust memdeb/glitch1 \
 	memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
@@ -515,7 +515,7 @@ libucl_CLEANFILES = libucl_test.output
 libexecinfo_EXTRA_DIST = libexecinfo
 libexecinfo_CLEANFILES = 
 acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
-acct_rtcp_hep_CLEANFILES = 
+acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
 rtp_analyze_EXTRA_DIST = rtp_analyze
 rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
 extractaudio_EXTRA_DIST = extractaudio
@@ -815,6 +815,13 @@ libexecinfo/libexecinfo1.log: libexecinfo/libexecinfo1
 acct_rtcp_hep/confval1.log: acct_rtcp_hep/confval1
 	@p='acct_rtcp_hep/confval1'; \
 	b='acct_rtcp_hep/confval1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+acct_rtcp_hep/basic.log: acct_rtcp_hep/basic
+	@p='acct_rtcp_hep/basic'; \
+	b='acct_rtcp_hep/basic'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
