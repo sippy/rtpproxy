@@ -58,6 +58,8 @@ struct delete_ematch_arg {
     struct rtpp_weakref_obj *sessions_wrt;
 };
 
+static void rtpp_command_del_opts_free(struct delete_opts *);
+
 static int
 rtpp_cmd_delete_ematch(void *dp, void *ap)
 {
@@ -167,7 +169,7 @@ err_undo_0:
     return (NULL);
 }
 
-void
+static void
 rtpp_command_del_opts_free(struct delete_opts *dlop)
 {
 

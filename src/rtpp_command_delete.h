@@ -30,5 +30,4 @@ struct common_cmd_args;
 struct delete_opts;
 
 struct delete_opts *rtpp_command_del_opts_parse(struct rtpp_command *);
-void rtpp_command_del_opts_free(struct delete_opts *);
 int handle_delete(const struct rtpp_cfg *, struct common_cmd_args *);
