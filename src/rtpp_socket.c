@@ -35,7 +35,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "config_pp.h"
+
+#include "rtpp_log.h"
 #include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_socket.h"
 #include "rtpp_socket_fin.h"
@@ -71,6 +75,8 @@ static struct rtp_packet * rtpp_socket_rtp_recv_simple(struct rtpp_socket *,
 static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *,
   const struct rtpp_timestamp *, const struct sockaddr *, int);
 static int rtpp_socket_getfd(struct rtpp_socket *);
+static int rtpp_socket_drain(struct rtpp_socket *, const char *,
+  struct rtpp_log *);
 
 struct rtpp_socket *
 rtpp_socket_ctor(int domain, int type)
@@ -102,6 +108,7 @@ rtpp_socket_ctor(int domain, int type)
     pvt->pub.send_pkt_na = &rtpp_socket_send_pkt_na;
     pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_simple;
     pvt->pub.getfd = &rtpp_socket_getfd;
+    pvt->pub.drain = &rtpp_socket_drain;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_dtor,
       pvt);
     return (&pvt->pub);
@@ -294,4 +301,34 @@ rtpp_socket_getfd(struct rtpp_socket *self)
 
     PUB2PVT(self, pvt);
     return (pvt->fd);
+}
+
+static int
+rtpp_socket_drain(struct rtpp_socket *self, const char *ptype,
+  struct rtpp_log *log)
+{
+    struct rtp_packet *packet;
+    int ndrained;
+    struct rtpp_socket_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    ndrained = 0;
+#if RTPP_DEBUG
+    RTPP_LOG(log, RTPP_LOG_DBUG, "Draining %s socket %d", ptype,
+      pvt->fd);
+#endif
+    for (;;) {
+        packet = CALL_METHOD(self, rtp_recv, NULL, NULL, 0);
+        if (packet == NULL)
+            break;
+        ndrained++;
+        RTPP_OBJ_DECREF(packet);
+    }
+#if RTPP_DEBUG
+    if (ndrained > 0) {
+        RTPP_LOG(log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
+          "packets discarded", ptype, pvt->fd, ndrained);
+    }
+#endif
+    return (ndrained);
 }

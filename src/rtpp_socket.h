@@ -51,6 +51,8 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_send_pkt_na, int,
 DEFINE_METHOD(rtpp_socket, rtpp_socket_rtp_recv, struct rtp_packet *,
   const struct rtpp_timestamp *, const struct sockaddr *, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_getfd, int);
+DEFINE_METHOD(rtpp_socket, rtpp_socket_drain, int, const char *,
+  struct rtpp_log *);
 
 struct rtpp_socket {
     struct rtpp_refcnt *rcnt;
@@ -66,6 +68,7 @@ struct rtpp_socket {
     METHOD_ENTRY(rtpp_socket_send_pkt_na, send_pkt_na);
     METHOD_ENTRY(rtpp_socket_rtp_recv, rtp_recv);
     METHOD_ENTRY(rtpp_socket_getfd, getfd);
+    METHOD_ENTRY(rtpp_socket_drain, drain);
 };
 
 struct rtpp_socket *rtpp_socket_ctor(int, int);
