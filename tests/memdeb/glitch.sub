@@ -16,10 +16,10 @@ stop_nc()
   report "waiting for nc to exit"
 }
 
-glitch_test()
+glitch_collect()
 {
   test="${1}"
-  nok_expected="${2}"
+  filter="${2}"
 
   spin_nc
 
@@ -31,10 +31,14 @@ glitch_test()
     echo "glitch data cannot be collected"
     return 1
   fi
-  echo "Collected glitch data, OK, $((`wc -l < glitch1.ncout`)) total points"
-  echo "                       ....$((`awk '{print $2}' glitch1.ncout | sort -u | wc -l`)) unique points"
-  nfail=0
-  nok=0
+  echo "Collected glitch data, $((`wc -l < glitch1.ncout`)) total points"
+  if [ ! -z "${filter}" ]
+  then
+    grep -e "${filter}" glitch1.ncout > glitch1.ncout.flt
+    mv glitch1.ncout.flt glitch1.ncout
+    echo "                   ....$((`wc -l < glitch1.ncout`)) selected points"
+  fi
+  echo "                   ....$((`awk '{print $2}' glitch1.ncout | sort -u | wc -l`)) unique points"
   GPS="`awk '{print $2}' glitch1.ncout | sort -u`"
   for gp in ${GPS}
   do
@@ -46,6 +50,18 @@ glitch_test()
       return 1
     fi
   done
+}
+
+glitch_do()
+{
+  test="${1}"
+  nok_expected="${2}"
+  rlog="${3}"
+
+  nfail=0
+  nok=0
+
+  GPS="`awk '{print $7" "$2}' glitch1.ncout  | sort -u | awk '{print $2}'`"
   for gp in ${GPS}
   do
     glline="`grep -w ${gp} glitch1.ncout | awk '{print $7}' | uniq`"
@@ -53,10 +69,23 @@ glitch_test()
     if MEMDEB_GLITCH_ACT="g" MEMDEB_GLITCH_TRIG="${tp}" ./${test} 2>/dev/null >/dev/null
     then
        nok=$((${nok} + 1))
-       echo "${tp}: test OK at ${glline}"
+       res="OK"
     else
+       res="FAIL"
        nfail=$((${nfail} + 1))
-       echo "${tp}: test FAIL at ${glline}"
+    fi
+    if [ ! -z ${rlog} ]
+    then
+      if grep -q "^Died on signal" "${rlog}"
+      then
+         res="CRASH"
+      fi
+    fi
+    printf "%-24s test %s at ${glline}\n" "${tp}:" "${res}"
+    if [ ${res} = "CRASH" ]
+    then
+      grep -B 5 -A 5 "^Died on signal" "${rlog}"
+      return 1
     fi
   done
   echo "${nok} times OK, ${nfail} times FAIL"
@@ -66,4 +95,11 @@ glitch_test()
     return 1
   fi
   return 0
+}
+
+glitch_test() {
+  glitch_collect "${1}" "${4}"
+  report "Collecting glitch data for \"${1}\""
+  glitch_do "${1}" "${2}" "${3}"
+  return ${?}
 }
