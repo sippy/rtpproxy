@@ -50,7 +50,7 @@ DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_rtcp_rcvd, void,
 
 #include <stdarg.h>
 
-DEFINE_RAW_METHOD(rtpp_module_malloc, void *, size_t,  void *, const char *,
+DEFINE_RAW_METHOD(rtpp_module_malloc, void *, size_t,  void *, int, const char *,
   int, const char *);
 DEFINE_RAW_METHOD(rtpp_module_zmalloc, void *, size_t,  void *, const char *,
   int, const char *);
@@ -66,7 +66,7 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
    void *, const char *, int, const char *, va_list);
 
 #if !defined(MODULE_IF_CODE)
-#define mod_malloc(n) rtpp_module._malloc((n), rtpp_module.memdeb_p, \
+#define mod_malloc(n) rtpp_module._malloc((n), rtpp_module.memdeb_p, 0, \
   __FILE__, __LINE__, __func__)
 #define mod_zmalloc(n) rtpp_module._zmalloc((n), rtpp_module.memdeb_p, \
   __FILE__, __LINE__, __func__)
