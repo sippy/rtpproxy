@@ -6,10 +6,6 @@
 #include "rtpp_debug.h"
 #include "rtpp_stream.h"
 #include "rtpp_stream_fin.h"
-static void rtpp_stream_drain_skt_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_stream@%p::drain_skt (rtpp_stream_drain_skt) is invoked after destruction\x0a", pub);
-    RTPP_AUTOTRAP();
-}
 static void rtpp_stream_finish_playback_fin(void *pub) {
     fprintf(stderr, "Method rtpp_stream@%p::finish_playback (rtpp_stream_finish_playback) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -83,7 +79,6 @@ static void rtpp_stream_update_skt_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 static const struct rtpp_stream_smethods rtpp_stream_smethods_fin = {
-    .drain_skt = (rtpp_stream_drain_skt_t)&rtpp_stream_drain_skt_fin,
     .finish_playback = (rtpp_stream_finish_playback_t)&rtpp_stream_finish_playback_fin,
     .get_actor = (rtpp_stream_get_actor_t)&rtpp_stream_get_actor_fin,
     .get_proto = (rtpp_stream_get_proto_t)&rtpp_stream_get_proto_fin,
@@ -104,7 +99,6 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods_fin = {
     .update_skt = (rtpp_stream_update_skt_t)&rtpp_stream_update_skt_fin,
 };
 void rtpp_stream_fin(struct rtpp_stream *pub) {
-    RTPP_DBG_ASSERT(pub->smethods->drain_skt != (rtpp_stream_drain_skt_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->finish_playback != (rtpp_stream_finish_playback_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_actor != (rtpp_stream_get_actor_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_proto != (rtpp_stream_get_proto_t)NULL);
@@ -149,7 +143,6 @@ rtpp_stream_fintest()
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
     static const struct rtpp_stream_smethods dummy = {
-        .drain_skt = (rtpp_stream_drain_skt_t)((void *)0x1),
         .finish_playback = (rtpp_stream_finish_playback_t)((void *)0x1),
         .get_actor = (rtpp_stream_get_actor_t)((void *)0x1),
         .get_proto = (rtpp_stream_get_proto_t)((void *)0x1),
@@ -173,7 +166,6 @@ rtpp_stream_fintest()
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
-    CALL_TFIN(&tp->pub, drain_skt);
     CALL_TFIN(&tp->pub, finish_playback);
     CALL_TFIN(&tp->pub, get_actor);
     CALL_TFIN(&tp->pub, get_proto);
@@ -192,7 +184,7 @@ rtpp_stream_fintest()
     CALL_TFIN(&tp->pub, send_pkt);
     CALL_TFIN(&tp->pub, set_skt);
     CALL_TFIN(&tp->pub, update_skt);
-    assert((_naborts - naborts_s) == 19);
+    assert((_naborts - naborts_s) == 18);
 }
 const static void *_rtpp_stream_ftp = (void *)&rtpp_stream_fintest;
 DATA_SET(rtpp_fintests, _rtpp_stream_ftp);
