@@ -69,7 +69,7 @@ rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int 
     wipp = malloc(sizeof(struct rtpp_wi_sgnl) + datalen);
 #else
     wipp = rtpp_memdeb_malloc(sizeof(struct rtpp_wi_sgnl) + datalen,
-      MEMDEB_SYM, fname, linen, funcn);
+      MEMDEB_SYM, 0, fname, linen, funcn);
 #endif
     if (wipp == NULL) {
         return (NULL);
