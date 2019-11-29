@@ -186,20 +186,6 @@ rtpp_socket_settimestamp(struct rtpp_socket *self)
     return (0);
 }
 
-#if 0
-static int 
-rtpp_socket_send_pkt(struct rtpp_socket *self, struct sthread_args *str,
-  const struct sockaddr *daddr, int addrlen, struct rtp_packet *pkt,
-  struct rtpp_log *log)
-{
-    struct rtpp_socket_priv *pvt;
-
-    PUB2PVT(self, pvt);
-    return (rtpp_anetio_send_pkt(str, pvt->fd, daddr, addrlen, pkt,
-      self->rcnt, log));
-}
-#endif
-
 static int
 rtpp_socket_send_pkt_na(struct rtpp_socket *self, struct sthread_args *str,
   struct rtpp_netaddr *daddr, struct rtp_packet *pkt,
