@@ -7,14 +7,14 @@ EXTRA_DIST = # empty
 #include $(srcdir)/unittests/Makefile.ami
 #include $(srcdir)/libucl/Makefile.ami
 #include $(srcdir)/libexecinfo/Makefile.ami
-include $(srcdir)/acct_rtcp_hep/Makefile.ami
+#include $(srcdir)/acct_rtcp_hep/Makefile.ami
 #include $(srcdir)/rtp_analyze/Makefile.ami
 #include $(srcdir)/extractaudio/Makefile.ami
 #include $(srcdir)/startstop/Makefile.ami
 #include $(srcdir)/basic_versions/Makefile.ami
 #include $(srcdir)/command_parser/Makefile.ami
 #include $(srcdir)/forwarding/Makefile.ami
-#include $(srcdir)/memdeb/Makefile.ami
+include $(srcdir)/memdeb/Makefile.ami
 #include $(srcdir)/session_timeouts/Makefile.ami
 #include $(srcdir)/playback/Makefile.ami
 
