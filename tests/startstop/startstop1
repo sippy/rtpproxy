@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 # test start up of rtpproxy and handling of SIGTERM and SIGHUP
 
 BASEDIR="`dirname "${0}"`/.."
