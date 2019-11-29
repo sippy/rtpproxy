@@ -39,7 +39,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "config.h"
+#include "config_pp.h"
 
 #include "rtpp_cfg.h"
 #include "rtpp_ssrc.h"

@@ -38,7 +38,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "config.h"
+#include "config_pp.h"
 
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
