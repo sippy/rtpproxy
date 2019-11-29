@@ -25,7 +25,7 @@
  *
  */
 
-#define MODULE_API_REVISION 7
+#define MODULE_API_REVISION 8
 
 struct rtpp_cfg;
 struct rtpp_module_priv;
@@ -90,6 +90,7 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
 struct api_version {
     int rev;
     size_t mi_size;
+    const char *build;
 };
 
 struct api_on_sess_end {
@@ -131,6 +132,11 @@ struct rtpp_minfo {
 
 extern struct rtpp_minfo rtpp_module;
 
-#define MI_VER_INIT() {.rev = MODULE_API_REVISION, .mi_size = sizeof(rtpp_module)}
-#define MI_VER_CHCK(sptr) ((sptr)->ver.rev == MODULE_API_REVISION && \
-  (sptr)->ver.mi_size == sizeof(struct rtpp_minfo))
+#define MI_VER_INIT() { \
+    .rev = MODULE_API_REVISION, \
+    .mi_size = sizeof(rtpp_module), \
+    .build = RTPP_SW_VERSION}
+#define MI_VER_CHCK(sptr) ( \
+  (sptr)->ver.rev == MODULE_API_REVISION && \
+  (sptr)->ver.mi_size == sizeof(struct rtpp_minfo) && \
+  strcmp((sptr)->ver.build, RTPP_SW_VERSION) == 0)
