@@ -386,6 +386,7 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
     if (wi == NULL) {
         RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
           "memory", pvt->mip->name);
+        RTPP_OBJ_DECREF(acct);
         return;
     }
     rtpp_queue_put_item(wi, pvt->req_q);
