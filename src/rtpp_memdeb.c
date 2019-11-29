@@ -257,7 +257,8 @@ rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, struct memdeb_loc *mlp,
     }
 
 void *
-rtpp_memdeb_malloc(size_t size, void *p, const char *fname, int linen, const char *funcn)
+rtpp_memdeb_malloc(size_t size, void *p, int noglitch, const char *fname,
+  int linen, const char *funcn)
 {
     struct memdeb_node *mnp;
     struct memdeb_pfx *mpf;
@@ -270,7 +271,9 @@ rtpp_memdeb_malloc(size_t size, void *p, const char *fname, int linen, const cha
     ml.linen = linen;
     ml.funcn = funcn;
 
-    GLITCH_INJECT1();
+    if (!noglitch) {
+        GLITCH_INJECT1();
+    }
 
     CHK_PRIV_VRB(pvt, p, &ml);
     mpf = malloc(offsetof(struct memdeb_pfx, real_data) + size + MEMDEB_GUARD_SIZE);
@@ -380,7 +383,7 @@ rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int line
 
     CHK_PRIV_VRB(pvt, p, &ml);
     if (ptr == NULL) {
-        return (rtpp_memdeb_malloc(size, pvt, fname, linen, funcn));
+        return (rtpp_memdeb_malloc(size, pvt, 1, fname, linen, funcn));
     }
     mpf = ptr2mpf(pvt, ptr, &ml);
     sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
@@ -393,7 +396,7 @@ rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int line
         mpf->magic = sig_save;
         mpf->mnp->mstats.afails++;
         pthread_mutex_unlock(&pvt->mutex);
-        return (cp);
+        return (NULL);
     }
     new_mpf = (struct memdeb_pfx *)cp;
     if (new_mpf != mpf) {
@@ -480,7 +483,7 @@ rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
     if (rval <= 0) {
         return (rval);
     }
-    tp = rtpp_memdeb_malloc(rval + 1, p, fname, linen, funcn);
+    tp = rtpp_memdeb_malloc(rval + 1, p, 1, fname, linen, funcn);
     if (tp == NULL) {
         free(*pp);
         *pp = NULL;
@@ -518,7 +521,7 @@ rtpp_memdeb_calloc(size_t number, size_t size, void *p, \
 {
     void *rp;
 
-    rp = rtpp_memdeb_malloc(number * size, p, fname, linen, funcn);
+    rp = rtpp_memdeb_malloc(number * size, p, 0, fname, linen, funcn);
     if (rp == NULL)
         return (NULL);
     memset(rp, '\0', number * size);
