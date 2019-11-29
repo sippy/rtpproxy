@@ -32,20 +32,17 @@ mygid="`id -gn`"
 for rargs in "--config libucl/libucl_test.conf -c fifo" \
  "-c rr -u ${myuid}:${mygid} --dso ../modules/acct_rtcp_hep/.libs/rtpp_acct_rtcp_hep_debug.so" ""
 do
-  rtpproxy_start ${rargs}
-  report "rtpproxy start"
-  TMP_LOGFILE="/dev/null" rtpproxy_stop TERM
-  report "rtpproxy stop (SIGTERM)"
-  cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
-  rm "${TMP_LOGFILE}"
-  ${DIFF} startstop/startstop.output startstop.rout
-  report "rtpproxy output"
-  rtpproxy_start ${rargs}
-  report "rtpproxy start"
-  TMP_LOGFILE="/dev/null" rtpproxy_stop HUP
-  report "rtpproxy stop (SIGHUP)"
-  cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
-  rm "${TMP_LOGFILE}"
-  ${DIFF} startstop/startstop.output startstop.rout
-  report "rtpproxy output"
+  for sig in TERM HUP
+  do
+    rm -f rtpproxy_acct.csv
+    rtpproxy_start ${rargs}
+    report "rtpproxy start"
+    RTPP_LOGFILE="${TMP_LOGFILE}"
+    TMP_LOGFILE="/dev/null" rtpproxy_stop ${sig}
+    report "rtpproxy stop (SIG${sig})"
+    cat "${RTPP_LOGFILE}" >> "${TS_LOGFILE}"
+    rm "${RTPP_LOGFILE}"
+    ${DIFF} startstop/startstop.output startstop.rout
+    report "rtpproxy output"
+  done
 done
