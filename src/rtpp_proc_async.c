@@ -187,10 +187,11 @@ rtpp_proc_async_run(void *arg)
         }
 
         CALL_METHOD(cfsp->sessinfo, sync_polltbl, &ptbl_rtp, PIPE_RTP);
+        if (rtp_only == 0)
+            CALL_METHOD(cfsp->sessinfo, sync_polltbl, &ptbl_rtcp, PIPE_RTCP);
         nready_rtp = nready_rtcp = 0;
         if (ptbl_rtp.curlen > 0) {
             if (rtp_only == 0) {
-                CALL_METHOD(cfsp->sessinfo, sync_polltbl, &ptbl_rtcp, PIPE_RTCP);
 #if RTPP_DEBUG_netio > 1
                 RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for %d RTCP file descriptors", \
