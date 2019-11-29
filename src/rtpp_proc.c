@@ -46,6 +46,7 @@
 #include "rtpp_sessinfo.h"
 #include "rtpp_stream.h"
 #include "rtpp_pcount.h"
+#include "rtpp_socket.h"
 #include "rtpp_session.h"
 #include "rtpp_ttl.h"
 #include "rtpp_pipe.h"
@@ -158,6 +159,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
     struct rtpp_session *sp;
     struct rtpp_stream *stp;
     struct rtp_packet *packet;
+    struct rtpp_socket *iskt;
 
     for (readyfd = 0; readyfd < ptbl->curlen; readyfd++) {
         if ((ptbl->pfds[readyfd].revents & POLLIN) == 0)
@@ -171,6 +173,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
             RTPP_OBJ_DECREF(stp);
             continue;
         }
+        iskt = ptbl->mds[readyfd].skt;
         if (sp->complete != 0) {
             rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp, sp);
             RTPP_OBJ_DECREF(sp);
@@ -182,8 +185,11 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
                 }
             }
         } else {
+            const char *proto;
+
             RTPP_OBJ_DECREF(sp);
-            ndrained = CALL_SMETHOD(stp, drain_skt);
+            proto = CALL_SMETHOD(stp, get_proto);
+            ndrained = CALL_METHOD(iskt, drain, proto, stp->log);
             if (ndrained > 0) {
                 rsp->npkts_discard.cnt += ndrained;
             }

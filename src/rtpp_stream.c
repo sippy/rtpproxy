@@ -133,7 +133,6 @@ static void rtpp_stream_set_skt(struct rtpp_stream *, struct rtpp_socket *);
 static struct rtpp_socket *rtpp_stream_get_skt(struct rtpp_stream *);
 static struct rtpp_socket *rtpp_stream_update_skt(struct rtpp_stream *,
   struct rtpp_socket *);
-static int rtpp_stream_drain_skt(struct rtpp_stream *);
 static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
   struct rtp_packet *);
 static struct rtp_packet *_rtpp_stream_recv_pkt(struct rtpp_stream_priv *,
@@ -158,7 +157,6 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .set_skt = &rtpp_stream_set_skt,
     .get_skt = &rtpp_stream_get_skt,
     .update_skt = &rtpp_stream_update_skt,
-    .drain_skt = &rtpp_stream_drain_skt,
     .send_pkt = &rtpp_stream_send_pkt,
     .guess_addr = &rtpp_stream_guess_addr,
     .issendable = &rtpp_stream_issendable,
@@ -768,43 +766,6 @@ rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     }
     pthread_mutex_unlock(&pvt->lock);
     return (old_skt);
-}
-
-static int
-rtpp_stream_drain_skt(struct rtpp_stream *self)
-{
-    struct rtp_packet *packet;
-    int ndrained;
-    struct rtpp_stream_priv *pvt;
-#if RTPP_DEBUG
-    const char *ptype;
-    int fd;
-#endif
-
-    PUB2PVT(self, pvt);
-    ndrained = 0;
-    pthread_mutex_lock(&pvt->lock);
-#if RTPP_DEBUG
-    ptype = rtpp_stream_get_proto(self);
-    fd = CALL_METHOD(pvt->fd, getfd);
-    RTPP_LOG(self->log, RTPP_LOG_DBUG, "Draining %s socket %d", ptype,
-      fd);
-#endif
-    for (;;) {
-        packet = CALL_METHOD(pvt->fd, rtp_recv, NULL, NULL, 0);
-        if (packet == NULL)
-            break;
-        ndrained++;
-        RTPP_OBJ_DECREF(packet);
-    }
-    pthread_mutex_unlock(&pvt->lock);
-#if RTPP_DEBUG
-    if (ndrained > 0) {
-        RTPP_LOG(self->log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
-          "packets discarded", ptype, fd, ndrained);
-    }
-#endif
-    return (ndrained);
 }
 
 static int
