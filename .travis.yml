@@ -44,6 +44,8 @@ jobs:
     - compiler: clang
       env:
         - FOO=bar
+    - compiler: clang
+      env:
         - FOO=baz
     - compiler: gcc
     - stage: Build Documentation
