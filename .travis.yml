@@ -1,9 +1,6 @@
 # force run: 1
 dist: xenial
 language: c
-compiler:
-  - clang
-  - gcc
 python:
   - "3.6"
 sudo: required
@@ -17,8 +14,6 @@ before_install:
 #    - sudo -H PATH="${PATH}:/usr/local/clang-3.4/bin" pip3 install -r requirements.txt
     - pip3 install --user cpp-coveralls
 env:
-  - FOO=bar
-  - FOO=baz
   global:
     - COVERALLS_PARALLEL=true
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
@@ -46,6 +41,8 @@ stages:
     if: branch = master AND type = cron
 jobs:
   include:
+    - compiler: clang
+    - compiler: gcc
     - stage: Build Documentation
       name: Build Documentation
       script: sh -x ./scripts/do-docbuild.sh
