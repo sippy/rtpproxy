@@ -1,12 +1,18 @@
 # force run: 1
 dist: xenial
 language: c
-compiler:
-  - clang
-  - gcc
 python:
   - "3.6"
 sudo: required
+
+matrix:
+  include:
+    - name: "Compiler: clang C"
+      compiler: clang
+
+    - name: "Compiler: gcc C"
+      compiler: gcc
+
 before_install:
     - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
     - sudo apt-get -y install python3-pip python-dev
