@@ -42,6 +42,9 @@ stages:
 jobs:
   include:
     - compiler: clang
+      env:
+        - FOO=bar
+        - FOO=baz
     - compiler: gcc
     - stage: Build Documentation
       name: Build Documentation
