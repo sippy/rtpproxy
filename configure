@@ -13931,6 +13931,50 @@ fi
 fi
 # </DocBook & friends>
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SO_TS_CLOCK/SO_TS_MONOTONIC" >&5
+$as_echo_n "checking for SO_TS_CLOCK/SO_TS_MONOTONIC... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+  #include <sys/types.h>
+  #include <sys/socket.h>
+
+int
+main ()
+{
+
+  int stype = SO_TS_MONOTONIC;
+  struct cmsghdr mymsg = {.cmsg_type = SCM_MONOTONIC};
+  setsockopt(0, 0, SO_TS_CLOCK, &stype, sizeof(stype));
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_SO_TS_CLOCK 1
+_ACEOF
+
+
+else
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_SO_TS_CLOCK 0
+_ACEOF
+
+
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
  if test "${LIBS_SNDFILE}" != ""; then
   BUILD_EXTRACTAUDIO_TRUE=
   BUILD_EXTRACTAUDIO_FALSE='#'
