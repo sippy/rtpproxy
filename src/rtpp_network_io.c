@@ -36,10 +36,10 @@
 #include "rtpp_network.h"
 #include "rtpp_network_io.h"
 
-ssize_t
-recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
+static ssize_t
+_recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
   socklen_t *fromlen, struct sockaddr *to, socklen_t *tolen,
-  struct timeval *timeptr)
+  void *tp, size_t tplen, int mtype)
 {
     /* We use a union to make sure hdr is aligned */
     union {
@@ -91,11 +91,33 @@ recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
             break;
         }
 #endif
-        if ((cmsg->cmsg_level == SOL_SOCKET)
-          && (cmsg->cmsg_type == SCM_TIMESTAMP)) {
-            memcpy(timeptr, CMSG_DATA(cmsg), sizeof(struct timeval));
+        if ((cmsg->cmsg_level == SOL_SOCKET) &&
+          (cmsg->cmsg_type == mtype)) {
+            memcpy(tp, CMSG_DATA(cmsg), tplen);
         }
     }
     *fromlen = msg.msg_namelen;
     return (rval);
 }
+
+ssize_t
+recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
+  socklen_t *fromlen, struct sockaddr *to, socklen_t *tolen,
+  struct timeval *timeptr)
+{
+
+    return (_recvfromto(s, buf, len, from, fromlen, to, tolen, timeptr,
+      sizeof(*timeptr), SCM_TIMESTAMP));
+}
+
+#if HAVE_SO_TS_CLOCK
+ssize_t
+recvfromto_mono(int s, void *buf, size_t len, struct sockaddr *from,
+  socklen_t *fromlen, struct sockaddr *to, socklen_t *tolen,
+  struct timespec *timeptr)
+{
+
+    return (_recvfromto(s, buf, len, from, fromlen, to, tolen, timeptr,
+      sizeof(*timeptr), SCM_MONOTONIC));
+}
+#endif /* HAVE_SO_TS_CLOCK */
