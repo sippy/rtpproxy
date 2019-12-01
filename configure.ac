@@ -289,6 +289,26 @@ then
 fi
 # </DocBook & friends>
 
+AC_MSG_CHECKING([for SO_TS_CLOCK/SO_TS_MONOTONIC])
+AC_COMPILE_IFELSE( [AC_LANG_PROGRAM([[
+  #include <sys/types.h>
+  #include <sys/socket.h>
+  ]],
+  [[
+  int stype = SO_TS_MONOTONIC;
+  struct cmsghdr mymsg = {.cmsg_type = SCM_MONOTONIC};
+  setsockopt(0, 0, SO_TS_CLOCK, &stype, sizeof(stype));
+  ]])],
+[
+  AC_MSG_RESULT([yes])
+  AC_DEFINE_UNQUOTED([HAVE_SO_TS_CLOCK], 1, [Define to 1 if you have the SO_TS_CLOCK.])
+],
+[
+  AC_MSG_RESULT([no])
+  AC_DEFINE_UNQUOTED([HAVE_SO_TS_CLOCK], 0, [Define to 1 if you have the SO_TS_CLOCK.])
+]
+)
+
 AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
 AM_CONDITIONAL(BUILD_MODULES, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
