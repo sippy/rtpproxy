@@ -53,6 +53,12 @@ jobs:
         - true
     - compiler: clang
       env:
+        - TTYPE=depsbuild
+    - compiler: gcc
+      env:
+        - TTYPE=depsbuild
+    - compiler: clang
+      env:
         - TTYPE=basic
     - compiler: gcc
       env:

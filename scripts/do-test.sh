@@ -19,10 +19,12 @@ sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
 
+ALLCLEAN_TGT="all clean distclean"
+
 if [ "${TTYPE}" = "cleanbuild" ]
 then
   ./configure
-  exec make
+  exec make ${ALLCLEAN_TGT}
 fi
 
 ${APT_GET} install -y libgsm1-dev tcpdump curl wireshark-common gdb
@@ -60,6 +62,15 @@ cd ../..
 sudo ldconfig
 
 autoreconf --force --install --verbose
+
+if [ "${TTYPE}" = "depsbuild" ]
+then
+  ./configure
+  make ${ALLCLEAN_TGT}
+  ${APT_GET} install -y libsrtp0
+  ./configure
+  exec make ${ALLCLEAN_TGT}
+fi
 
 CONFIGURE_ARGS="--enable-coverage"
 case ${TTYPE} in
