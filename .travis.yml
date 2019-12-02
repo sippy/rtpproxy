@@ -25,7 +25,7 @@ after_success:
     do
       cat tests/${f}.log;
     done
-  - if [ "${CC}" = "gcc" -a "${TTYPE}" != "cleanbuild" -a "${TTYPE}" != "depsbuild" ];
+  - if [ "${CC}" = "gcc" ];
     then
       sh -x ./scripts/submit-coverage.sh ;
     fi
@@ -44,19 +44,21 @@ jobs:
     - compiler: clang
       env:
         - TTYPE=cleanbuild
-      before_install:
-        - true
+      before_install: true
+      after_success: true
     - compiler: gcc
       env:
         - TTYPE=cleanbuild
-      before_install:
-        - true
+      before_install: true
+      after_success: true
     - compiler: clang
       env:
         - TTYPE=depsbuild
+      after_success: true
     - compiler: gcc
       env:
         - TTYPE=depsbuild
+      after_success: true
     - compiler: clang
       env:
         - TTYPE=basic
