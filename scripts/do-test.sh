@@ -61,7 +61,7 @@ basic)
   ;;
 
 glitching)
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-memglitching"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --disable-basic-tests --enable-memglitching"
   ;;
 
 *)
