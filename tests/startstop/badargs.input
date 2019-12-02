@@ -1,3 +1,5 @@
+--dso&&
+--dso&/not/there/garbage/100500
 --nice&&
 --nice&100500
 --nice&garbage
