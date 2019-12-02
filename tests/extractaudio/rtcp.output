@@ -1,0 +1,6 @@
+pcount=236, min_seq=59133, max_seq=59368, seq_offset=0, ssrc=0xDEE0EE8F, duplicates=0
+ssrc_changes=1, psent=236, precvd=236, plost=0
+last_jitter=2.863717,average_jitter=2.893805,max_jitter=6.751814
+pcount=72, min_seq=9758, max_seq=9829, seq_offset=0, ssrc=0xF3CB2001, duplicates=0
+ssrc_changes=3, psent=230, precvd=230, plost=0
+last_jitter=23.960613,average_jitter=21.309609,max_jitter=58.874593

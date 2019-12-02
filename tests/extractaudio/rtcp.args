@@ -1,0 +1,1 @@
+echo -A ${1}.a.pcap -B ${1}.o.pcap

@@ -10,8 +10,13 @@ OFMTS_mono="wav raw w64"
 OFMTS_stereo="wav w64"
 
 ofiles=""
-extractaudio_RFILES="call1_alaw call1_ulaw call1_g722 call1_g729 call1_gsm \
+extractaudio_RFILES1="call1_alaw call1_ulaw call1_g722 call1_g729 call1_gsm \
  call1_g722_srtp corrupted_g722"
+for f in ${extractaudio_RFILES1}
+do
+  extractaudio_RFILES="extractaudio/${f} ${extractaudio_RFILES}"
+done
+extractaudio_RFILES="${extractaudio_RFILES} acct_rtcp_hep/rtcp"
 
 for tkind in ${TKINDS}
 do
@@ -27,29 +32,30 @@ do
   fi
   for rfile in ${extractaudio_RFILES}
   do
-    ofile="extractaudio/${rfile}.output"
+    bfile="`basename ${rfile}`"
+    ofile="extractaudio/${bfile}.output"
     for ofmt in ${OFMTS}
     do
       DFMTS=`cat extractaudio/extractaudio.${CHFMT}.${ofmt}.dfmts`
       for dfmt in ${DFMTS}
       do
-        wfile="${rfile}.${tkind}.${dfmt}.${ofmt}"
-        sfile="${rfile}.${tkind}.${dfmt}.${ofmt}.tout"
-        logfile="${rfile}.${tkind}.${dfmt}.${ofmt}.rlog"
+        wfile="${bfile}.${tkind}.${dfmt}.${ofmt}"
+        sfile="${bfile}.${tkind}.${dfmt}.${ofmt}.tout"
+        logfile="${bfile}.${tkind}.${dfmt}.${ofmt}.rlog"
         if [ -e "${wfile}" ]
         then
           rm "${wfile}"
         fi
-        afile="extractaudio/${rfile}.args"
+        afile="extractaudio/${bfile}.args"
         if [ -e "${afile}" ]
         then
-          EXTRACTAUDIO_EARGS=`cat "${afile}"`
+          EXTRACTAUDIO_EARGS=`"${afile}" "${rfile}"`
         else
-          EXTRACTAUDIO_EARGS=""
+          EXTRACTAUDIO_EARGS="${rfile}"
         fi
         ${EXTRACTAUDIO} -F ${ofmt} -D ${dfmt} ${EXTRACTAUDIO_ARGS} \
-         ${EXTRACTAUDIO_EARGS} extractaudio/${rfile} ${wfile} 2>${logfile} >${sfile}
-        report "${EXTRACTAUDIO} extractaudio/${rfile}"
+         ${EXTRACTAUDIO_EARGS} ${wfile} 2>${logfile} >${sfile}
+        report "${EXTRACTAUDIO} ${rfile}"
         test -s ${wfile}
         report "${rfile} -> ${wfile}"
         sha256_verify ${wfile} extractaudio/extractaudio.checksums
