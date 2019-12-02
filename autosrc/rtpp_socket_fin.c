@@ -10,6 +10,10 @@ static void rtpp_socket_bind_fin(void *pub) {
     fprintf(stderr, "Method rtpp_socket@%p::bind (rtpp_socket_bind) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_socket_drain_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_socket@%p::drain (rtpp_socket_drain) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_socket_getfd_fin(void *pub) {
     fprintf(stderr, "Method rtpp_socket@%p::getfd (rtpp_socket_getfd) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -42,6 +46,9 @@ void rtpp_socket_fin(struct rtpp_socket *pub) {
     RTPP_DBG_ASSERT(pub->bind != (rtpp_socket_bind_t)NULL);
     RTPP_DBG_ASSERT(pub->bind != (rtpp_socket_bind_t)&rtpp_socket_bind_fin);
     pub->bind = (rtpp_socket_bind_t)&rtpp_socket_bind_fin;
+    RTPP_DBG_ASSERT(pub->drain != (rtpp_socket_drain_t)NULL);
+    RTPP_DBG_ASSERT(pub->drain != (rtpp_socket_drain_t)&rtpp_socket_drain_fin);
+    pub->drain = (rtpp_socket_drain_t)&rtpp_socket_drain_fin;
     RTPP_DBG_ASSERT(pub->getfd != (rtpp_socket_getfd_t)NULL);
     RTPP_DBG_ASSERT(pub->getfd != (rtpp_socket_getfd_t)&rtpp_socket_getfd_fin);
     pub->getfd = (rtpp_socket_getfd_t)&rtpp_socket_getfd_fin;
@@ -86,6 +93,7 @@ rtpp_socket_fintest()
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
     tp->pub.bind = (rtpp_socket_bind_t)((void *)0x1);
+    tp->pub.drain = (rtpp_socket_drain_t)((void *)0x1);
     tp->pub.getfd = (rtpp_socket_getfd_t)((void *)0x1);
     tp->pub.rtp_recv = (rtpp_socket_rtp_recv_t)((void *)0x1);
     tp->pub.send_pkt_na = (rtpp_socket_send_pkt_na_t)((void *)0x1);
@@ -97,6 +105,7 @@ rtpp_socket_fintest()
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, bind);
+    CALL_TFIN(&tp->pub, drain);
     CALL_TFIN(&tp->pub, getfd);
     CALL_TFIN(&tp->pub, rtp_recv);
     CALL_TFIN(&tp->pub, send_pkt_na);
@@ -104,7 +113,7 @@ rtpp_socket_fintest()
     CALL_TFIN(&tp->pub, setrbuf);
     CALL_TFIN(&tp->pub, settimestamp);
     CALL_TFIN(&tp->pub, settos);
-    assert((_naborts - naborts_s) == 8);
+    assert((_naborts - naborts_s) == 9);
 }
 const static void *_rtpp_socket_ftp = (void *)&rtpp_socket_fintest;
 DATA_SET(rtpp_fintests, _rtpp_socket_ftp);

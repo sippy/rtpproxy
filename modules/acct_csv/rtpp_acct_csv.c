@@ -38,7 +38,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "config.h"
+#include "config_pp.h"
 
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
@@ -97,24 +97,6 @@ struct rtpp_minfo rtpp_module = {
     .dtor = rtpp_acct_csv_dtor,
     .on_session_end = API_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
 };
-
-#if 0
-/* Quick hack to check and see if periodic updates work as expected */
-static int
-gethostname_test(char *name, size_t namelen)
-{
-    static int i = 0;
-
-    if (i < 2) {
-        strcpy(name, "foo.bar.com");
-        i++;
-        return 0;
-    }
-    return (gethostname(name, namelen));
-}
-
-#define gethostname gethostname_test
-#endif
 
 static const char *
 rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)

@@ -1082,8 +1082,8 @@ main(int argc, char **argv)
     CALL_METHOD(cfs.rtpp_tnset_cf, dtor);
     CALL_SMETHOD(cfs.rtpp_timed_cf, shutdown);
     RTPP_OBJ_DECREF(cfs.rtpp_timed_cf);
-    CALL_METHOD(cfs.rtpp_proc_cf, dtor);
     CALL_METHOD(cfs.rtpp_proc_ttl_cf, dtor);
+    CALL_METHOD(cfs.rtpp_proc_cf, dtor);
     RTPP_OBJ_DECREF(cfs.sessinfo);
     RTPP_OBJ_DECREF(cfs.rtpp_stats);
     for (i = 0; i <= RTPP_PT_MAX; i++) {

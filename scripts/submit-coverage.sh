@@ -8,4 +8,4 @@ set -e
 #done
 
 coveralls --exclude external --exclude hepconnector --exclude libelperiodic \
-  --exclude bench --exclude pertools --gcov gcov --gcov-options '\-lp'
+  --exclude dist --exclude bench --exclude pertools --gcov gcov --gcov-options '\-lp'

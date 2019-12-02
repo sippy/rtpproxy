@@ -9,5 +9,5 @@ SUDO_REQUIRED=1
 
 disable_aslr
 
-glitch_test basic_versions/basic_versions1 19 basic_versions.rlog
-report "glitching basic_versions/basic_versions1"
+glitch_test acct_rtcp_hep/basic 5 acct_rtcp_hep.rlog
+report "glitching acct_rtcp_hep/basic"

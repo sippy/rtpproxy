@@ -53,6 +53,14 @@ AC_ARG_ENABLE(coverage,
   AC_DEFINE([ENABLE_COVERAGE], [], [Test coverage support is enabled])
   CFLAGS="${CFLAGS} --coverage"; LDFLAGS="${LDFLAGS} --coverage"; break], [])
 
+AC_ARG_ENABLE(memglitching,
+  AC_HELP_STRING([--enable-memglitching], [enable advanced tests around malloc glitching]),
+  [ENABLE_MEMGLITCHING=${enableval}], [ENABLE_MEMGLITCHING=no])
+
+AC_ARG_ENABLE(basic-tests,
+  AC_HELP_STRING([--enable-basic-tests], [enable basic functionality tests]),
+  [ENABLE_BASIC_TESTS=${enableval}], [ENABLE_BASIC_TESTS=yes])
+
 # Checks for libraries.
 
 if test "$enable_systemd" = 'yes'
@@ -140,22 +148,22 @@ then
    AC_DEFINE([ENABLE_SNDFILE], 1, [Define if you have libsndfile library installed]))
 fi
 
-# libsrtp
-AC_CHECK_HEADER(srtp/srtp.h, found_libsrtp=yes)
-if test "$found_libsrtp" = yes
-then
-  AC_CHECK_LIB(srtp, srtp_init,
-   LIBS_SRTP="-lsrtp"
-   AC_DEFINE([ENABLE_SRTP], 1, [Define if you have libsrtp library installed]))
-fi
-
-# libsrtp2
+# libsrtp2 (preferred)
 AC_CHECK_HEADER(srtp2/srtp.h, found_libsrtp2=yes)
 if test "$found_libsrtp2" = yes
 then
   AC_CHECK_LIB(srtp2, srtp_init,
    LIBS_SRTP="-lsrtp2"
    AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed]))
+else
+  # libsrtp
+  AC_CHECK_HEADER(srtp/srtp.h, found_libsrtp=yes)
+  if test "$found_libsrtp" = yes
+  then
+    AC_CHECK_LIB(srtp, srtp_init,
+     LIBS_SRTP="-lsrtp"
+     AC_DEFINE([ENABLE_SRTP], 1, [Define if you have libsrtp library installed]))
+  fi
 fi
 
 # libelperiodic
@@ -289,6 +297,26 @@ then
 fi
 # </DocBook & friends>
 
+AC_MSG_CHECKING([for SO_TS_CLOCK/SO_TS_MONOTONIC])
+AC_COMPILE_IFELSE( [AC_LANG_PROGRAM([[
+  #include <sys/types.h>
+  #include <sys/socket.h>
+  ]],
+  [[
+  int stype = SO_TS_MONOTONIC;
+  struct cmsghdr mymsg = {.cmsg_type = SCM_MONOTONIC};
+  setsockopt(0, 0, SO_TS_CLOCK, &stype, sizeof(stype));
+  ]])],
+[
+  AC_MSG_RESULT([yes])
+  AC_DEFINE_UNQUOTED([HAVE_SO_TS_CLOCK], 1, [Define to 1 if you have the SO_TS_CLOCK.])
+],
+[
+  AC_MSG_RESULT([no])
+  AC_DEFINE_UNQUOTED([HAVE_SO_TS_CLOCK], 0, [Define to 1 if you have the SO_TS_CLOCK.])
+]
+)
+
 AM_CONDITIONAL(BUILD_EXTRACTAUDIO, [test "${LIBS_SNDFILE}" != ""])
 AM_CONDITIONAL(BUILD_MODULES, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
@@ -298,6 +326,8 @@ AM_CONDITIONAL(BUILD_LOG_STAND, [test "${LIBS_SIPLOG}" = ""])
 AM_CONDITIONAL(BUILD_UDP_CONTENTION, [test "${ENABLE_UDP_CONTENTION}" = 1])
 AM_CONDITIONAL(BUILD_OBJCK, [test "${ENABLE_OBJCK}" = 1])
 AM_CONDITIONAL(BUILD_DOCS, [test "x${HAVE_DOCBOOK_DTD_4_5}" = "xyes" ])
+AM_CONDITIONAL(ENABLE_MEMGLITCHING, [test "x${ENABLE_MEMGLITCHING}" = "xyes" ])
+AM_CONDITIONAL(ENABLE_BASIC_TESTS, [test "x${ENABLE_BASIC_TESTS}" = "xyes" ])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile

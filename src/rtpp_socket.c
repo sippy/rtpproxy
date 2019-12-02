@@ -35,7 +35,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "config_pp.h"
+
+#include "rtpp_log.h"
 #include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_socket.h"
 #include "rtpp_socket_fin.h"
@@ -60,10 +64,6 @@ static int rtpp_socket_settos(struct rtpp_socket *, int);
 static int rtpp_socket_setrbuf(struct rtpp_socket *, int);
 static int rtpp_socket_setnonblock(struct rtpp_socket *);
 static int rtpp_socket_settimestamp(struct rtpp_socket *);
-#if 0
-static int rtpp_socket_send_pkt(struct rtpp_socket *, struct sthread_args *,
-  const struct sockaddr *, int, struct rtp_packet *, struct rtpp_log *);
-#endif
 static int rtpp_socket_send_pkt_na(struct rtpp_socket *, struct sthread_args *,
   struct rtpp_netaddr *, struct rtp_packet *, struct rtpp_log *);
 static struct rtp_packet * rtpp_socket_rtp_recv_simple(struct rtpp_socket *,
@@ -71,6 +71,13 @@ static struct rtp_packet * rtpp_socket_rtp_recv_simple(struct rtpp_socket *,
 static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *,
   const struct rtpp_timestamp *, const struct sockaddr *, int);
 static int rtpp_socket_getfd(struct rtpp_socket *);
+static int rtpp_socket_drain(struct rtpp_socket *, const char *,
+  struct rtpp_log *);
+
+#if HAVE_SO_TS_CLOCK
+static struct rtp_packet *rtpp_socket_rtp_recv_mono(struct rtpp_socket *,
+  const struct rtpp_timestamp *, const struct sockaddr *, int);
+#endif
 
 struct rtpp_socket *
 rtpp_socket_ctor(int domain, int type)
@@ -102,6 +109,7 @@ rtpp_socket_ctor(int domain, int type)
     pvt->pub.send_pkt_na = &rtpp_socket_send_pkt_na;
     pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_simple;
     pvt->pub.getfd = &rtpp_socket_getfd;
+    pvt->pub.drain = &rtpp_socket_drain;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_dtor,
       pvt);
     return (&pvt->pub);
@@ -175,23 +183,18 @@ rtpp_socket_settimestamp(struct rtpp_socket *self)
     if (rval != 0) {
         return (rval);
     }
+#if HAVE_SO_TS_CLOCK
+    sval = SO_TS_MONOTONIC;
+    rval = setsockopt(pvt->fd, SOL_SOCKET, SO_TS_CLOCK, &sval,
+      sizeof(sval));
+    if (rval == 0) {
+        pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_mono;
+        return (0);
+    }
+#endif
     pvt->pub.rtp_recv = &rtpp_socket_rtp_recv;
     return (0);
 }
-
-#if 0
-static int 
-rtpp_socket_send_pkt(struct rtpp_socket *self, struct sthread_args *str,
-  const struct sockaddr *daddr, int addrlen, struct rtp_packet *pkt,
-  struct rtpp_log *log)
-{
-    struct rtpp_socket_priv *pvt;
-
-    PUB2PVT(self, pvt);
-    return (rtpp_anetio_send_pkt(str, pvt->fd, daddr, addrlen, pkt,
-      self->rcnt, log));
-}
-#endif
 
 static int
 rtpp_socket_send_pkt_na(struct rtpp_socket *self, struct sthread_args *str,
@@ -237,13 +240,15 @@ rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, const struct rtpp_timestam
     return (packet);
 }
 
+DEFINE_RAW_METHOD(recvfromto, ssize_t, int, void *, size_t, struct sockaddr *,
+  socklen_t *, struct sockaddr *, socklen_t *, void *);
+
 static struct rtp_packet *
-rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
-  const struct sockaddr *laddr, int port)
+_rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct sockaddr *laddr,
+  int port, recvfromto_t _recvfromtof, void *tptr)
 {
     struct rtpp_socket_priv *pvt;
     struct rtp_packet *packet;
-    struct timeval rtime;
     socklen_t llen;
 
     packet = rtp_packet_alloc();
@@ -255,10 +260,8 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtim
 
     packet->rlen = sizeof(packet->raddr);
     llen = sizeof(packet->_laddr);
-    memset(&rtime, '\0', sizeof(rtime));
-    packet->size = recvfromto(pvt->fd, packet->data.buf, sizeof(packet->data.buf),
-      sstosa(&packet->raddr), &packet->rlen, sstosa(&packet->_laddr), &llen,
-      &rtime);
+    packet->size = _recvfromtof(pvt->fd, packet->data.buf, sizeof(packet->data.buf),
+      sstosa(&packet->raddr), &packet->rlen, sstosa(&packet->_laddr), &llen, tptr);
 
     if (packet->size == -1) {
         RTPP_OBJ_DECREF(packet);
@@ -271,7 +274,20 @@ rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtim
         packet->laddr = laddr;
         packet->lport = port;
     }
-    if (dtime == NULL) {
+    return (packet);
+}
+
+static struct rtp_packet *
+rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
+  const struct sockaddr *laddr, int port)
+{
+    struct rtp_packet *packet;
+    struct timeval rtime;
+
+    memset(&rtime, '\0', sizeof(rtime));
+    packet = _rtpp_socket_rtp_recv(self, laddr, port, (recvfromto_t)recvfromto,
+      &rtime);
+    if (packet == NULL || dtime == NULL) {
         goto out;
     }
 
@@ -287,6 +303,34 @@ out:
     return (packet);
 }
 
+#if HAVE_SO_TS_CLOCK
+static struct rtp_packet *
+rtpp_socket_rtp_recv_mono(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
+  const struct sockaddr *laddr, int port)
+{
+    struct rtp_packet *packet;
+    struct timespec rtime;
+
+    memset(&rtime, '\0', sizeof(rtime));
+    packet = _rtpp_socket_rtp_recv(self, laddr, port,
+      (recvfromto_t)recvfromto_mono, &rtime);
+    if (packet == NULL || dtime == NULL) {
+        goto out;
+    }
+
+    if (!timespeciszero(&rtime)) {
+        packet->rtime.mono = timespec2dtime(&rtime);
+    } else {
+        packet->rtime.mono = dtime->mono;
+    }
+    RTPP_DBG_ASSERT(packet->rtime.mono > 0);
+    packet->rtime.wall = dtime->wall;
+
+out:
+    return (packet);
+}
+#endif
+
 static int
 rtpp_socket_getfd(struct rtpp_socket *self)
 {
@@ -294,4 +338,34 @@ rtpp_socket_getfd(struct rtpp_socket *self)
 
     PUB2PVT(self, pvt);
     return (pvt->fd);
+}
+
+static int
+rtpp_socket_drain(struct rtpp_socket *self, const char *ptype,
+  struct rtpp_log *log)
+{
+    struct rtp_packet *packet;
+    int ndrained;
+    struct rtpp_socket_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    ndrained = 0;
+#if RTPP_DEBUG
+    RTPP_LOG(log, RTPP_LOG_DBUG, "Draining %s socket %d", ptype,
+      pvt->fd);
+#endif
+    for (;;) {
+        packet = CALL_METHOD(self, rtp_recv, NULL, NULL, 0);
+        if (packet == NULL)
+            break;
+        ndrained++;
+        RTPP_OBJ_DECREF(packet);
+    }
+#if RTPP_DEBUG
+    if (ndrained > 0) {
+        RTPP_LOG(log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
+          "packets discarded", ptype, pvt->fd, ndrained);
+    }
+#endif
+    return (ndrained);
 }

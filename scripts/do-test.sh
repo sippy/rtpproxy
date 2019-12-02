@@ -5,6 +5,7 @@ set -e
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/scripts/functions.sub"
 
+TTYPE="${1}"
 BCG729_VER=1.0.4
 SNDFILE_VER=1.0.28
 
@@ -17,12 +18,16 @@ sudo iptables -L INPUT
 sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
-./configure
-make
-make clean
-#${APT_GET} update
-${APT_GET} install -y libgsm1-dev tcpdump curl wireshark-common gdb
-tcpdump --version || true
+
+ALLCLEAN_TGT="all clean distclean"
+
+if [ "${TTYPE}" = "cleanbuild" ]
+then
+  ./configure
+  exec make ${ALLCLEAN_TGT}
+fi
+
+${APT_GET} install -y libgsm1-dev
 mkdir deps
 cd deps
 wget https://linphone.org/releases/sources/bcg729/bcg729-${BCG729_VER}.tar.gz
@@ -56,9 +61,33 @@ cd ../..
 sudo ldconfig
 
 autoreconf --force --install --verbose
-./configure
-make clean all
-./configure --enable-coverage
+
+if [ "${TTYPE}" = "depsbuild" ]
+then
+  ./configure
+  make ${ALLCLEAN_TGT}
+  ${APT_GET} install -y libsrtp0-dev
+  ./configure
+  exec make ${ALLCLEAN_TGT}
+fi
+
+CONFIGURE_ARGS="--enable-coverage"
+case ${TTYPE} in
+basic)
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-basic-tests"
+  ;;
+
+glitching)
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --disable-basic-tests --enable-memglitching"
+  ;;
+
+*)
+  echo "Unknown or undefined TTYPE" >&2
+  exit 1
+  ;;
+esac
+
+./configure ${CONFIGURE_ARGS}
 make clean all
 
 cd deps
@@ -67,7 +96,8 @@ cd libelperiodic
 ./configure
 make all
 sudo make install
-sudo python3 setup.py build install
+python3 setup.py build
+sudo python3 setup.py install
 cd ../..
 
 sudo ldconfig
@@ -78,5 +108,8 @@ mkdir dist/udpreplay/build
 cmake -Bdist/udpreplay/build -Hdist/udpreplay
 make -C dist/udpreplay/build all
 sudo make -C dist/udpreplay/build install
+
+${APT_GET} install -y tcpdump curl wireshark-common gdb
+tcpdump --version || true
 
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)

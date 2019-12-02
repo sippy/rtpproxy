@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "config.h"
+#include "config_pp.h"
 
 #include "rtpp_types.h"
 #include "rtpp_module.h"
