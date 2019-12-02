@@ -25,7 +25,7 @@ after_success:
     do
       cat tests/${f}.log;
     done
-  - if [ "${CC}" = "gcc" -a "${TTYPE}" != "cleanbuild" ];
+  - if [ "${CC}" = "gcc" -a "${TTYPE}" != "cleanbuild" -a "${TTYPE}" != "depsbuild" ];
     then
       sh -x ./scripts/submit-coverage.sh ;
     fi
