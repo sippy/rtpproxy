@@ -70,7 +70,7 @@ glitching)
   ;;
 esac
 
-./configure ${TTYPE}
+./configure ${CONFIGURE_ARGS}
 make clean all
 
 cd deps
