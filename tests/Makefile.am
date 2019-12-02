@@ -19,6 +19,7 @@ include $(srcdir)/session_timeouts/Makefile.ami
 include $(srcdir)/playback/Makefile.ami
 endif
 if ENABLE_MEMGLITCHING
+include $(srcdir)/makeann/Makefile.ami
 include $(srcdir)/memdeb/Makefile.ami
 endif
 
