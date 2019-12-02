@@ -87,6 +87,15 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@ENABLE_BASIC_TESTS_TRUE@am__append_1 = acct_rtcp_hep/confval1 acct_rtcp_hep/basic
+@ENABLE_BASIC_TESTS_TRUE@am__append_2 = ${acct_rtcp_hep_CLEANFILES}
+@ENABLE_BASIC_TESTS_TRUE@am__append_3 = ${acct_rtcp_hep_EXTRA_DIST}
+@ENABLE_MEMGLITCHING_TRUE@am__append_4 = memdeb/glitch1 memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_command_parser1 memdeb/glitch_acct_rtcp_hep
+
+@ENABLE_MEMGLITCHING_TRUE@am__append_5 = ${memdeb_CLEANFILES}
+@ENABLE_MEMGLITCHING_TRUE@am__append_6 = ${memdeb_EXTRA_DIST}
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
@@ -327,7 +336,8 @@ TEST_LOG_DRIVER = $(SHELL) $(top_srcdir)/test-driver
 TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
 	$(TEST_LOG_FLAGS)
 am__DIST_COMMON = $(srcdir)/Makefile.in \
-	$(srcdir)/acct_rtcp_hep/Makefile.ami $(top_srcdir)/test-driver
+	$(srcdir)/acct_rtcp_hep/Makefile.ami \
+	$(srcdir)/memdeb/Makefile.ami $(top_srcdir)/test-driver
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -462,8 +472,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = acct_rtcp_hep/confval1 acct_rtcp_hep/basic
-CLEANFILES = ${acct_rtcp_hep_CLEANFILES} *.core
+TESTS = $(am__append_1) $(am__append_4)
+CLEANFILES = $(am__append_2) $(am__append_5) *.core
 
 #include $(srcdir)/autosrc/Makefile.ami
 #include $(srcdir)/makeann/Makefile.ami
@@ -476,12 +486,13 @@ CLEANFILES = ${acct_rtcp_hep_CLEANFILES} *.core
 #include $(srcdir)/basic_versions/Makefile.ami
 #include $(srcdir)/command_parser/Makefile.ami
 #include $(srcdir)/forwarding/Makefile.ami
-#include $(srcdir)/memdeb/Makefile.ami
 #include $(srcdir)/session_timeouts/Makefile.ami
 #include $(srcdir)/playback/Makefile.ami
-EXTRA_DIST = ${acct_rtcp_hep_EXTRA_DIST} Makefile.am ringback.sln
-acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
-acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
+EXTRA_DIST = $(am__append_3) $(am__append_6) Makefile.am ringback.sln
+@ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
+@ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
+@ENABLE_MEMGLITCHING_TRUE@memdeb_EXTRA_DIST = memdeb
+@ENABLE_MEMGLITCHING_TRUE@memdeb_CLEANFILES = glitch1.ncout glitch1.nclog
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
@@ -492,7 +503,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .log .test .test$(EXEEXT) .trs
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/acct_rtcp_hep/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -512,7 +523,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/acct_rtcp_hep/Makefile.ami $(am__empty):
+$(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -686,6 +697,55 @@ acct_rtcp_hep/confval1.log: acct_rtcp_hep/confval1
 acct_rtcp_hep/basic.log: acct_rtcp_hep/basic
 	@p='acct_rtcp_hep/basic'; \
 	b='acct_rtcp_hep/basic'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch1.log: memdeb/glitch1
+	@p='memdeb/glitch1'; \
+	b='memdeb/glitch1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch_libucl1.log: memdeb/glitch_libucl1
+	@p='memdeb/glitch_libucl1'; \
+	b='memdeb/glitch_libucl1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch_extractaudio.log: memdeb/glitch_extractaudio
+	@p='memdeb/glitch_extractaudio'; \
+	b='memdeb/glitch_extractaudio'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch_startstop1.log: memdeb/glitch_startstop1
+	@p='memdeb/glitch_startstop1'; \
+	b='memdeb/glitch_startstop1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch_basic_versions1.log: memdeb/glitch_basic_versions1
+	@p='memdeb/glitch_basic_versions1'; \
+	b='memdeb/glitch_basic_versions1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch_command_parser1.log: memdeb/glitch_command_parser1
+	@p='memdeb/glitch_command_parser1'; \
+	b='memdeb/glitch_command_parser1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+memdeb/glitch_acct_rtcp_hep.log: memdeb/glitch_acct_rtcp_hep
+	@p='memdeb/glitch_acct_rtcp_hep'; \
+	b='memdeb/glitch_acct_rtcp_hep'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
