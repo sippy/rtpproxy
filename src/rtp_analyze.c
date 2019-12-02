@@ -351,6 +351,8 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
 
     rpp = rinfo->rtp_profile;
     jdp = jdata_by_ssrc(stat->jdata, rinfo->ssrc);
+    if (jdp == NULL)
+        return (UPDATE_ERR);
     if (stat->ssrc_changes == 0) {
         RTPP_DBG_ASSERT(stat->last.pcount == 0);
         RTPP_DBG_ASSERT(stat->psent == 0);
@@ -365,7 +367,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         idx = (rinfo->seq % 131072) >> 5;
         stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
         stat->last.seq = rinfo->seq;
-        if (rpp->ts_rate > 0 && jdp != NULL) {
+        if (rpp->ts_rate > 0) {
             update_jitter_stats(jdp, rinfo, rtime, RTP_NORMAL, rlog);
         }
         return (UPDATE_OK);
@@ -391,7 +393,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         idx = (rinfo->seq % 131072) >> 5;
         stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
         stat->last.seq = rinfo->seq;
-        if (rpp->ts_rate > 0 && jdp != NULL) {
+        if (rpp->ts_rate > 0) {
             update_jitter_stats(jdp, rinfo, rtime, RTP_SSRC_RESET, rlog);
         }
         return (UPDATE_SSRC_CHG);
@@ -412,12 +414,12 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         idx = (seq % 131072) >> 5;
         stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
         stat->last.seq = rinfo->seq;
-        if (rpp->ts_rate > 0 && jdp != NULL) {
+        if (rpp->ts_rate > 0) {
             update_jitter_stats(jdp, rinfo, rtime, RTP_SEQ_RESET, rlog);
         }
         return (UPDATE_OK);
     } else {
-        if (rpp->ts_rate > 0 && jdp != NULL) {
+        if (rpp->ts_rate > 0) {
             if (seq == 0 && (stat->last.max_seq & 0xffff) < 65500) {
                 update_jitter_stats(jdp, rinfo, rtime, RTP_SEQ_RESET, rlog);
             } else {
