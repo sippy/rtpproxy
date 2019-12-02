@@ -5,6 +5,7 @@ set -e
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/scripts/functions.sub"
 
+TTYPE="${1}"
 BCG729_VER=1.0.4
 SNDFILE_VER=1.0.28
 
@@ -52,7 +53,24 @@ cd ../..
 sudo ldconfig
 
 autoreconf --force --install --verbose
-./configure --enable-coverage
+
+CONFIGURE_ARGS="--enable-coverage"
+case ${TTYPE} in
+basic)
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-basic-tests"
+  ;;
+
+glitching)
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-memglitching"
+  ;;
+
+*)
+  echo "Unknown or indefined TTYPE" >&2
+  exit 1
+  ;;
+esac
+
+./configure ${TTYPE}
 make clean all
 
 cd deps
