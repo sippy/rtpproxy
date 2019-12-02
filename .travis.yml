@@ -54,10 +54,12 @@ jobs:
     - compiler: clang
       env:
         - TTYPE=depsbuild
+      before_install: true
       after_success: true
     - compiler: gcc
       env:
         - TTYPE=depsbuild
+      before_install: true
       after_success: true
     - compiler: clang
       env:
