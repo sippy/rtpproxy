@@ -25,7 +25,7 @@ after_success:
     do
       cat tests/${f}.log;
     done
-  - if [ "${CC}" = "gcc" ];
+  - if [ "${CC}" = "gcc" -a "${TTYPE}" != "cleanbuild" ];
     then
       sh -x ./scripts/submit-coverage.sh ;
     fi
@@ -41,6 +41,12 @@ stages:
     if: branch = master AND type = cron
 jobs:
   include:
+    - compiler: clang
+      env:
+        - TTYPE=cleanbuild
+    - compiler: gcc
+      env:
+        - TTYPE=cleanbuild
     - compiler: clang
       env:
         - TTYPE=basic

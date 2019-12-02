@@ -18,6 +18,13 @@ sudo iptables -L INPUT
 sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
+
+if [ "${TTYPE}" = "cleanbuild" ]
+then
+  ./configure
+  exec make
+fi
+
 ${APT_GET} install -y libgsm1-dev tcpdump curl wireshark-common gdb
 tcpdump --version || true
 mkdir deps
