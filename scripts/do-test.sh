@@ -27,8 +27,7 @@ then
   exec make ${ALLCLEAN_TGT}
 fi
 
-${APT_GET} install -y libgsm1-dev tcpdump curl wireshark-common gdb
-tcpdump --version || true
+${APT_GET} install -y libgsm1-dev
 mkdir deps
 cd deps
 wget https://linphone.org/releases/sources/bcg729/bcg729-${BCG729_VER}.tar.gz
@@ -97,7 +96,8 @@ cd libelperiodic
 ./configure
 make all
 sudo make install
-sudo python3 setup.py build install
+python3 setup.py build
+sudo python3 setup.py install
 cd ../..
 
 sudo ldconfig
@@ -108,5 +108,8 @@ mkdir dist/udpreplay/build
 cmake -Bdist/udpreplay/build -Hdist/udpreplay
 make -C dist/udpreplay/build all
 sudo make -C dist/udpreplay/build install
+
+${APT_GET} install -y tcpdump curl wireshark-common gdb
+tcpdump --version || true
 
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
