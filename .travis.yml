@@ -54,12 +54,14 @@ jobs:
     - compiler: clang
       env:
         - TTYPE=depsbuild
-      before_install: true
+      before_install:
+        - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
     - compiler: gcc
       env:
         - TTYPE=depsbuild
-      before_install: true
+      before_install:
+        - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
     - compiler: clang
       env:
