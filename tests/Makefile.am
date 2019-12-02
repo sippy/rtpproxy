@@ -11,7 +11,7 @@ if ENABLE_BASIC_TESTS
 include $(srcdir)/acct_rtcp_hep/Makefile.ami
 #include $(srcdir)/rtp_analyze/Makefile.ami
 #include $(srcdir)/extractaudio/Makefile.ami
-#include $(srcdir)/startstop/Makefile.ami
+include $(srcdir)/startstop/Makefile.ami
 #include $(srcdir)/basic_versions/Makefile.ami
 #include $(srcdir)/command_parser/Makefile.ami
 #include $(srcdir)/forwarding/Makefile.ami
