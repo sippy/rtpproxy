@@ -72,7 +72,7 @@ glitching)
   ;;
 
 *)
-  echo "Unknown or indefined TTYPE" >&2
+  echo "Unknown or undefined TTYPE" >&2
   exit 1
   ;;
 esac
