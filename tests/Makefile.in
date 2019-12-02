@@ -87,9 +87,14 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@ENABLE_BASIC_TESTS_TRUE@am__append_1 = acct_rtcp_hep/confval1 acct_rtcp_hep/basic
-@ENABLE_BASIC_TESTS_TRUE@am__append_2 = ${acct_rtcp_hep_CLEANFILES}
-@ENABLE_BASIC_TESTS_TRUE@am__append_3 = ${acct_rtcp_hep_EXTRA_DIST}
+@ENABLE_BASIC_TESTS_TRUE@am__append_1 = acct_rtcp_hep/confval1 \
+@ENABLE_BASIC_TESTS_TRUE@	acct_rtcp_hep/basic \
+@ENABLE_BASIC_TESTS_TRUE@	startstop/goodargs startstop/badargs \
+@ENABLE_BASIC_TESTS_TRUE@	startstop/startstop1
+@ENABLE_BASIC_TESTS_TRUE@am__append_2 = ${acct_rtcp_hep_CLEANFILES} \
+@ENABLE_BASIC_TESTS_TRUE@	${startstop_CLEANFILES}
+@ENABLE_BASIC_TESTS_TRUE@am__append_3 = ${acct_rtcp_hep_EXTRA_DIST} \
+@ENABLE_BASIC_TESTS_TRUE@	${startstop_EXTRA_DIST}
 @ENABLE_MEMGLITCHING_TRUE@am__append_4 = memdeb/glitch1 memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
 @ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
 @ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_command_parser1 memdeb/glitch_acct_rtcp_hep
@@ -337,7 +342,8 @@ TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
 	$(TEST_LOG_FLAGS)
 am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(srcdir)/acct_rtcp_hep/Makefile.ami \
-	$(srcdir)/memdeb/Makefile.ami $(top_srcdir)/test-driver
+	$(srcdir)/memdeb/Makefile.ami $(srcdir)/startstop/Makefile.ami \
+	$(top_srcdir)/test-driver
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -482,7 +488,6 @@ CLEANFILES = $(am__append_2) $(am__append_5) *.core
 #include $(srcdir)/libexecinfo/Makefile.ami
 #include $(srcdir)/rtp_analyze/Makefile.ami
 #include $(srcdir)/extractaudio/Makefile.ami
-#include $(srcdir)/startstop/Makefile.ami
 #include $(srcdir)/basic_versions/Makefile.ami
 #include $(srcdir)/command_parser/Makefile.ami
 #include $(srcdir)/forwarding/Makefile.ami
@@ -491,6 +496,8 @@ CLEANFILES = $(am__append_2) $(am__append_5) *.core
 EXTRA_DIST = $(am__append_3) $(am__append_6) Makefile.am ringback.sln
 @ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
 @ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
+@ENABLE_BASIC_TESTS_TRUE@startstop_EXTRA_DIST = startstop
+@ENABLE_BASIC_TESTS_TRUE@startstop_CLEANFILES = startstop.rout startstop.rlog
 @ENABLE_MEMGLITCHING_TRUE@memdeb_EXTRA_DIST = memdeb
 @ENABLE_MEMGLITCHING_TRUE@memdeb_CLEANFILES = glitch1.ncout glitch1.nclog
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
@@ -503,7 +510,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .log .test .test$(EXEEXT) .trs
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -523,7 +530,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__empty):
+$(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -697,6 +704,27 @@ acct_rtcp_hep/confval1.log: acct_rtcp_hep/confval1
 acct_rtcp_hep/basic.log: acct_rtcp_hep/basic
 	@p='acct_rtcp_hep/basic'; \
 	b='acct_rtcp_hep/basic'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+startstop/goodargs.log: startstop/goodargs
+	@p='startstop/goodargs'; \
+	b='startstop/goodargs'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+startstop/badargs.log: startstop/badargs
+	@p='startstop/badargs'; \
+	b='startstop/badargs'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+startstop/startstop1.log: startstop/startstop1
+	@p='startstop/startstop1'; \
+	b='startstop/startstop1'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
