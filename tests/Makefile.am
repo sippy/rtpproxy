@@ -3,20 +3,20 @@ CLEANFILES = # empty
 EXTRA_DIST = # empty
 
 if ENABLE_BASIC_TESTS
-#include $(srcdir)/autosrc/Makefile.ami
-#include $(srcdir)/makeann/Makefile.ami
-#include $(srcdir)/unittests/Makefile.ami
-#include $(srcdir)/libucl/Makefile.ami
-#include $(srcdir)/libexecinfo/Makefile.ami
+include $(srcdir)/autosrc/Makefile.ami
+include $(srcdir)/makeann/Makefile.ami
+include $(srcdir)/unittests/Makefile.ami
+include $(srcdir)/libucl/Makefile.ami
+include $(srcdir)/libexecinfo/Makefile.ami
 include $(srcdir)/acct_rtcp_hep/Makefile.ami
-#include $(srcdir)/rtp_analyze/Makefile.ami
-#include $(srcdir)/extractaudio/Makefile.ami
+include $(srcdir)/rtp_analyze/Makefile.ami
+include $(srcdir)/extractaudio/Makefile.ami
 include $(srcdir)/startstop/Makefile.ami
-#include $(srcdir)/basic_versions/Makefile.ami
-#include $(srcdir)/command_parser/Makefile.ami
-#include $(srcdir)/forwarding/Makefile.ami
-#include $(srcdir)/session_timeouts/Makefile.ami
-#include $(srcdir)/playback/Makefile.ami
+include $(srcdir)/basic_versions/Makefile.ami
+include $(srcdir)/command_parser/Makefile.ami
+include $(srcdir)/forwarding/Makefile.ami
+include $(srcdir)/session_timeouts/Makefile.ami
+include $(srcdir)/playback/Makefile.ami
 endif
 if ENABLE_MEMGLITCHING
 include $(srcdir)/memdeb/Makefile.ami
