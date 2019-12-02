@@ -67,7 +67,7 @@ if [ "${TTYPE}" = "depsbuild" ]
 then
   ./configure
   make ${ALLCLEAN_TGT}
-  ${APT_GET} install -y libsrtp0
+  ${APT_GET} install -y libsrtp0-dev
   ./configure
   exec make ${ALLCLEAN_TGT}
 fi
