@@ -183,6 +183,12 @@ rtpp_socket_settimestamp(struct rtpp_socket *self)
     if (rval != 0) {
         return (rval);
     }
+    sval = 1;
+#if defined(IP_RECVDSTADDR)
+    setsockopt(pvt->fd, IPPROTO_IP, IP_RECVDSTADDR, &sval, sizeof(sval));
+#else
+    setsockopt(pvt->fd, IPPROTO_IP, IP_PKTINFO, &sval, sizeof(sval));
+#endif
 #if HAVE_SO_TS_CLOCK
     sval = SO_TS_MONOTONIC;
     rval = setsockopt(pvt->fd, SOL_SOCKET, SO_TS_CLOCK, &sval,
