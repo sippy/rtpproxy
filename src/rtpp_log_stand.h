@@ -49,17 +49,17 @@ struct rtpp_cfg;
 
 #define	rtpp_log_open(cf, app, call_id, flag) _rtpp_log_open(cf, app, call_id);
 #if !defined(rtpp_log_write_va)
-#define rtpp_log_write_va(level, handle, format, args...)                  \
-        _rtpp_log_write_va(handle, level, __FUNCTION__, format, ## args)
+#define rtpp_log_write_va(level, handle, format, vargs)                  \
+        _rtpp_log_write_va(handle, level, __FUNCTION__, __LINE__, format, vargs)
 #endif
-#define	rtpp_log_ewrite(level, handle, format, args...)			\
-	_rtpp_log_ewrite(handle, level, __FUNCTION__, format, ## args)
-#define rtpp_log_ewrite_va(level, handle, format, args...)                 \
-        _rtpp_log_ewrite_va(handle, level, __FUNCTION__, format, ## args)
+#define rtpp_log_ewrite_va(level, handle, format, vargs)                 \
+        _rtpp_log_ewrite_va(handle, level, __FUNCTION__, __LINE__, format, vargs)
 #define	rtpp_log_close(handle) _rtpp_log_close(handle)
 
-void _rtpp_log_write_va(struct rtpp_log_inst *, int, const char *, const char *, va_list);
-void _rtpp_log_ewrite_va(struct rtpp_log_inst *, int, const char *, const char *, va_list);
+void _rtpp_log_write_va(struct rtpp_log_inst *, int, const char *, int,
+ const char *, va_list);
+void _rtpp_log_ewrite_va(struct rtpp_log_inst *, int, const char *, int,
+ const char *, va_list);
 struct rtpp_log_inst *_rtpp_log_open(const struct rtpp_cfg *, const char *, const char *);
 void _rtpp_log_close(struct rtpp_log_inst *);
 int rtpp_log_str2lvl(const char *);

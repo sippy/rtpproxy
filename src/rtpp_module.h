@@ -83,9 +83,9 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
 #endif
 
 #define mod_log(args...) CALL_METHOD(rtpp_module.log, write, __FUNCTION__, \
-  ## args)
+  __LINE__, ## args)
 #define mod_elog(args...) CALL_METHOD(rtpp_module.log, ewrite, __FUNCTION__, \
-  ## args)
+  __LINE__, ## args)
 
 struct api_version {
     int rev;

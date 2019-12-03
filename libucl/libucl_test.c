@@ -27,8 +27,8 @@ static bool conf_helper_mapper(const ucl_object_t *obj,
 extern struct rtpp_module_conf *rtpp_arh_conf;
 
 static void
-rtpp_log_obj_write_early(struct rtpp_log *self, const char *fname, int level,
-  const char *fmt, ...)
+rtpp_log_obj_write_early(struct rtpp_log *self, const char *fname, int lnum,
+  int level, const char *fmt, ...)
 {
     va_list ap;
 
@@ -42,8 +42,8 @@ rtpp_log_obj_write_early(struct rtpp_log *self, const char *fname, int level,
 }
 
 static void
-rtpp_log_obj_ewrite_early(struct rtpp_log *self, const char *fname, int level,
-  const char *fmt, ...)
+rtpp_log_obj_ewrite_early(struct rtpp_log *self, const char *fname, int lnum,
+  int level, const char *fmt, ...)
 {
     va_list ap;
 

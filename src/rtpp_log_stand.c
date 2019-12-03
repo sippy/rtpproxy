@@ -113,13 +113,13 @@ _rtpp_log_open(const struct rtpp_cfg *cf, const char *app, const char *call_id)
     } else {
         rli->level = cf->log_level;
     }
-    rli->format_se[0] = "%s%s:%s:%s: ";
+    rli->format_se[0] = "%s%s:%s:%s:%d: ";
     rli->format_se[1] = "\n";
-    rli->eformat_se[0] = "%s%s:%s:%s: ";
+    rli->eformat_se[0] = "%s%s:%s:%s:%d: ";
     rli->eformat_se[1] = ": %s (%d)\n";
-    rli->format_sl[0] = "%s:%s:%s: ";
+    rli->format_sl[0] = "%s:%s:%s:%d: ";
     rli->format_sl[1] = NULL;
-    rli->eformat_sl[0] = "%s:%s:%s: ";
+    rli->eformat_sl[0] = "%s:%s:%s:%d: ";
     rli->eformat_sl[1] = ": %s (%d)";
     return (rli);
 }
@@ -241,7 +241,7 @@ _rtpp_log_unlock(void)
 
 void
 _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
-  const char *format, va_list ap)
+  int lnum, const char *format, va_list ap)
 {
     char rtpp_log_buff[2048];
     char rtpp_time_buff[32];
@@ -262,7 +262,7 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
 #ifdef RTPP_LOG_ADVANCED
     if (syslog_async_opened != 0) {
         snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_sl[0],
-          strlvl(level), call_id, function);
+          strlvl(level), call_id, function, lnum);
         va_copy(apc, ap);
 	vsyslog_async(level, rtpp_log_buff, rli->format_sl[1], format, apc);
         va_end(apc);
@@ -275,7 +275,7 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
     ftime(rli, getdtime(), rtpp_time_buff, sizeof(rtpp_time_buff));
     _rtpp_log_lock();
     fprintf(stderr, rli->format_se[0], rtpp_time_buff, strlvl(level),
-      call_id, function);
+      call_id, function, lnum);
     vfprintf(stderr, format, ap);
     fprintf(stderr, "%s", rli->format_se[1]);
     fflush(stderr);
@@ -284,7 +284,7 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
 
 void
 _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
-  const char *format, va_list ap)
+  int lnum, const char *format, va_list ap)
 {
     char rtpp_log_buff[2048];
     char rtpp_time_buff[32];
@@ -309,7 +309,7 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
 
         m = sizeof(rtpp_log_buff);
         nch = snprintf(rtpp_log_buff, m, rli->eformat_sl[0],
-          strlvl(level), call_id, function);
+          strlvl(level), call_id, function, lnum);
         nch += 1;
         post = " TRUNCATED! ";
         if (nch < m) {
@@ -328,7 +328,7 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
     ftime(rli, getdtime(), rtpp_time_buff, sizeof(rtpp_time_buff));
     _rtpp_log_lock();
     fprintf(stderr, rli->eformat_se[0], rtpp_time_buff, strlvl(level), call_id,
-      function);
+      function, lnum);
     vfprintf(stderr, format, ap);
     fprintf(stderr, rli->eformat_se[1], strerror(errno), errno);
     fflush(stderr);

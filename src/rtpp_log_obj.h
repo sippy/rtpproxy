@@ -29,10 +29,10 @@
 struct rtpp_cfg;
 struct rtpp_log;
 
-DEFINE_METHOD(rtpp_log, rtpp_log_write, void, const char *, int,
-  const char *, ...) __attribute__ ((format (printf, 4, 5)));
-DEFINE_METHOD(rtpp_log, rtpp_log_ewrite, void, const char *, int,
-  const char *, ...) __attribute__ ((format (printf, 4, 5)));
+DEFINE_METHOD(rtpp_log, rtpp_log_write, void, const char *, int, int,
+  const char *, ...) __attribute__ ((format (printf, 5, 6)));
+DEFINE_METHOD(rtpp_log, rtpp_log_ewrite, void, const char *, int, int,
+  const char *, ...) __attribute__ ((format (printf, 5, 6)));
 DEFINE_METHOD(rtpp_log, rtpp_log_setlevel, void, int);
 DEFINE_METHOD(rtpp_log, rtpp_log_start, int, const struct rtpp_cfg *);
 
@@ -50,6 +50,6 @@ struct rtpp_log {
 struct rtpp_log *rtpp_log_ctor(const char *, const char *, int);
 
 #define RTPP_LOG(log, args...) CALL_METHOD((log), write, __FUNCTION__, \
-  ## args)
+  __LINE__, ## args)
 #define RTPP_ELOG(log, args...) CALL_METHOD((log), ewrite, __FUNCTION__, \
-  ## args)
+  __LINE__, ## args)
