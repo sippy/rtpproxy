@@ -274,12 +274,12 @@ _rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct sockaddr *laddr,
         return (NULL);
     }
     if (llen > 0) {
+        setport(sstosa(&packet->_laddr), port);
         packet->laddr = sstosa(&packet->_laddr);
-        packet->lport = getport(packet->laddr);
     } else {
         packet->laddr = laddr;
-        packet->lport = port;
     }
+    packet->lport = port;
     return (packet);
 }
 
