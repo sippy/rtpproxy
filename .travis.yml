@@ -74,10 +74,14 @@ jobs:
         - TTYPE=glitching
     - stage: Build Documentation
       name: Build Documentation
+      before_install:
+        - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       script: sh -x ./scripts/do-docbuild.sh
       after_success:
     - stage: Build & Deploy Documentation
       name: Build Documentation and Deploy it to the rtpproxy.org repo
+      before_install:
+        - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       script:
         - sh -x ./scripts/do-docbuild.sh
         - sh -x ./scripts/do-docdeploy.sh
