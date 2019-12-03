@@ -46,7 +46,7 @@ _recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
         struct cmsghdr hdr;
         unsigned char buf[CMSG_SPACE(1024)];
     } cmsgbuf;
-#if !defined(__FreeBSD__)
+#if !defined(IP_RECVDSTADDR)
     struct in_pktinfo *pktinfo;
 #endif
     struct cmsghdr *cmsg;
@@ -71,7 +71,7 @@ _recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
     *tolen = 0;
     for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
       cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-#if defined(__FreeBSD__)
+#if defined(IP_RECVDSTADDR)
         if (cmsg->cmsg_level == IPPROTO_IP &&
           cmsg->cmsg_type == IP_RECVDSTADDR) {
             memcpy(&satosin(to)->sin_addr, CMSG_DATA(cmsg),
