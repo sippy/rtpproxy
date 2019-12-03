@@ -333,6 +333,8 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
 		    if (ret == NULL)
 			break;
 		    rtp_packet_dup(ret, p, RTPP_DUP_HDRONLY);
+                    /* Reset MBT if it happens to be set */
+                    p->data.header.mbt = 0;
 		    move_chunk(ret, p, &chunk);
 		    ++split;
 		}
