@@ -143,7 +143,10 @@ run_test()
   else
     client_notify_sock="${notify_sock}"
   fi
-  ${RTPP_NOTYFY_CLIENT} -s ${client_notify_sock} -o session_timeouts.tlog -t 240&
+  NSTESTS=`echo ${RTPP_TEST_SOCKETS} | wc -w`
+  RTPP_NC_TOUT=$((${NSTESTS} * 34))
+  ${RTPP_NOTYFY_CLIENT} -s ${client_notify_sock} -o session_timeouts.tlog \
+   -t ${RTPP_NC_TOUT}&
   RTPP_NC_RC=${?}
   RTPP_NC_PID=${!}
   report_rc ${RTPP_NC_RC} "Starting rtpp_notify_client.py on ${client_notify_sock}"
