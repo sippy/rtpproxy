@@ -112,6 +112,7 @@ sudo make -C dist/udpreplay/build install
 ${APT_GET} install -y tcpdump curl wireshark-common gdb
 tcpdump --version || true
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
+${APT_GET} update
 ${APT_GET} install -y ffmpeg
 
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
