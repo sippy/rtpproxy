@@ -1,4 +1,4 @@
-Uz20 %%CALLID%% 127.0.0.1 %%PORTA%% from_tag_1
+Uz30 %%CALLID%% 127.0.0.1 %%PORTA%% from_tag_1
 Lz60 %%CALLID%% 127.0.0.1 %%PORTO%% from_tag_1 to_tag_1
-U6z20 %%CALLID%%_ipv6 ::1 %%PORTA%% from_tag_1
+U6z30 %%CALLID%%_ipv6 ::1 %%PORTA%% from_tag_1
 L6z60 %%CALLID%%_ipv6 ::1 %%PORTO%% from_tag_1 to_tag_1

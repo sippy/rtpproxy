@@ -24,7 +24,7 @@ BASEDIR="`dirname "${0}"`/.."
 SUDO_REQUIRED=1
 . "${BASEDIR}/functions"
 
-TEST_CODECS="0 3 8 18 9"
+TEST_CODECS="0 3 4 8 18 9"
 #TEST_CODECS="9 9 9 9 9"
 FWD_SPORT=13342
 GENO_SPORT=12000
@@ -194,6 +194,7 @@ do
 done
 rm -f ${FORWARDING_RFILES}
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/forwarding1
+ffmpeg -i ${BASEDIR}/ringback.sln -f g723_1 ${BASEDIR}/forwarding1.4
 report "makeann forwarding1"
 
 _CODECSO=""
@@ -267,7 +268,7 @@ witness_stop
 test -e rtpproxy_acct.csv
 report "checking if rtpproxy_acct.csv is present"
 
-nlexpected="181"
+nlexpected="253"
 anlines=$((`wc -l < rtpproxy_acct.csv`))
 test ${anlines} -eq ${nlexpected}
 report "checking number of lines in rtpproxy_acct.csv: ${anlines} vs ${nlexpected}"
