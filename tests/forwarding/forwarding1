@@ -194,7 +194,7 @@ do
 done
 rm -f ${FORWARDING_RFILES}
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/forwarding1
-ffmpeg -i ${BASEDIR}/ringback.sln -f g723_1 ${BASEDIR}/forwarding1.4
+ffmpeg -i ${BASEDIR}/ringback.sln -f g723_1 -b:a 6300 ${BASEDIR}/forwarding1.4
 report "makeann forwarding1"
 
 _CODECSO=""
