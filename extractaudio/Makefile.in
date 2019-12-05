@@ -125,8 +125,8 @@ am__extractaudio_SOURCES_DIST = extractaudio.c decoder.c rtpp_loader.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c eaud_oformats.c \
 	eaud_oformats.h rtpp_scan_pcap.c rtpp_scan_pcap.h eaud_pcap.c \
 	eaud_pcap.h eaud_substreams.c eaud_substreams.h \
-	rtpp_scan_adhoc.c rtpp_scan_adhoc.h eaud_crypto.c \
-	eaud_crypto.h srtp_util.c srtp_util.h
+	rtpp_scan_adhoc.c rtpp_scan_adhoc.h eaud_adhoc.c eaud_adhoc.h \
+	eaud_crypto.c eaud_crypto.h srtp_util.c srtp_util.h
 am__objects_1 = extractaudio-rtpp_refcnt_fin.$(OBJEXT)
 am__objects_2 = extractaudio-rtpp_ringbuf_fin.$(OBJEXT)
 am__objects_3 = extractaudio-rtpp_netaddr_fin.$(OBJEXT)
@@ -148,7 +148,8 @@ am_extractaudio_OBJECTS = extractaudio-extractaudio.$(OBJEXT) \
 	extractaudio-rtpp_scan_pcap.$(OBJEXT) \
 	extractaudio-eaud_pcap.$(OBJEXT) \
 	extractaudio-eaud_substreams.$(OBJEXT) \
-	extractaudio-rtpp_scan_adhoc.$(OBJEXT) $(am__objects_4)
+	extractaudio-rtpp_scan_adhoc.$(OBJEXT) \
+	extractaudio-eaud_adhoc.$(OBJEXT) $(am__objects_4)
 extractaudio_OBJECTS = $(am_extractaudio_OBJECTS)
 am__DEPENDENCIES_1 =
 extractaudio_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -172,8 +173,8 @@ am__extractaudio_debug_SOURCES_DIST = extractaudio.c decoder.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c eaud_oformats.c \
 	eaud_oformats.h rtpp_scan_pcap.c rtpp_scan_pcap.h eaud_pcap.c \
 	eaud_pcap.h eaud_substreams.c eaud_substreams.h \
-	rtpp_scan_adhoc.c rtpp_scan_adhoc.h eaud_crypto.c \
-	eaud_crypto.h srtp_util.c srtp_util.h \
+	rtpp_scan_adhoc.c rtpp_scan_adhoc.h eaud_adhoc.c eaud_adhoc.h \
+	eaud_crypto.c eaud_crypto.h srtp_util.c srtp_util.h \
 	$(top_srcdir)/src/rtpp_memdeb.c \
 	$(top_srcdir)/src/rtpp_memdeb.h \
 	$(top_srcdir)/src/rtpp_memdeb_internal.h \
@@ -202,7 +203,8 @@ am__objects_9 = extractaudio_debug-extractaudio.$(OBJEXT) \
 	extractaudio_debug-rtpp_scan_pcap.$(OBJEXT) \
 	extractaudio_debug-eaud_pcap.$(OBJEXT) \
 	extractaudio_debug-eaud_substreams.$(OBJEXT) \
-	extractaudio_debug-rtpp_scan_adhoc.$(OBJEXT) $(am__objects_8)
+	extractaudio_debug-rtpp_scan_adhoc.$(OBJEXT) \
+	extractaudio_debug-eaud_adhoc.$(OBJEXT) $(am__objects_8)
 am__objects_10 = extractaudio_debug-rtpp_memdeb.$(OBJEXT) \
 	extractaudio_debug-rtpp_memdeb_glitch.$(OBJEXT)
 am_extractaudio_debug_OBJECTS = $(am__objects_9) $(am__objects_10)
@@ -231,6 +233,7 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/extractaudio-decoder.Po \
+	./$(DEPDIR)/extractaudio-eaud_adhoc.Po \
 	./$(DEPDIR)/extractaudio-eaud_crypto.Po \
 	./$(DEPDIR)/extractaudio-eaud_oformats.Po \
 	./$(DEPDIR)/extractaudio-eaud_pcap.Po \
@@ -254,6 +257,7 @@ am__depfiles_remade = ./$(DEPDIR)/extractaudio-decoder.Po \
 	./$(DEPDIR)/extractaudio-rtpp_util.Po \
 	./$(DEPDIR)/extractaudio-srtp_util.Po \
 	./$(DEPDIR)/extractaudio_debug-decoder.Po \
+	./$(DEPDIR)/extractaudio_debug-eaud_adhoc.Po \
 	./$(DEPDIR)/extractaudio_debug-eaud_crypto.Po \
 	./$(DEPDIR)/extractaudio_debug-eaud_oformats.Po \
 	./$(DEPDIR)/extractaudio_debug-eaud_pcap.Po \
@@ -517,7 +521,7 @@ extractaudio_SOURCES = extractaudio.c decoder.c rtpp_loader.c \
 	eaud_oformats.c eaud_oformats.h rtpp_scan_pcap.c \
 	rtpp_scan_pcap.h eaud_pcap.c eaud_pcap.h eaud_substreams.c \
 	eaud_substreams.h rtpp_scan_adhoc.c rtpp_scan_adhoc.h \
-	$(am__append_1)
+	eaud_adhoc.c eaud_adhoc.h $(am__append_1)
 extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ \
 	-lm -lpthread $(am__append_2)
 extractaudio_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) -D_BSD_SOURCE
@@ -633,6 +637,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-decoder.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-eaud_adhoc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-eaud_crypto.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-eaud_oformats.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-eaud_pcap.Po@am__quote@ # am--include-marker
@@ -656,6 +661,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-rtpp_util.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-srtp_util.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-decoder.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-eaud_adhoc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-eaud_crypto.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-eaud_oformats.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-eaud_pcap.Po@am__quote@ # am--include-marker
@@ -1002,6 +1008,20 @@ extractaudio-rtpp_scan_adhoc.obj: rtpp_scan_adhoc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_scan_adhoc.obj `if test -f 'rtpp_scan_adhoc.c'; then $(CYGPATH_W) 'rtpp_scan_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_adhoc.c'; fi`
 
+extractaudio-eaud_adhoc.o: eaud_adhoc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_adhoc.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_adhoc.Tpo -c -o extractaudio-eaud_adhoc.o `test -f 'eaud_adhoc.c' || echo '$(srcdir)/'`eaud_adhoc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_adhoc.Tpo $(DEPDIR)/extractaudio-eaud_adhoc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_adhoc.c' object='extractaudio-eaud_adhoc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_adhoc.o `test -f 'eaud_adhoc.c' || echo '$(srcdir)/'`eaud_adhoc.c
+
+extractaudio-eaud_adhoc.obj: eaud_adhoc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_adhoc.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_adhoc.Tpo -c -o extractaudio-eaud_adhoc.obj `if test -f 'eaud_adhoc.c'; then $(CYGPATH_W) 'eaud_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/eaud_adhoc.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_adhoc.Tpo $(DEPDIR)/extractaudio-eaud_adhoc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_adhoc.c' object='extractaudio-eaud_adhoc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_adhoc.obj `if test -f 'eaud_adhoc.c'; then $(CYGPATH_W) 'eaud_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/eaud_adhoc.c'; fi`
+
 extractaudio-eaud_crypto.o: eaud_crypto.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_crypto.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_crypto.Tpo -c -o extractaudio-eaud_crypto.o `test -f 'eaud_crypto.c' || echo '$(srcdir)/'`eaud_crypto.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_crypto.Tpo $(DEPDIR)/extractaudio-eaud_crypto.Po
@@ -1324,6 +1344,20 @@ extractaudio_debug-rtpp_scan_adhoc.obj: rtpp_scan_adhoc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_scan_adhoc.obj `if test -f 'rtpp_scan_adhoc.c'; then $(CYGPATH_W) 'rtpp_scan_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_adhoc.c'; fi`
 
+extractaudio_debug-eaud_adhoc.o: eaud_adhoc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-eaud_adhoc.o -MD -MP -MF $(DEPDIR)/extractaudio_debug-eaud_adhoc.Tpo -c -o extractaudio_debug-eaud_adhoc.o `test -f 'eaud_adhoc.c' || echo '$(srcdir)/'`eaud_adhoc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-eaud_adhoc.Tpo $(DEPDIR)/extractaudio_debug-eaud_adhoc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_adhoc.c' object='extractaudio_debug-eaud_adhoc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-eaud_adhoc.o `test -f 'eaud_adhoc.c' || echo '$(srcdir)/'`eaud_adhoc.c
+
+extractaudio_debug-eaud_adhoc.obj: eaud_adhoc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-eaud_adhoc.obj -MD -MP -MF $(DEPDIR)/extractaudio_debug-eaud_adhoc.Tpo -c -o extractaudio_debug-eaud_adhoc.obj `if test -f 'eaud_adhoc.c'; then $(CYGPATH_W) 'eaud_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/eaud_adhoc.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-eaud_adhoc.Tpo $(DEPDIR)/extractaudio_debug-eaud_adhoc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_adhoc.c' object='extractaudio_debug-eaud_adhoc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-eaud_adhoc.obj `if test -f 'eaud_adhoc.c'; then $(CYGPATH_W) 'eaud_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/eaud_adhoc.c'; fi`
+
 extractaudio_debug-eaud_crypto.o: eaud_crypto.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-eaud_crypto.o -MD -MP -MF $(DEPDIR)/extractaudio_debug-eaud_crypto.Tpo -c -o extractaudio_debug-eaud_crypto.o `test -f 'eaud_crypto.c' || echo '$(srcdir)/'`eaud_crypto.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-eaud_crypto.Tpo $(DEPDIR)/extractaudio_debug-eaud_crypto.Po
@@ -1515,6 +1549,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-libtool \
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/extractaudio-decoder.Po
+	-rm -f ./$(DEPDIR)/extractaudio-eaud_adhoc.Po
 	-rm -f ./$(DEPDIR)/extractaudio-eaud_crypto.Po
 	-rm -f ./$(DEPDIR)/extractaudio-eaud_oformats.Po
 	-rm -f ./$(DEPDIR)/extractaudio-eaud_pcap.Po
@@ -1538,6 +1573,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_util.Po
 	-rm -f ./$(DEPDIR)/extractaudio-srtp_util.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-decoder.Po
+	-rm -f ./$(DEPDIR)/extractaudio_debug-eaud_adhoc.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-eaud_crypto.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-eaud_oformats.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-eaud_pcap.Po
@@ -1608,6 +1644,7 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/extractaudio-decoder.Po
+	-rm -f ./$(DEPDIR)/extractaudio-eaud_adhoc.Po
 	-rm -f ./$(DEPDIR)/extractaudio-eaud_crypto.Po
 	-rm -f ./$(DEPDIR)/extractaudio-eaud_oformats.Po
 	-rm -f ./$(DEPDIR)/extractaudio-eaud_pcap.Po
@@ -1631,6 +1668,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_util.Po
 	-rm -f ./$(DEPDIR)/extractaudio-srtp_util.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-decoder.Po
+	-rm -f ./$(DEPDIR)/extractaudio_debug-eaud_adhoc.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-eaud_crypto.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-eaud_oformats.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-eaud_pcap.Po
