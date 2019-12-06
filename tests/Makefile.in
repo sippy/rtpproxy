@@ -558,7 +558,7 @@ EXTRA_DIST = $(am__append_3) $(am__append_6) Makefile.am ringback.sln
 @ENABLE_BASIC_TESTS_TRUE@extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
 @ENABLE_BASIC_TESTS_TRUE@  *.stereo.*.wav.tout *.mono.*.raw *.mono.*.raw.tout *.mono.*.w64 \
 @ENABLE_BASIC_TESTS_TRUE@  *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout \
-@ENABLE_BASIC_TESTS_TRUE@  *.mono.*.rlog *.stereo.*.rlog
+@ENABLE_BASIC_TESTS_TRUE@  *.mono.*.rlog *.stereo.*.rlog *.scan.rlog *.scan.tout
 
 @ENABLE_BASIC_TESTS_TRUE@startstop_EXTRA_DIST = startstop
 @ENABLE_BASIC_TESTS_TRUE@startstop_CLEANFILES = startstop.rout startstop.rlog
