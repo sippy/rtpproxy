@@ -43,6 +43,7 @@
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_stream.h"
+#include "rtpp_command_ecodes.h"
 #include "rtpp_util.h"
 
 static void
@@ -89,6 +90,9 @@ rtpp_command_stream_doio(const struct rtpp_cfg *cfsp, struct rtpp_cmd_connection
     return (len);
 }
 
+#ifndef ECODE_NOMEM_9
+# error ECODE_NOMEM_9 is not defined!
+#endif
 #define ENM_STR "E" STR(ECODE_NOMEM_9)
 #define ENM_PSTR ENM_STR "\\n"
 
