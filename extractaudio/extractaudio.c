@@ -101,15 +101,23 @@ const static struct option longopts[] = {
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
+const static char *usage_msg[8] = {
+  "%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+  "usage: extractaudio [-idsn] [-F file_fmt] [-D data_fmt] rdir outfile",
+  "                    [link1] ... [linkN]",
+  "       extractaudio [-idsn] [-F file_fmt] [-D data_fmt] [-A answer_cap]",
+  "                    [-B originate_cap] [--alice-crypto CSPEC]",
+  "                    [--bob-crypto CSPEC] outfile [link1] ... [linkN]",
+  "       extractaudio -S [-A answer_cap] [-B originate_cap]",
+  "       extractaudio -S rdir"
+};
+
 static void
 usage(void)
 {
 
-    fprintf(stderr, "usage: extractaudio [-idsn] [-F file_fmt] [-D data_fmt] "
-      "rdir outfile [link1] ... [linkN]\n"
-                    "       extractaudio [-idsn] [-F file_fmt] [-D data_fmt] "
-      "[-A answer_cap] [-B originate_cap] [--alice-crypto CSPEC] [--bob-crypto CSPEC] "
-      "outfile [link1] ... [linkN]\n");
+    fprintf(stderr, usage_msg[0], usage_msg[1], usage_msg[2], usage_msg[3],
+      usage_msg[4], usage_msg[5], usage_msg[6], usage_msg[7]);
     exit(1);
 }
 
