@@ -10,27 +10,41 @@ BASEDIR="$(readlink -f -- $BASEDIR)"
 
 . $(dirname $0)/../functions
 
-HEPSIZE=334
+HEPSIZE=342
+CALL_ID="acct_rtcp_hep.rec."
+RECNAME="${CALL_ID}=from_tag_1.pcap"
 CD_DIR="${BASEDIR}/acct_rtcp_hep"
 RTP_PORT=2006
 MIN_PORT=$((${RTP_PORT}))
 MAX_PORT=$((${RTP_PORT} + 3))
 RTPP_ARGS="-d dbug -f -s stdio: -b -n ${RTPP_NOTIFY_SOCK_TCP} -m ${MIN_PORT} \
  -M ${MAX_PORT} -T2 -W2 --config ${CD_DIR}/basic.conf"
+RECORD_DIR="${BUILDDIR}"
+RECORD_SPL_DIR="${CD_DIR}"
+RTPP_REC_ARGS="-a -P -R -r ${RECORD_DIR} -S ${RECORD_SPL_DIR}"
+
 
 run_udpreplay_o() {
+  #UDPREPLAY_ARGS="-o udpreplay_o.pcap"
   sleep 1
-  exec udpreplay "${CD_DIR}/rtcp.o.pcap"
+  exec udpreplay ${UDPREPLAY_ARGS} "${CD_DIR}/rtcp.o.pcap"
 }
 
 run_udpreplay_a() {
+  #UDPREPLAY_ARGS="-o udpreplay_a.pcap"
   sleep 1
-  exec udpreplay "${CD_DIR}/rtcp.a.pcap"
+  exec udpreplay ${UDPREPLAY_ARGS} "${CD_DIR}/rtcp.a.pcap"
 }
 
 run_acct_rtcp_hep() {
-  sed "s|%%RTPP_NOTIFY_SOCK_TCP%%|${RTPP_NOTIFY_SOCK_TCP}|g" "${CD_DIR}/basic.input" | \
-   ${RTPPROXY} ${RTPP_ARGS} 2>acct_rtcp_hep.rlog || return 1
+  if [ -e "${RECNAME}" ]
+  then
+    rm "${RECNAME}" || return 1
+  fi
+  sed "s|%%RTPP_NOTIFY_SOCK_TCP%%|${RTPP_NOTIFY_SOCK_TCP}|g ; \
+   s|%%CALLID%%|${CALL_ID}|g" "${CD_DIR}/basic.input" | \
+   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} 2>acct_rtcp_hep.rlog || return 1
+  ${EXTRACTAUDIO} -S -A "${RECNAME}" || return 1
 }
 
 nc -l 127.0.0.1 9642 > acct_rtcp_hep.tlog&
