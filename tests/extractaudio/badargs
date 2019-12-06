@@ -5,7 +5,9 @@ BASEDIR="`dirname "${0}"`/.."
 
 for bad_args in "-F foo" "-D bar" "--alice-crypto" "--alice-crypto=invalid" \
  "--alice-crypto=invalid:bar" "--alice-crypto=AES_CM_128_HMAC_SHA1_80:garbage" \
- "--bob-crypto=AES_CM_128_HMAC_SHA1_80:UBFc5R7tK5f91V8j1da++z3h/3H2yS5WaN819nJ-"
+ "--bob-crypto=AES_CM_128_HMAC_SHA1_80:UBFc5R7tK5f91V8j1da++z3h/3H2yS5WaN819nJ-" \
+ "-S /dev/null /dev/null" "-A /dev/null -B /dev/null /dev/null" \
+ "-S -A /dev/null -B /dev/null /dev/null"
 do
   ${EXTRACTAUDIO} ${bad_args}
   reportifnotfail "extractaudio start with bad argumens: ${bad_args}"
