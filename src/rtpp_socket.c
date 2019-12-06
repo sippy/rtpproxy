@@ -351,8 +351,9 @@ rtpp_socket_drain(struct rtpp_socket *self, const char *ptype,
   struct rtpp_log *log)
 {
     struct rtp_packet *packet;
-    int ndrained;
+    int ndrained, rval;
     struct rtpp_socket_priv *pvt;
+    static unsigned char scrapbuf[MAX_RPKT_LEN];
 
     PUB2PVT(self, pvt);
     ndrained = 0;
@@ -361,11 +362,10 @@ rtpp_socket_drain(struct rtpp_socket *self, const char *ptype,
       pvt->fd);
 #endif
     for (;;) {
-        packet = CALL_METHOD(self, rtp_recv, NULL, NULL, 0);
-        if (packet == NULL)
+        rval = recv(pvt->fd, scrapbuf, sizeof(scrapbuf), 0);
+        if (rval < 0)
             break;
         ndrained++;
-        RTPP_OBJ_DECREF(packet);
     }
 #if RTPP_DEBUG
     if (ndrained > 0) {
