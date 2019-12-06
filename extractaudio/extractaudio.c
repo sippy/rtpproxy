@@ -343,9 +343,9 @@ main(int argc, char **argv)
     argv += optind;
 
     if (aname == NULL && bname == NULL) {
-        if (argc < 2)
+        if ((argc < 2 && !scanonly) || (scanonly && argc != 1))
             usage();
-    } else if (argc == 0) {
+    } else if ((argc == 0 && !scanonly) || (scanonly && argc != 0)) {
         usage();
     }
 
