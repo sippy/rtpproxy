@@ -34,7 +34,7 @@ notifications:
 
 stages:
   - name: Build Documentation
-    if: branch != master OR type != push
+    if: (branch != master OR type != push) AND branch != improve_coverage
   - name: Build & Deploy Documentation
     if: branch = master AND type = push
   - name: Update Coverity Report
