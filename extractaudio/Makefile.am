@@ -1,5 +1,6 @@
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/autosrc.ami
+include $(top_srcdir)/m4/ccflags.ami
 
 include $(top_srcdir)/autosrc/Makefile.ami
 
@@ -16,7 +17,8 @@ extractaudio_SOURCES=extractaudio.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c 
   ${MAINSRCDIR}/rtpp_ringbuf.c $(rtpp_ringbuf_AUTOSRCS) \
   ${MAINSRCDIR}/rtpp_netaddr.c ${MAINSRCDIR}/rtpp_netaddr.h \
   $(rtpp_netaddr_AUTOSRCS) eaud_oformats.c eaud_oformats.h rtpp_scan_pcap.c rtpp_scan_pcap.h \
-  eaud_pcap.c eaud_pcap.h eaud_substreams.c eaud_substreams.h
+  eaud_pcap.c eaud_pcap.h eaud_substreams.c eaud_substreams.h \
+  rtpp_scan_adhoc.c rtpp_scan_adhoc.h eaud_adhoc.c eaud_adhoc.h
 extractaudio_LDADD=@LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ -lm -lpthread
 extractaudio_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) -D_BSD_SOURCE
 if BUILD_CRYPTO
@@ -29,4 +31,4 @@ extractaudio_debug_LDADD = $(extractaudio_LDADD) $(RTPP_MEMDEB_LDADD)
 extractaudio_debug_CPPFLAGS = $(extractaudio_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=extractaudio
 extractaudio_debug_CFLAGS = $(RTPP_MEMDEB_CFLAGS)
 
-DEFS=   -DWITHOUT_RTPPLOG -Wall @DEFS@
+DEFS=   -DWITHOUT_RTPPLOG $(CC_WFLAGS) @DEFS@

@@ -59,11 +59,13 @@
 # include <err.h>
 #endif
 
+#include "rtpp_types.h"
 #include "format_au.h"
 #include "g711.h"
 #include "rtp_info.h"
 #include "decoder.h"
 #include "session.h"
+#include "rtpp_record_adhoc.h"
 #include "rtpp_record_private.h"
 #include "rtpp_ssrc.h"
 #include "rtp_analyze.h"
@@ -194,6 +196,24 @@ e0:
     return -1;
 }
 
+static int
+scan_session(const char *path)
+{
+    int pcount;
+    struct rtpp_loader *loader;
+
+    loader = rtpp_load(path);
+    if (loader == NULL)
+        goto e0;
+
+    pcount = loader->scan(loader, NULL);
+    loader->destroy(loader);
+
+    return pcount;
+e0:
+    return -1;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -239,8 +259,9 @@ main(int argc, char **argv)
     alice_crypto = bob_crypto = NULL;
     isample = -1;
     sync_sample = 0;
+    int scanonly = 0;
 
-    while ((ch = getopt_long(argc, argv, "dsinF:D:A:B:U:", longopts,
+    while ((ch = getopt_long(argc, argv, "dsSinF:D:A:B:U:", longopts,
       &option_index)) != -1)
         switch (ch) {
         case 'd':
@@ -310,6 +331,10 @@ main(int argc, char **argv)
             break;
 #endif
 
+        case 'S':
+            scanonly = 1;
+            break;
+
         case '?':
         default:
             usage();
@@ -348,6 +373,16 @@ main(int argc, char **argv)
         bname = bname_s;
         argv += 1;
         argc -= 1;
+    }
+
+    if (scanonly) {
+        if (aname != NULL) {
+            printf("%s: %d\n", aname, scan_session(aname));
+        }
+        if (bname != NULL) {
+            printf("%s: %d\n", bname, scan_session(bname));
+        }
+        exit (0);
     }
 
     nloaded = 0;

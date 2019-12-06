@@ -123,7 +123,6 @@ struct streams {
     struct stream *last;
 };
 
-#define	RPKT(packet)	((rtp_hdr_t *)((packet)->pkt + 1))
 #define RPLOAD(packet)	(((unsigned char *)(packet)->rpkt) + (packet)->parsed.data_offset)
 #define RPLEN(packet)	((packet)->parsed.data_size)
 

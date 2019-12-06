@@ -44,8 +44,10 @@
 # include <err.h>
 #endif
 
+#include "rtpp_types.h"
 #include "rtpp_ssrc.h"
 #include "rtp_info.h"
+#include "rtpp_record_adhoc.h"
 #include "rtpp_record_private.h"
 #include "session.h"
 #include "rtp_analyze.h"
@@ -56,6 +58,9 @@
 #include "eaud_crypto.h"
 #endif
 #include "eaud_pcap.h"
+#include "eaud_adhoc.h"
+#include "rtpp_scan_pcap.h"
+#include "rtpp_scan_adhoc.h"
 
 static int load_adhoc(struct rtpp_loader *loader, struct channels *,
   struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
@@ -112,8 +117,10 @@ rtpp_load(const char *path)
 
     if (*(uint32_t *)(rval->ibuf) != PCAP_MAGIC) {
         rval->load = load_adhoc;
+        rval->scan = rtpp_scan_adhoc;
     } else {
         rval->load = load_pcap;
+        rval->scan = rtpp_scan_pcap;
         if (rval->sb.st_size < sizeof(*pcap_hdr)) {
             warnx("invalid PCAP format");
             rval->destroy(rval);
@@ -158,40 +165,43 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
 {
     int pcount, rcode;
     unsigned char *cp, *ep;
-    struct pkt_hdr_adhoc *pkt;
     struct packet *pack, *pp;
     struct channel *channel;
     struct session *sess;
     off_t st_size;
+    struct adhoc_dissect ad_data;
 
     pcount = 0;
     st_size = loader->sb.st_size;
     ep = loader->ibuf + st_size;
-    for (cp = loader->ibuf; cp < ep; cp += pkt->plen) {
-        pkt = (struct pkt_hdr_adhoc *)cp;
-        cp += sizeof(*pkt);
-        if (pkt->plen < sizeof(rtp_hdr_t))
-            continue;
-        if (cp + pkt->plen > ep) {
-            warnx("input file truncated, %ld bytes are missing",
-              (long)(cp + pkt->plen - ep));
-            continue;
+    for (cp = loader->ibuf; cp < ep; cp = ad_data.nextcp) {
+        switch (eaud_adhoc_dissect(cp, ep - cp, &ad_data)) {
+        case ADH_DSCT_OK:
+            break;
+
+        case ADH_DSCT_EOF:
+            goto endloop;
+
+        default:
+            return -1;
         }
         pack = malloc(sizeof(*pack));
         if (pack == NULL) {
             warn("malloc() failed");
             return -1;
         }
-        rcode = rtp_packet_parse_raw(cp, pkt->plen, &(pack->parsed));
+        rcode = rtp_packet_parse_raw(ad_data.pkt, ad_data.ahp->plen,
+          &(pack->parsed));
         if (rcode != RTP_PARSER_OK) {
             /* XXX error handling */
             warnx("rtp_packet_parse_raw() failed: %s", rtp_packet_parse_errstr(rcode));
             free(pack);
             continue;
         }
-        pack->pkt = pkt;
-        pack->rpkt = RPKT(pack);
-        if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pkt->time) == UPDATE_ERR) {
+        pack->pkt = ad_data.ahp;
+        pack->rpkt = RPKT(&ad_data);
+        if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed),
+          ad_data.ahp->time) == UPDATE_ERR) {
             /* XXX error handling */
             abort();
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2019 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,50 +23,46 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id$
- *
  */
 
-#ifndef _RTP_LOADER_H_
-#define _RTP_LOADER_H_
-
 #include <sys/types.h>
-#include <sys/stat.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <stdlib.h>
 
-struct rtpp_loader;
-struct sessions;
-struct channels;
-struct rtpp_session_stat;
-struct eaud_crypto;
+#include "config.h"
 
-enum origin;
-
-#if !defined(pcap_hdr_t_DEFINED)
-typedef struct pcap_hdr_s pcap_hdr_t;
-#define pcap_hdr_t_DEFINED 1
+#if HAVE_ERR_H
+# include <err.h>
 #endif
 
-DEFINE_METHOD(rtpp_loader, rtpp_loader_scan, int, struct sessions *);
-DEFINE_METHOD(rtpp_loader, rtpp_loader_load, int, struct channels *,
-  struct rtpp_session_stat *, enum origin, struct eaud_crypto *);
-DEFINE_METHOD(rtpp_loader, rtpp_loader_dtor, void);
+#include "rtp.h"
+#include "rtpp_record_adhoc.h"
+#include "eaud_adhoc.h"
 
-struct rtpp_loader {
-    int ifd;
-    struct stat sb;
-    unsigned char *ibuf;
-    rtpp_loader_scan_t scan;
-    rtpp_loader_load_t load;
-    rtpp_loader_dtor_t destroy;
+int
+eaud_adhoc_dissect(unsigned char *bp, size_t blen,
+  struct adhoc_dissect  *adp)
+{
+    unsigned char *ep;
+    struct pkt_hdr_adhoc *pkt;
 
-    union {
-        struct {
-            pcap_hdr_t *pcap_hdr;
-        } pcap_data;
-        struct {} adhoc_data;
-    } private;
-};
-
-struct rtpp_loader *rtpp_load(const char *);
-
-#endif
+    ep = bp + blen;
+    for (adp->nextcp = bp; adp->nextcp < ep; adp->nextcp += pkt->plen) {
+        pkt = (struct pkt_hdr_adhoc *)adp->nextcp;
+        adp->nextcp += sizeof(*pkt);
+        if (pkt->plen < sizeof(rtp_hdr_t))
+            continue;
+        if (adp->nextcp + pkt->plen > ep) {
+            warnx("input file truncated, %ld bytes are missing",
+              (long)(adp->nextcp + pkt->plen - ep));
+            return (ADH_DSCT_TRNK);
+        }
+        adp->ahp = pkt;
+        adp->pkt = adp->nextcp;
+        adp->nextcp += pkt->plen;
+        return (ADH_DSCT_OK);
+    }
+    return (ADH_DSCT_EOF);
+}
