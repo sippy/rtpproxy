@@ -1,0 +1,25 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+. "${BASEDIR}/extractaudio/common.sub"
+
+tkind="scan"
+for rfile in ${extractaudio_RFILES}
+do
+  bfile="`basename ${rfile}`"
+  afile="extractaudio/${bfile}.args"
+  sfile="${bfile}.${tkind}.tout"
+  logfile="${bfile}.${tkind}.rlog"
+  if [ -e "${afile}" ]
+  then
+    EXTRACTAUDIO_EARGS=`"${afile}" "${rfile}"`
+  else
+    EXTRACTAUDIO_EARGS="${rfile}"
+  fi
+  ${EXTRACTAUDIO} -S ${EXTRACTAUDIO_EARGS} 2>${logfile} >${sfile}
+  ofile="extractaudio/${bfile}.${tkind}.output"
+  ${DIFF} "${ofile}" "${sfile}"
+  report "checking ${tkind} results for the ${rfile}"
+done
