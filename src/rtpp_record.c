@@ -66,6 +66,7 @@
 #include "rtpp_network.h"
 #include "rtpp_record.h"
 #include "rtpp_record_fin.h"
+#include "rtpp_record_adhoc.h"
 #include "rtpp_record_private.h"
 #include "rtpp_session.h"
 #include "rtpp_stream.h"

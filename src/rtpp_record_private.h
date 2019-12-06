@@ -117,28 +117,4 @@ union pkt_hdr_pcap {
     struct pkt_hdr_pcap_en10t_v6 en10t_v6;
 };
 
-/* Stripped down version of sockaddr_in* for saving space */
-struct sockaddr_in4_s {
-    sa_family_t sin_family;
-    in_port_t sin_port;
-    struct in_addr sin_addr;
-};
-
-struct sockaddr_in6_s {
-    sa_family_t sin_family;
-    in_port_t sin_port;
-    struct in6_addr sin_addr;
-};
-
-union sockaddr_in_s {
-    struct sockaddr_in4_s in4;
-    struct sockaddr_in6_s in6;
-};
-
-struct pkt_hdr_adhoc {
-    union sockaddr_in_s addr;   /* Source address */
-    double time;		/* Time of arrival */
-    unsigned short plen;	/* Length of following RTP/RTCP packet */
-} __attribute__((__packed__));
-
 #endif
