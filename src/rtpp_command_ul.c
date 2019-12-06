@@ -551,8 +551,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
         RTPP_LOG(spa->log, RTPP_LOG_INFO, "new session on %s port %d created, "
           "tag %s", AF2STR(ulop->pf), lport, cmd->cca.from_tag);
         if (cfsp->record_all != 0) {
-            handle_copy(cfsp, spa, 0, NULL, 0);
-            handle_copy(cfsp, spa, 1, NULL, 0);
+            handle_copy(cfsp, spa, 0, NULL, RSF_MODE_DFLT(cfsp));
+            handle_copy(cfsp, spa, 1, NULL, RSF_MODE_DFLT(cfsp));
         }
         /* Save ref, it will be decref'd by the command disposal code */
         RTPP_DBG_ASSERT(cmd->sp == NULL);

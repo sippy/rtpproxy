@@ -496,7 +496,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
                 reply_error(cmd, ECODE_PARSE_2);
                 return 0;
             }
-            record_single_file = (cfsp->record_pcap == 0) ? 0 : 1;
+            record_single_file = RSF_MODE_DFLT(cfsp);
         } else {
             if (cmd->args.v[0][1] != '\0') {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");

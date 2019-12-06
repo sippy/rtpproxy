@@ -202,6 +202,9 @@ rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
 
     if (rrc->record_single_file != 0) {
         suffix1 = suffix2 = "";
+        if (rrc->mode == MODE_LOCAL_PCAP && rname == NULL) {
+            suffix2 = ".pcap";
+        }
     } else {
         suffix1 = (orig != 0) ? ".o" : ".a";
         suffix2 = (record_type == RECORD_RTP) ? ".rtp" : ".rtcp";
