@@ -23,7 +23,6 @@ RECORD_DIR="${BUILDDIR}"
 RECORD_SPL_DIR="${CD_DIR}"
 RTPP_REC_ARGS="-a -P -R -r ${RECORD_DIR} -S ${RECORD_SPL_DIR}"
 
-
 run_udpreplay_o() {
   #UDPREPLAY_ARGS="-o udpreplay_o.pcap"
   sleep 1
