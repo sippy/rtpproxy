@@ -33,6 +33,8 @@ struct rtp_info;
 struct rtpp_wi;
 struct rtpp_refcnt;
 
+#define MAX_RPKT_LEN 8192
+
 struct rtp_packet {
     struct rtpp_refcnt *rcnt;
     struct rtpp_wi *wi;
@@ -61,7 +63,7 @@ struct rtp_packet {
      */
     union {
         rtp_hdr_t       header;
-        unsigned char   buf[8192];
+        unsigned char   buf[MAX_RPKT_LEN];
     } data;
 };
 
