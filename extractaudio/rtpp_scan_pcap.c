@@ -38,6 +38,7 @@
 # include <err.h>
 #endif
 
+#include "rtpp_types.h"
 #include "rtpp_loader.h"
 #include "rtpp_record_private.h"
 #include "eaud_pcap.h"
@@ -66,6 +67,7 @@ rtpp_scan_pcap(struct rtpp_loader *loader, struct sessions *sessions)
             warnx("broken or truncated PCAP file");
             return -1;
         }
+        pcount++;
     }
     if (cp != loader->ibuf + st_size) {
         warnx("invalid format, %d packets loaded", pcount);
