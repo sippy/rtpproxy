@@ -429,9 +429,6 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr, &lport, fds) == -1) {
                 RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
                 reply_error(cmd, ECODE_LSTFAIL_1);
-                if (fd != NULL) {
-                    RTPP_OBJ_DECREF(fd);
-                }
                 goto err_undo_0;
             }
             if (fd != NULL && ulop->new_port != 0) {
