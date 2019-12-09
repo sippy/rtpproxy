@@ -25,7 +25,7 @@
  *
  */
 
-struct memdeb_loc;
+struct rtpp_codeptr;
 
 struct _glav_trig {
     atomic_intmax_t step;
@@ -46,9 +46,9 @@ enum glav_act {
   GLAV_GLTCH = 'g'
 };
 
-void rtpp_memdeb_glitch_init();
-void rtpp_memdeb_callhome(intmax_t step, uintptr_t hash,
-  const struct memdeb_loc *);
+void rtpp_glitch_init();
+void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
+  const struct rtpp_codeptr *);
 
 #define GLITCH_ACTION(mlp) { \
     const char *_cp; \
@@ -64,7 +64,7 @@ void rtpp_memdeb_callhome(intmax_t step, uintptr_t hash,
         case GLAV_BAIL: \
             exit(255); \
         case GLAV_RPRT: \
-            rtpp_memdeb_callhome(step, stack_cook, mlp); \
+            rtpp_glitch_callhome(step, stack_cook, mlp); \
             break; \
         case GLAV_GLTCH: \
             _do_glitch = 1; \

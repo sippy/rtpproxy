@@ -58,7 +58,8 @@
 #include "rtpp_memdeb.h"
 #include "rtpp_memdeb_internal.h"
 #include "rtpp_memdeb_stats.h"
-#include "rtpp_memdeb_glitch.h"
+#include "rtpp_codeptr.h"
+#include "rtpp_glitch.h"
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
 
@@ -89,7 +90,7 @@
 struct memdeb_node
 {
     uint64_t magic;
-    struct memdeb_loc loc;
+    struct rtpp_codeptr loc;
     struct memdeb_stats mstats;
     struct memdeb_node *next;
 };
@@ -135,7 +136,7 @@ rtpp_memdeb_init(bool is_main)
     pvt->inst_name = STR(MEMDEB_APP);
 
     if (is_main) {
-        rtpp_memdeb_glitch_init();
+        rtpp_glitch_init();
    }
 
     return (pvt);
@@ -209,7 +210,7 @@ rtpp_memdeb_approve(void *p, const char *funcn, int max_nunalloc,
     }
 
 static struct memdeb_node *
-rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const struct memdeb_loc *mlp,
+rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const struct rtpp_codeptr *mlp,
   int doalloc)
 {
     struct memdeb_node *rval, *mnp, *lastnode;
@@ -257,15 +258,15 @@ rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const struct memdeb_loc *mlp,
     }
 
 static void *rtpp_memdeb_imalloc(size_t, void *, int,
-  const struct memdeb_loc *);
+  const struct rtpp_codeptr *);
 static int rtpp_memdeb_ivasprintf(char **, const char *, void *,
-  const struct memdeb_loc *, va_list ap);
+  const struct rtpp_codeptr *, va_list ap);
 
 void *
 rtpp_memdeb_malloc(size_t size, void *p, const char *fname,
   int linen, const char *funcn)
 {
-    struct memdeb_loc ml;
+    struct rtpp_codeptr ml;
 
     ml.fname = fname;
     ml.linen = linen;
@@ -275,7 +276,7 @@ rtpp_memdeb_malloc(size_t size, void *p, const char *fname,
 
 static void *
 rtpp_memdeb_imalloc(size_t size, void *p, int noglitch,
-  const struct memdeb_loc *mlp)
+  const struct rtpp_codeptr *mlp)
 {
     struct memdeb_node *mnp;
     struct memdeb_pfx *mpf;
@@ -311,7 +312,7 @@ glitched:
 }
 
 static struct memdeb_pfx *
-ptr2mpf(struct rtpp_memdeb_priv *pvt, void *ptr, struct memdeb_loc *mlp)
+ptr2mpf(struct rtpp_memdeb_priv *pvt, void *ptr, struct rtpp_codeptr *mlp)
 {
     char *cp;
     struct memdeb_pfx *mpf;
@@ -343,7 +344,7 @@ rtpp_memdeb_free(void *ptr, void *p, const char *fname, int linen, const char *f
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
-    struct memdeb_loc ml;
+    struct rtpp_codeptr ml;
 
     ml.fname = fname;
     ml.linen = linen;
@@ -388,7 +389,7 @@ rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int line
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
-    struct memdeb_loc ml;
+    struct rtpp_codeptr ml;
 
     ml.fname = fname;
     ml.linen = linen;
@@ -443,7 +444,7 @@ rtpp_memdeb_strdup(const char *ptr, void *p, const char *fname, int linen, \
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
-    struct memdeb_loc ml;
+    struct rtpp_codeptr ml;
 
     ml.fname = fname;
     ml.linen = linen;
@@ -482,7 +483,7 @@ rtpp_memdeb_asprintf(char **pp, const char *fmt, void *p, const char *fname,
 {
     va_list ap;
     int rval;
-    struct memdeb_loc ml;
+    struct rtpp_codeptr ml;
 
     ml.fname = fname;
     ml.linen = linen;
@@ -498,7 +499,7 @@ int
 rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
   int linen, const char *funcn, va_list ap)
 {
-    struct memdeb_loc ml;
+    struct rtpp_codeptr ml;
 
     ml.fname = fname;
     ml.linen = linen;
@@ -508,7 +509,7 @@ rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
 
 static int
 rtpp_memdeb_ivasprintf(char **pp, const char *fmt, void *p,
-  const struct memdeb_loc *mlp, va_list ap)
+  const struct rtpp_codeptr *mlp, va_list ap)
 {
     int rval;
     void *tp;
@@ -539,7 +540,7 @@ void *
 rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *p,
   const char *fname, int linen, const char *funcn)
 {
-    struct memdeb_loc ml;
+    struct rtpp_codeptr ml;
     struct rtpp_memdeb_priv *pvt;
 
     CHK_PRIV(pvt, p);
@@ -560,7 +561,7 @@ rtpp_memdeb_calloc(size_t number, size_t size, void *p, \
   const char *fname, int linen, const char *funcn)
 {
     void *rp;
-    struct memdeb_loc ml;
+    struct rtpp_codeptr ml;
 
     ml.fname = fname;
     ml.linen = linen;
@@ -607,7 +608,7 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
          * function.
          */
         if (pvt->_md_glog != NULL) {
-            struct memdeb_loc ml;
+            struct rtpp_codeptr ml;
 
             ml.fname = __FILE__;
             ml.linen = __LINE__;

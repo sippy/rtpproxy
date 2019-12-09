@@ -37,14 +37,14 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "rtpp_memdeb_internal.h"
-#include "rtpp_memdeb_glitch.h"
+#include "rtpp_codeptr.h"
+#include "rtpp_glitch.h"
 
 struct _glav_trig _glav_trig = {.wild = 0, .stack = 0};
 
-#define MDG_ENAME "MEMDEB_GLITCH_TRIG"
-#define MDG_ACT_ENAME "MEMDEB_GLITCH_ACT"
-#define MDG_CH_PORT "MEMDEB_GLITCH_CH_PORT"
+#define MDG_ENAME "RTPP_GLITCH_TRIG"
+#define MDG_ACT_ENAME "RTPP_GLITCH_ACT"
+#define MDG_CH_PORT "RTPP_GLITCH_CH_PORT"
 
 enum {
   TRIG_STEP = 's',
@@ -60,8 +60,8 @@ struct mg_data {
 static struct mg_data mgd;
 
 void
-rtpp_memdeb_callhome(intmax_t step, uintptr_t hash,
-  const struct memdeb_loc *mlp)
+rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
+  const struct rtpp_codeptr *mlp)
 {
    char buffer[512]; /* +1 so we can \n */
    int len;
@@ -73,7 +73,7 @@ rtpp_memdeb_callhome(intmax_t step, uintptr_t hash,
 }
 
 void
-rtpp_memdeb_glitch_init()
+rtpp_glitch_init()
 {
     const char *glav, *cp;
 
