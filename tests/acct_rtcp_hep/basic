@@ -42,7 +42,7 @@ run_acct_rtcp_hep() {
   fi
   sed "s|%%RTPP_NOTIFY_SOCK_TCP%%|${RTPP_NOTIFY_SOCK_TCP}|g ; \
    s|%%CALLID%%|${CALL_ID}|g" "${CD_DIR}/basic.input" | \
-   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} 2>acct_rtcp_hep.rlog || return 1
+   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} || return 1
   env MEMDEB_GLITCH_ACT="" ${EXTRACTAUDIO} -S -A "${RECNAME}" || return 1
 }
 
@@ -59,7 +59,7 @@ run_udpreplay_o &
 UDPRPL_O_RC=${?}
 UDPRPL_O_PID=${!}
 report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate)"
-run_acct_rtcp_hep > acct_rtcp_hep.rout
+run_acct_rtcp_hep > acct_rtcp_hep.rout 2>acct_rtcp_hep.rlog
 RTPP_RC=${?}
 kill -TERM ${RTPP_NC_PID} 2>/dev/null
 if [ ${RTPP_RC} -ne 0 -a -e acct_rtcp_hep.rlog ]
