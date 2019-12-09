@@ -91,7 +91,7 @@ circ_buf_pop(circ_buf_t *c, struct rtpp_wi **data)
     if (next == c->buflen)
         next = 0;
 #ifdef RTPQ_DEBUG
-    assert(c->tail >= 0 && c->tail < c->buflen);
+    assert(c->tail < c->buflen);
 #endif
 
     *data = c->buffer[c->tail];  /* Read data and then move */
@@ -138,7 +138,7 @@ circ_buf_popmany(circ_buf_t *c, struct rtpp_wi *data[], unsigned int howmany)
     }
 #ifdef RTPQ_DEBUG
     assert(rval <= howmany);
-    assert(c->tail >= 0 && c->tail < c->buflen);
+    assert(c->tail < c->buflen);
 #endif
 
     return(rval); /* Return number of objects popped */
