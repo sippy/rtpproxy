@@ -164,7 +164,7 @@ circ_buf_peek(const circ_buf_t *c, unsigned int offset, struct rtpp_wi **data)
     if(itmidx >= c->buflen)
         itmidx -= c->buflen;
 #ifdef RTPQ_DEBUG
-    assert(itmidx >= 0 && itmidx < c->buflen);
+    assert(itmidx < c->buflen);
     assert(c->buffer[itmidx] != NULL);
 #endif
 
@@ -193,7 +193,7 @@ circ_buf_replace(circ_buf_t *c, unsigned int offset, struct rtpp_wi **data)
     if(itmidx >= c->buflen)
         itmidx -= c->buflen;
 #ifdef RTPQ_DEBUG
-    assert(itmidx >= 0 && itmidx < c->buflen);
+    assert(itmidx < c->buflen);
     assert(c->buffer[itmidx] != NULL);
 #endif
     tdata = c->buffer[itmidx];
