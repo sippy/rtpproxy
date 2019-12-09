@@ -22,7 +22,7 @@ RTPP_QUERY="${PYINT} ${SIPPY_DIR}/sippy/tools/rtpp_query.py -n 1"
 RTPP_NOTYFY_CLIENT="${PYINT} ${TOP_BUILDDIR}/python/rtpp_notify_client.py -S ${TOP_BUILDDIR}/python/sippy_lite"
 
 setup_tstart() {
-  RTPP_MCLOCK_NAME="`MEMDEB_GLITCH_ACT="" ${RTPPROXY} -C 2>/dev/null`"
+  RTPP_MCLOCK_NAME="`RTPP_GLITCH_ACT="" ${RTPPROXY} -C 2>/dev/null`"
   if [ "${RTPP_MCLOCK_NAME}" = "" ]
   then
     echo "oops, cannot determine clock name to synchronize logs!" 1>&2

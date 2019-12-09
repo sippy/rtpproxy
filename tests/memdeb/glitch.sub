@@ -23,7 +23,7 @@ glitch_collect()
 
   spin_nc
 
-  if MEMDEB_GLITCH_ACT="r" MEMDEB_GLITCH_TRIG="*" MEMDEB_GLITCH_CH_PORT="${NC_PORT}" ./${test} >/dev/null
+  if RTPP_GLITCH_ACT="r" RTPP_GLITCH_TRIG="*" RTPP_GLITCH_CH_PORT="${NC_PORT}" ./${test} >/dev/null
   then
     stop_nc
   else
@@ -66,7 +66,7 @@ glitch_do()
   do
     glline="`grep -w ${gp} glitch1.ncout | awk '{print $7}' | uniq`"
     tp="${gp}:*"
-    if MEMDEB_GLITCH_ACT="g" MEMDEB_GLITCH_TRIG="${tp}" ./${test} 2>/dev/null >/dev/null
+    if RTPP_GLITCH_ACT="g" RTPP_GLITCH_TRIG="${tp}" ./${test} 2>/dev/null >/dev/null
     then
        nok=$((${nok} + 1))
        res="OK"
