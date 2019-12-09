@@ -182,7 +182,8 @@ am__extractaudio_debug_SOURCES_DIST = extractaudio.c decoder.c \
 	$(top_srcdir)/src/rtpp_glitch.h \
 	$(top_srcdir)/src/rtpp_codeptr.h \
 	$(top_srcdir)/src/rtpp_autoglitch.c \
-	$(top_srcdir)/src/rtpp_autoglitch.h
+	$(top_srcdir)/src/rtpp_autoglitch.h \
+	$(top_srcdir)/src/rtpp_debugon.h
 am__objects_5 = extractaudio_debug-rtpp_refcnt_fin.$(OBJEXT)
 am__objects_6 = extractaudio_debug-rtpp_ringbuf_fin.$(OBJEXT)
 am__objects_7 = extractaudio_debug-rtpp_netaddr_fin.$(OBJEXT)
@@ -477,7 +478,8 @@ RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
 RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
   $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_glitch.c \
   $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h \
-  $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h
+  $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h \
+  $(top_srcdir)/src/rtpp_debugon.h
 
 RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
