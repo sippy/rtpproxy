@@ -70,7 +70,7 @@ conf_set_capt_port(struct rtpp_log *log, const ucl_object_t *top,
 {
 
     const char *val = NULL;
-    int rport;
+    int64_t rport;
 
     if (ucl_object_type(obj) == UCL_INT) {
         rport = ucl_object_toint(obj);
@@ -82,10 +82,10 @@ conf_set_capt_port(struct rtpp_log *log, const ucl_object_t *top,
     }
     if (rport <= 0 || rport > 0xffff) {
         RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for port in section '%s': %d",
-            ucl_object_key(obj), rport);
+            ucl_object_key(obj), (int)rport);
         return (false);
     }
-    snprintf(target->capt_port, sizeof(target->capt_port), "%d", rport);
+    snprintf(target->capt_port, sizeof(target->capt_port), "%d", (int)rport);
     return (true);
 }
 
@@ -116,7 +116,7 @@ conf_set_capt_id(struct rtpp_log *log, const ucl_object_t *top,
 {
 
     const char *val = NULL;
-    int capt_id;
+    int64_t capt_id;
 
     if (ucl_object_type(obj) == UCL_INT) {
         capt_id = ucl_object_toint(obj);
