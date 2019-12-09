@@ -350,7 +350,6 @@ static int
 rtpp_socket_drain(struct rtpp_socket *self, const char *ptype,
   struct rtpp_log *log)
 {
-    struct rtp_packet *packet;
     int ndrained, rval;
     struct rtpp_socket_priv *pvt;
     static unsigned char scrapbuf[MAX_RPKT_LEN];
