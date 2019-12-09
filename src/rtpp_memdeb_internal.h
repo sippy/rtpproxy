@@ -75,12 +75,6 @@
         _##appname##_memdeb = NULL; \
     }
 
-struct memdeb_loc {
-    const char *fname;
-    int linen;
-    const char *funcn;
-};
-
 struct rtpp_log;
 
 int rtpp_memdeb_dumpstats(void *, int);
