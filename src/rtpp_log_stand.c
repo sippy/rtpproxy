@@ -49,7 +49,7 @@
 #include "rtpp_mallocs.h"
 
 #ifdef RTPP_LOG_ADVANCED
-static int syslog_async_opened = 0;
+static atomic_int syslog_async_opened = ATOMIC_VAR_INIT(0);
 #endif
 static double iitime = 0.0;
 
@@ -84,9 +84,12 @@ _rtpp_log_open(const struct rtpp_cfg *cf, const char *app, const char *call_id)
     if (facility == -1)
 	facility = LOG_DAEMON;
 
-    if (cf->nodaemon == 0 && syslog_async_opened == 0) {
-	if (syslog_async_init(app, facility) == 0)
-	    syslog_async_opened = 1;
+    if (cf->nodaemon == 0 && atomic_load(&syslog_async_opened) == 0) {
+	if (syslog_async_init(app, facility) == 0) {
+	    atomic_store(&syslog_async_opened, 1);
+        } else {
+            return (NULL);
+        }
     }
 #endif
     rli = rtpp_zmalloc(sizeof(struct rtpp_log_inst));
@@ -260,7 +263,7 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
     }
 
 #ifdef RTPP_LOG_ADVANCED
-    if (syslog_async_opened != 0) {
+    if (atomic_load(&syslog_async_opened) != 0) {
         snprintf(rtpp_log_buff, sizeof(rtpp_log_buff), rli->format_sl[0],
           strlvl(level), call_id, function, lnum);
         va_copy(apc, ap);
@@ -304,7 +307,7 @@ _rtpp_log_ewrite_va(struct rtpp_log_inst *rli, int level, const char *function,
     }
 
 #ifdef RTPP_LOG_ADVANCED
-    if (syslog_async_opened != 0) {
+    if (atomic_load(&syslog_async_opened) != 0) {
         int nch, m;
 
         m = sizeof(rtpp_log_buff);
