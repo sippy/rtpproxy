@@ -118,7 +118,8 @@ am__v_lt_1 =
 am__objects_1 = makeann_debug-makeann.$(OBJEXT) \
 	makeann_debug-g729_compat.$(OBJEXT)
 am__objects_2 = makeann_debug-rtpp_memdeb.$(OBJEXT) \
-	makeann_debug-rtpp_glitch.$(OBJEXT)
+	makeann_debug-rtpp_glitch.$(OBJEXT) \
+	makeann_debug-rtpp_autoglitch.$(OBJEXT)
 am_makeann_debug_OBJECTS = $(am__objects_1) $(am__objects_2)
 makeann_debug_OBJECTS = $(am_makeann_debug_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -147,6 +148,7 @@ am__depfiles_remade = ./$(DEPDIR)/makeann-g729_compat.Po \
 	./$(DEPDIR)/makeann-makeann.Po \
 	./$(DEPDIR)/makeann_debug-g729_compat.Po \
 	./$(DEPDIR)/makeann_debug-makeann.Po \
+	./$(DEPDIR)/makeann_debug-rtpp_autoglitch.Po \
 	./$(DEPDIR)/makeann_debug-rtpp_glitch.Po \
 	./$(DEPDIR)/makeann_debug-rtpp_memdeb.Po
 am__mv = mv -f
@@ -330,13 +332,16 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h -I$(top_srcdir)
+RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
+  -I$(top_srcdir)
+
 RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
   $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_glitch.c \
-  $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h
+  $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h \
+  $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h
 
 RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
-RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
 extractaudio_SRCDIR = $(top_srcdir)/extractaudio
 makeann_SOURCES = makeann.c rtp.h g711.h $(extractaudio_SRCDIR)/g729_compat.c \
   $(extractaudio_SRCDIR)/g729_compat.h
@@ -458,6 +463,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann-makeann.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann_debug-g729_compat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann_debug-makeann.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann_debug-rtpp_autoglitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann_debug-rtpp_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeann_debug-rtpp_memdeb.Po@am__quote@ # am--include-marker
 
@@ -571,6 +577,20 @@ makeann_debug-rtpp_glitch.obj: $(top_srcdir)/src/rtpp_glitch.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='makeann_debug-rtpp_glitch.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
+
+makeann_debug-rtpp_autoglitch.o: $(top_srcdir)/src/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-rtpp_autoglitch.o -MD -MP -MF $(DEPDIR)/makeann_debug-rtpp_autoglitch.Tpo -c -o makeann_debug-rtpp_autoglitch.o `test -f '$(top_srcdir)/src/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-rtpp_autoglitch.Tpo $(DEPDIR)/makeann_debug-rtpp_autoglitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_autoglitch.c' object='makeann_debug-rtpp_autoglitch.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-rtpp_autoglitch.o `test -f '$(top_srcdir)/src/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_autoglitch.c
+
+makeann_debug-rtpp_autoglitch.obj: $(top_srcdir)/src/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-rtpp_autoglitch.obj -MD -MP -MF $(DEPDIR)/makeann_debug-rtpp_autoglitch.Tpo -c -o makeann_debug-rtpp_autoglitch.obj `if test -f '$(top_srcdir)/src/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_autoglitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann_debug-rtpp_autoglitch.Tpo $(DEPDIR)/makeann_debug-rtpp_autoglitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_autoglitch.c' object='makeann_debug-rtpp_autoglitch.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -c -o makeann_debug-rtpp_autoglitch.obj `if test -f '$(top_srcdir)/src/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_autoglitch.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -710,6 +730,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/makeann-makeann.Po
 	-rm -f ./$(DEPDIR)/makeann_debug-g729_compat.Po
 	-rm -f ./$(DEPDIR)/makeann_debug-makeann.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_autoglitch.Po
 	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_glitch.Po
 	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_memdeb.Po
 	-rm -f Makefile
@@ -761,6 +782,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/makeann-makeann.Po
 	-rm -f ./$(DEPDIR)/makeann_debug-g729_compat.Po
 	-rm -f ./$(DEPDIR)/makeann_debug-makeann.Po
+	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_autoglitch.Po
 	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_glitch.Po
 	-rm -f ./$(DEPDIR)/makeann_debug-rtpp_memdeb.Po
 	-rm -f Makefile

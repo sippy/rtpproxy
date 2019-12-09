@@ -353,13 +353,16 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h -I$(top_srcdir)
+RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
+  -I$(top_srcdir)
+
 RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
   $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_glitch.c \
-  $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h
+  $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h \
+  $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h
 
 RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
-RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration -Werror=incompatible-pointer-types
 pkglib_LTLIBRARIES = rtpp_acct_csv.la rtpp_acct_csv_debug.la
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
