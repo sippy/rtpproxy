@@ -26,12 +26,22 @@
  */
 
 int rtpp_glitch_pthread_create(pthread_t *, const pthread_attr_t *,
- void *(*)(void *), void *, const char *, int, const char *);
+  void *(*)(void *), void *, const char *, int, const char *);
 
 #ifdef pthread_create
 # undef pthread_create
 #endif
 
 #define pthread_create(thread, attr, start_routine, arg) \
- rtpp_glitch_pthread_create(thread, attr, start_routine, arg, \
+  rtpp_glitch_pthread_create(thread, attr, start_routine, arg, \
   __FILE__, __LINE__, __func__)
+
+int rtpp_glitch_pthread_mutex_init(pthread_mutex_t *,
+  const pthread_mutexattr_t *, const char *, int, const char *);
+
+#ifdef pthread_mutex_init
+# undef pthread_mutex_init
+#endif
+
+#define pthread_mutex_init(mutex, attr) \
+  rtpp_glitch_pthread_mutex_init(mutex, attr, __FILE__, __LINE__, __func__)

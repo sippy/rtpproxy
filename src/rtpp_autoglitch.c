@@ -40,7 +40,7 @@
 
 int
 rtpp_glitch_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
- void *(*start_routine)(void *), void *arg, const char *fname,
+  void *(*start_routine)(void *), void *arg, const char *fname,
   int linen, const char *funcn)
 {
     struct rtpp_codeptr ml;
@@ -53,4 +53,22 @@ rtpp_glitch_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 glitched:
     errno = EFAULT;
     return (-1);
+}
+
+#undef pthread_mutex_init
+
+int
+rtpp_glitch_pthread_mutex_init(pthread_mutex_t *mutex,
+  const pthread_mutexattr_t *attr, const char *fname, int linen,
+  const char *funcn)
+{
+    struct rtpp_codeptr ml;
+
+    ml.fname = fname;
+    ml.linen = linen;
+    ml.funcn = funcn;
+    GLITCH_INJECT(&ml, glitched);
+    return (pthread_mutex_init(mutex, attr));
+glitched:
+    return (ENOMEM);
 }
