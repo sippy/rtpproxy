@@ -195,7 +195,7 @@ am__objects_43 = rtpp_objck-rtpp_objck.$(OBJEXT) $(am__objects_42) \
 	rtpp_objck-rtpp_wi_data.$(OBJEXT) \
 	rtpp_objck-rtpp_wi_sgnl.$(OBJEXT)
 am__objects_44 = rtpp_objck-rtpp_memdeb.$(OBJEXT) \
-	rtpp_objck-rtpp_memdeb_glitch.$(OBJEXT)
+	rtpp_objck-rtpp_glitch.$(OBJEXT)
 am__objects_45 = $(am__objects_44) \
 	rtpp_objck-rtpp_memdeb_test.$(OBJEXT)
 am_rtpp_objck_OBJECTS = $(am__objects_43) $(am__objects_45)
@@ -540,8 +540,9 @@ am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	$(top_srcdir)/src/rtpp_memdeb.c \
 	$(top_srcdir)/src/rtpp_memdeb.h \
 	$(top_srcdir)/src/rtpp_memdeb_internal.h \
-	$(top_srcdir)/src/rtpp_memdeb_glitch.c \
-	$(top_srcdir)/src/rtpp_memdeb_glitch.h rtpp_memdeb_stats.h \
+	$(top_srcdir)/src/rtpp_glitch.c \
+	$(top_srcdir)/src/rtpp_glitch.h \
+	$(top_srcdir)/src/rtpp_codeptr.h rtpp_memdeb_stats.h \
 	rtpp_memdeb_test.c rtpp_stacktrace.c rtpp_stacktrace.h
 @ENABLE_MODULE_IF_TRUE@am__objects_95 = rtpproxy_debug-rtpp_module_if.$(OBJEXT)
 @BUILD_LOG_STAND_TRUE@am__objects_96 =  \
@@ -647,7 +648,7 @@ am__objects_119 = $(am__objects_99) $(am__objects_100) \
 	$(am__objects_116) $(am__objects_117) $(am__objects_118)
 am__objects_120 = $(am__objects_98) $(am__objects_119)
 am__objects_121 = rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
-	rtpproxy_debug-rtpp_memdeb_glitch.$(OBJEXT)
+	rtpproxy_debug-rtpp_glitch.$(OBJEXT)
 am__objects_122 = $(am__objects_121) \
 	rtpproxy_debug-rtpp_memdeb_test.$(OBJEXT)
 am__objects_123 = $(am__objects_122) \
@@ -701,10 +702,10 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/rtpp_fintest-rtpp_timed_task_fin.Po \
 	./$(DEPDIR)/rtpp_fintest-rtpp_ttl_fin.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_command_rcache_fin.Po \
+	./$(DEPDIR)/rtpp_objck-rtpp_glitch.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_log_obj_fin.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_mallocs.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_memdeb.Po \
-	./$(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_memdeb_test.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_module_if_fin.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_netaddr_fin.Po \
@@ -888,6 +889,7 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_controlfd.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_genuid.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_genuid_singlet.Po \
+	./$(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_hash_table.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_log.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_log_obj.Po \
@@ -895,7 +897,6 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_log_stand.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_mallocs.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po \
-	./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_module_if_fin.Po \
@@ -1147,8 +1148,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h -I$(top_srcdir)
 RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
-  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_memdeb_glitch.c \
-  $(top_srcdir)/src/rtpp_memdeb_glitch.h
+  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_glitch.c \
+  $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h
 
 RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
@@ -1463,10 +1464,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_fintest-rtpp_timed_task_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_fintest-rtpp_ttl_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_command_rcache_fin.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_log_obj_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_mallocs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_memdeb.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_memdeb_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_module_if_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_netaddr_fin.Po@am__quote@ # am--include-marker
@@ -1651,6 +1652,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_controlfd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_genuid.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_genuid_singlet.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_hash_table.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_log.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_log_obj.Po@am__quote@ # am--include-marker
@@ -1658,7 +1660,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_log_stand.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_mallocs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_module_if_fin.Po@am__quote@ # am--include-marker
@@ -2531,19 +2532,19 @@ rtpp_objck-rtpp_memdeb.obj: $(top_srcdir)/src/rtpp_memdeb.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o rtpp_objck-rtpp_memdeb.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb.c'; fi`
 
-rtpp_objck-rtpp_memdeb_glitch.o: $(top_srcdir)/src/rtpp_memdeb_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT rtpp_objck-rtpp_memdeb_glitch.o -MD -MP -MF $(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Tpo -c -o rtpp_objck-rtpp_memdeb_glitch.o `test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Tpo $(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb_glitch.c' object='rtpp_objck-rtpp_memdeb_glitch.o' libtool=no @AMDEPBACKSLASH@
+rtpp_objck-rtpp_glitch.o: $(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT rtpp_objck-rtpp_glitch.o -MD -MP -MF $(DEPDIR)/rtpp_objck-rtpp_glitch.Tpo -c -o rtpp_objck-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_objck-rtpp_glitch.Tpo $(DEPDIR)/rtpp_objck-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='rtpp_objck-rtpp_glitch.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o rtpp_objck-rtpp_memdeb_glitch.o `test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb_glitch.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o rtpp_objck-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
 
-rtpp_objck-rtpp_memdeb_glitch.obj: $(top_srcdir)/src/rtpp_memdeb_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT rtpp_objck-rtpp_memdeb_glitch.obj -MD -MP -MF $(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Tpo -c -o rtpp_objck-rtpp_memdeb_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb_glitch.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Tpo $(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb_glitch.c' object='rtpp_objck-rtpp_memdeb_glitch.obj' libtool=no @AMDEPBACKSLASH@
+rtpp_objck-rtpp_glitch.obj: $(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT rtpp_objck-rtpp_glitch.obj -MD -MP -MF $(DEPDIR)/rtpp_objck-rtpp_glitch.Tpo -c -o rtpp_objck-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_objck-rtpp_glitch.Tpo $(DEPDIR)/rtpp_objck-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='rtpp_objck-rtpp_glitch.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o rtpp_objck-rtpp_memdeb_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb_glitch.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o rtpp_objck-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
 
 rtpp_objck-rtpp_memdeb_test.o: rtpp_memdeb_test.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT rtpp_objck-rtpp_memdeb_test.o -MD -MP -MF $(DEPDIR)/rtpp_objck-rtpp_memdeb_test.Tpo -c -o rtpp_objck-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
@@ -5639,19 +5640,19 @@ rtpproxy_debug-rtpp_memdeb.obj: $(top_srcdir)/src/rtpp_memdeb.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_memdeb.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb.c'; fi`
 
-rtpproxy_debug-rtpp_memdeb_glitch.o: $(top_srcdir)/src/rtpp_memdeb_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_memdeb_glitch.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Tpo -c -o rtpproxy_debug-rtpp_memdeb_glitch.o `test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb_glitch.c' object='rtpproxy_debug-rtpp_memdeb_glitch.o' libtool=no @AMDEPBACKSLASH@
+rtpproxy_debug-rtpp_glitch.o: $(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_glitch.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_glitch.Tpo -c -o rtpproxy_debug-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_glitch.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='rtpproxy_debug-rtpp_glitch.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_memdeb_glitch.o `test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb_glitch.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
 
-rtpproxy_debug-rtpp_memdeb_glitch.obj: $(top_srcdir)/src/rtpp_memdeb_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_memdeb_glitch.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Tpo -c -o rtpproxy_debug-rtpp_memdeb_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb_glitch.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb_glitch.c' object='rtpproxy_debug-rtpp_memdeb_glitch.obj' libtool=no @AMDEPBACKSLASH@
+rtpproxy_debug-rtpp_glitch.obj: $(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_glitch.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_glitch.Tpo -c -o rtpproxy_debug-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_glitch.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='rtpproxy_debug-rtpp_glitch.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_memdeb_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb_glitch.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
 
 rtpproxy_debug-rtpp_memdeb_test.o: rtpp_memdeb_test.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_memdeb_test.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Tpo -c -o rtpproxy_debug-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
@@ -5841,10 +5842,10 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpp_fintest-rtpp_timed_task_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_fintest-rtpp_ttl_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_command_rcache_fin.Po
+	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_glitch.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_log_obj_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_mallocs.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_module_if_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_netaddr_fin.Po
@@ -6029,6 +6030,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_controlfd.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_genuid.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_genuid_singlet.Po
+	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_hash_table.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_log.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_log_obj.Po
@@ -6036,7 +6038,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_log_stand.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_mallocs.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_module_if_fin.Po
@@ -6167,10 +6168,10 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpp_fintest-rtpp_timed_task_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_fintest-rtpp_ttl_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_command_rcache_fin.Po
+	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_glitch.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_log_obj_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_mallocs.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_memdeb_glitch.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_module_if_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_netaddr_fin.Po
@@ -6355,6 +6356,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_controlfd.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_genuid.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_genuid_singlet.Po
+	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_hash_table.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_log.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_log_obj.Po
@@ -6362,7 +6364,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_log_stand.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_mallocs.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_glitch.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_module_if_fin.Po

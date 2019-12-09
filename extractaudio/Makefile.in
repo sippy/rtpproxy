@@ -178,8 +178,9 @@ am__extractaudio_debug_SOURCES_DIST = extractaudio.c decoder.c \
 	$(top_srcdir)/src/rtpp_memdeb.c \
 	$(top_srcdir)/src/rtpp_memdeb.h \
 	$(top_srcdir)/src/rtpp_memdeb_internal.h \
-	$(top_srcdir)/src/rtpp_memdeb_glitch.c \
-	$(top_srcdir)/src/rtpp_memdeb_glitch.h
+	$(top_srcdir)/src/rtpp_glitch.c \
+	$(top_srcdir)/src/rtpp_glitch.h \
+	$(top_srcdir)/src/rtpp_codeptr.h
 am__objects_5 = extractaudio_debug-rtpp_refcnt_fin.$(OBJEXT)
 am__objects_6 = extractaudio_debug-rtpp_ringbuf_fin.$(OBJEXT)
 am__objects_7 = extractaudio_debug-rtpp_netaddr_fin.$(OBJEXT)
@@ -206,7 +207,7 @@ am__objects_9 = extractaudio_debug-extractaudio.$(OBJEXT) \
 	extractaudio_debug-rtpp_scan_adhoc.$(OBJEXT) \
 	extractaudio_debug-eaud_adhoc.$(OBJEXT) $(am__objects_8)
 am__objects_10 = extractaudio_debug-rtpp_memdeb.$(OBJEXT) \
-	extractaudio_debug-rtpp_memdeb_glitch.$(OBJEXT)
+	extractaudio_debug-rtpp_glitch.$(OBJEXT)
 am_extractaudio_debug_OBJECTS = $(am__objects_9) $(am__objects_10)
 extractaudio_debug_OBJECTS = $(am_extractaudio_debug_OBJECTS)
 am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
@@ -266,10 +267,10 @@ am__depfiles_remade = ./$(DEPDIR)/extractaudio-decoder.Po \
 	./$(DEPDIR)/extractaudio_debug-g729_compat.Po \
 	./$(DEPDIR)/extractaudio_debug-rtp.Po \
 	./$(DEPDIR)/extractaudio_debug-rtp_analyze.Po \
+	./$(DEPDIR)/extractaudio_debug-rtpp_glitch.Po \
 	./$(DEPDIR)/extractaudio_debug-rtpp_loader.Po \
 	./$(DEPDIR)/extractaudio_debug-rtpp_mallocs.Po \
 	./$(DEPDIR)/extractaudio_debug-rtpp_memdeb.Po \
-	./$(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Po \
 	./$(DEPDIR)/extractaudio_debug-rtpp_netaddr.Po \
 	./$(DEPDIR)/extractaudio_debug-rtpp_netaddr_fin.Po \
 	./$(DEPDIR)/extractaudio_debug-rtpp_network.Po \
@@ -468,8 +469,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_memdeb.h -I$(top_srcdir)
 RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
-  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_memdeb_glitch.c \
-  $(top_srcdir)/src/rtpp_memdeb_glitch.h
+  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_glitch.c \
+  $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h
 
 RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
@@ -670,10 +671,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-g729_compat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtp_analyze.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtpp_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtpp_loader.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtpp_mallocs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtpp_memdeb.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtpp_netaddr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtpp_netaddr_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio_debug-rtpp_network.Po@am__quote@ # am--include-marker
@@ -1400,19 +1401,19 @@ extractaudio_debug-rtpp_memdeb.obj: $(top_srcdir)/src/rtpp_memdeb.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_memdeb.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb.c'; fi`
 
-extractaudio_debug-rtpp_memdeb_glitch.o: $(top_srcdir)/src/rtpp_memdeb_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-rtpp_memdeb_glitch.o -MD -MP -MF $(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Tpo -c -o extractaudio_debug-rtpp_memdeb_glitch.o `test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Tpo $(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb_glitch.c' object='extractaudio_debug-rtpp_memdeb_glitch.o' libtool=no @AMDEPBACKSLASH@
+extractaudio_debug-rtpp_glitch.o: $(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-rtpp_glitch.o -MD -MP -MF $(DEPDIR)/extractaudio_debug-rtpp_glitch.Tpo -c -o extractaudio_debug-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-rtpp_glitch.Tpo $(DEPDIR)/extractaudio_debug-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='extractaudio_debug-rtpp_glitch.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_memdeb_glitch.o `test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb_glitch.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
 
-extractaudio_debug-rtpp_memdeb_glitch.obj: $(top_srcdir)/src/rtpp_memdeb_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-rtpp_memdeb_glitch.obj -MD -MP -MF $(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Tpo -c -o extractaudio_debug-rtpp_memdeb_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb_glitch.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Tpo $(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb_glitch.c' object='extractaudio_debug-rtpp_memdeb_glitch.obj' libtool=no @AMDEPBACKSLASH@
+extractaudio_debug-rtpp_glitch.obj: $(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-rtpp_glitch.obj -MD -MP -MF $(DEPDIR)/extractaudio_debug-rtpp_glitch.Tpo -c -o extractaudio_debug-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-rtpp_glitch.Tpo $(DEPDIR)/extractaudio_debug-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='extractaudio_debug-rtpp_glitch.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_memdeb_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb_glitch.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1582,10 +1583,10 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/extractaudio_debug-g729_compat.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtp.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtp_analyze.Po
+	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_glitch.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_loader.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_mallocs.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_netaddr.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_netaddr_fin.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_network.Po
@@ -1677,10 +1678,10 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/extractaudio_debug-g729_compat.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtp.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtp_analyze.Po
+	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_glitch.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_loader.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_mallocs.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_memdeb_glitch.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_netaddr.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_netaddr_fin.Po
 	-rm -f ./$(DEPDIR)/extractaudio_debug-rtpp_network.Po
