@@ -47,9 +47,10 @@ enum glav_act {
 };
 
 void rtpp_memdeb_glitch_init();
-void rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *);
+void rtpp_memdeb_callhome(intmax_t step, uintptr_t hash,
+  const struct memdeb_loc *);
 
-#define GLITCH_ACTION() { \
+#define GLITCH_ACTION(mlp) { \
     const char *_cp; \
     static int _b = 1; \
     for (_cp = &_glav_trig.act[0]; *_cp != '\0'; _cp++) { \
@@ -63,7 +64,7 @@ void rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *);
         case GLAV_BAIL: \
             exit(255); \
         case GLAV_RPRT: \
-            rtpp_memdeb_callhome(step, stack_cook, &ml); \
+            rtpp_memdeb_callhome(step, stack_cook, mlp); \
             break; \
         case GLAV_GLTCH: \
             _do_glitch = 1; \
@@ -76,7 +77,7 @@ void rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *);
 #define TRIG_CHCK2() (_glav_trig.stack == 0 || stack_cook == _glav_trig.stack)
 #define TRIG_CHCK3() (_glav_trig.stack == 0 || (nhit == 0 || _glav_trig.wild != 0))
 
-#define GLITCH_INJECT1() { \
+#define GLITCH_INJECT(mlp, ghlabel) { \
     intmax_t step = atomic_fetch_add(&_glav_trig.step, 1); \
     if (TRIG_CHCK1()) { \
         uintptr_t stack_cook =  getstackcookie(); \
@@ -84,33 +85,9 @@ void rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *);
             intmax_t nhit = atomic_fetch_add(&_glav_trig.hits, 1); \
             if (TRIG_CHCK3()) { \
                 int _do_glitch = 0; \
-                GLITCH_ACTION(); \
+                GLITCH_ACTION(mlp); \
                 if (_do_glitch) { \
-                    errno = ENOMEM; \
-                   return (NULL); \
-                } \
-            } \
-        } \
-    } \
-}
-
-#define GLITCH_INJECT2(pp) { \
-    intmax_t step = atomic_fetch_add(&_glav_trig.step, 1); \
-    if (TRIG_CHCK1()) { \
-        uintptr_t stack_cook =  getstackcookie(); \
-        if (TRIG_CHCK2()) { \
-            intmax_t nhit = atomic_fetch_add(&_glav_trig.hits, 1); \
-            if (TRIG_CHCK3()) { \
-                int _do_glitch = 0; \
-                struct memdeb_loc ml; \
-                ml.fname = fname; \
-                ml.linen = linen; \
-                ml.funcn = funcn; \
-                GLITCH_ACTION(); \
-                if (_do_glitch) { \
-                    *(pp) = NULL; \
-                    errno = ENOMEM; \
-                    return (-1); \
+                    goto ghlabel; \
                 } \
             } \
         } \

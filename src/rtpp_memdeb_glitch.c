@@ -60,7 +60,8 @@ struct mg_data {
 static struct mg_data mgd;
 
 void
-rtpp_memdeb_callhome(intmax_t step, uintptr_t hash, struct memdeb_loc *mlp)
+rtpp_memdeb_callhome(intmax_t step, uintptr_t hash,
+  const struct memdeb_loc *mlp)
 {
    char buffer[512]; /* +1 so we can \n */
    int len;
