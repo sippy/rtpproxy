@@ -142,11 +142,16 @@ rtpp_bindaddrs_ctor(void)
 
     cf = rtpp_zmalloc(sizeof(*cf));
     if (cf == NULL)
-        return (NULL);
+        goto e0;
+    if (pthread_mutex_init(&cf->bindaddr_lock, NULL) != 0)
+        goto e1;
     cf->pub.addr2 = addr2bindaddr;
     cf->pub.host2 = host2bindaddr;
     cf->pub.foraf = bindaddr4af;
     cf->pub.dtor = rtpp_bindaddrs_dtor;
-    pthread_mutex_init(&cf->bindaddr_lock, NULL);
     return (&(cf->pub));
+e1:
+    free(cf);
+e0:
+    return (NULL);
 }

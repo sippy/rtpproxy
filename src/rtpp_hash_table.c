@@ -101,9 +101,11 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
 
     rp = rtpp_zmalloc(sizeof(struct rtpp_hash_table_full));
     if (rp == NULL) {
-        return (NULL);
+        goto e0;
     }
     pvt = &(rp->pvt);
+    if (pthread_mutex_init(&pvt->hash_table_lock, NULL) != 0)
+        goto e1;
     pvt->key_type = key_type;
     pvt->flags = flags;
     pub = &(rp->pub);
@@ -124,10 +126,13 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
     pub->dtor = &hash_table_dtor;
     pub->get_length = &hash_table_get_length;
     pub->purge = &hash_table_purge;
-    pthread_mutex_init(&pvt->hash_table_lock, NULL);
     rtpp_pearson_shuffle(&pvt->rp);
     pub->pvt = pvt;
     return (pub);
+e1:
+    free(rp);
+e0:
+    return (NULL);
 }
 
 static void

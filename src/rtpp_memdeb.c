@@ -128,10 +128,11 @@ rtpp_memdeb_init(bool is_main)
 
     pvt = malloc(sizeof(struct rtpp_memdeb_priv));
     if (pvt == NULL) {
-        return (NULL);
+        goto e0;
     }
     memset(pvt, '\0', sizeof(struct rtpp_memdeb_priv));
-    pthread_mutex_init(&pvt->mutex, NULL);
+    if (pthread_mutex_init(&pvt->mutex, NULL) != 0)
+        goto e1;
     pvt->magic = MEMDEB_SIGNATURE_PRIV(pvt);
     pvt->inst_name = STR(MEMDEB_APP);
 
@@ -140,6 +141,10 @@ rtpp_memdeb_init(bool is_main)
    }
 
     return (pvt);
+e1:
+    free(pvt);
+e0:
+    return (NULL);
 }
 
 #define CHK_PRIV(pvt, p) { \

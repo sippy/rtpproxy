@@ -130,15 +130,28 @@ syslog_queue_init(void)
 
     syslog_dropped_items = 0;
 
-    pthread_cond_init(&syslog_queue_cond, NULL);
-    pthread_mutex_init(&syslog_queue_mutex, NULL);
-    pthread_cond_init(&syslog_wi_free_cond, NULL);
-    pthread_mutex_init(&syslog_wi_free_mutex, NULL);
-
+    if (pthread_cond_init(&syslog_queue_cond, NULL) != 0)
+        goto e0;
+    if (pthread_mutex_init(&syslog_queue_mutex, NULL) != 0)
+        goto e1;
+    if (pthread_cond_init(&syslog_wi_free_cond, NULL)  != 0)
+        goto e2;
+    if (pthread_mutex_init(&syslog_wi_free_mutex, NULL)  != 0)
+        goto e3;
     if (pthread_create(&syslog_queue, NULL, (void *(*)(void *))&syslog_queue_run, NULL) != 0)
-        return -1;
+        goto e4;
 
     return 0;
+e4:
+    pthread_mutex_destroy(&syslog_wi_free_mutex);
+e3:
+    pthread_cond_destroy(&syslog_wi_free_cond);
+e2:
+    pthread_mutex_destroy(&syslog_queue_mutex);
+e1:
+    pthread_cond_destroy(&syslog_queue_cond);
+e0:
+    return -1;
 }
 
 static struct syslog_wi *

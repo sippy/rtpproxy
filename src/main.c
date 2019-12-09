@@ -321,7 +321,9 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     if (cfsp->locks == NULL) {
         err(1, "malloc(rtpp_cfg->locks)");
     }
-    pthread_mutex_init(&(cfsp->locks->glob), NULL);
+    if (pthread_mutex_init(&(cfsp->locks->glob), NULL) != 0) {
+        errx(1, "pthread_mutex_init(rtpp_cfg->locks->glob)");
+    }
     cfsp->bindaddrs_cf = rtpp_bindaddrs_ctor();
     if (cfsp->bindaddrs_cf == NULL) {
         err(1, "malloc(rtpp_cfg->bindaddrs_cf)");
