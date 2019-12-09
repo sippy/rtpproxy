@@ -209,7 +209,7 @@ rtpp_memdeb_approve(void *p, const char *funcn, int max_nunalloc,
     }
 
 static struct memdeb_node *
-rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, struct memdeb_loc *mlp,
+rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const struct memdeb_loc *mlp,
   int doalloc)
 {
     struct memdeb_node *rval, *mnp, *lastnode;
@@ -256,28 +256,40 @@ rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, struct memdeb_loc *mlp,
         } \
     }
 
+static void *rtpp_memdeb_imalloc(size_t, void *, int,
+  const struct memdeb_loc *);
+static int rtpp_memdeb_ivasprintf(char **, const char *, void *,
+  const struct memdeb_loc *, va_list ap);
+
 void *
-rtpp_memdeb_malloc(size_t size, void *p, int noglitch, const char *fname,
+rtpp_memdeb_malloc(size_t size, void *p, const char *fname,
   int linen, const char *funcn)
+{
+    struct memdeb_loc ml;
+
+    ml.fname = fname;
+    ml.linen = linen;
+    ml.funcn = funcn;
+    return (rtpp_memdeb_imalloc(size, p, 0, &ml));
+}
+
+static void *
+rtpp_memdeb_imalloc(size_t size, void *p, int noglitch,
+  const struct memdeb_loc *mlp)
 {
     struct memdeb_node *mnp;
     struct memdeb_pfx *mpf;
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
-    struct memdeb_loc ml;
-
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
 
     if (!noglitch) {
-        GLITCH_INJECT1();
+        GLITCH_INJECT(mlp, glitched);
     }
 
-    CHK_PRIV_VRB(pvt, p, &ml);
+    CHK_PRIV_VRB(pvt, p, mlp);
     mpf = malloc(offsetof(struct memdeb_pfx, real_data) + size + MEMDEB_GUARD_SIZE);
-    mnp = rtpp_memdeb_nget(pvt, &ml, 1);
+    mnp = rtpp_memdeb_nget(pvt, mlp, 1);
     if (mpf == NULL) {
         mnp->mstats.afails++;
         pthread_mutex_unlock(&pvt->mutex);
@@ -293,6 +305,9 @@ rtpp_memdeb_malloc(size_t size, void *p, int noglitch, const char *fname,
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
     _memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
     return (mpf->real_data);
+glitched:
+    errno = ENOMEM;
+    return (NULL);
 }
 
 static struct memdeb_pfx *
@@ -379,11 +394,11 @@ rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int line
     ml.linen = linen;
     ml.funcn = funcn;
 
-    GLITCH_INJECT1();
+    GLITCH_INJECT(&ml, glitched);
 
     CHK_PRIV_VRB(pvt, p, &ml);
     if (ptr == NULL) {
-        return (rtpp_memdeb_malloc(size, pvt, 1, fname, linen, funcn));
+        return (rtpp_memdeb_imalloc(size, pvt, 1, &ml));
     }
     mpf = ptr2mpf(pvt, ptr, &ml);
     sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
@@ -413,6 +428,9 @@ rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int line
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
     _memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
     return (new_mpf->real_data);
+glitched:
+    errno = ENOMEM;
+    return (NULL);
 }
 
 char *
@@ -431,7 +449,7 @@ rtpp_memdeb_strdup(const char *ptr, void *p, const char *fname, int linen, \
     ml.linen = linen;
     ml.funcn = funcn;
 
-    GLITCH_INJECT1();
+    GLITCH_INJECT(&ml, glitched);
 
     CHK_PRIV_VRB(pvt, p, &ml);
     size = strlen(ptr) + 1;
@@ -453,6 +471,9 @@ rtpp_memdeb_strdup(const char *ptr, void *p, const char *fname, int linen, \
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
     _memcpy(gp, &guard, MEMDEB_GUARD_SIZE);
     return ((char *)mpf->real_data);
+glitched:
+    errno = ENOMEM;
+    return (NULL);
 }
 
 int
@@ -461,11 +482,14 @@ rtpp_memdeb_asprintf(char **pp, const char *fmt, void *p, const char *fname,
 {
     va_list ap;
     int rval;
+    struct memdeb_loc ml;
 
-    GLITCH_INJECT2(pp);
+    ml.fname = fname;
+    ml.linen = linen;
+    ml.funcn = funcn;
 
     va_start(ap, funcn);
-    rval = rtpp_memdeb_vasprintf(pp, fmt, p, fname, linen, funcn, ap);
+    rval = rtpp_memdeb_ivasprintf(pp, fmt, p, &ml, ap);
     va_end(ap);
     return (rval);
 }
@@ -474,16 +498,28 @@ int
 rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
   int linen, const char *funcn, va_list ap)
 {
+    struct memdeb_loc ml;
+
+    ml.fname = fname;
+    ml.linen = linen;
+    ml.funcn = funcn;
+    return (rtpp_memdeb_ivasprintf(pp, fmt, p, &ml, ap));
+}
+
+static int
+rtpp_memdeb_ivasprintf(char **pp, const char *fmt, void *p,
+  const struct memdeb_loc *mlp, va_list ap)
+{
     int rval;
     void *tp;
 
-    GLITCH_INJECT2(pp);
+    GLITCH_INJECT(mlp, glitched);
 
     rval = vasprintf(pp, fmt, ap);
     if (rval <= 0) {
         return (rval);
     }
-    tp = rtpp_memdeb_malloc(rval + 1, p, 1, fname, linen, funcn);
+    tp = rtpp_memdeb_imalloc(rval + 1, p, 1, mlp);
     if (tp == NULL) {
         free(*pp);
         *pp = NULL;
@@ -493,6 +529,10 @@ rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
     free(*pp);
     *pp = tp;
     return (rval);
+glitched:
+    *pp = NULL;
+    errno = ENOMEM;
+    return (-1);
 }
 
 void *
@@ -520,8 +560,13 @@ rtpp_memdeb_calloc(size_t number, size_t size, void *p, \
   const char *fname, int linen, const char *funcn)
 {
     void *rp;
+    struct memdeb_loc ml;
 
-    rp = rtpp_memdeb_malloc(number * size, p, 0, fname, linen, funcn);
+    ml.fname = fname;
+    ml.linen = linen;
+    ml.funcn = funcn;
+
+    rp = rtpp_memdeb_imalloc(number * size, p, 0, &ml);
     if (rp == NULL)
         return (NULL);
     memset(rp, '\0', number * size);
