@@ -10,73 +10,136 @@ BASEDIR="$(readlink -f -- $BASEDIR)"
 
 . $(dirname $0)/../functions
 
-HEPSIZE=342
-CALL_ID="acct_rtcp_hep.rec."
-RECNAME="${CALL_ID}=from_tag_1.pcap"
 CD_DIR="${BASEDIR}/acct_rtcp_hep"
-RTP_PORT=2006
-MIN_PORT=$((${RTP_PORT}))
-MAX_PORT=$((${RTP_PORT} + 3))
-RTPP_ARGS="-d dbug -f -s stdio: -b -n ${RTPP_NOTIFY_SOCK_TCP} -m ${MIN_PORT} \
- -M ${MAX_PORT} -T2 -W2 --config ${CD_DIR}/basic.conf"
+HEPSIZE=352
 RECORD_DIR="${BUILDDIR}"
 RECORD_SPL_DIR="${CD_DIR}"
-RTPP_REC_ARGS="-a -P -R -r ${RECORD_DIR} -S ${RECORD_SPL_DIR}"
 
-run_udpreplay_o() {
-  #UDPREPLAY_ARGS="-o udpreplay_o.pcap"
+run_udpreplay() {
+  direction=${1}
+  rtp_oport=${2}
+  rtp_nport=${3}
+  rtcp_oport=$((${rtp_oport} + 1))
+  rtcp_nport=$((${rtp_nport} + 1))
+  #UDPREPLAY_ARGS="-o udpreplay_${direction}.pcap"
+  tcprewrite --portmap=${rtp_oport}:${rtp_nport} --portmap=${rtcp_oport}:${rtcp_nport} \
+   -i "${CD_DIR}/rtcp.${direction}.pcap" -o acct_rtcp_hep.${rtp_nport}.${direction}.pcap || return 1
   sleep 1
-  exec udpreplay ${UDPREPLAY_ARGS} "${CD_DIR}/rtcp.o.pcap"
+  exec udpreplay ${UDPREPLAY_ARGS} acct_rtcp_hep.${rtp_nport}.${direction}.pcap
 }
 
-run_udpreplay_a() {
-  #UDPREPLAY_ARGS="-o udpreplay_a.pcap"
-  sleep 1
-  exec udpreplay ${UDPREPLAY_ARGS} "${CD_DIR}/rtcp.a.pcap"
+run_rtpproxy() {
+  rname="${1}"
+  rtp_porta=${2}
+  rtp_porto=${3}
+  if [ -e "${rname}" ]
+  then
+    rm "${rname}" || return 1
+  fi
+  (sed "s|%%RTPP_NOTIFY_SOCK_TCP%%|${RTPP_NOTIFY_SOCK_TCP}|g ; \
+   s|%%CALLID%%|${CALL_ID}|g" "${CD_DIR}/basic.input" | \
+   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS}) | sed \
+   "s|^${rtp_porta}$|%%PORT_A%%|g ;  s|^${rtp_porto}$|%%PORT_O%%|g"
+  (env RTPP_GLITCH_ACT="" ${EXTRACTAUDIO} -S -A "${rname}" || return 1) | \
+   sed "s|${CALL_ID}|%%CALL_ID%%|g"
 }
 
 run_acct_rtcp_hep() {
-  if [ -e "${RECNAME}" ]
+  HEP_PROTO="${1}"
+  HEP_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
+  RTP_PORT=`${PYINT} -c "from random import random;m=10000;print(m+(int(random()*((65536-m)/4)) * 4))"`
+  CALL_ID="acct_rtcp_hep.${HEP_PROTO}_${HEP_PORT}.rec."
+  RECNAME="${CALL_ID}=from_tag_1.pcap"
+  MIN_PORT=$((${RTP_PORT}))
+  MAX_PORT=$((${RTP_PORT} + 3))
+  RTP_PORT_A=${RTP_PORT}
+  RTP_PORT_O=$((${RTP_PORT} + 2))
+  RTPP_REC_ARGS="-a -P -r ${RECORD_DIR} -S ${RECORD_SPL_DIR}"
+  if [ "${HEP_PROTO}" = "udp" ]
   then
-    rm "${RECNAME}" || return 1
+    RTPP_REC_ARGS="${RTPP_REC_ARGS} -R"
   fi
-  sed "s|%%RTPP_NOTIFY_SOCK_TCP%%|${RTPP_NOTIFY_SOCK_TCP}|g ; \
-   s|%%CALLID%%|${CALL_ID}|g" "${CD_DIR}/basic.input" | \
-   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} || return 1
-  env RTPP_GLITCH_ACT="" ${EXTRACTAUDIO} -S -A "${RECNAME}" || return 1
+
+  CNAME="acct_rtcp_hep.${HEP_PORT}.${HEP_PROTO}.conf"
+  ONAME="acct_rtcp_hep.${HEP_PORT}.${HEP_PROTO}.rout"
+  TNAME="acct_rtcp_hep.${HEP_PORT}.${HEP_PROTO}.tlog"
+  LNAME="acct_rtcp_hep.${HEP_PROTO}.rlog"
+  sed "s|%%HEP_PORT%%|${HEP_PORT}|g ; s|%%HEP_PROTO%%|${HEP_PROTO}|g" < \
+   ${CD_DIR}/basic.conf > "${CNAME}"
+  RTPP_ARGS="-d dbug -f -s stdio: -b -n ${RTPP_NOTIFY_SOCK_TCP} -m ${MIN_PORT} \
+   -M ${MAX_PORT} -T2 -W2 --config ${CNAME}"
+
+  NC_ARGS="-l 127.0.0.1 ${HEP_PORT}"
+  if [ "${HEP_PROTO}" = "udp" ]
+  then
+    NC_ARGS="-u ${NC_ARGS}"
+  fi
+  nc ${NC_ARGS} > ${TNAME}&
+  RTPP_NC_RC=${?}
+  RTPP_NC_PID=${!}
+  sleep 0.2
+  report_rc ${RTPP_NC_RC} "Starting NetCat on port ${HEP_PORT}/${HEP_PROTO}"
+  run_udpreplay a 2006 ${RTP_PORT_A} &
+  UDPRPL_A_RC=${?}
+  UDPRPL_A_PID=${!}
+  report_rc ${UDPRPL_A_RC} "Starting udpreplay (answering) to ${RTP_PORT_A}/rtp"
+  run_udpreplay o 2008 ${RTP_PORT_O} &
+  UDPRPL_O_RC=${?}
+  UDPRPL_O_PID=${!}
+  report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate) to ${RTP_PORT_O}/rtp"
+  run_rtpproxy "${RECNAME}" ${RTP_PORT_A} ${RTP_PORT_O} \
+    > "${ONAME}" 2> "${LNAME}"
+  RTPP_RC=${?}
+  ${DIFF} "${CD_DIR}/basic.${HEP_PROTO}.output" "${ONAME}"
+  DIFF_RC=${?}
+  if [ ${RTPP_RC} -ne 0 -o ${DIFF_RC} -ne 0 ]
+  then
+    kill -KILL ${UDPRPL_A_PID} ${UDPRPL_O_PID} ${RTPP_NC_PID} 2>/dev/null
+    if [ -e "${LNAME}" ]
+    then
+      cat "${LNAME}"
+    fi
+  fi
+  report_rc ${RTPP_RC} "wait for the rtproxy shutdown"
+  report_rc ${DIFF_RC} "checking rtproxy output"
+  kill -TERM ${RTPP_NC_PID} 2>/dev/null
+  if [ "${HEP_PROTO}" != "udp" ]
+  then
+    wait ${RTPP_NC_PID}
+    report "wait for NetCat shutdown"
+  fi
+  wait ${UDPRPL_A_PID}
+  report "wait for udpreplay (answering) shutdown"
+  wait ${UDPRPL_O_PID}
+  report "wait for udpreplay (originate) shutdown"
+  hepsize=`wc -c "${TNAME}"| awk '{print $1}'`
+  if [ ${hepsize} -ne ${HEPSIZE} ]
+  then
+    forcefail 1 "Incorrect HEP size, ${HEPSIZE} expected, ${hepsize} obtained"
+  fi
 }
 
-nc -l 127.0.0.1 9642 > acct_rtcp_hep.tlog&
-RTPP_NC_RC=${?}
-RTPP_NC_PID=${!}
+run_acct_rtcp_hep tcp &
+TTCP_RC=${?}
+TTCP_PID=${!}
+report_rc "${TTCP_RC}" "Starting sub-test on HEP/tcp"
 sleep 0.2
-report_rc ${RTPP_NC_RC} "Starting NetCat"
-run_udpreplay_a &
-UDPRPL_A_RC=${?}
-UDPRPL_A_PID=${!}
-report_rc ${UDPRPL_A_RC} "Starting udpreplay (answering)"
-run_udpreplay_o &
-UDPRPL_O_RC=${?}
-UDPRPL_O_PID=${!}
-report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate)"
-run_acct_rtcp_hep > acct_rtcp_hep.rout 2>acct_rtcp_hep.rlog
-RTPP_RC=${?}
-kill -TERM ${RTPP_NC_PID} 2>/dev/null
-if [ ${RTPP_RC} -ne 0 -a -e acct_rtcp_hep.rlog ]
-then
-  cat acct_rtcp_hep.rlog
-fi
-report_rc ${RTPP_RC} "wait for the rtproxy shutdown"
-wait ${RTPP_NC_PID}
-report "wait for NetCat shutdown"
-wait ${UDPRPL_A_PID}
-report "wait for udpreplay (answering) shutdown"
-wait ${UDPRPL_O_PID}
-report "wait for udpreplay (originate) shutdown"
-${DIFF} "${CD_DIR}/basic.output" acct_rtcp_hep.rout
-hepsize=`wc -c acct_rtcp_hep.tlog | awk '{print $1}'`
-if [ ${hepsize} -ne ${HEPSIZE} ]
-then
-  forcefail 1 "Incorrect HEP size, ${HEPSIZE} expected, ${hepsize} obtained"
-fi
-report "acct_rtcp_hep"
+run_acct_rtcp_hep udp &
+TUDP_RC=${?}
+TUDP_PID=${!}
+report_rc ${TUDP_RC} "Starting sub-test on HEP/udp"
+wait ${TTCP_PID}
+TTCP_RC=${?}
+wait ${TUDP_PID}
+TUDP_RC=${?}
+cat /dev/null > acct_rtcp_hep.rlog
+for proto in tcp udp
+do
+  lfile="acct_rtcp_hep.${proto}.rlog"
+  if [ -e "${lfile}" ]
+  then
+    cat "${lfile}" >> acct_rtcp_hep.rlog
+  fi
+done
+report_rc "${TTCP_RC}" "Waiting for HEP/tcp to complete"
+report_rc "${TUDP_RC}" "Waiting for HEP/udp to complete"
