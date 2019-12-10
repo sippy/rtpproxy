@@ -447,12 +447,16 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
     if (face == 0 && ishostnull(dst_addr) && !ishostnull(src_addr)) {
         if (local4remote(src_addr, &tmp_addr) == 0) {
             dst_addr = sstosa(&tmp_addr);
+        } else {
+            return -1;
         }
     }
     fake_ether_addr(dst_addr, ether->dhost);
     if (face != 0 && ishostnull(src_addr) && !ishostnull(dst_addr)) {
         if (local4remote(dst_addr, &tmp_addr) == 0) {
             src_addr = sstosa(&tmp_addr);
+        } else {
+            return -1;
         }
     }
     fake_ether_addr(src_addr, ether->shost);
