@@ -115,8 +115,8 @@ tcpdump --version || true
 #launchpad fails#sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
 #launchpad fails#${APT_GET} update
 #launchpad fails#${APT_GET} install -y ffmpeg
-wget -o dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz
-tar -C dist -xvf ffmpeg.tar.xz
+wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz
+tar -C dist -xvf dist/ffmpeg.tar.xz
 cp dist/ffmpeg-*-i686-static/ffmpeg /usr/bin
 
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
