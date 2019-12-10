@@ -111,6 +111,7 @@ sudo make -C dist/udpreplay/build install
 
 ${APT_GET} install -y tcpdump curl wireshark-common gdb tcpreplay
 tcpdump --version || true
+${APT_GET} install -y --reinstall ca-certificates
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
 ${APT_GET} update
 ${APT_GET} install -y ffmpeg
