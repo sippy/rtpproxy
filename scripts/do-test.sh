@@ -111,9 +111,12 @@ sudo make -C dist/udpreplay/build install
 
 ${APT_GET} install -y tcpdump curl wireshark-common gdb tcpreplay
 tcpdump --version || true
-${APT_GET} install -y --reinstall ca-certificates
-sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
-${APT_GET} update
-${APT_GET} install -y ffmpeg
+#launchpad fails#${APT_GET} install -y --reinstall ca-certificates
+#launchpad fails#sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
+#launchpad fails#${APT_GET} update
+#launchpad fails#${APT_GET} install -y ffmpeg
+wget -o dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz
+tar -C dist -xvf ffmpeg.tar.xz
+cp dist/ffmpeg-*-i686-static/ffmpeg /usr/bin
 
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
