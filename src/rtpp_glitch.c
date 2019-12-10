@@ -72,6 +72,8 @@ rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
    assert(send(mgd.mysocket, buffer, len, 0) == len);
 }
 
+#undef socket
+
 void
 rtpp_glitch_init()
 {

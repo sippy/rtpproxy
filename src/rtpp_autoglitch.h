@@ -25,6 +25,9 @@
  *
  */
 
+#ifndef _RTPP_AUTOGLITCH_H
+#define _RTPP_AUTOGLITCH_H
+
 int rtpp_glitch_pthread_create(pthread_t *, const pthread_attr_t *,
   void *(*)(void *), void *, const char *, int, const char *);
 
@@ -45,3 +48,16 @@ int rtpp_glitch_pthread_mutex_init(pthread_mutex_t *,
 
 #define pthread_mutex_init(mutex, attr) \
   rtpp_glitch_pthread_mutex_init(mutex, attr, __FILE__, __LINE__, __func__)
+
+#include <sys/socket.h>
+
+int rtpp_glitch_socket(int, int, int, const char *, int, const char *);
+
+#ifdef socket
+# undef socket
+#endif
+
+#define socket(domain, type, protocol) \
+  rtpp_glitch_socket(domain, type, protocol, __FILE__, __LINE__, __func__)
+
+#endif /* _RTPP_AUTOGLITCH_H */

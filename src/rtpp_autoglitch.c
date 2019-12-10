@@ -38,16 +38,19 @@
 
 #undef pthread_create
 
+#define GLITCH_PROLOGUE() \
+    struct rtpp_codeptr ml; \
+    ml.fname = fname; \
+    ml.linen = linen; \
+    ml.funcn = funcn; \
+
 int
 rtpp_glitch_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   void *(*start_routine)(void *), void *arg, const char *fname,
   int linen, const char *funcn)
 {
-    struct rtpp_codeptr ml;
 
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
+    GLITCH_PROLOGUE();
     GLITCH_INJECT(&ml, glitched);
     return (pthread_create(thread, attr, start_routine, arg));
 glitched:
@@ -62,13 +65,25 @@ rtpp_glitch_pthread_mutex_init(pthread_mutex_t *mutex,
   const pthread_mutexattr_t *attr, const char *fname, int linen,
   const char *funcn)
 {
-    struct rtpp_codeptr ml;
 
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
+    GLITCH_PROLOGUE();
     GLITCH_INJECT(&ml, glitched);
     return (pthread_mutex_init(mutex, attr));
 glitched:
     return (ENOMEM);
+}
+
+#undef socket
+
+int
+rtpp_glitch_socket(int domain, int type, int protocol,
+  const char *fname, int linen, const char *funcn)
+{
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return(socket(domain, type, protocol));
+glitched:
+    errno = ENFILE;
+    return (-1);
 }
