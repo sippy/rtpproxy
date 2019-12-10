@@ -35,6 +35,13 @@ setup_tstart() {
   export RTPP_LOG_TFORM
 }
 
+assign_test_sockets() {
+  RTPP_TEST_SOCKETS="stdio: udp:${IPV4_LHOST}:${RTPP_TEST_SOCK_UDP4_PORT} \
+   unix:${RTPP_TEST_SOCK_UNIX} tcp:${IPV4_LHOST}:${RTPP_TEST_SOCK_TCP4_PORT} \
+   cunix:${RTPP_TEST_SOCK_CUNIX} udp6:${IPV6_LHOST}:${RTPP_TEST_SOCK_UDP6_PORT} \
+   tcp6:${IPV6_LHOST}:${RTPP_TEST_SOCK_TCP6_PORT}"
+}
+
 if [ "${RTPP_LOG_TSTART}" = "" ]
 then
   setup_tstart
@@ -57,10 +64,7 @@ RTPP_TEST_SOCK_UNIX=${RTPP_TEST_SOCK_UNIX:-/tmp/rtpproxy.sock}
 RTPP_TEST_SOCK_CUNIX=${RTPP_TEST_SOCK_CUNIX:-/tmp/rtpproxy.csock}
 if [ -z "${RTPP_TEST_SOCKETS}" ]
 then
-  RTPP_TEST_SOCKETS="stdio: udp:${IPV4_LHOST}:${RTPP_TEST_SOCK_UDP4_PORT} \
-   unix:${RTPP_TEST_SOCK_UNIX} tcp:${IPV4_LHOST}:${RTPP_TEST_SOCK_TCP4_PORT} \
-   cunix:${RTPP_TEST_SOCK_CUNIX} udp6:${IPV6_LHOST}:${RTPP_TEST_SOCK_UDP6_PORT} \
-   tcp6:${IPV6_LHOST}:${RTPP_TEST_SOCK_TCP6_PORT}"
+  assign_test_sockets
 fi
 MAKEANN=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio_debug

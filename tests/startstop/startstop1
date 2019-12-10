@@ -20,6 +20,13 @@ __beforeexit_cleanup()
   fi
 }
 
+randomize_test_sockets() {
+  RTPP_TEST_SOCK_UDP4_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
+  RTPP_TEST_SOCK_UDP6_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
+  RTPP_TEST_SOCK_TCP4_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
+  RTPP_TEST_SOCK_TCP6_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
+}
+
 RTPP_OUTFILE="startstop.rout"
 
 truncate -s 0 "${TS_LOGFILE}"
@@ -27,20 +34,23 @@ truncate -s 0 "${TS_LOGFILE}"
 myuid="`id -un`"
 mygid="`id -gn`"
 
-for ts in ${RTPP_TEST_SOCKETS}
-do
-  if [ "${ts}" = "stdio:" ]
-  then
-    continue
-  fi
-  SOCK_RARGS="-s ${ts} ${SOCK_RARGS}"
-done
-
 for rargs in "--config libucl/libucl_test.conf -c fifo" \
  "-c rr -u ${myuid}:${mygid} --dso ../modules/acct_rtcp_hep/.libs/rtpp_acct_rtcp_hep_debug.so" ""
 do
   for sig in TERM HUP
   do
+    randomize_test_sockets
+    assign_test_sockets
+    SOCK_RARGS=""
+    for ts in ${RTPP_TEST_SOCKETS}
+    do
+      if [ "${ts}" = "stdio:" ]
+      then
+        continue
+      fi
+      SOCK_RARGS="-s ${ts} ${SOCK_RARGS}"
+    done
+
     rm -f rtpproxy_acct.csv
     rtpproxy_start ${rargs} ${SOCK_RARGS}
     report "rtpproxy start"
