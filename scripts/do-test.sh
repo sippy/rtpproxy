@@ -109,7 +109,7 @@ cmake -Bdist/udpreplay/build -Hdist/udpreplay
 make -C dist/udpreplay/build all
 sudo make -C dist/udpreplay/build install
 
-${APT_GET} install -y tcpdump curl wireshark-common gdb
+${APT_GET} install -y tcpdump curl wireshark-common gdb tcpreplay
 tcpdump --version || true
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
 ${APT_GET} update
