@@ -25,6 +25,9 @@ randomize_test_sockets() {
   RTPP_TEST_SOCK_UDP6_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
   RTPP_TEST_SOCK_TCP4_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
   RTPP_TEST_SOCK_TCP6_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
+  tempfoo="`basename $0`"
+  RTPP_TEST_SOCK_UNIX="`mktemp -t ${tempfoo}`"
+  RTPP_TEST_SOCK_CUNIX="`mktemp -t ${tempfoo}`"
 }
 
 RTPP_OUTFILE="startstop.rout"
