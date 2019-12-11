@@ -88,4 +88,34 @@ int rtpp_glitch_chmod(const char *path, mode_t mode, LOCTYPES);
 
 #define chmod(path, mode) rtpp_glitch_chmod(path, mode, LOCVALS)
 
+#include <netdb.h>
+
+int rtpp_glitch_getaddrinfo(const char *, const char *, const struct addrinfo *,
+  struct addrinfo **, LOCTYPES);
+
+#ifdef getaddrinfo
+# undef getaddrinfo
+#endif
+
+#define getaddrinfo(hostname, servname, hints, res) \
+  rtpp_glitch_getaddrinfo(hostname, servname, hints, res, LOCVALS)
+
+#include <fcntl.h>
+
+int rtpp_glitch_open(const char *, int, LOCTYPES, ...);
+
+#ifdef open
+# undef open
+#endif
+
+#define open(path, flags, args...) rtpp_glitch_open(path, flags, LOCVALS, ## args)
+
+int rtpp_glitch_fcntl(int, int, LOCTYPES, ...);
+
+#ifdef fcntl
+# undef fcntl
+#endif
+
+#define fcntl(fd, cmd, args...) rtpp_glitch_fcntl(fd, cmd, LOCVALS, ## args)
+
 #endif /* _RTPP_AUTOGLITCH_H */

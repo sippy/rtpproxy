@@ -129,3 +129,64 @@ glitched:
     errno = EIO;
     return (-1);
 }
+
+#undef getaddrinfo
+
+int
+rtpp_glitch_getaddrinfo(const char *hostname, const char *servname,
+  const struct addrinfo *hints, struct addrinfo **res, LOCTYPEVALS)
+{
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return(getaddrinfo(hostname, servname, hints, res));
+glitched:
+    return (EAI_MEMORY);
+}
+
+#undef open
+
+#include <stdarg.h>
+
+int
+rtpp_glitch_open(const char *path, int flags, LOCTYPEVALS, ...)
+{
+
+    GLITCH_PROLOGUE();
+    if (strcmp(path, "/dev/urandom") != 0 && strcmp(funcn, "main") != 0) {
+        GLITCH_INJECT(&ml, glitched);
+    }
+
+    if ((flags & O_CREAT) != 0) {
+        va_list ap;
+        int mode;
+
+        va_start(ap, funcn);
+        mode = va_arg(ap, int);
+        va_end(ap);
+        return(open(path, flags, mode));
+    }
+    return(open(path, flags));
+glitched:
+    errno = EACCES;
+    return (-1);
+}
+
+#undef fcntl
+
+int
+rtpp_glitch_fcntl(int fd, int cmd, LOCTYPEVALS, ...)
+{
+    va_list args;
+    long arg;
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    va_start(args, funcn);
+    arg = va_arg(args, long);
+    va_end(args);
+    return(fcntl(fd, cmd, arg));
+glitched:
+    errno = EINVAL;
+    return (-1);
+}
