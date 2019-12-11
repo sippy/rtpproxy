@@ -167,6 +167,8 @@ rtpp_socket_setnonblock(struct rtpp_socket *self)
 
     PUB2PVT(self, pvt);
     flags = fcntl(pvt->fd, F_GETFL);
+    if (flags < 0)
+        return (flags);
     return (fcntl(pvt->fd, F_SETFL, flags | O_NONBLOCK));
 }
 
