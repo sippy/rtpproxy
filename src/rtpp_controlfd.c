@@ -254,7 +254,7 @@ rtpp_controlfd_init(const struct rtpp_cfg *cfsp)
         ctrl_sock->controlfd_in = controlfd_in;
         ctrl_sock->controlfd_out = controlfd_out;
         flags = fcntl(controlfd_in, F_GETFL);
-        if (fcntl(controlfd_in, F_SETFL, flags | O_NONBLOCK) < 0) {
+        if (flags < 0 || fcntl(controlfd_in, F_SETFL, flags | O_NONBLOCK) < 0) {
             warn("can't set O_NONBLOCK on a socket: %d", controlfd_in);
             return (-1);
         }
