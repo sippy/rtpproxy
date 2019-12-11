@@ -67,6 +67,22 @@ struct rtpp_server {
     uint64_t stuid;
 };
 
-struct rtpp_server *rtpp_server_ctor(const char *, enum rtp_type, int,  int);
+#ifndef RTPP_FINCODE
+struct rtpp_server_ctor_args {
+    const char *name;
+    enum rtp_type codec;
+    int loop;
+    int ptime;
+    int result;
+};
+#else
+struct rtpp_server_ctor_args;
+#endif
+
+#define RTPP_SERV_OK     0
+#define RTPP_SERV_NOENT -1
+#define RTPP_SERV_NOMEM -2
+
+struct rtpp_server *rtpp_server_ctor(struct rtpp_server_ctor_args *);
 
 #endif

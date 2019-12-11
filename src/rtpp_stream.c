@@ -337,6 +337,8 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
     uint16_t seq;
     uint32_t ssrc;
     const char *plerror;
+    struct rtpp_server_ctor_args sca = {.name = pname, .loop = playcount,
+      .ptime = ptime};
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
@@ -350,12 +352,15 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
         codecs = cp;
         if (*codecs != '\0')
             codecs++;
-        rsrv = rtpp_server_ctor(pname, n, playcount, ptime);
+        sca.codec = n;
+        rsrv = rtpp_server_ctor(&sca);
         if (rsrv == NULL) {
             RTPP_LOG(pvt->pub.log, RTPP_LOG_DBUG, "rtpp_server_ctor(\"%s\", %d, %d) failed",
               pname, n, playcount);
             plerror = "rtpp_server_ctor() failed";
-            continue;
+            if (sca.result == RTPP_SERV_NOENT)
+                continue;
+            break;
         }
         rsrv->stuid = self->stuid;
         ssrc = CALL_SMETHOD(rsrv, get_ssrc);
