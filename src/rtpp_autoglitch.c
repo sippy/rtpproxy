@@ -44,10 +44,11 @@
     ml.linen = linen; \
     ml.funcn = funcn; \
 
+#define LOCTYPEVALS const char *fname, int linen, const char *funcn
+
 int
 rtpp_glitch_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-  void *(*start_routine)(void *), void *arg, const char *fname,
-  int linen, const char *funcn)
+  void *(*start_routine)(void *), void *arg, LOCTYPEVALS)
 {
 
     GLITCH_PROLOGUE();
@@ -62,8 +63,7 @@ glitched:
 
 int
 rtpp_glitch_pthread_mutex_init(pthread_mutex_t *mutex,
-  const pthread_mutexattr_t *attr, const char *fname, int linen,
-  const char *funcn)
+  const pthread_mutexattr_t *attr, LOCTYPEVALS)
 {
 
     GLITCH_PROLOGUE();
@@ -76,8 +76,7 @@ glitched:
 #undef socket
 
 int
-rtpp_glitch_socket(int domain, int type, int protocol,
-  const char *fname, int linen, const char *funcn)
+rtpp_glitch_socket(int domain, int type, int protocol, LOCTYPEVALS)
 {
 
     GLITCH_PROLOGUE();
@@ -85,5 +84,48 @@ rtpp_glitch_socket(int domain, int type, int protocol,
     return(socket(domain, type, protocol));
 glitched:
     errno = ENFILE;
+    return (-1);
+}
+
+#undef listen
+
+int
+rtpp_glitch_listen(int s, int backlog, LOCTYPEVALS)
+{
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return(listen(s, backlog));
+glitched:
+    errno = EOPNOTSUPP;
+    return (-1);
+}
+
+#undef bind
+
+int
+rtpp_glitch_bind(int s, const struct sockaddr *addr, socklen_t addrlen,
+  LOCTYPEVALS)
+{
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return(bind(s, addr, addrlen));
+glitched:
+    errno = EADDRINUSE;
+    return (-1);
+}
+
+#undef chmod
+
+int
+rtpp_glitch_chmod(const char *path, mode_t mode, LOCTYPEVALS)
+{
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return(chmod(path, mode));
+glitched:
+    errno = EIO;
     return (-1);
 }

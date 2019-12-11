@@ -28,36 +28,64 @@
 #ifndef _RTPP_AUTOGLITCH_H
 #define _RTPP_AUTOGLITCH_H
 
+#define LOCTYPES const char *, int, const char *
+#define LOCVALS  __FILE__, __LINE__, __func__
+
 int rtpp_glitch_pthread_create(pthread_t *, const pthread_attr_t *,
-  void *(*)(void *), void *, const char *, int, const char *);
+  void *(*)(void *), void *, LOCTYPES);
 
 #ifdef pthread_create
 # undef pthread_create
 #endif
 
 #define pthread_create(thread, attr, start_routine, arg) \
-  rtpp_glitch_pthread_create(thread, attr, start_routine, arg, \
-  __FILE__, __LINE__, __func__)
+  rtpp_glitch_pthread_create(thread, attr, start_routine, arg, LOCVALS)
 
 int rtpp_glitch_pthread_mutex_init(pthread_mutex_t *,
-  const pthread_mutexattr_t *, const char *, int, const char *);
+  const pthread_mutexattr_t *, LOCTYPES);
 
 #ifdef pthread_mutex_init
 # undef pthread_mutex_init
 #endif
 
 #define pthread_mutex_init(mutex, attr) \
-  rtpp_glitch_pthread_mutex_init(mutex, attr, __FILE__, __LINE__, __func__)
+  rtpp_glitch_pthread_mutex_init(mutex, attr, LOCVALS)
 
 #include <sys/socket.h>
 
-int rtpp_glitch_socket(int, int, int, const char *, int, const char *);
+int rtpp_glitch_socket(int, int, int, LOCTYPES);
 
 #ifdef socket
 # undef socket
 #endif
 
 #define socket(domain, type, protocol) \
-  rtpp_glitch_socket(domain, type, protocol, __FILE__, __LINE__, __func__)
+  rtpp_glitch_socket(domain, type, protocol, LOCVALS)
+
+int rtpp_glitch_listen(int, int, LOCTYPES);
+
+#ifdef listen
+# undef listen
+#endif
+
+#define listen(s, backlog) rtpp_glitch_listen(s, backlog, LOCVALS)
+
+int rtpp_glitch_bind(int, const struct sockaddr *, socklen_t, LOCTYPES);
+
+#ifdef bind
+# undef bind
+#endif
+
+#define bind(s, addr, addrlen) rtpp_glitch_bind(s, addr, addrlen, LOCVALS)
+
+#include <sys/stat.h>
+
+int rtpp_glitch_chmod(const char *path, mode_t mode, LOCTYPES);
+
+#ifdef chmod
+# undef chmod
+#endif
+
+#define chmod(path, mode) rtpp_glitch_chmod(path, mode, LOCVALS)
 
 #endif /* _RTPP_AUTOGLITCH_H */
