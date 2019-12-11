@@ -153,7 +153,8 @@ rtpp_glitch_open(const char *path, int flags, LOCTYPEVALS, ...)
 {
 
     GLITCH_PROLOGUE();
-    if (strcmp(path, "/dev/urandom") != 0 && strcmp(funcn, "main") != 0) {
+    if (strcmp(path, "/dev/urandom") != 0 && strcmp(funcn, "main") != 0 &&
+      strcmp(funcn, "rtpp_get_sched_hz_linux") != 0) {
         GLITCH_INJECT(&ml, glitched);
     }
 
