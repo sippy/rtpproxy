@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#define RTPP_FINCODE
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
 #include "rtpp_pcount.h"
