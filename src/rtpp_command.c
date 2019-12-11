@@ -137,7 +137,8 @@ create_twinlistener(uint16_t port, void *ap)
 	so_rcvbuf = 256 * 1024;
 	if (CALL_METHOD(ctap->fds[i], setrbuf, so_rcvbuf) == -1)
 	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
-        CALL_METHOD(ctap->fds[i], setnonblock);
+        if (CALL_METHOD(ctap->fds[i], setnonblock) < 0)
+            goto failure;
         CALL_METHOD(ctap->fds[i], settimestamp);
     }
     *ctap->port = port - 2;
