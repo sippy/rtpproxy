@@ -57,7 +57,7 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_drain, int, const char *,
 struct rtpp_socket {
     struct rtpp_refcnt *rcnt;
     /* Public methods */
-    METHOD_ENTRY(rtpp_socket_bind, bind);
+    METHOD_ENTRY(rtpp_socket_bind, bind2);
     METHOD_ENTRY(rtpp_socket_settos, settos);
     METHOD_ENTRY(rtpp_socket_setrbuf, setrbuf);
     METHOD_ENTRY(rtpp_socket_setnonblock, setnonblock);

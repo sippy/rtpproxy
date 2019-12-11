@@ -98,7 +98,7 @@ rtpp_socket_ctor(int domain, int type)
 
         setsockopt(pvt->fd, IPPROTO_IPV6, IPV6_V6ONLY, &yes, sizeof(yes));
     }
-    pvt->pub.bind = &rtpp_socket_bind;
+    pvt->pub.bind2 = &rtpp_socket_bind;
     pvt->pub.settos = &rtpp_socket_settos;
     pvt->pub.setrbuf = &rtpp_socket_setrbuf;
     pvt->pub.setnonblock = &rtpp_socket_setnonblock;

@@ -121,7 +121,7 @@ create_twinlistener(uint16_t port, void *ap)
 	}
 	memcpy(&iac, ctap->ia, SA_LEN(ctap->ia));
 	satosin(&iac)->sin_port = htons(port);
-	if (CALL_METHOD(ctap->fds[i], bind, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
+	if (CALL_METHOD(ctap->fds[i], bind2, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
 	    if (errno != EADDRINUSE && errno != EACCES) {
 		RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't bind to the %s port %d",
 		  SA_AF2STR(ctap->ia), port);

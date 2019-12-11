@@ -73,6 +73,7 @@ rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
 }
 
 #undef socket
+#undef bind
 
 void
 rtpp_glitch_init()
