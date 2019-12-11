@@ -78,6 +78,15 @@ int rtpp_glitch_bind(int, const struct sockaddr *, socklen_t, LOCTYPES);
 
 #define bind(s, addr, addrlen) rtpp_glitch_bind(s, addr, addrlen, LOCVALS)
 
+int rtpp_glitch_accept(int, struct sockaddr * restrict, socklen_t * restrict,
+  LOCTYPES);
+
+#ifdef accept
+# undef accept
+#endif
+
+#define accept(s, addr, addrlen) rtpp_glitch_accept(s, addr, addrlen, LOCVALS)
+
 #include <sys/stat.h>
 
 int rtpp_glitch_chmod(const char *path, mode_t mode, LOCTYPES);

@@ -116,6 +116,26 @@ glitched:
     return (-1);
 }
 
+#undef accept
+
+int
+rtpp_glitch_accept(int s, struct sockaddr * restrict addr,
+  socklen_t * restrict addrlen, LOCTYPEVALS)
+{
+    int fdc;
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return(accept(s, addr, addrlen));
+glitched:
+    fdc = accept(s, addr, addrlen);
+    if (fdc < 0)
+         return (-1);
+    close(fdc);
+    errno = ECONNABORTED;
+    return (-1);
+}
+
 #undef chmod
 
 int
