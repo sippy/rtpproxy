@@ -156,6 +156,11 @@ rtpp_daemon(int nochdir, int noclose)
     int oerrno;
     int osa_ok;
 
+    if (!noclose) {
+        fd = open("/dev/null", O_RDWR, 0);
+        if (fd < 0)
+            return (-1);
+    }
     /* A SIGHUP may be thrown when the parent exits below. */
     sigemptyset(&sa.sa_mask);
     sa.sa_handler = SIG_IGN;
@@ -164,6 +169,8 @@ rtpp_daemon(int nochdir, int noclose)
 
     switch (fork()) {
     case -1:
+        if (!noclose)
+            close(fd);
         return (-1);
     case 0:
         break;
@@ -184,7 +191,7 @@ rtpp_daemon(int nochdir, int noclose)
     if (!nochdir)
         (void)chdir("/");
 
-    if (!noclose && (fd = open("/dev/null", O_RDWR, 0)) != -1) {
+    if (!noclose) {
         if (fd != STDIN_FILENO) {
             if (dup2(fd, STDIN_FILENO) < 0) {
                 (void)close(fd);
