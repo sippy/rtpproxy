@@ -10,6 +10,7 @@ gen_fin_c() {
   echo   "#include <stdio.h>"
   echo   "#include <stdint.h>"
   echo   "#include <stdlib.h>"
+  echo   "#define RTPP_FINCODE"
   echo   "#include \"rtpp_types.h\""
   echo   "#include \"rtpp_debug.h\""
   echo   "#include \"${1}\""
