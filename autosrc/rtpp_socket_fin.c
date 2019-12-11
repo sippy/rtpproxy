@@ -7,7 +7,7 @@
 #include "rtpp_socket.h"
 #include "rtpp_socket_fin.h"
 static void rtpp_socket_bind_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_socket@%p::bind (rtpp_socket_bind) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_socket@%p::bind2 (rtpp_socket_bind) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_socket_drain_fin(void *pub) {
@@ -43,9 +43,9 @@ static void rtpp_socket_settos_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_socket_fin(struct rtpp_socket *pub) {
-    RTPP_DBG_ASSERT(pub->bind != (rtpp_socket_bind_t)NULL);
-    RTPP_DBG_ASSERT(pub->bind != (rtpp_socket_bind_t)&rtpp_socket_bind_fin);
-    pub->bind = (rtpp_socket_bind_t)&rtpp_socket_bind_fin;
+    RTPP_DBG_ASSERT(pub->bind2 != (rtpp_socket_bind_t)NULL);
+    RTPP_DBG_ASSERT(pub->bind2 != (rtpp_socket_bind_t)&rtpp_socket_bind_fin);
+    pub->bind2 = (rtpp_socket_bind_t)&rtpp_socket_bind_fin;
     RTPP_DBG_ASSERT(pub->drain != (rtpp_socket_drain_t)NULL);
     RTPP_DBG_ASSERT(pub->drain != (rtpp_socket_drain_t)&rtpp_socket_drain_fin);
     pub->drain = (rtpp_socket_drain_t)&rtpp_socket_drain_fin;
@@ -92,7 +92,7 @@ rtpp_socket_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
-    tp->pub.bind = (rtpp_socket_bind_t)((void *)0x1);
+    tp->pub.bind2 = (rtpp_socket_bind_t)((void *)0x1);
     tp->pub.drain = (rtpp_socket_drain_t)((void *)0x1);
     tp->pub.getfd = (rtpp_socket_getfd_t)((void *)0x1);
     tp->pub.rtp_recv = (rtpp_socket_rtp_recv_t)((void *)0x1);
@@ -104,7 +104,7 @@ rtpp_socket_fintest()
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
-    CALL_TFIN(&tp->pub, bind);
+    CALL_TFIN(&tp->pub, bind2);
     CALL_TFIN(&tp->pub, drain);
     CALL_TFIN(&tp->pub, getfd);
     CALL_TFIN(&tp->pub, rtp_recv);
