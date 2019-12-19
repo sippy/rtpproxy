@@ -146,6 +146,6 @@ if __name__ == '__main__':
     crun = command_runner(rc, commands, file_in, file_out)
     if timeout != None:
         Timeout(crun.timeout, timeout)
-    ED2.loop(freq = 1000.0)
+    ED2.loop()
     rc.shutdown()
     sys.exit(crun.rval)

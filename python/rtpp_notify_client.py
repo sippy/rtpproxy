@@ -109,5 +109,5 @@ if __name__ == '__main__':
     if timeout != None:
         Timeout(ch.done, timeout)
     ED2.regSignal(SIGTERM, ch.sigin)
-    ED2.loop(freq = 1000.0)
+    ED2.loop()
     sys.exit(ch.rval)
