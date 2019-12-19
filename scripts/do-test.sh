@@ -91,7 +91,7 @@ esac
 make clean all
 
 cd deps
-git clone git://github.com/sobomax/libelperiodic.git
+git clone --branch callfromthread git://github.com/sobomax/libelperiodic.git
 cd libelperiodic
 ./configure
 make all
