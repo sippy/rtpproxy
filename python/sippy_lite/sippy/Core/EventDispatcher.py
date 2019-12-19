@@ -122,13 +122,14 @@ class EventDispatcher2(Singleton):
     signals_pending = None
     twasted = 0
     tcbs_lock = None
-    thread_cbs = None
     last_ts = None
     my_ident = None
     state_lock = Lock()
     ed_inum = 0
+    elp = None
+    bands = None
 
-    def __init__(self):
+    def __init__(self, freq = 100.0):
         EventDispatcher2.state_lock.acquire()
         if EventDispatcher2.ed_inum != 0:
             EventDispatcher2.state_lock.release()
@@ -139,9 +140,11 @@ class EventDispatcher2(Singleton):
         self.tlisteners = []
         self.slisteners = []
         self.signals_pending = []
-        self.thread_cbs = []
         self.last_ts = MonoTime()
         self.my_ident = get_ident()
+        self.elp = ElPeriodic(freq)
+        self.elp.CFT_enable(signal.SIGURG)
+        self.bands = [(freq, 0),]
 
     def signal(self, signum, frame):
         self.signals_pending.append(signum)
@@ -232,34 +235,29 @@ class EventDispatcher2(Singleton):
                 if self.endloop:
                     return
 
+    def dispatchThreadCallbacks(self, thread_cb, cb_params):
+        try:
+            thread_cb(*cb_params)
+        except Exception as ex:
+            if isinstance(ex, SystemExit):
+                raise
+            dump_exception('EventDispatcher2: unhandled exception when processing from-thread-call')
+        #print('dispatchThreadCallbacks dispatched', thread_cb, cb_params)
+
     def callFromThread(self, thread_cb, *cb_params):
-        self.tcbs_lock.acquire()
-        self.thread_cbs.append((thread_cb, cb_params))
-        self.tcbs_lock.release()
+        self.elp.call_from_thread(self.dispatchThreadCallbacks, thread_cb, cb_params)
         #print('EventDispatcher2.callFromThread completed', str(self), thread_cb, cb_params)
 
-    def dispatchThreadCallbacks(self):
-        self.tcbs_lock.acquire()
-        #print('dispatchThreadCallbacks called', str(self), self.thread_cbs)
-        if len(self.thread_cbs) == 0:
-            self.tcbs_lock.release()
-            return
-        thread_cbs = self.thread_cbs
-        self.thread_cbs = []
-        self.tcbs_lock.release()
-        for thread_cb, cb_params in thread_cbs:
-            try:
-                thread_cb(*cb_params)
-            except Exception as ex:
-                if isinstance(ex, SystemExit):
-                    raise
-                dump_exception('EventDispatcher2: unhandled exception when processing from-thread-call')
-            #print('dispatchThreadCallbacks dispatched', thread_cb, cb_params)
-            if self.endloop:
-                return
-
-    def loop(self, timeout = None, freq = 100.0):
-        elp = ElPeriodic(freq)
+    def loop(self, timeout = None, freq = None):
+        if freq != None and self.bands[0][0] != freq:
+            for fb in self.bands:
+                if fb[0] == freq:
+                    self.bands.remove(fb)
+                    break
+            else:
+                fb = (freq, self.elp.addband(freq))
+            self.elp.useband(fb[1])
+            self.bands.insert(0, fb)
         self.endloop = False
         self.last_ts = MonoTime()
         if timeout != None:
@@ -269,7 +267,6 @@ class EventDispatcher2(Singleton):
                 self.dispatchSignals()
                 if self.endloop:
                     return
-            self.dispatchThreadCallbacks()
             if self.endloop:
                 return
             self.dispatchTimers()
@@ -283,7 +280,7 @@ class EventDispatcher2(Singleton):
             if (timeout != None and self.last_ts > etime) or self.endloop:
                 self.endloop = False
                 break
-            elp.procrastinate()
+            self.elp.procrastinate()
             self.last_ts = MonoTime()
 
     def breakLoop(self):
