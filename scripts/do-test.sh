@@ -103,7 +103,7 @@ cd ../..
 sudo ldconfig
 
 ${APT_GET} install -y libpcap-dev cmake
-git clone -b precise_timings https://github.com/sippy/udpreplay.git dist/udpreplay
+git clone -b master https://github.com/sippy/udpreplay.git dist/udpreplay
 mkdir dist/udpreplay/build
 cmake -Bdist/udpreplay/build -Hdist/udpreplay
 make -C dist/udpreplay/build all
