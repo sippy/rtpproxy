@@ -90,8 +90,9 @@ esac
 ./configure ${CONFIGURE_ARGS}
 make clean all
 
+ELP_BRANCH="${ELP_BRANCH:-"master"}"
 cd deps
-git clone --branch callfromthread git://github.com/sobomax/libelperiodic.git
+git clone --branch ${ELP_BRANCH} git://github.com/sobomax/libelperiodic.git
 cd libelperiodic
 ./configure
 make all
