@@ -235,17 +235,17 @@ class EventDispatcher2(Singleton):
                 if self.endloop:
                     return
 
-    def dispatchThreadCallbacks(self, thread_cb, cb_params):
+    def dispatchThreadCallback(self, thread_cb, cb_params):
         try:
             thread_cb(*cb_params)
         except Exception as ex:
             if isinstance(ex, SystemExit):
                 raise
             dump_exception('EventDispatcher2: unhandled exception when processing from-thread-call')
-        #print('dispatchThreadCallbacks dispatched', thread_cb, cb_params)
+        #print('dispatchThreadCallback dispatched', thread_cb, cb_params)
 
     def callFromThread(self, thread_cb, *cb_params):
-        self.elp.call_from_thread(self.dispatchThreadCallbacks, thread_cb, cb_params)
+        self.elp.call_from_thread(self.dispatchThreadCallback, thread_cb, cb_params)
         #print('EventDispatcher2.callFromThread completed', str(self), thread_cb, cb_params)
 
     def loop(self, timeout = None, freq = None):
