@@ -76,13 +76,17 @@ glitch_do()
     fi
     if [ ! -z ${rlog} ]
     then
+      if grep -q "MEMDEB(.*): errors found: " "${rlog}"
+      then
+         res="${res} (LEAKS!)"
+      fi
       if grep -q "^Died on signal" "${rlog}"
       then
          res="CRASH"
       fi
     fi
     printf "%-24s test %s at ${glline}\n" "${tp}:" "${res}"
-    if [ ${res} = "CRASH" ]
+    if [ "${res}" = "CRASH" ]
     then
       grep -B 5 -A 5 "^Died on signal" "${rlog}"
       return 1
