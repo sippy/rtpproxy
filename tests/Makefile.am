@@ -4,6 +4,7 @@ EXTRA_DIST = # empty
 
 if ENABLE_BASIC_TESTS
 include $(srcdir)/autosrc/Makefile.ami
+include $(srcdir)/recording/Makefile.ami
 include $(srcdir)/makeann/Makefile.ami
 include $(srcdir)/unittests/Makefile.ami
 include $(srcdir)/libucl/Makefile.ami
