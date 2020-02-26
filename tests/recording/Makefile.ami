@@ -1,0 +1,5 @@
+recording_EXTRA_DIST = recording
+recording_CLEANFILES = recording.*
+TESTS += recording/basic
+CLEANFILES += ${recording_CLEANFILES}
+EXTRA_DIST += ${recording_EXTRA_DIST}

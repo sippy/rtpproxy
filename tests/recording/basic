@@ -1,0 +1,194 @@
+#!/bin/sh
+
+# Tests a set of commands listed in the recording/basic.input file
+# and runs those commands through the rtpp control channel, comparing
+# the results with the expected results contained in the
+# recording/basic.output file.
+
+BASEDIR="${BASEDIR:-$(dirname -- $0)/..}"
+BASEDIR="$(readlink -f -- $BASEDIR)"
+
+. $(dirname $0)/../functions
+
+PCAP_DIR="${BASEDIR}/rtp_analyze"
+CD_DIR="${BASEDIR}/recording"
+HEPSIZE=568932
+RECORD_DIR="${BUILDDIR}"
+RECORD_SPL_DIR="${CD_DIR}"
+
+run_udpreplay() {
+  direction=${1}
+  rtp_oport=${2}
+  rtp_nport=${3}
+  rtcp_oport=$((${rtp_oport} + 1))
+  rtcp_nport=$((${rtp_nport} + 1))
+  #UDPREPLAY_ARGS="-o udpreplay_${direction}.pcap"
+  tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 --portmap=${rtp_oport}:${rtp_nport} --portmap=${rtcp_oport}:${rtcp_nport} \
+   -i "${PCAP_DIR}/bob_srtp.${direction}.pcap" -o recording.${rtp_nport}.${direction}.pcap || return 1
+  sleep 1
+  exec udpreplay ${UDPREPLAY_ARGS} recording.${rtp_nport}.${direction}.pcap
+}
+
+run_rtpproxy() {
+  rname="${1}"
+  rtp_porta=${2}
+  rtp_porto=${3}
+  rproto=${4}
+  rport=${5}
+
+  case "${rproto}" in
+  files)
+    for rdircn in 'a' 'o'
+    do
+      for rtype in 'rtcp' 'rtp'
+      do
+        recfile="${rname}.${rdircn}.${rtype}"
+        if [ -e "${recfile}" ]
+        then
+          rm "${recfile}" || return 1
+        fi
+      done
+    done
+    ;;
+
+  singlefile)
+    recfile="${rname}.pcap"
+    if [ -e "${recfile}" ]
+    then
+      rm "${recfile}" || return 1
+    fi
+    ;;
+  esac
+
+  (cat "${CD_DIR}/basic.input" "${CD_DIR}/basic.${rproto}.input" | \
+   sed "s|%%CALLID%%|${CALL_ID}|g ; s|%%REC_PORT%%|${rport}|g" | \
+   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS}) | sed \
+   "s|^${rtp_porta}$|%%PORT_A%%|g ;  s|^${rtp_porto}$|%%PORT_O%%|g"
+
+  case "${rproto}" in
+  files)
+    for rdircn in 'a' 'o'
+    do
+      for rtype in 'rtcp' 'rtp'
+      do
+        recfile="${rname}.${rdircn}.${rtype}"
+        (env RTPP_GLITCH_ACT="" ${EXTRACTAUDIO} -S -A "${recfile}" || return 1) | \
+         sed "s|${CALL_ID}|%%CALL_ID%%|g"
+      done
+    done
+    ;;
+
+  singlefile)
+    recfile="${rname}.pcap"
+    if [ -e "${recfile}" ]
+    then
+      (env RTPP_GLITCH_ACT="" ${EXTRACTAUDIO} -S -A "${recfile}" || return 1) | \
+       sed "s|${CALL_ID}|%%CALL_ID%%|g"
+    fi
+    ;;
+  esac
+}
+
+run_recording() {
+  REC_PROTO="${1}"
+  RTP_PORT=`${PYINT} -c "from random import random;m=10000;print(m+(int(random()*((65536-m)/4)) * 4))"`
+  REC_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
+  CALL_ID="recording.${REC_PROTO}_${REC_PORT}.rec."
+  RECNAME="${CALL_ID}=from_tag_1"
+  MIN_PORT=$((${RTP_PORT}))
+  MAX_PORT=$((${RTP_PORT} + 3))
+  RTP_PORT_A=${RTP_PORT}
+  RTP_PORT_O=$((${RTP_PORT} + 2))
+  RTPP_REC_ARGS="-P -r ${RECORD_DIR} -S ${RECORD_SPL_DIR}"
+
+  ONAME="recording.${REC_PORT}.${REC_PROTO}.rout"
+  TNAME="recording.${REC_PORT}.${REC_PROTO}.tlog"
+  LNAME="recording.${REC_PROTO}.rlog"
+  RTPP_ARGS="-d dbug -f -s stdio: -b -m ${MIN_PORT} \
+   -M ${MAX_PORT} -T2 -W2"
+
+  if [ "${REC_PROTO}" = "remote" ]
+  then
+    NC_ARGS="-u -k -l 127.0.0.1 ${REC_PORT}"
+    nc ${NC_ARGS} > ${TNAME}&
+    RTPP_NC_RC=${?}
+    RTPP_NC_PID=${!}
+    sleep 0.2
+    report_rc ${RTPP_NC_RC} "Starting NetCat on port ${REC_PORT}/${REC_PROTO}"
+  fi
+  run_udpreplay a 41602 ${RTP_PORT_A} &
+  UDPRPL_A_RC=${?}
+  UDPRPL_A_PID=${!}
+  report_rc ${UDPRPL_A_RC} "Starting udpreplay (answering) to ${RTP_PORT_A}/rtp"
+  run_udpreplay o 2230 ${RTP_PORT_O} &
+  UDPRPL_O_RC=${?}
+  UDPRPL_O_PID=${!}
+  report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate) to ${RTP_PORT_O}/rtp"
+  run_rtpproxy "${RECNAME}" ${RTP_PORT_A} ${RTP_PORT_O} "${REC_PROTO}" \
+    "${REC_PORT}" > "${ONAME}" 2> "${LNAME}"
+  RTPP_RC=${?}
+  ${DIFF} "${CD_DIR}/basic.${REC_PROTO}.output" "${ONAME}"
+  DIFF_RC=${?}
+  if [ ${RTPP_RC} -ne 0 -o ${DIFF_RC} -ne 0 ]
+  then
+    kill -KILL ${UDPRPL_A_PID} ${UDPRPL_O_PID} ${RTPP_NC_PID} 2>/dev/null
+    if [ -e "${LNAME}" ]
+    then
+      cat "${LNAME}"
+    fi
+  fi
+  report_rc ${RTPP_RC} "wait for the rtproxy shutdown"
+  report_rc ${DIFF_RC} "checking rtproxy output"
+  if [ "${REC_PROTO}" = "remote" ]
+  then
+    kill -TERM ${RTPP_NC_PID} 2>/dev/null
+    ##wait ${RTPP_NC_PID}
+    report "wait for NetCat shutdown"
+  fi
+  wait ${UDPRPL_A_PID}
+  report "wait for udpreplay (answering) shutdown"
+  wait ${UDPRPL_O_PID}
+  report "wait for udpreplay (originate) shutdown"
+  if [ "${REC_PROTO}" = "remote" ]
+  then
+    hepsize=`wc -c "${TNAME}"| awk '{print $1}'`
+    if [ ${hepsize} -ne ${HEPSIZE} ]
+    then
+      forcefail 1 "Incorrect HEP size, ${HEPSIZE} expected, ${hepsize} obtained"
+    fi
+    report "checking recording size"
+  fi
+}
+
+run_recording files &
+T1_RC=${?}
+T1_PID=${!}
+report_rc "${T1_RC}" "Starting sub-test \"files\""
+sleep 0.2
+run_recording singlefile &
+T2_RC=${?}
+T2_PID=${!}
+report_rc ${T2_RC} "Starting sub-test \"singlefile\""
+sleep 0.2
+run_recording remote &
+T3_RC=${?}
+T3_PID=${!}
+report_rc ${T3_RC} "Starting sub-test \"remote\""
+wait ${T1_PID}
+T1_RC=${?}
+wait ${T2_PID}
+T2_RC=${?}
+wait ${T3_PID}
+T3_RC=${?}
+cat /dev/null > recording.rlog
+for proto in files singlefile remote
+do
+  lfile="recording.${proto}.rlog"
+  if [ -e "${lfile}" ]
+  then
+    cat "${lfile}" >> recording.rlog
+  fi
+done
+report_rc "${T1_RC}" "Waiting for sub-test \"files\" to complete"
+report_rc "${T2_RC}" "Waiting for sub-test \"singlefile\" to complete"
+report_rc "${T3_RC}" "Waiting for sub-test \"remote\" to complete"

@@ -1,0 +1,10 @@
+%%PORT_A%%
+%%PORT_O%%
+0
+E50
+0
+MEMDEB(rtpproxy): all clear
+%%CALL_ID%%=from_tag_1.a.rtcp: 0
+%%CALL_ID%%=from_tag_1.a.rtp: 1564
+%%CALL_ID%%=from_tag_1.o.rtcp: 0
+%%CALL_ID%%=from_tag_1.o.rtp: 1562

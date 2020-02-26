@@ -1,0 +1,6 @@
+%%PORT_A%%
+%%PORT_O%%
+0
+E50
+0
+MEMDEB(rtpproxy): all clear
