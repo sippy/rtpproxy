@@ -5,23 +5,23 @@ EXTRA_DIST = # empty
 if ENABLE_BASIC_TESTS
 include $(srcdir)/autosrc/Makefile.ami
 include $(srcdir)/recording/Makefile.ami
-include $(srcdir)/makeann/Makefile.ami
-include $(srcdir)/unittests/Makefile.ami
-include $(srcdir)/libucl/Makefile.ami
-include $(srcdir)/libexecinfo/Makefile.ami
-include $(srcdir)/acct_rtcp_hep/Makefile.ami
-include $(srcdir)/rtp_analyze/Makefile.ami
-include $(srcdir)/extractaudio/Makefile.ami
-include $(srcdir)/startstop/Makefile.ami
-include $(srcdir)/basic_versions/Makefile.ami
-include $(srcdir)/command_parser/Makefile.ami
-include $(srcdir)/forwarding/Makefile.ami
-include $(srcdir)/session_timeouts/Makefile.ami
-include $(srcdir)/playback/Makefile.ami
+#temp#include $(srcdir)/makeann/Makefile.ami
+#temp#include $(srcdir)/unittests/Makefile.ami
+#temp#include $(srcdir)/libucl/Makefile.ami
+#temp#include $(srcdir)/libexecinfo/Makefile.ami
+#temp#include $(srcdir)/acct_rtcp_hep/Makefile.ami
+#temp#include $(srcdir)/rtp_analyze/Makefile.ami
+#temp#include $(srcdir)/extractaudio/Makefile.ami
+#temp#include $(srcdir)/startstop/Makefile.ami
+#temp#include $(srcdir)/basic_versions/Makefile.ami
+#temp#include $(srcdir)/command_parser/Makefile.ami
+#temp#include $(srcdir)/forwarding/Makefile.ami
+#temp#include $(srcdir)/session_timeouts/Makefile.ami
+#temp#include $(srcdir)/playback/Makefile.ami
 endif
 if ENABLE_MEMGLITCHING
-include $(srcdir)/makeann/Makefile.ami
-include $(srcdir)/memdeb/Makefile.ami
+#temp#include $(srcdir)/makeann/Makefile.ami
+#temp#include $(srcdir)/memdeb/Makefile.ami
 endif
 
 EXTRA_DIST += Makefile.am ringback.sln
