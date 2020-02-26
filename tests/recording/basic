@@ -109,12 +109,12 @@ run_recording() {
 
   if [ "${REC_PROTO}" = "remote" ]
   then
-    NC_ARGS="-u -k -l 127.0.0.1 ${REC_PORT}"
+    NC_ARGS="-k -u -l 127.0.0.1 ${REC_PORT}"
     nc ${NC_ARGS} > ${TNAME}&
     RTPP_NC_RC=${?}
     RTPP_NC_PID=${!}
     sleep 0.2
-    report_rc ${RTPP_NC_RC} "Starting NetCat on port ${REC_PORT}/${REC_PROTO}"
+    report_rc ${RTPP_NC_RC} "Starting NetCat on port ${REC_PORT}/udp"
   fi
   run_udpreplay a 41602 ${RTP_PORT_A} &
   UDPRPL_A_RC=${?}
