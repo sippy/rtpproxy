@@ -26,6 +26,8 @@ run_udpreplay() {
   tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 --portmap=${rtp_oport}:${rtp_nport} --portmap=${rtcp_oport}:${rtcp_nport} \
    -i "${PCAP_DIR}/bob_srtp.${direction}.pcap" -o recording.${rtp_nport}.${direction}.pcap || return 1
   sleep 1
+  udpreplay ${UDPREPLAY_ARGS} recording.${rtp_nport}.${direction}.pcap
+  sleep 3
   exec udpreplay ${UDPREPLAY_ARGS} recording.${rtp_nport}.${direction}.pcap
 }
 
@@ -60,9 +62,10 @@ run_rtpproxy() {
     ;;
   esac
 
-  (cat "${CD_DIR}/basic.input" "${CD_DIR}/basic.${rproto}.input" | \
-   sed "s|%%CALLID%%|${CALL_ID}|g ; s|%%REC_PORT%%|${rport}|g" | \
-   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS}) | sed \
+  (cat "${CD_DIR}/basic.input" "${CD_DIR}/basic.${rproto}.input"; \
+   sleep 34; cat "${CD_DIR}/basic.recstop.input") | \
+   sed -l "s|%%CALLID%%|${CALL_ID}|g ; s|%%REC_PORT%%|${rport}|g" | \
+   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} | sed \
    "s|^${rtp_porta}$|%%PORT_A%%|g ;  s|^${rtp_porto}$|%%PORT_O%%|g"
 
   case "${rproto}" in
@@ -105,7 +108,7 @@ run_recording() {
   TNAME="recording.${REC_PORT}.${REC_PROTO}.tlog"
   LNAME="recording.${REC_PROTO}.rlog"
   RTPP_ARGS="-d dbug -f -s stdio: -b -m ${MIN_PORT} \
-   -M ${MAX_PORT} -T2 -W2"
+   -M ${MAX_PORT} -T10 -W2"
 
   if [ "${REC_PROTO}" = "remote" ]
   then

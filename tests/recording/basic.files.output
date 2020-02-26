@@ -3,6 +3,8 @@
 0
 E50
 0
+0
+0
 MEMDEB(rtpproxy): all clear
 %%CALL_ID%%=from_tag_1.a.rtcp: 0
 %%CALL_ID%%=from_tag_1.a.rtp: 1564
