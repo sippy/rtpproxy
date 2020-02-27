@@ -792,6 +792,7 @@ main(int argc, char **argv)
     double sleep_time, filter_lastval;
 #endif
     struct rtpp_module_if *mif, *tmp;
+    struct rtpp_daemon_rope drop;
 
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_APP_INIT();
@@ -906,7 +907,8 @@ main(int argc, char **argv)
                 err(1, "getcwd");
             }
         }
-	if (rtpp_daemon(cfs.no_chdir, 0) == -1)
+	drop = rtpp_daemon(cfs.no_chdir, 0);
+	if (drop.result == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
     }
@@ -1048,11 +1050,23 @@ main(int argc, char **argv)
     signal(SIGSYS, rtpp_stacktrace);
 #endif
 
+    elp = prdic_init(cfs.target_pfreq / 10.0, 0.0);
+    if (elp == NULL) {
+        RTPP_LOG(cfs.glog, RTPP_LOG_ERR, "prdic_init() failed");
+        exit(1);
+    }
+
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "READY=1");
 #endif
 
-    elp = prdic_init(cfs.target_pfreq / 10.0, 0.0);
+    if (cfs.nodaemon == 0) {
+        if (rtpp_daemon_rel_parent(&drop) != 0) {
+            RTPP_LOG(cfs.glog, RTPP_LOG_ERR, "parent died prematurely #cry #die");
+            exit(1);
+        }
+    }
+
     for (;;) {
         CALL_METHOD(cfs.rtpp_cmd_cf, wakeup);
         if (cfs.fastshutdown != 0) {
