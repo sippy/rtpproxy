@@ -122,7 +122,7 @@ static const char *rtpp_stream_get_proto(struct rtpp_stream *);
 static int _rtpp_stream_latch(struct rtpp_stream_priv *, double,
   struct rtp_packet *);
 static int _rtpp_stream_check_latch_override(struct rtpp_stream_priv *,
-  struct rtp_packet *);
+  struct rtp_packet *, double);
 static void __rtpp_stream_fill_addr(struct rtpp_stream_priv *,
   struct rtp_packet *);
 static int rtpp_stream_guess_addr(struct rtpp_stream *,
@@ -534,7 +534,7 @@ _rtpp_stream_latch_sync(struct rtpp_stream_priv *pvt, double dtime,
 
 static int
 _rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
-  struct rtp_packet *packet)
+  struct rtp_packet *packet, double dtime)
 {
     const char *actor;
     char saddr[MAX_AP_STRBUF];
@@ -545,8 +545,10 @@ _rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
         return (0);
     if (packet->parsed->ssrc != pvt->latch_info.ssrc.val)
         return (0);
-    if (SEQ_DIST(pvt->latch_info.seq, packet->parsed->seq) > 536)
-        return (0);
+    if (pvt->last_update == 0 || dtime - pvt->last_update > UPDATE_WINDOW) {
+        if (SEQ_DIST(pvt->latch_info.seq, packet->parsed->seq) > 536)
+            return (0);
+    }
 
     actor = _rtpp_stream_get_actor(pvt);
 
@@ -892,13 +894,15 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
             if (CALL_SMETHOD(pvt->rem_addr, cmp, sstosa(&packet->raddr),
               packet->rlen) != 0) {
                 if (_rtpp_stream_islatched(pvt) && \
-                  _rtpp_stream_check_latch_override(pvt, packet) == 0) {
+                  _rtpp_stream_check_latch_override(pvt, packet, dtime->mono) == 0) {
                     /*
                      * Continue, since there could be good packets in
                      * queue.
                      */
                     CALL_METHOD(self->pcount, reg_ignr);
                     goto discard_and_continue;
+                } else if (!_rtpp_stream_islatched(pvt)) {
+                    _rtpp_stream_latch(pvt, dtime->mono, packet);
                 }
                 /* Signal that an address has to be updated */
                 _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
