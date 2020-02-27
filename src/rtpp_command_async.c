@@ -721,6 +721,9 @@ rtpp_command_async_ctor(struct rtpp_cfg *cfsp)
 
 e7:
     if (cmd_cf->acceptor_started != 0) {
+        pthread_mutex_lock(&cmd_cf->cmd_mutex);
+        cmd_cf->tstate_acceptor = TSTATE_CEASE;
+        pthread_mutex_unlock(&cmd_cf->cmd_mutex);
         for (i = 0; i < cmd_cf->aset.pfds_used; i ++) {
             close(cmd_cf->aset.pfds[i].fd);
         }
