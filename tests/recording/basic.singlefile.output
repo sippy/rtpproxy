@@ -5,5 +5,9 @@ E50
 0
 0
 0
+%%PORT_A%%
+%%PORT_O%%
+rtpa_nsent=3124 rtpa_nrcvd=3124 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=3128 rtpa_nrcvd=3128 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 MEMDEB(rtpproxy): all clear
 %%CALL_ID%%=from_tag_1.pcap: 3126

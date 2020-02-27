@@ -1,0 +1,2 @@
+Qv %%CALLID%% from_tag_1 to_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+Qv %%CALLID%% to_tag_1 from_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
