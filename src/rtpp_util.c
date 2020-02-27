@@ -211,11 +211,11 @@ rtpp_daemon(int nochdir, int noclose)
     case -1:
         goto e1;
     case 0:  /*  child */
-        close(ropefd[0]);
+        (void)close(ropefd[0]);
         res.pipe = ropefd[1];
         break;
     default: /* parent */
-        close(ropefd[1]);
+        (void)close(ropefd[1]);
         res.pipe = ropefd[0];
         rtpp_daemon_parent(&res);
         /* noreturn */
