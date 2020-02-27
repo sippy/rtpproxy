@@ -37,12 +37,20 @@
 
 struct rtpp_cfg;
 
+struct rtpp_daemon_rope {
+    int result;
+    int pipe;
+    const char *ok_msg;
+    size_t msglen;
+};
+
 /* Function prototypes */
 void seedrandom(void);
 int set_rlimits(const struct rtpp_cfg *);
 int drop_privileges(const struct rtpp_cfg *);
 char *rtpp_strsep(char **, const char *);
-int rtpp_daemon(int, int);
+int rtpp_daemon_rel_parent(const struct rtpp_daemon_rope *);
+struct rtpp_daemon_rope rtpp_daemon(int, int);
 int url_unquote(unsigned char *, int);
 int rtpp_get_sched_hz(void);
 long long rtpp_rlim_max(const struct rtpp_cfg *);

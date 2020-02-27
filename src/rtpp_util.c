@@ -141,13 +141,48 @@ rtpp_strsep(char **stringp, const char *delim)
     /* NOTREACHED */
 }
 
+static void
+rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
+{
+    char buf[rp->msglen];
+    int r;
+
+    do {
+        r = read(rp->pipe, buf, rp->msglen);
+    } while (r < 0 && errno == EINTR);
+    if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0)
+        _exit(1);
+    _exit(0);
+}
+
+int
+rtpp_daemon_rel_parent(const struct rtpp_daemon_rope *rp)
+{
+    int r;
+
+    do {
+        r = write(rp->pipe, rp->ok_msg, rp->msglen);
+    } while (r < 0 && errno == EINTR);
+    (void)close(rp->pipe);
+    if (r == rp->msglen)
+        return (0);
+    return (-1);
+}
+
 /*
- * Portable daemon(3) implementation, borrowed from FreeBSD. For license
+ * Portable daemon(3) implementation, derived from FreeBSD. For license
  * and other information see:
  *
  * $FreeBSD: src/lib/libc/gen/daemon.c,v 1.8 2007/01/09 00:27:53 imp Exp $
+ *
+ * This version has since been extended to permit simple protocol
+ * to be implemented between parent and a child to keep parent
+ * alive until child done everything it needs to do in order to get
+ * up and running, so that any error condition can be propagated
+ * back.
  */
-int
+
+struct rtpp_daemon_rope
 rtpp_daemon(int nochdir, int noclose)
 {
     struct sigaction osa, sa;
@@ -155,11 +190,16 @@ rtpp_daemon(int nochdir, int noclose)
     pid_t newgrp;
     int oerrno;
     int osa_ok;
+    int ropefd[2];
+    struct rtpp_daemon_rope res = {.result = 0, .ok_msg = "OK", .msglen = 2};
 
     if (!noclose) {
         fd = open("/dev/null", O_RDWR, 0);
         if (fd < 0)
-            return (-1);
+            goto fail;
+    }
+    if (pipe(ropefd) != 0) {
+        goto e0;
     }
     /* A SIGHUP may be thrown when the parent exits below. */
     sigemptyset(&sa.sa_mask);
@@ -169,13 +209,16 @@ rtpp_daemon(int nochdir, int noclose)
 
     switch (fork()) {
     case -1:
-        if (!noclose)
-            close(fd);
-        return (-1);
-    case 0:
+        goto e1;
+    case 0:  /*  child */
+        close(ropefd[0]);
+        res.pipe = ropefd[1];
         break;
-    default:
-        _exit(0);
+    default: /* parent */
+        close(ropefd[1]);
+        res.pipe = ropefd[0];
+        rtpp_daemon_parent(&res);
+        /* noreturn */
     }
 
     newgrp = setsid();
@@ -185,7 +228,7 @@ rtpp_daemon(int nochdir, int noclose)
 
     if (newgrp == -1) {
         errno = oerrno;
-        return (-1);
+        goto child_fail;
     }
 
     if (!nochdir)
@@ -195,18 +238,31 @@ rtpp_daemon(int nochdir, int noclose)
         if (fd != STDIN_FILENO) {
             if (dup2(fd, STDIN_FILENO) < 0) {
                 (void)close(fd);
-                return (-1);
+                goto child_fail;
             }
             (void)close(fd);
         }
 #if !defined(RTPP_DEBUG)
-        if (dup2(STDIN_FILENO, STDOUT_FILENO) < 0)
-            return (-1);
-        if (dup2(STDIN_FILENO, STDERR_FILENO) < 0)
-            return (-1);
+        if (dup2(STDIN_FILENO, STDOUT_FILENO) < 0) {
+            goto child_fail;
+        }
+        if (dup2(STDIN_FILENO, STDERR_FILENO) < 0) {
+            goto child_fail;
+        }
 #endif
     }
-    return (0);
+    return (res);
+child_fail:
+    (void)close(res.pipe);
+    goto fail;
+e1:
+    (void)close(ropefd[0]);
+    (void)close(ropefd[1]);
+e0:
+    if (!noclose)
+        (void)close(fd);
+fail:
+    return ((struct rtpp_daemon_rope){.result = -1});
 }
 
 static int8_t hex2char[128] = {
