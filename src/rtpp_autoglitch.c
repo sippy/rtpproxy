@@ -25,6 +25,9 @@
  *
  */
 
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdint.h>
@@ -209,5 +212,76 @@ rtpp_glitch_fcntl(int fd, int cmd, LOCTYPEVALS, ...)
     return(fcntl(fd, cmd, arg));
 glitched:
     errno = EINVAL;
+    return (-1);
+}
+
+#undef getrlimit
+
+struct rlimit;
+
+int
+rtpp_glitch_getrlimit(int resource, struct rlimit *rlp, LOCTYPEVALS)
+{
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return (getrlimit(resource, rlp));
+glitched:
+    errno = EFAULT;
+    return (-1);
+}
+
+#undef setrlimit
+
+int
+rtpp_glitch_setrlimit(int resource, struct rlimit *rlp, LOCTYPEVALS)
+{
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return (setrlimit(resource, rlp));
+glitched:
+    errno = EPERM;
+    return (-1);
+}
+
+#undef dup2
+
+int
+rtpp_glitch_dup2(int oldd, int newd, LOCTYPEVALS)
+{
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return (dup2(oldd, newd));
+glitched:
+    errno = EMFILE;
+    return (-1);
+}
+
+#undef setuid
+
+int
+rtpp_glitch_setuid(uid_t uid, LOCTYPEVALS)
+{
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return (setuid(uid));
+glitched:
+    errno = EPERM;
+    return (-1);
+}
+
+#undef setgid
+
+int
+rtpp_glitch_setgid(gid_t gid, LOCTYPEVALS)
+{
+
+    GLITCH_PROLOGUE();
+    GLITCH_INJECT(&ml, glitched);
+    return (setgid(gid));
+glitched:
+    errno = EPERM;
     return (-1);
 }

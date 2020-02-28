@@ -127,4 +127,50 @@ int rtpp_glitch_fcntl(int, int, LOCTYPES, ...);
 
 #define fcntl(fd, cmd, args...) rtpp_glitch_fcntl(fd, cmd, LOCVALS, ## args)
 
+struct rlimit;
+
+#include <sys/resource.h>
+
+int rtpp_glitch_getrlimit(int, struct rlimit *, LOCTYPES);
+
+#ifdef getrlimit
+# undef getrlimit
+#endif
+
+#define getrlimit(resource, rlp) rtpp_glitch_getrlimit(resource, rlp, LOCVALS)
+
+int rtpp_glitch_setrlimit(int, struct rlimit *, LOCTYPES);
+
+#ifdef setrlimit
+# undef setrlimit
+#endif
+
+#define setrlimit(resource, rlp) rtpp_glitch_setrlimit(resource, rlp, LOCVALS)
+
+#include <unistd.h>
+
+int rtpp_glitch_dup2(int, int, LOCTYPES);
+
+#ifdef dup2
+# undef dup2
+#endif
+
+#define dup2(oldd, newd) rtpp_glitch_dup2(oldd, newd, LOCVALS)
+
+int rtpp_glitch_setuid(uid_t, LOCTYPES);
+
+#ifdef setuid
+# undef setuid
+#endif
+
+#define setuid(uid) rtpp_glitch_setuid(uid, LOCVALS)
+
+int rtpp_glitch_setgid(gid_t, LOCTYPES);
+
+#ifdef setgid
+# undef setgid
+#endif
+
+#define setgid(gid) rtpp_glitch_setgid(gid, LOCVALS)
+
 #endif /* _RTPP_AUTOGLITCH_H */
