@@ -141,18 +141,27 @@ rtpp_strsep(char **stringp, const char *delim)
     /* NOTREACHED */
 }
 
-static void
+/* check in gcc sources gcc/gcov-io.h for the prototype */
+void __attribute__((weak))
+__gcov_flush(void)
+{
+
+}
+
+static void __attribute__ ((noreturn))
 rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
 {
     char buf[rp->msglen];
-    int r;
+    int r, e = 0;
 
     do {
         r = read(rp->pipe, buf, rp->msglen);
     } while (r < 0 && errno == EINTR);
-    if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0)
-        _exit(1);
-    _exit(0);
+    if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0) {
+        e = 1;
+    }
+    __gcov_flush();
+    _exit(e);
 }
 
 int
