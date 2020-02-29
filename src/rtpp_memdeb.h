@@ -41,6 +41,8 @@
 
 #include <pthread.h>
 
+#include "rtpp_codeptr.h"
+
 #if !defined(MEMDEB_APP)
 #error MEMDEB_APP has to be defined
 #endif
@@ -53,50 +55,42 @@ CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
 #define MEMDEB_SYM CONCAT(CONCAT(_, MEMDEB_APP), _memdeb)
 
 #undef malloc
-#define malloc(n) rtpp_memdeb_malloc((n), MEMDEB_SYM, \
-  __FILE__, __LINE__, __func__)
+#define malloc(n) rtpp_memdeb_malloc((n), MEMDEB_SYM, HEREVAL)
 #undef free
 #if !defined(RTPP_MEMDEB_FREE_NULL)
-#define free(p) rtpp_memdeb_free((p), MEMDEB_SYM, \
-  __FILE__, __LINE__, __func__)
+#define free(p) rtpp_memdeb_free((p), MEMDEB_SYM, HEREVAL)
 #else
-#define free(p) rtpp_memdeb_free_n((p), MEMDEB_SYM, \
-  __FILE__, __LINE__, __func__)
+#define free(p) rtpp_memdeb_free_n((p), MEMDEB_SYM, HEREVAL)
 #endif
 #undef realloc
-#define realloc(p,n) rtpp_memdeb_realloc((p), (n), \
-  MEMDEB_SYM, __FILE__, __LINE__, __func__)
+#define realloc(p,n) rtpp_memdeb_realloc((p), (n), MEMDEB_SYM, HEREVAL)
 #undef strdup
-#define strdup(p) rtpp_memdeb_strdup((p), MEMDEB_SYM, \
-  __FILE__, __LINE__, __func__)
+#define strdup(p) rtpp_memdeb_strdup((p), MEMDEB_SYM, HEREVAL)
 #undef asprintf
 #define asprintf(pp, fmt, args...) rtpp_memdeb_asprintf((pp), (fmt), \
-  MEMDEB_SYM, __FILE__, __LINE__, __func__, ## args)
+  MEMDEB_SYM, HEREVAL, ## args)
 #undef vasprintf
 #define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), \
-  MEMDEB_SYM, __FILE__, __LINE__, __func__, (vl))
+  MEMDEB_SYM, HEREVAL, (vl))
 #undef memcpy
 #define memcpy(dp, sp, len) rtpp_memdeb_memcpy((dp), (sp), (len), \
-  MEMDEB_SYM, __FILE__, __LINE__, __func__)
-#define calloc(nm, sz) rtpp_memdeb_calloc((nm), (sz), \
-  MEMDEB_SYM, __FILE__, __LINE__, __func__)
+  MEMDEB_SYM, HEREVAL)
+#define calloc(nm, sz) rtpp_memdeb_calloc((nm), (sz), MEMDEB_SYM, HEREVAL)
 
-void *rtpp_memdeb_malloc(size_t, void *, const char *, int, const char *);
-void rtpp_memdeb_free(void *, void *, const char *, int, const char *);
-void rtpp_memdeb_free_n(void *, void *, const char *, int, const char *);
-void *rtpp_memdeb_realloc(void *, size_t, void *, const char *, int, const char *);
-char *rtpp_memdeb_strdup(const char *, void *, const char *, int, const char *);
-int rtpp_memdeb_asprintf(char **, const char *, void *, const char *, int, \
-  const char *, ...) __attribute__ ((format (printf, 2, 7)));
-void *rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *, \
-  const char *, int, const char *);
-void *rtpp_memdeb_calloc(size_t number, size_t size, void *, \
-  const char *, int, const char *);
+void *rtpp_memdeb_malloc(size_t, void *, HERETYPE);
+void rtpp_memdeb_free(void *, void *, HERETYPE);
+void rtpp_memdeb_free_n(void *, void *, HERETYPE);
+void *rtpp_memdeb_realloc(void *, size_t, void *, HERETYPE);
+char *rtpp_memdeb_strdup(const char *, void *, HERETYPE);
+int rtpp_memdeb_asprintf(char **, const char *, void *, HERETYPE, ...)
+   __attribute__ ((format (printf, 2, 5)));
+void *rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *,
+  HERETYPE);
+void *rtpp_memdeb_calloc(size_t number, size_t size, void *, HERETYPE);
 
 #include <stdarg.h>
 
-int rtpp_memdeb_vasprintf(char **, const char *, void *, const char *, int, \
-  const char *, va_list);
+int rtpp_memdeb_vasprintf(char **, const char *, void *, HERETYPE, va_list);
 
 #define RTPP_CHECK_LEAKS 	1
 

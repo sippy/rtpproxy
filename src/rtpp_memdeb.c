@@ -72,7 +72,7 @@
 #undef memcpy
 
 #define _memcpy(dp, sp, len) rtpp_memdeb_memcpy((dp), (sp), (len), \
-  p, __FILE__, __LINE__, __func__)
+  p, HEREVAL)
 
 #define UNUSED(x) (void)(x)
 
@@ -90,7 +90,7 @@
 struct memdeb_node
 {
     uint64_t magic;
-    struct rtpp_codeptr loc;
+    const struct rtpp_codeptr *loc;
     struct memdeb_stats mstats;
     struct memdeb_node *next;
 };
@@ -228,8 +228,8 @@ rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const struct rtpp_codeptr *mlp,
             RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, mlp, "Nodelist %p is corrupt", mnp);
             abort();
         }
-        if (mnp->loc.fname == mlp->fname && mnp->loc.linen == mlp->linen && \
-          mnp->loc.funcn == mlp->funcn)
+        if (mnp->loc->fname == mlp->fname && mnp->loc->linen == mlp->linen && \
+          mnp->loc->funcn == mlp->funcn)
             return (mnp);
         lastnode = mnp;
     }
@@ -244,7 +244,7 @@ rtpp_memdeb_nget(struct rtpp_memdeb_priv *pvt, const struct rtpp_codeptr *mlp,
     }
     memset(rval, '\0', sizeof(struct memdeb_node));
     rval->magic = MEMDEB_SIGNATURE;
-    rval->loc = *mlp;
+    rval->loc = mlp;
     if (pvt->nodes == NULL) {
         pvt->nodes = rval;
     } else {
@@ -268,15 +268,10 @@ static int rtpp_memdeb_ivasprintf(char **, const char *, void *,
   const struct rtpp_codeptr *, va_list ap);
 
 void *
-rtpp_memdeb_malloc(size_t size, void *p, const char *fname,
-  int linen, const char *funcn)
+rtpp_memdeb_malloc(size_t size, void *p, HERETYPEARG)
 {
-    struct rtpp_codeptr ml;
 
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
-    return (rtpp_memdeb_imalloc(size, p, 0, &ml));
+    return (rtpp_memdeb_imalloc(size, p, 0, HEREARG));
 }
 
 static void *
@@ -317,7 +312,7 @@ glitched:
 }
 
 static struct memdeb_pfx *
-ptr2mpf(struct rtpp_memdeb_priv *pvt, void *ptr, struct rtpp_codeptr *mlp)
+ptr2mpf(struct rtpp_memdeb_priv *pvt, void *ptr, const struct rtpp_codeptr *mlp)
 {
     char *cp;
     struct memdeb_pfx *mpf;
@@ -340,28 +335,20 @@ ptr2mpf(struct rtpp_memdeb_priv *pvt, void *ptr, struct rtpp_codeptr *mlp)
 }
 
 void
-rtpp_memdeb_free(void *ptr, void *p, const char *fname, int linen, const char *funcn)
+rtpp_memdeb_free(void *ptr, void *p, HERETYPEARG)
 {
-    UNUSED(fname);
-    UNUSED(linen);
-    UNUSED(funcn);
     struct memdeb_pfx *mpf;
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
-    struct rtpp_codeptr ml;
 
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
-
-    CHK_PRIV_VRB(pvt, p, &ml);
-    mpf = ptr2mpf(pvt, ptr, &ml);
+    CHK_PRIV_VRB(pvt, p, HEREARG);
+    mpf = ptr2mpf(pvt, ptr, HEREARG);
     gp = (unsigned char *)mpf->real_data + mpf->asize;
     guard = MEMDEB_SIGNATURE_ALLOC(gp);
     if (memcmp(gp, &guard, MEMDEB_GUARD_SIZE) != 0) {
         /* Guard is b0rken, probably out-of-bound write */
-        RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, &ml, "Guard is b0rken, probably out-of-bound write");
+        RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, HEREARG, "Guard is b0rken, probably out-of-bound write");
         abort();
     }
     pthread_mutex_lock(&pvt->mutex);
@@ -373,40 +360,31 @@ rtpp_memdeb_free(void *ptr, void *p, const char *fname, int linen, const char *f
 }
 
 void
-rtpp_memdeb_free_n(void *ptr, void *p, const char *fname, int linen, const char *funcn)
+rtpp_memdeb_free_n(void *ptr, void *p, HERETYPEARG)
 {
 
     if (ptr == NULL)
         return;
-    rtpp_memdeb_free(ptr, p, fname, linen, funcn);
+    rtpp_memdeb_free(ptr, p, HEREARG);
 }
 
 void *
-rtpp_memdeb_realloc(void *ptr, size_t size, void *p, const char *fname, int linen,
-  const char *funcn)
+rtpp_memdeb_realloc(void *ptr, size_t size, void *p, HERETYPEARG)
 {
-    UNUSED(fname);
-    UNUSED(linen);
-    UNUSED(funcn);
     struct memdeb_pfx *mpf, *new_mpf;
     char *cp;
     uint64_t sig_save;
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
-    struct rtpp_codeptr ml;
 
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
+    GLITCH_INJECT(HEREARG, glitched);
 
-    GLITCH_INJECT(&ml, glitched);
-
-    CHK_PRIV_VRB(pvt, p, &ml);
+    CHK_PRIV_VRB(pvt, p, HEREARG);
     if (ptr == NULL) {
-        return (rtpp_memdeb_imalloc(size, pvt, 1, &ml));
+        return (rtpp_memdeb_imalloc(size, pvt, 1, HEREARG));
     }
-    mpf = ptr2mpf(pvt, ptr, &ml);
+    mpf = ptr2mpf(pvt, ptr, HEREARG);
     sig_save = MEMDEB_SIGNATURE_ALLOC(mpf);
     pthread_mutex_lock(&pvt->mutex);
     mpf->magic = MEMDEB_SIGNATURE_FREE(mpf);
@@ -440,8 +418,7 @@ glitched:
 }
 
 char *
-rtpp_memdeb_strdup(const char *ptr, void *p, const char *fname, int linen, \
-  const char *funcn)
+rtpp_memdeb_strdup(const char *ptr, void *p, HERETYPEARG)
 {
     struct memdeb_node *mnp;
     struct memdeb_pfx *mpf;
@@ -449,18 +426,13 @@ rtpp_memdeb_strdup(const char *ptr, void *p, const char *fname, int linen, \
     unsigned char *gp;
     uint64_t guard;
     struct rtpp_memdeb_priv *pvt;
-    struct rtpp_codeptr ml;
 
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
+    GLITCH_INJECT(HEREARG, glitched);
 
-    GLITCH_INJECT(&ml, glitched);
-
-    CHK_PRIV_VRB(pvt, p, &ml);
+    CHK_PRIV_VRB(pvt, p, HEREARG);
     size = strlen(ptr) + 1;
     mpf = malloc(size + offsetof(struct memdeb_pfx, real_data) + MEMDEB_GUARD_SIZE);
-    mnp = rtpp_memdeb_nget(pvt, &ml, 1);
+    mnp = rtpp_memdeb_nget(pvt, HEREARG, 1);
     if (mpf == NULL) {
         mnp->mstats.afails++;
         pthread_mutex_unlock(&pvt->mutex);
@@ -483,33 +455,23 @@ glitched:
 }
 
 int
-rtpp_memdeb_asprintf(char **pp, const char *fmt, void *p, const char *fname,
-  int linen, const char *funcn, ...)
+rtpp_memdeb_asprintf(char **pp, const char *fmt, void *p, HERETYPEARG, ...)
 {
     va_list ap;
     int rval;
-    struct rtpp_codeptr ml;
 
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
-
-    va_start(ap, funcn);
-    rval = rtpp_memdeb_ivasprintf(pp, fmt, p, &ml, ap);
+    va_start(ap, HEREARG);
+    rval = rtpp_memdeb_ivasprintf(pp, fmt, p, HEREARG, ap);
     va_end(ap);
     return (rval);
 }
 
 int
-rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
-  int linen, const char *funcn, va_list ap)
+rtpp_memdeb_vasprintf(char **pp, const char *fmt, void *p, HERETYPEARG,
+  va_list ap)
 {
-    struct rtpp_codeptr ml;
 
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
-    return (rtpp_memdeb_ivasprintf(pp, fmt, p, &ml, ap));
+    return (rtpp_memdeb_ivasprintf(pp, fmt, p, HEREARG, ap));
 }
 
 static int
@@ -542,19 +504,14 @@ glitched:
 }
 
 void *
-rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *p,
-  const char *fname, int linen, const char *funcn)
+rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *p, HERETYPEARG)
 {
-    struct rtpp_codeptr ml;
     struct rtpp_memdeb_priv *pvt;
 
     CHK_PRIV(pvt, p);
 
     if ((dst < src && src < (dst + len)) || (src < dst && dst < (src + len))) {
-        ml.fname = fname;
-        ml.linen = linen;
-        ml.funcn = funcn;
-        RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, &ml, "memcpy(%p, %p, %ld) overlapping regions, use memmove()",
+        RTPP_MEMDEB_REPORT_LOC(pvt->_md_glog, HEREARG, "memcpy(%p, %p, %ld) overlapping regions, use memmove()",
           dst, src, (long)len);
         abort();
     }
@@ -562,17 +519,11 @@ rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *p,
 }
 
 void *
-rtpp_memdeb_calloc(size_t number, size_t size, void *p, \
-  const char *fname, int linen, const char *funcn)
+rtpp_memdeb_calloc(size_t number, size_t size, void *p, HERETYPEARG)
 {
     void *rp;
-    struct rtpp_codeptr ml;
 
-    ml.fname = fname;
-    ml.linen = linen;
-    ml.funcn = funcn;
-
-    rp = rtpp_memdeb_imalloc(number * size, p, 0, &ml);
+    rp = rtpp_memdeb_imalloc(number * size, p, 0, HEREARG);
     if (rp == NULL)
         return (NULL);
     memset(rp, '\0', number * size);
@@ -630,7 +581,7 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
                 continue;
         }
         if (nunalloc > 0) {
-            max_nunalloc = is_approved(pvt, mnp->loc.funcn);
+            max_nunalloc = is_approved(pvt, mnp->loc->funcn);
             if (max_nunalloc > 0 && nunalloc <= max_nunalloc)
                 continue;
         }
@@ -642,7 +593,7 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
         RTPP_MEMDEB_REPORT2(log, nostdout,
           "  %s+%d, %s(): nalloc = %" PRId64 ", balloc = %" PRId64 ", nfree = %"
           PRId64 ", bfree = %" PRId64 ", afails = %" PRId64 ", nunalloc_baseln"
-          " = %" PRId64, mnp->loc.fname, mnp->loc.linen, mnp->loc.funcn, mnp->mstats.nalloc,
+          " = %" PRId64, mnp->loc->fname, mnp->loc->linen, mnp->loc->funcn, mnp->mstats.nalloc,
           mnp->mstats.balloc, mnp->mstats.nfree, mnp->mstats.bfree,
           mnp->mstats.afails, mnp->mstats.nunalloc_baseln);
     }
@@ -697,10 +648,10 @@ rtpp_memdeb_get_stats(void *p, const char *fname, const char *funcn,
             RTPP_MEMDEB_REPORT(pvt->_md_glog, "Nodelist %p is corrupt", mnp);
             abort();
         }
-        if (funcn != NULL && strcmp(funcn, mnp->loc.funcn) != 0) {
+        if (funcn != NULL && strcmp(funcn, mnp->loc->funcn) != 0) {
             continue;
         }
-        if (fname != NULL && strcmp(fname, mnp->loc.fname) != 0) {
+        if (fname != NULL && strcmp(fname, mnp->loc->fname) != 0) {
             continue;
         }
         RTPP_MD_STATS_ADD(mstatp, &mnp->mstats);

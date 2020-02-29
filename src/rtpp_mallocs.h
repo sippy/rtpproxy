@@ -31,16 +31,15 @@
 
 /* Function prototypes */
 #if defined(RTPP_CHECK_LEAKS)
-#define rtpp_zmalloc(s) rtpp_zmalloc_memdeb((s), MEMDEB_SYM, __FILE__, \
-  __LINE__, __func__)
-void *rtpp_zmalloc_memdeb(size_t, void *, const char *, int, const char *);
+#define rtpp_zmalloc(s) rtpp_zmalloc_memdeb((s), MEMDEB_SYM, HEREVAL)
+void *rtpp_zmalloc_memdeb(size_t, void *, HERETYPE);
 #else
 void *rtpp_zmalloc(size_t);
 #endif
 
 #if defined(RTPP_CHECK_LEAKS)
-#define rtpp_rzmalloc(args...) rtpp_rzmalloc_memdeb(__FILE__, __LINE__, __func__, ## args)
-void *rtpp_rzmalloc_memdeb(const char *, int, const char *, size_t, size_t);
+#define rtpp_rzmalloc(args...) rtpp_rzmalloc_memdeb(HEREVAL, ## args)
+void *rtpp_rzmalloc_memdeb(HERETYPE, size_t, size_t);
 #else
 void *rtpp_rzmalloc(size_t, size_t);
 #endif

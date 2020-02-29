@@ -25,7 +25,12 @@
  *
  */
 
-#define MODULE_API_REVISION 8
+#ifndef _RTPP_MODULE_H
+#define _RTPP_MODULE_H
+
+#define MODULE_API_REVISION 9
+
+#include "rtpp_codeptr.h"
 
 struct rtpp_cfg;
 struct rtpp_module_priv;
@@ -50,36 +55,33 @@ DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_rtcp_rcvd, void,
 
 #include <stdarg.h>
 
-DEFINE_RAW_METHOD(rtpp_module_malloc, void *, size_t,  void *, const char *,
-  int, const char *);
-DEFINE_RAW_METHOD(rtpp_module_zmalloc, void *, size_t,  void *, const char *,
-  int, const char *);
-DEFINE_RAW_METHOD(rtpp_module_free, void, void *, void *, const char *, int,
-  const char *);
+DEFINE_RAW_METHOD(rtpp_module_malloc, void *, size_t,  void *, HERETYPE);
+DEFINE_RAW_METHOD(rtpp_module_zmalloc, void *, size_t,  void *, HERETYPE);
+DEFINE_RAW_METHOD(rtpp_module_free, void, void *, void *, HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_realloc, void *, void *, size_t,   void *,
-  const char *, int, const char *);
+  HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_strdup, char *, const char *,  void *,
-  const char *, int, const char *);
+  HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_asprintf, int, char **, const char *,
-   void *, const char *, int, const char *, ...);
+   void *, HERETYPE, ...);
 DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
-   void *, const char *, int, const char *, va_list);
+   void *, HERETYPE, va_list);
 
 #if !defined(MODULE_IF_CODE)
 #define mod_malloc(n) rtpp_module._malloc((n), rtpp_module.memdeb_p, \
-  __FILE__, __LINE__, __func__)
+  HEREVAL)
 #define mod_zmalloc(n) rtpp_module._zmalloc((n), rtpp_module.memdeb_p, \
-  __FILE__, __LINE__, __func__)
+  HEREVAL)
 #define mod_free(p) rtpp_module._free((p), rtpp_module.memdeb_p, \
-  __FILE__, __LINE__, __func__)
+  HEREVAL)
 #define mod_realloc(p,n) rtpp_module._realloc((p), (n), rtpp_module.memdeb_p, \
-  __FILE__, __LINE__, __func__)
+  HEREVAL)
 #define mod_strdup(p) rtpp_module._strdup((p), rtpp_module.memdeb_p, \
-  __FILE__, __LINE__, __func__)
+  HEREVAL)
 #define mod_asprintf(pp, fmt, args...) rtpp_module._asprintf((pp), (fmt), \
-  rtpp_module.memdeb_p, __FILE__, __LINE__, __func__, ## args)
+  rtpp_module.memdeb_p, HEREVAL, ## args)
 #define mod_vasprintf(pp, fmt, vl) rtpp_module._vasprintf((pp), (fmt), \
-  rtpp_module.memdeb_p, __FILE__, __LINE__, __func__, (vl))
+  rtpp_module.memdeb_p, HEREVAL, (vl))
 #endif
 
 #define mod_log(args...) CALL_METHOD(rtpp_module.log, genwrite, __FUNCTION__, \
@@ -140,3 +142,5 @@ extern struct rtpp_minfo rtpp_module;
   (sptr)->ver.rev == MODULE_API_REVISION && \
   (sptr)->ver.mi_size == sizeof(struct rtpp_minfo) && \
   strcmp((sptr)->ver.build, RTPP_SW_VERSION) == 0)
+
+#endif /* _RTPP_MODULE_H */

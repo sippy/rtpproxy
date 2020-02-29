@@ -41,14 +41,12 @@
 
 #undef pthread_create
 
-#define LOCTYPEVALS LOCTYPES mlp
-
 int
 rtpp_glitch_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-  void *(*start_routine)(void *), void *arg, LOCTYPEVALS)
+  void *(*start_routine)(void *), void *arg, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return (pthread_create(thread, attr, start_routine, arg));
 glitched:
     errno = EFAULT;
@@ -59,10 +57,10 @@ glitched:
 
 int
 rtpp_glitch_pthread_mutex_init(pthread_mutex_t *mutex,
-  const pthread_mutexattr_t *attr, LOCTYPEVALS)
+  const pthread_mutexattr_t *attr, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return (pthread_mutex_init(mutex, attr));
 glitched:
     return (ENOMEM);
@@ -71,10 +69,10 @@ glitched:
 #undef socket
 
 int
-rtpp_glitch_socket(int domain, int type, int protocol, LOCTYPEVALS)
+rtpp_glitch_socket(int domain, int type, int protocol, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return(socket(domain, type, protocol));
 glitched:
     errno = ENFILE;
@@ -84,10 +82,10 @@ glitched:
 #undef listen
 
 int
-rtpp_glitch_listen(int s, int backlog, LOCTYPEVALS)
+rtpp_glitch_listen(int s, int backlog, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return(listen(s, backlog));
 glitched:
     errno = EOPNOTSUPP;
@@ -98,10 +96,10 @@ glitched:
 
 int
 rtpp_glitch_bind(int s, const struct sockaddr *addr, socklen_t addrlen,
-  LOCTYPEVALS)
+  HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return(bind(s, addr, addrlen));
 glitched:
     errno = EADDRINUSE;
@@ -112,11 +110,11 @@ glitched:
 
 int
 rtpp_glitch_accept(int s, struct sockaddr * restrict addr,
-  socklen_t * restrict addrlen, LOCTYPEVALS)
+  socklen_t * restrict addrlen, HERETYPEARG)
 {
     int fdc;
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return(accept(s, addr, addrlen));
 glitched:
     fdc = accept(s, addr, addrlen);
@@ -130,10 +128,10 @@ glitched:
 #undef chmod
 
 int
-rtpp_glitch_chmod(const char *path, mode_t mode, LOCTYPEVALS)
+rtpp_glitch_chmod(const char *path, mode_t mode, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return(chmod(path, mode));
 glitched:
     errno = EIO;
@@ -144,10 +142,10 @@ glitched:
 
 int
 rtpp_glitch_getaddrinfo(const char *hostname, const char *servname,
-  const struct addrinfo *hints, struct addrinfo **res, LOCTYPEVALS)
+  const struct addrinfo *hints, struct addrinfo **res, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return(getaddrinfo(hostname, servname, hints, res));
 glitched:
     return (EAI_MEMORY);
@@ -158,19 +156,19 @@ glitched:
 #include <stdarg.h>
 
 int
-rtpp_glitch_open(const char *path, int flags, LOCTYPEVALS, ...)
+rtpp_glitch_open(const char *path, int flags, HERETYPEARG, ...)
 {
 
     if (strcmp(path, "/dev/urandom") != 0 && strcmp(mlp->funcn, "main") != 0 &&
       strcmp(mlp->funcn, "rtpp_get_sched_hz_linux") != 0) {
-        GLITCH_INJECT(mlp, glitched);
+        GLITCH_INJECT(HEREARG, glitched);
     }
 
     if ((flags & O_CREAT) != 0) {
         va_list ap;
         int mode;
 
-        va_start(ap, mlp);
+        va_start(ap, HEREARG);
         mode = va_arg(ap, int);
         va_end(ap);
         return(open(path, flags, mode));
@@ -184,13 +182,13 @@ glitched:
 #undef fcntl
 
 int
-rtpp_glitch_fcntl(int fd, int cmd, LOCTYPEVALS, ...)
+rtpp_glitch_fcntl(int fd, int cmd, HERETYPEARG, ...)
 {
     va_list args;
     long arg;
 
-    GLITCH_INJECT(mlp, glitched);
-    va_start(args, mlp);
+    GLITCH_INJECT(HEREARG, glitched);
+    va_start(args, HEREARG);
     arg = va_arg(args, long);
     va_end(args);
     return(fcntl(fd, cmd, arg));
@@ -204,9 +202,9 @@ glitched:
 struct rlimit;
 
 int
-rtpp_glitch_getrlimit(int resource, struct rlimit *rlp, LOCTYPEVALS)
+rtpp_glitch_getrlimit(int resource, struct rlimit *rlp, HERETYPEARG)
 {
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return (getrlimit(resource, rlp));
 glitched:
     errno = EFAULT;
@@ -216,10 +214,10 @@ glitched:
 #undef setrlimit
 
 int
-rtpp_glitch_setrlimit(int resource, struct rlimit *rlp, LOCTYPEVALS)
+rtpp_glitch_setrlimit(int resource, struct rlimit *rlp, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return (setrlimit(resource, rlp));
 glitched:
     errno = EPERM;
@@ -229,10 +227,10 @@ glitched:
 #undef dup2
 
 int
-rtpp_glitch_dup2(int oldd, int newd, LOCTYPEVALS)
+rtpp_glitch_dup2(int oldd, int newd, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return (dup2(oldd, newd));
 glitched:
     errno = EMFILE;
@@ -242,10 +240,10 @@ glitched:
 #undef setuid
 
 int
-rtpp_glitch_setuid(uid_t uid, LOCTYPEVALS)
+rtpp_glitch_setuid(uid_t uid, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return (setuid(uid));
 glitched:
     errno = EPERM;
@@ -255,10 +253,10 @@ glitched:
 #undef setgid
 
 int
-rtpp_glitch_setgid(gid_t gid, LOCTYPEVALS)
+rtpp_glitch_setgid(gid_t gid, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return (setgid(gid));
 glitched:
     errno = EPERM;
@@ -268,10 +266,10 @@ glitched:
 #undef pipe
 
 int
-rtpp_glitch_pipe(int fildes[2], LOCTYPEVALS)
+rtpp_glitch_pipe(int fildes[2], HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return (pipe(fildes));
 glitched:
     errno = ENOMEM;
@@ -281,10 +279,10 @@ glitched:
 #undef write
 
 ssize_t
-rtpp_glitch_write(int fd, const void *buf, size_t nbytes, LOCTYPEVALS)
+rtpp_glitch_write(int fd, const void *buf, size_t nbytes, HERETYPEARG)
 {
 
-    GLITCH_INJECT(mlp, glitched);
+    GLITCH_INJECT(HEREARG, glitched);
     return (write(fd, buf, nbytes));
 glitched:
     errno = EDQUOT;
