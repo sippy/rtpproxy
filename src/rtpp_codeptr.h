@@ -25,8 +25,13 @@
  *
  */
 
+#ifndef _RTPP_CODEPTR_H
+#define _RTPP_CODEPTR_H
+
 struct rtpp_codeptr {
     const char *fname;
     int linen;
     const char *funcn;
 };
+
+#endif /* _RTPP_CODEPTR_H */
