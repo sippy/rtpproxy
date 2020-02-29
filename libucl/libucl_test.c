@@ -200,7 +200,8 @@ conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
     const char *key = NULL;
     int i;
     bool ret = true, found = false;
-    static struct rtpp_log log = {.write = rtpp_log_obj_write_early, .ewrite = rtpp_log_obj_ewrite_early};
+    static struct rtpp_log log = {.genwrite = rtpp_log_obj_write_early,
+      .errwrite = rtpp_log_obj_ewrite_early};
 
     it = ucl_object_iterate_new(obj);
     if (it == NULL)

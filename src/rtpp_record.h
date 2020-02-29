@@ -39,7 +39,7 @@ DEFINE_METHOD(rtpp_record, rtpp_record_write, void, struct rtpp_stream *, struct
 
 struct rtpp_record {
     struct rtpp_refcnt *rcnt;
-    METHOD_ENTRY(rtpp_record_write, write);
+    METHOD_ENTRY(rtpp_record_write, pktwrite);
 };
 
 #define RECORD_RTP  0

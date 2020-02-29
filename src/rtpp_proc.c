@@ -124,7 +124,7 @@ send_packet(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp_in,
 
     if (stp_in->rrc != NULL) {
         if (!CALL_SMETHOD(stp_out, isplayer_active)) {
-            CALL_METHOD(stp_in->rrc, write, stp_out, packet);
+            CALL_METHOD(stp_in->rrc, pktwrite, stp_out, packet);
         }
     }
 
