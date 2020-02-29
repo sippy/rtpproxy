@@ -8,13 +8,13 @@
 #include "rtpp_record.h"
 #include "rtpp_record_fin.h"
 static void rtpp_record_write_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_record@%p::write (rtpp_record_write) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_record@%p::pktwrite (rtpp_record_write) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 void rtpp_record_fin(struct rtpp_record *pub) {
-    RTPP_DBG_ASSERT(pub->write != (rtpp_record_write_t)NULL);
-    RTPP_DBG_ASSERT(pub->write != (rtpp_record_write_t)&rtpp_record_write_fin);
-    pub->write = (rtpp_record_write_t)&rtpp_record_write_fin;
+    RTPP_DBG_ASSERT(pub->pktwrite != (rtpp_record_write_t)NULL);
+    RTPP_DBG_ASSERT(pub->pktwrite != (rtpp_record_write_t)&rtpp_record_write_fin);
+    pub->pktwrite = (rtpp_record_write_t)&rtpp_record_write_fin;
 }
 #if defined(RTPP_FINTEST)
 #include <assert.h>
@@ -37,11 +37,11 @@ rtpp_record_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
-    tp->pub.write = (rtpp_record_write_t)((void *)0x1);
+    tp->pub.pktwrite = (rtpp_record_write_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
-    CALL_TFIN(&tp->pub, write);
+    CALL_TFIN(&tp->pub, pktwrite);
     assert((_naborts - naborts_s) == 1);
 }
 const static void *_rtpp_record_ftp = (void *)&rtpp_record_fintest;
