@@ -28,8 +28,10 @@
 #ifndef _RTPP_AUTOGLITCH_H
 #define _RTPP_AUTOGLITCH_H
 
-#define LOCTYPES const char *, int, const char *
-#define LOCVALS  __FILE__, __LINE__, __func__
+#include "rtpp_codeptr.h"
+
+#define LOCTYPES const struct rtpp_codeptr *
+#define LOCVALS  &(const struct rtpp_codeptr){.fname = __FILE__, .linen = __LINE__, .funcn = __func__}
 
 int rtpp_glitch_pthread_create(pthread_t *, const pthread_attr_t *,
   void *(*)(void *), void *, LOCTYPES);
@@ -172,5 +174,21 @@ int rtpp_glitch_setgid(gid_t, LOCTYPES);
 #endif
 
 #define setgid(gid) rtpp_glitch_setgid(gid, LOCVALS)
+
+int rtpp_glitch_pipe(int [2], LOCTYPES);
+
+#ifdef pipe
+# undef pipe
+#endif
+
+#define pipe(fildes) rtpp_glitch_pipe(fildes, LOCVALS)
+
+ssize_t rtpp_glitch_write(int, const void *, size_t, LOCTYPES);
+
+#ifdef write
+# undef write
+#endif
+
+#define write(fd, buf, nbytes) rtpp_glitch_write(fd, buf, nbytes, LOCVALS)
 
 #endif /* _RTPP_AUTOGLITCH_H */

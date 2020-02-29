@@ -33,6 +33,10 @@ struct _glav_trig {
     uintptr_t stack;
     int wild;
     char act[16];
+    union {
+      const struct rtpp_codeptr *ptr;
+      atomic_uintptr_t aptr;
+    } lasthit;
 };
 
 extern struct _glav_trig _glav_trig;
@@ -53,6 +57,7 @@ void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
 #define GLITCH_ACTION(mlp) { \
     const char *_cp; \
     static int _b = 1; \
+    atomic_store(&_glav_trig.lasthit.aptr, (uintptr_t)mlp); \
     for (_cp = &_glav_trig.act[0]; *_cp != '\0'; _cp++) { \
         switch (*_cp) { \
         case GLAV_ABORT: \
