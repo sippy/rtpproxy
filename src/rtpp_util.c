@@ -216,6 +216,14 @@ rtpp_daemon(int nochdir, int noclose)
     sa.sa_flags = 0;
     osa_ok = sigaction(SIGHUP, &sa, &osa);
 
+    /*
+     * When we fork, the counters are duplicate as they're and so the values
+     * are finally wrong when writing gcda for parent and child. So just before
+     * to fork, we flush the counters and so the parent and the child have new
+     * counters set to zero.
+     */
+    __gcov_flush();
+
     switch (fork()) {
     case -1:
         goto e1;
