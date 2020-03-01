@@ -188,4 +188,20 @@ ssize_t rtpp_glitch_write(int, const void *, size_t, HERETYPE);
 
 #define write(fd, buf, nbytes) rtpp_glitch_write(fd, buf, nbytes, HEREVAL)
 
+pid_t rtpp_glitch_setsid(HERETYPE);
+
+#ifdef setsid
+# undef setsid
+#endif
+
+#define setsid() rtpp_glitch_setsid(HEREVAL)
+
+pid_t rtpp_glitch_fork(HERETYPE);
+
+#ifdef fork
+# undef fork
+#endif
+
+#define fork() rtpp_glitch_fork(HEREVAL)
+
 #endif /* _RTPP_AUTOGLITCH_H */

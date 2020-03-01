@@ -288,3 +288,25 @@ glitched:
     errno = EDQUOT;
     return (-1);
 }
+
+pid_t
+rtpp_glitch_setsid(HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (setsid());
+glitched:
+    errno = EPERM;
+    return (-1);
+}
+
+pid_t
+rtpp_glitch_fork(HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (fork());
+glitched:
+    errno = ENOMEM;
+    return (-1);
+}
