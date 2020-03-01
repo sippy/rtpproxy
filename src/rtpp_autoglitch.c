@@ -289,6 +289,8 @@ glitched:
     return (-1);
 }
 
+#undef setsid
+
 pid_t
 rtpp_glitch_setsid(HERETYPEARG)
 {
@@ -299,6 +301,8 @@ glitched:
     errno = EPERM;
     return (-1);
 }
+
+#undef fork
 
 pid_t
 rtpp_glitch_fork(HERETYPEARG)
