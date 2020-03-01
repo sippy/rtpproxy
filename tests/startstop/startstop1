@@ -37,7 +37,7 @@ truncate -s 0 "${TS_LOGFILE}"
 myuid="`id -un`"
 mygid="`id -gn`"
 
-for rargs in "--config libucl/libucl_test.conf -c fifo" \
+for rargs in "--config libucl/libucl_test.conf -c fifo -L 100" \
  "-c rr -u ${myuid}:${mygid} --dso ../modules/acct_rtcp_hep/.libs/rtpp_acct_rtcp_hep_debug.so" ""
 do
   for sig in TERM HUP

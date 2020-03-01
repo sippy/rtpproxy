@@ -930,7 +930,10 @@ main(int argc, char **argv)
     i = open(cfs.pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (i >= 0) {
 	len = sprintf(buf, "%u\n", (unsigned int)getpid());
-	write(i, buf, len);
+	if (write(i, buf, len) != len) {
+            RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't write pidfile");
+            exit(1);
+        }
 	close(i);
     } else {
 	RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't open pidfile for writing");

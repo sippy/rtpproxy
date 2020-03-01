@@ -8,7 +8,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_log_obj_fin.h"
 static void rtpp_log_ewrite_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_log@%p::ewrite (rtpp_log_ewrite) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_log@%p::errwrite (rtpp_log_ewrite) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_log_setlevel_fin(void *pub) {
@@ -20,22 +20,22 @@ static void rtpp_log_start_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 static void rtpp_log_write_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_log@%p::write (rtpp_log_write) is invoked after destruction\x0a", pub);
+    fprintf(stderr, "Method rtpp_log@%p::genwrite (rtpp_log_write) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 void rtpp_log_fin(struct rtpp_log *pub) {
-    RTPP_DBG_ASSERT(pub->ewrite != (rtpp_log_ewrite_t)NULL);
-    RTPP_DBG_ASSERT(pub->ewrite != (rtpp_log_ewrite_t)&rtpp_log_ewrite_fin);
-    pub->ewrite = (rtpp_log_ewrite_t)&rtpp_log_ewrite_fin;
+    RTPP_DBG_ASSERT(pub->errwrite != (rtpp_log_ewrite_t)NULL);
+    RTPP_DBG_ASSERT(pub->errwrite != (rtpp_log_ewrite_t)&rtpp_log_ewrite_fin);
+    pub->errwrite = (rtpp_log_ewrite_t)&rtpp_log_ewrite_fin;
     RTPP_DBG_ASSERT(pub->setlevel != (rtpp_log_setlevel_t)NULL);
     RTPP_DBG_ASSERT(pub->setlevel != (rtpp_log_setlevel_t)&rtpp_log_setlevel_fin);
     pub->setlevel = (rtpp_log_setlevel_t)&rtpp_log_setlevel_fin;
     RTPP_DBG_ASSERT(pub->start != (rtpp_log_start_t)NULL);
     RTPP_DBG_ASSERT(pub->start != (rtpp_log_start_t)&rtpp_log_start_fin);
     pub->start = (rtpp_log_start_t)&rtpp_log_start_fin;
-    RTPP_DBG_ASSERT(pub->write != (rtpp_log_write_t)NULL);
-    RTPP_DBG_ASSERT(pub->write != (rtpp_log_write_t)&rtpp_log_write_fin);
-    pub->write = (rtpp_log_write_t)&rtpp_log_write_fin;
+    RTPP_DBG_ASSERT(pub->genwrite != (rtpp_log_write_t)NULL);
+    RTPP_DBG_ASSERT(pub->genwrite != (rtpp_log_write_t)&rtpp_log_write_fin);
+    pub->genwrite = (rtpp_log_write_t)&rtpp_log_write_fin;
 }
 #if defined(RTPP_FINTEST)
 #include <assert.h>
@@ -58,17 +58,17 @@ rtpp_log_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
-    tp->pub.ewrite = (rtpp_log_ewrite_t)((void *)0x1);
+    tp->pub.errwrite = (rtpp_log_ewrite_t)((void *)0x1);
     tp->pub.setlevel = (rtpp_log_setlevel_t)((void *)0x1);
     tp->pub.start = (rtpp_log_start_t)((void *)0x1);
-    tp->pub.write = (rtpp_log_write_t)((void *)0x1);
+    tp->pub.genwrite = (rtpp_log_write_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_log_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
-    CALL_TFIN(&tp->pub, ewrite);
+    CALL_TFIN(&tp->pub, errwrite);
     CALL_TFIN(&tp->pub, setlevel);
     CALL_TFIN(&tp->pub, start);
-    CALL_TFIN(&tp->pub, write);
+    CALL_TFIN(&tp->pub, genwrite);
     assert((_naborts - naborts_s) == 4);
 }
 const static void *_rtpp_log_ftp = (void *)&rtpp_log_fintest;

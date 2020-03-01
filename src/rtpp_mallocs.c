@@ -41,8 +41,7 @@ void *
 #if !defined(RTPP_CHECK_LEAKS)
 rtpp_zmalloc(size_t msize)
 #else
-rtpp_zmalloc_memdeb(size_t msize, void *memdeb_p, const char *fname,
-  int linen, const char *funcn)
+rtpp_zmalloc_memdeb(size_t msize, void *memdeb_p, const struct rtpp_codeptr *mlp)
 #endif
 {
     void *rval;
@@ -50,7 +49,7 @@ rtpp_zmalloc_memdeb(size_t msize, void *memdeb_p, const char *fname,
 #if !defined(RTPP_CHECK_LEAKS)
     rval = malloc(msize);
 #else
-    rval = rtpp_memdeb_malloc(msize, memdeb_p, fname, linen, funcn);
+    rval = rtpp_memdeb_malloc(msize, memdeb_p, mlp);
 #endif
     if (rval != NULL) {
         memset(rval, '\0', msize);
@@ -69,8 +68,7 @@ void *
 #if !defined(RTPP_CHECK_LEAKS)
 rtpp_rzmalloc(size_t msize, size_t rcntp_offs)
 #else
-rtpp_rzmalloc_memdeb(const char *fname, int linen, const char *funcn,
-  size_t msize, size_t rcntp_offs)
+rtpp_rzmalloc_memdeb(const struct rtpp_codeptr *mlp, size_t msize, size_t rcntp_offs)
 #endif
 {
     void *rval;
@@ -91,7 +89,7 @@ rtpp_rzmalloc_memdeb(const char *fname, int linen, const char *funcn,
 #if !defined(RTPP_CHECK_LEAKS)
     rval = malloc(asize);
 #else
-    rval = rtpp_memdeb_malloc(asize, MEMDEB_SYM, fname, linen, funcn);
+    rval = rtpp_memdeb_malloc(asize, MEMDEB_SYM, mlp);
 #endif
     if (rval == NULL) {
         return (NULL);

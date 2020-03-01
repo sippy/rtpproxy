@@ -34,8 +34,8 @@ void *rtpp_wi_sgnl_get_data(struct rtpp_wi *, size_t *);
 int rtpp_wi_sgnl_get_signum(struct rtpp_wi *);
 
 #if defined(RTPP_CHECK_LEAKS)
-#define rtpp_wi_malloc_sgnl(args...) rtpp_wi_malloc_sgnl_memdeb(__FILE__, __LINE__, __func__, ## args)
-struct rtpp_wi *rtpp_wi_malloc_sgnl_memdeb(const char *, int, const char *, int, const void *, size_t);
+#define rtpp_wi_malloc_sgnl(args...) rtpp_wi_malloc_sgnl_memdeb(HEREVAL, ## args)
+struct rtpp_wi *rtpp_wi_malloc_sgnl_memdeb(HERETYPE, int, const void *, size_t);
 #else
 struct rtpp_wi *rtpp_wi_malloc_sgnl(int, const void *, size_t);
 #endif

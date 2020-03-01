@@ -113,6 +113,7 @@ rtpp_glitch_init()
         assert(unsetenv(MDG_ENAME) == 0);
         atomic_init(&_glav_trig.step, -(iglav + 1));
         atomic_init(&_glav_trig.hits, 0);
+        atomic_init(&_glav_trig.lasthit.aptr, (uintptr_t)NULL);
         mgd._glav_orig = iglav;
 
         int do_report = 0;

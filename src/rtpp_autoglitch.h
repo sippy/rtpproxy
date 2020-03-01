@@ -28,103 +28,180 @@
 #ifndef _RTPP_AUTOGLITCH_H
 #define _RTPP_AUTOGLITCH_H
 
-#define LOCTYPES const char *, int, const char *
-#define LOCVALS  __FILE__, __LINE__, __func__
+#include "rtpp_codeptr.h"
 
 int rtpp_glitch_pthread_create(pthread_t *, const pthread_attr_t *,
-  void *(*)(void *), void *, LOCTYPES);
+  void *(*)(void *), void *, HERETYPE);
 
 #ifdef pthread_create
 # undef pthread_create
 #endif
 
 #define pthread_create(thread, attr, start_routine, arg) \
-  rtpp_glitch_pthread_create(thread, attr, start_routine, arg, LOCVALS)
+  rtpp_glitch_pthread_create(thread, attr, start_routine, arg, HEREVAL)
 
 int rtpp_glitch_pthread_mutex_init(pthread_mutex_t *,
-  const pthread_mutexattr_t *, LOCTYPES);
+  const pthread_mutexattr_t *, HERETYPE);
 
 #ifdef pthread_mutex_init
 # undef pthread_mutex_init
 #endif
 
 #define pthread_mutex_init(mutex, attr) \
-  rtpp_glitch_pthread_mutex_init(mutex, attr, LOCVALS)
+  rtpp_glitch_pthread_mutex_init(mutex, attr, HEREVAL)
 
 #include <sys/socket.h>
 
-int rtpp_glitch_socket(int, int, int, LOCTYPES);
+int rtpp_glitch_socket(int, int, int, HERETYPE);
 
 #ifdef socket
 # undef socket
 #endif
 
 #define socket(domain, type, protocol) \
-  rtpp_glitch_socket(domain, type, protocol, LOCVALS)
+  rtpp_glitch_socket(domain, type, protocol, HEREVAL)
 
-int rtpp_glitch_listen(int, int, LOCTYPES);
+int rtpp_glitch_listen(int, int, HERETYPE);
 
 #ifdef listen
 # undef listen
 #endif
 
-#define listen(s, backlog) rtpp_glitch_listen(s, backlog, LOCVALS)
+#define listen(s, backlog) rtpp_glitch_listen(s, backlog, HEREVAL)
 
-int rtpp_glitch_bind(int, const struct sockaddr *, socklen_t, LOCTYPES);
+int rtpp_glitch_bind(int, const struct sockaddr *, socklen_t, HERETYPE);
 
 #ifdef bind
 # undef bind
 #endif
 
-#define bind(s, addr, addrlen) rtpp_glitch_bind(s, addr, addrlen, LOCVALS)
+#define bind(s, addr, addrlen) rtpp_glitch_bind(s, addr, addrlen, HEREVAL)
 
 int rtpp_glitch_accept(int, struct sockaddr * restrict, socklen_t * restrict,
-  LOCTYPES);
+  HERETYPE);
 
 #ifdef accept
 # undef accept
 #endif
 
-#define accept(s, addr, addrlen) rtpp_glitch_accept(s, addr, addrlen, LOCVALS)
+#define accept(s, addr, addrlen) rtpp_glitch_accept(s, addr, addrlen, HEREVAL)
 
 #include <sys/stat.h>
 
-int rtpp_glitch_chmod(const char *path, mode_t mode, LOCTYPES);
+int rtpp_glitch_chmod(const char *path, mode_t mode, HERETYPE);
 
 #ifdef chmod
 # undef chmod
 #endif
 
-#define chmod(path, mode) rtpp_glitch_chmod(path, mode, LOCVALS)
+#define chmod(path, mode) rtpp_glitch_chmod(path, mode, HEREVAL)
 
 #include <netdb.h>
 
 int rtpp_glitch_getaddrinfo(const char *, const char *, const struct addrinfo *,
-  struct addrinfo **, LOCTYPES);
+  struct addrinfo **, HERETYPE);
 
 #ifdef getaddrinfo
 # undef getaddrinfo
 #endif
 
 #define getaddrinfo(hostname, servname, hints, res) \
-  rtpp_glitch_getaddrinfo(hostname, servname, hints, res, LOCVALS)
+  rtpp_glitch_getaddrinfo(hostname, servname, hints, res, HEREVAL)
 
 #include <fcntl.h>
 
-int rtpp_glitch_open(const char *, int, LOCTYPES, ...);
+int rtpp_glitch_open(const char *, int, HERETYPE, ...);
 
 #ifdef open
 # undef open
 #endif
 
-#define open(path, flags, args...) rtpp_glitch_open(path, flags, LOCVALS, ## args)
+#define open(path, flags, args...) rtpp_glitch_open(path, flags, HEREVAL, ## args)
 
-int rtpp_glitch_fcntl(int, int, LOCTYPES, ...);
+int rtpp_glitch_fcntl(int, int, HERETYPE, ...);
 
 #ifdef fcntl
 # undef fcntl
 #endif
 
-#define fcntl(fd, cmd, args...) rtpp_glitch_fcntl(fd, cmd, LOCVALS, ## args)
+#define fcntl(fd, cmd, args...) rtpp_glitch_fcntl(fd, cmd, HEREVAL, ## args)
+
+struct rlimit;
+
+#include <sys/resource.h>
+
+int rtpp_glitch_getrlimit(int, struct rlimit *, HERETYPE);
+
+#ifdef getrlimit
+# undef getrlimit
+#endif
+
+#define getrlimit(resource, rlp) rtpp_glitch_getrlimit(resource, rlp, HEREVAL)
+
+int rtpp_glitch_setrlimit(int, struct rlimit *, HERETYPE);
+
+#ifdef setrlimit
+# undef setrlimit
+#endif
+
+#define setrlimit(resource, rlp) rtpp_glitch_setrlimit(resource, rlp, HEREVAL)
+
+#include <unistd.h>
+
+int rtpp_glitch_dup2(int, int, HERETYPE);
+
+#ifdef dup2
+# undef dup2
+#endif
+
+#define dup2(oldd, newd) rtpp_glitch_dup2(oldd, newd, HEREVAL)
+
+int rtpp_glitch_setuid(uid_t, HERETYPE);
+
+#ifdef setuid
+# undef setuid
+#endif
+
+#define setuid(uid) rtpp_glitch_setuid(uid, HEREVAL)
+
+int rtpp_glitch_setgid(gid_t, HERETYPE);
+
+#ifdef setgid
+# undef setgid
+#endif
+
+#define setgid(gid) rtpp_glitch_setgid(gid, HEREVAL)
+
+int rtpp_glitch_pipe(int [2], HERETYPE);
+
+#ifdef pipe
+# undef pipe
+#endif
+
+#define pipe(fildes) rtpp_glitch_pipe(fildes, HEREVAL)
+
+ssize_t rtpp_glitch_write(int, const void *, size_t, HERETYPE);
+
+#ifdef write
+# undef write
+#endif
+
+#define write(fd, buf, nbytes) rtpp_glitch_write(fd, buf, nbytes, HEREVAL)
+
+pid_t rtpp_glitch_setsid(HERETYPE);
+
+#ifdef setsid
+# undef setsid
+#endif
+
+#define setsid() rtpp_glitch_setsid(HEREVAL)
+
+pid_t rtpp_glitch_fork(HERETYPE);
+
+#ifdef fork
+# undef fork
+#endif
+
+#define fork() rtpp_glitch_fork(HEREVAL)
 
 #endif /* _RTPP_AUTOGLITCH_H */
