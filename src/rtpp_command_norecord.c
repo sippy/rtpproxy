@@ -69,11 +69,6 @@ handle_stop_record(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int id
 		CALL_SMETHOD(spa->rtcp->stream[idx]->rrc->rcnt, decref);
 		spa->rtcp->stream[idx]->rrc = NULL;
 	}
-	/* if there was single file recording, decrease the other stream too */
-	if (spa->rtp->stream[idx]->rrc == spa->rtp->stream[NOT(idx)]->rrc) {
-		CALL_SMETHOD(spa->rtcp->stream[NOT(idx)]->rrc->rcnt, decref);
-		spa->rtcp->stream[NOT(idx)]->rrc = NULL;
-	}
 	RTPP_LOG(spa->log, RTPP_LOG_INFO,
 			"stopping recording RTP session on port %d", spa->rtp->stream[idx]->port);
 	CALL_SMETHOD(spa->rtp->stream[idx]->rrc->rcnt, decref);
