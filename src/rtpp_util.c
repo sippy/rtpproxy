@@ -195,7 +195,7 @@ struct rtpp_daemon_rope
 rtpp_daemon(int nochdir, int noclose)
 {
     struct sigaction osa, sa;
-    int fd;
+    int fd, cpid;
     pid_t newgrp;
     int oerrno;
     int osa_ok;
@@ -222,9 +222,12 @@ rtpp_daemon(int nochdir, int noclose)
      * to fork, we flush the counters and so the parent and the child have new
      * counters set to zero.
      */
-    __gcov_flush();
 
-    switch (fork()) {
+    cpid = fork();
+    if (cpid >= 0) {
+        __gcov_flush();
+    }
+    switch (cpid) {
     case -1:
         goto e1;
     case 0:  /*  child */
