@@ -141,14 +141,8 @@ rtpp_strsep(char **stringp, const char *delim)
     /* NOTREACHED */
 }
 
-#if 0
 /* check in gcc sources gcc/gcov-io.h for the prototype */
-void __attribute__((weak))
-__gcov_flush(void)
-{
-
-}
-#endif
+void (*__gcov_flush)(void) __attribute__((weak)) = NULL;
 
 static void __attribute__ ((noreturn))
 rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
@@ -156,15 +150,14 @@ rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
     char buf[rp->msglen];
     int r, e = 0;
 
-    do {
-        r = read(rp->pipe, buf, rp->msglen);
-    } while (r < 0 && errno == EINTR);
-    if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0) {
-        e = 1;
+    if (__gcov_flush == NULL) {
+        do {
+            r = read(rp->pipe, buf, rp->msglen);
+        } while (r < 0 && errno == EINTR);
+        if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0) {
+            e = 1;
+        }
     }
-#if 0
-    __gcov_flush();
-#endif
     _exit(e);
 }
 
@@ -173,6 +166,10 @@ rtpp_daemon_rel_parent(const struct rtpp_daemon_rope *rp)
 {
     int r;
 
+    if (__gcov_flush != NULL) {
+        (void)close(rp->pipe);
+        return (0);
+    }
     do {
         r = write(rp->pipe, rp->ok_msg, rp->msglen);
     } while (r < 0 && errno == EINTR);
@@ -228,11 +225,6 @@ rtpp_daemon(int nochdir, int noclose)
      */
 
     cpid = fork();
-#if 0
-    if (cpid >= 0) {
-        __gcov_flush();
-    }
-#endif
     switch (cpid) {
     case -1:
         goto e1;
