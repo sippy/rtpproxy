@@ -141,12 +141,14 @@ rtpp_strsep(char **stringp, const char *delim)
     /* NOTREACHED */
 }
 
+#if 0
 /* check in gcc sources gcc/gcov-io.h for the prototype */
 void __attribute__((weak))
 __gcov_flush(void)
 {
 
 }
+#endif
 
 static void __attribute__ ((noreturn))
 rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
@@ -160,7 +162,9 @@ rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
     if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0) {
         e = 1;
     }
+#if 0
     __gcov_flush();
+#endif
     _exit(e);
 }
 
@@ -224,9 +228,11 @@ rtpp_daemon(int nochdir, int noclose)
      */
 
     cpid = fork();
+#if 0
     if (cpid >= 0) {
         __gcov_flush();
     }
+#endif
     switch (cpid) {
     case -1:
         goto e1;
