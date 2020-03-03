@@ -159,10 +159,9 @@ int
 rtpp_glitch_open(const char *path, int flags, HERETYPEARG, ...)
 {
 
-    if (strcmp(path, "/dev/urandom") != 0 && strcmp(mlp->funcn, "main") != 0 &&
-      strcmp(mlp->funcn, "rtpp_get_sched_hz_linux") != 0) {
-        GLITCH_INJECT(HEREARG, glitched);
-    }
+    GLITCH_INJECT_IF(HEREARG, glitched,
+      (strcmp(path, "/dev/urandom") != 0 && strcmp(mlp->funcn, "main") != 0 &&
+      strcmp(mlp->funcn, "rtpp_get_sched_hz_linux") != 0));
 
     if ((flags & O_CREAT) != 0) {
         va_list ap;
@@ -282,7 +281,7 @@ ssize_t
 rtpp_glitch_write(int fd, const void *buf, size_t nbytes, HERETYPEARG)
 {
 
-    GLITCH_INJECT(HEREARG, glitched);
+    GLITCH_INJECT_IF(HEREARG, glitched, (strcmp(mlp->funcn, "rtpc_doreply") != 0));
     return (write(fd, buf, nbytes));
 glitched:
     errno = EDQUOT;

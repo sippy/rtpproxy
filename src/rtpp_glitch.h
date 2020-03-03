@@ -82,9 +82,9 @@ void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
 #define TRIG_CHCK2() (_glav_trig.stack == 0 || stack_cook == _glav_trig.stack)
 #define TRIG_CHCK3() (_glav_trig.stack == 0 || (nhit == 0 || _glav_trig.wild != 0))
 
-#define GLITCH_INJECT(mlp, ghlabel) { \
+#define GLITCH_INJECT_IF(mlp, ghlabel, cond) { \
     intmax_t step = atomic_fetch_add(&_glav_trig.step, 1); \
-    if (TRIG_CHCK1()) { \
+    if (TRIG_CHCK1() && (cond)) { \
         uintptr_t stack_cook =  getstackcookie(); \
         if (TRIG_CHCK2()) { \
             intmax_t nhit = atomic_fetch_add(&_glav_trig.hits, 1); \
@@ -98,3 +98,5 @@ void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
         } \
     } \
 }
+
+#define GLITCH_INJECT(mlp, ghlabel) GLITCH_INJECT_IF(mlp, ghlabel, 1)
