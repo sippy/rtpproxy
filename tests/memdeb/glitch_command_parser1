@@ -11,7 +11,7 @@ disable_aslr
 
 rm -f glitch1.seen.ncout
 touch glitch1.seen.ncout
-for rsock in "stdio:" "${RTPP_NOTIFY_SOCK_TCP}"
+for rsock in ${RTPP_TEST_SOCKETS}
 do
   export RTPP_TEST_SOCKETS="${rsock}"
   glitch_collect "command_parser/command_parser1"
@@ -24,9 +24,9 @@ do
   echo "                   ....${UNSP} unseen points"
   if [ ${rsock} = "stdio:" ]
   then
-    NFPOS=13
+    NFPOS=11
   else
-    NFPOS=0
+    NFPOS=1
   fi
   glitch_do "command_parser/command_parser1" ${NFPOS} command_parser.rlog
   report "glitching command_parser1/${rsock}"
