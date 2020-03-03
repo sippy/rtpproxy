@@ -142,7 +142,11 @@ rtpp_strsep(char **stringp, const char *delim)
 }
 
 /* check in gcc sources gcc/gcov-io.h for the prototype */
-void (*__gcov_flush)(void) __attribute__((weak)) = NULL;
+void __attribute__((weak))
+__gcov_flush(void)
+{
+
+}
 
 static void __attribute__ ((noreturn))
 rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
@@ -150,14 +154,13 @@ rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
     char buf[rp->msglen];
     int r, e = 0;
 
-    if (__gcov_flush == NULL) {
-        do {
-            r = read(rp->pipe, buf, rp->msglen);
-        } while (r < 0 && errno == EINTR);
-        if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0) {
-            e = 1;
-        }
+    do {
+        r = read(rp->pipe, buf, rp->msglen);
+    } while (r < 0 && errno == EINTR);
+    if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0) {
+        e = 1;
     }
+    __gcov_flush();
     _exit(e);
 }
 
@@ -166,10 +169,6 @@ rtpp_daemon_rel_parent(const struct rtpp_daemon_rope *rp)
 {
     int r;
 
-    if (__gcov_flush != NULL) {
-        (void)close(rp->pipe);
-        return (0);
-    }
     do {
         r = write(rp->pipe, rp->ok_msg, rp->msglen);
     } while (r < 0 && errno == EINTR);
@@ -196,7 +195,7 @@ struct rtpp_daemon_rope
 rtpp_daemon(int nochdir, int noclose)
 {
     struct sigaction osa, sa;
-    int fd, cpid;
+    int fd;
     pid_t newgrp;
     int oerrno;
     int osa_ok;
@@ -217,15 +216,7 @@ rtpp_daemon(int nochdir, int noclose)
     sa.sa_flags = 0;
     osa_ok = sigaction(SIGHUP, &sa, &osa);
 
-    /*
-     * When we fork, the counters are duplicate as they're and so the values
-     * are finally wrong when writing gcda for parent and child. So just before
-     * to fork, we flush the counters and so the parent and the child have new
-     * counters set to zero.
-     */
-
-    cpid = fork();
-    switch (cpid) {
+    switch (fork()) {
     case -1:
         goto e1;
     case 0:  /*  child */
