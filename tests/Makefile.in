@@ -142,7 +142,7 @@ host_triplet = @host@
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_extractaudio \
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_startstop1 \
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_basic_versions1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_command_parser1 \
+@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_command_parser1_stdio \
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_acct_rtcp_hep
 @ENABLE_MEMGLITCHING_TRUE@am__append_5 = ${makeann_CLEANFILES} \
 @ENABLE_MEMGLITCHING_TRUE@	${memdeb_CLEANFILES}
@@ -995,9 +995,9 @@ memdeb/glitch_basic_versions1.log: memdeb/glitch_basic_versions1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-memdeb/glitch_command_parser1.log: memdeb/glitch_command_parser1
-	@p='memdeb/glitch_command_parser1'; \
-	b='memdeb/glitch_command_parser1'; \
+memdeb/glitch_command_parser1_stdio.log: memdeb/glitch_command_parser1_stdio
+	@p='memdeb/glitch_command_parser1_stdio'; \
+	b='memdeb/glitch_command_parser1_stdio'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
