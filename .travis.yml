@@ -1,5 +1,7 @@
 # force run: 1
-dist: xenial
+dist:
+  - xenial
+  - bionic
 language: c
 python:
   - "3.6"
@@ -73,12 +75,14 @@ jobs:
       env:
         - TTYPE=glitching
     - stage: Build Documentation
+      dist: xenial
       name: Build Documentation
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       script: sh -x ./scripts/do-docbuild.sh
       after_success:
     - stage: Build & Deploy Documentation
+      dist: xenial
       name: Build Documentation and Deploy it to the rtpproxy.org repo
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
@@ -87,6 +91,7 @@ jobs:
         - sh -x ./scripts/do-docdeploy.sh
       after_success:
     - stage: Update Coverity Report
+      dist: xenial
       name: Push latest code to scan.coverity.com for analysis
       addons:
         coverity_scan:
