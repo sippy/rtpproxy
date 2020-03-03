@@ -1,5 +1,5 @@
 # force run: 1
-dist: bionic
+dist: xenial
 language: c
 python:
   - "3.6"
