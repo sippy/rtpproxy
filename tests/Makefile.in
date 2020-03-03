@@ -590,7 +590,7 @@ EXTRA_DIST = $(am__append_3) $(am__append_6) Makefile.am ringback.sln
 @ENABLE_BASIC_TESTS_TRUE@  playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout playback1.rlog
 
 @ENABLE_MEMGLITCHING_TRUE@memdeb_EXTRA_DIST = memdeb
-@ENABLE_MEMGLITCHING_TRUE@memdeb_CLEANFILES = glitch1.ncout glitch1.nclog
+@ENABLE_MEMGLITCHING_TRUE@memdeb_CLEANFILES = glitch1.*
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
