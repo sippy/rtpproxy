@@ -204,4 +204,14 @@ pid_t rtpp_glitch_fork(HERETYPE);
 
 #define fork() rtpp_glitch_fork(HEREVAL)
 
+#include <stdlib.h>
+
+char *rtpp_glitch_realpath(const char * restrict pathname, char * restrict resolved_path, HERETYPE);
+
+#ifdef realpath
+# undef realpath
+#endif
+
+#define realpath(pathname, resolved_path) rtpp_glitch_realpath(pathname, resolved_path, HEREVAL)
+
 #endif /* _RTPP_AUTOGLITCH_H */

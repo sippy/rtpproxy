@@ -31,8 +31,11 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdatomic.h>
 #include <unistd.h>
+#define _POSIX_C_SOURCE 1
+#include <limits.h>
 
 #include "rtpp_codeptr.h"
 #include "rtpp_glitch.h"
@@ -312,4 +315,23 @@ rtpp_glitch_fork(HERETYPEARG)
 glitched:
     errno = ENOMEM;
     return (-1);
+}
+
+#undef realpath
+
+char *
+rtpp_glitch_realpath(const char * restrict pathname, char * restrict resolved_path, HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (realpath(pathname, resolved_path));
+glitched:
+    if (resolved_path == NULL) {
+        errno = ENOMEM;
+    } else {
+        strncpy(resolved_path, pathname, PATH_MAX - 1);
+        resolved_path[PATH_MAX - 1] = '\0';
+        errno = EIO;
+    }
+    return (NULL);
 }
