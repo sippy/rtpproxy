@@ -34,10 +34,10 @@ typedef int (*rtpp_hash_table_match_t)(void *, void *);
 
 #if 0
 DEFINE_METHOD(rtpp_hash_table, hash_table_append, struct rtpp_hash_table_entry *, const void *, void *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_remove_nc, void, struct rtpp_hash_table_entry *sp);
 #endif
 DEFINE_METHOD(rtpp_hash_table, hash_table_append_refcnt, struct rtpp_hash_table_entry *, const void *, struct rtpp_refcnt *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_remove, void, const void *key, struct rtpp_hash_table_entry *sp);
-DEFINE_METHOD(rtpp_hash_table, hash_table_remove_nc, void, struct rtpp_hash_table_entry *sp);
 DEFINE_METHOD(rtpp_hash_table, hash_table_remove_by_key, struct rtpp_refcnt *, const void *key);
 #if 0
 DEFINE_METHOD(rtpp_hash_table, hash_table_findfirst, struct rtpp_hash_table_entry *,
@@ -68,10 +68,10 @@ struct rtpp_hash_table
 {
 #if 0
     hash_table_append_t append;
+    hash_table_remove_nc_t remove_nc;
 #endif
     hash_table_append_refcnt_t append_refcnt;
     hash_table_remove_t remove;
-    hash_table_remove_nc_t remove_nc;
     hash_table_remove_by_key_t remove_by_key;
 #if 0
     hash_table_findfirst_t findfirst;
