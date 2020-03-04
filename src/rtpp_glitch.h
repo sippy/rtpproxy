@@ -85,7 +85,7 @@ void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
 #define GLITCH_INJECT_IF(mlp, ghlabel, cond) { \
     intmax_t step = atomic_fetch_add(&_glav_trig.step, 1); \
     if (TRIG_CHCK1() && (cond)) { \
-        uintptr_t stack_cook =  getstackcookie(); \
+        uintptr_t stack_cook =  getstackcookie() ^ mlp->linen; \
         if (TRIG_CHCK2()) { \
             intmax_t nhit = atomic_fetch_add(&_glav_trig.hits, 1); \
             if (TRIG_CHCK3()) { \
