@@ -43,12 +43,30 @@ stages:
     if: branch = master AND type = cron
 jobs:
   include:
-    - compiler: clang
+    - name: "Naked Build @ Ubuntu 16 (Xenial Xerus) GCC 7"
+      dist: xenial
+      compiler: gcc
       env:
         - TTYPE=cleanbuild
       before_install: true
       after_success: true
-    - compiler: gcc
+    - name: "Naked Build @ Ubuntu 18 (Bionic Beaver) GCC 7"
+      dist: bionic
+      compiler: gcc
+      env:
+        - TTYPE=cleanbuild
+      before_install: true
+      after_success: true
+    - name: "Naked Build @ Ubuntu 16 (Xenial Xerus) Clang 7"
+      dist: xenial
+      compiler: clang
+      env:
+        - TTYPE=cleanbuild
+      before_install: true
+      after_success: true
+    - name: "Naked Build @ Ubuntu 18 (Bionic Beaver) Clang 7"
+      dist: bionic
+      compiler: clang
       env:
         - TTYPE=cleanbuild
       before_install: true
