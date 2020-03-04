@@ -286,7 +286,7 @@ ssize_t
 rtpp_glitch_write(int fd, const void *buf, size_t nbytes, HERETYPEARG)
 {
 
-    GLITCH_INJECT_IF(HEREARG, glitched, (strcmp(mlp->funcn, "rtpc_doreply") != 0));
+    GLITCH_INJECT(HEREARG, glitched);
     return (write(fd, buf, nbytes));
 glitched:
     errno = EDQUOT;
