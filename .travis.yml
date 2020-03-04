@@ -71,38 +71,61 @@ jobs:
         - TTYPE=cleanbuild
       before_install: true
       after_success: true
-    - compiler: clang
+
+    - name: "All-Dependencies-Inclusive Build @ Ubuntu 16 (Xenial Xerus) GCC 7"
+      dist: xenial
+      compiler: gcc
       env:
         - TTYPE=depsbuild
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
-    - compiler: gcc
+    - name: "All-Dependencies-Inclusive Build @ Ubuntu 18 (Bionic Beaver) GCC 7"
+      dist: bionic
+      compiler: gcc
       env:
         - TTYPE=depsbuild
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
-    - name: "Basic Testing @ Ubuntu 16 (Xenial Xerus) GCC 7"
+    - name: "All-Dependencies-Inclusive Build @ Ubuntu 16 (Xenial Xerus) Clang 7"
+      dist: xenial
+      compiler: clang
+      env:
+        - TTYPE=depsbuild
+      before_install:
+        - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
+      after_success: true
+    - name: "All-Dependencies-Inclusive Build @ Ubuntu 18 (Bionic Beaver) Clang 7"
+      dist: bionic
+      compiler: clang
+      env:
+        - TTYPE=depsbuild
+      before_install:
+        - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
+      after_success: true
+
+    - name: "Functional Testing @ Ubuntu 16 (Xenial Xerus) GCC 7"
       dist: xenial
       compiler: gcc
       env:
         - TTYPE=basic
-    - name: "Basic Testing @ Ubuntu 18 (Bionic Beaver) GCC 7"
+    - name: "Functional Testing @ Ubuntu 18 (Bionic Beaver) GCC 7"
       dist: bionic
       compiler: gcc
       env:
         - TTYPE=basic
-    - name: "Basic Testing @ Ubuntu 16 (Xenial Xerus) Clang 7"
+    - name: "Functional Testing @ Ubuntu 16 (Xenial Xerus) Clang 7"
       dist: xenial
       compiler: clang
       env:
         - TTYPE=basic
-    - name: "Basic Testing @ Ubuntu 18 (Bionic Beaver) Clang 7"
+    - name: "Functional Testing @ Ubuntu 18 (Bionic Beaver) Clang 7"
       dist: bionic
       compiler: clang
       env:
         - TTYPE=basic
+
     - name: "Glitching @ Ubuntu 16 (Xenial Xerus) GCC 7"
       dist: xenial
       compiler: gcc
@@ -120,6 +143,7 @@ jobs:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       script: sh -x ./scripts/do-docbuild.sh
       after_success:
+
     - stage: Build & Deploy Documentation
       dist: bionic
       name: Build Documentation and Deploy it to the rtpproxy.org repo
@@ -129,6 +153,7 @@ jobs:
         - sh -x ./scripts/do-docbuild.sh
         - sh -x ./scripts/do-docdeploy.sh
       after_success:
+
     - stage: Update Coverity Report
       dist: bionic
       name: Push latest code to scan.coverity.com for analysis
