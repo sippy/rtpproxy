@@ -51,7 +51,7 @@
 #include "rtpp_runcreds.h"
 
 #if defined(RTPP_DEBUG)
-extern void (*__gcov_flush)(void);
+#include "rtpp_coverage.h"
 #endif
 
 void

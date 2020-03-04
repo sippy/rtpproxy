@@ -40,7 +40,6 @@ struct _glav_trig {
 };
 
 extern struct _glav_trig _glav_trig;
-extern void (*__gcov_flush)(void);
 
 enum glav_act {
   GLAV_NOP   = 0,
