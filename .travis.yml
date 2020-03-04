@@ -71,7 +71,14 @@ jobs:
     - compiler: gcc
       env:
         - TTYPE=basic
-    - compiler: gcc
+    - name: "Glitching @ Ubuntu 16 (Xenial Xerus) GCC 7"
+      dist: xenial
+      compiler: gcc
+      env:
+        - TTYPE=glitching
+    - name: "Glitching @ Ubuntu 18 (Bionic Beaver) GCC 7"
+      dist: bionic
+      compiler: gcc
       env:
         - TTYPE=glitching
     - stage: Build Documentation
