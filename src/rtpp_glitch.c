@@ -75,6 +75,8 @@ rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
 #undef socket
 #undef bind
 
+#define AFLUSH() {__gcov_flush(); abort();}
+
 void
 rtpp_glitch_init()
 {
@@ -107,7 +109,7 @@ rtpp_glitch_init()
             _glav_trig.stack = u;
             break;
         default:
-            abort();
+            AFLUSH();
         }
 
         assert(unsetenv(MDG_ENAME) == 0);
@@ -130,7 +132,7 @@ rtpp_glitch_init()
                     do_report = 1;
                     break;
                 default:
-                    abort();
+                    AFLUSH();
                 }
             }
             assert(strlen(act) < sizeof(_glav_trig.act));
