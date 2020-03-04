@@ -50,6 +50,10 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_runcreds.h"
 
+#if defined(RTPP_DEBUG)
+extern void (*__gcov_flush)(void);
+#endif
+
 void
 seedrandom(void)
 {
@@ -141,15 +145,6 @@ rtpp_strsep(char **stringp, const char *delim)
     /* NOTREACHED */
 }
 
-/* check in gcc sources gcc/gcov-io.h for the prototype */
-static void
-gcov_flush_nop(void)
-{
-
-}
-
-void (*__gcov_flush)(void) __attribute__((weak)) = gcov_flush_nop;
-
 static void __attribute__ ((noreturn))
 rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
 {
@@ -162,7 +157,9 @@ rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
     if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0) {
         e = 1;
     }
+#if defined(RTPP_DEBUG)
     __gcov_flush();
+#endif
     _exit(e);
 }
 

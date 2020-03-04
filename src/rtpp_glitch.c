@@ -59,6 +59,15 @@ struct mg_data {
 
 static struct mg_data mgd;
 
+/* check in gcc sources gcc/gcov-io.h for the prototype */
+static void
+gcov_flush_nop(void)
+{
+
+}
+
+void (*__gcov_flush)(void) __attribute__((weak)) = gcov_flush_nop;
+
 void
 rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
   const struct rtpp_codeptr *mlp)
