@@ -34,7 +34,9 @@
 #include <stdlib.h>
 #include <stdatomic.h>
 #include <unistd.h>
+#if !defined(_POSIX_C_SOURCE) || (_POSIX_C_SOURCE == 0)
 #define _POSIX_C_SOURCE 1
+#endif
 #include <limits.h>
 
 #include "rtpp_codeptr.h"
@@ -326,9 +328,8 @@ rtpp_glitch_realpath(const char * restrict pathname, char * restrict resolved_pa
     GLITCH_INJECT(HEREARG, glitched);
     return (realpath(pathname, resolved_path));
 glitched:
-    if (resolved_path == NULL) {
-        errno = ENOMEM;
-    } else {
+    errno = ENOMEM;
+    if (resolved_path != NULL) {
         strncpy(resolved_path, pathname, PATH_MAX - 1);
         resolved_path[PATH_MAX - 1] = '\0';
         errno = EIO;
