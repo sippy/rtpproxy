@@ -142,11 +142,13 @@ rtpp_strsep(char **stringp, const char *delim)
 }
 
 /* check in gcc sources gcc/gcov-io.h for the prototype */
-void __attribute__((weak))
-__gcov_flush(void)
+static void
+gcov_flush_nop(void)
 {
 
 }
+
+void (*__gcov_flush)(void) __attribute__((weak)) = gcov_flush_nop;
 
 static void __attribute__ ((noreturn))
 rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
