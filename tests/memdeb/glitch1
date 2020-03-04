@@ -35,6 +35,9 @@ rtpp_glitch()
 
 disable_aslr
 
+rtpp_glitch "garbage" "r"
+rtpp_glitch "*" "garbage"
+
 spin_nc
 export RTPP_GLITCH_TRIG="*"
 export RTPP_GLITCH_ACT="r"
