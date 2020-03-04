@@ -487,7 +487,7 @@ rtpp_memdeb_ivasprintf(char **pp, const char *fmt, void *p,
     if (rval <= 0) {
         return (rval);
     }
-    tp = rtpp_memdeb_imalloc(rval + 1, p, 1, mlp);
+    tp = rtpp_memdeb_imalloc(rval + 1, p, 0, mlp);
     if (tp == NULL) {
         free(*pp);
         *pp = NULL;
