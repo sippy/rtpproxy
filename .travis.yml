@@ -83,10 +83,24 @@ jobs:
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
-    - compiler: clang
+    - name: "Basic Testing @ Ubuntu 16 (Xenial Xerus) GCC 7"
+      dist: xenial
+      compiler: gcc
       env:
         - TTYPE=basic
-    - compiler: gcc
+    - name: "Basic Testing @ Ubuntu 18 (Bionic Beaver) GCC 7"
+      dist: bionic
+      compiler: gcc
+      env:
+        - TTYPE=basic
+    - name: "Basic Testing @ Ubuntu 16 (Xenial Xerus) Clang 7"
+      dist: xenial
+      compiler: clang
+      env:
+        - TTYPE=basic
+    - name: "Basic Testing @ Ubuntu 18 (Bionic Beaver) Clang 7"
+      dist: bionic
+      compiler: clang
       env:
         - TTYPE=basic
     - name: "Glitching @ Ubuntu 16 (Xenial Xerus) GCC 7"
