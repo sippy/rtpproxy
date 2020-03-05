@@ -305,7 +305,13 @@ rtpp_cmd_acceptor_run(void *arg)
 
     for (;;) {
 #ifndef LINUX_XXX
-        nready = poll(asp->pfds, asp->pfds_used, INFTIM);
+        /*
+         * On most decent OSes but Linux close()ing file descriptor in
+         * parent thread would wake up poll most of the time, however
+         * once in a while it wouldn't. This is why we don't use INFTIM
+         * below.
+         */
+        nready = poll(asp->pfds, asp->pfds_used, 1000);
 #else
 	nready = poll(asp->pfds, asp->pfds_used, 100);
 #endif

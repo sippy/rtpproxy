@@ -39,8 +39,8 @@ DEFINE_METHOD(rtpp_log, rtpp_log_start, int, const struct rtpp_cfg *);
 struct rtpp_log {
     struct rtpp_refcnt *rcnt;
     /* Public methods */
-    METHOD_ENTRY(rtpp_log_write, write);
-    METHOD_ENTRY(rtpp_log_ewrite, ewrite);
+    METHOD_ENTRY(rtpp_log_write, genwrite);
+    METHOD_ENTRY(rtpp_log_ewrite, errwrite);
     METHOD_ENTRY(rtpp_log_setlevel, setlevel);
     METHOD_ENTRY(rtpp_log_start, start);
     /* UID */
@@ -49,7 +49,7 @@ struct rtpp_log {
 
 struct rtpp_log *rtpp_log_ctor(const char *, const char *, int);
 
-#define RTPP_LOG(log, args...) CALL_METHOD((log), write, __FUNCTION__, \
+#define RTPP_LOG(log, args...) CALL_METHOD((log), genwrite, __FUNCTION__, \
   __LINE__, ## args)
-#define RTPP_ELOG(log, args...) CALL_METHOD((log), ewrite, __FUNCTION__, \
+#define RTPP_ELOG(log, args...) CALL_METHOD((log), errwrite, __FUNCTION__, \
   __LINE__, ## args)

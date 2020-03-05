@@ -79,8 +79,8 @@ rtpp_log_ctor(const char *app, const char *call_id, int flags)
         return (NULL);
     }
     rtpp_gen_uid(&pvt->pub.lguid);
-    pvt->pub.write = rtpp_log_obj_write_early;
-    pvt->pub.ewrite = rtpp_log_obj_ewrite_early;
+    pvt->pub.genwrite = rtpp_log_obj_write_early;
+    pvt->pub.errwrite = rtpp_log_obj_ewrite_early;
     pvt->pub.setlevel = rtpp_log_obj_setlevel_early;
     pvt->pub.start = rtpp_log_obj_start;
     pvt->app = app;
@@ -160,7 +160,7 @@ rtpp_log_obj_write_early(struct rtpp_log *self, const char *fname, int lnum,
     struct rtpp_log_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (level < pvt->level)
+    if (level > pvt->level)
         return;
     fprintf(stderr, "%s: ", fname);
     va_start(ap, fmt);
@@ -179,7 +179,7 @@ rtpp_log_obj_ewrite_early(struct rtpp_log *self, const char *fname, int lnum,
     struct rtpp_log_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (level < pvt->level)
+    if (level > pvt->level)
         return;
     fprintf(stderr, "%s: ", fname);
     va_start(ap, fmt);
@@ -200,8 +200,8 @@ rtpp_log_obj_start(struct rtpp_log *self, const struct rtpp_cfg *cfs)
     pvt->log = rtpp_log_open(cfs, pvt->app, pvt->call_id, pvt->flags);
     if (pvt->log == NULL)
         return (-1);
-    pvt->pub.write = rtpp_log_obj_write;
-    pvt->pub.ewrite = rtpp_log_obj_ewrite;
+    pvt->pub.genwrite = rtpp_log_obj_write;
+    pvt->pub.errwrite = rtpp_log_obj_ewrite;
     pvt->pub.setlevel = rtpp_log_obj_setlevel;
     if (pvt->level != -1) {
         rtpp_log_setlevel(pvt->log, pvt->level);

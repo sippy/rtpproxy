@@ -142,7 +142,7 @@ host_triplet = @host@
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_extractaudio \
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_startstop1 \
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_basic_versions1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_command_parser1 \
+@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_command_parser1_stdio \
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_acct_rtcp_hep
 @ENABLE_MEMGLITCHING_TRUE@am__append_5 = ${makeann_CLEANFILES} \
 @ENABLE_MEMGLITCHING_TRUE@	${memdeb_CLEANFILES}
@@ -590,7 +590,7 @@ EXTRA_DIST = $(am__append_3) $(am__append_6) Makefile.am ringback.sln
 @ENABLE_BASIC_TESTS_TRUE@  playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout playback1.rlog
 
 @ENABLE_MEMGLITCHING_TRUE@memdeb_EXTRA_DIST = memdeb
-@ENABLE_MEMGLITCHING_TRUE@memdeb_CLEANFILES = glitch1.ncout glitch1.nclog
+@ENABLE_MEMGLITCHING_TRUE@memdeb_CLEANFILES = glitch1.*
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
@@ -995,9 +995,9 @@ memdeb/glitch_basic_versions1.log: memdeb/glitch_basic_versions1
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-memdeb/glitch_command_parser1.log: memdeb/glitch_command_parser1
-	@p='memdeb/glitch_command_parser1'; \
-	b='memdeb/glitch_command_parser1'; \
+memdeb/glitch_command_parser1_stdio.log: memdeb/glitch_command_parser1_stdio
+	@p='memdeb/glitch_command_parser1_stdio'; \
+	b='memdeb/glitch_command_parser1_stdio'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

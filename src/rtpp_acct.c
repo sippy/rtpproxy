@@ -114,10 +114,3 @@ rtpp_acct_dtor(struct rtpp_acct_priv *pvt)
         RTPP_OBJ_DECREF(pvt->pub.rtcp.o.rem_addr);
     free(pvt);
 }
-
-const unsigned int
-rtpp_acct_osize(void)
-{
-
-    return (sizeof(struct rtpp_acct_priv));
-}

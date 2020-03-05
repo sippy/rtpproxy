@@ -178,7 +178,7 @@ rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
     }
     rrc->log = sp->log;
     RTPP_OBJ_INCREF(sp->log);
-    rrc->pub.write = &rtpp_record_write;
+    rrc->pub.pktwrite = &rtpp_record_write;
     if (remote) {
 	rval = ropen_remote_ctor_pa(rrc, sp->log, rname, (record_type == RECORD_RTCP));
         if (rval < 0) {

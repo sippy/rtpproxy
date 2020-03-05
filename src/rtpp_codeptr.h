@@ -25,8 +25,18 @@
  *
  */
 
+#ifndef _RTPP_CODEPTR_H
+#define _RTPP_CODEPTR_H
+
 struct rtpp_codeptr {
     const char *fname;
     int linen;
     const char *funcn;
 };
+
+#define HERETYPE const struct rtpp_codeptr *
+#define HEREVAL  ({static const struct rtpp_codeptr _here = {.fname = __FILE__, .linen = __LINE__, .funcn = __func__}; &_here;})
+#define HEREARG mlp
+#define HERETYPEARG HERETYPE HEREARG
+
+#endif /* _RTPP_CODEPTR_H */

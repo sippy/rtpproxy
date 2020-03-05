@@ -89,6 +89,9 @@ E50
 60 0 0 0 0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
+E19
+E62
+ttl=60
 0
 E1
 E1
@@ -103,10 +106,10 @@ E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 102 10 91 101
+1 1 1 1 0 1 0 105 11 93 104
 E5
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=105 ncmds_succd=11 ncmds_errs=93 ncmds_repld=104
+nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=108 ncmds_succd=12 ncmds_errs=95 ncmds_repld=107
 0
 MEMDEB(rtpproxy): all clear
 E0
@@ -200,6 +203,9 @@ E50
 60 0 0 0 0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
+E19
+E62
+ttl=60
 0
 E1
 E1
@@ -214,10 +220,10 @@ E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 102 10 91 101
+1 1 1 1 0 1 0 105 11 93 104
 E5
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=105 ncmds_succd=11 ncmds_errs=93 ncmds_repld=104
+nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=108 ncmds_succd=12 ncmds_errs=95 ncmds_repld=107
 0
 MEMDEB(rtpproxy): all clear
 E0
@@ -311,6 +317,9 @@ E50
 60 0 0 0 0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
+E19
+E62
+ttl=60
 0
 E1
 E1
@@ -325,10 +334,10 @@ E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 102 11 90 101
+1 1 1 1 0 1 0 105 12 92 104
 E5
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=105 ncmds_succd=12 ncmds_errs=92 ncmds_repld=104
+nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=108 ncmds_succd=13 ncmds_errs=94 ncmds_repld=107
 0
 MEMDEB(rtpproxy): all clear
 E0
@@ -422,6 +431,9 @@ E50
 60 0 0 0 0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
+E19
+E62
+ttl=60
 0
 E1
 E1
@@ -436,9 +448,9 @@ E9
 E68
 E9
 E9
-1 1 1 1 0 1 0 102 11 90 101
+1 1 1 1 0 1 0 105 12 92 104
 E5
 E9
-nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=105 ncmds_succd=12 ncmds_errs=92 ncmds_repld=104
+nsess_created=1 nsess_destroyed=1 nsess_complete=1 nsess_nortp=1 nsess_owrtp=0 nsess_nortcp=1 nsess_owrtcp=0 ncmds_rcvd=108 ncmds_succd=13 ncmds_errs=94 ncmds_repld=107
 0
 MEMDEB(rtpproxy): all clear

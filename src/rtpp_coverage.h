@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2020 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,19 +25,14 @@
  *
  */
 
-#ifndef _RTPP_WI_SGNL_H_
-#define _RTPP_WI_SGNL_H_
+#ifndef _RTPP_COVERAGE_H
+#define _RTPP_COVERAGE_H
 
-struct rtpp_wi;
+/* check in gcc sources gcc/gcov-io.h for the prototype */
+void __attribute__((weak))
+__gcov_flush(void)
+{
 
-void *rtpp_wi_sgnl_get_data(struct rtpp_wi *, size_t *);
-int rtpp_wi_sgnl_get_signum(struct rtpp_wi *);
+}
 
-#if defined(RTPP_CHECK_LEAKS)
-#define rtpp_wi_malloc_sgnl(args...) rtpp_wi_malloc_sgnl_memdeb(HEREVAL, ## args)
-struct rtpp_wi *rtpp_wi_malloc_sgnl_memdeb(HERETYPE, int, const void *, size_t);
-#else
-struct rtpp_wi *rtpp_wi_malloc_sgnl(int, const void *, size_t);
-#endif
-
-#endif
+#endif /* _RTPP_COVERAGE_H */

@@ -90,10 +90,8 @@ struct rtpp_module_if_priv {
 
 static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
 #if !RTPP_CHECK_LEAKS
-static int rtpp_module_asprintf(char **, const char *, void *, const char *,
-  int, const char *, ...);
-static int rtpp_module_vasprintf(char **, const char *, void *, const char *,
-  int, const char *, va_list);
+static int rtpp_module_asprintf(char **, const char *, void *, HERETYPE, ...);
+static int rtpp_module_vasprintf(char **, const char *, void *, HERETYPE, va_list);
 #endif
 static void rtpp_mif_run(void *);
 static int rtpp_mif_load(struct rtpp_module_if *, const struct rtpp_cfg *, struct rtpp_log *);
@@ -394,21 +392,19 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
 
 #if !RTPP_CHECK_LEAKS
 static int
-rtpp_module_asprintf(char **pp, const char *fmt, void *p, const char *fname,
-  int linen, const char *funcn, ...)
+rtpp_module_asprintf(char **pp, const char *fmt, void *p, HERETYPEARG, ...)
 {
     va_list ap;
     int rval;
 
-    va_start(ap, funcn);
+    va_start(ap, mlp);
     rval = vasprintf(pp, fmt, ap);
     va_end(ap);
     return (rval);
 }
 
 static int
-rtpp_module_vasprintf(char **pp, const char *fmt, void *p, const char *fname,
-  int linen, const char *funcn, va_list ap)
+rtpp_module_vasprintf(char **pp, const char *fmt, void *p, HERETYPEARG, va_list ap)
 {
     int rval;
 

@@ -61,7 +61,7 @@ struct rtpp_wi *
 #if !defined(RTPP_CHECK_LEAKS)
 rtpp_wi_malloc_sgnl(int signum, const void *data, size_t datalen)
 #else
-rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int signum, const void *data, size_t datalen)
+rtpp_wi_malloc_sgnl_memdeb(const struct rtpp_codeptr *mlp, int signum, const void *data, size_t datalen)
 #endif
 {
     struct rtpp_wi_sgnl *wipp;
@@ -69,7 +69,7 @@ rtpp_wi_malloc_sgnl_memdeb(const char *fname, int linen, const char *funcn, int 
     wipp = malloc(sizeof(struct rtpp_wi_sgnl) + datalen);
 #else
     wipp = rtpp_memdeb_malloc(sizeof(struct rtpp_wi_sgnl) + datalen,
-      MEMDEB_SYM, fname, linen, funcn);
+      MEMDEB_SYM, mlp);
 #endif
     if (wipp == NULL) {
         return (NULL);

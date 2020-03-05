@@ -33,6 +33,10 @@ struct _glav_trig {
     uintptr_t stack;
     int wild;
     char act[16];
+    union {
+      const struct rtpp_codeptr *ptr;
+      atomic_uintptr_t aptr;
+    } lasthit;
 };
 
 extern struct _glav_trig _glav_trig;
@@ -53,6 +57,7 @@ void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
 #define GLITCH_ACTION(mlp) { \
     const char *_cp; \
     static int _b = 1; \
+    atomic_store(&_glav_trig.lasthit.aptr, (uintptr_t)mlp); \
     for (_cp = &_glav_trig.act[0]; *_cp != '\0'; _cp++) { \
         switch (*_cp) { \
         case GLAV_ABORT: \
@@ -77,10 +82,10 @@ void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
 #define TRIG_CHCK2() (_glav_trig.stack == 0 || stack_cook == _glav_trig.stack)
 #define TRIG_CHCK3() (_glav_trig.stack == 0 || (nhit == 0 || _glav_trig.wild != 0))
 
-#define GLITCH_INJECT(mlp, ghlabel) { \
+#define GLITCH_INJECT_IF(mlp, ghlabel, cond) { \
     intmax_t step = atomic_fetch_add(&_glav_trig.step, 1); \
-    if (TRIG_CHCK1()) { \
-        uintptr_t stack_cook =  getstackcookie(); \
+    if (TRIG_CHCK1() && (cond)) { \
+        uintptr_t stack_cook =  getstackcookie() ^ mlp->linen; \
         if (TRIG_CHCK2()) { \
             intmax_t nhit = atomic_fetch_add(&_glav_trig.hits, 1); \
             if (TRIG_CHCK3()) { \
@@ -93,3 +98,5 @@ void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
         } \
     } \
 }
+
+#define GLITCH_INJECT(mlp, ghlabel) GLITCH_INJECT_IF(mlp, ghlabel, 1)
