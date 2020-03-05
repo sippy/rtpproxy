@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/mman.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdint.h>
@@ -335,4 +336,17 @@ glitched:
         errno = EIO;
     }
     return (NULL);
+}
+
+#undef mmap
+
+void *
+rtpp_glitch_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset, HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (mmap(addr, len, prot, flags, fd, offset));
+glitched:
+    errno = ENOMEM;
+    return (MAP_FAILED);
 }

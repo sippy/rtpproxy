@@ -214,4 +214,14 @@ char *rtpp_glitch_realpath(const char * restrict pathname, char * restrict resol
 
 #define realpath(pathname, resolved_path) rtpp_glitch_realpath(pathname, resolved_path, HEREVAL)
 
+#include <sys/mman.h>
+
+void *rtpp_glitch_mmap(void *, size_t, int, int, int, off_t, HERETYPE);
+
+#ifdef mmap
+# undef mmap
+#endif
+
+#define mmap(addr, len, prot, flags, fd, offset) rtpp_glitch_mmap(addr, len, prot, flags, fd, offset, HEREVAL)
+
 #endif /* _RTPP_AUTOGLITCH_H */
