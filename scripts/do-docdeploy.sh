@@ -30,7 +30,10 @@ do
   tidy -utf8 -qmi "${DDP_TGT}" || true
   ${DDP_GIT} add "${DDP_PTH}"
 done
-${DDP_GIT} diff origin/${DDP_BRANCH} | wc -l
-${DDP_GIT} commit -m "Re-gen by job ${TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
- --author="${AUTHOR_NAME} <${COMMITTER_EMAIL}>" ${DDP_PDIR}
-${DDP_GIT} push
+NCHG=$((`${DDP_GIT} diff origin/${DDP_BRANCH} | wc -l`))
+if [ ${NCHG} -ne 0 ]
+then
+  ${DDP_GIT} commit -m "Re-gen by job ${TRAVIS_BUILD_ID} from ${TRAVIS_COMMIT}." \
+   --author="${AUTHOR_NAME} <${COMMITTER_EMAIL}>" ${DDP_PDIR}
+  ${DDP_GIT} push
+fi
