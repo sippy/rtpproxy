@@ -446,9 +446,12 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     char *recording_name;
     struct rtpp_session *spa;
     int record_single_file;
+    int norecord_all;
 
     spa = NULL;
     recording_name = NULL;
+    norecord_all = 0;
+    record_single_file = 0;
 
     /* Step II: parse parameters that are specific to a particular op and run simple ops */
     switch (cmd->cca.op) {
@@ -506,6 +509,24 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
                 return 0;
             }
             record_single_file = 0;
+        }
+        break;
+
+    case NORECORD:
+        if (cmd->args.v[0][1] == 'A' || cmd->args.v[0][1] == 'a') {
+            if (cmd->args.v[0][2] != '\0') {
+                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
+                reply_error(cmd, ECODE_PARSE_2);
+                return 0;
+            }
+            norecord_all = 1;
+        } else {
+            if (cmd->args.v[0][1] != '\0') {
+                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
+                reply_error(cmd, ECODE_PARSE_3);
+                return 0;
+            }
+            norecord_all = 0;
         }
         break;
 
@@ -567,7 +588,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 	break;
 
     case NORECORD:
-	i = handle_norecord(cfsp, &cmd->cca);
+	i = handle_norecord(cfsp, &cmd->cca, norecord_all);
 	break;
 
     default:

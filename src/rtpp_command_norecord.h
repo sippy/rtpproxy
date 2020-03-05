@@ -29,5 +29,5 @@
 struct rtpp_cfg;
 struct common_cmd_args;
 
-int handle_norecord(const struct rtpp_cfg *, struct common_cmd_args *);
+int handle_norecord(const struct rtpp_cfg *, struct common_cmd_args *, int all);
 

@@ -52,6 +52,7 @@
 
 struct norecord_ematch_arg {
     int nrecorded;
+    int all;
     const char *from_tag;
     const char *to_tag;
     const struct rtpp_cfg *cfsp;
@@ -97,11 +98,14 @@ rtpp_cmd_norecord_ematch(void *dp, void *ap)
     if (handle_stop_record(rep->cfsp, spa, idx) == 0) {
         rep->nrecorded++;
     }
+    if (rep->all && handle_stop_record(rep->cfsp, spa, NOT(idx)) == 0) {
+        rep->nrecorded++;
+    }
     return(RTPP_HT_MATCH_CONT);
 }
 
 int
-handle_norecord(struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
+handle_norecord(struct rtpp_cfg *cfsp, struct common_cmd_args *ccap, int all)
 {
     struct norecord_ematch_arg rea;
 
@@ -109,6 +113,7 @@ handle_norecord(struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
     rea.from_tag = ccap->from_tag;
     rea.to_tag = ccap->to_tag;
     rea.cfsp = cfsp;
+    rea.all = all;
     CALL_METHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
       rtpp_cmd_norecord_ematch, &rea);
     if (rea.nrecorded == 0) {
