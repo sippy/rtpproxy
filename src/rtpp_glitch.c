@@ -60,7 +60,6 @@ struct mg_data {
 
 static struct mg_data mgd;
 
-
 void
 rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
   const struct rtpp_codeptr *mlp)
