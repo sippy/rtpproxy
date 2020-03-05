@@ -158,10 +158,10 @@ fill_cmd_props(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
     case 'N':
         cmd->cca.op = NORECORD;
         cmd->cca.rname = "norecord";
-        cmd->cca.hint = "N call_id from_tag [to_tag]";
+        cmd->cca.hint = "N[a] call_id from_tag [to_tag]";
         cpp->max_argc = 4;
         cpp->min_argc = 3;
-        cpp->has_cmods = 0;
+        cpp->has_cmods = 1;
         cpp->fpos = 2;
         cpp->tpos = 3;
         break;
