@@ -133,13 +133,14 @@ jobs:
       compiler: gcc
       env:
         - TTYPE=glitching
+
     - stage: Build Documentation
       dist: bionic
       name: Build Documentation
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       script: sh -x ./scripts/do-docbuild.sh
-      after_success:
+      after_success: true
 
     - stage: Build & Deploy Documentation
       dist: bionic
@@ -149,7 +150,7 @@ jobs:
       script:
         - sh -x ./scripts/do-docbuild.sh
         - sh -x ./scripts/do-docdeploy.sh
-      after_success:
+      after_success: true
 
     - stage: Update Coverity Report
       dist: bionic
@@ -167,4 +168,4 @@ jobs:
         - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
       script:
         - true
-      after_success:
+      after_success: true
