@@ -50,6 +50,10 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_runcreds.h"
 
+#if defined(RTPP_DEBUG)
+#include "rtpp_coverage.h"
+#endif
+
 void
 seedrandom(void)
 {
@@ -141,13 +145,6 @@ rtpp_strsep(char **stringp, const char *delim)
     /* NOTREACHED */
 }
 
-/* check in gcc sources gcc/gcov-io.h for the prototype */
-void __attribute__((weak))
-__gcov_flush(void)
-{
-
-}
-
 static void __attribute__ ((noreturn))
 rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
 {
@@ -160,7 +157,9 @@ rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
     if (r < rp->msglen || memcmp(buf, rp->ok_msg, rp->msglen) != 0) {
         e = 1;
     }
+#if defined(RTPP_DEBUG)
     __gcov_flush();
+#endif
     _exit(e);
 }
 
@@ -215,14 +214,6 @@ rtpp_daemon(int nochdir, int noclose)
     sa.sa_handler = SIG_IGN;
     sa.sa_flags = 0;
     osa_ok = sigaction(SIGHUP, &sa, &osa);
-
-    /*
-     * When we fork, the counters are duplicate as they're and so the values
-     * are finally wrong when writing gcda for parent and child. So just before
-     * to fork, we flush the counters and so the parent and the child have new
-     * counters set to zero.
-     */
-    __gcov_flush();
 
     switch (fork()) {
     case -1:

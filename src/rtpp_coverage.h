@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2019 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2020 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,18 +25,14 @@
  *
  */
 
-#ifndef _RTPP_CODEPTR_H
-#define _RTPP_CODEPTR_H
+#ifndef _RTPP_COVERAGE_H
+#define _RTPP_COVERAGE_H
 
-struct rtpp_codeptr {
-    const char *fname;
-    int linen;
-    const char *funcn;
-};
+/* check in gcc sources gcc/gcov-io.h for the prototype */
+void __attribute__((weak))
+__gcov_flush(void)
+{
 
-#define HERETYPE const struct rtpp_codeptr *
-#define HEREVAL  ({static const struct rtpp_codeptr _here = {.fname = __FILE__, .linen = __LINE__, .funcn = __func__}; &_here;})
-#define HEREARG mlp
-#define HERETYPEARG HERETYPE HEREARG
+}
 
-#endif /* _RTPP_CODEPTR_H */
+#endif /* _RTPP_COVERAGE_H */

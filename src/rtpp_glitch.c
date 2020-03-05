@@ -39,6 +39,7 @@
 
 #include "rtpp_codeptr.h"
 #include "rtpp_glitch.h"
+#include "rtpp_coverage.h"
 
 struct _glav_trig _glav_trig = {.wild = 0, .stack = 0};
 
@@ -66,14 +67,16 @@ rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
    char buffer[512]; /* +1 so we can \n */
    int len;
  
-   len = snprintf(buffer, sizeof(buffer), "s%lld: c%lu\tcalled from %s() at %s:%d\n",
-     (long long)mgd._glav_orig + step + 1, (unsigned long)hash, mlp->funcn, mlp->fname,
+   len = snprintf(buffer, sizeof(buffer), "s%lld: c%016" PRIXPTR "\tcalled from %s() at %s:%d\n",
+     (long long)mgd._glav_orig + step + 1, hash, mlp->funcn, mlp->fname,
      mlp->linen);
    assert(send(mgd.mysocket, buffer, len, 0) == len);
 }
 
 #undef socket
 #undef bind
+
+#define AFLUSH() {__gcov_flush(); abort();}
 
 void
 rtpp_glitch_init()
@@ -83,7 +86,7 @@ rtpp_glitch_init()
     glav = getenv(MDG_ENAME);
     if (glav != NULL) {
         int iglav = -1;
-        unsigned long u;
+        uintptr_t u;
 
         switch (glav[0]) {
         case TRIG_STEP:
@@ -102,12 +105,12 @@ rtpp_glitch_init()
             if (cp != NULL && cp[1] == TRIG_WC) {
                 _glav_trig.wild = 1;
             }
-            assert(sscanf(glav, "%lu\n", &u) == 1);
+            assert(sscanf(glav, "%" SCNxPTR "\n", &u) == 1);
             assert(u != 0);
             _glav_trig.stack = u;
             break;
         default:
-            abort();
+            AFLUSH();
         }
 
         assert(unsetenv(MDG_ENAME) == 0);
@@ -130,7 +133,7 @@ rtpp_glitch_init()
                     do_report = 1;
                     break;
                 default:
-                    abort();
+                    AFLUSH();
                 }
             }
             assert(strlen(act) < sizeof(_glav_trig.act));

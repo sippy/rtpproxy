@@ -487,7 +487,7 @@ rtpp_memdeb_ivasprintf(char **pp, const char *fmt, void *p,
     if (rval <= 0) {
         return (rval);
     }
-    tp = rtpp_memdeb_imalloc(rval + 1, p, 1, mlp);
+    tp = rtpp_memdeb_imalloc(rval + 1, p, 0, mlp);
     if (tp == NULL) {
         free(*pp);
         *pp = NULL;
@@ -564,12 +564,7 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
          * function.
          */
         if (pvt->_md_glog != NULL) {
-            struct rtpp_codeptr ml;
-
-            ml.fname = __FILE__;
-            ml.linen = __LINE__;
-            ml.funcn = __func__;
-            if (ptr2mpf(pvt, pvt->_md_glog, &ml)->mnp == mnp && nunalloc > 0)
+            if (ptr2mpf(pvt, pvt->_md_glog, HEREVAL)->mnp == mnp && nunalloc > 0)
                 nunalloc--;
         }
         if (mnp->mstats.afails == 0) {

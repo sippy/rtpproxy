@@ -1,0 +1,14 @@
+#!/bin/sh
+
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
+SUDO_REQUIRED=1
+. "${BASEDIR}/functions"
+
+. "${TDIR}/glitch.sub"
+
+disable_aslr
+
+export RTPP_TEST_SOCKETS="tcp:${IPV4_LHOST}:${RTPP_TEST_SOCK_TCP4_PORT}"
+glitch_test "command_parser/command_parser1" 13 command_parser.rlog
+report "glitching command_parser/command_parser1"

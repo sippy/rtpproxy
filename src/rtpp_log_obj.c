@@ -160,7 +160,7 @@ rtpp_log_obj_write_early(struct rtpp_log *self, const char *fname, int lnum,
     struct rtpp_log_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (level < pvt->level)
+    if (level > pvt->level)
         return;
     fprintf(stderr, "%s: ", fname);
     va_start(ap, fmt);
@@ -179,7 +179,7 @@ rtpp_log_obj_ewrite_early(struct rtpp_log *self, const char *fname, int lnum,
     struct rtpp_log_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (level < pvt->level)
+    if (level > pvt->level)
         return;
     fprintf(stderr, "%s: ", fname);
     va_start(ap, fmt);

@@ -927,18 +927,6 @@ main(int argc, char **argv)
     rtpp_memdeb_setbaseln(MEMDEB_SYM);
 #endif
 
-    i = open(cfs.pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
-    if (i >= 0) {
-	len = sprintf(buf, "%u\n", (unsigned int)getpid());
-	if (write(i, buf, len) != len) {
-            RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't write pidfile");
-            exit(1);
-        }
-	close(i);
-    } else {
-	RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't open pidfile for writing");
-    }
-
     if (cfs.sched_policy != SCHED_OTHER) {
         sparam.sched_priority = sched_get_priority_max(cfs.sched_policy);
         if (sched_setscheduler(0, cfs.sched_policy, &sparam) == -1) {
@@ -1057,6 +1045,18 @@ main(int argc, char **argv)
     if (elp == NULL) {
         RTPP_LOG(cfs.glog, RTPP_LOG_ERR, "prdic_init() failed");
         exit(1);
+    }
+
+    i = open(cfs.pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
+    if (i >= 0) {
+        len = sprintf(buf, "%u\n", (unsigned int)getpid());
+        if (write(i, buf, len) != len) {
+            RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't write pidfile");
+            exit(1);
+        }
+        close(i);
+    } else {
+        RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't open pidfile for writing");
     }
 
 #ifdef HAVE_SYSTEMD_DAEMON

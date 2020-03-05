@@ -28,11 +28,17 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/mman.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdatomic.h>
 #include <unistd.h>
+#if !defined(_POSIX_C_SOURCE) || (_POSIX_C_SOURCE == 0)
+#define _POSIX_C_SOURCE 1
+#endif
+#include <limits.h>
 
 #include "rtpp_codeptr.h"
 #include "rtpp_glitch.h"
@@ -159,10 +165,9 @@ int
 rtpp_glitch_open(const char *path, int flags, HERETYPEARG, ...)
 {
 
-    if (strcmp(path, "/dev/urandom") != 0 && strcmp(mlp->funcn, "main") != 0 &&
-      strcmp(mlp->funcn, "rtpp_get_sched_hz_linux") != 0) {
-        GLITCH_INJECT(HEREARG, glitched);
-    }
+    GLITCH_INJECT_IF(HEREARG, glitched,
+      (strcmp(path, "/dev/urandom") != 0 && strcmp(mlp->funcn, "main") != 0 &&
+      strcmp(mlp->funcn, "rtpp_get_sched_hz_linux") != 0));
 
     if ((flags & O_CREAT) != 0) {
         va_list ap;
@@ -313,4 +318,35 @@ rtpp_glitch_fork(HERETYPEARG)
 glitched:
     errno = ENOMEM;
     return (-1);
+}
+
+#undef realpath
+
+char *
+rtpp_glitch_realpath(const char * restrict pathname, char * restrict resolved_path, HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (realpath(pathname, resolved_path));
+glitched:
+    errno = ENOMEM;
+    if (resolved_path != NULL) {
+        strncpy(resolved_path, pathname, PATH_MAX - 1);
+        resolved_path[PATH_MAX - 1] = '\0';
+        errno = EIO;
+    }
+    return (NULL);
+}
+
+#undef mmap
+
+void *
+rtpp_glitch_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset, HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (mmap(addr, len, prot, flags, fd, offset));
+glitched:
+    errno = ENOMEM;
+    return (MAP_FAILED);
 }
