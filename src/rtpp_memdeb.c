@@ -564,12 +564,7 @@ rtpp_memdeb_dumpstats(void *p, int nostdout)
          * function.
          */
         if (pvt->_md_glog != NULL) {
-            struct rtpp_codeptr ml;
-
-            ml.fname = __FILE__;
-            ml.linen = __LINE__;
-            ml.funcn = __func__;
-            if (ptr2mpf(pvt, pvt->_md_glog, &ml)->mnp == mnp && nunalloc > 0)
+            if (ptr2mpf(pvt, pvt->_md_glog, HEREVAL)->mnp == mnp && nunalloc > 0)
                 nunalloc--;
         }
         if (mnp->mstats.afails == 0) {
