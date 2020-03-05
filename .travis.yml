@@ -102,21 +102,21 @@ jobs:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
 
-    - name: "Functional Testing @ Ubuntu 16 (Xenial Xerus) GCC 7"
-      dist: xenial
-      compiler: gcc
-      env:
-        - TTYPE=basic
+#temp: nc -k does not work#    - name: "Functional Testing @ Ubuntu 16 (Xenial Xerus) GCC 7"
+#temp: nc -k does not work#      dist: xenial
+#temp: nc -k does not work#      compiler: gcc
+#temp: nc -k does not work#      env:
+#temp: nc -k does not work#        - TTYPE=basic
     - name: "Functional Testing @ Ubuntu 18 (Bionic Beaver) GCC 7"
       dist: bionic
       compiler: gcc
       env:
         - TTYPE=basic
-    - name: "Functional Testing @ Ubuntu 16 (Xenial Xerus) Clang 7"
-      dist: xenial
-      compiler: clang
-      env:
-        - TTYPE=basic
+#temp: nc -k does not work#    - name: "Functional Testing @ Ubuntu 16 (Xenial Xerus) Clang 7"
+#temp: nc -k does not work#      dist: xenial
+#temp: nc -k does not work#      compiler: clang
+#temp: nc -k does not work#      env:
+#temp: nc -k does not work#        - TTYPE=basic
     - name: "Functional Testing @ Ubuntu 18 (Bionic Beaver) Clang 7"
       dist: bionic
       compiler: clang
