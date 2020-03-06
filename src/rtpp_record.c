@@ -96,6 +96,13 @@ static void rtpp_record_write(struct rtpp_record *, struct rtpp_stream *, struct
 static void rtpp_record_close(struct rtpp_record_channel *);
 static int get_hdr_size(const struct sockaddr *);
 
+#if HAVE_SO_TS_CLOCK
+#define ARRIVAL_TIME(rp, pp) (rp->epoch.wall + (pp->rtime.mono - rp->epoch.mono))
+#else
+#define ARRIVAL_TIME(rp, pp) (pp->rtime.wall)
+#endif
+
+
 static int
 ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
   char *rname, int is_rtcp)
@@ -604,7 +611,7 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp,
       .ldport = stp->port,
       .daddr = sstosa(&daddr),
       .face = (rrc->record_single_file == 0) ? 0 : (stp->pipe_type != PIPE_RTP),
-      .atime_wall = rrc->epoch.wall + (packet->rtime.mono - rrc->epoch.mono)
+      .atime_wall = ARRIVAL_TIME(rrc, packet)
     };
 
     /* Check if received packet doesn't fit into the buffer, do synchronous write  if so */
