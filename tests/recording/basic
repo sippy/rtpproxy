@@ -12,7 +12,7 @@ BASEDIR="$(readlink -f -- $BASEDIR)"
 
 PCAP_DIR="${BASEDIR}/rtp_analyze"
 CD_DIR="${BASEDIR}/recording"
-HEPSIZE=568932
+RECSIZE=109564
 RECORD_DIR="${BUILDDIR}"
 RECORD_SPL_DIR="${CD_DIR}"
 
@@ -24,11 +24,19 @@ run_udpreplay() {
   rtcp_nport=$((${rtp_nport} + 1))
   #UDPREPLAY_ARGS="-o udpreplay_${direction}.pcap"
   tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 --portmap=${rtp_oport}:${rtp_nport} --portmap=${rtcp_oport}:${rtcp_nport} \
-   -i "${PCAP_DIR}/bob_srtp.${direction}.pcap" -o recording.${rtp_nport}.${direction}.pcap || return 1
+   -i "${PCAP_DIR}/srtp1.${direction}.rtp" -o recording.${rtp_nport}.${direction}.pcap || return 1
+  if [ "${direction}" = "o" ]
+  then
+    NPKTS1=300
+    NPKTS2=153
+  else
+    NPKTS1=302
+    NPKTS2=149
+  fi
   sleep 1
-  udpreplay ${UDPREPLAY_ARGS} recording.${rtp_nport}.${direction}.pcap
+  udpreplay -r 2 -n ${NPKTS1} ${UDPREPLAY_ARGS} recording.${rtp_nport}.${direction}.pcap
   sleep 3
-  exec udpreplay ${UDPREPLAY_ARGS} recording.${rtp_nport}.${direction}.pcap
+  exec udpreplay -r 2 -n ${NPKTS2} ${UDPREPLAY_ARGS} recording.${rtp_nport}.${direction}.pcap
 }
 
 run_rtpproxy() {
@@ -40,7 +48,12 @@ run_rtpproxy() {
   recstop=
 
   case "${rproto}" in
-  files)
+  files*)
+    if [ "${rproto}" = "files_stophalf" ]
+    then
+      recstop=half1
+      rproto="files"
+    fi
     for rdircn in 'a' 'o'
     do
       for rtype in 'rtcp' 'rtp'
@@ -54,9 +67,15 @@ run_rtpproxy() {
     done
     ;;
 
-  singlefile|stopall)
-    if [ "${rproto}" = "stopall" ]; then
+  singlefile*|stopall)
+    if [ "${rproto}" = "stopall" ]
+    then
       recstop=all
+    fi
+    if [ "${rproto}" = "singlefile_stophalf" ]
+    then
+      recstop=half2
+      rproto="singlefile"
     fi
     recfile="${rname}.pcap"
     if [ -e "${recfile}" ]
@@ -67,8 +86,9 @@ run_rtpproxy() {
   esac
 
   (cat "${CD_DIR}/basic.input" "${CD_DIR}/basic.${rproto}.input"; \
-   sleep 34; cat "${CD_DIR}/basic.recstop${recstop}.input"; \
-   sleep 34; cat "${CD_DIR}/basic.stats.input") | \
+   sleep 8; cat "${CD_DIR}/basic.stats.input" "${CD_DIR}/basic.recstop${recstop}.input" \
+    "${CD_DIR}/basic.refresh.input"; \
+   sleep 6; cat "${CD_DIR}/basic.stats.input") | \
    sed -u "s|%%CALLID%%|${CALL_ID}|g ; s|%%REC_PORT%%|${rport}|g" | \
    ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} | sed \
    "s|^${rtp_porta}$|%%PORT_A%%|g ;  s|^${rtp_porto}$|%%PORT_O%%|g"
@@ -113,7 +133,7 @@ run_recording() {
   TNAME="recording.${REC_PORT}.${REC_PROTO}.tlog"
   LNAME="recording.${REC_PROTO}.rlog"
   RTPP_ARGS="-d dbug -f -s stdio: -b -m ${MIN_PORT} \
-   -M ${MAX_PORT} -T10 -W2"
+   -M ${MAX_PORT} -T2 -W2"
 
   if [ "${REC_PROTO}" = "remote" ]
   then
@@ -124,11 +144,11 @@ run_recording() {
     sleep 0.2
     report_rc ${RTPP_NC_RC} "Starting NetCat on port ${REC_PORT}/udp"
   fi
-  run_udpreplay a 41602 ${RTP_PORT_A} &
+  run_udpreplay a 2280 ${RTP_PORT_A} &
   UDPRPL_A_RC=${?}
   UDPRPL_A_PID=${!}
   report_rc ${UDPRPL_A_RC} "Starting udpreplay (answering) to ${RTP_PORT_A}/rtp"
-  run_udpreplay o 2230 ${RTP_PORT_O} &
+  run_udpreplay o 2240 ${RTP_PORT_O} &
   UDPRPL_O_RC=${?}
   UDPRPL_O_PID=${!}
   report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate) to ${RTP_PORT_O}/rtp"
@@ -159,44 +179,37 @@ run_recording() {
   report "wait for udpreplay (originate) shutdown"
   if [ "${REC_PROTO}" = "remote" ]
   then
-    hepsize=`wc -c "${TNAME}"| awk '{print $1}'`
-    if [ ${hepsize} -ne ${HEPSIZE} ]
+    recsize=`wc -c "${TNAME}"| awk '{print $1}'`
+    if [ ${recsize} -ne ${RECSIZE} ]
     then
-      forcefail 1 "Incorrect HEP size, ${HEPSIZE} expected, ${hepsize} obtained"
+      forcefail 1 "Incorrect recording size, ${RECSIZE} expected, ${recsize} obtained"
     fi
     report "checking recording size"
   fi
 }
 
-run_recording files &
-T1_RC=${?}
-T1_PID=${!}
-report_rc "${T1_RC}" "Starting sub-test \"files\""
-sleep 0.2
-run_recording singlefile &
-T2_RC=${?}
-T2_PID=${!}
-report_rc ${T2_RC} "Starting sub-test \"singlefile\""
-sleep 0.2
-run_recording stopall &
-T3_RC=${?}
-T3_PID=${!}
-report_rc ${T3_RC} "Starting sub-test \"stopall\""
-sleep 0.2
-run_recording remote &
-T4_RC=${?}
-T4_PID=${!}
-report_rc ${T4_RC} "Starting sub-test \"remote\""
-wait ${T1_PID}
-T1_RC=${?}
-wait ${T2_PID}
-T2_RC=${?}
-wait ${T3_PID}
-T3_RC=${?}
-wait ${T4_PID}
-T4_RC=${?}
+SUB_TESTS="files singlefile stopall files_stophalf singlefile_stophalf remote"
+
+for stest in ${SUB_TESTS}
+do
+  run_recording ${stest} &
+  T_RC=${?}
+  eval ${stest}_PID=${!}
+  report_rc "${T_RC}" "Starting sub-test \"${stest}\""
+  eval ${stest}_RC=${T_RC}
+  sleep 0.2
+done
+
+for stest in ${SUB_TESTS}
+do
+  eval "T_PID=\${${stest}_PID}"
+  wait ${T_PID}
+  eval ${stest}_RC=${?}
+done
+
 cat /dev/null > recording.rlog
-for proto in files singlefile stopall remote
+
+for proto in ${SUB_TESTS}
 do
   lfile="recording.${proto}.rlog"
   if [ -e "${lfile}" ]
@@ -204,7 +217,9 @@ do
     cat "${lfile}" >> recording.rlog
   fi
 done
-report_rc "${T1_RC}" "Waiting for sub-test \"files\" to complete"
-report_rc "${T2_RC}" "Waiting for sub-test \"singlefile\" to complete"
-report_rc "${T3_RC}" "Waiting for sub-test \"stopall\" to complete"
-report_rc "${T4_RC}" "Waiting for sub-test \"remote\" to complete"
+
+for stest in ${SUB_TESTS}
+do
+  eval "T_RC=\${${stest}_RC}"
+  report_rc "${T_RC}" "Waiting for sub-test \"${stest}\" to complete"
+done

@@ -3,10 +3,12 @@
 0
 E50
 0
+rtpa_nsent=300 rtpa_nrcvd=300 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=302 rtpa_nrcvd=302 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
 0
 %%PORT_A%%
 %%PORT_O%%
-rtpa_nsent=3124 rtpa_nrcvd=3124 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
-rtpa_nsent=3128 rtpa_nrcvd=3128 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=453 rtpa_nrcvd=453 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=451 rtpa_nrcvd=451 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 MEMDEB(rtpproxy): all clear

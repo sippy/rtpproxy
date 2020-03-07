@@ -6,10 +6,12 @@ E50
 rtpa_nsent=300 rtpa_nrcvd=300 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=302 rtpa_nrcvd=302 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
-0
 %%PORT_A%%
 %%PORT_O%%
 rtpa_nsent=453 rtpa_nrcvd=453 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=451 rtpa_nrcvd=451 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 MEMDEB(rtpproxy): all clear
-%%CALL_ID%%=from_tag_1.pcap: 602
+%%CALL_ID%%=from_tag_1.a.rtcp: 0
+%%CALL_ID%%=from_tag_1.a.rtp: 302
+%%CALL_ID%%=from_tag_1.o.rtcp: 0
+%%CALL_ID%%=from_tag_1.o.rtp: 453
