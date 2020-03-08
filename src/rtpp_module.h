@@ -68,20 +68,23 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
    void *, HERETYPE, va_list);
 
 #if !defined(MODULE_IF_CODE)
-#define mod_malloc(n) rtpp_module._malloc((n), rtpp_module.memdeb_p, \
+
+#define _MMDEB *(rtpp_module.memdeb_p)
+
+#define mod_malloc(n) rtpp_module._malloc((n), _MMDEB, \
   HEREVAL)
-#define mod_zmalloc(n) rtpp_module._zmalloc((n), rtpp_module.memdeb_p, \
+#define mod_zmalloc(n) rtpp_module._zmalloc((n), _MMDEB, \
   HEREVAL)
-#define mod_free(p) rtpp_module._free((p), rtpp_module.memdeb_p, \
+#define mod_free(p) rtpp_module._free((p), _MMDEB, \
   HEREVAL)
-#define mod_realloc(p,n) rtpp_module._realloc((p), (n), rtpp_module.memdeb_p, \
+#define mod_realloc(p,n) rtpp_module._realloc((p), (n), _MMDEB, \
   HEREVAL)
-#define mod_strdup(p) rtpp_module._strdup((p), rtpp_module.memdeb_p, \
+#define mod_strdup(p) rtpp_module._strdup((p), _MMDEB, \
   HEREVAL)
 #define mod_asprintf(pp, fmt, args...) rtpp_module._asprintf((pp), (fmt), \
-  rtpp_module.memdeb_p, HEREVAL, ## args)
+  _MMDEB, HEREVAL, ## args)
 #define mod_vasprintf(pp, fmt, vl) rtpp_module._vasprintf((pp), (fmt), \
-  rtpp_module.memdeb_p, HEREVAL, (vl))
+  _MMDEB, HEREVAL, (vl))
 #endif
 
 #define mod_log(args...) CALL_METHOD(rtpp_module.log, genwrite, __FUNCTION__, \
@@ -128,7 +131,7 @@ struct rtpp_minfo {
     rtpp_module_strdup_t _strdup;
     rtpp_module_asprintf_t _asprintf;
     rtpp_module_vasprintf_t _vasprintf;
-    void *memdeb_p;
+    void **memdeb_p;
     struct rtpp_log *log;
 };
 
