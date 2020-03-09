@@ -90,11 +90,20 @@ static void rtpp_acct_csv_unlockf(int, off_t);
 
 #define API_FUNC(fname, asize) {.func = (fname), .argsize = (asize)}
 
+#ifdef RTPP_CHECK_LEAKS
+#include "rtpp_memdeb_internal.h"
+
+RTPP_MEMDEB_APP_STATIC;
+#endif
+
 struct rtpp_minfo rtpp_module = {
     .name = "acct_csv",
     .ver = MI_VER_INIT(),
     .ctor = rtpp_acct_csv_ctor,
     .dtor = rtpp_acct_csv_dtor,
+#ifdef RTPP_CHECK_LEAKS
+    .memdeb_p = &MEMDEB_SYM,
+#endif
     .on_session_end = API_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
 };
 
@@ -164,6 +173,7 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
 {
     char *buf;
     int len, pos;
+    int r = 0;
 
     if (pvt->fd != -1) {
         close(pvt->fd);
@@ -205,11 +215,16 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
             }
             goto e2;
         }
-        write(pvt->fd, buf, len);
+
+        do {
+            r = write(pvt->fd, buf, len);
+        } while (r < 0 && errno == EINTR);
+        if (r > 0 && r < len)
+            r = -1;
         mod_free(buf);
     }
     rtpp_acct_csv_unlockf(pvt->fd, pos);
-    return (0);
+    return (r);
 
 e3:
     mod_free(buf);
@@ -307,10 +322,12 @@ rtpp_acct_csv_do(struct rtpp_module_priv *pvt, struct rtpp_acct *acct)
     rval = stat(pvt->fname, &stt);
     if (rval != -1) {
         if (stt.st_dev != pvt->stt.st_dev || stt.st_ino != pvt->stt.st_ino) {
-            rtpp_acct_csv_open(pvt);
+            if (rtpp_acct_csv_open(pvt) < 0)
+                return;
         }
     } else if (rval == -1 && errno == ENOENT) {
-        rtpp_acct_csv_open(pvt);
+        if (rtpp_acct_csv_open(pvt) < 0)
+            return;
     }
     pos = rtpp_acct_csv_lockf(pvt->fd);
     if (pos < 0) {

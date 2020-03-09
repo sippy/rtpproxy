@@ -74,6 +74,12 @@ static int rtpp_acct_rtcp_hep_config(struct rtpp_module_priv *);
 
 extern struct rtpp_module_conf *rtpp_arh_conf;
 
+#ifdef RTPP_CHECK_LEAKS
+#include "rtpp_memdeb_internal.h"
+
+RTPP_MEMDEB_APP_STATIC;
+#endif
+
 struct rtpp_minfo rtpp_module = {
     .name = "acct_rtcp_hep",
     .ver = MI_VER_INIT(),
@@ -81,6 +87,9 @@ struct rtpp_minfo rtpp_module = {
     .dtor = rtpp_acct_rtcp_hep_dtor,
     .get_mconf = rtpp_acct_rtcp_hep_get_mconf,
     .config = rtpp_acct_rtcp_hep_config,
+#ifdef RTPP_CHECK_LEAKS
+    .memdeb_p = &MEMDEB_SYM,
+#endif
     .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 

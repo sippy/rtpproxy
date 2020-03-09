@@ -207,7 +207,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     rtpp_memdeb_setlog(pvt->memdeb_p, log);
     rtpp_memdeb_setname(pvt->memdeb_p, pvt->mip->name);
     /* We make a copy, so that the module cannot screw us up */
-    pvt->mip->memdeb_p = pvt->memdeb_p;
+    *pvt->mip->memdeb_p = pvt->memdeb_p;
 #else
     pvt->mip->_malloc = (rtpp_module_malloc_t)&malloc;
     pvt->mip->_zmalloc = (rtpp_module_zmalloc_t)&rtpp_zmalloc;

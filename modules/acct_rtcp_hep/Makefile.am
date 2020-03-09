@@ -21,7 +21,8 @@ rtpp_acct_rtcp_hep_la_CFLAGS=-std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE
 rtpp_acct_rtcp_hep_debug_la_SOURCES = $(rtpp_acct_rtcp_hep_la_SOURCES)
 rtpp_acct_rtcp_hep_debug_la_LIBADD = $(rtpp_acct_rtcp_hep_la_LIBADD) $(RTPP_MEMDEB_LDADD)
 rtpp_acct_rtcp_hep_debug_la_LDFLAGS=$(rtpp_acct_rtcp_hep_la_LDFLAGS)
-rtpp_acct_rtcp_hep_debug_la_CPPFLAGS=$(rtpp_acct_rtcp_hep_la_CPPFLAGS) -DRTPP_DEBUG
+rtpp_acct_rtcp_hep_debug_la_CPPFLAGS=$(rtpp_acct_rtcp_hep_la_CPPFLAGS) -DRTPP_DEBUG \
+ $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="acct_rtcp_hep"
 rtpp_acct_rtcp_hep_debug_la_CFLAGS=$(RTPP_MEMDEB_CFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS)
 
 DEFS=	$(CC_WFLAGS) @DEFS@

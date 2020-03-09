@@ -25,10 +25,15 @@
  *
  */
 
+#if !defined(_RTPP_MEMDEB_INTERNAL_H)
+#define _RTPP_MEMDEB_INTERNAL_H
+
+#include <stdbool.h>
+
 #ifndef RTPP_MEMDEB_STDOUT
 #  define RTPP_MEMDEB_REPORT(handle, format, args...) \
     if (handle != NULL) { \
-        RTPP_LOG(((struct rtpp_log *)handle), RTPP_LOG_DBUG, format, ## args); \
+        RTPP_LOG(((struct rtpp_log *)handle), RTPP_LOG_ERR, format, ## args); \
     }
 #else
 #  define RTPP_MEMDEB_REPORT2(handle, nostdout, format, args...) { \
@@ -37,7 +42,7 @@
         fflush(stdout); \
     }; \
     if (handle != NULL) { \
-        RTPP_LOG(((struct rtpp_log *)handle), RTPP_LOG_DBUG, format, ## args); \
+        RTPP_LOG(((struct rtpp_log *)handle), RTPP_LOG_ERR, format, ## args); \
     } \
 }
 #  define RTPP_MEMDEB_REPORT(handle, format, args...) \
@@ -86,3 +91,5 @@ void rtpp_memdeb_approve(void *, const char *, int, const char *);
 
 void *rtpp_memdeb_init(bool);
 void rtpp_memdeb_dtor(void *);
+
+#endif /* _RTPP_MEMDEB_INTERNAL_H */
