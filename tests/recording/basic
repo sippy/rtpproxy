@@ -10,7 +10,8 @@ BASEDIR="$(readlink -f -- $BASEDIR)"
 
 . $(dirname $0)/../functions
 
-PCAP_DIR="${BASEDIR}/rtp_analyze"
+PCAP_DIR1="${BASEDIR}/rtp_analyze"
+PCAP_DIR2="${BASEDIR}/acct_rtcp_hep"
 CD_DIR="${BASEDIR}/recording"
 RECSIZE=109564
 RECORD_DIR="${BUILDDIR}"
@@ -18,25 +19,29 @@ RECORD_SPL_DIR="${CD_DIR}"
 
 run_udpreplay() {
   direction=${1}
-  rtp_oport=${2}
-  rtp_nport=${3}
-  rtcp_oport=$((${rtp_oport} + 1))
+  rtp_oport1=${2}
+  rtp_oport2=${3}
+  rtp_nport=${4}
+  rtcp_oport1=$((${rtp_oport1} + 1))
+  rtcp_oport2=$((${rtp_oport2} + 1))
   rtcp_nport=$((${rtp_nport} + 1))
   #UDPREPLAY_ARGS="-o udpreplay_${direction}.pcap"
-  tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 --portmap=${rtp_oport}:${rtp_nport} --portmap=${rtcp_oport}:${rtcp_nport} \
-   -i "${PCAP_DIR}/srtp1.${direction}.rtp" -o recording.${rtp_nport}.${direction}.pcap || return 1
+  tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 --portmap=${rtp_oport1}:${rtp_nport} --portmap=${rtcp_oport1}:${rtcp_nport} \
+   -i "${PCAP_DIR1}/srtp1.${direction}.rtp" -o recording.1.${rtp_nport}.${direction}.pcap || return 1
+  tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 --portmap=${rtp_oport2}:${rtp_nport} --portmap=${rtcp_oport2}:${rtcp_nport} \
+   -i "${PCAP_DIR2}/rtcp.${direction}.pcap" -o recording.2.${rtp_nport}.${direction}.pcap || return 1
   if [ "${direction}" = "o" ]
   then
     NPKTS1=300
-    NPKTS2=153
+    NPKTS2=163
   else
     NPKTS1=302
-    NPKTS2=149
+    NPKTS2=159
   fi
   sleep 1
-  udpreplay -r 2 -n ${NPKTS1} ${UDPREPLAY_ARGS} recording.${rtp_nport}.${direction}.pcap
-  sleep 3
-  exec udpreplay -r 2 -n ${NPKTS2} ${UDPREPLAY_ARGS} recording.${rtp_nport}.${direction}.pcap
+  udpreplay -r 2 -n ${NPKTS1} ${UDPREPLAY_ARGS} recording.1.${rtp_nport}.${direction}.pcap
+  sleep 2
+  exec udpreplay -r 2 -n ${NPKTS2} ${UDPREPLAY_ARGS} recording.2.${rtp_nport}.${direction}.pcap
 }
 
 run_rtpproxy() {
@@ -88,7 +93,7 @@ run_rtpproxy() {
   (cat "${CD_DIR}/basic.input" "${CD_DIR}/basic.${rproto}.input"; \
    sleep 8; cat "${CD_DIR}/basic.stats.input" "${CD_DIR}/basic.recstop${recstop}.input" \
     "${CD_DIR}/basic.refresh.input"; \
-   sleep 6; cat "${CD_DIR}/basic.stats.input") | \
+   sleep 7; cat "${CD_DIR}/basic.stats.input") | \
    sed -u "s|%%CALLID%%|${CALL_ID}|g ; s|%%REC_PORT%%|${rport}|g" | \
    ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} | sed \
    "s|^${rtp_porta}$|%%PORT_A%%|g ;  s|^${rtp_porto}$|%%PORT_O%%|g"
@@ -144,11 +149,11 @@ run_recording() {
     sleep 0.2
     report_rc ${RTPP_NC_RC} "Starting NetCat on port ${REC_PORT}/udp"
   fi
-  run_udpreplay a 2280 ${RTP_PORT_A} &
+  run_udpreplay a 2280 2006 ${RTP_PORT_A} &
   UDPRPL_A_RC=${?}
   UDPRPL_A_PID=${!}
   report_rc ${UDPRPL_A_RC} "Starting udpreplay (answering) to ${RTP_PORT_A}/rtp"
-  run_udpreplay o 2240 ${RTP_PORT_O} &
+  run_udpreplay o 2240 2008 ${RTP_PORT_O} &
   UDPRPL_O_RC=${?}
   UDPRPL_O_PID=${!}
   report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate) to ${RTP_PORT_O}/rtp"
