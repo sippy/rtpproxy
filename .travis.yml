@@ -10,6 +10,8 @@ before_install:
     - sudo pip3 install -U virtualenvwrapper
     - which python
     - python --version
+    - nc -h
+    - netcat -h
 #    - sudo -H PATH="${PATH}:/usr/local/clang-3.4/bin" pip3 install -r requirements.txt
     - pip3 install --user cpp-coveralls
 env:
