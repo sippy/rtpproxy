@@ -543,9 +543,9 @@ _rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
         return (0);
     if (rtp_packet_parse(packet) != RTP_PARSER_OK)
         return (0);
-    if (packet->parsed->ssrc != pvt->latch_info.ssrc.val)
-        return (0);
     if (pvt->last_update == 0 || dtime - pvt->last_update > UPDATE_WINDOW) {
+        if (packet->parsed->ssrc != pvt->latch_info.ssrc.val)
+            return (0);
         if (SEQ_DIST(pvt->latch_info.seq, packet->parsed->seq) > 536)
             return (0);
     }
