@@ -115,8 +115,8 @@ glitched:
 #undef accept
 
 int
-rtpp_glitch_accept(int s, struct sockaddr * restrict addr,
-  socklen_t * restrict addrlen, HERETYPEARG)
+rtpp_glitch_accept(int s, struct sockaddr *addr, socklen_t *addrlen,
+  HERETYPEARG)
 {
     int fdc;
 
@@ -323,7 +323,7 @@ glitched:
 #undef realpath
 
 char *
-rtpp_glitch_realpath(const char * restrict pathname, char * restrict resolved_path, HERETYPEARG)
+rtpp_glitch_realpath(const char *pathname, char *resolved_path, HERETYPEARG)
 {
 
     GLITCH_INJECT(HEREARG, glitched);

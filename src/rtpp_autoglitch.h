@@ -77,8 +77,7 @@ int rtpp_glitch_bind(int, const struct sockaddr *, socklen_t, HERETYPE);
 
 #define bind(s, addr, addrlen) rtpp_glitch_bind(s, addr, addrlen, HEREVAL)
 
-int rtpp_glitch_accept(int, struct sockaddr * restrict, socklen_t * restrict,
-  HERETYPE);
+int rtpp_glitch_accept(int, struct sockaddr *, socklen_t *, HERETYPE);
 
 #ifdef accept
 # undef accept
@@ -206,7 +205,7 @@ pid_t rtpp_glitch_fork(HERETYPE);
 
 #include <stdlib.h>
 
-char *rtpp_glitch_realpath(const char * restrict pathname, char * restrict resolved_path, HERETYPE);
+char *rtpp_glitch_realpath(const char *, char *, HERETYPE);
 
 #ifdef realpath
 # undef realpath
