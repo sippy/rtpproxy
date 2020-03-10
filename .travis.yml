@@ -165,8 +165,8 @@ jobs:
           build_command: "make all"
           branch_pattern: master
       before_install:
-        - echo -n | openssl s_client -connect scan.coverity.com:443 | \
-            sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | \
+        - echo -n | openssl s_client -connect scan.coverity.com:443 |
+            sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' |
             sudo tee -a /etc/ssl/certs/ca-certificates.crt
       script:
         - true
