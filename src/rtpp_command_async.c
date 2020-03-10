@@ -389,9 +389,6 @@ rtpp_cmd_queue_run(void *arg)
     struct rtpp_cmd_pollset *psp;
     int i, nready, rval;
     struct rtpp_timestamp sptime;
-#if 0
-    double eptime, tused;
-#endif
     struct rtpp_command_stats *csp;
     struct rtpp_stats *rtpp_stats_cf;
 
@@ -470,24 +467,7 @@ closefd:
         if (nready > 0) {
             rtpp_anetio_pump(cmd_cf->cf_save->rtpp_proc_cf->netio);
         }
-#if 0
-        eptime = getdtime();
-        pthread_mutex_lock(&cmd_cf->cmd_mutex);
-        recfilter_apply(&cmd_cf->average_load, (eptime - sptime.mono + tused) * cmd_cf->cf_save->target_pfreq);
-        pthread_mutex_unlock(&cmd_cf->cmd_mutex);
-#endif
         flush_cstats(rtpp_stats_cf, csp);
-#if 0
-#if RTPP_DEBUG
-        if (last_ctick % (unsigned int)cmd_cf->cf_save->target_pfreq == 0 || last_ctick < 1000) {
-            RTPP_LOG(cmd_cf->cf_save->glog, RTPP_LOG_DBUG, "rtpp_cmd_queue_run %lld sptime %f eptime %f, CSV: %f,%f,%f,%f,%f", \
-              last_ctick, sptime.mono, eptime, (double)last_ctick / cmd_cf->cf_save->target_pfreq, \
-              eptime - sptime.mono + tused, eptime, sptime.mono, tused);
-            RTPP_LOG(cmd_cf->cf_save->glog, RTPP_LOG_DBUG, "run %lld average load %f, CSV: %f,%f", last_ctick, \
-              cmd_cf->average_load.lastval * 100.0, (double)last_ctick / cmd_cf->cf_save->target_pfreq, cmd_cf->average_load.lastval);
-        }
-#endif
-#endif
     }
 }
 
