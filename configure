@@ -648,6 +648,8 @@ LIBS_GSM
 LIBS_DL
 AM_CFLAGS
 subdirs
+ENABLE_WARN_IPT_FALSE
+ENABLE_WARN_IPT_TRUE
 ENABLE_BASIC_TESTS_FALSE
 ENABLE_BASIC_TESTS_TRUE
 ENABLE_MEMGLITCHING_FALSE
@@ -12134,10 +12136,8 @@ CC=$lt_save_CC
 
 mydef_version=`git describe --always --dirty || date "+%Y%m%d%H%M%S"`
 
-$as_echo "#define VERSION_GIT /**/" >>confdefs.h
-
 cat >>confdefs.h <<_ACEOF
-#define VERSION_GIT "$mydef_version"
+#define VERSION_GIT "${mydef_version}"
 _ACEOF
 
 
@@ -12199,6 +12199,31 @@ _ACEOF
 
 SIZEOF_TIME_T=$ac_cv_sizeof_time_t
 
+
+ac_save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -Wincompatible-pointer-types"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+struct foo; struct bar;
+int
+main ()
+{
+struct foo *f; struct bar *b; f = b;
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cc_warn_ipt=1
+else
+  ac_cc_warn_ipt=0
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+if test $ac_cc_warn_ipt -ne 0; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: '$CC' supports -Wincompatible-pointer-types" >&5
+$as_echo "'$CC' supports -Wincompatible-pointer-types" >&6; }
+fi
+CFLAGS="$ac_save_CFLAGS"
 
 # Check whether --enable-systemd was given.
 if test "${enable_systemd+set}" = set; then :
@@ -14087,6 +14112,14 @@ else
   ENABLE_BASIC_TESTS_FALSE=
 fi
 
+ if test "${ac_cc_warn_ipt}" = 1; then
+  ENABLE_WARN_IPT_TRUE=
+  ENABLE_WARN_IPT_FALSE='#'
+else
+  ENABLE_WARN_IPT_TRUE='#'
+  ENABLE_WARN_IPT_FALSE=
+fi
+
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
 
@@ -14287,6 +14320,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${ENABLE_BASIC_TESTS_TRUE}" && test -z "${ENABLE_BASIC_TESTS_FALSE}"; then
   as_fn_error $? "conditional \"ENABLE_BASIC_TESTS\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${ENABLE_WARN_IPT_TRUE}" && test -z "${ENABLE_WARN_IPT_FALSE}"; then
+  as_fn_error $? "conditional \"ENABLE_WARN_IPT\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
