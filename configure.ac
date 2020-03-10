@@ -21,8 +21,7 @@ AM_PROG_CC_C_O
 LT_INIT
 
 mydef_version=`git describe --always --dirty || date "+%Y%m%d%H%M%S"`
-AC_DEFINE([VERSION_GIT], [], [Git hash])
-AC_DEFINE_UNQUOTED([VERSION_GIT],["$mydef_version"])
+AC_DEFINE_UNQUOTED([VERSION_GIT], ["${mydef_version}"], [Git hash])
 
 case "${host_os}" in
 freebsd*)
@@ -42,6 +41,15 @@ solaris*)
 esac
 
 AX_COMPILE_CHECK_SIZEOF(time_t, [#include <time.h>])
+
+ac_save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -Wincompatible-pointer-types"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([struct foo; struct bar;],
+  [[struct foo *f; struct bar *b; f = b;]])],
+  [ac_cc_warn_ipt=1], [ac_cc_warn_ipt=0])
+AS_IF([test $ac_cc_warn_ipt -ne 0],
+  [AC_MSG_RESULT(['$CC' supports -Wincompatible-pointer-types])])
+CFLAGS="$ac_save_CFLAGS"
 
 AC_ARG_ENABLE(systemd,
 AS_HELP_STRING([--enable-systemd], [enable systemd support in rtpproxy]),
@@ -328,6 +336,7 @@ AM_CONDITIONAL(BUILD_OBJCK, [test "${ENABLE_OBJCK}" = 1])
 AM_CONDITIONAL(BUILD_DOCS, [test "x${HAVE_DOCBOOK_DTD_4_5}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_MEMGLITCHING, [test "x${ENABLE_MEMGLITCHING}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_BASIC_TESTS, [test "x${ENABLE_BASIC_TESTS}" = "xyes" ])
+AM_CONDITIONAL(ENABLE_WARN_IPT, [test "${ac_cc_warn_ipt}" = 1])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
