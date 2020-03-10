@@ -358,21 +358,21 @@ rtpp_socket_drain(struct rtpp_socket *self, const char *ptype,
 
     PUB2PVT(self, pvt);
     ndrained = 0;
-#if RTPP_DEBUG
-    RTPP_LOG(log, RTPP_LOG_DBUG, "Draining %s socket %d", ptype,
-      pvt->fd);
-#endif
+    RTPP_DBGCODE() {
+        RTPP_LOG(log, RTPP_LOG_DBUG, "Draining %s socket %d", ptype,
+          pvt->fd);
+    }
     for (;;) {
         rval = recv(pvt->fd, scrapbuf, sizeof(scrapbuf), 0);
         if (rval < 0)
             break;
         ndrained++;
     }
-#if RTPP_DEBUG
-    if (ndrained > 0) {
-        RTPP_LOG(log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
-          "packets discarded", ptype, pvt->fd, ndrained);
+    RTPP_DBGCODE() {
+        if (ndrained > 0) {
+            RTPP_LOG(log, RTPP_LOG_DBUG, "Draining %s socket %d: %d "
+              "packets discarded", ptype, pvt->fd, ndrained);
+        }
     }
-#endif
     return (ndrained);
 }

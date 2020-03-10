@@ -188,10 +188,10 @@ update_jitter_stats(struct rtp_analyze_jdata *jdp, struct rtp_info *rinfo,
         }
         jdp->jss.jtotal += jdp->jss.jlast;
     }
-#if RTPP_DEBUG_analyze > 1
-    LOGD_IF_NOT_NULL(rlog, SSRC_FMT ",%lld,%llu,%u,%f", rinfo->ssrc, jdp->jss.pcount,
-      rtime_ts, rinfo->ts, jdp->jss.jlast);
-#endif
+    RTPP_DBGCODE(analyze > 1) {
+        LOGD_IF_NOT_NULL(rlog, SSRC_FMT ",%lld,%llu,%u,%f", rinfo->ssrc, jdp->jss.pcount,
+          rtime_ts, rinfo->ts, jdp->jss.jlast);
+    }
     jdp->jss.pcount++;
 saveandexit:
     if (rinfo->rtp_profile->pt_kind == RTP_PTK_AUDIO) {

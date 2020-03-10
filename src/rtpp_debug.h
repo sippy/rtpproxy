@@ -68,8 +68,19 @@
 #include <assert.h>
 
 #define RTPP_DBG_ASSERT(...)  assert(__VA_ARGS__)
+#define _DCOND_ RTPP_DBG_YES
+
 #else
 #define RTPP_DBG_ASSERT(...)
-#endif
+#define _DCOND_ RTPP_DBG_NO
+#endif /* RTPP_DEBUG */
+
+#define _DCOND_netio      RTPP_DEBUG_netio
+#define _DCOND_timers     RTPP_DEBUG_timers
+#define _DCOND_catchtrace RTPP_DEBUG_catchtrace
+#define _DCOND_refcnt     RTPP_DEBUG_refcnt
+#define _DCOND_analyze    RTPP_DEBUG_analyze
+
+#define RTPP_DBGCODE(x) if (_DCOND_##x)
 
 #endif
