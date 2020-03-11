@@ -1,1 +1,4 @@
-CC_WFLAGS = -Wall -Werror=implicit-function-declaration -Werror=incompatible-pointer-types
+CC_WFLAGS = -Wall -Werror=implicit-function-declaration
+if ENABLE_WARN_IPT
+CC_WFLAGS += -Werror=incompatible-pointer-types
+endif

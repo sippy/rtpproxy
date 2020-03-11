@@ -48,9 +48,6 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_command_async.h"
 #include "rtpp_debug.h"
-#if RTPP_DEBUG_timers
-#include "rtpp_math.h"
-#endif
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
@@ -124,9 +121,7 @@ rtpp_proc_async_run(void *arg)
     int ndrain, rtp_only;
     int nready_rtp, nready_rtcp;
     struct rtpp_proc_async_cf *proc_cf;
-#if RTPP_DEBUG_netio
     long long last_ctick;
-#endif
     struct sthread_args *sender;
     struct rtpp_proc_rstats *rstats;
     struct rtpp_stats *stats_cf;
@@ -146,9 +141,9 @@ rtpp_proc_async_run(void *arg)
 
     memset(&rtime, '\0', sizeof(rtime));
 
-#if RTPP_DEBUG_netio
-    last_ctick = 0;
-#endif
+    RTPP_DBGCODE(netio) {
+        last_ctick = 0;
+    }
     overload = 0;
 
     edp = &proc_cf->elp_lz;
@@ -192,33 +187,33 @@ rtpp_proc_async_run(void *arg)
         nready_rtp = nready_rtcp = 0;
         if (ptbl_rtp.curlen > 0) {
             if (rtp_only == 0) {
-#if RTPP_DEBUG_netio > 1
-                RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-                  "polling for %d RTCP file descriptors", \
-                  last_ctick, ptbl_rtcp.curlen);
-#endif
-                nready_rtcp = poll(ptbl_rtcp.pfds, ptbl_rtcp.curlen, 0);
-#if RTPP_DEBUG_netio
-                if (RTPP_DEBUG_netio > 1 || nready_rtcp > 0) {
+                RTPP_DBGCODE(netio > 1) {
                     RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-                      "polling for %d RTCP file descriptors: %d descriptors are ready", \
-                      last_ctick, ptbl_rtcp.curlen, nready_rtcp);
+                      "polling for %d RTCP file descriptors", \
+                      last_ctick, ptbl_rtcp.curlen);
                 }
-#endif
+                nready_rtcp = poll(ptbl_rtcp.pfds, ptbl_rtcp.curlen, 0);
+                RTPP_DBGCODE(netio) {
+                    RTPP_DBGCODE(netio > 1 || nready_rtcp > 0) {
+                        RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
+                          "polling for %d RTCP file descriptors: %d descriptors are ready", \
+                          last_ctick, ptbl_rtcp.curlen, nready_rtcp);
+                    }
+                }
             }
-#if RTPP_DEBUG_netio > 1
-           RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-              "polling for %d RTP file descriptors", \
-              last_ctick, ptbl_rtp.curlen);
-#endif
-            nready_rtp = poll(ptbl_rtp.pfds, ptbl_rtp.curlen, 0);
-#if RTPP_DEBUG_netio
-            if (RTPP_DEBUG_netio > 1 || nready_rtp > 0) {
+            RTPP_DBGCODE(netio > 1) {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-                  "polling for RTP %d file descriptors: %d descriptors are ready", \
-                  last_ctick, ptbl_rtp.curlen, nready_rtp);
+                  "polling for %d RTP file descriptors", \
+                  last_ctick, ptbl_rtp.curlen);
             }
-#endif
+            nready_rtp = poll(ptbl_rtp.pfds, ptbl_rtp.curlen, 0);
+            RTPP_DBGCODE(netio) {
+                RTPP_DBGCODE(netio > 1 || nready_rtp > 0) {
+                    RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
+                      "polling for RTP %d file descriptors: %d descriptors are ready", \
+                      last_ctick, ptbl_rtp.curlen, nready_rtp);
+                }
+            }
             if (nready_rtp < 0 && errno == EINTR) {
                 continue;
             }
@@ -252,9 +247,9 @@ rtpp_proc_async_run(void *arg)
             }
         }
         prdic_procrastinate(edp->obj);
-#if RTPP_DEBUG_netio
-        last_ctick++;
-#endif
+        RTPP_DBGCODE(netio) {
+            last_ctick++;
+        }
     }
     rtpp_polltbl_free(&ptbl_rtp);
     rtpp_polltbl_free(&ptbl_rtcp);

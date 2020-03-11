@@ -112,9 +112,7 @@
 #include "libexecinfo/execinfo.h"
 #include "rtpp_memdeb_internal.h"
 #endif
-#if RTPP_DEBUG_catchtrace
 #include "rtpp_stacktrace.h"
-#endif
 
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
@@ -205,9 +203,9 @@ static void
 ehandler(void)
 {
 
-#if RTPP_DEBUG_catchtrace 
-    rtpp_stacktrace_print("Exiting from: ehandler()");
-#endif
+    RTPP_DBGCODE(catchtrace) {
+        rtpp_stacktrace_print("Exiting from: ehandler()");
+    }
     rtpp_controlfd_cleanup(_sig_cf);
     unlink(_sig_cf->pid_file);
     RTPP_LOG(_sig_cf->glog, RTPP_LOG_INFO, "rtpproxy ended");
@@ -305,10 +303,10 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     cfsp->sched_policy = SCHED_OTHER;
     cfsp->sched_nice = PRIO_UNSET;
     cfsp->target_pfreq = MIN(POLL_RATE, cfsp->sched_hz);
-#if RTPP_DEBUG
-    if (cfsp->target_pfreq != cfsp->sched_hz)
-        fprintf(stderr, "target_pfreq = %f\n", cfsp->target_pfreq);
-#endif
+    RTPP_DBGCODE() {
+        if (cfsp->target_pfreq != cfsp->sched_hz)
+            fprintf(stderr, "target_pfreq = %f\n", cfsp->target_pfreq);
+    }
     cfsp->slowshutdown = 0;
     cfsp->fastshutdown = 0;
 
@@ -788,9 +786,6 @@ main(int argc, char **argv)
     struct sched_param sparam;
     void *elp;
     struct rtpp_timed_task *tp;
-#if RTPP_DEBUG_timers
-    double sleep_time, filter_lastval;
-#endif
     struct rtpp_module_if *mif, *tmp;
     struct rtpp_daemon_rope drop;
 
@@ -1027,19 +1022,19 @@ main(int argc, char **argv)
     signal(SIGPROF, fatsignal);
     signal(SIGUSR1, fatsignal);
     signal(SIGUSR2, fatsignal);
-#if RTPP_DEBUG_catchtrace
-    signal(SIGQUIT, rtpp_stacktrace);
-    signal(SIGILL, rtpp_stacktrace);
-    signal(SIGTRAP, rtpp_stacktrace);
-    signal(SIGABRT, rtpp_stacktrace);
+    RTPP_DBGCODE(catchtrace) {
+        signal(SIGQUIT, rtpp_stacktrace);
+        signal(SIGILL, rtpp_stacktrace);
+        signal(SIGTRAP, rtpp_stacktrace);
+        signal(SIGABRT, rtpp_stacktrace);
 #if defined(SIGEMT)
-    signal(SIGEMT, rtpp_stacktrace);
+        signal(SIGEMT, rtpp_stacktrace);
 #endif
-    signal(SIGFPE, rtpp_stacktrace);
-    signal(SIGBUS, rtpp_stacktrace);
-    signal(SIGSEGV, rtpp_stacktrace);
-    signal(SIGSYS, rtpp_stacktrace);
-#endif
+        signal(SIGFPE, rtpp_stacktrace);
+        signal(SIGBUS, rtpp_stacktrace);
+        signal(SIGSEGV, rtpp_stacktrace);
+        signal(SIGSYS, rtpp_stacktrace);
+    }
 
     elp = prdic_init(cfs.target_pfreq / 10.0, 0.0);
     if (elp == NULL) {

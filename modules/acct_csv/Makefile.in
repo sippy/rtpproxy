@@ -88,6 +88,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
 subdir = modules/acct_csv
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
@@ -364,7 +365,8 @@ RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_me
 
 RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
-CC_WFLAGS = -Wall -Werror=implicit-function-declaration -Werror=incompatible-pointer-types
+CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
+	$(am__append_1)
 pkglib_LTLIBRARIES = rtpp_acct_csv.la rtpp_acct_csv_debug.la
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
 rtpp_acct_csv_la_LDFLAGS = -avoid-version -module -shared -export-dynamic

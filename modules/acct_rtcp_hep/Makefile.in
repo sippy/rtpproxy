@@ -89,6 +89,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
 noinst_PROGRAMS = rtcp2json_test$(EXEEXT) rtpp_sbuf_selftest$(EXEEXT)
 subdir = modules/acct_rtcp_hep
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -415,7 +416,8 @@ RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_me
 
 RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
-CC_WFLAGS = -Wall -Werror=implicit-function-declaration -Werror=incompatible-pointer-types
+CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
+	$(am__append_1)
 HEPSRCDIR = $(top_srcdir)/hepconnector
 UCLSRCDIR = $(top_srcdir)/external/libucl
 pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
