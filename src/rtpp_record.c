@@ -89,11 +89,19 @@ struct rtpp_record_channel {
     int record_single_file;
     const char *proto;
     struct rtpp_log *log;
+    struct rtpp_timestamp epoch;
 };
 
 static void rtpp_record_write(struct rtpp_record *, struct rtpp_stream *, struct rtp_packet *);
 static void rtpp_record_close(struct rtpp_record_channel *);
 static int get_hdr_size(const struct sockaddr *);
+
+#if HAVE_SO_TS_CLOCK
+#define ARRIVAL_TIME(rp, pp) (rp->epoch.wall + (pp->rtime.mono - rp->epoch.mono))
+#else
+#define ARRIVAL_TIME(rp, pp) (pp->rtime.wall)
+#endif
+
 
 static int
 ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
@@ -289,36 +297,49 @@ flush_rbuf(struct rtpp_record_channel *rrc)
     return -1;
 }
 
-static int
-prepare_pkt_hdr_adhoc(struct rtpp_log *log, struct rtp_packet *packet,
-  struct pkt_hdr_adhoc *hdrp, const struct sockaddr *daddr,
-  const struct sockaddr *ldaddr, int ldport, int face)
-{
+union anyhdr {
+    union pkt_hdr_pcap pcap;
+    struct pkt_hdr_adhoc adhoc;
+};
 
-    memset(hdrp, 0, sizeof(*hdrp));
-    hdrp->time = packet->rtime.wall;
-    if (hdrp->time == -1) {
-	RTPP_ELOG(log, RTPP_LOG_ERR, "can't get current time");
-	return -1;
-    }
-    switch (sstosa(&packet->raddr)->sa_family) {
+struct prepare_pkt_hdr_args {
+    const struct rtp_packet *packet;
+    union anyhdr *hdrp;
+    const struct sockaddr *daddr;
+    const struct sockaddr *ldaddr;
+    int ldport;
+    int face;
+    double atime_wall;
+};
+
+DEFINE_RAW_METHOD(prepare_pkt_hdr, int, const struct prepare_pkt_hdr_args *);
+
+static int
+prepare_pkt_hdr_adhoc(const struct prepare_pkt_hdr_args *phap)
+{
+    struct pkt_hdr_adhoc *ap;
+
+    ap = &(phap->hdrp->adhoc);
+    memset(ap, 0, sizeof(*ap));
+    ap->time = phap->atime_wall;
+    switch (sstosa(&phap->packet->raddr)->sa_family) {
     case AF_INET:
-	hdrp->addr.in4.sin_family = sstosa(&packet->raddr)->sa_family;
-	hdrp->addr.in4.sin_port = satosin(&packet->raddr)->sin_port;
-	hdrp->addr.in4.sin_addr = satosin(&packet->raddr)->sin_addr;
+	ap->addr.in4.sin_family = sstosa(&phap->packet->raddr)->sa_family;
+	ap->addr.in4.sin_port = satosin(&phap->packet->raddr)->sin_port;
+	ap->addr.in4.sin_addr = satosin(&phap->packet->raddr)->sin_addr;
 	break;
 
     case AF_INET6:
-	hdrp->addr.in6.sin_family = sstosa(&packet->raddr)->sa_family;
-	hdrp->addr.in6.sin_port = satosin6(&packet->raddr)->sin6_port;
-	hdrp->addr.in6.sin_addr = satosin6(&packet->raddr)->sin6_addr;
+	ap->addr.in6.sin_family = sstosa(&phap->packet->raddr)->sa_family;
+	ap->addr.in6.sin_port = satosin6(&phap->packet->raddr)->sin6_port;
+	ap->addr.in6.sin_addr = satosin6(&phap->packet->raddr)->sin6_addr;
 	break;
 
     default:
 	abort();
     }
 
-    hdrp->plen = packet->size;
+    ap->plen = phap->packet->size;
     return 0;
 }
 
@@ -353,9 +374,7 @@ fake_ether_addr(const struct sockaddr *addr, uint8_t *eaddr)
 #endif
 
 static int
-prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
-  union pkt_hdr_pcap *hdrp, const struct sockaddr *daddr,
-  const struct sockaddr *ldaddr, int ldport, int face)
+prepare_pkt_hdr_pcap(const struct prepare_pkt_hdr_args *phap)
 {
     const struct sockaddr *src_addr, *dst_addr;
     uint16_t src_port, dst_port;
@@ -372,42 +391,38 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
     struct layer2_hdr *ether;
 #endif
 
-    if (packet->rtime.wall == -1) {
-	RTPP_ELOG(log, RTPP_LOG_ERR, "can't get current time");
-	return -1;
-    }
-
-    if (face == 0) {
-        src_addr = sstosa(&(packet->raddr));
+    if (phap->face == 0) {
+        src_addr = sstosa(&(phap->packet->raddr));
         src_port = getnport(src_addr);
-        dst_addr = packet->laddr;
-        dst_port = htons(packet->lport);
+        dst_addr = phap->packet->laddr;
+        dst_port = htons(phap->packet->lport);
     } else {
-        src_addr = ldaddr;
-        src_port = htons(ldport);
-        dst_addr = daddr;
+        src_addr = phap->ldaddr;
+        src_port = htons(phap->ldport);
+        dst_addr = phap->daddr;
         dst_port = getnport(dst_addr);
     }
 
 #if 0
     if (src_addr->sa_family != AF_INET) {
-	RTPP_ELOG(log, RTPP_LOG_ERR, "only AF_INET pcap format is supported");
+	RTPP_ELOG(phap->log, RTPP_LOG_ERR, "only AF_INET pcap format is supported");
 	return -1;
     }
 #endif
 
-    memset(hdrp, 0, get_hdr_size(src_addr));
+    union pkt_hdr_pcap *pcp = &(phap->hdrp->pcap);
+    memset(pcp, 0, get_hdr_size(src_addr));
     memset(&phd, 0, sizeof(phd));
 
 #if (PCAP_FORMAT == DLT_NULL)
-    pcap_size = (src_addr->sa_family == AF_INET) ? sizeof(hdrp->null) :
-      sizeof(hdrp->null_v6);
+    pcap_size = (src_addr->sa_family == AF_INET) ? sizeof(pcp->null) :
+      sizeof(pcp->null_v6);
 #else
-    pcap_size = (src_addr->sa_family == AF_INET) ? sizeof(hdrp->en10t) :
-       sizeof(hdrp->en10t_v6);
+    pcap_size = (src_addr->sa_family == AF_INET) ? sizeof(pcp->en10t) :
+       sizeof(pcp->en10t_v6);
 #endif
 
-    dtime2timeval(packet->rtime.wall, &rtimeval);
+    dtime2timeval(phap->atime_wall, &rtimeval);
 
     RTPP_DBG_ASSERT(SEC(&rtimeval) > 0 && SEC(&rtimeval) <= UINT32_MAX);
     RTPP_DBG_ASSERT(USEC(&rtimeval) < USEC_MAX);
@@ -415,36 +430,36 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
     phd.ts_sec = SEC(&rtimeval);
     phd.ts_usec = USEC(&rtimeval);
     phd.orig_len = phd.incl_len = pcap_size -
-      sizeof(phd) + packet->size;
+      sizeof(phd) + phap->packet->size;
 
 #if (PCAP_FORMAT == DLT_NULL)
     if (src_addr->sa_family == AF_INET) {
-        memcpy(&hdrp->null.pcaprec_hdr, &phd, sizeof(phd));
-        hdrp->null.family = src_addr->sa_family;
-        ipp.v4 = &(hdrp->null.udpip.iphdr);
-        udp = &(hdrp->null.udpip.udphdr);
+        memcpy(&pcp->null.pcaprec_hdr, &phd, sizeof(phd));
+        pcp->null.family = src_addr->sa_family;
+        ipp.v4 = &(pcp->null.udpip.iphdr);
+        udp = &(pcp->null.udpip.udphdr);
     } else {
-        memcpy(&hdrp->null_v6.pcaprec_hdr, &phd, sizeof(phd));
-        hdrp->null_v6.family = src_addr->sa_family;
-        ipp.v6 = &(hdrp->null_v6.udpip6.iphdr);
-        udp = &(hdrp->null_v6.udpip6.udphdr);
+        memcpy(&pcp->null_v6.pcaprec_hdr, &phd, sizeof(phd));
+        pcp->null_v6.family = src_addr->sa_family;
+        ipp.v6 = &(pcp->null_v6.udpip6.iphdr);
+        udp = &(pcp->null_v6.udpip6.udphdr);
     }
 #else
     /* Prepare fake ethernet header */
     if (src_addr->sa_family == AF_INET) {
-        memcpy(&hdrp->en10t.pcaprec_hdr, &phd, sizeof(phd));
-        ether = &hdrp->en10t.ether;
+        memcpy(&pcp->en10t.pcaprec_hdr, &phd, sizeof(phd));
+        ether = &pcp->en10t.ether;
         ether->type = ETHERTYPE_INET;
-        udp = &(hdrp->en10t.udpip.udphdr);
-        ipp.v4 = &(hdrp->en10t.udpip.iphdr);
+        udp = &(pcp->en10t.udpip.udphdr);
+        ipp.v4 = &(pcp->en10t.udpip.iphdr);
     } else {
-        memcpy(&hdrp->en10t_v6.pcaprec_hdr, &phd, sizeof(phd));
-        ether = &hdrp->en10t_v6.ether;
+        memcpy(&pcp->en10t_v6.pcaprec_hdr, &phd, sizeof(phd));
+        ether = &pcp->en10t_v6.ether;
         ether->type = ETHERTYPE_INET6;
-        udp = &(hdrp->en10t_v6.udpip6.udphdr);
-        ipp.v6 = &(hdrp->en10t_v6.udpip6.iphdr);
+        udp = &(pcp->en10t_v6.udpip6.udphdr);
+        ipp.v6 = &(pcp->en10t_v6.udpip6.iphdr);
     }
-    if (face == 0 && ishostnull(dst_addr) && !ishostnull(src_addr)) {
+    if (phap->face == 0 && ishostnull(dst_addr) && !ishostnull(src_addr)) {
         if (local4remote(src_addr, &tmp_addr) == 0) {
             dst_addr = sstosa(&tmp_addr);
         } else {
@@ -452,7 +467,7 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
         }
     }
     fake_ether_addr(dst_addr, ether->dhost);
-    if (face != 0 && ishostnull(src_addr) && !ishostnull(dst_addr)) {
+    if (phap->face != 0 && ishostnull(src_addr) && !ishostnull(dst_addr)) {
         if (local4remote(dst_addr, &tmp_addr) == 0) {
             src_addr = sstosa(&tmp_addr);
         } else {
@@ -466,7 +481,7 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
     if (src_addr->sa_family == AF_INET) {
         ipp.v4->ip_v = 4;
         ipp.v4->ip_hl = sizeof(*ipp.v4) >> 2;
-        ipp.v4->ip_len = htons(sizeof(*ipp.v4) + sizeof(*udp) + packet->size);
+        ipp.v4->ip_len = htons(sizeof(*ipp.v4) + sizeof(*udp) + phap->packet->size);
         ipp.v4->ip_src = satosin(src_addr)->sin_addr;
         ipp.v4->ip_dst = satosin(dst_addr)->sin_addr;
         ipp.v4->ip_p = IPPROTO_UDP;
@@ -479,13 +494,13 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
         ipp.v6->ip6_nxt = IPPROTO_UDP;
         ipp.v6->ip6_src = satosin6(src_addr)->sin6_addr;
         ipp.v6->ip6_dst = satosin6(dst_addr)->sin6_addr;
-        ipp.v6->ip6_plen = htons(sizeof(*udp) + packet->size);
+        ipp.v6->ip6_plen = htons(sizeof(*udp) + phap->packet->size);
     }
 
     /* Prepare fake UDP header */
     udp->uh_sport = src_port;
     udp->uh_dport = dst_port;
-    udp->uh_ulen = htons(sizeof(*udp) + packet->size);
+    udp->uh_ulen = htons(sizeof(*udp) + phap->packet->size);
 
     rtpp_ip_chksum_start();
     if (src_addr->sa_family == AF_INET) {
@@ -498,14 +513,14 @@ prepare_pkt_hdr_pcap(struct rtpp_log *log, struct rtp_packet *packet,
 
         rtpp_ip_chksum_update(&ipp.v6->ip6_src, sizeof(ipp.v6->ip6_src));
         rtpp_ip_chksum_update(&ipp.v6->ip6_dst, sizeof(ipp.v6->ip6_dst));
-        ulen32 = htonl(sizeof(*udp) + packet->size);
+        ulen32 = htonl(sizeof(*udp) + phap->packet->size);
         rtpp_ip_chksum_update(&ulen32, sizeof(ulen32));
         rtpp_ip_chksum_pad_v6();
     }
     rtpp_ip_chksum_update(&(udp->uh_sport), sizeof(udp->uh_sport));
     rtpp_ip_chksum_update(&(udp->uh_dport), sizeof(udp->uh_dport));
     rtpp_ip_chksum_update(&(udp->uh_ulen), sizeof(udp->uh_ulen));
-    rtpp_ip_chksum_update_data(packet->data.buf, packet->size);
+    rtpp_ip_chksum_update_data(phap->packet->data.buf, phap->packet->size);
     rtpp_ip_chksum_fin(udp->uh_sum);
 
     return 0;
@@ -533,20 +548,14 @@ get_hdr_size(const struct sockaddr *raddr)
 }
 
 static void
-rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_packet *packet)
+rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp,
+  struct rtp_packet *packet)
 {
     struct iovec v[2];
-    union {
-	union pkt_hdr_pcap pcap;
-	struct pkt_hdr_adhoc adhoc;
-    } hdr;
     int rval, hdr_size;
-    int (*prepare_pkt_hdr)(struct rtpp_log *, struct rtp_packet *, void *,
-      const struct sockaddr *, const struct sockaddr *, int, int);
+    prepare_pkt_hdr_t prepare_pkt_hdr;
     const char *proto;
     struct sockaddr_storage daddr;
-    const struct sockaddr *ldaddr;
-    int ldport, face;
     struct rtpp_record_channel *rrc;
     struct rtpp_netaddr *rem_addr;
     size_t dalen;
@@ -562,8 +571,14 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
     }
     dalen = CALL_SMETHOD(rem_addr, get, sstosa(&daddr), sizeof(daddr));
     RTPP_OBJ_DECREF(rem_addr);
-    ldaddr = stp->laddr;
-    ldport = stp->port;
+
+    if (packet->rtime.wall == -1) {
+        RTPP_ELOG(stp->log, RTPP_LOG_ERR, "can't get current time");
+    }
+
+    if (rrc->epoch.wall == 0) {
+        rrc->epoch = packet->rtime;
+    }
 
     switch (rrc->mode) {
     case MODE_REMOTE_RTP:
@@ -571,13 +586,13 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
 	return;
 
     case MODE_LOCAL_PKT:
-	hdr_size = sizeof(hdr.adhoc);
-	prepare_pkt_hdr = (void *)&prepare_pkt_hdr_adhoc;
+	hdr_size = sizeof(struct pkt_hdr_adhoc);
+	prepare_pkt_hdr = &prepare_pkt_hdr_adhoc;
 	break;
 
     case MODE_LOCAL_PCAP:
         hdr_size = get_hdr_size(sstosa(&packet->raddr));
-	prepare_pkt_hdr = (void *)&prepare_pkt_hdr_pcap;
+	prepare_pkt_hdr = &prepare_pkt_hdr_pcap;
 	break;
 
     default:
@@ -590,11 +605,21 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
 	if (flush_rbuf(rrc) != 0)
 	    return;
 
-    face = (rrc->record_single_file == 0) ? 0 : (stp->pipe_type != PIPE_RTP);
+    struct prepare_pkt_hdr_args pargs = {
+      .packet = packet,
+      .ldaddr = stp->laddr,
+      .ldport = stp->port,
+      .daddr = sstosa(&daddr),
+      .face = (rrc->record_single_file == 0) ? 0 : (stp->pipe_type != PIPE_RTP),
+      .atime_wall = ARRIVAL_TIME(rrc, packet)
+    };
 
     /* Check if received packet doesn't fit into the buffer, do synchronous write  if so */
     if (rrc->rbuf_len + hdr_size + packet->size > sizeof(rrc->rbuf)) {
-	if (prepare_pkt_hdr(stp->log, packet, (void *)&hdr, sstosa(&daddr), ldaddr, ldport, face) != 0)
+        union anyhdr hdr;
+        pargs.hdrp = &hdr;
+
+	if (prepare_pkt_hdr(&pargs) != 0)
 	    return;
 
 	v[0].iov_base = (void *)&hdr;
@@ -614,8 +639,8 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp, struct rtp_
 	rrc->fd = -1;
 	return;
     }
-    if (prepare_pkt_hdr(stp->log, packet, (void *)rrc->rbuf + rrc->rbuf_len,
-      sstosa(&daddr), ldaddr, ldport, face) != 0)
+    pargs.hdrp = (void *)rrc->rbuf + rrc->rbuf_len;
+    if (prepare_pkt_hdr(&pargs) != 0)
 	return;
     rrc->rbuf_len += hdr_size;
     memcpy(rrc->rbuf + rrc->rbuf_len, packet->data.buf, packet->size);

@@ -58,6 +58,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_network_io.c rtpp_network_io.h rtpp_wi_pkt.c rtpp_wi_pkt.h \
   rtpp_timeout_data.c rtpp_timeout_data.h rtpp_locking.h \
   rtpp_nofile.c rtpp_nofile.h rtpp_record_adhoc.h \
+  rtpp_command_norecord.c rtpp_command_norecord.h \
   $(RTPP_AUTOSRC_SOURCES) $(RTPP_AUTOSRC_SOURCES_S)
 ADV_DIR=$(top_srcdir)/src/advanced
 BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/po_manager.c \

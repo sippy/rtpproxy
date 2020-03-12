@@ -1,0 +1,14 @@
+%%PORT_A%%
+%%PORT_O%%
+0
+E50
+0
+rtpa_nsent=300 rtpa_nrcvd=300 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=302 rtpa_nrcvd=302 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+0
+%%PORT_A%%
+%%PORT_O%%
+rtpa_nsent=463 rtpa_nrcvd=462 rtpa_ndups=0 rtpa_nlost=1 rtpa_perrs=0
+rtpa_nsent=461 rtpa_nrcvd=461 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+MEMDEB(rtpproxy): all clear

@@ -57,6 +57,7 @@
 #include "rtpp_command_ecodes.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_record.h"
+#include "rtpp_command_norecord.h"
 #include "rtpp_command_rcache.h"
 #include "rtpp_command_query.h"
 #include "rtpp_command_stats.h"
@@ -445,9 +446,12 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     char *recording_name;
     struct rtpp_session *spa;
     int record_single_file;
+    int norecord_all;
 
     spa = NULL;
     recording_name = NULL;
+    norecord_all = 0;
+    record_single_file = 0;
 
     /* Step II: parse parameters that are specific to a particular op and run simple ops */
     switch (cmd->cca.op) {
@@ -508,6 +512,24 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         }
         break;
 
+    case NORECORD:
+        if (cmd->args.v[0][1] == 'A' || cmd->args.v[0][1] == 'a') {
+            if (cmd->args.v[0][2] != '\0') {
+                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
+                reply_error(cmd, ECODE_PARSE_2);
+                return 0;
+            }
+            norecord_all = 1;
+        } else {
+            if (cmd->args.v[0][1] != '\0') {
+                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
+                reply_error(cmd, ECODE_PARSE_3);
+                return 0;
+            }
+            norecord_all = 0;
+        }
+        break;
+
     case DELETE:
         /* D[w] call_id from_tag [to_tag] */
         cmd->cca.opts.delete = rtpp_command_del_opts_parse(cmd);
@@ -565,6 +587,10 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 	i = handle_record(cfsp, &cmd->cca, record_single_file);
 	break;
 
+    case NORECORD:
+	i = handle_norecord(cfsp, &cmd->cca, norecord_all);
+	break;
+
     default:
 	i = find_stream(cfsp, cmd->cca.call_id, cmd->cca.from_tag,
 	  cmd->cca.to_tag, &spa);
@@ -602,6 +628,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     switch (cmd->cca.op) {
     case DELETE:
     case RECORD:
+    case NORECORD:
 	reply_ok(cmd);
 	break;
 

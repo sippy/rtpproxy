@@ -53,7 +53,7 @@ struct rtpp_command_stats {
 #define RTPC_MAX_ARGC   20
 
 enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
-  QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS};
+  QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS, NORECORD};
 
 struct common_cmd_args {
     enum rtpp_cmd_op op;

@@ -107,6 +107,8 @@ jobs:
       compiler: gcc
       env:
         - TTYPE=basic
+      before_script:
+        - sh -x ./scripts/install_working_nc.sh
     - name: "Functional Testing @ Ubuntu 18 (Bionic Beaver) GCC 7"
       dist: bionic
       compiler: gcc
@@ -117,6 +119,8 @@ jobs:
       compiler: clang
       env:
         - TTYPE=basic
+      before_script:
+        - sh -x ./scripts/install_working_nc.sh
     - name: "Functional Testing @ Ubuntu 18 (Bionic Beaver) Clang 7"
       dist: bionic
       compiler: clang
