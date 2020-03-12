@@ -28,7 +28,7 @@
 #ifndef _RTPP_MODULE_H
 #define _RTPP_MODULE_H
 
-#define MODULE_API_REVISION 9
+#define MODULE_API_REVISION 10
 
 #include "rtpp_codeptr.h"
 
