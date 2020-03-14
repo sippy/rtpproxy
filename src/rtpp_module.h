@@ -55,6 +55,7 @@ DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_rtcp_rcvd, void,
 
 #include <stdarg.h>
 
+#if defined(RTPP_CHECK_LEAKS)
 DEFINE_RAW_METHOD(rtpp_module_malloc, void *, size_t,  void *, HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_zmalloc, void *, size_t,  void *, HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_free, void, void *, void *, HERETYPE);
@@ -63,12 +64,23 @@ DEFINE_RAW_METHOD(rtpp_module_realloc, void *, void *, size_t,   void *,
 DEFINE_RAW_METHOD(rtpp_module_strdup, char *, const char *,  void *,
   HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_asprintf, int, char **, const char *,
-   void *, HERETYPE, ...);
+   void *, HERETYPE, ...) __attribute__ ((format (printf, 2, 5)));;
 DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
-   void *, HERETYPE, va_list);
+   void *, HERETYPE, va_list);;
+#else
+DEFINE_RAW_METHOD(rtpp_module_malloc, void *, size_t);
+DEFINE_RAW_METHOD(rtpp_module_zmalloc, void *, size_t);
+DEFINE_RAW_METHOD(rtpp_module_free, void, void *);
+DEFINE_RAW_METHOD(rtpp_module_realloc, void *, void *, size_t);
+DEFINE_RAW_METHOD(rtpp_module_strdup, char *, const char *);
+DEFINE_RAW_METHOD(rtpp_module_asprintf, int, char **, const char *, ...)
+  __attribute__ ((format (printf, 2, 3)));;
+DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *, va_list);
+#endif
 
 #if !defined(MODULE_IF_CODE)
 
+#if defined(RTPP_CHECK_LEAKS)
 #define _MMDEB *(rtpp_module.memdeb_p)
 
 #define mod_malloc(n) rtpp_module._malloc((n), _MMDEB, \
@@ -85,7 +97,17 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
   _MMDEB, HEREVAL, ## args)
 #define mod_vasprintf(pp, fmt, vl) rtpp_module._vasprintf((pp), (fmt), \
   _MMDEB, HEREVAL, (vl))
+#else
+#define mod_malloc(n) rtpp_module._malloc((n))
+#define mod_zmalloc(n) rtpp_module._zmalloc((n))
+#define mod_free(p) rtpp_module._free((p))
+#define mod_realloc(p,n) rtpp_module._realloc((p), (n))
+#define mod_strdup(p) rtpp_module._strdup((p))
+#define mod_asprintf(pp, fmt, args...) rtpp_module._asprintf((pp), (fmt), ## args)
+#define mod_vasprintf(pp, fmt, vl) rtpp_module._vasprintf((pp), (fmt), (vl))
 #endif
+#endif /* !MODULE_IF_CODE */
+
 
 #define mod_log(args...) CALL_METHOD(rtpp_module.log, genwrite, __FUNCTION__, \
   __LINE__, ## args)
