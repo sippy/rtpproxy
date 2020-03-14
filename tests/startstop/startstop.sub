@@ -1,0 +1,55 @@
+__beforeexit_cleanup()
+{
+  if [ ! -z "${TMP_PIDFILE}" ]
+  then
+    rtpproxy_stop TERM
+  fi
+  if [ -f "${TMP_LOGFILE}" -a "${TMP_LOGFILE}" != "/dev/null" ]
+  then
+    cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+    rm "${TMP_LOGFILE}"
+  fi
+}
+
+test_startstop() {
+  RTPP_OUTFILE="${1}"
+  RTPPROXY="${2}"
+  RTPP_CONF="${3}"
+  RTPP_DSO="${4}"
+  REF_OUTFILE="${5}"
+
+  truncate -s 0 "${TS_LOGFILE}"
+
+  myuid="`id -un`"
+  mygid="`id -gn`"
+
+  for rargs in "--config ${RTPP_CONF} -c fifo -L 100" \
+   "-c rr -u ${myuid}:${mygid} --dso ${RTPP_DSO}" ""
+  do
+    for sig in TERM HUP
+    do
+      randomize_test_sockets
+      assign_test_sockets
+      SOCK_RARGS=""
+      for ts in ${RTPP_TEST_SOCKETS}
+      do
+        if [ "${ts}" = "stdio:" ]
+        then
+          continue
+        fi
+        SOCK_RARGS="-s ${ts} ${SOCK_RARGS}"
+      done
+
+      rm -f rtpproxy_acct.csv
+      rtpproxy_start ${rargs} ${SOCK_RARGS}
+      report "`basename ${RTPPROXY}` start"
+      RTPP_LOGFILE="${TMP_LOGFILE}"
+      TMP_LOGFILE="/dev/null" rtpproxy_stop ${sig}
+      report "`basename ${RTPPROXY}` stop (SIG${sig})"
+      cat "${RTPP_LOGFILE}" >> "${TS_LOGFILE}"
+      rm "${RTPP_LOGFILE}"
+      ${DIFF} "startstop/${REF_OUTFILE}" "${RTPP_OUTFILE}"
+      report "`basename ${RTPPROXY}` output"
+    done
+  done
+}

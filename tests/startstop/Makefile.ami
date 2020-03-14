@@ -1,5 +1,6 @@
 startstop_EXTRA_DIST = startstop
-startstop_CLEANFILES = startstop.rout startstop.rlog
-TESTS += startstop/goodargs startstop/badargs startstop/startstop1
+startstop_CLEANFILES = startstop.*.rout startstop.*.rlog
+TESTS += startstop/goodargs startstop/badargs startstop/startstop1 \
+  startstop/nodebug
 CLEANFILES += ${startstop_CLEANFILES}
 EXTRA_DIST += ${startstop_EXTRA_DIST}

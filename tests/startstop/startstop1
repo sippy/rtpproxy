@@ -7,62 +7,7 @@ BASEDIR="`dirname "${0}"`/.."
 
 TS_LOGFILE="startstop.rlog"
 
-__beforeexit_cleanup()
-{
-  if [ ! -z "${TMP_PIDFILE}" ]
-  then
-    rtpproxy_stop TERM
-  fi
-  if [ -f "${TMP_LOGFILE}" -a "${TMP_LOGFILE}" != "/dev/null" ]
-  then
-    cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
-    rm "${TMP_LOGFILE}"
-  fi
-}
+. "${BASEDIR}/startstop/startstop.sub"
 
-randomize_test_sockets() {
-  RTPP_TEST_SOCK_UDP4_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
-  RTPP_TEST_SOCK_UDP6_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
-  RTPP_TEST_SOCK_TCP4_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
-  RTPP_TEST_SOCK_TCP6_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
-  tempfoo="`basename $0`.XXXXX"
-  RTPP_TEST_SOCK_UNIX="`mktemp -t ${tempfoo}`"
-  RTPP_TEST_SOCK_CUNIX="`mktemp -t ${tempfoo}`"
-}
-
-RTPP_OUTFILE="startstop.rout"
-
-truncate -s 0 "${TS_LOGFILE}"
-
-myuid="`id -un`"
-mygid="`id -gn`"
-
-for rargs in "--config libucl/libucl_test.conf -c fifo -L 100" \
- "-c rr -u ${myuid}:${mygid} --dso ../modules/acct_rtcp_hep/.libs/rtpp_acct_rtcp_hep_debug.so" ""
-do
-  for sig in TERM HUP
-  do
-    randomize_test_sockets
-    assign_test_sockets
-    SOCK_RARGS=""
-    for ts in ${RTPP_TEST_SOCKETS}
-    do
-      if [ "${ts}" = "stdio:" ]
-      then
-        continue
-      fi
-      SOCK_RARGS="-s ${ts} ${SOCK_RARGS}"
-    done
-
-    rm -f rtpproxy_acct.csv
-    rtpproxy_start ${rargs} ${SOCK_RARGS}
-    report "rtpproxy start"
-    RTPP_LOGFILE="${TMP_LOGFILE}"
-    TMP_LOGFILE="/dev/null" rtpproxy_stop ${sig}
-    report "rtpproxy stop (SIG${sig})"
-    cat "${RTPP_LOGFILE}" >> "${TS_LOGFILE}"
-    rm "${RTPP_LOGFILE}"
-    ${DIFF} startstop/startstop.output startstop.rout
-    report "rtpproxy output"
-  done
-done
+test_startstop "startstop.rout" "${RTPPROXY_DBG}" "libucl/libucl_test.conf" \
+ "../modules/acct_rtcp_hep/.libs/rtpp_acct_rtcp_hep_debug.so" "startstop.output"
