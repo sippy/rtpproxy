@@ -103,6 +103,7 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	extractaudio/scan startstop/goodargs \
 @ENABLE_BASIC_TESTS_TRUE@	startstop/badargs \
 @ENABLE_BASIC_TESTS_TRUE@	startstop/startstop1 \
+@ENABLE_BASIC_TESTS_TRUE@	startstop/nodebug \
 @ENABLE_BASIC_TESTS_TRUE@	basic_versions/basic_versions1 \
 @ENABLE_BASIC_TESTS_TRUE@	command_parser/command_parser1 \
 @ENABLE_BASIC_TESTS_TRUE@	forwarding/forwarding1_robust \
@@ -567,7 +568,7 @@ EXTRA_DIST = $(am__append_3) $(am__append_6) Makefile.am ringback.sln
 @ENABLE_BASIC_TESTS_TRUE@  *.mono.*.rlog *.stereo.*.rlog *.scan.rlog *.scan.tout
 
 @ENABLE_BASIC_TESTS_TRUE@startstop_EXTRA_DIST = startstop
-@ENABLE_BASIC_TESTS_TRUE@startstop_CLEANFILES = startstop.rout startstop.rlog
+@ENABLE_BASIC_TESTS_TRUE@startstop_CLEANFILES = startstop.*.rout startstop.*.rlog
 @ENABLE_BASIC_TESTS_TRUE@basic_versions_EXTRA_DIST = basic_versions
 @ENABLE_BASIC_TESTS_TRUE@basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
 @ENABLE_BASIC_TESTS_TRUE@  basic_versions.rlog _basic_versions.rlog
@@ -920,6 +921,13 @@ startstop/badargs.log: startstop/badargs
 startstop/startstop1.log: startstop/startstop1
 	@p='startstop/startstop1'; \
 	b='startstop/startstop1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+startstop/nodebug.log: startstop/nodebug
+	@p='startstop/nodebug'; \
+	b='startstop/nodebug'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

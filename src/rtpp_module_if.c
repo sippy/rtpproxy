@@ -89,10 +89,6 @@ struct rtpp_module_if_priv {
 };
 
 static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
-#if !RTPP_CHECK_LEAKS
-static int rtpp_module_asprintf(char **, const char *, void *, HERETYPE, ...);
-static int rtpp_module_vasprintf(char **, const char *, void *, HERETYPE, va_list);
-#endif
 static void rtpp_mif_run(void *);
 static int rtpp_mif_load(struct rtpp_module_if *, const struct rtpp_cfg *, struct rtpp_log *);
 static int rtpp_mif_start(struct rtpp_module_if *, const struct rtpp_cfg *);
@@ -209,13 +205,13 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     /* We make a copy, so that the module cannot screw us up */
     *pvt->mip->memdeb_p = pvt->memdeb_p;
 #else
-    pvt->mip->_malloc = (rtpp_module_malloc_t)&malloc;
-    pvt->mip->_zmalloc = (rtpp_module_zmalloc_t)&rtpp_zmalloc;
-    pvt->mip->_free = (rtpp_module_free_t)&free;
-    pvt->mip->_realloc = (rtpp_module_realloc_t)&realloc;
-    pvt->mip->_strdup = (rtpp_module_strdup_t)&strdup;
-    pvt->mip->_asprintf = rtpp_module_asprintf;
-    pvt->mip->_vasprintf = rtpp_module_vasprintf;
+    pvt->mip->_malloc = &malloc;
+    pvt->mip->_zmalloc = &rtpp_zmalloc;
+    pvt->mip->_free = &free;
+    pvt->mip->_realloc = &realloc;
+    pvt->mip->_strdup = &strdup;
+    pvt->mip->_asprintf = &asprintf;
+    pvt->mip->_vasprintf = &vasprintf;
 #endif
     pvt->sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
     if (pvt->sigterm == NULL) {
@@ -389,29 +385,6 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
     }
     rtpp_queue_put_item(wi, pvt->req_q);
 }
-
-#if !RTPP_CHECK_LEAKS
-static int
-rtpp_module_asprintf(char **pp, const char *fmt, void *p, HERETYPEARG, ...)
-{
-    va_list ap;
-    int rval;
-
-    va_start(ap, mlp);
-    rval = vasprintf(pp, fmt, ap);
-    va_end(ap);
-    return (rval);
-}
-
-static int
-rtpp_module_vasprintf(char **pp, const char *fmt, void *p, HERETYPEARG, va_list ap)
-{
-    int rval;
-
-    rval = vasprintf(pp, fmt, ap);
-    return (rval);
-}
-#endif
 
 static int
 rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
