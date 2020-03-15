@@ -4,15 +4,18 @@
 
 ## About
 
-The RTPproxy is a high-performance software proxy for RTP streams that can
-work together with [OpenSIPS](https://opensips.org), [Kamailio](https://kamailio.org)
-or [Sippy B2BUA](https://github.com/sippy/b2bua).
+The RTPproxy is a extremely reliable and reasonably high-performance software
+proxy for RTP streams that can work together with [OpenSIPS](https://opensips.org),
+[Kamailio](https://kamailio.org) or [Sippy B2BUA](https://github.com/sippy/b2bua).
 
-Originally created for handling NAT scenarios it can also act as a generic
-media relay as well as gateway RTP sessions between IPv4 and IPv6 networks.
+Originally created for handling NAT scenarios, back in 2005, it can also act as
+a generic real time datagram relay as well as gateway Real-Time Protocol (RTP)
+sessions between IPv4 and IPv6 networks.
 
-The RTPproxy supports some advanced features, such as remote control mode,
-allowing building scalable distributed SIP VoIP networks. The nathelper module
+The RTPproxy supports many advanced features and is controllable over
+multitude of Layer 4 protocols, including Unix Domain, UDP, UDPv6, TCP and TCPv6.
+
+The software allows building scalable distributed SIP networks. The rtpproxy module
 included into the OpenSIPS or Kamailio SIP Proxy software allows using multiple
 RTPproxy instances running on remote machines for fault-tolerance and
 load-balancing purposes.
@@ -20,33 +23,43 @@ load-balancing purposes.
 Advanced high-capacity clustering and load balancing is available through the
 use of [RTP Cluster](https://github.com/sippy/rtp_cluster) middleware.
 
-The software also supports MOH/pre-recorded prompts injection,  video relaying
-and RTP session recording to a local file or remote UDP listener(s).
+The software also supports MOH/pre-recorded media injection,  video relaying
+and session recording to a local file or remote UDP listener(s). As well
+as makes available array of real-time or near real-time session counters,
+both per-session and per-instance.
 
-RTPproxy was developed by Maxim Sobolev and now is being actively maintained
-by the [Sippy Software, Inc](http://www.sippysoft.com).
+The RTPproxy has been designed by Maxim Sobolev and now is being actively
+maintained by the [Sippy Software, Inc](http://www.sippysoft.com). With the
+great help of numerous community contributors, both private and institutional.
+Not to mention army of robots gracefully dispatched at need by the
+[Travis CI](https://travis-ci.org).
+
+The original idea has inspired and directly influenced multitude of independent
+implementations, including but not limited to the Mediaproxy, erlrtpproxy,
+and most recently RTP Engine, each project focusing on its own area of the
+wast functionality space.
 
 ## How it works
 
 This proxy works as follows:
 
-- When SER receives INVITE request, it extracts call-id from it and
-  communicates it to the proxy via Unix domain socket. Proxy looks for an
-  existing sessions with such id, if the session exists it returns UDP port
-  for that session, if not, then it creates a new session, binds to a first
-  empty UDP port from the range specified at the compile time and returns
-  number of that port to a SER. After receiving reply from the proxy, SER
-  replaces media ip:port in the SDP to point to the proxy and forwards
-  request as usually;
+- When SIP Controller, either proxy or B2BUA, receives INVITE request, it
+  extracts call-id from it and communicates it to the proxy via control
+  channel. Proxy looks for an existing sessions with such id, if the session
+  exists it returns UDP port for that session, if not, then it creates a new
+  session, binds to a first available randomly selected pair of UDP ports and
+  returns number of the first port. After receiving reply from the proxy, SIP
+  Controller replaces media ip:port in the SDP to point to the proxy and
+  forwards request as usually;
 
-- when SER receives non-negative SIP reply with SDP it again extracts
-  call-id from it and communicates it to the proxy. In this case the proxy
-  does not allocate a new session if it doesn't exist, but simply performs a
-  lookup among existing sessions and returns either a port number if the
-  session is found, or error code indicating that there is no session with
-  such id. After receiving positive reply from the proxy, SER replaces media
-  ip:port in the SIP reply to point to the proxy and forwards reply as
-  usually;
+- when SIP Controller receives non-negative SIP reply with SDP it again
+  extracts call-id along with session tags from it and communicates it to
+  the proxy. In this case the proxy does not allocate a new session if it
+  doesn't exist, but simply performs a lookup among existing sessions and
+  returns either a port number if the session is found, or error code
+  indicating that there is no session with such id. After receiving positive
+  reply from the proxy, SIP Controller replaces media ip:port in the SIP
+  reply to point to the proxy and forwards reply as usually;
 
 - after the session has been created, the proxy listens on the port it has
   allocated for that session and waits for receiving at least one UDP
