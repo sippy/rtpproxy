@@ -8,8 +8,8 @@ The RTPproxy is a extremely reliable and reasonably high-performance software
 proxy for RTP streams that can work together with [OpenSIPS](https://opensips.org),
 [Kamailio](https://kamailio.org) or [Sippy B2BUA](https://github.com/sippy/b2bua).
 
-Originally created for handling NAT scenarios, back in 2005, it can also act as
-a generic real time datagram relay as well as gateway Real-Time Protocol (RTP)
+Originally created for handling NAT scenarios, back in 2004-2005, it can also act
+as a generic real time datagram relay as well as gateway Real-Time Protocol (RTP)
 sessions between IPv4 and IPv6 networks.
 
 The RTPproxy supports many advanced features and is controllable over
@@ -39,7 +39,7 @@ implementations, including but not limited to the
 [Mediaproxy](https://mediaproxy.com),
 [erlrtpproxy](https://github.com/lemenkov/erlrtpproxy), and most recently
 [RTP Engine](https://github.com/sipwise/rtpengine), each project focusing on
-its own area of the wast functionality space.
+its own area of the vast functionality space.
 
 ## How it works
 
