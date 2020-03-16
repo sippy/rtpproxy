@@ -35,9 +35,11 @@ Not to mention army of robots gracefully dispatched at need by the
 [Travis CI](https://travis-ci.org).
 
 The original idea has inspired and directly influenced multitude of independent
-implementations, including but not limited to the Mediaproxy, erlrtpproxy,
-and most recently RTP Engine, each project focusing on its own area of the
-wast functionality space.
+implementations, including but not limited to the
+[Mediaproxy](https://mediaproxy.com),
+[erlrtpproxy](https://github.com/lemenkov/erlrtpproxy), and most recently
+[RTP Engine](https://github.com/sipwise/rtpengine), each project focusing on
+its own area of the wast functionality space.
 
 ## How it works
 
