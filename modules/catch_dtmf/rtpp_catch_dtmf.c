@@ -183,7 +183,7 @@ rtpp_catch_dtmf_worker(void *arg)
         struct rtp_dtmf_event *dtmf =
             (struct rtp_dtmf_event *)(wip->pkt->data.buf + sizeof(rtp_hdr_t));
         if (dtmf->event > sizeof(dtmf_events) - 1) {
-            RTPP_LOG(pvt->log, RTPP_LOG_DBUG, "Unhandled DTMF event %u!", dtmf->event);
+            RTPP_LOG(pvt->log, RTPP_LOG_DBUG, "Unhandled DTMF event %u", dtmf->event);
             goto skip;
         }
         ei.digit = dtmf_events[dtmf->event];
@@ -215,13 +215,13 @@ rtpp_catch_dtmf_worker(void *arg)
         if (!eip->pending) {
             if (!dtmf->end && eip->duration <= ei.duration)
                 RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Received DTMF for %c without "
-                        "start %d!", ei.digit, eip->pending);
+                        "start %d", ei.digit, eip->pending);
             goto skip;
         }
 
         if (ei.digit != eip->digit) {
             RTPP_LOG(pvt->log, RTPP_LOG_WARN, "Received DTMF for %c "
-                    "while processing %c!", ei.digit, eip->digit);
+                    "while processing %c", ei.digit, eip->digit);
             goto skip;
         }
         if (eip->duration < ei.duration)
@@ -261,8 +261,8 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
 
     PUB2PVT(pub, pvt);
     if (ctxp->sessp->timeout_data == NULL) {
-        RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(sp=%p): "
-          "notification is not enabled", ctxp->sessp);
+        RTPP_LOG(pvt->log, RTPP_LOG_ERR, "notification is not enabled (sp=%p)",
+          ctxp->sessp);
         return (-1);
     }
 
@@ -270,22 +270,27 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
     if (rtps_c == NULL) {
 
         if (ctxp->subc_args->c < 2) {
-            RTPP_LOG(pvt->log, RTPP_LOG_DBUG, "rtpp_catch_dtmf_handle_command(%p), "
-                    "no tag specified!", ctxp->sessp);
+            RTPP_LOG(pvt->log, RTPP_LOG_DBUG, "no tag specified (sp=%p)",
+              ctxp->sessp);
             return (-1);
         }
 
         dtmf_tag = ctxp->subc_args->v[1];
         len = url_unquote((uint8_t *)dtmf_tag, strlen(dtmf_tag));
         if (len == -1) {
-            RTPP_LOG(pvt->log, RTPP_LOG_ERR,
-              "rtpp_catch_dtmf_handle_command: syntax error - invalid URL encoding");
+            RTPP_LOG(pvt->log, RTPP_LOG_ERR, "syntax error: invalid URL "
+              "encoding");
             return (-1);
         }
         dtmf_tag[len] = '\0';
 
-        if (ctxp->subc_args->c > 2)
-            new_pt = strtol(ctxp->subc_args->v[2], NULL, 10);
+        if (ctxp->subc_args->c > 2) {
+            if (atoi_saferange(ctxp->subc_args->v[2], &new_pt, 0, 127)) {
+                RTPP_LOG(pvt->log, RTPP_LOG_ERR, "syntax error: invalid "
+                  "payload type: %s", ctxp->subc_args->v[2]);
+                return (-1);
+            }
+        }
 
         rtps_c = rtpp_zmalloc(sizeof(*rtps_c));
         if (rtps_c == NULL) {
@@ -296,7 +301,8 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
         atomic_init(&(rtps_c->pt), new_pt);
         rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp->side);
         if (!rtps_c->edata) {
-            RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), cannot create edata!", ctxp->strmp);
+            RTPP_LOG(pvt->log, RTPP_LOG_ERR, "cannot create edata (sp=%p)",
+              ctxp->strmp);
             free(rtps_c);
             return (-1);
         }
@@ -310,7 +316,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_catch_dtmf *pub, const struct rtpp_su
         }
     }
     if (old_pt != -1)
-        RTPP_LOG(pvt->log, RTPP_LOG_ERR, "rtpp_catch_dtmf_handle_command(%p), pt=%d->%d",
+        RTPP_LOG(pvt->log, RTPP_LOG_DBUG, "sp=%p, pt=%d->%d",
           ctxp->strmp, old_pt, new_pt);
     return (0);
 }
