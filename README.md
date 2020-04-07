@@ -88,10 +88,7 @@ $ make
 
 For detailed compilation instructions please check [User Manual](https://www.rtpproxy.org/doc/master/user_manual.html#MAKESRC).
 
-## Support
+## Feedback & Support
 
 Open a ticket on the github issue tracker, or post a message on the [mailing
 list](https://groups.google.com/forum/#!forum/rtpproxy)
-
-Commercial support is available from the Sippy Software, Inc. - visit
-http://www.sippysoft.com for details.
