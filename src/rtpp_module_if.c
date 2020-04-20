@@ -47,6 +47,7 @@
 #include "rtpp_log.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_types.h"
+#include "rtpp_list.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
@@ -242,6 +243,16 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
           "consider recompiling the module", pvt->mpath);
         goto e6;
+    }
+
+    pvt->mip->instance_id = 1;
+    for (struct rtpp_module_if *tmp = RTPP_LIST_HEAD(cfsp->modules_cf);
+      tmp != NULL; tmp = RTPP_ITER_NEXT(tmp)) {
+        struct rtpp_module_if_priv *tmp_pvt;
+        PUB2PVT(tmp, tmp_pvt);
+        if (tmp_pvt->mip->module_id != pvt->mip->module_id)
+            continue;
+        pvt->mip->instance_id += 1;
     }
 
     return (0);

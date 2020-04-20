@@ -83,6 +83,7 @@ RTPP_MEMDEB_APP_STATIC;
 struct rtpp_minfo rtpp_module = {
     .name = "acct_rtcp_hep",
     .ver = MI_VER_INIT(),
+    .module_id = 2,
     .ctor = rtpp_acct_rtcp_hep_ctor,
     .dtor = rtpp_acct_rtcp_hep_dtor,
     .get_mconf = rtpp_acct_rtcp_hep_get_mconf,

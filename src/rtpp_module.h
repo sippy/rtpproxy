@@ -139,6 +139,7 @@ struct rtpp_minfo {
     const char *author;
     const char *copyright;
     const char *maintainer;
+    unsigned int module_id;
     rtpp_module_ctor_t ctor;
     rtpp_module_dtor_t dtor;
     rtpp_module_get_mconf_t get_mconf;
@@ -146,6 +147,7 @@ struct rtpp_minfo {
     struct api_on_sess_end on_session_end;
     struct api_on_rtcp_rcvd on_rtcp_rcvd;
     /* Lower half, filled by the core */
+    unsigned int instance_id;
     rtpp_module_malloc_t _malloc;
     rtpp_module_zmalloc_t _zmalloc;
     rtpp_module_free_t _free;

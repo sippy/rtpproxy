@@ -99,6 +99,7 @@ RTPP_MEMDEB_APP_STATIC;
 struct rtpp_minfo rtpp_module = {
     .name = "acct_csv",
     .ver = MI_VER_INIT(),
+    .module_id = 1,
     .ctor = rtpp_acct_csv_ctor,
     .dtor = rtpp_acct_csv_dtor,
 #ifdef RTPP_CHECK_LEAKS
