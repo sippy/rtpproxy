@@ -39,7 +39,7 @@
 #include "rtpp_command_parse.h"
 #include "rtpp_command_ecodes.h"
 #include "rtpp_command_private.h"
-#include "rtpp_command_query.h"
+#include "commands/query.h"
 #include "rtpp_types.h"
 #include "rtpp_stats.h"
 #include "rtpp_log_obj.h"

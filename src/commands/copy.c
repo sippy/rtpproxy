@@ -43,7 +43,7 @@
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
-#include "rtpp_command_copy.h"
+#include "commands/copy.h"
 
 int
 handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx, char *rname,

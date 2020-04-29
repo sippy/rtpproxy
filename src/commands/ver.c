@@ -36,7 +36,7 @@
 #include "rtpp_types.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
-#include "rtpp_command_ver.h"
+#include "commands/ver.h"
 #include "rtpp_tnotify_set.h"
 
 static struct proto_cap proto_caps[] = {

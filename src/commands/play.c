@@ -38,7 +38,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_command.h"
 #include "rtpp_command_ecodes.h"
-#include "rtpp_command_play.h"
+#include "commands/play.h"
 #include "rtpp_command_private.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_stream.h"

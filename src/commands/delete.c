@@ -38,7 +38,7 @@
 #include "rtpp_cfg.h"
 #include "rtpp_log.h"
 #include "rtpp_command.h"
-#include "rtpp_command_delete.h"
+#include "commands/delete.h"
 #include "rtpp_command_ecodes.h"
 #include "rtpp_command_private.h"
 #include "rtpp_types.h"
