@@ -341,6 +341,7 @@ AM_CONDITIONAL(ENABLE_WARN_IPT, [test "${ac_cc_warn_ipt}" = 1])
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
  modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile
+ modules/catch_dtmf/Makefile
  pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile
  python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile])
 

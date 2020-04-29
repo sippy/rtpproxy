@@ -1,1 +1,1 @@
-SUBDIRS= acct_csv acct_rtcp_hep
+SUBDIRS= acct_csv acct_rtcp_hep catch_dtmf
