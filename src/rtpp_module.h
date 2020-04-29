@@ -132,6 +132,18 @@ struct api_on_rtcp_rcvd {
    rtpp_module_on_rtcp_rcvd_t func;
 };
 
+struct rtpp_mhandlers {
+    rtpp_module_ctor_t ctor;
+    rtpp_module_dtor_t dtor;
+    rtpp_module_get_mconf_t get_mconf;
+    rtpp_module_config_t config;
+};
+
+struct rtpp_acct_handlers {
+    struct api_on_sess_end on_session_end;
+    struct api_on_rtcp_rcvd on_rtcp_rcvd;
+};
+
 struct rtpp_minfo {
     /* Upper half, filled by the module */
     struct api_version ver;
@@ -140,12 +152,8 @@ struct rtpp_minfo {
     const char *copyright;
     const char *maintainer;
     unsigned int module_id;
-    rtpp_module_ctor_t ctor;
-    rtpp_module_dtor_t dtor;
-    rtpp_module_get_mconf_t get_mconf;
-    rtpp_module_config_t config;
-    struct api_on_sess_end on_session_end;
-    struct api_on_rtcp_rcvd on_rtcp_rcvd;
+    struct rtpp_mhandlers proc;
+    struct rtpp_acct_handlers aapi;
     /* Lower half, filled by the core */
     unsigned int instance_id;
     rtpp_module_malloc_t _malloc;

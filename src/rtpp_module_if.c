@@ -224,22 +224,22 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     }
     RTPP_OBJ_INCREF(log);
     pvt->mip->log = log;
-    if (pvt->mip->ctor != NULL) {
-        pvt->mpvt = pvt->mip->ctor(cfsp);
+    if (pvt->mip->proc.ctor != NULL) {
+        pvt->mpvt = pvt->mip->proc.ctor(cfsp);
         if (pvt->mpvt == NULL) {
             RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' failed to initialize",
               pvt->mip->name);
             goto e5;
         }
     }
-    if (pvt->mip->on_session_end.func != NULL &&
-      pvt->mip->on_session_end.argsize != rtpp_acct_OSIZE()) {
+    if (pvt->mip->aapi.on_session_end.func != NULL &&
+      pvt->mip->aapi.on_session_end.argsize != rtpp_acct_OSIZE()) {
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
           "consider recompiling the module", pvt->mpath);
         goto e6;
     }
-    if (pvt->mip->on_rtcp_rcvd.func != NULL &&
-      pvt->mip->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
+    if (pvt->mip->aapi.on_rtcp_rcvd.func != NULL &&
+      pvt->mip->aapi.on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
           "consider recompiling the module", pvt->mpath);
         goto e6;
@@ -257,8 +257,8 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
 
     return (0);
 e6:
-    if (pvt->mip->dtor != NULL) {
-        pvt->mip->dtor(pvt->mpvt);
+    if (pvt->mip->proc.dtor != NULL) {
+        pvt->mip->proc.dtor(pvt->mpvt);
     }
 e5:
     RTPP_OBJ_DECREF(pvt->mip->log);
@@ -302,8 +302,8 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
 
         if (pvt->mip != NULL) {
             /* Then run module destructor (if any) */
-            if (pvt->mip->dtor != NULL) {
-                pvt->mip->dtor(pvt->mpvt);
+            if (pvt->mip->proc.dtor != NULL) {
+                pvt->mip->proc.dtor(pvt->mpvt);
             }
             RTPP_OBJ_DECREF(pvt->mip->log);
 
@@ -347,16 +347,16 @@ rtpp_mif_run(void *argp)
             struct rtpp_acct *rap;
 
             rtpp_wi_apis_getnamearg(wi, (void **)&rap, sizeof(rap));
-            if (pvt->mip->on_session_end.func != NULL)
-                pvt->mip->on_session_end.func(pvt->mpvt, rap);
+            if (pvt->mip->aapi.on_session_end.func != NULL)
+                pvt->mip->aapi.on_session_end.func(pvt->mpvt, rap);
             RTPP_OBJ_DECREF(rap);
         }
         if (aname == do_acct_rtcp_aname) {
             struct rtpp_acct_rtcp *rapr;
 
             rtpp_wi_apis_getnamearg(wi, (void **)&rapr, sizeof(rapr));
-            if (pvt->mip->on_rtcp_rcvd.func != NULL)
-                pvt->mip->on_rtcp_rcvd.func(pvt->mpvt, rapr);
+            if (pvt->mip->aapi.on_rtcp_rcvd.func != NULL)
+                pvt->mip->aapi.on_rtcp_rcvd.func(pvt->mpvt, rapr);
             RTPP_OBJ_DECREF(rapr);
         }
         CALL_METHOD(wi, dtor);
@@ -403,7 +403,7 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
     struct rtpp_module_if_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (pvt->mip->on_rtcp_rcvd.func != NULL) {
+    if (pvt->mip->aapi.on_rtcp_rcvd.func != NULL) {
         struct packet_observer_if acct_rtcp_poi;
 
         acct_rtcp_poi.taste = packet_is_rtcp;
@@ -427,11 +427,11 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
     struct rtpp_module_conf *rval;
 
     PUB2PVT(self, pvt);
-    if (pvt->mip->get_mconf == NULL) {
+    if (pvt->mip->proc.get_mconf == NULL) {
         *mcpp = NULL;
         return (0);
     }
-    rval = pvt->mip->get_mconf(pvt->mpvt);
+    rval = pvt->mip->proc.get_mconf(pvt->mpvt);
     if (rval == NULL) {
         return (-1);
     }
@@ -445,8 +445,8 @@ rtpp_mif_config(struct rtpp_module_if *self)
     struct rtpp_module_if_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (pvt->mip->config == NULL) {
+    if (pvt->mip->proc.config == NULL) {
         return (0);
     }
-    return (pvt->mip->config(pvt->mpvt));
+    return (pvt->mip->proc.config(pvt->mpvt));
 }

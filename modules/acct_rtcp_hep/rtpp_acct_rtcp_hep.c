@@ -84,14 +84,14 @@ struct rtpp_minfo rtpp_module = {
     .name = "acct_rtcp_hep",
     .ver = MI_VER_INIT(),
     .module_id = 2,
-    .ctor = rtpp_acct_rtcp_hep_ctor,
-    .dtor = rtpp_acct_rtcp_hep_dtor,
-    .get_mconf = rtpp_acct_rtcp_hep_get_mconf,
-    .config = rtpp_acct_rtcp_hep_config,
+    .proc.ctor = rtpp_acct_rtcp_hep_ctor,
+    .proc.dtor = rtpp_acct_rtcp_hep_dtor,
+    .proc.get_mconf = rtpp_acct_rtcp_hep_get_mconf,
+    .proc.config = rtpp_acct_rtcp_hep_config,
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM,
 #endif
-    .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
+    .aapi.on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
 static struct rtpp_module_priv *

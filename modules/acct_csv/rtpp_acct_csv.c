@@ -100,12 +100,12 @@ struct rtpp_minfo rtpp_module = {
     .name = "acct_csv",
     .ver = MI_VER_INIT(),
     .module_id = 1,
-    .ctor = rtpp_acct_csv_ctor,
-    .dtor = rtpp_acct_csv_dtor,
+    .proc.ctor = rtpp_acct_csv_ctor,
+    .proc.dtor = rtpp_acct_csv_dtor,
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM,
 #endif
-    .on_session_end = API_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
+    .aapi.on_session_end = API_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
 };
 
 static const char *
