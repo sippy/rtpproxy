@@ -233,19 +233,20 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
             goto e5;
         }
     }
-    if (pvt->mip->aapi->on_session_end.func != NULL &&
-      pvt->mip->aapi->on_session_end.argsize != rtpp_acct_OSIZE()) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
-          "consider recompiling the module", pvt->mpath);
-        goto e6;
+    if (pvt->mip->aapi != NULL) {
+        if (pvt->mip->aapi->on_session_end.func != NULL &&
+          pvt->mip->aapi->on_session_end.argsize != rtpp_acct_OSIZE()) {
+            RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
+              "consider recompiling the module", pvt->mpath);
+            goto e6;
+        }
+        if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL &&
+          pvt->mip->aapi->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
+            RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
+              "consider recompiling the module", pvt->mpath);
+            goto e6;
+        }
     }
-    if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL &&
-      pvt->mip->aapi->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
-          "consider recompiling the module", pvt->mpath);
-        goto e6;
-    }
-
     pvt->mip->instance_id = 1;
     for (struct rtpp_module_if *tmp = RTPP_LIST_HEAD(cfsp->modules_cf);
       tmp != NULL; tmp = RTPP_ITER_NEXT(tmp)) {
@@ -331,8 +332,10 @@ rtpp_mif_run(void *argp)
     struct rtpp_wi *wi;
     int signum;
     const char *aname;
+    const struct rtpp_acct_handlers *aap;
 
     pvt = (struct rtpp_module_if_priv *)argp;
+    aap = pvt->mip->aapi;
     for (;;) {
         wi = rtpp_queue_get_item(pvt->req_q, 0);
         if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
@@ -348,16 +351,16 @@ rtpp_mif_run(void *argp)
             struct rtpp_acct *rap;
 
             rtpp_wi_apis_getnamearg(wi, (void **)&rap, sizeof(rap));
-            if (pvt->mip->aapi->on_session_end.func != NULL)
-                pvt->mip->aapi->on_session_end.func(pvt->mpvt, rap);
+            if (aap->on_session_end.func != NULL)
+                aap->on_session_end.func(pvt->mpvt, rap);
             RTPP_OBJ_DECREF(rap);
         }
         if (aname == do_acct_rtcp_aname) {
             struct rtpp_acct_rtcp *rapr;
 
             rtpp_wi_apis_getnamearg(wi, (void **)&rapr, sizeof(rapr));
-            if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL)
-                pvt->mip->aapi->on_rtcp_rcvd.func(pvt->mpvt, rapr);
+            if (aap->on_rtcp_rcvd.func != NULL)
+                aap->on_rtcp_rcvd.func(pvt->mpvt, rapr);
             RTPP_OBJ_DECREF(rapr);
         }
         CALL_METHOD(wi, dtor);
@@ -404,20 +407,22 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
     struct rtpp_module_if_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL) {
-        struct packet_observer_if acct_rtcp_poi;
+    if (pvt->mip->aapi != NULL) {
+        if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL) {
+            struct packet_observer_if acct_rtcp_poi;
 
-        acct_rtcp_poi.taste = packet_is_rtcp;
-        acct_rtcp_poi.enqueue = acct_rtcp_enqueue;
-        acct_rtcp_poi.arg = pvt;
-        if (CALL_METHOD(cfsp->observers, reg, &acct_rtcp_poi) < 0)
+            acct_rtcp_poi.taste = packet_is_rtcp;
+            acct_rtcp_poi.enqueue = acct_rtcp_enqueue;
+            acct_rtcp_poi.arg = pvt;
+            if (CALL_METHOD(cfsp->observers, reg, &acct_rtcp_poi) < 0)
+                return (-1);
+        }
+        if (pthread_create(&pvt->thread_id, NULL,
+          (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
             return (-1);
+        }
+        pvt->started = 1;
     }
-    if (pthread_create(&pvt->thread_id, NULL,
-      (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
-        return (-1);
-    }
-    pvt->started = 1;
     return (0);
 }
 
