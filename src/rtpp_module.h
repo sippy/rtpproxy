@@ -34,9 +34,8 @@
 
 struct rtpp_cfg;
 struct rtpp_module_priv;
-struct rtpp_acct;
-struct rtpp_acct_rtcp;
 struct rtpp_module_conf;
+struct rtpp_acct_handlers;
 
 #if !defined(MODULE_IF_CODE)
 #include <sys/types.h>
@@ -48,10 +47,6 @@ DEFINE_RAW_METHOD(rtpp_module_ctor, struct rtpp_module_priv *,
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_get_mconf, struct rtpp_module_conf *);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_config, int);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_dtor, void);
-DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_session_end, void,
-  struct rtpp_acct *);
-DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_rtcp_rcvd, void,
-  struct rtpp_acct_rtcp *);
 
 #include <stdarg.h>
 
@@ -108,7 +103,6 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *, va_list);
 #endif
 #endif /* !MODULE_IF_CODE */
 
-
 #define mod_log(args...) CALL_METHOD(rtpp_module.log, genwrite, __FUNCTION__, \
   __LINE__, ## args)
 #define mod_elog(args...) CALL_METHOD(rtpp_module.log, errwrite, __FUNCTION__, \
@@ -120,28 +114,11 @@ struct api_version {
     const char *build;
 };
 
-struct api_on_sess_end {
-   int rev;
-   size_t argsize;
-   rtpp_module_on_session_end_t func;
-};
-
-struct api_on_rtcp_rcvd {
-   int rev;
-   size_t argsize;
-   rtpp_module_on_rtcp_rcvd_t func;
-};
-
 struct rtpp_mhandlers {
     rtpp_module_ctor_t ctor;
     rtpp_module_dtor_t dtor;
     rtpp_module_get_mconf_t get_mconf;
     rtpp_module_config_t config;
-};
-
-struct rtpp_acct_handlers {
-    struct api_on_sess_end on_session_end;
-    struct api_on_rtcp_rcvd on_rtcp_rcvd;
 };
 
 struct rtpp_minfo {

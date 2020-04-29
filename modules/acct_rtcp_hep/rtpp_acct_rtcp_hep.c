@@ -39,6 +39,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_module.h"
+#include "rtpp_module_acct.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg.h"

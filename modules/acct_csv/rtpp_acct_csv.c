@@ -51,6 +51,7 @@
 #include "rtpp_acct_pipe.h"
 #include "rtpp_acct.h"
 #include "rtpp_module.h"
+#include "rtpp_module_acct.h"
 #include "rtpp_netaddr.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"

@@ -62,6 +62,7 @@
 #include "advanced/po_manager.h"
 #define MODULE_IF_CODE
 #include "rtpp_module.h"
+#include "rtpp_module_acct.h"
 #include "rtpp_module_if.h"
 #include "rtpp_module_if_fin.h"
 #include "rtpp_queue.h"
