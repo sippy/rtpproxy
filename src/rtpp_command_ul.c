@@ -75,6 +75,14 @@ struct ul_reply {
     const struct sockaddr *ia;
     const char *ia_ov;
     int port;
+    int subc_res;
+};
+
+DEFINE_RAW_METHOD(after_success, int, void *, const struct rtpp_subc_ctx *);
+
+struct success_h {
+    after_success_t handler;
+    void *arg;
 };
 
 struct ul_opts {
@@ -97,6 +105,8 @@ struct ul_opts {
     int new_port;
 
     int onhold;
+
+    struct success_h after_success;
 };
 
 void
@@ -107,18 +117,24 @@ ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
 
     if (ulr == NULL || ulr->ia == NULL || ishostnull(ulr->ia)) {
         rport = (ulr == NULL) ? 0 : ulr->port;
-        len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", rport);
+        len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d", rport);
     } else {
         if (ulr->ia_ov == NULL) {
             addr2char_r(ulr->ia, saddr, sizeof(saddr));
-            len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", ulr->port,
+            len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s", ulr->port,
               saddr, (ulr->ia->sa_family == AF_INET) ? "" : " 6");
         } else {
-            len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s\n", ulr->port,
+            len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %s%s", ulr->port,
               ulr->ia_ov, (ulr->ia->sa_family == AF_INET) ? "" : " 6");
         }
     }
-
+    if (ulr != NULL && ulr->subc_res != 0) {
+        len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+          " && %d", ulr->subc_res);
+    }
+    cmd->buf_t[len] = '\n';
+    len += 1;
+    cmd->buf_t[len] = '\0';
     rtpc_doreply(cmd, cmd->buf_t, len, (ulr != NULL) ? 0 : 1);
 }
 
@@ -638,6 +654,11 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
         } else {
             ulop->reply.ia_ov = cfsp->advaddr[0];
         }
+    }
+    if (ulop->after_success.handler != NULL) {
+        struct rtpp_subc_ctx rsc = {.sessp = spa, .strmp = spa->rtp->stream[pidx],
+          .subc_args = &(cmd->subc_args)};
+        ulop->reply.subc_res = ulop->after_success.handler(ulop->after_success.arg, &rsc);
     }
     ul_reply_port(cmd, &ulop->reply);
     rtpp_command_ul_opts_free(ulop);

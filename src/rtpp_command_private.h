@@ -70,13 +70,18 @@ struct common_cmd_args {
     } opts;
 };
 
+struct rtpp_subc_ctx {
+    struct rtpp_session *sessp;
+    struct rtpp_stream *strmp;
+    const struct rtpp_command_args *subc_args;
+};
+
 struct rtpp_command_args {
     int c;
     char *v[RTPC_MAX_ARGC];
 };
 
-struct rtpp_command
-{
+struct rtpp_command {
     char buf[RTPP_CMD_BUFLEN];
     char buf_t[256];
     struct rtpp_command_args args;
