@@ -25,6 +25,7 @@
  *
  */
 
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "config_pp.h"
