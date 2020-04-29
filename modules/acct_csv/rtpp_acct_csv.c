@@ -96,6 +96,10 @@ static void rtpp_acct_csv_unlockf(int, off_t);
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
+static const struct rtpp_acct_handlers acct_csv_aapi = {
+    .on_session_end = API_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
+};
+
 struct rtpp_minfo rtpp_module = {
     .name = "acct_csv",
     .ver = MI_VER_INIT(),
@@ -105,7 +109,7 @@ struct rtpp_minfo rtpp_module = {
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM,
 #endif
-    .aapi.on_session_end = API_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
+    .aapi = &acct_csv_aapi
 };
 
 static const char *

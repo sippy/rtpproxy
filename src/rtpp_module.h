@@ -28,7 +28,7 @@
 #ifndef _RTPP_MODULE_H
 #define _RTPP_MODULE_H
 
-#define MODULE_API_REVISION 10
+#define MODULE_API_REVISION 11
 
 #include "rtpp_codeptr.h"
 
@@ -153,7 +153,7 @@ struct rtpp_minfo {
     const char *maintainer;
     unsigned int module_id;
     struct rtpp_mhandlers proc;
-    struct rtpp_acct_handlers aapi;
+    const struct rtpp_acct_handlers *aapi;
     /* Lower half, filled by the core */
     unsigned int instance_id;
     rtpp_module_malloc_t _malloc;

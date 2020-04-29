@@ -232,14 +232,14 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
             goto e5;
         }
     }
-    if (pvt->mip->aapi.on_session_end.func != NULL &&
-      pvt->mip->aapi.on_session_end.argsize != rtpp_acct_OSIZE()) {
+    if (pvt->mip->aapi->on_session_end.func != NULL &&
+      pvt->mip->aapi->on_session_end.argsize != rtpp_acct_OSIZE()) {
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
           "consider recompiling the module", pvt->mpath);
         goto e6;
     }
-    if (pvt->mip->aapi.on_rtcp_rcvd.func != NULL &&
-      pvt->mip->aapi.on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
+    if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL &&
+      pvt->mip->aapi->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
           "consider recompiling the module", pvt->mpath);
         goto e6;
@@ -347,16 +347,16 @@ rtpp_mif_run(void *argp)
             struct rtpp_acct *rap;
 
             rtpp_wi_apis_getnamearg(wi, (void **)&rap, sizeof(rap));
-            if (pvt->mip->aapi.on_session_end.func != NULL)
-                pvt->mip->aapi.on_session_end.func(pvt->mpvt, rap);
+            if (pvt->mip->aapi->on_session_end.func != NULL)
+                pvt->mip->aapi->on_session_end.func(pvt->mpvt, rap);
             RTPP_OBJ_DECREF(rap);
         }
         if (aname == do_acct_rtcp_aname) {
             struct rtpp_acct_rtcp *rapr;
 
             rtpp_wi_apis_getnamearg(wi, (void **)&rapr, sizeof(rapr));
-            if (pvt->mip->aapi.on_rtcp_rcvd.func != NULL)
-                pvt->mip->aapi.on_rtcp_rcvd.func(pvt->mpvt, rapr);
+            if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL)
+                pvt->mip->aapi->on_rtcp_rcvd.func(pvt->mpvt, rapr);
             RTPP_OBJ_DECREF(rapr);
         }
         CALL_METHOD(wi, dtor);
@@ -403,7 +403,7 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
     struct rtpp_module_if_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (pvt->mip->aapi.on_rtcp_rcvd.func != NULL) {
+    if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL) {
         struct packet_observer_if acct_rtcp_poi;
 
         acct_rtcp_poi.taste = packet_is_rtcp;

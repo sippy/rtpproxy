@@ -80,6 +80,10 @@ extern struct rtpp_module_conf *rtpp_arh_conf;
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
+static const struct rtpp_acct_handlers acct_rtcp_hep_aapi = {
+    .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
+};
+
 struct rtpp_minfo rtpp_module = {
     .name = "acct_rtcp_hep",
     .ver = MI_VER_INIT(),
@@ -91,7 +95,7 @@ struct rtpp_minfo rtpp_module = {
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM,
 #endif
-    .aapi.on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
+    .aapi = &acct_rtcp_hep_aapi
 };
 
 static struct rtpp_module_priv *
