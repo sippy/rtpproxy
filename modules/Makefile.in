@@ -317,7 +317,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = acct_csv acct_rtcp_hep
+SUBDIRS = acct_csv acct_rtcp_hep catch_dtmf
 all: all-recursive
 
 .SUFFIXES:
