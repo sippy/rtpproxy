@@ -44,12 +44,12 @@ typedef enum rtpp_ttl_mode rtpp_ttl_mode;
 struct rtpp_timed;
 struct rtpp_sessinfo;
 struct rtpp_log;
-struct rtpp_module_if;
 struct rtpp_runcreds;
 struct rtpp_proc_ttl;
 struct po_manager;
 struct rtpp_locking;
 struct rtpp_nofile;
+struct rtpp_modman;
 
 #define RTPP_PT_INET	0
 #define	RTPP_PT_INET6	1
@@ -132,7 +132,7 @@ struct rtpp_cfg {
     struct rtpp_sessinfo *sessinfo;
     const char *cwd_orig;
 
-    struct rtpp_list *modules_cf;
+    struct rtpp_modman *modules_cf;
 
     struct overload_prot overload_prot;
 

@@ -92,12 +92,13 @@
 #include "rtpp_notify.h"
 #include "rtpp_math.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_list.h"
 #if ENABLE_MODULE_IF
 #include "rtpp_module_if.h"
+#include "rtpp_modman.h"
 #endif
 #include "rtpp_stats.h"
 #include "rtpp_sessinfo.h"
-#include "rtpp_list.h"
 #include "rtpp_time.h"
 #include "rtpp_timed.h"
 #include "rtpp_timed_task.h"
@@ -255,7 +256,7 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     free(cfsp->ctrl_socks);
     free(cfsp->runcreds);
 #if ENABLE_MODULE_IF
-    for (mif = RTPP_LIST_HEAD(cfsp->modules_cf); mif != NULL; mif = tmp) {
+    for (mif = RTPP_LIST_HEAD(&cfsp->modules_cf->all); mif != NULL; mif = tmp) {
         tmp = RTPP_ITER_NEXT(mif);
         RTPP_OBJ_DECREF(mif);
     }
@@ -337,7 +338,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
       "Vc:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
         case LOPT_DSO:
-            if (!RTPP_LIST_IS_EMPTY(cfsp->modules_cf)) {
+            if (!RTPP_LIST_IS_EMPTY(&cfsp->modules_cf->all)) {
                  errx(1, "this version of the rtpproxy only supports loading a "
                    "single module");
             }
@@ -354,7 +355,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
                   "%p: dymanic module load has failed", mif);
                 exit(1);
             }
-            rtpp_list_append(cfsp->modules_cf, mif);
+            rtpp_list_append(&cfsp->modules_cf->all, mif);
             break;
 
         case LOPT_BRSYM:
@@ -813,7 +814,7 @@ main(int argc, char **argv)
          /* NOTREACHED */
     }
 
-    cfs.modules_cf = rtpp_zmalloc(sizeof(struct rtpp_list));
+    cfs.modules_cf = rtpp_zmalloc(sizeof(struct rtpp_modman));
     if (cfs.modules_cf == NULL) {
          err(1, "can't allocate memory for the struct modules_cf");
          /* NOTREACHED */
@@ -994,8 +995,8 @@ main(int argc, char **argv)
     }
 
 #if ENABLE_MODULE_IF
-    if (!RTPP_LIST_IS_EMPTY(cfs.modules_cf)) {
-        mif = RTPP_LIST_HEAD(cfs.modules_cf);
+    if (!RTPP_LIST_IS_EMPTY(&cfs.modules_cf->all)) {
+        mif = RTPP_LIST_HEAD(&cfs.modules_cf->all);
         if (CALL_METHOD(mif, start, &cfs) != 0) {
             RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
               "%p: dymanic module start has failed", mif);
@@ -1083,7 +1084,7 @@ main(int argc, char **argv)
 
     CALL_METHOD(cfs.rtpp_cmd_cf, dtor);
 #if ENABLE_MODULE_IF
-    for (mif = RTPP_LIST_HEAD(cfs.modules_cf); mif != NULL; mif = tmp) {
+    for (mif = RTPP_LIST_HEAD(&cfs.modules_cf->all); mif != NULL; mif = tmp) {
         tmp = RTPP_ITER_NEXT(mif);
         RTPP_OBJ_DECREF(mif);
     }

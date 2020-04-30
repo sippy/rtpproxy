@@ -64,6 +64,7 @@
 #include "rtpp_module.h"
 #include "rtpp_module_acct.h"
 #include "rtpp_module_if.h"
+#include "rtpp_modman.h"
 #include "rtpp_module_if_fin.h"
 #include "rtpp_queue.h"
 #include "rtpp_refcnt.h"
@@ -248,7 +249,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         }
     }
     pvt->mip->instance_id = 1;
-    for (struct rtpp_module_if *tmp = RTPP_LIST_HEAD(cfsp->modules_cf);
+    for (struct rtpp_module_if *tmp = RTPP_LIST_HEAD(&cfsp->modules_cf->all);
       tmp != NULL; tmp = RTPP_ITER_NEXT(tmp)) {
         struct rtpp_module_if_priv *tmp_pvt;
         PUB2PVT(tmp, tmp_pvt);

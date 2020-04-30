@@ -1,6 +1,6 @@
 /*
+ * Copyright (c) 2006-2020 Sippy Software, Inc., http://www.sippysoft.com
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,7 @@
 #include "rtpp_list.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_module_if.h"
+#include "rtpp_modman.h"
 #include "rtpp_pipe.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
@@ -63,7 +64,7 @@ struct rtpp_session_priv
 {
     struct rtpp_session pub;
     struct rtpp_sessinfo *sessinfo;
-    struct rtpp_module_if *modules_cf;
+    struct rtpp_module_if *module_if;
     struct rtpp_acct *acct;
 };
 
@@ -160,12 +161,12 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     pvt->pub.rtpp_stats = cfs->rtpp_stats;
     pvt->pub.log = log;
     pvt->sessinfo = cfs->sessinfo;
-    if (!RTPP_LIST_IS_EMPTY(cfs->modules_cf)) {
+    if (!RTPP_LIST_IS_EMPTY(&cfs->modules_cf->all)) {
         struct rtpp_module_if *mif;
 
-        mif = RTPP_LIST_HEAD(cfs->modules_cf);
+        mif = RTPP_LIST_HEAD(&cfs->modules_cf->all);
         RTPP_OBJ_INCREF(mif);
-        pvt->modules_cf = mif;
+        pvt->module_if = mif;
     }
 
     CALL_METHOD(cfs->sessinfo, append, pub, 0, fds);
@@ -220,7 +221,7 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     CALL_SMETHOD(pub->rtpp_stats, updatebyname, "nsess_destroyed", 1);
     CALL_SMETHOD(pub->rtpp_stats, updatebyname_d, "total_duration",
       session_time);
-    if (pvt->modules_cf != NULL) {
+    if (pvt->module_if != NULL) {
         pvt->acct->call_id = pvt->pub.call_id;
         pvt->pub.call_id = NULL;
         pvt->acct->from_tag = pvt->pub.tag;
@@ -234,8 +235,8 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
         CALL_METHOD(pub->rtp->stream[1]->analyzer, get_jstats, \
           pvt->acct->jrasta);
 
-        CALL_METHOD(pvt->modules_cf, do_acct, pvt->acct);
-        RTPP_OBJ_DECREF(pvt->modules_cf);
+        CALL_METHOD(pvt->module_if, do_acct, pvt->acct);
+        RTPP_OBJ_DECREF(pvt->module_if);
     }
     RTPP_OBJ_DECREF(pvt->acct);
 

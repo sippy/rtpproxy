@@ -40,6 +40,7 @@
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_module_if.h"
+#include "rtpp_modman.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_ucl.h"
 
@@ -219,7 +220,7 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
             RTPP_LOG(csp->glog, RTPP_LOG_ERR, "%p->config() method has failed: %s", mif, cp);
             goto e1;
         }
-        rtpp_list_append(csp->modules_cf, mif);
+        rtpp_list_append(&csp->modules_cf->all, mif);
         continue;
 e1:
         ecode = -1;
