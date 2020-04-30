@@ -36,6 +36,7 @@ struct rtpp_cfg;
 struct rtpp_module_priv;
 struct rtpp_module_conf;
 struct rtpp_acct_handlers;
+struct rtpp_cplane_handlers;
 
 #if !defined(MODULE_IF_CODE)
 #include <sys/types.h>
@@ -131,6 +132,7 @@ struct rtpp_minfo {
     unsigned int module_id;
     struct rtpp_mhandlers proc;
     const struct rtpp_acct_handlers *aapi;
+    const struct rtpp_cplane_handlers *capi;
     /* Lower half, filled by the core */
     unsigned int instance_id;
     rtpp_module_malloc_t _malloc;
