@@ -495,11 +495,11 @@ SRCS_AUTOGEN = $(rtpp_command_rcache_AUTOSRCS) \
 	$(rtpp_port_table_AUTOSRCS) $(rtpp_record_AUTOSRCS) \
 	$(rtpp_ringbuf_AUTOSRCS) $(rtpp_sessinfo_AUTOSRCS) \
 	$(rtpp_socket_AUTOSRCS) $(rtpp_timed_task_AUTOSRCS) \
-	$(rtpp_ttl_AUTOSRCS) $(rtpp_module_if_AUTOSRCS) \
-	$(rtpp_netaddr_AUTOSRCS) $(rtpp_pearson_perfect_AUTOSRCS) \
-	$(rtpp_refcnt_AUTOSRCS) $(rtpp_server_AUTOSRCS) \
-	$(rtpp_stats_AUTOSRCS) $(rtpp_stream_AUTOSRCS) \
-	$(rtpp_timed_AUTOSRCS)
+	$(rtpp_ttl_AUTOSRCS) $(rtpp_modman_AUTOSRCS) \
+	$(rtpp_module_if_AUTOSRCS) $(rtpp_netaddr_AUTOSRCS) \
+	$(rtpp_pearson_perfect_AUTOSRCS) $(rtpp_refcnt_AUTOSRCS) \
+	$(rtpp_server_AUTOSRCS) $(rtpp_stats_AUTOSRCS) \
+	$(rtpp_stream_AUTOSRCS) $(rtpp_timed_AUTOSRCS)
 rtpp_command_rcache_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.c
 rtpp_log_obj_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.c
 rtpp_pcnt_strm_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_pcnt_strm_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_pcnt_strm_fin.c
@@ -512,6 +512,7 @@ rtpp_sessinfo_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_sessinfo_fin.h $(RTPP_AUTOSRC_
 rtpp_socket_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.c
 rtpp_timed_task_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_timed_task_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_timed_task_fin.c
 rtpp_ttl_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_ttl_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_ttl_fin.c
+rtpp_modman_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_modman_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_modman_fin.c
 rtpp_module_if_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_module_if_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_module_if_fin.c
 rtpp_netaddr_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c
 rtpp_pearson_perfect_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_pearson_perfect_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_pearson_perfect_fin.c
