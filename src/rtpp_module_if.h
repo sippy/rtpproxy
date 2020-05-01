@@ -32,6 +32,7 @@ struct rtpp_acct_rtcp;
 struct rtpp_log;
 struct rtpp_cfg;
 struct rtpp_module_conf;
+struct rtpp_mdescr;
 
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, const struct rtpp_cfg *,
   struct rtpp_log *);
@@ -48,6 +49,7 @@ DEFINE_METHOD(rtpp_module_if, rtpp_module_if_get_mconf, int,
 struct rtpp_module_if {
     struct rtpp_type_linkable t;
     struct rtpp_refcnt *rcnt;
+    const struct rtpp_mdescr *descr;
     METHOD_ENTRY(rtpp_module_if_load, load);
     METHOD_ENTRY(rtpp_module_if_config, config);
     METHOD_ENTRY(rtpp_module_if_start, start);
