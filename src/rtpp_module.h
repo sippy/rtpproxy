@@ -157,8 +157,8 @@ extern struct rtpp_minfo rtpp_module;
     .mi_size = sizeof(rtpp_module), \
     .build = RTPP_SW_VERSION}
 #define MI_VER_CHCK(sptr) ( \
-  (sptr)->ver.rev == MODULE_API_REVISION && \
-  (sptr)->ver.mi_size == sizeof(struct rtpp_minfo) && \
-  strcmp((sptr)->ver.build, RTPP_SW_VERSION) == 0)
+  (sptr)->descr.ver.rev == MODULE_API_REVISION && \
+  (sptr)->descr.ver.mi_size == sizeof(struct rtpp_minfo) && \
+  strcmp((sptr)->descr.ver.build, RTPP_SW_VERSION) == 0)
 
 #endif /* _RTPP_MODULE_H */
