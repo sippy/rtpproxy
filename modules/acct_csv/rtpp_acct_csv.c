@@ -102,9 +102,9 @@ static const struct rtpp_acct_handlers acct_csv_aapi = {
 };
 
 struct rtpp_minfo rtpp_module = {
-    .name = "acct_csv",
-    .ver = MI_VER_INIT(),
-    .module_id = 1,
+    .descr.name = "acct_csv",
+    .descr.ver = MI_VER_INIT(),
+    .descr.module_id = 1,
     .proc.ctor = rtpp_acct_csv_ctor,
     .proc.dtor = rtpp_acct_csv_dtor,
 #ifdef RTPP_CHECK_LEAKS

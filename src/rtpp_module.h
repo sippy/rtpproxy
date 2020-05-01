@@ -115,6 +115,15 @@ struct api_version {
     const char *build;
 };
 
+struct rtpp_mdescr {
+    struct api_version ver;
+    const char *name;
+    const char *author;
+    const char *copyright;
+    const char *maintainer;
+    unsigned int module_id;
+};
+
 struct rtpp_mhandlers {
     rtpp_module_ctor_t ctor;
     rtpp_module_dtor_t dtor;
@@ -124,12 +133,7 @@ struct rtpp_mhandlers {
 
 struct rtpp_minfo {
     /* Upper half, filled by the module */
-    struct api_version ver;
-    const char *name;
-    const char *author;
-    const char *copyright;
-    const char *maintainer;
-    unsigned int module_id;
+    struct rtpp_mdescr descr;
     struct rtpp_mhandlers proc;
     const struct rtpp_acct_handlers *aapi;
     const struct rtpp_cplane_handlers *capi;

@@ -86,9 +86,9 @@ static const struct rtpp_acct_handlers acct_rtcp_hep_aapi = {
 };
 
 struct rtpp_minfo rtpp_module = {
-    .name = "acct_rtcp_hep",
-    .ver = MI_VER_INIT(),
-    .module_id = 2,
+    .descr.name = "acct_rtcp_hep",
+    .descr.ver = MI_VER_INIT(),
+    .descr.module_id = 2,
     .proc.ctor = rtpp_acct_rtcp_hep_ctor,
     .proc.dtor = rtpp_acct_rtcp_hep_dtor,
     .proc.get_mconf = rtpp_acct_rtcp_hep_get_mconf,

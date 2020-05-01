@@ -49,9 +49,9 @@ RTPP_MEMDEB_APP_STATIC;
 #endif
 
 struct rtpp_minfo rtpp_module = {
-    .name = "catch_dtmf",
-    .ver = MI_VER_INIT(),
-    .module_id = 3,
+    .descr.name = "catch_dtmf",
+    .descr.ver = MI_VER_INIT(),
+    .descr.module_id = 3,
     .proc.ctor = rtpp_catch_dtmf_ctor,
     .proc.dtor = rtpp_catch_dtmf_dtor,
 #ifdef RTPP_CHECK_LEAKS
