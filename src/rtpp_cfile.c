@@ -220,7 +220,7 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
             RTPP_LOG(csp->glog, RTPP_LOG_ERR, "%p->config() method has failed: %s", mif, cp);
             goto e1;
         }
-        rtpp_list_append(&csp->modules_cf->all, mif);
+        CALL_METHOD(csp->modules_cf, insert, mif);
         continue;
 e1:
         ecode = -1;

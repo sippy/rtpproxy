@@ -50,6 +50,9 @@ struct rtpp_module_if {
     struct rtpp_type_linkable t;
     struct rtpp_refcnt *rcnt;
     const struct rtpp_mdescr *descr;
+    struct {
+        int has_do_acct:1;
+    } flags;
     METHOD_ENTRY(rtpp_module_if_load, load);
     METHOD_ENTRY(rtpp_module_if_config, config);
     METHOD_ENTRY(rtpp_module_if_start, start);

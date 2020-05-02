@@ -204,7 +204,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         goto e2;
     }
     rtpp_memdeb_setlog(pvt->memdeb_p, log);
-    rtpp_memdeb_setname(pvt->memdeb_p, pvt->mip->name);
+    rtpp_memdeb_setname(pvt->memdeb_p, pvt->mip->descr.name);
     /* We make a copy, so that the module cannot screw us up */
     *pvt->mip->memdeb_p = pvt->memdeb_p;
 #else
@@ -220,7 +220,8 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     if (pvt->sigterm == NULL) {
         goto e3;
     }
-    pvt->req_q = rtpp_queue_init(RTPQ_SMALL_CB_LEN, "rtpp_module_if(%s)", pvt->mip->name);
+    pvt->req_q = rtpp_queue_init(RTPQ_SMALL_CB_LEN, "rtpp_module_if(%s)",
+      pvt->mip->descr.name);
     if (pvt->req_q == NULL) {
         goto e4;
     }
@@ -230,7 +231,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         pvt->mpvt = pvt->mip->proc.ctor(cfsp);
         if (pvt->mpvt == NULL) {
             RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' failed to initialize",
-              pvt->mip->name);
+              pvt->mip->descr.name);
             goto e5;
         }
     }
@@ -247,16 +248,11 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
               "consider recompiling the module", pvt->mpath);
             goto e6;
         }
+        pvt->pub.flags.has_do_acct = (pvt->mip->aapi->on_session_end.func != NULL);
     }
-    pvt->mip->instance_id = 1;
-    for (struct rtpp_module_if *tmp = RTPP_LIST_HEAD(&cfsp->modules_cf->all);
-      tmp != NULL; tmp = RTPP_ITER_NEXT(tmp)) {
-        struct rtpp_module_if_priv *tmp_pvt;
-        PUB2PVT(tmp, tmp_pvt);
-        if (tmp_pvt->mip->module_id != pvt->mip->module_id)
-            continue;
-        pvt->mip->instance_id += 1;
-    }
+    pvt->mip->instance_id = CALL_METHOD(cfsp->modules_cf, get_next_id,
+      pvt->mip->descr.module_id);
+    pvt->pub.descr = &(pvt->mip->descr);
 
     return (0);
 e6:
@@ -270,7 +266,7 @@ e5:
 #if RTPP_CHECK_LEAKS
     if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' leaked memory in the failed "
-          "constructor", pvt->mip->name);
+          "constructor", pvt->mip->descr.name);
     }
 #endif
 e4:
@@ -314,7 +310,7 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
             /* Check if module leaked any mem */
             if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
                 RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s' leaked memory after "
-                  "destruction", pvt->mip->name);
+                  "destruction", pvt->mip->descr.name);
             }
             rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
@@ -378,7 +374,7 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
     wi = rtpp_wi_malloc_apis(do_acct_aname, &acct, sizeof(acct));
     if (wi == NULL) {
         RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
-          "memory", pvt->mip->name);
+          "memory", pvt->mip->descr.name);
         return;
     }
     RTPP_OBJ_INCREF(acct);
@@ -395,7 +391,7 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
     wi = rtpp_wi_malloc_apis(do_acct_rtcp_aname, &acct, sizeof(acct));
     if (wi == NULL) {
         RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
-          "memory", pvt->mip->name);
+          "memory", pvt->mip->descr.name);
         RTPP_OBJ_DECREF(acct);
         return;
     }

@@ -237,7 +237,6 @@ const static struct option longopts[] = {
 static void
 init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
 {
-    struct rtpp_module_if *mif, *tmp;
     struct rtpp_ctrl_sock *ctrl_sock, *ctrl_sock_next;
 
     if (msg != NULL) {
@@ -255,13 +254,7 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     }
     free(cfsp->ctrl_socks);
     free(cfsp->runcreds);
-#if ENABLE_MODULE_IF
-    for (mif = RTPP_LIST_HEAD(&cfsp->modules_cf->all); mif != NULL; mif = tmp) {
-        tmp = RTPP_ITER_NEXT(mif);
-        RTPP_OBJ_DECREF(mif);
-    }
-#endif
-    free(cfsp->modules_cf);
+    RTPP_OBJ_DECREF(cfsp->modules_cf);
     rtpp_gen_uid_free();
     rtpp_exit(memdeb, rval);
 }
@@ -338,10 +331,6 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
       "Vc:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
         case LOPT_DSO:
-            if (!RTPP_LIST_IS_EMPTY(&cfsp->modules_cf->all)) {
-                 errx(1, "this version of the rtpproxy only supports loading a "
-                   "single module");
-            }
             cp = realpath(optarg, mpath);
             if (cp == NULL) {
                  err(1, "realpath");
@@ -355,7 +344,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
                   "%p: dymanic module load has failed", mif);
                 exit(1);
             }
-            rtpp_list_append(&cfsp->modules_cf->all, mif);
+            CALL_METHOD(cfsp->modules_cf, insert, mif);
             break;
 
         case LOPT_BRSYM:
@@ -787,7 +776,6 @@ main(int argc, char **argv)
     struct sched_param sparam;
     void *elp;
     struct rtpp_timed_task *tp;
-    struct rtpp_module_if *mif, *tmp;
     struct rtpp_daemon_rope drop;
 
 #ifdef RTPP_CHECK_LEAKS
@@ -814,7 +802,7 @@ main(int argc, char **argv)
          /* NOTREACHED */
     }
 
-    cfs.modules_cf = rtpp_zmalloc(sizeof(struct rtpp_modman));
+    cfs.modules_cf = rtpp_modman_ctor();
     if (cfs.modules_cf == NULL) {
          err(1, "can't allocate memory for the struct modules_cf");
          /* NOTREACHED */
@@ -995,13 +983,11 @@ main(int argc, char **argv)
     }
 
 #if ENABLE_MODULE_IF
-    if (!RTPP_LIST_IS_EMPTY(&cfs.modules_cf->all)) {
-        mif = RTPP_LIST_HEAD(&cfs.modules_cf->all);
-        if (CALL_METHOD(mif, start, &cfs) != 0) {
-            RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
-              "%p: dymanic module start has failed", mif);
-            exit(1);
-        }
+    const char *failmod;
+    if (CALL_METHOD(cfs.modules_cf, startall, &cfs, &failmod) != 0) {
+        RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
+          "%s: dymanic module start has failed", failmod);
+        exit(1);
     }
 #endif
 
@@ -1083,14 +1069,8 @@ main(int argc, char **argv)
     prdic_free(elp);
 
     CALL_METHOD(cfs.rtpp_cmd_cf, dtor);
-#if ENABLE_MODULE_IF
-    for (mif = RTPP_LIST_HEAD(&cfs.modules_cf->all); mif != NULL; mif = tmp) {
-        tmp = RTPP_ITER_NEXT(mif);
-        RTPP_OBJ_DECREF(mif);
-    }
-#endif
+    RTPP_OBJ_DECREF(cfs.modules_cf);
     RTPP_OBJ_DECREF(cfs.observers)
-    free(cfs.modules_cf);
     free(cfs.runcreds);
     CALL_METHOD(cfs.rtpp_notify_cf, dtor);
     CALL_METHOD(cfs.bindaddrs_cf, dtor);

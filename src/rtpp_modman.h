@@ -21,15 +21,36 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
 
 #ifndef _RTPP_MODMAN_H
 #define _RTPP_MODMAN_H
 
+struct rtpp_modman;
+struct rtpp_refcnt;
+struct rtpp_module_if;
+struct rtpp_cfg;
+struct rtpp_acct;
+
+DEFINE_METHOD(rtpp_modman, rtpp_modman_insert, void, struct rtpp_module_if *);
+DEFINE_METHOD(rtpp_modman, rtpp_modman_startall, int, const struct rtpp_cfg *,
+  const char **);
+DEFINE_METHOD(rtpp_modman, rtpp_modman_get_next_id, unsigned int,
+  unsigned int);
+DEFINE_METHOD(rtpp_modman, rtpp_modman_do_acct, void, struct rtpp_acct *);
+
 struct rtpp_modman {
-    struct rtpp_list all;
-    unsigned int count;
+    struct rtpp_refcnt *rcnt;
+    struct {
+        unsigned int total;
+        unsigned int sess_acct;
+    } count;
+    METHOD_ENTRY(rtpp_modman_insert, insert);
+    METHOD_ENTRY(rtpp_modman_startall, startall);
+    METHOD_ENTRY(rtpp_modman_get_next_id, get_next_id);
+    METHOD_ENTRY(rtpp_modman_do_acct, do_acct);
 };
+
+struct rtpp_modman *rtpp_modman_ctor(void);
 
 #endif /* _RTPP_MODMAN_H */
