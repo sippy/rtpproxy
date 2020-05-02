@@ -119,6 +119,11 @@ run_acct_rtcp_hep() {
   fi
 }
 
+if [ -e rtpproxy_acct.csv ]
+then
+  rm rtpproxy_acct.csv
+fi
+
 run_acct_rtcp_hep tcp &
 TTCP_RC=${?}
 TTCP_PID=${!}
@@ -143,3 +148,8 @@ do
 done
 report_rc "${TTCP_RC}" "Waiting for HEP/tcp to complete"
 report_rc "${TUDP_RC}" "Waiting for HEP/udp to complete"
+
+nlexpected="3"
+anlines=$((`wc -l < rtpproxy_acct.csv`))
+test ${anlines} -eq ${nlexpected}
+report "checking number of lines in rtpproxy_acct.csv: ${anlines} vs ${nlexpected}"
