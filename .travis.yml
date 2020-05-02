@@ -18,7 +18,7 @@ env:
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
     #   via the "travis encrypt" command using the project repo's public key
     - secure: "MUzUSD/uRmjvh0oKBSlKfNkQnPGiN0l4TeKY1nehQQB4h6WiOlVbAu1PCUxR9G/DOmVMLUasWTEB9j5H9hWsvR1MwNge7woHtuW6YmUxw4/+Sh2pOqMIjwpqywFXtY/zfXa8AGpQI0ZOR0eg1mMq/6OV23pkOz9XnfqwvHtVvxs="
-script: sh -x ./scripts/do-test.sh ${TTYPE}
+script: travis_wait 20 sh -x ./scripts/do-test.sh ${TTYPE}
 after_success:
   - for f in `make -f tests/Makefile list_tests`;
     do
