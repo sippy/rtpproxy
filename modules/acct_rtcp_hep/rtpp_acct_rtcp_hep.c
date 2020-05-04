@@ -71,8 +71,6 @@ static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct_rt
 static struct rtpp_module_conf *rtpp_acct_rtcp_hep_get_mconf(struct rtpp_module_priv *);
 static int rtpp_acct_rtcp_hep_config(struct rtpp_module_priv *);
 
-#define API_FUNC(fname, asize) {.func = (fname), .argsize = (asize)}
-
 extern struct rtpp_module_conf *rtpp_arh_conf;
 
 #ifdef RTPP_CHECK_LEAKS
@@ -82,7 +80,7 @@ RTPP_MEMDEB_APP_STATIC;
 #endif
 
 static const struct rtpp_acct_handlers acct_rtcp_hep_aapi = {
-    .on_rtcp_rcvd = API_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
+    .on_rtcp_rcvd = AAPI_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
 struct rtpp_minfo rtpp_module = {

@@ -36,14 +36,14 @@ DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_session_end, void,
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_on_rtcp_rcvd, void,
   struct rtpp_acct_rtcp *);
 
+#define AAPI_FUNC(fname, asize) {.func = (fname), .argsize = (asize)}
+
 struct api_on_sess_end {
-   int rev;
    size_t argsize;
    rtpp_module_on_session_end_t func;
 };
 
 struct api_on_rtcp_rcvd {
-   int rev;
    size_t argsize;
    rtpp_module_on_rtcp_rcvd_t func;
 };
