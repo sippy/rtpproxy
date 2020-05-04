@@ -21,7 +21,7 @@ run_udpreplay() {
   rtp_nport=${3}
   rtcp_oport=$((${rtp_oport} + 1))
   rtcp_nport=$((${rtp_nport} + 1))
-  #UDPREPLAY_ARGS="-o udpreplay_${direction}.pcap"
+  UDPREPLAY_ARGS="-n 160"
   tcprewrite --portmap=${rtp_oport}:${rtp_nport} --portmap=${rtcp_oport}:${rtcp_nport} \
    -i "${CD_DIR}/rtcp.${direction}.pcap" -o acct_rtcp_hep.${rtp_nport}.${direction}.pcap || return 1
   sleep 1
@@ -67,7 +67,7 @@ run_acct_rtcp_hep() {
   sed "s|%%HEP_PORT%%|${HEP_PORT}|g ; s|%%HEP_PROTO%%|${HEP_PROTO}|g" < \
    ${CD_DIR}/basic.conf > "${CNAME}"
   RTPP_ARGS="-d dbug -f -s stdio: -b -n ${RTPP_NOTIFY_SOCK_TCP} -m ${MIN_PORT} \
-   -M ${MAX_PORT} -T2 -W2 --config ${CNAME}"
+   -M ${MAX_PORT} -T1 -W2 --config ${CNAME}"
 
   NC_ARGS="-l 127.0.0.1 ${HEP_PORT}"
   if [ "${HEP_PROTO}" = "udp" ]
