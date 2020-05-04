@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/sippy/rtpproxy.svg?branch=master)](https://travis-ci.org/sippy/rtpproxy)
+[![Build Status](https://travis-ci.com/sippy/rtpproxy.svg?branch=master)](https://travis-ci.com/sippy/rtpproxy)
 [![Coverage Status](https://coveralls.io/repos/github/sippy/rtpproxy/badge.svg?branch=master)](https://coveralls.io/github/sippy/rtpproxy?branch=master)
 [![Coverity](https://scan.coverity.com/projects/8841/badge.svg)](https://scan.coverity.com/projects/sippy-rtpproxy)
 
