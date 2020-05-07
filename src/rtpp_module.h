@@ -131,6 +131,12 @@ struct rtpp_mhandlers {
     rtpp_module_config_t config;
 };
 
+struct rtpp_wthrdata {
+    struct rtpp_wi *sigterm;
+    pthread_t thread_id;
+    struct rtpp_queue *mod_q;
+};
+
 struct rtpp_minfo {
     /* Upper half, filled by the module */
     struct rtpp_mdescr descr;
@@ -148,6 +154,7 @@ struct rtpp_minfo {
     rtpp_module_vasprintf_t _vasprintf;
     void **memdeb_p;
     struct rtpp_log *log;
+    struct rtpp_wthrdata wthr;
 };
 
 extern struct rtpp_minfo rtpp_module;

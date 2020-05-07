@@ -81,9 +81,6 @@ struct rtpp_module_if_priv {
     struct rtpp_minfo *mip;
     struct rtpp_module_priv *mpvt;
     struct rtpp_log *log;
-    struct rtpp_wi *sigterm;
-    pthread_t thread_id;
-    struct rtpp_queue *req_q;
     /* Privary version of the module's memdeb_p, store it here */
     /* just in case module screws it up                        */
     void *memdeb_p;
@@ -216,13 +213,13 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     pvt->mip->_asprintf = &asprintf;
     pvt->mip->_vasprintf = &vasprintf;
 #endif
-    pvt->sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
-    if (pvt->sigterm == NULL) {
+    pvt->mip->wthr.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
+    if (pvt->mip->wthr.sigterm == NULL) {
         goto e3;
     }
-    pvt->req_q = rtpp_queue_init(RTPQ_SMALL_CB_LEN, "rtpp_module_if(%s)",
+    pvt->mip->wthr.mod_q = rtpp_queue_init(RTPQ_SMALL_CB_LEN, "rtpp_module_if(%s)",
       pvt->mip->descr.name);
-    if (pvt->req_q == NULL) {
+    if (pvt->mip->wthr.mod_q == NULL) {
         goto e4;
     }
     RTPP_OBJ_INCREF(log);
@@ -261,8 +258,8 @@ e6:
     }
 e5:
     RTPP_OBJ_DECREF(pvt->mip->log);
-    rtpp_queue_destroy(pvt->req_q);
-    pvt->req_q = NULL;
+    rtpp_queue_destroy(pvt->mip->wthr.mod_q);
+    pvt->mip->wthr.mod_q = NULL;
 #if RTPP_CHECK_LEAKS
     if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' leaked memory in the failed "
@@ -270,8 +267,8 @@ e5:
     }
 #endif
 e4:
-    CALL_METHOD(pvt->sigterm, dtor);
-    pvt->sigterm = NULL;
+    CALL_METHOD(pvt->mip->wthr.sigterm, dtor);
+    pvt->mip->wthr.sigterm = NULL;
 e3:
 #if RTPP_CHECK_LEAKS
     rtpp_memdeb_dtor(pvt->memdeb_p);
@@ -291,13 +288,13 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
         rtpp_module_if_fin(&(pvt->pub));
         if (pvt->started != 0) {
             /* First, stop the worker thread and wait for it to terminate */
-            rtpp_queue_put_item(pvt->sigterm, pvt->req_q);
-            pthread_join(pvt->thread_id, NULL);
-        } else if (pvt->sigterm != NULL) {
-            CALL_METHOD(pvt->sigterm, dtor);
+            rtpp_queue_put_item(pvt->mip->wthr.sigterm, pvt->mip->wthr.mod_q);
+            pthread_join(pvt->mip->wthr.thread_id, NULL);
+        } else if (pvt->mip->wthr.sigterm != NULL) {
+            CALL_METHOD(pvt->mip->wthr.sigterm, dtor);
         }
-        if (pvt->req_q != NULL)
-            rtpp_queue_destroy(pvt->req_q);
+        if (pvt->mip->wthr.mod_q != NULL)
+            rtpp_queue_destroy(pvt->mip->wthr.mod_q);
 
         if (pvt->mip != NULL) {
             /* Then run module destructor (if any) */
@@ -334,7 +331,7 @@ rtpp_mif_run(void *argp)
     pvt = (struct rtpp_module_if_priv *)argp;
     aap = pvt->mip->aapi;
     for (;;) {
-        wi = rtpp_queue_get_item(pvt->req_q, 0);
+        wi = rtpp_queue_get_item(pvt->mip->wthr.mod_q, 0);
         if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
             signum = rtpp_wi_sgnl_get_signum(wi);
             CALL_METHOD(wi, dtor);
@@ -378,7 +375,7 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
         return;
     }
     RTPP_OBJ_INCREF(acct);
-    rtpp_queue_put_item(wi, pvt->req_q);
+    rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q);
 }
 
 static void
@@ -395,7 +392,7 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
         RTPP_OBJ_DECREF(acct);
         return;
     }
-    rtpp_queue_put_item(wi, pvt->req_q);
+    rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q);
 }
 
 static int
@@ -414,7 +411,7 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
             if (CALL_METHOD(cfsp->observers, reg, &acct_rtcp_poi) < 0)
                 return (-1);
         }
-        if (pthread_create(&pvt->thread_id, NULL,
+        if (pthread_create(&pvt->mip->wthr.thread_id, NULL,
           (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
             return (-1);
         }
