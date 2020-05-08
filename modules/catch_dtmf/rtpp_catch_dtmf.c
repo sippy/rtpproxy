@@ -25,6 +25,8 @@
  *
  */
 
+#include <stdatomic.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -34,9 +36,34 @@
 #include "rtpp_module.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_cfg.h"
+#include "rtpp_stream.h"
 
 struct rtpp_module_priv {
+    struct rtpp_notify *notifier;
+};
+
+struct catch_dtmf_einfo {
+    int pending;
+    char digit;
+    uint32_t ts;
+    uint16_t duration;
+};
+
+#define EINFO_HST_DPTH 4
+
+struct catch_dtmf_edata {
+    struct rtpp_refcnt *rcnt;
+    struct catch_dtmf_einfo hst[EINFO_HST_DPTH];
+    int hst_next;
+    enum rtpp_stream_side side;
+};
+
+struct catch_dtmf_stream_cfg {
+    atomic_int pt;
+    struct catch_dtmf_edata *edata;
+    const struct rtpp_timeout_data *rtdp;
 };
 
 static struct rtpp_module_priv *rtpp_catch_dtmf_ctor(const struct rtpp_cfg *);
@@ -58,6 +85,56 @@ struct rtpp_minfo rtpp_module = {
     .memdeb_p = &MEMDEB_SYM
 #endif
 };
+
+static void
+rtpp_catch_dtmf_edata_dtor(void *p)
+{
+
+    mod_free(p);
+}
+
+static struct catch_dtmf_edata *
+rtpp_catch_dtmf_edata_ctor(enum rtpp_stream_side side)
+{
+    struct catch_dtmf_edata *edata;
+    int i;
+
+    edata = mod_rzmalloc(sizeof(*edata), offsetof(struct catch_dtmf_edata, rcnt));
+    if (edata == NULL) {
+        goto e0;
+    }
+    for (i = 0; i < EINFO_HST_DPTH; i++) {
+        edata->hst[i].digit = -1;
+    }
+    edata->side = side;
+    CALL_SMETHOD(edata->rcnt, attach, rtpp_catch_dtmf_edata_dtor, edata);
+    return edata;
+e0:
+    return (NULL);
+}
+
+struct wipkt {
+    const struct rtp_packet *pkt;
+    struct catch_dtmf_edata *edata;
+    const struct rtpp_timeout_data *rtdp;
+};
+
+struct rtp_dtmf_event {
+    unsigned int event:8;        /* event_id - digit */
+#if BYTE_ORDER == BIG_ENDIAN
+    unsigned int end:1;            /* indicates the end of the event */
+    unsigned int res:1;            /* reserved - should be 0 */
+    unsigned int volume:6;        /* volume */
+#else
+    unsigned int volume:6;        /* volume */
+    unsigned int res:1;            /* reserved - should be 0 */
+    unsigned int end:1;            /* indicates the end of the event */
+#endif
+    unsigned int duration:16;    /* duration */
+} __attribute__((__packed__));
+
+#define RTPP_MAX_NOTIFY_BUF 512
+static const char *notyfy_type = "DTMF";
 
 static struct rtpp_module_priv *
 rtpp_catch_dtmf_ctor(const struct rtpp_cfg *cfsp)
