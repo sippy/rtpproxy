@@ -68,7 +68,8 @@ void *
 #if !defined(RTPP_CHECK_LEAKS)
 rtpp_rzmalloc(size_t msize, size_t rcntp_offs)
 #else
-rtpp_rzmalloc_memdeb(const struct rtpp_codeptr *mlp, size_t msize, size_t rcntp_offs)
+rtpp_rzmalloc_memdeb(size_t msize, size_t rcntp_offs, void *memdeb_p,
+  const struct rtpp_codeptr *mlp)
 #endif
 {
     void *rval;
@@ -89,7 +90,7 @@ rtpp_rzmalloc_memdeb(const struct rtpp_codeptr *mlp, size_t msize, size_t rcntp_
 #if !defined(RTPP_CHECK_LEAKS)
     rval = malloc(asize);
 #else
-    rval = rtpp_memdeb_malloc(asize, MEMDEB_SYM, mlp);
+    rval = rtpp_memdeb_malloc(asize, memdeb_p, mlp);
 #endif
     if (rval == NULL) {
         return (NULL);

@@ -191,6 +191,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
 #if RTPP_CHECK_LEAKS
     pvt->mip->_malloc = &rtpp_memdeb_malloc;
     pvt->mip->_zmalloc = &rtpp_zmalloc_memdeb;
+    pvt->mip->_rzmalloc = &rtpp_rzmalloc_memdeb;
     pvt->mip->_free = &rtpp_memdeb_free;
     pvt->mip->_realloc = &rtpp_memdeb_realloc;
     pvt->mip->_strdup = &rtpp_memdeb_strdup;
@@ -207,6 +208,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
 #else
     pvt->mip->_malloc = &malloc;
     pvt->mip->_zmalloc = &rtpp_zmalloc;
+    pvt->mip->_rzmalloc = &rtpp_rzmalloc;
     pvt->mip->_free = &free;
     pvt->mip->_realloc = &realloc;
     pvt->mip->_strdup = &strdup;

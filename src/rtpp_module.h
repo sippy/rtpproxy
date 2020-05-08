@@ -54,6 +54,7 @@ DEFINE_METHOD(rtpp_module_priv, rtpp_module_dtor, void);
 #if defined(RTPP_CHECK_LEAKS)
 DEFINE_RAW_METHOD(rtpp_module_malloc, void *, size_t,  void *, HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_zmalloc, void *, size_t,  void *, HERETYPE);
+DEFINE_RAW_METHOD(rtpp_module_rzmalloc, void *, size_t, size_t, void *, HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_free, void, void *, void *, HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_realloc, void *, void *, size_t,   void *,
   HERETYPE);
@@ -66,6 +67,7 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
 #else
 DEFINE_RAW_METHOD(rtpp_module_malloc, void *, size_t);
 DEFINE_RAW_METHOD(rtpp_module_zmalloc, void *, size_t);
+DEFINE_RAW_METHOD(rtpp_module_rzmalloc, void *, size_t, size_t);
 DEFINE_RAW_METHOD(rtpp_module_free, void, void *);
 DEFINE_RAW_METHOD(rtpp_module_realloc, void *, void *, size_t);
 DEFINE_RAW_METHOD(rtpp_module_strdup, char *, const char *);
@@ -83,6 +85,8 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *, va_list);
   HEREVAL)
 #define mod_zmalloc(n) rtpp_module._zmalloc((n), _MMDEB, \
   HEREVAL)
+#define mod_rzmalloc(n, m) rtpp_module._rzmalloc((n), (m), _MMDEB, \
+  HEREVAL)
 #define mod_free(p) rtpp_module._free((p), _MMDEB, \
   HEREVAL)
 #define mod_realloc(p,n) rtpp_module._realloc((p), (n), _MMDEB, \
@@ -96,6 +100,7 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *, va_list);
 #else
 #define mod_malloc(n) rtpp_module._malloc((n))
 #define mod_zmalloc(n) rtpp_module._zmalloc((n))
+#define mod_rzmalloc(n, m) rtpp_module._rzmalloc((n), m)
 #define mod_free(p) rtpp_module._free((p))
 #define mod_realloc(p,n) rtpp_module._realloc((p), (n))
 #define mod_strdup(p) rtpp_module._strdup((p))
@@ -147,6 +152,7 @@ struct rtpp_minfo {
     unsigned int instance_id;
     rtpp_module_malloc_t _malloc;
     rtpp_module_zmalloc_t _zmalloc;
+    rtpp_module_rzmalloc_t _rzmalloc;
     rtpp_module_free_t _free;
     rtpp_module_realloc_t _realloc;
     rtpp_module_strdup_t _strdup;
