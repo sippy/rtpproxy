@@ -64,8 +64,15 @@ struct rtpp_pipe {
     METHOD_ENTRY(rtpp_pipe_upd_cntrs, upd_cntrs);
 };
 
-struct rtpp_pipe *rtpp_pipe_ctor(uint64_t, struct rtpp_weakref_obj *,
-  struct rtpp_weakref_obj *, struct rtpp_log *,
-  struct rtpp_stats *, int);
+struct r_pipe_ctor_args {
+    uint64_t seuid;
+    struct rtpp_weakref_obj *streams_wrt;
+    struct rtpp_weakref_obj *servers_wrt;
+    struct rtpp_log *log;
+    struct rtpp_stats *rtpp_stats;
+    int pipe_type;
+};
+
+struct rtpp_pipe *rtpp_pipe_ctor(const struct r_pipe_ctor_args *);
 
 #endif

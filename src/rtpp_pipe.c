@@ -71,12 +71,10 @@ static void rtpp_pipe_upd_cntrs(struct rtpp_pipe *, struct rtpp_acct_pipe *);
 #define DRTN_NZ(bmt, emt) ((emt).mono == 0.0 || (bmt).mono == 0.0 ? 0.0 : ((emt).mono - (bmt).mono))
 
 struct rtpp_pipe *
-rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
-  struct rtpp_weakref_obj *servers_wrt, struct rtpp_log *log,
-  struct rtpp_stats *rtpp_stats, int pipe_type)
+rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
 {
     struct rtpp_pipe_priv *pvt;
-    struct rtps_ctor_args rsca;
+    struct r_stream_ctor_args rsca;
     int i;
 
     pvt = rtpp_rzmalloc(sizeof(struct rtpp_pipe_priv), PVT_RCOFFS(pvt));
@@ -84,11 +82,11 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
         goto e0;
     }
 
-    pvt->streams_wrt = streams_wrt;
+    pvt->streams_wrt = ap->streams_wrt;
 
     rtpp_gen_uid(&pvt->pub.ppuid);
-    rsca = (struct rtps_ctor_args){.log = log, .servers_wrt = servers_wrt, .rtpp_stats = rtpp_stats,
-      .pipe_type = pipe_type, .seuid = seuid};
+    rsca = (struct r_stream_ctor_args){.log = ap->log, .servers_wrt = ap->servers_wrt,
+      .rtpp_stats = ap->rtpp_stats, .pipe_type = ap->pipe_type, .seuid = ap->seuid};
     for (i = 0; i < 2; i++) {
         rsca.side = i;
         pvt->pub.stream[i] = rtpp_stream_ctor(&rsca);
@@ -110,14 +108,14 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
         RTPP_OBJ_INCREF(pvt->pub.pcount);
         pvt->pub.stream[i]->pcount = pvt->pub.pcount;
     }
-    pvt->pipe_type = pipe_type;
-    pvt->pub.rtpp_stats = rtpp_stats;
-    pvt->pub.log = log;
+    pvt->pipe_type = ap->pipe_type;
+    pvt->pub.rtpp_stats = ap->rtpp_stats;
+    pvt->pub.log = ap->log;
     pvt->pub.get_ttl = &rtpp_pipe_get_ttl;
     pvt->pub.decr_ttl = &rtpp_pipe_decr_ttl;
     pvt->pub.get_stats = &rtpp_pipe_get_stats;
     pvt->pub.upd_cntrs = &rtpp_pipe_upd_cntrs;
-    RTPP_OBJ_INCREF(log);
+    RTPP_OBJ_INCREF(ap->log);
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pipe_dtor, pvt);
     return (&pvt->pub);
 

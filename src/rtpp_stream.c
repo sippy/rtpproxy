@@ -168,7 +168,7 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
 };
 
 struct rtpp_stream *
-rtpp_stream_ctor(const struct rtps_ctor_args *ap)
+rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
 {
     struct rtpp_stream_priv *pvt;
 

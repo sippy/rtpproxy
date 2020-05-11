@@ -142,7 +142,7 @@ struct rtpp_stream {
     _Atomic(void *) pmod_data[0];
 };
 
-struct rtps_ctor_args {
+struct r_stream_ctor_args {
     struct rtpp_log *log;
     struct rtpp_weakref_obj *servers_wrt;
     struct rtpp_stats *rtpp_stats;
@@ -151,6 +151,6 @@ struct rtps_ctor_args {
     uint64_t seuid;
 };
 
-struct rtpp_stream *rtpp_stream_ctor(const struct rtps_ctor_args *);
+struct rtpp_stream *rtpp_stream_ctor(const struct r_stream_ctor_args *);
 
 #endif
