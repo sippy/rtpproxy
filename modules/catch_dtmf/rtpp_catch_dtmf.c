@@ -25,20 +25,34 @@
  *
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "config_pp.h"
 
 #include "rtpp_types.h"
 #include "rtpp_module.h"
+#include "rtpp_module_wthr.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_cfg.h"
+#include "rtpp_wi.h"
+#include "rtpp_wi_sgnl.h"
+#include "rtpp_wi_data.h"
+#include "rtpp_queue.h"
 #include "rtpp_stream.h"
+#include "rtp.h"
+#include "rtpp_time.h"
+#include "rtp_packet.h"
+#include "rtpp_notify.h"
+#include "rtpp_timeout_data.h"
 
 struct rtpp_module_priv {
     struct rtpp_notify *notifier;
@@ -68,6 +82,7 @@ struct catch_dtmf_stream_cfg {
 
 static struct rtpp_module_priv *rtpp_catch_dtmf_ctor(const struct rtpp_cfg *);
 static void rtpp_catch_dtmf_dtor(struct rtpp_module_priv *);
+static void rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *);
 
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
@@ -81,6 +96,7 @@ struct rtpp_minfo rtpp_module = {
     .descr.module_id = 3,
     .proc.ctor = rtpp_catch_dtmf_ctor,
     .proc.dtor = rtpp_catch_dtmf_dtor,
+    .wapi = &(const struct rtpp_wthr_handlers){.main_thread = rtpp_catch_dtmf_worker},
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM
 #endif
@@ -135,6 +151,91 @@ struct rtp_dtmf_event {
 
 #define RTPP_MAX_NOTIFY_BUF 512
 static const char *notyfy_type = "DTMF";
+
+static void
+rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *wp)
+{
+    struct rtpp_module_priv *pvt;
+    struct rtpp_wi *wi;
+    struct wipkt *wip;
+    char buf[RTPP_MAX_NOTIFY_BUF];
+    const char dtmf_events[] = "0123456789*#ABCD ";
+    struct catch_dtmf_einfo *eip, ei;
+    int i;
+
+    pvt = wp->mpvt;
+    for (;;) {
+        wi = rtpp_queue_get_item(wp->mod_q, 0);
+        if (wi == wp->sigterm) {
+            break;
+        }
+        wip = rtpp_wi_data_get_ptr(wi, sizeof(*wip), sizeof(*wip));
+
+        struct rtp_dtmf_event *dtmf =
+            (struct rtp_dtmf_event *)(wip->pkt->data.buf + sizeof(rtp_hdr_t));
+        if (dtmf->event > sizeof(dtmf_events) - 1) {
+            RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "Unhandled DTMF event %u", dtmf->event);
+            goto skip;
+        }
+        ei.digit = dtmf_events[dtmf->event];
+        ei.ts = ntohl(wip->pkt->data.header.ts);
+        ei.duration = ntohs(dtmf->duration);
+        eip = NULL;
+        for (i = 1; i <= EINFO_HST_DPTH; i++) {
+            int j = wip->edata->hst_next - i;
+            if (j < 0)
+                j = EINFO_HST_DPTH + j;
+            if (wip->edata->hst[j].ts == ei.ts && wip->edata->hst[j].digit != -1) {
+                eip = &wip->edata->hst[j];
+                break;
+            }
+        }
+
+        if (eip == NULL) {
+            /* this is a new event */
+            eip = &wip->edata->hst[wip->edata->hst_next];
+            eip->ts = ei.ts;
+            eip->pending = 1;
+            eip->digit = ei.digit;
+            eip->duration = ei.duration;
+            wip->edata->hst_next += 1;
+            if (wip->edata->hst_next == EINFO_HST_DPTH)
+                wip->edata->hst_next = 0;
+            goto skip;
+        }
+        if (!eip->pending) {
+            if (!dtmf->end && eip->duration <= ei.duration)
+                RTPP_LOG(rtpp_module.log, RTPP_LOG_WARN, "Received DTMF for %c without "
+                        "start %d", ei.digit, eip->pending);
+            goto skip;
+        }
+
+        if (ei.digit != eip->digit) {
+            RTPP_LOG(rtpp_module.log, RTPP_LOG_WARN, "Received DTMF for %c "
+                    "while processing %c", ei.digit, eip->digit);
+            goto skip;
+        }
+        if (eip->duration < ei.duration)
+            eip->duration = ei.duration;
+
+        if (!dtmf->end)
+            goto skip;
+        /* we received the end of the DTMF */
+        /* all good - send the notification */
+        eip->pending = 0;
+        snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%s %c %u %u %d",
+          wip->rtdp->notify_tag, ei.digit, dtmf->volume, eip->duration,
+          (wip->edata->side == RTPP_SSIDE_CALLER) ? 0 : 1);
+        CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target, buf,
+          notyfy_type);
+
+skip:
+        CALL_SMETHOD(wip->edata->rcnt, decref);
+        CALL_SMETHOD(wip->rtdp->rcnt, decref);
+        CALL_SMETHOD(wip->pkt->rcnt, decref);
+        CALL_METHOD(wi, dtor);
+    }
+}
 
 static struct rtpp_module_priv *
 rtpp_catch_dtmf_ctor(const struct rtpp_cfg *cfsp)
