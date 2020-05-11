@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Sippy Software, Inc., http://www.sippysoft.com
- * All rights reserved.
+ * Copyright (c) 2006-2020 Sippy Software, Inc., http://www.sippysoft.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -63,6 +62,7 @@
 #define MODULE_IF_CODE
 #include "rtpp_module.h"
 #include "rtpp_module_acct.h"
+#include "rtpp_module_wthr.h"
 #include "rtpp_module_if.h"
 #include "rtpp_modman.h"
 #include "rtpp_module_if_fin.h"
@@ -89,7 +89,7 @@ struct rtpp_module_if_priv {
 };
 
 static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
-static void rtpp_mif_run(void *);
+static void rtpp_mif_run_acct(void *);
 static int rtpp_mif_load(struct rtpp_module_if *, const struct rtpp_cfg *, struct rtpp_log *);
 static int rtpp_mif_start(struct rtpp_module_if *, const struct rtpp_cfg *);
 static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
@@ -322,7 +322,7 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
 }
 
 static void
-rtpp_mif_run(void *argp)
+rtpp_mif_run_acct(void *argp)
 {
     struct rtpp_module_if_priv *pvt;
     struct rtpp_wi *wi;
@@ -397,12 +397,16 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
     rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q);
 }
 
+#define PTH_CB(x) ((void *(*)(void *))(x))
+
 static int
 rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_if_priv *pvt;
 
     PUB2PVT(self, pvt);
+    if (pvt->mip->aapi == NULL && pvt->mip->wapi == NULL)
+        return (0);
     if (pvt->mip->aapi != NULL) {
         if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL) {
             struct packet_observer_if acct_rtcp_poi;
@@ -414,11 +418,17 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
                 return (-1);
         }
         if (pthread_create(&pvt->mip->wthr.thread_id, NULL,
-          (void *(*)(void *))&rtpp_mif_run, pvt) != 0) {
+          PTH_CB(&rtpp_mif_run_acct), pvt) != 0) {
             return (-1);
         }
-        pvt->started = 1;
+    } else {
+        pvt->mip->wthr.mpvt = pvt->mpvt;
+        if (pthread_create(&pvt->mip->wthr.thread_id, NULL,
+          PTH_CB(pvt->mip->wapi->main_thread), &pvt->mip->wthr) != 0) {
+            return (-1);
+        }
     }
+    pvt->started = 1;
     return (0);
 }
 

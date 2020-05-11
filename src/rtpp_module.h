@@ -37,6 +37,7 @@ struct rtpp_module_priv;
 struct rtpp_module_conf;
 struct rtpp_acct_handlers;
 struct rtpp_cplane_handlers;
+struct rtpp_wthr_handlers;
 
 #if !defined(MODULE_IF_CODE)
 #include <sys/types.h>
@@ -140,6 +141,7 @@ struct rtpp_wthrdata {
     struct rtpp_wi *sigterm;
     pthread_t thread_id;
     struct rtpp_queue *mod_q;
+    struct rtpp_module_priv *mpvt;
 };
 
 struct rtpp_minfo {
@@ -148,6 +150,7 @@ struct rtpp_minfo {
     struct rtpp_mhandlers proc;
     const struct rtpp_acct_handlers *aapi;
     const struct rtpp_cplane_handlers *capi;
+    const struct rtpp_wthr_handlers *wapi;
     /* Lower half, filled by the core */
     unsigned int instance_id;
     rtpp_module_malloc_t _malloc;
