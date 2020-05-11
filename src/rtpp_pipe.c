@@ -76,6 +76,7 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
   struct rtpp_stats *rtpp_stats, int pipe_type)
 {
     struct rtpp_pipe_priv *pvt;
+    struct rtps_ctor_args rsca;
     int i;
 
     pvt = rtpp_rzmalloc(sizeof(struct rtpp_pipe_priv), PVT_RCOFFS(pvt));
@@ -86,9 +87,11 @@ rtpp_pipe_ctor(uint64_t seuid, struct rtpp_weakref_obj *streams_wrt,
     pvt->streams_wrt = streams_wrt;
 
     rtpp_gen_uid(&pvt->pub.ppuid);
+    rsca = (struct rtps_ctor_args){.log = log, .servers_wrt = servers_wrt, .rtpp_stats = rtpp_stats,
+      .pipe_type = pipe_type, .seuid = seuid};
     for (i = 0; i < 2; i++) {
-        pvt->pub.stream[i] = rtpp_stream_ctor(log, servers_wrt,
-          rtpp_stats, i, pipe_type, seuid);
+        rsca.side = i;
+        pvt->pub.stream[i] = rtpp_stream_ctor(&rsca);
         if (pvt->pub.stream[i] == NULL) {
             goto e1;
         }

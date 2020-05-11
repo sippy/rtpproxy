@@ -138,10 +138,19 @@ struct rtpp_stream {
     struct rtpp_pcnt_strm *pcnt_strm;
     /* Public methods */
     const struct rtpp_stream_smethods *smethods;
+    /* Placeholder for per-module structures */
+    _Atomic(void *) pmod_data[0];
 };
 
-struct rtpp_stream *rtpp_stream_ctor(struct rtpp_log *,
-  struct rtpp_weakref_obj *, struct rtpp_stats *, enum rtpp_stream_side,
-  int, uint64_t);
+struct rtps_ctor_args {
+    struct rtpp_log *log;
+    struct rtpp_weakref_obj *servers_wrt;
+    struct rtpp_stats *rtpp_stats;
+    enum rtpp_stream_side side;
+    int pipe_type;
+    uint64_t seuid;
+};
+
+struct rtpp_stream *rtpp_stream_ctor(const struct rtps_ctor_args *);
 
 #endif

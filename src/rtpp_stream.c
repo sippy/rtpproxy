@@ -168,9 +168,7 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
 };
 
 struct rtpp_stream *
-rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
-  struct rtpp_stats *rtpp_stats, enum rtpp_stream_side side,
-  int pipe_type, uint64_t seuid)
+rtpp_stream_ctor(const struct rtps_ctor_args *ap)
 {
     struct rtpp_stream_priv *pvt;
 
@@ -181,8 +179,8 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
-    if (pipe_type == PIPE_RTP) {
-        pvt->pub.analyzer = rtpp_analyzer_ctor(log);
+    if (ap->pipe_type == PIPE_RTP) {
+        pvt->pub.analyzer = rtpp_analyzer_ctor(ap->log);
         if (pvt->pub.analyzer == NULL) {
             goto e3;
         }
@@ -199,16 +197,16 @@ rtpp_stream_ctor(struct rtpp_log *log, struct rtpp_weakref_obj *servers_wrt,
     if (pvt->rem_addr == NULL) {
         goto e6;
     }
-    pvt->servers_wrt = servers_wrt;
-    pvt->rtpp_stats = rtpp_stats;
-    pvt->pub.log = log;
-    RTPP_OBJ_INCREF(log);
-    pvt->pub.side = side;
-    pvt->pub.pipe_type = pipe_type;
+    pvt->servers_wrt = ap->servers_wrt;
+    pvt->rtpp_stats = ap->rtpp_stats;
+    pvt->pub.log = ap->log;
+    RTPP_OBJ_INCREF(ap->log);
+    pvt->pub.side = ap->side;
+    pvt->pub.pipe_type = ap->pipe_type;
     pvt->pub.smethods = &rtpp_stream_smethods;
 
     rtpp_gen_uid(&pvt->pub.stuid);
-    pvt->pub.seuid = seuid;
+    pvt->pub.seuid = ap->seuid;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_dtor,
       pvt);
     return (&pvt->pub);
@@ -218,7 +216,7 @@ e6:
 e5:
     RTPP_OBJ_DECREF(pvt->pub.pcnt_strm);
 e4:
-    if (pipe_type == PIPE_RTP) {
+    if (ap->pipe_type == PIPE_RTP) {
          RTPP_OBJ_DECREF(pvt->pub.analyzer);
     }
 e3:
