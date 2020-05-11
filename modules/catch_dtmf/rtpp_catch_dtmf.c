@@ -246,6 +246,7 @@ rtpp_catch_dtmf_ctor(const struct rtpp_cfg *cfsp)
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->notifier = cfsp->rtpp_notify_cf;
     return (pvt);
 
 #if 0
