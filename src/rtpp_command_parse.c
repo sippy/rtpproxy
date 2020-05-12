@@ -38,6 +38,7 @@
 #include "rtpp_command.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_ecodes.h"
+#include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_query.h"
 #include "rtpp_types.h"

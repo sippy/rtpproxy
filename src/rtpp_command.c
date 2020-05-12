@@ -55,6 +55,7 @@
 #include "rtpp_command_parse.h"
 #include "commands/rpcpv1_play.h"
 #include "rtpp_command_ecodes.h"
+#include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_record.h"
 #include "commands/rpcpv1_norecord.h"

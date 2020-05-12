@@ -47,6 +47,7 @@
 #include "rtpp_time.h"
 #include "rtpp_command.h"
 #include "rtpp_command_async.h"
+#include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_rcache.h"
 #include "rtpp_command_stream.h"
