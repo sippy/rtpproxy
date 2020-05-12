@@ -34,6 +34,7 @@
 #include "rtpp_module.h"
 #include "rtpp_module_if.h"
 #include "rtpp_modman_fin.h"
+#include "commands/rpcpv1_ul.h"
 
 struct rtpp_modman_priv {
     struct rtpp_modman pub;
@@ -46,6 +47,8 @@ static int rtpp_modman_startall(struct rtpp_modman *, const struct rtpp_cfg *,
   const char **);
 static unsigned int rtpp_modman_get_next_id(struct rtpp_modman *, unsigned int);
 static void rtpp_modman_do_acct(struct rtpp_modman *, struct rtpp_acct *);
+static int rtpp_modman_get_ul_subc_h(struct rtpp_modman *, unsigned int,
+  unsigned int, struct after_success_h *);
 
 struct rtpp_modman *
 rtpp_modman_ctor(void)
@@ -60,6 +63,7 @@ rtpp_modman_ctor(void)
     pvt->pub.startall = rtpp_modman_startall;
     pvt->pub.get_next_id = rtpp_modman_get_next_id;
     pvt->pub.do_acct = rtpp_modman_do_acct;
+    pvt->pub.get_ul_subc_h = rtpp_modman_get_ul_subc_h;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_modman_dtor,
       pvt);
     return ((&pvt->pub));
@@ -90,7 +94,7 @@ rtpp_modman_insert(struct rtpp_modman *self, struct rtpp_module_if *mif)
     mif->module_idx = self->count.total;
     rtpp_list_append(&pvt->all, mif);
     self->count.total++;
-    if (mif->flags.has_do_acct)
+    if (mif->has.do_acct)
         self->count.sess_acct++;
 }
 
@@ -135,8 +139,27 @@ rtpp_modman_do_acct(struct rtpp_modman *self, struct rtpp_acct *ap)
     PUB2PVT(self, pvt);
     for (struct rtpp_module_if *tmp = RTPP_LIST_HEAD(&pvt->all);
       tmp != NULL; tmp = RTPP_ITER_NEXT(tmp)) {
-        if (tmp->flags.has_do_acct == 0)
+        if (tmp->has.do_acct == 0)
             continue;
         CALL_METHOD(tmp, do_acct, ap);
     }
+}
+
+static int
+rtpp_modman_get_ul_subc_h(struct rtpp_modman *self, unsigned int mod_id,
+  unsigned int inst_id, struct after_success_h *ashp)
+{
+    struct rtpp_modman_priv *pvt;
+    PUB2PVT(self, pvt);
+    for (struct rtpp_module_if *tmp = RTPP_LIST_HEAD(&pvt->all);
+      tmp != NULL; tmp = RTPP_ITER_NEXT(tmp)) {
+        if (tmp->descr->module_id != mod_id || tmp->instance_id != inst_id)
+            continue;
+        if (tmp->has.ul_subc_h == 0)
+            break;
+        ashp->handler = (after_success_t)tmp->ul_subc_handle;
+        ashp->arg = tmp;
+        return (0);
+    }
+    return (-1);
 }
