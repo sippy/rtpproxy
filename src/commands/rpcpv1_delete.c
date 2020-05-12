@@ -40,6 +40,7 @@
 #include "rtpp_command.h"
 #include "commands/rpcpv1_delete.h"
 #include "rtpp_command_ecodes.h"
+#include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"

@@ -39,6 +39,7 @@
 #include "rtpp_command.h"
 #include "rtpp_command_ecodes.h"
 #include "commands/rpcpv1_play.h"
+#include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_stream.h"

@@ -37,6 +37,7 @@
 #include "rtpp_cfg.h"
 #include "rtpp_log.h"
 #include "rtpp_command.h"
+#include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
 #include "rtpp_defines.h"
 #include "rtpp_types.h"

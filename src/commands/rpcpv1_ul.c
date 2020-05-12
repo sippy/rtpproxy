@@ -52,6 +52,8 @@
 #include "rtpp_command_async.h"
 #include "commands/rpcpv1_copy.h"
 #include "rtpp_command_ecodes.h"
+#include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_ul.h"
 #include "rtpp_hash_table.h"
