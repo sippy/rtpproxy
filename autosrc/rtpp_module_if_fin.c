@@ -31,6 +31,10 @@ static void rtpp_module_if_start_fin(void *pub) {
     fprintf(stderr, "Method rtpp_module_if@%p::start (rtpp_module_if_start) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_module_if_ul_subc_handle_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_module_if@%p::ul_subc_handle (rtpp_module_if_ul_subc_handle) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 void rtpp_module_if_fin(struct rtpp_module_if *pub) {
     RTPP_DBG_ASSERT(pub->config != (rtpp_module_if_config_t)NULL);
     RTPP_DBG_ASSERT(pub->config != (rtpp_module_if_config_t)&rtpp_module_if_config_fin);
@@ -50,6 +54,9 @@ void rtpp_module_if_fin(struct rtpp_module_if *pub) {
     RTPP_DBG_ASSERT(pub->start != (rtpp_module_if_start_t)NULL);
     RTPP_DBG_ASSERT(pub->start != (rtpp_module_if_start_t)&rtpp_module_if_start_fin);
     pub->start = (rtpp_module_if_start_t)&rtpp_module_if_start_fin;
+    RTPP_DBG_ASSERT(pub->ul_subc_handle != (rtpp_module_if_ul_subc_handle_t)NULL);
+    RTPP_DBG_ASSERT(pub->ul_subc_handle != (rtpp_module_if_ul_subc_handle_t)&rtpp_module_if_ul_subc_handle_fin);
+    pub->ul_subc_handle = (rtpp_module_if_ul_subc_handle_t)&rtpp_module_if_ul_subc_handle_fin;
 }
 #if defined(RTPP_FINTEST)
 #include <assert.h>
@@ -78,6 +85,7 @@ rtpp_module_if_fintest()
     tp->pub.get_mconf = (rtpp_module_if_get_mconf_t)((void *)0x1);
     tp->pub.load = (rtpp_module_if_load_t)((void *)0x1);
     tp->pub.start = (rtpp_module_if_start_t)((void *)0x1);
+    tp->pub.ul_subc_handle = (rtpp_module_if_ul_subc_handle_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_module_if_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
@@ -87,7 +95,8 @@ rtpp_module_if_fintest()
     CALL_TFIN(&tp->pub, get_mconf);
     CALL_TFIN(&tp->pub, load);
     CALL_TFIN(&tp->pub, start);
-    assert((_naborts - naborts_s) == 6);
+    CALL_TFIN(&tp->pub, ul_subc_handle);
+    assert((_naborts - naborts_s) == 7);
 }
 const static void *_rtpp_module_if_ftp = (void *)&rtpp_module_if_fintest;
 DATA_SET(rtpp_fintests, _rtpp_module_if_ftp);

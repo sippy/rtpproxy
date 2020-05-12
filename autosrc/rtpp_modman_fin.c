@@ -15,6 +15,10 @@ static void rtpp_modman_get_next_id_fin(void *pub) {
     fprintf(stderr, "Method rtpp_modman@%p::get_next_id (rtpp_modman_get_next_id) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_modman_get_ul_subc_h_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_modman@%p::get_ul_subc_h (rtpp_modman_get_ul_subc_h) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_modman_insert_fin(void *pub) {
     fprintf(stderr, "Method rtpp_modman@%p::insert (rtpp_modman_insert) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -30,6 +34,9 @@ void rtpp_modman_fin(struct rtpp_modman *pub) {
     RTPP_DBG_ASSERT(pub->get_next_id != (rtpp_modman_get_next_id_t)NULL);
     RTPP_DBG_ASSERT(pub->get_next_id != (rtpp_modman_get_next_id_t)&rtpp_modman_get_next_id_fin);
     pub->get_next_id = (rtpp_modman_get_next_id_t)&rtpp_modman_get_next_id_fin;
+    RTPP_DBG_ASSERT(pub->get_ul_subc_h != (rtpp_modman_get_ul_subc_h_t)NULL);
+    RTPP_DBG_ASSERT(pub->get_ul_subc_h != (rtpp_modman_get_ul_subc_h_t)&rtpp_modman_get_ul_subc_h_fin);
+    pub->get_ul_subc_h = (rtpp_modman_get_ul_subc_h_t)&rtpp_modman_get_ul_subc_h_fin;
     RTPP_DBG_ASSERT(pub->insert != (rtpp_modman_insert_t)NULL);
     RTPP_DBG_ASSERT(pub->insert != (rtpp_modman_insert_t)&rtpp_modman_insert_fin);
     pub->insert = (rtpp_modman_insert_t)&rtpp_modman_insert_fin;
@@ -60,6 +67,7 @@ rtpp_modman_fintest()
     assert(tp->pub.rcnt != NULL);
     tp->pub.do_acct = (rtpp_modman_do_acct_t)((void *)0x1);
     tp->pub.get_next_id = (rtpp_modman_get_next_id_t)((void *)0x1);
+    tp->pub.get_ul_subc_h = (rtpp_modman_get_ul_subc_h_t)((void *)0x1);
     tp->pub.insert = (rtpp_modman_insert_t)((void *)0x1);
     tp->pub.startall = (rtpp_modman_startall_t)((void *)0x1);
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_modman_fin,
@@ -67,9 +75,10 @@ rtpp_modman_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, do_acct);
     CALL_TFIN(&tp->pub, get_next_id);
+    CALL_TFIN(&tp->pub, get_ul_subc_h);
     CALL_TFIN(&tp->pub, insert);
     CALL_TFIN(&tp->pub, startall);
-    assert((_naborts - naborts_s) == 4);
+    assert((_naborts - naborts_s) == 5);
 }
 const static void *_rtpp_modman_ftp = (void *)&rtpp_modman_fintest;
 DATA_SET(rtpp_fintests, _rtpp_modman_ftp);
