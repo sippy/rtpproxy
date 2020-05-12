@@ -311,17 +311,27 @@ url_unquote(unsigned char *buf, int len)
 }
 
 enum atoi_rval
-atoi_safe(const char *s, int *res)
+atoi_safe_sep(const char *s, int *res, char sep, const char * *next)
 {
     int rval;
     char *cp;
 
     rval = strtol(s, &cp, 10);
-    if (cp == s || *cp != '\0') {
+    if (cp == s || *cp != sep) {
         return (ATOI_NOTINT);
     }
     *res = rval;
+    if (next != NULL) {
+        *next = cp + 1;
+    }
     return (ATOI_OK);
+}
+
+enum atoi_rval
+atoi_safe(const char *s, int *res)
+{
+
+    return (atoi_safe_sep(s, res, '\0', NULL));
 }
 
 enum atoi_rval
