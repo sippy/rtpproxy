@@ -78,13 +78,6 @@ struct ul_reply {
     int subc_res;
 };
 
-DEFINE_RAW_METHOD(after_success, int, void *, const struct rtpp_subc_ctx *);
-
-struct success_h {
-    after_success_t handler;
-    void *arg;
-};
-
 struct ul_opts {
     int asymmetric;
     int weak;
@@ -106,7 +99,7 @@ struct ul_opts {
 
     int onhold;
 
-    struct success_h after_success;
+    struct after_success_h after_success;
 };
 
 void

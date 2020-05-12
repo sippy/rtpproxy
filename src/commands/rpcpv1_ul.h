@@ -33,6 +33,13 @@ struct ul_opts;
 struct ul_reply;
 struct rtpp_session;
 
+DEFINE_RAW_METHOD(after_success, int, void *, const struct rtpp_subc_ctx *);
+
+struct after_success_h {
+    after_success_t handler;
+    void *arg;
+};
+
 struct ul_opts *rtpp_command_ul_opts_parse(const struct rtpp_cfg *,
   struct rtpp_command *cmd);
 void rtpp_command_ul_opts_free(struct ul_opts *ulop);
