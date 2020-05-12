@@ -50,8 +50,6 @@ struct rtpp_command_stats {
     struct rtpp_command_stat nplrs_destroyed;
 };
 
-#define RTPC_MAX_ARGC   20
-
 enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
   QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS, NORECORD};
 
@@ -68,17 +66,6 @@ struct common_cmd_args {
         struct delete_opts *delete;
         void *ptr;
     } opts;
-};
-
-struct rtpp_subc_ctx {
-    struct rtpp_session *sessp;
-    struct rtpp_stream *strmp;
-    const struct rtpp_command_args *subc_args;
-};
-
-struct rtpp_command_args {
-    int c;
-    char *v[RTPC_MAX_ARGC];
 };
 
 struct rtpp_command {
