@@ -50,7 +50,7 @@
 #include "rtpp_pipe.h"
 #include "rtpp_stream.h"
 #include "rtpp_util.h"
-#include "commands/query.h"
+#include "commands/rpcpv1_query.h"
 
 #define CHECK_OVERFLOW() \
     if (len > sizeof(cmd->buf_t) - 2) { \

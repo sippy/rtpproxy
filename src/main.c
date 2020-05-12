@@ -81,7 +81,7 @@
 #include "rtpp_controlfd.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_hash_table.h"
-#include "commands/ver.h"
+#include "commands/rpcpv1_ver.h"
 #include "rtpp_command_async.h"
 #include "rtpp_command_ecodes.h"
 #include "rtpp_port_table.h"

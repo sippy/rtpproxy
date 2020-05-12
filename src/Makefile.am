@@ -32,14 +32,14 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_proc_async.h rtpp_proc.h rtpp_proc.c rtpp_version.h \
   rtpp_math.h rtpp_wi.h rtpp_wi_private.h rtpp_queue.c rtpp_queue.h \
   rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
-  rtpp_command_parse.c rtpp_command_parse.h $(CMDSRCDIR)/copy.c \
-  $(CMDSRCDIR)/copy.h $(CMDSRCDIR)/ul.c $(CMDSRCDIR)/ul.h \
+  rtpp_command_parse.c rtpp_command_parse.h $(CMDSRCDIR)/rpcpv1_copy.c \
+  $(CMDSRCDIR)/rpcpv1_copy.h $(CMDSRCDIR)/rpcpv1_ul.c $(CMDSRCDIR)/rpcpv1_ul.h \
   rtpp_hash_table.c rtpp_hash_table.h rtpp_types.h config_pp.h rtpp_stats.c \
-  rtpp_cfg.h $(CMDSRCDIR)/stats.h $(CMDSRCDIR)/stats.c \
+  rtpp_cfg.h $(CMDSRCDIR)/rpcpv1_stats.h $(CMDSRCDIR)/rpcpv1_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
   rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c rtpp_timed.c \
   rtpp_analyzer.c rtpp_analyzer.h rtp_analyze.c rtp_analyze.h \
-  $(CMDSRCDIR)/query.c $(CMDSRCDIR)/query.h rtpp_pearson.c rtpp_pearson.h \
+  $(CMDSRCDIR)/rpcpv1_query.c $(CMDSRCDIR)/rpcpv1_query.h rtpp_pearson.c rtpp_pearson.h \
   rtpp_refcnt.c rtpp_command_rcache.c rtpp_command_ecodes.h \
   rtpp_tnotify_set.c rtpp_tnotify_set.h rtpp_tnotify_tgt.h rtp_packet.h \
   rtp_packet.c rtpp_time.c rtpp_time.h rtpp_pcnts_strm.h rtpp_runcreds.h \
@@ -51,17 +51,17 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_pipe.c rtpp_pcount.c rtpp_debug.h rtpp_wi_sgnl.c rtpp_wi_sgnl.h \
   rtpp_mallocs.c rtpp_mallocs.h rtpp_wi_data.c rtpp_wi_data.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c \
-  $(CMDSRCDIR)/delete.c $(CMDSRCDIR)/delete.h $(CMDSRCDIR)/record.c \
-  $(CMDSRCDIR)/record.h rtpp_port_table.c rtpp_acct.c \
+  $(CMDSRCDIR)/rpcpv1_delete.c $(CMDSRCDIR)/rpcpv1_delete.h $(CMDSRCDIR)/rpcpv1_record.c \
+  $(CMDSRCDIR)/rpcpv1_record.h rtpp_port_table.c rtpp_acct.c \
   rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddrs.h rtpp_ssrc.h \
-  rtpp_netaddr.c rtpp_acct_pipe.h $(CMDSRCDIR)/play.c \
-  $(CMDSRCDIR)/play.h $(CMDSRCDIR)/ver.h $(CMDSRCDIR)/ver.c \
+  rtpp_netaddr.c rtpp_acct_pipe.h $(CMDSRCDIR)/rpcpv1_play.c \
+  $(CMDSRCDIR)/rpcpv1_play.h $(CMDSRCDIR)/rpcpv1_ver.h $(CMDSRCDIR)/rpcpv1_ver.c \
   rtpp_pearson_perfect.c rtpp_acct_rtcp.h \
   rtpp_acct_rtcp.c rtpp_cfile.c rtpp_cfile.h rtpp_ucl.c rtpp_ucl.h \
   rtpp_network_io.c rtpp_network_io.h rtpp_wi_pkt.c rtpp_wi_pkt.h \
   rtpp_timeout_data.c rtpp_timeout_data.h rtpp_locking.h \
   rtpp_nofile.c rtpp_nofile.h rtpp_record_adhoc.h \
-  $(CMDSRCDIR)/norecord.c $(CMDSRCDIR)/norecord.h \
+  $(CMDSRCDIR)/rpcpv1_norecord.c $(CMDSRCDIR)/rpcpv1_norecord.h \
   $(RTPP_AUTOSRC_SOURCES) $(RTPP_AUTOSRC_SOURCES_S)
 ADV_DIR=$(top_srcdir)/src/advanced
 BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/po_manager.c \
