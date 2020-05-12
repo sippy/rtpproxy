@@ -98,7 +98,8 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     CALL_METHOD(log, setlevel, cfs->log_level);
     pipe_cfg = (struct r_pipe_ctor_args){.seuid = pub->seuid,
       .streams_wrt = cfs->rtp_streams_wrt, .servers_wrt = cfs->servers_wrt,
-      .log = log, .rtpp_stats = cfs->rtpp_stats, .pipe_type = PIPE_RTP};
+      .log = log, .rtpp_stats = cfs->rtpp_stats, .pipe_type = PIPE_RTP,
+      .nmodules  = cfs->modules_cf->count.total};
     pub->rtp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtp == NULL) {
         goto e2;

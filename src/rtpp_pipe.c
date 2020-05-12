@@ -86,7 +86,8 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
 
     rtpp_gen_uid(&pvt->pub.ppuid);
     rsca = (struct r_stream_ctor_args){.log = ap->log, .servers_wrt = ap->servers_wrt,
-      .rtpp_stats = ap->rtpp_stats, .pipe_type = ap->pipe_type, .seuid = ap->seuid};
+      .rtpp_stats = ap->rtpp_stats, .pipe_type = ap->pipe_type, .seuid = ap->seuid,
+      .nmodules = ap->nmodules};
     for (i = 0; i < 2; i++) {
         rsca.side = i;
         pvt->pub.stream[i] = rtpp_stream_ctor(&rsca);

@@ -30,6 +30,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -109,6 +110,8 @@ struct rtpp_stream_priv
     struct rtpp_socket *fd;
     /* Remote source address */
     struct rtpp_netaddr *rem_addr;
+    /* Placeholder for per-module structures */
+    _Atomic(void *) pmod_data[];
 };
 
 static void rtpp_stream_dtor(struct rtpp_stream_priv *);
@@ -171,8 +174,11 @@ struct rtpp_stream *
 rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
 {
     struct rtpp_stream_priv *pvt;
+    size_t alen;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_stream_priv), PVT_RCOFFS(pvt));
+    alen = offsetof(struct rtpp_stream_priv, pmod_data) + 
+      (ap->nmodules * sizeof(pvt->pmod_data[0]));
+    pvt = rtpp_rzmalloc(alen, PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
@@ -207,6 +213,10 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
 
     rtpp_gen_uid(&pvt->pub.stuid);
     pvt->pub.seuid = ap->seuid;
+    for (unsigned int i = 0; i < ap->nmodules; i++) {
+        atomic_init(&(pvt->pmod_data[i]), NULL);
+    }
+    pvt->pub.pmod_data = &(pvt->pmod_data[0]);
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_dtor,
       pvt);
     return (&pvt->pub);
