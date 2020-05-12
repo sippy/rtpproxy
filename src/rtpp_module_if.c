@@ -63,6 +63,7 @@
 #include "rtpp_module.h"
 #include "rtpp_module_acct.h"
 #include "rtpp_module_wthr.h"
+#include "rtpp_module_cplane.h"
 #include "rtpp_module_if.h"
 #include "rtpp_modman.h"
 #include "rtpp_module_if_fin.h"
@@ -71,6 +72,7 @@
 #include "rtpp_wi.h"
 #include "rtpp_wi_apis.h"
 #include "rtpp_wi_sgnl.h"
+#include "rtpp_command_sub.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -96,6 +98,8 @@ static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
 static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp *);
 static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **);
 static int rtpp_mif_config(struct rtpp_module_if *);
+static int rtpp_mif_ul_subc_handle(struct rtpp_module_if *,
+  const struct rtpp_subc_ctx *);
 
 static const char *do_acct_aname = "do_acct";
 static const char *do_acct_rtcp_aname = "do_acct_rtcp";
@@ -119,6 +123,7 @@ rtpp_module_if_ctor(const char *mpath)
     pvt->pub.start = &rtpp_mif_start;
     pvt->pub.get_mconf = &rtpp_mif_get_mconf;
     pvt->pub.config = &rtpp_mif_config;
+    pvt->pub.ul_subc_handle = &rtpp_mif_ul_subc_handle;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
@@ -247,10 +252,12 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
               "consider recompiling the module", pvt->mpath);
             goto e6;
         }
-        pvt->pub.flags.has_do_acct = (pvt->mip->aapi->on_session_end.func != NULL);
+        pvt->pub.has.do_acct = (pvt->mip->aapi->on_session_end.func != NULL);
     }
-    pvt->mip->instance_id = CALL_METHOD(cfsp->modules_cf, get_next_id,
-      pvt->mip->descr.module_id);
+    pvt->pub.has.ul_subc_h = (pvt->mip->capi != NULL &&
+      pvt->mip->capi->ul_subc_handle != NULL);
+    pvt->pub.instance_id = pvt->mip->instance_id = CALL_METHOD(cfsp->modules_cf,
+      get_next_id, pvt->mip->descr.module_id);
     pvt->pub.descr = &(pvt->mip->descr);
 
     return (0);
@@ -461,4 +468,16 @@ rtpp_mif_config(struct rtpp_module_if *self)
         return (0);
     }
     return (pvt->mip->proc.config(pvt->mpvt));
+}
+
+static int
+rtpp_mif_ul_subc_handle(struct rtpp_module_if *self,
+  const struct rtpp_subc_ctx *ctxp)
+{
+    struct rtpp_module_if_priv *pvt;
+    _Atomic(struct rtpp_refcnt *) *pmod_dtp;
+
+    PUB2PVT(self, pvt);
+    pmod_dtp = ctxp->strmp->pmod_data + self->module_idx;
+    return (pvt->mip->capi->ul_subc_handle(pvt->mpvt, ctxp, pmod_dtp));
 }

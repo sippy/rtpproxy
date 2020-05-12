@@ -33,6 +33,7 @@ struct rtpp_log;
 struct rtpp_cfg;
 struct rtpp_module_conf;
 struct rtpp_mdescr;
+struct rtpp_subc_ctx;
 
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, const struct rtpp_cfg *,
   struct rtpp_log *);
@@ -45,21 +46,26 @@ DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct_rtcp, void,
   struct rtpp_acct_rtcp *);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_get_mconf, int,
   struct rtpp_module_conf **);
+DEFINE_METHOD(rtpp_module_if, rtpp_module_if_ul_subc_handle, int,
+  const struct rtpp_subc_ctx *);
 
 struct rtpp_module_if {
     struct rtpp_type_linkable t;
     struct rtpp_refcnt *rcnt;
     const struct rtpp_mdescr *descr;
+    unsigned int instance_id;
     unsigned int module_idx;
     struct {
-        int has_do_acct:1;
-    } flags;
+        int do_acct:1;
+        int ul_subc_h:1;
+    } has;
     METHOD_ENTRY(rtpp_module_if_load, load);
     METHOD_ENTRY(rtpp_module_if_config, config);
     METHOD_ENTRY(rtpp_module_if_start, start);
     METHOD_ENTRY(rtpp_module_if_do_acct, do_acct);
     METHOD_ENTRY(rtpp_module_if_do_acct_rtcp, do_acct_rtcp);
     METHOD_ENTRY(rtpp_module_if_get_mconf, get_mconf);
+    METHOD_ENTRY(rtpp_module_if_ul_subc_handle, ul_subc_handle);
 };
 
 struct rtpp_module_if *rtpp_module_if_ctor(const char *);
