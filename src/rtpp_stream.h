@@ -138,7 +138,7 @@ struct rtpp_stream {
     /* Public methods */
     const struct rtpp_stream_smethods *smethods;
     /* Placeholder for per-module structures */
-    _Atomic(void *) *pmod_data;
+    _Atomic(struct rtpp_refcnt *) *pmod_data;
 };
 
 struct r_stream_ctor_args {
