@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
  * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -55,7 +54,6 @@
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
-#include "commands/rpcpv1_ul.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_pipe.h"
 #include "rtpp_stream.h"
@@ -70,6 +68,8 @@
 #include "rtpp_util.h"
 #include "rtpp_ttl.h"
 #include "rtpp_nofile.h"
+#include "commands/rpcpv1_ul.h"
+#include "commands/rpcpv1_ul_subc.h"
 
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
@@ -383,6 +383,13 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
         } else {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "getaddrinfo(pf=%d, addr=%s, port=%s): %s",
               ulop->pf, ulop->addr, ulop->port, gai_strerror(n));
+        }
+    }
+    if (cmd->subc_args.c > 0) {
+        if (rtpp_subcommand_ul_opts_parse(cfsp, &cmd->subc_args,
+          &ulop->after_success) != 0) {
+            reply_error(cmd, ECODE_PARSE_SUBC);
+            goto err_undo_1;
         }
     }
     return (ulop);
