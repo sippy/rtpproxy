@@ -31,7 +31,9 @@
 
 struct ul_opts;
 struct ul_reply;
+struct rtpp_command;
 struct rtpp_session;
+struct rtpp_subc_ctx;
 
 DEFINE_RAW_METHOD(after_success, int, void *, const struct rtpp_subc_ctx *);
 
