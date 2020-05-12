@@ -33,12 +33,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "config_pp.h"
 
 #include "rtpp_types.h"
 #include "rtpp_module.h"
 #include "rtpp_module_wthr.h"
+#include "rtpp_module_cplane.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_refcnt.h"
@@ -53,6 +55,11 @@
 #include "rtp_packet.h"
 #include "rtpp_notify.h"
 #include "rtpp_timeout_data.h"
+#include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
+#include "rtpp_util.h"
+#include "rtpp_session.h"
+#include "rtpp_stream.h"
 
 struct rtpp_module_priv {
     struct rtpp_notify *notifier;
@@ -75,6 +82,7 @@ struct catch_dtmf_edata {
 };
 
 struct catch_dtmf_stream_cfg {
+    struct rtpp_refcnt *rcnt;
     atomic_int pt;
     struct catch_dtmf_edata *edata;
     const struct rtpp_timeout_data *rtdp;
@@ -83,6 +91,8 @@ struct catch_dtmf_stream_cfg {
 static struct rtpp_module_priv *rtpp_catch_dtmf_ctor(const struct rtpp_cfg *);
 static void rtpp_catch_dtmf_dtor(struct rtpp_module_priv *);
 static void rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *);
+static int rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *,
+  const struct rtpp_subc_ctx *, _Atomic(struct rtpp_refcnt *) *);
 
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
@@ -97,6 +107,7 @@ struct rtpp_minfo rtpp_module = {
     .proc.ctor = rtpp_catch_dtmf_ctor,
     .proc.dtor = rtpp_catch_dtmf_dtor,
     .wapi = &(const struct rtpp_wthr_handlers){.main_thread = rtpp_catch_dtmf_worker},
+    .capi = &(const struct rtpp_cplane_handlers){.ul_subc_handle = rtpp_catch_dtmf_handle_command},
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM
 #endif
@@ -235,6 +246,106 @@ skip:
         CALL_SMETHOD(wip->pkt->rcnt, decref);
         CALL_METHOD(wi, dtor);
     }
+}
+
+static void
+catch_dtmf_data_dtor(struct catch_dtmf_stream_cfg *rtps_c)
+{
+
+    CALL_SMETHOD(rtps_c->rtdp->rcnt, decref);
+    CALL_SMETHOD(rtps_c->edata->rcnt, decref);
+    free(rtps_c);
+}
+
+static struct catch_dtmf_stream_cfg *
+catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const char *dtmf_tag,
+  int new_pt)
+{
+    struct catch_dtmf_stream_cfg *rtps_c;
+
+    rtps_c = mod_rzmalloc(sizeof(*rtps_c), offsetof(struct catch_dtmf_stream_cfg, rcnt));
+    if (rtps_c == NULL) {
+        goto e0;
+    }
+    rtps_c->rtdp = rtpp_timeout_data_ctor(ctxp->sessp->timeout_data->notify_target,
+      dtmf_tag);
+    if (rtps_c->rtdp == NULL) {
+        goto e1;
+    }
+    atomic_init(&(rtps_c->pt), new_pt);
+    rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp->side);
+    if (!rtps_c->edata) {
+        RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "cannot create edata (sp=%p)",
+          ctxp->strmp);
+        goto e2;
+    }
+    CALL_SMETHOD(rtps_c->rcnt, attach, (rtpp_refcnt_dtor_t)catch_dtmf_data_dtor, rtps_c);
+    return (rtps_c);
+e2:
+    CALL_SMETHOD(rtps_c->rtdp->rcnt, decref);
+e1:
+    mod_free(rtps_c);
+e0:
+    return (NULL);
+}
+
+static int
+rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
+  const struct rtpp_subc_ctx *ctxp, _Atomic(struct rtpp_refcnt *) *catch_dtmf_datap)
+{
+    struct rtpp_refcnt *rtps_cnt;
+    struct catch_dtmf_stream_cfg *rtps_c;
+    int len;
+    int new_pt = 101;
+    int old_pt = -1;
+    char *dtmf_tag;
+
+    if (ctxp->sessp->timeout_data == NULL) {
+        RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "notification is not enabled (sp=%p)",
+          ctxp->sessp);
+        return (-1);
+    }
+
+    rtps_cnt = atomic_load(catch_dtmf_datap);
+    if (rtps_cnt == NULL) {
+        if (ctxp->subc_args->c < 2) {
+            RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "no tag specified (sp=%p)",
+              ctxp->sessp);
+            return (-1);
+        }
+
+        dtmf_tag = ctxp->subc_args->v[1];
+        len = url_unquote((uint8_t *)dtmf_tag, strlen(dtmf_tag));
+        if (len == -1) {
+            RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "syntax error: invalid URL "
+              "encoding");
+            return (-1);
+        }
+        dtmf_tag[len] = '\0';
+
+        if (ctxp->subc_args->c > 2) {
+            if (atoi_saferange(ctxp->subc_args->v[2], &new_pt, 0, 127)) {
+                RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "syntax error: invalid "
+                  "payload type: %s", ctxp->subc_args->v[2]);
+                return (-1);
+            }
+        }
+
+        rtps_c = catch_dtmf_data_ctor(ctxp, dtmf_tag, new_pt);
+        if (rtps_c == NULL) {
+            return (-1);
+        }
+        if (!atomic_compare_exchange_strong(catch_dtmf_datap,
+          &rtps_cnt, rtps_c->rcnt)) {
+            CALL_SMETHOD(rtps_c->rcnt, decref);
+            rtps_c = CALL_SMETHOD(rtps_cnt, getdata);
+            old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
+        }
+    }
+    if (old_pt != -1)
+        RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "sp=%p, pt=%d->%d",
+          ctxp->strmp, old_pt, new_pt);
+    return (0);
 }
 
 static struct rtpp_module_priv *
