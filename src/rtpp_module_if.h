@@ -50,6 +50,7 @@ struct rtpp_module_if {
     struct rtpp_type_linkable t;
     struct rtpp_refcnt *rcnt;
     const struct rtpp_mdescr *descr;
+    unsigned int module_idx;
     struct {
         int has_do_acct:1;
     } flags;

@@ -87,6 +87,7 @@ rtpp_modman_insert(struct rtpp_modman *self, struct rtpp_module_if *mif)
     struct rtpp_modman_priv *pvt;
 
     PUB2PVT(self, pvt);
+    mif->module_idx = self->count.total;
     rtpp_list_append(&pvt->all, mif);
     self->count.total++;
     if (mif->flags.has_do_acct)
