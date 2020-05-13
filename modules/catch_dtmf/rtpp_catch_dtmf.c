@@ -308,33 +308,32 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
           ctxp->sessp);
         return (-1);
     }
+    if (ctxp->subc_args->c < 2) {
+        RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "no tag specified (sp=%p)",
+          ctxp->sessp);
+        return (-1);
+    }
+
+    dtmf_tag = ctxp->subc_args->v[1];
+    len = url_unquote((uint8_t *)dtmf_tag, strlen(dtmf_tag));
+    if (len == -1) {
+        RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "syntax error: invalid URL "
+          "encoding");
+        return (-1);
+    }
+    dtmf_tag[len] = '\0';
+
+    if (ctxp->subc_args->c > 2) {
+        if (atoi_saferange(ctxp->subc_args->v[2], &new_pt, 0, 127)) {
+            RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "syntax error: invalid "
+              "payload type: %s", ctxp->subc_args->v[2]);
+            return (-1);
+        }
+    }
 
     catch_dtmf_datap = ctxp->strmp->pmod_data + rtpp_module.ids->module_idx;
     rtps_cnt = atomic_load(catch_dtmf_datap);
     if (rtps_cnt == NULL) {
-        if (ctxp->subc_args->c < 2) {
-            RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "no tag specified (sp=%p)",
-              ctxp->sessp);
-            return (-1);
-        }
-
-        dtmf_tag = ctxp->subc_args->v[1];
-        len = url_unquote((uint8_t *)dtmf_tag, strlen(dtmf_tag));
-        if (len == -1) {
-            RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "syntax error: invalid URL "
-              "encoding");
-            return (-1);
-        }
-        dtmf_tag[len] = '\0';
-
-        if (ctxp->subc_args->c > 2) {
-            if (atoi_saferange(ctxp->subc_args->v[2], &new_pt, 0, 127)) {
-                RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "syntax error: invalid "
-                  "payload type: %s", ctxp->subc_args->v[2]);
-                return (-1);
-            }
-        }
-
         rtps_c = catch_dtmf_data_ctor(ctxp, dtmf_tag, new_pt);
         if (rtps_c == NULL) {
             return (-1);
@@ -343,9 +342,11 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
           &rtps_cnt, rtps_c->rcnt)) {
             CALL_SMETHOD(rtps_c->rcnt, decref);
             rtps_c = CALL_SMETHOD(rtps_cnt, getdata);
-            old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
         }
+    } else {
+        rtps_c = CALL_SMETHOD(rtps_cnt, getdata);
     }
+    old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
     if (old_pt != -1)
         RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "sp=%p, pt=%d->%d",
           ctxp->strmp, old_pt, new_pt);
