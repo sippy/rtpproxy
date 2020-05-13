@@ -96,7 +96,7 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_fintest libucl/libucl1 \
 @ENABLE_BASIC_TESTS_TRUE@	libexecinfo/libexecinfo1 \
 @ENABLE_BASIC_TESTS_TRUE@	acct_rtcp_hep/confval1 \
-@ENABLE_BASIC_TESTS_TRUE@	acct_rtcp_hep/basic \
+@ENABLE_BASIC_TESTS_TRUE@	acct_rtcp_hep/basic catch_dtmf/basic \
 @ENABLE_BASIC_TESTS_TRUE@	rtp_analyze/rtp_analyze1 \
 @ENABLE_BASIC_TESTS_TRUE@	extractaudio/badargs \
 @ENABLE_BASIC_TESTS_TRUE@	extractaudio/extractaudio1 \
@@ -118,6 +118,7 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	${libucl_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${libexecinfo_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${acct_rtcp_hep_CLEANFILES} \
+@ENABLE_BASIC_TESTS_TRUE@	${catch_dtmf_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${rtp_analyze_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${extractaudio_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${startstop_CLEANFILES} \
@@ -133,6 +134,7 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	${libucl_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${libexecinfo_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${acct_rtcp_hep_EXTRA_DIST} \
+@ENABLE_BASIC_TESTS_TRUE@	${catch_dtmf_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${rtp_analyze_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${extractaudio_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${startstop_EXTRA_DIST} \
@@ -395,6 +397,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(srcdir)/acct_rtcp_hep/Makefile.ami \
 	$(srcdir)/autosrc/Makefile.ami \
 	$(srcdir)/basic_versions/Makefile.ami \
+	$(srcdir)/catch_dtmf/Makefile.ami \
 	$(srcdir)/command_parser/Makefile.ami \
 	$(srcdir)/extractaudio/Makefile.ami \
 	$(srcdir)/forwarding/Makefile.ami \
@@ -557,8 +560,8 @@ EXTRA_DIST = $(am__append_3) $(am__append_6) Makefile.am ringback.sln
 @ENABLE_BASIC_TESTS_TRUE@libucl_CLEANFILES = libucl_test.output
 @ENABLE_BASIC_TESTS_TRUE@libexecinfo_EXTRA_DIST = libexecinfo
 @ENABLE_BASIC_TESTS_TRUE@libexecinfo_CLEANFILES = 
-@ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
-@ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
+@ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_EXTRA_DIST = catch_dtmf
+@ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_CLEANFILES = catch_dtmf.*
 @ENABLE_BASIC_TESTS_TRUE@rtp_analyze_EXTRA_DIST = rtp_analyze
 @ENABLE_BASIC_TESTS_TRUE@rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog
 @ENABLE_BASIC_TESTS_TRUE@extractaudio_EXTRA_DIST = extractaudio
@@ -608,7 +611,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .log .test .test$(EXEEXT) .trs
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -628,7 +631,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__empty):
+$(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -872,6 +875,13 @@ acct_rtcp_hep/confval1.log: acct_rtcp_hep/confval1
 acct_rtcp_hep/basic.log: acct_rtcp_hep/basic
 	@p='acct_rtcp_hep/basic'; \
 	b='acct_rtcp_hep/basic'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+catch_dtmf/basic.log: catch_dtmf/basic
+	@p='catch_dtmf/basic'; \
+	b='catch_dtmf/basic'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
