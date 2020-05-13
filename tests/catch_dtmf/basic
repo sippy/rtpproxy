@@ -43,5 +43,6 @@ report "wait for rtpp_notify_client.py shutdown"
 wait ${UDPRPL_PID}
 report "wait for udpreplay shutdown"
 ${DIFF} "${CD_DIR}/catch_dtmf.output" catch_dtmf.rout
+report "catch_dtmf.output"
 ${DIFF} "${CD_DIR}/catch_dtmf.tnotify.output" catch_dtmf.tlog
 report "catch_dtmf"
