@@ -60,6 +60,9 @@
 #include "rtpp_util.h"
 #include "rtpp_session.h"
 #include "rtpp_stream.h"
+#include "rtpp_pipe.h"
+#include "advanced/packet_observer.h"
+#include "advanced/po_manager.h"
 
 struct rtpp_module_priv {
     struct rtpp_notify *notifier;
@@ -350,22 +353,72 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     return (0);
 }
 
+static int
+rtp_packet_is_dtmf(struct po_mgr_pkt_ctx *pktx)
+{
+    struct catch_dtmf_stream_cfg *rtps_c;
+    struct rtpp_refcnt *rtps_cnt;
+    _Atomic(struct rtpp_refcnt *) *catch_dtmf_datap;
+
+    if (pktx->strmp->pipe_type != PIPE_RTP)
+        return (0);
+    catch_dtmf_datap = pktx->strmp->pmod_data + rtpp_module.ids->module_idx;
+    rtps_cnt = atomic_load(catch_dtmf_datap);
+    if (rtps_cnt == NULL)
+        return (0);
+    rtps_c = CALL_SMETHOD(rtps_cnt, getdata);
+    if (atomic_load(&(rtps_c->pt)) != pktx->pktp->data.header.pt)
+        return (0);
+    pktx->auxp = rtps_c;
+
+    return (1);
+}
+
+static void
+rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
+{
+    struct rtpp_catch_dtmf_pvt *pvt;
+    struct rtpp_wi *wi;
+    struct wipkt *wip;
+    struct catch_dtmf_stream_cfg *rtps_c;
+
+    pvt = (struct rtpp_catch_dtmf_pvt *)arg;
+    rtps_c = (struct catch_dtmf_stream_cfg *)pktx->auxp;
+    /* we duplicate the tag to make sure it does not vanish */
+    wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
+    if (wi == NULL)
+        return;
+    CALL_SMETHOD(pktx->pktp->rcnt, incref);
+    /* we need to duplicate the tag and state */
+    wip->edata = rtps_c->edata;
+    CALL_SMETHOD(rtps_c->edata->rcnt, incref);
+    wip->pkt = pktx->pktp;
+    CALL_SMETHOD(rtps_c->rtdp->rcnt, incref);
+    wip->rtdp = rtps_c->rtdp;
+    rtpp_queue_put_item(wi, rtpp_module.wthr.mod_q);
+}
+
 static struct rtpp_module_priv *
 rtpp_catch_dtmf_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_priv *pvt;
+    struct packet_observer_if dtmf_poi;
 
     pvt = mod_zmalloc(sizeof(struct rtpp_module_priv));
     if (pvt == NULL) {
         goto e0;
     }
     pvt->notifier = cfsp->rtpp_notify_cf;
+    memset(&dtmf_poi, '\0', sizeof(dtmf_poi));
+    dtmf_poi.taste = rtp_packet_is_dtmf;
+    dtmf_poi.enqueue = rtpp_catch_dtmf_enqueue;
+    dtmf_poi.arg = pvt;
+    if (CALL_METHOD(cfsp->observers, reg, &dtmf_poi) < 0)
+        goto e1;
     return (pvt);
 
-#if 0
 e1:
     mod_free(pvt);
-#endif
 e0:
     return (NULL);
 }
