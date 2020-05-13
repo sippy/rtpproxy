@@ -832,6 +832,13 @@ main(int argc, char **argv)
     _sig_cf = &cfs;
     atexit(rtpp_glog_fin);
 
+    cfs.observers = rtpp_po_mgr_ctor();
+    if (cfs.observers == NULL) {
+        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
+          "can't init packet inspection subsystem");
+        exit(1);
+    }
+
     init_config(&cfs, argc, argv);
 
     cfs.sessions_ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, 0);
@@ -972,13 +979,6 @@ main(int argc, char **argv)
     if (cfs.rtpp_notify_cf == NULL) {
         RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
           "can't init timeout notification subsystem");
-        exit(1);
-    }
-
-    cfs.observers = rtpp_po_mgr_ctor();
-    if (cfs.observers == NULL) {
-        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
-          "can't init packet inspection subsystem");
         exit(1);
     }
 
