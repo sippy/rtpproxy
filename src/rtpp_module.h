@@ -137,10 +137,6 @@ struct rtpp_mhandlers {
     rtpp_module_config_t config;
 };
 
-struct rtpp_mmemreq {
-    size_t per_strm;
-};
-
 struct rtpp_wthrdata {
     struct rtpp_wi *sigterm;
     pthread_t thread_id;
@@ -158,7 +154,6 @@ struct rtpp_minfo {
     /* Upper half, filled by the module */
     struct rtpp_mdescr descr;
     struct rtpp_mhandlers proc;
-    struct rtpp_mmemreq mreq;
     const struct rtpp_acct_handlers *aapi;
     const struct rtpp_cplane_handlers *capi;
     const struct rtpp_wthr_handlers *wapi;
