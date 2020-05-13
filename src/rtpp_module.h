@@ -148,6 +148,11 @@ struct rtpp_wthrdata {
     struct rtpp_module_priv *mpvt;
 };
 
+struct rtpp_modids {
+    unsigned int instance_id;
+    unsigned int module_idx;
+};
+
 struct rtpp_minfo {
     /* Upper half, filled by the module */
     struct rtpp_mdescr descr;
@@ -157,7 +162,7 @@ struct rtpp_minfo {
     const struct rtpp_cplane_handlers *capi;
     const struct rtpp_wthr_handlers *wapi;
     /* Lower half, filled by the core */
-    unsigned int instance_id;
+    const struct rtpp_modids *ids;
     rtpp_module_malloc_t _malloc;
     rtpp_module_zmalloc_t _zmalloc;
     rtpp_module_rzmalloc_t _rzmalloc;

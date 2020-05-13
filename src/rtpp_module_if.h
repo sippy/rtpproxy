@@ -53,8 +53,7 @@ struct rtpp_module_if {
     struct rtpp_type_linkable t;
     struct rtpp_refcnt *rcnt;
     const struct rtpp_mdescr *descr;
-    unsigned int instance_id;
-    unsigned int module_idx;
+    struct rtpp_modids *ids;
     struct {
         int do_acct:1;
         int ul_subc_h:1;

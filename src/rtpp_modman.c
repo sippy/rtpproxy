@@ -91,7 +91,7 @@ rtpp_modman_insert(struct rtpp_modman *self, struct rtpp_module_if *mif)
     struct rtpp_modman_priv *pvt;
 
     PUB2PVT(self, pvt);
-    mif->module_idx = self->count.total;
+    mif->ids->module_idx = self->count.total;
     rtpp_list_append(&pvt->all, mif);
     self->count.total++;
     if (mif->has.do_acct)
@@ -153,7 +153,7 @@ rtpp_modman_get_ul_subc_h(struct rtpp_modman *self, unsigned int mod_id,
     PUB2PVT(self, pvt);
     for (struct rtpp_module_if *tmp = RTPP_LIST_HEAD(&pvt->all);
       tmp != NULL; tmp = RTPP_ITER_NEXT(tmp)) {
-        if (tmp->descr->module_id != mod_id || tmp->instance_id != inst_id)
+        if (tmp->descr->module_id != mod_id || tmp->ids->instance_id != inst_id)
             continue;
         if (tmp->has.ul_subc_h == 0)
             break;

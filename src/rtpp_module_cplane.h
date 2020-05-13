@@ -31,7 +31,7 @@ struct rtpp_subc_ctx;
 struct rtpp_refcnt;
 
 DEFINE_RAW_METHOD(rtpm_cplane_ul_subc_handle, int, struct rtpp_module_priv *,
-  const struct rtpp_subc_ctx *ctxp, _Atomic(struct rtpp_refcnt *) *);
+  const struct rtpp_subc_ctx *ctxp);
 
 struct rtpp_cplane_handlers {
     rtpm_cplane_ul_subc_handle_t ul_subc_handle;

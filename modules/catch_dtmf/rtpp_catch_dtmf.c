@@ -92,7 +92,7 @@ static struct rtpp_module_priv *rtpp_catch_dtmf_ctor(const struct rtpp_cfg *);
 static void rtpp_catch_dtmf_dtor(struct rtpp_module_priv *);
 static void rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *);
 static int rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *,
-  const struct rtpp_subc_ctx *, _Atomic(struct rtpp_refcnt *) *);
+  const struct rtpp_subc_ctx *);
 
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
@@ -291,7 +291,7 @@ e0:
 
 static int
 rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
-  const struct rtpp_subc_ctx *ctxp, _Atomic(struct rtpp_refcnt *) *catch_dtmf_datap)
+  const struct rtpp_subc_ctx *ctxp)
 {
     struct rtpp_refcnt *rtps_cnt;
     struct catch_dtmf_stream_cfg *rtps_c;
@@ -299,6 +299,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     int new_pt = 101;
     int old_pt = -1;
     char *dtmf_tag;
+    _Atomic(struct rtpp_refcnt *) *catch_dtmf_datap;
 
     if (ctxp->sessp->timeout_data == NULL) {
         RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "notification is not enabled (sp=%p)",
@@ -306,6 +307,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
         return (-1);
     }
 
+    catch_dtmf_datap = ctxp->strmp->pmod_data + rtpp_module.ids->module_idx;
     rtps_cnt = atomic_load(catch_dtmf_datap);
     if (rtps_cnt == NULL) {
         if (ctxp->subc_args->c < 2) {

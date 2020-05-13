@@ -83,6 +83,7 @@ struct rtpp_module_if_priv {
     struct rtpp_minfo *mip;
     struct rtpp_module_priv *mpvt;
     struct rtpp_log *log;
+    struct rtpp_modids ids;
     /* Privary version of the module's memdeb_p, store it here */
     /* just in case module screws it up                        */
     void *memdeb_p;
@@ -256,8 +257,9 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     }
     pvt->pub.has.ul_subc_h = (pvt->mip->capi != NULL &&
       pvt->mip->capi->ul_subc_handle != NULL);
-    pvt->pub.instance_id = pvt->mip->instance_id = CALL_METHOD(cfsp->modules_cf,
-      get_next_id, pvt->mip->descr.module_id);
+    pvt->ids.instance_id = CALL_METHOD(cfsp->modules_cf, get_next_id,
+      pvt->mip->descr.module_id);
+    pvt->mip->ids = pvt->pub.ids = &pvt->ids;
     pvt->pub.descr = &(pvt->mip->descr);
 
     return (0);
@@ -475,9 +477,7 @@ rtpp_mif_ul_subc_handle(struct rtpp_module_if *self,
   const struct rtpp_subc_ctx *ctxp)
 {
     struct rtpp_module_if_priv *pvt;
-    _Atomic(struct rtpp_refcnt *) *pmod_dtp;
 
     PUB2PVT(self, pvt);
-    pmod_dtp = ctxp->strmp->pmod_data + self->module_idx;
-    return (pvt->mip->capi->ul_subc_handle(pvt->mpvt, ctxp, pmod_dtp));
+    return (pvt->mip->capi->ul_subc_handle(pvt->mpvt, ctxp));
 }
