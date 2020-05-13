@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020 Sippy Software, Inc., http://www.sippysoft.com
- * All rights reserved.
+ * Copyright (c) 2019 Maxim Sobolev <sobomax@sippysoft.com>
+ * Copyright (c) 2019 Razvan Crainea <razvan@opensips.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
