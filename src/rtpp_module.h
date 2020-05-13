@@ -146,6 +146,7 @@ struct rtpp_wthrdata {
     pthread_t thread_id;
     struct rtpp_queue *mod_q;
     struct rtpp_module_priv *mpvt;
+    const struct rtpp_cfg *cfsp;
 };
 
 struct rtpp_modids {
