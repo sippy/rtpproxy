@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# Tests a set of commands listed in the catch_dtmf.input file
+# and runs those commands through the rtpp control channel, comparing
+# the results with the expected results contained in the
+# catch_dtmf.output file.
+
+BASEDIR="${BASEDIR:-$(dirname -- $0)/..}"
+BASEDIR="$(readlink -f -- $BASEDIR)"
+
+. $(dirname $0)/../functions
+
+CD_DIR="${BASEDIR}/catch_dtmf"
+RTP_PORT=24272
+MIN_PORT=$((${RTP_PORT} - 2))
+MAX_PORT=$((${RTP_PORT} + 1))
+RTPP_ARGS="-d dbug -f -s stdio: -b -n ${RTPP_NOTIFY_SOCK_TCP} -m ${MIN_PORT} \
+  -M ${MAX_PORT} -T2 -W2 --dso ../modules/catch_dtmf/.libs/rtpp_catch_dtmf_debug.so"
+
+run_udpreplay() {
+  sleep 2
+  exec udpreplay "${CD_DIR}/dtmf.pcap"
+}
+
+run_catch_dtmf() {
+  sed "s|%%RTPP_NOTIFY_SOCK_TCP%%|${RTPP_NOTIFY_SOCK_TCP}|g" "${CD_DIR}/catch_dtmf.input" | \
+   ${RTPPROXY} ${RTPP_ARGS} 2>catch_dtmf.rlog || return 1
+}
+
+${RTPP_NOTYFY_CLIENT} -s ${RTPP_NOTIFY_SOCK_TCP} \
+ -S "${TOP_BUILDDIR}/python/sippy_lite" -o catch_dtmf.tlog -t 15&
+RTPP_NC_RC=${?}
+RTPP_NC_PID=${!}
+report_rc ${RTPP_NC_RC} "Starting rtpp_notify_client.py"
+run_udpreplay &
+UDPRPL_RC=${?}
+UDPRPL_PID=${!}
+report_rc ${UDPRPL_RC} "Starting udpreplay"
+run_catch_dtmf > catch_dtmf.rout
+report "wait for the rtproxy shutdown"
+wait ${RTPP_NC_PID}
+report "wait for rtpp_notify_client.py shutdown"
+wait ${UDPRPL_PID}
+report "wait for udpreplay shutdown"
+${DIFF} "${CD_DIR}/catch_dtmf.output" catch_dtmf.rout
+${DIFF} "${CD_DIR}/catch_dtmf.tnotify.output" catch_dtmf.tlog
+report "catch_dtmf"

@@ -10,6 +10,7 @@ include $(srcdir)/unittests/Makefile.ami
 include $(srcdir)/libucl/Makefile.ami
 include $(srcdir)/libexecinfo/Makefile.ami
 include $(srcdir)/acct_rtcp_hep/Makefile.ami
+include $(srcdir)/catch_dtmf/Makefile.ami
 include $(srcdir)/rtp_analyze/Makefile.ami
 include $(srcdir)/extractaudio/Makefile.ami
 include $(srcdir)/startstop/Makefile.ami

@@ -1,0 +1,5 @@
+acct_rtcp_hep_EXTRA_DIST = catch_dtmf
+acct_rtcp_hep_CLEANFILES = catch_dtmf.*
+TESTS += catch_dtmf/basic
+CLEANFILES += ${catch_dtmf_CLEANFILES}
+EXTRA_DIST += ${catch_dtmf_EXTRA_DIST}
