@@ -9,5 +9,5 @@ SUDO_REQUIRED=1
 
 disable_aslr
 
-glitch_test catch_dtmf/basic 0 catch_dtmf.rlog rtpp_catch_dtmf.c
+glitch_test catch_dtmf/basic 0 catch_dtmf.rlog 'rtpp_catch_dtmf.c\|rtpp_wi_data.c'
 report "glitching catch_dtmf/basic"
