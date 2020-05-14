@@ -98,6 +98,11 @@ struct rtpp_stream_smethods {
     METHOD_ENTRY(rtpp_stream_get_rem_addr, get_rem_addr);
 };
 
+struct pmod_data {
+    unsigned int nmodules;
+    _Atomic(struct rtpp_refcnt *) adp[];
+};
+
 struct rtpp_stream {
     /* ttl for stream */
     struct rtpp_ttl *ttl;
@@ -138,7 +143,7 @@ struct rtpp_stream {
     /* Public methods */
     const struct rtpp_stream_smethods *smethods;
     /* Placeholder for per-module structures */
-    _Atomic(struct rtpp_refcnt *) *pmod_data;
+    struct pmod_data *pmod_datap;
 };
 
 struct r_stream_ctor_args {

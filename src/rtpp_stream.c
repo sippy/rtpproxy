@@ -112,8 +112,7 @@ struct rtpp_stream_priv
     /* Remote source address */
     struct rtpp_netaddr *rem_addr;
     /* Placeholder for per-module structures */
-    unsigned int nmodules;
-    _Atomic(struct rtpp_refcnt *) pmod_data[];
+    struct pmod_data pmod_data;
 };
 
 static void rtpp_stream_dtor(struct rtpp_stream_priv *);
@@ -178,8 +177,8 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     struct rtpp_stream_priv *pvt;
     size_t alen;
 
-    alen = offsetof(struct rtpp_stream_priv, pmod_data) + 
-      (ap->nmodules * sizeof(pvt->pmod_data[0]));
+    alen = offsetof(struct rtpp_stream_priv, pmod_data.adp) + 
+      (ap->nmodules * sizeof(pvt->pmod_data.adp[0]));
     pvt = rtpp_rzmalloc(alen, PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
@@ -216,10 +215,10 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     rtpp_gen_uid(&pvt->pub.stuid);
     pvt->pub.seuid = ap->seuid;
     for (unsigned int i = 0; i < ap->nmodules; i++) {
-        atomic_init(&(pvt->pmod_data[i]), NULL);
+        atomic_init(&(pvt->pmod_data.adp[i]), NULL);
     }
-    pvt->pub.pmod_data = &(pvt->pmod_data[0]);
-    pvt->nmodules = ap->nmodules;
+    pvt->pmod_data.nmodules = ap->nmodules;
+    pvt->pub.pmod_datap = &(pvt->pmod_data);
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_dtor,
       pvt);
     return (&pvt->pub);
@@ -319,9 +318,9 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
         RTPP_OBJ_DECREF(pub->rrc);
     if (pub->pcount != NULL)
         RTPP_OBJ_DECREF(pub->pcount);
-    for (unsigned int i = 0; i < pvt->nmodules; i++) {
+    for (unsigned int i = 0; i < pvt->pmod_data.nmodules; i++) {
         struct rtpp_refcnt *mdata_rcnt;
-        mdata_rcnt = atomic_load(&(pvt->pmod_data[i]));
+        mdata_rcnt = atomic_load(&(pvt->pmod_data.adp[i]));
         if (mdata_rcnt != NULL) {
             CALL_SMETHOD(mdata_rcnt, decref);
         }
