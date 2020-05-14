@@ -335,7 +335,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     }
 
     RTPP_DBG_ASSERT(rtpp_module.ids->module_idx < ctxp->strmp->pmod_datap->nmodules);
-    catch_dtmf_datap = ctxp->strmp->pmod_datap->adp + rtpp_module.ids->module_idx;
+    catch_dtmf_datap = &(ctxp->strmp->pmod_datap->adp[rtpp_module.ids->module_idx]);
     rtps_cnt = atomic_load(catch_dtmf_datap);
     if (rtps_cnt == NULL) {
         rtps_c = catch_dtmf_data_ctor(ctxp, dtmf_tag, new_pt);
@@ -367,7 +367,7 @@ rtp_packet_is_dtmf(struct po_mgr_pkt_ctx *pktx)
     if (pktx->strmp->pipe_type != PIPE_RTP)
         return (0);
     RTPP_DBG_ASSERT(rtpp_module.ids->module_idx < pktx->strmp->pmod_datap->nmodules);
-    catch_dtmf_datap = pktx->strmp->pmod_datap->adp + rtpp_module.ids->module_idx;
+    catch_dtmf_datap = &(pktx->strmp->pmod_datap->adp[rtpp_module.ids->module_idx]);
     rtps_cnt = atomic_load(catch_dtmf_datap);
     if (rtps_cnt == NULL)
         return (0);
