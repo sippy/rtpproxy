@@ -98,9 +98,9 @@ static int rtpp_mif_start(struct rtpp_module_if *, const struct rtpp_cfg *);
 static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
 static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp *);
 static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **);
-static int rtpp_mif_config(struct rtpp_module_if *);
 static int rtpp_mif_ul_subc_handle(struct rtpp_module_if *,
   const struct rtpp_subc_ctx *);
+static int rtpp_mif_construct(struct rtpp_module_if *self, const struct rtpp_cfg *);
 
 static const char *do_acct_aname = "do_acct";
 static const char *do_acct_rtcp_aname = "do_acct_rtcp";
@@ -119,11 +119,11 @@ rtpp_module_if_ctor(const char *mpath)
         goto e1;
     }
     pvt->pub.load = &rtpp_mif_load;
+    pvt->pub.construct = &rtpp_mif_construct;
     pvt->pub.do_acct = &rtpp_mif_do_acct;
     pvt->pub.do_acct_rtcp = &rtpp_mif_do_acct_rtcp;
     pvt->pub.start = &rtpp_mif_start;
     pvt->pub.get_mconf = &rtpp_mif_get_mconf;
-    pvt->pub.config = &rtpp_mif_config;
     pvt->pub.ul_subc_handle = &rtpp_mif_ul_subc_handle;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
@@ -233,26 +233,18 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     pvt->mip->wthr.cfsp = cfsp;
     RTPP_OBJ_INCREF(log);
     pvt->mip->log = log;
-    if (pvt->mip->proc.ctor != NULL) {
-        pvt->mpvt = pvt->mip->proc.ctor(cfsp);
-        if (pvt->mpvt == NULL) {
-            RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' failed to initialize",
-              pvt->mip->descr.name);
-            goto e5;
-        }
-    }
     if (pvt->mip->aapi != NULL) {
         if (pvt->mip->aapi->on_session_end.func != NULL &&
           pvt->mip->aapi->on_session_end.argsize != rtpp_acct_OSIZE()) {
             RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
               "consider recompiling the module", pvt->mpath);
-            goto e6;
+            goto e5;
         }
         if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL &&
           pvt->mip->aapi->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
             RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
               "consider recompiling the module", pvt->mpath);
-            goto e6;
+            goto e5;
         }
         pvt->pub.has.do_acct = (pvt->mip->aapi->on_session_end.func != NULL);
     }
@@ -264,10 +256,6 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     pvt->pub.descr = &(pvt->mip->descr);
 
     return (0);
-e6:
-    if (pvt->mip->proc.dtor != NULL) {
-        pvt->mip->proc.dtor(pvt->mpvt);
-    }
 e5:
     RTPP_OBJ_DECREF(pvt->mip->log);
     rtpp_queue_destroy(pvt->mip->wthr.mod_q);
@@ -310,7 +298,7 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
 
         if (pvt->mip != NULL) {
             /* Then run module destructor (if any) */
-            if (pvt->mip->proc.dtor != NULL) {
+            if (pvt->mip->proc.dtor != NULL && pvt->mpvt != NULL) {
                 pvt->mip->proc.dtor(pvt->mpvt);
             }
             RTPP_OBJ_DECREF(pvt->mip->log);
@@ -410,6 +398,33 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
 #define PTH_CB(x) ((void *(*)(void *))(x))
 
 static int
+rtpp_mif_construct(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
+{
+    struct rtpp_module_if_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    if (pvt->mip->proc.ctor != NULL) {
+        pvt->mpvt = pvt->mip->proc.ctor(cfsp);
+        if (pvt->mpvt == NULL) {
+            RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s' failed to initialize",
+              pvt->mip->descr.name);
+            return (-1);
+        }
+    }
+    if (pvt->mip->proc.config != NULL) {
+        if (pvt->mip->proc.config(pvt->mpvt) != 0) {
+            RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "%p->config() method has failed: %s",
+              self, pvt->mip->descr.name);
+            if (pvt->mip->proc.dtor != NULL) {
+                pvt->mip->proc.dtor(pvt->mpvt);
+            }
+            return (-1);
+        }
+    }
+    return (0);
+}
+
+static int
 rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_if_priv *pvt;
@@ -453,24 +468,12 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
         *mcpp = NULL;
         return (0);
     }
-    rval = pvt->mip->proc.get_mconf(pvt->mpvt);
+    rval = pvt->mip->proc.get_mconf();
     if (rval == NULL) {
         return (-1);
     }
     *mcpp = rval;
     return (0);
-}
-
-static int
-rtpp_mif_config(struct rtpp_module_if *self)
-{
-    struct rtpp_module_if_priv *pvt;
-
-    PUB2PVT(self, pvt);
-    if (pvt->mip->proc.config == NULL) {
-        return (0);
-    }
-    return (pvt->mip->proc.config(pvt->mpvt));
 }
 
 static int

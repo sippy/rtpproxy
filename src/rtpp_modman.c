@@ -107,12 +107,17 @@ rtpp_modman_startall(struct rtpp_modman *self, const struct rtpp_cfg *cfp,
 
     PUB2PVT(self, pvt);
     for (mif = RTPP_LIST_HEAD(&pvt->all); mif != NULL; mif = RTPP_ITER_NEXT(mif)) {
+        if (CALL_METHOD(mif, construct, cfp) != 0) {
+            goto failed;
+        }
         if (CALL_METHOD(mif, start, cfp) != 0) {
-            *failedmod = mif->descr->name;
-            return (-1);
+            goto failed;
         }
     }
     return (0);
+failed:
+    *failedmod = mif->descr->name;
+    return (-1);
 }
 
 static unsigned int

@@ -46,7 +46,7 @@ struct rtpp_wthr_handlers;
 
 DEFINE_RAW_METHOD(rtpp_module_ctor, struct rtpp_module_priv *,
   const struct rtpp_cfg *);
-DEFINE_METHOD(rtpp_module_priv, rtpp_module_get_mconf, struct rtpp_module_conf *);
+DEFINE_RAW_METHOD(rtpp_module_get_mconf, struct rtpp_module_conf *, void);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_config, int);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_dtor, void);
 
