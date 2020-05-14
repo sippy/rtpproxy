@@ -66,6 +66,7 @@
 #include "advanced/po_manager.h"
 
 struct rtpp_module_priv {
+    struct rtpp_notify *notifier;
 };
 
 struct catch_dtmf_einfo {
@@ -240,7 +241,7 @@ rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *wp)
         snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%s %c %u %u %d",
           wip->rtdp->notify_tag, ei.digit, dtmf->volume, eip->duration,
           (wip->edata->side == RTPP_SSIDE_CALLER) ? 0 : 1);
-        CALL_METHOD(wp->cfsp->rtpp_notify_cf, schedule, wip->rtdp->notify_target, buf,
+        CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target, buf,
           notyfy_type);
 
 skip:
@@ -409,6 +410,7 @@ rtpp_catch_dtmf_ctor(const struct rtpp_cfg *cfsp)
     if (pvt == NULL) {
         goto e0;
     }
+    pvt->notifier = cfsp->rtpp_notify_cf;
     memset(&dtmf_poi, '\0', sizeof(dtmf_poi));
     dtmf_poi.taste = rtp_packet_is_dtmf;
     dtmf_poi.enqueue = rtpp_catch_dtmf_enqueue;

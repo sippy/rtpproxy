@@ -230,7 +230,6 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     if (pvt->mip->wthr.mod_q == NULL) {
         goto e4;
     }
-    pvt->mip->wthr.cfsp = cfsp;
     RTPP_OBJ_INCREF(log);
     pvt->mip->log = log;
     if (pvt->mip->aapi != NULL) {
