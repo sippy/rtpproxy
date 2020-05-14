@@ -40,28 +40,28 @@ stages:
     if: branch = master AND type = cron
 jobs:
   include:
-    - name: "Naked Build @ Ubuntu 16 (Xenial Xerus) GCC 7"
+    - name: "Naked Build @ Ubuntu 16 GCC 7"
       dist: xenial
       compiler: gcc
       env:
         - TTYPE=cleanbuild
       before_install: true
       after_success: true
-    - name: "Naked Build @ Ubuntu 18 (Bionic Beaver) GCC 7"
+    - name: "Naked Build @ Ubuntu 18 GCC 7"
       dist: bionic
       compiler: gcc
       env:
         - TTYPE=cleanbuild
       before_install: true
       after_success: true
-    - name: "Naked Build @ Ubuntu 16 (Xenial Xerus) Clang 7"
+    - name: "Naked Build @ Ubuntu 16 Clang 7"
       dist: xenial
       compiler: clang
       env:
         - TTYPE=cleanbuild
       before_install: true
       after_success: true
-    - name: "Naked Build @ Ubuntu 18 (Bionic Beaver) Clang 7"
+    - name: "Naked Build @ Ubuntu 18 Clang 7"
       dist: bionic
       compiler: clang
       env:
@@ -69,7 +69,7 @@ jobs:
       before_install: true
       after_success: true
 
-    - name: "All-Dependencies-Inclusive Build @ Ubuntu 16 (Xenial Xerus) GCC 7"
+    - name: "All-Dependencies-Inclusive Build @ Ubuntu 16 GCC 7"
       dist: xenial
       compiler: gcc
       env:
@@ -77,7 +77,7 @@ jobs:
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
-    - name: "All-Dependencies-Inclusive Build @ Ubuntu 18 (Bionic Beaver) GCC 7"
+    - name: "All-Dependencies-Inclusive Build @ Ubuntu 18 GCC 7"
       dist: bionic
       compiler: gcc
       env:
@@ -85,7 +85,7 @@ jobs:
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
-    - name: "All-Dependencies-Inclusive Build @ Ubuntu 16 (Xenial Xerus) Clang 7"
+    - name: "All-Dependencies-Inclusive Build @ Ubuntu 16 Clang 7"
       dist: xenial
       compiler: clang
       env:
@@ -93,7 +93,7 @@ jobs:
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
-    - name: "All-Dependencies-Inclusive Build @ Ubuntu 18 (Bionic Beaver) Clang 7"
+    - name: "All-Dependencies-Inclusive Build @ Ubuntu 18 Clang 7"
       dist: bionic
       compiler: clang
       env:
@@ -102,37 +102,37 @@ jobs:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
 
-    - name: "Functional Testing @ Ubuntu 16 (Xenial Xerus) GCC 7"
+    - name: "Functional Testing @ Ubuntu 16 GCC 7"
       dist: xenial
       compiler: gcc
       env:
         - TTYPE=basic
       before_script:
         - sh -x ./scripts/install_working_nc.sh
-    - name: "Functional Testing @ Ubuntu 18 (Bionic Beaver) GCC 7"
+    - name: "Functional Testing @ Ubuntu 18 GCC 7"
       dist: bionic
       compiler: gcc
       env:
         - TTYPE=basic
-    - name: "Functional Testing @ Ubuntu 16 (Xenial Xerus) Clang 7"
+    - name: "Functional Testing @ Ubuntu 16 Clang 7"
       dist: xenial
       compiler: clang
       env:
         - TTYPE=basic
       before_script:
         - sh -x ./scripts/install_working_nc.sh
-    - name: "Functional Testing @ Ubuntu 18 (Bionic Beaver) Clang 7"
+    - name: "Functional Testing @ Ubuntu 18 Clang 7"
       dist: bionic
       compiler: clang
       env:
         - TTYPE=basic
 
-    - name: "Glitching @ Ubuntu 16 (Xenial Xerus) GCC 7"
+    - name: "Glitching @ Ubuntu 16 GCC 7"
       dist: xenial
       compiler: gcc
       env:
         - TTYPE=glitching
-    - name: "Glitching @ Ubuntu 18 (Bionic Beaver) GCC 7"
+    - name: "Glitching @ Ubuntu 18 GCC 7"
       dist: bionic
       compiler: gcc
       env:
