@@ -7,8 +7,8 @@
 #include "rtpp_debug.h"
 #include "rtpp_module_if.h"
 #include "rtpp_module_if_fin.h"
-static void rtpp_module_if_config_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_module_if@%p::config (rtpp_module_if_config) is invoked after destruction\x0a", pub);
+static void rtpp_module_if_construct_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_module_if@%p::construct (rtpp_module_if_construct) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_module_if_do_acct_fin(void *pub) {
@@ -36,9 +36,9 @@ static void rtpp_module_if_ul_subc_handle_fin(void *pub) {
     RTPP_AUTOTRAP();
 }
 void rtpp_module_if_fin(struct rtpp_module_if *pub) {
-    RTPP_DBG_ASSERT(pub->config != (rtpp_module_if_config_t)NULL);
-    RTPP_DBG_ASSERT(pub->config != (rtpp_module_if_config_t)&rtpp_module_if_config_fin);
-    pub->config = (rtpp_module_if_config_t)&rtpp_module_if_config_fin;
+    RTPP_DBG_ASSERT(pub->construct != (rtpp_module_if_construct_t)NULL);
+    RTPP_DBG_ASSERT(pub->construct != (rtpp_module_if_construct_t)&rtpp_module_if_construct_fin);
+    pub->construct = (rtpp_module_if_construct_t)&rtpp_module_if_construct_fin;
     RTPP_DBG_ASSERT(pub->do_acct != (rtpp_module_if_do_acct_t)NULL);
     RTPP_DBG_ASSERT(pub->do_acct != (rtpp_module_if_do_acct_t)&rtpp_module_if_do_acct_fin);
     pub->do_acct = (rtpp_module_if_do_acct_t)&rtpp_module_if_do_acct_fin;
@@ -79,7 +79,7 @@ rtpp_module_if_fintest()
     tp = rtpp_rzmalloc(sizeof(*tp), offsetof(typeof(*tp), pub.rcnt));
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
-    tp->pub.config = (rtpp_module_if_config_t)((void *)0x1);
+    tp->pub.construct = (rtpp_module_if_construct_t)((void *)0x1);
     tp->pub.do_acct = (rtpp_module_if_do_acct_t)((void *)0x1);
     tp->pub.do_acct_rtcp = (rtpp_module_if_do_acct_rtcp_t)((void *)0x1);
     tp->pub.get_mconf = (rtpp_module_if_get_mconf_t)((void *)0x1);
@@ -89,7 +89,7 @@ rtpp_module_if_fintest()
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_module_if_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
-    CALL_TFIN(&tp->pub, config);
+    CALL_TFIN(&tp->pub, construct);
     CALL_TFIN(&tp->pub, do_acct);
     CALL_TFIN(&tp->pub, do_acct_rtcp);
     CALL_TFIN(&tp->pub, get_mconf);
