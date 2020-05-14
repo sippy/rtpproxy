@@ -156,6 +156,7 @@ struct rtpp_minfo {
     const struct rtpp_acct_handlers *aapi;
     const struct rtpp_cplane_handlers *capi;
     const struct rtpp_wthr_handlers *wapi;
+    void **memdeb_p;
     /* Lower half, filled by the core */
     const struct rtpp_modids *ids;
     rtpp_module_malloc_t _malloc;
@@ -166,7 +167,6 @@ struct rtpp_minfo {
     rtpp_module_strdup_t _strdup;
     rtpp_module_asprintf_t _asprintf;
     rtpp_module_vasprintf_t _vasprintf;
-    void **memdeb_p;
     struct rtpp_log *log;
     struct rtpp_wthrdata wthr;
 };
