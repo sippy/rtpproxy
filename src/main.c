@@ -272,6 +272,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     struct proto_cap *pcp;
     struct rtpp_module_if *mif;
     char mpath[PATH_MAX + 1];
+    struct rtpp_module_conf *mcp;
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -333,7 +334,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
         case LOPT_DSO:
             cp = realpath(optarg, mpath);
             if (cp == NULL) {
-                 err(1, "realpath");
+                 err(1, "realpath: %s", optarg);
             }
             mif = rtpp_module_if_ctor(cp);
             if (mif == NULL) {
@@ -343,6 +344,14 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
                   "%p: dymanic module load has failed", mif);
                 exit(1);
+            }
+            if (CALL_METHOD(mif, get_mconf, &mcp) != 0) {
+                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%p->get_mconf() method has failed: %s", mif, cp);
+                exit(1);
+            }
+            if (mcp != NULL) {
+                 errx(1, "%s: dymanic module requires configuration, cannot be "
+                   "loaded via --dso option", cp);
             }
             CALL_METHOD(cfsp->modules_cf, insert, mif);
             break;
