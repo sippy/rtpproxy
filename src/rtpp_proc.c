@@ -61,13 +61,11 @@ static void send_packet(const struct rtpp_cfg *, struct rtpp_stream *,
   struct rtp_packet *, struct sthread_args *, struct rtpp_proc_rstats *);
 
 static void
-rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
-  const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
-  struct rtpp_proc_rstats *rsp, const struct rtpp_session *sp)
+rxmit_packets(const struct rtpp_cfg *cfsp, const struct rtpp_timestamp *dtime,
+  int drain_repeat, struct po_mgr_pkt_ctx *pktxp)
 {
     int ndrain;
     struct rtp_packet *packet = NULL;
-    struct po_mgr_pkt_ctx pktx;
 
     /* Repeat since we may have several packets queued on the same socket */
     ndrain = -1;
@@ -78,8 +76,8 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
             ndrain -= 1;
         }
 
-	packet = CALL_SMETHOD(stp, rx, cfsp->rtcp_streams_wrt, dtime,
-          rsp);
+	packet = CALL_SMETHOD(pktxp->strmp, rx, cfsp->rtcp_streams_wrt, dtime,
+          pktxp->stats);
 	if (packet == NULL) {
             /* Move on to the next session */
             return;
@@ -88,11 +86,9 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
             ndrain += 1;
             continue;
         }
-        pktx.sessp = sp;
-        pktx.strmp = stp;
-        pktx.pktp = packet;
-        CALL_METHOD(cfsp->observers, observe, &pktx);
-        send_packet(cfsp, stp, packet, sender, rsp);
+        pktxp->pktp = packet;
+        if (CALL_METHOD(cfsp->observers, observe, pktxp) != POM_CONSUME)
+           send_packet(cfsp, pktxp->strmp, packet, pktxp->sender, pktxp->stats);
     } while (ndrain > 0);
     return;
 }
@@ -160,6 +156,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
     struct rtpp_stream *stp;
     struct rtp_packet *packet;
     struct rtpp_socket *iskt;
+    struct po_mgr_pkt_ctx pktx = {.sender = sender, .stats = rsp};
 
     for (readyfd = 0; readyfd < ptbl->curlen; readyfd++) {
         if ((ptbl->pfds[readyfd].revents & POLLIN) == 0)
@@ -175,7 +172,9 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
         }
         iskt = ptbl->mds[readyfd].skt;
         if (sp->complete != 0) {
-            rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp, sp);
+            pktx.sessp = sp;
+            pktx.strmp = stp;
+            rxmit_packets(cfsp, dtime, drain_repeat, &pktx);
             RTPP_OBJ_DECREF(sp);
             if (stp->resizer != NULL) {
                 while ((packet = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {

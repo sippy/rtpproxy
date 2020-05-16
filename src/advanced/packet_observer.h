@@ -29,7 +29,7 @@ struct packet_observer_if;
 struct po_mgr_pkt_ctx;
 
 DEFINE_RAW_METHOD(po_taste, int, struct po_mgr_pkt_ctx *);
-DEFINE_RAW_METHOD(po_enqueue, void, void *, const struct po_mgr_pkt_ctx *);
+DEFINE_RAW_METHOD(po_enqueue, int, void *, const struct po_mgr_pkt_ctx *);
 DEFINE_RAW_METHOD(po_control, void);
 
 struct packet_observer_if {

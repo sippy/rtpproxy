@@ -145,7 +145,7 @@ packet_is_rtcp(struct po_mgr_pkt_ctx *pktx)
     return (1);
 }
 
-static void
+static int
 acct_rtcp_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
 {
     struct rtpp_module_if_priv *pvt;
@@ -154,9 +154,10 @@ acct_rtcp_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
     pvt = (struct rtpp_module_if_priv *)arg;
     rarp = rtpp_acct_rtcp_ctor(pktx->sessp->call_id, pktx->pktp);
     if (rarp == NULL) {
-        return;
+        return (POM_NOP);
     }
     rtpp_mif_do_acct_rtcp(&(pvt->pub), rarp);
+    return (POM_COPY);
 }
 
 static int

@@ -379,7 +379,7 @@ rtp_packet_is_dtmf(struct po_mgr_pkt_ctx *pktx)
     return (1);
 }
 
-static void
+static int
 rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
 {
     struct rtpp_catch_dtmf_pvt *pvt;
@@ -392,7 +392,7 @@ rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
     /* we duplicate the tag to make sure it does not vanish */
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
-        return;
+        return (POM_NOP);
     CALL_SMETHOD(pktx->pktp->rcnt, incref);
     /* we need to duplicate the tag and state */
     wip->edata = rtps_c->edata;
@@ -401,6 +401,7 @@ rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
     CALL_SMETHOD(rtps_c->rtdp->rcnt, incref);
     wip->rtdp = rtps_c->rtdp;
     rtpp_queue_put_item(wi, rtpp_module.wthr.mod_q);
+    return (POM_COPY);
 }
 
 static struct rtpp_module_priv *

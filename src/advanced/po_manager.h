@@ -31,15 +31,22 @@ struct rtpp_session;
 struct rtpp_stream;
 struct rtp_packet;
 
+#define POM_NOP     (-1)
+#define POM_COPY     (0)
+#define POM_CONSUME  (1)
+
 struct po_mgr_pkt_ctx {
   const struct rtpp_session *sessp;
   struct rtpp_stream *strmp;
+  struct sthread_args *sender;
+  struct rtpp_proc_rstats *stats;
   const struct rtp_packet *pktp;
+  unsigned int lastpoidx;
   void *auxp;
 };
 
 DEFINE_METHOD(po_manager, po_manager_reg, int, const struct packet_observer_if *);
-DEFINE_METHOD(po_manager, po_manager_observe, void, struct po_mgr_pkt_ctx *);
+DEFINE_METHOD(po_manager, po_manager_observe, int, struct po_mgr_pkt_ctx *);
 
 struct po_manager {
     struct rtpp_refcnt *rcnt;
