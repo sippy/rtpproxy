@@ -71,14 +71,12 @@ jobs:
     - name: "Naked Build @ Ubuntu 18 Clang 9"
       dist: bionic
       compiler: clang
-      packages:
-        - clang-9
-        - libc++-9-dev
-        - libc++abi-9-dev
       env:
         - TTYPE=cleanbuild
         - CC=clang90
-      before_install: true
+      before_install:
+        - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
+        - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
       after_success: true
 
     - name: "All-Dependencies-Inclusive Build @ Ubuntu 16 GCC 7"
