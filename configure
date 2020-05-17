@@ -648,6 +648,8 @@ LIBS_GSM
 LIBS_DL
 AM_CFLAGS
 subdirs
+ENABLE_LTO_FALSE
+ENABLE_LTO_TRUE
 ENABLE_WARN_IPT_FALSE
 ENABLE_WARN_IPT_TRUE
 ENABLE_BASIC_TESTS_FALSE
@@ -812,6 +814,7 @@ enable_systemd
 enable_coverage
 enable_memglitching
 enable_basic_tests
+enable_lto
 with_xsltproc
 with_xsltproc_flags
 '
@@ -1461,6 +1464,7 @@ Optional Features:
   --enable-coverage       enable test coverage support
   --enable-memglitching   enable advanced tests around malloc glitching
   --enable-basic-tests    enable basic functionality tests
+  --enable-lto            enable LTO (Link-Time Optimization)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -12258,6 +12262,14 @@ else
 fi
 
 
+# Check whether --enable-lto was given.
+if test "${enable_lto+set}" = set; then :
+  enableval=$enable_lto; ENABLE_LTO=${enableval}
+else
+  ENABLE_LTO=no
+fi
+
+
 # Checks for libraries.
 
 if test "$enable_systemd" = 'yes'
@@ -14120,6 +14132,14 @@ else
   ENABLE_WARN_IPT_FALSE=
 fi
 
+ if test "x${ENABLE_LTO}" = "xyes" ; then
+  ENABLE_LTO_TRUE=
+  ENABLE_LTO_FALSE='#'
+else
+  ENABLE_LTO_TRUE='#'
+  ENABLE_LTO_FALSE=
+fi
+
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
 
@@ -14324,6 +14344,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${ENABLE_WARN_IPT_TRUE}" && test -z "${ENABLE_WARN_IPT_FALSE}"; then
   as_fn_error $? "conditional \"ENABLE_WARN_IPT\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${ENABLE_LTO_TRUE}" && test -z "${ENABLE_LTO_FALSE}"; then
+  as_fn_error $? "conditional \"ENABLE_LTO\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
