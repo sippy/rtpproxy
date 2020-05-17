@@ -732,9 +732,9 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 	if (bh[1] != NULL && bh6[1] != NULL)
 	    errx(1, "either IPv4 or IPv6 should be configured for internal "
 	      "interface in bridging mode, not both");
-    if (cfsp->advaddr[0] != NULL && cfsp->advaddr[1] == NULL)
-        errx(1, "two advertised addresses are required for internal "
-          "and external interfaces in bridging mode");
+        if (cfsp->advaddr[0] != NULL && cfsp->advaddr[1] == NULL)
+            errx(1, "two advertised addresses are required for internal "
+              "and external interfaces in bridging mode");
 	if (i != 2)
 	    errx(1, "incomplete configuration of the bridging mode - exactly "
 	      "2 listen addresses required, %d provided", i);
