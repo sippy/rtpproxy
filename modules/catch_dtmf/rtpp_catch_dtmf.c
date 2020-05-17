@@ -246,9 +246,9 @@ rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *wp)
           notyfy_type);
 
 skip:
-        CALL_SMETHOD(wip->edata->rcnt, decref);
-        CALL_SMETHOD(wip->rtdp->rcnt, decref);
-        CALL_SMETHOD(wip->pkt->rcnt, decref);
+        RTPP_OBJ_DECREF(wip->edata);
+        RTPP_OBJ_DECREF(wip->rtdp);
+        RTPP_OBJ_DECREF(wip->pkt);
         CALL_METHOD(wi, dtor);
     }
 }
@@ -257,8 +257,8 @@ static void
 catch_dtmf_data_dtor(struct catch_dtmf_stream_cfg *rtps_c)
 {
 
-    CALL_SMETHOD(rtps_c->rtdp->rcnt, decref);
-    CALL_SMETHOD(rtps_c->edata->rcnt, decref);
+    RTPP_OBJ_DECREF(rtps_c->rtdp);
+    RTPP_OBJ_DECREF(rtps_c->edata);
     free(rtps_c);
 }
 
@@ -287,7 +287,7 @@ catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const char *dtmf_tag,
     CALL_SMETHOD(rtps_c->rcnt, attach, (rtpp_refcnt_dtor_t)catch_dtmf_data_dtor, rtps_c);
     return (rtps_c);
 e2:
-    CALL_SMETHOD(rtps_c->rtdp->rcnt, decref);
+    RTPP_OBJ_DECREF(rtps_c->rtdp);
 e1:
     mod_free(rtps_c);
 e0:
@@ -344,7 +344,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
         }
         if (!atomic_compare_exchange_strong(catch_dtmf_datap,
           &rtps_cnt, rtps_c->rcnt)) {
-            CALL_SMETHOD(rtps_c->rcnt, decref);
+            RTPP_OBJ_DECREF(rtps_c);
             rtps_c = CALL_SMETHOD(rtps_cnt, getdata);
         }
     } else {
@@ -393,12 +393,12 @@ rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
         return;
-    CALL_SMETHOD(pktx->pktp->rcnt, incref);
+    RTPP_OBJ_INCREF(pktx->pktp);
     /* we need to duplicate the tag and state */
     wip->edata = rtps_c->edata;
-    CALL_SMETHOD(rtps_c->edata->rcnt, incref);
+    RTPP_OBJ_INCREF(rtps_c->edata);
     wip->pkt = pktx->pktp;
-    CALL_SMETHOD(rtps_c->rtdp->rcnt, incref);
+    RTPP_OBJ_INCREF(rtps_c->rtdp);
     wip->rtdp = rtps_c->rtdp;
     rtpp_queue_put_item(wi, rtpp_module.wthr.mod_q);
 }
