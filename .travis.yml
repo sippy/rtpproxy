@@ -68,6 +68,18 @@ jobs:
         - TTYPE=cleanbuild
       before_install: true
       after_success: true
+    - name: "Naked Build @ Ubuntu 18 Clang 9"
+      dist: bionic
+      compiler: clang
+      packages:
+        - clang-9
+        - libc++-9-dev
+        - libc++abi-9-dev
+      env:
+        - TTYPE=cleanbuild
+        - CC=clang90
+      before_install: true
+      after_success: true
 
     - name: "All-Dependencies-Inclusive Build @ Ubuntu 16 GCC 7"
       dist: xenial
