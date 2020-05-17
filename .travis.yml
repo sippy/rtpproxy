@@ -73,7 +73,7 @@ jobs:
       compiler: clang
       env:
         - TTYPE=cleanbuild
-        - CC=clang90
+        - CC=clang-9
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
         - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
