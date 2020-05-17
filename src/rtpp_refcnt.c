@@ -67,8 +67,6 @@ struct rtpp_refcnt_priv
 
 static void rtpp_refcnt_attach(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *);
-static void rtpp_refcnt_incref(struct rtpp_refcnt *);
-static void rtpp_refcnt_decref(struct rtpp_refcnt *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt *);
 static void rtpp_refcnt_reg_pd(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *);
@@ -137,7 +135,7 @@ rtpp_refcnt_attach(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f,
     pvt->dtor_f = dtor_f;
 }
 
-static void
+void
 rtpp_refcnt_incref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
@@ -162,7 +160,7 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
     atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
 }
 
-static void
+void
 rtpp_refcnt_decref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;

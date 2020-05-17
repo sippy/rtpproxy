@@ -163,7 +163,7 @@ rtpp_memdeb_dtor(void *p)
 
     CHK_PRIV(pvt, p);
     if (pvt->_md_glog != NULL) {
-        RTPP_OBJ_DECREF(pvt->_md_glog);
+        CALL_SMETHOD(pvt->_md_glog->rcnt, decref);
     }
     pvt->magic = MEMDEB_SIGNATURE_FREE(pvt);
     pthread_mutex_destroy(&pvt->mutex);
@@ -177,7 +177,7 @@ rtpp_memdeb_setlog(void *p, struct rtpp_log *log)
     struct rtpp_memdeb_priv *pvt;
 
     CHK_PRIV(pvt, p);
-    RTPP_OBJ_INCREF(log);
+    CALL_SMETHOD(log->rcnt, incref);
     pvt->_md_glog = log;
 }
 
