@@ -72,13 +72,14 @@ BASE_SOURCES+=rtpp_modman.c
 rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl.a
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.a \
   $(RTPP_MEMDEB_LDADD)
-rtpproxy_debug_LDFLAGS=-static -Wl,--export-dynamic
+rtpproxy_debug_LDFLAGS=-Wl,--export-dynamic
+rtpproxy_LDFLAGS=
 
 if ENABLE_MODULE_IF
 RTPP_AUTOSRC_SOURCES += rtpp_module_if.h
 BASE_SOURCES += rtpp_module_if.c rtpp_module.h
 rtpproxy_LDADD+=@LIBS_DL@
-rtpproxy_LDFLAGS=-Wl,--export-dynamic
+rtpproxy_LDFLAGS+=-Wl,--export-dynamic
 endif
 
 if BUILD_LOG_STAND
@@ -115,6 +116,12 @@ RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
 EXTRA_CFLAGS = $(CC_WFLAGS)
 
 EXTRA_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR)
+
+if ENABLE_LTO
+rtpproxy_debug_LDFLAGS += -flto
+rtpproxy_LDFLAGS += -flto
+EXTRA_CFLAGS += -flto
+endif
 
 if BUILD_ELPERIODIC
 EXTRA_CPPFLAGS += -I$(top_srcdir)/libelperiodic/src

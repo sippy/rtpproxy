@@ -69,6 +69,10 @@ AC_ARG_ENABLE(basic-tests,
   AC_HELP_STRING([--enable-basic-tests], [enable basic functionality tests]),
   [ENABLE_BASIC_TESTS=${enableval}], [ENABLE_BASIC_TESTS=yes])
 
+AC_ARG_ENABLE(lto,
+  AC_HELP_STRING([--enable-lto], [enable LTO (Link-Time Optimization)]),
+  [ENABLE_LTO=${enableval}], [ENABLE_LTO=no])
+
 # Checks for libraries.
 
 if test "$enable_systemd" = 'yes'
@@ -337,6 +341,7 @@ AM_CONDITIONAL(BUILD_DOCS, [test "x${HAVE_DOCBOOK_DTD_4_5}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_MEMGLITCHING, [test "x${ENABLE_MEMGLITCHING}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_BASIC_TESTS, [test "x${ENABLE_BASIC_TESTS}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_WARN_IPT, [test "${ac_cc_warn_ipt}" = 1])
+AM_CONDITIONAL(ENABLE_LTO, [test "x${ENABLE_LTO}" = "xyes" ])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
