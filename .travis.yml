@@ -68,12 +68,13 @@ jobs:
         - TTYPE=cleanbuild
       before_install: true
       after_success: true
-    - name: "Naked Build @ Ubuntu 18 Clang 9"
+    - name: "Naked Build @ Ubuntu 18 Clang 9+LTO"
       dist: bionic
       compiler: clang
       env:
         - TTYPE=cleanbuild
         - CC=clang-9
+        - CONFIGURE_ARGS=--enable-lto
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
         - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
