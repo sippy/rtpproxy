@@ -71,7 +71,7 @@ jobs:
         - CONFIGURE_ARGS=--enable-lto
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
-        - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
+        - sudo apt-get -y install clang-9 llvm-9-dev libc++-9-dev libc++abi-9-dev
       after_success: true
 
     - name: "All-Dependencies-Inclusive Build @ Ubuntu 16 GCC 7"
@@ -115,7 +115,7 @@ jobs:
         - CONFIGURE_ARGS=--enable-lto
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
-        - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
+        - sudo apt-get -y install clang-9 llvm-9-dev libc++-9-dev libc++abi-9-dev
       after_success: true
 
     - name: "Functional Testing @ Ubuntu 16 GCC 7"
@@ -151,7 +151,7 @@ jobs:
         - CONFIGURE_ARGS=--enable-lto
       before_install:
         - sh -x ./scripts/ft-before_install.sh
-        - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
+        - sudo apt-get -y install clang-9 llvm-9-dev libc++-9-dev libc++abi-9-dev
 
     - name: "Glitching @ Ubuntu 16 GCC 7"
       dist: xenial
@@ -172,7 +172,7 @@ jobs:
         - CONFIGURE_ARGS=--enable-lto
       before_install:
         - sh -x ./scripts/ft-before_install.sh
-        - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
+        - sudo apt-get -y install clang-9 llvm-9-dev libc++-9-dev libc++abi-9-dev
 
     - stage: Build Documentation
       dist: bionic
