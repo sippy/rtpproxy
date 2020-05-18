@@ -4,14 +4,8 @@ language: c
 python:
   - "3.6"
 before_install:
-    - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
-    - sudo apt-get -y install python3-pip python-dev
-    - sudo pip3 install -U setuptools
-    - sudo pip3 install -U virtualenvwrapper
-    - which python
-    - python --version
+    - sh -x ./scripts/ft-before_install.sh
 #    - sudo -H PATH="${PATH}:/usr/local/clang-3.4/bin" pip3 install -r requirements.txt
-    - pip3 install --user cpp-coveralls
 env:
   global:
     - COVERALLS_PARALLEL=true
@@ -112,6 +106,17 @@ jobs:
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
       after_success: true
+    - name: "All-Dependencies-Inclusive Build @ Ubuntu 18 Clang 9+LTO"
+      dist: bionic
+      compiler: clang
+      env:
+        - TTYPE=depsbuild
+        - CC=clang-9
+        - CONFIGURE_ARGS=--enable-lto
+      before_install:
+        - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
+        - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
+      after_success: true
 
     - name: "Functional Testing @ Ubuntu 16 GCC 7"
       dist: xenial
@@ -137,6 +142,16 @@ jobs:
       compiler: clang
       env:
         - TTYPE=basic
+    - name: "Functional Testing @ Ubuntu 18 Clang 9+LTO"
+      dist: bionic
+      compiler: clang
+      env:
+        - TTYPE=basic
+        - CC=clang-9
+        - CONFIGURE_ARGS=--enable-lto
+      before_install:
+        - sh -x ./scripts/ft-before_install.sh
+        - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
 
     - name: "Glitching @ Ubuntu 16 GCC 7"
       dist: xenial
@@ -148,6 +163,16 @@ jobs:
       compiler: gcc
       env:
         - TTYPE=glitching
+    - name: "Glitching @ Ubuntu 18 Clang 9+LTO"
+      dist: bionic
+      compiler: clang
+      env:
+        - TTYPE=glitching
+        - CC=clang-9
+        - CONFIGURE_ARGS=--enable-lto
+      before_install:
+        - sh -x ./scripts/ft-before_install.sh
+        - sudo apt-get -y install clang-9 libc++-9-dev libc++abi-9-dev
 
     - stage: Build Documentation
       dist: bionic
