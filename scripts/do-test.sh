@@ -13,6 +13,10 @@ uname -a
 which ${CC}
 ${CC} --version
 python3 --version
+automake --version
+autoconf --version
+autoreconf --version
+
 sudo iptables -L OUTPUT
 sudo iptables -L INPUT
 sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
