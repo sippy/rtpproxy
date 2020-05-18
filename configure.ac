@@ -42,13 +42,15 @@ esac
 
 AX_COMPILE_CHECK_SIZEOF(time_t, [#include <time.h>])
 
+AC_MSG_CHECKING([whether '$CC' supports -Wincompatible-pointer-types])
 ac_save_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -Wincompatible-pointer-types"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([struct foo; struct bar;],
   [[struct foo *f; struct bar *b; f = b;]])],
   [ac_cc_warn_ipt=1], [ac_cc_warn_ipt=0])
 AS_IF([test $ac_cc_warn_ipt -ne 0],
-  [AC_MSG_RESULT(['$CC' supports -Wincompatible-pointer-types])])
+  [AC_MSG_RESULT([yes])],
+  [AC_MSG_RESULT([no])])
 CFLAGS="$ac_save_CFLAGS"
 
 AC_ARG_ENABLE(systemd,
