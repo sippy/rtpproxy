@@ -370,6 +370,7 @@ RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
+@ENABLE_LTO_TRUE@LTO_FLAG = -flto
 pkglib_LTLIBRARIES = rtpp_catch_dtmf.la rtpp_catch_dtmf_debug.la
 rtpp_catch_dtmf_la_SOURCES = rtpp_catch_dtmf.c
 rtpp_catch_dtmf_la_LDFLAGS = -avoid-version -module -shared -export-dynamic

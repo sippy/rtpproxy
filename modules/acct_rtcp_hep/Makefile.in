@@ -418,6 +418,7 @@ RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
+@ENABLE_LTO_TRUE@LTO_FLAG = -flto
 HEPSRCDIR = $(top_srcdir)/hepconnector
 UCLSRCDIR = $(top_srcdir)/external/libucl
 pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
