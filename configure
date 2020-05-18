@@ -3020,6 +3020,7 @@ END
   fi
 fi
 
+#AM_INIT_AUTOMAKE
 ac_config_headers="$ac_config_headers src/config.h"
 
 
