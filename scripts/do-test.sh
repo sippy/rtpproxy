@@ -23,7 +23,7 @@ ALLCLEAN_TGT="all clean distclean"
 
 if [ "${TTYPE}" = "cleanbuild" ]
 then
-  ./configure
+  ./configure ${CONFIGURE_ARGS}
   exec make ${ALLCLEAN_TGT}
 fi
 
@@ -35,7 +35,7 @@ tar xfz bcg729-${BCG729_VER}.tar.gz
 cd bcg729-${BCG729_VER}
 #perl -pi -e 's|BASICOPERATIONSMACROS__H|BASICOPERATIONSMACROS_H|g' include/basicOperationsMacros.h
 ./autogen.sh
-./configure
+./configure ${CONFIGURE_ARGS}
 make
 sudo make install
 cd ..
@@ -46,14 +46,14 @@ sudo make install
 cd ..
 git clone https://github.com/cisco/libsrtp.git
 cd libsrtp
-./configure
+./configure ${CONFIGURE_ARGS}
 make
 sudo make install
 cd ..
 wget http://www.mega-nerd.com/libsndfile/files/libsndfile-${SNDFILE_VER}.tar.gz
 tar xfz libsndfile-${SNDFILE_VER}.tar.gz
 cd libsndfile-${SNDFILE_VER}
-./configure
+./configure ${CONFIGURE_ARGS}
 make
 sudo make install
 cd ../..
@@ -64,14 +64,14 @@ autoreconf --force --install --verbose
 
 if [ "${TTYPE}" = "depsbuild" ]
 then
-  ./configure
+  ./configure ${CONFIGURE_ARGS}
   make ${ALLCLEAN_TGT}
   ${APT_GET} install -y libsrtp0-dev
-  ./configure
+  ./configure ${CONFIGURE_ARGS}
   exec make ${ALLCLEAN_TGT}
 fi
 
-CONFIGURE_ARGS="--enable-coverage"
+CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-coverage"
 case ${TTYPE} in
 basic)
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-basic-tests"
