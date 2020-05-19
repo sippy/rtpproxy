@@ -1,5 +1,6 @@
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/ccflags.ami
+include $(top_srcdir)/m4/coverage.ami
 
 UCL_DIR=$(top_srcdir)/external/libucl
 UCL_SDIR=$(UCL_DIR)/src
@@ -34,5 +35,3 @@ libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
   $(top_srcdir)/src/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS)
 libucl_test_LDADD=libucl_debug.a $(RTPP_MEMDEB_LDADD)
-
-CLEANFILES = *.gcda *.gcno
