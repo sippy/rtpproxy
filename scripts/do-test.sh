@@ -39,7 +39,7 @@ tar xfz bcg729-${BCG729_VER}.tar.gz
 cd bcg729-${BCG729_VER}
 #perl -pi -e 's|BASICOPERATIONSMACROS__H|BASICOPERATIONSMACROS_H|g' include/basicOperationsMacros.h
 ./autogen.sh
-./configure ${CONFIGURE_ARGS}
+./configure
 make
 sudo make install
 cd ..
@@ -50,14 +50,14 @@ sudo make install
 cd ..
 git clone https://github.com/cisco/libsrtp.git
 cd libsrtp
-./configure ${CONFIGURE_ARGS}
+./configure
 make
 sudo make install
 cd ..
 wget http://www.mega-nerd.com/libsndfile/files/libsndfile-${SNDFILE_VER}.tar.gz
 tar xfz libsndfile-${SNDFILE_VER}.tar.gz
 cd libsndfile-${SNDFILE_VER}
-./configure ${CONFIGURE_ARGS}
+./configure
 make
 sudo make install
 cd ../..
