@@ -64,7 +64,7 @@ jobs:
       compiler: clang
       env:
         - TTYPE=cleanbuild
-        - CC=clang-9
+        - CC=clang-9 AR=llvm-ar-9 RANLIB=llvm-ranlib-9
         - CONFIGURE_ARGS=--enable-lto
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
@@ -108,7 +108,7 @@ jobs:
       compiler: clang
       env:
         - TTYPE=depsbuild
-        - CC=clang-9
+        - CC=clang-9 AR=llvm-ar-9 RANLIB=llvm-ranlib-9
         - CONFIGURE_ARGS=--enable-lto
       before_install:
         - sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
@@ -146,7 +146,7 @@ jobs:
       compiler: clang
       env:
         - TTYPE=basic
-        - CC=clang-9
+        - CC=clang-9 AR=llvm-ar-9 RANLIB=llvm-ranlib-9
         - CONFIGURE_ARGS=--enable-lto
         - GCOV_CMD="llvm-cov-9 gcov"
       before_install:
@@ -168,7 +168,7 @@ jobs:
       compiler: clang
       env:
         - TTYPE=glitching
-        - CC=clang-9
+        - CC=clang-9 AR=llvm-ar-9 RANLIB=llvm-ranlib-9
         - CONFIGURE_ARGS=--enable-lto
         - GCOV_CMD="llvm-cov-9 gcov"
       before_install:
