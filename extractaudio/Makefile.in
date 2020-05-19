@@ -235,7 +235,6 @@ AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
 am__v_at_1 = 
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/extractaudio-decoder.Po \
@@ -485,6 +484,8 @@ RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_me
 RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
 RTPP_AUTOSRC_DIR = $(top_srcdir)/autosrc
+MAINSRCDIR = $(top_srcdir)/src
+DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
@@ -522,7 +523,6 @@ rtpp_server_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_server_fin.h $(RTPP_AUTOSRC_DIR)
 rtpp_stats_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_stats_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_stats_fin.c
 rtpp_stream_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_stream_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_stream_fin.c
 rtpp_timed_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_timed_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_timed_fin.c
-MAINSRCDIR = $(top_srcdir)/src
 extractaudio_SOURCES = extractaudio.c decoder.c rtpp_loader.c \
 	${MAINSRCDIR}/rtp.c ${MAINSRCDIR}/rtp_analyze.c \
 	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c decoder.h \

@@ -88,9 +88,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
 bin_PROGRAMS = udp_contention$(EXEEXT)
-@BUILD_ELPERIODIC_TRUE@am__append_1 = ${MAINSRCDIR}/rtpp_math.c
-@BUILD_ELPERIODIC_TRUE@am__append_2 = -I$(top_srcdir)/libelperiodic/src
+@BUILD_ELPERIODIC_TRUE@am__append_2 = ${MAINSRCDIR}/rtpp_math.c
+@BUILD_ELPERIODIC_TRUE@am__append_3 = -I$(top_srcdir)/libelperiodic/src
 subdir = pertools/udp_contention
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
@@ -130,7 +131,6 @@ AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
 am__v_at_1 = 
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/rtpp_math.Po \
@@ -180,7 +180,8 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
+am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
+	$(top_srcdir)/m4/ccflags.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -198,7 +199,7 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DEFS = -I$(MAINSRCDIR) @DEFS@ $(am__append_2)
+DEFS = -I$(MAINSRCDIR) @DEFS@ $(am__append_3)
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
@@ -316,13 +317,17 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 MAINSRCDIR = $(top_srcdir)/src
-udp_contention_SOURCES = udp_contention.c $(am__append_1)
+DEFAULT_INCLUDES = -I$(MAINSRCDIR)
+CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
+	$(am__append_1)
+@ENABLE_LTO_TRUE@LTO_FLAG = -flto
+udp_contention_SOURCES = udp_contention.c $(am__append_2)
 udp_contention_LDADD = -lm -lpthread @LIBS_ELPERIODIC@
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/ccflags.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -342,6 +347,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
+$(top_srcdir)/m4/ccflags.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
