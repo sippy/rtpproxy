@@ -1,0 +1,4 @@
+rtpproxy_module_20200519 {
+    global: rtpp_module;
+    local: *;
+};
