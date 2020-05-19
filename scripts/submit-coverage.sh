@@ -7,5 +7,7 @@ set -e
 #  find src -name "*_fin.${ext}" -delete
 #done
 
+GCOV_CMD="${GCOV_CMD:-gcov}"
 coveralls --exclude external --exclude hepconnector --exclude libelperiodic \
-  --exclude dist --exclude bench --exclude pertools --gcov gcov --gcov-options '\-lp'
+  --exclude dist --exclude bench --exclude pertools --gcov "${GCOV_CMD}" \
+  --gcov-options '\-lp'
