@@ -18,10 +18,7 @@ after_success:
     do
       cat tests/${f}.log;
     done
-  - if [ "${CC}" = "gcc" ];
-    then
-      sh -x ./scripts/submit-coverage.sh ;
-    fi
+  - sh -x ./scripts/submit-coverage.sh
 notifications:
   webhooks: https://coveralls.io/webhook
 
@@ -135,6 +132,7 @@ jobs:
       compiler: clang
       env:
         - TTYPE=basic
+        - GCOV_CMD="llvm-cov gcov"
       before_script:
         - sh -x ./scripts/install_working_nc.sh
     - name: "Functional Testing @ Ubuntu 18 Clang 7"
@@ -142,6 +140,7 @@ jobs:
       compiler: clang
       env:
         - TTYPE=basic
+        - GCOV_CMD="llvm-cov gcov"
     - name: "Functional Testing @ Ubuntu 18 Clang 9+LTO"
       dist: bionic
       compiler: clang
@@ -149,6 +148,7 @@ jobs:
         - TTYPE=basic
         - CC=clang-9
         - CONFIGURE_ARGS=--enable-lto
+        - GCOV_CMD="llvm-cov-9 gcov"
       before_install:
         - sh -x ./scripts/ft-before_install.sh
         - sudo apt-get -y install clang-9 llvm-9-dev libc++-9-dev libc++abi-9-dev
@@ -170,6 +170,7 @@ jobs:
         - TTYPE=glitching
         - CC=clang-9
         - CONFIGURE_ARGS=--enable-lto
+        - GCOV_CMD="llvm-cov-9 gcov"
       before_install:
         - sh -x ./scripts/ft-before_install.sh
         - sudo apt-get -y install clang-9 llvm-9-dev libc++-9-dev libc++abi-9-dev
