@@ -73,7 +73,8 @@ struct test_data {
 struct tests {
     struct test_data queue_p2c;
     struct test_data queue_b2b;
-    struct test_data wi_malloc;
+    struct test_data wi_malloc_udata;
+    struct test_data wi_malloc_data;
 };
 
 struct thr_args {
@@ -104,12 +105,16 @@ update_derived_stats(double dtime, void *argp)
         rtpp_queue_put_item(tap->sigterm, tap->fqp);
         break;
 
+    case 1:
+        rtpp_queue_put_item(tap->sigterm, tap->fqp);
+        break;
+
     case 2:
         atomic_store(&tap->tdp->done, true);
         break;
 
-    case 1:
-        rtpp_queue_put_item(tap->sigterm, tap->fqp);
+    case 3:
+        atomic_store(&tap->tdp->done, true);
         break;
 
     default:
@@ -214,7 +219,8 @@ main(int argc, char **argv)
     memset(&tests, '\0', sizeof(tests));
     tests.queue_p2c.done = ATOMIC_VAR_INIT(false);
     tests.queue_b2b.done = ATOMIC_VAR_INIT(false);
-    tests.wi_malloc.done = ATOMIC_VAR_INIT(false);
+    tests.wi_malloc_udata.done = ATOMIC_VAR_INIT(false);
+    tests.wi_malloc_data.done = ATOMIC_VAR_INIT(false);
 
     tsize = 1256;
     if (argc > 1) {
@@ -324,19 +330,33 @@ main(int argc, char **argv)
     }
     RPRINT(&tests.queue_b2b, "rtpp_queue (b2b)", tsize);
 
-    targs.tdp = &tests.wi_malloc;
+    targs.tdp = &tests.wi_malloc_udata;
     ttp = CALL_SMETHOD(rtp, schedule_rc, 10.0, targs.rsp->rcnt, update_derived_stats, NULL, &targs);
     stime = getdtime();
     do {
         wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
         CALL_METHOD(wi, dtor);
-        tests.wi_malloc.nitems++;
-    } while(!atomic_load(&tests.wi_malloc.done));
-    tests.wi_malloc.runtime = getdtime() - stime;
-    RPRINT(&tests.wi_malloc, "rtpp_wi", tsize);
-
+        tests.wi_malloc_udata.nitems++;
+    } while(!atomic_load(&tests.wi_malloc_udata.done));
+    tests.wi_malloc_udata.runtime = getdtime() - stime;
+    RPRINT(&tests.wi_malloc_udata, "rtpp_wi(udata)", tsize);
     CALL_METHOD(ttp, cancel);
     RTPP_OBJ_DECREF(ttp);
+
+    targs.tdp = &tests.wi_malloc_data;
+    ttp = CALL_SMETHOD(rtp, schedule_rc, 10.0, targs.rsp->rcnt, update_derived_stats, NULL, &targs);
+    stime = getdtime();
+    do {
+        char fake_data[tsize];
+        wi = rtpp_wi_malloc_data(fake_data, tsize);
+        CALL_METHOD(wi, dtor);
+        tests.wi_malloc_data.nitems++;
+    } while(!atomic_load(&tests.wi_malloc_data.done));
+    tests.wi_malloc_data.runtime = getdtime() - stime;
+    RPRINT(&tests.wi_malloc_data, "rtpp_wi(data)", tsize);
+    CALL_METHOD(ttp, cancel);
+    RTPP_OBJ_DECREF(ttp);
+
     RTPP_OBJ_DECREF(targs.rsp);
     CALL_SMETHOD(rtp, shutdown);
     RTPP_OBJ_DECREF(rtp);
