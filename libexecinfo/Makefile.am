@@ -1,4 +1,5 @@
 include $(top_srcdir)/m4/memdeb.ami
+include $(top_srcdir)/m4/ccflags.ami
 
 noinst_LIBRARIES = libexecinfo.a
 libexecinfo_a_SOURCES = execinfo.c execinfo.h stacktraverse.c stacktraverse.h

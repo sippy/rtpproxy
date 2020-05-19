@@ -1,4 +1,5 @@
 include $(top_srcdir)/m4/memdeb.ami
+include $(top_srcdir)/m4/ccflags.ami
 
 UCL_DIR=$(top_srcdir)/external/libucl
 UCL_SDIR=$(UCL_DIR)/src

@@ -1,4 +1,5 @@
 include $(top_srcdir)/m4/memdeb.ami
+include $(top_srcdir)/m4/ccflags.ami
 
 bin_PROGRAMS=makeann
 noinst_PROGRAMS=makeann_debug
