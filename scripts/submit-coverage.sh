@@ -8,7 +8,7 @@ set -e
 #done
 
 GCOV_CMD="${GCOV_CMD:-gcov}"
-ln -sf src/rtpp_coverage.h rtpp_coverage.h
+ln -sf src/*.h ./
 coveralls --exclude external --exclude hepconnector --exclude libelperiodic \
   --exclude dist --exclude bench --exclude pertools --gcov "${GCOV_CMD}" \
   --gcov-options '\-lp'
