@@ -1,5 +1,6 @@
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/ccflags.ami
+include $(top_srcdir)/m4/coverage.ami
 
 HEPSRCDIR=$(top_srcdir)/hepconnector
 UCLSRCDIR=$(top_srcdir)/external/libucl
@@ -8,7 +9,8 @@ pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
 
 noinst_PROGRAMS = rtcp2json_test
 rtcp2json_test_SOURCES = rtcp2json_test.c rtpp_sbuf.c rtcp2json.c
-rtcp2json_test_CFLAGS = $(AM_CFLAGS)
+rtcp2json_test_CFLAGS = $(AM_CFLAGS) $(LTO_FLAG)
+rtcp2json_test_LDFLAGS = $(AM_CFLAGS) $(LTO_FLAG)
 
 rtpp_acct_rtcp_hep_la_SOURCES = rtpp_acct_rtcp_hep.c rtcp2json.c rtpp_sbuf.c \
   $(HEPSRCDIR)/core_hep.c rtpp_arh_conf.c
