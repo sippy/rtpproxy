@@ -207,7 +207,8 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
-	$(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/memdeb.ami
+	$(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami \
+	$(top_srcdir)/m4/memdeb.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -358,6 +359,7 @@ DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
+CLEANFILES = *.gcda *.gcno *.gcov
 noinst_LIBRARIES = libexecinfo.a
 libexecinfo_a_SOURCES = execinfo.c execinfo.h stacktraverse.c stacktraverse.h
 libexecinfo_a_CFLAGS = $(RTPP_MEMDEB_CFLAGS)
@@ -369,12 +371,11 @@ execinfo_TEST_CPPFLAGS = ${execinfo_check_CPPFLAGS} -Dexecinfo_TEST=main
 execinfo_TEST_SOURCES = execinfo.c stacktraverse.c
 execinfo_TEST_LDADD = @LIBS_DL@
 execinfo_TEST_CFLAGS = ${execinfo_check_CFLAGS}
-CLEANFILES = *.gcda *.gcno
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -394,7 +395,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(am__empty):
+$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh

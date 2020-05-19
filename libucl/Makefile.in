@@ -237,7 +237,8 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
-	$(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/memdeb.ami
+	$(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami \
+	$(top_srcdir)/m4/memdeb.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -388,6 +389,7 @@ DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
+CLEANFILES = *.gcda *.gcno *.gcov
 UCL_DIR = $(top_srcdir)/external/libucl
 UCL_SDIR = $(UCL_DIR)/src
 noinst_LIBRARIES = libucl.a libucl_debug.a
@@ -421,12 +423,11 @@ libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/src/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS)
 
 libucl_test_LDADD = libucl_debug.a $(RTPP_MEMDEB_LDADD)
-CLEANFILES = *.gcda *.gcno
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -446,7 +447,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(am__empty):
+$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh

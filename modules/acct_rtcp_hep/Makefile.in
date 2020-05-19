@@ -175,8 +175,8 @@ rtcp2json_test_OBJECTS = $(am_rtcp2json_test_OBJECTS)
 rtcp2json_test_LDADD = $(LDADD)
 rtcp2json_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(rtcp2json_test_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
-	$@
+	$(rtcp2json_test_CFLAGS) $(CFLAGS) $(rtcp2json_test_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am__objects_2 = rtpp_sbuf_selftest-rtpp_memdeb.$(OBJEXT) \
 	rtpp_sbuf_selftest-rtpp_glitch.$(OBJEXT) \
 	rtpp_sbuf_selftest-rtpp_autoglitch.$(OBJEXT)
@@ -269,7 +269,8 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
-	$(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/memdeb.ami
+	$(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami \
+	$(top_srcdir)/m4/memdeb.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -420,11 +421,13 @@ DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
+CLEANFILES = *.gcda *.gcno *.gcov
 HEPSRCDIR = $(top_srcdir)/hepconnector
 UCLSRCDIR = $(top_srcdir)/external/libucl
 pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
 rtcp2json_test_SOURCES = rtcp2json_test.c rtpp_sbuf.c rtcp2json.c
-rtcp2json_test_CFLAGS = $(AM_CFLAGS)
+rtcp2json_test_CFLAGS = $(AM_CFLAGS) $(LTO_FLAG)
+rtcp2json_test_LDFLAGS = $(AM_CFLAGS) $(LTO_FLAG)
 rtpp_acct_rtcp_hep_la_SOURCES = rtpp_acct_rtcp_hep.c rtcp2json.c rtpp_sbuf.c \
   $(HEPSRCDIR)/core_hep.c rtpp_arh_conf.c
 
@@ -453,7 +456,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -473,7 +476,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(am__empty):
+$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -881,6 +884,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)

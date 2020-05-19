@@ -181,7 +181,7 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
-	$(top_srcdir)/m4/ccflags.ami
+	$(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -321,13 +321,14 @@ DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
+CLEANFILES = *.gcda *.gcno *.gcov
 udp_contention_SOURCES = udp_contention.c $(am__append_2)
 udp_contention_LDADD = -lm -lpthread @LIBS_ELPERIODIC@
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/ccflags.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -347,7 +348,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(top_srcdir)/m4/ccflags.ami $(am__empty):
+$(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -581,6 +582,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
