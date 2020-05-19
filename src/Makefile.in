@@ -1241,9 +1241,6 @@ rtpp_server_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_server_fin.h $(RTPP_AUTOSRC_DIR)
 rtpp_stats_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_stats_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_stats_fin.c
 rtpp_stream_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_stream_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_stream_fin.c
 rtpp_timed_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_timed_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_timed_fin.c
-
-#MAINSRCDIR = $(top_srcdir)/src
-#DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 UCL_DIR = $(top_srcdir)/external/libucl
 RTPP_AUTOSRC_SOURCES = rtpp_command_rcache.h rtpp_log_obj.h \
 	rtpp_pcnt_strm.h rtpp_pcount.h rtpp_pipe.h rtpp_port_table.h \
