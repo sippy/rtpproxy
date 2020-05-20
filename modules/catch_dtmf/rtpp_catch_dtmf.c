@@ -260,6 +260,7 @@ catch_dtmf_data_dtor(struct catch_dtmf_stream_cfg *rtps_c)
     RTPP_OBJ_DECREF(rtps_c->rtdp);
     RTPP_OBJ_DECREF(rtps_c->edata);
     free(rtps_c);
+    RC_DECREF(rtpp_module.module_rcnt);
 }
 
 static struct catch_dtmf_stream_cfg *
@@ -284,6 +285,7 @@ catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const char *dtmf_tag,
           ctxp->strmp);
         goto e2;
     }
+    RC_INCREF(rtpp_module.module_rcnt);
     CALL_SMETHOD(rtps_c->rcnt, attach, (rtpp_refcnt_dtor_t)catch_dtmf_data_dtor, rtps_c);
     return (rtps_c);
 e2:
