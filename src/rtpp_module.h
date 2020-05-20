@@ -168,6 +168,7 @@ struct rtpp_minfo {
     rtpp_module_asprintf_t _asprintf;
     rtpp_module_vasprintf_t _vasprintf;
     struct rtpp_log *log;
+    struct rtpp_refcnt *module_rcnt;
     struct rtpp_wthrdata wthr;
 };
 

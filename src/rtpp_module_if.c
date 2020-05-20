@@ -245,14 +245,15 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
               "consider recompiling the module", pvt->mpath);
             goto e5;
         }
-        pvt->pub.has.do_acct = (pvt->mip->aapi->on_session_end.func != NULL);
+        self->has.do_acct = (pvt->mip->aapi->on_session_end.func != NULL);
     }
-    pvt->pub.has.ul_subc_h = (pvt->mip->capi != NULL &&
+    self->has.ul_subc_h = (pvt->mip->capi != NULL &&
       pvt->mip->capi->ul_subc_handle != NULL);
     pvt->ids.instance_id = CALL_METHOD(cfsp->modules_cf, get_next_id,
       pvt->mip->descr.module_id);
-    pvt->mip->ids = pvt->pub.ids = &pvt->ids;
-    pvt->pub.descr = &(pvt->mip->descr);
+    pvt->mip->ids = self->ids = &pvt->ids;
+    pvt->mip->module_rcnt = self->rcnt;
+    self->descr = &(pvt->mip->descr);
 
     return (0);
 e5:
