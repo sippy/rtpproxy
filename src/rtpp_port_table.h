@@ -30,7 +30,7 @@ struct rtpp_port_table;
 struct rtpp_refcnt;
 
 enum rtpp_ptu_rval {RTPP_PTU_BRKERR = -1, RTPP_PTU_OK = 0, RTPP_PTU_ONEMORE};
-DEFINE_RAW_METHOD(rtpp_pt_use, enum rtpp_ptu_rval, uint16_t, void *);
+DEFINE_RAW_METHOD(rtpp_pt_use, enum rtpp_ptu_rval, unsigned int, void *);
 
 DEFINE_METHOD(rtpp_port_table, rtpp_ptbl_get_port, int, rtpp_pt_use_t, void *);
 
