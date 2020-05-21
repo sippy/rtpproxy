@@ -110,7 +110,7 @@ struct rtpp_command_priv {
 
 struct d_opts;
 
-static int create_twinlistener(uint16_t, void *);
+static int create_twinlistener(unsigned int, void *);
 static void handle_info(struct cfg *, struct rtpp_command *,
   const char *);
 static void handle_ver_feature(struct cfg *cf, struct rtpp_command *cmd);
@@ -123,11 +123,13 @@ struct create_twinlistener_args {
 };
 
 static int
-create_twinlistener(uint16_t port, void *ap)
+create_twinlistener(unsigned int port, void *ap)
 {
     struct sockaddr_storage iac;
     int rval, i, so_rcvbuf;
     struct create_twinlistener_args *ctap;
+
+    RTPP_DBG_ASSERT(port >= 1 && IS_VALID_PORT(port - 1));
 
     ctap = (struct create_twinlistener_args *)ap;
 
@@ -162,6 +164,7 @@ create_twinlistener(uint16_t port, void *ap)
         CALL_METHOD(ctap->fds[i], setnonblock);
         CALL_METHOD(ctap->fds[i], settimestamp);
     }
+    RTPP_DBG_ASSERT(port > 2 && IS_VALID_PORT(port - 2));
     *ctap->port = port - 2;
     return RTPP_PTU_OK;
 
