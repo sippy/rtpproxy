@@ -35,9 +35,11 @@
 
 #if defined(RTPP_DEBUG)
 #include <assert.h>
+#include <signal.h>
 #include <stdint.h>
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
+#include "rtpp_stacktrace.h"
 #endif
 
 struct dummy {
@@ -136,6 +138,7 @@ main(int argc, char **argv)
     void *_trp = getreturnaddr(0);
     assert(_trp != NULL);
     assert(execinfo_set_topframe(_trp) == NULL);
+    rtpp_stacktrace(SIGCONT);
 #endif
 
     for (tp = &(tests[0]); tp->tname != NULL; tp++) {
