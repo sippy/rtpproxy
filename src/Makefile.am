@@ -8,7 +8,7 @@ include $(top_srcdir)/autosrc/Makefile.ami
 UCL_DIR=$(top_srcdir)/external/libucl
 
 bin_PROGRAMS=rtpproxy rtpproxy_debug
-noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_fintest
+noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_rzmalloc_perf_debug rtpp_fintest
 
 if BUILD_OBJCK
 noinst_PROGRAMS += rtpp_objck rtpp_objck_perf
@@ -111,6 +111,12 @@ rtpp_rzmalloc_perf_CFLAGS = $(EXTRA_CFLAGS)
 rtpp_rzmalloc_perf_CPPFLAGS = $(EXTRA_CPPFLAGS)
 rtpp_rzmalloc_perf_LDFLAGS = $(LTO_FLAG)
 rtpp_rzmalloc_perf_LDADD = -lm
+
+rtpp_rzmalloc_perf_debug_SOURCES = $(rtpp_rzmalloc_perf_SOURCES) rtpp_stacktrace.c rtpp_stacktrace.h
+rtpp_rzmalloc_perf_debug_CFLAGS = $(rtpp_rzmalloc_perf_CFLAGS) -fno-omit-frame-pointer
+rtpp_rzmalloc_perf_debug_CPPFLAGS = $(rtpp_rzmalloc_perf_CPPFLAGS) -DRTPP_DEBUG -I$(top_srcdir)
+rtpp_rzmalloc_perf_debug_LDFLAGS = $(rtpp_rzmalloc_perf_LDFLAGS)
+rtpp_rzmalloc_perf_debug_LDADD = $(rtpp_rzmalloc_perf_LDADD) $(top_srcdir)/libexecinfo/libexecinfo.a
 
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \

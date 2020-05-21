@@ -40,7 +40,7 @@ struct dummy {
 };
 
 static struct dummy *
-rtpp_rzmalloc_perf_ctor(void)
+rtpp_rzmalloc_perf(void)
 {
     struct dummy *pvt;
 
@@ -57,7 +57,7 @@ e0:
 }
 
 static struct dummy *
-rtpp_refcnt_perf_ctor(void)
+rtpp_refcnt_perf(void)
 {
     struct dummy *pvt;
 
@@ -76,6 +76,33 @@ e0:
     return (NULL);
 }
 
+#if defined(RTPP_DEBUG)
+static struct dummy *
+rtpp_refcnt_trace_perf(void)
+{
+    struct dummy *pvt;
+    static int once = 1;
+
+    pvt = rtpp_zmalloc(sizeof(struct dummy));
+    if (pvt == NULL) {
+        goto e0;
+    }
+    pvt->pub.rcnt = rtpp_refcnt_ctor(pvt, NULL);
+    if (pvt->pub.rcnt == NULL) {
+        goto e1;
+    }
+    if (once) {
+        CALL_SMETHOD(pvt->pub.rcnt, traceen);
+        once = 0;
+    }
+    return (pvt);
+e1:
+    free(pvt);
+e0:
+    return (NULL);
+}
+#endif
+
 #define TESTOPS (4 * 10000000)
 
 DEFINE_RAW_METHOD(perf_func_ctor, struct dummy *, void);
@@ -90,8 +117,11 @@ main(int argc, char **argv)
        perf_func_ctor_t pfunc_ctor;
        const char *tname;
     } *tp, tests[] = {
-       {.pfunc_ctor = rtpp_rzmalloc_perf_ctor, .tname = "rtpp_rzmalloc()"},
-       {.pfunc_ctor = rtpp_refcnt_perf_ctor, .tname = "rtpp_zmalloc()+rtpp_refcnt()"},
+       {.pfunc_ctor = rtpp_rzmalloc_perf, .tname = "rtpp_rzmalloc()"},
+       {.pfunc_ctor = rtpp_refcnt_perf, .tname = "rtpp_zmalloc()+rtpp_refcnt()"},
+#if defined(RTPP_DEBUG)
+       {.pfunc_ctor = rtpp_refcnt_trace_perf, .tname = "rtpp_zmalloc()+rtpp_refcnt(traceen)"},
+#endif
        {.tname = NULL}
     };
 
