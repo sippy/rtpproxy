@@ -25,6 +25,11 @@
  *
  */
 
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
+/* Apparently needed for asprintf(3) */
+#define _GNU_SOURCE
+#endif
+
 #include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -39,10 +44,6 @@
 #include "rtpp_refcnt_fin.h"
 
 #if RTPP_DEBUG_refcnt
-#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
-/* Apparently needed for asprintf(3) */
-#define _GNU_SOURCE
-#endif
 #include <stdio.h>
 #ifdef RTPP_DEBUG
 #include "rtpp_stacktrace.h"
