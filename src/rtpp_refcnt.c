@@ -39,7 +39,10 @@
 #include "rtpp_refcnt_fin.h"
 
 #if RTPP_DEBUG_refcnt
-#define _WITH_DPRINTF
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
+/* Apparently needed for asprintf(3) */
+#define _GNU_SOURCE
+#endif
 #include <stdio.h>
 #ifdef RTPP_DEBUG
 #include "rtpp_stacktrace.h"
