@@ -95,6 +95,14 @@ int rtpp_glitch_chmod(const char *path, mode_t mode, HERETYPE);
 
 #define chmod(path, mode) rtpp_glitch_chmod(path, mode, HEREVAL)
 
+int rtpp_glitch_fstat(int fd, struct stat *sb, HERETYPE);
+
+#ifdef fstat
+# undef fstat
+#endif
+
+#define fstat(fd, sb) rtpp_glitch_fstat(fd, sb, HEREVAL)
+
 #include <netdb.h>
 
 int rtpp_glitch_getaddrinfo(const char *, const char *, const struct addrinfo *,
