@@ -8,5 +8,9 @@ Makefile
 rtpproxy
 ktrace.out
 rtpproxy_debug
+rtpp_fintest
+rtpp_objck_perf
+rtpp_rzmalloc_perf
+rtpp_rzmalloc_perf_debug
 *_fin.c
 *_fin.h
