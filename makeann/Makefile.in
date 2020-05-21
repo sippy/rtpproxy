@@ -116,6 +116,9 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+makeann_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(makeann_CFLAGS) \
+	$(CFLAGS) $(makeann_LDFLAGS) $(LDFLAGS) -o $@
 am__objects_1 = makeann_debug-makeann.$(OBJEXT) \
 	makeann_debug-g729_compat.$(OBJEXT)
 am__objects_2 = makeann_debug-rtpp_memdeb.$(OBJEXT) \
@@ -129,7 +132,7 @@ makeann_debug_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_2)
 makeann_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(makeann_debug_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(CFLAGS) $(makeann_debug_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -356,10 +359,13 @@ makeann_SOURCES = makeann.c rtp.h g711.h $(extractaudio_SRCDIR)/g729_compat.c \
 
 makeann_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@
 makeann_CPPFLAGS = -I$(extractaudio_SRCDIR) -D_BSD_SOURCE
+makeann_CFLAGS = $(LTO_FLAG)
+makeann_LDFLAGS = $(LTO_FLAG)
 makeann_debug_SOURCES = $(makeann_SOURCES) $(RTPP_MEMDEB_CORESRCS)
 makeann_debug_LDADD = $(makeann_LDADD) $(RTPP_MEMDEB_LDADD)
 makeann_debug_CPPFLAGS = $(makeann_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=makeann
-makeann_debug_CFLAGS = $(RTPP_MEMDEB_CFLAGS)
+makeann_debug_CFLAGS = $(makeann_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+makeann_debug_LDFLAGS = $(makeann_LDFLAGS)
 all: all-am
 
 .SUFFIXES:
@@ -455,7 +461,7 @@ clean-noinstPROGRAMS:
 
 makeann$(EXEEXT): $(makeann_OBJECTS) $(makeann_DEPENDENCIES) $(EXTRA_makeann_DEPENDENCIES) 
 	@rm -f makeann$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(makeann_OBJECTS) $(makeann_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(makeann_LINK) $(makeann_OBJECTS) $(makeann_LDADD) $(LIBS)
 
 makeann_debug$(EXEEXT): $(makeann_debug_OBJECTS) $(makeann_debug_DEPENDENCIES) $(EXTRA_makeann_debug_DEPENDENCIES) 
 	@rm -f makeann_debug$(EXEEXT)
@@ -503,32 +509,32 @@ am--depfiles: $(am__depfiles_remade)
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 makeann-makeann.o: makeann.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT makeann-makeann.o -MD -MP -MF $(DEPDIR)/makeann-makeann.Tpo -c -o makeann-makeann.o `test -f 'makeann.c' || echo '$(srcdir)/'`makeann.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(makeann_CFLAGS) $(CFLAGS) -MT makeann-makeann.o -MD -MP -MF $(DEPDIR)/makeann-makeann.Tpo -c -o makeann-makeann.o `test -f 'makeann.c' || echo '$(srcdir)/'`makeann.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann-makeann.Tpo $(DEPDIR)/makeann-makeann.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='makeann.c' object='makeann-makeann.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o makeann-makeann.o `test -f 'makeann.c' || echo '$(srcdir)/'`makeann.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(makeann_CFLAGS) $(CFLAGS) -c -o makeann-makeann.o `test -f 'makeann.c' || echo '$(srcdir)/'`makeann.c
 
 makeann-makeann.obj: makeann.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT makeann-makeann.obj -MD -MP -MF $(DEPDIR)/makeann-makeann.Tpo -c -o makeann-makeann.obj `if test -f 'makeann.c'; then $(CYGPATH_W) 'makeann.c'; else $(CYGPATH_W) '$(srcdir)/makeann.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(makeann_CFLAGS) $(CFLAGS) -MT makeann-makeann.obj -MD -MP -MF $(DEPDIR)/makeann-makeann.Tpo -c -o makeann-makeann.obj `if test -f 'makeann.c'; then $(CYGPATH_W) 'makeann.c'; else $(CYGPATH_W) '$(srcdir)/makeann.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann-makeann.Tpo $(DEPDIR)/makeann-makeann.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='makeann.c' object='makeann-makeann.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o makeann-makeann.obj `if test -f 'makeann.c'; then $(CYGPATH_W) 'makeann.c'; else $(CYGPATH_W) '$(srcdir)/makeann.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(makeann_CFLAGS) $(CFLAGS) -c -o makeann-makeann.obj `if test -f 'makeann.c'; then $(CYGPATH_W) 'makeann.c'; else $(CYGPATH_W) '$(srcdir)/makeann.c'; fi`
 
 makeann-g729_compat.o: $(extractaudio_SRCDIR)/g729_compat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT makeann-g729_compat.o -MD -MP -MF $(DEPDIR)/makeann-g729_compat.Tpo -c -o makeann-g729_compat.o `test -f '$(extractaudio_SRCDIR)/g729_compat.c' || echo '$(srcdir)/'`$(extractaudio_SRCDIR)/g729_compat.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(makeann_CFLAGS) $(CFLAGS) -MT makeann-g729_compat.o -MD -MP -MF $(DEPDIR)/makeann-g729_compat.Tpo -c -o makeann-g729_compat.o `test -f '$(extractaudio_SRCDIR)/g729_compat.c' || echo '$(srcdir)/'`$(extractaudio_SRCDIR)/g729_compat.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann-g729_compat.Tpo $(DEPDIR)/makeann-g729_compat.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(extractaudio_SRCDIR)/g729_compat.c' object='makeann-g729_compat.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o makeann-g729_compat.o `test -f '$(extractaudio_SRCDIR)/g729_compat.c' || echo '$(srcdir)/'`$(extractaudio_SRCDIR)/g729_compat.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(makeann_CFLAGS) $(CFLAGS) -c -o makeann-g729_compat.o `test -f '$(extractaudio_SRCDIR)/g729_compat.c' || echo '$(srcdir)/'`$(extractaudio_SRCDIR)/g729_compat.c
 
 makeann-g729_compat.obj: $(extractaudio_SRCDIR)/g729_compat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT makeann-g729_compat.obj -MD -MP -MF $(DEPDIR)/makeann-g729_compat.Tpo -c -o makeann-g729_compat.obj `if test -f '$(extractaudio_SRCDIR)/g729_compat.c'; then $(CYGPATH_W) '$(extractaudio_SRCDIR)/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/$(extractaudio_SRCDIR)/g729_compat.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(makeann_CFLAGS) $(CFLAGS) -MT makeann-g729_compat.obj -MD -MP -MF $(DEPDIR)/makeann-g729_compat.Tpo -c -o makeann-g729_compat.obj `if test -f '$(extractaudio_SRCDIR)/g729_compat.c'; then $(CYGPATH_W) '$(extractaudio_SRCDIR)/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/$(extractaudio_SRCDIR)/g729_compat.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/makeann-g729_compat.Tpo $(DEPDIR)/makeann-g729_compat.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(extractaudio_SRCDIR)/g729_compat.c' object='makeann-g729_compat.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o makeann-g729_compat.obj `if test -f '$(extractaudio_SRCDIR)/g729_compat.c'; then $(CYGPATH_W) '$(extractaudio_SRCDIR)/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/$(extractaudio_SRCDIR)/g729_compat.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_CPPFLAGS) $(CPPFLAGS) $(makeann_CFLAGS) $(CFLAGS) -c -o makeann-g729_compat.obj `if test -f '$(extractaudio_SRCDIR)/g729_compat.c'; then $(CYGPATH_W) '$(extractaudio_SRCDIR)/g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/$(extractaudio_SRCDIR)/g729_compat.c'; fi`
 
 makeann_debug-makeann.o: makeann.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(makeann_debug_CPPFLAGS) $(CPPFLAGS) $(makeann_debug_CFLAGS) $(CFLAGS) -MT makeann_debug-makeann.o -MD -MP -MF $(DEPDIR)/makeann_debug-makeann.Tpo -c -o makeann_debug-makeann.o `test -f 'makeann.c' || echo '$(srcdir)/'`makeann.c

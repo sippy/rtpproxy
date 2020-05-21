@@ -111,14 +111,20 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__udp_contention_SOURCES_DIST = udp_contention.c \
 	${MAINSRCDIR}/rtpp_math.c
-@BUILD_ELPERIODIC_TRUE@am__objects_1 = rtpp_math.$(OBJEXT)
-am_udp_contention_OBJECTS = udp_contention.$(OBJEXT) $(am__objects_1)
+@BUILD_ELPERIODIC_TRUE@am__objects_1 =  \
+@BUILD_ELPERIODIC_TRUE@	udp_contention-rtpp_math.$(OBJEXT)
+am_udp_contention_OBJECTS = udp_contention-udp_contention.$(OBJEXT) \
+	$(am__objects_1)
 udp_contention_OBJECTS = $(am_udp_contention_OBJECTS)
 udp_contention_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+udp_contention_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(udp_contention_CFLAGS) $(CFLAGS) $(udp_contention_LDFLAGS) \
+	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -133,8 +139,8 @@ am__v_at_0 = @
 am__v_at_1 = 
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/rtpp_math.Po \
-	./$(DEPDIR)/udp_contention.Po
+am__depfiles_remade = ./$(DEPDIR)/udp_contention-rtpp_math.Po \
+	./$(DEPDIR)/udp_contention-udp_contention.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -324,6 +330,8 @@ CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 CLEANFILES = *.gcda *.gcno *.gcov
 udp_contention_SOURCES = udp_contention.c $(am__append_2)
 udp_contention_LDADD = -lm -lpthread @LIBS_ELPERIODIC@
+udp_contention_CFLAGS = $(LTO_FLAG)
+udp_contention_LDFLAGS = $(LTO_FLAG)
 all: all-am
 
 .SUFFIXES:
@@ -410,7 +418,7 @@ clean-binPROGRAMS:
 
 udp_contention$(EXEEXT): $(udp_contention_OBJECTS) $(udp_contention_DEPENDENCIES) $(EXTRA_udp_contention_DEPENDENCIES) 
 	@rm -f udp_contention$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(udp_contention_OBJECTS) $(udp_contention_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(udp_contention_LINK) $(udp_contention_OBJECTS) $(udp_contention_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -418,8 +426,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_math.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udp_contention.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udp_contention-rtpp_math.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udp_contention-udp_contention.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -448,19 +456,33 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-rtpp_math.o: ${MAINSRCDIR}/rtpp_math.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_math.o -MD -MP -MF $(DEPDIR)/rtpp_math.Tpo -c -o rtpp_math.o `test -f '${MAINSRCDIR}/rtpp_math.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_math.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_math.Tpo $(DEPDIR)/rtpp_math.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_math.c' object='rtpp_math.o' libtool=no @AMDEPBACKSLASH@
+udp_contention-udp_contention.o: udp_contention.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(udp_contention_CFLAGS) $(CFLAGS) -MT udp_contention-udp_contention.o -MD -MP -MF $(DEPDIR)/udp_contention-udp_contention.Tpo -c -o udp_contention-udp_contention.o `test -f 'udp_contention.c' || echo '$(srcdir)/'`udp_contention.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/udp_contention-udp_contention.Tpo $(DEPDIR)/udp_contention-udp_contention.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='udp_contention.c' object='udp_contention-udp_contention.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_math.o `test -f '${MAINSRCDIR}/rtpp_math.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_math.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(udp_contention_CFLAGS) $(CFLAGS) -c -o udp_contention-udp_contention.o `test -f 'udp_contention.c' || echo '$(srcdir)/'`udp_contention.c
 
-rtpp_math.obj: ${MAINSRCDIR}/rtpp_math.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtpp_math.obj -MD -MP -MF $(DEPDIR)/rtpp_math.Tpo -c -o rtpp_math.obj `if test -f '${MAINSRCDIR}/rtpp_math.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_math.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_math.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_math.Tpo $(DEPDIR)/rtpp_math.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_math.c' object='rtpp_math.obj' libtool=no @AMDEPBACKSLASH@
+udp_contention-udp_contention.obj: udp_contention.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(udp_contention_CFLAGS) $(CFLAGS) -MT udp_contention-udp_contention.obj -MD -MP -MF $(DEPDIR)/udp_contention-udp_contention.Tpo -c -o udp_contention-udp_contention.obj `if test -f 'udp_contention.c'; then $(CYGPATH_W) 'udp_contention.c'; else $(CYGPATH_W) '$(srcdir)/udp_contention.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/udp_contention-udp_contention.Tpo $(DEPDIR)/udp_contention-udp_contention.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='udp_contention.c' object='udp_contention-udp_contention.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtpp_math.obj `if test -f '${MAINSRCDIR}/rtpp_math.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_math.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_math.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(udp_contention_CFLAGS) $(CFLAGS) -c -o udp_contention-udp_contention.obj `if test -f 'udp_contention.c'; then $(CYGPATH_W) 'udp_contention.c'; else $(CYGPATH_W) '$(srcdir)/udp_contention.c'; fi`
+
+udp_contention-rtpp_math.o: ${MAINSRCDIR}/rtpp_math.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(udp_contention_CFLAGS) $(CFLAGS) -MT udp_contention-rtpp_math.o -MD -MP -MF $(DEPDIR)/udp_contention-rtpp_math.Tpo -c -o udp_contention-rtpp_math.o `test -f '${MAINSRCDIR}/rtpp_math.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_math.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/udp_contention-rtpp_math.Tpo $(DEPDIR)/udp_contention-rtpp_math.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_math.c' object='udp_contention-rtpp_math.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(udp_contention_CFLAGS) $(CFLAGS) -c -o udp_contention-rtpp_math.o `test -f '${MAINSRCDIR}/rtpp_math.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_math.c
+
+udp_contention-rtpp_math.obj: ${MAINSRCDIR}/rtpp_math.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(udp_contention_CFLAGS) $(CFLAGS) -MT udp_contention-rtpp_math.obj -MD -MP -MF $(DEPDIR)/udp_contention-rtpp_math.Tpo -c -o udp_contention-rtpp_math.obj `if test -f '${MAINSRCDIR}/rtpp_math.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_math.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_math.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/udp_contention-rtpp_math.Tpo $(DEPDIR)/udp_contention-rtpp_math.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_math.c' object='udp_contention-rtpp_math.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(udp_contention_CFLAGS) $(CFLAGS) -c -o udp_contention-rtpp_math.obj `if test -f '${MAINSRCDIR}/rtpp_math.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_math.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_math.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -596,8 +618,8 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/rtpp_math.Po
-	-rm -f ./$(DEPDIR)/udp_contention.Po
+		-rm -f ./$(DEPDIR)/udp_contention-rtpp_math.Po
+	-rm -f ./$(DEPDIR)/udp_contention-udp_contention.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -643,8 +665,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/rtpp_math.Po
-	-rm -f ./$(DEPDIR)/udp_contention.Po
+		-rm -f ./$(DEPDIR)/udp_contention-rtpp_math.Po
+	-rm -f ./$(DEPDIR)/udp_contention-udp_contention.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

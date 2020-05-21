@@ -158,6 +158,9 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+extractaudio_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(extractaudio_CFLAGS) \
+	$(CFLAGS) $(extractaudio_LDFLAGS) $(LDFLAGS) -o $@
 am__extractaudio_debug_SOURCES_DIST = extractaudio.c decoder.c \
 	rtpp_loader.c ${MAINSRCDIR}/rtp.c ${MAINSRCDIR}/rtp_analyze.c \
 	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c decoder.h \
@@ -221,8 +224,8 @@ extractaudio_debug_DEPENDENCIES = $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_3)
 extractaudio_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(extractaudio_debug_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+	$(extractaudio_debug_CFLAGS) $(CFLAGS) \
+	$(extractaudio_debug_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -540,10 +543,13 @@ extractaudio_SOURCES = extractaudio.c decoder.c rtpp_loader.c \
 extractaudio_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@ @LIBS_SNDFILE@ \
 	-lm -lpthread $(am__append_3)
 extractaudio_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) -D_BSD_SOURCE
+extractaudio_CFLAGS = $(LTO_FLAG)
+extractaudio_LDFLAGS = $(LTO_FLAG)
 extractaudio_debug_SOURCES = $(extractaudio_SOURCES) $(RTPP_MEMDEB_CORESRCS)
 extractaudio_debug_LDADD = $(extractaudio_LDADD) $(RTPP_MEMDEB_LDADD)
 extractaudio_debug_CPPFLAGS = $(extractaudio_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=extractaudio
-extractaudio_debug_CFLAGS = $(RTPP_MEMDEB_CFLAGS)
+extractaudio_debug_CFLAGS = $(extractaudio_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+extractaudio_debug_LDFLAGS = $(extractaudio_LDFLAGS)
 all: all-am
 
 .SUFFIXES:
@@ -639,7 +645,7 @@ clean-noinstPROGRAMS:
 
 extractaudio$(EXEEXT): $(extractaudio_OBJECTS) $(extractaudio_DEPENDENCIES) $(EXTRA_extractaudio_DEPENDENCIES) 
 	@rm -f extractaudio$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(extractaudio_OBJECTS) $(extractaudio_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(extractaudio_LINK) $(extractaudio_OBJECTS) $(extractaudio_LDADD) $(LIBS)
 
 extractaudio_debug$(EXEEXT): $(extractaudio_debug_OBJECTS) $(extractaudio_debug_DEPENDENCIES) $(EXTRA_extractaudio_debug_DEPENDENCIES) 
 	@rm -f extractaudio_debug$(EXEEXT)
@@ -731,340 +737,340 @@ am--depfiles: $(am__depfiles_remade)
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 extractaudio-extractaudio.o: extractaudio.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-extractaudio.o -MD -MP -MF $(DEPDIR)/extractaudio-extractaudio.Tpo -c -o extractaudio-extractaudio.o `test -f 'extractaudio.c' || echo '$(srcdir)/'`extractaudio.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-extractaudio.o -MD -MP -MF $(DEPDIR)/extractaudio-extractaudio.Tpo -c -o extractaudio-extractaudio.o `test -f 'extractaudio.c' || echo '$(srcdir)/'`extractaudio.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-extractaudio.Tpo $(DEPDIR)/extractaudio-extractaudio.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='extractaudio.c' object='extractaudio-extractaudio.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-extractaudio.o `test -f 'extractaudio.c' || echo '$(srcdir)/'`extractaudio.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-extractaudio.o `test -f 'extractaudio.c' || echo '$(srcdir)/'`extractaudio.c
 
 extractaudio-extractaudio.obj: extractaudio.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-extractaudio.obj -MD -MP -MF $(DEPDIR)/extractaudio-extractaudio.Tpo -c -o extractaudio-extractaudio.obj `if test -f 'extractaudio.c'; then $(CYGPATH_W) 'extractaudio.c'; else $(CYGPATH_W) '$(srcdir)/extractaudio.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-extractaudio.obj -MD -MP -MF $(DEPDIR)/extractaudio-extractaudio.Tpo -c -o extractaudio-extractaudio.obj `if test -f 'extractaudio.c'; then $(CYGPATH_W) 'extractaudio.c'; else $(CYGPATH_W) '$(srcdir)/extractaudio.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-extractaudio.Tpo $(DEPDIR)/extractaudio-extractaudio.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='extractaudio.c' object='extractaudio-extractaudio.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-extractaudio.obj `if test -f 'extractaudio.c'; then $(CYGPATH_W) 'extractaudio.c'; else $(CYGPATH_W) '$(srcdir)/extractaudio.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-extractaudio.obj `if test -f 'extractaudio.c'; then $(CYGPATH_W) 'extractaudio.c'; else $(CYGPATH_W) '$(srcdir)/extractaudio.c'; fi`
 
 extractaudio-decoder.o: decoder.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-decoder.o -MD -MP -MF $(DEPDIR)/extractaudio-decoder.Tpo -c -o extractaudio-decoder.o `test -f 'decoder.c' || echo '$(srcdir)/'`decoder.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-decoder.o -MD -MP -MF $(DEPDIR)/extractaudio-decoder.Tpo -c -o extractaudio-decoder.o `test -f 'decoder.c' || echo '$(srcdir)/'`decoder.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-decoder.Tpo $(DEPDIR)/extractaudio-decoder.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='decoder.c' object='extractaudio-decoder.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-decoder.o `test -f 'decoder.c' || echo '$(srcdir)/'`decoder.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-decoder.o `test -f 'decoder.c' || echo '$(srcdir)/'`decoder.c
 
 extractaudio-decoder.obj: decoder.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-decoder.obj -MD -MP -MF $(DEPDIR)/extractaudio-decoder.Tpo -c -o extractaudio-decoder.obj `if test -f 'decoder.c'; then $(CYGPATH_W) 'decoder.c'; else $(CYGPATH_W) '$(srcdir)/decoder.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-decoder.obj -MD -MP -MF $(DEPDIR)/extractaudio-decoder.Tpo -c -o extractaudio-decoder.obj `if test -f 'decoder.c'; then $(CYGPATH_W) 'decoder.c'; else $(CYGPATH_W) '$(srcdir)/decoder.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-decoder.Tpo $(DEPDIR)/extractaudio-decoder.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='decoder.c' object='extractaudio-decoder.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-decoder.obj `if test -f 'decoder.c'; then $(CYGPATH_W) 'decoder.c'; else $(CYGPATH_W) '$(srcdir)/decoder.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-decoder.obj `if test -f 'decoder.c'; then $(CYGPATH_W) 'decoder.c'; else $(CYGPATH_W) '$(srcdir)/decoder.c'; fi`
 
 extractaudio-rtpp_loader.o: rtpp_loader.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_loader.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_loader.Tpo -c -o extractaudio-rtpp_loader.o `test -f 'rtpp_loader.c' || echo '$(srcdir)/'`rtpp_loader.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_loader.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_loader.Tpo -c -o extractaudio-rtpp_loader.o `test -f 'rtpp_loader.c' || echo '$(srcdir)/'`rtpp_loader.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_loader.Tpo $(DEPDIR)/extractaudio-rtpp_loader.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_loader.c' object='extractaudio-rtpp_loader.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_loader.o `test -f 'rtpp_loader.c' || echo '$(srcdir)/'`rtpp_loader.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_loader.o `test -f 'rtpp_loader.c' || echo '$(srcdir)/'`rtpp_loader.c
 
 extractaudio-rtpp_loader.obj: rtpp_loader.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_loader.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_loader.Tpo -c -o extractaudio-rtpp_loader.obj `if test -f 'rtpp_loader.c'; then $(CYGPATH_W) 'rtpp_loader.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_loader.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_loader.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_loader.Tpo -c -o extractaudio-rtpp_loader.obj `if test -f 'rtpp_loader.c'; then $(CYGPATH_W) 'rtpp_loader.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_loader.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_loader.Tpo $(DEPDIR)/extractaudio-rtpp_loader.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_loader.c' object='extractaudio-rtpp_loader.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_loader.obj `if test -f 'rtpp_loader.c'; then $(CYGPATH_W) 'rtpp_loader.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_loader.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_loader.obj `if test -f 'rtpp_loader.c'; then $(CYGPATH_W) 'rtpp_loader.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_loader.c'; fi`
 
 extractaudio-rtp.o: ${MAINSRCDIR}/rtp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtp.o -MD -MP -MF $(DEPDIR)/extractaudio-rtp.Tpo -c -o extractaudio-rtp.o `test -f '${MAINSRCDIR}/rtp.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtp.o -MD -MP -MF $(DEPDIR)/extractaudio-rtp.Tpo -c -o extractaudio-rtp.o `test -f '${MAINSRCDIR}/rtp.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtp.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtp.Tpo $(DEPDIR)/extractaudio-rtp.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtp.c' object='extractaudio-rtp.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtp.o `test -f '${MAINSRCDIR}/rtp.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtp.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtp.o `test -f '${MAINSRCDIR}/rtp.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtp.c
 
 extractaudio-rtp.obj: ${MAINSRCDIR}/rtp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtp.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtp.Tpo -c -o extractaudio-rtp.obj `if test -f '${MAINSRCDIR}/rtp.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtp.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtp.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtp.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtp.Tpo -c -o extractaudio-rtp.obj `if test -f '${MAINSRCDIR}/rtp.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtp.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtp.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtp.Tpo $(DEPDIR)/extractaudio-rtp.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtp.c' object='extractaudio-rtp.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtp.obj `if test -f '${MAINSRCDIR}/rtp.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtp.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtp.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtp.obj `if test -f '${MAINSRCDIR}/rtp.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtp.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtp.c'; fi`
 
 extractaudio-rtp_analyze.o: ${MAINSRCDIR}/rtp_analyze.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtp_analyze.o -MD -MP -MF $(DEPDIR)/extractaudio-rtp_analyze.Tpo -c -o extractaudio-rtp_analyze.o `test -f '${MAINSRCDIR}/rtp_analyze.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtp_analyze.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtp_analyze.o -MD -MP -MF $(DEPDIR)/extractaudio-rtp_analyze.Tpo -c -o extractaudio-rtp_analyze.o `test -f '${MAINSRCDIR}/rtp_analyze.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtp_analyze.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtp_analyze.Tpo $(DEPDIR)/extractaudio-rtp_analyze.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtp_analyze.c' object='extractaudio-rtp_analyze.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtp_analyze.o `test -f '${MAINSRCDIR}/rtp_analyze.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtp_analyze.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtp_analyze.o `test -f '${MAINSRCDIR}/rtp_analyze.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtp_analyze.c
 
 extractaudio-rtp_analyze.obj: ${MAINSRCDIR}/rtp_analyze.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtp_analyze.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtp_analyze.Tpo -c -o extractaudio-rtp_analyze.obj `if test -f '${MAINSRCDIR}/rtp_analyze.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtp_analyze.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtp_analyze.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtp_analyze.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtp_analyze.Tpo -c -o extractaudio-rtp_analyze.obj `if test -f '${MAINSRCDIR}/rtp_analyze.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtp_analyze.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtp_analyze.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtp_analyze.Tpo $(DEPDIR)/extractaudio-rtp_analyze.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtp_analyze.c' object='extractaudio-rtp_analyze.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtp_analyze.obj `if test -f '${MAINSRCDIR}/rtp_analyze.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtp_analyze.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtp_analyze.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtp_analyze.obj `if test -f '${MAINSRCDIR}/rtp_analyze.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtp_analyze.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtp_analyze.c'; fi`
 
 extractaudio-rtpp_util.o: ${MAINSRCDIR}/rtpp_util.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_util.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_util.Tpo -c -o extractaudio-rtpp_util.o `test -f '${MAINSRCDIR}/rtpp_util.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_util.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_util.Tpo -c -o extractaudio-rtpp_util.o `test -f '${MAINSRCDIR}/rtpp_util.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_util.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_util.Tpo $(DEPDIR)/extractaudio-rtpp_util.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_util.c' object='extractaudio-rtpp_util.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_util.o `test -f '${MAINSRCDIR}/rtpp_util.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_util.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_util.o `test -f '${MAINSRCDIR}/rtpp_util.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_util.c
 
 extractaudio-rtpp_util.obj: ${MAINSRCDIR}/rtpp_util.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_util.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_util.Tpo -c -o extractaudio-rtpp_util.obj `if test -f '${MAINSRCDIR}/rtpp_util.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_util.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_util.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_util.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_util.Tpo -c -o extractaudio-rtpp_util.obj `if test -f '${MAINSRCDIR}/rtpp_util.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_util.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_util.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_util.Tpo $(DEPDIR)/extractaudio-rtpp_util.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_util.c' object='extractaudio-rtpp_util.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_util.obj `if test -f '${MAINSRCDIR}/rtpp_util.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_util.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_util.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_util.obj `if test -f '${MAINSRCDIR}/rtpp_util.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_util.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_util.c'; fi`
 
 extractaudio-rtpp_time.o: ${MAINSRCDIR}/rtpp_time.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_time.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_time.Tpo -c -o extractaudio-rtpp_time.o `test -f '${MAINSRCDIR}/rtpp_time.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_time.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_time.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_time.Tpo -c -o extractaudio-rtpp_time.o `test -f '${MAINSRCDIR}/rtpp_time.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_time.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_time.Tpo $(DEPDIR)/extractaudio-rtpp_time.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_time.c' object='extractaudio-rtpp_time.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_time.o `test -f '${MAINSRCDIR}/rtpp_time.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_time.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_time.o `test -f '${MAINSRCDIR}/rtpp_time.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_time.c
 
 extractaudio-rtpp_time.obj: ${MAINSRCDIR}/rtpp_time.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_time.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_time.Tpo -c -o extractaudio-rtpp_time.obj `if test -f '${MAINSRCDIR}/rtpp_time.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_time.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_time.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_time.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_time.Tpo -c -o extractaudio-rtpp_time.obj `if test -f '${MAINSRCDIR}/rtpp_time.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_time.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_time.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_time.Tpo $(DEPDIR)/extractaudio-rtpp_time.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_time.c' object='extractaudio-rtpp_time.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_time.obj `if test -f '${MAINSRCDIR}/rtpp_time.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_time.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_time.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_time.obj `if test -f '${MAINSRCDIR}/rtpp_time.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_time.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_time.c'; fi`
 
 extractaudio-g729_compat.o: g729_compat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-g729_compat.o -MD -MP -MF $(DEPDIR)/extractaudio-g729_compat.Tpo -c -o extractaudio-g729_compat.o `test -f 'g729_compat.c' || echo '$(srcdir)/'`g729_compat.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-g729_compat.o -MD -MP -MF $(DEPDIR)/extractaudio-g729_compat.Tpo -c -o extractaudio-g729_compat.o `test -f 'g729_compat.c' || echo '$(srcdir)/'`g729_compat.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-g729_compat.Tpo $(DEPDIR)/extractaudio-g729_compat.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='g729_compat.c' object='extractaudio-g729_compat.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-g729_compat.o `test -f 'g729_compat.c' || echo '$(srcdir)/'`g729_compat.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-g729_compat.o `test -f 'g729_compat.c' || echo '$(srcdir)/'`g729_compat.c
 
 extractaudio-g729_compat.obj: g729_compat.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-g729_compat.obj -MD -MP -MF $(DEPDIR)/extractaudio-g729_compat.Tpo -c -o extractaudio-g729_compat.obj `if test -f 'g729_compat.c'; then $(CYGPATH_W) 'g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/g729_compat.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-g729_compat.obj -MD -MP -MF $(DEPDIR)/extractaudio-g729_compat.Tpo -c -o extractaudio-g729_compat.obj `if test -f 'g729_compat.c'; then $(CYGPATH_W) 'g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/g729_compat.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-g729_compat.Tpo $(DEPDIR)/extractaudio-g729_compat.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='g729_compat.c' object='extractaudio-g729_compat.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-g729_compat.obj `if test -f 'g729_compat.c'; then $(CYGPATH_W) 'g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/g729_compat.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-g729_compat.obj `if test -f 'g729_compat.c'; then $(CYGPATH_W) 'g729_compat.c'; else $(CYGPATH_W) '$(srcdir)/g729_compat.c'; fi`
 
 extractaudio-rtpp_network.o: ${MAINSRCDIR}/rtpp_network.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_network.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_network.Tpo -c -o extractaudio-rtpp_network.o `test -f '${MAINSRCDIR}/rtpp_network.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_network.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_network.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_network.Tpo -c -o extractaudio-rtpp_network.o `test -f '${MAINSRCDIR}/rtpp_network.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_network.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_network.Tpo $(DEPDIR)/extractaudio-rtpp_network.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_network.c' object='extractaudio-rtpp_network.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_network.o `test -f '${MAINSRCDIR}/rtpp_network.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_network.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_network.o `test -f '${MAINSRCDIR}/rtpp_network.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_network.c
 
 extractaudio-rtpp_network.obj: ${MAINSRCDIR}/rtpp_network.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_network.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_network.Tpo -c -o extractaudio-rtpp_network.obj `if test -f '${MAINSRCDIR}/rtpp_network.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_network.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_network.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_network.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_network.Tpo -c -o extractaudio-rtpp_network.obj `if test -f '${MAINSRCDIR}/rtpp_network.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_network.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_network.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_network.Tpo $(DEPDIR)/extractaudio-rtpp_network.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_network.c' object='extractaudio-rtpp_network.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_network.obj `if test -f '${MAINSRCDIR}/rtpp_network.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_network.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_network.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_network.obj `if test -f '${MAINSRCDIR}/rtpp_network.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_network.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_network.c'; fi`
 
 extractaudio-rtpp_mallocs.o: ${MAINSRCDIR}/rtpp_mallocs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_mallocs.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_mallocs.Tpo -c -o extractaudio-rtpp_mallocs.o `test -f '${MAINSRCDIR}/rtpp_mallocs.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_mallocs.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_mallocs.Tpo -c -o extractaudio-rtpp_mallocs.o `test -f '${MAINSRCDIR}/rtpp_mallocs.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_mallocs.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_mallocs.Tpo $(DEPDIR)/extractaudio-rtpp_mallocs.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_mallocs.c' object='extractaudio-rtpp_mallocs.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_mallocs.o `test -f '${MAINSRCDIR}/rtpp_mallocs.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_mallocs.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_mallocs.o `test -f '${MAINSRCDIR}/rtpp_mallocs.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_mallocs.c
 
 extractaudio-rtpp_mallocs.obj: ${MAINSRCDIR}/rtpp_mallocs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_mallocs.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_mallocs.Tpo -c -o extractaudio-rtpp_mallocs.obj `if test -f '${MAINSRCDIR}/rtpp_mallocs.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_mallocs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_mallocs.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_mallocs.Tpo -c -o extractaudio-rtpp_mallocs.obj `if test -f '${MAINSRCDIR}/rtpp_mallocs.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_mallocs.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_mallocs.Tpo $(DEPDIR)/extractaudio-rtpp_mallocs.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_mallocs.c' object='extractaudio-rtpp_mallocs.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_mallocs.obj `if test -f '${MAINSRCDIR}/rtpp_mallocs.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_mallocs.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_mallocs.obj `if test -f '${MAINSRCDIR}/rtpp_mallocs.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_mallocs.c'; fi`
 
 extractaudio-rtpp_refcnt.o: ${MAINSRCDIR}/rtpp_refcnt.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_refcnt.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_refcnt.Tpo -c -o extractaudio-rtpp_refcnt.o `test -f '${MAINSRCDIR}/rtpp_refcnt.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_refcnt.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_refcnt.Tpo -c -o extractaudio-rtpp_refcnt.o `test -f '${MAINSRCDIR}/rtpp_refcnt.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_refcnt.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_refcnt.Tpo $(DEPDIR)/extractaudio-rtpp_refcnt.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_refcnt.c' object='extractaudio-rtpp_refcnt.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_refcnt.o `test -f '${MAINSRCDIR}/rtpp_refcnt.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_refcnt.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_refcnt.o `test -f '${MAINSRCDIR}/rtpp_refcnt.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_refcnt.c
 
 extractaudio-rtpp_refcnt.obj: ${MAINSRCDIR}/rtpp_refcnt.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_refcnt.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_refcnt.Tpo -c -o extractaudio-rtpp_refcnt.obj `if test -f '${MAINSRCDIR}/rtpp_refcnt.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_refcnt.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_refcnt.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_refcnt.Tpo -c -o extractaudio-rtpp_refcnt.obj `if test -f '${MAINSRCDIR}/rtpp_refcnt.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_refcnt.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_refcnt.Tpo $(DEPDIR)/extractaudio-rtpp_refcnt.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_refcnt.c' object='extractaudio-rtpp_refcnt.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_refcnt.obj `if test -f '${MAINSRCDIR}/rtpp_refcnt.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_refcnt.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_refcnt.obj `if test -f '${MAINSRCDIR}/rtpp_refcnt.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_refcnt.c'; fi`
 
 extractaudio-rtpp_refcnt_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_refcnt_fin.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_refcnt_fin.Tpo -c -o extractaudio-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_refcnt_fin.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_refcnt_fin.Tpo -c -o extractaudio-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_refcnt_fin.Tpo $(DEPDIR)/extractaudio-rtpp_refcnt_fin.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='extractaudio-rtpp_refcnt_fin.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
 
 extractaudio-rtpp_refcnt_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_refcnt_fin.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_refcnt_fin.Tpo -c -o extractaudio-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_refcnt_fin.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_refcnt_fin.Tpo -c -o extractaudio-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_refcnt_fin.Tpo $(DEPDIR)/extractaudio-rtpp_refcnt_fin.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='extractaudio-rtpp_refcnt_fin.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
 
 extractaudio-rtpp_ringbuf.o: ${MAINSRCDIR}/rtpp_ringbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf.Tpo -c -o extractaudio-rtpp_ringbuf.o `test -f '${MAINSRCDIR}/rtpp_ringbuf.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_ringbuf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf.Tpo -c -o extractaudio-rtpp_ringbuf.o `test -f '${MAINSRCDIR}/rtpp_ringbuf.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_ringbuf.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_ringbuf.Tpo $(DEPDIR)/extractaudio-rtpp_ringbuf.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_ringbuf.c' object='extractaudio-rtpp_ringbuf.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf.o `test -f '${MAINSRCDIR}/rtpp_ringbuf.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_ringbuf.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf.o `test -f '${MAINSRCDIR}/rtpp_ringbuf.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_ringbuf.c
 
 extractaudio-rtpp_ringbuf.obj: ${MAINSRCDIR}/rtpp_ringbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf.Tpo -c -o extractaudio-rtpp_ringbuf.obj `if test -f '${MAINSRCDIR}/rtpp_ringbuf.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_ringbuf.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_ringbuf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf.Tpo -c -o extractaudio-rtpp_ringbuf.obj `if test -f '${MAINSRCDIR}/rtpp_ringbuf.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_ringbuf.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_ringbuf.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_ringbuf.Tpo $(DEPDIR)/extractaudio-rtpp_ringbuf.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_ringbuf.c' object='extractaudio-rtpp_ringbuf.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf.obj `if test -f '${MAINSRCDIR}/rtpp_ringbuf.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_ringbuf.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_ringbuf.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf.obj `if test -f '${MAINSRCDIR}/rtpp_ringbuf.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_ringbuf.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_ringbuf.c'; fi`
 
 extractaudio-rtpp_ringbuf_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf_fin.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo -c -o extractaudio-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf_fin.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo -c -o extractaudio-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' object='extractaudio-rtpp_ringbuf_fin.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
 
 extractaudio-rtpp_ringbuf_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf_fin.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo -c -o extractaudio-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf_fin.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo -c -o extractaudio-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' object='extractaudio-rtpp_ringbuf_fin.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
 
 extractaudio-rtpp_netaddr.o: ${MAINSRCDIR}/rtpp_netaddr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_netaddr.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_netaddr.Tpo -c -o extractaudio-rtpp_netaddr.o `test -f '${MAINSRCDIR}/rtpp_netaddr.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_netaddr.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_netaddr.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_netaddr.Tpo -c -o extractaudio-rtpp_netaddr.o `test -f '${MAINSRCDIR}/rtpp_netaddr.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_netaddr.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_netaddr.Tpo $(DEPDIR)/extractaudio-rtpp_netaddr.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_netaddr.c' object='extractaudio-rtpp_netaddr.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_netaddr.o `test -f '${MAINSRCDIR}/rtpp_netaddr.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_netaddr.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_netaddr.o `test -f '${MAINSRCDIR}/rtpp_netaddr.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_netaddr.c
 
 extractaudio-rtpp_netaddr.obj: ${MAINSRCDIR}/rtpp_netaddr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_netaddr.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_netaddr.Tpo -c -o extractaudio-rtpp_netaddr.obj `if test -f '${MAINSRCDIR}/rtpp_netaddr.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_netaddr.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_netaddr.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_netaddr.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_netaddr.Tpo -c -o extractaudio-rtpp_netaddr.obj `if test -f '${MAINSRCDIR}/rtpp_netaddr.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_netaddr.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_netaddr.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_netaddr.Tpo $(DEPDIR)/extractaudio-rtpp_netaddr.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_netaddr.c' object='extractaudio-rtpp_netaddr.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_netaddr.obj `if test -f '${MAINSRCDIR}/rtpp_netaddr.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_netaddr.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_netaddr.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_netaddr.obj `if test -f '${MAINSRCDIR}/rtpp_netaddr.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_netaddr.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_netaddr.c'; fi`
 
 extractaudio-rtpp_netaddr_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_netaddr_fin.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_netaddr_fin.Tpo -c -o extractaudio-rtpp_netaddr_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_netaddr_fin.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_netaddr_fin.Tpo -c -o extractaudio-rtpp_netaddr_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_netaddr_fin.Tpo $(DEPDIR)/extractaudio-rtpp_netaddr_fin.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c' object='extractaudio-rtpp_netaddr_fin.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_netaddr_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_netaddr_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c
 
 extractaudio-rtpp_netaddr_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_netaddr_fin.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_netaddr_fin.Tpo -c -o extractaudio-rtpp_netaddr_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_netaddr_fin.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_netaddr_fin.Tpo -c -o extractaudio-rtpp_netaddr_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_netaddr_fin.Tpo $(DEPDIR)/extractaudio-rtpp_netaddr_fin.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c' object='extractaudio-rtpp_netaddr_fin.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_netaddr_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_netaddr_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c'; fi`
 
 extractaudio-eaud_oformats.o: eaud_oformats.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_oformats.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_oformats.Tpo -c -o extractaudio-eaud_oformats.o `test -f 'eaud_oformats.c' || echo '$(srcdir)/'`eaud_oformats.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_oformats.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_oformats.Tpo -c -o extractaudio-eaud_oformats.o `test -f 'eaud_oformats.c' || echo '$(srcdir)/'`eaud_oformats.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_oformats.Tpo $(DEPDIR)/extractaudio-eaud_oformats.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_oformats.c' object='extractaudio-eaud_oformats.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_oformats.o `test -f 'eaud_oformats.c' || echo '$(srcdir)/'`eaud_oformats.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_oformats.o `test -f 'eaud_oformats.c' || echo '$(srcdir)/'`eaud_oformats.c
 
 extractaudio-eaud_oformats.obj: eaud_oformats.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_oformats.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_oformats.Tpo -c -o extractaudio-eaud_oformats.obj `if test -f 'eaud_oformats.c'; then $(CYGPATH_W) 'eaud_oformats.c'; else $(CYGPATH_W) '$(srcdir)/eaud_oformats.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_oformats.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_oformats.Tpo -c -o extractaudio-eaud_oformats.obj `if test -f 'eaud_oformats.c'; then $(CYGPATH_W) 'eaud_oformats.c'; else $(CYGPATH_W) '$(srcdir)/eaud_oformats.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_oformats.Tpo $(DEPDIR)/extractaudio-eaud_oformats.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_oformats.c' object='extractaudio-eaud_oformats.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_oformats.obj `if test -f 'eaud_oformats.c'; then $(CYGPATH_W) 'eaud_oformats.c'; else $(CYGPATH_W) '$(srcdir)/eaud_oformats.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_oformats.obj `if test -f 'eaud_oformats.c'; then $(CYGPATH_W) 'eaud_oformats.c'; else $(CYGPATH_W) '$(srcdir)/eaud_oformats.c'; fi`
 
 extractaudio-rtpp_scan_pcap.o: rtpp_scan_pcap.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_scan_pcap.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_scan_pcap.Tpo -c -o extractaudio-rtpp_scan_pcap.o `test -f 'rtpp_scan_pcap.c' || echo '$(srcdir)/'`rtpp_scan_pcap.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_scan_pcap.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_scan_pcap.Tpo -c -o extractaudio-rtpp_scan_pcap.o `test -f 'rtpp_scan_pcap.c' || echo '$(srcdir)/'`rtpp_scan_pcap.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_scan_pcap.Tpo $(DEPDIR)/extractaudio-rtpp_scan_pcap.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_scan_pcap.c' object='extractaudio-rtpp_scan_pcap.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_scan_pcap.o `test -f 'rtpp_scan_pcap.c' || echo '$(srcdir)/'`rtpp_scan_pcap.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_scan_pcap.o `test -f 'rtpp_scan_pcap.c' || echo '$(srcdir)/'`rtpp_scan_pcap.c
 
 extractaudio-rtpp_scan_pcap.obj: rtpp_scan_pcap.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_scan_pcap.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_scan_pcap.Tpo -c -o extractaudio-rtpp_scan_pcap.obj `if test -f 'rtpp_scan_pcap.c'; then $(CYGPATH_W) 'rtpp_scan_pcap.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_pcap.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_scan_pcap.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_scan_pcap.Tpo -c -o extractaudio-rtpp_scan_pcap.obj `if test -f 'rtpp_scan_pcap.c'; then $(CYGPATH_W) 'rtpp_scan_pcap.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_pcap.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_scan_pcap.Tpo $(DEPDIR)/extractaudio-rtpp_scan_pcap.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_scan_pcap.c' object='extractaudio-rtpp_scan_pcap.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_scan_pcap.obj `if test -f 'rtpp_scan_pcap.c'; then $(CYGPATH_W) 'rtpp_scan_pcap.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_pcap.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_scan_pcap.obj `if test -f 'rtpp_scan_pcap.c'; then $(CYGPATH_W) 'rtpp_scan_pcap.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_pcap.c'; fi`
 
 extractaudio-eaud_pcap.o: eaud_pcap.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_pcap.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_pcap.Tpo -c -o extractaudio-eaud_pcap.o `test -f 'eaud_pcap.c' || echo '$(srcdir)/'`eaud_pcap.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_pcap.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_pcap.Tpo -c -o extractaudio-eaud_pcap.o `test -f 'eaud_pcap.c' || echo '$(srcdir)/'`eaud_pcap.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_pcap.Tpo $(DEPDIR)/extractaudio-eaud_pcap.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_pcap.c' object='extractaudio-eaud_pcap.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_pcap.o `test -f 'eaud_pcap.c' || echo '$(srcdir)/'`eaud_pcap.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_pcap.o `test -f 'eaud_pcap.c' || echo '$(srcdir)/'`eaud_pcap.c
 
 extractaudio-eaud_pcap.obj: eaud_pcap.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_pcap.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_pcap.Tpo -c -o extractaudio-eaud_pcap.obj `if test -f 'eaud_pcap.c'; then $(CYGPATH_W) 'eaud_pcap.c'; else $(CYGPATH_W) '$(srcdir)/eaud_pcap.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_pcap.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_pcap.Tpo -c -o extractaudio-eaud_pcap.obj `if test -f 'eaud_pcap.c'; then $(CYGPATH_W) 'eaud_pcap.c'; else $(CYGPATH_W) '$(srcdir)/eaud_pcap.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_pcap.Tpo $(DEPDIR)/extractaudio-eaud_pcap.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_pcap.c' object='extractaudio-eaud_pcap.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_pcap.obj `if test -f 'eaud_pcap.c'; then $(CYGPATH_W) 'eaud_pcap.c'; else $(CYGPATH_W) '$(srcdir)/eaud_pcap.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_pcap.obj `if test -f 'eaud_pcap.c'; then $(CYGPATH_W) 'eaud_pcap.c'; else $(CYGPATH_W) '$(srcdir)/eaud_pcap.c'; fi`
 
 extractaudio-eaud_substreams.o: eaud_substreams.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_substreams.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_substreams.Tpo -c -o extractaudio-eaud_substreams.o `test -f 'eaud_substreams.c' || echo '$(srcdir)/'`eaud_substreams.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_substreams.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_substreams.Tpo -c -o extractaudio-eaud_substreams.o `test -f 'eaud_substreams.c' || echo '$(srcdir)/'`eaud_substreams.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_substreams.Tpo $(DEPDIR)/extractaudio-eaud_substreams.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_substreams.c' object='extractaudio-eaud_substreams.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_substreams.o `test -f 'eaud_substreams.c' || echo '$(srcdir)/'`eaud_substreams.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_substreams.o `test -f 'eaud_substreams.c' || echo '$(srcdir)/'`eaud_substreams.c
 
 extractaudio-eaud_substreams.obj: eaud_substreams.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_substreams.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_substreams.Tpo -c -o extractaudio-eaud_substreams.obj `if test -f 'eaud_substreams.c'; then $(CYGPATH_W) 'eaud_substreams.c'; else $(CYGPATH_W) '$(srcdir)/eaud_substreams.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_substreams.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_substreams.Tpo -c -o extractaudio-eaud_substreams.obj `if test -f 'eaud_substreams.c'; then $(CYGPATH_W) 'eaud_substreams.c'; else $(CYGPATH_W) '$(srcdir)/eaud_substreams.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_substreams.Tpo $(DEPDIR)/extractaudio-eaud_substreams.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_substreams.c' object='extractaudio-eaud_substreams.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_substreams.obj `if test -f 'eaud_substreams.c'; then $(CYGPATH_W) 'eaud_substreams.c'; else $(CYGPATH_W) '$(srcdir)/eaud_substreams.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_substreams.obj `if test -f 'eaud_substreams.c'; then $(CYGPATH_W) 'eaud_substreams.c'; else $(CYGPATH_W) '$(srcdir)/eaud_substreams.c'; fi`
 
 extractaudio-rtpp_scan_adhoc.o: rtpp_scan_adhoc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_scan_adhoc.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_scan_adhoc.Tpo -c -o extractaudio-rtpp_scan_adhoc.o `test -f 'rtpp_scan_adhoc.c' || echo '$(srcdir)/'`rtpp_scan_adhoc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_scan_adhoc.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_scan_adhoc.Tpo -c -o extractaudio-rtpp_scan_adhoc.o `test -f 'rtpp_scan_adhoc.c' || echo '$(srcdir)/'`rtpp_scan_adhoc.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_scan_adhoc.Tpo $(DEPDIR)/extractaudio-rtpp_scan_adhoc.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_scan_adhoc.c' object='extractaudio-rtpp_scan_adhoc.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_scan_adhoc.o `test -f 'rtpp_scan_adhoc.c' || echo '$(srcdir)/'`rtpp_scan_adhoc.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_scan_adhoc.o `test -f 'rtpp_scan_adhoc.c' || echo '$(srcdir)/'`rtpp_scan_adhoc.c
 
 extractaudio-rtpp_scan_adhoc.obj: rtpp_scan_adhoc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_scan_adhoc.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_scan_adhoc.Tpo -c -o extractaudio-rtpp_scan_adhoc.obj `if test -f 'rtpp_scan_adhoc.c'; then $(CYGPATH_W) 'rtpp_scan_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_adhoc.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_scan_adhoc.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_scan_adhoc.Tpo -c -o extractaudio-rtpp_scan_adhoc.obj `if test -f 'rtpp_scan_adhoc.c'; then $(CYGPATH_W) 'rtpp_scan_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_adhoc.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_scan_adhoc.Tpo $(DEPDIR)/extractaudio-rtpp_scan_adhoc.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_scan_adhoc.c' object='extractaudio-rtpp_scan_adhoc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_scan_adhoc.obj `if test -f 'rtpp_scan_adhoc.c'; then $(CYGPATH_W) 'rtpp_scan_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_adhoc.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_scan_adhoc.obj `if test -f 'rtpp_scan_adhoc.c'; then $(CYGPATH_W) 'rtpp_scan_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_scan_adhoc.c'; fi`
 
 extractaudio-eaud_adhoc.o: eaud_adhoc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_adhoc.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_adhoc.Tpo -c -o extractaudio-eaud_adhoc.o `test -f 'eaud_adhoc.c' || echo '$(srcdir)/'`eaud_adhoc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_adhoc.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_adhoc.Tpo -c -o extractaudio-eaud_adhoc.o `test -f 'eaud_adhoc.c' || echo '$(srcdir)/'`eaud_adhoc.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_adhoc.Tpo $(DEPDIR)/extractaudio-eaud_adhoc.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_adhoc.c' object='extractaudio-eaud_adhoc.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_adhoc.o `test -f 'eaud_adhoc.c' || echo '$(srcdir)/'`eaud_adhoc.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_adhoc.o `test -f 'eaud_adhoc.c' || echo '$(srcdir)/'`eaud_adhoc.c
 
 extractaudio-eaud_adhoc.obj: eaud_adhoc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_adhoc.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_adhoc.Tpo -c -o extractaudio-eaud_adhoc.obj `if test -f 'eaud_adhoc.c'; then $(CYGPATH_W) 'eaud_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/eaud_adhoc.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_adhoc.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_adhoc.Tpo -c -o extractaudio-eaud_adhoc.obj `if test -f 'eaud_adhoc.c'; then $(CYGPATH_W) 'eaud_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/eaud_adhoc.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_adhoc.Tpo $(DEPDIR)/extractaudio-eaud_adhoc.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_adhoc.c' object='extractaudio-eaud_adhoc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_adhoc.obj `if test -f 'eaud_adhoc.c'; then $(CYGPATH_W) 'eaud_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/eaud_adhoc.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_adhoc.obj `if test -f 'eaud_adhoc.c'; then $(CYGPATH_W) 'eaud_adhoc.c'; else $(CYGPATH_W) '$(srcdir)/eaud_adhoc.c'; fi`
 
 extractaudio-eaud_crypto.o: eaud_crypto.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_crypto.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_crypto.Tpo -c -o extractaudio-eaud_crypto.o `test -f 'eaud_crypto.c' || echo '$(srcdir)/'`eaud_crypto.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_crypto.o -MD -MP -MF $(DEPDIR)/extractaudio-eaud_crypto.Tpo -c -o extractaudio-eaud_crypto.o `test -f 'eaud_crypto.c' || echo '$(srcdir)/'`eaud_crypto.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_crypto.Tpo $(DEPDIR)/extractaudio-eaud_crypto.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_crypto.c' object='extractaudio-eaud_crypto.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_crypto.o `test -f 'eaud_crypto.c' || echo '$(srcdir)/'`eaud_crypto.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_crypto.o `test -f 'eaud_crypto.c' || echo '$(srcdir)/'`eaud_crypto.c
 
 extractaudio-eaud_crypto.obj: eaud_crypto.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_crypto.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_crypto.Tpo -c -o extractaudio-eaud_crypto.obj `if test -f 'eaud_crypto.c'; then $(CYGPATH_W) 'eaud_crypto.c'; else $(CYGPATH_W) '$(srcdir)/eaud_crypto.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-eaud_crypto.obj -MD -MP -MF $(DEPDIR)/extractaudio-eaud_crypto.Tpo -c -o extractaudio-eaud_crypto.obj `if test -f 'eaud_crypto.c'; then $(CYGPATH_W) 'eaud_crypto.c'; else $(CYGPATH_W) '$(srcdir)/eaud_crypto.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-eaud_crypto.Tpo $(DEPDIR)/extractaudio-eaud_crypto.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eaud_crypto.c' object='extractaudio-eaud_crypto.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_crypto.obj `if test -f 'eaud_crypto.c'; then $(CYGPATH_W) 'eaud_crypto.c'; else $(CYGPATH_W) '$(srcdir)/eaud_crypto.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-eaud_crypto.obj `if test -f 'eaud_crypto.c'; then $(CYGPATH_W) 'eaud_crypto.c'; else $(CYGPATH_W) '$(srcdir)/eaud_crypto.c'; fi`
 
 extractaudio-srtp_util.o: srtp_util.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-srtp_util.o -MD -MP -MF $(DEPDIR)/extractaudio-srtp_util.Tpo -c -o extractaudio-srtp_util.o `test -f 'srtp_util.c' || echo '$(srcdir)/'`srtp_util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-srtp_util.o -MD -MP -MF $(DEPDIR)/extractaudio-srtp_util.Tpo -c -o extractaudio-srtp_util.o `test -f 'srtp_util.c' || echo '$(srcdir)/'`srtp_util.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-srtp_util.Tpo $(DEPDIR)/extractaudio-srtp_util.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='srtp_util.c' object='extractaudio-srtp_util.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-srtp_util.o `test -f 'srtp_util.c' || echo '$(srcdir)/'`srtp_util.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-srtp_util.o `test -f 'srtp_util.c' || echo '$(srcdir)/'`srtp_util.c
 
 extractaudio-srtp_util.obj: srtp_util.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT extractaudio-srtp_util.obj -MD -MP -MF $(DEPDIR)/extractaudio-srtp_util.Tpo -c -o extractaudio-srtp_util.obj `if test -f 'srtp_util.c'; then $(CYGPATH_W) 'srtp_util.c'; else $(CYGPATH_W) '$(srcdir)/srtp_util.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-srtp_util.obj -MD -MP -MF $(DEPDIR)/extractaudio-srtp_util.Tpo -c -o extractaudio-srtp_util.obj `if test -f 'srtp_util.c'; then $(CYGPATH_W) 'srtp_util.c'; else $(CYGPATH_W) '$(srcdir)/srtp_util.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-srtp_util.Tpo $(DEPDIR)/extractaudio-srtp_util.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='srtp_util.c' object='extractaudio-srtp_util.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o extractaudio-srtp_util.obj `if test -f 'srtp_util.c'; then $(CYGPATH_W) 'srtp_util.c'; else $(CYGPATH_W) '$(srcdir)/srtp_util.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-srtp_util.obj `if test -f 'srtp_util.c'; then $(CYGPATH_W) 'srtp_util.c'; else $(CYGPATH_W) '$(srcdir)/srtp_util.c'; fi`
 
 extractaudio_debug-extractaudio.o: extractaudio.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-extractaudio.o -MD -MP -MF $(DEPDIR)/extractaudio_debug-extractaudio.Tpo -c -o extractaudio_debug-extractaudio.o `test -f 'extractaudio.c' || echo '$(srcdir)/'`extractaudio.c
