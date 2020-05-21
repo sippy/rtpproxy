@@ -262,9 +262,10 @@ am__objects_70 = rtpp_rzmalloc_perf-rtpp_refcnt_fin.$(OBJEXT)
 am_rtpp_rzmalloc_perf_OBJECTS =  \
 	rtpp_rzmalloc_perf-rtpp_rzmalloc_perf.$(OBJEXT) \
 	rtpp_rzmalloc_perf-rtpp_mallocs.$(OBJEXT) \
-	rtpp_rzmalloc_perf-rtpp_refcnt.$(OBJEXT) $(am__objects_70)
+	rtpp_rzmalloc_perf-rtpp_refcnt.$(OBJEXT) \
+	rtpp_rzmalloc_perf-rtpp_time.$(OBJEXT) $(am__objects_70)
 rtpp_rzmalloc_perf_OBJECTS = $(am_rtpp_rzmalloc_perf_OBJECTS)
-rtpp_rzmalloc_perf_LDADD = $(LDADD)
+rtpp_rzmalloc_perf_DEPENDENCIES =
 rtpp_rzmalloc_perf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_rzmalloc_perf_CFLAGS) $(CFLAGS) \
@@ -805,6 +806,7 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_refcnt.Po \
 	./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_refcnt_fin.Po \
 	./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_rzmalloc_perf.Po \
+	./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Po \
 	./$(DEPDIR)/rtpproxy-main.Po \
 	./$(DEPDIR)/rtpproxy-po_manager.Po \
 	./$(DEPDIR)/rtpproxy-rpcpv1_copy.Po \
@@ -1324,11 +1326,12 @@ rtpp_objck_perf_SOURCES = rtpp_objck.c $(SRCS_AUTOGEN) \
 rtpp_objck_LDADD = $(rtpp_objck_perf_LDADD) $(RTPP_MEMDEB_LDADD)
 rtpp_objck_SOURCES = $(rtpp_objck_perf_SOURCES) $(SRCS_MEMDEB_CORE)
 rtpp_rzmalloc_perf_SOURCES = rtpp_rzmalloc_perf.c rtpp_mallocs.c rtpp_mallocs.h \
-  rtpp_refcnt.c $(rtpp_refcnt_AUTOSRCS)
+  rtpp_refcnt.c rtpp_time.c $(rtpp_refcnt_AUTOSRCS)
 
 rtpp_rzmalloc_perf_CFLAGS = $(EXTRA_CFLAGS)
 rtpp_rzmalloc_perf_CPPFLAGS = $(EXTRA_CPPFLAGS)
 rtpp_rzmalloc_perf_LDFLAGS = $(LTO_FLAG)
+rtpp_rzmalloc_perf_LDADD = -lm
 RTPP_COMMON_CPPFLAGS = -DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \
   -D_BSD_SOURCE
@@ -1601,6 +1604,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_refcnt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_refcnt_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_rzmalloc_perf.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-po_manager.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy-rpcpv1_copy.Po@am__quote@ # am--include-marker
@@ -3169,6 +3173,20 @@ rtpp_rzmalloc_perf-rtpp_refcnt.obj: rtpp_refcnt.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_refcnt.c' object='rtpp_rzmalloc_perf-rtpp_refcnt.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_CFLAGS) $(CFLAGS) -c -o rtpp_rzmalloc_perf-rtpp_refcnt.obj `if test -f 'rtpp_refcnt.c'; then $(CYGPATH_W) 'rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_refcnt.c'; fi`
+
+rtpp_rzmalloc_perf-rtpp_time.o: rtpp_time.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_CFLAGS) $(CFLAGS) -MT rtpp_rzmalloc_perf-rtpp_time.o -MD -MP -MF $(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Tpo -c -o rtpp_rzmalloc_perf-rtpp_time.o `test -f 'rtpp_time.c' || echo '$(srcdir)/'`rtpp_time.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Tpo $(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_time.c' object='rtpp_rzmalloc_perf-rtpp_time.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_CFLAGS) $(CFLAGS) -c -o rtpp_rzmalloc_perf-rtpp_time.o `test -f 'rtpp_time.c' || echo '$(srcdir)/'`rtpp_time.c
+
+rtpp_rzmalloc_perf-rtpp_time.obj: rtpp_time.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_CFLAGS) $(CFLAGS) -MT rtpp_rzmalloc_perf-rtpp_time.obj -MD -MP -MF $(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Tpo -c -o rtpp_rzmalloc_perf-rtpp_time.obj `if test -f 'rtpp_time.c'; then $(CYGPATH_W) 'rtpp_time.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_time.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Tpo $(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_time.c' object='rtpp_rzmalloc_perf-rtpp_time.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_CFLAGS) $(CFLAGS) -c -o rtpp_rzmalloc_perf-rtpp_time.obj `if test -f 'rtpp_time.c'; then $(CYGPATH_W) 'rtpp_time.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_time.c'; fi`
 
 rtpp_rzmalloc_perf-rtpp_refcnt_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_CFLAGS) $(CFLAGS) -MT rtpp_rzmalloc_perf-rtpp_refcnt_fin.o -MD -MP -MF $(DEPDIR)/rtpp_rzmalloc_perf-rtpp_refcnt_fin.Tpo -c -o rtpp_rzmalloc_perf-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
@@ -6174,6 +6192,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_refcnt.Po
 	-rm -f ./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_refcnt_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_rzmalloc_perf.Po
+	-rm -f ./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-main.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-po_manager.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rpcpv1_copy.Po
@@ -6513,6 +6532,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_refcnt.Po
 	-rm -f ./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_refcnt_fin.Po
 	-rm -f ./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_rzmalloc_perf.Po
+	-rm -f ./$(DEPDIR)/rtpp_rzmalloc_perf-rtpp_time.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-main.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-po_manager.Po
 	-rm -f ./$(DEPDIR)/rtpproxy-rpcpv1_copy.Po
