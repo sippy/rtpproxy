@@ -25,11 +25,13 @@
  *
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_time.h"
 
 struct dummy {
     struct {
@@ -54,28 +56,68 @@ e0:
     return (NULL);
 }
 
+static struct dummy *
+rtpp_refcnt_perf_ctor(void)
+{
+    struct dummy *pvt;
+
+    pvt = rtpp_zmalloc(sizeof(struct dummy));
+    if (pvt == NULL) {
+        goto e0;
+    }
+    pvt->pub.rcnt = rtpp_refcnt_ctor(pvt, (rtpp_refcnt_dtor_t)&free);
+    if (pvt->pub.rcnt == NULL) {
+        goto e1;
+    }
+    return (pvt);
+e1:
+    free(pvt);
+e0:
+    return (NULL);
+}
+
+#define TESTOPS (4 * 10000000)
+
+DEFINE_RAW_METHOD(perf_func_ctor, struct dummy *, void);
+
 int
 main(int argc, char **argv)
 {
     long long i, j, k;
     struct dummy *dpbuf[1000];
+    double stime, etime;
+    struct {
+       perf_func_ctor_t pfunc_ctor;
+       const char *tname;
+    } *tp, tests[] = {
+       {.pfunc_ctor = rtpp_rzmalloc_perf_ctor, .tname = "rtpp_rzmalloc()"},
+       {.pfunc_ctor = rtpp_refcnt_perf_ctor, .tname = "rtpp_zmalloc()+rtpp_refcnt()"},
+       {.tname = NULL}
+    };
 
-    for (i = 0; i < 10000000; i++) {
-        j = i % 1000;
-        if (i >= 1000) {
-            for (k = 0; k < 11; k++) {
-                RTPP_OBJ_DECREF(&(dpbuf[j]->pub));
+    for (tp = &(tests[0]); tp->tname != NULL; tp++) {
+        stime = getdtime();
+        for (i = 0; i < TESTOPS; i++) {
+            j = i % 1000;
+            if (i >= 1000) {
+                for (k = 0; k < 11; k++) {
+                    RTPP_OBJ_DECREF(&(dpbuf[j]->pub));
+                }
+            }
+            dpbuf[j] = tp->pfunc_ctor();
+            for (k = 0; k < 10; k++) {
+                RTPP_OBJ_INCREF(&(dpbuf[j]->pub));
             }
         }
-        dpbuf[j] = rtpp_rzmalloc_perf_ctor();
-        for (k = 0; k < 10; k++) {
-            RTPP_OBJ_INCREF(&(dpbuf[j]->pub));
+        for (i = 0; i < 1000; i++) {
+            for (k = 0; k < 11; k++) {
+                RTPP_OBJ_DECREF(&(dpbuf[i]->pub));
+            }
         }
+        etime = getdtime() - stime;
+        printf("%s: took %f sec, %f ops/sec\n", tp->tname, etime,
+          ((double)TESTOPS ) / etime);
     }
-    for (i = 0; i < 1000; i++) {
-         for (k = 0; k < 11; k++) {
-             RTPP_OBJ_DECREF(&(dpbuf[i]->pub));
-         }
-    }
+
     return (0);
 }

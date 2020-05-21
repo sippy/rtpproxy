@@ -106,10 +106,11 @@ rtpp_objck_LDADD=$(rtpp_objck_perf_LDADD) $(RTPP_MEMDEB_LDADD)
 rtpp_objck_SOURCES=$(rtpp_objck_perf_SOURCES) $(SRCS_MEMDEB_CORE)
 
 rtpp_rzmalloc_perf_SOURCES = rtpp_rzmalloc_perf.c rtpp_mallocs.c rtpp_mallocs.h \
-  rtpp_refcnt.c $(rtpp_refcnt_AUTOSRCS)
+  rtpp_refcnt.c rtpp_time.c $(rtpp_refcnt_AUTOSRCS)
 rtpp_rzmalloc_perf_CFLAGS = $(EXTRA_CFLAGS)
 rtpp_rzmalloc_perf_CPPFLAGS = $(EXTRA_CPPFLAGS)
 rtpp_rzmalloc_perf_LDFLAGS = $(LTO_FLAG)
+rtpp_rzmalloc_perf_LDADD = -lm
 
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \
