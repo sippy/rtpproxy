@@ -408,11 +408,11 @@ libucl_a_CFLAGS = -Wno-pointer-sign -std=c11 -DHAVE_CONFIG_H -D_BSD_SOURCE \
   -I$(UCL_DIR)/uthash \
   -I$(UCL_DIR)/klib \
   -I$(UCL_DIR)/src/ \
-  -Wno-unused-parameter
+  -Wno-unused-parameter $(LTO_FLAG)
 
 libucl_debug_a_SOURCES = $(libucl_a_SOURCES)
 libucl_debug_a_CPPFLAGS = -DRTPP_MEMDEB_FREE_NULL $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpproxy
-libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
+libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 HEPSRCDIR = $(top_srcdir)/hepconnector
 libucl_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libucl_test \
   -I$(UCL_DIR)/include -I$(HEPSRCDIR)
