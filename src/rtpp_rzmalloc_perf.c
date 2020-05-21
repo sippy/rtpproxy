@@ -33,6 +33,13 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_time.h"
 
+#if defined(RTPP_DEBUG)
+#include <assert.h>
+#include <stdint.h>
+#include "libexecinfo/stacktraverse.h"
+#include "libexecinfo/execinfo.h"
+#endif
+
 struct dummy {
     struct {
         struct rtpp_refcnt *rcnt;
@@ -124,6 +131,12 @@ main(int argc, char **argv)
 #endif
        {.tname = NULL}
     };
+
+#if defined(RTPP_DEBUG)
+    void *_trp = getreturnaddr(0);
+    assert(_trp != NULL);
+    assert(execinfo_set_topframe(_trp) == NULL);
+#endif
 
     for (tp = &(tests[0]); tp->tname != NULL; tp++) {
         stime = getdtime();
