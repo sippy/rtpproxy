@@ -88,8 +88,10 @@ int setbindhost(struct sockaddr *, int, const char *, const char *);
 #define	satoss(sa)	((struct sockaddr_storage *)(sa))
 #endif
 
-#define	IS_VALID_PORT(p)	((p) > 0 && (p) < 65536)
-#define	IS_LAST_PORT(p)		((p) == 65535)
+#define	MIN_UDP_PORT		(1)
+#define	MAX_UDP_PORT		(65535)
+#define	IS_VALID_PORT(p)	((p) >= MIN_UDP_PORT && (p) <= MAX_UDP_PORT)
+#define	IS_LAST_PORT(p)		((p) == MAX_UDP_PORT)
 
 
 /*
