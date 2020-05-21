@@ -1362,7 +1362,9 @@ rtpp_rzmalloc_perf_debug_SOURCES = $(rtpp_rzmalloc_perf_SOURCES) rtpp_stacktrace
 rtpp_rzmalloc_perf_debug_CFLAGS = $(rtpp_rzmalloc_perf_CFLAGS) -fno-omit-frame-pointer
 rtpp_rzmalloc_perf_debug_CPPFLAGS = $(rtpp_rzmalloc_perf_CPPFLAGS) -DRTPP_DEBUG -I$(top_srcdir)
 rtpp_rzmalloc_perf_debug_LDFLAGS = $(rtpp_rzmalloc_perf_LDFLAGS)
-rtpp_rzmalloc_perf_debug_LDADD = $(rtpp_rzmalloc_perf_LDADD) $(top_srcdir)/libexecinfo/libexecinfo.a
+rtpp_rzmalloc_perf_debug_LDADD = $(rtpp_rzmalloc_perf_LDADD) \
+  $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@
+
 RTPP_COMMON_CPPFLAGS = -DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \
   -D_BSD_SOURCE
