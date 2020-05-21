@@ -39,6 +39,7 @@
 #include "rtpp_refcnt_fin.h"
 
 #if RTPP_DEBUG_refcnt
+#define _WITH_DPRINTF
 #include <stdio.h>
 #ifdef RTPP_DEBUG
 #include "rtpp_stacktrace.h"
