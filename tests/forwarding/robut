@@ -5,7 +5,7 @@ BASEDIR="${TDIR}/.."
 . "${BASEDIR}/functions"
 
 i=0
-while [ ${i} -lt 5 ]
+while [ ${i} -lt 6 ]
 do
   if ${TDIR}/forwarding1
   then
