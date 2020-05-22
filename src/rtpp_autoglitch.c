@@ -162,11 +162,12 @@ glitched:
 int
 rtpp_glitch_stat(const char * restrict path, struct stat *sb, HERETYPEARG)
 {
+    struct stat tsb;
 
     GLITCH_INJECT(HEREARG, glitched);
     return(stat(path, sb));
 glitched:
-    errno = EIO;
+    errno = (stat(path, &tsb) == 0) ? ENOENT : EIO;
     return (-1);
 }
 
