@@ -157,6 +157,19 @@ glitched:
     return (-1);
 }
 
+#undef stat
+
+int
+rtpp_glitch_stat(const char * restrict path, struct stat *sb, HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return(stat(path, sb));
+glitched:
+    errno = EIO;
+    return (-1);
+}
+
 #undef getaddrinfo
 
 int

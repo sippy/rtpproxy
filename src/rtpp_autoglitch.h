@@ -103,6 +103,14 @@ int rtpp_glitch_fstat(int fd, struct stat *sb, HERETYPE);
 
 #define fstat(fd, sb) rtpp_glitch_fstat(fd, sb, HEREVAL)
 
+int rtpp_glitch_stat(const char * restrict path, struct stat *sb, HERETYPE);
+
+#ifdef stat
+# undef stat
+#endif
+
+#define stat(path, sb) rtpp_glitch_stat(path, sb, HEREVAL)
+
 #include <netdb.h>
 
 int rtpp_glitch_getaddrinfo(const char *, const char *, const struct addrinfo *,
