@@ -8,7 +8,3 @@ endif
 if ENABLE_LTO
 LTO_FLAG = -flto
 endif
-
-OPT_CFLAGS = @OPT_CFLAGS@
-
-NOPT_CFLAGS = -g3 -O0

@@ -9,8 +9,7 @@ rtpp_catch_dtmf_la_SOURCES = rtpp_catch_dtmf.c
 rtpp_catch_dtmf_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
 rtpp_catch_dtmf_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
   -Dfree=mod_free -Drealloc=mod_realloc -I$(UCLSRCDIR)/include
-CFLAGS_rtpp_catch_dtmf_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
-rtpp_catch_dtmf_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_catch_dtmf_common)
+rtpp_catch_dtmf_la_CFLAGS=-std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
 #rtpp_catch_dtmf_la_LIBADD = -lz
 
 rtpp_catch_dtmf_debug_la_SOURCES = $(rtpp_catch_dtmf_la_SOURCES)
@@ -18,7 +17,6 @@ rtpp_catch_dtmf_debug_la_LIBADD = $(rtpp_catch_dtmf_la_LIBADD) $(RTPP_MEMDEB_LDA
 rtpp_catch_dtmf_debug_la_LDFLAGS = $(rtpp_catch_dtmf_la_LDFLAGS)
 rtpp_catch_dtmf_debug_la_CPPFLAGS = $(rtpp_catch_dtmf_la_CPPFLAGS) -DRTPP_DEBUG \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="catch_dtmf"
-rtpp_catch_dtmf_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_rtpp_catch_dtmf_common) \
- $(RTPP_MEMDEB_CFLAGS)
+rtpp_catch_dtmf_debug_la_CFLAGS = $(RTPP_MEMDEB_CFLAGS) $(rtpp_catch_dtmf_la_CFLAGS)
 
 DEFS=	$(CC_WFLAGS) @DEFS@

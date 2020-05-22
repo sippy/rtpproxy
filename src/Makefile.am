@@ -107,13 +107,13 @@ rtpp_objck_SOURCES=$(rtpp_objck_perf_SOURCES) $(SRCS_MEMDEB_CORE)
 
 rtpp_rzmalloc_perf_SOURCES = rtpp_rzmalloc_perf.c rtpp_mallocs.c rtpp_mallocs.h \
   rtpp_refcnt.c rtpp_time.c $(rtpp_refcnt_AUTOSRCS)
-rtpp_rzmalloc_perf_CFLAGS = $(OPT_CFLAGS) $(EXTRA_CFLAGS)
+rtpp_rzmalloc_perf_CFLAGS = $(EXTRA_CFLAGS)
 rtpp_rzmalloc_perf_CPPFLAGS = $(EXTRA_CPPFLAGS)
 rtpp_rzmalloc_perf_LDFLAGS = $(LTO_FLAG)
 rtpp_rzmalloc_perf_LDADD = -lm
 
 rtpp_rzmalloc_perf_debug_SOURCES = $(rtpp_rzmalloc_perf_SOURCES) rtpp_stacktrace.c rtpp_stacktrace.h
-rtpp_rzmalloc_perf_debug_CFLAGS = $(NOPT_CFLAGS) $(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+rtpp_rzmalloc_perf_debug_CFLAGS = $(rtpp_rzmalloc_perf_CFLAGS) -fno-omit-frame-pointer
 rtpp_rzmalloc_perf_debug_CPPFLAGS = $(rtpp_rzmalloc_perf_CPPFLAGS) -DRTPP_DEBUG -I$(top_srcdir)
 rtpp_rzmalloc_perf_debug_LDFLAGS = $(rtpp_rzmalloc_perf_LDFLAGS)
 rtpp_rzmalloc_perf_debug_LDADD = $(rtpp_rzmalloc_perf_LDADD) \
@@ -130,17 +130,17 @@ if BUILD_ELPERIODIC
 EXTRA_CPPFLAGS += -I$(top_srcdir)/libelperiodic/src
 endif
 
-rtpproxy_debug_CFLAGS=$(NOPT_CFLAGS) $(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+rtpproxy_debug_CFLAGS=$(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 rtpproxy_debug_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS) -DRTPP_DEBUG $(RTPP_MEMDEB_CPPFLAGS) \
   -DMEMDEB_APP=@PACKAGE@ -I$(top_srcdir)
 
-rtpproxy_CFLAGS=$(OPT_CFLAGS) $(EXTRA_CFLAGS)
+rtpproxy_CFLAGS=$(EXTRA_CFLAGS)
 rtpproxy_CPPFLAGS=$(RTPP_COMMON_CPPFLAGS) $(EXTRA_CPPFLAGS)
 
-rtpp_objck_perf_CFLAGS=$(OPT_CFLAGS) $(EXTRA_CFLAGS)
+rtpp_objck_perf_CFLAGS=$(EXTRA_CFLAGS)
 rtpp_objck_perf_CPPFLAGS=$(EXTRA_CPPFLAGS) -D_BSD_SOURCE
 rtpp_objck_perf_LDFLAGS=$(LDO_LDFLAGS)
-rtpp_objck_CFLAGS=$(NOPT_CFLAGS) $(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+rtpp_objck_CFLAGS=$(rtpp_objck_perf_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 rtpp_objck_CPPFLAGS=$(rtpp_objck_perf_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_objck \
   -DRTPQ_CHECK_SEQ
 rtpp_objck_LDFLAGS=$(rtpp_objck_perf_LDFLAGS)
@@ -158,7 +158,7 @@ rtpp_fintest_SOURCES = rtpp_fintest.c rtpp_mallocs.c rtpp_mallocs.h \
 rtpp_fintest_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) -Drtpp_fintest=main \
   "-DRTPP_AUTOTRAP()=(_naborts++)" -DRTPP_FINTEST -DRTPP_DEBUG \
   -I$(top_srcdir)
-rtpp_fintest_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
+rtpp_fintest_CFLAGS = $(LTO_FLAG)
 rtpp_fintest_LDADD = $(RTPP_MEMDEB_LDADD)
 rtpp_fintest_LDFLAGS = $(LTO_FLAG)
 

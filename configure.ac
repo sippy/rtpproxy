@@ -19,6 +19,7 @@ AC_CANONICAL_HOST
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_MKDIR_P
+AM_PROG_CC_C_O
 LT_INIT
 
 mydef_version=`git describe --always --dirty || date "+%Y%m%d%H%M%S"`
@@ -40,8 +41,6 @@ solaris*)
 *)
   ;;
 esac
-OPT_CFLAGS="`echo "${CFLAGS}" | sed 's|-g |-g3 |'`"
-CFLAGS="-pipe"
 
 AX_COMPILE_CHECK_SIZEOF(time_t, [#include <time.h>])
 
@@ -368,5 +367,4 @@ AC_SUBST(LIBS_SIPLOG)
 AC_SUBST(LIBS_SIPLOG_DBG)
 AC_SUBST(LIBS_ELPERIODIC)
 AC_SUBST(SIZEOF_TIME_T)
-AC_SUBST(OPT_CFLAGS)
 AC_OUTPUT
