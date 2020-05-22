@@ -281,7 +281,6 @@ NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
-OPT_CFLAGS = @OPT_CFLAGS@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
@@ -364,28 +363,27 @@ RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_me
   $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h \
   $(top_srcdir)/src/rtpp_debugon.h
 
-RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
+RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
 MAINSRCDIR = $(top_srcdir)/src
 DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
-NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 pkglib_LTLIBRARIES = rtpp_acct_csv.la rtpp_acct_csv_debug.la
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
 rtpp_acct_csv_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
 rtpp_acct_csv_la_CPPFLAGS = -D_BSD_SOURCE
-rtpp_acct_csv_la_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
+rtpp_acct_csv_la_CFLAGS = $(LTO_FLAG)
 rtpp_acct_csv_debug_la_SOURCES = ${rtpp_acct_csv_la_SOURCES}
 rtpp_acct_csv_debug_la_LIBADD = $(RTPP_MEMDEB_LDADD)
 rtpp_acct_csv_debug_la_LDFLAGS = ${rtpp_acct_csv_la_LDFLAGS}
 rtpp_acct_csv_debug_la_CPPFLAGS = $(rtpp_acct_csv_la_CPPFLAGS) -DRTPP_DEBUG \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="acct_csv"
 
-rtpp_acct_csv_debug_la_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
+rtpp_acct_csv_debug_la_CFLAGS = $(rtpp_acct_csv_la_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 all: all-am
 
 .SUFFIXES:

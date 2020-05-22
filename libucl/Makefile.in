@@ -300,7 +300,6 @@ NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
-OPT_CFLAGS = @OPT_CFLAGS@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
@@ -383,14 +382,13 @@ RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_me
   $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h \
   $(top_srcdir)/src/rtpp_debugon.h
 
-RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
+RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
 MAINSRCDIR = $(top_srcdir)/src
 DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
-NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 UCL_DIR = $(top_srcdir)/external/libucl
 UCL_SDIR = $(UCL_DIR)/src
@@ -405,22 +403,21 @@ libucl_a_SOURCES = $(UCL_SDIR)/ucl_emitter_streamline.c \
   $(UCL_SDIR)/ucl_sexp.c \
   $(UCL_SDIR)/ucl_util.c
 
-CFLAGS_libucl_common = -Wno-pointer-sign -std=c11 -DHAVE_CONFIG_H -D_BSD_SOURCE \
+libucl_a_CFLAGS = -Wno-pointer-sign -std=c11 -DHAVE_CONFIG_H -D_BSD_SOURCE \
   -I$(UCL_DIR)/include \
   -I$(UCL_DIR)/uthash \
   -I$(UCL_DIR)/klib \
   -I$(UCL_DIR)/src/ \
   -Wno-unused-parameter $(LTO_FLAG)
 
-libucl_a_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_libucl_common)
 libucl_debug_a_SOURCES = $(libucl_a_SOURCES)
 libucl_debug_a_CPPFLAGS = -DRTPP_MEMDEB_FREE_NULL $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpproxy
-libucl_debug_a_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_libucl_common) $(RTPP_MEMDEB_CFLAGS)
+libucl_debug_a_CFLAGS = $(libucl_a_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 HEPSRCDIR = $(top_srcdir)/hepconnector
 libucl_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libucl_test \
   -I$(UCL_DIR)/include -I$(HEPSRCDIR)
 
-libucl_test_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
+libucl_test_CFLAGS = $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
   $(top_srcdir)/src/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS)

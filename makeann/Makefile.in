@@ -263,7 +263,6 @@ NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
-OPT_CFLAGS = @OPT_CFLAGS@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
@@ -346,14 +345,13 @@ RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_me
   $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h \
   $(top_srcdir)/src/rtpp_debugon.h
 
-RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
+RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
 MAINSRCDIR = $(top_srcdir)/src
 DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
-NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 extractaudio_SRCDIR = $(top_srcdir)/extractaudio
 makeann_SOURCES = makeann.c rtp.h g711.h $(extractaudio_SRCDIR)/g729_compat.c \
@@ -361,12 +359,12 @@ makeann_SOURCES = makeann.c rtp.h g711.h $(extractaudio_SRCDIR)/g729_compat.c \
 
 makeann_LDADD = @LIBS_G729@ @LIBS_GSM@ @LIBS_G722@
 makeann_CPPFLAGS = -I$(extractaudio_SRCDIR) -D_BSD_SOURCE
-makeann_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
+makeann_CFLAGS = $(LTO_FLAG)
 makeann_LDFLAGS = $(LTO_FLAG)
 makeann_debug_SOURCES = $(makeann_SOURCES) $(RTPP_MEMDEB_CORESRCS)
 makeann_debug_LDADD = $(makeann_LDADD) $(RTPP_MEMDEB_LDADD)
 makeann_debug_CPPFLAGS = $(makeann_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=makeann
-makeann_debug_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
+makeann_debug_CFLAGS = $(makeann_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 makeann_debug_LDFLAGS = $(makeann_LDFLAGS)
 all: all-am
 
