@@ -36,8 +36,6 @@ struct rtpp_netaddr;
 
 struct rtpp_wi *rtpp_wi_malloc(int, const void *, size_t, int,
   const struct sockaddr *, size_t);
-struct rtpp_wi *rtpp_wi_malloc_pkt(int, struct rtp_packet *,
-  const struct sockaddr *, size_t, int, struct rtpp_refcnt *);
 struct rtpp_wi *rtpp_wi_malloc_pkt_na(int, struct rtp_packet *,
   struct rtpp_netaddr *, int, struct rtpp_refcnt *);
 

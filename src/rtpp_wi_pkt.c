@@ -87,32 +87,6 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
 }
 
 struct rtpp_wi *
-rtpp_wi_malloc_pkt(int sock, struct rtp_packet *pkt,
-  const struct sockaddr *sendto, size_t tolen, int nsend,
-  struct rtpp_refcnt *sock_rcnt)
-{
-    struct rtpp_wi_pvt *wipp;
-
-    PUB2PVT(pkt->wi, wipp);
-    wipp->pub.dtor = rtpp_wi_pkt_free;
-    wipp->pub.wi_type = RTPP_WI_TYPE_OPKT;
-    wipp->free_ptr = (struct rtpp_wi *)pkt;
-    wipp->sock = sock;
-    if (sock_rcnt != NULL) {
-        RC_INCREF(sock_rcnt);
-    }
-    wipp->sock_rcnt = sock_rcnt;
-    wipp->flags = 0;
-    wipp->msg = pkt->data.buf;
-    wipp->msg_len = pkt->size;
-    wipp->sendto = sstosa(&pkt->sendto);
-    wipp->tolen = tolen;
-    memcpy(wipp->sendto, sendto, tolen);
-    wipp->nsend = nsend;
-    return (&(wipp->pub));
-}
-
-struct rtpp_wi *
 rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
   struct rtpp_netaddr *sendto, int nsend,
   struct rtpp_refcnt *sock_rcnt)
