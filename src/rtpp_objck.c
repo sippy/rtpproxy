@@ -360,7 +360,11 @@ main(int argc, char **argv)
     RTPP_OBJ_DECREF(targs.rsp);
     CALL_SMETHOD(rtp, shutdown);
     RTPP_OBJ_DECREF(rtp);
+    wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
+    rtpp_queue_put_item(wi, targs.fqp);
     rtpp_queue_destroy(targs.fqp);
+    wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
+    rtpp_queue_put_item(wi, targs.bqp);
     rtpp_queue_destroy(targs.bqp);
 
     assert(tpl.cp == MLQ);
