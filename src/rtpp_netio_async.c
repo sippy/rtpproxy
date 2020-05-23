@@ -233,7 +233,7 @@ rtpp_anetio_send_pkt_na(struct sthread_args *sender, int sock, \
         return (-1);
     }
     /*
-     * rtpp_wi_malloc_pkt() consumes pkt and returns wi, so no need to
+     * rtpp_wi_malloc_pkt_na() consumes pkt and returns wi, so no need to
      * call rtp_packet_free() here.
      */
 #if RTPP_DEBUG_netio >= 2
