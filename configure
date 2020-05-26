@@ -636,6 +636,7 @@ enable_option_checking=no
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+OPT_CFLAGS
 SIZEOF_TIME_T
 LIBS_ELPERIODIC
 LIBS_SIPLOG_DBG
@@ -4275,7 +4276,6 @@ ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
 
 
 case `pwd` in
@@ -12163,6 +12163,8 @@ solaris*)
 *)
   ;;
 esac
+OPT_CFLAGS="`echo "${CFLAGS}" | sed 's|-g |-g3 |'`"
+CFLAGS="-pipe"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking size of time_t" >&5
 $as_echo_n "checking size of time_t... " >&6; }
@@ -14157,6 +14159,7 @@ if test -z "$BUILD_ELPERIODIC_TRUE"; then :
   subdirs="$subdirs libelperiodic"
 
 fi
+
 
 
 
