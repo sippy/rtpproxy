@@ -85,6 +85,22 @@ int rtpp_glitch_accept(int, struct sockaddr *, socklen_t *, HERETYPE);
 
 #define accept(s, addr, addrlen) rtpp_glitch_accept(s, addr, addrlen, HEREVAL)
 
+ssize_t rtpp_glitch_send(int s, const void *msg, size_t len, int flags, HERETYPE);
+
+#ifdef send
+# undef send
+#endif
+
+#define send(s, msg, len, flags) rtpp_glitch_send(s, msg, len, flags, HEREVAL)
+
+int rtpp_glitch_connect(int s, const struct sockaddr *name, socklen_t namelen, HERETYPE);
+
+#ifdef connect
+# undef connect
+#endif
+
+#define connect(s, name, namelen) rtpp_glitch_connect(s, name, namelen, HEREVAL)
+
 #include <sys/stat.h>
 
 int rtpp_glitch_chmod(const char *path, mode_t mode, HERETYPE);

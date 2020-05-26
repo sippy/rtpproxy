@@ -131,6 +131,35 @@ glitched:
     return (-1);
 }
 
+#undef send
+
+ssize_t
+rtpp_glitch_send(int s, const void *msg, size_t len, int flags,
+  HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (send(s, msg, len, flags));
+glitched:
+    shutdown(s, SHUT_WR);
+    errno = EHOSTDOWN;
+    return (-1);
+}
+
+#undef connect
+
+int
+rtpp_glitch_connect(int s, const struct sockaddr *name, socklen_t namelen,
+  HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (connect(s, name, namelen));
+glitched:
+    errno = ETIMEDOUT;
+    return (-1);
+}
+
 #undef chmod
 
 int
