@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "rtpp_coverage.h"
+
 #include "libexecinfo/execinfo.h"
 
 void
@@ -53,6 +55,7 @@ rtpp_stacktrace(int sig)
         fprintf(stderr, "%s\n", strings[i]);
     fflush(stderr);
     signal(sig, SIG_DFL);
+    __gcov_flush();
     kill(getpid(), sig);
 }
 
