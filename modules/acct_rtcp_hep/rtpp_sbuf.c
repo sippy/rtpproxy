@@ -110,6 +110,21 @@ rtpp_sbuf_extend(struct rtpp_sbuf *sbp, int nlen)
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
 
+#include "config_pp.h"
+
+#if !defined(NO_ERR_H)
+#include <err.h>
+#include "rtpp_util.h"
+#else
+#include "rtpp_util.h"
+#endif
+
+#define errx_ifnot(expr) \
+    if (!(expr)) \
+        errx(1, "`%s` check has failed in %s() at %s:%d", #expr, __func__, \
+          __FILE__, __LINE__);
+
+
 RTPP_MEMDEB_APP_STATIC;
 
 int
@@ -122,42 +137,42 @@ rtpp_sbuf_selftest(void)
     RTPP_MEMDEB_APP_INIT();
 
     sbp = rtpp_sbuf_ctor(6);
-    assert(sbp != NULL);
-    assert(sbp->alen == 6);
-    assert(sbp->cp == sbp->bp);
-    assert(RS_ULEN(sbp) == 0);
+    errx_ifnot(sbp != NULL);
+    errx_ifnot(sbp->alen == 6);
+    errx_ifnot(sbp->cp == sbp->bp);
+    errx_ifnot(RS_ULEN(sbp) == 0);
     rval = rtpp_sbuf_write(sbp, "%d", 12345);
-    assert(rval == SBW_OK);
-    assert(sbp->cp[0] == '\0');
-    assert(strcmp(sbp->bp, "12345") == 0);
-    assert(RS_ULEN(sbp) == 5);
+    errx_ifnot(rval == SBW_OK);
+    errx_ifnot(sbp->cp[0] == '\0');
+    errx_ifnot(strcmp(sbp->bp, "12345") == 0);
+    errx_ifnot(RS_ULEN(sbp) == 5);
     rval = rtpp_sbuf_write(sbp, "%s", "F");
-    assert(rval == SBW_SHRT);
-    assert(sbp->cp[0] == '\0');
-    assert(strcmp(sbp->bp, "12345") == 0);
-    assert(RS_ULEN(sbp) == 5);
-    assert(rtpp_sbuf_extend(sbp, 7) == 0);
-    assert(RS_ULEN(sbp) == 5);
-    assert(strcmp(sbp->bp, "12345") == 0);
+    errx_ifnot(rval == SBW_SHRT);
+    errx_ifnot(sbp->cp[0] == '\0');
+    errx_ifnot(strcmp(sbp->bp, "12345") == 0);
+    errx_ifnot(RS_ULEN(sbp) == 5);
+    errx_ifnot(rtpp_sbuf_extend(sbp, 7) == 0);
+    errx_ifnot(RS_ULEN(sbp) == 5);
+    errx_ifnot(strcmp(sbp->bp, "12345") == 0);
     rval = rtpp_sbuf_write(sbp, "%s", "F");
-    assert(rval == SBW_OK);
-    assert(RS_ULEN(sbp) == 6);
-    assert(strcmp(sbp->bp, "12345F") == 0);
+    errx_ifnot(rval == SBW_OK);
+    errx_ifnot(RS_ULEN(sbp) == 6);
+    errx_ifnot(strcmp(sbp->bp, "12345F") == 0);
     do {
-        assert(rtpp_sbuf_extend(sbp, sbp->alen + 1) == 0);
+        errx_ifnot(rtpp_sbuf_extend(sbp, sbp->alen + 1) == 0);
         rval = rtpp_sbuf_write(sbp, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
           longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest,
           longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest, longtest);
     } while (rval == SBW_SHRT);
-    assert(rval == SBW_OK);
-    assert(RS_ULEN(sbp) == 1446);
-    assert(sbp->alen == RS_ULEN(sbp) + 1);
-    assert(strncmp(sbp->bp, "12345F", 6) == 0);
+    errx_ifnot(rval == SBW_OK);
+    errx_ifnot(RS_ULEN(sbp) == 1446);
+    errx_ifnot(sbp->alen == RS_ULEN(sbp) + 1);
+    errx_ifnot(strncmp(sbp->bp, "12345F", 6) == 0);
     rval = RS_ULEN(sbp);
     rtpp_sbuf_reset(sbp);
-    assert(sbp->cp == sbp->bp);
-    assert(sbp->cp[0] == '\0');
-    assert(sbp->alen == rval + 1);
+    errx_ifnot(sbp->cp == sbp->bp);
+    errx_ifnot(sbp->cp[0] == '\0');
+    errx_ifnot(sbp->alen == rval + 1);
     rtpp_sbuf_dtor(sbp);
 
     rval = rtpp_memdeb_dumpstats(MEMDEB_SYM, 0);
