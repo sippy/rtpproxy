@@ -25,13 +25,13 @@ if BUILD_CRYPTO
 extractaudio_SOURCES+=eaud_crypto.c eaud_crypto.h srtp_util.c srtp_util.h
 extractaudio_LDADD+=@LIBS_SRTP@
 endif
-extractaudio_CFLAGS = $(LTO_FLAG)
+extractaudio_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 extractaudio_LDFLAGS = $(LTO_FLAG)
 
 extractaudio_debug_SOURCES = $(extractaudio_SOURCES) $(RTPP_MEMDEB_CORESRCS)
 extractaudio_debug_LDADD = $(extractaudio_LDADD) $(RTPP_MEMDEB_LDADD)
 extractaudio_debug_CPPFLAGS = $(extractaudio_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=extractaudio
-extractaudio_debug_CFLAGS = $(extractaudio_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+extractaudio_debug_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 extractaudio_debug_LDFLAGS = $(extractaudio_LDFLAGS)
 
 DEFS=   -DWITHOUT_RTPPLOG $(CC_WFLAGS) @DEFS@
