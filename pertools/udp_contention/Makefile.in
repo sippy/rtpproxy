@@ -249,6 +249,7 @@ NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OPT_CFLAGS = @OPT_CFLAGS@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
@@ -327,10 +328,11 @@ DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
+NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 udp_contention_SOURCES = udp_contention.c $(am__append_2)
 udp_contention_LDADD = -lm -lpthread @LIBS_ELPERIODIC@
-udp_contention_CFLAGS = $(LTO_FLAG)
+udp_contention_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 udp_contention_LDFLAGS = $(LTO_FLAG)
 all: all-am
 

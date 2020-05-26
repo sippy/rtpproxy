@@ -284,6 +284,7 @@ NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OPT_CFLAGS = @OPT_CFLAGS@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
@@ -366,13 +367,14 @@ RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_me
   $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h \
   $(top_srcdir)/src/rtpp_debugon.h
 
-RTPP_MEMDEB_CFLAGS = -g3 -O0 -fno-omit-frame-pointer
+RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
 MAINSRCDIR = $(top_srcdir)/src
 DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 	$(am__append_1)
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
+NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 pkglib_LTLIBRARIES = rtpp_catch_dtmf.la rtpp_catch_dtmf_debug.la
@@ -381,7 +383,8 @@ rtpp_catch_dtmf_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG
 rtpp_catch_dtmf_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
   -Dfree=mod_free -Drealloc=mod_realloc -I$(UCLSRCDIR)/include
 
-rtpp_catch_dtmf_la_CFLAGS = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
+CFLAGS_rtpp_catch_dtmf_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
+rtpp_catch_dtmf_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_catch_dtmf_common)
 #rtpp_catch_dtmf_la_LIBADD = -lz
 rtpp_catch_dtmf_debug_la_SOURCES = $(rtpp_catch_dtmf_la_SOURCES)
 rtpp_catch_dtmf_debug_la_LIBADD = $(rtpp_catch_dtmf_la_LIBADD) $(RTPP_MEMDEB_LDADD)
@@ -389,7 +392,9 @@ rtpp_catch_dtmf_debug_la_LDFLAGS = $(rtpp_catch_dtmf_la_LDFLAGS)
 rtpp_catch_dtmf_debug_la_CPPFLAGS = $(rtpp_catch_dtmf_la_CPPFLAGS) -DRTPP_DEBUG \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="catch_dtmf"
 
-rtpp_catch_dtmf_debug_la_CFLAGS = $(RTPP_MEMDEB_CFLAGS) $(rtpp_catch_dtmf_la_CFLAGS)
+rtpp_catch_dtmf_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_rtpp_catch_dtmf_common) \
+ $(RTPP_MEMDEB_CFLAGS)
+
 all: all-am
 
 .SUFFIXES:
