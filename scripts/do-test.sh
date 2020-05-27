@@ -124,4 +124,9 @@ wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-rele
 tar -C dist -xvf dist/ffmpeg.tar.xz
 sudo cp dist/ffmpeg-*-i686-static/ffmpeg /usr/bin
 
-TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
+cd tests
+while true
+do
+  TEST_WITNESS_ENABLE=yes ./memdeb/glitch_catch_dtmf || break
+  make clean >/dev/null 2>/dev/null
+done
