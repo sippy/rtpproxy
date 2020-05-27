@@ -101,6 +101,7 @@ static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf *
 static int rtpp_mif_ul_subc_handle(struct rtpp_module_if *,
   const struct rtpp_subc_ctx *);
 static int rtpp_mif_construct(struct rtpp_module_if *self, const struct rtpp_cfg *);
+static void rtpp_mif_kaput(struct rtpp_module_if *self);
 
 static const char *do_acct_aname = "do_acct";
 static const char *do_acct_rtcp_aname = "do_acct_rtcp";
@@ -125,6 +126,7 @@ rtpp_module_if_ctor(const char *mpath)
     pvt->pub.start = &rtpp_mif_start;
     pvt->pub.get_mconf = &rtpp_mif_get_mconf;
     pvt->pub.ul_subc_handle = &rtpp_mif_ul_subc_handle;
+    pvt->pub.kaput = &rtpp_mif_kaput;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
       pvt);
     return ((&pvt->pub));
@@ -285,14 +287,28 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
 {
 
     if (pvt->dmp != NULL) {
-        rtpp_module_if_fin(&(pvt->pub));
         if (pvt->started != 0) {
-            /* First, stop the worker thread and wait for it to terminate */
+            /* First, stop the worker thread */
             rtpp_queue_put_item(pvt->mip->wthr.sigterm, pvt->mip->wthr.mod_q);
-            pthread_join(pvt->mip->wthr.thread_id, NULL);
         } else if (pvt->mip->wthr.sigterm != NULL) {
             CALL_METHOD(pvt->mip->wthr.sigterm, dtor);
         }
+    }
+}
+
+static void
+rtpp_mif_kaput(struct rtpp_module_if *self)
+{
+    struct rtpp_module_if_priv *pvt;
+
+    PUB2PVT(self, pvt);
+
+    if (pvt->dmp != NULL) {
+        if (pvt->started != 0) {
+            /* First, wait for worker thread to terminate */
+            pthread_join(pvt->mip->wthr.thread_id, NULL);
+        }
+        rtpp_module_if_fin(&(pvt->pub));
         if (pvt->mip->wthr.mod_q != NULL)
             rtpp_queue_destroy(pvt->mip->wthr.mod_q);
 
