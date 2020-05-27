@@ -12,5 +12,15 @@ do
    '--alice-crypto=AES_CM_128_HMAC_SHA1_80:9sOd+W72ilwfNgNt0FzlGYj6YZPMqN1sJJx43UuS' \
    -A rtp_analyze_trunc.pcap '--bob-crypto=AES_CM_128_HMAC_SHA1_80:NhqBK/JjtVJgmOgPyDKpvMTEjvFCQ4eiyVQelF6x' \
    -B ${RTPA_SUBDR}/bob_srtp.pcap /dev/null
-   reportifnotfail "Truncating alice_srtp.pcap at ${i} bytes"
+  reportifnotfail "Truncating alice's stream at ${i} bytes"
+  ${EXTRACTAUDIO} -e -s -n \
+   '--bob-crypto=AES_CM_128_HMAC_SHA1_80:9sOd+W72ilwfNgNt0FzlGYj6YZPMqN1sJJx43UuS' \
+   -B rtp_analyze_trunc.pcap '--alice-crypto=AES_CM_128_HMAC_SHA1_80:NhqBK/JjtVJgmOgPyDKpvMTEjvFCQ4eiyVQelF6x' \
+   -A ${RTPA_SUBDR}/bob_srtp.pcap /dev/null
+  reportifnotfail "Truncating both's streams at ${i} bytes"
+  ${EXTRACTAUDIO} -s -n \
+   '--bob-crypto=AES_CM_128_HMAC_SHA1_80:9sOd+W72ilwfNgNt0FzlGYj6YZPMqN1sJJx43UuS' \
+   -B rtp_analyze_trunc.pcap '--alice-crypto=AES_CM_128_HMAC_SHA1_80:9sOd+W72ilwfNgNt0FzlGYj6YZPMqN1sJJx43UuS' \
+   -A rtp_analyze_trunc.pcap /dev/null
+  reportifnotfail "Truncating both's streams at ${i} bytes"
 done
