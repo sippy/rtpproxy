@@ -9,5 +9,11 @@ SUDO_REQUIRED=1
 
 disable_aslr
 
+rm -f core
 glitch_test catch_dtmf/basic 1 catch_dtmf.rlog 'rtpp_catch_dtmf.c\|rtpp_wi_data.c\|rtpp_notify.c\|rtpp_tnotify_set.c'
-report "glitching catch_dtmf/basic"
+GL_RC=${?}
+if [ -e core ]
+then
+  gdb --command=${BUILDDIR}/gdb.gettrace ${RTPPROXY} core >&2 && rm core
+fi
+report_rc ${GL_RC} "glitching catch_dtmf/basic"
