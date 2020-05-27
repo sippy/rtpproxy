@@ -23,6 +23,10 @@ static void rtpp_module_if_get_mconf_fin(void *pub) {
     fprintf(stderr, "Method rtpp_module_if@%p::get_mconf (rtpp_module_if_get_mconf) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_module_if_kaput_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_module_if@%p::kaput (rtpp_module_if_kaput) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_module_if_load_fin(void *pub) {
     fprintf(stderr, "Method rtpp_module_if@%p::load (rtpp_module_if_load) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -48,6 +52,9 @@ void rtpp_module_if_fin(struct rtpp_module_if *pub) {
     RTPP_DBG_ASSERT(pub->get_mconf != (rtpp_module_if_get_mconf_t)NULL);
     RTPP_DBG_ASSERT(pub->get_mconf != (rtpp_module_if_get_mconf_t)&rtpp_module_if_get_mconf_fin);
     pub->get_mconf = (rtpp_module_if_get_mconf_t)&rtpp_module_if_get_mconf_fin;
+    RTPP_DBG_ASSERT(pub->kaput != (rtpp_module_if_kaput_t)NULL);
+    RTPP_DBG_ASSERT(pub->kaput != (rtpp_module_if_kaput_t)&rtpp_module_if_kaput_fin);
+    pub->kaput = (rtpp_module_if_kaput_t)&rtpp_module_if_kaput_fin;
     RTPP_DBG_ASSERT(pub->load != (rtpp_module_if_load_t)NULL);
     RTPP_DBG_ASSERT(pub->load != (rtpp_module_if_load_t)&rtpp_module_if_load_fin);
     pub->load = (rtpp_module_if_load_t)&rtpp_module_if_load_fin;
@@ -83,6 +90,7 @@ rtpp_module_if_fintest()
     tp->pub.do_acct = (rtpp_module_if_do_acct_t)((void *)0x1);
     tp->pub.do_acct_rtcp = (rtpp_module_if_do_acct_rtcp_t)((void *)0x1);
     tp->pub.get_mconf = (rtpp_module_if_get_mconf_t)((void *)0x1);
+    tp->pub.kaput = (rtpp_module_if_kaput_t)((void *)0x1);
     tp->pub.load = (rtpp_module_if_load_t)((void *)0x1);
     tp->pub.start = (rtpp_module_if_start_t)((void *)0x1);
     tp->pub.ul_subc_handle = (rtpp_module_if_ul_subc_handle_t)((void *)0x1);
@@ -93,10 +101,11 @@ rtpp_module_if_fintest()
     CALL_TFIN(&tp->pub, do_acct);
     CALL_TFIN(&tp->pub, do_acct_rtcp);
     CALL_TFIN(&tp->pub, get_mconf);
+    CALL_TFIN(&tp->pub, kaput);
     CALL_TFIN(&tp->pub, load);
     CALL_TFIN(&tp->pub, start);
     CALL_TFIN(&tp->pub, ul_subc_handle);
-    assert((_naborts - naborts_s) == 7);
+    assert((_naborts - naborts_s) == 8);
 }
 const static void *_rtpp_module_if_ftp = (void *)&rtpp_module_if_fintest;
 DATA_SET(rtpp_fintests, _rtpp_module_if_ftp);
