@@ -14,7 +14,27 @@ after_success:
 
 jobs:
   include:
-    - name: "Glitching @ Ubuntu 16 GCC 7"
+    - name: "Glitching @ Ubuntu 16 GCC 7 #1"
+      dist: xenial
+      compiler: gcc
+      env:
+        - TTYPE=glitching
+    - name: "Glitching @ Ubuntu 16 GCC 7 #2"
+      dist: xenial
+      compiler: gcc
+      env:
+        - TTYPE=glitching
+    - name: "Glitching @ Ubuntu 16 GCC 7 #3"
+      dist: xenial
+      compiler: gcc
+      env:
+        - TTYPE=glitching
+    - name: "Glitching @ Ubuntu 16 GCC 7 #4"
+      dist: xenial
+      compiler: gcc
+      env:
+        - TTYPE=glitching
+    - name: "Glitching @ Ubuntu 16 GCC 7 #5"
       dist: xenial
       compiler: gcc
       env:
