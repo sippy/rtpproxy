@@ -48,6 +48,7 @@ DEFINE_METHOD(rtpp_module_if, rtpp_module_if_get_mconf, int,
   struct rtpp_module_conf **);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_ul_subc_handle, int,
   const struct rtpp_subc_ctx *);
+DEFINE_METHOD(rtpp_module_if, rtpp_module_if_kaput, void);
 
 struct rtpp_module_if {
     struct rtpp_type_linkable t;
@@ -65,6 +66,7 @@ struct rtpp_module_if {
     METHOD_ENTRY(rtpp_module_if_do_acct_rtcp, do_acct_rtcp);
     METHOD_ENTRY(rtpp_module_if_get_mconf, get_mconf);
     METHOD_ENTRY(rtpp_module_if_ul_subc_handle, ul_subc_handle);
+    METHOD_ENTRY(rtpp_module_if_kaput, kaput);
 };
 
 struct rtpp_module_if *rtpp_module_if_ctor(const char *);
