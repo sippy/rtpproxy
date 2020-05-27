@@ -78,6 +78,7 @@ struct decoder_stream {
 
 #define D_FLAG_NONE      0x0
 #define D_FLAG_NOSYNC    0x1
+#define D_FLAG_ERRFAIL   0x2
 
 void *decoder_new(struct session *, int);
 int32_t decoder_get(struct decoder_stream *);

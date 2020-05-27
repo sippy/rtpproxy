@@ -103,9 +103,9 @@ RTPP_MEMDEB_APP_STATIC;
 
 const static char *usage_msg[8] = {
   "%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
-  "usage: extractaudio [-idsn] [-F file_fmt] [-D data_fmt] rdir outfile",
+  "usage: extractaudio [-idsne] [-F file_fmt] [-D data_fmt] rdir outfile",
   "                    [link1] ... [linkN]",
-  "       extractaudio [-idsn] [-F file_fmt] [-D data_fmt] [-A answer_cap]",
+  "       extractaudio [-idsne] [-F file_fmt] [-D data_fmt] [-A answer_cap]",
   "                    [-B originate_cap] [--alice-crypto CSPEC]",
   "                    [--bob-crypto CSPEC] outfile [link1] ... [linkN]",
   "       extractaudio -S [-A answer_cap] [-B originate_cap]",
@@ -269,7 +269,7 @@ main(int argc, char **argv)
     sync_sample = 0;
     int scanonly = 0;
 
-    while ((ch = getopt_long(argc, argv, "dsSinF:D:A:B:U:", longopts,
+    while ((ch = getopt_long(argc, argv, "dsSineF:D:A:B:U:", longopts,
       &option_index)) != -1)
         switch (ch) {
         case 'd':
@@ -343,6 +343,10 @@ main(int argc, char **argv)
             scanonly = 1;
             break;
 
+        case 'e':
+            dflags |= D_FLAG_ERRFAIL;
+            break;
+
         case '?':
         default:
             usage();
@@ -397,11 +401,15 @@ main(int argc, char **argv)
     if (aname != NULL) {
         if (load_session(aname, &channels, A_CH, alice_crypto) >= 0) {
             nloaded += 1;
+        } else if (dflags & D_FLAG_ERRFAIL) {
+            errx(1, "cannot load %s", aname);
         }
     }
     if (bname != NULL) {
         if (load_session(bname, &channels, B_CH, bob_crypto) >= 0) {
             nloaded += 1;
+        } else if (dflags & D_FLAG_ERRFAIL) {
+            errx(1, "cannot load %s", bname);
         }
     }
     if (nloaded == 0) {
