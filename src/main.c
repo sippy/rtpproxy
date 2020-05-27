@@ -1028,7 +1028,9 @@ main(int argc, char **argv)
 #endif
         signal(SIGFPE, rtpp_stacktrace);
         signal(SIGBUS, rtpp_stacktrace);
+#if 0
         signal(SIGSEGV, rtpp_stacktrace);
+#endif
         signal(SIGSYS, rtpp_stacktrace);
     }
 
