@@ -23,4 +23,9 @@ do
    -B rtp_analyze_trunc.pcap '--alice-crypto=AES_CM_128_HMAC_SHA1_80:9sOd+W72ilwfNgNt0FzlGYj6YZPMqN1sJJx43UuS' \
    -A rtp_analyze_trunc.pcap /dev/null
   reportifnotfail "Truncating both's streams at ${i} bytes"
+  ${EXTRACTAUDIO} -S \
+   '--bob-crypto=AES_CM_128_HMAC_SHA1_80:9sOd+W72ilwfNgNt0FzlGYj6YZPMqN1sJJx43UuS' \
+   -B rtp_analyze_trunc.pcap '--alice-crypto=AES_CM_128_HMAC_SHA1_80:9sOd+W72ilwfNgNt0FzlGYj6YZPMqN1sJJx43UuS' \
+   -A rtp_analyze_trunc.pcap
+  report "Scanning streams truncated at ${i} bytes"
 done
