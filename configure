@@ -12248,10 +12248,9 @@ fi
 
 # Check whether --enable-coverage was given.
 if test "${enable_coverage+set}" = set; then :
-  enableval=$enable_coverage;
-$as_echo "#define ENABLE_COVERAGE /**/" >>confdefs.h
-
-  CFLAGS="${CFLAGS} --coverage"; LDFLAGS="${LDFLAGS} --coverage"; break]
+  enableval=$enable_coverage; ENABLE_COVERAGE=${enableval}
+else
+  ENABLE_COVERAGE=no
 fi
 
 
@@ -12276,6 +12275,16 @@ if test "${enable_lto+set}" = set; then :
   enableval=$enable_lto; ENABLE_LTO=${enableval}
 else
   ENABLE_LTO=no
+fi
+
+
+if test "$ENABLE_COVERAGE" = 'yes'
+then
+
+$as_echo "#define ENABLE_COVERAGE 1" >>confdefs.h
+
+  CFLAGS="${CFLAGS} --coverage"
+  LDFLAGS="${LDFLAGS} --coverage"
 fi
 
 
@@ -12356,7 +12365,6 @@ fi
 $as_echo "#define HAVE_SYSTEMD_DAEMON 1" >>confdefs.h
 
   fi
-
 fi
 
 # dlopen et al
@@ -14150,7 +14158,7 @@ else
 fi
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile modules/badmod/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
 
 
 
@@ -15248,6 +15256,7 @@ do
     "modules/acct_csv/Makefile") CONFIG_FILES="$CONFIG_FILES modules/acct_csv/Makefile" ;;
     "modules/acct_rtcp_hep/Makefile") CONFIG_FILES="$CONFIG_FILES modules/acct_rtcp_hep/Makefile" ;;
     "modules/catch_dtmf/Makefile") CONFIG_FILES="$CONFIG_FILES modules/catch_dtmf/Makefile" ;;
+    "modules/badmod/Makefile") CONFIG_FILES="$CONFIG_FILES modules/badmod/Makefile" ;;
     "pertools/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/Makefile" ;;
     "pertools/udp_contention/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/udp_contention/Makefile" ;;
     "libucl/Makefile") CONFIG_FILES="$CONFIG_FILES libucl/Makefile" ;;
