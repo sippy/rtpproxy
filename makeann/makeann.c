@@ -76,6 +76,16 @@
 #define LE16_2_HOST(x) (x)
 #endif
 
+#ifdef RTPP_CHECK_LEAKS
+#include <assert.h>
+
+#include "libexecinfo/stacktraverse.h"
+#include "libexecinfo/execinfo.h"
+#include "rtpp_memdeb_internal.h"
+
+RTPP_MEMDEB_APP_STATIC;
+#endif
+
 static void
 usage(void)
 {
@@ -111,6 +121,10 @@ int main(int argc, char **argv)
     struct efile efiles[] = {{NULL, RTP_PCMU, 1}, {NULL, RTP_GSM, GSM_ENABLED},
       {NULL, RTP_G729, G729_ENABLED}, {NULL, RTP_PCMA, 1},
       {NULL, RTP_G722, G722_ENABLED}, {NULL, RTP_UNKN, 0}};
+
+#ifdef RTPP_CHECK_LEAKS
+    RTPP_MEMDEB_APP_INIT();
+#endif
 
     loop = 0;
     limit = -1;
