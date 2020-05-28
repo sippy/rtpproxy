@@ -1,0 +1,13 @@
+#!/bin/sh
+
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
+SUDO_REQUIRED=1
+. "${BASEDIR}/functions"
+
+. "${TDIR}/glitch.sub"
+
+disable_aslr
+
+glitch_test makeann/makeann1 0
+report "glitching makeann/makeann1"
