@@ -281,4 +281,16 @@ void *rtpp_glitch_dlsym(void * restrict handle, const char * restrict symbol, HE
 
 #define dlsym(handle, symbol) rtpp_glitch_dlsym(handle, symbol, HEREVAL)
 
+#include <stdio.h>
+
+size_t rtpp_glitch_fwrite(const void * restrict ptr, size_t size, size_t nmemb,
+  FILE * restrict stream, HERETYPE);
+
+#ifdef fwrite
+# undef fwrite
+#endif
+
+#define fwrite(ptr, size, nmemb, stream) \
+  rtpp_glitch_fwrite(ptr, size, nmemb, stream, HEREVAL)
+
 #endif /* _RTPP_AUTOGLITCH_H */

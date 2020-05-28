@@ -429,14 +429,13 @@ glitched:
 const char *
 rtpp_glitch_dlerror(HERETYPEARG)
 {
+    const char *rval;
 
+    rval = (dlerp != NULL) ? dlerp : dlerror();
     if (dlerp != NULL) {
-       const char *rval;
-       rval = dlerp;
-       dlerp = NULL;
-       return (rval);
+        dlerp = NULL;
     }
-    return (dlerror());
+    return (rval);
 }
 
 #undef dlsym
@@ -450,4 +449,23 @@ rtpp_glitch_dlsym(void * restrict handle, const char * restrict symbol, HERETYPE
 glitched:
     dlerp = "baz foo bar";
     return (NULL);
+}
+
+#include <stdio.h>
+
+#undef fwrite
+
+size_t
+rtpp_glitch_fwrite(const void * restrict ptr, size_t size, size_t nmemb,
+  FILE * restrict stream, HERETYPEARG)
+{
+    size_t rv = 0;
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (fwrite(ptr, size, nmemb, stream));
+glitched:
+    if (nmemb > 1) {
+        rv = fwrite(ptr, size, nmemb - 1, stream);
+    }
+    return (rv);
 }
