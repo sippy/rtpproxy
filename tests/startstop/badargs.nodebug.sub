@@ -1,0 +1,2 @@
+RTPPROXY="${RTPPROXY_PROD}"
+BA_ADD="${BASEDIR}/startstop/badargs.nodebug.input"

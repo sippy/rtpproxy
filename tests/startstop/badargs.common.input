@@ -1,6 +1,5 @@
 --dso&&
 --dso&/not/there/garbage/100500
---dso&../modules/acct_rtcp_hep/.libs/rtpp_acct_rtcp_hep_debug.so
 --nice&&
 --nice&100500
 --nice&garbage

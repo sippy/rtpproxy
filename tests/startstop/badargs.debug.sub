@@ -1,0 +1,2 @@
+RTPPROXY="${RTPPROXY_DBG}"
+BA_ADD="${BASEDIR}/startstop/badargs.debug.input"

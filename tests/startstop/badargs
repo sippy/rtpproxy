@@ -18,6 +18,20 @@ __beforeexit_cleanup()
   fi
 }
 
+do_run()
+{
+  for bad_rargs in ${1}
+  do
+    IFS=\&
+    set -o noglob
+    RTPP_ARGS=`eval "echo \"${bad_rargs}\""`
+    rtpproxy_start ${RTPP_ARGS}
+    reportifnotfail "`basename ${RTPPROXY}` don't start with bad argumens: \""${RTPP_ARGS}"\""
+    cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+    rm "${TMP_LOGFILE}"
+  done
+}
+
 RTPP_OUTFILE="startstop.rout"
 
 truncate -s 0 "${TS_LOGFILE}"
@@ -25,14 +39,12 @@ truncate -s 0 "${TS_LOGFILE}"
 myuid="`id -un`"
 mygid="`id -gn`"
 
-bad_rargs_all=`cat ${BASEDIR}/startstop/badargs.input`
-for bad_rargs in ${bad_rargs_all}
+for rtpv in debug nodebug
 do
-  IFS=\&
-  set -o noglob
-  RTPP_ARGS=`eval "echo \"${bad_rargs}\""`
-  rtpproxy_start ${RTPP_ARGS}
-  reportifnotfail "rtpproxy don't start with bad argumens: \""${RTPP_ARGS}"\""
-  cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
-  rm "${TMP_LOGFILE}"
+  . ${BASEDIR}/startstop/badargs.${rtpv}.sub
+  bad_rargs_all=`cat ${BA_ADD} ${BASEDIR}/startstop/badargs.common.input`
+  do_run "${bad_rargs_all}" &
+  DR_PID=${!}
+  wait ${DR_PID}
+  report "checks for `basename ${RTPPROXY}`"
 done

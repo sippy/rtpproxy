@@ -1,0 +1,6 @@
+--dso&../modules/acct_rtcp_hep/.libs/rtpp_acct_rtcp_hep.so
+--dso&../modules/badmod/.libs/rtpp_badmod1.so
+--dso&../modules/badmod/.libs/rtpp_badmod2.so
+--dso&../modules/badmod/.libs/rtpp_badmod3_debug.so
+--dso&../modules/badmod/.libs/rtpp_badmod3.so
+--dso&../modules/badmod/.libs/rtpp_badmod4.so
