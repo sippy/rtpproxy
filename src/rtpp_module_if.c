@@ -197,6 +197,11 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     }
 
 #if RTPP_CHECK_LEAKS
+    if (pvt->mip->memdeb_p == NULL) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "memdeb pointer is NULL in the %s, "
+          "trying to load non-debug module?", pvt->mpath);
+        goto e2;
+    }
     pvt->mip->_malloc = &rtpp_memdeb_malloc;
     pvt->mip->_zmalloc = &rtpp_zmalloc_memdeb;
     pvt->mip->_rzmalloc = &rtpp_rzmalloc_memdeb;
@@ -214,6 +219,11 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     /* We make a copy, so that the module cannot screw us up */
     *pvt->mip->memdeb_p = pvt->memdeb_p;
 #else
+    if (pvt->mip->memdeb_p != NULL) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "memdeb pointer is not NULL in the %s, "
+          "trying to load debug module?", pvt->mpath);
+        goto e2;
+    }
     pvt->mip->_malloc = &malloc;
     pvt->mip->_zmalloc = &rtpp_zmalloc;
     pvt->mip->_rzmalloc = &rtpp_rzmalloc;
