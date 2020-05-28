@@ -22,6 +22,10 @@ RTPPROXY_PROD="${TOP_BUILDDIR}/src/rtpproxy"
 RTPPROXY="${RTPPROXY:-${RTPPROXY_DBG}}"
 RTPP_QUERY="${PYINT} ${SIPPY_DIR}/sippy/tools/rtpp_query.py -n 1"
 RTPP_NOTYFY_CLIENT="${PYINT} ${TOP_BUILDDIR}/python/rtpp_notify_client.py -S ${TOP_BUILDDIR}/python/sippy_lite"
+MAKEANN_DBG=${TOP_BUILDDIR}/makeann/makeann_debug
+MAKEANN_PROD=${TOP_BUILDDIR}/makeann/makeann
+MAKEANN="${MAKEANN:-${MAKEANN_PROD}}"
+EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio_debug
 
 setup_tstart() {
   RTPP_MCLOCK_NAME="`RTPP_GLITCH_ACT="" ${RTPPROXY} -C 2>/dev/null`"
@@ -78,8 +82,6 @@ if [ -z "${RTPP_TEST_SOCKETS}" ]
 then
   assign_test_sockets
 fi
-MAKEANN=${TOP_BUILDDIR}/makeann/makeann
-EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio_debug
 DIFF="diff -u"
 TCPDUMP="tcpdump"
 TAR="tar"
