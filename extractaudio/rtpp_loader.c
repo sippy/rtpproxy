@@ -203,7 +203,9 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
         if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed),
           ad_data.ahp->time) == UPDATE_ERR) {
             /* XXX error handling */
-            abort();
+            warnx("update_rtpp_stats() failed");
+            free(pack);
+            return (-1);
         }
         if (pack->parsed.nsamples <= 0) {
             warnx("pack->parsed.nsamples = %d", pack->parsed.nsamples);
@@ -331,7 +333,9 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
         }
         if (update_rtpp_stats(NULL, stat, pack->rpkt, &(pack->parsed), pack->pkt->time) == UPDATE_ERR) {
             /* XXX error handling */
-            abort();
+            warnx("update_rtpp_stats() failed");
+            free(pack);
+            return (-1);
         }
         if (pack->parsed.nsamples <= 0) {
             warnx("pack->parsed.nsamples = %d", pack->parsed.nsamples);
