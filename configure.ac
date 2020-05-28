@@ -63,8 +63,7 @@ AS_HELP_STRING([--enable-systemd], [enable systemd support in rtpproxy]),
 
 AC_ARG_ENABLE(coverage,
   AC_HELP_STRING([--enable-coverage], [enable test coverage support]),
-  AC_DEFINE([ENABLE_COVERAGE], [], [Test coverage support is enabled])
-  CFLAGS="${CFLAGS} --coverage"; LDFLAGS="${LDFLAGS} --coverage"; break], [])
+  [ENABLE_COVERAGE=${enableval}], [ENABLE_COVERAGE=no])
 
 AC_ARG_ENABLE(memglitching,
   AC_HELP_STRING([--enable-memglitching], [enable advanced tests around malloc glitching]),
@@ -77,6 +76,14 @@ AC_ARG_ENABLE(basic-tests,
 AC_ARG_ENABLE(lto,
   AC_HELP_STRING([--enable-lto], [enable LTO (Link-Time Optimization)]),
   [ENABLE_LTO=${enableval}], [ENABLE_LTO=no])
+
+if test "$ENABLE_COVERAGE" = 'yes'
+then
+  AC_DEFINE([ENABLE_COVERAGE], [1], [Test coverage support is enabled])
+  CFLAGS="${CFLAGS} --coverage"
+  LDFLAGS="${LDFLAGS} --coverage"
+fi
+
 
 # Checks for libraries.
 
@@ -93,7 +100,6 @@ then
   then
      AC_DEFINE([HAVE_SYSTEMD_DAEMON],[1],[Define if you have systemd daemon])
   fi
-
 fi
 
 # dlopen et al
@@ -351,7 +357,7 @@ AM_CONDITIONAL(ENABLE_LTO, [test "x${ENABLE_LTO}" = "xyes" ])
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
  modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile
- modules/catch_dtmf/Makefile
+ modules/catch_dtmf/Makefile modules/badmod/Makefile
  pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile
  python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile])
 
