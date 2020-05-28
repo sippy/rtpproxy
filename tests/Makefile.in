@@ -152,7 +152,8 @@ host_triplet = @host@
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_command_parser1_stdio \
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_acct_rtcp_hep \
 @ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_catch_dtmf \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_unittests_sbuf
+@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_unittests_sbuf \
+@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_makeann1
 @ENABLE_MEMGLITCHING_TRUE@am__append_5 = ${makeann_CLEANFILES} \
 @ENABLE_MEMGLITCHING_TRUE@	${memdeb_CLEANFILES}
 @ENABLE_MEMGLITCHING_TRUE@am__append_6 = ${makeann_EXTRA_DIST} \
