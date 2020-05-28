@@ -273,4 +273,12 @@ const char *rtpp_glitch_dlerror(HERETYPE);
 
 #define dlerror() rtpp_glitch_dlerror(HEREVAL)
 
+void *rtpp_glitch_dlsym(void * restrict handle, const char * restrict symbol, HERETYPE);
+
+#ifdef dlsym
+# undef dlsym
+#endif
+
+#define dlsym(handle, symbol) rtpp_glitch_dlsym(handle, symbol, HEREVAL)
+
 #endif /* _RTPP_AUTOGLITCH_H */

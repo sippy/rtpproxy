@@ -438,3 +438,16 @@ rtpp_glitch_dlerror(HERETYPEARG)
     }
     return (dlerror());
 }
+
+#undef dlsym
+
+void *
+rtpp_glitch_dlsym(void * restrict handle, const char * restrict symbol, HERETYPEARG)
+{
+    GLITCH_INJECT(HEREARG, glitched);
+    dlerp = NULL;
+    return (dlsym(handle, symbol));
+glitched:
+    dlerp = "baz foo bar";
+    return (NULL);
+}
