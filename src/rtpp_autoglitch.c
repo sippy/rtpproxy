@@ -406,3 +406,35 @@ glitched:
     errno = ENOMEM;
     return (MAP_FAILED);
 }
+
+#include <dlfcn.h>
+
+#undef dlopen
+
+static const char *dlerp;
+
+void *
+rtpp_glitch_dlopen(const char *path, int mode, HERETYPEARG)
+{
+    GLITCH_INJECT(HEREARG, glitched);
+    dlerp = NULL;
+    return (dlopen(path, mode));
+glitched:
+    dlerp = "foo bar baz";
+    return (NULL);
+}
+
+#undef dlerror
+
+const char *
+rtpp_glitch_dlerror(HERETYPEARG)
+{
+
+    if (dlerp != NULL) {
+       const char *rval;
+       rval = dlerp;
+       dlerp = NULL;
+       return (rval);
+    }
+    return (dlerror());
+}

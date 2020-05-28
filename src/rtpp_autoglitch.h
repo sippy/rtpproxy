@@ -255,4 +255,22 @@ void *rtpp_glitch_mmap(void *, size_t, int, int, int, off_t, HERETYPE);
 
 #define mmap(addr, len, prot, flags, fd, offset) rtpp_glitch_mmap(addr, len, prot, flags, fd, offset, HEREVAL)
 
+#include <dlfcn.h>
+
+void *rtpp_glitch_dlopen(const char *path, int mode, HERETYPE);
+
+#ifdef dlopen
+# undef dlopen
+#endif
+
+#define dlopen(path, mode) rtpp_glitch_dlopen(path, mode, HEREVAL)
+
+const char *rtpp_glitch_dlerror(HERETYPE);
+
+#ifdef dlerror
+# undef dlerror
+#endif
+
+#define dlerror() rtpp_glitch_dlerror(HEREVAL)
+
 #endif /* _RTPP_AUTOGLITCH_H */
