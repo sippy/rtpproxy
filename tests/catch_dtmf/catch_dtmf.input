@@ -1,3 +1,8 @@
+U %%CALLID%% 127.0.0.7 12339 from_tag_1 && MX:1 Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29
+U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M3:Y Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29
+U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M0:1 Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29
+U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M1:0 Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29
+U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M300:0 Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29
 U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M3:1 Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29
 U %%CALLID%% 127.0.0.6 12340 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29
 U %%CALLID%% 127.0.0.5 12341 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29 22
