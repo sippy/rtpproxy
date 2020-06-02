@@ -50,6 +50,10 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx, char
   int record_single_file)
 {
     int remote;
+    struct {
+        struct rtpp_record *rtp;
+        struct rtpp_record *rtcp;
+    } newrrc = {NULL, NULL};
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0)? 1 : 0;
 
@@ -78,20 +82,30 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx, char
     }
 
     if (spa->rtp->stream[idx]->rrc == NULL) {
-        spa->rtp->stream[idx]->rrc = rtpp_record_open(cfsp, spa, rname, idx, RECORD_RTP);
-        if (spa->rtp->stream[idx]->rrc == NULL) {
+        newrrc.rtp = rtpp_record_open(cfsp, spa, rname, idx, RECORD_RTP);
+        if (newrrc.rtp == NULL) {
             return (-1);
         }
+    }
+    if (spa->rtcp->stream[idx]->rrc == NULL && cfsp->rrtcp != 0) {
+        newrrc.rtcp = rtpp_record_open(cfsp, spa, rname, idx, RECORD_RTCP);
+        if (newrrc.rtcp == NULL) {
+            goto e1;
+        }
+    }
+    if (newrrc.rtp != NULL) {
+        spa->rtp->stream[idx]->rrc = newrrc.rtp;
         RTPP_LOG(spa->log, RTPP_LOG_INFO,
           "starting recording RTP session on port %d", spa->rtp->stream[idx]->port);
     }
-    if (spa->rtcp->stream[idx]->rrc == NULL && cfsp->rrtcp != 0) {
-        spa->rtcp->stream[idx]->rrc = rtpp_record_open(cfsp, spa, rname, idx, RECORD_RTCP);
-        if (spa->rtcp->stream[idx]->rrc == NULL) {
-            return (-1);
-        }
+    if (newrrc.rtcp != NULL) {
+        spa->rtcp->stream[idx]->rrc = newrrc.rtcp;
         RTPP_LOG(spa->log, RTPP_LOG_INFO,
           "starting recording RTCP session on port %d", spa->rtcp->stream[idx]->port);
     }
     return (0);
+e1:
+    if (newrrc.rtp != NULL)
+        RTPP_OBJ_DECREF(newrrc.rtp);
+    return (-1);
 }
