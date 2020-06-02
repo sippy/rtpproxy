@@ -126,16 +126,23 @@ ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
     *cp = '\0';
     cp++;
 
-    if (is_rtcp) {
-        /* Handle RTCP (increase target port by 1) */
-        port = atoi(cp);
-        if (port <= 0 || port > 65534) {
-            RTPP_LOG(log, RTPP_LOG_ERR, "invalid port in the remote recording target specification");
-            goto e1;
-        }
-        sprintf(cp, "%d", port + 1);
+    switch (atoi_saferange(cp, &port, 1, is_rtcp ? 65535 : 65534)) {
+    case ATOI_OK:
+        break;
+    case ATOI_OUTRANGE:
+        RTPP_LOG(log, RTPP_LOG_ERR, "port out of range %d..%d in the remote recording "
+          "target specification", 1, is_rtcp ? 65535 : 65534);
+        goto e1;
+    default:
+        RTPP_LOG(log, RTPP_LOG_ERR, "%s: invalid port in the remote recording "
+          "target specification", cp);
+        goto e1;
     }
 
+    /* Handle RTCP (increase target port by 1) */
+    if (is_rtcp) {
+        sprintf(cp, "%d", port + 1);
+    }
     n = resolve(sstosa(&raddr), AF_INET, tmp, cp, AI_PASSIVE);
     if (n != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "ropen: getaddrinfo: %s", gai_strerror(n));
