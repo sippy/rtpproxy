@@ -1,5 +1,7 @@
 libucl_EXTRA_DIST = libucl
 libucl_CLEANFILES = libucl_test.output
+if ENABLE_BASIC_TESTS
 TESTS += libucl/libucl1
+endif
 CLEANFILES += ${libucl_CLEANFILES}
 EXTRA_DIST += ${libucl_EXTRA_DIST}

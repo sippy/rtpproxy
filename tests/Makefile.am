@@ -2,7 +2,6 @@ TESTS = # empty
 CLEANFILES = # empty
 EXTRA_DIST = # empty
 
-if ENABLE_BASIC_TESTS
 include $(srcdir)/autosrc/Makefile.ami
 include $(srcdir)/recording/Makefile.ami
 include $(srcdir)/makeann/Makefile.ami
@@ -19,11 +18,7 @@ include $(srcdir)/command_parser/Makefile.ami
 include $(srcdir)/forwarding/Makefile.ami
 include $(srcdir)/session_timeouts/Makefile.ami
 include $(srcdir)/playback/Makefile.ami
-endif
-if ENABLE_MEMGLITCHING
-include $(srcdir)/makeann/Makefile.ami
 include $(srcdir)/memdeb/Makefile.ami
-endif
 
 EXTRA_DIST += Makefile.am ringback.sln
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12

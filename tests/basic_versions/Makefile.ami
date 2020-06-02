@@ -1,6 +1,8 @@
 basic_versions_EXTRA_DIST = basic_versions
 basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
   basic_versions.rlog _basic_versions.rlog
+if ENABLE_BASIC_TESTS
 TESTS += basic_versions/basic_versions1
+endif
 CLEANFILES += ${basic_versions_CLEANFILES}
 EXTRA_DIST += ${basic_versions_EXTRA_DIST}

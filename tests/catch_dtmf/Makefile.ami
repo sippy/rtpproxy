@@ -1,5 +1,7 @@
 catch_dtmf_EXTRA_DIST = catch_dtmf
 catch_dtmf_CLEANFILES = catch_dtmf.*
+if ENABLE_BASIC_TESTS
 TESTS += catch_dtmf/basic
+endif
 CLEANFILES += ${catch_dtmf_CLEANFILES}
 EXTRA_DIST += ${catch_dtmf_EXTRA_DIST}
