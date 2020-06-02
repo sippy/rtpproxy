@@ -1,9 +1,11 @@
 memdeb_EXTRA_DIST = memdeb
 memdeb_CLEANFILES = glitch1.*
+if ENABLE_MEMGLITCHING
 TESTS += memdeb/glitch1 memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
   memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
   memdeb/glitch_command_parser1_stdio memdeb/glitch_acct_rtcp_hep \
   memdeb/glitch_catch_dtmf memdeb/glitch_unittests_sbuf \
-  memdeb/glitch_makeann1
+  memdeb/glitch_makeann1 memdeb/glitch_recording
+endif
 CLEANFILES += ${memdeb_CLEANFILES}
 EXTRA_DIST += ${memdeb_EXTRA_DIST}
