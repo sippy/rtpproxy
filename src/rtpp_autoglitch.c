@@ -469,3 +469,16 @@ glitched:
     }
     return (rv);
 }
+
+#undef rename
+
+int
+rtpp_glitch_rename(const char *from, const char *to, HERETYPEARG)
+{
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (rename(from, to));
+glitched:
+    errno = ENOSPC;
+    return (-1);
+}

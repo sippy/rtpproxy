@@ -293,4 +293,12 @@ size_t rtpp_glitch_fwrite(const void * restrict ptr, size_t size, size_t nmemb,
 #define fwrite(ptr, size, nmemb, stream) \
   rtpp_glitch_fwrite(ptr, size, nmemb, stream, HEREVAL)
 
+int rtpp_glitch_rename(const char *from, const char *to, HERETYPE);
+
+#ifdef rename
+# undef rename
+#endif
+
+#define rename(from, to) rtpp_glitch_rename(from, to, HEREVAL)
+
 #endif /* _RTPP_AUTOGLITCH_H */
