@@ -3,7 +3,7 @@
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
-NTRIES=4
+NTRIES=6
 
 for tc in "0 3 4 8 9" "18 3 4 9 0"
 do
