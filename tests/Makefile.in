@@ -88,8 +88,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@am__append_1 = autosrc/chk_up2date \
-@ENABLE_BASIC_TESTS_TRUE@	recording/basic makeann/makeann1 \
-@ENABLE_BASIC_TESTS_TRUE@	unittests/rtcp2json1 \
+@ENABLE_BASIC_TESTS_TRUE@	recording/basic
+@ENABLE_BASIC_TESTS_TRUE@am__append_2 = unittests/rtcp2json1 \
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_sbuf \
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_objck \
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_rzmalloc_perf \
@@ -112,52 +112,12 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_tcp_wild \
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_unix \
 @ENABLE_BASIC_TESTS_TRUE@	playback/playback1
-@ENABLE_BASIC_TESTS_TRUE@am__append_2 = ${autosrc_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${recording_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${makeann_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${rtcp2json_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${libucl_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${libexecinfo_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${acct_rtcp_hep_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${catch_dtmf_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${rtp_analyze_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${extractaudio_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${startstop_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${basic_versions_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${command_parser_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${forwarding_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${session_timeouts_CLEANFILES} \
-@ENABLE_BASIC_TESTS_TRUE@	${playback_CLEANFILES}
-@ENABLE_BASIC_TESTS_TRUE@am__append_3 = ${autosrc_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${recording_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${makeann_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${unittests_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${libucl_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${libexecinfo_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${acct_rtcp_hep_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${catch_dtmf_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${rtp_analyze_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${extractaudio_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${startstop_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${basic_versions_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${command_parser_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${forwarding_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${session_timeouts_EXTRA_DIST} \
-@ENABLE_BASIC_TESTS_TRUE@	${playback_EXTRA_DIST}
-@ENABLE_MEMGLITCHING_TRUE@am__append_4 = makeann/makeann1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch1 memdeb/glitch_libucl1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_extractaudio \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_startstop1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_basic_versions1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_command_parser1_stdio \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_acct_rtcp_hep \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_catch_dtmf \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_unittests_sbuf \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_makeann1
-@ENABLE_MEMGLITCHING_TRUE@am__append_5 = ${makeann_CLEANFILES} \
-@ENABLE_MEMGLITCHING_TRUE@	${memdeb_CLEANFILES}
-@ENABLE_MEMGLITCHING_TRUE@am__append_6 = ${makeann_EXTRA_DIST} \
-@ENABLE_MEMGLITCHING_TRUE@	${memdeb_EXTRA_DIST}
+@ENABLE_MEMGLITCHING_TRUE@am__append_3 = memdeb/glitch1 memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_command_parser1_stdio memdeb/glitch_acct_rtcp_hep \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_catch_dtmf memdeb/glitch_unittests_sbuf \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_makeann1 memdeb/glitch_recording
+
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
@@ -366,68 +326,83 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = $(am__append_1) $(am__append_4)
-CLEANFILES = $(am__append_2) $(am__append_5) *.core
-EXTRA_DIST = $(am__append_3) $(am__append_6) Makefile.am ringback.sln
-@ENABLE_BASIC_TESTS_TRUE@autosrc_EXTRA_DIST = autosrc
-@ENABLE_BASIC_TESTS_TRUE@autosrc_CLEANFILES = 
-@ENABLE_BASIC_TESTS_TRUE@recording_EXTRA_DIST = recording
-@ENABLE_BASIC_TESTS_TRUE@recording_CLEANFILES = recording.*
-@ENABLE_BASIC_TESTS_TRUE@makeann_EXTRA_DIST = makeann
-@ENABLE_MEMGLITCHING_TRUE@makeann_EXTRA_DIST = makeann
-@ENABLE_BASIC_TESTS_TRUE@makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
-@ENABLE_MEMGLITCHING_TRUE@makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
-@ENABLE_BASIC_TESTS_TRUE@unittests_EXTRA_DIST = unittests
-@ENABLE_BASIC_TESTS_TRUE@rtcp2json_CLEANFILES = rtcp1.output
-@ENABLE_BASIC_TESTS_TRUE@libucl_EXTRA_DIST = libucl
-@ENABLE_BASIC_TESTS_TRUE@libucl_CLEANFILES = libucl_test.output
-@ENABLE_BASIC_TESTS_TRUE@libexecinfo_EXTRA_DIST = libexecinfo
-@ENABLE_BASIC_TESTS_TRUE@libexecinfo_CLEANFILES = 
-@ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
-@ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
-@ENABLE_BASIC_TESTS_TRUE@catch_dtmf_EXTRA_DIST = catch_dtmf
-@ENABLE_BASIC_TESTS_TRUE@catch_dtmf_CLEANFILES = catch_dtmf.*
-@ENABLE_BASIC_TESTS_TRUE@rtp_analyze_EXTRA_DIST = rtp_analyze
-@ENABLE_BASIC_TESTS_TRUE@rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog \
-@ENABLE_BASIC_TESTS_TRUE@  rtp_analyze_*.pcap
+TESTS = $(am__append_1) makeann/makeann1 $(am__append_2) \
+	$(am__append_3)
+CLEANFILES = ${autosrc_CLEANFILES} ${recording_CLEANFILES} \
+	${makeann_CLEANFILES} ${rtcp2json_CLEANFILES} \
+	${libucl_CLEANFILES} ${libexecinfo_CLEANFILES} \
+	${acct_rtcp_hep_CLEANFILES} ${catch_dtmf_CLEANFILES} \
+	${rtp_analyze_CLEANFILES} ${extractaudio_CLEANFILES} \
+	${startstop_CLEANFILES} ${basic_versions_CLEANFILES} \
+	${command_parser_CLEANFILES} ${forwarding_CLEANFILES} \
+	${session_timeouts_CLEANFILES} ${playback_CLEANFILES} \
+	${memdeb_CLEANFILES} *.core
+EXTRA_DIST = ${autosrc_EXTRA_DIST} ${recording_EXTRA_DIST} \
+	${makeann_EXTRA_DIST} ${unittests_EXTRA_DIST} \
+	${libucl_EXTRA_DIST} ${libexecinfo_EXTRA_DIST} \
+	${acct_rtcp_hep_EXTRA_DIST} ${catch_dtmf_EXTRA_DIST} \
+	${rtp_analyze_EXTRA_DIST} ${extractaudio_EXTRA_DIST} \
+	${startstop_EXTRA_DIST} ${basic_versions_EXTRA_DIST} \
+	${command_parser_EXTRA_DIST} ${forwarding_EXTRA_DIST} \
+	${session_timeouts_EXTRA_DIST} ${playback_EXTRA_DIST} \
+	${memdeb_EXTRA_DIST} Makefile.am ringback.sln
+autosrc_EXTRA_DIST = autosrc
+autosrc_CLEANFILES = 
+recording_EXTRA_DIST = recording
+recording_CLEANFILES = recording.*
+makeann_EXTRA_DIST = makeann
+makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
+unittests_EXTRA_DIST = unittests
+rtcp2json_CLEANFILES = rtcp1.output
+libucl_EXTRA_DIST = libucl
+libucl_CLEANFILES = libucl_test.output
+libexecinfo_EXTRA_DIST = libexecinfo
+libexecinfo_CLEANFILES = 
+acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
+acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
+catch_dtmf_EXTRA_DIST = catch_dtmf
+catch_dtmf_CLEANFILES = catch_dtmf.*
+rtp_analyze_EXTRA_DIST = rtp_analyze
+rtp_analyze_CLEANFILES = rtp_analyze_*.wav rtp_analyze_*.tout rtp_analyze_*.tlog \
+  rtp_analyze_*.pcap
 
-@ENABLE_BASIC_TESTS_TRUE@extractaudio_EXTRA_DIST = extractaudio
-@ENABLE_BASIC_TESTS_TRUE@extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
-@ENABLE_BASIC_TESTS_TRUE@  *.stereo.*.wav.tout *.mono.*.raw *.mono.*.raw.tout *.mono.*.w64 \
-@ENABLE_BASIC_TESTS_TRUE@  *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout \
-@ENABLE_BASIC_TESTS_TRUE@  *.mono.*.rlog *.stereo.*.rlog *.scan.rlog *.scan.tout
+extractaudio_EXTRA_DIST = extractaudio
+extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
+  *.stereo.*.wav.tout *.mono.*.raw *.mono.*.raw.tout *.mono.*.w64 \
+  *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout \
+  *.mono.*.rlog *.stereo.*.rlog *.scan.rlog *.scan.tout
 
-@ENABLE_BASIC_TESTS_TRUE@startstop_EXTRA_DIST = startstop
-@ENABLE_BASIC_TESTS_TRUE@startstop_CLEANFILES = startstop*.rout startstop*.rlog
-@ENABLE_BASIC_TESTS_TRUE@basic_versions_EXTRA_DIST = basic_versions
-@ENABLE_BASIC_TESTS_TRUE@basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
-@ENABLE_BASIC_TESTS_TRUE@  basic_versions.rlog _basic_versions.rlog
+startstop_EXTRA_DIST = startstop
+startstop_CLEANFILES = startstop*.rout startstop*.rlog
+basic_versions_EXTRA_DIST = basic_versions
+basic_versions_CLEANFILES = basic_versions.qout basic_versions.rout \
+  basic_versions.rlog _basic_versions.rlog
 
-@ENABLE_BASIC_TESTS_TRUE@command_parser_EXTRA_DIST = command_parser
-@ENABLE_BASIC_TESTS_TRUE@command_parser_CLEANFILES = command_parser.rout W3.IT2Nl*.rtcp W3.IT2Nl*.rtp \
-@ENABLE_BASIC_TESTS_TRUE@  command_parser.rlog
+command_parser_EXTRA_DIST = command_parser
+command_parser_CLEANFILES = command_parser.rout W3.IT2Nl*.rtcp W3.IT2Nl*.rtp \
+  command_parser.rlog
 
-@ENABLE_BASIC_TESTS_TRUE@forwarding_EXTRA_DIST = forwarding
-@ENABLE_BASIC_TESTS_TRUE@forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.8.wav forwarding1.9.wav forwarding1.gena.rout forwarding1.geno.rout \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.*.eout rtpproxy_acct.csv forwarding1_robust.rout
+forwarding_EXTRA_DIST = forwarding
+forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
+  forwarding1.8.wav forwarding1.9.wav forwarding1.gena.rout forwarding1.geno.rout \
+  forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
+  forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
+  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog \
+  forwarding1.*.eout rtpproxy_acct.csv forwarding1_robust.rout
 
-@ENABLE_BASIC_TESTS_TRUE@session_timeouts_EXTRA_DIST = session_timeouts
-@ENABLE_BASIC_TESTS_TRUE@session_timeouts_CLEANFILES = session_timeouts.rout[1234567].[1234] session_timeouts.rlog[1234567].[1234] \
-@ENABLE_BASIC_TESTS_TRUE@  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234567].[1234] \
-@ENABLE_BASIC_TESTS_TRUE@  session_timeouts.fout[1234567].[1234]
+session_timeouts_EXTRA_DIST = session_timeouts
+session_timeouts_CLEANFILES = session_timeouts.rout[1234567].[1234] session_timeouts.rlog[1234567].[1234] \
+  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234567].[1234] \
+  session_timeouts.fout[1234567].[1234]
 
-@ENABLE_BASIC_TESTS_TRUE@playback_EXTRA_DIST = playback
-@ENABLE_BASIC_TESTS_TRUE@playback_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
-@ENABLE_BASIC_TESTS_TRUE@  playback1.8.a.rtp playback1.9.a.rtp playback1.0 playback1.18 playback1.3 \
-@ENABLE_BASIC_TESTS_TRUE@  playback1.8 playback1.9 playback1.rout playback1.0.wav playback1.18.wav \
-@ENABLE_BASIC_TESTS_TRUE@  playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout playback1.rlog
+playback_EXTRA_DIST = playback
+playback_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
+  playback1.8.a.rtp playback1.9.a.rtp playback1.0 playback1.18 playback1.3 \
+  playback1.8 playback1.9 playback1.rout playback1.0.wav playback1.18.wav \
+  playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout playback1.rlog
 
-@ENABLE_MEMGLITCHING_TRUE@memdeb_EXTRA_DIST = memdeb
-@ENABLE_MEMGLITCHING_TRUE@memdeb_CLEANFILES = glitch1.*
+memdeb_EXTRA_DIST = memdeb
+memdeb_CLEANFILES = glitch1.*
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
@@ -437,7 +412,7 @@ TESTS_ENVIRONMENT = \
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -457,7 +432,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__empty):
+$(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
