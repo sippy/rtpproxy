@@ -189,7 +189,7 @@ glitched:
 #undef stat
 
 int
-rtpp_glitch_stat(const char * restrict path, struct stat *sb, HERETYPEARG)
+rtpp_glitch_stat(const char *path, struct stat *sb, HERETYPEARG)
 {
     struct stat tsb;
 
@@ -441,7 +441,7 @@ rtpp_glitch_dlerror(HERETYPEARG)
 #undef dlsym
 
 void *
-rtpp_glitch_dlsym(void * restrict handle, const char * restrict symbol, HERETYPEARG)
+rtpp_glitch_dlsym(void *handle, const char *symbol, HERETYPEARG)
 {
     GLITCH_INJECT(HEREARG, glitched);
     dlerp = NULL;
@@ -456,8 +456,8 @@ glitched:
 #undef fwrite
 
 size_t
-rtpp_glitch_fwrite(const void * restrict ptr, size_t size, size_t nmemb,
-  FILE * restrict stream, HERETYPEARG)
+rtpp_glitch_fwrite(const void *ptr, size_t size, size_t nmemb,
+  FILE *stream, HERETYPEARG)
 {
     size_t rv = 0;
 

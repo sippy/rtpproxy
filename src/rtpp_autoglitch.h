@@ -119,7 +119,7 @@ int rtpp_glitch_fstat(int fd, struct stat *sb, HERETYPE);
 
 #define fstat(fd, sb) rtpp_glitch_fstat(fd, sb, HEREVAL)
 
-int rtpp_glitch_stat(const char * restrict path, struct stat *sb, HERETYPE);
+int rtpp_glitch_stat(const char *path, struct stat *sb, HERETYPE);
 
 #ifdef stat
 # undef stat
@@ -273,7 +273,7 @@ const char *rtpp_glitch_dlerror(HERETYPE);
 
 #define dlerror() rtpp_glitch_dlerror(HEREVAL)
 
-void *rtpp_glitch_dlsym(void * restrict handle, const char * restrict symbol, HERETYPE);
+void *rtpp_glitch_dlsym(void *handle, const char *symbol, HERETYPE);
 
 #ifdef dlsym
 # undef dlsym
@@ -283,8 +283,8 @@ void *rtpp_glitch_dlsym(void * restrict handle, const char * restrict symbol, HE
 
 #include <stdio.h>
 
-size_t rtpp_glitch_fwrite(const void * restrict ptr, size_t size, size_t nmemb,
-  FILE * restrict stream, HERETYPE);
+size_t rtpp_glitch_fwrite(const void *ptr, size_t size, size_t nmemb,
+  FILE *stream, HERETYPE);
 
 #ifdef fwrite
 # undef fwrite
