@@ -137,6 +137,8 @@ struct rtpp_mhandlers {
     rtpp_module_config_t config;
 };
 
+#include <pthread.h>
+
 struct rtpp_wthrdata {
     struct rtpp_wi *sigterm;
     pthread_t thread_id;
