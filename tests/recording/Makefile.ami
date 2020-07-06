@@ -1,5 +1,7 @@
 recording_EXTRA_DIST = recording
 recording_CLEANFILES = recording.*
+if ENABLE_BASIC_TESTS
 TESTS += recording/basic
+endif
 CLEANFILES += ${recording_CLEANFILES}
 EXTRA_DIST += ${recording_EXTRA_DIST}

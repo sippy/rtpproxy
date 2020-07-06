@@ -3,6 +3,8 @@ extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
   *.stereo.*.wav.tout *.mono.*.raw *.mono.*.raw.tout *.mono.*.w64 \
   *.mono.*.w64.tout *.stereo.*.w64 *.stereo.*.w64.tout \
   *.mono.*.rlog *.stereo.*.rlog *.scan.rlog *.scan.tout
+if ENABLE_BASIC_TESTS
 TESTS += extractaudio/badargs extractaudio/extractaudio1 extractaudio/scan
+endif
 CLEANFILES += ${extractaudio_CLEANFILES}
 EXTRA_DIST += ${extractaudio_EXTRA_DIST}

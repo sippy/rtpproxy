@@ -1,5 +1,7 @@
 acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
 acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
+if ENABLE_BASIC_TESTS
 TESTS += acct_rtcp_hep/confval1 acct_rtcp_hep/basic
+endif
 CLEANFILES += ${acct_rtcp_hep_CLEANFILES}
 EXTRA_DIST += ${acct_rtcp_hep_EXTRA_DIST}

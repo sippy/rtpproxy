@@ -1,5 +1,7 @@
 autosrc_EXTRA_DIST = autosrc
 autosrc_CLEANFILES = 
+if ENABLE_BASIC_TESTS
 TESTS += autosrc/chk_up2date
+endif
 CLEANFILES += ${autosrc_CLEANFILES}
 EXTRA_DIST += ${autosrc_EXTRA_DIST}

@@ -231,11 +231,8 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
     }
     memset(wi_data, '\0', rtpp_timed_cf->wi_dsize);
     wi_data->wi = wi;
+    /* rtpp_refcnt_ctor_pa() never fails */
     wi_data->pub.rcnt = rtpp_refcnt_ctor_pa(&wi_data->rco[0]);
-    if (wi_data->pub.rcnt == NULL) {
-        CALL_METHOD(wi, dtor);
-        return (NULL);
-    }
     wi_data->cb_func = cb_func;
     wi_data->cancel_cb_func = cancel_cb_func;
     wi_data->cb_func_arg = cb_func_arg;

@@ -2,7 +2,9 @@ session_timeouts_EXTRA_DIST = session_timeouts
 session_timeouts_CLEANFILES = session_timeouts.rout[1234567].[1234] session_timeouts.rlog[1234567].[1234] \
   session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234567].[1234] \
   session_timeouts.fout[1234567].[1234]
+if ENABLE_BASIC_TESTS
 TESTS += session_timeouts/notify_tcp session_timeouts/notify_tcp_wild \
   session_timeouts/notify_unix
+endif
 CLEANFILES += ${session_timeouts_CLEANFILES}
 EXTRA_DIST += ${session_timeouts_EXTRA_DIST}
