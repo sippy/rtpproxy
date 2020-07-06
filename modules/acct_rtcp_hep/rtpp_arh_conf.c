@@ -128,7 +128,7 @@ conf_set_capt_id(struct rtpp_log *log, const ucl_object_t *top,
     }
     if (capt_id < 0 || capt_id > 0xffffffff) {
         RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for capt_id in section '%s': %d",
-            ucl_object_key(obj), capt_id);
+            ucl_object_key(obj), (int)capt_id);
         return (false);
     }
     target->capt_id = capt_id;
