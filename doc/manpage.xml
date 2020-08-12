@@ -150,6 +150,8 @@
 
       <arg choice="opt"><option>-W</option>
       <replaceable>setup_ttl</replaceable></arg>
+
+      <arg choice="opt"><option>--force_asymmetric</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -587,6 +589,15 @@
 
           <para>The default level in foreground mode is is DBUG, in background
           - WARN and facility is LOG_DAEMON.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--force_asymmetric</option></term>
+
+        <listitem>
+          <para>Treat all RTP/RTCP sessions as "assymetric", i.e. disable any NAT
+          traversal features unconditionally.</para>
         </listitem>
       </varlistentry>
     </variablelist>

@@ -224,6 +224,7 @@ rtpp_rlim_max(const struct rtpp_cfg *cfsp)
 #define LOPT_NICE     258
 #define LOPT_OVL_PROT 259
 #define LOPT_CONFIG   260
+#define LOPT_FORC_ASM 261
 
 const static struct option longopts[] = {
     { "dso", required_argument, NULL, LOPT_DSO },
@@ -231,6 +232,7 @@ const static struct option longopts[] = {
     { "nice", required_argument, NULL, LOPT_NICE },
     { "overload_prot", optional_argument, NULL, LOPT_OVL_PROT },
     { "config", required_argument, NULL, LOPT_CONFIG },
+    { "force_asymmetric", no_argument, NULL, LOPT_FORC_ASM },
     { NULL,  0,                 NULL, 0 }
 };
 
@@ -380,6 +382,10 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 
         case LOPT_CONFIG:
             cfsp->cfile = optarg;
+            break;
+
+        case LOPT_FORC_ASM:
+            cfsp->aforce = 1;
             break;
 
         case 'c':
