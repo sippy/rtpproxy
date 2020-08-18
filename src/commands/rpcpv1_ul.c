@@ -444,7 +444,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             if (ulop->local_addr != NULL) {
                 spa->rtp->stream[sidx]->laddr = ulop->local_addr;
             }
-            if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr, &lport, fds) == -1) {
+            if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr, &lport, fds) != 0) {
                 RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
                 reply_error(cmd, ECODE_LSTFAIL_1);
                 goto err_undo_0;
@@ -515,7 +515,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             reply_error(cmd, cfsp->overload_prot.ecode);
             goto err_undo_0;
         }
-        if (rtpp_create_listener(cfsp, ulop->lia[0], &lport, fds) == -1) {
+        if (rtpp_create_listener(cfsp, ulop->lia[0], &lport, fds) != 0) {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "can't create listener");
             reply_error(cmd, ECODE_LSTFAIL_2);
             goto err_undo_0;
