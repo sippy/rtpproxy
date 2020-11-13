@@ -8,7 +8,7 @@ def get_ip_flags(iname, includedirs):
     includedirs = ['.',] + includedirs
     for dname in includedirs:
         try:
-            f = file('%s/%s' % (dname, iname))
+            f = open('%s/%s' % (dname, iname))
             break
         except IOError:
             continue
@@ -42,17 +42,27 @@ class header_file(object):
             return False
         return (flname in self.ip_flags)
 
+    def __lt__(self, other):
+        return self.ifname < other.ifname
+
 def first_pass(fname, includedirs):
     includes = []
-    for line in file(fname).readlines():
+    for line in open(fname).readlines():
         line = line.strip()
         lparts = line.split(None, 1)
         if len(lparts) < 2 or not lparts[0].startswith('#include'):
             continue
-        if lparts[1] in [x.ifname for x in includes]:
+        incname = lparts[1]
+        tpos = incname.rfind('"')
+        if tpos == -1:
+            tpos = incname.rfind('>')
+        if tpos == -1:
+            continue
+        incname = incname[:tpos + 1]
+        if incname in [x.ifname for x in includes]:
             # dupe
             continue
-        includes.append(header_file(lparts[1], includedirs))
+        includes.append(header_file(incname, includedirs))
     if len(includes) > 0:
         return tuple(includes)
     return None
@@ -67,10 +77,10 @@ def err_line(fout, line):
     fout.write(line)
 
 def second_pass(fname_in, fname_out, filter, target, edit_fn = block_line):
-    #print 'second_pass', fname_in, fname_out, filter, target
-    fout = file(fname_out, 'w')
+    #print('second_pass', fname_in, fname_out, filter, target)
+    fout = open(fname_out, 'w')
     fh_names = [x.ifname for x in filter + [target,]]
-    for line in file(fname_in).readlines():
+    for line in open(fname_in).readlines():
         line_s = line.strip()
         lparts = line_s.split(None, 1)
         if len(lparts) < 2 or not lparts[0].startswith('#include'):
@@ -91,7 +101,7 @@ def second_pass(fname_in, fname_out, filter, target, edit_fn = block_line):
         ofnames.append(objfile_dbg)
     for objfile in ofnames:
         if os.path.exists(objfile):
-            #print 'removing', objfile
+            #print('removing', objfile)
             os.remove(objfile)
 
 class PassConf(object):
@@ -125,8 +135,8 @@ if __name__ == '__main__':
     make = os.environ['SMAKE']
     includedirs = os.environ['SIPATH'].split(':')
     pconf = PassConf()
-    pconf.cleanbuild_targets = ('clean', 'all')
-    pconf.build_targets = ('all',)
+    pconf.cleanbuild_targets = ('clean', 'opensips')
+    pconf.build_targets = ('opensips',)
     try:
         pconf.make_flags = os.environ['SMAKEFLAGS'].split()
     except KeyError:
@@ -136,17 +146,17 @@ if __name__ == '__main__':
     ignore = list(always_ignore)
     if fname.endswith('.c'):
         ignore.append('"%s.h"' % fname[:-2])
-    print 'processing %s' % fname
+    print('processing %s' % fname)
     includes = first_pass(fname, includedirs)
     if includes == None:
-        print '  ...no includes found'
+        print('  ...no includes found')
         sys.exit(0)
     includes = [x for x in includes if x.ifname not in ignore \
       and not x.isflset('DONT_REMOVE')]
     includes.sort()
-    pconf.devnull = file('ipol/' + fname + '.iout', 'a')
-    print ' .collected %d "#include" statements' % len(includes)
-    print ' .doing dry run'
+    pconf.devnull = open('ipol/' + fname + '.iout', 'a')
+    print(' .collected %d "#include" statements' % len(includes))
+    print(' .doing dry run')
     cargs = [make,]
     if pconf.make_flags != None:
         cargs.extend(pconf.make_flags)
@@ -155,7 +165,7 @@ if __name__ == '__main__':
     pconf.devnull.flush()
     rval = call(cargs, stdout = pconf.devnull, stderr = pconf.devnull)
     if rval != 0:
-        print '  ...dry run failed'
+        print('  ...dry run failed')
         sys.exit(255)
     pconf.devnull.flush()
     r = int(random() * 1000000.0)
@@ -163,9 +173,9 @@ if __name__ == '__main__':
     unusd_includes = []
     fname_bak = '%s.%.6d' % (fname, r)
     os.rename(fname, fname_bak)
-    print ' ..renamed "%s" into "%s"' % (fname, fname_bak)
+    print(' ..renamed "%s" into "%s"' % (fname, fname_bak))
     while True:
-        #print 'sfl_includes:', [x.ifname for x in sfl_includes]
+        #print('sfl_includes:', [x.ifname for x in sfl_includes])
         sfl_includes_bak = sfl_includes[:]
         for include in includes:
             if include in sfl_includes + unusd_includes:
@@ -184,5 +194,5 @@ if __name__ == '__main__':
             break
     os.rename(fname_bak, fname)
     for include in sfl_includes:
-        print '"#include %s" is superfluous in %s' % (include.ifname, fname)
+        print('"#include %s" is superfluous in %s' % (include.ifname, fname))
     sys.exit(len(sfl_includes))
