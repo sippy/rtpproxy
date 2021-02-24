@@ -4,10 +4,13 @@ set -e
 
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/scripts/functions.sub"
+. "${BASEDIR}/scripts/build/build.conf.sub"
 
 TTYPE="${1}"
 BCG729_VER=1.1.1
 SNDFILE_VER=1.0.28
+
+TAR_CMD=${TAR_CMD:-"tar"}
 
 uname -a
 which ${CC}
@@ -17,8 +20,8 @@ automake --version
 autoconf --version
 autoreconf --version
 
-sudo iptables -L OUTPUT
-sudo iptables -L INPUT
+sudo iptables -w -L OUTPUT
+sudo iptables -w -L INPUT
 sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
@@ -36,7 +39,7 @@ mkdir deps
 cd deps
 wget -O bcg729-${BCG729_VER}.tar.gz \
   https://github.com/BelledonneCommunications/bcg729/archive/${BCG729_VER}.tar.gz
-tar xfz bcg729-${BCG729_VER}.tar.gz
+${TAR_CMD} xfz bcg729-${BCG729_VER}.tar.gz
 cd bcg729-${BCG729_VER}
 touch ChangeLog NEWS AUTHORS
 perl -pi -e 's|bcg729.spec||g' configure.ac
@@ -57,7 +60,7 @@ make
 sudo make install
 cd ..
 wget http://www.mega-nerd.com/libsndfile/files/libsndfile-${SNDFILE_VER}.tar.gz
-tar xfz libsndfile-${SNDFILE_VER}.tar.gz
+${TAR_CMD} xfz libsndfile-${SNDFILE_VER}.tar.gz
 cd libsndfile-${SNDFILE_VER}
 ./configure
 make
@@ -72,9 +75,13 @@ if [ "${TTYPE}" = "depsbuild" ]
 then
   ./configure ${CONFIGURE_ARGS}
   make ${ALLCLEAN_TGT}
-  ${APT_GET} install -y libsrtp0-dev
-  ./configure ${CONFIGURE_ARGS}
-  exec make ${ALLCLEAN_TGT}
+  if ${APT_GET} install -y libsrtp0-dev
+  then
+    ./configure ${CONFIGURE_ARGS}
+    exec make ${ALLCLEAN_TGT}
+  else
+    exit 0
+  fi
 fi
 
 CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-coverage"
@@ -100,11 +107,9 @@ ELP_BRANCH="${ELP_BRANCH:-"master"}"
 cd deps
 git clone --branch ${ELP_BRANCH} https://github.com/sobomax/libelperiodic.git
 cd libelperiodic
-./configure
+./configure --without-python
 make all
 sudo make install
-python3 setup.py build
-sudo python3 setup.py install
 cd ../..
 
 sudo ldconfig
@@ -122,8 +127,11 @@ tcpdump --version || true
 #launchpad fails#sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
 #launchpad fails#${APT_GET} update
 #launchpad fails#${APT_GET} install -y ffmpeg
-wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz
-tar -C dist -xvf dist/ffmpeg.tar.xz
-sudo cp dist/ffmpeg-*-i686-static/ffmpeg /usr/bin
+if [ ! -e dist/ffmpeg.tar.xz ]
+then
+  wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+fi
+${TAR_CMD} -C dist -xvf dist/ffmpeg.tar.xz
+sudo cp dist/ffmpeg-*-*-static/ffmpeg /usr/bin
 
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
