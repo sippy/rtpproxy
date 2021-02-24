@@ -56,7 +56,7 @@ jobs:
           python-version: 3.6
 
       - name: before_install
-        run: sh -x scripts/ft-before_install.sh
+        run: sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
 
       - name: install_depends
         run: sh -x scripts/build/install_depends.sh
