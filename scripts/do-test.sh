@@ -72,9 +72,13 @@ if [ "${TTYPE}" = "depsbuild" ]
 then
   ./configure ${CONFIGURE_ARGS}
   make ${ALLCLEAN_TGT}
-  ${APT_GET} install -y libsrtp0-dev
-  ./configure ${CONFIGURE_ARGS}
-  exec make ${ALLCLEAN_TGT}
+  if ${APT_GET} install -y libsrtp0-dev
+  then
+    ./configure ${CONFIGURE_ARGS}
+    exec make ${ALLCLEAN_TGT}
+  else
+    exit 0
+  fi
 fi
 
 CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-coverage"
