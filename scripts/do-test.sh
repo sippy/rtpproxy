@@ -104,7 +104,7 @@ ELP_BRANCH="${ELP_BRANCH:-"master"}"
 cd deps
 git clone --branch ${ELP_BRANCH} git://github.com/sobomax/libelperiodic.git
 cd libelperiodic
-./configure
+./configure --without-python
 make all
 sudo make install
 cd ../..
