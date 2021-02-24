@@ -18,8 +18,8 @@ automake --version
 autoconf --version
 autoreconf --version
 
-sudo iptables -L OUTPUT
-sudo iptables -L INPUT
+sudo iptables -w -L OUTPUT
+sudo iptables -w -L INPUT
 sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
