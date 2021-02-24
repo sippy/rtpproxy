@@ -107,8 +107,6 @@ cd libelperiodic
 ./configure
 make all
 sudo make install
-python3 setup.py build
-sudo python3 setup.py install
 cd ../..
 
 sudo ldconfig
