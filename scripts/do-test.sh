@@ -4,7 +4,7 @@ set -e
 
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/scripts/functions.sub"
-. "${BASEDIR}/scripts/build/build.conf.sub
+. "${BASEDIR}/scripts/build/build.conf.sub"
 
 TTYPE="${1}"
 BCG729_VER=1.0.4
