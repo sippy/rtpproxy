@@ -57,4 +57,4 @@ jobs:
         run: sh -x scripts/build/install_depends.sh
 
       - name: script
-         run: sh -x ./scripts/do-test.sh cleanbuild
+        run: sh -x ./scripts/do-test.sh cleanbuild
