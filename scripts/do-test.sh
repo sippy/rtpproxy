@@ -4,6 +4,7 @@ set -e
 
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/scripts/functions.sub"
+. "${BASEDIR}/scripts/build/build.conf.sub"
 
 TTYPE="${1}"
 BCG729_VER=1.0.4
@@ -17,8 +18,8 @@ automake --version
 autoconf --version
 autoreconf --version
 
-sudo iptables -L OUTPUT
-sudo iptables -L INPUT
+sudo iptables -w -L OUTPUT
+sudo iptables -w -L INPUT
 sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
@@ -71,9 +72,13 @@ if [ "${TTYPE}" = "depsbuild" ]
 then
   ./configure ${CONFIGURE_ARGS}
   make ${ALLCLEAN_TGT}
-  ${APT_GET} install -y libsrtp0-dev
-  ./configure ${CONFIGURE_ARGS}
-  exec make ${ALLCLEAN_TGT}
+  if ${APT_GET} install -y libsrtp0-dev
+  then
+    ./configure ${CONFIGURE_ARGS}
+    exec make ${ALLCLEAN_TGT}
+  else
+    exit 0
+  fi
 fi
 
 CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-coverage"
@@ -99,11 +104,9 @@ ELP_BRANCH="${ELP_BRANCH:-"master"}"
 cd deps
 git clone --branch ${ELP_BRANCH} git://github.com/sobomax/libelperiodic.git
 cd libelperiodic
-./configure
+./configure --without-python
 make all
 sudo make install
-python3 setup.py build
-sudo python3 setup.py install
 cd ../..
 
 sudo ldconfig
@@ -121,7 +124,10 @@ tcpdump --version || true
 #launchpad fails#sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
 #launchpad fails#${APT_GET} update
 #launchpad fails#${APT_GET} install -y ffmpeg
-wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz
+if [ ! -e dist/ffmpeg.tar.xz ]
+then
+  wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz
+fi
 tar -C dist -xvf dist/ffmpeg.tar.xz
 sudo cp dist/ffmpeg-*-i686-static/ffmpeg /usr/bin
 
