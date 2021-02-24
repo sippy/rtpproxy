@@ -8,4 +8,5 @@ sudo pip3 install -U pip setuptools wheel
 #sudo pip3 install -U virtualenvwrapper
 which python
 python --version
+pip3 install --user elperiodic
 pip3 install --user cpp-coveralls
