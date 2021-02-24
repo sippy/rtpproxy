@@ -124,7 +124,10 @@ tcpdump --version || true
 #launchpad fails#sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
 #launchpad fails#${APT_GET} update
 #launchpad fails#${APT_GET} install -y ffmpeg
-wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz
+if [ ! -e dist/ffmpeg.tar.xz ]
+then
+  wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz
+fi
 tar -C dist -xvf dist/ffmpeg.tar.xz
 sudo cp dist/ffmpeg-*-i686-static/ffmpeg /usr/bin
 

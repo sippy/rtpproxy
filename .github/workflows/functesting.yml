@@ -50,6 +50,11 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: Cache ffmpeg
+        uses: actions/cache@v2
+        with:
+          path: dist/ffmpeg.tar.xz
+
       - name: Set up Python 3.6
         uses: actions/setup-python@v2
         with:
