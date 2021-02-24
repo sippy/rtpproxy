@@ -66,4 +66,4 @@ jobs:
         run: sh -x scripts/install_working_nc.sh
 
       - name: script
-        run: sh -x ./scripts/do-test.sh basic
+        run: sh -x scripts/do-test.sh basic
