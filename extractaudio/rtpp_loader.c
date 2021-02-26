@@ -49,12 +49,13 @@
 #include "rtp_info.h"
 #include "rtpp_record_adhoc.h"
 #include "rtpp_record_private.h"
-#include "session.h"
+#include "eaud_channels.h"
+#include "eaud_session.h"
 #include "rtp_analyze.h"
 #include "rtpp_loader.h"
 #include "rtpp_time.h"
 #include "rtpp_util.h"
-#if ENABLE_SRTP || ENABLE_SRTP2
+#if (ENABLE_SRTP || ENABLE_SRTP2) && !defined(WITHOUT_CRYPTO)
 #include "eaud_crypto.h"
 #endif
 #include "eaud_pcap.h"
@@ -99,7 +100,7 @@ rtpp_load(const char *path)
         return NULL;
     }
 
-#if !ENABLE_SRTP && !ENABLE_SRTP2
+#if (!ENABLE_SRTP && !ENABLE_SRTP2) || !defined(WITHOUT_CRYPTO)
     rval->ibuf = mmap(NULL, rval->sb.st_size, PROT_READ, MAP_SHARED,
       rval->ifd, 0);
 #else
@@ -213,7 +214,7 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
             continue;
         }
 
-        sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
+        sess = eaud_session_lookup(channels, pack->rpkt->ssrc, &channel);
         if (sess == NULL) {
             channel = channel_alloc(origin);
             if (channel == NULL) {
@@ -290,7 +291,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
         if (pd.l5_len < sizeof(rtp_hdr_t))
             continue;
 
-#if ENABLE_SRTP || ENABLE_SRTP2
+#if (ENABLE_SRTP || ENABLE_SRTP2) && !defined(WITHOUT_CRYPTO)
         if (crypto != NULL) {
             rtp_pkt_len = eaud_crypto_decrypt(crypto, pd.l5_data, pd.l5_len);
             if (rtp_pkt_len <= 0) {
@@ -343,7 +344,7 @@ load_pcap(struct rtpp_loader *loader, struct channels *channels,
             continue;
         }
 
-        sess = session_lookup(channels, pack->rpkt->ssrc, &channel);
+        sess = eaud_session_lookup(channels, pack->rpkt->ssrc, &channel);
         if (sess == NULL) {
             channel = channel_alloc(origin);
             if (channel == NULL) {

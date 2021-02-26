@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2006-2021 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,53 +23,13 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
 
-#include <stdlib.h>
-#include <stdint.h>
+struct channels;
+struct channel;
+struct cnode;
 
-#include "rtp_info.h"
-#include "eaud_session.h"
+/* Insert channel keeping them ordered by time of first packet arrival */
+int channel_insert(struct channels *, struct channel *);
+void channel_remove(struct channels *, struct cnode *);
 
-struct cnode *
-eaud_ss_find(struct channels *ssp, struct channel *cp)
-{
-    struct cnode *cnp;
-
-    MYQ_FOREACH(cnp, ssp) {
-        if (cnp->cp == cp) {
-            return (cnp);
-        }
-    }
-    return (NULL);
-}
-
-int
-eaud_ss_syncactive(struct channels *all_ssp, struct channels *act_ssp,
-  int64_t csample, int64_t *nsample)
-{
-    struct cnode *cnp;
-    int64_t min_nsample;
-    int nadded;
-
-    min_nsample = -1;
-    nadded = 0;
-    MYQ_FOREACH(cnp, all_ssp) {
-        if (cnp->cp->skip > csample) {
-            if (min_nsample < 0) {
-                min_nsample = cnp->cp->skip;
-            } else if (min_nsample > cnp->cp->skip) {
-                min_nsample = cnp->cp->skip;
-            }
-            continue;
-        }
-        if (eaud_ss_find(act_ssp, cnp->cp) == NULL) {
-            if (channel_insert(act_ssp, cnp->cp) < 0)
-               return (-1);
-            nadded += 1;
-        }
-    }
-    *nsample = min_nsample;
-    return (nadded);
-}

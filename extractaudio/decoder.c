@@ -41,7 +41,7 @@
 #include "rtp_info.h"
 #include "decoder.h"
 #include "g729_compat.h"
-#include "session.h"
+#include "eaud_session.h"
 #include "rtpp_record_adhoc.h"
 #include "rtpp_record_private.h"
 #include "rtp.h"

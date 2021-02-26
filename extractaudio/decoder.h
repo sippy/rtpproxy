@@ -46,7 +46,7 @@
 #endif
 
 #include "rtp.h"
-#include "session.h"
+#include "eaud_session.h"
 
 #define	DECODER_EOF	(-(1 << 16))
 #define	DECODER_ERROR	(-(2 << 16))

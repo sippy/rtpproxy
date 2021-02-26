@@ -23,9 +23,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * $Id$
- *
  */
 
 #include <sys/types.h>
@@ -64,14 +61,14 @@
 #include "g711.h"
 #include "rtp_info.h"
 #include "decoder.h"
-#include "session.h"
+#include "eaud_channels.h"
+#include "eaud_session.h"
 #include "rtpp_record_adhoc.h"
 #include "rtpp_record_private.h"
 #include "rtpp_ssrc.h"
 #include "rtp_analyze.h"
 #include "rtpp_loader.h"
 #include "rtp.h"
-#include "rtpa_stats.h"
 #include "eaud_oformats.h"
 #if ENABLE_SRTP || ENABLE_SRTP2
 # include "eaud_crypto.h"
@@ -119,107 +116,6 @@ usage(void)
     fprintf(stderr, usage_msg[0], usage_msg[1], usage_msg[2], usage_msg[3],
       usage_msg[4], usage_msg[5], usage_msg[6], usage_msg[7]);
     exit(1);
-}
-
-/* Lookup session given ssrc */
-struct session *
-session_lookup(struct channels *channels, uint32_t ssrc, struct channel **cpp)
-{
-    struct cnode *cnp;
-
-    MYQ_FOREACH(cnp, channels) {
-        if (MYQ_FIRST(&(cnp->cp->session))->rpkt->ssrc == ssrc) {
-            *cpp = cnp->cp;
-            return &(cnp->cp->session);
-        }
-    }
-    return NULL;
-}
-
-/* Insert channel keeping them ordered by time of first packet arrival */
-int
-channel_insert(struct channels *channels, struct channel *channel)
-{
-    struct cnode *cnp, *nnp;
-
-    nnp = malloc(sizeof(*nnp));
-    if (nnp == NULL)
-        return (-1);
-    memset(nnp, 0, sizeof(*nnp));
-    nnp->cp = channel;
-
-    MYQ_FOREACH_REVERSE(cnp, channels)
-        if (MYQ_FIRST(&(cnp->cp->session))->pkt->time <
-          MYQ_FIRST(&(channel->session))->pkt->time) {
-            MYQ_INSERT_AFTER(channels, cnp, nnp);
-            return 0;
-        }
-    MYQ_INSERT_HEAD(channels, nnp);
-    return 0;
-}
-
-void
-channel_remove(struct channels *channels, struct cnode *cnp)
-{
-
-    MYQ_REMOVE(channels, cnp);
-    free(cnp);
-}
-
-static int
-load_session(const char *path, struct channels *channels, enum origin origin,
-  struct eaud_crypto *crypto)
-{
-    int pcount, jc;
-    struct rtpp_session_stat stat;
-    struct rtpa_stats_jitter jstat;
-    struct rtpp_loader *loader;
-
-    loader = rtpp_load(path);
-    if (loader == NULL)
-        return -1;
-
-    if (rtpp_stats_init(&stat) < 0)
-        goto e0;
-    pcount = loader->load(loader, channels, &stat, origin, crypto);
-
-    update_rtpp_totals(&stat, &stat);
-    jc = get_jitter_stats(stat.jdata, &jstat, NULL);
-    printf("pcount=%u, min_seq=%u, max_seq=%u, seq_offset=%u, ssrc=0x%.8X, duplicates=%u\n",
-      (unsigned int)stat.last.pcount, (unsigned int)stat.last.min_seq, (unsigned int)stat.last.max_seq,
-      (unsigned int)stat.last.seq_offset, (unsigned int)stat.last.ssrc.val, (unsigned int)stat.last.duplicates);
-    printf("ssrc_changes=%u, psent=%u, precvd=%u, plost=%d\n", stat.ssrc_changes, stat.psent, stat.precvd,
-      stat.psent - stat.precvd);
-    if (jc > 0) {
-        printf("last_jitter=%f,average_jitter=%f,max_jitter=%f\n",
-          jstat.jlast, jstat.javg, jstat.jmax);
-    }
-
-    loader->destroy(loader);
-    rtpp_stats_destroy(&stat);
-
-    return pcount;
-e0:
-    loader->destroy(loader);
-    return -1;
-}
-
-static int
-scan_session(const char *path)
-{
-    int pcount;
-    struct rtpp_loader *loader;
-
-    loader = rtpp_load(path);
-    if (loader == NULL)
-        goto e0;
-
-    pcount = loader->scan(loader, NULL);
-    loader->destroy(loader);
-
-    return pcount;
-e0:
-    return -1;
 }
 
 int
@@ -389,24 +285,24 @@ main(int argc, char **argv)
 
     if (scanonly) {
         if (aname != NULL) {
-            printf("%s: %d\n", aname, scan_session(aname));
+            printf("%s: %d\n", aname, eaud_session_scan(aname));
         }
         if (bname != NULL) {
-            printf("%s: %d\n", bname, scan_session(bname));
+            printf("%s: %d\n", bname, eaud_session_scan(bname));
         }
         exit (0);
     }
 
     nloaded = 0;
     if (aname != NULL) {
-        if (load_session(aname, &channels, A_CH, alice_crypto) >= 0) {
+        if (eaud_session_load(aname, &channels, A_CH, alice_crypto) >= 0) {
             nloaded += 1;
         } else if (dflags & D_FLAG_ERRFAIL) {
             errx(1, "cannot load %s", aname);
         }
     }
     if (bname != NULL) {
-        if (load_session(bname, &channels, B_CH, bob_crypto) >= 0) {
+        if (eaud_session_load(bname, &channels, B_CH, bob_crypto) >= 0) {
             nloaded += 1;
         } else if (dflags & D_FLAG_ERRFAIL) {
             errx(1, "cannot load %s", bname);

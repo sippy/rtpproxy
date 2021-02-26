@@ -23,13 +23,10 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * $Id$
- *
  */
 
-#ifndef _SESSION_H_
-#define _SESSION_H_
+#ifndef _EAUD_SESSION_H_
+#define _EAUD_SESSION_H_
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -126,7 +123,11 @@ struct streams {
 #define RPLOAD(packet)	(((unsigned char *)(packet)->rpkt) + (packet)->parsed.data_offset)
 #define RPLEN(packet)	((packet)->parsed.data_size)
 
-struct session *session_lookup(struct channels *, uint32_t, struct channel **);
 int channel_insert(struct channels *, struct channel *);
+struct session *eaud_session_lookup(struct channels *, uint32_t,
+  struct channel **);
+int eaud_session_load(const char *, struct channels *, enum origin,
+  struct eaud_crypto *);
+int eaud_session_scan(const char *);
 
 #endif
