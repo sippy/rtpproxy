@@ -153,7 +153,7 @@ eaud_crypto_getopt_parse(char *optarg)
     srtp_crypto_policy_set_rtp_default(&rval->policy.rtp);
     srtp_crypto_policy_set_rtcp_default(&rval->policy.rtcp);
     rval->policy.key = (uint8_t *)rval->key;
-    rval->policy.ekt = NULL; rval->policy.next = NULL;
+    rval->policy.next = NULL;
     rval->policy.window_size = 128;
     rval->policy.allow_repeat_tx = 0;
     rval->policy.rtp.auth_tag_len = suite->tag_size;
