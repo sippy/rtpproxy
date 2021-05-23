@@ -260,7 +260,8 @@ out:
             .strmp_in = spp->stream[idx],
             .strmp_out = spp->stream[NOT(idx)],
             .subc_args = &(cmd->subc.args[i]),
-            .resp = &(cmd->subc.res[i])
+            .resp = &(cmd->subc.res[i]),
+            .log = spp->log,
         };
         rsc.resp->result = cmd->after_success[i].handler(
           &cmd->after_success[i].args, &rsc);

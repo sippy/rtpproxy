@@ -30,6 +30,7 @@
 struct rtpp_session;
 struct rtpp_stream;
 struct rtpp_command_args;
+struct rtpp_log;
 
 struct rtpp_subc_resp {
     int result;
@@ -42,6 +43,7 @@ struct rtpp_subc_ctx {
     struct rtpp_stream *strmp_out;
     const struct rtpp_command_args *subc_args;
     struct rtpp_subc_resp *resp;
+    struct rtpp_log *log;
 };
 
 #endif /* _RTPP_COMMAND_SUB_H_ */

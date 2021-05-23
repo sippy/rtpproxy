@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2020 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2025 Sippy Software, Inc., http://www.sippysoft.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,6 +45,7 @@
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc.h"
 #include "commands/rpcpv1_delete.h"
+#include "commands/rpcpv1_ul_subc_set.h"
 
 #if ENABLE_MODULE_IF
 static int
@@ -72,6 +73,7 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *
   const struct rtpp_command_args *subc_args, struct after_success_h *asp)
 {
     struct delete_opts *dop;
+    struct rtpp_subcommand_set *sop;
 
     switch(subc_args->v[0].s[0]) {
     case 'M':
@@ -96,6 +98,17 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *
         RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, dop);
         asp->args.stat = (void *)cfsp;
         asp->handler = handle_delete_as_subc;
+        break;
+
+    case 'S':
+    case 's':
+        if (subc_args->c != 2 || subc_args->v[0].len < 1 || subc_args->v[0].len > 2)
+            return (-1);
+        sop = handle_set_subc_parse(cfsp, &subc_args->v[0].s[1], &subc_args->v[1], asp);
+        if (sop == NULL)
+            return (-1);
+        asp->args.dyn = sop;
+        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, sop);
         break;
 
     default:
