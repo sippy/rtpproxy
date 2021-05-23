@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2020 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2021 Sippy Software, Inc., http://www.sippysoft.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,6 +35,7 @@
 #include "rtpp_util.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_modman.h"
 #include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
@@ -45,6 +46,7 @@
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc.h"
 #include "commands/rpcpv1_delete.h"
+#include "commands/rpcpv1_ul_subc_ttl.h"
 
 #if ENABLE_MODULE_IF
 static int
@@ -66,6 +68,31 @@ handle_mod_subc_parse(const struct rtpp_cfg *cfsp, const char *ip,
     return (0);
 }
 #endif
+
+static int
+handle_ttl_subc_parse(const struct rtpp_cfg *cfsp, const char *cp,
+  struct after_success_h *asp)
+{
+    struct rtpp_subcommand_ttl ttl_arg, *tap;
+
+    if (cp[0] == 'r' || cp[0] == 'R') {
+        ttl_arg.direction = TTL_REVERSE;
+        cp += 1;
+    } else {
+        ttl_arg.direction = TTL_FORWARD;
+    }
+    if (atoi_safe(cp, &ttl_arg.ttl) != ATOI_OK)
+        return (-1);
+    if (ttl_arg.ttl <= 0)
+        return (-1);
+    tap = rtpp_zmalloc(sizeof(ttl_arg));
+    if (tap == NULL)
+        return (-1);
+    *tap = ttl_arg;
+    asp->args.dyn = tap;
+    asp->handler = rtpp_subcommand_ttl_handler;
+    return (0);
+}
 
 int
 rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
@@ -96,6 +123,13 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *
         RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, dop);
         asp->args.stat = (void *)cfsp;
         asp->handler = handle_delete_as_subc;
+        break;
+
+    case 'T':
+    case 't':
+        if (subc_args->c != 1)
+            return (-1);
+        return (handle_ttl_subc_parse(cfsp, &subc_args->v[0].s[1], asp));
         break;
 
     default:
