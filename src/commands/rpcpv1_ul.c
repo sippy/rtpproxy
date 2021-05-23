@@ -448,6 +448,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
     struct rtpp_session *spa, *spb;
     struct rtpp_socket *fd;
     struct ul_opts *ulop;
+    int desired_tos;
 
     pidx = 1;
     lport = 0;
@@ -466,6 +467,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
     if (sidx != -1) {
         RTPP_DBG_ASSERT(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = cmd->sp;
+        desired_tos = spa->rtp->stream[sidx]->tos;
         fd = CALL_SMETHOD(spa->rtp->stream[sidx], get_skt, HEREVAL);
         if (fd == NULL || ulop->new_port != 0) {
             if (ulop->local_addr != NULL) {
@@ -473,7 +475,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             } else if (ulop->new_port != 0 && ulop->lidx == -1 && spa->rtp->stream[sidx]->laddr != ulop->lia[0]) {
                 spa->rtp->stream[sidx]->laddr = ulop->lia[0];
             }
-            if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr, &lport, fds) == -1) {
+            if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr, &lport, fds,
+              desired_tos) == -1) {
                 if (fd != NULL)
                     RTPP_OBJ_DECREF(fd);
                 RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
@@ -496,9 +499,9 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             if (spa->complete == 0) {
                 rtpp_command_get_stats(cmd)->nsess_complete.cnt++;
                 CALL_SMETHOD(spa->rtp->stream[0]->ttl, reset_with,
-                  cfsp->max_ttl);
+                  spa->rtp->stream[0]->stream_ttl);
                 CALL_SMETHOD(spa->rtp->stream[1]->ttl, reset_with,
-                  cfsp->max_ttl);
+                  spa->rtp->stream[1]->stream_ttl);
             }
             spa->complete = 1;
         }
@@ -698,7 +701,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             .strmp_in = spa->rtp->stream[pidx],
             .strmp_out = spa->rtp->stream[NOT(pidx)],
             .subc_args = &(cmd->subc.args[i]),
-            .resp = &(cmd->subc.res[i])
+            .resp = &(cmd->subc.res[i]),
+            .log = spa->log,
         };
         rsc.resp->result = cmd->after_success[i].handler(
           &cmd->after_success[i].args, &rsc);

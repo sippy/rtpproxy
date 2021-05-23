@@ -101,6 +101,7 @@ struct create_listener_args {
     const struct sockaddr *ia;
     struct rtpp_socket **fds;
     int *port;
+    int tos;
 };
 
 static enum rtpp_ptu_rval
@@ -129,9 +130,9 @@ create_listener(struct create_listener_args *ctap, unsigned int port, struct rtp
         }
         goto e1;
     }
-    if ((ctap->ia->sa_family == AF_INET) && (ctap->cfs->tos >= 0) &&
-      (CALL_SMETHOD(fd, settos, ctap->cfs->tos) == -1))
-        RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set TOS to %d", ctap->cfs->tos);
+    if ((ctap->ia->sa_family == AF_INET) && (ctap->tos >= 0) &&
+      (CALL_SMETHOD(fd, settos,  ctap->tos) == -1))
+        RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set TOS to %d",  ctap->tos);
     so_rcvbuf = 256 * 1024;
     if (CALL_SMETHOD(fd, setrbuf, so_rcvbuf) == -1)
         RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
@@ -178,7 +179,7 @@ failure:
 
 int
 rtpp_create_listener(const struct rtpp_cfg *cfsp, const struct sockaddr *ia, int *port,
-  struct rtpp_socket **fds)
+  struct rtpp_socket **fds, int tos)
 {
     struct create_listener_args cta;
     int i;
@@ -189,6 +190,7 @@ rtpp_create_listener(const struct rtpp_cfg *cfsp, const struct sockaddr *ia, int
     cta.fds = fds;
     cta.ia = ia;
     cta.port = port;
+    cta.tos = tos;
 
     for (i = 0; i < 2; i++)
         fds[i] = NULL;
