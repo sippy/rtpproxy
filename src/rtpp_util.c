@@ -399,6 +399,31 @@ atoi_saferange(const char *s, int *res, int min, int max)
     return (ATOI_OK);
 }
 
+enum atoi_rval
+strtol_saferange(const char *s, long *res, long min, long max,
+  const char **next)
+{
+    char *cp;
+    long rval;
+
+    errno = 0;
+    rval = strtol(s, &cp, 10);
+    if (cp == s) {
+        return (ATOI_NOTINT);
+    }
+    if (errno == ERANGE) {
+        return (ATOI_OUTRANGE);
+    }
+    if (rval < min || (max >= min && rval > max)) {
+        return (ATOI_OUTRANGE);
+    }
+    if (next != NULL) {
+        *next = cp;
+    }
+    *res = rval;
+    return (ATOI_OK);
+}
+
 #if defined(_SC_CLK_TCK) && !defined(__FreeBSD__)
 #if defined(LINUX_XXX)
 static int
