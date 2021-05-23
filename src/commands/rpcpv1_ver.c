@@ -70,6 +70,7 @@ const static struct proto_cap proto_caps[] = {
     { "20230314", "Support for for \"fusing\" G and D commands" },
     { "20230424", "Support for for \"longest_ipi\", \"rtpa_jlast\", \"rtpa_jmax\" and \"rtpa_javg\" counters" },
     { "20250523", "Support for the \"P\" modifier in the C command"},
+    { "20251015", "Support for changing session's ttl / IP tos via S subcommand" },
     { NULL, NULL }
 };
 
