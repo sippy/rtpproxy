@@ -61,6 +61,8 @@ enum atoi_rval {ATOI_OK = 0, ATOI_NOTINT = -1, ATOI_OUTRANGE = -2};
 enum atoi_rval atoi_safe_sep(const char *, int *, char, const char **);
 enum atoi_rval atoi_safe(const char *, int *);
 enum atoi_rval atoi_saferange(const char *, int *, int, int) RTPP_EXPORT;
+enum atoi_rval strtol_saferange(const char *, long *, long, long,
+  const char **) RTPP_EXPORT;
 void rtpp_strsplit(char *, char *, size_t, size_t);
 void generate_random_string(char *, int) RTPP_EXPORT;
 

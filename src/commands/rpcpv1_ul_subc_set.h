@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
- * All rights reserved.
+ * Copyright (c) 2025 Sippy Software, Inc., http://www.sippysoft.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,37 +24,27 @@
  *
  */
 
-#pragma once
+struct rtpp_subc_ctx;
+struct after_success_h_args;
 
-struct rtpp_session;
-struct rtpp_stream;
-struct rtp_packet;
-struct rtpp_cfg;
-struct pkt_proc_ctx;
-struct rtpp_socket;
-
-struct remote_copy_args {
-    char rhost[NI_MAXHOST];
-    const char *rport;
-    int idx;
-    const struct sockaddr *laddr;
-    int lport;
-    struct rtpp_socket *fds[2];
-    int tos;
+enum rtpp_subcommand_set_direction {
+    SET_FORWARD = 0,
+    SET_REVERSE = 1
 };
 
-DECLARE_CLASS(rtpp_record, const struct rtpp_cfg *, const struct remote_copy_args *, struct rtpp_session *,
-  const char *, int, int);
-
-DECLARE_METHOD(rtpp_record, rtpp_record_write, void, const struct pkt_proc_ctx *);
-
-DECLARE_SMETHODS(rtpp_record)
-{
-    METHOD_ENTRY(rtpp_record_write, pktwrite);
+enum rtpp_subcommand_set_param {
+    SET_PRM_TTL,
+    SET_PRM_TOS,
+    SET_PRM_SSRC_IN,
+    SET_PRM_SSRC_OUT,
 };
 
-DECLARE_CLASS_PUBTYPE(rtpp_record, {});
+struct rtpp_subcommand_set {
+    struct rtpp_refcnt *rcnt;
+    int val;
+    enum rtpp_subcommand_set_param param;
+    enum rtpp_subcommand_set_direction direction;
+};
 
-#define RECORD_RTP  0
-#define RECORD_RTCP 1
-#define RECORD_BOTH 2
+struct rtpp_subcommand_set *handle_set_subc_parse(const struct rtpp_cfg *, const char *,
+  const rtpp_str_const_t *, struct after_success_h *);
