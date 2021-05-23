@@ -62,6 +62,7 @@ static struct proto_cap proto_caps[] = {
     { "20150617", "Support for the wildcard %%CC_SELF%% as a disconnect notify target" },
     { "20191015", "Support for the && sub-command specifier" },
     { "20200226", "Support for the N command to stop recording" },
+    { "20210524", "Support for changing session's ttl" },
     { NULL, NULL }
 };
 
