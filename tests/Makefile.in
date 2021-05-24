@@ -113,6 +113,7 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_tcp \
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_tcp_wild \
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_unix \
+@ENABLE_BASIC_TESTS_TRUE@	session_timeouts/set_ttl \
 @ENABLE_BASIC_TESTS_TRUE@	playback/playback1
 @ENABLE_BASIC_TESTS_TRUE@am__append_2 = ${autosrc_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${recording_CLEANFILES} \
