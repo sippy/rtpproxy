@@ -164,7 +164,7 @@ rtpp_modman_get_ul_subc_h(struct rtpp_modman *self, unsigned int mod_id,
         if (tmp->has.ul_subc_h == 0)
             break;
         ashp->handler = (after_success_t)tmp->ul_subc_handle;
-        ashp->arg = tmp;
+        ashp->args.stat = tmp;
         return (0);
     }
     return (-1);

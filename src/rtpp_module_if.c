@@ -74,6 +74,7 @@
 #include "rtpp_wi_sgnl.h"
 #include "rtpp_weakref.h"
 #include "rtpp_command_sub.h"
+#include "commands/rpcpv1_ul.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -100,7 +101,7 @@ static int rtpp_mif_start(struct rtpp_module_if *, const struct rtpp_cfg *);
 static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
 static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp *);
 static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **);
-static int rtpp_mif_ul_subc_handle(struct rtpp_module_if *,
+static int rtpp_mif_ul_subc_handle(const struct after_success_h_args *,
   const struct rtpp_subc_ctx *);
 static int rtpp_mif_construct(struct rtpp_module_if *self, const struct rtpp_cfg *);
 static void rtpp_mif_kaput(struct rtpp_module_if *self);
@@ -512,11 +513,13 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
 }
 
 static int
-rtpp_mif_ul_subc_handle(struct rtpp_module_if *self,
+rtpp_mif_ul_subc_handle(const struct after_success_h_args *ashap,
   const struct rtpp_subc_ctx *ctxp)
 {
     struct rtpp_module_if_priv *pvt;
+    struct rtpp_module_if *self;
 
+    self = ashap->stat;
     PUB2PVT(self, pvt);
     return (pvt->mip->capi->ul_subc_handle(pvt->mpvt, ctxp));
 }

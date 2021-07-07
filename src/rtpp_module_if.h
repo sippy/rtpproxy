@@ -34,6 +34,7 @@ struct rtpp_cfg;
 struct rtpp_module_conf;
 struct rtpp_mdescr;
 struct rtpp_subc_ctx;
+struct after_success_h_args;
 
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_load, int, const struct rtpp_cfg *,
   struct rtpp_log *);
@@ -46,7 +47,7 @@ DEFINE_METHOD(rtpp_module_if, rtpp_module_if_do_acct_rtcp, void,
   struct rtpp_acct_rtcp *);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_get_mconf, int,
   struct rtpp_module_conf **);
-DEFINE_METHOD(rtpp_module_if, rtpp_module_if_ul_subc_handle, int,
+DEFINE_RAW_METHOD(rtpp_module_if_ul_subc_handle, int, const struct after_success_h_args *,
   const struct rtpp_subc_ctx *);
 DEFINE_METHOD(rtpp_module_if, rtpp_module_if_kaput, void);
 
