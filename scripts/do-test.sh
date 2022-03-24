@@ -45,7 +45,7 @@ cd bcg729-${BCG729_VER}
 make
 sudo make install
 cd ..
-git clone git://github.com/sippy/libg722 libg722
+git clone https://github.com/sippy/libg722 libg722
 cd libg722
 make
 sudo make install
@@ -102,7 +102,7 @@ make clean all
 
 ELP_BRANCH="${ELP_BRANCH:-"master"}"
 cd deps
-git clone --branch ${ELP_BRANCH} git://github.com/sobomax/libelperiodic.git
+git clone --branch ${ELP_BRANCH} https://github.com/sobomax/libelperiodic.git
 cd libelperiodic
 ./configure --without-python
 make all
