@@ -38,10 +38,6 @@ jobs:
 #            compiler: 'gcc-arm32-cross'
 #          - os: ubuntu-18.04
 #            compiler: 'gcc-arm64-cross'
-          - os: ubuntu-16.04
-            compiler: 'gcc'
-          - os: ubuntu-16.04
-            compiler: 'clang'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -72,10 +68,6 @@ jobs:
 
       - name: install_depends
         run: sh -x scripts/build/install_depends.sh
-
-      - name: install_working_nc
-        if: ${{ matrix.os == 'ubuntu-16.04' }}
-        run: sh -x scripts/install_working_nc.sh
 
       - name: script
         run: sh -x scripts/do-test.sh basic
