@@ -71,7 +71,7 @@ circ_buf_push(circ_buf_t *c, struct rtpp_wi *data)
     if (next == c->tail)  /* if the head + 1 == tail, circular buffer is full */
         return(-1);
 
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     assert(c->buffer[c->head] == NULL);
 #endif
     c->buffer[c->head] = data;  /* Load data and then move */
@@ -90,12 +90,12 @@ circ_buf_pop(circ_buf_t *c, struct rtpp_wi **data)
     next = c->tail + 1;  /* next is where tail will point to after this read. */
     if (next == c->buflen)
         next = 0;
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     assert(c->tail < c->buflen);
 #endif
 
     *data = c->buffer[c->tail];  /* Read data and then move */
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     c->buffer[c->tail] = NULL;
 #endif
     c->tail = next;              /* tail to next offset. */
@@ -127,7 +127,7 @@ circ_buf_popmany(circ_buf_t *c, struct rtpp_wi *data[], unsigned int howmany)
         }
         copyn = last - c->tail;
         memcpy(data, &(c->buffer[c->tail]), copyn * sizeof(data[0]));
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
         memset(&(c->buffer[c->tail]), '\0', copyn * sizeof(data[0]));
 #endif
         c->tail = next;
@@ -136,7 +136,7 @@ circ_buf_popmany(circ_buf_t *c, struct rtpp_wi *data[], unsigned int howmany)
             break;
         data += copyn;
     }
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     assert(rval <= howmany);
     assert(c->tail < c->buflen);
 #endif
@@ -163,7 +163,7 @@ circ_buf_peek(const circ_buf_t *c, unsigned int offset, struct rtpp_wi **data)
     itmidx = c->tail + offset;  /* itmidx points to the item in question */
     if(itmidx >= c->buflen)
         itmidx -= c->buflen;
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     assert(itmidx < c->buflen);
     assert(c->buffer[itmidx] != NULL);
 #endif
@@ -192,12 +192,12 @@ circ_buf_replace(circ_buf_t *c, unsigned int offset, struct rtpp_wi **data)
     itmidx = c->tail + offset;  /* itmidx points to the item in question */
     if(itmidx >= c->buflen)
         itmidx -= c->buflen;
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     assert(itmidx < c->buflen);
     assert(c->buffer[itmidx] != NULL);
 #endif
     tdata = c->buffer[itmidx];
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     assert(tdata != NULL);
 #endif
     c->buffer[itmidx] = *data;  /* Read data and then replace */
@@ -226,7 +226,7 @@ circ_buf_remove(circ_buf_t *c, unsigned int offset)
         assert(circ_buf_peek(c, offset - 1, &data) == 0);
         assert(circ_buf_replace(c, offset, &data) == 0);
     }
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     assert(c->buffer[c->tail] != NULL);
     c->buffer[c->tail] = NULL;
 #endif
@@ -379,7 +379,7 @@ rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake)
             return (NULL);
         }
     }
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     assert(rtpp_queue_getclen(queue) > 0);
 #endif
     if (circ_buf_pop(&queue->circb, &wi) == 0) {
@@ -387,7 +387,7 @@ rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake)
         return (wi);
     }
     wi = queue->head;
-#ifdef RTPQ_DEBUG
+#if RTPQ_DEBUG
     assert(rtpp_queue_getclen(queue) > 0);
 #endif
     RTPPQ_REMOVE_HEAD(queue);
