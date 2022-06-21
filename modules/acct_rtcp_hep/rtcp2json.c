@@ -214,7 +214,7 @@ int rtcp2json(struct rtpp_sbuf *out, const void *buf, int len)
       }
       if (r->common.count > 0)
         RSW_REST(-1, out, " ],\n");
-      RSW_REST(-1, out, " \"report_count\": %lu,\n", (unsigned long)r->common.count);
+      RSW_REST(-1, out, " \"report_count\": %lu\n", (unsigned long)r->common.count);
       RSW_REST(-1, out, "}");
       break;
 
