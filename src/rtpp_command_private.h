@@ -70,7 +70,7 @@ struct common_cmd_args {
 
 struct rtpp_command {
     char buf[RTPP_CMD_BUFLEN];
-    char buf_t[256];
+    char buf_t[1024];
     struct rtpp_command_args args;
     struct rtpp_command_args subc_args;
     struct sockaddr_storage raddr;
