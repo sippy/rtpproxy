@@ -66,14 +66,24 @@ struct elp_data {
     double target_pfreq;
 };
 
-struct rtpp_proc_async_cf {
-    struct rtpp_proc_async pub;
+struct rtpp_proc_async_cf;
+
+struct rtpp_proc_thread_cf {
     pthread_t thread_id;
-    struct rtpp_proc_rstats rstats;
-    const struct rtpp_cfg *cf_save;
     atomic_int tstate;
     struct elp_data elp_fs;
     struct elp_data elp_lz;
+    int pipe_type;
+    const struct rtpp_proc_async_cf *proc_cf;
+    struct rtpp_proc_rstats *rsp;
+};
+
+struct rtpp_proc_async_cf {
+    struct rtpp_proc_async pub;
+    struct rtpp_proc_rstats rstats;
+    const struct rtpp_cfg *cf_save;
+    struct rtpp_proc_thread_cf rtp_thread;
+    struct rtpp_proc_thread_cf rtcp_thread;
 };
 
 #define TSTATE_RUN   0x0
@@ -118,26 +128,26 @@ static void
 rtpp_proc_async_run(void *arg)
 {
     const struct rtpp_cfg *cfsp;
-    int ndrain, rtp_only;
-    int nready_rtp, nready_rtcp;
-    struct rtpp_proc_async_cf *proc_cf;
+    int ndrain;
+    int nready;
+    struct rtpp_proc_thread_cf *tcp;
+    const struct rtpp_proc_async_cf *proc_cf;
     long long last_ctick;
     struct sthread_args *sender;
     struct rtpp_proc_rstats *rstats;
     struct rtpp_stats *stats_cf;
-    struct rtpp_polltbl ptbl_rtp;
-    struct rtpp_polltbl ptbl_rtcp;
+    struct rtpp_polltbl ptbl;
     int tstate, overload;
     struct rtpp_timestamp rtime;
     struct elp_data *edp;
 
-    proc_cf = (struct rtpp_proc_async_cf *)arg;
+    tcp = (struct rtpp_proc_thread_cf *)arg;
+    proc_cf = tcp->proc_cf;
     cfsp = proc_cf->cf_save;
     stats_cf = cfsp->rtpp_stats;
-    rstats = &proc_cf->rstats;
+    rstats = tcp->rsp;
 
-    memset(&ptbl_rtp, '\0', sizeof(struct rtpp_polltbl));
-    memset(&ptbl_rtcp, '\0', sizeof(struct rtpp_polltbl));
+    memset(&ptbl, '\0', sizeof(struct rtpp_polltbl));
 
     memset(&rtime, '\0', sizeof(rtime));
 
@@ -146,10 +156,10 @@ rtpp_proc_async_run(void *arg)
     }
     overload = 0;
 
-    edp = &proc_cf->elp_lz;
+    edp = &tcp->elp_lz;
 
     for (;;) {
-        tstate = atomic_load(&proc_cf->tstate);
+        tstate = atomic_load(&tcp->tstate);
         if (tstate == TSTATE_CEASE) {
             break;
         }
@@ -175,46 +185,23 @@ rtpp_proc_async_run(void *arg)
             ndrain = 1;
         }
 
-        if ((edp->ncycles_ref_last % 7) == 0) {
-            rtp_only = 0;
-        } else {
-            rtp_only = 1;
-        }
-
-        CALL_METHOD(cfsp->sessinfo, sync_polltbl, &ptbl_rtp, PIPE_RTP);
-        if (rtp_only == 0)
-            CALL_METHOD(cfsp->sessinfo, sync_polltbl, &ptbl_rtcp, PIPE_RTCP);
-        nready_rtp = nready_rtcp = 0;
-        if (ptbl_rtp.curlen > 0) {
-            if (rtp_only == 0) {
-                RTPP_DBGCODE(netio > 1) {
-                    RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-                      "polling for %d RTCP file descriptors", \
-                      last_ctick, ptbl_rtcp.curlen);
-                }
-                nready_rtcp = poll(ptbl_rtcp.pfds, ptbl_rtcp.curlen, 0);
-                RTPP_DBGCODE(netio) {
-                    RTPP_DBGCODE(netio > 1 || nready_rtcp > 0) {
-                        RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-                          "polling for %d RTCP file descriptors: %d descriptors are ready", \
-                          last_ctick, ptbl_rtcp.curlen, nready_rtcp);
-                    }
-                }
-            }
+        CALL_METHOD(cfsp->sessinfo, sync_polltbl, &ptbl, tcp->pipe_type);
+        nready = 0;
+        if (ptbl.curlen > 0) {
             RTPP_DBGCODE(netio > 1) {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-                  "polling for %d RTP file descriptors", \
-                  last_ctick, ptbl_rtp.curlen);
+                  "polling for %d %s file descriptors", \
+                  last_ctick, ptbl.curlen, PP_NAME(tcp->pipe_type));
             }
-            nready_rtp = poll(ptbl_rtp.pfds, ptbl_rtp.curlen, 0);
+            nready = poll(ptbl.pfds, ptbl.curlen, 0);
             RTPP_DBGCODE(netio) {
-                RTPP_DBGCODE(netio > 1 || nready_rtp > 0) {
+                RTPP_DBGCODE(netio > 1 || nready > 0) {
                     RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-                      "polling for RTP %d file descriptors: %d descriptors are ready", \
-                      last_ctick, ptbl_rtp.curlen, nready_rtp);
+                      "polling for %d %s file descriptors: %d descriptors are ready", \
+                      last_ctick, ptbl.curlen, PP_NAME(tcp->pipe_type), nready);
                 }
             }
-            if (nready_rtp < 0 && errno == EINTR) {
+            if (nready < 0 && errno == EINTR) {
                 continue;
             }
         }
@@ -223,27 +210,24 @@ rtpp_proc_async_run(void *arg)
         RTPP_DBG_ASSERT(rtime.wall > 0 && rtime.mono > 0);
 
         sender = rtpp_anetio_pick_sender(proc_cf->pub.netio);
-        if (nready_rtp > 0) {
-            process_rtp_only(cfsp, &ptbl_rtp, &rtime, ndrain, sender, rstats);
-        }
-        if (nready_rtcp > 0 && rtp_only == 0) {
-            process_rtp_only(cfsp, &ptbl_rtcp, &rtime, ndrain, sender, rstats);
+        if (nready > 0) {
+            process_rtp_only(cfsp, &ptbl, &rtime, ndrain, sender, rstats);
         }
 
-        if (CALL_METHOD(cfsp->servers_wrt, get_length) > 0) {
+        if (tcp->pipe_type == PIPE_RTP && CALL_METHOD(cfsp->servers_wrt, get_length) > 0) {
             rtpp_proc_servers(cfsp, rtime.mono, sender, rstats);
         }
 
         rtpp_anetio_pump_q(sender);
         flush_rstats(stats_cf, rstats);
 
-        if (ptbl_rtp.curlen > 0 || ptbl_rtcp.curlen > 0) {
-            if (edp == &proc_cf->elp_lz) {
-                edp = &proc_cf->elp_fs;
+        if (ptbl.curlen > 0) {
+            if (edp == &tcp->elp_lz) {
+                edp = &tcp->elp_fs;
             }
         } else {
-            if (edp == &proc_cf->elp_fs) {
-                edp = &proc_cf->elp_lz;
+            if (edp == &tcp->elp_fs) {
+                edp = &tcp->elp_lz;
             }
         }
         prdic_procrastinate(edp->obj);
@@ -251,8 +235,51 @@ rtpp_proc_async_run(void *arg)
             last_ctick++;
         }
     }
-    rtpp_polltbl_free(&ptbl_rtp);
-    rtpp_polltbl_free(&ptbl_rtcp);
+    rtpp_polltbl_free(&ptbl);
+}
+
+static int
+rtpp_proc_async_thread_init(const struct rtpp_cfg *cfsp, const struct rtpp_proc_async_cf *proc_cf,
+  struct rtpp_proc_thread_cf *tcp, int pipe_type)
+{
+
+    tcp->elp_fs.obj = prdic_init(cfsp->target_pfreq, 0.0);
+    if (tcp->elp_fs.obj == NULL) {
+        goto e1;
+    }
+    tcp->elp_fs.target_pfreq = cfsp->target_pfreq;
+    tcp->elp_lz.obj = prdic_init(10.0, 0.0);
+    if (tcp->elp_lz.obj == NULL) {
+        goto e2;
+    }
+    tcp->elp_lz.target_pfreq = 10.0;
+
+    tcp->proc_cf = proc_cf;
+    tcp->pipe_type = pipe_type;
+
+    if (pthread_create(&tcp->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, tcp) != 0) {
+        goto e3;
+    }
+    return (0);
+
+e3:
+    prdic_free(tcp->elp_lz.obj);
+e2:
+    prdic_free(tcp->elp_fs.obj);
+e1:
+    return (-1);
+}
+
+static void
+rtpp_proc_async_thread_destroy(struct rtpp_proc_thread_cf *tcp)
+{
+    int tstate = atomic_load(&tcp->tstate);
+
+    assert(tstate == TSTATE_RUN);
+    atomic_store(&tcp->tstate, TSTATE_CEASE);
+    pthread_join(tcp->thread_id, NULL);
+    prdic_free(tcp->elp_lz.obj);
+    prdic_free(tcp->elp_fs.obj);
 }
 
 struct rtpp_proc_async *
@@ -265,6 +292,7 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
         return (NULL);
 
     init_rstats(cfsp->rtpp_stats, &proc_cf->rstats);
+    proc_cf->rtp_thread.rsp = proc_cf->rtcp_thread.rsp = &proc_cf->rstats;
 
     proc_cf->pub.netio = rtpp_netio_async_init(cfsp, 1);
     if (proc_cf->pub.netio == NULL) {
@@ -273,26 +301,18 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
 
     proc_cf->cf_save = cfsp;
 
-    proc_cf->elp_fs.obj = prdic_init(cfsp->target_pfreq, 0.0);
-    if (proc_cf->elp_fs.obj == NULL) {
+    if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtp_thread, PIPE_RTP) != 0) {
         goto e1;
     }
-    proc_cf->elp_fs.target_pfreq = cfsp->target_pfreq;
-    proc_cf->elp_lz.obj = prdic_init(10.0, 0.0);
-    if (proc_cf->elp_lz.obj == NULL) {
+
+    if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtcp_thread, PIPE_RTCP) != 0) {
         goto e2;
     }
-    proc_cf->elp_lz.target_pfreq = 10.0;
 
-    if (pthread_create(&proc_cf->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, proc_cf) != 0) {
-        goto e3;
-    }
     proc_cf->pub.dtor = &rtpp_proc_async_dtor;
     return (&proc_cf->pub);
-e3:
-    prdic_free(proc_cf->elp_lz.obj);
 e2:
-    prdic_free(proc_cf->elp_fs.obj);
+    rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
 e1:
     rtpp_netio_async_destroy(proc_cf->pub.netio);
 e0:
@@ -304,15 +324,10 @@ static void
 rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
 {
     struct rtpp_proc_async_cf *proc_cf;
-    int tstate;
 
     PUB2PVT(pub, proc_cf);
-    tstate = atomic_load(&proc_cf->tstate);
-    assert(tstate == TSTATE_RUN);
-    atomic_store(&proc_cf->tstate, TSTATE_CEASE);
-    pthread_join(proc_cf->thread_id, NULL);
-    prdic_free(proc_cf->elp_lz.obj);
-    prdic_free(proc_cf->elp_fs.obj);
+    rtpp_proc_async_thread_destroy(&proc_cf->rtcp_thread);
+    rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
     rtpp_netio_async_destroy(proc_cf->pub.netio);
     free(proc_cf);
 }
