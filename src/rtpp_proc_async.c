@@ -26,15 +26,16 @@
  */
 
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <assert.h>
 #include <errno.h>
-#include <poll.h>
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <elperiodic.h>
 
@@ -57,6 +58,7 @@
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
 #include "rtpp_pipe.h"
+#include "rtpp_epoll.h"
 
 struct elp_data {
     void *obj;
@@ -74,6 +76,7 @@ struct rtpp_proc_thread_cf {
     struct elp_data elp_fs;
     struct elp_data elp_lz;
     int pipe_type;
+    struct rtpp_polltbl ptbl;
     const struct rtpp_proc_async_cf *proc_cf;
     struct rtpp_proc_rstats *rsp;
 };
@@ -90,6 +93,7 @@ struct rtpp_proc_async_cf {
 #define TSTATE_CEASE 0x1
 
 static void rtpp_proc_async_dtor(struct rtpp_proc_async *);
+static void rtpp_proc_async_nudge(struct rtpp_proc_async *);
 
 #define FLUSH_STAT(sobj, st)	{ \
     if ((st).cnt > 0) { \
@@ -136,7 +140,6 @@ rtpp_proc_async_run(void *arg)
     struct sthread_args *sender;
     struct rtpp_proc_rstats *rstats;
     struct rtpp_stats *stats_cf;
-    struct rtpp_polltbl ptbl;
     int tstate, overload;
     struct rtpp_timestamp rtime;
     struct elp_data *edp;
@@ -146,8 +149,6 @@ rtpp_proc_async_run(void *arg)
     cfsp = proc_cf->cf_save;
     stats_cf = cfsp->rtpp_stats;
     rstats = tcp->rsp;
-
-    memset(&ptbl, '\0', sizeof(struct rtpp_polltbl));
 
     memset(&rtime, '\0', sizeof(rtime));
 
@@ -185,20 +186,22 @@ rtpp_proc_async_run(void *arg)
             ndrain = 1;
         }
 
-        CALL_METHOD(cfsp->sessinfo, sync_polltbl, &ptbl, tcp->pipe_type);
+        CALL_METHOD(cfsp->sessinfo, sync_polltbl, &tcp->ptbl, tcp->pipe_type);
+        struct epoll_event events[512];
         nready = 0;
-        if (ptbl.curlen > 0) {
+        if (tcp->ptbl.curlen > 0) {
             RTPP_DBGCODE(netio > 1) {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
                   "polling for %d %s file descriptors", \
-                  last_ctick, ptbl.curlen, PP_NAME(tcp->pipe_type));
+                  last_ctick, tcp->ptbl.curlen, PP_NAME(tcp->pipe_type));
             }
-            nready = poll(ptbl.pfds, ptbl.curlen, 0);
+            nready = rtpp_epoll_wait(tcp->ptbl.epfd, events, 512, 0);
             RTPP_DBGCODE(netio) {
                 RTPP_DBGCODE(netio > 1 || nready > 0) {
+                    {static int _tb = 0; while (_tb);}
                     RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
                       "polling for %d %s file descriptors: %d descriptors are ready", \
-                      last_ctick, ptbl.curlen, PP_NAME(tcp->pipe_type), nready);
+                      last_ctick, tcp->ptbl.curlen, PP_NAME(tcp->pipe_type), nready);
                 }
             }
             if (nready < 0 && errno == EINTR) {
@@ -211,7 +214,7 @@ rtpp_proc_async_run(void *arg)
 
         sender = rtpp_anetio_pick_sender(proc_cf->pub.netio);
         if (nready > 0) {
-            process_rtp_only(cfsp, &ptbl, &rtime, ndrain, sender, rstats);
+            process_rtp_only(cfsp, &tcp->ptbl, &rtime, ndrain, sender, rstats, events, nready);
         }
 
         if (tcp->pipe_type == PIPE_RTP && CALL_METHOD(cfsp->servers_wrt, get_length) > 0) {
@@ -221,7 +224,7 @@ rtpp_proc_async_run(void *arg)
         rtpp_anetio_pump_q(sender);
         flush_rstats(stats_cf, rstats);
 
-        if (ptbl.curlen > 0) {
+        if (tcp->ptbl.curlen > 0) {
             if (edp == &tcp->elp_lz) {
                 edp = &tcp->elp_fs;
             }
@@ -235,22 +238,33 @@ rtpp_proc_async_run(void *arg)
             last_ctick++;
         }
     }
-    rtpp_polltbl_free(&ptbl);
+    rtpp_polltbl_free(&tcp->ptbl);
 }
 
 static int
 rtpp_proc_async_thread_init(const struct rtpp_cfg *cfsp, const struct rtpp_proc_async_cf *proc_cf,
   struct rtpp_proc_thread_cf *tcp, int pipe_type)
 {
+    struct epoll_event epevent;
+
+    tcp->ptbl.epfd = rtpp_epoll_create();
+    if (tcp->ptbl.epfd < 0)
+        goto e0;
+    if (socketpair(PF_LOCAL, SOCK_STREAM, 0, tcp->ptbl.wakefd) != 0)
+        goto e1;
+    epevent.events = EPOLLIN;
+    epevent.data.ptr = NULL;
+    if (rtpp_epoll_ctl(tcp->ptbl.epfd, EPOLL_CTL_ADD, tcp->ptbl.wakefd[0], &epevent) != 0)
+        goto e2;
 
     tcp->elp_fs.obj = prdic_init(cfsp->target_pfreq, 0.0);
     if (tcp->elp_fs.obj == NULL) {
-        goto e1;
+        goto e2;
     }
     tcp->elp_fs.target_pfreq = cfsp->target_pfreq;
     tcp->elp_lz.obj = prdic_init(10.0, 0.0);
     if (tcp->elp_lz.obj == NULL) {
-        goto e2;
+        goto e3;
     }
     tcp->elp_lz.target_pfreq = 10.0;
 
@@ -258,15 +272,20 @@ rtpp_proc_async_thread_init(const struct rtpp_cfg *cfsp, const struct rtpp_proc_
     tcp->pipe_type = pipe_type;
 
     if (pthread_create(&tcp->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, tcp) != 0) {
-        goto e3;
+        goto e4;
     }
     return (0);
 
-e3:
+e4:
     prdic_free(tcp->elp_lz.obj);
-e2:
+e3:
     prdic_free(tcp->elp_fs.obj);
+e2:
+    close(tcp->ptbl.wakefd[0]);
+    close(tcp->ptbl.wakefd[1]);
 e1:
+    close(tcp->ptbl.epfd);
+e0:
     return (-1);
 }
 
@@ -276,6 +295,7 @@ rtpp_proc_async_thread_destroy(struct rtpp_proc_thread_cf *tcp)
     int tstate = atomic_load(&tcp->tstate);
 
     assert(tstate == TSTATE_RUN);
+    close(tcp->ptbl.wakefd[1]);
     atomic_store(&tcp->tstate, TSTATE_CEASE);
     pthread_join(tcp->thread_id, NULL);
     prdic_free(tcp->elp_lz.obj);
@@ -310,6 +330,7 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
     }
 
     proc_cf->pub.dtor = &rtpp_proc_async_dtor;
+    proc_cf->pub.nudge = &rtpp_proc_async_nudge;
     return (&proc_cf->pub);
 e2:
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
@@ -330,4 +351,15 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
     rtpp_netio_async_destroy(proc_cf->pub.netio);
     free(proc_cf);
+}
+
+static void
+rtpp_proc_async_nudge(struct rtpp_proc_async *pub)
+{
+    struct rtpp_proc_async_cf *proc_cf;
+    int nudge_data = 1;
+
+    PUB2PVT(pub, proc_cf);
+    write(proc_cf->rtp_thread.ptbl.wakefd[1], &nudge_data, sizeof(nudge_data));
+    write(proc_cf->rtcp_thread.ptbl.wakefd[1], &nudge_data, sizeof(nudge_data));
 }

@@ -51,12 +51,13 @@ struct rtpp_polltbl_mdata {
 };
 
 struct rtpp_polltbl {
-    struct pollfd *pfds;
+    int epfd;
     struct rtpp_polltbl_mdata *mds;
     int curlen;
     int aloclen;
     uint64_t revision;
     struct rtpp_weakref_obj *streams_wrt;
+    int wakefd[2];
 };
 
 struct rtpp_sessinfo {

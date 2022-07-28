@@ -32,10 +32,12 @@ struct rtpp_proc_async;
 struct rtpp_anetio_cf;
 
 DEFINE_METHOD(rtpp_proc_async, rtpp_proc_async_dtor, void);
+DEFINE_METHOD(rtpp_proc_async, rtpp_proc_async_nudge, void);
 
 struct rtpp_proc_async {
     struct rtpp_anetio_cf *netio;
     rtpp_proc_async_dtor_t dtor;
+    rtpp_proc_async_nudge_t nudge;
 };
 
 struct rtpp_proc_async *rtpp_proc_async_ctor(const struct rtpp_cfg *);
