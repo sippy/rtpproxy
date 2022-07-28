@@ -223,6 +223,16 @@ then
   AC_DEFINE([ENABLE_OBJCK], 1, [Define if you want to build rtpp_objck test app])
 fi
 
+AC_CHECK_HEADER(sys/epoll.h, found_epoll=yes)
+if test "$found_epoll" != yes
+then
+  AC_CHECK_HEADER(sys/event.h, found_kevent=yes,
+   AC_MSG_ERROR([Neither epoll not kqueue is found]))
+  AC_DEFINE([HAVE_KQUEUE], 1, [Have kqueue(2) interface.])
+else
+  AC_DEFINE([HAVE_EPOLL], 1, [Have epoll(2) interface.])
+fi
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdlib.h])

@@ -26,6 +26,8 @@
  *
  */
 
+#include "config.h"
+
 #include <sys/stat.h>
 #include <assert.h>
 #include <stddef.h>
