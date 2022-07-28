@@ -15,6 +15,10 @@ static void rtpp_socket_drain_fin(void *pub) {
     fprintf(stderr, "Method rtpp_socket@%p::drain (rtpp_socket_drain) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_socket_get_stuid_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_socket@%p::get_stuid (rtpp_socket_get_stuid) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_socket_getfd_fin(void *pub) {
     fprintf(stderr, "Method rtpp_socket@%p::getfd (rtpp_socket_getfd) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -25,6 +29,10 @@ static void rtpp_socket_rtp_recv_fin(void *pub) {
 }
 static void rtpp_socket_send_pkt_na_fin(void *pub) {
     fprintf(stderr, "Method rtpp_socket@%p::send_pkt_na (rtpp_socket_send_pkt_na) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void rtpp_socket_set_stuid_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_socket@%p::set_stuid (rtpp_socket_set_stuid) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_socket_setnonblock_fin(void *pub) {
@@ -50,6 +58,9 @@ void rtpp_socket_fin(struct rtpp_socket *pub) {
     RTPP_DBG_ASSERT(pub->drain != (rtpp_socket_drain_t)NULL);
     RTPP_DBG_ASSERT(pub->drain != (rtpp_socket_drain_t)&rtpp_socket_drain_fin);
     pub->drain = (rtpp_socket_drain_t)&rtpp_socket_drain_fin;
+    RTPP_DBG_ASSERT(pub->get_stuid != (rtpp_socket_get_stuid_t)NULL);
+    RTPP_DBG_ASSERT(pub->get_stuid != (rtpp_socket_get_stuid_t)&rtpp_socket_get_stuid_fin);
+    pub->get_stuid = (rtpp_socket_get_stuid_t)&rtpp_socket_get_stuid_fin;
     RTPP_DBG_ASSERT(pub->getfd != (rtpp_socket_getfd_t)NULL);
     RTPP_DBG_ASSERT(pub->getfd != (rtpp_socket_getfd_t)&rtpp_socket_getfd_fin);
     pub->getfd = (rtpp_socket_getfd_t)&rtpp_socket_getfd_fin;
@@ -59,6 +70,9 @@ void rtpp_socket_fin(struct rtpp_socket *pub) {
     RTPP_DBG_ASSERT(pub->send_pkt_na != (rtpp_socket_send_pkt_na_t)NULL);
     RTPP_DBG_ASSERT(pub->send_pkt_na != (rtpp_socket_send_pkt_na_t)&rtpp_socket_send_pkt_na_fin);
     pub->send_pkt_na = (rtpp_socket_send_pkt_na_t)&rtpp_socket_send_pkt_na_fin;
+    RTPP_DBG_ASSERT(pub->set_stuid != (rtpp_socket_set_stuid_t)NULL);
+    RTPP_DBG_ASSERT(pub->set_stuid != (rtpp_socket_set_stuid_t)&rtpp_socket_set_stuid_fin);
+    pub->set_stuid = (rtpp_socket_set_stuid_t)&rtpp_socket_set_stuid_fin;
     RTPP_DBG_ASSERT(pub->setnonblock != (rtpp_socket_setnonblock_t)NULL);
     RTPP_DBG_ASSERT(pub->setnonblock != (rtpp_socket_setnonblock_t)&rtpp_socket_setnonblock_fin);
     pub->setnonblock = (rtpp_socket_setnonblock_t)&rtpp_socket_setnonblock_fin;
@@ -95,9 +109,11 @@ rtpp_socket_fintest()
     assert(tp->pub.rcnt != NULL);
     tp->pub.bind2 = (rtpp_socket_bind_t)((void *)0x1);
     tp->pub.drain = (rtpp_socket_drain_t)((void *)0x1);
+    tp->pub.get_stuid = (rtpp_socket_get_stuid_t)((void *)0x1);
     tp->pub.getfd = (rtpp_socket_getfd_t)((void *)0x1);
     tp->pub.rtp_recv = (rtpp_socket_rtp_recv_t)((void *)0x1);
     tp->pub.send_pkt_na = (rtpp_socket_send_pkt_na_t)((void *)0x1);
+    tp->pub.set_stuid = (rtpp_socket_set_stuid_t)((void *)0x1);
     tp->pub.setnonblock = (rtpp_socket_setnonblock_t)((void *)0x1);
     tp->pub.setrbuf = (rtpp_socket_setrbuf_t)((void *)0x1);
     tp->pub.settimestamp = (rtpp_socket_settimestamp_t)((void *)0x1);
@@ -107,14 +123,16 @@ rtpp_socket_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, bind2);
     CALL_TFIN(&tp->pub, drain);
+    CALL_TFIN(&tp->pub, get_stuid);
     CALL_TFIN(&tp->pub, getfd);
     CALL_TFIN(&tp->pub, rtp_recv);
     CALL_TFIN(&tp->pub, send_pkt_na);
+    CALL_TFIN(&tp->pub, set_stuid);
     CALL_TFIN(&tp->pub, setnonblock);
     CALL_TFIN(&tp->pub, setrbuf);
     CALL_TFIN(&tp->pub, settimestamp);
     CALL_TFIN(&tp->pub, settos);
-    assert((_naborts - naborts_s) == 9);
+    assert((_naborts - naborts_s) == 11);
 }
 const static void *_rtpp_socket_ftp = (void *)&rtpp_socket_fintest;
 DATA_SET(rtpp_fintests, _rtpp_socket_ftp);
