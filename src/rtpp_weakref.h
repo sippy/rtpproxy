@@ -34,6 +34,7 @@ struct rtpp_refcnt;
 #define RTPP_WR_MATCH_DEL  RTPP_HT_MATCH_DEL
 
 DEFINE_RAW_METHOD(rtpp_weakref_foreach, int, void *, void *);
+DEFINE_RAW_METHOD(rtpp_weakref_cb, void, void *);
 
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_reg, int,
   struct rtpp_refcnt *, uint64_t);
@@ -46,6 +47,10 @@ DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_foreach, void,
   rtpp_weakref_foreach_t, void *);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_get_length, int);
 DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_purge, int);
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_set_on_first,
+  rtpp_weakref_cb_t, rtpp_weakref_cb_t, void *);
+DEFINE_METHOD(rtpp_weakref_obj, rtpp_wref_set_on_last,
+  rtpp_weakref_cb_t, rtpp_weakref_cb_t, void *);
 
 struct rtpp_weakref_obj {
     rtpp_wref_reg_t reg;
@@ -55,6 +60,8 @@ struct rtpp_weakref_obj {
     rtpp_wref_foreach_t foreach;
     rtpp_wref_get_length_t get_length;
     rtpp_wref_purge_t purge;
+    rtpp_wref_set_on_first_t set_on_first;
+    rtpp_wref_set_on_last_t set_on_last;
 };
 
 struct rtpp_weakref_obj *rtpp_weakref_ctor(void);
