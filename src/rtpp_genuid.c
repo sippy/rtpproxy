@@ -52,7 +52,7 @@ rtpp_genuid_ctor(void)
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->lastuid = ATOMIC_VAR_INIT(0);
+    atomic_init(&pvt->lastuid, 0);
     pvt->pub.dtor = &rtpp_genuid_dtor;
     pvt->pub.gen = &rtpp_genuid_gen;
     return (&pvt->pub);
