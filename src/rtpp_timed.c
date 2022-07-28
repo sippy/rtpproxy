@@ -63,11 +63,13 @@ struct rtpp_timed_cf {
 #define RT_ST_RUNNING 0
 #define RT_ST_SHTDOWN 1
 
+DEFINE_CB_STRUCT(rtpp_timed);
+DEFINE_CB_STRUCT(rtpp_timed_cancel);
+
 struct rtpp_timed_wi {
     struct rtpp_timed_task pub;
-    rtpp_timed_cb_t cb_func;
-    rtpp_timed_cancel_cb_t cancel_cb_func;
-    void *cb_func_arg;
+    rtpp_timed_cb_s cb;
+    rtpp_timed_cancel_cb_s cancel_cb;
     struct rtpp_refcnt *callback_rcnt;
     double when;
     double offset;
@@ -121,8 +123,8 @@ rtpp_timed_queue_run(void *argp)
     while (rtpp_queue_get_length(rtcp->q) > 0) {
         wi = rtpp_queue_get_item(rtcp->q, 1);
         wi_data = rtpp_wi_data_get_ptr(wi, rtcp->wi_dsize, rtcp->wi_dsize);
-        if (wi_data->cancel_cb_func != NULL) {
-            wi_data->cancel_cb_func(wi_data->cb_func_arg);
+        if (wi_data->cancel_cb.func != NULL) {
+            wi_data->cancel_cb.func(wi_data->cancel_cb.arg);
         }
         if (wi_data->callback_rcnt != NULL) {
             RC_DECREF(wi_data->callback_rcnt);
@@ -236,9 +238,10 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
         CALL_METHOD(wi, dtor);
         return (NULL);
     }
-    wi_data->cb_func = cb_func;
-    wi_data->cancel_cb_func = cancel_cb_func;
-    wi_data->cb_func_arg = cb_func_arg;
+    wi_data->cb.func = cb_func;
+    wi_data->cb.arg = cb_func_arg;
+    wi_data->cancel_cb.func = cancel_cb_func;
+    wi_data->cancel_cb.arg = cb_func_arg;
     wi_data->when = getdtime() + offset;
     wi_data->offset = offset;
     wi_data->callback_rcnt = callback_rcnt;
@@ -324,7 +327,7 @@ rtpp_timed_process(struct rtpp_timed_cf *rtcp, double ctime)
             return;
         }
         wi_data = rtpp_wi_data_get_ptr(wi, rtcp->wi_dsize, rtcp->wi_dsize);
-        cb_rval = wi_data->cb_func(ctime, wi_data->cb_func_arg);
+        cb_rval = wi_data->cb.func(ctime, wi_data->cb.arg);
         if (cb_rval == CB_MORE) {
             while (wi_data->when <= ctime) {
                 /* Make sure next run is in the future */
@@ -388,8 +391,8 @@ rtpp_timed_cancel(struct rtpp_timed_task *taskpub)
     if (wim == NULL) {
         return (0);
     }
-    if (wi_data->cancel_cb_func != NULL) {
-        wi_data->cancel_cb_func(wi_data->cb_func_arg);
+    if (wi_data->cancel_cb.func != NULL) {
+        wi_data->cancel_cb.func(wi_data->cancel_cb.arg);
     }
     if (wi_data->callback_rcnt != NULL) {
         RC_DECREF(wi_data->callback_rcnt);

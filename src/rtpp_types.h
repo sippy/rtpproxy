@@ -54,4 +54,10 @@ struct rtpp_type_linkable {
 #define RTPP_OBJ_INCREF(obj) RC_INCREF((obj)->rcnt)
 #define RTPP_OBJ_DECREF(obj) RC_DECREF((obj)->rcnt)
 
+#define DEFINE_CB_STRUCT(functype) \
+    typedef struct { \
+        functype##_cb_t func; \
+        void *arg; \
+    } functype##_cb_s;
+
 #endif
