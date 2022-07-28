@@ -537,7 +537,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
         cmd->csp->nsess_created.cnt++;
 
         hte = CALL_METHOD(cfsp->sessions_ht, append_refcnt, spa->call_id,
-          spa->rcnt);
+          spa->rcnt, NULL);
         if (hte == NULL) {
             handle_nomem(cmd, ECODE_NOMEM_5, spa);
             return (-1);

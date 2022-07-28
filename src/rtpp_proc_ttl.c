@@ -114,7 +114,7 @@ rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct rtpp_weakref_obj
     fargs.rtpp_notify_cf = rtpp_notify_cf;
     fargs.rtpp_stats = rtpp_stats;
     fargs.sessions_wrt = sessions_wrt;
-    CALL_METHOD(sessions_ht, foreach, rtpp_proc_ttl_foreach, &fargs);
+    CALL_METHOD(sessions_ht, foreach, rtpp_proc_ttl_foreach, &fargs, NULL);
 }
 
 static void
