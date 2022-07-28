@@ -72,6 +72,10 @@ dtime2timeval(double dtime, struct timeval *tvp)
 
     SEC(tvp) = trunc(dtime);
     USEC(tvp) = round((double)USEC_MAX * (dtime - (double)SEC(tvp)));
+    if (USEC(tvp) == USEC_MAX) {
+        SEC(tvp)++;
+        USEC(tvp) = 0;
+    }
 }
 
 const char *
