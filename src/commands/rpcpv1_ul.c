@@ -68,6 +68,7 @@
 #include "rtpp_util.h"
 #include "rtpp_ttl.h"
 #include "rtpp_nofile.h"
+#include "rtpp_proc_async.h"
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc.h"
 
@@ -457,6 +458,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             } else {
                 CALL_METHOD(cfsp->sessinfo, append, spa, sidx, fds);
             }
+            CALL_METHOD(cfsp->rtpp_proc_cf, nudge);
             RTPP_OBJ_DECREF(fds[0]);
             RTPP_OBJ_DECREF(fds[1]);
             spa->rtp->stream[sidx]->port = lport;

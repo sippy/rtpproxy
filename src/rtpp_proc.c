@@ -33,6 +33,7 @@
 #include <poll.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "rtpp_types.h"
 #include "rtpp_weakref.h"
@@ -52,6 +53,8 @@
 #include "rtpp_session.h"
 #include "rtpp_ttl.h"
 #include "rtpp_pipe.h"
+#include "rtpp_epoll.h"
+#include "rtpp_debug.h"
 #include "advanced/po_manager.h"
 
 struct rtpp_proc_ready_lst {
@@ -155,7 +158,7 @@ e0:
 void
 process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
   const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
-  struct rtpp_proc_rstats *rsp)
+  struct rtpp_proc_rstats *rsp, struct epoll_event events[], int nready)
 {
     int readyfd, ndrained;
     struct rtpp_session *sp;
@@ -163,11 +166,20 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
     struct rtp_packet *packet;
     struct rtpp_socket *iskt;
 
-    for (readyfd = 0; readyfd < ptbl->curlen; readyfd++) {
-        if ((ptbl->pfds[readyfd].revents & POLLIN) == 0)
+    for (readyfd = 0; readyfd < nready; readyfd++) {
+        struct epoll_event *ep = &events[readyfd];
+        if ((ep->events & EPOLLIN) == 0)
             continue;
-        stp = CALL_METHOD(ptbl->streams_wrt, get_by_idx,
-          ptbl->mds[readyfd].stuid);
+        if (ep->data.ptr == NULL) {
+            int nudge_data, rsize;
+
+            rsize = read(ptbl->wakefd[0], &nudge_data, sizeof(nudge_data));
+            RTPP_DBG_ASSERT(rsize == sizeof(nudge_data) || rsize == 0);
+            continue;
+        }
+        iskt = ep->data.ptr;
+        uint64_t stuid = CALL_METHOD(iskt, get_stuid);
+        stp = CALL_METHOD(ptbl->streams_wrt, get_by_idx, stuid);
         if (stp == NULL)
             continue;
         sp = CALL_METHOD(cfsp->sessions_wrt, get_by_idx, stp->seuid);
@@ -175,7 +187,6 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
             RTPP_OBJ_DECREF(stp);
             continue;
         }
-        iskt = ptbl->mds[readyfd].skt;
         if (sp->complete != 0) {
             rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp, sp);
             RTPP_OBJ_DECREF(sp);

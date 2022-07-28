@@ -36,6 +36,7 @@
 #include <string.h>
 #include <poll.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
@@ -47,6 +48,7 @@
 #include "rtpp_session.h"
 #include "rtpp_socket.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_epoll.h"
 
 enum polltbl_hst_ops {HST_ADD, HST_DEL, HST_UPD};
 
@@ -330,10 +332,13 @@ rtpp_polltbl_free(struct rtpp_polltbl *ptbl)
     }
     if (ptbl->curlen > 0) {
         for (i = 0; i < ptbl->curlen; i++) {
+            int fd = CALL_METHOD(ptbl->mds[i].skt, getfd);
+            rtpp_epoll_ctl(ptbl->epfd, EPOLL_CTL_DEL, fd, NULL);
             RTPP_OBJ_DECREF(ptbl->mds[i].skt);
         }
     }
-    free(ptbl->pfds);
+    close(ptbl->wakefd[0]);
+    close(ptbl->epfd);
     free(ptbl->mds);
 }
 
@@ -342,7 +347,6 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
   struct rtpp_polltbl *ptbl, int pipe_type)
 {
     struct rtpp_sessinfo_priv *pvt;
-    struct pollfd *pfds;
     struct rtpp_polltbl_mdata *mds;
     struct rtpp_polltbl_hst *hp;
     int i;
@@ -360,33 +364,18 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
     if (hp->ulen > ptbl->aloclen - ptbl->curlen) {
         int alen = hp->ulen + ptbl->curlen;
 
-        pfds = realloc(ptbl->pfds, (alen * sizeof(struct pollfd)));
         mds = realloc(ptbl->mds, (alen * sizeof(struct rtpp_polltbl_mdata)));
-        if (pfds != NULL) {
-            if (mds == NULL && ptbl->mds == NULL && ptbl->pfds == NULL) {
-                free(pfds);
-                pfds = NULL;
-            } else {
-                ptbl->pfds = pfds;
-            }
-        }
-        if (mds != NULL) {
-            if (pfds == NULL && ptbl->aloclen == 0) {
-                free(mds);
-                mds = NULL;
-            } else {
-                ptbl->mds = mds;
-            }
-        }
-        if (pfds == NULL || mds == NULL) {
+        if (mds == NULL) {
             goto e0;
         }
+        ptbl->mds = mds;
         ptbl->aloclen = alen;
     }
 
     for (i = 0; i < hp->ulen; i++) {
         struct rtpp_polltbl_hst_ent *hep;
         int session_index, movelen;
+        struct epoll_event event;
 
         hep = hp->clog + i;
         switch (hep->op) {
@@ -395,9 +384,9 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
             assert(find_polltbl_idx(ptbl, hep->stuid) < 0);
 #endif
             session_index = ptbl->curlen;
-            ptbl->pfds[session_index].fd = CALL_METHOD(hep->skt, getfd);
-            ptbl->pfds[session_index].events = POLLIN;
-            ptbl->pfds[session_index].revents = 0;
+            event.events = EPOLLIN;
+            event.data.ptr = hep->skt;
+            rtpp_epoll_ctl(ptbl->epfd, EPOLL_CTL_ADD, CALL_METHOD(hep->skt, getfd), &event);
             ptbl->mds[session_index].stuid = hep->stuid;
             ptbl->mds[session_index].skt = hep->skt;
             ptbl->curlen++;
@@ -407,11 +396,10 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
         case HST_DEL:
             session_index = find_polltbl_idx(ptbl, hep->stuid);
             assert(session_index > -1);
+            rtpp_epoll_ctl(ptbl->epfd, EPOLL_CTL_DEL, CALL_METHOD(ptbl->mds[session_index].skt, getfd), NULL);
             RTPP_OBJ_DECREF(ptbl->mds[session_index].skt);
             movelen = (ptbl->curlen - session_index - 1);
             if (movelen > 0) {
-                memmove(&ptbl->pfds[session_index], &ptbl->pfds[session_index + 1],
-                  movelen * sizeof(ptbl->pfds[0]));
                 memmove(&ptbl->mds[session_index], &ptbl->mds[session_index + 1],
                   movelen * sizeof(ptbl->mds[0]));
             }
@@ -422,10 +410,11 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
         case HST_UPD:
             session_index = find_polltbl_idx(ptbl, hep->stuid);
             assert(session_index > -1);
+            rtpp_epoll_ctl(ptbl->epfd, EPOLL_CTL_DEL, CALL_METHOD(ptbl->mds[session_index].skt, getfd), NULL);
             RTPP_OBJ_DECREF(ptbl->mds[session_index].skt);
-            ptbl->pfds[session_index].fd = CALL_METHOD(hep->skt, getfd);
-            ptbl->pfds[session_index].events = POLLIN;
-            ptbl->pfds[session_index].revents = 0;
+            event.events = EPOLLIN;
+            event.data.ptr = hep->skt;
+            rtpp_epoll_ctl(ptbl->epfd, EPOLL_CTL_ADD, CALL_METHOD(hep->skt, getfd), &event);
             ptbl->mds[session_index].skt = hep->skt;
             ptbl->revision++;
             break;

@@ -60,6 +60,7 @@
 #include "rtpp_ttl.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_timeout_data.h"
+#include "rtpp_proc_async.h"
 
 struct rtpp_session_priv
 {
@@ -173,6 +174,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     }
 
     CALL_METHOD(cfs->sessinfo, append, pub, 0, fds);
+    CALL_METHOD(cfs->rtpp_proc_cf, nudge);
 
     CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor,
       pvt);

@@ -747,6 +747,7 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
         return;
     }
     RTPP_DBG_ASSERT(pvt->fd == NULL);
+    CALL_METHOD(new_skt, set_stuid, self->stuid);
     pvt->fd = new_skt;
     RTPP_OBJ_INCREF(pvt->fd);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
