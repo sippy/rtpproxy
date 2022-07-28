@@ -27,8 +27,8 @@
 
 enum rtpp_timed_cb_rvals {CB_LAST, CB_MORE};
 
-typedef enum rtpp_timed_cb_rvals (*rtpp_timed_cb_t)(double, void *);
-typedef void (*rtpp_timed_cancel_cb_t)(void *);
+DEFINE_RAW_METHOD(rtpp_timed_cb, enum rtpp_timed_cb_rvals, double, void *);
+DEFINE_RAW_METHOD(rtpp_timed_cancel_cb, void, void *);
 
 struct rtpp_timed;
 struct rtpp_timed_task;

@@ -138,7 +138,7 @@ e0:
 
 static const conf_helper_map default_module_map[] = {
     { "load", NULL }, /* The "load" is default */
-    { NULL, (conf_helper_func) rtpp_ucl_set_unknown }
+    { NULL, (conf_helper_t) rtpp_ucl_set_unknown }
 };
 
 static int

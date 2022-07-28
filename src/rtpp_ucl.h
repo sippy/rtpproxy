@@ -33,7 +33,7 @@ typedef struct ucl_object_s ucl_object_t;
 /*
  * Config parser helper callback function pointer alias
  */
-typedef bool (*conf_helper_func)(struct rtpp_log *, const ucl_object_t *,
+DEFINE_RAW_METHOD(conf_helper, bool, struct rtpp_log *, const ucl_object_t *,
   const ucl_object_t *, void *);
 
 /*
@@ -42,7 +42,7 @@ typedef bool (*conf_helper_func)(struct rtpp_log *, const ucl_object_t *,
  */
 typedef struct conf_helper_callback_map {
     const char *conf_key;
-    conf_helper_func callback;
+    conf_helper_t callback;
 } conf_helper_map;
 
 struct rtpp_module_conf {
