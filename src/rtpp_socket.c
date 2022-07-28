@@ -55,6 +55,8 @@
 struct rtpp_socket_priv {
     struct rtpp_socket pub;
     int fd;
+    int type;
+    uint64_t stuid;
 };
 
 static void rtpp_socket_dtor(struct rtpp_socket_priv *);
@@ -73,6 +75,8 @@ static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *,
 static int rtpp_socket_getfd(struct rtpp_socket *);
 static int rtpp_socket_drain(struct rtpp_socket *, const char *,
   struct rtpp_log *);
+static void rtpp_socket_set_stuid(struct rtpp_socket *, uint64_t);
+static uint64_t rtpp_socket_get_stuid(struct rtpp_socket *);
 
 #if HAVE_SO_TS_CLOCK
 static struct rtp_packet *rtpp_socket_rtp_recv_mono(struct rtpp_socket *,
@@ -92,6 +96,7 @@ rtpp_socket_ctor(int domain, int type)
     if (pvt->fd < 0) {
         goto e1;
     }
+    pvt->type = type;
     if (domain == AF_INET6) {
         /* Disable any automatic IPv4->IPv6 gatewaying */
         int yes = 1;
@@ -110,6 +115,8 @@ rtpp_socket_ctor(int domain, int type)
     pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_simple;
     pvt->pub.getfd = &rtpp_socket_getfd;
     pvt->pub.drain = &rtpp_socket_drain;
+    pvt->pub.set_stuid = &rtpp_socket_set_stuid;
+    pvt->pub.get_stuid = &rtpp_socket_get_stuid;
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_dtor,
       pvt);
     return (&pvt->pub);
@@ -125,7 +132,9 @@ rtpp_socket_dtor(struct rtpp_socket_priv *pvt)
 {
 
     rtpp_socket_fin(&pvt->pub);
-    shutdown(pvt->fd, SHUT_RDWR);
+    if (pvt->type != SOCK_DGRAM) {
+        shutdown(pvt->fd, SHUT_RDWR);
+    }
     close(pvt->fd);
     free(pvt);
 }
@@ -375,4 +384,22 @@ rtpp_socket_drain(struct rtpp_socket *self, const char *ptype,
         }
     }
     return (ndrained);
+}
+
+static void
+rtpp_socket_set_stuid(struct rtpp_socket *self, uint64_t stuid)
+{
+    struct rtpp_socket_priv *pvt;
+    PUB2PVT(self, pvt);
+
+    pvt->stuid = stuid;
+}
+
+static uint64_t
+rtpp_socket_get_stuid(struct rtpp_socket *self)
+{
+    struct rtpp_socket_priv *pvt;
+    PUB2PVT(self, pvt);
+
+    return (pvt->stuid);
 }
