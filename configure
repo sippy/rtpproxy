@@ -12956,6 +12956,31 @@ $as_echo "#define ENABLE_OBJCK 1" >>confdefs.h
 
 fi
 
+ac_fn_c_check_header_mongrel "$LINENO" "sys/epoll.h" "ac_cv_header_sys_epoll_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_epoll_h" = xyes; then :
+  found_epoll=yes
+fi
+
+
+if test "$found_epoll" != yes
+then
+  ac_fn_c_check_header_mongrel "$LINENO" "sys/event.h" "ac_cv_header_sys_event_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_event_h" = xyes; then :
+  found_kevent=yes
+else
+  as_fn_error $? "Neither epoll not kqueue is found" "$LINENO" 5
+fi
+
+
+
+$as_echo "#define HAVE_KQUEUE 1" >>confdefs.h
+
+else
+
+$as_echo "#define HAVE_EPOLL 1" >>confdefs.h
+
+fi
+
 # Checks for header files.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
 $as_echo_n "checking for ANSI C header files... " >&6; }
