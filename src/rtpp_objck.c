@@ -217,10 +217,10 @@ main(int argc, char **argv)
 
     memset(&targs, '\0', sizeof(targs));
     memset(&tests, '\0', sizeof(tests));
-    tests.queue_p2c.done = ATOMIC_VAR_INIT(false);
-    tests.queue_b2b.done = ATOMIC_VAR_INIT(false);
-    tests.wi_malloc_udata.done = ATOMIC_VAR_INIT(false);
-    tests.wi_malloc_data.done = ATOMIC_VAR_INIT(false);
+    atomic_init(&tests.queue_p2c.done, false);
+    atomic_init(&tests.queue_b2b.done, false);
+    atomic_init(&tests.wi_malloc_udata.done, false);
+    atomic_init(&tests.wi_malloc_data.done, false);
 
     tsize = 1256;
     if (argc > 1) {
