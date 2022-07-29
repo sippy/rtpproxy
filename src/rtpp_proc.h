@@ -39,9 +39,15 @@ struct rtpp_proc_stat {
     int cnt_idx;
 };
 
+#define FLUSH_STAT(sobj, st)    { \
+    if ((st).cnt > 0) { \
+        CALL_SMETHOD(sobj, updatebyidx, (st).cnt_idx, (st).cnt); \
+        (st).cnt = 0; \
+    } \
+}
+
 struct rtpp_proc_rstats {
     struct rtpp_proc_stat npkts_rcvd;
-    struct rtpp_proc_stat npkts_played;
     struct rtpp_proc_stat npkts_relayed;
     struct rtpp_proc_stat npkts_resizer_in;
     struct rtpp_proc_stat npkts_resizer_out;
