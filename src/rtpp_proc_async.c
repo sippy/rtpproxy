@@ -37,8 +37,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <elperiodic.h>
-
 #include "config.h"
 
 #include "rtpp_log.h"
@@ -59,34 +57,28 @@
 #include "rtpp_time.h"
 #include "rtpp_pipe.h"
 #include "rtpp_epoll.h"
-
-struct elp_data {
-    void *obj;
-    long long ncycles_ref;
-    long long ncycles_ref_last;
-    long long ncycles_chk_ol;
-    double target_pfreq;
-};
+#include "rtpp_refcnt.h"
+#include "rtpp_debug.h"
 
 struct rtpp_proc_async_cf;
 
 struct rtpp_proc_thread_cf {
     pthread_t thread_id;
     atomic_int tstate;
-    struct elp_data elp_fs;
-    struct elp_data elp_lz;
     int pipe_type;
     struct rtpp_polltbl ptbl;
     const struct rtpp_proc_async_cf *proc_cf;
-    struct rtpp_proc_rstats *rsp;
+    struct rtpp_proc_rstats rstats;
+    struct epoll_event *events;
+    int events_alloc;
 };
 
 struct rtpp_proc_async_cf {
     struct rtpp_proc_async pub;
-    struct rtpp_proc_rstats rstats;
     const struct rtpp_cfg *cf_save;
     struct rtpp_proc_thread_cf rtp_thread;
     struct rtpp_proc_thread_cf rtcp_thread;
+    struct rtpp_proc_servers *stap;
 };
 
 #define TSTATE_RUN   0x0
@@ -95,19 +87,11 @@ struct rtpp_proc_async_cf {
 static void rtpp_proc_async_dtor(struct rtpp_proc_async *);
 static void rtpp_proc_async_nudge(struct rtpp_proc_async *);
 
-#define FLUSH_STAT(sobj, st)	{ \
-    if ((st).cnt > 0) { \
-        CALL_SMETHOD(sobj, updatebyidx, (st).cnt_idx, (st).cnt); \
-        (st).cnt = 0; \
-    } \
-}
-
 static void
 flush_rstats(struct rtpp_stats *sobj, struct rtpp_proc_rstats *rsp)
 {
 
     FLUSH_STAT(sobj, rsp->npkts_rcvd);
-    FLUSH_STAT(sobj, rsp->npkts_played);
     FLUSH_STAT(sobj, rsp->npkts_relayed);
     FLUSH_STAT(sobj, rsp->npkts_resizer_in);
     FLUSH_STAT(sobj, rsp->npkts_resizer_out);
@@ -120,7 +104,6 @@ init_rstats(struct rtpp_stats *sobj, struct rtpp_proc_rstats *rsp)
 {
 
     rsp->npkts_rcvd.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_rcvd");
-    rsp->npkts_played.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_played");
     rsp->npkts_relayed.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_relayed");
     rsp->npkts_resizer_in.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_resizer_in");
     rsp->npkts_resizer_out.cnt_idx = CALL_SMETHOD(sobj, getidxbyname, "npkts_resizer_out");
@@ -140,100 +123,71 @@ rtpp_proc_async_run(void *arg)
     struct sthread_args *sender;
     struct rtpp_proc_rstats *rstats;
     struct rtpp_stats *stats_cf;
-    int tstate, overload;
+    int tstate;
     struct rtpp_timestamp rtime;
-    struct elp_data *edp;
 
     tcp = (struct rtpp_proc_thread_cf *)arg;
     proc_cf = tcp->proc_cf;
     cfsp = proc_cf->cf_save;
     stats_cf = cfsp->rtpp_stats;
-    rstats = tcp->rsp;
+    rstats = &tcp->rstats;
 
     memset(&rtime, '\0', sizeof(rtime));
 
     RTPP_DBGCODE(netio) {
         last_ctick = 0;
     }
-    overload = 0;
-
-    edp = &tcp->elp_lz;
 
     for (;;) {
         tstate = atomic_load(&tcp->tstate);
         if (tstate == TSTATE_CEASE) {
             break;
         }
-        edp->ncycles_ref = (long long)prdic_getncycles_ref(edp->obj);
-        if (cfsp->overload_prot.ecode != 0 && edp->ncycles_chk_ol <= edp->ncycles_ref) {
-            double lv = prdic_getload(edp->obj);
 
-            if (overload  && lv < 0.85) {
-                overload = 0;
-                CALL_METHOD(cfsp->rtpp_cmd_cf, reg_overload, 0);
-            } else if (overload == 0 && lv > 0.9) {
-                overload = 1;
-                CALL_METHOD(cfsp->rtpp_cmd_cf, reg_overload, 1);
-            }
-            RTPP_LOG(cfsp->glog, RTPP_LOG_INFO, "ncycles=%lld load=%f",
-              edp->ncycles_ref, lv);
-            edp->ncycles_chk_ol = ((edp->ncycles_ref / 200) + 1) * 200;
-        }
-        ndrain = ((edp->ncycles_ref - edp->ncycles_ref_last) * MAX_RTP_RATE) / edp->target_pfreq;
-        edp->ncycles_ref_last = edp->ncycles_ref;
-
-        if (ndrain < 1) {
-            ndrain = 1;
-        }
+        ndrain = 1;
 
         CALL_METHOD(cfsp->sessinfo, sync_polltbl, &tcp->ptbl, tcp->pipe_type);
-        struct epoll_event events[512];
         nready = 0;
-        if (tcp->ptbl.curlen > 0) {
-            RTPP_DBGCODE(netio > 1) {
+        RTPP_DBGCODE(netio > 1) {
+            RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
+              "polling for %d %s file descriptors", \
+              last_ctick, tcp->ptbl.curlen, PP_NAME(tcp->pipe_type));
+        }
+        nready = rtpp_epoll_wait(tcp->ptbl.epfd, tcp->events, tcp->events_alloc, -1);
+        RTPP_DBGCODE(netio) {
+            RTPP_DBGCODE(netio > 1 || nready > 0) {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-                  "polling for %d %s file descriptors", \
-                  last_ctick, tcp->ptbl.curlen, PP_NAME(tcp->pipe_type));
-            }
-            nready = rtpp_epoll_wait(tcp->ptbl.epfd, events, 512, 0);
-            RTPP_DBGCODE(netio) {
-                RTPP_DBGCODE(netio > 1 || nready > 0) {
-                    {static int _tb = 0; while (_tb);}
-                    RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \
-                      "polling for %d %s file descriptors: %d descriptors are ready", \
-                      last_ctick, tcp->ptbl.curlen, PP_NAME(tcp->pipe_type), nready);
-                }
-            }
-            if (nready < 0 && errno == EINTR) {
-                continue;
+                  "polling for %d %s file descriptors: %d descriptors are ready", \
+                  last_ctick, tcp->ptbl.curlen, PP_NAME(tcp->pipe_type), nready);
             }
         }
+        if (nready < 0 && errno == EINTR) {
+            continue;
+        }
+        if (nready == 0)
+            goto next;
 
         rtpp_timestamp_get(&rtime);
         RTPP_DBG_ASSERT(rtime.wall > 0 && rtime.mono > 0);
 
         sender = rtpp_anetio_pick_sender(proc_cf->pub.netio);
-        if (nready > 0) {
-            process_rtp_only(cfsp, &tcp->ptbl, &rtime, ndrain, sender, rstats, events, nready);
-        }
-
-        if (tcp->pipe_type == PIPE_RTP && CALL_METHOD(cfsp->servers_wrt, get_length) > 0) {
-            rtpp_proc_servers(cfsp, rtime.mono, sender, rstats);
-        }
+        process_rtp_only(cfsp, &tcp->ptbl, &rtime, ndrain, sender, rstats,
+          tcp->events, nready);
 
         rtpp_anetio_pump_q(sender);
         flush_rstats(stats_cf, rstats);
 
-        if (tcp->ptbl.curlen > 0) {
-            if (edp == &tcp->elp_lz) {
-                edp = &tcp->elp_fs;
-            }
-        } else {
-            if (edp == &tcp->elp_fs) {
-                edp = &tcp->elp_lz;
+        if (nready == tcp->events_alloc) {
+            struct epoll_event *tep;
+
+            tep = realloc(tcp->events, sizeof(tcp->events[0]) * tcp->events_alloc * 2);
+            if (tep != NULL) {
+                tcp->events = tep;
+                tcp->events_alloc *= 2;
             }
         }
-        prdic_procrastinate(edp->obj);
+
+next:
         RTPP_DBGCODE(netio) {
             last_ctick++;
         }
@@ -257,29 +211,23 @@ rtpp_proc_async_thread_init(const struct rtpp_cfg *cfsp, const struct rtpp_proc_
     if (rtpp_epoll_ctl(tcp->ptbl.epfd, EPOLL_CTL_ADD, tcp->ptbl.wakefd[0], &epevent) != 0)
         goto e2;
 
-    tcp->elp_fs.obj = prdic_init(cfsp->target_pfreq, 0.0);
-    if (tcp->elp_fs.obj == NULL) {
-        goto e2;
-    }
-    tcp->elp_fs.target_pfreq = cfsp->target_pfreq;
-    tcp->elp_lz.obj = prdic_init(10.0, 0.0);
-    if (tcp->elp_lz.obj == NULL) {
-        goto e3;
-    }
-    tcp->elp_lz.target_pfreq = 10.0;
-
     tcp->proc_cf = proc_cf;
     tcp->pipe_type = pipe_type;
 
+    init_rstats(cfsp->rtpp_stats, &tcp->rstats);
+
+    tcp->events_alloc = 16;
+    tcp->events = rtpp_zmalloc(sizeof(tcp->events[0]) * tcp->events_alloc);
+    if (tcp->events == NULL)
+        goto e2;
+
     if (pthread_create(&tcp->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, tcp) != 0) {
-        goto e4;
+        goto e3;
     }
     return (0);
 
-e4:
-    prdic_free(tcp->elp_lz.obj);
 e3:
-    prdic_free(tcp->elp_fs.obj);
+    free(tcp->events);
 e2:
     close(tcp->ptbl.wakefd[0]);
     close(tcp->ptbl.wakefd[1]);
@@ -298,8 +246,7 @@ rtpp_proc_async_thread_destroy(struct rtpp_proc_thread_cf *tcp)
     close(tcp->ptbl.wakefd[1]);
     atomic_store(&tcp->tstate, TSTATE_CEASE);
     pthread_join(tcp->thread_id, NULL);
-    prdic_free(tcp->elp_lz.obj);
-    prdic_free(tcp->elp_fs.obj);
+    free(tcp->events);
 }
 
 struct rtpp_proc_async *
@@ -311,9 +258,6 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
     if (proc_cf == NULL)
         return (NULL);
 
-    init_rstats(cfsp->rtpp_stats, &proc_cf->rstats);
-    proc_cf->rtp_thread.rsp = proc_cf->rtcp_thread.rsp = &proc_cf->rstats;
-
     proc_cf->pub.netio = rtpp_netio_async_init(cfsp, 1);
     if (proc_cf->pub.netio == NULL) {
         goto e0;
@@ -321,19 +265,25 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
 
     proc_cf->cf_save = cfsp;
 
-    if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtp_thread, PIPE_RTP) != 0) {
+    proc_cf->stap = rtpp_proc_servers_ctor(cfsp, proc_cf->pub.netio);
+    if (proc_cf->stap == NULL)
         goto e1;
+
+    if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtp_thread, PIPE_RTP) != 0) {
+        goto e2;
     }
 
     if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtcp_thread, PIPE_RTCP) != 0) {
-        goto e2;
+        goto e3;
     }
 
     proc_cf->pub.dtor = &rtpp_proc_async_dtor;
     proc_cf->pub.nudge = &rtpp_proc_async_nudge;
     return (&proc_cf->pub);
-e2:
+e3:
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
+e2:
+    RTPP_OBJ_DECREF(proc_cf->stap);
 e1:
     rtpp_netio_async_destroy(proc_cf->pub.netio);
 e0:
@@ -349,6 +299,7 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     PUB2PVT(pub, proc_cf);
     rtpp_proc_async_thread_destroy(&proc_cf->rtcp_thread);
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
+    RTPP_OBJ_DECREF(proc_cf->stap);
     rtpp_netio_async_destroy(proc_cf->pub.netio);
     free(proc_cf);
 }
@@ -357,9 +308,13 @@ static void
 rtpp_proc_async_nudge(struct rtpp_proc_async *pub)
 {
     struct rtpp_proc_async_cf *proc_cf;
-    int nudge_data = 1;
+    int nudge_data = 1, ret;
 
     PUB2PVT(pub, proc_cf);
-    write(proc_cf->rtp_thread.ptbl.wakefd[1], &nudge_data, sizeof(nudge_data));
-    write(proc_cf->rtcp_thread.ptbl.wakefd[1], &nudge_data, sizeof(nudge_data));
+    ret = write(proc_cf->rtp_thread.ptbl.wakefd[1], &nudge_data,
+      sizeof(nudge_data));
+    RTPP_DBG_ASSERT(ret == sizeof(nudge_data));
+    ret = write(proc_cf->rtcp_thread.ptbl.wakefd[1], &nudge_data,
+      sizeof(nudge_data));
+    RTPP_DBG_ASSERT(ret == sizeof(nudge_data));
 }

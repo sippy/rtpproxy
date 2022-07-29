@@ -966,7 +966,7 @@ main(int argc, char **argv)
 
     counter = 0;
 
-    cfs.rtpp_timed_cf = rtpp_timed_ctor(0.1);
+    cfs.rtpp_timed_cf = rtpp_timed_ctor(0.01);
     if (cfs.rtpp_timed_cf == NULL) {
         RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
           "can't init scheduling subsystem");
