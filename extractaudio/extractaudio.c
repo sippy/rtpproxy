@@ -158,9 +158,19 @@ channel_insert(struct channels *channels, struct channel *channel)
     return 0;
 }
 
-void
-channel_remove(struct channels *channels, struct cnode *cnp)
+static void
+channel_remove(struct channels *channels, struct cnode *cnp, int dealloc)
 {
+    if (dealloc != 0) {
+        struct session *sp = &(cnp->cp->session);
+        while (!MYQ_EMPTY(sp)) {
+            struct packet *pkt = MYQ_FIRST(sp);
+            MYQ_REMOVE(sp, pkt);
+            free(pkt);
+        }
+        free(cnp->cp);
+        free(cnp->cp->decoder);
+    }
 
     MYQ_REMOVE(channels, cnp);
     free(cnp);
@@ -268,6 +278,7 @@ main(int argc, char **argv)
     isample = -1;
     sync_sample = 0;
     int scanonly = 0;
+    int ecode = 0;
 
     while ((ch = getopt_long(argc, argv, "dsSineF:D:A:B:U:", longopts,
       &option_index)) != -1)
@@ -296,7 +307,8 @@ main(int argc, char **argv)
             if (sf_of == NULL) {
                 warnx("unknown output file format: \"%s\"", optarg);
                 dump_formats_descr("Supported file formats:\n", eaud_file_fmts);
-                exit(1);
+                ecode = 1;
+                goto done;
             }
             use_file_fmt = sf_of->id;
             break;
@@ -306,7 +318,8 @@ main(int argc, char **argv)
             if (sf_of == NULL) {
                 warnx("unknown output data format: \"%s\"", optarg);
                 dump_formats_descr("Supported data formats:\n", eaud_data_fmts);
-                exit(1);
+                ecode = 1;
+                goto done;
             }
             use_data_fmt = sf_of->id;
             break;
@@ -327,14 +340,16 @@ main(int argc, char **argv)
         case LOPT_ALICE_CRYPTO:
             alice_crypto = eaud_crypto_getopt_parse(optarg);
             if (alice_crypto == NULL) {
-                exit(1);
+                ecode = 1;
+                goto done;
             }
             break;
 
         case LOPT_BOB_CRYPTO:
             bob_crypto = eaud_crypto_getopt_parse(optarg);
             if (bob_crypto == NULL) {
-                exit(1);
+                ecode = 1;
+                goto done;
             }
             break;
 #endif
@@ -394,7 +409,7 @@ main(int argc, char **argv)
         if (bname != NULL) {
             printf("%s: %d\n", bname, scan_session(bname));
         }
-        exit (0);
+        goto done;
     }
 
     nloaded = 0;
@@ -452,6 +467,7 @@ main(int argc, char **argv)
     FILE *raw_file = fopen(EAUD_DUMPRAW, "w");
 #endif
 
+    struct cnode *cnp_next;
     nasamples = nbsamples = nwsamples = 0;
     do {
         neof = 0;
@@ -485,14 +501,15 @@ restart:
 
                 tnp = eaud_ss_find(&channels, cnp->cp);
                 assert(tnp != NULL);
-                channel_remove(&channels, tnp);
+                channel_remove(&channels, tnp, 1);
+                cnp_next = MYQ_NEXT(cnp);
                 if (ap != &channels) {
-                    channel_remove(ap, cnp);
+                    channel_remove(ap, cnp, 0);
                 }
                 nch -= 1;
-                cnp = MYQ_NEXT(cnp);
-                if (cnp == NULL)
+                if (cnp_next == NULL)
                     goto out;
+                cnp = cnp_next;
                 goto restart;
             }
             if (csample == DECODER_ERROR) {
@@ -561,5 +578,17 @@ theend:
         }
     }
 
-    return 0;
+done:
+    if (alice_crypto != NULL)
+        free(alice_crypto);
+    if (bob_crypto != NULL)
+        free(bob_crypto);
+
+#ifdef RTPP_CHECK_LEAKS
+    if (MEMDEB_SYM != NULL && ecode == 0) {
+        ecode = rtpp_memdeb_dumpstats(MEMDEB_SYM, 0) == 0 ? 0 : 1;
+    }
+#endif
+
+    return ecode;
 }
