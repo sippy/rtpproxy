@@ -12,6 +12,10 @@ rtpa_nsent=463 rtpa_nrcvd=462 rtpa_ndups=0 rtpa_nlost=1 rtpa_perrs=0
 rtpa_nsent=461 rtpa_nrcvd=461 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 MEMDEB(rtpproxy): all clear
 %%CALL_ID%%=from_tag_1.a.rtcp: 0
+MEMDEB(extractaudio): all clear
 %%CALL_ID%%=from_tag_1.a.rtp: 302
+MEMDEB(extractaudio): all clear
 %%CALL_ID%%=from_tag_1.o.rtcp: 1
+MEMDEB(extractaudio): all clear
 %%CALL_ID%%=from_tag_1.o.rtp: 462
+MEMDEB(extractaudio): all clear
