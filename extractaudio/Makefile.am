@@ -12,7 +12,7 @@ extractaudio_SOURCES=extractaudio.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c 
   ${MAINSRCDIR}/rtp_analyze.c ${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
   decoder.h format_au.h g711.h rtpp_loader.h \
   session.h g729_compat.c g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
-  ${MAINSRCDIR}/rtpp_mallocs.c \
+  ${MAINSRCDIR}/rtpp_mallocs.c $(rtpp_netaddr_AUTOSRCS) \
   ${MAINSRCDIR}/rtpp_refcnt.c $(rtpp_refcnt_AUTOSRCS) \
   ${MAINSRCDIR}/rtpp_ringbuf.c $(rtpp_ringbuf_AUTOSRCS) \
   ${MAINSRCDIR}/rtpp_netaddr.c ${MAINSRCDIR}/rtpp_netaddr.h \
@@ -29,7 +29,7 @@ extractaudio_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 extractaudio_LDFLAGS = $(LTO_FLAG)
 
 extractaudio_debug_SOURCES = $(extractaudio_SOURCES) $(RTPP_MEMDEB_CORESRCS) \
-  $(rtpp_netaddr_AUTOSRCS) ${MAINSRCDIR}/rtpp_stacktrace.c
+  ${MAINSRCDIR}/rtpp_stacktrace.c
 extractaudio_debug_LDADD = $(extractaudio_LDADD) $(RTPP_MEMDEB_LDADD)
 extractaudio_debug_CPPFLAGS = $(extractaudio_CPPFLAGS) -DRTPP_DEBUG \
   $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=extractaudio
