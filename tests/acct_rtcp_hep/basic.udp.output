@@ -2,3 +2,4 @@
 %%PORT_O%%
 MEMDEB(rtpproxy): all clear
 %%CALL_ID%%=from_tag_1.pcap: 319
+MEMDEB(extractaudio): all clear
