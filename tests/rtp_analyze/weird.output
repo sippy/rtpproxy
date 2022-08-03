@@ -4,3 +4,4 @@ last_jitter=5.198145,average_jitter=3.358278,max_jitter=5.735731
 pcount=1273, min_seq=24960, max_seq=28338, seq_offset=0, ssrc=0x9B77EDD9, duplicates=0
 ssrc_changes=1, psent=3379, precvd=1273, plost=2106
 last_jitter=2.003499,average_jitter=2.672129,max_jitter=5.612692
+MEMDEB(extractaudio): all clear
