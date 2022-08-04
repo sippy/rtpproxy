@@ -28,6 +28,7 @@
 #include "config.h"
 
 #if HAVE_KQUEUE
+#include <sys/types.h>
 #include <sys/event.h>
 #else
 #include <sys/epoll.h>
