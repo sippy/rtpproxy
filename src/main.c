@@ -784,7 +784,7 @@ update_derived_stats(double dtime, void *argp)
 int
 main(int argc, char **argv)
 {
-    int i, len;
+    int i, len, pid_fd;
     long long counter;
     struct rtpp_cfg cfs;
     char buf[256];
@@ -941,6 +941,11 @@ main(int argc, char **argv)
         }
     }
 
+    pid_fd = open(cfs.pid_file, O_WRONLY | O_CREAT, DEFFILEMODE);
+    if (pid_fd < 0) {
+        RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't open pidfile for writing");
+    }
+
     if (cfs.runcreds->uname != NULL || cfs.runcreds->gname != NULL) {
 	if (drop_privileges(&cfs) != 0) {
 	    RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
@@ -1044,16 +1049,17 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    i = open(cfs.pid_file, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
-    if (i >= 0) {
+    if (pid_fd >= 0) {
+        if (ftruncate(pid_fd, 0) != 0) {
+            RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't truncate pidfile");
+            exit(1);
+        }
         len = sprintf(buf, "%u\n", (unsigned int)getpid());
-        if (write(i, buf, len) != len) {
+        if (write(pid_fd, buf, len) != len) {
             RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't write pidfile");
             exit(1);
         }
-        close(i);
-    } else {
-        RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't open pidfile for writing");
+        close(pid_fd);
     }
 
 #ifdef HAVE_SYSTEMD_DAEMON
