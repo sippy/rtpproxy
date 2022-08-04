@@ -52,10 +52,10 @@
 #define	rtpp_log_setlevel(handle, level) siplog_set_level(handle, level)
 #define	rtpp_log_write(level, handle, format, args...) siplog_write(level, handle, format, ## args)
 #define	rtpp_log_write_va(level, handle, format, va) siplog_write_va(level, handle, format, va)
-#define	_rtpp_log_write_va(handle, level, fname, format, va) siplog_write_va(level, handle, format, va)
+#define	_rtpp_log_write_va(handle, level, fname, lnum, format, va) siplog_write_va(level, handle, format, va)
 #define	rtpp_log_ewrite(level, handle, format, args...) siplog_ewrite(level, handle, format, ## args)
 #define	rtpp_log_ewrite_va(level, handle, format, va) siplog_ewrite(level, handle, format, va)
-#define	_rtpp_log_ewrite_va(handle, level, fname, format, va) siplog_ewrite(level, handle, format, va)
+#define	_rtpp_log_ewrite_va(handle, level, fname, lnum, format, va) siplog_ewrite(level, handle, format, va)
 #define	rtpp_log_close(handle) siplog_close(handle)
 # endif /* !ENABLE_SIPLOG */
 #else /* WITHOUT_RTPPLOG */
