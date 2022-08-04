@@ -5,15 +5,15 @@ spin_nc()
 #  (strace -o glitch1.nctrace -f ${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
   (${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
   NC_PID=${!}
-  echo "starting nc on port ${NC_PORT}"
-  sleep 1
+  echo "starting NOTYFY_CLIENT on port ${NC_PORT}"
+  sleep 2
 }
 
 stop_nc()
 {
   kill ${NC_PID} 2>/dev/null
   wait ${NC_PID}
-  report "waiting for nc to exit"
+  report "waiting for NOTYFY_CLIENT to exit"
 }
 
 glitch_collect()
