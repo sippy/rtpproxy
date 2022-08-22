@@ -6,7 +6,7 @@ BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/scripts/functions.sub"
 
 TTYPE="${1}"
-BCG729_VER=1.0.4
+BCG729_VER=1.1.1
 SNDFILE_VER=1.0.28
 
 uname -a
@@ -38,7 +38,8 @@ wget -O bcg729-${BCG729_VER}.tar.gz \
   https://github.com/BelledonneCommunications/bcg729/archive/${BCG729_VER}.tar.gz
 tar xfz bcg729-${BCG729_VER}.tar.gz
 cd bcg729-${BCG729_VER}
-#perl -pi -e 's|BASICOPERATIONSMACROS__H|BASICOPERATIONSMACROS_H|g' include/basicOperationsMacros.h
+touch ChangeLog NEWS AUTHORS
+perl -pi -e 's|bcg729.spec||g' configure.ac
 ./autogen.sh
 ./configure
 make
