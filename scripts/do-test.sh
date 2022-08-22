@@ -39,8 +39,8 @@ wget -O bcg729-${BCG729_VER}.tar.gz \
   https://github.com/BelledonneCommunications/bcg729/archive/${BCG729_VER}.tar.gz
 tar xfz bcg729-${BCG729_VER}.tar.gz
 cd bcg729-${BCG729_VER}
-touch ChangeLog NEWS
-#perl -pi -e 's|BASICOPERATIONSMACROS__H|BASICOPERATIONSMACROS_H|g' include/basicOperationsMacros.h
+touch ChangeLog NEWS AUTHORS
+perl -pi -e 's|bcg729.spec.in||g' configure.ac
 ./autogen.sh
 ./configure
 make
