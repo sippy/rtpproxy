@@ -40,7 +40,7 @@ wget -O bcg729-${BCG729_VER}.tar.gz \
 tar xfz bcg729-${BCG729_VER}.tar.gz
 cd bcg729-${BCG729_VER}
 touch ChangeLog NEWS AUTHORS
-perl -pi -e 's|bcg729.spec.in||g' configure.ac
+perl -pi -e 's|bcg729.spec||g' configure.ac
 ./autogen.sh
 ./configure
 make
