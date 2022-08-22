@@ -7,7 +7,7 @@ BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/scripts/build/build.conf.sub"
 
 TTYPE="${1}"
-BCG729_VER=1.0.4
+BCG729_VER=1.1.1
 SNDFILE_VER=1.0.28
 
 uname -a
