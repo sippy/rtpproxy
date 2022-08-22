@@ -48,6 +48,6 @@ struct rtpp_record {
 
 /* Function prototypes */
 struct rtpp_record *rtpp_record_open(const struct rtpp_cfg *,
-  struct rtpp_session *, char *, int, int);
+  struct rtpp_session *, const char *, int, int);
 
 #endif

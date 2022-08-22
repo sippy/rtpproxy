@@ -447,7 +447,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     int i, verbose, rval;
     char *cp;
-    char *recording_name;
+    const char *recording_name;
     struct rtpp_session *spa;
     int record_single_file;
     int norecord_all;

@@ -105,7 +105,7 @@ static int get_hdr_size(const struct sockaddr *);
 
 static int
 ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
-  char *rname, int is_rtcp)
+  const char *rname, int is_rtcp)
 {
     char *cp, *tmp;
     int n, port;
@@ -163,7 +163,7 @@ e0:
 
 struct rtpp_record *
 rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
-  char *rname, int orig, int record_type)
+  const char *rname, int orig, int record_type)
 {
     struct rtpp_record_channel *rrc;
     const char *sdir, *suffix1, *suffix2;

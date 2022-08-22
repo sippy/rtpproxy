@@ -46,8 +46,8 @@
 #include "commands/rpcpv1_copy.h"
 
 int
-handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx, char *rname,
-  int record_single_file)
+handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx,
+  const char *rname, int record_single_file)
 {
     int remote;
 

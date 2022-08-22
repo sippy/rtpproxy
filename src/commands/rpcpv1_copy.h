@@ -31,8 +31,8 @@
 
 struct rtpp_session;
 
-int handle_copy(const struct rtpp_cfg *, struct rtpp_session *, int, char *,
-  int);
+int handle_copy(const struct rtpp_cfg *, struct rtpp_session *, int,
+  const char *, int);
 
 #define RSF_MODE_DFLT(cfsp) (((cfsp)->record_pcap == 0) ? 0 : 1)
 
