@@ -9,5 +9,7 @@ U %%CALLID%% 127.0.0.5 12341 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 He
 U %%CALLID%% 127.0.0.4 12342 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 
 U %%CALLID%% 127.0.0.3 12343 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 Hello%2C%20Foo%40Bar%21%20%3A-%29 nonsense
 U %%CALLID%% 127.0.0.2 12344 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 Hello%2C%B%A%D%%C%A%T%21%20%3A-%29 33
+U %%CALLID%% 127.0.0.2 12344 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 Hello%2CKiteh 33 non sense
+U %%CALLID%% 127.0.0.2 12344 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 Hello%2CKiteh 33 nonsense
 U %%CALLID%% 127.0.0.1 12345 from_tag_1 %%RTPP_NOTIFY_SOCK_TCP%% DTAG && M3:1 Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29 101
-L %%CALLID%% 127.0.0.1 54321 from_tag_1 to_tag_1 && M3:1 Hello%2C%20Max%21%20%3AD 101
+L %%CALLID%% 127.0.0.1 54321 from_tag_1 to_tag_1 && M3:1 Hello%2C%20Max%21%20%3AD 101 H
