@@ -51,6 +51,7 @@
 #include "rtpp_ttl.h"
 #include "rtpp_pipe.h"
 #include "advanced/po_manager.h"
+#include "advanced/packet_observer.h"
 
 struct rtpp_proc_ready_lst {
     struct rtpp_session *sp;
@@ -91,7 +92,12 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
         pktx.sessp = sp;
         pktx.strmp = stp;
         pktx.pktp = packet;
-        CALL_METHOD(cfsp->observers, observe, &pktx);
+        if (CALL_METHOD(cfsp->observers, observe, &pktx) & PO_TAKE) {
+            RTPP_OBJ_DECREF(packet);
+            CALL_METHOD(stp->pcount, reg_drop);
+            rsp->npkts_discard.cnt++;
+            continue;
+        }
         send_packet(cfsp, stp, packet, sender, rsp);
     } while (ndrain > 0);
     return;

@@ -30,6 +30,7 @@ struct packet_observer_if;
 struct rtpp_session;
 struct rtpp_stream;
 struct rtp_packet;
+enum po_action;
 
 struct po_mgr_pkt_ctx {
   const struct rtpp_session *sessp;
@@ -39,7 +40,7 @@ struct po_mgr_pkt_ctx {
 };
 
 DEFINE_METHOD(po_manager, po_manager_reg, int, const struct packet_observer_if *);
-DEFINE_METHOD(po_manager, po_manager_observe, void, struct po_mgr_pkt_ctx *);
+DEFINE_METHOD(po_manager, po_manager_observe, enum po_action, struct po_mgr_pkt_ctx *);
 
 struct po_manager {
     struct rtpp_refcnt *rcnt;
