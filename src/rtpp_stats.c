@@ -104,6 +104,7 @@ static struct rtpp_stat_descr default_stats[] = {
     {.name = "rtpa_nsent",           .descr = "Total number of uniqie RTP packets sent to us based on SEQ tracking", .type = RTPP_CNT_U64},
     {.name = "rtpa_nrcvd",           .descr = "Total number of unique RTP packets received by us based on SEQ tracking", .type = RTPP_CNT_U64},
     {.name = "rtpa_ndups",           .descr = "Total number of duplicate RTP packets received by us based on SEQ tracking", .type = RTPP_CNT_U64},
+    {.name = "rtpa_nlost",           .descr = "Total number of lost RTP packets based on SEQ tracking", .type = RTPP_CNT_U64},
     {.name = "rtpa_perrs",           .descr = "Total number of RTP packets that failed RTP parse routine in SEQ tracking", .type = RTPP_CNT_U64},
     {.name = "pps_in",               .descr = "Rate at which RTP/RTPC packets are received (packets per second)", .type = RTPP_CNT_DBL, .derive_from = "npkts_rcvd"},
     {.name = NULL}
