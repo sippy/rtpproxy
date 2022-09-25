@@ -43,7 +43,7 @@ struct po_manager_pvt {
 };
 
 static int rtpp_po_mgr_register(struct po_manager *, const struct packet_observer_if *);
-static void rtpp_po_mgr_observe(struct po_manager *, struct po_mgr_pkt_ctx *);
+static enum po_action rtpp_po_mgr_observe(struct po_manager *, struct po_mgr_pkt_ctx *);
 
 static void
 rtpp_po_mgr_dtor(struct po_manager_pvt *pvt)
@@ -83,11 +83,12 @@ rtpp_po_mgr_register(struct po_manager *pub, const struct packet_observer_if *ip
     return (0);
 }
 
-static void
+static enum po_action
 rtpp_po_mgr_observe(struct po_manager *pub, struct po_mgr_pkt_ctx *pktxp)
 {
     int i;
     struct po_manager_pvt *pvt;
+    enum po_action res = PO_NOP;
 
     PUB2PVT(pub, pvt);
     for (i = 0; i < MAX_OBSERVERS; i++) {
@@ -99,6 +100,9 @@ rtpp_po_mgr_observe(struct po_manager *pub, struct po_mgr_pkt_ctx *pktxp)
         }
         if (pvt->observers[i].taste(pktxp) == 0)
             continue;
-        pvt->observers[i].enqueue(pvt->observers[i].arg, pktxp);
+        res |= pvt->observers[i].enqueue(pvt->observers[i].arg, pktxp);
+        if (res & PO_TAKE)
+            break;
     }
+    return (res);
 }
