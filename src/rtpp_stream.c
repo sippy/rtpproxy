@@ -301,6 +301,9 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          if (rst.pdups > 0) {
              CALL_SMETHOD(pvt->rtpp_stats, updatebyname, "rtpa_ndups", rst.pdups);
          }
+         if (rst.plost > 0) {
+             CALL_SMETHOD(pvt->rtpp_stats, updatebyname, "rtpa_nlost", rst.plost);
+         }
          if (rst.pecount > 0) {
              CALL_SMETHOD(pvt->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
          }

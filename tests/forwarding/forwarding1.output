@@ -432,7 +432,7 @@ nsess_created=60 nsess_destroyed=30 nsess_timeout=0 nsess_complete=60 nsess_nort
 ncmds_rcvd=432 ncmds_succd=431 ncmds_errs=0 ncmds_repld=431
 npkts_rcvd=168000 npkts_played=0 npkts_relayed=154500 npkts_discard=0 nplrs_created=0 nplrs_destroyed=0
 npkts_resizer_in=28000 npkts_resizer_out=14500 npkts_resizer_discard=0
-rtpa_nsent=84000 rtpa_nrcvd=84000 rtpa_ndups=0 rtpa_perrs=0
+rtpa_nsent=84000 rtpa_nrcvd=84000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
-rtpa_nsent=168000 rtpa_nrcvd=168000 rtpa_ndups=0 rtpa_perrs=0
+rtpa_nsent=168000 rtpa_nrcvd=168000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 MEMDEB(rtpproxy): all clear
