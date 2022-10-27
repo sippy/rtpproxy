@@ -39,6 +39,10 @@ struct _glav_trig {
     } lasthit;
 };
 
+struct rtpp_glitch_opts {
+    unsigned int mightclose:1;
+};
+
 extern struct _glav_trig _glav_trig;
 
 enum glav_act {
@@ -50,7 +54,7 @@ enum glav_act {
   GLAV_GLTCH = 'g'
 };
 
-void rtpp_glitch_init();
+void rtpp_glitch_init(struct rtpp_glitch_opts *);
 void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
   const struct rtpp_codeptr *);
 

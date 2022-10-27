@@ -137,7 +137,7 @@ rtpp_memdeb_init(bool is_main)
     pvt->inst_name = STR(MEMDEB_APP);
 
     if (is_main) {
-        rtpp_glitch_init();
+        rtpp_glitch_init(NULL);
    }
 
     return (pvt);
