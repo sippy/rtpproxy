@@ -42,13 +42,13 @@ jobs:
         shell: bash
 
       - name: Cache ffmpeg
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: dist/ffmpeg.tar.xz
           key: ${{ steps.get-date.outputs.date }}
 
       - name: Set up Python 3.6
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: 3.6
 
