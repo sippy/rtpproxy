@@ -29,6 +29,7 @@
 #ifndef _RTPP_COMMAND_H_
 #define _RTPP_COMMAND_H_
 
+struct rtpp_cfg;
 struct rtpp_command;
 struct rtpp_command_stats;
 struct sockaddr;
