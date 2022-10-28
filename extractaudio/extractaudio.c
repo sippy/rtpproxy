@@ -246,7 +246,7 @@ main(int argc, char **argv)
 #endif
     int16_t obuf[1024];
     char aname_s[MAXPATHLEN], bname_s[MAXPATHLEN];
-    const char *aname, *bname, *uname;
+    const char *aname, *bname;
     double basetime;
     SF_INFO sfinfo;
     SNDFILE *sffile;
@@ -330,10 +330,6 @@ main(int argc, char **argv)
 
         case 'B':
             bname = optarg;
-            break;
-
-        case 'U':
-            uname = optarg;
             break;
 
 #if ENABLE_SRTP || ENABLE_SRTP2
