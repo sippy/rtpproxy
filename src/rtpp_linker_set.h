@@ -48,8 +48,8 @@
 #define __CONCAT421(x,y)  x ## y
 #define __CONCAT42(x,y)   __CONCAT421(x,y)
 
-#define __GLOBL1(sym)   __asm__(".globl " #sym)
-#define __GLOBL(sym)    __GLOBL1(sym)
+#define __RTPP_GLOBL1(sym)   __asm__(".globl " #sym)
+#define __RTPP_GLOBL(sym)    __RTPP_GLOBL1(sym)
 
 /*
  * The following macros are used to declare global sets of objects, which
@@ -71,8 +71,8 @@
  * Private macros, not to be used outside this header file.
  */
 #define __MAKE_SET(set, sym)				\
-	__GLOBL(__CONCAT42(__start_set_,set));		\
-	__GLOBL(__CONCAT42(__stop_set_,set));		\
+	__RTPP_GLOBL(__CONCAT42(__start_set_,set));	\
+	__RTPP_GLOBL(__CONCAT42(__stop_set_,set));	\
 	static void const * __MAKE_SET_CONST		\
 	__set_##set##_sym_##sym __section("set_" #set)	\
 	__used = &(sym)
