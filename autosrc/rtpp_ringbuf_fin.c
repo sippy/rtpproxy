@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_ringbuf.h"
 #include "rtpp_ringbuf_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_ringbuf_flush_fin(void *pub) {
     fprintf(stderr, "Method rtpp_ringbuf@%p::flush (rtpp_ringbuf_flush) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -30,6 +31,7 @@ void rtpp_ringbuf_fin(struct rtpp_ringbuf *pub) {
     RTPP_DBG_ASSERT(pub->push != (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin);
     pub->push = (rtpp_ringbuf_push_t)&rtpp_ringbuf_push_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -61,6 +63,7 @@ rtpp_ringbuf_fintest()
     CALL_TFIN(&tp->pub, locate);
     CALL_TFIN(&tp->pub, push);
     assert((_naborts - naborts_s) == 3);
+    free(tp);
 }
 const static void *_rtpp_ringbuf_ftp = (void *)&rtpp_ringbuf_fintest;
 DATA_SET(rtpp_fintests, _rtpp_ringbuf_ftp);

@@ -6,7 +6,11 @@
 #else
 extern int _naborts;
 #endif
+#if defined(RTPP_DEBUG)
 void rtpp_server_fin(struct rtpp_server *);
+#else
+#define rtpp_server_fin(arg) /* nop */
+#endif
 #if defined(RTPP_FINTEST)
 void rtpp_server_fintest(void);
 #endif /* RTPP_FINTEST */

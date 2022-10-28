@@ -106,6 +106,7 @@ rtpp_netaddr_fintest()
     CALL_TFIN(&tp->pub, set);
     CALL_TFIN(&tp->pub, sip_print);
     assert((_naborts - naborts_s) == 8);
+    free(tp);
 }
 const static void *_rtpp_netaddr_ftp = (void *)&rtpp_netaddr_fintest;
 DATA_SET(rtpp_fintests, _rtpp_netaddr_ftp);

@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_log_obj_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_log_ewrite_fin(void *pub) {
     fprintf(stderr, "Method rtpp_log@%p::errwrite (rtpp_log_ewrite) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -37,6 +38,7 @@ void rtpp_log_fin(struct rtpp_log *pub) {
     RTPP_DBG_ASSERT(pub->genwrite != (rtpp_log_write_t)&rtpp_log_write_fin);
     pub->genwrite = (rtpp_log_write_t)&rtpp_log_write_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -70,6 +72,7 @@ rtpp_log_fintest()
     CALL_TFIN(&tp->pub, start);
     CALL_TFIN(&tp->pub, genwrite);
     assert((_naborts - naborts_s) == 4);
+    free(tp);
 }
 const static void *_rtpp_log_ftp = (void *)&rtpp_log_fintest;
 DATA_SET(rtpp_fintests, _rtpp_log_ftp);

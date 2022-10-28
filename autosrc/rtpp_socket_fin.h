@@ -6,7 +6,11 @@
 #else
 extern int _naborts;
 #endif
+#if defined(RTPP_DEBUG)
 void rtpp_socket_fin(struct rtpp_socket *);
+#else
+#define rtpp_socket_fin(arg) /* nop */
+#endif
 #if defined(RTPP_FINTEST)
 void rtpp_socket_fintest(void);
 #endif /* RTPP_FINTEST */

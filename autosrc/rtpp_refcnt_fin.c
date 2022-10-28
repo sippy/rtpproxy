@@ -90,6 +90,7 @@ rtpp_refcnt_fintest()
     CALL_TFIN(&tp->pub, reg_pd);
     CALL_TFIN(&tp->pub, traceen);
     assert((_naborts - naborts_s) == 6);
+    free(tp);
 }
 const static void *_rtpp_refcnt_ftp = (void *)&rtpp_refcnt_fintest;
 DATA_SET(rtpp_fintests, _rtpp_refcnt_ftp);

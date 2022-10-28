@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_record.h"
 #include "rtpp_record_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_record_write_fin(void *pub) {
     fprintf(stderr, "Method rtpp_record@%p::pktwrite (rtpp_record_write) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -16,6 +17,7 @@ void rtpp_record_fin(struct rtpp_record *pub) {
     RTPP_DBG_ASSERT(pub->pktwrite != (rtpp_record_write_t)&rtpp_record_write_fin);
     pub->pktwrite = (rtpp_record_write_t)&rtpp_record_write_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -43,6 +45,7 @@ rtpp_record_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, pktwrite);
     assert((_naborts - naborts_s) == 1);
+    free(tp);
 }
 const static void *_rtpp_record_ftp = (void *)&rtpp_record_fintest;
 DATA_SET(rtpp_fintests, _rtpp_record_ftp);

@@ -6,7 +6,11 @@
 #else
 extern int _naborts;
 #endif
+#if defined(RTPP_DEBUG)
 void rtpp_sessinfo_fin(struct rtpp_sessinfo *);
+#else
+#define rtpp_sessinfo_fin(arg) /* nop */
+#endif
 #if defined(RTPP_FINTEST)
 void rtpp_sessinfo_fintest(void);
 #endif /* RTPP_FINTEST */

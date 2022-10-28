@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_modman.h"
 #include "rtpp_modman_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_modman_do_acct_fin(void *pub) {
     fprintf(stderr, "Method rtpp_modman@%p::do_acct (rtpp_modman_do_acct) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -44,6 +45,7 @@ void rtpp_modman_fin(struct rtpp_modman *pub) {
     RTPP_DBG_ASSERT(pub->startall != (rtpp_modman_startall_t)&rtpp_modman_startall_fin);
     pub->startall = (rtpp_modman_startall_t)&rtpp_modman_startall_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -79,6 +81,7 @@ rtpp_modman_fintest()
     CALL_TFIN(&tp->pub, insert);
     CALL_TFIN(&tp->pub, startall);
     assert((_naborts - naborts_s) == 5);
+    free(tp);
 }
 const static void *_rtpp_modman_ftp = (void *)&rtpp_modman_fintest;
 DATA_SET(rtpp_fintests, _rtpp_modman_ftp);

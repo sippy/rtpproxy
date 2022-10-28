@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_module_if.h"
 #include "rtpp_module_if_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_module_if_construct_fin(void *pub) {
     fprintf(stderr, "Method rtpp_module_if@%p::construct (rtpp_module_if_construct) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -65,6 +66,7 @@ void rtpp_module_if_fin(struct rtpp_module_if *pub) {
     RTPP_DBG_ASSERT(pub->ul_subc_handle != (rtpp_module_if_ul_subc_handle_t)&rtpp_module_if_ul_subc_handle_fin);
     pub->ul_subc_handle = (rtpp_module_if_ul_subc_handle_t)&rtpp_module_if_ul_subc_handle_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -106,6 +108,7 @@ rtpp_module_if_fintest()
     CALL_TFIN(&tp->pub, start);
     CALL_TFIN(&tp->pub, ul_subc_handle);
     assert((_naborts - naborts_s) == 8);
+    free(tp);
 }
 const static void *_rtpp_module_if_ftp = (void *)&rtpp_module_if_fintest;
 DATA_SET(rtpp_fintests, _rtpp_module_if_ftp);

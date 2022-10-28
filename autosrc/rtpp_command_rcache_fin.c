@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_command_rcache.h"
 #include "rtpp_command_rcache_fin.h"
+#if defined(RTPP_DEBUG)
 static void rcache_insert_fin(void *pub) {
     fprintf(stderr, "Method rtpp_cmd_rcache@%p::insert (rcache_insert) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -30,6 +31,7 @@ void rtpp_cmd_rcache_fin(struct rtpp_cmd_rcache *pub) {
     RTPP_DBG_ASSERT(pub->shutdown != (rcache_shutdown_t)&rcache_shutdown_fin);
     pub->shutdown = (rcache_shutdown_t)&rcache_shutdown_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -61,6 +63,7 @@ rtpp_cmd_rcache_fintest()
     CALL_TFIN(&tp->pub, lookup);
     CALL_TFIN(&tp->pub, shutdown);
     assert((_naborts - naborts_s) == 3);
+    free(tp);
 }
 const static void *_rtpp_cmd_rcache_ftp = (void *)&rtpp_cmd_rcache_fintest;
 DATA_SET(rtpp_fintests, _rtpp_cmd_rcache_ftp);

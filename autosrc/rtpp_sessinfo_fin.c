@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_sessinfo_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_si_append_fin(void *pub) {
     fprintf(stderr, "Method rtpp_sessinfo@%p::append (rtpp_si_append) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -37,6 +38,7 @@ void rtpp_sessinfo_fin(struct rtpp_sessinfo *pub) {
     RTPP_DBG_ASSERT(pub->update != (rtpp_si_update_t)&rtpp_si_update_fin);
     pub->update = (rtpp_si_update_t)&rtpp_si_update_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -70,6 +72,7 @@ rtpp_sessinfo_fintest()
     CALL_TFIN(&tp->pub, sync_polltbl);
     CALL_TFIN(&tp->pub, update);
     assert((_naborts - naborts_s) == 4);
+    free(tp);
 }
 const static void *_rtpp_sessinfo_ftp = (void *)&rtpp_sessinfo_fintest;
 DATA_SET(rtpp_fintests, _rtpp_sessinfo_ftp);

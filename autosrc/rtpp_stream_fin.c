@@ -186,6 +186,7 @@ rtpp_stream_fintest()
     CALL_TFIN(&tp->pub, set_skt);
     CALL_TFIN(&tp->pub, update_skt);
     assert((_naborts - naborts_s) == 18);
+    free(tp);
 }
 const static void *_rtpp_stream_ftp = (void *)&rtpp_stream_fintest;
 DATA_SET(rtpp_fintests, _rtpp_stream_ftp);

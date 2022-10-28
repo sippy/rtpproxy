@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_timed_task.h"
 #include "rtpp_timed_task_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_timed_task_cancel_fin(void *pub) {
     fprintf(stderr, "Method rtpp_timed_task@%p::cancel (rtpp_timed_task_cancel) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -16,6 +17,7 @@ void rtpp_timed_task_fin(struct rtpp_timed_task *pub) {
     RTPP_DBG_ASSERT(pub->cancel != (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin);
     pub->cancel = (rtpp_timed_task_cancel_t)&rtpp_timed_task_cancel_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -43,6 +45,7 @@ rtpp_timed_task_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, cancel);
     assert((_naborts - naborts_s) == 1);
+    free(tp);
 }
 const static void *_rtpp_timed_task_ftp = (void *)&rtpp_timed_task_fintest;
 DATA_SET(rtpp_fintests, _rtpp_timed_task_ftp);

@@ -90,6 +90,7 @@ rtpp_server_fintest()
     CALL_TFIN(&tp->pub, set_ssrc);
     CALL_TFIN(&tp->pub, start);
     assert((_naborts - naborts_s) == 6);
+    free(tp);
 }
 const static void *_rtpp_server_ftp = (void *)&rtpp_server_fintest;
 DATA_SET(rtpp_fintests, _rtpp_server_ftp);

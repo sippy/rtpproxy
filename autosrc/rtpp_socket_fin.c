@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_socket.h"
 #include "rtpp_socket_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_socket_bind_fin(void *pub) {
     fprintf(stderr, "Method rtpp_socket@%p::bind2 (rtpp_socket_bind) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -86,6 +87,7 @@ void rtpp_socket_fin(struct rtpp_socket *pub) {
     RTPP_DBG_ASSERT(pub->settos != (rtpp_socket_settos_t)&rtpp_socket_settos_fin);
     pub->settos = (rtpp_socket_settos_t)&rtpp_socket_settos_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -133,6 +135,7 @@ rtpp_socket_fintest()
     CALL_TFIN(&tp->pub, settimestamp);
     CALL_TFIN(&tp->pub, settos);
     assert((_naborts - naborts_s) == 11);
+    free(tp);
 }
 const static void *_rtpp_socket_ftp = (void *)&rtpp_socket_fintest;
 DATA_SET(rtpp_fintests, _rtpp_socket_ftp);

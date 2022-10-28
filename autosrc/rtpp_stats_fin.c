@@ -106,6 +106,7 @@ rtpp_stats_fintest()
     CALL_TFIN(&tp->pub, updatebyname);
     CALL_TFIN(&tp->pub, updatebyname_d);
     assert((_naborts - naborts_s) == 8);
+    free(tp);
 }
 const static void *_rtpp_stats_ftp = (void *)&rtpp_stats_fintest;
 DATA_SET(rtpp_fintests, _rtpp_stats_ftp);

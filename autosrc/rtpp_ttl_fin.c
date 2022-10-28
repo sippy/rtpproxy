@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_ttl.h"
 #include "rtpp_ttl_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_ttl_decr_fin(void *pub) {
     fprintf(stderr, "Method rtpp_ttl@%p::decr (rtpp_ttl_decr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -37,6 +38,7 @@ void rtpp_ttl_fin(struct rtpp_ttl *pub) {
     RTPP_DBG_ASSERT(pub->reset_with != (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin);
     pub->reset_with = (rtpp_ttl_reset_with_t)&rtpp_ttl_reset_with_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -70,6 +72,7 @@ rtpp_ttl_fintest()
     CALL_TFIN(&tp->pub, reset);
     CALL_TFIN(&tp->pub, reset_with);
     assert((_naborts - naborts_s) == 4);
+    free(tp);
 }
 const static void *_rtpp_ttl_ftp = (void *)&rtpp_ttl_fintest;
 DATA_SET(rtpp_fintests, _rtpp_ttl_ftp);

@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_pcnt_strm.h"
 #include "rtpp_pcnt_strm_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_pcnt_strm_get_stats_fin(void *pub) {
     fprintf(stderr, "Method rtpp_pcnt_strm@%p::get_stats (rtpp_pcnt_strm_get_stats) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -23,6 +24,7 @@ void rtpp_pcnt_strm_fin(struct rtpp_pcnt_strm *pub) {
     RTPP_DBG_ASSERT(pub->reg_pktin != (rtpp_pcnt_strm_reg_pktin_t)&rtpp_pcnt_strm_reg_pktin_fin);
     pub->reg_pktin = (rtpp_pcnt_strm_reg_pktin_t)&rtpp_pcnt_strm_reg_pktin_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -52,6 +54,7 @@ rtpp_pcnt_strm_fintest()
     CALL_TFIN(&tp->pub, get_stats);
     CALL_TFIN(&tp->pub, reg_pktin);
     assert((_naborts - naborts_s) == 2);
+    free(tp);
 }
 const static void *_rtpp_pcnt_strm_ftp = (void *)&rtpp_pcnt_strm_fintest;
 DATA_SET(rtpp_fintests, _rtpp_pcnt_strm_ftp);

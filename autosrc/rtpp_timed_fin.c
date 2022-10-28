@@ -66,6 +66,7 @@ rtpp_timed_fintest()
     CALL_TFIN(&tp->pub, schedule_rc);
     CALL_TFIN(&tp->pub, shutdown);
     assert((_naborts - naborts_s) == 3);
+    free(tp);
 }
 const static void *_rtpp_timed_ftp = (void *)&rtpp_timed_fintest;
 DATA_SET(rtpp_fintests, _rtpp_timed_ftp);

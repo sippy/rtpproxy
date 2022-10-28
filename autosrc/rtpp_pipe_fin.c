@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_pipe.h"
 #include "rtpp_pipe_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_pipe_decr_ttl_fin(void *pub) {
     fprintf(stderr, "Method rtpp_pipe@%p::decr_ttl (rtpp_pipe_decr_ttl) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -37,6 +38,7 @@ void rtpp_pipe_fin(struct rtpp_pipe *pub) {
     RTPP_DBG_ASSERT(pub->upd_cntrs != (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin);
     pub->upd_cntrs = (rtpp_pipe_upd_cntrs_t)&rtpp_pipe_upd_cntrs_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -70,6 +72,7 @@ rtpp_pipe_fintest()
     CALL_TFIN(&tp->pub, get_ttl);
     CALL_TFIN(&tp->pub, upd_cntrs);
     assert((_naborts - naborts_s) == 4);
+    free(tp);
 }
 const static void *_rtpp_pipe_ftp = (void *)&rtpp_pipe_fintest;
 DATA_SET(rtpp_fintests, _rtpp_pipe_ftp);

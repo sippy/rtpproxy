@@ -7,6 +7,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_port_table.h"
 #include "rtpp_port_table_fin.h"
+#if defined(RTPP_DEBUG)
 static void rtpp_ptbl_get_port_fin(void *pub) {
     fprintf(stderr, "Method rtpp_port_table@%p::get_port (rtpp_ptbl_get_port) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -16,6 +17,7 @@ void rtpp_port_table_fin(struct rtpp_port_table *pub) {
     RTPP_DBG_ASSERT(pub->get_port != (rtpp_ptbl_get_port_t)&rtpp_ptbl_get_port_fin);
     pub->get_port = (rtpp_ptbl_get_port_t)&rtpp_ptbl_get_port_fin;
 }
+#endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
 #include <assert.h>
 #include <stddef.h>
@@ -43,6 +45,7 @@ rtpp_port_table_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, get_port);
     assert((_naborts - naborts_s) == 1);
+    free(tp);
 }
 const static void *_rtpp_port_table_ftp = (void *)&rtpp_port_table_fintest;
 DATA_SET(rtpp_fintests, _rtpp_port_table_ftp);
