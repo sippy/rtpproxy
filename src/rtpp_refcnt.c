@@ -50,6 +50,9 @@
 #endif
 #endif
 
+static void rtpp_refcnt_incref(struct rtpp_refcnt *);
+static void rtpp_refcnt_decref(struct rtpp_refcnt *);
+
 /*
  * Somewhat arbitrary cap on the maximum value of the references. Just here
  * to catch any runaway situations, i.e. bugs in the code.
@@ -79,7 +82,7 @@ static void rtpp_refcnt_reg_pd(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
 static void rtpp_refcnt_traceen(struct rtpp_refcnt *);
 #endif
 
-const struct rtpp_refcnt_smethods rtpp_refcnt_smethods = {
+static const struct rtpp_refcnt_smethods _rtpp_refcnt_smethods = {
     .incref = &rtpp_refcnt_incref,
     .decref = &rtpp_refcnt_decref,
     .getdata = &rtpp_refcnt_getdata,
@@ -89,6 +92,16 @@ const struct rtpp_refcnt_smethods rtpp_refcnt_smethods = {
 #endif
     .attach = &rtpp_refcnt_attach
 };
+const struct rtpp_refcnt_smethods * const rtpp_refcnt_smethods = &_rtpp_refcnt_smethods;
+
+#if defined(RTPP_CHECK_LEAKS)
+static void
+rtpp_refcnt_free(void *p)
+{
+
+    free(p);
+}
+#endif
 
 struct rtpp_refcnt *
 rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
@@ -103,9 +116,15 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     if (dtor_f != NULL) {
         pvt->dtor_f = dtor_f;
     } else {
+#if !defined(RTPP_CHECK_LEAKS)
         pvt->dtor_f = free;
+#else
+        pvt->dtor_f = rtpp_refcnt_free;
+#endif
     }
-    pvt->pub.smethods = &rtpp_refcnt_smethods;
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = rtpp_refcnt_smethods;
+#endif
     atomic_init(&pvt->cnt, 1);
     return (&pvt->pub);
 }
@@ -123,7 +142,9 @@ rtpp_refcnt_ctor_pa(void *pap)
     struct rtpp_refcnt_priv *pvt;
 
     pvt = (struct rtpp_refcnt_priv *)pap;
-    pvt->pub.smethods = &rtpp_refcnt_smethods;
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = rtpp_refcnt_smethods;
+#endif
     atomic_init(&pvt->cnt, 1);
     pvt->flags |= RC_FLAG_PA;
     return (&pvt->pub);
@@ -140,7 +161,7 @@ rtpp_refcnt_attach(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f,
     pvt->dtor_f = dtor_f;
 }
 
-void
+static void
 rtpp_refcnt_incref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
@@ -165,7 +186,7 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
     atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
 }
 
-void
+static void
 rtpp_refcnt_decref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;

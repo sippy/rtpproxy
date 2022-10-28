@@ -13,7 +13,7 @@ rtpp_acct_csv_la_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 rtpp_acct_csv_debug_la_SOURCES = ${rtpp_acct_csv_la_SOURCES}
 rtpp_acct_csv_debug_la_LIBADD = $(RTPP_MEMDEB_LDADD)
 rtpp_acct_csv_debug_la_LDFLAGS=${rtpp_acct_csv_la_LDFLAGS}
-rtpp_acct_csv_debug_la_CPPFLAGS=$(rtpp_acct_csv_la_CPPFLAGS) -DRTPP_DEBUG \
+rtpp_acct_csv_debug_la_CPPFLAGS=$(rtpp_acct_csv_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="acct_csv"
 rtpp_acct_csv_debug_la_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 

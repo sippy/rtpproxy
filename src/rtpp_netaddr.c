@@ -60,7 +60,7 @@ static size_t rtpp_netaddr_get(struct rtpp_netaddr *, struct sockaddr *, size_t)
 static size_t rtpp_netaddr_sip_print(struct rtpp_netaddr *, char *, size_t,
   char);
 
-static const struct rtpp_netaddr_smethods rtpp_netaddr_smethods = {
+static const struct rtpp_netaddr_smethods _rtpp_netaddr_smethods = {
     .set = &rtpp_netaddr_set,
     .isempty = &rtpp_netaddr_isempty,
     .cmp = &rtpp_netaddr_cmp,
@@ -70,6 +70,7 @@ static const struct rtpp_netaddr_smethods rtpp_netaddr_smethods = {
     .get = &rtpp_netaddr_get,
     .sip_print = &rtpp_netaddr_sip_print
 };
+const struct rtpp_netaddr_smethods * const rtpp_netaddr_smethods = &_rtpp_netaddr_smethods;
 
 struct rtpp_netaddr *
 rtpp_netaddr_ctor(void)
@@ -83,7 +84,9 @@ rtpp_netaddr_ctor(void)
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
-    pvt->pub.smethods = &rtpp_netaddr_smethods;
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = rtpp_netaddr_smethods;
+#endif
     CALL_SMETHOD(pvt->pub.rcnt, attach,
       (rtpp_refcnt_dtor_t)&rtpp_netaddr_dtor, pvt);
     return ((&pvt->pub));

@@ -49,7 +49,9 @@ struct rtpp_timed_smethods
 
 struct rtpp_timed {
     struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
     const struct rtpp_timed_smethods *smethods;
+#endif
 };
 
 struct rtpp_timed *rtpp_timed_ctor(double);

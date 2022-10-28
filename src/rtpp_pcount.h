@@ -45,12 +45,18 @@ struct rtpps_pcount {
     unsigned long nignored;
 };
 
-struct rtpp_pcount {
-    struct rtpp_refcnt *rcnt;
+struct rtpp_pcount_smethods {
     METHOD_ENTRY(rtpp_pcount_reg_reld, reg_reld);
     METHOD_ENTRY(rtpp_pcount_reg_drop, reg_drop);
     METHOD_ENTRY(rtpp_pcount_reg_ignr, reg_ignr);
     METHOD_ENTRY(rtpp_pcount_get_stats, get_stats);
+};
+
+struct rtpp_pcount {
+    struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
+    const struct rtpp_pcount_smethods *smethods;
+#endif
 };
 
 struct rtpp_pcount *rtpp_pcount_ctor(void);

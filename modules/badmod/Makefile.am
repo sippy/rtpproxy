@@ -16,7 +16,7 @@ rtpp_badmod1_la_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 rtpp_badmod1_debug_la_SOURCES = ${rtpp_badmod1_la_SOURCES}
 rtpp_badmod1_debug_la_LIBADD = $(RTPP_MEMDEB_LDADD)
 rtpp_badmod1_debug_la_LDFLAGS=${rtpp_badmod1_la_LDFLAGS}
-rtpp_badmod1_debug_la_CPPFLAGS=$(rtpp_badmod1_la_CPPFLAGS) -DRTPP_DEBUG \
+rtpp_badmod1_debug_la_CPPFLAGS=$(rtpp_badmod1_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="badmod1"
 rtpp_badmod1_debug_la_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 
@@ -28,7 +28,7 @@ rtpp_badmod2_la_CFLAGS = $(rtpp_badmod1_la_CFLAGS)
 rtpp_badmod2_debug_la_SOURCES = ${rtpp_badmod2_la_SOURCES}
 rtpp_badmod2_debug_la_LIBADD = $(rtpp_badmod1_debug_la_LIBADD)
 rtpp_badmod2_debug_la_LDFLAGS=${rtpp_badmod1_la_LDFLAGS}
-rtpp_badmod2_debug_la_CPPFLAGS=$(rtpp_badmod1_la_CPPFLAGS) -DRTPP_DEBUG \
+rtpp_badmod2_debug_la_CPPFLAGS=$(rtpp_badmod1_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="badmod2"
 rtpp_badmod2_debug_la_CFLAGS = $(rtpp_badmod1_debug_la_CFLAGS)
 
@@ -40,7 +40,7 @@ rtpp_badmod3_la_CFLAGS = $(rtpp_badmod1_la_CFLAGS)
 rtpp_badmod3_debug_la_SOURCES = ${rtpp_badmod3_la_SOURCES}
 rtpp_badmod3_debug_la_LIBADD = $(rtpp_badmod1_debug_la_LIBADD)
 rtpp_badmod3_debug_la_LDFLAGS=${rtpp_badmod1_la_LDFLAGS}
-rtpp_badmod3_debug_la_CPPFLAGS=$(rtpp_badmod1_la_CPPFLAGS) -DRTPP_DEBUG \
+rtpp_badmod3_debug_la_CPPFLAGS=$(rtpp_badmod1_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="badmod3"
 rtpp_badmod3_debug_la_CFLAGS = $(rtpp_badmod1_debug_la_CFLAGS)
 
@@ -52,7 +52,7 @@ rtpp_badmod4_la_CFLAGS = $(rtpp_badmod1_la_CFLAGS)
 rtpp_badmod4_debug_la_SOURCES = ${rtpp_badmod4_la_SOURCES}
 rtpp_badmod4_debug_la_LIBADD = $(rtpp_badmod1_debug_la_LIBADD)
 rtpp_badmod4_debug_la_LDFLAGS=${rtpp_badmod1_la_LDFLAGS}
-rtpp_badmod4_debug_la_CPPFLAGS=$(rtpp_badmod1_la_CPPFLAGS) -DRTPP_DEBUG \
+rtpp_badmod4_debug_la_CPPFLAGS=$(rtpp_badmod1_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="badmod4"
 rtpp_badmod4_debug_la_CFLAGS = $(rtpp_badmod1_debug_la_CFLAGS)
 

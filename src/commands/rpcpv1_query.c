@@ -69,7 +69,7 @@ handle_query_simple(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
     struct rtpp_pcnts_strm pst[2];
 
     ttl = CALL_METHOD(spp, get_ttl);
-    CALL_METHOD(spp->pcount, get_stats, &pcnts);
+    CALL_SMETHOD(spp->pcount, get_stats, &pcnts);
     CALL_METHOD(spp->stream[idx]->pcnt_strm, get_stats, &pst[0]);
     CALL_METHOD(spp->stream[NOT(idx)]->pcnt_strm, get_stats, &pst[1]);
     if (verbose == 0) {
@@ -92,7 +92,7 @@ handle_query_simple(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
 
 #define PULL_PCNT() \
     if (pcnt_pulled == 0) { \
-        CALL_METHOD(spp->pcount, get_stats, &pcnts); \
+        CALL_SMETHOD(spp->pcount, get_stats, &pcnts); \
         pcnt_pulled = 1; \
     }
 

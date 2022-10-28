@@ -42,7 +42,32 @@ struct rtpp_type_linkable {
 #define DEFINE_RAW_METHOD(func, rval, args...) typedef rval (*func##_t)(args)
 #define METHOD_ENTRY(func, epname) func##_t epname
 #define CALL_METHOD(obj, method, args...) (obj)->method(obj, ## args)
+
+extern const struct rtpp_refcnt_smethods * const rtpp_refcnt_smethods;
+extern const struct rtpp_pearson_perfect_smethods * const rtpp_pearson_perfect_smethods;
+extern const struct rtpp_netaddr_smethods * const rtpp_netaddr_smethods;
+extern const struct rtpp_server_smethods * const rtpp_server_smethods;
+extern const struct rtpp_stats_smethods * const rtpp_stats_smethods;
+extern const struct rtpp_timed_smethods * const rtpp_timed_smethods;
+extern const struct rtpp_stream_smethods * const rtpp_stream_smethods;
+extern const struct rtpp_pcount_smethods * const rtpp_pcount_smethods;
+
+#if defined(RTPP_DEBUG)
 #define CALL_SMETHOD(obj, method, args...) (obj)->smethods->method(obj, ## args)
+#else
+#define GET_SMETHODS(obj) _Generic((obj), \
+    struct rtpp_refcnt *: rtpp_refcnt_smethods, \
+    struct rtpp_pearson_perfect *: rtpp_pearson_perfect_smethods, \
+    struct rtpp_netaddr *: rtpp_netaddr_smethods, \
+    struct rtpp_server *: rtpp_server_smethods, \
+    struct rtpp_stats *: rtpp_stats_smethods, \
+    struct rtpp_timed *: rtpp_timed_smethods, \
+    struct rtpp_stream *: rtpp_stream_smethods, \
+    struct rtpp_pcount *: rtpp_pcount_smethods \
+)
+
+#define CALL_SMETHOD(obj, method, args...) GET_SMETHODS(obj)->method(obj, ## args)
+#endif
 
 #define PVT_RCOFFS(pvt) (size_t)(&(((typeof(pvt))NULL)->pub.rcnt))
 

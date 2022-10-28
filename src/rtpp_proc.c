@@ -99,7 +99,7 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
         pktx.pktp = packet;
         if (CALL_METHOD(cfsp->observers, observe, &pktx) & PO_TAKE) {
             RTPP_OBJ_DECREF(packet);
-            CALL_METHOD(stp->pcount, reg_drop);
+            CALL_SMETHOD(stp->pcount, reg_drop);
             rsp->npkts_discard.cnt++;
             continue;
         }
@@ -147,7 +147,7 @@ send_packet(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp_in,
         goto e1;
     } else {
         CALL_SMETHOD(stp_out, send_pkt, sender, packet);
-        CALL_METHOD(stp_in->pcount, reg_reld);
+        CALL_SMETHOD(stp_in->pcount, reg_reld);
         rsp->npkts_relayed.cnt++;
     }
     RTPP_OBJ_DECREF(stp_out);
@@ -157,7 +157,7 @@ e1:
     RTPP_OBJ_DECREF(stp_out);
 e0:
     RTPP_OBJ_DECREF(packet);
-    CALL_METHOD(stp_in->pcount, reg_drop);
+    CALL_SMETHOD(stp_in->pcount, reg_drop);
     rsp->npkts_discard.cnt++;
 }
 

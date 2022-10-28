@@ -76,7 +76,7 @@ static uint16_t rtpp_server_get_seq(struct rtpp_server *);
 static void rtpp_server_set_seq(struct rtpp_server *, uint16_t);
 static void rtpp_server_start(struct rtpp_server *, double);
 
-static const struct rtpp_server_smethods rtpp_server_smethods = {
+static const struct rtpp_server_smethods _rtpp_server_smethods = {
     .get = &rtpp_server_get,
     .get_ssrc = &rtpp_server_get_ssrc,
     .set_ssrc = &rtpp_server_set_ssrc,
@@ -84,6 +84,7 @@ static const struct rtpp_server_smethods rtpp_server_smethods = {
     .set_seq = &rtpp_server_set_seq,
     .start = &rtpp_server_start
 };
+const struct rtpp_server_smethods * const rtpp_server_smethods = &_rtpp_server_smethods;
 
 struct rtpp_server *
 rtpp_server_ctor(struct rtpp_server_ctor_args *ap)
@@ -122,7 +123,9 @@ rtpp_server_ctor(struct rtpp_server_ctor_args *ap)
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
-    rp->pub.smethods = &rtpp_server_smethods;
+#if defined(RTPP_DEBUG)
+    rp->pub.smethods = &_rtpp_server_smethods;
+#endif
     rtpp_gen_uid(&rp->pub.sruid);
 
     CALL_SMETHOD(rp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_dtor,

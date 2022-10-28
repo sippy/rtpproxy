@@ -16,7 +16,7 @@ rtpp_catch_dtmf_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_catch_dtmf_common)
 rtpp_catch_dtmf_debug_la_SOURCES = $(rtpp_catch_dtmf_la_SOURCES)
 rtpp_catch_dtmf_debug_la_LIBADD = $(rtpp_catch_dtmf_la_LIBADD) $(RTPP_MEMDEB_LDADD)
 rtpp_catch_dtmf_debug_la_LDFLAGS = $(rtpp_catch_dtmf_la_LDFLAGS)
-rtpp_catch_dtmf_debug_la_CPPFLAGS = $(rtpp_catch_dtmf_la_CPPFLAGS) -DRTPP_DEBUG \
+rtpp_catch_dtmf_debug_la_CPPFLAGS = $(rtpp_catch_dtmf_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="catch_dtmf"
 rtpp_catch_dtmf_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_rtpp_catch_dtmf_common) \
  $(RTPP_MEMDEB_CFLAGS)

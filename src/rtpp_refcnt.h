@@ -54,17 +54,24 @@ struct rtpp_refcnt
 #if defined(RTPP_FINTEST)
     struct rtpp_refcnt *rcnt;
 #endif
-    const struct rtpp_refcnt_smethods *smethods;
+#if defined(RTPP_DEBUG)
+    const struct rtpp_refcnt_smethods * smethods;
+#endif
 };
 
 struct rtpp_refcnt *rtpp_refcnt_ctor(void *, rtpp_refcnt_dtor_t);
 const unsigned int rtpp_refcnt_osize(void);
 struct rtpp_refcnt *rtpp_refcnt_ctor_pa(void *);
 
+#if 0
 void rtpp_refcnt_incref(struct rtpp_refcnt *);
 void rtpp_refcnt_decref(struct rtpp_refcnt *);
 
 #define RC_INCREF(rp) rtpp_refcnt_incref(rp);
 #define RC_DECREF(rp) rtpp_refcnt_decref(rp);
+#else
+#define RC_INCREF(rp) CALL_SMETHOD(rp, incref);
+#define RC_DECREF(rp) CALL_SMETHOD(rp, decref);
+#endif
 
 #endif /* _RTPP_REFCNT_H */

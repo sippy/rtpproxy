@@ -57,7 +57,9 @@ struct rtpp_stats_priv;
 struct rtpp_stats
 {
     struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
     const struct rtpp_stats_smethods *smethods;
+#endif
     struct rtpp_stats_priv *pvt;
 };
 

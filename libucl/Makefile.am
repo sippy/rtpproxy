@@ -34,6 +34,6 @@ libucl_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLA
 libucl_test_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
-  $(top_srcdir)/src/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS)
+  $(top_srcdir)/src/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
 libucl_test_LDADD=libucl_debug.a $(RTPP_MEMDEB_LDADD)
 libucl_test_LDLAGS=$(LTO_FLAG)

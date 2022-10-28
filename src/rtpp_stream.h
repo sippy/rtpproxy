@@ -140,8 +140,10 @@ struct rtpp_stream {
     struct rtpp_pcount *pcount;
     /* Per-stream counters */
     struct rtpp_pcnt_strm *pcnt_strm;
+#if defined(RTPP_DEBUG)
     /* Public methods */
     const struct rtpp_stream_smethods *smethods;
+#endif
     /* Placeholder for per-module structures */
     struct pmod_data *pmod_datap;
 };

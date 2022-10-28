@@ -16,6 +16,7 @@ gen_fin_c() {
   echo   "#include \"${1}\""
   echo   "#include \"${2}\""
 
+  echo   "#if defined(RTPP_DEBUG)"
   for oname in ${ONAMES}
   do
     MNAMES=`get_mnames ${1} ${oname}`
@@ -38,6 +39,7 @@ gen_fin_c() {
     done
     echo "}"
   done
+  echo   "#endif /* RTPP_DEBUG */"
   emit_fintestsection ${1} "${ONAMES}" 0
 }
 

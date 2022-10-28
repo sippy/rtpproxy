@@ -45,7 +45,11 @@ emit_fin_h() {
   echo   "#endif"
   for oname in ${ONAMES}
   do
+    echo "#if defined(RTPP_DEBUG)"
     echo "void ${oname}_fin(struct ${oname} *);"
+    echo "#else"
+    echo "#define ${oname}_fin(arg) /* nop */"
+    echo "#endif"
   done
   echo   "#if defined(RTPP_FINTEST)"
   for oname in ${ONAMES}
@@ -104,6 +108,7 @@ emit_fintestfunction() {
     i=$((${i} + 1))
   done
   echo   "    assert((_naborts - naborts_s) == ${i});"
+  echo   "    free(tp);"
   echo   "}"
   echo   "const static void *_${oname}_ftp = (void *)&${oname}_fintest;"
   echo   "DATA_SET(rtpp_fintests, _${oname}_ftp);"

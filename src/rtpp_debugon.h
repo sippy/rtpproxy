@@ -27,5 +27,7 @@
 
 /* Do not include directly, droppen in automatically */
 
+#define RTPP_DEBUG
+
 #include "rtpp_memdeb.h"
 #include "rtpp_autoglitch.h"

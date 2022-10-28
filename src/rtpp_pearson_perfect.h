@@ -38,7 +38,9 @@ struct rtpp_pearson_perfect_smethods
 struct rtpp_pearson_perfect
 {
     struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
     const struct rtpp_pearson_perfect_smethods *smethods;
+#endif
 };
 
 typedef const char * (*rtpp_pearson_getval_t)(void *, int);

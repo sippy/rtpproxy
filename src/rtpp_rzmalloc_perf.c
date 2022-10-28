@@ -40,6 +40,9 @@
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
 #include "rtpp_stacktrace.h"
+#include "rtpp_memdeb_internal.h"
+
+RTPP_MEMDEB_APP_STATIC;
 #endif
 
 struct dummy {
@@ -47,6 +50,15 @@ struct dummy {
         struct rtpp_refcnt *rcnt;
     } pub;
 };
+
+#if defined(RTPP_CHECK_LEAKS)
+static void
+dummy_free(void *p)
+{
+
+    free(p);
+}
+#endif
 
 static struct dummy *
 rtpp_rzmalloc_perf(void)
@@ -57,8 +69,13 @@ rtpp_rzmalloc_perf(void)
     if (pvt == NULL) {
         goto e0;
     }
+#if defined(RTPP_CHECK_LEAKS)
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&dummy_free,
+      pvt);
+#else
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&free,
       pvt);
+#endif
     return (pvt);
 
 e0:
@@ -74,7 +91,11 @@ rtpp_refcnt_perf(void)
     if (pvt == NULL) {
         goto e0;
     }
+#if defined(RTPP_CHECK_LEAKS)
+    pvt->pub.rcnt = rtpp_refcnt_ctor(pvt, (rtpp_refcnt_dtor_t)&dummy_free);
+#else
     pvt->pub.rcnt = rtpp_refcnt_ctor(pvt, (rtpp_refcnt_dtor_t)&free);
+#endif
     if (pvt->pub.rcnt == NULL) {
         goto e1;
     }
@@ -139,6 +160,11 @@ main(int argc, char **argv)
     assert(_trp != NULL);
     assert(execinfo_set_topframe(_trp) == NULL);
     rtpp_stacktrace(SIGCONT);
+    assert(execinfo_set_topframe(NULL) == _trp);
+#endif
+
+#ifdef RTPP_CHECK_LEAKS
+    RTPP_MEMDEB_APP_INIT();
 #endif
 
     for (tp = &(tests[0]); tp->tname != NULL; tp++) {
@@ -165,5 +191,11 @@ main(int argc, char **argv)
           ((double)TESTOPS ) / etime);
     }
 
-    return (0);
+#if defined(RTPP_CHECK_LEAKS)
+    int ecode = rtpp_memdeb_dumpstats(MEMDEB_SYM, 0) == 0 ? 0 : 1;
+#else
+    int ecode = 0;
+#endif
+
+    return (ecode);
 }

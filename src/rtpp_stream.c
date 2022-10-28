@@ -150,7 +150,7 @@ static struct rtp_packet *rtpp_stream_rx(struct rtpp_stream *,
   struct rtpp_weakref_obj *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
 static struct rtpp_netaddr *rtpp_stream_get_rem_addr(struct rtpp_stream *, int);
 
-static const struct rtpp_stream_smethods rtpp_stream_smethods = {
+static const struct rtpp_stream_smethods _rtpp_stream_smethods = {
     .handle_play = &rtpp_stream_handle_play,
     .handle_noplay = &rtpp_stream_handle_noplay,
     .isplayer_active = &rtpp_stream_isplayer_active,
@@ -170,6 +170,7 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods = {
     .rx = &rtpp_stream_rx,
     .get_rem_addr = &rtpp_stream_get_rem_addr
 };
+const struct rtpp_stream_smethods * const rtpp_stream_smethods = &_rtpp_stream_smethods;
 
 struct rtpp_stream *
 rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
@@ -210,7 +211,9 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     RTPP_OBJ_INCREF(ap->log);
     pvt->pub.side = ap->side;
     pvt->pub.pipe_type = ap->pipe_type;
-    pvt->pub.smethods = &rtpp_stream_smethods;
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = rtpp_stream_smethods;
+#endif
 
     rtpp_gen_uid(&pvt->pub.stuid);
     pvt->pub.seuid = ap->seuid;
@@ -920,7 +923,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
                      * Continue, since there could be good packets in
                      * queue.
                      */
-                    CALL_METHOD(self->pcount, reg_ignr);
+                    CALL_SMETHOD(self->pcount, reg_ignr);
                     goto discard_and_continue;
                 } else if (!_rtpp_stream_islatched(pvt)) {
                     _rtpp_stream_latch(pvt, dtime->mono, packet);
@@ -940,7 +943,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
                  * Continue, since there could be good packets in
                  * queue.
                  */
-                CALL_METHOD(self->pcount, reg_ignr);
+                CALL_SMETHOD(self->pcount, reg_ignr);
                 goto discard_and_continue;
             }
         }

@@ -57,8 +57,10 @@ struct rtpp_server_smethods {
 #define	RTPS_ENOMEM	(-3)
 
 struct rtpp_server {
+#if defined(RTPP_DEBUG)
     /* Public methods */
     const struct rtpp_server_smethods *smethods;
+#endif
     /* Refcounter */
     struct rtpp_refcnt *rcnt;
     /* UID */

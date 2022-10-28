@@ -175,7 +175,7 @@ rtpp_pipe_get_stats(struct rtpp_pipe *self, struct rtpp_acct_pipe *rapp)
 
     PUB2PVT(self, pvt);
 
-    CALL_METHOD(self->pcount, get_stats, rapp->pcnts);
+    CALL_SMETHOD(self->pcount, get_stats, rapp->pcnts);
     CALL_SMETHOD(self->stream[0], get_stats, &rapp->o.hld_stat);
     CALL_SMETHOD(self->stream[1], get_stats, &rapp->a.hld_stat);
     CALL_METHOD(self->stream[0]->pcnt_strm, get_stats, rapp->o.ps);

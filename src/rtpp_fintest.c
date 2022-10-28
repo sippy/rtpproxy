@@ -32,6 +32,15 @@
 #include "rtpp_types.h"
 #include "rtpp_linker_set.h"
 
+#ifdef RTPP_CHECK_LEAKS
+#include "libexecinfo/stacktraverse.h"
+#include "libexecinfo/execinfo.h"
+#include "rtpp_memdeb_internal.h"
+
+RTPP_MEMDEB_APP_STATIC;
+#endif
+
+
 SET_DECLARE(rtpp_fintests, const void *);
 
 int _naborts = 0;
@@ -43,9 +52,20 @@ rtpp_fintest()
 {
     const void ***tp;
 
+#ifdef RTPP_CHECK_LEAKS
+    RTPP_MEMDEB_APP_INIT();
+#endif
+
     SET_FOREACH(tp, rtpp_fintests) {
         ((fintest_t)**tp)();
     }
     assert(_naborts > 0);
-    return (0);
+
+#if defined(RTPP_CHECK_LEAKS)
+    int ecode = rtpp_memdeb_dumpstats(MEMDEB_SYM, 0) == 0 ? 0 : 1;
+#else
+    int ecode = 0;
+#endif
+
+    return (ecode);
 }

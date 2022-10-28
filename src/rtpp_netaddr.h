@@ -61,7 +61,9 @@ struct rtpp_netaddr_smethods {
 
 struct rtpp_netaddr {
     struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
     const struct rtpp_netaddr_smethods *smethods;
+#endif
 };
 
 struct rtpp_netaddr *rtpp_netaddr_ctor(void);
