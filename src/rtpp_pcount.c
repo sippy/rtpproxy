@@ -26,7 +26,7 @@
  *
  */
 
-#include <pthread.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,10 +37,15 @@
 #include "rtpp_pcount.h"
 #include "rtpp_pcount_fin.h"
 
+struct _rtpps_pcount {
+    atomic_ulong nrelayed;
+    atomic_ulong ndropped;
+    atomic_ulong nignored;
+};
+
 struct rtpp_pcount_priv {
     struct rtpp_pcount pub;
-    struct rtpps_pcount cnt;
-    pthread_mutex_t lock;
+    struct _rtpps_pcount cnt;
 };
 
 static void rtpp_pcount_dtor(struct rtpp_pcount_priv *);
@@ -66,19 +71,16 @@ rtpp_pcount_ctor(void)
     if (pvt == NULL) {
         goto e0;
     }
-    if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
-        goto e1;
-    }
 #if defined(RTPP_DEBUG)
     pvt->pub.smethods = rtpp_pcount_smethods;
 #endif
+    atomic_init(&(pvt->cnt.nrelayed), 0);
+    atomic_init(&(pvt->cnt.ndropped), 0);
+    atomic_init(&(pvt->cnt.nignored), 0);
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcount_dtor,
       pvt);
     return ((&pvt->pub));
 
-e1:
-    RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -88,7 +90,6 @@ rtpp_pcount_dtor(struct rtpp_pcount_priv *pvt)
 {
 
     rtpp_pcount_fin(&(pvt->pub));
-    pthread_mutex_destroy(&pvt->lock);
     free(pvt);
 }
 
@@ -98,9 +99,7 @@ rtpp_pcount_reg_reld(struct rtpp_pcount *self)
     struct rtpp_pcount_priv *pvt;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
-    pvt->cnt.nrelayed++;
-    pthread_mutex_unlock(&pvt->lock);
+    atomic_fetch_add_explicit(&pvt->cnt.nrelayed, 1, memory_order_relaxed);
 }
 
 static void
@@ -109,9 +108,7 @@ rtpp_pcount_reg_drop(struct rtpp_pcount *self)
     struct rtpp_pcount_priv *pvt;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
-    pvt->cnt.ndropped++;
-    pthread_mutex_unlock(&pvt->lock);
+    atomic_fetch_add_explicit(&pvt->cnt.ndropped, 1, memory_order_relaxed);
 }
 
 static void
@@ -120,9 +117,7 @@ rtpp_pcount_reg_ignr(struct rtpp_pcount *self)
     struct rtpp_pcount_priv *pvt;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
-    pvt->cnt.nignored++;
-    pthread_mutex_unlock(&pvt->lock);
+    atomic_fetch_add_explicit(&pvt->cnt.nignored, 1, memory_order_relaxed);
 }
 
 static void
@@ -131,7 +126,7 @@ rtpp_pcount_get_stats(struct rtpp_pcount *self, struct rtpps_pcount *ocnt)
     struct rtpp_pcount_priv *pvt;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
-    memcpy(ocnt, &pvt->cnt, sizeof(struct rtpps_pcount));
-    pthread_mutex_unlock(&pvt->lock);
+    ocnt->nrelayed = atomic_load_explicit((&pvt->cnt.nrelayed), memory_order_relaxed);
+    ocnt->ndropped = atomic_load_explicit((&pvt->cnt.ndropped), memory_order_relaxed);
+    ocnt->nignored = atomic_load_explicit((&pvt->cnt.nignored), memory_order_relaxed);
 }
