@@ -4,7 +4,7 @@ include $(top_srcdir)/m4/coverage.ami
 
 noinst_LIBRARIES = libexecinfo.a
 libexecinfo_a_SOURCES = execinfo.c execinfo.h stacktraverse.c stacktraverse.h
-libexecinfo_a_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
+libexecinfo_a_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG) -Wno-frame-address
 
 noinst_PROGRAMS = execinfo_check execinfo_TEST
 execinfo_check_CPPFLAGS = -Werror=implicit-function-declaration -Wall
