@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2022 Sippy Software, Inc., http://www.sippysoft.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,29 +26,35 @@
 
 #include <string.h>
 
-#include "rtpp_module.h"
-#include "rtpp_module_if_static.h"
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
-extern struct rtpp_minfo rtpp_module_acct_csv;
-extern struct rtpp_minfo rtpp_module_acct_rtcp_hep;
-extern struct rtpp_minfo rtpp_module_catch_dtmf;
-extern struct rtpp_minfo rtpp_module_dtls_gw;
+#include "rtpp_dtls_util.h"
 
-const struct rtpp_modules rtpp_modules = {
-    .acct_csv = &rtpp_module_acct_csv,
-    .acct_rtcp_hep = &rtpp_module_acct_rtcp_hep,
-    .catch_dtmf = &rtpp_module_catch_dtmf,
-    .dtls_gw = &rtpp_module_dtls_gw,
-};
-
-struct rtpp_minfo *
-rtpp_static_modules_lookup(const char *name)
+int
+rtpp_dtls_fp_gen(const X509 *cert, char *buf, int len)
 {
+    uint8_t fp[FP_DIGEST_LEN];
+    unsigned int fp_len, i;
 
-    for (int i = 0; rtpp_modules.all[i] != NULL; i++) {
-        if (strcmp(rtpp_modules.all[i]->descr.name, name) == 0) {
-             return (rtpp_modules.all[i]);
+    if (len < FP_DIGEST_STRBUF_LEN)
+        return (-1);
+    fp_len = sizeof(fp);
+    if (X509_digest(cert, EVP_sha256(), fp, &fp_len) != 1) {
+        ERR_clear_error();
+        return (-1);
+    }
+    memcpy(buf, FP_DIGEST_ALG, sizeof(FP_DIGEST_ALG) - 1);
+    buf += sizeof(FP_DIGEST_ALG) - 1;
+    buf[0] = ' ';
+    buf++;
+    for (i = 0; i < FP_DIGEST_LEN; i++) {
+        sprintf(buf, "%.2X", fp[i]);
+        buf += 2;
+        if (i != (FP_DIGEST_LEN - 1)) {
+            buf[0] = ':';
+            buf++;
         }
     }
-    return (NULL);
+    return (0);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2022 Sippy Software, Inc., http://www.sippysoft.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,31 +24,45 @@
  *
  */
 
-#include <string.h>
+struct rtpp_refcnt;
+struct rtpp_stream;
+struct rtpp_dtls_conn;
+struct rtp_packet;
+struct rtpp_anetio_cf;
+struct pkt_proc_ctx;
 
-#include "rtpp_module.h"
-#include "rtpp_module_if_static.h"
-
-extern struct rtpp_minfo rtpp_module_acct_csv;
-extern struct rtpp_minfo rtpp_module_acct_rtcp_hep;
-extern struct rtpp_minfo rtpp_module_catch_dtmf;
-extern struct rtpp_minfo rtpp_module_dtls_gw;
-
-const struct rtpp_modules rtpp_modules = {
-    .acct_csv = &rtpp_module_acct_csv,
-    .acct_rtcp_hep = &rtpp_module_acct_rtcp_hep,
-    .catch_dtmf = &rtpp_module_catch_dtmf,
-    .dtls_gw = &rtpp_module_dtls_gw,
+enum rtpp_dtls_mode {
+    RTPP_DTLS_MODERR  = -1,
+    RTPP_DTLS_ACTPASS =  0,
+    RTPP_DTLS_ACTIVE  =  1,
+    RTPP_DTLS_PASSIVE =  2
 };
 
-struct rtpp_minfo *
-rtpp_static_modules_lookup(const char *name)
-{
+struct rdc_peer_spec {
+    enum rtpp_dtls_mode peer_mode;
+    const rtpp_str_t *algorithm;
+    const rtpp_str_t *fingerprint;
+    const rtpp_str_t *ssrc;
+};
 
-    for (int i = 0; rtpp_modules.all[i] != NULL; i++) {
-        if (strcmp(rtpp_modules.all[i]->descr.name, name) == 0) {
-             return (rtpp_modules.all[i]);
-        }
-    }
-    return (NULL);
-}
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_dtls_recv, void,
+  const struct rtp_packet *);
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_rtp_send, int,
+  struct pkt_proc_ctx *);
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_srtp_recv, int,
+  struct pkt_proc_ctx *);
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_setmode, enum rtpp_dtls_mode,
+  const struct rdc_peer_spec *);
+
+struct rtpp_dtls_conn {
+    struct rtpp_refcnt *rcnt;
+    METHOD_ENTRY(rtpp_dtls_conn_dtls_recv, dtls_recv);
+    METHOD_ENTRY(rtpp_dtls_conn_rtp_send, rtp_send);
+    METHOD_ENTRY(rtpp_dtls_conn_srtp_recv, srtp_recv);
+    METHOD_ENTRY(rtpp_dtls_conn_setmode, setmode);
+};
+
+#if defined(OPENSSL_VERSION_NUMBER)
+struct rtpp_dtls_conn *rtpp_dtls_conn_ctor(const struct rtpp_cfg *,
+  SSL_CTX *, struct rtpp_stream *);
+#endif

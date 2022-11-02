@@ -24,6 +24,9 @@ if ENABLE_MEMGLITCHING
 include $(srcdir)/makeann/Makefile.ami
 include $(srcdir)/memdeb/Makefile.ami
 endif
+if BUILD_CRYPTO
+include $(srcdir)/dtls_gw/Makefile.ami
+endif
 
 EXTRA_DIST += Makefile.am ringback.sln
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12

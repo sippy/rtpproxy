@@ -4,6 +4,7 @@ include $(top_srcdir)/m4/coverage.ami
 
 UCL_DIR=$(top_srcdir)/external/libucl
 XXH_DIR=$(top_srcdir)/libxxHash
+MOD_DIR=$(top_srcdir)/modules
 
 bin_PROGRAMS=rtpproxy rtpproxy_debug
 noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_rzmalloc_perf_debug rtpp_fintest
@@ -175,9 +176,10 @@ librtpproxy_la_SOURCES = $(rtpproxy_SOURCES) $(top_srcdir)/libucl/libucl.la \
 librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS) -fPIC
 librtpproxy_la_CPPFLAGS = $(rtpproxy_CPPFLAGS) -DLIBRTPPROXY
 librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
-  $(XXH_DIR)/libxxHash.la $(top_srcdir)/modules/catch_dtmf/librtpp_catch_dtmf.la \
-  $(top_srcdir)/modules/acct_csv/librtpp_acct_csv.la \
-  $(top_srcdir)/modules/acct_rtcp_hep/librtpp_acct_rtcp_hep.la
+  $(XXH_DIR)/libxxHash.la $(MOD_DIR)/catch_dtmf/librtpp_catch_dtmf.la \
+  $(MOD_DIR)/acct_csv/librtpp_acct_csv.la \
+  $(MOD_DIR)/acct_rtcp_hep/librtpp_acct_rtcp_hep.la \
+  $(MOD_DIR)/dtls_gw/librtpp_dtls_gw.la
 librtpproxy_la_LDFLAGS = -static
 if BUILD_ELPERIODIC
 librtpproxy_la_LIBADD += @LIBS_ELPERIODIC@
