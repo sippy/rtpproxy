@@ -406,7 +406,7 @@ NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 noinst_LIBRARIES = libexecinfo.a
 libexecinfo_a_SOURCES = execinfo.c execinfo.h stacktraverse.c stacktraverse.h
-libexecinfo_a_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
+libexecinfo_a_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG) -Wno-frame-address
 execinfo_check_CPPFLAGS = -Werror=implicit-function-declaration -Wall
 execinfo_check_SOURCES = execinfo_check.c execinfo_testfunc.c execinfo_testfunc1.c
 execinfo_check_LDADD = libexecinfo.a @LIBS_DL@ -lpthread
