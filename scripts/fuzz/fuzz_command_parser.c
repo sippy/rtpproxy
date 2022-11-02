@@ -59,6 +59,7 @@ rtpp_init()
        "-r", ".",
        "--dso", "acct_csv",
        "--dso", "catch_dtmf",
+       "--dso", "dtls_gw",
     };
     int argc = howmany(argv, *argv);
     struct rtpp_cfg *cfsp;

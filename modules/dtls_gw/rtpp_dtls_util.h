@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2022 Sippy Software, Inc., http://www.sippysoft.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,31 +24,12 @@
  *
  */
 
-#include <string.h>
+#define FP_DIGEST_ALG "SHA-256"
+#define FP_DIGEST_ALG_LEN (sizeof(FP_DIGEST_ALG) - 1)
+#define FP_DIGEST_LEN 32
+#define FP_FINGERPRINT_STR_LEN ((FP_DIGEST_LEN * 2) + (FP_DIGEST_LEN - 1))
+#define FP_DIGEST_STR_LEN ((sizeof(FP_DIGEST_ALG) - 1) + 1 + \
+  FP_FINGERPRINT_STR_LEN)
+#define FP_DIGEST_STRBUF_LEN (FP_DIGEST_STR_LEN + 1)
 
-#include "rtpp_module.h"
-#include "rtpp_module_if_static.h"
-
-extern struct rtpp_minfo rtpp_module_acct_csv;
-extern struct rtpp_minfo rtpp_module_acct_rtcp_hep;
-extern struct rtpp_minfo rtpp_module_catch_dtmf;
-extern struct rtpp_minfo rtpp_module_dtls_gw;
-
-const struct rtpp_modules rtpp_modules = {
-    .acct_csv = &rtpp_module_acct_csv,
-    .acct_rtcp_hep = &rtpp_module_acct_rtcp_hep,
-    .catch_dtmf = &rtpp_module_catch_dtmf,
-    .dtls_gw = &rtpp_module_dtls_gw,
-};
-
-struct rtpp_minfo *
-rtpp_static_modules_lookup(const char *name)
-{
-
-    for (int i = 0; rtpp_modules.all[i] != NULL; i++) {
-        if (strcmp(rtpp_modules.all[i]->descr.name, name) == 0) {
-             return (rtpp_modules.all[i]);
-        }
-    }
-    return (NULL);
-}
+int rtpp_dtls_fp_gen(const X509 *, char *, int);

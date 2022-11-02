@@ -34,8 +34,9 @@ struct rtpp_modules {
             struct rtpp_minfo *acct_csv;
             struct rtpp_minfo *acct_rtcp_hep;
             struct rtpp_minfo *catch_dtmf;
+            struct rtpp_minfo *dtls_gw;
         };
-        struct rtpp_minfo *all[4];
+        struct rtpp_minfo *all[5];
     };
 };
 
