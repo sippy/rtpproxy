@@ -142,7 +142,7 @@ static int
 packet_is_rtcp(struct po_mgr_pkt_ctx *pktx)
 {
 
-    if (pktx->strmp->pipe_type != PIPE_RTCP)
+    if (pktx->strmp_in->pipe_type != PIPE_RTCP)
         return (0);
     return (1);
 }

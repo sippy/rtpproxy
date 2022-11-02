@@ -34,8 +34,9 @@ enum po_action;
 
 struct po_mgr_pkt_ctx {
   const struct rtpp_session *sessp;
-  struct rtpp_stream *strmp;
-  const struct rtp_packet *pktp;
+  struct rtpp_stream *strmp_in;
+  struct rtpp_stream *strmp_out;
+  struct rtp_packet *pktp;
   void *auxp;
 };
 

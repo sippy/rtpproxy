@@ -393,10 +393,10 @@ rtp_packet_is_dtmf(struct po_mgr_pkt_ctx *pktx)
     struct rtpp_refcnt *rtps_cnt;
     _Atomic(struct rtpp_refcnt *) *catch_dtmf_datap;
 
-    if (pktx->strmp->pipe_type != PIPE_RTP)
+    if (pktx->strmp_in->pipe_type != PIPE_RTP)
         return (0);
-    RTPP_DBG_ASSERT(rtpp_module.ids->module_idx < pktx->strmp->pmod_datap->nmodules);
-    catch_dtmf_datap = &(pktx->strmp->pmod_datap->adp[rtpp_module.ids->module_idx]);
+    RTPP_DBG_ASSERT(rtpp_module.ids->module_idx < pktx->strmp_in->pmod_datap->nmodules);
+    catch_dtmf_datap = &(pktx->strmp_in->pmod_datap->adp[rtpp_module.ids->module_idx]);
     rtps_cnt = atomic_load(catch_dtmf_datap);
     if (rtps_cnt == NULL)
         return (0);

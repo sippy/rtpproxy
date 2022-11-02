@@ -63,8 +63,9 @@ struct rtpp_proc_ready_lst {
     struct rtpp_stream *stp;
 };
 
-static void send_packet(const struct rtpp_cfg *, struct rtpp_stream *,
-  struct rtp_packet *, struct sthread_args *, struct rtpp_proc_rstats *);
+static struct rtpp_stream *get_sender(const struct rtpp_cfg *, struct rtpp_stream *);
+static int relay_packet(const struct rtpp_cfg *, struct po_mgr_pkt_ctx *pktxp,
+  struct sthread_args *, struct rtpp_proc_rstats *);
 
 static void
 rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
@@ -75,6 +76,9 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
     struct rtp_packet *packet = NULL;
     struct po_mgr_pkt_ctx pktx;
 
+    pktx.sessp = sp;
+    pktx.strmp_in = stp;
+    pktx.strmp_out = get_sender(cfsp, stp);
     /* Repeat since we may have several packets queued on the same socket */
     ndrain = -1;
     do {
@@ -84,27 +88,25 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
             ndrain -= 1;
         }
 
-	packet = CALL_SMETHOD(stp, rx, cfsp->rtcp_streams_wrt, dtime,
-          rsp);
+	packet = CALL_SMETHOD(stp, rx, cfsp->rtcp_streams_wrt, dtime, rsp);
 	if (packet == NULL) {
             /* Move on to the next session */
-            return;
+            break;
         }
         if (packet == RTPP_S_RX_DCONT) {
             ndrain += 1;
             continue;
         }
-        pktx.sessp = sp;
-        pktx.strmp = stp;
         pktx.pktp = packet;
-        if (CALL_METHOD(cfsp->observers, observe, &pktx) & PO_TAKE) {
+        if (relay_packet(cfsp, &pktx, sender, rsp) != 0) {
             RTPP_OBJ_DECREF(packet);
             CALL_SMETHOD(stp->pcount, reg_drop);
             rsp->npkts_discard.cnt++;
-            continue;
         }
-        send_packet(cfsp, stp, packet, sender, rsp);
     } while (ndrain > 0);
+    if (pktx.strmp_out != NULL) {
+        RTPP_OBJ_DECREF(pktx.strmp_out);
+    }
     return;
 }
 
@@ -119,18 +121,20 @@ get_sender(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp)
       stp->stuid_sendr));
 }
 
-static void
-send_packet(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp_in,
-  struct rtp_packet *packet, struct sthread_args *sender,
-  struct rtpp_proc_rstats *rsp)
+static int
+relay_packet(const struct rtpp_cfg *cfsp, struct po_mgr_pkt_ctx *pktxp,
+  struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
 {
-    struct rtpp_stream *stp_out;
+    struct rtpp_stream *stp_out = pktxp->strmp_out;
+    struct rtpp_stream *stp_in = pktxp->strmp_in;
+    struct rtp_packet *packet = pktxp->pktp;
 
     CALL_METHOD(stp_in->ttl, reset);
-
-    stp_out = get_sender(cfsp, stp_in);
+    if (CALL_METHOD(cfsp->observers, observe, pktxp) & PO_TAKE) {
+        return -1;
+    }
     if (stp_out == NULL) {
-        goto e0;
+        return -1;
     }
 
     if (stp_in->rrc != NULL) {
@@ -144,21 +148,12 @@ send_packet(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp_in,
      * sent out, drop otherwise.
      */
     if (!CALL_SMETHOD(stp_out, issendable) || CALL_SMETHOD(stp_out, isplayer_active)) {
-        goto e1;
-    } else {
-        CALL_SMETHOD(stp_out, send_pkt, sender, packet);
-        CALL_SMETHOD(stp_in->pcount, reg_reld);
-        rsp->npkts_relayed.cnt++;
+        return -1;
     }
-    RTPP_OBJ_DECREF(stp_out);
-    return;
-
-e1:
-    RTPP_OBJ_DECREF(stp_out);
-e0:
-    RTPP_OBJ_DECREF(packet);
-    CALL_SMETHOD(stp_in->pcount, reg_drop);
-    rsp->npkts_discard.cnt++;
+    CALL_SMETHOD(stp_out, send_pkt, sender, packet);
+    CALL_SMETHOD(stp_in->pcount, reg_reld);
+    rsp->npkts_relayed.cnt++;
+    return 0;
 }
 
 void
@@ -169,7 +164,6 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
     int readyfd, ndrained;
     struct rtpp_session *sp;
     struct rtpp_stream *stp;
-    struct rtp_packet *packet;
     struct rtpp_socket *iskt;
 
     for (readyfd = 0; readyfd < nready; readyfd++) {
@@ -195,14 +189,22 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
         }
         if (sp->complete != 0) {
             rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp, sp);
-            RTPP_OBJ_DECREF(sp);
             if (stp->resizer != NULL) {
-                while ((packet = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
-                    send_packet(cfsp, stp, packet, sender, rsp);
-                    rsp->npkts_resizer_out.cnt++;
-                    packet = NULL;
+                struct po_mgr_pkt_ctx pktx;
+
+                pktx.sessp = sp;
+                pktx.strmp_in = stp;
+                pktx.strmp_out = get_sender(cfsp, stp);
+
+                while ((pktx.pktp = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
+                    if (relay_packet(cfsp, &pktx, sender, rsp) == 0)
+                        rsp->npkts_resizer_out.cnt++;
                 }
+
+                if (pktx.strmp_out != NULL)
+                    RTPP_OBJ_DECREF(pktx.strmp_out);
             }
+            RTPP_OBJ_DECREF(sp);
         } else {
             const char *proto;
 
