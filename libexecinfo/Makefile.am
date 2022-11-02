@@ -16,5 +16,5 @@ execinfo_check_LDFLAGS = $(LTO_FLAG)
 execinfo_TEST_CPPFLAGS = ${execinfo_check_CPPFLAGS} -Dexecinfo_TEST=main
 execinfo_TEST_SOURCES = execinfo.c stacktraverse.c
 execinfo_TEST_LDADD = @LIBS_DL@
-execinfo_TEST_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
+execinfo_TEST_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG) -Wno-frame-address
 execinfo_TEST_LDFLAGS = $(LTO_FLAG)
