@@ -1,14 +1,14 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.58)
-AC_INIT(rtpproxy, 2.2.alpha, sobomax@sippysoft.com)
+AC_PREREQ([2.69])
+AC_INIT([rtpproxy],[2.2.1],[sobomax@sippysoft.com])
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([src/main.c])
 AM_INIT_AUTOMAKE([serial-tests])
 # If the test gets too verbose, comment one line above and uncomment one below
 #AM_INIT_AUTOMAKE
-AM_CONFIG_HEADER([src/config.h])
+AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # cross-compile macros
@@ -62,19 +62,19 @@ AS_HELP_STRING([--enable-systemd], [enable systemd support in rtpproxy]),
 [enable_systemd=no])
 
 AC_ARG_ENABLE(coverage,
-  AC_HELP_STRING([--enable-coverage], [enable test coverage support]),
+  AS_HELP_STRING([--enable-coverage],[enable test coverage support]),
   [ENABLE_COVERAGE=${enableval}], [ENABLE_COVERAGE=no])
 
 AC_ARG_ENABLE(memglitching,
-  AC_HELP_STRING([--enable-memglitching], [enable advanced tests around malloc glitching]),
+  AS_HELP_STRING([--enable-memglitching],[enable advanced tests around malloc glitching]),
   [ENABLE_MEMGLITCHING=${enableval}], [ENABLE_MEMGLITCHING=no])
 
 AC_ARG_ENABLE(basic-tests,
-  AC_HELP_STRING([--enable-basic-tests], [enable basic functionality tests]),
+  AS_HELP_STRING([--enable-basic-tests],[enable basic functionality tests]),
   [ENABLE_BASIC_TESTS=${enableval}], [ENABLE_BASIC_TESTS=yes])
 
 AC_ARG_ENABLE(lto,
-  AC_HELP_STRING([--enable-lto], [enable LTO (Link-Time Optimization)]),
+  AS_HELP_STRING([--enable-lto],[enable LTO (Link-Time Optimization)]),
   [ENABLE_LTO=${enableval}], [ENABLE_LTO=no])
 
 if test "$ENABLE_COVERAGE" = 'yes'
@@ -142,10 +142,7 @@ else
 fi
 if test "$found_libbcg729" = yes
 then
-  AC_TRY_COMPILE([#include <bcg729/encoder.h>],
-   [initBcg729EncoderChannel();],
-   new_bcg729_api=no,
-   new_bcg729_api=yes)
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <bcg729/encoder.h>]], [[initBcg729EncoderChannel();]])],[new_bcg729_api=no],[new_bcg729_api=yes])
   if test "$new_bcg729_api" = yes
   then
     AC_DEFINE(HAVE_NEW_BCG729_API, 1,
@@ -233,15 +230,14 @@ else
   AC_DEFINE([HAVE_EPOLL], 1, [Have epoll(2) interface.])
 fi
 
-# Checks for header files.
-AC_HEADER_STDC
+## Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdlib.h])
 AC_CHECK_HEADERS([string.h strings.h sys/socket.h sys/time.h unistd.h err.h endian.h sys/endian.h])
 AC_CHECK_HEADERS([libgen.h stdio.h float.h math.h sys/mman.h ctype.h errno.h sys/sysctl.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
-AC_HEADER_TIME
+
 
 dnl check for the sockaddr_un.sun_len member
 AC_CHECK_MEMBER([struct sockaddr_un.sun_len],
@@ -255,7 +251,7 @@ AC_CHECK_MEMBER([struct sockaddr_un.sun_len],
 AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
-AC_TYPE_SIGNAL
+
 AC_CHECK_FUNCS([atexit gettimeofday memset mkdir socket strchr strdup strerror strlcpy])
 if test "x$GCC" = "xyes"; then
   ## We like to use C99 routines when available.  This makes sure that
