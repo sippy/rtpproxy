@@ -69,6 +69,13 @@ extern const struct rtpp_pcount_smethods * const rtpp_pcount_smethods;
 #define CALL_SMETHOD(obj, method, args...) GET_SMETHODS(obj)->method(obj, ## args)
 #endif
 
+#ifdef __clang__
+    #define typeof(x) __typeof__(x)
+#else
+    // Might even check for __GNUC__?
+    #define typeof(x) __typeof(x)
+#endif
+
 #define PVT_RCOFFS(pvt) (size_t)(&(((typeof(pvt))NULL)->pub.rcnt))
 
 #define PUB2PVT(pubp, pvtp) \
