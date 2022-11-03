@@ -281,10 +281,10 @@ catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const char *dtmf_tag,
     }
     atomic_init(&(rtps_c->pt), new_pt);
     atomic_init(&(rtps_c->act), PO_TEE);
-    rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp->side);
+    rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp_in->side);
     if (!rtps_c->edata) {
         RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "cannot create edata (sp=%p)",
-          ctxp->strmp);
+          ctxp->strmp_in);
         goto e2;
     }
     RC_INCREF(rtpp_module.module_rcnt);
@@ -359,8 +359,8 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
         }
     }
 
-    RTPP_DBG_ASSERT(rtpp_module.ids->module_idx < ctxp->strmp->pmod_datap->nmodules);
-    catch_dtmf_datap = &(ctxp->strmp->pmod_datap->adp[rtpp_module.ids->module_idx]);
+    RTPP_DBG_ASSERT(rtpp_module.ids->module_idx < ctxp->strmp_in->pmod_datap->nmodules);
+    catch_dtmf_datap = &(ctxp->strmp_in->pmod_datap->adp[rtpp_module.ids->module_idx]);
     rtps_cnt = atomic_load(catch_dtmf_datap);
     if (rtps_cnt == NULL) {
         rtps_c = catch_dtmf_data_ctor(ctxp, dtmf_tag, new_pt);
@@ -378,11 +378,11 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
     if (old_pt != -1)
         RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "sp=%p, pt=%d->%d",
-          ctxp->strmp, old_pt, new_pt);
+          ctxp->strmp_in, old_pt, new_pt);
     old_act = atomic_exchange(&(rtps_c->act), new_act);
     if (old_act != new_act)
         RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "sp=%p, act=%d->%d",
-          ctxp->strmp, old_act, new_act);
+          ctxp->strmp_in, old_act, new_act);
     return (0);
 }
 
