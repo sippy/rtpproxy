@@ -156,10 +156,10 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 librtpproxy_la_DEPENDENCIES = $(top_srcdir)/libucl/libucl.la \
 	$(XXH_DIR)/libxxHash.la \
-	$(top_srcdir)/modules/catch_dtmf/librtpp_catch_dtmf.la \
-	$(top_srcdir)/modules/acct_csv/librtpp_acct_csv.la \
-	$(top_srcdir)/modules/acct_rtcp_hep/librtpp_acct_rtcp_hep.la \
-	$(am__DEPENDENCIES_1)
+	$(MOD_DIR)/catch_dtmf/librtpp_catch_dtmf.la \
+	$(MOD_DIR)/acct_csv/librtpp_acct_csv.la \
+	$(MOD_DIR)/acct_rtcp_hep/librtpp_acct_rtcp_hep.la \
+	$(MOD_DIR)/dtls_gw/librtpp_dtls_gw.la $(am__DEPENDENCIES_1)
 am__librtpproxy_la_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_pthread.c rtpp_pthread.h rtpp_defines.h rtpp_log.h \
 	rtpp_record.c rtpp_session.h rtpp_util.c rtpp_util.h rtp.c \
@@ -1641,6 +1641,7 @@ NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 UCL_DIR = $(top_srcdir)/external/libucl
 XXH_DIR = $(top_srcdir)/libxxHash
+MOD_DIR = $(top_srcdir)/modules
 @ENABLE_LIBRTPPROXY_TRUE@lib_LTLIBRARIES = librtpproxy.la
 RTPP_AUTOSRC_SOURCES = rtpp_command_rcache.h rtpp_log_obj.h \
 	rtpp_port_table.h rtpp_socket.h rtpp_timed_task.h \
@@ -1790,10 +1791,10 @@ librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS) -fPIC
 librtpproxy_la_CPPFLAGS = $(rtpproxy_CPPFLAGS) -DLIBRTPPROXY
 librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
 	$(XXH_DIR)/libxxHash.la \
-	$(top_srcdir)/modules/catch_dtmf/librtpp_catch_dtmf.la \
-	$(top_srcdir)/modules/acct_csv/librtpp_acct_csv.la \
-	$(top_srcdir)/modules/acct_rtcp_hep/librtpp_acct_rtcp_hep.la \
-	$(am__append_12)
+	$(MOD_DIR)/catch_dtmf/librtpp_catch_dtmf.la \
+	$(MOD_DIR)/acct_csv/librtpp_acct_csv.la \
+	$(MOD_DIR)/acct_rtcp_hep/librtpp_acct_rtcp_hep.la \
+	$(MOD_DIR)/dtls_gw/librtpp_dtls_gw.la $(am__append_12)
 librtpproxy_la_LDFLAGS = -static
 IPLDIR = $(top_srcdir)/src/ipol
 all: config.h

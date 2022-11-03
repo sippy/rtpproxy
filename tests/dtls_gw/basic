@@ -14,7 +14,7 @@ RTPP_ARGS_COMM="-T5 --bridge_symmetric -d dbug -l 0.0.0.0 -6 /:: \
 
 RTPP_LOGFILE_A="dtls_gw.a.rlog"
 RTPP_OUTFILE_A="dtls_gw.a.rout"
-RTPP_ARGS_A="${RTPP_ARGS_COMM} -r /usr/home/sobomax/projects/rtpproxy/tests"
+RTPP_ARGS_A="${RTPP_ARGS_COMM} -r ${RECORD_DIR}"
 RTPP_SOCKFILE_A="/tmp/dtls_gw.a.sock"
 
 RTPP_LOGFILE_F="dtls_gw.f.rlog"
@@ -24,8 +24,7 @@ RTPP_SOCKFILE_F="/tmp/dtls_gw.f.sock"
 
 RTPP_LOGFILE_O="dtls_gw.o.rlog"
 RTPP_OUTFILE_O="dtls_gw.o.rout"
-RTPP_ARGS_O="${RTPP_ARGS_COMM} -P -r /usr/home/sobomax/projects/rtpproxy/tests \
- -S /usr/home/sobomax/projects/rtpproxy/tests/forwarding"
+RTPP_ARGS_O="${RTPP_ARGS_COMM} -P -r ${RECORD_DIR} -S ${RECORD_SPL_DIR}"
 RTPP_SOCKFILE_O="/tmp/dtls_gw.o.sock"
 
 RTPP_LOGFILE="dtls_gw.o.rlog"
