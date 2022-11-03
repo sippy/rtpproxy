@@ -37,6 +37,7 @@ struct rtpp_refcnt;
 
 struct rtp_packet {
     struct rtpp_refcnt *rcnt;
+#if defined(_RTP_H_)
     struct rtpp_wi *wi;
     struct rtp_packet *next;
     struct rtp_packet *prev;
@@ -65,6 +66,7 @@ struct rtp_packet {
         rtp_hdr_t       header;
         unsigned char   buf[MAX_RPKT_LEN];
     } data;
+#endif
 };
 
 #define RTP_PKT_COPYOFF(x) (offsetof(typeof(*x), parse_result))
