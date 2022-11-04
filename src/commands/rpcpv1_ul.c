@@ -78,7 +78,7 @@ struct ul_reply {
     const struct sockaddr *ia;
     const char *ia_ov;
     int port;
-    int subc_res;
+    struct rtpp_subc_resp subc_res;
 };
 
 struct ul_opts {
@@ -124,9 +124,14 @@ ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
               ulr->ia_ov, (ulr->ia->sa_family == AF_INET) ? "" : " 6");
         }
     }
-    if (ulr != NULL && ulr->subc_res != 0) {
-        len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
-          " && %d", ulr->subc_res);
+    if (ulr != NULL) {
+        if (ulr->subc_res.result != 0) {
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+              " && %d", ulr->subc_res.result);
+        } else if (ulr->subc_res.buf_t[0] != '\0') {
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+              " && %s", ulr->subc_res.buf_t);
+        }
     }
     cmd->buf_t[len] = '\n';
     len += 1;
@@ -664,9 +669,11 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             .sessp = spa,
             .strmp_in = spa->rtp->stream[pidx],
             .strmp_out = spa->rtp->stream[NOT(pidx)],
-            .subc_args = &(cmd->subc_args)
+            .subc_args = &(cmd->subc_args),
+            .resp = &(ulop->reply.subc_res)
         };
-        ulop->reply.subc_res = ulop->after_success.handler(ulop->after_success.arg, &rsc);
+        rsc.resp->result = ulop->after_success.handler(ulop->after_success.arg,
+          &rsc);
     }
     ul_reply_port(cmd, &ulop->reply);
     rtpp_command_ul_opts_free(ulop);
