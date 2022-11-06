@@ -36,11 +36,16 @@ DEFINE_METHOD(rtpp_log, rtpp_log_ewrite, void, const char *, int, int,
 DEFINE_METHOD(rtpp_log, rtpp_log_setlevel, void, int);
 DEFINE_METHOD(rtpp_log, rtpp_log_start, int, const struct rtpp_cfg *);
 
+#define T_printf(val) _Generic((val), \
+    uint64_t: (unsigned long long)(val), \
+    int64_t: (long long)(val) \
+)
+
 struct rtpp_log {
     struct rtpp_refcnt *rcnt;
     /* Public methods */
-    METHOD_ENTRY(rtpp_log_write, genwrite);
-    METHOD_ENTRY(rtpp_log_ewrite, errwrite);
+    METHOD_ENTRY(rtpp_log_write, genwrite) __attribute__ ((format (printf, 5, 6)));
+    METHOD_ENTRY(rtpp_log_ewrite, errwrite) __attribute__ ((format (printf, 5, 6)));
     METHOD_ENTRY(rtpp_log_setlevel, setlevel);
     METHOD_ENTRY(rtpp_log_start, start);
     /* UID */
