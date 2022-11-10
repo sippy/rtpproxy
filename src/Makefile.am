@@ -20,7 +20,7 @@ RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_server.h rtpp_stats.h rtpp_stream.h rtpp_timed.h rtpp_pcount.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
-BASE_SOURCES=main.c rtp.h rtpp_server.c \
+BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
   rtpp_command.c rtpp_command.h rtpp_network.h rtpp_network.c \
