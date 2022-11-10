@@ -40,12 +40,12 @@ void
 rtpp_stacktrace(int sig)
 {
     /* Obtain a backtrace and print it to stderr. */
-    void *array[10];
+    void *array[20];
     size_t size;
     char **strings;
     int i;
 
-    size = backtrace(array, 10);
+    size = backtrace(array, 20);
     strings = backtrace_symbols(array, size);
 
     fprintf(stderr, "Died on signal %d, obtained %lu stack frames.\n",
