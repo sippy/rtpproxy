@@ -288,24 +288,31 @@ int
 url_unquote(unsigned char *buf, int len)
 {
     int outlen;
-    uint8_t *cp;
+    uint8_t *cp, *ocp;
 
     outlen = len;
-    while (len > 0) {
-        cp = memchr(buf, '%', len);
-        if (cp == NULL)
-            return (outlen);
-        if (cp - buf + 2 > len)
-            return (-1);
-        if (cp[1] > 127 || cp[2] > 127 ||
-          hex2char[cp[1]] == -1 || hex2char[cp[2]] == -1)
-            return (-1);
-        cp[0] = (hex2char[cp[1]] << 4) | hex2char[cp[2]];
-        len -= cp - buf + 3;
-        if (len > 0)
-            memmove(cp + 1, cp + 3, len);
-        buf = cp + 1;
-        outlen -= 2;
+    for (ocp = cp = buf; (cp - buf) < len; cp++, ocp++) {
+        switch (cp[0]) {
+        case '%':
+            if (cp - buf + 2 > len)
+                return (-1);
+            if (cp[1] > 127 || cp[2] > 127 ||
+              hex2char[cp[1]] == -1 || hex2char[cp[2]] == -1)
+                return (-1);
+            ocp[0] = (hex2char[cp[1]] << 4) | hex2char[cp[2]];
+            cp += 2;
+            outlen -= 2;
+            break;
+
+        case '+':
+            ocp[0] = ' ';
+            break;
+
+        default:
+            if (ocp != cp)
+                ocp[0] = cp[0];
+            break;
+        }
     }
     return (outlen);
 }
