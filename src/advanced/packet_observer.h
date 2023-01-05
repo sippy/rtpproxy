@@ -32,11 +32,9 @@ enum po_action {PO_NOP = 0, PO_TEE = 1, PO_TAKE = 2};
 
 DEFINE_RAW_METHOD(po_taste, int, struct po_mgr_pkt_ctx *);
 DEFINE_RAW_METHOD(po_enqueue, enum po_action, void *, const struct po_mgr_pkt_ctx *);
-DEFINE_RAW_METHOD(po_control, void);
 
 struct packet_observer_if {
     void *arg;
     po_taste_t taste;
     po_enqueue_t enqueue;
-    po_control_t control;
 };
