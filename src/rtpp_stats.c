@@ -28,9 +28,8 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <inttypes.h>
-#include <pthread.h>
+#include <stdatomic.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -58,14 +57,13 @@ struct rtpp_stat_descr
 };
 
 union rtpp_stat_cnt {
-    uint64_t u64;
-    double d;
+    _Atomic(uint64_t) u64;
+    _Atomic(double) d;
 };
 
 struct rtpp_stat
 {
     struct rtpp_stat_descr *descr;
-    pthread_mutex_t mutex;
     union rtpp_stat_cnt cnt;
 };
 
@@ -216,18 +214,10 @@ rtpp_stats_ctor(void)
     for (i = 0; default_stats[i].name != NULL; i++) {
         st = &pvt->stats[pvt->nstats];
         st->descr = &default_stats[i];
-        if (pthread_mutex_init(&st->mutex, NULL) != 0) {
-            while ((pvt->nstats - 1) >= 0) {
-                st = &pvt->stats[pvt->nstats - 1];
-                pthread_mutex_destroy(&st->mutex);
-                pvt->nstats -= 1;
-            }
-            goto e2;
-        }
         if (default_stats[i].type == RTPP_CNT_U64) {
-            st->cnt.u64 = 0;
+            atomic_init(&st->cnt.u64, 0);
         } else {
-            st->cnt.d = 0.0;
+            atomic_init(&st->cnt.d, 0.0);
         }
         pvt->nstats += 1;
     }
@@ -284,13 +274,11 @@ rtpp_stats_updatebyidx_internal(struct rtpp_stats *self, int idx,
     if (idx < 0 || idx >= pvt->nstats)
         return (-1);
     st = &pvt->stats[idx];
-    pthread_mutex_lock(&st->mutex);
     if (type == RTPP_CNT_U64) {
-        st->cnt.u64 += *(uint64_t *)argp;
+        atomic_fetch_add_explicit(&st->cnt.u64, *(uint64_t *)argp, memory_order_relaxed);
     } else {
-        st->cnt.d += *(double *)argp;
+        atomic_fetch_add_explicit(&st->cnt.d, *(double *)argp, memory_order_relaxed);
     }
-    pthread_mutex_unlock(&st->mutex);
     return (0);
 }
 
@@ -333,9 +321,7 @@ rtpp_stats_getlvalbyname(struct rtpp_stats *self, const char *name)
     }
     pvt = self->pvt;
     st = &pvt->stats[idx];
-    pthread_mutex_lock(&st->mutex);
-    rval = st->cnt.u64;
-    pthread_mutex_unlock(&st->mutex);
+    rval = atomic_load_explicit(&st->cnt.u64, memory_order_relaxed);
     return (rval);
 }
 
@@ -355,14 +341,10 @@ rtpp_stats_nstr(struct rtpp_stats *self, char *buf, int len, const char *name)
     pvt = self->pvt;
     st = &pvt->stats[idx];
     if (pvt->stats[idx].descr->type == RTPP_CNT_U64) {
-        pthread_mutex_lock(&st->mutex);
-        uval = st->cnt.u64;
-        pthread_mutex_unlock(&st->mutex);
+        uval = atomic_load_explicit(&st->cnt.u64, memory_order_relaxed);
         rval = snprintf(buf, len, "%" PRIu64, uval);
     } else {
-        pthread_mutex_lock(&st->mutex);
-        dval = st->cnt.d;
-        pthread_mutex_unlock(&st->mutex);
+        dval = atomic_load_explicit(&st->cnt.d, memory_order_relaxed);
         rval = snprintf(buf, len, "%f", dval);
     }
     return (rval);
@@ -371,15 +353,9 @@ rtpp_stats_nstr(struct rtpp_stats *self, char *buf, int len, const char *name)
 static void
 rtpp_stats_dtor(struct rtpp_stats_full *fp)
 {
-    int i;
     struct rtpp_stats_priv *pvt;
-    struct rtpp_stat *st;
 
     pvt = &fp->pvt;
-    for (i = 0; i < pvt->nstats; i++) {
-        st = &pvt->stats[i];
-        pthread_mutex_destroy(&st->mutex);
-    }
     RTPP_OBJ_DECREF(pvt->rppp);
     if (pvt->dstats != NULL) {
         free(pvt->dstats);
@@ -410,18 +386,16 @@ rtpp_stats_update_derived(struct rtpp_stats *self, double dtime)
         dst = &pvt->dstats[i];
         assert(dst->last_ts < dtime);
         ival = dtime - dst->last_ts;
-        last_val = dst->last_val;
-        pthread_mutex_lock(&dst->derive_from->mutex);
-        dst->last_val = dst->derive_from->cnt;
-        pthread_mutex_unlock(&dst->derive_from->mutex);
         if (dst->derive_from->descr->type == RTPP_CNT_U64) {
+            last_val.u64 = dst->last_val.u64;
+            dst->last_val.u64 = atomic_load_explicit(&dst->derive_from->cnt.u64, memory_order_relaxed);
             dval = (dst->last_val.u64 - last_val.u64) / ival;
         } else {
+            last_val.d = dst->last_val.d;
+            dst->last_val.d = atomic_load_explicit(&dst->derive_from->cnt.d, memory_order_relaxed);
             dval = (dst->last_val.d - last_val.d) / ival;
         }
-        pthread_mutex_lock(&dst->derive_to->mutex);
-        dst->derive_to->cnt.d = dval;
-        pthread_mutex_unlock(&dst->derive_to->mutex);
+        atomic_store_explicit(&dst->derive_to->cnt.d, dval, memory_order_relaxed);
         dst->last_ts = dtime;
     }
 }
