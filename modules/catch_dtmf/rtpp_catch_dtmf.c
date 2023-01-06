@@ -63,8 +63,8 @@
 #include "rtpp_session.h"
 #include "rtpp_stream.h"
 #include "rtpp_pipe.h"
-#include "advanced/packet_observer.h"
-#include "advanced/po_manager.h"
+#include "advanced/packet_processor.h"
+#include "advanced/pproc_manager.h"
 
 struct rtpp_module_priv {
     struct rtpp_notify *notifier;
@@ -89,7 +89,7 @@ struct catch_dtmf_edata {
 struct catch_dtmf_stream_cfg {
     struct rtpp_refcnt *rcnt;
     atomic_int pt;
-    _Atomic(enum po_action) act;
+    _Atomic(enum pproc_action) act;
     struct catch_dtmf_edata *edata;
     const struct rtpp_timeout_data *rtdp;
 };
@@ -280,7 +280,7 @@ catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const char *dtmf_tag,
         goto e1;
     }
     atomic_init(&(rtps_c->pt), new_pt);
-    atomic_init(&(rtps_c->act), PO_TEE);
+    atomic_init(&(rtps_c->act), PPROC_TEE);
     rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp_in->side);
     if (!rtps_c->edata) {
         RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "cannot create edata (sp=%p)",
@@ -306,7 +306,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     struct catch_dtmf_stream_cfg *rtps_c;
     int len;
     int old_pt, new_pt = 101;
-    enum po_action old_act, new_act = PO_TEE;
+    enum pproc_action old_act, new_act = PPROC_TEE;
     char *dtmf_tag;
     _Atomic(struct rtpp_refcnt *) *catch_dtmf_datap;
 
@@ -347,7 +347,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
                 switch (*opt) {
                 case 'h':
                 case 'H':
-                    new_act = PO_TAKE;
+                    new_act = PPROC_TAKE;
                     break;
 
                 default:
@@ -387,7 +387,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
 }
 
 static int
-rtp_packet_is_dtmf(struct po_mgr_pkt_ctx *pktx)
+rtp_packet_is_dtmf(struct pkt_proc_ctx *pktx)
 {
     struct catch_dtmf_stream_cfg *rtps_c;
     struct rtpp_refcnt *rtps_cnt;
@@ -408,8 +408,8 @@ rtp_packet_is_dtmf(struct po_mgr_pkt_ctx *pktx)
     return (1);
 }
 
-static enum po_action
-rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
+static enum pproc_action
+rtpp_catch_dtmf_enqueue(void *arg, const struct pkt_proc_ctx *pktx)
 {
     struct rtpp_wi *wi;
     struct wipkt *wip;
@@ -423,7 +423,7 @@ rtpp_catch_dtmf_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
     /* we duplicate the tag to make sure it does not vanish */
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
-        return (PO_NOP);
+        return (PPROC_NOP);
     RTPP_OBJ_INCREF(pktx->pktp);
     /* we need to duplicate the tag and state */
     wip->edata = rtps_c->edata;
@@ -439,7 +439,7 @@ static struct rtpp_module_priv *
 rtpp_catch_dtmf_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_priv *pvt;
-    struct packet_observer_if dtmf_poi;
+    struct packet_processor_if dtmf_poi;
 
     pvt = mod_zmalloc(sizeof(struct rtpp_module_priv));
     if (pvt == NULL) {
@@ -450,7 +450,7 @@ rtpp_catch_dtmf_ctor(const struct rtpp_cfg *cfsp)
     dtmf_poi.taste = rtp_packet_is_dtmf;
     dtmf_poi.enqueue = rtpp_catch_dtmf_enqueue;
     dtmf_poi.arg = pvt;
-    if (CALL_METHOD(cfsp->observers, reg, &dtmf_poi) < 0)
+    if (CALL_METHOD(cfsp->pproc_manager, reg, &dtmf_poi) < 0)
         goto e1;
     return (pvt);
 

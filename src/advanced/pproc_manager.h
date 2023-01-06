@@ -25,14 +25,14 @@
  *
  */
 
-struct po_manager;
-struct packet_observer_if;
+struct pproc_manager;
+struct packet_processor_if;
 struct rtpp_session;
 struct rtpp_stream;
 struct rtp_packet;
-enum po_action;
+enum pproc_action;
 
-struct po_mgr_pkt_ctx {
+struct pkt_proc_ctx {
   const struct rtpp_session *sessp;
   struct rtpp_stream *strmp_in;
   struct rtpp_stream *strmp_out;
@@ -40,13 +40,13 @@ struct po_mgr_pkt_ctx {
   void *auxp;
 };
 
-DEFINE_METHOD(po_manager, po_manager_reg, int, const struct packet_observer_if *);
-DEFINE_METHOD(po_manager, po_manager_observe, enum po_action, struct po_mgr_pkt_ctx *);
+DEFINE_METHOD(pproc_manager, pproc_manager_reg, int, const struct packet_processor_if *);
+DEFINE_METHOD(pproc_manager, pproc_manager_handle, enum pproc_action, struct pkt_proc_ctx *);
 
-struct po_manager {
+struct pproc_manager {
     struct rtpp_refcnt *rcnt;
-    po_manager_reg_t reg;
-    po_manager_observe_t observe;
+    pproc_manager_reg_t reg;
+    pproc_manager_handle_t handle;
 };
 
-struct po_manager *rtpp_po_mgr_ctor(void);
+struct pproc_manager *rtpp_pproc_mgr_ctor(void);

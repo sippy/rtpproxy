@@ -55,8 +55,8 @@
 #include "rtpp_pipe.h"
 #include "rtpp_epoll.h"
 #include "rtpp_debug.h"
-#include "advanced/po_manager.h"
-#include "advanced/packet_observer.h"
+#include "advanced/pproc_manager.h"
+#include "advanced/packet_processor.h"
 
 struct rtpp_proc_ready_lst {
     struct rtpp_session *sp;
@@ -64,7 +64,7 @@ struct rtpp_proc_ready_lst {
 };
 
 static struct rtpp_stream *get_sender(const struct rtpp_cfg *, struct rtpp_stream *);
-static int relay_packet(const struct rtpp_cfg *, struct po_mgr_pkt_ctx *pktxp,
+static int relay_packet(const struct rtpp_cfg *, struct pkt_proc_ctx *,
   struct sthread_args *, struct rtpp_proc_rstats *);
 
 static void
@@ -74,7 +74,7 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
 {
     int ndrain;
     struct rtp_packet *packet = NULL;
-    struct po_mgr_pkt_ctx pktx;
+    struct pkt_proc_ctx pktx;
 
     pktx.sessp = sp;
     pktx.strmp_in = stp;
@@ -122,7 +122,7 @@ get_sender(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp)
 }
 
 static int
-relay_packet(const struct rtpp_cfg *cfsp, struct po_mgr_pkt_ctx *pktxp,
+relay_packet(const struct rtpp_cfg *cfsp, struct pkt_proc_ctx *pktxp,
   struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
 {
     struct rtpp_stream *stp_out = pktxp->strmp_out;
@@ -130,7 +130,7 @@ relay_packet(const struct rtpp_cfg *cfsp, struct po_mgr_pkt_ctx *pktxp,
     struct rtp_packet *packet = pktxp->pktp;
 
     CALL_METHOD(stp_in->ttl, reset);
-    if (CALL_METHOD(cfsp->observers, observe, pktxp) & PO_TAKE) {
+    if (CALL_METHOD(cfsp->pproc_manager, handle, pktxp) & PPROC_TAKE) {
         return -1;
     }
     if (stp_out == NULL) {
@@ -190,7 +190,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
         if (sp->complete != 0) {
             rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp, sp);
             if (stp->resizer != NULL) {
-                struct po_mgr_pkt_ctx pktx;
+                struct pkt_proc_ctx pktx;
 
                 pktx.sessp = sp;
                 pktx.strmp_in = stp;

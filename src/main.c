@@ -107,7 +107,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_locking.h"
 #include "rtpp_nofile.h"
-#include "advanced/po_manager.h"
+#include "advanced/pproc_manager.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
@@ -995,8 +995,8 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    cfs.observers = rtpp_po_mgr_ctor();
-    if (cfs.observers == NULL) {
+    cfs.pproc_manager = rtpp_pproc_mgr_ctor();
+    if (cfs.pproc_manager == NULL) {
         RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
           "can't init packet inspection subsystem");
         exit(1);
@@ -1091,7 +1091,7 @@ main(int argc, char **argv)
 
     CALL_METHOD(cfs.rtpp_cmd_cf, dtor);
     RTPP_OBJ_DECREF(cfs.modules_cf);
-    RTPP_OBJ_DECREF(cfs.observers)
+    RTPP_OBJ_DECREF(cfs.pproc_manager)
     free(cfs.runcreds);
     CALL_METHOD(cfs.rtpp_notify_cf, dtor);
     CALL_METHOD(cfs.bindaddrs_cf, dtor);

@@ -46,7 +46,7 @@ struct rtpp_sessinfo;
 struct rtpp_log;
 struct rtpp_runcreds;
 struct rtpp_proc_ttl;
-struct po_manager;
+struct pproc_manager;
 struct rtpp_locking;
 struct rtpp_nofile;
 struct rtpp_modman;
@@ -138,7 +138,7 @@ struct rtpp_cfg {
 
     const char *cfile;
 
-    struct po_manager *observers;
+    struct pproc_manager *pproc_manager;
 
     struct rtpp_locking *locks;
 };

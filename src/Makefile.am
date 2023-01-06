@@ -62,8 +62,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
   $(CMDSRCDIR)/rpcpv1_ul_subc.c $(CMDSRCDIR)/rpcpv1_ul_subc.h \
   $(RTPP_AUTOSRC_SOURCES) rtpp_epoll.c
 ADV_DIR=$(top_srcdir)/src/advanced
-BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/po_manager.c \
-  $(ADV_DIR)/po_manager.h
+BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/pproc_manager.c \
+  $(ADV_DIR)/pproc_manager.h
 BASE_SOURCES+=rtpp_modman.c
 
 rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl.a

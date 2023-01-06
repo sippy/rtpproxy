@@ -32,76 +32,76 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 
-#include "advanced/po_manager.h"
-#include "advanced/packet_observer.h"
+#include "advanced/pproc_manager.h"
+#include "advanced/packet_processor.h"
 
 #define MAX_OBSERVERS 4
 
-struct po_manager_pvt {
-    struct po_manager pub;
-    struct packet_observer_if observers[MAX_OBSERVERS + 1];
+struct pproc_manager_pvt {
+    struct pproc_manager pub;
+    struct packet_processor_if handlers[MAX_OBSERVERS + 1];
 };
 
-static int rtpp_po_mgr_register(struct po_manager *, const struct packet_observer_if *);
-static enum po_action rtpp_po_mgr_observe(struct po_manager *, struct po_mgr_pkt_ctx *);
+static int rtpp_pproc_mgr_register(struct pproc_manager *, const struct packet_processor_if *);
+static enum pproc_action rtpp_pproc_mgr_handle(struct pproc_manager *, struct pkt_proc_ctx *);
 
 static void
-rtpp_po_mgr_dtor(struct po_manager_pvt *pvt)
+rtpp_pproc_mgr_dtor(struct pproc_manager_pvt *pvt)
 {
 
     free(pvt);
 }
 
-struct po_manager *
-rtpp_po_mgr_ctor(void)
+struct pproc_manager *
+rtpp_pproc_mgr_ctor(void)
 {
-    struct po_manager_pvt *pvt;
+    struct pproc_manager_pvt *pvt;
 
     pvt = rtpp_rzmalloc(sizeof(*pvt), PVT_RCOFFS(pvt));
     if (pvt == NULL)
         return (NULL);
-    pvt->pub.reg = rtpp_po_mgr_register;
-    pvt->pub.observe = rtpp_po_mgr_observe;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_po_mgr_dtor,
+    pvt->pub.reg = rtpp_pproc_mgr_register;
+    pvt->pub.handle = rtpp_pproc_mgr_handle;
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pproc_mgr_dtor,
       pvt);
     return (&(pvt->pub));
 }
 
 static int
-rtpp_po_mgr_register(struct po_manager *pub, const struct packet_observer_if *ip)
+rtpp_pproc_mgr_register(struct pproc_manager *pub, const struct packet_processor_if *ip)
 {
     int i;
-    struct po_manager_pvt *pvt;
+    struct pproc_manager_pvt *pvt;
 
     PUB2PVT(pub, pvt);
     for (i = 0; i < MAX_OBSERVERS; i++)
-        if (pvt->observers[i].taste == NULL)
+        if (pvt->handlers[i].taste == NULL)
             break;
     if (i >= MAX_OBSERVERS)
         return (-1);
-    pvt->observers[i] = *ip;
+    pvt->handlers[i] = *ip;
     return (0);
 }
 
-static enum po_action
-rtpp_po_mgr_observe(struct po_manager *pub, struct po_mgr_pkt_ctx *pktxp)
+static enum pproc_action
+rtpp_pproc_mgr_handle(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp)
 {
     int i;
-    struct po_manager_pvt *pvt;
-    enum po_action res = PO_NOP;
+    struct pproc_manager_pvt *pvt;
+    enum pproc_action res = PPROC_NOP;
 
     PUB2PVT(pub, pvt);
     for (i = 0; i < MAX_OBSERVERS; i++) {
-        if (pvt->observers[i].taste == NULL)
+        if (pvt->handlers[i].taste == NULL)
             break;
         if (i > 0) {
             /* Clean after use */
             pktxp->auxp = NULL;
         }
-        if (pvt->observers[i].taste(pktxp) == 0)
+        if (pvt->handlers[i].taste(pktxp) == 0)
             continue;
-        res |= pvt->observers[i].enqueue(pvt->observers[i].arg, pktxp);
-        if (res & PO_TAKE)
+        res |= pvt->handlers[i].enqueue(pvt->handlers[i].arg, pktxp);
+        if (res & PPROC_TAKE)
             break;
     }
     return (res);

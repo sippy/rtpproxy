@@ -25,16 +25,16 @@
  *
  */
 
-struct packet_observer_if;
-struct po_mgr_pkt_ctx;
+struct packet_processor_if;
+struct pkt_proc_ctx;
 
-enum po_action {PO_NOP = 0, PO_TEE = 1, PO_TAKE = 2};
+enum pproc_action {PPROC_NOP = 0, PPROC_TEE = 1, PPROC_TAKE = 2};
 
-DEFINE_RAW_METHOD(po_taste, int, struct po_mgr_pkt_ctx *);
-DEFINE_RAW_METHOD(po_enqueue, enum po_action, void *, const struct po_mgr_pkt_ctx *);
+DEFINE_RAW_METHOD(pproc_taste, int, struct pkt_proc_ctx *);
+DEFINE_RAW_METHOD(pproc_enqueue, enum pproc_action, void *, const struct pkt_proc_ctx *);
 
-struct packet_observer_if {
+struct packet_processor_if {
     void *arg;
-    po_taste_t taste;
-    po_enqueue_t enqueue;
+    pproc_taste_t taste;
+    pproc_enqueue_t enqueue;
 };

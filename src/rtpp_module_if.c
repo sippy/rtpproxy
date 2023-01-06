@@ -57,8 +57,8 @@
 #include "rtpp_stream.h"
 #include "rtpp_pipe.h"
 #include "rtpp_session.h"
-#include "advanced/packet_observer.h"
-#include "advanced/po_manager.h"
+#include "advanced/packet_processor.h"
+#include "advanced/pproc_manager.h"
 #define MODULE_IF_CODE
 #include "rtpp_module.h"
 #include "rtpp_module_acct.h"
@@ -139,7 +139,7 @@ e0:
 }
 
 static int
-packet_is_rtcp(struct po_mgr_pkt_ctx *pktx)
+packet_is_rtcp(struct pkt_proc_ctx *pktx)
 {
 
     if (pktx->strmp_in->pipe_type != PIPE_RTCP)
@@ -147,8 +147,8 @@ packet_is_rtcp(struct po_mgr_pkt_ctx *pktx)
     return (1);
 }
 
-static enum po_action
-acct_rtcp_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
+static enum pproc_action
+acct_rtcp_enqueue(void *arg, const struct pkt_proc_ctx *pktx)
 {
     struct rtpp_module_if_priv *pvt;
     struct rtpp_acct_rtcp *rarp;
@@ -156,10 +156,10 @@ acct_rtcp_enqueue(void *arg, const struct po_mgr_pkt_ctx *pktx)
     pvt = (struct rtpp_module_if_priv *)arg;
     rarp = rtpp_acct_rtcp_ctor(pktx->sessp->call_id, pktx->pktp);
     if (rarp == NULL) {
-        return (PO_NOP);
+        return (PPROC_NOP);
     }
     rtpp_mif_do_acct_rtcp(&(pvt->pub), rarp);
-    return (PO_TEE);
+    return (PPROC_TEE);
 }
 
 static int
@@ -460,12 +460,12 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
         return (0);
     if (pvt->mip->aapi != NULL) {
         if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL) {
-            struct packet_observer_if acct_rtcp_poi;
+            struct packet_processor_if acct_rtcp_poi;
 
             acct_rtcp_poi.taste = packet_is_rtcp;
             acct_rtcp_poi.enqueue = acct_rtcp_enqueue;
             acct_rtcp_poi.arg = pvt;
-            if (CALL_METHOD(cfsp->observers, reg, &acct_rtcp_poi) < 0)
+            if (CALL_METHOD(cfsp->pproc_manager, reg, &acct_rtcp_poi) < 0)
                 return (-1);
         }
         if (pthread_create(&pvt->mip->wthr.thread_id, NULL,
