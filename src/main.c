@@ -955,6 +955,13 @@ main(int argc, char **argv)
     }
     set_rlimits(&cfs);
 
+    cfs.pproc_manager = rtpp_pproc_mgr_ctor(cfs.rtpp_stats);
+    if (cfs.pproc_manager == NULL) {
+        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
+          "can't init packet prosessing subsystem");
+        exit(1);
+    }
+
     cfs.rtpp_proc_cf = rtpp_proc_async_ctor(&cfs);
     if (cfs.rtpp_proc_cf == NULL) {
         RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
@@ -992,13 +999,6 @@ main(int argc, char **argv)
     if (cfs.rtpp_notify_cf == NULL) {
         RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
           "can't init timeout notification subsystem");
-        exit(1);
-    }
-
-    cfs.pproc_manager = rtpp_pproc_mgr_ctor();
-    if (cfs.pproc_manager == NULL) {
-        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
-          "can't init packet inspection subsystem");
         exit(1);
     }
 

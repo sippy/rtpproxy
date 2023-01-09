@@ -74,6 +74,7 @@
 #include "rtpp_util.h"
 #include "rtpp_pipe.h"
 #include "rtpp_netaddr.h"
+#include "advanced/pproc_manager.h"
 
 enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP, MODE_LOCAL_PCAP}; /* MODE_LOCAL_RTP/MODE_REMOTE_PKT? */
 
@@ -92,7 +93,7 @@ struct rtpp_record_channel {
     struct rtpp_timestamp epoch;
 };
 
-static void rtpp_record_write(struct rtpp_record *, struct rtpp_stream *, struct rtp_packet *);
+static void rtpp_record_write(struct rtpp_record *, const struct pkt_proc_ctx *);
 static void rtpp_record_close(struct rtpp_record_channel *);
 static int get_hdr_size(const struct sockaddr *);
 
@@ -548,8 +549,7 @@ get_hdr_size(const struct sockaddr *raddr)
 }
 
 static void
-rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp,
-  struct rtp_packet *packet)
+rtpp_record_write(struct rtpp_record *self, const struct pkt_proc_ctx *pktxp)
 {
     struct iovec v[2];
     int rval, hdr_size;
@@ -559,6 +559,8 @@ rtpp_record_write(struct rtpp_record *self, struct rtpp_stream *stp,
     struct rtpp_record_channel *rrc;
     struct rtpp_netaddr *rem_addr;
     size_t dalen;
+    struct rtp_packet *packet = pktxp->pktp;
+    struct rtpp_stream *stp = pktxp->strmp_out;
 
     PUB2PVT(self, rrc);
 

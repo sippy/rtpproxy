@@ -32,6 +32,8 @@
 struct rtp_info;
 struct rtpp_wi;
 struct rtpp_refcnt;
+struct sthread_args;
+struct packet_processor_if;
 
 #define MAX_RPKT_LEN 8192
 
@@ -56,6 +58,7 @@ struct rtp_packet {
 
     socklen_t   rlen;
     struct rtpp_timestamp rtime;
+    struct sthread_args *sender;
 
     /*
      * The packet, keep it the last member so that we can use

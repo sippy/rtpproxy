@@ -148,18 +148,18 @@ packet_is_rtcp(struct pkt_proc_ctx *pktx)
 }
 
 static enum pproc_action
-acct_rtcp_enqueue(void *arg, const struct pkt_proc_ctx *pktx)
+acct_rtcp_enqueue(const struct pkt_proc_ctx *pktx)
 {
     struct rtpp_module_if_priv *pvt;
     struct rtpp_acct_rtcp *rarp;
 
-    pvt = (struct rtpp_module_if_priv *)arg;
+    pvt = (struct rtpp_module_if_priv *)pktx->pproc->arg;
     rarp = rtpp_acct_rtcp_ctor(pktx->sessp->call_id, pktx->pktp);
     if (rarp == NULL) {
-        return (PPROC_NOP);
+        return (PPROC_ACT_NOP);
     }
     rtpp_mif_do_acct_rtcp(&(pvt->pub), rarp);
-    return (PPROC_TEE);
+    return (PPROC_ACT_TEE);
 }
 
 static int
@@ -460,12 +460,13 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
         return (0);
     if (pvt->mip->aapi != NULL) {
         if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL) {
-            struct packet_processor_if acct_rtcp_poi;
-
-            acct_rtcp_poi.taste = packet_is_rtcp;
-            acct_rtcp_poi.enqueue = acct_rtcp_enqueue;
-            acct_rtcp_poi.arg = pvt;
-            if (CALL_METHOD(cfsp->pproc_manager, reg, &acct_rtcp_poi) < 0)
+            struct packet_processor_if acct_rtcp_poi = {
+                .descr = "acct_rtcp",
+                .taste = packet_is_rtcp,
+                .enqueue = acct_rtcp_enqueue,
+                .arg = pvt
+            };
+            if (CALL_SMETHOD(cfsp->pproc_manager, reg, PPROC_ORD_WITNESS, &acct_rtcp_poi) < 0)
                 return (-1);
         }
         if (pthread_create(&pvt->mip->wthr.thread_id, NULL,

@@ -74,6 +74,7 @@
 #include "rtpp_netaddr.h"
 #include "rtpp_debug.h"
 #include "rtpp_acct_pipe.h"
+#include "advanced/pproc_manager.h"
 
 #define  SEQ_SYNC_IVAL   1.0    /* in seconds */
 
@@ -205,6 +206,10 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     if (pvt->rem_addr == NULL) {
         goto e6;
     }
+    pvt->pub.pproc_manager = CALL_SMETHOD(ap->pproc_manager, clone);
+    if (pvt->pub.pproc_manager == NULL) {
+        goto e7;
+    }
     pvt->servers_wrt = ap->servers_wrt;
     pvt->rtpp_stats = ap->rtpp_stats;
     pvt->pub.log = ap->log;
@@ -225,7 +230,8 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_dtor,
       pvt);
     return (&pvt->pub);
-
+e7:
+    RTPP_OBJ_DECREF(pvt->rem_addr);
 e6:
     RTPP_OBJ_DECREF(pvt->raddr_prev);
 e5:
@@ -337,6 +343,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     RTPP_OBJ_DECREF(pvt->pub.log);
     RTPP_OBJ_DECREF(pvt->rem_addr);
     RTPP_OBJ_DECREF(pvt->raddr_prev);
+    RTPP_OBJ_DECREF(pvt->pub.pproc_manager);
 
     pthread_mutex_destroy(&pvt->lock);
     free(pvt);

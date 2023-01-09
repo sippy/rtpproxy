@@ -71,6 +71,7 @@ struct r_pipe_ctor_args {
     struct rtpp_stats *rtpp_stats;
     int pipe_type;
     unsigned int nmodules;
+    struct pproc_manager *pproc_manager;
 };
 
 struct rtpp_pipe *rtpp_pipe_ctor(const struct r_pipe_ctor_args *);

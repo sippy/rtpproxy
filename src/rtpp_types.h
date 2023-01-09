@@ -51,6 +51,7 @@ extern const struct rtpp_stats_smethods * const rtpp_stats_smethods;
 extern const struct rtpp_timed_smethods * const rtpp_timed_smethods;
 extern const struct rtpp_stream_smethods * const rtpp_stream_smethods;
 extern const struct rtpp_pcount_smethods * const rtpp_pcount_smethods;
+extern const struct pproc_manager_smethods * const pproc_manager_smethods;
 
 #if defined(RTPP_DEBUG)
 #define CALL_SMETHOD(obj, method, args...) (obj)->smethods->method(obj, ## args)
@@ -63,7 +64,8 @@ extern const struct rtpp_pcount_smethods * const rtpp_pcount_smethods;
     struct rtpp_stats *: rtpp_stats_smethods, \
     struct rtpp_timed *: rtpp_timed_smethods, \
     struct rtpp_stream *: rtpp_stream_smethods, \
-    struct rtpp_pcount *: rtpp_pcount_smethods \
+    struct rtpp_pcount *: rtpp_pcount_smethods, \
+    struct pproc_manager *: pproc_manager_smethods \
 )
 
 #define CALL_SMETHOD(obj, method, args...) GET_SMETHODS(obj)->method(obj, ## args)

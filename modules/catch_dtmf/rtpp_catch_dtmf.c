@@ -99,6 +99,8 @@ static void rtpp_catch_dtmf_dtor(struct rtpp_module_priv *);
 static void rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *);
 static int rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *,
   const struct rtpp_subc_ctx *);
+static int rtp_packet_is_dtmf(struct pkt_proc_ctx *);
+static enum pproc_action rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *);
 
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
@@ -280,7 +282,7 @@ catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const char *dtmf_tag,
         goto e1;
     }
     atomic_init(&(rtps_c->pt), new_pt);
-    atomic_init(&(rtps_c->act), PPROC_TEE);
+    atomic_init(&(rtps_c->act), PPROC_ACT_TEE);
     rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp_in->side);
     if (!rtps_c->edata) {
         RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "cannot create edata (sp=%p)",
@@ -302,13 +304,11 @@ static int
 rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
   const struct rtpp_subc_ctx *ctxp)
 {
-    struct rtpp_refcnt *rtps_cnt;
     struct catch_dtmf_stream_cfg *rtps_c;
     int len;
     int old_pt, new_pt = 101;
-    enum pproc_action old_act, new_act = PPROC_TEE;
+    enum pproc_action old_act, new_act = PPROC_ACT_TEE;
     char *dtmf_tag;
-    _Atomic(struct rtpp_refcnt *) *catch_dtmf_datap;
 
     if (ctxp->sessp->timeout_data == NULL) {
         RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "notification is not enabled (sp=%p)",
@@ -347,7 +347,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
                 switch (*opt) {
                 case 'h':
                 case 'H':
-                    new_act = PPROC_TAKE;
+                    new_act = PPROC_ACT_DROP;
                     break;
 
                 default:
@@ -359,22 +359,31 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
         }
     }
 
-    RTPP_DBG_ASSERT(rtpp_module.ids->module_idx < ctxp->strmp_in->pmod_datap->nmodules);
-    catch_dtmf_datap = &(ctxp->strmp_in->pmod_datap->adp[rtpp_module.ids->module_idx]);
-    rtps_cnt = atomic_load(catch_dtmf_datap);
-    if (rtps_cnt == NULL) {
+    const struct packet_processor_if *dpp;
+
+    dpp = CALL_SMETHOD(ctxp->strmp_in->pproc_manager, lookup, pvt);
+    if (dpp == NULL) {
         rtps_c = catch_dtmf_data_ctor(ctxp, dtmf_tag, new_pt);
         if (rtps_c == NULL) {
             return (-1);
         }
-        if (!atomic_compare_exchange_strong(catch_dtmf_datap,
-          &rtps_cnt, rtps_c->rcnt)) {
+        const struct packet_processor_if dtmf_poi = {
+            .descr = "dtmf",
+            .taste = rtp_packet_is_dtmf,
+            .enqueue = rtpp_catch_dtmf_enqueue,
+            .key = pvt,
+            .arg = rtps_c,
+            .rcnt = rtps_c->rcnt
+        };
+        if (CALL_SMETHOD(ctxp->strmp_in->pproc_manager, reg, PPROC_ORD_WITNESS, &dtmf_poi) < 0) {
             RTPP_OBJ_DECREF(rtps_c);
-            rtps_c = CALL_SMETHOD(rtps_cnt, getdata);
+            return (-1);
         }
+        RTPP_OBJ_DECREF(rtps_c);
     } else {
-        rtps_c = CALL_SMETHOD(rtps_cnt, getdata);
+        rtps_c = dpp->arg;
     }
+
     old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
     if (old_pt != -1)
         RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "sp=%p, pt=%d->%d",
@@ -390,17 +399,10 @@ static int
 rtp_packet_is_dtmf(struct pkt_proc_ctx *pktx)
 {
     struct catch_dtmf_stream_cfg *rtps_c;
-    struct rtpp_refcnt *rtps_cnt;
-    _Atomic(struct rtpp_refcnt *) *catch_dtmf_datap;
 
     if (pktx->strmp_in->pipe_type != PIPE_RTP)
         return (0);
-    RTPP_DBG_ASSERT(rtpp_module.ids->module_idx < pktx->strmp_in->pmod_datap->nmodules);
-    catch_dtmf_datap = &(pktx->strmp_in->pmod_datap->adp[rtpp_module.ids->module_idx]);
-    rtps_cnt = atomic_load(catch_dtmf_datap);
-    if (rtps_cnt == NULL)
-        return (0);
-    rtps_c = CALL_SMETHOD(rtps_cnt, getdata);
+    rtps_c = pktx->pproc->arg;
     if (atomic_load(&(rtps_c->pt)) != pktx->pktp->data.header.pt)
         return (0);
     pktx->auxp = rtps_c;
@@ -409,21 +411,17 @@ rtp_packet_is_dtmf(struct pkt_proc_ctx *pktx)
 }
 
 static enum pproc_action
-rtpp_catch_dtmf_enqueue(void *arg, const struct pkt_proc_ctx *pktx)
+rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *pktx)
 {
     struct rtpp_wi *wi;
     struct wipkt *wip;
     struct catch_dtmf_stream_cfg *rtps_c;
-#if 0
-    struct rtpp_catch_dtmf_pvt *pvt;
 
-    pvt = (struct rtpp_catch_dtmf_pvt *)arg;
-#endif
     rtps_c = (struct catch_dtmf_stream_cfg *)pktx->auxp;
     /* we duplicate the tag to make sure it does not vanish */
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
-        return (PPROC_NOP);
+        return (PPROC_ACT_DROP);
     RTPP_OBJ_INCREF(pktx->pktp);
     /* we need to duplicate the tag and state */
     wip->edata = rtps_c->edata;
@@ -439,23 +437,14 @@ static struct rtpp_module_priv *
 rtpp_catch_dtmf_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_priv *pvt;
-    struct packet_processor_if dtmf_poi;
 
     pvt = mod_zmalloc(sizeof(struct rtpp_module_priv));
     if (pvt == NULL) {
         goto e0;
     }
     pvt->notifier = cfsp->rtpp_notify_cf;
-    memset(&dtmf_poi, '\0', sizeof(dtmf_poi));
-    dtmf_poi.taste = rtp_packet_is_dtmf;
-    dtmf_poi.enqueue = rtpp_catch_dtmf_enqueue;
-    dtmf_poi.arg = pvt;
-    if (CALL_METHOD(cfsp->pproc_manager, reg, &dtmf_poi) < 0)
-        goto e1;
     return (pvt);
 
-e1:
-    mod_free(pvt);
 e0:
     return (NULL);
 }

@@ -113,6 +113,7 @@ struct rtpp_stream {
     enum rtpp_stream_side side;
     /* Flags: strong create/delete; weak ones */
     int weak;
+    struct pproc_manager *pproc_manager;
     /* Pointer to rtpp_record's opaque data type */
     struct rtpp_record *rrc;
     struct rtp_resizer *resizer;
@@ -156,6 +157,7 @@ struct r_stream_ctor_args {
     int pipe_type;
     uint64_t seuid;
     unsigned int nmodules;
+    struct pproc_manager *pproc_manager;
 };
 
 struct rtpp_stream *rtpp_stream_ctor(const struct r_stream_ctor_args *);
