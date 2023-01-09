@@ -64,8 +64,7 @@ struct rtpp_proc_ready_lst {
 };
 
 static struct rtpp_stream *get_sender(const struct rtpp_cfg *, struct rtpp_stream *);
-static int relay_packet(const struct rtpp_cfg *, struct pkt_proc_ctx *,
-  struct sthread_args *, struct rtpp_proc_rstats *);
+static int relay_packet(struct pkt_proc_ctx *);
 
 static void
 rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
@@ -74,11 +73,12 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
 {
     int ndrain;
     struct rtp_packet *packet = NULL;
-    struct pkt_proc_ctx pktx;
-
-    pktx.sessp = sp;
-    pktx.strmp_in = stp;
-    pktx.strmp_out = get_sender(cfsp, stp);
+    struct pkt_proc_ctx pktx = {
+        .sessp = sp,
+        .strmp_in = stp,
+        .strmp_out = get_sender(cfsp, stp),
+        .rsp = rsp
+    };
     /* Repeat since we may have several packets queued on the same socket */
     ndrain = -1;
     do {
@@ -97,8 +97,9 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
             ndrain += 1;
             continue;
         }
+        packet->sender = sender;
         pktx.pktp = packet;
-        if (relay_packet(cfsp, &pktx, sender, rsp) != 0) {
+        if (relay_packet(&pktx) != 0) {
             RTPP_OBJ_DECREF(packet);
             CALL_SMETHOD(stp->pcount, reg_drop);
             rsp->npkts_discard.cnt++;
@@ -122,15 +123,14 @@ get_sender(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp)
 }
 
 static int
-relay_packet(const struct rtpp_cfg *cfsp, struct pkt_proc_ctx *pktxp,
-  struct sthread_args *sender, struct rtpp_proc_rstats *rsp)
+relay_packet(struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_out = pktxp->strmp_out;
     struct rtpp_stream *stp_in = pktxp->strmp_in;
     struct rtp_packet *packet = pktxp->pktp;
 
     CALL_METHOD(stp_in->ttl, reset);
-    if (CALL_METHOD(cfsp->pproc_manager, handle, pktxp) & PPROC_TAKE) {
+    if (CALL_SMETHOD(stp_in->pproc_manager, handle, pktxp) & PPROC_ACT_TAKE) {
         return -1;
     }
     if (stp_out == NULL) {
@@ -139,7 +139,7 @@ relay_packet(const struct rtpp_cfg *cfsp, struct pkt_proc_ctx *pktxp,
 
     if (stp_in->rrc != NULL) {
         if (!CALL_SMETHOD(stp_out, isplayer_active)) {
-            CALL_METHOD(stp_in->rrc, pktwrite, stp_out, packet);
+            CALL_METHOD(stp_in->rrc, pktwrite, pktxp);
         }
     }
 
@@ -150,9 +150,9 @@ relay_packet(const struct rtpp_cfg *cfsp, struct pkt_proc_ctx *pktxp,
     if (!CALL_SMETHOD(stp_out, issendable) || CALL_SMETHOD(stp_out, isplayer_active)) {
         return -1;
     }
-    CALL_SMETHOD(stp_out, send_pkt, sender, packet);
+    CALL_SMETHOD(stp_out, send_pkt, packet->sender, packet);
     CALL_SMETHOD(stp_in->pcount, reg_reld);
-    rsp->npkts_relayed.cnt++;
+    pktxp->rsp->npkts_relayed.cnt++;
     return 0;
 }
 
@@ -190,14 +190,16 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
         if (sp->complete != 0) {
             rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp, sp);
             if (stp->resizer != NULL) {
-                struct pkt_proc_ctx pktx;
-
-                pktx.sessp = sp;
-                pktx.strmp_in = stp;
-                pktx.strmp_out = get_sender(cfsp, stp);
+                struct pkt_proc_ctx pktx = {
+                    .sessp = sp,
+                    .strmp_in = stp,
+                    .strmp_out = get_sender(cfsp, stp),
+                    .rsp = rsp
+                };
 
                 while ((pktx.pktp = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
-                    if (relay_packet(cfsp, &pktx, sender, rsp) == 0)
+                    pktx.pktp->sender = sender;
+                    if (relay_packet(&pktx) == 0)
                         rsp->npkts_resizer_out.cnt++;
                 }
 

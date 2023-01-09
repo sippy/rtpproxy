@@ -34,8 +34,9 @@ struct rtpp_stream;
 struct rtp_packet;
 struct rtpp_record;
 struct rtpp_cfg;
+struct pkt_proc_ctx;
 
-DEFINE_METHOD(rtpp_record, rtpp_record_write, void, struct rtpp_stream *, struct rtp_packet *);
+DEFINE_METHOD(rtpp_record, rtpp_record_write, void, const struct pkt_proc_ctx *);
 
 struct rtpp_record {
     struct rtpp_refcnt *rcnt;
