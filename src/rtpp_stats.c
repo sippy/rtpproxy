@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <pthread.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,12 +59,13 @@ struct rtpp_stat_descr
 
 union rtpp_stat_cnt {
     _Atomic(uint64_t) u64;
-    _Atomic(double) d;
+    double d;
 };
 
 struct rtpp_stat
 {
     struct rtpp_stat_descr *descr;
+    pthread_mutex_t mutex;
     union rtpp_stat_cnt cnt;
 };
 
@@ -214,10 +216,18 @@ rtpp_stats_ctor(void)
     for (i = 0; default_stats[i].name != NULL; i++) {
         st = &pvt->stats[pvt->nstats];
         st->descr = &default_stats[i];
+        if (pthread_mutex_init(&st->mutex, NULL) != 0) {
+            while ((pvt->nstats - 1) >= 0) {
+                st = &pvt->stats[pvt->nstats - 1];
+                pthread_mutex_destroy(&st->mutex);
+                pvt->nstats -= 1;
+            }
+            goto e2;
+        }
         if (default_stats[i].type == RTPP_CNT_U64) {
             atomic_init(&st->cnt.u64, 0);
         } else {
-            atomic_init(&st->cnt.d, 0.0);
+            st->cnt.d = 0.0;
         }
         pvt->nstats += 1;
     }
@@ -277,7 +287,9 @@ rtpp_stats_updatebyidx_internal(struct rtpp_stats *self, int idx,
     if (type == RTPP_CNT_U64) {
         atomic_fetch_add_explicit(&st->cnt.u64, *(uint64_t *)argp, memory_order_relaxed);
     } else {
-        atomic_fetch_add_explicit(&st->cnt.d, *(double *)argp, memory_order_relaxed);
+        pthread_mutex_lock(&st->mutex);
+        st->cnt.d += *(double *)argp;
+        pthread_mutex_unlock(&st->mutex);
     }
     return (0);
 }
@@ -344,7 +356,9 @@ rtpp_stats_nstr(struct rtpp_stats *self, char *buf, int len, const char *name)
         uval = atomic_load_explicit(&st->cnt.u64, memory_order_relaxed);
         rval = snprintf(buf, len, "%" PRIu64, uval);
     } else {
-        dval = atomic_load_explicit(&st->cnt.d, memory_order_relaxed);
+        pthread_mutex_lock(&st->mutex);
+        dval = st->cnt.d;
+        pthread_mutex_unlock(&st->mutex);
         rval = snprintf(buf, len, "%f", dval);
     }
     return (rval);
@@ -353,9 +367,15 @@ rtpp_stats_nstr(struct rtpp_stats *self, char *buf, int len, const char *name)
 static void
 rtpp_stats_dtor(struct rtpp_stats_full *fp)
 {
+    int i;
     struct rtpp_stats_priv *pvt;
+    struct rtpp_stat *st;
 
     pvt = &fp->pvt;
+    for (i = 0; i < pvt->nstats; i++) {
+        st = &pvt->stats[i];
+        pthread_mutex_destroy(&st->mutex);
+    }
     RTPP_OBJ_DECREF(pvt->rppp);
     if (pvt->dstats != NULL) {
         free(pvt->dstats);
@@ -392,10 +412,14 @@ rtpp_stats_update_derived(struct rtpp_stats *self, double dtime)
             dval = (dst->last_val.u64 - last_val.u64) / ival;
         } else {
             last_val.d = dst->last_val.d;
-            dst->last_val.d = atomic_load_explicit(&dst->derive_from->cnt.d, memory_order_relaxed);
+            pthread_mutex_lock(&dst->derive_from->mutex);
+            dst->last_val.d = dst->derive_from->cnt.d;
+            pthread_mutex_unlock(&dst->derive_from->mutex);
             dval = (dst->last_val.d - last_val.d) / ival;
         }
-        atomic_store_explicit(&dst->derive_to->cnt.d, dval, memory_order_relaxed);
+        pthread_mutex_lock(&dst->derive_to->mutex);
+        dst->derive_to->cnt.d = dval;
+        pthread_mutex_unlock(&dst->derive_to->mutex);
         dst->last_ts = dtime;
     }
 }
