@@ -22,6 +22,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       COMPILER: ${{ matrix.compiler }}
+      TAR_CMD: tar_nosuid
 
     strategy:
       matrix:
@@ -35,6 +36,9 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: apt_get_update
+        run: sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
+
       - name: Get Date
         id: get-date
         run: |
@@ -47,10 +51,22 @@ jobs:
           path: dist/ffmpeg.tar.xz
           key: ${{ steps.get-date.outputs.date }}
 
-      - name: Set up Python 3.6
+      - name: Workaround for tar not being able to access /var/cache/apt/archives
+        run: |
+          sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
+          sudo chmod u+s "$(command -v tar)"
+
+      # Cache the apt-get packages
+      - name: Cache apt-get packages
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/apt/archives
+          key: glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get-${{ hashFiles('**/scripts/build/install_depends.sh') }}
+
+      - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.6
+          python-version: 3.9
 
       - name: before_install
         run: sh -x scripts/ft-before_install.sh

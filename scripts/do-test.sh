@@ -10,6 +10,8 @@ TTYPE="${1}"
 BCG729_VER=1.1.1
 SNDFILE_VER=1.0.28
 
+TAR_CMD=${TAR_CMD:-"tar"}
+
 uname -a
 which ${CC}
 ${CC} --version
@@ -37,7 +39,7 @@ mkdir deps
 cd deps
 wget -O bcg729-${BCG729_VER}.tar.gz \
   https://github.com/BelledonneCommunications/bcg729/archive/${BCG729_VER}.tar.gz
-tar xfz bcg729-${BCG729_VER}.tar.gz
+${TAR_CMD} xfz bcg729-${BCG729_VER}.tar.gz
 cd bcg729-${BCG729_VER}
 touch ChangeLog NEWS AUTHORS
 perl -pi -e 's|bcg729.spec||g' configure.ac
@@ -58,7 +60,7 @@ make
 sudo make install
 cd ..
 wget http://www.mega-nerd.com/libsndfile/files/libsndfile-${SNDFILE_VER}.tar.gz
-tar xfz libsndfile-${SNDFILE_VER}.tar.gz
+${TAR_CMD} xfz libsndfile-${SNDFILE_VER}.tar.gz
 cd libsndfile-${SNDFILE_VER}
 ./configure
 make
@@ -129,7 +131,7 @@ if [ ! -e dist/ffmpeg.tar.xz ]
 then
   wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
 fi
-tar -C dist -xvf dist/ffmpeg.tar.xz
+${TAR_CMD} -C dist -xvf dist/ffmpeg.tar.xz
 sudo cp dist/ffmpeg-*-*-static/ffmpeg /usr/bin
 
 TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
