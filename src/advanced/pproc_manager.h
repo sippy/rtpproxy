@@ -30,6 +30,7 @@ struct packet_processor_if;
 struct rtpp_session;
 struct rtpp_stream;
 struct rtp_packet;
+struct rtpp_stats;
 
 enum pproc_action;
 enum pproc_order;
@@ -47,6 +48,8 @@ struct pkt_proc_ctx {
 DEFINE_METHOD(pproc_manager, pproc_manager_reg, int, enum pproc_order, const struct packet_processor_if *);
 DEFINE_METHOD(pproc_manager, pproc_manager_unreg, void, void *);
 DEFINE_METHOD(pproc_manager, pproc_manager_handle, enum pproc_action, struct pkt_proc_ctx *);
+DEFINE_METHOD(pproc_manager, pproc_manager_handleat, enum pproc_action, struct pkt_proc_ctx *,
+  enum pproc_order);
 DEFINE_METHOD(pproc_manager, pproc_manager_lookup, const struct packet_processor_if *,
   void *);
 DEFINE_METHOD(pproc_manager, pproc_manager_clone, struct pproc_manager *);
@@ -56,6 +59,7 @@ struct pproc_manager_smethods
     METHOD_ENTRY(pproc_manager_reg, reg);
     METHOD_ENTRY(pproc_manager_unreg, unreg);
     METHOD_ENTRY(pproc_manager_handle, handle);
+    METHOD_ENTRY(pproc_manager_handleat, handleat);
     METHOD_ENTRY(pproc_manager_lookup, lookup);
     METHOD_ENTRY(pproc_manager_clone, clone);
 };
@@ -67,4 +71,4 @@ struct pproc_manager {
 #endif
 };
 
-struct pproc_manager *rtpp_pproc_mgr_ctor(void);
+struct pproc_manager *rtpp_pproc_mgr_ctor(struct rtpp_stats *);

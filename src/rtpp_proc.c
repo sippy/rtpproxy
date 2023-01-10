@@ -51,7 +51,6 @@
 #include "rtpp_pcount.h"
 #include "rtpp_socket.h"
 #include "rtpp_session.h"
-#include "rtpp_ttl.h"
 #include "rtpp_pipe.h"
 #include "rtpp_epoll.h"
 #include "rtpp_debug.h"
@@ -64,7 +63,6 @@ struct rtpp_proc_ready_lst {
 };
 
 static struct rtpp_stream *get_sender(const struct rtpp_cfg *, struct rtpp_stream *);
-static int relay_packet(struct pkt_proc_ctx *);
 
 static void
 rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
@@ -99,11 +97,7 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
         }
         packet->sender = sender;
         pktx.pktp = packet;
-        if (relay_packet(&pktx) != 0) {
-            RTPP_OBJ_DECREF(packet);
-            CALL_SMETHOD(stp->pcount, reg_drop);
-            rsp->npkts_discard.cnt++;
-        }
+        CALL_SMETHOD(stp->pproc_manager, handle, &pktx);
     } while (ndrain > 0);
     if (pktx.strmp_out != NULL) {
         RTPP_OBJ_DECREF(pktx.strmp_out);
@@ -120,40 +114,6 @@ get_sender(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp)
     }
     return (CALL_METHOD(cfsp->rtcp_streams_wrt, get_by_idx,
       stp->stuid_sendr));
-}
-
-static int
-relay_packet(struct pkt_proc_ctx *pktxp)
-{
-    struct rtpp_stream *stp_out = pktxp->strmp_out;
-    struct rtpp_stream *stp_in = pktxp->strmp_in;
-    struct rtp_packet *packet = pktxp->pktp;
-
-    CALL_METHOD(stp_in->ttl, reset);
-    if (CALL_SMETHOD(stp_in->pproc_manager, handle, pktxp) & PPROC_ACT_TAKE) {
-        return -1;
-    }
-    if (stp_out == NULL) {
-        return -1;
-    }
-
-    if (stp_in->rrc != NULL) {
-        if (!CALL_SMETHOD(stp_out, isplayer_active)) {
-            CALL_METHOD(stp_in->rrc, pktwrite, pktxp);
-        }
-    }
-
-    /*
-     * Check that we have some address to which packet is to be
-     * sent out, drop otherwise.
-     */
-    if (!CALL_SMETHOD(stp_out, issendable) || CALL_SMETHOD(stp_out, isplayer_active)) {
-        return -1;
-    }
-    CALL_SMETHOD(stp_out, send_pkt, packet->sender, packet);
-    CALL_SMETHOD(stp_in->pcount, reg_reld);
-    pktxp->rsp->npkts_relayed.cnt++;
-    return 0;
 }
 
 void
@@ -199,7 +159,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
 
                 while ((pktx.pktp = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
                     pktx.pktp->sender = sender;
-                    if (relay_packet(&pktx) == 0)
+                    if (CALL_SMETHOD(stp->pproc_manager, handleat, &pktx, PPROC_ORD_WITNESS) & PPROC_ACT_TAKE)
                         rsp->npkts_resizer_out.cnt++;
                 }
 

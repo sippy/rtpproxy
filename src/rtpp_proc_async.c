@@ -59,6 +59,14 @@
 #include "rtpp_epoll.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_debug.h"
+#include "rtpp_stream.h"
+#include "rtpp_record.h"
+#include "rtpp_pcount.h"
+#include "rtp.h"
+#include "rtp_packet.h"
+#include "rtpp_ttl.h"
+#include "advanced/pproc_manager.h"
+#include "advanced/packet_processor.h"
 
 struct rtpp_proc_async_cf;
 
@@ -79,6 +87,7 @@ struct rtpp_proc_async_cf {
     struct rtpp_proc_thread_cf rtp_thread;
     struct rtpp_proc_thread_cf rtcp_thread;
     struct rtpp_proc_servers *stap;
+    int npkts_relayed_idx;
 };
 
 #define TSTATE_RUN   0x0
@@ -249,6 +258,42 @@ rtpp_proc_async_thread_destroy(struct rtpp_proc_thread_cf *tcp)
     free(tcp->events);
 }
 
+static enum pproc_action
+relay_packet(const struct pkt_proc_ctx *pktxp)
+{
+    struct rtpp_stream *stp_out = pktxp->strmp_out;
+    struct rtpp_stream *stp_in = pktxp->strmp_in;
+    struct rtp_packet *packet = pktxp->pktp;
+
+    CALL_METHOD(stp_in->ttl, reset);
+    if (stp_out == NULL) {
+        return PPROC_ACT_DROP;
+    }
+
+    if (stp_in->rrc != NULL) {
+        if (!CALL_SMETHOD(stp_out, isplayer_active)) {
+            CALL_METHOD(stp_in->rrc, pktwrite, pktxp);
+        }
+    }
+
+    /*
+     * Check that we have some address to which packet is to be
+     * sent out, drop otherwise.
+     */
+    if (!CALL_SMETHOD(stp_out, issendable) || CALL_SMETHOD(stp_out, isplayer_active)) {
+        return PPROC_ACT_DROP;
+    }
+    CALL_SMETHOD(stp_out, send_pkt, packet->sender, packet);
+    CALL_SMETHOD(stp_in->pcount, reg_reld);
+    if (pktxp->rsp != NULL) {
+        pktxp->rsp->npkts_relayed.cnt++;
+    } else {
+        struct rtpp_proc_async_cf *proc_cf = pktxp->pproc->arg;
+        CALL_SMETHOD(proc_cf->cf_save->rtpp_stats, updatebyidx, proc_cf->npkts_relayed_idx, 1);
+    }
+    return PPROC_ACT_TAKE;
+}
+
 struct rtpp_proc_async *
 rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
 {
@@ -257,6 +302,10 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
     proc_cf = rtpp_zmalloc(sizeof(*proc_cf));
     if (proc_cf == NULL)
         return (NULL);
+
+    proc_cf->npkts_relayed_idx = CALL_SMETHOD(cfsp->rtpp_stats, getidxbyname, "npkts_relayed");
+    if (proc_cf->npkts_relayed_idx < 0)
+        goto e0;
 
     proc_cf->pub.netio = rtpp_netio_async_init(cfsp, 1);
     if (proc_cf->pub.netio == NULL) {
@@ -269,19 +318,30 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
     if (proc_cf->stap == NULL)
         goto e1;
 
-    if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtp_thread, PIPE_RTP) != 0) {
+    const struct packet_processor_if relay_packet_poi = {
+        .descr = "relay_packet",
+        .arg = (void *)proc_cf,
+        .key = (void *)proc_cf,
+        .enqueue = &relay_packet
+    };
+    if (CALL_SMETHOD(cfsp->pproc_manager, reg, PPROC_ORD_RELAY, &relay_packet_poi) < 0)
         goto e2;
+
+    if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtp_thread, PIPE_RTP) != 0) {
+        goto e3;
     }
 
     if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtcp_thread, PIPE_RTCP) != 0) {
-        goto e3;
+        goto e4;
     }
 
     proc_cf->pub.dtor = &rtpp_proc_async_dtor;
     proc_cf->pub.nudge = &rtpp_proc_async_nudge;
     return (&proc_cf->pub);
-e3:
+e4:
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
+e3:
+    CALL_SMETHOD(cfsp->pproc_manager, unreg, relay_packet_poi.key);
 e2:
     RTPP_OBJ_DECREF(proc_cf->stap);
 e1:
@@ -297,6 +357,7 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     struct rtpp_proc_async_cf *proc_cf;
 
     PUB2PVT(pub, proc_cf);
+    CALL_SMETHOD(proc_cf->cf_save->pproc_manager, unreg, proc_cf);
     rtpp_proc_async_thread_destroy(&proc_cf->rtcp_thread);
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
     RTPP_OBJ_DECREF(proc_cf->stap);

@@ -347,7 +347,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
                 switch (*opt) {
                 case 'h':
                 case 'H':
-                    new_act = PPROC_ACT_TAKE;
+                    new_act = PPROC_ACT_DROP;
                     break;
 
                 default:
@@ -421,7 +421,7 @@ rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *pktx)
     /* we duplicate the tag to make sure it does not vanish */
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
-        return (PPROC_ACT_NOP);
+        return (PPROC_ACT_DROP);
     RTPP_OBJ_INCREF(pktx->pktp);
     /* we need to duplicate the tag and state */
     wip->edata = rtps_c->edata;

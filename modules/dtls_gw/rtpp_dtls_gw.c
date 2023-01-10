@@ -96,7 +96,7 @@ struct rtpp_dtls_gw_aux {
 };
 
 struct wipkt {
-    struct rtp_packet *pkt;
+    struct pkt_proc_ctx pktx;
     struct rtpp_dtls_gw_aux edata;
 };
 
@@ -144,22 +144,22 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
         switch (wip->edata.direction) {
         case DTLS_IN:
             RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "Packet from DTLS");
-            CALL_METHOD(wip->edata.dtls_conn, dtls_recv, wip->pkt);
+            CALL_METHOD(wip->edata.dtls_conn, dtls_recv, wip->pktx.pktp);
             break;
         case SRTP_IN:
             RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "DTLS: packet SRTP->RTP");
-            CALL_METHOD(wip->edata.dtls_conn, srtp_recv, wip->pkt);
+            CALL_METHOD(wip->edata.dtls_conn, srtp_recv, wip->pktx.pktp);
             break;
         case RTP_OUT:
             RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "DTLS: packet RTP->SRTP");
-            CALL_METHOD(wip->edata.dtls_conn, rtp_send, wip->pkt);
+            CALL_METHOD(wip->edata.dtls_conn, rtp_send, wip->pktx.pktp);
             break;
         default:
             abort();
         }
         RTPP_OBJ_DECREF(wip->edata.strmp);
         RTPP_OBJ_DECREF(wip->edata.dtls_conn);
-        RTPP_OBJ_DECREF(wip->pkt);
+        RTPP_OBJ_DECREF(wip->pktx.pktp);
         CALL_METHOD(wi, dtor);
     }
 }
@@ -384,52 +384,55 @@ e0:
 }
 
 static int
-rtpp_dtls_gw_taste_in(struct pkt_proc_ctx *pktx)
+rtpp_dtls_gw_taste_in(struct pkt_proc_ctx *pktxp)
 {
     struct dtls_gw_stream_cfg *rtps_c;
     static __thread struct rtpp_dtls_gw_aux dtls_in = {.direction = DTLS_IN};
     static __thread struct rtpp_dtls_gw_aux strp_in = {.direction = SRTP_IN};
     struct rtpp_dtls_gw_aux *rdgap;
 
-    if (!is_dtls_packet(pktx->pktp))
+    if (!is_dtls_packet(pktxp->pktp))
         rdgap = &strp_in;
     else
         rdgap = &dtls_in;
-    rtps_c = pktx->pproc->arg;
+    rtps_c = pktxp->pproc->arg;
     rdgap->dtls_conn = rtps_c->dtls_conn;
-    rdgap->strmp = pktx->strmp_in;
-    pktx->auxp = rdgap;
+    rdgap->strmp = pktxp->strmp_in;
+    pktxp->auxp = rdgap;
     return (1);
 }
 
 static int
-rtpp_dtls_gw_taste_out(struct pkt_proc_ctx *pktx)
+rtpp_dtls_gw_taste_out(struct pkt_proc_ctx *pktxp)
 {
     struct dtls_gw_stream_cfg *rtps_c;
     static __thread struct rtpp_dtls_gw_aux rtp_out = {.direction = RTP_OUT};
 
-    rtps_c = pktx->pproc->arg;
+    if (pktxp->strmp_out == NULL)
+        return (0);
+    rtps_c = pktxp->pproc->arg;
     rtp_out.dtls_conn = rtps_c->dtls_conn;
-    rtp_out.strmp = pktx->strmp_out;
-    pktx->auxp = &rtp_out;
+    rtp_out.strmp = pktxp->strmp_out;
+    pktxp->auxp = &rtp_out;
     return (1);
 }
 
 static enum pproc_action
-rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *pktx)
+rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_dtls_gw_aux *edata;
     struct rtpp_wi *wi;
     struct wipkt *wip;
 
-    edata = (struct rtpp_dtls_gw_aux *)pktx->auxp;
+    edata = (struct rtpp_dtls_gw_aux *)pktxp->auxp;
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
-        return (PPROC_ACT_TAKE);
-    RTPP_OBJ_INCREF(pktx->pktp);
+        return (PPROC_ACT_DROP);
+    RTPP_OBJ_INCREF(pktxp->pktp);
     wip->edata = *edata;
     RTPP_OBJ_INCREF(edata->dtls_conn);
-    wip->pkt = pktx->pktp;
+    wip->pktx = *pktxp;
+    wip->pktx.rsp = NULL;
     RTPP_OBJ_INCREF(edata->strmp);
     rtpp_queue_put_item(wi, rtpp_module.wthr.mod_q);
 

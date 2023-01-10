@@ -29,14 +29,21 @@ struct packet_processor_if;
 struct pkt_proc_ctx;
 struct rtpp_refcnt;
 
-enum pproc_action {PPROC_ACT_NOP = 0, PPROC_ACT_TEE = 1, PPROC_ACT_TAKE = 2};
+enum pproc_action {
+    PPROC_ACT_NOP = 0,
+    PPROC_ACT_TEE = 1,
+    PPROC_ACT_TAKE = 2,
+    PPROC_ACT_DROP = 4
+};
+
 enum pproc_order {
-    PPROC_ORD_DECRYPT = 0,
-    PPROC_ORD_DECODE = 1,
-    PPROC_ORD_WITNESS = 2,
-    PPROC_ORD_ENCODE = 3,
-    PPROC_ORD_ENCRYPT = 4,
-    PPROC_ORD_RELAY = 5
+    _PPROC_ORD_EMPTY = 0,
+    PPROC_ORD_DECRYPT = 1,
+    PPROC_ORD_DECODE = 2,
+    PPROC_ORD_WITNESS = 3,
+    PPROC_ORD_ENCODE = 4,
+    PPROC_ORD_ENCRYPT = 5,
+    PPROC_ORD_RELAY = 6
 };
 
 DEFINE_RAW_METHOD(pproc_taste, int, struct pkt_proc_ctx *);
