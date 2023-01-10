@@ -424,7 +424,7 @@ pkglib_LTLIBRARIES = rtpp_catch_dtmf.la rtpp_catch_dtmf_debug.la
 rtpp_catch_dtmf_la_SOURCES = rtpp_catch_dtmf.c
 rtpp_catch_dtmf_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
 rtpp_catch_dtmf_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
-  -Dfree=mod_free -Drealloc=mod_realloc -I$(UCLSRCDIR)/include
+  -Dfree=mod_free -Drealloc=mod_realloc
 
 CFLAGS_rtpp_catch_dtmf_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
 rtpp_catch_dtmf_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_catch_dtmf_common)
