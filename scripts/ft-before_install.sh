@@ -2,7 +2,7 @@
 
 set -e
 
-sudo apt-get -y install python3-pip python-dev
+sudo apt-get -y install python3-pip python3-dev
 sudo pip3 install -U pip setuptools wheel
 #sudo pip3 install -U virtualenvwrapper
 which python
