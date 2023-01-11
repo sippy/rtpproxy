@@ -1077,7 +1077,8 @@ am__define_uniq_tagged_files = \
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/depcomp \
 	$(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami \
-	$(top_srcdir)/m4/coverage.ami $(top_srcdir)/m4/memdeb.ami
+	$(top_srcdir)/m4/coverage.ami $(top_srcdir)/m4/ipolice.ami \
+	$(top_srcdir)/m4/memdeb.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -1417,7 +1418,7 @@ all: config.h
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(top_srcdir)/m4/ipolice.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -1437,7 +1438,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__empty):
+$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(top_srcdir)/m4/ipolice.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -7004,15 +7005,16 @@ update_autosrc:
 
 includepolice:
 	@rm -f $(IPLDIR)/*.txt $(IPLDIR)/*.iout
-	@nfiles=`echo ${BASE_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); \
+	@_SOURCES=`echo ${SOURCES} | tr ' ' '\n' | sort -u`; \
+         nfiles=`echo $${_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); \
 	 i=1; nwarns=0; \
-	 for file in ${BASE_SOURCES}; \
+	 for file in $${_SOURCES}; \
 	 do \
 	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
 	   set +e; set +x; \
 	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
-            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src:$(RTPP_AUTOSRC_DIR):$(top_srcdir)" \
-	    python ../misc/includepolice.py $${file} > $(IPLDIR)/$${file}.txt; \
+            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src:$(RTPP_AUTOSRC_DIR):$(top_srcdir)/src" \
+	    python3 $(top_srcdir)/misc/includepolice.py $${file} > $(IPLDIR)/$${file}.txt; \
 	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
 	   if [ $${RC} -eq 0 ]; then \
 	     rm -f $(IPLDIR)/$${file}.txt $(IPLDIR)/$${file}.iout; \
