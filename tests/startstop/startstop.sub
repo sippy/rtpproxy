@@ -41,6 +41,7 @@ test_startstop() {
       done
 
       rm -f rtpproxy_acct.csv
+      echo "rtpproxy_start ${rargs} ${SOCK_RARGS}" >&2
       rtpproxy_start ${rargs} ${SOCK_RARGS}
       report "`basename ${RTPPROXY}` start"
       RTPP_LOGFILE="${TMP_LOGFILE}"
