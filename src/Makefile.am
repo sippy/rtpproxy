@@ -197,28 +197,4 @@ update_autosrc:
 	  echo "SRCS_AUTOGEN_DEBUG += \$$($${ofile}_AUTOSRCS)" >> $(RTPP_AUTOSRC_DIR)/Makefile.ami; \
 	done
 
-IPLDIR=$(top_srcdir)/src/ipol
-
-includepolice:
-	@rm -f $(IPLDIR)/*.txt $(IPLDIR)/*.iout
-	@nfiles=`echo ${BASE_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); \
-	 i=1; nwarns=0; \
-	 for file in ${BASE_SOURCES}; \
-	 do \
-	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
-	   set +e; set +x; \
-	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
-            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src:$(RTPP_AUTOSRC_DIR):$(top_srcdir)" \
-	    python ../misc/includepolice.py $${file} > $(IPLDIR)/$${file}.txt; \
-	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
-	   if [ $${RC} -eq 0 ]; then \
-	     rm -f $(IPLDIR)/$${file}.txt $(IPLDIR)/$${file}.iout; \
-	     echo "all clean"; \
-	   else \
-	     echo "$${RC} warning(s)"; \
-	     nwarns=$$(($${nwarns} + $${RC})); \
-	   fi; \
-	   i=$$(($${i} + 1)); \
-	 done; \
-	 echo "=========="; \
-	 echo "Total warnings: $${nwarns}"
+include $(top_srcdir)/m4/ipolice.ami

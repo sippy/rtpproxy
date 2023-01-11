@@ -1,0 +1,26 @@
+IPLDIR=$(top_srcdir)/src/ipol
+
+includepolice:
+	@rm -f $(IPLDIR)/*.txt $(IPLDIR)/*.iout
+	@_SOURCES=`echo ${SOURCES} | tr ' ' '\n' | sort -u`; \
+         nfiles=`echo $${_SOURCES} | wc -w`; nfiles=$$(($${nfiles})); \
+	 i=1; nwarns=0; \
+	 for file in $${_SOURCES}; \
+	 do \
+	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
+	   set +e; set +x; \
+	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
+            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src:$(RTPP_AUTOSRC_DIR):$(top_srcdir)/src" \
+	    python3 $(top_srcdir)/misc/includepolice.py $${file} > $(IPLDIR)/$${file}.txt; \
+	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
+	   if [ $${RC} -eq 0 ]; then \
+	     rm -f $(IPLDIR)/$${file}.txt $(IPLDIR)/$${file}.iout; \
+	     echo "all clean"; \
+	   else \
+	     echo "$${RC} warning(s)"; \
+	     nwarns=$$(($${nwarns} + $${RC})); \
+	   fi; \
+	   i=$$(($${i} + 1)); \
+	 done; \
+	 echo "=========="; \
+	 echo "Total warnings: $${nwarns}"
