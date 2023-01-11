@@ -38,9 +38,16 @@ struct pkt_proc_ctx;
 
 DEFINE_METHOD(rtpp_record, rtpp_record_write, void, const struct pkt_proc_ctx *);
 
+struct rtpp_record_smethods
+{
+    METHOD_ENTRY(rtpp_record_write, pktwrite);
+};
+
 struct rtpp_record {
     struct rtpp_refcnt *rcnt;
-    METHOD_ENTRY(rtpp_record_write, pktwrite);
+#if defined(RTPP_DEBUG)
+    const struct rtpp_record_smethods * smethods;
+#endif
 };
 
 #define RECORD_RTP  0

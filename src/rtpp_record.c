@@ -103,6 +103,10 @@ static int get_hdr_size(const struct sockaddr *);
 #define ARRIVAL_TIME(rp, pp) (pp->rtime.wall)
 #endif
 
+static const struct rtpp_record_smethods _rtpp_record_smethods = {
+    .pktwrite = &rtpp_record_write
+};
+const struct rtpp_record_smethods * const rtpp_record_smethods = &_rtpp_record_smethods;
 
 static int
 ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
@@ -187,7 +191,9 @@ rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
     }
     rrc->log = sp->log;
     RTPP_OBJ_INCREF(sp->log);
-    rrc->pub.pktwrite = &rtpp_record_write;
+#if defined(RTPP_DEBUG)
+    rrc->pub.smethods = rtpp_record_smethods;
+#endif
     if (remote) {
 	rval = ropen_remote_ctor_pa(rrc, sp->log, rname, (record_type == RECORD_RTCP));
         if (rval < 0) {
