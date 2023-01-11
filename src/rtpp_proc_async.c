@@ -270,12 +270,6 @@ relay_packet(const struct pkt_proc_ctx *pktxp)
         return PPROC_ACT_DROP;
     }
 
-    if (stp_in->rrc != NULL) {
-        if (!CALL_SMETHOD(stp_out, isplayer_active)) {
-            CALL_METHOD(stp_in->rrc, pktwrite, pktxp);
-        }
-    }
-
     /*
      * Check that we have some address to which packet is to be
      * sent out, drop otherwise.
@@ -292,6 +286,20 @@ relay_packet(const struct pkt_proc_ctx *pktxp)
         CALL_SMETHOD(proc_cf->cf_save->rtpp_stats, updatebyidx, proc_cf->npkts_relayed_idx, 1);
     }
     return PPROC_ACT_TAKE;
+}
+
+static enum pproc_action
+record_packet(const struct pkt_proc_ctx *pktxp)
+{
+    struct rtpp_stream *stp_out = pktxp->strmp_out;
+    struct rtpp_stream *stp_in = pktxp->strmp_in;
+
+    if (stp_in->rrc != NULL && stp_out != NULL) {
+        if (!CALL_SMETHOD(stp_out, isplayer_active)) {
+            CALL_SMETHOD(stp_in->rrc, pktwrite, pktxp);
+        }
+    }
+    return PPROC_ACT_NOP;
 }
 
 struct rtpp_proc_async *
@@ -321,25 +329,36 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
     const struct packet_processor_if relay_packet_poi = {
         .descr = "relay_packet",
         .arg = (void *)proc_cf,
-        .key = (void *)proc_cf,
+        .key = (void *)&relay_packet,
         .enqueue = &relay_packet
     };
     if (CALL_SMETHOD(cfsp->pproc_manager, reg, PPROC_ORD_RELAY, &relay_packet_poi) < 0)
         goto e2;
 
-    if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtp_thread, PIPE_RTP) != 0) {
+    const struct packet_processor_if record_packet_poi = {
+        .descr = "record_packet",
+        .arg = (void *)proc_cf,
+        .key = (void *)&record_packet,
+        .enqueue = &record_packet
+    };
+    if (CALL_SMETHOD(cfsp->pproc_manager, reg, PPROC_ORD_WITNESS, &record_packet_poi) < 0)
         goto e3;
+
+    if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtp_thread, PIPE_RTP) != 0) {
+        goto e4;
     }
 
     if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtcp_thread, PIPE_RTCP) != 0) {
-        goto e4;
+        goto e5;
     }
 
     proc_cf->pub.dtor = &rtpp_proc_async_dtor;
     proc_cf->pub.nudge = &rtpp_proc_async_nudge;
     return (&proc_cf->pub);
-e4:
+e5:
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
+e4:
+    CALL_SMETHOD(cfsp->pproc_manager, unreg, record_packet_poi.key);
 e3:
     CALL_SMETHOD(cfsp->pproc_manager, unreg, relay_packet_poi.key);
 e2:
@@ -357,7 +376,8 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     struct rtpp_proc_async_cf *proc_cf;
 
     PUB2PVT(pub, proc_cf);
-    CALL_SMETHOD(proc_cf->cf_save->pproc_manager, unreg, proc_cf);
+    CALL_SMETHOD(proc_cf->cf_save->pproc_manager, unreg, record_packet);
+    CALL_SMETHOD(proc_cf->cf_save->pproc_manager, unreg, relay_packet);
     rtpp_proc_async_thread_destroy(&proc_cf->rtcp_thread);
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
     RTPP_OBJ_DECREF(proc_cf->stap);
