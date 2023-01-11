@@ -135,8 +135,8 @@ if __name__ == '__main__':
     make = os.environ['SMAKE']
     includedirs = os.environ['SIPATH'].split(':')
     pconf = PassConf()
-    pconf.cleanbuild_targets = ('clean', 'opensips')
-    pconf.build_targets = ('opensips',)
+    pconf.cleanbuild_targets = ('clean', 'all')
+    pconf.build_targets = ('all',)
     try:
         pconf.make_flags = os.environ['SMAKEFLAGS'].split()
     except KeyError:
@@ -194,5 +194,9 @@ if __name__ == '__main__':
             break
     os.rename(fname_bak, fname)
     for include in sfl_includes:
-        print('"#include %s" is superfluous in %s' % (include.ifname, fname))
+        msg = F'"#include {include.ifname}" is superfluous in {fname}'
+        sys.stderr.write(msg + '\n')
+        sys.stderr.flush()
+        print(msg)
+        sys.stdout.flush()
     sys.exit(len(sfl_includes))
