@@ -74,6 +74,7 @@
 #include "rtpp_netaddr.h"
 #include "rtpp_debug.h"
 #include "rtpp_acct_pipe.h"
+#include "rtpp_cfg.h"
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
 
@@ -153,6 +154,8 @@ void rtpp_stream_get_stats(struct rtpp_stream *, struct rtpp_acct_hold *);
 static struct rtp_packet *rtpp_stream_rx(struct rtpp_stream *,
   struct rtpp_weakref_obj *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
 static struct rtpp_netaddr *rtpp_stream_get_rem_addr(struct rtpp_stream *, int);
+static struct rtpp_stream *rtpp_stream_get_sender(struct rtpp_stream *,
+  const struct rtpp_cfg *cfsp);
 
 static const struct rtpp_stream_smethods _rtpp_stream_smethods = {
     .handle_play = &rtpp_stream_handle_play,
@@ -174,6 +177,7 @@ static const struct rtpp_stream_smethods _rtpp_stream_smethods = {
     .rx = &rtpp_stream_rx,
     .get_rem_addr = &rtpp_stream_get_rem_addr,
     .latch = &rtpp_stream_latch,
+    .get_sender = &rtpp_stream_get_sender,
 };
 const struct rtpp_stream_smethods * const rtpp_stream_smethods = &_rtpp_stream_smethods;
 
@@ -1072,4 +1076,15 @@ rtpp_stream_get_rem_addr(struct rtpp_stream *self, int retempty)
     RTPP_OBJ_INCREF(rval);
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
+}
+
+static struct rtpp_stream *
+rtpp_stream_get_sender(struct rtpp_stream *self, const struct rtpp_cfg *cfsp)
+{
+    if (self->pipe_type == PIPE_RTP) {
+       return (CALL_METHOD(cfsp->rtp_streams_wrt, get_by_idx,
+         self->stuid_sendr));
+    }
+    return (CALL_METHOD(cfsp->rtcp_streams_wrt, get_by_idx,
+      self->stuid_sendr));
 }

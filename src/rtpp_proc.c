@@ -62,19 +62,16 @@ struct rtpp_proc_ready_lst {
     struct rtpp_stream *stp;
 };
 
-static struct rtpp_stream *get_sender(const struct rtpp_cfg *, struct rtpp_stream *);
-
 static void
 rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
   const struct rtpp_timestamp *dtime, int drain_repeat, struct sthread_args *sender,
-  struct rtpp_proc_rstats *rsp, const struct rtpp_session *sp)
+  struct rtpp_proc_rstats *rsp)
 {
     int ndrain;
     struct rtp_packet *packet = NULL;
     struct pkt_proc_ctx pktx = {
-        .sessp = sp,
         .strmp_in = stp,
-        .strmp_out = get_sender(cfsp, stp),
+        .strmp_out = CALL_SMETHOD(stp, get_sender, cfsp),
         .rsp = rsp
     };
     /* Repeat since we may have several packets queued on the same socket */
@@ -103,17 +100,6 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
         RTPP_OBJ_DECREF(pktx.strmp_out);
     }
     return;
-}
-
-static struct rtpp_stream *
-get_sender(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp)
-{
-    if (stp->pipe_type == PIPE_RTP) {
-       return (CALL_METHOD(cfsp->rtp_streams_wrt, get_by_idx,
-         stp->stuid_sendr));
-    }
-    return (CALL_METHOD(cfsp->rtcp_streams_wrt, get_by_idx,
-      stp->stuid_sendr));
 }
 
 void
@@ -148,12 +134,11 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
             continue;
         }
         if (sp->complete != 0) {
-            rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp, sp);
+            rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp);
             if (stp->resizer != NULL) {
                 struct pkt_proc_ctx pktx = {
-                    .sessp = sp,
                     .strmp_in = stp,
-                    .strmp_out = get_sender(cfsp, stp),
+                    .strmp_out = CALL_SMETHOD(stp, get_sender, cfsp),
                     .rsp = rsp
                 };
 

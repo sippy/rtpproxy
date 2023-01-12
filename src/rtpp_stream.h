@@ -44,6 +44,7 @@ struct sthread_args;
 struct rtpp_acct_hold;
 struct rtpp_proc_rstats;
 struct rtpp_timestamp;
+struct rtpp_cfg;
 
 DEFINE_METHOD(rtpp_stream, rtpp_stream_handle_play, int, const char *,
   const char *, int, struct rtpp_command *, int);
@@ -72,6 +73,8 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_rx, struct rtp_packet *,
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
   int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_latch, int, struct rtp_packet *);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_get_sender, struct rtpp_stream *,
+  const struct rtpp_cfg *cfsp);
 
 enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
 
@@ -98,6 +101,7 @@ struct rtpp_stream_smethods {
     METHOD_ENTRY(rtpp_stream_rx, rx);
     METHOD_ENTRY(rtpp_stream_get_rem_addr, get_rem_addr);
     METHOD_ENTRY(rtpp_stream_latch, latch);
+    METHOD_ENTRY(rtpp_stream_get_sender, get_sender);
 };
 
 struct pmod_data {
