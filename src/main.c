@@ -785,7 +785,6 @@ int
 main(int argc, char **argv)
 {
     int i, len, pid_fd;
-    long long counter;
     struct rtpp_cfg cfs;
     char buf[256];
     struct sched_param sparam;
@@ -976,8 +975,6 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    counter = 0;
-
     cfs.rtpp_timed_cf = rtpp_timed_ctor(0.01);
     if (cfs.rtpp_timed_cf == NULL) {
         RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
@@ -1085,7 +1082,6 @@ main(int argc, char **argv)
             break;
         }
         prdic_procrastinate(elp);
-        counter++;
     }
     prdic_free(elp);
 
