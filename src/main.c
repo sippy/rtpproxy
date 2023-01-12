@@ -248,6 +248,7 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     free(cfsp->locks);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     CALL_METHOD(cfsp->nofile, dtor);
+    CALL_METHOD(cfsp->sessions_wrt, dtor);
 
     for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = ctrl_sock_next) {
@@ -327,6 +328,12 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     cfsp->nofile = rtpp_nofile_ctor();
     if (cfsp->nofile == NULL)
         err(1, "malloc(rtpp_cfg->nofile)");
+
+    cfsp->sessions_wrt = rtpp_weakref_ctor();
+    if (cfsp->sessions_wrt == NULL) {
+        err(1, "can't allocate memory for the sessions weakref table");
+         /* NOTREACHED */
+    }
 
     option_index = -1;
     brsym = 0;
@@ -853,11 +860,6 @@ main(int argc, char **argv)
         err(1, "can't allocate memory for the hash table");
          /* NOTREACHED */
     }
-    cfs.sessions_wrt = rtpp_weakref_ctor();
-    if (cfs.sessions_wrt == NULL) {
-        err(1, "can't allocate memory for the sessions weakref table");
-         /* NOTREACHED */
-    }
     cfs.rtp_streams_wrt = rtpp_weakref_ctor();
     if (cfs.rtp_streams_wrt == NULL) {
         err(1, "can't allocate memory for the RTP streams weakref table");
@@ -1102,6 +1104,7 @@ main(int argc, char **argv)
     for (i = 0; i <= RTPP_PT_MAX; i++) {
         RTPP_OBJ_DECREF(cfs.port_table[i]);
     }
+    CALL_METHOD(cfs.sessions_wrt, dtor);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif
