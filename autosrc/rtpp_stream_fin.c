@@ -23,6 +23,10 @@ static void rtpp_stream_get_rem_addr_fin(void *pub) {
     fprintf(stderr, "Method rtpp_stream@%p::get_rem_addr (rtpp_stream_get_rem_addr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_stream_get_sender_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_stream@%p::get_sender (rtpp_stream_get_sender) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_stream_get_skt_fin(void *pub) {
     fprintf(stderr, "Method rtpp_stream@%p::get_skt (rtpp_stream_get_skt) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -88,6 +92,7 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods_fin = {
     .get_actor = (rtpp_stream_get_actor_t)&rtpp_stream_get_actor_fin,
     .get_proto = (rtpp_stream_get_proto_t)&rtpp_stream_get_proto_fin,
     .get_rem_addr = (rtpp_stream_get_rem_addr_t)&rtpp_stream_get_rem_addr_fin,
+    .get_sender = (rtpp_stream_get_sender_t)&rtpp_stream_get_sender_fin,
     .get_skt = (rtpp_stream_get_skt_t)&rtpp_stream_get_skt_fin,
     .get_stats = (rtpp_stream_get_stats_t)&rtpp_stream_get_stats_fin,
     .guess_addr = (rtpp_stream_guess_addr_t)&rtpp_stream_guess_addr_fin,
@@ -109,6 +114,7 @@ void rtpp_stream_fin(struct rtpp_stream *pub) {
     RTPP_DBG_ASSERT(pub->smethods->get_actor != (rtpp_stream_get_actor_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_proto != (rtpp_stream_get_proto_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_rem_addr != (rtpp_stream_get_rem_addr_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_sender != (rtpp_stream_get_sender_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_skt != (rtpp_stream_get_skt_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_stats != (rtpp_stream_get_stats_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->guess_addr != (rtpp_stream_guess_addr_t)NULL);
@@ -154,6 +160,7 @@ rtpp_stream_fintest()
         .get_actor = (rtpp_stream_get_actor_t)((void *)0x1),
         .get_proto = (rtpp_stream_get_proto_t)((void *)0x1),
         .get_rem_addr = (rtpp_stream_get_rem_addr_t)((void *)0x1),
+        .get_sender = (rtpp_stream_get_sender_t)((void *)0x1),
         .get_skt = (rtpp_stream_get_skt_t)((void *)0x1),
         .get_stats = (rtpp_stream_get_stats_t)((void *)0x1),
         .guess_addr = (rtpp_stream_guess_addr_t)((void *)0x1),
@@ -178,6 +185,7 @@ rtpp_stream_fintest()
     CALL_TFIN(&tp->pub, get_actor);
     CALL_TFIN(&tp->pub, get_proto);
     CALL_TFIN(&tp->pub, get_rem_addr);
+    CALL_TFIN(&tp->pub, get_sender);
     CALL_TFIN(&tp->pub, get_skt);
     CALL_TFIN(&tp->pub, get_stats);
     CALL_TFIN(&tp->pub, guess_addr);
@@ -193,7 +201,7 @@ rtpp_stream_fintest()
     CALL_TFIN(&tp->pub, send_pkt);
     CALL_TFIN(&tp->pub, set_skt);
     CALL_TFIN(&tp->pub, update_skt);
-    assert((_naborts - naborts_s) == 19);
+    assert((_naborts - naborts_s) == 20);
     free(tp);
 }
 const static void *_rtpp_stream_ftp = (void *)&rtpp_stream_fintest;
