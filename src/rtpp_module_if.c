@@ -72,6 +72,7 @@
 #include "rtpp_wi.h"
 #include "rtpp_wi_apis.h"
 #include "rtpp_wi_sgnl.h"
+#include "rtpp_weakref.h"
 #include "rtpp_command_sub.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
@@ -84,6 +85,7 @@ struct rtpp_module_if_priv {
     struct rtpp_module_priv *mpvt;
     struct rtpp_log *log;
     struct rtpp_modids ids;
+    struct rtpp_weakref_obj *sessions_wrt;
     /* Privary version of the module's memdeb_p, store it here */
     /* just in case module screws it up                        */
     void *memdeb_p;
@@ -152,11 +154,16 @@ acct_rtcp_enqueue(const struct pkt_proc_ctx *pktx)
 {
     struct rtpp_module_if_priv *pvt;
     struct rtpp_acct_rtcp *rarp;
+    const struct rtpp_session *sessp;
 
     pvt = (struct rtpp_module_if_priv *)pktx->pproc->arg;
-    rarp = rtpp_acct_rtcp_ctor(pktx->sessp->call_id, pktx->pktp);
+    sessp = CALL_METHOD(pvt->sessions_wrt, get_by_idx, pktx->strmp_in->seuid);
+    if (sessp == NULL)
+       return (PPROC_ACT_DROP);
+    rarp = rtpp_acct_rtcp_ctor(sessp->call_id, pktx->pktp);
+    RTPP_OBJ_DECREF(sessp);
     if (rarp == NULL) {
-        return (PPROC_ACT_NOP);
+        return (PPROC_ACT_DROP);
     }
     rtpp_mif_do_acct_rtcp(&(pvt->pub), rarp);
     return (PPROC_ACT_TEE);
@@ -267,6 +274,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     pvt->mip->ids = self->ids = &pvt->ids;
     pvt->mip->module_rcnt = self->rcnt;
     self->descr = &(pvt->mip->descr);
+    pvt->sessions_wrt = cfsp->sessions_wrt;
 
     return (0);
 e5:
