@@ -159,7 +159,8 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
 
                 while ((pktx.pktp = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
                     pktx.pktp->sender = sender;
-                    if (CALL_SMETHOD(stp->pproc_manager, handleat, &pktx, PPROC_ORD_WITNESS) & PPROC_ACT_TAKE)
+                    if (CALL_SMETHOD(stp->pproc_manager, handleat, &pktx,
+                      PPROC_ORD_RESIZE + 1) & PPROC_ACT_TAKE)
                         rsp->npkts_resizer_out.cnt++;
                 }
 

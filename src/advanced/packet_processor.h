@@ -37,13 +37,15 @@ enum pproc_action {
 };
 
 enum pproc_order {
-    _PPROC_ORD_EMPTY = 0,
+    _PPROC_ORD_EMPTY  = 0,
     PPROC_ORD_DECRYPT = 1,
-    PPROC_ORD_DECODE = 2,
-    PPROC_ORD_WITNESS = 3,
-    PPROC_ORD_ENCODE = 4,
-    PPROC_ORD_ENCRYPT = 5,
-    PPROC_ORD_RELAY = 6
+    PPROC_ORD_ANALYZE = 2,
+    PPROC_ORD_RESIZE  = 3,
+    PPROC_ORD_DECODE  = 4,
+    PPROC_ORD_WITNESS = 5,
+    PPROC_ORD_ENCODE  = 6,
+    PPROC_ORD_ENCRYPT = 7,
+    PPROC_ORD_RELAY   = 8
 };
 
 DEFINE_RAW_METHOD(pproc_taste, int, struct pkt_proc_ctx *);

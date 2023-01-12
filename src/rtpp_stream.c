@@ -75,6 +75,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_acct_pipe.h"
 #include "advanced/pproc_manager.h"
+#include "advanced/packet_processor.h"
 
 #define  SEQ_SYNC_IVAL   1.0    /* in seconds */
 
@@ -112,6 +113,7 @@ struct rtpp_stream_priv
     struct rtpp_socket *fd;
     /* Remote source address */
     struct rtpp_netaddr *rem_addr;
+    int npkts_resizer_in_idx;
     /* Placeholder for per-module structures */
     struct pmod_data pmod_data;
 };
@@ -126,6 +128,7 @@ static const char *rtpp_stream_get_actor(struct rtpp_stream *);
 static const char *rtpp_stream_get_proto(struct rtpp_stream *);
 static int _rtpp_stream_latch(struct rtpp_stream_priv *, double,
   struct rtp_packet *);
+static int rtpp_stream_latch(struct rtpp_stream *, struct rtp_packet *);
 static int _rtpp_stream_check_latch_override(struct rtpp_stream_priv *,
   struct rtp_packet *, double);
 static void __rtpp_stream_fill_addr(struct rtpp_stream_priv *,
@@ -169,9 +172,43 @@ static const struct rtpp_stream_smethods _rtpp_stream_smethods = {
     .reg_onhold = &rtpp_stream_reg_onhold,
     .get_stats = &rtpp_stream_get_stats,
     .rx = &rtpp_stream_rx,
-    .get_rem_addr = &rtpp_stream_get_rem_addr
+    .get_rem_addr = &rtpp_stream_get_rem_addr,
+    .latch = &rtpp_stream_latch,
 };
 const struct rtpp_stream_smethods * const rtpp_stream_smethods = &_rtpp_stream_smethods;
+
+static enum pproc_action
+analyze_packet(const struct pkt_proc_ctx *pktxp)
+{
+    struct rtpp_stream *stp_in = pktxp->strmp_in;
+    struct rtp_packet *packet = pktxp->pktp;
+
+    if (CALL_METHOD(stp_in->analyzer, update, packet) == UPDATE_SSRC_CHG) {
+        CALL_SMETHOD(stp_in, latch, packet);
+    }
+    return (PPROC_ACT_NOP);
+}
+
+static enum pproc_action
+resizer_injest(const struct pkt_proc_ctx *pktxp)
+{
+    struct rtpp_stream *stp_in = pktxp->strmp_in;
+    struct rtp_packet *packet = pktxp->pktp;
+    struct rtpp_stream_priv *pvt;
+
+    if (stp_in->resizer != NULL) {
+        rtp_resizer_enqueue(stp_in->resizer, &packet, pktxp->rsp);
+        if (packet == NULL) {
+            if (pktxp->rsp != NULL) {
+                pktxp->rsp->npkts_resizer_in.cnt++;
+            } else {
+                pvt = (struct rtpp_stream_priv *)pktxp->pproc->arg;
+                CALL_SMETHOD(pvt->rtpp_stats, updatebyidx, pvt->npkts_resizer_in_idx, 1);
+            }
+        }
+    }
+    return ((packet == NULL) ? PPROC_ACT_TAKE : PPROC_ACT_NOP);
+}
 
 struct rtpp_stream *
 rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
@@ -188,27 +225,49 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
+    pvt->pub.pproc_manager = CALL_SMETHOD(ap->pproc_manager, clone);
+    if (pvt->pub.pproc_manager == NULL) {
+        goto e2;
+    }
     if (ap->pipe_type == PIPE_RTP) {
         pvt->pub.analyzer = rtpp_analyzer_ctor(ap->log);
         if (pvt->pub.analyzer == NULL) {
             goto e3;
         }
+        const struct packet_processor_if analyze_packet_poi = {
+            .descr = "analyze_packet",
+            .arg = (void *)pvt->pub.analyzer,
+            .key = (void *)pvt,
+            .enqueue = &analyze_packet
+        };
+        if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_ANALYZE, &analyze_packet_poi) < 0)
+            goto e4;
+
+        const struct packet_processor_if resize_packet_poi = {
+            .descr = "resize_packet",
+            .arg = (void *)pvt,
+            .key = (void *)(pvt + 1),
+            .enqueue = &resizer_injest
+        };
+        if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_RESIZE, &resize_packet_poi) < 0)
+            goto e5;
+        pvt->npkts_resizer_in_idx = CALL_SMETHOD(ap->rtpp_stats, getidxbyname,
+          "npkts_resizer_in");
+        if (pvt->npkts_resizer_in_idx == -1)
+            goto e6;
+
     }
     pvt->pub.pcnt_strm = rtpp_pcnt_strm_ctor();
     if (pvt->pub.pcnt_strm == NULL) {
-        goto e4;
+        goto e6;
     }
     pvt->raddr_prev = rtpp_netaddr_ctor();
     if (pvt->raddr_prev == NULL) {
-        goto e5;
+        goto e7;
     }
     pvt->rem_addr = rtpp_netaddr_ctor();
     if (pvt->rem_addr == NULL) {
-        goto e6;
-    }
-    pvt->pub.pproc_manager = CALL_SMETHOD(ap->pproc_manager, clone);
-    if (pvt->pub.pproc_manager == NULL) {
-        goto e7;
+        goto e8;
     }
     pvt->servers_wrt = ap->servers_wrt;
     pvt->rtpp_stats = ap->rtpp_stats;
@@ -230,17 +289,26 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_dtor,
       pvt);
     return (&pvt->pub);
-e7:
-    RTPP_OBJ_DECREF(pvt->rem_addr);
-e6:
+
+e8:
     RTPP_OBJ_DECREF(pvt->raddr_prev);
-e5:
+e7:
     RTPP_OBJ_DECREF(pvt->pub.pcnt_strm);
+e6:
+    if (ap->pipe_type == PIPE_RTP) {
+        CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt + 1);
+    }
+e5:
+    if (ap->pipe_type == PIPE_RTP) {
+        CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt);
+    }
 e4:
     if (ap->pipe_type == PIPE_RTP) {
-         RTPP_OBJ_DECREF(pvt->pub.analyzer);
+        RTPP_OBJ_DECREF(pvt->pub.analyzer);
     }
 e3:
+    RTPP_OBJ_DECREF(pvt->pub.pproc_manager);
+e2:
     pthread_mutex_destroy(&pvt->lock);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
@@ -343,6 +411,10 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     RTPP_OBJ_DECREF(pvt->pub.log);
     RTPP_OBJ_DECREF(pvt->rem_addr);
     RTPP_OBJ_DECREF(pvt->raddr_prev);
+    if (pvt->pub.pipe_type == PIPE_RTP) {
+        CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt + 1);
+        CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt);
+    }
     RTPP_OBJ_DECREF(pvt->pub.pproc_manager);
 
     pthread_mutex_destroy(&pvt->lock);
@@ -541,6 +613,18 @@ _rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
       saddr, ptype, ssrc, seq);
     pvt->latch_info.latched = newlatch;
     return (1);
+}
+
+static int
+rtpp_stream_latch(struct rtpp_stream *self, struct rtp_packet *packet)
+{
+    struct rtpp_stream_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    pthread_mutex_lock(&pvt->lock);
+    int rval = _rtpp_stream_latch(pvt, packet->rtime.mono, packet);
+    pthread_mutex_unlock(&pvt->lock);
+    return (rval);
 }
 
 static void
@@ -961,18 +1045,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
         /* Update address recorded in the session */
         _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
     }
-    if (self->analyzer != NULL) {
-        if (CALL_METHOD(self->analyzer, update, packet) == UPDATE_SSRC_CHG) {
-            _rtpp_stream_latch(pvt, dtime->mono, packet);
-        }
-    }
     _rtpp_stream_latch_sync(pvt, dtime->mono, packet);
-    if (self->resizer != NULL) {
-        rtp_resizer_enqueue(self->resizer, &packet, rsp);
-        if (packet == NULL) {
-            rsp->npkts_resizer_in.cnt++;
-        }
-    }
     pthread_mutex_unlock(&pvt->lock);
     return (packet);
 

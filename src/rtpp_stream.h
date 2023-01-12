@@ -71,6 +71,7 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_rx, struct rtp_packet *,
   struct rtpp_weakref_obj *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
   int);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_latch, int, struct rtp_packet *);
 
 enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
 
@@ -96,6 +97,7 @@ struct rtpp_stream_smethods {
     METHOD_ENTRY(rtpp_stream_get_stats, get_stats);
     METHOD_ENTRY(rtpp_stream_rx, rx);
     METHOD_ENTRY(rtpp_stream_get_rem_addr, get_rem_addr);
+    METHOD_ENTRY(rtpp_stream_latch, latch);
 };
 
 struct pmod_data {
