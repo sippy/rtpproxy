@@ -35,14 +35,16 @@ struct rtpp_stats;
 enum pproc_action;
 enum pproc_order;
 
+#define PPROC_FLAG_LGEN (1 << 0)
+
 struct pkt_proc_ctx {
-  const struct rtpp_session *sessp;
-  struct rtpp_stream *strmp_in;
-  struct rtpp_stream *strmp_out;
-  struct rtp_packet *pktp;
-  struct rtpp_proc_rstats *rsp;
-  const struct packet_processor_if *pproc;
-  void *auxp;
+    struct rtpp_stream *strmp_in;
+    struct rtpp_stream *strmp_out;
+    struct rtp_packet *pktp;
+    struct rtpp_proc_rstats *rsp;
+    const struct packet_processor_if *pproc;
+    void *auxp;
+    unsigned int flags;
 };
 
 DEFINE_METHOD(pproc_manager, pproc_manager_reg, int, enum pproc_order, const struct packet_processor_if *);

@@ -184,11 +184,13 @@ rtpp_pproc_mgr_handleat(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp,
     pthread_mutex_unlock(&pvt->lock);
     if ((res & PPROC_ACT_TAKE) == 0 || (res & PPROC_ACT_DROP) != 0) {
         RTPP_OBJ_DECREF(pktxp->pktp);
-        CALL_SMETHOD(pktxp->strmp_in->pcount, reg_drop);
-        if (pktxp->rsp != NULL)
-            pktxp->rsp->npkts_discard.cnt++;
-        else
-            CALL_SMETHOD(pvt->rtpp_stats, updatebyidx, pvt->npkts_discard_idx, 1);
+        if ((pktxp->flags & PPROC_FLAG_LGEN) == 0) {
+            CALL_SMETHOD(pktxp->strmp_in->pcount, reg_drop);
+            if (pktxp->rsp != NULL)
+                pktxp->rsp->npkts_discard.cnt++;
+            else
+                CALL_SMETHOD(pvt->rtpp_stats, updatebyidx, pvt->npkts_discard_idx, 1);
+        }
     }
     return (res);
 }

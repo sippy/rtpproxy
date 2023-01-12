@@ -42,10 +42,11 @@ enum pproc_order {
     PPROC_ORD_ANALYZE = 2,
     PPROC_ORD_RESIZE  = 3,
     PPROC_ORD_DECODE  = 4,
-    PPROC_ORD_WITNESS = 5,
-    PPROC_ORD_ENCODE  = 6,
-    PPROC_ORD_ENCRYPT = 7,
-    PPROC_ORD_RELAY   = 8
+    PPROC_ORD_PLAY    = 5,
+    PPROC_ORD_WITNESS = 6,
+    PPROC_ORD_ENCODE  = 7,
+    PPROC_ORD_ENCRYPT = 8,
+    PPROC_ORD_RELAY   = 9
 };
 
 DEFINE_RAW_METHOD(pproc_taste, int, struct pkt_proc_ctx *);
