@@ -1071,9 +1071,9 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref *rtcps_wrt,
                 goto discard_and_continue;
             }
         }
-        CALL_METHOD(self->pcnt_strm, reg_pktin, packet);
+        CALL_SMETHOD(self->pcnt_strm, reg_pktin, packet);
     } else {
-        CALL_METHOD(self->pcnt_strm, reg_pktin, packet);
+        CALL_SMETHOD(self->pcnt_strm, reg_pktin, packet);
         /* Update address recorded in the session */
         _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
     }

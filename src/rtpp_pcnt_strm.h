@@ -39,10 +39,17 @@ DEFINE_METHOD(rtpp_pcnt_strm, rtpp_pcnt_strm_get_stats, void,
 DEFINE_METHOD(rtpp_pcnt_strm, rtpp_pcnt_strm_reg_pktin, void,
   struct rtp_packet *);
 
-struct rtpp_pcnt_strm {
-    struct rtpp_refcnt *rcnt;
+struct rtpp_pcnt_strm_smethods
+{
     METHOD_ENTRY(rtpp_pcnt_strm_get_stats, get_stats);
     METHOD_ENTRY(rtpp_pcnt_strm_reg_pktin, reg_pktin);
+};
+
+struct rtpp_pcnt_strm {
+    struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
+    const struct rtpp_pcnt_strm_smethods * smethods;
+#endif
 };
 
 struct rtpp_pcnt_strm *rtpp_pcnt_strm_ctor(void);

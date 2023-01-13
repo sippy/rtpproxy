@@ -58,6 +58,12 @@ static void rtpp_pcnt_strm_get_stats(struct rtpp_pcnt_strm *,
 static void rtpp_pcnt_strm_reg_pktin(struct rtpp_pcnt_strm *,
   struct rtp_packet *);
 
+static const struct rtpp_pcnt_strm_smethods _rtpp_pcnt_strm_smethods = {
+    .get_stats = &rtpp_pcnt_strm_get_stats,
+    .reg_pktin = &rtpp_pcnt_strm_reg_pktin,
+};
+const struct rtpp_pcnt_strm_smethods * const rtpp_pcnt_strm_smethods = &_rtpp_pcnt_strm_smethods;
+
 struct rtpp_pcnt_strm *
 rtpp_pcnt_strm_ctor(void)
 {
@@ -70,8 +76,9 @@ rtpp_pcnt_strm_ctor(void)
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
-    pvt->pub.get_stats = &rtpp_pcnt_strm_get_stats;
-    pvt->pub.reg_pktin = &rtpp_pcnt_strm_reg_pktin;
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = rtpp_pcnt_strm_smethods;
+#endif
     CALL_SMETHOD(pvt->pub.rcnt, attach,
       (rtpp_refcnt_dtor_t)&rtpp_pcnt_strm_dtor, pvt);
     return ((&pvt->pub));

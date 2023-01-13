@@ -189,8 +189,8 @@ rtpp_pipe_get_stats(struct rtpp_pipe *self, struct rtpp_acct_pipe *rapp)
     CALL_SMETHOD(self->pcount, get_stats, rapp->pcnts);
     CALL_SMETHOD(self->stream[0], get_stats, &rapp->o.hld_stat);
     CALL_SMETHOD(self->stream[1], get_stats, &rapp->a.hld_stat);
-    CALL_METHOD(self->stream[0]->pcnt_strm, get_stats, rapp->o.ps);
-    CALL_METHOD(self->stream[1]->pcnt_strm, get_stats, rapp->a.ps);
+    CALL_SMETHOD(self->stream[0]->pcnt_strm, get_stats, rapp->o.ps);
+    CALL_SMETHOD(self->stream[1]->pcnt_strm, get_stats, rapp->a.ps);
     rapp->o.rem_addr = CALL_SMETHOD(self->stream[0], get_rem_addr, 1);
     rapp->a.rem_addr = CALL_SMETHOD(self->stream[1], get_rem_addr, 1);
     RTPP_LOG(self->log, RTPP_LOG_INFO, "%s stats: %lu in from callee, %lu "
