@@ -50,6 +50,7 @@
 #include "rtpp_pcnt_strm.h"
 #include "rtpp_pcnts_strm.h"
 #include "rtpp_stats.h"
+#include "advanced/pproc_manager.h"
 
 struct rtpp_pipe_priv
 {
@@ -74,7 +75,6 @@ struct rtpp_pipe *
 rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
 {
     struct rtpp_pipe_priv *pvt;
-    struct r_stream_ctor_args rsca;
     int i;
 
     pvt = rtpp_rzmalloc(sizeof(struct rtpp_pipe_priv), PVT_RCOFFS(pvt));
@@ -85,9 +85,15 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
     pvt->streams_wrt = ap->streams_wrt;
 
     rtpp_gen_uid(&pvt->pub.ppuid);
-    rsca = (struct r_stream_ctor_args){.log = ap->log, .servers_wrt = ap->servers_wrt,
-      .rtpp_stats = ap->rtpp_stats, .pipe_type = ap->pipe_type, .seuid = ap->seuid,
-      .nmodules = ap->nmodules, .pproc_manager = ap->pproc_manager};
+    struct r_stream_ctor_args rsca = {
+        .log = ap->log,
+        .servers_wrt = ap->servers_wrt,
+        .rtpp_stats = ap->rtpp_stats,
+        .pipe_type = ap->pipe_type,
+        .seuid = ap->seuid,
+        .nmodules = ap->nmodules,
+        .pproc_manager = ap->pproc_manager
+    };
     for (i = 0; i < 2; i++) {
         rsca.side = i;
         pvt->pub.stream[i] = rtpp_stream_ctor(&rsca);
@@ -109,6 +115,10 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
         RTPP_OBJ_INCREF(pvt->pub.pcount);
         pvt->pub.stream[i]->pcount = pvt->pub.pcount;
     }
+    pvt->pub.stream[0]->pproc_manager->reverse = pvt->pub.stream[1]->pproc_manager;
+    RTPP_OBJ_INCREF(pvt->pub.stream[1]->pproc_manager);
+    pvt->pub.stream[1]->pproc_manager->reverse = pvt->pub.stream[0]->pproc_manager;
+    RTPP_OBJ_INCREF(pvt->pub.stream[0]->pproc_manager);
     pvt->pipe_type = ap->pipe_type;
     pvt->pub.rtpp_stats = ap->rtpp_stats;
     pvt->pub.log = ap->log;
@@ -142,6 +152,7 @@ rtpp_pipe_dtor(struct rtpp_pipe_priv *pvt)
     rtpp_pipe_fin(&(pvt->pub));
     for (i = 0; i < 2; i++) {
         CALL_METHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
+        RTPP_OBJ_DECREF(pvt->pub.stream[i]->pproc_manager->reverse);
         RTPP_OBJ_DECREF(pvt->pub.stream[i]);
     }
     RTPP_OBJ_DECREF(pvt->pub.pcount);

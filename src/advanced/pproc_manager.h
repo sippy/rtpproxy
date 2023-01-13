@@ -68,6 +68,7 @@ struct pproc_manager_smethods
 
 struct pproc_manager {
     struct rtpp_refcnt *rcnt;
+    struct pproc_manager *reverse;
 #if defined(RTPP_DEBUG)
     const struct pproc_manager_smethods * smethods;
 #endif
