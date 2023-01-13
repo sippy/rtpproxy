@@ -41,6 +41,7 @@
 #include "rtp_packet.h"
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
+#include "rtpp_analyzer_fin.h"
 #include "rtpp_mallocs.h"
 
 struct rtpp_analyzer_priv {
@@ -59,6 +60,13 @@ static int rtpp_analyzer_get_jstats(struct rtpp_analyzer *,
   struct rtpa_stats_jitter *);
 static void rtpp_analyzer_dtor(struct rtpp_analyzer_priv *);
 
+static const struct rtpp_analyzer_smethods _rtpp_analyzer_smethods = {
+    .update = &rtpp_analyzer_update,
+    .get_stats = &rtpp_analyzer_get_stats,
+    .get_jstats = &rtpp_analyzer_get_jstats,
+};
+const struct rtpp_analyzer_smethods * const rtpp_analyzer_smethods = &_rtpp_analyzer_smethods;
+
 struct rtpp_analyzer *
 rtpp_analyzer_ctor(struct rtpp_log *log)
 {
@@ -74,9 +82,9 @@ rtpp_analyzer_ctor(struct rtpp_log *log)
         goto e0;
     }
     pvt->log = log;
-    rap->update = &rtpp_analyzer_update;
-    rap->get_stats = &rtpp_analyzer_get_stats;
-    rap->get_jstats = &rtpp_analyzer_get_jstats;
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = rtpp_analyzer_smethods;
+#endif
     RTPP_OBJ_INCREF(log);
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_analyzer_dtor,
       pvt);
@@ -147,6 +155,7 @@ static void
 rtpp_analyzer_dtor(struct rtpp_analyzer_priv *pvt)
 {
 
+    rtpp_analyzer_fin(&(pvt->pub));
     rtpp_stats_destroy(&pvt->rstat);
     RTPP_OBJ_DECREF(pvt->log);
     free(pvt);

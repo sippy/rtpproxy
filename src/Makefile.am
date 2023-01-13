@@ -18,7 +18,7 @@ RTPP_AUTOSRC_SOURCES = rtpp_command_rcache.h rtpp_log_obj.h \
 
 RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_server.h rtpp_stats.h rtpp_stream.h rtpp_timed.h rtpp_pcount.h \
-  rtpp_record.h rtpp_hash_table.h rtpp_weakref.h
+  rtpp_record.h rtpp_hash_table.h rtpp_weakref.h rtpp_analyzer.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
 BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
@@ -36,7 +36,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
   rtpp_cfg.h $(CMDSRCDIR)/rpcpv1_stats.h $(CMDSRCDIR)/rpcpv1_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
   rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c rtpp_timed.c \
-  rtpp_analyzer.c rtpp_analyzer.h rtp_analyze.c rtp_analyze.h \
+  rtpp_analyzer.c rtp_analyze.c rtp_analyze.h \
   $(CMDSRCDIR)/rpcpv1_query.c $(CMDSRCDIR)/rpcpv1_query.h rtpp_pearson.c rtpp_pearson.h \
   rtpp_command_rcache.c rtpp_command_ecodes.h \
   rtpp_tnotify_set.c rtpp_tnotify_set.h rtpp_tnotify_tgt.h rtp_packet.h \

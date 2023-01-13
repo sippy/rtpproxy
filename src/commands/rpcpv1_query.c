@@ -86,7 +86,7 @@ handle_query_simple(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
 
 #define PULL_RST() \
     if (rst_pulled == 0) { \
-        CALL_METHOD(spp->stream[idx]->analyzer, get_stats, &rst); \
+        CALL_SMETHOD(spp->stream[idx]->analyzer, get_stats, &rst); \
         rst_pulled = 1; \
     }
 

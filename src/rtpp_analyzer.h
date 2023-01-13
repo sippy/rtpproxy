@@ -44,11 +44,18 @@ DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_stats, void,
 DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_jstats, int,
   struct rtpa_stats_jitter *);
 
-struct rtpp_analyzer {
+struct rtpp_analyzer_smethods
+{
     METHOD_ENTRY(rtpp_analyzer_update, update);
     METHOD_ENTRY(rtpp_analyzer_get_stats, get_stats);
     METHOD_ENTRY(rtpp_analyzer_get_jstats, get_jstats);
+};
+
+struct rtpp_analyzer {
     struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
+    const struct rtpp_analyzer_smethods * smethods;
+#endif
 };
 
 struct rtpp_analyzer * rtpp_analyzer_ctor(struct rtpp_log *);

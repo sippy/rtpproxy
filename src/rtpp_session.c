@@ -232,13 +232,13 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
         pvt->pub.call_id = NULL;
         pvt->acct->from_tag = pvt->pub.tag;
         pvt->pub.tag = NULL;
-        CALL_METHOD(pub->rtp->stream[0]->analyzer, get_stats, \
+        CALL_SMETHOD(pub->rtp->stream[0]->analyzer, get_stats, \
           pvt->acct->rasto);
-        CALL_METHOD(pub->rtp->stream[1]->analyzer, get_stats, \
+        CALL_SMETHOD(pub->rtp->stream[1]->analyzer, get_stats, \
           pvt->acct->rasta);
-        CALL_METHOD(pub->rtp->stream[0]->analyzer, get_jstats, \
+        CALL_SMETHOD(pub->rtp->stream[0]->analyzer, get_jstats, \
           pvt->acct->jrasto);
-        CALL_METHOD(pub->rtp->stream[1]->analyzer, get_jstats, \
+        CALL_SMETHOD(pub->rtp->stream[1]->analyzer, get_jstats, \
           pvt->acct->jrasta);
 
         CALL_METHOD(pvt->module_cf, do_acct, pvt->acct);

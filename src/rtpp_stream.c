@@ -187,7 +187,7 @@ analyze_packet(const struct pkt_proc_ctx *pktxp)
     struct rtpp_stream *stp_in = pktxp->strmp_in;
     struct rtp_packet *packet = pktxp->pktp;
 
-    if (CALL_METHOD(stp_in->analyzer, update, packet) == UPDATE_SSRC_CHG) {
+    if (CALL_SMETHOD(stp_in->analyzer, update, packet) == UPDATE_SSRC_CHG) {
         CALL_SMETHOD(stp_in, latch, packet);
     }
     return (PPROC_ACT_NOP);
@@ -362,7 +362,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          const char *actor, *ssrc;
 
          actor = _rtpp_stream_get_actor(pvt);
-         CALL_METHOD(pub->analyzer, get_stats, &rst);
+         CALL_SMETHOD(pub->analyzer, get_stats, &rst);
          if (rst.ssrc_changes != 0) {
              snprintf(ssrc_buf, sizeof(ssrc_buf), SSRC_FMT, rst.last_ssrc.val);
              ssrc = ssrc_buf;
