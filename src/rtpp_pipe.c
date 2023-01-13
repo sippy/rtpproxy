@@ -165,18 +165,18 @@ rtpp_pipe_get_ttl(struct rtpp_pipe *self)
 {
     int ttls[2];
 
-    ttls[0] = CALL_METHOD(self->stream[0]->ttl, get_remaining);
-    ttls[1] = CALL_METHOD(self->stream[1]->ttl, get_remaining);
+    ttls[0] = CALL_SMETHOD(self->stream[0]->ttl, get_remaining);
+    ttls[1] = CALL_SMETHOD(self->stream[1]->ttl, get_remaining);
     return (MIN(ttls[0], ttls[1]));
 }
 
 static void
 rtpp_pipe_decr_ttl(struct rtpp_pipe *self)
 {
-    CALL_METHOD(self->stream[0]->ttl, decr);
+    CALL_SMETHOD(self->stream[0]->ttl, decr);
     if (self->stream[1]->ttl == self->stream[0]->ttl)
         return;
-    CALL_METHOD(self->stream[1]->ttl, decr);
+    CALL_SMETHOD(self->stream[1]->ttl, decr);
 }
 
 static void

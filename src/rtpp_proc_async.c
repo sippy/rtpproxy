@@ -265,7 +265,7 @@ relay_packet(const struct pkt_proc_ctx *pktxp)
     struct rtpp_stream *stp_in = pktxp->strmp_in;
     struct rtp_packet *packet = pktxp->pktp;
 
-    CALL_METHOD(stp_in->ttl, reset);
+    CALL_SMETHOD(stp_in->ttl, reset);
     if (stp_out == NULL) {
         return PPROC_ACT_DROP;
     }

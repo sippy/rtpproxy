@@ -34,12 +34,19 @@ DEFINE_METHOD(rtpp_ttl, rtpp_ttl_reset_with, void, int);
 DEFINE_METHOD(rtpp_ttl, rtpp_ttl_get_remaining, int);
 DEFINE_METHOD(rtpp_ttl, rtpp_ttl_decr, int);
 
-struct rtpp_ttl {
-    struct rtpp_refcnt *rcnt;
+struct rtpp_ttl_smethods
+{
     METHOD_ENTRY(rtpp_ttl_reset, reset);
     METHOD_ENTRY(rtpp_ttl_reset_with, reset_with);
     METHOD_ENTRY(rtpp_ttl_get_remaining, get_remaining);
     METHOD_ENTRY(rtpp_ttl_decr, decr);
+};
+
+struct rtpp_ttl {
+    struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
+    const struct rtpp_ttl_smethods * smethods;
+#endif
 };
 
 struct rtpp_ttl *rtpp_ttl_ctor(int);
