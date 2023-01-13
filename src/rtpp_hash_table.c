@@ -35,6 +35,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
+#include "rtpp_hash_table_fin.h"
 #include "rtpp_pearson.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_mallocs.h"
@@ -87,9 +88,29 @@ static void hash_table_foreach(struct rtpp_hash_table *self, rtpp_hash_table_mat
   void *, struct rtpp_ht_opstats *);
 static void hash_table_foreach_key(struct rtpp_hash_table *, const void *,
   rtpp_hash_table_match_t, void *);
-static void hash_table_dtor(struct rtpp_hash_table *self);
+static void hash_table_dtor(struct rtpp_hash_table_priv *);
 static int hash_table_get_length(struct rtpp_hash_table *self);
 static int hash_table_purge(struct rtpp_hash_table *self);
+
+static const struct rtpp_hash_table_smethods _rtpp_hash_table_smethods = {
+#if 0
+    .append = &hash_table_append,
+    .remove_nc = &hash_table_remove_nc,
+#endif
+    .append_refcnt = &hash_table_append_refcnt,
+    .remove = &hash_table_remove,
+    .remove_by_key = &hash_table_remove_by_key,
+#if 0
+    .findfirst = &hash_table_findfirst,
+    .findnext = &hash_table_findnext,
+#endif
+    .find = &hash_table_find,
+    .foreach = &hash_table_foreach,
+    .foreach_key = &hash_table_foreach_key,
+    .get_length = &hash_table_get_length,
+    .purge = &hash_table_purge,
+};
+const struct rtpp_hash_table_smethods * const rtpp_hash_table_smethods = &_rtpp_hash_table_smethods;
 
 struct rtpp_hash_table *
 rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
@@ -97,7 +118,7 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
     struct rtpp_hash_table *pub;
     struct rtpp_hash_table_priv *pvt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_hash_table_priv));
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_hash_table_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
@@ -106,39 +127,27 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
     pvt->key_type = key_type;
     pvt->flags = flags;
     pub = &(pvt->pub);
-#if 0
-    pub->append = &hash_table_append;
-    pub->remove_nc = &hash_table_remove_nc;
+#if defined(RTPP_DEBUG)
+    pub->smethods = rtpp_hash_table_smethods;
 #endif
-    pub->append_refcnt = &hash_table_append_refcnt;
-    pub->remove = &hash_table_remove;
-    pub->remove_by_key = &hash_table_remove_by_key;
-#if 0
-    pub->findfirst = &hash_table_findfirst;
-    pub->findnext = &hash_table_findnext;
-#endif
-    pub->find = &hash_table_find;
-    pub->foreach = &hash_table_foreach;
-    pub->foreach_key = &hash_table_foreach_key;
-    pub->dtor = &hash_table_dtor;
-    pub->get_length = &hash_table_get_length;
-    pub->purge = &hash_table_purge;
     rtpp_pearson_shuffle(&pvt->rp);
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&hash_table_dtor,
+      pvt);
     return (pub);
 e1:
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);
 }
 
 static void
-hash_table_dtor(struct rtpp_hash_table *self)
+hash_table_dtor(struct rtpp_hash_table_priv *pvt)
 {
     struct rtpp_hash_table_entry *sp, *sp_next;
-    struct rtpp_hash_table_priv *pvt;
     int i;
 
-    PUB2PVT(self, pvt);
+    rtpp_hash_table_fin(&(pvt->pub));
     for (i = 0; i < RTPP_HT_LEN; i++) {
         sp = pvt->hash_table[i];
         if (sp == NULL)
@@ -156,7 +165,7 @@ hash_table_dtor(struct rtpp_hash_table *self)
     pthread_mutex_destroy(&pvt->hash_table_lock);
     RTPP_DBG_ASSERT(pvt->hte_num == 0);
 
-    free(self);
+    free(pvt);
 }
 
 static inline uint8_t
@@ -584,6 +593,6 @@ hash_table_purge(struct rtpp_hash_table *self)
     int npurged;
 
     npurged = 0;
-    CALL_METHOD(self, foreach, hash_table_purge_f, &npurged, NULL);
+    CALL_SMETHOD(self, foreach, hash_table_purge_f, &npurged, NULL);
     return (npurged);
 }

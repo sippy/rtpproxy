@@ -18,7 +18,7 @@ RTPP_AUTOSRC_SOURCES = rtpp_command_rcache.h rtpp_log_obj.h \
 
 RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_server.h rtpp_stats.h rtpp_stream.h rtpp_timed.h rtpp_pcount.h \
-  rtpp_record.h
+  rtpp_record.h rtpp_hash_table.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
 BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
@@ -32,7 +32,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
   rtpp_netio_async.c rtpp_netio_async.h rtpp_record_private.h \
   rtpp_command_parse.c rtpp_command_parse.h $(CMDSRCDIR)/rpcpv1_copy.c \
   $(CMDSRCDIR)/rpcpv1_copy.h $(CMDSRCDIR)/rpcpv1_ul.c $(CMDSRCDIR)/rpcpv1_ul.h \
-  rtpp_hash_table.c rtpp_hash_table.h rtpp_types.h config_pp.h rtpp_stats.c \
+  rtpp_hash_table.c rtpp_types.h config_pp.h rtpp_stats.c \
   rtpp_cfg.h $(CMDSRCDIR)/rpcpv1_stats.h $(CMDSRCDIR)/rpcpv1_stats.c \
   rtp_info.h rtpp_command_private.h rtpp_controlfd.h rtpp_controlfd.c \
   rtpp_list.h rtpp_command_stream.h rtpp_command_stream.c rtpp_timed.c \

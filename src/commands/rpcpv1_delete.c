@@ -130,7 +130,7 @@ handle_delete(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
     dea.to_tag = ccap->to_tag;
     dea.weak = ccap->opts.delete->weak;
     dea.sessions_wrt = cfsp->sessions_wrt;
-    CALL_METHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
+    CALL_SMETHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
       rtpp_cmd_delete_ematch, &dea);
     rtpp_command_del_opts_free(ccap->opts.delete);
     ccap->opts.delete = NULL;

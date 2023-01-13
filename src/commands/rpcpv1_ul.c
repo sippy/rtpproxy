@@ -543,14 +543,14 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
 
         cmd->csp->nsess_created.cnt++;
 
-        hte = CALL_METHOD(cfsp->sessions_ht, append_refcnt, spa->call_id,
+        hte = CALL_SMETHOD(cfsp->sessions_ht, append_refcnt, spa->call_id,
           spa->rcnt, NULL);
         if (hte == NULL) {
             handle_nomem(cmd, ECODE_NOMEM_5, spa);
             return (-1);
         }
         if (CALL_METHOD(cfsp->sessions_wrt, reg, spa->rcnt, spa->seuid) != 0) {
-            CALL_METHOD(cfsp->sessions_ht, remove, spa->call_id, hte);
+            CALL_SMETHOD(cfsp->sessions_ht, remove, spa->call_id, hte);
             handle_nomem(cmd, ECODE_NOMEM_8, spa);
             return (-1);
         }

@@ -472,7 +472,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         /* Delete all active sessions */
         RTPP_LOG(cfsp->glog, RTPP_LOG_INFO, "deleting all active sessions");
         CALL_METHOD(cfsp->sessions_wrt, purge);
-        CALL_METHOD(cfsp->sessions_ht, purge);
+        CALL_SMETHOD(cfsp->sessions_ht, purge);
         reply_ok(cmd);
         return 0;
 

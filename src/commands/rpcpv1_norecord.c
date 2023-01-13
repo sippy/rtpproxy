@@ -115,7 +115,7 @@ handle_norecord(struct rtpp_cfg *cfsp, struct common_cmd_args *ccap, int all)
     rea.to_tag = ccap->to_tag;
     rea.cfsp = cfsp;
     rea.all = all;
-    CALL_METHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
+    CALL_SMETHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
       rtpp_cmd_norecord_ematch, &rea);
     if (rea.nrecorded == 0) {
         return -1;

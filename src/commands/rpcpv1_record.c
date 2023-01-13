@@ -84,7 +84,7 @@ handle_record(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap,
     rea.to_tag = ccap->to_tag;
     rea.record_single_file = record_single_file;
     rea.cfsp = cfsp;
-    CALL_METHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
+    CALL_SMETHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
       rtpp_cmd_record_ematch, &rea);
     if (rea.nrecorded == 0) {
         return -1;

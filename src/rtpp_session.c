@@ -344,7 +344,7 @@ find_stream(const struct rtpp_cfg *cfsp, const char *call_id,
     ma.to_tag = to_tag;
     ma.rval = -1;
 
-    CALL_METHOD(cfsp->sessions_ht, foreach_key, call_id,
+    CALL_SMETHOD(cfsp->sessions_ht, foreach_key, call_id,
       rtpp_session_ematch, &ma);
     if (ma.rval != -1) {
         *spp = ma.sp;
