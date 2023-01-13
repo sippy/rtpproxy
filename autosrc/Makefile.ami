@@ -44,3 +44,5 @@ rtpp_pcount_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_pcount_fin.h $(RTPP_AUTOSRC_DIR)
 SRCS_AUTOGEN_DEBUG += $(rtpp_pcount_AUTOSRCS)
 rtpp_record_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_record_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_record_fin.c
 SRCS_AUTOGEN_DEBUG += $(rtpp_record_AUTOSRCS)
+rtpp_hash_table_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_hash_table_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_hash_table_fin.c
+SRCS_AUTOGEN_DEBUG += $(rtpp_hash_table_AUTOSRCS)
