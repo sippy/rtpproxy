@@ -23,6 +23,7 @@ jobs:
     env:
       COMPILER: ${{ matrix.compiler }}
       TAR_CMD: tar_nosuid
+      GHA_OS: ${{ matrix.os }}
 
     strategy:
       matrix:
@@ -52,7 +53,7 @@ jobs:
           submodules: 'recursive'
 
       - name: apt_get_update
-        run: sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
+        run: scripts/ft-apt-get-update.sh
 
       - name: Workaround for tar not being able to access /var/cache/apt/archives
         run: |
