@@ -48,3 +48,5 @@ rtpp_hash_table_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_hash_table_fin.h $(RTPP_AUTO
 SRCS_AUTOGEN_DEBUG += $(rtpp_hash_table_AUTOSRCS)
 rtpp_weakref_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_weakref_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_weakref_fin.c
 SRCS_AUTOGEN_DEBUG += $(rtpp_weakref_AUTOSRCS)
+rtpp_analyzer_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_analyzer_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_analyzer_fin.c
+SRCS_AUTOGEN_DEBUG += $(rtpp_analyzer_AUTOSRCS)
