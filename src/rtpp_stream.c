@@ -432,6 +432,13 @@ player_predestroy_cb(struct rtpp_stats *rtpp_stats)
     CALL_SMETHOD(rtpp_stats, updatebyname, "nplrs_destroyed", 1);
 }
 
+static enum pproc_action
+drop_packets(const struct pkt_proc_ctx *pktxp)
+{
+
+    return (PPROC_ACT_DROP);
+}
+
 static int
 rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
   const char *pname, int playcount, struct rtpp_command *cmd, int ptime)
@@ -447,13 +454,21 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
       .ptime = ptime};
 
     PUB2PVT(self, pvt);
+
+    const struct packet_processor_if drop_on_pa_poi = {
+        .descr = "drop_packets(player_active)",
+        .arg = (void *)pvt,
+        .key = (void *)(pvt + 2),
+        .enqueue = &drop_packets
+    };
+
     pthread_mutex_lock(&pvt->lock);
     plerror = "reason unknown";
     while (*codecs != '\0') {
         n = strtol(codecs, &cp, 10);
         if (cp == codecs) {
             plerror = "invalid codecs";
-            break;
+            goto e0;
         }
         codecs = cp;
         if (*codecs != '\0')
@@ -466,16 +481,21 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
             plerror = "rtpp_server_ctor() failed";
             if (sca.result == RTPP_SERV_NOENT)
                 continue;
-            break;
+            goto e0;
         }
         rsrv->stuid = self->stuid;
         ssrc = CALL_SMETHOD(rsrv, get_ssrc);
         seq = CALL_SMETHOD(rsrv, get_seq);
         _s_rtps(pvt, rsrv->sruid, 0);
+        int regres = CALL_SMETHOD(self->pproc_manager->reverse, reg, PPROC_ORD_PLAY,
+          &drop_on_pa_poi);
+        if (regres < 0) {
+            plerror = "pproc_manager->reg() method failed";
+            goto e1;
+        }
         if (CALL_METHOD(pvt->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
-            RTPP_OBJ_DECREF(rsrv);
             plerror = "servers_wrt->reg() method failed";
-            break;
+            goto e2;
         }
         if (pvt->rtps.inact == 0) {
             CALL_SMETHOD(rsrv, start, cmd->dtime->mono);
@@ -490,6 +510,12 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
           playcount, pname, n, ssrc, seq);
         return 0;
     }
+    goto e0;
+e2:
+    CALL_SMETHOD(self->pproc_manager->reverse, unreg, drop_on_pa_poi.key);
+e1:
+    RTPP_OBJ_DECREF(rsrv);
+e0:
     pthread_mutex_unlock(&pvt->lock);
     RTPP_LOG(pvt->pub.log, RTPP_LOG_ERR, "can't create player: %s", plerror);
     return -1;
@@ -508,6 +534,7 @@ rtpp_stream_handle_noplay(struct rtpp_stream *self)
     ruid = pvt->rtps.uid;
     pthread_mutex_unlock(&pvt->lock);
     if (ruid != RTPP_UID_NONE) {
+        CALL_SMETHOD(self->pproc_manager->reverse, unreg, pvt + 2);
         if (CALL_METHOD(pvt->servers_wrt, unreg, ruid) != NULL) {
             pthread_mutex_lock(&pvt->lock);
             if (pvt->rtps.uid == ruid) {
@@ -545,6 +572,7 @@ rtpp_stream_finish_playback(struct rtpp_stream *self, uint64_t sruid)
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     if (pvt->rtps.uid != RTPP_UID_NONE && pvt->rtps.uid == sruid) {
+        CALL_SMETHOD(self->pproc_manager->reverse, unreg, pvt + 2);
         _s_rtps(pvt, RTPP_UID_NONE, 1);
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
           "player at port %d has finished", self->port);

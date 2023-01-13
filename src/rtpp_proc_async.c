@@ -274,16 +274,19 @@ relay_packet(const struct pkt_proc_ctx *pktxp)
      * Check that we have some address to which packet is to be
      * sent out, drop otherwise.
      */
-    if (!CALL_SMETHOD(stp_out, issendable) || CALL_SMETHOD(stp_out, isplayer_active)) {
+    if (!CALL_SMETHOD(stp_out, issendable)) {
         return PPROC_ACT_DROP;
     }
     CALL_SMETHOD(stp_out, send_pkt, packet->sender, packet);
-    CALL_SMETHOD(stp_in->pcount, reg_reld);
-    if (pktxp->rsp != NULL) {
-        pktxp->rsp->npkts_relayed.cnt++;
-    } else {
-        struct rtpp_proc_async_cf *proc_cf = pktxp->pproc->arg;
-        CALL_SMETHOD(proc_cf->cf_save->rtpp_stats, updatebyidx, proc_cf->npkts_relayed_idx, 1);
+    if ((pktxp->flags & PPROC_FLAG_LGEN) == 0) {
+        CALL_SMETHOD(stp_in->pcount, reg_reld);
+        if (pktxp->rsp != NULL) {
+            pktxp->rsp->npkts_relayed.cnt++;
+        } else {
+            struct rtpp_proc_async_cf *proc_cf = pktxp->pproc->arg;
+            CALL_SMETHOD(proc_cf->cf_save->rtpp_stats, updatebyidx,
+              proc_cf->npkts_relayed_idx, 1);
+        }
     }
     return PPROC_ACT_TAKE;
 }

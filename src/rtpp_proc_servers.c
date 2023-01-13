@@ -51,6 +51,8 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_stats.h"
 #include "rtpp_debug.h"
+#include "advanced/packet_processor.h"
+#include "advanced/pproc_manager.h"
 
 struct rtpp_proc_servers_priv {
     struct rtpp_proc_servers pub;
@@ -64,17 +66,18 @@ struct foreach_args {
     double dtime;
     struct sthread_args *sender;
     struct rtpp_proc_stat *npkts_played;
-    struct rtpp_weakref_obj *rtp_streams_wrt;
+    const struct rtpp_cfg *cfsp;
 };
 
 static int
 process_rtp_servers_foreach(void *dp, void *ap)
 {
-    struct foreach_args *fap;
+    const struct foreach_args *fap;
     struct rtpp_server *rsrv;
     struct rtp_packet *pkt;
     int len;
-    struct rtpp_stream *rsop;
+    struct rtpp_stream *strmp_out;
+    struct rtpp_stream *strmp_in;
 
     fap = (struct foreach_args *)ap;
     /*
@@ -82,31 +85,40 @@ process_rtp_servers_foreach(void *dp, void *ap)
      * locked context of the rtpp_hash_table, which holds its own ref.
      */
     rsrv = (struct rtpp_server *)dp;
-    rsop = CALL_METHOD(fap->rtp_streams_wrt, get_by_idx, rsrv->stuid);
-    if (rsop == NULL) {
-        return (RTPP_WR_MATCH_CONT);
-    }
+    strmp_out = CALL_METHOD(fap->cfsp->rtp_streams_wrt, get_by_idx, rsrv->stuid);
+    if (strmp_out == NULL)
+        goto e0;
+    strmp_in = CALL_SMETHOD(strmp_out, get_sender, fap->cfsp);
+    if (strmp_in == NULL)
+        goto e1;
     for (;;) {
         pkt = CALL_SMETHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
             if (len == RTPS_EOF) {
-                CALL_SMETHOD(rsop, finish_playback, rsrv->sruid);
-                RTPP_OBJ_DECREF(rsop);
+                CALL_SMETHOD(strmp_out, finish_playback, rsrv->sruid);
+                RTPP_OBJ_DECREF(strmp_in);
+                RTPP_OBJ_DECREF(strmp_out);
                 return (RTPP_WR_MATCH_DEL);
             } else if (len != RTPS_LATER) {
                 /* XXX some error, brag to logs */
             }
             break;
         }
-        if (CALL_SMETHOD(rsop, issendable) == 0) {
-            /* We have a packet, but nowhere to send it, drop */
-            RTPP_OBJ_DECREF(pkt);
-            continue;
-        }
-        CALL_SMETHOD(rsop, send_pkt, fap->sender, pkt);
-        fap->npkts_played->cnt++;
+        pkt->sender = fap->sender;
+        struct pkt_proc_ctx pktx = {
+            .strmp_in = strmp_in,
+            .strmp_out = strmp_out,
+            .pktp = pkt,
+            .flags = PPROC_FLAG_LGEN,
+        };
+        if (CALL_SMETHOD(strmp_in->pproc_manager, handleat, &pktx,
+          PPROC_ORD_PLAY + 1) & PPROC_ACT_TAKE)
+            fap->npkts_played->cnt++;
     }
-    RTPP_OBJ_DECREF(rsop);
+    RTPP_OBJ_DECREF(strmp_in);
+e1:
+    RTPP_OBJ_DECREF(strmp_out);
+e0:
     return (RTPP_WR_MATCH_CONT);
 }
 
@@ -115,15 +127,15 @@ static enum rtpp_timed_cb_rvals
 run_servers(double dtime, void *arg)
 {
     struct rtpp_proc_servers_priv *tp = arg;
-    struct foreach_args fargs;
-
-    fargs.dtime = dtime;
-    fargs.sender = rtpp_anetio_pick_sender(tp->netio);
-    fargs.npkts_played = &tp->npkts_played;
-    fargs.rtp_streams_wrt = tp->cfsp->rtp_streams_wrt;
+    const struct foreach_args fargs = {
+        .dtime = dtime,
+        .sender = rtpp_anetio_pick_sender(tp->netio),
+        .npkts_played = &tp->npkts_played,
+        .cfsp = tp->cfsp,
+    };
 
     CALL_METHOD(tp->cfsp->servers_wrt, foreach, process_rtp_servers_foreach,
-      &fargs);
+      (void *)&fargs);
 
     rtpp_anetio_pump_q(fargs.sender);
     FLUSH_STAT(tp->cfsp->rtpp_stats, tp->npkts_played);
