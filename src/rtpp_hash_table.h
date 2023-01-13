@@ -75,23 +75,22 @@ enum rtpp_ht_key_types {rtpp_ht_key_str_t = 0, rtpp_ht_key_u64_t,
 struct rtpp_hash_table
 {
 #if 0
-    hash_table_append_t append;
-    hash_table_remove_nc_t remove_nc;
+    METHOD_ENTRY(hash_table_append, append);
+    METHOD_ENTRY(hash_table_remove_nc, remove_nc);
 #endif
-    hash_table_append_refcnt_t append_refcnt;
-    hash_table_remove_t remove;
-    hash_table_remove_by_key_t remove_by_key;
+    METHOD_ENTRY(hash_table_append_refcnt, append_refcnt);
+    METHOD_ENTRY(hash_table_remove, remove);
+    METHOD_ENTRY(hash_table_remove_by_key, remove_by_key);
 #if 0
-    hash_table_findfirst_t findfirst;
-    hash_table_findnext_t findnext;
+    METHOD_ENTRY(hash_table_findfirst, findfirst);
+    METHOD_ENTRY(hash_table_findnext, findnext);
 #endif
-    hash_table_find_t find;
-    hash_table_foreach_t foreach;
-    hash_table_foreach_key_t foreach_key;
-    hash_table_dtor_t dtor;
-    hash_table_get_length_t get_length;
-    hash_table_purge_t purge;
-    struct rtpp_hash_table_priv *pvt;
+    METHOD_ENTRY(hash_table_find, find);
+    METHOD_ENTRY(hash_table_foreach, foreach);
+    METHOD_ENTRY(hash_table_foreach_key, foreach_key);
+    METHOD_ENTRY(hash_table_dtor, dtor);
+    METHOD_ENTRY(hash_table_get_length, get_length);
+    METHOD_ENTRY(hash_table_purge, purge);
 };
 
 struct rtpp_hash_table *rtpp_hash_table_ctor(enum rtpp_ht_key_types, int);
