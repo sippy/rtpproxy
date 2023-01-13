@@ -63,7 +63,7 @@ struct rtpp_polltbl_hst {
    int ulen;	/* Number of entries used */
    int ilen;	/* Minimum number of entries to be allocated when need to extend */
    struct rtpp_polltbl_hst_ent *clog;
-   struct rtpp_weakref_obj *streams_wrt;
+   struct rtpp_weakref *streams_wrt;
 };
 
 struct rtpp_sessinfo_priv {

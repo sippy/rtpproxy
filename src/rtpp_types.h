@@ -53,6 +53,7 @@ extern const struct rtpp_stream_smethods * const rtpp_stream_smethods;
 extern const struct rtpp_pcount_smethods * const rtpp_pcount_smethods;
 extern const struct rtpp_record_smethods * const rtpp_record_smethods;
 extern const struct rtpp_hash_table_smethods * const rtpp_hash_table_smethods;
+extern const struct rtpp_weakref_smethods * const rtpp_weakref_smethods;
 extern const struct pproc_manager_smethods * const pproc_manager_smethods;
 
 #if defined(RTPP_DEBUG)
@@ -69,6 +70,7 @@ extern const struct pproc_manager_smethods * const pproc_manager_smethods;
     struct rtpp_pcount *: rtpp_pcount_smethods, \
     struct rtpp_record *: rtpp_record_smethods, \
     struct rtpp_hash_table *: rtpp_hash_table_smethods, \
+    struct rtpp_weakref *: rtpp_weakref_smethods, \
     struct pproc_manager *: pproc_manager_smethods \
 )
 

@@ -64,13 +64,13 @@ struct rtpp_proc_ttl_pvt {
 #define TSTATE_RUN   0x0
 #define TSTATE_CEASE 0x1
 
-static void rtpp_proc_ttl(struct rtpp_hash_table *, struct rtpp_weakref_obj *,
+static void rtpp_proc_ttl(struct rtpp_hash_table *, struct rtpp_weakref *,
   struct rtpp_notify *, struct rtpp_stats *);
 
 struct foreach_args {
     struct rtpp_notify *rtpp_notify_cf;
     struct rtpp_stats *rtpp_stats;
-    struct rtpp_weakref_obj *sessions_wrt;
+    struct rtpp_weakref *sessions_wrt;
 };  
 
 static const char *notyfy_type = "timeout";
@@ -96,7 +96,7 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
               notyfy_type);
         }
         CALL_SMETHOD(fap->rtpp_stats, updatebyname, "nsess_timeout", 1);
-        CALL_METHOD(fap->sessions_wrt, unreg, sp->seuid);
+        CALL_SMETHOD(fap->sessions_wrt, unreg, sp->seuid);
         return (RTPP_HT_MATCH_DEL);
     } else {
         CALL_METHOD(sp->rtp, decr_ttl);
@@ -105,7 +105,7 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
 }
 
 static void
-rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct rtpp_weakref_obj
+rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct rtpp_weakref
   *sessions_wrt, struct rtpp_notify *rtpp_notify_cf, struct rtpp_stats
   *rtpp_stats)
 {

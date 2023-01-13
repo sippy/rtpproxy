@@ -18,7 +18,7 @@ RTPP_AUTOSRC_SOURCES = rtpp_command_rcache.h rtpp_log_obj.h \
 
 RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_server.h rtpp_stats.h rtpp_stream.h rtpp_timed.h rtpp_pcount.h \
-  rtpp_record.h rtpp_hash_table.h
+  rtpp_record.h rtpp_hash_table.h rtpp_weakref.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
 BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
@@ -41,7 +41,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
   rtpp_command_rcache.c rtpp_command_ecodes.h \
   rtpp_tnotify_set.c rtpp_tnotify_set.h rtpp_tnotify_tgt.h rtp_packet.h \
   rtp_packet.c rtpp_time.c rtpp_time.h rtpp_pcnts_strm.h rtpp_runcreds.h \
-  rtpp_sessinfo.c rtpp_weakref.c rtpp_weakref.h \
+  rtpp_sessinfo.c rtpp_weakref.c \
   rtpp_proc_servers.h rtpp_proc_servers.c rtpp_stream.c \
   rtpp_genuid.h rtpp_genuid.c rtpp_genuid_singlet.h rtpp_genuid_singlet.c \
   rtpp_log_obj.c rtpp_socket.c rtpp_wi_apis.c rtpp_wi_apis.h \

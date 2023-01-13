@@ -95,7 +95,7 @@ struct rtps {
 struct rtpp_stream_priv
 {
     struct rtpp_stream pub;
-    struct rtpp_weakref_obj *servers_wrt;
+    struct rtpp_weakref *servers_wrt;
     struct rtpp_stats *rtpp_stats;
     pthread_mutex_t lock;
     /* Weak reference to the "rtpp_server" (player) */
@@ -152,7 +152,7 @@ static void rtpp_stream_locklatch(struct rtpp_stream *);
 static void rtpp_stream_reg_onhold(struct rtpp_stream *);
 void rtpp_stream_get_stats(struct rtpp_stream *, struct rtpp_acct_hold *);
 static struct rtp_packet *rtpp_stream_rx(struct rtpp_stream *,
-  struct rtpp_weakref_obj *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
+  struct rtpp_weakref *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
 static struct rtpp_netaddr *rtpp_stream_get_rem_addr(struct rtpp_stream *, int);
 static struct rtpp_stream *rtpp_stream_get_sender(struct rtpp_stream *,
   const struct rtpp_cfg *cfsp);
@@ -395,7 +395,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     if (pub->codecs != NULL)
         free(pub->codecs);
     if (pvt->rtps.uid != RTPP_UID_NONE)
-        CALL_METHOD(pvt->servers_wrt, unreg, pvt->rtps.uid);
+        CALL_SMETHOD(pvt->servers_wrt, unreg, pvt->rtps.uid);
     if (pub->resizer != NULL)
         rtp_resizer_free(pvt->rtpp_stats, pub->resizer);
     if (pub->rrc != NULL)
@@ -493,7 +493,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
             plerror = "pproc_manager->reg() method failed";
             goto e1;
         }
-        if (CALL_METHOD(pvt->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
+        if (CALL_SMETHOD(pvt->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
             plerror = "servers_wrt->reg() method failed";
             goto e2;
         }
@@ -535,7 +535,7 @@ rtpp_stream_handle_noplay(struct rtpp_stream *self)
     pthread_mutex_unlock(&pvt->lock);
     if (ruid != RTPP_UID_NONE) {
         CALL_SMETHOD(self->pproc_manager->reverse, unreg, pvt + 2);
-        if (CALL_METHOD(pvt->servers_wrt, unreg, ruid) != NULL) {
+        if (CALL_SMETHOD(pvt->servers_wrt, unreg, ruid) != NULL) {
             pthread_mutex_lock(&pvt->lock);
             if (pvt->rtps.uid == ruid) {
                 pvt->rtps.uid = RTPP_UID_NONE;
@@ -715,7 +715,7 @@ _rtpp_stream_plr_start(struct rtpp_stream_priv *pvt, double dtime)
     struct rtpp_server *rsrv;
 
     RTPP_DBG_ASSERT(pvt->rtps.inact != 0);
-    rsrv = CALL_METHOD(pvt->servers_wrt, get_by_idx, pvt->rtps.uid);
+    rsrv = CALL_SMETHOD(pvt->servers_wrt, get_by_idx, pvt->rtps.uid);
     if (rsrv == NULL) {
         return;
     }
@@ -1000,7 +1000,7 @@ rtpp_stream_get_stats(struct rtpp_stream *self, struct rtpp_acct_hold *ahp)
 
 static int
 _rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt,
-  struct rtpp_weakref_obj *rtcps_wrt, struct rtp_packet *packet)
+  struct rtpp_weakref *rtcps_wrt, struct rtp_packet *packet)
 {
     struct rtpp_stream *stp_rtcp;
     int rval;
@@ -1009,7 +1009,7 @@ _rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt,
     if (pvt->pub.stuid_rtcp == RTPP_UID_NONE) {
         return (0);
     }
-    stp_rtcp = CALL_METHOD(rtcps_wrt, get_by_idx,
+    stp_rtcp = CALL_SMETHOD(rtcps_wrt, get_by_idx,
       pvt->pub.stuid_rtcp);
     if (stp_rtcp == NULL) {
         return (0);
@@ -1020,7 +1020,7 @@ _rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt,
 }
 
 static struct rtp_packet *
-rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref_obj *rtcps_wrt,
+rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref *rtcps_wrt,
   const struct rtpp_timestamp *dtime, struct rtpp_proc_rstats *rsp)
 {
     struct rtp_packet *packet = NULL;
@@ -1110,9 +1110,9 @@ static struct rtpp_stream *
 rtpp_stream_get_sender(struct rtpp_stream *self, const struct rtpp_cfg *cfsp)
 {
     if (self->pipe_type == PIPE_RTP) {
-       return (CALL_METHOD(cfsp->rtp_streams_wrt, get_by_idx,
+       return (CALL_SMETHOD(cfsp->rtp_streams_wrt, get_by_idx,
          self->stuid_sendr));
     }
-    return (CALL_METHOD(cfsp->rtcp_streams_wrt, get_by_idx,
+    return (CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_by_idx,
       self->stuid_sendr));
 }

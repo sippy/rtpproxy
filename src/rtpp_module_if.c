@@ -85,7 +85,7 @@ struct rtpp_module_if_priv {
     struct rtpp_module_priv *mpvt;
     struct rtpp_log *log;
     struct rtpp_modids ids;
-    struct rtpp_weakref_obj *sessions_wrt;
+    struct rtpp_weakref *sessions_wrt;
     /* Privary version of the module's memdeb_p, store it here */
     /* just in case module screws it up                        */
     void *memdeb_p;
@@ -157,7 +157,7 @@ acct_rtcp_enqueue(const struct pkt_proc_ctx *pktx)
     const struct rtpp_session *sessp;
 
     pvt = (struct rtpp_module_if_priv *)pktx->pproc->arg;
-    sessp = CALL_METHOD(pvt->sessions_wrt, get_by_idx, pktx->strmp_in->seuid);
+    sessp = CALL_SMETHOD(pvt->sessions_wrt, get_by_idx, pktx->strmp_in->seuid);
     if (sessp == NULL)
        return (PPROC_ACT_DROP);
     rarp = rtpp_acct_rtcp_ctor(sessp->call_id, pktx->pktp);

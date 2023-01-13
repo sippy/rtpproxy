@@ -31,7 +31,7 @@ struct rtpp_session;
 struct rtpp_sessinfo;
 struct rtpp_socket;
 struct rtpp_polltbl;
-struct rtpp_weakref_obj;
+struct rtpp_weakref;
 struct rtpp_cfg;
 
 DEFINE_METHOD(rtpp_sessinfo, rtpp_si_append, int, struct rtpp_session *,
@@ -56,7 +56,7 @@ struct rtpp_polltbl {
     int curlen;
     int aloclen;
     uint64_t revision;
-    struct rtpp_weakref_obj *streams_wrt;
+    struct rtpp_weakref *streams_wrt;
     int wakefd[2];
 };
 

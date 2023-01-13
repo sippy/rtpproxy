@@ -56,7 +56,7 @@ struct delete_ematch_arg {
     const char *from_tag;
     const char *to_tag;
     int weak;
-    struct rtpp_weakref_obj *sessions_wrt;
+    struct rtpp_weakref *sessions_wrt;
 };
 
 static void rtpp_command_del_opts_free(struct delete_opts *);
@@ -107,7 +107,7 @@ rtpp_cmd_delete_ematch(void *dp, void *ap)
     RTPP_LOG(spa->log, RTPP_LOG_INFO,
       "forcefully deleting session %u on ports %d/%d",
        medianum, spa->rtp->stream[0]->port, spa->rtp->stream[1]->port);
-    if (CALL_METHOD(dep->sessions_wrt, unreg, spa->seuid) != NULL) {
+    if (CALL_SMETHOD(dep->sessions_wrt, unreg, spa->seuid) != NULL) {
         dep->ndeleted++;
     }
     if (cmpr != 2) {

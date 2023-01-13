@@ -125,10 +125,10 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
         }
         iskt = ep->data.ptr;
         uint64_t stuid = CALL_METHOD(iskt, get_stuid);
-        stp = CALL_METHOD(ptbl->streams_wrt, get_by_idx, stuid);
+        stp = CALL_SMETHOD(ptbl->streams_wrt, get_by_idx, stuid);
         if (stp == NULL)
             continue;
-        sp = CALL_METHOD(cfsp->sessions_wrt, get_by_idx, stp->seuid);
+        sp = CALL_SMETHOD(cfsp->sessions_wrt, get_by_idx, stp->seuid);
         if (sp == NULL) {
             RTPP_OBJ_DECREF(stp);
             continue;

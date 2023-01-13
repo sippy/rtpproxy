@@ -52,7 +52,7 @@ struct rtpp_pipe {
     struct rtpp_log *log;
 
     struct rtpp_stats *rtpp_stats;
-    struct rtpp_weakref_obj *servers_wrt;
+    struct rtpp_weakref *servers_wrt;
 
     /* Refcounter */
     struct rtpp_refcnt *rcnt;
@@ -65,8 +65,8 @@ struct rtpp_pipe {
 
 struct r_pipe_ctor_args {
     uint64_t seuid;
-    struct rtpp_weakref_obj *streams_wrt;
-    struct rtpp_weakref_obj *servers_wrt;
+    struct rtpp_weakref *streams_wrt;
+    struct rtpp_weakref *servers_wrt;
     struct rtpp_log *log;
     struct rtpp_stats *rtpp_stats;
     int pipe_type;

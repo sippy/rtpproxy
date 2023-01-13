@@ -52,7 +52,7 @@ struct rtpp_session {
     uint64_t seuid;
 
     struct rtpp_stats *rtpp_stats;
-    struct rtpp_weakref_obj *servers_wrt;
+    struct rtpp_weakref *servers_wrt;
 
     /* Refcounter */
     struct rtpp_refcnt *rcnt;

@@ -471,7 +471,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     case DELETE_ALL:
         /* Delete all active sessions */
         RTPP_LOG(cfsp->glog, RTPP_LOG_INFO, "deleting all active sessions");
-        CALL_METHOD(cfsp->sessions_wrt, purge);
+        CALL_SMETHOD(cfsp->sessions_wrt, purge);
         CALL_SMETHOD(cfsp->sessions_ht, purge);
         reply_ok(cmd);
         return 0;
@@ -721,7 +721,7 @@ handle_info(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
       "nsess_created");
     sessions_active = sessions_created - CALL_SMETHOD(cfsp->rtpp_stats,
       getlvalbyname, "nsess_destroyed");
-    rtp_streams_active = CALL_METHOD(cfsp->rtp_streams_wrt, get_length);
+    rtp_streams_active = CALL_SMETHOD(cfsp->rtp_streams_wrt, get_length);
     len = snprintf(buf, sizeof(buf), "sessions created: %llu\nactive sessions: %d\n"
       "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
       sessions_created, sessions_active, rtp_streams_active, packets_in, packets_out);

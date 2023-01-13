@@ -55,7 +55,7 @@
 struct rtpp_pipe_priv
 {
     struct rtpp_pipe pub;
-    struct rtpp_weakref_obj *streams_wrt;
+    struct rtpp_weakref *streams_wrt;
     int pipe_type;
 };
 
@@ -100,7 +100,7 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
         if (pvt->pub.stream[i] == NULL) {
             goto e1;
         }
-        if (CALL_METHOD(pvt->streams_wrt, reg, pvt->pub.stream[i]->rcnt,
+        if (CALL_SMETHOD(pvt->streams_wrt, reg, pvt->pub.stream[i]->rcnt,
           pvt->pub.stream[i]->stuid) != 0) {
             goto e1;
         }
@@ -134,7 +134,7 @@ e2:
 e1:
     for (i = 0; i < 2; i++) {
         if (pvt->pub.stream[i] != NULL) {
-            CALL_METHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
+            CALL_SMETHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
             RTPP_OBJ_DECREF(pvt->pub.stream[i]);
         }
     }
@@ -151,7 +151,7 @@ rtpp_pipe_dtor(struct rtpp_pipe_priv *pvt)
 
     rtpp_pipe_fin(&(pvt->pub));
     for (i = 0; i < 2; i++) {
-        CALL_METHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
+        CALL_SMETHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
         RTPP_OBJ_DECREF(pvt->pub.stream[i]->pproc_manager->reverse);
         RTPP_OBJ_DECREF(pvt->pub.stream[i]);
     }

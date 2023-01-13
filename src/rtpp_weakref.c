@@ -35,37 +35,50 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
+#include "rtpp_weakref_fin.h"
 #include "rtpp_mallocs.h"
 
 DEFINE_CB_STRUCT(rtpp_weakref);
 
 struct rtpp_weakref_priv {
-    struct rtpp_weakref_obj pub;
+    struct rtpp_weakref pub;
     struct rtpp_hash_table *ht;
     rtpp_weakref_cb_s on_first;
     rtpp_weakref_cb_s on_last;
     pthread_mutex_t on_lock;
 };
 
-static void rtpp_weakref_dtor(struct rtpp_weakref_obj *);
-static int rtpp_weakref_reg(struct rtpp_weakref_obj *, struct rtpp_refcnt *, uint64_t);
-static void *rtpp_wref_get_by_idx(struct rtpp_weakref_obj *, uint64_t);
-static struct rtpp_refcnt *rtpp_weakref_unreg(struct rtpp_weakref_obj *, uint64_t);
-static void rtpp_wref_foreach(struct rtpp_weakref_obj *, rtpp_weakref_foreach_t,
+static void rtpp_weakref_dtor(struct rtpp_weakref_priv *);
+static int rtpp_weakref_reg(struct rtpp_weakref *, struct rtpp_refcnt *, uint64_t);
+static void *rtpp_wref_get_by_idx(struct rtpp_weakref *, uint64_t);
+static struct rtpp_refcnt *rtpp_weakref_unreg(struct rtpp_weakref *, uint64_t);
+static void rtpp_wref_foreach(struct rtpp_weakref *, rtpp_weakref_foreach_t,
   void *);
-static int rtpp_wref_get_length(struct rtpp_weakref_obj *);
-static int rtpp_wref_purge(struct rtpp_weakref_obj *);
-static rtpp_weakref_cb_t rtpp_wref_set_on_first(struct rtpp_weakref_obj *, rtpp_weakref_cb_t,
+static int rtpp_wref_get_length(struct rtpp_weakref *);
+static int rtpp_wref_purge(struct rtpp_weakref *);
+static rtpp_weakref_cb_t rtpp_wref_set_on_first(struct rtpp_weakref *, rtpp_weakref_cb_t,
   void *);
-static rtpp_weakref_cb_t rtpp_wref_set_on_last(struct rtpp_weakref_obj *, rtpp_weakref_cb_t,
+static rtpp_weakref_cb_t rtpp_wref_set_on_last(struct rtpp_weakref *, rtpp_weakref_cb_t,
   void *);
 
-struct rtpp_weakref_obj *
+static const struct rtpp_weakref_smethods _rtpp_weakref_smethods = {
+    .reg = &rtpp_weakref_reg,
+    .get_by_idx = &rtpp_wref_get_by_idx,
+    .unreg = &rtpp_weakref_unreg,
+    .foreach = &rtpp_wref_foreach,
+    .get_length = &rtpp_wref_get_length,
+    .purge = &rtpp_wref_purge,
+    .set_on_first = &rtpp_wref_set_on_first,
+    .set_on_last = &rtpp_wref_set_on_last,
+};
+const struct rtpp_weakref_smethods * const rtpp_weakref_smethods = &_rtpp_weakref_smethods;
+
+struct rtpp_weakref *
 rtpp_weakref_ctor(void)
 {
     struct rtpp_weakref_priv *pvt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_weakref_priv));
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_weakref_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         return (NULL);
     }
@@ -77,25 +90,22 @@ rtpp_weakref_ctor(void)
     if (pthread_mutex_init(&pvt->on_lock, NULL) != 0) {
         goto e1;
     }
-    pvt->pub.dtor = &rtpp_weakref_dtor;
-    pvt->pub.reg = &rtpp_weakref_reg;
-    pvt->pub.get_by_idx = &rtpp_wref_get_by_idx;
-    pvt->pub.unreg = &rtpp_weakref_unreg;
-    pvt->pub.foreach = &rtpp_wref_foreach;
-    pvt->pub.get_length = &rtpp_wref_get_length;
-    pvt->pub.purge = &rtpp_wref_purge;
-    pvt->pub.set_on_first = &rtpp_wref_set_on_first;
-    pvt->pub.set_on_last = &rtpp_wref_set_on_last;
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = rtpp_weakref_smethods;
+#endif
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_weakref_dtor,
+      pvt);
     return (&pvt->pub);
 e1:
     RTPP_OBJ_DECREF(pvt->ht);
 e0:
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
     return (NULL);
 }
 
 static int
-rtpp_weakref_reg(struct rtpp_weakref_obj *pub, struct rtpp_refcnt *sp,
+rtpp_weakref_reg(struct rtpp_weakref *pub, struct rtpp_refcnt *sp,
   uint64_t suid)
 {
     struct rtpp_weakref_priv *pvt;
@@ -125,7 +135,7 @@ rtpp_weakref_reg(struct rtpp_weakref_obj *pub, struct rtpp_refcnt *sp,
 }
 
 static struct rtpp_refcnt *
-rtpp_weakref_unreg(struct rtpp_weakref_obj *pub, uint64_t suid)
+rtpp_weakref_unreg(struct rtpp_weakref *pub, uint64_t suid)
 {
     struct rtpp_weakref_priv *pvt;
     struct rtpp_refcnt *sp;
@@ -153,19 +163,17 @@ rtpp_weakref_unreg(struct rtpp_weakref_obj *pub, uint64_t suid)
 }
 
 static void
-rtpp_weakref_dtor(struct rtpp_weakref_obj *pub)
+rtpp_weakref_dtor(struct rtpp_weakref_priv *pvt)
 {
-    struct rtpp_weakref_priv *pvt;
 
-    PUB2PVT(pub, pvt);
-
+    rtpp_weakref_fin(&(pvt->pub));
     pthread_mutex_destroy(&pvt->on_lock);
     RTPP_OBJ_DECREF(pvt->ht);
     free(pvt);
 }
 
 static void *
-rtpp_wref_get_by_idx(struct rtpp_weakref_obj *pub, uint64_t suid)
+rtpp_wref_get_by_idx(struct rtpp_weakref *pub, uint64_t suid)
 {
     struct rtpp_weakref_priv *pvt;
     struct rtpp_refcnt *rco;
@@ -180,7 +188,7 @@ rtpp_wref_get_by_idx(struct rtpp_weakref_obj *pub, uint64_t suid)
 }
 
 static void
-rtpp_wref_foreach(struct rtpp_weakref_obj *pub, rtpp_weakref_foreach_t foreach_f,
+rtpp_wref_foreach(struct rtpp_weakref *pub, rtpp_weakref_foreach_t foreach_f,
   void *foreach_d)
 {
     struct rtpp_weakref_priv *pvt;
@@ -206,7 +214,7 @@ rtpp_wref_foreach(struct rtpp_weakref_obj *pub, rtpp_weakref_foreach_t foreach_f
 }
 
 static int
-rtpp_wref_get_length(struct rtpp_weakref_obj *pub)
+rtpp_wref_get_length(struct rtpp_weakref *pub)
 {
     struct rtpp_weakref_priv *pvt;
 
@@ -215,7 +223,7 @@ rtpp_wref_get_length(struct rtpp_weakref_obj *pub)
 }
 
 static int
-rtpp_wref_purge(struct rtpp_weakref_obj *pub)
+rtpp_wref_purge(struct rtpp_weakref *pub)
 {
     struct rtpp_weakref_priv *pvt;
     int npurged;
@@ -237,7 +245,7 @@ rtpp_wref_purge(struct rtpp_weakref_obj *pub)
 }
 
 static rtpp_weakref_cb_t
-rtpp_wref_set_on_first(struct rtpp_weakref_obj *pub, rtpp_weakref_cb_t cb_func,
+rtpp_wref_set_on_first(struct rtpp_weakref *pub, rtpp_weakref_cb_t cb_func,
   void *cb_func_arg)
 {
     struct rtpp_weakref_priv *pvt;
@@ -251,7 +259,7 @@ rtpp_wref_set_on_first(struct rtpp_weakref_obj *pub, rtpp_weakref_cb_t cb_func,
 }
 
 static rtpp_weakref_cb_t
-rtpp_wref_set_on_last(struct rtpp_weakref_obj *pub, rtpp_weakref_cb_t cb_func,
+rtpp_wref_set_on_last(struct rtpp_weakref *pub, rtpp_weakref_cb_t cb_func,
   void *cb_func_arg)
 {
     struct rtpp_weakref_priv *pvt;

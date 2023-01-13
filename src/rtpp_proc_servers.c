@@ -85,7 +85,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
      * locked context of the rtpp_hash_table, which holds its own ref.
      */
     rsrv = (struct rtpp_server *)dp;
-    strmp_out = CALL_METHOD(fap->cfsp->rtp_streams_wrt, get_by_idx, rsrv->stuid);
+    strmp_out = CALL_SMETHOD(fap->cfsp->rtp_streams_wrt, get_by_idx, rsrv->stuid);
     if (strmp_out == NULL)
         goto e0;
     strmp_in = CALL_SMETHOD(strmp_out, get_sender, fap->cfsp);
@@ -134,7 +134,7 @@ run_servers(double dtime, void *arg)
         .cfsp = tp->cfsp,
     };
 
-    CALL_METHOD(tp->cfsp->servers_wrt, foreach, process_rtp_servers_foreach,
+    CALL_SMETHOD(tp->cfsp->servers_wrt, foreach, process_rtp_servers_foreach,
       (void *)&fargs);
 
     rtpp_anetio_pump_q(fargs.sender);
@@ -169,8 +169,8 @@ last_server(void *arg)
 static void
 rtpp_proc_servers_dtor(struct rtpp_proc_servers_priv *stap)
 {
-    CALL_METHOD(stap->cfsp->servers_wrt, set_on_first, NULL, NULL);
-    CALL_METHOD(stap->cfsp->servers_wrt, set_on_last, NULL, NULL);
+    CALL_SMETHOD(stap->cfsp->servers_wrt, set_on_first, NULL, NULL);
+    CALL_SMETHOD(stap->cfsp->servers_wrt, set_on_last, NULL, NULL);
     free(stap);
 }
 
@@ -187,8 +187,8 @@ rtpp_proc_servers_ctor(const struct rtpp_cfg *cfsp, struct rtpp_anetio_cf *netio
     stap->cfsp = cfsp;
     stap->npkts_played.cnt_idx = CALL_SMETHOD(cfsp->rtpp_stats, getidxbyname, "npkts_played");
 
-    CALL_METHOD(cfsp->servers_wrt, set_on_first, first_server, stap);
-    CALL_METHOD(cfsp->servers_wrt, set_on_last, last_server, stap);
+    CALL_SMETHOD(cfsp->servers_wrt, set_on_first, first_server, stap);
+    CALL_SMETHOD(cfsp->servers_wrt, set_on_last, last_server, stap);
 
     CALL_SMETHOD(stap->pub.rcnt, attach, (rtpp_refcnt_dtor_t)rtpp_proc_servers_dtor, stap);
     return (&stap->pub);

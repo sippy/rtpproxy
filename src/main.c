@@ -248,7 +248,7 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     free(cfsp->locks);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     CALL_METHOD(cfsp->nofile, dtor);
-    CALL_METHOD(cfsp->sessions_wrt, dtor);
+    RTPP_OBJ_DECREF(cfsp->sessions_wrt);
 
     for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = ctrl_sock_next) {
@@ -1078,7 +1078,7 @@ main(int argc, char **argv)
             break;
         }
         if (cfs.slowshutdown != 0 &&
-          CALL_METHOD(cfs.sessions_wrt, get_length) == 0) {
+          CALL_SMETHOD(cfs.sessions_wrt, get_length) == 0) {
             RTPP_LOG(cfs.glog, RTPP_LOG_INFO,
               "deorbiting-burn sequence completed, exiting");
             break;
@@ -1104,7 +1104,7 @@ main(int argc, char **argv)
     for (i = 0; i <= RTPP_PT_MAX; i++) {
         RTPP_OBJ_DECREF(cfs.port_table[i]);
     }
-    CALL_METHOD(cfs.sessions_wrt, dtor);
+    RTPP_OBJ_DECREF(cfs.sessions_wrt);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif

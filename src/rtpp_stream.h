@@ -29,7 +29,7 @@
 #define _RTPP_STREAM_H_
 
 struct rtpp_stream;
-struct rtpp_weakref_obj;
+struct rtpp_weakref;
 struct rtpp_stats;
 struct rtpp_log;
 struct rtpp_command;
@@ -69,7 +69,7 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_reg_onhold, void);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_stats, void,
   struct rtpp_acct_hold *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_rx, struct rtp_packet *,
-  struct rtpp_weakref_obj *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
+  struct rtpp_weakref *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
   int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_latch, int, struct rtp_packet *);
@@ -157,7 +157,7 @@ struct rtpp_stream {
 
 struct r_stream_ctor_args {
     struct rtpp_log *log;
-    struct rtpp_weakref_obj *servers_wrt;
+    struct rtpp_weakref *servers_wrt;
     struct rtpp_stats *rtpp_stats;
     enum rtpp_stream_side side;
     int pipe_type;
