@@ -98,13 +98,46 @@ rtpp_rzmalloc_memdeb(size_t msize, size_t rcntp_offs, void *memdeb_p,
     memset(rval, '\0', asize);
     rco = (char *)rval + msize + pad_size;
     rcnt = rtpp_refcnt_ctor_pa(rco);
-    if (rcnt == NULL) {
-        goto e1;
-    }
     *PpP(rval, rcntp_offs, struct rtpp_refcnt **) = rcnt;
 
     return (rval);
-e1:
-    free(rval);
-    return (NULL);
+}
+
+void *
+#if !defined(RTPP_CHECK_LEAKS)
+rtpp_rmalloc(size_t msize, size_t rcntp_offs)
+#else
+rtpp_rmalloc_memdeb(size_t msize, size_t rcntp_offs, void *memdeb_p,
+  const struct rtpp_codeptr *mlp)
+#endif
+{
+    void *rval;
+    struct rtpp_refcnt *rcnt;
+    size_t pad_size, asize;
+    void *rco;
+
+    RTPP_DBG_ASSERT(msize >= rcntp_offs + sizeof(struct rtpp_refcnt *));
+    if (offsetof(struct alig_help, b) > 1) {
+        pad_size = msize % offsetof(struct alig_help, b);
+        if (pad_size != 0) {
+            pad_size = offsetof(struct alig_help, b) - pad_size;
+        }
+    } else {
+        pad_size = 0;
+    }
+    asize = msize + pad_size + rtpp_refcnt_osize();
+#if !defined(RTPP_CHECK_LEAKS)
+    rval = malloc(asize);
+#else
+    rval = rtpp_memdeb_malloc(asize, memdeb_p, mlp);
+#endif
+    if (rval == NULL) {
+        return (NULL);
+    }
+    rco = (char *)rval + msize + pad_size;
+    memset(rco, '\0', rtpp_refcnt_osize());
+    rcnt = rtpp_refcnt_ctor_pa(rco);
+    *PpP(rval, rcntp_offs, struct rtpp_refcnt **) = rcnt;
+
+    return (rval);
 }

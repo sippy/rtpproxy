@@ -44,4 +44,11 @@ void *rtpp_rzmalloc_memdeb(size_t, size_t, void *, HERETYPE);
 void *rtpp_rzmalloc(size_t, size_t);
 #endif
 
+#if defined(RTPP_CHECK_LEAKS)
+#define rtpp_rmalloc(x, y) rtpp_rmalloc_memdeb(x, y, MEMDEB_SYM, HEREVAL)
+void *rtpp_rmalloc_memdeb(size_t, size_t, void *, HERETYPE);
+#else
+void *rtpp_rmalloc(size_t, size_t);
+#endif
+
 #endif
