@@ -31,6 +31,8 @@
 #include <stdlib.h>
 
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_data.h"
 
@@ -40,32 +42,18 @@ struct rtpp_wi_data {
    char data[0];
 };
 
-static void
-rtpp_wi_data_free(struct rtpp_wi *wi)
-{
-    struct rtpp_wi_data *wipp;
-
-    PUB2PVT(wi, wipp);
-    free(wipp);
-}
-
-static const struct rtpp_wi_data rtpp_wi_data_i = {
-   .pub = {
-       .dtor = rtpp_wi_data_free,
-       .wi_type = RTPP_WI_TYPE_DATA
-   }
-};
-
 struct rtpp_wi *
 rtpp_wi_malloc_data(void *dataptr, size_t datalen)
 {
     struct rtpp_wi_data *wipp;
 
-    wipp = malloc(sizeof(struct rtpp_wi_data) + datalen);
+    wipp = rtpp_rmalloc(sizeof(struct rtpp_wi_data) + datalen, PVT_RCOFFS(wipp));
     if (wipp == NULL) {
         return (NULL);
     }
-    *wipp = rtpp_wi_data_i;
+    CALL_SMETHOD(wipp->pub.rcnt, use_stdfree, wipp);
+    wipp->pub.wi_type = RTPP_WI_TYPE_DATA;
+    wipp->pub.next = NULL;
     if (datalen > 0) {
         wipp->data_len = datalen;
         memcpy(wipp->data, dataptr, datalen);
@@ -78,11 +66,13 @@ rtpp_wi_malloc_udata(void **dataptr, size_t datalen)
 {
     struct rtpp_wi_data *wipp;
 
-    wipp = malloc(sizeof(struct rtpp_wi_data) + datalen);
+    wipp = rtpp_rmalloc(sizeof(struct rtpp_wi_data) + datalen, PVT_RCOFFS(wipp));
     if (wipp == NULL) {
         return (NULL);
     }
-    *wipp = rtpp_wi_data_i;
+    CALL_SMETHOD(wipp->pub.rcnt, use_stdfree, wipp);
+    wipp->pub.wi_type = RTPP_WI_TYPE_DATA;
+    wipp->pub.next = NULL;
     if (datalen > 0) {
         wipp->data_len = datalen;
         *dataptr = wipp->data;

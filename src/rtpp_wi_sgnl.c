@@ -31,6 +31,8 @@
 #include <stdlib.h>
 
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_sgnl.h"
 
@@ -39,22 +41,6 @@ struct rtpp_wi_sgnl {
    int signum;
    size_t data_len;
    char data[0];
-};
-
-static void
-rtpp_wi_free_sgnl(struct rtpp_wi *wi)
-{
-    struct rtpp_wi_sgnl *wipp;
-
-    PUB2PVT(wi, wipp);
-    free(wipp);
-}
-
-static const struct rtpp_wi_sgnl rtpp_wi_sgnl_i = {
-   .pub = {
-       .dtor = rtpp_wi_free_sgnl,
-       .wi_type = RTPP_WI_TYPE_SGNL
-   }
 };
 
 struct rtpp_wi *
@@ -66,15 +52,17 @@ rtpp_wi_malloc_sgnl_memdeb(const struct rtpp_codeptr *mlp, int signum, const voi
 {
     struct rtpp_wi_sgnl *wipp;
 #if !defined(RTPP_CHECK_LEAKS)
-    wipp = malloc(sizeof(struct rtpp_wi_sgnl) + datalen);
+    wipp = rtpp_rmalloc(sizeof(struct rtpp_wi_sgnl) + datalen, PVT_RCOFFS(wipp));
 #else
-    wipp = rtpp_memdeb_malloc(sizeof(struct rtpp_wi_sgnl) + datalen,
-      MEMDEB_SYM, mlp);
+    wipp = rtpp_rmalloc_memdeb(sizeof(struct rtpp_wi_sgnl) + datalen,
+      PVT_RCOFFS(wipp), MEMDEB_SYM, mlp);
 #endif
     if (wipp == NULL) {
         return (NULL);
     }
-    *wipp = rtpp_wi_sgnl_i;
+    CALL_SMETHOD(wipp->pub.rcnt, use_stdfree, wipp);
+    wipp->pub.wi_type = RTPP_WI_TYPE_SGNL;
+    wipp->pub.next = NULL;
     wipp->signum = signum;
     if (datalen > 0) {
         wipp->data_len = datalen;

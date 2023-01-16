@@ -25,6 +25,11 @@
  *
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include <assert.h>
 #include <pthread.h>
 #include <signal.h>
@@ -50,7 +55,10 @@
 #include "libexecinfo/execinfo.h"
 #include "rtpp_memdeb_internal.h"
 #endif
+#include "rtp_packet.h"
 #include "rtpp_queue.h"
+#include "rtpp_netaddr.h"
+#include "rtpp_network.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
@@ -58,6 +66,7 @@
 #include "rtpp_timed_task.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_data.h"
+#include "rtpp_wi_pkt.h"
 #include "rtpp_wi_sgnl.h"
 
 #if defined(_RTPP_MEMDEB_H)
@@ -75,6 +84,7 @@ struct tests {
     struct test_data queue_b2b;
     struct test_data wi_malloc_udata;
     struct test_data wi_malloc_data;
+    struct test_data wi_malloc_pkt;
 };
 
 struct thr_args {
@@ -92,6 +102,12 @@ struct sgnl_pload {
 };
 
 static const char *MLQ = "meaning of life?";
+
+static void inline
+taint(struct rtpp_wi *p) {
+
+    asm volatile ("" : : "m" (*p));
+}
 
 static enum rtpp_timed_cb_rvals
 update_derived_stats(double dtime, void *argp)
@@ -114,6 +130,10 @@ update_derived_stats(double dtime, void *argp)
         break;
 
     case 3:
+        atomic_store(&tap->tdp->done, true);
+        break;
+
+    case 4:
         atomic_store(&tap->tdp->done, true);
         break;
 
@@ -149,7 +169,7 @@ worker_run(void *argp)
         assert(wi_id > wi_id_prev);
 #endif
         /* deallocate wi */
-        CALL_METHOD(wi, dtor);
+        RTPP_OBJ_DECREF(wi);
 #if defined(RTPQ_CHECK_SEQ)
         wi_id_prev = wi_id;
 #endif
@@ -221,6 +241,7 @@ main(int argc, char **argv)
     atomic_init(&tests.queue_b2b.done, false);
     atomic_init(&tests.wi_malloc_udata.done, false);
     atomic_init(&tests.wi_malloc_data.done, false);
+    atomic_init(&tests.wi_malloc_pkt.done, false);
 
     tsize = 1256;
     if (argc > 1) {
@@ -278,7 +299,7 @@ main(int argc, char **argv)
     pthread_join(thread_id, NULL);
     while (rtpp_queue_get_length(targs.fqp) > 0) {
         wi = rtpp_queue_get_item(targs.fqp, 0);
-        CALL_METHOD(wi, dtor);
+        RTPP_OBJ_DECREF(wi);
         tests.queue_p2c.nitems--;
     }
     RPRINT(&tests.queue_p2c, "rtpp_queue (p2c)", tsize);
@@ -322,11 +343,11 @@ main(int argc, char **argv)
     pthread_join(thread_id, NULL);
     while (rtpp_queue_get_length(targs.fqp) > 0) {
         wi = rtpp_queue_get_item(targs.fqp, 0);
-        CALL_METHOD(wi, dtor);
+        RTPP_OBJ_DECREF(wi);
     }
     while (rtpp_queue_get_length(targs.bqp) > 0) {
         wi = rtpp_queue_get_item(targs.bqp, 0);
-        CALL_METHOD(wi, dtor);
+        RTPP_OBJ_DECREF(wi);
     }
     RPRINT(&tests.queue_b2b, "rtpp_queue (b2b)", tsize);
 
@@ -335,7 +356,8 @@ main(int argc, char **argv)
     stime = getdtime();
     do {
         wi = rtpp_wi_malloc_udata((void **)&wi_data, tsize);
-        CALL_METHOD(wi, dtor);
+        taint(wi);
+        RTPP_OBJ_DECREF(wi);
         tests.wi_malloc_udata.nitems++;
     } while(!atomic_load(&tests.wi_malloc_udata.done));
     tests.wi_malloc_udata.runtime = getdtime() - stime;
@@ -349,13 +371,34 @@ main(int argc, char **argv)
     do {
         char fake_data[tsize];
         wi = rtpp_wi_malloc_data(fake_data, tsize);
-        CALL_METHOD(wi, dtor);
+        taint(wi);
+        RTPP_OBJ_DECREF(wi);
         tests.wi_malloc_data.nitems++;
     } while(!atomic_load(&tests.wi_malloc_data.done));
     tests.wi_malloc_data.runtime = getdtime() - stime;
     RPRINT(&tests.wi_malloc_data, "rtpp_wi(data)", tsize);
     CALL_METHOD(ttp, cancel);
     RTPP_OBJ_DECREF(ttp);
+
+    struct sockaddr_in someaddr = {.sin_family = AF_INET};
+
+    struct rtpp_netaddr *na = rtpp_netaddr_ctor();
+    CALL_SMETHOD(na, set, sstosa(&someaddr), sizeof(someaddr));
+    targs.tdp = &tests.wi_malloc_pkt;
+    ttp = CALL_SMETHOD(rtp, schedule_rc, 10.0, targs.rsp->rcnt, update_derived_stats, NULL, &targs);
+    stime = getdtime();
+    do {
+        struct rtp_packet *pkt = rtp_packet_alloc();
+        wi = rtpp_wi_malloc_pkt_na(-1, pkt, na, 1, NULL);
+        taint(wi);
+        RTPP_OBJ_DECREF(wi);
+        tests.wi_malloc_pkt.nitems++;
+    } while(!atomic_load(&tests.wi_malloc_pkt.done));
+    tests.wi_malloc_pkt.runtime = getdtime() - stime;
+    RPRINT(&tests.wi_malloc_pkt, "rtpp_wi_pkt()", tsize);
+    CALL_METHOD(ttp, cancel);
+    RTPP_OBJ_DECREF(ttp);
+    RTPP_OBJ_DECREF(na);
 
     RTPP_OBJ_DECREF(targs.rsp);
     CALL_SMETHOD(rtp, shutdown);

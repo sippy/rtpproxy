@@ -88,7 +88,7 @@ rtpp_notify_queue_run(void *arg)
     for (;;) {
         wi = rtpp_queue_get_item(pvt->nqueue, 0);
         if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
-            CALL_METHOD(wi, dtor);
+            RTPP_OBJ_DECREF(wi);
             break;
         }
         wi_data = rtpp_wi_data_get_ptr(wi, sizeof(struct rtpp_notify_wi), 0);
@@ -98,7 +98,7 @@ rtpp_notify_queue_run(void *arg)
 
         /* deallocate wi */
         RTPP_OBJ_DECREF(wi_data->glog);
-        CALL_METHOD(wi, dtor);
+        RTPP_OBJ_DECREF(wi);
     }
 }
 
@@ -134,7 +134,7 @@ rtpp_notify_ctor(struct rtpp_log *glog)
     return (&pvt->pub);
 
 e3:
-    CALL_METHOD(pvt->sigterm, dtor);
+    RTPP_OBJ_DECREF(pvt->sigterm);
 e2:
     rtpp_queue_destroy(pvt->nqueue);
 e1:

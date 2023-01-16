@@ -31,6 +31,8 @@
 #include <stdlib.h>
 
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_apis.h"
 
@@ -41,32 +43,18 @@ struct rtpp_wi_apis {
    char msg[0];
 };
 
-static void
-rtpp_wi_free_apis(struct rtpp_wi *wi)
-{
-    struct rtpp_wi_apis *wipp;
-
-    PUB2PVT(wi, wipp);
-    free(wipp);
-}
-
-static const struct rtpp_wi_apis rtpp_wi_apis_i = {
-   .pub = {
-       .dtor = rtpp_wi_free_apis,
-       .wi_type = RTPP_WI_TYPE_API_STR
-   }
-};
-
 struct rtpp_wi *
 rtpp_wi_malloc_apis(const char *apiname, void *data, size_t datalen)
 {
     struct rtpp_wi_apis *wipp;
 
-    wipp = malloc(sizeof(struct rtpp_wi_apis) + datalen);
+    wipp = rtpp_rmalloc(sizeof(struct rtpp_wi_apis) + datalen, PVT_RCOFFS(wipp));
     if (wipp == NULL) {
         return (NULL);
     }
-    *wipp = rtpp_wi_apis_i;
+    CALL_SMETHOD(wipp->pub.rcnt, use_stdfree, wipp);
+    wipp->pub.wi_type = RTPP_WI_TYPE_API_STR;
+    wipp->pub.next = NULL;
     wipp->apiname = apiname;
     if (datalen > 0) {
         wipp->msg_len = datalen;

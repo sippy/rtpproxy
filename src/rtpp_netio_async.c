@@ -105,7 +105,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
 	    wi = wis[i];
             PUB2PVT(wi, wipp);
             if (wi->wi_type == RTPP_WI_TYPE_SGNL) {
-                CALL_METHOD(wi, dtor);
+                RTPP_OBJ_DECREF(wi);
                 goto out;
             }
             nretry = 0;
@@ -151,7 +151,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
                     }
                 }
             } while (wipp->nsend > 0);
-            CALL_METHOD(wi, dtor);
+            RTPP_OBJ_DECREF(wi);
         }
 #if RTPP_DEBUG_timers
         sleeptime += tp[1] - tp[0];
@@ -228,10 +228,6 @@ rtpp_anetio_send_pkt_na(struct sthread_args *sender, int sock, \
     }
 
     wi = rtpp_wi_malloc_pkt_na(sock, pkt, sendto, nsend, sock_rcnt);
-    if (wi == NULL) {
-        RTPP_OBJ_DECREF(pkt);
-        return (-1);
-    }
     /*
      * rtpp_wi_malloc_pkt_na() consumes pkt and returns wi, so no need to
      * call rtp_packet_free() here.
@@ -305,7 +301,7 @@ rtpp_netio_async_init(const struct rtpp_cfg *cfsp, int qlen)
         netio_cf->args[i].sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
         if (netio_cf->args[i].sigterm == NULL) {
             for (ri = i - 1; ri >= 0; ri--) {
-                CALL_METHOD(netio_cf->args[ri].sigterm, dtor);
+                RTPP_OBJ_DECREF(netio_cf->args[ri].sigterm);
             }
             goto e1;
         }
@@ -318,7 +314,7 @@ rtpp_netio_async_init(const struct rtpp_cfg *cfsp, int qlen)
                  pthread_join(netio_cf->thread_id[ri], NULL);
              }
              for (ri = i; ri < SEND_THREADS; ri++) {
-                 CALL_METHOD(netio_cf->args[ri].sigterm, dtor);
+                 RTPP_OBJ_DECREF(netio_cf->args[ri].sigterm);
              }
              goto e1;
         }
@@ -329,7 +325,7 @@ rtpp_netio_async_init(const struct rtpp_cfg *cfsp, int qlen)
 #if 0
 e2:
     for (i = 0; i < SEND_THREADS; i++) {
-        CALL_METHOD(netio_cf->args[i].sigterm, dtor);
+        RTPP_OBJ_DECREF(netio_cf->args[i].sigterm);
     }
 #endif
 e1:

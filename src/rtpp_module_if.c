@@ -288,7 +288,7 @@ e5:
     }
 #endif
 e4:
-    CALL_METHOD(pvt->mip->wthr.sigterm, dtor);
+    RTPP_OBJ_DECREF(pvt->mip->wthr.sigterm);
     pvt->mip->wthr.sigterm = NULL;
 e3:
 #if RTPP_CHECK_LEAKS
@@ -310,7 +310,7 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
             /* First, stop the worker thread */
             rtpp_queue_put_item(pvt->mip->wthr.sigterm, pvt->mip->wthr.mod_q);
         } else if (pvt->mip->wthr.sigterm != NULL) {
-            CALL_METHOD(pvt->mip->wthr.sigterm, dtor);
+            RTPP_OBJ_DECREF(pvt->mip->wthr.sigterm);
         }
     }
 }
@@ -368,7 +368,7 @@ rtpp_mif_run_acct(void *argp)
         wi = rtpp_queue_get_item(pvt->mip->wthr.mod_q, 0);
         if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
             signum = rtpp_wi_sgnl_get_signum(wi);
-            CALL_METHOD(wi, dtor);
+            RTPP_OBJ_DECREF(wi);
             if (signum == SIGTERM) {
                 break;
             }
@@ -391,7 +391,7 @@ rtpp_mif_run_acct(void *argp)
                 aap->on_rtcp_rcvd.func(pvt->mpvt, rapr);
             RTPP_OBJ_DECREF(rapr);
         }
-        CALL_METHOD(wi, dtor);
+        RTPP_OBJ_DECREF(wi);
     }
 }
 

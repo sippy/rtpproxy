@@ -252,7 +252,7 @@ skip:
         RTPP_OBJ_DECREF(wip->edata);
         RTPP_OBJ_DECREF(wip->rtdp);
         RTPP_OBJ_DECREF(wip->pkt);
-        CALL_METHOD(wi, dtor);
+        RTPP_OBJ_DECREF(wi);
     }
 }
 

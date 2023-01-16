@@ -45,8 +45,6 @@
 
 struct rtp_packet_full;
 
-static void rtp_packet_free(struct rtp_packet_full *);
-
 struct rtp_packet_priv {
     struct rtp_info rinfo;
     struct rtpp_wi_pvt wip;
@@ -93,18 +91,10 @@ rtp_packet_alloc()
     if (pkt == NULL) {
         return (NULL);
     }
+    CALL_SMETHOD(pkt->pub.rcnt, use_stdfree, pkt);
     pkt->pub.wi = &(pkt->pvt.wip.pub);
-    CALL_SMETHOD(pkt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtp_packet_free,
-      pkt);
 
     return &(pkt->pub);
-}
-
-static void
-rtp_packet_free(struct rtp_packet_full *pkt)
-{
-
-    free(pkt);
 }
 
 void 

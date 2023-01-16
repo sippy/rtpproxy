@@ -30,17 +30,15 @@
 
 struct rtpp_wi;
 
-DEFINE_METHOD(rtpp_wi, rtpp_wi_dtor, void);
-
 enum rtpp_wi_type {RTPP_WI_TYPE_OPKT = 0, RTPP_WI_TYPE_SGNL = 1,
   RTPP_WI_TYPE_API_STR = 2, RTPP_WI_TYPE_DATA = 3};
 
 #define rtpp_wi_get_type(wip) ((wip)->wi_type)
 
 struct rtpp_wi {
+    struct rtpp_refcnt *rcnt;
     struct rtpp_wi *next;
     enum rtpp_wi_type wi_type;
-    METHOD_ENTRY(rtpp_wi_dtor, dtor);
 };
 
 #endif

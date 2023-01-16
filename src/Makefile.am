@@ -96,12 +96,12 @@ rtpproxy_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN) rtpp_mallocs.c rtpp_mallocs.h \
   rtpp_refcnt.c rtpp_refcnt.h
 rtpproxy_debug_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN) $(SRCS_DEBUG) $(SRCS_AUTOGEN_DEBUG)
 rtpp_objck_perf_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
-rtpp_objck_BASESOURCES=rtpp_objck.c $(SRCS_AUTOGEN) \
-  rtpp_stats.c rtpp_stats.h \
+rtpp_objck_BASESOURCES=rtpp_objck.c $(SRCS_AUTOGEN) rtpp_network.c \
+  rtpp_network.h rtpp_stats.c rtpp_stats.h rtpp_netaddr.c rtpp_netaddr.h \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_pearson.c rtpp_pearson.h \
-  rtpp_time.c rtpp_time.h rtpp_timed.c rtpp_timed.h \
+  rtpp_time.c rtpp_time.h rtpp_timed.c rtpp_timed.h rtp_packet.c rtp_packet.h \
   rtpp_queue.c rtpp_queue.h rtpp_wi.h rtpp_wi_data.c rtpp_wi_data.h \
-  rtpp_wi_sgnl.c rtpp_wi_sgnl.h
+  rtpp_wi_sgnl.c rtpp_wi_sgnl.h rtpp_wi_pkt.c rtpp_wi_pkt.h
 rtpp_objck_perf_SOURCES=$(rtpp_objck_BASESOURCES) rtpp_refcnt.c rtpp_refcnt.h \
   rtpp_mallocs.c rtpp_mallocs.h
 rtpp_objck_LDADD=$(rtpp_objck_perf_LDADD) $(RTPP_MEMDEB_LDADD)

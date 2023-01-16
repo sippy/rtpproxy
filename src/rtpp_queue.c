@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_queue.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_wi.h"
@@ -293,7 +294,7 @@ rtpp_queue_destroy(struct rtpp_queue *queue)
     while (rtpp_queue_get_length(queue) > 0) {
         struct rtpp_wi *wip;
         wip = rtpp_queue_get_item(queue, 0);
-        CALL_METHOD(wip, dtor);
+        RTPP_OBJ_DECREF(wip);
     }
     pthread_cond_destroy(&queue->cond);
     pthread_mutex_destroy(&queue->mutex);
