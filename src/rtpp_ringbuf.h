@@ -35,13 +35,19 @@ DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_push, void, void *);
 DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_flush, void);
 DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_locate, int, void *);
 
-struct rtpp_ringbuf {
-    /* Refcounter */
-    struct rtpp_refcnt *rcnt;
-
+struct rtpp_ringbuf_smethods
+{
     METHOD_ENTRY(rtpp_ringbuf_push, push);
     METHOD_ENTRY(rtpp_ringbuf_flush, flush);
     METHOD_ENTRY(rtpp_ringbuf_locate, locate);
+};
+
+struct rtpp_ringbuf {
+    /* Refcounter */
+    struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
+    const struct rtpp_ringbuf_smethods * smethods;
+#endif
 };
 
 struct rtpp_ringbuf *rtpp_ringbuf_ctor(size_t, int);

@@ -125,7 +125,7 @@ update_jitter_stats(struct rtp_analyze_jdata *jdp, struct rtp_info *rinfo,
 
     rtime_ts = rtp_dtime2time_ts64(rinfo->rtp_profile->ts_rate, rtime);
     if (rinfo->rtp_profile->pt_kind == RTP_PTK_AUDIO &&
-      CALL_METHOD(jdp->ts_dedup, locate, &rinfo->ts) >= 0) {
+      CALL_SMETHOD(jdp->ts_dedup, locate, &rinfo->ts) >= 0) {
         jdp->jss.ts_dcount++;
         if (jdp->jss.pcount == 1) {
             jdp->jss.prev_rtime_ts = rtime_ts;
@@ -198,7 +198,7 @@ update_jitter_stats(struct rtp_analyze_jdata *jdp, struct rtp_info *rinfo,
     jdp->jss.pcount++;
 saveandexit:
     if (rinfo->rtp_profile->pt_kind == RTP_PTK_AUDIO) {
-        CALL_METHOD(jdp->ts_dedup, push, &rinfo->ts);
+        CALL_SMETHOD(jdp->ts_dedup, push, &rinfo->ts);
     }
     jdp->jss.prev_rtime_ts = rtime_ts;
     jdp->jss.prev_ts = rinfo->ts;
@@ -316,7 +316,7 @@ jdata_by_ssrc(struct rtp_analyze_jitter *jp, uint32_t ssrc)
         } else {
             jp->first = NULL;
         }
-        CALL_METHOD(rjdp->ts_dedup, flush);
+        CALL_SMETHOD(rjdp->ts_dedup, flush);
         if (rjdp->jss.pcount >= 2) {
             if (jp->jmax_acum < rjdp->jss.jmax) {
                 jp->jmax_acum = rjdp->jss.jmax;

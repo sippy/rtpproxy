@@ -58,6 +58,7 @@ extern const struct rtpp_analyzer_smethods * const rtpp_analyzer_smethods;
 extern const struct rtpp_pcnt_strm_smethods * const rtpp_pcnt_strm_smethods;
 extern const struct rtpp_ttl_smethods * const rtpp_ttl_smethods;
 extern const struct rtpp_pipe_smethods * const rtpp_pipe_smethods;
+extern const struct rtpp_ringbuf_smethods * const rtpp_ringbuf_smethods;
 extern const struct pproc_manager_smethods * const pproc_manager_smethods;
 
 #if defined(RTPP_DEBUG)
@@ -79,6 +80,7 @@ extern const struct pproc_manager_smethods * const pproc_manager_smethods;
     struct rtpp_pcnt_strm *: rtpp_pcnt_strm_smethods, \
     struct rtpp_ttl *: rtpp_ttl_smethods, \
     struct rtpp_pipe *: rtpp_pipe_smethods, \
+    struct rtpp_ringbuf *: rtpp_ringbuf_smethods, \
     struct pproc_manager *: pproc_manager_smethods \
 )
 
