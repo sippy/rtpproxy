@@ -68,7 +68,7 @@ handle_query_simple(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
     struct rtpps_pcount pcnts;
     struct rtpp_pcnts_strm pst[2];
 
-    ttl = CALL_METHOD(spp, get_ttl);
+    ttl = CALL_SMETHOD(spp, get_ttl);
     CALL_SMETHOD(spp->pcount, get_stats, &pcnts);
     CALL_SMETHOD(spp->stream[idx]->pcnt_strm, get_stats, &pst[0]);
     CALL_SMETHOD(spp->stream[NOT(idx)]->pcnt_strm, get_stats, &pst[1]);
@@ -144,7 +144,7 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
         }
         CHECK_OVERFLOW();
         if (strcmp(cmd->args.v[i], "ttl") == 0) {
-            int ttl = CALL_METHOD(spp, get_ttl);
+            int ttl = CALL_SMETHOD(spp, get_ttl);
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
               ttl);
             continue;

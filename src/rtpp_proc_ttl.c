@@ -88,7 +88,7 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
      */
     sp = (struct rtpp_session *)dp;
 
-    if (CALL_METHOD(sp->rtp, get_ttl) == 0) {
+    if (CALL_SMETHOD(sp->rtp, get_ttl) == 0) {
         RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
         if (sp->timeout_data != NULL) {
             CALL_METHOD(fap->rtpp_notify_cf, schedule,
@@ -99,7 +99,7 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
         CALL_SMETHOD(fap->sessions_wrt, unreg, sp->seuid);
         return (RTPP_HT_MATCH_DEL);
     } else {
-        CALL_METHOD(sp->rtp, decr_ttl);
+        CALL_SMETHOD(sp->rtp, decr_ttl);
     }
     return (RTPP_HT_MATCH_CONT);
 }

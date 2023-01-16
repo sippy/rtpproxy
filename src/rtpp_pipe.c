@@ -71,6 +71,14 @@ static void rtpp_pipe_upd_cntrs(struct rtpp_pipe *, struct rtpp_acct_pipe *);
 #define MT2RT_NZ(mt) ((mt).wall)
 #define DRTN_NZ(bmt, emt) ((emt).mono == 0.0 || (bmt).mono == 0.0 ? 0.0 : ((emt).mono - (bmt).mono))
 
+static const struct rtpp_pipe_smethods _rtpp_pipe_smethods = {
+    .get_ttl = &rtpp_pipe_get_ttl,
+    .decr_ttl = &rtpp_pipe_decr_ttl,
+    .get_stats = &rtpp_pipe_get_stats,
+    .upd_cntrs = &rtpp_pipe_upd_cntrs,
+};
+const struct rtpp_pipe_smethods * const rtpp_pipe_smethods = &_rtpp_pipe_smethods;
+
 struct rtpp_pipe *
 rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
 {
@@ -122,10 +130,9 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
     pvt->pipe_type = ap->pipe_type;
     pvt->pub.rtpp_stats = ap->rtpp_stats;
     pvt->pub.log = ap->log;
-    pvt->pub.get_ttl = &rtpp_pipe_get_ttl;
-    pvt->pub.decr_ttl = &rtpp_pipe_decr_ttl;
-    pvt->pub.get_stats = &rtpp_pipe_get_stats;
-    pvt->pub.upd_cntrs = &rtpp_pipe_upd_cntrs;
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = rtpp_pipe_smethods;
+#endif
     RTPP_OBJ_INCREF(ap->log);
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pipe_dtor, pvt);
     return (&pvt->pub);

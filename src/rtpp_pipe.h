@@ -42,6 +42,14 @@ DEFINE_METHOD(rtpp_pipe, rtpp_pipe_decr_ttl, void);
 DEFINE_METHOD(rtpp_pipe, rtpp_pipe_get_stats, void, struct rtpp_acct_pipe *);
 DEFINE_METHOD(rtpp_pipe, rtpp_pipe_upd_cntrs, void, struct rtpp_acct_pipe *);
 
+struct rtpp_pipe_smethods
+{
+    METHOD_ENTRY(rtpp_pipe_get_ttl, get_ttl);
+    METHOD_ENTRY(rtpp_pipe_decr_ttl, decr_ttl);
+    METHOD_ENTRY(rtpp_pipe_get_stats, get_stats);
+    METHOD_ENTRY(rtpp_pipe_upd_cntrs, upd_cntrs);
+};
+
 struct rtpp_pipe {
     /* Session for caller [0] and callee [1] */
     struct rtpp_stream *stream[2];
@@ -56,11 +64,9 @@ struct rtpp_pipe {
 
     /* Refcounter */
     struct rtpp_refcnt *rcnt;
-
-    METHOD_ENTRY(rtpp_pipe_get_ttl, get_ttl);
-    METHOD_ENTRY(rtpp_pipe_decr_ttl, decr_ttl);
-    METHOD_ENTRY(rtpp_pipe_get_stats, get_stats);
-    METHOD_ENTRY(rtpp_pipe_upd_cntrs, upd_cntrs);
+#if defined(RTPP_DEBUG)
+    const struct rtpp_pipe_smethods * smethods;
+#endif
 };
 
 struct r_pipe_ctor_args {

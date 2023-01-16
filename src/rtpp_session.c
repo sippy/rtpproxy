@@ -213,11 +213,11 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     rtpp_timestamp_get(pvt->acct->destroy_ts);
     session_time = pvt->acct->destroy_ts->mono - pvt->acct->init_ts->mono;
 
-    CALL_METHOD(pub->rtp, get_stats, &pvt->acct->rtp);
-    CALL_METHOD(pub->rtcp, get_stats, &pvt->acct->rtcp);
+    CALL_SMETHOD(pub->rtp, get_stats, &pvt->acct->rtp);
+    CALL_SMETHOD(pub->rtcp, get_stats, &pvt->acct->rtcp);
     if (pub->complete != 0) {
-        CALL_METHOD(pub->rtp, upd_cntrs, &pvt->acct->rtp);
-        CALL_METHOD(pub->rtcp, upd_cntrs, &pvt->acct->rtcp);
+        CALL_SMETHOD(pub->rtp, upd_cntrs, &pvt->acct->rtp);
+        CALL_SMETHOD(pub->rtcp, upd_cntrs, &pvt->acct->rtcp);
     }
     RTPP_LOG(pub->log, RTPP_LOG_INFO, "session on ports %d/%d is cleaned up",
       pub->rtp->stream[0]->port, pub->rtp->stream[1]->port);
