@@ -59,8 +59,11 @@ static void rtpp_refcnt_decref(struct rtpp_refcnt *);
  */
 #define RC_ABS_MAX 2000000
 
-#define RC_FLAG_PA    (1 << 0)
-#define RC_FLAG_TRACE (1 << 1)
+#define RC_FLAG_PA         (1 << 0)
+#define RC_FLAG_TRACE      (1 << 1)
+#define RC_FLAG_HASDTOR    (1 << 2)
+#define RC_FLAG_HASPRDTOR  (1 << 3)
+#define RC_FLAG_PA_STDFREE (1 << 4)
 
 struct rtpp_refcnt_priv
 {
@@ -78,6 +81,8 @@ static void rtpp_refcnt_attach(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt *);
 static void rtpp_refcnt_reg_pd(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *);
+static void rtpp_refcnt_use_stdfree(struct rtpp_refcnt *, void *);
+
 #if RTPP_DEBUG_refcnt
 static void rtpp_refcnt_traceen(struct rtpp_refcnt *);
 #endif
@@ -90,7 +95,8 @@ static const struct rtpp_refcnt_smethods _rtpp_refcnt_smethods = {
 #if RTPP_DEBUG_refcnt
     .traceen = rtpp_refcnt_traceen,
 #endif
-    .attach = &rtpp_refcnt_attach
+    .attach = &rtpp_refcnt_attach,
+    .use_stdfree = &rtpp_refcnt_use_stdfree,
 };
 const struct rtpp_refcnt_smethods * const rtpp_refcnt_smethods = &_rtpp_refcnt_smethods;
 
@@ -115,12 +121,7 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
     pvt->data = data;
     if (dtor_f != NULL) {
         pvt->dtor_f = dtor_f;
-    } else {
-#if !defined(RTPP_CHECK_LEAKS)
-        pvt->dtor_f = free;
-#else
-        pvt->dtor_f = rtpp_refcnt_free;
-#endif
+        pvt->flags |= RC_FLAG_HASDTOR;
     }
 #if defined(RTPP_DEBUG)
     pvt->pub.smethods = rtpp_refcnt_smethods;
@@ -157,8 +158,11 @@ rtpp_refcnt_attach(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f,
     struct rtpp_refcnt_priv *pvt;
 
     PUB2PVT(pub, pvt);
+    RTPP_DBG_ASSERT(pvt->data == NULL && pvt->dtor_f == NULL &&
+      !(pvt->flags & RC_FLAG_HASDTOR));
     pvt->data = data;
     pvt->dtor_f = dtor_f;
+    pvt->flags |= RC_FLAG_HASDTOR;
 }
 
 static void
@@ -210,20 +214,36 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
 #endif
     if (oldcnt == 1) {
         atomic_thread_fence(memory_order_acquire);
-        if ((pvt->flags & RC_FLAG_PA) == 0) {
-            if (pvt->pre_dtor_f != NULL) {
+        int flags = pvt->flags;
+        if ((flags & RC_FLAG_PA) == 0) {
+            if (flags & RC_FLAG_HASPRDTOR) {
                 pvt->pre_dtor_f(pvt->pd_data);
             }
-            pvt->dtor_f(pvt->data);
+            if (flags & RC_FLAG_HASDTOR) {
+                pvt->dtor_f(pvt->data);
+            } else {
+#if !defined(RTPP_CHECK_LEAKS)
+                free(pvt->data);
+#else
+                rtpp_refcnt_free(pvt->data);
+#endif
+            }
             rtpp_refcnt_fin(pub);
             free(pvt);
         } else {
             rtpp_refcnt_fin(pub);
-            if (pvt->pre_dtor_f != NULL) {
+            if (flags & RC_FLAG_HASPRDTOR) {
                 pvt->pre_dtor_f(pvt->pd_data);
             }
-            if (pvt->dtor_f != NULL) {
+            if (flags & RC_FLAG_HASDTOR) {
                 pvt->dtor_f(pvt->data);
+            }
+            if (flags & RC_FLAG_PA_STDFREE) {
+#if !defined(RTPP_CHECK_LEAKS)
+                free(pvt->data);
+#else
+                rtpp_refcnt_free(pvt->data);
+#endif
             }
         }
 
@@ -248,9 +268,12 @@ rtpp_refcnt_reg_pd(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t pre_dtor_f,
     struct rtpp_refcnt_priv *pvt;
 
     PUB2PVT(pub, pvt);
+    RTPP_DBG_ASSERT(pvt->pd_data == NULL && pvt->pre_dtor_f == NULL &&
+      !(pvt->flags & RC_FLAG_HASPRDTOR));
     RTPP_DBG_ASSERT(pvt->pre_dtor_f == NULL);
     pvt->pre_dtor_f = pre_dtor_f;
     pvt->pd_data = pd_data;
+    pvt->flags |= RC_FLAG_HASPRDTOR;
 }
 
 #if RTPP_DEBUG_refcnt
@@ -263,3 +286,15 @@ rtpp_refcnt_traceen(struct rtpp_refcnt *pub)
     pvt->flags |= RC_FLAG_TRACE;
 }
 #endif
+
+static void
+rtpp_refcnt_use_stdfree(struct rtpp_refcnt *pub, void *data)
+{
+    struct rtpp_refcnt_priv *pvt;
+
+    PUB2PVT(pub, pvt);
+    RTPP_DBG_ASSERT(pvt->data == NULL && (pvt->flags & RC_FLAG_PA) &&
+      !(pvt->flags & RC_FLAG_PA_STDFREE));
+    pvt->flags |= RC_FLAG_PA_STDFREE;
+    pvt->data = data;
+}
