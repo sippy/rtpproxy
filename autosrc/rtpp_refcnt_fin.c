@@ -31,6 +31,10 @@ static void refcnt_traceen_fin(void *pub) {
     fprintf(stderr, "Method rtpp_refcnt@%p::traceen (refcnt_traceen) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void refcnt_use_stdfree_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_refcnt@%p::use_stdfree (refcnt_use_stdfree) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
     .attach = (refcnt_attach_t)&refcnt_attach_fin,
     .decref = (refcnt_decref_t)&refcnt_decref_fin,
@@ -38,6 +42,7 @@ static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
     .incref = (refcnt_incref_t)&refcnt_incref_fin,
     .reg_pd = (refcnt_reg_pd_t)&refcnt_reg_pd_fin,
     .traceen = (refcnt_traceen_t)&refcnt_traceen_fin,
+    .use_stdfree = (refcnt_use_stdfree_t)&refcnt_use_stdfree_fin,
 };
 void rtpp_refcnt_fin(struct rtpp_refcnt *pub) {
     RTPP_DBG_ASSERT(pub->smethods->attach != (refcnt_attach_t)NULL);
@@ -46,6 +51,7 @@ void rtpp_refcnt_fin(struct rtpp_refcnt *pub) {
     RTPP_DBG_ASSERT(pub->smethods->incref != (refcnt_incref_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->reg_pd != (refcnt_reg_pd_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->traceen != (refcnt_traceen_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->use_stdfree != (refcnt_use_stdfree_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_refcnt_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_refcnt_smethods_fin;
@@ -78,6 +84,7 @@ rtpp_refcnt_fintest()
         .incref = (refcnt_incref_t)((void *)0x1),
         .reg_pd = (refcnt_reg_pd_t)((void *)0x1),
         .traceen = (refcnt_traceen_t)((void *)0x1),
+        .use_stdfree = (refcnt_use_stdfree_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_refcnt_fin,
@@ -89,7 +96,8 @@ rtpp_refcnt_fintest()
     CALL_TFIN(&tp->pub, incref);
     CALL_TFIN(&tp->pub, reg_pd);
     CALL_TFIN(&tp->pub, traceen);
-    assert((_naborts - naborts_s) == 6);
+    CALL_TFIN(&tp->pub, use_stdfree);
+    assert((_naborts - naborts_s) == 7);
     free(tp);
 }
 const static void *_rtpp_refcnt_ftp = (void *)&rtpp_refcnt_fintest;
