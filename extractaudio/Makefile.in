@@ -115,21 +115,17 @@ am__extractaudio_SOURCES_DIST = extractaudio.c decoder.c rtpp_loader.c \
 	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c decoder.h \
 	format_au.h g711.h rtpp_loader.h session.h g729_compat.c \
 	g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
-	${MAINSRCDIR}/rtpp_ringbuf.c \
-	$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.h \
-	$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c \
-	${MAINSRCDIR}/rtpp_netaddr.c ${MAINSRCDIR}/rtpp_netaddr.h \
-	eaud_oformats.c eaud_oformats.h rtpp_scan_pcap.c \
-	rtpp_scan_pcap.h eaud_pcap.c eaud_pcap.h eaud_substreams.c \
-	eaud_substreams.h rtpp_scan_adhoc.c rtpp_scan_adhoc.h \
-	eaud_adhoc.c eaud_adhoc.h eaud_crypto.c eaud_crypto.h \
-	srtp_util.c srtp_util.h ${MAINSRCDIR}/rtpp_mallocs.c \
-	${MAINSRCDIR}/rtpp_mallocs.h ${MAINSRCDIR}/rtpp_refcnt.c \
-	${MAINSRCDIR}/rtpp_refcnt.h
-am__objects_1 = extractaudio-rtpp_ringbuf_fin.$(OBJEXT)
-@BUILD_CRYPTO_TRUE@am__objects_2 = extractaudio-eaud_crypto.$(OBJEXT) \
+	${MAINSRCDIR}/rtpp_ringbuf.c ${MAINSRCDIR}/rtpp_netaddr.c \
+	${MAINSRCDIR}/rtpp_netaddr.h eaud_oformats.c eaud_oformats.h \
+	rtpp_scan_pcap.c rtpp_scan_pcap.h eaud_pcap.c eaud_pcap.h \
+	eaud_substreams.c eaud_substreams.h rtpp_scan_adhoc.c \
+	rtpp_scan_adhoc.h eaud_adhoc.c eaud_adhoc.h eaud_crypto.c \
+	eaud_crypto.h srtp_util.c srtp_util.h \
+	${MAINSRCDIR}/rtpp_mallocs.c ${MAINSRCDIR}/rtpp_mallocs.h \
+	${MAINSRCDIR}/rtpp_refcnt.c ${MAINSRCDIR}/rtpp_refcnt.h
+@BUILD_CRYPTO_TRUE@am__objects_1 = extractaudio-eaud_crypto.$(OBJEXT) \
 @BUILD_CRYPTO_TRUE@	extractaudio-srtp_util.$(OBJEXT)
-am__objects_3 = extractaudio-extractaudio.$(OBJEXT) \
+am__objects_2 = extractaudio-extractaudio.$(OBJEXT) \
 	extractaudio-decoder.$(OBJEXT) \
 	extractaudio-rtpp_loader.$(OBJEXT) extractaudio-rtp.$(OBJEXT) \
 	extractaudio-rtp_analyze.$(OBJEXT) \
@@ -137,15 +133,15 @@ am__objects_3 = extractaudio-extractaudio.$(OBJEXT) \
 	extractaudio-rtpp_time.$(OBJEXT) \
 	extractaudio-g729_compat.$(OBJEXT) \
 	extractaudio-rtpp_network.$(OBJEXT) \
-	extractaudio-rtpp_ringbuf.$(OBJEXT) $(am__objects_1) \
+	extractaudio-rtpp_ringbuf.$(OBJEXT) \
 	extractaudio-rtpp_netaddr.$(OBJEXT) \
 	extractaudio-eaud_oformats.$(OBJEXT) \
 	extractaudio-rtpp_scan_pcap.$(OBJEXT) \
 	extractaudio-eaud_pcap.$(OBJEXT) \
 	extractaudio-eaud_substreams.$(OBJEXT) \
 	extractaudio-rtpp_scan_adhoc.$(OBJEXT) \
-	extractaudio-eaud_adhoc.$(OBJEXT) $(am__objects_2)
-am_extractaudio_OBJECTS = $(am__objects_3) \
+	extractaudio-eaud_adhoc.$(OBJEXT) $(am__objects_1)
+am_extractaudio_OBJECTS = $(am__objects_2) \
 	extractaudio-rtpp_mallocs.$(OBJEXT) \
 	extractaudio-rtpp_refcnt.$(OBJEXT)
 extractaudio_OBJECTS = $(am_extractaudio_OBJECTS)
@@ -163,15 +159,13 @@ am__extractaudio_debug_SOURCES_DIST = extractaudio.c decoder.c \
 	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c decoder.h \
 	format_au.h g711.h rtpp_loader.h session.h g729_compat.c \
 	g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
-	${MAINSRCDIR}/rtpp_ringbuf.c \
-	$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.h \
-	$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c \
-	${MAINSRCDIR}/rtpp_netaddr.c ${MAINSRCDIR}/rtpp_netaddr.h \
-	eaud_oformats.c eaud_oformats.h rtpp_scan_pcap.c \
-	rtpp_scan_pcap.h eaud_pcap.c eaud_pcap.h eaud_substreams.c \
-	eaud_substreams.h rtpp_scan_adhoc.c rtpp_scan_adhoc.h \
-	eaud_adhoc.c eaud_adhoc.h eaud_crypto.c eaud_crypto.h \
-	srtp_util.c srtp_util.h $(top_srcdir)/src/rtpp_memdeb.c \
+	${MAINSRCDIR}/rtpp_ringbuf.c ${MAINSRCDIR}/rtpp_netaddr.c \
+	${MAINSRCDIR}/rtpp_netaddr.h eaud_oformats.c eaud_oformats.h \
+	rtpp_scan_pcap.c rtpp_scan_pcap.h eaud_pcap.c eaud_pcap.h \
+	eaud_substreams.c eaud_substreams.h rtpp_scan_adhoc.c \
+	rtpp_scan_adhoc.h eaud_adhoc.c eaud_adhoc.h eaud_crypto.c \
+	eaud_crypto.h srtp_util.c srtp_util.h \
+	$(top_srcdir)/src/rtpp_memdeb.c \
 	$(top_srcdir)/src/rtpp_memdeb.h \
 	$(top_srcdir)/src/rtpp_memdeb_internal.h \
 	$(top_srcdir)/src/rtpp_glitch.c \
@@ -189,12 +183,13 @@ am__extractaudio_debug_SOURCES_DIST = extractaudio.c decoder.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.h \
 	$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.h \
-	$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
-am__objects_4 = extractaudio_debug-rtpp_ringbuf_fin.$(OBJEXT)
-@BUILD_CRYPTO_TRUE@am__objects_5 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c \
+	$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.h \
+	$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
+@BUILD_CRYPTO_TRUE@am__objects_3 =  \
 @BUILD_CRYPTO_TRUE@	extractaudio_debug-eaud_crypto.$(OBJEXT) \
 @BUILD_CRYPTO_TRUE@	extractaudio_debug-srtp_util.$(OBJEXT)
-am__objects_6 = extractaudio_debug-extractaudio.$(OBJEXT) \
+am__objects_4 = extractaudio_debug-extractaudio.$(OBJEXT) \
 	extractaudio_debug-decoder.$(OBJEXT) \
 	extractaudio_debug-rtpp_loader.$(OBJEXT) \
 	extractaudio_debug-rtp.$(OBJEXT) \
@@ -203,24 +198,25 @@ am__objects_6 = extractaudio_debug-extractaudio.$(OBJEXT) \
 	extractaudio_debug-rtpp_time.$(OBJEXT) \
 	extractaudio_debug-g729_compat.$(OBJEXT) \
 	extractaudio_debug-rtpp_network.$(OBJEXT) \
-	extractaudio_debug-rtpp_ringbuf.$(OBJEXT) $(am__objects_4) \
+	extractaudio_debug-rtpp_ringbuf.$(OBJEXT) \
 	extractaudio_debug-rtpp_netaddr.$(OBJEXT) \
 	extractaudio_debug-eaud_oformats.$(OBJEXT) \
 	extractaudio_debug-rtpp_scan_pcap.$(OBJEXT) \
 	extractaudio_debug-eaud_pcap.$(OBJEXT) \
 	extractaudio_debug-eaud_substreams.$(OBJEXT) \
 	extractaudio_debug-rtpp_scan_adhoc.$(OBJEXT) \
-	extractaudio_debug-eaud_adhoc.$(OBJEXT) $(am__objects_5)
-am__objects_7 = extractaudio_debug-rtpp_memdeb.$(OBJEXT) \
+	extractaudio_debug-eaud_adhoc.$(OBJEXT) $(am__objects_3)
+am__objects_5 = extractaudio_debug-rtpp_memdeb.$(OBJEXT) \
 	extractaudio_debug-rtpp_glitch.$(OBJEXT) \
 	extractaudio_debug-rtpp_autoglitch.$(OBJEXT) \
 	extractaudio_debug-rtpp_refcnt.$(OBJEXT) \
 	extractaudio_debug-rtpp_mallocs.$(OBJEXT) \
 	extractaudio_debug-rtpp_stacktrace.$(OBJEXT)
-am__objects_8 = extractaudio_debug-rtpp_netaddr_fin.$(OBJEXT)
-am__objects_9 = extractaudio_debug-rtpp_refcnt_fin.$(OBJEXT)
-am_extractaudio_debug_OBJECTS = $(am__objects_6) $(am__objects_7) \
-	$(am__objects_8) $(am__objects_9)
+am__objects_6 = extractaudio_debug-rtpp_netaddr_fin.$(OBJEXT)
+am__objects_7 = extractaudio_debug-rtpp_refcnt_fin.$(OBJEXT)
+am__objects_8 = extractaudio_debug-rtpp_ringbuf_fin.$(OBJEXT)
+am_extractaudio_debug_OBJECTS = $(am__objects_4) $(am__objects_5) \
+	$(am__objects_6) $(am__objects_7) $(am__objects_8)
 extractaudio_debug_OBJECTS = $(am_extractaudio_debug_OBJECTS)
 am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 am__DEPENDENCIES_3 = $(top_srcdir)/libexecinfo/libexecinfo.a
@@ -260,7 +256,6 @@ am__depfiles_remade = ./$(DEPDIR)/extractaudio-decoder.Po \
 	./$(DEPDIR)/extractaudio-rtpp_network.Po \
 	./$(DEPDIR)/extractaudio-rtpp_refcnt.Po \
 	./$(DEPDIR)/extractaudio-rtpp_ringbuf.Po \
-	./$(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Po \
 	./$(DEPDIR)/extractaudio-rtpp_scan_adhoc.Po \
 	./$(DEPDIR)/extractaudio-rtpp_scan_pcap.Po \
 	./$(DEPDIR)/extractaudio-rtpp_time.Po \
@@ -486,9 +481,9 @@ RTPP_AUTOSRC_DIR = $(top_srcdir)/autosrc
 # Auto-generated by ./Makefile - DO NOT EDIT!
 SRCS_AUTOGEN = $(rtpp_command_rcache_AUTOSRCS) \
 	$(rtpp_log_obj_AUTOSRCS) $(rtpp_port_table_AUTOSRCS) \
-	$(rtpp_ringbuf_AUTOSRCS) $(rtpp_sessinfo_AUTOSRCS) \
-	$(rtpp_socket_AUTOSRCS) $(rtpp_timed_task_AUTOSRCS) \
-	$(rtpp_modman_AUTOSRCS) $(rtpp_module_if_AUTOSRCS)
+	$(rtpp_sessinfo_AUTOSRCS) $(rtpp_socket_AUTOSRCS) \
+	$(rtpp_timed_task_AUTOSRCS) $(rtpp_modman_AUTOSRCS) \
+	$(rtpp_module_if_AUTOSRCS)
 SRCS_AUTOGEN_DEBUG = $(rtpp_netaddr_AUTOSRCS) \
 	$(rtpp_pearson_perfect_AUTOSRCS) $(rtpp_refcnt_AUTOSRCS) \
 	$(rtpp_server_AUTOSRCS) $(rtpp_stats_AUTOSRCS) \
@@ -496,11 +491,11 @@ SRCS_AUTOGEN_DEBUG = $(rtpp_netaddr_AUTOSRCS) \
 	$(rtpp_pcount_AUTOSRCS) $(rtpp_record_AUTOSRCS) \
 	$(rtpp_hash_table_AUTOSRCS) $(rtpp_weakref_AUTOSRCS) \
 	$(rtpp_analyzer_AUTOSRCS) $(rtpp_pcnt_strm_AUTOSRCS) \
-	$(rtpp_ttl_AUTOSRCS) $(rtpp_pipe_AUTOSRCS)
+	$(rtpp_ttl_AUTOSRCS) $(rtpp_pipe_AUTOSRCS) \
+	$(rtpp_ringbuf_AUTOSRCS)
 rtpp_command_rcache_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.c
 rtpp_log_obj_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.c
 rtpp_port_table_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_port_table_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_port_table_fin.c
-rtpp_ringbuf_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
 rtpp_sessinfo_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_sessinfo_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_sessinfo_fin.c
 rtpp_socket_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.c
 rtpp_timed_task_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_timed_task_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_timed_task_fin.c
@@ -521,6 +516,7 @@ rtpp_analyzer_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_analyzer_fin.h $(RTPP_AUTOSRC_
 rtpp_pcnt_strm_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_pcnt_strm_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_pcnt_strm_fin.c
 rtpp_ttl_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_ttl_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_ttl_fin.c
 rtpp_pipe_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_pipe_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_pipe_fin.c
+rtpp_ringbuf_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
 RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
   -I$(top_srcdir) -I$(RTPP_AUTOSRC_DIR)
 
@@ -547,12 +543,11 @@ extractaudio_BASESOURCES = extractaudio.c decoder.c rtpp_loader.c \
 	${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c decoder.h \
 	format_au.h g711.h rtpp_loader.h session.h g729_compat.c \
 	g729_compat.h ${MAINSRCDIR}/rtpp_network.c \
-	${MAINSRCDIR}/rtpp_ringbuf.c $(rtpp_ringbuf_AUTOSRCS) \
-	${MAINSRCDIR}/rtpp_netaddr.c ${MAINSRCDIR}/rtpp_netaddr.h \
-	eaud_oformats.c eaud_oformats.h rtpp_scan_pcap.c \
-	rtpp_scan_pcap.h eaud_pcap.c eaud_pcap.h eaud_substreams.c \
-	eaud_substreams.h rtpp_scan_adhoc.c rtpp_scan_adhoc.h \
-	eaud_adhoc.c eaud_adhoc.h $(am__append_2)
+	${MAINSRCDIR}/rtpp_ringbuf.c ${MAINSRCDIR}/rtpp_netaddr.c \
+	${MAINSRCDIR}/rtpp_netaddr.h eaud_oformats.c eaud_oformats.h \
+	rtpp_scan_pcap.c rtpp_scan_pcap.h eaud_pcap.c eaud_pcap.h \
+	eaud_substreams.c eaud_substreams.h rtpp_scan_adhoc.c \
+	rtpp_scan_adhoc.h eaud_adhoc.c eaud_adhoc.h $(am__append_2)
 extractaudio_SOURCES = $(extractaudio_BASESOURCES) ${MAINSRCDIR}/rtpp_mallocs.c \
   ${MAINSRCDIR}/rtpp_mallocs.h ${MAINSRCDIR}/rtpp_refcnt.c ${MAINSRCDIR}/rtpp_refcnt.h
 
@@ -562,7 +557,7 @@ extractaudio_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) -D_BSD_SOURCE
 extractaudio_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 extractaudio_LDFLAGS = $(LTO_FLAG)
 extractaudio_debug_SOURCES = $(extractaudio_BASESOURCES) $(RTPP_MEMDEB_CORESRCS) \
-  $(rtpp_netaddr_AUTOSRCS) $(rtpp_refcnt_AUTOSRCS)
+  $(rtpp_netaddr_AUTOSRCS) $(rtpp_refcnt_AUTOSRCS) $(rtpp_ringbuf_AUTOSRCS)
 
 extractaudio_debug_LDADD = $(extractaudio_LDADD) $(RTPP_MEMDEB_LDADD)
 extractaudio_debug_CPPFLAGS = $(extractaudio_CPPFLAGS) \
@@ -693,7 +688,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-rtpp_network.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-rtpp_refcnt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-rtpp_ringbuf.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-rtpp_scan_adhoc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-rtpp_scan_pcap.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extractaudio-rtpp_time.Po@am__quote@ # am--include-marker
@@ -894,20 +888,6 @@ extractaudio-rtpp_ringbuf.obj: ${MAINSRCDIR}/rtpp_ringbuf.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='${MAINSRCDIR}/rtpp_ringbuf.c' object='extractaudio-rtpp_ringbuf.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf.obj `if test -f '${MAINSRCDIR}/rtpp_ringbuf.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_ringbuf.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_ringbuf.c'; fi`
-
-extractaudio-rtpp_ringbuf_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf_fin.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo -c -o extractaudio-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' object='extractaudio-rtpp_ringbuf_fin.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-
-extractaudio-rtpp_ringbuf_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_ringbuf_fin.obj -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo -c -o extractaudio-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Tpo $(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' object='extractaudio-rtpp_ringbuf_fin.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -c -o extractaudio-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
 
 extractaudio-rtpp_netaddr.o: ${MAINSRCDIR}/rtpp_netaddr.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_CPPFLAGS) $(CPPFLAGS) $(extractaudio_CFLAGS) $(CFLAGS) -MT extractaudio-rtpp_netaddr.o -MD -MP -MF $(DEPDIR)/extractaudio-rtpp_netaddr.Tpo -c -o extractaudio-rtpp_netaddr.o `test -f '${MAINSRCDIR}/rtpp_netaddr.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_netaddr.c
@@ -1203,20 +1183,6 @@ extractaudio_debug-rtpp_ringbuf.obj: ${MAINSRCDIR}/rtpp_ringbuf.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_ringbuf.obj `if test -f '${MAINSRCDIR}/rtpp_ringbuf.c'; then $(CYGPATH_W) '${MAINSRCDIR}/rtpp_ringbuf.c'; else $(CYGPATH_W) '$(srcdir)/${MAINSRCDIR}/rtpp_ringbuf.c'; fi`
 
-extractaudio_debug-rtpp_ringbuf_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-rtpp_ringbuf_fin.o -MD -MP -MF $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Tpo -c -o extractaudio_debug-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Tpo $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' object='extractaudio_debug-rtpp_ringbuf_fin.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-
-extractaudio_debug-rtpp_ringbuf_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-rtpp_ringbuf_fin.obj -MD -MP -MF $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Tpo -c -o extractaudio_debug-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Tpo $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' object='extractaudio_debug-rtpp_ringbuf_fin.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
-
 extractaudio_debug-rtpp_netaddr.o: ${MAINSRCDIR}/rtpp_netaddr.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-rtpp_netaddr.o -MD -MP -MF $(DEPDIR)/extractaudio_debug-rtpp_netaddr.Tpo -c -o extractaudio_debug-rtpp_netaddr.o `test -f '${MAINSRCDIR}/rtpp_netaddr.c' || echo '$(srcdir)/'`${MAINSRCDIR}/rtpp_netaddr.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-rtpp_netaddr.Tpo $(DEPDIR)/extractaudio_debug-rtpp_netaddr.Po
@@ -1455,6 +1421,20 @@ extractaudio_debug-rtpp_refcnt_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
 
+extractaudio_debug-rtpp_ringbuf_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-rtpp_ringbuf_fin.o -MD -MP -MF $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Tpo -c -o extractaudio_debug-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Tpo $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' object='extractaudio_debug-rtpp_ringbuf_fin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_ringbuf_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
+
+extractaudio_debug-rtpp_ringbuf_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -MT extractaudio_debug-rtpp_ringbuf_fin.obj -MD -MP -MF $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Tpo -c -o extractaudio_debug-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Tpo $(DEPDIR)/extractaudio_debug-rtpp_ringbuf_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c' object='extractaudio_debug-rtpp_ringbuf_fin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(extractaudio_debug_CPPFLAGS) $(CPPFLAGS) $(extractaudio_debug_CFLAGS) $(CFLAGS) -c -o extractaudio_debug-rtpp_ringbuf_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c'; fi`
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -1605,7 +1585,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_network.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_refcnt.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_ringbuf.Po
-	-rm -f ./$(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_scan_adhoc.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_scan_pcap.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_time.Po
@@ -1700,7 +1679,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_network.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_refcnt.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_ringbuf.Po
-	-rm -f ./$(DEPDIR)/extractaudio-rtpp_ringbuf_fin.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_scan_adhoc.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_scan_pcap.Po
 	-rm -f ./$(DEPDIR)/extractaudio-rtpp_time.Po
