@@ -1,0 +1,438 @@
+{assert(x == 13342); x}
+{assert(x == 13344); x}
+{assert(x == 13342); x}
+{assert(x == 13344); x}
+{assert(x == 13346); x}
+{assert(x == 13348); x}
+{assert(x == 13346); x}
+{assert(x == 13348); x}
+{assert(x == 13350); x}
+{assert(x == 13352); x}
+{assert(x == 13350); x}
+{assert(x == 13352); x}
+{assert(x == 13354); x}
+{assert(x == 13356); x}
+{assert(x == 13354); x}
+{assert(x == 13356); x}
+{assert(x == 13358); x}
+{assert(x == 13360); x}
+{assert(x == 13358); x}
+{assert(x == 13360); x}
+{assert(x == 13362); x}
+{assert(x == 13364); x}
+{assert(x == 13362); x}
+{assert(x == 13364); x}
+{assert(x == 13366); x}
+{assert(x == 13368); x}
+{assert(x == 13366); x}
+{assert(x == 13368); x}
+{assert(x == 13370); x}
+{assert(x == 13372); x}
+{assert(x == 13370); x}
+{assert(x == 13372); x}
+{assert(x == 13374); x}
+{assert(x == 13376); x}
+{assert(x == 13374); x}
+{assert(x == 13376); x}
+{assert(x == 13378); x}
+{assert(x == 13380); x}
+{assert(x == 13378); x}
+{assert(x == 13380); x}
+{assert(x == 13382); x}
+{assert(x == 13384); x}
+{assert(x == 13382); x}
+{assert(x == 13384); x}
+{assert(x == 13386); x}
+{assert(x == 13388); x}
+{assert(x == 13386); x}
+{assert(x == 13388); x}
+{assert(x == 13390); x}
+{assert(x == 13392); x}
+{assert(x == 13390); x}
+{assert(x == 13392); x}
+{assert(x == 13394); x}
+{assert(x == 13396); x}
+{assert(x == 13394); x}
+{assert(x == 13396); x}
+{assert(x == 13398); x}
+{assert(x == 13400); x}
+{assert(x == 13398); x}
+{assert(x == 13400); x}
+{assert(x == 13402); x}
+{assert(x == 13404); x}
+{assert(x == 13402); x}
+{assert(x == 13404); x}
+{assert(x == 13406); x}
+{assert(x == 13408); x}
+{assert(x == 13406); x}
+{assert(x == 13408); x}
+{assert(x == 13410); x}
+{assert(x == 13412); x}
+{assert(x == 13410); x}
+{assert(x == 13412); x}
+{assert(x == 13414); x}
+{assert(x == 13416); x}
+{assert(x == 13414); x}
+{assert(x == 13416); x}
+{assert(x == 13418); x}
+{assert(x == 13420); x}
+{assert(x == 13418); x}
+{assert(x == 13420); x}
+{assert(x == 13422); x}
+{assert(x == 13424); x}
+{assert(x == 13422); x}
+{assert(x == 13424); x}
+{assert(x == 13426); x}
+{assert(x == 13428); x}
+{assert(x == 13426); x}
+{assert(x == 13428); x}
+{assert(x == 13430); x}
+{assert(x == 13432); x}
+{assert(x == 13430); x}
+{assert(x == 13432); x}
+{assert(x == 13434); x}
+{assert(x == 13436); x}
+{assert(x == 13434); x}
+{assert(x == 13436); x}
+{assert(x == 13438); x}
+{assert(x == 13440); x}
+{assert(x == 13438); x}
+{assert(x == 13440); x}
+{assert(x == 13442); x}
+{assert(x == 13444); x}
+{assert(x == 13442); x}
+{assert(x == 13444); x}
+{assert(x == 13446); x}
+{assert(x == 13448); x}
+{assert(x == 13446); x}
+{assert(x == 13448); x}
+{assert(x == 13450); x}
+{assert(x == 13452); x}
+{assert(x == 13450); x}
+{assert(x == 13452); x}
+{assert(x == 13454); x}
+{assert(x == 13456); x}
+{assert(x == 13454); x}
+{assert(x == 13456); x}
+{assert(x == 13458); x}
+{assert(x == 13460); x}
+{assert(x == 13458); x}
+{assert(x == 13460); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 13344); x}
+{assert(x == 13342); x}
+{assert(x == 13348); x}
+{assert(x == 13346); x}
+{assert(x == 13352); x}
+{assert(x == 13350); x}
+{assert(x == 13356); x}
+{assert(x == 13354); x}
+{assert(x == 13360); x}
+{assert(x == 13358); x}
+{assert(x == 13364); x}
+{assert(x == 13362); x}
+{assert(x == 13368); x}
+{assert(x == 13366); x}
+{assert(x == 13372); x}
+{assert(x == 13370); x}
+{assert(x == 13376); x}
+{assert(x == 13374); x}
+{assert(x == 13380); x}
+{assert(x == 13378); x}
+{assert(x == 13384); x}
+{assert(x == 13382); x}
+{assert(x == 13388); x}
+{assert(x == 13386); x}
+{assert(x == 13392); x}
+{assert(x == 13390); x}
+{assert(x == 13396); x}
+{assert(x == 13394); x}
+{assert(x == 13400); x}
+{assert(x == 13398); x}
+{assert(x == 13404); x}
+{assert(x == 13402); x}
+{assert(x == 13408); x}
+{assert(x == 13406); x}
+{assert(x == 13412); x}
+{assert(x == 13410); x}
+{assert(x == 13416); x}
+{assert(x == 13414); x}
+{assert(x == 13420); x}
+{assert(x == 13418); x}
+{assert(x == 13424); x}
+{assert(x == 13422); x}
+{assert(x == 13428); x}
+{assert(x == 13426); x}
+{assert(x == 13432); x}
+{assert(x == 13430); x}
+{assert(x == 13436); x}
+{assert(x == 13434); x}
+{assert(x == 13440); x}
+{assert(x == 13438); x}
+{assert(x == 13442); x}
+{assert(x == 13444); x}
+{assert(x == 13442); x}
+{assert(x == 13444); x}
+{assert(x == 13446); x}
+{assert(x == 13448); x}
+{assert(x == 13446); x}
+{assert(x == 13448); x}
+{assert(x == 13450); x}
+{assert(x == 13452); x}
+{assert(x == 13450); x}
+{assert(x == 13452); x}
+{assert(x == 13454); x}
+{assert(x == 13456); x}
+{assert(x == 13454); x}
+{assert(x == 13456); x}
+{assert(x == 13458); x}
+{assert(x == 13460); x}
+{assert(x == 13458); x}
+{assert(x == 13460); x}
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
+rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+0
+nsess_created=60 nsess_destroyed=30 nsess_timeout=0 nsess_complete=60 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=30 nsess_owrtcp=0
+ncmds_rcvd=432 ncmds_succd=431 ncmds_errs=0 ncmds_repld=431
+npkts_rcvd={x + c[i+5]} npkts_played=0 npkts_relayed={x + c[i+4]} npkts_discard=0 nplrs_created=0 nplrs_destroyed=0
+npkts_resizer_in=28000 npkts_resizer_out=14500 npkts_resizer_discard=0
+rtpa_nsent=84000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+0
+rtpa_nsent=168000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+MEMDEB(rtpproxy): all clear

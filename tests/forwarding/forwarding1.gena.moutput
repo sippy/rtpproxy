@@ -1,0 +1,488 @@
+{assert(x >= 15000 and x <= 15000 + 2); 15000}
+{assert(x >= 15002 and x <= 15002 + 2); 15002}
+{assert(x == 0); x}
+{assert(x >= 15000 and x <= 15000 + 2); 15000}
+{assert(x >= 15002 and x <= 15002 + 2); 15002}
+{assert(x == 0); x}
+{assert(x >= 15004 and x <= 15004 + 2); 15004}
+{assert(x >= 15006 and x <= 15006 + 2); 15006}
+{assert(x == 0); x}
+{assert(x >= 15004 and x <= 15004 + 2); 15004}
+{assert(x >= 15006 and x <= 15006 + 2); 15006}
+{assert(x == 0); x}
+{assert(x >= 15008 and x <= 15008 + 2); 15008}
+{assert(x >= 15010 and x <= 15010 + 2); 15010}
+{assert(x == 0); x}
+{assert(x >= 15008 and x <= 15008 + 2); 15008}
+{assert(x >= 15010 and x <= 15010 + 2); 15010}
+{assert(x == 0); x}
+{assert(x >= 15012 and x <= 15012 + 2); 15012}
+{assert(x >= 15014 and x <= 15014 + 2); 15014}
+{assert(x == 0); x}
+{assert(x >= 15012 and x <= 15012 + 2); 15012}
+{assert(x >= 15014 and x <= 15014 + 2); 15014}
+{assert(x == 0); x}
+{assert(x >= 15016 and x <= 15016 + 2); 15016}
+{assert(x >= 15018 and x <= 15018 + 2); 15018}
+{assert(x == 0); x}
+{assert(x >= 15016 and x <= 15016 + 2); 15016}
+{assert(x >= 15018 and x <= 15018 + 2); 15018}
+{assert(x == 0); x}
+{assert(x >= 15020 and x <= 15020 + 2); 15020}
+{assert(x >= 15022 and x <= 15022 + 2); 15022}
+{assert(x == 0); x}
+{assert(x >= 15020 and x <= 15020 + 2); 15020}
+{assert(x >= 15022 and x <= 15022 + 2); 15022}
+{assert(x == 0); x}
+{assert(x >= 15024 and x <= 15024 + 2); 15024}
+{assert(x >= 15026 and x <= 15026 + 2); 15026}
+{assert(x == 0); x}
+{assert(x >= 15024 and x <= 15024 + 2); 15024}
+{assert(x >= 15026 and x <= 15026 + 2); 15026}
+{assert(x == 0); x}
+{assert(x >= 15028 and x <= 15028 + 2); 15028}
+{assert(x >= 15030 and x <= 15030 + 2); 15030}
+{assert(x == 0); x}
+{assert(x >= 15028 and x <= 15028 + 2); 15028}
+{assert(x >= 15030 and x <= 15030 + 2); 15030}
+{assert(x == 0); x}
+{assert(x >= 15032 and x <= 15032 + 2); 15032}
+{assert(x >= 15034 and x <= 15034 + 2); 15034}
+{assert(x == 0); x}
+{assert(x >= 15032 and x <= 15032 + 2); 15032}
+{assert(x >= 15034 and x <= 15034 + 2); 15034}
+{assert(x == 0); x}
+{assert(x >= 15036 and x <= 15036 + 2); 15036}
+{assert(x >= 15038 and x <= 15038 + 2); 15038}
+{assert(x == 0); x}
+{assert(x >= 15036 and x <= 15036 + 2); 15036}
+{assert(x >= 15038 and x <= 15038 + 2); 15038}
+{assert(x == 0); x}
+{assert(x >= 15040 and x <= 15040 + 2); 15040}
+{assert(x >= 15042 and x <= 15042 + 2); 15042}
+{assert(x == 0); x}
+{assert(x >= 15040 and x <= 15040 + 2); 15040}
+{assert(x >= 15042 and x <= 15042 + 2); 15042}
+{assert(x == 0); x}
+{assert(x >= 15044 and x <= 15044 + 2); 15044}
+{assert(x >= 15046 and x <= 15046 + 2); 15046}
+{assert(x == 0); x}
+{assert(x >= 15044 and x <= 15044 + 2); 15044}
+{assert(x >= 15046 and x <= 15046 + 2); 15046}
+{assert(x == 0); x}
+{assert(x >= 15048 and x <= 15048 + 2); 15048}
+{assert(x >= 15050 and x <= 15050 + 2); 15050}
+{assert(x == 0); x}
+{assert(x >= 15048 and x <= 15048 + 2); 15048}
+{assert(x >= 15050 and x <= 15050 + 2); 15050}
+{assert(x == 0); x}
+{assert(x >= 15052 and x <= 15052 + 2); 15052}
+{assert(x >= 15054 and x <= 15054 + 2); 15054}
+{assert(x == 0); x}
+{assert(x >= 15052 and x <= 15052 + 2); 15052}
+{assert(x >= 15054 and x <= 15054 + 2); 15054}
+{assert(x == 0); x}
+{assert(x >= 15056 and x <= 15056 + 2); 15056}
+{assert(x >= 15058 and x <= 15058 + 2); 15058}
+{assert(x == 0); x}
+{assert(x >= 15056 and x <= 15056 + 2); 15056}
+{assert(x >= 15058 and x <= 15058 + 2); 15058}
+{assert(x == 0); x}
+{assert(x >= 15060 and x <= 15060 + 2); 15060}
+{assert(x >= 15062 and x <= 15062 + 2); 15062}
+{assert(x == 0); x}
+{assert(x >= 15060 and x <= 15060 + 2); 15060}
+{assert(x >= 15062 and x <= 15062 + 2); 15062}
+{assert(x == 0); x}
+{assert(x >= 15064 and x <= 15064 + 2); 15064}
+{assert(x >= 15066 and x <= 15066 + 2); 15066}
+{assert(x == 0); x}
+{assert(x >= 15064 and x <= 15064 + 2); 15064}
+{assert(x >= 15066 and x <= 15066 + 2); 15066}
+{assert(x == 0); x}
+{assert(x >= 15068 and x <= 15068 + 2); 15068}
+{assert(x >= 15070 and x <= 15070 + 2); 15070}
+{assert(x == 0); x}
+{assert(x >= 15068 and x <= 15068 + 2); 15068}
+{assert(x >= 15070 and x <= 15070 + 2); 15070}
+{assert(x == 0); x}
+{assert(x >= 15072 and x <= 15072 + 2); 15072}
+{assert(x >= 15074 and x <= 15074 + 2); 15074}
+{assert(x == 0); x}
+{assert(x >= 15072 and x <= 15072 + 2); 15072}
+{assert(x >= 15074 and x <= 15074 + 2); 15074}
+{assert(x == 0); x}
+{assert(x >= 15076 and x <= 15076 + 2); 15076}
+{assert(x >= 15078 and x <= 15078 + 2); 15078}
+{assert(x == 0); x}
+{assert(x >= 15076 and x <= 15076 + 2); 15076}
+{assert(x >= 15078 and x <= 15078 + 2); 15078}
+{assert(x == 0); x}
+{assert(x >= 15080 and x <= 15080 + 2); 15080}
+{assert(x >= 15082 and x <= 15082 + 2); 15082}
+{assert(x == 0); x}
+{assert(x >= 15080 and x <= 15080 + 2); 15080}
+{assert(x >= 15082 and x <= 15082 + 2); 15082}
+{assert(x == 0); x}
+{assert(x >= 15084 and x <= 15084 + 2); 15084}
+{assert(x >= 15086 and x <= 15086 + 2); 15086}
+{assert(x == 0); x}
+{assert(x >= 15084 and x <= 15084 + 2); 15084}
+{assert(x >= 15086 and x <= 15086 + 2); 15086}
+{assert(x == 0); x}
+{assert(x >= 15088 and x <= 15088 + 2); 15088}
+{assert(x >= 15090 and x <= 15090 + 2); 15090}
+{assert(x == 0); x}
+{assert(x >= 15088 and x <= 15088 + 2); 15088}
+{assert(x >= 15090 and x <= 15090 + 2); 15090}
+{assert(x == 0); x}
+{assert(x >= 15092 and x <= 15092 + 2); 15092}
+{assert(x >= 15094 and x <= 15094 + 2); 15094}
+{assert(x == 0); x}
+{assert(x >= 15092 and x <= 15092 + 2); 15092}
+{assert(x >= 15094 and x <= 15094 + 2); 15094}
+{assert(x == 0); x}
+{assert(x >= 15096 and x <= 15096 + 2); 15096}
+{assert(x >= 15098 and x <= 15098 + 2); 15098}
+{assert(x == 0); x}
+{assert(x >= 15096 and x <= 15096 + 2); 15096}
+{assert(x >= 15098 and x <= 15098 + 2); 15098}
+{assert(x == 0); x}
+{assert(x >= 15100 and x <= 15100 + 2); 15100}
+{assert(x >= 15102 and x <= 15102 + 2); 15102}
+{assert(x == 0); x}
+{assert(x >= 15100 and x <= 15100 + 2); 15100}
+{assert(x >= 15102 and x <= 15102 + 2); 15102}
+{assert(x == 0); x}
+{assert(x >= 15104 and x <= 15104 + 2); 15104}
+{assert(x >= 15106 and x <= 15106 + 2); 15106}
+{assert(x == 0); x}
+{assert(x >= 15104 and x <= 15104 + 2); 15104}
+{assert(x >= 15106 and x <= 15106 + 2); 15106}
+{assert(x == 0); x}
+{assert(x >= 15108 and x <= 15108 + 2); 15108}
+{assert(x >= 15110 and x <= 15110 + 2); 15110}
+{assert(x == 0); x}
+{assert(x >= 15108 and x <= 15108 + 2); 15108}
+{assert(x >= 15110 and x <= 15110 + 2); 15110}
+{assert(x == 0); x}
+{assert(x >= 15112 and x <= 15112 + 2); 15112}
+{assert(x >= 15114 and x <= 15114 + 2); 15114}
+{assert(x == 0); x}
+{assert(x >= 15112 and x <= 15112 + 2); 15112}
+{assert(x >= 15114 and x <= 15114 + 2); 15114}
+{assert(x == 0); x}
+{assert(x >= 15116 and x <= 15116 + 2); 15116}
+{assert(x >= 15118 and x <= 15118 + 2); 15118}
+{assert(x == 0); x}
+{assert(x >= 15116 and x <= 15116 + 2); 15116}
+{assert(x >= 15118 and x <= 15118 + 2); 15118}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+{assert(x == 0); x}
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1500 npkts_ino=0 nrelayed=1500 ndropped=0
+rtpa_nsent=1500 rtpa_nrcvd=1500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=1000 npkts_ino=0 nrelayed=1000 ndropped=0
+rtpa_nsent=1000 rtpa_nrcvd=1000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=3000 npkts_ino=0 nrelayed=3000 ndropped=0
+rtpa_nsent=3000 rtpa_nrcvd=3000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+npkts_ina=500 npkts_ino=0 nrelayed=500 ndropped=0
+rtpa_nsent=500 rtpa_nrcvd=500 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+nsess_created=60 nsess_destroyed=0 nsess_timeout=0 nsess_complete=60 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=0 nsess_owrtcp=0
+ncmds_rcvd=482 ncmds_succd=481 ncmds_errs=0 ncmds_repld=481
+npkts_rcvd=120000 npkts_played=30000 npkts_relayed=120000 npkts_discard=0 nplrs_created=120 nplrs_destroyed=120
+npkts_resizer_in=0 npkts_resizer_out=0 npkts_resizer_discard=0
+rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+0
+rtpa_nsent=120000 rtpa_nrcvd=120000 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
+MEMDEB(rtpproxy): all clear

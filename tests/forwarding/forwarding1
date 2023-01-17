@@ -183,6 +183,20 @@ verify_results()
   done
 }
 
+verify_reslogs()
+{
+  local restype="${1}"
+  if ! ${REVTEMPL} forwarding/forwarding1${restype}.moutput forwarding1${restype}.rout > forwarding1${restype}.rout.amod
+  then
+    ${DIFF} forwarding/forwarding1${restype}.output forwarding1${restype}.rout
+    local DIFF_RC=${?}
+  else
+    ${DIFF} forwarding/forwarding1${restype}.output forwarding1${restype}.rout.amod
+    local DIFF_RC=${?}
+  fi
+  return ${DIFF_RC}
+}
+
 CODECSO="${TEST_CODECS}"
 CODECSA="${TEST_CODECS}"
 PORTO=$((${FWD_SPORT} + 2))
@@ -250,11 +264,12 @@ wait ${GENO_PID}
 report "wait for rtpproxy Gen.O shutdown, PID: ${GENO_PID}"
 wait ${GENA_PID}
 report "wait for rtpproxy Gen.A shutdown, PID: ${GENA_PID}"
-${DIFF} forwarding/forwarding1.output forwarding1.rout
+
+verify_reslogs ""
 DIFF_FWD_RC=${?}
-${DIFF} forwarding/forwarding1.geno.output forwarding1.geno.rout
+verify_reslogs ".geno"
 DIFF_GENO_RC=${?}
-${DIFF} forwarding/forwarding1.gena.output forwarding1.gena.rout
+verify_reslogs ".gena"
 DIFF_GENA_RC=${?}
 
 verify_results "o" "${CODECSA}" "${REPACK_CODECSA}"
