@@ -26,6 +26,7 @@ MAKEANN_DBG=${TOP_BUILDDIR}/makeann/makeann_debug
 MAKEANN_PROD=${TOP_BUILDDIR}/makeann/makeann
 MAKEANN="${MAKEANN:-${MAKEANN_PROD}}"
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio_debug
+REVTEMPL="${PYINT} ${TOP_BUILDDIR}/scripts/revtempl.py"
 
 setup_tstart() {
   RTPP_MCLOCK_NAME="`RTPP_GLITCH_ACT="" ${RTPPROXY} -C 2>/dev/null`"
