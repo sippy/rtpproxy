@@ -51,15 +51,6 @@ struct dummy {
     } pub;
 };
 
-#if defined(RTPP_CHECK_LEAKS)
-static void
-dummy_free(void *p)
-{
-
-    free(p);
-}
-#endif
-
 static struct dummy *
 rtpp_rzmalloc_perf(void)
 {
@@ -69,13 +60,7 @@ rtpp_rzmalloc_perf(void)
     if (pvt == NULL) {
         goto e0;
     }
-#if defined(RTPP_CHECK_LEAKS)
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&dummy_free,
-      pvt);
-#else
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&free,
-      pvt);
-#endif
+    CALL_SMETHOD(pvt->pub.rcnt, use_stdfree, pvt);
     return (pvt);
 
 e0:
@@ -91,11 +76,7 @@ rtpp_refcnt_perf(void)
     if (pvt == NULL) {
         goto e0;
     }
-#if defined(RTPP_CHECK_LEAKS)
-    pvt->pub.rcnt = rtpp_refcnt_ctor(pvt, (rtpp_refcnt_dtor_t)&dummy_free);
-#else
-    pvt->pub.rcnt = rtpp_refcnt_ctor(pvt, (rtpp_refcnt_dtor_t)&free);
-#endif
+    pvt->pub.rcnt = rtpp_refcnt_ctor(pvt, NULL);
     if (pvt->pub.rcnt == NULL) {
         goto e1;
     }
