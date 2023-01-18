@@ -182,14 +182,25 @@ static const struct rtpp_stream_smethods _rtpp_stream_smethods = {
 const struct rtpp_stream_smethods * const rtpp_stream_smethods = &_rtpp_stream_smethods;
 
 static enum pproc_action
-analyze_packet(const struct pkt_proc_ctx *pktxp)
+analyze_rtp_packet(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_in = pktxp->strmp_in;
     struct rtp_packet *packet = pktxp->pktp;
 
+    CALL_SMETHOD(stp_in->pcnt_strm, reg_pktin, packet);
     if (CALL_SMETHOD(stp_in->analyzer, update, packet) == UPDATE_SSRC_CHG) {
         CALL_SMETHOD(stp_in, latch, packet);
     }
+    return (PPROC_ACT_NOP);
+}
+
+static enum pproc_action
+analyze_rtcp_packet(const struct pkt_proc_ctx *pktxp)
+{
+    struct rtpp_stream *stp_in = pktxp->strmp_in;
+    struct rtp_packet *packet = pktxp->pktp;
+
+    CALL_SMETHOD(stp_in->pcnt_strm, reg_pktin, packet);
     return (PPROC_ACT_NOP);
 }
 
@@ -238,14 +249,6 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
         if (pvt->pub.analyzer == NULL) {
             goto e3;
         }
-        const struct packet_processor_if analyze_packet_poi = {
-            .descr = "analyze_packet",
-            .arg = (void *)pvt->pub.analyzer,
-            .key = (void *)pvt,
-            .enqueue = &analyze_packet
-        };
-        if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_ANALYZE, &analyze_packet_poi) < 0)
-            goto e4;
 
         const struct packet_processor_if resize_packet_poi = {
             .descr = "resize_packet",
@@ -254,13 +257,23 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
             .enqueue = &resizer_injest
         };
         if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_RESIZE, &resize_packet_poi) < 0)
-            goto e5;
+            goto e4;
         pvt->npkts_resizer_in_idx = CALL_SMETHOD(ap->rtpp_stats, getidxbyname,
           "npkts_resizer_in");
         if (pvt->npkts_resizer_in_idx == -1)
-            goto e6;
+            goto e5;
 
     }
+
+    const struct packet_processor_if analyze_packet_poi = {
+        .descr = "analyze_packet",
+        .arg = (void *)pvt->pub.analyzer,
+        .key = (void *)pvt,
+        .enqueue = (ap->pipe_type == PIPE_RTP) ? &analyze_rtp_packet : &analyze_rtcp_packet,
+    };
+    if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_ANALYZE, &analyze_packet_poi) < 0)
+        goto e5;
+
     pvt->pub.pcnt_strm = rtpp_pcnt_strm_ctor();
     if (pvt->pub.pcnt_strm == NULL) {
         goto e6;
@@ -299,12 +312,10 @@ e8:
 e7:
     RTPP_OBJ_DECREF(pvt->pub.pcnt_strm);
 e6:
-    if (ap->pipe_type == PIPE_RTP) {
-        CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt + 1);
-    }
+    CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt);
 e5:
     if (ap->pipe_type == PIPE_RTP) {
-        CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt);
+        CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt + 1);
     }
 e4:
     if (ap->pipe_type == PIPE_RTP) {
@@ -417,8 +428,8 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     RTPP_OBJ_DECREF(pvt->raddr_prev);
     if (pvt->pub.pipe_type == PIPE_RTP) {
         CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt + 1);
-        CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt);
     }
+    CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt);
     RTPP_OBJ_DECREF(pvt->pub.pproc_manager);
 
     pthread_mutex_destroy(&pvt->lock);
@@ -1071,9 +1082,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref *rtcps_wrt,
                 goto discard_and_continue;
             }
         }
-        CALL_SMETHOD(self->pcnt_strm, reg_pktin, packet);
     } else {
-        CALL_SMETHOD(self->pcnt_strm, reg_pktin, packet);
         /* Update address recorded in the session */
         _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
     }
