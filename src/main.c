@@ -300,10 +300,6 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     cfsp->sched_policy = SCHED_OTHER;
     cfsp->sched_nice = PRIO_UNSET;
     cfsp->target_pfreq = MIN(POLL_RATE, cfsp->sched_hz);
-    RTPP_DBGCODE() {
-        if (cfsp->target_pfreq != cfsp->sched_hz)
-            fprintf(stderr, "target_pfreq = %f\n", cfsp->target_pfreq);
-    }
     cfsp->slowshutdown = 0;
     cfsp->fastshutdown = 0;
 
