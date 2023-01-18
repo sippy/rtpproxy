@@ -163,7 +163,7 @@ controlfd_init_udp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
         RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
     if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0) {
-        warn("can't bind to a socket");
+        warn("can't bind to a socket: %s", csp->cmd_sock);
         close(controlfd);
         return (-1);
     }
@@ -201,7 +201,7 @@ controlfd_init_tcp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
     if (setsockopt(controlfd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)) == -1)
         RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "unable to set 16K receive buffer size on controlfd");
     if (bind(controlfd, ifsin, SA_LEN(ifsin)) < 0) {
-        warn("can't bind to a socket");
+        warn("can't bind to a socket: %s", csp->cmd_sock);
         goto e0;
     }
     if (listen(controlfd, 32) != 0) {
