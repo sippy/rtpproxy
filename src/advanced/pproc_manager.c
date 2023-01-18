@@ -65,6 +65,7 @@ static const struct packet_processor_if *rtpp_pproc_mgr_lookup(struct pproc_mana
   void *);
 static void rtpp_pproc_mgr_unregister(struct pproc_manager *, void *);
 static struct pproc_manager *rtpp_pproc_mgr_clone(struct pproc_manager *);
+void rtpp_pproc_mgr_reg_drop(struct pproc_manager *);
 
 static const struct pproc_manager_smethods _rtpp_pproc_mgr_smethods = {
     .reg = &rtpp_pproc_mgr_register,
@@ -72,7 +73,8 @@ static const struct pproc_manager_smethods _rtpp_pproc_mgr_smethods = {
     .handleat = &rtpp_pproc_mgr_handleat,
     .lookup = &rtpp_pproc_mgr_lookup,
     .unreg = &rtpp_pproc_mgr_unregister,
-    .clone = &rtpp_pproc_mgr_clone
+    .clone = &rtpp_pproc_mgr_clone,
+    .reg_drop = &rtpp_pproc_mgr_reg_drop,
 };
 const struct pproc_manager_smethods * const pproc_manager_smethods = &_rtpp_pproc_mgr_smethods;
 
@@ -266,4 +268,13 @@ rtpp_pproc_mgr_clone(struct pproc_manager *pub)
             RTPP_OBJ_INCREF(ip);
     }
     return (rval);
+}
+
+void
+rtpp_pproc_mgr_reg_drop(struct pproc_manager *pub)
+{
+    struct pproc_manager_pvt *pvt;
+
+    PUB2PVT(pub, pvt);
+    CALL_SMETHOD(pvt->rtpp_stats, updatebyidx, pvt->npkts_discard_idx, 1);
 }

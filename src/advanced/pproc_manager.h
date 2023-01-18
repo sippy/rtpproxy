@@ -55,6 +55,7 @@ DEFINE_METHOD(pproc_manager, pproc_manager_handleat, enum pproc_action, struct p
 DEFINE_METHOD(pproc_manager, pproc_manager_lookup, const struct packet_processor_if *,
   void *);
 DEFINE_METHOD(pproc_manager, pproc_manager_clone, struct pproc_manager *);
+DEFINE_METHOD(pproc_manager, pproc_manager_reg_drop, void);
 
 struct pproc_manager_smethods
 {
@@ -64,6 +65,7 @@ struct pproc_manager_smethods
     METHOD_ENTRY(pproc_manager_handleat, handleat);
     METHOD_ENTRY(pproc_manager_lookup, lookup);
     METHOD_ENTRY(pproc_manager_clone, clone);
+    METHOD_ENTRY(pproc_manager_reg_drop, reg_drop);
 };
 
 struct pproc_manager {
