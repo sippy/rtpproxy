@@ -9,6 +9,6 @@ then
 else
   sudo gem install apt-spy2
 fi
-sudo apt-spy2 check
-sudo apt-spy2 fix --commit
+sudo apt-spy2 check --country=US
+sudo apt-spy2 fix --country=US --commit
 sudo -H DEBIAN_FRONTEND=noninteractive apt-get update
