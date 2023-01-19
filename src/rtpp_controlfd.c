@@ -137,12 +137,13 @@ static int
 controlfd_init_udp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
     struct sockaddr *ifsin;
-    char *cp;
-    int controlfd, so_rcvbuf, i;
+    char *cp, *tcp = NULL;
+    int controlfd, so_rcvbuf, i, r;
 
     cp = strrchr(csp->cmd_sock, ':');
     if (cp != NULL) {
         *cp = '\0';
+        tcp = cp;
         cp++;
     }
     if (cp == NULL || *cp == '\0')
@@ -150,7 +151,10 @@ controlfd_init_udp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
     csp->port_ctl = atoi(cp);
     i = (csp->type == RTPC_UDP6) ? AF_INET6 : AF_INET;
     ifsin = sstosa(&csp->bindaddr);
-    if (setbindhost(ifsin, i, csp->cmd_sock, cp) != 0) {
+    r = setbindhost(ifsin, i, csp->cmd_sock, cp);
+    if (tcp != NULL)
+        *tcp = ':';
+    if (r != 0) {
         warnx("setbindhost failed");
         return (-1);
     }
@@ -175,12 +179,13 @@ static int
 controlfd_init_tcp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
     struct sockaddr *ifsin;
-    char *cp;
-    int controlfd, so_rcvbuf, i;
+    char *cp, *tcp = NULL;;
+    int controlfd, so_rcvbuf, i, r;
 
     cp = strrchr(csp->cmd_sock, ':');
     if (cp != NULL) {
         *cp = '\0';
+        tcp = cp;
         cp++;
     }
     if (cp == NULL || *cp == '\0')
@@ -188,7 +193,10 @@ controlfd_init_tcp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
     csp->port_ctl = atoi(cp);
     i = (csp->type == RTPC_TCP6) ? AF_INET6 : AF_INET;
     ifsin = sstosa(&csp->bindaddr);
-    if (setbindhost(ifsin, i, csp->cmd_sock, cp) != 0) {
+    r = setbindhost(ifsin, i, csp->cmd_sock, cp);
+    if (tcp != NULL)
+        *tcp = ':';
+    if (r != 0) {
         warnx("setbindhost failed");
         return (-1);
     }
