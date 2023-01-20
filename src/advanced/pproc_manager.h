@@ -52,8 +52,7 @@ DEFINE_METHOD(pproc_manager, pproc_manager_unreg, void, void *);
 DEFINE_METHOD(pproc_manager, pproc_manager_handle, enum pproc_action, struct pkt_proc_ctx *);
 DEFINE_METHOD(pproc_manager, pproc_manager_handleat, enum pproc_action, struct pkt_proc_ctx *,
   enum pproc_order);
-DEFINE_METHOD(pproc_manager, pproc_manager_lookup, const struct packet_processor_if *,
-  void *);
+DEFINE_METHOD(pproc_manager, pproc_manager_lookup, int, void *, struct packet_processor_if *);
 DEFINE_METHOD(pproc_manager, pproc_manager_clone, struct pproc_manager *);
 DEFINE_METHOD(pproc_manager, pproc_manager_reg_drop, void);
 

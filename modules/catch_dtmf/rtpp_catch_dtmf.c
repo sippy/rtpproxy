@@ -359,15 +359,14 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
         }
     }
 
-    const struct packet_processor_if *dpp;
+    struct packet_processor_if dtmf_poi;
 
-    dpp = CALL_SMETHOD(ctxp->strmp_in->pproc_manager, lookup, pvt);
-    if (dpp == NULL) {
+    if (CALL_SMETHOD(ctxp->strmp_in->pproc_manager, lookup, pvt, &dtmf_poi) != 0) {
         rtps_c = catch_dtmf_data_ctor(ctxp, dtmf_tag, new_pt);
         if (rtps_c == NULL) {
             return (-1);
         }
-        const struct packet_processor_if dtmf_poi = {
+        dtmf_poi = (struct packet_processor_if) {
             .descr = "dtmf",
             .taste = rtp_packet_is_dtmf,
             .enqueue = rtpp_catch_dtmf_enqueue,
@@ -376,12 +375,11 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
             .rcnt = rtps_c->rcnt
         };
         if (CALL_SMETHOD(ctxp->strmp_in->pproc_manager, reg, PPROC_ORD_WITNESS, &dtmf_poi) < 0) {
-            RTPP_OBJ_DECREF(rtps_c);
+            RTPP_OBJ_DECREF(&dtmf_poi);
             return (-1);
         }
-        RTPP_OBJ_DECREF(rtps_c);
     } else {
-        rtps_c = dpp->arg;
+        rtps_c = dtmf_poi.arg;
     }
 
     old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
@@ -392,6 +390,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     if (old_act != new_act)
         RTPP_LOG(rtpp_module.log, RTPP_LOG_DBUG, "sp=%p, act=%d->%d",
           ctxp->strmp_in, old_act, new_act);
+    RTPP_OBJ_DECREF(&dtmf_poi);
     return (0);
 }
 
