@@ -361,7 +361,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
 
     struct packet_processor_if dtmf_poi;
 
-    if (CALL_SMETHOD(ctxp->strmp_in->pproc_manager, lookup, pvt, &dtmf_poi) != 0) {
+    if (CALL_SMETHOD(ctxp->strmp_in->pproc_manager, lookup, pvt, &dtmf_poi) == 0) {
         rtps_c = catch_dtmf_data_ctor(ctxp, dtmf_tag, new_pt);
         if (rtps_c == NULL) {
             return (-1);

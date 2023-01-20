@@ -212,12 +212,12 @@ rtpp_pproc_mgr_lookup(struct pproc_manager *pub, void *key, struct packet_proces
                 RTPP_OBJ_INCREF(ip);
             *rval = *ip;
             pthread_mutex_unlock(&pvt->lock);
-            return (0);
+            return (1);
         }
     }
 out:
     pthread_mutex_unlock(&pvt->lock);
-    return (-1);
+    return (0);
 }
 
 static void
