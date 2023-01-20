@@ -1101,6 +1101,7 @@ main(int argc, char **argv)
         RTPP_OBJ_DECREF(cfs.port_table[i]);
     }
     RTPP_OBJ_DECREF(cfs.sessions_wrt);
+    RTPP_OBJ_DECREF(cfs.sessions_ht);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif
