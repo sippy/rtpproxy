@@ -259,6 +259,8 @@ rtpp_dtls_gw_setup_sender(struct rtpp_module_priv *pvt,
     return (0);
 }
 
+enum rdg_cmd {RDG_CMD_A, RDG_CMD_P, RDG_CMD_S, RDG_CMD_D};
+
 static int
 rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
   const struct rtpp_subc_ctx *ctxp)
@@ -271,6 +273,7 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
     struct rtpp_stream *dtls_strmp;
     int rlen;
     char *rcp;
+    enum rdg_cmd rdg_cmd;
 
     if (argc != 1 && argc != 3 && argc != 4) {
         RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "expected 1, 3 or 4 parameters: %d",
@@ -284,6 +287,7 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
         if (argc != 3 && argc != 4)
             goto invalmode;
         rdfs.peer_mode = RTPP_DTLS_ACTIVE;
+        rdg_cmd = RDG_CMD_A;
         break;
 
     case 'p':
@@ -291,32 +295,57 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
         if (argc != 3 && argc != 4)
             goto invalmode;
         rdfs.peer_mode = RTPP_DTLS_PASSIVE;
+        rdg_cmd = RDG_CMD_P;
         break;
 
     case 's':
     case 'S':
         if (argc != 1)
             goto invalmode;
+        rdg_cmd = RDG_CMD_S;
+        break;
+
+    case 'd':
+    case 'D':
+        if (argc != 1)
+            goto invalmode;
+        rdg_cmd = RDG_CMD_D;
         break;
 
     default:
         goto invalmode;
     }
 
-    if (argc != 1) {
+    switch (rdg_cmd) {
+    case RDG_CMD_A:
+    case RDG_CMD_P:
         rdfs.algorithm = argv[1];
         rdfs.fingerprint = argv[2];
         rdfs.ssrc = (argc == 4) ? argv[3] : NULL;
         rdfsp = &rdfs;
+        /* Fallthrough */
+    case RDG_CMD_D:
         dtls_strmp = ctxp->strmp_in;
-    } else {
+        break;
+
+    case RDG_CMD_S:
         rdfsp = NULL;
         dtls_strmp = ctxp->strmp_out;
+        break;
     }
 
     const struct packet_processor_if *dpp;
 
     dpp = CALL_SMETHOD(dtls_strmp->pproc_manager, lookup, pvt);
+
+    if (rdg_cmd == RDG_CMD_D) {
+        if (dpp == NULL) {
+            return (-1);
+        }
+        CALL_SMETHOD(dtls_strmp->pproc_manager, unreg, pvt);
+        CALL_SMETHOD(dtls_strmp->pproc_manager->reverse, unreg, pvt + 1);
+        return (0);
+    }
 
     if (dpp == NULL) {
         rtps_c = dtls_gw_data_ctor(pvt, dtls_strmp);
@@ -338,7 +367,7 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
             .descr = "dtls (rtp->srtp)",
             .taste = rtpp_dtls_gw_taste_plain,
             .enqueue = rtpp_dtls_gw_enqueue,
-            .key = pvt,
+            .key = pvt + 1,
             .arg = rtps_c,
             .rcnt = rtps_c->rcnt
         };
