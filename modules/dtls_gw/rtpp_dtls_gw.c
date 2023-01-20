@@ -334,25 +334,39 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
         break;
     }
 
-    const struct packet_processor_if *dpp;
+    struct packet_processor_if dtls_in_poi;
 
-    dpp = CALL_SMETHOD(dtls_strmp->pproc_manager, lookup, pvt);
+    int lookup_res = CALL_SMETHOD(dtls_strmp->pproc_manager, lookup, pvt, &dtls_in_poi);
+    if (lookup_res != 0) {
+        rtps_c = dtls_in_poi.arg;
+    }
 
     if (rdg_cmd == RDG_CMD_D) {
-        if (dpp == NULL) {
+        if (lookup_res == 0) {
             return (-1);
         }
         CALL_SMETHOD(dtls_strmp->pproc_manager, unreg, pvt);
         CALL_SMETHOD(dtls_strmp->pproc_manager->reverse, unreg, pvt + 1);
-        return (0);
+        goto out;
     }
 
-    if (dpp == NULL) {
+    if (lookup_res == 0) {
         rtps_c = dtls_gw_data_ctor(pvt, dtls_strmp);
         if (rtps_c == NULL) {
             return (-1);
         }
-        const struct packet_processor_if dtls_in_poi = {
+    }
+    if (rdfsp != NULL && rdfs.peer_mode == RTPP_DTLS_PASSIVE) {
+        if (rtpp_dtls_gw_setup_sender(pvt, ctxp->sessp, dtls_strmp) != 0) {
+            goto e0;
+        }
+    }
+    my_mode = CALL_METHOD(rtps_c->dtls_conn, setmode, rdfsp);
+    if (my_mode == RTPP_DTLS_MODERR) {
+        goto e0;
+    }
+    if (lookup_res == 0) {
+        dtls_in_poi = (struct packet_processor_if){
             .descr = "dtls (srtp->rtp)",
             .taste = rtpp_dtls_gw_taste_encrypted,
             .enqueue = rtpp_dtls_gw_enqueue,
@@ -374,57 +388,44 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
         if (CALL_SMETHOD(dtls_strmp->pproc_manager->reverse, reg, PPROC_ORD_ENCRYPT, &dtls_out_poi) < 0) {
             goto e1;
         }
-        RTPP_OBJ_DECREF(rtps_c);
-    } else {
-        rtps_c = dpp->arg;
     }
-    if (rdfsp != NULL && rdfs.peer_mode == RTPP_DTLS_PASSIVE) {
-        if (rtpp_dtls_gw_setup_sender(pvt, ctxp->sessp, dtls_strmp) != 0) {
-            return (-1);
+    if (rdfsp == NULL) {
+        rcp = ctxp->resp->buf_t;
+        rlen = sizeof(ctxp->resp->buf_t);
+
+        switch (my_mode) {
+        case RTPP_DTLS_ACTPASS:
+            strlcpy(rcp, "actpass ", rlen);
+            rcp += strlen("actpass ");
+            rlen -= strlen("actpass ");
+            break;
+
+        case RTPP_DTLS_ACTIVE:
+            strlcpy(rcp, "active ", rlen);
+            rcp += strlen("active ");
+            rlen -= strlen("active ");
+            break;
+
+        case RTPP_DTLS_PASSIVE:
+            strlcpy(rcp, "passive ", rlen);
+            rcp += strlen("passive ");
+            rlen -= strlen("passive ");
+            break;
+
+        default:
+            abort();
         }
+
+        strlcpy(rcp, pvt->dtls_ctx->fingerprint, rlen);
     }
-    my_mode = CALL_METHOD(rtps_c->dtls_conn, setmode, rdfsp);
-    if (my_mode == RTPP_DTLS_MODERR) {
-        return (-1);
-    }
-    if (rdfsp != NULL) {
-        return (0);
-    }
-
-    rcp = ctxp->resp->buf_t;
-    rlen = sizeof(ctxp->resp->buf_t);
-
-    switch (my_mode) {
-    case RTPP_DTLS_ACTPASS:
-        strlcpy(rcp, "actpass ", rlen);
-        rcp += strlen("actpass ");
-        rlen -= strlen("actpass ");
-        break;
-
-    case RTPP_DTLS_ACTIVE:
-        strlcpy(rcp, "active ", rlen);
-        rcp += strlen("active ");
-        rlen -= strlen("active ");
-        break;
-
-    case RTPP_DTLS_PASSIVE:
-        strlcpy(rcp, "passive ", rlen);
-        rcp += strlen("passive ");
-        rlen -= strlen("passive ");
-        break;
-
-    default:
-        abort();
-    }
-
-    strlcpy(rcp, pvt->dtls_ctx->fingerprint, rlen);
+out:
+    RTPP_OBJ_DECREF(rtps_c);
     return (0);
 
 invalmode:
     RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "invalid mode: \"%s\"",
       argv[0]);
     return (-1);
-
 e1:
     CALL_SMETHOD(dtls_strmp->pproc_manager, unreg, pvt);
 e0:
