@@ -169,6 +169,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     pvt->pub.rtpp_stats = cfs->rtpp_stats;
     pvt->pub.log = log;
     pvt->sessinfo = cfs->sessinfo;
+    RTPP_OBJ_INCREF(cfs->sessinfo);
     if (cfs->modules_cf->count.sess_acct > 0) {
         RTPP_OBJ_INCREF(cfs->modules_cf);
         pvt->module_cf = cfs->modules_cf;
@@ -224,6 +225,7 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     for (i = 0; i < 2; i++) {
         CALL_METHOD(pvt->sessinfo, remove, pub, i);
     }
+    RTPP_OBJ_DECREF(pvt->sessinfo);
     CALL_SMETHOD(pub->rtpp_stats, updatebyname, "nsess_destroyed", 1);
     CALL_SMETHOD(pub->rtpp_stats, updatebyname_d, "total_duration",
       session_time);
