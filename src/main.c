@@ -1084,6 +1084,13 @@ main(int argc, char **argv)
     prdic_free(elp);
 
     CALL_METHOD(cfs.rtpp_cmd_cf, dtor);
+    CALL_SMETHOD(cfs.sessions_wrt, purge);
+    CALL_SMETHOD(cfs.sessions_ht, purge);
+
+    RTPP_DBG_ASSERT(CALL_SMETHOD(cfs.servers_wrt, get_length) == 0);
+    RTPP_DBG_ASSERT(CALL_SMETHOD(cfs.rtp_streams_wrt, get_length) == 0);
+    RTPP_DBG_ASSERT(CALL_SMETHOD(cfs.rtcp_streams_wrt, get_length) == 0);
+
     RTPP_OBJ_DECREF(cfs.modules_cf);
     RTPP_OBJ_DECREF(cfs.pproc_manager)
     free(cfs.runcreds);
@@ -1102,6 +1109,9 @@ main(int argc, char **argv)
     }
     RTPP_OBJ_DECREF(cfs.sessions_wrt);
     RTPP_OBJ_DECREF(cfs.sessions_ht);
+    RTPP_OBJ_DECREF(cfs.servers_wrt);
+    RTPP_OBJ_DECREF(cfs.rtp_streams_wrt);
+    RTPP_OBJ_DECREF(cfs.rtcp_streams_wrt);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif
