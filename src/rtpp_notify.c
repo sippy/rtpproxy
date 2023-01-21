@@ -74,7 +74,7 @@ struct rtpp_notify_priv {
 
 static int rtpp_notify_schedule(struct rtpp_notify *,
   struct rtpp_tnotify_target *, const char *, const char *);
-static void rtpp_notify_dtor(struct rtpp_notify *);
+static void rtpp_notify_dtor(struct rtpp_notify_priv *);
 static void do_notification(struct rtpp_notify_wi *, int);
 
 static void
@@ -107,7 +107,7 @@ rtpp_notify_ctor(struct rtpp_log *glog)
 {
     struct rtpp_notify_priv *pvt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_notify_priv));
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_notify_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
@@ -129,8 +129,9 @@ rtpp_notify_ctor(struct rtpp_log *glog)
     RTPP_OBJ_INCREF(glog);
     pvt->glog = glog;
     pvt->pub.schedule = &rtpp_notify_schedule;
-    pvt->pub.dtor = &rtpp_notify_dtor;
 
+    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_notify_dtor,
+      pvt);
     return (&pvt->pub);
 
 e3:
@@ -138,17 +139,15 @@ e3:
 e2:
     rtpp_queue_destroy(pvt->nqueue);
 e1:
+    RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
 e0:
     return (NULL);
 }
 
 static void
-rtpp_notify_dtor(struct rtpp_notify *pub)
+rtpp_notify_dtor(struct rtpp_notify_priv *pvt)
 {
-    struct rtpp_notify_priv *pvt;
-
-    PUB2PVT(pub, pvt);
 
     rtpp_queue_put_item(pvt->sigterm, pvt->nqueue);
     pthread_join(pvt->thread_id, NULL);

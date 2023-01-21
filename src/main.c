@@ -1094,7 +1094,7 @@ main(int argc, char **argv)
     RTPP_OBJ_DECREF(cfs.modules_cf);
     RTPP_OBJ_DECREF(cfs.pproc_manager)
     free(cfs.runcreds);
-    CALL_METHOD(cfs.rtpp_notify_cf, dtor);
+    RTPP_OBJ_DECREF(cfs.rtpp_notify_cf);
     CALL_METHOD(cfs.bindaddrs_cf, dtor);
     free(cfs.locks);
     CALL_METHOD(cfs.rtpp_tnset_cf, dtor);

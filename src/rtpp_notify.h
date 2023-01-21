@@ -33,11 +33,10 @@ struct rtpp_tnotify_target;
 
 DEFINE_METHOD(rtpp_notify, rtpp_notify_schedule, int,
   struct rtpp_tnotify_target *, const char *, const char *);
-DEFINE_METHOD(rtpp_notify, rtpp_notify_dtor, void);
 
 struct rtpp_notify {
+    struct rtpp_refcnt *rcnt;
     rtpp_notify_schedule_t schedule;
-    rtpp_notify_dtor_t dtor;
 };
 
 struct rtpp_notify *rtpp_notify_ctor(struct rtpp_log *);
