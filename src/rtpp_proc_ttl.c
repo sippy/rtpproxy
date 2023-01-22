@@ -47,41 +47,42 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_weakref.h"
 #include "rtpp_proc_ttl.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_pipe.h"
 #include "rtpp_timeout_data.h"
 #include "rtpp_locking.h"
 
+struct foreach_args {
+    struct rtpp_notify *rtpp_notify_cf;
+    struct rtpp_stats *rtpp_stats;
+    struct rtpp_weakref *sessions_wrt;
+};
+
 struct rtpp_proc_ttl_pvt {
     struct rtpp_proc_ttl pub;
     pthread_t thread_id;
     struct rtpp_anetio_cf *op;
-    const struct rtpp_cfg *cfsp_save;
     atomic_int tstate;
     void *elp;
+    struct rtpp_hash_table *sessions_ht;
+    struct foreach_args fa;
 };
 
 #define TSTATE_RUN   0x0
 #define TSTATE_CEASE 0x1
 
-static void rtpp_proc_ttl(struct rtpp_hash_table *, struct rtpp_weakref *,
-  struct rtpp_notify *, struct rtpp_stats *);
-
-struct foreach_args {
-    struct rtpp_notify *rtpp_notify_cf;
-    struct rtpp_stats *rtpp_stats;
-    struct rtpp_weakref *sessions_wrt;
-};  
+static void rtpp_proc_ttl(struct rtpp_hash_table *, const struct foreach_args *);
 
 static const char *notyfy_type = "timeout";
 
 static int
 rtpp_proc_ttl_foreach(void *dp, void *ap)
 {
-    struct foreach_args *fap;
+    const struct foreach_args *fap;
     struct rtpp_session *sp;
 
-    fap = (struct foreach_args *)ap;
+    fap = (const struct foreach_args *)ap;
     /*
      * This method does not need us to bump ref, since we are in the
      * locked context of the rtpp_hash_table, which holds its own ref.
@@ -105,29 +106,19 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
 }
 
 static void
-rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct rtpp_weakref
-  *sessions_wrt, struct rtpp_notify *rtpp_notify_cf, struct rtpp_stats
-  *rtpp_stats)
+rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, const struct foreach_args *fap)
 {
-    struct foreach_args fargs;
 
-    fargs.rtpp_notify_cf = rtpp_notify_cf;
-    fargs.rtpp_stats = rtpp_stats;
-    fargs.sessions_wrt = sessions_wrt;
-    CALL_SMETHOD(sessions_ht, foreach, rtpp_proc_ttl_foreach, &fargs, NULL);
+    CALL_SMETHOD(sessions_ht, foreach, rtpp_proc_ttl_foreach, (void *)fap, NULL);
 }
 
 static void
 rtpp_proc_ttl_run(void *arg)
 {
-    const struct rtpp_cfg *cfsp;
     struct rtpp_proc_ttl_pvt *proc_cf;
-    struct rtpp_stats *stats_cf;
     int tstate;
 
     proc_cf = (struct rtpp_proc_ttl_pvt *)arg;
-    cfsp = proc_cf->cfsp_save;
-    stats_cf = cfsp->rtpp_stats;
 
     for (;;) {
         tstate = atomic_load(&proc_cf->tstate);
@@ -135,8 +126,7 @@ rtpp_proc_ttl_run(void *arg)
             break;
         }
         prdic_procrastinate(proc_cf->elp);
-        rtpp_proc_ttl(cfsp->sessions_ht, cfsp->sessions_wrt,
-          cfsp->rtpp_notify_cf, stats_cf);
+        rtpp_proc_ttl(proc_cf->sessions_ht, &proc_cf->fa);
     }
 }
 
@@ -151,6 +141,10 @@ rtpp_proc_ttl_dtor(struct rtpp_proc_ttl *pub)
     assert(tstate == TSTATE_RUN);
     atomic_store(&proc_cf->tstate, TSTATE_CEASE);
     pthread_join(proc_cf->thread_id, NULL);
+    RTPP_OBJ_DECREF(proc_cf->sessions_ht);
+    RTPP_OBJ_DECREF(proc_cf->fa.sessions_wrt);
+    RTPP_OBJ_DECREF(proc_cf->fa.rtpp_notify_cf);
+    RTPP_OBJ_DECREF(proc_cf->fa.rtpp_stats);
     prdic_free(proc_cf->elp);
     free(proc_cf);
 }
@@ -164,12 +158,19 @@ rtpp_proc_ttl_ctor(const struct rtpp_cfg *cfsp)
     if (proc_cf == NULL)
         return (NULL);
 
-    proc_cf->cfsp_save = cfsp;
-
     proc_cf->elp = prdic_init(1.0, 0.0);
     if (proc_cf->elp == NULL) {
         goto e0;
     }
+
+    proc_cf->fa.rtpp_notify_cf = cfsp->rtpp_notify_cf;
+    RTPP_OBJ_INCREF(cfsp->rtpp_notify_cf);
+    proc_cf->fa.rtpp_stats = cfsp->rtpp_stats;
+    RTPP_OBJ_INCREF(cfsp->rtpp_stats);
+    proc_cf->fa.sessions_wrt = cfsp->sessions_wrt;
+    RTPP_OBJ_INCREF(cfsp->sessions_wrt);
+    proc_cf->sessions_ht = cfsp->sessions_ht;
+    RTPP_OBJ_INCREF(cfsp->sessions_ht);
 
     if (pthread_create(&proc_cf->thread_id, NULL, (void *(*)(void *))&rtpp_proc_ttl_run, proc_cf) != 0) {
         goto e1;
@@ -177,6 +178,10 @@ rtpp_proc_ttl_ctor(const struct rtpp_cfg *cfsp)
     proc_cf->pub.dtor = &rtpp_proc_ttl_dtor;
     return (&proc_cf->pub);
 e1:
+    RTPP_OBJ_DECREF(cfsp->rtpp_stats);
+    RTPP_OBJ_DECREF(cfsp->sessions_ht);
+    RTPP_OBJ_DECREF(cfsp->sessions_wrt);
+    RTPP_OBJ_DECREF(cfsp->rtpp_notify_cf);
     prdic_free(proc_cf->elp);
 e0:
     free(proc_cf);
