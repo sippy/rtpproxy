@@ -966,13 +966,6 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    cfs.rtpp_proc_ttl_cf = rtpp_proc_ttl_ctor(&cfs);
-    if (cfs.rtpp_proc_ttl_cf == NULL) {
-        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
-          "can't init TTL processing subsystem");
-        exit(1);
-    }
-
     cfs.rtpp_timed_cf = rtpp_timed_ctor(0.01);
     if (cfs.rtpp_timed_cf == NULL) {
         RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
@@ -994,6 +987,13 @@ main(int argc, char **argv)
     if (cfs.rtpp_notify_cf == NULL) {
         RTPP_ELOG(cfs.glog, RTPP_LOG_ERR,
           "can't init timeout notification subsystem");
+        exit(1);
+    }
+
+    cfs.rtpp_proc_ttl_cf = rtpp_proc_ttl_ctor(&cfs);
+    if (cfs.rtpp_proc_ttl_cf == NULL) {
+        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
+          "can't init TTL processing subsystem");
         exit(1);
     }
 
