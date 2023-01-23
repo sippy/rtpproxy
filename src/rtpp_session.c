@@ -111,6 +111,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
 #endif
       .pproc_manager = cfs->pproc_manager,
       .guid = cfs->guid,
+      .max_ttl = cfs->max_ttl
     };
     pub->rtp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtp == NULL) {

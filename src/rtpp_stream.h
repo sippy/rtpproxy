@@ -141,6 +141,7 @@ DECLARE_CLASS_PUBTYPE(rtpp_stream, {
     const struct sockaddr *laddr;
     int port;
     int asymmetric;
+    int stream_ttl;
     enum rtpp_stream_side side;
     /* Flags: strong create/delete; weak ones */
     int weak;
