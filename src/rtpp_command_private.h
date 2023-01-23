@@ -68,11 +68,16 @@ struct common_cmd_args {
     } opts;
 };
 
+#define MAX_SUBC_NUM 4
+
 struct rtpp_command {
     char buf[RTPP_CMD_BUFLEN];
     char buf_t[1024];
     struct rtpp_command_args args;
-    struct rtpp_command_args subc_args;
+    struct {
+        struct rtpp_command_args args[MAX_SUBC_NUM];
+        int n;
+    } subc;
     struct sockaddr_storage raddr;
     struct sockaddr *laddr;
     socklen_t rlen;

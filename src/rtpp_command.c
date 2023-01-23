@@ -411,25 +411,30 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
                     }
                     continue;
                 }
-                if (ISAMPAMP(*ap)) {
-                    *ap = NULL;
-                    cap = &cmd->subc_args;
-                    ap = cap->v;
-                    continue;
-                }
+            }
+            if (ISAMPAMP(*ap)) {
+                if (cmd->subc.n == (MAX_SUBC_NUM - 1))
+                    goto etoomany;
+                *ap = NULL;
+                cap = &cmd->subc.args[cmd->subc.n];
+                cmd->subc.n += 1;
+                ap = cap->v;
+                continue;
             }
             cap->c++;
             if (++ap >= &cap->v[RTPC_MAX_ARGC])
                 goto etoomany;
         }
     }
-    if (cmd->args.c < 1 || (pvt->umode != 0 && pvt->cookie == NULL) ||
-      (cap == &cmd->subc_args && cap->c < 1)) {
+    for (int i = 0; i < cmd->subc.n; i++) {
+        if (cmd->args.c < 1 || (pvt->umode != 0 && pvt->cookie == NULL) ||
+          (cap == &cmd->subc.args[i] && cap->c < 1)) {
 etoomany:
-        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_ERR, "command syntax error");
-        reply_error(cmd, ECODE_PARSE_1);
-        *rval = GET_CMD_INVAL;
-        return (1);
+            RTPP_LOG(pvt->cfs->glog, RTPP_LOG_ERR, "command syntax error");
+            reply_error(cmd, ECODE_PARSE_1);
+            *rval = GET_CMD_INVAL;
+            return (1);
+        }
     }
 
     /* Step I: parse parameters that are common to all ops */

@@ -78,7 +78,7 @@ struct ul_reply {
     const struct sockaddr *ia;
     const char *ia_ov;
     int port;
-    struct rtpp_subc_resp subc_res;
+    struct rtpp_subc_resp subc_res[MAX_SUBC_NUM];
 };
 
 struct ul_opts {
@@ -102,7 +102,7 @@ struct ul_opts {
 
     int onhold;
 
-    struct after_success_h after_success;
+    struct after_success_h after_success[MAX_SUBC_NUM];
 };
 
 void
@@ -125,12 +125,27 @@ ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
         }
     }
     if (ulr != NULL) {
-        if (ulr->subc_res.result != 0) {
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
-              " && %d", ulr->subc_res.result);
-        } else if (ulr->subc_res.buf_t[0] != '\0') {
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
-              " && %s", ulr->subc_res.buf_t);
+        int skipped = 0;
+        for (int i = 0; i < cmd->subc.n; i++) {
+            if (ulr->subc_res[i].result != 0) {
+                while (skipped > 0) {
+                    len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+                      " && 0");
+                    skipped -= 1;
+                }
+                len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+                  " && %d", ulr->subc_res[i].result);
+            } else if (ulr->subc_res[i].buf_t[0] != '\0') {
+                while (skipped > 0) {
+                    len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+                      " && 0");
+                    skipped -= 1;
+                }
+                len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+                  " && %s", ulr->subc_res[i].buf_t);
+            } else {
+                skipped += 1;
+            }
         }
     }
     cmd->buf_t[len] = '\n';
@@ -391,12 +406,13 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
               ulop->pf, ulop->addr, ulop->port, gai_strerror(n));
         }
     }
-    if (cmd->subc_args.c > 0) {
-        if (rtpp_subcommand_ul_opts_parse(cfsp, &cmd->subc_args,
-          &ulop->after_success) != 0) {
+    for (int i = 0; i < cmd->subc.n; i++) {
+        if (rtpp_subcommand_ul_opts_parse(cfsp, &cmd->subc.args[i],
+          &ulop->after_success[i]) != 0) {
             reply_error(cmd, ECODE_PARSE_SUBC);
             goto err_undo_1;
         }
+        RTPP_DBG_ASSERT(ulop->after_success[i].handler != NULL);
     }
     return (ulop);
 
@@ -664,16 +680,16 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             ulop->reply.ia_ov = cfsp->advaddr[0];
         }
     }
-    if (ulop->after_success.handler != NULL) {
+    for (int i = 0; i < cmd->subc.n; i++) {
         struct rtpp_subc_ctx rsc = {
             .sessp = spa,
             .strmp_in = spa->rtp->stream[pidx],
             .strmp_out = spa->rtp->stream[NOT(pidx)],
-            .subc_args = &(cmd->subc_args),
-            .resp = &(ulop->reply.subc_res)
+            .subc_args = &(cmd->subc.args[i]),
+            .resp = &(ulop->reply.subc_res[i])
         };
-        rsc.resp->result = ulop->after_success.handler(ulop->after_success.arg,
-          &rsc);
+        rsc.resp->result = ulop->after_success[i].handler(
+          ulop->after_success[i].arg, &rsc);
     }
     ul_reply_port(cmd, &ulop->reply);
     rtpp_command_ul_opts_free(ulop);

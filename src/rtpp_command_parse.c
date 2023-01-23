@@ -268,7 +268,7 @@ rtpp_command_pre_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         reply_error(cmd, ECODE_PARSE_MODS);
         return (-1);
     }
-    if (cprops.has_subc == 0 && cmd->subc_args.c > 0) {
+    if (cprops.has_subc == 0 && cmd->subc.n > 0) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s command syntax error"
           ": subcommand is not supported", cmd->cca.rname);
         reply_error(cmd, ECODE_PARSE_SUBC);
