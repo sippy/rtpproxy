@@ -58,6 +58,7 @@ struct r_stream_ctor_args {
     struct rtpp_stats *rtpp_stats;
     enum rtpp_stream_side side;
     int pipe_type;
+    int max_ttl;
     uint64_t seuid;
     unsigned int nmodules;
     struct pproc_manager *pproc_manager;
@@ -148,6 +149,7 @@ DECLARE_CLASS_PUBTYPE(rtpp_stream, {
     const struct sockaddr *laddr;
     int port;
     int asymmetric;
+    int stream_ttl;
     enum rtpp_stream_side side;
     /* Flags: strong create/delete; weak ones */
     int weak;

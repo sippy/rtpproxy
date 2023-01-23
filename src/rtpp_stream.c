@@ -315,6 +315,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
 
     pvt->pub.stuid = CALL_SMETHOD(ap->guid, gen);
     pvt->pub.seuid = ap->seuid;
+    pvt->pub.stream_ttl = ap->max_ttl;
     for (unsigned int i = 0; i < ap->nmodules; i++) {
         atomic_init(&(pvt->pmod_data.adp[i]), NULL);
     }

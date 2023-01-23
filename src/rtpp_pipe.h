@@ -46,6 +46,7 @@ struct r_pipe_ctor_args {
     unsigned int nmodules;
     struct pproc_manager *pproc_manager;
     struct rtpp_genuid *guid;
+    int max_ttl;
 };
 
 DECLARE_CLASS(rtpp_pipe, const struct r_pipe_ctor_args *);

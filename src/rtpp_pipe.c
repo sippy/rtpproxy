@@ -105,6 +105,7 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
         .nmodules = ap->nmodules,
         .pproc_manager = ap->pproc_manager,
         .guid = ap->guid,
+        .max_ttl = ap->max_ttl,
     };
     for (i = 0; i < 2; i++) {
         rsca.side = i;
