@@ -346,13 +346,10 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
                 err(1, "%s: dymanic module constructor has failed", cp);
             }
             if (CALL_METHOD(mif, load, cfsp, cfsp->glog) != 0) {
-                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
-                  "%p: dymanic module load has failed", mif);
-                exit(1);
+                errx(1, "%p: dymanic module load has failed", mif);
             }
             if (CALL_METHOD(mif, get_mconf, &mcp) != 0) {
-                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%p->get_mconf() method has failed: %s", mif, cp);
-                exit(1);
+                errx(1, "%p->get_mconf() method has failed: %s", mif, cp);
             }
             if (mcp != NULL) {
                  errx(1, "%s: dymanic module requires configuration, cannot be "
