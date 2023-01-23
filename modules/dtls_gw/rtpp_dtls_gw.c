@@ -259,7 +259,7 @@ rtpp_dtls_gw_setup_sender(struct rtpp_module_priv *pvt,
     return (0);
 }
 
-enum rdg_cmd {RDG_CMD_A, RDG_CMD_P, RDG_CMD_S, RDG_CMD_D};
+enum rdg_cmd {RDG_CMD_A, RDG_CMD_P, RDG_CMD_S, RDG_CMD_D, RDG_CMD_U};
 
 static int
 rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
@@ -312,6 +312,13 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
         rdg_cmd = RDG_CMD_D;
         break;
 
+    case 'u':
+    case 'U':
+        if (argc != 1)
+            goto invalmode;
+        rdg_cmd = RDG_CMD_U;
+        break;
+
     default:
         goto invalmode;
     }
@@ -330,6 +337,8 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
 
     case RDG_CMD_S:
         rdfsp = NULL;
+        /* Fallthrough */
+    case RDG_CMD_U:
         dtls_strmp = ctxp->strmp_out;
         break;
     }
@@ -341,7 +350,7 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
         rtps_c = dtls_in_poi.arg;
     }
 
-    if (rdg_cmd == RDG_CMD_D) {
+    if (rdg_cmd == RDG_CMD_D || rdg_cmd == RDG_CMD_U) {
         if (lookup_res == 0) {
             return (-1);
         }
