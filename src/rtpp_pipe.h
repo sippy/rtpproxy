@@ -76,6 +76,7 @@ struct r_pipe_ctor_args {
     struct rtpp_log *log;
     struct rtpp_stats *rtpp_stats;
     int pipe_type;
+    int max_ttl;
     unsigned int nmodules;
     struct pproc_manager *pproc_manager;
 };

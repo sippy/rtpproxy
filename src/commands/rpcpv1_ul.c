@@ -489,9 +489,9 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             if (spa->complete == 0) {
                 cmd->csp->nsess_complete.cnt++;
                 CALL_SMETHOD(spa->rtp->stream[0]->ttl, reset_with,
-                  cfsp->max_ttl);
+                  spa->rtp->stream[0]->stream_ttl);
                 CALL_SMETHOD(spa->rtp->stream[1]->ttl, reset_with,
-                  cfsp->max_ttl);
+                  spa->rtp->stream[1]->stream_ttl);
             }
             spa->complete = 1;
         }

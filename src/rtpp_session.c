@@ -102,7 +102,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
       .streams_wrt = cfs->rtp_streams_wrt, .servers_wrt = cfs->servers_wrt,
       .log = log, .rtpp_stats = cfs->rtpp_stats, .pipe_type = PIPE_RTP,
       .nmodules  = cfs->modules_cf->count.total,
-      .pproc_manager = cfs->pproc_manager};
+      .pproc_manager = cfs->pproc_manager, .max_ttl = cfs->max_ttl};
     pub->rtp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtp == NULL) {
         goto e2;

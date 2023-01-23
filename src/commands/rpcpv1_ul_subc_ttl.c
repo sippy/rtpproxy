@@ -57,6 +57,7 @@ rtpp_subcommand_ttl_handler(const struct after_success_h_args *ashap,
         abort();
     }
 
+    strmp->stream_ttl = tap->ttl;
     CALL_SMETHOD(strmp->ttl, reset_with, tap->ttl);
     return (0);
 }

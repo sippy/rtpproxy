@@ -292,6 +292,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     RTPP_OBJ_INCREF(ap->log);
     pvt->pub.side = ap->side;
     pvt->pub.pipe_type = ap->pipe_type;
+    pvt->pub.stream_ttl = ap->max_ttl;
 #if defined(RTPP_DEBUG)
     pvt->pub.smethods = rtpp_stream_smethods;
 #endif
