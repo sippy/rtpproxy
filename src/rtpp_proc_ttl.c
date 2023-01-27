@@ -80,14 +80,14 @@ static int
 rtpp_proc_ttl_foreach(void *dp, void *ap)
 {
     const struct foreach_args *fap;
-    struct rtpp_session *sp;
+    const struct rtpp_session *sp;
 
     fap = (const struct foreach_args *)ap;
     /*
      * This method does not need us to bump ref, since we are in the
      * locked context of the rtpp_hash_table, which holds its own ref.
      */
-    sp = (struct rtpp_session *)dp;
+    sp = (const struct rtpp_session *)dp;
 
     if (CALL_SMETHOD(sp->rtp, get_ttl) == 0) {
         RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
