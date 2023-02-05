@@ -272,7 +272,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     struct group *gp;
     struct rtpp_ctrl_sock *ctrl_sock;
     int option_index, brsym;
-    struct proto_cap *pcp;
+    const struct proto_cap *pcp;
     struct rtpp_module_if *mif;
     char mpath[PATH_MAX + 1];
     struct rtpp_module_conf *mcp;
