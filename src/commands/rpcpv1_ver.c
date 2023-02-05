@@ -40,7 +40,7 @@
 #include "commands/rpcpv1_ver.h"
 #include "rtpp_tnotify_set.h"
 
-static struct proto_cap proto_caps[] = {
+const static struct proto_cap proto_caps[] = {
     /*
      * The first entry must be basic protocol version and isn't shown
      * as extension on -v.
@@ -62,6 +62,7 @@ static struct proto_cap proto_caps[] = {
     { "20150617", "Support for the wildcard %%CC_SELF%% as a disconnect notify target" },
     { "20191015", "Support for the && sub-command specifier" },
     { "20200226", "Support for the N command to stop recording" },
+    { "20230205", "Support for \"rtpa_nlost\" counter; extend catch_dtmf module with \"h\" modifier" },
     { NULL, NULL }
 };
 
@@ -92,8 +93,8 @@ handle_ver_feature(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     reply_number(cmd, known);
 }
 
-struct proto_cap *
-iterate_proto_caps(struct proto_cap *prevp)
+const struct proto_cap *
+iterate_proto_caps(const struct proto_cap *prevp)
 {
     int i;
 
