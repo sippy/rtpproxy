@@ -30,6 +30,7 @@
 #include <netinet/in.h>
 #include <assert.h>
 #include <errno.h>
+#define _GNU_SOURCE /* pthread_setname_np() */
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stddef.h>

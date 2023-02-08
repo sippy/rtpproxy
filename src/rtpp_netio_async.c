@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
+#define _GNU_SOURCE /* pthread_setname_np() */
 #include <pthread.h>
 #include <sched.h>
 #include <signal.h>

@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <poll.h>
+#define _GNU_SOURCE /* pthread_setname_np() */
 #include <pthread.h>
 #include <stddef.h>
 #include <stdlib.h>

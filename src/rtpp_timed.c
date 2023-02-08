@@ -26,6 +26,7 @@
  */
 
 #include <assert.h>
+#define _GNU_SOURCE /* pthread_setname_np() */
 #include <pthread.h>
 #include <signal.h>
 #include <stddef.h>

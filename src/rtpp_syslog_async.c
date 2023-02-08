@@ -25,6 +25,7 @@
  *
  */
 
+#define _GNU_SOURCE /* pthread_setname_np() */
 #include <pthread.h>
 #include <syslog.h>
 #include <stdarg.h>
