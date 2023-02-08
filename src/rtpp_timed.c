@@ -169,6 +169,9 @@ rtpp_timed_ctor(double run_period)
       (void *(*)(void *))&rtpp_timed_queue_run, rtcp) != 0) {
         goto e5;
     }
+#if HAVE_PTHREAD_SETNAME_NP
+    (void)pthread_setname_np(rtcp->thread_id, "rtpp_timed_queue");
+#endif
     rtcp->last_run = getdtime();
     rtcp->period = run_period;
     rtcp->wi_dsize = sizeof(struct rtpp_timed_wi) + rtpp_refcnt_osize();

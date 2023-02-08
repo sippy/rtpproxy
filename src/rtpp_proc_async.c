@@ -233,6 +233,9 @@ rtpp_proc_async_thread_init(const struct rtpp_cfg *cfsp, const struct rtpp_proc_
     if (pthread_create(&tcp->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, tcp) != 0) {
         goto e3;
     }
+#if HAVE_PTHREAD_SETNAME_NP
+    (void)pthread_setname_np(tcp->thread_id, "rtpp_proc_async");
+#endif
     return (0);
 
 e3:

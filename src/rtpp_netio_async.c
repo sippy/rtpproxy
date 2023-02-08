@@ -318,6 +318,9 @@ rtpp_netio_async_init(const struct rtpp_cfg *cfsp, int qlen)
              }
              goto e1;
         }
+#if HAVE_PTHREAD_SETNAME_NP
+        (void)pthread_setname_np(netio_cf->thread_id[i], "rtpp_anetio_sender");
+#endif
     }
 
     return (netio_cf);

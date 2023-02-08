@@ -694,11 +694,17 @@ rtpp_command_async_ctor(struct rtpp_cfg *cfsp)
             goto e6;
         }
         cmd_cf->acceptor_started = 1;
+#if HAVE_PTHREAD_SETNAME_NP
+        (void)pthread_setname_np(cmd_cf->acpt_thread_id, "rtpp_cmd_acceptor");
+#endif
     }
     if (pthread_create(&cmd_cf->thread_id, NULL,
       (void *(*)(void *))&rtpp_cmd_queue_run, cmd_cf) != 0) {
         goto e7;
     }
+#if HAVE_PTHREAD_SETNAME_NP
+    (void)pthread_setname_np(cmd_cf->thread_id, "rtpp_cmd_queue");
+#endif
     cmd_cf->pub.dtor = &rtpp_command_async_dtor;
     cmd_cf->pub.wakeup = &rtpp_command_async_wakeup;
     cmd_cf->pub.get_aload = &rtpp_command_async_get_aload;

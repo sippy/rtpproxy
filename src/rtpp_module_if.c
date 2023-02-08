@@ -489,6 +489,9 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
             return (-1);
         }
     }
+#if HAVE_PTHREAD_SETNAME_NP
+    (void)pthread_setname_np(pvt->mip->wthr.thread_id, pvt->mip->descr.name);
+#endif
     pvt->started = 1;
     return (0);
 }

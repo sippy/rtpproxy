@@ -175,6 +175,9 @@ rtpp_proc_ttl_ctor(const struct rtpp_cfg *cfsp)
     if (pthread_create(&proc_cf->thread_id, NULL, (void *(*)(void *))&rtpp_proc_ttl_run, proc_cf) != 0) {
         goto e1;
     }
+#if HAVE_PTHREAD_SETNAME_NP
+    (void)pthread_setname_np(proc_cf->thread_id, "rtpp_proc_ttl");
+#endif
     proc_cf->pub.dtor = &rtpp_proc_ttl_dtor;
     return (&proc_cf->pub);
 e1:

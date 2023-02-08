@@ -125,6 +125,9 @@ rtpp_notify_ctor(struct rtpp_log *glog)
     if (pthread_create(&pvt->thread_id, NULL, (void *(*)(void *))&rtpp_notify_queue_run, pvt) != 0) {
         goto e3;
     }
+#if HAVE_PTHREAD_SETNAME_NP
+    (void)pthread_setname_np(pvt->thread_id, "rtpp_notify_queue");
+#endif
 
     RTPP_OBJ_INCREF(glog);
     pvt->glog = glog;

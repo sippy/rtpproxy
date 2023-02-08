@@ -140,6 +140,9 @@ syslog_queue_init(void)
         goto e3;
     if (pthread_create(&syslog_queue, NULL, (void *(*)(void *))&syslog_queue_run, NULL) != 0)
         goto e4;
+#if HAVE_PTHREAD_SETNAME_NP
+    (void)pthread_setname_np(syslog_queue, "syslog_queue");
+#endif
 
     return 0;
 e4:
