@@ -25,13 +25,16 @@
  *
  */
 
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE /* pthread_setname_np() */
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <assert.h>
 #include <errno.h>
 #include <poll.h>
-#define _GNU_SOURCE /* pthread_setname_np() */
 #include <pthread.h>
 #include <stddef.h>
 #include <stdlib.h>

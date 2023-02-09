@@ -25,6 +25,10 @@
  *
  */
 
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE /* pthread_setname_np() */
+#endif
+
 #if defined(HAVE_CONFIG_H)
 #include "config_pp.h"
 #endif
@@ -34,7 +38,6 @@
 #include <netinet/in.h>
 #include <assert.h>
 #include <errno.h>
-#define _GNU_SOURCE /* pthread_setname_np() */
 #include <pthread.h>
 #include <signal.h>
 #include <stddef.h>

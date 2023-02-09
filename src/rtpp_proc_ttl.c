@@ -26,8 +26,11 @@
  *
  */
 
-#include <assert.h>
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE /* pthread_setname_np() */
+#endif
+
+#include <assert.h>
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stddef.h>

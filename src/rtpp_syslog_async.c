@@ -25,7 +25,10 @@
  *
  */
 
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE /* pthread_setname_np() */
+#endif
+
 #include <pthread.h>
 #include <syslog.h>
 #include <stdarg.h>
