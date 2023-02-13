@@ -31,6 +31,7 @@
 #include <stdlib.h>
 
 #include "rtpp_types.h"
+#include "rtpp_debug.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_wi.h"
@@ -89,10 +90,10 @@ rtpp_wi_data_get_ptr(struct rtpp_wi *wi, size_t min_len, size_t max_len)
 {
     struct rtpp_wi_data *wipp;
 
-    assert(wi->wi_type == RTPP_WI_TYPE_DATA);
+    RTPP_DBG_ASSERT(wi->wi_type == RTPP_WI_TYPE_DATA);
     PUB2PVT(wi, wipp);
-    assert(wipp->data_len >= min_len);
-    assert(max_len == 0 || wipp->data_len <= max_len);
+    RTPP_DBG_ASSERT(wipp->data_len >= min_len);
+    RTPP_DBG_ASSERT(max_len == 0 || wipp->data_len <= max_len);
 
     return(wipp->data);
 }

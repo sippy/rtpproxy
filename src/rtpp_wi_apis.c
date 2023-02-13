@@ -31,6 +31,7 @@
 #include <stdlib.h>
 
 #include "rtpp_types.h"
+#include "rtpp_debug.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_wi.h"
@@ -70,7 +71,7 @@ rtpp_wi_apis_getname(struct rtpp_wi *wi)
 {
     struct rtpp_wi_apis *wipp;
 
-    assert(wi->wi_type == RTPP_WI_TYPE_API_STR);
+    RTPP_DBG_ASSERT(wi->wi_type == RTPP_WI_TYPE_API_STR);
     PUB2PVT(wi, wipp);
     return (wipp->apiname);
 }
@@ -80,9 +81,9 @@ rtpp_wi_apis_getnamearg(struct rtpp_wi *wi, void **datap, size_t datalen)
 {
     struct rtpp_wi_apis *wipp;
 
-    assert(wi->wi_type == RTPP_WI_TYPE_API_STR);
+    RTPP_DBG_ASSERT(wi->wi_type == RTPP_WI_TYPE_API_STR);
     PUB2PVT(wi, wipp);
-    assert(wipp->msg_len == datalen);
+    RTPP_DBG_ASSERT(wipp->msg_len == datalen);
     if (datap != NULL && datalen > 0) {
         memcpy(datap, wipp->msg, datalen);
     }

@@ -31,6 +31,7 @@
 #include <stdlib.h>
 
 #include "rtpp_types.h"
+#include "rtpp_debug.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_wi.h"
@@ -78,7 +79,7 @@ rtpp_wi_sgnl_get_data(struct rtpp_wi *wi, size_t *datalen)
 {
     struct rtpp_wi_sgnl *wipp;
 
-    assert(wi->wi_type == RTPP_WI_TYPE_SGNL);
+    RTPP_DBG_ASSERT(wi->wi_type == RTPP_WI_TYPE_SGNL);
     PUB2PVT(wi, wipp);
     if (datalen != NULL) {
         *datalen = wipp->data_len;
@@ -91,7 +92,7 @@ rtpp_wi_sgnl_get_signum(struct rtpp_wi *wi)
 {
     struct rtpp_wi_sgnl *wipp;
 
-    assert(wi->wi_type == RTPP_WI_TYPE_SGNL);
+    RTPP_DBG_ASSERT(wi->wi_type == RTPP_WI_TYPE_SGNL);
     PUB2PVT(wi, wipp);
     return (wipp->signum);
 }
