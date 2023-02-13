@@ -53,9 +53,11 @@ rtpp_wi_malloc_apis(const char *apiname, void *data, size_t datalen)
         return (NULL);
     }
     CALL_SMETHOD(wipp->pub.rcnt, use_stdfree, wipp);
-    wipp->pub.wi_type = RTPP_WI_TYPE_API_STR;
-    wipp->pub.next = NULL;
-    wipp->apiname = apiname;
+    *wipp = (const struct rtpp_wi_apis) {
+        .pub.wi_type = RTPP_WI_TYPE_API_STR,
+        .pub.rcnt = wipp->pub.rcnt,
+        .apiname = apiname
+    };
     if (datalen > 0) {
         wipp->msg_len = datalen;
         memcpy(wipp->msg, data, datalen);

@@ -61,9 +61,11 @@ rtpp_wi_malloc_sgnl_memdeb(const struct rtpp_codeptr *mlp, int signum, const voi
         return (NULL);
     }
     CALL_SMETHOD(wipp->pub.rcnt, use_stdfree, wipp);
-    wipp->pub.wi_type = RTPP_WI_TYPE_SGNL;
-    wipp->pub.next = NULL;
-    wipp->signum = signum;
+    *wipp = (const struct rtpp_wi_sgnl) {
+        .pub.wi_type = RTPP_WI_TYPE_SGNL,
+        .pub.rcnt = wipp->pub.rcnt,
+        .signum = signum
+    };
     if (datalen > 0) {
         wipp->data_len = datalen;
         memcpy(wipp->data, data, datalen);

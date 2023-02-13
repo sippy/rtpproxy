@@ -64,17 +64,18 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
     if (wis == NULL) {
         return (NULL);
     }
-    wis->wip.pub.wi_type = RTPP_WI_TYPE_OPKT;
-    wis->wip.pub.next = NULL;
-    wis->wip.nsend = 1;
-    wis->wip.sock = sock;
-    wis->wip.flags = flags;
-    wis->wip.msg = &(wis->msg);
-    wis->wip.sendto = sstosa(&(wis->to));
-    wis->wip.msg_len = msg_len;
-    wis->wip.log = NULL;
+    wis->wip = (const struct rtpp_wi_pvt) {
+        .pub.wi_type = RTPP_WI_TYPE_OPKT,
+        .pub.rcnt = wis->wip.pub.rcnt,
+        .nsend = 1,
+        .sock = sock,
+        .flags = flags,
+        .msg = &(wis->msg),
+        .sendto = sstosa(&(wis->to)),
+        .msg_len = msg_len,
+        .tolen = tolen
+    };
     memcpy(wis->msg, msg, msg_len);
-    wis->wip.tolen = tolen;
     memcpy(&(wis->to), sendto, tolen);
     CALL_SMETHOD(wis->wip.pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_wi_free,
       wis);
@@ -89,21 +90,20 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
     struct rtpp_wi_pvt *wipp;
 
     PUB2PVT(pkt->wi, wipp);
-    wipp->pub.rcnt = pkt->rcnt;
-    wipp->pub.wi_type = RTPP_WI_TYPE_OPKT;
-    wipp->pub.next = NULL;
-    wipp->sock = sock;
+    *wipp = (const struct rtpp_wi_pvt) {
+        .pub.wi_type = RTPP_WI_TYPE_OPKT,
+        .pub.rcnt = pkt->rcnt,
+        .nsend = nsend,
+        .sock = sock,
+        .msg = pkt->data.buf,
+        .sendto = sstosa(&pkt->sendto),
+        .msg_len = pkt->size,
+        .tolen = CALL_SMETHOD(sendto, get, sstosa(&pkt->sendto), sizeof(pkt->raddr))
+    };
     if (sock_rcnt != NULL) {
         RC_INCREF(sock_rcnt);
+        wipp->sock_rcnt = sock_rcnt;
     }
-    wipp->sock_rcnt = sock_rcnt;
-    wipp->flags = 0;
-    wipp->msg = pkt->data.buf;
-    wipp->msg_len = pkt->size;
-    wipp->log = NULL;
-    wipp->sendto = sstosa(&pkt->sendto);
-    wipp->tolen = CALL_SMETHOD(sendto, get, wipp->sendto, sizeof(pkt->raddr));
-    wipp->nsend = nsend;
     CALL_SMETHOD(pkt->rcnt, reg_pd, (rtpp_refcnt_dtor_t)rtpp_wi_pkt_free,
       wipp);
     return (&(wipp->pub));
