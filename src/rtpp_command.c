@@ -414,7 +414,7 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
             }
             if (ISAMPAMP(*ap)) {
                 if (cmd->subc.n == (MAX_SUBC_NUM - 1))
-                    goto etoomany;
+                    goto synerr;
                 *ap = NULL;
                 cap = &cmd->subc.args[cmd->subc.n];
                 cmd->subc.n += 1;
@@ -423,17 +423,16 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
             }
             cap->c++;
             if (++ap >= &cap->v[RTPC_MAX_ARGC])
-                goto etoomany;
+                goto synerr;
         }
     }
+    if (cmd->args.c < 1 || (pvt->umode != 0 && pvt->cookie == NULL)) {
+        goto synerr;
+    }
     for (int i = 0; i < cmd->subc.n; i++) {
-        if (cmd->args.c < 1 || (pvt->umode != 0 && pvt->cookie == NULL) ||
-          (cap == &cmd->subc.args[i] && cap->c < 1)) {
-etoomany:
-            RTPP_LOG(pvt->cfs->glog, RTPP_LOG_ERR, "command syntax error");
-            reply_error(cmd, ECODE_PARSE_1);
-            *rval = GET_CMD_INVAL;
-            return (1);
+        cap = &cmd->subc.args[i];
+        if (cap->c < 1) {
+            goto synerr;
         }
     }
 
@@ -445,6 +444,12 @@ etoomany:
     }
 
     return (0);
+synerr:
+    RTPP_LOG(pvt->cfs->glog, RTPP_LOG_ERR, "command syntax error");
+    reply_error(cmd, ECODE_PARSE_1);
+    *rval = GET_CMD_INVAL;
+    return (1);
+
 }
 
 int
