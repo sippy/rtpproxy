@@ -1,0 +1,30 @@
+name: CIFuzz
+on: [push, pull_request]
+jobs:
+  Fuzzing:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - name: Build Fuzzers
+      id: build
+      uses: sobomax/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'rtpproxy'
+        dry-run: false
+        language: c
+    - name: Run Fuzzers
+      uses: sobomax/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'rtpproxy'
+        fuzz-seconds: 600
+        dry-run: false
+        parallel-fuzzing: true
+        language: c
+    - name: Upload Crash
+      uses: actions/upload-artifact@v1
+      if: failure() && steps.build.outcome == 'success'
+      with:
+        name: artifacts
+        path: ./out/artifacts
