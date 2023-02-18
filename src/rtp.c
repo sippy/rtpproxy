@@ -278,7 +278,7 @@ rtp_packet_parse_errstr(rtp_parser_err_t ecode)
 }
 
 rtp_parser_err_t
-rtp_packet_parse_raw(unsigned char *buf, size_t size, struct rtp_info *rinfo)
+rtp_packet_parse_raw(const unsigned char *buf, size_t size, struct rtp_info *rinfo)
 {
     int padding_size;
     rtp_hdr_ext_t *hdr_ext_ptr;
