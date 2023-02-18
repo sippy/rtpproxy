@@ -18,7 +18,7 @@ jobs:
       uses: sobomax/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
       with:
         oss-fuzz-project-name: 'rtpproxy'
-        fuzz-seconds: 600
+        fuzz-seconds: 1200
         dry-run: false
         parallel-fuzzing: true
         language: c
