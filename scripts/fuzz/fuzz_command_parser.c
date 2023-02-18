@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <threads.h>
 #include <unistd.h>
 
 #include "rtpp_types.h"
@@ -42,16 +43,17 @@ rtpp_socket_ctor(int domain, int type)
     return (NULL);
 }
 
-static struct rtpp_cfg cfg = {};
-
 int
 LLVMFuzzerTestOneInput(const char *data, size_t size)
 {
+    static thread_local struct rtpp_cfg cfg = {};
     struct rtpp_timestamp dtime = {};
     struct rtpp_command_stats cstat = {};
     struct rtpp_command *cmd;
     int rval = -1;
 
+    if (size > RTPP_CMD_BUFLEN)
+        return (0);
     if (cfg.glog == NULL) {
         assert(rtpp_gen_uid_init() == 0);
         cfg.glog = rtpp_log_ctor("rtpproxy", NULL, LF_REOPEN);
