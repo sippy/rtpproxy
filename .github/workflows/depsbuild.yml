@@ -14,6 +14,10 @@ on:
   schedule:
     - cron: "10 0 * * *"
 
+# added using https://github.com/step-security/secure-repo
+permissions:
+  contents: read
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
