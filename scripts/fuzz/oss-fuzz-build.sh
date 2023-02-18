@@ -11,16 +11,18 @@ OUT="${OUT:-"."}"
 make -C libexecinfo all
 make -C libucl all
 make -C libelperiodic all
+make -C modules/acct_rtcp_hep all
 make -C src rtpproxy
 
 rm src/*-main.o
 rm src/*-rtpp_netio_async.o
 rm src/*-rtpp_socket.o
-ar -r librtpproxy.a ./src/*.o
+ar -r librtpproxy.a ./src/*.o ./modules/acct_rtcp_hep/*.o
 
-for fz in command_parser rtp_parser
+for fz in command rtp rtcp
 do
-  ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc scripts/fuzz/fuzz_${fz}.c \
-   -o ${OUT}/fuzz_${fz} librtpproxy.a libucl/libucl.a -pthread
+  ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -Imodules/acct_rtcp_hep \
+   scripts/fuzz/fuzz_${fz}_parser.c -o ${OUT}/fuzz_${fz}_parser \
+   librtpproxy.a libucl/libucl.a -pthread
 done
 cp -Rp ${OUT} build-out
