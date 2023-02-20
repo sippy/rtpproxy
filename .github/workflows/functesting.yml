@@ -93,5 +93,11 @@ jobs:
       - name: build
         run: sh -x ./scripts/do-build.sh basic
 
+      - name: Catch build failure
+        if: failure()
+        uses: actions/set-output@v2
+        with:
+          status: "indecisive"
+
       - name: test
         run: sh -x scripts/do-test.sh
