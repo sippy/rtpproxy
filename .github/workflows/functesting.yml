@@ -90,5 +90,8 @@ jobs:
       - name: install_depends
         run: sh -x scripts/build/install_depends.sh
 
-      - name: script
-        run: sh -x scripts/do-test.sh basic
+      - name: build
+        run: sh -x ./scripts/do-build.sh basic
+
+      - name: test
+        run: sh -x scripts/do-test.sh
