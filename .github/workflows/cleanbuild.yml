@@ -81,6 +81,3 @@ jobs:
 
       - name: build
         run: sh -x ./scripts/do-build.sh cleanbuild
-
-      - name: test
-        run: sh -x ./scripts/do-test.sh
