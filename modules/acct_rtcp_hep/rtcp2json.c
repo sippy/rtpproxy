@@ -155,118 +155,120 @@ int rtcp2json(struct rtpp_sbuf *out, const void *buf, int len)
 #if 0
   fprintf(out, "\n");
 #endif
-  size_t bincr = sizeof(uint32_t) * (ntohs(r->common.length) + 1);
+  while (len > 0) {
+    size_t bincr = sizeof(uint32_t) * (ntohs(r->common.length) + 1);
 
-  switch (r->common.pt) {
-  case RTCP_SR:
-    if (len < bincr || bincr < (char *)&(r->r.sr) - (char *)r + sizeof(r->r.sr) + (sizeof(r->r.sr.rr[0]) * (r->common.count - 1)))
-      goto invallen;
-    RSW_REST(-1, out, "{\n \"ssrc\": %lu,\n",
-      (unsigned long)ntohl(r->r.sr.ssrc));
-    RSW_REST(-1, out, " \"sender_information\": {\n  \"ntp_timestamp_sec\": %lu,\n  \"ntp_timestamp_usec\": %lu,\n  \"rtp_timestamp\": %lu,\n  \"packets\": %lu,\n  \"octets\": %lu\n },\n",
-      (unsigned long)ntohl(r->r.sr.ntp_sec),
-      (unsigned long)ntohl(r->r.sr.ntp_frac),
-      (unsigned long)ntohl(r->r.sr.rtp_ts),
-      (unsigned long)ntohl(r->r.sr.psent),
-      (unsigned long)ntohl(r->r.sr.osent));
-    RSW_REST(-1, out, " \"type\": %lu,\n", (unsigned long)r->common.pt);
-    if (r->common.count > 0)
-      RSW_REST(-1, out, " \"report_blocks\": [\n");
-    for (i = 0; i < r->common.count; i++) {
-      if (i > 0)
-        RSW_REST(-1, out, "  ,\n");
-      RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %ld,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
-       (unsigned long)ntohl(r->r.sr.rr[i].ssrc),
-       (unsigned long)r->r.sr.rr[i].fraction,
-       (long)RTCP_GET_LOST(&r->r.sr.rr[i]),
-       (unsigned long)ntohl(r->r.sr.rr[i].last_seq),
-       (unsigned long)ntohl(r->r.sr.rr[i].jitter),
-       (unsigned long)ntohl(r->r.sr.rr[i].lsr),
-       (unsigned long)ntohl(r->r.sr.rr[i].dlsr));
-    }
-    if (r->common.count > 0)
-      RSW_REST(-1, out, " ],\n");
-    RSW_REST(-1, out, " \"report_count\": %lu\n", (unsigned long)r->common.count);
-    RSW_REST(-1, out, "}");
-    break;
-
-  case RTCP_RR:
-    if (len < bincr || bincr < (char *)&(r->r.rr) - (char *)r + sizeof(r->r.rr) + (sizeof(r->r.rr.rr[0]) * (r->common.count - 1)))
-      goto invallen;
-    RSW_REST(-1, out, "{\n \"ssrc\": %lu,\n",
-      (unsigned long)ntohl(r->r.rr.ssrc));
-    RSW_REST(-1, out, " \"type\": %lu,\n", (unsigned long)r->common.pt);
-    if (r->common.count > 0)
-      RSW_REST(-1, out, " \"report_blocks\": [\n");
-    for (i = 0; i < r->common.count; i++) {
-      if (i > 0)
-        RSW_REST(-1, out, "  ,\n");
-      RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %ld,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
-        (unsigned long)ntohl(r->r.rr.rr[i].ssrc),
-        (unsigned long)r->r.rr.rr[i].fraction,
-        (long)RTCP_GET_LOST(&r->r.rr.rr[i]),
-        (unsigned long)ntohl(r->r.rr.rr[i].last_seq),
-        (unsigned long)ntohl(r->r.rr.rr[i].jitter),
-        (unsigned long)ntohl(r->r.rr.rr[i].lsr),
-        (unsigned long)ntohl(r->r.rr.rr[i].dlsr));
-    }
-    if (r->common.count > 0)
-      RSW_REST(-1, out, " ],\n");
-    RSW_REST(-1, out, " \"report_count\": %lu\n", (unsigned long)r->common.count);
-    RSW_REST(-1, out, "}");
-    break;
-
-  case RTCP_SDES:
-#if 0
-    fprintf(out, " (SDES p=%d count=%d len=%d\n",
-      r->common.p, r->common.count, ntohs(r->common.length));
-    cp = (const char *)&r->r.sdes;
-    for (i = 0; i < r->common.count; i++) {
-      int remaining = (ntohs(r->common.length) << 2) -
-                      (cp - (const char *)&r->r.sdes);
-      fprintf(out, "  (src=0x%lx ",
-        (unsigned long)ntohl(((struct rtcp_sdes *)cp)->src));
-      if (remaining > 0) {
-        cp = rtp_read_sdes(out, cp,
-          (ntohs(r->common.length) << 2) - (cp - (const char *)&r->r.sdes));
-        if (!cp) return -1;
+    switch (r->common.pt) {
+    case RTCP_SR:
+      if (len < bincr || bincr < (char *)&(r->r.sr) - (char *)r + sizeof(r->r.sr) + (sizeof(r->r.sr.rr[0]) * (r->common.count - 1)))
+        goto invallen;
+      RSW_REST(-1, out, "{\n \"ssrc\": %lu,\n",
+        (unsigned long)ntohl(r->r.sr.ssrc));
+      RSW_REST(-1, out, " \"sender_information\": {\n  \"ntp_timestamp_sec\": %lu,\n  \"ntp_timestamp_usec\": %lu,\n  \"rtp_timestamp\": %lu,\n  \"packets\": %lu,\n  \"octets\": %lu\n },\n",
+        (unsigned long)ntohl(r->r.sr.ntp_sec),
+        (unsigned long)ntohl(r->r.sr.ntp_frac),
+        (unsigned long)ntohl(r->r.sr.rtp_ts),
+        (unsigned long)ntohl(r->r.sr.psent),
+        (unsigned long)ntohl(r->r.sr.osent));
+      RSW_REST(-1, out, " \"type\": %lu,\n", (unsigned long)r->common.pt);
+      if (r->common.count > 0)
+        RSW_REST(-1, out, " \"report_blocks\": [\n");
+      for (i = 0; i < r->common.count; i++) {
+        if (i > 0)
+          RSW_REST(-1, out, "  ,\n");
+        RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %ld,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
+         (unsigned long)ntohl(r->r.sr.rr[i].ssrc),
+         (unsigned long)r->r.sr.rr[i].fraction,
+         (long)RTCP_GET_LOST(&r->r.sr.rr[i]),
+         (unsigned long)ntohl(r->r.sr.rr[i].last_seq),
+         (unsigned long)ntohl(r->r.sr.rr[i].jitter),
+         (unsigned long)ntohl(r->r.sr.rr[i].lsr),
+         (unsigned long)ntohl(r->r.sr.rr[i].dlsr));
       }
-      else {
-        fprintf(stderr, "Missing at least %d bytes.\n", -remaining);
-        return -1;
+      if (r->common.count > 0)
+        RSW_REST(-1, out, " ],\n");
+      RSW_REST(-1, out, " \"report_count\": %lu\n", (unsigned long)r->common.count);
+      RSW_REST(-1, out, "}");
+      break;
+
+    case RTCP_RR:
+      if (len < bincr || bincr < (char *)&(r->r.rr) - (char *)r + sizeof(r->r.rr) + (sizeof(r->r.rr.rr[0]) * (r->common.count - 1)))
+        goto invallen;
+      RSW_REST(-1, out, "{\n \"ssrc\": %lu,\n",
+        (unsigned long)ntohl(r->r.rr.ssrc));
+      RSW_REST(-1, out, " \"type\": %lu,\n", (unsigned long)r->common.pt);
+      if (r->common.count > 0)
+        RSW_REST(-1, out, " \"report_blocks\": [\n");
+      for (i = 0; i < r->common.count; i++) {
+        if (i > 0)
+          RSW_REST(-1, out, "  ,\n");
+        RSW_REST(-1, out, "  {\n   \"source_ssrc\": %lu,\n   \"fraction_lost\": %lu,\n   \"packets_lost\": %ld,\n   \"highest_seq_no\": %lu,\n   \"ia_jitter\": %lu,\n   \"lsr\": %lu,\n   \"dlsr\": %lu\n  }\n",
+          (unsigned long)ntohl(r->r.rr.rr[i].ssrc),
+          (unsigned long)r->r.rr.rr[i].fraction,
+          (long)RTCP_GET_LOST(&r->r.rr.rr[i]),
+          (unsigned long)ntohl(r->r.rr.rr[i].last_seq),
+          (unsigned long)ntohl(r->r.rr.rr[i].jitter),
+          (unsigned long)ntohl(r->r.rr.rr[i].lsr),
+          (unsigned long)ntohl(r->r.rr.rr[i].dlsr));
+      }
+      if (r->common.count > 0)
+        RSW_REST(-1, out, " ],\n");
+      RSW_REST(-1, out, " \"report_count\": %lu\n", (unsigned long)r->common.count);
+      RSW_REST(-1, out, "}");
+      break;
+
+    case RTCP_SDES:
+#if 0
+      fprintf(out, " (SDES p=%d count=%d len=%d\n",
+        r->common.p, r->common.count, ntohs(r->common.length));
+      cp = (const char *)&r->r.sdes;
+      for (i = 0; i < r->common.count; i++) {
+        int remaining = (ntohs(r->common.length) << 2) -
+                        (cp - (const char *)&r->r.sdes);
+        fprintf(out, "  (src=0x%lx ",
+          (unsigned long)ntohl(((struct rtcp_sdes *)cp)->src));
+        if (remaining > 0) {
+          cp = rtp_read_sdes(out, cp,
+            (ntohs(r->common.length) << 2) - (cp - (const char *)&r->r.sdes));
+          if (!cp) return -1;
+        } else {
+          fprintf(stderr, "Missing at least %d bytes.\n", -remaining);
+          return -1;
+        }
+        fprintf(out, ")\n");
+      }
+      fprintf(out, " )\n");
+#endif
+      break;
+
+    case RTCP_BYE:
+#if 0
+      fprintf(out, " (BYE p=%d count=%d len=%d\n",
+        r->common.p, r->common.count, ntohs(r->common.length));
+      for (i = 0; i < r->common.count; i++) {
+        fprintf(out, "  (ssrc[%d]=0x%0lx ", i,
+          (unsigned long)ntohl(r->r.bye.src[i]));
       }
       fprintf(out, ")\n");
-    }
-    fprintf(out, " )\n");
+      if (ntohs(r->common.length) > r->common.count) {
+        cp = (const char *)&r->r.bye.src[r->common.count];
+        fprintf(out, "reason=\"%*.*s\"", *cp, *cp, cp+1);
+      }
+      fprintf(out, " )\n");
 #endif
-    break;
+      break;
 
-  case RTCP_BYE:
+    /* invalid type */
+    default:
 #if 0
-    fprintf(out, " (BYE p=%d count=%d len=%d\n",
-      r->common.p, r->common.count, ntohs(r->common.length));
-    for (i = 0; i < r->common.count; i++) {
-      fprintf(out, "  (ssrc[%d]=0x%0lx ", i,
-        (unsigned long)ntohl(r->r.bye.src[i]));
-    }
-    fprintf(out, ")\n");
-    if (ntohs(r->common.length) > r->common.count) {
-      cp = (const char *)&r->r.bye.src[r->common.count];
-      fprintf(out, "reason=\"%*.*s\"", *cp, *cp, cp+1);
-    }
-    fprintf(out, " )\n");
+      fprintf(out, "(? pt=%d src=0x%lx)\n", r->common.pt,
+        (unsigned long)ntohl(r->r.sdes.src));
 #endif
-    break;
-
-  /* invalid type */
-  default:
-#if 0
-    fprintf(out, "(? pt=%d src=0x%lx)\n", r->common.pt,
-      (unsigned long)ntohl(r->r.sdes.src));
-#endif
-  break;
+      break;
+    }
+    len -= bincr;
+    r = (const rtcp_t *)((const char *)r + bincr);
   }
-  len -= bincr;
 
   return len;
 
