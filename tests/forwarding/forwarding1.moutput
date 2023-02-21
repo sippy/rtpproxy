@@ -314,120 +314,120 @@ rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 els
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=1500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 npkts_ina={x + c[i+4]} npkts_ino={x + c[i+5]} nrelayed={x + c[i+2] + c[i+4]} ndropped=0
 rtpa_nsent=500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
 rtpa_nsent=3000 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
-0
-0
+npkts_ina={x + c[i-10]} npkts_ino={x + c[i-9]} nrelayed={x + c[i-12] + c[i-10]} ndropped=0
+npkts_ina={x + c[i-6]} npkts_ino={x + c[i-5]} nrelayed={x + c[i-8] + c[i-6]} ndropped=0
 nsess_created=60 nsess_destroyed=30 nsess_timeout=0 nsess_complete=60 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=30 nsess_owrtcp=0
 ncmds_rcvd=432 ncmds_succd=431 ncmds_errs=0 ncmds_repld=431
 npkts_rcvd={x + c[i+5]} npkts_played=0 npkts_relayed={x + c[i+4]} npkts_discard=0 nplrs_created=0 nplrs_destroyed=0

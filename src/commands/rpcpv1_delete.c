@@ -34,6 +34,7 @@
 
 #include "config.h"
 
+#include "rtpp_types.h"
 #include "rtpp_defines.h"
 #include "rtpp_cfg.h"
 #include "rtpp_log.h"
@@ -41,7 +42,9 @@
 #include "commands/rpcpv1_delete.h"
 #include "rtpp_command_ecodes.h"
 #include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_sub.h"
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_log_obj.h"
@@ -123,13 +126,13 @@ struct delete_opts {
 int
 handle_delete(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
 {
-    struct delete_ematch_arg dea;
+    struct delete_ematch_arg dea = {
+        .from_tag = ccap->from_tag,
+        .to_tag = ccap->to_tag,
+        .weak = ccap->opts.delete->weak,
+        .sessions_wrt = cfsp->sessions_wrt
+    };
 
-    memset(&dea, '\0', sizeof(dea));
-    dea.from_tag = ccap->from_tag;
-    dea.to_tag = ccap->to_tag;
-    dea.weak = ccap->opts.delete->weak;
-    dea.sessions_wrt = cfsp->sessions_wrt;
     CALL_SMETHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
       rtpp_cmd_delete_ematch, &dea);
     rtpp_command_del_opts_free(ccap->opts.delete);
@@ -137,18 +140,36 @@ handle_delete(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
     return (dea.ndeleted == 0) ? -1 : 0;
 }
 
+int
+handle_delete_as_subc(const struct after_success_h_args *ap,
+  const struct rtpp_subc_ctx *scp)
+{
+    const struct rtpp_cfg *cfsp = ap->stat;
+    struct delete_opts *dop = ap->dyn;
+    struct delete_ematch_arg dea = {
+        .from_tag = scp->sessp->tag,
+        .weak = dop->weak,
+        .sessions_wrt = cfsp->sessions_wrt
+    };
+
+    CALL_SMETHOD(cfsp->sessions_ht, foreach_key, scp->sessp->call_id,
+      rtpp_cmd_delete_ematch, &dea);
+    return (dea.ndeleted == 0) ? -1 : 0;
+}
+
 struct delete_opts *
-rtpp_command_del_opts_parse(struct rtpp_command *cmd)
+rtpp_command_del_opts_parse(struct rtpp_command *cmd, const struct rtpp_command_args *ap)
 {
     struct delete_opts *dlop;
     const char *cp;
 
     dlop = rtpp_zmalloc(sizeof(struct delete_opts));
     if (dlop == NULL) {
-        reply_error(cmd, ECODE_NOMEM_1);
+        if (cmd != NULL)
+            reply_error(cmd, ECODE_NOMEM_1);
         goto err_undo_0;
     }
-    for (cp = cmd->args.v[0] + 1; *cp != '\0'; cp++) {
+    for (cp = ap->v[0] + 1; *cp != '\0'; cp++) {
         switch (*cp) {
         case 'w':
         case 'W':
@@ -156,9 +177,11 @@ rtpp_command_del_opts_parse(struct rtpp_command *cmd)
             break;
 
         default:
-            RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-              "DELETE: unknown command modifier `%c'", *cp);
-            reply_error(cmd, ECODE_PARSE_4);
+            if (cmd != NULL) {
+                RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
+                  "DELETE: unknown command modifier `%c'", *cp);
+                reply_error(cmd, ECODE_PARSE_4);
+            }
             goto err_undo_1;
         }
     }

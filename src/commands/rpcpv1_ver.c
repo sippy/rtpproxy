@@ -36,6 +36,7 @@
 #include "rtpp_types.h"
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_ver.h"
 #include "rtpp_tnotify_set.h"
@@ -63,6 +64,7 @@ const static struct proto_cap proto_caps[] = {
     { "20191015", "Support for the && sub-command specifier" },
     { "20200226", "Support for the N command to stop recording" },
     { "20230205", "Support for \"rtpa_nlost\" counter; extend catch_dtmf module with \"h\" modifier" },
+    { "20230314", "Support for for \"fusing\" G and D commands" },
     { NULL, NULL }
 };
 

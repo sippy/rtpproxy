@@ -33,12 +33,14 @@
 
 #include "config.h"
 
+#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg.h"
 #include "rtpp_command.h"
 #include "rtpp_command_parse.h"
 #include "rtpp_command_ecodes.h"
 #include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_query.h"
 #include "rtpp_types.h"
@@ -214,6 +216,7 @@ fill_cmd_props(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
         cpp->has_cmods = 1;
         cpp->fpos = 2;
         cpp->tpos = 3;
+        cpp->has_subc = 1;
         break;
 
     case 'x':

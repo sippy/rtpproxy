@@ -23,7 +23,9 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/socket.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "rtpp_types.h"
@@ -34,7 +36,10 @@
 #include "rtpp_module.h"
 #include "rtpp_module_if.h"
 #include "rtpp_modman_fin.h"
-#include "commands/rpcpv1_ul.h"
+#include "rtpp_command.h"
+#include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
+#include "rtpp_command_private.h"
 
 struct rtpp_modman_priv {
     struct rtpp_modman pub;

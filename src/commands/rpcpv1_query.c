@@ -43,6 +43,7 @@
 #include "rtpp_command.h"
 #include "rtpp_command_ecodes.h"
 #include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "rtpp_pcount.h"
 #include "rtpp_time.h"
@@ -73,15 +74,14 @@ handle_query_simple(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
     CALL_SMETHOD(spp->stream[idx]->pcnt_strm, get_stats, &pst[0]);
     CALL_SMETHOD(spp->stream[NOT(idx)]->pcnt_strm, get_stats, &pst[1]);
     if (verbose == 0) {
-        len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu\n",
+        len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d %lu %lu %lu %lu",
           ttl, pst[0].npkts_in, pst[1].npkts_in, pcnts.nrelayed, pcnts.ndropped);
     } else {
         len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "ttl=%d npkts_ina=%lu "
-          "npkts_ino=%lu nrelayed=%lu ndropped=%lu\n", ttl,
+          "npkts_ino=%lu nrelayed=%lu ndropped=%lu", ttl,
           pst[0].npkts_in, pst[1].npkts_in, pcnts.nrelayed, pcnts.ndropped);
     }
-    rtpc_doreply(cmd, cmd->buf_t, len, 0);
-    return (0);
+    return (len);
 }
 
 #define PULL_RST() \
@@ -128,7 +128,8 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
         }
     }
     if (cmd->args.c <= 4) {
-        return (handle_query_simple(cfsp, cmd, spp, idx, verbose));
+        len = handle_query_simple(cfsp, cmd, spp, idx, verbose);
+        goto out;
     }
     len = 0;
     rst_pulled = pcnt_pulled = pcnt_strm_pulled = 0;
@@ -208,6 +209,37 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
         return (ECODE_QRYFAIL);
     }
     CHECK_OVERFLOW();
+out:
+    for (int i = 0, skipped = 0; i < cmd->subc.n; i++) {
+        struct rtpp_subc_ctx rsc = {
+            .sessp = cmd->sp,
+            .strmp_in = spp->stream[idx],
+            .strmp_out = spp->stream[NOT(idx)],
+            .subc_args = &(cmd->subc.args[i]),
+            .resp = &(cmd->subc.res[i])
+        };
+        rsc.resp->result = cmd->after_success[i].handler(
+          &cmd->after_success[i].args, &rsc);
+        if (rsc.resp->result != 0) {
+            while (skipped >= 0) {
+                 len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+                   " && %d", cmd->subc.res[i - skipped].result);
+                 skipped -= 1;
+            }
+            break;
+        }
+        if (cmd->subc.res[i].buf_t[0] != '\0') {
+            while (skipped > 0) {
+                 len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+                   " && 0");
+                 skipped -= 1;
+            }
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
+                " && %s", cmd->subc.res[i].buf_t);
+        } else {
+            skipped += 1;
+        }
+    }
     len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "\n");
     rtpc_doreply(cmd, cmd->buf_t, len, 0);
     return (0);
