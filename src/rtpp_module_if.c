@@ -28,6 +28,7 @@
 #define _GNU_SOURCE /* pthread_setname_np() */
 #endif
 
+#include <sys/socket.h>
 #include <dlfcn.h>
 #include <pthread.h>
 #include <signal.h>
@@ -74,7 +75,9 @@
 #include "rtpp_wi_sgnl.h"
 #include "rtpp_weakref.h"
 #include "rtpp_command_sub.h"
-#include "commands/rpcpv1_ul.h"
+#include "rtpp_command.h"
+#include "rtpp_command_args.h"
+#include "rtpp_command_private.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif

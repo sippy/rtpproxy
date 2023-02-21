@@ -34,21 +34,6 @@ struct ul_reply;
 struct rtpp_command;
 struct rtpp_session;
 struct rtpp_subc_ctx;
-struct after_success_h_args;
-
-DEFINE_RAW_METHOD(after_success, int, const struct after_success_h_args *,
-  const struct rtpp_subc_ctx *);
-
-struct after_success_h_args {
-    void *stat;
-    void *dyn;
-
-};
-
-struct after_success_h {
-    after_success_t handler;
-    struct after_success_h_args args;
-};
 
 struct ul_opts *rtpp_command_ul_opts_parse(const struct rtpp_cfg *,
   struct rtpp_command *cmd);

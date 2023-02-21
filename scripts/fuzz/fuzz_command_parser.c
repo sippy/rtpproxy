@@ -15,6 +15,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command.h"
+#include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_async.h"
 #include "rtpp_proc_async.h"

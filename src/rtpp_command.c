@@ -56,6 +56,7 @@
 #include "commands/rpcpv1_play.h"
 #include "rtpp_command_ecodes.h"
 #include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_record.h"
 #include "commands/rpcpv1_norecord.h"
@@ -63,6 +64,7 @@
 #include "commands/rpcpv1_query.h"
 #include "commands/rpcpv1_stats.h"
 #include "commands/rpcpv1_ul.h"
+#include "commands/rpcpv1_ul_subc.h"
 #include "commands/rpcpv1_ver.h"
 #include "rtpp_controlfd.h"
 #include "rtpp_hash_table.h"
@@ -254,6 +256,10 @@ free_command(struct rtpp_command *cmd)
     }
     if (cmd->sp != NULL) {
         RTPP_OBJ_DECREF(cmd->sp);
+    }
+    for (int i = 0; i < MAX_SUBC_NUM; i++) {
+        if (cmd->after_success[i].args.dyn != NULL)
+            free(cmd->after_success[i].args.dyn);
     }
     free(pvt);
 }
@@ -546,7 +552,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 
     case DELETE:
         /* D[w] call_id from_tag [to_tag] */
-        cmd->cca.opts.delete = rtpp_command_del_opts_parse(cmd);
+        cmd->cca.opts.delete = rtpp_command_del_opts_parse(cmd, &cmd->args);
         if (cmd->cca.opts.delete == NULL) {
             RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
@@ -586,6 +592,17 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 
     default:
         break;
+    }
+
+    for (int i = 0; i < cmd->subc.n; i++) {
+        if (rtpp_subcommand_ul_opts_parse(cfsp, &cmd->subc.args[i],
+          &cmd->after_success[i]) != 0) {
+            if (cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP)
+                rtpp_command_ul_opts_free(cmd->cca.opts.ul);
+            reply_error(cmd, ECODE_PARSE_SUBC);
+            return 0;
+        }
+        RTPP_DBG_ASSERT(cmd->after_success[i].handler != NULL);
     }
 
     /*

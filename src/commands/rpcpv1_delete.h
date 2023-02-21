@@ -28,6 +28,12 @@
 
 struct common_cmd_args;
 struct delete_opts;
+struct rtpp_command_args;
+struct after_success_h_args;
+struct rtpp_subc_ctx;
 
-struct delete_opts *rtpp_command_del_opts_parse(struct rtpp_command *);
+struct delete_opts *rtpp_command_del_opts_parse(struct rtpp_command *,
+  const struct rtpp_command_args *);
 int handle_delete(const struct rtpp_cfg *, struct common_cmd_args *);
+int handle_delete_as_subc(const struct after_success_h_args *,
+  const struct rtpp_subc_ctx *);

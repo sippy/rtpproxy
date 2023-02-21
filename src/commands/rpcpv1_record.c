@@ -31,9 +31,11 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "rtpp_types.h"
 #include "rtpp_cfg.h"
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_copy.h"
 #include "commands/rpcpv1_record.h"

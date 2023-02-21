@@ -24,6 +24,8 @@
  *
  */
 
+#include <sys/socket.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "config_pp.h"
@@ -32,9 +34,13 @@
 #include "rtpp_cfg.h"
 #include "rtpp_util.h"
 #include "rtpp_modman.h"
+#include "rtpp_command.h"
 #include "rtpp_command_args.h"
+#include "rtpp_command_sub.h"
+#include "rtpp_command_private.h"
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc.h"
+#include "commands/rpcpv1_delete.h"
 
 int
 rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp,
@@ -55,6 +61,17 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp,
         if (CALL_METHOD(cfsp->modules_cf, get_ul_subc_h, (unsigned)mod_id,
           (unsigned)inst_id, asp) != 0)
             return (-1);
+        break;
+
+    case 'D':
+    case 'd':
+        if (subc_args->c != 1)
+            return (-1);
+        asp->args.dyn = rtpp_command_del_opts_parse(NULL, subc_args);
+        if (asp->args.dyn == NULL)
+            return (-1);
+        asp->args.stat = (void *)cfsp;
+        asp->handler = handle_delete_as_subc;
         break;
 
     default:

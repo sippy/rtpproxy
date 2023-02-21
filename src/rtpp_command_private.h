@@ -70,12 +70,30 @@ struct common_cmd_args {
 
 #define MAX_SUBC_NUM 4
 
+struct after_success_h_args;
+struct rtpp_subc_ctx;
+
+DEFINE_RAW_METHOD(after_success, int, const struct after_success_h_args *,
+  const struct rtpp_subc_ctx *);
+
+struct after_success_h_args {
+    void *stat;
+    void *dyn;
+
+};
+
+struct after_success_h {
+    after_success_t handler;
+    struct after_success_h_args args;
+};
+
 struct rtpp_command {
     char buf[RTPP_CMD_BUFLEN];
     char buf_t[1024];
     struct rtpp_command_args args;
     struct {
         struct rtpp_command_args args[MAX_SUBC_NUM];
+        struct rtpp_subc_resp res[MAX_SUBC_NUM];
         int n;
     } subc;
     struct sockaddr_storage raddr;
@@ -87,6 +105,7 @@ struct rtpp_command {
     int no_glock;
     struct rtpp_session *sp;
     struct rtpp_log *glog;
+    struct after_success_h after_success[MAX_SUBC_NUM];
 };
 
 #endif
