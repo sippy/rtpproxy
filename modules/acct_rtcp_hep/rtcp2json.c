@@ -156,6 +156,9 @@ int rtcp2json(struct rtpp_sbuf *out, const void *buf, int len)
   fprintf(out, "\n");
 #endif
   while (len > 0) {
+    if (len < sizeof(rtcp_common_t)) {
+      return -1;
+    }
     size_t bincr = sizeof(uint32_t) * (ntohs(r->common.length) + 1);
 
     switch (r->common.pt) {
