@@ -41,7 +41,11 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: apt_get_update
+      - name: Sanitize list of Ubuntu mirrors
+        run: scripts/ft-apt-spy2-check-and-fix.sh
+        if: ${{ matrix.os != 'ubuntu-18.04' }}
+
+      - name: Install apt-get updates
         run: scripts/ft-apt-get-update.sh
 
       - name: Get Date
