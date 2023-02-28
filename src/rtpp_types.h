@@ -94,7 +94,7 @@ extern const struct pproc_manager_smethods * const pproc_manager_smethods;
     #define typeof(x) __typeof(x)
 #endif
 
-#define PVT_RCOFFS(pvt) (size_t)(&(((typeof(pvt))NULL)->pub.rcnt))
+#define PVT_RCOFFS(pvtp) (offsetof(typeof(*(pvtp)), pub) + offsetof(typeof((pvtp)->pub), rcnt))
 
 #define PUB2PVT(pubp, pvtp) \
   (pvtp) = (typeof(pvtp))((char *)(pubp) - offsetof(typeof(*(pvtp)), pub))
