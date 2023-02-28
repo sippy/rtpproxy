@@ -20,6 +20,7 @@ glitch_collect()
 {
   test="${1}"
   filter="${2}"
+  nretry="${3:-0}"
 
   spin_nc
 
@@ -28,6 +29,12 @@ glitch_collect()
     stop_nc
   else
     stop_nc
+    if [ ${nretry} -gt 0 ]
+    then
+      nretry=$((${nretry} - 1))
+      glitch_collect "${test}" "${filter}" "${nretry}"
+      return "${?}"
+    fi
     echo "glitch data cannot be collected"
     return 1
   fi
@@ -102,7 +109,13 @@ glitch_do()
 }
 
 glitch_test() {
-  glitch_collect "${1}" "${4}"
+  if [ ! -z "${5}" ]
+  then
+    nretry="${5}"
+  else
+    nretry=0
+  fi
+  glitch_collect "${1}" "${4}" "${nretry}"
   report "Collecting glitch data for \"${1}\""
   glitch_do "${1}" "${2}" "${3}"
   return ${?}
