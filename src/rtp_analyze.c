@@ -368,7 +368,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         stat->last.pcount = 1;
         stat->ssrc_changes = 1;
         idx = (rinfo->seq % 131072) >> 5;
-        stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
+        stat->last.seen[idx] |= (uint32_t)1 << (rinfo->seq & 31);
         stat->last.seq = rinfo->seq;
         if (rpp->ts_rate > 0) {
             update_jitter_stats(jdp, rinfo, rtime, RTP_NORMAL, rlog);
