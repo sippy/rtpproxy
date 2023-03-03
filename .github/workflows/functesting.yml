@@ -31,7 +31,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04]
+        os: [ubuntu-20.04]
         compiler: ['gcc', 'clang', 'gcc-9', 'gcc-10', 'clang-9', 'clang-10']
         include:
           - os: ubuntu-22.04
@@ -62,7 +62,6 @@ jobs:
 
       - name: Sanitize list of Ubuntu mirrors
         run: scripts/ft-apt-spy2-check-and-fix.sh
-        if: ${{ matrix.os != 'ubuntu-18.04' }}
 
       - name: Install apt-get updates
         run: scripts/ft-apt-get-update.sh
