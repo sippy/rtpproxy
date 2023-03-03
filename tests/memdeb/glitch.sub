@@ -6,7 +6,7 @@ spin_nc()
   (${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
   NC_PID=${!}
   echo "starting NOTYFY_CLIENT on port ${NC_PORT}"
-  sleep 2
+  sleep 2.5
 }
 
 stop_nc()
