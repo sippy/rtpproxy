@@ -18,7 +18,7 @@ jobs:
       uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
       with:
         oss-fuzz-project-name: 'rtpproxy'
-        fuzz-seconds: 1200
+        fuzz-seconds: 3600
         dry-run: false
         parallel-fuzzing: true
         language: c
