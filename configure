@@ -676,6 +676,8 @@ LIBS_GSM
 LIBS_DL
 AM_CFLAGS
 subdirs
+ENABLE_LIBRTPPROXY_FALSE
+ENABLE_LIBRTPPROXY_TRUE
 ENABLE_LTO_FALSE
 ENABLE_LTO_TRUE
 ENABLE_WARN_IPT_FALSE
@@ -847,6 +849,7 @@ enable_coverage
 enable_memglitching
 enable_basic_tests
 enable_lto
+enable_librtpproxy
 with_xsltproc
 with_xsltproc_flags
 '
@@ -1506,6 +1509,7 @@ Optional Features:
   --enable-memglitching   enable advanced tests around malloc glitching
   --enable-basic-tests    enable basic functionality tests
   --enable-lto            enable LTO (Link-Time Optimization)
+  --enable-librtpproxy    Build librtpproxy for instrumentation
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -12983,6 +12987,15 @@ else $as_nop
 fi
 
 
+# Check whether --enable-librtpproxy was given.
+if test ${enable_librtpproxy+y}
+then :
+  enableval=$enable_librtpproxy; ENABLE_LIBRTPPROXY=${enableval}
+else $as_nop
+  ENABLE_LIBRTPPROXY=no
+fi
+
+
 if test "$ENABLE_COVERAGE" = 'yes'
 then
 
@@ -14839,6 +14852,14 @@ else
   ENABLE_LTO_FALSE=
 fi
 
+ if test "x${ENABLE_LIBRTPPROXY}" = "xyes" ; then
+  ENABLE_LIBRTPPROXY_TRUE=
+  ENABLE_LIBRTPPROXY_FALSE='#'
+else
+  ENABLE_LIBRTPPROXY_TRUE='#'
+  ENABLE_LIBRTPPROXY_FALSE=
+fi
+
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile modules/badmod/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
 
@@ -15049,6 +15070,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${ENABLE_LTO_TRUE}" && test -z "${ENABLE_LTO_FALSE}"; then
   as_fn_error $? "conditional \"ENABLE_LTO\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${ENABLE_LIBRTPPROXY_TRUE}" && test -z "${ENABLE_LIBRTPPROXY_FALSE}"; then
+  as_fn_error $? "conditional \"ENABLE_LIBRTPPROXY\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
