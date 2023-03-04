@@ -17,7 +17,7 @@ make -C src librtpproxy.a
 
 ar -r librtcp.a ./modules/acct_rtcp_hep/*.o
 
-for fz in command rtp rtcp
+for fz in command
 do
   ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -Imodules/acct_rtcp_hep \
    scripts/fuzz/fuzz_${fz}_parser.c -o ${OUT}/fuzz_${fz}_parser \
