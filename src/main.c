@@ -781,11 +781,16 @@ update_derived_stats(double dtime, void *argp)
     return (CB_MORE);
 }
 
+#if !defined(LIBRTPPROXY)
 int
 main(int argc, char **argv)
+#else
+struct rtpp_cfg *
+rtpp_main(int argc, char **argv)
+#endif
 {
     int i, len, pid_fd;
-    struct rtpp_cfg cfs;
+    static struct rtpp_cfg cfs;
     char buf[256];
     struct sched_param sparam;
     void *elp;
@@ -1064,6 +1069,10 @@ main(int argc, char **argv)
             exit(1);
         }
     }
+
+#if defined(LIBRTPPROXY)
+    return (&cfs);
+#endif
 
     for (;;) {
         CALL_METHOD(cfs.rtpp_cmd_cf, wakeup);

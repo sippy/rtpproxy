@@ -77,6 +77,10 @@ AC_ARG_ENABLE(lto,
   AS_HELP_STRING([--enable-lto],[enable LTO (Link-Time Optimization)]),
   [ENABLE_LTO=${enableval}], [ENABLE_LTO=no])
 
+AC_ARG_ENABLE(librtpproxy,
+  AS_HELP_STRING([--enable-librtpproxy],[Build librtpproxy for instrumentation]),
+  [ENABLE_LIBRTPPROXY=${enableval}], [ENABLE_LIBRTPPROXY=no])
+
 if test "$ENABLE_COVERAGE" = 'yes'
 then
   AC_DEFINE([ENABLE_COVERAGE], [1], [Test coverage support is enabled])
@@ -359,6 +363,7 @@ AM_CONDITIONAL(ENABLE_MEMGLITCHING, [test "x${ENABLE_MEMGLITCHING}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_BASIC_TESTS, [test "x${ENABLE_BASIC_TESTS}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_WARN_IPT, [test "${ac_cc_warn_ipt}" = 1])
 AM_CONDITIONAL(ENABLE_LTO, [test "x${ENABLE_LTO}" = "xyes" ])
+AM_CONDITIONAL(ENABLE_LIBRTPPROXY, [test "x${ENABLE_LIBRTPPROXY}" = "xyes" ])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
