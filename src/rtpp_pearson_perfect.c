@@ -108,7 +108,7 @@ rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *self, const char *isval)
     struct rtpp_pearson_perfect_priv *rppp;
 
     PUB2PVT(self, rppp);
-    rval = rppp->omap_table[rtpp_pearson_hash8(&rppp->rp, isval, NULL)] - 1;
+    rval = (int)(rppp->omap_table[rtpp_pearson_hash8(&rppp->rp, isval, NULL)]) - 1;
     if (rval == -1) {
         return (-1);
     }
