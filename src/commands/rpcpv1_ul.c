@@ -285,7 +285,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
                 if (!isdigit(*cp) && *cp != ',')
                     break;
             }
-            if (t == cp) {
+            if (t == cp || ulop->codecs != NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_14);
                 goto err_undo_1;
