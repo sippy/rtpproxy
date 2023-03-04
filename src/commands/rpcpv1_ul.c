@@ -366,7 +366,8 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
         default:
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "unknown command modifier `%c'",
               *cp);
-            break;
+            reply_error(cmd, ECODE_INVLARG_5);
+            goto err_undo_1;
         }
     }
     if (ulop->local_addr == NULL && ulop->lidx == 1 &&
