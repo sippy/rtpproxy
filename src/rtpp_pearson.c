@@ -53,7 +53,7 @@ rtpp_pearson_hash8(struct rtpp_pearson *rpp, const char *bp, const char *ep)
     uint8_t res;
 
     for (res = rpp->rand_table[0]; bp[0] != '\0' && bp != ep; bp++) {
-        res = rpp->rand_table[res ^ bp[0]];
+        res = rpp->rand_table[res ^ (uint8_t)(bp[0])];
     }
     return res;
 }
