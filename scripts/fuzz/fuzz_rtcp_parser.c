@@ -6,6 +6,8 @@
 #include "rtpp_sbuf.h"
 #include "rtcp2json.h"
 
+#include "fuzz_standalone.h"
+
 int
 LLVMFuzzerTestOneInput(const char *rtcp_data, size_t rtcp_dlen)
 {

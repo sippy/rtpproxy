@@ -1082,11 +1082,13 @@ rtpp_main(int argc, char **argv)
         signal(SIGSYS, rtpp_stacktrace);
     }
 
+#if !defined(LIBRTPPROXY)
     elp = prdic_init(cfs.target_pfreq / 10.0, 0.0);
     if (elp == NULL) {
         RTPP_LOG(cfs.glog, RTPP_LOG_ERR, "prdic_init() failed");
         exit(1);
     }
+#endif
 
     if (pid_fd >= 0) {
         if (ftruncate(pid_fd, 0) != 0) {

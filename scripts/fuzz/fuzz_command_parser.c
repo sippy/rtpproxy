@@ -1,5 +1,7 @@
 #include <sys/socket.h>
 #include <assert.h>
+#include <fcntl.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,57 +16,68 @@
 #include "rtpp_command_args.h"
 #include "rtpp_command.h"
 #include "rtpp_command_private.h"
-#include "rtpp_genuid_singlet.h"
+#include "rtpp_command_async.h"
+#include "rtpp_proc_async.h"
+#include "rtpp_hash_table.h"
+#include "rtpp_weakref.h"
+#include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
 
-struct rtpp_anetio_cf;
-struct rtpp_socket;
+#include "librtpproxy.h"
 
-int
-rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg,
-  size_t msg_len, int flags, const struct sockaddr *sendto, socklen_t tolen)
+#include "fuzz_standalone.h"
+
+#define howmany(x, y) (sizeof(x) / sizeof(y))
+
+static const struct rtpp_cfg *cfsp;
+
+void
+cleanupHandler(void)
 {
-
-    return (0);
-}
-
-long long
-rtpp_rlim_max(const struct rtpp_cfg *cfsp)
-{
-
-    return (long long)(0);
-}
-
-struct rtpp_socket *
-rtpp_socket_ctor(int domain, int type)
-{
-
-    return (NULL);
+    printf("Cleaning up before exit...\n");
+    rtpp_shutdown(cfsp);
 }
 
 int
 LLVMFuzzerTestOneInput(const char *data, size_t size)
 {
-    static thread_local struct rtpp_cfg cfg = {};
     struct rtpp_timestamp dtime = {};
-    struct rtpp_command_stats cstat = {};
+    static struct rtpp_command_stats cstat = {};
     struct rtpp_command *cmd;
     int rval = -1;
+    char *argv[] = {
+       "rtpproxy",
+       "-f",
+       "-T", "1",
+       "-W", "1",
+       "-s", "cunix:/tmp/rtpproxy.sock",
+       "-d", "crit",
+       "-n", "tcp:127.0.0.1:9642",
+       "-S", "/tmp",
+       "-r", "."
+    };
+    int argc = howmany(argv, *argv);
+    static int tfd;
 
     if (size > RTPP_CMD_BUFLEN)
         return (0);
-    if (cfg.glog == NULL) {
-        assert(rtpp_gen_uid_init() == 0);
-        cfg.glog = rtpp_log_ctor("rtpproxy", NULL, LF_REOPEN);
-        assert(cfg.glog != NULL);
-        cfg.rtpp_stats = rtpp_stats_ctor();
-        assert(cfg.rtpp_stats != NULL);
+
+    if (cfsp == NULL) {
+        cfsp = rtpp_main(argc, argv);
+        assert(cfsp != NULL);
+        tfd = open("/dev/null", O_WRONLY, 0);
+        assert(tfd >= 0);
+        atexit(cleanupHandler);
     }
-    cmd = rtpp_command_ctor(&cfg, STDIN_FILENO, &dtime, &cstat, 0);
+    cmd = rtpp_command_ctor(cfsp, tfd, &dtime, &cstat, 0);
     assert(cmd != NULL);
     memcpy(cmd->buf, data, size);
-    rtpp_command_split(cmd, size, &rval, NULL);
+    cmd->buf[size == RTPP_CMD_BUFLEN ? size - 1 : size] = '\0';
+
+    if (rtpp_command_split(cmd, size, &rval, NULL) == 0) {
+        handle_command(cfsp, cmd);
+    }
     free_command(cmd);
     return (0);
 }

@@ -19,6 +19,8 @@
 #include "rtp_analyze.h"
 #include "rtpp_analyzer.h"
 
+#include "fuzz_standalone.h"
+
 int
 LLVMFuzzerTestOneInput(const char *data, size_t size)
 {
