@@ -214,11 +214,13 @@ rtpp_sinfo_append(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     pthread_mutex_lock(&pvt->lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
+            abort();
             goto e0;
         }
     }
     if (pvt->hst_rtcp.ulen == pvt->hst_rtcp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtcp) < 0) {
+            abort();
             goto e0;
         }
     }
@@ -262,11 +264,13 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     pthread_mutex_lock(&pvt->lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
+            abort();
             goto e0;
         }
     }
     if (pvt->hst_rtcp.ulen == pvt->hst_rtcp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtcp) < 0) {
+            abort();
             goto e0;
         }
     }
@@ -304,11 +308,13 @@ rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     pthread_mutex_lock(&pvt->lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
+            abort();
             goto e0;
         }
     }
     if (pvt->hst_rtcp.ulen == pvt->hst_rtcp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtcp) < 0) {
+            abort();
             goto e0;
         }
     }
@@ -373,8 +379,10 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
 
         mds = realloc(ptbl->mds, (alen * sizeof(struct rtpp_polltbl_mdata)));
         if (mds == NULL) {
+            abort();
             goto e0;
         }
+        memset(&mds[ptbl->aloclen], '\0', (alen - ptbl->aloclen) * sizeof(struct rtpp_polltbl_mdata));
         ptbl->mds = mds;
         ptbl->aloclen = alen;
     }
@@ -391,6 +399,7 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
             assert(find_polltbl_idx(ptbl, hep->stuid) < 0);
 #endif
             session_index = ptbl->curlen;
+            assert(ptbl->mds[session_index].skt == NULL);
             event.events = EPOLLIN;
             event.data.ptr = hep->skt;
             rtpp_epoll_ctl(ptbl->epfd, EPOLL_CTL_ADD, CALL_METHOD(hep->skt, getfd), &event);
@@ -412,6 +421,7 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
             }
             ptbl->curlen--;
             ptbl->revision++;
+            ptbl->mds[ptbl->curlen].skt = NULL;
             break;
 
         case HST_UPD:

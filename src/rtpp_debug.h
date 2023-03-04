@@ -64,7 +64,7 @@
 # define RTPP_DEBUG_analyze     RTPP_DBG_NO
 #endif
 
-#if defined(RTPP_DEBUG)
+#if defined(RTPP_DEBUG) || 1
 #include <assert.h>
 
 #define RTPP_DBG_ASSERT(...)  assert(__VA_ARGS__)
