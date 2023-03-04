@@ -429,7 +429,6 @@ handle_nomem(struct rtpp_command *cmd, int ecode, struct rtpp_session *spa)
 {
 
     RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "can't allocate memory");
-    rtpp_command_ul_opts_free(cmd->cca.opts.ul);
     if (spa != NULL) {
         RTPP_OBJ_DECREF(spa);
     }
@@ -694,10 +693,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
           &ulop->after_success[i].args, &rsc);
     }
     ul_reply_port(cmd, &ulop->reply);
-    rtpp_command_ul_opts_free(ulop);
     return (0);
 
 err_undo_0:
-    rtpp_command_ul_opts_free(ulop);
     return (-1);
 }

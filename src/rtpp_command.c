@@ -673,6 +673,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     case LOOKUP:
     case UPDATE:
 	rtpp_command_ul_handle(cfsp, cmd, i);
+	rtpp_command_ul_opts_free(cmd->cca.opts.ul);
 	break;
 
     default:
