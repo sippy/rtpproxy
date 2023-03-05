@@ -114,6 +114,9 @@
 #include "rtpp_memdeb_internal.h"
 #endif
 #include "rtpp_stacktrace.h"
+#if defined(LIBRTPPROXY)
+#include "librtpproxy.h"
+#endif
 
 #ifndef RTPP_DEBUG
 # define RTPP_DEBUG	0
@@ -782,6 +785,45 @@ update_derived_stats(double dtime, void *argp)
 }
 
 #if !defined(LIBRTPPROXY)
+static void
+#else
+void
+#endif
+rtpp_shutdown(const struct rtpp_cfg *cfsp)
+{
+
+    CALL_METHOD(cfsp->rtpp_cmd_cf, dtor);
+    CALL_SMETHOD(cfsp->sessions_wrt, purge);
+    CALL_SMETHOD(cfsp->sessions_ht, purge);
+
+    RTPP_DBG_ASSERT(CALL_SMETHOD(cfsp->servers_wrt, get_length) == 0);
+    RTPP_DBG_ASSERT(CALL_SMETHOD(cfsp->rtp_streams_wrt, get_length) == 0);
+    RTPP_DBG_ASSERT(CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_length) == 0);
+
+    RTPP_OBJ_DECREF(cfsp->modules_cf);
+    RTPP_OBJ_DECREF(cfsp->pproc_manager)
+    free(cfsp->runcreds);
+    RTPP_OBJ_DECREF(cfsp->rtpp_notify_cf);
+    CALL_METHOD(cfsp->bindaddrs_cf, dtor);
+    free(cfsp->locks);
+    CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
+    CALL_SMETHOD(cfsp->rtpp_timed_cf, shutdown);
+    RTPP_OBJ_DECREF(cfsp->rtpp_timed_cf);
+    CALL_METHOD(cfsp->rtpp_proc_ttl_cf, dtor);
+    CALL_METHOD(cfsp->rtpp_proc_cf, dtor);
+    RTPP_OBJ_DECREF(cfsp->sessinfo);
+    RTPP_OBJ_DECREF(cfsp->rtpp_stats);
+    for (int i = 0; i <= RTPP_PT_MAX; i++) {
+        RTPP_OBJ_DECREF(cfsp->port_table[i]);
+    }
+    RTPP_OBJ_DECREF(cfsp->sessions_wrt);
+    RTPP_OBJ_DECREF(cfsp->sessions_ht);
+    RTPP_OBJ_DECREF(cfsp->servers_wrt);
+    RTPP_OBJ_DECREF(cfsp->rtp_streams_wrt);
+    RTPP_OBJ_DECREF(cfsp->rtcp_streams_wrt);
+}
+
+#if !defined(LIBRTPPROXY)
 int
 main(int argc, char **argv)
 #else
@@ -1089,35 +1131,8 @@ rtpp_main(int argc, char **argv)
     }
     prdic_free(elp);
 
-    CALL_METHOD(cfs.rtpp_cmd_cf, dtor);
-    CALL_SMETHOD(cfs.sessions_wrt, purge);
-    CALL_SMETHOD(cfs.sessions_ht, purge);
+    rtpp_shutdown(&cfs);
 
-    RTPP_DBG_ASSERT(CALL_SMETHOD(cfs.servers_wrt, get_length) == 0);
-    RTPP_DBG_ASSERT(CALL_SMETHOD(cfs.rtp_streams_wrt, get_length) == 0);
-    RTPP_DBG_ASSERT(CALL_SMETHOD(cfs.rtcp_streams_wrt, get_length) == 0);
-
-    RTPP_OBJ_DECREF(cfs.modules_cf);
-    RTPP_OBJ_DECREF(cfs.pproc_manager)
-    free(cfs.runcreds);
-    RTPP_OBJ_DECREF(cfs.rtpp_notify_cf);
-    CALL_METHOD(cfs.bindaddrs_cf, dtor);
-    free(cfs.locks);
-    CALL_METHOD(cfs.rtpp_tnset_cf, dtor);
-    CALL_SMETHOD(cfs.rtpp_timed_cf, shutdown);
-    RTPP_OBJ_DECREF(cfs.rtpp_timed_cf);
-    CALL_METHOD(cfs.rtpp_proc_ttl_cf, dtor);
-    CALL_METHOD(cfs.rtpp_proc_cf, dtor);
-    RTPP_OBJ_DECREF(cfs.sessinfo);
-    RTPP_OBJ_DECREF(cfs.rtpp_stats);
-    for (i = 0; i <= RTPP_PT_MAX; i++) {
-        RTPP_OBJ_DECREF(cfs.port_table[i]);
-    }
-    RTPP_OBJ_DECREF(cfs.sessions_wrt);
-    RTPP_OBJ_DECREF(cfs.sessions_ht);
-    RTPP_OBJ_DECREF(cfs.servers_wrt);
-    RTPP_OBJ_DECREF(cfs.rtp_streams_wrt);
-    RTPP_OBJ_DECREF(cfs.rtcp_streams_wrt);
 #ifdef HAVE_SYSTEMD_DAEMON
     sd_notify(0, "STATUS=Exited");
 #endif
