@@ -60,12 +60,19 @@ struct rtpp_polltbl {
     int wakefd[2];
 };
 
-struct rtpp_sessinfo {
-    struct rtpp_refcnt *rcnt;
+struct rtpp_sessinfo_smethods
+{
     METHOD_ENTRY(rtpp_si_append, append);
     METHOD_ENTRY(rtpp_si_update, update);
     METHOD_ENTRY(rtpp_si_remove, remove);
     METHOD_ENTRY(rtpp_si_sync_polltbl, sync_polltbl);
+};
+
+struct rtpp_sessinfo {
+    struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
+    const struct rtpp_sessinfo_smethods * smethods;
+#endif
 };
 
 struct rtpp_sessinfo *rtpp_sessinfo_ctor(const struct rtpp_cfg *);

@@ -153,13 +153,13 @@ rtpp_proc_async_run(void *arg)
 
     for (;;) {
         tstate = atomic_load(&tcp->tstate);
+        CALL_SMETHOD(cfsp->sessinfo, sync_polltbl, &tcp->ptbl, tcp->pipe_type);
         if (tstate == TSTATE_CEASE) {
             break;
         }
 
         ndrain = 1;
 
-        CALL_METHOD(cfsp->sessinfo, sync_polltbl, &tcp->ptbl, tcp->pipe_type);
         nready = 0;
         RTPP_DBGCODE(netio > 1) {
             RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG, "run %lld " \

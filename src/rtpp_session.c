@@ -176,7 +176,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
         pvt->module_cf = cfs->modules_cf;
     }
 
-    CALL_METHOD(cfs->sessinfo, append, pub, 0, fds);
+    CALL_SMETHOD(cfs->sessinfo, append, pub, 0, fds);
     CALL_METHOD(cfs->rtpp_proc_cf, nudge);
 
     CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor,
@@ -224,7 +224,7 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     RTPP_LOG(pub->log, RTPP_LOG_INFO, "session on ports %d/%d is cleaned up",
       pub->rtp->stream[0]->port, pub->rtp->stream[1]->port);
     for (i = 0; i < 2; i++) {
-        CALL_METHOD(pvt->sessinfo, remove, pub, i);
+        CALL_SMETHOD(pvt->sessinfo, remove, pub, i);
     }
     RTPP_OBJ_DECREF(pvt->sessinfo);
     CALL_SMETHOD(pub->rtpp_stats, updatebyname, "nsess_destroyed", 1);

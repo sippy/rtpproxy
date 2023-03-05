@@ -477,9 +477,9 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
                 RTPP_LOG(spa->log, RTPP_LOG_INFO,
                   "new port requested, releasing %d/%d, replacing with %d/%d",
                   spa->rtp->stream[sidx]->port, spa->rtcp->stream[sidx]->port, lport, lport + 1);
-                CALL_METHOD(cfsp->sessinfo, update, spa, sidx, fds);
+                CALL_SMETHOD(cfsp->sessinfo, update, spa, sidx, fds);
             } else {
-                CALL_METHOD(cfsp->sessinfo, append, spa, sidx, fds);
+                CALL_SMETHOD(cfsp->sessinfo, append, spa, sidx, fds);
             }
             CALL_METHOD(cfsp->rtpp_proc_cf, nudge);
             RTPP_OBJ_DECREF(fds[0]);
