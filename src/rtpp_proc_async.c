@@ -362,6 +362,9 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
         goto e5;
     }
 
+    RTPP_OBJ_INCREF(cfsp->rtpp_stats);
+    RTPP_OBJ_INCREF(cfsp->pproc_manager);
+
     proc_cf->pub.dtor = &rtpp_proc_async_dtor;
     proc_cf->pub.nudge = &rtpp_proc_async_nudge;
     return (&proc_cf->pub);
@@ -392,6 +395,8 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
     RTPP_OBJ_DECREF(proc_cf->stap);
     rtpp_netio_async_destroy(proc_cf->pub.netio);
+    RTPP_OBJ_DECREF(proc_cf->cf_save->rtpp_stats);
+    RTPP_OBJ_DECREF(proc_cf->cf_save->pproc_manager);
     free(proc_cf);
 }
 
