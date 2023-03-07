@@ -70,7 +70,7 @@ seedrandom(void)
     }
 
     gettimeofday(&tv, NULL);
-    srandom((getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
+    srandom((unsigned int)(getpid() << 14) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
 }
 
 int
