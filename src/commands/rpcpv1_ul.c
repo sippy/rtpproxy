@@ -270,7 +270,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
         case 'z':
         case 'Z':
             ulop->requested_ptime = strtol(cp + 1, &cp, 10);
-            if (ulop->requested_ptime <= 0) {
+            if (ulop->requested_ptime <= 0 || ulop->requested_ptime >= 1000) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_13);
                 goto err_undo_1;
