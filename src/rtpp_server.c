@@ -92,8 +92,13 @@ rtpp_server_ctor(struct rtpp_server_ctor_args *ap)
     struct rtpp_server_priv *rp;
     int fd;
     char path[PATH_MAX + 1];
+    size_t len;
 
-    sprintf(path, "%s.%d", ap->name, ap->codec);
+    len = snprintf(path, sizeof(path), "%s.%d", ap->name, ap->codec);
+    if (len >= sizeof(path)) {
+        ap->result = RTPP_SERV_BADARG;
+        goto e0;
+    }
     fd = open(path, O_RDONLY);
     if (fd == -1) {
         ap->result = RTPP_SERV_NOENT;

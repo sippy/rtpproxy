@@ -84,6 +84,7 @@ struct rtpp_server_ctor_args;
 #define RTPP_SERV_OK     0
 #define RTPP_SERV_NOENT -1
 #define RTPP_SERV_NOMEM -2
+#define RTPP_SERV_BADARG -3
 
 struct rtpp_server *rtpp_server_ctor(struct rtpp_server_ctor_args *);
 
