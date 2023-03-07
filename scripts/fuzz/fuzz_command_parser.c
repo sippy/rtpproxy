@@ -51,7 +51,7 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
        "-f",
        "-T", "1",
        "-W", "1",
-       "-s", "cunix:/tmp/rtpproxy.sock",
+       "-s", "stdio:",
        "-d", "crit",
        "-n", "tcp:127.0.0.1:9642",
        "-S", "/tmp",
