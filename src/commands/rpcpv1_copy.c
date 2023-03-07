@@ -88,6 +88,8 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx,
     if (spa->rtcp->stream[idx]->rrc == NULL && cfsp->rrtcp != 0) {
         spa->rtcp->stream[idx]->rrc = rtpp_record_open(cfsp, spa, rname, idx, RECORD_RTCP);
         if (spa->rtcp->stream[idx]->rrc == NULL) {
+            RTPP_OBJ_DECREF(spa->rtp->stream[idx]->rrc);
+            spa->rtp->stream[idx]->rrc = NULL;
             return (-1);
         }
         RTPP_LOG(spa->log, RTPP_LOG_INFO,
