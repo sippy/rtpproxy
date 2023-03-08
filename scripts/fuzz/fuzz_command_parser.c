@@ -30,22 +30,22 @@
 
 #define howmany(x, y) (sizeof(x) / sizeof(y))
 
-static const struct rtpp_cfg *cfsp;
+static struct {
+    const struct rtpp_cfg *cfsp;
+    int tfd;
+} gconf;
 
-void
+static void
 cleanupHandler(void)
 {
     printf("Cleaning up before exit...\n");
-    rtpp_shutdown(cfsp);
+    rtpp_shutdown(gconf.cfsp);
+    close(gconf.tfd);
 }
 
-int
-LLVMFuzzerTestOneInput(const char *data, size_t size)
+__attribute__((constructor)) void
+rtpp_init()
 {
-    struct rtpp_timestamp dtime = {};
-    static struct rtpp_command_stats cstat = {};
-    struct rtpp_command *cmd;
-    int rval = -1;
     char *argv[] = {
        "rtpproxy",
        "-f",
@@ -58,25 +58,34 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
        "-r", "."
     };
     int argc = howmany(argv, *argv);
-    static int tfd;
+
+    OPT_SAVE();
+    gconf.cfsp = rtpp_main(argc, argv);
+    OPT_RESTORE();
+    assert(gconf.cfsp != NULL);
+    gconf.tfd = open("/dev/null", O_WRONLY, 0);
+    assert(gconf.tfd >= 0);
+    atexit(cleanupHandler);
+}
+
+int
+LLVMFuzzerTestOneInput(const char *data, size_t size)
+{
+    struct rtpp_timestamp dtime = {};
+    static struct rtpp_command_stats cstat = {};
+    struct rtpp_command *cmd;
+    int rval = -1;
 
     if (size > RTPP_CMD_BUFLEN)
         return (0);
 
-    if (cfsp == NULL) {
-        cfsp = rtpp_main(argc, argv);
-        assert(cfsp != NULL);
-        tfd = open("/dev/null", O_WRONLY, 0);
-        assert(tfd >= 0);
-        atexit(cleanupHandler);
-    }
-    cmd = rtpp_command_ctor(cfsp, tfd, &dtime, &cstat, 0);
+    cmd = rtpp_command_ctor(gconf.cfsp, gconf.tfd, &dtime, &cstat, 0);
     assert(cmd != NULL);
     memcpy(cmd->buf, data, size);
     cmd->buf[size == RTPP_CMD_BUFLEN ? size - 1 : size] = '\0';
 
     if (rtpp_command_split(cmd, size, &rval, NULL) == 0) {
-        handle_command(cfsp, cmd);
+        handle_command(gconf.cfsp, cmd);
     }
     free_command(cmd);
     return (0);
