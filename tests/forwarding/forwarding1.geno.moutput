@@ -484,5 +484,5 @@ npkts_rcvd={x + c[i+3]} npkts_played=138000 npkts_relayed={x + c[i+2]} npkts_dis
 npkts_resizer_in=0 npkts_resizer_out=0 npkts_resizer_discard=0
 rtpa_nsent=0 rtpa_nrcvd=0 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
-rtpa_nsent=34500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 10 else x} rtpa_perrs=0
+rtpa_nsent=34500 rtpa_nrcvd={x + c[i+1]} rtpa_ndups=0 rtpa_nlost={0 if x < 30 else x} rtpa_perrs=0
 MEMDEB(rtpproxy): all clear
