@@ -9,13 +9,13 @@ jobs:
         submodules: 'recursive'
     - name: Build Fuzzers
       id: build
-      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      uses: sobomax/oss-fuzz/infra/cifuzz/actions/build_fuzzers@rtpproxy
       with:
         oss-fuzz-project-name: 'rtpproxy'
         dry-run: false
         language: c
     - name: Run Fuzzers
-      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      uses: sobomax/oss-fuzz/infra/cifuzz/actions/run_fuzzers@rtpproxy
       with:
         oss-fuzz-project-name: 'rtpproxy'
         fuzz-seconds: 300
