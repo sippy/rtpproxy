@@ -44,17 +44,23 @@
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
 
-#define MAX_PKT_PROCS 8
+struct pproc_handler {
+    enum pproc_order order;
+    struct packet_processor_if ppif;
+};
+
+struct pproc_handlers {
+    struct rtpp_refcnt *rcnt;
+    int nprocs;
+    struct pproc_handler pproc[0];
+};
 
 struct pproc_manager_pvt {
     struct pproc_manager pub;
     pthread_mutex_t lock;
     struct rtpp_stats *rtpp_stats;
     int npkts_discard_idx;
-    struct {
-        enum pproc_order pproc_order;
-        struct packet_processor_if pproc_if;
-    } handlers[MAX_PKT_PROCS + 1];
+    struct pproc_handlers *handlers;
 };
 
 static int rtpp_pproc_mgr_register(struct pproc_manager *, enum pproc_order, const struct packet_processor_if *);
@@ -62,7 +68,7 @@ static enum pproc_action rtpp_pproc_mgr_handle(struct pproc_manager *, struct pk
 static enum pproc_action rtpp_pproc_mgr_handleat(struct pproc_manager *, struct pkt_proc_ctx *,
   enum pproc_order) __attribute__((always_inline));
 static int rtpp_pproc_mgr_lookup(struct pproc_manager *, void *, struct packet_processor_if *);
-static void rtpp_pproc_mgr_unregister(struct pproc_manager *, void *);
+static int rtpp_pproc_mgr_unregister(struct pproc_manager *, void *);
 static struct pproc_manager *rtpp_pproc_mgr_clone(struct pproc_manager *);
 void rtpp_pproc_mgr_reg_drop(struct pproc_manager *);
 
@@ -78,35 +84,59 @@ static const struct pproc_manager_smethods _rtpp_pproc_mgr_smethods = {
 const struct pproc_manager_smethods * const pproc_manager_smethods = &_rtpp_pproc_mgr_smethods;
 
 static void
-rtpp_pproc_mgr_dtor(struct pproc_manager_pvt *pvt)
+pproc_handlers_dtor(struct pproc_handlers *hndlrs)
 {
-    int i;
 
-    for (i = 0; i < MAX_PKT_PROCS; i++) {
-        const struct packet_processor_if *ip = &pvt->handlers[i].pproc_if;
-        if (pvt->handlers[i].pproc_order == _PPROC_ORD_EMPTY)
-            break;
+    for (int i = 0; i < hndlrs->nprocs; i++) {
+        const struct packet_processor_if *ip = &hndlrs->pproc[i].ppif;
+        RTPP_DBG_ASSERT(hndlrs->pproc[i].order != _PPROC_ORD_EMPTY);
         if (ip->rcnt != NULL)
             RTPP_OBJ_DECREF(ip);
     }
+    free(hndlrs);
+}
+
+static struct pproc_handlers *
+pproc_handlers_alloc(int nprocs)
+{
+    struct pproc_handlers *hndlrs;
+
+    hndlrs = rtpp_rzmalloc(sizeof(*hndlrs) + sizeof(struct pproc_handler) * nprocs,
+      offsetof(struct pproc_handlers, rcnt));
+    if (hndlrs == NULL)
+        return (NULL);
+    hndlrs->nprocs = nprocs;
+    CALL_SMETHOD(hndlrs->rcnt, attach, (rtpp_refcnt_dtor_t)&pproc_handlers_dtor,
+      hndlrs);
+    return (hndlrs);
+}
+
+static void
+rtpp_pproc_mgr_dtor(struct pproc_manager_pvt *pvt)
+{
+
     pthread_mutex_destroy(&pvt->lock);
     RTPP_OBJ_DECREF(pvt->rtpp_stats);
+    RTPP_OBJ_DECREF(pvt->handlers);
     free(pvt);
 }
 
 struct pproc_manager *
-rtpp_pproc_mgr_ctor(struct rtpp_stats *rtpp_stats)
+rtpp_pproc_mgr_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
 {
     struct pproc_manager_pvt *pvt;
 
     pvt = rtpp_rzmalloc(sizeof(*pvt), PVT_RCOFFS(pvt));
     if (pvt == NULL)
         goto e0;
+    pvt->handlers = pproc_handlers_alloc(nprocs);
+    if (pvt->handlers == NULL)
+        goto e1;
     pvt->npkts_discard_idx = CALL_SMETHOD(rtpp_stats, getidxbyname, "npkts_discard");
     if (pvt->npkts_discard_idx < 0)
-        goto e1;
+        goto e2;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0)
-        goto e1;
+        goto e2;
     RTPP_OBJ_INCREF(rtpp_stats);
     pvt->rtpp_stats = rtpp_stats;
 #if defined(RTPP_DEBUG)
@@ -115,6 +145,8 @@ rtpp_pproc_mgr_ctor(struct rtpp_stats *rtpp_stats)
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pproc_mgr_dtor,
       pvt);
     return (&(pvt->pub));
+e2:
+    RTPP_OBJ_DECREF(pvt->handlers);
 e1:
     free(pvt);
 e0:
@@ -127,23 +159,34 @@ rtpp_pproc_mgr_register(struct pproc_manager *pub, enum pproc_order pproc_order,
 {
     int i;
     struct pproc_manager_pvt *pvt;
+    struct pproc_handlers *newh;
 
     PUB2PVT(pub, pvt);
     pthread_mutex_lock(&pvt->lock);
-    if (pvt->handlers[MAX_PKT_PROCS - 1].pproc_order != _PPROC_ORD_EMPTY) {
+
+    newh = pproc_handlers_alloc(pvt->handlers->nprocs + 1);
+    if (newh == NULL) {
         pthread_mutex_unlock(&pvt->lock);
         return (-1);
     }
-    for (i = 0; i < MAX_PKT_PROCS; i++)
-        if (pvt->handlers[i].pproc_order == _PPROC_ORD_EMPTY || pvt->handlers[i].pproc_order > pproc_order)
+    for (i = 0; i < pvt->handlers->nprocs; i++)
+        if (pvt->handlers->pproc[i].order > pproc_order)
             break;
-    RTPP_DBG_ASSERT(i < MAX_PKT_PROCS);
-    if (pvt->handlers[i].pproc_order != _PPROC_ORD_EMPTY)
-        memmove(&pvt->handlers[i + 1], &pvt->handlers[i], sizeof(pvt->handlers[0]) * (MAX_PKT_PROCS - i - 1));
-    pvt->handlers[i].pproc_order = pproc_order;
-    pvt->handlers[i].pproc_if = *ip;
-    if (ip->rcnt != NULL)
-        RTPP_OBJ_INCREF(ip);
+    if (i > 0)
+        memcpy(&newh->pproc[0], &pvt->handlers->pproc[0],
+          sizeof(pvt->handlers->pproc[0]) * i);
+    if (i < pvt->handlers->nprocs)
+        memcpy(&newh->pproc[i + 1], &pvt->handlers->pproc[i],
+          sizeof(pvt->handlers->pproc[0]) * (pvt->handlers->nprocs - i));
+    newh->pproc[i].order = pproc_order;
+    newh->pproc[i].ppif = *ip;
+    for (int j = 0; j < newh->nprocs; j++) {
+        ip = &newh->pproc[j].ppif;
+        if (ip->rcnt != NULL)
+            RTPP_OBJ_INCREF(ip);
+    }
+    RTPP_OBJ_DECREF(pvt->handlers);
+    pvt->handlers = newh;
     pthread_mutex_unlock(&pvt->lock);
     return (0);
 }
@@ -162,14 +205,18 @@ rtpp_pproc_mgr_handleat(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp,
     int i;
     struct pproc_manager_pvt *pvt;
     enum pproc_action res = PPROC_ACT_NOP;
+    const struct pproc_handlers *handlers;
 
     PUB2PVT(pub, pvt);
     pthread_mutex_lock(&pvt->lock);
-    for (i = 0; i < MAX_PKT_PROCS; i++) {
-        const struct packet_processor_if *ip = &pvt->handlers[i].pproc_if;
-        if (pvt->handlers[i].pproc_order == _PPROC_ORD_EMPTY)
-            break;
-        if (startat > _PPROC_ORD_EMPTY && pvt->handlers[i].pproc_order < startat)
+    handlers = pvt->handlers;
+    RTPP_OBJ_INCREF(handlers);
+    pthread_mutex_unlock(&pvt->lock);
+
+    for (i = 0; i < handlers->nprocs; i++) {
+        const struct packet_processor_if *ip = &handlers->pproc[i].ppif;
+        RTPP_DBG_ASSERT(handlers->pproc[i].order != _PPROC_ORD_EMPTY);
+        if (startat > _PPROC_ORD_EMPTY && handlers->pproc[i].order < startat)
             continue;
         if (i > 0) {
             /* Clean after use */
@@ -182,7 +229,7 @@ rtpp_pproc_mgr_handleat(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp,
         if (res & (PPROC_ACT_TAKE | PPROC_ACT_DROP))
             break;
     }
-    pthread_mutex_unlock(&pvt->lock);
+    RTPP_OBJ_DECREF(handlers);
     if ((res & PPROC_ACT_TAKE) == 0 || (res & PPROC_ACT_DROP) != 0) {
         RTPP_OBJ_DECREF(pktxp->pktp);
         if ((pktxp->flags & PPROC_FLAG_LGEN) == 0) {
@@ -203,10 +250,9 @@ rtpp_pproc_mgr_lookup(struct pproc_manager *pub, void *key, struct packet_proces
 
     PUB2PVT(pub, pvt);
     pthread_mutex_lock(&pvt->lock);
-    for (int i = 0; i < MAX_PKT_PROCS; i++) {
-        const struct packet_processor_if *ip = &pvt->handlers[i].pproc_if;
-        if (pvt->handlers[i].pproc_order == _PPROC_ORD_EMPTY)
-            goto out;
+    for (int i = 0; i < pvt->handlers->nprocs; i++) {
+        const struct packet_processor_if *ip = &pvt->handlers->pproc[i].ppif;
+        RTPP_DBG_ASSERT(pvt->handlers->pproc[i].order != _PPROC_ORD_EMPTY);
         if (ip->key == key) {
             if (ip->rcnt != NULL)
                 RTPP_OBJ_INCREF(ip);
@@ -215,33 +261,44 @@ rtpp_pproc_mgr_lookup(struct pproc_manager *pub, void *key, struct packet_proces
             return (1);
         }
     }
-out:
     pthread_mutex_unlock(&pvt->lock);
     return (0);
 }
 
-static void
+static int
 rtpp_pproc_mgr_unregister(struct pproc_manager *pub, void *key)
 {
     int i;
     struct pproc_manager_pvt *pvt;
+    struct pproc_handlers *newh;
 
     PUB2PVT(pub, pvt);
     pthread_mutex_lock(&pvt->lock);
-    for (i = 0; i < MAX_PKT_PROCS; i++) {
-        const struct packet_processor_if *ip = &pvt->handlers[i].pproc_if;
-        if (pvt->handlers[i].pproc_order == _PPROC_ORD_EMPTY)
-            break;
+    for (i = 0; i < pvt->handlers->nprocs; i++) {
+        const struct packet_processor_if *ip = &pvt->handlers->pproc[i].ppif;
+        RTPP_DBG_ASSERT(pvt->handlers->pproc[i].order != _PPROC_ORD_EMPTY);
         if (ip->key != key)
             continue;
-        if (ip->rcnt != NULL)
-            RTPP_OBJ_DECREF(ip);
-        if (i < MAX_PKT_PROCS - 1)
-            memmove(&pvt->handlers[i], &pvt->handlers[i + 1],
-              sizeof(pvt->handlers[0]) * (MAX_PKT_PROCS - i - 1));
-        memset(&pvt->handlers[MAX_PKT_PROCS - 1], '\0', sizeof(pvt->handlers[0]));
+        newh = pproc_handlers_alloc(pvt->handlers->nprocs - 1);
+        if (newh == NULL) {
+            pthread_mutex_unlock(&pvt->lock);
+            return (-1);
+        }
+        if (i > 0)
+            memcpy(&newh->pproc[0], &pvt->handlers->pproc[0],
+              sizeof(pvt->handlers->pproc[0]) * i);
+        if (i < pvt->handlers->nprocs - 1)
+            memcpy(&newh->pproc[i], &pvt->handlers->pproc[i + 1],
+              sizeof(pvt->handlers->pproc[0]) * (pvt->handlers->nprocs - i - 1));
+        for (int j = 0; j < newh->nprocs; j++) {
+            ip = &newh->pproc[j].ppif;
+            if (ip->rcnt != NULL)
+                RTPP_OBJ_INCREF(ip);
+        }
+        RTPP_OBJ_DECREF(pvt->handlers);
+        pvt->handlers = newh;
         pthread_mutex_unlock(&pvt->lock);
-        return;
+        return (0);
     }
     abort();
 }
@@ -254,20 +311,22 @@ rtpp_pproc_mgr_clone(struct pproc_manager *pub)
     int i;
 
     PUB2PVT(pub, pvt);
-    rval = rtpp_pproc_mgr_ctor(pvt->rtpp_stats);
-    if (rval == NULL)
-        return (NULL);
-    PUB2PVT(rval, pvt_new);
     pthread_mutex_lock(&pvt->lock);
-    memcpy(pvt_new->handlers, pvt->handlers, sizeof(pvt->handlers));
-    pthread_mutex_unlock(&pvt->lock);
-    for (i = 0; i < MAX_PKT_PROCS; i++) {
-        const struct packet_processor_if *ip = &pvt_new->handlers[i].pproc_if;
-        if (pvt->handlers[i].pproc_order == _PPROC_ORD_EMPTY)
-            break;
+    rval = rtpp_pproc_mgr_ctor(pvt->rtpp_stats, pvt->handlers->nprocs);
+    if (rval == NULL) {
+        pthread_mutex_unlock(&pvt->lock);
+        return (NULL);
+    }
+    PUB2PVT(rval, pvt_new);
+    memcpy(pvt_new->handlers->pproc, pvt->handlers->pproc,
+      sizeof(pvt->handlers->pproc[0]) * pvt->handlers->nprocs);
+    for (i = 0; i < pvt->handlers->nprocs; i++) {
+        const struct packet_processor_if *ip = &pvt_new->handlers->pproc[i].ppif;
+        RTPP_DBG_ASSERT(pvt->handlers->pproc[i].order != _PPROC_ORD_EMPTY);
         if (ip->rcnt != NULL)
             RTPP_OBJ_INCREF(ip);
     }
+    pthread_mutex_unlock(&pvt->lock);
     return (rval);
 }
 

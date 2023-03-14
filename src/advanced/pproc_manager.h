@@ -48,7 +48,7 @@ struct pkt_proc_ctx {
 };
 
 DEFINE_METHOD(pproc_manager, pproc_manager_reg, int, enum pproc_order, const struct packet_processor_if *);
-DEFINE_METHOD(pproc_manager, pproc_manager_unreg, void, void *);
+DEFINE_METHOD(pproc_manager, pproc_manager_unreg, int, void *);
 DEFINE_METHOD(pproc_manager, pproc_manager_handle, enum pproc_action, struct pkt_proc_ctx *);
 DEFINE_METHOD(pproc_manager, pproc_manager_handleat, enum pproc_action, struct pkt_proc_ctx *,
   enum pproc_order);
@@ -75,4 +75,4 @@ struct pproc_manager {
 #endif
 };
 
-struct pproc_manager *rtpp_pproc_mgr_ctor(struct rtpp_stats *);
+struct pproc_manager *rtpp_pproc_mgr_ctor(struct rtpp_stats *, int);
