@@ -9,5 +9,5 @@ SUDO_REQUIRED=1
 
 disable_aslr
 
-glitch_test basic_versions/basic_versions1 21 basic_versions.rlog
+glitch_test basic_versions/basic_versions1 22 basic_versions.rlog
 report "glitching basic_versions/basic_versions1"
