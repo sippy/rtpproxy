@@ -142,7 +142,7 @@ update_jitter_stats(struct rtp_analyze_jdata *jdp, struct rtp_info *rinfo,
         rtime_ts_delta = jdp->jss.prev_rtime_ts - rtime_ts;
 #endif
         if (jdp->jss.prev_ts > rinfo->ts) {
-            if (((uint64_t)jdp->jss.prev_ts - (uint64_t)rinfo->ts) > (1 << 31)) {
+            if (((uint64_t)jdp->jss.prev_ts - (uint64_t)rinfo->ts) > ((uint32_t)1 << 31)) {
                 /* Normal case, timestamp wrap */
                 wrcorr = (uint64_t)1 << 32;
 #if FIX_TIMESTAMP_RESET
@@ -394,7 +394,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
               rinfo->ssrc, rinfo->seq, stat->ssrc_changes, stat->psent, stat->precvd);
         }
         idx = (rinfo->seq % 131072) >> 5;
-        stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
+        stat->last.seen[idx] |= (uint32_t)1 << (rinfo->seq & 31);
         stat->last.seq = rinfo->seq;
         if (rpp->ts_rate > 0) {
             update_jitter_stats(jdp, rinfo, rtime, RTP_SSRC_RESET, rlog);
@@ -415,7 +415,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         stat->last.pcount = 1;
         stat->seq_res_count += 1;
         idx = (seq % 131072) >> 5;
-        stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
+        stat->last.seen[idx] |= (uint32_t)1 << (rinfo->seq & 31);
         stat->last.seq = rinfo->seq;
         if (rpp->ts_rate > 0) {
             update_jitter_stats(jdp, rinfo, rtime, RTP_SEQ_RESET, rlog);
@@ -462,7 +462,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         stat->last.pcount = 1;
         stat->desync_count += 1;
         idx = (seq % 131072) >> 5;
-        stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
+        stat->last.seen[idx] |= (uint32_t)1 << (rinfo->seq & 31);
         stat->last.seq = rinfo->seq;
         return (UPDATE_OK);
     }
@@ -476,7 +476,7 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         stat->last.seq = rinfo->seq;
         return (UPDATE_OK);
     }
-    stat->last.seen[idx] |= 1 << (rinfo->seq & 31);
+    stat->last.seen[idx] |= (uint32_t)1 << (rinfo->seq & 31);
     if (seq - stat->last.max_seq != 1)
         LOGD_IF_NOT_NULL(rlog, SSRC_FMT "/%d: delta = %d",
           rinfo->ssrc, rinfo->seq, seq - stat->last.max_seq);
