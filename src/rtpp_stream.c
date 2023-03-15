@@ -544,21 +544,21 @@ rtpp_stream_handle_noplay(struct rtpp_stream *self)
     pthread_mutex_lock(&pvt->lock);
     ruid = pvt->rtps.uid;
     pthread_mutex_unlock(&pvt->lock);
-    if (ruid != RTPP_UID_NONE) {
+    if (ruid == RTPP_UID_NONE)
+        return;
+    if (CALL_SMETHOD(pvt->servers_wrt, unreg, ruid) != NULL) {
+        pthread_mutex_lock(&pvt->lock);
         CALL_SMETHOD(self->pproc_manager->reverse, unreg, pvt + 2);
-        if (CALL_SMETHOD(pvt->servers_wrt, unreg, ruid) != NULL) {
-            pthread_mutex_lock(&pvt->lock);
-            if (pvt->rtps.uid == ruid) {
-                pvt->rtps.uid = RTPP_UID_NONE;
-                pvt->rtps.inact = 0;
-                stopped = 1;
-            }
-            pthread_mutex_unlock(&pvt->lock);
+        if (pvt->rtps.uid == ruid) {
+            pvt->rtps.uid = RTPP_UID_NONE;
+            pvt->rtps.inact = 0;
+            stopped = 1;
         }
-        if (stopped != 0) {
-            RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
-              "stopping player at port %d", self->port);
-        }
+        pthread_mutex_unlock(&pvt->lock);
+    }
+    if (stopped != 0) {
+        RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
+          "stopping player at port %d", self->port);
     }
 }
 
