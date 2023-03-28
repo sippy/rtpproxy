@@ -44,6 +44,7 @@ OPT_CFLAGS="`echo "${CFLAGS}" | sed 's|-g |-g3 |'`"
 CFLAGS="-pipe"
 
 AX_COMPILE_CHECK_SIZEOF(time_t, [#include <time.h>])
+AX_CHECK_COMPILE_FLAG([-Wno-frame-address], [CFLAGS="${CFLAGS} -Wno-frame-address"], [], [-Werror])
 
 AC_MSG_CHECKING([whether '$CC' supports -Wincompatible-pointer-types])
 ac_save_CFLAGS="$CFLAGS"
