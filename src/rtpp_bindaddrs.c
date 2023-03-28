@@ -82,7 +82,8 @@ addr2bindaddr(struct rtpp_bindaddrs *pub, const struct sockaddr *ia, const char 
 }
 
 static const struct sockaddr *
-host2bindaddr(struct rtpp_bindaddrs *pub, const char *host, int pf, const char **ep)
+host2bindaddr(struct rtpp_bindaddrs *pub, const char *host, int pf,
+  int ai_flags, const char **ep)
 {
     int n;
     struct sockaddr_storage ia;
@@ -95,7 +96,7 @@ host2bindaddr(struct rtpp_bindaddrs *pub, const char *host, int pf, const char *
     if (host && (strcmp(host, "*") == 0))
         host = NULL;
 
-    if ((n = resolve(sstosa(&ia), pf, host, SERVICE, AI_PASSIVE)) != 0) {
+    if ((n = resolve(sstosa(&ia), pf, host, SERVICE, ai_flags)) != 0) {
         *ep = gai_strerror(n);
         return (NULL);
     }

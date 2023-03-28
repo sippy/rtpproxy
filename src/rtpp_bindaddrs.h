@@ -35,7 +35,7 @@ struct rtpp_bindaddrs;
 DEFINE_METHOD(rtpp_bindaddrs, addr2bindaddr, const struct sockaddr *,
   const struct sockaddr *, const char **);
 DEFINE_METHOD(rtpp_bindaddrs, host2bindaddr, const struct sockaddr *,
-  const char *, int, const char **);
+  const char *, int, int, const char **);
 DEFINE_METHOD(rtpp_bindaddrs, bindaddr4af, const struct sockaddr *, int);
 DEFINE_METHOD(rtpp_bindaddrs, rtpp_bindaddrs_dtor, void);
 

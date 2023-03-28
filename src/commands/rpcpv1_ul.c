@@ -182,7 +182,7 @@ rtpp_command_ul_opts_free(struct ul_opts *ulop)
 struct ul_opts *
 rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
-    int len, tpf, n, i;
+    int len, tpf, n, i, ai_flags;
     char c;
     char *cp, *t, *notify_tag;
     const char *errmsg;
@@ -303,8 +303,9 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             }
             c = t[len];
             t[len] = '\0';
+            ai_flags = cfsp->no_resolve ? AI_NUMERICHOST : AI_PASSIVE;
             ulop->local_addr = CALL_METHOD(cfsp->bindaddrs_cf, host2, t,
-              tpf, &errmsg);
+              tpf, ai_flags, &errmsg);
             if (ulop->local_addr == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "invalid local address: %s: %s", t, errmsg);
@@ -326,6 +327,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             c = t[len];
             t[len] = '\0';
             struct sockaddr_storage local_addr;
+            ai_flags = cfsp->no_resolve ? AI_NUMERICHOST : AI_PASSIVE;
             n = resolve(sstosa(&local_addr), tpf, t, SERVICE, AI_PASSIVE);
             if (n != 0) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,

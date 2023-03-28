@@ -59,13 +59,16 @@ rtpp_init()
        "-r", "."
     };
     int argc = howmany(argv, *argv);
+    struct rtpp_cfg *cfsp;
 
     OPT_SAVE();
-    gconf.cfsp = rtpp_main(argc, argv);
+    cfsp = rtpp_main(argc, argv);
     OPT_RESTORE();
-    assert(gconf.cfsp != NULL);
+    assert(cfsp != NULL);
+    cfsp->no_resolve = 1;
     gconf.tfd = open("/dev/null", O_WRONLY, 0);
     assert(gconf.tfd >= 0);
+    gconf.cfsp = cfsp;
     atexit(cleanupHandler);
 }
 

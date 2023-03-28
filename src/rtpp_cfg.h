@@ -141,6 +141,8 @@ struct rtpp_cfg {
     struct pproc_manager *pproc_manager;
 
     struct rtpp_locking *locks;
+
+    int no_resolve;
 };
 
 #endif
