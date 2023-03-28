@@ -93,7 +93,8 @@ host_triplet = @host@
 noinst_PROGRAMS = execinfo_check$(EXEEXT) execinfo_TEST$(EXEEXT)
 subdir = libexecinfo
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
+	$(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
 	$(top_srcdir)/m4/ax_compile_check_sizeof.m4 \
 	$(top_srcdir)/m4/ax_prog_xsltproc.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
@@ -410,7 +411,7 @@ NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 noinst_LIBRARIES = libexecinfo.a
 libexecinfo_a_SOURCES = execinfo.c execinfo.h stacktraverse.c stacktraverse.h
-libexecinfo_a_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG) -Wno-frame-address
+libexecinfo_a_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 execinfo_check_CPPFLAGS = -Werror=implicit-function-declaration -Wall
 execinfo_check_SOURCES = execinfo_check.c execinfo_testfunc.c execinfo_testfunc1.c
 execinfo_check_LDADD = libexecinfo.a @LIBS_DL@ -lpthread
@@ -419,7 +420,7 @@ execinfo_check_LDFLAGS = $(LTO_FLAG)
 execinfo_TEST_CPPFLAGS = ${execinfo_check_CPPFLAGS} -Dexecinfo_TEST=main
 execinfo_TEST_SOURCES = execinfo.c stacktraverse.c
 execinfo_TEST_LDADD = @LIBS_DL@
-execinfo_TEST_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG) -Wno-frame-address
+execinfo_TEST_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 execinfo_TEST_LDFLAGS = $(LTO_FLAG)
 all: all-am
 

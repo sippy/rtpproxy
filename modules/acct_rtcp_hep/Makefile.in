@@ -93,7 +93,8 @@ host_triplet = @host@
 noinst_PROGRAMS = rtcp2json_test$(EXEEXT) rtpp_sbuf_selftest$(EXEEXT)
 subdir = modules/acct_rtcp_hep
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
+	$(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
 	$(top_srcdir)/m4/ax_compile_check_sizeof.m4 \
 	$(top_srcdir)/m4/ax_prog_xsltproc.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \

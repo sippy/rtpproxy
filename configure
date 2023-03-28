@@ -12909,6 +12909,44 @@ printf "%s\n" "#define SIZEOF_TIME_T $ac_cv_sizeof_time_t" >>confdefs.h
 
 SIZEOF_TIME_T=$ac_cv_sizeof_time_t
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -Wno-frame-address" >&5
+printf %s "checking whether C compiler accepts -Wno-frame-address... " >&6; }
+if test ${ax_cv_check_cflags__Werror__Wno_frame_address+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS -Werror -Wno-frame-address"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  ax_cv_check_cflags__Werror__Wno_frame_address=yes
+else $as_nop
+  ax_cv_check_cflags__Werror__Wno_frame_address=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags__Werror__Wno_frame_address" >&5
+printf "%s\n" "$ax_cv_check_cflags__Werror__Wno_frame_address" >&6; }
+if test "x$ax_cv_check_cflags__Werror__Wno_frame_address" = xyes
+then :
+  CFLAGS="${CFLAGS} -Wno-frame-address"
+else $as_nop
+  :
+fi
+
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether '$CC' supports -Wincompatible-pointer-types" >&5
 printf %s "checking whether '$CC' supports -Wincompatible-pointer-types... " >&6; }
