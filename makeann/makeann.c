@@ -107,8 +107,8 @@ int main(int argc, char **argv)
     uint8_t lawbuf[160];
     int16_t slbuf[160];
     int i, j, k, rsize, wsize, loop, limit, rlimit, ch;
-    int vad_enable;
 #ifdef ENABLE_G729
+    int vad_enable = 0;
     G729_ECTX *ctx_g729;
 #endif
 #ifdef ENABLE_GSM
@@ -128,7 +128,6 @@ int main(int argc, char **argv)
 
     loop = 0;
     limit = -1;
-    vad_enable = 0;
     while ((ch = getopt(argc, argv, "l:Lv")) != -1)
         switch (ch) {
         case 'l':
@@ -141,11 +140,13 @@ int main(int argc, char **argv)
             loop = 1;
             break;
 
+#ifdef ENABLE_G729
         case 'v':
             vad_enable = 1;
             warnx("VAD enable (-v) is for debugging purposes only, "
               "produced stream may not play correctly");
             break;
+#endif
 
         case '?':
         default:
