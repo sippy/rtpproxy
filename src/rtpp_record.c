@@ -516,11 +516,10 @@ prepare_pkt_hdr_pcap(const struct prepare_pkt_hdr_args *phap)
         rtpp_ip_chksum_pad_v4();
         rtpp_ip_chksum_update(&(udp->uh_ulen), sizeof(udp->uh_ulen));
     } else {
-        uint32_t ulen32;
+        uint32_t ulen32 = htonl(sizeof(*udp) + phap->packet->size);
 
         rtpp_ip_chksum_update(&ipp.v6->ip6_src, sizeof(ipp.v6->ip6_src));
         rtpp_ip_chksum_update(&ipp.v6->ip6_dst, sizeof(ipp.v6->ip6_dst));
-        ulen32 = htonl(sizeof(*udp) + phap->packet->size);
         rtpp_ip_chksum_update(&ulen32, sizeof(ulen32));
         rtpp_ip_chksum_pad_v6();
     }
