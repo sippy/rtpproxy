@@ -34,15 +34,15 @@ jobs:
         os: [ubuntu-20.04]
         compiler: ['gcc', 'clang', 'gcc-9', 'gcc-10', 'clang-9', 'clang-10']
         include:
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             compiler: 'gcc-i386-cross'
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             compiler: 'clang-i386-cross'
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             compiler: 'gcc-mips64-cross'
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             compiler: 'gcc-arm32-cross'
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             compiler: 'gcc-arm64-cross'
           - os: ubuntu-22.04
             compiler: 'gcc'
@@ -70,26 +70,35 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Sanitize list of Ubuntu mirrors
-        run: scripts/ft-apt-spy2-check-and-fix.sh
-        if: ${{ matrix.os != 'ubuntu-18.04' }}
+      - name: Start Docker container
+        if: endsWith(matrix.compiler, '-cross')
+        run: sh -x scripts/build/start_container.sh
 
-      - name: Install apt-get updates
-        run: scripts/ft-apt-get-update.sh
+#      - name: Sanitize list of Ubuntu mirrors
+#        if: endsWith(matrix.compiler, '-cross') == 0
+#        run: scripts/ft-apt-spy2-check-and-fix.sh
 
       - name: Workaround for tar not being able to access /var/cache/apt/archives
+        if: endsWith(matrix.compiler, '-cross') == 0
         run: |
           sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
           sudo chmod u+s "$(command -v tar)"
 
       # Cache the apt-get packages
       - name: Cache apt-get packages
+        if: endsWith(matrix.compiler, '-cross') == 0
         uses: actions/cache@v3
         with:
           path: /var/cache/apt/archives
-          key: depsbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get-${{ hashFiles('**/scripts/build/install_depends.sh') }}
+          key: depsbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get-${{ github.run_id }}
+          restore-keys: |
+            depsbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+
+      - name: Install apt-get updates
+        run: scripts/ft-apt-get-update.sh
 
       - name: Set up Python
+        if: endsWith(matrix.compiler, '-cross') == 0
         uses: actions/setup-python@v3
         with:
           python-version: 3.9

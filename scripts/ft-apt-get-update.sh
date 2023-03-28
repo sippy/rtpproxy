@@ -3,4 +3,8 @@
 set -e
 set -x
 
-sudo -H DEBIAN_FRONTEND=noninteractive apt-get update --fix-missing
+. $(dirname $0)/build/dockerize.sub
+. $(dirname $0)/build/build.conf.sub
+
+${SUDO} apt-get update -y --fix-missing
+${SUDO} apt-get upgrade -y

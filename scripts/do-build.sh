@@ -3,8 +3,9 @@
 set -e
 
 BASEDIR="`dirname "${0}"`/.."
-. "${BASEDIR}/scripts/functions.sub"
+. "${BASEDIR}/scripts/build/dockerize.sub"
 . "${BASEDIR}/scripts/build/build.conf.sub"
+. "${BASEDIR}/scripts/functions.sub"
 
 TTYPE="${1}"
 BCG729_VER=1.1.1
@@ -20,13 +21,21 @@ automake --version
 autoconf --version
 autoreconf --version
 
-sudo iptables -w -L OUTPUT
-sudo iptables -w -L INPUT
-sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
+if [ "${TTYPE}" != "depsbuild" -a "${TTYPE}" != "cleanbuild" ]
+then
+  ${SUDO} iptables -w -L OUTPUT
+  ${SUDO} iptables -w -L INPUT
+  ${SUDO} sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
+fi
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
 
 ALLCLEAN_TGT="all clean distclean"
+
+if [ ! -z "${CC_EXTRA_OPTS}" ]
+then
+  export CC="${CC} ${CC_EXTRA_OPTS}"
+fi
 
 if [ "${TTYPE}" = "cleanbuild" ]
 then
@@ -46,28 +55,28 @@ perl -pi -e 's|bcg729.spec||g' configure.ac
 ./autogen.sh
 ./configure
 make
-sudo make install
+${SUDO} make install
 cd ..
 git clone https://github.com/sippy/libg722 libg722
 cd libg722
 make
-sudo make install
+${SUDO} make install
 cd ..
 git clone https://github.com/cisco/libsrtp.git
 cd libsrtp
 ./configure
 make
-sudo make install
+${SUDO} make install
 cd ..
 wget http://www.mega-nerd.com/libsndfile/files/libsndfile-${SNDFILE_VER}.tar.gz
 ${TAR_CMD} xfz libsndfile-${SNDFILE_VER}.tar.gz
 cd libsndfile-${SNDFILE_VER}
 ./configure
 make
-sudo make install
+${SUDO} make install
 cd ../..
 
-sudo ldconfig
+${SUDO} ldconfig
 
 autoreconf --force --install --verbose
 
@@ -109,17 +118,17 @@ git clone --branch ${ELP_BRANCH} https://github.com/sobomax/libelperiodic.git
 cd libelperiodic
 ./configure --without-python
 make all
-sudo make install
+${SUDO} make install
 cd ../..
 
-sudo ldconfig
+${SUDO} ldconfig
 
 ${APT_GET} install -y libpcap-dev cmake
 git clone -b master https://github.com/sippy/udpreplay.git dist/udpreplay
 mkdir dist/udpreplay/build
 cmake -Bdist/udpreplay/build -Hdist/udpreplay
 make -C dist/udpreplay/build all
-sudo make -C dist/udpreplay/build install
+${SUDO} make -C dist/udpreplay/build install
 
 ${APT_GET} install -y tcpdump curl gdb tcpreplay
 tcpdump --version || true
@@ -132,4 +141,4 @@ then
   wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
 fi
 ${TAR_CMD} -C dist -xvf dist/ffmpeg.tar.xz
-sudo cp dist/ffmpeg-*-*-static/ffmpeg /usr/bin
+${SUDO} cp dist/ffmpeg-*-*-static/ffmpeg /usr/bin

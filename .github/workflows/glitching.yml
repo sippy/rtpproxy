@@ -60,11 +60,8 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Sanitize list of Ubuntu mirrors
-        run: scripts/ft-apt-spy2-check-and-fix.sh
-
-      - name: Install apt-get updates
-        run: scripts/ft-apt-get-update.sh
+#      - name: Sanitize list of Ubuntu mirrors
+#        run: scripts/ft-apt-spy2-check-and-fix.sh
 
       - name: Get Date
         id: get-date
@@ -88,18 +85,23 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /var/cache/apt/archives
-          key: glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get-${{ hashFiles('**/scripts/build/install_depends.sh') }}
+          key: glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get-${{ github.run_id }}
+          restore-keys: |
+            glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+
+      - name: Install apt-get updates
+        run: scripts/ft-apt-get-update.sh
 
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: 3.9
 
-      - name: before_install
-        run: sh -x scripts/ft-before_install.sh
-
       - name: install_depends
         run: sh -x scripts/build/install_depends.sh
+
+      - name: before_install
+        run: sh -x scripts/ft-before_install.sh
 
       - name: build
         run: sh -x ./scripts/do-build.sh glitching

@@ -1,0 +1,6 @@
+DKR_CID_FILE="/tmp/docker_rtpproxy.cid"
+
+if [ -e "${DKR_CID_FILE}" ]
+then
+  exec docker exec -w `pwd` --env COMPILER --env BUILD_OS `cat "${DKR_CID_FILE}"` sh -x "${0}" "${@}"
+fi

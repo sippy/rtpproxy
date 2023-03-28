@@ -6,13 +6,36 @@ enable_ubuntu_toolchain_test() {
 setup_qemu() {
 	ARCH1="${1}"
 	ARCH2="${2}"
-	sudo mkdir "/usr/${ARCH1}-linux-${ARCH2}/etc"
-	sudo touch "/usr/${ARCH1}-linux-${ARCH2}/etc/ld.so.cache"
-	sudo mkdir "/etc/qemu-binfmt"
-	sudo ln -sf "/usr/${ARCH1}-linux-${ARCH2}" "/etc/qemu-binfmt/${ARCH1}"
+	${SUDO} mkdir "/usr/${ARCH1}-linux-${ARCH2}/etc"
+	${SUDO} touch "/usr/${ARCH1}-linux-${ARCH2}/etc/ld.so.cache"
+	${SUDO} mkdir "/etc/qemu-binfmt"
+	${SUDO} ln -sf "/usr/${ARCH1}-linux-${ARCH2}" "/etc/qemu-binfmt/${ARCH1}"
+}
+
+exclude_pkgs() {
+	local _PKGS=""
+	for pkg in ${PKGS}
+	do
+		if echo "${pkg}" | grep -q -w "${1}"
+		then
+			continue
+		fi
+		_PKGS="${_PKGS} ${pkg}"
+	done
+	echo "${_PKGS}"
+}
+
+enable_arch() {
+        ${SUDO} dpkg --add-architecture ${1}
+        ${SUDO} apt-get update -y
 }
 
 COMPILER_VER=`echo "${COMPILER}" | sed -e 's|[a-z]*-||'`
+
+if [ "`id -u`" -ne 0 ]
+then
+	SUDO="sudo"
+fi
 
 case "${COMPILER}" in
 gcc)
@@ -21,43 +44,71 @@ gcc)
 	;;
 gcc-i386-cross)
 	export CC="gcc"
-	CC_EXTRA_OPTS="-Werror -m32"
-	MAKE_TGT="opensips"
-	PRE_INSTALL_CMD="sudo dpkg --add-architecture i386"
-	PKGS="${PKGS} gcc g++ libc6-dev-i386 libstdc++6:i386 lib32gcc-7-dev"
+	CC_EXTRA_OPTS="-m32"
+	DOCKR_BASE="ubuntu:18.04"
+	DOCKR_PLATFORM="x86_64"
+	export BUILD_OS="ubuntu-18.04"
+	PRE_INSTALL_CMD="enable_arch i386"
+	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc g++ libc6-dev:i386 libstdc++6:i386 lib32gcc-7-dev"
 	;;
 gcc-mips64-cross)
-	MAKE_TGT="opensips"
+	DOCKR_BASE="ubuntu:18.04"
+	DOCKR_PLATFORM="x86_64"
+	export BUILD_OS="ubuntu-18.04"
 	export CC="mips64-linux-gnuabi64-gcc"
 	export AR="mips64-linux-gnuabi64-ar"
 	export RANLIB="mips64-linux-gnuabi64-ranlib"
 	POST_INSTALL_CMD="setup_qemu mips64 gnuabi64"
-	PKGS="${PKGS} gcc-mips64-linux-gnuabi64 libc-dev-mips64-cross qemu-user-static"
+	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc-mips64-linux-gnuabi64 libc-dev-mips64-cross qemu-user-static"
 	;;
 gcc-arm32-cross)
-	MAKE_TGT="opensips"
 	export CC="arm-linux-gnueabihf-gcc"
 	export AR="arm-linux-gnueabihf-ar"
 	export RANLIB="arm-linux-gnueabihf-ranlib"
 	POST_INSTALL_CMD="setup_qemu arm gnueabihf"
-	PKGS="${PKGS} gcc-arm-linux-gnueabihf libc-dev-armhf-cross qemu-user-static"
+	export BUILD_OS="ubuntu-18.04"
+	DOCKR_BASE="ubuntu:18.04"
+	DOCKR_PLATFORM="x86_64"
+	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc-arm-linux-gnueabihf libc-dev-armhf-cross qemu-user-static"
 	;;
 gcc-arm64-cross)
-	MAKE_TGT="opensips"
 	export CC="aarch64-linux-gnu-gcc"
 	export AR="aarch64-linux-gnu-ar"
 	export RANLIB="aarch64-linux-gnu-ranlib"
 	POST_INSTALL_CMD="setup_qemu aarch64 gnu"
-	PKGS="${PKGS} gcc-aarch64-linux-gnu libc-dev-arm64-cross qemu-user-static"
+	export BUILD_OS="ubuntu-18.04"
+	DOCKR_BASE="ubuntu:18.04"
+	DOCKR_PLATFORM="x86_64"
+	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc-aarch64-linux-gnu libc-dev-arm64-cross qemu-user-static"
 	;;
-gcc-*)
-        export CC="${COMPILER}"
-        export AR="gcc-ar-${COMPILER_VER}"
-        export RANLIB="gcc-ranlib-${COMPILER_VER}"
-        export GCOV_CMD="gcov-${COMPILER_VER}"
-        PRE_INSTALL_CMD="enable_ubuntu_toolchain_test"
-        PKGS="${PKGS} gcc-${COMPILER_VER} g++-${COMPILER_VER}"
+gcc-arm32-qemu-cross)
+	export CC="/usr/lib/ccache/gcc"
+	export CCACHE_DIR="`pwd`/ccache"
+	DOCKR_BASE="ubuntu"
+	DOCKR_PLATFORM="arm/v7"
+	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc g++ ccache"
+	;;
+clang-arm32-qemu-cross)
+	export CC="/usr/lib/ccache/clang"
+	export CCACHE_DIR="`pwd`/ccache"
+	DOCKR_BASE="ubuntu"
+	DOCKR_PLATFORM="arm/v7"
+	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 clang llvm-dev ccache"
         ;;
+gcc-arm64-qemu-cross)
+	export CC="/usr/lib/ccache/gcc"
+	export CCACHE_DIR="`pwd`/ccache"
+	DOCKR_BASE="ubuntu"
+	DOCKR_PLATFORM="arm64/v8"
+	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc g++ ccache"
+	;;
+clang-arm64-qemu-cross)
+	export CC="/usr/lib/ccache/clang"
+	export CCACHE_DIR="`pwd`/ccache"
+	DOCKR_BASE="ubuntu"
+	DOCKR_PLATFORM="arm64/v8"
+	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 clang llvm-dev ccache"
+	;;
 clang)
 	export CC="${COMPILER}"
 	export AR="llvm-ar"
@@ -67,10 +118,20 @@ clang)
 	;;
 clang-i386-cross)
 	export CC="clang"
-	CC_EXTRA_OPTS="-Werror -m32"
-	MAKE_TGT="opensips"
-	PRE_INSTALL_CMD="sudo dpkg --add-architecture i386"
-	PKGS="${PKGS} clang llvm-dev libc6-dev-i386 libstdc++6:i386 lib32gcc-7-dev"
+	CC_EXTRA_OPTS="-m32"
+	DOCKR_BASE="ubuntu:18.04"
+	DOCKR_PLATFORM="x86_64"
+	export BUILD_OS="ubuntu-18.04"
+	PRE_INSTALL_CMD="enable_arch i386"
+	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 clang llvm-dev libc6-dev:i386 libstdc++6:i386 lib32gcc-7-dev"
+	;;
+gcc-*)
+	export CC="${COMPILER}"
+	export AR="gcc-ar-${COMPILER_VER}"
+	export RANLIB="gcc-ranlib-${COMPILER_VER}"
+	export GCOV_CMD="gcov-${COMPILER_VER}"
+	PRE_INSTALL_CMD="enable_ubuntu_toolchain_test"
+	PKGS="${PKGS} gcc-${COMPILER_VER} g++-${COMPILER_VER}"
 	;;
 clang-*)
 	export CC="${COMPILER}"
