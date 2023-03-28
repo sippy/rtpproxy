@@ -326,6 +326,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             c = t[len];
             t[len] = '\0';
             struct sockaddr_storage local_addr;
+            int ai_flags = cfsp->no_resolve ? AI_NUMERICHOST : AI_PASSIVE;
             n = resolve(sstosa(&local_addr), tpf, t, SERVICE, AI_PASSIVE);
             if (n != 0) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
