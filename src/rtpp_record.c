@@ -564,7 +564,6 @@ rtpp_record_write(struct rtpp_record *self, const struct pkt_proc_ctx *pktxp)
     struct sockaddr_storage daddr;
     struct rtpp_record_channel *rrc;
     struct rtpp_netaddr *rem_addr;
-    size_t dalen;
     struct rtp_packet *packet = pktxp->pktp;
     struct rtpp_stream *stp = pktxp->strmp_out;
 
@@ -577,7 +576,7 @@ rtpp_record_write(struct rtpp_record *self, const struct pkt_proc_ctx *pktxp)
     if (rem_addr == NULL) {
         return;
     }
-    dalen = CALL_SMETHOD(rem_addr, get, sstosa(&daddr), sizeof(daddr));
+    CALL_SMETHOD(rem_addr, get, sstosa(&daddr), sizeof(daddr));
     RTPP_OBJ_DECREF(rem_addr);
 
     if (packet->rtime.wall == -1) {
