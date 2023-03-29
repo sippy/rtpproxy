@@ -43,6 +43,7 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_wi.h"
 #include "rtpp_debug.h"
+#include "rtpp_time.h"
 
 #define RTPQ_DEBUG 0
 
@@ -257,31 +258,43 @@ rtpp_queue_init(unsigned int cb_capacity, const char *fmt, ...)
     char *name;
     va_list ap;
     int eval;
+    pthread_condattr_t cond_attr;
 
     cb_buflen = cb_capacity + 1;
     queue = rtpp_zmalloc(sizeof(*queue) + (sizeof(queue->circb.buffer[0]) * cb_buflen));
     if (queue == NULL)
         goto e0;
-    if ((eval = pthread_cond_init(&queue->cond, NULL)) != 0) {
+
+    /* Set the clock type for the condition variable to CLOCK_MONOTONIC */
+    if (pthread_condattr_init(&cond_attr) != 0) {
         goto e1;
     }
-    if (pthread_mutex_init(&queue->mutex, NULL) != 0) {
+    if (pthread_condattr_setclock(&cond_attr, CLOCK_MONOTONIC) != 0) {
         goto e2;
+    }
+    if ((eval = pthread_cond_init(&queue->cond, &cond_attr)) != 0) {
+        goto e2;
+    }
+    if (pthread_mutex_init(&queue->mutex, NULL) != 0) {
+        goto e3;
     }
     va_start(ap, fmt);
     vasprintf(&name, fmt, ap);
     va_end(ap);
     if (name == NULL) {
-        goto e3;
+        goto e4;
     }
     queue->qlen = 1;
     queue->name = name;
     queue->circb.buflen = cb_buflen;
+    pthread_condattr_destroy(&cond_attr);
     return (queue);
-e3:
+e4:
     pthread_mutex_destroy(&queue->mutex);
-e2:
+e3:
     pthread_cond_destroy(&queue->cond);
+e2:
+    pthread_condattr_destroy(&cond_attr);
 e1:
     free(queue);
 e0:
@@ -365,6 +378,47 @@ rtpp_queue_pump(struct rtpp_queue *queue)
     }
 
     pthread_mutex_unlock(&queue->mutex);
+}
+
+void
+rtpp_queue_wakeup(struct rtpp_queue *queue)
+{
+
+    pthread_mutex_lock(&queue->mutex);
+    /* notify worker thread */
+    pthread_cond_signal(&queue->cond);
+    pthread_mutex_unlock(&queue->mutex);
+}
+
+struct rtpp_wi *
+rtpp_queue_get_item_by(struct rtpp_queue *queue, struct timespec *deadline, int *rval)
+{
+    struct rtpp_wi *wi;
+
+    pthread_mutex_lock(&queue->mutex);
+    while (rtpp_queue_getclen(queue) == 0) {
+        int rc = pthread_cond_timedwait(&queue->cond, &queue->mutex, deadline);
+        if (rval != NULL)
+            *rval = rc;
+        pthread_mutex_unlock(&queue->mutex);
+        return (NULL);
+    }
+#if RTPQ_DEBUG
+    assert(rtpp_queue_getclen(queue) > 0);
+#endif
+    if (circ_buf_pop(&queue->circb, &wi) == 0) {
+        pthread_mutex_unlock(&queue->mutex);
+        return (wi);
+    }
+    wi = queue->head;
+#if RTPQ_DEBUG
+    assert(rtpp_queue_getclen(queue) > 0);
+#endif
+    RTPPQ_REMOVE_HEAD(queue);
+    pthread_mutex_unlock(&queue->mutex);
+    wi->next = NULL;
+
+    return (wi);
 }
 
 struct rtpp_wi *
