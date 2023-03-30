@@ -220,7 +220,7 @@ am_extractaudio_debug_OBJECTS = $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) $(am__objects_7) $(am__objects_8)
 extractaudio_debug_OBJECTS = $(am_extractaudio_debug_OBJECTS)
 am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
-am__DEPENDENCIES_3 = $(top_srcdir)/libexecinfo/libexecinfo.a
+am__DEPENDENCIES_3 = $(top_srcdir)/libexecinfo/libexecinfo.la
 extractaudio_debug_DEPENDENCIES = $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_3)
 extractaudio_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -389,6 +389,7 @@ LIBS_SIPLOG = @LIBS_SIPLOG@
 LIBS_SIPLOG_DBG = @LIBS_SIPLOG_DBG@
 LIBS_SNDFILE = @LIBS_SNDFILE@
 LIBS_SRTP = @LIBS_SRTP@
+LIBS_UNWIND = @LIBS_UNWIND@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
@@ -492,7 +493,8 @@ SRCS_AUTOGEN_DEBUG = $(rtpp_netaddr_AUTOSRCS) \
 	$(rtpp_hash_table_AUTOSRCS) $(rtpp_weakref_AUTOSRCS) \
 	$(rtpp_analyzer_AUTOSRCS) $(rtpp_pcnt_strm_AUTOSRCS) \
 	$(rtpp_ttl_AUTOSRCS) $(rtpp_pipe_AUTOSRCS) \
-	$(rtpp_ringbuf_AUTOSRCS) $(rtpp_sessinfo_AUTOSRCS)
+	$(rtpp_ringbuf_AUTOSRCS) $(rtpp_sessinfo_AUTOSRCS) \
+	$(rtpp_rw_lock_AUTOSRCS) $(rtpp_proc_servers_AUTOSRCS)
 rtpp_command_rcache_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.c
 rtpp_log_obj_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.c
 rtpp_port_table_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_port_table_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_port_table_fin.c
@@ -517,6 +519,8 @@ rtpp_ttl_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_ttl_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_
 rtpp_pipe_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_pipe_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_pipe_fin.c
 rtpp_ringbuf_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.c
 rtpp_sessinfo_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_sessinfo_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_sessinfo_fin.c
+rtpp_rw_lock_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_rw_lock_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_rw_lock_fin.c
+rtpp_proc_servers_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.c
 RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
   -I$(top_srcdir) -I$(RTPP_AUTOSRC_DIR)
 
@@ -529,8 +533,8 @@ RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_me
   $(top_srcdir)/src/rtpp_mallocs.c $(top_srcdir)/src/rtpp_mallocs.h \
   $(top_srcdir)/src/rtpp_stacktrace.c $(top_srcdir)/src/rtpp_stacktrace.h
 
-RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
-RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
+@ENABLE_LIBUNWIND_FALSE@RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
 MAINSRCDIR = $(top_srcdir)/src
 DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \

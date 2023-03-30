@@ -18,6 +18,9 @@
 /* Define if you have libgsm library installed */
 #undef ENABLE_GSM
 
+/* Define if you have libunwind library installed */
+#undef ENABLE_LIBUNWIND
+
 /* Define to enable dymanic modules */
 #undef ENABLE_MODULE_IF
 

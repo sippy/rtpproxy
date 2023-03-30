@@ -11,8 +11,16 @@ static void hash_table_append_refcnt_fin(void *pub) {
     fprintf(stderr, "Method rtpp_hash_table@%p::append_refcnt (hash_table_append_refcnt) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void hash_table_append_str_refcnt_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_hash_table@%p::append_str_refcnt (hash_table_append_str_refcnt) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void hash_table_find_fin(void *pub) {
     fprintf(stderr, "Method rtpp_hash_table@%p::find (hash_table_find) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void hash_table_find_str_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_hash_table@%p::find_str (hash_table_find_str) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void hash_table_foreach_fin(void *pub) {
@@ -21,6 +29,10 @@ static void hash_table_foreach_fin(void *pub) {
 }
 static void hash_table_foreach_key_fin(void *pub) {
     fprintf(stderr, "Method rtpp_hash_table@%p::foreach_key (hash_table_foreach_key) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void hash_table_foreach_key_str_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_hash_table@%p::foreach_key_str (hash_table_foreach_key_str) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void hash_table_get_length_fin(void *pub) {
@@ -39,25 +51,43 @@ static void hash_table_remove_by_key_fin(void *pub) {
     fprintf(stderr, "Method rtpp_hash_table@%p::remove_by_key (hash_table_remove_by_key) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void hash_table_remove_str_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_hash_table@%p::remove_str (hash_table_remove_str) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void hash_table_transfer_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_hash_table@%p::transfer (hash_table_transfer) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static const struct rtpp_hash_table_smethods rtpp_hash_table_smethods_fin = {
     .append_refcnt = (hash_table_append_refcnt_t)&hash_table_append_refcnt_fin,
+    .append_str_refcnt = (hash_table_append_str_refcnt_t)&hash_table_append_str_refcnt_fin,
     .find = (hash_table_find_t)&hash_table_find_fin,
+    .find_str = (hash_table_find_str_t)&hash_table_find_str_fin,
     .foreach = (hash_table_foreach_t)&hash_table_foreach_fin,
     .foreach_key = (hash_table_foreach_key_t)&hash_table_foreach_key_fin,
+    .foreach_key_str = (hash_table_foreach_key_str_t)&hash_table_foreach_key_str_fin,
     .get_length = (hash_table_get_length_t)&hash_table_get_length_fin,
     .purge = (hash_table_purge_t)&hash_table_purge_fin,
     .remove = (hash_table_remove_t)&hash_table_remove_fin,
     .remove_by_key = (hash_table_remove_by_key_t)&hash_table_remove_by_key_fin,
+    .remove_str = (hash_table_remove_str_t)&hash_table_remove_str_fin,
+    .transfer = (hash_table_transfer_t)&hash_table_transfer_fin,
 };
 void rtpp_hash_table_fin(struct rtpp_hash_table *pub) {
     RTPP_DBG_ASSERT(pub->smethods->append_refcnt != (hash_table_append_refcnt_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->append_str_refcnt != (hash_table_append_str_refcnt_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->find != (hash_table_find_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->find_str != (hash_table_find_str_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->foreach != (hash_table_foreach_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->foreach_key != (hash_table_foreach_key_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->foreach_key_str != (hash_table_foreach_key_str_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_length != (hash_table_get_length_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->purge != (hash_table_purge_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->remove != (hash_table_remove_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->remove_by_key != (hash_table_remove_by_key_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->remove_str != (hash_table_remove_str_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->transfer != (hash_table_transfer_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_hash_table_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_hash_table_smethods_fin;
@@ -85,27 +115,37 @@ rtpp_hash_table_fintest()
     assert(tp->pub.rcnt != NULL);
     static const struct rtpp_hash_table_smethods dummy = {
         .append_refcnt = (hash_table_append_refcnt_t)((void *)0x1),
+        .append_str_refcnt = (hash_table_append_str_refcnt_t)((void *)0x1),
         .find = (hash_table_find_t)((void *)0x1),
+        .find_str = (hash_table_find_str_t)((void *)0x1),
         .foreach = (hash_table_foreach_t)((void *)0x1),
         .foreach_key = (hash_table_foreach_key_t)((void *)0x1),
+        .foreach_key_str = (hash_table_foreach_key_str_t)((void *)0x1),
         .get_length = (hash_table_get_length_t)((void *)0x1),
         .purge = (hash_table_purge_t)((void *)0x1),
         .remove = (hash_table_remove_t)((void *)0x1),
         .remove_by_key = (hash_table_remove_by_key_t)((void *)0x1),
+        .remove_str = (hash_table_remove_str_t)((void *)0x1),
+        .transfer = (hash_table_transfer_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_hash_table_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, append_refcnt);
+    CALL_TFIN(&tp->pub, append_str_refcnt);
     CALL_TFIN(&tp->pub, find);
+    CALL_TFIN(&tp->pub, find_str);
     CALL_TFIN(&tp->pub, foreach);
     CALL_TFIN(&tp->pub, foreach_key);
+    CALL_TFIN(&tp->pub, foreach_key_str);
     CALL_TFIN(&tp->pub, get_length);
     CALL_TFIN(&tp->pub, purge);
     CALL_TFIN(&tp->pub, remove);
     CALL_TFIN(&tp->pub, remove_by_key);
-    assert((_naborts - naborts_s) == 8);
+    CALL_TFIN(&tp->pub, remove_str);
+    CALL_TFIN(&tp->pub, transfer);
+    assert((_naborts - naborts_s) == 13);
     free(tp);
 }
 const static void *_rtpp_hash_table_ftp = (void *)&rtpp_hash_table_fintest;

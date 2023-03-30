@@ -665,6 +665,7 @@ am__EXEEXT_TRUE
 LTLIBOBJS
 OPT_CFLAGS
 SIZEOF_TIME_T
+LIBS_UNWIND
 LIBS_ELPERIODIC
 LIBS_SIPLOG_DBG
 LIBS_SIPLOG
@@ -676,6 +677,8 @@ LIBS_GSM
 LIBS_DL
 AM_CFLAGS
 subdirs
+ENABLE_LIBUNWIND_FALSE
+ENABLE_LIBUNWIND_TRUE
 ENABLE_LIBRTPPROXY_FALSE
 ENABLE_LIBRTPPROXY_TRUE
 ENABLE_LTO_FALSE
@@ -13707,6 +13710,60 @@ fi
 
 fi
 
+ac_fn_c_check_header_compile "$LINENO" "libunwind.h" "ac_cv_header_libunwind_h" "$ac_includes_default"
+if test "x$ac_cv_header_libunwind_h" = xyes
+then :
+  found_libunwind=yes
+fi
+
+if test "$found_libunwind" = yes
+then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for unw_backtrace in -lunwind" >&5
+printf %s "checking for unw_backtrace in -lunwind... " >&6; }
+if test ${ac_cv_lib_unwind_unw_backtrace+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lunwind  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char unw_backtrace ();
+int
+main (void)
+{
+return unw_backtrace ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_unwind_unw_backtrace=yes
+else $as_nop
+  ac_cv_lib_unwind_unw_backtrace=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_unwind_unw_backtrace" >&5
+printf "%s\n" "$ac_cv_lib_unwind_unw_backtrace" >&6; }
+if test "x$ac_cv_lib_unwind_unw_backtrace" = xyes
+then :
+  LIBS_UNWIND="-lunwind"
+   ENABLE_LIBUNWIND=1
+
+printf "%s\n" "#define ENABLE_LIBUNWIND 1" >>confdefs.h
+
+fi
+
+fi
+
 ac_fn_c_check_header_compile "$LINENO" "stdatomic.h" "ac_cv_header_stdatomic_h" "$ac_includes_default"
 if test "x$ac_cv_header_stdatomic_h" = xyes
 then :
@@ -14898,8 +14955,16 @@ else
   ENABLE_LIBRTPPROXY_FALSE=
 fi
 
+ if test "${ENABLE_LIBUNWIND}" = 1 ; then
+  ENABLE_LIBUNWIND_TRUE=
+  ENABLE_LIBUNWIND_FALSE='#'
+else
+  ENABLE_LIBUNWIND_TRUE='#'
+  ENABLE_LIBUNWIND_FALSE=
+fi
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile modules/badmod/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
+
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile modules/badmod/Makefile libxxHash/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
 
 
 
@@ -14908,6 +14973,7 @@ if test -z "$BUILD_ELPERIODIC_TRUE"; then :
   subdirs="$subdirs libelperiodic"
 
 fi
+
 
 
 
@@ -15112,6 +15178,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${ENABLE_LIBRTPPROXY_TRUE}" && test -z "${ENABLE_LIBRTPPROXY_FALSE}"; then
   as_fn_error $? "conditional \"ENABLE_LIBRTPPROXY\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${ENABLE_LIBUNWIND_TRUE}" && test -z "${ENABLE_LIBUNWIND_FALSE}"; then
+  as_fn_error $? "conditional \"ENABLE_LIBUNWIND\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -15998,6 +16068,7 @@ do
     "modules/acct_rtcp_hep/Makefile") CONFIG_FILES="$CONFIG_FILES modules/acct_rtcp_hep/Makefile" ;;
     "modules/catch_dtmf/Makefile") CONFIG_FILES="$CONFIG_FILES modules/catch_dtmf/Makefile" ;;
     "modules/badmod/Makefile") CONFIG_FILES="$CONFIG_FILES modules/badmod/Makefile" ;;
+    "libxxHash/Makefile") CONFIG_FILES="$CONFIG_FILES libxxHash/Makefile" ;;
     "pertools/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/Makefile" ;;
     "pertools/udp_contention/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/udp_contention/Makefile" ;;
     "libucl/Makefile") CONFIG_FILES="$CONFIG_FILES libucl/Makefile" ;;

@@ -19,6 +19,10 @@ static void rtpp_wref_get_length_fin(void *pub) {
     fprintf(stderr, "Method rtpp_weakref@%p::get_length (rtpp_wref_get_length) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_wref_move_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::move (rtpp_wref_move) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_wref_purge_fin(void *pub) {
     fprintf(stderr, "Method rtpp_weakref@%p::purge (rtpp_wref_purge) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -43,6 +47,7 @@ static const struct rtpp_weakref_smethods rtpp_weakref_smethods_fin = {
     .foreach = (rtpp_wref_foreach_t)&rtpp_wref_foreach_fin,
     .get_by_idx = (rtpp_wref_get_by_idx_t)&rtpp_wref_get_by_idx_fin,
     .get_length = (rtpp_wref_get_length_t)&rtpp_wref_get_length_fin,
+    .move = (rtpp_wref_move_t)&rtpp_wref_move_fin,
     .purge = (rtpp_wref_purge_t)&rtpp_wref_purge_fin,
     .reg = (rtpp_wref_reg_t)&rtpp_wref_reg_fin,
     .set_on_first = (rtpp_wref_set_on_first_t)&rtpp_wref_set_on_first_fin,
@@ -53,6 +58,7 @@ void rtpp_weakref_fin(struct rtpp_weakref *pub) {
     RTPP_DBG_ASSERT(pub->smethods->foreach != (rtpp_wref_foreach_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_by_idx != (rtpp_wref_get_by_idx_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_length != (rtpp_wref_get_length_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->move != (rtpp_wref_move_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->purge != (rtpp_wref_purge_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->reg != (rtpp_wref_reg_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->set_on_first != (rtpp_wref_set_on_first_t)NULL);
@@ -87,6 +93,7 @@ rtpp_weakref_fintest()
         .foreach = (rtpp_wref_foreach_t)((void *)0x1),
         .get_by_idx = (rtpp_wref_get_by_idx_t)((void *)0x1),
         .get_length = (rtpp_wref_get_length_t)((void *)0x1),
+        .move = (rtpp_wref_move_t)((void *)0x1),
         .purge = (rtpp_wref_purge_t)((void *)0x1),
         .reg = (rtpp_wref_reg_t)((void *)0x1),
         .set_on_first = (rtpp_wref_set_on_first_t)((void *)0x1),
@@ -100,12 +107,13 @@ rtpp_weakref_fintest()
     CALL_TFIN(&tp->pub, foreach);
     CALL_TFIN(&tp->pub, get_by_idx);
     CALL_TFIN(&tp->pub, get_length);
+    CALL_TFIN(&tp->pub, move);
     CALL_TFIN(&tp->pub, purge);
     CALL_TFIN(&tp->pub, reg);
     CALL_TFIN(&tp->pub, set_on_first);
     CALL_TFIN(&tp->pub, set_on_last);
     CALL_TFIN(&tp->pub, unreg);
-    assert((_naborts - naborts_s) == 8);
+    assert((_naborts - naborts_s) == 9);
     free(tp);
 }
 const static void *_rtpp_weakref_ftp = (void *)&rtpp_weakref_fintest;

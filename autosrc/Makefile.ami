@@ -50,3 +50,7 @@ rtpp_ringbuf_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_ringbuf_fin.h $(RTPP_AUTOSRC_DI
 SRCS_AUTOGEN_DEBUG += $(rtpp_ringbuf_AUTOSRCS)
 rtpp_sessinfo_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_sessinfo_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_sessinfo_fin.c
 SRCS_AUTOGEN_DEBUG += $(rtpp_sessinfo_AUTOSRCS)
+rtpp_rw_lock_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_rw_lock_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_rw_lock_fin.c
+SRCS_AUTOGEN_DEBUG += $(rtpp_rw_lock_AUTOSRCS)
+rtpp_proc_servers_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.c
+SRCS_AUTOGEN_DEBUG += $(rtpp_proc_servers_AUTOSRCS)
