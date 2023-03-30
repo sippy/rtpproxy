@@ -36,7 +36,7 @@
 #include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_hash_table_fin.h"
-#include "rtpp_pearson.h"
+#include "rtpp_xxHash.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_mallocs.h"
 
@@ -62,7 +62,7 @@ struct rtpp_hash_table_entry {
 struct rtpp_hash_table_priv
 {
     struct rtpp_hash_table pub;
-    struct rtpp_pearson rp;
+    uint64_t seed;
     struct rtpp_hash_table_entry *hash_table[RTPP_HT_LEN];
     pthread_mutex_t hash_table_lock;
     int hte_num;
@@ -114,7 +114,7 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
 #if defined(RTPP_DEBUG)
     pub->smethods = rtpp_hash_table_smethods;
 #endif
-    rtpp_pearson_shuffle(&pvt->rp);
+    pvt->seed = ((uint64_t)random()) << 32 | (uint64_t)random();
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&hash_table_dtor,
       pvt);
     return (pub);
@@ -158,16 +158,16 @@ rtpp_ht_hashkey(struct rtpp_hash_table_priv *pvt, const void *key)
 
     switch (pvt->key_type) {
     case rtpp_ht_key_str_t:
-        return rtpp_pearson_hash8(&pvt->rp, key, NULL);
+        return XXH64(key, strlen(key), pvt->seed);
 
     case rtpp_ht_key_u16_t:
-        return rtpp_pearson_hash8b(&pvt->rp, key, sizeof(uint16_t));
+        return XXH64(key, sizeof(uint16_t), pvt->seed);
 
     case rtpp_ht_key_u32_t:
-        return rtpp_pearson_hash8b(&pvt->rp, key, sizeof(uint32_t));
+        return XXH64(key, sizeof(uint32_t), pvt->seed);
 
     case rtpp_ht_key_u64_t:
-        return rtpp_pearson_hash8b(&pvt->rp, key, sizeof(uint64_t));
+        return XXH64(key, sizeof(uint64_t), pvt->seed);
 
     default:
 	abort();
