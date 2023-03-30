@@ -18,7 +18,8 @@ if BUILD_DOCS
 SUBD_DOCS=	doc
 endif
 
-SUBDIRS=	libexecinfo libucl makeann $(SUBD_MOD) $(SUBD_ELP) src $(SUBD_UDCNT) tests \
+SUBDIRS=	libexecinfo libucl libxxHash makeann $(SUBD_MOD) \
+  $(SUBD_ELP) src $(SUBD_UDCNT) tests \
   $(SUBD_EAUD) ${SUBD_DOCS}
 
 dist_man_MANS=	rtpproxy.8
