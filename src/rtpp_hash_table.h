@@ -26,6 +26,8 @@
  *
  */
 
+#include "rtpp_str.h"
+
 struct rtpp_hash_table;
 struct rtpp_hash_table_entry;
 struct rtpp_refcnt;
@@ -39,13 +41,20 @@ struct rtpp_ht_opstats {
 
 DEFINE_METHOD(rtpp_hash_table, hash_table_append_refcnt, struct rtpp_hash_table_entry *,
   const void *, struct rtpp_refcnt *, struct rtpp_ht_opstats *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_append_str_refcnt, struct rtpp_hash_table_entry *,
+  const rtpp_str_t *, struct rtpp_refcnt *, struct rtpp_ht_opstats *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_remove, void, const void *key, struct rtpp_hash_table_entry *sp);
+DEFINE_METHOD(rtpp_hash_table, hash_table_remove_str, void,
+  const rtpp_str_t *key, struct rtpp_hash_table_entry *sp);
 DEFINE_METHOD(rtpp_hash_table, hash_table_remove_by_key, struct rtpp_refcnt *,
   const void *key, struct rtpp_ht_opstats *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_find, struct rtpp_refcnt *, const void *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_find_str, struct rtpp_refcnt *, const rtpp_str_t *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_foreach, void, rtpp_hash_table_match_t,
   void *, struct rtpp_ht_opstats *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_foreach_key, void, const void *, rtpp_hash_table_match_t, void *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_foreach_key_str, void, const rtpp_str_t *,
+  rtpp_hash_table_match_t, void *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_get_length, int);
 DEFINE_METHOD(rtpp_hash_table, hash_table_purge, int);
 
@@ -62,11 +71,15 @@ enum rtpp_ht_key_types {rtpp_ht_key_str_t = 0, rtpp_ht_key_u64_t,
 struct rtpp_hash_table_smethods
 {
     METHOD_ENTRY(hash_table_append_refcnt, append_refcnt);
+    METHOD_ENTRY(hash_table_append_str_refcnt, append_str_refcnt);
     METHOD_ENTRY(hash_table_remove, remove);
+    METHOD_ENTRY(hash_table_remove_str, remove_str);
     METHOD_ENTRY(hash_table_remove_by_key, remove_by_key);
     METHOD_ENTRY(hash_table_find, find);
+    METHOD_ENTRY(hash_table_find_str, find_str);
     METHOD_ENTRY(hash_table_foreach, foreach);
     METHOD_ENTRY(hash_table_foreach_key, foreach_key);
+    METHOD_ENTRY(hash_table_foreach_key_str, foreach_key_str);
     METHOD_ENTRY(hash_table_get_length, get_length);
     METHOD_ENTRY(hash_table_purge, purge);
 };
