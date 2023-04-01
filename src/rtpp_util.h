@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2023 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,7 @@
  *
  */
 
-#ifndef _RTPP_UTIL_H_
-#define _RTPP_UTIL_H_
+#pragma once
 
 #if !defined(PACKAGE_VERSION)
 # error "config.h" needs to be included
@@ -52,6 +51,7 @@ char *rtpp_strsep(char **, const char *);
 int rtpp_daemon_rel_parent(const struct rtpp_daemon_rope *);
 struct rtpp_daemon_rope rtpp_daemon(int, int);
 int url_unquote(unsigned char *, int);
+int url_unquote2(const char *, char *, int);
 int rtpp_get_sched_hz(void);
 long long rtpp_rlim_max(const struct rtpp_cfg *);
 #ifndef HAVE_STRLCPY
@@ -83,6 +83,4 @@ enum atoi_rval atoi_saferange(const char *, int *, int, int);
   warnx(format ": %s", ## args, strerror(errno))
 #define warnx(format, args...) \
   fprintf(stderr, format "\n", ## args)
-#endif
-
 #endif

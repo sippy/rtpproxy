@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2023 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -285,16 +285,18 @@ static int8_t hex2char[128] = {
 };
 
 int
-url_unquote(unsigned char *buf, int len)
+url_unquote2(const char *ibuf, char *obuf, int len)
 {
     int outlen;
-    uint8_t *cp, *ocp;
+    uint8_t *ocp = (uint8_t *)obuf;
+    const unsigned char *cp, *endp;
 
     outlen = len;
-    for (ocp = cp = buf; (cp - buf) < len; cp++, ocp++) {
+    endp = (const unsigned char *)ibuf + len;
+    for (cp = (const unsigned char *)ibuf; cp < endp; cp++, ocp++) {
         switch (cp[0]) {
         case '%':
-            if (cp - buf + 2 > len)
+            if (cp + 2 > endp)
                 return (-1);
             if (cp[1] > 127 || cp[2] > 127 ||
               hex2char[cp[1]] == -1 || hex2char[cp[2]] == -1)
@@ -315,6 +317,13 @@ url_unquote(unsigned char *buf, int len)
         }
     }
     return (outlen);
+}
+
+int
+url_unquote(unsigned char *buf, int len)
+{
+
+    return (url_unquote2((char *)buf, (char *)buf, len));
 }
 
 enum atoi_rval
