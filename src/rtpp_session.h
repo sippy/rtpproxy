@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef _RTPP_SESSION_H_
-#define _RTPP_SESSION_H_
+#pragma once
+#include "rtpp_str.h"
 
 struct rtpp_session;
 struct rtpp_socket;
@@ -37,9 +37,9 @@ struct rtpp_timestamp;
 struct rtpp_timeout_data;
 
 struct rtpp_session {
-    char *call_id;
-    char *tag;
-    char *tag_nomedianum;
+    const rtpp_str_t *call_id;
+    const rtpp_str_t *from_tag;
+    const rtpp_str_t *from_tag_nmn;
     struct rtpp_log *log;
     struct rtpp_pipe *rtp;
     struct rtpp_pipe *rtcp;
@@ -60,12 +60,10 @@ struct rtpp_session {
 
 struct rtpp_cfg;
 
-int compare_session_tags(const char *, const char *, unsigned *);
-int find_stream(const struct rtpp_cfg *, const char *, const char *,
-  const char *, struct rtpp_session **);
+int compare_session_tags(const rtpp_str_t *, const rtpp_str_t *, unsigned *);
+int find_stream(const struct rtpp_cfg *, const rtpp_str_t *, const rtpp_str_t *,
+  const rtpp_str_t *, struct rtpp_session **);
 
 struct rtpp_session *rtpp_session_ctor(const struct rtpp_cfg *,
   struct common_cmd_args *, const struct rtpp_timestamp *,
   const struct sockaddr **, int, int, struct rtpp_socket **);
-
-#endif

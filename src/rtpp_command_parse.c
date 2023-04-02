@@ -55,7 +55,7 @@ struct cmd_props {
     int has_subc;
     int fpos;
     int tpos;
-    char *cmods;
+    const char *cmods;
 };
 
 static int 
@@ -67,8 +67,8 @@ fill_cmd_props(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
     cpp->has_subc = 0;
     cpp->fpos = -1;
     cpp->tpos = -1;
-    cpp->cmods = &(cmd->args.v[0][1]);
-    switch (cmd->args.v[0][0]) {
+    cpp->cmods = &(cmd->args.v[0].s[1]);
+    switch (cmd->args.v[0].s[0]) {
     case 'u':
     case 'U':
         cmd->cca.op = UPDATE;
@@ -251,11 +251,11 @@ fill_cmd_props(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
 int
 rtpp_command_pre_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
-    struct cmd_props cprops;
+    struct cmd_props cprops = {};
 
     if (fill_cmd_props(cfsp, cmd, &cprops) != 0) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "unknown command \"%c\"",
-          cmd->args.v[0][0]);
+          cmd->args.v[0].s[0]);
         reply_error(cmd, ECODE_CMDUNKN);
         return (-1);
     }
@@ -277,8 +277,14 @@ rtpp_command_pre_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         reply_error(cmd, ECODE_PARSE_SUBC);
         return (-1);
     }
-    cmd->cca.call_id = cprops.has_call_id ? cmd->args.v[1] : NULL;
-    cmd->cca.from_tag = cprops.fpos > 0 ? cmd->args.v[cprops.fpos] : NULL;
-    cmd->cca.to_tag = cprops.tpos > 0 ? cmd->args.v[cprops.tpos] : NULL;
+    if (cprops.has_call_id) {
+        cmd->cca.call_id = rtpp_str_fix(&cmd->args.v[1]);
+    }
+    if (cprops.fpos > 0) {
+        cmd->cca.from_tag = rtpp_str_fix(&cmd->args.v[cprops.fpos]);
+    }
+    if (cprops.tpos > 0) {
+        cmd->cca.to_tag = rtpp_str_fix(&cmd->args.v[cprops.tpos]);
+    }
     return (0);
 }

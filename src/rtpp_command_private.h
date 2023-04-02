@@ -26,6 +26,8 @@
  *
  */
 
+#include "rtpp_str.h"
+
 #ifndef _RTPP_COMMAND_PRIVATE_H_
 #define _RTPP_COMMAND_PRIVATE_H_
 
@@ -57,9 +59,9 @@ struct common_cmd_args {
     enum rtpp_cmd_op op;
     const char *rname;
     const char *hint;
-    char *call_id;
-    char *from_tag;
-    char *to_tag;
+    const rtpp_str_t *call_id;
+    const rtpp_str_t *from_tag;
+    const rtpp_str_t *to_tag;
     union {
         struct ul_opts *ul;
         struct play_opts *play;

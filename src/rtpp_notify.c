@@ -77,7 +77,7 @@ struct rtpp_notify_priv {
 };
 
 static int rtpp_notify_schedule(struct rtpp_notify *,
-  struct rtpp_tnotify_target *, const char *, const char *);
+  struct rtpp_tnotify_target *, const rtpp_str_t *, const char *);
 static void rtpp_notify_dtor(struct rtpp_notify_priv *);
 static void do_notification(struct rtpp_notify_wi *, int);
 
@@ -165,7 +165,7 @@ rtpp_notify_dtor(struct rtpp_notify_priv *pvt)
 
 static int
 rtpp_notify_schedule(struct rtpp_notify *pub,
-  struct rtpp_tnotify_target *rttp, const char *notify_tag,
+  struct rtpp_tnotify_target *rttp, const rtpp_str_t *notify_tag,
   const char *notify_type)
 {
     struct rtpp_notify_wi *wi_data;
@@ -176,14 +176,14 @@ rtpp_notify_schedule(struct rtpp_notify *pub,
     PUB2PVT(pub, pvt);
 
     /* string, \0 and \n */
-    len = strlen(notify_tag) + 2;
+    len = notify_tag->len + 2;
 
     wi = rtpp_wi_malloc_udata((void **)&wi_data,
       sizeof(struct rtpp_notify_wi) + len);
     if (wi == NULL) {
         return (-1);
     }
-    memset(wi_data, '\0', sizeof(struct rtpp_notify_wi) + len);
+    memset(wi_data, '\0', sizeof(struct rtpp_notify_wi));
 
     wi_data->rttp = rttp;
     wi_data->len = len;
@@ -191,7 +191,8 @@ rtpp_notify_schedule(struct rtpp_notify *pub,
     wi_data->glog = pvt->glog;
     wi_data->ntype = notify_type;
 
-    len = snprintf(wi_data->notify_buf, len, "%s\n", notify_tag);
+    memcpy(wi_data->notify_buf, notify_tag->s, notify_tag->len);
+    wi_data->notify_buf[notify_tag->len] = '\n';
 
     rtpp_queue_put_item(wi, pvt->nqueue);
     return (0);

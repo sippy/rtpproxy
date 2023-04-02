@@ -36,37 +36,31 @@
 
 struct rtpp_timeout_data_priv {
    struct rtpp_timeout_data pub;
+   struct rtpp_str tag;
+   char tagdata[0];
 };
 
-static void
-rtpp_timeout_data_dtor(struct rtpp_timeout_data_priv *pvt)
-{
-
-    free((void *)pvt->pub.notify_tag);
-    free(pvt);
-}
-
 struct rtpp_timeout_data *
-rtpp_timeout_data_ctor(struct rtpp_tnotify_target *ttp, const char *tag)
+rtpp_timeout_data_ctor(struct rtpp_tnotify_target *ttp, const rtpp_str_t *tag)
 {
     struct rtpp_timeout_data_priv *pvt;
+    size_t allocsize;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_timeout_data_priv), PVT_RCOFFS(pvt));
+    allocsize = sizeof(struct rtpp_timeout_data_priv);
+    allocsize += tag->len + 1;
+    pvt = rtpp_rzmalloc(allocsize, PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->pub.notify_tag = strdup(tag);
-    if (pvt->pub.notify_tag == NULL) {
-        goto e1;
-    }
+    memcpy(pvt->tagdata, tag->s, tag->len);
+    pvt->tagdata[tag->len] = '\0';
+    pvt->tag.rw.s = pvt->tagdata;
+    pvt->tag.rw.len = tag->len;
     pvt->pub.notify_target = ttp;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timeout_data_dtor,
-      pvt);
+    pvt->pub.notify_tag = &pvt->tag.fx;
+    CALL_SMETHOD(pvt->pub.rcnt, use_stdfree, pvt);
     return ((&pvt->pub));
 
-e1:
-    RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }

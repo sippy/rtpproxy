@@ -45,8 +45,8 @@
 
 struct record_ematch_arg {
     int nrecorded;
-    const char *from_tag;
-    const char *to_tag;
+    const rtpp_str_t *from_tag;
+    const rtpp_str_t *to_tag;
     int record_single_file;
     const struct rtpp_cfg *cfsp;
 };
@@ -61,10 +61,10 @@ rtpp_cmd_record_ematch(void *dp, void *ap)
     spa = (struct rtpp_session *)dp;
     rep = (struct record_ematch_arg *)ap;
 
-    if (compare_session_tags(spa->tag, rep->from_tag, NULL) != 0) {
+    if (compare_session_tags(spa->from_tag, rep->from_tag, NULL) != 0) {
         idx = 1;
     } else if (rep->to_tag != NULL &&
-      (compare_session_tags(spa->tag, rep->to_tag, NULL)) != 0) {
+      (compare_session_tags(spa->from_tag, rep->to_tag, NULL)) != 0) {
         idx = 0;
     } else {
         return(RTPP_HT_MATCH_CONT);
@@ -86,7 +86,7 @@ handle_record(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap,
     rea.to_tag = ccap->to_tag;
     rea.record_single_file = record_single_file;
     rea.cfsp = cfsp;
-    CALL_SMETHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
+    CALL_SMETHOD(cfsp->sessions_ht, foreach_key_str, ccap->call_id,
       rtpp_cmd_record_ematch, &rea);
     if (rea.nrecorded == 0) {
         return -1;

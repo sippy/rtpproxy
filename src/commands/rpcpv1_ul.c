@@ -85,8 +85,8 @@ struct ul_opts {
     int weak;
     int requested_ptime;
     char *codecs;
-    const char *addr;
-    const char *port;
+    const rtpp_str_t *addr;
+    const rtpp_str_t *port;
     struct sockaddr *ia[2];
     const struct sockaddr *lia[2];
 
@@ -94,8 +94,8 @@ struct ul_opts {
     
     int lidx;
     const struct sockaddr *local_addr;
-    const char *notify_socket;
-    const char *notify_tag;
+    const rtpp_str_t *notify_socket;
+    rtpp_str_const_t notify_tag;
     int pf;
     int new_port;
 
@@ -183,8 +183,9 @@ struct ul_opts *
 rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     int len, tpf, n, i, ai_flags;
-    char c;
-    char *cp, *t, *notify_tag;
+    char *hostname;
+    const char *cp, *t;
+    rtpp_str_const_t notify_tag;
     const char *errmsg;
     struct sockaddr_storage tia;
     struct ul_opts *ulop;
@@ -197,27 +198,27 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
     ul_opts_init(cfsp, ulop);
     if (cmd->cca.op == UPDATE && cmd->args.c > 6) {
         if (cmd->args.c == 8) {
-            ulop->notify_socket = cmd->args.v[6];
+            ulop->notify_socket = rtpp_str_fix(&cmd->args.v[6]);
             notify_tag = cmd->args.v[7];
         } else {
-            ulop->notify_socket = cmd->args.v[5];
+            ulop->notify_socket = rtpp_str_fix(&cmd->args.v[5]);
             notify_tag = cmd->args.v[6];
             cmd->cca.to_tag = NULL;
         }
-        len = url_unquote((uint8_t *)notify_tag, strlen(notify_tag));
+        len = url_unquote((uint8_t *)notify_tag.s, notify_tag.len);
         if (len == -1) {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
               "command syntax error - invalid URL encoding");
             reply_error(cmd, ECODE_PARSE_10);
             goto err_undo_1;
         }
-        notify_tag[len] = '\0';
+        notify_tag.len = len;
         ulop->notify_tag = notify_tag;
     }
-    ulop->addr = cmd->args.v[2];
-    ulop->port = cmd->args.v[3];
+    ulop->addr = rtpp_str_fix(&cmd->args.v[2]);
+    ulop->port = rtpp_str_fix(&cmd->args.v[3]);
     /* Process additional command modifiers */
-    for (cp = cmd->args.v[0] + 1; *cp != '\0'; cp++) {
+    for (cp = cmd->args.v[0].s + 1; *cp != '\0'; cp++) {
         switch (*cp) {
         case 'a':
         case 'A':
@@ -262,7 +263,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
 
         case 'z':
         case 'Z':
-            ulop->requested_ptime = strtol(cp + 1, &cp, 10);
+            ulop->requested_ptime = strtol(cp + 1, (char **)&cp, 10);
             if (ulop->requested_ptime <= 0 || ulop->requested_ptime >= 1000) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 reply_error(cmd, ECODE_PARSE_13);
@@ -301,18 +302,18 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
                 reply_error(cmd, ECODE_PARSE_15);
                 goto err_undo_1;
             }
-            c = t[len];
-            t[len] = '\0';
+            hostname = alloca(len + 1);
+            memcpy(hostname, t, len);
+            hostname[len] = '\0';
             ai_flags = cfsp->no_resolve ? AI_NUMERICHOST : AI_PASSIVE;
-            ulop->local_addr = CALL_METHOD(cfsp->bindaddrs_cf, host2, t,
+            ulop->local_addr = CALL_METHOD(cfsp->bindaddrs_cf, host2, hostname,
               tpf, ai_flags, &errmsg);
             if (ulop->local_addr == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-                  "invalid local address: %s: %s", t, errmsg);
+                  "invalid local address: %s: %s", hostname, errmsg);
                 reply_error(cmd, ECODE_INVLARG_1);
                 goto err_undo_1;
             }
-            t[len] = c;
             cp--;
             break;
 
@@ -324,20 +325,21 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
                 reply_error(cmd, ECODE_PARSE_16);
                 goto err_undo_1;
             }
-            c = t[len];
-            t[len] = '\0';
+            hostname = alloca(len + 1);
+            memcpy(hostname, t, len);
+            hostname[len] = '\0';
             struct sockaddr_storage local_addr;
             ai_flags = cfsp->no_resolve ? AI_NUMERICHOST : AI_PASSIVE;
-            n = resolve(sstosa(&local_addr), tpf, t, SERVICE, AI_PASSIVE);
+            n = resolve(sstosa(&local_addr), tpf, hostname, SERVICE, AI_PASSIVE);
             if (n != 0) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-                  "invalid remote address: %s: %s", t, gai_strerror(n));
+                  "invalid remote address: %s: %s", hostname, gai_strerror(n));
                 reply_error(cmd, ECODE_INVLARG_2);
                 goto err_undo_1;
             }
             if (local4remote(sstosa(&local_addr), &local_addr) == -1) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-                  "can't find local address for remote address: %s", t);
+                  "can't find local address for remote address: %s", hostname);
                 reply_error(cmd, ECODE_INVLARG_3);
                 goto err_undo_1;
             }
@@ -349,7 +351,6 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
                 reply_error(cmd, ECODE_INVLARG_4);
                 goto err_undo_1;
             }
-            t[len] = c;
             cp--;
             break;
 
@@ -381,8 +382,8 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             goto err_undo_1;
         }
     }
-    if (ulop->addr != NULL && ulop->port != NULL && IS_IPSTR_VALID(ulop->addr, ulop->pf)) {
-        n = resolve(sstosa(&tia), ulop->pf, ulop->addr, ulop->port, AI_NUMERICHOST);
+    if (ulop->addr != NULL && ulop->port != NULL && IS_IPSTR_VALID(ulop->addr->s, ulop->pf)) {
+        n = resolve(sstosa(&tia), ulop->pf, ulop->addr->s, ulop->port->s, AI_NUMERICHOST);
         if (n == 0) {
             if (!ishostnull(sstosa(&tia))) {
                 for (i = 0; i < 2; i++) {
@@ -401,7 +402,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             }
         } else {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "getaddrinfo(pf=%d, addr=%s, port=%s): %s",
-              ulop->pf, ulop->addr, ulop->port, gai_strerror(n));
+              ulop->pf, ulop->addr->s, ulop->port->s, gai_strerror(n));
         }
     }
     return (ulop);
@@ -511,9 +512,9 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             ulop->lia[0] = ulop->lia[1] = ulop->local_addr;
         }
         RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
-          "new %s/%s session %s, tag %s requested, type %s",
-          SA_AF2STR(ulop->lia[0]), SA_AF2STR(ulop->lia[1]),
-          cmd->cca.call_id, cmd->cca.from_tag, ulop->weak ? "weak" : "strong");
+          "new %s/%s session %.*s, tag %.*s requested, type %s",
+          SA_AF2STR(ulop->lia[0]), SA_AF2STR(ulop->lia[1]), FMTSTR(cmd->cca.call_id),
+          FMTSTR(cmd->cca.from_tag), ulop->weak ? "weak" : "strong");
         if (cfsp->slowshutdown != 0) {
             RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
               "proxy is in the deorbiting-burn mode, new session rejected");
@@ -548,14 +549,14 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
 
         cmd->csp->nsess_created.cnt++;
 
-        hte = CALL_SMETHOD(cfsp->sessions_ht, append_refcnt, spa->call_id,
+        hte = CALL_SMETHOD(cfsp->sessions_ht, append_str_refcnt, spa->call_id,
           spa->rcnt, NULL);
         if (hte == NULL) {
             handle_nomem(cmd, ECODE_NOMEM_5, spa);
             return (-1);
         }
         if (CALL_SMETHOD(cfsp->sessions_wrt, reg, spa->rcnt, spa->seuid) != 0) {
-            CALL_SMETHOD(cfsp->sessions_ht, remove, spa->call_id, hte);
+            CALL_SMETHOD(cfsp->sessions_ht, remove_str, spa->call_id, hte);
             handle_nomem(cmd, ECODE_NOMEM_8, spa);
             return (-1);
         }
@@ -576,7 +577,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
         }
 
         RTPP_LOG(spa->log, RTPP_LOG_INFO, "new session on %s port %d created, "
-          "tag %s", AF2STR(ulop->pf), lport, cmd->cca.from_tag);
+          "tag %.*s", AF2STR(ulop->pf), lport, FMTSTR(cmd->cca.from_tag));
         if (cfsp->record_all != 0) {
             handle_copy(cfsp, spa, 0, NULL, RSF_MODE_DFLT(cfsp));
             handle_copy(cfsp, spa, 1, NULL, RSF_MODE_DFLT(cfsp));
@@ -594,15 +595,17 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
         if (ulop->notify_socket != NULL) {
             struct rtpp_tnotify_target *rttp;
 
-            rttp = CALL_METHOD(cfsp->rtpp_tnset_cf, lookup, ulop->notify_socket,
+            rttp = CALL_METHOD(cfsp->rtpp_tnset_cf, lookup, ulop->notify_socket->s,
               (cmd->rlen > 0) ? sstosa(&cmd->raddr) : NULL, (cmd->rlen > 0) ? cmd->laddr : NULL);
             if (rttp == NULL) {
-                RTPP_LOG(spa->log, RTPP_LOG_ERR, "invalid socket name %s", ulop->notify_socket);
+                RTPP_LOG(spa->log, RTPP_LOG_ERR, "invalid socket name %.*s",
+                  FMTSTR(ulop->notify_socket));
                 ulop->notify_socket = NULL;
             } else {
                 RTPP_LOG(spa->log, RTPP_LOG_INFO, "setting timeout handler");
-                RTPP_DBG_ASSERT(ulop->notify_tag != NULL);
-                spa->timeout_data = rtpp_timeout_data_ctor(rttp, ulop->notify_tag);
+                RTPP_DBG_ASSERT(ulop->notify_tag.s != NULL);
+                spa->timeout_data = rtpp_timeout_data_ctor(rttp,
+                  rtpp_str_fix(&ulop->notify_tag));
                 if (spa->timeout_data == NULL) {
                     RTPP_LOG(spa->log, RTPP_LOG_ERR,
                       "setting timeout handler: ENOMEM");

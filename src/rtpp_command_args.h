@@ -24,6 +24,8 @@
  *
  */
 
+#include "rtpp_str.h"
+
 #ifndef _RTPP_COMMAND_ARGS_H_
 #define _RTPP_COMMAND_ARGS_H_
 
@@ -31,7 +33,7 @@
 
 struct rtpp_command_args {
     int c;
-    char *v[RTPC_MAX_ARGC];
+    rtpp_str_const_t v[RTPC_MAX_ARGC];
 };
 
 #endif /* _RTPP_COMMAND_ARGS_H_ */

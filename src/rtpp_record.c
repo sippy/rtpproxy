@@ -231,14 +231,16 @@ rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
 	sdir = cfsp->sdir;
 	rrc->needspool = 1;
 	if (rname == NULL) {
-	    sprintf(rrc->rpath, "%s/%s=%s%s%s", cfsp->rdir, sp->call_id, sp->tag_nomedianum,
+	    sprintf(rrc->rpath, "%s/%.*s=%.*s%s%s", cfsp->rdir, (int)sp->call_id->len,
+              sp->call_id->s, (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s,
 	      suffix1, suffix2);
 	} else {
 	    sprintf(rrc->rpath, "%s/%s%s", cfsp->rdir, rname, suffix2);
 	}
     }
     if (rname == NULL) {
-	sprintf(rrc->spath, "%s/%s=%s%s%s", sdir, sp->call_id, sp->tag_nomedianum,
+	sprintf(rrc->spath, "%s/%.*s=%.*s%s%s", sdir, (int)sp->call_id->len,
+          sp->call_id->s, (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s,
 	  suffix1, suffix2);
     } else {
 	sprintf(rrc->spath, "%s/%s%s", sdir, rname, suffix2);

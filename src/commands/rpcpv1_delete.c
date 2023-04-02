@@ -51,13 +51,14 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_pipe.h"
 #include "rtpp_session.h"
+#include "rtpp_str.h"
 #include "rtpp_stream.h"
 #include "rtpp_weakref.h"
 
 struct delete_ematch_arg {
     int ndeleted;
-    const char *from_tag;
-    const char *to_tag;
+    const rtpp_str_t *from_tag;
+    const rtpp_str_t *to_tag;
     int weak;
     struct rtpp_weakref *sessions_wrt;
 };
@@ -76,11 +77,11 @@ rtpp_cmd_delete_ematch(void *dp, void *ap)
     dep = (struct delete_ematch_arg *)ap;
 
     medianum = 0;
-    if ((cmpr1 = compare_session_tags(spa->tag, dep->from_tag, &medianum)) != 0) {
+    if ((cmpr1 = compare_session_tags(spa->from_tag, dep->from_tag, &medianum)) != 0) {
         idx = 1;
         cmpr = cmpr1;
     } else if (dep->to_tag != NULL &&
-      (cmpr1 = compare_session_tags(spa->tag, dep->to_tag, &medianum)) != 0) {
+      (cmpr1 = compare_session_tags(spa->from_tag, dep->to_tag, &medianum)) != 0) {
         idx = 0;
         cmpr = cmpr1;
     } else {
@@ -126,6 +127,7 @@ struct delete_opts {
 int
 handle_delete(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
 {
+
     struct delete_ematch_arg dea = {
         .from_tag = ccap->from_tag,
         .to_tag = ccap->to_tag,
@@ -133,7 +135,7 @@ handle_delete(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
         .sessions_wrt = cfsp->sessions_wrt
     };
 
-    CALL_SMETHOD(cfsp->sessions_ht, foreach_key, ccap->call_id,
+    CALL_SMETHOD(cfsp->sessions_ht, foreach_key_str, ccap->call_id,
       rtpp_cmd_delete_ematch, &dea);
     rtpp_command_del_opts_free(ccap->opts.delete);
     ccap->opts.delete = NULL;
@@ -147,12 +149,12 @@ handle_delete_as_subc(const struct after_success_h_args *ap,
     const struct rtpp_cfg *cfsp = ap->stat;
     struct delete_opts *dop = ap->dyn;
     struct delete_ematch_arg dea = {
-        .from_tag = scp->sessp->tag,
+        .from_tag = scp->sessp->from_tag,
         .weak = dop->weak,
         .sessions_wrt = cfsp->sessions_wrt
     };
 
-    CALL_SMETHOD(cfsp->sessions_ht, foreach_key, scp->sessp->call_id,
+    CALL_SMETHOD(cfsp->sessions_ht, foreach_key_str, scp->sessp->call_id,
       rtpp_cmd_delete_ematch, &dea);
     return (dea.ndeleted == 0) ? -1 : 0;
 }
@@ -169,7 +171,7 @@ rtpp_command_del_opts_parse(struct rtpp_command *cmd, const struct rtpp_command_
             reply_error(cmd, ECODE_NOMEM_1);
         goto err_undo_0;
     }
-    for (cp = ap->v[0] + 1; *cp != '\0'; cp++) {
+    for (cp = ap->v[0].s + 1; *cp != '\0'; cp++) {
         switch (*cp) {
         case 'w':
         case 'W':

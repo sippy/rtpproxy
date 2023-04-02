@@ -47,8 +47,8 @@
 
 struct play_opts {
     int count;
-    const char *pname;
-    const char *codecs;
+    const rtpp_str_t *pname;
+    const rtpp_str_t *codecs;
 };
 
 struct play_opts *
@@ -64,9 +64,9 @@ rtpp_command_play_opts_parse(struct rtpp_command *cmd)
         goto err_undo_0;
     }
     plop->count = 1;
-    plop->pname = cmd->args.v[2];
-    plop->codecs = cmd->args.v[3];
-    tcp = &(cmd->args.v[0][1]);
+    plop->pname = rtpp_str_fix(&cmd->args.v[2]);
+    plop->codecs = rtpp_str_fix(&cmd->args.v[3]);
+    tcp = &(cmd->args.v[0].s[1]);
     if (*tcp != '\0') {
         plop->count = strtol(tcp, &cp, 10);
         if (cp == tcp || *cp != '\0') {
@@ -99,7 +99,7 @@ rtpp_command_play_handle(struct rtpp_stream *rsp, struct rtpp_command *cmd)
 
     CALL_SMETHOD(rsp, handle_noplay);
     plop = cmd->cca.opts.play;
-    if (strcmp(plop->codecs, "session") == 0) {
+    if (strcmp(plop->codecs->s, "session") == 0) {
         if (rsp->codecs == NULL) {
             reply_error(cmd, ECODE_INVLARG_5);
             goto freeplop;
@@ -107,11 +107,11 @@ rtpp_command_play_handle(struct rtpp_stream *rsp, struct rtpp_command *cmd)
         codecs = rsp->codecs;
         ptime = rsp->ptime;
     } else {
-        codecs = plop->codecs;
+        codecs = plop->codecs->s;
         ptime = -1;
     }
     if (plop->count != 0 && CALL_SMETHOD(rsp, handle_play, codecs,
-      plop->pname, plop->count, cmd, ptime) != 0) {
+      plop->pname->s, plop->count, cmd, ptime) != 0) {
         reply_error(cmd, ECODE_PLRFAIL);
         goto freeplop;
     }

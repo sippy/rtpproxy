@@ -49,10 +49,10 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp,
     int mod_id, inst_id;
     const char *cp;
 
-    switch(subc_args->v[0][0]) {
+    switch(subc_args->v[0].s[0]) {
     case 'M':
     case 'm':
-        if (atoi_safe_sep(&subc_args->v[0][1], &mod_id, ':', &cp) != ATOI_OK)
+        if (atoi_safe_sep(&subc_args->v[0].s[1], &mod_id, ':', &cp) != ATOI_OK)
             return (-1);
         if (atoi_safe(cp, &inst_id) != ATOI_OK)
             return (-1);

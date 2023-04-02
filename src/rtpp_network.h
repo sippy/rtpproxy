@@ -49,7 +49,7 @@ char *addrport2char_r(const struct sockaddr *, char *buf, int size, char);
 int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
 int local4remote(const struct sockaddr *, struct sockaddr_storage *);
-int extractaddr(const char *, char **, char **, int *);
+int extractaddr(const char *, const char **, const char **, int *);
 int setbindhost(struct sockaddr *, int, const char *, const char *);
 
 /* Some handy/compat macros */

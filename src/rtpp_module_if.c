@@ -164,7 +164,7 @@ acct_rtcp_enqueue(const struct pkt_proc_ctx *pktx)
     sessp = CALL_SMETHOD(pvt->sessions_wrt, get_by_idx, pktx->strmp_in->seuid);
     if (sessp == NULL)
        return (PPROC_ACT_DROP);
-    rarp = rtpp_acct_rtcp_ctor(sessp->call_id, pktx->pktp);
+    rarp = rtpp_acct_rtcp_ctor(sessp->call_id->s, pktx->pktp);
     RTPP_OBJ_DECREF(sessp);
     if (rarp == NULL) {
         return (PPROC_ACT_DROP);

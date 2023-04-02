@@ -25,14 +25,14 @@
  *
  */
 
-#ifndef _RTPP_NOTIFY_H_
-#define _RTPP_NOTIFY_H_
+#pragma once
+#include "rtpp_str.h"
 
 struct rtpp_notify;
 struct rtpp_tnotify_target;
 
 DEFINE_METHOD(rtpp_notify, rtpp_notify_schedule, int,
-  struct rtpp_tnotify_target *, const char *, const char *);
+  struct rtpp_tnotify_target *, const rtpp_str_t *, const char *);
 
 struct rtpp_notify {
     struct rtpp_refcnt *rcnt;
@@ -40,5 +40,3 @@ struct rtpp_notify {
 };
 
 struct rtpp_notify *rtpp_notify_ctor(struct rtpp_log *);
-
-#endif

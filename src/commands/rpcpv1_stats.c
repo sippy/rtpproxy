@@ -63,12 +63,12 @@ handle_get_stats(struct rtpp_stats *rsp, struct rtpp_command *cmd, int verbose)
         }
         if (verbose != 0) {
             CHECK_OVERFLOW();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%s=", \
-              cmd->args.v[i]);
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%.*s=", \
+              FMTSTR(&cmd->args.v[i]));
         }
         CHECK_OVERFLOW();
         rval = CALL_SMETHOD(rsp, nstr, cmd->buf_t + len,
-          sizeof(cmd->buf_t) - len, cmd->args.v[i]);
+          sizeof(cmd->buf_t) - len, cmd->args.v[i].s);
         if (rval < 0) {
             return (ECODE_STSFAIL);
         }

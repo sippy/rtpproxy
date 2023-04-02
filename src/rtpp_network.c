@@ -309,7 +309,7 @@ local4remote(const struct sockaddr *ra, struct sockaddr_storage *la)
 }
 
 int
-extractaddr(const char *str, char **begin, char **end, int *pf)
+extractaddr(const char *str, const char **begin, const char **end, int *pf)
 {
     const char *t;
     int tpf;

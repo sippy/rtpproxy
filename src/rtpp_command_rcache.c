@@ -62,9 +62,9 @@ struct rtpp_cmd_rcache_entry {
 };
 
 static enum rtpp_timed_cb_rvals rtpp_cmd_rcache_cleanup(double, void *);
-static void rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *, const char *,
+static void rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *, const rtpp_str_t *,
   const char *, double);
-int rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *, const char *,
+int rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *, const rtpp_str_t *,
   char *, int);
 static void rtpp_cmd_rcache_dtor(struct rtpp_cmd_rcache_pvt *);
 static void rtpp_cmd_rcache_shutdown(struct rtpp_cmd_rcache *);
@@ -120,7 +120,7 @@ rtpp_cmd_rcache_entry_free(void *p)
 }
 
 static void
-rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const char *cookie,
+rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const rtpp_str_t *cookie,
   const char *reply, double ctime)
 {
     struct rtpp_cmd_rcache_pvt *pvt;
@@ -137,7 +137,7 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const char *cookie,
     }
     rep->etime = ctime + pvt->min_ttl;
     CALL_SMETHOD(rep->pub.rcnt, attach, rtpp_cmd_rcache_entry_free, rep);
-    CALL_SMETHOD(pvt->ht, append_refcnt, cookie, rep->pub.rcnt, NULL);
+    CALL_SMETHOD(pvt->ht, append_str_refcnt, cookie, rep->pub.rcnt, NULL);
     /*
      * append_refcnt() either takes ownership in which case it incs refcount
      * or it drops the ball in which it does not, so we release rco and set
@@ -151,7 +151,7 @@ e1:
 }
 
 int
-rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *pub, const char *cookie,
+rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *pub, const rtpp_str_t *cookie,
   char *rbuf, int rblen)
 {
     struct rtpp_cmd_rcache_pvt *pvt;
@@ -159,7 +159,7 @@ rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *pub, const char *cookie,
     struct rtpp_refcnt *rco;
 
     pvt = (struct rtpp_cmd_rcache_pvt *)pub;
-    rco = CALL_SMETHOD(pvt->ht, find, cookie);
+    rco = CALL_SMETHOD(pvt->ht, find_str, cookie);
     if (rco == NULL) {
         return (0);
     }

@@ -108,13 +108,13 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
   struct rtpp_pipe *spp, int idx)
 {
     int len, i, verbose, rst_pulled, pcnt_pulled, pcnt_strm_pulled;
-    char *cp;
+    const char *cp;
     struct rtpa_stats rst;
     struct rtpps_pcount pcnts;
     struct rtpp_pcnts_strm pst[2];
 
     verbose = 0;
-    for (cp = cmd->args.v[0] + 1; *cp != '\0'; cp++) {
+    for (cp = cmd->args.v[0].s + 1; *cp != '\0'; cp++) {
         switch (*cp) {
         case 'v':
         case 'V':
@@ -140,72 +140,73 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
         }
         if (verbose != 0) {
             CHECK_OVERFLOW();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%s=", \
-              cmd->args.v[i]);
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%.*s=", \
+              FMTSTR(&cmd->args.v[i]));
         }
         CHECK_OVERFLOW();
-        if (strcmp(cmd->args.v[i], "ttl") == 0) {
+        if (strcmp(cmd->args.v[i].s, "ttl") == 0) {
             int ttl = CALL_SMETHOD(spp, get_ttl);
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%d",
               ttl);
             continue;
         }
-        if (strcmp(cmd->args.v[i], "npkts_ina") == 0) {
+        if (strcmp(cmd->args.v[i].s, "npkts_ina") == 0) {
             PULL_PCNT_STRM();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               pst[0].npkts_in);
             continue;
         }
-        if (strcmp(cmd->args.v[i], "npkts_ino") == 0) {
+        if (strcmp(cmd->args.v[i].s, "npkts_ino") == 0) {
             PULL_PCNT_STRM();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               pst[1].npkts_in);
             continue;
         }
-        if (strcmp(cmd->args.v[i], "nrelayed") == 0) {
+        if (strcmp(cmd->args.v[i].s, "nrelayed") == 0) {
             PULL_PCNT();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               pcnts.nrelayed);
             continue;
         }
-        if (strcmp(cmd->args.v[i], "ndropped") == 0) {
+        if (strcmp(cmd->args.v[i].s, "ndropped") == 0) {
             PULL_PCNT();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               pcnts.ndropped);
             continue;
         }
-        if (strcmp(cmd->args.v[i], "rtpa_nsent") == 0) {
+        if (strcmp(cmd->args.v[i].s, "rtpa_nsent") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.psent);
             continue;
         }
-        if (strcmp(cmd->args.v[i], "rtpa_nrcvd") == 0) {
+        if (strcmp(cmd->args.v[i].s, "rtpa_nrcvd") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.precvd);
             continue;
         }
-        if (strcmp(cmd->args.v[i], "rtpa_ndups") == 0) {
+        if (strcmp(cmd->args.v[i].s, "rtpa_ndups") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.pdups);
             continue;
         }
-        if (strcmp(cmd->args.v[i], "rtpa_nlost") == 0) {
+        if (strcmp(cmd->args.v[i].s, "rtpa_nlost") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.plost);
             continue;
         }
-        if (strcmp(cmd->args.v[i], "rtpa_perrs") == 0) {
+        if (strcmp(cmd->args.v[i].s, "rtpa_perrs") == 0) {
             PULL_RST();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
               rst.pecount);
             continue;
         }
         RTPP_LOG(spp->log, RTPP_LOG_ERR,
-              "QUERY: unsupported/invalid counter name `%s'", cmd->args.v[i]);
+          "QUERY: unsupported/invalid counter name `%.*s'",
+          FMTSTR(&cmd->args.v[i]));
         return (ECODE_QRYFAIL);
     }
     CHECK_OVERFLOW();

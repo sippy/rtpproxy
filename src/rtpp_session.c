@@ -70,6 +70,9 @@ struct rtpp_session_priv
     struct rtpp_sessinfo *sessinfo;
     struct rtpp_modman *module_cf;
     struct rtpp_acct *acct;
+    struct rtpp_str call_id;
+    struct rtpp_str from_tag;
+    struct rtpp_str from_tag_nmn;
 };
 
 static void rtpp_session_dtor(struct rtpp_session_priv *);
@@ -84,7 +87,6 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     struct rtpp_log *log;
     struct r_pipe_ctor_args pipe_cfg;
     int i;
-    char *cp;
 
     pvt = rtpp_rzmalloc(sizeof(struct rtpp_session_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
@@ -94,7 +96,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     pub = &(pvt->pub);
     rtpp_gen_uid(&pub->seuid);
 
-    log = rtpp_log_ctor("rtpproxy", ccap->call_id, 0);
+    log = rtpp_log_ctor("rtpproxy", ccap->call_id->s, 0);
     if (log == NULL) {
         goto e1;
     }
@@ -122,21 +124,24 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     }
     pvt->acct->init_ts->wall = dtime->wall;
     pvt->acct->init_ts->mono = dtime->mono;
-    pub->call_id = strdup(ccap->call_id);
-    if (pub->call_id == NULL) {
+
+    if (rtpp_str_dup2(ccap->call_id, &pvt->call_id.ro) == NULL) {
         goto e5;
     }
-    pub->tag = strdup(ccap->from_tag);
-    if (pub->tag == NULL) {
+    pub->call_id = &pvt->call_id.fx;
+    if (rtpp_str_dup2(ccap->from_tag, &pvt->from_tag.ro) == NULL) {
         goto e6;
     }
-    pub->tag_nomedianum = strdup(ccap->from_tag);
-    if (pub->tag_nomedianum == NULL) {
+    pub->from_tag = &pvt->from_tag.fx;
+    rtpp_str_const_t tag_nomedianum = {.s = ccap->from_tag->s, .len = ccap->from_tag->len};
+    const char *semi = memchr(tag_nomedianum.s, ';', tag_nomedianum.len);
+    if (semi != NULL) {
+        tag_nomedianum.len = tag_nomedianum.s - semi;
+    }
+    if (rtpp_str_dup2(&tag_nomedianum, &pvt->from_tag_nmn.ro) == NULL) {
         goto e7;
     }
-    cp = strrchr(pub->tag_nomedianum, ';');
-    if (cp != NULL)
-        *cp = '\0';
+    pub->from_tag_nmn = &pvt->from_tag_nmn.fx;
     for (i = 0; i < 2; i++) {
         pub->rtp->stream[i]->laddr = lia[i];
         pub->rtcp->stream[i]->laddr = lia[i];
@@ -185,11 +190,11 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     return (&pvt->pub);
 
 e8:
-    free(pub->tag_nomedianum);
+    free(pvt->from_tag_nmn.rw.s);
 e7:
-    free(pub->tag);
+    free(pvt->from_tag.rw.s);
 e6:
-    free(pub->call_id);
+    free(pvt->call_id.rw.s);
 e5:
     RTPP_OBJ_DECREF(pvt->acct);
 e4:
@@ -232,10 +237,10 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     CALL_SMETHOD(pub->rtpp_stats, updatebyname_d, "total_duration",
       session_time);
     if (pvt->module_cf != NULL) {
-        pvt->acct->call_id = pvt->pub.call_id;
-        pvt->pub.call_id = NULL;
-        pvt->acct->from_tag = pvt->pub.tag;
-        pvt->pub.tag = NULL;
+        pvt->acct->call_id = pvt->call_id.rw.s;
+        pvt->call_id.rw.s = NULL;
+        pvt->acct->from_tag = pvt->from_tag.rw.s;
+        pvt->from_tag.rw.s = NULL;
         CALL_SMETHOD(pub->rtp->stream[0]->analyzer, get_stats, \
           pvt->acct->rasto);
         CALL_SMETHOD(pub->rtp->stream[1]->analyzer, get_stats, \
@@ -253,12 +258,12 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     RTPP_OBJ_DECREF(pvt->pub.log);
     if (pvt->pub.timeout_data != NULL)
         RTPP_OBJ_DECREF(pvt->pub.timeout_data);
-    if (pvt->pub.call_id != NULL)
-        free(pvt->pub.call_id);
-    if (pvt->pub.tag != NULL)
-        free(pvt->pub.tag);
-    if (pvt->pub.tag_nomedianum != NULL)
-        free(pvt->pub.tag_nomedianum);
+    if (pvt->call_id.rw.s != NULL)
+        free(pvt->call_id.rw.s);
+    if (pvt->from_tag.rw.s != NULL)
+        free(pvt->from_tag.rw.s);
+    if (pvt->from_tag_nmn.rw.s != NULL)
+        free(pvt->from_tag_nmn.rw.s);
 
     RTPP_OBJ_DECREF(pvt->pub.rtcp);
     RTPP_OBJ_DECREF(pvt->pub.rtp);
@@ -266,26 +271,27 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
 }
 
 int
-compare_session_tags(const char *tag1, const char *tag0, unsigned *medianum_p)
+compare_session_tags(const rtpp_str_t *tag1, const rtpp_str_t *tag0,
+  unsigned *medianum_p)
 {
-    size_t len0 = strlen(tag0);
 
-    if (!strncmp(tag1, tag0, len0)) {
-	if (tag1[len0] == ';') {
+    if (tag1->len < tag0->len)
+        return 0;
+    if (!memcmp(tag1->s, tag0->s, tag0->len)) {
+        if (tag1->len == tag0->len)
+            return 1;
+	if (tag1->s[tag0->len] == ';') {
 	    if (medianum_p != NULL)
-		*medianum_p = strtoul(tag1 + len0 + 1, NULL, 10);
+		*medianum_p = strtoul(tag1->s + tag0->len + 1, NULL, 10);
 	    return 2;
 	}
-	if (tag1[len0] == '\0')
-	    return 1;
-	return 0;
     }
     return 0;
 }
 
 struct session_match_args {
-    const char *from_tag;
-    const char *to_tag;
+    const rtpp_str_t *from_tag;
+    const rtpp_str_t *to_tag;
     struct rtpp_session *sp;
     int rval;
 };
@@ -300,12 +306,12 @@ rtpp_session_ematch(void *dp, void *ap)
     rsp = (struct rtpp_session *)dp;
     map = (struct session_match_args *)ap;
 
-    if (strcmp(rsp->tag, map->from_tag) == 0) {
+    if (rtpp_str_match(rsp->from_tag, map->from_tag)) {
         map->rval = 0;
         goto found;
     }
     if (map->to_tag != NULL) {
-        switch (compare_session_tags(rsp->tag, map->to_tag, NULL)) {
+        switch (compare_session_tags(rsp->from_tag, map->to_tag, NULL)) {
         case 1:
             /* Exact tag match */
             map->rval = 1;
@@ -316,8 +322,8 @@ rtpp_session_ematch(void *dp, void *ap)
              * Reverse tag match without medianum. Medianum is always
              * applied to the from tag, verify that.
              */
-            cp1 = strrchr(rsp->tag, ';');
-            cp2 = strrchr(map->from_tag, ';');
+            cp1 = strrchr(rsp->from_tag->s, ';');
+            cp2 = strrchr(map->from_tag->s, ';');
             if (cp2 != NULL && strcmp(cp1, cp2) == 0) {
                 map->rval = 1;
                 goto found;
@@ -338,8 +344,8 @@ found:
 }
 
 int
-find_stream(const struct rtpp_cfg *cfsp, const char *call_id,
-  const char *from_tag, const char *to_tag, struct rtpp_session **spp)
+find_stream(const struct rtpp_cfg *cfsp, const rtpp_str_t *call_id,
+  const rtpp_str_t *from_tag, const rtpp_str_t *to_tag, struct rtpp_session **spp)
 {
     struct session_match_args ma;
 
@@ -348,7 +354,7 @@ find_stream(const struct rtpp_cfg *cfsp, const char *call_id,
     ma.to_tag = to_tag;
     ma.rval = -1;
 
-    CALL_SMETHOD(cfsp->sessions_ht, foreach_key, call_id,
+    CALL_SMETHOD(cfsp->sessions_ht, foreach_key_str, call_id,
       rtpp_session_ematch, &ma);
     if (ma.rval != -1) {
         *spp = ma.sp;

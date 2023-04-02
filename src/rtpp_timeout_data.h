@@ -26,6 +26,9 @@
  *
  */
 
+#pragma once
+#include "rtpp_str.h"
+
 struct rtpp_timeout_data;
 struct rtpp_refcnt;
 struct rtpp_tnotify_target;
@@ -33,8 +36,8 @@ struct rtpp_tnotify_target;
 struct rtpp_timeout_data {
     struct rtpp_refcnt *rcnt;
     struct rtpp_tnotify_target *notify_target;
-    const char *notify_tag;
+    const rtpp_str_t *notify_tag;
 };
 
 struct rtpp_timeout_data *rtpp_timeout_data_ctor(struct rtpp_tnotify_target *,
-  const char *);
+  const rtpp_str_t *);

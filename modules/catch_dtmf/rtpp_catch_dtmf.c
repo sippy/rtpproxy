@@ -242,11 +242,12 @@ rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *wp)
         /* we received the end of the DTMF */
         /* all good - send the notification */
         eip->pending = 0;
-        snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%s %c %u %u %d",
-          wip->rtdp->notify_tag, ei.digit, dtmf->volume, eip->duration,
+        rtpp_str_const_t notify_tag = {.s = buf};
+        notify_tag.len = snprintf(buf, RTPP_MAX_NOTIFY_BUF, "%.*s %c %u %u %d",
+          FMTSTR(wip->rtdp->notify_tag), ei.digit, dtmf->volume, eip->duration,
           (wip->edata->side == RTPP_SSIDE_CALLER) ? 0 : 1);
-        CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target, buf,
-          notyfy_type);
+        CALL_METHOD(pvt->notifier, schedule, wip->rtdp->notify_target,
+          rtpp_str_fix(&notify_tag), notyfy_type);
 
 skip:
         RTPP_OBJ_DECREF(wip->edata);
@@ -267,7 +268,7 @@ catch_dtmf_data_dtor(struct catch_dtmf_stream_cfg *rtps_c)
 }
 
 static struct catch_dtmf_stream_cfg *
-catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const char *dtmf_tag,
+catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const rtpp_str_t *dtmf_tag,
   int new_pt)
 {
     struct catch_dtmf_stream_cfg *rtps_c;
@@ -308,7 +309,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     int len;
     int old_pt, new_pt = 101;
     enum pproc_action old_act, new_act = PPROC_ACT_TEE;
-    char *dtmf_tag;
+    rtpp_str_const_t dtmf_tag;
 
     if (ctxp->sessp->timeout_data == NULL) {
         RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "notification is not enabled (sp=%p)",
@@ -328,22 +329,25 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     }
 
     dtmf_tag = ctxp->subc_args->v[1];
-    len = url_unquote((uint8_t *)dtmf_tag, strlen(dtmf_tag));
+    char *l_dtmf_tag = alloca(dtmf_tag.len + 1);
+    len = url_unquote2(dtmf_tag.s, l_dtmf_tag, dtmf_tag.len);
     if (len == -1) {
         RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "syntax error: invalid URL "
           "encoding");
         return (-1);
     }
-    dtmf_tag[len] = '\0';
+    l_dtmf_tag[len] = '\0';
+    dtmf_tag.s = l_dtmf_tag;
+    dtmf_tag.len = len;
 
     if (ctxp->subc_args->c > 2) {
-        if (atoi_saferange(ctxp->subc_args->v[2], &new_pt, 0, 127)) {
+        if (atoi_saferange(ctxp->subc_args->v[2].s, &new_pt, 0, 127)) {
             RTPP_LOG(rtpp_module.log, RTPP_LOG_ERR, "syntax error: invalid "
-              "payload type: %s", ctxp->subc_args->v[2]);
+              "payload type: %.*s", FMTSTR(&ctxp->subc_args->v[2]));
             return (-1);
         }
         if (ctxp->subc_args->c > 3) {
-            for (const char *opt = ctxp->subc_args->v[3]; *opt != '\0'; opt++) {
+            for (const char *opt = ctxp->subc_args->v[3].s; *opt != '\0'; opt++) {
                 switch (*opt) {
                 case 'h':
                 case 'H':
@@ -362,7 +366,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     struct packet_processor_if dtmf_poi;
 
     if (CALL_SMETHOD(ctxp->strmp_in->pproc_manager, lookup, pvt, &dtmf_poi) == 0) {
-        rtps_c = catch_dtmf_data_ctor(ctxp, dtmf_tag, new_pt);
+        rtps_c = catch_dtmf_data_ctor(ctxp, rtpp_str_fix(&dtmf_tag), new_pt);
         if (rtps_c == NULL) {
             return (-1);
         }

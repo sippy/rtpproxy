@@ -81,13 +81,13 @@ handle_ver_feature(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
      * Only list 20081224 protocol mod as supported if
      * user actually enabled notification with -n
      */
-    if (strcmp(cmd->args.v[1], "20081224") == 0 &&
+    if (strcmp(cmd->args.v[1].s, "20081224") == 0 &&
       !CALL_METHOD(cfsp->rtpp_tnset_cf, isenabled)) {
         reply_number(cmd, 0);
         return;
     }
     for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
-        if (!strcmp(cmd->args.v[1], proto_caps[i].pc_id)) {
+        if (!strcmp(cmd->args.v[1].s, proto_caps[i].pc_id)) {
             known = 1;
             break;
         }
