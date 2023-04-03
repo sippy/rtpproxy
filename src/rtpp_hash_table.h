@@ -54,7 +54,7 @@ DEFINE_METHOD(rtpp_hash_table, hash_table_transfer, struct rtpp_refcnt *,
 DEFINE_METHOD(rtpp_hash_table, hash_table_find, struct rtpp_refcnt *, const void *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_find_str, struct rtpp_refcnt *, const rtpp_str_t *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_foreach, void, rtpp_hash_table_match_t,
-  void *, struct rtpp_ht_opstats *);
+  void *, int, struct rtpp_ht_opstats *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_foreach_key, void, const void *, rtpp_hash_table_match_t, void *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_foreach_key_str, void, const rtpp_str_t *,
   rtpp_hash_table_match_t, void *);

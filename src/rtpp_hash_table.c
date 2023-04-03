@@ -39,6 +39,7 @@
 #include "rtpp_xxHash.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_rw_lock.h"
 
 enum rtpp_hte_types {rtpp_hte_naive_t = 0, rtpp_hte_refcnt_t};
 
@@ -89,7 +90,7 @@ struct rtpp_hash_table_l1
 struct rtpp_hash_table_priv
 {
     struct rtpp_hash_table pub;
-    pthread_mutex_t hash_table_lock;
+    struct rtpp_rw_lock *hash_table_lock;
     enum rtpp_ht_key_types key_type;
     int flags;
     struct rtpp_hash_table_l1 *l1;
@@ -109,7 +110,7 @@ static struct rtpp_refcnt * hash_table_transfer(struct rtpp_hash_table *self,
 static struct rtpp_refcnt * hash_table_find(struct rtpp_hash_table *self, const void *key);
 static struct rtpp_refcnt * hash_table_find_str(struct rtpp_hash_table *self, const rtpp_str_t *key);
 static void hash_table_foreach(struct rtpp_hash_table *self, rtpp_hash_table_match_t,
-  void *, struct rtpp_ht_opstats *);
+  void *, int, struct rtpp_ht_opstats *);
 static void hash_table_foreach_key(struct rtpp_hash_table *, const void *,
   rtpp_hash_table_match_t, void *);
 static void hash_table_foreach_key_str(struct rtpp_hash_table *, const rtpp_str_t *,
@@ -159,7 +160,8 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
     if (pvt->l1 == NULL) {
         goto e1;
     }
-    if (pthread_mutex_init(&pvt->hash_table_lock, NULL) != 0)
+    pvt->hash_table_lock = rtpp_rw_lock_ctor();
+    if (pvt->hash_table_lock == NULL)
         goto e2;
     pvt->key_type = key_type;
     pvt->flags = flags;
@@ -202,7 +204,7 @@ hash_table_dtor(struct rtpp_hash_table_priv *pvt)
             pvt->l1->hte_num -= 1;
         } while (sp != NULL);
     }
-    pthread_mutex_destroy(&pvt->hash_table_lock);
+    RTPP_OBJ_DECREF(pvt->hash_table_lock);
     RTPP_DBG_ASSERT(pvt->l1->hte_num == 0);
 
     free(pvt->l1);
@@ -353,9 +355,9 @@ hash_table_insert(struct rtpp_hash_table_priv *pvt, struct rtpp_hash_table_entry
   struct rtpp_ht_opstats *hosp)
 {
 
-    pthread_mutex_lock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, lock, RTPP_RW_LOCK_WR);
     if (hash_table_insert_locked(pvt, pvt->l1, sp) == 0) {
-        pthread_mutex_unlock(&pvt->hash_table_lock);
+        CALL_SMETHOD(pvt->hash_table_lock, unlock, RTPP_RW_LOCK_WR);
         free(sp);
         return (NULL);
     }
@@ -363,7 +365,7 @@ hash_table_insert(struct rtpp_hash_table_priv *pvt, struct rtpp_hash_table_entry
         hash_table_resize_locked(pvt, pvt->l1->ht_len * 2);
     if (hosp != NULL && pvt->l1->hte_num == 1)
         hosp->first = 1;
-    pthread_mutex_unlock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, unlock, RTPP_RW_LOCK_WR);
     return (sp);
 }
 
@@ -478,9 +480,9 @@ hash_table_remove_raw(struct rtpp_hash_table_priv *pvt, const void *key,
     uint64_t hash;
 
     hash = rtpp_ht_hashkey(pvt, key, klen);
-    pthread_mutex_lock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, lock, RTPP_RW_LOCK_WR);
     hash_table_remove_locked(pvt, sp, hash, NULL);
-    pthread_mutex_unlock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, unlock, RTPP_RW_LOCK_WR);
     if (sp->hte_type == rtpp_hte_refcnt_t) {
         RC_DECREF((struct rtpp_refcnt *)sp->sptr);
     }
@@ -519,7 +521,7 @@ hash_table_remove_by_key_raw(struct rtpp_hash_table_priv *pvt, const void *key,
 
     klen = rtpp_ht_get_keysize(pvt, key);
     hash = rtpp_ht_hashkey(pvt, key, klen);
-    pthread_mutex_lock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, lock, RTPP_RW_LOCK_WR);
     for (sp = HT_GET(pvt->l1, hash); sp != NULL; sp = sp->next) {
         if (pvt->key_type == rtpp_ht_key_str_t && hash != sp->hash)
             continue;
@@ -528,11 +530,11 @@ hash_table_remove_by_key_raw(struct rtpp_hash_table_priv *pvt, const void *key,
         }
     }
     if (sp == NULL) {
-        pthread_mutex_unlock(&pvt->hash_table_lock);
+        CALL_SMETHOD(pvt->hash_table_lock, unlock, RTPP_RW_LOCK_WR);
         return (NULL);
     }
     hash_table_remove_locked(pvt, sp, hash, hosp);
-    pthread_mutex_unlock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, unlock, RTPP_RW_LOCK_WR);
     return (sp);
 }
 
@@ -590,7 +592,7 @@ hash_table_find_raw(struct rtpp_hash_table_priv *pvt, const void *key, size_t kl
     uint64_t hash;
 
     hash = rtpp_ht_hashkey(pvt, key, klen);
-    pthread_mutex_lock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, lock, RTPP_RW_LOCK_RD);
     for (sp = HT_GET(pvt->l1, hash); sp != NULL; sp = sp->next) {
         if (pvt->key_type == rtpp_ht_key_str_t && hash != sp->hash)
             continue;
@@ -605,7 +607,7 @@ hash_table_find_raw(struct rtpp_hash_table_priv *pvt, const void *key, size_t kl
     } else {
         rptr = NULL;
     }
-    pthread_mutex_unlock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, unlock, RTPP_RW_LOCK_RD);
     return (rptr);
 }
 
@@ -634,17 +636,20 @@ hash_table_find_str(struct rtpp_hash_table *self, const rtpp_str_t *key)
 
 static void
 hash_table_foreach(struct rtpp_hash_table *self,
-  rtpp_hash_table_match_t hte_ematch, void *marg, struct rtpp_ht_opstats *hosp)
+  rtpp_hash_table_match_t hte_ematch, void *marg, int restartable,
+  struct rtpp_ht_opstats *hosp)
 {
     struct rtpp_hash_table_entry *sp, *sp_next;
     struct rtpp_hash_table_priv *pvt;
     struct rtpp_refcnt *rptr;
     int i, mval;
+    enum rtpp_rw_lock_mode lmode = restartable ? RTPP_RW_LOCK_RD : RTPP_RW_LOCK_WR;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->hash_table_lock);
+restart:
+    CALL_SMETHOD(pvt->hash_table_lock, lock, lmode);
     if (pvt->l1->hte_num == 0) {
-        pthread_mutex_unlock(&pvt->hash_table_lock);
+        CALL_SMETHOD(pvt->hash_table_lock, unlock, lmode);
         return;
     }
     for (i = 0; i < pvt->l1->ht_len; i++) {
@@ -655,6 +660,13 @@ hash_table_foreach(struct rtpp_hash_table *self,
             mval = hte_ematch(CALL_SMETHOD(rptr, getdata), marg);
             RTPP_DBG_ASSERT(VDTE_MVAL(mval));
             if (mval & RTPP_HT_MATCH_DEL) {
+                if (lmode == RTPP_RW_LOCK_RD) {
+                    lmode = RTPP_RW_LOCK_WR;
+                    if (CALL_SMETHOD(pvt->hash_table_lock, upgrade) != 0) {
+                        CALL_SMETHOD(pvt->hash_table_lock, unlock, RTPP_RW_LOCK_RD);
+                        goto restart;
+                    }
+                }
                 hash_table_remove_locked(pvt, sp, sp->hash, hosp);
                 RC_DECREF(rptr);
                 free(sp);
@@ -664,7 +676,7 @@ hash_table_foreach(struct rtpp_hash_table *self,
             }
         }
     }
-    pthread_mutex_unlock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, unlock, lmode);
 }
 
 static void
@@ -675,11 +687,13 @@ hash_table_foreach_key_raw(struct rtpp_hash_table_priv *pvt, const void *key,
     struct rtpp_refcnt *rptr;
     int mval;
     uint64_t hash;
+    enum rtpp_rw_lock_mode lmode = RTPP_RW_LOCK_RD;
 
     hash = rtpp_ht_hashkey(pvt, key, klen);
-    pthread_mutex_lock(&pvt->hash_table_lock);
+restart:
+    CALL_SMETHOD(pvt->hash_table_lock, lock, lmode);
     if (pvt->l1->hte_num == 0) {
-        pthread_mutex_unlock(&pvt->hash_table_lock);
+        CALL_SMETHOD(pvt->hash_table_lock, unlock, lmode);
         return;
     }
     for (sp = HT_GET(pvt->l1, hash); sp != NULL; sp = sp_next) {
@@ -694,6 +708,13 @@ hash_table_foreach_key_raw(struct rtpp_hash_table_priv *pvt, const void *key,
         mval = hte_ematch(CALL_SMETHOD(rptr, getdata), marg);
         RTPP_DBG_ASSERT(VDTE_MVAL(mval));
         if (mval & RTPP_HT_MATCH_DEL) {
+            if (lmode == RTPP_RW_LOCK_RD) {
+                lmode = RTPP_RW_LOCK_WR;
+                if (CALL_SMETHOD(pvt->hash_table_lock, upgrade) != 0) {
+                    CALL_SMETHOD(pvt->hash_table_lock, unlock, RTPP_RW_LOCK_RD);
+                    goto restart;
+                }
+            }
             hash_table_remove_locked(pvt, sp, sp->hash, NULL);
             RC_DECREF(rptr);
             free(sp);
@@ -702,7 +723,7 @@ hash_table_foreach_key_raw(struct rtpp_hash_table_priv *pvt, const void *key,
             break;
         }
     }
-    pthread_mutex_unlock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, unlock, lmode);
 }
 
 static void
@@ -734,9 +755,9 @@ hash_table_get_length(struct rtpp_hash_table *self)
     int rval;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, lock, RTPP_RW_LOCK_RD);
     rval = pvt->l1->hte_num;
-    pthread_mutex_unlock(&pvt->hash_table_lock);
+    CALL_SMETHOD(pvt->hash_table_lock, unlock, RTPP_RW_LOCK_RD);
 
     return (rval);
 }
@@ -757,7 +778,7 @@ hash_table_purge(struct rtpp_hash_table *self)
     int npurged;
 
     npurged = 0;
-    CALL_SMETHOD(self, foreach, hash_table_purge_f, &npurged, NULL);
+    CALL_SMETHOD(self, foreach, hash_table_purge_f, &npurged, 1, NULL);
     return (npurged);
 }
 

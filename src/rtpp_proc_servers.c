@@ -165,7 +165,7 @@ run_servers(struct rtpp_proc_servers_priv *tp, double dtime)
     };
 
     CALL_SMETHOD(tp->act_servers, foreach, process_rtp_servers_foreach,
-      (void *)&fargs);
+      0, (void *)&fargs);
 
     rtpp_anetio_pump_q(fargs.sender);
     FLUSH_STAT(tp->cfsp->rtpp_stats, tp->npkts_played);

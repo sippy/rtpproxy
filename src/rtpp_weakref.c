@@ -54,7 +54,7 @@ static struct rtpp_refcnt *rtpp_weakref_unreg(struct rtpp_weakref *, uint64_t);
 static struct rtpp_refcnt *rtpp_weakref_move(struct rtpp_weakref *, uint64_t,
   struct rtpp_weakref *);
 static void rtpp_wref_foreach(struct rtpp_weakref *, rtpp_weakref_foreach_t,
-  void *);
+  int, void *);
 static int rtpp_wref_get_length(struct rtpp_weakref *);
 static int rtpp_wref_purge(struct rtpp_weakref *);
 static rtpp_weakref_cb_t rtpp_wref_set_on_first(struct rtpp_weakref *, rtpp_weakref_cb_t,
@@ -228,7 +228,7 @@ rtpp_wref_get_by_idx(struct rtpp_weakref *pub, uint64_t suid)
 
 static void
 rtpp_wref_foreach(struct rtpp_weakref *pub, rtpp_weakref_foreach_t foreach_f,
-  void *foreach_d)
+  int restartable, void *foreach_d)
 {
     struct rtpp_weakref_priv *pvt;
     struct rtpp_ht_opstats hos, *hosp;
@@ -243,7 +243,7 @@ rtpp_wref_foreach(struct rtpp_weakref *pub, rtpp_weakref_foreach_t foreach_f,
         hosp = NULL;
     }
 
-    CALL_SMETHOD(pvt->pub.ht, foreach, foreach_f, foreach_d, hosp);
+    CALL_SMETHOD(pvt->pub.ht, foreach, foreach_f, foreach_d, restartable, hosp);
 
     if (pvt->on_last.func != NULL) {
         if (hosp->last)

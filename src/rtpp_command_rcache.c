@@ -218,6 +218,6 @@ rtpp_cmd_rcache_cleanup(double ctime, void *p)
     struct rtpp_cmd_rcache_pvt *pvt;
 
     pvt = (struct rtpp_cmd_rcache_pvt *)p;
-    CALL_SMETHOD(pvt->ht, foreach, rtpp_cmd_rcache_ematch, &ctime, NULL);
+    CALL_SMETHOD(pvt->ht, foreach, rtpp_cmd_rcache_ematch, &ctime, 1, NULL);
     return (pvt->timeout_rval);
 }

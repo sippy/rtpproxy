@@ -117,7 +117,8 @@ rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct foreach_args *fap)
     const struct rtpp_session *sp, *sp_next;
 
     fap->dellist.last = fap->dellist.first = NULL;
-    CALL_SMETHOD(sessions_ht, foreach, rtpp_proc_ttl_foreach, (void *)fap, NULL);
+    CALL_SMETHOD(sessions_ht, foreach, rtpp_proc_ttl_foreach, (void *)fap,
+      0, NULL);
 
     int nsess_timeout = 0;
     for (sp = fap->dellist.first; sp != NULL; sp = sp_next) {
