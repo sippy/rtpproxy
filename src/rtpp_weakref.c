@@ -52,6 +52,8 @@ static void rtpp_weakref_dtor(struct rtpp_weakref_priv *);
 static int rtpp_weakref_reg(struct rtpp_weakref *, struct rtpp_refcnt *, uint64_t);
 static void *rtpp_wref_get_by_idx(struct rtpp_weakref *, uint64_t);
 static struct rtpp_refcnt *rtpp_weakref_unreg(struct rtpp_weakref *, uint64_t);
+static struct rtpp_refcnt *rtpp_weakref_move(struct rtpp_weakref *, uint64_t,
+  struct rtpp_weakref *);
 static void rtpp_wref_foreach(struct rtpp_weakref *, rtpp_weakref_foreach_t,
   void *);
 static int rtpp_wref_get_length(struct rtpp_weakref *);
@@ -65,6 +67,7 @@ static const struct rtpp_weakref_smethods _rtpp_weakref_smethods = {
     .reg = &rtpp_weakref_reg,
     .get_by_idx = &rtpp_wref_get_by_idx,
     .unreg = &rtpp_weakref_unreg,
+    .move = &rtpp_weakref_move,
     .foreach = &rtpp_wref_foreach,
     .get_length = &rtpp_wref_get_length,
     .purge = &rtpp_wref_purge,
@@ -157,6 +160,43 @@ rtpp_weakref_unreg(struct rtpp_weakref *pub, uint64_t suid)
         if (sp != NULL && hosp->last)
             pvt->on_last.func(pvt->on_last.arg);
         pthread_mutex_unlock(&pvt->on_lock);
+    }
+
+    return (sp);
+}
+
+static struct rtpp_refcnt *
+rtpp_weakref_move(struct rtpp_weakref *pub, uint64_t suid,
+  struct rtpp_weakref *other)
+{
+    struct rtpp_weakref_priv *pvt, *pvt_other;
+
+    struct rtpp_refcnt *sp;
+    struct rtpp_ht_opstats hos = {}, *hosp = NULL;
+
+    PUB2PVT(pub, pvt);
+    PUB2PVT(other, pvt_other);
+
+    if (pvt->on_last.func != NULL) {
+        pthread_mutex_lock(&pvt->on_lock);
+        hosp = &hos;
+    }
+    if (pvt_other->on_first.func != NULL) {
+        pthread_mutex_lock(&pvt_other->on_lock);
+        hosp = &hos;
+    }
+
+    sp = CALL_SMETHOD(pvt->ht, transfer, &suid, pvt_other->ht, hosp);
+
+    if (pvt->on_last.func != NULL) {
+        if (sp != NULL && hosp->last)
+            pvt->on_last.func(pvt->on_last.arg);
+        pthread_mutex_unlock(&pvt->on_lock);
+    }
+    if (pvt_other->on_first.func != NULL) {
+        if (sp != NULL && hosp->first)
+            pvt_other->on_first.func(pvt_other->on_first.arg);
+        pthread_mutex_unlock(&pvt_other->on_lock);
     }
 
     return (sp);
