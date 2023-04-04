@@ -42,7 +42,6 @@ DEFINE_CB_STRUCT(rtpp_weakref);
 
 struct rtpp_weakref_priv {
     struct rtpp_weakref pub;
-    struct rtpp_hash_table *ht;
     rtpp_weakref_cb_s on_first;
     rtpp_weakref_cb_s on_last;
     pthread_mutex_t on_lock;
@@ -85,9 +84,9 @@ rtpp_weakref_ctor(void)
     if (pvt == NULL) {
         return (NULL);
     }
-    pvt->ht = rtpp_hash_table_ctor(rtpp_ht_key_u64_t, RTPP_HT_NODUPS |
+    pvt->pub.ht = rtpp_hash_table_ctor(rtpp_ht_key_u64_t, RTPP_HT_NODUPS |
       RTPP_HT_DUP_ABRT);
-    if (pvt->ht == NULL) {
+    if (pvt->pub.ht == NULL) {
         goto e0;
     }
     if (pthread_mutex_init(&pvt->on_lock, NULL) != 0) {
@@ -100,7 +99,7 @@ rtpp_weakref_ctor(void)
       pvt);
     return (&pvt->pub);
 e1:
-    RTPP_OBJ_DECREF(pvt->ht);
+    RTPP_OBJ_DECREF(pvt->pub.ht);
 e0:
     RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
@@ -126,7 +125,7 @@ rtpp_weakref_reg(struct rtpp_weakref *pub, struct rtpp_refcnt *sp,
     }
 
     rval = 0;
-    if (CALL_SMETHOD(pvt->ht, append_refcnt, &suid, sp, hosp) == NULL) {
+    if (CALL_SMETHOD(pvt->pub.ht, append_refcnt, &suid, sp, hosp) == NULL) {
         rval = -1;
     }
     if (pvt->on_first.func != NULL) {
@@ -154,7 +153,7 @@ rtpp_weakref_unreg(struct rtpp_weakref *pub, uint64_t suid)
         hosp = NULL;
     }
 
-    sp = CALL_SMETHOD(pvt->ht, remove_by_key, &suid, hosp);
+    sp = CALL_SMETHOD(pvt->pub.ht, remove_by_key, &suid, hosp);
 
     if (pvt->on_last.func != NULL) {
         if (sp != NULL && hosp->last)
@@ -186,7 +185,7 @@ rtpp_weakref_move(struct rtpp_weakref *pub, uint64_t suid,
         hosp = &hos;
     }
 
-    sp = CALL_SMETHOD(pvt->ht, transfer, &suid, pvt_other->ht, hosp);
+    sp = CALL_SMETHOD(pvt->pub.ht, transfer, &suid, pvt_other->pub.ht, hosp);
 
     if (pvt->on_last.func != NULL) {
         if (sp != NULL && hosp->last)
@@ -208,7 +207,7 @@ rtpp_weakref_dtor(struct rtpp_weakref_priv *pvt)
 
     rtpp_weakref_fin(&(pvt->pub));
     pthread_mutex_destroy(&pvt->on_lock);
-    RTPP_OBJ_DECREF(pvt->ht);
+    RTPP_OBJ_DECREF(pvt->pub.ht);
     free(pvt);
 }
 
@@ -220,7 +219,7 @@ rtpp_wref_get_by_idx(struct rtpp_weakref *pub, uint64_t suid)
 
     PUB2PVT(pub, pvt);
 
-    rco = CALL_SMETHOD(pvt->ht, find, &suid);
+    rco = CALL_SMETHOD(pvt->pub.ht, find, &suid);
     if (rco == NULL) {
         return (NULL);
     }
@@ -244,7 +243,7 @@ rtpp_wref_foreach(struct rtpp_weakref *pub, rtpp_weakref_foreach_t foreach_f,
         hosp = NULL;
     }
 
-    CALL_SMETHOD(pvt->ht, foreach, foreach_f, foreach_d, hosp);
+    CALL_SMETHOD(pvt->pub.ht, foreach, foreach_f, foreach_d, hosp);
 
     if (pvt->on_last.func != NULL) {
         if (hosp->last)
@@ -259,7 +258,7 @@ rtpp_wref_get_length(struct rtpp_weakref *pub)
     struct rtpp_weakref_priv *pvt;
 
     PUB2PVT(pub, pvt);
-    return (CALL_SMETHOD(pvt->ht, get_length));
+    return (CALL_SMETHOD(pvt->pub.ht, get_length));
 }
 
 static int
@@ -274,7 +273,7 @@ rtpp_wref_purge(struct rtpp_weakref *pub)
         pthread_mutex_lock(&pvt->on_lock);
     }
 
-    npurged = CALL_SMETHOD(pvt->ht, purge);
+    npurged = CALL_SMETHOD(pvt->pub.ht, purge);
 
     if (pvt->on_last.func != NULL) {
         if (npurged > 0)

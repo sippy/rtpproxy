@@ -27,6 +27,7 @@
  */
 
 #include "rtpp_str.h"
+#include <stdint.h>
 
 struct rtpp_hash_table;
 struct rtpp_hash_table_entry;
@@ -90,6 +91,7 @@ struct rtpp_hash_table_smethods
 struct rtpp_hash_table
 {
     struct rtpp_refcnt *rcnt;
+    uint64_t seed;
 #if defined(RTPP_DEBUG)
     const struct rtpp_hash_table_smethods * smethods;
 #endif

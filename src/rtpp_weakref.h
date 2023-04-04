@@ -69,6 +69,7 @@ struct rtpp_weakref_smethods
 struct rtpp_weakref
 {
     struct rtpp_refcnt *rcnt;
+    struct rtpp_hash_table *ht;
 #if defined(RTPP_DEBUG)
     const struct rtpp_weakref_smethods * smethods;
 #endif

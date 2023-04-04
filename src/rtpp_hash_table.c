@@ -89,7 +89,6 @@ struct rtpp_hash_table_l1
 struct rtpp_hash_table_priv
 {
     struct rtpp_hash_table pub;
-    uint64_t seed;
     pthread_mutex_t hash_table_lock;
     enum rtpp_ht_key_types key_type;
     int flags;
@@ -169,7 +168,7 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
 #if defined(RTPP_DEBUG)
     pub->smethods = rtpp_hash_table_smethods;
 #endif
-    pvt->seed = ((uint64_t)random()) << 32 | (uint64_t)random();
+    pvt->pub.seed = ((uint64_t)random()) << 32 | (uint64_t)random();
     CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&hash_table_dtor,
       pvt);
     return (pub);
@@ -214,7 +213,7 @@ static inline uint64_t
 rtpp_ht_hashkey(struct rtpp_hash_table_priv *pvt, const void *key, size_t ksize)
 {
 
-    return XXH64(key, ksize, pvt->seed);
+    return XXH64(key, ksize, pvt->pub.seed);
 }
 
 static inline size_t
@@ -569,6 +568,7 @@ hash_table_transfer(struct rtpp_hash_table *self, const void *key,
     PUB2PVT(other, pvt_other);
 
     RTPP_DBG_ASSERT(pvt->key_type == pvt_other->key_type);
+    RTPP_DBG_ASSERT(pvt->pub.seed == pvt_other->pub.seed);
 
     sp = hash_table_remove_by_key_raw(pvt, key, hosp);
     if (sp == NULL)
