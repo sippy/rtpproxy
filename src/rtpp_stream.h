@@ -157,7 +157,7 @@ struct rtpp_stream {
 
 struct r_stream_ctor_args {
     struct rtpp_log *log;
-    struct rtpp_weakref *servers_wrt;
+    struct rtpp_proc_servers *proc_servers;
     struct rtpp_stats *rtpp_stats;
     enum rtpp_stream_side side;
     int pipe_type;

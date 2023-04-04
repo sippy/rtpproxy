@@ -87,6 +87,7 @@
 #include "rtpp_command_ecodes.h"
 #include "rtpp_port_table.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_proc_servers.h"
 #include "rtpp_proc_ttl.h"
 #include "rtpp_bindaddrs.h"
 #include "rtpp_network.h"
@@ -797,7 +798,6 @@ rtpp_shutdown(const struct rtpp_cfg *cfsp)
     CALL_SMETHOD(cfsp->sessions_wrt, purge);
     CALL_SMETHOD(cfsp->sessions_ht, purge);
 
-    RTPP_DBG_ASSERT(CALL_SMETHOD(cfsp->servers_wrt, get_length) == 0);
     RTPP_DBG_ASSERT(CALL_SMETHOD(cfsp->rtp_streams_wrt, get_length) == 0);
     RTPP_DBG_ASSERT(CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_length) == 0);
 
@@ -811,6 +811,7 @@ rtpp_shutdown(const struct rtpp_cfg *cfsp)
     CALL_SMETHOD(cfsp->rtpp_timed_cf, shutdown);
     RTPP_OBJ_DECREF(cfsp->rtpp_timed_cf);
     CALL_METHOD(cfsp->rtpp_proc_ttl_cf, dtor);
+    RTPP_OBJ_DECREF(cfsp->proc_servers);
     CALL_METHOD(cfsp->rtpp_proc_cf, dtor);
     RTPP_OBJ_DECREF(cfsp->sessinfo);
     RTPP_OBJ_DECREF(cfsp->rtpp_stats);
@@ -819,7 +820,6 @@ rtpp_shutdown(const struct rtpp_cfg *cfsp)
     }
     RTPP_OBJ_DECREF(cfsp->sessions_wrt);
     RTPP_OBJ_DECREF(cfsp->sessions_ht);
-    RTPP_OBJ_DECREF(cfsp->servers_wrt);
     RTPP_OBJ_DECREF(cfsp->rtp_streams_wrt);
     RTPP_OBJ_DECREF(cfsp->rtcp_streams_wrt);
 }
@@ -909,11 +909,6 @@ rtpp_main(int argc, char **argv)
     cfs.rtcp_streams_wrt = rtpp_weakref_ctor();
     if (cfs.rtcp_streams_wrt == NULL) {
         err(1, "can't allocate memory for the RTCP streams weakref table");
-         /* NOTREACHED */
-    }
-    cfs.servers_wrt = rtpp_weakref_ctor();
-    if (cfs.servers_wrt == NULL) {
-        err(1, "can't allocate memory for the servers weakref table");
          /* NOTREACHED */
     }
     cfs.sessinfo = rtpp_sessinfo_ctor(&cfs);
@@ -1008,6 +1003,13 @@ rtpp_main(int argc, char **argv)
     if (cfs.rtpp_proc_cf == NULL) {
         RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
           "can't init RTP processing subsystem");
+        exit(1);
+    }
+
+    cfs.proc_servers = rtpp_proc_servers_ctor(&cfs, cfs.rtpp_proc_cf->netio);
+    if (cfs.proc_servers == NULL) {
+        RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
+          "can't init RTP playback subsystem");
         exit(1);
     }
 

@@ -103,7 +103,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     CALL_METHOD(log, start, cfs);
     CALL_METHOD(log, setlevel, cfs->log_level);
     pipe_cfg = (struct r_pipe_ctor_args){.seuid = pub->seuid,
-      .streams_wrt = cfs->rtp_streams_wrt, .servers_wrt = cfs->servers_wrt,
+      .streams_wrt = cfs->rtp_streams_wrt, .proc_servers = cfs->proc_servers,
       .log = log, .rtpp_stats = cfs->rtpp_stats, .pipe_type = PIPE_RTP,
       .nmodules  = cfs->modules_cf->count.total,
       .pproc_manager = cfs->pproc_manager};

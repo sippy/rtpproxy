@@ -109,7 +109,6 @@ struct rtpp_cfg {
 
     struct rtpp_hash_table *sessions_ht;
     struct rtpp_weakref *sessions_wrt;
-    struct rtpp_weakref *servers_wrt;
     struct rtpp_weakref *rtp_streams_wrt;
     struct rtpp_weakref *rtcp_streams_wrt;
 
@@ -143,6 +142,8 @@ struct rtpp_cfg {
     struct rtpp_locking *locks;
 
     int no_resolve;
+
+    struct rtpp_proc_servers *proc_servers;
 };
 
 #endif

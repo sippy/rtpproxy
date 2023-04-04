@@ -76,6 +76,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_acct_pipe.h"
 #include "rtpp_cfg.h"
+#include "rtpp_proc_servers.h"
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
 
@@ -96,7 +97,7 @@ struct rtps {
 struct rtpp_stream_priv
 {
     struct rtpp_stream pub;
-    struct rtpp_weakref *servers_wrt;
+    struct rtpp_proc_servers *proc_servers;
     struct rtpp_stats *rtpp_stats;
     pthread_mutex_t lock;
     /* Weak reference to the "rtpp_server" (player) */
@@ -287,7 +288,8 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     if (pvt->rem_addr == NULL) {
         goto e8;
     }
-    pvt->servers_wrt = ap->servers_wrt;
+    pvt->proc_servers = ap->proc_servers;
+    RTPP_OBJ_INCREF(ap->proc_servers);
     pvt->rtpp_stats = ap->rtpp_stats;
     pvt->pub.log = ap->log;
     RTPP_OBJ_INCREF(ap->log);
@@ -407,7 +409,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     if (pub->codecs != NULL)
         free(pub->codecs);
     if (pvt->rtps.uid != RTPP_UID_NONE)
-        CALL_SMETHOD(pvt->servers_wrt, unreg, pvt->rtps.uid);
+        CALL_SMETHOD(pvt->proc_servers, unreg, pvt->rtps.uid);
     if (pub->resizer != NULL)
         rtp_resizer_free(pvt->rtpp_stats, pub->resizer);
     if (pub->rrc != NULL)
@@ -427,6 +429,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     RTPP_OBJ_DECREF(pvt->pub.log);
     RTPP_OBJ_DECREF(pvt->rem_addr);
     RTPP_OBJ_DECREF(pvt->raddr_prev);
+    RTPP_OBJ_DECREF(pvt->proc_servers);
     if (pvt->pub.pipe_type == PIPE_RTP) {
         CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt + 1);
     }
@@ -505,12 +508,12 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
             plerror = "pproc_manager->reg() method failed";
             goto e1;
         }
-        if (CALL_SMETHOD(pvt->servers_wrt, reg, rsrv->rcnt, rsrv->sruid) != 0) {
-            plerror = "servers_wrt->reg() method failed";
-            goto e2;
-        }
         if (pvt->rtps.inact == 0) {
             CALL_SMETHOD(rsrv, start, cmd->dtime->mono);
+        }
+        if (CALL_SMETHOD(pvt->proc_servers, reg, rsrv, pvt->rtps.inact) != 0) {
+            plerror = "proc_servers->reg() method failed";
+            goto e2;
         }
         pthread_mutex_unlock(&pvt->lock);
         cmd->csp->nplrs_created.cnt++;
@@ -547,7 +550,7 @@ rtpp_stream_handle_noplay(struct rtpp_stream *self)
     pthread_mutex_unlock(&pvt->lock);
     if (ruid == RTPP_UID_NONE)
         return;
-    if (CALL_SMETHOD(pvt->servers_wrt, unreg, ruid) != NULL) {
+    if (CALL_SMETHOD(pvt->proc_servers, unreg, ruid) == 0) {
         pthread_mutex_lock(&pvt->lock);
         CALL_SMETHOD(self->pproc_manager->reverse, unreg, pvt + 2);
         if (pvt->rtps.uid == ruid) {
@@ -724,15 +727,9 @@ _rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
 static void
 _rtpp_stream_plr_start(struct rtpp_stream_priv *pvt, double dtime)
 {
-    struct rtpp_server *rsrv;
 
     RTPP_DBG_ASSERT(pvt->rtps.inact != 0);
-    rsrv = CALL_SMETHOD(pvt->servers_wrt, get_by_idx, pvt->rtps.uid);
-    if (rsrv == NULL) {
-        return;
-    }
-    CALL_SMETHOD(rsrv, start, dtime);
-    RTPP_OBJ_DECREF(rsrv);
+    CALL_SMETHOD(pvt->proc_servers, plr_start, pvt->rtps.uid, dtime);
     pvt->rtps.inact = 0;
 }
 

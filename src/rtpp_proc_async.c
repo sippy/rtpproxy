@@ -54,7 +54,6 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
-#include "rtpp_proc_servers.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
@@ -90,7 +89,6 @@ struct rtpp_proc_async_cf {
     const struct rtpp_cfg *cf_save;
     struct rtpp_proc_thread_cf rtp_thread;
     struct rtpp_proc_thread_cf rtcp_thread;
-    struct rtpp_proc_servers *stap;
     int npkts_relayed_idx;
 };
 
@@ -332,10 +330,6 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
 
     proc_cf->cf_save = cfsp;
 
-    proc_cf->stap = rtpp_proc_servers_ctor(cfsp, proc_cf->pub.netio);
-    if (proc_cf->stap == NULL)
-        goto e1;
-
     const struct packet_processor_if relay_packet_poi = {
         .descr = "relay_packet",
         .arg = (void *)proc_cf,
@@ -343,7 +337,7 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
         .enqueue = &relay_packet
     };
     if (CALL_SMETHOD(cfsp->pproc_manager, reg, PPROC_ORD_RELAY, &relay_packet_poi) < 0)
-        goto e2;
+        goto e1;
 
     const struct packet_processor_if record_packet_poi = {
         .descr = "record_packet",
@@ -352,14 +346,14 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
         .enqueue = &record_packet
     };
     if (CALL_SMETHOD(cfsp->pproc_manager, reg, PPROC_ORD_WITNESS, &record_packet_poi) < 0)
-        goto e3;
+        goto e2;
 
     if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtp_thread, PIPE_RTP) != 0) {
-        goto e4;
+        goto e3;
     }
 
     if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtcp_thread, PIPE_RTCP) != 0) {
-        goto e5;
+        goto e4;
     }
 
     RTPP_OBJ_INCREF(cfsp->rtpp_stats);
@@ -368,14 +362,12 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
     proc_cf->pub.dtor = &rtpp_proc_async_dtor;
     proc_cf->pub.nudge = &rtpp_proc_async_nudge;
     return (&proc_cf->pub);
-e5:
-    rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
 e4:
-    CALL_SMETHOD(cfsp->pproc_manager, unreg, record_packet_poi.key);
+    rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
 e3:
-    CALL_SMETHOD(cfsp->pproc_manager, unreg, relay_packet_poi.key);
+    CALL_SMETHOD(cfsp->pproc_manager, unreg, record_packet_poi.key);
 e2:
-    RTPP_OBJ_DECREF(proc_cf->stap);
+    CALL_SMETHOD(cfsp->pproc_manager, unreg, relay_packet_poi.key);
 e1:
     rtpp_netio_async_destroy(proc_cf->pub.netio);
 e0:
@@ -393,7 +385,6 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     CALL_SMETHOD(proc_cf->cf_save->pproc_manager, unreg, relay_packet);
     rtpp_proc_async_thread_destroy(&proc_cf->rtcp_thread);
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
-    RTPP_OBJ_DECREF(proc_cf->stap);
     rtpp_netio_async_destroy(proc_cf->pub.netio);
     RTPP_OBJ_DECREF(proc_cf->cf_save->rtpp_stats);
     RTPP_OBJ_DECREF(proc_cf->cf_save->pproc_manager);
