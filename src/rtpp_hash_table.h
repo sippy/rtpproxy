@@ -48,6 +48,8 @@ DEFINE_METHOD(rtpp_hash_table, hash_table_remove_str, void,
   const rtpp_str_t *key, struct rtpp_hash_table_entry *sp);
 DEFINE_METHOD(rtpp_hash_table, hash_table_remove_by_key, struct rtpp_refcnt *,
   const void *key, struct rtpp_ht_opstats *);
+DEFINE_METHOD(rtpp_hash_table, hash_table_transfer, struct rtpp_refcnt *,
+  const void *key, struct rtpp_hash_table *, struct rtpp_ht_opstats *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_find, struct rtpp_refcnt *, const void *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_find_str, struct rtpp_refcnt *, const rtpp_str_t *);
 DEFINE_METHOD(rtpp_hash_table, hash_table_foreach, void, rtpp_hash_table_match_t,
@@ -75,6 +77,7 @@ struct rtpp_hash_table_smethods
     METHOD_ENTRY(hash_table_remove, remove);
     METHOD_ENTRY(hash_table_remove_str, remove_str);
     METHOD_ENTRY(hash_table_remove_by_key, remove_by_key);
+    METHOD_ENTRY(hash_table_transfer, transfer);
     METHOD_ENTRY(hash_table_find, find);
     METHOD_ENTRY(hash_table_find_str, find_str);
     METHOD_ENTRY(hash_table_foreach, foreach);
