@@ -70,7 +70,7 @@ struct timespec;
     (rqp)->length += 1;                      \
 }
 
-#define RTPQ_TYNY_CB_LEN  4
+#define RTPQ_TINY_CB_LEN  4
 #define RTPQ_SMALL_CB_LEN 16
 #define RTPQ_LARGE_CB_LEN 1024
 

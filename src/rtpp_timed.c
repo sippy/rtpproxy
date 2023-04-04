@@ -155,7 +155,7 @@ rtpp_timed_ctor(double run_period)
         goto e1;
     }
     rtpp_queue_setqlen(rtcp->q, 0);
-    rtcp->cmd_q = rtpp_queue_init(RTPQ_TYNY_CB_LEN, "rtpp_timed(commands)");
+    rtcp->cmd_q = rtpp_queue_init(RTPQ_TINY_CB_LEN, "rtpp_timed(commands)");
     if (rtcp->cmd_q == NULL) {
         goto e2;
     }
