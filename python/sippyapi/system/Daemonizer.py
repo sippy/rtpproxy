@@ -25,11 +25,19 @@
 
 import os, sys, signal, socket
 
+class DChildProcessError(ChildProcessError):
+    logfile: str
+
+    def __init__(self, *args, logfile = None):
+        self.logfile = logfile
+        super().__init__(*args)
+
 class Daemonizer():
     amiparent = True
     childpid = None
     ssock = None
     report_token = 'init_ok\n'
+    logfile = None
 
     def __init__(self, logfile = None, tweakhup = False):
         if tweakhup:
@@ -42,7 +50,7 @@ class Daemonizer():
             try:
                 self.childpid = int(sp[0].recv(8).decode('ascii').strip())
             except ValueError as exc:
-                raise ChildProcessError('Invalid/no token returned by a child') from None
+                raise DChildProcessError('Invalid/no token returned by a child') from None
             self.ssock = sp[0]
             return
         self.amiparent = False
@@ -58,6 +66,7 @@ class Daemonizer():
             sys.stdout = fake_stdout
             sys.stderr = fake_stdout
             fd = fake_stdout.fileno()
+            self.logfile = logfile
         os.dup2(fd, sys.__stdout__.fileno())
         os.dup2(fd, sys.__stderr__.fileno())
         if logfile == None:
@@ -76,8 +85,22 @@ class Daemonizer():
         status = self.ssock.recv(len(self.report_token)).decode('ascii')
         if status == self.report_token:
             return status
+        if status is None:
+            estatus = 'NULL'
+        else:
+            estatus = F'"{status}"'
+        report_token = self.report_token
+        if report_token[-1] == '\n':
+            report_token = report_token[:-1]
+        emsg = F'Expected "{report_token}", got {estatus}'
+        #sys.stderr.write(emsg + '\n')
+        exc = None
         while True:
-            os.kill(self.childpid, signal.SIGTERM)
+            try:
+                os.kill(self.childpid, signal.SIGTERM)
+            except ProcessLookupError:
+                break
+        raise DChildProcessError(emsg, self.logfile) from None
 
     def childreport(self):
         assert(not self.amiparent)
