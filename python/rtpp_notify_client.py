@@ -34,6 +34,7 @@ DEFAULT_RTPP_SPATH = 'unix:/var/run/rtpproxy.sock'
 class cli_handler(object):
     file_out = None
     rval = 0
+    exception = None
 
     def __init__(self, file_out):
         self.file_out = file_out
@@ -43,10 +44,11 @@ class cli_handler(object):
         try:
             self.file_out.write('%s\n' % (cmd,))
             self.file_out.flush()
-        except:
+        except Exception as ex:
             self.rval = 1
             clm.shutdown()
             ED2.breakLoop()
+            self.exception = ex
             return
 
     def done(self):
@@ -127,6 +129,8 @@ def main():
     if daemonize:
         dob.childreport()
     ED2.loop()
+    if ch.exception is not None:
+        raise ch.exception
     sys.exit(ch.rval)
 
 if __name__ == '__main__':
