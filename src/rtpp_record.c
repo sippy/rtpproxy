@@ -42,6 +42,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <netdb.h>
+#include <pthread.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,6 +81,7 @@ enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP, MODE_LOCAL_PCAP}; /* MODE_LOC
 
 struct rtpp_record_channel {
     struct rtpp_record pub;
+    pthread_mutex_t lock;
     char spath[PATH_MAX + 1];
     char rpath[PATH_MAX + 1];
     int fd;
@@ -182,6 +184,8 @@ rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
 	RTPP_ELOG(sp->log, RTPP_LOG_ERR, "can't allocate memory");
 	goto e0;
     }
+    if (pthread_mutex_init(&rrc->lock, NULL) != 0)
+        goto e1;
 
     rrc->record_single_file = (record_type == RECORD_BOTH) ? 1 : 0;
     if (rrc->record_single_file != 0) {
@@ -282,6 +286,8 @@ e3:
 e2:
     RTPP_OBJ_DECREF(rrc->log);
     RTPP_OBJ_DECREF(&(rrc->pub));
+    pthread_mutex_destroy(&rrc->lock);
+e1:
     free(rrc);
 e0:
     return NULL;
@@ -556,19 +562,16 @@ get_hdr_size(const struct sockaddr *raddr)
 }
 
 static void
-rtpp_record_write(struct rtpp_record *self, const struct pkt_proc_ctx *pktxp)
+rtpp_record_write_locked(struct rtpp_record_channel *rrc, const struct pkt_proc_ctx *pktxp)
 {
     struct iovec v[2];
     int rval, hdr_size;
     prepare_pkt_hdr_t prepare_pkt_hdr;
     const char *proto;
     struct sockaddr_storage daddr;
-    struct rtpp_record_channel *rrc;
     struct rtpp_netaddr *rem_addr;
     struct rtp_packet *packet = pktxp->pktp;
     struct rtpp_stream *stp = pktxp->strmp_out;
-
-    PUB2PVT(self, rrc);
 
     if (rrc->fd == -1)
 	return;
@@ -656,6 +659,17 @@ rtpp_record_write(struct rtpp_record *self, const struct pkt_proc_ctx *pktxp)
 }
 
 static void
+rtpp_record_write(struct rtpp_record *self, const struct pkt_proc_ctx *pktxp)
+{
+    struct rtpp_record_channel *rrc;
+
+    PUB2PVT(self, rrc);
+    pthread_mutex_lock(&rrc->lock);
+    rtpp_record_write_locked(rrc, pktxp);
+    pthread_mutex_unlock(&rrc->lock);
+}
+
+static void
 rtpp_record_close(struct rtpp_record_channel *rrc)
 {
     static int keep = 1;
@@ -681,6 +695,6 @@ rtpp_record_close(struct rtpp_record_channel *rrc)
     }
 done:
     RTPP_OBJ_DECREF(rrc->log);
-
+    pthread_mutex_destroy(&rrc->lock);
     free(rrc);
 }
