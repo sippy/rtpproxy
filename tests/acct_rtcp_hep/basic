@@ -90,7 +90,7 @@ run_acct_rtcp_hep() {
   run_rtpproxy "${RECNAME}" ${RTP_PORT_A} ${RTP_PORT_O} \
     > "${ONAME}" 2> "${LNAME}"
   RTPP_RC=${?}
-  ${DIFF} "${CD_DIR}/basic.${HEP_PROTO}.output" "${ONAME}"
+  ${DIFF} "${CD_DIR}/basic.${HEP_PROTO}.output" "${ONAME}" >&2
   DIFF_RC=${?}
   if [ ${RTPP_RC} -ne 0 -o ${DIFF_RC} -ne 0 ]
   then
