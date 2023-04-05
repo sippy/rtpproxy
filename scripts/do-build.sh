@@ -43,7 +43,7 @@ then
   exec make ${ALLCLEAN_TGT}
 fi
 
-${APT_GET} install -y libgsm1-dev
+${APT_GET} install -y libgsm1-dev libpcap-dev cmake libunwind-dev tcpdump curl gdb tcpreplay
 mkdir deps
 cd deps
 wget -O bcg729-${BCG729_VER}.tar.gz \
@@ -123,14 +123,12 @@ cd ../..
 
 ${SUDO} ldconfig
 
-${APT_GET} install -y libpcap-dev cmake
 git clone -b master https://github.com/sippy/udpreplay.git dist/udpreplay
 mkdir dist/udpreplay/build
 cmake -Bdist/udpreplay/build -Hdist/udpreplay
 make -C dist/udpreplay/build all
 ${SUDO} make -C dist/udpreplay/build install
 
-${APT_GET} install -y tcpdump curl gdb tcpreplay
 tcpdump --version || true
 #launchpad fails#${APT_GET} install -y --reinstall ca-certificates
 #launchpad fails#sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
