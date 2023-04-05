@@ -53,10 +53,6 @@ class cli_handler(object):
         from sippy.Core.EventDispatcher import ED2
         ED2.breakLoop()
 
-    def sigin(self):
-        from sippy.Time.Timeout import Timeout
-        Timeout(self.done, 0.125)
-
 def main():
     spath = DEFAULT_RTPP_SPATH
     stype = 'unix'
@@ -127,7 +123,7 @@ def main():
         cs = CLIConnectionManager(rep, tuple(spath), tcp = True)
     if timeout != None:
         Timeout(ch.done, timeout)
-    ED2.regSignal(SIGTERM, ch.sigin)
+    ED2.regSignal(SIGTERM, ch.done)
     if daemonize:
         dob.childreport()
     ED2.loop()
