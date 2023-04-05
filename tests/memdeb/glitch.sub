@@ -3,17 +3,18 @@ spin_nc()
   NC_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
 #  (nc -k -l 127.0.0.1 ${NC_PORT} > glitch1.ncout)&
 #  (strace -o glitch1.nctrace -f ${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
-  (${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
-  NC_PID=${!}
-  echo "starting NOTYFY_CLIENT on port ${NC_PORT}"
-  sleep 2.5
+  NC_PID="`${RTPP_NOTYFY_CLIENT} -D -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 -l glitch1.nclog`"
+  RTPP_NC_RC=${?}
+  if [ -z "${NC_PID}" ]
+  then
+    RTPP_NC_RC=1
+  fi
+  report_rc "${RTPP_NC_RC}" "starting NOTYFY_CLIENT on port ${NC_PORT}"
 }
 
 stop_nc()
 {
-  kill ${NC_PID} 2>/dev/null
-  wait ${NC_PID}
-  report "waiting for NOTYFY_CLIENT to exit"
+  notify_client_stop "${NC_PID}"
 }
 
 glitch_collect()

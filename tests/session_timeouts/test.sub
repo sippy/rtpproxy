@@ -145,10 +145,13 @@ run_test()
   fi
   NSTESTS=`echo ${RTPP_TEST_SOCKETS} | wc -w`
   RTPP_NC_TOUT=$((${NSTESTS} * 34))
-  ${RTPP_NOTYFY_CLIENT} -s ${client_notify_sock} -o session_timeouts.tlog \
-   -t ${RTPP_NC_TOUT}&
+  RTPP_NC_PID="`${RTPP_NOTYFY_CLIENT} -D -s ${client_notify_sock} -o session_timeouts.tlog \
+   -t ${RTPP_NC_TOUT} -l session_timeouts.tout`"
   RTPP_NC_RC=${?}
-  RTPP_NC_PID=${!}
+  if [ -z "${RTPP_NC_PID}" ]
+  then
+    RTPP_NC_RC=1
+  fi
   report_rc ${RTPP_NC_RC} "Starting rtpp_notify_client.py on ${client_notify_sock}"
 
   setup_tstart
@@ -272,8 +275,8 @@ run_test()
     j=$((${j} + 1))
   done
 
-  wait ${RTPP_NC_PID}
-  report "wait for rtpp_notify_client.py on ${client_notify_sock} shutdown"
+  notify_client_stop "${RTPP_NC_PID}"
+
   sort session_timeouts.tlog > session_timeouts.tlog.sorted
   sort session_timeouts/tnotify.output | ${DIFF} - session_timeouts.tlog.sorted
   report "checking rtpp_notify_client.py on ${client_notify_sock} output"

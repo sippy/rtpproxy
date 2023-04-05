@@ -299,6 +299,24 @@ witness_start() {
   fi
 }
 
+notify_client_stop() {
+  local NC_PID="${1}"
+  kill ${NC_PID} 2>/dev/null
+  report "asking NOTYFY_CLIENT[${NC_PID}] to exit"
+  not_exited=1
+  for i in 1 2 3
+  do
+    if kill -TERM ${NC_PID} 2>/dev/null
+    then
+      sleep 1
+      continue
+    fi
+    not_exited=0
+    break
+  done
+  report_rc ${not_exited} "waiting for NOTYFY_CLIENT[${NC_PID}] to exit"
+}
+
 witness_stop() {
   if [ "${WITNESS_PID}" != "" ]
   then
