@@ -3,12 +3,24 @@ spin_nc()
   NC_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
 #  (nc -k -l 127.0.0.1 ${NC_PORT} > glitch1.ncout)&
 #  (strace -o glitch1.nctrace -f ${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
-  NC_PID="`${RTPP_NOTYFY_CLIENT} -D -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 -l glitch1.nclog`"
+  GNC_LOG="glitch1.nclog"
+  if [ -e ${GNC_LOG} ]
+  then
+    rm "${GNC_LOG}"
+  fi
+  NC_PID="`${RTPP_NOTYFY_CLIENT} -D -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 -l "${GNC_LOG}"`"
   RTPP_NC_RC=${?}
   if [ -z "${NC_PID}" ]
   then
     RTPP_NC_RC=1
   fi
+  if [ -z "${NC_PID}" -o ${RTPP_NC_RC} -ne 0 ]
+  then
+    if [ -e "${GNC_LOG}" ]
+    then
+        cat "${GNC_LOG}" >&2
+    fi
+   fi
   report_rc "${RTPP_NC_RC}" "starting NOTYFY_CLIENT on port ${NC_PORT}"
 }
 
