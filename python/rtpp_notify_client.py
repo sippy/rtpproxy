@@ -27,6 +27,8 @@ import sys
 import getopt
 from signal import SIGTERM
 
+from sippyapi.system.Daemonizer import Daemonizer
+
 DEFAULT_RTPP_SPATH = 'unix:/var/run/rtpproxy.sock'
 
 class cli_handler(object):
@@ -37,6 +39,7 @@ class cli_handler(object):
         self.file_out = file_out
 
     def command_received(self, x, clm, cmd):
+        from sippy.Core.EventDispatcher import ED2
         try:
             self.file_out.write('%s\n' % (cmd,))
             self.file_out.flush()
@@ -47,20 +50,24 @@ class cli_handler(object):
             return
 
     def done(self):
+        from sippy.Core.EventDispatcher import ED2
         ED2.breakLoop()
 
     def sigin(self):
+        from sippy.Time.Timeout import Timeout
         Timeout(self.done, 0.125)
 
-if __name__ == '__main__':
+def main():
     spath = DEFAULT_RTPP_SPATH
     stype = 'unix'
     sippy_path = None
     file_out = sys.stdout
     timeout = None
+    daemonize = False
+    logfile = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 's:S:o:t:')
+        opts, args = getopt.getopt(sys.argv[1:], 's:S:o:t:Dl:')
     except getopt.GetoptError:
         usage()
 
@@ -91,6 +98,11 @@ if __name__ == '__main__':
         if o == '-t':
            timeout = float(a.strip())
            continue
+        if o == '-D':
+           daemonize = True
+           continue
+        if o == '-l':
+           logfile = a
 
     if sippy_path != None:
         sys.path.insert(0, sippy_path)
@@ -98,6 +110,13 @@ if __name__ == '__main__':
     from sippy.CLIManager import CLIConnectionManager
     from sippy.Time.Timeout import Timeout
     from sippy.Core.EventDispatcher import ED2
+
+    if daemonize:
+        dob = Daemonizer(logfile = logfile)
+        if dob.amiparent:
+            dob.waitchild()
+            print(F'{dob.childpid}')
+            sys.exit(0)
 
     ch = cli_handler(file_out)
     if stype == 'unix':
@@ -109,5 +128,10 @@ if __name__ == '__main__':
     if timeout != None:
         Timeout(ch.done, timeout)
     ED2.regSignal(SIGTERM, ch.sigin)
+    if daemonize:
+        dob.childreport()
     ED2.loop()
     sys.exit(ch.rval)
+
+if __name__ == '__main__':
+    main()
