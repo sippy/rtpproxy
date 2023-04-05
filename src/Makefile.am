@@ -126,7 +126,7 @@ rtpp_rzmalloc_perf_debug_CPPFLAGS = $(rtpp_rzmalloc_perf_CPPFLAGS) $(RTPP_MEMDEB
   -DMEMDEB_APP=rtpp_rzmalloc_perf -I$(top_srcdir)
 rtpp_rzmalloc_perf_debug_LDFLAGS = $(rtpp_rzmalloc_perf_LDFLAGS)
 rtpp_rzmalloc_perf_debug_LDADD = $(rtpp_rzmalloc_perf_LDADD) \
-  $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
+  $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
 
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \

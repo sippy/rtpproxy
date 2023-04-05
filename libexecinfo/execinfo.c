@@ -40,12 +40,20 @@
 #include <unistd.h>
 
 #include "execinfo.h"
+#include "execinfo_internal.h"
 #include "stacktraverse.h"
 
-#define LINELEN_MAX 512
-
-static char bt_buffer[STACKTRAVERSE_MAX_LEVELS * LINELEN_MAX];
-static char *bt_rvals[STACKTRAVERSE_MAX_LEVELS];
+struct libexecinfo_ns libexecinfo_ns = {
+    .sc_randtable = {
+        23,  3, 50, 54,  6, 63, 58, 61, 12,  4, 46, 36, 52, 35, 28, 55, 11, 29, 60,
+        38, 37, 53,  7, 26,  2, 39,  0, 30, 14, 56, 48, 27, 33, 47, 24, 57, 20, 34,
+        31, 15, 51, 13, 32,  8,  1, 49, 22, 21, 45, 41, 62, 40, 19, 44, 17, 10, 59,
+        18,  5, 16,  9, 25, 43, 42, 55, 14, 46,  6, 20, 29, 48, 12, 63, 31, 60, 34,
+        61, 32, 37, 36, 22, 45, 58,  8, 54, 24, 44, 49, 41, 11,  5, 15,  1, 56,  4,
+        21, 10,  3,  9,  2, 13, 47, 50, 57, 51, 26, 17, 35, 18,  0, 53, 59, 43, 52,
+        30, 27, 19, 38, 42, 23, 25, 40,  7, 62, 33, 28, 39, 16
+    },
+};
 
 static int
 get_d10(int val)
@@ -64,18 +72,17 @@ get_d10(int val)
     return (c);
 }
 
-static const void *topframe;
-
 const void *
 execinfo_set_topframe(const void *tfp)
 {
     const void *otfp;
 
-    otfp = topframe;
-    topframe = tfp;
+    otfp = libexecinfo_ns.topframe;
+    libexecinfo_ns.topframe = tfp;
     return (otfp);
 }
 
+#if !defined(USE_LIBUNWIND)
 int
 backtrace(void **buffer, int size)
 {
@@ -87,28 +94,11 @@ backtrace(void **buffer, int size)
         buffer[i - 1] = getreturnaddr(i);
         if (buffer[i - 1] == NULL)
             break;
-	if (buffer[i - 1] == topframe)
+	if (buffer[i - 1] == libexecinfo_ns.topframe)
 	    return i;
     }
 
     return i - 1;
-}
-
-const static unsigned int sc_randtable[STACKTRAVERSE_MAX_LEVELS + 1] = {
-    23,  3, 50, 54,  6, 63, 58, 61, 12,  4, 46, 36, 52, 35, 28, 55, 11, 29, 60,
-    38, 37, 53,  7, 26,  2, 39,  0, 30, 14, 56, 48, 27, 33, 47, 24, 57, 20, 34,
-    31, 15, 51, 13, 32,  8,  1, 49, 22, 21, 45, 41, 62, 40, 19, 44, 17, 10, 59,
-    18,  5, 16,  9, 25, 43, 42, 55, 14, 46,  6, 20, 29, 48, 12, 63, 31, 60, 34,
-    61, 32, 37, 36, 22, 45, 58,  8, 54, 24, 44, 49, 41, 11,  5, 15,  1, 56,  4,
-    21, 10,  3,  9,  2, 13, 47, 50, 57, 51, 26, 17, 35, 18,  0, 53, 59, 43, 52,
-    30, 27, 19, 38, 42, 23, 25, 40,  7, 62, 33, 28, 39, 16
-};
-
-static uintptr_t
-ROR(uintptr_t x, unsigned int sft)
-{
-
-    return ((x >> sft) | (x << ((sizeof(x) * 8) - sft)));
 }
 
 uintptr_t
@@ -121,13 +111,14 @@ getstackcookie(void)
     r = 0;
     for (i = 1; i < STACKTRAVERSE_MAX_LEVELS + 1 && getframeaddr(i) != NULL; i++) {
         p = getreturnaddr(i);
-        tr = ROR((uintptr_t)p, sc_randtable[i - 1]);
+        tr = ROR((uintptr_t)p, libexecinfo_ns.sc_randtable[i - 1]);
         r ^= tr;
-        if (p == topframe || p == NULL)
+        if (p == libexecinfo_ns.topframe || p == NULL)
             break;
     }
     return (r);
 }
+#endif
 
 char **
 backtrace_symbols(void *const *buffer, int size)
@@ -138,8 +129,8 @@ backtrace_symbols(void *const *buffer, int size)
 
     if (size > STACKTRAVERSE_MAX_LEVELS)
         size = STACKTRAVERSE_MAX_LEVELS;
-    bp = bt_buffer;
-    bsize = sizeof(bt_buffer);
+    bp = libexecinfo_ns.bt_buffer;
+    bsize = sizeof(libexecinfo_ns.bt_buffer);
     for (i = 0; i < size; i++) {
         if (dladdr(buffer[i], &info) != 0) {
             if (info.dli_sname == NULL)
@@ -167,18 +158,18 @@ backtrace_symbols(void *const *buffer, int size)
                    1;                       /* "\0" */
             snprintf(bp, bsize, "#%d\t%p", i, buffer[i]);
         }
-        bt_rvals[i] = bp;
+        libexecinfo_ns.bt_rvals[i] = bp;
         bp += alen;
         bsize -= alen;
         if (bsize <= 0) {
             for (i = i + 1; i < size; i++) {
-                bt_rvals[i] = NULL;
+                libexecinfo_ns.bt_rvals[i] = NULL;
             }
             break;
         }
     }
 
-    return bt_rvals;
+    return libexecinfo_ns.bt_rvals;
 }
 
 void

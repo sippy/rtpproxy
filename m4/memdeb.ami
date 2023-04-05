@@ -10,5 +10,7 @@ RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_me
   $(top_srcdir)/src/rtpp_refcnt.h \
   $(top_srcdir)/src/rtpp_mallocs.c $(top_srcdir)/src/rtpp_mallocs.h \
   $(top_srcdir)/src/rtpp_stacktrace.c $(top_srcdir)/src/rtpp_stacktrace.h
+if !ENABLE_LIBUNWIND
 RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
-RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.a @LIBS_DL@ -lpthread
+endif
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread

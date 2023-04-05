@@ -218,6 +218,15 @@ then
    AC_DEFINE([ENABLE_SIPLOG], 1, [Define if you have libsiplog library installed]))
 fi
 
+AC_CHECK_HEADER(libunwind.h, found_libunwind=yes)
+if test "$found_libunwind" = yes
+then
+  AC_CHECK_LIB(unwind, unw_backtrace,
+   LIBS_UNWIND="-lunwind"
+   ENABLE_LIBUNWIND=1
+   AC_DEFINE([ENABLE_LIBUNWIND], 1, [Define if you have libunwind library installed]))
+fi
+
 AC_CHECK_HEADER(stdatomic.h, found_stdatomic=yes)
 if test "$found_stdatomic" = yes
 then
@@ -365,6 +374,7 @@ AM_CONDITIONAL(ENABLE_BASIC_TESTS, [test "x${ENABLE_BASIC_TESTS}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_WARN_IPT, [test "${ac_cc_warn_ipt}" = 1])
 AM_CONDITIONAL(ENABLE_LTO, [test "x${ENABLE_LTO}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBRTPPROXY, [test "x${ENABLE_LIBRTPPROXY}" = "xyes" ])
+AM_CONDITIONAL(ENABLE_LIBUNWIND, [test "${ENABLE_LIBUNWIND}" = 1 ])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
@@ -385,6 +395,7 @@ AC_SUBST(LIBS_SRTP)
 AC_SUBST(LIBS_SIPLOG)
 AC_SUBST(LIBS_SIPLOG_DBG)
 AC_SUBST(LIBS_ELPERIODIC)
+AC_SUBST(LIBS_UNWIND)
 AC_SUBST(SIZEOF_TIME_T)
 AC_SUBST(OPT_CFLAGS)
 AC_OUTPUT

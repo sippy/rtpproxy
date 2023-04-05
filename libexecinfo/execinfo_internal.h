@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2003-2019 Maxim Sobolev <sobomax@FreeBSD.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,16 +22,25 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * $Id: stacktraverse.h,v 1.1 2003/08/10 14:47:54 sobomax Exp $
  */
 
-#ifndef _STACKTRAVERSE_H_
-#define _STACKTRAVERSE_H_
+#pragma once
 
-void *getreturnaddr(int) __attribute__((noinline));
-void *getframeaddr(int);
-
+#define LINELEN_MAX 512
 #define STACKTRAVERSE_MAX_LEVELS 127
 
-#endif /* _STACKTRAVERSE_H_ */
+struct libexecinfo_ns {
+    const void *topframe;
+    char bt_buffer[STACKTRAVERSE_MAX_LEVELS * LINELEN_MAX];
+    char *bt_rvals[STACKTRAVERSE_MAX_LEVELS];
+    const unsigned int sc_randtable[STACKTRAVERSE_MAX_LEVELS + 1];
+};
+
+extern struct libexecinfo_ns libexecinfo_ns;
+
+static inline uintptr_t
+ROR(uintptr_t x, unsigned int sft)
+{
+
+    return ((x >> sft) | (x << ((sizeof(x) * 8) - sft)));
+}
