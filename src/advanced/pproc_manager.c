@@ -129,13 +129,13 @@ rtpp_pproc_mgr_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
     pvt = rtpp_rzmalloc(sizeof(*pvt), PVT_RCOFFS(pvt));
     if (pvt == NULL)
         goto e0;
-    pvt->handlers = pproc_handlers_alloc(nprocs);
-    if (pvt->handlers == NULL)
-        goto e1;
     pvt->npkts_discard_idx = CALL_SMETHOD(rtpp_stats, getidxbyname, "npkts_discard");
     if (pvt->npkts_discard_idx < 0)
-        goto e2;
+        goto e1;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0)
+        goto e1;
+    pvt->handlers = pproc_handlers_alloc(nprocs);
+    if (pvt->handlers == NULL)
         goto e2;
     RTPP_OBJ_INCREF(rtpp_stats);
     pvt->rtpp_stats = rtpp_stats;
@@ -146,7 +146,7 @@ rtpp_pproc_mgr_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
       pvt);
     return (&(pvt->pub));
 e2:
-    RTPP_OBJ_DECREF(pvt->handlers);
+    pthread_mutex_destroy(&pvt->lock);
 e1:
     free(pvt);
 e0:
