@@ -89,9 +89,9 @@ glitch_do()
     if RTPP_GLITCH_ACT="g" RTPP_GLITCH_TRIG="${tp}" ./${test} 2>/dev/null >/dev/null
     then
        nok=$((${nok} + 1))
-       res="OK"
+       res="INEFFECTIVE"
     else
-       res="FAIL"
+       res="OK, caused test to fail"
        nfail=$((${nfail} + 1))
     fi
     if [ ! -z ${rlog} ]
@@ -105,17 +105,17 @@ glitch_do()
          res="CRASH"
       fi
     fi
-    printf "%-24s test %s at ${glline}\n" "${tp}:" "${res}"
+    printf "%-24s glitching %s at ${glline}\n" "${tp}:" "${res}"
     if [ "${res}" = "CRASH" ]
     then
       grep -B 5 -A 5 "^Died on signal" "${rlog}"
       return 1
     fi
   done
-  echo "${nok} times OK, ${nfail} times FAIL"
+  echo "${nok} times effective, ${nfail} times ineffective"
   if [ ${nok} -gt ${nok_expected} ]
   then
-    echo "Test went OK ${nok} times vs expected ${nok_expected}"
+    echo "Glitching was ineffective ${nok} times vs expected ${nok_expected}"
     return 1
   fi
   return 0
