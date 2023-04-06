@@ -26,12 +26,12 @@ AC_DEFINE_UNQUOTED([VERSION_GIT], ["${mydef_version}"], [Git hash])
 
 case "${host_os}" in
 freebsd*)
-  CPPFLAGS="-I/usr/local/include -pthread"
+  CPPFLAGS="${CPPFLAGS} -I/usr/local/include -pthread"
   LDFLAGS="-L/usr/local/lib"
   #LIBS=
   ;;
 linux*)
-  CPPFLAGS="-D_DEFAULT_SOURCE -D_ISOC99_SOURCE -DLINUX_XXX"
+  CPPFLAGS="${CPPFLAGS} -D_DEFAULT_SOURCE -D_ISOC99_SOURCE -DLINUX_XXX"
   LIBS="-lrt"
   ;;
 solaris*)
@@ -221,10 +221,20 @@ fi
 AC_CHECK_HEADER(libunwind.h, found_libunwind=yes)
 if test "$found_libunwind" = yes
 then
-  AC_CHECK_LIB(unwind, unw_backtrace,
-   LIBS_UNWIND="-lunwind"
-   ENABLE_LIBUNWIND=1
-   AC_DEFINE([ENABLE_LIBUNWIND], 1, [Define if you have libunwind library installed]))
+  AC_COMPILE_IFELSE( [AC_LANG_PROGRAM([[
+      #include <stddef.h>
+      #define UNW_LOCAL_ONLY
+      #include <libunwind.h>
+    ]],
+    [[
+      unw_getcontext(NULL);
+    ]])],
+    [
+      LIBS_UNWIND="-lunwind"
+      ENABLE_LIBUNWIND=1
+      AC_DEFINE([ENABLE_LIBUNWIND], 1, [Define if you have libunwind library installed])
+    ]
+  )
 fi
 
 AC_CHECK_HEADER(stdatomic.h, found_stdatomic=yes)
