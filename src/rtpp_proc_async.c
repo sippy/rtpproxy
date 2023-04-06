@@ -400,8 +400,8 @@ rtpp_proc_async_nudge(struct rtpp_proc_async *pub)
     PUB2PVT(pub, proc_cf);
     ret = write(proc_cf->rtp_thread.ptbl.wakefd[1], &nudge_data,
       sizeof(nudge_data));
-    RTPP_DBG_ASSERT(ret == sizeof(nudge_data));
+    RTPP_DBG_ASSERT(ret < 0 || ret == sizeof(nudge_data));
     ret = write(proc_cf->rtcp_thread.ptbl.wakefd[1], &nudge_data,
       sizeof(nudge_data));
-    RTPP_DBG_ASSERT(ret == sizeof(nudge_data));
+    RTPP_DBG_ASSERT(ret < 0 || ret == sizeof(nudge_data));
 }
