@@ -32,8 +32,17 @@ run_command_parser() {
 RECORD_DIR="${BUILDDIR}"
 for socket in ${RTPP_TEST_SOCKETS}
 do
+  if [ -e command_parser.rlog ]
+  then
+    rm command_parser.rlog
+  fi
   run_command_parser "${socket}" "" "-P" "-r ${RECORD_DIR}" "-P -r ${RECORD_DIR}" > command_parser.rout
-  report "wait for the rtproxy shutdown on ${socket}"
+  RTPP_RC="${?}"
+  if [ ${RTPP_RC} -ne 0 -a -s command_parser.rlog ]
+  then
+    cat command_parser.rlog >&1
+  fi
+  report_rc ${RTPP_RC} "wait for the rtproxy shutdown on ${socket}"
   ${DIFF} ${BASEDIR}/command_parser/command_parser.output command_parser.rout
   report "command_parser on ${socket}"
 done
