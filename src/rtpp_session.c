@@ -136,7 +136,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     rtpp_str_const_t tag_nomedianum = {.s = ccap->from_tag->s, .len = ccap->from_tag->len};
     const char *semi = memchr(tag_nomedianum.s, ';', tag_nomedianum.len);
     if (semi != NULL) {
-        tag_nomedianum.len = tag_nomedianum.s - semi;
+        tag_nomedianum.len = semi - tag_nomedianum.s;
     }
     if (rtpp_str_dup2(&tag_nomedianum, &pvt->from_tag_nmn.ro) == NULL) {
         goto e7;
