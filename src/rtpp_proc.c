@@ -121,6 +121,9 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
 
             rsize = read(ptbl->wakefd[0], &nudge_data, sizeof(nudge_data));
             RTPP_DBG_ASSERT(rsize == sizeof(nudge_data) || rsize == 0);
+            if (rsize > 0 && rsize == sizeof(nudge_data)) {
+                atomic_store(&ptbl->served_i_wake, nudge_data);
+            }
             continue;
         }
         iskt = ep->data.ptr;

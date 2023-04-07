@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <string.h>
@@ -54,6 +55,7 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_proc_wakeup.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stats.h"
@@ -90,11 +92,12 @@ struct rtpp_proc_async_cf {
     const struct rtpp_cfg *cf_save;
     struct rtpp_proc_thread_cf rtp_thread;
     struct rtpp_proc_thread_cf rtcp_thread;
+    struct rtpp_proc_wakeup *wakeup_cf;
     int npkts_relayed_idx;
 };
 
 static void rtpp_proc_async_dtor(struct rtpp_proc_async *);
-static void rtpp_proc_async_nudge(struct rtpp_proc_async *);
+static int rtpp_proc_async_nudge(struct rtpp_proc_async *);
 
 static void
 flush_rstats(struct rtpp_stats *sobj, struct rtpp_proc_rstats *rsp)
@@ -204,6 +207,19 @@ next:
     rtpp_polltbl_free(&tcp->ptbl);
 }
 
+void
+rtpp_proc_async_setprocname(pthread_t thread_id, const char *pname)
+{
+#if HAVE_PTHREAD_SETNAME_NP
+    const char ppr[] = "rtpp_proc: ";
+    char *ptrname = alloca(sizeof(ppr) + strlen(pname));
+    if (ptrname != NULL) {
+        sprintf(ptrname, "%s%s", ppr, pname);
+        (void)pthread_setname_np(thread_id, ptrname);
+    }
+#endif
+}
+
 static int
 rtpp_proc_async_thread_init(const struct rtpp_cfg *cfsp, const struct rtpp_proc_async_cf *proc_cf,
   struct rtpp_proc_thread_cf *tcp, int pipe_type)
@@ -233,9 +249,7 @@ rtpp_proc_async_thread_init(const struct rtpp_cfg *cfsp, const struct rtpp_proc_
     if (pthread_create(&tcp->thread_id, NULL, (void *(*)(void *))&rtpp_proc_async_run, tcp) != 0) {
         goto e3;
     }
-#if HAVE_PTHREAD_SETNAME_NP
-    (void)pthread_setname_np(tcp->thread_id, "rtpp_proc_async");
-#endif
+    rtpp_proc_async_setprocname(tcp->thread_id, PP_NAME(pipe_type));
     return (0);
 
 e3:
@@ -354,12 +368,19 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
         goto e4;
     }
 
+    proc_cf->wakeup_cf = rtpp_proc_wakeup_ctor(proc_cf->rtp_thread.ptbl.wakefd[1],
+      proc_cf->rtcp_thread.ptbl.wakefd[1]);
+    if (proc_cf->wakeup_cf == NULL)
+        goto e5;
+
     RTPP_OBJ_INCREF(cfsp->rtpp_stats);
     RTPP_OBJ_INCREF(cfsp->pproc_manager);
 
     proc_cf->pub.dtor = &rtpp_proc_async_dtor;
     proc_cf->pub.nudge = &rtpp_proc_async_nudge;
     return (&proc_cf->pub);
+e5:
+    rtpp_proc_async_thread_destroy(&proc_cf->rtcp_thread);
 e4:
     rtpp_proc_async_thread_destroy(&proc_cf->rtp_thread);
 e3:
@@ -379,6 +400,7 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     struct rtpp_proc_async_cf *proc_cf;
 
     PUB2PVT(pub, proc_cf);
+    RTPP_OBJ_DECREF(proc_cf->wakeup_cf);
     CALL_SMETHOD(proc_cf->cf_save->pproc_manager, unreg, record_packet);
     CALL_SMETHOD(proc_cf->cf_save->pproc_manager, unreg, relay_packet);
     rtpp_proc_async_thread_destroy(&proc_cf->rtcp_thread);
@@ -389,17 +411,13 @@ rtpp_proc_async_dtor(struct rtpp_proc_async *pub)
     free(proc_cf);
 }
 
-static void
+static int
 rtpp_proc_async_nudge(struct rtpp_proc_async *pub)
 {
     struct rtpp_proc_async_cf *proc_cf;
-    int nudge_data = 1, ret;
+    int nres;
 
     PUB2PVT(pub, proc_cf);
-    ret = write(proc_cf->rtp_thread.ptbl.wakefd[1], &nudge_data,
-      sizeof(nudge_data));
-    RTPP_DBG_ASSERT(ret < 0 || ret == sizeof(nudge_data));
-    ret = write(proc_cf->rtcp_thread.ptbl.wakefd[1], &nudge_data,
-      sizeof(nudge_data));
-    RTPP_DBG_ASSERT(ret < 0 || ret == sizeof(nudge_data));
+    nres = CALL_SMETHOD(proc_cf->wakeup_cf, nudge);
+    return (nres);
 }

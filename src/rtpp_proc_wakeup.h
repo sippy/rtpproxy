@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2023 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,58 +26,22 @@
  */
 
 #pragma once
-#include <stdatomic.h>
 
-struct pollfd;
-struct rtpp_session;
-struct rtpp_sessinfo;
-struct rtpp_socket;
-struct rtpp_polltbl;
-struct rtpp_weakref;
-struct rtpp_cfg;
+struct rtpp_proc_wakeup;
+struct rtpp_refcnt;
 
-DEFINE_METHOD(rtpp_sessinfo, rtpp_si_append, int, struct rtpp_session *,
-  int, struct rtpp_socket **);
-DEFINE_METHOD(rtpp_sessinfo, rtpp_si_update, void, struct rtpp_session *,
-  int, struct rtpp_socket **);
-DEFINE_METHOD(rtpp_sessinfo, rtpp_si_remove, void, struct rtpp_session *,
-  int);
-DEFINE_METHOD(rtpp_sessinfo, rtpp_si_sync_polltbl, int, struct rtpp_polltbl *,
-  int);
+DEFINE_METHOD(rtpp_proc_wakeup, rtpp_proc_wakeup_nudge, int);
 
-struct rtpp_polltbl_mdata;
-
-struct rtpp_polltbl_mdata {
-    uint64_t stuid;
-    struct rtpp_socket *skt;
-};
-
-struct rtpp_polltbl {
-    int epfd;
-    struct rtpp_polltbl_mdata *mds;
-    int curlen;
-    int aloclen;
-    uint64_t revision;
-    struct rtpp_weakref *streams_wrt;
-    int wakefd[2];
-    atomic_int served_i_wake;
-};
-
-struct rtpp_sessinfo_smethods
+struct rtpp_proc_wakeup_smethods
 {
-    METHOD_ENTRY(rtpp_si_append, append);
-    METHOD_ENTRY(rtpp_si_update, update);
-    METHOD_ENTRY(rtpp_si_remove, remove);
-    METHOD_ENTRY(rtpp_si_sync_polltbl, sync_polltbl);
+    METHOD_ENTRY(rtpp_proc_wakeup_nudge, nudge);
 };
 
-struct rtpp_sessinfo {
+struct rtpp_proc_wakeup {
     struct rtpp_refcnt *rcnt;
 #if defined(RTPP_DEBUG)
-    const struct rtpp_sessinfo_smethods * smethods;
+    const struct rtpp_proc_wakeup_smethods * smethods;
 #endif
 };
 
-struct rtpp_sessinfo *rtpp_sessinfo_ctor(const struct rtpp_cfg *);
-
-void rtpp_polltbl_free(struct rtpp_polltbl *);
+struct rtpp_proc_wakeup *rtpp_proc_wakeup_ctor(int, int);
