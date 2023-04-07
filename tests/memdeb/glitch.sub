@@ -112,7 +112,7 @@ glitch_do()
       return 1
     fi
   done
-  echo "${nok} times effective, ${nfail} times ineffective"
+  echo "${nok} times ineffective, ${nfail} times effective"
   if [ ${nok} -gt ${nok_expected} ]
   then
     echo "Glitching was ineffective ${nok} times vs expected ${nok_expected}"
