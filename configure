@@ -12854,12 +12854,12 @@ printf "%s\n" "#define VERSION_GIT \"${mydef_version}\"" >>confdefs.h
 
 case "${host_os}" in
 freebsd*)
-  CPPFLAGS="-I/usr/local/include -pthread"
+  CPPFLAGS="${CPPFLAGS} -I/usr/local/include -pthread"
   LDFLAGS="-L/usr/local/lib"
   #LIBS=
   ;;
 linux*)
-  CPPFLAGS="-D_DEFAULT_SOURCE -D_ISOC99_SOURCE -DLINUX_XXX"
+  CPPFLAGS="${CPPFLAGS} -D_DEFAULT_SOURCE -D_ISOC99_SOURCE -DLINUX_XXX"
   LIBS="-lrt"
   ;;
 solaris*)
@@ -13718,50 +13718,35 @@ fi
 
 if test "$found_libunwind" = yes
 then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for unw_backtrace in -lunwind" >&5
-printf %s "checking for unw_backtrace in -lunwind... " >&6; }
-if test ${ac_cv_lib_unwind_unw_backtrace+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lunwind  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-char unw_backtrace ();
+      #include <stddef.h>
+      #define UNW_LOCAL_ONLY
+      #include <libunwind.h>
+
 int
 main (void)
 {
-return unw_backtrace ();
+
+      unw_getcontext(NULL);
+
   ;
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"
+if ac_fn_c_try_compile "$LINENO"
 then :
-  ac_cv_lib_unwind_unw_backtrace=yes
-else $as_nop
-  ac_cv_lib_unwind_unw_backtrace=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_unwind_unw_backtrace" >&5
-printf "%s\n" "$ac_cv_lib_unwind_unw_backtrace" >&6; }
-if test "x$ac_cv_lib_unwind_unw_backtrace" = xyes
-then :
-  LIBS_UNWIND="-lunwind"
-   ENABLE_LIBUNWIND=1
+
+      LIBS_UNWIND="-lunwind"
+      ENABLE_LIBUNWIND=1
 
 printf "%s\n" "#define ENABLE_LIBUNWIND 1" >>confdefs.h
 
-fi
 
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
 
 ac_fn_c_check_header_compile "$LINENO" "stdatomic.h" "ac_cv_header_stdatomic_h" "$ac_includes_default"
