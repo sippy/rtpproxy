@@ -108,9 +108,6 @@ struct rtpp_cfg {
     struct rtpp_port_table *port_table[RTPP_PT_LEN];
 
     struct rtpp_hash_table *sessions_ht;
-    struct rtpp_weakref *sessions_wrt;
-    struct rtpp_weakref *rtp_streams_wrt;
-    struct rtpp_weakref *rtcp_streams_wrt;
 
     int sched_policy;
     int sched_hz;

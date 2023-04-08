@@ -33,6 +33,7 @@ struct sthread_args;
 struct rtpp_log;
 struct rtpp_netaddr;
 struct rtpp_timestamp;
+struct rtpp_stream;
 
 DEFINE_METHOD(rtpp_socket, rtpp_socket_bind, int, const struct sockaddr *,
   int);
@@ -53,8 +54,9 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_rtp_recv, struct rtp_packet *,
 DEFINE_METHOD(rtpp_socket, rtpp_socket_getfd, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_drain, int, const char *,
   struct rtpp_log *);
-DEFINE_METHOD(rtpp_socket, rtpp_socket_set_stuid, void, uint64_t);
-DEFINE_METHOD(rtpp_socket, rtpp_socket_get_stuid, uint64_t);
+DEFINE_METHOD(rtpp_socket, rtpp_socket_set_strmp, void,
+  struct rtpp_stream *);
+DEFINE_METHOD(rtpp_socket, rtpp_socket_get_strmp, struct rtpp_stream *);
 
 struct rtpp_socket {
     struct rtpp_refcnt *rcnt;
@@ -71,8 +73,8 @@ struct rtpp_socket {
     METHOD_ENTRY(rtpp_socket_rtp_recv, rtp_recv);
     METHOD_ENTRY(rtpp_socket_getfd, getfd);
     METHOD_ENTRY(rtpp_socket_drain, drain);
-    METHOD_ENTRY(rtpp_socket_set_stuid, set_stuid);
-    METHOD_ENTRY(rtpp_socket_get_stuid, get_stuid);
+    METHOD_ENTRY(rtpp_socket_set_strmp, set_strmp);
+    METHOD_ENTRY(rtpp_socket_get_strmp, get_strmp);
 };
 
 struct rtpp_socket *rtpp_socket_ctor(int, int);

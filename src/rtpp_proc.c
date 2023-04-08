@@ -71,7 +71,7 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
     struct rtp_packet *packet = NULL;
     struct pkt_proc_ctx pktx = {
         .strmp_in = stp,
-        .strmp_out = CALL_SMETHOD(stp, get_sender, cfsp),
+        .strmp_out = CALL_SMETHOD(stp, get_sender),
         .rsp = rsp
     };
     /* Repeat since we may have several packets queued on the same socket */
@@ -83,7 +83,7 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
             ndrain -= 1;
         }
 
-	packet = CALL_SMETHOD(stp, rx, cfsp->rtcp_streams_wrt, dtime, rsp);
+	packet = CALL_SMETHOD(stp, rx, dtime, rsp);
 	if (packet == NULL) {
             /* Move on to the next session */
             break;
@@ -127,21 +127,17 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
             continue;
         }
         iskt = ep->data.ptr;
-        uint64_t stuid = CALL_METHOD(iskt, get_stuid);
-        stp = CALL_SMETHOD(ptbl->streams_wrt, get_by_idx, stuid);
+        stp = CALL_METHOD(iskt, get_strmp);
         if (stp == NULL)
             continue;
-        sp = CALL_SMETHOD(cfsp->sessions_wrt, get_by_idx, stp->seuid);
-        if (sp == NULL) {
-            RTPP_OBJ_DECREF(stp);
-            continue;
-        }
+        sp = stp->sessp;
+        RTPP_OBJ_INCREF(stp->sessp);
         if (sp->complete != 0) {
             rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp);
             if (stp->resizer != NULL) {
                 struct pkt_proc_ctx pktx = {
                     .strmp_in = stp,
-                    .strmp_out = CALL_SMETHOD(stp, get_sender, cfsp),
+                    .strmp_out = CALL_SMETHOD(stp, get_sender),
                     .rsp = rsp
                 };
 

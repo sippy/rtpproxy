@@ -61,7 +61,6 @@
 struct foreach_args {
     struct rtpp_notify *rtpp_notify_cf;
     struct rtpp_stats *rtpp_stats;
-    struct rtpp_weakref *sessions_wrt;
     struct {
         struct rtpp_session *first;
         struct rtpp_session *last;
@@ -129,7 +128,6 @@ rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct foreach_args *fap)
               sp->timeout_data->notify_target, sp->timeout_data->notify_tag,
               notyfy_type);
         }
-        CALL_SMETHOD(fap->sessions_wrt, unreg, sp->seuid);
         RTPP_OBJ_DECREF(sp);
         nsess_timeout += 1;
     }
@@ -167,7 +165,6 @@ rtpp_proc_ttl_dtor(struct rtpp_proc_ttl *pub)
     atomic_store(&proc_cf->tstate, TSTATE_CEASE);
     pthread_join(proc_cf->thread_id, NULL);
     RTPP_OBJ_DECREF(proc_cf->sessions_ht);
-    RTPP_OBJ_DECREF(proc_cf->fa.sessions_wrt);
     RTPP_OBJ_DECREF(proc_cf->fa.rtpp_notify_cf);
     RTPP_OBJ_DECREF(proc_cf->fa.rtpp_stats);
     prdic_free(proc_cf->elp);
@@ -192,8 +189,6 @@ rtpp_proc_ttl_ctor(const struct rtpp_cfg *cfsp)
     RTPP_OBJ_INCREF(cfsp->rtpp_notify_cf);
     proc_cf->fa.rtpp_stats = cfsp->rtpp_stats;
     RTPP_OBJ_INCREF(cfsp->rtpp_stats);
-    proc_cf->fa.sessions_wrt = cfsp->sessions_wrt;
-    RTPP_OBJ_INCREF(cfsp->sessions_wrt);
     proc_cf->sessions_ht = cfsp->sessions_ht;
     RTPP_OBJ_INCREF(cfsp->sessions_ht);
 
@@ -208,7 +203,6 @@ rtpp_proc_ttl_ctor(const struct rtpp_cfg *cfsp)
 e1:
     RTPP_OBJ_DECREF(cfsp->rtpp_stats);
     RTPP_OBJ_DECREF(cfsp->sessions_ht);
-    RTPP_OBJ_DECREF(cfsp->sessions_wrt);
     RTPP_OBJ_DECREF(cfsp->rtpp_notify_cf);
     prdic_free(proc_cf->elp);
 e0:

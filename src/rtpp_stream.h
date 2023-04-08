@@ -69,12 +69,11 @@ DEFINE_METHOD(rtpp_stream, rtpp_stream_reg_onhold, void);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_stats, void,
   struct rtpp_acct_hold *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_rx, struct rtp_packet *,
-  struct rtpp_weakref *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
+  const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
   int);
 DEFINE_METHOD(rtpp_stream, rtpp_stream_latch, int, struct rtp_packet *);
-DEFINE_METHOD(rtpp_stream, rtpp_stream_get_sender, struct rtpp_stream *,
-  const struct rtpp_cfg *cfsp);
+DEFINE_METHOD(rtpp_stream, rtpp_stream_get_sender, struct rtpp_stream *);
 
 enum rtpp_stream_side {RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0};
 
@@ -133,13 +132,13 @@ struct rtpp_stream {
     /* UID, read-only */
     uint64_t stuid;
     /* UID of the session we belong to, read-only */
-    uint64_t seuid;
-    /* UID of the associated "sending" stream, read-only */
-    uint64_t stuid_sendr;
-    /* UID of the associated "RTCP" stream, read-only */
-    uint64_t stuid_rtcp;
-    /* UID of the associated "RTP" stream, read-only */
-    uint64_t stuid_rtp;
+    struct rtpp_session *sessp;
+    /* pointer to the associated "sending" stream, read-only */
+    struct rtpp_stream *strmp_sendr;
+    /* pointer to the associated "RTCP" stream, read-only */
+    struct rtpp_stream *strmp_rtcp;
+    /* pointer to the associated "RTP" stream, read-only */
+    struct rtpp_stream *strmp_rtp;
     /* Type of pipe we are associated with, read-only */
     int pipe_type;
     struct rtpp_log *log;
@@ -161,7 +160,7 @@ struct r_stream_ctor_args {
     struct rtpp_stats *rtpp_stats;
     enum rtpp_stream_side side;
     int pipe_type;
-    uint64_t seuid;
+    struct rtpp_session *sessp;
     unsigned int nmodules;
     struct pproc_manager *pproc_manager;
 };

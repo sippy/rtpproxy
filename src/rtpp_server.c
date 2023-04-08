@@ -44,6 +44,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_server.h"
 #include "rtpp_server_fin.h"
+#include "rtpp_stream.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_debug.h"
 
@@ -87,7 +88,7 @@ static const struct rtpp_server_smethods _rtpp_server_smethods = {
 const struct rtpp_server_smethods * const rtpp_server_smethods = &_rtpp_server_smethods;
 
 struct rtpp_server *
-rtpp_server_ctor(struct rtpp_server_ctor_args *ap)
+rtpp_server_ctor(struct rtpp_server_ctor_args *ap, struct rtpp_stream *strmp)
 {
     struct rtpp_server_priv *rp;
     int fd;
@@ -132,6 +133,8 @@ rtpp_server_ctor(struct rtpp_server_ctor_args *ap)
     rp->pub.smethods = &_rtpp_server_smethods;
 #endif
     rtpp_gen_uid(&rp->pub.sruid);
+    rp->pub.strmp = strmp;
+    RTPP_OBJ_INCREF(strmp);
 
     CALL_SMETHOD(rp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_server_dtor,
       rp);
@@ -149,6 +152,7 @@ rtpp_server_dtor(struct rtpp_server_priv *rp)
 
     rtpp_server_fin(&rp->pub);
     close(rp->fd);
+    RTPP_OBJ_DECREF(rp->pub.strmp);
     free(rp);
 }
 

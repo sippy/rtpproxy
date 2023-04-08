@@ -255,7 +255,6 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     free(cfsp->locks);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     CALL_METHOD(cfsp->nofile, dtor);
-    RTPP_OBJ_DECREF(cfsp->sessions_wrt);
 
     for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = ctrl_sock_next) {
@@ -331,12 +330,6 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     cfsp->nofile = rtpp_nofile_ctor();
     if (cfsp->nofile == NULL)
         err(1, "malloc(rtpp_cfg->nofile)");
-
-    cfsp->sessions_wrt = rtpp_weakref_ctor();
-    if (cfsp->sessions_wrt == NULL) {
-        err(1, "can't allocate memory for the sessions weakref table");
-         /* NOTREACHED */
-    }
 
     option_index = -1;
     brsym = 0;
@@ -805,12 +798,7 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
     struct rtpp_ctrl_sock *ctrl_sock, *ctrl_sock_next;
 
     CALL_METHOD(cfsp->rtpp_cmd_cf, dtor);
-    CALL_SMETHOD(cfsp->sessions_wrt, purge);
     CALL_SMETHOD(cfsp->sessions_ht, purge);
-
-    while ((CALL_SMETHOD(cfsp->rtp_streams_wrt, get_length) > 0) ||
-      (CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_length) > 0))
-        continue;
 
     RTPP_OBJ_DECREF(cfsp->modules_cf);
     RTPP_OBJ_DECREF(cfsp->pproc_manager)
@@ -829,10 +817,7 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
     for (int i = 0; i <= RTPP_PT_MAX; i++) {
         RTPP_OBJ_DECREF(cfsp->port_table[i]);
     }
-    RTPP_OBJ_DECREF(cfsp->sessions_wrt);
     RTPP_OBJ_DECREF(cfsp->sessions_ht);
-    RTPP_OBJ_DECREF(cfsp->rtp_streams_wrt);
-    RTPP_OBJ_DECREF(cfsp->rtcp_streams_wrt);
     CALL_METHOD(cfsp->nofile, dtor);
     rtpp_controlfd_cleanup(cfsp);
     for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
@@ -920,16 +905,6 @@ rtpp_main(int argc, char **argv)
     cfs.sessions_ht = rtpp_hash_table_ctor(rtpp_ht_key_str_t, 0);
     if (cfs.sessions_ht == NULL) {
         err(1, "can't allocate memory for the hash table");
-         /* NOTREACHED */
-    }
-    cfs.rtp_streams_wrt = rtpp_weakref_ctor();
-    if (cfs.rtp_streams_wrt == NULL) {
-        err(1, "can't allocate memory for the RTP streams weakref table");
-         /* NOTREACHED */
-    }
-    cfs.rtcp_streams_wrt = rtpp_weakref_ctor();
-    if (cfs.rtcp_streams_wrt == NULL) {
-        err(1, "can't allocate memory for the RTCP streams weakref table");
          /* NOTREACHED */
     }
     cfs.sessinfo = rtpp_sessinfo_ctor(&cfs);
@@ -1143,7 +1118,7 @@ rtpp_main(int argc, char **argv)
             break;
         }
         if (cfs.slowshutdown != 0 &&
-          CALL_SMETHOD(cfs.sessions_wrt, get_length) == 0) {
+          CALL_SMETHOD(cfs.sessions_ht, get_length) == 0) {
             RTPP_LOG(cfs.glog, RTPP_LOG_INFO,
               "deorbiting-burn sequence completed, exiting");
             break;

@@ -70,8 +70,7 @@ struct rtpp_pipe {
 };
 
 struct r_pipe_ctor_args {
-    uint64_t seuid;
-    struct rtpp_weakref *streams_wrt;
+    struct rtpp_session *sessp;
     struct rtpp_proc_servers *proc_servers;
     struct rtpp_log *log;
     struct rtpp_stats *rtpp_stats;

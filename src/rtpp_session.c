@@ -102,8 +102,8 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     }
     CALL_METHOD(log, start, cfs);
     CALL_METHOD(log, setlevel, cfs->log_level);
-    pipe_cfg = (struct r_pipe_ctor_args){.seuid = pub->seuid,
-      .streams_wrt = cfs->rtp_streams_wrt, .proc_servers = cfs->proc_servers,
+    pipe_cfg = (struct r_pipe_ctor_args){.sessp = pub,
+      .proc_servers = cfs->proc_servers,
       .log = log, .rtpp_stats = cfs->rtpp_stats, .pipe_type = PIPE_RTP,
       .nmodules  = cfs->modules_cf->count.total,
       .pproc_manager = cfs->pproc_manager};
@@ -112,7 +112,6 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
         goto e2;
     }
     /* spb is RTCP twin session for this one. */
-    pipe_cfg.streams_wrt = cfs->rtcp_streams_wrt;
     pipe_cfg.pipe_type = PIPE_RTCP;
     pub->rtcp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtcp == NULL) {
@@ -169,8 +168,8 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
         RTPP_OBJ_INCREF(pub->rtp->stream[i]->ttl);
     }
     for (i = 0; i < 2; i++) {
-        pub->rtp->stream[i]->stuid_rtcp = pub->rtcp->stream[i]->stuid;
-        pub->rtcp->stream[i]->stuid_rtp = pub->rtp->stream[i]->stuid;
+        pub->rtp->stream[i]->strmp_rtcp = pub->rtcp->stream[i];
+        pub->rtcp->stream[i]->strmp_rtp = pub->rtp->stream[i];
     }
 
     pvt->pub.rtpp_stats = cfs->rtpp_stats;

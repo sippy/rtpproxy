@@ -65,8 +65,8 @@ struct rtpp_server {
     struct rtpp_refcnt *rcnt;
     /* UID */
     uint64_t sruid;
-    /* Weakref to the associated RTP stream */
-    uint64_t stuid;
+    /* Pointer to the associated RTP stream */
+    struct rtpp_stream *strmp;
 };
 
 #ifndef RTPP_FINCODE
@@ -86,6 +86,6 @@ struct rtpp_server_ctor_args;
 #define RTPP_SERV_NOMEM -2
 #define RTPP_SERV_BADARG -3
 
-struct rtpp_server *rtpp_server_ctor(struct rtpp_server_ctor_args *);
+struct rtpp_server *rtpp_server_ctor(struct rtpp_server_ctor_args *, struct rtpp_stream *);
 
 #endif

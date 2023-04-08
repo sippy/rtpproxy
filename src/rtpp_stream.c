@@ -154,10 +154,9 @@ static void rtpp_stream_locklatch(struct rtpp_stream *);
 static void rtpp_stream_reg_onhold(struct rtpp_stream *);
 void rtpp_stream_get_stats(struct rtpp_stream *, struct rtpp_acct_hold *);
 static struct rtp_packet *rtpp_stream_rx(struct rtpp_stream *,
-  struct rtpp_weakref *, const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
+  const struct rtpp_timestamp *, struct rtpp_proc_rstats *);
 static struct rtpp_netaddr *rtpp_stream_get_rem_addr(struct rtpp_stream *, int);
-static struct rtpp_stream *rtpp_stream_get_sender(struct rtpp_stream *,
-  const struct rtpp_cfg *cfsp);
+static struct rtpp_stream *rtpp_stream_get_sender(struct rtpp_stream *);
 
 static const struct rtpp_stream_smethods _rtpp_stream_smethods = {
     .handle_play = &rtpp_stream_handle_play,
@@ -300,7 +299,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
 #endif
 
     rtpp_gen_uid(&pvt->pub.stuid);
-    pvt->pub.seuid = ap->seuid;
+    pvt->pub.sessp = ap->sessp;
     for (unsigned int i = 0; i < ap->nmodules; i++) {
         atomic_init(&(pvt->pmod_data.adp[i]), NULL);
     }
@@ -440,6 +439,20 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     free(pvt);
 }
 
+void
+rtpp_stream_unreg_player(struct rtpp_stream *self)
+{
+    struct rtpp_stream_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    pthread_mutex_lock(&pvt->lock);
+    if (pvt->rtps.uid != RTPP_UID_NONE) {
+        CALL_SMETHOD(pvt->proc_servers, unreg, pvt->rtps.uid);
+        pvt->rtps.uid = RTPP_UID_NONE;
+    }
+    pthread_mutex_unlock(&pvt->lock);
+}
+
 static void
 player_predestroy_cb(struct rtpp_stats *rtpp_stats)
 {
@@ -489,7 +502,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
         if (*codecs != '\0')
             codecs++;
         sca.codec = n;
-        rsrv = rtpp_server_ctor(&sca);
+        rsrv = rtpp_server_ctor(&sca, self);
         if (rsrv == NULL) {
             RTPP_LOG(pvt->pub.log, RTPP_LOG_DBUG, "rtpp_server_ctor(\"%s\", %d, %d) failed",
               pname, n, playcount);
@@ -498,7 +511,6 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
                 continue;
             goto e0;
         }
-        rsrv->stuid = self->stuid;
         ssrc = CALL_SMETHOD(rsrv, get_ssrc);
         seq = CALL_SMETHOD(rsrv, get_seq);
         _s_rtps(pvt, rsrv->sruid, 0);
@@ -885,7 +897,7 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
         return;
     }
     RTPP_DBG_ASSERT(pvt->fd == NULL);
-    CALL_METHOD(new_skt, set_stuid, self->stuid);
+    CALL_METHOD(new_skt, set_strmp, self);
     pvt->fd = new_skt;
     RTPP_OBJ_INCREF(pvt->fd);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
@@ -922,7 +934,7 @@ rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     old_skt = pvt->fd;
-    CALL_METHOD(new_skt, set_stuid, self->stuid);
+    CALL_METHOD(new_skt, set_strmp, self);
     pvt->fd = new_skt;
     RTPP_OBJ_INCREF(pvt->fd);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
@@ -1009,28 +1021,21 @@ rtpp_stream_get_stats(struct rtpp_stream *self, struct rtpp_acct_hold *ahp)
 
 static int
 _rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt,
-  struct rtpp_weakref *rtcps_wrt, struct rtp_packet *packet)
+  struct rtp_packet *packet)
 {
-    struct rtpp_stream *stp_rtcp;
     int rval;
 
     __rtpp_stream_fill_addr(pvt, packet);
-    if (pvt->pub.stuid_rtcp == RTPP_UID_NONE) {
+    if (pvt->pub.strmp_rtcp == NULL) {
         return (0);
     }
-    stp_rtcp = CALL_SMETHOD(rtcps_wrt, get_by_idx,
-      pvt->pub.stuid_rtcp);
-    if (stp_rtcp == NULL) {
-        return (0);
-    }
-    rval = CALL_SMETHOD(stp_rtcp, guess_addr, packet);
-    RTPP_OBJ_DECREF(stp_rtcp);
+    rval = CALL_SMETHOD(pvt->pub.strmp_rtcp, guess_addr, packet);
     return (rval);
 }
 
 static struct rtp_packet *
-rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref *rtcps_wrt,
-  const struct rtpp_timestamp *dtime, struct rtpp_proc_rstats *rsp)
+rtpp_stream_rx(struct rtpp_stream *self, const struct rtpp_timestamp *dtime,
+  struct rtpp_proc_rstats *rsp)
 {
     struct rtp_packet *packet = NULL;
     struct rtpp_stream_priv *pvt;
@@ -1062,7 +1067,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref *rtcps_wrt,
                     _rtpp_stream_latch(pvt, dtime->mono, packet);
                 }
                 /* Signal that an address has to be updated */
-                _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
+                _rtpp_stream_fill_addr(pvt, packet);
             } else if (!_rtpp_stream_islatched(pvt)) {
                 _rtpp_stream_latch(pvt, dtime->mono, packet);
             }
@@ -1082,7 +1087,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref *rtcps_wrt,
         }
     } else {
         /* Update address recorded in the session */
-        _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
+        _rtpp_stream_fill_addr(pvt, packet);
     }
     _rtpp_stream_latch_sync(pvt, dtime->mono, packet);
     pthread_mutex_unlock(&pvt->lock);
@@ -1114,12 +1119,9 @@ rtpp_stream_get_rem_addr(struct rtpp_stream *self, int retempty)
 }
 
 static struct rtpp_stream *
-rtpp_stream_get_sender(struct rtpp_stream *self, const struct rtpp_cfg *cfsp)
+rtpp_stream_get_sender(struct rtpp_stream *self)
 {
-    if (self->pipe_type == PIPE_RTP) {
-       return (CALL_SMETHOD(cfsp->rtp_streams_wrt, get_by_idx,
-         self->stuid_sendr));
-    }
-    return (CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_by_idx,
-      self->stuid_sendr));
+
+    RTPP_OBJ_INCREF(self->strmp_sendr);
+    return (self->strmp_sendr);
 }

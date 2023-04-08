@@ -60,7 +60,6 @@ struct delete_ematch_arg {
     const rtpp_str_t *from_tag;
     const rtpp_str_t *to_tag;
     int weak;
-    struct rtpp_weakref *sessions_wrt;
 };
 
 static void rtpp_command_del_opts_free(struct delete_opts *);
@@ -111,9 +110,7 @@ rtpp_cmd_delete_ematch(void *dp, void *ap)
     RTPP_LOG(spa->log, RTPP_LOG_INFO,
       "forcefully deleting session %u on ports %d/%d",
        medianum, spa->rtp->stream[0]->port, spa->rtp->stream[1]->port);
-    if (CALL_SMETHOD(dep->sessions_wrt, unreg, spa->seuid) != NULL) {
-        dep->ndeleted++;
-    }
+    dep->ndeleted++;
     if (cmpr != 2) {
         return (RTPP_HT_MATCH_DEL | RTPP_HT_MATCH_BRK);
     }
@@ -132,7 +129,6 @@ handle_delete(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
         .from_tag = ccap->from_tag,
         .to_tag = ccap->to_tag,
         .weak = ccap->opts.delete->weak,
-        .sessions_wrt = cfsp->sessions_wrt
     };
 
     CALL_SMETHOD(cfsp->sessions_ht, foreach_key_str, ccap->call_id,
@@ -151,7 +147,6 @@ handle_delete_as_subc(const struct after_success_h_args *ap,
     struct delete_ematch_arg dea = {
         .from_tag = scp->sessp->from_tag,
         .weak = dop->weak,
-        .sessions_wrt = cfsp->sessions_wrt
     };
 
     CALL_SMETHOD(cfsp->sessions_ht, foreach_key_str, scp->sessp->call_id,

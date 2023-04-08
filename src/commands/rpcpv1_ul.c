@@ -555,18 +555,13 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             handle_nomem(cmd, ECODE_NOMEM_5, spa);
             return (-1);
         }
-        if (CALL_SMETHOD(cfsp->sessions_wrt, reg, spa->rcnt, spa->seuid) != 0) {
-            CALL_SMETHOD(cfsp->sessions_ht, remove_str, spa->call_id, hte);
-            handle_nomem(cmd, ECODE_NOMEM_8, spa);
-            return (-1);
-        }
 
         /*
          * Each session can consume up to 5 open file descriptors (2 RTP,
          * 2 RTCP and 1 logging) so that warn user when he is likely to
          * exceed 80% mark on hard limit.
          */
-        sessions_active = CALL_SMETHOD(cfsp->sessions_wrt, get_length);
+        sessions_active = CALL_SMETHOD(cfsp->sessions_ht, get_length);
         if (sessions_active > (rtpp_rlim_max(cfsp) * 80 / (100 * 5)) &&
           atomic_load(&cfsp->nofile->warned) == 0) {
             atomic_store(&(cfsp->nofile->warned), 1);

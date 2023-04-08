@@ -115,12 +115,9 @@ process_rtp_servers_foreach(void *dp, void *ap)
      * locked context of the rtpp_hash_table, which holds its own ref.
      */
     rsrv = (struct rtpp_server *)dp;
-    strmp_out = CALL_SMETHOD(fap->cfsp->rtp_streams_wrt, get_by_idx, rsrv->stuid);
-    if (strmp_out == NULL)
-        goto e0;
-    strmp_in = CALL_SMETHOD(strmp_out, get_sender, fap->cfsp);
-    if (strmp_in == NULL)
-        goto e1;
+    strmp_out = rsrv->strmp;
+    RTPP_OBJ_INCREF(strmp_out);
+    strmp_in = CALL_SMETHOD(strmp_out, get_sender);
     for (;;) {
         pkt = CALL_SMETHOD(rsrv, get, fap->dtime, &len);
         if (pkt == NULL) {
@@ -146,9 +143,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
             fap->npkts_played->cnt++;
     }
     RTPP_OBJ_DECREF(strmp_in);
-e1:
     RTPP_OBJ_DECREF(strmp_out);
-e0:
     return (RTPP_WR_MATCH_CONT);
 }
 
