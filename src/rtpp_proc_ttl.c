@@ -62,6 +62,10 @@ struct foreach_args {
     struct rtpp_notify *rtpp_notify_cf;
     struct rtpp_stats *rtpp_stats;
     struct rtpp_weakref *sessions_wrt;
+    struct {
+        struct rtpp_session *first;
+        struct rtpp_session *last;
+    } dellist;
 };
 
 struct rtpp_proc_ttl_pvt {
@@ -74,32 +78,32 @@ struct rtpp_proc_ttl_pvt {
     struct foreach_args fa;
 };
 
-static void rtpp_proc_ttl(struct rtpp_hash_table *, const struct foreach_args *);
+static void rtpp_proc_ttl(struct rtpp_hash_table *, struct foreach_args *);
 
-static const char *notyfy_type = "timeout";
+static const char * const notyfy_type = "timeout";
 
 static int
 rtpp_proc_ttl_foreach(void *dp, void *ap)
 {
-    const struct foreach_args *fap;
-    const struct rtpp_session *sp;
+    struct foreach_args *fap;
+    struct rtpp_session *sp;
 
-    fap = (const struct foreach_args *)ap;
+    fap = (struct foreach_args *)ap;
     /*
      * This method does not need us to bump ref, since we are in the
      * locked context of the rtpp_hash_table, which holds its own ref.
      */
-    sp = (const struct rtpp_session *)dp;
+    sp = (struct rtpp_session *)dp;
 
     if (CALL_SMETHOD(sp->rtp, get_ttl) == 0) {
-        RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
-        if (sp->timeout_data != NULL) {
-            CALL_METHOD(fap->rtpp_notify_cf, schedule,
-              sp->timeout_data->notify_target, sp->timeout_data->notify_tag,
-              notyfy_type);
+        assert(sp->_next == NULL);
+        if (fap->dellist.last == NULL) {
+            fap->dellist.first = sp;
+        } else {
+            fap->dellist.last->_next = sp;
         }
-        CALL_SMETHOD(fap->rtpp_stats, updatebyname, "nsess_timeout", 1);
-        CALL_SMETHOD(fap->sessions_wrt, unreg, sp->seuid);
+        fap->dellist.last = sp;
+        RTPP_OBJ_INCREF(sp);
         return (RTPP_HT_MATCH_DEL);
     } else {
         CALL_SMETHOD(sp->rtp, decr_ttl);
@@ -108,10 +112,28 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
 }
 
 static void
-rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, const struct foreach_args *fap)
+rtpp_proc_ttl(struct rtpp_hash_table *sessions_ht, struct foreach_args *fap)
 {
+    const struct rtpp_session *sp, *sp_next;
 
+    fap->dellist.last = fap->dellist.first = NULL;
     CALL_SMETHOD(sessions_ht, foreach, rtpp_proc_ttl_foreach, (void *)fap, NULL);
+
+    int nsess_timeout = 0;
+    for (sp = fap->dellist.first; sp != NULL; sp = sp_next) {
+        sp_next = sp->_next;
+        RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");
+        if (sp->timeout_data != NULL) {
+            CALL_METHOD(fap->rtpp_notify_cf, schedule,
+              sp->timeout_data->notify_target, sp->timeout_data->notify_tag,
+              notyfy_type);
+        }
+        CALL_SMETHOD(fap->sessions_wrt, unreg, sp->seuid);
+        RTPP_OBJ_DECREF(sp);
+        nsess_timeout += 1;
+    }
+    if (nsess_timeout > 0)
+        CALL_SMETHOD(fap->rtpp_stats, updatebyname, "nsess_timeout", nsess_timeout);
 }
 
 static void

@@ -55,6 +55,9 @@ struct rtpp_session {
 
     /* Refcounter */
     struct rtpp_refcnt *rcnt;
+
+    /* Link */
+    struct rtpp_session *_next;
 };
 
 struct rtpp_cfg;
