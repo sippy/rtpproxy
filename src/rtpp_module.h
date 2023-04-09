@@ -25,8 +25,7 @@
  *
  */
 
-#ifndef _RTPP_MODULE_H
-#define _RTPP_MODULE_H
+#pragma once
 
 #define MODULE_API_REVISION 11
 
@@ -79,41 +78,51 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *, va_list);
 
 #if !defined(MODULE_IF_CODE)
 
-#if defined(RTPP_CHECK_LEAKS)
-#define _MMDEB *(rtpp_module.memdeb_p)
+#if defined(LIBRTPPROXY)
+#include "rtpp_module_if_static.h"
+#define RTPP_MOD_SELF (*(rtpp_modules.RTPP_MOD_NAME))
+#else
+#define RTPP_MOD_SELF (rtpp_module)
+#endif
 
-#define mod_malloc(n) rtpp_module._malloc((n), _MMDEB, \
+#if defined(RTPP_CHECK_LEAKS)
+
+#define _MMDEB *(RTPP_MOD_SELF.memdeb_p)
+
+#define mod_malloc(n) RTPP_MOD_SELF._malloc((n), _MMDEB, \
   HEREVAL)
-#define mod_zmalloc(n) rtpp_module._zmalloc((n), _MMDEB, \
+#define mod_zmalloc(n) RTPP_MOD_SELF._zmalloc((n), _MMDEB, \
   HEREVAL)
-#define mod_rzmalloc(n, m) rtpp_module._rzmalloc((n), (m), _MMDEB, \
+#define mod_rzmalloc(n, m) RTPP_MOD_SELF._rzmalloc((n), (m), _MMDEB, \
   HEREVAL)
-#define mod_free(p) rtpp_module._free((p), _MMDEB, \
+#define mod_free(p) RTPP_MOD_SELF._free((p), _MMDEB, \
   HEREVAL)
-#define mod_realloc(p,n) rtpp_module._realloc((p), (n), _MMDEB, \
+#define mod_realloc(p,n) RTPP_MOD_SELF._realloc((p), (n), _MMDEB, \
   HEREVAL)
-#define mod_strdup(p) rtpp_module._strdup((p), _MMDEB, \
+#define mod_strdup(p) RTPP_MOD_SELF._strdup((p), _MMDEB, \
   HEREVAL)
-#define mod_asprintf(pp, fmt, args...) rtpp_module._asprintf((pp), (fmt), \
+#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF._asprintf((pp), (fmt), \
   _MMDEB, HEREVAL, ## args)
-#define mod_vasprintf(pp, fmt, vl) rtpp_module._vasprintf((pp), (fmt), \
+#define mod_vasprintf(pp, fmt, vl) RTPP_MOD_SELF._vasprintf((pp), (fmt), \
   _MMDEB, HEREVAL, (vl))
 #else
-#define mod_malloc(n) rtpp_module._malloc((n))
-#define mod_zmalloc(n) rtpp_module._zmalloc((n))
-#define mod_rzmalloc(n, m) rtpp_module._rzmalloc((n), m)
-#define mod_free(p) rtpp_module._free((p))
-#define mod_realloc(p,n) rtpp_module._realloc((p), (n))
-#define mod_strdup(p) rtpp_module._strdup((p))
-#define mod_asprintf(pp, fmt, args...) rtpp_module._asprintf((pp), (fmt), ## args)
-#define mod_vasprintf(pp, fmt, vl) rtpp_module._vasprintf((pp), (fmt), (vl))
-#endif
-#endif /* !MODULE_IF_CODE */
+#define mod_malloc(n) RTPP_MOD_SELF._malloc((n))
+#define mod_zmalloc(n) RTPP_MOD_SELF._zmalloc((n))
+#define mod_rzmalloc(n, m) RTPP_MOD_SELF._rzmalloc((n), m)
+#define mod_free(p) RTPP_MOD_SELF._free((p))
+#define mod_realloc(p,n) RTPP_MOD_SELF._realloc((p), (n))
+#define mod_strdup(p) RTPP_MOD_SELF._strdup((p))
+#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF._asprintf((pp), (fmt), ## args)
+#define mod_vasprintf(pp, fmt, vl) RTPP_MOD_SELF._vasprintf((pp), (fmt), (vl))
 
-#define mod_log(args...) CALL_METHOD(rtpp_module.log, genwrite, __FUNCTION__, \
+#endif /* RTPP_CHECK_LEAKS */
+
+#define mod_log(args...) CALL_METHOD(RTPP_MOD_SELF.log, genwrite, __FUNCTION__, \
   __LINE__, ## args)
-#define mod_elog(args...) CALL_METHOD(rtpp_module.log, errwrite, __FUNCTION__, \
+#define mod_elog(args...) CALL_METHOD(RTPP_MOD_SELF.log, errwrite, __FUNCTION__, \
   __LINE__, ## args)
+
+#endif /* !MODULE_IF_CODE */
 
 struct api_version {
     int rev;
@@ -184,5 +193,3 @@ extern struct rtpp_minfo rtpp_module;
   (sptr)->descr.ver.rev == MODULE_API_REVISION && \
   (sptr)->descr.ver.mi_size == sizeof(struct rtpp_minfo) && \
   strcmp((sptr)->descr.ver.build, RTPP_SW_VERSION) == 0)
-
-#endif /* _RTPP_MODULE_H */

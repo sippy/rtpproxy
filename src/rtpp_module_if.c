@@ -81,6 +81,9 @@
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
+#if defined(LIBRTPPROXY)
+#include "rtpp_module_if_static.h"
+#endif
 
 struct rtpp_module_if_priv {
     struct rtpp_module_if pub;
@@ -178,30 +181,37 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
 {
     struct rtpp_module_if_priv *pvt;
     const char *derr;
+    struct rtpp_minfo *mip = NULL;
 
     PUB2PVT(self, pvt);
-    pvt->dmp = dlopen(pvt->mpath, RTLD_NOW);
-    if (pvt->dmp == NULL) {
-        derr = dlerror();
-        if (strstr(derr, pvt->mpath) == NULL) {
-            RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen(%s): %s", pvt->mpath, derr);
-        } else {
-            RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen() module: %s", derr);
+#if defined(LIBRTPPROXY)
+    mip = rtpp_static_modules_lookup(pvt->mpath);
+#endif
+    if (mip == NULL) {
+        pvt->dmp = dlopen(pvt->mpath, RTLD_NOW);
+        if (pvt->dmp == NULL) {
+            derr = dlerror();
+            if (strstr(derr, pvt->mpath) == NULL) {
+                RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen(%s): %s", pvt->mpath, derr);
+            } else {
+                RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen() module: %s", derr);
+            }
+            goto e1;
         }
-        goto e1;
-    }
-    pvt->mip = dlsym(pvt->dmp, "rtpp_module");
-    if (pvt->mip == NULL) {
-        derr = dlerror();
-        if (strstr(derr, pvt->mpath) == NULL) {
-            RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol in the %s"
-              ": %s", pvt->mpath, derr);
-        } else {
-            RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol: %s",
-              derr);
+        mip = dlsym(pvt->dmp, "rtpp_module");
+        if (mip == NULL) {
+            derr = dlerror();
+            if (strstr(derr, pvt->mpath) == NULL) {
+                RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol in the %s"
+                  ": %s", pvt->mpath, derr);
+            } else {
+                RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol: %s",
+                  derr);
+            }
+            goto e2;
         }
-        goto e2;
     }
+    pvt->mip = mip;
     if (!MI_VER_CHCK(pvt->mip)) {
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
           "consider recompiling the module", pvt->mpath);
@@ -299,7 +309,8 @@ e3:
     rtpp_memdeb_dtor(pvt->memdeb_p);
 #endif
 e2:
-    dlclose(pvt->dmp);
+    if (pvt->dmp != NULL)
+        dlclose(pvt->dmp);
     pvt->mip = NULL;
 e1:
     return (-1);

@@ -8,6 +8,10 @@ UCLSRCDIR=$(top_srcdir)/external/libucl
 
 pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
 
+if ENABLE_LIBRTPPROXY
+noinst_LTLIBRARIES = librtpp_acct_rtcp_hep.la
+endif
+
 noinst_PROGRAMS = rtcp2json_test
 rtcp2json_test_SOURCES = rtcp2json_test.c rtpp_sbuf.c rtcp2json.c
 rtcp2json_test_CFLAGS = $(OPT_CFLAGS) $(AM_CFLAGS) $(LTO_FLAG)
@@ -18,11 +22,11 @@ rtpp_acct_rtcp_hep_la_SOURCES = rtpp_acct_rtcp_hep.c rtcp2json.c rtpp_sbuf.c \
 rtpp_acct_rtcp_hep_la_LDFLAGS = -avoid-version -module -shared \
   $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
 rtpp_acct_rtcp_hep_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
-  -Dfree=mod_free -Drealloc=mod_realloc -I$(HEPSRCDIR) -I$(UCLSRCDIR)/include
+  -Dfree=mod_free -Drealloc=mod_realloc -I$(HEPSRCDIR) -I$(UCLSRCDIR)/include \
+  -DRTPP_MOD_NAME="acct_rtcp_hep"
 CFLAGS_acct_rtcp_hep_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE \
   $(LTO_FLAG)
 rtpp_acct_rtcp_hep_la_CFLAGS=$(OPT_CFLAGS) $(CFLAGS_acct_rtcp_hep_common)
-#rtpp_acct_rtcp_hep_la_LIBADD = -lz
 
 rtpp_acct_rtcp_hep_debug_la_SOURCES = $(rtpp_acct_rtcp_hep_la_SOURCES)
 rtpp_acct_rtcp_hep_debug_la_LIBADD = $(rtpp_acct_rtcp_hep_la_LIBADD) $(RTPP_MEMDEB_LDADD)
@@ -32,8 +36,6 @@ rtpp_acct_rtcp_hep_debug_la_CPPFLAGS=$(rtpp_acct_rtcp_hep_la_CPPFLAGS) \
 rtpp_acct_rtcp_hep_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_acct_rtcp_hep_common) \
  $(RTPP_MEMDEB_CFLAGS)
 
-DEFS=	$(CC_WFLAGS) @DEFS@
-
 noinst_PROGRAMS += rtpp_sbuf_selftest
 rtpp_sbuf_selftest_CPPFLAGS = -Drtpp_sbuf_selftest=main \
   $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_sbuf
@@ -42,3 +44,7 @@ rtpp_sbuf_selftest_SOURCES = rtpp_sbuf.c rtpp_sbuf.h \
   $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
 rtpp_sbuf_selftest_LDADD = $(RTPP_MEMDEB_LDADD)
 rtpp_sbuf_selftest_LDFLAGS = $(LTO_FLAG)
+
+librtpp_acct_rtcp_hep_la_SOURCES = $(rtpp_acct_rtcp_hep_la_SOURCES)
+librtpp_acct_rtcp_hep_la_CPPFLAGS = $(rtpp_acct_rtcp_hep_la_CPPFLAGS) -DLIBRTPPROXY
+librtpp_acct_rtcp_hep_la_CFLAGS = $(rtpp_acct_rtcp_hep_la_CFLAGS)

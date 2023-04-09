@@ -99,7 +99,11 @@ static const struct rtpp_acct_handlers acct_csv_aapi = {
     .on_session_end = AAPI_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
 };
 
+#if !defined(LIBRTPPROXY)
 struct rtpp_minfo rtpp_module = {
+#else
+struct rtpp_minfo rtpp_module_acct_csv = {
+#endif
     .descr.name = "acct_csv",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 1,

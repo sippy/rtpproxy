@@ -83,7 +83,11 @@ static const struct rtpp_acct_handlers acct_rtcp_hep_aapi = {
     .on_rtcp_rcvd = AAPI_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
+#if !defined(LIBRTPPROXY)
 struct rtpp_minfo rtpp_module = {
+#else
+struct rtpp_minfo rtpp_module_acct_rtcp_hep = {
+#endif
     .descr.name = "acct_rtcp_hep",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 2,

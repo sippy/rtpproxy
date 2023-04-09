@@ -118,6 +118,7 @@
 #include "rtpp_stacktrace.h"
 #if defined(LIBRTPPROXY)
 #include "librtpproxy.h"
+#include "rtpp_module_if_static.h"
 #endif
 
 #ifndef RTPP_DEBUG
@@ -342,7 +343,14 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
       "Vc:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
         case LOPT_DSO:
-            cp = realpath(optarg, mpath);
+            cp = NULL;
+#if defined(LIBRTPPROXY)
+            if (rtpp_static_modules_lookup(optarg) != NULL) {
+                cp = optarg;
+            }
+#endif
+            if (cp == NULL)
+                cp = realpath(optarg, mpath);
             if (cp == NULL) {
                  err(1, "realpath: %s", optarg);
             }

@@ -171,11 +171,13 @@ rtpp_fintest_LDADD = $(RTPP_MEMDEB_LDADD)
 rtpp_fintest_LDFLAGS = $(LTO_FLAG)
 
 librtpproxy_la_SOURCES = $(rtpproxy_SOURCES) $(top_srcdir)/libucl/libucl.la \
-  $(XXH_DIR)/libxxHash.la
+  $(XXH_DIR)/libxxHash.la rtpp_module_if_static.c rtpp_module_if_static.h
 librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS)
 librtpproxy_la_CPPFLAGS = $(rtpproxy_CPPFLAGS) -DLIBRTPPROXY
 librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
-  $(XXH_DIR)/libxxHash.la
+  $(XXH_DIR)/libxxHash.la $(top_srcdir)/modules/catch_dtmf/librtpp_catch_dtmf.la \
+  $(top_srcdir)/modules/acct_csv/librtpp_acct_csv.la \
+  $(top_srcdir)/modules/acct_rtcp_hep/librtpp_acct_rtcp_hep.la
 if BUILD_ELPERIODIC
 librtpproxy_la_LIBADD += @LIBS_ELPERIODIC@
 endif
