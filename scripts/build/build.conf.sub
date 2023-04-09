@@ -49,7 +49,7 @@ gcc-i386-cross)
 	DOCKR_PLATFORM="x86_64"
 	export BUILD_OS="ubuntu-18.04"
 	PRE_INSTALL_CMD="enable_arch i386"
-	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc g++ libc6-dev:i386 libstdc++6:i386 lib32gcc-7-dev"
+	PKGS="${PKGS} wget make git libssl-dev pkg-config libtool automake autoconf python3 gcc g++ libc6-dev:i386 libstdc++6:i386 lib32gcc-7-dev"
 	;;
 gcc-mips64-cross)
 	DOCKR_BASE="ubuntu:18.04"
@@ -59,7 +59,7 @@ gcc-mips64-cross)
 	export AR="mips64-linux-gnuabi64-ar"
 	export RANLIB="mips64-linux-gnuabi64-ranlib"
 	POST_INSTALL_CMD="setup_qemu mips64 gnuabi64"
-	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc-mips64-linux-gnuabi64 libc-dev-mips64-cross qemu-user-static"
+	PKGS="${PKGS} wget make git libssl-dev pkg-config libtool automake autoconf python3 gcc-mips64-linux-gnuabi64 libc-dev-mips64-cross qemu-user-static"
 	;;
 gcc-arm32-cross)
 	export CC="arm-linux-gnueabihf-gcc"
@@ -69,7 +69,7 @@ gcc-arm32-cross)
 	export BUILD_OS="ubuntu-18.04"
 	DOCKR_BASE="ubuntu:18.04"
 	DOCKR_PLATFORM="x86_64"
-	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc-arm-linux-gnueabihf libc-dev-armhf-cross qemu-user-static"
+	PKGS="${PKGS} wget make git libssl-dev pkg-config libtool automake autoconf python3 gcc-arm-linux-gnueabihf libc-dev-armhf-cross qemu-user-static"
 	;;
 gcc-arm64-cross)
 	export CC="aarch64-linux-gnu-gcc"
@@ -79,35 +79,35 @@ gcc-arm64-cross)
 	export BUILD_OS="ubuntu-18.04"
 	DOCKR_BASE="ubuntu:18.04"
 	DOCKR_PLATFORM="x86_64"
-	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc-aarch64-linux-gnu libc-dev-arm64-cross qemu-user-static"
+	PKGS="${PKGS} wget make git libssl-dev pkg-config libtool automake autoconf python3 gcc-aarch64-linux-gnu libc-dev-arm64-cross qemu-user-static"
 	;;
 gcc-arm32-qemu-cross)
 	export CC="/usr/lib/ccache/gcc"
 	export CCACHE_DIR="`pwd`/ccache"
 	DOCKR_BASE="ubuntu"
 	DOCKR_PLATFORM="arm/v7"
-	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc g++ ccache"
+	PKGS="${PKGS} wget make git libssl-dev pkg-config libtool automake autoconf python3 gcc g++ ccache"
 	;;
 clang-arm32-qemu-cross)
 	export CC="/usr/lib/ccache/clang"
 	export CCACHE_DIR="`pwd`/ccache"
 	DOCKR_BASE="ubuntu"
 	DOCKR_PLATFORM="arm/v7"
-	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 clang llvm-dev ccache"
+	PKGS="${PKGS} wget make git libssl-dev pkg-config libtool automake autoconf python3 clang llvm-dev ccache"
         ;;
 gcc-arm64-qemu-cross)
 	export CC="/usr/lib/ccache/gcc"
 	export CCACHE_DIR="`pwd`/ccache"
 	DOCKR_BASE="ubuntu"
 	DOCKR_PLATFORM="arm64/v8"
-	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 gcc g++ ccache"
+	PKGS="${PKGS} wget make git libssl-dev pkg-config libtool automake autoconf python3 gcc g++ ccache"
 	;;
 clang-arm64-qemu-cross)
 	export CC="/usr/lib/ccache/clang"
 	export CCACHE_DIR="`pwd`/ccache"
 	DOCKR_BASE="ubuntu"
 	DOCKR_PLATFORM="arm64/v8"
-	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 clang llvm-dev ccache"
+	PKGS="${PKGS} wget make git libssl-dev pkg-config libtool automake autoconf python3 clang llvm-dev ccache"
 	;;
 clang)
 	export CC="${COMPILER}"
@@ -123,7 +123,7 @@ clang-i386-cross)
 	DOCKR_PLATFORM="x86_64"
 	export BUILD_OS="ubuntu-18.04"
 	PRE_INSTALL_CMD="enable_arch i386"
-	PKGS="${PKGS} wget make git pkg-config libtool automake autoconf python3 clang llvm-dev libc6-dev:i386 libstdc++6:i386 lib32gcc-7-dev"
+	PKGS="${PKGS} wget make git libssl-dev pkg-config libtool automake autoconf python3 clang llvm-dev libc6-dev:i386 libstdc++6:i386 lib32gcc-7-dev"
 	;;
 gcc-*)
 	export CC="${COMPILER}"
