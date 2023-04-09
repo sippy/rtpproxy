@@ -133,14 +133,23 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
-LTLIBRARIES = $(pkglib_LTLIBRARIES)
-rtpp_catch_dtmf_la_LIBADD =
-am_rtpp_catch_dtmf_la_OBJECTS = rtpp_catch_dtmf_la-rtpp_catch_dtmf.lo
-rtpp_catch_dtmf_la_OBJECTS = $(am_rtpp_catch_dtmf_la_OBJECTS)
+LTLIBRARIES = $(noinst_LTLIBRARIES) $(pkglib_LTLIBRARIES)
+librtpp_catch_dtmf_la_LIBADD =
+am__objects_1 = librtpp_catch_dtmf_la-rtpp_catch_dtmf.lo
+am_librtpp_catch_dtmf_la_OBJECTS = $(am__objects_1)
+librtpp_catch_dtmf_la_OBJECTS = $(am_librtpp_catch_dtmf_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+librtpp_catch_dtmf_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(librtpp_catch_dtmf_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+@ENABLE_LIBRTPPROXY_TRUE@am_librtpp_catch_dtmf_la_rpath =
+rtpp_catch_dtmf_la_LIBADD =
+am_rtpp_catch_dtmf_la_OBJECTS = rtpp_catch_dtmf_la-rtpp_catch_dtmf.lo
+rtpp_catch_dtmf_la_OBJECTS = $(am_rtpp_catch_dtmf_la_OBJECTS)
 rtpp_catch_dtmf_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_catch_dtmf_la_CFLAGS) $(CFLAGS) \
@@ -149,8 +158,8 @@ am__DEPENDENCIES_1 =
 am__DEPENDENCIES_2 = $(top_srcdir)/libexecinfo/libexecinfo.la
 rtpp_catch_dtmf_debug_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_2)
-am__objects_1 = rtpp_catch_dtmf_debug_la-rtpp_catch_dtmf.lo
-am_rtpp_catch_dtmf_debug_la_OBJECTS = $(am__objects_1)
+am__objects_2 = rtpp_catch_dtmf_debug_la-rtpp_catch_dtmf.lo
+am_rtpp_catch_dtmf_debug_la_OBJECTS = $(am__objects_2)
 rtpp_catch_dtmf_debug_la_OBJECTS =  \
 	$(am_rtpp_catch_dtmf_debug_la_OBJECTS)
 rtpp_catch_dtmf_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -172,6 +181,7 @@ am__v_at_1 =
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade =  \
+	./$(DEPDIR)/librtpp_catch_dtmf_la-rtpp_catch_dtmf.Plo \
 	./$(DEPDIR)/rtpp_catch_dtmf_debug_la-rtpp_catch_dtmf.Plo \
 	./$(DEPDIR)/rtpp_catch_dtmf_la-rtpp_catch_dtmf.Plo
 am__mv = mv -f
@@ -193,9 +203,11 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(rtpp_catch_dtmf_la_SOURCES) \
+SOURCES = $(librtpp_catch_dtmf_la_SOURCES) \
+	$(rtpp_catch_dtmf_la_SOURCES) \
 	$(rtpp_catch_dtmf_debug_la_SOURCES)
-DIST_SOURCES = $(rtpp_catch_dtmf_la_SOURCES) \
+DIST_SOURCES = $(librtpp_catch_dtmf_la_SOURCES) \
+	$(rtpp_catch_dtmf_la_SOURCES) \
 	$(rtpp_catch_dtmf_debug_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
@@ -430,14 +442,14 @@ NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 pkglib_LTLIBRARIES = rtpp_catch_dtmf.la rtpp_catch_dtmf_debug.la
+@ENABLE_LIBRTPPROXY_TRUE@noinst_LTLIBRARIES = librtpp_catch_dtmf.la
 rtpp_catch_dtmf_la_SOURCES = rtpp_catch_dtmf.c
 rtpp_catch_dtmf_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
 rtpp_catch_dtmf_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
-  -Dfree=mod_free -Drealloc=mod_realloc
+  -Dfree=mod_free -Drealloc=mod_realloc -DRTPP_MOD_NAME="catch_dtmf"
 
 CFLAGS_rtpp_catch_dtmf_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
 rtpp_catch_dtmf_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_catch_dtmf_common)
-#rtpp_catch_dtmf_la_LIBADD = -lz
 rtpp_catch_dtmf_debug_la_SOURCES = $(rtpp_catch_dtmf_la_SOURCES)
 rtpp_catch_dtmf_debug_la_LIBADD = $(rtpp_catch_dtmf_la_LIBADD) $(RTPP_MEMDEB_LDADD)
 rtpp_catch_dtmf_debug_la_LDFLAGS = $(rtpp_catch_dtmf_la_LDFLAGS)
@@ -447,6 +459,9 @@ rtpp_catch_dtmf_debug_la_CPPFLAGS = $(rtpp_catch_dtmf_la_CPPFLAGS) \
 rtpp_catch_dtmf_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_rtpp_catch_dtmf_common) \
  $(RTPP_MEMDEB_CFLAGS)
 
+librtpp_catch_dtmf_la_SOURCES = $(rtpp_catch_dtmf_la_SOURCES)
+librtpp_catch_dtmf_la_CPPFLAGS = $(rtpp_catch_dtmf_la_CPPFLAGS) -DLIBRTPPROXY
+librtpp_catch_dtmf_la_CFLAGS = $(rtpp_catch_dtmf_la_CFLAGS)
 all: all-am
 
 .SUFFIXES:
@@ -481,6 +496,17 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
+	@list='$(noinst_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
 
 install-pkglibLTLIBRARIES: $(pkglib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
@@ -517,6 +543,9 @@ clean-pkglibLTLIBRARIES:
 	  rm -f $${locs}; \
 	}
 
+librtpp_catch_dtmf.la: $(librtpp_catch_dtmf_la_OBJECTS) $(librtpp_catch_dtmf_la_DEPENDENCIES) $(EXTRA_librtpp_catch_dtmf_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(librtpp_catch_dtmf_la_LINK) $(am_librtpp_catch_dtmf_la_rpath) $(librtpp_catch_dtmf_la_OBJECTS) $(librtpp_catch_dtmf_la_LIBADD) $(LIBS)
+
 rtpp_catch_dtmf.la: $(rtpp_catch_dtmf_la_OBJECTS) $(rtpp_catch_dtmf_la_DEPENDENCIES) $(EXTRA_rtpp_catch_dtmf_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_catch_dtmf_la_LINK) -rpath $(pkglibdir) $(rtpp_catch_dtmf_la_OBJECTS) $(rtpp_catch_dtmf_la_LIBADD) $(LIBS)
 
@@ -529,6 +558,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpp_catch_dtmf_la-rtpp_catch_dtmf.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_catch_dtmf_debug_la-rtpp_catch_dtmf.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_catch_dtmf_la-rtpp_catch_dtmf.Plo@am__quote@ # am--include-marker
 
@@ -558,6 +588,13 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+librtpp_catch_dtmf_la-rtpp_catch_dtmf.lo: rtpp_catch_dtmf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_catch_dtmf_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_catch_dtmf_la_CFLAGS) $(CFLAGS) -MT librtpp_catch_dtmf_la-rtpp_catch_dtmf.lo -MD -MP -MF $(DEPDIR)/librtpp_catch_dtmf_la-rtpp_catch_dtmf.Tpo -c -o librtpp_catch_dtmf_la-rtpp_catch_dtmf.lo `test -f 'rtpp_catch_dtmf.c' || echo '$(srcdir)/'`rtpp_catch_dtmf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpp_catch_dtmf_la-rtpp_catch_dtmf.Tpo $(DEPDIR)/librtpp_catch_dtmf_la-rtpp_catch_dtmf.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_catch_dtmf.c' object='librtpp_catch_dtmf_la-rtpp_catch_dtmf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_catch_dtmf_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_catch_dtmf_la_CFLAGS) $(CFLAGS) -c -o librtpp_catch_dtmf_la-rtpp_catch_dtmf.lo `test -f 'rtpp_catch_dtmf.c' || echo '$(srcdir)/'`rtpp_catch_dtmf.c
 
 rtpp_catch_dtmf_la-rtpp_catch_dtmf.lo: rtpp_catch_dtmf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_catch_dtmf_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_catch_dtmf_la_CFLAGS) $(CFLAGS) -MT rtpp_catch_dtmf_la-rtpp_catch_dtmf.lo -MD -MP -MF $(DEPDIR)/rtpp_catch_dtmf_la-rtpp_catch_dtmf.Tpo -c -o rtpp_catch_dtmf_la-rtpp_catch_dtmf.lo `test -f 'rtpp_catch_dtmf.c' || echo '$(srcdir)/'`rtpp_catch_dtmf.c
@@ -703,11 +740,12 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-pkglibLTLIBRARIES \
-	mostlyclean-am
+clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	clean-pkglibLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/rtpp_catch_dtmf_debug_la-rtpp_catch_dtmf.Plo
+		-rm -f ./$(DEPDIR)/librtpp_catch_dtmf_la-rtpp_catch_dtmf.Plo
+	-rm -f ./$(DEPDIR)/rtpp_catch_dtmf_debug_la-rtpp_catch_dtmf.Plo
 	-rm -f ./$(DEPDIR)/rtpp_catch_dtmf_la-rtpp_catch_dtmf.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -754,7 +792,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/rtpp_catch_dtmf_debug_la-rtpp_catch_dtmf.Plo
+		-rm -f ./$(DEPDIR)/librtpp_catch_dtmf_la-rtpp_catch_dtmf.Plo
+	-rm -f ./$(DEPDIR)/rtpp_catch_dtmf_debug_la-rtpp_catch_dtmf.Plo
 	-rm -f ./$(DEPDIR)/rtpp_catch_dtmf_la-rtpp_catch_dtmf.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
@@ -777,19 +816,20 @@ uninstall-am: uninstall-pkglibLTLIBRARIES
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-am clean \
-	clean-generic clean-libtool clean-pkglibLTLIBRARIES \
-	cscopelist-am ctags ctags-am distclean distclean-compile \
-	distclean-generic distclean-libtool distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-pkglibLTLIBRARIES install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-pkglibLTLIBRARIES
+	clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	clean-pkglibLTLIBRARIES cscopelist-am ctags ctags-am distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-pkglibLTLIBRARIES \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am \
+	uninstall-pkglibLTLIBRARIES
 
 .PRECIOUS: Makefile
 

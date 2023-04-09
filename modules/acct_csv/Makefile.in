@@ -133,22 +133,31 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
-LTLIBRARIES = $(pkglib_LTLIBRARIES)
-rtpp_acct_csv_la_LIBADD =
-am_rtpp_acct_csv_la_OBJECTS = rtpp_acct_csv_la-rtpp_acct_csv.lo
-rtpp_acct_csv_la_OBJECTS = $(am_rtpp_acct_csv_la_OBJECTS)
+LTLIBRARIES = $(noinst_LTLIBRARIES) $(pkglib_LTLIBRARIES)
+librtpp_acct_csv_la_LIBADD =
+am__objects_1 = librtpp_acct_csv_la-rtpp_acct_csv.lo
+am_librtpp_acct_csv_la_OBJECTS = $(am__objects_1)
+librtpp_acct_csv_la_OBJECTS = $(am_librtpp_acct_csv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+librtpp_acct_csv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(librtpp_acct_csv_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+@ENABLE_LIBRTPPROXY_TRUE@am_librtpp_acct_csv_la_rpath =
+rtpp_acct_csv_la_LIBADD =
+am_rtpp_acct_csv_la_OBJECTS = rtpp_acct_csv_la-rtpp_acct_csv.lo
+rtpp_acct_csv_la_OBJECTS = $(am_rtpp_acct_csv_la_OBJECTS)
 rtpp_acct_csv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_acct_csv_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_acct_csv_la_LDFLAGS) $(LDFLAGS) -o $@
 am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.la
 rtpp_acct_csv_debug_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am__objects_1 = rtpp_acct_csv_debug_la-rtpp_acct_csv.lo
-am_rtpp_acct_csv_debug_la_OBJECTS = $(am__objects_1)
+am__objects_2 = rtpp_acct_csv_debug_la-rtpp_acct_csv.lo
+am_rtpp_acct_csv_debug_la_OBJECTS = $(am__objects_2)
 rtpp_acct_csv_debug_la_OBJECTS = $(am_rtpp_acct_csv_debug_la_OBJECTS)
 rtpp_acct_csv_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -169,6 +178,7 @@ am__v_at_1 =
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade =  \
+	./$(DEPDIR)/librtpp_acct_csv_la-rtpp_acct_csv.Plo \
 	./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo \
 	./$(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Plo
 am__mv = mv -f
@@ -190,10 +200,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(rtpp_acct_csv_la_SOURCES) \
+SOURCES = $(librtpp_acct_csv_la_SOURCES) $(rtpp_acct_csv_la_SOURCES) \
 	$(rtpp_acct_csv_debug_la_SOURCES)
-DIST_SOURCES = $(rtpp_acct_csv_la_SOURCES) \
-	$(rtpp_acct_csv_debug_la_SOURCES)
+DIST_SOURCES = $(librtpp_acct_csv_la_SOURCES) \
+	$(rtpp_acct_csv_la_SOURCES) $(rtpp_acct_csv_debug_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -427,9 +437,10 @@ NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 pkglib_LTLIBRARIES = rtpp_acct_csv.la rtpp_acct_csv_debug.la
+@ENABLE_LIBRTPPROXY_TRUE@noinst_LTLIBRARIES = librtpp_acct_csv.la
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
 rtpp_acct_csv_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
-rtpp_acct_csv_la_CPPFLAGS = -D_BSD_SOURCE
+rtpp_acct_csv_la_CPPFLAGS = -D_BSD_SOURCE -DRTPP_MOD_NAME="acct_csv"
 rtpp_acct_csv_la_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 rtpp_acct_csv_debug_la_SOURCES = ${rtpp_acct_csv_la_SOURCES}
 rtpp_acct_csv_debug_la_LIBADD = $(RTPP_MEMDEB_LDADD)
@@ -438,6 +449,9 @@ rtpp_acct_csv_debug_la_CPPFLAGS = $(rtpp_acct_csv_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="acct_csv"
 
 rtpp_acct_csv_debug_la_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
+librtpp_acct_csv_la_SOURCES = $(rtpp_acct_csv_la_SOURCES)
+librtpp_acct_csv_la_CPPFLAGS = $(rtpp_acct_csv_la_CPPFLAGS) -DLIBRTPPROXY
+librtpp_acct_csv_la_CFLAGS = $(rtpp_acct_csv_la_CFLAGS)
 all: all-am
 
 .SUFFIXES:
@@ -472,6 +486,17 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
+	@list='$(noinst_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
 
 install-pkglibLTLIBRARIES: $(pkglib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
@@ -508,6 +533,9 @@ clean-pkglibLTLIBRARIES:
 	  rm -f $${locs}; \
 	}
 
+librtpp_acct_csv.la: $(librtpp_acct_csv_la_OBJECTS) $(librtpp_acct_csv_la_DEPENDENCIES) $(EXTRA_librtpp_acct_csv_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(librtpp_acct_csv_la_LINK) $(am_librtpp_acct_csv_la_rpath) $(librtpp_acct_csv_la_OBJECTS) $(librtpp_acct_csv_la_LIBADD) $(LIBS)
+
 rtpp_acct_csv.la: $(rtpp_acct_csv_la_OBJECTS) $(rtpp_acct_csv_la_DEPENDENCIES) $(EXTRA_rtpp_acct_csv_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_acct_csv_la_LINK) -rpath $(pkglibdir) $(rtpp_acct_csv_la_OBJECTS) $(rtpp_acct_csv_la_LIBADD) $(LIBS)
 
@@ -520,6 +548,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpp_acct_csv_la-rtpp_acct_csv.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Plo@am__quote@ # am--include-marker
 
@@ -549,6 +578,13 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+librtpp_acct_csv_la-rtpp_acct_csv.lo: rtpp_acct_csv.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_csv_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_csv_la_CFLAGS) $(CFLAGS) -MT librtpp_acct_csv_la-rtpp_acct_csv.lo -MD -MP -MF $(DEPDIR)/librtpp_acct_csv_la-rtpp_acct_csv.Tpo -c -o librtpp_acct_csv_la-rtpp_acct_csv.lo `test -f 'rtpp_acct_csv.c' || echo '$(srcdir)/'`rtpp_acct_csv.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpp_acct_csv_la-rtpp_acct_csv.Tpo $(DEPDIR)/librtpp_acct_csv_la-rtpp_acct_csv.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_acct_csv.c' object='librtpp_acct_csv_la-rtpp_acct_csv.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_csv_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_csv_la_CFLAGS) $(CFLAGS) -c -o librtpp_acct_csv_la-rtpp_acct_csv.lo `test -f 'rtpp_acct_csv.c' || echo '$(srcdir)/'`rtpp_acct_csv.c
 
 rtpp_acct_csv_la-rtpp_acct_csv.lo: rtpp_acct_csv.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_csv_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_csv_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_csv_la-rtpp_acct_csv.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Tpo -c -o rtpp_acct_csv_la-rtpp_acct_csv.lo `test -f 'rtpp_acct_csv.c' || echo '$(srcdir)/'`rtpp_acct_csv.c
@@ -694,11 +730,12 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-pkglibLTLIBRARIES \
-	mostlyclean-am
+clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	clean-pkglibLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo
+		-rm -f ./$(DEPDIR)/librtpp_acct_csv_la-rtpp_acct_csv.Plo
+	-rm -f ./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -745,7 +782,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo
+		-rm -f ./$(DEPDIR)/librtpp_acct_csv_la-rtpp_acct_csv.Plo
+	-rm -f ./$(DEPDIR)/rtpp_acct_csv_debug_la-rtpp_acct_csv.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_csv_la-rtpp_acct_csv.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
@@ -768,19 +806,20 @@ uninstall-am: uninstall-pkglibLTLIBRARIES
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-am clean \
-	clean-generic clean-libtool clean-pkglibLTLIBRARIES \
-	cscopelist-am ctags ctags-am distclean distclean-compile \
-	distclean-generic distclean-libtool distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-pkglibLTLIBRARIES install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-pkglibLTLIBRARIES
+	clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	clean-pkglibLTLIBRARIES cscopelist-am ctags ctags-am distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-pkglibLTLIBRARIES \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am \
+	uninstall-pkglibLTLIBRARIES
 
 .PRECIOUS: Makefile
 

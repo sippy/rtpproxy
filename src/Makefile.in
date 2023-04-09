@@ -128,7 +128,11 @@ PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 librtpproxy_la_DEPENDENCIES = $(top_srcdir)/libucl/libucl.la \
-	$(XXH_DIR)/libxxHash.la $(am__DEPENDENCIES_1)
+	$(XXH_DIR)/libxxHash.la \
+	$(top_srcdir)/modules/catch_dtmf/librtpp_catch_dtmf.la \
+	$(top_srcdir)/modules/acct_csv/librtpp_acct_csv.la \
+	$(top_srcdir)/modules/acct_rtcp_hep/librtpp_acct_rtcp_hep.la \
+	$(am__DEPENDENCIES_1)
 am__librtpproxy_la_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_pthread.c rtpp_pthread.h rtpp_defines.h rtpp_log.h \
 	rtpp_record.c rtpp_session.h rtpp_util.c rtpp_util.h rtp.c \
@@ -195,7 +199,8 @@ am__librtpproxy_la_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_module_if_fin.h \
 	$(RTPP_AUTOSRC_DIR)/rtpp_module_if_fin.c rtpp_mallocs.c \
 	rtpp_mallocs.h rtpp_refcnt.c rtpp_refcnt.h \
-	$(top_srcdir)/libucl/libucl.la $(XXH_DIR)/libxxHash.la
+	$(top_srcdir)/libucl/libucl.la $(XXH_DIR)/libxxHash.la \
+	rtpp_module_if_static.c rtpp_module_if_static.h
 am__objects_1 =
 am__objects_2 = $(am__objects_1)
 @ENABLE_MODULE_IF_TRUE@am__objects_3 =  \
@@ -266,7 +271,8 @@ am__objects_14 = $(am__objects_7) $(am__objects_8) $(am__objects_9) \
 	$(am__objects_13)
 am__objects_15 = $(am__objects_6) $(am__objects_14) \
 	librtpproxy_la-rtpp_mallocs.lo librtpproxy_la-rtpp_refcnt.lo
-am_librtpproxy_la_OBJECTS = $(am__objects_15)
+am_librtpproxy_la_OBJECTS = $(am__objects_15) \
+	librtpproxy_la-rtpp_module_if_static.lo
 librtpproxy_la_OBJECTS = $(am_librtpproxy_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -942,6 +948,7 @@ am__depfiles_remade = ./$(DEPDIR)/librtpproxy_la-main.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_modman_fin.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_module_if.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_module_if_fin.Plo \
+	./$(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_netaddr.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_netio_async.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_network.Plo \
@@ -1724,12 +1731,16 @@ rtpp_fintest_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 rtpp_fintest_LDADD = $(RTPP_MEMDEB_LDADD)
 rtpp_fintest_LDFLAGS = $(LTO_FLAG)
 librtpproxy_la_SOURCES = $(rtpproxy_SOURCES) $(top_srcdir)/libucl/libucl.la \
-  $(XXH_DIR)/libxxHash.la
+  $(XXH_DIR)/libxxHash.la rtpp_module_if_static.c rtpp_module_if_static.h
 
 librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS)
 librtpproxy_la_CPPFLAGS = $(rtpproxy_CPPFLAGS) -DLIBRTPPROXY
 librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
-	$(XXH_DIR)/libxxHash.la $(am__append_12)
+	$(XXH_DIR)/libxxHash.la \
+	$(top_srcdir)/modules/catch_dtmf/librtpp_catch_dtmf.la \
+	$(top_srcdir)/modules/acct_csv/librtpp_acct_csv.la \
+	$(top_srcdir)/modules/acct_rtcp_hep/librtpp_acct_rtcp_hep.la \
+	$(am__append_12)
 IPLDIR = $(top_srcdir)/src/ipol
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -1929,6 +1940,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_modman_fin.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_module_if.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_module_if_fin.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_netaddr.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_netio_async.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_network.Plo@am__quote@ # am--include-marker
@@ -2935,6 +2947,13 @@ librtpproxy_la-rtpp_refcnt.lo: rtpp_refcnt.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_refcnt.c' object='librtpproxy_la-rtpp_refcnt.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-rtpp_refcnt.lo `test -f 'rtpp_refcnt.c' || echo '$(srcdir)/'`rtpp_refcnt.c
+
+librtpproxy_la-rtpp_module_if_static.lo: rtpp_module_if_static.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -MT librtpproxy_la-rtpp_module_if_static.lo -MD -MP -MF $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Tpo -c -o librtpproxy_la-rtpp_module_if_static.lo `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Tpo $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_module_if_static.c' object='librtpproxy_la-rtpp_module_if_static.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-rtpp_module_if_static.lo `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
 
 rtpp_fintest-rtpp_fintest.o: rtpp_fintest.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_fintest_CPPFLAGS) $(CPPFLAGS) $(rtpp_fintest_CFLAGS) $(CFLAGS) -MT rtpp_fintest-rtpp_fintest.o -MD -MP -MF $(DEPDIR)/rtpp_fintest-rtpp_fintest.Tpo -c -o rtpp_fintest-rtpp_fintest.o `test -f 'rtpp_fintest.c' || echo '$(srcdir)/'`rtpp_fintest.c
@@ -7759,6 +7778,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_modman_fin.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_module_if.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_module_if_fin.Plo
+	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_netaddr.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_netio_async.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_network.Plo
@@ -8222,6 +8242,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_modman_fin.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_module_if.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_module_if_fin.Plo
+	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_netaddr.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_netio_async.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_network.Plo
