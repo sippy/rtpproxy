@@ -47,10 +47,11 @@ class Daemonizer():
         # Fork once
         if os.fork() != 0:
             sp[1].close()
+            rdata = sp[0].recv(8).decode('ascii').strip()
             try:
-                self.childpid = int(sp[0].recv(8).decode('ascii').strip())
+                self.childpid = int(rdata)
             except ValueError as exc:
-                raise DChildProcessError('Invalid/no token returned by a child') from None
+                raise DChildProcessError(F'Invalid/no token returned by a child: {rdata}') from None
             self.ssock = sp[0]
             return
         self.amiparent = False
