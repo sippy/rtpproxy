@@ -806,8 +806,9 @@ rtpp_shutdown(const struct rtpp_cfg *cfsp)
     CALL_SMETHOD(cfsp->sessions_wrt, purge);
     CALL_SMETHOD(cfsp->sessions_ht, purge);
 
-    RTPP_DBG_ASSERT(CALL_SMETHOD(cfsp->rtp_streams_wrt, get_length) == 0);
-    RTPP_DBG_ASSERT(CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_length) == 0);
+    while ((CALL_SMETHOD(cfsp->rtp_streams_wrt, get_length) > 0) ||
+      (CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_length) > 0))
+        continue;
 
     RTPP_OBJ_DECREF(cfsp->modules_cf);
     RTPP_OBJ_DECREF(cfsp->pproc_manager)
