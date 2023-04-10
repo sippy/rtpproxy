@@ -3,10 +3,24 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "rtpp_module.h"
+#include "rtpp_module_if_static.h"
 #include "rtpp_sbuf.h"
 #include "rtcp2json.h"
 
 #include "fuzz_standalone.h"
+
+__attribute__((constructor)) void
+fuzz_rtcp_parser_init()
+{
+    struct rtpp_minfo *mip;
+
+    mip = rtpp_static_modules_lookup("acct_rtcp_hep");
+    assert(mip != NULL);
+    mip->_malloc = &malloc;
+    mip->_realloc = &realloc;
+    mip->_free = &free;
+}
 
 int
 LLVMFuzzerTestOneInput(const char *rtcp_data, size_t rtcp_dlen)
