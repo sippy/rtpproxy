@@ -389,9 +389,9 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
   struct rtpp_cmd_rcache *rcache_obj)
 {
     rtpp_str_const_t *ap;
-    char *cp;
     struct rtpp_command_priv *pvt;
     struct rtpp_command_args *cap;
+    char mbuf[RTPP_CMD_BUFLEN];
 
     PUB2PVT(cmd, pvt);
     if (len > 0 && cmd->buf[len - 1] == '\n') {
@@ -403,16 +403,31 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
     }
     cmd->csp->ncmds_rcvd.cnt++;
 
-    cp = cmd->buf;
     cap = &cmd->args;
-    for (ap = cap->v; (ap->s = rtpp_strsep(&cp, "\r\n\t ")) != NULL;) {
-        if (ap->s[0] == '\0')
-            continue;
-        if (cp != NULL) {
-            ap->len = cp - ap->s - 1;
+    rtpp_strsplit(cmd->buf, mbuf, len, sizeof(mbuf));
+    char *mp, *mp_next;
+    ap = cap->v;
+    for (mp = mbuf; mp != NULL && (mp - mbuf) < len; mp = mp_next) {
+        rtpp_str_const_t tap;
+        mp_next = memchr(mp, '\0', len - (mp - mbuf));
+        if (mp_next == NULL) {
+            tap.len = mbuf + len - mp;
         } else {
-            ap->len = cmd->buf + len - ap->s;
+            tap.len = mp_next - mp;
+            mp_next += 1;
         }
+        if (tap.len == 0) {
+            continue;
+        }
+        tap.s = cmd->buf + (mp - mbuf);
+        size_t slen = strlen(tap.s);
+        RTPP_DBG_ASSERT(slen <= tap.len);
+        if (slen < tap.len) {
+            /* \0 inside a parameter is not allowed */
+            goto synerr;
+        }
+        *ap = tap;
+
         if (cap == &cmd->args) {
             /* Stream communication mode doesn't use cookie */
             if (pvt->umode != 0 && cap->c == 0 && pvt->cookie.s == NULL) {
@@ -424,10 +439,12 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
                 continue;
             }
         }
+
         if (ISAMPAMP(ap)) {
             if (cmd->subc.n == (MAX_SUBC_NUM - 1))
                 goto synerr;
             ap->s = NULL;
+            ap->len = 0;
             cap = &cmd->subc.args[cmd->subc.n];
             cmd->subc.n += 1;
             ap = cap->v;
