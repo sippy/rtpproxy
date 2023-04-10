@@ -1,8 +1,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 
+#include "rtp_packet.h"
 #include "rtpp_module.h"
 #include "rtpp_module_if_static.h"
 #include "rtpp_sbuf.h"
@@ -26,6 +28,9 @@ int
 LLVMFuzzerTestOneInput(const char *rtcp_data, size_t rtcp_dlen)
 {
     struct rtpp_sbuf *sbp;
+
+    if (rtcp_dlen > MAX_RPKT_LEN)
+        return (0);
 
     sbp = rtpp_sbuf_ctor(512);
     assert (sbp != NULL);
