@@ -49,6 +49,7 @@
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_runcreds.h"
+#include "rtpp_debug.h"
 
 #if defined(RTPP_DEBUG)
 #include "rtpp_coverage.h"
@@ -485,3 +486,36 @@ size_t strlcpy(dst, src, siz)
 }
 
 #endif /* !HAVE_STRLCPY */
+
+#define populate(n, t) (~((t)0) / 255 * (n))
+#define haszero(v) (((v) - populate(0x1, typeof(v))) & ~(v) & populate(0x80, typeof(v)))
+
+void
+rtpp_strsplit(char *ibuf, char *mbuf, size_t dlen, size_t blen)
+{
+        const uint64_t sep_masks[4] = {
+                populate('\t', uint64_t),
+                populate('\n', uint64_t),
+                populate('\r', uint64_t),
+                populate(' ', uint64_t)
+        };
+
+        RTPP_DBG_ASSERT(blen >= dlen && (blen % sizeof(uint64_t)) == 0);
+
+        uint64_t *cp = (uint64_t *)ibuf;
+        uint64_t *obp = (uint64_t *)mbuf;
+
+        for (int i = 0; i < dlen; i += sizeof(uint64_t)) {
+                uint64_t ww;
+                uint64_t ow = populate(0xff, uint64_t);
+                ww = *cp;
+                for (int j = 0; j < 4; j++) {
+                        ow &= ~(haszero(ww ^ sep_masks[j]) / 0x80 * 0xff);
+                }
+                *obp = ow;
+                ww &= ow;
+                *cp = ww;
+                obp += 1;
+                cp += 1;
+        }
+}

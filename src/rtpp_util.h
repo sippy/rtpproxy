@@ -61,6 +61,7 @@ enum atoi_rval {ATOI_OK = 0, ATOI_NOTINT = -1, ATOI_OUTRANGE = -2};
 enum atoi_rval atoi_safe_sep(const char *, int *, char, const char **);
 enum atoi_rval atoi_safe(const char *, int *);
 enum atoi_rval atoi_saferange(const char *, int *, int, int);
+void rtpp_strsplit(char *, char *, size_t, size_t);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)
