@@ -488,7 +488,8 @@ size_t strlcpy(dst, src, siz)
 #endif /* !HAVE_STRLCPY */
 
 #define populate(n, t) (~((t)0) / 255 * (n))
-#define haszero(v) (((v) - populate(0x1, typeof(v))) & ~(v) & populate(0x80, typeof(v)))
+#define haszero(v) ~(((((v) & populate(0x7f, typeof(v))) + populate(0x7f, typeof(v))) | \
+  (v)) | populate(0x7f, typeof(v)))
 
 void
 rtpp_strsplit(char *ibuf, char *mbuf, size_t dlen, size_t blen)
