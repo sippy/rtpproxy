@@ -64,11 +64,11 @@ struct rtpp_polltbl_hst {
    int ilen;	/* Minimum number of entries to be allocated when need to extend */
    struct rtpp_polltbl_hst_ent *clog;
    struct rtpp_weakref *streams_wrt;
+   pthread_mutex_t lock;
 };
 
 struct rtpp_sessinfo_priv {
    struct rtpp_sessinfo pub;
-   pthread_mutex_t lock;
    struct rtpp_polltbl_hst hst_rtp;
    struct rtpp_polltbl_hst hst_rtcp;
 };
@@ -97,10 +97,16 @@ rtpp_polltbl_hst_alloc(struct rtpp_polltbl_hst *hp, int alen)
 
     hp->clog = rtpp_zmalloc(sizeof(struct rtpp_polltbl_hst_ent) * alen);
     if (hp->clog == NULL) {
-        return (-1);
+        goto e0;
     }
+    if (pthread_mutex_init(&hp->lock, NULL) != 0)
+        goto e1;
     hp->alen = hp->ilen = alen;
     return (0);
+e1:
+    free(hp->clog);
+e0:
+    return (-1);
 }
 
 static void
@@ -117,6 +123,7 @@ rtpp_polltbl_hst_dtor(struct rtpp_polltbl_hst *hp)
     }
     if (hp->alen > 0) {
         free(hp->clog);
+        pthread_mutex_destroy(&hp->lock);
     }
 }
 
@@ -162,9 +169,6 @@ rtpp_sessinfo_ctor(const struct rtpp_cfg *cfsp)
         return (NULL);
     }
     sessinfo = &(pvt->pub);
-    if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
-        goto e5;
-    }
     if (rtpp_polltbl_hst_alloc(&pvt->hst_rtp, 10) != 0) {
         goto e6;
     }
@@ -183,10 +187,8 @@ rtpp_sessinfo_ctor(const struct rtpp_cfg *cfsp)
     return (sessinfo);
 
 e7:
-    free(pvt->hst_rtp.clog);
+    rtpp_polltbl_hst_dtor(&pvt->hst_rtp);
 e6:
-    pthread_mutex_destroy(&pvt->lock);
-e5:
     RTPP_OBJ_DECREF(&(pvt->pub));
     free(pvt);
     return (NULL);
@@ -199,7 +201,6 @@ rtpp_sessinfo_dtor(struct rtpp_sessinfo_priv *pvt)
     rtpp_sessinfo_fin(&(pvt->pub));
     rtpp_polltbl_hst_dtor(&pvt->hst_rtp);
     rtpp_polltbl_hst_dtor(&pvt->hst_rtcp);
-    pthread_mutex_destroy(&pvt->lock);
     free(pvt);
 }
 
@@ -211,28 +212,33 @@ rtpp_sinfo_append(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
     struct rtpp_stream *rtp, *rtcp;
 
     PUB2PVT(sessinfo, pvt);
-    pthread_mutex_lock(&pvt->lock);
+    pthread_mutex_lock(&pvt->hst_rtp.lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
             goto e0;
         }
     }
+    pthread_mutex_lock(&pvt->hst_rtcp.lock);
     if (pvt->hst_rtcp.ulen == pvt->hst_rtcp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtcp) < 0) {
-            goto e0;
+            goto e1;
         }
     }
     rtp = sp->rtp->stream[index];
     CALL_SMETHOD(rtp, set_skt, new_fds[0]);
     rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_ADD, rtp->stuid, new_fds[0]);
+    pthread_mutex_unlock(&pvt->hst_rtp.lock);
+
     rtcp = sp->rtcp->stream[index];
     CALL_SMETHOD(rtcp, set_skt, new_fds[1]);
     rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_ADD, rtcp->stuid, new_fds[1]);
+    pthread_mutex_unlock(&pvt->hst_rtcp.lock);
 
-    pthread_mutex_unlock(&pvt->lock);
     return (0);
+e1:
+    pthread_mutex_unlock(&pvt->hst_rtcp.lock);
 e0:
-    pthread_mutex_unlock(&pvt->lock);
+    pthread_mutex_unlock(&pvt->hst_rtp.lock);
     return (-1);
 }
 
@@ -259,36 +265,42 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
 
     PUB2PVT(sessinfo, pvt);
 
-    pthread_mutex_lock(&pvt->lock);
+    pthread_mutex_lock(&pvt->hst_rtp.lock);
     if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
             goto e0;
         }
     }
+    pthread_mutex_lock(&pvt->hst_rtcp.lock);
     if (pvt->hst_rtcp.ulen == pvt->hst_rtcp.alen) {
         if (rtpp_polltbl_hst_extend(&pvt->hst_rtcp) < 0) {
-            goto e0;
+            goto e1;
         }
     }
     rtp = sp->rtp->stream[index];
     old_fd = CALL_SMETHOD(rtp, update_skt, new_fds[0]);
     if (old_fd != NULL) {
         rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_UPD, rtp->stuid, new_fds[0]);
+        pthread_mutex_unlock(&pvt->hst_rtp.lock);
         RTPP_OBJ_DECREF(old_fd);
     } else {
         rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_ADD, rtp->stuid, new_fds[0]);
+        pthread_mutex_unlock(&pvt->hst_rtp.lock);
     }
     rtcp = sp->rtcp->stream[index];
     old_fd = CALL_SMETHOD(rtcp, update_skt, new_fds[1]);
     if (old_fd != NULL) {
         rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_UPD, rtcp->stuid, new_fds[1]);
+        pthread_mutex_unlock(&pvt->hst_rtcp.lock);
         RTPP_OBJ_DECREF(old_fd);
     } else {
         rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_ADD, rtcp->stuid, new_fds[1]);
+        pthread_mutex_unlock(&pvt->hst_rtcp.lock);
     }
-
+e1:
+    pthread_mutex_unlock(&pvt->hst_rtcp.lock);
 e0:
-    pthread_mutex_unlock(&pvt->lock);
+    pthread_mutex_unlock(&pvt->hst_rtp.lock);
 }
 
 static void
@@ -297,36 +309,46 @@ rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
 {
     struct rtpp_sessinfo_priv *pvt;
     struct rtpp_stream *rtp, *rtcp;
-    struct rtpp_socket *fd;
+    struct rtpp_socket *fd_rtp, *fd_rtcp;;
 
     PUB2PVT(sessinfo, pvt);
 
-    pthread_mutex_lock(&pvt->lock);
-    if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
-        if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
-            goto e0;
-        }
-    }
-    if (pvt->hst_rtcp.ulen == pvt->hst_rtcp.alen) {
-        if (rtpp_polltbl_hst_extend(&pvt->hst_rtcp) < 0) {
-            goto e0;
-        }
-    }
     rtp = sp->rtp->stream[index];
-    fd = CALL_SMETHOD(rtp, get_skt);
-    if (fd != NULL) {
-        rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_DEL, rtp->stuid, NULL);
-        RTPP_OBJ_DECREF(fd);
-    }
     rtcp = sp->rtcp->stream[index];
-    fd = CALL_SMETHOD(rtcp, get_skt);
-    if (fd != NULL) {
-        rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_DEL, rtcp->stuid, NULL);
-        RTPP_OBJ_DECREF(fd);
+    fd_rtp = CALL_SMETHOD(rtp, get_skt);
+    fd_rtcp = CALL_SMETHOD(rtcp, get_skt);
+    if (fd_rtp != NULL) {
+        pthread_mutex_lock(&pvt->hst_rtp.lock);
+        if (pvt->hst_rtp.ulen == pvt->hst_rtp.alen) {
+            if (rtpp_polltbl_hst_extend(&pvt->hst_rtp) < 0) {
+                goto e0;
+            }
+        }
     }
-
+    if (fd_rtcp != NULL) {
+        pthread_mutex_lock(&pvt->hst_rtcp.lock);
+        if (pvt->hst_rtcp.ulen == pvt->hst_rtcp.alen) {
+            if (rtpp_polltbl_hst_extend(&pvt->hst_rtcp) < 0) {
+                goto e1;
+            }
+        }
+    }
+    if (fd_rtp != NULL) {
+        rtpp_polltbl_hst_record(&pvt->hst_rtp, HST_DEL, rtp->stuid, NULL);
+        pthread_mutex_unlock(&pvt->hst_rtp.lock);
+        RTPP_OBJ_DECREF(fd_rtp);
+    }
+    if (fd_rtcp != NULL) {
+        rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_DEL, rtcp->stuid, NULL);
+        pthread_mutex_unlock(&pvt->hst_rtcp.lock);
+        RTPP_OBJ_DECREF(fd_rtcp);
+    }
+    return;
+e1:
+    pthread_mutex_unlock(&pvt->hst_rtcp.lock);
 e0:
-    pthread_mutex_unlock(&pvt->lock);
+    if (fd_rtp != NULL)
+        pthread_mutex_unlock(&pvt->hst_rtp.lock);
 }
 
 void
@@ -360,11 +382,11 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
 
     PUB2PVT(sessinfo, pvt);
 
-    pthread_mutex_lock(&pvt->lock);
     hp = (pipe_type == PIPE_RTP) ? &pvt->hst_rtp : &pvt->hst_rtcp;
 
+    pthread_mutex_lock(&hp->lock);
     if (hp->ulen == 0) {
-        pthread_mutex_unlock(&pvt->lock);
+        pthread_mutex_unlock(&hp->lock);
         return (0);
     }
 
@@ -430,7 +452,7 @@ rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *sessinfo,
     hp->ulen = 0;
 
     ptbl->streams_wrt = hp->streams_wrt;
-    pthread_mutex_unlock(&pvt->lock);
+    pthread_mutex_unlock(&hp->lock);
     return (1);
 e0:
     for (i = 0; i < hp->ulen; i++) {
@@ -442,6 +464,6 @@ e0:
         }
     }
     hp->ulen = 0;
-    pthread_mutex_unlock(&pvt->lock);
+    pthread_mutex_unlock(&hp->lock);
     return (-1);
 }
