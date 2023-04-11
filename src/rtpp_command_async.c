@@ -63,6 +63,7 @@
 #include "rtpp_list.h"
 #include "rtpp_controlfd.h"
 #include "rtpp_locking.h"
+#include "rtpp_util.h"
 #include "rtpp_proc_async.h"
 
 #define RTPC_MAX_CONNECTIONS 100
