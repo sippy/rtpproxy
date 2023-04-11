@@ -31,7 +31,7 @@
 struct rtpp_cmd_async;
 
 DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_async_dtor, void);
-DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_async_wakeup, int);
+DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_async_wakeup, int, int);
 DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_async_get_aload, double);
 DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_reg_overload, void, int);
 DEFINE_METHOD(rtpp_cmd_async, rtpp_cmd_chk_overload, int);
