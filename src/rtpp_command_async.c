@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -762,7 +763,8 @@ rtpp_command_async_dtor(struct rtpp_cmd_async *pub)
     }
     pthread_mutex_unlock(&cmd_cf->cmd_mutex);
     /* notify worker thread */
-    rtpp_command_async_wakeup(pub, 0);
+    if (rtpp_command_async_wakeup(pub, 0) < 0)
+        pthread_kill(cmd_cf->thread_id, SIGKILL);
     pthread_join(cmd_cf->thread_id, NULL);        
     if (cmd_cf->acceptor_started != 0) {
         pthread_join(cmd_cf->acpt_thread_id, NULL);
