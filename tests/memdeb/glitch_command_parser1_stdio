@@ -10,5 +10,5 @@ SUDO_REQUIRED=1
 disable_aslr
 
 export RTPP_TEST_SOCKETS="stdio:"
-glitch_test "command_parser/command_parser1" 18 command_parser.rlog
+glitch_test "command_parser/command_parser1" 20 command_parser.rlog
 report "glitching command_parser/command_parser1"
