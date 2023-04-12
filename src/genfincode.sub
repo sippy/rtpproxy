@@ -46,6 +46,7 @@ emit_fin_h() {
   for oname in ${ONAMES}
   do
     echo "#if defined(RTPP_DEBUG)"
+    echo "struct ${oname};"
     echo "void ${oname}_fin(struct ${oname} *);"
     echo "#else"
     echo "#define ${oname}_fin(arg) /* nop */"
