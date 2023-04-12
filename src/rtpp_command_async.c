@@ -334,17 +334,24 @@ rtpp_cmd_acceptor_run(void *arg)
             if ((asp->pfds[i].revents & POLLIN) == 0) {
                 continue;
             }
-            rtpp_command_async_wakeup(&cmd_cf->pub, 1);
+            controlfd = accept_connection(CONST(cmd_cf->cf_save), asp->csocks[i],
+              sstosa(&raddr));
+            if (controlfd < 0) {
+                continue;
+            }
+            if (rtpp_command_async_wakeup(&cmd_cf->pub, 1) < 0) {
+                /*
+		 * We cannot proceed if proc cannot be waked,
+		 * the pfds_mutex might remain locked forever.
+		 */
+                close(controlfd);
+                continue;
+            }
             pthread_mutex_lock(&psp->pfds_mutex);
             pthread_mutex_unlock(&cmd_cf->cmd_mutex);
             if (psp->pfds_used >= RTPC_MAX_CONNECTIONS) {
                 pthread_mutex_unlock(&psp->pfds_mutex);
-                continue;
-            }
-            controlfd = accept_connection(CONST(cmd_cf->cf_save), asp->csocks[i],
-              sstosa(&raddr));
-            if (controlfd < 0) {
-                pthread_mutex_unlock(&psp->pfds_mutex);
+                close(controlfd);
                 continue;
             }
             tp = realloc(psp->pfds, sizeof(struct pollfd) * (psp->pfds_used + 1));
@@ -499,8 +506,11 @@ rtpp_command_async_wakeup(struct rtpp_cmd_async *pub, int keep_locked)
         pthread_mutex_unlock(&cmd_cf->cmd_mutex);
 
     /* notify worker thread */
-    write(cmd_cf->wakefds[0], &old_clock, sizeof(old_clock + 1));
-
+    if (write(cmd_cf->wakefds[0], &old_clock, sizeof(old_clock + 1)) <= 0) {
+	if (keep_locked)
+            pthread_mutex_unlock(&cmd_cf->cmd_mutex);
+        return (-1);
+    }
 
     return (old_clock);
 }
