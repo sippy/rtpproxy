@@ -1131,7 +1131,6 @@ rtpp_main(int argc, char **argv)
 #endif
 
     for (;;) {
-        CALL_METHOD(cfs.rtpp_cmd_cf, wakeup, 0);
         if (cfs.fastshutdown != 0) {
             break;
         }
