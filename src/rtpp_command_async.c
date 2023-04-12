@@ -353,6 +353,7 @@ rtpp_cmd_acceptor_run(void *arg)
                 close(controlfd); /* Yeah, sorry, please try later */
                 continue;
             }
+            psp->pfds = tp;
             rcc = rtpp_cmd_connection_ctor(controlfd, controlfd, asp->csocks[i],
               sstosa(&raddr));
             if (rcc == NULL) {
@@ -360,7 +361,6 @@ rtpp_cmd_acceptor_run(void *arg)
                 close(controlfd); /* Yeah, sorry, please try later */
                 continue;
             }
-            psp->pfds = tp;
             psp->pfds[psp->pfds_used].fd = controlfd;
             psp->pfds[psp->pfds_used].events = POLLIN | POLLERR | POLLHUP;
             psp->pfds[psp->pfds_used].revents = 0;
