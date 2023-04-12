@@ -420,7 +420,6 @@ rtpp_cmd_queue_run(void *arg)
                     if (psp->pfds[i].revents & POLLIN) {
                         read(psp->pfds[i].fd, &dummy, sizeof(dummy));
                     }
-                    pthread_mutex_unlock(&psp->pfds_mutex);
                     continue;
                 }
 again:
