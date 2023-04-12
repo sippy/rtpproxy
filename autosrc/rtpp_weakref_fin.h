@@ -7,6 +7,7 @@
 extern int _naborts;
 #endif
 #if defined(RTPP_DEBUG)
+struct rtpp_weakref;
 void rtpp_weakref_fin(struct rtpp_weakref *);
 #else
 #define rtpp_weakref_fin(arg) /* nop */

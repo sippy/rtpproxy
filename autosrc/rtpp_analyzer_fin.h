@@ -7,6 +7,7 @@
 extern int _naborts;
 #endif
 #if defined(RTPP_DEBUG)
+struct rtpp_analyzer;
 void rtpp_analyzer_fin(struct rtpp_analyzer *);
 #else
 #define rtpp_analyzer_fin(arg) /* nop */

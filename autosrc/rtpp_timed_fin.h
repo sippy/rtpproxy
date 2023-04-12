@@ -7,6 +7,7 @@
 extern int _naborts;
 #endif
 #if defined(RTPP_DEBUG)
+struct rtpp_timed;
 void rtpp_timed_fin(struct rtpp_timed *);
 #else
 #define rtpp_timed_fin(arg) /* nop */

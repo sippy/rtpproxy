@@ -7,6 +7,7 @@
 extern int _naborts;
 #endif
 #if defined(RTPP_DEBUG)
+struct rtpp_modman;
 void rtpp_modman_fin(struct rtpp_modman *);
 #else
 #define rtpp_modman_fin(arg) /* nop */

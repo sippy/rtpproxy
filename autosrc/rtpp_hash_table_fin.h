@@ -7,6 +7,7 @@
 extern int _naborts;
 #endif
 #if defined(RTPP_DEBUG)
+struct rtpp_hash_table;
 void rtpp_hash_table_fin(struct rtpp_hash_table *);
 #else
 #define rtpp_hash_table_fin(arg) /* nop */

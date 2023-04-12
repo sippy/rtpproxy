@@ -7,6 +7,7 @@
 extern int _naborts;
 #endif
 #if defined(RTPP_DEBUG)
+struct rtpp_pearson_perfect;
 void rtpp_pearson_perfect_fin(struct rtpp_pearson_perfect *);
 #else
 #define rtpp_pearson_perfect_fin(arg) /* nop */
