@@ -64,6 +64,7 @@
 #include "rtpp_controlfd.h"
 #include "rtpp_locking.h"
 #include "rtpp_util.h"
+#include "rtpp_threads.h"
 #include "rtpp_proc_async.h"
 
 #define RTPC_MAX_CONNECTIONS 100
@@ -102,9 +103,6 @@ struct rtpp_cmd_async_cf {
     struct rtpp_cfg *cf_save;
     struct rtpp_cmd_rcache *rcache;
 };
-
-#define TSTATE_RUN   0x0
-#define TSTATE_CEASE 0x1
 
 static double rtpp_command_async_get_aload(struct rtpp_cmd_async *);
 static int rtpp_command_async_wakeup(struct rtpp_cmd_async *, int);

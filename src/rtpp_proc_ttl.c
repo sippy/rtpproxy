@@ -56,6 +56,7 @@
 #include "rtpp_pipe.h"
 #include "rtpp_timeout_data.h"
 #include "rtpp_locking.h"
+#include "rtpp_threads.h"
 
 struct foreach_args {
     struct rtpp_notify *rtpp_notify_cf;
@@ -72,9 +73,6 @@ struct rtpp_proc_ttl_pvt {
     struct rtpp_hash_table *sessions_ht;
     struct foreach_args fa;
 };
-
-#define TSTATE_RUN   0x0
-#define TSTATE_CEASE 0x1
 
 static void rtpp_proc_ttl(struct rtpp_hash_table *, const struct foreach_args *);
 

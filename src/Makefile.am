@@ -52,7 +52,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
   rtpp_log_obj.c rtpp_socket.c rtpp_wi_apis.c rtpp_wi_apis.h \
   rtpp_ttl.c rtpp_proc_ttl.h rtpp_proc_ttl.c \
   rtpp_pipe.c rtpp_pcount.c rtpp_debug.h rtpp_wi_sgnl.c rtpp_wi_sgnl.h \
-  rtpp_wi_data.c rtpp_wi_data.h \
+  rtpp_wi_data.c rtpp_wi_data.h rtpp_threads.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c \
   $(CMDSRCDIR)/rpcpv1_delete.c $(CMDSRCDIR)/rpcpv1_delete.h $(CMDSRCDIR)/rpcpv1_record.c \
   $(CMDSRCDIR)/rpcpv1_record.h rtpp_port_table.c rtpp_acct.c \

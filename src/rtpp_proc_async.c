@@ -68,6 +68,7 @@
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_ttl.h"
+#include "rtpp_threads.h"
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
 
@@ -91,9 +92,6 @@ struct rtpp_proc_async_cf {
     struct rtpp_proc_thread_cf rtcp_thread;
     int npkts_relayed_idx;
 };
-
-#define TSTATE_RUN   0x0
-#define TSTATE_CEASE 0x1
 
 static void rtpp_proc_async_dtor(struct rtpp_proc_async *);
 static void rtpp_proc_async_nudge(struct rtpp_proc_async *);
