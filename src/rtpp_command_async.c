@@ -395,8 +395,6 @@ rtpp_cmd_queue_run(void *arg)
     psp = &cmd_cf->pset;
 
     for (;;) {
-        rtpp_timestamp_get(&sptime);
-
         pthread_mutex_lock(&cmd_cf->cmd_mutex);
         if (cmd_cf->tstate_queue != TSTATE_RUN) {
             pthread_mutex_unlock(&cmd_cf->cmd_mutex);
@@ -434,6 +432,7 @@ again:
                 if ((psp->pfds[i].revents & POLLIN) == 0) {
                     continue;
                 }
+                rtpp_timestamp_get(&sptime);
                 if (RTPP_CTRL_ISSTREAM(psp->rccs[i]->csock)) {
                     rval = process_commands_stream(CONST(cmd_cf->cf_save), psp->rccs[i], &sptime, csp, rtpp_stats_cf);
                 } else {
