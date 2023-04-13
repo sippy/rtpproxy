@@ -54,3 +54,5 @@ rtpp_rw_lock_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_rw_lock_fin.h $(RTPP_AUTOSRC_DI
 SRCS_AUTOGEN_DEBUG += $(rtpp_rw_lock_AUTOSRCS)
 rtpp_proc_servers_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.c
 SRCS_AUTOGEN_DEBUG += $(rtpp_proc_servers_AUTOSRCS)
+rtpp_proc_wakeup_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.c
+SRCS_AUTOGEN_DEBUG += $(rtpp_proc_wakeup_AUTOSRCS)
