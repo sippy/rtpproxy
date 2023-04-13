@@ -190,6 +190,7 @@ rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *wp)
     for (;;) {
         wi = rtpp_queue_get_item(wp->mod_q, 0);
         if (wi == wp->sigterm) {
+            RTPP_OBJ_DECREF(wi);
             break;
         }
         wip = rtpp_wi_data_get_ptr(wi, sizeof(*wip), sizeof(*wip));

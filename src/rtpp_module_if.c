@@ -323,9 +323,8 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
     if (pvt->dmp != NULL && pvt->mip != NULL) {
         if (pvt->started != 0) {
             /* First, stop the worker thread */
+            RTPP_OBJ_INCREF(pvt->mip->wthr.sigterm);
             rtpp_queue_put_item(pvt->mip->wthr.sigterm, pvt->mip->wthr.mod_q);
-        } else if (pvt->mip->wthr.sigterm != NULL) {
-            RTPP_OBJ_DECREF(pvt->mip->wthr.sigterm);
         }
     }
 }
@@ -337,20 +336,20 @@ rtpp_mif_kaput(struct rtpp_module_if *self)
 
     PUB2PVT(self, pvt);
 
+    rtpp_module_if_fin(&(pvt->pub));
     if (pvt->dmp != NULL) {
         if (pvt->started != 0) {
             /* First, wait for worker thread to terminate */
             pthread_join(pvt->mip->wthr.thread_id, NULL);
         }
-        rtpp_module_if_fin(&(pvt->pub));
         if (pvt->mip != NULL) {
-            if (pvt->mip->wthr.mod_q != NULL)
-                rtpp_queue_destroy(pvt->mip->wthr.mod_q);
+            rtpp_queue_destroy(pvt->mip->wthr.mod_q);
             /* Then run module destructor (if any) */
             if (pvt->mip->proc.dtor != NULL && pvt->mpvt != NULL) {
                 pvt->mip->proc.dtor(pvt->mpvt);
             }
             RTPP_OBJ_DECREF(pvt->mip->log);
+            RTPP_OBJ_DECREF(pvt->mip->wthr.sigterm);
 
 #if RTPP_CHECK_LEAKS
             /* Check if module leaked any mem */
