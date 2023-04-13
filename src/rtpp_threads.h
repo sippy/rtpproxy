@@ -29,3 +29,31 @@
 
 #define TSTATE_RUN   0x0
 #define TSTATE_CEASE 0x1
+
+#if defined(RTPP_DEBUG)
+#include <assert.h>
+#include <pthread.h>
+
+static inline int
+pthread_mutex_lock_safe(pthread_mutex_t *mutex)
+{
+    int rval;
+
+    rval = pthread_mutex_lock(mutex);
+    assert(rval == 0);
+    return (rval);
+}
+
+static inline int
+pthread_mutex_unlock_safe(pthread_mutex_t *mutex)
+{
+    int rval;
+
+    rval = pthread_mutex_unlock(mutex);
+    assert(rval == 0);
+    return (rval);
+}
+
+#define pthread_mutex_lock(x) pthread_mutex_lock_safe(x)
+#define pthread_mutex_unlock(x) pthread_mutex_unlock_safe(x)
+#endif

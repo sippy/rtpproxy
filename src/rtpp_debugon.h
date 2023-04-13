@@ -27,7 +27,10 @@
 
 /* Do not include directly, droppen in automatically */
 
+#pragma once
+
 #define RTPP_DEBUG
 
 #include "rtpp_memdeb.h"
 #include "rtpp_autoglitch.h"
+#include "rtpp_threads.h"
