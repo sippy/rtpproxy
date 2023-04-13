@@ -213,7 +213,8 @@ ehandler(void)
     RTPP_DBGCODE(catchtrace) {
         rtpp_stacktrace_print("Exiting from: ehandler()");
     }
-    rtpp_controlfd_cleanup(_sig_cf);
+    if (_sig_cf->ctrl_socks != NULL)
+        rtpp_controlfd_cleanup(_sig_cf);
     unlink(_sig_cf->pid_file);
     RTPP_LOG(_sig_cf->glog, RTPP_LOG_INFO, "rtpproxy ended");
 }
@@ -799,8 +800,9 @@ static void
 #else
 void
 #endif
-rtpp_shutdown(const struct rtpp_cfg *cfsp)
+rtpp_shutdown(struct rtpp_cfg *cfsp)
 {
+    struct rtpp_ctrl_sock *ctrl_sock, *ctrl_sock_next;
 
     CALL_METHOD(cfsp->rtpp_cmd_cf, dtor);
     CALL_SMETHOD(cfsp->sessions_wrt, purge);
@@ -831,6 +833,16 @@ rtpp_shutdown(const struct rtpp_cfg *cfsp)
     RTPP_OBJ_DECREF(cfsp->sessions_ht);
     RTPP_OBJ_DECREF(cfsp->rtp_streams_wrt);
     RTPP_OBJ_DECREF(cfsp->rtcp_streams_wrt);
+    CALL_METHOD(cfsp->nofile, dtor);
+    rtpp_controlfd_cleanup(cfsp);
+    for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
+      ctrl_sock != NULL; ctrl_sock = ctrl_sock_next) {
+        ctrl_sock_next = RTPP_ITER_NEXT(ctrl_sock);
+        free(ctrl_sock);
+    }
+    free(cfsp->ctrl_socks);
+    cfsp->ctrl_socks = NULL;
+    rtpp_gen_uid_free();
 }
 
 #if !defined(LIBRTPPROXY)
@@ -862,7 +874,6 @@ rtpp_main(int argc, char **argv)
         errx(1, "MEMDEB self-test has failed");
         /* NOTREACHED */
     }
-    rtpp_memdeb_approve(MEMDEB_SYM, "addr2bindaddr", 100, "Too busy to fix now");
 #endif
 
     memset(&cfs, 0, sizeof(cfs));
@@ -898,6 +909,7 @@ rtpp_main(int argc, char **argv)
     }
  #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setlog(MEMDEB_SYM, cfs.glog);
+    rtpp_memdeb_approve(MEMDEB_SYM, "_rtpp_log_open", 1, "Referenced by memdeb itself");
  #endif
 
     _sig_cf = &cfs;
@@ -967,10 +979,6 @@ rtpp_main(int argc, char **argv)
 
     atexit(ehandler);
     RTPP_LOG(cfs.glog, RTPP_LOG_INFO, "rtpproxy started, pid %d", getpid());
-
-#ifdef RTPP_CHECK_LEAKS
-    rtpp_memdeb_setbaseln(MEMDEB_SYM);
-#endif
 
     if (cfs.sched_policy != SCHED_OTHER) {
         sparam.sched_priority = sched_get_priority_max(cfs.sched_policy);

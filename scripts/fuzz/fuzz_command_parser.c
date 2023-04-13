@@ -32,7 +32,7 @@
 #define howmany(x, y) (sizeof(x) / sizeof(y))
 
 static struct {
-    const struct rtpp_cfg *cfsp;
+    struct rtpp_cfg *cfsp;
     int tfd;
 } gconf;
 
