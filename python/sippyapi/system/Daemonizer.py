@@ -47,11 +47,14 @@ class Daemonizer():
         # Fork once
         if os.fork() != 0:
             sp[1].close()
-            rdata = sp[0].recv(8).decode('ascii').strip()
+            rdata = sp[0].recv(16).decode('ascii')
+            estr = F'Invalid/no token returned by a child: {rdata}'
+            if len(rdata) != 16:
+                raise DChildProcessError(estr) from None
             try:
                 self.childpid = int(rdata)
             except ValueError as exc:
-                raise DChildProcessError(F'Invalid/no token returned by a child: {rdata}') from None
+                raise DChildProcessError(estr) from None
             self.ssock = sp[0]
             return
         self.amiparent = False
@@ -75,7 +78,7 @@ class Daemonizer():
         if tweakhup:
             signal.signal(signal.SIGHUP, old_sighup)
         self.childpid = os.getpid()
-        spid = F'{self.childpid}'
+        spid = '%.16d' % (self.childpid,)
         os.chdir('/')
         sp[1].send(spid.encode('ascii'))
         self.ssock = sp[1]
