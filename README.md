@@ -3,7 +3,6 @@
 [![Functional Testing@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/functesting.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/functesting.yml?query=branch%3Amaster++)
 [![Glitching@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/glitching.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/glitching.yml?query=branch%3Amaster++)
 [![OSSFuzz@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/cifuzz.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/cifuzz.yml?query=branch%3Amaster++)
-[![Build Status](https://travis-ci.com/sippy/rtpproxy.svg?branch=master)](https://travis-ci.com/sippy/rtpproxy)
 [![Coverage Status](https://coveralls.io/repos/github/sippy/rtpproxy/badge.svg?branch=master)](https://coveralls.io/github/sippy/rtpproxy?branch=master)
 [![Coverity](https://scan.coverity.com/projects/8841/badge.svg)](https://scan.coverity.com/projects/sippy-rtpproxy)
 
@@ -36,8 +35,7 @@ both per-session and per-instance.
 The RTPproxy has been designed by Maxim Sobolev and now is being actively
 maintained by the [Sippy Software, Inc](http://www.sippysoft.com). With the
 great help of numerous community contributors, both private and institutional.
-Not to mention army of robots gracefully dispatched at need by the
-[Travis CI](https://travis-ci.org).
+Not to mention army of robots gracefully dispatched at need by CI.
 
 The original idea has inspired and directly influenced multitude of independent
 implementations, including but not limited to the
