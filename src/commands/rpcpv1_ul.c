@@ -403,6 +403,8 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
         } else {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "getaddrinfo(pf=%d, addr=%s, port=%s): %s",
               ulop->pf, ulop->addr->s, ulop->port->s, gai_strerror(n));
+            reply_error(cmd, ECODE_INVLARG_7);
+            goto err_undo_1;
         }
     }
     return (ulop);
