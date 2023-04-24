@@ -162,6 +162,12 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
               pst[1].npkts_in);
             continue;
         }
+        if (strcmp(cmd->args.v[i].s, "longest_ipi") == 0) {
+            PULL_PCNT_STRM();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%f",
+              pst[0].longest_ipi);
+            continue;
+        }
         if (strcmp(cmd->args.v[i].s, "nrelayed") == 0) {
             PULL_PCNT();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%lu",
