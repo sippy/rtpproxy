@@ -23,6 +23,7 @@ packets transmitted: 0
 1
 1
 1
+1
 0
-nsess_created=0 nsess_destroyed=0 nsess_complete=0 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=0 nsess_owrtcp=0 ncmds_rcvd=23 ncmds_succd=22 ncmds_errs=0 ncmds_repld=22
+nsess_created=0 nsess_destroyed=0 nsess_complete=0 nsess_nortp=0 nsess_owrtp=0 nsess_nortcp=0 nsess_owrtcp=0 ncmds_rcvd=24 ncmds_succd=23 ncmds_errs=0 ncmds_repld=23
 MEMDEB(rtpproxy): all clear
