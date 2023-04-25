@@ -56,7 +56,9 @@ rtpp_init()
        "-d", "crit",
        "-n", "tcp:127.0.0.1:9642",
        "-S", "/tmp",
-       "-r", "."
+       "-r", ".",
+       "--dso", "acct_csv",
+       "--dso", "catch_dtmf",
     };
     int argc = howmany(argv, *argv);
     struct rtpp_cfg *cfsp;
