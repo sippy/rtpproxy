@@ -90,6 +90,12 @@ handle_query_simple(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
         rst_pulled = 1; \
     }
 
+#define PULL_JRST() \
+    if (jrst_pulled == 0) { \
+        CALL_SMETHOD(spp->stream[idx]->analyzer, get_jstats, &jrst); \
+        jrst_pulled = 1; \
+    }
+
 #define PULL_PCNT() \
     if (pcnt_pulled == 0) { \
         CALL_SMETHOD(spp->pcount, get_stats, &pcnts); \
@@ -108,8 +114,10 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
   struct rtpp_pipe *spp, int idx)
 {
     int len, i, verbose, rst_pulled, pcnt_pulled, pcnt_strm_pulled;
+    int jrst_pulled;
     const char *cp;
     struct rtpa_stats rst;
+    struct rtpa_stats_jitter jrst;
     struct rtpps_pcount pcnts;
     struct rtpp_pcnts_strm pst[2];
 
@@ -166,6 +174,24 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
             PULL_PCNT_STRM();
             len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%f",
               pst[0].longest_ipi);
+            continue;
+        }
+        if (strcmp(cmd->args.v[i].s, "rtpa_jlast") == 0) {
+            PULL_JRST();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%f",
+              jrst.jlast);
+            continue;
+        }
+        if (strcmp(cmd->args.v[i].s, "rtpa_jmax") == 0) {
+            PULL_JRST();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%f",
+              jrst.jmax);
+            continue;
+        }
+        if (strcmp(cmd->args.v[i].s, "rtpa_javg") == 0) {
+            PULL_JRST();
+            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%f",
+              jrst.javg);
             continue;
         }
         if (strcmp(cmd->args.v[i].s, "nrelayed") == 0) {

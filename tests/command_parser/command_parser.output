@@ -93,7 +93,7 @@ ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 E19
 E62
-ttl=60 longest_ipi=0.000000
+ttl=60 longest_ipi=0.000000 rtpa_jlast=0.000000 rtpa_jmax=0.000000 rtpa_javg=0.000000
 0
 E1
 E1
@@ -209,7 +209,7 @@ ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 E19
 E62
-ttl=60 longest_ipi=0.000000
+ttl=60 longest_ipi=0.000000 rtpa_jlast=0.000000 rtpa_jmax=0.000000 rtpa_javg=0.000000
 0
 E1
 E1
@@ -325,7 +325,7 @@ ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 E19
 E62
-ttl=60 longest_ipi=0.000000
+ttl=60 longest_ipi=0.000000 rtpa_jlast=0.000000 rtpa_jmax=0.000000 rtpa_javg=0.000000
 0
 E1
 E1
@@ -441,7 +441,7 @@ ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 ttl=60 npkts_ina=0 npkts_ino=0 nrelayed=0 ndropped=0
 E19
 E62
-ttl=60 longest_ipi=0.000000
+ttl=60 longest_ipi=0.000000 rtpa_jlast=0.000000 rtpa_jmax=0.000000 rtpa_javg=0.000000
 0
 E1
 E1

@@ -65,7 +65,7 @@ const static struct proto_cap proto_caps[] = {
     { "20200226", "Support for the N command to stop recording" },
     { "20230205", "Support for \"rtpa_nlost\" counter; extend catch_dtmf module with \"h\" modifier" },
     { "20230314", "Support for for \"fusing\" G and D commands" },
-    { "20230424", "Support for for \"longest_ipi\" counter" },
+    { "20230424", "Support for for \"longest_ipi\", \"rtpa_jlast\", \"rtpa_jmax\" and \"rtpa_javg\" counters" },
     { NULL, NULL }
 };
 
