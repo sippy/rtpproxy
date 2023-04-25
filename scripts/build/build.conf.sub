@@ -1,8 +1,3 @@
-enable_ubuntu_toolchain_test() {
-	sudo apt install software-properties-common
-	sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-}
-
 setup_qemu() {
 	ARCH1="${1}"
 	ARCH2="${2}"
@@ -130,7 +125,6 @@ gcc-*)
 	export AR="gcc-ar-${COMPILER_VER}"
 	export RANLIB="gcc-ranlib-${COMPILER_VER}"
 	export GCOV_CMD="gcov-${COMPILER_VER}"
-	PRE_INSTALL_CMD="enable_ubuntu_toolchain_test"
 	PKGS="${PKGS} gcc-${COMPILER_VER} g++-${COMPILER_VER}"
 	;;
 clang-*)
