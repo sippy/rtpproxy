@@ -230,9 +230,11 @@ then
       unw_getcontext(NULL);
     ]])],
     [
-      LIBS_UNWIND="-lunwind"
-      ENABLE_LIBUNWIND=1
-      AC_DEFINE([ENABLE_LIBUNWIND], 1, [Define if you have libunwind library installed])
+      AC_CHECK_LIB(unwind, unw_backtrace,
+       LIBS_UNWIND="-lunwind"
+       ENABLE_LIBUNWIND=1
+       AC_DEFINE([ENABLE_LIBUNWIND], 1, [Define if you have libunwind library installed])
+      )
     ]
   )
 fi
