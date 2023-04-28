@@ -1,7 +1,12 @@
 name: CIFuzz
 on: [push, pull_request]
 jobs:
+  check_disabled_actions:
+    uses: ./.github/workflows/_check_disabled_actions.yml
+
   Fuzzing:
+    needs: check_disabled_actions
+    if: needs.check_disabled_actions.outputs.should_continue == 'true'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3

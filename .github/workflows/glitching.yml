@@ -20,8 +20,12 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  check_disabled_actions:
+    uses: ./.github/workflows/_check_disabled_actions.yml
+
   build_and_glitch:
+    needs: check_disabled_actions
+    if: needs.check_disabled_actions.outputs.should_continue == 'true'
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
     env:
