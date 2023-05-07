@@ -67,6 +67,8 @@ struct rtpp_str {
 
 #define FMTSTR(sp) (int)(sp)->len, (sp)->s
 
+#define RTPP_STR_ITERATE(sp, cp) for((cp) = (sp)->s; (cp) < ((sp)->s + (sp)->len); (cp)++)
+
 struct rtpp_str *_rtpp_str_dup2(const struct rtpp_str *,
   struct rtpp_str *dst);
 
