@@ -140,7 +140,7 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
         goto out;
     }
     len = 0;
-    rst_pulled = pcnt_pulled = pcnt_strm_pulled = 0;
+    rst_pulled = pcnt_pulled = pcnt_strm_pulled = jrst_pulled = 0;
     for (i = 4; i < cmd->args.c && len < (sizeof(cmd->buf_t) - 2); i++) {
         if (i > 4) {
             CHECK_OVERFLOW();
