@@ -10,5 +10,7 @@ ${SUDO} pip3 install -U pip setuptools wheel
 #${SUDO} pip3 install -U virtualenvwrapper
 which python
 python --version
-pip3 install --user elperiodic
-pip3 install --user cpp-coveralls
+for pkg in parsimonious elperiodic cpp-coveralls
+do
+  pip3 install --user ${pkg}
+done

@@ -1,0 +1,149 @@
+socket gena: cunix:/tmp/dtls_gw.a.sock -> gena.rout
+socket geno: cunix:/tmp/dtls_gw.o.sock -> geno.rout
+socket fwd:  cunix:/tmp/dtls_gw.f.sock -> fwd.rout
+
+.eval: 0 -> CODEC
+.eval: forwarding1_1 -> CALLID_F
+.eval: forwarding1_a_1 -> CALLID_A
+.eval: forwarding1_o_1 -> CALLID_O
+.eval: 0.0.0.0 -> TRASH_IPv4
+.eval: :: -> TRASH_IPv6
+.eval: 0 -> TRASH_PORT
+.eval: forwarding1 -> PROMPT_NAME
+.eval: 4 -> NTIMES
+.eval: from_tag_1 -> FT
+.eval: to_tag_1 -> TT
+.eval: npkts_ina npkts_ino nrelayed ndropped -> G_STATS
+.eval: rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs rtpa_javg longest_ipi -> D_STATS
+.eval: npkts_ina=400 npkts_ino=2400 nrelayed=2800 ndropped=0 -> G_STATS_CHK_1
+.eval: npkts_ina=800 npkts_ino=4800 nrelayed=5600 ndropped=0 -> G_STATS_CHK_2
+.eval: npkts_ina=1200 npkts_ino=7200 nrelayed=8400 ndropped=0 -> G_STATS_CHK_3
+.eval: 0 -> RES_OK
+
+.echo: Setting up sessions...
+gena: Uc%%CODEC%% %%CALLID_A%% %%TRASH_IPv4%% %%TRASH_PORT%% %%FT%% -> validate_port(_)
+gena: Lz60 %%CALLID_A%% %%TRASH_IPv4%% %%TRASH_PORT%% %%FT%% %%TT%% -> validate_port(PORTA_IPv4)
+fwd: U %%CALLID_F%% 127.0.0.1 %%PORTA_IPv4%% %%FT%% && M4:1 S -> str_split(&&, PORT1_IPv4, DTLS_PARAMS)
+.eval: %%PORT1_IPv4%% -> validate_port(_)
+.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+gena: U6c%%CODEC%% %%CALLID_A%%_ipv6 %%TRASH_IPv6%% %%TRASH_PORT%% %%FT%% -> validate_port(_)
+gena: L6z60 %%CALLID_A%%_ipv6 %%TRASH_IPv6%% %%TRASH_PORT%% %%FT%% %%TT%% -> validate_port(PORTA_IPv6)
+geno: U %%CALLID_O%% 127.0.0.1 %%PORT1_IPv4%% %%FT%% && M4:1 A %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(_)
+
+geno: L %%CALLID_O%% %%TRASH_IPv4%% %%TRASH_PORT%% %%FT%% %%TT%% && M4:1 S -> str_split(&&, PORTO_IPv4, DTLS_PARAMS)
+.eval: %%PORTO_IPv4%% -> validate_port(_)
+.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+fwd: L %%CALLID_F%% 127.0.0.1 %%PORTO_IPv4%% %%FT%% %%TT%% && M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(PORT2_IPv4)
+gena: Uc%%CODEC%% %%CALLID_A%% 127.0.0.1 %%PORT2_IPv4%% %%FT%% -> validate_port(_)
+fwd: U6 %%CALLID_F%%_ipv6 ::1 %%PORTA_IPv6%% %%FT%% && M4:1 S -> str_split(&&, PORT1_IPv6, DTLS_PARAMS_AB)
+.eval: %%PORT1_IPv6%% -> validate_port(_)
+geno: U6 %%CALLID_O%%_ipv6 %%TRASH_IPv6%% %%TRASH_PORT%% %%FT%% -> validate_port(_)
+geno: L6 %%CALLID_O%%_ipv6 %%TRASH_IPv6%% %%TRASH_PORT%% %%FT%% %%TT%% && M4:1 S -> str_split(&&, PORTO_IPv6, DTLS_PARAMS_BA)
+.eval: %%PORTO_IPv6%% -> validate_port(_)
+
+.eval: %%DTLS_PARAMS_BA%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+fwd: L6 %%CALLID_F%%_ipv6 ::1 %%PORTO_IPv6%% %%FT%% %%TT%% && M4:1 A %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(PORT2_IPv6)
+.eval: %%DTLS_PARAMS_AB%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+geno: U6 %%CALLID_O%%_ipv6 ::1 %%PORT1_IPv6%% %%FT%% && M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(_)
+gena: U6c%%CODEC%% %%CALLID_A%%_ipv6 ::1 %%PORT2_IPv6%% %%FT%% -> validate_port(_)
+
+.echo: Starting recording...
+gena: R %%CALLID_A%% %%FT%% %%TT%% -> str_compare(RES_OK)
+gena: R %%CALLID_A%%_ipv6 %%FT%% %%TT%% -> str_compare(RES_OK)
+geno: R %%CALLID_O%% %%FT%% %%TT%% -> str_compare(RES_OK)
+geno: R %%CALLID_O%%_ipv6 %%FT%% %%TT%% -> str_compare(RES_OK)
+
+.sleep: 0.1
+
+.echo: Starting streaming...
+geno: P%%NTIMES%% %%CALLID_O%% %%PROMPT_NAME%% %%CODEC%% %%FT%% %%TT%% -> str_compare(RES_OK)
+geno: P%%NTIMES%% %%CALLID_O%%_ipv6 %%PROMPT_NAME%% %%CODEC%% %%FT%% %%TT%% -> str_compare(RES_OK)
+gena: P%%NTIMES%% %%CALLID_A%% %%PROMPT_NAME%% session %%FT%% %%TT%% -> str_compare(RES_OK)
+gena: P%%NTIMES%% %%CALLID_A%%_ipv6 %%PROMPT_NAME%% session %%FT%% %%TT%% -> str_compare(RES_OK)
+
+.sleep: 25
+
+.echo: Getting session stats...
+fwd: Qv %%CALLID_F%% %%FT%% %%TT%% %%G_STATS%% -> G_STATS4
+.eval: %%G_STATS4%% -> str_compare(G_STATS_CHK_1)
+fwd: Qv %%CALLID_F%% %%FT%% %%TT%% %%D_STATS%% -> D_STATS4_FWD
+fwd: Qv %%CALLID_F%% %%TT%% %%FT%% %%D_STATS%% -> D_STATS4_REV
+fwd: Qv %%CALLID_F%%_ipv6 %%FT%% %%TT%% %%G_STATS%% -> G_STATS6
+.eval: %%G_STATS6%% -> str_compare(G_STATS_CHK_1)
+fwd: Qv %%CALLID_F%%_ipv6 %%FT%% %%TT%% %%D_STATS%% -> D_STATS6_FWD
+fwd: Qv %%CALLID_F%%_ipv6 %%TT%% %%FT%% %%D_STATS%% -> D_STATS6_REV
+
+.echo: Enabling DTLS on originating side...
+gena: Lz60 %%CALLID_A%% %%TRASH_IPv4%% %%TRASH_PORT%% %%FT%% %%TT%% && M4:1 S -> str_split(&&, _, DTLS_PARAMS)
+.eval: %%_%% -> str_compare(PORTA_IPv4)
+.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+fwd: U %%CALLID_F%% 127.0.0.1 %%PORTA_IPv4%% %%FT%% && M4:1 A %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> str_compare(PORT1_IPv4)
+fwd: L %%CALLID_F%% 127.0.0.1 %%PORTO_IPv4%% %%FT%% %%TT%% && M4:1 S -> str_split(&&, _, DTLS_PARAMS)
+.eval: %%_%% -> str_compare(PORT2_IPv4)
+.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+gena: Uc%%CODEC%% %%CALLID_A%% 127.0.0.1 %%PORT2_IPv4%% %%FT%% && M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(_)
+
+fwd: U6 %%CALLID_F%%_ipv6 ::1 %%PORTA_IPv6%% %%TT%% %%FT%% && M4:1 S -> str_split(&&, _, DTLS_PARAMS)
+.eval: %%_%% -> str_compare(PORT2_IPv6)
+.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+gena: U6c%%CODEC%% %%CALLID_A%%_ipv6 ::1 %%PORT2_IPv6%% %%FT%% && M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(_)
+gena: L6z60 %%CALLID_A%%_ipv6 %%TRASH_IPv6%% %%TRASH_PORT%% %%FT%% %%TT%% && M4:1 S -> str_split(&&, _, DTLS_PARAMS)
+.eval: %%_%% -> str_compare(PORTA_IPv6)
+.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+fwd: L6 %%CALLID_F%%_ipv6 ::1 %%PORTO_IPv6%% %%FT%% %%TT%% && M4:1 A %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> str_compare(PORT2_IPv6)
+
+.sleep: 0.1
+
+.echo: Starting streaming...
+geno: P%%NTIMES%% %%CALLID_O%% %%PROMPT_NAME%% %%CODEC%% %%FT%% %%TT%% -> str_compare(RES_OK)
+geno: P%%NTIMES%% %%CALLID_O%%_ipv6 %%PROMPT_NAME%% %%CODEC%% %%FT%% %%TT%% -> str_compare(RES_OK)
+gena: P%%NTIMES%% %%CALLID_A%% %%PROMPT_NAME%% session %%FT%% %%TT%% -> str_compare(RES_OK)
+gena: P%%NTIMES%% %%CALLID_A%%_ipv6 %%PROMPT_NAME%% session %%FT%% %%TT%% -> str_compare(RES_OK)
+
+.sleep: 25
+
+.echo: Getting session stats...
+fwd: Qv %%CALLID_F%% %%FT%% %%TT%% %%G_STATS%% -> G_STATS4
+.eval: %%G_STATS4%% -> str_compare(G_STATS_CHK_2)
+fwd: Qv %%CALLID_F%% %%FT%% %%TT%% %%D_STATS%% -> D_STATS4_FWD
+fwd: Qv %%CALLID_F%% %%TT%% %%FT%% %%D_STATS%% -> D_STATS4_REV
+fwd: Qv %%CALLID_F%%_ipv6 %%FT%% %%TT%% %%G_STATS%% -> G_STATS6
+.eval: %%G_STATS6%% -> str_compare(G_STATS_CHK_2)
+fwd: Qv %%CALLID_F%%_ipv6 %%FT%% %%TT%% %%D_STATS%% -> D_STATS6_FWD
+fwd: Qv %%CALLID_F%%_ipv6 %%TT%% %%FT%% %%D_STATS%% -> D_STATS6_REV
+
+.echo: Turning DTLS off
+fwd: U %%CALLID_F%% 127.0.0.1 %%PORTA_IPv4%% %%FT%% && M4:1 U -> str_compare(PORT1_IPv4)
+fwd: L %%CALLID_F%% 127.0.0.1 %%PORTO_IPv4%% %%FT%% %%TT%% && M4:1 U -> str_compare(PORT2_IPv4)
+fwd: U6 %%CALLID_F%%_ipv6 ::1 %%PORTA_IPv6%% %%FT%% && M4:1 D -> str_compare(PORT1_IPv6)
+fwd: L6 %%CALLID_F%%_ipv6 ::1 %%PORTO_IPv6%% %%FT%% %%TT%% && M4:1 D -> str_compare(PORT2_IPv6)
+geno: U %%CALLID_O%% 127.0.0.1 %%PORT1_IPv4%% %%FT%% && M4:1 D -> validate_port(_)
+gena: Uc%%CODEC%% %%CALLID_A%% 127.0.0.1 %%PORT2_IPv4%% %%FT%% && M4:1 D -> validate_port(_)
+gena: L6z60 %%CALLID_A%%_ipv6 %%TRASH_IPv6%% %%TRASH_PORT%% %%FT%% %%TT%% && M4:1 U -> str_compare(PORTA_IPv6)
+geno: L6 %%CALLID_O%%_ipv6 %%TRASH_IPv6%% %%TRASH_PORT%% %%FT%% %%TT%% && M4:1 U -> str_compare(PORTO_IPv6)
+
+.echo: Starting streaming...
+geno: P%%NTIMES%% %%CALLID_O%% %%PROMPT_NAME%% %%CODEC%% %%FT%% %%TT%% -> str_compare(RES_OK)
+geno: P%%NTIMES%% %%CALLID_O%%_ipv6 %%PROMPT_NAME%% %%CODEC%% %%FT%% %%TT%% -> str_compare(RES_OK)
+gena: P%%NTIMES%% %%CALLID_A%% %%PROMPT_NAME%% session %%FT%% %%TT%% -> str_compare(RES_OK)
+gena: P%%NTIMES%% %%CALLID_A%%_ipv6 %%PROMPT_NAME%% session %%FT%% %%TT%% -> str_compare(RES_OK)
+
+.sleep: 25
+
+.echo: Getting session stats...
+fwd: Qv %%CALLID_F%% %%FT%% %%TT%% %%G_STATS%% -> G_STATS4
+.eval: %%G_STATS4%% -> str_compare(G_STATS_CHK_3)
+fwd: Qv %%CALLID_F%% %%FT%% %%TT%% %%D_STATS%% -> D_STATS4_FWD
+fwd: Qv %%CALLID_F%% %%TT%% %%FT%% %%D_STATS%% -> D_STATS4_REV
+fwd: Qv %%CALLID_F%%_ipv6 %%FT%% %%TT%% %%G_STATS%% -> G_STATS6
+.eval: %%G_STATS6%% -> str_compare(G_STATS_CHK_3)
+fwd: Qv %%CALLID_F%%_ipv6 %%FT%% %%TT%% %%D_STATS%% -> D_STATS6_FWD
+fwd: Qv %%CALLID_F%%_ipv6 %%TT%% %%FT%% %%D_STATS%% -> D_STATS6_REV
+
+.echo: Cleanning up...
+fwd: D %%CALLID_F%% %%FT%% %%TT%% -> str_compare(RES_OK)
+fwd: D %%CALLID_F%%_ipv6 %%FT%% %%TT%% -> str_compare(RES_OK)
+gena: D %%CALLID_A%% %%FT%% %%TT%% -> str_compare(RES_OK)
+gena: D %%CALLID_A%%_ipv6 %%FT%% %%TT%% -> str_compare(RES_OK)
+geno: D %%CALLID_O%% %%FT%% %%TT%% -> str_compare(RES_OK)
+geno: D %%CALLID_O%%_ipv6 %%FT%% %%TT%% -> str_compare(RES_OK)
