@@ -1,7 +1,7 @@
 Uncomment the line(s) below to disable particular pipeline(s):
 
-#cifuzz.yml
-#cleanbuild.yml
+cifuzz.yml
+cleanbuild.yml
 #depsbuild.yml
 #functesting.yml
-#glitching.yml
+glitching.yml
