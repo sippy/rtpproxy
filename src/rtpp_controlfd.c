@@ -255,6 +255,15 @@ rtpp_controlfd_init(const struct rtpp_cfg *cfsp)
             controlfd_in = fileno(stdin);
             controlfd_out = fileno(stdout);
             break;
+
+        case RTPC_FD:
+            if (atoi_safe(ctrl_sock->cmd_sock, &controlfd_in) != ATOI_OK ||
+              controlfd_in < 0) {
+                warnx("invalid fd: %s", ctrl_sock->cmd_sock);
+                return (-1);
+            }
+            controlfd_out = controlfd_in;
+            break;
         }
         if (controlfd_in < 0 || controlfd_out < 0) {
             return (-1);
@@ -343,6 +352,9 @@ rtpp_ctrl_sock_parse(const char *optarg)
         rcsp->type= RTPC_STDIO;
         rcsp->exit_on_close = 1;
         optarg += 7;
+    } else if (strncmp("fd:", optarg, 3) == 0) {
+        rcsp->type= RTPC_FD;
+        optarg += 3;
     } else if (strncmp("tcp:", optarg, 4) == 0) {
         rcsp->type= RTPC_TCP4;
         optarg += 4;
