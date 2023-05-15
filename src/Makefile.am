@@ -8,7 +8,7 @@ XXH_DIR=$(top_srcdir)/libxxHash
 bin_PROGRAMS=rtpproxy rtpproxy_debug
 noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_rzmalloc_perf_debug rtpp_fintest
 if ENABLE_LIBRTPPROXY
-noinst_LTLIBRARIES = librtpproxy.la
+lib_LTLIBRARIES = librtpproxy.la
 endif
 
 if BUILD_OBJCK
@@ -178,6 +178,7 @@ librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
   $(XXH_DIR)/libxxHash.la $(top_srcdir)/modules/catch_dtmf/librtpp_catch_dtmf.la \
   $(top_srcdir)/modules/acct_csv/librtpp_acct_csv.la \
   $(top_srcdir)/modules/acct_rtcp_hep/librtpp_acct_rtcp_hep.la
+librtpproxy_la_LDFLAGS = -static
 if BUILD_ELPERIODIC
 librtpproxy_la_LIBADD += @LIBS_ELPERIODIC@
 endif

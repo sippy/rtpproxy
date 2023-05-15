@@ -26,6 +26,10 @@ dist_man_MANS=	rtpproxy.8
 EXTRA_DIST=	README.remote doc rpm/rtpproxy.init rpm/rtpproxy.spec \
  LICENSE README.md
 
+if ENABLE_LIBRTPPROXY
+include_HEADERS = src/librtpproxy.h
+endif
+
 if BUILD_DOCS
 rtpproxy.8: doc/manpage.xml
 	${XSLTPROC} ${XSLTPROC_FLAGS} http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl doc/manpage.xml
