@@ -179,6 +179,7 @@ rtpp_glog_fin(void)
 #endif
 }
 
+#if !defined(LIBRTPPROXY)
 static void
 fatsignal(int sig)
 {
@@ -205,6 +206,7 @@ sighup(int sig)
     }
     _sig_cf->slowshutdown = 1;
 }
+#endif
 
 static void
 ehandler(void)
@@ -1077,6 +1079,7 @@ rtpp_main(int argc, char **argv)
         exit(1);
     }
 
+#if !defined(LIBRTPPROXY)
     signal(SIGHUP, sighup);
     signal(SIGINT, fatsignal);
     signal(SIGKILL, fatsignal);
@@ -1102,7 +1105,6 @@ rtpp_main(int argc, char **argv)
         signal(SIGSYS, rtpp_stacktrace);
     }
 
-#if !defined(LIBRTPPROXY)
     elp = prdic_init(cfs.target_pfreq / 10.0, 0.0);
     if (elp == NULL) {
         RTPP_LOG(cfs.glog, RTPP_LOG_ERR, "prdic_init() failed");
