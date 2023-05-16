@@ -179,7 +179,6 @@ rtpp_glog_fin(void)
 #endif
 }
 
-#if !defined(LIBRTPPROXY)
 static void
 fatsignal(int sig)
 {
@@ -206,7 +205,6 @@ sighup(int sig)
     }
     _sig_cf->slowshutdown = 1;
 }
-#endif
 
 static void
 ehandler(void)
@@ -417,7 +415,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
             break;
 
 	case 'f':
-	    cfsp->nodaemon = 1;
+	    cfsp->ropts.no_daemon = 1;
 	    break;
 
 	case 'l':
@@ -655,7 +653,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
             break;
 
         case 'D':
-	    cfsp->no_chdir = 1;
+	    cfsp->ropts.no_chdir = 1;
 	    break;
 
         case 'C':
@@ -701,7 +699,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     if (cfsp->rdir == NULL && cfsp->sdir != NULL)
 	errx(1, "-S switch requires -r switch");
 
-    if (cfsp->nodaemon == 0 && stdio_mode != 0)
+    if (cfsp->ropts.no_daemon == 0 && stdio_mode != 0)
         errx(1, "stdio command mode requires -f switch");
 
     if (cfsp->no_check == 0 && getuid() == 0 && cfsp->runcreds->uname == NULL) {
@@ -863,6 +861,14 @@ rtpp_main(int argc, char **argv)
     struct rtpp_timed_task *tp;
     struct rtpp_daemon_rope drop;
 
+    memset(&cfs, 0, sizeof(cfs));
+
+#if defined(LIBRTPPROXY)
+    cfs.ropts = (struct rtpp_run_options){
+        .no_pid = 1, .no_chdir = 1, .no_daemon = 1, .no_sigtrap = 1
+    };
+#endif
+
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_APP_INIT();
 #endif
@@ -877,8 +883,6 @@ rtpp_main(int argc, char **argv)
         /* NOTREACHED */
     }
 #endif
-
-    memset(&cfs, 0, sizeof(cfs));
 
     cfs.ctrl_socks = rtpp_zmalloc(sizeof(struct rtpp_list));
     if (cfs.ctrl_socks == NULL) {
@@ -959,14 +963,14 @@ rtpp_main(int argc, char **argv)
           cfs.ctrl_socks->len > 1 ? "s" : "");
     }
 
-    if (cfs.nodaemon == 0) {
-        if (cfs.no_chdir == 0) {
+    if (cfs.ropts.no_daemon == 0) {
+        if (cfs.ropts.no_chdir == 0) {
             cfs.cwd_orig = getcwd(NULL, 0);
             if (cfs.cwd_orig == NULL) {
                 err(1, "getcwd");
             }
         }
-	drop = rtpp_daemon(cfs.no_chdir, 0);
+	drop = rtpp_daemon(cfs.ropts.no_chdir, 0);
 	if (drop.result == -1)
 	    err(1, "can't switch into daemon mode");
 	    /* NOTREACHED */
@@ -997,9 +1001,13 @@ rtpp_main(int argc, char **argv)
         }
     }
 
-    pid_fd = open(cfs.pid_file, O_WRONLY | O_CREAT, DEFFILEMODE);
-    if (pid_fd < 0) {
-        RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't open pidfile for writing");
+    if (cfs.ropts.no_pid == 0) {
+        pid_fd = open(cfs.pid_file, O_WRONLY | O_CREAT, DEFFILEMODE);
+        if (pid_fd < 0) {
+            RTPP_ELOG(cfs.glog, RTPP_LOG_ERR, "can't open pidfile for writing");
+        }
+    } else {
+        pid_fd = -1;
     }
 
     if (cfs.runcreds->uname != NULL || cfs.runcreds->gname != NULL) {
@@ -1079,32 +1087,34 @@ rtpp_main(int argc, char **argv)
         exit(1);
     }
 
-#if !defined(LIBRTPPROXY)
-    signal(SIGHUP, sighup);
-    signal(SIGINT, fatsignal);
-    signal(SIGKILL, fatsignal);
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGTERM, fatsignal);
-    signal(SIGXCPU, fatsignal);
-    signal(SIGXFSZ, fatsignal);
-    signal(SIGVTALRM, fatsignal);
-    signal(SIGPROF, fatsignal);
-    signal(SIGUSR1, fatsignal);
-    signal(SIGUSR2, fatsignal);
-    RTPP_DBGCODE(catchtrace) {
-        signal(SIGQUIT, rtpp_stacktrace);
-        signal(SIGILL, rtpp_stacktrace);
-        signal(SIGTRAP, rtpp_stacktrace);
-        signal(SIGABRT, rtpp_stacktrace);
+    if (cfs.ropts.no_sigtrap == 0) {
+        signal(SIGHUP, sighup);
+        signal(SIGINT, fatsignal);
+        signal(SIGKILL, fatsignal);
+        signal(SIGPIPE, SIG_IGN);
+        signal(SIGTERM, fatsignal);
+        signal(SIGXCPU, fatsignal);
+        signal(SIGXFSZ, fatsignal);
+        signal(SIGVTALRM, fatsignal);
+        signal(SIGPROF, fatsignal);
+        signal(SIGUSR1, fatsignal);
+        signal(SIGUSR2, fatsignal);
+        RTPP_DBGCODE(catchtrace) {
+            signal(SIGQUIT, rtpp_stacktrace);
+            signal(SIGILL, rtpp_stacktrace);
+            signal(SIGTRAP, rtpp_stacktrace);
+            signal(SIGABRT, rtpp_stacktrace);
 #if defined(SIGEMT)
-        signal(SIGEMT, rtpp_stacktrace);
+            signal(SIGEMT, rtpp_stacktrace);
 #endif
-        signal(SIGFPE, rtpp_stacktrace);
-        signal(SIGBUS, rtpp_stacktrace);
-        signal(SIGSEGV, rtpp_stacktrace);
-        signal(SIGSYS, rtpp_stacktrace);
+            signal(SIGFPE, rtpp_stacktrace);
+            signal(SIGBUS, rtpp_stacktrace);
+            signal(SIGSEGV, rtpp_stacktrace);
+            signal(SIGSYS, rtpp_stacktrace);
+        }
     }
 
+#if !defined(LIBRTPPROXY)
     elp = prdic_init(cfs.target_pfreq / 10.0, 0.0);
     if (elp == NULL) {
         RTPP_LOG(cfs.glog, RTPP_LOG_ERR, "prdic_init() failed");
@@ -1129,7 +1139,7 @@ rtpp_main(int argc, char **argv)
     sd_notify(0, "READY=1");
 #endif
 
-    if (cfs.nodaemon == 0) {
+    if (cfs.ropts.no_daemon == 0) {
         if (rtpp_daemon_rel_parent(&drop) != 0) {
             RTPP_LOG(cfs.glog, RTPP_LOG_ERR, "parent died prematurely #cry #die");
             exit(1);

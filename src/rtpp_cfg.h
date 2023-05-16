@@ -64,11 +64,17 @@ struct overload_prot {
     int ecode;
 };
 
+struct rtpp_run_options {
+    int no_daemon;
+    int no_chdir;
+    int no_pid;
+    int no_sigtrap;
+};
+
 struct rtpp_cfg {
     const char *pid_file;
 
-    int nodaemon;
-    int no_chdir;
+    struct rtpp_run_options ropts;
     int dmode;
     int bmode;                  /* Bridge mode */
     int aforce;			/* Force asymmertic mode for all calls */

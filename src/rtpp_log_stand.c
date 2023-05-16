@@ -84,7 +84,7 @@ _rtpp_log_open(const struct rtpp_cfg *cf, const char *app, const char *call_id)
     if (facility == -1)
 	facility = LOG_DAEMON;
 
-    if (cf->nodaemon == 0 && atomic_load(&syslog_async_opened) == 0) {
+    if (cf->ropts.no_daemon == 0 && atomic_load(&syslog_async_opened) == 0) {
 	if (syslog_async_init(app, facility) == 0) {
 	    atomic_store(&syslog_async_opened, 1);
         } else {
@@ -112,7 +112,7 @@ _rtpp_log_open(const struct rtpp_cfg *cf, const char *app, const char *call_id)
         rli->call_id = strdup(call_id);
     }
     if (cf->log_level == -1) {
-	rli->level = (cf->nodaemon != 0) ? RTPP_LOG_DBUG : RTPP_LOG_WARN;
+	rli->level = (cf->ropts.no_daemon != 0) ? RTPP_LOG_DBUG : RTPP_LOG_WARN;
     } else {
         rli->level = cf->log_level;
     }
