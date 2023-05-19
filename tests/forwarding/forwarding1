@@ -208,9 +208,10 @@ do
 done
 rm -f ${FORWARDING_RFILES}
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/forwarding1
+report "makeann forwarding1"
 rm -f ${BASEDIR}/forwarding1.4
 ffmpeg -i ${BASEDIR}/ringback.sln -f g723_1 -b:a 6300 ${BASEDIR}/forwarding1.4
-report "makeann forwarding1"
+report "ffmpeg forwarding1.4"
 
 _CODECSO=""
 _CODECSA=""
