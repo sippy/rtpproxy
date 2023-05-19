@@ -14,8 +14,6 @@ PCAP_DIR1="${BASEDIR}/rtp_analyze"
 PCAP_DIR2="${BASEDIR}/acct_rtcp_hep"
 CD_DIR="${BASEDIR}/recording"
 RECSIZE=109564
-RECORD_DIR="${BUILDDIR}"
-RECORD_SPL_DIR="${CD_DIR}"
 
 run_udpreplay() {
   direction=${1}

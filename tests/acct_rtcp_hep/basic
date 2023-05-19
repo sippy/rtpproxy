@@ -12,8 +12,6 @@ BASEDIR="$(readlink -f -- $BASEDIR)"
 
 CD_DIR="${BASEDIR}/acct_rtcp_hep"
 HEPSIZE=352
-RECORD_DIR="${BUILDDIR}"
-RECORD_SPL_DIR="${CD_DIR}"
 
 run_udpreplay() {
   direction=${1}

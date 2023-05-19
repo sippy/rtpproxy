@@ -229,9 +229,6 @@ REPACK_CODECSA="${CODECSA}"
 CODECSO="${_CODECSO}"
 CODECSA="${_CODECSA}"
 
-RECORD_DIR="${BUILDDIR}"
-RECORD_SPL_DIR="${BUILDDIR}/forwarding"
-
 setup_buffers
 setup_test_net_3
 

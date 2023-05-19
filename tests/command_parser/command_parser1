@@ -29,7 +29,6 @@ run_command_parser() {
   done
 }
 
-RECORD_DIR="${BUILDDIR}"
 for socket in ${RTPP_TEST_SOCKETS}
 do
   if [ -e command_parser.rlog ]
