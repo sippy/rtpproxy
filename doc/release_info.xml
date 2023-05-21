@@ -3,7 +3,7 @@
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <book>
   <bookinfo>
-    <title>RTPProxy 2.2 Release Information</title>
+    <title>RTPProxy 3.0 Release Information</title>
 
     <author>
       <firstname>Maksym</firstname>
@@ -17,12 +17,12 @@
       <email>sobomax@gmail.com</email>
     </author>
 
-    <pubdate>16 May 2019</pubdate>
+    <pubdate>21 May 2023</pubdate>
 
     <copyright>
-      <year>2019</year>
+      <year>2023</year>
 
-      <holder>Maksym Sobolyev &lt;sobomax@gmail.com&gt;</holder>
+      <holder>Maksym Sobolyev &lt;sobomax@sippysoft.com&gt;</holder>
     </copyright>
   </bookinfo>
 
@@ -30,9 +30,26 @@
     <title>Introduction</title>
 
     <section>
-      <title/>
+      <title>Welcome to RTPProxy 3.0</title>
 
-      <para/>
+      <para>
+      We are excited to introduce RTPProxy 3.0, the latest milestone in our
+      journey of refining the proxy system for Real-Time Transport Protocol
+      (RTP) streams. This release marks an evolutionary leap from RTPProxy 2.2,
+      released four years ago.
+
+      Our team at Sippy Labs has rearchitected major subsystems to allow
+      more parallelism, resulting in significant performance improvements.
+      Our commitment to versatility has led to enhanced support for
+      third-party extension modules and robust handling of both video and
+      encrypted calls. Another remarkable addition is the introduction of
+      a library version of RTPProxy, enabling its embedding into other
+      real-time communication software.
+
+      This document will guide you through all the new enhancements, features,
+      and improvements that make RTPProxy 3.0 an industry benchmark in the
+      real-time multimedia data streaming space.
+      </para>
     </section>
   </chapter>
 
@@ -40,9 +57,50 @@
     <title>Release Highlights</title>
 
     <section>
-      <title/>
+      <title>Major Improvements</title>
 
-      <para/>
+      <para>
+      With RTPProxy 3.0, we are introducing a revamped architecture that
+      boosts parallelism and improves overall performance significantly.
+      These enhancements are a result of extensive rework of our
+      processes and algorithms, leading to a more reliable, efficient, and
+      powerful system. Key changes include:
+      </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Replacing the use of poll() with epoll()/kqueue() for
+            less overhead doing RTP/RTCP sockets polling.</para>
+        </listitem>
+        <listitem>
+          <para>Moving RTCP handling into its own dedicated thread, freeing
+            up resources and optimizing performance.</para>
+        </listitem>
+        <listitem>
+          <para>Running media generation (playback) in a separate thread,
+            allowing for more streamlined operations.</para>
+        </listitem>
+        <listitem>
+          <para>Eliminating a major synchronization bottleneck that
+            previously hindered the command-processing thread from
+            reaching its full capacity.</para>
+        </listitem>
+        <listitem>
+          <para>Upgrading the hashing algorithm for handling sessions hash
+            tables to xxHash. This state-of-the-art algorithm significantly
+            outperforms the previously used Pearson implementation, leading
+            to faster and more efficient processing.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>
+      Additionally, we have worked hard to ensure compatibility and extend
+      support for third-party extension modules. Notably, the new release
+      comes with full support for handling video and encrypted calls,
+      solidifying RTPProxy's position as a comprehensive solution for
+      real-time communication needs. These improvements, along with
+      numerous others, set a new standard for RTP proxy systems.
+      </para>
     </section>
   </chapter>
 
@@ -50,9 +108,31 @@
     <title>New Features</title>
 
     <section>
-      <title/>
+      <title>Embedding RTPProxy</title>
 
-      <para/>
+      <para>
+      One of the most exciting new features of RTPProxy 3.0 is the
+      availability of a library version of the software. This breakthrough
+      development allows for the embedding of RTPProxy into other real-time
+      communication software, thereby expanding its utility and enabling a
+      broader range of applications. This represents a major stride in our
+      ongoing efforts to make RTPProxy as adaptable and user-friendly as
+      possible.
+      </para>
+    </section>
+
+    <section>
+      <title>DTLS Gateway Module</title>
+
+      <para>
+      Another significant feature introduced in RTPProxy 3.0 is the dtls_gw
+      module. This new addition allows RTPProxy to translate between encrypted
+      and non-encrypted streams. More impressively, it can perform back-to-back
+      re-encryption of already encrypted streams, which is particularly useful
+      for secure recording purposes. This feature enhances RTPProxy's ability to
+      handle encrypted calls, providing users with increased flexibility and
+      security in their real-time communication needs.
+      </para>
     </section>
   </chapter>
 
