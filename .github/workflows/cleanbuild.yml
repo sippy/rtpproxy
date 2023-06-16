@@ -21,6 +21,7 @@ permissions:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   check_disabled_actions:
+    name: Check
     uses: ./.github/workflows/_check_disabled_actions.yml
 
   build:

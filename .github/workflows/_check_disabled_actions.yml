@@ -9,12 +9,13 @@ on:
 
 jobs:
   check_disabled_actions:
+    name: Disabled Actions
     runs-on: ubuntu-latest
     outputs:
       should_continue: ${{ steps.check_status.outputs.should_continue }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Check disabled actions
       id: check_status

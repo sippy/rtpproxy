@@ -2,6 +2,7 @@ name: CIFuzz
 on: [push, pull_request]
 jobs:
   check_disabled_actions:
+    name: Check
     uses: ./.github/workflows/_check_disabled_actions.yml
 
   Fuzzing:
