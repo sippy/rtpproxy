@@ -8,3 +8,4 @@ set -x
 
 ${SUDO} apt-get update -y --fix-missing
 ${SUDO} apt-get upgrade -y
+${SUDO} apt-get autoclean
