@@ -89,8 +89,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /var/cache/apt/archives
-          key: functesting-${{ matrix.os }}-${{ matrix.compiler }}-apt-get-${{ github.run_id }}
+          key: functesting-${{ matrix.os }}-apt-get-${{ github.run_id }}
           restore-keys: |
+            functesting-${{ matrix.os }}-apt-get
             functesting-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
 
       - name: Install apt-get updates

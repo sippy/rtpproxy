@@ -94,8 +94,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /var/cache/apt/archives
-          key: cleanbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get-${{ github.run_id }}
+          key: cleanbuild-${{ matrix.os }}-apt-get-${{ github.run_id }}
           restore-keys: |
+            cleanbuild-${{ matrix.os }}-apt-get
             cleanbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
 
       - name: Install apt-get updates

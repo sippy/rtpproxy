@@ -89,8 +89,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /var/cache/apt/archives
-          key: glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get-${{ github.run_id }}
+          key: glitching-${{ matrix.os }}-apt-get-${{ github.run_id }}
           restore-keys: |
+            glitching-${{ matrix.os }}-apt-get
             glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
 
       - name: Install apt-get updates
