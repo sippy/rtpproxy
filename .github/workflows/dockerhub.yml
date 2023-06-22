@@ -40,6 +40,13 @@ jobs:
       uses: docker/metadata-action@v3
       with:
         images: sippylabs/rtpproxy
+        tags: |
+          type=schedule
+          type=ref,event=branch
+          type=ref,event=tag
+          type=ref,event=pr
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=sha
 
     # Cache the compiler cache
     - name: Cache the compiler cache
@@ -68,9 +75,7 @@ jobs:
         context: .
         file: ./docker/Dockerfile.push
         push: true
-        tags: |
-          ${{ steps.meta.outputs.tags }}
-          sippylabs/rtpproxy:${{ github.sha }}
+        tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ env.PLATFORMS }}
 
