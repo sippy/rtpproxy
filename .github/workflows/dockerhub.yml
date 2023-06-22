@@ -46,7 +46,7 @@ jobs:
           type=ref,event=branch
           type=ref,event=tag
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'dockerhub') }}
           type=sha
 
     # Cache the compiler cache
@@ -65,7 +65,6 @@ jobs:
         file: ./docker/Dockerfile
         tags: |
           ${{ steps.meta.outputs.tags }}
-          sippylabs/rtpproxy:${{ github.sha }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ env.PLATFORMS }}
         outputs: type=tar,dest=/tmp/ccache_export.tar
