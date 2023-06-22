@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /rtpproxy
 COPY . /rtpproxy/
 
-#install basic components
+# Build & install everything
 RUN /rtpproxy/docker/build.sh
 RUN ls -l /usr/local/bin/rtpproxy*
 RUN ls -l /usr/local/bin/makeann*
