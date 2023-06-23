@@ -3,6 +3,7 @@ on: [push, pull_request]
 
 env:
   PLATFORMS: linux/amd64,linux/i386,linux/arm/v7,linux/arm64
+  BASE_IMAGE: debian:12-slim
 
 jobs:
   check_disabled_actions:
@@ -63,6 +64,7 @@ jobs:
       with:
         context: .
         file: ./docker/Dockerfile
+        build-args: BASE_IMAGE=${{ env.BASE_IMAGE }}
         tags: |
           ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -74,6 +76,7 @@ jobs:
       with:
         context: .
         file: ./docker/Dockerfile.push
+        build-args: BASE_IMAGE=${{ env.BASE_IMAGE }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

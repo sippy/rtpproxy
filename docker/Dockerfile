@@ -1,4 +1,5 @@
-FROM --platform=$TARGETPLATFORM debian:12-slim as build
+ARG BASE_IMAGE
+FROM --platform=$TARGETPLATFORM $BASE_IMAGE as build
 LABEL maintainer="Maksym Sobolyev <sobomax@sippysoft.com>"
 
 USER root

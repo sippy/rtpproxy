@@ -1,4 +1,5 @@
-FROM --platform=$TARGETPLATFORM debian:12-slim as build
+ARG BASE_IMAGE
+FROM --platform=$TARGETPLATFORM $BASE_IMAGE as build
 LABEL maintainer="Maksym Sobolyev <sobomax@sippysoft.com>"
 
 USER root
@@ -18,5 +19,5 @@ RUN ls -l /usr/local/lib/*rtpproxy*
 WORKDIR /
 RUN rm -rf /rtpproxy && rm -rf /var/cache/*
 
-FROM --platform=$TARGETPLATFORM debian:12-slim
+FROM --platform=$TARGETPLATFORM $BASE_IMAGE
 COPY --from=build / /
