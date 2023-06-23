@@ -2,6 +2,7 @@ name: Push to DockerHub
 on: [push, pull_request]
 
 env:
+  DOCKER_REPO: sippylabs/rtpproxy
   PLATFORMS: linux/amd64,linux/i386,linux/arm/v7,linux/arm64
   BASE_IMAGE: debian:12-slim
 
@@ -41,13 +42,13 @@ jobs:
       id: meta
       uses: docker/metadata-action@v3
       with:
-        images: sippylabs/rtpproxy
+        images: ${{ env.DOCKER_REPO }}
         tags: |
           type=schedule
           type=ref,event=branch
           type=ref,event=tag
           type=ref,event=pr
-          type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'dockerhub') }}
+          type=raw,value=latest,enable={{is_default_branch}}
           type=sha
 
     # Cache the compiler cache
@@ -81,6 +82,13 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ env.PLATFORMS }}
+
+    - name: Update DockerHub repo description
+      if: ${{ github.ref == github.event.repository.default_branch }}
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: sh -x docker/update_description.sh docker/README.md
 
     - name: Extract ccaches
       run: |
