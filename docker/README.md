@@ -8,23 +8,32 @@
 [![Coverage Status](https://coveralls.io/repos/github/sippy/rtpproxy/badge.svg?branch=master)](https://coveralls.io/github/sippy/rtpproxy?branch=master)
 [![Coverity](https://scan.coverity.com/projects/8841/badge.svg)](https://scan.coverity.com/projects/sippy-rtpproxy)
 
-## About
+## What is RTPproxy?
 
-The RTPproxy is a extremely reliable and reasonably high-performance software
-proxy for RTP streams that can work together with [OpenSIPS](https://opensips.org),
-[Kamailio](https://kamailio.org) or [Sippy B2BUA](https://github.com/sippy/b2bua).
+RTPproxy is a robust, high-performance software proxy engineered to manage
+Real-Time Protocol (RTP) streams. It integrates seamlessly with
+[OpenSIPS](https://opensips.org), [Kamailio](https://kamailio.org), and
+[Sippy B2BUA](https://github.com/sippy/b2bua), making it a versatile tool for
+various network applications.
 
-Originally created for handling NAT scenarios, back in 2004-2005, it can also act
-as a generic real time datagram relay as well as gateway Real-Time Protocol (RTP)
-sessions between IPv4 and IPv6 networks.
+Developed in 2004-2005 for NAT scenarios, RTPproxy has expanded its functionality
+over time. Beyond acting as a general-purpose datagram relay and bridging RTP
+sessions between IPv4 and IPv6 networks, it now supports translation between DTLS
+and unencrypted RTP channels, call recording, call forking, and audio prompt
+injection into RTP streams for applications like Music on Hold (MOH) and
+announcements.
 
-The RTPproxy supports many advanced features and is controllable over
-multitude of Layer 4 protocols, including Unix Domain, UDP, UDPv6, TCP and TCPv6.
+Equipped with advanced features, RTPproxy offers control through several Layer 4
+protocols, including Unix Domain, UDP, UDPv6, TCP, and TCPv6.
 
-The software allows building scalable distributed SIP networks. The rtpproxy module
-included into the OpenSIPS or Kamailio SIP Proxy software allows using multiple
-RTPproxy instances running on remote machines for fault-tolerance and
-load-balancing purposes.
+RTPproxy is crucial for constructing scalable, distributed SIP networks and
+developing SIP/VoIP/RTC products and services. It's been an integral part of
+related open-source projects like DD-WRT for over a decade.
 
-The image  is updated on every commit to the https://github.com/sippy/rtpproxy/
-repository.
+Incorporating the rtpproxy module into OpenSIPS or Kamailio SIP Proxy software
+allows deploying multiple RTPproxy instances across machines for enhanced
+fault tolerance and load balancing.
+
+Updates to the Docker image for RTPproxy are pushed with every commit to the
+[official RTPproxy repository](https://github.com/sippy/rtpproxy/), keeping users
+current with the latest enhancements.
