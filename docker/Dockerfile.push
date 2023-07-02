@@ -21,3 +21,5 @@ RUN rm -rf /rtpproxy && rm -rf /var/cache/*
 
 FROM --platform=$TARGETPLATFORM $BASE_IMAGE
 COPY --from=build / /
+
+ENTRYPOINT ["/usr/local/bin/rtpproxy", "-fF"]
