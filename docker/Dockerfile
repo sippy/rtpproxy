@@ -15,3 +15,5 @@ RUN /rtpproxy/docker/build.sh
 RUN ls -l /usr/local/bin/rtpproxy*
 RUN ls -l /usr/local/bin/makeann*
 RUN ls -l /usr/local/lib/*rtpproxy*
+
+ENTRYPOINT ["/usr/local/bin/rtpproxy_debug", "-fF"]
