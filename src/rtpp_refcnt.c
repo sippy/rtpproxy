@@ -87,7 +87,7 @@ static void rtpp_refcnt_use_stdfree(struct rtpp_refcnt *, void *);
 static void rtpp_refcnt_traceen(struct rtpp_refcnt *);
 #endif
 
-static const struct rtpp_refcnt_smethods _rtpp_refcnt_smethods = {
+DEFINE_SMETHODS(rtpp_refcnt,
     .incref = &rtpp_refcnt_incref,
     .decref = &rtpp_refcnt_decref,
     .getdata = &rtpp_refcnt_getdata,
@@ -97,8 +97,7 @@ static const struct rtpp_refcnt_smethods _rtpp_refcnt_smethods = {
 #endif
     .attach = &rtpp_refcnt_attach,
     .use_stdfree = &rtpp_refcnt_use_stdfree,
-};
-const struct rtpp_refcnt_smethods * const rtpp_refcnt_smethods = &_rtpp_refcnt_smethods;
+);
 
 #if defined(RTPP_CHECK_LEAKS)
 static void

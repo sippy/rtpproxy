@@ -84,12 +84,11 @@ static int rtpp_proc_servers_reg(struct rtpp_proc_servers *,
 static int rtpp_proc_servers_unreg(struct rtpp_proc_servers *, uint64_t);
 static int rtpp_proc_servers_plr_start(struct rtpp_proc_servers *, uint64_t, double);
 
-static const struct rtpp_proc_servers_smethods _rtpp_proc_servers_smethods = {
+DEFINE_SMETHODS(rtpp_proc_servers,
     .reg = &rtpp_proc_servers_reg,
     .unreg = &rtpp_proc_servers_unreg,
     .plr_start = &rtpp_proc_servers_plr_start,
-};
-const struct rtpp_proc_servers_smethods * const rtpp_proc_servers_smethods = &_rtpp_proc_servers_smethods;
+);
 
 struct foreach_args {
     double dtime;
@@ -275,11 +274,7 @@ rtpp_proc_servers_ctor(const struct rtpp_cfg *cfsp, struct rtpp_anetio_cf *netio
     (void)pthread_setname_np(stap->thread_id, "rtpp_proc_servers");
 #endif
 
-#if defined(RTPP_DEBUG)
-    stap->pub.smethods = rtpp_proc_servers_smethods;
-#endif
-
-    CALL_SMETHOD(stap->pub.rcnt, attach, (rtpp_refcnt_dtor_t)rtpp_proc_servers_dtor, stap);
+    PUBINST_FININIT(&stap->pub, stap, rtpp_proc_servers_dtor);
     return (&stap->pub);
 e5:
     RTPP_OBJ_DECREF(stap->inact_servers);

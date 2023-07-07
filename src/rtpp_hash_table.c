@@ -119,7 +119,7 @@ static int hash_table_get_length(struct rtpp_hash_table *self);
 static int hash_table_purge(struct rtpp_hash_table *self);
 static int hash_table_resize_locked(struct rtpp_hash_table_priv *, size_t);
 
-static const struct rtpp_hash_table_smethods _rtpp_hash_table_smethods = {
+DEFINE_SMETHODS(rtpp_hash_table,
     .append_refcnt = &hash_table_append_refcnt,
     .append_str_refcnt = &hash_table_append_str_refcnt,
     .remove = &hash_table_remove,
@@ -133,8 +133,7 @@ static const struct rtpp_hash_table_smethods _rtpp_hash_table_smethods = {
     .foreach_key_str = &hash_table_foreach_key_str,
     .get_length = &hash_table_get_length,
     .purge = &hash_table_purge,
-};
-const struct rtpp_hash_table_smethods * const rtpp_hash_table_smethods = &_rtpp_hash_table_smethods;
+);
 
 static size_t
 rtpp_hash_table_l1_sizeof(size_t ht_len)
@@ -165,12 +164,8 @@ rtpp_hash_table_ctor(enum rtpp_ht_key_types key_type, int flags)
     pvt->flags = flags;
     pvt->l1->ht_len = ht_len;
     pub = &(pvt->pub);
-#if defined(RTPP_DEBUG)
-    pub->smethods = rtpp_hash_table_smethods;
-#endif
     pvt->pub.seed = ((uint64_t)random()) << 32 | (uint64_t)random();
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&hash_table_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, hash_table_dtor);
     return (pub);
 e2:
     free(pvt->l1);

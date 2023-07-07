@@ -136,7 +136,7 @@ static int rtpp_stats_nstr(struct rtpp_stats *, char *, int, const char *);
 static int rtpp_stats_getnstats(struct rtpp_stats *);
 static void rtpp_stats_update_derived(struct rtpp_stats *, double);
 
-static const struct rtpp_stats_smethods _rtpp_stats_smethods = {
+DEFINE_SMETHODS(rtpp_stats,
     .getidxbyname = &rtpp_stats_getidxbyname,
     .updatebyidx = &rtpp_stats_updatebyidx,
     .updatebyname = &rtpp_stats_updatebyname,
@@ -145,8 +145,7 @@ static const struct rtpp_stats_smethods _rtpp_stats_smethods = {
     .getnstats = &rtpp_stats_getnstats,
     .nstr = &rtpp_stats_nstr,
     .update_derived = &rtpp_stats_update_derived
-};
-const struct rtpp_stats_smethods * const rtpp_stats_smethods = &_rtpp_stats_smethods;
+);
 
 static const char *
 getdstat(void *p, int n)
@@ -248,11 +247,7 @@ rtpp_stats_ctor(void)
         pvt->nstats_derived += 1;
         dst->last_ts = getdtime();
     }
-#if defined(RTPP_DEBUG)
-    pub->smethods = rtpp_stats_smethods;
-#endif
-    CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stats_dtor,
-      fp);
+    PUBINST_FININIT(pub, fp, rtpp_stats_dtor);
     return (pub);
 e2:
     if (pvt->dstats != NULL)

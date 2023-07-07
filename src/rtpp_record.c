@@ -105,10 +105,9 @@ static int get_hdr_size(const struct sockaddr *);
 #define ARRIVAL_TIME(rp, pp) (pp->rtime.wall)
 #endif
 
-static const struct rtpp_record_smethods _rtpp_record_smethods = {
+DEFINE_SMETHODS(rtpp_record,
     .pktwrite = &rtpp_record_write
-};
-const struct rtpp_record_smethods * const rtpp_record_smethods = &_rtpp_record_smethods;
+);
 
 static int
 ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,

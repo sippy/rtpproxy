@@ -49,13 +49,12 @@ static void rtpp_ttl_reset_with(struct rtpp_ttl *, int);
 static int rtpp_ttl_get_remaining(struct rtpp_ttl *);
 static int rtpp_ttl_decr(struct rtpp_ttl *);
 
-static const struct rtpp_ttl_smethods _rtpp_ttl_smethods = {
+DEFINE_SMETHODS(rtpp_ttl,
     .reset = &rtpp_ttl_reset,
     .reset_with = &rtpp_ttl_reset_with,
     .get_remaining = &rtpp_ttl_get_remaining,
     .decr = &rtpp_ttl_decr,
-};
-const struct rtpp_ttl_smethods * const rtpp_ttl_smethods = &_rtpp_ttl_smethods;
+);
 
 struct rtpp_ttl *
 rtpp_ttl_ctor(int max_ttl)
@@ -69,12 +68,8 @@ rtpp_ttl_ctor(int max_ttl)
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
-#if defined(RTPP_DEBUG)
-    pvt->pub.smethods = rtpp_ttl_smethods;
-#endif
     pvt->ttl = pvt->max_ttl = max_ttl;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ttl_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_ttl_dtor);
     return ((&pvt->pub));
 
 e1:

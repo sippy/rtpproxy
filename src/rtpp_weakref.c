@@ -62,7 +62,7 @@ static rtpp_weakref_cb_t rtpp_wref_set_on_first(struct rtpp_weakref *, rtpp_weak
 static rtpp_weakref_cb_t rtpp_wref_set_on_last(struct rtpp_weakref *, rtpp_weakref_cb_t,
   void *);
 
-static const struct rtpp_weakref_smethods _rtpp_weakref_smethods = {
+DEFINE_SMETHODS(rtpp_weakref,
     .reg = &rtpp_weakref_reg,
     .get_by_idx = &rtpp_wref_get_by_idx,
     .unreg = &rtpp_weakref_unreg,
@@ -72,8 +72,7 @@ static const struct rtpp_weakref_smethods _rtpp_weakref_smethods = {
     .purge = &rtpp_wref_purge,
     .set_on_first = &rtpp_wref_set_on_first,
     .set_on_last = &rtpp_wref_set_on_last,
-};
-const struct rtpp_weakref_smethods * const rtpp_weakref_smethods = &_rtpp_weakref_smethods;
+);
 
 struct rtpp_weakref *
 rtpp_weakref_ctor(void)
@@ -92,11 +91,7 @@ rtpp_weakref_ctor(void)
     if (pthread_mutex_init(&pvt->on_lock, NULL) != 0) {
         goto e1;
     }
-#if defined(RTPP_DEBUG)
-    pvt->pub.smethods = rtpp_weakref_smethods;
-#endif
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_weakref_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_weakref_dtor);
     return (&pvt->pub);
 e1:
     RTPP_OBJ_DECREF(pvt->pub.ht);

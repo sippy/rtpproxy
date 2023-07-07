@@ -54,13 +54,12 @@ static void rtpp_pcount_reg_drop(struct rtpp_pcount *);
 static void rtpp_pcount_reg_ignr(struct rtpp_pcount *);
 static void rtpp_pcount_get_stats(struct rtpp_pcount *, struct rtpps_pcount *);
 
-static const struct rtpp_pcount_smethods _rtpp_pcount_smethods = {
+DEFINE_SMETHODS(rtpp_pcount,
     .reg_reld = &rtpp_pcount_reg_reld,
     .reg_drop = &rtpp_pcount_reg_drop,
     .reg_ignr = &rtpp_pcount_reg_ignr,
     .get_stats = &rtpp_pcount_get_stats
-};
-const struct rtpp_pcount_smethods * const rtpp_pcount_smethods = &_rtpp_pcount_smethods;
+);
 
 struct rtpp_pcount *
 rtpp_pcount_ctor(void)
@@ -71,14 +70,10 @@ rtpp_pcount_ctor(void)
     if (pvt == NULL) {
         goto e0;
     }
-#if defined(RTPP_DEBUG)
-    pvt->pub.smethods = rtpp_pcount_smethods;
-#endif
     atomic_init(&(pvt->cnt.nrelayed), 0);
     atomic_init(&(pvt->cnt.ndropped), 0);
     atomic_init(&(pvt->cnt.nignored), 0);
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcount_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_pcount_dtor);
     return ((&pvt->pub));
 
 e0:

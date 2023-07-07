@@ -84,13 +84,12 @@ static int rtpp_sinfo_sync_polltbl(struct rtpp_sessinfo *, struct rtpp_polltbl *
   int);
 static void rtpp_sessinfo_dtor(struct rtpp_sessinfo_priv *);
 
-static const struct rtpp_sessinfo_smethods _rtpp_sessinfo_smethods = {
+DEFINE_SMETHODS(rtpp_sessinfo,
     .append = &rtpp_sinfo_append,
     .update = &rtpp_sinfo_update,
     .remove = &rtpp_sinfo_remove,
     .sync_polltbl = &rtpp_sinfo_sync_polltbl,
-};
-const struct rtpp_sessinfo_smethods * const rtpp_sessinfo_smethods = &_rtpp_sessinfo_smethods;
+);
 
 static int
 rtpp_polltbl_hst_alloc(struct rtpp_polltbl_hst *hp, int alen)
@@ -192,12 +191,7 @@ rtpp_sessinfo_ctor(const struct rtpp_cfg *cfsp)
     pvt->hst_rtp.streams_wrt = cfsp->rtp_streams_wrt;
     pvt->hst_rtcp.streams_wrt = cfsp->rtcp_streams_wrt;
 
-#if defined(RTPP_DEBUG)
-    sessinfo->smethods = rtpp_sessinfo_smethods;
-#endif
-
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_sessinfo_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_sessinfo_dtor);
     return (sessinfo);
 
 e7:

@@ -72,7 +72,7 @@ static int rtpp_pproc_mgr_unregister(struct pproc_manager *, void *);
 static struct pproc_manager *rtpp_pproc_mgr_clone(struct pproc_manager *);
 void rtpp_pproc_mgr_reg_drop(struct pproc_manager *);
 
-static const struct pproc_manager_smethods _rtpp_pproc_mgr_smethods = {
+DEFINE_SMETHODS(pproc_manager,
     .reg = &rtpp_pproc_mgr_register,
     .handle = &rtpp_pproc_mgr_handle,
     .handleat = &rtpp_pproc_mgr_handleat,
@@ -80,8 +80,7 @@ static const struct pproc_manager_smethods _rtpp_pproc_mgr_smethods = {
     .unreg = &rtpp_pproc_mgr_unregister,
     .clone = &rtpp_pproc_mgr_clone,
     .reg_drop = &rtpp_pproc_mgr_reg_drop,
-};
-const struct pproc_manager_smethods * const pproc_manager_smethods = &_rtpp_pproc_mgr_smethods;
+);
 
 static void
 pproc_handlers_dtor(struct pproc_handlers *hndlrs)
@@ -139,11 +138,7 @@ pproc_manager_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
         goto e2;
     RTPP_OBJ_INCREF(rtpp_stats);
     pvt->rtpp_stats = rtpp_stats;
-#if defined(RTPP_DEBUG)
-    pvt->pub.smethods = pproc_manager_smethods;
-#endif
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pproc_mgr_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_pproc_mgr_dtor);
     return (&(pvt->pub));
 e2:
     pthread_mutex_destroy(&pvt->lock);

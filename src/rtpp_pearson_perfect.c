@@ -50,11 +50,9 @@ struct rtpp_pearson_perfect_priv
 static int rtpp_pearson_perfect_hash(struct rtpp_pearson_perfect *, const char *);
 static void rtpp_pearson_perfect_dtor(struct rtpp_pearson_perfect_priv *);
 
-static const struct rtpp_pearson_perfect_smethods _rtpp_pearson_perfect_smethods = {
+DEFINE_SMETHODS(rtpp_pearson_perfect,
     .hash = &rtpp_pearson_perfect_hash
-};
-const struct rtpp_pearson_perfect_smethods * const rtpp_pearson_perfect_smethods =
-  &_rtpp_pearson_perfect_smethods;
+);
 
 static void
 compute_perfect_hash(struct rtpp_pearson_perfect_priv *rppp)
@@ -92,11 +90,7 @@ rtpp_pearson_perfect_ctor(rtpp_pearson_getval_t gv, void *gv_arg)
     pub = &rppp->pub;
 
     compute_perfect_hash(rppp);
-#if defined(RTPP_DEBUG)
-    pub->smethods = rtpp_pearson_perfect_smethods;
-#endif
-    CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pearson_perfect_dtor,
-      rppp);
+    PUBINST_FININIT(pub, rppp, rtpp_pearson_perfect_dtor);
     return(pub);
 }
 

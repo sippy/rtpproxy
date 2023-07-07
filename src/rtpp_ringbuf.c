@@ -51,12 +51,11 @@ static void rtpp_ringbuf_push(struct rtpp_ringbuf *, void *);
 static void rtpp_ringbuf_flush(struct rtpp_ringbuf *);
 static int rtpp_ringbuf_locate(struct rtpp_ringbuf *, void *);
 
-static const struct rtpp_ringbuf_smethods _rtpp_ringbuf_smethods = {
+DEFINE_SMETHODS(rtpp_ringbuf,
     .push = &rtpp_ringbuf_push,
     .flush = &rtpp_ringbuf_flush,
     .locate = &rtpp_ringbuf_locate,
-};
-const struct rtpp_ringbuf_smethods * const rtpp_ringbuf_smethods = &_rtpp_ringbuf_smethods;
+);
 
 struct rtpp_ringbuf *
 rtpp_ringbuf_ctor(size_t el_size, int nelements)
@@ -73,11 +72,7 @@ rtpp_ringbuf_ctor(size_t el_size, int nelements)
     }
     pvt->el_size = el_size;
     pvt->nelements = nelements;
-#if defined(RTPP_DEBUG)
-    pvt->pub.smethods = rtpp_ringbuf_smethods;
-#endif
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ringbuf_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_ringbuf_dtor);
     return (&pvt->pub);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));

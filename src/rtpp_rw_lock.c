@@ -47,12 +47,11 @@ static void rtpp_rw_lock_lock(struct rtpp_rw_lock *, enum rtpp_rw_lock_mode);
 static void rtpp_rw_lock_unlock(struct rtpp_rw_lock *, enum rtpp_rw_lock_mode);
 static int rtpp_rw_lock_upgrade(struct rtpp_rw_lock *);
 
-static const struct rtpp_rw_lock_smethods _rtpp_rw_lock_smethods = {
+DEFINE_SMETHODS(rtpp_rw_lock,
     .lock = &rtpp_rw_lock_lock,
     .unlock = &rtpp_rw_lock_unlock,
     .upgrade = &rtpp_rw_lock_upgrade,
-};
-const struct rtpp_rw_lock_smethods * const rtpp_rw_lock_smethods = &_rtpp_rw_lock_smethods;
+);
 
 static void
 rtpp_rw_lock_dtor(struct rtpp_rw_lock_priv *pvt)
@@ -76,11 +75,7 @@ rtpp_rw_lock_ctor(void)
         goto e2;
     if (pthread_mutex_init(&pvt->write_lock, NULL) != 0)
         goto e3;
-#if defined(RTPP_DEBUG)
-    pvt->pub.smethods = rtpp_rw_lock_smethods;
-#endif
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_rw_lock_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_rw_lock_dtor);
     return ((&pvt->pub));
 e3:
     pthread_mutex_destroy(&pvt->cnt_lock);

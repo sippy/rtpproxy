@@ -66,10 +66,9 @@ struct rtpp_proc_wakeup_priv {
 static void rtpp_proc_wakeup_dtor(struct rtpp_proc_wakeup_priv *);
 static int rtpp_proc_wakeup_nudge(struct rtpp_proc_wakeup *);
 
-static const struct rtpp_proc_wakeup_smethods _rtpp_proc_wakeup_smethods = {
+DEFINE_SMETHODS(rtpp_proc_wakeup,
     .nudge = &rtpp_proc_wakeup_nudge,
-};
-const struct rtpp_proc_wakeup_smethods * const rtpp_proc_wakeup_smethods = &_rtpp_proc_wakeup_smethods;
+);
 
 static void
 rtpp_proc_wakeup_run(void *arg)
@@ -156,11 +155,7 @@ rtpp_proc_wakeup_ctor(int rtp_wakefd, int rtcp_wakefd)
 #else
         sched_yield();
 #endif
-#if defined(RTPP_DEBUG)
-    pvt->pub.smethods = rtpp_proc_wakeup_smethods;
-#endif
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_proc_wakeup_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_proc_wakeup_dtor);
     return (&pvt->pub);
 e4:
     pthread_cond_destroy(&pvt->cond);

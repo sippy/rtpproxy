@@ -96,12 +96,11 @@ static void rtpp_timed_shutdown(struct rtpp_timed *);
 
 static void rtpp_timed_task_dtor(struct rtpp_timed_wi *);
 
-static const struct rtpp_timed_smethods _rtpp_timed_smethods = {
+DEFINE_SMETHODS(rtpp_timed,
     .schedule = &rtpp_timed_schedule,
     .schedule_rc = rtpp_timed_schedule_rc,
     .shutdown = &rtpp_timed_shutdown
-};
-const struct rtpp_timed_smethods * const rtpp_timed_smethods = & _rtpp_timed_smethods;
+);
 
 static void
 rtpp_timed_queue_run(void *argp)
@@ -181,11 +180,7 @@ rtpp_timed_ctor(double run_period)
     rtcp->last_run = getdtime();
     rtcp->period = run_period;
     rtcp->wi_dsize = sizeof(struct rtpp_timed_wi) + rtpp_refcnt_osize();
-#if defined(RTPP_DEBUG)
-    rtcp->pub.smethods = rtpp_timed_smethods;
-#endif
-    CALL_SMETHOD(rtcp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_destroy,
-      rtcp);
+    PUBINST_FININIT(&rtcp->pub, rtcp, rtpp_timed_destroy);
     return (&rtcp->pub);
 e5:
     prdic_free(rtcp->elp);

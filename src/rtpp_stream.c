@@ -159,7 +159,7 @@ static struct rtpp_netaddr *rtpp_stream_get_rem_addr(struct rtpp_stream *, int);
 static struct rtpp_stream *rtpp_stream_get_sender(struct rtpp_stream *,
   const struct rtpp_cfg *cfsp);
 
-static const struct rtpp_stream_smethods _rtpp_stream_smethods = {
+DEFINE_SMETHODS(rtpp_stream,
     .handle_play = &rtpp_stream_handle_play,
     .handle_noplay = &rtpp_stream_handle_noplay,
     .isplayer_active = &rtpp_stream_isplayer_active,
@@ -180,8 +180,7 @@ static const struct rtpp_stream_smethods _rtpp_stream_smethods = {
     .get_rem_addr = &rtpp_stream_get_rem_addr,
     .latch = &rtpp_stream_latch,
     .get_sender = &rtpp_stream_get_sender,
-};
-const struct rtpp_stream_smethods * const rtpp_stream_smethods = &_rtpp_stream_smethods;
+);
 
 static enum pproc_action
 analyze_rtp_packet(const struct pkt_proc_ctx *pktxp)
@@ -295,9 +294,6 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     RTPP_OBJ_INCREF(ap->log);
     pvt->pub.side = ap->side;
     pvt->pub.pipe_type = ap->pipe_type;
-#if defined(RTPP_DEBUG)
-    pvt->pub.smethods = rtpp_stream_smethods;
-#endif
 
     rtpp_gen_uid(&pvt->pub.stuid);
     pvt->pub.seuid = ap->seuid;
@@ -306,8 +302,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     }
     pvt->pmod_data.nmodules = ap->nmodules;
     pvt->pub.pmod_datap = &(pvt->pmod_data);
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stream_dtor,
-      pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_stream_dtor);
     return (&pvt->pub);
 
 e8:
