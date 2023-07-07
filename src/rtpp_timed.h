@@ -25,33 +25,26 @@
  *
  */
 
+#pragma once
+
+struct rtpp_refcnt;
 enum rtpp_timed_cb_rvals {CB_LAST, CB_MORE};
 
 DEFINE_RAW_METHOD(rtpp_timed_cb, enum rtpp_timed_cb_rvals, double, void *);
 DEFINE_RAW_METHOD(rtpp_timed_cancel_cb, void, void *);
 
-struct rtpp_timed;
-struct rtpp_timed_task;
-struct rtpp_refcnt;
+DECLARE_CLASS(rtpp_timed, double);
 
-DEFINE_METHOD(rtpp_timed, rtpp_timed_schedule, int, double,
+DECLARE_METHOD(rtpp_timed, rtpp_timed_schedule, int, double,
   rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
-DEFINE_METHOD(rtpp_timed, rtpp_timed_schedule_rc, struct rtpp_timed_task *,
+DECLARE_METHOD(rtpp_timed, rtpp_timed_schedule_rc, struct rtpp_timed_task *,
   double, struct rtpp_refcnt *, rtpp_timed_cb_t, rtpp_timed_cancel_cb_t, void *);
-DEFINE_METHOD(rtpp_timed, rtpp_timed_shutdown, void);
+DECLARE_METHOD(rtpp_timed, rtpp_timed_shutdown, void);
 
-struct rtpp_timed_smethods
-{
+DECLARE_SMETHODS(rtpp_timed) {
     METHOD_ENTRY(rtpp_timed_schedule, schedule);
     METHOD_ENTRY(rtpp_timed_schedule_rc, schedule_rc);
     METHOD_ENTRY(rtpp_timed_shutdown, shutdown);
 };
 
-struct rtpp_timed {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_timed_smethods *smethods;
-#endif
-};
-
-struct rtpp_timed *rtpp_timed_ctor(double);
+DECLARE_CLASS_PUBTYPE(rtpp_timed, {});

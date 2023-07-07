@@ -122,7 +122,7 @@ rtpp_pproc_mgr_dtor(struct pproc_manager_pvt *pvt)
 }
 
 struct pproc_manager *
-rtpp_pproc_mgr_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
+pproc_manager_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
 {
     struct pproc_manager_pvt *pvt;
 
@@ -312,7 +312,7 @@ rtpp_pproc_mgr_clone(struct pproc_manager *pub)
 
     PUB2PVT(pub, pvt);
     pthread_mutex_lock(&pvt->lock);
-    rval = rtpp_pproc_mgr_ctor(pvt->rtpp_stats, pvt->handlers->nprocs);
+    rval = pproc_manager_ctor(pvt->rtpp_stats, pvt->handlers->nprocs);
     if (rval == NULL) {
         pthread_mutex_unlock(&pvt->lock);
         return (NULL);

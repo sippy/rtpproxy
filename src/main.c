@@ -1019,7 +1019,7 @@ rtpp_main(int argc, char **argv)
     }
     set_rlimits(&cfs);
 
-    cfs.pproc_manager = rtpp_pproc_mgr_ctor(cfs.rtpp_stats, 0);
+    cfs.pproc_manager = pproc_manager_ctor(cfs.rtpp_stats, 0);
     if (cfs.pproc_manager == NULL) {
         RTPP_LOG(cfs.glog, RTPP_LOG_ERR,
           "can't init packet prosessing subsystem");

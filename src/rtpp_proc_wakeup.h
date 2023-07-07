@@ -27,21 +27,13 @@
 
 #pragma once
 
-struct rtpp_proc_wakeup;
-struct rtpp_refcnt;
+DECLARE_CLASS(rtpp_proc_wakeup, int, int);
 
-DEFINE_METHOD(rtpp_proc_wakeup, rtpp_proc_wakeup_nudge, int);
+DECLARE_METHOD(rtpp_proc_wakeup, rtpp_proc_wakeup_nudge, int);
 
-struct rtpp_proc_wakeup_smethods
+DECLARE_SMETHODS(rtpp_proc_wakeup)
 {
     METHOD_ENTRY(rtpp_proc_wakeup_nudge, nudge);
 };
 
-struct rtpp_proc_wakeup {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_proc_wakeup_smethods * smethods;
-#endif
-};
-
-struct rtpp_proc_wakeup *rtpp_proc_wakeup_ctor(int, int);
+DECLARE_CLASS_PUBTYPE(rtpp_proc_wakeup, {});

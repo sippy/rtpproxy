@@ -169,7 +169,7 @@ e0:
 }
 
 struct rtpp_record *
-rtpp_record_open(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
+rtpp_record_ctor(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
   const char *rname, int orig, int record_type)
 {
     struct rtpp_record_channel *rrc;

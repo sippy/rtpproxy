@@ -25,39 +25,30 @@
  *
  */
 
-#if !defined(_RTPP_ANALYZER_H)
-#define _RTPP_ANALYZER_H
+#pragma once
 
 struct rtpp_log;
 struct rtp_packet;
-struct rtpp_analyzer;
 struct rtpp_refcnt;
 struct rtpa_stats;
 struct rtpa_stats_jitter;
 struct rtpp_log;
 struct rtp_packet;
 
-DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_update, enum update_rtpp_stats_rval,
+DECLARE_CLASS(rtpp_analyzer, struct rtpp_log *);
+
+DECLARE_METHOD(rtpp_analyzer, rtpp_analyzer_update, enum update_rtpp_stats_rval,
   struct rtp_packet *);
-DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_stats, void,
+DECLARE_METHOD(rtpp_analyzer, rtpp_analyzer_get_stats, void,
   struct rtpa_stats *);
-DEFINE_METHOD(rtpp_analyzer, rtpp_analyzer_get_jstats, int,
+DECLARE_METHOD(rtpp_analyzer, rtpp_analyzer_get_jstats, int,
   struct rtpa_stats_jitter *);
 
-struct rtpp_analyzer_smethods
+DECLARE_SMETHODS(rtpp_analyzer)
 {
     METHOD_ENTRY(rtpp_analyzer_update, update);
     METHOD_ENTRY(rtpp_analyzer_get_stats, get_stats);
     METHOD_ENTRY(rtpp_analyzer_get_jstats, get_jstats);
 };
 
-struct rtpp_analyzer {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_analyzer_smethods * smethods;
-#endif
-};
-
-struct rtpp_analyzer * rtpp_analyzer_ctor(struct rtpp_log *);
-
-#endif
+DECLARE_CLASS_PUBTYPE(rtpp_analyzer, {});

@@ -26,7 +26,8 @@
  *
  */
 
-struct rtpp_weakref;
+#pragma once
+
 struct rtpp_refcnt;
 
 #define RTPP_WR_MATCH_BRK  RTPP_HT_MATCH_BRK
@@ -36,24 +37,26 @@ struct rtpp_refcnt;
 DEFINE_RAW_METHOD(rtpp_weakref_foreach, int, void *, void *);
 DEFINE_RAW_METHOD(rtpp_weakref_cb, void, void *);
 
-DEFINE_METHOD(rtpp_weakref, rtpp_wref_reg, int,
+DECLARE_CLASS(rtpp_weakref, void);
+
+DECLARE_METHOD(rtpp_weakref, rtpp_wref_reg, int,
   struct rtpp_refcnt *, uint64_t);
-DEFINE_METHOD(rtpp_weakref, rtpp_wref_unreg, struct rtpp_refcnt *,
+DECLARE_METHOD(rtpp_weakref, rtpp_wref_unreg, struct rtpp_refcnt *,
   uint64_t);
-DEFINE_METHOD(rtpp_weakref, rtpp_wref_move, struct rtpp_refcnt *,
+DECLARE_METHOD(rtpp_weakref, rtpp_wref_move, struct rtpp_refcnt *,
   uint64_t, struct rtpp_weakref *);
-DEFINE_METHOD(rtpp_weakref, rtpp_wref_get_by_idx, void *,
+DECLARE_METHOD(rtpp_weakref, rtpp_wref_get_by_idx, void *,
   uint64_t);
-DEFINE_METHOD(rtpp_weakref, rtpp_wref_foreach, void,
+DECLARE_METHOD(rtpp_weakref, rtpp_wref_foreach, void,
   rtpp_weakref_foreach_t, void *);
-DEFINE_METHOD(rtpp_weakref, rtpp_wref_get_length, int);
-DEFINE_METHOD(rtpp_weakref, rtpp_wref_purge, int);
-DEFINE_METHOD(rtpp_weakref, rtpp_wref_set_on_first,
+DECLARE_METHOD(rtpp_weakref, rtpp_wref_get_length, int);
+DECLARE_METHOD(rtpp_weakref, rtpp_wref_purge, int);
+DECLARE_METHOD(rtpp_weakref, rtpp_wref_set_on_first,
   rtpp_weakref_cb_t, rtpp_weakref_cb_t, void *);
-DEFINE_METHOD(rtpp_weakref, rtpp_wref_set_on_last,
+DECLARE_METHOD(rtpp_weakref, rtpp_wref_set_on_last,
   rtpp_weakref_cb_t, rtpp_weakref_cb_t, void *);
 
-struct rtpp_weakref_smethods
+DECLARE_SMETHODS(rtpp_weakref)
 {
     METHOD_ENTRY(rtpp_wref_reg, reg);
     METHOD_ENTRY(rtpp_wref_unreg, unreg);
@@ -66,13 +69,6 @@ struct rtpp_weakref_smethods
     METHOD_ENTRY(rtpp_wref_set_on_last, set_on_last);
 };
 
-struct rtpp_weakref
-{
-    struct rtpp_refcnt *rcnt;
+DECLARE_CLASS_PUBTYPE(rtpp_weakref, {
     struct rtpp_hash_table *ht;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_weakref_smethods * smethods;
-#endif
-};
-
-struct rtpp_weakref *rtpp_weakref_ctor(void);
+});

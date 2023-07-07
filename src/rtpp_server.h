@@ -26,22 +26,31 @@
  *
  */
 
-#ifndef _RTP_SERVER_H_
-#define _RTP_SERVER_H_
-
-struct rtpp_server;
-struct rtp_packet;
+#pragma once
 
 enum rtp_type;
+#ifndef RTPP_FINCODE
+struct rtpp_server_ctor_args {
+    const char *name;
+    enum rtp_type codec;
+    int loop;
+    int ptime;
+    int result;
+};
+#else
+struct rtpp_server_ctor_args;
+#endif
 
-DEFINE_METHOD(rtpp_server, rtpp_server_get, struct rtp_packet *, double, int *);
-DEFINE_METHOD(rtpp_server, rtpp_server_get_ssrc, uint32_t);
-DEFINE_METHOD(rtpp_server, rtpp_server_set_ssrc, void, uint32_t);
-DEFINE_METHOD(rtpp_server, rtpp_server_get_seq, uint16_t);
-DEFINE_METHOD(rtpp_server, rtpp_server_set_seq, void, uint16_t);
-DEFINE_METHOD(rtpp_server, rtpp_server_start, void, double);
+DECLARE_CLASS(rtpp_server, struct rtpp_server_ctor_args *);
 
-struct rtpp_server_smethods {
+DECLARE_METHOD(rtpp_server, rtpp_server_get, struct rtp_packet *, double, int *);
+DECLARE_METHOD(rtpp_server, rtpp_server_get_ssrc, uint32_t);
+DECLARE_METHOD(rtpp_server, rtpp_server_set_ssrc, void, uint32_t);
+DECLARE_METHOD(rtpp_server, rtpp_server_get_seq, uint16_t);
+DECLARE_METHOD(rtpp_server, rtpp_server_set_seq, void, uint16_t);
+DECLARE_METHOD(rtpp_server, rtpp_server_start, void, double);
+
+DECLARE_SMETHODS(rtpp_server) {
     /* Static methods */
     METHOD_ENTRY(rtpp_server_get, get);
     METHOD_ENTRY(rtpp_server_get_ssrc, get_ssrc);
@@ -56,36 +65,14 @@ struct rtpp_server_smethods {
 #define	RTPS_ERROR	(-2)
 #define	RTPS_ENOMEM	(-3)
 
-struct rtpp_server {
-#if defined(RTPP_DEBUG)
-    /* Public methods */
-    const struct rtpp_server_smethods *smethods;
-#endif
-    /* Refcounter */
-    struct rtpp_refcnt *rcnt;
+DECLARE_CLASS_PUBTYPE(rtpp_server, {
     /* UID */
     uint64_t sruid;
     /* Weakref to the associated RTP stream */
     uint64_t stuid;
-};
-
-#ifndef RTPP_FINCODE
-struct rtpp_server_ctor_args {
-    const char *name;
-    enum rtp_type codec;
-    int loop;
-    int ptime;
-    int result;
-};
-#else
-struct rtpp_server_ctor_args;
-#endif
+});
 
 #define RTPP_SERV_OK     0
 #define RTPP_SERV_NOENT -1
 #define RTPP_SERV_NOMEM -2
 #define RTPP_SERV_BADARG -3
-
-struct rtpp_server *rtpp_server_ctor(struct rtpp_server_ctor_args *);
-
-#endif

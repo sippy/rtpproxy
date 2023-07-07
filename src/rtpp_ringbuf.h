@@ -26,30 +26,19 @@
  *
  */
 
-#ifndef _RTPP_RINGBUF_H_
-#define _RTPP_RINGBUF_H_
+#pragma once
 
-struct rtpp_ringbuf;
+DECLARE_CLASS(rtpp_ringbuf, size_t, int);
 
-DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_push, void, void *);
-DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_flush, void);
-DEFINE_METHOD(rtpp_ringbuf, rtpp_ringbuf_locate, int, void *);
+DECLARE_METHOD(rtpp_ringbuf, rtpp_ringbuf_push, void, void *);
+DECLARE_METHOD(rtpp_ringbuf, rtpp_ringbuf_flush, void);
+DECLARE_METHOD(rtpp_ringbuf, rtpp_ringbuf_locate, int, void *);
 
-struct rtpp_ringbuf_smethods
+DECLARE_SMETHODS(rtpp_ringbuf)
 {
     METHOD_ENTRY(rtpp_ringbuf_push, push);
     METHOD_ENTRY(rtpp_ringbuf_flush, flush);
     METHOD_ENTRY(rtpp_ringbuf_locate, locate);
 };
 
-struct rtpp_ringbuf {
-    /* Refcounter */
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_ringbuf_smethods * smethods;
-#endif
-};
-
-struct rtpp_ringbuf *rtpp_ringbuf_ctor(size_t, int);
-
-#endif
+DECLARE_CLASS_PUBTYPE(rtpp_ringbuf, {});

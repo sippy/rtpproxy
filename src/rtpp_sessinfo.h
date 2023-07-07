@@ -27,23 +27,25 @@
  */
 
 #pragma once
+
 #include <stdatomic.h>
 
 struct pollfd;
 struct rtpp_session;
-struct rtpp_sessinfo;
 struct rtpp_socket;
 struct rtpp_polltbl;
 struct rtpp_weakref;
 struct rtpp_cfg;
 
-DEFINE_METHOD(rtpp_sessinfo, rtpp_si_append, int, struct rtpp_session *,
+DECLARE_CLASS(rtpp_sessinfo, const struct rtpp_cfg *);
+
+DECLARE_METHOD(rtpp_sessinfo, rtpp_si_append, int, struct rtpp_session *,
   int, struct rtpp_socket **);
-DEFINE_METHOD(rtpp_sessinfo, rtpp_si_update, void, struct rtpp_session *,
+DECLARE_METHOD(rtpp_sessinfo, rtpp_si_update, void, struct rtpp_session *,
   int, struct rtpp_socket **);
-DEFINE_METHOD(rtpp_sessinfo, rtpp_si_remove, void, struct rtpp_session *,
+DECLARE_METHOD(rtpp_sessinfo, rtpp_si_remove, void, struct rtpp_session *,
   int);
-DEFINE_METHOD(rtpp_sessinfo, rtpp_si_sync_polltbl, int, struct rtpp_polltbl *,
+DECLARE_METHOD(rtpp_sessinfo, rtpp_si_sync_polltbl, int, struct rtpp_polltbl *,
   int);
 
 struct rtpp_polltbl_mdata;
@@ -64,7 +66,7 @@ struct rtpp_polltbl {
     atomic_int served_i_wake;
 };
 
-struct rtpp_sessinfo_smethods
+DECLARE_SMETHODS(rtpp_sessinfo)
 {
     METHOD_ENTRY(rtpp_si_append, append);
     METHOD_ENTRY(rtpp_si_update, update);
@@ -72,13 +74,6 @@ struct rtpp_sessinfo_smethods
     METHOD_ENTRY(rtpp_si_sync_polltbl, sync_polltbl);
 };
 
-struct rtpp_sessinfo {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_sessinfo_smethods * smethods;
-#endif
-};
-
-struct rtpp_sessinfo *rtpp_sessinfo_ctor(const struct rtpp_cfg *);
+DECLARE_CLASS_PUBTYPE(rtpp_sessinfo, {});
 
 void rtpp_polltbl_free(struct rtpp_polltbl *);

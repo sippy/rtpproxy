@@ -26,15 +26,16 @@
  *
  */
 
-struct rtpp_ttl;
-struct rtpp_refcnt;
+#pragma once
 
-DEFINE_METHOD(rtpp_ttl, rtpp_ttl_reset, void);
-DEFINE_METHOD(rtpp_ttl, rtpp_ttl_reset_with, void, int);
-DEFINE_METHOD(rtpp_ttl, rtpp_ttl_get_remaining, int);
-DEFINE_METHOD(rtpp_ttl, rtpp_ttl_decr, int);
+DECLARE_CLASS(rtpp_ttl, int);
 
-struct rtpp_ttl_smethods
+DECLARE_METHOD(rtpp_ttl, rtpp_ttl_reset, void);
+DECLARE_METHOD(rtpp_ttl, rtpp_ttl_reset_with, void, int);
+DECLARE_METHOD(rtpp_ttl, rtpp_ttl_get_remaining, int);
+DECLARE_METHOD(rtpp_ttl, rtpp_ttl_decr, int);
+
+DECLARE_SMETHODS(rtpp_ttl)
 {
     METHOD_ENTRY(rtpp_ttl_reset, reset);
     METHOD_ENTRY(rtpp_ttl_reset_with, reset_with);
@@ -42,11 +43,4 @@ struct rtpp_ttl_smethods
     METHOD_ENTRY(rtpp_ttl_decr, decr);
 };
 
-struct rtpp_ttl {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_ttl_smethods * smethods;
-#endif
-};
-
-struct rtpp_ttl *rtpp_ttl_ctor(int);
+DECLARE_CLASS_PUBTYPE(rtpp_ttl, {});

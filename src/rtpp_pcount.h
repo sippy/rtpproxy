@@ -26,17 +26,16 @@
  *
  */
 
-#ifndef _RTPP_PCOUNT_H_
-#define _RTPP_PCOUNT_H_
+#pragma once
 
-struct rtpp_pcount;
-struct rtpp_refcnt;
 struct rtpps_pcount;
 
-DEFINE_METHOD(rtpp_pcount, rtpp_pcount_reg_reld, void);
-DEFINE_METHOD(rtpp_pcount, rtpp_pcount_reg_drop, void);
-DEFINE_METHOD(rtpp_pcount, rtpp_pcount_reg_ignr, void);
-DEFINE_METHOD(rtpp_pcount, rtpp_pcount_get_stats, void,
+DECLARE_CLASS(rtpp_pcount, void);
+
+DECLARE_METHOD(rtpp_pcount, rtpp_pcount_reg_reld, void);
+DECLARE_METHOD(rtpp_pcount, rtpp_pcount_reg_drop, void);
+DECLARE_METHOD(rtpp_pcount, rtpp_pcount_reg_ignr, void);
+DECLARE_METHOD(rtpp_pcount, rtpp_pcount_get_stats, void,
   struct rtpps_pcount *);
 
 struct rtpps_pcount {
@@ -45,19 +44,11 @@ struct rtpps_pcount {
     unsigned long nignored;
 };
 
-struct rtpp_pcount_smethods {
+DECLARE_SMETHODS(rtpp_pcount) {
     METHOD_ENTRY(rtpp_pcount_reg_reld, reg_reld);
     METHOD_ENTRY(rtpp_pcount_reg_drop, reg_drop);
     METHOD_ENTRY(rtpp_pcount_reg_ignr, reg_ignr);
     METHOD_ENTRY(rtpp_pcount_get_stats, get_stats);
 };
 
-struct rtpp_pcount {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_pcount_smethods *smethods;
-#endif
-};
-
-struct rtpp_pcount *rtpp_pcount_ctor(void);
-#endif
+DECLARE_CLASS_PUBTYPE(rtpp_pcount, {});

@@ -26,36 +26,26 @@
  *
  */
 
-#ifndef _RTPP_RECORD_H_
-#define _RTPP_RECORD_H_
+#pragma once
 
 struct rtpp_session;
 struct rtpp_stream;
 struct rtp_packet;
-struct rtpp_record;
 struct rtpp_cfg;
 struct pkt_proc_ctx;
 
-DEFINE_METHOD(rtpp_record, rtpp_record_write, void, const struct pkt_proc_ctx *);
+DECLARE_CLASS(rtpp_record, const struct rtpp_cfg *, struct rtpp_session *,
+  const char *, int, int);
 
-struct rtpp_record_smethods
+DECLARE_METHOD(rtpp_record, rtpp_record_write, void, const struct pkt_proc_ctx *);
+
+DECLARE_SMETHODS(rtpp_record)
 {
     METHOD_ENTRY(rtpp_record_write, pktwrite);
 };
 
-struct rtpp_record {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_record_smethods * smethods;
-#endif
-};
+DECLARE_CLASS_PUBTYPE(rtpp_record, {});
 
 #define RECORD_RTP  0
 #define RECORD_RTCP 1
 #define RECORD_BOTH 2
-
-/* Function prototypes */
-struct rtpp_record *rtpp_record_open(const struct rtpp_cfg *,
-  struct rtpp_session *, const char *, int, int);
-
-#endif

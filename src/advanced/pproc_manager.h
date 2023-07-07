@@ -25,7 +25,8 @@
  *
  */
 
-struct pproc_manager;
+#pragma once
+
 struct packet_processor_if;
 struct rtpp_session;
 struct rtpp_stream;
@@ -47,16 +48,18 @@ struct pkt_proc_ctx {
     unsigned int flags;
 };
 
-DEFINE_METHOD(pproc_manager, pproc_manager_reg, int, enum pproc_order, const struct packet_processor_if *);
-DEFINE_METHOD(pproc_manager, pproc_manager_unreg, int, void *);
-DEFINE_METHOD(pproc_manager, pproc_manager_handle, enum pproc_action, struct pkt_proc_ctx *);
-DEFINE_METHOD(pproc_manager, pproc_manager_handleat, enum pproc_action, struct pkt_proc_ctx *,
-  enum pproc_order);
-DEFINE_METHOD(pproc_manager, pproc_manager_lookup, int, void *, struct packet_processor_if *);
-DEFINE_METHOD(pproc_manager, pproc_manager_clone, struct pproc_manager *);
-DEFINE_METHOD(pproc_manager, pproc_manager_reg_drop, void);
+DECLARE_CLASS(pproc_manager, struct rtpp_stats *, int);
 
-struct pproc_manager_smethods
+DECLARE_METHOD(pproc_manager, pproc_manager_reg, int, enum pproc_order, const struct packet_processor_if *);
+DECLARE_METHOD(pproc_manager, pproc_manager_unreg, int, void *);
+DECLARE_METHOD(pproc_manager, pproc_manager_handle, enum pproc_action, struct pkt_proc_ctx *);
+DECLARE_METHOD(pproc_manager, pproc_manager_handleat, enum pproc_action, struct pkt_proc_ctx *,
+  enum pproc_order);
+DECLARE_METHOD(pproc_manager, pproc_manager_lookup, int, void *, struct packet_processor_if *);
+DECLARE_METHOD(pproc_manager, pproc_manager_clone, struct pproc_manager *);
+DECLARE_METHOD(pproc_manager, pproc_manager_reg_drop, void);
+
+DECLARE_SMETHODS(pproc_manager)
 {
     METHOD_ENTRY(pproc_manager_reg, reg);
     METHOD_ENTRY(pproc_manager_unreg, unreg);
@@ -67,12 +70,6 @@ struct pproc_manager_smethods
     METHOD_ENTRY(pproc_manager_reg_drop, reg_drop);
 };
 
-struct pproc_manager {
-    struct rtpp_refcnt *rcnt;
+DECLARE_CLASS_PUBTYPE(pproc_manager, {
     struct pproc_manager *reverse;
-#if defined(RTPP_DEBUG)
-    const struct pproc_manager_smethods * smethods;
-#endif
-};
-
-struct pproc_manager *rtpp_pproc_mgr_ctor(struct rtpp_stats *, int);
+});

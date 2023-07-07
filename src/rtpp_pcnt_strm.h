@@ -26,31 +26,22 @@
  *
  */
 
-#ifndef _RTPP_PCNT_STRM_H_
-#define _RTPP_PCNT_STRM_H_
+#pragma once
 
-struct rtpp_pcnt_strm;
-struct rtpp_refcnt;
 struct rtp_packet;
 struct rtpp_pcnts_strm;
 
-DEFINE_METHOD(rtpp_pcnt_strm, rtpp_pcnt_strm_get_stats, void,
+DECLARE_CLASS(rtpp_pcnt_strm, void);
+
+DECLARE_METHOD(rtpp_pcnt_strm, rtpp_pcnt_strm_get_stats, void,
   struct rtpp_pcnts_strm *);
-DEFINE_METHOD(rtpp_pcnt_strm, rtpp_pcnt_strm_reg_pktin, void,
+DECLARE_METHOD(rtpp_pcnt_strm, rtpp_pcnt_strm_reg_pktin, void,
   struct rtp_packet *);
 
-struct rtpp_pcnt_strm_smethods
+DECLARE_SMETHODS(rtpp_pcnt_strm)
 {
     METHOD_ENTRY(rtpp_pcnt_strm_get_stats, get_stats);
     METHOD_ENTRY(rtpp_pcnt_strm_reg_pktin, reg_pktin);
 };
 
-struct rtpp_pcnt_strm {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_pcnt_strm_smethods * smethods;
-#endif
-};
-
-struct rtpp_pcnt_strm *rtpp_pcnt_strm_ctor(void);
-#endif
+DECLARE_CLASS_PUBTYPE(rtpp_pcnt_strm, {});

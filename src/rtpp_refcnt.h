@@ -25,22 +25,21 @@
  *
  */
 
-#if !defined(_RTPP_REFCNT_H)
-#define _RTPP_REFCNT_H
-
-struct rtpp_refcnt;
+#pragma once
 
 typedef void (*rtpp_refcnt_dtor_t)(void *);
 
-DEFINE_METHOD(rtpp_refcnt, refcnt_incref, void);
-DEFINE_METHOD(rtpp_refcnt, refcnt_decref, void);
-DEFINE_METHOD(rtpp_refcnt, refcnt_getdata, void *);
-DEFINE_METHOD(rtpp_refcnt, refcnt_reg_pd, void, rtpp_refcnt_dtor_t, void *);
-DEFINE_METHOD(rtpp_refcnt, refcnt_attach, void, rtpp_refcnt_dtor_t, void *);
-DEFINE_METHOD(rtpp_refcnt, refcnt_traceen, void);
-DEFINE_METHOD(rtpp_refcnt, refcnt_use_stdfree, void, void *);
+DECLARE_CLASS(rtpp_refcnt, void *, rtpp_refcnt_dtor_t);
 
-struct rtpp_refcnt_smethods
+DECLARE_METHOD(rtpp_refcnt, refcnt_incref, void);
+DECLARE_METHOD(rtpp_refcnt, refcnt_decref, void);
+DECLARE_METHOD(rtpp_refcnt, refcnt_getdata, void *);
+DECLARE_METHOD(rtpp_refcnt, refcnt_reg_pd, void, rtpp_refcnt_dtor_t, void *);
+DECLARE_METHOD(rtpp_refcnt, refcnt_attach, void, rtpp_refcnt_dtor_t, void *);
+DECLARE_METHOD(rtpp_refcnt, refcnt_traceen, void);
+DECLARE_METHOD(rtpp_refcnt, refcnt_use_stdfree, void, void *);
+
+DECLARE_SMETHODS(rtpp_refcnt)
 {
     METHOD_ENTRY(refcnt_incref, incref);
     METHOD_ENTRY(refcnt_decref, decref);
@@ -61,19 +60,8 @@ struct rtpp_refcnt
 #endif
 };
 
-struct rtpp_refcnt *rtpp_refcnt_ctor(void *, rtpp_refcnt_dtor_t);
 const unsigned int rtpp_refcnt_osize(void);
-struct rtpp_refcnt *rtpp_refcnt_ctor_pa(void *);
+rtpp_refcnt_rot *rtpp_refcnt_ctor_pa(void *);
 
-#if 0
-void rtpp_refcnt_incref(struct rtpp_refcnt *);
-void rtpp_refcnt_decref(struct rtpp_refcnt *);
-
-#define RC_INCREF(rp) rtpp_refcnt_incref(rp);
-#define RC_DECREF(rp) rtpp_refcnt_decref(rp);
-#else
 #define RC_INCREF(rp) CALL_SMETHOD(rp, incref);
 #define RC_DECREF(rp) CALL_SMETHOD(rp, decref);
-#endif
-
-#endif /* _RTPP_REFCNT_H */

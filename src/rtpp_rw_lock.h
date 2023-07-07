@@ -27,29 +27,21 @@
 
 #pragma once
 
-struct rtpp_rw_lock;
-struct rtpp_refcnt;
-
 enum rtpp_rw_lock_mode {RTPP_RW_LOCK_RD, RTPP_RW_LOCK_WR};
 
-DEFINE_METHOD(rtpp_rw_lock, rtpp_rw_lock_lock, void,
-  enum rtpp_rw_lock_mode);
-DEFINE_METHOD(rtpp_rw_lock, rtpp_rw_lock_unlock, void,
-  enum rtpp_rw_lock_mode);
-DEFINE_METHOD(rtpp_rw_lock, rtpp_rw_lock_upgrade, int);
+DECLARE_CLASS(rtpp_rw_lock, void);
 
-struct rtpp_rw_lock_smethods
+DECLARE_METHOD(rtpp_rw_lock, rtpp_rw_lock_lock, void,
+  enum rtpp_rw_lock_mode);
+DECLARE_METHOD(rtpp_rw_lock, rtpp_rw_lock_unlock, void,
+  enum rtpp_rw_lock_mode);
+DECLARE_METHOD(rtpp_rw_lock, rtpp_rw_lock_upgrade, int);
+
+DECLARE_SMETHODS(rtpp_rw_lock)
 {
     METHOD_ENTRY(rtpp_rw_lock_lock, lock);
     METHOD_ENTRY(rtpp_rw_lock_unlock, unlock);
     METHOD_ENTRY(rtpp_rw_lock_upgrade, upgrade);
 };
 
-struct rtpp_rw_lock {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_rw_lock_smethods * smethods;
-#endif
-};
-
-struct rtpp_rw_lock *rtpp_rw_lock_ctor(void);
+DECLARE_CLASS_PUBTYPE(rtpp_rw_lock, {});

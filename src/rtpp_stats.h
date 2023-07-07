@@ -25,23 +25,24 @@
  *
  */
 
-struct rtpp_stats;
+#pragma once
 
-#if !defined(DEFINE_METHOD)
+#if !defined(DECLARE_CLASS)
 #error "rtpp_types.h" needs to be included
 #endif
 
-DEFINE_METHOD(rtpp_stats, rtpp_stats_getidxbyname, int, const char *);
-DEFINE_METHOD(rtpp_stats, rtpp_stats_updatebyidx, int, int, uint64_t);
-DEFINE_METHOD(rtpp_stats, rtpp_stats_updatebyname, int, const char *, uint64_t);
-DEFINE_METHOD(rtpp_stats, rtpp_stats_updatebyname_d, int, const char *, double);
-DEFINE_METHOD(rtpp_stats, rtpp_stats_getlvalbyname, int64_t, const char *);
-DEFINE_METHOD(rtpp_stats, rtpp_stats_nstr, int, char *, int, const char *);
-DEFINE_METHOD(rtpp_stats, rtpp_stats_getnstats, int);
-DEFINE_METHOD(rtpp_stats, rtpp_stats_update_derived, void, double);
+DECLARE_CLASS(rtpp_stats, void);
 
-struct rtpp_stats_smethods
-{
+DECLARE_METHOD(rtpp_stats, rtpp_stats_getidxbyname, int, const char *);
+DECLARE_METHOD(rtpp_stats, rtpp_stats_updatebyidx, int, int, uint64_t);
+DECLARE_METHOD(rtpp_stats, rtpp_stats_updatebyname, int, const char *, uint64_t);
+DECLARE_METHOD(rtpp_stats, rtpp_stats_updatebyname_d, int, const char *, double);
+DECLARE_METHOD(rtpp_stats, rtpp_stats_getlvalbyname, int64_t, const char *);
+DECLARE_METHOD(rtpp_stats, rtpp_stats_nstr, int, char *, int, const char *);
+DECLARE_METHOD(rtpp_stats, rtpp_stats_getnstats, int);
+DECLARE_METHOD(rtpp_stats, rtpp_stats_update_derived, void, double);
+
+DECLARE_SMETHODS(rtpp_stats) {
     METHOD_ENTRY(rtpp_stats_getidxbyname, getidxbyname);
     METHOD_ENTRY(rtpp_stats_updatebyidx, updatebyidx);
     METHOD_ENTRY(rtpp_stats_updatebyname, updatebyname);
@@ -52,15 +53,6 @@ struct rtpp_stats_smethods
     METHOD_ENTRY(rtpp_stats_update_derived, update_derived);
 };
 
-struct rtpp_stats_priv;
-
-struct rtpp_stats
-{
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_stats_smethods *smethods;
-#endif
+DECLARE_CLASS_PUBTYPE(rtpp_stats, {
     struct rtpp_stats_priv *pvt;
-};
-
-struct rtpp_stats *rtpp_stats_ctor(void);
+});

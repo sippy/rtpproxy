@@ -26,29 +26,27 @@
  *
  */
 
-#ifndef _RTPP_NETADDR_H_
-#define _RTPP_NETADDR_H_
+#pragma once
 
-struct rtpp_netaddr;
-struct rtpp_refcnt;
 struct sockaddr;
+DECLARE_CLASS(rtpp_netaddr, void);
 
-DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_set, void, const struct sockaddr *,
+DECLARE_METHOD(rtpp_netaddr, rtpp_netaddr_set, void, const struct sockaddr *,
   size_t);
-DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_isempty, int);
-DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_cmp, int, const struct sockaddr *,
+DECLARE_METHOD(rtpp_netaddr, rtpp_netaddr_isempty, int);
+DECLARE_METHOD(rtpp_netaddr, rtpp_netaddr_cmp, int, const struct sockaddr *,
   size_t);
-DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_isaddrseq, int,
+DECLARE_METHOD(rtpp_netaddr, rtpp_netaddr_isaddrseq, int,
   const struct sockaddr *);
-DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_cmphost, int,
+DECLARE_METHOD(rtpp_netaddr, rtpp_netaddr_cmphost, int,
   const struct sockaddr *);
-DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_copy, void, struct rtpp_netaddr *);
-DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_get, size_t, struct sockaddr *,
+DECLARE_METHOD(rtpp_netaddr, rtpp_netaddr_copy, void, struct rtpp_netaddr *);
+DECLARE_METHOD(rtpp_netaddr, rtpp_netaddr_get, size_t, struct sockaddr *,
   size_t);
-DEFINE_METHOD(rtpp_netaddr, rtpp_netaddr_sip_print, size_t, char *, size_t,
+DECLARE_METHOD(rtpp_netaddr, rtpp_netaddr_sip_print, size_t, char *, size_t,
   char);
 
-struct rtpp_netaddr_smethods {
+DECLARE_SMETHODS(rtpp_netaddr) {
     METHOD_ENTRY(rtpp_netaddr_set, set);
     METHOD_ENTRY(rtpp_netaddr_isempty, isempty);
     METHOD_ENTRY(rtpp_netaddr_cmp, cmp);
@@ -59,12 +57,4 @@ struct rtpp_netaddr_smethods {
     METHOD_ENTRY(rtpp_netaddr_sip_print, sip_print);
 };
 
-struct rtpp_netaddr {
-    struct rtpp_refcnt *rcnt;
-#if defined(RTPP_DEBUG)
-    const struct rtpp_netaddr_smethods *smethods;
-#endif
-};
-
-struct rtpp_netaddr *rtpp_netaddr_ctor(void);
-#endif
+DECLARE_CLASS_PUBTYPE(rtpp_netaddr, {});
