@@ -75,6 +75,7 @@ struct rtpp_refcnt_priv
     void *pd_data;
     int flags;
 };
+const size_t rtpp_refcnt_osize = sizeof(struct rtpp_refcnt_priv);
 
 static void rtpp_refcnt_attach(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *);
@@ -127,13 +128,6 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
 #endif
     atomic_init(&pvt->cnt, 1);
     return (&pvt->pub);
-}
-
-const unsigned int
-rtpp_refcnt_osize(void)
-{
-
-    return (sizeof(struct rtpp_refcnt_priv));
 }
 
 struct rtpp_refcnt *

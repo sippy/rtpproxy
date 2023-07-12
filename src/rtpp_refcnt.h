@@ -60,7 +60,7 @@ struct rtpp_refcnt
 #endif
 };
 
-const unsigned int rtpp_refcnt_osize(void);
+extern const size_t rtpp_refcnt_osize;
 rtpp_refcnt_rot *rtpp_refcnt_ctor_pa(void *);
 
 #define RC_INCREF(rp) CALL_SMETHOD(rp, incref);

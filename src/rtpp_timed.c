@@ -179,7 +179,7 @@ rtpp_timed_ctor(double run_period)
 #endif
     rtcp->last_run = getdtime();
     rtcp->period = run_period;
-    rtcp->wi_dsize = sizeof(struct rtpp_timed_wi) + rtpp_refcnt_osize();
+    rtcp->wi_dsize = sizeof(struct rtpp_timed_wi) + rtpp_refcnt_osize;
     PUBINST_FININIT(&rtcp->pub, rtcp, rtpp_timed_destroy);
     return (&rtcp->pub);
 e5:
