@@ -305,6 +305,7 @@ rtpp_sinfo_update(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
         rtpp_polltbl_hst_record(&pvt->hst_rtcp, HST_ADD, rtcp->stuid, new_fds[1]);
         pthread_mutex_unlock(&pvt->hst_rtcp.lock);
     }
+    return;
 e1:
     pthread_mutex_unlock(&pvt->hst_rtcp.lock);
 e0:
