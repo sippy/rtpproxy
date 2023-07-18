@@ -415,7 +415,7 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
         struct rtpp_refcnt *mdata_rcnt;
         mdata_rcnt = atomic_load(&(pvt->pmod_data.adp[i]));
         if (mdata_rcnt != NULL) {
-            CALL_SMETHOD(mdata_rcnt, decref);
+            RC_DECREF(mdata_rcnt);
         }
     }
     if (pub->ttl != NULL)

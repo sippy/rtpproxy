@@ -70,12 +70,12 @@ handle_stop_record(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int id
 		assert(spa->rtcp->stream[idx]->rrc != NULL);
 		RTPP_LOG(spa->log, RTPP_LOG_INFO,
 				"stopping recording RTCP session on port %d", spa->rtcp->stream[idx]->port);
-		CALL_SMETHOD(spa->rtcp->stream[idx]->rrc->rcnt, decref);
+		RTPP_OBJ_DECREF(spa->rtcp->stream[idx]->rrc);
 		spa->rtcp->stream[idx]->rrc = NULL;
 	}
 	RTPP_LOG(spa->log, RTPP_LOG_INFO,
 			"stopping recording RTP session on port %d", spa->rtp->stream[idx]->port);
-	CALL_SMETHOD(spa->rtp->stream[idx]->rrc->rcnt, decref);
+	RTPP_OBJ_DECREF(spa->rtp->stream[idx]->rrc);
 	spa->rtp->stream[idx]->rrc = NULL;
 	return 0;
 }
