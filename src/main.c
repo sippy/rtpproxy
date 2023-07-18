@@ -813,7 +813,7 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
         continue;
 
     RTPP_OBJ_DECREF(cfsp->modules_cf);
-    RTPP_OBJ_DECREF(cfsp->pproc_manager)
+    RTPP_OBJ_DECREF(cfsp->pproc_manager);
     free(cfsp->runcreds);
     RTPP_OBJ_DECREF(cfsp->rtpp_notify_cf);
     CALL_METHOD(cfsp->bindaddrs_cf, dtor);
