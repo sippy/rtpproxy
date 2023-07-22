@@ -80,8 +80,8 @@ def main():
                 if len(spath) != 2:
                     raise ValueError('TCP listening socket not in the form "IP:port": ' + spath[0])
                 spath[1] = int(spath[1])
-                if spath[1] <= 0 or spath[1] > 65535:
-                    raise ValueError('TCP listening port not in the range 1-65535: %d' % spath[1])
+                if spath[1] < 0 or spath[1] > 65535:
+                    raise ValueError('TCP listening port not in the range 0-65535: %d' % spath[1])
                 stype = 'tcp'
             continue
         if o == '-S':
@@ -111,9 +111,14 @@ def main():
 
     if daemonize:
         dob = Daemonizer(logfile = logfile)
+        if stype != 'unix':
+            dob.extra_rsize = 5
         if dob.amiparent:
-            dob.waitchild()
-            print(F'{dob.childpid}')
+            portnum = dob.waitchild()
+            out = F'{dob.childpid}'
+            if stype != 'unix' and spath[1] == 0:
+                out += F' {portnum[1]}'
+            print(out)
             sys.exit(0)
 
     ch = cli_handler(file_out)
@@ -127,7 +132,11 @@ def main():
         Timeout(ch.done, timeout)
     ED2.regSignal(SIGTERM, ch.done)
     if daemonize:
-        dob.childreport()
+        if stype == 'unix':
+            pnum = None
+        else:
+            pnum = '%.5d' % (cs.address[1],)
+        dob.childreport(pnum)
     ED2.loop()
     if ch.exception is not None:
         raise ch.exception
