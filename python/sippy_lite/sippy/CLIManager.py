@@ -88,6 +88,7 @@ class CLIConnectionManager(object):
     accept_list = None
     serversock = None
     atr = None
+    address = None
 
     def __init__(self, command_cb, address = None, sock_owner = None, backlog = 16, \
       tcp = False, sock_mode = None):
@@ -115,6 +116,9 @@ class CLIConnectionManager(object):
                 chown(address, sock_owner[0], sock_owner[1])
             if sock_mode != None:
                 chmod(address, sock_mode)
+        elif address[0] == '0.0.0.0' or address[1] == 0:
+            address = self.serversock.getsockname()
+        self.address = address
         self.serversock.listen(backlog)
         self.atr = _Acceptor(self)
 
