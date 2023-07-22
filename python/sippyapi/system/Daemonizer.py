@@ -38,6 +38,7 @@ class Daemonizer():
     ssock = None
     report_token = 'init_ok\n'
     logfile = None
+    extra_rsize = 0
 
     def __init__(self, logfile = None, tweakhup = False):
         if tweakhup:
@@ -86,13 +87,18 @@ class Daemonizer():
 
     def waitchild(self):
         assert(self.amiparent)
-        status = self.ssock.recv(len(self.report_token)).decode('ascii')
+        status = self.ssock.recv(len(self.report_token) + self.extra_rsize).decode('ascii')
+        if self.extra_rsize > 0:
+            ext_status = status[-self.extra_rsize:]
+            status = status[:-self.extra_rsize]
         if status == self.report_token:
-            return status
+            if self.extra_rsize == 0:
+                return status
+            return (status, ext_status)
         if status is None:
             estatus = 'NULL'
         else:
-            estatus = F'"{status}"'
+            estatus = F'"{status[:-self.extra_rsize]}"'
         report_token = self.report_token
         if report_token[-1] == '\n':
             report_token = report_token[:-1]
@@ -106,9 +112,13 @@ class Daemonizer():
                 break
         raise DChildProcessError(emsg, self.logfile) from None
 
-    def childreport(self):
+    def childreport(self, extra = None):
         assert(not self.amiparent)
-        self.ssock.send(self.report_token.encode('ascii'))
+        assert(extra == None or len(extra) == self.extra_rsize)
+        rep = self.report_token
+        if extra:
+            rep += extra
+        self.ssock.send(rep.encode('ascii'))
 
 if __name__ == '__main__':
     dob = Daemonizer()
