@@ -66,6 +66,8 @@ struct common_cmd_args {
         struct ul_opts *ul;
         struct play_opts *play;
         struct delete_opts *delete;
+        struct record_opts *record;
+        struct norecord_opts *norecord;
         void *ptr;
     } opts;
 };

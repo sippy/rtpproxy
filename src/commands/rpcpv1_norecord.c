@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -41,7 +42,9 @@
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_ecodes.h"
 #include "rtpp_defines.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
@@ -51,7 +54,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
-
+#include "commands/rpcpv1_norecord.h"
 
 struct norecord_ematch_arg {
     int nrecorded;
@@ -108,7 +111,7 @@ rtpp_cmd_norecord_ematch(void *dp, void *ap)
 }
 
 int
-handle_norecord(struct rtpp_cfg *cfsp, struct common_cmd_args *ccap, int all)
+handle_norecord(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
 {
     struct norecord_ematch_arg rea;
 
@@ -116,11 +119,52 @@ handle_norecord(struct rtpp_cfg *cfsp, struct common_cmd_args *ccap, int all)
     rea.from_tag = ccap->from_tag;
     rea.to_tag = ccap->to_tag;
     rea.cfsp = cfsp;
-    rea.all = all;
+    rea.all = ccap->opts.norecord->all;
     CALL_SMETHOD(cfsp->sessions_ht, foreach_key_str, ccap->call_id,
       rtpp_cmd_norecord_ematch, &rea);
     if (rea.nrecorded == 0) {
         return -1;
     }
     return 0;
+}
+
+struct norecord_opts *
+rtpp_command_nrec_opts_parse(struct rtpp_command *cmd)
+{
+    struct norecord_opts *rcop;
+    const char *cp;
+
+    rcop = rtpp_zmalloc(sizeof(struct norecord_opts));
+    if (rcop == NULL) {
+        if (cmd != NULL)
+            reply_error(cmd, ECODE_NOMEM_1);
+        goto err_undo_0;
+    }
+    for (cp = cmd->args.v[0].s + 1; *cp != '\0'; cp++) {
+        switch (*cp) {
+        case 'a':
+        case 'A':
+            rcop->all = 1;
+            break;
+
+        default:
+            RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
+              "DELETE: unknown command modifier `%c'", *cp);
+            reply_error(cmd, ECODE_PARSE_3);
+            goto err_undo_1;
+        }
+    }
+    return (rcop);
+
+err_undo_1:
+    rtpp_command_nrec_opts_free(rcop);
+err_undo_0:
+    return (NULL);
+}
+
+void
+rtpp_command_nrec_opts_free(struct norecord_opts *rcop)
+{
+
+    free(rcop);
 }

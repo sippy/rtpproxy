@@ -29,25 +29,32 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include "config.h"
 
 #include "rtpp_types.h"
 #include "rtpp_cfg.h"
+#include "rtpp_log.h"
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_ecodes.h"
 #include "commands/rpcpv1_copy.h"
 #include "commands/rpcpv1_record.h"
 #include "rtpp_types.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_hash_table.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_session.h"
 
 struct record_ematch_arg {
     int nrecorded;
     const rtpp_str_t *from_tag;
     const rtpp_str_t *to_tag;
-    int record_single_file;
+    const struct record_opts *rcop;
     const struct rtpp_cfg *cfsp;
 };
 
@@ -69,22 +76,21 @@ rtpp_cmd_record_ematch(void *dp, void *ap)
     } else {
         return(RTPP_HT_MATCH_CONT);
     }
-    if (handle_copy(rep->cfsp, spa, idx, NULL, rep->record_single_file) == 0) {
+    if (handle_copy(rep->cfsp, spa, idx, rep->rcop) == 0) {
         rep->nrecorded++;
     }
     return(RTPP_HT_MATCH_CONT);
 }
 
 int
-handle_record(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap,
-  int record_single_file)
+handle_record(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
 {
     struct record_ematch_arg rea;
 
     memset(&rea, '\0', sizeof(rea));
     rea.from_tag = ccap->from_tag;
     rea.to_tag = ccap->to_tag;
-    rea.record_single_file = record_single_file;
+    rea.rcop = ccap->opts.record;
     rea.cfsp = cfsp;
     CALL_SMETHOD(cfsp->sessions_ht, foreach_key_str, ccap->call_id,
       rtpp_cmd_record_ematch, &rea);
@@ -92,4 +98,49 @@ handle_record(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap,
         return -1;
     }
     return 0;
+}
+
+void
+rtpp_command_rec_opts_free(struct record_opts *rcop)
+{
+
+    free(rcop);
+}
+
+struct record_opts *
+rtpp_command_rec_opts_parse(struct rtpp_command *cmd, int rsf_dflt)
+{
+    struct record_opts *rcop;
+    const char *cp;
+
+    rcop = rtpp_zmalloc(sizeof(struct record_opts));
+    if (rcop == NULL) {
+        if (cmd != NULL)
+            reply_error(cmd, ECODE_NOMEM_1);
+        goto err_undo_0;
+    }
+    if (cmd->cca.op == COPY) {
+        rcop->recording_name = cmd->args.v[2].s;
+    }
+    rcop->record_single_file = 0;
+    for (cp = cmd->args.v[0].s + 1; *cp != '\0'; cp++) {
+        switch (*cp) {
+        case 's':
+        case 'S':
+            rcop->record_single_file = rsf_dflt;
+            break;
+
+        default:
+            RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
+              "DELETE: unknown command modifier `%c'", *cp);
+            reply_error(cmd, ECODE_PARSE_3);
+            goto err_undo_1;
+        }
+    }
+    return (rcop);
+
+err_undo_1:
+    rtpp_command_rec_opts_free(rcop);
+err_undo_0:
+    return (NULL);
 }

@@ -485,15 +485,9 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     int i, verbose, rval;
     const char *cp;
-    const char *recording_name;
     struct rtpp_session *spa;
-    int record_single_file;
-    int norecord_all;
 
     spa = NULL;
-    recording_name = NULL;
-    norecord_all = 0;
-    record_single_file = 0;
 
     /* Step II: parse parameters that are specific to a particular op and run simple ops */
     switch (cmd->cca.op) {
@@ -534,41 +528,20 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         break;
 
     case COPY:
-        recording_name = cmd->args.v[2].s;
         /* Fallthrough */
     case RECORD:
-        if (cmd->args.v[0].s[1] == 'S' || cmd->args.v[0].s[1] == 's') {
-            if (cmd->args.v[0].s[2] != '\0') {
-                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                reply_error(cmd, ECODE_PARSE_2);
-                return 0;
-            }
-            record_single_file = RSF_MODE_DFLT(cfsp);
-        } else {
-            if (cmd->args.v[0].s[1] != '\0') {
-                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                reply_error(cmd, ECODE_PARSE_3);
-                return 0;
-            }
-            record_single_file = 0;
+        cmd->cca.opts.record = rtpp_command_rec_opts_parse(cmd, RSF_MODE_DFLT(cfsp));
+        if (cmd->cca.opts.record == NULL) {
+            RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
+            return 0;
         }
         break;
 
     case NORECORD:
-        if (cmd->args.v[0].s[1] == 'A' || cmd->args.v[0].s[1] == 'a') {
-            if (cmd->args.v[0].s[2] != '\0') {
-                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                reply_error(cmd, ECODE_PARSE_2);
-                return 0;
-            }
-            norecord_all = 1;
-        } else {
-            if (cmd->args.v[0].s[1] != '\0') {
-                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                reply_error(cmd, ECODE_PARSE_3);
-                return 0;
-            }
-            norecord_all = 0;
+	cmd->cca.opts.norecord = rtpp_command_nrec_opts_parse(cmd);
+	if (cmd->cca.opts.norecord == NULL) {
+	    RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
+	    return 0;
         }
         break;
 
@@ -637,11 +610,13 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 	break;
 
     case RECORD:
-	i = handle_record(cfsp, &cmd->cca, record_single_file);
+	i = handle_record(cfsp, &cmd->cca);
+	rtpp_command_rec_opts_free(cmd->cca.opts.record);
 	break;
 
     case NORECORD:
-	i = handle_norecord(cfsp, &cmd->cca, norecord_all);
+	i = handle_norecord(cfsp, &cmd->cca);
+	rtpp_command_nrec_opts_free(cmd->cca.opts.norecord);
 	break;
 
     default:
@@ -673,6 +648,14 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 	    rtpp_command_play_opts_free(cmd->cca.opts.play);
 	    break;
 
+        case COPY:
+	    rtpp_command_rec_opts_free(cmd->cca.opts.record);
+            break;
+
+	case RECORD:
+	case NORECORD:
+	    break;
+
 	default:
 	    RTPP_DBG_ASSERT(cmd->cca.opts.ptr == NULL);
 	    break;
@@ -698,7 +681,9 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 	break;
 
     case COPY:
-	if (handle_copy(cfsp, spa, i, recording_name, record_single_file) != 0) {
+	rval = handle_copy(cfsp, spa, i, cmd->cca.opts.record);
+	rtpp_command_rec_opts_free(cmd->cca.opts.record);
+        if (rval != 0) {
             reply_error(cmd, ECODE_CPYFAIL);
             return 0;
         }

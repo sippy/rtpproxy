@@ -28,5 +28,11 @@
 
 struct common_cmd_args;
 
-int handle_record(const struct rtpp_cfg *, struct common_cmd_args *, int);
+struct record_opts {
+    int record_single_file;
+    const char *recording_name;
+};
 
+int handle_record(const struct rtpp_cfg *, struct common_cmd_args *);
+struct record_opts *rtpp_command_rec_opts_parse(struct rtpp_command *, int);
+void rtpp_command_rec_opts_free(struct record_opts *);

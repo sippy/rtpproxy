@@ -93,10 +93,13 @@ struct rtpp_record_channel {
     const char *proto;
     struct rtpp_log *log;
     struct rtpp_timestamp epoch;
+    struct sockaddr_storage laddr;
+    socklen_t laddr_len;
 };
 
 static void rtpp_record_write(struct rtpp_record *, const struct pkt_proc_ctx *);
 static void rtpp_record_close(struct rtpp_record_channel *);
+static int rtpp_record_get_local_port(struct rtpp_record *);
 static int get_hdr_size(const struct sockaddr *);
 
 #if HAVE_SO_TS_CLOCK
@@ -106,7 +109,8 @@ static int get_hdr_size(const struct sockaddr *);
 #endif
 
 DEFINE_SMETHODS(rtpp_record,
-    .pktwrite = &rtpp_record_write
+    .pktwrite = &rtpp_record_write,
+    .get_local_port = &rtpp_record_get_local_port
 );
 
 static int
@@ -116,6 +120,8 @@ ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
     char *cp, *tmp;
     int n, port;
     struct sockaddr_storage raddr;
+
+    rrc->laddr_len = sizeof(rrc->laddr);
 
     tmp = strdup(rname + 4);
     if (tmp == NULL) {
@@ -154,6 +160,10 @@ ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
     }
     if (connect(rrc->fd, sstosa(&raddr), SA_LEN(sstosa(&raddr))) == -1) {
         RTPP_ELOG(log, RTPP_LOG_ERR, "ropen: can't connect socket");
+        goto e2;
+    }
+    if (getsockname(rrc->fd, sstosa(&rrc->laddr), &rrc->laddr_len) == -1) {
+        RTPP_ELOG(log, RTPP_LOG_ERR, "ropen: getsockname() failed");
         goto e2;
     }
     free(tmp);
@@ -666,6 +676,19 @@ rtpp_record_write(struct rtpp_record *self, const struct pkt_proc_ctx *pktxp)
     pthread_mutex_lock(&rrc->lock);
     rtpp_record_write_locked(rrc, pktxp);
     pthread_mutex_unlock(&rrc->lock);
+}
+
+static int
+rtpp_record_get_local_port(struct rtpp_record *self)
+{
+    struct rtpp_record_channel *rrc;
+    int lport;
+
+    PUB2PVT(self, rrc);
+    pthread_mutex_lock(&rrc->lock);
+    lport = addr2port(&rrc->laddr);
+    pthread_mutex_unlock(&rrc->lock);
+    return (lport);
 }
 
 static void

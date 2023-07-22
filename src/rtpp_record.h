@@ -38,10 +38,12 @@ DECLARE_CLASS(rtpp_record, const struct rtpp_cfg *, struct rtpp_session *,
   const char *, int, int);
 
 DECLARE_METHOD(rtpp_record, rtpp_record_write, void, const struct pkt_proc_ctx *);
+DECLARE_METHOD(rtpp_record, rtpp_record_get_local_port, int);
 
 DECLARE_SMETHODS(rtpp_record)
 {
     METHOD_ENTRY(rtpp_record_write, pktwrite);
+    METHOD_ENTRY(rtpp_record_get_local_port, get_local_port);
 };
 
 DECLARE_CLASS_PUBTYPE(rtpp_record, {});
