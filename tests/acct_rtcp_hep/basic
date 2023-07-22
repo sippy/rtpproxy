@@ -34,8 +34,7 @@ run_rtpproxy() {
   then
     rm "${rname}" || return 1
   fi
-  (sed "s|%%RTPP_NOTIFY_SOCK_TCP%%|${RTPP_NOTIFY_SOCK_TCP}|g ; \
-   s|%%CALLID%%|${CALL_ID}|g" "${CD_DIR}/basic.input" | \
+  (sed "s|%%CALLID%%|${CALL_ID}|g" "${CD_DIR}/basic.input" | \
    ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS}) | sed \
    "s|^${rtp_porta}$|%%PORT_A%%|g ;  s|^${rtp_porto}$|%%PORT_O%%|g"
   (env RTPP_GLITCH_ACT="" ${EXTRACTAUDIO} -S -A "${rname}" || return 1) | \
@@ -64,7 +63,7 @@ run_acct_rtcp_hep() {
   LNAME="acct_rtcp_hep.${HEP_PROTO}.rlog"
   sed "s|%%HEP_PORT%%|${HEP_PORT}|g ; s|%%HEP_PROTO%%|${HEP_PROTO}|g" < \
    ${CD_DIR}/basic.conf > "${CNAME}"
-  RTPP_ARGS="-d dbug -f -s stdio: -b -n ${RTPP_NOTIFY_SOCK_TCP} -m ${MIN_PORT} \
+  RTPP_ARGS="-d dbug -f -s stdio: -b -m ${MIN_PORT} \
    -M ${MAX_PORT} -T1 -W2 --config ${CNAME}"
 
   NC_ARGS="-l 127.0.0.1 ${HEP_PORT}"

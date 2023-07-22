@@ -79,7 +79,7 @@ geninput() {
   cat session_timeouts/stats.input
 }
 
-RTPP0_ARGS="-d dbug -T10 -b -n ${RTPP_NOTIFY_SOCK_TCP} -n ${RTPP_NOTIFY_SOCK_WILD} -n ${RTPP_NOTIFY_SOCK_UNIX}"
+RTPP0_ARGS="-d dbug -T10 -b"
 RTPP1_ARGS="${RTPP0_ARGS} -m 12000 -W5"
 RTPP2_ARGS="${RTPP0_ARGS} -m 13000"
 RTPP3_ARGS="-6 ::1 ${RTPP1_ARGS}"
@@ -143,15 +143,38 @@ run_test()
   else
     client_notify_sock="${notify_sock}"
   fi
+  case "$client_notify_sock" in
+  tcp:*)
+    client_notify_sock1="${client_notify_sock}:0"
+    ;;
+  *)
+    client_notify_sock1="${client_notify_sock}"
+    ;;
+  esac
   NSTESTS=`echo ${RTPP_TEST_SOCKETS} | wc -w`
   RTPP_NC_TOUT=$((${NSTESTS} * 34))
-  RTPP_NC_PID="`${RTPP_NOTYFY_CLIENT} -D -s ${client_notify_sock} -o session_timeouts.tlog \
-   -t ${RTPP_NC_TOUT} -l session_timeouts.tout`"
+  set -- `${RTPP_NOTYFY_CLIENT} -D -s "${client_notify_sock1}" -o session_timeouts.tlog \
+   -t ${RTPP_NC_TOUT} -l session_timeouts.tout`
   RTPP_NC_RC=${?}
+  RTPP_NC_PID="${1}"
+  RTPP_NC_PORT="${2}"
   if [ -z "${RTPP_NC_PID}" ]
   then
     RTPP_NC_RC=1
   fi
+  case "$client_notify_sock" in
+  tcp:*)
+    if [ -z "${RTPP_NC_PORT}" ]
+    then
+      RTPP_NC_RC=1
+    else
+      client_notify_sock="${client_notify_sock}:${RTPP_NC_PORT}"
+      notify_sock="${notify_sock}:${RTPP_NC_PORT}"
+    fi
+    ;;
+  *)
+    ;;
+  esac
   report_rc ${RTPP_NC_RC} "Starting rtpp_notify_client.py on ${client_notify_sock}"
 
   setup_tstart
@@ -160,16 +183,16 @@ run_test()
   do
     if [ "${socket}" = "stdio:" ]
     then
-      run_rtpp_on_stdout "" ${j}.1 ${RTPP1_ARGS}
+      run_rtpp_on_stdout "" ${j}.1 -n "${notify_sock}" ${RTPP1_ARGS}
       report "rtpproxy #${j}.1 start on ${socket}"
       RTPP1_PID=${RTPP_PID}
-      run_rtpp_on_stdout "" ${j}.2 ${RTPP2_ARGS}
+      run_rtpp_on_stdout "" ${j}.2 -n "${notify_sock}" ${RTPP2_ARGS}
       report "rtpproxy #${j}.2 start on ${socket}"
       RTPP2_PID=${RTPP_PID}
-      run_rtpp_on_stdout "6" ${j}.3 ${RTPP3_ARGS}
+      run_rtpp_on_stdout "6" ${j}.3 -n "${notify_sock}" ${RTPP3_ARGS}
       report "rtpproxy #${j}.3 start on ${socket}"
       RTPP3_PID=${RTPP_PID}
-      run_rtpp_on_stdout "6" ${j}.4 ${RTPP4_ARGS}
+      run_rtpp_on_stdout "6" ${j}.4 -n "${notify_sock}" ${RTPP4_ARGS}
       report "rtpproxy #${j}.4 start on ${socket}"
       RTPP4_PID=${RTPP_PID}
       wait ${RTPP1_PID}
@@ -192,12 +215,12 @@ run_test()
       socket_idx=0
       advance_sockidx
       RTPP1_LOG=${RTPP_LOGFILE}
-      RTPP_SOCKFILE="${_socket}" rtpproxy_start ${RTPP1_ARGS}
+      RTPP_SOCKFILE="${_socket}" rtpproxy_start -n "${notify_sock}" ${RTPP1_ARGS}
       report "rtpproxy #${j}.1 start on ${_socket}"
       RTPP1_PID="${TMP_PIDFILE}"
       advance_sockidx
       RTPP2_LOG=${RTPP_LOGFILE}
-      RTPP_SOCKFILE="${_socket}" rtpproxy_start ${RTPP2_ARGS}
+      RTPP_SOCKFILE="${_socket}" rtpproxy_start -n "${notify_sock}" ${RTPP2_ARGS}
       RTPP2_START_RC=${?}
       if [ ${RTPP2_START_RC} -ne 0 ]
       then
@@ -207,7 +230,7 @@ run_test()
       RTPP2_PID="${TMP_PIDFILE}"
       advance_sockidx
       RTPP3_LOG=${RTPP_LOGFILE}
-      RTPP_SOCKFILE="${_socket}" rtpproxy_start ${RTPP3_ARGS}
+      RTPP_SOCKFILE="${_socket}" rtpproxy_start -n "${notify_sock}" ${RTPP3_ARGS}
       RTPP3_START_RC=${?}
       if [ ${RTPP3_START_RC} -ne 0 ]
       then
@@ -218,7 +241,7 @@ run_test()
       RTPP3_PID="${TMP_PIDFILE}"
       advance_sockidx
       RTPP4_LOG=${RTPP_LOGFILE}
-      RTPP_SOCKFILE="${_socket}" rtpproxy_start ${RTPP4_ARGS}
+      RTPP_SOCKFILE="${_socket}" rtpproxy_start -n "${notify_sock}" ${RTPP4_ARGS}
       RTPP4_START_RC=${?}
       if [ ${RTPP4_START_RC} -ne 0 ]
       then
