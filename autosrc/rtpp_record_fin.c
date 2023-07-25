@@ -7,14 +7,20 @@
 #include "rtpp_debug.h"
 #include "rtpp_record.h"
 #include "rtpp_record_fin.h"
+static void rtpp_record_get_local_port_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_record@%p::get_local_port (rtpp_record_get_local_port) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_record_write_fin(void *pub) {
     fprintf(stderr, "Method rtpp_record@%p::pktwrite (rtpp_record_write) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static const struct rtpp_record_smethods rtpp_record_smethods_fin = {
+    .get_local_port = (rtpp_record_get_local_port_t)&rtpp_record_get_local_port_fin,
     .pktwrite = (rtpp_record_write_t)&rtpp_record_write_fin,
 };
 void rtpp_record_fin(struct rtpp_record *pub) {
+    RTPP_DBG_ASSERT(pub->smethods->get_local_port != (rtpp_record_get_local_port_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->pktwrite != (rtpp_record_write_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_record_smethods_fin &&
       pub->smethods != NULL);
@@ -42,14 +48,16 @@ rtpp_record_fintest()
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
     static const struct rtpp_record_smethods dummy = {
+        .get_local_port = (rtpp_record_get_local_port_t)((void *)0x1),
         .pktwrite = (rtpp_record_write_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
+    CALL_TFIN(&tp->pub, get_local_port);
     CALL_TFIN(&tp->pub, pktwrite);
-    assert((_naborts - naborts_s) == 1);
+    assert((_naborts - naborts_s) == 2);
     free(tp);
 }
 const static void *_rtpp_record_ftp = (void *)&rtpp_record_fintest;
