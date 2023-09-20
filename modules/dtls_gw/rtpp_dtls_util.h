@@ -32,4 +32,6 @@
   FP_FINGERPRINT_STR_LEN)
 #define FP_DIGEST_STRBUF_LEN (FP_DIGEST_STR_LEN + 1)
 
+typedef struct x509_st X509;
+
 int rtpp_dtls_fp_gen(const X509 *, char *, int);

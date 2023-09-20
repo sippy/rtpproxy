@@ -40,9 +40,10 @@ enum rtpp_dtls_mode {
 
 struct rdc_peer_spec {
     enum rtpp_dtls_mode peer_mode;
-    const rtpp_str_t *algorithm;
+    rtpp_str_const_t algorithm;
     const rtpp_str_t *fingerprint;
     const rtpp_str_t *ssrc;
+    char alg_buf[FP_DIGEST_ALG_LEN];
 };
 
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_dtls_recv, void,

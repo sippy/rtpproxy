@@ -75,6 +75,7 @@
 #include "advanced/pproc_manager.h"
 
 #include "rtpp_dtls.h"
+#include "rtpp_dtls_util.h"
 #include "rtpp_dtls_conn.h"
 
 struct rtpp_module_priv {
@@ -331,7 +332,15 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
     switch (rdg_cmd) {
     case RDG_CMD_A:
     case RDG_CMD_P:
-        rdfs.algorithm = &argv[1];
+        rtpp_str_dup2(&argv[1], &rdfs.algorithm);
+        if (rdfs.algorithm.len > sizeof(rdfs.alg_buf))
+            goto invalalg;
+        for (int i = 0; i < rdfs.algorithm.len; i++) {
+            rdfs.alg_buf[i] = rdfs.algorithm.s[i];
+            if (rdfs.alg_buf[i] >= 'a')
+                rdfs.alg_buf[i] -= ('a' - 'A');
+        }
+        rdfs.algorithm.s = rdfs.alg_buf;
         rdfs.fingerprint = &argv[2];
         rdfs.ssrc = (argc == 4) ? &argv[3] : NULL;
         rdfsp = &rdfs;
@@ -436,6 +445,10 @@ out:
     RTPP_OBJ_DECREF(rtps_c);
     return (0);
 
+invalalg:
+    RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "invalid algorithm: \"%s\"",
+      argv[1].s);
+    return (-1);
 invalmode:
     RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "invalid mode: \"%s\"",
       argv[0].s);

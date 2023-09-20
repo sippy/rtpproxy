@@ -286,10 +286,10 @@ rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *self,
           pvt->state);
         goto failed;
     }
-    if (rdfsp->algorithm->len != FP_DIGEST_ALG_LEN ||
-      memcmp(rdfsp->algorithm->s, FP_DIGEST_ALG, FP_DIGEST_ALG_LEN) != 0) {
+    if (rdfsp->algorithm.len != FP_DIGEST_ALG_LEN ||
+      memcmp(rdfsp->algorithm.s, FP_DIGEST_ALG, FP_DIGEST_ALG_LEN) != 0) {
         RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "unsupported fingerprint "
-          "algorithm: \"%.*s\"", FMTSTR(rdfsp->algorithm));
+          "algorithm: \"%.*s\"", FMTSTR(&rdfsp->algorithm));
         goto failed;
     }
     if (rdfsp->fingerprint->len != FP_FINGERPRINT_STR_LEN) {
@@ -297,7 +297,7 @@ rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *self,
           "length: \"%lu\"", rdfsp->fingerprint->len);
         goto failed;
     }
-    sprintf(pvt->fingerprint, "%.*s %.*s", FMTSTR(rdfsp->algorithm),
+    sprintf(pvt->fingerprint, "%.*s %.*s", FMTSTR(&rdfsp->algorithm),
       FMTSTR(rdfsp->fingerprint));
     if (rdfsp->ssrc != NULL) {
         uint32_t ssrc = strtoul(rdfsp->ssrc->s, &ep, 10);
