@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
@@ -16,6 +18,10 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+#if HAVE_ERR_H
+#include <err.h>
+#endif
 
 #define UC_MAX_THREADS 64
 
@@ -59,8 +65,6 @@ srandomdev(void)
 #  define SO_REUSEPORT SO_REUSEADDR
 # endif
 #endif
-
-#include "config.h"
 
 #include "elperiodic.h"
 
