@@ -177,9 +177,21 @@ fi
 AC_CHECK_HEADER(srtp2/srtp.h, found_libsrtp2=yes)
 if test "$found_libsrtp2" = yes
 then
-  AC_CHECK_LIB(srtp2, srtp_init,
+  AC_CHECK_LIB(srtp2, srtp_init,[
    LIBS_SRTP="-lsrtp2"
-   AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed]))
+   # Test program to check if the srtp_protect function accepts size_t* argument
+   AC_MSG_CHECKING(['srtp_protect()' last argument type])
+   original_cflags="$CFLAGS"
+   CFLAGS="$CFLAGS -Werror"
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+     #include <stdlib.h>
+     #include <srtp2/srtp.h>],
+     [srtp_t ctx; void* rtp_hdr; size_t len; return srtp_protect(ctx, rtp_hdr, &len);])],
+     [srtp_protect_lastarg=size_t], [srtp_protect_lastarg=int])
+   CFLAGS="$original_cflags"
+   AC_MSG_RESULT([$srtp_protect_lastarg])
+   AC_DEFINE_UNQUOTED([SRTP_PROTECT_LASTARG], [${srtp_protect_lastarg}], [Type of the last argument of the srtp_protect() API])
+   AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed])])
 else
   # libsrtp
   AC_CHECK_HEADER(srtp/srtp.h, found_libsrtp=yes)

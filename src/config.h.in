@@ -211,6 +211,9 @@
 /* The number of bytes in type time_t */
 #undef SIZEOF_TIME_T
 
+/* Type of the last argument of the srtp_protect() API */
+#undef SRTP_PROTECT_LASTARG
+
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
    automatically deduced at runtime.

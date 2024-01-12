@@ -454,7 +454,12 @@ out:
 static int
 rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
 {
-    int status, len;
+    int status;
+#if defined(SRTP_PROTECT_LASTARG)
+    SRTP_PROTECT_LASTARG len;
+#else
+    size_t len;
+#endif
     struct rtpp_dtls_conn_priv *pvt;
 
     PUB2PVT(self, pvt);
@@ -477,7 +482,12 @@ rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
 static int
 rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
 {
-    int status, len;
+    int status;
+#if defined(SRTP_PROTECT_LASTARG)
+    SRTP_PROTECT_LASTARG len;
+#else
+    size_t len;
+#endif
     struct rtpp_dtls_conn_priv *pvt;
 
     PUB2PVT(self, pvt);
