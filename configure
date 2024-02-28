@@ -13496,6 +13496,48 @@ fi
 
 if test "$found_libsrtp2" = yes
 then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for srtp_protect_mki in -lsrtp2" >&5
+printf %s "checking for srtp_protect_mki in -lsrtp2... " >&6; }
+if test ${ac_cv_lib_srtp2_srtp_protect_mki+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsrtp2  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char srtp_protect_mki ();
+int
+main (void)
+{
+return srtp_protect_mki ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_srtp2_srtp_protect_mki=yes
+else $as_nop
+  ac_cv_lib_srtp2_srtp_protect_mki=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_srtp2_srtp_protect_mki" >&5
+printf "%s\n" "$ac_cv_lib_srtp2_srtp_protect_mki" >&6; }
+if test "x$ac_cv_lib_srtp2_srtp_protect_mki" = xyes
+then :
+  _sp_nargs=3
+else $as_nop
+  _sp_nargs=4
+fi
+
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for srtp_init in -lsrtp2" >&5
 printf %s "checking for srtp_init in -lsrtp2... " >&6; }
 if test ${ac_cv_lib_srtp2_srtp_init+y}
@@ -13539,7 +13581,7 @@ then :
    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking 'srtp_protect()' last argument type" >&5
 printf %s "checking 'srtp_protect()' last argument type... " >&6; }
    original_cflags="$CFLAGS"
-   CFLAGS="$CFLAGS -Werror"
+   CFLAGS="${CFLAGS} -Werror -DSRTP_PROTECT_NARGS=${_sp_nargs}"
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -13548,7 +13590,12 @@ printf %s "checking 'srtp_protect()' last argument type... " >&6; }
 int
 main (void)
 {
-srtp_t ctx; void* rtp_hdr; size_t len; return srtp_protect(ctx, rtp_hdr, &len);
+srtp_t ctx; void* rtp_hdr; size_t len;
+     #if SRTP_PROTECT_NARGS == 4
+     return srtp_protect(ctx, rtp_hdr, &len, 0);
+     #else
+     return srtp_protect(ctx, rtp_hdr, &len);
+     #endif
   ;
   return 0;
 }
@@ -13565,6 +13612,9 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 printf "%s\n" "$srtp_protect_lastarg" >&6; }
 
 printf "%s\n" "#define SRTP_PROTECT_LASTARG ${srtp_protect_lastarg}" >>confdefs.h
+
+
+printf "%s\n" "#define SRTP_PROTECT_NARGS ${_sp_nargs}" >>confdefs.h
 
 
 printf "%s\n" "#define ENABLE_SRTP2 1" >>confdefs.h
