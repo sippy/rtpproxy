@@ -469,7 +469,11 @@ rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
     }
 
     len = pktxp->pktp->size;
+#if SRTP_PROTECT_NARGS == 4
+    status = srtp_protect(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len, 0);
+#else
     status = srtp_protect(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len);
+#endif
     if (status){
        return (-1);
     }
