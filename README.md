@@ -90,7 +90,10 @@ $ ./configure
 $ make
 ```
 
-For detailed compilation instructions please check [User Manual](https://www.rtpproxy.org/doc/master/user_manual.html#MAKESRC).
+## Documentation and References
+
+- [User Manual](https://www.rtpproxy.org/doc/master/user_manual.html#MAKESRC);
+- [RTPproxy Control Protocol Reference](https://github.com/sippy/rtpproxy/wiki/RTPProxy-Command-Protocol).
 
 ## Feedback & Support
 
