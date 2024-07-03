@@ -15194,7 +15194,7 @@ AM_BACKSLASH='\'
 
 fi
 
-ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile modules/badmod/Makefile libxxHash/Makefile modules/dtls_gw/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile modules/badmod/Makefile libxxHash/Makefile libre/Makefile modules/dtls_gw/Makefile modules/ice_lite/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
 
 
 
@@ -16303,7 +16303,9 @@ do
     "modules/catch_dtmf/Makefile") CONFIG_FILES="$CONFIG_FILES modules/catch_dtmf/Makefile" ;;
     "modules/badmod/Makefile") CONFIG_FILES="$CONFIG_FILES modules/badmod/Makefile" ;;
     "libxxHash/Makefile") CONFIG_FILES="$CONFIG_FILES libxxHash/Makefile" ;;
+    "libre/Makefile") CONFIG_FILES="$CONFIG_FILES libre/Makefile" ;;
     "modules/dtls_gw/Makefile") CONFIG_FILES="$CONFIG_FILES modules/dtls_gw/Makefile" ;;
+    "modules/ice_lite/Makefile") CONFIG_FILES="$CONFIG_FILES modules/ice_lite/Makefile" ;;
     "pertools/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/Makefile" ;;
     "pertools/udp_contention/Makefile") CONFIG_FILES="$CONFIG_FILES pertools/udp_contention/Makefile" ;;
     "libucl/Makefile") CONFIG_FILES="$CONFIG_FILES libucl/Makefile" ;;

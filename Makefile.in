@@ -193,7 +193,7 @@ am__define_uniq_tagged_files = \
   unique=`for i in $$list; do \
     if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
   done | $(am__uniquify_input)`
-DIST_SUBDIRS = libexecinfo libucl libxxHash makeann modules \
+DIST_SUBDIRS = libexecinfo libucl libxxHash libre makeann modules \
 	libelperiodic/src src pertools tests extractaudio doc
 am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in \
 	$(top_srcdir)/python/sippy_lite/sippy/Time/clock_dtime.py.in \
@@ -389,7 +389,8 @@ AUTOMAKE_OPTIONS = foreign
 @BUILD_EXTRACTAUDIO_TRUE@SUBD_EAUD = extractaudio
 @BUILD_UDP_CONTENTION_TRUE@SUBD_UDCNT = pertools
 @BUILD_DOCS_TRUE@SUBD_DOCS = doc
-SUBDIRS = libexecinfo libucl libxxHash makeann $(SUBD_MOD) \
+@BUILD_CRYPTO_TRUE@SUB_LIBRE = libre
+SUBDIRS = libexecinfo libucl libxxHash $(SUB_LIBRE) makeann $(SUBD_MOD) \
   $(SUBD_ELP) src $(SUBD_UDCNT) tests \
   $(SUBD_EAUD) ${SUBD_DOCS}
 
