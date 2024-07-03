@@ -15,7 +15,7 @@ test_startstop() {
   RTPP_OUTFILE="${1}"
   RTPPROXY="${2}"
   RTPP_CONF="${3}"
-  RTPP_DSO="${4}"
+  RTPP_DSOS="${4}"
   REF_OUTFILE="${5}"
 
   truncate -s 0 "${TS_LOGFILE}"
@@ -23,8 +23,14 @@ test_startstop() {
   myuid="`id -un`"
   mygid="`id -gn`"
 
+  for dso in ${RTPP_DSOS}
+  do
+    dso_d="`echo ${dso} | sed 's|_debug||'`"
+    RTPP_DSO="--dso ../modules/${dso_d}/.libs/rtpp_${dso}.so ${RTPP_DSO}"
+  done
+
   for rargs in "--config ${RTPP_CONF} -c fifo -L 100" \
-   "-c rr -u ${myuid}:${mygid} --dso ${RTPP_DSO}" ""
+   "-c rr -u ${myuid}:${mygid} ${RTPP_DSO}" ""
   do
     for sig in TERM HUP
     do

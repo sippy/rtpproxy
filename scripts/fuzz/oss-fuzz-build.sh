@@ -22,8 +22,8 @@ else
 fi
 
 ./configure --enable-librtpproxy
-for dir in libexecinfo libucl libelperiodic libxxHash modules/acct_rtcp_hep \
-  modules/acct_csv modules/catch_dtmf modules/dtls_gw
+for dir in libexecinfo libucl libre libelperiodic libxxHash modules/acct_rtcp_hep \
+  modules/acct_csv modules/catch_dtmf modules/dtls_gw modules/ice_lite
 do
   make -C ${dir} all
 done

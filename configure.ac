@@ -455,7 +455,7 @@ AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
  modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile
  modules/catch_dtmf/Makefile modules/badmod/Makefile libxxHash/Makefile
- modules/dtls_gw/Makefile
+ libre/Makefile modules/dtls_gw/Makefile modules/ice_lite/Makefile
  pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile
  python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile])
 

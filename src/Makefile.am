@@ -182,7 +182,8 @@ librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
   $(XXH_DIR)/libxxHash.la $(MOD_DIR)/catch_dtmf/librtpp_catch_dtmf.la \
   $(MOD_DIR)/acct_csv/librtpp_acct_csv.la \
   $(MOD_DIR)/acct_rtcp_hep/librtpp_acct_rtcp_hep.la \
-  $(MOD_DIR)/dtls_gw/librtpp_dtls_gw.la
+  $(MOD_DIR)/dtls_gw/librtpp_dtls_gw.la \
+  $(MOD_DIR)/ice_lite/librtpp_ice_lite.la
 librtpproxy_la_LDFLAGS = -static
 if BUILD_ELPERIODIC
 librtpproxy_la_LIBADD += @LIBS_ELPERIODIC@

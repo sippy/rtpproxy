@@ -10,4 +10,4 @@ TS_LOGFILE="startstop.rlog"
 . "${BASEDIR}/startstop/startstop.sub"
 
 test_startstop "startstop.rout" "${RTPPROXY_DBG}" "libucl/libucl_test.conf" \
- "../modules/catch_dtmf/.libs/rtpp_catch_dtmf_debug.so" "startstop.output"
+ "catch_dtmf_debug dtls_gw_debug ice_lite_debug" "startstop.output"

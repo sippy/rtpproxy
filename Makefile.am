@@ -17,8 +17,11 @@ endif
 if BUILD_DOCS
 SUBD_DOCS=	doc
 endif
+if BUILD_CRYPTO
+SUB_LIBRE=	libre
+endif
 
-SUBDIRS=	libexecinfo libucl libxxHash makeann $(SUBD_MOD) \
+SUBDIRS=	libexecinfo libucl libxxHash $(SUB_LIBRE) makeann $(SUBD_MOD) \
   $(SUBD_ELP) src $(SUBD_UDCNT) tests \
   $(SUBD_EAUD) ${SUBD_DOCS}
 

@@ -33,12 +33,14 @@ extern struct rtpp_minfo rtpp_module_acct_csv;
 extern struct rtpp_minfo rtpp_module_acct_rtcp_hep;
 extern struct rtpp_minfo rtpp_module_catch_dtmf;
 extern struct rtpp_minfo rtpp_module_dtls_gw;
+extern struct rtpp_minfo rtpp_module_ice_lite;
 
 const struct rtpp_modules rtpp_modules = {
     .acct_csv = &rtpp_module_acct_csv,
     .acct_rtcp_hep = &rtpp_module_acct_rtcp_hep,
     .catch_dtmf = &rtpp_module_catch_dtmf,
     .dtls_gw = &rtpp_module_dtls_gw,
+    .ice_lite = &rtpp_module_ice_lite,
 };
 
 struct rtpp_minfo *
