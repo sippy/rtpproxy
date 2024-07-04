@@ -913,6 +913,7 @@ rtpp_main(int argc, char **argv)
         err(1, "can't initialize logging subsystem");
         /* NOTREACHED */
     }
+    CALL_METHOD(cfs.glog, setlevel, RTPP_LOG_ERR);
  #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setlog(MEMDEB_SYM, cfs.glog);
     rtpp_memdeb_approve(MEMDEB_SYM, "_rtpp_log_open", 1, "Referenced by memdeb itself");
