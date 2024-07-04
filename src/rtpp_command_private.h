@@ -70,7 +70,7 @@ struct common_cmd_args {
     } opts;
 };
 
-#define MAX_SUBC_NUM 4
+#define MAX_SUBC_NUM 8
 
 struct after_success_h_args;
 struct rtpp_subc_ctx;
