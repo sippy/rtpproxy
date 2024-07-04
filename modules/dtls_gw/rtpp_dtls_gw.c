@@ -332,14 +332,14 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
     switch (rdg_cmd) {
     case RDG_CMD_A:
     case RDG_CMD_P:
-        rtpp_str_dup2(&argv[1], &rdfs.algorithm);
-        if (rdfs.algorithm.len > sizeof(rdfs.alg_buf))
+        if (argv[1].len > sizeof(rdfs.alg_buf))
             goto invalalg;
-        for (int i = 0; i < rdfs.algorithm.len; i++) {
-            rdfs.alg_buf[i] = rdfs.algorithm.s[i];
+        for (int i = 0; i < argv[1].len; i++) {
+            rdfs.alg_buf[i] = argv[1].s[i];
             if (rdfs.alg_buf[i] >= 'a')
                 rdfs.alg_buf[i] -= ('a' - 'A');
         }
+        rdfs.algorithm.len = argv[1].len;
         rdfs.algorithm.s = rdfs.alg_buf;
         rdfs.fingerprint = &argv[2];
         rdfs.ssrc = (argc == 4) ? &argv[3] : NULL;
