@@ -146,6 +146,8 @@ static struct rtpp_socket *rtpp_stream_update_skt(struct rtpp_stream *,
   struct rtpp_socket *);
 static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
   struct rtp_packet *);
+static int rtpp_stream_send_pkt_to(struct rtpp_stream *, struct sthread_args *,
+  struct rtp_packet *, struct rtpp_netaddr *);
 static struct rtp_packet *_rtpp_stream_recv_pkt(struct rtpp_stream_priv *,
   const struct rtpp_timestamp *);
 static int rtpp_stream_issendable(struct rtpp_stream *);
@@ -171,6 +173,7 @@ DEFINE_SMETHODS(rtpp_stream,
     .get_skt = &rtpp_stream_get_skt,
     .update_skt = &rtpp_stream_update_skt,
     .send_pkt = &rtpp_stream_send_pkt,
+    .send_pkt_to = &rtpp_stream_send_pkt_to,
     .guess_addr = &rtpp_stream_guess_addr,
     .issendable = &rtpp_stream_issendable,
     .locklatch = &rtpp_stream_locklatch,
@@ -937,6 +940,21 @@ rtpp_stream_send_pkt(struct rtpp_stream *self, struct sthread_args *sap,
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     rval = CALL_METHOD(pvt->fd, send_pkt_na, sap, pvt->rem_addr, pkt,
+      self->log);
+    pthread_mutex_unlock(&pvt->lock);
+    return (rval);
+}
+
+static int
+rtpp_stream_send_pkt_to(struct rtpp_stream *self, struct sthread_args *sap,
+  struct rtp_packet *pkt, struct rtpp_netaddr *rem_addr)
+{
+    struct rtpp_stream_priv *pvt;
+    int rval;
+
+    PUB2PVT(self, pvt);
+    pthread_mutex_lock(&pvt->lock);
+    rval = CALL_METHOD(pvt->fd, send_pkt_na, sap, rem_addr, pkt,
       self->log);
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
