@@ -69,3 +69,9 @@ done
 report_rc ${RTPP_STOP_RC_O} "wait for rtpproxy GenO shutdown"
 report_rc ${RTPP_STOP_RC_A} "wait for rtpproxy GenA shutdown"
 report_rc ${RTPP_STOP_RC_F} "wait for rtpproxy Fwd shutdown"
+
+for i in o f a
+do
+  ${DIFF} "dtls_gw/dtls_gw.output" dtls_gw.${i}.rout
+  report "dtls_gw.${i}.rout"
+done
