@@ -56,6 +56,7 @@
 #include "rtp.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
+#include "rtpp_packetops.h"
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
@@ -107,7 +108,6 @@ static void rtpp_dtls_gw_dtor(struct rtpp_module_priv *);
 static void rtpp_dtls_gw_worker(const struct rtpp_wthrdata *);
 static int rtpp_dtls_gw_handle_command(struct rtpp_module_priv *,
   const struct rtpp_subc_ctx *);
-static bool is_dtls_packet(const struct rtp_packet *);
 static int rtpp_dtls_gw_taste_encrypted(struct pkt_proc_ctx *);
 static int rtpp_dtls_gw_taste_plain(struct pkt_proc_ctx *);
 static enum pproc_action rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *);
@@ -468,7 +468,7 @@ rtpp_dtls_gw_taste_encrypted(struct pkt_proc_ctx *pktxp)
     static __thread struct rtpp_dtls_gw_aux strp_in = {.direction = SRTP_IN};
     struct rtpp_dtls_gw_aux *rdgap;
 
-    if (!is_dtls_packet(pktxp->pktp))
+    if (!rtpp_is_dtls_tst(pktxp))
         rdgap = &strp_in;
     else
         rdgap = &dtls_in;
@@ -549,17 +549,4 @@ rtpp_dtls_gw_dtor(struct rtpp_module_priv *pvt)
     RTPP_OBJ_DECREF(pvt->dtls_ctx);
     mod_free(pvt);
     return;
-}
-
-static bool
-is_dtls_packet(const struct rtp_packet *pktp)
-{
-    uint8_t b;
-
-    if (pktp->size < 13)
-        return false;
-
-    b = pktp->data.buf[0];
-
-    return (19 < b && b < 64);
 }

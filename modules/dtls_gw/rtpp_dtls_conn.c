@@ -52,6 +52,7 @@
 #include "rtp.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
+#include "rtpp_packetops.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_pthread.h"
 #include "rtpp_ssrc.h"
@@ -449,6 +450,14 @@ out:
     pthread_mutex_unlock(&pvt->state_lock);
 }
 
+#if SRTP_PROTECT_NARGS == 4
+#define SRTP_PROTECT(a, b, c) srtp_protect(a, b, c, 0);
+#define SRTCP_PROTECT(a, b, c) srtp_protect_rtcp(a, b, c, 0);
+#else
+#define SRTP_PROTECT(a, b, c) srtp_protect(a, b, c);
+#define SRTCP_PROTECT(a, b, c) srtp_protect_rtcp(a, b, c);
+#endif
+
 static int
 rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
 {
@@ -467,11 +476,11 @@ rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
     }
 
     len = pktxp->pktp->size;
-#if SRTP_PROTECT_NARGS == 4
-    status = srtp_protect(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len, 0);
-#else
-    status = srtp_protect(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len);
-#endif
+    if (rtpp_is_rtcp_tst(pktxp)) {
+        status = SRTCP_PROTECT(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len);
+    } else {
+        status = SRTP_PROTECT(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len);
+    }
     if (status){
        return (-1);
     }
@@ -499,8 +508,12 @@ rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp
     }
 
     len = pktxp->pktp->size;
-    status = srtp_unprotect(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len);
-    if (status){
+    if (rtpp_is_rtcp_tst(pktxp)) {
+        status = srtp_unprotect_rtcp(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len);
+    } else {
+        status = srtp_unprotect(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len);
+    }
+    if (status) {
        return (-1);
     }
     pktxp->pktp->size = len;
@@ -512,7 +525,6 @@ rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp
 static int
 bio_write(BIO *b, const char *buf, int len)
 {
-    struct sthread_args *sender;
     struct rtpp_dtls_conn_priv *pvt = BIO_get_data(b);
     struct rtp_packet *packet;
 
