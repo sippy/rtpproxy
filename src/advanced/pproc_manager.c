@@ -26,6 +26,7 @@
  */
 
 #include <pthread.h>
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -201,12 +202,18 @@ rtpp_pproc_mgr_handleat(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp,
     struct pproc_manager_pvt *pvt;
     enum pproc_action res = PPROC_ACT_NOP;
     const struct pproc_handlers *handlers;
+    static __thread int max_recursion = 16;
 
     PUB2PVT(pub, pvt);
     pthread_mutex_lock(&pvt->lock);
     handlers = pvt->handlers;
     RTPP_OBJ_INCREF(handlers);
     pthread_mutex_unlock(&pvt->lock);
+
+    RTPP_DBGCODE() {
+        max_recursion--;
+        assert(max_recursion > 0);
+    }
 
     for (i = 0; i < handlers->nprocs; i++) {
         const struct packet_processor_if *ip = &handlers->pproc[i].ppif;
@@ -234,6 +241,9 @@ rtpp_pproc_mgr_handleat(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp,
             else
                 CALL_SMETHOD(pvt->rtpp_stats, updatebyidx, pvt->npkts_discard_idx, 1);
         }
+    }
+    RTPP_DBGCODE() {
+        max_recursion++;
     }
     return (res);
 }
