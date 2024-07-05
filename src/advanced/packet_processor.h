@@ -40,14 +40,16 @@ enum pproc_order {
     _PPROC_ORD_EMPTY  = 0,
     PPROC_ORD_RECV    = 1,
     PPROC_ORD_DECRYPT = 2,
-    PPROC_ORD_ANALYZE = 3,
-    PPROC_ORD_RESIZE  = 4,
-    PPROC_ORD_DECODE  = 5,
-    PPROC_ORD_PLAY    = 6,
-    PPROC_ORD_WITNESS = 7,
-    PPROC_ORD_ENCODE  = 8,
-    PPROC_ORD_ENCRYPT = 9,
-    PPROC_ORD_RELAY   = 10
+    PPROC_ORD_CT_RECV = 3,
+    PPROC_ORD_ANALYZE = 4,
+    PPROC_ORD_RESIZE  = 5,
+    PPROC_ORD_DECODE  = 6,
+    PPROC_ORD_PLAY    = 7,
+    PPROC_ORD_WITNESS = 8,
+    PPROC_ORD_ENCODE  = 9,
+    PPROC_ORD_CT_SEND = 10,
+    PPROC_ORD_ENCRYPT = 11,
+    PPROC_ORD_RELAY   = 12,
 };
 
 DEFINE_RAW_METHOD(pproc_taste, int, struct pkt_proc_ctx *);
