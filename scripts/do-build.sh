@@ -62,7 +62,7 @@ cd libg722
 make
 ${SUDO} make install
 cd ..
-git clone https://github.com/cisco/libsrtp.git
+git clone -b 2_x_dev https://github.com/cisco/libsrtp.git
 cd libsrtp
 ./configure
 make
