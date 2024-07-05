@@ -128,7 +128,6 @@ const struct srtp_crypto_suite srtp_suites [] = {
 struct rtpp_dtls_conn_priv {
     struct rtpp_dtls_conn pub;
     struct rtpp_stream *dtls_strmp;
-    struct rtpp_anetio_cf *netio_cf;
     struct rtpp_timed *timed_cf;
     pthread_mutex_t state_lock;
     enum rdc_state state;
@@ -225,7 +224,6 @@ rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
     /* Cannot grab refcount here, circular reference would ensue */
     /* RTPP_OBJ_INCREF(dtls_strmp); */
     pvt->dtls_strmp = dtls_strmp;
-    pvt->netio_cf = cfsp->rtpp_proc_cf->netio;
     pvt->timed_cf = cfsp->rtpp_timed_cf;
     pvt->pub.dtls_recv = rtpp_dtls_conn_dtls_recv;
     pvt->pub.rtp_send = rtpp_dtls_conn_rtp_send;
@@ -525,8 +523,7 @@ bio_write(BIO *b, const char *buf, int len)
         return (-1);
     memcpy(packet->data.buf, buf, len);
     packet->size = len;
-    sender = rtpp_anetio_pick_sender(pvt->netio_cf);
-    CALL_SMETHOD(pvt->dtls_strmp, send_pkt, sender, packet);
+    CALL_SMETHOD(pvt->dtls_strmp, send_pkt, NULL, packet);
     return (len);
 }
 

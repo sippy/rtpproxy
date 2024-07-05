@@ -28,7 +28,6 @@ struct rtpp_refcnt;
 struct rtpp_stream;
 struct rtpp_dtls_conn;
 struct rtp_packet;
-struct rtpp_anetio_cf;
 struct pkt_proc_ctx;
 
 enum rtpp_dtls_mode {
