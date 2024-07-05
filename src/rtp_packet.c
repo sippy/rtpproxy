@@ -25,6 +25,7 @@
  *
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -36,12 +37,15 @@
 #include "rtp_info.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
+#include "rtpp_packetops.h"
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 
 #include "rtpp_wi.h"
 #include "rtpp_wi_private.h"
+
+#include "advanced/pproc_manager.h"
 
 struct rtp_packet_full;
 
@@ -125,9 +129,72 @@ rtp_packet_parse(struct rtp_packet *pkt)
     assert(pkt->parsed == NULL);
     pkt_full = (void *)pkt;
     rinfo = &(pkt_full->pvt.rinfo);
+    if (rtp_packet_is_rtcp(pkt)) {
+        pkt->parse_result = RTP_PARSER_ISRTCP;
+        return (pkt->parse_result);
+    }
     pkt->parse_result = rtp_packet_parse_raw(pkt->data.buf, pkt->size, rinfo);
     if (pkt->parse_result == RTP_PARSER_OK) {
         pkt->parsed = rinfo;
     }
     return (pkt->parse_result);
+}
+
+int
+rtp_packet_is_rtcp(const struct rtp_packet *pkt)
+{
+    if (pkt->size < 2)
+        return false;
+
+    uint8_t version = (pkt->data.buf[0] >> 6) & 0b11;
+    uint8_t packet_type = pkt->data.buf[1];
+
+    // Version should be 2 and RTCP packet types are in the range 200-204
+    if (version == 2 && packet_type >= 200 && packet_type <= 204)
+        return true;
+    return false;
+}
+
+int
+rtpp_is_rtcp_tst(struct pkt_proc_ctx *pktx)
+{
+    return rtp_packet_is_rtcp(pktx->pktp);
+}
+
+#define STUN_MAGIC 0x2112A442
+
+int
+rtp_packet_is_stun(const struct rtp_packet *pkt)
+{
+    if (pkt->size < 20)
+        return (false);
+
+    if (ntohl(*(uint32_t *)(pkt->data.buf + 4)) != STUN_MAGIC)
+        return (false);
+    return (true);
+}
+
+int
+rtpp_is_stun_tst(struct pkt_proc_ctx *pktx)
+{
+    return rtp_packet_is_stun(pktx->pktp);
+}
+
+int
+rtp_packet_is_dtls(const struct rtp_packet *pkt)
+{
+    uint8_t b;
+
+    if (pkt->size < 13)
+        return false;
+
+    b = pkt->data.buf[0];
+
+    return (19 < b && b < 64);
+}
+
+int
+rtpp_is_dtls_tst(struct pkt_proc_ctx *pktx)
+{
+    return rtp_packet_is_dtls(pktx->pktp);
 }

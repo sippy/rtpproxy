@@ -121,7 +121,8 @@ typedef enum {
     RTP_PARSER_PTOOSHRTXH = -4,
     RTP_PARSER_PTOOSHRTPS = -5,
     RTP_PARSER_PTOOSHRTP = -6,
-    RTP_PARSER_IPS = -7
+    RTP_PARSER_IPS = -7,
+    RTP_PARSER_ISRTCP = -8,
 } rtp_parser_err_t;
 
 struct rtp_packet;
