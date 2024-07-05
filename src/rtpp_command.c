@@ -119,7 +119,8 @@ create_twinlistener(unsigned int port, void *ap)
 
     rval = RTPP_PTU_BRKERR;
     for (i = 0; i < 2; i++) {
-	ctap->fds[i] = rtpp_socket_ctor(ctap->ia->sa_family, SOCK_DGRAM);
+	ctap->fds[i] = rtpp_socket_ctor(ctap->cfs->rtpp_proc_cf->netio,
+	  ctap->ia->sa_family, SOCK_DGRAM);
 	if (ctap->fds[i] == NULL) {
 	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't create %s socket",
 	      SA_AF2STR(ctap->ia));

@@ -54,6 +54,7 @@
 
 struct rtpp_socket_priv {
     struct rtpp_socket pub;
+    struct rtpp_anetio_cf *netio;
     int fd;
     int type;
     uint64_t stuid;
@@ -84,7 +85,7 @@ static struct rtp_packet *rtpp_socket_rtp_recv_mono(struct rtpp_socket *,
 #endif
 
 struct rtpp_socket *
-rtpp_socket_ctor(int domain, int type)
+rtpp_socket_ctor(struct rtpp_anetio_cf *netio, int domain, int type)
 {
     struct rtpp_socket_priv *pvt;
 
@@ -93,6 +94,7 @@ rtpp_socket_ctor(int domain, int type)
         goto e0;
     }
     pvt->fd = socket(domain, type, 0);
+    pvt->netio = netio;
     if (pvt->fd < 0) {
         goto e1;
     }
@@ -221,6 +223,8 @@ rtpp_socket_send_pkt_na(struct rtpp_socket *self, struct sthread_args *str,
     struct rtpp_socket_priv *pvt;
 
     PUB2PVT(self, pvt);
+    if (str == NULL)
+        str = rtpp_anetio_pick_sender(pvt->netio);
     return (rtpp_anetio_send_pkt_na(str, pvt->fd, daddr, pkt,
       self->rcnt, log));
 }

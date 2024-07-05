@@ -33,6 +33,7 @@ struct sthread_args;
 struct rtpp_log;
 struct rtpp_netaddr;
 struct rtpp_timestamp;
+struct rtpp_anetio_cf;
 
 DEFINE_METHOD(rtpp_socket, rtpp_socket_bind, int, const struct sockaddr *,
   int);
@@ -75,4 +76,4 @@ struct rtpp_socket {
     METHOD_ENTRY(rtpp_socket_get_stuid, get_stuid);
 };
 
-struct rtpp_socket *rtpp_socket_ctor(int, int);
+struct rtpp_socket *rtpp_socket_ctor(struct rtpp_anetio_cf *, int, int);
