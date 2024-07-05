@@ -248,21 +248,6 @@ jobs:
         with:
           submodules: 'recursive'
 
-#      - name: Sanitize list of Ubuntu mirrors
-#        run: scripts/ft-apt-spy2-check-and-fix.sh
-
-      - name: Get Date
-        id: get-date
-        run: |
-          echo "date=$(/bin/date -u "+%Y%m")" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Cache ffmpeg
-        uses: actions/cache@v4
-        with:
-          path: dist/ffmpeg.tar.xz
-          key: ${{ steps.get-date.outputs.date }}
-
       - name: Workaround for tar not being able to access /var/cache/apt/archives
         run: |
           sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
@@ -339,21 +324,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-
-#      - name: Sanitize list of Ubuntu mirrors
-#        run: scripts/ft-apt-spy2-check-and-fix.sh
-
-      - name: Get Date
-        id: get-date
-        run: |
-          echo "date=$(/bin/date -u "+%Y%m")" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Cache ffmpeg
-        uses: actions/cache@v4
-        with:
-          path: dist/ffmpeg.tar.xz
-          key: ${{ steps.get-date.outputs.date }}
 
       - name: Workaround for tar not being able to access /var/cache/apt/archives
         run: |

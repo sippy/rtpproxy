@@ -43,7 +43,8 @@ then
   exec make ${ALLCLEAN_TGT}
 fi
 
-${APT_GET} install -y libgsm1-dev libpcap-dev cmake libunwind-dev tcpdump curl gdb tcpreplay
+${APT_GET} install -y libgsm1-dev libpcap-dev cmake libunwind-dev tcpdump curl \
+ gdb tcpreplay ffmpeg
 mkdir deps
 cd deps
 wget -O bcg729-${BCG729_VER}.tar.gz \
@@ -130,13 +131,3 @@ make -C dist/udpreplay/build all
 ${SUDO} make -C dist/udpreplay/build install
 
 tcpdump --version || true
-#launchpad fails#${APT_GET} install -y --reinstall ca-certificates
-#launchpad fails#sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
-#launchpad fails#${APT_GET} update
-#launchpad fails#${APT_GET} install -y ffmpeg
-if [ ! -e dist/ffmpeg.tar.xz ]
-then
-  wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-fi
-${TAR_CMD} -C dist -xvf dist/ffmpeg.tar.xz
-${SUDO} cp dist/ffmpeg-*-*-static/ffmpeg /usr/bin
