@@ -46,6 +46,12 @@ struct rtpp_cfg;
 
 enum rtpp_stream_side { RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0 };
 
+enum rtpps_latch_mode {
+    RTPLM_NORMAL = 0,
+    RTPLM_FORCE_OFF,
+    RTPLM_FORCE_ON
+};
+
 struct r_stream_ctor_args {
     struct rtpp_log *log;
     struct rtpp_proc_servers *proc_servers;
@@ -88,6 +94,8 @@ DECLARE_METHOD(rtpp_stream, rtpp_stream_rx, struct rtp_packet *,
 DECLARE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
   int);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_latch, int, struct rtp_packet *);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_setmode, void, enum rtpps_latch_mode);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_getmode, enum rtpps_latch_mode);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_get_sender, struct rtpp_stream *,
   const struct rtpp_cfg *cfsp);
 
@@ -112,6 +120,8 @@ DECLARE_SMETHODS(rtpp_stream) {
     METHOD_ENTRY(rtpp_stream_rx, rx);
     METHOD_ENTRY(rtpp_stream_get_rem_addr, get_rem_addr);
     METHOD_ENTRY(rtpp_stream_latch, latch);
+    METHOD_ENTRY(rtpp_stream_latch_setmode, latch_setmode);
+    METHOD_ENTRY(rtpp_stream_latch_getmode, latch_getmode);
     METHOD_ENTRY(rtpp_stream_get_sender, get_sender);
 };
 
