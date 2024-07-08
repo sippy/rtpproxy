@@ -18,14 +18,14 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  check_disabled_actions:
-    name: Check
-    uses: ./.github/workflows/_check_disabled_actions.yml
+  LoadJobs_conf:
+    name: Load Jobs Settings
+    uses: ./.github/workflows/.jobs_configure.yml
 
   MinBuild:
     name: Lean Build
-    needs: check_disabled_actions
-    if: needs.check_disabled_actions.outputs.do_MinBuild == 'true'
+    needs: LoadJobs_conf
+    if: needs.LoadJobs_conf.outputs.do_MinBuild == 'true'
     # The type of runner that the job will run on
     runs-on: ubuntu-${{ matrix.os }}
     env:
@@ -116,8 +116,8 @@ jobs:
 
   FullBuild:
     name: Full Build
-    needs: [check_disabled_actions, MinBuild]
-    if: needs.check_disabled_actions.outputs.do_FullBuild == 'true'
+    needs: [LoadJobs_conf, MinBuild]
+    if: needs.LoadJobs_conf.outputs.do_FullBuild == 'true'
     # The type of runner that the job will run on
     runs-on: ubuntu-${{ matrix.os }}
     env:
@@ -208,8 +208,8 @@ jobs:
 
   FuncTest:
     name: Functional Testing    
-    needs: [check_disabled_actions, FullBuild]
-    if: needs.check_disabled_actions.outputs.do_FuncTest == 'true'
+    needs: [LoadJobs_conf, FullBuild]
+    if: needs.LoadJobs_conf.outputs.do_FuncTest == 'true'
     # The type of runner that the job will run on
     runs-on: ubuntu-${{ matrix.os }}
     env:
@@ -285,8 +285,8 @@ jobs:
 
   Glitching:
     name: Glitch Injection
-    needs: [check_disabled_actions, FuncTest]
-    if: needs.check_disabled_actions.outputs.do_Glitch == 'true'
+    needs: [LoadJobs_conf, FuncTest]
+    if: needs.LoadJobs_conf.outputs.do_Glitch == 'true'
     # The type of runner that the job will run on
     runs-on: ubuntu-${{ matrix.os }}
     env:
@@ -362,8 +362,8 @@ jobs:
 
   Fuzzing:
     name: Fuzz with OSS-Fuzz
-    needs: [check_disabled_actions, Glitching]
-    if: needs.check_disabled_actions.outputs.do_Fuzzing == 'true'
+    needs: [LoadJobs_conf, Glitching]
+    if: needs.LoadJobs_conf.outputs.do_Fuzzing == 'true'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -393,8 +393,8 @@ jobs:
 
   Docker:
     name: Build&Push to DockerHub
-    needs: [check_disabled_actions, Fuzzing]
-    if: needs.check_disabled_actions.outputs.do_Docker == 'true' &&
+    needs: [LoadJobs_conf, Fuzzing]
+    if: needs.LoadJobs_conf.outputs.do_Docker == 'true' &&
         (github.event_name == 'push' || github.event_name == 'pull_request')
     runs-on: ubuntu-latest
     env:
