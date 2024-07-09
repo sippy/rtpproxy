@@ -28,17 +28,13 @@ and session recording to a local file or remote UDP listener(s). As well
 as makes available array of real-time or near real-time session counters,
 both per-session and per-instance.
 
-The RTPproxy has been designed by Maxim Sobolev and now is being actively
-maintained by the [Sippy Software, Inc](http://www.sippysoft.com). With the
-great help of numerous community contributors, both private and institutional.
-Not to mention army of robots gracefully dispatched at need by CI.
+Since version 3.1.0, full set of extensions is available allowing to create
+a WebRTC-compatible endpoints.
 
-The original idea has inspired and directly influenced multitude of independent
-implementations, including but not limited to the
-[Mediaproxy](https://mediaproxy.com),
-[erlrtpproxy](https://github.com/lemenkov/erlrtpproxy), and most recently
-[RTP Engine](https://github.com/sipwise/rtpengine), each project focusing on
-its own area of the vast functionality space.
+## News
+
+- introducing WebRTC/WSS clients support via 3 new modules: dtls_gw, ice_lite
+  and rtcp_demux.
 
 ## How it works
 
@@ -84,6 +80,20 @@ $ cd rtpproxy
 $ ./configure
 $ make
 ```
+
+## Authors and Contributors
+
+The RTPproxy has been designed by Maxim Sobolev and now is being actively
+maintained by the [Sippy Software, Inc](http://www.sippysoft.com). With the
+great help of numerous community contributors, both private and institutional.
+Not to mention army of robots gracefully dispatched at need by CI.
+
+The original idea has inspired and directly influenced multitude of independent
+implementations, including but not limited to the
+[Mediaproxy](https://mediaproxy.com),
+[erlrtpproxy](https://github.com/lemenkov/erlrtpproxy), and most recently
+[RTP Engine](https://github.com/sipwise/rtpengine), each project focusing on
+its own area of the vast functionality space.
 
 ## Documentation and References
 
