@@ -59,6 +59,14 @@ static void rtpp_stream_latch_fin(void *pub) {
     fprintf(stderr, "Method rtpp_stream@%p::latch (rtpp_stream_latch) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_stream_latch_getmode_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_stream@%p::latch_getmode (rtpp_stream_latch_getmode) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void rtpp_stream_latch_setmode_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_stream@%p::latch_setmode (rtpp_stream_latch_setmode) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_stream_locklatch_fin(void *pub) {
     fprintf(stderr, "Method rtpp_stream@%p::locklatch (rtpp_stream_locklatch) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -105,6 +113,8 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods_fin = {
     .isplayer_active = (rtpp_stream_isplayer_active_t)&rtpp_stream_isplayer_active_fin,
     .issendable = (rtpp_stream_issendable_t)&rtpp_stream_issendable_fin,
     .latch = (rtpp_stream_latch_t)&rtpp_stream_latch_fin,
+    .latch_getmode = (rtpp_stream_latch_getmode_t)&rtpp_stream_latch_getmode_fin,
+    .latch_setmode = (rtpp_stream_latch_setmode_t)&rtpp_stream_latch_setmode_fin,
     .locklatch = (rtpp_stream_locklatch_t)&rtpp_stream_locklatch_fin,
     .prefill_addr = (rtpp_stream_prefill_addr_t)&rtpp_stream_prefill_addr_fin,
     .reg_onhold = (rtpp_stream_reg_onhold_t)&rtpp_stream_reg_onhold_fin,
@@ -128,6 +138,8 @@ void rtpp_stream_fin(struct rtpp_stream *pub) {
     RTPP_DBG_ASSERT(pub->smethods->isplayer_active != (rtpp_stream_isplayer_active_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->issendable != (rtpp_stream_issendable_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->latch != (rtpp_stream_latch_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->latch_getmode != (rtpp_stream_latch_getmode_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->latch_setmode != (rtpp_stream_latch_setmode_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->locklatch != (rtpp_stream_locklatch_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->prefill_addr != (rtpp_stream_prefill_addr_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->reg_onhold != (rtpp_stream_reg_onhold_t)NULL);
@@ -175,6 +187,8 @@ rtpp_stream_fintest()
         .isplayer_active = (rtpp_stream_isplayer_active_t)((void *)0x1),
         .issendable = (rtpp_stream_issendable_t)((void *)0x1),
         .latch = (rtpp_stream_latch_t)((void *)0x1),
+        .latch_getmode = (rtpp_stream_latch_getmode_t)((void *)0x1),
+        .latch_setmode = (rtpp_stream_latch_setmode_t)((void *)0x1),
         .locklatch = (rtpp_stream_locklatch_t)((void *)0x1),
         .prefill_addr = (rtpp_stream_prefill_addr_t)((void *)0x1),
         .reg_onhold = (rtpp_stream_reg_onhold_t)((void *)0x1),
@@ -201,6 +215,8 @@ rtpp_stream_fintest()
     CALL_TFIN(&tp->pub, isplayer_active);
     CALL_TFIN(&tp->pub, issendable);
     CALL_TFIN(&tp->pub, latch);
+    CALL_TFIN(&tp->pub, latch_getmode);
+    CALL_TFIN(&tp->pub, latch_setmode);
     CALL_TFIN(&tp->pub, locklatch);
     CALL_TFIN(&tp->pub, prefill_addr);
     CALL_TFIN(&tp->pub, reg_onhold);
@@ -209,7 +225,7 @@ rtpp_stream_fintest()
     CALL_TFIN(&tp->pub, send_pkt_to);
     CALL_TFIN(&tp->pub, set_skt);
     CALL_TFIN(&tp->pub, update_skt);
-    assert((_naborts - naborts_s) == 21);
+    assert((_naborts - naborts_s) == 23);
     free(tp);
 }
 const static void *_rtpp_stream_ftp = (void *)&rtpp_stream_fintest;
