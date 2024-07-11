@@ -1,11 +1,6 @@
 # Official images of the RTPproxy Project
 
-[![Clean Build@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/cleanbuild.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/cleanbuild.yml?query=branch%3Amaster++)
-[![All-inclusive Build@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/depsbuild.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/depsbuild.yml?query=branch%3Amaster++)
-[![Functional Testing@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/functesting.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/functesting.yml?query=branch%3Amaster++)
-[![Glitching@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/glitching.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/glitching.yml?query=branch%3Amaster++)
-[![OSSFuzz@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/cifuzz.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/cifuzz.yml?query=branch%3Amaster++)
-[![Docker Image Build@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/dockerhub.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/dockerhub.yml?query=branch%3Amaster++)
+[![RTPProxy CI](https://github.com/sippy/rtpproxy/actions/workflows/rtpproxy_ci.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/rtpproxy_ci.yml?query=branch%3Amaster++)
 [![Coverage Status](https://coveralls.io/repos/github/sippy/rtpproxy/badge.svg?branch=master)](https://coveralls.io/github/sippy/rtpproxy?branch=master)
 [![Coverity](https://scan.coverity.com/projects/8841/badge.svg)](https://scan.coverity.com/projects/sippy-rtpproxy)
 
