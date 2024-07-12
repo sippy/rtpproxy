@@ -52,6 +52,7 @@ int rtpp_daemon_rel_parent(const struct rtpp_daemon_rope *);
 struct rtpp_daemon_rope rtpp_daemon(int, int);
 int url_unquote(unsigned char *, int);
 int url_unquote2(const char *, char *, int);
+int url_quote(const char *, char *, int, int);
 int rtpp_get_sched_hz(void);
 long long rtpp_rlim_max(const struct rtpp_cfg *);
 #ifndef HAVE_STRLCPY
@@ -62,6 +63,7 @@ enum atoi_rval atoi_safe_sep(const char *, int *, char, const char **);
 enum atoi_rval atoi_safe(const char *, int *);
 enum atoi_rval atoi_saferange(const char *, int *, int, int);
 void rtpp_strsplit(char *, char *, size_t, size_t);
+void generate_random_string(char *, int);
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)
