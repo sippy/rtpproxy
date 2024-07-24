@@ -393,7 +393,8 @@ jobs:
 
   Docker:
     name: Build&Push to DockerHub
-    needs: [LoadJobs_conf, Fuzzing]
+    #needs: [LoadJobs_conf, Fuzzing]
+    needs: [LoadJobs_conf]
     if: needs.LoadJobs_conf.outputs.do_Docker == 'true' &&
         (github.event_name == 'push' || github.event_name == 'pull_request')
     runs-on: ubuntu-latest
