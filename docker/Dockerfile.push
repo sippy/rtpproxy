@@ -1,25 +1,19 @@
+# syntax=docker/dockerfile:1.7-labs
+
 ARG BASE_IMAGE
-FROM --platform=$TARGETPLATFORM $BASE_IMAGE as build
+ARG BUILD_IMAGE
+FROM $BUILD_IMAGE AS build
+RUN rm -rf /rtpproxy && rm -rf /var/cache/*
+FROM $BASE_IMAGE
 LABEL maintainer="Maksym Sobolyev <sobomax@sippysoft.com>"
 
 USER root
 
 # Set Environment Variables
-ENV DEBIAN_FRONTEND noninteractive
-
-WORKDIR /rtpproxy
-COPY . /rtpproxy/
-
-#install basic components
-RUN /rtpproxy/docker/build.sh
-RUN ls -l /usr/local/bin/rtpproxy*
-RUN ls -l /usr/local/bin/makeann*
-RUN ls -l /usr/local/lib/*rtpproxy*
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /
-RUN rm -rf /rtpproxy && rm -rf /var/cache/*
 
-FROM --platform=$TARGETPLATFORM $BASE_IMAGE
 COPY --from=build / /
 
 ENTRYPOINT ["/usr/local/bin/rtpproxy", "-fF"]
