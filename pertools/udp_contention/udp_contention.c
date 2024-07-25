@@ -17,6 +17,12 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "config.h"
+
+#if HAVE_ERR_H
+# include <err.h>
+#endif
+
 #define UC_MAX_THREADS 64
 
 #if defined(__FreeBSD__)
