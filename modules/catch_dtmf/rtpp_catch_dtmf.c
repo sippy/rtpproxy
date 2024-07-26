@@ -100,7 +100,7 @@ static void rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *);
 static int rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *,
   const struct rtpp_subc_ctx *);
 static int rtp_packet_is_dtmf(struct pkt_proc_ctx *);
-static enum pproc_action rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *);
+static struct pproc_act rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *);
 
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
@@ -288,7 +288,7 @@ catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const rtpp_str_t *dtmf_ta
         goto e1;
     }
     atomic_init(&(rtps_c->pt), new_pt);
-    atomic_init(&(rtps_c->act), PPROC_ACT_TEE);
+    atomic_init(&(rtps_c->act), PPROC_ACT_TEE_v);
     rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp_in->side);
     if (!rtps_c->edata) {
         RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "cannot create edata (sp=%p)",
@@ -313,7 +313,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     struct catch_dtmf_stream_cfg *rtps_c;
     int len;
     int old_pt, new_pt = 101;
-    enum pproc_action old_act, new_act = PPROC_ACT_TEE;
+    enum pproc_action old_act, new_act = PPROC_ACT_TEE_v;
     rtpp_str_const_t dtmf_tag;
 
     if (ctxp->sessp->timeout_data == NULL) {
@@ -356,7 +356,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
                 switch (*opt) {
                 case 'h':
                 case 'H':
-                    new_act = PPROC_ACT_DROP;
+                    new_act = PPROC_ACT_DROP_v;
                     break;
 
                 default:
@@ -418,7 +418,7 @@ rtp_packet_is_dtmf(struct pkt_proc_ctx *pktx)
     return (1);
 }
 
-static enum pproc_action
+static struct pproc_act
 rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *pktx)
 {
     struct rtpp_wi *wi;
@@ -438,7 +438,7 @@ rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *pktx)
     RTPP_OBJ_INCREF(rtps_c->rtdp);
     wip->rtdp = rtps_c->rtdp;
     rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q);
-    return (atomic_load(&(rtps_c->act)));
+    return (PPROC_ACT(atomic_load(&(rtps_c->act))));
 }
 
 static struct rtpp_module_priv *

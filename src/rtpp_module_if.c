@@ -156,7 +156,7 @@ packet_is_rtcp(struct pkt_proc_ctx *pktx)
     return (1);
 }
 
-static enum pproc_action
+static struct pproc_act
 acct_rtcp_enqueue(const struct pkt_proc_ctx *pktx)
 {
     struct rtpp_module_if_priv *pvt;

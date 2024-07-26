@@ -77,6 +77,7 @@
 #include "rtpp_acct_pipe.h"
 #include "rtpp_cfg.h"
 #include "rtpp_proc_servers.h"
+#include "rtpp_codeptr.h"
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
 
@@ -191,7 +192,7 @@ DEFINE_SMETHODS(rtpp_stream,
     .get_sender = &rtpp_stream_get_sender,
 );
 
-static enum pproc_action
+static struct pproc_act
 analyze_rtp_packet(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_in = pktxp->strmp_in;
@@ -205,7 +206,7 @@ analyze_rtp_packet(const struct pkt_proc_ctx *pktxp)
     return (PPROC_ACT_NOP);
 }
 
-static enum pproc_action
+static struct pproc_act
 analyze_rtcp_packet(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_in = pktxp->strmp_in;
@@ -215,7 +216,7 @@ analyze_rtcp_packet(const struct pkt_proc_ctx *pktxp)
     return (PPROC_ACT_NOP);
 }
 
-static enum pproc_action
+static struct pproc_act
 resizer_injest(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_in = pktxp->strmp_in;
@@ -452,7 +453,7 @@ player_predestroy_cb(struct rtpp_stats *rtpp_stats)
     CALL_SMETHOD(rtpp_stats, updatebyname, "nplrs_destroyed", 1);
 }
 
-static enum pproc_action
+static struct pproc_act
 drop_packets(const struct pkt_proc_ctx *pktxp)
 {
 

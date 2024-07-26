@@ -28,13 +28,25 @@
 struct packet_processor_if;
 struct pkt_proc_ctx;
 struct rtpp_refcnt;
+struct rtpp_codeptr;
 
 enum pproc_action {
-    PPROC_ACT_NOP = 0,
-    PPROC_ACT_TEE = 1,
-    PPROC_ACT_TAKE = 2,
-    PPROC_ACT_DROP = 4
+    PPROC_ACT_NOP_v = 0,
+    PPROC_ACT_TEE_v = 1,
+    PPROC_ACT_TAKE_v = 2,
+    PPROC_ACT_DROP_v = 4
 };
+
+struct pproc_act {
+    enum pproc_action a;
+    const struct rtpp_codeptr *loc;
+};
+
+#define PPROC_ACT(a) ((struct pproc_act){(a), HEREVAL})
+#define PPROC_ACT_NOP PPROC_ACT(PPROC_ACT_NOP_v)
+#define PPROC_ACT_TEE PPROC_ACT(PPROC_ACT_TEE_v)
+#define PPROC_ACT_TAKE PPROC_ACT(PPROC_ACT_TAKE_v)
+#define PPROC_ACT_DROP PPROC_ACT(PPROC_ACT_DROP_v)
 
 enum pproc_order {
     _PPROC_ORD_EMPTY  = 0,
@@ -53,7 +65,7 @@ enum pproc_order {
 };
 
 DEFINE_RAW_METHOD(pproc_taste, int, struct pkt_proc_ctx *);
-DEFINE_RAW_METHOD(pproc_enqueue, enum pproc_action, const struct pkt_proc_ctx *);
+DEFINE_RAW_METHOD(pproc_enqueue, struct pproc_act, const struct pkt_proc_ctx *);
 
 struct packet_processor_if {
     const char *descr;

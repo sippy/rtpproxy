@@ -24,6 +24,8 @@
  *
  */
 
+#pragma once
+
 #define FP_DIGEST_ALG "SHA-256"
 #define FP_DIGEST_ALG_LEN (sizeof(FP_DIGEST_ALG) - 1)
 #define FP_DIGEST_LEN 32

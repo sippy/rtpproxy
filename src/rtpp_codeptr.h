@@ -35,6 +35,7 @@ struct rtpp_codeptr {
     const char *funcn;
 };
 
+typedef const struct rtpp_codeptr * here_t;
 #define HERETYPE const struct rtpp_codeptr *
 #define HEREVAL  ({static const struct rtpp_codeptr _here = {.fname = __FILE__, .linen = __LINE__, .funcn = __func__}; &_here;})
 #define HEREARG mlp

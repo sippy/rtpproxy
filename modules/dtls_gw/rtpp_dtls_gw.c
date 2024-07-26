@@ -110,7 +110,7 @@ static int rtpp_dtls_gw_handle_command(struct rtpp_module_priv *,
   const struct rtpp_subc_ctx *);
 static int rtpp_dtls_gw_taste_encrypted(struct pkt_proc_ctx *);
 static int rtpp_dtls_gw_taste_plain(struct pkt_proc_ctx *);
-static enum pproc_action rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *);
+static struct pproc_act rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *);
 
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
@@ -140,7 +140,7 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
 {
     struct rtpp_wi *wi;
     struct wipkt *wip;
-    int res;
+    struct res_loc res;
 
     for (;;) {
         wi = rtpp_queue_get_item(wp->mod_q, 0);
@@ -155,7 +155,7 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
             RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "Packet from DTLS");
 #endif
             CALL_METHOD(wip->edata.dtls_conn, dtls_recv, wip->pktx.pktp);
-            res = 1;
+            res = RES_HERE(1);
             break;
         case SRTP_IN:
 #if 0
@@ -172,7 +172,7 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
         default:
             abort();
         }
-        if (res != 0) {
+        if (res.v != 0) {
             switch (wip->edata.direction) {
             case DTLS_IN:
                 break;
@@ -180,7 +180,7 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
                 CALL_SMETHOD(wip->pktx.strmp_in->pcnt_strm, reg_pktin, wip->pktx.pktp);
                 /* Fallthrouth */
             case RTP_OUT:
-                CALL_SMETHOD(wip->pktx.strmp_in->pcount, reg_drop);
+                CALL_SMETHOD(wip->pktx.strmp_in->pcount, reg_drop, res.loc);
                 CALL_SMETHOD(wip->pktx.strmp_in->pproc_manager, reg_drop);
                 break;
             }
@@ -492,7 +492,7 @@ rtpp_dtls_gw_taste_plain(struct pkt_proc_ctx *pktxp)
     return (1);
 }
 
-static enum pproc_action
+static struct pproc_act
 rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_dtls_gw_aux *edata;

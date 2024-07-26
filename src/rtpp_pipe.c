@@ -201,6 +201,9 @@ rtpp_pipe_get_stats(struct rtpp_pipe *self, struct rtpp_acct_pipe *rapp)
       PP_NAME(pvt->pipe_type), rapp->o.ps->npkts_in,
       rapp->a.ps->npkts_in, rapp->pcnts->nrelayed, rapp->pcnts->ndropped,
       rapp->pcnts->nignored);
+    if (rapp->pcnts->ndropped > 0) {
+        CALL_SMETHOD(self->pcount, log_drops, self->log);
+    }
     if (pvt->pipe_type != PIPE_RTP) {
         return;
     }

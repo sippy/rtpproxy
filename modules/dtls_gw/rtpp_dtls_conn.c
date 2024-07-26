@@ -58,6 +58,7 @@
 #include "rtpp_ssrc.h"
 #include "rtpp_timed.h"
 #include "rtpp_timed_task.h"
+#include "rtpp_codeptr.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
@@ -156,9 +157,9 @@ enum {
 
 static void rtpp_dtls_conn_dtls_recv(struct rtpp_dtls_conn *,
   const struct rtp_packet *);
-static int rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *,
+static struct res_loc rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *,
   struct pkt_proc_ctx *);
-static int rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *,
+static struct res_loc rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *,
   struct pkt_proc_ctx *);
 static enum rtpp_dtls_mode rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *,
   const struct rdc_peer_spec *rdfsp);
@@ -451,17 +452,17 @@ out:
 }
 
 #if SRTP_PROTECT_NARGS == 4
-#define SRTP_PROTECT(a, b, c) srtp_protect(a, b, c, 0);
-#define SRTCP_PROTECT(a, b, c) srtp_protect_rtcp(a, b, c, 0);
+#define SRTP_PROTECT(a, b, c) srtp_protect(a, b, c, 0)
+#define SRTCP_PROTECT(a, b, c) srtp_protect_rtcp(a, b, c, 0)
 #else
-#define SRTP_PROTECT(a, b, c) srtp_protect(a, b, c);
-#define SRTCP_PROTECT(a, b, c) srtp_protect_rtcp(a, b, c);
+#define SRTP_PROTECT(a, b, c) srtp_protect(a, b, c)
+#define SRTCP_PROTECT(a, b, c) srtp_protect_rtcp(a, b, c)
 #endif
 
-static int
+static struct res_loc
 rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
 {
-    int status;
+    struct res_loc status;
 #if defined(SRTP_PROTECT_LASTARG)
     SRTP_PROTECT_LASTARG len;
 #else
@@ -472,28 +473,29 @@ rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
     PUB2PVT(self, pvt);
 
     if (pvt->state != RDC_UP) {
-        return (-1);
+        return (RES_HERE(-1));
     }
 
     len = pktxp->pktp->size;
     if (rtpp_is_rtcp_tst(pktxp)) {
-        status = SRTCP_PROTECT(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len);
+        status = RES_HERE(SRTCP_PROTECT(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len));
     } else {
-        status = SRTP_PROTECT(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len);
+        status = RES_HERE(SRTP_PROTECT(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len));
     }
-    if (status){
-       return (-1);
+    if (status.v) {
+        status.v = -1;
+        return (status);
     }
     pktxp->pktp->size = len;
     CALL_SMETHOD(pktxp->strmp_in->pproc_manager, handleat, pktxp,
       PPROC_ORD_ENCRYPT + 1);
-    return (0);
+    return (RES_HERE(0));
 }
 
-static int
+static struct res_loc
 rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
 {
-    int status;
+    struct res_loc status;
 #if defined(SRTP_PROTECT_LASTARG)
     SRTP_PROTECT_LASTARG len;
 #else
@@ -504,22 +506,23 @@ rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp
     PUB2PVT(self, pvt);
 
     if (pvt->state != RDC_UP) {
-        return (-1);
+        return (RES_HERE(-1));
     }
 
     len = pktxp->pktp->size;
     if (rtpp_is_rtcp_tst(pktxp)) {
-        status = srtp_unprotect_rtcp(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len);
+        status = RES_HERE(srtp_unprotect_rtcp(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len));
     } else {
-        status = srtp_unprotect(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len);
+        status = RES_HERE(srtp_unprotect(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len));
     }
-    if (status) {
-       return (-1);
+    if (status.v) {
+        status.v = -1;
+        return (status);
     }
     pktxp->pktp->size = len;
     CALL_SMETHOD(pktxp->strmp_in->pproc_manager, handleat, pktxp,
       PPROC_ORD_DECRYPT + 1);
-    return (0);
+    return (RES_HERE(0));
 }
 
 static int

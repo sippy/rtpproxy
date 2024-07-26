@@ -71,6 +71,7 @@
 #include "rtp_packet.h"
 #include "rtpp_ttl.h"
 #include "rtpp_threads.h"
+#include "rtpp_codeptr.h"
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
 
@@ -275,7 +276,7 @@ rtpp_proc_async_thread_destroy(struct rtpp_proc_thread_cf *tcp)
     free(tcp->events);
 }
 
-static enum pproc_action
+static struct pproc_act
 relay_packet(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_out = pktxp->strmp_out;
@@ -308,7 +309,7 @@ relay_packet(const struct pkt_proc_ctx *pktxp)
     return PPROC_ACT_TAKE;
 }
 
-static enum pproc_action
+static struct pproc_act
 record_packet(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_out = pktxp->strmp_out;

@@ -141,7 +141,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
             .flags = PPROC_FLAG_LGEN,
         };
         if (CALL_SMETHOD(strmp_in->pproc_manager, handleat, &pktx,
-          PPROC_ORD_PLAY + 1) & PPROC_ACT_TAKE)
+          PPROC_ORD_PLAY + 1).a & PPROC_ACT_TAKE_v)
             fap->npkts_played->cnt++;
     }
     RTPP_OBJ_DECREF(strmp_in);

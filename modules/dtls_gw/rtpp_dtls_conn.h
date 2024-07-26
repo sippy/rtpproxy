@@ -45,11 +45,17 @@ struct rdc_peer_spec {
     char alg_buf[FP_DIGEST_ALG_LEN];
 };
 
+struct res_loc {
+    int v;
+    here_t loc;
+};
+#define RES_HERE(res) (struct res_loc){(res), HEREVAL}
+
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_dtls_recv, void,
   const struct rtp_packet *);
-DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_rtp_send, int,
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_rtp_send, struct res_loc,
   struct pkt_proc_ctx *);
-DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_srtp_recv, int,
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_srtp_recv, struct res_loc,
   struct pkt_proc_ctx *);
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_setmode, enum rtpp_dtls_mode,
   const struct rdc_peer_spec *);
