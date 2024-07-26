@@ -26,39 +26,55 @@
  *
  */
 
+#include <assert.h>
 #include <stdatomic.h>
 #include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "config.h"
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_codeptr.h"
+#include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_pcount.h"
 #include "rtpp_pcount_fin.h"
 
 struct _rtpps_pcount {
-    atomic_ulong nrelayed;
-    atomic_ulong ndropped;
-    atomic_ulong nignored;
+    _Atomic(unsigned long) nrelayed;
+    _Atomic(unsigned long) ndropped;
+    _Atomic(unsigned long) nignored;
 };
+
+#define TOP_DROPS_SIZE 4
 
 struct rtpp_pcount_priv {
     struct rtpp_pcount pub;
     struct _rtpps_pcount cnt;
+    struct {
+        _Atomic(const struct rtpp_codeptr *) ptr;
+        _Atomic(unsigned long) cnt;
+    } top_drop_locs[TOP_DROPS_SIZE];
 };
 
 static void rtpp_pcount_dtor(struct rtpp_pcount_priv *);
 static void rtpp_pcount_reg_reld(struct rtpp_pcount *);
-static void rtpp_pcount_reg_drop(struct rtpp_pcount *);
+static void rtpp_pcount_reg_drop(struct rtpp_pcount *, HERETYPE);
 static void rtpp_pcount_reg_ignr(struct rtpp_pcount *);
 static void rtpp_pcount_get_stats(struct rtpp_pcount *, struct rtpps_pcount *);
+static void rtpp_pcount_log_drops(struct rtpp_pcount *, struct rtpp_log *);
 
 DEFINE_SMETHODS(rtpp_pcount,
     .reg_reld = &rtpp_pcount_reg_reld,
     .reg_drop = &rtpp_pcount_reg_drop,
     .reg_ignr = &rtpp_pcount_reg_ignr,
-    .get_stats = &rtpp_pcount_get_stats
+    .get_stats = &rtpp_pcount_get_stats,
+    .log_drops = &rtpp_pcount_log_drops
 );
 
 struct rtpp_pcount *
@@ -73,6 +89,10 @@ rtpp_pcount_ctor(void)
     atomic_init(&(pvt->cnt.nrelayed), 0);
     atomic_init(&(pvt->cnt.ndropped), 0);
     atomic_init(&(pvt->cnt.nignored), 0);
+    for (int i = 0; i < TOP_DROPS_SIZE; i++) {
+        atomic_init(&(pvt->top_drop_locs[i].ptr), NULL);
+        atomic_init(&(pvt->top_drop_locs[i].cnt), 0);
+    }
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_pcount_dtor);
     return ((&pvt->pub));
 
@@ -98,13 +118,49 @@ rtpp_pcount_reg_reld(struct rtpp_pcount *self)
 }
 
 static void
-rtpp_pcount_reg_drop(struct rtpp_pcount *self)
+rtpp_pcount_reg_drop(struct rtpp_pcount *self, HERETYPEARG)
 {
     struct rtpp_pcount_priv *pvt;
 
     PUB2PVT(self, pvt);
     atomic_fetch_add_explicit(&pvt->cnt.ndropped, 1, memory_order_relaxed);
+    assert(mlp != NULL);
+    for (int i = 0; i < TOP_DROPS_SIZE; i++) {
+        const struct rtpp_codeptr *old_ptr;
+
+retry:
+        old_ptr = atomic_load_explicit(&pvt->top_drop_locs[i].ptr, memory_order_relaxed);
+        if (old_ptr == NULL) {
+            if (atomic_compare_exchange_strong(&pvt->top_drop_locs[i].ptr, &old_ptr, mlp) != true) {
+                goto retry;
+            }
+        }
+        if (old_ptr != NULL && old_ptr != mlp)
+            continue;
+        atomic_fetch_add_explicit(&pvt->top_drop_locs[i].cnt, 1, memory_order_relaxed);
+        break;
+    }
 }
+
+static void rtpp_pcount_log_drops(struct rtpp_pcount *self, struct rtpp_log *log)
+{
+    struct rtpp_pcount_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    for (int i = 0; i < TOP_DROPS_SIZE; i++) {
+        const struct rtpp_codeptr *mlp;
+        unsigned long cnt;
+
+        mlp = atomic_load_explicit(&pvt->top_drop_locs[i].ptr, memory_order_relaxed);
+        if (mlp == NULL)
+            break;
+        cnt = atomic_load_explicit(&pvt->top_drop_locs[i].cnt, memory_order_relaxed);
+        if (cnt == 0)
+            continue;
+        RTPP_LOG(log, RTPP_LOG_INFO, CODEPTR_FMT(": %lu packets dropped here", mlp, cnt));
+    }
+}
+
 
 static void
 rtpp_pcount_reg_ignr(struct rtpp_pcount *self)
