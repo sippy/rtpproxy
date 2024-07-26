@@ -19,7 +19,7 @@ ARG LIB_DEPS="libsrtp2-1 libbcg729-0 libgsm1 libsndfile1 libunwind8 libssl3"
 ARG CLANG_VER_OLD=15
 ARG CLANG_VER_NEW=15
 ARG BUILD_DEPS_COMM="file pkg-config  ccache git make libsrtp2-dev libbcg729-dev \
- libgsm1-dev libsndfile1-dev libunwind-dev libssl-dev curl gpg ca-certificates"
+ libgsm1-dev libsndfile1-dev libunwind-dev libssl-dev curl gpg"
 ARG BUILD_DEPS_OLD="${BUILD_DEPS_COMM} clang-${CLANG_VER_OLD} llvm-${CLANG_VER_OLD} \
  lld-${CLANG_VER_OLD}"
 ARG BUILD_DEPS_NEW="${BUILD_DEPS_COMM} clang-${CLANG_VER_NEW} llvm-${CLANG_VER_NEW} \
