@@ -140,6 +140,9 @@ rtp_packet_parse(struct rtp_packet *pkt)
     return (pkt->parse_result);
 }
 
+#define RTCP_PT_SR  200
+#define RTCP_PR_SNM 213
+
 int
 rtp_packet_is_rtcp(const struct rtp_packet *pkt)
 {
@@ -149,8 +152,9 @@ rtp_packet_is_rtcp(const struct rtp_packet *pkt)
     uint8_t version = (pkt->data.buf[0] >> 6) & 0b11;
     uint8_t packet_type = pkt->data.buf[1];
 
-    // Version should be 2 and RTCP packet types are in the range 200-204
-    if (version == 2 && packet_type >= 200 && packet_type <= 204)
+    // Version should be 2 and RTCP packet types are in the range 200-213
+    // https://www.iana.org/assignments/rtp-parameters/rtp-parameters.txt
+    if (version == 2 && packet_type >= RTCP_PT_SR && packet_type <= RTCP_PR_SNM)
         return true;
     return false;
 }
