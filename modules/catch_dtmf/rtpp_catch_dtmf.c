@@ -88,7 +88,7 @@ struct catch_dtmf_edata {
 
 struct catch_dtmf_stream_cfg {
     struct rtpp_refcnt *rcnt;
-    atomic_int pt;
+    _Atomic(int) pt;
     _Atomic(enum pproc_action) act;
     struct catch_dtmf_edata *edata;
     const struct rtpp_timeout_data *rtdp;

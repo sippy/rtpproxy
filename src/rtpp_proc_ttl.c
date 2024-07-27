@@ -68,7 +68,7 @@ struct rtpp_proc_ttl_pvt {
     struct rtpp_proc_ttl pub;
     pthread_t thread_id;
     struct rtpp_anetio_cf *op;
-    atomic_int tstate;
+    _Atomic(int) tstate;
     void *elp;
     struct rtpp_hash_table *sessions_ht;
     struct foreach_args fa;

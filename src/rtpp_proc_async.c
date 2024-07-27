@@ -79,7 +79,7 @@ struct rtpp_proc_async_cf;
 
 struct rtpp_proc_thread_cf {
     pthread_t thread_id;
-    atomic_int tstate;
+    _Atomic(int) tstate;
     int pipe_type;
     struct rtpp_polltbl ptbl;
     const struct rtpp_proc_async_cf *proc_cf;

@@ -47,7 +47,7 @@
 struct rtpp_proc_wakeup_priv {
     struct rtpp_proc_wakeup pub;
     pthread_t thread_id;
-    atomic_int tstate;
+    _Atomic(int) tstate;
     int requested_i_wake;
     int delivered_i_wake;
     pthread_mutex_t mutex;

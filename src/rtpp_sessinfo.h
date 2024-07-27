@@ -63,7 +63,7 @@ struct rtpp_polltbl {
     uint64_t revision;
     struct rtpp_weakref *streams_wrt;
     int wakefd[2];
-    atomic_int served_i_wake;
+    _Atomic(int) served_i_wake;
 };
 
 DECLARE_SMETHODS(rtpp_sessinfo)

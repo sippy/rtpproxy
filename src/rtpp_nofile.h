@@ -32,7 +32,7 @@ DEFINE_METHOD(rtpp_nofile, rtpp_nofile_dtor, void);
 
 struct rtpp_nofile {
     struct rlimit *limit;
-    atomic_int warned;
+    _Atomic(int) warned;
     rtpp_nofile_dtor_t dtor;
 };
 

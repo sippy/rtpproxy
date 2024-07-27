@@ -49,16 +49,16 @@
 #include "rtpp_mallocs.h"
 
 #ifdef RTPP_LOG_ADVANCED
-static atomic_int syslog_async_opened = ATOMIC_VAR_INIT(0);
+static _Atomic(int) syslog_async_opened = (0);
 #endif
 static double iitime = 0.0;
 
 #define CALL_ID_NONE "GLOBAL"
 
 static struct {
-    atomic_uint next_ticket;
-    atomic_uint now_serving;
-} _log_lock = {ATOMIC_VAR_INIT(0), ATOMIC_VAR_INIT(0)};
+    _Atomic(unsigned int) next_ticket;
+    _Atomic(unsigned int) now_serving;
+} _log_lock = {0};
 
 struct rtpp_log_inst {
     char *call_id;

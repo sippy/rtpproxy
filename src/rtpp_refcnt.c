@@ -68,7 +68,7 @@ static void rtpp_refcnt_decref(struct rtpp_refcnt *);
 struct rtpp_refcnt_priv
 {
     struct rtpp_refcnt pub;
-    atomic_int cnt;
+    _Atomic(int) cnt;
     rtpp_refcnt_dtor_t dtor_f;
     void *data;
     rtpp_refcnt_dtor_t pre_dtor_f;
