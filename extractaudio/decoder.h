@@ -72,6 +72,8 @@ struct decoder_stream {
 #endif
     double stime;
     double dticks;
+    unsigned int silence_at_receiver;	/* in ticks */
+    unsigned int silence_from_sender;	/* in ticks */
     /* FILE *f; */
     int dflags;
 };
