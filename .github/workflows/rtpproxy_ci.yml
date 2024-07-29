@@ -461,6 +461,8 @@ jobs:
         echo "CCACHE_IMAGE=${CCACHE_IMAGE}" >> $GITHUB_ENV
         echo "CCACHE_BIMAGE=${CCACHE_BIMAGE}" >> $GITHUB_ENV
         echo "BUILD_IMAGE=${{ env.LOCAL_REPO }}:latest" >> $GITHUB_ENV
+        OS_TAG="`echo ${BASE_IMAGE} | sed 's|:|_|g'`"
+        echo "LIBG722_IMAGE=sippylabs/libg722:latest-${OS_TAG}" >> $GITHUB_ENV
 
     - name: Build Docker image
       uses: docker/build-push-action@v6
@@ -473,6 +475,7 @@ jobs:
           CLANG_VER_OLD=${{ env.CLANG_VER_OLD }}
           CLANG_VER_NEW=${{ env.CLANG_VER_NEW }}
           BASE_IMAGE=${{ env.BASE_IMAGE }}
+          LIBG722_IMAGE=${{ env.LIBG722_IMAGE }}
           CCACHE_IMAGE=${{ env.CCACHE_BIMAGE }}
           CCACHE_ROOT=${{ env.CCACHE_ROOT }}
         tags: ${{ env.BUILD_IMAGE }}

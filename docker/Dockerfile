@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1.7-labs
 
-ARG BASE_IMAGE
+ARG BASE_IMAGE=debian:sid-slim
+ARG LIBG722_IMAGE=sippylabs/libg722:latest-debian_sid-slim
 ARG CCACHE_IMAGE=scratch
+FROM ${LIBG722_IMAGE} AS libg722
 FROM ${BASE_IMAGE} AS build
 RUN mkdir -p /rtpproxy/ccache
 FROM ${CCACHE_IMAGE} AS ccache
@@ -31,6 +33,8 @@ COPY docker/install_depends.sh /tmp
 COPY docker/clang_ver.sub /tmp/docker/clang_ver.sub
 ARG TARGETPLATFORM
 RUN ./install_depends.sh
+COPY --from=libg722 /usr/local/lib/libg722.* /usr/local/lib/
+COPY --from=libg722 /usr/local/include/g722* /usr/local/include/
 
 COPY --exclude=.git* --link . /rtpproxy/
 
