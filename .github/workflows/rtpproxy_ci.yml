@@ -407,7 +407,6 @@ jobs:
       CLANG_VER_OLD: 16
       DOCKER_REPO: sippylabs/rtpproxy
       LOCAL_REPO: localhost:5000/sippylabs/rtpproxy
-      PLATFORMS: linux/amd64,linux/i386,linux/arm/v7,linux/arm64
       BASE_IMAGE: debian:12-slim
       CCACHE_ROOT: ccache
     steps:
@@ -420,7 +419,7 @@ jobs:
       id: qemu
       uses: docker/setup-qemu-action@v3
       with:
-        platforms: arm64,arm
+        platforms: arm64,arm,riscv64,mips64le,ppc64le,s390x
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -447,7 +446,7 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}}
           type=sha
 
-    - name: Get branch name
+    - name: Set dynamic environment
       run: |
         GIT_BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
         echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_ENV
@@ -463,6 +462,8 @@ jobs:
         echo "BUILD_IMAGE=${{ env.LOCAL_REPO }}:latest" >> $GITHUB_ENV
         OS_TAG="`echo ${BASE_IMAGE} | sed 's|:|_|g'`"
         echo "LIBG722_IMAGE=sippylabs/libg722:latest-${OS_TAG}" >> $GITHUB_ENV
+        PLATFORMS="`docker manifest inspect ${{ env.BASE_IMAGE }} | jq -r '.manifests[] | "\(.platform.os)/\(.platform.architecture)"' | sort -u | paste -sd ','`"
+        echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
 
     - name: Build Docker image
       uses: docker/build-push-action@v6
