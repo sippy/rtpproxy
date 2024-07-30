@@ -90,13 +90,7 @@ loaded).
 
 ## TODO
 
- o Recording and copying (forking) of decrypted RTP packets
-
  o Session teardown upon DTLS setup and/or key verification failure
-
- o RTCP encryption
-
- o Allow B2B DTLS sessions on both legs.
 
 ## Acknowledgements
 
