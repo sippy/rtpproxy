@@ -17,14 +17,13 @@ noinst_PROGRAMS += rtpp_objck rtpp_objck_perf
 endif
 
 RTPP_AUTOSRC_SOURCES = rtpp_command_rcache.h rtpp_log_obj.h \
-  rtpp_port_table.h rtpp_socket.h rtpp_timed_task.h \
-  rtpp_modman.h
+  rtpp_port_table.h rtpp_timed_task.h rtpp_modman.h
 
 RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_server.h rtpp_stats.h rtpp_stream.h rtpp_timed.h rtpp_pcount.h \
   rtpp_record.h rtpp_hash_table.h rtpp_weakref.h rtpp_analyzer.h \
   rtpp_pcnt_strm.h rtpp_ttl.h rtpp_pipe.h rtpp_ringbuf.h rtpp_sessinfo.h \
-  rtpp_rw_lock.h rtpp_proc_servers.h rtpp_proc_wakeup.h
+  rtpp_rw_lock.h rtpp_proc_servers.h rtpp_proc_wakeup.h rtpp_socket.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
 BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \

@@ -922,7 +922,7 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
         return;
     }
     RTPP_DBG_ASSERT(pvt->fd == NULL);
-    CALL_METHOD(new_skt, set_stuid, self->stuid);
+    CALL_SMETHOD(new_skt, set_stuid, self->stuid);
     pvt->fd = new_skt;
     RTPP_OBJ_INCREF(pvt->fd);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
@@ -959,7 +959,7 @@ rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     old_skt = pvt->fd;
-    CALL_METHOD(new_skt, set_stuid, self->stuid);
+    CALL_SMETHOD(new_skt, set_stuid, self->stuid);
     pvt->fd = new_skt;
     RTPP_OBJ_INCREF(pvt->fd);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
@@ -978,7 +978,7 @@ rtpp_stream_send_pkt(struct rtpp_stream *self, struct sthread_args *sap,
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
-    rval = CALL_METHOD(pvt->fd, send_pkt_na, sap, pvt->rem_addr, pkt,
+    rval = CALL_SMETHOD(pvt->fd, send_pkt_na, sap, pvt->rem_addr, pkt,
       self->log);
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
@@ -993,7 +993,7 @@ rtpp_stream_send_pkt_to(struct rtpp_stream *self, struct sthread_args *sap,
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
-    rval = CALL_METHOD(pvt->fd, send_pkt_na, sap, rem_addr, pkt,
+    rval = CALL_SMETHOD(pvt->fd, send_pkt_na, sap, rem_addr, pkt,
       self->log);
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
@@ -1005,7 +1005,7 @@ _rtpp_stream_recv_pkt(struct rtpp_stream_priv *pvt,
 {
     struct rtp_packet *pkt;
 
-    pkt = CALL_METHOD(pvt->fd, rtp_recv, dtime, pvt->pub.laddr, pvt->pub.port);
+    pkt = CALL_SMETHOD(pvt->fd, rtp_recv, dtime, pvt->pub.laddr, pvt->pub.port);
     return (pkt);
 }
 

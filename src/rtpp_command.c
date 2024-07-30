@@ -128,7 +128,7 @@ create_twinlistener(unsigned int port, void *ap)
 	}
 	memcpy(&iac, ctap->ia, SA_LEN(ctap->ia));
 	satosin(&iac)->sin_port = htons(port);
-	if (CALL_METHOD(ctap->fds[i], bind2, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
+	if (CALL_SMETHOD(ctap->fds[i], bind2, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
 	    if (errno != EADDRINUSE && errno != EACCES) {
 		RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't bind to the %s port %d",
 		  SA_AF2STR(ctap->ia), port);
@@ -139,14 +139,14 @@ create_twinlistener(unsigned int port, void *ap)
 	}
 	port++;
 	if ((ctap->ia->sa_family == AF_INET) && (ctap->cfs->tos >= 0) &&
-	  (CALL_METHOD(ctap->fds[i], settos, ctap->cfs->tos) == -1))
+	  (CALL_SMETHOD(ctap->fds[i], settos, ctap->cfs->tos) == -1))
 	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set TOS to %d", ctap->cfs->tos);
 	so_rcvbuf = 256 * 1024;
-	if (CALL_METHOD(ctap->fds[i], setrbuf, so_rcvbuf) == -1)
+	if (CALL_SMETHOD(ctap->fds[i], setrbuf, so_rcvbuf) == -1)
 	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
-        if (CALL_METHOD(ctap->fds[i], setnonblock) < 0)
+        if (CALL_SMETHOD(ctap->fds[i], setnonblock) < 0)
             goto failure;
-        CALL_METHOD(ctap->fds[i], settimestamp);
+        CALL_SMETHOD(ctap->fds[i], settimestamp);
     }
     RTPP_DBG_ASSERT(port > 2 && IS_VALID_PORT(port - 2));
     *ctap->port = port - 2;

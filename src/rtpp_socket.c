@@ -52,12 +52,22 @@
 #include "rtp_packet.h"
 #include "rtpp_debug.h"
 
+struct rs_recv_arg {
+    struct rtpp_socket_priv *pvt;
+    const struct rtpp_timestamp *dtime;
+    const struct sockaddr *laddr;
+    int port;
+};
+
+DEFINE_RAW_METHOD(rs_rtp_recv, struct rtp_packet *, const struct rs_recv_arg *);
+
 struct rtpp_socket_priv {
     struct rtpp_socket pub;
     struct rtpp_anetio_cf *netio;
     int fd;
     int type;
     uint64_t stuid;
+    rs_rtp_recv_t rtp_recv;
 };
 
 static void rtpp_socket_dtor(struct rtpp_socket_priv *);
@@ -69,10 +79,10 @@ static int rtpp_socket_setnonblock(struct rtpp_socket *);
 static int rtpp_socket_settimestamp(struct rtpp_socket *);
 static int rtpp_socket_send_pkt_na(struct rtpp_socket *, struct sthread_args *,
   struct rtpp_netaddr *, struct rtp_packet *, struct rtpp_log *);
-static struct rtp_packet * rtpp_socket_rtp_recv_simple(struct rtpp_socket *,
+static struct rtp_packet * rtpp_socket_rtp_recv(struct rtpp_socket *,
   const struct rtpp_timestamp *, const struct sockaddr *, int);
-static struct rtp_packet *rtpp_socket_rtp_recv(struct rtpp_socket *,
-  const struct rtpp_timestamp *, const struct sockaddr *, int);
+static struct rtp_packet * rtpp_socket_rtp_recv_simple(const struct rs_recv_arg *);
+static struct rtp_packet *rtpp_socket_rtp_recv_gen(const struct rs_recv_arg *);
 static int rtpp_socket_getfd(struct rtpp_socket *);
 static int rtpp_socket_drain(struct rtpp_socket *, const char *,
   struct rtpp_log *);
@@ -80,9 +90,22 @@ static void rtpp_socket_set_stuid(struct rtpp_socket *, uint64_t);
 static uint64_t rtpp_socket_get_stuid(struct rtpp_socket *);
 
 #if HAVE_SO_TS_CLOCK
-static struct rtp_packet *rtpp_socket_rtp_recv_mono(struct rtpp_socket *,
-  const struct rtpp_timestamp *, const struct sockaddr *, int);
+static struct rtp_packet *rtpp_socket_rtp_recv_mono(const struct rs_recv_arg *);
 #endif
+
+DEFINE_SMETHODS(rtpp_socket,
+    .bind2 = &rtpp_socket_bind,
+    .settos = &rtpp_socket_settos,
+    .setrbuf = &rtpp_socket_setrbuf,
+    .setnonblock = &rtpp_socket_setnonblock,
+    .settimestamp = &rtpp_socket_settimestamp,
+    .send_pkt_na = &rtpp_socket_send_pkt_na,
+    .rtp_recv = &rtpp_socket_rtp_recv,
+    .getfd = &rtpp_socket_getfd,
+    .drain = &rtpp_socket_drain,
+    .set_stuid = &rtpp_socket_set_stuid,
+    .get_stuid = &rtpp_socket_get_stuid,
+);
 
 struct rtpp_socket *
 rtpp_socket_ctor(struct rtpp_anetio_cf *netio, int domain, int type)
@@ -105,22 +128,8 @@ rtpp_socket_ctor(struct rtpp_anetio_cf *netio, int domain, int type)
 
         setsockopt(pvt->fd, IPPROTO_IPV6, IPV6_V6ONLY, &yes, sizeof(yes));
     }
-    pvt->pub.bind2 = &rtpp_socket_bind;
-    pvt->pub.settos = &rtpp_socket_settos;
-    pvt->pub.setrbuf = &rtpp_socket_setrbuf;
-    pvt->pub.setnonblock = &rtpp_socket_setnonblock;
-    pvt->pub.settimestamp = &rtpp_socket_settimestamp;
-#if 0
-    pvt->pub.send_pkt = &rtpp_socket_send_pkt;
-#endif
-    pvt->pub.send_pkt_na = &rtpp_socket_send_pkt_na;
-    pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_simple;
-    pvt->pub.getfd = &rtpp_socket_getfd;
-    pvt->pub.drain = &rtpp_socket_drain;
-    pvt->pub.set_stuid = &rtpp_socket_set_stuid;
-    pvt->pub.get_stuid = &rtpp_socket_get_stuid;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_socket_dtor,
-      pvt);
+    pvt->rtp_recv = &rtpp_socket_rtp_recv_simple;
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_socket_dtor);
     return (&pvt->pub);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
@@ -207,11 +216,11 @@ rtpp_socket_settimestamp(struct rtpp_socket *self)
     rval = setsockopt(pvt->fd, SOL_SOCKET, SO_TS_CLOCK, &sval,
       sizeof(sval));
     if (rval == 0) {
-        pvt->pub.rtp_recv = &rtpp_socket_rtp_recv_mono;
+        pvt->rtp_recv = &rtpp_socket_rtp_recv_mono;
         return (0);
     }
 #endif
-    pvt->pub.rtp_recv = &rtpp_socket_rtp_recv;
+    pvt->rtp_recv = &rtpp_socket_rtp_recv_gen;
     return (0);
 }
 
@@ -230,10 +239,18 @@ rtpp_socket_send_pkt_na(struct rtpp_socket *self, struct sthread_args *str,
 }
 
 static struct rtp_packet *
-rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
+rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
   const struct sockaddr *laddr, int port)
 {
     struct rtpp_socket_priv *pvt;
+    PUB2PVT(self, pvt);
+    struct rs_recv_arg arg = {pvt, dtime, laddr, port};
+    return (pvt->rtp_recv(&arg));
+}
+
+static struct rtp_packet *
+rtpp_socket_rtp_recv_simple(const struct rs_recv_arg *ra)
+{
     struct rtp_packet *packet;
 
     packet = rtp_packet_alloc();
@@ -241,21 +258,19 @@ rtpp_socket_rtp_recv_simple(struct rtpp_socket *self, const struct rtpp_timestam
         return NULL;
     }
 
-    PUB2PVT(self, pvt);
-
     packet->rlen = sizeof(packet->raddr);
-    packet->size = recvfrom(pvt->fd, packet->data.buf, sizeof(packet->data.buf), 0, 
+    packet->size = recvfrom(ra->pvt->fd, packet->data.buf, sizeof(packet->data.buf), 0, 
       sstosa(&packet->raddr), &packet->rlen);
 
     if (packet->size == -1) {
         RTPP_OBJ_DECREF(packet);
         return (NULL);
     }
-    packet->laddr = laddr;
-    packet->lport = port;
-    if (dtime != NULL) {
-        packet->rtime.wall = dtime->wall;
-        packet->rtime.mono = dtime->mono;
+    packet->laddr = ra->laddr;
+    packet->lport = ra->port;
+    if (ra->dtime != NULL) {
+        packet->rtime.wall = ra->dtime->wall;
+        packet->rtime.mono = ra->dtime->mono;
     }
 
     return (packet);
@@ -265,10 +280,8 @@ DEFINE_RAW_METHOD(recvfromto, ssize_t, int, void *, size_t, struct sockaddr *,
   socklen_t *, struct sockaddr *, socklen_t *, void *);
 
 static struct rtp_packet *
-_rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct sockaddr *laddr,
-  int port, recvfromto_t _recvfromtof, void *tptr)
+_rtpp_socket_rtp_recv(const struct rs_recv_arg *ra, recvfromto_t _recvfromtof, void *tptr)
 {
-    struct rtpp_socket_priv *pvt;
     struct rtp_packet *packet;
     socklen_t llen;
 
@@ -277,11 +290,9 @@ _rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct sockaddr *laddr,
         return NULL;
     }
 
-    PUB2PVT(self, pvt);
-
     packet->rlen = sizeof(packet->raddr);
     llen = sizeof(packet->_laddr);
-    packet->size = _recvfromtof(pvt->fd, packet->data.buf, sizeof(packet->data.buf),
+    packet->size = _recvfromtof(ra->pvt->fd, packet->data.buf, sizeof(packet->data.buf),
       sstosa(&packet->raddr), &packet->rlen, sstosa(&packet->_laddr), &llen, tptr);
 
     if (packet->size == -1) {
@@ -289,36 +300,34 @@ _rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct sockaddr *laddr,
         return (NULL);
     }
     if (llen > 0) {
-        setport(sstosa(&packet->_laddr), port);
+        setport(sstosa(&packet->_laddr), ra->port);
         packet->laddr = sstosa(&packet->_laddr);
     } else {
-        packet->laddr = laddr;
+        packet->laddr = ra->laddr;
     }
-    packet->lport = port;
+    packet->lport = ra->port;
     return (packet);
 }
 
 static struct rtp_packet *
-rtpp_socket_rtp_recv(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
-  const struct sockaddr *laddr, int port)
+rtpp_socket_rtp_recv_gen(const struct rs_recv_arg *ra)
 {
     struct rtp_packet *packet;
     struct timeval rtime;
 
     memset(&rtime, '\0', sizeof(rtime));
-    packet = _rtpp_socket_rtp_recv(self, laddr, port, (recvfromto_t)recvfromto,
-      &rtime);
-    if (packet == NULL || dtime == NULL) {
+    packet = _rtpp_socket_rtp_recv(ra, (recvfromto_t)recvfromto, &rtime);
+    if (packet == NULL || ra->dtime == NULL) {
         goto out;
     }
 
     if (!timevaliszero(&rtime)) {
         packet->rtime.wall = timeval2dtime(&rtime);
     } else {
-        packet->rtime.wall = dtime->wall;
+        packet->rtime.wall = ra->dtime->wall;
     }
     RTPP_DBG_ASSERT(packet->rtime.wall > 0);
-    packet->rtime.mono = dtime->mono;
+    packet->rtime.mono = ra->dtime->mono;
 
 out:
     return (packet);
@@ -326,26 +335,24 @@ out:
 
 #if HAVE_SO_TS_CLOCK
 static struct rtp_packet *
-rtpp_socket_rtp_recv_mono(struct rtpp_socket *self, const struct rtpp_timestamp *dtime,
-  const struct sockaddr *laddr, int port)
+rtpp_socket_rtp_recv_mono(const struct rs_recv_arg *ra)
 {
     struct rtp_packet *packet;
     struct timespec rtime;
 
     memset(&rtime, '\0', sizeof(rtime));
-    packet = _rtpp_socket_rtp_recv(self, laddr, port,
-      (recvfromto_t)recvfromto_mono, &rtime);
-    if (packet == NULL || dtime == NULL) {
+    packet = _rtpp_socket_rtp_recv(ra, (recvfromto_t)recvfromto_mono, &rtime);
+    if (packet == NULL || ra->dtime == NULL) {
         goto out;
     }
 
     if (!timespeciszero(&rtime)) {
         packet->rtime.mono = timespec2dtime(&rtime);
     } else {
-        packet->rtime.mono = dtime->mono;
+        packet->rtime.mono = ra->dtime->mono;
     }
     RTPP_DBG_ASSERT(packet->rtime.mono > 0);
-    packet->rtime.wall = dtime->wall;
+    packet->rtime.wall = ra->dtime->wall;
 
 out:
     return (packet);

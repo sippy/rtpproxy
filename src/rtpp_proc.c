@@ -127,7 +127,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
             continue;
         }
         iskt = ep->data.ptr;
-        uint64_t stuid = CALL_METHOD(iskt, get_stuid);
+        uint64_t stuid = CALL_SMETHOD(iskt, get_stuid);
         stp = CALL_SMETHOD(ptbl->streams_wrt, get_by_idx, stuid);
         if (stp == NULL)
             continue;
@@ -161,7 +161,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
 
             RTPP_OBJ_DECREF(sp);
             proto = CALL_SMETHOD(stp, get_proto);
-            ndrained = CALL_METHOD(iskt, drain, proto, stp->log);
+            ndrained = CALL_SMETHOD(iskt, drain, proto, stp->log);
             if (ndrained > 0) {
                 rsp->npkts_discard.cnt += ndrained;
             }
