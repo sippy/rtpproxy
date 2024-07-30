@@ -277,10 +277,10 @@ rtpp_socket_rtp_recv_simple(const struct rs_recv_arg *ra)
 }
 
 DEFINE_RAW_METHOD(recvfromto, ssize_t, int, void *, size_t, struct sockaddr *,
-  socklen_t *, struct sockaddr *, socklen_t *, void *);
+  socklen_t *, struct sockaddr *, socklen_t *, struct timespec *);
 
 static struct rtp_packet *
-_rtpp_socket_rtp_recv(const struct rs_recv_arg *ra, recvfromto_t _recvfromtof, void *tptr)
+_rtpp_socket_rtp_recv(const struct rs_recv_arg *ra, recvfromto_t _recvfromtof, struct timespec *tptr)
 {
     struct rtp_packet *packet;
     socklen_t llen;
@@ -310,19 +310,19 @@ _rtpp_socket_rtp_recv(const struct rs_recv_arg *ra, recvfromto_t _recvfromtof, v
 }
 
 static struct rtp_packet *
-rtpp_socket_rtp_recv_gen(const struct rs_recv_arg *ra)
+rtpp_socket_rtp_recv_ts(const struct rs_recv_arg *ra, recvfromto_t recv_f)
 {
     struct rtp_packet *packet;
-    struct timeval rtime;
+    struct timespec rtime;
 
     memset(&rtime, '\0', sizeof(rtime));
-    packet = _rtpp_socket_rtp_recv(ra, (recvfromto_t)recvfromto, &rtime);
+    packet = _rtpp_socket_rtp_recv(ra, recv_f, &rtime);
     if (packet == NULL || ra->dtime == NULL) {
         goto out;
     }
 
-    if (!timevaliszero(&rtime)) {
-        packet->rtime.wall = timeval2dtime(&rtime);
+    if (!timespeciszero(&rtime)) {
+        packet->rtime.wall = timespec2dtime(&rtime);
     } else {
         packet->rtime.wall = ra->dtime->wall;
     }
@@ -333,29 +333,19 @@ out:
     return (packet);
 }
 
+static struct rtp_packet *
+rtpp_socket_rtp_recv_gen(const struct rs_recv_arg *ra)
+{
+
+    return (rtpp_socket_rtp_recv_ts(ra, recvfromto));
+}
+
 #if HAVE_SO_TS_CLOCK
 static struct rtp_packet *
 rtpp_socket_rtp_recv_mono(const struct rs_recv_arg *ra)
 {
-    struct rtp_packet *packet;
-    struct timespec rtime;
 
-    memset(&rtime, '\0', sizeof(rtime));
-    packet = _rtpp_socket_rtp_recv(ra, (recvfromto_t)recvfromto_mono, &rtime);
-    if (packet == NULL || ra->dtime == NULL) {
-        goto out;
-    }
-
-    if (!timespeciszero(&rtime)) {
-        packet->rtime.mono = timespec2dtime(&rtime);
-    } else {
-        packet->rtime.mono = ra->dtime->mono;
-    }
-    RTPP_DBG_ASSERT(packet->rtime.mono > 0);
-    packet->rtime.wall = ra->dtime->wall;
-
-out:
-    return (packet);
+    return (rtpp_socket_rtp_recv_ts(ra, recvfromto_mono));
 }
 #endif
 

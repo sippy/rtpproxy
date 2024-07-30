@@ -34,7 +34,7 @@ struct timeval;
 
 /* Function prototypes */
 ssize_t recvfromto(int, void *, size_t, struct sockaddr *,
-  socklen_t *, struct sockaddr *, socklen_t *, struct timeval *);
+  socklen_t *, struct sockaddr *, socklen_t *, struct timespec *);
 #if HAVE_SO_TS_CLOCK
 ssize_t recvfromto_mono(int, void *, size_t, struct sockaddr *,
   socklen_t *, struct sockaddr *, socklen_t *, struct timespec *);
