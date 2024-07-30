@@ -154,20 +154,20 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
 #if 0
             RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "Packet from DTLS");
 #endif
-            CALL_METHOD(wip->edata.dtls_conn, dtls_recv, wip->pktx.pktp);
+            CALL_SMETHOD(wip->edata.dtls_conn, dtls_recv, wip->pktx.pktp);
             res = RES_HERE(1);
             break;
         case SRTP_IN:
 #if 0
             RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "DTLS: packet SRTP->RTP");
 #endif
-            res = CALL_METHOD(wip->edata.dtls_conn, srtp_recv, &wip->pktx);
+            res = CALL_SMETHOD(wip->edata.dtls_conn, srtp_recv, &wip->pktx);
             break;
         case RTP_OUT:
 #if 0
             RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "DTLS: packet RTP->SRTP");
 #endif
-            res = CALL_METHOD(wip->edata.dtls_conn, rtp_send, &wip->pktx);
+            res = CALL_SMETHOD(wip->edata.dtls_conn, rtp_send, &wip->pktx);
             break;
         default:
             abort();
@@ -384,7 +384,7 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
             goto e0;
         }
     }
-    my_mode = CALL_METHOD(rtps_c->dtls_conn, setmode, rdfsp);
+    my_mode = CALL_SMETHOD(rtps_c->dtls_conn, setmode, rdfsp);
     if (my_mode == RTPP_DTLS_MODERR) {
         goto e0;
     }

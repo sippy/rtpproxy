@@ -51,6 +51,12 @@ struct res_loc {
 };
 #define RES_HERE(res) (struct res_loc){(res), HEREVAL}
 
+#if !defined(OPENSSL_VERSION_NUMBER)
+typedef void SSL_CTX;
+#endif
+DECLARE_CLASS(rtpp_dtls_conn, const struct rtpp_cfg *,
+  SSL_CTX *, struct rtpp_stream *);
+
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_dtls_recv, void,
   const struct rtp_packet *);
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_rtp_send, struct res_loc,
@@ -60,15 +66,12 @@ DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_srtp_recv, struct res_loc,
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_setmode, enum rtpp_dtls_mode,
   const struct rdc_peer_spec *);
 
-struct rtpp_dtls_conn {
-    struct rtpp_refcnt *rcnt;
+DECLARE_SMETHODS(rtpp_dtls_conn)
+{
     METHOD_ENTRY(rtpp_dtls_conn_dtls_recv, dtls_recv);
     METHOD_ENTRY(rtpp_dtls_conn_rtp_send, rtp_send);
     METHOD_ENTRY(rtpp_dtls_conn_srtp_recv, srtp_recv);
     METHOD_ENTRY(rtpp_dtls_conn_setmode, setmode);
 };
 
-#if defined(OPENSSL_VERSION_NUMBER)
-struct rtpp_dtls_conn *rtpp_dtls_conn_ctor(const struct rtpp_cfg *,
-  SSL_CTX *, struct rtpp_stream *);
-#endif
+DECLARE_CLASS_PUBTYPE(rtpp_dtls_conn, {});

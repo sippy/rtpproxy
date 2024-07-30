@@ -103,6 +103,7 @@ extern const struct rtpp_rw_lock_smethods * const rtpp_rw_lock_smethods;
 extern const struct rtpp_proc_servers_smethods * const rtpp_proc_servers_smethods;
 extern const struct rtpp_proc_wakeup_smethods * const rtpp_proc_wakeup_smethods;
 extern const struct pproc_manager_smethods * const pproc_manager_smethods;
+extern const struct rtpp_dtls_conn_smethods * const rtpp_dtls_conn_smethods;
 
 #define GET_SMETHODS(obj) _Generic((obj), \
     struct rtpp_refcnt *: rtpp_refcnt_smethods, \
@@ -125,7 +126,8 @@ extern const struct pproc_manager_smethods * const pproc_manager_smethods;
     struct rtpp_rw_lock *: rtpp_rw_lock_smethods, \
     struct rtpp_proc_servers *: rtpp_proc_servers_smethods, \
     struct rtpp_proc_wakeup *: rtpp_proc_wakeup_smethods, \
-    struct pproc_manager *: pproc_manager_smethods \
+    struct pproc_manager *: pproc_manager_smethods, \
+    struct rtpp_dtls_conn *: rtpp_dtls_conn_smethods \
 )
 
 #if defined(RTPP_DEBUG)

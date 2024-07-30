@@ -168,6 +168,13 @@ static int tls_srtp_keyinfo(SSL *, const struct srtp_crypto_suite **,
   uint8_t *, size_t, uint8_t *, size_t);
 static int tls_peer_fingerprint(SSL *, char *, size_t);
 
+DEFINE_SMETHODS(rtpp_dtls_conn,
+    .dtls_recv = &rtpp_dtls_conn_dtls_recv,
+    .rtp_send = &rtpp_dtls_conn_rtp_send,
+    .srtp_recv = &rtpp_dtls_conn_srtp_recv,
+    .setmode = &rtpp_dtls_conn_setmode,
+);
+
 static void
 rtpp_dtls_conn_dtor(struct rtpp_dtls_conn_priv *pvt)
 {
@@ -227,11 +234,7 @@ rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
     /* RTPP_OBJ_INCREF(dtls_strmp); */
     pvt->dtls_strmp = dtls_strmp;
     pvt->timed_cf = cfsp->rtpp_timed_cf;
-    pvt->pub.dtls_recv = rtpp_dtls_conn_dtls_recv;
-    pvt->pub.rtp_send = rtpp_dtls_conn_rtp_send;
-    pvt->pub.srtp_recv = rtpp_dtls_conn_srtp_recv;
-    pvt->pub.setmode = rtpp_dtls_conn_setmode;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)rtpp_dtls_conn_dtor, pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_dtls_conn_dtor);
     return (&(pvt->pub));
 e5:
     BIO_free(pvt->sbio_out);
