@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([rtpproxy],[3.0-rc.1],[sobomax@sippysoft.com])
+AC_INIT([rtpproxy],[3.1.0],[sobomax@sippysoft.com])
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([src/main.c])
 AM_INIT_AUTOMAKE([serial-tests])
