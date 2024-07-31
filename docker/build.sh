@@ -6,12 +6,12 @@ set -x
 MYPATH="`realpath "${0}"`"
 RTPDIR="`dirname "${MYPATH}"`/.."
 
-CONFIGURE_ARGS="--enable-librtpproxy"
+CONFIGURE_ARGS="--enable-librtpproxy --enable-noinst=no"
 ARCH="`dpkg --print-architecture`"
 
-if [ "${ARCH}" != "armhf" ]
+if [ "${ARCH}" != "armhf" -a "${ARCH}" != "ppc64el" ]
 then
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-lto"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-lto=auto"
 fi
 
 cd "${RTPDIR}"
