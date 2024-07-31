@@ -39,6 +39,7 @@ ccache --cleanup
 ccache --zero-stats
 
 . "docker/clang_ver.sub"
+set_clang_env
 
 CC=clang-${CLANG_VER} AR=llvm-ar-${CLANG_VER} RANLIB=llvm-ranlib-${CLANG_VER} \
  NM=llvm-nm-${CLANG_VER} STRIP=llvm-strip-${CLANG_VER} CFLAGS="-O3 -pipe" \

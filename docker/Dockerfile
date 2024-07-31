@@ -17,7 +17,8 @@ USER root
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Build & install everything
-ARG LIB_DEPS="libsrtp2-1 libbcg729-0 libgsm1 libsndfile1 libunwind8 libssl3"
+ARG LIBSSL_APKG="libssl3"
+ARG LIB_DEPS="libsrtp2-1 libbcg729-0 libgsm1 libsndfile1 libunwind8 ${LIBSSL_APKG}"
 ARG CLANG_VER_OLD=15
 ARG CLANG_VER_NEW=15
 ARG BUILD_DEPS_COMM="file pkg-config  ccache git make libsrtp2-dev libbcg729-dev \

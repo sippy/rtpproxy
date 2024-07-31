@@ -407,8 +407,11 @@ jobs:
       CLANG_VER_OLD: 16
       DOCKER_REPO: sippylabs/rtpproxy
       LOCAL_REPO: localhost:5000/sippylabs/rtpproxy
-      BASE_IMAGE: debian:12-slim
+      BASE_IMAGE: ${{ matrix.base_image }}
       CCACHE_ROOT: ccache
+    strategy:
+      matrix:
+        base_image: ['debian:12-slim', 'ubuntu:latest']
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -433,24 +436,12 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Extract metadata (tags, labels) for Docker
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.DOCKER_REPO }}
-        tags: |
-          type=schedule
-          type=ref,event=branch
-          type=ref,event=tag
-          type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
-          type=sha
-
     - name: Set dynamic environment
       run: |
         GIT_BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
         echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_ENV
-        CCACHE_IMAGE="${{ env.DOCKER_REPO }}:${GIT_BRANCH}-cccache"
+        OS_TAG="`echo ${BASE_IMAGE} | sed 's|:|_|g'`"
+        CCACHE_IMAGE="${{ env.DOCKER_REPO }}:${GIT_BRANCH}-${OS_TAG}-cccache"
         if ! docker image inspect ${CCACHE_IMAGE} 2>&1 >/dev/null
         then
           CCACHE_BIMAGE="scratch"
@@ -459,16 +450,35 @@ jobs:
         fi
         echo "CCACHE_IMAGE=${CCACHE_IMAGE}" >> $GITHUB_ENV
         echo "CCACHE_BIMAGE=${CCACHE_BIMAGE}" >> $GITHUB_ENV
-        echo "BUILD_IMAGE=${{ env.LOCAL_REPO }}:latest" >> $GITHUB_ENV
-        OS_TAG="`echo ${BASE_IMAGE} | sed 's|:|_|g'`"
+        echo "BUILD_IMAGE=${{ env.LOCAL_REPO }}:latest-${OS_TAG}" >> $GITHUB_ENV
         echo "LIBG722_IMAGE=sippylabs/libg722:latest-${OS_TAG}" >> $GITHUB_ENV
         PLATFORMS="`docker manifest inspect ${{ env.BASE_IMAGE }} | jq -r '.manifests[] | "\(.platform.os)/\(.platform.architecture)"' | sort -u | paste -sd ','`"
         echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
+        echo "OS_TAG=${OS_TAG}" >> $GITHUB_ENV
+        if [[ "${{ matrix.base_image }}" == debian:* ]]
+        then
+          echo "LIBSSL_APKG=libssl3" >> $GITHUB_ENV
+        else
+          echo "LIBSSL_APKG=libssl3t64" >> $GITHUB_ENV
+        fi
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.DOCKER_REPO }}
+        tags: |
+          type=schedule,suffix=-${{ env.OS_TAG}}
+          type=ref,event=branch,suffix=-${{ env.OS_TAG}}
+          type=ref,event=tag,suffix=-${{ env.OS_TAG}}
+          type=ref,event=pr,suffix=-${{ env.OS_TAG}}
+          type=raw,value=latest-${{ env.OS_TAG}},enable={{is_default_branch}}
+          type=sha,suffix=-${{ env.OS_TAG}}
 
     - name: Build Docker image
       uses: docker/build-push-action@v6
       env:
-        CACHE_SPEC: "type=registry,ref=${{ env.DOCKER_REPO }}:${{ env.GIT_BRANCH }}-buildcache"
+        CACHE_SPEC: "type=registry,ref=${{ env.DOCKER_REPO }}:${{ env.GIT_BRANCH }}-${{ env.OS_TAG}}-buildcache"
       with:
         context: .
         file: ./docker/Dockerfile
@@ -479,6 +489,7 @@ jobs:
           LIBG722_IMAGE=${{ env.LIBG722_IMAGE }}
           CCACHE_IMAGE=${{ env.CCACHE_BIMAGE }}
           CCACHE_ROOT=${{ env.CCACHE_ROOT }}
+          LIBSSL_APKG=${{ env.LIBSSL_APKG }}
         tags: ${{ env.BUILD_IMAGE }}
         platforms: ${{ env.PLATFORMS }}
         push: true
