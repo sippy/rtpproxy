@@ -44,7 +44,7 @@ set_clang_env
 CC=clang-${CLANG_VER} AR=llvm-ar-${CLANG_VER} RANLIB=llvm-ranlib-${CLANG_VER} \
  NM=llvm-nm-${CLANG_VER} STRIP=llvm-strip-${CLANG_VER} CFLAGS="-O3 -pipe" \
  ./configure ${CONFIGURE_ARGS}
-make -j8 all
+make -j4 all
 make install
 
 ccache --show-stats
