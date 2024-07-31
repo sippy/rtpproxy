@@ -409,6 +409,7 @@ jobs:
       LOCAL_REPO: localhost:5000/sippylabs/rtpproxy
       BASE_IMAGE: ${{ matrix.base_image }}
       CCACHE_ROOT: ccache
+      DOCKER_RW: ${{ ( github.repository == 'sippy/rtpproxy' && github.event_name != 'pull_request' ) && 'true' || 'false' }}
     strategy:
       matrix:
         base_image: ['debian:12-slim', 'ubuntu:latest']
@@ -430,7 +431,7 @@ jobs:
         driver-opts: network=host
 
     - name: Log in to Docker Hub
-      if: github.event_name != 'pull_request'
+      if: ${{ env.DOCKER_RW }}
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
@@ -497,6 +498,7 @@ jobs:
         cache-to: ${{ env.CACHE_SPEC }},mode=max
 
     - name: Export ccache
+      if: ${{ env.DOCKER_RW }}
       uses: docker/build-push-action@v6
       with:
         file: ./docker/Dockerfile.export_ccache
@@ -506,6 +508,7 @@ jobs:
         push: true
 
     - name: Push Docker image
+      if: ${{ env.DOCKER_RW }}
       uses: docker/build-push-action@v6
       with:
         context: .
@@ -519,7 +522,7 @@ jobs:
         platforms: ${{ env.PLATFORMS }}
 
     - name: Update DockerHub repo description
-      if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+      if: ${{ env.DOCKER_RW }} && ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
