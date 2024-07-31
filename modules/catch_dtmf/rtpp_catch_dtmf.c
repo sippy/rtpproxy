@@ -72,7 +72,7 @@ struct rtpp_module_priv {
 
 struct catch_dtmf_einfo {
     int pending;
-    char digit;
+    int digit;
     uint32_t ts;
     uint16_t duration;
 };
