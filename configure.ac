@@ -74,9 +74,38 @@ AC_ARG_ENABLE(basic-tests,
   AS_HELP_STRING([--enable-basic-tests],[enable basic functionality tests]),
   [ENABLE_BASIC_TESTS=${enableval}], [ENABLE_BASIC_TESTS=yes])
 
+test_lto() {
+  if test "${ENABLE_LTO}" != "yes" -a "${ENABLE_LTO}" != "auto" ; then return; fi
+
+  local CFLAGS="$CFLAGS -flto"
+  local LDFLAGS="$LDFLAGS -flto"
+
+  AC_MSG_CHECKING([whether linking with -flto works])
+  AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([[]])],
+    [AC_MSG_RESULT([yes])
+     local _ENABLE_LTO=yes],
+    [AC_MSG_RESULT([no])
+     local _ENABLE_LTO=no]
+  )
+  if test "${_ENABLE_LTO}" = "yes"
+  then
+    ENABLE_LTO="yes"
+    return
+  fi
+  if test "${ENABLE_LTO}" = "auto"
+  then
+    ENABLE_LTO="no"
+    return
+  fi
+  AC_MSG_ERROR([LTO is not working])
+}
+
 AC_ARG_ENABLE(lto,
-  AS_HELP_STRING([--enable-lto],[enable LTO (Link-Time Optimization)]),
+  AS_HELP_STRING([--enable-lto],[enable LTO (Link-Time Optimization): yes/no/auto]),
   [ENABLE_LTO=${enableval}], [ENABLE_LTO=no])
+
+test_lto
 
 AC_ARG_ENABLE(librtpproxy,
   AS_HELP_STRING([--enable-librtpproxy],[Build librtpproxy for instrumentation]),
