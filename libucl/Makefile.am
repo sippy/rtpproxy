@@ -28,7 +28,9 @@ libucl_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_libucl_common) $(RTPP_MEMDEB_CF
 
 HEPSRCDIR=$(top_srcdir)/hepconnector
 
+if ENABLE_noinst
 noinst_PROGRAMS = libucl_test
+endif
 libucl_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libucl_test \
   -I$(UCL_DIR)/include -I$(HEPSRCDIR)
 libucl_test_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)

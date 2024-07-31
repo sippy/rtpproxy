@@ -3,7 +3,9 @@ include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
 
 bin_PROGRAMS=makeann
+if ENABLE_noinst
 noinst_PROGRAMS=makeann_debug
+endif
 
 extractaudio_SRCDIR=$(top_srcdir)/extractaudio
 

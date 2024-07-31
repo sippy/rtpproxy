@@ -12,7 +12,9 @@ if ENABLE_LIBRTPPROXY
 noinst_LTLIBRARIES = librtpp_acct_rtcp_hep.la
 endif
 
+if ENABLE_noinst
 noinst_PROGRAMS = rtcp2json_test
+endif
 rtcp2json_test_SOURCES = rtcp2json_test.c rtpp_sbuf.c rtcp2json.c
 rtcp2json_test_CFLAGS = $(OPT_CFLAGS) $(AM_CFLAGS) $(LTO_FLAG)
 rtcp2json_test_LDFLAGS = $(AM_CFLAGS) $(LTO_FLAG)
@@ -36,7 +38,9 @@ rtpp_acct_rtcp_hep_debug_la_CPPFLAGS=$(rtpp_acct_rtcp_hep_la_CPPFLAGS) \
 rtpp_acct_rtcp_hep_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_acct_rtcp_hep_common) \
  $(RTPP_MEMDEB_CFLAGS)
 
+if ENABLE_noinst
 noinst_PROGRAMS += rtpp_sbuf_selftest
+endif
 rtpp_sbuf_selftest_CPPFLAGS = -Drtpp_sbuf_selftest=main \
   $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_sbuf
 rtpp_sbuf_selftest_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)

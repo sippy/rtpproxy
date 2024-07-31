@@ -7,13 +7,17 @@ XXH_DIR=$(top_srcdir)/libxxHash
 MOD_DIR=$(top_srcdir)/modules
 
 bin_PROGRAMS=rtpproxy rtpproxy_debug
+if ENABLE_noinst
 noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_rzmalloc_perf_debug rtpp_fintest
+endif
 if ENABLE_LIBRTPPROXY
 lib_LTLIBRARIES = librtpproxy.la
 endif
 
+if ENABLE_noinst
 if BUILD_OBJCK
 noinst_PROGRAMS += rtpp_objck rtpp_objck_perf
+endif
 endif
 
 RTPP_AUTOSRC_SOURCES = rtpp_command_rcache.h rtpp_log_obj.h \

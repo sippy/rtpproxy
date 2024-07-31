@@ -118,6 +118,10 @@ then
   LDFLAGS="${LDFLAGS} --coverage"
 fi
 
+AC_ARG_ENABLE([noinst],
+  AS_HELP_STRING([--enable-noinst],[Enable building noinst binaries (default is yes)]),
+  [ENABLE_noinst=$enableval],
+  [ENABLE_noinst=yes])
 
 # Checks for libraries.
 
@@ -435,6 +439,7 @@ AM_CONDITIONAL(ENABLE_WARN_IPT, [test "${ac_cc_warn_ipt}" = 1])
 AM_CONDITIONAL(ENABLE_LTO, [test "x${ENABLE_LTO}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBRTPPROXY, [test "x${ENABLE_LIBRTPPROXY}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBUNWIND, [test "${ENABLE_LIBUNWIND}" = 1 ])
+AM_CONDITIONAL(ENABLE_noinst, [test "x${ENABLE_noinst}" = "xyes" ])
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile

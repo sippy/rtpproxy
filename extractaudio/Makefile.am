@@ -6,7 +6,9 @@ include $(top_srcdir)/m4/coverage.ami
 include $(top_srcdir)/autosrc/Makefile.ami
 
 bin_PROGRAMS=extractaudio
+if ENABLE_noinst
 noinst_PROGRAMS=extractaudio_debug
+endif
 
 extractaudio_BASESOURCES=extractaudio.c decoder.c rtpp_loader.c ${MAINSRCDIR}/rtp.c \
   ${MAINSRCDIR}/rtp_analyze.c ${MAINSRCDIR}/rtpp_util.c ${MAINSRCDIR}/rtpp_time.c \
