@@ -5,16 +5,14 @@ ARG LIBG722_IMAGE=sippylabs/libg722:latest-debian_sid-slim
 ARG CCACHE_IMAGE=scratch
 FROM ${LIBG722_IMAGE} AS libg722
 FROM ${BASE_IMAGE} AS build
-RUN mkdir -p /rtpproxy/ccache
-FROM ${CCACHE_IMAGE} AS ccache
-COPY --from=build /rtpproxy/ccache/ /rtpproxy/ccache/
-FROM build
 LABEL maintainer="Maksym Sobolyev <sobomax@sippysoft.com>"
 
 USER root
 
 # Set Environment Variables
 ENV DEBIAN_FRONTEND=noninteractive
+COPY --from=libg722 /usr/local/lib/libg722.* /usr/local/lib/
+COPY --from=libg722 /usr/local/include/g722* /usr/local/include/
 
 # Build & install everything
 ARG LIBSSL_APKG="libssl3"
@@ -34,16 +32,17 @@ COPY docker/install_depends.sh /tmp
 COPY docker/clang_ver.sub /tmp/docker/clang_ver.sub
 ARG TARGETPLATFORM
 RUN ./install_depends.sh
-COPY --from=libg722 /usr/local/lib/libg722.* /usr/local/lib/
-COPY --from=libg722 /usr/local/include/g722* /usr/local/include/
 
 COPY --exclude=.git* --link . /rtpproxy/
 
 ARG CCACHE_ROOT
 
-WORKDIR /rtpproxy
-
+RUN mkdir -p /rtpproxy/ccache
+FROM ${CCACHE_IMAGE} AS ccache
+COPY --from=build /rtpproxy/ccache/ /rtpproxy/ccache/
+FROM build
 COPY --from=ccache /rtpproxy/ccache /rtpproxy/ccache
+WORKDIR /rtpproxy
 RUN /rtpproxy/docker/build.sh
 RUN ls -l /usr/local/bin/rtpproxy*
 RUN ls -l /usr/local/bin/makeann*
