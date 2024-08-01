@@ -123,6 +123,11 @@ AC_ARG_ENABLE([noinst],
   [ENABLE_noinst=$enableval],
   [ENABLE_noinst=yes])
 
+AC_ARG_ENABLE([silent],
+  AS_HELP_STRING([--enable-silent],[Less verbose build]),
+  [ENABLE_SILENT=$enableval],
+  [ENABLE_SILENT=no])
+
 # Checks for libraries.
 
 if test "$enable_systemd" = 'yes'
@@ -440,6 +445,11 @@ AM_CONDITIONAL(ENABLE_LTO, [test "x${ENABLE_LTO}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBRTPPROXY, [test "x${ENABLE_LIBRTPPROXY}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBUNWIND, [test "${ENABLE_LIBUNWIND}" = 1 ])
 AM_CONDITIONAL(ENABLE_noinst, [test "x${ENABLE_noinst}" = "xyes" ])
+
+if test "${ENABLE_SILENT}" = "yes"
+then
+  AM_SILENT_RULES([yes])
+fi
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
