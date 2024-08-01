@@ -443,7 +443,7 @@ jobs:
         echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_ENV
         OS_TAG="`echo ${BASE_IMAGE} | sed 's|:|_|g'`"
         CCACHE_IMAGE="${{ env.DOCKER_REPO }}:${GIT_BRANCH}-${OS_TAG}-cccache"
-        if ! docker image inspect ${CCACHE_IMAGE} 2>&1 >/dev/null
+        if ! docker pull ${CCACHE_IMAGE} 2>&1 >/dev/null
         then
           CCACHE_BIMAGE="scratch"
         else
