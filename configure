@@ -856,6 +856,7 @@ enable_basic_tests
 enable_lto
 enable_librtpproxy
 enable_noinst
+enable_silent
 with_xsltproc
 with_xsltproc_flags
 '
@@ -1517,6 +1518,7 @@ Optional Features:
   --enable-lto            enable LTO (Link-Time Optimization): yes/no/auto
   --enable-librtpproxy    Build librtpproxy for instrumentation
   --enable-noinst         Enable building noinst binaries (default is yes)
+  --enable-silent         Less verbose build
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -13106,6 +13108,15 @@ else $as_nop
 fi
 
 
+# Check whether --enable-silent was given.
+if test ${enable_silent+y}
+then :
+  enableval=$enable_silent; ENABLE_SILENT=$enableval
+else $as_nop
+  ENABLE_SILENT=no
+fi
+
+
 # Checks for libraries.
 
 if test "$enable_systemd" = 'yes'
@@ -15137,6 +15148,51 @@ else
   ENABLE_noinst_FALSE=
 fi
 
+
+if test "${ENABLE_SILENT}" = "yes"
+then
+  # Check whether --enable-silent-rules was given.
+if test ${enable_silent_rules+y}
+then :
+  enableval=$enable_silent_rules;
+fi
+
+case $enable_silent_rules in # (((
+  yes) AM_DEFAULT_VERBOSITY=0;;
+   no) AM_DEFAULT_VERBOSITY=1;;
+    *) AM_DEFAULT_VERBOSITY=0;;
+esac
+am_make=${MAKE-make}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $am_make supports nested variables" >&5
+printf %s "checking whether $am_make supports nested variables... " >&6; }
+if test ${am_cv_make_support_nested_variables+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if printf "%s\n" 'TRUE=$(BAR$(V))
+BAR0=false
+BAR1=true
+V=1
+am__doit:
+	@$(TRUE)
+.PHONY: am__doit' | $am_make -f - >/dev/null 2>&1; then
+  am_cv_make_support_nested_variables=yes
+else
+  am_cv_make_support_nested_variables=no
+fi
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $am_cv_make_support_nested_variables" >&5
+printf "%s\n" "$am_cv_make_support_nested_variables" >&6; }
+if test $am_cv_make_support_nested_variables = yes; then
+    AM_V='$(V)'
+  AM_DEFAULT_V='$(AM_DEFAULT_VERBOSITY)'
+else
+  AM_V=$AM_DEFAULT_VERBOSITY
+  AM_DEFAULT_V=$AM_DEFAULT_VERBOSITY
+fi
+AM_BACKSLASH='\'
+
+fi
 
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile modules/badmod/Makefile libxxHash/Makefile modules/dtls_gw/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
 
