@@ -6,7 +6,7 @@ set -x
 MYPATH="`realpath "${0}"`"
 RTPDIR="`dirname "${MYPATH}"`/.."
 
-CONFIGURE_ARGS="--enable-librtpproxy --enable-noinst=no"
+CONFIGURE_ARGS="--enable-librtpproxy --enable-noinst=no --enable-silent"
 ARCH="`dpkg --print-architecture`"
 
 if [ "${ARCH}" != "armhf" -a "${ARCH}" != "ppc64el" ]
