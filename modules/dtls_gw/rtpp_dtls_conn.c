@@ -297,7 +297,7 @@ rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *self,
     }
     if (rdfsp->fingerprint->len != FP_FINGERPRINT_STR_LEN) {
         RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "invalid fingerprint "
-          "length: \"%lu\"", rdfsp->fingerprint->len);
+          "length: \"%lu\"", (unsigned long)rdfsp->fingerprint->len);
         goto failed;
     }
     sprintf(pvt->fingerprint, "%.*s %.*s", FMTSTR(&rdfsp->algorithm),
