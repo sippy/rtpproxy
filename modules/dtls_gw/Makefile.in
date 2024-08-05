@@ -134,13 +134,11 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
 LTLIBRARIES = $(noinst_LTLIBRARIES) $(pkglib_LTLIBRARIES)
-am__DEPENDENCIES_1 =
-librtpp_dtls_gw_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am__objects_1 = librtpp_dtls_gw_la-rtpp_dtls_gw.lo \
+librtpp_dtls_gw_la_DEPENDENCIES =
+am_librtpp_dtls_gw_la_OBJECTS = librtpp_dtls_gw_la-rtpp_dtls_gw.lo \
 	librtpp_dtls_gw_la-rtpp_dtls.lo \
 	librtpp_dtls_gw_la-rtpp_dtls_conn.lo \
 	librtpp_dtls_gw_la-rtpp_dtls_util.lo
-am_librtpp_dtls_gw_la_OBJECTS = $(am__objects_1)
 librtpp_dtls_gw_la_OBJECTS = $(am_librtpp_dtls_gw_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -150,24 +148,22 @@ librtpp_dtls_gw_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(librtpp_dtls_gw_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-@ENABLE_LIBRTPPROXY_TRUE@am_librtpp_dtls_gw_la_rpath =
-rtpp_dtls_gw_la_DEPENDENCIES =
-am_rtpp_dtls_gw_la_OBJECTS = rtpp_dtls_gw_la-rtpp_dtls_gw.lo \
-	rtpp_dtls_gw_la-rtpp_dtls.lo rtpp_dtls_gw_la-rtpp_dtls_conn.lo \
-	rtpp_dtls_gw_la-rtpp_dtls_util.lo
+rtpp_dtls_gw_la_DEPENDENCIES = librtpp_dtls_gw.la
+am_rtpp_dtls_gw_la_OBJECTS = rtpp_dtls_gw_la-rtpp_dtls_gw.lo
 rtpp_dtls_gw_la_OBJECTS = $(am_rtpp_dtls_gw_la_OBJECTS)
 rtpp_dtls_gw_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_dtls_gw_la_CFLAGS) $(CFLAGS) $(rtpp_dtls_gw_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am__DEPENDENCIES_1 =
 am__DEPENDENCIES_2 = $(top_srcdir)/libexecinfo/libexecinfo.la
 rtpp_dtls_gw_debug_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_2)
-am__objects_2 = rtpp_dtls_gw_debug_la-rtpp_dtls_gw.lo \
+am__objects_1 = rtpp_dtls_gw_debug_la-rtpp_dtls_gw.lo \
 	rtpp_dtls_gw_debug_la-rtpp_dtls.lo \
 	rtpp_dtls_gw_debug_la-rtpp_dtls_conn.lo \
 	rtpp_dtls_gw_debug_la-rtpp_dtls_util.lo
-am_rtpp_dtls_gw_debug_la_OBJECTS = $(am__objects_2)
+am_rtpp_dtls_gw_debug_la_OBJECTS = $(am__objects_1)
 rtpp_dtls_gw_debug_la_OBJECTS = $(am_rtpp_dtls_gw_debug_la_OBJECTS)
 rtpp_dtls_gw_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -195,10 +191,7 @@ am__depfiles_remade = ./$(DEPDIR)/librtpp_dtls_gw_la-rtpp_dtls.Plo \
 	./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_conn.Plo \
 	./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_gw.Plo \
 	./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_util.Plo \
-	./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls.Plo \
-	./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_conn.Plo \
-	./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_gw.Plo \
-	./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_util.Plo
+	./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_gw.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -281,6 +274,7 @@ EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 GREP = @GREP@
 HAVE_FOP = @HAVE_FOP@
 INSTALL = @INSTALL@
@@ -458,19 +452,17 @@ NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 pkglib_LTLIBRARIES = rtpp_dtls_gw.la rtpp_dtls_gw_debug.la
-@ENABLE_LIBRTPPROXY_TRUE@noinst_LTLIBRARIES = librtpp_dtls_gw.la
-rtpp_dtls_gw_la_SOURCES = rtpp_dtls_gw.c rtpp_dtls.c rtpp_dtls.h \
-  rtpp_dtls_conn.c rtpp_dtls_conn.h rtpp_dtls_util.c rtpp_dtls_util.h
-
+noinst_LTLIBRARIES = librtpp_dtls_gw.la
+rtpp_dtls_gw_la_SOURCES = rtpp_dtls_gw.c librtpp_dtls_gw.la
 rtpp_dtls_gw_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
 rtpp_dtls_gw_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
   -Dfree=mod_free -Drealloc=mod_realloc -DRTPP_MOD_NAME="dtls_gw"
 
 CFLAGS_rtpp_dtls_gw_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
 rtpp_dtls_gw_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_dtls_gw_common)
-rtpp_dtls_gw_la_LIBADD = -lssl -lsrtp2
-rtpp_dtls_gw_debug_la_SOURCES = $(rtpp_dtls_gw_la_SOURCES)
-rtpp_dtls_gw_debug_la_LIBADD = $(rtpp_dtls_gw_la_LIBADD) $(RTPP_MEMDEB_LDADD)
+rtpp_dtls_gw_la_LIBADD = librtpp_dtls_gw.la
+rtpp_dtls_gw_debug_la_SOURCES = $(librtpp_dtls_gw_la_SOURCES)
+rtpp_dtls_gw_debug_la_LIBADD = $(librtpp_dtls_gw_la_LIBADD) $(RTPP_MEMDEB_LDADD)
 rtpp_dtls_gw_debug_la_LDFLAGS = $(rtpp_dtls_gw_la_LDFLAGS)
 rtpp_dtls_gw_debug_la_CPPFLAGS = $(rtpp_dtls_gw_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="dtls_gw"
@@ -478,10 +470,12 @@ rtpp_dtls_gw_debug_la_CPPFLAGS = $(rtpp_dtls_gw_la_CPPFLAGS) \
 rtpp_dtls_gw_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_rtpp_dtls_gw_common) \
  $(RTPP_MEMDEB_CFLAGS)
 
-librtpp_dtls_gw_la_SOURCES = $(rtpp_dtls_gw_la_SOURCES)
+librtpp_dtls_gw_la_SOURCES = rtpp_dtls_gw.c rtpp_dtls.c rtpp_dtls.h \
+  rtpp_dtls_conn.c rtpp_dtls_conn.h rtpp_dtls_util.c rtpp_dtls_util.h
+
 librtpp_dtls_gw_la_CPPFLAGS = $(rtpp_dtls_gw_la_CPPFLAGS) -DLIBRTPPROXY
 librtpp_dtls_gw_la_CFLAGS = $(rtpp_dtls_gw_la_CFLAGS)
-librtpp_dtls_gw_la_LIBADD = $(rtpp_dtls_gw_la_LIBADD)
+librtpp_dtls_gw_la_LIBADD = -lssl -lsrtp2
 IPLDIR = $(top_srcdir)/src/ipol
 all: all-am
 
@@ -565,7 +559,7 @@ clean-pkglibLTLIBRARIES:
 	}
 
 librtpp_dtls_gw.la: $(librtpp_dtls_gw_la_OBJECTS) $(librtpp_dtls_gw_la_DEPENDENCIES) $(EXTRA_librtpp_dtls_gw_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(librtpp_dtls_gw_la_LINK) $(am_librtpp_dtls_gw_la_rpath) $(librtpp_dtls_gw_la_OBJECTS) $(librtpp_dtls_gw_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(librtpp_dtls_gw_la_LINK)  $(librtpp_dtls_gw_la_OBJECTS) $(librtpp_dtls_gw_la_LIBADD) $(LIBS)
 
 rtpp_dtls_gw.la: $(rtpp_dtls_gw_la_OBJECTS) $(rtpp_dtls_gw_la_DEPENDENCIES) $(EXTRA_rtpp_dtls_gw_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_dtls_gw_la_LINK) -rpath $(pkglibdir) $(rtpp_dtls_gw_la_OBJECTS) $(rtpp_dtls_gw_la_LIBADD) $(LIBS)
@@ -587,10 +581,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_conn.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_gw.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_util.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_conn.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_gw.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_util.Plo@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -653,27 +644,6 @@ rtpp_dtls_gw_la-rtpp_dtls_gw.lo: rtpp_dtls_gw.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_dtls_gw.c' object='rtpp_dtls_gw_la-rtpp_dtls_gw.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_dtls_gw_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_dtls_gw_la_CFLAGS) $(CFLAGS) -c -o rtpp_dtls_gw_la-rtpp_dtls_gw.lo `test -f 'rtpp_dtls_gw.c' || echo '$(srcdir)/'`rtpp_dtls_gw.c
-
-rtpp_dtls_gw_la-rtpp_dtls.lo: rtpp_dtls.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_dtls_gw_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_dtls_gw_la_CFLAGS) $(CFLAGS) -MT rtpp_dtls_gw_la-rtpp_dtls.lo -MD -MP -MF $(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls.Tpo -c -o rtpp_dtls_gw_la-rtpp_dtls.lo `test -f 'rtpp_dtls.c' || echo '$(srcdir)/'`rtpp_dtls.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls.Tpo $(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_dtls.c' object='rtpp_dtls_gw_la-rtpp_dtls.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_dtls_gw_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_dtls_gw_la_CFLAGS) $(CFLAGS) -c -o rtpp_dtls_gw_la-rtpp_dtls.lo `test -f 'rtpp_dtls.c' || echo '$(srcdir)/'`rtpp_dtls.c
-
-rtpp_dtls_gw_la-rtpp_dtls_conn.lo: rtpp_dtls_conn.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_dtls_gw_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_dtls_gw_la_CFLAGS) $(CFLAGS) -MT rtpp_dtls_gw_la-rtpp_dtls_conn.lo -MD -MP -MF $(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_conn.Tpo -c -o rtpp_dtls_gw_la-rtpp_dtls_conn.lo `test -f 'rtpp_dtls_conn.c' || echo '$(srcdir)/'`rtpp_dtls_conn.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_conn.Tpo $(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_conn.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_dtls_conn.c' object='rtpp_dtls_gw_la-rtpp_dtls_conn.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_dtls_gw_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_dtls_gw_la_CFLAGS) $(CFLAGS) -c -o rtpp_dtls_gw_la-rtpp_dtls_conn.lo `test -f 'rtpp_dtls_conn.c' || echo '$(srcdir)/'`rtpp_dtls_conn.c
-
-rtpp_dtls_gw_la-rtpp_dtls_util.lo: rtpp_dtls_util.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_dtls_gw_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_dtls_gw_la_CFLAGS) $(CFLAGS) -MT rtpp_dtls_gw_la-rtpp_dtls_util.lo -MD -MP -MF $(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_util.Tpo -c -o rtpp_dtls_gw_la-rtpp_dtls_util.lo `test -f 'rtpp_dtls_util.c' || echo '$(srcdir)/'`rtpp_dtls_util.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_util.Tpo $(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_util.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_dtls_util.c' object='rtpp_dtls_gw_la-rtpp_dtls_util.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_dtls_gw_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_dtls_gw_la_CFLAGS) $(CFLAGS) -c -o rtpp_dtls_gw_la-rtpp_dtls_util.lo `test -f 'rtpp_dtls_util.c' || echo '$(srcdir)/'`rtpp_dtls_util.c
 
 rtpp_dtls_gw_debug_la-rtpp_dtls_gw.lo: rtpp_dtls_gw.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_dtls_gw_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_dtls_gw_debug_la_CFLAGS) $(CFLAGS) -MT rtpp_dtls_gw_debug_la-rtpp_dtls_gw.lo -MD -MP -MF $(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_gw.Tpo -c -o rtpp_dtls_gw_debug_la-rtpp_dtls_gw.lo `test -f 'rtpp_dtls_gw.c' || echo '$(srcdir)/'`rtpp_dtls_gw.c
@@ -845,10 +815,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_conn.Plo
 	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_gw.Plo
 	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_util.Plo
-	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls.Plo
-	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_conn.Plo
 	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_gw.Plo
-	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_util.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -902,10 +869,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_conn.Plo
 	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_gw.Plo
 	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_debug_la-rtpp_dtls_util.Plo
-	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls.Plo
-	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_conn.Plo
 	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_gw.Plo
-	-rm -f ./$(DEPDIR)/rtpp_dtls_gw_la-rtpp_dtls_util.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

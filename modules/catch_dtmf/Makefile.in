@@ -146,7 +146,6 @@ librtpp_catch_dtmf_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(librtpp_catch_dtmf_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-@ENABLE_LIBRTPPROXY_TRUE@am_librtpp_catch_dtmf_la_rpath =
 rtpp_catch_dtmf_la_LIBADD =
 am_rtpp_catch_dtmf_la_OBJECTS = rtpp_catch_dtmf_la-rtpp_catch_dtmf.lo
 rtpp_catch_dtmf_la_OBJECTS = $(am_rtpp_catch_dtmf_la_OBJECTS)
@@ -267,6 +266,7 @@ EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 GREP = @GREP@
 HAVE_FOP = @HAVE_FOP@
 INSTALL = @INSTALL@
@@ -444,7 +444,7 @@ NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 pkglib_LTLIBRARIES = rtpp_catch_dtmf.la rtpp_catch_dtmf_debug.la
-@ENABLE_LIBRTPPROXY_TRUE@noinst_LTLIBRARIES = librtpp_catch_dtmf.la
+noinst_LTLIBRARIES = librtpp_catch_dtmf.la
 rtpp_catch_dtmf_la_SOURCES = rtpp_catch_dtmf.c
 rtpp_catch_dtmf_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
 rtpp_catch_dtmf_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
@@ -546,7 +546,7 @@ clean-pkglibLTLIBRARIES:
 	}
 
 librtpp_catch_dtmf.la: $(librtpp_catch_dtmf_la_OBJECTS) $(librtpp_catch_dtmf_la_DEPENDENCIES) $(EXTRA_librtpp_catch_dtmf_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(librtpp_catch_dtmf_la_LINK) $(am_librtpp_catch_dtmf_la_rpath) $(librtpp_catch_dtmf_la_OBJECTS) $(librtpp_catch_dtmf_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(librtpp_catch_dtmf_la_LINK)  $(librtpp_catch_dtmf_la_OBJECTS) $(librtpp_catch_dtmf_la_LIBADD) $(LIBS)
 
 rtpp_catch_dtmf.la: $(rtpp_catch_dtmf_la_OBJECTS) $(rtpp_catch_dtmf_la_DEPENDENCIES) $(EXTRA_rtpp_catch_dtmf_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_catch_dtmf_la_LINK) -rpath $(pkglibdir) $(rtpp_catch_dtmf_la_OBJECTS) $(rtpp_catch_dtmf_la_LIBADD) $(LIBS)

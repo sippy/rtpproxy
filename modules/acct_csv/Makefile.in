@@ -146,7 +146,6 @@ librtpp_acct_csv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(librtpp_acct_csv_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-@ENABLE_LIBRTPPROXY_TRUE@am_librtpp_acct_csv_la_rpath =
 rtpp_acct_csv_la_LIBADD =
 am_rtpp_acct_csv_la_OBJECTS = rtpp_acct_csv_la-rtpp_acct_csv.lo
 rtpp_acct_csv_la_OBJECTS = $(am_rtpp_acct_csv_la_OBJECTS)
@@ -262,6 +261,7 @@ EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 GREP = @GREP@
 HAVE_FOP = @HAVE_FOP@
 INSTALL = @INSTALL@
@@ -439,7 +439,7 @@ NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 pkglib_LTLIBRARIES = rtpp_acct_csv.la rtpp_acct_csv_debug.la
-@ENABLE_LIBRTPPROXY_TRUE@noinst_LTLIBRARIES = librtpp_acct_csv.la
+noinst_LTLIBRARIES = librtpp_acct_csv.la
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
 rtpp_acct_csv_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
 rtpp_acct_csv_la_CPPFLAGS = -D_BSD_SOURCE -DRTPP_MOD_NAME="acct_csv"
@@ -536,7 +536,7 @@ clean-pkglibLTLIBRARIES:
 	}
 
 librtpp_acct_csv.la: $(librtpp_acct_csv_la_OBJECTS) $(librtpp_acct_csv_la_DEPENDENCIES) $(EXTRA_librtpp_acct_csv_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(librtpp_acct_csv_la_LINK) $(am_librtpp_acct_csv_la_rpath) $(librtpp_acct_csv_la_OBJECTS) $(librtpp_acct_csv_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(librtpp_acct_csv_la_LINK)  $(librtpp_acct_csv_la_OBJECTS) $(librtpp_acct_csv_la_LIBADD) $(LIBS)
 
 rtpp_acct_csv.la: $(rtpp_acct_csv_la_OBJECTS) $(rtpp_acct_csv_la_DEPENDENCIES) $(EXTRA_rtpp_acct_csv_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_acct_csv_la_LINK) -rpath $(pkglibdir) $(rtpp_acct_csv_la_OBJECTS) $(rtpp_acct_csv_la_LIBADD) $(LIBS)
