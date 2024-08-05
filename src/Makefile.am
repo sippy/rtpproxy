@@ -12,6 +12,8 @@ noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_rzmalloc_perf_debug rtpp_fintest
 endif
 if ENABLE_LIBRTPPROXY
 lib_LTLIBRARIES = librtpproxy.la
+else
+noinst_LTLIBRARIES = librtpproxy.la
 endif
 
 if ENABLE_noinst
@@ -76,8 +78,7 @@ BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/pproc_manager.c \
   $(ADV_DIR)/pproc_manager.h
 BASE_SOURCES+=rtpp_modman.c
 
-rtpproxy_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl.la \
-  $(XXH_DIR)/libxxHash.la
+rtpproxy_LDADD=librtpproxy.la -lm -lpthread
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.la \
   $(XXH_DIR)/libxxHash_debug.la $(RTPP_MEMDEB_LDADD)
 rtpproxy_debug_LDFLAGS=-Wl,--export-dynamic $(LTO_FLAG)
@@ -101,8 +102,10 @@ endif
 SRCS_MEMDEB_CORE = $(RTPP_MEMDEB_CORESRCS) rtpp_memdeb_stats.h rtpp_memdeb_test.c
 SRCS_DEBUG=	$(SRCS_MEMDEB_CORE)
 
-rtpproxy_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN) rtpp_mallocs.c rtpp_mallocs.h \
-  rtpp_refcnt.c rtpp_refcnt.h
+rtpproxy_SOURCES=main.c librtpproxy.la
+if ENABLE_MODULE_IF
+rtpproxy_SOURCES += rtpp_module_if.c rtpp_module.h
+endif
 rtpproxy_debug_SOURCES=$(BASE_SOURCES) $(SRCS_AUTOGEN) $(SRCS_DEBUG) $(SRCS_AUTOGEN_DEBUG)
 rtpp_objck_perf_LDADD=-lm -lpthread @LIBS_ELPERIODIC@
 rtpp_objck_BASESOURCES=rtpp_objck.c $(SRCS_AUTOGEN) rtpp_network.c \
@@ -174,16 +177,23 @@ rtpp_fintest_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 rtpp_fintest_LDADD = $(RTPP_MEMDEB_LDADD)
 rtpp_fintest_LDFLAGS = $(LTO_FLAG)
 
-librtpproxy_la_SOURCES = $(rtpproxy_SOURCES) $(top_srcdir)/libucl/libucl.la \
-  $(XXH_DIR)/libxxHash.la rtpp_module_if_static.c rtpp_module_if_static.h
+librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \
+  rtpp_refcnt.c rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \
+  $(top_srcdir)/libucl/libucl.la $(XXH_DIR)/libxxHash.la \
+  rtpp_module_if_static.c rtpp_module_if_static.h
 librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS) -fPIC
 librtpproxy_la_CPPFLAGS = $(rtpproxy_CPPFLAGS) -DLIBRTPPROXY
 librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
-  $(XXH_DIR)/libxxHash.la $(MOD_DIR)/catch_dtmf/librtpp_catch_dtmf.la \
+  $(XXH_DIR)/libxxHash.la
+if BUILD_MODULES
+librtpproxy_la_LIBADD += $(MOD_DIR)/catch_dtmf/librtpp_catch_dtmf.la \
   $(MOD_DIR)/acct_csv/librtpp_acct_csv.la \
-  $(MOD_DIR)/acct_rtcp_hep/librtpp_acct_rtcp_hep.la \
-  $(MOD_DIR)/dtls_gw/librtpp_dtls_gw.la \
+  $(MOD_DIR)/acct_rtcp_hep/librtpp_acct_rtcp_hep.la
+if BUILD_CRYPTO
+librtpproxy_la_LIBADD += $(MOD_DIR)/dtls_gw/librtpp_dtls_gw.la \
   $(MOD_DIR)/ice_lite/librtpp_ice_lite.la
+endif
+endif
 librtpproxy_la_LDFLAGS = -static
 if BUILD_ELPERIODIC
 librtpproxy_la_LIBADD += @LIBS_ELPERIODIC@

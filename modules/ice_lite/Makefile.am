@@ -5,9 +5,7 @@ include $(top_srcdir)/m4/rtpp_module.ami
 
 pkglib_LTLIBRARIES = rtpp_ice_lite.la rtpp_ice_lite_debug.la
 
-if ENABLE_LIBRTPPROXY
 noinst_LTLIBRARIES = librtpp_ice_lite.la
-endif
 
 rtpp_ice_lite_la_SOURCES = rtpp_ice_lite.c
 rtpp_ice_lite_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)

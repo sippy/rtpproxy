@@ -5,9 +5,7 @@ include $(top_srcdir)/m4/rtpp_module.ami
 
 pkglib_LTLIBRARIES = rtpp_acct_csv.la rtpp_acct_csv_debug.la
 
-if ENABLE_LIBRTPPROXY
 noinst_LTLIBRARIES = librtpp_acct_csv.la
-endif
 
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
 rtpp_acct_csv_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
