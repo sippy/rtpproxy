@@ -9,7 +9,7 @@ RTPDIR="`dirname "${MYPATH}"`/.."
 CONFIGURE_ARGS="--enable-librtpproxy --enable-noinst=no --enable-silent"
 ARCH="`dpkg --print-architecture`"
 
-if [ "${ARCH}" != "armhf" -a "${ARCH}" != "ppc64el" ]
+if [ "${ARCH}" != "armhf" -a "${ARCH}" != "ppc64el" -a "${ARCH}" != "mips64el" ]
 then
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-lto=auto"
 fi
@@ -43,7 +43,7 @@ set_clang_env
 
 CC=clang-${CLANG_VER} AR=llvm-ar-${CLANG_VER} RANLIB=llvm-ranlib-${CLANG_VER} \
  NM=llvm-nm-${CLANG_VER} STRIP=llvm-strip-${CLANG_VER} CFLAGS="-O3 -pipe" \
- ./configure ${CONFIGURE_ARGS}
+ LDFLAGS="-L/usr/local/lib -fuse-ld=lld-${CLANG_VER}" ./configure ${CONFIGURE_ARGS}
 make -j4 all
 make install
 
