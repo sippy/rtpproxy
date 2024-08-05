@@ -27,7 +27,7 @@ AC_DEFINE_UNQUOTED([VERSION_GIT], ["${mydef_version}"], [Git hash])
 case "${host_os}" in
 freebsd*)
   CPPFLAGS="${CPPFLAGS} -I/usr/local/include -pthread"
-  LDFLAGS="-L/usr/local/lib"
+  LDFLAGS="${LDFLAGS} -L/usr/local/lib"
   #LIBS=
   ;;
 linux*)
