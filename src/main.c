@@ -264,7 +264,9 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     }
     free(cfsp->ctrl_socks);
     free(cfsp->runcreds);
+#if ENABLE_MODULE_IF
     RTPP_OBJ_DECREF(cfsp->modules_cf);
+#endif
     rtpp_gen_uid_free();
     rtpp_exit(memdeb, rval);
 }
@@ -280,9 +282,11 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     struct rtpp_ctrl_sock *ctrl_sock;
     int option_index, brsym;
     const struct proto_cap *pcp;
+#if ENABLE_MODULE_IF
     struct rtpp_module_if *mif;
     char mpath[PATH_MAX + 1];
     struct rtpp_module_conf *mcp;
+#endif
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -343,6 +347,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     while ((ch = getopt_long(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:"
       "Vc:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
+#if ENABLE_MODULE_IF
         case LOPT_DSO:
             cp = NULL;
 #if defined(LIBRTPPROXY)
@@ -370,6 +375,9 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
                    "loaded via --dso option", cp);
             }
             CALL_METHOD(cfsp->modules_cf, insert, mif);
+#else
+            errx(1, "%s: dymanic module support is not compiled in", cp);
+#endif
             break;
 
         case LOPT_BRSYM:
@@ -812,7 +820,9 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
       (CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_length) > 0))
         continue;
 
+#if ENABLE_MODULE_IF
     RTPP_OBJ_DECREF(cfsp->modules_cf);
+#endif
     RTPP_OBJ_DECREF(cfsp->pproc_manager);
     free(cfsp->runcreds);
     RTPP_OBJ_DECREF(cfsp->rtpp_notify_cf);
@@ -890,11 +900,13 @@ rtpp_main(int argc, char **argv)
          /* NOTREACHED */
     }
 
+#if ENABLE_MODULE_IF
     cfs.modules_cf = rtpp_modman_ctor();
     if (cfs.modules_cf == NULL) {
          err(1, "can't allocate memory for the struct modules_cf");
          /* NOTREACHED */
     }
+#endif
 
     cfs.runcreds = rtpp_zmalloc(sizeof(struct rtpp_runcreds));
     if (cfs.runcreds == NULL) {

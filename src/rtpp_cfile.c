@@ -114,11 +114,17 @@ rtpp_cfile_process(const struct rtpp_cfg *csp)
         cf_key = ucl_object_key(obj_file);
         RTPP_LOG(csp->glog, RTPP_LOG_DBUG, "Entry: %s", cf_key);
         if (strcasecmp(cf_key, "modules") == 0) {
+#if ENABLE_MODULE_IF
             if (parse_modules(csp, obj_file) < 0) {
                 RTPP_LOG(csp->glog, RTPP_LOG_ERR, "parse_modules() failed");
                 ecode = -1;
                 goto e4;
             }
+#else
+            RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Modules are disabled, but the configuration file contains a \"modules\" section");
+            ecode = -1;
+            goto e4;
+#endif
         }
     }
     if (ucl_object_iter_chk_excpn(it_conf)) {
@@ -141,6 +147,7 @@ static const conf_helper_map default_module_map[] = {
     { NULL, (conf_helper_t) rtpp_ucl_set_unknown }
 };
 
+#if ENABLE_MODULE_IF
 static int
 parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
 {
@@ -232,6 +239,7 @@ e0:
     ucl_object_iterate_free(it_conf);
     return (ecode);
 }
+#endif
 
 static bool
 conf_helper_mapper(struct rtpp_log *log, const ucl_object_t *obj, const conf_helper_map *map,

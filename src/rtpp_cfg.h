@@ -137,7 +137,9 @@ struct rtpp_cfg {
     struct rtpp_sessinfo *sessinfo;
     const char *cwd_orig;
 
+#if ENABLE_MODULE_IF
     struct rtpp_modman *modules_cf;
+#endif
 
     struct overload_prot overload_prot;
 

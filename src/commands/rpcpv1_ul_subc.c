@@ -33,6 +33,8 @@
 #include "rtpp_types.h"
 #include "rtpp_cfg.h"
 #include "rtpp_util.h"
+#include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_modman.h"
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
@@ -42,25 +44,42 @@
 #include "commands/rpcpv1_ul_subc.h"
 #include "commands/rpcpv1_delete.h"
 
-int
-rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp,
-  const struct rtpp_command_args *subc_args, struct after_success_h *asp)
+#if ENABLE_MODULE_IF
+static int
+handle_mod_subc_parse(const struct rtpp_cfg *cfsp, const char *ip,
+  struct after_success_h *asp)
 {
     int mod_id, inst_id;
     const char *cp;
 
+    if (atoi_safe_sep(ip, &mod_id, ':', &cp) != ATOI_OK)
+        return (-1);
+    if (atoi_safe(cp, &inst_id) != ATOI_OK)
+        return (-1);
+    if (mod_id < 1 || inst_id < 1)
+        return (-1);
+    if (CALL_METHOD(cfsp->modules_cf, get_ul_subc_h, (unsigned)mod_id,
+        (unsigned)inst_id, asp) != 0)
+        return (-1);
+    return (0);
+}
+#endif
+
+int
+rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp,
+  const struct rtpp_command_args *subc_args, struct after_success_h *asp)
+{
+
     switch(subc_args->v[0].s[0]) {
     case 'M':
     case 'm':
-        if (atoi_safe_sep(&subc_args->v[0].s[1], &mod_id, ':', &cp) != ATOI_OK)
-            return (-1);
-        if (atoi_safe(cp, &inst_id) != ATOI_OK)
-            return (-1);
-        if (mod_id < 1 || inst_id < 1)
-            return (-1);
-        if (CALL_METHOD(cfsp->modules_cf, get_ul_subc_h, (unsigned)mod_id,
-          (unsigned)inst_id, asp) != 0)
-            return (-1);
+#if ENABLE_MODULE_IF
+        return (handle_mod_subc_parse(cfsp, &subc_args->v[0].s[1], asp));
+#else
+        RTPP_LOG(cfsp->glog, RTPP_LOG_WARN, "module command, but modules are not " \
+          "compiled in: %s", subc_args->v[0].s);
+        return (-1);
+#endif
         break;
 
     case 'D':
