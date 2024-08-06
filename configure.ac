@@ -149,8 +149,11 @@ fi
 AC_CHECK_HEADER(dlfcn.h, found_dlfcn=yes)
 if test "$found_dlfcn" = yes
 then
-  ENABLE_MODULE_IF=1
-  AC_DEFINE([ENABLE_MODULE_IF], 1, [Define to enable dymanic modules])
+  if test "${enable_shared}" = yes
+  then
+    ENABLE_MODULE_IF=1
+    AC_DEFINE([ENABLE_MODULE_IF], [1], [Define to enable dymanic modules])
+  fi
   AC_CHECK_LIB([dl], [dladdr], [LIBS_DL=-ldl], [LIBS_DL=])
 fi
 
