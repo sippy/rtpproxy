@@ -1,9 +1,9 @@
-#if !defined(_FUZZ_STANDALONE_H)
-#define _FUZZ_STANDALONE_H
+#pragma once
 
 #if defined(FUZZ_STANDALONE)
 #include <assert.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #endif /* FUZZ_STANDALONE */
@@ -30,7 +30,19 @@ static struct opt_save {
 })
 
 #if defined(FUZZ_STANDALONE)
+extern int LLVMFuzzerInitialize(int *argc, char ***argv) __attribute__((__weak__));
+
 int LLVMFuzzerTestOneInput(const char *data, size_t size);
+
+__attribute__((constructor)) static void
+rtpp_init()
+{
+    if (LLVMFuzzerInitialize != NULL) {
+        int r = LLVMFuzzerInitialize(NULL, NULL);
+        if (r != 0)
+            abort();
+    }
+}
 
 int
 main(int argc, char *argv[])
@@ -68,5 +80,8 @@ main(int argc, char *argv[])
     LLVMFuzzerTestOneInput(cp, size);
     return (0);
 }
+#else
+const char *__asan_default_options() {
+  return "verbosity=1";
+}
 #endif /* FUZZ_STANDALONE */
-#endif /* _FUZZ_STANDALONE_H */

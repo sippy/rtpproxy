@@ -47,8 +47,8 @@ cleanupHandler(void)
     close(gconf.tfd);
 }
 
-__attribute__((constructor)) void
-rtpp_init()
+int
+LLVMFuzzerInitialize(int *_argc, char ***_argv)
 {
     char *argv[] = {
        "rtpproxy",
@@ -70,12 +70,19 @@ rtpp_init()
     OPT_SAVE();
     cfsp = rtpp_main(argc, argv);
     OPT_RESTORE();
-    assert(cfsp != NULL);
+    if (cfsp == NULL)
+        goto e0;
     cfsp->no_resolve = 1;
     gconf.tfd = open("/dev/null", O_WRONLY, 0);
-    assert(gconf.tfd >= 0);
+    if (gconf.tfd < 0)
+        goto e1;
     gconf.cfsp = cfsp;
     atexit(cleanupHandler);
+    return (0);
+e1:
+    cleanupHandler();
+e0:
+    return (-1);
 }
 
 int
