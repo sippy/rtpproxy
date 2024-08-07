@@ -362,7 +362,8 @@ jobs:
 
   Fuzzing:
     name: Fuzz with OSS-Fuzz
-    needs: [LoadJobs_conf, Glitching]
+    needs: [LoadJobs_conf]
+    #needs: [LoadJobs_conf, Glitching]
     if: needs.LoadJobs_conf.outputs.do_Fuzzing == 'true'
     runs-on: ubuntu-latest
     permissions:
