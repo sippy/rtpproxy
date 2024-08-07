@@ -37,6 +37,7 @@
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <grp.h>
@@ -266,6 +267,9 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     free(cfsp->runcreds);
 #if ENABLE_MODULE_IF
     RTPP_OBJ_DECREF(cfsp->modules_cf);
+#else
+    assert(cfsp->_pad == (void *)0x12345678);
+    cfsp->_pad = (void *)((uintptr_t)cfsp->_pad ^ 0x87654321);
 #endif
     rtpp_gen_uid_free();
     rtpp_exit(memdeb, rval);
@@ -822,6 +826,9 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
 
 #if ENABLE_MODULE_IF
     RTPP_OBJ_DECREF(cfsp->modules_cf);
+#else
+    assert(cfsp->_pad == (void *)0x12345678);
+    cfsp->_pad = (void *)((uintptr_t)cfsp->_pad ^ 0x87654321);
 #endif
     RTPP_OBJ_DECREF(cfsp->pproc_manager);
     free(cfsp->runcreds);
@@ -906,6 +913,8 @@ rtpp_main(int argc, char **argv)
          err(1, "can't allocate memory for the struct modules_cf");
          /* NOTREACHED */
     }
+#else
+    cfs._pad = (void *)0x12345678;
 #endif
 
     cfs.runcreds = rtpp_zmalloc(sizeof(struct rtpp_runcreds));
