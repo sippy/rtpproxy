@@ -22,7 +22,7 @@ else
 fi
 
 ./configure --enable-librtpproxy
-for dir in libexecinfo libucl libre libelperiodic libxxHash modules/acct_rtcp_hep \
+for dir in libexecinfo libucl libre libelperiodic/src libxxHash modules/acct_rtcp_hep \
   modules/acct_csv modules/catch_dtmf modules/dtls_gw modules/ice_lite
 do
   make -C ${dir} all
@@ -34,7 +34,7 @@ do
   ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -Imodules/acct_rtcp_hep \
    scripts/fuzz/fuzz_${fz}_parser.c -o ${OUT}/fuzz_${fz}_parser \
    src/.libs/librtpproxy.a -pthread -lm -lssl -lcrypto \
-   -L${LIBSRTP}
+   ${LIBSRTP}
   for suff in dict options
   do
     if [ -e scripts/fuzz/fuzz_${fz}_parser.${suff} ]
