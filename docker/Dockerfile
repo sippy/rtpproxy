@@ -28,10 +28,10 @@ ARG BUILD_DEPS_NEW="${BUILD_DEPS_COMM} clang-${CLANG_VER_NEW} llvm-${CLANG_VER_N
 
 WORKDIR /tmp
 ARG APT_INSTALL="apt-get install --no-install-recommends -y"
-COPY docker/install_depends.sh /tmp
-COPY docker/clang_ver.sub /tmp/docker/clang_ver.sub
 ARG TARGETPLATFORM
-RUN ./install_depends.sh
+RUN --mount=type=bind,source=docker/install_depends.sh,target=install_depends.sh \
+    --mount=type=bind,source=docker/clang_ver.sub,target=docker/clang_ver.sub \
+      ./install_depends.sh
 
 COPY --exclude=.git* --link . /rtpproxy/
 
