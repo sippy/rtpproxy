@@ -47,8 +47,8 @@ cleanupHandler(void)
     close(gconf.tfd);
 }
 
-__attribute__((constructor)) void
-rtpp_init()
+int
+LLVMFuzzerInitialize(int *_argc, char ***_argv)
 {
     char *argv[] = {
        "rtpproxy",
@@ -76,6 +76,7 @@ rtpp_init()
     assert(gconf.tfd >= 0);
     gconf.cfsp = cfsp;
     atexit(cleanupHandler);
+    return (0);
 }
 
 int

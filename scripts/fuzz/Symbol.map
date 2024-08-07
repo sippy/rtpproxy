@@ -1,0 +1,7 @@
+RTPPROXY_FUZZ {
+    global:
+      main;
+      environ;
+      __progname;
+    local: *;
+};
