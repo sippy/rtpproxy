@@ -31,6 +31,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "config_pp.h"
+
 #include "rtpp_types.h"
 #include "rtpp_cfg.h"
 #include "rtpp_command.h"
