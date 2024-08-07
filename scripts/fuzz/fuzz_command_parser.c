@@ -8,6 +8,9 @@
 #include <threads.h>
 #include <unistd.h>
 
+#define HAVE_CONFIG_H 1
+#include "config_pp.h"
+
 #include "rtpp_types.h"
 #include "rtpp_cfg.h"
 #include "rtpp_refcnt.h"
