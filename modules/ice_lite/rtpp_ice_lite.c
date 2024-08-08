@@ -69,6 +69,7 @@
 #include "rtpp_proc_async.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_netaddr.h"
+#include "rtpp_linker_set.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
@@ -131,11 +132,7 @@ void *_libre_memdeb;
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
-#if !defined(LIBRTPPROXY)
-struct rtpp_minfo rtpp_module = {
-#else
-struct rtpp_minfo rtpp_module_ice_lite = {
-#endif
+struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "ice_lite",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 5,
@@ -147,6 +144,10 @@ struct rtpp_minfo rtpp_module_ice_lite = {
     .memdeb_p = &MEMDEB_SYM
 #endif
 };
+#if defined(LIBRTPPROXY)
+const static struct rtpp_minfo *_rtpp_module_ice_lite = &RTPP_MOD_SELF;
+DATA_SET(rtpp_modules, _rtpp_module_ice_lite);
+#endif
 
 struct wipkt {
     struct rtp_packet *pkt;

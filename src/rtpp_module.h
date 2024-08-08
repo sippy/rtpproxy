@@ -80,7 +80,10 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *, va_list);
 
 #if defined(LIBRTPPROXY)
 #include "rtpp_module_if_static.h"
-#define RTPP_MOD_SELF (*(rtpp_modules.RTPP_MOD_NAME))
+#define EXPAND_AND_CONCAT(a, b) a##b
+#define CONCAT(a, b) EXPAND_AND_CONCAT(a, b)
+#define RTPP_MOD_SELF CONCAT(rtpp_module_, RTPP_MOD_NAME)
+extern struct rtpp_minfo RTPP_MOD_SELF;
 #else
 #define RTPP_MOD_SELF (rtpp_module)
 #endif

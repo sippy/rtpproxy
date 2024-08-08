@@ -72,6 +72,7 @@
 #include "rtpp_util.h"
 #include "rtpp_pcount.h"
 #include "rtpp_pcnt_strm.h"
+#include "rtpp_linker_set.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
@@ -118,11 +119,7 @@ static struct pproc_act rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *);
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
-#if !defined(LIBRTPPROXY)
-struct rtpp_minfo rtpp_module = {
-#else
-struct rtpp_minfo rtpp_module_dtls_gw = {
-#endif
+struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "dtls_gw",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 4,
@@ -134,6 +131,10 @@ struct rtpp_minfo rtpp_module_dtls_gw = {
     .memdeb_p = &MEMDEB_SYM
 #endif
 };
+#if defined(LIBRTPPROXY)
+const static struct rtpp_minfo *_rtpp_module_dtls_gw = &RTPP_MOD_SELF;
+DATA_SET(rtpp_modules, _rtpp_module_dtls_gw);
+#endif
 
 static void
 rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)

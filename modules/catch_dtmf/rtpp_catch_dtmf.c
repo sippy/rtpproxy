@@ -63,6 +63,7 @@
 #include "rtpp_session.h"
 #include "rtpp_stream.h"
 #include "rtpp_pipe.h"
+#include "rtpp_linker_set.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
@@ -108,11 +109,7 @@ static struct pproc_act rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *);
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
-#if !defined(LIBRTPPROXY)
-struct rtpp_minfo rtpp_module = {
-#else
-struct rtpp_minfo rtpp_module_catch_dtmf = {
-#endif
+struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "catch_dtmf",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 3,
@@ -124,6 +121,10 @@ struct rtpp_minfo rtpp_module_catch_dtmf = {
     .memdeb_p = &MEMDEB_SYM
 #endif
 };
+#if defined(LIBRTPPROXY)
+const static struct rtpp_minfo *_rtpp_module_catch_dtmf = &RTPP_MOD_SELF;
+DATA_SET(rtpp_modules, _rtpp_module_catch_dtmf);
+#endif
 
 static void
 rtpp_catch_dtmf_edata_dtor(void *p)
