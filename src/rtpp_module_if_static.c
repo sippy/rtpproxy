@@ -32,8 +32,8 @@
 extern struct rtpp_minfo rtpp_module_acct_csv;
 extern struct rtpp_minfo rtpp_module_acct_rtcp_hep;
 extern struct rtpp_minfo rtpp_module_catch_dtmf;
-extern struct rtpp_minfo rtpp_module_dtls_gw;
-extern struct rtpp_minfo rtpp_module_ice_lite;
+struct rtpp_minfo __attribute__((__weak__)) rtpp_module_dtls_gw;
+struct rtpp_minfo  __attribute__((__weak__)) rtpp_module_ice_lite;
 
 const struct rtpp_modules rtpp_modules = {
     .acct_csv = &rtpp_module_acct_csv,
@@ -48,8 +48,10 @@ rtpp_static_modules_lookup(const char *name)
 {
 
     for (int i = 0; rtpp_modules.all[i] != NULL; i++) {
+        if (rtpp_modules.all[i]->descr.name == NULL)
+            continue;
         if (strcmp(rtpp_modules.all[i]->descr.name, name) == 0) {
-             return (rtpp_modules.all[i]);
+            return (rtpp_modules.all[i]);
         }
     }
     return (NULL);
