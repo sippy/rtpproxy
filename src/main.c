@@ -357,6 +357,8 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 #if defined(LIBRTPPROXY)
             if (rtpp_static_modules_lookup(optarg) != NULL) {
                 cp = optarg;
+            } else {
+                err(1, "%s: static module is not compiled in", optarg);
             }
 #endif
             if (cp == NULL)

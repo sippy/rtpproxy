@@ -58,6 +58,7 @@
 #include "rtpp_cfg.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_linker_set.h"
 
 #define SSRC_STRLEN 11
 
@@ -99,11 +100,7 @@ static const struct rtpp_acct_handlers acct_csv_aapi = {
     .on_session_end = AAPI_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
 };
 
-#if !defined(LIBRTPPROXY)
-struct rtpp_minfo rtpp_module = {
-#else
-struct rtpp_minfo rtpp_module_acct_csv = {
-#endif
+struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "acct_csv",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 1,
@@ -114,6 +111,10 @@ struct rtpp_minfo rtpp_module_acct_csv = {
 #endif
     .aapi = &acct_csv_aapi
 };
+#if defined(LIBRTPPROXY)
+const static struct rtpp_minfo *_rtpp_module_acct_csv = &RTPP_MOD_SELF;
+DATA_SET(rtpp_modules, _rtpp_module_acct_csv);
+#endif
 
 static const char *
 rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)

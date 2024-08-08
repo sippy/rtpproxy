@@ -51,6 +51,7 @@
 #include "rtpp_ssrc.h"
 #include "rtpp_ucl.h"
 #include "rtpa_stats.h"
+#include "rtpp_linker_set.h"
 
 #include "rtcp2json.h"
 #include "core_hep.h"
@@ -83,11 +84,7 @@ static const struct rtpp_acct_handlers acct_rtcp_hep_aapi = {
     .on_rtcp_rcvd = AAPI_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
-#if !defined(LIBRTPPROXY)
-struct rtpp_minfo rtpp_module = {
-#else
-struct rtpp_minfo rtpp_module_acct_rtcp_hep = {
-#endif
+struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "acct_rtcp_hep",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 2,
@@ -100,6 +97,10 @@ struct rtpp_minfo rtpp_module_acct_rtcp_hep = {
 #endif
     .aapi = &acct_rtcp_hep_aapi
 };
+#if defined(LIBRTPPROXY)
+const static struct rtpp_minfo *_rtpp_module_acct_rtcp_hep = &RTPP_MOD_SELF;
+DATA_SET(rtpp_modules, _rtpp_module_acct_rtcp_hep);
+#endif
 
 static struct rtpp_module_priv *
 rtpp_acct_rtcp_hep_ctor(const struct rtpp_cfg *cfsp)

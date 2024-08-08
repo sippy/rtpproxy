@@ -27,31 +27,20 @@
 #include <string.h>
 
 #include "rtpp_module.h"
+#include "rtpp_linker_set.h"
 #include "rtpp_module_if_static.h"
 
-extern struct rtpp_minfo rtpp_module_acct_csv;
-extern struct rtpp_minfo rtpp_module_acct_rtcp_hep;
-extern struct rtpp_minfo rtpp_module_catch_dtmf;
-struct rtpp_minfo __attribute__((__weak__)) rtpp_module_dtls_gw;
-struct rtpp_minfo  __attribute__((__weak__)) rtpp_module_ice_lite;
-
-const struct rtpp_modules rtpp_modules = {
-    .acct_csv = &rtpp_module_acct_csv,
-    .acct_rtcp_hep = &rtpp_module_acct_rtcp_hep,
-    .catch_dtmf = &rtpp_module_catch_dtmf,
-    .dtls_gw = &rtpp_module_dtls_gw,
-    .ice_lite = &rtpp_module_ice_lite,
-};
+SET_DECLARE(rtpp_modules, struct rtpp_minfo *);
 
 struct rtpp_minfo *
 rtpp_static_modules_lookup(const char *name)
 {
+    struct rtpp_minfo ***tp;
 
-    for (int i = 0; rtpp_modules.all[i] != NULL; i++) {
-        if (rtpp_modules.all[i]->descr.name == NULL)
-            continue;
-        if (strcmp(rtpp_modules.all[i]->descr.name, name) == 0) {
-            return (rtpp_modules.all[i]);
+    SET_FOREACH(tp, rtpp_modules) {
+        struct rtpp_minfo *mp = **tp;
+        if (strcmp(mp->descr.name, name) == 0) {
+            return (mp);
         }
     }
     return (NULL);
