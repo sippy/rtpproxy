@@ -276,7 +276,7 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
 }
 
 static void
-init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
+init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 {
     int ch, i, umode, stdio_mode;
     char *bh[2], *bh6[2], *cp;
@@ -348,7 +348,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 
     option_index = -1;
     brsym = 0;
-    while ((ch = getopt_long(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:"
+    while ((ch = getopt_long(argc, (char *const *)argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:"
       "Vc:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
 #if ENABLE_MODULE_IF
@@ -866,10 +866,10 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
 
 #if !defined(LIBRTPPROXY)
 int
-main(int argc, char **argv)
+main(int argc, const char * const *argv)
 #else
 struct rtpp_cfg *
-rtpp_main(int argc, char **argv)
+rtpp_main(int argc, const char * const *argv)
 #endif
 {
     int i, len, pid_fd;
