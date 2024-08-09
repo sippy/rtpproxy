@@ -214,14 +214,18 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
         }
         rtep->rtt.remote_len = SA_LEN(ifsa);
     }
-    if (sprefix == NULL) {
-        new_sn = strdup(sock_name);
-    } else {
-        asprintf(&new_sn, "%s%s", sprefix, usock_name);
-    }
+    int snlen = (sprefix == NULL) ? strlen(sock_name) :
+                                    strlen(sprefix) + strlen(usock_name);
+    snlen += 1;
+    new_sn = rtpp_zmalloc(snlen);
     if (new_sn == NULL) {
         *e = strerror(errno);
         return (-1);
+    }
+    if (sprefix == NULL) {
+        memcpy(new_sn, sock_name, snlen);
+    } else {
+        snprintf(new_sn, snlen, "%s%s", sprefix, usock_name);
     }
     *snp = new_sn;
 
