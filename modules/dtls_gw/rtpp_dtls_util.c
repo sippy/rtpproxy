@@ -34,7 +34,7 @@
 int
 rtpp_dtls_fp_gen(const X509 *cert, char *buf, int len)
 {
-    uint8_t fp[FP_DIGEST_LEN];
+    uint8_t fp[FP_DIGEST_LEN] = {0};
     unsigned int fp_len, i;
 
     if (len < FP_DIGEST_STRBUF_LEN)
