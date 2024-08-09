@@ -96,8 +96,8 @@ struct rtpp_module_if_priv {
     /* Privary version of the module's memdeb_p, store it here */
     /* just in case module screws it up                        */
     void *memdeb_p;
-    char *mpath;
     int started;
+    char mpath[0];
 };
 
 static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
@@ -119,15 +119,15 @@ struct rtpp_module_if *
 rtpp_module_if_ctor(const char *mpath)
 {
     struct rtpp_module_if_priv *pvt;
+    size_t msize = sizeof(struct rtpp_module_if_priv);
+    int plen = strlen(mpath) + 1;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_module_if_priv), PVT_RCOFFS(pvt));
+    msize += plen;
+    pvt = rtpp_rzmalloc(msize, PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->mpath = strdup(mpath);
-    if (pvt->mpath == NULL) {
-        goto e1;
-    }
+    memcpy(pvt->mpath, mpath, plen);
     pvt->pub.load = &rtpp_mif_load;
     pvt->pub.construct = &rtpp_mif_construct;
     pvt->pub.do_acct = &rtpp_mif_do_acct;
@@ -140,9 +140,6 @@ rtpp_module_if_ctor(const char *mpath)
       pvt);
     return ((&pvt->pub));
 
-e1:
-    RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -186,6 +183,8 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     PUB2PVT(self, pvt);
 #if defined(LIBRTPPROXY)
     mip = rtpp_static_modules_lookup(pvt->mpath);
+    if (mip == NULL)
+        goto e1;
 #endif
     if (mip == NULL) {
         pvt->dmp = dlopen(pvt->mpath, RTLD_NOW);
@@ -362,7 +361,6 @@ rtpp_mif_kaput(struct rtpp_module_if *self)
     /* Unload and free everything */
     if (pvt->dmp != NULL)
         dlclose(pvt->dmp);
-    free(pvt->mpath);
     free(pvt);
 }
 
