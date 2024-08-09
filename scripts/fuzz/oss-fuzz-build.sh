@@ -35,19 +35,21 @@ make -C src librtpproxy.la
 
 CFLAGS="${CFLAGS} -flto"
 
-for fz in command rtp rtcp
+ALL="command_parser rtp_parser rtcp_parser rtp_session"
+
+for fz in ${ALL}
 do
   ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -Imodules/acct_rtcp_hep \
-   -o ${OUT}/fuzz_${fz}_parser \
+   -o ${OUT}/fuzz_${fz} \
    -Wl,--version-script=scripts/fuzz/Symbol.map -fPIE -pie \
-   scripts/fuzz/fuzz_${fz}_parser.c \
+   scripts/fuzz/fuzz_${fz}.c \
    -Wl,--whole-archive src/.libs/librtpproxy.a -Wl,--no-whole-archive \
    -pthread -lm ${LIBSRTP}
-  for suff in dict options
+  for suff in dict options setup
   do
-    if [ -e scripts/fuzz/fuzz_${fz}_parser.${suff} ]
+    if [ -e scripts/fuzz/fuzz_${fz}.${suff} ]
     then
-      cp scripts/fuzz/fuzz_${fz}_parser.${suff} ${OUT}
+      cp scripts/fuzz/fuzz_${fz}.${suff} ${OUT}
     fi
   done
 done
