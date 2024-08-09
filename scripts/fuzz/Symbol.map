@@ -2,7 +2,6 @@ RTPPROXY_FUZZ {
     global:
       main;
       environ;
-      _DYNAMIC;
       __progname;
     local: *;
 };

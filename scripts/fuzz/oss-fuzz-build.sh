@@ -38,8 +38,9 @@ CFLAGS="${CFLAGS} -flto"
 for fz in command rtp rtcp
 do
   ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -Imodules/acct_rtcp_hep \
-   -Wl,--version-script=scripts/fuzz/Symbol.map -fpie -static \
-   scripts/fuzz/fuzz_${fz}_parser.c -o ${OUT}/fuzz_${fz}_parser \
+   -o ${OUT}/fuzz_${fz}_parser \
+   -Wl,--version-script=scripts/fuzz/Symbol.map -fPIE -pie \
+   scripts/fuzz/fuzz_${fz}_parser.c \
    -Wl,--whole-archive src/.libs/librtpproxy.a -Wl,--no-whole-archive \
    -pthread -lm ${LIBSRTP}
   for suff in dict options
