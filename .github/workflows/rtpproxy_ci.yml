@@ -463,12 +463,12 @@ jobs:
         CCACHE_IMAGE="${{ env.GHCR_REPO }}:${GIT_BRANCH}-${OS_TAG}-cccache"
         if ! docker pull ${CCACHE_IMAGE} 2>&1 >/dev/null
         then
-          CCACHE_IMAGE="${{ env.DOCKER_REPO }}:${GIT_BRANCH}-${OS_TAG}-cccache"
-          if ! docker pull ${CCACHE_IMAGE} 2>&1 >/dev/null
+          _CCACHE_IMAGE="${{ env.DOCKER_REPO }}:${GIT_BRANCH}-${OS_TAG}-cccache"
+          if ! docker pull ${_CCACHE_IMAGE} 2>&1 >/dev/null
           then
             CCACHE_BIMAGE="scratch"
           else
-            CCACHE_BIMAGE="${CCACHE_IMAGE}"
+            CCACHE_BIMAGE="${_CCACHE_IMAGE}"
           fi
         else
           CCACHE_BIMAGE="${CCACHE_IMAGE}"
