@@ -180,9 +180,24 @@ rtpp_acct_get_nid(struct rtpp_module_priv *pvt, struct rtpp_acct *ap)
 static int
 rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
 {
-    char *buf;
-    int len, pos;
+    int pos;
     int r = 0;
+    const char * const head = (RVER_NM SEP NID_NM SEP PID_NM SEP SID_NM
+          SEP CID_NM SEP
+          "from_tag,setup_ts,teardown_ts,first_rtp_ts_ino,last_rtp_ts_ino,"
+          "first_rtp_ts_ina,last_rtp_ts_ina,rtp_npkts_ina,rtp_npkts_ino,"
+          "rtp_nrelayed,rtp_ndropped,rtcp_npkts_ina,rtcp_npkts_ino,"
+          "rtcp_nrelayed,rtcp_ndropped,rtpa_nsent_ino,rtpa_nrcvd_ino,"
+          "rtpa_ndups_ino,rtpa_nlost_ino,rtpa_perrs_ino,"
+          "rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino" SEP PT_NM_O SEP
+          "rtpa_nsent_ina,rtpa_nrcvd_ina,rtpa_ndups_ina,rtpa_nlost_ina,"
+          "rtpa_perrs_ina,rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina" SEP PT_NM_A SEP
+          "rtpa_jitter_last_ino,rtpa_jitter_max_ino,rtpa_jitter_avg_ino,"
+          "rtpa_jitter_last_ina,rtpa_jitter_max_ina,rtpa_jitter_avg_ina" SEP
+          R_RM_NM_O SEP R_RM_PT_NM_O SEP R_RM_NM_A SEP R_RM_PT_NM_A SEP
+          C_RM_NM_O SEP C_RM_PT_NM_O SEP C_RM_NM_A SEP C_RM_PT_NM_A SEP
+          HLD_STS_NM_O SEP HLD_STS_NM_A SEP HLD_CNT_NM_O SEP HLD_CNT_NM_A "\n");
+    const int hlen = strlen(head);
 
     if (pvt->fd != -1) {
         close(pvt->fd);
@@ -202,41 +217,15 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
         goto e2;
     }
     if (pvt->stt.st_size == 0) {
-        buf = NULL;
-        len = mod_asprintf(&buf, RVER_NM SEP NID_NM SEP PID_NM SEP SID_NM
-          SEP CID_NM SEP
-          "from_tag,setup_ts,teardown_ts,first_rtp_ts_ino,last_rtp_ts_ino,"
-          "first_rtp_ts_ina,last_rtp_ts_ina,rtp_npkts_ina,rtp_npkts_ino,"
-          "rtp_nrelayed,rtp_ndropped,rtcp_npkts_ina,rtcp_npkts_ino,"
-          "rtcp_nrelayed,rtcp_ndropped,rtpa_nsent_ino,rtpa_nrcvd_ino,"
-          "rtpa_ndups_ino,rtpa_nlost_ino,rtpa_perrs_ino,"
-          "rtpa_ssrc_last_ino,rtpa_ssrc_cnt_ino" SEP PT_NM_O SEP
-          "rtpa_nsent_ina,rtpa_nrcvd_ina,rtpa_ndups_ina,rtpa_nlost_ina,"
-          "rtpa_perrs_ina,rtpa_ssrc_last_ina,rtpa_ssrc_cnt_ina" SEP PT_NM_A SEP
-          "rtpa_jitter_last_ino,rtpa_jitter_max_ino,rtpa_jitter_avg_ino,"
-          "rtpa_jitter_last_ina,rtpa_jitter_max_ina,rtpa_jitter_avg_ina" SEP
-          R_RM_NM_O SEP R_RM_PT_NM_O SEP R_RM_NM_A SEP R_RM_PT_NM_A SEP
-          C_RM_NM_O SEP C_RM_PT_NM_O SEP C_RM_NM_A SEP C_RM_PT_NM_A SEP
-          HLD_STS_NM_O SEP HLD_STS_NM_A SEP HLD_CNT_NM_O SEP HLD_CNT_NM_A "\n");
-        if (len <= 0) {
-            if (len == 0 && buf != NULL) {
-                goto e3;
-            }
-            goto e2;
-        }
-
         do {
-            r = write(pvt->fd, buf, len);
+            r = write(pvt->fd, head, hlen);
         } while (r < 0 && errno == EINTR);
-        if (r > 0 && r < len)
+        if (r > 0 && r < hlen)
             r = -1;
-        mod_free(buf);
     }
     rtpp_acct_csv_unlockf(pvt->fd, pos);
     return (r);
 
-e3:
-    mod_free(buf);
 e2:
     rtpp_acct_csv_unlockf(pvt->fd, pos);
 e1:
