@@ -240,7 +240,6 @@ circ_buf_remove(circ_buf_t *c, unsigned int offset)
 
 struct rtpp_queue
 {
-    char const *name;
     struct rtpp_wi *head;
     struct rtpp_wi *tail;
     pthread_cond_t cond;
@@ -248,6 +247,7 @@ struct rtpp_queue
     unsigned int length;
     unsigned int qlen;
     circ_buf_t circb;
+    char name[128];
 };
 
 struct rtpp_queue *
@@ -255,7 +255,6 @@ rtpp_queue_init(unsigned int cb_capacity, const char *fmt, ...)
 {
     struct rtpp_queue *queue;
     unsigned int cb_buflen;
-    char *name;
     va_list ap;
     int eval;
     pthread_condattr_t cond_attr;
@@ -279,13 +278,12 @@ rtpp_queue_init(unsigned int cb_capacity, const char *fmt, ...)
         goto e3;
     }
     va_start(ap, fmt);
-    vasprintf(&name, fmt, ap);
+    int r = vsnprintf(queue->name, sizeof(queue->name), fmt, ap);
     va_end(ap);
-    if (name == NULL) {
+    if (r >= sizeof(queue->name)) {
         goto e4;
     }
     queue->qlen = 1;
-    queue->name = name;
     queue->circb.buflen = cb_buflen;
     pthread_condattr_destroy(&cond_attr);
     return (queue);
@@ -311,7 +309,6 @@ rtpp_queue_destroy(struct rtpp_queue *queue)
     }
     pthread_cond_destroy(&queue->cond);
     pthread_mutex_destroy(&queue->mutex);
-    free((void *)queue->name);
     free(queue);
 }
 
