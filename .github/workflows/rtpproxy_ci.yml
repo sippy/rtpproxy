@@ -415,6 +415,8 @@ jobs:
     if: needs.LoadJobs_conf.outputs.do_Docker == 'true' &&
         (github.event_name == 'push' || github.event_name == 'pull_request')
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     services:
       registry:
         image: registry:2
@@ -461,7 +463,7 @@ jobs:
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
-        password: ${{ secrets.GHCR_TOKEN }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Set dynamic environment
       run: |
