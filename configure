@@ -858,6 +858,7 @@ enable_lto
 enable_librtpproxy
 enable_noinst
 enable_silent
+enable_docs
 with_xsltproc
 with_xsltproc_flags
 '
@@ -1520,6 +1521,7 @@ Optional Features:
   --enable-librtpproxy    Build librtpproxy for instrumentation
   --enable-noinst         Enable building noinst binaries (default is yes)
   --enable-silent         Less verbose build
+  --enable-docs           enable generation of documentation
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -14874,7 +14876,18 @@ then :
 fi
 
 
-# <DocBook & friends>
+# Check whether --enable-docs was given.
+if test ${enable_docs+y}
+then :
+  enableval=$enable_docs; ENABLE_DOCS=${enableval}
+else $as_nop
+  ENABLE_DOCS=no
+fi
+
+
+if test "${ENABLE_DOCS}" = "yes"
+then
+  # <DocBook & friends>
 
 XSLTPROC_FLAGS=""
 
@@ -15068,9 +15081,9 @@ printf "%s\n" "$ac_cv_docbook_dtd_4_5" >&6; }
     HAVE_DOCBOOK_DTD=HAVE_DOCBOOK_DTD_4_5
 
 
-if test "x$HAVE_DOCBOOK_DTD_4_5" = "xyes"
-then
-  # Extract the first word of "fop", so it can be a program name with args.
+  if test "x$HAVE_DOCBOOK_DTD_4_5" = "xyes"
+  then
+    # Extract the first word of "fop", so it can be a program name with args.
 set dummy fop; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 printf %s "checking for $ac_word... " >&6; }
@@ -15112,8 +15125,9 @@ printf "%s\n" "no" >&6; }
 fi
 
 
+  fi
+  # </DocBook & friends>
 fi
-# </DocBook & friends>
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for SO_TS_CLOCK/SO_TS_MONOTONIC" >&5
 printf %s "checking for SO_TS_CLOCK/SO_TS_MONOTONIC... " >&6; }
