@@ -404,13 +404,20 @@ AC_LINK_IFELSE(
 )
 AC_CHECK_FUNCS([pthread_yield pthread_setname_np])
 
-# <DocBook & friends>
-AX_CHECK_DOCBOOK_DTD(4.5)
-if test "x$HAVE_DOCBOOK_DTD_4_5" = "xyes"
+AC_ARG_ENABLE(docs,
+  AS_HELP_STRING([--enable-docs],[enable generation of documentation]),
+  [ENABLE_DOCS=${enableval}], [ENABLE_DOCS=no])
+
+if test "${ENABLE_DOCS}" = "yes"
 then
-  AC_CHECK_PROG(HAVE_FOP, fop, yes)
+  # <DocBook & friends>
+  AX_CHECK_DOCBOOK_DTD(4.5)
+  if test "x$HAVE_DOCBOOK_DTD_4_5" = "xyes"
+  then
+    AC_CHECK_PROG(HAVE_FOP, fop, yes)
+  fi
+  # </DocBook & friends>
 fi
-# </DocBook & friends>
 
 AC_MSG_CHECKING([for SO_TS_CLOCK/SO_TS_MONOTONIC])
 AC_COMPILE_IFELSE( [AC_LANG_PROGRAM([[
