@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <semaphore.h>
 
 #include "fuzz_standalone.h"
 #include "fuzz_rtpp_utils.h"
@@ -15,6 +16,16 @@
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
+static struct {
+    sem_t wi_proc_done;
+} fuzz_ctx;
+
+static void
+fuzz_ctx_dtor(void)
+{
+    sem_destroy(&fuzz_ctx.wi_proc_done);
+}
+
 int
 LLVMFuzzerInitialize(int *_argc, char ***_argv)
 {
@@ -26,14 +37,19 @@ LLVMFuzzerInitialize(int *_argc, char ***_argv)
     FILE *file = fopen("fuzz_rtp_session.setup", "r");
     if (file == NULL)
         goto e0;
+    if (sem_init(&fuzz_ctx.wi_proc_done, 0, 0) != 0)
+	goto e1;
     while (fgets(line, sizeof(line), file)) {
         int size = strlen(line);
         r = ExecuteRTPPCommand(&gconf, line, size);
         if (r != 0)
-            goto e1;
+            goto e2;
     }
     fclose(file);
+    atexit(fuzz_ctx_dtor);
     return (0);
+e2:
+    sem_destroy(&fuzz_ctx.wi_proc_done);
 e1:
     fclose(file);
 e0:
@@ -65,9 +81,16 @@ proc_foreach(void *dp, void *ap)
                                     .strmp_out = ostp,
                                     .rsp = fap->rsp,
                                     .pktp = fap->pktp};
+        RTPP_OBJ_INCREF(fap->pktp);
         CALL_SMETHOD(istp->pproc_manager, handleat, &pktx, _PPROC_ORD_EMPTY);
     }
     return (RTPP_HT_MATCH_CONT);
+}
+
+static void
+wi_proc_complete(void *arg)
+{
+    sem_post(&fuzz_ctx.wi_proc_done);
 }
 
 int
@@ -75,6 +98,8 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
 {
     struct foreach_args fa;
     static struct rtpp_proc_rstats rs = {0};
+    rtpp_refcnt_dtor_t wpd_f = (rtpp_refcnt_dtor_t)&wi_proc_complete;
+    sem_t *wpdp = &fuzz_ctx.wi_proc_done;
 
     if (size <= sizeof(struct sockaddr_in))
         return (0);
@@ -82,8 +107,10 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
         return (0);
 
     fa.pktp = rtp_packet_alloc();
-    fa.rsp = &rs;
     assert (fa.pktp != NULL);
+    void *olddata = CALL_SMETHOD(fa.pktp->rcnt, getdata);
+    CALL_SMETHOD(fa.pktp->rcnt, attach, wpd_f, olddata);
+    fa.rsp = &rs;
     memcpy(&fa.pktp->raddr, data, sizeof(struct sockaddr_in));
     size -= sizeof(struct sockaddr_in);
     data += sizeof(struct sockaddr_in);
@@ -92,5 +119,6 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
 
     CALL_SMETHOD(gconf.cfsp->sessions_ht, foreach, proc_foreach, (void *)&fa, NULL);
     RTPP_OBJ_DECREF(fa.pktp);
+    sem_wait(wpdp);
     return (0);
 }
