@@ -53,7 +53,7 @@ do
   ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -o ${OUT}/fuzz_${fz} \
    -Wl,--start-lib,${OUT}/fuzz_${fz}.o,${LIBRTPP},--end-lib \
    -pthread -lm ${LIBSRTP}
-  for suff in dict options setup
+  for suff in dict options
   do
     if [ -e scripts/fuzz/fuzz_${fz}.${suff} ]
     then

@@ -12,6 +12,7 @@
 #include "rtpp_session.h"
 #include "rtpp_pipe.h"
 #include "rtpp_proc.h"
+#include "rtpp_network.h"
 #include "rtpp_stream.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
@@ -23,35 +24,38 @@ static struct {
 static void
 fuzz_ctx_dtor(void)
 {
+    ExecuteRTPPCommand(&gconf, "X", 1);
     sem_destroy(&fuzz_ctx.wi_proc_done);
 }
+
+static const char * const setup_script[] = {
+    #include "fuzz_rtp_session.setup"
+    NULL
+};
 
 int
 LLVMFuzzerInitialize(int *_argc, char ***_argv)
 {
     char line[RTPP_CMD_BUFLEN];
-    RTPPInitializeParams.debug_level = "dbug";
+    RTPPInitializeParams.debug_level = "info";
+    RTPPInitializeParams.ttl = "60";
     int r = RTPPInitialize();
     if (r != 0)
         goto e0;
-    FILE *file = fopen("fuzz_rtp_session.setup", "r");
-    if (file == NULL)
-        goto e0;
     if (sem_init(&fuzz_ctx.wi_proc_done, 0, 0) != 0)
-	goto e1;
-    while (fgets(line, sizeof(line), file)) {
-        int size = strlen(line);
+        goto e0;
+    for (int i = 0; setup_script[i] != NULL; i++) {
+        const char *cp = setup_script[i];
+        int size = strlen(cp);
+        memcpy(line, cp, size + 1);
         r = ExecuteRTPPCommand(&gconf, line, size);
         if (r != 0)
-            goto e2;
+            goto e1;
     }
-    fclose(file);
     atexit(fuzz_ctx_dtor);
     return (0);
-e2:
-    sem_destroy(&fuzz_ctx.wi_proc_done);
 e1:
-    fclose(file);
+    sem_destroy(&fuzz_ctx.wi_proc_done);
 e0:
     return (-1);
 }
@@ -100,6 +104,7 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
     static struct rtpp_proc_rstats rs = {0};
     rtpp_refcnt_dtor_t wpd_f = (rtpp_refcnt_dtor_t)&wi_proc_complete;
     sem_t *wpdp = &fuzz_ctx.wi_proc_done;
+    struct sockaddr *rap;
 
     if (size <= sizeof(struct sockaddr_in))
         return (0);
@@ -111,7 +116,9 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
     void *olddata = CALL_SMETHOD(fa.pktp->rcnt, getdata);
     CALL_SMETHOD(fa.pktp->rcnt, attach, wpd_f, olddata);
     fa.rsp = &rs;
-    memcpy(&fa.pktp->raddr, data, sizeof(struct sockaddr_in));
+    rap = sstosa(&fa.pktp->raddr);
+    memcpy(rap, data, sizeof(struct sockaddr_in));
+    rap->sa_family = AF_INET;
     size -= sizeof(struct sockaddr_in);
     data += sizeof(struct sockaddr_in);
     fa.pktp->size = size;
