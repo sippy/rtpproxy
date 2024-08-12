@@ -13124,6 +13124,40 @@ printf "%s\n" "no" >&6; }
 fi
 CFLAGS="$ac_save_CFLAGS"
 
+mused="[[maybe_unused]]"
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether '$CC' supports '${mused}' " >&5
+printf %s "checking whether '$CC' supports '${mused}' ... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+${mused} int bar=42;
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+
+printf "%s\n" "#define MAYBE_UNUSED ${mused}" >>confdefs.h
+
+
+else $as_nop
+
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+printf "%s\n" "#define MAYBE_UNUSED /**/" >>confdefs.h
+
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+
 # Check whether --enable-systemd was given.
 if test ${enable_systemd+y}
 then :
