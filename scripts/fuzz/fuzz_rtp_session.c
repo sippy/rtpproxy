@@ -78,6 +78,8 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
 
     if (size <= sizeof(struct sockaddr_in))
         return (0);
+    if (size > sizeof(struct sockaddr_in) + MAX_RPKT_LEN)
+        return (0);
 
     fa.pktp = rtp_packet_alloc();
     fa.rsp = &rs;
