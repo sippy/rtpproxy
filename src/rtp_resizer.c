@@ -289,8 +289,8 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
     struct rtp_packet *ret = NULL;
     struct rtp_packet *p;
     uint32_t    ref_ts;
-    int         count = 0;
-    int         split = 0;
+    MAYBE_UNUSED int count = 0;
+    MAYBE_UNUSED int split = 0;
     int         nsamples_left;
     int         output_nsamples;
     int         min;

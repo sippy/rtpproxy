@@ -179,7 +179,7 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
         }
     }
 #endif
-    int oldcnt;
+    MAYBE_UNUSED int oldcnt;
     RTPP_DBGCODE() {
         oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
         RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);

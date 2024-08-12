@@ -32,6 +32,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "config_pp.h"
+
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
 #include "rtpp_refcnt.h"
@@ -82,7 +84,7 @@ rtpp_proc_wakeup_run(void *arg)
 
     atomic_store(&wtcp->tstate, TSTATE_RUN);
     for (;;) {
-        int ret;
+        MAYBE_UNUSED int ret;
 
         pthread_mutex_lock(&wtcp->mutex);
         while ((atomic_load(&wtcp->tstate) == TSTATE_RUN) && (requested_i_wake == wtcp->requested_i_wake)) {

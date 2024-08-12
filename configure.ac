@@ -57,6 +57,18 @@ AS_IF([test $ac_cc_warn_ipt -ne 0],
   [AC_MSG_RESULT([no])])
 CFLAGS="$ac_save_CFLAGS"
 
+mused="[[[maybe_unused]]]"
+AC_MSG_CHECKING([whether '$CC' supports '${mused}' ])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([${mused} int bar=42;],
+  [])],
+  [
+   AC_MSG_RESULT([yes])
+   AC_DEFINE_UNQUOTED([MAYBE_UNUSED], [${mused}], [Define if you have the [[maybe_unused]].])
+  ], [
+   AC_MSG_RESULT([no])
+   AC_DEFINE_UNQUOTED([MAYBE_UNUSED], [], [Define if you have the [[maybe_unused]].])
+  ])
+
 AC_ARG_ENABLE(systemd,
 AS_HELP_STRING([--enable-systemd], [enable systemd support in rtpproxy]),
 [],
