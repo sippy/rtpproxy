@@ -179,8 +179,13 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
         }
     }
 #endif
-    RTPP_DBG_ASSERT(atomic_load(&pvt->cnt) > 0 && atomic_load(&pvt->cnt) < RC_ABS_MAX);
-    atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
+    int oldcnt;
+    RTPP_DBGCODE() {
+        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+        RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
+    }
+    oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
+    RTPP_DBG_ASSERT(oldcnt > 0);
 }
 
 static void
@@ -190,7 +195,12 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
     int oldcnt;
 
     PUB2PVT(pub, pvt);
+    RTPP_DBGCODE() {
+        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+        RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
+    }
     oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release);
+    RTPP_DBG_ASSERT(oldcnt > 0);
 #if RTPP_DEBUG_refcnt
     if (pvt->flags & RC_FLAG_TRACE) {
         char *dbuf;
