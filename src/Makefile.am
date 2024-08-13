@@ -1,10 +1,7 @@
+include $(top_srcdir)/m4/dirs.ami
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
-
-UCL_DIR=$(top_srcdir)/external/libucl
-XXH_DIR=$(top_srcdir)/libxxHash
-MOD_DIR=$(top_srcdir)/modules
 
 bin_PROGRAMS=rtpproxy rtpproxy_debug
 if ENABLE_noinst
@@ -73,7 +70,6 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
   $(CMDSRCDIR)/rpcpv1_norecord.c $(CMDSRCDIR)/rpcpv1_norecord.h \
   $(CMDSRCDIR)/rpcpv1_ul_subc.c $(CMDSRCDIR)/rpcpv1_ul_subc.h \
   $(RTPP_AUTOSRC_SOURCES) rtpp_epoll.c rtpp_str.c rtpp_str.h
-ADV_DIR=$(top_srcdir)/src/advanced
 BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/pproc_manager.c \
   $(ADV_DIR)/pproc_manager.h
 BASE_SOURCES+=rtpp_modman.c
