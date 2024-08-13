@@ -26,7 +26,7 @@ fi
 
 
 AR=llvm-ar RANLIB=llvm-ranlib NM=llvm-nm STRIP=llvm-strip \
- ./configure --enable-librtpproxy --enable-lto
+ ./configure --enable-librtpproxy --enable-lto --enable-silent
 for dir in libexecinfo libucl libre libelperiodic/src libxxHash modules
 do
   make -C ${dir} all
