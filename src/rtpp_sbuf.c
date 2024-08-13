@@ -32,10 +32,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(RTPP_MODULE)
-#include "rtpp_module.h"
-#endif
-
+#include "rtpp_codeptr.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_sbuf.h"
 
 int
@@ -60,15 +58,27 @@ rtpp_sbuf_write(struct rtpp_sbuf *sbp, const char *format, ...)
 }
 
 struct rtpp_sbuf *
+#if !defined(RTPP_CHECK_LEAKS)
 rtpp_sbuf_ctor(int ilen)
+#else
+_rtpp_sbuf_ctor(int ilen, void *memdeb_p, const struct rtpp_codeptr *mlp)
+#endif
 {
     struct rtpp_sbuf *sbp;
 
+#if !defined(RTPP_CHECK_LEAKS)
     sbp = malloc(sizeof(struct rtpp_sbuf));
+#else
+    sbp = rtpp_memdeb_malloc(sizeof(struct rtpp_sbuf), memdeb_p, mlp);
+#endif
     if (sbp == NULL)
         return (NULL);
     memset(sbp, '\0', sizeof(struct rtpp_sbuf));
+#if !defined(RTPP_CHECK_LEAKS)
     sbp->bp = sbp->cp = malloc(ilen);
+#else
+    sbp->bp = sbp->cp = rtpp_memdeb_malloc(ilen, memdeb_p, mlp);
+#endif
     if (sbp->bp == NULL) {
         free(sbp);
         return (NULL);
@@ -79,20 +89,37 @@ rtpp_sbuf_ctor(int ilen)
 }
 
 void
+#if !defined(RTPP_CHECK_LEAKS)
 rtpp_sbuf_dtor(struct rtpp_sbuf *sbp)
+#else
+_rtpp_sbuf_dtor(struct rtpp_sbuf *sbp, void *memdeb_p, const struct rtpp_codeptr *mlp)
+#endif
 {
 
+#if !defined(RTPP_CHECK_LEAKS)
     free(sbp->bp);
     free(sbp);
+#else
+    rtpp_memdeb_free(sbp->bp, memdeb_p, mlp);
+    rtpp_memdeb_free(sbp, memdeb_p, mlp);
+#endif
 }
 
 int
+#if !defined(RTPP_CHECK_LEAKS)
 rtpp_sbuf_extend(struct rtpp_sbuf *sbp, int nlen)
+#else
+_rtpp_sbuf_extend(struct rtpp_sbuf *sbp, int nlen, void *memdeb_p, const struct rtpp_codeptr *mlp)
+#endif
 {
     void *nbp, *ncp;
 
     assert(nlen > sbp->alen);
+#if !defined(RTPP_CHECK_LEAKS)
     nbp = realloc(sbp->bp, nlen);
+#else
+    nbp = rtpp_memdeb_realloc(sbp->bp, nlen, memdeb_p, mlp);
+#endif
     if (nbp == NULL)
         return (-1);
     sbp->alen = nlen;

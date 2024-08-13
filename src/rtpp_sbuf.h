@@ -25,6 +25,8 @@
  *
  */
 
+#pragma once
+
 struct rtpp_sbuf {
    int alen;
    char *bp;
@@ -38,7 +40,16 @@ struct rtpp_sbuf {
 #define RS_ULEN(sbp) ((int)((sbp)->cp - (sbp)->bp))
 
 int rtpp_sbuf_write(struct rtpp_sbuf *sbp, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+#if !defined(RTPP_CHECK_LEAKS)
 struct rtpp_sbuf *rtpp_sbuf_ctor(int ilen);
-void rtpp_sbuf_dtor(struct rtpp_sbuf *sbp);
 int rtpp_sbuf_extend(struct rtpp_sbuf *sbp, int nlen);
+void rtpp_sbuf_dtor(struct rtpp_sbuf *sbp);
+#else
+struct rtpp_sbuf *_rtpp_sbuf_ctor(int ilen, void *, HERETYPE);
+int _rtpp_sbuf_extend(struct rtpp_sbuf *sbp, int nlen, void *, HERETYPE);
+void _rtpp_sbuf_dtor(struct rtpp_sbuf *sbp, void *, HERETYPE);
+#define rtpp_sbuf_ctor(ilen) _rtpp_sbuf_ctor(ilen, MEMDEB_SYM, HEREVAL)
+#define rtpp_sbuf_extend(sbp, nlen) _rtpp_sbuf_extend(sbp, nlen, MEMDEB_SYM, HEREVAL)
+#define rtpp_sbuf_dtor(sbp) _rtpp_sbuf_dtor(sbp, MEMDEB_SYM, HEREVAL)
+#endif
 void rtpp_sbuf_reset(struct rtpp_sbuf *sbp);

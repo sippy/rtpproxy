@@ -13,11 +13,11 @@ noinst_LTLIBRARIES = librtpp_acct_rtcp_hep.la
 if ENABLE_noinst
 noinst_PROGRAMS = rtcp2json_test
 endif
-rtcp2json_test_SOURCES = rtcp2json_test.c rtpp_sbuf.c rtcp2json.c
+rtcp2json_test_SOURCES = rtcp2json_test.c $(MAINSRCDIR)/rtpp_sbuf.c rtcp2json.c
 rtcp2json_test_CFLAGS = $(OPT_CFLAGS) $(AM_CFLAGS) $(LTO_FLAG)
 rtcp2json_test_LDFLAGS = $(AM_CFLAGS) $(LTO_FLAG)
 
-rtpp_acct_rtcp_hep_la_SOURCES = rtpp_acct_rtcp_hep.c rtcp2json.c rtpp_sbuf.c \
+rtpp_acct_rtcp_hep_la_SOURCES = rtpp_acct_rtcp_hep.c rtcp2json.c \
   $(HEPSRCDIR)/core_hep.c rtpp_arh_conf.c
 rtpp_acct_rtcp_hep_la_LDFLAGS = -avoid-version -module -shared \
   $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
@@ -42,7 +42,7 @@ endif
 rtpp_sbuf_selftest_CPPFLAGS = -Drtpp_sbuf_selftest=main \
   $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_sbuf
 rtpp_sbuf_selftest_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
-rtpp_sbuf_selftest_SOURCES = rtpp_sbuf.c rtpp_sbuf.h \
+rtpp_sbuf_selftest_SOURCES = $(MAINSRCDIR)/rtpp_sbuf.c $(MAINSRCDIR)/rtpp_sbuf.h \
   $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
 rtpp_sbuf_selftest_LDADD = $(RTPP_MEMDEB_LDADD)
 rtpp_sbuf_selftest_LDFLAGS = $(LTO_FLAG)

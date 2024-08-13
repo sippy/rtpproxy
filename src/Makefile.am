@@ -69,7 +69,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
   rtpp_nofile.c rtpp_nofile.h rtpp_record_adhoc.h \
   $(CMDSRCDIR)/rpcpv1_norecord.c $(CMDSRCDIR)/rpcpv1_norecord.h \
   $(CMDSRCDIR)/rpcpv1_ul_subc.c $(CMDSRCDIR)/rpcpv1_ul_subc.h \
-  $(RTPP_AUTOSRC_SOURCES) rtpp_epoll.c rtpp_str.c rtpp_str.h
+  $(RTPP_AUTOSRC_SOURCES) rtpp_epoll.c rtpp_str.c rtpp_str.h \
+  rtpp_sbuf.c rtpp_sbuf.h
 BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/pproc_manager.c \
   $(ADV_DIR)/pproc_manager.h
 BASE_SOURCES+=rtpp_modman.c
@@ -78,7 +79,7 @@ rtpproxy_LDADD=librtpproxy.la -lm -lpthread
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.la \
   $(XXH_DIR)/libxxHash_debug.la $(RTPP_MEMDEB_LDADD)
 rtpproxy_debug_LDFLAGS=-Wl,--export-dynamic $(LTO_FLAG)
-rtpproxy_LDFLAGS=$(LTO_FLAG)
+rtpproxy_LDFLAGS=$(LTO_FLAG) -Wl,--whole-archive,.libs/librtpproxy.a,--no-whole-archive
 
 if ENABLE_MODULE_IF
 RTPP_AUTOSRC_SOURCES += rtpp_module_if.h
