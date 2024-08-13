@@ -139,10 +139,10 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
 LTLIBRARIES = $(noinst_LTLIBRARIES) $(pkglib_LTLIBRARIES)
 librtpp_acct_rtcp_hep_la_LIBADD =
+am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 = librtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo \
 	librtpp_acct_rtcp_hep_la-rtcp2json.lo \
-	librtpp_acct_rtcp_hep_la-rtpp_sbuf.lo \
-	librtpp_acct_rtcp_hep_la-core_hep.lo \
+	$(HEPSRCDIR)/librtpp_acct_rtcp_hep_la-core_hep.lo \
 	librtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo
 am_librtpp_acct_rtcp_hep_la_OBJECTS = $(am__objects_1)
 librtpp_acct_rtcp_hep_la_OBJECTS =  \
@@ -159,8 +159,7 @@ rtpp_acct_rtcp_hep_la_LIBADD =
 am_rtpp_acct_rtcp_hep_la_OBJECTS =  \
 	rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.lo \
 	rtpp_acct_rtcp_hep_la-rtcp2json.lo \
-	rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo \
-	rtpp_acct_rtcp_hep_la-core_hep.lo \
+	$(HEPSRCDIR)/rtpp_acct_rtcp_hep_la-core_hep.lo \
 	rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo
 rtpp_acct_rtcp_hep_la_OBJECTS = $(am_rtpp_acct_rtcp_hep_la_OBJECTS)
 rtpp_acct_rtcp_hep_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -171,8 +170,7 @@ am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.la
 rtpp_acct_rtcp_hep_debug_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_2 = rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.lo \
 	rtpp_acct_rtcp_hep_debug_la-rtcp2json.lo \
-	rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.lo \
-	rtpp_acct_rtcp_hep_debug_la-core_hep.lo \
+	$(HEPSRCDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.lo \
 	rtpp_acct_rtcp_hep_debug_la-rtpp_arh_conf.lo
 am_rtpp_acct_rtcp_hep_debug_la_OBJECTS = $(am__objects_2)
 rtpp_acct_rtcp_hep_debug_la_OBJECTS =  \
@@ -182,7 +180,7 @@ rtpp_acct_rtcp_hep_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_acct_rtcp_hep_debug_la_LDFLAGS) $(LDFLAGS) -o $@
 am_rtcp2json_test_OBJECTS = rtcp2json_test-rtcp2json_test.$(OBJEXT) \
-	rtcp2json_test-rtpp_sbuf.$(OBJEXT) \
+	$(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.$(OBJEXT) \
 	rtcp2json_test-rtcp2json.$(OBJEXT)
 rtcp2json_test_OBJECTS = $(am_rtcp2json_test_OBJECTS)
 rtcp2json_test_LDADD = $(LDADD)
@@ -190,16 +188,18 @@ rtcp2json_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtcp2json_test_CFLAGS) $(CFLAGS) $(rtcp2json_test_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am__objects_3 = rtpp_sbuf_selftest-rtpp_memdeb.$(OBJEXT) \
-	rtpp_sbuf_selftest-rtpp_glitch.$(OBJEXT) \
-	rtpp_sbuf_selftest-rtpp_autoglitch.$(OBJEXT) \
-	rtpp_sbuf_selftest-rtpp_refcnt.$(OBJEXT) \
-	rtpp_sbuf_selftest-rtpp_mallocs.$(OBJEXT) \
-	rtpp_sbuf_selftest-rtpp_stacktrace.$(OBJEXT)
-am__objects_4 = rtpp_sbuf_selftest-rtpp_refcnt_fin.$(OBJEXT)
+am__objects_3 =  \
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.$(OBJEXT)
+am__objects_4 = $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.$(OBJEXT)
 am_rtpp_sbuf_selftest_OBJECTS =  \
-	rtpp_sbuf_selftest-rtpp_sbuf.$(OBJEXT) $(am__objects_3) \
-	$(am__objects_4)
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.$(OBJEXT) \
+	$(am__objects_3) $(am__objects_4)
 rtpp_sbuf_selftest_OBJECTS = $(am_rtpp_sbuf_selftest_OBJECTS)
 rtpp_sbuf_selftest_DEPENDENCIES = $(am__DEPENDENCIES_1)
 rtpp_sbuf_selftest_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -221,32 +221,30 @@ am__v_at_1 =
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade =  \
-	./$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo \
+	$(HEPSRCDIR)/$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo \
+	$(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo \
+	$(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo \
+	$(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Po \
+	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po \
 	./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtcp2json.Plo \
 	./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Plo \
 	./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo \
-	./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo \
 	./$(DEPDIR)/rtcp2json_test-rtcp2json.Po \
 	./$(DEPDIR)/rtcp2json_test-rtcp2json_test.Po \
-	./$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po \
-	./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo \
 	./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtcp2json.Plo \
 	./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.Plo \
 	./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_arh_conf.Plo \
-	./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.Plo \
-	./$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo \
 	./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtcp2json.Plo \
 	./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Plo \
-	./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo \
-	./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo \
-	./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po \
-	./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po \
-	./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po \
-	./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po \
-	./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po \
-	./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po \
-	./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po \
-	./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po
+	./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -442,6 +440,28 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
+  -I$(top_srcdir) -I$(RTPP_AUTOSRC_DIR)
+
+RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
+  $(MAINSRCDIR)/rtpp_memdeb_internal.h $(MAINSRCDIR)/rtpp_glitch.c \
+  $(MAINSRCDIR)/rtpp_glitch.h $(MAINSRCDIR)/rtpp_codeptr.h \
+  $(MAINSRCDIR)/rtpp_autoglitch.c $(MAINSRCDIR)/rtpp_autoglitch.h \
+  $(MAINSRCDIR)/rtpp_debugon.h $(MAINSRCDIR)/rtpp_refcnt.c \
+  $(MAINSRCDIR)/rtpp_refcnt.h $(MAINSRCDIR)/rtpp_threads.h \
+  $(MAINSRCDIR)/rtpp_threads.c \
+  $(MAINSRCDIR)/rtpp_mallocs.c $(MAINSRCDIR)/rtpp_mallocs.h \
+  $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h
+
+@ENABLE_LIBUNWIND_FALSE@RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
+MAINSRCDIR = $(top_srcdir)/src
+DEFAULT_INCLUDES = -I$(MAINSRCDIR)
+CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
+	$(am__append_1)
+@ENABLE_LTO_TRUE@LTO_FLAG = -flto
+NOPT_CFLAGS = -g3 -O0
+CLEANFILES = *.gcda *.gcno *.gcov
 RTPP_AUTOSRC_DIR = $(top_srcdir)/autosrc
 
 # Auto-generated by ./Makefile - DO NOT EDIT!
@@ -487,36 +507,15 @@ rtpp_rw_lock_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_rw_lock_fin.h $(RTPP_AUTOSRC_DI
 rtpp_proc_servers_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.c
 rtpp_proc_wakeup_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.c
 rtpp_socket_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.c
-RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
-  -I$(top_srcdir) -I$(RTPP_AUTOSRC_DIR)
-
-RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
-  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_glitch.c \
-  $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h \
-  $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h \
-  $(top_srcdir)/src/rtpp_debugon.h $(top_srcdir)/src/rtpp_refcnt.c \
-  $(top_srcdir)/src/rtpp_refcnt.h \
-  $(top_srcdir)/src/rtpp_mallocs.c $(top_srcdir)/src/rtpp_mallocs.h \
-  $(top_srcdir)/src/rtpp_stacktrace.c $(top_srcdir)/src/rtpp_stacktrace.h
-
-@ENABLE_LIBUNWIND_FALSE@RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
-RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
-MAINSRCDIR = $(top_srcdir)/src
-DEFAULT_INCLUDES = -I$(MAINSRCDIR)
-CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
-	$(am__append_1)
-@ENABLE_LTO_TRUE@LTO_FLAG = -flto
-NOPT_CFLAGS = -g3 -O0
-CLEANFILES = *.gcda *.gcno *.gcov
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 HEPSRCDIR = $(top_srcdir)/hepconnector
 UCLSRCDIR = $(top_srcdir)/external/libucl
 pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
 noinst_LTLIBRARIES = librtpp_acct_rtcp_hep.la
-rtcp2json_test_SOURCES = rtcp2json_test.c rtpp_sbuf.c rtcp2json.c
+rtcp2json_test_SOURCES = rtcp2json_test.c $(MAINSRCDIR)/rtpp_sbuf.c rtcp2json.c
 rtcp2json_test_CFLAGS = $(OPT_CFLAGS) $(AM_CFLAGS) $(LTO_FLAG)
 rtcp2json_test_LDFLAGS = $(AM_CFLAGS) $(LTO_FLAG)
-rtpp_acct_rtcp_hep_la_SOURCES = rtpp_acct_rtcp_hep.c rtcp2json.c rtpp_sbuf.c \
+rtpp_acct_rtcp_hep_la_SOURCES = rtpp_acct_rtcp_hep.c rtcp2json.c \
   $(HEPSRCDIR)/core_hep.c rtpp_arh_conf.c
 
 rtpp_acct_rtcp_hep_la_LDFLAGS = -avoid-version -module -shared \
@@ -543,7 +542,7 @@ rtpp_sbuf_selftest_CPPFLAGS = -Drtpp_sbuf_selftest=main \
   $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpp_sbuf
 
 rtpp_sbuf_selftest_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
-rtpp_sbuf_selftest_SOURCES = rtpp_sbuf.c rtpp_sbuf.h \
+rtpp_sbuf_selftest_SOURCES = $(MAINSRCDIR)/rtpp_sbuf.c $(MAINSRCDIR)/rtpp_sbuf.h \
   $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
 
 rtpp_sbuf_selftest_LDADD = $(RTPP_MEMDEB_LDADD)
@@ -555,7 +554,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(top_srcdir)/m4/rtpp_module.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(top_srcdir)/m4/rtpp_module.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -575,7 +574,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(top_srcdir)/m4/rtpp_module.ami $(am__empty):
+$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(top_srcdir)/m4/rtpp_module.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -640,19 +639,76 @@ clean-pkglibLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+$(HEPSRCDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(HEPSRCDIR)
+	@: > $(HEPSRCDIR)/$(am__dirstamp)
+$(HEPSRCDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(HEPSRCDIR)/$(DEPDIR)
+	@: > $(HEPSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(HEPSRCDIR)/librtpp_acct_rtcp_hep_la-core_hep.lo:  \
+	$(HEPSRCDIR)/$(am__dirstamp) \
+	$(HEPSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 
 librtpp_acct_rtcp_hep.la: $(librtpp_acct_rtcp_hep_la_OBJECTS) $(librtpp_acct_rtcp_hep_la_DEPENDENCIES) $(EXTRA_librtpp_acct_rtcp_hep_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(librtpp_acct_rtcp_hep_la_LINK)  $(librtpp_acct_rtcp_hep_la_OBJECTS) $(librtpp_acct_rtcp_hep_la_LIBADD) $(LIBS)
+$(HEPSRCDIR)/rtpp_acct_rtcp_hep_la-core_hep.lo:  \
+	$(HEPSRCDIR)/$(am__dirstamp) \
+	$(HEPSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 
 rtpp_acct_rtcp_hep.la: $(rtpp_acct_rtcp_hep_la_OBJECTS) $(rtpp_acct_rtcp_hep_la_DEPENDENCIES) $(EXTRA_rtpp_acct_rtcp_hep_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_acct_rtcp_hep_la_LINK) -rpath $(pkglibdir) $(rtpp_acct_rtcp_hep_la_OBJECTS) $(rtpp_acct_rtcp_hep_la_LIBADD) $(LIBS)
+$(HEPSRCDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.lo:  \
+	$(HEPSRCDIR)/$(am__dirstamp) \
+	$(HEPSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 
 rtpp_acct_rtcp_hep_debug.la: $(rtpp_acct_rtcp_hep_debug_la_OBJECTS) $(rtpp_acct_rtcp_hep_debug_la_DEPENDENCIES) $(EXTRA_rtpp_acct_rtcp_hep_debug_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_acct_rtcp_hep_debug_la_LINK) -rpath $(pkglibdir) $(rtpp_acct_rtcp_hep_debug_la_OBJECTS) $(rtpp_acct_rtcp_hep_debug_la_LIBADD) $(LIBS)
+$(MAINSRCDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(MAINSRCDIR)
+	@: > $(MAINSRCDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(MAINSRCDIR)/$(DEPDIR)
+	@: > $(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 
 rtcp2json_test$(EXEEXT): $(rtcp2json_test_OBJECTS) $(rtcp2json_test_DEPENDENCIES) $(EXTRA_rtcp2json_test_DEPENDENCIES) 
 	@rm -f rtcp2json_test$(EXEEXT)
 	$(AM_V_CCLD)$(rtcp2json_test_LINK) $(rtcp2json_test_OBJECTS) $(rtcp2json_test_LDADD) $(LIBS)
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RTPP_AUTOSRC_DIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(RTPP_AUTOSRC_DIR)
+	@: > $(RTPP_AUTOSRC_DIR)/$(am__dirstamp)
+$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)
+	@: > $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
+$(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.$(OBJEXT):  \
+	$(RTPP_AUTOSRC_DIR)/$(am__dirstamp) \
+	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
 
 rtpp_sbuf_selftest$(EXEEXT): $(rtpp_sbuf_selftest_OBJECTS) $(rtpp_sbuf_selftest_DEPENDENCIES) $(EXTRA_rtpp_sbuf_selftest_DEPENDENCIES) 
 	@rm -f rtpp_sbuf_selftest$(EXEEXT)
@@ -660,36 +716,38 @@ rtpp_sbuf_selftest$(EXEEXT): $(rtpp_sbuf_selftest_OBJECTS) $(rtpp_sbuf_selftest_
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f $(HEPSRCDIR)/*.$(OBJEXT)
+	-rm -f $(HEPSRCDIR)/*.lo
+	-rm -f $(MAINSRCDIR)/*.$(OBJEXT)
+	-rm -f $(RTPP_AUTOSRC_DIR)/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(HEPSRCDIR)/$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtcp2json.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtcp2json_test-rtcp2json.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtcp2json_test-rtcp2json_test.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtcp2json.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_arh_conf.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtcp2json.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -698,22 +756,25 @@ $(am__depfiles_remade):
 am--depfiles: $(am__depfiles_remade)
 
 .c.o:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
 
 .c.obj:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .c.lo:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
@@ -732,19 +793,12 @@ librtpp_acct_rtcp_hep_la-rtcp2json.lo: rtcp2json.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o librtpp_acct_rtcp_hep_la-rtcp2json.lo `test -f 'rtcp2json.c' || echo '$(srcdir)/'`rtcp2json.c
 
-librtpp_acct_rtcp_hep_la-rtpp_sbuf.lo: rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT librtpp_acct_rtcp_hep_la-rtpp_sbuf.lo -MD -MP -MF $(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_sbuf.Tpo -c -o librtpp_acct_rtcp_hep_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_sbuf.Tpo $(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_sbuf.c' object='librtpp_acct_rtcp_hep_la-rtpp_sbuf.lo' libtool=yes @AMDEPBACKSLASH@
+$(HEPSRCDIR)/librtpp_acct_rtcp_hep_la-core_hep.lo: $(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT $(HEPSRCDIR)/librtpp_acct_rtcp_hep_la-core_hep.lo -MD -MP -MF $(HEPSRCDIR)/$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Tpo -c -o $(HEPSRCDIR)/librtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(HEPSRCDIR)/$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Tpo $(HEPSRCDIR)/$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(HEPSRCDIR)/core_hep.c' object='$(HEPSRCDIR)/librtpp_acct_rtcp_hep_la-core_hep.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o librtpp_acct_rtcp_hep_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
-
-librtpp_acct_rtcp_hep_la-core_hep.lo: $(HEPSRCDIR)/core_hep.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT librtpp_acct_rtcp_hep_la-core_hep.lo -MD -MP -MF $(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Tpo -c -o librtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Tpo $(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(HEPSRCDIR)/core_hep.c' object='librtpp_acct_rtcp_hep_la-core_hep.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o librtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o $(HEPSRCDIR)/librtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
 
 librtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo: rtpp_arh_conf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(librtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT librtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo -MD -MP -MF $(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_arh_conf.Tpo -c -o librtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo `test -f 'rtpp_arh_conf.c' || echo '$(srcdir)/'`rtpp_arh_conf.c
@@ -767,19 +821,12 @@ rtpp_acct_rtcp_hep_la-rtcp2json.lo: rtcp2json.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtcp2json.lo `test -f 'rtcp2json.c' || echo '$(srcdir)/'`rtcp2json.c
 
-rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo: rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Tpo -c -o rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Tpo $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_sbuf.c' object='rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo' libtool=yes @AMDEPBACKSLASH@
+$(HEPSRCDIR)/rtpp_acct_rtcp_hep_la-core_hep.lo: $(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT $(HEPSRCDIR)/rtpp_acct_rtcp_hep_la-core_hep.lo -MD -MP -MF $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Tpo -c -o $(HEPSRCDIR)/rtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Tpo $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(HEPSRCDIR)/core_hep.c' object='$(HEPSRCDIR)/rtpp_acct_rtcp_hep_la-core_hep.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
-
-rtpp_acct_rtcp_hep_la-core_hep.lo: $(HEPSRCDIR)/core_hep.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-core_hep.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Tpo -c -o rtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Tpo $(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(HEPSRCDIR)/core_hep.c' object='rtpp_acct_rtcp_hep_la-core_hep.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -c -o $(HEPSRCDIR)/rtpp_acct_rtcp_hep_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
 
 rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo: rtpp_arh_conf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Tpo -c -o rtpp_acct_rtcp_hep_la-rtpp_arh_conf.lo `test -f 'rtpp_arh_conf.c' || echo '$(srcdir)/'`rtpp_arh_conf.c
@@ -802,19 +849,12 @@ rtpp_acct_rtcp_hep_debug_la-rtcp2json.lo: rtcp2json.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_debug_la-rtcp2json.lo `test -f 'rtcp2json.c' || echo '$(srcdir)/'`rtcp2json.c
 
-rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.lo: rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.Tpo -c -o rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.Tpo $(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_sbuf.c' object='rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.lo' libtool=yes @AMDEPBACKSLASH@
+$(HEPSRCDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.lo: $(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) -MT $(HEPSRCDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.lo -MD -MP -MF $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Tpo -c -o $(HEPSRCDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Tpo $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(HEPSRCDIR)/core_hep.c' object='$(HEPSRCDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.lo `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
-
-rtpp_acct_rtcp_hep_debug_la-core_hep.lo: $(HEPSRCDIR)/core_hep.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_debug_la-core_hep.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Tpo -c -o rtpp_acct_rtcp_hep_debug_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Tpo $(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(HEPSRCDIR)/core_hep.c' object='rtpp_acct_rtcp_hep_debug_la-core_hep.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) -c -o rtpp_acct_rtcp_hep_debug_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) -c -o $(HEPSRCDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.lo `test -f '$(HEPSRCDIR)/core_hep.c' || echo '$(srcdir)/'`$(HEPSRCDIR)/core_hep.c
 
 rtpp_acct_rtcp_hep_debug_la-rtpp_arh_conf.lo: rtpp_arh_conf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_acct_rtcp_hep_debug_la_CPPFLAGS) $(CPPFLAGS) $(rtpp_acct_rtcp_hep_debug_la_CFLAGS) $(CFLAGS) -MT rtpp_acct_rtcp_hep_debug_la-rtpp_arh_conf.lo -MD -MP -MF $(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_arh_conf.Tpo -c -o rtpp_acct_rtcp_hep_debug_la-rtpp_arh_conf.lo `test -f 'rtpp_arh_conf.c' || echo '$(srcdir)/'`rtpp_arh_conf.c
@@ -837,19 +877,19 @@ rtcp2json_test-rtcp2json_test.obj: rtcp2json_test.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -c -o rtcp2json_test-rtcp2json_test.obj `if test -f 'rtcp2json_test.c'; then $(CYGPATH_W) 'rtcp2json_test.c'; else $(CYGPATH_W) '$(srcdir)/rtcp2json_test.c'; fi`
 
-rtcp2json_test-rtpp_sbuf.o: rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -MT rtcp2json_test-rtpp_sbuf.o -MD -MP -MF $(DEPDIR)/rtcp2json_test-rtpp_sbuf.Tpo -c -o rtcp2json_test-rtpp_sbuf.o `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtcp2json_test-rtpp_sbuf.Tpo $(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_sbuf.c' object='rtcp2json_test-rtpp_sbuf.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.o: $(MAINSRCDIR)/rtpp_sbuf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Tpo -c -o $(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.o `test -f '$(MAINSRCDIR)/rtpp_sbuf.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_sbuf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_sbuf.c' object='$(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -c -o rtcp2json_test-rtpp_sbuf.o `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.o `test -f '$(MAINSRCDIR)/rtpp_sbuf.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_sbuf.c
 
-rtcp2json_test-rtpp_sbuf.obj: rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -MT rtcp2json_test-rtpp_sbuf.obj -MD -MP -MF $(DEPDIR)/rtcp2json_test-rtpp_sbuf.Tpo -c -o rtcp2json_test-rtpp_sbuf.obj `if test -f 'rtpp_sbuf.c'; then $(CYGPATH_W) 'rtpp_sbuf.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_sbuf.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtcp2json_test-rtpp_sbuf.Tpo $(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_sbuf.c' object='rtcp2json_test-rtpp_sbuf.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.obj: $(MAINSRCDIR)/rtpp_sbuf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Tpo -c -o $(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.obj `if test -f '$(MAINSRCDIR)/rtpp_sbuf.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_sbuf.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_sbuf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_sbuf.c' object='$(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -c -o rtcp2json_test-rtpp_sbuf.obj `if test -f 'rtpp_sbuf.c'; then $(CYGPATH_W) 'rtpp_sbuf.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_sbuf.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtcp2json_test-rtpp_sbuf.obj `if test -f '$(MAINSRCDIR)/rtpp_sbuf.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_sbuf.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_sbuf.c'; fi`
 
 rtcp2json_test-rtcp2json.o: rtcp2json.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -MT rtcp2json_test-rtcp2json.o -MD -MP -MF $(DEPDIR)/rtcp2json_test-rtcp2json.Tpo -c -o rtcp2json_test-rtcp2json.o `test -f 'rtcp2json.c' || echo '$(srcdir)/'`rtcp2json.c
@@ -865,122 +905,137 @@ rtcp2json_test-rtcp2json.obj: rtcp2json.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rtcp2json_test_CFLAGS) $(CFLAGS) -c -o rtcp2json_test-rtcp2json.obj `if test -f 'rtcp2json.c'; then $(CYGPATH_W) 'rtcp2json.c'; else $(CYGPATH_W) '$(srcdir)/rtcp2json.c'; fi`
 
-rtpp_sbuf_selftest-rtpp_sbuf.o: rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_sbuf.o -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Tpo -c -o rtpp_sbuf_selftest-rtpp_sbuf.o `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_sbuf.c' object='rtpp_sbuf_selftest-rtpp_sbuf.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.o: $(MAINSRCDIR)/rtpp_sbuf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.o `test -f '$(MAINSRCDIR)/rtpp_sbuf.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_sbuf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_sbuf.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_sbuf.o `test -f 'rtpp_sbuf.c' || echo '$(srcdir)/'`rtpp_sbuf.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.o `test -f '$(MAINSRCDIR)/rtpp_sbuf.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_sbuf.c
 
-rtpp_sbuf_selftest-rtpp_sbuf.obj: rtpp_sbuf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_sbuf.obj -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Tpo -c -o rtpp_sbuf_selftest-rtpp_sbuf.obj `if test -f 'rtpp_sbuf.c'; then $(CYGPATH_W) 'rtpp_sbuf.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_sbuf.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_sbuf.c' object='rtpp_sbuf_selftest-rtpp_sbuf.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.obj: $(MAINSRCDIR)/rtpp_sbuf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.obj `if test -f '$(MAINSRCDIR)/rtpp_sbuf.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_sbuf.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_sbuf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_sbuf.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_sbuf.obj `if test -f 'rtpp_sbuf.c'; then $(CYGPATH_W) 'rtpp_sbuf.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_sbuf.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.obj `if test -f '$(MAINSRCDIR)/rtpp_sbuf.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_sbuf.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_sbuf.c'; fi`
 
-rtpp_sbuf_selftest-rtpp_memdeb.o: $(top_srcdir)/src/rtpp_memdeb.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_memdeb.o -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Tpo -c -o rtpp_sbuf_selftest-rtpp_memdeb.o `test -f '$(top_srcdir)/src/rtpp_memdeb.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb.c' object='rtpp_sbuf_selftest-rtpp_memdeb.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.o: $(MAINSRCDIR)/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.o `test -f '$(MAINSRCDIR)/rtpp_memdeb.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_memdeb.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_memdeb.o `test -f '$(top_srcdir)/src/rtpp_memdeb.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.o `test -f '$(MAINSRCDIR)/rtpp_memdeb.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_memdeb.c
 
-rtpp_sbuf_selftest-rtpp_memdeb.obj: $(top_srcdir)/src/rtpp_memdeb.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_memdeb.obj -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Tpo -c -o rtpp_sbuf_selftest-rtpp_memdeb.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb.c' object='rtpp_sbuf_selftest-rtpp_memdeb.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.obj: $(MAINSRCDIR)/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.obj `if test -f '$(MAINSRCDIR)/rtpp_memdeb.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_memdeb.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_memdeb.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_memdeb.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_memdeb.obj `if test -f '$(MAINSRCDIR)/rtpp_memdeb.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_memdeb.c'; fi`
 
-rtpp_sbuf_selftest-rtpp_glitch.o: $(top_srcdir)/src/rtpp_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_glitch.o -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Tpo -c -o rtpp_sbuf_selftest-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='rtpp_sbuf_selftest-rtpp_glitch.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.o: $(MAINSRCDIR)/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.o `test -f '$(MAINSRCDIR)/rtpp_glitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_glitch.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.o `test -f '$(MAINSRCDIR)/rtpp_glitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_glitch.c
 
-rtpp_sbuf_selftest-rtpp_glitch.obj: $(top_srcdir)/src/rtpp_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_glitch.obj -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Tpo -c -o rtpp_sbuf_selftest-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='rtpp_sbuf_selftest-rtpp_glitch.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.obj: $(MAINSRCDIR)/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.obj `if test -f '$(MAINSRCDIR)/rtpp_glitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_glitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_glitch.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_glitch.obj `if test -f '$(MAINSRCDIR)/rtpp_glitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_glitch.c'; fi`
 
-rtpp_sbuf_selftest-rtpp_autoglitch.o: $(top_srcdir)/src/rtpp_autoglitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_autoglitch.o -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Tpo -c -o rtpp_sbuf_selftest-rtpp_autoglitch.o `test -f '$(top_srcdir)/src/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_autoglitch.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_autoglitch.c' object='rtpp_sbuf_selftest-rtpp_autoglitch.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.o: $(MAINSRCDIR)/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.o `test -f '$(MAINSRCDIR)/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_autoglitch.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_autoglitch.o `test -f '$(top_srcdir)/src/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_autoglitch.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.o `test -f '$(MAINSRCDIR)/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_autoglitch.c
 
-rtpp_sbuf_selftest-rtpp_autoglitch.obj: $(top_srcdir)/src/rtpp_autoglitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_autoglitch.obj -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Tpo -c -o rtpp_sbuf_selftest-rtpp_autoglitch.obj `if test -f '$(top_srcdir)/src/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_autoglitch.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_autoglitch.c' object='rtpp_sbuf_selftest-rtpp_autoglitch.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.obj: $(MAINSRCDIR)/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.obj `if test -f '$(MAINSRCDIR)/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_autoglitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_autoglitch.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_autoglitch.obj `if test -f '$(top_srcdir)/src/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_autoglitch.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.obj `if test -f '$(MAINSRCDIR)/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_autoglitch.c'; fi`
 
-rtpp_sbuf_selftest-rtpp_refcnt.o: $(top_srcdir)/src/rtpp_refcnt.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_refcnt.o -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Tpo -c -o rtpp_sbuf_selftest-rtpp_refcnt.o `test -f '$(top_srcdir)/src/rtpp_refcnt.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_refcnt.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_refcnt.c' object='rtpp_sbuf_selftest-rtpp_refcnt.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.o: $(MAINSRCDIR)/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.o `test -f '$(MAINSRCDIR)/rtpp_refcnt.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_refcnt.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_refcnt.o `test -f '$(top_srcdir)/src/rtpp_refcnt.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_refcnt.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.o `test -f '$(MAINSRCDIR)/rtpp_refcnt.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_refcnt.c
 
-rtpp_sbuf_selftest-rtpp_refcnt.obj: $(top_srcdir)/src/rtpp_refcnt.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_refcnt.obj -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Tpo -c -o rtpp_sbuf_selftest-rtpp_refcnt.obj `if test -f '$(top_srcdir)/src/rtpp_refcnt.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_refcnt.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_refcnt.c' object='rtpp_sbuf_selftest-rtpp_refcnt.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.obj: $(MAINSRCDIR)/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.obj `if test -f '$(MAINSRCDIR)/rtpp_refcnt.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_refcnt.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_refcnt.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_refcnt.obj `if test -f '$(top_srcdir)/src/rtpp_refcnt.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_refcnt.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.obj `if test -f '$(MAINSRCDIR)/rtpp_refcnt.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_refcnt.c'; fi`
 
-rtpp_sbuf_selftest-rtpp_mallocs.o: $(top_srcdir)/src/rtpp_mallocs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_mallocs.o -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Tpo -c -o rtpp_sbuf_selftest-rtpp_mallocs.o `test -f '$(top_srcdir)/src/rtpp_mallocs.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_mallocs.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_mallocs.c' object='rtpp_sbuf_selftest-rtpp_mallocs.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.o: $(MAINSRCDIR)/rtpp_threads.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.o `test -f '$(MAINSRCDIR)/rtpp_threads.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_threads.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_threads.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_mallocs.o `test -f '$(top_srcdir)/src/rtpp_mallocs.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_mallocs.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.o `test -f '$(MAINSRCDIR)/rtpp_threads.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_threads.c
 
-rtpp_sbuf_selftest-rtpp_mallocs.obj: $(top_srcdir)/src/rtpp_mallocs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_mallocs.obj -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Tpo -c -o rtpp_sbuf_selftest-rtpp_mallocs.obj `if test -f '$(top_srcdir)/src/rtpp_mallocs.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_mallocs.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_mallocs.c' object='rtpp_sbuf_selftest-rtpp_mallocs.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.obj: $(MAINSRCDIR)/rtpp_threads.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.obj `if test -f '$(MAINSRCDIR)/rtpp_threads.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_threads.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_threads.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_threads.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_mallocs.obj `if test -f '$(top_srcdir)/src/rtpp_mallocs.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_mallocs.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.obj `if test -f '$(MAINSRCDIR)/rtpp_threads.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_threads.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_threads.c'; fi`
 
-rtpp_sbuf_selftest-rtpp_stacktrace.o: $(top_srcdir)/src/rtpp_stacktrace.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_stacktrace.o -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Tpo -c -o rtpp_sbuf_selftest-rtpp_stacktrace.o `test -f '$(top_srcdir)/src/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_stacktrace.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_stacktrace.c' object='rtpp_sbuf_selftest-rtpp_stacktrace.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.o: $(MAINSRCDIR)/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.o `test -f '$(MAINSRCDIR)/rtpp_mallocs.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_mallocs.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_stacktrace.o `test -f '$(top_srcdir)/src/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_stacktrace.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.o `test -f '$(MAINSRCDIR)/rtpp_mallocs.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_mallocs.c
 
-rtpp_sbuf_selftest-rtpp_stacktrace.obj: $(top_srcdir)/src/rtpp_stacktrace.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_stacktrace.obj -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Tpo -c -o rtpp_sbuf_selftest-rtpp_stacktrace.obj `if test -f '$(top_srcdir)/src/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_stacktrace.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_stacktrace.c' object='rtpp_sbuf_selftest-rtpp_stacktrace.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.obj: $(MAINSRCDIR)/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.obj `if test -f '$(MAINSRCDIR)/rtpp_mallocs.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_mallocs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_mallocs.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_stacktrace.obj `if test -f '$(top_srcdir)/src/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_stacktrace.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.obj `if test -f '$(MAINSRCDIR)/rtpp_mallocs.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_mallocs.c'; fi`
 
-rtpp_sbuf_selftest-rtpp_refcnt_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_refcnt_fin.o -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo -c -o rtpp_sbuf_selftest-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='rtpp_sbuf_selftest-rtpp_refcnt_fin.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.o: $(MAINSRCDIR)/rtpp_stacktrace.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.o `test -f '$(MAINSRCDIR)/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_stacktrace.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_stacktrace.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.o `test -f '$(MAINSRCDIR)/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_stacktrace.c
 
-rtpp_sbuf_selftest-rtpp_refcnt_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT rtpp_sbuf_selftest-rtpp_refcnt_fin.obj -MD -MP -MF $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo -c -o rtpp_sbuf_selftest-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo $(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='rtpp_sbuf_selftest-rtpp_refcnt_fin.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.obj: $(MAINSRCDIR)/rtpp_stacktrace.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_stacktrace.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o rtpp_sbuf_selftest-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
+
+$(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.o -MD -MP -MF $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo -c -o $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='$(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+
+$(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.obj -MD -MP -MF $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo -c -o $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='$(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
+	-rm -rf $(HEPSRCDIR)/.libs $(HEPSRCDIR)/_libs
 	-rm -rf .libs _libs
 
 ID: $(am__tagged_files)
@@ -1101,6 +1156,12 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-test -z "$(HEPSRCDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(HEPSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(HEPSRCDIR)/$(am__dirstamp)" || rm -f $(HEPSRCDIR)/$(am__dirstamp)
+	-test -z "$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(MAINSRCDIR)/$(am__dirstamp)" || rm -f $(MAINSRCDIR)/$(am__dirstamp)
+	-test -z "$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(RTPP_AUTOSRC_DIR)/$(am__dirstamp)" || rm -f $(RTPP_AUTOSRC_DIR)/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1111,32 +1172,30 @@ clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
 	clean-noinstPROGRAMS clean-pkglibLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo
+		-rm -f $(HEPSRCDIR)/$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo
+	-rm -f $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo
+	-rm -f $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Po
+	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po
 	-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtcp2json.Plo
 	-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Plo
 	-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo
-	-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo
 	-rm -f ./$(DEPDIR)/rtcp2json_test-rtcp2json.Po
 	-rm -f ./$(DEPDIR)/rtcp2json_test-rtcp2json_test.Po
-	-rm -f ./$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
-	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtcp2json.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_arh_conf.Plo
-	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.Plo
-	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtcp2json.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo
-	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1182,32 +1241,30 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo
+		-rm -f $(HEPSRCDIR)/$(DEPDIR)/librtpp_acct_rtcp_hep_la-core_hep.Plo
+	-rm -f $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo
+	-rm -f $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_threads.Po
+	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po
 	-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtcp2json.Plo
 	-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Plo
 	-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo
-	-rm -f ./$(DEPDIR)/librtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo
 	-rm -f ./$(DEPDIR)/rtcp2json_test-rtcp2json.Po
 	-rm -f ./$(DEPDIR)/rtcp2json_test-rtcp2json_test.Po
-	-rm -f ./$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
-	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-core_hep.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtcp2json.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_acct_rtcp_hep.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_arh_conf.Plo
-	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_debug_la-rtpp_sbuf.Plo
-	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtcp2json.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_acct_rtcp_hep.Plo
 	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_arh_conf.Plo
-	-rm -f ./$(DEPDIR)/rtpp_acct_rtcp_hep_la-rtpp_sbuf.Plo
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_sbuf.Po
-	-rm -f ./$(DEPDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

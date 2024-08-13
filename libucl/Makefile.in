@@ -110,11 +110,17 @@ CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libucl_la_LIBADD =
-am_libucl_la_OBJECTS = libucl_la-ucl_emitter_streamline.lo \
-	libucl_la-ucl_emitter_utils.lo libucl_la-ucl_emitter.lo \
-	libucl_la-ucl_hash.lo libucl_la-ucl_msgpack.lo \
-	libucl_la-ucl_parser.lo libucl_la-ucl_schema.lo \
-	libucl_la-ucl_sexp.lo libucl_la-ucl_util.lo
+am__dirstamp = $(am__leading_dot)dirstamp
+am_libucl_la_OBJECTS =  \
+	$(UCL_SDIR)/libucl_la-ucl_emitter_streamline.lo \
+	$(UCL_SDIR)/libucl_la-ucl_emitter_utils.lo \
+	$(UCL_SDIR)/libucl_la-ucl_emitter.lo \
+	$(UCL_SDIR)/libucl_la-ucl_hash.lo \
+	$(UCL_SDIR)/libucl_la-ucl_msgpack.lo \
+	$(UCL_SDIR)/libucl_la-ucl_parser.lo \
+	$(UCL_SDIR)/libucl_la-ucl_schema.lo \
+	$(UCL_SDIR)/libucl_la-ucl_sexp.lo \
+	$(UCL_SDIR)/libucl_la-ucl_util.lo
 libucl_la_OBJECTS = $(am_libucl_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -124,28 +130,33 @@ libucl_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libucl_la_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 libucl_debug_la_LIBADD =
-am__objects_1 = libucl_debug_la-ucl_emitter_streamline.lo \
-	libucl_debug_la-ucl_emitter_utils.lo \
-	libucl_debug_la-ucl_emitter.lo libucl_debug_la-ucl_hash.lo \
-	libucl_debug_la-ucl_msgpack.lo libucl_debug_la-ucl_parser.lo \
-	libucl_debug_la-ucl_schema.lo libucl_debug_la-ucl_sexp.lo \
-	libucl_debug_la-ucl_util.lo
+am__objects_1 = $(UCL_SDIR)/libucl_debug_la-ucl_emitter_streamline.lo \
+	$(UCL_SDIR)/libucl_debug_la-ucl_emitter_utils.lo \
+	$(UCL_SDIR)/libucl_debug_la-ucl_emitter.lo \
+	$(UCL_SDIR)/libucl_debug_la-ucl_hash.lo \
+	$(UCL_SDIR)/libucl_debug_la-ucl_msgpack.lo \
+	$(UCL_SDIR)/libucl_debug_la-ucl_parser.lo \
+	$(UCL_SDIR)/libucl_debug_la-ucl_schema.lo \
+	$(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo \
+	$(UCL_SDIR)/libucl_debug_la-ucl_util.lo
 am_libucl_debug_la_OBJECTS = $(am__objects_1)
 libucl_debug_la_OBJECTS = $(am_libucl_debug_la_OBJECTS)
 libucl_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(libucl_debug_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-am__objects_2 = libucl_test-rtpp_memdeb.$(OBJEXT) \
-	libucl_test-rtpp_glitch.$(OBJEXT) \
-	libucl_test-rtpp_autoglitch.$(OBJEXT) \
-	libucl_test-rtpp_refcnt.$(OBJEXT) \
-	libucl_test-rtpp_mallocs.$(OBJEXT) \
-	libucl_test-rtpp_stacktrace.$(OBJEXT)
-am__objects_3 = libucl_test-rtpp_refcnt_fin.$(OBJEXT)
+am__objects_2 = $(MAINSRCDIR)/libucl_test-rtpp_memdeb.$(OBJEXT) \
+	$(MAINSRCDIR)/libucl_test-rtpp_glitch.$(OBJEXT) \
+	$(MAINSRCDIR)/libucl_test-rtpp_autoglitch.$(OBJEXT) \
+	$(MAINSRCDIR)/libucl_test-rtpp_refcnt.$(OBJEXT) \
+	$(MAINSRCDIR)/libucl_test-rtpp_threads.$(OBJEXT) \
+	$(MAINSRCDIR)/libucl_test-rtpp_mallocs.$(OBJEXT) \
+	$(MAINSRCDIR)/libucl_test-rtpp_stacktrace.$(OBJEXT)
+am__objects_3 =  \
+	$(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.$(OBJEXT)
 am_libucl_test_OBJECTS = libucl_test-libucl_test.$(OBJEXT) \
-	libucl_test-rtpp_arh_conf.$(OBJEXT) \
-	libucl_test-rtpp_ucl.$(OBJEXT) $(am__objects_2) \
+	$(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.$(OBJEXT) \
+	$(MAINSRCDIR)/libucl_test-rtpp_ucl.$(OBJEXT) $(am__objects_2) \
 	$(am__objects_3)
 libucl_test_OBJECTS = $(am_libucl_test_OBJECTS)
 am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.la
@@ -167,34 +178,36 @@ am__v_at_0 = @
 am__v_at_1 = 
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo \
-	./$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo \
-	./$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo \
-	./$(DEPDIR)/libucl_debug_la-ucl_hash.Plo \
-	./$(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo \
-	./$(DEPDIR)/libucl_debug_la-ucl_parser.Plo \
-	./$(DEPDIR)/libucl_debug_la-ucl_schema.Plo \
-	./$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo \
-	./$(DEPDIR)/libucl_debug_la-ucl_util.Plo \
-	./$(DEPDIR)/libucl_la-ucl_emitter.Plo \
-	./$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo \
-	./$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo \
-	./$(DEPDIR)/libucl_la-ucl_hash.Plo \
-	./$(DEPDIR)/libucl_la-ucl_msgpack.Plo \
-	./$(DEPDIR)/libucl_la-ucl_parser.Plo \
-	./$(DEPDIR)/libucl_la-ucl_schema.Plo \
-	./$(DEPDIR)/libucl_la-ucl_sexp.Plo \
-	./$(DEPDIR)/libucl_la-ucl_util.Plo \
-	./$(DEPDIR)/libucl_test-libucl_test.Po \
-	./$(DEPDIR)/libucl_test-rtpp_arh_conf.Po \
-	./$(DEPDIR)/libucl_test-rtpp_autoglitch.Po \
-	./$(DEPDIR)/libucl_test-rtpp_glitch.Po \
-	./$(DEPDIR)/libucl_test-rtpp_mallocs.Po \
-	./$(DEPDIR)/libucl_test-rtpp_memdeb.Po \
-	./$(DEPDIR)/libucl_test-rtpp_refcnt.Po \
-	./$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po \
-	./$(DEPDIR)/libucl_test-rtpp_stacktrace.Po \
-	./$(DEPDIR)/libucl_test-rtpp_ucl.Po
+am__depfiles_remade =  \
+	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po \
+	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_hash.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_parser.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_hash.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_msgpack.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_parser.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_schema.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_sexp.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Plo \
+	$(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Po \
+	./$(DEPDIR)/libucl_test-libucl_test.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -385,6 +398,28 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
+  -I$(top_srcdir) -I$(RTPP_AUTOSRC_DIR)
+
+RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
+  $(MAINSRCDIR)/rtpp_memdeb_internal.h $(MAINSRCDIR)/rtpp_glitch.c \
+  $(MAINSRCDIR)/rtpp_glitch.h $(MAINSRCDIR)/rtpp_codeptr.h \
+  $(MAINSRCDIR)/rtpp_autoglitch.c $(MAINSRCDIR)/rtpp_autoglitch.h \
+  $(MAINSRCDIR)/rtpp_debugon.h $(MAINSRCDIR)/rtpp_refcnt.c \
+  $(MAINSRCDIR)/rtpp_refcnt.h $(MAINSRCDIR)/rtpp_threads.h \
+  $(MAINSRCDIR)/rtpp_threads.c \
+  $(MAINSRCDIR)/rtpp_mallocs.c $(MAINSRCDIR)/rtpp_mallocs.h \
+  $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h
+
+@ENABLE_LIBUNWIND_FALSE@RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
+RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
+MAINSRCDIR = $(top_srcdir)/src
+DEFAULT_INCLUDES = -I$(MAINSRCDIR)
+CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
+	$(am__append_1)
+@ENABLE_LTO_TRUE@LTO_FLAG = -flto
+NOPT_CFLAGS = -g3 -O0
+CLEANFILES = *.gcda *.gcno *.gcov
 RTPP_AUTOSRC_DIR = $(top_srcdir)/autosrc
 
 # Auto-generated by ./Makefile - DO NOT EDIT!
@@ -430,27 +465,6 @@ rtpp_rw_lock_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_rw_lock_fin.h $(RTPP_AUTOSRC_DI
 rtpp_proc_servers_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.c
 rtpp_proc_wakeup_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.c
 rtpp_socket_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.c
-RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
-  -I$(top_srcdir) -I$(RTPP_AUTOSRC_DIR)
-
-RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
-  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_glitch.c \
-  $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h \
-  $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h \
-  $(top_srcdir)/src/rtpp_debugon.h $(top_srcdir)/src/rtpp_refcnt.c \
-  $(top_srcdir)/src/rtpp_refcnt.h \
-  $(top_srcdir)/src/rtpp_mallocs.c $(top_srcdir)/src/rtpp_mallocs.h \
-  $(top_srcdir)/src/rtpp_stacktrace.c $(top_srcdir)/src/rtpp_stacktrace.h
-
-@ENABLE_LIBUNWIND_FALSE@RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
-RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
-MAINSRCDIR = $(top_srcdir)/src
-DEFAULT_INCLUDES = -I$(MAINSRCDIR)
-CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
-	$(am__append_1)
-@ENABLE_LTO_TRUE@LTO_FLAG = -flto
-NOPT_CFLAGS = -g3 -O0
-CLEANFILES = *.gcda *.gcno *.gcov
 UCL_DIR = $(top_srcdir)/external/libucl
 UCL_SDIR = $(UCL_DIR)/src
 noinst_LTLIBRARIES = libucl.la libucl_debug.la
@@ -482,7 +496,7 @@ libucl_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLA
 libucl_test_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
-  $(top_srcdir)/src/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
+  $(MAINSRCDIR)/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
 
 libucl_test_LDADD = libucl_debug.la $(RTPP_MEMDEB_LDADD)
 libucl_test_LDLAGS = $(LTO_FLAG)
@@ -490,7 +504,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -510,7 +524,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__empty):
+$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(top_srcdir)/autosrc/Makefile.ami $(top_srcdir)/m4/autosrc.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -540,12 +554,110 @@ clean-noinstLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+$(UCL_SDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(UCL_SDIR)
+	@: > $(UCL_SDIR)/$(am__dirstamp)
+$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(UCL_SDIR)/$(DEPDIR)
+	@: > $(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_emitter_streamline.lo:  \
+	$(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_emitter_utils.lo:  \
+	$(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_emitter.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_hash.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_msgpack.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_parser.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_schema.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_sexp.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_util.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
 
 libucl.la: $(libucl_la_OBJECTS) $(libucl_la_DEPENDENCIES) $(EXTRA_libucl_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libucl_la_LINK)  $(libucl_la_OBJECTS) $(libucl_la_LIBADD) $(LIBS)
+$(UCL_SDIR)/libucl_debug_la-ucl_emitter_streamline.lo:  \
+	$(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_debug_la-ucl_emitter_utils.lo:  \
+	$(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_debug_la-ucl_emitter.lo:  \
+	$(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_debug_la-ucl_hash.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_debug_la-ucl_msgpack.lo:  \
+	$(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_debug_la-ucl_parser.lo:  \
+	$(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_debug_la-ucl_schema.lo:  \
+	$(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_debug_la-ucl_util.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
 
 libucl_debug.la: $(libucl_debug_la_OBJECTS) $(libucl_debug_la_DEPENDENCIES) $(EXTRA_libucl_debug_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libucl_debug_la_LINK)  $(libucl_debug_la_OBJECTS) $(libucl_debug_la_LIBADD) $(LIBS)
+$(top_builddir)/modules/acct_rtcp_hep/$(am__dirstamp):
+	@$(MKDIR_P) $(top_builddir)/modules/acct_rtcp_hep
+	@: > $(top_builddir)/modules/acct_rtcp_hep/$(am__dirstamp)
+$(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)
+	@: > $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/$(am__dirstamp)
+$(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.$(OBJEXT):  \
+	$(top_builddir)/modules/acct_rtcp_hep/$(am__dirstamp) \
+	$(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(MAINSRCDIR)
+	@: > $(MAINSRCDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(MAINSRCDIR)/$(DEPDIR)
+	@: > $(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/libucl_test-rtpp_ucl.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/libucl_test-rtpp_memdeb.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/libucl_test-rtpp_glitch.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/libucl_test-rtpp_autoglitch.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/libucl_test-rtpp_refcnt.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/libucl_test-rtpp_threads.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/libucl_test-rtpp_mallocs.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/libucl_test-rtpp_stacktrace.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RTPP_AUTOSRC_DIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(RTPP_AUTOSRC_DIR)
+	@: > $(RTPP_AUTOSRC_DIR)/$(am__dirstamp)
+$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)
+	@: > $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
+$(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.$(OBJEXT):  \
+	$(RTPP_AUTOSRC_DIR)/$(am__dirstamp) \
+	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
 
 libucl_test$(EXEEXT): $(libucl_test_OBJECTS) $(libucl_test_DEPENDENCIES) $(EXTRA_libucl_test_DEPENDENCIES) 
 	@rm -f libucl_test$(EXEEXT)
@@ -553,38 +665,44 @@ libucl_test$(EXEEXT): $(libucl_test_OBJECTS) $(libucl_test_DEPENDENCIES) $(EXTRA
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f $(MAINSRCDIR)/*.$(OBJEXT)
+	-rm -f $(RTPP_AUTOSRC_DIR)/*.$(OBJEXT)
+	-rm -f $(UCL_SDIR)/*.$(OBJEXT)
+	-rm -f $(UCL_SDIR)/*.lo
+	-rm -f $(top_builddir)/modules/acct_rtcp_hep/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_la-ucl_hash.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_la-ucl_parser.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_la-ucl_schema.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_debug_la-ucl_util.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_la-ucl_emitter.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_la-ucl_hash.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_la-ucl_msgpack.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_la-ucl_parser.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_la-ucl_schema.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_la-ucl_sexp.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_la-ucl_util.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_hash.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_parser.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_hash.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_msgpack.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_parser.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_schema.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_sexp.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-libucl_test.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_arh_conf.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_autoglitch.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_glitch.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_mallocs.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_memdeb.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_refcnt.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_stacktrace.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libucl_test-rtpp_ucl.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -593,151 +711,154 @@ $(am__depfiles_remade):
 am--depfiles: $(am__depfiles_remade)
 
 .c.o:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
 
 .c.obj:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .c.lo:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-libucl_la-ucl_emitter_streamline.lo: $(UCL_SDIR)/ucl_emitter_streamline.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT libucl_la-ucl_emitter_streamline.lo -MD -MP -MF $(DEPDIR)/libucl_la-ucl_emitter_streamline.Tpo -c -o libucl_la-ucl_emitter_streamline.lo `test -f '$(UCL_SDIR)/ucl_emitter_streamline.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_streamline.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_la-ucl_emitter_streamline.Tpo $(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter_streamline.c' object='libucl_la-ucl_emitter_streamline.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_la-ucl_emitter_streamline.lo: $(UCL_SDIR)/ucl_emitter_streamline.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_emitter_streamline.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_emitter_streamline.lo `test -f '$(UCL_SDIR)/ucl_emitter_streamline.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_streamline.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter_streamline.c' object='$(UCL_SDIR)/libucl_la-ucl_emitter_streamline.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o libucl_la-ucl_emitter_streamline.lo `test -f '$(UCL_SDIR)/ucl_emitter_streamline.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_streamline.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_emitter_streamline.lo `test -f '$(UCL_SDIR)/ucl_emitter_streamline.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_streamline.c
 
-libucl_la-ucl_emitter_utils.lo: $(UCL_SDIR)/ucl_emitter_utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT libucl_la-ucl_emitter_utils.lo -MD -MP -MF $(DEPDIR)/libucl_la-ucl_emitter_utils.Tpo -c -o libucl_la-ucl_emitter_utils.lo `test -f '$(UCL_SDIR)/ucl_emitter_utils.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_la-ucl_emitter_utils.Tpo $(DEPDIR)/libucl_la-ucl_emitter_utils.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter_utils.c' object='libucl_la-ucl_emitter_utils.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_la-ucl_emitter_utils.lo: $(UCL_SDIR)/ucl_emitter_utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_emitter_utils.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_emitter_utils.lo `test -f '$(UCL_SDIR)/ucl_emitter_utils.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_utils.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter_utils.c' object='$(UCL_SDIR)/libucl_la-ucl_emitter_utils.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o libucl_la-ucl_emitter_utils.lo `test -f '$(UCL_SDIR)/ucl_emitter_utils.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_utils.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_emitter_utils.lo `test -f '$(UCL_SDIR)/ucl_emitter_utils.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_utils.c
 
-libucl_la-ucl_emitter.lo: $(UCL_SDIR)/ucl_emitter.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT libucl_la-ucl_emitter.lo -MD -MP -MF $(DEPDIR)/libucl_la-ucl_emitter.Tpo -c -o libucl_la-ucl_emitter.lo `test -f '$(UCL_SDIR)/ucl_emitter.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_la-ucl_emitter.Tpo $(DEPDIR)/libucl_la-ucl_emitter.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter.c' object='libucl_la-ucl_emitter.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_la-ucl_emitter.lo: $(UCL_SDIR)/ucl_emitter.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_emitter.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_emitter.lo `test -f '$(UCL_SDIR)/ucl_emitter.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter.c' object='$(UCL_SDIR)/libucl_la-ucl_emitter.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o libucl_la-ucl_emitter.lo `test -f '$(UCL_SDIR)/ucl_emitter.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_emitter.lo `test -f '$(UCL_SDIR)/ucl_emitter.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter.c
 
-libucl_la-ucl_hash.lo: $(UCL_SDIR)/ucl_hash.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT libucl_la-ucl_hash.lo -MD -MP -MF $(DEPDIR)/libucl_la-ucl_hash.Tpo -c -o libucl_la-ucl_hash.lo `test -f '$(UCL_SDIR)/ucl_hash.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_hash.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_la-ucl_hash.Tpo $(DEPDIR)/libucl_la-ucl_hash.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_hash.c' object='libucl_la-ucl_hash.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_la-ucl_hash.lo: $(UCL_SDIR)/ucl_hash.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_hash.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_hash.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_hash.lo `test -f '$(UCL_SDIR)/ucl_hash.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_hash.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_hash.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_hash.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_hash.c' object='$(UCL_SDIR)/libucl_la-ucl_hash.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o libucl_la-ucl_hash.lo `test -f '$(UCL_SDIR)/ucl_hash.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_hash.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_hash.lo `test -f '$(UCL_SDIR)/ucl_hash.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_hash.c
 
-libucl_la-ucl_msgpack.lo: $(UCL_SDIR)/ucl_msgpack.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT libucl_la-ucl_msgpack.lo -MD -MP -MF $(DEPDIR)/libucl_la-ucl_msgpack.Tpo -c -o libucl_la-ucl_msgpack.lo `test -f '$(UCL_SDIR)/ucl_msgpack.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_msgpack.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_la-ucl_msgpack.Tpo $(DEPDIR)/libucl_la-ucl_msgpack.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_msgpack.c' object='libucl_la-ucl_msgpack.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_la-ucl_msgpack.lo: $(UCL_SDIR)/ucl_msgpack.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_msgpack.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_msgpack.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_msgpack.lo `test -f '$(UCL_SDIR)/ucl_msgpack.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_msgpack.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_msgpack.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_msgpack.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_msgpack.c' object='$(UCL_SDIR)/libucl_la-ucl_msgpack.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o libucl_la-ucl_msgpack.lo `test -f '$(UCL_SDIR)/ucl_msgpack.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_msgpack.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_msgpack.lo `test -f '$(UCL_SDIR)/ucl_msgpack.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_msgpack.c
 
-libucl_la-ucl_parser.lo: $(UCL_SDIR)/ucl_parser.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT libucl_la-ucl_parser.lo -MD -MP -MF $(DEPDIR)/libucl_la-ucl_parser.Tpo -c -o libucl_la-ucl_parser.lo `test -f '$(UCL_SDIR)/ucl_parser.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_parser.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_la-ucl_parser.Tpo $(DEPDIR)/libucl_la-ucl_parser.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_parser.c' object='libucl_la-ucl_parser.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_la-ucl_parser.lo: $(UCL_SDIR)/ucl_parser.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_parser.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_parser.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_parser.lo `test -f '$(UCL_SDIR)/ucl_parser.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_parser.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_parser.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_parser.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_parser.c' object='$(UCL_SDIR)/libucl_la-ucl_parser.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o libucl_la-ucl_parser.lo `test -f '$(UCL_SDIR)/ucl_parser.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_parser.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_parser.lo `test -f '$(UCL_SDIR)/ucl_parser.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_parser.c
 
-libucl_la-ucl_schema.lo: $(UCL_SDIR)/ucl_schema.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT libucl_la-ucl_schema.lo -MD -MP -MF $(DEPDIR)/libucl_la-ucl_schema.Tpo -c -o libucl_la-ucl_schema.lo `test -f '$(UCL_SDIR)/ucl_schema.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_schema.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_la-ucl_schema.Tpo $(DEPDIR)/libucl_la-ucl_schema.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_schema.c' object='libucl_la-ucl_schema.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_la-ucl_schema.lo: $(UCL_SDIR)/ucl_schema.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_schema.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_schema.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_schema.lo `test -f '$(UCL_SDIR)/ucl_schema.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_schema.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_schema.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_schema.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_schema.c' object='$(UCL_SDIR)/libucl_la-ucl_schema.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o libucl_la-ucl_schema.lo `test -f '$(UCL_SDIR)/ucl_schema.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_schema.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_schema.lo `test -f '$(UCL_SDIR)/ucl_schema.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_schema.c
 
-libucl_la-ucl_sexp.lo: $(UCL_SDIR)/ucl_sexp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT libucl_la-ucl_sexp.lo -MD -MP -MF $(DEPDIR)/libucl_la-ucl_sexp.Tpo -c -o libucl_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_la-ucl_sexp.Tpo $(DEPDIR)/libucl_la-ucl_sexp.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_sexp.c' object='libucl_la-ucl_sexp.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_la-ucl_sexp.lo: $(UCL_SDIR)/ucl_sexp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_sexp.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_sexp.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_sexp.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_sexp.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_sexp.c' object='$(UCL_SDIR)/libucl_la-ucl_sexp.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o libucl_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
 
-libucl_la-ucl_util.lo: $(UCL_SDIR)/ucl_util.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT libucl_la-ucl_util.lo -MD -MP -MF $(DEPDIR)/libucl_la-ucl_util.Tpo -c -o libucl_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_la-ucl_util.Tpo $(DEPDIR)/libucl_la-ucl_util.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_util.c' object='libucl_la-ucl_util.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_la-ucl_util.lo: $(UCL_SDIR)/ucl_util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_util.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_util.c' object='$(UCL_SDIR)/libucl_la-ucl_util.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o libucl_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
 
-libucl_debug_la-ucl_emitter_streamline.lo: $(UCL_SDIR)/ucl_emitter_streamline.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT libucl_debug_la-ucl_emitter_streamline.lo -MD -MP -MF $(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Tpo -c -o libucl_debug_la-ucl_emitter_streamline.lo `test -f '$(UCL_SDIR)/ucl_emitter_streamline.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_streamline.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Tpo $(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter_streamline.c' object='libucl_debug_la-ucl_emitter_streamline.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_debug_la-ucl_emitter_streamline.lo: $(UCL_SDIR)/ucl_emitter_streamline.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_emitter_streamline.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_emitter_streamline.lo `test -f '$(UCL_SDIR)/ucl_emitter_streamline.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_streamline.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter_streamline.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_emitter_streamline.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o libucl_debug_la-ucl_emitter_streamline.lo `test -f '$(UCL_SDIR)/ucl_emitter_streamline.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_streamline.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_emitter_streamline.lo `test -f '$(UCL_SDIR)/ucl_emitter_streamline.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_streamline.c
 
-libucl_debug_la-ucl_emitter_utils.lo: $(UCL_SDIR)/ucl_emitter_utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT libucl_debug_la-ucl_emitter_utils.lo -MD -MP -MF $(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Tpo -c -o libucl_debug_la-ucl_emitter_utils.lo `test -f '$(UCL_SDIR)/ucl_emitter_utils.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Tpo $(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter_utils.c' object='libucl_debug_la-ucl_emitter_utils.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_debug_la-ucl_emitter_utils.lo: $(UCL_SDIR)/ucl_emitter_utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_emitter_utils.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_emitter_utils.lo `test -f '$(UCL_SDIR)/ucl_emitter_utils.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_utils.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter_utils.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_emitter_utils.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o libucl_debug_la-ucl_emitter_utils.lo `test -f '$(UCL_SDIR)/ucl_emitter_utils.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_utils.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_emitter_utils.lo `test -f '$(UCL_SDIR)/ucl_emitter_utils.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter_utils.c
 
-libucl_debug_la-ucl_emitter.lo: $(UCL_SDIR)/ucl_emitter.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT libucl_debug_la-ucl_emitter.lo -MD -MP -MF $(DEPDIR)/libucl_debug_la-ucl_emitter.Tpo -c -o libucl_debug_la-ucl_emitter.lo `test -f '$(UCL_SDIR)/ucl_emitter.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_debug_la-ucl_emitter.Tpo $(DEPDIR)/libucl_debug_la-ucl_emitter.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter.c' object='libucl_debug_la-ucl_emitter.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_debug_la-ucl_emitter.lo: $(UCL_SDIR)/ucl_emitter.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_emitter.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_emitter.lo `test -f '$(UCL_SDIR)/ucl_emitter.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_emitter.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_emitter.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o libucl_debug_la-ucl_emitter.lo `test -f '$(UCL_SDIR)/ucl_emitter.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_emitter.lo `test -f '$(UCL_SDIR)/ucl_emitter.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_emitter.c
 
-libucl_debug_la-ucl_hash.lo: $(UCL_SDIR)/ucl_hash.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT libucl_debug_la-ucl_hash.lo -MD -MP -MF $(DEPDIR)/libucl_debug_la-ucl_hash.Tpo -c -o libucl_debug_la-ucl_hash.lo `test -f '$(UCL_SDIR)/ucl_hash.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_hash.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_debug_la-ucl_hash.Tpo $(DEPDIR)/libucl_debug_la-ucl_hash.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_hash.c' object='libucl_debug_la-ucl_hash.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_debug_la-ucl_hash.lo: $(UCL_SDIR)/ucl_hash.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_hash.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_hash.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_hash.lo `test -f '$(UCL_SDIR)/ucl_hash.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_hash.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_hash.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_hash.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_hash.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_hash.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o libucl_debug_la-ucl_hash.lo `test -f '$(UCL_SDIR)/ucl_hash.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_hash.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_hash.lo `test -f '$(UCL_SDIR)/ucl_hash.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_hash.c
 
-libucl_debug_la-ucl_msgpack.lo: $(UCL_SDIR)/ucl_msgpack.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT libucl_debug_la-ucl_msgpack.lo -MD -MP -MF $(DEPDIR)/libucl_debug_la-ucl_msgpack.Tpo -c -o libucl_debug_la-ucl_msgpack.lo `test -f '$(UCL_SDIR)/ucl_msgpack.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_msgpack.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_debug_la-ucl_msgpack.Tpo $(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_msgpack.c' object='libucl_debug_la-ucl_msgpack.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_debug_la-ucl_msgpack.lo: $(UCL_SDIR)/ucl_msgpack.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_msgpack.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_msgpack.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_msgpack.lo `test -f '$(UCL_SDIR)/ucl_msgpack.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_msgpack.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_msgpack.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_msgpack.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_msgpack.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o libucl_debug_la-ucl_msgpack.lo `test -f '$(UCL_SDIR)/ucl_msgpack.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_msgpack.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_msgpack.lo `test -f '$(UCL_SDIR)/ucl_msgpack.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_msgpack.c
 
-libucl_debug_la-ucl_parser.lo: $(UCL_SDIR)/ucl_parser.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT libucl_debug_la-ucl_parser.lo -MD -MP -MF $(DEPDIR)/libucl_debug_la-ucl_parser.Tpo -c -o libucl_debug_la-ucl_parser.lo `test -f '$(UCL_SDIR)/ucl_parser.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_parser.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_debug_la-ucl_parser.Tpo $(DEPDIR)/libucl_debug_la-ucl_parser.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_parser.c' object='libucl_debug_la-ucl_parser.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_debug_la-ucl_parser.lo: $(UCL_SDIR)/ucl_parser.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_parser.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_parser.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_parser.lo `test -f '$(UCL_SDIR)/ucl_parser.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_parser.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_parser.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_parser.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_parser.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_parser.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o libucl_debug_la-ucl_parser.lo `test -f '$(UCL_SDIR)/ucl_parser.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_parser.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_parser.lo `test -f '$(UCL_SDIR)/ucl_parser.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_parser.c
 
-libucl_debug_la-ucl_schema.lo: $(UCL_SDIR)/ucl_schema.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT libucl_debug_la-ucl_schema.lo -MD -MP -MF $(DEPDIR)/libucl_debug_la-ucl_schema.Tpo -c -o libucl_debug_la-ucl_schema.lo `test -f '$(UCL_SDIR)/ucl_schema.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_schema.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_debug_la-ucl_schema.Tpo $(DEPDIR)/libucl_debug_la-ucl_schema.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_schema.c' object='libucl_debug_la-ucl_schema.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_debug_la-ucl_schema.lo: $(UCL_SDIR)/ucl_schema.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_schema.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_schema.lo `test -f '$(UCL_SDIR)/ucl_schema.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_schema.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_schema.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_schema.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o libucl_debug_la-ucl_schema.lo `test -f '$(UCL_SDIR)/ucl_schema.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_schema.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_schema.lo `test -f '$(UCL_SDIR)/ucl_schema.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_schema.c
 
-libucl_debug_la-ucl_sexp.lo: $(UCL_SDIR)/ucl_sexp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT libucl_debug_la-ucl_sexp.lo -MD -MP -MF $(DEPDIR)/libucl_debug_la-ucl_sexp.Tpo -c -o libucl_debug_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_debug_la-ucl_sexp.Tpo $(DEPDIR)/libucl_debug_la-ucl_sexp.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_sexp.c' object='libucl_debug_la-ucl_sexp.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo: $(UCL_SDIR)/ucl_sexp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_sexp.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o libucl_debug_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
 
-libucl_debug_la-ucl_util.lo: $(UCL_SDIR)/ucl_util.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT libucl_debug_la-ucl_util.lo -MD -MP -MF $(DEPDIR)/libucl_debug_la-ucl_util.Tpo -c -o libucl_debug_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_debug_la-ucl_util.Tpo $(DEPDIR)/libucl_debug_la-ucl_util.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_util.c' object='libucl_debug_la-ucl_util.lo' libtool=yes @AMDEPBACKSLASH@
+$(UCL_SDIR)/libucl_debug_la-ucl_util.lo: $(UCL_SDIR)/ucl_util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_util.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_util.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_util.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o libucl_debug_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
 
 libucl_test-libucl_test.o: libucl_test.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-libucl_test.o -MD -MP -MF $(DEPDIR)/libucl_test-libucl_test.Tpo -c -o libucl_test-libucl_test.o `test -f 'libucl_test.c' || echo '$(srcdir)/'`libucl_test.c
@@ -753,136 +874,151 @@ libucl_test-libucl_test.obj: libucl_test.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-libucl_test.obj `if test -f 'libucl_test.c'; then $(CYGPATH_W) 'libucl_test.c'; else $(CYGPATH_W) '$(srcdir)/libucl_test.c'; fi`
 
-libucl_test-rtpp_arh_conf.o: $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_arh_conf.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo -c -o libucl_test-rtpp_arh_conf.o `test -f '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' || echo '$(srcdir)/'`$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo $(DEPDIR)/libucl_test-rtpp_arh_conf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' object='libucl_test-rtpp_arh_conf.o' libtool=no @AMDEPBACKSLASH@
+$(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.o: $(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.o -MD -MP -MF $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo -c -o $(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.o `test -f '$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' || echo '$(srcdir)/'`$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' object='$(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_arh_conf.o `test -f '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' || echo '$(srcdir)/'`$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.o `test -f '$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' || echo '$(srcdir)/'`$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
 
-libucl_test-rtpp_arh_conf.obj: $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_arh_conf.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo -c -o libucl_test-rtpp_arh_conf.obj `if test -f '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; then $(CYGPATH_W) '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo $(DEPDIR)/libucl_test-rtpp_arh_conf.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' object='libucl_test-rtpp_arh_conf.obj' libtool=no @AMDEPBACKSLASH@
+$(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.obj: $(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.obj -MD -MP -MF $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo -c -o $(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.obj `if test -f '$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; then $(CYGPATH_W) '$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Tpo $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c' object='$(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_arh_conf.obj `if test -f '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; then $(CYGPATH_W) '$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(top_builddir)/modules/acct_rtcp_hep/libucl_test-rtpp_arh_conf.obj `if test -f '$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; then $(CYGPATH_W) '$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/modules/acct_rtcp_hep/rtpp_arh_conf.c'; fi`
 
-libucl_test-rtpp_ucl.o: $(top_srcdir)/src/rtpp_ucl.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_ucl.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_ucl.Tpo -c -o libucl_test-rtpp_ucl.o `test -f '$(top_srcdir)/src/rtpp_ucl.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_ucl.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_ucl.Tpo $(DEPDIR)/libucl_test-rtpp_ucl.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_ucl.c' object='libucl_test-rtpp_ucl.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_ucl.o: $(MAINSRCDIR)/rtpp_ucl.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_ucl.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_ucl.o `test -f '$(MAINSRCDIR)/rtpp_ucl.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_ucl.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_ucl.c' object='$(MAINSRCDIR)/libucl_test-rtpp_ucl.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_ucl.o `test -f '$(top_srcdir)/src/rtpp_ucl.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_ucl.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_ucl.o `test -f '$(MAINSRCDIR)/rtpp_ucl.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_ucl.c
 
-libucl_test-rtpp_ucl.obj: $(top_srcdir)/src/rtpp_ucl.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_ucl.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_ucl.Tpo -c -o libucl_test-rtpp_ucl.obj `if test -f '$(top_srcdir)/src/rtpp_ucl.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_ucl.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_ucl.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_ucl.Tpo $(DEPDIR)/libucl_test-rtpp_ucl.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_ucl.c' object='libucl_test-rtpp_ucl.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_ucl.obj: $(MAINSRCDIR)/rtpp_ucl.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_ucl.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_ucl.obj `if test -f '$(MAINSRCDIR)/rtpp_ucl.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_ucl.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_ucl.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_ucl.c' object='$(MAINSRCDIR)/libucl_test-rtpp_ucl.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_ucl.obj `if test -f '$(top_srcdir)/src/rtpp_ucl.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_ucl.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_ucl.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_ucl.obj `if test -f '$(MAINSRCDIR)/rtpp_ucl.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_ucl.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_ucl.c'; fi`
 
-libucl_test-rtpp_memdeb.o: $(top_srcdir)/src/rtpp_memdeb.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_memdeb.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_memdeb.Tpo -c -o libucl_test-rtpp_memdeb.o `test -f '$(top_srcdir)/src/rtpp_memdeb.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_memdeb.Tpo $(DEPDIR)/libucl_test-rtpp_memdeb.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb.c' object='libucl_test-rtpp_memdeb.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_memdeb.o: $(MAINSRCDIR)/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_memdeb.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_memdeb.o `test -f '$(MAINSRCDIR)/rtpp_memdeb.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_memdeb.c' object='$(MAINSRCDIR)/libucl_test-rtpp_memdeb.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_memdeb.o `test -f '$(top_srcdir)/src/rtpp_memdeb.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_memdeb.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_memdeb.o `test -f '$(MAINSRCDIR)/rtpp_memdeb.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_memdeb.c
 
-libucl_test-rtpp_memdeb.obj: $(top_srcdir)/src/rtpp_memdeb.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_memdeb.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_memdeb.Tpo -c -o libucl_test-rtpp_memdeb.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_memdeb.Tpo $(DEPDIR)/libucl_test-rtpp_memdeb.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_memdeb.c' object='libucl_test-rtpp_memdeb.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_memdeb.obj: $(MAINSRCDIR)/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_memdeb.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_memdeb.obj `if test -f '$(MAINSRCDIR)/rtpp_memdeb.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_memdeb.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_memdeb.c' object='$(MAINSRCDIR)/libucl_test-rtpp_memdeb.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_memdeb.obj `if test -f '$(top_srcdir)/src/rtpp_memdeb.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_memdeb.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_memdeb.obj `if test -f '$(MAINSRCDIR)/rtpp_memdeb.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_memdeb.c'; fi`
 
-libucl_test-rtpp_glitch.o: $(top_srcdir)/src/rtpp_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_glitch.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_glitch.Tpo -c -o libucl_test-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_glitch.Tpo $(DEPDIR)/libucl_test-rtpp_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='libucl_test-rtpp_glitch.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_glitch.o: $(MAINSRCDIR)/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_glitch.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_glitch.o `test -f '$(MAINSRCDIR)/rtpp_glitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_glitch.c' object='$(MAINSRCDIR)/libucl_test-rtpp_glitch.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_glitch.o `test -f '$(top_srcdir)/src/rtpp_glitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_glitch.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_glitch.o `test -f '$(MAINSRCDIR)/rtpp_glitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_glitch.c
 
-libucl_test-rtpp_glitch.obj: $(top_srcdir)/src/rtpp_glitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_glitch.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_glitch.Tpo -c -o libucl_test-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_glitch.Tpo $(DEPDIR)/libucl_test-rtpp_glitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_glitch.c' object='libucl_test-rtpp_glitch.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_glitch.obj: $(MAINSRCDIR)/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_glitch.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_glitch.obj `if test -f '$(MAINSRCDIR)/rtpp_glitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_glitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_glitch.c' object='$(MAINSRCDIR)/libucl_test-rtpp_glitch.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_glitch.obj `if test -f '$(top_srcdir)/src/rtpp_glitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_glitch.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_glitch.obj `if test -f '$(MAINSRCDIR)/rtpp_glitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_glitch.c'; fi`
 
-libucl_test-rtpp_autoglitch.o: $(top_srcdir)/src/rtpp_autoglitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_autoglitch.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_autoglitch.Tpo -c -o libucl_test-rtpp_autoglitch.o `test -f '$(top_srcdir)/src/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_autoglitch.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_autoglitch.Tpo $(DEPDIR)/libucl_test-rtpp_autoglitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_autoglitch.c' object='libucl_test-rtpp_autoglitch.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_autoglitch.o: $(MAINSRCDIR)/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_autoglitch.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_autoglitch.o `test -f '$(MAINSRCDIR)/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_autoglitch.c' object='$(MAINSRCDIR)/libucl_test-rtpp_autoglitch.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_autoglitch.o `test -f '$(top_srcdir)/src/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_autoglitch.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_autoglitch.o `test -f '$(MAINSRCDIR)/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_autoglitch.c
 
-libucl_test-rtpp_autoglitch.obj: $(top_srcdir)/src/rtpp_autoglitch.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_autoglitch.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_autoglitch.Tpo -c -o libucl_test-rtpp_autoglitch.obj `if test -f '$(top_srcdir)/src/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_autoglitch.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_autoglitch.Tpo $(DEPDIR)/libucl_test-rtpp_autoglitch.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_autoglitch.c' object='libucl_test-rtpp_autoglitch.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_autoglitch.obj: $(MAINSRCDIR)/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_autoglitch.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_autoglitch.obj `if test -f '$(MAINSRCDIR)/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_autoglitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_autoglitch.c' object='$(MAINSRCDIR)/libucl_test-rtpp_autoglitch.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_autoglitch.obj `if test -f '$(top_srcdir)/src/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_autoglitch.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_autoglitch.obj `if test -f '$(MAINSRCDIR)/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_autoglitch.c'; fi`
 
-libucl_test-rtpp_refcnt.o: $(top_srcdir)/src/rtpp_refcnt.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_refcnt.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_refcnt.Tpo -c -o libucl_test-rtpp_refcnt.o `test -f '$(top_srcdir)/src/rtpp_refcnt.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_refcnt.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_refcnt.Tpo $(DEPDIR)/libucl_test-rtpp_refcnt.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_refcnt.c' object='libucl_test-rtpp_refcnt.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_refcnt.o: $(MAINSRCDIR)/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_refcnt.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_refcnt.o `test -f '$(MAINSRCDIR)/rtpp_refcnt.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_refcnt.c' object='$(MAINSRCDIR)/libucl_test-rtpp_refcnt.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_refcnt.o `test -f '$(top_srcdir)/src/rtpp_refcnt.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_refcnt.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_refcnt.o `test -f '$(MAINSRCDIR)/rtpp_refcnt.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_refcnt.c
 
-libucl_test-rtpp_refcnt.obj: $(top_srcdir)/src/rtpp_refcnt.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_refcnt.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_refcnt.Tpo -c -o libucl_test-rtpp_refcnt.obj `if test -f '$(top_srcdir)/src/rtpp_refcnt.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_refcnt.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_refcnt.Tpo $(DEPDIR)/libucl_test-rtpp_refcnt.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_refcnt.c' object='libucl_test-rtpp_refcnt.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_refcnt.obj: $(MAINSRCDIR)/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_refcnt.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_refcnt.obj `if test -f '$(MAINSRCDIR)/rtpp_refcnt.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_refcnt.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_refcnt.c' object='$(MAINSRCDIR)/libucl_test-rtpp_refcnt.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_refcnt.obj `if test -f '$(top_srcdir)/src/rtpp_refcnt.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_refcnt.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_refcnt.obj `if test -f '$(MAINSRCDIR)/rtpp_refcnt.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_refcnt.c'; fi`
 
-libucl_test-rtpp_mallocs.o: $(top_srcdir)/src/rtpp_mallocs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_mallocs.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_mallocs.Tpo -c -o libucl_test-rtpp_mallocs.o `test -f '$(top_srcdir)/src/rtpp_mallocs.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_mallocs.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_mallocs.Tpo $(DEPDIR)/libucl_test-rtpp_mallocs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_mallocs.c' object='libucl_test-rtpp_mallocs.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_threads.o: $(MAINSRCDIR)/rtpp_threads.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_threads.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_threads.o `test -f '$(MAINSRCDIR)/rtpp_threads.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_threads.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_threads.c' object='$(MAINSRCDIR)/libucl_test-rtpp_threads.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_mallocs.o `test -f '$(top_srcdir)/src/rtpp_mallocs.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_mallocs.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_threads.o `test -f '$(MAINSRCDIR)/rtpp_threads.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_threads.c
 
-libucl_test-rtpp_mallocs.obj: $(top_srcdir)/src/rtpp_mallocs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_mallocs.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_mallocs.Tpo -c -o libucl_test-rtpp_mallocs.obj `if test -f '$(top_srcdir)/src/rtpp_mallocs.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_mallocs.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_mallocs.Tpo $(DEPDIR)/libucl_test-rtpp_mallocs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_mallocs.c' object='libucl_test-rtpp_mallocs.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_threads.obj: $(MAINSRCDIR)/rtpp_threads.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_threads.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_threads.obj `if test -f '$(MAINSRCDIR)/rtpp_threads.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_threads.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_threads.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_threads.c' object='$(MAINSRCDIR)/libucl_test-rtpp_threads.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_mallocs.obj `if test -f '$(top_srcdir)/src/rtpp_mallocs.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_mallocs.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_threads.obj `if test -f '$(MAINSRCDIR)/rtpp_threads.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_threads.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_threads.c'; fi`
 
-libucl_test-rtpp_stacktrace.o: $(top_srcdir)/src/rtpp_stacktrace.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_stacktrace.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_stacktrace.Tpo -c -o libucl_test-rtpp_stacktrace.o `test -f '$(top_srcdir)/src/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_stacktrace.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_stacktrace.Tpo $(DEPDIR)/libucl_test-rtpp_stacktrace.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_stacktrace.c' object='libucl_test-rtpp_stacktrace.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_mallocs.o: $(MAINSRCDIR)/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_mallocs.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_mallocs.o `test -f '$(MAINSRCDIR)/rtpp_mallocs.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_mallocs.c' object='$(MAINSRCDIR)/libucl_test-rtpp_mallocs.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_stacktrace.o `test -f '$(top_srcdir)/src/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(top_srcdir)/src/rtpp_stacktrace.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_mallocs.o `test -f '$(MAINSRCDIR)/rtpp_mallocs.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_mallocs.c
 
-libucl_test-rtpp_stacktrace.obj: $(top_srcdir)/src/rtpp_stacktrace.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_stacktrace.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_stacktrace.Tpo -c -o libucl_test-rtpp_stacktrace.obj `if test -f '$(top_srcdir)/src/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_stacktrace.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_stacktrace.Tpo $(DEPDIR)/libucl_test-rtpp_stacktrace.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/rtpp_stacktrace.c' object='libucl_test-rtpp_stacktrace.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_mallocs.obj: $(MAINSRCDIR)/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_mallocs.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_mallocs.obj `if test -f '$(MAINSRCDIR)/rtpp_mallocs.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_mallocs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_mallocs.c' object='$(MAINSRCDIR)/libucl_test-rtpp_mallocs.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_stacktrace.obj `if test -f '$(top_srcdir)/src/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(top_srcdir)/src/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/src/rtpp_stacktrace.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_mallocs.obj `if test -f '$(MAINSRCDIR)/rtpp_mallocs.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_mallocs.c'; fi`
 
-libucl_test-rtpp_refcnt_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_refcnt_fin.o -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_refcnt_fin.Tpo -c -o libucl_test-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_refcnt_fin.Tpo $(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='libucl_test-rtpp_refcnt_fin.o' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_stacktrace.o: $(MAINSRCDIR)/rtpp_stacktrace.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_stacktrace.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_stacktrace.o `test -f '$(MAINSRCDIR)/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_stacktrace.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_stacktrace.c' object='$(MAINSRCDIR)/libucl_test-rtpp_stacktrace.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_stacktrace.o `test -f '$(MAINSRCDIR)/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_stacktrace.c
 
-libucl_test-rtpp_refcnt_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT libucl_test-rtpp_refcnt_fin.obj -MD -MP -MF $(DEPDIR)/libucl_test-rtpp_refcnt_fin.Tpo -c -o libucl_test-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libucl_test-rtpp_refcnt_fin.Tpo $(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='libucl_test-rtpp_refcnt_fin.obj' libtool=no @AMDEPBACKSLASH@
+$(MAINSRCDIR)/libucl_test-rtpp_stacktrace.obj: $(MAINSRCDIR)/rtpp_stacktrace.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/libucl_test-rtpp_stacktrace.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Tpo -c -o $(MAINSRCDIR)/libucl_test-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Tpo $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_stacktrace.c' object='$(MAINSRCDIR)/libucl_test-rtpp_stacktrace.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o libucl_test-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/libucl_test-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
+
+$(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.o -MD -MP -MF $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Tpo -c -o $(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Tpo $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='$(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+
+$(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -MT $(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.obj -MD -MP -MF $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Tpo -c -o $(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Tpo $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='$(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_test_CPPFLAGS) $(CPPFLAGS) $(libucl_test_CFLAGS) $(CFLAGS) -c -o $(RTPP_AUTOSRC_DIR)/libucl_test-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
+	-rm -rf $(UCL_SDIR)/.libs $(UCL_SDIR)/_libs
 	-rm -rf .libs _libs
 
 ID: $(am__tagged_files)
@@ -1000,6 +1136,14 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-test -z "$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(MAINSRCDIR)/$(am__dirstamp)" || rm -f $(MAINSRCDIR)/$(am__dirstamp)
+	-test -z "$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(RTPP_AUTOSRC_DIR)/$(am__dirstamp)" || rm -f $(RTPP_AUTOSRC_DIR)/$(am__dirstamp)
+	-test -z "$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(UCL_SDIR)/$(am__dirstamp)" || rm -f $(UCL_SDIR)/$(am__dirstamp)
+	-test -z "$(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/$(am__dirstamp)" || rm -f $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(top_builddir)/modules/acct_rtcp_hep/$(am__dirstamp)" || rm -f $(top_builddir)/modules/acct_rtcp_hep/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1010,34 +1154,35 @@ clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
 	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_hash.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_parser.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_schema.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_util.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_emitter.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_hash.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_msgpack.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_parser.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_schema.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_sexp.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_util.Plo
+		-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po
+	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_hash.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_parser.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_hash.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_msgpack.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_parser.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_schema.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_sexp.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Plo
+	-rm -f $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Po
 	-rm -f ./$(DEPDIR)/libucl_test-libucl_test.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_arh_conf.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_autoglitch.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_glitch.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_mallocs.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_refcnt.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_stacktrace.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_ucl.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1083,34 +1228,35 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_hash.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_parser.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_schema.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo
-	-rm -f ./$(DEPDIR)/libucl_debug_la-ucl_util.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_emitter.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_hash.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_msgpack.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_parser.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_schema.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_sexp.Plo
-	-rm -f ./$(DEPDIR)/libucl_la-ucl_util.Plo
+		-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_glitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_mallocs.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_memdeb.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_refcnt.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_stacktrace.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po
+	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_hash.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_msgpack.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_parser.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_hash.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_msgpack.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_parser.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_schema.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_sexp.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Plo
+	-rm -f $(top_builddir)/modules/acct_rtcp_hep/$(DEPDIR)/libucl_test-rtpp_arh_conf.Po
 	-rm -f ./$(DEPDIR)/libucl_test-libucl_test.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_arh_conf.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_autoglitch.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_glitch.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_mallocs.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_memdeb.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_refcnt.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_stacktrace.Po
-	-rm -f ./$(DEPDIR)/libucl_test-rtpp_ucl.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

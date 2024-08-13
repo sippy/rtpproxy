@@ -13009,8 +13009,8 @@ solaris*)
 *)
   ;;
 esac
-OPT_CFLAGS="`echo "${CFLAGS}" | sed 's|-g |-g3 |'`"
-CFLAGS="-pipe"
+OPT_CFLAGS="`echo "${CFLAGS}" | tr ' ' '\n' | sed 's|^-g$|-g3|' | tr '\n' ' '` -fvisibility=hidden"
+CFLAGS="`echo ${CFLAGS} | tr ' ' '\n' | grep -v '^-O.*' | uniq | tr '\n' ' '` -fvisibility=hidden"
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking size of time_t" >&5
 printf %s "checking size of time_t... " >&6; }
@@ -15384,7 +15384,10 @@ ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile tests/M
 
 
 if test -z "$BUILD_ELPERIODIC_TRUE"; then :
+
+  ac_configure_args="$ac_configure_args \"CFLAGS=$CFLAGS\""
   subdirs="$subdirs libelperiodic"
+
 
 fi
 
