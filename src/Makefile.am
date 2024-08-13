@@ -2,6 +2,7 @@ include $(top_srcdir)/m4/dirs.ami
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
+include $(top_srcdir)/autosrc/Makefile.ami
 
 bin_PROGRAMS=rtpproxy rtpproxy_debug
 if ENABLE_noinst

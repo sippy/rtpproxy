@@ -79,7 +79,14 @@ cd ../..
 
 ${SUDO} ldconfig
 
-autoreconf --force --install --verbose
+if ! autoreconf --force --install --verbose 2>/tmp/auto.log
+then
+  if ! grep -q 'higher is required' /tmp/auto.log
+  then
+    cat /tmp/auto.log >&2
+    exit 1
+  fi
+fi
 
 if [ "${TTYPE}" = "depsbuild" ]
 then

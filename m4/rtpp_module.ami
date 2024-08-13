@@ -1,2 +1,4 @@
+include $(top_srcdir)/autosrc/Makefile.ami
+
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 DEFS=   $(CC_WFLAGS) @DEFS@

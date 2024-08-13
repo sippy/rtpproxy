@@ -1,3 +1,4 @@
+include $(top_srcdir)/m4/autosrc.ami
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami

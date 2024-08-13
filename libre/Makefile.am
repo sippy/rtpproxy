@@ -1,6 +1,7 @@
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
+include $(top_srcdir)/autosrc/Makefile.ami
 
 RE_DIR=$(top_srcdir)/external/libre
 RE_SDIR=$(RE_DIR)/src
