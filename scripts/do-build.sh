@@ -9,7 +9,7 @@ BASEDIR="`dirname "${0}"`/.."
 
 TTYPE="${1}"
 BCG729_VER=1.1.1
-SNDFILE_VER=1.0.28
+SNDFILE_VER=1.2.2
 
 TAR_CMD=${TAR_CMD:-"tar"}
 
@@ -70,8 +70,8 @@ cd libsrtp
 make
 ${SUDO} make install
 cd ..
-wget http://www.mega-nerd.com/libsndfile/files/libsndfile-${SNDFILE_VER}.tar.gz
-${TAR_CMD} xfz libsndfile-${SNDFILE_VER}.tar.gz
+wget https://ftp2.osuosl.org/pub/blfs/conglomeration/libsndfile/libsndfile-${SNDFILE_VER}.tar.xz
+xzcat libsndfile-${SNDFILE_VER}.tar.xz | ${TAR_CMD} -xv -f -
 cd libsndfile-${SNDFILE_VER}
 ./configure
 make
