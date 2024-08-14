@@ -45,8 +45,9 @@ fi
 
 ${APT_GET} install -y libgsm1-dev libpcap-dev cmake libunwind-dev tcpdump curl \
  gdb tcpreplay ffmpeg
-mkdir deps
-cd deps
+OPWD="`pwd`"
+mkdir /tmp/deps
+cd /tmp/deps
 wget -O bcg729-${BCG729_VER}.tar.gz \
   https://github.com/BelledonneCommunications/bcg729/archive/${BCG729_VER}.tar.gz
 ${TAR_CMD} xfz bcg729-${BCG729_VER}.tar.gz
@@ -75,7 +76,7 @@ cd libsndfile-${SNDFILE_VER}
 ./configure
 make
 ${SUDO} make install
-cd ../..
+cd ${OPWD}
 
 ${SUDO} ldconfig
 
@@ -120,21 +121,12 @@ esac
 ./configure ${CONFIGURE_ARGS}
 make clean all
 
-ELP_BRANCH="${ELP_BRANCH:-"master"}"
-cd deps
-git clone --branch ${ELP_BRANCH} https://github.com/sobomax/libelperiodic.git
-cd libelperiodic
-./configure --without-python
-make all
-${SUDO} make install
-cd ../..
+UDPR_DIR=/tmp/dist/udpreplay
 
-${SUDO} ldconfig
-
-git clone -b master https://github.com/sippy/udpreplay.git dist/udpreplay
-mkdir dist/udpreplay/build
-cmake -Bdist/udpreplay/build -Hdist/udpreplay
-make -C dist/udpreplay/build all
-${SUDO} make -C dist/udpreplay/build install
+git clone -b master https://github.com/sippy/udpreplay.git ${UDPR_DIR}
+mkdir ${UDPR_DIR}/build
+cmake -B${UDPR_DIR}/build -H${UDPR_DIR}
+make -C ${UDPR_DIR}/build all
+${SUDO} make -C ${UDPR_DIR}/build install
 
 tcpdump --version || true
