@@ -37,3 +37,4 @@ struct rtpp_nofile {
 };
 
 struct rtpp_nofile *rtpp_nofile_ctor(void);
+long long rtpp_rlim_max(const struct rtpp_nofile *);

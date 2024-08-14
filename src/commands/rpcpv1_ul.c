@@ -569,13 +569,13 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
          * exceed 80% mark on hard limit.
          */
         sessions_active = CALL_SMETHOD(cfsp->sessions_wrt, get_length);
-        if (sessions_active > (rtpp_rlim_max(cfsp) * 80 / (100 * 5)) &&
+        if (sessions_active > (rtpp_rlim_max(cfsp->nofile) * 80 / (100 * 5)) &&
           atomic_load(&cfsp->nofile->warned) == 0) {
             atomic_store(&(cfsp->nofile->warned), 1);
             RTPP_LOG(cmd->glog, RTPP_LOG_WARN, "passed 80%% "
               "threshold on the open file descriptors limit (%d), "
               "consider increasing the limit using -L command line "
-              "option", (int)rtpp_rlim_max(cfsp));
+              "option", (int)rtpp_rlim_max(cfsp->nofile));
         }
 
         RTPP_LOG(spa->log, RTPP_LOG_INFO, "new session on %s port %d created, "

@@ -74,3 +74,10 @@ rtpp_nofile_ctor(void)
     priv->pub.limit = &(priv->limit_storage);
     return (&(priv->pub));
 }
+
+long long
+rtpp_rlim_max(const struct rtpp_nofile *np)
+{
+
+    return (long long)(np->limit->rlim_max);
+}

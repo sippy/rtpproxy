@@ -54,7 +54,6 @@ int url_unquote(unsigned char *, int);
 int url_unquote2(const char *, char *, int);
 int url_quote(const char *, char *, int, int);
 int rtpp_get_sched_hz(void);
-long long rtpp_rlim_max(const struct rtpp_cfg *);
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
 #endif

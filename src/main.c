@@ -220,13 +220,6 @@ ehandler(void)
     RTPP_LOG(_sig_cf->glog, RTPP_LOG_INFO, "rtpproxy ended");
 }
 
-long long
-rtpp_rlim_max(const struct rtpp_cfg *cfsp)
-{
-
-    return (long long)(cfsp->nofile->limit->rlim_max);
-}
-
 #define LOPT_DSO      256
 #define LOPT_BRSYM    257
 #define LOPT_NICE     258
