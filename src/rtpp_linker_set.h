@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+ *
  * Copyright (c) 1999 John D. Polstra
  * Copyright (c) 1999,2001 Peter Wemm <peter@FreeBSD.org>
  * All rights reserved.
@@ -24,41 +26,30 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: releng/11.2/sys/sys/linker_set.h 331722 2018-03-29 02:50:57Z eadler $
+ * $FreeBSD: 7c12ae215018afa4eb26492e736b8fa748b79831 $
  */
 
-#ifndef _SYS_LINKER_SET_H_
-#define _SYS_LINKER_SET_H_
+#pragma once
 
-#if defined(__weak_symbol)
-#undef __weak_symbol
-#endif
-#define __weak_symbol __attribute__((__weak__))
-
-#if defined(__section)
-#undef __section
-#endif
-#define __section(x)    __attribute__((__section__(x)))
-
-#if defined(__used)
-#undef __used
-#endif
-#define __used          __attribute__((__used__))
-
-#define __CONCAT421(x,y)  x ## y
-#define __CONCAT42(x,y)   __CONCAT421(x,y)
-
-#define __RTPP_GLOBL1(sym)   __asm__(".globl " #sym)
-#define __RTPP_GLOBL(sym)    __RTPP_GLOBL1(sym)
-
+#define __RTPP_CONCAT1(x,y)  x ## y
+#define __RTPP_CONCAT(x,y)   __RTPP_CONCAT1(x,y)
+#define __RTPP_STRING(x)     #x              /* stringify without expanding x */
+#define __RTPP_XSTRING(x)    __RTPP_STRING(x)     /* expand x, then stringify */
+#define __RTPP_WEAK(sym)     __asm__(".weak " __RTPP_XSTRING(sym))
+#define __RTPP_GLOBL(sym)    __asm__(".globl " __RTPP_XSTRING(sym))
+#define __rtpp_used          __attribute__((__used__))
+#define __rtpp_section(x)    __attribute__((__section__(x)))
 /*
  * The following macros are used to declare global sets of objects, which
  * are collected by the linker into a `linker_set' as defined below.
  * For ELF, this is done by constructing a separate segment for each set.
  */
 
-#if defined(__powerpc64__)
+#if defined(__powerpc64__) && (!defined(_CALL_ELF) || _CALL_ELF == 1)
 /*
+ * ELFv1 pointers to functions are actaully pointers to function
+ * descriptors.
+ *
  * Move the symbol pointer from ".text" to ".data" segment, to make
  * the GCC compiler happy:
  */
@@ -70,18 +61,36 @@
 /*
  * Private macros, not to be used outside this header file.
  */
-#define __MAKE_SET(set, sym)				\
-	__RTPP_GLOBL(__CONCAT42(__start_set_,set));	\
-	__RTPP_GLOBL(__CONCAT42(__stop_set_,set));	\
-	static void const * __MAKE_SET_CONST		\
-	__set_##set##_sym_##sym __section("set_" #set)	\
-	__used = &(sym)
+#if defined(__GNUC__)
+
+/*
+ * The userspace address sanitizer inserts redzones around global variables,
+ * violating the assumption that linker set elements are packed.
+ */
+#if __has_attribute(no_sanitize) && defined(__clang__)
+#define __NOASAN __attribute__((no_sanitize("address")))
+#else
+#define __NOASAN
+#endif
+
+#define __MAKE_SET_QV(set, sym, qv)				\
+	__RTPP_WEAK(__RTPP_CONCAT(__start_set_,set));		\
+	__RTPP_WEAK(__RTPP_CONCAT(__stop_set_,set));		\
+	static void const * qv					\
+	__NOASAN						\
+	__set_##set##_sym_##sym __rtpp_section("set_" #set)	\
+	__rtpp_used = &(sym)
+#define __MAKE_SET(set, sym)	__MAKE_SET_QV(set, sym, __MAKE_SET_CONST)
+#else /* !__GNUCLIKE___SECTION */
+#error this file needs to be ported to your compiler
+#endif /* __GNUCLIKE___SECTION */
 
 /*
  * Public macros.
  */
 #define TEXT_SET(set, sym)	__MAKE_SET(set, sym)
 #define DATA_SET(set, sym)	__MAKE_SET(set, sym)
+#define DATA_WSET(set, sym)	__MAKE_SET_QV(set, sym, )
 #define BSS_SET(set, sym)	__MAKE_SET(set, sym)
 #define ABS_SET(set, sym)	__MAKE_SET(set, sym)
 #define SET_ENTRY(set, sym)	__MAKE_SET(set, sym)
@@ -90,13 +99,13 @@
  * Initialize before referring to a given linker set.
  */
 #define SET_DECLARE(set, ptype)					\
-	extern ptype __weak_symbol *__CONCAT42(__start_set_,set);	\
-	extern ptype __weak_symbol *__CONCAT42(__stop_set_,set)
+	extern ptype __attribute__((__weak__)) *__RTPP_CONCAT(__start_set_,set);	\
+	extern ptype __attribute__((__weak__)) *__RTPP_CONCAT(__stop_set_,set)
 
 #define SET_BEGIN(set)							\
-	(&__CONCAT42(__start_set_,set))
+	(&__RTPP_CONCAT(__start_set_,set))
 #define SET_LIMIT(set)							\
-	(&__CONCAT42(__stop_set_,set))
+	(&__RTPP_CONCAT(__stop_set_,set))
 
 /*
  * Iterate over all the elements of a set.
@@ -116,5 +125,3 @@
  */
 #define SET_COUNT(set)							\
 	(SET_LIMIT(set) - SET_BEGIN(set))
-
-#endif	/* _SYS_LINKER_SET_H_ */
