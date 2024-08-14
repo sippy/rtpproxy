@@ -42,9 +42,8 @@
 #include "rtpp_module_if.h"
 #include "rtpp_modman.h"
 #include "rtpp_refcnt.h"
-#include "rtpp_ucl.h"
-
 #include "ucl.h"
+#include "rtpp_ucl.h"
 
 static int parse_modules(const struct rtpp_cfg *, const ucl_object_t *);
 static bool conf_helper_mapper(struct rtpp_log *, const ucl_object_t *,

@@ -49,6 +49,7 @@
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_ssrc.h"
+#include "ucl.h"
 #include "rtpp_ucl.h"
 #include "rtpa_stats.h"
 #include "rtpp_linker_set.h"

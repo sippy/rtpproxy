@@ -43,10 +43,10 @@
 #include <sys/sysctl.h>
 #endif
 
+#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg.h"
 #include "rtpp_util.h"
-#include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_runcreds.h"
 #include "rtpp_debug.h"

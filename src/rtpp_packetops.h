@@ -31,8 +31,8 @@ struct rtp_packet;
 struct pkt_proc_ctx;
 
 int rtp_packet_is_rtcp(const struct rtp_packet *pkt);
-int rtpp_is_rtcp_tst(struct pkt_proc_ctx *pktx);
+int rtpp_is_rtcp_tst(struct pkt_proc_ctx *pktx) RTPP_EXPORT;
 int rtp_packet_is_stun(const struct rtp_packet *pkt);
-int rtpp_is_stun_tst(struct pkt_proc_ctx *pktx);
+int rtpp_is_stun_tst(struct pkt_proc_ctx *pktx) RTPP_EXPORT;
 int rtp_packet_is_dtls(const struct rtp_packet *pkt);
-int rtpp_is_dtls_tst(struct pkt_proc_ctx *pktx);
+int rtpp_is_dtls_tst(struct pkt_proc_ctx *pktx) RTPP_EXPORT;

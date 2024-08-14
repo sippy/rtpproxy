@@ -33,8 +33,8 @@
 #include <unistd.h>
 
 #include "rtpp_debug.h"
-#include "rtpp_mallocs.h"
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 
 void *

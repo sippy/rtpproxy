@@ -41,12 +41,12 @@
 
 #include "config_pp.h"
 
+#include "rtpp_types.h"
 #include "rtpp_cfg.h"
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_log.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_types.h"
 #include "rtpp_list.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_acct_pipe.h"
@@ -114,6 +114,36 @@ static void rtpp_mif_kaput(struct rtpp_module_if *self);
 
 static const char *do_acct_aname = "do_acct";
 static const char *do_acct_rtcp_aname = "do_acct_rtcp";
+
+extern void rtpp_sbuf_ctor(void);
+extern void rtpp_sbuf_dtor(void);
+extern void rtpp_sbuf_extend(void);
+extern void rtpp_sbuf_reset(void);
+extern void rtpp_sbuf_write(void);
+
+static const struct rtpp_minfo_fset mip_model = {
+#if RTPP_CHECK_LEAKS
+    ._malloc = &rtpp_memdeb_malloc,
+    ._zmalloc = &rtpp_zmalloc_memdeb,
+    ._rzmalloc = &rtpp_rzmalloc_memdeb,
+    ._free = &rtpp_memdeb_free,
+    ._realloc = &rtpp_memdeb_realloc,
+    ._strdup = &rtpp_memdeb_strdup,
+    ._asprintf = &rtpp_memdeb_asprintf,
+    ._vasprintf = &rtpp_memdeb_vasprintf,
+#else
+    ._malloc = &malloc,
+    ._zmalloc = &rtpp_zmalloc,
+    ._rzmalloc = &rtpp_rzmalloc,
+    ._free = &free,
+    ._realloc = &realloc,
+    ._strdup = &strdup,
+    ._asprintf = &asprintf,
+    ._vasprintf = &vasprintf,
+    .auxp = {rtpp_sbuf_ctor, rtpp_sbuf_dtor, rtpp_sbuf_extend,
+             rtpp_sbuf_reset, rtpp_sbuf_write},
+#endif
+};
 
 struct rtpp_module_if *
 rtpp_module_if_ctor(const char *mpath)
@@ -217,20 +247,13 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         goto e2;
     }
 
+    pvt->mip->fn = &mip_model;
 #if RTPP_CHECK_LEAKS
     if (pvt->mip->memdeb_p == NULL) {
         RTPP_LOG(log, RTPP_LOG_ERR, "memdeb pointer is NULL in the %s, "
           "trying to load non-debug module?", pvt->mpath);
         goto e2;
     }
-    pvt->mip->_malloc = &rtpp_memdeb_malloc;
-    pvt->mip->_zmalloc = &rtpp_zmalloc_memdeb;
-    pvt->mip->_rzmalloc = &rtpp_rzmalloc_memdeb;
-    pvt->mip->_free = &rtpp_memdeb_free;
-    pvt->mip->_realloc = &rtpp_memdeb_realloc;
-    pvt->mip->_strdup = &rtpp_memdeb_strdup;
-    pvt->mip->_asprintf = &rtpp_memdeb_asprintf;
-    pvt->mip->_vasprintf = &rtpp_memdeb_vasprintf;
     pvt->memdeb_p = rtpp_memdeb_init(false);
     if (pvt->memdeb_p == NULL) {
         goto e2;
@@ -245,14 +268,6 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
           "trying to load debug module?", pvt->mpath);
         goto e2;
     }
-    pvt->mip->_malloc = &malloc;
-    pvt->mip->_zmalloc = &rtpp_zmalloc;
-    pvt->mip->_rzmalloc = &rtpp_rzmalloc;
-    pvt->mip->_free = &free;
-    pvt->mip->_realloc = &realloc;
-    pvt->mip->_strdup = &strdup;
-    pvt->mip->_asprintf = &asprintf;
-    pvt->mip->_vasprintf = &vasprintf;
 #endif
     pvt->mip->wthr.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
     if (pvt->mip->wthr.sigterm == NULL) {

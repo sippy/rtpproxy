@@ -33,11 +33,11 @@
 
 #include "config.h"
 
+#include "rtpp_types.h"
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_debug.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtp_info.h"

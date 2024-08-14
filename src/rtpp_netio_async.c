@@ -42,13 +42,13 @@
 
 #include "config.h"
 
+#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg.h"
 #include "rtpp_defines.h"
 #include "rtp.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
-#include "rtpp_types.h"
 #include "rtpp_wi.h"
 #include "rtpp_wi_pkt.h"
 #include "rtpp_wi_sgnl.h"

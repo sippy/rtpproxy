@@ -30,6 +30,7 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "rtpp_types.h"
 #include "rtpp_endian.h"
 #include "rtp.h"
 #include "rtp_info.h"
@@ -37,7 +38,6 @@
 #include "rtp_packet.h"
 #include "rtp_resizer.h"
 #include "rtpp_proc.h"
-#include "rtpp_types.h"
 #include "rtpp_stats.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_ssrc.h"

@@ -52,6 +52,7 @@
 
 #include "config.h"
 
+#include "rtpp_types.h"
 #include "rtp.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
@@ -60,7 +61,6 @@
 #include "rtpp_ip_chksum.h"
 #include "rtpp_debug.h"
 #include "rtpp_defines.h"
-#include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_mallocs.h"

@@ -92,31 +92,31 @@ extern struct rtpp_minfo RTPP_MOD_SELF;
 
 #define _MMDEB *(RTPP_MOD_SELF.memdeb_p)
 
-#define mod_malloc(n) RTPP_MOD_SELF._malloc((n), _MMDEB, \
+#define mod_malloc(n) RTPP_MOD_SELF.fn->_malloc((n), _MMDEB, \
   HEREVAL)
-#define mod_zmalloc(n) RTPP_MOD_SELF._zmalloc((n), _MMDEB, \
+#define mod_zmalloc(n) RTPP_MOD_SELF.fn->_zmalloc((n), _MMDEB, \
   HEREVAL)
-#define mod_rzmalloc(n, m) RTPP_MOD_SELF._rzmalloc((n), (m), _MMDEB, \
+#define mod_rzmalloc(n, m) RTPP_MOD_SELF.fn->_rzmalloc((n), (m), _MMDEB, \
   HEREVAL)
-#define mod_free(p) RTPP_MOD_SELF._free((p), _MMDEB, \
+#define mod_free(p) RTPP_MOD_SELF.fn->_free((p), _MMDEB, \
   HEREVAL)
-#define mod_realloc(p,n) RTPP_MOD_SELF._realloc((p), (n), _MMDEB, \
+#define mod_realloc(p,n) RTPP_MOD_SELF.fn->_realloc((p), (n), _MMDEB, \
   HEREVAL)
-#define mod_strdup(p) RTPP_MOD_SELF._strdup((p), _MMDEB, \
+#define mod_strdup(p) RTPP_MOD_SELF.fn->_strdup((p), _MMDEB, \
   HEREVAL)
-#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF._asprintf((pp), (fmt), \
+#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF.fn->_asprintf((pp), (fmt), \
   _MMDEB, HEREVAL, ## args)
-#define mod_vasprintf(pp, fmt, vl) RTPP_MOD_SELF._vasprintf((pp), (fmt), \
+#define mod_vasprintf(pp, fmt, vl) RTPP_MOD_SELF.fn->_vasprintf((pp), (fmt), \
   _MMDEB, HEREVAL, (vl))
 #else
-#define mod_malloc(n) RTPP_MOD_SELF._malloc((n))
-#define mod_zmalloc(n) RTPP_MOD_SELF._zmalloc((n))
-#define mod_rzmalloc(n, m) RTPP_MOD_SELF._rzmalloc((n), m)
-#define mod_free(p) RTPP_MOD_SELF._free((p))
-#define mod_realloc(p,n) RTPP_MOD_SELF._realloc((p), (n))
-#define mod_strdup(p) RTPP_MOD_SELF._strdup((p))
-#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF._asprintf((pp), (fmt), ## args)
-#define mod_vasprintf(pp, fmt, vl) RTPP_MOD_SELF._vasprintf((pp), (fmt), (vl))
+#define mod_malloc(n) RTPP_MOD_SELF.fn->_malloc((n))
+#define mod_zmalloc(n) RTPP_MOD_SELF.fn->_zmalloc((n))
+#define mod_rzmalloc(n, m) RTPP_MOD_SELF.fn->_rzmalloc((n), m)
+#define mod_free(p) RTPP_MOD_SELF.fn->_free((p))
+#define mod_realloc(p,n) RTPP_MOD_SELF.fn->_realloc((p), (n))
+#define mod_strdup(p) RTPP_MOD_SELF.fn->_strdup((p))
+#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF.fn->_asprintf((pp), (fmt), ## args)
+#define mod_vasprintf(pp, fmt, vl) RTPP_MOD_SELF.fn->_vasprintf((pp), (fmt), (vl))
 
 #endif /* RTPP_CHECK_LEAKS */
 
@@ -163,6 +163,18 @@ struct rtpp_modids {
     unsigned int module_idx;
 };
 
+struct rtpp_minfo_fset {
+    rtpp_module_malloc_t _malloc;
+    rtpp_module_zmalloc_t _zmalloc;
+    rtpp_module_rzmalloc_t _rzmalloc;
+    rtpp_module_free_t _free;
+    rtpp_module_realloc_t _realloc;
+    rtpp_module_strdup_t _strdup;
+    rtpp_module_asprintf_t _asprintf;
+    rtpp_module_vasprintf_t _vasprintf;
+    void *auxp[];
+};
+
 struct rtpp_minfo {
     /* Upper half, filled by the module */
     struct rtpp_mdescr descr;
@@ -173,20 +185,13 @@ struct rtpp_minfo {
     void **memdeb_p;
     /* Lower half, filled by the core */
     const struct rtpp_modids *ids;
-    rtpp_module_malloc_t _malloc;
-    rtpp_module_zmalloc_t _zmalloc;
-    rtpp_module_rzmalloc_t _rzmalloc;
-    rtpp_module_free_t _free;
-    rtpp_module_realloc_t _realloc;
-    rtpp_module_strdup_t _strdup;
-    rtpp_module_asprintf_t _asprintf;
-    rtpp_module_vasprintf_t _vasprintf;
+    const struct rtpp_minfo_fset *fn;
     struct rtpp_log *log;
     struct rtpp_refcnt *module_rcnt;
     struct rtpp_wthrdata wthr;
 };
 
-extern struct rtpp_minfo rtpp_module;
+extern struct rtpp_minfo rtpp_module RTPP_EXPORT;
 
 #define MI_VER_INIT() { \
     .rev = MODULE_API_REVISION, \

@@ -42,6 +42,8 @@
 
 #include "config_pp.h"
 
+#include "rtpp_types.h"
+
 #if !defined(NO_ERR_H)
 #include <err.h>
 #include "rtpp_util.h"
@@ -49,7 +51,6 @@
 #include "rtpp_util.h"
 #endif
 
-#include "rtpp_types.h"
 #if defined(_RTPP_MEMDEB_H)
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"

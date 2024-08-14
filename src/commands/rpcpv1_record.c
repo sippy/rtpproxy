@@ -41,7 +41,6 @@
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_copy.h"
 #include "commands/rpcpv1_record.h"
-#include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_session.h"
 

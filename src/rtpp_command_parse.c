@@ -43,7 +43,6 @@
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_query.h"
-#include "rtpp_types.h"
 #include "rtpp_stats.h"
 #include "rtpp_log_obj.h"
 

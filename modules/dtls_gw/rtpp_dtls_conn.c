@@ -54,7 +54,7 @@
 #include "rtp_packet.h"
 #include "rtpp_packetops.h"
 #include "rtpp_proc_async.h"
-#include "rtpp_pthread.h"
+#include "rtpp_threads.h"
 #include "rtpp_ssrc.h"
 #include "rtpp_timed.h"
 #include "rtpp_timed_task.h"

@@ -70,6 +70,7 @@ srandomdev(void)
 
 #include "elperiodic.h"
 
+#include "rtpp_types.h"
 #include "rtpp_network.h"
 
 #define TEST_KIND_ALL         0

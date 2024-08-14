@@ -40,6 +40,7 @@
 
 #define RTPP_LOG_ADVANCED 1
 
+#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg.h"
 #ifdef RTPP_LOG_ADVANCED

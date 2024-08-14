@@ -45,7 +45,6 @@
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_sub.h"
-#include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_mallocs.h"

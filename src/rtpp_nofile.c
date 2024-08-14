@@ -34,8 +34,8 @@
 
 #include "config_pp.h"
 
-#include "rtpp_mallocs.h"
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_nofile.h"
 
 #if !defined(NO_ERR_H)

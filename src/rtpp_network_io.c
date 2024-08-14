@@ -33,6 +33,7 @@
 
 #include "config_pp.h"
 
+#include "rtpp_types.h"
 #include "rtpp_network.h"
 #include "rtpp_network_io.h"
 

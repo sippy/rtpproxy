@@ -37,13 +37,21 @@ CFLAGS="${CFLAGS} -flto"
 
 ALL="command_parser rtp_parser rtcp_parser rtp_session"
 
+ld.lld -o src/librtpproxy.o -r --whole-archive src/.libs/librtpproxy.a
 for fz in ${ALL}
 do
+  case "${fz}" in
+  rtp_parser)
+      LIBRTPP=src/.libs/librtpproxy.a
+      ;;
+  *)
+      LIBRTPP=src/librtpproxy.o
+      ;;
+  esac
   ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -Imodules/acct_rtcp_hep \
-   -o ${OUT}/fuzz_${fz} \
-   -Wl,--version-script=scripts/fuzz/Symbol.map -fPIE -pie \
-   scripts/fuzz/fuzz_${fz}.c \
-   -Wl,--whole-archive src/.libs/librtpproxy.a -Wl,--no-whole-archive \
+   -o ${OUT}/fuzz_${fz}.o -fPIE -pie -c scripts/fuzz/fuzz_${fz}.c
+  ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -o ${OUT}/fuzz_${fz} \
+   -Wl,--start-lib,${OUT}/fuzz_${fz}.o,${LIBRTPP},--end-lib \
    -pthread -lm ${LIBSRTP}
   for suff in dict options setup
   do

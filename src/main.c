@@ -56,7 +56,11 @@
 #include <syslog.h>
 #include <unistd.h>
 
+#include <elperiodic.h>
+
 #include "config_pp.h"
+
+#include "rtpp_types.h"
 
 #if !defined(NO_ERR_H)
 #include <err.h>
@@ -69,9 +73,6 @@
 #include <systemd/sd-daemon.h>
 #endif
 
-#include <elperiodic.h>
-
-#include "rtpp_types.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_runcreds.h"
 #include "rtpp_cfile.h"

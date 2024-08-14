@@ -39,6 +39,7 @@
 #include "config.h"
 
 #ifndef HAVE_STRLCPY
+#include "rtpp_types.h"
 #include "rtpp_util.h"
 #endif
 

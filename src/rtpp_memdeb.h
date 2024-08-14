@@ -77,15 +77,15 @@ CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
   MEMDEB_SYM, HEREVAL)
 #define calloc(nm, sz) rtpp_memdeb_calloc((nm), (sz), MEMDEB_SYM, HEREVAL)
 
-void *rtpp_memdeb_malloc(size_t, void *, HERETYPE);
-void rtpp_memdeb_free(void *, void *, HERETYPE);
+void *rtpp_memdeb_malloc(size_t, void *, HERETYPE) RTPP_EXPORT;
+void rtpp_memdeb_free(void *, void *, HERETYPE) RTPP_EXPORT;
 void rtpp_memdeb_free_n(void *, void *, HERETYPE);
-void *rtpp_memdeb_realloc(void *, size_t, void *, HERETYPE);
+void *rtpp_memdeb_realloc(void *, size_t, void *, HERETYPE) RTPP_EXPORT;
 char *rtpp_memdeb_strdup(const char *, void *, HERETYPE);
 int rtpp_memdeb_asprintf(char **, const char *, void *, HERETYPE, ...)
    __attribute__ ((format (printf, 2, 5)));
 void *rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *,
-  HERETYPE);
+  HERETYPE) RTPP_EXPORT;
 void *rtpp_memdeb_calloc(size_t number, size_t size, void *, HERETYPE);
 
 #include <stdarg.h>

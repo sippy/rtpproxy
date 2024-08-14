@@ -5,7 +5,8 @@ RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
   $(MAINSRCDIR)/rtpp_glitch.h $(MAINSRCDIR)/rtpp_codeptr.h \
   $(MAINSRCDIR)/rtpp_autoglitch.c $(MAINSRCDIR)/rtpp_autoglitch.h \
   $(MAINSRCDIR)/rtpp_debugon.h $(MAINSRCDIR)/rtpp_refcnt.c \
-  $(MAINSRCDIR)/rtpp_refcnt.h \
+  $(MAINSRCDIR)/rtpp_refcnt.h $(MAINSRCDIR)/rtpp_threads.h \
+  $(MAINSRCDIR)/rtpp_threads.c \
   $(MAINSRCDIR)/rtpp_mallocs.c $(MAINSRCDIR)/rtpp_mallocs.h \
   $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h
 if !ENABLE_LIBUNWIND

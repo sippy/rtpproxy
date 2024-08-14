@@ -44,6 +44,7 @@
 #include <err.h>
 #endif
 
+#include "rtpp_types.h"
 #include "rtpp_network.h"
 
 int

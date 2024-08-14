@@ -31,7 +31,7 @@
 struct rtpp_wi;
 
 struct rtpp_wi *rtpp_wi_malloc_data(void *, size_t);
-struct rtpp_wi *rtpp_wi_malloc_udata(void **, size_t);
-void *rtpp_wi_data_get_ptr(struct rtpp_wi *, size_t, size_t);
+struct rtpp_wi *rtpp_wi_malloc_udata(void **, size_t) RTPP_EXPORT;
+void *rtpp_wi_data_get_ptr(struct rtpp_wi *, size_t, size_t) RTPP_EXPORT;
 
 #endif

@@ -36,10 +36,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_types.h"
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_types.h"
 #include "rtpp_bindaddrs.h"
 
 struct bindaddr_list {

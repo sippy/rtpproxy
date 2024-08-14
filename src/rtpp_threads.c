@@ -26,8 +26,14 @@
  *
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <pthread.h>
+
+#include "rtpp_threads.h"
+
+#undef pthread_mutex_lock
+#undef pthread_mutex_unlock
 
 int
 rtpp_mutex_islocked(pthread_mutex_t *mutex)
@@ -42,4 +48,24 @@ rtpp_mutex_islocked(pthread_mutex_t *mutex)
     }
     pthread_mutex_unlock(mutex);
     return (0);
+}
+
+int
+pthread_mutex_lock_safe(pthread_mutex_t *mutex)
+{
+    int rval;
+
+    rval = pthread_mutex_lock(mutex);
+    assert(rval == 0);
+    return (rval);
+}
+
+int
+pthread_mutex_unlock_safe(pthread_mutex_t *mutex)
+{
+    int rval;
+
+    rval = pthread_mutex_unlock(mutex);
+    assert(rval == 0);
+    return (rval);
 }

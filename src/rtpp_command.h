@@ -59,7 +59,7 @@ void reply_port(struct rtpp_command *cmd, int lport,
   struct sockaddr **lia);
 void reply_number(struct rtpp_command *cmd, int number);
 int rtpp_create_listener(const struct rtpp_cfg *, const struct sockaddr *, int *,
-  struct rtpp_socket **);
+  struct rtpp_socket **) RTPP_EXPORT;
 struct rtpp_command *rtpp_command_ctor(const struct rtpp_cfg *, int, const struct rtpp_timestamp *,
   struct rtpp_command_stats *, int);
 int rtpp_command_split(struct rtpp_command *, int, int *, struct rtpp_cmd_rcache *);

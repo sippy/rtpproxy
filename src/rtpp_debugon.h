@@ -31,6 +31,7 @@
 
 #define RTPP_DEBUG
 
+#include "rtpp_types.h"
 #include "rtpp_memdeb.h"
 #include "rtpp_autoglitch.h"
 #include "rtpp_threads.h"

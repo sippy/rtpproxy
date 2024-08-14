@@ -40,8 +40,8 @@ solaris*)
 *)
   ;;
 esac
-OPT_CFLAGS="`echo "${CFLAGS}" | sed 's|-g |-g3 |'`"
-CFLAGS="-pipe"
+OPT_CFLAGS="`echo "${CFLAGS}" | sed 's|-g |-g3 |'` -fvisibility=hidden"
+CFLAGS="-pipe -fvisibility=hidden"
 
 AX_COMPILE_CHECK_SIZEOF(time_t, [#include <time.h>])
 AX_CHECK_COMPILE_FLAG([-Wno-frame-address], [CFLAGS="${CFLAGS} -Wno-frame-address"], [], [-Werror])
@@ -481,7 +481,10 @@ AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
  pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile
  python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile])
 
-AM_COND_IF([BUILD_ELPERIODIC], [AC_CONFIG_SUBDIRS([libelperiodic])])
+AM_COND_IF([BUILD_ELPERIODIC], [
+  ac_configure_args="$ac_configure_args \"CFLAGS=$CFLAGS\""
+  AC_CONFIG_SUBDIRS([libelperiodic])
+])
 
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_DL)

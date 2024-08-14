@@ -33,12 +33,12 @@
 #include <assert.h>
 #include <stddef.h>
 
+#include "rtpp_types.h"
 #include "rtp.h"
 #include "rtp_info.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtpp_packetops.h"
-#include "rtpp_types.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 

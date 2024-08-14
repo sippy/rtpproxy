@@ -30,7 +30,7 @@ RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_rw_lock.h rtpp_proc_servers.h rtpp_proc_wakeup.h rtpp_socket.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
-BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
+BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_session.h \
   rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h rtpp_session.c \
   rtpp_command.c rtpp_command.h rtpp_network.h rtpp_network.c \
@@ -56,7 +56,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c rtpp_pthread.c rtpp_pthread.h \
   rtpp_log_obj.c rtpp_socket.c rtpp_wi_apis.c rtpp_wi_apis.h \
   rtpp_ttl.c rtpp_proc_ttl.h rtpp_proc_ttl.c \
   rtpp_pipe.c rtpp_pcount.c rtpp_debug.h rtpp_wi_sgnl.c rtpp_wi_sgnl.h \
-  rtpp_wi_data.c rtpp_wi_data.h rtpp_threads.h \
+  rtpp_wi_data.c rtpp_wi_data.h \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c \
   $(CMDSRCDIR)/rpcpv1_delete.c $(CMDSRCDIR)/rpcpv1_delete.h $(CMDSRCDIR)/rpcpv1_record.c \
   $(CMDSRCDIR)/rpcpv1_record.h rtpp_port_table.c rtpp_acct.c \
@@ -80,7 +80,7 @@ rtpproxy_LDADD=librtpproxy.la -lm -lpthread
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.la \
   $(XXH_DIR)/libxxHash_debug.la $(RTPP_MEMDEB_LDADD)
 rtpproxy_debug_LDFLAGS=-Wl,--export-dynamic $(LTO_FLAG)
-rtpproxy_LDFLAGS=$(LTO_FLAG) -Wl,--whole-archive,.libs/librtpproxy.a,--no-whole-archive
+rtpproxy_LDFLAGS=$(LTO_FLAG)
 
 if ENABLE_MODULE_IF
 RTPP_AUTOSRC_SOURCES += rtpp_module_if.h

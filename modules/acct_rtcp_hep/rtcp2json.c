@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "rtpp_types.h"
 #include "rtcp.h"
 #include "rtpp_sbuf.h"
 #include "rtcp2json.h"

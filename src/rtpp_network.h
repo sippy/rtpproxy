@@ -38,7 +38,7 @@ struct sockaddr_storage;
 /* Function prototypes */
 int ishostseq(const struct sockaddr *, const struct sockaddr *);
 int ishostnull(const struct sockaddr *);
-uint16_t getport(const struct sockaddr *);
+uint16_t getport(const struct sockaddr *) RTPP_EXPORT;
 uint16_t getnport(const struct sockaddr *);
 int isaddrseq(const struct sockaddr *ia1, const struct sockaddr *ia2);
 int isaddreq(struct sockaddr *ia1, struct sockaddr *ia2);
