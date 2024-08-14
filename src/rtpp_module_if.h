@@ -70,4 +70,7 @@ struct rtpp_module_if {
     METHOD_ENTRY(rtpp_module_if_kaput, kaput);
 };
 
-struct rtpp_module_if *rtpp_module_if_ctor(const char *);
+#if defined(LIBRTPPROXY)
+__attribute__((__weak__))
+#endif
+struct rtpp_module_if * rtpp_module_if_ctor(const char *);
