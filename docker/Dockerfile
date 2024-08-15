@@ -28,6 +28,7 @@ ARG BUILD_DEPS_NEW="${BUILD_DEPS_COMM} clang-${CLANG_VER_NEW} llvm-${CLANG_VER_N
 
 WORKDIR /tmp
 ARG APT_INSTALL="apt-get install --no-install-recommends -y"
+ARG APT_UPDATE="apt-get -y update -qq"
 ARG TARGETPLATFORM
 RUN --mount=type=bind,source=docker/install_depends.sh,target=install_depends.sh \
     --mount=type=bind,source=docker/clang_ver.sub,target=docker/clang_ver.sub \

@@ -26,6 +26,6 @@ install_clang() {
   MYREL="`lsb_release -c | grep ^Codename | awk '{print $2}'`"
   echo "deb [signed-by=/usr/share/keyrings/llvm.gpg] http://apt.llvm.org/${MYREL}/ llvm-toolchain-${MYREL}-${CLANG_VER} main" > /etc/apt/sources.list.d/llvm.list
   curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor > /usr/share/keyrings/llvm.gpg
-  apt-get -y update -qq
+  ${APT_UPDATE}
   apt-mark hold ca-certificates
 }
