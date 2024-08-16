@@ -187,8 +187,8 @@ rtpp_dtls_conn_dtor(struct rtpp_dtls_conn_priv *pvt)
     pthread_mutex_destroy(&pvt->state_lock);
     /* BIO_free(pvt->sbio_out); <- done by SSL_free() */
     /* BIO_free(pvt->sbio_in); <- done by SSL_free() */
-    BIO_meth_free(pvt->biomet);
     SSL_free(pvt->ssl_ctx);
+    BIO_meth_free(pvt->biomet);
     free(pvt);
 }
 
@@ -202,13 +202,13 @@ rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->ssl_ctx = SSL_new(ctx);
-    if (pvt->ssl_ctx == NULL) {
+    pvt->biomet = bio_method_udp();
+    if (pvt->biomet == NULL) {
         ERR_clear_error();
         goto e1;
     }
-    pvt->biomet = bio_method_udp();
-    if (pvt->biomet == NULL) {
+    pvt->ssl_ctx = SSL_new(ctx);
+    if (pvt->ssl_ctx == NULL) {
         ERR_clear_error();
         goto e2;
     }
@@ -241,9 +241,9 @@ e5:
 e4:
     BIO_free(pvt->sbio_in);
 e3:
-    BIO_meth_free(pvt->biomet);
-e2:
     SSL_free(pvt->ssl_ctx);
+e2:
+    BIO_meth_free(pvt->biomet);
 e1:
     mod_free(pvt);
 e0:
