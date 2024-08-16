@@ -238,8 +238,9 @@ rtpp_ice_lite_worker(const struct rtpp_wthrdata *wp)
         ila_c = wip->ila_c;
         pthread_mutex_lock(&ila_c->state_lock);
         mb = ila_c->mb;
-        *mb = (struct mbuf){.buf = (uint8_t *)pkt->data.buf, .end = pkt->size,
-               .size = sizeof(pkt->data.buf)};
+        assert(pkt->size <= mb->size);
+        memcpy(mb->buf, pkt->data.buf, pkt->size);
+        mb->end = pkt->size;
         struct sa raddr = {0};
         rtpp2re_sa(&raddr, sstosa(&pkt->raddr));
         ila_c->sock->strmp_in = wip->strmp_in;
@@ -265,6 +266,7 @@ ice_lite_data_dtor(struct ice_lite_agent_cfg *pvt)
 
     pthread_mutex_destroy(&pvt->state_lock);
     RTPP_OBJ_DECREF(pvt->sock->raddr);
+    mem_deref(pvt->mb->buf);
     mem_deref(pvt->mb);
     mem_deref(pvt->sock);
     mem_deref(pvt->icem);
@@ -308,16 +310,22 @@ ice_lite_data_ctor(int lufrag_len, int lpwd_len)
     ila_c->mb = mem_zalloc(sizeof(*ila_c->mb), NULL);
     if (ila_c->mb == NULL)
         goto e3;
+    ila_c->mb->buf = mem_zalloc(MAX_RPKT_LEN, NULL);
+    if (ila_c->mb->buf == NULL)
+        goto e4;
+    ila_c->mb->size = MAX_RPKT_LEN;
     ila_c->sock->raddr = rtpp_netaddr_ctor();
     if (ila_c->sock->raddr == NULL)
-        goto e4;
-    if (pthread_mutex_init(&ila_c->state_lock, NULL) != 0)
         goto e5;
+    if (pthread_mutex_init(&ila_c->state_lock, NULL) != 0)
+        goto e6;
     RC_INCREF(RTPP_MOD_SELF.module_rcnt);
     CALL_SMETHOD(ila_c->rcnt, attach, (rtpp_refcnt_dtor_t)ice_lite_data_dtor, ila_c);
     return (ila_c);
-e5:
+e6:
     RTPP_OBJ_DECREF(ila_c->sock->raddr);
+e5:
+    mem_deref(ila_c->mb->buf);
 e4:
     mem_deref(ila_c->mb);
 e3:
