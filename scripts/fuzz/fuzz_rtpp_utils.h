@@ -10,6 +10,8 @@
 #include <threads.h>
 #include <unistd.h>
 
+#include <openssl/rand.h>
+
 #define HAVE_CONFIG_H 1
 #include "config_pp.h"
 
@@ -92,6 +94,8 @@ RTPPInitialize(void)
     struct rtpp_cfg *cfsp;
 
     OPT_SAVE();
+    int seed = 42;
+    RAND_seed(&seed, sizeof(seed));
     cfsp = rtpp_main(argc, argv);
     OPT_RESTORE();
     if (cfsp == NULL)

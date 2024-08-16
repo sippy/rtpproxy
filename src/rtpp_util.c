@@ -58,6 +58,7 @@
 void
 seedrandom(void)
 {
+#if !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
     int fd;
     unsigned long junk;
     struct timeval tv;
@@ -72,6 +73,9 @@ seedrandom(void)
 
     gettimeofday(&tv, NULL);
     srandom((unsigned int)(getpid() << 14) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
+#else
+    srandom(42);
+#endif
 }
 
 int
