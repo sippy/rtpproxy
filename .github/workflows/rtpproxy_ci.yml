@@ -443,8 +443,6 @@ jobs:
     - name: Set up QEMU
       id: qemu
       uses: docker/setup-qemu-action@v3
-      with:
-        platforms: arm64,arm,riscv64,mips64le,ppc64le,s390x
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -487,7 +485,9 @@ jobs:
         echo "CCACHE_BIMAGE=${CCACHE_BIMAGE}" >> $GITHUB_ENV
         echo "BUILD_IMAGE=${{ env.LOCAL_REPO }}:latest-${OS_TAG}" >> $GITHUB_ENV
         echo "LIBG722_IMAGE=sippylabs/libg722:latest-${OS_TAG}" >> $GITHUB_ENV
-        PLATFORMS="`docker manifest inspect ${{ env.BASE_IMAGE }} | jq -r '.manifests[] | "\(.platform.os)/\(.platform.architecture)"' | sort -u | paste -sd ','`"
+        PLATFORMS="`docker manifest inspect ${{ env.BASE_IMAGE }} | \
+         jq -r '.manifests[] | "\(.platform.os)/\(.platform.architecture)\(if .platform.variant != null then "/\(.platform.variant)" else "" end)"' | \
+         sort -u | paste -sd ','`"
         echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
         echo "OS_TAG=${OS_TAG}" >> $GITHUB_ENV
         if [[ "${{ matrix.base_image }}" == debian:* ]]

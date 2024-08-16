@@ -1,6 +1,6 @@
 set_clang_env() {
   case ${TARGETPLATFORM} in
-  linux/arm/v7 | linux/ppc64le | linux/mips64le)
+  linux/arm/v5 | linux/arm/v7 | linux/ppc64le | linux/mips64le)
     if [ ${CLANG_VER_NEW} -gt 16 ]
     then
       CLANG_VER="${CLANG_VER_OLD}"
