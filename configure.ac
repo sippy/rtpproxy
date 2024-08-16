@@ -40,8 +40,8 @@ solaris*)
 *)
   ;;
 esac
-OPT_CFLAGS="`echo "${CFLAGS}" | sed 's|-g |-g3 |'` -fvisibility=hidden"
-CFLAGS="-pipe -fvisibility=hidden"
+OPT_CFLAGS="`echo "${CFLAGS}" | tr ' ' '\n' | sed 's|^-g$|-g3|' | tr '\n' ' '` -fvisibility=hidden"
+CFLAGS="`echo ${CFLAGS} | tr ' ' '\n' | grep -v '^-O.*' | uniq | tr '\n' ' '` -fvisibility=hidden"
 
 AX_COMPILE_CHECK_SIZEOF(time_t, [#include <time.h>])
 AX_CHECK_COMPILE_FLAG([-Wno-frame-address], [CFLAGS="${CFLAGS} -Wno-frame-address"], [], [-Werror])
