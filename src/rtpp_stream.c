@@ -666,9 +666,11 @@ _rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
     } else {
         relatch = "re-latched";
     }
+#if !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address %s: %s (%s), SSRC=%s, Seq=%s", actor, relatch,
       saddr, ptype, ssrc, seq);
+#endif
     pvt->latch_info.latched = newlatch;
     return (1);
 }

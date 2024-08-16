@@ -380,9 +380,11 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         update_rtpp_totals(stat, stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
+#if !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
         LOGI_IF_NOT_NULL(rlog, "SSRC changed from " SSRC_FMT "/%d to "
           SSRC_FMT "/%d", stat->last.ssrc.val, stat->last.seq, rinfo->ssrc,
           rinfo->seq); 
+#endif
         stat->last.ssrc.val = rinfo->ssrc;
         stat->last.max_seq = stat->last.min_seq = rinfo->seq;
         stat->last.base_ts = rinfo->ts;
