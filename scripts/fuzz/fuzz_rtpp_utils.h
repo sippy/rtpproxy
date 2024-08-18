@@ -63,7 +63,7 @@ static struct RTPPInitializeParams {
 } RTPPInitializeParams = {
     .ttl = "1",
     .setup_ttl = "1",
-    .socket = "stdio:",
+    .socket = NULL,
     .debug_level = "crit",
     .notify_socket = "tcp:127.0.0.1:9642",
     .rec_spool_dir = "/tmp",
@@ -80,7 +80,7 @@ RTPPInitialize(void)
        "-f",
        "-T", rp->ttl,
        "-W", rp->setup_ttl,
-       "-s", rp->socket,
+       "-s", (rp->socket != NULL) ? rp->socket : tmpnam(NULL),
        "-d", rp->debug_level,
        "-n", rp->notify_socket,
        "-S", rp->rec_spool_dir,
