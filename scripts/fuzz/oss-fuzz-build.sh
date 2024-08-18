@@ -39,7 +39,7 @@ install_src_pkg() {
     echo "${PNAME}" >> debian/patches/series
   fi
   if ! PATH=/tmp:${PATH} DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -uc -us 2>&1 | \
-   pv -fcl -F "%t %b %p" > ../build.log
+   pv -fcl -F "%t %b %p" -i 5 > ../build.log
   then
     tail -n 200 ../build.log
     cd "${OLD_PWD}"
