@@ -46,6 +46,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_network.h"
+#include "rtpp_debug.h"
 
 int
 ishostseq(const struct sockaddr *ia1, const struct sockaddr *ia2)
@@ -231,6 +232,7 @@ resolve(struct sockaddr *ia, int pf, const char *host,
 
     n = getaddrinfo(host, servname, &hints, &res);
     if (n == 0) {
+	RTPP_DBG_ASSERT(res->ai_family == pf);
 	/* Use the first socket address returned */
 	memcpy(ia, res->ai_addr, res->ai_addrlen);
 	freeaddrinfo(res);

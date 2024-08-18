@@ -122,6 +122,7 @@ rtpp_netaddr_isempty(struct rtpp_netaddr *self)
     struct rtpp_netaddr_priv *pvt;
     int rval;
 
+    RTPP_DBG_ASSERT(self != NULL);
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     rval = (pvt->rlen == 0);
