@@ -14,6 +14,7 @@
 #include "rtpp_proc.h"
 #include "rtpp_network.h"
 #include "rtpp_stream.h"
+#include "rtpp_ttl.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
@@ -87,6 +88,8 @@ proc_foreach(void *dp, void *ap)
                                     .pktp = fap->pktp};
         RTPP_OBJ_INCREF(fap->pktp);
         CALL_SMETHOD(istp->pproc_manager, handleat, &pktx, _PPROC_ORD_EMPTY);
+        CALL_SMETHOD(istp->ttl, reset);
+        CALL_SMETHOD(ostp->ttl, reset);
     }
     return (RTPP_HT_MATCH_CONT);
 }
