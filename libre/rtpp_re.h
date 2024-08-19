@@ -1,5 +1,8 @@
 #pragma once
 
+#define HAVE_INET_NTOP 1
+#define HAVE_INET_PTON 1
+
 #define mem_alloc mem_zalloc
 
 struct icem;
