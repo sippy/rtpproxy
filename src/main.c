@@ -771,17 +771,18 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
     }
 
     for (i = 0; i < 2; i++) {
+	int rmode = AI_ADDRCONFIG | AI_PASSIVE;
 	cfsp->bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
 	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
-              host2, bh[i], AF_INET, AI_PASSIVE, &errmsg);
+              host2, bh[i], AF_INET, rmode, &errmsg);
 	    if (cfsp->bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
 	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
-              host2, bh6[i], AF_INET6, AI_PASSIVE, &errmsg);
+              host2, bh6[i], AF_INET6, rmode, &errmsg);
 	    if (cfsp->bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;

@@ -142,7 +142,7 @@ ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
         sprintf(cp, "%d", port + 1);
     }
 
-    n = resolve(sstosa(&raddr), AF_INET, tmp, cp, AI_PASSIVE);
+    n = resolve(sstosa(&raddr), AF_INET, tmp, cp, 0);
     if (n != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "ropen: getaddrinfo: %s", gai_strerror(n));
         goto e1;

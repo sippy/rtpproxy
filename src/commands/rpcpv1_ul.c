@@ -305,7 +305,8 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             hostname = alloca(len + 1);
             memcpy(hostname, t, len);
             hostname[len] = '\0';
-            ai_flags = cfsp->no_resolve ? AI_NUMERICHOST : AI_PASSIVE;
+            ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+            ai_flags |= cfsp->no_resolve ? AI_NUMERICHOST : 0;
             ulop->local_addr = CALL_METHOD(cfsp->bindaddrs_cf, host2, hostname,
               tpf, ai_flags, &errmsg);
             if (ulop->local_addr == NULL) {
@@ -329,8 +330,8 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             memcpy(hostname, t, len);
             hostname[len] = '\0';
             struct sockaddr_storage local_addr;
-            ai_flags = cfsp->no_resolve ? AI_NUMERICHOST : AI_PASSIVE;
-            n = resolve(sstosa(&local_addr), tpf, hostname, SERVICE, AI_PASSIVE);
+            ai_flags = cfsp->no_resolve ? AI_NUMERICHOST : 0;
+            n = resolve(sstosa(&local_addr), tpf, hostname, SERVICE, ai_flags);
             if (n != 0) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "invalid remote address: %s: %s", hostname, gai_strerror(n));

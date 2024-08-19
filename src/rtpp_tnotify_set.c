@@ -207,7 +207,7 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
         rval = 1;
     } else {
         ifsa = sstosa(&rtep->rtt.remote);
-        n = resolve(ifsa, AF_INET, host, port, AI_PASSIVE);
+        n = resolve(ifsa, AF_INET, host, port, 0);
         if (n != 0) {
             *e = gai_strerror(n);
             return (-1);

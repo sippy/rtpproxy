@@ -349,6 +349,7 @@ setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
   const char *servname)
 {
     int n;
+    int rmode = AI_PASSIVE | AI_ADDRCONFIG;
 
     /*
      * If user specified * then change it to NULL,
@@ -357,7 +358,7 @@ setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
     if (bindhost && (strcmp(bindhost, "*") == 0))
 	bindhost = NULL;
 
-    if ((n = resolve(ia, pf, bindhost, servname, AI_PASSIVE)) != 0) {
+    if ((n = resolve(ia, pf, bindhost, servname, rmode)) != 0) {
 	warnx("setbindhost: %s for %s %s", gai_strerror(n), bindhost, servname);
 	return -1;
     }
