@@ -96,6 +96,9 @@ host2bindaddr(struct rtpp_bindaddrs *pub, const char *host, int pf,
     if (host && (strcmp(host, "*") == 0))
         host = NULL;
 
+    if ((ai_flags & AI_ADDRCONFIG) && host == NULL)
+        ai_flags ^= AI_ADDRCONFIG;
+
     if ((n = resolve(sstosa(&ia), pf, host, SERVICE, ai_flags)) != 0) {
         *ep = gai_strerror(n);
         return (NULL);
