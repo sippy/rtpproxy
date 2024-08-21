@@ -36,6 +36,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_time.h"
 #include "rtpp_pcnt_strm.h"

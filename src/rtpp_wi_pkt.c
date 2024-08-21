@@ -35,6 +35,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtp.h"

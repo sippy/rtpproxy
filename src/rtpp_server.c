@@ -41,6 +41,7 @@
 #include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_server.h"
 #include "rtpp_server_fin.h"

@@ -37,6 +37,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_pearson_perfect.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_stats.h"
 #include "rtpp_stats_fin.h"

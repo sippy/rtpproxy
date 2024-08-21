@@ -46,6 +46,7 @@
 #include "rtpp_module_cplane.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_cfg.h"
 #include "rtpp_wi.h"
@@ -237,7 +238,7 @@ rtpp_dtls_gw_setup_sender(struct rtpp_module_priv *pvt,
     int sidx, lport;
     struct rtpp_socket *fd, *fds[2];
 
-    fd = CALL_SMETHOD(dtls_strmp, get_skt);
+    fd = CALL_SMETHOD(dtls_strmp, get_skt, HEREVAL);
     if (fd != NULL) {
         RTPP_OBJ_DECREF(fd);
         return (0);

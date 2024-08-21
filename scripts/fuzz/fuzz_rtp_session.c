@@ -15,6 +15,7 @@
 #include "rtpp_cfg.h"
 #include "rtp.h"
 #include "rtpp_time.h"
+#include "rtpp_codeptr.h"
 #include "rtp_packet.h"
 #include "rtpp_session.h"
 #include "rtpp_pipe.h"

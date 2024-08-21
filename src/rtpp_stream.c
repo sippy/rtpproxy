@@ -58,6 +58,7 @@
 #include "rtp_info.h"
 #include "rtp_packet.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_network.h"
 #include "rtpp_pcount.h"
@@ -77,7 +78,6 @@
 #include "rtpp_acct_pipe.h"
 #include "rtpp_cfg.h"
 #include "rtpp_proc_servers.h"
-#include "rtpp_codeptr.h"
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
 #include "rtpp_command_stats.h"
@@ -147,7 +147,7 @@ static int rtpp_stream_guess_addr(struct rtpp_stream *,
 static void rtpp_stream_prefill_addr(struct rtpp_stream *,
   struct sockaddr **, double);
 static void rtpp_stream_set_skt(struct rtpp_stream *, struct rtpp_socket *);
-static struct rtpp_socket *rtpp_stream_get_skt(struct rtpp_stream *);
+static struct rtpp_socket *rtpp_stream_get_skt(struct rtpp_stream *, HERETYPE);
 static struct rtpp_socket *rtpp_stream_update_skt(struct rtpp_stream *,
   struct rtpp_socket *);
 static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
@@ -935,7 +935,7 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
 }
 
 static struct rtpp_socket *
-rtpp_stream_get_skt(struct rtpp_stream *self)
+rtpp_stream_get_skt(struct rtpp_stream *self, HERETYPE mlp)
 {
     struct rtpp_stream_priv *pvt;
     struct rtpp_socket *rval;

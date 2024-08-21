@@ -41,6 +41,7 @@
 #include "rtpp_stats.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_ssrc.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 
 struct rtp_resizer {

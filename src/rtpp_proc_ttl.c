@@ -51,6 +51,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_weakref.h"
 #include "rtpp_proc_ttl.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_pipe.h"

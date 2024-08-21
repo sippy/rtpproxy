@@ -33,6 +33,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_port_table.h"
 #include "rtpp_port_table_fin.h"

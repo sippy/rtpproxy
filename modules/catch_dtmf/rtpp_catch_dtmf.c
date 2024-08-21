@@ -45,6 +45,7 @@
 #include "rtpp_module_cplane.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_cfg.h"
 #include "rtpp_wi.h"

@@ -60,6 +60,7 @@
 #include "rtpp_queue.h"
 #include "rtpp_netaddr.h"
 #include "rtpp_network.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"

@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 #include "rtpp_types.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_cfg.h"
 #include "rtpp_sessinfo.h"
@@ -329,8 +330,8 @@ rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
 
     rtp = sp->rtp->stream[index];
     rtcp = sp->rtcp->stream[index];
-    fd_rtp = CALL_SMETHOD(rtp, get_skt);
-    fd_rtcp = CALL_SMETHOD(rtcp, get_skt);
+    fd_rtp = CALL_SMETHOD(rtp, get_skt, HEREVAL);
+    fd_rtcp = CALL_SMETHOD(rtcp, get_skt, HEREVAL);
     if (fd_rtp != NULL) {
         pthread_mutex_lock(&pvt->hst_rtp.lock);
         if (pvt->hst_rtp.ulen == pvt->hst_rtp.main.alen) {

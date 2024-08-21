@@ -39,6 +39,7 @@
 #include "config_pp.h"
 
 #include "rtpp_module.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_str.h"
 

@@ -39,6 +39,7 @@
 #include "rtpp_command_rcache_fin.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_timed.h"
 #include "rtpp_timed_task.h"

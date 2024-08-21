@@ -55,6 +55,7 @@
 #include "rtpp_module_if.h"
 #include "rtpp_modman.h"
 #include "rtpp_pipe.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"

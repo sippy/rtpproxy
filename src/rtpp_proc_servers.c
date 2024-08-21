@@ -44,6 +44,7 @@
 
 #include "rtpp_cfg.h"
 #include "rtpp_types.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
 #include "rtpp_hash_table.h"

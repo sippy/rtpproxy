@@ -45,6 +45,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_proc.h"
 #include "rtpp_record.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stream.h"

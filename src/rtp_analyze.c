@@ -44,6 +44,7 @@
 #include "rtp.h"
 #include "rtp_analyze.h"
 #include "rtpp_math.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_ringbuf.h"
 

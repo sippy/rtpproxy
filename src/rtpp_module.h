@@ -29,8 +29,6 @@
 
 #define MODULE_API_REVISION 11
 
-#include "rtpp_codeptr.h"
-
 struct rtpp_cfg;
 struct rtpp_module_priv;
 struct rtpp_module_conf;

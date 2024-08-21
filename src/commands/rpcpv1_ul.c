@@ -40,6 +40,7 @@
 
 #include "rtpp_debug.h"
 #include "rtpp_types.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_weakref.h"
 #include "rtpp_log.h"
@@ -478,7 +479,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
     if (sidx != -1) {
         RTPP_DBG_ASSERT(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = cmd->sp;
-        fd = CALL_SMETHOD(spa->rtp->stream[sidx], get_skt);
+        fd = CALL_SMETHOD(spa->rtp->stream[sidx], get_skt, HEREVAL);
         if (fd == NULL || ulop->new_port != 0) {
             if (ulop->local_addr != NULL) {
                 spa->rtp->stream[sidx]->laddr = ulop->local_addr;

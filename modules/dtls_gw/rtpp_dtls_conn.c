@@ -46,6 +46,7 @@
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_netio_async.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_str.h"
 #include "rtpp_stream.h"

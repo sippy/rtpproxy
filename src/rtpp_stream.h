@@ -77,7 +77,8 @@ DECLARE_METHOD(rtpp_stream, rtpp_stream_guess_addr, int,
 DECLARE_METHOD(rtpp_stream, rtpp_stream_prefill_addr, void,
   struct sockaddr **, double);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_set_skt, void, struct rtpp_socket *);
-DECLARE_METHOD(rtpp_stream, rtpp_stream_get_skt, struct rtpp_socket *);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_get_skt, struct rtpp_socket *,
+  HERETYPE);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_update_skt, struct rtpp_socket *,
   struct rtpp_socket *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_send_pkt, int, struct sthread_args *,

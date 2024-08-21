@@ -41,6 +41,7 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_module_if.h"
 #include "rtpp_modman.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "ucl.h"
 #include "rtpp_ucl.h"

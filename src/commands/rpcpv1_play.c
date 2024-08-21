@@ -44,6 +44,7 @@
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_stream.h"
 
 struct play_opts {

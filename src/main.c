@@ -73,6 +73,7 @@
 #include <systemd/sd-daemon.h>
 #endif
 
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_runcreds.h"
 #include "rtpp_cfile.h"
