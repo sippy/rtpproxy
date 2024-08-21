@@ -73,7 +73,7 @@ mem_deref(void *data)
 {
     if (data != NULL) {
         struct re_mem *pvt = D2P(data);
-        CALL_SMETHOD(pvt->rcnt, decref);
+        RTPP_OBJ_DECREF(pvt);
     }
     return (NULL);
 }
@@ -83,6 +83,6 @@ mem_ref(void *data)
 {
     struct re_mem *pvt = D2P(data);
 
-    CALL_SMETHOD(pvt->rcnt, incref);
+    RTPP_OBJ_INCREF(pvt);
     return (data);
 }
