@@ -18,7 +18,8 @@ fi
 
 install_src_pkg() {
   local PKGNAME="${1}"
-  local TMPDIR="`mktemp -d /tmp/${PKGNAME}.XXXXXXXX`"
+  mkdir -p /tmp/src/libfuzzer
+  local TMPDIR="`mktemp -d /tmp/src/libfuzzer/${PKGNAME}.XXXXXXXX`"
   local OLD_PWD="`pwd`"
   cd ${TMPDIR}
   apt-get build-dep -y ${PKGNAME}
@@ -49,8 +50,7 @@ install_src_pkg() {
   cd -
   dpkg -i *.deb
   cd ${OLD_PWD}
-  #keep TMPDIR, it's needed for coverage
-  #rm -rf ${TMPDIR}
+  rm -rf ${TMPDIR}
 }
 
 OS="`uname -s`"
