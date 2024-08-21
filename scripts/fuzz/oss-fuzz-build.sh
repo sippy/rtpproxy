@@ -105,24 +105,37 @@ CFLAGS="${CFLAGS} -flto -fPIE -fPIC"
 CXXFLAGS="${CXXFLAGS} -flto -fPIE -fPIC"
 RTPPLIB="src/.libs/librtpproxy.a"
 
+for src in rfz_chunk.c
+do
+  obj="${OUT}/${src%.*}.o"
+  src=scripts/fuzz/${src}
+  ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -o ${obj} -c ${src}
+  OBJS="${OBJS} ${obj}"
+done
+
 ALL="command_parser rtp_parser rtcp_parser rtp_session"
+OBJS0="${OBJS}"
 for fz in ${ALL}
 do
+  OBJS="${OBJS0}"
+  obj="${OUT}/fuzz_${fz}.o"
   ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -Imodules/acct_rtcp_hep \
-   -o ${OUT}/fuzz_${fz}.o -c scripts/fuzz/fuzz_${fz}.c
+   -o "${obj}" -c scripts/fuzz/fuzz_${fz}.c
 
   case "${fz}" in
   rtp_parser)
-      LIBRTPP="${OUT}/fuzz_${fz}.o ${RTPPLIB}"
+      LIBRTPP="${RTPPLIB}"
+      OBJS="${OBJS} ${obj}"
       ;;
   *)
-      ${LLINK_BIN} -o ${OUT}/_fuzz_${fz}.o ${OUT}/fuzz_${fz}.o ${RTPPLIB}
-      LIBRTPP="${OUT}/_fuzz_${fz}.o"
+      _obj="${OUT}/_fuzz_${fz}.o"
+      ${LLINK_BIN} -o ${_obj} ${obj} ${RTPPLIB}
+      LIBRTPP="${_obj}"
       ;;
   esac
 
   ${CXX} ${CXXFLAGS} ${LIB_FUZZING_ENGINE} ${LDFLAGS} -o ${OUT}/fuzz_${fz} \
-   ${LIBRTPP} -lm ${LIBSRTP}
+   ${OBJS} ${LIBRTPP} -lm ${LIBSRTP}
 
   for suff in dict options
   do

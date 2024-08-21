@@ -18,6 +18,8 @@
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
+#include "rfz_chunk.h"
+
 static struct {
     sem_t wi_proc_done;
 } fuzz_ctx;
@@ -34,25 +36,34 @@ static const char * const setup_script[] = {
     NULL
 };
 
-int
-LLVMFuzzerInitialize(int *_argc, char ***_argv)
+static int
+ExecuteScript(void)
 {
     char line[RTPP_CMD_BUFLEN];
-    RTPPInitializeParams.debug_level = "info";
-    RTPPInitializeParams.ttl = "60";
-    int r = RTPPInitialize();
-    if (r != 0)
-        goto e0;
-    if (sem_init(&fuzz_ctx.wi_proc_done, 0, 0) != 0)
-        goto e0;
+
     for (int i = 0; setup_script[i] != NULL; i++) {
         const char *cp = setup_script[i];
         int size = strlen(cp);
         memcpy(line, cp, size + 1);
-        r = ExecuteRTPPCommand(&gconf, line, size);
+        int r = ExecuteRTPPCommand(&gconf, line, size);
         if (r != 0)
-            goto e1;
+            return (-1);
     }
+    return (0);
+}
+
+int
+LLVMFuzzerInitialize(int *_argc, char ***_argv)
+{
+    RTPPInitializeParams.ttl = "60";
+    int r = RTPPInitialize();
+
+    if (r != 0)
+        goto e0;
+    if (sem_init(&fuzz_ctx.wi_proc_done, 0, 0) != 0)
+        goto e0;
+    if (ExecuteScript() != 0)
+        goto e1;
     atexit(fuzz_ctx_dtor);
     return (0);
 e1:
@@ -106,8 +117,6 @@ proc_foreach(void *dp, void *ap)
                                     .rsp = fap->rsp,
                                     .pktp = pktp};
         CALL_SMETHOD(istp->pproc_manager, handleat, &pktx, _PPROC_ORD_EMPTY);
-        CALL_SMETHOD(istp->ttl, reset);
-        CALL_SMETHOD(ostp->ttl, reset);
         fap->nwait += 1;
     }
     return (RTPP_HT_MATCH_CONT);
@@ -117,15 +126,45 @@ int
 LLVMFuzzerTestOneInput(const char *data, size_t size)
 {
     static struct rtpp_proc_rstats rs = {0};
-    struct foreach_args fa = {.data = data, .size = size, .rsp = &rs};
     sem_t *wpdp = &fuzz_ctx.wi_proc_done;
+    struct {
+        union {
+            struct {
+                uint8_t reset:1;
+                uint8_t reseed:1;
+            };
+            uint8_t value;
+        };
+    } op_flags;
 
-    if (size <= sizeof(struct sockaddr_in))
-        return (0);
-    if (size > sizeof(struct sockaddr_in) + MAX_RPKT_LEN)
+    if (size < 2)
         return (0);
 
-    CALL_SMETHOD(gconf.cfsp->sessions_ht, foreach, proc_foreach, (void *)&fa, NULL);
+    op_flags.value = data[0];
+    data += 1;
+    size -= 1;
+
+    if (op_flags.reseed) {
+        SeedRNGs();
+    }
+    if (op_flags.reset) {
+        assert(ExecuteRTPPCommand(&gconf, "X", 1) == 0);
+        assert(ExecuteScript() == 0);
+    }
+
+    struct rfz_chunk chunk = {.rem_size = size, .rem_data = data};
+    struct foreach_args fa = {.rsp = &rs};
+
+    do {
+        chunk = rfz_get_chunk(chunk.rem_data, chunk.rem_size);
+        if (chunk.size < sizeof(struct sockaddr_in))
+            break;
+        if (chunk.size > sizeof(struct sockaddr_in) + MAX_RPKT_LEN)
+            break;
+        fa.data = chunk.data;
+        fa.size = chunk.size;
+        CALL_SMETHOD(gconf.cfsp->sessions_ht, foreach, proc_foreach, (void *)&fa, NULL);
+    } while (chunk.rem_size > 1);
     for (int i = 0; i < fa.nwait; i++)
         sem_wait(wpdp);
     return (0);

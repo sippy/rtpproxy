@@ -25,6 +25,7 @@
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_async.h"
+#include "rtpp_command_stats.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_weakref.h"
@@ -109,6 +110,8 @@ static struct RTPPInitializeParams {
     .modules = {"acct_csv", "catch_dtmf", "dtls_gw", "ice_lite", NULL},
 };
 
+extern void __afl_manual_init(void) __attribute__((__weak__));
+
 static int
 RTPPInitialize(void)
 {
@@ -130,6 +133,9 @@ RTPPInitialize(void)
     };
     int argc = howmany(argv, *argv);
     struct rtpp_cfg *cfsp;
+
+    if (__afl_manual_init != NULL)
+        __afl_manual_init();
 
     OPT_SAVE();
     assert(RAND_set_rand_method(&dummy) == 1);
