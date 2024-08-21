@@ -162,13 +162,18 @@ static void
 rtpp_refcnt_incref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
+    MAYBE_UNUSED int oldcnt;
 
     PUB2PVT(pub, pvt);
+    RTPP_DBGCODE() {
+        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+        RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
+    }
+    oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
 #if RTPP_DEBUG_refcnt
     if (pvt->flags & RC_FLAG_TRACE) {
         char *dbuf;
-        asprintf(&dbuf, "rtpp_refcnt(%p, %u).incref()", pub,
-          atomic_load(&pvt->cnt));
+        asprintf(&dbuf, "rtpp_refcnt(%p, %u).incref()", pub, oldcnt);
         if (dbuf != NULL) {
 #ifdef RTPP_DEBUG
             rtpp_stacktrace_print(dbuf);
@@ -179,12 +184,6 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub)
         }
     }
 #endif
-    MAYBE_UNUSED int oldcnt;
-    RTPP_DBGCODE() {
-        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
-        RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
-    }
-    oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
     RTPP_DBG_ASSERT(oldcnt > 0);
 }
 
@@ -208,7 +207,6 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
     flags = pvt->flags;
 #endif
     oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release);
-    RTPP_DBG_ASSERT(oldcnt > 0);
 #if RTPP_DEBUG_refcnt
     if (flags & RC_FLAG_TRACE) {
         char *dbuf;
@@ -223,6 +221,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
         }
     }
 #endif
+    RTPP_DBG_ASSERT(oldcnt > 0);
     if (oldcnt == 1) {
         atomic_thread_fence(memory_order_acquire);
         int flags = pvt->flags;
