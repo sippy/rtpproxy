@@ -1,4 +1,6 @@
 "U callid_1 1.2.3.4 1234 from_tag_1",
 "L callid_1 5.6.7.8 5678 from_tag_1 to_tag_1",
-"UR1.2.3.4 2oaqau81j7b3d0hcq5ef-0 1.2.3.4 1234 1668f24f2dbe997e89cda91f14ee9475 && M4:1 A sha-256 2A:97:63:6D:3B:2A:63:3B:EB:08:3C:E8:A5:6F:E7:7E:39:15:C3:54:64:3D:59:91:01:DA:32:5C:D5:BA:1D:6E 3966876515 && M5:1 A Wkih UPWk9IlmFfJIaps47b4cCd5g && M5:1 C 333148571 1 udp 2122260223 192.168.56.1 50699 typ host generation 0 network-id 1 && M5:1 C 1886825411 1 udp 2122194687 192.168.121.1 50700 typ host generation 0 network-id 2 && M5:1 C 2412729127 1 udp 2122129151 192.168.23.190 50701 typ host generation 0 network-id 3 && M5:1 C 419902974 1 udp 1685921535 1.2.3.4 1234 typ srflx raddr 1.2.3.4 rport 1234 generation 0 network-id 3",
-"UR5.6.7.8 2oaqau81j7b3d0hcq5ef-0 5.6.7.8 5678 7fb2d935198f743d8484cbb2e016eb00 1668f24f2dbe997e89cda91f14ee9475 && M4:1 S && M5:1 S",
+"U callid_2 1.2.3.4 1234 from_tag_2 && M4:1 A sha-256 2A:97:63:6D:3B:2A:63:3B:EB:08:3C:E8:A5:6F:E7:7E:39:15:C3:54:64:3D:59:91:01:DA:32:5C:D5:BA:1D:6E 3966876515",
+"U callid_2 5.6.7.8 5678 to_tag_2 from_tag_2 && M4:1 S",
+"U callid_3 1.2.3.4 1234 from_tag_3 && M4:1 A sha-256 2A:97:63:6D:3B:2A:63:3B:EB:08:3C:E8:A5:6F:E7:7E:39:15:C3:54:64:3D:59:91:01:DA:32:5C:D5:BA:1D:6E 3966876515 && M5:1 A Wkih UPWk9IlmFfJIaps47b4cCd5g && M5:1 C 333148571 1 udp 2122260223 192.168.56.1 50699 typ host generation 0 network-id 1 && M5:1 C 1886825411 1 udp 2122194687 192.168.121.1 50700 typ host generation 0 network-id 2 && M5:1 C 2412729127 1 udp 2122129151 192.168.23.190 50701 typ host generation 0 network-id 3 && M5:1 C 419902974 1 udp 1685921535 1.2.3.4 1234 typ srflx raddr 1.2.3.4 rport 1234 generation 0 network-id 3",
+"U callid_3 5.6.7.8 5678 to_tag_3 from_tag_3 && M4:1 S && M5:1 S",
