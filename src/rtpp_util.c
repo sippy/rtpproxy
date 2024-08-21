@@ -559,7 +559,7 @@ generate_random_string(char *buffer, int length)
     int charset_size = sizeof(charset) - 1;
 
     for (int i = 0; i < length; i++) {
-        int key = rand() % charset_size;
+        int key = random() % charset_size;
         buffer[i] = charset[key];
     }
     buffer[length] = '\0';
