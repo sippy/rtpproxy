@@ -49,6 +49,7 @@
 #include "rtpp_socket.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_epoll.h"
+#include "rtpp_debug.h"
 
 enum polltbl_hst_ops {HST_ADD, HST_DEL, HST_UPD};
 
@@ -252,14 +253,19 @@ e0:
 static int
 find_polltbl_idx(struct rtpp_polltbl *ptp, uint64_t stuid)
 {
-    int i;
+    int i, j = -1;
 
     for (i = 0; i < ptp->curlen; i++) {
         if (ptp->mds[i].stuid != stuid)
             continue;
-        return (i);
+        RTPP_DBGCODE() {
+            assert(j == -1);
+            j = i;
+        } else {
+            return (i);
+        }
     }
-    return (-1);
+    return (j);
 }
 
 static void
