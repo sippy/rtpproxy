@@ -82,6 +82,6 @@ main(int argc, char *argv[])
 }
 #else
 const char *__asan_default_options() {
-  return "verbosity=1";
+  return "verbosity=0";
 }
 #endif /* FUZZ_STANDALONE */
