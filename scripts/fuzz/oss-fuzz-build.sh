@@ -49,7 +49,8 @@ install_src_pkg() {
   cd -
   dpkg -i *.deb
   cd ${OLD_PWD}
-  rm -rf ${TMPDIR}
+  #keep TMPDIR, it's needed for coverage
+  #rm -rf ${TMPDIR}
 }
 
 OS="`uname -s`"
