@@ -67,8 +67,8 @@ CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
 #undef strdup
 #define strdup(p) rtpp_memdeb_strdup((p), MEMDEB_SYM, HEREVAL)
 #undef asprintf
-#define asprintf(pp, fmt, args...) rtpp_memdeb_asprintf((pp), (fmt), \
-  MEMDEB_SYM, HEREVAL, ## args)
+#define asprintf(pp, fmt, args...) rtpp_memdeb_asprintf((pp), MEMDEB_SYM, HEREVAL, \
+  (fmt), ## args)
 #undef vasprintf
 #define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), \
   MEMDEB_SYM, HEREVAL, (vl))
@@ -82,8 +82,8 @@ void rtpp_memdeb_free(void *, void *, HERETYPE) RTPP_EXPORT;
 void rtpp_memdeb_free_n(void *, void *, HERETYPE);
 void *rtpp_memdeb_realloc(void *, size_t, void *, HERETYPE) RTPP_EXPORT;
 char *rtpp_memdeb_strdup(const char *, void *, HERETYPE);
-int rtpp_memdeb_asprintf(char **, const char *, void *, HERETYPE, ...)
-   __attribute__ ((format (printf, 2, 5)));
+int rtpp_memdeb_asprintf(char **, void *, HERETYPE, const char *, ...)
+   __attribute__ ((format (printf, 4, 5)));
 void *rtpp_memdeb_memcpy(void *dst, const void *src, size_t len, void *,
   HERETYPE) RTPP_EXPORT;
 void *rtpp_memdeb_calloc(size_t number, size_t size, void *, HERETYPE);

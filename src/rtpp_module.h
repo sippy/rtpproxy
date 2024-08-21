@@ -60,8 +60,8 @@ DEFINE_RAW_METHOD(rtpp_module_realloc, void *, void *, size_t,   void *,
   HERETYPE);
 DEFINE_RAW_METHOD(rtpp_module_strdup, char *, const char *,  void *,
   HERETYPE);
-DEFINE_RAW_METHOD(rtpp_module_asprintf, int, char **, const char *,
-   void *, HERETYPE, ...) __attribute__ ((format (printf, 2, 5)));;
+DEFINE_RAW_METHOD(rtpp_module_asprintf, int, char **, void *, HERETYPE,
+   const char *, ...) __attribute__ ((format (printf, 4, 5)));;
 DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *,
    void *, HERETYPE, va_list);;
 #else
@@ -72,7 +72,7 @@ DEFINE_RAW_METHOD(rtpp_module_free, void, void *);
 DEFINE_RAW_METHOD(rtpp_module_realloc, void *, void *, size_t);
 DEFINE_RAW_METHOD(rtpp_module_strdup, char *, const char *);
 DEFINE_RAW_METHOD(rtpp_module_asprintf, int, char **, const char *, ...)
-  __attribute__ ((format (printf, 2, 3)));;
+  __attribute__ ((format (printf, 2, 3)));
 DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *, va_list);
 #endif
 
@@ -104,8 +104,8 @@ extern struct rtpp_minfo RTPP_MOD_SELF;
   HEREVAL)
 #define mod_strdup(p) RTPP_MOD_SELF.fn->_strdup((p), _MMDEB, \
   HEREVAL)
-#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF.fn->_asprintf((pp), (fmt), \
-  _MMDEB, HEREVAL, ## args)
+#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF.fn->_asprintf((pp), \
+  _MMDEB, HEREVAL, (fmt), ## args)
 #define mod_vasprintf(pp, fmt, vl) RTPP_MOD_SELF.fn->_vasprintf((pp), (fmt), \
   _MMDEB, HEREVAL, (vl))
 #else
