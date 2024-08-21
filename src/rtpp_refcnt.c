@@ -192,17 +192,25 @@ static void
 rtpp_refcnt_decref(struct rtpp_refcnt *pub)
 {
     struct rtpp_refcnt_priv *pvt;
-    int oldcnt;
+    int oldcnt, flags;
 
     PUB2PVT(pub, pvt);
     RTPP_DBGCODE() {
         oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
         RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
     }
+#if RTPP_DEBUG_refcnt
+    /*
+     * Fetch flags before decrement, otherwise we can decrement and then
+     * somebody decrements it and deallocates. Atomic is not needed since
+     * this initialized at the init time.
+     */
+    flags = pvt->flags;
+#endif
     oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release);
     RTPP_DBG_ASSERT(oldcnt > 0);
 #if RTPP_DEBUG_refcnt
-    if (pvt->flags & RC_FLAG_TRACE) {
+    if (flags & RC_FLAG_TRACE) {
         char *dbuf;
         asprintf(&dbuf, "rtpp_refcnt(%p, %u).decref()", pub, oldcnt);
         if (dbuf != NULL) {
