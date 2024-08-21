@@ -62,37 +62,11 @@ e0:
 }
 
 struct foreach_args {
-    struct rtp_packet *pktp;
+    const char *data;
+    size_t size;
     struct rtpp_proc_rstats *rsp;
+    int nwait;
 };
-
-static int
-proc_foreach(void *dp, void *ap)
-{
-    const struct foreach_args *fap;
-    const struct rtpp_session *sp;
-
-    fap = (const struct foreach_args *)ap;
-    /*
-     * This method does not need us to bump ref, since we are in the
-     * locked context of the rtpp_hash_table, which holds its own ref.
-     */
-    sp = (const struct rtpp_session *)dp;
-
-    for (int i=0; i < 2; i++) {
-        struct rtpp_stream *istp = sp->rtp->stream[i],
-                           *ostp = sp->rtp->stream[i ^ 1];
-        struct pkt_proc_ctx pktx = {.strmp_in = istp,
-                                    .strmp_out = ostp,
-                                    .rsp = fap->rsp,
-                                    .pktp = fap->pktp};
-        RTPP_OBJ_INCREF(fap->pktp);
-        CALL_SMETHOD(istp->pproc_manager, handleat, &pktx, _PPROC_ORD_EMPTY);
-        CALL_SMETHOD(istp->ttl, reset);
-        CALL_SMETHOD(ostp->ttl, reset);
-    }
-    return (RTPP_HT_MATCH_CONT);
-}
 
 static void
 wi_proc_complete(void *arg)
@@ -100,35 +74,59 @@ wi_proc_complete(void *arg)
     sem_post(&fuzz_ctx.wi_proc_done);
 }
 
+static int
+proc_foreach(void *dp, void *ap)
+{
+    struct foreach_args *fap;
+    const struct rtpp_session *sp;
+    rtpp_refcnt_dtor_t wpd_f = (rtpp_refcnt_dtor_t)&wi_proc_complete;
+
+    fap = (struct foreach_args *)ap;
+    /*
+     * This method does not need us to bump ref, since we are in the
+     * locked context of the rtpp_hash_table, which holds its own ref.
+     */
+    sp = (const struct rtpp_session *)dp;
+
+    for (int i=0; i < 2; i++) {
+        struct sockaddr *rap;
+        struct rtp_packet *pktp = rtp_packet_alloc();
+        assert (pktp != NULL);
+        void *olddata = CALL_SMETHOD(pktp->rcnt, getdata);
+        CALL_SMETHOD(pktp->rcnt, attach, wpd_f, olddata);
+        rap = sstosa(&pktp->raddr);
+        memcpy(rap, fap->data, sizeof(struct sockaddr_in));
+        rap->sa_family = AF_INET;
+        pktp->size = fap->size - sizeof(struct sockaddr_in);
+        memcpy(pktp->data.buf, fap->data + sizeof(struct sockaddr_in), pktp->size);
+        struct rtpp_stream *istp = sp->rtp->stream[i],
+                           *ostp = sp->rtp->stream[i ^ 1];
+        struct pkt_proc_ctx pktx = {.strmp_in = istp,
+                                    .strmp_out = ostp,
+                                    .rsp = fap->rsp,
+                                    .pktp = pktp};
+        CALL_SMETHOD(istp->pproc_manager, handleat, &pktx, _PPROC_ORD_EMPTY);
+        CALL_SMETHOD(istp->ttl, reset);
+        CALL_SMETHOD(ostp->ttl, reset);
+        fap->nwait += 1;
+    }
+    return (RTPP_HT_MATCH_CONT);
+}
+
 int
 LLVMFuzzerTestOneInput(const char *data, size_t size)
 {
-    struct foreach_args fa;
     static struct rtpp_proc_rstats rs = {0};
-    rtpp_refcnt_dtor_t wpd_f = (rtpp_refcnt_dtor_t)&wi_proc_complete;
+    struct foreach_args fa = {.data = data, .size = size, .rsp = &rs};
     sem_t *wpdp = &fuzz_ctx.wi_proc_done;
-    struct sockaddr *rap;
 
     if (size <= sizeof(struct sockaddr_in))
         return (0);
     if (size > sizeof(struct sockaddr_in) + MAX_RPKT_LEN)
         return (0);
 
-    fa.pktp = rtp_packet_alloc();
-    assert (fa.pktp != NULL);
-    void *olddata = CALL_SMETHOD(fa.pktp->rcnt, getdata);
-    CALL_SMETHOD(fa.pktp->rcnt, attach, wpd_f, olddata);
-    fa.rsp = &rs;
-    rap = sstosa(&fa.pktp->raddr);
-    memcpy(rap, data, sizeof(struct sockaddr_in));
-    rap->sa_family = AF_INET;
-    size -= sizeof(struct sockaddr_in);
-    data += sizeof(struct sockaddr_in);
-    fa.pktp->size = size;
-    memcpy(fa.pktp->data.buf, data, size);
-
     CALL_SMETHOD(gconf.cfsp->sessions_ht, foreach, proc_foreach, (void *)&fa, NULL);
-    RTPP_OBJ_DECREF(fa.pktp);
-    sem_wait(wpdp);
+    for (int i = 0; i < fa.nwait; i++)
+        sem_wait(wpdp);
     return (0);
 }
