@@ -28,6 +28,7 @@ install_src_pkg() {
   (head -n 1 debian/rules; \
    echo "export CFLAGS=${CFLAGS}"; \
    echo "export CXXFLAGS=${CXXFLAGS}"; \
+   echo "export RANLIB=llvm-ranlib-${CLANG_VER}"; \
    tail -n +2 debian/rules) > debian/_rules
   mv debian/_rules debian/rules
   chmod 755 debian/rules
@@ -129,4 +130,9 @@ done
 if [ "${OUT}" != "." ]
 then
   cp -Rp ${OUT} build-out
+fi
+
+if [ "${OS}" != "FreeBSD" ]
+then
+  apt-get reinstall -y libssl1.1
 fi

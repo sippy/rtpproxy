@@ -34,3 +34,23 @@ Last-Update: 2024-08-16
  
  static inline int hex_char_to_nibble(uint8_t c)
  {
+--- libsrtp2-2.3.0.orig/Makefile.in
++++ libsrtp2-2.3.0/Makefile.in
+@@ -163,7 +163,7 @@ libsrtp2.a: $(srtpobj) $(cryptobj) $(gdo
+ 	$(RANLIB) libsrtp2.a
+ 
+ libsrtp2.$(SHAREDLIBSUFFIX): $(srtpobj) $(cryptobj) $(gdoi)
+-	$(CC) -shared -o $@ $(SHAREDLIB_LDFLAGS) \
++	$(CC) $(CFLAGS) -shared -o $@ $(SHAREDLIB_LDFLAGS) \
+ 				$^ $(LDFLAGS) $(LIBS)
+ 	if [ -n "$(SHAREDLIBVERSION)" ]; then \
+ 		ln -sfn $@ libsrtp2.$(SHAREDLIBSUFFIXNOVER); \
+@@ -172,7 +172,7 @@ libsrtp2.$(SHAREDLIBSUFFIX): $(srtpobj)
+ shared_library: libsrtp2.$(SHAREDLIBSUFFIX)
+ 
+ libsrtp2.so: $(srtpobj) $(cryptobj)
+-	$(CC) -shared -Wl,-soname,libsrtp2.so \
++	$(CC) $(CFLAGS) -shared -Wl,-soname,libsrtp2.so \
+ 		-o libsrtp2.so $^ $(LDFLAGS)
+ 
+ # test applications
