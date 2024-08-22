@@ -370,7 +370,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sanitizer: [address, undefined, memory]
+        sanitizer: [address, undefined, memory, coverage]
     steps:
     - uses: actions/checkout@v4
       with:
@@ -402,7 +402,7 @@ jobs:
         name: ${{ matrix.sanitizer }}-artifacts
         path: ./out/artifacts
     - name: Upload Sarif
-      if: always() && steps.build.outcome == 'success'
+      if: always() && steps.build.outcome == 'success' && matrix.sanitizer != 'coverage'
       uses: github/codeql-action/upload-sarif@v2
       with:
         # Path to SARIF file relative to the root of the repository
