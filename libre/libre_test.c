@@ -97,7 +97,7 @@ main(int argc, char **argv)
       tiebrk, lufrag, lpwd, NULL, NULL) == 0);
     for (int i=0; testv[i].c != 0; i++) {
         const struct rtpp_command_argsp args = {.c=testv[i].c, .v=testv[i].v};
-        int err = rtpp_cand_decode(icem, &args);
+        int err = rtpp_cand_decode(icem, &args, NULL);
         assert(err == 0);
     }
     assert(icem_comp_alloc(&comp, icem, id, sock) == 0);

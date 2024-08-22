@@ -367,7 +367,7 @@ ice_lite_candidate(struct ice_lite_agent_cfg *ila_c, int c, const rtpp_str_t *v)
 {
     struct rtpp_command_argsp args = {.c = c, .v = v};
     pthread_mutex_lock(&ila_c->state_lock);
-    int err = rtpp_cand_decode(ila_c->icem, &args);
+    int err = rtpp_cand_decode(ila_c->icem, &args, RTPP_MOD_SELF.log);
     pthread_mutex_unlock(&ila_c->state_lock);
     return (err);
 }

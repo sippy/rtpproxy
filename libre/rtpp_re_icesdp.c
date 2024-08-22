@@ -16,11 +16,15 @@ struct stun_msg;
 #include "re_tmr.h"
 #include "ice/ice.h"
 
+#include "rtpp_types.h"
+#include "rtpp_log.h"
+#include "rtpp_log_obj.h"
 #include "rtpp_command_args.h"
 
 #define A2PL(a, i) S2PL(&(a)->v[i])
 //#define A2PL(a, i) S2PL((a)->v + i)
 #define S2PL(sp) (struct pl){.p=(sp)->s, .l=(sp)->len}
+#define PL4P(pl) ((int)(pl).l), (pl).p
 
 static enum ice_transp transp_resolve(const struct pl *transp)
 {
@@ -31,20 +35,21 @@ static enum ice_transp transp_resolve(const struct pl *transp)
 }
 
 int
-rtpp_cand_decode(struct icem *icem, const struct rtpp_command_argsp *args)
+rtpp_cand_decode(struct icem *icem, const struct rtpp_command_argsp *args,
+  struct rtpp_log *log)
 {
     static const char rel_addr_str[] = "raddr";
     static const char rel_port_str[] = "rport";
-	struct pl foundation, compid, transp, prio, addr, port, cand_type;
-	struct sa caddr, rel_addr;
-	char type[8];
-	uint8_t cid;
-	int err;
+    struct pl foundation, compid, transp, prio, addr, port, cand_type;
+    struct sa caddr, rel_addr;
+    char type[8];
+    uint8_t cid;
+    int err;
 
-	sa_init(&rel_addr, AF_INET);
+    sa_init(&rel_addr, AF_INET);
 
-	if (args->c < 8 || pl_strcasecmp(&A2PL(args, 6), "typ") != 0)
-		return EINVAL;
+    if (args->c < 8 || pl_strcasecmp(&A2PL(args, 6), "typ") != 0)
+        return EINVAL;
 
     foundation = A2PL(args, 0);
     compid = A2PL(args, 1);
@@ -55,12 +60,18 @@ rtpp_cand_decode(struct icem *icem, const struct rtpp_command_argsp *args)
     cand_type = A2PL(args, 7);
     struct rtpp_command_argsp extra = {.c = args->c - 8, .v = args->v + 8};
 
-	if (ICE_TRANSP_NONE == transp_resolve(&transp)) {
-		DEBUG_NOTICE("<%s> ignoring candidate with"
-			     " unknown transport=%r (%r:%r)\n",
-			     icem->name, &transp, &cand_type, &addr);
-		return EINVAL;
-	}
+    if (ICE_TRANSP_NONE == transp_resolve(&transp)) {
+        if (log == NULL) {
+            DEBUG_NOTICE("<%s> ignoring candidate with"
+              " unknown transport=%r (%r:%r)\n",
+              icem->name, &transp, &cand_type, &addr);
+        } else {
+            RTPP_LOG(log, RTPP_LOG_WARN, "<%s> ignoring candidate with"
+              " unknown transport=%.*s (%.*s:%.*s)",
+              icem->name, PL4P(transp), PL4P(cand_type), PL4P(addr));
+        }
+        return EINVAL;
+    }
 
     /* Loop through " SP attr SP value" pairs */
     while (extra.c >= 2) {
@@ -81,18 +92,18 @@ rtpp_cand_decode(struct icem *icem, const struct rtpp_command_argsp *args)
         }
     }
 
-	err = sa_set(&caddr, &addr, pl_u32(&port));
-	if (err)
-		return err;
+    err = sa_set(&caddr, &addr, pl_u32(&port));
+    if (err)
+        return err;
 
-	cid = pl_u32(&compid);
+    cid = pl_u32(&compid);
 
-	/* add only if not exist */
-	if (icem_cand_find(&icem->rcandl, cid, &caddr))
-		return 0;
+    /* add only if not exist */
+    if (icem_cand_find(&icem->rcandl, cid, &caddr))
+        return 0;
 
-	(void)pl_strcpy(&cand_type, type, sizeof(type));
+    (void)pl_strcpy(&cand_type, type, sizeof(type));
 
-	return icem_rcand_add(icem, ice_cand_name2type(type), cid,
-			      pl_u32(&prio), &caddr, &rel_addr, &foundation);
+    return icem_rcand_add(icem, ice_cand_name2type(type), cid,
+      pl_u32(&prio), &caddr, &rel_addr, &foundation);
 }
