@@ -431,9 +431,14 @@ jobs:
       BASE_IMAGE: ${{ matrix.base_image }}
       CCACHE_ROOT: ccache
       DOCKER_RW: ${{ ( github.repository == 'sippy/rtpproxy' && github.event_name != 'pull_request' ) && 'true' || 'false' }}
+      CCACHE_BIN_IMAGE: ghcr.io/sobomax/ccache:${{ matrix.ccache_bin_image }}
     strategy:
       matrix:
-        base_image: ['debian:12-slim', 'ubuntu:latest']
+        include:
+          - base_image: 'debian:12-slim'
+            ccache_bin_image: 'latest-debian-12'
+          - base_image: 'ubuntu:latest'
+            ccache_bin_image: 'latest-ubuntu-24.04'
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -471,16 +476,11 @@ jobs:
         CCACHE_IMAGE="${{ env.GHCR_REPO }}:${GIT_BRANCH}-${OS_TAG}-cccache"
         if ! docker pull ${CCACHE_IMAGE} 2>&1 >/dev/null
         then
-          _CCACHE_IMAGE="${{ env.DOCKER_REPO }}:${GIT_BRANCH}-${OS_TAG}-cccache"
-          if ! docker pull ${_CCACHE_IMAGE} 2>&1 >/dev/null
-          then
-            CCACHE_BIMAGE="scratch"
-          else
-            CCACHE_BIMAGE="${_CCACHE_IMAGE}"
-          fi
+          CCACHE_BIMAGE="scratch"
         else
           CCACHE_BIMAGE="${CCACHE_IMAGE}"
         fi
+        docker pull ${CCACHE_BIN_IMAGE}
         echo "CCACHE_IMAGE=${CCACHE_IMAGE}" >> $GITHUB_ENV
         echo "CCACHE_BIMAGE=${CCACHE_BIMAGE}" >> $GITHUB_ENV
         echo "BUILD_IMAGE=${{ env.LOCAL_REPO }}:latest-${OS_TAG}" >> $GITHUB_ENV
@@ -539,6 +539,7 @@ jobs:
           BASE_IMAGE=${{ env.BASE_IMAGE }}
           LIBG722_IMAGE=${{ env.LIBG722_IMAGE }}
           CCACHE_IMAGE=${{ env.CCACHE_BIMAGE }}
+          CCACHE_BIN_IMAGE=${{ env.CCACHE_BIN_IMAGE }}
           CCACHE_ROOT=${{ env.CCACHE_ROOT }}
           LIBSSL_APKG=${{ env.LIBSSL_APKG }}
         tags: ${{ env.BUILD_IMAGE }}
