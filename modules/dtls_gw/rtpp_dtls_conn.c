@@ -61,6 +61,7 @@
 #include "rtpp_codeptr.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
+#include "rtpp_refproxy.h"
 
 #include "rtpp_dtls_util.h"
 #include "rtpp_dtls_conn.h"
@@ -702,9 +703,15 @@ check_timer(struct rtpp_dtls_conn_priv *pvt)
         return (0);
     if (err == 1) {
         double to = timeval2dtime(&tv);
-
+        struct rtpp_refproxy *rp = rtpp_refproxy_ctor(3);
+        if (rp == NULL)
+            return (-1);
+        CALL_SMETHOD(rp, add, pvt->pub.rcnt);
+        CALL_SMETHOD(rp, add, pvt->dtls_strmp->rcnt);
+        CALL_SMETHOD(rp, add, RTPP_MOD_SELF.module_rcnt);
         pvt->ttp = CALL_SMETHOD(pvt->timed_cf, schedule_rc, to,
-          pvt->dtls_strmp->rcnt, rtpp_dtls_conn_timeout, NULL, pvt);
+          rp->rcnt, rtpp_dtls_conn_timeout, NULL, pvt);
+        RTPP_OBJ_DECREF(rp);
 
         if (pvt->ttp == NULL)
             return (-1);
