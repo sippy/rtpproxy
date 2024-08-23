@@ -68,8 +68,13 @@ then
   ldconfig
   perl -pi -e 's|^# deb-src|deb-src|' /etc/apt/sources.list
   ${APT_UPDATE}
-  install_src_pkg libssl-dev openssl
-  install_src_pkg libsrtp2-dev libsrtp2
+  if [ "${SANITIZER}" != "introspector" ]
+  then
+    install_src_pkg libssl-dev openssl
+    install_src_pkg libsrtp2-dev libsrtp2
+  else
+    ${APT_INSTALL} libsrtp2-dev
+  fi
   LIBSRTP="-L/usr/lib/x86_64-linux-gnu \
    -Wl,-Bstatic `pkg-config --libs --static libsrtp2` -lssl -lcrypto \
    -Wl,-Bdynamic -lpthread"
@@ -132,7 +137,7 @@ then
   cp -Rp ${OUT} build-out
 fi
 
-if [ "${OS}" != "FreeBSD" ]
+if [ "${OS}" != "FreeBSD" -a "${SANITIZER}" != "introspector" ]
 then
   apt-get reinstall -y libssl1.1
 fi
