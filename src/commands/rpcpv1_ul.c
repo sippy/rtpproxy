@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <assert.h>
 #include <ctype.h>
 #include <netdb.h>
 #include <stdatomic.h>
@@ -102,11 +103,30 @@ struct ul_opts {
     int onhold;
 };
 
+#define BC_snprintf(f, ...) { \
+    int _s = snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, \
+      f, ##__VA_ARGS__); \
+    assert(_s >= 0); \
+    if ((len + _s) > mxl) \
+        goto subc_nomem; \
+    len += _s; \
+}
+
+#define BC_memcpy(b) { \
+    int _s = (sizeof(b) - 1); \
+    if ((len + _s) > mxl) \
+        goto subc_nomem; \
+    memcpy(cmd->buf_t + len, b, _s); \
+    len += _s; \
+}
+
 void
 ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
 {
-    int len, rport;
+    int len, rport, maxlen = sizeof(cmd->buf_t) - 2;
     char saddr[MAX_ADDR_STRLEN];
+    const char subc_err[] = " && -1";
+    const char subc_ok[] = " && 0";
 
     if (ulr == NULL || ulr->ia == NULL || ishostnull(ulr->ia)) {
         rport = (ulr == NULL) ? 0 : ulr->port;
@@ -121,27 +141,31 @@ ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
               ulr->ia_ov, (ulr->ia->sa_family == AF_INET) ? "" : " 6");
         }
     }
+    int mxl = (maxlen - sizeof(subc_err) + 1);
+    assert(len >= 0 && len < mxl);
     int skipped = 0;
     for (int i = 0; i < cmd->subc.n; i++) {
         if (cmd->subc.res[i].result != 0) {
             while (skipped > 0) {
-                len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
-                  " && 0");
+                BC_memcpy(subc_ok);
                 skipped -= 1;
             }
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
-              " && %d", cmd->subc.res[i].result);
+            BC_snprintf(" && %d", cmd->subc.res[i].result);
         } else if (cmd->subc.res[i].buf_t[0] != '\0') {
             while (skipped > 0) {
-                len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
-                  " && 0");
+                BC_memcpy(subc_ok);
                 skipped -= 1;
             }
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len,
-              " && %s", cmd->subc.res[i].buf_t);
+            BC_snprintf(" && %s", cmd->subc.res[i].buf_t);
         } else {
             skipped += 1;
         }
+    }
+    if (0) {
+subc_nomem:
+        assert(sizeof(cmd->buf_t) - len >= sizeof(subc_err) + 1);
+        memcpy(cmd->buf_t + len, subc_err, sizeof(subc_err) - 1);
+        len += sizeof(subc_err) - 1;
     }
     cmd->buf_t[len] = '\n';
     len += 1;
