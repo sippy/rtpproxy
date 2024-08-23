@@ -56,3 +56,5 @@ rtpp_proc_wakeup_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.h $(RTPP_AU
 SRCS_AUTOGEN_DEBUG += $(rtpp_proc_wakeup_AUTOSRCS)
 rtpp_socket_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.c
 SRCS_AUTOGEN_DEBUG += $(rtpp_socket_AUTOSRCS)
+rtpp_refproxy_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.c
+SRCS_AUTOGEN_DEBUG += $(rtpp_refproxy_AUTOSRCS)
