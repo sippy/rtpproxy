@@ -27,7 +27,8 @@ RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_server.h rtpp_stats.h rtpp_stream.h rtpp_timed.h rtpp_pcount.h \
   rtpp_record.h rtpp_hash_table.h rtpp_weakref.h rtpp_analyzer.h \
   rtpp_pcnt_strm.h rtpp_ttl.h rtpp_pipe.h rtpp_ringbuf.h rtpp_sessinfo.h \
-  rtpp_rw_lock.h rtpp_proc_servers.h rtpp_proc_wakeup.h rtpp_socket.h
+  rtpp_rw_lock.h rtpp_proc_servers.h rtpp_proc_wakeup.h rtpp_socket.h \
+  rtpp_refproxy.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
 BASE_SOURCES=main.c rtp.h rtpp_server.c \
@@ -71,7 +72,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   $(CMDSRCDIR)/rpcpv1_norecord.c $(CMDSRCDIR)/rpcpv1_norecord.h \
   $(CMDSRCDIR)/rpcpv1_ul_subc.c $(CMDSRCDIR)/rpcpv1_ul_subc.h \
   $(RTPP_AUTOSRC_SOURCES) rtpp_epoll.c rtpp_str.c rtpp_str.h \
-  rtpp_sbuf.c rtpp_sbuf.h
+  rtpp_sbuf.c rtpp_sbuf.h rtpp_refproxy.c
 BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/pproc_manager.c \
   $(ADV_DIR)/pproc_manager.h
 BASE_SOURCES+=rtpp_modman.c

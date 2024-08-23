@@ -172,7 +172,7 @@ struct rtpp_minfo_fset {
     rtpp_module_strdup_t _strdup;
     rtpp_module_asprintf_t _asprintf;
     rtpp_module_vasprintf_t _vasprintf;
-    void *auxp[];
+    const void *auxp[];
 };
 
 struct rtpp_minfo {

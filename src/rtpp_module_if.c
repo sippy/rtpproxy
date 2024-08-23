@@ -78,6 +78,7 @@
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
+#include "rtpp_refproxy.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -141,7 +142,7 @@ static const struct rtpp_minfo_fset mip_model = {
     ._asprintf = &asprintf,
     ._vasprintf = &vasprintf,
     .auxp = {rtpp_sbuf_ctor, rtpp_sbuf_dtor, rtpp_sbuf_extend,
-             rtpp_sbuf_reset, rtpp_sbuf_write},
+             rtpp_sbuf_reset, rtpp_sbuf_write, rtpp_refproxy_ctor},
 #endif
 };
 
