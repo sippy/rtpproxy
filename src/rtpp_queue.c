@@ -246,6 +246,7 @@ struct rtpp_queue
     pthread_mutex_t mutex;
     unsigned int length;
     unsigned int qlen;
+    unsigned int mlen;
     circ_buf_t circb;
     char name[128];
 };
@@ -284,6 +285,7 @@ rtpp_queue_init(unsigned int cb_capacity, const char *fmt, ...)
         goto e4;
     }
     queue->qlen = 1;
+    queue->mlen = -1;
     queue->circb.buflen = cb_buflen;
     pthread_condattr_destroy(&cond_attr);
     return (queue);
@@ -297,6 +299,17 @@ e1:
     free(queue);
 e0:
     return (NULL);
+}
+
+int
+rtpp_queue_setmaxlen(struct rtpp_queue *queue, unsigned int new_mlen)
+{
+
+    pthread_mutex_lock(&queue->mutex);
+    int mlen = queue->mlen;
+    queue->mlen = new_mlen;
+    pthread_mutex_unlock(&queue->mutex);
+    return (mlen);
 }
 
 void
@@ -339,15 +352,20 @@ rtpp_queue_setqlen(struct rtpp_queue *queue, unsigned int qlen)
     return (rval);
 }
 
-void
+int
 rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *queue)
 {
+    int rval = 0;
 
     pthread_mutex_lock(&queue->mutex);
     /*
      * If queue is not empty, push to the queue so that order of elements
      * is preserved while pulling them out.
      */
+    if (queue->mlen != -1 && rtpp_queue_getclen(queue) >= queue->mlen) {
+        rval = -1;
+        goto out;
+    }
     if ((queue->length > 0) || (circ_buf_push(&queue->circb, wi) != 0)) {
         RTPPQ_APPEND(queue, wi);
 #if 0
@@ -361,7 +379,9 @@ rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *queue)
         pthread_cond_signal(&queue->cond);
     }
 
+out:
     pthread_mutex_unlock(&queue->mutex);
+    return (rval);
 }
 
 void
