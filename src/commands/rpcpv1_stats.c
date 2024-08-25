@@ -27,6 +27,7 @@
 
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -41,9 +42,10 @@
 #include "rtpp_command_private.h"
 #include "rtpp_stats.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_command_reply.h"
 
 #define CHECK_OVERFLOW() \
-    if (len > sizeof(cmd->buf_t) - 2) { \
+    if (aerr != 0) { \
         RTPP_LOG(cmd->glog, RTPP_LOG_ERR, \
           "STATS: output buffer overflow"); \
         return (ECODE_RTOOBIG_1); \
@@ -52,29 +54,27 @@
 int
 handle_get_stats(struct rtpp_stats *rsp, struct rtpp_command *cmd, int verbose)
 {
-    int len, i, rval;
+    int aerr = 0, i;
 
-    len = 0;
-    for (i = 1; i < cmd->args.c && len < (sizeof(cmd->buf_t) - 2); i++) {
+    for (i = 1; i < cmd->args.c && aerr == 0; i++) {
         if (i > 1) {
             CHECK_OVERFLOW();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, " ");
+            aerr = CALL_SMETHOD(cmd->reply, appendf, " ");
         }
         if (verbose != 0) {
             CHECK_OVERFLOW();
-            len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "%.*s=", \
+            aerr = CALL_SMETHOD(cmd->reply, appendf, "%.*s=", \
               FMTSTR(&cmd->args.v[i]));
         }
         CHECK_OVERFLOW();
-        rval = CALL_SMETHOD(rsp, nstr, cmd->buf_t + len,
-          sizeof(cmd->buf_t) - len, cmd->args.v[i].s);
-        if (rval < 0) {
+        aerr = CALL_SMETHOD(rsp, nstr, cmd->args.v[i].s, cmd->reply);
+        if (aerr != 0) {
             return (ECODE_STSFAIL);
         }
-        len += rval;
     }
     CHECK_OVERFLOW();
-    len += snprintf(cmd->buf_t + len, sizeof(cmd->buf_t) - len, "\n");
-    rtpc_doreply(cmd, cmd->buf_t, len, 0);
+    assert(CALL_SMETHOD(cmd->reply, append, "\n", 2, 1) == 0);
+    CALL_SMETHOD(cmd->reply, commit);
+    CALL_SMETHOD(cmd->reply, deliver, 0);
     return (0);
 }

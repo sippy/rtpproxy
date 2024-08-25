@@ -110,6 +110,8 @@ taint(struct rtpp_wi *p) {
     asm volatile ("" : : "m" (*p));
 }
 
+const struct rtpc_reply_smethods *const rtpc_reply_smethods;
+
 static enum rtpp_timed_cb_rvals
 update_derived_stats(double dtime, void *argp)
 {

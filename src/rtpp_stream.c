@@ -80,6 +80,7 @@
 #include "rtpp_codeptr.h"
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
+#include "rtpp_command_stats.h"
 
 #define  SEQ_SYNC_IVAL   1.0    /* in seconds */
 
@@ -522,7 +523,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
             goto e2;
         }
         pthread_mutex_unlock(&pvt->lock);
-        cmd->csp->nplrs_created.cnt++;
+        rtpp_command_get_stats(cmd)->nplrs_created.cnt++;
         CALL_SMETHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           pvt->rtpp_stats);
         RTPP_OBJ_DECREF(rsrv);

@@ -39,6 +39,7 @@
 #include "rtpp_command.h"
 #include "rtpp_command_ecodes.h"
 #include "commands/rpcpv1_play.h"
+#include "rtpp_command_reply.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
@@ -60,7 +61,7 @@ rtpp_command_play_opts_parse(struct rtpp_command *cmd)
 
     plop = rtpp_zmalloc(sizeof(struct play_opts));
     if (plop == NULL) {
-        reply_error(cmd, ECODE_NOMEM_1);
+        CALL_SMETHOD(cmd->reply, error, ECODE_NOMEM_1);
         goto err_undo_0;
     }
     plop->count = 1;
@@ -71,7 +72,7 @@ rtpp_command_play_opts_parse(struct rtpp_command *cmd)
         plop->count = strtol(tcp, &cp, 10);
         if (cp == tcp || *cp != '\0') {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
-            reply_error(cmd, ECODE_PARSE_6);
+            CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_6);
             goto err_undo_1;
         }
     }
@@ -101,7 +102,7 @@ rtpp_command_play_handle(struct rtpp_stream *rsp, struct rtpp_command *cmd)
     plop = cmd->cca.opts.play;
     if (strcmp(plop->codecs->s, "session") == 0) {
         if (rsp->codecs == NULL) {
-            reply_error(cmd, ECODE_INVLARG_5);
+            CALL_SMETHOD(cmd->reply, error, ECODE_INVLARG_5);
             goto freeplop;
         }
         codecs = rsp->codecs;
@@ -112,10 +113,10 @@ rtpp_command_play_handle(struct rtpp_stream *rsp, struct rtpp_command *cmd)
     }
     if (plop->count != 0 && CALL_SMETHOD(rsp, handle_play, codecs,
       plop->pname->s, plop->count, cmd, ptime) != 0) {
-        reply_error(cmd, ECODE_PLRFAIL);
+        CALL_SMETHOD(cmd->reply, error, ECODE_PLRFAIL);
         goto freeplop;
     }
-    reply_ok(cmd);
+    CALL_SMETHOD(cmd->reply, ok);
 freeplop:
     rtpp_command_play_opts_free(plop);
 }

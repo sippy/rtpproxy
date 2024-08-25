@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2014 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2006-2014 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,34 +28,21 @@
 
 #pragma once
 
-struct rtpc_reply;
-
-#if !defined(DECLARE_CLASS)
-#error "rtpp_types.h" needs to be included
-#endif
-
-DECLARE_CLASS(rtpp_stats, void);
-
-DECLARE_METHOD(rtpp_stats, rtpp_stats_getidxbyname, int, const char *);
-DECLARE_METHOD(rtpp_stats, rtpp_stats_updatebyidx, int, int, uint64_t);
-DECLARE_METHOD(rtpp_stats, rtpp_stats_updatebyname, int, const char *, uint64_t);
-DECLARE_METHOD(rtpp_stats, rtpp_stats_updatebyname_d, int, const char *, double);
-DECLARE_METHOD(rtpp_stats, rtpp_stats_getlvalbyname, int64_t, const char *);
-DECLARE_METHOD(rtpp_stats, rtpp_stats_nstr, int, const char *, struct rtpc_reply *);
-DECLARE_METHOD(rtpp_stats, rtpp_stats_getnstats, int);
-DECLARE_METHOD(rtpp_stats, rtpp_stats_update_derived, void, double);
-
-DECLARE_SMETHODS(rtpp_stats) {
-    METHOD_ENTRY(rtpp_stats_getidxbyname, getidxbyname);
-    METHOD_ENTRY(rtpp_stats_updatebyidx, updatebyidx);
-    METHOD_ENTRY(rtpp_stats_updatebyname, updatebyname);
-    METHOD_ENTRY(rtpp_stats_updatebyname_d, updatebyname_d);
-    METHOD_ENTRY(rtpp_stats_getlvalbyname, getlvalbyname);
-    METHOD_ENTRY(rtpp_stats_getnstats, getnstats);
-    METHOD_ENTRY(rtpp_stats_nstr, nstr);
-    METHOD_ENTRY(rtpp_stats_update_derived, update_derived);
+struct rtpp_command_stat {
+    uint64_t cnt;
+    int cnt_idx;
 };
 
-DECLARE_CLASS_PUBTYPE(rtpp_stats, {
-    struct rtpp_stats_priv *pvt;
-});
+struct rtpp_command_stats {
+    struct rtpp_command_stat ncmds_rcvd;
+    struct rtpp_command_stat ncmds_rcvd_ndups;
+    struct rtpp_command_stat ncmds_succd;
+    struct rtpp_command_stat ncmds_errs;
+    struct rtpp_command_stat ncmds_repld;
+
+    struct rtpp_command_stat nsess_complete;
+    struct rtpp_command_stat nsess_created;
+
+    struct rtpp_command_stat nplrs_created;
+    struct rtpp_command_stat nplrs_destroyed;
+};

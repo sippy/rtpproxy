@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2007 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2006-2024 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,43 +23,36 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
 
-#ifndef _RTPP_COMMAND_H_
-#define _RTPP_COMMAND_H_
+#pragma once
 
-struct rtpp_cfg;
-struct rtpp_command;
-struct rtpp_command_stats;
+struct rtpp_command_ctx;
 struct sockaddr;
-struct rtpp_cmd_rcache;
-struct rtpp_socket;
-struct rtpp_ctrl_sock;
-struct rtpp_timestamp;
 
-#define GET_CMD_OK     (0)
-#define GET_CMD_IOERR  (-1)
-#define GET_CMD_EOF    (-2)
-#define GET_CMD_ENOMEM (-3)
-#define GET_CMD_EAGAIN (-4)
-#define GET_CMD_INVAL (-5)
+#define IS_WEIRD_ERRNO(e) ((e) == EINTR || (e) == EAGAIN || (e) == ENOBUFS)
 
-#define RTPP_CMD_BUFLEN (8 * 1024)
+DECLARE_CLASS(rtpc_reply, const struct rtpp_command_ctx *);
 
-int handle_command(const struct rtpp_cfg *, struct rtpp_command *);
-void free_command(struct rtpp_command *);
-struct rtpp_command *get_command(const struct rtpp_cfg *, struct rtpp_ctrl_sock *, int, int *,
-  const struct rtpp_timestamp *, struct rtpp_command_stats *csp,
-  struct rtpp_cmd_rcache *);
-int rtpp_create_listener(const struct rtpp_cfg *, const struct sockaddr *, int *,
-  struct rtpp_socket **) RTPP_EXPORT;
-struct rtpp_command *rtpp_command_ctor(const struct rtpp_cfg *, int, const struct rtpp_timestamp *,
-  struct rtpp_command_stats *, int);
-int rtpp_command_split(struct rtpp_command *, int, int *, struct rtpp_cmd_rcache *);
-void rtpp_command_set_raddr(struct rtpp_command *, const struct sockaddr *, socklen_t);
-struct rtpp_sockaddr rtpp_command_get_raddr(const struct rtpp_command *);
-struct rtpp_command_stats *rtpp_command_get_stats(const struct rtpp_command *);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_error, void, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_ok, void);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_number, void, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver, void, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_append, int, const char *,
+  int, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_appendf, int, const char *,
+  ...) __attribute__ ((format (printf, 2, 3)));
+DECLARE_METHOD(rtpc_reply, rtpc_reply_commit, void);
 
+DECLARE_SMETHODS(rtpc_reply)
+{
+    METHOD_ENTRY(rtpc_reply_error, error);
+    METHOD_ENTRY(rtpc_reply_ok, ok);
+    METHOD_ENTRY(rtpc_reply_number, number);
+    METHOD_ENTRY(rtpc_reply_deliver, deliver);
+    METHOD_ENTRY(rtpc_reply_append, append);
+    METHOD_ENTRY(rtpc_reply_appendf, appendf);
+    METHOD_ENTRY(rtpc_reply_commit, commit);
+};
 
-#endif
+DECLARE_CLASS_PUBTYPE(rtpc_reply, {});

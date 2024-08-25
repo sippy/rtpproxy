@@ -42,6 +42,7 @@
 #include "rtpp_stats_fin.h"
 #include "rtpp_time.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_command_reply.h"
 
 struct rtpp_stat_derived;
 
@@ -132,7 +133,7 @@ static int rtpp_stats_updatebyidx(struct rtpp_stats *, int, uint64_t);
 static int rtpp_stats_updatebyname(struct rtpp_stats *, const char *, uint64_t);
 static int rtpp_stats_updatebyname_d(struct rtpp_stats *, const char *, double);
 static int64_t rtpp_stats_getlvalbyname(struct rtpp_stats *, const char *);
-static int rtpp_stats_nstr(struct rtpp_stats *, char *, int, const char *);
+static int rtpp_stats_nstr(struct rtpp_stats *, const char *, struct rtpc_reply *);
 static int rtpp_stats_getnstats(struct rtpp_stats *);
 static void rtpp_stats_update_derived(struct rtpp_stats *, double);
 
@@ -334,7 +335,7 @@ rtpp_stats_getlvalbyname(struct rtpp_stats *self, const char *name)
 }
 
 static int
-rtpp_stats_nstr(struct rtpp_stats *self, char *buf, int len, const char *name)
+rtpp_stats_nstr(struct rtpp_stats *self, const char *name, struct rtpc_reply *rrp)
 {
     struct rtpp_stats_priv *pvt;
     struct rtpp_stat *st;
@@ -350,12 +351,12 @@ rtpp_stats_nstr(struct rtpp_stats *self, char *buf, int len, const char *name)
     st = &pvt->stats[idx];
     if (pvt->stats[idx].descr->type == RTPP_CNT_U64) {
         uval = atomic_load_explicit(&st->cnt.u64, memory_order_relaxed);
-        rval = snprintf(buf, len, "%" PRIu64, uval);
+        rval = CALL_SMETHOD(rrp, appendf, "%" PRIu64, uval);
     } else {
         pthread_mutex_lock(&st->mutex);
         dval = st->cnt.d;
         pthread_mutex_unlock(&st->mutex);
-        rval = snprintf(buf, len, "%f", dval);
+        rval = CALL_SMETHOD(rrp, appendf, "%f", dval);
     }
     return (rval);
 }

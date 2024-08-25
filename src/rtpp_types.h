@@ -108,6 +108,7 @@ extern const struct pproc_manager_smethods * const pproc_manager_smethods RTPP_E
 extern const struct rtpp_dtls_conn_smethods * const rtpp_dtls_conn_smethods;
 extern const struct rtpp_socket_smethods * const rtpp_socket_smethods;
 extern const struct rtpp_refproxy_smethods * const rtpp_refproxy_smethods RTPP_EXPORT;
+extern const struct rtpc_reply_smethods * const rtpc_reply_smethods;
 
 #define GET_SMETHODS(obj) _Generic((obj), \
     struct rtpp_refcnt *: rtpp_refcnt_smethods, \
@@ -133,7 +134,8 @@ extern const struct rtpp_refproxy_smethods * const rtpp_refproxy_smethods RTPP_E
     struct pproc_manager *: pproc_manager_smethods, \
     struct rtpp_dtls_conn *: rtpp_dtls_conn_smethods, \
     struct rtpp_socket *: rtpp_socket_smethods, \
-    struct rtpp_refproxy *: rtpp_refproxy_smethods \
+    struct rtpp_refproxy *: rtpp_refproxy_smethods, \
+    struct rtpc_reply *: rtpc_reply_smethods \
 )
 
 #if defined(RTPP_DEBUG)
