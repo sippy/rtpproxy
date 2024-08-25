@@ -58,3 +58,5 @@ rtpp_socket_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.h $(RTPP_AUTOSRC_DIR)
 SRCS_AUTOGEN_DEBUG += $(rtpp_socket_AUTOSRCS)
 rtpp_refproxy_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.c
 SRCS_AUTOGEN_DEBUG += $(rtpp_refproxy_AUTOSRCS)
+rtpp_command_reply_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.c
+SRCS_AUTOGEN_DEBUG += $(rtpp_command_reply_AUTOSRCS)
