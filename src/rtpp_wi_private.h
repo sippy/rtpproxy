@@ -39,7 +39,7 @@ struct rtpp_wi_pvt {
     int flags;
     struct sockaddr *sendto;
     socklen_t tolen;
-    void *msg;
+    const void *msg;
     int nsend;
     int debug;
     struct rtpp_log *log;
