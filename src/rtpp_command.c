@@ -369,20 +369,23 @@ rtpp_command_guard_retrans(struct rtpp_command *cmd,
 {
     size_t len;
     struct rtpp_command_priv *pvt;
+    struct rtpp_cmd_rcache_entry *cres;
 
     PUB2PVT(cmd, pvt);
-    if (CALL_METHOD(rcache_obj, lookup, rtpp_str_fix(&pvt->cookie), pvt->buf_r,
-      sizeof(pvt->buf_r)) == 1) {
-        len = strlen(pvt->buf_r);
-        rtpp_anetio_sendto(pvt->cfs->rtpp_proc_cf->netio, pvt->controlfd,
-          pvt->buf_r, len, 0, sstosa(&cmd->raddr), cmd->rlen);
-        cmd->csp->ncmds_rcvd.cnt--;
-        cmd->csp->ncmds_rcvd_ndups.cnt++;
-        return (1);
+    cres = CALL_METHOD(rcache_obj, lookup, rtpp_str_fix(&pvt->cookie));
+    if (cres == NULL) {
+        RTPP_OBJ_INCREF(rcache_obj);
+        pvt->rcache_obj = rcache_obj;
+        return (0);
     }
-    RTPP_OBJ_INCREF(rcache_obj);
-    pvt->rcache_obj = rcache_obj;
-    return (0);
+    len = strlen(cres->reply);
+    int r = rtpp_anetio_sendto_na(pvt->cfs->rtpp_proc_cf->netio, pvt->controlfd,
+      cres->reply, len, 0, sstosa(&cmd->raddr), cmd->rlen, cres->rcnt);
+    if (r != 0)
+        RTPP_OBJ_DECREF(cres);
+    cmd->csp->ncmds_rcvd.cnt--;
+    cmd->csp->ncmds_rcvd_ndups.cnt++;
+    return (1);
 }
 
 int

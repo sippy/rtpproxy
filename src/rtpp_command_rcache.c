@@ -53,19 +53,16 @@ struct rtpp_cmd_rcache_pvt {
     int timeout_rval;
 };
 
-struct rtpp_cmd_rcache_entry {
+struct rtpp_cmd_rcache_entry_pvt {
+    struct rtpp_cmd_rcache_entry pub;
     char *reply;
     double etime;
-    struct {
-        struct rtpp_refcnt *rcnt;
-    } pub;
 };
 
 static enum rtpp_timed_cb_rvals rtpp_cmd_rcache_cleanup(double, void *);
 static void rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *, const rtpp_str_t *,
   const char *, double);
-int rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *, const rtpp_str_t *,
-  char *, int);
+struct rtpp_cmd_rcache_entry *rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *, const rtpp_str_t *);
 static void rtpp_cmd_rcache_dtor(struct rtpp_cmd_rcache_pvt *);
 static void rtpp_cmd_rcache_shutdown(struct rtpp_cmd_rcache *);
 
@@ -112,9 +109,9 @@ e0:
 static void
 rtpp_cmd_rcache_entry_free(void *p)
 {
-    struct rtpp_cmd_rcache_entry *rep;
+    struct rtpp_cmd_rcache_entry_pvt *rep;
 
-    rep = (struct rtpp_cmd_rcache_entry *)p;
+    rep = (struct rtpp_cmd_rcache_entry_pvt *)p;
     free(rep->reply);
     free(rep);
 }
@@ -124,14 +121,14 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const rtpp_str_t *cookie,
   const char *reply, double ctime)
 {
     struct rtpp_cmd_rcache_pvt *pvt;
-    struct rtpp_cmd_rcache_entry *rep;
+    struct rtpp_cmd_rcache_entry_pvt *rep;
 
-    pvt = (struct rtpp_cmd_rcache_pvt *)pub;
-    rep = rtpp_rzmalloc(sizeof(struct rtpp_cmd_rcache_entry), PVT_RCOFFS(rep));
+    PUB2PVT(pub, pvt);
+    rep = rtpp_rzmalloc(sizeof(struct rtpp_cmd_rcache_entry_pvt), PVT_RCOFFS(rep));
     if (rep == NULL) {
         return;
     }
-    rep->reply = strdup(reply);
+    rep->pub.reply = rep->reply = strdup(reply);
     if (rep->reply == NULL) {
         goto e1;
     }
@@ -150,27 +147,24 @@ e1:
     free(rep);
 }
 
-int
-rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *pub, const rtpp_str_t *cookie,
-  char *rbuf, int rblen)
+struct rtpp_cmd_rcache_entry *
+rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *pub, const rtpp_str_t *cookie)
 {
     struct rtpp_cmd_rcache_pvt *pvt;
     struct rtpp_cmd_rcache_entry *rep;
     struct rtpp_refcnt *rco;
 
-    pvt = (struct rtpp_cmd_rcache_pvt *)pub;
+    PUB2PVT(pub, pvt);
     rco = CALL_SMETHOD(pvt->ht, find_str, cookie);
     if (rco == NULL) {
-        return (0);
+        return (NULL);
     }
     /*
      * "find" method returns object that has been incref'ed, so make sure
      * to decref when we've done with it.
      */
     rep = CALL_SMETHOD(rco, getdata);
-    strlcpy(rbuf, rep->reply, rblen);
-    RC_DECREF(rco);
-    return (1);
+    return (rep);
 }
 
 static void
@@ -178,7 +172,7 @@ rtpp_cmd_rcache_shutdown(struct rtpp_cmd_rcache *pub)
 {
     struct rtpp_cmd_rcache_pvt *pvt;
 
-    pvt = (struct rtpp_cmd_rcache_pvt *)pub;
+    PUB2PVT(pub, pvt);
     pvt->timeout_rval = CB_LAST;
     CALL_METHOD(pvt->timeout, cancel);
     RTPP_OBJ_DECREF(pvt->timeout);
@@ -197,7 +191,7 @@ rtpp_cmd_rcache_dtor(struct rtpp_cmd_rcache_pvt *pvt)
 static int
 rtpp_cmd_rcache_ematch(void *dp, void *ap)
 {
-    struct rtpp_cmd_rcache_entry *rep;
+    struct rtpp_cmd_rcache_entry_pvt *rep;
     double *ctimep;
 
     /*
@@ -205,7 +199,7 @@ rtpp_cmd_rcache_ematch(void *dp, void *ap)
      * context of the rtpp_hash_table, which hold its own ref.
      */
     ctimep = (double *)ap;
-    rep = (struct rtpp_cmd_rcache_entry *)dp;
+    rep = (struct rtpp_cmd_rcache_entry_pvt *)dp;
     if (rep->etime < *ctimep) {
         return (RTPP_HT_MATCH_DEL);
     }

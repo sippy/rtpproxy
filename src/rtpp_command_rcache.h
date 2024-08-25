@@ -33,7 +33,8 @@ struct rtpp_cmd_rcache;
 
 DEFINE_METHOD(rtpp_cmd_rcache, rcache_insert, void, const rtpp_str_t *,
   const char *, double);
-DEFINE_METHOD(rtpp_cmd_rcache, rcache_lookup, int, const rtpp_str_t *, char *, int);
+DEFINE_METHOD(rtpp_cmd_rcache, rcache_lookup, struct rtpp_cmd_rcache_entry *,
+  const rtpp_str_t *);
 DEFINE_METHOD(rtpp_cmd_rcache, rcache_shutdown, void);
 
 struct rtpp_cmd_rcache {
@@ -41,6 +42,11 @@ struct rtpp_cmd_rcache {
     METHOD_ENTRY(rcache_lookup, lookup);
     METHOD_ENTRY(rcache_shutdown, shutdown);
     struct rtpp_refcnt *rcnt;
+};
+
+struct rtpp_cmd_rcache_entry {
+    struct rtpp_refcnt *rcnt;
+    const char *reply;
 };
 
 struct rtpp_timed;
