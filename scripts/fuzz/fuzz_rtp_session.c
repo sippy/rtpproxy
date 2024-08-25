@@ -64,6 +64,8 @@ LLVMFuzzerInitialize(int *_argc, char ***_argv)
         goto e0;
     if (ExecuteScript() != 0)
         goto e1;
+    if (ExecuteRTPPCommand(&gconf, "X", 1) != 0)
+        goto e1;
     atexit(fuzz_ctx_dtor);
     return (0);
 e1:
@@ -130,7 +132,6 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
     struct {
         union {
             struct {
-                uint8_t reset:1;
                 uint8_t reseed:1;
             };
             uint8_t value;
@@ -147,10 +148,8 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
     if (op_flags.reseed) {
         SeedRNGs();
     }
-    if (op_flags.reset) {
-        assert(ExecuteRTPPCommand(&gconf, "X", 1) == 0);
-        assert(ExecuteScript() == 0);
-    }
+
+    assert(ExecuteScript() == 0);
 
     struct rfz_chunk chunk = {.rem_size = size, .rem_data = data};
     struct foreach_args fa = {.rsp = &rs};
@@ -167,5 +166,7 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
     } while (chunk.rem_size > 1);
     for (int i = 0; i < fa.nwait; i++)
         sem_wait(wpdp);
+
+    assert(ExecuteRTPPCommand(&gconf, "X", 1) == 0);
     return (0);
 }
