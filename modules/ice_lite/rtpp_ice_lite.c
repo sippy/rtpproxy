@@ -138,7 +138,10 @@ struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.module_id = 5,
     .proc.ctor = rtpp_ice_lite_ctor,
     .proc.dtor = rtpp_ice_lite_dtor,
-    .wapi = &(const struct rtpp_wthr_handlers){.main_thread = rtpp_ice_lite_worker},
+    .wapi = &(const struct rtpp_wthr_handlers){
+        .main_thread = rtpp_ice_lite_worker,
+        .queue_size = RTPQ_MEDIUM_CB_LEN,
+     },
     .capi = &(const struct rtpp_cplane_handlers){.ul_subc_handle = rtpp_ice_lite_handle_command},
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM
@@ -680,14 +683,18 @@ rtpp_ice_lite_enqueue(const struct pkt_proc_ctx *pktx)
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
         return (PPROC_ACT_DROP);
-    RTPP_OBJ_INCREF(pktx->pktp);
     wip->pkt = pktx->pktp;
     RTPP_OBJ_INCREF(ila_c);
     wip->ila_c = ila_c;
     RTPP_OBJ_INCREF(pktx->strmp_in);
     wip->strmp_in = pktx->strmp_in;
-    rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q);
-    return (PPROC_ACT_DROP);
+    if (rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q) != 0) {
+        RTPP_OBJ_DECREF(ila_c);
+        RTPP_OBJ_DECREF(pktx->strmp_in);
+        RTPP_OBJ_DECREF(wi);
+        return (PPROC_ACT_DROP);
+    }
+    return (PPROC_ACT_TAKE);
 }
 
 static struct pproc_act

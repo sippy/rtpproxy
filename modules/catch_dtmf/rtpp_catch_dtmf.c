@@ -115,7 +115,10 @@ struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.module_id = 3,
     .proc.ctor = rtpp_catch_dtmf_ctor,
     .proc.dtor = rtpp_catch_dtmf_dtor,
-    .wapi = &(const struct rtpp_wthr_handlers){.main_thread = rtpp_catch_dtmf_worker},
+    .wapi = &(const struct rtpp_wthr_handlers){
+        .main_thread = rtpp_catch_dtmf_worker,
+        .queue_size = RTPQ_MEDIUM_CB_LEN,
+    },
     .capi = &(const struct rtpp_cplane_handlers){.ul_subc_handle = rtpp_catch_dtmf_handle_command},
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM
@@ -438,7 +441,13 @@ rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *pktx)
     wip->pkt = pktx->pktp;
     RTPP_OBJ_INCREF(rtps_c->rtdp);
     wip->rtdp = rtps_c->rtdp;
-    rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q);
+    if (rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q) != 0) {
+        RTPP_OBJ_DECREF(rtps_c->rtdp);
+        RTPP_OBJ_DECREF(rtps_c->edata);
+        RTPP_OBJ_DECREF(pktx->pktp);
+        RTPP_OBJ_DECREF(wi);
+        return (PPROC_ACT_DROP);
+    }
     return (PPROC_ACT(atomic_load(&(rtps_c->act))));
 }
 

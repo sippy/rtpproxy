@@ -274,11 +274,15 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     if (pvt->mip->wthr.sigterm == NULL) {
         goto e3;
     }
-    pvt->mip->wthr.mod_q = rtpp_queue_init(RTPQ_SMALL_CB_LEN, "rtpp_module_if(%s)",
+    int qsize = RTPQ_SMALL_CB_LEN;
+    if (pvt->mip->wapi != NULL && pvt->mip->wapi->queue_size > 0)
+        qsize = pvt->mip->wapi->queue_size;
+    pvt->mip->wthr.mod_q = rtpp_queue_init(qsize, "rtpp_module_if(%s)",
       pvt->mip->descr.name);
     if (pvt->mip->wthr.mod_q == NULL) {
         goto e4;
     }
+    rtpp_queue_setmaxlen(pvt->mip->wthr.mod_q, RTPQ_SMALL_CB_LEN * 8);
     RTPP_OBJ_INCREF(log);
     pvt->mip->log = log;
     if (pvt->mip->aapi != NULL) {
@@ -339,7 +343,10 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
         if (pvt->started != 0) {
             /* First, stop the worker thread */
             RTPP_OBJ_INCREF(pvt->mip->wthr.sigterm);
-            rtpp_queue_put_item(pvt->mip->wthr.sigterm, pvt->mip->wthr.mod_q);
+            for (int r = -1; r < 0;) {
+                r = rtpp_queue_put_item(pvt->mip->wthr.sigterm,
+                  pvt->mip->wthr.mod_q);
+            }
         }
     }
 }
@@ -436,7 +443,12 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
         return;
     }
     RTPP_OBJ_INCREF(acct);
-    rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q);
+    if (rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q) == 0)
+        return;
+    RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': accounting queue "
+      "is full", pvt->mip->descr.name);
+    RTPP_OBJ_DECREF(acct);
+    RTPP_OBJ_DECREF(wi);
 }
 
 static void
@@ -453,7 +465,12 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
         RTPP_OBJ_DECREF(acct);
         return;
     }
-    rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q);
+    if (rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q) == 0)
+        return;
+    RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': accounting queue "
+      "is full", pvt->mip->descr.name);
+    RTPP_OBJ_DECREF(acct);
+    RTPP_OBJ_DECREF(wi);
 }
 
 #define PTH_CB(x) ((void *(*)(void *))(x))

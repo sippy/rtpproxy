@@ -125,7 +125,10 @@ struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.module_id = 4,
     .proc.ctor = rtpp_dtls_gw_ctor,
     .proc.dtor = rtpp_dtls_gw_dtor,
-    .wapi = &(const struct rtpp_wthr_handlers){.main_thread = rtpp_dtls_gw_worker},
+    .wapi = &(const struct rtpp_wthr_handlers){
+        .main_thread = rtpp_dtls_gw_worker,
+        .queue_size = RTPQ_MEDIUM_CB_LEN,
+    },
     .capi = &(const struct rtpp_cplane_handlers){.ul_subc_handle = rtpp_dtls_gw_handle_command},
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM
@@ -511,7 +514,14 @@ rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *pktxp)
     RTPP_OBJ_INCREF(pktxp->strmp_in);
     if (pktxp->strmp_out != NULL)
         RTPP_OBJ_INCREF(pktxp->strmp_out);
-    rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q);
+    if (rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q) != 0) {
+        if (pktxp->strmp_out != NULL)
+            RTPP_OBJ_DECREF(pktxp->strmp_out);
+        RTPP_OBJ_DECREF(pktxp->strmp_in);
+        RTPP_OBJ_DECREF(edata->dtls_conn);
+        RTPP_OBJ_DECREF(wi);
+        return (PPROC_ACT_DROP);
+    }
 
     return (PPROC_ACT_TAKE);
 }

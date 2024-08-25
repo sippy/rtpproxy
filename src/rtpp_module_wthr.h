@@ -30,6 +30,7 @@
 DEFINE_RAW_METHOD(rtpp_module_worker, void, const struct rtpp_wthrdata *wp);
 
 struct rtpp_wthr_handlers {
+    int queue_size;
     rtpp_module_worker_t main_thread;
 };
 
