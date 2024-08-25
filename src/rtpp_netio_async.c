@@ -176,16 +176,9 @@ out:
     return;
 }
 
-int
-rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
-  size_t msg_len, int flags, const struct sockaddr *sendto, socklen_t tolen)
+static void
+rtpp_anetio_sendto_debug(struct rtpp_anetio_cf *netio_cf, struct rtpp_wi *wi)
 {
-    struct rtpp_wi *wi;
-
-    wi = rtpp_wi_malloc(sock, msg, msg_len, flags, sendto, tolen);
-    if (wi == NULL) {
-        return (-1);
-    }
 #if RTPP_DEBUG_netio >= 1
     struct rtpp_wi_pvt *wipp;
     PUB2PVT(wi, wipp);
@@ -199,6 +192,35 @@ rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
       wipp->sock, wipp->msg, wipp->msg_len, wipp->flags, wipp->sendto, wipp->tolen);
 #endif
 #endif
+}
+
+int
+rtpp_anetio_sendto(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
+  size_t msg_len, int flags, const struct sockaddr *sendto, socklen_t tolen)
+{
+    struct rtpp_wi *wi;
+
+    wi = rtpp_wi_malloc(sock, msg, msg_len, flags, sendto, tolen);
+    if (wi == NULL) {
+        return (-1);
+    }
+    rtpp_anetio_sendto_debug(netio_cf, wi);
+    rtpp_queue_put_item(wi, netio_cf->args[0].out_q);
+    return (0);
+}
+
+int
+rtpp_anetio_sendto_na(struct rtpp_anetio_cf *netio_cf, int sock, const void *msg, \
+  size_t msg_len, int flags, const struct sockaddr *sendto, socklen_t tolen, \
+  struct rtpp_refcnt *data_rcnt)
+{
+    struct rtpp_wi *wi;
+
+    wi = rtpp_wi_malloc_na(sock, msg, msg_len, flags, sendto, tolen, data_rcnt);
+    if (wi == NULL) {
+        return (-1);
+    }
+    rtpp_anetio_sendto_debug(netio_cf, wi);
     rtpp_queue_put_item(wi, netio_cf->args[0].out_q);
     return (0);
 }
