@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define DEBUG_MODULE "icesdp"
 #define DEBUG_LEVEL 5
@@ -22,7 +23,6 @@ struct stun_msg;
 #include "rtpp_command_args.h"
 
 #define A2PL(a, i) S2PL(&(a)->v[i])
-//#define A2PL(a, i) S2PL((a)->v + i)
 #define S2PL(sp) (struct pl){.p=(sp)->s, .l=(sp)->len}
 #define PL4P(pl) ((int)(pl).l), (pl).p
 
@@ -45,8 +45,6 @@ rtpp_cand_decode(struct icem *icem, const struct rtpp_command_argsp *args,
     char type[8];
     uint8_t cid;
     int err;
-
-    sa_init(&rel_addr, AF_INET);
 
     if (args->c < 8 || pl_strcasecmp(&A2PL(args, 6), "typ") != 0)
         return EINVAL;
@@ -71,6 +69,14 @@ rtpp_cand_decode(struct icem *icem, const struct rtpp_command_argsp *args,
               icem->name, PL4P(transp), PL4P(cand_type), PL4P(addr));
         }
         return EINVAL;
+    }
+    /* "When parsing this field, an agent can differentiate an IPv4
+        address and an IPv6 address by presence of a colon in its value -
+        the presence of a colon indicates IPv6." */
+    if (memchr(addr.p, ':', addr.l)) {
+        sa_init(&rel_addr, AF_INET6);
+    } else {
+        sa_init(&rel_addr, AF_INET);
     }
 
     /* Loop through " SP attr SP value" pairs */
