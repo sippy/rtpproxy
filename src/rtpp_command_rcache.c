@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "rtpp_types.h"
+#include "rtpp_str.h"
 #include "rtpp_command_rcache.h"
 #include "rtpp_command_rcache_fin.h"
 #include "rtpp_hash_table.h"
@@ -55,13 +56,14 @@ struct rtpp_cmd_rcache_pvt {
 
 struct rtpp_cmd_rcache_entry_pvt {
     struct rtpp_cmd_rcache_entry pub;
-    char *reply;
+    rtpp_str_const_t reply;
+    struct rtpp_refcnt *reply_rcnt;
     double etime;
 };
 
 static enum rtpp_timed_cb_rvals rtpp_cmd_rcache_cleanup(double, void *);
 static void rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *, const rtpp_str_t *,
-  const char *, double);
+  const rtpp_str_t *, struct rtpp_refcnt *, double);
 struct rtpp_cmd_rcache_entry *rtpp_cmd_rcache_lookup(struct rtpp_cmd_rcache *, const rtpp_str_t *);
 static void rtpp_cmd_rcache_dtor(struct rtpp_cmd_rcache_pvt *);
 static void rtpp_cmd_rcache_shutdown(struct rtpp_cmd_rcache *);
@@ -112,13 +114,13 @@ rtpp_cmd_rcache_entry_free(void *p)
     struct rtpp_cmd_rcache_entry_pvt *rep;
 
     rep = (struct rtpp_cmd_rcache_entry_pvt *)p;
-    free(rep->reply);
+    RC_DECREF(rep->reply_rcnt);
     free(rep);
 }
 
 static void
 rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const rtpp_str_t *cookie,
-  const char *reply, double ctime)
+  const rtpp_str_t *reply, struct rtpp_refcnt *reply_rcnt, double ctime)
 {
     struct rtpp_cmd_rcache_pvt *pvt;
     struct rtpp_cmd_rcache_entry_pvt *rep;
@@ -128,10 +130,10 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const rtpp_str_t *cookie,
     if (rep == NULL) {
         return;
     }
-    rep->pub.reply = rep->reply = strdup(reply);
-    if (rep->reply == NULL) {
-        goto e1;
-    }
+    rep->reply = *(const rtpp_str_const_t *)reply;
+    rep->pub.reply = &rep->reply;
+    RC_INCREF(reply_rcnt);
+    rep->reply_rcnt = reply_rcnt;
     rep->etime = ctime + pvt->min_ttl;
     CALL_SMETHOD(rep->pub.rcnt, attach, rtpp_cmd_rcache_entry_free, rep);
     CALL_SMETHOD(pvt->ht, append_str_refcnt, cookie, rep->pub.rcnt, NULL);
@@ -142,9 +144,6 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const rtpp_str_t *cookie,
      */
     RTPP_OBJ_DECREF(&(rep->pub));
     return;
-e1:
-    RTPP_OBJ_DECREF(&(rep->pub));
-    free(rep);
 }
 
 struct rtpp_cmd_rcache_entry *

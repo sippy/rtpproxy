@@ -133,8 +133,9 @@ rtpc_reply_deliver(struct rtpc_reply *self, int errd)
         }
     } else {
         if (pvt->ctx->cookie.s != NULL) {
-            CALL_METHOD(pvt->ctx->rcache_obj, insert, rtpp_str_fix(&pvt->ctx->cookie), pvt->buf.r,
-              pvt->ctx->dtime.mono);
+            rtpp_str_t c = {.s=pvt->buf.r, .len=pvt->buf.clen};
+            CALL_METHOD(pvt->ctx->rcache_obj, insert, rtpp_str_fix(&pvt->ctx->cookie), &c,
+              self->rcnt, pvt->ctx->dtime.mono);
         }
         RTPP_OBJ_INCREF(self);
         if (rtpp_anetio_sendto_na(pvt->ctx->cfs->rtpp_proc_cf->netio, pvt->ctx->controlfd,
