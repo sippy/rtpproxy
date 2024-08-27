@@ -19,5 +19,6 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
         chunk = rfz_get_chunk(chunk.rem_data, chunk.rem_size);
         ExecuteRTPPCommand(&gconf, chunk.data, chunk.size);
     } while (chunk.rem_size > 1);
+    assert(ExecuteRTPPCommand(&gconf, "X", 1) == 0);
     return (0);
 }
