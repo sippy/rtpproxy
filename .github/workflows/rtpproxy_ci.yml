@@ -498,7 +498,7 @@ jobs:
         fi
 
     - name: Extract metadata (tags, labels) for Docker
-      id: meta1
+      id: meta_dkr
       uses: docker/metadata-action@v5
       with:
         images: ${{ env.DOCKER_REPO }}
@@ -511,20 +511,17 @@ jobs:
           type=sha,suffix=-${{ env.OS_TAG}}
 
     - name: Extract metadata (tags, labels) for GHCR
-      id: meta2
+      id: meta_ghcr
       uses: docker/metadata-action@v5
       with:
         images: ${{ env.GHCR_REPO }}
         tags: |
-          ${{ steps.meta1.outputs.tags }}
           type=schedule,suffix=-${{ env.OS_TAG}}
           type=ref,event=branch,suffix=-${{ env.OS_TAG}}
           type=ref,event=tag,suffix=-${{ env.OS_TAG}}
           type=ref,event=pr,suffix=-${{ env.OS_TAG}}
           type=raw,value=latest-${{ env.OS_TAG}},enable={{is_default_branch}}
           type=sha,suffix=-${{ env.OS_TAG}}
-        labels: |
-          ${{ steps.meta1.outputs.labels }}
 
     - name: Build Docker image
       uses: docker/build-push-action@v6
@@ -568,8 +565,12 @@ jobs:
           BASE_IMAGE=${{ env.BASE_IMAGE }}
           BUILD_IMAGE=${{ env.BUILD_IMAGE }}
         push: true
-        tags: ${{ steps.meta2.outputs.tags }}
-        labels: ${{ steps.meta2.outputs.labels }}
+        tags: |
+          ${{ steps.meta_dkr.outputs.tags }}
+          ${{ steps.meta_ghcr.outputs.tags }}
+        labels: |
+          ${{ steps.meta_dkr.outputs.labels }}
+          ${{ steps.meta_ghcr.outputs.labels }}
         platforms: ${{ env.PLATFORMS }}
 
     - name: Update DockerHub repo description
