@@ -25,7 +25,9 @@
  *
  */
 
+#if !defined(_GNU_SOURCE)
 #define _GNU_SOURCE /* pthread_yield() */
+#endif
 #include <errno.h>
 #include <pthread.h>
 #include <stdatomic.h>
