@@ -124,6 +124,8 @@ ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
     const char subc_err[] = " && -1";
     const char subc_ok[] = " && 0";
 
+    r = CALL_SMETHOD(cmd->reply, reserve, 2);
+    assert(r == 0);
     if (ulr == NULL || ulr->ia == NULL || ishostnull(ulr->ia)) {
         rport = (ulr == NULL) ? 0 : ulr->port;
         r = CALL_SMETHOD(cmd->reply, appendf, "%d", rport);
@@ -138,6 +140,10 @@ ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
         }
     }
     assert(r == 0);
+    if (cmd->subc.n > 0) {
+        r = CALL_SMETHOD(cmd->reply, reserve, sizeof(subc_err) - 1 + 2);
+        assert(r == 0);
+    }
     int skipped = 0;
     for (int i = 0; i < cmd->subc.n; i++) {
         if (cmd->subc.res[i].result != 0) {
