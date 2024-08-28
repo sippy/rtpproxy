@@ -8,5 +8,4 @@ set -x
 
 ${SUDO} apt-get update -y --fix-missing
 ${SUDO} apt-mark hold grub-efi-amd64-signed
-${SUDO} apt-get upgrade -y
 ${SUDO} apt-get autoclean
