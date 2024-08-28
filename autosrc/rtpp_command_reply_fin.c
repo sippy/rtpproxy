@@ -35,6 +35,10 @@ static void rtpc_reply_ok_fin(void *pub) {
     fprintf(stderr, "Method rtpc_reply@%p::ok (rtpc_reply_ok) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpc_reply_reserve_fin(void *pub) {
+    fprintf(stderr, "Method rtpc_reply@%p::reserve (rtpc_reply_reserve) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static const struct rtpc_reply_smethods rtpc_reply_smethods_fin = {
     .append = (rtpc_reply_append_t)&rtpc_reply_append_fin,
     .appendf = (rtpc_reply_appendf_t)&rtpc_reply_appendf_fin,
@@ -43,6 +47,7 @@ static const struct rtpc_reply_smethods rtpc_reply_smethods_fin = {
     .error = (rtpc_reply_error_t)&rtpc_reply_error_fin,
     .number = (rtpc_reply_number_t)&rtpc_reply_number_fin,
     .ok = (rtpc_reply_ok_t)&rtpc_reply_ok_fin,
+    .reserve = (rtpc_reply_reserve_t)&rtpc_reply_reserve_fin,
 };
 void rtpc_reply_fin(struct rtpc_reply *pub) {
     RTPP_DBG_ASSERT(pub->smethods->append != (rtpc_reply_append_t)NULL);
@@ -52,6 +57,7 @@ void rtpc_reply_fin(struct rtpc_reply *pub) {
     RTPP_DBG_ASSERT(pub->smethods->error != (rtpc_reply_error_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->number != (rtpc_reply_number_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->ok != (rtpc_reply_ok_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->reserve != (rtpc_reply_reserve_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpc_reply_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpc_reply_smethods_fin;
@@ -85,6 +91,7 @@ rtpc_reply_fintest()
         .error = (rtpc_reply_error_t)((void *)0x1),
         .number = (rtpc_reply_number_t)((void *)0x1),
         .ok = (rtpc_reply_ok_t)((void *)0x1),
+        .reserve = (rtpc_reply_reserve_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
     CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpc_reply_fin,
@@ -97,7 +104,8 @@ rtpc_reply_fintest()
     CALL_TFIN(&tp->pub, error);
     CALL_TFIN(&tp->pub, number);
     CALL_TFIN(&tp->pub, ok);
-    assert((_naborts - naborts_s) == 7);
+    CALL_TFIN(&tp->pub, reserve);
+    assert((_naborts - naborts_s) == 8);
     free(tp);
 }
 const static void *_rtpc_reply_ftp = (void *)&rtpc_reply_fintest;
