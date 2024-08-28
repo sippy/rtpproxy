@@ -164,6 +164,7 @@ static struct res_loc rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *,
   struct pkt_proc_ctx *);
 static enum rtpp_dtls_mode rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *,
   const struct rdc_peer_spec *rdfsp);
+static void rtpp_dtls_conn_godead(struct rtpp_dtls_conn *);
 
 static int tls_srtp_keyinfo(SSL *, const struct srtp_crypto_suite **,
   uint8_t *, size_t, uint8_t *, size_t);
@@ -174,6 +175,7 @@ DEFINE_SMETHODS(rtpp_dtls_conn,
     .rtp_send = &rtpp_dtls_conn_rtp_send,
     .srtp_recv = &rtpp_dtls_conn_srtp_recv,
     .setmode = &rtpp_dtls_conn_setmode,
+    .godead = &rtpp_dtls_conn_godead,
 );
 
 static void
@@ -703,16 +705,8 @@ check_timer(struct rtpp_dtls_conn_priv *pvt)
         return (0);
     if (err == 1) {
         double to = timeval2dtime(&tv);
-        struct rtpp_refproxy *rp = rtpp_refproxy_ctor(3);
-        if (rp == NULL)
-            return (-1);
-        CALL_SMETHOD(rp, add, pvt->pub.rcnt);
-        CALL_SMETHOD(rp, add, pvt->dtls_strmp->rcnt);
-        CALL_SMETHOD(rp, add, RTPP_MOD_SELF.module_rcnt);
         pvt->ttp = CALL_SMETHOD(pvt->timed_cf, schedule_rc, to,
-          rp->rcnt, rtpp_dtls_conn_timeout, NULL, pvt);
-        RTPP_OBJ_DECREF(rp);
-
+          pvt->pub.rcnt, rtpp_dtls_conn_timeout, NULL, pvt);
         if (pvt->ttp == NULL)
             return (-1);
     } else if (pvt->ttp != NULL) {
@@ -862,4 +856,21 @@ tls_peer_fingerprint(SSL *ssl_ctx, char *buf, size_t size)
     X509_free(cert);
 
     return (err);
+}
+
+static void
+rtpp_dtls_conn_godead(struct rtpp_dtls_conn *self)
+{
+    struct rtpp_dtls_conn_priv *pvt;
+
+    PUB2PVT(self, pvt);
+
+    pthread_mutex_lock(&pvt->state_lock);
+    pvt->state = RDC_DEAD;
+    if (pvt->ttp != NULL) {
+        CALL_METHOD(pvt->ttp, cancel);
+        RTPP_OBJ_DECREF(pvt->ttp);
+        pvt->ttp = NULL;
+    }
+    pthread_mutex_unlock(&pvt->state_lock);
 }
