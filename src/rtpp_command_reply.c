@@ -63,6 +63,7 @@ struct rtpc_reply_priv {
     struct {
         int ulen;
         int clen;
+        int rlen;
         char r[1024];
     } buf;
 };
@@ -75,6 +76,7 @@ static int rtpc_reply_append(struct rtpc_reply *, const char *, int, int);
 static int rtpc_reply_appendf(struct rtpc_reply *, const char *, ...)
   __attribute__ ((format (printf, 2, 3)));
 static void rtpc_reply_commit(struct rtpc_reply *);
+static int rtpc_reply_reserve(struct rtpc_reply *, int);
 
 DEFINE_SMETHODS(rtpc_reply,
     .error = &rtpc_reply_error,
@@ -84,11 +86,13 @@ DEFINE_SMETHODS(rtpc_reply,
     .append = &rtpc_reply_append,
     .appendf = &rtpc_reply_appendf,
     .commit = &rtpc_reply_commit,
+    .reserve = &rtpc_reply_reserve,
 );
 
 #define CBP(pvt) ((pvt)->buf.r + (pvt)->buf.ulen)
 #define CBL(pvt) ((pvt)->buf.ulen)
-#define CBRL(pvt) (sizeof(pvt->buf.r) - (pvt)->buf.ulen)
+#define CBRL(pvt, fin) (sizeof(pvt->buf.r) - (pvt)->buf.ulen - \
+  ((fin) ? (pvt)->buf.rlen : 0))
 #define CBP_C(pvt) ((pvt)->buf.r + (pvt)->buf.clen)
 #define CBL_C(pvt) ((pvt)->buf.clen)
 
@@ -190,7 +194,7 @@ rtpc_reply_append(struct rtpc_reply *self, const char *buf, int len, int final)
     struct rtpc_reply_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (CBRL(pvt) < len) {
+    if (CBRL(pvt, final) < len) {
         RTPP_LOG(pvt->ctx->cfs->glog, RTPP_LOG_ERR, "reply buffer overflow");
         return (-1);
     }
@@ -210,9 +214,9 @@ rtpc_reply_appendf(struct rtpc_reply *self, const char *fmt, ...)
 
     PUB2PVT(self, pvt);
     va_start(ap, fmt);
-    plen = vsnprintf(CBP(pvt), CBRL(pvt), fmt, ap);
+    plen = vsnprintf(CBP(pvt), CBRL(pvt, 0), fmt, ap);
     va_end(ap);
-    if (plen >= CBRL(pvt)) {
+    if (plen >= CBRL(pvt, 0)) {
         RTPP_LOG(pvt->ctx->cfs->glog, RTPP_LOG_ERR, "reply buffer overflow");
         return (-1);
     }
@@ -228,4 +232,16 @@ rtpc_reply_commit(struct rtpc_reply *self)
     PUB2PVT(self, pvt);
     RTPP_DBG_ASSERT(pvt->buf.ulen >= pvt->buf.clen);
     pvt->buf.clen = pvt->buf.ulen;
+}
+
+int
+rtpc_reply_reserve(struct rtpc_reply *self, int rlen)
+{
+    struct rtpc_reply_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    if (CBRL(pvt, 1) < rlen)
+        return (-1);
+    pvt->buf.rlen = rlen;
+    return (0);
 }

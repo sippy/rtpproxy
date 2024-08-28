@@ -43,6 +43,7 @@ DECLARE_METHOD(rtpc_reply, rtpc_reply_append, int, const char *,
 DECLARE_METHOD(rtpc_reply, rtpc_reply_appendf, int, const char *,
   ...) __attribute__ ((format (printf, 2, 3)));
 DECLARE_METHOD(rtpc_reply, rtpc_reply_commit, void);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_reserve, int, int);
 
 DECLARE_SMETHODS(rtpc_reply)
 {
@@ -53,6 +54,7 @@ DECLARE_SMETHODS(rtpc_reply)
     METHOD_ENTRY(rtpc_reply_append, append);
     METHOD_ENTRY(rtpc_reply_appendf, appendf);
     METHOD_ENTRY(rtpc_reply_commit, commit);
+    METHOD_ENTRY(rtpc_reply_reserve, reserve);
 };
 
 DECLARE_CLASS_PUBTYPE(rtpc_reply, {});
