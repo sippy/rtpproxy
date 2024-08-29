@@ -84,6 +84,6 @@ struct rtpp_command {
     int no_glock;
     struct rtpp_session *sp;
     struct rtpp_log *glog;
-    struct after_success_h after_success[MAX_SUBC_NUM];
     struct rtpc_reply *reply;
+    struct after_success_h after_success[MAX_SUBC_NUM];
 };
