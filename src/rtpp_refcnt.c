@@ -224,7 +224,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub)
     RTPP_DBG_ASSERT(oldcnt > 0);
     if (oldcnt == 1) {
         atomic_thread_fence(memory_order_acquire);
-        int flags = pvt->flags;
+        flags = pvt->flags;
         if ((flags & RC_FLAG_PA) == 0) {
             if (flags & RC_FLAG_HASPRDTOR) {
                 pvt->pre_dtor_f(pvt->pd_data);
