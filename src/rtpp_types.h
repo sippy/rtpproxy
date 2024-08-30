@@ -94,7 +94,7 @@ extern const struct rtpp_stream_smethods * const rtpp_stream_smethods RTPP_EXPOR
 extern const struct rtpp_pcount_smethods * const rtpp_pcount_smethods RTPP_EXPORT;
 extern const struct rtpp_record_smethods * const rtpp_record_smethods;
 extern const struct rtpp_hash_table_smethods * const rtpp_hash_table_smethods;
-extern const struct rtpp_weakref_smethods * const rtpp_weakref_smethods;
+extern const struct rtpp_weakref_smethods * const rtpp_weakref_smethods RTPP_EXPORT;
 extern const struct rtpp_analyzer_smethods * const rtpp_analyzer_smethods;
 extern const struct rtpp_pcnt_strm_smethods * const rtpp_pcnt_strm_smethods RTPP_EXPORT;
 extern const struct rtpp_ttl_smethods * const rtpp_ttl_smethods RTPP_EXPORT;
