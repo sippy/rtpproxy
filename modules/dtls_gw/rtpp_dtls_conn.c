@@ -62,6 +62,7 @@
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 #include "rtpp_refproxy.h"
+#include "rtpp_weakref.h"
 
 #include "rtpp_dtls_util.h"
 #include "rtpp_dtls_conn.h"
@@ -130,8 +131,9 @@ const struct srtp_crypto_suite srtp_suites [] = {
 
 struct rtpp_dtls_conn_priv {
     struct rtpp_dtls_conn pub;
-    struct rtpp_stream *dtls_strmp;
+    uint64_t dtls_strm_id;
     struct rtpp_timed *timed_cf;
+    struct rtpp_weakref *streams_wrt;
     pthread_mutex_t state_lock;
     enum rdc_state state;
     enum rtpp_dtls_mode mode;
@@ -186,7 +188,7 @@ rtpp_dtls_conn_dtor(struct rtpp_dtls_conn_priv *pvt)
         srtp_dealloc(pvt->srtp_ctx_in);
     if (pvt->srtp_ctx_out != NULL)
         srtp_dealloc(pvt->srtp_ctx_out);
-    /* RTPP_OBJ_DECREF(pvt->dtls_strmp); */
+    RTPP_OBJ_DECREF(pvt->streams_wrt);
     pthread_mutex_destroy(&pvt->state_lock);
     /* BIO_free(pvt->sbio_out); <- done by SSL_free() */
     /* BIO_free(pvt->sbio_in); <- done by SSL_free() */
@@ -235,7 +237,9 @@ rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
     pvt->state = RDC_INIT;
     /* Cannot grab refcount here, circular reference would ensue */
     /* RTPP_OBJ_INCREF(dtls_strmp); */
-    pvt->dtls_strmp = dtls_strmp;
+    pvt->dtls_strm_id = dtls_strmp->stuid;
+    RTPP_OBJ_INCREF(cfsp->rtp_streams_wrt);
+    pvt->streams_wrt = cfsp->rtp_streams_wrt;
     pvt->timed_cf = cfsp->rtpp_timed_cf;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_dtls_conn_dtor);
     return (&(pvt->pub));
@@ -536,16 +540,25 @@ bio_write(BIO *b, const char *buf, int len)
 {
     struct rtpp_dtls_conn_priv *pvt = BIO_get_data(b);
     struct rtp_packet *packet;
+    struct rtpp_stream *dtls_strmp;
 
-    if (len > MAX_RPKT_LEN || !CALL_SMETHOD(pvt->dtls_strmp, issendable))
-        return (-1);
+    dtls_strmp = CALL_SMETHOD(pvt->streams_wrt, get_by_idx, pvt->dtls_strm_id);
+    if (dtls_strmp == NULL)
+        goto e0;
+    if (len > MAX_RPKT_LEN || !CALL_SMETHOD(dtls_strmp, issendable))
+        goto e1;
     packet = rtp_packet_alloc();
     if (packet == NULL)
-        return (-1);
+        goto e1;
     memcpy(packet->data.buf, buf, len);
     packet->size = len;
-    CALL_SMETHOD(pvt->dtls_strmp, send_pkt, NULL, packet);
+    CALL_SMETHOD(dtls_strmp, send_pkt, NULL, packet);
+    RTPP_OBJ_DECREF(dtls_strmp)
     return (len);
+e1:
+    RTPP_OBJ_DECREF(dtls_strmp)
+e0:
+    return (-1);
 }
 
 static long
