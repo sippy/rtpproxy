@@ -553,10 +553,10 @@ bio_write(BIO *b, const char *buf, int len)
     memcpy(packet->data.buf, buf, len);
     packet->size = len;
     CALL_SMETHOD(dtls_strmp, send_pkt, NULL, packet);
-    RTPP_OBJ_DECREF(dtls_strmp)
+    RTPP_OBJ_DECREF(dtls_strmp);
     return (len);
 e1:
-    RTPP_OBJ_DECREF(dtls_strmp)
+    RTPP_OBJ_DECREF(dtls_strmp);
 e0:
     return (-1);
 }
