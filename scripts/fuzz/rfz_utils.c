@@ -1,5 +1,3 @@
-#pragma once
-
 #include <sys/socket.h>
 #include <assert.h>
 #include <fcntl.h>
@@ -20,12 +18,6 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_log_stand.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_command_args.h"
-#include "rtpp_command.h"
-#include "rtpp_command_sub.h"
-#include "rtpp_command_private.h"
-#include "rtpp_command_async.h"
-#include "rtpp_command_stats.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_weakref.h"
@@ -36,14 +28,32 @@
 
 #include "librtpproxy.h"
 
-struct rtpp_conf {
-    struct rtpp_cfg *cfsp;
-    int tfd;
-};
+#include "rfz_utils.h"
 
 #define howmany(x, y) (sizeof(x) / sizeof(y))
 
-static struct rtpp_conf gconf;
+struct rtpp_conf gconf;
+
+#if defined(__linux__)
+static int optreset; /* Not present in linux */
+#endif
+
+static struct opt_save {
+    char *optarg;
+    int optind;
+    int optopt;
+    int opterr;
+    int optreset;
+} opt_save;
+
+#define OPT_SAVE() (opt_save = (struct opt_save){optarg, optind, optopt, opterr, optreset})
+#define OPT_RESTORE() ({ \
+    optarg = opt_save.optarg; \
+    optind = opt_save.optind; \
+    optopt = opt_save.optopt; \
+    opterr = opt_save.opterr; \
+    optreset = opt_save.optreset; \
+})
 
 static void
 cleanupHandler(void)
@@ -83,23 +93,14 @@ RAND_METHOD dummy = {
     .status = &dRAND_status,
 };
 
-static void
+void
 SeedRNGs(void)
 {
     offset = 0;
     seedrandom();
 }
 
-static struct RTPPInitializeParams {
-    const char *ttl;
-    const char *setup_ttl;
-    const char *socket;
-    const char *debug_level;
-    const char *notify_socket;
-    const char *rec_spool_dir;
-    const char *rec_final_dir;
-    const char *modules[];
-} RTPPInitializeParams = {
+struct RTPPInitializeParams RTPPInitializeParams = {
     .ttl = "1",
     .setup_ttl = "1",
     .socket = NULL,
@@ -112,7 +113,7 @@ static struct RTPPInitializeParams {
 
 extern void __afl_manual_init(void) __attribute__((__weak__));
 
-static int
+int
 RTPPInitialize(void)
 {
     const struct RTPPInitializeParams *rp = &RTPPInitializeParams;
@@ -155,29 +156,4 @@ e1:
     cleanupHandler();
 e0:
     return (-1);
-}
-
-static int
-ExecuteRTPPCommand(struct rtpp_conf *gcp, const char *data, size_t size)
-{
-    struct rtpp_timestamp dtime = {};
-    static struct rtpp_command_stats cstat = {};
-    struct rtpp_command *cmd;
-    int rval = -1;
-
-    if (size >= RTPP_CMD_BUFLEN)
-        return (-1);
-
-    cmd = rtpp_command_ctor(gcp->cfsp, gcp->tfd, &dtime, &cstat, 0);
-    if (cmd == NULL)
-        return (-1);
-    memcpy(cmd->buf, data, size);
-    cmd->buf[size] = '\0';
-
-    rval = rtpp_command_split(cmd, size, &rval, NULL);
-    if (rval == 0) {
-        rval = handle_command(gcp->cfsp, cmd);
-    }
-    free_command(cmd);
-    return (rval);
 }

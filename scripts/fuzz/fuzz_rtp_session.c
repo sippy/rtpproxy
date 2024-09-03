@@ -2,12 +2,19 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <assert.h>
 #include <semaphore.h>
+#include <stdio.h>
 
 #include "fuzz_standalone.h"
-#include "fuzz_rtpp_utils.h"
 
+#define HAVE_CONFIG_H 1
+#include "config_pp.h"
+
+#include "rtpp_types.h"
+#include "rtpp_cfg.h"
 #include "rtp.h"
+#include "rtpp_time.h"
 #include "rtp_packet.h"
 #include "rtpp_session.h"
 #include "rtpp_pipe.h"
@@ -15,10 +22,17 @@
 #include "rtpp_network.h"
 #include "rtpp_stream.h"
 #include "rtpp_ttl.h"
+#include "rtpp_codeptr.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_command.h"
+#include "rtpp_weakref.h"
+#include "rtpp_hash_table.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
 #include "rfz_chunk.h"
+#include "rfz_utils.h"
+#include "rfz_command.h"
 
 static struct {
     sem_t wi_proc_done;

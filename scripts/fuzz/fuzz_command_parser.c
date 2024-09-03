@@ -1,6 +1,11 @@
-#include "fuzz_standalone.h"
-#include "fuzz_rtpp_utils.h"
+#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
+#include "fuzz_standalone.h"
+#include "rfz_utils.h"
+#include "rfz_command.h"
 #include "rfz_chunk.h"
 
 int

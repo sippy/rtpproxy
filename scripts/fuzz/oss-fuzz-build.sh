@@ -101,15 +101,15 @@ do
 done
 make -C src librtpproxy.la
 
-CFLAGS="${CFLAGS} -flto -fPIE -fPIC"
-CXXFLAGS="${CXXFLAGS} -flto -fPIE -fPIC"
+CFLAGS="${CFLAGS} -flto -fPIE -fPIC -fvisibility=hidden"
+CXXFLAGS="${CXXFLAGS} -flto -fPIE -fPIC -fvisibility=hidden"
 RTPPLIB="src/.libs/librtpproxy.a"
 
-for src in rfz_chunk.c
+for src in rfz_chunk.c rfz_command.c rfz_utils.c
 do
   obj="${OUT}/${src%.*}.o"
   src=scripts/fuzz/${src}
-  ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -o ${obj} -c ${src}
+  ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -o ${obj} -c ${src}
   OBJS="${OBJS} ${obj}"
 done
 
