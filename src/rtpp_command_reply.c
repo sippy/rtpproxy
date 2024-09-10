@@ -92,7 +92,7 @@ DEFINE_SMETHODS(rtpc_reply,
 #define CBP(pvt) ((pvt)->buf.r + (pvt)->buf.ulen)
 #define CBL(pvt) ((pvt)->buf.ulen)
 #define CBRL(pvt, fin) (sizeof(pvt->buf.r) - (pvt)->buf.ulen - \
-  ((fin) ? (pvt)->buf.rlen : 0))
+  ((fin) ? 0 : (pvt)->buf.rlen))
 #define CBP_C(pvt) ((pvt)->buf.r + (pvt)->buf.clen)
 #define CBL_C(pvt) ((pvt)->buf.clen)
 
