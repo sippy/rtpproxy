@@ -23,6 +23,10 @@ static void refcnt_incref_fin(void *pub) {
     fprintf(stderr, "Method rtpp_refcnt@%p::incref (refcnt_incref) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void refcnt_peek_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_refcnt@%p::peek (refcnt_peek) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void refcnt_reg_pd_fin(void *pub) {
     fprintf(stderr, "Method rtpp_refcnt@%p::reg_pd (refcnt_reg_pd) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -40,6 +44,7 @@ static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
     .decref = (refcnt_decref_t)&refcnt_decref_fin,
     .getdata = (refcnt_getdata_t)&refcnt_getdata_fin,
     .incref = (refcnt_incref_t)&refcnt_incref_fin,
+    .peek = (refcnt_peek_t)&refcnt_peek_fin,
     .reg_pd = (refcnt_reg_pd_t)&refcnt_reg_pd_fin,
     .traceen = (refcnt_traceen_t)&refcnt_traceen_fin,
     .use_stdfree = (refcnt_use_stdfree_t)&refcnt_use_stdfree_fin,
@@ -49,6 +54,7 @@ void rtpp_refcnt_fin(struct rtpp_refcnt *pub) {
     RTPP_DBG_ASSERT(pub->smethods->decref != (refcnt_decref_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->getdata != (refcnt_getdata_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->incref != (refcnt_incref_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->peek != (refcnt_peek_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->reg_pd != (refcnt_reg_pd_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->traceen != (refcnt_traceen_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->use_stdfree != (refcnt_use_stdfree_t)NULL);
@@ -82,6 +88,7 @@ rtpp_refcnt_fintest()
         .decref = (refcnt_decref_t)((void *)0x1),
         .getdata = (refcnt_getdata_t)((void *)0x1),
         .incref = (refcnt_incref_t)((void *)0x1),
+        .peek = (refcnt_peek_t)((void *)0x1),
         .reg_pd = (refcnt_reg_pd_t)((void *)0x1),
         .traceen = (refcnt_traceen_t)((void *)0x1),
         .use_stdfree = (refcnt_use_stdfree_t)((void *)0x1),
@@ -94,10 +101,11 @@ rtpp_refcnt_fintest()
     CALL_TFIN(&tp->pub, decref);
     CALL_TFIN(&tp->pub, getdata);
     CALL_TFIN(&tp->pub, incref);
+    CALL_TFIN(&tp->pub, peek);
     CALL_TFIN(&tp->pub, reg_pd);
     CALL_TFIN(&tp->pub, traceen);
     CALL_TFIN(&tp->pub, use_stdfree);
-    assert((_naborts - naborts_s) == 7);
+    assert((_naborts - naborts_s) == 8);
     free(tp);
 }
 const static void *_rtpp_refcnt_ftp = (void *)&rtpp_refcnt_fintest;
