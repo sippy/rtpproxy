@@ -1,4 +1,5 @@
 #include <sys/socket.h>
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,11 +9,13 @@
 
 #include "rtpp_types.h"
 #include "rtpp_cfg.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_reply.h"
 #include "rtpp_command_stats.h"
 #include "rtpp_time.h"
 
@@ -20,7 +23,7 @@
 #include "rfz_command.h"
 
 int
-ExecuteRTPPCommand(struct rtpp_conf *gcp, const char *data, size_t size)
+ExecuteRTPPCommand(struct rtpp_conf *gcp, const char *data, size_t size, int debug)
 {
     struct rtpp_timestamp dtime = {};
     static struct rtpp_command_stats cstat = {};
@@ -33,6 +36,10 @@ ExecuteRTPPCommand(struct rtpp_conf *gcp, const char *data, size_t size)
     cmd = rtpp_command_ctor(gcp->cfsp, gcp->tfd, &dtime, &cstat, 0);
     if (cmd == NULL)
         return (-1);
+    const void *tp = cmd->reply;
+    const void *trp = cmd->reply->rcnt;
+    if (debug)
+        CALL_SMETHOD(cmd->reply->rcnt, traceen, HEREVAL);
     memcpy(cmd->buf, data, size);
     cmd->buf[size] = '\0';
 
@@ -40,6 +47,8 @@ ExecuteRTPPCommand(struct rtpp_conf *gcp, const char *data, size_t size)
     if (rval == 0) {
         rval = handle_command(gcp->cfsp, cmd);
     }
+    assert(tp == cmd->reply);
+    assert(trp == cmd->reply->rcnt);
     free_command(cmd);
     return (rval);
 }

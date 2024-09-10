@@ -42,7 +42,7 @@ static struct {
 static void
 fuzz_ctx_dtor(void)
 {
-    ExecuteRTPPCommand(&gconf, "X", 1);
+    ExecuteRTPPCommand(&gconf, "X", 1, 0);
     sem_destroy(&fuzz_ctx.wi_proc_done);
 }
 
@@ -60,7 +60,7 @@ ExecuteScript(void)
         const char *cp = setup_script[i];
         int size = strlen(cp);
         memcpy(line, cp, size + 1);
-        int r = ExecuteRTPPCommand(&gconf, line, size);
+        int r = ExecuteRTPPCommand(&gconf, line, size, 0);
         if (r != 0)
             return (-1);
     }
@@ -79,7 +79,7 @@ LLVMFuzzerInitialize(int *_argc, char ***_argv)
         goto e0;
     if (ExecuteScript() != 0)
         goto e1;
-    if (ExecuteRTPPCommand(&gconf, "X", 1) != 0)
+    if (ExecuteRTPPCommand(&gconf, "X", 1, 0) != 0)
         goto e1;
     atexit(fuzz_ctx_dtor);
     return (0);
@@ -182,6 +182,6 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
     for (int i = 0; i < fa.nwait; i++)
         sem_wait(wpdp);
 
-    assert(ExecuteRTPPCommand(&gconf, "X", 1) == 0);
+    assert(ExecuteRTPPCommand(&gconf, "X", 1, 0) == 0);
     return (0);
 }

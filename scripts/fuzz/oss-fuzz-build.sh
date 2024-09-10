@@ -88,9 +88,12 @@ LD="lld"
 LD_BIN="ld.lld"
 LDFLAGS="-fuse-ld=${LD}"
 
+CFLAGS="${CFLAGS} -DRTPP_DEBUG_refcnt=1"
+CXXFLAGS="${CXXFLAGS} -DRTPP_DEBUG_refcnt=1"
+
 if ! AR=llvm-ar RANLIB=llvm-ranlib NM=llvm-nm STRIP=llvm-strip \
- LDFLAGS="${LDFLAGS}" ./configure --enable-librtpproxy --enable-lto \
-  --enable-silent --enable-noinst=no
+ LDFLAGS="${LDFLAGS}" CFLAGS="${CFLAGS}" ./configure --enable-librtpproxy \
+  --enable-lto --enable-silent --enable-noinst=no
 then
   cat config.log
   exit 1
