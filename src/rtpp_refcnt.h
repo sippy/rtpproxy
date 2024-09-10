@@ -40,6 +40,7 @@ DECLARE_METHOD(rtpp_refcnt, refcnt_reg_pd, void, rtpp_refcnt_dtor_t, void *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_attach, void, rtpp_refcnt_dtor_t, void *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_traceen, void, const struct rtpp_codeptr *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_use_stdfree, void, void *);
+DECLARE_METHOD(rtpp_refcnt, refcnt_peek, int);
 
 DECLARE_SMETHODS(rtpp_refcnt)
 {
@@ -50,6 +51,7 @@ DECLARE_SMETHODS(rtpp_refcnt)
     METHOD_ENTRY(refcnt_attach, attach);
     METHOD_ENTRY(refcnt_traceen, traceen);
     METHOD_ENTRY(refcnt_use_stdfree, use_stdfree);
+    METHOD_ENTRY(refcnt_peek, peek);
 };
 
 struct rtpp_refcnt

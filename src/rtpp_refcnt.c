@@ -87,6 +87,7 @@ static void rtpp_refcnt_use_stdfree(struct rtpp_refcnt *, void *);
 
 #if RTPP_DEBUG_refcnt
 static void rtpp_refcnt_traceen(struct rtpp_refcnt *, HERETYPE);
+static int rtpp_refcnt_peek(struct rtpp_refcnt *);
 #endif
 
 DEFINE_SMETHODS(rtpp_refcnt,
@@ -96,6 +97,7 @@ DEFINE_SMETHODS(rtpp_refcnt,
     .reg_pd = &rtpp_refcnt_reg_pd,
 #if RTPP_DEBUG_refcnt
     .traceen = rtpp_refcnt_traceen,
+    .peek = rtpp_refcnt_peek,
 #endif
     .attach = &rtpp_refcnt_attach,
     .use_stdfree = &rtpp_refcnt_use_stdfree,
@@ -299,6 +301,15 @@ rtpp_refcnt_traceen(struct rtpp_refcnt *pub, HERETYPE mlp)
     pvt->flags |= RC_FLAG_TRACE;
     int oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
     fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).traceen()\n", mlp, pub, oldcnt));
+}
+
+static int
+rtpp_refcnt_peek(struct rtpp_refcnt *pub)
+{
+    struct rtpp_refcnt_priv *pvt;
+
+    PUB2PVT(pub, pvt);
+    return atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
 }
 #endif
 
