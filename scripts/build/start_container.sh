@@ -13,4 +13,5 @@ fi
 
 sudo apt-get update
 sudo apt-get install -y qemu-user-static
+docker pull ${DOCKR_BASE}
 docker run --cidfile "${DKR_CID_FILE}" -d --restart=always --platform linux/${DOCKR_PLATFORM} -v `pwd`:`pwd` ${DOCKR_BASE} sleep infinity
