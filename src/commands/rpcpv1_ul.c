@@ -483,6 +483,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
         if (fd == NULL || ulop->new_port != 0) {
             if (ulop->local_addr != NULL) {
                 spa->rtp->stream[sidx]->laddr = ulop->local_addr;
+            } else if (ulop->new_port != 0 && ulop->lidx == -1 && spa->rtp->stream[sidx]->laddr != ulop->lia[0]) {
+                spa->rtp->stream[sidx]->laddr = ulop->lia[0];
             }
             if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr, &lport, fds) == -1) {
                 if (fd != NULL)
