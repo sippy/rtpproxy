@@ -4,7 +4,7 @@ set -e
 set -x
 set -o pipefail
 
-CC="${CC:-"clang15"}"
+CC="${CC:-"clang19"}"
 CXX="${CXX:-"${CC}"}"
 CFLAGS="${CFLAGS:-"-g3 -O0 -Wall"}"
 CXXFLAGS="${CXXFLAGS:-"${CFLAGS}"}"
@@ -81,7 +81,7 @@ then
   LLINK_BIN="llvm-link-${CLANG_VER}"
 else
   LIBSRTP="-L/usr/local/lib -lsrtp2 -lssl -lcrypto -lpthread"
-  LLINK_BIN="llvm-link13"
+  LLINK_BIN="llvm-link19"
 fi
 
 LD="lld"
