@@ -95,7 +95,8 @@ handle_query_simple(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
 
 #define PULL_JRST() \
     if (jrst_pulled == 0) { \
-        CALL_SMETHOD(spp->stream[idx]->analyzer, get_jstats, &jrst); \
+        if (CALL_SMETHOD(spp->stream[idx]->analyzer, get_jstats, &jrst) == 0) \
+            jrst = (typeof(jrst)){0}; \
         jrst_pulled = 1; \
     }
 
