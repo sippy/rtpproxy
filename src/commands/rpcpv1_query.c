@@ -113,6 +113,9 @@ handle_query_simple(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
         pcnt_strm_pulled = 1; \
     }
 
+#define SUBC_FAIL_RSP " && -1"
+#define SUBC_OK_RSP   " && 0"
+
 int
 handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
   struct rtpp_pipe *spp, int idx)
@@ -246,7 +249,12 @@ handle_query(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
     }
     CHECK_OVERFLOW();
 out:
+    if (cmd->subc.n > 0) {
+        assert(CALL_SMETHOD(cmd->reply, reserve, sizeof(SUBC_FAIL_RSP)) == 0);
+    }
+    aerr = 0;
     for (int i = 0, skipped = 0; i < cmd->subc.n; i++) {
+        CALL_SMETHOD(cmd->reply, commit);
         struct rtpp_subc_ctx rsc = {
             .sessp = cmd->sp,
             .strmp_in = spp->stream[idx],
@@ -260,22 +268,29 @@ out:
             while (skipped >= 0) {
                  aerr = CALL_SMETHOD(cmd->reply, appendf,
                    " && %d", cmd->subc.res[i - skipped].result);
+                 if (aerr)
+                    break;
                  skipped -= 1;
             }
             break;
         }
         if (cmd->subc.res[i].buf_t[0] != '\0') {
             while (skipped > 0) {
-                 aerr = CALL_SMETHOD(cmd->reply, appendf,
-                   " && 0");
+                 aerr = CALL_SMETHOD(cmd->reply, appendf, SUBC_OK_RSP);
+                 if (aerr)
+                    break;
                  skipped -= 1;
             }
             aerr = CALL_SMETHOD(cmd->reply, appendf,
                 " && %s", cmd->subc.res[i].buf_t);
+            if (aerr)
+                break;
         } else {
             skipped += 1;
         }
     }
+    if (aerr)
+        assert(CALL_SMETHOD(cmd->reply, append, SUBC_FAIL_RSP, strlen(SUBC_FAIL_RSP), 1) == 0);
     assert(CALL_SMETHOD(cmd->reply, append, "\n", 2, 1) == 0);
     CALL_SMETHOD(cmd->reply, commit);
     CALL_SMETHOD(cmd->reply, deliver, 0);
