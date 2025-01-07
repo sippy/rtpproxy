@@ -488,7 +488,7 @@ jobs:
         echo "LIBG722_IMAGE=sippylabs/libg722:latest-${OS_TAG}" >> $GITHUB_ENV
         PLATFORMS="`docker manifest inspect ${{ env.BASE_IMAGE }} | \
          jq -r '.manifests[] | "\(.platform.os)/\(.platform.architecture)\(if .platform.variant != null then "/\(.platform.variant)" else "" end)"' | \
-         sort -u | paste -sd ','`"
+         grep -v unknown | sort -u | paste -sd ','`"
         echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
         echo "OS_TAG=${OS_TAG}" >> $GITHUB_ENV
         if [[ "${{ matrix.base_image }}" == debian:* ]]
