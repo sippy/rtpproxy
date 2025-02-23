@@ -22,8 +22,12 @@ SUB_LIBRE=	libre
 endif
 
 SUBDIRS=	libexecinfo libucl libxxHash $(SUB_LIBRE) makeann $(SUBD_MOD) \
-  $(SUBD_ELP) src $(SUBD_UDCNT) tests \
+  $(SUBD_ELP) src $(SUBD_UDCNT) \
   $(SUBD_EAUD) ${SUBD_DOCS}
+
+if TESTS_EXIST
+SUBDIRS += tests
+endif
 
 dist_man_MANS=	rtpproxy.8
 EXTRA_DIST=	README.remote doc rpm/rtpproxy.init rpm/rtpproxy.spec \

@@ -467,19 +467,24 @@ AM_CONDITIONAL(ENABLE_LTO, [test "x${ENABLE_LTO}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBRTPPROXY, [test "x${ENABLE_LIBRTPPROXY}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBUNWIND, [test "${ENABLE_LIBUNWIND}" = 1 ])
 AM_CONDITIONAL(ENABLE_noinst, [test "x${ENABLE_noinst}" = "xyes" ])
+AM_CONDITIONAL([TESTS_EXIST], [test -d "$srcdir/tests"])
 
 if test "${ENABLE_SILENT}" = "yes"
 then
   AM_SILENT_RULES([yes])
 fi
 
-AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
+AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
  modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile
  modules/catch_dtmf/Makefile modules/badmod/Makefile libxxHash/Makefile
  libre/Makefile modules/dtls_gw/Makefile modules/ice_lite/Makefile
  pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile
  python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile])
+
+AM_COND_IF([TESTS_EXIST], [
+  AC_CONFIG_FILES([tests/Makefile])
+])
 
 AM_COND_IF([BUILD_ELPERIODIC], [
   ac_configure_args="$ac_configure_args \"CFLAGS=$CFLAGS\""

@@ -14,7 +14,7 @@ on:
 
 # added using https://github.com/step-security/secure-repo
 permissions:
-  contents: read
+  contents: write
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -580,3 +580,41 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: sh -x docker/update_description.sh docker/README.md
+
+  release:
+    name: Create Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [LoadJobs_conf, Fuzzing]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Set Environment
+        id: job_config
+        run: |
+          RELEASE_VER="${GITHUB_REF#refs/tags/v}"
+          echo "ver=${RELEASE_VER}" >> ${GITHUB_OUTPUT}
+          echo "src=rtpproxy-${RELEASE_VER}.tar.gz" >> ${GITHUB_OUTPUT}
+
+      - name: Create source distribution
+        run: |
+          set -x
+          git rev-parse HEAD > revision.txt
+          NAME="rtpproxy-${{steps.job_config.outputs.ver}}"
+          tar --exclude-vcs --exclude=./tests -czvf /tmp/${{steps.job_config.outputs.src}} \
+           --transform="s|^[.]|${NAME}|" .
+          mv /tmp/${{steps.job_config.outputs.src}} ${{steps.job_config.outputs.src}}
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ./${{steps.job_config.outputs.src}}
+          draft: true
+          prerelease: false
+          generate_release_notes: true
