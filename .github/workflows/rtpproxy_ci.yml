@@ -35,37 +35,25 @@ jobs:
 
     strategy:
       matrix:
-        os: [20.04]
-        compiler: ['gcc', 'clang', 'gcc-9', 'gcc-10', 'clang-9', 'clang-10']
+        os: [22.04]
+        compiler: ['gcc-i386-cross', 'clang-i386-cross', 'gcc-mips64-cross', 'gcc-arm32-cross', 'gcc-arm64-cross', 'gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
-          - os: 22.04
-            compiler: 'gcc-i386-cross'
-          - os: 22.04
-            compiler: 'clang-i386-cross'
-          - os: 22.04
-            compiler: 'gcc-mips64-cross'
-          - os: 22.04
-            compiler: 'gcc-arm32-cross'
-          - os: 22.04
-            compiler: 'gcc-arm64-cross'
-          - os: 22.04
+          - os: 24.04
             compiler: 'gcc'
-          - os: 22.04
+          - os: 24.04
             compiler: 'clang'
-          - os: 22.04
-            compiler: 'gcc-11'
-          - os: 22.04
-            compiler: 'gcc-12'
-          - os: 22.04
-            compiler: 'clang-11'
-          - os: 22.04
-            compiler: 'clang-12'
-          - os: 22.04
-            compiler: 'clang-13'
-          - os: 22.04
-            compiler: 'clang-14'
-          - os: 22.04
-            compiler: 'clang-15'
+          - os: 24.04
+            compiler: 'gcc-13'
+          - os: 24.04
+            compiler: 'gcc-14'
+          - os: 24.04
+            compiler: 'clang-16'
+          - os: 24.04
+            compiler: 'clang-17'
+          - os: 24.04
+            compiler: 'clang-18'
+          - os: 24.04
+            compiler: 'clang-19'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -127,37 +115,25 @@ jobs:
 
     strategy:
       matrix:
-        os: [20.04]
-        compiler: ['gcc', 'clang', 'gcc-9', 'gcc-10', 'clang-9', 'clang-10']
+        os: [22.04]
+        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
-          - os: 22.04
-            compiler: 'gcc-i386-cross'
-          - os: 22.04
-            compiler: 'clang-i386-cross'
-          - os: 22.04
-            compiler: 'gcc-mips64-cross'
-          - os: 22.04
-            compiler: 'gcc-arm32-cross'
-          - os: 22.04
-            compiler: 'gcc-arm64-cross'
-          - os: 22.04
+          - os: 24.04
             compiler: 'gcc'
-          - os: 22.04
+          - os: 24.04
             compiler: 'clang'
-          - os: 22.04
-            compiler: 'gcc-11'
-          - os: 22.04
-            compiler: 'gcc-12'
-          - os: 22.04
-            compiler: 'clang-11'
-          - os: 22.04
-            compiler: 'clang-12'
-          - os: 22.04
-            compiler: 'clang-13'
-          - os: 22.04
-            compiler: 'clang-14'
-          - os: 22.04
-            compiler: 'clang-15'
+          - os: 24.04
+            compiler: 'gcc-13'
+          - os: 24.04
+            compiler: 'gcc-14'
+          - os: 24.04
+            compiler: 'clang-16'
+          - os: 24.04
+            compiler: 'clang-17'
+          - os: 24.04
+            compiler: 'clang-18'
+          - os: 24.04
+            compiler: 'clang-19'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -219,27 +195,25 @@ jobs:
 
     strategy:
       matrix:
-        os: [20.04]
-        compiler: ['gcc', 'clang', 'gcc-9', 'gcc-10', 'clang-9', 'clang-10']
+        os: [22.04]
+        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
-          - os: 22.04
+          - os: 24.04
             compiler: 'gcc'
-          - os: 22.04
+          - os: 24.04
             compiler: 'clang'
-          - os: 22.04
-            compiler: 'gcc-11'
-          - os: 22.04
-            compiler: 'gcc-12'
-          - os: 22.04
-            compiler: 'clang-11'
-          - os: 22.04
-            compiler: 'clang-12'
-          - os: 22.04
-            compiler: 'clang-13'
-          - os: 22.04
-            compiler: 'clang-14'
-          - os: 22.04
-            compiler: 'clang-15'
+          - os: 24.04
+            compiler: 'gcc-13'
+          - os: 24.04
+            compiler: 'gcc-14'
+          - os: 24.04
+            compiler: 'clang-16'
+          - os: 24.04
+            compiler: 'clang-17'
+          - os: 24.04
+            compiler: 'clang-18'
+          - os: 24.04
+            compiler: 'clang-19'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -296,27 +270,25 @@ jobs:
 
     strategy:
       matrix:
-        os: [20.04]
-        compiler: ['gcc', 'clang', 'gcc-9', 'gcc-10', 'clang-9', 'clang-10']
+        os: [22.04]
+        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
-          - os: 22.04
+          - os: 24.04
             compiler: 'gcc'
-          - os: 22.04
+          - os: 24.04
             compiler: 'clang'
-          - os: 22.04
-            compiler: 'gcc-11'
-          - os: 22.04
-            compiler: 'gcc-12'
-          - os: 22.04
-            compiler: 'clang-11'
-          - os: 22.04
-            compiler: 'clang-12'
-          - os: 22.04
-            compiler: 'clang-13'
-          - os: 22.04
-            compiler: 'clang-14'
-          - os: 22.04
-            compiler: 'clang-15'
+          - os: 24.04
+            compiler: 'gcc-13'
+          - os: 24.04
+            compiler: 'gcc-14'
+          - os: 24.04
+            compiler: 'clang-16'
+          - os: 24.04
+            compiler: 'clang-17'
+          - os: 24.04
+            compiler: 'clang-18'
+          - os: 24.04
+            compiler: 'clang-19'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
