@@ -99,3 +99,25 @@ Last-Update: 2024-08-16
      int i, ret = 0;
      enum {
          i_1 = 0, i_10,     i_11,     i_101, i_111, i_1010, i_1111,
+--- openssl-1.1.1f.orig/ssl/ssl_lib.c	2025/03/20 15:10:07	1.1
++++ openssl-1.1.1f/ssl/ssl_lib.c	2025/03/20 15:10:53
+@@ -5415,7 +5415,7 @@
+     STACK_OF(SSL_CIPHER) *scsvs = NULL;
+     int n;
+     /* 3 = SSLV2_CIPHER_LEN > TLS_CIPHER_LEN = 2. */
+-    unsigned char cipher[SSLV2_CIPHER_LEN];
++    unsigned char cipher[SSLV2_CIPHER_LEN] = {0};
+ 
+     n = sslv2format ? SSLV2_CIPHER_LEN : TLS_CIPHER_LEN;
+ 
+--- openssl-1.1.1f.orig/ssl/ssl_lib.c	2025/03/20 17:04:59	1.1
++++ openssl-1.1.1f/ssl/ssl_lib.c	2025/03/20 17:05:10
+@@ -929,7 +929,7 @@
+      * any new session built out of this id/id_len and the ssl_version in use
+      * by this SSL.
+      */
+-    SSL_SESSION r, *p;
++    SSL_SESSION r = {0}, *p;
+ 
+     if (id_len > sizeof(r.session_id))
+         return 0;
