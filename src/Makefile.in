@@ -114,7 +114,6 @@ bin_PROGRAMS = rtpproxy$(EXEEXT) rtpproxy_debug$(EXEEXT)
 @BUILD_CRYPTO_TRUE@@BUILD_MODULES_TRUE@am__append_14 = $(MOD_DIR)/dtls_gw/librtpp_dtls_gw.la \
 @BUILD_CRYPTO_TRUE@@BUILD_MODULES_TRUE@  $(MOD_DIR)/ice_lite/librtpp_ice_lite.la
 
-@BUILD_ELPERIODIC_TRUE@am__append_15 = @LIBS_ELPERIODIC@
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
@@ -163,10 +162,8 @@ am__uninstall_files_from_dir = { \
        $(am__cd) "$$dir" && echo $$files | $(am__xargs_n) 40 $(am__rm_f); }; \
   }
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
-am__DEPENDENCIES_1 =
 librtpproxy_la_DEPENDENCIES = $(top_srcdir)/libucl/libucl.la \
-	$(XXH_DIR)/libxxHash.la $(am__append_13) $(am__append_14) \
-	$(am__DEPENDENCIES_1)
+	$(XXH_DIR)/libxxHash.la $(am__append_13) $(am__append_14)
 am__librtpproxy_la_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_defines.h rtpp_log.h rtpp_record.c rtpp_session.h \
 	rtpp_util.c rtpp_util.h rtp.c rtp_resizer.c rtp_resizer.h \
@@ -402,8 +399,8 @@ am__objects_46 = $(am__objects_23) $(am__objects_24) $(am__objects_25) \
 am_rtpp_fintest_OBJECTS = rtpp_fintest-rtpp_fintest.$(OBJEXT) \
 	$(am__objects_15) $(am__objects_22) $(am__objects_46)
 rtpp_fintest_OBJECTS = $(am_rtpp_fintest_OBJECTS)
-am__DEPENDENCIES_2 = $(top_srcdir)/libexecinfo/libexecinfo.la
-rtpp_fintest_DEPENDENCIES = $(am__DEPENDENCIES_2)
+am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.la
+rtpp_fintest_DEPENDENCIES = $(am__DEPENDENCIES_1)
 rtpp_fintest_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rtpp_fintest_CFLAGS) \
 	$(CFLAGS) $(rtpp_fintest_LDFLAGS) $(LDFLAGS) -o $@
@@ -495,7 +492,8 @@ am__objects_80 = $(am__objects_57) $(am__objects_58) $(am__objects_59) \
 am_rtpp_objck_OBJECTS = $(am__objects_54) $(am__objects_56) \
 	$(am__objects_80)
 rtpp_objck_OBJECTS = $(am_rtpp_objck_OBJECTS)
-rtpp_objck_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
+am__DEPENDENCIES_2 =
+rtpp_objck_DEPENDENCIES = $(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1)
 rtpp_objck_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rtpp_objck_CFLAGS) \
 	$(CFLAGS) $(rtpp_objck_LDFLAGS) $(LDFLAGS) -o $@
@@ -589,7 +587,7 @@ am_rtpp_rzmalloc_perf_debug_OBJECTS =  \
 	$(am__objects_114)
 rtpp_rzmalloc_perf_debug_OBJECTS =  \
 	$(am_rtpp_rzmalloc_perf_debug_OBJECTS)
-rtpp_rzmalloc_perf_debug_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+rtpp_rzmalloc_perf_debug_DEPENDENCIES = $(am__DEPENDENCIES_2) \
 	$(top_srcdir)/libexecinfo/libexecinfo.la
 rtpp_rzmalloc_perf_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -601,8 +599,8 @@ am__rtpproxy_SOURCES_DIST = main.c librtpproxy.la rtpp_module_if.c \
 @ENABLE_MODULE_IF_TRUE@	rtpproxy-rtpp_module_if.$(OBJEXT)
 am_rtpproxy_OBJECTS = rtpproxy-main.$(OBJEXT) $(am__objects_115)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
-rtpproxy_DEPENDENCIES = librtpproxy.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+rtpproxy_DEPENDENCIES = librtpproxy.la $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_2)
 rtpproxy_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rtpproxy_CFLAGS) \
 	$(CFLAGS) $(rtpproxy_LDFLAGS) $(LDFLAGS) -o $@
@@ -879,8 +877,8 @@ am_rtpproxy_debug_OBJECTS = $(am__objects_119) $(am__objects_126) \
 	$(am__objects_129) $(am__objects_153)
 rtpproxy_debug_OBJECTS = $(am_rtpproxy_debug_OBJECTS)
 rtpproxy_debug_DEPENDENCIES = $(top_srcdir)/libucl/libucl_debug.la \
-	$(XXH_DIR)/libxxHash_debug.la $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_1)
+	$(XXH_DIR)/libxxHash_debug.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 rtpproxy_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpproxy_debug_CFLAGS) $(CFLAGS) $(rtpproxy_debug_LDFLAGS) \
@@ -1680,7 +1678,7 @@ librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS) -fPIC
 librtpproxy_la_CPPFLAGS = $(rtpproxy_CPPFLAGS) -DLIBRTPPROXY
 librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
 	$(XXH_DIR)/libxxHash.la $(am__append_13) $(am__append_14) \
-	$(am__append_15)
+	@LIBS_ELPERIODIC@ $(am__empty)
 librtpproxy_la_LDFLAGS = -static
 IPLDIR = $(top_srcdir)/src/ipol
 all: config.h
