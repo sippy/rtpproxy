@@ -55,6 +55,7 @@
 #include "rtpp_module_if.h"
 #include "rtpp_modman.h"
 #include "rtpp_pipe.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
@@ -105,7 +106,9 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     pipe_cfg = (struct r_pipe_ctor_args){.seuid = pub->seuid,
       .streams_wrt = cfs->rtp_streams_wrt, .proc_servers = cfs->proc_servers,
       .log = log, .rtpp_stats = cfs->rtpp_stats, .pipe_type = PIPE_RTP,
+#if ENABLE_MODULE_IF
       .nmodules  = cfs->modules_cf->count.total,
+#endif
       .pproc_manager = cfs->pproc_manager};
     pub->rtp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtp == NULL) {
@@ -177,10 +180,12 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     pvt->pub.log = log;
     pvt->sessinfo = cfs->sessinfo;
     RTPP_OBJ_INCREF(cfs->sessinfo);
+#if ENABLE_MODULE_IF
     if (cfs->modules_cf->count.sess_acct > 0) {
         RTPP_OBJ_INCREF(cfs->modules_cf);
         pvt->module_cf = cfs->modules_cf;
     }
+#endif
 
     CALL_SMETHOD(cfs->sessinfo, append, pub, 0, fds);
     CALL_METHOD(cfs->rtpp_proc_cf, nudge);

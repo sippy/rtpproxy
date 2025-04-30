@@ -34,7 +34,7 @@ extern "C" {
 struct rtpp_cfg;
 
 void rtpp_shutdown(struct rtpp_cfg *);
-struct rtpp_cfg *rtpp_main(int argc, char **argv);
+struct rtpp_cfg *rtpp_main(int argc, const char * const *argv);
 
 #ifdef __cplusplus
 }

@@ -46,6 +46,9 @@
 #include "rtpp_command_private.h"
 #include "rtpp_command_stream.h"
 #include "rtpp_command_ecodes.h"
+#include "rtpp_command_stats.h"
+#include "rtpp_command_reply.h"
+#include "rtpp_network.h"
 #include "rtpp_util.h"
 
 static void
@@ -146,8 +149,7 @@ rtpp_command_stream_get(const struct rtpp_cfg *cfsp, struct rtpp_cmd_connection 
     }
 
     if (rcs->rlen > 0) {
-        cmd->rlen = rcs->rlen;
-        memcpy(&cmd->raddr, &rcs->raddr, rcs->rlen);
+        rtpp_command_set_raddr(cmd, sstosa(&rcs->raddr), rcs->rlen);
     }
 
     memcpy(cmd->buf, cp, len);

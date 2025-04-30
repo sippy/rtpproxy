@@ -1,0 +1,56 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ libsrtp2 (2.3.0-2) unstable; urgency=medium
+ .
+   * Release targeted unstable.
+Author: Jonas Smedegaard <dr@jones.dk>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2024-08-16
+
+--- libsrtp2-2.3.0.orig/test/util.c
++++ libsrtp2-2.3.0/test/util.c
+@@ -49,7 +49,7 @@
+ #include <stdint.h>
+ 
+ /* include space for null terminator */
+-char bit_string[MAX_PRINT_STRING_LEN + 1];
++static char bit_string[MAX_PRINT_STRING_LEN + 1];
+ 
+ static inline int hex_char_to_nibble(uint8_t c)
+ {
+--- libsrtp2-2.3.0.orig/Makefile.in
++++ libsrtp2-2.3.0/Makefile.in
+@@ -163,7 +163,7 @@ libsrtp2.a: $(srtpobj) $(cryptobj) $(gdo
+ 	$(RANLIB) libsrtp2.a
+ 
+ libsrtp2.$(SHAREDLIBSUFFIX): $(srtpobj) $(cryptobj) $(gdoi)
+-	$(CC) -shared -o $@ $(SHAREDLIB_LDFLAGS) \
++	$(CC) $(CFLAGS) -shared -o $@ $(SHAREDLIB_LDFLAGS) \
+ 				$^ $(LDFLAGS) $(LIBS)
+ 	if [ -n "$(SHAREDLIBVERSION)" ]; then \
+ 		ln -sfn $@ libsrtp2.$(SHAREDLIBSUFFIXNOVER); \
+@@ -172,7 +172,7 @@ libsrtp2.$(SHAREDLIBSUFFIX): $(srtpobj)
+ shared_library: libsrtp2.$(SHAREDLIBSUFFIX)
+ 
+ libsrtp2.so: $(srtpobj) $(cryptobj)
+-	$(CC) -shared -Wl,-soname,libsrtp2.so \
++	$(CC) $(CFLAGS) -shared -Wl,-soname,libsrtp2.so \
+ 		-o libsrtp2.so $^ $(LDFLAGS)
+ 
+ # test applications

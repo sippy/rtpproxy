@@ -81,6 +81,6 @@ double getdtime(void);
 void dtime2mtimespec(double, struct timespec *);
 const char *get_mclock_name(void);
 void rtpp_timestamp_get(struct rtpp_timestamp *);
-void dtime2timeval(double dtime, struct timeval *tvp);
+void dtime2timeval(double dtime, struct timeval *tvp) RTPP_EXPORT;
 
 #endif

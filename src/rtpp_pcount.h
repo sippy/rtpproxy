@@ -29,11 +29,14 @@
 #pragma once
 
 struct rtpps_pcount;
+struct rtpp_codeptr;
+struct rtpp_log;
 
 DECLARE_CLASS(rtpp_pcount, void);
 
 DECLARE_METHOD(rtpp_pcount, rtpp_pcount_reg_reld, void);
-DECLARE_METHOD(rtpp_pcount, rtpp_pcount_reg_drop, void);
+DECLARE_METHOD(rtpp_pcount, rtpp_pcount_reg_drop, void, const struct rtpp_codeptr *);
+DECLARE_METHOD(rtpp_pcount, rtpp_pcount_log_drops, void, struct rtpp_log *);
 DECLARE_METHOD(rtpp_pcount, rtpp_pcount_reg_ignr, void);
 DECLARE_METHOD(rtpp_pcount, rtpp_pcount_get_stats, void,
   struct rtpps_pcount *);
@@ -47,6 +50,7 @@ struct rtpps_pcount {
 DECLARE_SMETHODS(rtpp_pcount) {
     METHOD_ENTRY(rtpp_pcount_reg_reld, reg_reld);
     METHOD_ENTRY(rtpp_pcount_reg_drop, reg_drop);
+    METHOD_ENTRY(rtpp_pcount_log_drops, log_drops);
     METHOD_ENTRY(rtpp_pcount_reg_ignr, reg_ignr);
     METHOD_ENTRY(rtpp_pcount_get_stats, get_stats);
 };

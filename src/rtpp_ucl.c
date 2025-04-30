@@ -33,9 +33,9 @@
 #include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
-#include "rtpp_ucl.h"
-
 #include "ucl.h"
+#define _RTPP_UCL_C
+#include "rtpp_ucl.h"
 
 bool
 rtpp_ucl_set_unknown(struct rtpp_log *log, const ucl_object_t *top,
@@ -44,4 +44,32 @@ rtpp_ucl_set_unknown(struct rtpp_log *log, const ucl_object_t *top,
     RTPP_LOG(log, RTPP_LOG_ERR, "Unknown key '%s' in section '%s'",
         ucl_object_key(obj), ucl_object_key(top));
     return (false);
+}
+
+const char *
+r_ucl_object_tostring_forced(const ucl_object_t *obj)
+{
+
+    return (ucl_object_tostring_forced(obj));
+}
+
+ucl_type_t
+r_ucl_object_type(const ucl_object_t *obj)
+{
+
+    return (ucl_object_type(obj));
+}
+
+int64_t
+r_ucl_object_toint(const ucl_object_t *obj)
+{
+
+    return (ucl_object_toint(obj));
+}
+
+const char *
+r_ucl_object_key(const ucl_object_t *obj)
+{
+
+    return (ucl_object_key(obj));
 }

@@ -46,6 +46,7 @@
 #include "rtpp_module_cplane.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_cfg.h"
 #include "rtpp_wi.h"
@@ -56,6 +57,7 @@
 #include "rtp.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
+#include "rtpp_packetops.h"
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
@@ -71,6 +73,7 @@
 #include "rtpp_util.h"
 #include "rtpp_pcount.h"
 #include "rtpp_pcnt_strm.h"
+#include "rtpp_linker_set.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
@@ -107,10 +110,9 @@ static void rtpp_dtls_gw_dtor(struct rtpp_module_priv *);
 static void rtpp_dtls_gw_worker(const struct rtpp_wthrdata *);
 static int rtpp_dtls_gw_handle_command(struct rtpp_module_priv *,
   const struct rtpp_subc_ctx *);
-static bool is_dtls_packet(const struct rtp_packet *);
 static int rtpp_dtls_gw_taste_encrypted(struct pkt_proc_ctx *);
 static int rtpp_dtls_gw_taste_plain(struct pkt_proc_ctx *);
-static enum pproc_action rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *);
+static struct pproc_act rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *);
 
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
@@ -118,29 +120,32 @@ static enum pproc_action rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *);
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
-#if !defined(LIBRTPPROXY)
-struct rtpp_minfo rtpp_module = {
-#else
-struct rtpp_minfo rtpp_module_dtls_gw = {
-#endif
+struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "dtls_gw",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 4,
     .proc.ctor = rtpp_dtls_gw_ctor,
     .proc.dtor = rtpp_dtls_gw_dtor,
-    .wapi = &(const struct rtpp_wthr_handlers){.main_thread = rtpp_dtls_gw_worker},
+    .wapi = &(const struct rtpp_wthr_handlers){
+        .main_thread = rtpp_dtls_gw_worker,
+        .queue_size = RTPQ_MEDIUM_CB_LEN,
+    },
     .capi = &(const struct rtpp_cplane_handlers){.ul_subc_handle = rtpp_dtls_gw_handle_command},
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM
 #endif
 };
+#if defined(LIBRTPPROXY)
+const static struct rtpp_minfo *_rtpp_module_dtls_gw = &RTPP_MOD_SELF;
+DATA_SET(rtpp_modules, _rtpp_module_dtls_gw);
+#endif
 
 static void
 rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
 {
     struct rtpp_wi *wi;
     struct wipkt *wip;
-    int res;
+    struct res_loc res;
 
     for (;;) {
         wi = rtpp_queue_get_item(wp->mod_q, 0);
@@ -154,25 +159,25 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
 #if 0
             RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "Packet from DTLS");
 #endif
-            CALL_METHOD(wip->edata.dtls_conn, dtls_recv, wip->pktx.pktp);
-            res = 1;
+            CALL_SMETHOD(wip->edata.dtls_conn, dtls_recv, wip->pktx.pktp);
+            res = RES_HERE(1);
             break;
         case SRTP_IN:
 #if 0
             RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "DTLS: packet SRTP->RTP");
 #endif
-            res = CALL_METHOD(wip->edata.dtls_conn, srtp_recv, &wip->pktx);
+            res = CALL_SMETHOD(wip->edata.dtls_conn, srtp_recv, &wip->pktx);
             break;
         case RTP_OUT:
 #if 0
             RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "DTLS: packet RTP->SRTP");
 #endif
-            res = CALL_METHOD(wip->edata.dtls_conn, rtp_send, &wip->pktx);
+            res = CALL_SMETHOD(wip->edata.dtls_conn, rtp_send, &wip->pktx);
             break;
         default:
             abort();
         }
-        if (res != 0) {
+        if (res.v != 0) {
             switch (wip->edata.direction) {
             case DTLS_IN:
                 break;
@@ -180,7 +185,7 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
                 CALL_SMETHOD(wip->pktx.strmp_in->pcnt_strm, reg_pktin, wip->pktx.pktp);
                 /* Fallthrouth */
             case RTP_OUT:
-                CALL_SMETHOD(wip->pktx.strmp_in->pcount, reg_drop);
+                CALL_SMETHOD(wip->pktx.strmp_in->pcount, reg_drop, res.loc);
                 CALL_SMETHOD(wip->pktx.strmp_in->pproc_manager, reg_drop);
                 break;
             }
@@ -198,6 +203,7 @@ static void
 dtls_gw_data_dtor(struct dtls_gw_stream_cfg *pvt)
 {
 
+    CALL_SMETHOD(pvt->dtls_conn, godead);
     RTPP_OBJ_DECREF(pvt->dtls_conn);
     free(pvt);
     RC_DECREF(RTPP_MOD_SELF.module_rcnt);
@@ -232,7 +238,7 @@ rtpp_dtls_gw_setup_sender(struct rtpp_module_priv *pvt,
     int sidx, lport;
     struct rtpp_socket *fd, *fds[2];
 
-    fd = CALL_SMETHOD(dtls_strmp, get_skt);
+    fd = CALL_SMETHOD(dtls_strmp, get_skt, HEREVAL);
     if (fd != NULL) {
         RTPP_OBJ_DECREF(fd);
         return (0);
@@ -332,14 +338,14 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
     switch (rdg_cmd) {
     case RDG_CMD_A:
     case RDG_CMD_P:
-        rtpp_str_dup2(&argv[1], &rdfs.algorithm);
-        if (rdfs.algorithm.len > sizeof(rdfs.alg_buf))
+        if (argv[1].len > sizeof(rdfs.alg_buf))
             goto invalalg;
-        for (int i = 0; i < rdfs.algorithm.len; i++) {
-            rdfs.alg_buf[i] = rdfs.algorithm.s[i];
+        for (int i = 0; i < argv[1].len; i++) {
+            rdfs.alg_buf[i] = argv[1].s[i];
             if (rdfs.alg_buf[i] >= 'a')
                 rdfs.alg_buf[i] -= ('a' - 'A');
         }
+        rdfs.algorithm.len = argv[1].len;
         rdfs.algorithm.s = rdfs.alg_buf;
         rdfs.fingerprint = &argv[2];
         rdfs.ssrc = (argc == 4) ? &argv[3] : NULL;
@@ -384,7 +390,7 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
             goto e0;
         }
     }
-    my_mode = CALL_METHOD(rtps_c->dtls_conn, setmode, rdfsp);
+    my_mode = CALL_SMETHOD(rtps_c->dtls_conn, setmode, rdfsp);
     if (my_mode == RTPP_DTLS_MODERR) {
         goto e0;
     }
@@ -468,7 +474,7 @@ rtpp_dtls_gw_taste_encrypted(struct pkt_proc_ctx *pktxp)
     static __thread struct rtpp_dtls_gw_aux strp_in = {.direction = SRTP_IN};
     struct rtpp_dtls_gw_aux *rdgap;
 
-    if (!is_dtls_packet(pktxp->pktp))
+    if (!rtpp_is_dtls_tst(pktxp))
         rdgap = &strp_in;
     else
         rdgap = &dtls_in;
@@ -492,7 +498,7 @@ rtpp_dtls_gw_taste_plain(struct pkt_proc_ctx *pktxp)
     return (1);
 }
 
-static enum pproc_action
+static struct pproc_act
 rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_dtls_gw_aux *edata;
@@ -510,7 +516,14 @@ rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *pktxp)
     RTPP_OBJ_INCREF(pktxp->strmp_in);
     if (pktxp->strmp_out != NULL)
         RTPP_OBJ_INCREF(pktxp->strmp_out);
-    rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q);
+    if (rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q) != 0) {
+        if (pktxp->strmp_out != NULL)
+            RTPP_OBJ_DECREF(pktxp->strmp_out);
+        RTPP_OBJ_DECREF(pktxp->strmp_in);
+        RTPP_OBJ_DECREF(edata->dtls_conn);
+        RTPP_OBJ_DECREF(wi);
+        return (PPROC_ACT_DROP);
+    }
 
     return (PPROC_ACT_TAKE);
 }
@@ -549,17 +562,4 @@ rtpp_dtls_gw_dtor(struct rtpp_module_priv *pvt)
     RTPP_OBJ_DECREF(pvt->dtls_ctx);
     mod_free(pvt);
     return;
-}
-
-static bool
-is_dtls_packet(const struct rtp_packet *pktp)
-{
-    uint8_t b;
-
-    if (pktp->size < 13)
-        return false;
-
-    b = pktp->data.buf[0];
-
-    return (19 < b && b < 64);
 }

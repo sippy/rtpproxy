@@ -34,8 +34,8 @@
 
 #include "config_pp.h"
 
-#include "rtpp_mallocs.h"
 #include "rtpp_types.h"
+#include "rtpp_mallocs.h"
 #include "rtpp_nofile.h"
 
 #if !defined(NO_ERR_H)
@@ -73,4 +73,11 @@ rtpp_nofile_ctor(void)
     priv->pub.dtor = rtpp_nofile_dtor;
     priv->pub.limit = &(priv->limit_storage);
     return (&(priv->pub));
+}
+
+long long
+rtpp_rlim_max(const struct rtpp_nofile *np)
+{
+
+    return (long long)(np->limit->rlim_max);
 }

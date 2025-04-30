@@ -5,9 +5,7 @@ include $(top_srcdir)/m4/rtpp_module.ami
 
 pkglib_LTLIBRARIES = rtpp_catch_dtmf.la rtpp_catch_dtmf_debug.la
 
-if ENABLE_LIBRTPPROXY
 noinst_LTLIBRARIES = librtpp_catch_dtmf.la
-endif
 
 rtpp_catch_dtmf_la_SOURCES = rtpp_catch_dtmf.c
 rtpp_catch_dtmf_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)

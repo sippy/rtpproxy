@@ -50,18 +50,19 @@ int drop_privileges(const struct rtpp_cfg *);
 char *rtpp_strsep(char **, const char *);
 int rtpp_daemon_rel_parent(const struct rtpp_daemon_rope *);
 struct rtpp_daemon_rope rtpp_daemon(int, int);
-int url_unquote(unsigned char *, int);
-int url_unquote2(const char *, char *, int);
+int url_unquote(unsigned char *, int) RTPP_EXPORT;
+int url_unquote2(const char *, char *, int) RTPP_EXPORT;
+int url_quote(const char *, char *, int, int) RTPP_EXPORT;
 int rtpp_get_sched_hz(void);
-long long rtpp_rlim_max(const struct rtpp_cfg *);
 #ifndef HAVE_STRLCPY
-size_t strlcpy(char *, const char *, size_t);
+size_t strlcpy(char *, const char *, size_t) RTPP_EXPORT;
 #endif
 enum atoi_rval {ATOI_OK = 0, ATOI_NOTINT = -1, ATOI_OUTRANGE = -2};
 enum atoi_rval atoi_safe_sep(const char *, int *, char, const char **);
 enum atoi_rval atoi_safe(const char *, int *);
-enum atoi_rval atoi_saferange(const char *, int *, int, int);
+enum atoi_rval atoi_saferange(const char *, int *, int, int) RTPP_EXPORT;
 void rtpp_strsplit(char *, char *, size_t, size_t);
+void generate_random_string(char *, int) RTPP_EXPORT;
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)

@@ -56,7 +56,5 @@ rtpp_badmod4_debug_la_CPPFLAGS=$(rtpp_badmod1_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="badmod4"
 rtpp_badmod4_debug_la_CFLAGS = $(rtpp_badmod1_debug_la_CFLAGS)
 
-DEFS=	$(CC_WFLAGS) @DEFS@
-
 install:
 	true

@@ -28,7 +28,6 @@ struct rtpp_refcnt;
 struct rtpp_stream;
 struct rtpp_dtls_conn;
 struct rtp_packet;
-struct rtpp_anetio_cf;
 struct pkt_proc_ctx;
 
 enum rtpp_dtls_mode {
@@ -46,24 +45,35 @@ struct rdc_peer_spec {
     char alg_buf[FP_DIGEST_ALG_LEN];
 };
 
+struct res_loc {
+    int v;
+    here_t loc;
+};
+#define RES_HERE(res) (struct res_loc){(res), HEREVAL}
+
+#if !defined(OPENSSL_VERSION_NUMBER)
+typedef void SSL_CTX;
+#endif
+DECLARE_CLASS(rtpp_dtls_conn, const struct rtpp_cfg *,
+  SSL_CTX *, struct rtpp_stream *);
+
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_dtls_recv, void,
   const struct rtp_packet *);
-DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_rtp_send, int,
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_rtp_send, struct res_loc,
   struct pkt_proc_ctx *);
-DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_srtp_recv, int,
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_srtp_recv, struct res_loc,
   struct pkt_proc_ctx *);
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_setmode, enum rtpp_dtls_mode,
   const struct rdc_peer_spec *);
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_godead, void);
 
-struct rtpp_dtls_conn {
-    struct rtpp_refcnt *rcnt;
+DECLARE_SMETHODS(rtpp_dtls_conn)
+{
     METHOD_ENTRY(rtpp_dtls_conn_dtls_recv, dtls_recv);
     METHOD_ENTRY(rtpp_dtls_conn_rtp_send, rtp_send);
     METHOD_ENTRY(rtpp_dtls_conn_srtp_recv, srtp_recv);
     METHOD_ENTRY(rtpp_dtls_conn_setmode, setmode);
+    METHOD_ENTRY(rtpp_dtls_conn_godead, godead);
 };
 
-#if defined(OPENSSL_VERSION_NUMBER)
-struct rtpp_dtls_conn *rtpp_dtls_conn_ctor(const struct rtpp_cfg *,
-  SSL_CTX *, struct rtpp_stream *);
-#endif
+DECLARE_CLASS_PUBTYPE(rtpp_dtls_conn, {});

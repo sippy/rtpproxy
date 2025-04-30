@@ -135,10 +135,13 @@ int main(int argc, char **argv)
     char ch, *datafile;
     char sendbuf[88], databuf[1024 * 8];
     FILE *f;
-    _Atomic(uint64_t) totalout = ATOMIC_VAR_INIT(0);
-    _Atomic(uint64_t) totalin = ATOMIC_VAR_INIT(0);
+    _Atomic(uint64_t) totalout;
+    atomic_init(&totalout, 0);
+    _Atomic(uint64_t) totalin;
+    atomic_init(&totalin, 0);
     void *elp;
-    _Atomic(double) prate = ATOMIC_VAR_INIT(100.0);
+    _Atomic(double) prate;
+    atomic_init(&prate, 100.0);
     double pr;
 
     min_port = 6000;

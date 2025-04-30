@@ -41,12 +41,12 @@
 
 #include "config_pp.h"
 
+#include "rtpp_types.h"
 #include "rtpp_cfg.h"
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_log.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_types.h"
 #include "rtpp_list.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_acct_pipe.h"
@@ -55,6 +55,7 @@
 #include "rtpp_pcount.h"
 #include "rtpp_time.h"
 #include "rtpp_pcnts_strm.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_stream.h"
 #include "rtpp_pipe.h"
 #include "rtpp_session.h"
@@ -78,6 +79,7 @@
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
+#include "rtpp_refproxy.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -96,8 +98,8 @@ struct rtpp_module_if_priv {
     /* Privary version of the module's memdeb_p, store it here */
     /* just in case module screws it up                        */
     void *memdeb_p;
-    char *mpath;
     int started;
+    char mpath[0];
 };
 
 static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
@@ -115,19 +117,49 @@ static void rtpp_mif_kaput(struct rtpp_module_if *self);
 static const char *do_acct_aname = "do_acct";
 static const char *do_acct_rtcp_aname = "do_acct_rtcp";
 
+extern void rtpp_sbuf_ctor(void);
+extern void rtpp_sbuf_dtor(void);
+extern void rtpp_sbuf_extend(void);
+extern void rtpp_sbuf_reset(void);
+extern void rtpp_sbuf_write(void);
+
+static const struct rtpp_minfo_fset mip_model = {
+#if RTPP_CHECK_LEAKS
+    ._malloc = &rtpp_memdeb_malloc,
+    ._zmalloc = &rtpp_zmalloc_memdeb,
+    ._rzmalloc = &rtpp_rzmalloc_memdeb,
+    ._free = &rtpp_memdeb_free,
+    ._realloc = &rtpp_memdeb_realloc,
+    ._strdup = &rtpp_memdeb_strdup,
+    ._asprintf = &rtpp_memdeb_asprintf,
+    ._vasprintf = &rtpp_memdeb_vasprintf,
+#else
+    ._malloc = &malloc,
+    ._zmalloc = &rtpp_zmalloc,
+    ._rzmalloc = &rtpp_rzmalloc,
+    ._free = &free,
+    ._realloc = &realloc,
+    ._strdup = &strdup,
+    ._asprintf = &asprintf,
+    ._vasprintf = &vasprintf,
+    .auxp = {rtpp_sbuf_ctor, rtpp_sbuf_dtor, rtpp_sbuf_extend,
+             rtpp_sbuf_reset, rtpp_sbuf_write, rtpp_refproxy_ctor},
+#endif
+};
+
 struct rtpp_module_if *
 rtpp_module_if_ctor(const char *mpath)
 {
     struct rtpp_module_if_priv *pvt;
+    size_t msize = sizeof(struct rtpp_module_if_priv);
+    int plen = strlen(mpath) + 1;
 
-    pvt = rtpp_rzmalloc(sizeof(struct rtpp_module_if_priv), PVT_RCOFFS(pvt));
+    msize += plen;
+    pvt = rtpp_rzmalloc(msize, PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->mpath = strdup(mpath);
-    if (pvt->mpath == NULL) {
-        goto e1;
-    }
+    memcpy(pvt->mpath, mpath, plen);
     pvt->pub.load = &rtpp_mif_load;
     pvt->pub.construct = &rtpp_mif_construct;
     pvt->pub.do_acct = &rtpp_mif_do_acct;
@@ -140,9 +172,6 @@ rtpp_module_if_ctor(const char *mpath)
       pvt);
     return ((&pvt->pub));
 
-e1:
-    RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -156,7 +185,7 @@ packet_is_rtcp(struct pkt_proc_ctx *pktx)
     return (1);
 }
 
-static enum pproc_action
+static struct pproc_act
 acct_rtcp_enqueue(const struct pkt_proc_ctx *pktx)
 {
     struct rtpp_module_if_priv *pvt;
@@ -186,6 +215,8 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     PUB2PVT(self, pvt);
 #if defined(LIBRTPPROXY)
     mip = rtpp_static_modules_lookup(pvt->mpath);
+    if (mip == NULL)
+        goto e1;
 #endif
     if (mip == NULL) {
         pvt->dmp = dlopen(pvt->mpath, RTLD_NOW);
@@ -218,20 +249,13 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         goto e2;
     }
 
+    pvt->mip->fn = &mip_model;
 #if RTPP_CHECK_LEAKS
     if (pvt->mip->memdeb_p == NULL) {
         RTPP_LOG(log, RTPP_LOG_ERR, "memdeb pointer is NULL in the %s, "
           "trying to load non-debug module?", pvt->mpath);
         goto e2;
     }
-    pvt->mip->_malloc = &rtpp_memdeb_malloc;
-    pvt->mip->_zmalloc = &rtpp_zmalloc_memdeb;
-    pvt->mip->_rzmalloc = &rtpp_rzmalloc_memdeb;
-    pvt->mip->_free = &rtpp_memdeb_free;
-    pvt->mip->_realloc = &rtpp_memdeb_realloc;
-    pvt->mip->_strdup = &rtpp_memdeb_strdup;
-    pvt->mip->_asprintf = &rtpp_memdeb_asprintf;
-    pvt->mip->_vasprintf = &rtpp_memdeb_vasprintf;
     pvt->memdeb_p = rtpp_memdeb_init(false);
     if (pvt->memdeb_p == NULL) {
         goto e2;
@@ -246,24 +270,20 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
           "trying to load debug module?", pvt->mpath);
         goto e2;
     }
-    pvt->mip->_malloc = &malloc;
-    pvt->mip->_zmalloc = &rtpp_zmalloc;
-    pvt->mip->_rzmalloc = &rtpp_rzmalloc;
-    pvt->mip->_free = &free;
-    pvt->mip->_realloc = &realloc;
-    pvt->mip->_strdup = &strdup;
-    pvt->mip->_asprintf = &asprintf;
-    pvt->mip->_vasprintf = &vasprintf;
 #endif
     pvt->mip->wthr.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
     if (pvt->mip->wthr.sigterm == NULL) {
         goto e3;
     }
-    pvt->mip->wthr.mod_q = rtpp_queue_init(RTPQ_SMALL_CB_LEN, "rtpp_module_if(%s)",
+    int qsize = RTPQ_SMALL_CB_LEN;
+    if (pvt->mip->wapi != NULL && pvt->mip->wapi->queue_size > 0)
+        qsize = pvt->mip->wapi->queue_size;
+    pvt->mip->wthr.mod_q = rtpp_queue_init(qsize, "rtpp_module_if(%s)",
       pvt->mip->descr.name);
     if (pvt->mip->wthr.mod_q == NULL) {
         goto e4;
     }
+    rtpp_queue_setmaxlen(pvt->mip->wthr.mod_q, RTPQ_SMALL_CB_LEN * 8);
     RTPP_OBJ_INCREF(log);
     pvt->mip->log = log;
     if (pvt->mip->aapi != NULL) {
@@ -324,7 +344,10 @@ rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
         if (pvt->started != 0) {
             /* First, stop the worker thread */
             RTPP_OBJ_INCREF(pvt->mip->wthr.sigterm);
-            rtpp_queue_put_item(pvt->mip->wthr.sigterm, pvt->mip->wthr.mod_q);
+            for (int r = -1; r < 0;) {
+                r = rtpp_queue_put_item(pvt->mip->wthr.sigterm,
+                  pvt->mip->wthr.mod_q);
+            }
         }
     }
 }
@@ -362,7 +385,6 @@ rtpp_mif_kaput(struct rtpp_module_if *self)
     /* Unload and free everything */
     if (pvt->dmp != NULL)
         dlclose(pvt->dmp);
-    free(pvt->mpath);
     free(pvt);
 }
 
@@ -422,7 +444,12 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
         return;
     }
     RTPP_OBJ_INCREF(acct);
-    rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q);
+    if (rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q) == 0)
+        return;
+    RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': accounting queue "
+      "is full", pvt->mip->descr.name);
+    RTPP_OBJ_DECREF(acct);
+    RTPP_OBJ_DECREF(wi);
 }
 
 static void
@@ -439,7 +466,12 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
         RTPP_OBJ_DECREF(acct);
         return;
     }
-    rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q);
+    if (rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q) == 0)
+        return;
+    RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': accounting queue "
+      "is full", pvt->mip->descr.name);
+    RTPP_OBJ_DECREF(acct);
+    RTPP_OBJ_DECREF(wi);
 }
 
 #define PTH_CB(x) ((void *(*)(void *))(x))

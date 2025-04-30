@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#include "rtpp_types.h"
 #include "rtp_packet.h"
 #include "rtpp_module.h"
 #include "rtpp_module_if_static.h"
@@ -12,6 +13,12 @@
 
 #include "fuzz_standalone.h"
 
+static const struct rtpp_minfo_fset minfo_fset = {
+    ._malloc = &malloc,
+    ._realloc = &realloc,
+    ._free  = &free
+};
+
 __attribute__((constructor)) void
 fuzz_rtcp_parser_init()
 {
@@ -19,9 +26,7 @@ fuzz_rtcp_parser_init()
 
     mip = rtpp_static_modules_lookup("acct_rtcp_hep");
     assert(mip != NULL);
-    mip->_malloc = &malloc;
-    mip->_realloc = &realloc;
-    mip->_free = &free;
+    mip->fn = &minfo_fset;
 }
 
 int

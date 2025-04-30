@@ -1,0 +1,16 @@
+"U callid_1 1.2.3.4 1234 from_tag_1",
+"L callid_1 5.6.7.8 5678 from_tag_1 to_tag_1",
+"U callid_2 1.2.3.4 1234 from_tag_2 && " \
+  "M4:1 A sha-256 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00 1",
+"U callid_2 5.6.7.8 5678 to_tag_2 from_tag_2 && M4:1 S",
+"U callid_3 1.2.3.4 1234 from_tag_3 && " \
+  "M4:1 A sha-256 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00 1 && " \
+  "M5:1 A bbbb AAAAAAAAAAAAAAAAAAAAAAAA && " \
+  "M5:1 C 0 1 udp 4 1.2.3.4 1234 typ host generation 0 network-id 1 && " \
+  "M5:1 C 1 1 udp 3 5.6.7.8 5678 typ host generation 0 network-id 2 && " \
+  "M5:1 C 2 1 udp 2 5.6.7.8 1234 typ host generation 0 network-id 3 && " \
+  "M5:1 C 3 1 udp 1 1.2.3.4 5678 typ srflx raddr 1.2.3.4 rport 1234 generation 0 network-id 3",
+"U callid_3 5.6.7.8 5678 to_tag_3 from_tag_3 && M4:1 S && M5:1 S",
+"U callid_4 5.6.7.8 5678 from_tag_4 to_tag_4 && M4:1 S",
+"U callid_4 1.2.3.4 1234 to_tag_4 && " \
+  "M4:1 P sha-256 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00 1",

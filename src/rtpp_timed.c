@@ -40,6 +40,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_queue.h"
 #include "rtpp_wi.h"

@@ -43,10 +43,10 @@
 #include <sys/sysctl.h>
 #endif
 
+#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_cfg.h"
 #include "rtpp_util.h"
-#include "rtpp_types.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_runcreds.h"
 #include "rtpp_debug.h"
@@ -58,6 +58,7 @@
 void
 seedrandom(void)
 {
+#if !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
     int fd;
     unsigned long junk;
     struct timeval tv;
@@ -72,6 +73,9 @@ seedrandom(void)
 
     gettimeofday(&tv, NULL);
     srandom((unsigned int)(getpid() << 14) ^ tv.tv_sec ^ tv.tv_usec ^ junk);
+#else
+    srandom(42);
+#endif
 }
 
 int
@@ -327,6 +331,33 @@ url_unquote(unsigned char *buf, int len)
     return (url_unquote2((char *)buf, (char *)buf, len));
 }
 
+int
+url_quote(const char *ibuf, char *obuf, int ilen, int olen) {
+    const char *hex = "0123456789ABCDEF";
+    const unsigned char *cp;
+    unsigned char *ocp = (unsigned char *)obuf;
+    int outlen = 0;
+
+    for (cp = (const unsigned char *)ibuf; ilen-- > 0; cp++) {
+        if ((*cp >= 'A' && *cp <= 'Z') || (*cp >= 'a' && *cp <= 'z') ||
+          (*cp >= '0' && *cp <= '9') || *cp == '-' || *cp == '_' ||
+          *cp == '.' || *cp == '~') {
+            if ((olen - outlen) == 0)
+                return -1;
+            *ocp++ = *cp;
+            outlen++;
+        } else {
+            if ((olen - outlen) < 3)
+                return -1;
+            *ocp++ = '%';
+            *ocp++ = hex[*cp >> 4];
+            *ocp++ = hex[*cp & 0x0F];
+            outlen += 3;
+        }
+    }
+    return outlen;
+}
+
 enum atoi_rval
 atoi_safe_sep(const char *s, int *res, char sep, const char * *next)
 {
@@ -457,10 +488,7 @@ rtpp_get_sched_hz(void)
  * will be copied.  Always NUL terminates (unless siz == 0).
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
-size_t strlcpy(dst, src, siz)
-	char *dst;
-	const char *src;
-	size_t siz;
+size_t strlcpy(char *dst, const char *src, size_t siz)
 {
 	char *d = dst;
 	const char *s = src;
@@ -519,4 +547,20 @@ rtpp_strsplit(char *ibuf, char *mbuf, size_t dlen, size_t blen)
                 obp += 1;
                 cp += 1;
         }
+}
+
+void
+generate_random_string(char *buffer, int length)
+{
+    const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                           "abcdefghijklmnopqrstuvwxyz"
+                           "0123456789"
+                           "+/";
+    int charset_size = sizeof(charset) - 1;
+
+    for (int i = 0; i < length; i++) {
+        int key = random() % charset_size;
+        buffer[i] = charset[key];
+    }
+    buffer[length] = '\0';
 }

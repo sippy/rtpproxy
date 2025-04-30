@@ -33,7 +33,7 @@ struct rtpp_command_args;
 
 struct rtpp_subc_resp {
     int result;
-    char buf_t[256];
+    char buf_t[512];
 };
 
 struct rtpp_subc_ctx {

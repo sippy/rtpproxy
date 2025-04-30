@@ -40,18 +40,19 @@
 #include "rtpp_log.h"
 #include "rtpp_command.h"
 #include "commands/rpcpv1_delete.h"
+#include "rtpp_command_reply.h"
 #include "rtpp_command_ecodes.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "rtpp_command_sub.h"
-#include "rtpp_types.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_pipe.h"
 #include "rtpp_session.h"
 #include "rtpp_str.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_stream.h"
 #include "rtpp_weakref.h"
 
@@ -168,7 +169,7 @@ rtpp_command_del_opts_parse(struct rtpp_command *cmd, const struct rtpp_command_
     dlop = rtpp_zmalloc(sizeof(struct delete_opts));
     if (dlop == NULL) {
         if (cmd != NULL)
-            reply_error(cmd, ECODE_NOMEM_1);
+            CALL_SMETHOD(cmd->reply, error, ECODE_NOMEM_1);
         goto err_undo_0;
     }
     for (cp = ap->v[0].s + 1; *cp != '\0'; cp++) {
@@ -182,7 +183,7 @@ rtpp_command_del_opts_parse(struct rtpp_command *cmd, const struct rtpp_command_
             if (cmd != NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "DELETE: unknown command modifier `%c'", *cp);
-                reply_error(cmd, ECODE_PARSE_4);
+                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_4);
             }
             goto err_undo_1;
         }

@@ -32,12 +32,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config_pp.h"
+
 #include "rtpp_cfg.h"
 #include "rtpp_types.h"
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
+#include "rtpp_command_reply.h"
 #include "commands/rpcpv1_ver.h"
 #include "rtpp_tnotify_set.h"
 
@@ -84,7 +87,7 @@ handle_ver_feature(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
      */
     if (strcmp(cmd->args.v[1].s, "20081224") == 0 &&
       !CALL_METHOD(cfsp->rtpp_tnset_cf, isenabled)) {
-        reply_number(cmd, 0);
+        CALL_SMETHOD(cmd->reply, number, 0);
         return;
     }
     for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
@@ -93,7 +96,7 @@ handle_ver_feature(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             break;
         }
     }
-    reply_number(cmd, known);
+    CALL_SMETHOD(cmd->reply, number, known);
 }
 
 const struct proto_cap *

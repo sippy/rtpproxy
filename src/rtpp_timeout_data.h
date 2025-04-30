@@ -40,4 +40,4 @@ struct rtpp_timeout_data {
 };
 
 struct rtpp_timeout_data *rtpp_timeout_data_ctor(struct rtpp_tnotify_target *,
-  const rtpp_str_t *);
+  const rtpp_str_t *) RTPP_EXPORT;

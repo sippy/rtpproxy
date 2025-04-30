@@ -1,9 +1,4 @@
-[![Clean Build@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/cleanbuild.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/cleanbuild.yml?query=branch%3Amaster++)
-[![All-inclusive Build@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/depsbuild.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/depsbuild.yml?query=branch%3Amaster++)
-[![Functional Testing@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/functesting.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/functesting.yml?query=branch%3Amaster++)
-[![Glitching@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/glitching.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/glitching.yml?query=branch%3Amaster++)
-[![OSSFuzz@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/cifuzz.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/cifuzz.yml?query=branch%3Amaster++)
-[![Docker Image Build@GitHub](https://github.com/sippy/rtpproxy/actions/workflows/dockerhub.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/dockerhub.yml?query=branch%3Amaster++)
+[![RTPProxy CI](https://github.com/sippy/rtpproxy/actions/workflows/rtpproxy_ci.yml/badge.svg?branch=master)](https://github.com/sippy/rtpproxy/actions/workflows/rtpproxy_ci.yml?query=branch%3Amaster++)
 [![Coverage Status](https://coveralls.io/repos/github/sippy/rtpproxy/badge.svg?branch=master)](https://coveralls.io/github/sippy/rtpproxy?branch=master)
 [![Coverity](https://scan.coverity.com/projects/8841/badge.svg)](https://scan.coverity.com/projects/sippy-rtpproxy)
 
@@ -33,17 +28,13 @@ and session recording to a local file or remote UDP listener(s). As well
 as makes available array of real-time or near real-time session counters,
 both per-session and per-instance.
 
-The RTPproxy has been designed by Maxim Sobolev and now is being actively
-maintained by the [Sippy Software, Inc](http://www.sippysoft.com). With the
-great help of numerous community contributors, both private and institutional.
-Not to mention army of robots gracefully dispatched at need by CI.
+Since version 3.1.0, full set of extensions is available allowing to create
+a WebRTC-compatible endpoints.
 
-The original idea has inspired and directly influenced multitude of independent
-implementations, including but not limited to the
-[Mediaproxy](https://mediaproxy.com),
-[erlrtpproxy](https://github.com/lemenkov/erlrtpproxy), and most recently
-[RTP Engine](https://github.com/sipwise/rtpengine), each project focusing on
-its own area of the vast functionality space.
+## News
+
+- introducing WebRTC/WSS clients support via 3 new modules: dtls_gw, ice_lite
+  and rtcp_demux.
 
 ## How it works
 
@@ -90,7 +81,24 @@ $ ./configure
 $ make
 ```
 
-For detailed compilation instructions please check [User Manual](https://www.rtpproxy.org/doc/master/user_manual.html#MAKESRC).
+## Authors and Contributors
+
+The RTPproxy has been designed by Maxim Sobolev and now is being actively
+maintained by the [Sippy Software, Inc](http://www.sippysoft.com). With the
+great help of numerous community contributors, both private and institutional.
+Not to mention army of robots gracefully dispatched at need by CI.
+
+The original idea has inspired and directly influenced multitude of independent
+implementations, including but not limited to the
+[Mediaproxy](https://mediaproxy.com),
+[erlrtpproxy](https://github.com/lemenkov/erlrtpproxy), and most recently
+[RTP Engine](https://github.com/sipwise/rtpengine), each project focusing on
+its own area of the vast functionality space.
+
+## Documentation and References
+
+- [User Manual](https://www.rtpproxy.org/doc/master/user_manual.html#MAKESRC);
+- [RTPproxy Control Protocol Reference](https://github.com/sippy/rtpproxy/wiki/RTPProxy-Command-Protocol).
 
 ## Feedback & Support
 

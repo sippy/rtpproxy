@@ -1,0 +1,31 @@
+set_clang_env() {
+  case ${TARGETPLATFORM} in
+  linux/arm/v5 | linux/arm/v7 | linux/ppc64le | linux/mips64le)
+    if [ ${CLANG_VER_NEW} -gt 16 ]
+    then
+      CLANG_VER="${CLANG_VER_OLD}"
+      BUILD_DEPS="${BUILD_DEPS_OLD}"
+    else
+      CLANG_VER="${CLANG_VER_NEW}"
+      BUILD_DEPS="${BUILD_DEPS_NEW}"
+    fi
+    ;;
+  *)
+    CLANG_VER="${CLANG_VER_NEW}"
+    BUILD_DEPS="${BUILD_DEPS_NEW}"
+    ;;
+  esac
+}
+
+install_clang() {
+  if [ ${CLANG_VER} -eq ${CLANG_VER_OLD} ]
+  then
+    return
+  fi
+  ${APT_INSTALL} curl gpg lsb-release
+  MYREL="`lsb_release -c | grep ^Codename | awk '{print $2}'`"
+  echo "deb [signed-by=/usr/share/keyrings/llvm.gpg] http://apt.llvm.org/${MYREL}/ llvm-toolchain-${MYREL}-${CLANG_VER} main" > /etc/apt/sources.list.d/llvm.list
+  curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor > /usr/share/keyrings/llvm.gpg
+  ${APT_UPDATE}
+  apt-mark hold ca-certificates
+}

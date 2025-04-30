@@ -29,11 +29,16 @@
 #ifndef _RTPP_COMMAND_ARGS_H_
 #define _RTPP_COMMAND_ARGS_H_
 
-#define RTPC_MAX_ARGC   20
+#define RTPC_MAX_ARGC   24
 
 struct rtpp_command_args {
     int c;
     rtpp_str_const_t v[RTPC_MAX_ARGC];
+};
+
+struct rtpp_command_argsp {
+    int c;
+    const rtpp_str_t *v;
 };
 
 #endif /* _RTPP_COMMAND_ARGS_H_ */

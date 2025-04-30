@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2007-2024 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,20 +25,14 @@
  *
  */
 
-#include <errno.h>
-#include <pthread.h>
+#pragma once
 
-int
-rtpp_mutex_islocked(pthread_mutex_t *mutex)
-{
-    int rval;
+struct rtp_packet;
+struct pkt_proc_ctx;
 
-    rval = pthread_mutex_trylock(mutex);
-    if (rval != 0) {
-        if (rval == EBUSY)
-            return (1);
-        return (-1);
-    }
-    pthread_mutex_unlock(mutex);
-    return (0);
-}
+int rtp_packet_is_rtcp(const struct rtp_packet *pkt);
+int rtpp_is_rtcp_tst(struct pkt_proc_ctx *pktx) RTPP_EXPORT;
+int rtp_packet_is_stun(const struct rtp_packet *pkt);
+int rtpp_is_stun_tst(struct pkt_proc_ctx *pktx) RTPP_EXPORT;
+int rtp_packet_is_dtls(const struct rtp_packet *pkt);
+int rtpp_is_dtls_tst(struct pkt_proc_ctx *pktx) RTPP_EXPORT;

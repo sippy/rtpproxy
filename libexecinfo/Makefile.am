@@ -16,7 +16,9 @@ libexecinfo_la_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libexecinfo_la_CPPFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG) $(CPPFLAGS_UNWIND)
 libexecinfo_la_LIBADD = @LIBS_UNWIND@
 
+if ENABLE_noinst
 noinst_PROGRAMS = execinfo_check execinfo_TEST
+endif
 execinfo_check_CPPFLAGS = -Werror=implicit-function-declaration -Wall $(CPPFLAGS_UNWIND)
 execinfo_check_SOURCES = execinfo_check.c execinfo_testfunc.c execinfo_testfunc1.c
 execinfo_check_CFLAGS = $(libexecinfo_la_CFLAGS)

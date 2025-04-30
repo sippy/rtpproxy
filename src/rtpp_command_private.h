@@ -26,31 +26,12 @@
  *
  */
 
+#pragma once
+
 #include "rtpp_str.h"
 
-#ifndef _RTPP_COMMAND_PRIVATE_H_
-#define _RTPP_COMMAND_PRIVATE_H_
-
 struct rtpp_timestamp;
-
-struct rtpp_command_stat {
-    uint64_t cnt;
-    int cnt_idx;
-};
-
-struct rtpp_command_stats {
-    struct rtpp_command_stat ncmds_rcvd;
-    struct rtpp_command_stat ncmds_rcvd_ndups;
-    struct rtpp_command_stat ncmds_succd;
-    struct rtpp_command_stat ncmds_errs;
-    struct rtpp_command_stat ncmds_repld;
-
-    struct rtpp_command_stat nsess_complete;
-    struct rtpp_command_stat nsess_created;
-
-    struct rtpp_command_stat nplrs_created;
-    struct rtpp_command_stat nplrs_destroyed;
-};
+struct rtpc_reply;
 
 enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
   QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS, NORECORD};
@@ -70,7 +51,7 @@ struct common_cmd_args {
     } opts;
 };
 
-#define MAX_SUBC_NUM 4
+#define MAX_SUBC_NUM 16
 
 struct after_success_h_args;
 struct rtpp_subc_ctx;
@@ -91,23 +72,18 @@ struct after_success_h {
 
 struct rtpp_command {
     char buf[RTPP_CMD_BUFLEN];
-    char buf_t[1024];
     struct rtpp_command_args args;
     struct {
         struct rtpp_command_args args[MAX_SUBC_NUM];
         struct rtpp_subc_resp res[MAX_SUBC_NUM];
         int n;
     } subc;
-    struct sockaddr_storage raddr;
     struct sockaddr *laddr;
-    socklen_t rlen;
     const struct rtpp_timestamp *dtime;
-    struct rtpp_command_stats *csp;
     struct common_cmd_args cca;
     int no_glock;
     struct rtpp_session *sp;
     struct rtpp_log *glog;
+    struct rtpc_reply *reply;
     struct after_success_h after_success[MAX_SUBC_NUM];
 };
-
-#endif

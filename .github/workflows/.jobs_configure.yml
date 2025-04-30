@@ -1,0 +1,45 @@
+name: Check Disabled Actions
+
+on:
+  workflow_call:
+    outputs:
+      do_Docker:
+        description: "Whether the current workflow should continue"
+        value: ${{ jobs.check_disabled_actions.outputs.do_Docker }}
+      do_FullBuild:
+        description: "Whether the current workflow should continue"
+        value: ${{ jobs.check_disabled_actions.outputs.do_FullBuild }}
+      do_FuncTest:
+        description: "Whether the current workflow should continue"
+        value: ${{ jobs.check_disabled_actions.outputs.do_FuncTest }}
+      do_Fuzzing:
+        description: "Whether the current workflow should continue"
+        value: ${{ jobs.check_disabled_actions.outputs.do_Fuzzing }}
+      do_Glitch:
+        description: "Whether the current workflow should continue"
+        value: ${{ jobs.check_disabled_actions.outputs.do_Glitch }}
+      do_MinBuild:
+        description: "Whether the current workflow should continue"
+        value: ${{ jobs.check_disabled_actions.outputs.do_MinBuild }}
+
+jobs:
+  check_disabled_actions:
+    name: Disabled Actions
+    runs-on: ubuntu-latest
+    outputs:
+      do_Docker: ${{ steps.check_status.outputs.do_Docker }}
+      do_FullBuild: ${{ steps.check_status.outputs.do_FullBuild }}
+      do_FuncTest: ${{ steps.check_status.outputs.do_FuncTest }}
+      do_Fuzzing: ${{ steps.check_status.outputs.do_Fuzzing }}
+      do_Glitch: ${{ steps.check_status.outputs.do_Glitch }}
+      do_MinBuild: ${{ steps.check_status.outputs.do_MinBuild }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check disabled actions
+      id: check_status
+      run: |
+        set -x
+        DIS_FILE=".github/workflows.cfg"
+        grep -v '#' ${DIS_FILE} >> $GITHUB_OUTPUT

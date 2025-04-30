@@ -33,6 +33,7 @@
 
 #include "config_pp.h"
 
+#include "rtpp_types.h"
 #include "rtpp_network.h"
 #include "rtpp_network_io.h"
 
@@ -103,11 +104,18 @@ _recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
 ssize_t
 recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
   socklen_t *fromlen, struct sockaddr *to, socklen_t *tolen,
-  struct timeval *timeptr)
+  struct timespec *timeptr)
 {
+    ssize_t r;
+    struct timeval rtime = {0};
 
-    return (_recvfromto(s, buf, len, from, fromlen, to, tolen, timeptr,
-      sizeof(*timeptr), SCM_TIMESTAMP));
+    r = _recvfromto(s, buf, len, from, fromlen, to, tolen, &rtime,
+      sizeof(rtime), SCM_TIMESTAMP);
+    if (r >= 0) {
+        timeptr->tv_sec = rtime.tv_sec;
+        timeptr->tv_nsec = rtime.tv_usec * 1000;
+    }
+    return (r);
 }
 
 #if HAVE_SO_TS_CLOCK

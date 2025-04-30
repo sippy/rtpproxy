@@ -9,7 +9,7 @@ BASEDIR="`dirname "${0}"`/.."
 
 TTYPE="${1}"
 BCG729_VER=1.1.1
-SNDFILE_VER=1.0.28
+SNDFILE_VER=1.2.2
 
 TAR_CMD=${TAR_CMD:-"tar"}
 
@@ -43,9 +43,11 @@ then
   exec make ${ALLCLEAN_TGT}
 fi
 
-${APT_GET} install -y libgsm1-dev libpcap-dev cmake libunwind-dev tcpdump curl gdb tcpreplay
-mkdir deps
-cd deps
+${APT_GET} install -y libgsm1-dev libpcap-dev cmake libunwind-dev tcpdump curl \
+ gdb tcpreplay ffmpeg
+OPWD="`pwd`"
+mkdir /tmp/deps
+cd /tmp/deps
 wget -O bcg729-${BCG729_VER}.tar.gz \
   https://github.com/BelledonneCommunications/bcg729/archive/${BCG729_VER}.tar.gz
 ${TAR_CMD} xfz bcg729-${BCG729_VER}.tar.gz
@@ -62,23 +64,30 @@ cd libg722
 make
 ${SUDO} make install
 cd ..
-git clone https://github.com/cisco/libsrtp.git
+git clone -b 2_x_dev https://github.com/cisco/libsrtp.git
 cd libsrtp
 ./configure
 make
 ${SUDO} make install
 cd ..
-wget http://www.mega-nerd.com/libsndfile/files/libsndfile-${SNDFILE_VER}.tar.gz
-${TAR_CMD} xfz libsndfile-${SNDFILE_VER}.tar.gz
+wget https://ftp2.osuosl.org/pub/blfs/conglomeration/libsndfile/libsndfile-${SNDFILE_VER}.tar.xz
+xzcat libsndfile-${SNDFILE_VER}.tar.xz | ${TAR_CMD} -xv -f -
 cd libsndfile-${SNDFILE_VER}
 ./configure
 make
 ${SUDO} make install
-cd ../..
+cd ${OPWD}
 
 ${SUDO} ldconfig
 
-autoreconf --force --install --verbose
+if ! autoreconf --force --install --verbose 2>/tmp/auto.log
+then
+  if ! grep -q 'higher is required' /tmp/auto.log
+  then
+    cat /tmp/auto.log >&2
+    exit 1
+  fi
+fi
 
 if [ "${TTYPE}" = "depsbuild" ]
 then
@@ -112,31 +121,12 @@ esac
 ./configure ${CONFIGURE_ARGS}
 make clean all
 
-ELP_BRANCH="${ELP_BRANCH:-"master"}"
-cd deps
-git clone --branch ${ELP_BRANCH} https://github.com/sobomax/libelperiodic.git
-cd libelperiodic
-./configure --without-python
-make all
-${SUDO} make install
-cd ../..
+UDPR_DIR=/tmp/dist/udpreplay
 
-${SUDO} ldconfig
-
-git clone -b master https://github.com/sippy/udpreplay.git dist/udpreplay
-mkdir dist/udpreplay/build
-cmake -Bdist/udpreplay/build -Hdist/udpreplay
-make -C dist/udpreplay/build all
-${SUDO} make -C dist/udpreplay/build install
+git clone -b master https://github.com/sippy/udpreplay.git ${UDPR_DIR}
+mkdir ${UDPR_DIR}/build
+cmake -B${UDPR_DIR}/build -H${UDPR_DIR}
+make -C ${UDPR_DIR}/build all
+${SUDO} make -C ${UDPR_DIR}/build install
 
 tcpdump --version || true
-#launchpad fails#${APT_GET} install -y --reinstall ca-certificates
-#launchpad fails#sudo add-apt-repository ppa:jonathonf/ffmpeg-4 -y
-#launchpad fails#${APT_GET} update
-#launchpad fails#${APT_GET} install -y ffmpeg
-if [ ! -e dist/ffmpeg.tar.xz ]
-then
-  wget -O dist/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-fi
-${TAR_CMD} -C dist -xvf dist/ffmpeg.tar.xz
-${SUDO} cp dist/ffmpeg-*-*-static/ffmpeg /usr/bin

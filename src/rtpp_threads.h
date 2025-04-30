@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2023 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,30 +31,11 @@
 #define TSTATE_RUN   0x0
 #define TSTATE_CEASE 0x1
 
+int rtpp_mutex_islocked(pthread_mutex_t *) RTPP_EXPORT;
+int pthread_mutex_lock_safe(pthread_mutex_t *mutex) RTPP_EXPORT;
+int pthread_mutex_unlock_safe(pthread_mutex_t *mutex) RTPP_EXPORT;
+
 #if defined(RTPP_DEBUG)
-#include <assert.h>
-#include <pthread.h>
-
-static inline int
-pthread_mutex_lock_safe(pthread_mutex_t *mutex)
-{
-    int rval;
-
-    rval = pthread_mutex_lock(mutex);
-    assert(rval == 0);
-    return (rval);
-}
-
-static inline int
-pthread_mutex_unlock_safe(pthread_mutex_t *mutex)
-{
-    int rval;
-
-    rval = pthread_mutex_unlock(mutex);
-    assert(rval == 0);
-    return (rval);
-}
-
 #define pthread_mutex_lock(x) pthread_mutex_lock_safe(x)
 #define pthread_mutex_unlock(x) pthread_mutex_unlock_safe(x)
 #endif

@@ -72,16 +72,17 @@ struct timespec;
 
 #define RTPQ_TINY_CB_LEN  4
 #define RTPQ_SMALL_CB_LEN 16
+#define RTPQ_MEDIUM_CB_LEN 256
 #define RTPQ_LARGE_CB_LEN 1024
 
 struct rtpp_queue *rtpp_queue_init(unsigned int, const char *format, ...);
 void rtpp_queue_destroy(struct rtpp_queue *queue);
 
-void rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *);
+int rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *) RTPP_EXPORT;
 void rtpp_queue_pump(struct rtpp_queue *);
 void rtpp_queue_wakeup(struct rtpp_queue *);
 
-struct rtpp_wi *rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake);
+struct rtpp_wi *rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake) RTPP_EXPORT;
 struct rtpp_wi *rtpp_queue_get_item_by(struct rtpp_queue *queue, struct timespec *,
   int *);
 int rtpp_queue_get_items(struct rtpp_queue *, struct rtpp_wi **, int, int);
@@ -92,5 +93,6 @@ DEFINE_METHOD(rtpp_wi, rtpp_queue_match_fn, int, void *);
 
 int rtpp_queue_count_matching(struct rtpp_queue *, rtpp_queue_match_fn_t, void *);
 struct rtpp_wi *rtpp_queue_get_first_matching(struct rtpp_queue *, rtpp_queue_match_fn_t, void *);
+int rtpp_queue_setmaxlen(struct rtpp_queue *queue, unsigned int new_mlen);
 
 #endif

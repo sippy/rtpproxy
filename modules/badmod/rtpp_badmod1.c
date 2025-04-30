@@ -27,6 +27,6 @@
 
 #include "rtpp_module.h"
 
-struct rtpp_minfo rtpp_module = {
+struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "badmod1",
 };

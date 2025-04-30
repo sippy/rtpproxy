@@ -1,6 +1,7 @@
 include $(top_srcdir)/m4/memdeb.ami
 include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
+include $(top_srcdir)/autosrc/Makefile.ami
 
 UCL_DIR=$(top_srcdir)/external/libucl
 UCL_SDIR=$(UCL_DIR)/src
@@ -28,12 +29,14 @@ libucl_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_libucl_common) $(RTPP_MEMDEB_CF
 
 HEPSRCDIR=$(top_srcdir)/hepconnector
 
+if ENABLE_noinst
 noinst_PROGRAMS = libucl_test
+endif
 libucl_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libucl_test \
   -I$(UCL_DIR)/include -I$(HEPSRCDIR)
 libucl_test_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
-  $(top_srcdir)/src/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
+  $(MAINSRCDIR)/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
 libucl_test_LDADD=libucl_debug.la $(RTPP_MEMDEB_LDADD)
 libucl_test_LDLAGS=$(LTO_FLAG)

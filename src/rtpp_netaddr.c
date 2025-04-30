@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "rtpp_types.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_netaddr.h"
@@ -122,6 +123,7 @@ rtpp_netaddr_isempty(struct rtpp_netaddr *self)
     struct rtpp_netaddr_priv *pvt;
     int rval;
 
+    RTPP_DBG_ASSERT(self != NULL);
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     rval = (pvt->rlen == 0);

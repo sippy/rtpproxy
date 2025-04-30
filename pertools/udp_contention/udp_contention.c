@@ -19,8 +19,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "config.h"
+
 #if HAVE_ERR_H
-#include <err.h>
+# include <err.h>
 #endif
 
 #define UC_MAX_THREADS 64
@@ -68,6 +70,7 @@ srandomdev(void)
 
 #include "elperiodic.h"
 
+#include "rtpp_types.h"
 #include "rtpp_network.h"
 
 #define TEST_KIND_ALL         0

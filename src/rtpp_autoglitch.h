@@ -41,7 +41,7 @@ int rtpp_glitch_pthread_create(pthread_t *, const pthread_attr_t *,
   rtpp_glitch_pthread_create(thread, attr, start_routine, arg, HEREVAL)
 
 int rtpp_glitch_pthread_mutex_init(pthread_mutex_t *,
-  const pthread_mutexattr_t *, HERETYPE);
+  const pthread_mutexattr_t *, HERETYPE) RTPP_EXPORT;
 
 #ifdef pthread_mutex_init
 # undef pthread_mutex_init
@@ -52,7 +52,7 @@ int rtpp_glitch_pthread_mutex_init(pthread_mutex_t *,
 
 #include <sys/socket.h>
 
-int rtpp_glitch_socket(int, int, int, HERETYPE);
+int rtpp_glitch_socket(int, int, int, HERETYPE) RTPP_EXPORT;
 
 #ifdef socket
 # undef socket
@@ -85,7 +85,8 @@ int rtpp_glitch_accept(int, struct sockaddr *, socklen_t *, HERETYPE);
 
 #define accept(s, addr, addrlen) rtpp_glitch_accept(s, addr, addrlen, HEREVAL)
 
-ssize_t rtpp_glitch_send(int s, const void *msg, size_t len, int flags, HERETYPE);
+ssize_t rtpp_glitch_send(int s, const void *msg, size_t len, int flags, HERETYPE)
+  RTPP_EXPORT;
 
 #ifdef send
 # undef send
@@ -93,7 +94,8 @@ ssize_t rtpp_glitch_send(int s, const void *msg, size_t len, int flags, HERETYPE
 
 #define send(s, msg, len, flags) rtpp_glitch_send(s, msg, len, flags, HEREVAL)
 
-int rtpp_glitch_connect(int s, const struct sockaddr *name, socklen_t namelen, HERETYPE);
+int rtpp_glitch_connect(int s, const struct sockaddr *name, socklen_t namelen, HERETYPE)
+  RTPP_EXPORT;
 
 #ifdef connect
 # undef connect
@@ -111,7 +113,8 @@ int rtpp_glitch_chmod(const char *path, mode_t mode, HERETYPE);
 
 #define chmod(path, mode) rtpp_glitch_chmod(path, mode, HEREVAL)
 
-int rtpp_glitch_fstat(int fd, struct stat *sb, HERETYPE);
+int rtpp_glitch_fstat(int fd, struct stat *sb, HERETYPE)
+  RTPP_EXPORT;
 
 #ifdef fstat
 # undef fstat
@@ -119,7 +122,8 @@ int rtpp_glitch_fstat(int fd, struct stat *sb, HERETYPE);
 
 #define fstat(fd, sb) rtpp_glitch_fstat(fd, sb, HEREVAL)
 
-int rtpp_glitch_stat(const char *path, struct stat *sb, HERETYPE);
+int rtpp_glitch_stat(const char *path, struct stat *sb, HERETYPE)
+  RTPP_EXPORT;
 
 #ifdef stat
 # undef stat
@@ -130,7 +134,7 @@ int rtpp_glitch_stat(const char *path, struct stat *sb, HERETYPE);
 #include <netdb.h>
 
 int rtpp_glitch_getaddrinfo(const char *, const char *, const struct addrinfo *,
-  struct addrinfo **, HERETYPE);
+  struct addrinfo **, HERETYPE) RTPP_EXPORT;
 
 #ifdef getaddrinfo
 # undef getaddrinfo
@@ -141,7 +145,8 @@ int rtpp_glitch_getaddrinfo(const char *, const char *, const struct addrinfo *,
 
 #include <fcntl.h>
 
-int rtpp_glitch_open(const char *, int, HERETYPE, ...);
+int rtpp_glitch_open(const char *, int, HERETYPE, ...)
+   RTPP_EXPORT;
 
 #ifdef open
 # undef open
@@ -149,7 +154,7 @@ int rtpp_glitch_open(const char *, int, HERETYPE, ...);
 
 #define open(path, flags, args...) rtpp_glitch_open(path, flags, HEREVAL, ## args)
 
-int rtpp_glitch_fcntl(int, int, HERETYPE, ...);
+int rtpp_glitch_fcntl(int, int, HERETYPE, ...) RTPP_EXPORT;
 
 #ifdef fcntl
 # undef fcntl
@@ -211,7 +216,8 @@ int rtpp_glitch_pipe(int [2], HERETYPE);
 
 #define pipe(fildes) rtpp_glitch_pipe(fildes, HEREVAL)
 
-ssize_t rtpp_glitch_write(int, const void *, size_t, HERETYPE);
+ssize_t rtpp_glitch_write(int, const void *, size_t, HERETYPE)
+  RTPP_EXPORT;
 
 #ifdef write
 # undef write
@@ -284,7 +290,7 @@ void *rtpp_glitch_dlsym(void *handle, const char *symbol, HERETYPE);
 #include <stdio.h>
 
 size_t rtpp_glitch_fwrite(const void *ptr, size_t size, size_t nmemb,
-  FILE *stream, HERETYPE);
+  FILE *stream, HERETYPE) RTPP_EXPORT;
 
 #ifdef fwrite
 # undef fwrite

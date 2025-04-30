@@ -39,6 +39,7 @@
 #include "config_pp.h"
 
 #include "rtpp_module.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_str.h"
 
@@ -138,7 +139,7 @@ rtpp_dtls_newconn(struct rtpp_dtls *self, struct rtpp_stream *dtls_strmp)
 #endif
 
 static uint32_t
-rand_u32(void)
+dtls_rand_u32(void)
 {
     uint32_t v;
 
@@ -178,7 +179,7 @@ tls_generate_cert(const char *cn)
     if (!X509_set_version(cert, 2))
         goto e1;
 
-    if (!ASN1_INTEGER_set(X509_get_serialNumber(cert), rand_u32()))
+    if (!ASN1_INTEGER_set(X509_get_serialNumber(cert), dtls_rand_u32()))
         goto e1;
 
     subj = X509_NAME_new();

@@ -42,6 +42,8 @@
 
 #include "config_pp.h"
 
+#include "rtpp_types.h"
+
 #if !defined(NO_ERR_H)
 #include <err.h>
 #include "rtpp_util.h"
@@ -49,7 +51,6 @@
 #include "rtpp_util.h"
 #endif
 
-#include "rtpp_types.h"
 #if defined(_RTPP_MEMDEB_H)
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
@@ -59,6 +60,7 @@
 #include "rtpp_queue.h"
 #include "rtpp_netaddr.h"
 #include "rtpp_network.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_stats.h"
 #include "rtpp_time.h"
@@ -108,6 +110,8 @@ taint(struct rtpp_wi *p) {
 
     asm volatile ("" : : "m" (*p));
 }
+
+const struct rtpc_reply_smethods *const rtpc_reply_smethods;
 
 static enum rtpp_timed_cb_rvals
 update_derived_stats(double dtime, void *argp)

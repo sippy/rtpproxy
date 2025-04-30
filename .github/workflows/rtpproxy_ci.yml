@@ -1,0 +1,592 @@
+name: RTPProxy CI
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on all push or pull request events
+  push:
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 0 * * *"
+
+# added using https://github.com/step-security/secure-repo
+permissions:
+  contents: write
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  LoadJobs_conf:
+    name: Load Jobs Settings
+    uses: ./.github/workflows/.jobs_configure.yml
+
+  MinBuild:
+    name: Lean Build
+    needs: LoadJobs_conf
+    if: needs.LoadJobs_conf.outputs.do_MinBuild == 'true'
+    # The type of runner that the job will run on
+    runs-on: ubuntu-${{ matrix.os }}
+    env:
+      COMPILER: ${{ matrix.compiler }}
+      TAR_CMD: tar_nosuid
+      GHA_OS: ubuntu-${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [22.04]
+        compiler: ['gcc-i386-cross', 'clang-i386-cross', 'gcc-mips64-cross', 'gcc-arm32-cross', 'gcc-arm64-cross', 'gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
+        include:
+          - os: 24.04
+            compiler: 'gcc'
+          - os: 24.04
+            compiler: 'clang'
+          - os: 24.04
+            compiler: 'gcc-13'
+          - os: 24.04
+            compiler: 'gcc-14'
+          - os: 24.04
+            compiler: 'clang-16'
+          - os: 24.04
+            compiler: 'clang-17'
+          - os: 24.04
+            compiler: 'clang-18'
+          - os: 24.04
+            compiler: 'clang-19'
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Start Docker container
+        if: endsWith(matrix.compiler, '-cross')
+        run: sh -x scripts/build/start_container.sh
+
+#      - name: Sanitize list of Ubuntu mirrors
+#        if: endsWith(matrix.compiler, '-cross') == 0
+#        run: scripts/ft-apt-spy2-check-and-fix.sh
+
+      - name: Workaround for tar not being able to access /var/cache/apt/archives
+        if: endsWith(matrix.compiler, '-cross') == 0
+        run: |
+          sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
+          sudo chmod u+s "$(command -v tar)"
+
+      # Cache the apt-get packages
+      - name: Cache apt-get packages
+        if: endsWith(matrix.compiler, '-cross') == 0
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: cleanbuild-${{ matrix.os }}-apt-get-${{ github.run_id }}
+          restore-keys: |
+            cleanbuild-${{ matrix.os }}-apt-get
+            cleanbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+
+      - name: Install apt-get updates
+        run: scripts/ft-apt-get-update.sh
+
+      - name: Set up Python
+        if: endsWith(matrix.compiler, '-cross') == 0
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: install_depends
+        run: sh -x scripts/build/install_depends.sh
+
+      - name: build
+        run: sh -x ./scripts/do-build.sh cleanbuild
+
+  FullBuild:
+    name: Full Build
+    needs: [LoadJobs_conf, MinBuild]
+    if: needs.LoadJobs_conf.outputs.do_FullBuild == 'true'
+    # The type of runner that the job will run on
+    runs-on: ubuntu-${{ matrix.os }}
+    env:
+      COMPILER: ${{ matrix.compiler }}
+      TAR_CMD: tar_nosuid
+      GHA_OS: ubuntu-${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [22.04]
+        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
+        include:
+          - os: 24.04
+            compiler: 'gcc'
+          - os: 24.04
+            compiler: 'clang'
+          - os: 24.04
+            compiler: 'gcc-13'
+          - os: 24.04
+            compiler: 'gcc-14'
+          - os: 24.04
+            compiler: 'clang-16'
+          - os: 24.04
+            compiler: 'clang-17'
+          - os: 24.04
+            compiler: 'clang-18'
+          - os: 24.04
+            compiler: 'clang-19'
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Start Docker container
+        if: endsWith(matrix.compiler, '-cross')
+        run: sh -x scripts/build/start_container.sh
+
+#      - name: Sanitize list of Ubuntu mirrors
+#        if: endsWith(matrix.compiler, '-cross') == 0
+#        run: scripts/ft-apt-spy2-check-and-fix.sh
+
+      - name: Workaround for tar not being able to access /var/cache/apt/archives
+        if: endsWith(matrix.compiler, '-cross') == 0
+        run: |
+          sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
+          sudo chmod u+s "$(command -v tar)"
+
+      # Cache the apt-get packages
+      - name: Cache apt-get packages
+        if: endsWith(matrix.compiler, '-cross') == 0
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: depsbuild-${{ matrix.os }}-apt-get-${{ github.run_id }}
+          restore-keys: |
+            depsbuild-${{ matrix.os }}-apt-get
+            depsbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+
+      - name: Install apt-get updates
+        run: scripts/ft-apt-get-update.sh
+
+      - name: Set up Python
+        if: endsWith(matrix.compiler, '-cross') == 0
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: install_depends
+        run: sh -x scripts/build/install_depends.sh
+
+      - name: build
+        run: sh -x ./scripts/do-build.sh depsbuild
+
+  FuncTest:
+    name: Functional Testing    
+    needs: [LoadJobs_conf, FullBuild]
+    if: needs.LoadJobs_conf.outputs.do_FuncTest == 'true'
+    # The type of runner that the job will run on
+    runs-on: ubuntu-${{ matrix.os }}
+    env:
+      COMPILER: ${{ matrix.compiler }}
+      TAR_CMD: tar_nosuid
+      GHA_OS: ubuntu-${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [22.04]
+        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
+        include:
+          - os: 24.04
+            compiler: 'gcc'
+          - os: 24.04
+            compiler: 'clang'
+          - os: 24.04
+            compiler: 'gcc-13'
+          - os: 24.04
+            compiler: 'gcc-14'
+          - os: 24.04
+            compiler: 'clang-16'
+          - os: 24.04
+            compiler: 'clang-17'
+          - os: 24.04
+            compiler: 'clang-18'
+          - os: 24.04
+            compiler: 'clang-19'
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Workaround for tar not being able to access /var/cache/apt/archives
+        run: |
+          sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
+          sudo chmod u+s "$(command -v tar)"
+
+      # Cache the apt-get packages
+      - name: Cache apt-get packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: functesting-${{ matrix.os }}-apt-get-${{ github.run_id }}
+          restore-keys: |
+            functesting-${{ matrix.os }}-apt-get
+            functesting-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+
+      - name: Install apt-get updates
+        run: scripts/ft-apt-get-update.sh
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: install_depends
+        run: sh -x scripts/build/install_depends.sh
+
+      - name: before_install
+        run: sh -x scripts/ft-before_install.sh
+
+      - name: build
+        run: sh -x ./scripts/do-build.sh basic
+
+      - name: test
+        run: sh -x scripts/do-test.sh
+
+  Glitching:
+    name: Glitch Injection
+    needs: [LoadJobs_conf, FuncTest]
+    if: needs.LoadJobs_conf.outputs.do_Glitch == 'true'
+    # The type of runner that the job will run on
+    runs-on: ubuntu-${{ matrix.os }}
+    env:
+      COMPILER: ${{ matrix.compiler }}
+      TAR_CMD: tar_nosuid
+      GHA_OS: ubuntu-${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [22.04]
+        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
+        include:
+          - os: 24.04
+            compiler: 'gcc'
+          - os: 24.04
+            compiler: 'clang'
+          - os: 24.04
+            compiler: 'gcc-13'
+          - os: 24.04
+            compiler: 'gcc-14'
+          - os: 24.04
+            compiler: 'clang-16'
+          - os: 24.04
+            compiler: 'clang-17'
+          - os: 24.04
+            compiler: 'clang-18'
+          - os: 24.04
+            compiler: 'clang-19'
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Workaround for tar not being able to access /var/cache/apt/archives
+        run: |
+          sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
+          sudo chmod u+s "$(command -v tar)"
+
+      # Cache the apt-get packages
+      - name: Cache apt-get packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: glitching-${{ matrix.os }}-apt-get-${{ github.run_id }}
+          restore-keys: |
+            glitching-${{ matrix.os }}-apt-get
+            glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+
+      - name: Install apt-get updates
+        run: scripts/ft-apt-get-update.sh
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: install_depends
+        run: sh -x scripts/build/install_depends.sh
+
+      - name: before_install
+        run: sh -x scripts/ft-before_install.sh
+
+      - name: build
+        run: sh -x ./scripts/do-build.sh glitching
+
+      - name: test
+        run: sh -x scripts/do-test.sh
+
+  Fuzzing:
+    name: Fuzz with OSS-Fuzz
+    needs: [LoadJobs_conf, Glitching]
+    if: needs.LoadJobs_conf.outputs.do_Fuzzing == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, undefined, memory, coverage]
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: Build Fuzzers (${{ matrix.sanitizer }})
+      id: build
+      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'rtpproxy'
+        dry-run: false
+        language: c
+        sanitizer: ${{ matrix.sanitizer }}
+    - name: Run Fuzzers
+      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      env:
+        OF_SANITIZER: ${{ matrix.sanitizer }}
+      with:
+        oss-fuzz-project-name: 'rtpproxy'
+        fuzz-seconds: 1200
+        dry-run: false
+        parallel-fuzzing: true
+        language: c
+        sanitizer: ${{ matrix.sanitizer }}
+        output-sarif: true
+    - name: Upload Crash
+      uses: actions/upload-artifact@v4
+      if: failure() && steps.build.outcome == 'success'
+      with:
+        name: ${{ matrix.sanitizer }}-artifacts
+        path: ./out/artifacts
+    - name: Upload Sarif
+      if: always() && steps.build.outcome == 'success' && matrix.sanitizer != 'coverage'
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        # Path to SARIF file relative to the root of the repository
+        sarif_file: cifuzz-sarif/results.sarif
+        checkout_path: cifuzz-sarif
+
+  Docker:
+    name: Build&Push to DockerHub
+    needs: [LoadJobs_conf, Fuzzing]
+    if: needs.LoadJobs_conf.outputs.do_Docker == 'true' &&
+        (github.event_name == 'push' || github.event_name == 'pull_request')
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    env:
+      CLANG_VER_NEW: 18
+      CLANG_VER_OLD: 16
+      DOCKER_REPO: sippylabs/rtpproxy
+      GHCR_REPO: ghcr.io/${{ github.repository_owner }}/rtpproxy
+      LOCAL_REPO: localhost:5000/sippylabs/rtpproxy
+      BASE_IMAGE: ${{ matrix.base_image }}
+      CCACHE_ROOT: ccache
+      DOCKER_RW: ${{ ( github.repository == 'sippy/rtpproxy' && github.event_name != 'pull_request' ) && 'true' || 'false' }}
+      CCACHE_BIN_IMAGE: ghcr.io/sobomax/ccache:${{ matrix.ccache_bin_image }}
+    strategy:
+      matrix:
+        include:
+          - base_image: 'debian:12-slim'
+            ccache_bin_image: 'latest-debian-12'
+          - base_image: 'ubuntu:latest'
+            ccache_bin_image: 'latest-ubuntu-24.04'
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Set up QEMU
+      id: qemu
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        driver-opts: network=host
+
+    - name: Log in to Docker Hub
+      if: ${{ env.DOCKER_RW }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set dynamic environment
+      run: |
+        GIT_BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        GIT_BRANCH="${GIT_BRANCH#refs/tags/}"
+        echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_ENV
+        OS_TAG="`echo ${BASE_IMAGE} | sed 's|:|_|g'`"
+        CCACHE_IMAGE="${{ env.GHCR_REPO }}:${GIT_BRANCH}-${OS_TAG}-cccache"
+        if ! docker pull ${CCACHE_IMAGE} 2>&1 >/dev/null
+        then
+          CCACHE_BIMAGE="scratch"
+        else
+          CCACHE_BIMAGE="${CCACHE_IMAGE}"
+        fi
+        docker pull ${CCACHE_BIN_IMAGE}
+        echo "CCACHE_IMAGE=${CCACHE_IMAGE}" >> $GITHUB_ENV
+        echo "CCACHE_BIMAGE=${CCACHE_BIMAGE}" >> $GITHUB_ENV
+        echo "BUILD_IMAGE=${{ env.LOCAL_REPO }}:latest-${OS_TAG}" >> $GITHUB_ENV
+        echo "LIBG722_IMAGE=sippylabs/libg722:latest-${OS_TAG}" >> $GITHUB_ENV
+        PLATFORMS="`docker manifest inspect ${{ env.BASE_IMAGE }} | \
+         jq -r '.manifests[] | "\(.platform.os)/\(.platform.architecture)\(if .platform.variant != null then "/\(.platform.variant)" else "" end)"' | \
+         grep -v unknown | sort -u | paste -sd ','`"
+        echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
+        echo "OS_TAG=${OS_TAG}" >> $GITHUB_ENV
+        if [[ "${{ matrix.base_image }}" == debian:* ]]
+        then
+          echo "LIBSSL_APKG=libssl3" >> $GITHUB_ENV
+        else
+          echo "LIBSSL_APKG=libssl3t64" >> $GITHUB_ENV
+        fi
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta_dkr
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.DOCKER_REPO }}
+        tags: |
+          type=schedule,suffix=-${{ env.OS_TAG}}
+          type=ref,event=branch,suffix=-${{ env.OS_TAG}}
+          type=ref,event=tag,suffix=-${{ env.OS_TAG}}
+          type=ref,event=pr,suffix=-${{ env.OS_TAG}}
+          type=raw,value=latest-${{ env.OS_TAG}},enable={{is_default_branch}}
+          type=sha,suffix=-${{ env.OS_TAG}}
+
+    - name: Extract metadata (tags, labels) for GHCR
+      id: meta_ghcr
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.GHCR_REPO }}
+        tags: |
+          type=schedule,suffix=-${{ env.OS_TAG}}
+          type=ref,event=branch,suffix=-${{ env.OS_TAG}}
+          type=ref,event=tag,suffix=-${{ env.OS_TAG}}
+          type=ref,event=pr,suffix=-${{ env.OS_TAG}}
+          type=raw,value=latest-${{ env.OS_TAG}},enable={{is_default_branch}}
+          type=sha,suffix=-${{ env.OS_TAG}}
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v6
+      env:
+        CACHE_SPEC: "type=registry,ref=${{ env.GHCR_REPO }}:${{ env.GIT_BRANCH }}-${{ env.OS_TAG}}-buildcache"
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        build-args: |
+          CLANG_VER_OLD=${{ env.CLANG_VER_OLD }}
+          CLANG_VER_NEW=${{ env.CLANG_VER_NEW }}
+          BASE_IMAGE=${{ env.BASE_IMAGE }}
+          LIBG722_IMAGE=${{ env.LIBG722_IMAGE }}
+          CCACHE_IMAGE=${{ env.CCACHE_BIMAGE }}
+          CCACHE_BIN_IMAGE=${{ env.CCACHE_BIN_IMAGE }}
+          CCACHE_ROOT=${{ env.CCACHE_ROOT }}
+          LIBSSL_APKG=${{ env.LIBSSL_APKG }}
+        tags: ${{ env.BUILD_IMAGE }}
+        platforms: ${{ env.PLATFORMS }}
+        push: true
+        cache-from: ${{ env.CACHE_SPEC }}
+        cache-to: ${{ env.CACHE_SPEC }},mode=max
+
+    - name: Export ccache
+      if: ${{ env.DOCKER_RW }}
+      uses: docker/build-push-action@v6
+      with:
+        file: ./docker/Dockerfile.export_ccache
+        build-args: BUILD_IMAGE=${{ env.BUILD_IMAGE }}
+        tags: ${{ env.CCACHE_IMAGE }}
+        platforms: ${{ env.PLATFORMS }}
+        push: true
+
+    - name: Push Docker image
+      if: ${{ env.DOCKER_RW }}
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ./docker/Dockerfile.push
+        build-args: |
+          BASE_IMAGE=${{ env.BASE_IMAGE }}
+          BUILD_IMAGE=${{ env.BUILD_IMAGE }}
+        push: true
+        tags: |
+          ${{ steps.meta_dkr.outputs.tags }}
+          ${{ steps.meta_ghcr.outputs.tags }}
+        labels: |
+          ${{ steps.meta_dkr.outputs.labels }}
+          ${{ steps.meta_ghcr.outputs.labels }}
+        platforms: ${{ env.PLATFORMS }}
+
+    - name: Update DockerHub repo description
+      if: ${{ env.DOCKER_RW }} && ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: sh -x docker/update_description.sh docker/README.md
+
+  release:
+    name: Create Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [LoadJobs_conf, Fuzzing]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Set Environment
+        id: job_config
+        run: |
+          RELEASE_VER="${GITHUB_REF#refs/tags/v}"
+          echo "ver=${RELEASE_VER}" >> ${GITHUB_OUTPUT}
+          echo "src=rtpproxy-${RELEASE_VER}.tar.gz" >> ${GITHUB_OUTPUT}
+
+      - name: Create source distribution
+        run: |
+          set -x
+          git rev-parse HEAD > revision.txt
+          NAME="rtpproxy-${{steps.job_config.outputs.ver}}"
+          tar --exclude-vcs --exclude=./tests -czvf /tmp/${{steps.job_config.outputs.src}} \
+           --transform="s|^[.]|${NAME}|" .
+          mv /tmp/${{steps.job_config.outputs.src}} ${{steps.job_config.outputs.src}}
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ./${{steps.job_config.outputs.src}}
+          draft: true
+          prerelease: false
+          generate_release_notes: true

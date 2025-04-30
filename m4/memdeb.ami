@@ -1,15 +1,14 @@
-include $(top_srcdir)/autosrc/Makefile.ami
-
 RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
   -I$(top_srcdir) -I$(RTPP_AUTOSRC_DIR)
-RTPP_MEMDEB_CORESRCS = $(top_srcdir)/src/rtpp_memdeb.c $(top_srcdir)/src/rtpp_memdeb.h \
-  $(top_srcdir)/src/rtpp_memdeb_internal.h $(top_srcdir)/src/rtpp_glitch.c \
-  $(top_srcdir)/src/rtpp_glitch.h $(top_srcdir)/src/rtpp_codeptr.h \
-  $(top_srcdir)/src/rtpp_autoglitch.c $(top_srcdir)/src/rtpp_autoglitch.h \
-  $(top_srcdir)/src/rtpp_debugon.h $(top_srcdir)/src/rtpp_refcnt.c \
-  $(top_srcdir)/src/rtpp_refcnt.h \
-  $(top_srcdir)/src/rtpp_mallocs.c $(top_srcdir)/src/rtpp_mallocs.h \
-  $(top_srcdir)/src/rtpp_stacktrace.c $(top_srcdir)/src/rtpp_stacktrace.h
+RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
+  $(MAINSRCDIR)/rtpp_memdeb_internal.h $(MAINSRCDIR)/rtpp_glitch.c \
+  $(MAINSRCDIR)/rtpp_glitch.h $(MAINSRCDIR)/rtpp_codeptr.h \
+  $(MAINSRCDIR)/rtpp_autoglitch.c $(MAINSRCDIR)/rtpp_autoglitch.h \
+  $(MAINSRCDIR)/rtpp_debugon.h $(MAINSRCDIR)/rtpp_refcnt.c \
+  $(MAINSRCDIR)/rtpp_refcnt.h $(MAINSRCDIR)/rtpp_threads.h \
+  $(MAINSRCDIR)/rtpp_threads.c \
+  $(MAINSRCDIR)/rtpp_mallocs.c $(MAINSRCDIR)/rtpp_mallocs.h \
+  $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h
 if !ENABLE_LIBUNWIND
 RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
 endif

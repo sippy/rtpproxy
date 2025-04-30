@@ -1,0 +1,117 @@
+addr1="\x01\x02\x03\x04"
+# port1=1234
+port1="\x04\xd2"
+
+addr2="\x05\x06\x07\x08"
+# port2=5678
+port2="\x2e\x16"
+
+# AFL dictionary for RTP/RTCP packets
+# -----------------------------------
+#
+# Basic sections derived from standard RTP/RTCP headers and payloads.
+# Does not include vendor-specific extensions.
+#
+# Created by [Your Name]
+#
+
+# RTP header fields
+header_vpxt="10000000"
+header_vpxc="10010000"
+header_vpxt_mark="10000001"
+header_vpxc_mark="10010001"
+
+# RTP payload types
+payload_pcmu="\x00"
+payload_pcma="\x08"
+payload_gsm="\x03"
+payload_g723="\x04"
+payload_dvi4_8k="\x05"
+payload_dvi4_16k="\x06"
+payload_lpc="\x07"
+payload_g722="\x09"
+payload_l16_stereo="\x0a"
+payload_l16_mono="\x0b"
+payload_qcelp="\x0c"
+payload_cn="\x13"
+payload_mpeg="\x0e"
+payload_g729="\x12"
+
+# RTCP packet types
+# Sender Report
+rtcp_sr="\xc8"
+# Receiver Report
+rtcp_rr="\xc9"
+# Source Description
+rtcp_sdes="\xca"
+# Goodbye
+rtcp_bye="\xcb"
+# Application-defined
+rtcp_app="\xcc"
+
+# RTCP SDES item types
+sdes_cname="\x01"
+sdes_name="\x02"
+sdes_email="\x03"
+sdes_phone="\x04"
+sdes_loc="\x05"
+sdes_tool="\x06"
+sdes_note="\x07"
+sdes_priv="\x08"
+
+# Common RTP/RTCP extensions
+# Extended Sequence Number
+ext_trans_seq="\xbe\xde"
+# Media Identifier
+ext_mid="\xbe\xde\x02"
+# RTP Stream Identifier
+ext_rtp_stream_id="\xbe\xde\x0d"
+
+# AFL dictionary for STUN/ICE packets
+# -----------------------------------
+#
+# Basic sections derived from standard STUN/ICE headers and attributes.
+# Does not include vendor-specific extensions.
+#
+# Created by [Your Name]
+#
+
+# STUN message types
+stun_binding_request="\x00\x01"
+stun_binding_response="\x01\x01"
+stun_binding_error_response="\x01\x11"
+stun_binding_indication="\x00\x11"
+
+# STUN message headers
+stun_magic_cookie="\x21\x12\xa4\x42"
+
+# STUN attributes
+attr_mapped_address="\x00\x01"
+attr_response_address="\x00\x02"
+attr_change_request="\x00\x03"
+attr_source_address="\x00\x04"
+attr_changed_address="\x00\x05"
+attr_username="\x00\x06"
+attr_password="\x00\x07"
+attr_message_integrity="\x00\x08"
+attr_error_code="\x00\x09"
+attr_unknown_attributes="\x00\x0a"
+attr_reflected_from="\x00\x0b"
+attr_realm="\x00\x14"
+attr_nonce="\x00\x15"
+attr_xor_mapped_address="\x00\x20"
+attr_software="\x80\x22"
+attr_alternate_server="\x80\x23"
+attr_fingerprint="\x80\x28"
+
+# ICE-specific attributes
+attr_priority="\x00\x24"
+attr_use_candidate="\x00\x25"
+attr_ice_controlled="\x80\x29"
+attr_ice_controlling="\x80\x2a"
+
+# Common STUN message header extensions
+# Example length field (32 bytes)
+header_length="\x00\x20"
+# Example transaction ID
+header_transaction_id="\x63\x1a\x1f\x80\x39\x4d\x41\x50\x4c\x65\x75"

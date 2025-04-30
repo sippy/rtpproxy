@@ -62,6 +62,7 @@
 #include "rtpp_time.h"
 #include "rtpp_pipe.h"
 #include "rtpp_epoll.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_debug.h"
 #include "rtpp_stream.h"
@@ -78,7 +79,7 @@ struct rtpp_proc_async_cf;
 
 struct rtpp_proc_thread_cf {
     pthread_t thread_id;
-    atomic_int tstate;
+    _Atomic(int) tstate;
     int pipe_type;
     struct rtpp_polltbl ptbl;
     const struct rtpp_proc_async_cf *proc_cf;
@@ -275,7 +276,7 @@ rtpp_proc_async_thread_destroy(struct rtpp_proc_thread_cf *tcp)
     free(tcp->events);
 }
 
-static enum pproc_action
+static struct pproc_act
 relay_packet(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_out = pktxp->strmp_out;
@@ -308,7 +309,7 @@ relay_packet(const struct pkt_proc_ctx *pktxp)
     return PPROC_ACT_TAKE;
 }
 
-static enum pproc_action
+static struct pproc_act
 record_packet(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_out = pktxp->strmp_out;

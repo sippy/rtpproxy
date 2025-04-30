@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <assert.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -46,6 +47,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_types.h"
 #include "rtpp_log_obj.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_time.h"
 #include "rtpp_command.h"
@@ -66,6 +68,7 @@
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc.h"
 #include "commands/rpcpv1_ver.h"
+#include "rtpp_command_reply.h"
 #include "rtpp_controlfd.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_mallocs.h"
@@ -80,16 +83,13 @@
 #include "rtpp_stats.h"
 #include "rtpp_weakref.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_command_ctx.h"
+#include "rtpp_command_reply.h"
+#include "rtpp_command_stats.h"
 
 struct rtpp_command_priv {
     struct rtpp_command pub;
-    const struct rtpp_cfg *cfs;
-    int controlfd;
-    rtpp_str_const_t cookie;
-    int umode;
-    char buf_r[256];
-    struct rtpp_cmd_rcache *rcache_obj;
-    struct rtpp_timestamp dtime;
+    struct rtpp_command_ctx ctx;
 };
 
 struct d_opts;
@@ -119,7 +119,8 @@ create_twinlistener(unsigned int port, void *ap)
 
     rval = RTPP_PTU_BRKERR;
     for (i = 0; i < 2; i++) {
-	ctap->fds[i] = rtpp_socket_ctor(ctap->ia->sa_family, SOCK_DGRAM);
+	ctap->fds[i] = rtpp_socket_ctor(ctap->cfs->rtpp_proc_cf->netio,
+	  ctap->ia->sa_family, SOCK_DGRAM);
 	if (ctap->fds[i] == NULL) {
 	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't create %s socket",
 	      SA_AF2STR(ctap->ia));
@@ -127,7 +128,7 @@ create_twinlistener(unsigned int port, void *ap)
 	}
 	memcpy(&iac, ctap->ia, SA_LEN(ctap->ia));
 	satosin(&iac)->sin_port = htons(port);
-	if (CALL_METHOD(ctap->fds[i], bind2, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
+	if (CALL_SMETHOD(ctap->fds[i], bind2, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
 	    if (errno != EADDRINUSE && errno != EACCES) {
 		RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't bind to the %s port %d",
 		  SA_AF2STR(ctap->ia), port);
@@ -138,14 +139,14 @@ create_twinlistener(unsigned int port, void *ap)
 	}
 	port++;
 	if ((ctap->ia->sa_family == AF_INET) && (ctap->cfs->tos >= 0) &&
-	  (CALL_METHOD(ctap->fds[i], settos, ctap->cfs->tos) == -1))
+	  (CALL_SMETHOD(ctap->fds[i], settos, ctap->cfs->tos) == -1))
 	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set TOS to %d", ctap->cfs->tos);
 	so_rcvbuf = 256 * 1024;
-	if (CALL_METHOD(ctap->fds[i], setrbuf, so_rcvbuf) == -1)
+	if (CALL_SMETHOD(ctap->fds[i], setrbuf, so_rcvbuf) == -1)
 	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
-        if (CALL_METHOD(ctap->fds[i], setnonblock) < 0)
+        if (CALL_SMETHOD(ctap->fds[i], setnonblock) < 0)
             goto failure;
-        CALL_METHOD(ctap->fds[i], settimestamp);
+        CALL_SMETHOD(ctap->fds[i], settimestamp);
     }
     RTPP_DBG_ASSERT(port > 2 && IS_VALID_PORT(port - 2));
     *ctap->port = port - 2;
@@ -183,76 +184,13 @@ rtpp_create_listener(const struct rtpp_cfg *cfsp, const struct sockaddr *ia, int
 }
 
 void
-rtpc_doreply(struct rtpp_command *cmd, char *buf, int len, int errd)
-{
-    struct rtpp_command_priv *pvt;
-
-    PUB2PVT(cmd, pvt);
-
-    if (len > 0 && buf[len - 1] == '\n') {
-        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "sending reply \"%.*s\\n\"",
-          len - 1, buf);
-    } else {
-        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "sending reply \"%.*s\"",
-          len, buf);
-    }
-    if (pvt->umode == 0) {
-        if (write(pvt->controlfd, buf, len) < 0) {
-            RTPP_DBG_ASSERT(!IS_WEIRD_ERRNO(errno));
-        }
-    } else {
-        if (pvt->cookie.s != NULL) {
-            len = snprintf(pvt->buf_r, sizeof(pvt->buf_r), "%.*s %.*s",
-              (int)pvt->cookie.len, pvt->cookie.s, len, buf);
-            buf = pvt->buf_r;
-            CALL_METHOD(pvt->rcache_obj, insert, rtpp_str_fix(&pvt->cookie), pvt->buf_r,
-              cmd->dtime->mono);
-        }
-        rtpp_anetio_sendto(pvt->cfs->rtpp_proc_cf->netio, pvt->controlfd, buf,
-          len, 0, sstosa(&cmd->raddr), cmd->rlen);
-    }
-    cmd->csp->ncmds_repld.cnt++;
-    if (errd == 0) {
-        cmd->csp->ncmds_succd.cnt++;
-    } else {
-        cmd->csp->ncmds_errs.cnt++;
-    }
-}
-
-void
-reply_number(struct rtpp_command *cmd, int number)
-{
-    int len;
-
-    len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "%d\n", number);
-    rtpc_doreply(cmd, cmd->buf_t, len, 0);
-}
-
-void
-reply_ok(struct rtpp_command *cmd)
-{
-
-    reply_number(cmd, 0);
-}
-
-void
-reply_error(struct rtpp_command *cmd,
-  int ecode)
-{
-    int len;
-
-    len = snprintf(cmd->buf_t, sizeof(cmd->buf_t), "E%d\n", ecode);
-    rtpc_doreply(cmd, cmd->buf_t, len, 1);
-}
-
-void
 free_command(struct rtpp_command *cmd)
 {
     struct rtpp_command_priv *pvt;
 
     PUB2PVT(cmd, pvt);
-    if (pvt->rcache_obj != NULL) {
-        RTPP_OBJ_DECREF(pvt->rcache_obj);
+    if (pvt->ctx.rcache_obj != NULL) {
+        RTPP_OBJ_DECREF(pvt->ctx.rcache_obj);
     }
     if (cmd->sp != NULL) {
         RTPP_OBJ_DECREF(cmd->sp);
@@ -261,6 +199,7 @@ free_command(struct rtpp_command *cmd)
         if (cmd->after_success[i].args.dyn != NULL)
             free(cmd->after_success[i].args.dyn);
     }
+    RTPP_OBJ_DECREF(cmd->reply);
     free(pvt);
 }
 
@@ -276,15 +215,51 @@ rtpp_command_ctor(const struct rtpp_cfg *cfsp, int controlfd,
         return (NULL);
     }
     cmd = &(pvt->pub);
-    pvt->controlfd = controlfd;
-    pvt->cfs = cfsp;
-    pvt->dtime.wall = dtime->wall;
-    pvt->dtime.mono = dtime->mono;
-    cmd->dtime = &pvt->dtime;
-    cmd->csp = csp;
+    pvt->ctx.controlfd = controlfd;
+    pvt->ctx.cfs = cfsp;
+    pvt->ctx.dtime.wall = dtime->wall;
+    pvt->ctx.dtime.mono = dtime->mono;
+    cmd->dtime = &pvt->ctx.dtime;
+    pvt->ctx.csp = csp;
     cmd->glog = cfsp->glog;
-    pvt->umode = umode;
+    pvt->ctx.umode = umode;
+    cmd->reply = rtpc_reply_ctor(&pvt->ctx);
+    if (cmd->reply == NULL) {
+        free(pvt);
+        return (NULL);
+    }
     return (cmd);
+}
+
+void
+rtpp_command_set_raddr(struct rtpp_command *cmd, const struct sockaddr *raddr, socklen_t rlen)
+{
+    struct rtpp_command_priv *pvt;
+
+    PUB2PVT(cmd, pvt);
+    memcpy(&pvt->ctx.raddr, raddr, rlen);
+    pvt->ctx.rlen = rlen;
+}
+
+struct rtpp_sockaddr
+rtpp_command_get_raddr(const struct rtpp_command *cmd)
+{
+    struct rtpp_sockaddr raddr;
+    const struct rtpp_command_priv *pvt;
+
+    PUB2PVT(cmd, pvt);
+    raddr.a = &pvt->ctx.raddr;
+    raddr.l = pvt->ctx.rlen;
+    return (raddr);
+}
+
+struct rtpp_command_stats *
+rtpp_command_get_stats(const struct rtpp_command *cmd)
+{
+    const struct rtpp_command_priv *pvt;
+
+    PUB2PVT(cmd, pvt);
+    return (pvt->ctx.csp);
 }
 
 struct rtpp_command *
@@ -330,9 +305,9 @@ get_command(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp, int contro
             lp = &asize;
             raddr = sstosa(&rcsp->emrg.addr);
         } else {
-            cmd->rlen = sizeof(cmd->raddr);
-            lp = &cmd->rlen;
-            raddr = sstosa(&cmd->raddr);
+            pvt->ctx.rlen = sizeof(pvt->ctx.raddr);
+            lp = &pvt->ctx.rlen;
+            raddr = sstosa(&pvt->ctx.raddr);
         }
         len = recvfrom(controlfd, bp, bsize - 1, 0, raddr, lp);
     }
@@ -368,20 +343,23 @@ rtpp_command_guard_retrans(struct rtpp_command *cmd,
 {
     size_t len;
     struct rtpp_command_priv *pvt;
+    struct rtpp_cmd_rcache_entry *cres;
 
     PUB2PVT(cmd, pvt);
-    if (CALL_METHOD(rcache_obj, lookup, rtpp_str_fix(&pvt->cookie), pvt->buf_r,
-      sizeof(pvt->buf_r)) == 1) {
-        len = strlen(pvt->buf_r);
-        rtpp_anetio_sendto(pvt->cfs->rtpp_proc_cf->netio, pvt->controlfd,
-          pvt->buf_r, len, 0, sstosa(&cmd->raddr), cmd->rlen);
-        cmd->csp->ncmds_rcvd.cnt--;
-        cmd->csp->ncmds_rcvd_ndups.cnt++;
-        return (1);
+    cres = CALL_METHOD(rcache_obj, lookup, rtpp_str_fix(&pvt->ctx.cookie));
+    if (cres == NULL) {
+        RTPP_OBJ_INCREF(rcache_obj);
+        pvt->ctx.rcache_obj = rcache_obj;
+        return (0);
     }
-    RTPP_OBJ_INCREF(rcache_obj);
-    pvt->rcache_obj = rcache_obj;
-    return (0);
+    len = cres->reply->len;
+    int r = rtpp_anetio_sendto_na(pvt->ctx.cfs->rtpp_proc_cf->netio, pvt->ctx.controlfd,
+      cres->reply->s, len, 0, sstosa(&pvt->ctx.raddr), pvt->ctx.rlen, cres->rcnt);
+    if (r != 0)
+        RTPP_OBJ_DECREF(cres);
+    pvt->ctx.csp->ncmds_rcvd.cnt--;
+    pvt->ctx.csp->ncmds_rcvd_ndups.cnt++;
+    return (1);
 }
 
 int
@@ -395,13 +373,13 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
 
     PUB2PVT(cmd, pvt);
     if (len > 0 && cmd->buf[len - 1] == '\n') {
-        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "received command \"%.*s\\n\"",
+        RTPP_LOG(pvt->ctx.cfs->glog, RTPP_LOG_DBUG, "received command \"%.*s\\n\"",
           len - 1, cmd->buf);
     } else {
-        RTPP_LOG(pvt->cfs->glog, RTPP_LOG_DBUG, "received command \"%s\"",
+        RTPP_LOG(pvt->ctx.cfs->glog, RTPP_LOG_DBUG, "received command \"%s\"",
           cmd->buf);
     }
-    cmd->csp->ncmds_rcvd.cnt++;
+    pvt->ctx.csp->ncmds_rcvd.cnt++;
 
     cap = &cmd->args;
     rtpp_strsplit(cmd->buf, mbuf, len, sizeof(mbuf));
@@ -430,12 +408,14 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
 
         if (cap == &cmd->args) {
             /* Stream communication mode doesn't use cookie */
-            if (pvt->umode != 0 && cap->c == 0 && pvt->cookie.s == NULL) {
-                pvt->cookie = *ap;
+            if (pvt->ctx.umode != 0 && cap->c == 0 && pvt->ctx.cookie.s == NULL) {
+                pvt->ctx.cookie = *ap;
                 if (rtpp_command_guard_retrans(cmd, rcache_obj)) {
                     *rval = GET_CMD_OK;
                     return (1);
                 }
+                assert(CALL_SMETHOD(cmd->reply, appendf, "%.*s ", ap->len, ap->s) == 0);
+                CALL_SMETHOD(cmd->reply, commit);
                 continue;
             }
         }
@@ -454,7 +434,7 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
         if (++ap >= &cap->v[RTPC_MAX_ARGC])
             goto synerr;
     }
-    if (cmd->args.c < 1 || (pvt->umode != 0 && pvt->cookie.s == NULL)) {
+    if (cmd->args.c < 1 || (pvt->ctx.umode != 0 && pvt->ctx.cookie.s == NULL)) {
         goto synerr;
     }
     for (int i = 0; i < cmd->subc.n; i++) {
@@ -465,7 +445,7 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
     }
 
     /* Step I: parse parameters that are common to all ops */
-    if (rtpp_command_pre_parse(pvt->cfs, cmd) != 0) {
+    if (rtpp_command_pre_parse(pvt->ctx.cfs, cmd) != 0) {
         /* Error reply is handled by the rtpp_command_pre_parse() */
         *rval = GET_CMD_INVAL;
         return (1);
@@ -473,8 +453,8 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
 
     return (0);
 synerr:
-    RTPP_LOG(pvt->cfs->glog, RTPP_LOG_ERR, "command syntax error");
-    reply_error(cmd, ECODE_PARSE_1);
+    RTPP_LOG(pvt->ctx.cfs->glog, RTPP_LOG_ERR, "command syntax error");
+    CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_1);
     *rval = GET_CMD_INVAL;
     return (1);
 
@@ -503,7 +483,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 
     case GET_VER:
         /* This returns base version. */
-        reply_number(cmd, CPROTOVER);
+        CALL_SMETHOD(cmd->reply, number, CPROTOVER);
         return 0;
 
     case DELETE_ALL:
@@ -511,7 +491,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         RTPP_LOG(cfsp->glog, RTPP_LOG_INFO, "deleting all active sessions");
         CALL_SMETHOD(cfsp->sessions_wrt, purge);
         CALL_SMETHOD(cfsp->sessions_ht, purge);
-        reply_ok(cmd);
+        CALL_SMETHOD(cmd->reply, ok);
         return 0;
 
     case INFO:
@@ -540,14 +520,14 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         if (cmd->args.v[0].s[1] == 'S' || cmd->args.v[0].s[1] == 's') {
             if (cmd->args.v[0].s[2] != '\0') {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                reply_error(cmd, ECODE_PARSE_2);
+                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_2);
                 return 0;
             }
             record_single_file = RSF_MODE_DFLT(cfsp);
         } else {
             if (cmd->args.v[0].s[1] != '\0') {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                reply_error(cmd, ECODE_PARSE_3);
+                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_3);
                 return 0;
             }
             record_single_file = 0;
@@ -558,14 +538,14 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         if (cmd->args.v[0].s[1] == 'A' || cmd->args.v[0].s[1] == 'a') {
             if (cmd->args.v[0].s[2] != '\0') {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                reply_error(cmd, ECODE_PARSE_2);
+                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_2);
                 return 0;
             }
             norecord_all = 1;
         } else {
             if (cmd->args.v[0].s[1] != '\0') {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                reply_error(cmd, ECODE_PARSE_3);
+                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_3);
                 return 0;
             }
             norecord_all = 0;
@@ -602,13 +582,13 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             default:
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
                   "STATS: unknown command modifier `%c'", *cp);
-                reply_error(cmd, ECODE_PARSE_5);
+                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_5);
                 return 0;
             }
         }
         i = handle_get_stats(cfsp->rtpp_stats, cmd, verbose);
         if (i != 0) {
-            reply_error(cmd, i);
+            CALL_SMETHOD(cmd->reply, error, i);
         }
         return 0;
 
@@ -621,7 +601,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
           &cmd->after_success[i]) != 0) {
             if (cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP)
                 rtpp_command_ul_opts_free(cmd->cca.opts.ul);
-            reply_error(cmd, ECODE_PARSE_SUBC);
+            CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_SUBC);
             return 0;
         }
         RTPP_DBG_ASSERT(cmd->after_success[i].handler != NULL);
@@ -677,7 +657,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 	    RTPP_DBG_ASSERT(cmd->cca.opts.ptr == NULL);
 	    break;
 	}
-	reply_error(cmd, ECODE_SESUNKN);
+	CALL_SMETHOD(cmd->reply, error, ECODE_SESUNKN);
 	return 0;
     }
 
@@ -685,12 +665,12 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     case DELETE:
     case RECORD:
     case NORECORD:
-	reply_ok(cmd);
+	CALL_SMETHOD(cmd->reply, ok);
 	break;
 
     case NOPLAY:
 	CALL_SMETHOD(spa->rtp->stream[i], handle_noplay);
-	reply_ok(cmd);
+	CALL_SMETHOD(cmd->reply, ok);
 	break;
 
     case PLAY:
@@ -699,16 +679,16 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 
     case COPY:
 	if (handle_copy(cfsp, spa, i, recording_name, record_single_file) != 0) {
-            reply_error(cmd, ECODE_CPYFAIL);
+            CALL_SMETHOD(cmd->reply, error, ECODE_CPYFAIL);
             return 0;
         }
-	reply_ok(cmd);
+	CALL_SMETHOD(cmd->reply, ok);
 	break;
 
     case QUERY:
 	rval = handle_query(cfsp, cmd, spa->rtp, i);
 	if (rval != 0) {
-	    reply_error(cmd, rval);
+	    CALL_SMETHOD(cmd->reply, error, rval);
 	}
 	break;
 
@@ -734,8 +714,7 @@ handle_info(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     char addrs[4][256];
     int brief;
 #endif
-    int len, i, load;
-    char buf[1024 * 8];
+    int aerr, i, load;
     unsigned long long packets_in, packets_out;
     unsigned long long sessions_created;
     int sessions_active, rtp_streams_active;
@@ -762,7 +741,7 @@ handle_info(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 
         default:
             RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-            reply_error(cmd, ECODE_PARSE_7);
+            CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_7);
             return;
         }
     }
@@ -775,11 +754,11 @@ handle_info(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     sessions_active = sessions_created - CALL_SMETHOD(cfsp->rtpp_stats,
       getlvalbyname, "nsess_destroyed");
     rtp_streams_active = CALL_SMETHOD(cfsp->rtp_streams_wrt, get_length);
-    len = snprintf(buf, sizeof(buf), "sessions created: %llu\nactive sessions: %d\n"
+    aerr = CALL_SMETHOD(cmd->reply, appendf, "sessions created: %llu\nactive sessions: %d\n"
       "active streams: %d\npackets received: %llu\npackets transmitted: %llu\n",
       sessions_created, sessions_active, rtp_streams_active, packets_in, packets_out);
-    if (load != 0) {
-          len += snprintf(buf + len, sizeof(buf) - len, "average load: %f\n",
+    if (load != 0 && aerr == 0) {
+          aerr = CALL_SMETHOD(cmd->reply, appendf, "average load: %f\n",
             CALL_METHOD(cfsp->rtpp_cmd_cf, get_aload));
     }
 #if 0
@@ -826,7 +805,10 @@ XXX this needs work to fix it after rtp/rtcp split
         }
     }
 #endif
-    if (len > 0) {
-        rtpc_doreply(cmd, buf, len, 0);
+    if (aerr == 0) {
+        CALL_SMETHOD(cmd->reply, commit);
+        CALL_SMETHOD(cmd->reply, deliver, 0);
+    } else {
+        CALL_SMETHOD(cmd->reply, error, ECODE_NOMEM_6);
     }
 }

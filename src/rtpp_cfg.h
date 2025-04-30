@@ -26,8 +26,11 @@
  *
  */
 
-#ifndef _RTPP_CFG_H_
-#define _RTPP_CFG_H_
+#pragma once
+
+#if !defined(VERSION)
+#error "config.h" needs to be included
+#endif
 
 /*
  * TTL counters are used to detect the absence of audio packets
@@ -137,8 +140,6 @@ struct rtpp_cfg {
     struct rtpp_sessinfo *sessinfo;
     const char *cwd_orig;
 
-    struct rtpp_modman *modules_cf;
-
     struct overload_prot overload_prot;
 
     const char *cfile;
@@ -150,6 +151,9 @@ struct rtpp_cfg {
     int no_resolve;
 
     struct rtpp_proc_servers *proc_servers;
-};
-
+#if ENABLE_MODULE_IF
+    struct rtpp_modman *modules_cf;
+#else
+    void *_pad;
 #endif
+};

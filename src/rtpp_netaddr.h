@@ -29,7 +29,7 @@
 #pragma once
 
 struct sockaddr;
-DECLARE_CLASS(rtpp_netaddr, void);
+DECLARE_CLASS(rtpp_netaddr, void) RTPP_EXPORT;
 
 DECLARE_METHOD(rtpp_netaddr, rtpp_netaddr_set, void, const struct sockaddr *,
   size_t);

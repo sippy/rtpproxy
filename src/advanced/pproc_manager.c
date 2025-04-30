@@ -26,6 +26,7 @@
  */
 
 #include <pthread.h>
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -34,12 +35,14 @@
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtp_packet.h"
 #include "rtpp_stream.h"
 #include "rtpp_pcount.h"
 #include "rtpp_stats.h"
 #include "rtpp_proc.h"
+#include "rtpp_codeptr.h"
 
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
@@ -65,7 +68,7 @@ struct pproc_manager_pvt {
 
 static int rtpp_pproc_mgr_register(struct pproc_manager *, enum pproc_order, const struct packet_processor_if *);
 static enum pproc_action rtpp_pproc_mgr_handle(struct pproc_manager *, struct pkt_proc_ctx *);
-static enum pproc_action rtpp_pproc_mgr_handleat(struct pproc_manager *, struct pkt_proc_ctx *,
+static struct pproc_act rtpp_pproc_mgr_handleat(struct pproc_manager *, struct pkt_proc_ctx *,
   enum pproc_order) __attribute__((always_inline));
 static int rtpp_pproc_mgr_lookup(struct pproc_manager *, void *, struct packet_processor_if *);
 static int rtpp_pproc_mgr_unregister(struct pproc_manager *, void *);
@@ -190,23 +193,30 @@ static enum pproc_action
 rtpp_pproc_mgr_handle(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp)
 {
 
-    return rtpp_pproc_mgr_handleat(pub, pktxp, _PPROC_ORD_EMPTY);
+    return rtpp_pproc_mgr_handleat(pub, pktxp, _PPROC_ORD_EMPTY).a;
 }
 
-static enum pproc_action
+static struct pproc_act
 rtpp_pproc_mgr_handleat(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp,
   enum pproc_order startat)
 {
     int i;
     struct pproc_manager_pvt *pvt;
-    enum pproc_action res = PPROC_ACT_NOP;
+    enum pproc_action res = PPROC_ACT_NOP_v;
+    struct pproc_act lastres = PPROC_ACT(res);
     const struct pproc_handlers *handlers;
+    static __thread int max_recursion = 16;
 
     PUB2PVT(pub, pvt);
     pthread_mutex_lock(&pvt->lock);
     handlers = pvt->handlers;
     RTPP_OBJ_INCREF(handlers);
     pthread_mutex_unlock(&pvt->lock);
+
+    RTPP_DBGCODE() {
+        max_recursion--;
+        assert(max_recursion > 0);
+    }
 
     for (i = 0; i < handlers->nprocs; i++) {
         const struct packet_processor_if *ip = &handlers->pproc[i].ppif;
@@ -220,22 +230,27 @@ rtpp_pproc_mgr_handleat(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp,
         pktxp->pproc = ip;
         if (ip->taste != NULL && ip->taste(pktxp) == 0)
             continue;
-        res |= ip->enqueue(pktxp);
-        if (res & (PPROC_ACT_TAKE | PPROC_ACT_DROP))
+        lastres = ip->enqueue(pktxp);
+        res |= lastres.a;
+        if (res & (PPROC_ACT_TAKE_v | PPROC_ACT_DROP_v))
             break;
     }
     RTPP_OBJ_DECREF(handlers);
-    if ((res & PPROC_ACT_TAKE) == 0 || (res & PPROC_ACT_DROP) != 0) {
+    if ((res & PPROC_ACT_TAKE_v) == 0 || (res & PPROC_ACT_DROP_v) != 0) {
         RTPP_OBJ_DECREF(pktxp->pktp);
         if ((pktxp->flags & PPROC_FLAG_LGEN) == 0) {
-            CALL_SMETHOD(pktxp->strmp_in->pcount, reg_drop);
+            CALL_SMETHOD(pktxp->strmp_in->pcount, reg_drop, lastres.loc);
             if (pktxp->rsp != NULL)
                 pktxp->rsp->npkts_discard.cnt++;
             else
                 CALL_SMETHOD(pvt->rtpp_stats, updatebyidx, pvt->npkts_discard_idx, 1);
         }
     }
-    return (res);
+    lastres.a = res;
+    RTPP_DBGCODE() {
+        max_recursion++;
+    }
+    return (lastres);
 }
 
 int

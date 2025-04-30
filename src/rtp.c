@@ -32,11 +32,11 @@
 #include <assert.h>
 #include <stddef.h>
 
+#include "rtpp_types.h"
 #include "rtp.h"
 #include "rtp_info.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
-#include "rtpp_types.h"
 
 #define RTP_PROFILE_AUDIO(s, nc) {.ts_rate = (s), .sample_rate = (s), \
   .pt_kind = RTP_PTK_AUDIO, .nchannels = (nc)}

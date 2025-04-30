@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2024 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +25,17 @@
  *
  */
 
-int rtpp_mutex_islocked(pthread_mutex_t *);
+#pragma once
 
+struct rtpp_refcnt;
 
+DECLARE_CLASS(rtpp_refproxy, int) RTPP_EXPORT;
+
+DECLARE_METHOD(rtpp_refproxy, rtpp_refproxy_add, void, struct rtpp_refcnt *);
+
+DECLARE_SMETHODS(rtpp_refproxy)
+{
+    METHOD_ENTRY(rtpp_refproxy_add, add);
+};
+
+DECLARE_CLASS_PUBTYPE(rtpp_refproxy, {});

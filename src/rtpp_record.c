@@ -52,6 +52,7 @@
 
 #include "config.h"
 
+#include "rtpp_types.h"
 #include "rtp.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
@@ -60,7 +61,7 @@
 #include "rtpp_ip_chksum.h"
 #include "rtpp_debug.h"
 #include "rtpp_defines.h"
-#include "rtpp_types.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_mallocs.h"
@@ -142,7 +143,7 @@ ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
         sprintf(cp, "%d", port + 1);
     }
 
-    n = resolve(sstosa(&raddr), AF_INET, tmp, cp, AI_PASSIVE);
+    n = resolve(sstosa(&raddr), AF_INET, tmp, cp, 0);
     if (n != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "ropen: getaddrinfo: %s", gai_strerror(n));
         goto e1;

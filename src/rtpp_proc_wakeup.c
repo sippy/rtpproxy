@@ -25,6 +25,9 @@
  *
  */
 
+#if !defined(_GNU_SOURCE)
+#define _GNU_SOURCE /* pthread_yield() */
+#endif
 #include <errno.h>
 #include <pthread.h>
 #include <stdatomic.h>
@@ -32,8 +35,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "config_pp.h"
+
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_time.h"
@@ -47,7 +53,7 @@
 struct rtpp_proc_wakeup_priv {
     struct rtpp_proc_wakeup pub;
     pthread_t thread_id;
-    atomic_int tstate;
+    _Atomic(int) tstate;
     int requested_i_wake;
     int delivered_i_wake;
     pthread_mutex_t mutex;
@@ -82,7 +88,7 @@ rtpp_proc_wakeup_run(void *arg)
 
     atomic_store(&wtcp->tstate, TSTATE_RUN);
     for (;;) {
-        int ret;
+        MAYBE_UNUSED int ret;
 
         pthread_mutex_lock(&wtcp->mutex);
         while ((atomic_load(&wtcp->tstate) == TSTATE_RUN) && (requested_i_wake == wtcp->requested_i_wake)) {

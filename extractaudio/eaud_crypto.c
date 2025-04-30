@@ -169,7 +169,12 @@ static int srtp_inited;
 int
 eaud_crypto_decrypt(struct eaud_crypto *crypto, uint8_t *pkt_raw, int pkt_len)
 {
-    int status, octets_recvd;
+    int status;
+#if defined(SRTP_PROTECT_LASTARG)
+    SRTP_PROTECT_LASTARG octets_recvd;
+#else
+    size_t octets_recvd;
+#endif
     rtp_hdr_t *rpkt;
 
     if (srtp_inited == 0) {

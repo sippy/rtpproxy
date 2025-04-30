@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2018 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
+ * Copyright (c) 2006-2015 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,20 +26,46 @@
  *
  */
 
-struct rtpp_sbuf {
-   int alen;
-   char *bp;
-   char *cp;
-};
+#include <assert.h>
+#include <errno.h>
+#include <pthread.h>
 
-#define SBW_OK    (0)
-#define SBW_ERR  (-1)
-#define SBW_SHRT (-2)
+#include "rtpp_threads.h"
 
-#define RS_ULEN(sbp) ((int)((sbp)->cp - (sbp)->bp))
+#undef pthread_mutex_lock
+#undef pthread_mutex_unlock
 
-int rtpp_sbuf_write(struct rtpp_sbuf *sbp, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
-struct rtpp_sbuf *rtpp_sbuf_ctor(int ilen);
-void rtpp_sbuf_dtor(struct rtpp_sbuf *sbp);
-int rtpp_sbuf_extend(struct rtpp_sbuf *sbp, int nlen);
-void rtpp_sbuf_reset(struct rtpp_sbuf *sbp);
+int
+rtpp_mutex_islocked(pthread_mutex_t *mutex)
+{
+    int rval;
+
+    rval = pthread_mutex_trylock(mutex);
+    if (rval != 0) {
+        if (rval == EBUSY)
+            return (1);
+        return (-1);
+    }
+    pthread_mutex_unlock(mutex);
+    return (0);
+}
+
+int
+pthread_mutex_lock_safe(pthread_mutex_t *mutex)
+{
+    int rval;
+
+    rval = pthread_mutex_lock(mutex);
+    assert(rval == 0);
+    return (rval);
+}
+
+int
+pthread_mutex_unlock_safe(pthread_mutex_t *mutex)
+{
+    int rval;
+
+    rval = pthread_mutex_unlock(mutex);
+    assert(rval == 0);
+    return (rval);
+}

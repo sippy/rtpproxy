@@ -38,7 +38,7 @@ struct sockaddr_storage;
 /* Function prototypes */
 int ishostseq(const struct sockaddr *, const struct sockaddr *);
 int ishostnull(const struct sockaddr *);
-uint16_t getport(const struct sockaddr *);
+uint16_t getport(const struct sockaddr *) RTPP_EXPORT;
 uint16_t getnport(const struct sockaddr *);
 int isaddrseq(const struct sockaddr *ia1, const struct sockaddr *ia2);
 int isaddreq(struct sockaddr *ia1, struct sockaddr *ia2);
@@ -93,6 +93,10 @@ int setbindhost(struct sockaddr *, int, const char *, const char *);
 #define	IS_VALID_PORT(p)	((p) >= MIN_UDP_PORT && (p) <= MAX_UDP_PORT)
 #define	IS_LAST_PORT(p)		((p) == MAX_UDP_PORT)
 
+struct rtpp_sockaddr {
+    const struct sockaddr_storage *a;
+    size_t l;
+};
 
 /*
  * > len('0000:0000:0000:0000:0000:0000:127.127.127.127')

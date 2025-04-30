@@ -27,17 +27,3 @@
 #pragma once
 
 struct rtpp_minfo *rtpp_static_modules_lookup(const char *);
-
-struct rtpp_modules {
-    union {
-        struct {
-            struct rtpp_minfo *acct_csv;
-            struct rtpp_minfo *acct_rtcp_hep;
-            struct rtpp_minfo *catch_dtmf;
-            struct rtpp_minfo *dtls_gw;
-        };
-        struct rtpp_minfo *all[5];
-    };
-};
-
-extern const struct rtpp_modules rtpp_modules;

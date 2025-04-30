@@ -30,6 +30,7 @@
 #include <math.h>
 #include <time.h>
 
+#include "rtpp_types.h"
 #include "rtpp_time.h"
 
 static double

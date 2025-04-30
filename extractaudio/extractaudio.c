@@ -168,8 +168,8 @@ channel_remove(struct channels *channels, struct cnode *cnp, int dealloc)
             MYQ_REMOVE(sp, pkt);
             free(pkt);
         }
-        free(cnp->cp);
         free(cnp->cp->decoder);
+        free(cnp->cp);
     }
 
     MYQ_REMOVE(channels, cnp);

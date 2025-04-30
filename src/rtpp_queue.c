@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include "rtpp_types.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_queue.h"
 #include "rtpp_mallocs.h"
@@ -240,14 +241,15 @@ circ_buf_remove(circ_buf_t *c, unsigned int offset)
 
 struct rtpp_queue
 {
-    char const *name;
     struct rtpp_wi *head;
     struct rtpp_wi *tail;
     pthread_cond_t cond;
     pthread_mutex_t mutex;
     unsigned int length;
     unsigned int qlen;
+    unsigned int mlen;
     circ_buf_t circb;
+    char name[128];
 };
 
 struct rtpp_queue *
@@ -255,7 +257,6 @@ rtpp_queue_init(unsigned int cb_capacity, const char *fmt, ...)
 {
     struct rtpp_queue *queue;
     unsigned int cb_buflen;
-    char *name;
     va_list ap;
     int eval;
     pthread_condattr_t cond_attr;
@@ -279,13 +280,13 @@ rtpp_queue_init(unsigned int cb_capacity, const char *fmt, ...)
         goto e3;
     }
     va_start(ap, fmt);
-    vasprintf(&name, fmt, ap);
+    int r = vsnprintf(queue->name, sizeof(queue->name), fmt, ap);
     va_end(ap);
-    if (name == NULL) {
+    if (r >= sizeof(queue->name)) {
         goto e4;
     }
     queue->qlen = 1;
-    queue->name = name;
+    queue->mlen = -1;
     queue->circb.buflen = cb_buflen;
     pthread_condattr_destroy(&cond_attr);
     return (queue);
@@ -301,6 +302,17 @@ e0:
     return (NULL);
 }
 
+int
+rtpp_queue_setmaxlen(struct rtpp_queue *queue, unsigned int new_mlen)
+{
+
+    pthread_mutex_lock(&queue->mutex);
+    int mlen = queue->mlen;
+    queue->mlen = new_mlen;
+    pthread_mutex_unlock(&queue->mutex);
+    return (mlen);
+}
+
 void
 rtpp_queue_destroy(struct rtpp_queue *queue)
 {
@@ -311,7 +323,6 @@ rtpp_queue_destroy(struct rtpp_queue *queue)
     }
     pthread_cond_destroy(&queue->cond);
     pthread_mutex_destroy(&queue->mutex);
-    free((void *)queue->name);
     free(queue);
 }
 
@@ -342,15 +353,20 @@ rtpp_queue_setqlen(struct rtpp_queue *queue, unsigned int qlen)
     return (rval);
 }
 
-void
+int
 rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *queue)
 {
+    int rval = 0;
 
     pthread_mutex_lock(&queue->mutex);
     /*
      * If queue is not empty, push to the queue so that order of elements
      * is preserved while pulling them out.
      */
+    if (queue->mlen != -1 && rtpp_queue_getclen(queue) >= queue->mlen) {
+        rval = -1;
+        goto out;
+    }
     if ((queue->length > 0) || (circ_buf_push(&queue->circb, wi) != 0)) {
         RTPPQ_APPEND(queue, wi);
 #if 0
@@ -364,7 +380,9 @@ rtpp_queue_put_item(struct rtpp_wi *wi, struct rtpp_queue *queue)
         pthread_cond_signal(&queue->cond);
     }
 
+out:
     pthread_mutex_unlock(&queue->mutex);
+    return (rval);
 }
 
 void

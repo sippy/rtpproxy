@@ -26,6 +26,8 @@
  *
  */
 
+#pragma once
+
 struct rtpp_socket;
 struct sockaddr;
 struct rtp_packet;
@@ -33,6 +35,9 @@ struct sthread_args;
 struct rtpp_log;
 struct rtpp_netaddr;
 struct rtpp_timestamp;
+struct rtpp_anetio_cf;
+
+DECLARE_CLASS(rtpp_socket, struct rtpp_anetio_cf *, int, int);
 
 DEFINE_METHOD(rtpp_socket, rtpp_socket_bind, int, const struct sockaddr *,
   int);
@@ -40,11 +45,6 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_settos, int, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_setrbuf, int, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_setnonblock, int);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_settimestamp, int);
-#if 0
-/*DEFINE_METHOD(rtpp_socket, rtpp_socket_send_pkt, int,
-  struct sthread_args *, const struct sockaddr *, int, struct rtp_packet *,
-  struct rtpp_log *);*/
-#endif
 DEFINE_METHOD(rtpp_socket, rtpp_socket_send_pkt_na, int,
   struct sthread_args *, struct rtpp_netaddr *, struct rtp_packet *,
   struct rtpp_log *);
@@ -56,7 +56,8 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_drain, int, const char *,
 DEFINE_METHOD(rtpp_socket, rtpp_socket_set_stuid, void, uint64_t);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_get_stuid, uint64_t);
 
-struct rtpp_socket {
+DECLARE_SMETHODS(rtpp_socket)
+{
     struct rtpp_refcnt *rcnt;
     /* Public methods */
     METHOD_ENTRY(rtpp_socket_bind, bind2);
@@ -64,9 +65,6 @@ struct rtpp_socket {
     METHOD_ENTRY(rtpp_socket_setrbuf, setrbuf);
     METHOD_ENTRY(rtpp_socket_setnonblock, setnonblock);
     METHOD_ENTRY(rtpp_socket_settimestamp, settimestamp);
-#if 0
-    METHOD_ENTRY(rtpp_socket_send_pkt, send_pkt);
-#endif
     METHOD_ENTRY(rtpp_socket_send_pkt_na, send_pkt_na);
     METHOD_ENTRY(rtpp_socket_rtp_recv, rtp_recv);
     METHOD_ENTRY(rtpp_socket_getfd, getfd);
@@ -75,4 +73,4 @@ struct rtpp_socket {
     METHOD_ENTRY(rtpp_socket_get_stuid, get_stuid);
 };
 
-struct rtpp_socket *rtpp_socket_ctor(int, int);
+DECLARE_CLASS_PUBTYPE(rtpp_socket, {});

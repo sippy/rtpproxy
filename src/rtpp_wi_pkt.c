@@ -35,6 +35,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_log_obj.h"
 #include "rtp.h"
@@ -83,6 +84,34 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
 }
 
 struct rtpp_wi *
+rtpp_wi_malloc_na(int sock, const void *msg, size_t msg_len, int flags,
+  const struct sockaddr *sendto, size_t tolen, struct rtpp_refcnt *data_rcnt)
+{
+    struct rtpp_wi_sendto *wis;
+
+    wis = rtpp_rmalloc(sizeof(struct rtpp_wi_sendto), PVT_RCOFFS(&wis->wip));
+    if (wis == NULL) {
+        return (NULL);
+    }
+    wis->wip = (const struct rtpp_wi_pvt) {
+        .pub.wi_type = RTPP_WI_TYPE_OPKT,
+        .pub.rcnt = wis->wip.pub.rcnt,
+        .nsend = 1,
+        .sock = sock,
+        .flags = flags,
+        .msg = msg,
+        .sendto = sstosa(&(wis->to)),
+        .msg_len = msg_len,
+        .tolen = tolen,
+        .aux_rcnt = data_rcnt,
+    };
+    memcpy(&(wis->to), sendto, tolen);
+    CALL_SMETHOD(wis->wip.pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_wi_free,
+      wis);
+    return (&(wis->wip.pub));
+}
+
+struct rtpp_wi *
 rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
   struct rtpp_netaddr *sendto, int nsend,
   struct rtpp_refcnt *sock_rcnt)
@@ -102,7 +131,7 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
     };
     if (sock_rcnt != NULL) {
         RC_INCREF(sock_rcnt);
-        wipp->sock_rcnt = sock_rcnt;
+        wipp->aux_rcnt = sock_rcnt;
     }
     CALL_SMETHOD(pkt->rcnt, reg_pd, (rtpp_refcnt_dtor_t)rtpp_wi_pkt_free,
       wipp);
@@ -112,10 +141,7 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
 static void
 rtpp_wi_free(struct rtpp_wi_sendto *wis)
 {
-
-    if (wis->wip.log != NULL) {
-        RTPP_OBJ_DECREF(wis->wip.log);
-    }
+    rtpp_wi_pkt_free(&wis->wip);
     free(wis);
 }
 
@@ -123,8 +149,8 @@ static void
 rtpp_wi_pkt_free(struct rtpp_wi_pvt *wipp)
 {
 
-    if (wipp->sock_rcnt != NULL) {
-        RC_DECREF(wipp->sock_rcnt);
+    if (wipp->aux_rcnt != NULL) {
+        RC_DECREF(wipp->aux_rcnt);
     }
     if (wipp->log != NULL) {
         RTPP_OBJ_DECREF(wipp->log);

@@ -40,6 +40,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_refcnt_fin.h"
 
@@ -50,8 +51,8 @@
 #endif
 #endif
 
-static void rtpp_refcnt_incref(struct rtpp_refcnt *);
-static void rtpp_refcnt_decref(struct rtpp_refcnt *);
+static void rtpp_refcnt_incref(struct rtpp_refcnt *, HERETYPE);
+static void rtpp_refcnt_decref(struct rtpp_refcnt *, HERETYPE);
 
 /*
  * Somewhat arbitrary cap on the maximum value of the references. Just here
@@ -68,7 +69,7 @@ static void rtpp_refcnt_decref(struct rtpp_refcnt *);
 struct rtpp_refcnt_priv
 {
     struct rtpp_refcnt pub;
-    atomic_int cnt;
+    _Atomic(int) cnt;
     rtpp_refcnt_dtor_t dtor_f;
     void *data;
     rtpp_refcnt_dtor_t pre_dtor_f;
@@ -85,7 +86,8 @@ static void rtpp_refcnt_reg_pd(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
 static void rtpp_refcnt_use_stdfree(struct rtpp_refcnt *, void *);
 
 #if RTPP_DEBUG_refcnt
-static void rtpp_refcnt_traceen(struct rtpp_refcnt *);
+static void rtpp_refcnt_traceen(struct rtpp_refcnt *, HERETYPE);
+static int rtpp_refcnt_peek(struct rtpp_refcnt *);
 #endif
 
 DEFINE_SMETHODS(rtpp_refcnt,
@@ -95,6 +97,7 @@ DEFINE_SMETHODS(rtpp_refcnt,
     .reg_pd = &rtpp_refcnt_reg_pd,
 #if RTPP_DEBUG_refcnt
     .traceen = rtpp_refcnt_traceen,
+    .peek = rtpp_refcnt_peek,
 #endif
     .attach = &rtpp_refcnt_attach,
     .use_stdfree = &rtpp_refcnt_use_stdfree,
@@ -159,55 +162,74 @@ rtpp_refcnt_attach(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f,
 }
 
 static void
-rtpp_refcnt_incref(struct rtpp_refcnt *pub)
+rtpp_refcnt_incref(struct rtpp_refcnt *pub, HERETYPE mlp)
 {
     struct rtpp_refcnt_priv *pvt;
+    MAYBE_UNUSED int oldcnt;
 
     PUB2PVT(pub, pvt);
+    RTPP_DBGCODE() {
+        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+        RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
+    }
+    oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
 #if RTPP_DEBUG_refcnt
     if (pvt->flags & RC_FLAG_TRACE) {
-        char *dbuf;
-        asprintf(&dbuf, "rtpp_refcnt(%p, %u).incref()", pub,
-          atomic_load(&pvt->cnt));
-        if (dbuf != NULL) {
 #ifdef RTPP_DEBUG
+        char *dbuf;
+        rtpp_memdeb_asprintf(&dbuf, MEMDEB_SYM, mlp,
+          CODEPTR_FMT(": rtpp_refcnt(%p, %u).incref()", mlp, pub, oldcnt));
+        if (dbuf != NULL) {
             rtpp_stacktrace_print(dbuf);
-#else
-            fprintf(stderr, "%s\n", dbuf);
-#endif
             free(dbuf);
         }
+#else
+        fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).incref()\n", mlp, pub, oldcnt));
+#endif
     }
 #endif
-    RTPP_DBG_ASSERT(atomic_load(&pvt->cnt) > 0 && atomic_load(&pvt->cnt) < RC_ABS_MAX);
-    atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
+    RTPP_DBG_ASSERT(oldcnt > 0);
 }
 
 static void
-rtpp_refcnt_decref(struct rtpp_refcnt *pub)
+rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
 {
     struct rtpp_refcnt_priv *pvt;
-    int oldcnt;
+    int oldcnt, flags;
 
     PUB2PVT(pub, pvt);
+    RTPP_DBGCODE() {
+        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+        RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
+    }
+#if RTPP_DEBUG_refcnt
+    /*
+     * Fetch flags before decrement, otherwise we can decrement and then
+     * somebody decrements it and deallocates. Atomic is not needed since
+     * this initialized at the init time.
+     */
+    flags = pvt->flags;
+#endif
     oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release);
 #if RTPP_DEBUG_refcnt
-    if (pvt->flags & RC_FLAG_TRACE) {
-        char *dbuf;
-        asprintf(&dbuf, "rtpp_refcnt(%p, %u).decref()", pub, oldcnt);
-        if (dbuf != NULL) {
+    if (flags & RC_FLAG_TRACE) {
 #ifdef RTPP_DEBUG
+        char *dbuf;
+        rtpp_memdeb_asprintf(&dbuf, MEMDEB_SYM, mlp,
+          CODEPTR_FMT(": rtpp_refcnt(%p, %u).decref()", mlp, pub, oldcnt));
+        if (dbuf != NULL) {
             rtpp_stacktrace_print(dbuf);
-#else
-            fprintf(stderr, "%s\n", dbuf);
-#endif
             free(dbuf);
         }
+#else
+        fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).decref()\n", mlp, pub, oldcnt));
+#endif
     }
 #endif
+    RTPP_DBG_ASSERT(oldcnt > 0);
     if (oldcnt == 1) {
         atomic_thread_fence(memory_order_acquire);
-        int flags = pvt->flags;
+        flags = pvt->flags;
         if ((flags & RC_FLAG_PA) == 0) {
             if (flags & RC_FLAG_HASPRDTOR) {
                 pvt->pre_dtor_f(pvt->pd_data);
@@ -271,12 +293,23 @@ rtpp_refcnt_reg_pd(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t pre_dtor_f,
 
 #if RTPP_DEBUG_refcnt
 static void
-rtpp_refcnt_traceen(struct rtpp_refcnt *pub)
+rtpp_refcnt_traceen(struct rtpp_refcnt *pub, HERETYPE mlp)
 {
     struct rtpp_refcnt_priv *pvt;
 
     PUB2PVT(pub, pvt);
     pvt->flags |= RC_FLAG_TRACE;
+    int oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+    fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).traceen()\n", mlp, pub, oldcnt));
+}
+
+static int
+rtpp_refcnt_peek(struct rtpp_refcnt *pub)
+{
+    struct rtpp_refcnt_priv *pvt;
+
+    PUB2PVT(pub, pvt);
+    return atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
 }
 #endif
 

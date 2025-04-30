@@ -1,0 +1,132 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ openssl (1.1.1f-1ubuntu2.23) focal-security; urgency=medium
+ .
+   * SECURITY UPDATE: unbounded mem growth when processing TLSv1.3 sessions
+     - debian/patches/CVE-2024-2511.patch: fix unconstrained session cache
+       growth in TLSv1.3 in ssl/ssl_lib.c, ssl/ssl_sess.c,
+       ssl/statem/statem_srvr.c.
+     - CVE-2024-2511
+   * SECURITY UPDATE: use after free with SSL_free_buffers
+     - debian/patches/CVE-2024-4741.patch: only free the read buffers if
+       we're not using them in ssl/record/rec_layer_s3.c,
+       ssl/record/record.h, ssl/ssl_lib.c.
+     - CVE-2024-4741
+   * SECURITY UPDATE: crash or memory disclosure via SSL_select_next_proto
+     - debian/patches/CVE-2024-5535.patch: validate provided client list in
+       ssl/ssl_lib.c.
+     - CVE-2024-5535
+Author: Marc Deslauriers <marc.deslauriers@ubuntu.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2024-08-16
+
+--- openssl-1.1.1f.orig/ssl/ssl_ciph.c
++++ openssl-1.1.1f/ssl/ssl_ciph.c
+@@ -1279,7 +1279,7 @@ static int ciphersuite_cb(const char *el
+     STACK_OF(SSL_CIPHER) *ciphersuites = (STACK_OF(SSL_CIPHER) *)arg;
+     const SSL_CIPHER *cipher;
+     /* Arbitrary sized temp buffer for the cipher name. Should be big enough */
+-    char name[80];
++    char name[80] = {0};
+ 
+     if (len > (int)(sizeof(name) - 1)) {
+         SSLerr(SSL_F_CIPHERSUITE_CB, SSL_R_NO_CIPHER_MATCH);
+--- openssl-1.1.1f.orig/crypto/bn/bn_rand.c
++++ openssl-1.1.1f/crypto/bn/bn_rand.c
+@@ -41,6 +42,7 @@ static int bnrand(BNRAND_FLAG flag, BIGN
+         BNerr(BN_F_BNRAND, ERR_R_MALLOC_FAILURE);
+         goto err;
+     }
++    memset(buf, '\0', bytes);
+ 
+     /* make a random number and set the top and bottom bits */
+     b = flag == NORMAL ? RAND_bytes(buf, bytes) : RAND_priv_bytes(buf, bytes);
+--- openssl-1.1.1f.orig/crypto/rand/rand_lib.c
++++ openssl-1.1.1f/crypto/rand/rand_lib.c
+@@ -927,8 +927,8 @@ int RAND_priv_bytes(unsigned char *buf,
+     drbg = RAND_DRBG_get0_private();
+     if (drbg != NULL)
+         return RAND_DRBG_bytes(drbg, buf, num);
+-
+-    return 0;
++    RANDerr(RAND_F_RAND_BYTES, RAND_R_FUNC_NOT_IMPLEMENTED);
++    return -1;
+ }
+ 
+ int RAND_bytes(unsigned char *buf, int num)
+--- openssl-1.1.1f.orig/crypto/ec/ecp_nistz256.c
++++ openssl-1.1.1f/crypto/ec/ecp_nistz256.c
+@@ -1166,7 +1166,7 @@ __owur static int ecp_nistz256_points_mu
+     ALIGN32 union {
+         P256_POINT p;
+         P256_POINT_AFFINE a;
+-    } t, p;
++    } t, p = {0};
+     BIGNUM *tmp_scalar;
+ 
+     if ((num + 1) == 0 || (num + 1) > OPENSSL_MALLOC_MAX_NELEMS(void *)) {
+@@ -1384,7 +1384,7 @@ __owur static int ecp_nistz256_get_affin
+     BN_ULONG x_aff[P256_LIMBS];
+     BN_ULONG y_aff[P256_LIMBS];
+     BN_ULONG point_x[P256_LIMBS], point_y[P256_LIMBS], point_z[P256_LIMBS];
+-    BN_ULONG x_ret[P256_LIMBS], y_ret[P256_LIMBS];
++    BN_ULONG x_ret[P256_LIMBS]={0}, y_ret[P256_LIMBS]={0};
+ 
+     if (EC_POINT_is_at_infinity(group, point)) {
+         ECerr(EC_F_ECP_NISTZ256_GET_AFFINE, EC_R_POINT_AT_INFINITY);
+@@ -1517,7 +1517,7 @@ static int ecp_nistz256_inv_mod_ord(cons
+      * with -1 offset.
+      */
+     BN_ULONG table[15][P256_LIMBS];
+-    BN_ULONG out[P256_LIMBS], t[P256_LIMBS];
++    BN_ULONG out[P256_LIMBS]={0}, t[P256_LIMBS];
+     int i, ret = 0;
+     enum {
+         i_1 = 0, i_10,     i_11,     i_101, i_111, i_1010, i_1111,
+--- openssl-1.1.1f.orig/ssl/ssl_lib.c	2025/03/22 18:19:03	1.1
++++ openssl-1.1.1f/ssl/ssl_lib.c	2025/03/22 18:19:09
+@@ -929,7 +929,7 @@
+      * any new session built out of this id/id_len and the ssl_version in use
+      * by this SSL.
+      */
+-    SSL_SESSION r, *p;
++    SSL_SESSION r = {0}, *p;
+ 
+     if (id_len > sizeof(r.session_id))
+         return 0;
+@@ -5415,7 +5415,7 @@
+     STACK_OF(SSL_CIPHER) *scsvs = NULL;
+     int n;
+     /* 3 = SSLV2_CIPHER_LEN > TLS_CIPHER_LEN = 2. */
+-    unsigned char cipher[SSLV2_CIPHER_LEN];
++    unsigned char cipher[SSLV2_CIPHER_LEN] = {0};
+ 
+     n = sslv2format ? SSLV2_CIPHER_LEN : TLS_CIPHER_LEN;
+ 
+--- openssl-1.1.1f/ssl/ssl_sess.c	2025/03/22 22:49:40	1.1
++++ openssl-1.1.1f/ssl/ssl_sess.c	2025/03/22 22:50:31
+@@ -439,7 +439,7 @@
+ 
+     if ((s->session_ctx->session_cache_mode
+          & SSL_SESS_CACHE_NO_INTERNAL_LOOKUP) == 0) {
+-        SSL_SESSION data;
++        SSL_SESSION data = {0};
+ 
+         data.ssl_version = s->version;
+         if (!ossl_assert(sess_id_len <= SSL_MAX_SSL_SESSION_ID_LENGTH))

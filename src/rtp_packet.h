@@ -74,7 +74,7 @@ struct rtp_packet {
 
 #define RTP_PKT_COPYOFF(x) (offsetof(typeof(*x), parse_result))
 
-struct rtp_packet *rtp_packet_alloc();
+struct rtp_packet *rtp_packet_alloc() RTPP_EXPORT;
 void rtp_packet_set_seq(struct rtp_packet *, uint16_t seq);
 void rtp_packet_set_ts(struct rtp_packet *, uint32_t ts);
 

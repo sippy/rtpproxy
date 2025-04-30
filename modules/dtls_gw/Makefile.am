@@ -5,9 +5,7 @@ include $(top_srcdir)/m4/rtpp_module.ami
 
 pkglib_LTLIBRARIES = rtpp_dtls_gw.la rtpp_dtls_gw_debug.la
 
-if ENABLE_LIBRTPPROXY
 noinst_LTLIBRARIES = librtpp_dtls_gw.la
-endif
 
 rtpp_dtls_gw_la_SOURCES = rtpp_dtls_gw.c rtpp_dtls.c rtpp_dtls.h \
   rtpp_dtls_conn.c rtpp_dtls_conn.h rtpp_dtls_util.c rtpp_dtls_util.h

@@ -28,29 +28,44 @@
 struct packet_processor_if;
 struct pkt_proc_ctx;
 struct rtpp_refcnt;
+struct rtpp_codeptr;
 
 enum pproc_action {
-    PPROC_ACT_NOP = 0,
-    PPROC_ACT_TEE = 1,
-    PPROC_ACT_TAKE = 2,
-    PPROC_ACT_DROP = 4
+    PPROC_ACT_NOP_v = 0,
+    PPROC_ACT_TEE_v = 1,
+    PPROC_ACT_TAKE_v = 2,
+    PPROC_ACT_DROP_v = 4
 };
+
+struct pproc_act {
+    enum pproc_action a;
+    const struct rtpp_codeptr *loc;
+};
+
+#define PPROC_ACT(a) ((struct pproc_act){(a), HEREVAL})
+#define PPROC_ACT_NOP PPROC_ACT(PPROC_ACT_NOP_v)
+#define PPROC_ACT_TEE PPROC_ACT(PPROC_ACT_TEE_v)
+#define PPROC_ACT_TAKE PPROC_ACT(PPROC_ACT_TAKE_v)
+#define PPROC_ACT_DROP PPROC_ACT(PPROC_ACT_DROP_v)
 
 enum pproc_order {
     _PPROC_ORD_EMPTY  = 0,
-    PPROC_ORD_DECRYPT = 1,
-    PPROC_ORD_ANALYZE = 2,
-    PPROC_ORD_RESIZE  = 3,
-    PPROC_ORD_DECODE  = 4,
-    PPROC_ORD_PLAY    = 5,
-    PPROC_ORD_WITNESS = 6,
-    PPROC_ORD_ENCODE  = 7,
-    PPROC_ORD_ENCRYPT = 8,
-    PPROC_ORD_RELAY   = 9
+    PPROC_ORD_RECV    = 1,
+    PPROC_ORD_DECRYPT = 2,
+    PPROC_ORD_CT_RECV = 3,
+    PPROC_ORD_ANALYZE = 4,
+    PPROC_ORD_RESIZE  = 5,
+    PPROC_ORD_DECODE  = 6,
+    PPROC_ORD_PLAY    = 7,
+    PPROC_ORD_WITNESS = 8,
+    PPROC_ORD_ENCODE  = 9,
+    PPROC_ORD_CT_SEND = 10,
+    PPROC_ORD_ENCRYPT = 11,
+    PPROC_ORD_RELAY   = 12,
 };
 
 DEFINE_RAW_METHOD(pproc_taste, int, struct pkt_proc_ctx *);
-DEFINE_RAW_METHOD(pproc_enqueue, enum pproc_action, const struct pkt_proc_ctx *);
+DEFINE_RAW_METHOD(pproc_enqueue, struct pproc_act, const struct pkt_proc_ctx *);
 
 struct packet_processor_if {
     const char *descr;

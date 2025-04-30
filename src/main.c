@@ -37,6 +37,7 @@
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <grp.h>
@@ -55,7 +56,11 @@
 #include <syslog.h>
 #include <unistd.h>
 
+#include <elperiodic.h>
+
 #include "config_pp.h"
+
+#include "rtpp_types.h"
 
 #if !defined(NO_ERR_H)
 #include <err.h>
@@ -68,9 +73,7 @@
 #include <systemd/sd-daemon.h>
 #endif
 
-#include <elperiodic.h>
-
-#include "rtpp_types.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_runcreds.h"
 #include "rtpp_cfile.h"
@@ -219,13 +222,6 @@ ehandler(void)
     RTPP_LOG(_sig_cf->glog, RTPP_LOG_INFO, "rtpproxy ended");
 }
 
-long long
-rtpp_rlim_max(const struct rtpp_cfg *cfsp)
-{
-
-    return (long long)(cfsp->nofile->limit->rlim_max);
-}
-
 #define LOPT_DSO      256
 #define LOPT_BRSYM    257
 #define LOPT_NICE     258
@@ -264,13 +260,18 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     }
     free(cfsp->ctrl_socks);
     free(cfsp->runcreds);
+#if ENABLE_MODULE_IF
     RTPP_OBJ_DECREF(cfsp->modules_cf);
+#else
+    assert(cfsp->_pad == (void *)0x12345678);
+    cfsp->_pad = (void *)((uintptr_t)cfsp->_pad ^ 0x87654321);
+#endif
     rtpp_gen_uid_free();
     rtpp_exit(memdeb, rval);
 }
 
 static void
-init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
+init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 {
     int ch, i, umode, stdio_mode;
     char *bh[2], *bh6[2], *cp;
@@ -280,9 +281,11 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     struct rtpp_ctrl_sock *ctrl_sock;
     int option_index, brsym;
     const struct proto_cap *pcp;
+#if ENABLE_MODULE_IF
     struct rtpp_module_if *mif;
     char mpath[PATH_MAX + 1];
     struct rtpp_module_conf *mcp;
+#endif
 
     bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
 
@@ -340,14 +343,17 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
 
     option_index = -1;
     brsym = 0;
-    while ((ch = getopt_long(argc, argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:"
+    while ((ch = getopt_long(argc, (char *const *)argv, "vf2Rl:6:s:S:t:r:p:T:L:m:M:u:Fin:Pad:"
       "Vc:A:w:bW:DC", longopts, &option_index)) != -1) {
 	switch (ch) {
+#if ENABLE_MODULE_IF
         case LOPT_DSO:
             cp = NULL;
 #if defined(LIBRTPPROXY)
             if (rtpp_static_modules_lookup(optarg) != NULL) {
                 cp = optarg;
+            } else {
+                err(1, "%s: static module is not compiled in", optarg);
             }
 #endif
             if (cp == NULL)
@@ -370,6 +376,9 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
                    "loaded via --dso option", cp);
             }
             CALL_METHOD(cfsp->modules_cf, insert, mif);
+#else
+            errx(1, "%s: dymanic module support is not compiled in", cp);
+#endif
             break;
 
         case LOPT_BRSYM:
@@ -763,17 +772,18 @@ init_config(struct rtpp_cfg *cfsp, int argc, char **argv)
     }
 
     for (i = 0; i < 2; i++) {
+	int rmode = AI_ADDRCONFIG | AI_PASSIVE;
 	cfsp->bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
 	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
-              host2, bh[i], AF_INET, AI_PASSIVE, &errmsg);
+              host2, bh[i], AF_INET, rmode, &errmsg);
 	    if (cfsp->bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
 	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
-              host2, bh6[i], AF_INET6, AI_PASSIVE, &errmsg);
+              host2, bh6[i], AF_INET6, rmode, &errmsg);
 	    if (cfsp->bindaddr[i] == NULL)
 		errx(1, "host2bindaddr: %s", errmsg);
 	    continue;
@@ -812,7 +822,12 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
       (CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_length) > 0))
         continue;
 
+#if ENABLE_MODULE_IF
     RTPP_OBJ_DECREF(cfsp->modules_cf);
+#else
+    assert(cfsp->_pad == (void *)0x12345678);
+    cfsp->_pad = (void *)((uintptr_t)cfsp->_pad ^ 0x87654321);
+#endif
     RTPP_OBJ_DECREF(cfsp->pproc_manager);
     free(cfsp->runcreds);
     RTPP_OBJ_DECREF(cfsp->rtpp_notify_cf);
@@ -847,10 +862,10 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
 
 #if !defined(LIBRTPPROXY)
 int
-main(int argc, char **argv)
+main(int argc, const char * const *argv)
 #else
 struct rtpp_cfg *
-rtpp_main(int argc, char **argv)
+rtpp_main(int argc, const char * const *argv)
 #endif
 {
     int i, len, pid_fd;
@@ -890,11 +905,15 @@ rtpp_main(int argc, char **argv)
          /* NOTREACHED */
     }
 
+#if ENABLE_MODULE_IF
     cfs.modules_cf = rtpp_modman_ctor();
     if (cfs.modules_cf == NULL) {
          err(1, "can't allocate memory for the struct modules_cf");
          /* NOTREACHED */
     }
+#else
+    cfs._pad = (void *)0x12345678;
+#endif
 
     cfs.runcreds = rtpp_zmalloc(sizeof(struct rtpp_runcreds));
     if (cfs.runcreds == NULL) {
@@ -913,6 +932,7 @@ rtpp_main(int argc, char **argv)
         err(1, "can't initialize logging subsystem");
         /* NOTREACHED */
     }
+    CALL_METHOD(cfs.glog, setlevel, RTPP_LOG_ERR);
  #ifdef RTPP_CHECK_LEAKS
     rtpp_memdeb_setlog(MEMDEB_SYM, cfs.glog);
     rtpp_memdeb_approve(MEMDEB_SYM, "_rtpp_log_open", 1, "Referenced by memdeb itself");

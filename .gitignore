@@ -35,3 +35,4 @@ python/sippy_lite/sippy/Time/clock_dtime.py
 libucl/libucl.a
 libucl/libucl_debug.a
 libucl/libucl_test
+.dirstamp

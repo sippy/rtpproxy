@@ -27,6 +27,8 @@
 
 #pragma once
 
+struct rtpc_reply;
+
 #if !defined(DECLARE_CLASS)
 #error "rtpp_types.h" needs to be included
 #endif
@@ -38,7 +40,7 @@ DECLARE_METHOD(rtpp_stats, rtpp_stats_updatebyidx, int, int, uint64_t);
 DECLARE_METHOD(rtpp_stats, rtpp_stats_updatebyname, int, const char *, uint64_t);
 DECLARE_METHOD(rtpp_stats, rtpp_stats_updatebyname_d, int, const char *, double);
 DECLARE_METHOD(rtpp_stats, rtpp_stats_getlvalbyname, int64_t, const char *);
-DECLARE_METHOD(rtpp_stats, rtpp_stats_nstr, int, char *, int, const char *);
+DECLARE_METHOD(rtpp_stats, rtpp_stats_nstr, int, const char *, struct rtpc_reply *);
 DECLARE_METHOD(rtpp_stats, rtpp_stats_getnstats, int);
 DECLARE_METHOD(rtpp_stats, rtpp_stats_update_derived, void, double);
 

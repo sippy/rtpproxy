@@ -455,12 +455,12 @@ glitched:
 }
 
 int
-rtpp_memdeb_asprintf(char **pp, const char *fmt, void *p, HERETYPEARG, ...)
+rtpp_memdeb_asprintf(char **pp, void *p, HERETYPEARG, const char *fmt, ...)
 {
     va_list ap;
     int rval;
 
-    va_start(ap, HEREARG);
+    va_start(ap, fmt);
     rval = rtpp_memdeb_ivasprintf(pp, fmt, p, HEREARG, ap);
     va_end(ap);
     return (rval);

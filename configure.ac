@@ -1,11 +1,11 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
-AC_INIT([rtpproxy],[3.0-rc.1],[sobomax@sippysoft.com])
+AC_PREREQ([2.71])
+AC_INIT([rtpproxy],[3.1],[sobomax@sippysoft.com])
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([src/main.c])
-AM_INIT_AUTOMAKE([serial-tests])
+AM_INIT_AUTOMAKE([serial-tests subdir-objects])
 # If the test gets too verbose, comment one line above and uncomment one below
 #AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([src/config.h])
@@ -27,7 +27,7 @@ AC_DEFINE_UNQUOTED([VERSION_GIT], ["${mydef_version}"], [Git hash])
 case "${host_os}" in
 freebsd*)
   CPPFLAGS="${CPPFLAGS} -I/usr/local/include -pthread"
-  LDFLAGS="-L/usr/local/lib"
+  LDFLAGS="${LDFLAGS} -L/usr/local/lib"
   #LIBS=
   ;;
 linux*)
@@ -40,8 +40,8 @@ solaris*)
 *)
   ;;
 esac
-OPT_CFLAGS="`echo "${CFLAGS}" | sed 's|-g |-g3 |'`"
-CFLAGS="-pipe"
+OPT_CFLAGS="`echo "${CFLAGS}" | tr ' ' '\n' | sed 's|^-g$|-g3|' | tr '\n' ' '` -fvisibility=hidden"
+CFLAGS="`echo ${CFLAGS} | tr ' ' '\n' | grep -v '^-O.*' | uniq | tr '\n' ' '` -fvisibility=hidden"
 
 AX_COMPILE_CHECK_SIZEOF(time_t, [#include <time.h>])
 AX_CHECK_COMPILE_FLAG([-Wno-frame-address], [CFLAGS="${CFLAGS} -Wno-frame-address"], [], [-Werror])
@@ -56,6 +56,18 @@ AS_IF([test $ac_cc_warn_ipt -ne 0],
   [AC_MSG_RESULT([yes])],
   [AC_MSG_RESULT([no])])
 CFLAGS="$ac_save_CFLAGS"
+
+mused="[[[maybe_unused]]]"
+AC_MSG_CHECKING([whether '$CC' supports '${mused}' ])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([${mused} int bar=42;],
+  [])],
+  [
+   AC_MSG_RESULT([yes])
+   AC_DEFINE_UNQUOTED([MAYBE_UNUSED], [${mused}], [Define if you have the [[maybe_unused]].])
+  ], [
+   AC_MSG_RESULT([no])
+   AC_DEFINE_UNQUOTED([MAYBE_UNUSED], [], [Define if you have the [[maybe_unused]].])
+  ])
 
 AC_ARG_ENABLE(systemd,
 AS_HELP_STRING([--enable-systemd], [enable systemd support in rtpproxy]),
@@ -74,9 +86,38 @@ AC_ARG_ENABLE(basic-tests,
   AS_HELP_STRING([--enable-basic-tests],[enable basic functionality tests]),
   [ENABLE_BASIC_TESTS=${enableval}], [ENABLE_BASIC_TESTS=yes])
 
+test_lto() {
+  if test "${ENABLE_LTO}" != "yes" -a "${ENABLE_LTO}" != "auto" ; then return; fi
+
+  local CFLAGS="$CFLAGS -flto"
+  local LDFLAGS="$LDFLAGS -flto"
+
+  AC_MSG_CHECKING([whether linking with -flto works])
+  AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([[]])],
+    [AC_MSG_RESULT([yes])
+     local _ENABLE_LTO=yes],
+    [AC_MSG_RESULT([no])
+     local _ENABLE_LTO=no]
+  )
+  if test "${_ENABLE_LTO}" = "yes"
+  then
+    ENABLE_LTO="yes"
+    return
+  fi
+  if test "${ENABLE_LTO}" = "auto"
+  then
+    ENABLE_LTO="no"
+    return
+  fi
+  AC_MSG_ERROR([LTO is not working])
+}
+
 AC_ARG_ENABLE(lto,
-  AS_HELP_STRING([--enable-lto],[enable LTO (Link-Time Optimization)]),
+  AS_HELP_STRING([--enable-lto],[enable LTO (Link-Time Optimization): yes/no/auto]),
   [ENABLE_LTO=${enableval}], [ENABLE_LTO=no])
+
+test_lto
 
 AC_ARG_ENABLE(librtpproxy,
   AS_HELP_STRING([--enable-librtpproxy],[Build librtpproxy for instrumentation]),
@@ -89,6 +130,15 @@ then
   LDFLAGS="${LDFLAGS} --coverage"
 fi
 
+AC_ARG_ENABLE([noinst],
+  AS_HELP_STRING([--enable-noinst],[Enable building noinst binaries (default is yes)]),
+  [ENABLE_noinst=$enableval],
+  [ENABLE_noinst=yes])
+
+AC_ARG_ENABLE([silent],
+  AS_HELP_STRING([--enable-silent],[Less verbose build]),
+  [ENABLE_SILENT=$enableval],
+  [ENABLE_SILENT=no])
 
 # Checks for libraries.
 
@@ -111,8 +161,11 @@ fi
 AC_CHECK_HEADER(dlfcn.h, found_dlfcn=yes)
 if test "$found_dlfcn" = yes
 then
-  ENABLE_MODULE_IF=1
-  AC_DEFINE([ENABLE_MODULE_IF], 1, [Define to enable dymanic modules])
+  if test "${enable_shared}" = yes
+  then
+    ENABLE_MODULE_IF=1
+    AC_DEFINE([ENABLE_MODULE_IF], [1], [Define to enable dymanic modules])
+  fi
   AC_CHECK_LIB([dl], [dladdr], [LIBS_DL=-ldl], [LIBS_DL=])
 fi
 
@@ -177,9 +230,28 @@ fi
 AC_CHECK_HEADER(srtp2/srtp.h, found_libsrtp2=yes)
 if test "$found_libsrtp2" = yes
 then
-  AC_CHECK_LIB(srtp2, srtp_init,
+  AC_CHECK_LIB([srtp2], [srtp_protect_mki], [_sp_nargs=3], [_sp_nargs=4])
+  AC_CHECK_LIB(srtp2, srtp_init,[
    LIBS_SRTP="-lsrtp2"
-   AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed]))
+   # Test program to check if the srtp_protect function accepts size_t* argument
+   AC_MSG_CHECKING(['srtp_protect()' last argument type])
+   original_cflags="$CFLAGS"
+   CFLAGS="${CFLAGS} -Werror -DSRTP_PROTECT_NARGS=${_sp_nargs}"
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+     #include <stdlib.h>
+     #include <srtp2/srtp.h>],
+     [srtp_t ctx; void* rtp_hdr; size_t len;
+     #if SRTP_PROTECT_NARGS == 4
+     return srtp_protect(ctx, rtp_hdr, &len, 0);
+     #else
+     return srtp_protect(ctx, rtp_hdr, &len);
+     #endif])],
+     [srtp_protect_lastarg=size_t], [srtp_protect_lastarg=int])
+   CFLAGS="$original_cflags"
+   AC_MSG_RESULT([$srtp_protect_lastarg])
+   AC_DEFINE_UNQUOTED([SRTP_PROTECT_LASTARG], [${srtp_protect_lastarg}], [Type of the last argument of the srtp_protect() API])
+   AC_DEFINE_UNQUOTED([SRTP_PROTECT_NARGS], [${_sp_nargs}], [Number of srtp_protect() arguments])
+   AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed])])
 else
   # libsrtp
   AC_CHECK_HEADER(srtp/srtp.h, found_libsrtp=yes)
@@ -344,13 +416,20 @@ AC_LINK_IFELSE(
 )
 AC_CHECK_FUNCS([pthread_yield pthread_setname_np])
 
-# <DocBook & friends>
-AX_CHECK_DOCBOOK_DTD(4.5)
-if test "x$HAVE_DOCBOOK_DTD_4_5" = "xyes"
+AC_ARG_ENABLE(docs,
+  AS_HELP_STRING([--enable-docs],[enable generation of documentation]),
+  [ENABLE_DOCS=${enableval}], [ENABLE_DOCS=no])
+
+if test "${ENABLE_DOCS}" = "yes"
 then
-  AC_CHECK_PROG(HAVE_FOP, fop, yes)
+  # <DocBook & friends>
+  AX_CHECK_DOCBOOK_DTD(4.5)
+  if test "x$HAVE_DOCBOOK_DTD_4_5" = "xyes"
+  then
+    AC_CHECK_PROG(HAVE_FOP, fop, yes)
+  fi
+  # </DocBook & friends>
 fi
-# </DocBook & friends>
 
 AC_MSG_CHECKING([for SO_TS_CLOCK/SO_TS_MONOTONIC])
 AC_COMPILE_IFELSE( [AC_LANG_PROGRAM([[
@@ -387,16 +466,30 @@ AM_CONDITIONAL(ENABLE_WARN_IPT, [test "${ac_cc_warn_ipt}" = 1])
 AM_CONDITIONAL(ENABLE_LTO, [test "x${ENABLE_LTO}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBRTPPROXY, [test "x${ENABLE_LIBRTPPROXY}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBUNWIND, [test "${ENABLE_LIBUNWIND}" = 1 ])
+AM_CONDITIONAL(ENABLE_noinst, [test "x${ENABLE_noinst}" = "xyes" ])
+AM_CONDITIONAL([TESTS_EXIST], [test -d "$srcdir/tests"])
 
-AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile tests/Makefile
+if test "${ENABLE_SILENT}" = "yes"
+then
+  AM_SILENT_RULES([yes])
+fi
+
+AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
  modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile
  modules/catch_dtmf/Makefile modules/badmod/Makefile libxxHash/Makefile
- modules/dtls_gw/Makefile
+ libre/Makefile modules/dtls_gw/Makefile modules/ice_lite/Makefile
  pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile
  python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile])
 
-AM_COND_IF([BUILD_ELPERIODIC], [AC_CONFIG_SUBDIRS([libelperiodic])])
+AM_COND_IF([TESTS_EXIST], [
+  AC_CONFIG_FILES([tests/Makefile])
+])
+
+AM_COND_IF([BUILD_ELPERIODIC], [
+  ac_configure_args="$ac_configure_args \"CFLAGS=$CFLAGS\""
+  AC_CONFIG_SUBDIRS([libelperiodic])
+])
 
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(LIBS_DL)

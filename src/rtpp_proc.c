@@ -45,6 +45,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_proc.h"
 #include "rtpp_record.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_sessinfo.h"
 #include "rtpp_stream.h"
@@ -127,7 +128,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
             continue;
         }
         iskt = ep->data.ptr;
-        uint64_t stuid = CALL_METHOD(iskt, get_stuid);
+        uint64_t stuid = CALL_SMETHOD(iskt, get_stuid);
         stp = CALL_SMETHOD(ptbl->streams_wrt, get_by_idx, stuid);
         if (stp == NULL)
             continue;
@@ -148,7 +149,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
                 while ((pktx.pktp = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
                     pktx.pktp->sender = sender;
                     if (CALL_SMETHOD(stp->pproc_manager, handleat, &pktx,
-                      PPROC_ORD_RESIZE + 1) & PPROC_ACT_TAKE)
+                      PPROC_ORD_RESIZE + 1).a & PPROC_ACT_TAKE_v)
                         rsp->npkts_resizer_out.cnt++;
                 }
 
@@ -161,7 +162,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
 
             RTPP_OBJ_DECREF(sp);
             proto = CALL_SMETHOD(stp, get_proto);
-            ndrained = CALL_METHOD(iskt, drain, proto, stp->log);
+            ndrained = CALL_SMETHOD(iskt, drain, proto, stp->log);
             if (ndrained > 0) {
                 rsp->npkts_discard.cnt += ndrained;
             }

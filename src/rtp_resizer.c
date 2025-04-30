@@ -30,6 +30,7 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "rtpp_types.h"
 #include "rtpp_endian.h"
 #include "rtp.h"
 #include "rtp_info.h"
@@ -37,10 +38,10 @@
 #include "rtp_packet.h"
 #include "rtp_resizer.h"
 #include "rtpp_proc.h"
-#include "rtpp_types.h"
 #include "rtpp_stats.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_ssrc.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 
 struct rtp_resizer {
@@ -289,8 +290,8 @@ rtp_resizer_get(struct rtp_resizer *this, double dtime)
     struct rtp_packet *ret = NULL;
     struct rtp_packet *p;
     uint32_t    ref_ts;
-    int         count = 0;
-    int         split = 0;
+    MAYBE_UNUSED int count = 0;
+    MAYBE_UNUSED int split = 0;
     int         nsamples_left;
     int         output_nsamples;
     int         min;

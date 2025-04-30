@@ -28,7 +28,6 @@ struct rtpp_refcnt;
 struct rtpp_dtls_conn;
 struct rtpp_dtls;
 struct rtpp_stream;
-struct rtpp_anetio_cf;
 struct rdc_fp_spec;
 
 DEFINE_METHOD(rtpp_dtls, rtpp_dtls_newconn, struct rtpp_dtls_conn *,

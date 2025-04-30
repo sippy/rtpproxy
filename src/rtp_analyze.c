@@ -33,17 +33,18 @@
 
 #include "config.h"
 
+#include "rtpp_types.h"
 #include "rtpp_ssrc.h"
 #include "rtpa_stats.h"
 #include "rtpp_debug.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_types.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtp_info.h"
 #include "rtp.h"
 #include "rtp_analyze.h"
 #include "rtpp_math.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_ringbuf.h"
 
@@ -380,9 +381,11 @@ update_rtpp_stats(struct rtpp_log *rlog, struct rtpp_session_stat *stat, rtp_hdr
         update_rtpp_totals(stat, stat);
         stat->last.duplicates = 0;
         memset(stat->last.seen, '\0', sizeof(stat->last.seen));
+#if !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
         LOGI_IF_NOT_NULL(rlog, "SSRC changed from " SSRC_FMT "/%d to "
           SSRC_FMT "/%d", stat->last.ssrc.val, stat->last.seq, rinfo->ssrc,
           rinfo->seq); 
+#endif
         stat->last.ssrc.val = rinfo->ssrc;
         stat->last.max_seq = stat->last.min_seq = rinfo->seq;
         stat->last.base_ts = rinfo->ts;

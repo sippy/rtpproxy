@@ -1,0 +1,4 @@
+[libfuzzer]
+max_len=8192
+print_final_stats=1
+use_value_profile=1

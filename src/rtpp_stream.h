@@ -46,6 +46,12 @@ struct rtpp_cfg;
 
 enum rtpp_stream_side { RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0 };
 
+enum rtpps_latch_mode {
+    RTPLM_NORMAL = 0,
+    RTPLM_FORCE_OFF,
+    RTPLM_FORCE_ON
+};
+
 struct r_stream_ctor_args {
     struct rtpp_log *log;
     struct rtpp_proc_servers *proc_servers;
@@ -71,11 +77,14 @@ DECLARE_METHOD(rtpp_stream, rtpp_stream_guess_addr, int,
 DECLARE_METHOD(rtpp_stream, rtpp_stream_prefill_addr, void,
   struct sockaddr **, double);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_set_skt, void, struct rtpp_socket *);
-DECLARE_METHOD(rtpp_stream, rtpp_stream_get_skt, struct rtpp_socket *);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_get_skt, struct rtpp_socket *,
+  HERETYPE);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_update_skt, struct rtpp_socket *,
   struct rtpp_socket *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_send_pkt, int, struct sthread_args *,
   struct rtp_packet *);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_send_pkt_to, int, struct sthread_args *,
+  struct rtp_packet *, struct rtpp_netaddr *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_issendable, int);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_locklatch, void);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_reg_onhold, void);
@@ -86,6 +95,8 @@ DECLARE_METHOD(rtpp_stream, rtpp_stream_rx, struct rtp_packet *,
 DECLARE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
   int);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_latch, int, struct rtp_packet *);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_setmode, void, enum rtpps_latch_mode);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_getmode, enum rtpps_latch_mode);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_get_sender, struct rtpp_stream *,
   const struct rtpp_cfg *cfsp);
 
@@ -102,6 +113,7 @@ DECLARE_SMETHODS(rtpp_stream) {
     METHOD_ENTRY(rtpp_stream_get_skt, get_skt);
     METHOD_ENTRY(rtpp_stream_update_skt, update_skt);
     METHOD_ENTRY(rtpp_stream_send_pkt, send_pkt);
+    METHOD_ENTRY(rtpp_stream_send_pkt_to, send_pkt_to);
     METHOD_ENTRY(rtpp_stream_issendable, issendable);
     METHOD_ENTRY(rtpp_stream_locklatch, locklatch);
     METHOD_ENTRY(rtpp_stream_reg_onhold, reg_onhold);
@@ -109,6 +121,8 @@ DECLARE_SMETHODS(rtpp_stream) {
     METHOD_ENTRY(rtpp_stream_rx, rx);
     METHOD_ENTRY(rtpp_stream_get_rem_addr, get_rem_addr);
     METHOD_ENTRY(rtpp_stream_latch, latch);
+    METHOD_ENTRY(rtpp_stream_latch_setmode, latch_setmode);
+    METHOD_ENTRY(rtpp_stream_latch_getmode, latch_getmode);
     METHOD_ENTRY(rtpp_stream_get_sender, get_sender);
 };
 

@@ -46,19 +46,24 @@
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_netio_async.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_str.h"
 #include "rtpp_stream.h"
 #include "rtp.h"
 #include "rtpp_time.h"
 #include "rtp_packet.h"
+#include "rtpp_packetops.h"
 #include "rtpp_proc_async.h"
-#include "rtpp_pthread.h"
+#include "rtpp_threads.h"
 #include "rtpp_ssrc.h"
 #include "rtpp_timed.h"
 #include "rtpp_timed_task.h"
+#include "rtpp_codeptr.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
+#include "rtpp_refproxy.h"
+#include "rtpp_weakref.h"
 
 #include "rtpp_dtls_util.h"
 #include "rtpp_dtls_conn.h"
@@ -127,9 +132,9 @@ const struct srtp_crypto_suite srtp_suites [] = {
 
 struct rtpp_dtls_conn_priv {
     struct rtpp_dtls_conn pub;
-    struct rtpp_stream *dtls_strmp;
-    struct rtpp_anetio_cf *netio_cf;
+    uint64_t dtls_strm_id;
     struct rtpp_timed *timed_cf;
+    struct rtpp_weakref *streams_wrt;
     pthread_mutex_t state_lock;
     enum rdc_state state;
     enum rtpp_dtls_mode mode;
@@ -156,16 +161,25 @@ enum {
 
 static void rtpp_dtls_conn_dtls_recv(struct rtpp_dtls_conn *,
   const struct rtp_packet *);
-static int rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *,
+static struct res_loc rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *,
   struct pkt_proc_ctx *);
-static int rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *,
+static struct res_loc rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *,
   struct pkt_proc_ctx *);
 static enum rtpp_dtls_mode rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *,
   const struct rdc_peer_spec *rdfsp);
+static void rtpp_dtls_conn_godead(struct rtpp_dtls_conn *);
 
 static int tls_srtp_keyinfo(SSL *, const struct srtp_crypto_suite **,
   uint8_t *, size_t, uint8_t *, size_t);
 static int tls_peer_fingerprint(SSL *, char *, size_t);
+
+DEFINE_SMETHODS(rtpp_dtls_conn,
+    .dtls_recv = &rtpp_dtls_conn_dtls_recv,
+    .rtp_send = &rtpp_dtls_conn_rtp_send,
+    .srtp_recv = &rtpp_dtls_conn_srtp_recv,
+    .setmode = &rtpp_dtls_conn_setmode,
+    .godead = &rtpp_dtls_conn_godead,
+);
 
 static void
 rtpp_dtls_conn_dtor(struct rtpp_dtls_conn_priv *pvt)
@@ -175,12 +189,12 @@ rtpp_dtls_conn_dtor(struct rtpp_dtls_conn_priv *pvt)
         srtp_dealloc(pvt->srtp_ctx_in);
     if (pvt->srtp_ctx_out != NULL)
         srtp_dealloc(pvt->srtp_ctx_out);
-    /* RTPP_OBJ_DECREF(pvt->dtls_strmp); */
+    RTPP_OBJ_DECREF(pvt->streams_wrt);
     pthread_mutex_destroy(&pvt->state_lock);
     /* BIO_free(pvt->sbio_out); <- done by SSL_free() */
     /* BIO_free(pvt->sbio_in); <- done by SSL_free() */
-    BIO_meth_free(pvt->biomet);
     SSL_free(pvt->ssl_ctx);
+    BIO_meth_free(pvt->biomet);
     free(pvt);
 }
 
@@ -194,13 +208,13 @@ rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->ssl_ctx = SSL_new(ctx);
-    if (pvt->ssl_ctx == NULL) {
+    pvt->biomet = bio_method_udp();
+    if (pvt->biomet == NULL) {
         ERR_clear_error();
         goto e1;
     }
-    pvt->biomet = bio_method_udp();
-    if (pvt->biomet == NULL) {
+    pvt->ssl_ctx = SSL_new(ctx);
+    if (pvt->ssl_ctx == NULL) {
         ERR_clear_error();
         goto e2;
     }
@@ -224,23 +238,20 @@ rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
     pvt->state = RDC_INIT;
     /* Cannot grab refcount here, circular reference would ensue */
     /* RTPP_OBJ_INCREF(dtls_strmp); */
-    pvt->dtls_strmp = dtls_strmp;
-    pvt->netio_cf = cfsp->rtpp_proc_cf->netio;
+    pvt->dtls_strm_id = dtls_strmp->stuid;
+    RTPP_OBJ_INCREF(cfsp->rtp_streams_wrt);
+    pvt->streams_wrt = cfsp->rtp_streams_wrt;
     pvt->timed_cf = cfsp->rtpp_timed_cf;
-    pvt->pub.dtls_recv = rtpp_dtls_conn_dtls_recv;
-    pvt->pub.rtp_send = rtpp_dtls_conn_rtp_send;
-    pvt->pub.srtp_recv = rtpp_dtls_conn_srtp_recv;
-    pvt->pub.setmode = rtpp_dtls_conn_setmode;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)rtpp_dtls_conn_dtor, pvt);
+    PUBINST_FININIT(&pvt->pub, pvt, rtpp_dtls_conn_dtor);
     return (&(pvt->pub));
 e5:
     BIO_free(pvt->sbio_out);
 e4:
     BIO_free(pvt->sbio_in);
 e3:
-    BIO_meth_free(pvt->biomet);
-e2:
     SSL_free(pvt->ssl_ctx);
+e2:
+    BIO_meth_free(pvt->biomet);
 e1:
     mod_free(pvt);
 e0:
@@ -294,7 +305,7 @@ rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *self,
     }
     if (rdfsp->fingerprint->len != FP_FINGERPRINT_STR_LEN) {
         RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "invalid fingerprint "
-          "length: \"%lu\"", rdfsp->fingerprint->len);
+          "length: \"%lu\"", (unsigned long)rdfsp->fingerprint->len);
         goto failed;
     }
     sprintf(pvt->fingerprint, "%.*s %.*s", FMTSTR(&rdfsp->algorithm),
@@ -451,69 +462,104 @@ out:
     pthread_mutex_unlock(&pvt->state_lock);
 }
 
-static int
+#if SRTP_PROTECT_NARGS == 4
+#define SRTP_PROTECT(a, b, c) srtp_protect(a, b, c, 0)
+#define SRTCP_PROTECT(a, b, c) srtp_protect_rtcp(a, b, c, 0)
+#else
+#define SRTP_PROTECT(a, b, c) srtp_protect(a, b, c)
+#define SRTCP_PROTECT(a, b, c) srtp_protect_rtcp(a, b, c)
+#endif
+
+static struct res_loc
 rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
 {
-    int status, len;
+    struct res_loc status;
+#if defined(SRTP_PROTECT_LASTARG)
+    SRTP_PROTECT_LASTARG len;
+#else
+    size_t len;
+#endif
     struct rtpp_dtls_conn_priv *pvt;
 
     PUB2PVT(self, pvt);
 
     if (pvt->state != RDC_UP) {
-        return (-1);
+        return (RES_HERE(-1));
     }
 
     len = pktxp->pktp->size;
-    status = srtp_protect(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len);
-    if (status){
-       return (-1);
+    if (rtpp_is_rtcp_tst(pktxp)) {
+        status = RES_HERE(SRTCP_PROTECT(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len));
+    } else {
+        status = RES_HERE(SRTP_PROTECT(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len));
+    }
+    if (status.v) {
+        status.v = -1;
+        return (status);
     }
     pktxp->pktp->size = len;
     CALL_SMETHOD(pktxp->strmp_in->pproc_manager, handleat, pktxp,
       PPROC_ORD_ENCRYPT + 1);
-    return (0);
+    return (RES_HERE(0));
 }
 
-static int
+static struct res_loc
 rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
 {
-    int status, len;
+    struct res_loc status;
+#if defined(SRTP_PROTECT_LASTARG)
+    SRTP_PROTECT_LASTARG len;
+#else
+    size_t len;
+#endif
     struct rtpp_dtls_conn_priv *pvt;
 
     PUB2PVT(self, pvt);
 
     if (pvt->state != RDC_UP) {
-        return (-1);
+        return (RES_HERE(-1));
     }
 
     len = pktxp->pktp->size;
-    status = srtp_unprotect(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len);
-    if (status){
-       return (-1);
+    if (rtpp_is_rtcp_tst(pktxp)) {
+        status = RES_HERE(srtp_unprotect_rtcp(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len));
+    } else {
+        status = RES_HERE(srtp_unprotect(pvt->srtp_ctx_in, pktxp->pktp->data.buf, &len));
+    }
+    if (status.v) {
+        status.v = -1;
+        return (status);
     }
     pktxp->pktp->size = len;
     CALL_SMETHOD(pktxp->strmp_in->pproc_manager, handleat, pktxp,
       PPROC_ORD_DECRYPT + 1);
-    return (0);
+    return (RES_HERE(0));
 }
 
 static int
 bio_write(BIO *b, const char *buf, int len)
 {
-    struct sthread_args *sender;
     struct rtpp_dtls_conn_priv *pvt = BIO_get_data(b);
     struct rtp_packet *packet;
+    struct rtpp_stream *dtls_strmp;
 
-    if (len > MAX_RPKT_LEN || !CALL_SMETHOD(pvt->dtls_strmp, issendable))
-        return (-1);
+    dtls_strmp = CALL_SMETHOD(pvt->streams_wrt, get_by_idx, pvt->dtls_strm_id);
+    if (dtls_strmp == NULL)
+        goto e0;
+    if (len > MAX_RPKT_LEN || !CALL_SMETHOD(dtls_strmp, issendable))
+        goto e1;
     packet = rtp_packet_alloc();
     if (packet == NULL)
-        return (-1);
+        goto e1;
     memcpy(packet->data.buf, buf, len);
     packet->size = len;
-    sender = rtpp_anetio_pick_sender(pvt->netio_cf);
-    CALL_SMETHOD(pvt->dtls_strmp, send_pkt, sender, packet);
+    CALL_SMETHOD(dtls_strmp, send_pkt, NULL, packet);
+    RTPP_OBJ_DECREF(dtls_strmp);
     return (len);
+e1:
+    RTPP_OBJ_DECREF(dtls_strmp);
+e0:
+    return (-1);
 }
 
 static long
@@ -673,10 +719,8 @@ check_timer(struct rtpp_dtls_conn_priv *pvt)
         return (0);
     if (err == 1) {
         double to = timeval2dtime(&tv);
-
         pvt->ttp = CALL_SMETHOD(pvt->timed_cf, schedule_rc, to,
-          pvt->dtls_strmp->rcnt, rtpp_dtls_conn_timeout, NULL, pvt);
-
+          pvt->pub.rcnt, rtpp_dtls_conn_timeout, NULL, pvt);
         if (pvt->ttp == NULL)
             return (-1);
     } else if (pvt->ttp != NULL) {
@@ -826,4 +870,21 @@ tls_peer_fingerprint(SSL *ssl_ctx, char *buf, size_t size)
     X509_free(cert);
 
     return (err);
+}
+
+static void
+rtpp_dtls_conn_godead(struct rtpp_dtls_conn *self)
+{
+    struct rtpp_dtls_conn_priv *pvt;
+
+    PUB2PVT(self, pvt);
+
+    pthread_mutex_lock(&pvt->state_lock);
+    pvt->state = RDC_DEAD;
+    if (pvt->ttp != NULL) {
+        CALL_METHOD(pvt->ttp, cancel);
+        RTPP_OBJ_DECREF(pvt->ttp);
+        pvt->ttp = NULL;
+    }
+    pthread_mutex_unlock(&pvt->state_lock);
 }

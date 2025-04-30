@@ -28,14 +28,14 @@
 struct rtpp_codeptr;
 
 struct _glav_trig {
-    atomic_intmax_t step;
-    atomic_intmax_t hits;
+    _Atomic(intmax_t) step;
+    _Atomic(intmax_t) hits;
     uintptr_t stack;
     int wild;
     char act[16];
     union {
       const struct rtpp_codeptr *ptr;
-      atomic_uintptr_t aptr;
+      _Atomic(uintptr_t) aptr;
     } lasthit;
 };
 

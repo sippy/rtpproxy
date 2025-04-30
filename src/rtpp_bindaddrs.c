@@ -36,10 +36,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtpp_types.h"
 #include "rtpp_defines.h"
 #include "rtpp_network.h"
 #include "rtpp_mallocs.h"
-#include "rtpp_types.h"
 #include "rtpp_bindaddrs.h"
 
 struct bindaddr_list {
@@ -95,6 +95,9 @@ host2bindaddr(struct rtpp_bindaddrs *pub, const char *host, int pf,
      */
     if (host && (strcmp(host, "*") == 0))
         host = NULL;
+
+    if ((ai_flags & AI_ADDRCONFIG) && host == NULL)
+        ai_flags ^= AI_ADDRCONFIG;
 
     if ((n = resolve(sstosa(&ia), pf, host, SERVICE, ai_flags)) != 0) {
         *ep = gai_strerror(n);

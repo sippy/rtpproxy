@@ -25,6 +25,8 @@
  *
  */
 
+#pragma once
+
 struct ucl_object_s;
 struct rtpp_log;
 
@@ -51,4 +53,18 @@ struct rtpp_module_conf {
 };
 
 bool rtpp_ucl_set_unknown(struct rtpp_log *, const ucl_object_t *top,
-  const ucl_object_t *obj, void *target);
+  const ucl_object_t *obj, void *target) RTPP_EXPORT;
+const char *r_ucl_object_tostring_forced(const ucl_object_t *obj)
+  RTPP_EXPORT;
+ucl_type_t r_ucl_object_type(const ucl_object_t *obj)
+  RTPP_EXPORT;
+int64_t r_ucl_object_toint(const ucl_object_t *obj)
+  RTPP_EXPORT;
+const char * r_ucl_object_key(const ucl_object_t *obj)
+  RTPP_EXPORT;
+#if !defined(_RTPP_UCL_C)
+#define ucl_object_tostring_forced r_ucl_object_tostring_forced
+#define ucl_object_type r_ucl_object_type
+#define ucl_object_toint r_ucl_object_toint
+#define ucl_object_key r_ucl_object_key
+#endif

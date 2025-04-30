@@ -58,6 +58,7 @@
 #include "rtp_info.h"
 #include "rtp_packet.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_network.h"
 #include "rtpp_pcount.h"
@@ -79,10 +80,12 @@
 #include "rtpp_proc_servers.h"
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
+#include "rtpp_command_stats.h"
 
 #define  SEQ_SYNC_IVAL   1.0    /* in seconds */
 
 struct rtpps_latch {
+    enum rtpps_latch_mode mode;
     int latched;
     struct rtpp_ssrc ssrc;
     int seq;
@@ -132,6 +135,9 @@ static const char *rtpp_stream_get_proto(struct rtpp_stream *);
 static int _rtpp_stream_latch(struct rtpp_stream_priv *, double,
   struct rtp_packet *);
 static int rtpp_stream_latch(struct rtpp_stream *, struct rtp_packet *);
+static void rtpp_stream_latch_setmode(struct rtpp_stream *, enum rtpps_latch_mode);
+static enum rtpps_latch_mode rtpp_stream_latch_getmode(struct rtpp_stream *);
+
 static int _rtpp_stream_check_latch_override(struct rtpp_stream_priv *,
   struct rtp_packet *, double);
 static void __rtpp_stream_fill_addr(struct rtpp_stream_priv *,
@@ -141,11 +147,13 @@ static int rtpp_stream_guess_addr(struct rtpp_stream *,
 static void rtpp_stream_prefill_addr(struct rtpp_stream *,
   struct sockaddr **, double);
 static void rtpp_stream_set_skt(struct rtpp_stream *, struct rtpp_socket *);
-static struct rtpp_socket *rtpp_stream_get_skt(struct rtpp_stream *);
+static struct rtpp_socket *rtpp_stream_get_skt(struct rtpp_stream *, HERETYPE);
 static struct rtpp_socket *rtpp_stream_update_skt(struct rtpp_stream *,
   struct rtpp_socket *);
 static int rtpp_stream_send_pkt(struct rtpp_stream *, struct sthread_args *,
   struct rtp_packet *);
+static int rtpp_stream_send_pkt_to(struct rtpp_stream *, struct sthread_args *,
+  struct rtp_packet *, struct rtpp_netaddr *);
 static struct rtp_packet *_rtpp_stream_recv_pkt(struct rtpp_stream_priv *,
   const struct rtpp_timestamp *);
 static int rtpp_stream_issendable(struct rtpp_stream *);
@@ -171,6 +179,7 @@ DEFINE_SMETHODS(rtpp_stream,
     .get_skt = &rtpp_stream_get_skt,
     .update_skt = &rtpp_stream_update_skt,
     .send_pkt = &rtpp_stream_send_pkt,
+    .send_pkt_to = &rtpp_stream_send_pkt_to,
     .guess_addr = &rtpp_stream_guess_addr,
     .issendable = &rtpp_stream_issendable,
     .locklatch = &rtpp_stream_locklatch,
@@ -179,23 +188,26 @@ DEFINE_SMETHODS(rtpp_stream,
     .rx = &rtpp_stream_rx,
     .get_rem_addr = &rtpp_stream_get_rem_addr,
     .latch = &rtpp_stream_latch,
+    .latch_setmode = &rtpp_stream_latch_setmode,
+    .latch_getmode = &rtpp_stream_latch_getmode,
     .get_sender = &rtpp_stream_get_sender,
 );
 
-static enum pproc_action
+static struct pproc_act
 analyze_rtp_packet(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_in = pktxp->strmp_in;
     struct rtp_packet *packet = pktxp->pktp;
 
     CALL_SMETHOD(stp_in->pcnt_strm, reg_pktin, packet);
-    if (CALL_SMETHOD(stp_in->analyzer, update, packet) == UPDATE_SSRC_CHG) {
+    if (CALL_SMETHOD(stp_in->analyzer, update, packet) == UPDATE_SSRC_CHG &&
+      CALL_SMETHOD(stp_in, latch_getmode) != RTPLM_FORCE_ON) {
         CALL_SMETHOD(stp_in, latch, packet);
     }
     return (PPROC_ACT_NOP);
 }
 
-static enum pproc_action
+static struct pproc_act
 analyze_rtcp_packet(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_in = pktxp->strmp_in;
@@ -205,7 +217,7 @@ analyze_rtcp_packet(const struct pkt_proc_ctx *pktxp)
     return (PPROC_ACT_NOP);
 }
 
-static enum pproc_action
+static struct pproc_act
 resizer_injest(const struct pkt_proc_ctx *pktxp)
 {
     struct rtpp_stream *stp_in = pktxp->strmp_in;
@@ -442,7 +454,7 @@ player_predestroy_cb(struct rtpp_stats *rtpp_stats)
     CALL_SMETHOD(rtpp_stats, updatebyname, "nplrs_destroyed", 1);
 }
 
-static enum pproc_action
+static struct pproc_act
 drop_packets(const struct pkt_proc_ctx *pktxp)
 {
 
@@ -511,7 +523,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
             goto e2;
         }
         pthread_mutex_unlock(&pvt->lock);
-        cmd->csp->nplrs_created.cnt++;
+        rtpp_command_get_stats(cmd)->nplrs_created.cnt++;
         CALL_SMETHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           pvt->rtpp_stats);
         RTPP_OBJ_DECREF(rsrv);
@@ -615,7 +627,12 @@ _rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
     char saddr[MAX_AP_STRBUF];
     int newlatch;
 
-    if (pvt->last_update != 0 && \
+    if (pvt->latch_info.mode == RTPLM_FORCE_ON) {
+        __rtpp_stream_fill_addr(pvt, packet);
+        return (0);
+    }
+
+    if (pvt->last_update != 0 &&
       dtime - pvt->last_update < UPDATE_WINDOW) {
         return (0);
     }
@@ -650,9 +667,11 @@ _rtpp_stream_latch(struct rtpp_stream_priv *pvt, double dtime,
     } else {
         relatch = "re-latched";
     }
+#if !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
       "%s's address %s: %s (%s), SSRC=%s, Seq=%s", actor, relatch,
       saddr, ptype, ssrc, seq);
+#endif
     pvt->latch_info.latched = newlatch;
     return (1);
 }
@@ -667,6 +686,29 @@ rtpp_stream_latch(struct rtpp_stream *self, struct rtp_packet *packet)
     int rval = _rtpp_stream_latch(pvt, packet->rtime.mono, packet);
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
+}
+
+static void
+rtpp_stream_latch_setmode(struct rtpp_stream *self, enum rtpps_latch_mode mode)
+{
+    struct rtpp_stream_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    pthread_mutex_lock(&pvt->lock);
+    pvt->latch_info.mode = mode;
+    pthread_mutex_unlock(&pvt->lock);
+}
+
+static enum rtpps_latch_mode
+rtpp_stream_latch_getmode(struct rtpp_stream *self)
+{
+    struct rtpp_stream_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    pthread_mutex_lock(&pvt->lock);
+    enum rtpps_latch_mode mode = pvt->latch_info.mode;
+    pthread_mutex_unlock(&pvt->lock);
+    return (mode);
 }
 
 static void
@@ -696,6 +738,8 @@ _rtpp_stream_check_latch_override(struct rtpp_stream_priv *pvt,
     char saddr[MAX_AP_STRBUF];
 
     if (pvt->pub.pipe_type == PIPE_RTCP || pvt->latch_info.ssrc.inited == 0)
+        return (0);
+    if (pvt->latch_info.mode == RTPLM_FORCE_ON)
         return (0);
     if (rtp_packet_parse(packet) != RTP_PARSER_OK)
         return (0);
@@ -747,8 +791,9 @@ __rtpp_stream_fill_addr(struct rtpp_stream_priv *pvt, struct rtp_packet *packet)
     actor = _rtpp_stream_get_actor(pvt);
     ptype = _rtpp_stream_get_proto(pvt);
     addrport2char_r(sstosa(&packet->raddr), saddr, sizeof(saddr), ':');
+    const char *wice = (pvt->latch_info.mode == RTPLM_FORCE_ON) ? " (with ICE)" : "";
     RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
-      "%s's address filled in: %s (%s)", actor, saddr, ptype);
+      "%s's address filled in%s: %s (%s)", actor, wice, saddr, ptype);
     return;
 }
 
@@ -880,7 +925,7 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
         return;
     }
     RTPP_DBG_ASSERT(pvt->fd == NULL);
-    CALL_METHOD(new_skt, set_stuid, self->stuid);
+    CALL_SMETHOD(new_skt, set_stuid, self->stuid);
     pvt->fd = new_skt;
     RTPP_OBJ_INCREF(pvt->fd);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
@@ -890,7 +935,7 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
 }
 
 static struct rtpp_socket *
-rtpp_stream_get_skt(struct rtpp_stream *self)
+rtpp_stream_get_skt(struct rtpp_stream *self, HERETYPE mlp)
 {
     struct rtpp_stream_priv *pvt;
     struct rtpp_socket *rval;
@@ -917,7 +962,7 @@ rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     old_skt = pvt->fd;
-    CALL_METHOD(new_skt, set_stuid, self->stuid);
+    CALL_SMETHOD(new_skt, set_stuid, self->stuid);
     pvt->fd = new_skt;
     RTPP_OBJ_INCREF(pvt->fd);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
@@ -936,7 +981,22 @@ rtpp_stream_send_pkt(struct rtpp_stream *self, struct sthread_args *sap,
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
-    rval = CALL_METHOD(pvt->fd, send_pkt_na, sap, pvt->rem_addr, pkt,
+    rval = CALL_SMETHOD(pvt->fd, send_pkt_na, sap, pvt->rem_addr, pkt,
+      self->log);
+    pthread_mutex_unlock(&pvt->lock);
+    return (rval);
+}
+
+static int
+rtpp_stream_send_pkt_to(struct rtpp_stream *self, struct sthread_args *sap,
+  struct rtp_packet *pkt, struct rtpp_netaddr *rem_addr)
+{
+    struct rtpp_stream_priv *pvt;
+    int rval;
+
+    PUB2PVT(self, pvt);
+    pthread_mutex_lock(&pvt->lock);
+    rval = CALL_SMETHOD(pvt->fd, send_pkt_na, sap, rem_addr, pkt,
       self->log);
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
@@ -948,7 +1008,7 @@ _rtpp_stream_recv_pkt(struct rtpp_stream_priv *pvt,
 {
     struct rtp_packet *pkt;
 
-    pkt = CALL_METHOD(pvt->fd, rtp_recv, dtime, pvt->pub.laddr, pvt->pub.port);
+    pkt = CALL_SMETHOD(pvt->fd, rtp_recv, dtime, pvt->pub.laddr, pvt->pub.port);
     return (pkt);
 }
 
@@ -1040,6 +1100,9 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref *rtcps_wrt,
     }
     rsp->npkts_rcvd.cnt++;
 
+    if (pvt->latch_info.mode == RTPLM_FORCE_OFF)
+        goto nolatch;
+
     if (!CALL_SMETHOD(pvt->rem_addr, isempty)) {
         /* Check that the packet is authentic, drop if it isn't */
         if (self->asymmetric == 0) {
@@ -1080,6 +1143,7 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref *rtcps_wrt,
         _rtpp_stream_fill_addr(pvt, rtcps_wrt, packet);
     }
     _rtpp_stream_latch_sync(pvt, dtime->mono, packet);
+nolatch:
     pthread_mutex_unlock(&pvt->lock);
     return (packet);
 

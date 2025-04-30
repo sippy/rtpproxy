@@ -40,7 +40,7 @@ struct rtpp_type_linkable {
 #define DECLARE_CLASS(rot_name, init_args...) \
     struct rot_name; \
     typedef struct rot_name rot_name##_rot; \
-    rot_name##_rot *rot_name##_ctor(init_args);
+    rot_name##_rot *rot_name##_ctor(init_args)
 
 #if defined(RTPP_DEBUG)
 #define DECLARE_CLASS_PUBTYPE(rot_name, custom_struct) \
@@ -82,27 +82,33 @@ struct rtpp_type_linkable {
 #define METHOD_ENTRY(func, epname) func##_t epname
 #define CALL_METHOD(obj, method, args...) (obj)->method(obj, ## args)
 
-extern const struct rtpp_refcnt_smethods * const rtpp_refcnt_smethods;
+#define RTPP_EXPORT __attribute__((visibility("default")))
+
+extern const struct rtpp_refcnt_smethods * const rtpp_refcnt_smethods RTPP_EXPORT;
 extern const struct rtpp_pearson_perfect_smethods * const rtpp_pearson_perfect_smethods;
-extern const struct rtpp_netaddr_smethods * const rtpp_netaddr_smethods;
+extern const struct rtpp_netaddr_smethods * const rtpp_netaddr_smethods RTPP_EXPORT;
 extern const struct rtpp_server_smethods * const rtpp_server_smethods;
-extern const struct rtpp_stats_smethods * const rtpp_stats_smethods;
-extern const struct rtpp_timed_smethods * const rtpp_timed_smethods;
-extern const struct rtpp_stream_smethods * const rtpp_stream_smethods;
-extern const struct rtpp_pcount_smethods * const rtpp_pcount_smethods;
+extern const struct rtpp_stats_smethods * const rtpp_stats_smethods RTPP_EXPORT;
+extern const struct rtpp_timed_smethods * const rtpp_timed_smethods RTPP_EXPORT;
+extern const struct rtpp_stream_smethods * const rtpp_stream_smethods RTPP_EXPORT;
+extern const struct rtpp_pcount_smethods * const rtpp_pcount_smethods RTPP_EXPORT;
 extern const struct rtpp_record_smethods * const rtpp_record_smethods;
 extern const struct rtpp_hash_table_smethods * const rtpp_hash_table_smethods;
-extern const struct rtpp_weakref_smethods * const rtpp_weakref_smethods;
+extern const struct rtpp_weakref_smethods * const rtpp_weakref_smethods RTPP_EXPORT;
 extern const struct rtpp_analyzer_smethods * const rtpp_analyzer_smethods;
-extern const struct rtpp_pcnt_strm_smethods * const rtpp_pcnt_strm_smethods;
-extern const struct rtpp_ttl_smethods * const rtpp_ttl_smethods;
+extern const struct rtpp_pcnt_strm_smethods * const rtpp_pcnt_strm_smethods RTPP_EXPORT;
+extern const struct rtpp_ttl_smethods * const rtpp_ttl_smethods RTPP_EXPORT;
 extern const struct rtpp_pipe_smethods * const rtpp_pipe_smethods;
 extern const struct rtpp_ringbuf_smethods * const rtpp_ringbuf_smethods;
-extern const struct rtpp_sessinfo_smethods * const rtpp_sessinfo_smethods;
+extern const struct rtpp_sessinfo_smethods * const rtpp_sessinfo_smethods RTPP_EXPORT;
 extern const struct rtpp_rw_lock_smethods * const rtpp_rw_lock_smethods;
 extern const struct rtpp_proc_servers_smethods * const rtpp_proc_servers_smethods;
 extern const struct rtpp_proc_wakeup_smethods * const rtpp_proc_wakeup_smethods;
-extern const struct pproc_manager_smethods * const pproc_manager_smethods;
+extern const struct pproc_manager_smethods * const pproc_manager_smethods RTPP_EXPORT;
+extern const struct rtpp_dtls_conn_smethods * const rtpp_dtls_conn_smethods;
+extern const struct rtpp_socket_smethods * const rtpp_socket_smethods;
+extern const struct rtpp_refproxy_smethods * const rtpp_refproxy_smethods RTPP_EXPORT;
+extern const struct rtpc_reply_smethods * const rtpc_reply_smethods;
 
 #define GET_SMETHODS(obj) _Generic((obj), \
     struct rtpp_refcnt *: rtpp_refcnt_smethods, \
@@ -125,7 +131,11 @@ extern const struct pproc_manager_smethods * const pproc_manager_smethods;
     struct rtpp_rw_lock *: rtpp_rw_lock_smethods, \
     struct rtpp_proc_servers *: rtpp_proc_servers_smethods, \
     struct rtpp_proc_wakeup *: rtpp_proc_wakeup_smethods, \
-    struct pproc_manager *: pproc_manager_smethods \
+    struct pproc_manager *: pproc_manager_smethods, \
+    struct rtpp_dtls_conn *: rtpp_dtls_conn_smethods, \
+    struct rtpp_socket *: rtpp_socket_smethods, \
+    struct rtpp_refproxy *: rtpp_refproxy_smethods, \
+    struct rtpc_reply *: rtpc_reply_smethods \
 )
 
 #if defined(RTPP_DEBUG)

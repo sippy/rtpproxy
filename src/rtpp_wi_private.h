@@ -34,12 +34,12 @@ struct rtpp_log;
 struct rtpp_wi_pvt {
     struct rtpp_wi pub;
     int sock;
-    struct rtpp_refcnt *sock_rcnt;
+    struct rtpp_refcnt *aux_rcnt;
     size_t msg_len;
     int flags;
     struct sockaddr *sendto;
     socklen_t tolen;
-    void *msg;
+    const void *msg;
     int nsend;
     int debug;
     struct rtpp_log *log;

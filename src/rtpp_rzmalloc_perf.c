@@ -31,6 +31,7 @@
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
 #include "rtpp_time.h"
 
@@ -104,7 +105,7 @@ rtpp_refcnt_trace_perf(void)
         goto e1;
     }
     if (once) {
-        CALL_SMETHOD(pvt->pub.rcnt, traceen);
+        CALL_SMETHOD(pvt->pub.rcnt, traceen, HEREVAL);
         once = 0;
     }
     return (pvt);
