@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
@@ -65,8 +67,6 @@ srandomdev(void)
 #  define SO_REUSEPORT SO_REUSEADDR
 # endif
 #endif
-
-#include "config.h"
 
 #include "elperiodic.h"
 
