@@ -77,7 +77,7 @@ try_push(SPMCQueue* queue, void* value)
     // Update the cached index and retry
     queue->readIdxCache = LOAD_R_IDX(queue, memory_order_acquire);
     newsize = nextWriteIdx - queue->readIdxCache;
-    if(newsize <= queue->capacity) {
+    if (newsize <= queue->capacity) {
         queue->slots[writeIdx & queue->mask] = value;
         UPDATE_W_IDX(queue, nextWriteIdx);
         return true;
