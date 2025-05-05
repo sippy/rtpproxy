@@ -12,11 +12,9 @@ on:
   schedule:
     - cron: "0 0 * * *"
 
-# added using https://github.com/step-security/secure-repo
 permissions:
   contents: write
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   LoadJobs_conf:
     name: Load Jobs Settings
@@ -38,69 +36,62 @@ jobs:
         os: [22.04]
         compiler: ['gcc-i386-cross', 'clang-i386-cross', 'gcc-mips64-cross', 'gcc-arm32-cross', 'gcc-arm64-cross', 'gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
-          - os: 24.04
-            compiler: 'gcc'
-          - os: 24.04
-            compiler: 'clang'
-          - os: 24.04
-            compiler: 'gcc-13'
-          - os: 24.04
-            compiler: 'gcc-14'
-          - os: 24.04
-            compiler: 'clang-16'
-          - os: 24.04
-            compiler: 'clang-17'
-          - os: 24.04
-            compiler: 'clang-18'
-          - os: 24.04
-            compiler: 'clang-19'
+        - os: 24.04
+          compiler: 'gcc'
+        - os: 24.04
+          compiler: 'clang'
+        - os: 24.04
+          compiler: 'gcc-13'
+        - os: 24.04
+          compiler: 'gcc-14'
+        - os: 24.04
+          compiler: 'clang-16'
+        - os: 24.04
+          compiler: 'clang-17'
+        - os: 24.04
+          compiler: 'clang-18'
+        - os: 24.04
+          compiler: 'clang-19'
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
 
-      - name: Start Docker container
-        if: endsWith(matrix.compiler, '-cross')
-        run: sh -x scripts/build/start_container.sh
+    - name: Start Docker container
+      if: endsWith(matrix.compiler, '-cross')
+      run: sh -x scripts/build/start_container.sh
 
-#      - name: Sanitize list of Ubuntu mirrors
-#        if: endsWith(matrix.compiler, '-cross') == 0
-#        run: scripts/ft-apt-spy2-check-and-fix.sh
+    - name: Workaround for tar not being able to access /var/cache/apt/archives
+      if: endsWith(matrix.compiler, '-cross') == 0
+      run: |
+        sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
+        sudo chmod u+s "$(command -v tar)"
 
-      - name: Workaround for tar not being able to access /var/cache/apt/archives
-        if: endsWith(matrix.compiler, '-cross') == 0
-        run: |
-          sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
-          sudo chmod u+s "$(command -v tar)"
+    - name: Cache apt-get packages
+      if: endsWith(matrix.compiler, '-cross') == 0
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt/archives
+        key: cleanbuild-${{ matrix.os }}-apt-get-${{ github.run_id }}
+        restore-keys: |
+          cleanbuild-${{ matrix.os }}-apt-get
+          cleanbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
 
-      # Cache the apt-get packages
-      - name: Cache apt-get packages
-        if: endsWith(matrix.compiler, '-cross') == 0
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: cleanbuild-${{ matrix.os }}-apt-get-${{ github.run_id }}
-          restore-keys: |
-            cleanbuild-${{ matrix.os }}-apt-get
-            cleanbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+    - name: Install apt-get updates
+      run: scripts/ft-apt-get-update.sh
 
-      - name: Install apt-get updates
-        run: scripts/ft-apt-get-update.sh
+    - name: Set up Python
+      if: endsWith(matrix.compiler, '-cross') == 0
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
 
-      - name: Set up Python
-        if: endsWith(matrix.compiler, '-cross') == 0
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.9
+    - name: install_depends
+      run: sh -x scripts/build/install_depends.sh
 
-      - name: install_depends
-        run: sh -x scripts/build/install_depends.sh
-
-      - name: build
-        run: sh -x ./scripts/do-build.sh cleanbuild
+    - name: build
+      run: sh -x ./scripts/do-build.sh cleanbuild
 
   FullBuild:
     name: Full Build
@@ -118,69 +109,61 @@ jobs:
         os: [22.04]
         compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
-          - os: 24.04
-            compiler: 'gcc'
-          - os: 24.04
-            compiler: 'clang'
-          - os: 24.04
-            compiler: 'gcc-13'
-          - os: 24.04
-            compiler: 'gcc-14'
-          - os: 24.04
-            compiler: 'clang-16'
-          - os: 24.04
-            compiler: 'clang-17'
-          - os: 24.04
-            compiler: 'clang-18'
-          - os: 24.04
-            compiler: 'clang-19'
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+        - os: 24.04
+          compiler: 'gcc'
+        - os: 24.04
+          compiler: 'clang'
+        - os: 24.04
+          compiler: 'gcc-13'
+        - os: 24.04
+          compiler: 'gcc-14'
+        - os: 24.04
+          compiler: 'clang-16'
+        - os: 24.04
+          compiler: 'clang-17'
+        - os: 24.04
+          compiler: 'clang-18'
+        - os: 24.04
+          compiler: 'clang-19'
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
 
-      - name: Start Docker container
-        if: endsWith(matrix.compiler, '-cross')
-        run: sh -x scripts/build/start_container.sh
+    - name: Start Docker container
+      if: endsWith(matrix.compiler, '-cross')
+      run: sh -x scripts/build/start_container.sh
 
-#      - name: Sanitize list of Ubuntu mirrors
-#        if: endsWith(matrix.compiler, '-cross') == 0
-#        run: scripts/ft-apt-spy2-check-and-fix.sh
+    - name: Workaround for tar not being able to access /var/cache/apt/archives
+      if: endsWith(matrix.compiler, '-cross') == 0
+      run: |
+        sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
+        sudo chmod u+s "$(command -v tar)"
 
-      - name: Workaround for tar not being able to access /var/cache/apt/archives
-        if: endsWith(matrix.compiler, '-cross') == 0
-        run: |
-          sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
-          sudo chmod u+s "$(command -v tar)"
+    - name: Cache apt-get packages
+      if: endsWith(matrix.compiler, '-cross') == 0
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt/archives
+        key: depsbuild-${{ matrix.os }}-apt-get-${{ github.run_id }}
+        restore-keys: |
+          depsbuild-${{ matrix.os }}-apt-get
+          depsbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
 
-      # Cache the apt-get packages
-      - name: Cache apt-get packages
-        if: endsWith(matrix.compiler, '-cross') == 0
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: depsbuild-${{ matrix.os }}-apt-get-${{ github.run_id }}
-          restore-keys: |
-            depsbuild-${{ matrix.os }}-apt-get
-            depsbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+    - name: Install apt-get updates
+      run: scripts/ft-apt-get-update.sh
 
-      - name: Install apt-get updates
-        run: scripts/ft-apt-get-update.sh
+    - name: Set up Python
+      if: endsWith(matrix.compiler, '-cross') == 0
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
 
-      - name: Set up Python
-        if: endsWith(matrix.compiler, '-cross') == 0
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.9
+    - name: install_depends
+      run: sh -x scripts/build/install_depends.sh
 
-      - name: install_depends
-        run: sh -x scripts/build/install_depends.sh
-
-      - name: build
-        run: sh -x ./scripts/do-build.sh depsbuild
+    - name: build
+      run: sh -x ./scripts/do-build.sh depsbuild
 
   FuncTest:
     name: Functional Testing    
@@ -198,64 +181,61 @@ jobs:
         os: [22.04]
         compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
-          - os: 24.04
-            compiler: 'gcc'
-          - os: 24.04
-            compiler: 'clang'
-          - os: 24.04
-            compiler: 'gcc-13'
-          - os: 24.04
-            compiler: 'gcc-14'
-          - os: 24.04
-            compiler: 'clang-16'
-          - os: 24.04
-            compiler: 'clang-17'
-          - os: 24.04
-            compiler: 'clang-18'
-          - os: 24.04
-            compiler: 'clang-19'
+        - os: 24.04
+          compiler: 'gcc'
+        - os: 24.04
+          compiler: 'clang'
+        - os: 24.04
+          compiler: 'gcc-13'
+        - os: 24.04
+          compiler: 'gcc-14'
+        - os: 24.04
+          compiler: 'clang-16'
+        - os: 24.04
+          compiler: 'clang-17'
+        - os: 24.04
+          compiler: 'clang-18'
+        - os: 24.04
+          compiler: 'clang-19'
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
 
-      - name: Workaround for tar not being able to access /var/cache/apt/archives
-        run: |
-          sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
-          sudo chmod u+s "$(command -v tar)"
+    - name: Workaround for tar not being able to access /var/cache/apt/archives
+      run: |
+        sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
+        sudo chmod u+s "$(command -v tar)"
 
-      # Cache the apt-get packages
-      - name: Cache apt-get packages
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: functesting-${{ matrix.os }}-apt-get-${{ github.run_id }}
-          restore-keys: |
-            functesting-${{ matrix.os }}-apt-get
-            functesting-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+    - name: Cache apt-get packages
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt/archives
+        key: functesting-${{ matrix.os }}-apt-get-${{ github.run_id }}
+        restore-keys: |
+          functesting-${{ matrix.os }}-apt-get
+          functesting-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
 
-      - name: Install apt-get updates
-        run: scripts/ft-apt-get-update.sh
+    - name: Install apt-get updates
+      run: scripts/ft-apt-get-update.sh
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.9
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
 
-      - name: install_depends
-        run: sh -x scripts/build/install_depends.sh
+    - name: install_depends
+      run: sh -x scripts/build/install_depends.sh
 
-      - name: before_install
-        run: sh -x scripts/ft-before_install.sh
+    - name: before_install
+      run: sh -x scripts/ft-before_install.sh
 
-      - name: build
-        run: sh -x ./scripts/do-build.sh basic
+    - name: build
+      run: sh -x ./scripts/do-build.sh basic
 
-      - name: test
-        run: sh -x scripts/do-test.sh
+    - name: test
+      run: sh -x scripts/do-test.sh
 
   Glitching:
     name: Glitch Injection
@@ -273,64 +253,61 @@ jobs:
         os: [22.04]
         compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
-          - os: 24.04
-            compiler: 'gcc'
-          - os: 24.04
-            compiler: 'clang'
-          - os: 24.04
-            compiler: 'gcc-13'
-          - os: 24.04
-            compiler: 'gcc-14'
-          - os: 24.04
-            compiler: 'clang-16'
-          - os: 24.04
-            compiler: 'clang-17'
-          - os: 24.04
-            compiler: 'clang-18'
-          - os: 24.04
-            compiler: 'clang-19'
+        - os: 24.04
+          compiler: 'gcc'
+        - os: 24.04
+          compiler: 'clang'
+        - os: 24.04
+          compiler: 'gcc-13'
+        - os: 24.04
+          compiler: 'gcc-14'
+        - os: 24.04
+          compiler: 'clang-16'
+        - os: 24.04
+          compiler: 'clang-17'
+        - os: 24.04
+          compiler: 'clang-18'
+        - os: 24.04
+          compiler: 'clang-19'
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
 
-      - name: Workaround for tar not being able to access /var/cache/apt/archives
-        run: |
-          sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
-          sudo chmod u+s "$(command -v tar)"
+    - name: Workaround for tar not being able to access /var/cache/apt/archives
+      run: |
+        sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
+        sudo chmod u+s "$(command -v tar)"
 
-      # Cache the apt-get packages
-      - name: Cache apt-get packages
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: glitching-${{ matrix.os }}-apt-get-${{ github.run_id }}
-          restore-keys: |
-            glitching-${{ matrix.os }}-apt-get
-            glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
+    - name: Cache apt-get packages
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt/archives
+        key: glitching-${{ matrix.os }}-apt-get-${{ github.run_id }}
+        restore-keys: |
+          glitching-${{ matrix.os }}-apt-get
+          glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
 
-      - name: Install apt-get updates
-        run: scripts/ft-apt-get-update.sh
+    - name: Install apt-get updates
+      run: scripts/ft-apt-get-update.sh
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.9
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
 
-      - name: install_depends
-        run: sh -x scripts/build/install_depends.sh
+    - name: install_depends
+      run: sh -x scripts/build/install_depends.sh
 
-      - name: before_install
-        run: sh -x scripts/ft-before_install.sh
+    - name: before_install
+      run: sh -x scripts/ft-before_install.sh
 
-      - name: build
-        run: sh -x ./scripts/do-build.sh glitching
+    - name: build
+      run: sh -x ./scripts/do-build.sh glitching
 
-      - name: test
-        run: sh -x scripts/do-test.sh
+    - name: test
+      run: sh -x scripts/do-test.sh
 
   Fuzzing:
     name: Fuzz with OSS-Fuzz
@@ -407,10 +384,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - base_image: 'debian:12-slim'
-            ccache_bin_image: 'latest-debian-12'
-          - base_image: 'ubuntu:latest'
-            ccache_bin_image: 'latest-ubuntu-24.04'
+        - base_image: 'debian:12-slim'
+          ccache_bin_image: 'latest-debian-12'
+        - base_image: 'ubuntu:latest'
+          ccache_bin_image: 'latest-ubuntu-24.04'
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
