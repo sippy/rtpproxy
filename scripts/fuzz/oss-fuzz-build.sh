@@ -98,7 +98,7 @@ then
   cat config.log
   exit 1
 fi
-for dir in libexecinfo libucl libre libelperiodic/src libxxHash modules
+for dir in libexecinfo libucl libre external/libelperiodic/src libxxHash modules
 do
   make -C ${dir} all
 done

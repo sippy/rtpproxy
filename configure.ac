@@ -272,12 +272,12 @@ then
    EXTERNAL_ELPERIODIC=1
    ,,-lm)
 else
-  SUBD_ELP="libelperiodic/src"
+  SUBD_ELP="external/libelperiodic/src"
 fi
 
 if test "${EXTERNAL_ELPERIODIC}" != 1
 then
-  LIBS_ELPERIODIC="\$(top_srcdir)/libelperiodic/src/libelperiodic.la"
+  LIBS_ELPERIODIC="\$(top_srcdir)/external/libelperiodic/src/libelperiodic.la"
 fi
 
 # libsiplog
@@ -488,7 +488,7 @@ AM_COND_IF([TESTS_EXIST], [
 
 AM_COND_IF([BUILD_ELPERIODIC], [
   ac_configure_args="$ac_configure_args \"CFLAGS=$CFLAGS\""
-  AC_CONFIG_SUBDIRS([libelperiodic])
+  AC_CONFIG_SUBDIRS([external/libelperiodic])
 ])
 
 AC_SUBST(AM_CFLAGS)

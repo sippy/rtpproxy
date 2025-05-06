@@ -142,7 +142,7 @@ EXTRA_CFLAGS = $(CC_WFLAGS) $(LTO_FLAG)
 EXTRA_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR)
 
 if BUILD_ELPERIODIC
-EXTRA_CPPFLAGS += -I$(top_srcdir)/libelperiodic/src
+EXTRA_CPPFLAGS += -I$(top_srcdir)/external/libelperiodic/src
 endif
 
 rtpproxy_debug_CFLAGS=$(NOPT_CFLAGS) $(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)

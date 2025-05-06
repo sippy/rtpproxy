@@ -27,7 +27,7 @@ libucl_debug_la_SOURCES = $(libucl_la_SOURCES)
 libucl_debug_la_CPPFLAGS = -DRTPP_MEMDEB_FREE_NULL $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpproxy
 libucl_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_libucl_common) $(RTPP_MEMDEB_CFLAGS)
 
-HEPSRCDIR=$(top_srcdir)/hepconnector
+HEPSRCDIR=$(top_srcdir)/external/hepconnector
 
 if ENABLE_noinst
 noinst_PROGRAMS = libucl_test

@@ -6,7 +6,7 @@ if BUILD_MODULES
 SUBD_MOD=	modules
 endif
 if BUILD_ELPERIODIC
-SUBD_ELP=       libelperiodic/src
+SUBD_ELP=       external/libelperiodic/src
 endif
 if BUILD_EXTRACTAUDIO
 SUBD_EAUD=       extractaudio

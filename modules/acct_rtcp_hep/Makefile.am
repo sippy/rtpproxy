@@ -3,7 +3,7 @@ include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
 include $(top_srcdir)/m4/rtpp_module.ami
 
-HEPSRCDIR=$(top_srcdir)/hepconnector
+HEPSRCDIR=$(top_srcdir)/external/hepconnector
 UCLSRCDIR=$(top_srcdir)/external/libucl
 
 pkglib_LTLIBRARIES = rtpp_acct_rtcp_hep.la rtpp_acct_rtcp_hep_debug.la
