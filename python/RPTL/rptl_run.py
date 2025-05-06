@@ -33,7 +33,7 @@ class CommandRunner():
     outfile: str
 
     def __init__(self, socket_name, outfile):
-        from sippy.Rtp_proxy_client import Rtp_proxy_client
+        from sippy.Rtp_proxy.client import Rtp_proxy_client
         self.rc = Rtp_proxy_client({'_sip_address': '127.0.0.1'}, spath = socket_name,
           nworkers = 4, no_version_check = True)
         self.spath = socket_name

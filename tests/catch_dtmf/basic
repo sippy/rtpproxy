@@ -31,7 +31,7 @@ run_catch_dtmf() {
 }
 
 set -- `${RTPP_NOTYFY_CLIENT} -s "${RTPP_NOTIFY_SOCK_TCP}:0" \
- -S "${TOP_BUILDDIR}/python/sippy_lite" -o catch_dtmf.tlog -t 16 -D`
+ -o catch_dtmf.tlog -t 16 -D`
 RTPP_NC_RC=${?}
 RTPP_NC_PID="${1}"
 RTPP_NOTIFY_SOCK_TCP4_PORT="${2}"

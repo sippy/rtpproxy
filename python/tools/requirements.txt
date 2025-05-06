@@ -1,0 +1,1 @@
+sippy @ git+https://github.com/sippy/b2bua@master

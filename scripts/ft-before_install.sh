@@ -6,10 +6,12 @@ set -e
 . $(dirname $0)/build/build.conf.sub
 
 ${SUDO} apt-get -y install python3-pip python3-dev
-${SUDO} pip3 install --user -U pip setuptools
+PIP_RUN="python -m pip"
+${PIP_RUN} install --user -U pip setuptools
 which python
 python --version
-for pkg in parsimonious elperiodic cpp-coveralls
+for pkg in parsimonious cpp-coveralls
 do
-  pip3 install --user ${pkg}
+  ${PIP_RUN} install --user ${pkg}
 done
+${PIP_RUN} install --user -r python/tools/requirements.txt

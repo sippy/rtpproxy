@@ -19,7 +19,7 @@ run_command_parser() {
       ${RTPPROXY} -f -s "${socket}" ${RTPP_ARGS} < $BASEDIR/command_parser/command_parser.input 2>command_parser.rlog || return 1
     else
       RTPP_SOCKFILE="${socket}" rtpproxy_start ${RTPP_ARGS} || return 1
-      if ! ${RTPP_QUERY} -t 10 -b -s "${socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/command_parser/command_parser.input
+      if ! ${RTPP_QUERY} -t 10 -b -s "${socket}" -i $BASEDIR/command_parser/command_parser.input
       then
         rtpproxy_stop TERM
         return 1

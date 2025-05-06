@@ -261,7 +261,7 @@ run_test()
         else
           garg=""
         fi
-        (geninput "${garg}" "RTPP${j}.${i}" | ${RTPP_QUERY} -b -s "${_socket}" -S "${TOP_BUILDDIR}/python/sippy_lite" -i - \
+        (geninput "${garg}" "RTPP${j}.${i}" | ${RTPP_QUERY} -b -s "${_socket}" -i - \
           > session_timeouts.qout${j}.${i})&
         eval RTPQ${i}_PID=${!}
       done

@@ -34,7 +34,7 @@ do
     RTPP_SOCKFILE="${socket}" RTPP_OUTFILE="basic_versions.rout" RTPP_LOGFILE="${BV_TLFILE}" rtpproxy_start
     report "rtpproxy start on ${socket}"
     ${RTPP_QUERY} -t 10  -b -s "${socket}" \
-      -S "${TOP_BUILDDIR}/python/sippy_lite" -i $BASEDIR/basic_versions/basic_versions.input -o basic_versions.qout
+      -i $BASEDIR/basic_versions/basic_versions.input -o basic_versions.qout
     report "rtpp_query on ${socket}"
     rtpproxy_stop HUP
     report "rtpproxy stop (SIGHUP) on ${socket}"

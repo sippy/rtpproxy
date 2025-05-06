@@ -135,7 +135,8 @@ def main():
         if stype == 'unix':
             pnum = None
         else:
-            pnum = '%.5d' % (cs.address[1],)
+            port = cs.serversock.getsockname()[1]
+            pnum = f'{port}'
         dob.childreport(pnum)
     ED2.loop()
     if ch.exception is not None:

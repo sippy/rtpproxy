@@ -496,7 +496,7 @@ AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile
  modules/catch_dtmf/Makefile modules/badmod/Makefile libxxHash/Makefile
  libre/Makefile modules/dtls_gw/Makefile modules/ice_lite/Makefile
  pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile
- python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile])
+ doc/Makefile])
 
 AM_COND_IF([TESTS_EXIST], [
   AC_CONFIG_FILES([tests/Makefile])

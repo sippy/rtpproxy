@@ -13,7 +13,6 @@ BUILDDIR="${BUILDDIR:-${BASEDIR}}"
 TOP_BUILDDIR="${TOP_BUILDDIR:-${BASEDIR}/..}"
 
 PYTHON_DIR="${TOP_BUILDDIR}/python"
-SIPPY_DIR="${PYTHON_DIR}/sippy_lite"
 RPTL_DIR="${PYTHON_DIR}/RPTL"
 RECORD_DIR="${BUILDDIR}"
 RECORD_SPL_DIR="${BUILDDIR}/.spool"
@@ -23,9 +22,9 @@ PYINT=${PYINT:-"python3"}
 RTPPROXY_DBG="${TOP_BUILDDIR}/src/rtpproxy_debug"
 RTPPROXY_PROD="${TOP_BUILDDIR}/src/rtpproxy"
 RTPPROXY="${RTPPROXY:-${RTPPROXY_DBG}}"
-RTPP_QUERY="${PYINT} ${SIPPY_DIR}/sippy/tools/rtpp_query.py -n 1 -S ${SIPPY_DIR}"
-RTPP_NOTYFY_CLIENT="${PYINT} ${PYTHON_DIR}/rtpp_notify_client.py -S ${SIPPY_DIR}"
-RPTL_INT="${PYINT} ${RPTL_DIR}/rptl_run.py -S ${SIPPY_DIR}"
+RTPP_QUERY="${PYINT} ${PYTHON_DIR}/tools/rtpp_query.py -n 1"
+RTPP_NOTYFY_CLIENT="${PYINT} ${PYTHON_DIR}/tools/rtpp_notify_client.py"
+RPTL_INT="${PYINT} ${RPTL_DIR}/rptl_run.py"
 MAKEANN_DBG=${TOP_BUILDDIR}/makeann/makeann_debug
 MAKEANN_PROD=${TOP_BUILDDIR}/makeann/makeann
 MAKEANN="${MAKEANN:-${MAKEANN_PROD}}"
@@ -39,7 +38,7 @@ setup_tstart() {
     echo "oops, cannot determine clock name to synchronize logs!" 1>&2
     exit 1
   fi
-  RTPP_LOG_TSTART="`${PYINT} ${SIPPY_DIR}/sippy/tools/getmonotime.py -S ${SIPPY_DIR} \
+  RTPP_LOG_TSTART="`${PYINT} ${PYTHON_DIR}/tools/getmonotime.py \
    -C ${RTPP_MCLOCK_NAME}`"
   export RTPP_LOG_TSTART
   RTPP_LOG_TFORM="rel"

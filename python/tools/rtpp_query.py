@@ -136,7 +136,7 @@ if __name__ == '__main__':
     if sippy_path != None:
         sys.path.insert(0, sippy_path)
 
-    from sippy.Rtp_proxy_client import Rtp_proxy_client
+    from sippy.Rtp_proxy.client import Rtp_proxy_client
     from sippy.Time.Timeout import Timeout
     from sippy.Core.EventDispatcher import ED2
 
