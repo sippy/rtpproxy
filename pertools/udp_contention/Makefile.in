@@ -93,7 +93,7 @@ host_triplet = @host@
 @ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
 bin_PROGRAMS = udp_contention$(EXEEXT)
 @BUILD_ELPERIODIC_TRUE@am__append_2 = ${MAINSRCDIR}/rtpp_math.c
-@BUILD_ELPERIODIC_TRUE@am__append_3 = -I$(top_srcdir)/libelperiodic/src
+@BUILD_ELPERIODIC_TRUE@am__append_3 = -I$(top_srcdir)/external/libelperiodic/src
 subdir = pertools/udp_contention
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \

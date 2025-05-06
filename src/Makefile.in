@@ -106,7 +106,7 @@ bin_PROGRAMS = rtpproxy$(EXEEXT) rtpproxy_debug$(EXEEXT)
 @BUILD_LOG_STAND_FALSE@am__append_9 = @LIBS_SIPLOG@
 @BUILD_LOG_STAND_FALSE@am__append_10 = @LIBS_SIPLOG_DBG@
 @ENABLE_MODULE_IF_TRUE@am__append_11 = rtpp_module_if.c rtpp_module.h
-@BUILD_ELPERIODIC_TRUE@am__append_12 = -I$(top_srcdir)/libelperiodic/src
+@BUILD_ELPERIODIC_TRUE@am__append_12 = -I$(top_srcdir)/external/libelperiodic/src
 @BUILD_MODULES_TRUE@am__append_13 = $(MOD_DIR)/catch_dtmf/librtpp_catch_dtmf.la \
 @BUILD_MODULES_TRUE@  $(MOD_DIR)/acct_csv/librtpp_acct_csv.la \
 @BUILD_MODULES_TRUE@  $(MOD_DIR)/acct_rtcp_hep/librtpp_acct_rtcp_hep.la
@@ -8143,7 +8143,7 @@ includepolice:
 	   echo -n "  policing file $${i} of $${nfiles} -> $${file}: "; \
 	   set +e; set +x; \
 	   SMAKE="${MAKE}" SMAKEFLAGS='CFLAGS="-DRTPP_DEBUG_MAX"' \
-            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/libelperiodic/src:$(RTPP_AUTOSRC_DIR):$(top_srcdir)/src" \
+            SIPATH="$(UCL_DIR)/include:$(top_srcdir)/external/libelperiodic/src:$(RTPP_AUTOSRC_DIR):$(top_srcdir)/src" \
 	    python3 $(top_srcdir)/misc/includepolice.py $${file} > $(IPLDIR)/$${file}.txt; \
 	   RC=$${?}; if [ $${RC} -eq 255 ]; then exit 1; fi; \
 	   if [ $${RC} -eq 0 ]; then \

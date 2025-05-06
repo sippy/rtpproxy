@@ -196,7 +196,7 @@ am__define_uniq_tagged_files = \
     if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
   done | $(am__uniquify_input)`
 DIST_SUBDIRS = libexecinfo libucl libxxHash libre makeann modules \
-	libelperiodic/src src pertools extractaudio doc tests
+	external/libelperiodic/src src pertools extractaudio doc tests
 am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in \
 	$(top_srcdir)/python/sippy_lite/sippy/Time/clock_dtime.py.in \
 	AUTHORS ChangeLog INSTALL README.md compile config.guess \
@@ -392,7 +392,7 @@ top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign
 @BUILD_MODULES_TRUE@SUBD_MOD = modules
-@BUILD_ELPERIODIC_TRUE@SUBD_ELP = libelperiodic/src
+@BUILD_ELPERIODIC_TRUE@SUBD_ELP = external/libelperiodic/src
 @BUILD_EXTRACTAUDIO_TRUE@SUBD_EAUD = extractaudio
 @BUILD_UDP_CONTENTION_TRUE@SUBD_UDCNT = pertools
 @BUILD_DOCS_TRUE@SUBD_DOCS = doc

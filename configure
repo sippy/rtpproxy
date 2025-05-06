@@ -869,7 +869,7 @@ LIBS
 CPPFLAGS
 CPP
 LT_SYS_LIBRARY_PATH'
-ac_subdirs_all='libelperiodic'
+ac_subdirs_all='external/libelperiodic'
 
 # Initialize some variables set by options.
 ac_init_help=
@@ -14427,12 +14427,12 @@ then :
 fi
 
 else
-  SUBD_ELP="libelperiodic/src"
+  SUBD_ELP="external/libelperiodic/src"
 fi
 
 if test "${EXTERNAL_ELPERIODIC}" != 1
 then
-  LIBS_ELPERIODIC="\$(top_srcdir)/libelperiodic/src/libelperiodic.la"
+  LIBS_ELPERIODIC="\$(top_srcdir)/external/libelperiodic/src/libelperiodic.la"
 fi
 
 # libsiplog
@@ -15869,7 +15869,7 @@ fi
 if test -z "$BUILD_ELPERIODIC_TRUE"; then :
 
   ac_configure_args="$ac_configure_args \"CFLAGS=$CFLAGS\""
-  subdirs="$subdirs libelperiodic"
+  subdirs="$subdirs external/libelperiodic"
 
 
 fi
