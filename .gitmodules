@@ -4,6 +4,3 @@
 [submodule "hepconnector"]
 	path = hepconnector
 	url = https://github.com/sippy/hepconnector.git
-[submodule "xxHash"]
-	path = external/xxHash
-	url = https://github.com/Cyan4973/xxHash.git
