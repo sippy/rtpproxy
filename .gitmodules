@@ -10,6 +10,3 @@
 [submodule "xxHash"]
 	path = external/xxHash
 	url = https://github.com/Cyan4973/xxHash.git
-[submodule "external/libre"]
-	path = external/libre
-	url = https://github.com/creytiv/re.git
