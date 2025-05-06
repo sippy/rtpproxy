@@ -76,6 +76,5 @@ rtpp_ttl_fintest()
     assert((_naborts - naborts_s) == 4);
     free(tp);
 }
-const static void *_rtpp_ttl_ftp = (void *)&rtpp_ttl_fintest;
-DATA_SET(rtpp_fintests, _rtpp_ttl_ftp);
+DATA_SET(rtpp_fintests, rtpp_ttl_fintest);
 #endif /* RTPP_FINTEST */

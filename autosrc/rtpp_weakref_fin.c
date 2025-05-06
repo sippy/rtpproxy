@@ -116,6 +116,5 @@ rtpp_weakref_fintest()
     assert((_naborts - naborts_s) == 9);
     free(tp);
 }
-const static void *_rtpp_weakref_ftp = (void *)&rtpp_weakref_fintest;
-DATA_SET(rtpp_fintests, _rtpp_weakref_ftp);
+DATA_SET(rtpp_fintests, rtpp_weakref_fintest);
 #endif /* RTPP_FINTEST */

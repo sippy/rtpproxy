@@ -108,6 +108,5 @@ rtpc_reply_fintest()
     assert((_naborts - naborts_s) == 8);
     free(tp);
 }
-const static void *_rtpc_reply_ftp = (void *)&rtpc_reply_fintest;
-DATA_SET(rtpp_fintests, _rtpc_reply_ftp);
+DATA_SET(rtpp_fintests, rtpc_reply_fintest);
 #endif /* RTPP_FINTEST */

@@ -68,6 +68,5 @@ rtpp_ringbuf_fintest()
     assert((_naborts - naborts_s) == 3);
     free(tp);
 }
-const static void *_rtpp_ringbuf_ftp = (void *)&rtpp_ringbuf_fintest;
-DATA_SET(rtpp_fintests, _rtpp_ringbuf_ftp);
+DATA_SET(rtpp_fintests, rtpp_ringbuf_fintest);
 #endif /* RTPP_FINTEST */

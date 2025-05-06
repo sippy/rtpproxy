@@ -47,6 +47,5 @@ rtpp_timed_task_fintest()
     assert((_naborts - naborts_s) == 1);
     free(tp);
 }
-const static void *_rtpp_timed_task_ftp = (void *)&rtpp_timed_task_fintest;
-DATA_SET(rtpp_fintests, _rtpp_timed_task_ftp);
+DATA_SET(rtpp_fintests, rtpp_timed_task_fintest);
 #endif /* RTPP_FINTEST */

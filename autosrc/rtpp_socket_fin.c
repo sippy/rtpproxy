@@ -132,6 +132,5 @@ rtpp_socket_fintest()
     assert((_naborts - naborts_s) == 11);
     free(tp);
 }
-const static void *_rtpp_socket_ftp = (void *)&rtpp_socket_fintest;
-DATA_SET(rtpp_fintests, _rtpp_socket_ftp);
+DATA_SET(rtpp_fintests, rtpp_socket_fintest);
 #endif /* RTPP_FINTEST */

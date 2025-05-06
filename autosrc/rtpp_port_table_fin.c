@@ -47,6 +47,5 @@ rtpp_port_table_fintest()
     assert((_naborts - naborts_s) == 1);
     free(tp);
 }
-const static void *_rtpp_port_table_ftp = (void *)&rtpp_port_table_fintest;
-DATA_SET(rtpp_fintests, _rtpp_port_table_ftp);
+DATA_SET(rtpp_fintests, rtpp_port_table_fintest);
 #endif /* RTPP_FINTEST */

@@ -83,6 +83,5 @@ rtpp_modman_fintest()
     assert((_naborts - naborts_s) == 5);
     free(tp);
 }
-const static void *_rtpp_modman_ftp = (void *)&rtpp_modman_fintest;
-DATA_SET(rtpp_fintests, _rtpp_modman_ftp);
+DATA_SET(rtpp_fintests, rtpp_modman_fintest);
 #endif /* RTPP_FINTEST */

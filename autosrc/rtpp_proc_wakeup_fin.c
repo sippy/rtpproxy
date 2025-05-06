@@ -52,6 +52,5 @@ rtpp_proc_wakeup_fintest()
     assert((_naborts - naborts_s) == 1);
     free(tp);
 }
-const static void *_rtpp_proc_wakeup_ftp = (void *)&rtpp_proc_wakeup_fintest;
-DATA_SET(rtpp_fintests, _rtpp_proc_wakeup_ftp);
+DATA_SET(rtpp_fintests, rtpp_proc_wakeup_fintest);
 #endif /* RTPP_FINTEST */

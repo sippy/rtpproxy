@@ -65,6 +65,5 @@ rtpp_cmd_rcache_fintest()
     assert((_naborts - naborts_s) == 3);
     free(tp);
 }
-const static void *_rtpp_cmd_rcache_ftp = (void *)&rtpp_cmd_rcache_fintest;
-DATA_SET(rtpp_fintests, _rtpp_cmd_rcache_ftp);
+DATA_SET(rtpp_fintests, rtpp_cmd_rcache_fintest);
 #endif /* RTPP_FINTEST */

@@ -68,6 +68,5 @@ rtpp_rw_lock_fintest()
     assert((_naborts - naborts_s) == 3);
     free(tp);
 }
-const static void *_rtpp_rw_lock_ftp = (void *)&rtpp_rw_lock_fintest;
-DATA_SET(rtpp_fintests, _rtpp_rw_lock_ftp);
+DATA_SET(rtpp_fintests, rtpp_rw_lock_fintest);
 #endif /* RTPP_FINTEST */

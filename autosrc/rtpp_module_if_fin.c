@@ -101,6 +101,5 @@ rtpp_module_if_fintest()
     assert((_naborts - naborts_s) == 7);
     free(tp);
 }
-const static void *_rtpp_module_if_ftp = (void *)&rtpp_module_if_fintest;
-DATA_SET(rtpp_fintests, _rtpp_module_if_ftp);
+DATA_SET(rtpp_fintests, rtpp_module_if_fintest);
 #endif /* RTPP_FINTEST */

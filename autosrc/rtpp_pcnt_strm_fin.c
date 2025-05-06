@@ -60,6 +60,5 @@ rtpp_pcnt_strm_fintest()
     assert((_naborts - naborts_s) == 2);
     free(tp);
 }
-const static void *_rtpp_pcnt_strm_ftp = (void *)&rtpp_pcnt_strm_fintest;
-DATA_SET(rtpp_fintests, _rtpp_pcnt_strm_ftp);
+DATA_SET(rtpp_fintests, rtpp_pcnt_strm_fintest);
 #endif /* RTPP_FINTEST */

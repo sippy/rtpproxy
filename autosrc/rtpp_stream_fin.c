@@ -228,6 +228,5 @@ rtpp_stream_fintest()
     assert((_naborts - naborts_s) == 23);
     free(tp);
 }
-const static void *_rtpp_stream_ftp = (void *)&rtpp_stream_fintest;
-DATA_SET(rtpp_fintests, _rtpp_stream_ftp);
+DATA_SET(rtpp_fintests, rtpp_stream_fintest);
 #endif /* RTPP_FINTEST */

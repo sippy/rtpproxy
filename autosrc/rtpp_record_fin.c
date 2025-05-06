@@ -52,6 +52,5 @@ rtpp_record_fintest()
     assert((_naborts - naborts_s) == 1);
     free(tp);
 }
-const static void *_rtpp_record_ftp = (void *)&rtpp_record_fintest;
-DATA_SET(rtpp_fintests, _rtpp_record_ftp);
+DATA_SET(rtpp_fintests, rtpp_record_fintest);
 #endif /* RTPP_FINTEST */

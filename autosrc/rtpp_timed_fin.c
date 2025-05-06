@@ -68,6 +68,5 @@ rtpp_timed_fintest()
     assert((_naborts - naborts_s) == 3);
     free(tp);
 }
-const static void *_rtpp_timed_ftp = (void *)&rtpp_timed_fintest;
-DATA_SET(rtpp_fintests, _rtpp_timed_ftp);
+DATA_SET(rtpp_fintests, rtpp_timed_fintest);
 #endif /* RTPP_FINTEST */

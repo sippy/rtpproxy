@@ -108,6 +108,5 @@ rtpp_netaddr_fintest()
     assert((_naborts - naborts_s) == 8);
     free(tp);
 }
-const static void *_rtpp_netaddr_ftp = (void *)&rtpp_netaddr_fintest;
-DATA_SET(rtpp_fintests, _rtpp_netaddr_ftp);
+DATA_SET(rtpp_fintests, rtpp_netaddr_fintest);
 #endif /* RTPP_FINTEST */

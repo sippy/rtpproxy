@@ -92,6 +92,5 @@ rtpp_server_fintest()
     assert((_naborts - naborts_s) == 6);
     free(tp);
 }
-const static void *_rtpp_server_ftp = (void *)&rtpp_server_fintest;
-DATA_SET(rtpp_fintests, _rtpp_server_ftp);
+DATA_SET(rtpp_fintests, rtpp_server_fintest);
 #endif /* RTPP_FINTEST */

@@ -148,6 +148,5 @@ rtpp_hash_table_fintest()
     assert((_naborts - naborts_s) == 13);
     free(tp);
 }
-const static void *_rtpp_hash_table_ftp = (void *)&rtpp_hash_table_fintest;
-DATA_SET(rtpp_fintests, _rtpp_hash_table_ftp);
+DATA_SET(rtpp_fintests, rtpp_hash_table_fintest);
 #endif /* RTPP_FINTEST */
