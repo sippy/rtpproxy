@@ -109,7 +109,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/config.h
-CONFIG_CLEAN_FILES = python/sippy_lite/sippy/Time/clock_dtime.py
+CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -197,10 +197,9 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 DIST_SUBDIRS = libexecinfo libucl libxxHash libre makeann modules \
 	external/libelperiodic/src src pertools extractaudio doc tests
-am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in \
-	$(top_srcdir)/python/sippy_lite/sippy/Time/clock_dtime.py.in \
-	AUTHORS ChangeLog INSTALL README.md compile config.guess \
-	config.sub depcomp install-sh ltmain.sh missing
+am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in AUTHORS \
+	ChangeLog INSTALL README.md compile config.guess config.sub \
+	depcomp install-sh ltmain.sh missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -444,8 +443,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
-python/sippy_lite/sippy/Time/clock_dtime.py: $(top_builddir)/config.status $(top_srcdir)/python/sippy_lite/sippy/Time/clock_dtime.py.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
 	-rm -f *.lo
