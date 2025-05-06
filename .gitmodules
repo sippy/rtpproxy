@@ -1,6 +1,3 @@
-[submodule "libelperiodic"]
-	path = libelperiodic
-	url = https://github.com/sobomax/libelperiodic.git
 [submodule "hepconnector"]
 	path = hepconnector
 	url = https://github.com/sippy/hepconnector.git
