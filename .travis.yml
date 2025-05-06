@@ -1,0 +1,49 @@
+dist: xenial
+language: c
+compiler:
+  - clang
+  - gcc
+arch:
+  - amd64
+#  - arm64
+before_install:
+  - sudo -H DEBIAN_FRONTEND=noninteractive apt-get -y update
+  - sudo -H DEBIAN_FRONTEND=noninteractive apt-get -y install python3-pip
+  - sudo pip3 install --upgrade pip
+  - pip3 install --user setuptools
+  - pip3 install --user cpp-coveralls
+script:
+    sh -x ./scripts/do-test.sh
+env:
+  global:
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    #   via the "travis encrypt" command using the project repo's public key
+    - secure: "pKwcIu7M/p3X4UkOA3c9oY6PQZEHcZcuS6L7aaAntli9uQ6llehWEORPdHNJ9HZdC0gqBKTcei3VdmIt84P14z4NKVBTYea949gx28CM/71LpXUVzoo18U07x5bVb6pvgbn2JXH6TBltjJofPnnyFt9a1EKEBNdE4AEboViTDtZDc2ykdvWj14aZA5U+Z/o44rfBV2Gzs9foHoWTJkbLlQfZ4VF3t6iHaYduxw0AnpuAFsLHKMXmOUXNkzgv0dj61GGDJt2e76YpLOS0nkGT3krrtZVRXOaaHWr0o4Wh8cSO3NjTJT3zvmqBbCzlMp3I3/Xyq6quYbJgqvrCMsSd5SjLTWCWBrRaqYARatQwtSUwc2FkmCBUZqqY28+Kayfbh9oKMmdYNDpVgUdO4gnOwByWCzKcN231z0p3WJHEnFxuGuNrDzKQRGZNcFdeSxEnXo6wkXeC8MHDrRF+FpVSugYstd8aAaXIwnIgooiJIySEq3/5PcsPyBYTWQBq4CgrJRkUUzV4VhmY03lij4BIr+aEUqVpUyVe7kDFjkCctuuOZDLeVpC1hEgLQa1SLS8rL/68Bx82OPSj9zANgMwvnApDMTs4ec1uv9+aNIInZ4yfLblj/Pr7gYv3SVPakSoxNMDSlfStw2TcyASjiMWwSpaIDqQAlmiLNAfDWFBlOh4="
+after_success:
+  - if [ "${CC}" = "gcc" ];
+    then
+      COVERALLS_PARALLEL=true coveralls --exclude CMakeFiles --gcov gcov --gcov-options '\-lp';
+    fi
+notifications:
+  webhooks: https://coveralls.io/webhook
+stages:
+  - name: Update Coverity Report
+    if: branch = master AND type = cron
+jobs:
+  include:
+    - stage: Update Coverity Report
+      name: Push latest code to scan.coverity.com for analysis
+      addons:
+        coverity_scan:
+          project:
+            name: "sobomax/libelperiodic"
+            description: "Library to run frequent periodic tasks."
+          notification_email: sobomax@sippysoft.com
+          build_command_prepend: "./configure"
+          build_command: "make all"
+          branch_pattern: master
+      before_install:
+        - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+      script:
+        - true
+      after_success:
