@@ -149,8 +149,7 @@ struct rtpp_minfo RTPP_MOD_SELF = {
 #endif
 };
 #if defined(LIBRTPPROXY)
-const static struct rtpp_minfo *_rtpp_module_ice_lite = &RTPP_MOD_SELF;
-DATA_SET(rtpp_modules, _rtpp_module_ice_lite);
+DATA_SET(rtpp_modules, RTPP_MOD_SELF);
 #endif
 
 struct wipkt {

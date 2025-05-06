@@ -42,7 +42,7 @@ RTPP_MEMDEB_APP_STATIC;
 #endif
 
 
-SET_DECLARE(rtpp_fintests, const void *);
+SET_DECLARE(rtpp_fintests, const void);
 
 int _naborts = 0;
 
@@ -51,14 +51,14 @@ typedef void (*fintest_t) (void);
 int
 rtpp_fintest()
 {
-    const void ***tp;
+    const void **tp;
 
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_APP_INIT();
 #endif
 
     SET_FOREACH(tp, rtpp_fintests) {
-        ((fintest_t)**tp)();
+        ((fintest_t)*tp)();
     }
     assert(_naborts > 0);
 

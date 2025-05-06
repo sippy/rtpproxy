@@ -115,8 +115,7 @@ struct rtpp_minfo RTPP_MOD_SELF = {
     .aapi = &acct_csv_aapi
 };
 #if defined(LIBRTPPROXY)
-const static struct rtpp_minfo *_rtpp_module_acct_csv = &RTPP_MOD_SELF;
-DATA_SET(rtpp_modules, _rtpp_module_acct_csv);
+DATA_SET(rtpp_modules, RTPP_MOD_SELF);
 #endif
 
 static const char *

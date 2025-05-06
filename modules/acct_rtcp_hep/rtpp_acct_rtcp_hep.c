@@ -99,8 +99,7 @@ struct rtpp_minfo RTPP_MOD_SELF = {
     .aapi = &acct_rtcp_hep_aapi
 };
 #if defined(LIBRTPPROXY)
-const static struct rtpp_minfo *_rtpp_module_acct_rtcp_hep = &RTPP_MOD_SELF;
-DATA_SET(rtpp_modules, _rtpp_module_acct_rtcp_hep);
+DATA_SET(rtpp_modules, RTPP_MOD_SELF);
 #endif
 
 static struct rtpp_module_priv *

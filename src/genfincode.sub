@@ -111,8 +111,7 @@ emit_fintestfunction() {
   echo   "    assert((_naborts - naborts_s) == ${i});"
   echo   "    free(tp);"
   echo   "}"
-  echo   "const static void *_${oname}_ftp = (void *)&${oname}_fintest;"
-  echo   "DATA_SET(rtpp_fintests, _${oname}_ftp);"
+  echo   "DATA_SET(rtpp_fintests, ${oname}_fintest);"
 }
 
 emit_fintestsection() {

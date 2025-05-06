@@ -136,8 +136,7 @@ struct rtpp_minfo RTPP_MOD_SELF = {
 #endif
 };
 #if defined(LIBRTPPROXY)
-const static struct rtpp_minfo *_rtpp_module_dtls_gw = &RTPP_MOD_SELF;
-DATA_SET(rtpp_modules, _rtpp_module_dtls_gw);
+DATA_SET(rtpp_modules, RTPP_MOD_SELF);
 #endif
 
 static void
