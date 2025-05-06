@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1.7-labs
+
+ARG BASE_IMAGE="quay.io/pypa/manylinux_2_28:latest"
+ARG CACHE_IMAGE="scratch"
+
+FROM ${CACHE_IMAGE} AS pipcache
+
+FROM --platform=$TARGETPLATFORM $BASE_IMAGE AS build
+LABEL maintainer="Maksym Sobolyev <sobomax@sippysoft.com>"
+
+USER root
+
+WORKDIR /src
+
+ARG PY_VER
+ARG PYTHON_CMD
+
+RUN mkdir -p /root/.cache/pip
+RUN --mount=type=bind,from=pipcache,source=/,target=/tmp/pip_cache_root \
+ test ! -d /tmp/pip_cache_root/root/.cache/pip || \
+  cp -a /tmp/pip_cache_root/root/.cache/pip /root/.cache/pip
+
+RUN --mount=type=bind,source=scripts/build,target=scripts/build \
+ sh -x scripts/build/install_depends_wheels.sh
+
+COPY --exclude=.git --exclude=.github --exclude=docker --exclude=dist \
+ --exclude=scripts . .
+
+RUN ${PYTHON_CMD} -m build --wheel
+RUN auditwheel repair dist/*.whl --wheel-dir dist_out
+
+FROM build AS test
+RUN ${PYTHON_CMD} -m pip install dist_out/*.whl
+RUN ${PYTHON_CMD} tests/t_ElPeriodic.py > /dev/null
+RUN date > dist_out/test_done.ts
+
+FROM scratch AS export
+COPY --from=build /src/dist_out /dist
+COPY --from=build /root/.cache/pip /root/.cache/pip
+COPY --from=test /src/dist_out/test_done.ts /dist

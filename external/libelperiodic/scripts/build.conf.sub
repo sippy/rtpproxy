@@ -1,0 +1,99 @@
+setup_qemu() {
+	ARCH1="${1}"
+	ARCH2="${2}"
+	${SUDO} mkdir "/usr/${ARCH1}-linux-${ARCH2}/etc"
+	${SUDO} touch "/usr/${ARCH1}-linux-${ARCH2}/etc/ld.so.cache"
+	${SUDO} mkdir "/usr/gnemul"
+	${SUDO} ln -sf "/usr/${ARCH1}-linux-${ARCH2}" "/usr/gnemul/qemu-${ARCH1}"
+}
+
+
+if [ "`id -u`" -ne 0 ]
+then
+	SUDO="sudo -H DEBIAN_FRONTEND=noninteractive"
+fi
+
+case "${COMPILER}" in
+gcc)
+	export CC="${COMPILER}"
+	PKGS="${PKGS} gcc g++"
+	;;
+gcc-i386-cross)
+	export CC="gcc"
+	CC_EXTRA_OPTS="-Werror -m32"
+	PRE_INSTALL_CMD="${SUDO} dpkg --add-architecture i386"
+	PKGS="${PKGS} gcc g++ libc6-dev:i386 libstdc++6:i386 lib32gcc-7-dev"
+	;;
+gcc-mips64-cross)
+	export CC="mips64-linux-gnuabi64-gcc"
+	export AR="mips64-linux-gnuabi64-ar"
+	export RANLIB="mips64-linux-gnuabi64-ranlib"
+	export NO_PY_EXT=1
+	POST_INSTALL_CMD="setup_qemu mips64 gnuabi64"
+	PKGS="${PKGS} gcc-mips64-linux-gnuabi64 libc-dev-mips64-cross qemu-user-static"
+	;;
+gcc-arm32-cross)
+	export CC="arm-linux-gnueabihf-gcc"
+	export AR="arm-linux-gnueabihf-ar"
+	export RANLIB="arm-linux-gnueabihf-ranlib"
+	export NO_PY_EXT=1
+	POST_INSTALL_CMD="setup_qemu arm gnueabihf"
+	PKGS="${PKGS} gcc-arm-linux-gnueabihf libc-dev-armhf-cross qemu-user-static"
+	;;
+gcc-arm64-cross)
+	export CC="aarch64-linux-gnu-gcc"
+	export AR="aarch64-linux-gnu-ar"
+	export RANLIB="aarch64-linux-gnu-ranlib"
+	export NO_PY_EXT=1
+	POST_INSTALL_CMD="setup_qemu aarch64 gnu"
+	PKGS="${PKGS} gcc-aarch64-linux-gnu libc-dev-arm64-cross qemu-user-static"
+	;;
+clang)
+	export CC="${COMPILER}"
+	export AR="llvm-ar"
+	export RANLIB="llvm-ranlib"
+	export GCOV_CMD="llvm-cov gcov"
+	PKGS="${PKGS} clang llvm-dev"
+	;;
+clang-i386-cross)
+	export CC="clang"
+	CC_EXTRA_OPTS="-Werror -m32"
+	PRE_INSTALL_CMD="${SUDO} dpkg --add-architecture i386"
+	PKGS="${PKGS} clang llvm-dev libc6-dev:i386 libstdc++6:i386 lib32gcc-7-dev"
+	;;
+gcc-9)
+	export CC="${COMPILER}"
+	export AR="gcc-ar-9"
+	export RANLIB="gcc-ranlib-9"
+	export GCOV_CMD="gcov-9"
+	PKGS="${PKGS} gcc-9 g++-9"
+	;;
+gcc-10)
+	export CC="${COMPILER}"
+	export AR="gcc-ar-10"
+	export RANLIB="gcc-ranlib-10"
+	export GCOV_CMD="gcov-10"
+	PKGS="${PKGS} gcc-10 g++-10"
+	;;
+clang-9)
+	export CC="${COMPILER}"
+	export AR="llvm-ar-9"
+	export RANLIB="llvm-ranlib-9"
+	export GCOV_CMD="llvm-cov-9 gcov"
+	PKGS="${PKGS} clang-9 llvm-9-dev libc++-9-dev libc++abi-9-dev"
+	;;
+clang-10)
+	export CC="${COMPILER}"
+	export AR="llvm-ar-10"
+	export RANLIB="llvm-ranlib-10"
+	export GCOV_CMD="llvm-cov-10 gcov"
+	PKGS="${PKGS} clang-10 llvm-10-dev libc++-10-dev libc++abi-10-dev"
+	;;
+*)
+	printf 'COMPILER="%s" is unknown / unsupported\n' "${COMPILER}" 1>&2
+	exit 1
+	;;
+esac
+
+PYTHON_CMD="${PYTHON_CMD:-"python3"}"
+#PYTHON_CMD="`which "${_PYTHON_CMD}"`"

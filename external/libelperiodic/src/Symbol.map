@@ -1,0 +1,40 @@
+/*
+ * $FreeBSD$
+ */
+
+LIBELPERIODIC_20160708115711 {
+    global: prdic_init; prdic_procrastinate; prdic_free;
+    local: *;
+};
+
+LIBELPERIODIC_20160921155900 {
+    global: prdic_getncycles_ref;
+} LIBELPERIODIC_20160708115711;
+
+LIBELPERIODIC_20170401084300 {
+    global: prdic_set_fparams;
+} LIBELPERIODIC_20160921155900;
+
+LIBELPERIODIC_20180115152300 {
+    global: prdic_addband; prdic_useband; prdic_set_epoch;
+} LIBELPERIODIC_20170401084300;
+
+LIBELPERIODIC_20180126205100 {
+    global: prdic_getload;
+} LIBELPERIODIC_20180115152300;
+
+LIBELPERIODIC_20191107120834 {
+    global: prdic_set_det_type;
+} LIBELPERIODIC_20180126205100;
+
+LIBELPERIODIC_20191115111432 {
+    global: prdic_islocked;
+} LIBELPERIODIC_20191107120834;
+
+LIBELPERIODIC_20191216121054 {
+    global: prdic_call_from_thread;
+} LIBELPERIODIC_20191115111432;
+
+LIBELPERIODIC_20191218113043 {
+    global: prdic_CFT_enable;
+} LIBELPERIODIC_20191216121054;

@@ -1,0 +1,10 @@
+exclude README
+include README.md
+include build_tools/__init__.py build_tools/CheckVersion.py
+include src/Symbol.map
+include src/elperiodic.h src/prdic_math.h src/prdic_timespecops.h \
+  src/prdic_fd.h src/prdic_pfd.h src/prdic_main_fd.h src/prdic_main_pfd.h \
+  src/prdic_main.h src/prdic_recfilter.h src/prdic_shmtrig.h \
+  src/prdic_procchain.h src/prdic_types.h src/prdic_sign.h src/prdic_sign_ctx.h \
+  src/prdic_sign_impl.h src/prdic_band.h src/prdic_inst.h src/prdic_time.h
+
