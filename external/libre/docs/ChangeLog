@@ -1,0 +1,741 @@
+2019-09-07 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.6.1
+
+Aleksei (1):
+      Update MSVS project (Remove uri_cmp) (#209)
+
+Alfred E. Heggestad (10):
+      rtmp: update timestamp after complete packet (#172)
+      rtmp: add rtmp_meta() to send metadata on stream (#173)
+      remove gai_strerror stub (#174)
+      rtmp: add function to set handlers (#180)
+      rtmp: proper handling of extended timestamps (#184)
+      docs: update copyright year (#186)
+      debian: fix some warnings and add version to SONAME (#192)
+      uri: remove uri_cmp() (#199)
+      rtmp: add rtmps (tls) support (#195)
+      Update README.md (#205)
+
+Andrey Semashev (1):
+      Fix libdir in pkgconfig (#185)
+
+Lennart Grahl (1):
+      Raise FD_EXCEPT on EPOLLHUP (fixes closed pipes) (#159)
+
+Richard Aas (9):
+      debian release 0.6.0-1
+      debian release 0.6.0-2
+      debian release 0.6.0-3
+      dns: fix dname decode buffer checks (#197)
+      regex: fix character buffer check (#198)
+      Debian release 0.6.0-4
+      tls: don't close connection on SSL_ERROR_ZERO_RETURN error (#217)
+      DNS TXT resource record support (#219)
+      debian release 0.6.0-6
+
+Steffen Vogel (1):
+      rpm: add missing file to %install section (#178)
+
+
+2018-11-24 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.6.0
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: add major,minor,patch versions to CFLAGS
+
+	* odict: add high-level odict helper functions
+
+	* rtmp: new module for Real Time Messaging Protocol (RTMP)
+
+	* uri: add uri_decode_hostport
+
+
+2018-09-01 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.9
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: Added support for 64-bit MINGW (#131)
+		 (thanks Alexander Ushakov)
+
+		 fixed inline issue when compiling VS as C++ (#143)
+		 (thanks TheSil)
+
+	* jbuf: zero out jbuf_stat on jbuf flush (#147)
+		(thanks Christian Spielberger)
+
+	* net: remove net_conn api (old and unused) (#145)
+	       fix bug in net_if_getname (#144)
+
+	* sip: get local TCP address in establish handler (#146)
+
+	* tls: add AES-GCM to DTLS-SRTP (#141)
+
+
+2018-04-20 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.8
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: update win32 files (thanks Encamy)
+
+	* aes: add support for AES-GCM (Galois Counter Mode)
+
+	* fmt: json/utf8: fix unescaping of unicode code points (#127)
+	       add utf8_byteseq
+
+	* mqueue: set non-blocking mode for read/write file descriptors (#122)
+
+	* srtp: add support for AES-GCM cipher suite (RFC 7714)
+
+
+2018-01-12 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.7
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: remove support for Cygwin (#95)
+		 remove support for splint (#96)
+
+	* mem: add secure memory functions (#102)
+
+	* net: larger buffer for net_if_list (#100)
+
+	* sipreg: add from_name (Display Name) (#104)
+
+	* tls: use per connection bio_method (fixes issue #92) (#93)
+
+
+2017-11-06 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.6
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: Update ar flags; use deterministic mode (#79)
+
+	* http: added support for chunked transfer encoding (#90)
+
+	* ice: Added functions to get selected candidates. (#72)
+	       (thanks Joachim Bauch)
+
+	* json: improved performance for mypower10 (#88)
+		(thanks Chris Owen)
+
+	* mqueue: Pack struct of mqueue messages. (#62)
+		  (thanks Joachim Bauch)
+
+	* odict: use int instead of enum to avoid vararg promotion (#81)
+
+	* tls: add dtls_recv_packet() (#89)
+
+
+2017-09-05 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.5
+
+	* Project URL: https://github.com/creytiv/re
+
+	* ice: move gathering to application
+
+	* mod: add accessor function to module list
+
+	* sipreg: Added function sipreg_laddr()
+
+	* sys: optimize rand_str() and rand_char()
+
+
+2017-06-24 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.4
+
+	* Project URL: https://github.com/creytiv/re
+
+	* rtp: add extension bit to the api
+
+
+2017-05-13 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.3
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: upgrade windows project to VS2015 (thanks Mikhail Barg)
+		 makefile improvements (thanks Lennart Grahl)
+
+	* ice: remove session object "struct ice"
+
+	* telev: add telev_set_srate (thanks Jan Hoffmann)
+
+
+2017-04-08 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.2
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: add Debian/kFreeBSD+Hurd (thanks Vasudev Kamath)
+
+	* ice: make enum ice_role type public
+
+	* main: fix build for Solaris 11
+
+	* srtcp: use unsigned for encrypted bit
+
+	* tls: add tls_openssl_context() accessor function
+
+
+2017-02-04 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.1
+
+	* Project URL: https://github.com/creytiv/re
+
+	* fmt: print directly to stream using handler (#38)
+
+	* http: HTTP client improvements (#36)
+	  - http client connection reuse
+	  - retry failed requests using fresh connections
+	  - Handle Connection: close response header
+
+
+2016-11-25 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.0
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: add Dragonfly BSD (thanks Dmitrij D. Czarkoff)
+		 remove support for Symbian OS
+
+	* aes: add support for OpenSSL version 1.1.0
+
+	* dns: dns/resolv cleanup (#11)
+	       (thanks Dmitrij D. Czarkoff)
+
+	* hmac: add support for OpenSSL version 1.1.0
+
+	* main: remove support for ActiveScheduler (SymbianOS)
+
+	* tls: add support for OpenSSL version 1.1.0
+	       add tls_set_certificate_pem()
+	       add tls_set_certificate_der()
+	       add dtls_peer()
+	       add dtls_set_peer()
+	       add tls_flush_error to dump openssl errors
+	       (thanks to Lennart Grahl)
+
+	* udp: add udp_helper_find()
+
+
+2016-06-24 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.17
+
+	* build: add USE_OPENSSL_AES and USE_OPENSSL_HMAC
+
+	* dns: add key to dns_rrlist_sort()
+	       add dns_rrlist_sort_addr
+
+	* tls: add tls_set_ciphers()
+	       add tls_set_servername()
+
+	* sip: fix for stateless SIP requests
+	       sort DNS RR entries by a fixed key
+
+	* stun: fix bug with 8-bit and 16-bit attributes on certain
+		platforms, such as MIPS
+
+
+2016-04-27 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.16
+
+	* build: fix warnings about DEFAULT_SOURCE with new glibc
+
+	* lock: fix debian build without HAVE_PTHREAD_RWLOCK
+
+	* rand: add arc4random (based on patch from Dmitrij D. Czarkoff)
+
+	* rtcp: adjust mbuf positions for RTCP_PSFB_AFB decoding
+
+	* tls: add tls_cipher_name()
+	       add dtls_set_mtu()
+
+
+2016-02-06 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.15
+
+	* build: fix warnings about DEFAULT_SOURCE with new glibc
+		 fix compile error for mingw32 (thanks Dmitrij D. Czarkoff)
+
+	* aes: handle buffers with zero length
+
+	* dns: add support for multiple DNS name-servers on Android
+	
+	* hmac: add support for HMAC-SHA256
+
+	* rtp: fix packet-loss calc when first packet has seq=0
+
+	* srtp: split error code in ENOSR and ENOMEM
+
+	* stun: keepalive: handle method BINDING only
+
+	* telev: add a maximum queue size
+
+	* uri: fix a potential read buffer overflow
+
+
+2015-10-24 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.14
+
+	* New modules: json and odict
+
+	* build: add pkg-config file (thanks to William King)
+	
+	* re_types: added a portable __REFUNC__
+
+	* fmt: add utf8_encode/decode, used by JSON module
+
+	* hash: add hash_fast() function
+
+	* json: new JavaScript Object Notation (JSON) module
+
+	* main: fix order of kqueue setting events (WRITE,READ)
+
+	* odict: new Ordered Dictionary module
+
+	* sip: reverse order of transport enumeration for SRV-records
+
+	* udp,tcp,net: add __USE_XOPEN2K (thanks Dmitrij D. Czarkoff)
+
+
+2015-07-01 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.13
+
+	* aes: added support for CommonCrypto API
+
+	* fmt: pl_float() handles negative numbers now
+
+	* hmac: added support for CommonCrypto API
+
+	* main: added support for async I/O method `kqueue'
+		this is now the default on platforms like OSX/iOS,
+		FreeBSD, NetBSD and OpenBSD.
+
+	* mem: added mem_reallocarray(), inspired by OpenBSD
+
+	* net: added net_default_gateway_get()
+
+	* tls: use RSA_generate_key_ex() instead of deprecated functions
+
+
+2015-03-16 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.12
+
+	* ice: added ice_ prefix to some functions and types
+               fix bug in priority calculations (thanks to Daniel Ma)
+
+	* mqueue: fix bug with leaking sockets on Windows-32
+
+	* rtp: fix bug with RTCP timestamp calculation
+
+	* sip: export sip_transp_laddr()
+
+	* tls: added more TLS methods
+
+
+2014-12-09 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.11
+
+	* build: export USE_TLS and USE_DTLS flags in re.mk makefile
+		 detect sysctl.h and epoll.h for multi-arch platforms
+		 dont use libresolv for openbsd
+
+	* main: check that maxfds is less than FD_SETSIZE (for select method)
+
+	* dtls: added udp-socket accessor and function to set handlers
+
+	* stun: added support for DTLS-transport
+		added doxygen comments
+
+	* tls: added function to set certificate from a string
+
+	* turn: added support for DTLS-transport
+
+
+2014-10-19 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.10
+
+	* dns: added support for using multi-threaded libresolv
+               (thanks to Thomas Klausner)
+	       (thanks to Dmitrij D. Czarkoff for testing on OpenBSD)
+	
+	* dtls: added support for sending DTLS over e.g. TURN
+		(this is done by adding 4 bytes of headroom in the packet)
+
+	* ice: added ice_set_conf()
+	       continue checklist if send fails (thanks to SnakE)
+	
+	* mbuf: added mbuf_shift()
+
+	* sdp: added sdp_media_session_rattr()
+	       added extmap decoding RFC 5285 (thanks to Jose Carlos Pujol)
+
+	* sip: added struct sip_contact and related functions
+
+	* sipevent: added support for URI in contact-user, used for GRUU
+		    (thanks to Juha Heinanen)
+	
+	* sipreg: added "gruu" to list of Supported extensions
+	
+	* sipsess: added support for URI in contact-user, used for GRUU
+		   (thanks to Juha Heinanen)
+
+
+2014-06-18 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.9
+
+	* aes: clear openssl error queue in error cases
+
+	* bfcp: disabled support for DTLS-transport
+
+	* hmac: clear openssl error queue in error cases
+
+	* http: make response parsing a bit more robust
+
+	* main: make use of openssl's multi-threading API
+
+	* rtcp: added Round-Trip Time (RTT) field to struct rtcp_stats
+                fix some rounding errors
+
+	* sa: added padding buffer to struct sa union
+
+	* sdp: improved handling of unsupported transport protocols
+	       and sub-sequence offer/answer exchanges
+
+	* srtp: added support for Secure Real-time Transport Protocol (SRTP)
+                (RFC 3711 and RFC 6188)
+
+	* sys: rand -- clear openssl error queue in error cases
+
+	* tls: added support for generating self-signed certificates
+	       added support for the SRTP-extension using openssl
+	       clear openssl error queue in error cases
+	       improved DTLS api
+
+
+2014-04-11 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.8
+
+	* build: added support for Apple in cmake
+
+	* debian: update package
+
+	* aes: added AES (Advanced Encryption Standard) wrapper
+
+	* hmac: added a stateful HMAC wrapper
+
+	* http: added a HTTP client
+
+	* ice: minor API improvements
+
+	* msg: added a Generic message component library
+	       (shared by SIP module and HTTP module)
+
+	* sdp: added sdp_media_laddr() to get local transport address
+
+	* sip: change struct sip_msg to use new struct msg_ctype
+	       fixed a bug in parsing of Via headers
+
+	* sipsess: added sipsess_set_close_headers() to set any additional
+		   SIP headers for BYE or BYE-response
+
+	* net: fixed a bug in net_rt_list() for darwin
+
+	* websock: added WebSocket Protocol (RFC 6455)
+
+
+2014-01-05 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.7
+
+	* build: added support for LLVM clang compiler
+
+	* dns: added support for getting Android nameserver address
+
+	* ice: minor debug tuning
+
+	* sipsess: only send INFO when dialog is established
+	
+
+2013-11-12 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.6
+
+	* bfcp: fix bitwise operator for bool (thanks Tomasz Ostrowski)
+
+	* dns: do not connect the UDP socket
+
+	* ice: fix deref of NULL-pointer (thanks Tomasz Ostrowski)
+
+	* rtp: add support for RTCP AFB (Application-layer Feedback)
+	       make RTCP decoding more robust
+
+	* udp: udp_connect() -- add peer address
+	       add udp_error_handler_set()
+
+
+2013-10-03 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.5
+
+	* udp: add functions for joining/leaving multicast groups
+
+	* fmt: re_regex() fix va_end robustness
+
+	* rtp: set sequence number in range 0-32767
+
+	* sa: sa_print_addr() fix build when HAVE_INET6 is not set
+
+
+2013-08-27 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.4
+
+	* base64: added base64_print()
+
+	* http: added HTTP (Hypertext Transfer Protocol) parser
+
+	* ice: cleanup and minor bug fixes
+
+	* main: added external mutex for re_main() loop
+
+	* sdp: added sdp_media_set_alt_protos()
+	       added sdp_media_proto()
+
+	* stun: make API compatible with C++
+		fix endianess-bug in STUN attributes
+
+	* sys: sys_rel_get() detect new kernels
+
+	* tls: fingerprint: add SHA-256
+	       proper error handling, call ERR_clear_error()
+	
+
+2013-05-05 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.3
+
+	* bfcp: added udp
+
+	* dns: added doxygen comments
+
+	* fmt: added str_cmp()
+
+	* mbuf: make mbuf_get_left() and mbuf_get_space() more robust
+	        added mbuf_fill()
+
+	* mod: fixed a bug in mod_find()
+
+	* mqueue: move handler to mqueue_alloc()
+
+	* sa: fix building on some Windows platforms
+
+	* sdp: added sdp_session_lbandwidth()
+	       added sdp_media_set_fmt_ignore()
+
+	* stun: make stun_msg_vencode() public
+		unlink element from attribute-list in destructor
+
+	* tcp: make fd handling more robust
+
+	* tls: added tls_get_remote_fingerprint()
+
+
+2012-08-10 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.2
+
+	* added debian build
+
+	* build: fix building for Ubuntu 12.04
+
+	* re_types: increase ERRNO values
+
+	* fmt: re_printf() add support for %m to print errno description
+	       added str_error()
+	
+	* hash: added hash_clear()
+
+	* list: added list_clear()
+
+	* net: added net_if_getlinklocal()
+
+	* rtp: added rtcp_set_srate_tx/rx()
+	       rtcp_msg_print(): add all types
+
+	* sa: added sa_print_addr()
+
+	* sdp: added media encode handler
+	       sdp_format_add(): added fmtp encode handler (breaks API)
+
+	* sip: handle merged SIP requests (482 Loop Detected)
+	       added doxygen comments
+
+	* sipevent: fix bug in handler argument
+	
+	* sys: added sys_username()
+	       added fs_mkdir() and fs_gethome()
+
+	* tcp: added tcp_conn_txqsz()
+	       fix enqueue buffer size
+	       handle scopeid for IPv6 linklocal
+
+	* tmr: added tmr_status %H handler
+	
+	* udp: handle scopeid for IPv6 linklocal
+	
+	
+2012-04-21 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.1
+
+	* updated doxygen comments for sdp and tls
+
+	* dns: dnsc_srv_set: copy DNS servers to fixed-size array
+
+	* fmt: added str_isset()
+	       added fmt_param_exists()
+
+	* rtp: fix lock protection of RTCP txstat during read
+
+	* sdp: sdp_media_align_formats: move unsupported codecs to end of list
+
+	* sip: limit startline to max 8192 bytes
+	       limit tcp buffersize to max 65536 bytes
+
+	* tcp: limit the size of the tcp send queue
+
+
+2011-12-25 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.0
+
+	* updated doxygen comments
+
+	* build: add support for CMake (thanks to Stefan Radomski)
+		 clean up OS and ARCH detection
+
+	* dns: fix potential infinite loop in dname decode
+
+	* sip: change struct sip_via transp to enum sip_transp (breaks API)
+	       added sip_transp_isladdr() and sip_transp_port()
+	       added sip_dialog_fork(), sip_dialog_lseq(),
+	       sip_dialog_established(), sip_dialog_cmp_half()
+
+	* sipevent: new module for SIP Event framework (RFC 3265, RFC 3515)
+
+	* sys: add portable sys_usleep() and sys_msleep()
+	
+	* tcp: add tcp_send_helper()
+
+	* tls: add support for DTLSv1 (Datagram TLS)
+	       tls_alloc: add tls_method and layer (breaks API)
+	       tls_tcp: use custom BIO to send data
+
+	* tmr: optimize tmr_start() where delay == 0
+
+	* turn: add stun_msg to turnc handler (breaks API)
+
+	* udp: add udp_send_helper()
+
+
+2011-09-07 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.3.0
+
+	* build support for native mingw32 (thanks to Michael Erskine)
+
+	* bfcp: new module for The Binary Floor Control Protocol (RFC 4582)
+
+	* g711: module moved to librem
+
+	* sipreg: fix a bug in failwait() calculation
+
+	* stun: add support for STUNS (secure STUN)
+
+	* tcp: added tcp_set_handlers()
+
+	* turn: added send/recv functions
+
+
+2011-05-20 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.2.0
+
+	* updated doxygen comments
+
+	* conf: added conf_get_bool()
+
+	* dns: fixed a bug in get_resolv_dns()
+
+	* fmt: added pl_x64() pl_float() fmt_gmtime()
+	
+	* hash: added hash_valid_size()
+
+	* httpauth: clean up API
+
+	* ice: many improvements and bugfixes
+
+	* main: fix a bug if re_main() fails
+
+	* mbuf: added mbuf_debug()
+
+	* natbd: fixed some race conditions and memory leaks
+
+	* rtp: added rtcp_enable_mux() (RFC 5761; RTP and RTCP multiplexing)
+
+	* sdp: fixed setting RTCP port if RTP port is zero
+
+	* sip: added support for SIP Outbound (RFC 5626)
+	       added sip_msg_hdr_count() sip_msg_xhdr_count()
+	       added sip_msg_hdr_has_value() sip_msg_xhdr_has_value()
+	       added sip_auth_reset()
+	       handle multiple authenticate headers with equal realm value
+	       fixed a bug with loose-routing in Route header
+	       fixed decoding of Via header
+	
+	* sipreg: added support for SIP Outbound (breaks API compatibility)
+
+	* sipsess: fix a bug in sipsess_reject() if fmt is NULL
+	
+	* tcp: update tcp_register_helper() (breaks API)
+
+	* tmr: removed tmrl from 'struct tmr' (breaks ABI)
+	       added tmr_isrunning()
+
+	* udp: update udp_register_helper() (breaks API)
+
+	* uri: fix optional username in uri_decode()
+
+
+2010-11-05 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.1.0
+	
+	* Initial Release

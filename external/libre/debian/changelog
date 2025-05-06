@@ -1,0 +1,287 @@
+libre (100.6.1-7) unstable; urgency=medium
+
+  * release
+
+ -- Richard Aas <richaraas@gmail.com>  Tue, 6 Feb 2024 09:00:00 +0100
+
+libre (100.6.1-6) unstable; urgency=medium
+
+  * release
+
+ -- Richard Aas <richaraas@gmail.com>  Mon, 14 Aug 2023 09:00:00 +0200
+
+libre (100.6.1-5) unstable; urgency=medium
+
+  * release
+
+ -- Richard Aas <richaraas@gmail.com>  Thu, 4 Nov 2021 15:00:00 +0100
+
+libre (100.6.1-4) unstable; urgency=medium
+
+  * release
+
+ -- Richard Aas <richaraas@gmail.com>  Thu, 2 Sep 2021 07:00:00 +0200
+
+libre (0.6.1-3) unstable; urgency=medium
+
+  * version 0.6.1-3
+
+ -- Richard Aas <richaraas@gmail.com>  Thu, 23 Apr 2020 13:00:00 +0200
+
+libre (0.6.1-2) unstable; urgency=medium
+
+  * version 0.6.1-2
+
+ -- Richard Aas <richaraas@gmail.com>  Wed, 4 Mar 2020 14:00:00 +0100
+
+libre (0.6.1-1) unstable; urgency=medium
+
+  * version 0.6.1-1
+
+ -- Richard Aas <richaraas@gmail.com>  Tue, 25 Feb 2020 09:00:00 +0100
+
+libre (0.6.1) unstable; urgency=medium
+
+  * version 0.6.1
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Sat, 7 Sep 2019 08:00:00 +0200
+
+libre (0.6.0-6) unstable; urgency=medium
+
+  * version 0.6.0-6
+
+ -- Richard Aas <richaraas@gmail.com>  Thu, 04 Jul 2019 12:00:00 +0200
+
+libre (0.6.0-4) unstable; urgency=medium
+
+  * version 0.6.0-4
+
+ -- Richard Aas <richaraas@gmail.com>  Fri, 26 Apr 2019 12:00:00 +0200
+
+libre (0.6.0-3) unstable; urgency=medium
+
+  * version 0.6.0-3
+
+ -- Richard Aas <richaraas@gmail.com>  Fri, 1 Feb 2019 12:00:00 +0100
+
+libre (0.6.0-2) unstable; urgency=medium
+
+  * version 0.6.0-2
+
+ -- Richard Aas <richaraas@gmail.com>  Tue, 11 Dec 2018 10:00:00 +0100
+
+libre (0.6.0-1) unstable; urgency=medium
+
+  * version 0.6.0-1
+
+ -- Richard Aas <richard@db.org>  Fri, 30 Nov 2018 10:00:00 +0100
+
+libre (0.6.0) unstable; urgency=medium
+
+  * version 0.6.0
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Sat, 24 Nov 2018 10:00:00 +0100
+
+libre (0.5.9) unstable; urgency=medium
+
+  * version 0.5.9
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Sat, 1 Sep 2018 10:00:00 +0200
+
+libre (0.5.8) unstable; urgency=medium
+
+  * version 0.5.8
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Fri, 20 Apr 2018 16:00:00 +0200
+
+libre (0.5.7) unstable; urgency=medium
+
+  * version 0.5.7
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Fri, 12 Jan 2018 18:00:00 +0100
+
+libre (0.5.6) unstable; urgency=medium
+
+  * version 0.5.6
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Mon, 6 Nov 2017 15:00:00 +0100
+
+libre (0.5.5) unstable; urgency=medium
+
+  * version 0.5.5
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Tue, 5 Sep 2017 12:00:00 +0200
+
+libre (0.5.4) unstable; urgency=medium
+
+  * version 0.5.4
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Sat, 24 Jun 2017 12:00:00 +0200
+
+libre (0.5.3) unstable; urgency=medium
+
+  * version 0.5.3
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Sat, 13 May 2017 12:00:00 +0200
+
+libre (0.5.2) unstable; urgency=medium
+
+  * version 0.5.2
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Sat, 08 Apr 2017 12:00:00 +0200
+
+libre (0.5.1) unstable; urgency=medium
+
+  * version 0.5.1
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Sat, 04 Feb 2017 12:00:00 +0100
+
+libre (0.5.0) unstable; urgency=medium
+
+  * version 0.5.0
+
+ -- Alfred E. Heggestad <alfred.heggestad@gmail.com>  Fri, 25 Nov 2016 18:00:00 +0100
+
+libre (0.4.17) unstable; urgency=medium
+
+  * version 0.4.17
+
+ -- Alfred E. Heggestad <aeh@db.org>  Fri, 24 Jun 2016 15:00:00 +0100
+
+libre (0.4.16) unstable; urgency=medium
+
+  * version 0.4.16
+
+ -- Alfred E. Heggestad <aeh@db.org>  Wed, 27 Apr 2016 20:00:00 +0100
+
+libre (0.4.15) unstable; urgency=medium
+
+  * version 0.4.15
+
+ -- Alfred E. Heggestad <aeh@db.org>  Sat, 06 Feb 2016 04:15:00 +0100
+
+libre (0.4.14) unstable; urgency=low
+
+  * version 0.4.14
+
+ -- Alfred E. Heggestad <aeh@db.org>  Sat, 24 Oct 2015 20:00:00 +0100
+
+libre (0.4.13-1) unstable; urgency=low
+
+  * version 0.4.13-1
+
+ -- Richard Aas <richard@db.org>  Thu, 08 Oct 2015 10:35:00 +0100
+
+libre (0.4.13) unstable; urgency=low
+
+  * version 0.4.13
+
+ -- Alfred E. Heggestad <aeh@db.org>  Wed, 01 July 2015 20:00:00 +0100
+
+libre (0.4.12) unstable; urgency=low
+
+  * version 0.4.12
+
+ -- Alfred E. Heggestad <aeh@db.org>  Mon, 16 Mar 2015 20:00:00 +0100
+
+libre (0.4.11) unstable; urgency=low
+
+  * version 0.4.11
+
+ -- Alfred E. Heggestad <aeh@db.org>  Tue, 9 Dec 2014 20:00:00 +0100
+
+libre (0.4.10-2) unstable; urgency=low
+
+  * version 0.4.10-2
+
+ -- Richard Aas <richard@db.org>  Mon, 17 Nov 2014 09:09:00 +0100
+
+libre (0.4.10-1) unstable; urgency=low
+
+  * version 0.4.10-1
+
+ -- Richard Aas <richard@db.org>  Fri, 14 Nov 2014 09:09:00 +0100
+
+libre (0.4.10) unstable; urgency=low
+
+  * version 0.4.10
+
+ -- Alfred E. Heggestad <aeh@db.org>  Sun, 19 Oct 2014 19:00:00 +0100
+
+libre (0.4.9) unstable; urgency=low
+
+  * version 0.4.9
+
+ -- Alfred E. Heggestad <aeh@db.org>  Wed, 18 Jun 2014 19:00:00 +0100
+
+libre (0.4.8) unstable; urgency=low
+
+  * version 0.4.8
+
+ -- Alfred E. Heggestad <aeh@db.org>  Fri, 11 Apr 2014 19:00:00 +0100
+
+libre (0.4.7) unstable; urgency=low
+
+  * version 0.4.7
+
+ -- Alfred E. Heggestad <aeh@db.org>  Sun, 5 Jan 2014 20:00:00 +0100
+
+libre (0.4.6) unstable; urgency=low
+
+  * version 0.4.6
+
+ -- Alfred E. Heggestad <aeh@db.org>  Tue, 12 Nov 2013 20:00:00 +0100
+
+libre (0.4.5) unstable; urgency=low
+
+  * version 0.4.5
+
+ -- Alfred E. Heggestad <aeh@db.org>  Thu, 3 Oct 2013 20:00:00 +0100
+
+libre (0.4.4) unstable; urgency=low
+
+  * version 0.4.4
+
+ -- Alfred E. Heggestad <aeh@db.org>  Tue, 27 Aug 2013 20:00:00 +0100
+
+libre (0.4.3) unstable; urgency=low
+
+  * version 0.4.3
+
+ -- Alfred E. Heggestad <aeh@db.org>  Sun, 5 May 2013 15:00:00 +0100
+
+libre (0.4.2) unstable; urgency=low
+
+  * version 0.4.2
+
+ -- Alfred E. Heggestad <aeh@db.org>  Fri, 10 Aug 2012 10:08:00 +0100
+
+libre (0.4.1) unstable; urgency=low
+
+  * version 0.4.1
+
+ -- Alfred E. Heggestad <aeh@db.org>  Sat, 21 Apr 2012 21:04:00 +0100
+
+libre (0.4.0) unstable; urgency=low
+
+  * version 0.4.0
+
+ -- Alfred E. Heggestad <aeh@db.org>  Sun, 25 Dec 2011 12:25:00 +0100
+
+libre (0.3.0) unstable; urgency=low
+
+  * version 0.3.0
+
+ -- Alfred E. Heggestad <aeh@db.org>  Wed, 7 Sept 2011 07:11:00 +0100
+
+libre (0.2.0) unstable; urgency=low
+
+  * version 0.2.0
+
+ -- Alfred E. Heggestad <aeh@db.org>  Fri, 20 May 2011 20:05:00 +0100
+
+libre (0.1.0) unstable; urgency=low
+
+  * version 0.1.0
+
+ -- Alfred E. Heggestad <aeh@db.org>  Fri, 5 Nov 2010 05:11:10 +0100
