@@ -1,28 +1,48 @@
 #!/bin/sh
 
-# Add the following lines to /etc/rc.conf to enable RTPproxy:
-#
-# rtpproxy_enable="YES"
-
 # PROVIDE: rtpproxy
 # REQUIRE: DAEMON
-# BEFORE: ser openser
+# BEFORE: kamailio opensips
+#
+# Add the following lines to /etc/rc.conf to enable RTPproxy:
+#
+# rtpproxy_enable (bool):   Set to NO by default
+#                           Set it to YES to enable rtpproxy
+# rtpproxy_laddr (string):  Set listen address
+#                           Default is "0.0.0.0"
+# rtpproxy_ctrl_socket (string): Set control socket location
+#                           Default is "/var/run/rtpproxy.sock"
+# rtpproxy_paddr (string):  Set advertised address
+#                           Default is "0.0.0.0"
+# rtpproxy_usr (string):    Set user to run rtpproxy
+#                           Default is "rtpproxy"
+# rtpproxy_grp (string):    Set group to run rtpproxy
+#                           Default is "rtpproxy"
+# rtpproxy_args (string):   Set additional command line arguments
+#                           Default is ""
 
-prefix=%%PREFIX%%
-
-. %%RC_SUBR%%
+. /etc/rc.subr
 
 name=rtpproxy
-rcvar=`set_rcvar`
-
-command="${prefix}/bin/rtpproxy"
-pidfile="/var/run/rtpproxy.pid"
+desc="rtpproxy daemon startup script"
+rcvar=rtpproxy_enable
 
 load_rc_config ${name}
 
-rtpproxy_enable=${rtpproxy_enable:-"NO"}
-rtpproxy_laddr=${rtpproxy_laddr:-"0.0.0.0"}
+prefix=/usr/local
+command=${prefix}/bin/rtpproxy
+pidfile=/var/run/rtpproxy.pid
 
-command_args="-l ${rtpproxy_laddr} -p /var/run/rtpproxy.pid"
 
-run_rc_command "${1}"
+: ${rtpproxy_enable:-"NO"}
+: ${rtpproxy_laddr:-"0.0.0.0"}
+: ${rtpproxy_ctrl_socket:-"unix:/var/run/rtpproxy.sock"}
+: ${rtpproxy_paddr:-"0.0.0.0"}
+: ${rtpproxy_usr:-"rtpproxy"}
+: ${rtpproxy_grp:-"rtpproxy"}
+: ${rtpproxy_args:-""}
+
+command_args="-u ${rtpproxy_usr}:${rtpproxy_grp} -A ${rtpproxy_paddr} -F -l ${rtpproxy_laddr} \
+  -s ${rtpproxy_ctrl_socket} -d INFO -p /var/run/rtpproxy.pid ${rtpproxy_args}"
+
+run_rc_command "$1"
