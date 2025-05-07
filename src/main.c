@@ -379,7 +379,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
             if (rtpp_static_modules_lookup(optarg) != NULL) {
                 cp = optarg;
             } else {
-                IC_ERR(1, "%s: static module is not compiled in", optarg);
+                IC_ERRX(1, "%s: static module is not compiled in", optarg);
             }
 #endif
             if (cp == NULL)
