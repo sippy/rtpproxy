@@ -656,6 +656,9 @@ enable_option_checking=no
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+LIB_SRTP2
+LIB_SSL
+LIB_CRYPTO
 OPT_CFLAGS
 SIZEOF_TIME_T
 LIBS_UNWIND
@@ -855,6 +858,7 @@ enable_lto
 enable_librtpproxy
 enable_noinst
 enable_silent
+enable_static_crypto
 enable_docs
 with_xsltproc
 with_xsltproc_flags
@@ -1518,6 +1522,7 @@ Optional Features:
   --enable-librtpproxy    Build librtpproxy for instrumentation
   --enable-noinst         Enable building noinst binaries (default is yes)
   --enable-silent         Less verbose build
+  --enable-static-crypto  Link statically against libssl, libcrypto, libsrtp2
   --enable-docs           enable generation of documentation
 
 Optional Packages:
@@ -13648,6 +13653,16 @@ esac
 fi
 
 
+# Check whether --enable-static-crypto was given.
+if test ${enable_static_crypto+y}
+then :
+  enableval=$enable_static_crypto; ENABLE_STATIC_CRYPTO=$enableval
+else case e in #(
+  e) ENABLE_STATIC_CRYPTO=no ;;
+esac
+fi
+
+
 # Checks for libraries.
 
 if test "$enable_systemd" = 'yes'
@@ -15854,6 +15869,17 @@ then
 AM_DEFAULT_VERBOSITY=0
 fi
 
+if test "$ENABLE_STATIC_CRYPTO" = yes; then
+  LIB_CRYPTO='-l:libcrypto.a'
+  LIB_SSL='-l:libssl.a'
+  LIB_SRTP2='-l:libsrtp2.a'
+else
+  LIB_CRYPTO='-lcrypto'
+  LIB_SSL='-lssl'
+  LIB_SRTP2='-lsrtp2'
+fi
+
+
 ac_config_files="$ac_config_files Makefile src/Makefile makeann/Makefile extractaudio/Makefile libexecinfo/Makefile modules/Makefile modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile modules/catch_dtmf/Makefile modules/badmod/Makefile libxxHash/Makefile libre/Makefile modules/dtls_gw/Makefile modules/ice_lite/Makefile pertools/Makefile pertools/udp_contention/Makefile libucl/Makefile python/sippy_lite/sippy/Time/clock_dtime.py doc/Makefile"
 
 
@@ -15873,6 +15899,9 @@ if test -z "$BUILD_ELPERIODIC_TRUE"; then :
 
 
 fi
+
+
+
 
 
 

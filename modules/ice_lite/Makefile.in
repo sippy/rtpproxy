@@ -135,8 +135,10 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
 LTLIBRARIES = $(noinst_LTLIBRARIES) $(pkglib_LTLIBRARIES)
-am__DEPENDENCIES_1 = $(top_srcdir)/libre/libre.la
-librtpp_ice_lite_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am__DEPENDENCIES_1 =
+am__DEPENDENCIES_2 = $(top_srcdir)/libre/libre.la \
+	$(am__DEPENDENCIES_1)
+librtpp_ice_lite_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am__objects_1 = librtpp_ice_lite_la-rtpp_ice_lite.lo
 am_librtpp_ice_lite_la_OBJECTS = $(am__objects_1)
 librtpp_ice_lite_la_OBJECTS = $(am_librtpp_ice_lite_la_OBJECTS)
@@ -148,16 +150,18 @@ librtpp_ice_lite_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(librtpp_ice_lite_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-rtpp_ice_lite_la_DEPENDENCIES = $(top_srcdir)/libre/libre.la
+rtpp_ice_lite_la_DEPENDENCIES = $(top_srcdir)/libre/libre.la \
+	$(am__DEPENDENCIES_1)
 am_rtpp_ice_lite_la_OBJECTS = rtpp_ice_lite_la-rtpp_ice_lite.lo
 rtpp_ice_lite_la_OBJECTS = $(am_rtpp_ice_lite_la_OBJECTS)
 rtpp_ice_lite_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_ice_lite_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_ice_lite_la_LDFLAGS) $(LDFLAGS) -o $@
-am__DEPENDENCIES_2 = $(top_srcdir)/libexecinfo/libexecinfo.la
+am__DEPENDENCIES_3 = $(top_srcdir)/libexecinfo/libexecinfo.la
 rtpp_ice_lite_debug_la_DEPENDENCIES =  \
-	$(top_srcdir)/libre/libre_debug.la $(am__DEPENDENCIES_2)
+	$(top_srcdir)/libre/libre_debug.la $(am__DEPENDENCIES_3) \
+	$(am__DEPENDENCIES_1)
 am__objects_2 = rtpp_ice_lite_debug_la-rtpp_ice_lite.lo
 am_rtpp_ice_lite_debug_la_OBJECTS = $(am__objects_2)
 rtpp_ice_lite_debug_la_OBJECTS = $(am_rtpp_ice_lite_debug_la_OBJECTS)
@@ -287,6 +291,9 @@ LIBS_SNDFILE = @LIBS_SNDFILE@
 LIBS_SRTP = @LIBS_SRTP@
 LIBS_UNWIND = @LIBS_UNWIND@
 LIBTOOL = @LIBTOOL@
+LIB_CRYPTO = @LIB_CRYPTO@
+LIB_SRTP2 = @LIB_SRTP2@
+LIB_SSL = @LIB_SSL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
@@ -458,9 +465,9 @@ rtpp_ice_lite_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
 
 CFLAGS_rtpp_ice_lite_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
 rtpp_ice_lite_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_ice_lite_common)
-rtpp_ice_lite_la_LIBADD = $(top_srcdir)/libre/libre.la -lcrypto
+rtpp_ice_lite_la_LIBADD = $(top_srcdir)/libre/libre.la $(LIB_CRYPTO)
 rtpp_ice_lite_debug_la_SOURCES = $(rtpp_ice_lite_la_SOURCES)
-rtpp_ice_lite_debug_la_LIBADD = $(top_srcdir)/libre/libre_debug.la $(RTPP_MEMDEB_LDADD) -lcrypto
+rtpp_ice_lite_debug_la_LIBADD = $(top_srcdir)/libre/libre_debug.la $(RTPP_MEMDEB_LDADD) $(LIB_CRYPTO)
 rtpp_ice_lite_debug_la_LDFLAGS = $(rtpp_ice_lite_la_LDFLAGS)
 rtpp_ice_lite_debug_la_CPPFLAGS = $(rtpp_ice_lite_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="ice_lite"

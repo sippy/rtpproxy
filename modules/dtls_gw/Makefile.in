@@ -136,7 +136,8 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
 LTLIBRARIES = $(noinst_LTLIBRARIES) $(pkglib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-librtpp_dtls_gw_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+librtpp_dtls_gw_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am__objects_1 = librtpp_dtls_gw_la-rtpp_dtls_gw.lo \
 	librtpp_dtls_gw_la-rtpp_dtls.lo \
 	librtpp_dtls_gw_la-rtpp_dtls_conn.lo \
@@ -151,7 +152,8 @@ librtpp_dtls_gw_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(librtpp_dtls_gw_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-rtpp_dtls_gw_la_DEPENDENCIES =
+rtpp_dtls_gw_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am_rtpp_dtls_gw_la_OBJECTS = rtpp_dtls_gw_la-rtpp_dtls_gw.lo \
 	rtpp_dtls_gw_la-rtpp_dtls.lo rtpp_dtls_gw_la-rtpp_dtls_conn.lo \
 	rtpp_dtls_gw_la-rtpp_dtls_util.lo
@@ -160,9 +162,9 @@ rtpp_dtls_gw_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_dtls_gw_la_CFLAGS) $(CFLAGS) $(rtpp_dtls_gw_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am__DEPENDENCIES_2 = $(top_srcdir)/libexecinfo/libexecinfo.la
-rtpp_dtls_gw_debug_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_2)
+am__DEPENDENCIES_3 = $(top_srcdir)/libexecinfo/libexecinfo.la
+rtpp_dtls_gw_debug_la_DEPENDENCIES = $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3)
 am__objects_2 = rtpp_dtls_gw_debug_la-rtpp_dtls_gw.lo \
 	rtpp_dtls_gw_debug_la-rtpp_dtls.lo \
 	rtpp_dtls_gw_debug_la-rtpp_dtls_conn.lo \
@@ -304,6 +306,9 @@ LIBS_SNDFILE = @LIBS_SNDFILE@
 LIBS_SRTP = @LIBS_SRTP@
 LIBS_UNWIND = @LIBS_UNWIND@
 LIBTOOL = @LIBTOOL@
+LIB_CRYPTO = @LIB_CRYPTO@
+LIB_SRTP2 = @LIB_SRTP2@
+LIB_SSL = @LIB_SSL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
@@ -475,7 +480,7 @@ rtpp_dtls_gw_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
 
 CFLAGS_rtpp_dtls_gw_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
 rtpp_dtls_gw_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_dtls_gw_common)
-rtpp_dtls_gw_la_LIBADD = -lssl -lsrtp2
+rtpp_dtls_gw_la_LIBADD = $(LIB_SSL) $(LIB_SRTP2)
 rtpp_dtls_gw_debug_la_SOURCES = $(rtpp_dtls_gw_la_SOURCES)
 rtpp_dtls_gw_debug_la_LIBADD = $(rtpp_dtls_gw_la_LIBADD) $(RTPP_MEMDEB_LDADD)
 rtpp_dtls_gw_debug_la_LDFLAGS = $(rtpp_dtls_gw_la_LDFLAGS)

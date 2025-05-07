@@ -203,7 +203,9 @@ am_libre_test_OBJECTS = libre_test-libre_test.$(OBJEXT) \
 	$(am__objects_2) $(am__objects_3)
 libre_test_OBJECTS = $(am_libre_test_OBJECTS)
 am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.la
-libre_test_DEPENDENCIES = libre_debug.la $(am__DEPENDENCIES_1)
+am__DEPENDENCIES_2 =
+libre_test_DEPENDENCIES = libre_debug.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 libre_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libre_test_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -402,6 +404,9 @@ LIBS_SNDFILE = @LIBS_SNDFILE@
 LIBS_SRTP = @LIBS_SRTP@
 LIBS_UNWIND = @LIBS_UNWIND@
 LIBTOOL = @LIBTOOL@
+LIB_CRYPTO = @LIB_CRYPTO@
+LIB_SRTP2 = @LIB_SRTP2@
+LIB_SSL = @LIB_SSL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
@@ -599,7 +604,7 @@ libre_test_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libre_test_SOURCES = libre_test.c \
   $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
 
-libre_test_LDADD = libre_debug.la $(RTPP_MEMDEB_LDADD) -lcrypto
+libre_test_LDADD = libre_debug.la $(RTPP_MEMDEB_LDADD) $(LIB_CRYPTO)
 libre_test_LDLAGS = $(LTO_FLAG)
 all: all-am
 
