@@ -140,6 +140,11 @@ AC_ARG_ENABLE([silent],
   [ENABLE_SILENT=$enableval],
   [ENABLE_SILENT=no])
 
+AC_ARG_ENABLE([static-crypto],
+  AS_HELP_STRING([--enable-static-crypto], [Link statically against libssl, libcrypto, libsrtp2]),
+  [ENABLE_STATIC_CRYPTO=$enableval],
+  [ENABLE_STATIC_CRYPTO=no])
+
 # Checks for libraries.
 
 if test "$enable_systemd" = 'yes'
@@ -474,6 +479,17 @@ then
   AM_SILENT_RULES([yes])
 fi
 
+if test "$ENABLE_STATIC_CRYPTO" = yes; then
+  LIB_CRYPTO='-l:libcrypto.a'
+  LIB_SSL='-l:libssl.a'
+  LIB_SRTP2='-l:libsrtp2.a'
+else
+  LIB_CRYPTO='-lcrypto'
+  LIB_SSL='-lssl'
+  LIB_SRTP2='-lsrtp2'
+fi
+
+
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
  modules/acct_csv/Makefile modules/acct_rtcp_hep/Makefile
@@ -504,4 +520,7 @@ AC_SUBST(LIBS_ELPERIODIC)
 AC_SUBST(LIBS_UNWIND)
 AC_SUBST(SIZEOF_TIME_T)
 AC_SUBST(OPT_CFLAGS)
+AC_SUBST(LIB_CRYPTO)
+AC_SUBST(LIB_SSL)
+AC_SUBST(LIB_SRTP2)
 AC_OUTPUT

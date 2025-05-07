@@ -14,7 +14,7 @@ rtpp_dtls_gw_la_CPPFLAGS = -DRTPP_MODULE -Dmalloc=mod_malloc \
   -Dfree=mod_free -Drealloc=mod_realloc -DRTPP_MOD_NAME="dtls_gw"
 CFLAGS_rtpp_dtls_gw_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE $(LTO_FLAG)
 rtpp_dtls_gw_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_dtls_gw_common)
-rtpp_dtls_gw_la_LIBADD = -lssl -lsrtp2
+rtpp_dtls_gw_la_LIBADD = $(LIB_SSL) $(LIB_SRTP2)
 
 rtpp_dtls_gw_debug_la_SOURCES = $(rtpp_dtls_gw_la_SOURCES)
 rtpp_dtls_gw_debug_la_LIBADD = $(rtpp_dtls_gw_la_LIBADD) $(RTPP_MEMDEB_LDADD)

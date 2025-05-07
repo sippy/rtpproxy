@@ -40,5 +40,5 @@ libre_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLAG
 libre_test_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libre_test_SOURCES = libre_test.c \
   $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
-libre_test_LDADD=libre_debug.la $(RTPP_MEMDEB_LDADD) -lcrypto
+libre_test_LDADD=libre_debug.la $(RTPP_MEMDEB_LDADD) $(LIB_CRYPTO)
 libre_test_LDLAGS=$(LTO_FLAG)
