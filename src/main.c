@@ -208,6 +208,7 @@ sighup(int sig)
     _sig_cf->slowshutdown = 1;
 }
 
+#if !defined(LIBRTPPROXY)
 static void
 ehandler(void)
 {
@@ -220,6 +221,7 @@ ehandler(void)
     unlink(_sig_cf->pid_file);
     RTPP_LOG(_sig_cf->glog, RTPP_LOG_INFO, "rtpproxy ended");
 }
+#endif
 
 #define LOPT_DSO      256
 #define LOPT_BRSYM    257
@@ -806,14 +808,14 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
               host2, bh[i], AF_INET, rmode, &errmsg);
 	    if (cfsp->bindaddr[i] == NULL)
-		IC_ERRX(1, "host2bindaddr: %s", errmsg);
+		IC_ERRX(1, "host2bindaddr(%s): %s", bh[i], errmsg);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
 	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
               host2, bh6[i], AF_INET6, rmode, &errmsg);
 	    if (cfsp->bindaddr[i] == NULL)
-		IC_ERRX(1, "host2bindaddr: %s", errmsg);
+		IC_ERRX(1, "host2bindaddr(%s): %s", bh6[i], errmsg);
 	    continue;
 	}
     }
