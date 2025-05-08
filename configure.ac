@@ -145,6 +145,16 @@ AC_ARG_ENABLE([static-crypto],
   [ENABLE_STATIC_CRYPTO=$enableval],
   [ENABLE_STATIC_CRYPTO=no])
 
+if test "$ENABLE_STATIC_CRYPTO" = yes; then
+  LIB_CRYPTO='-l:libcrypto.a'
+  LIB_SSL='-l:libssl.a'
+  LIB_SRTP2='-l:libsrtp2.a'
+else
+  LIB_CRYPTO='-lcrypto'
+  LIB_SSL='-lssl'
+  LIB_SRTP2='-lsrtp2'
+fi
+
 # Checks for libraries.
 
 if test "$enable_systemd" = 'yes'
@@ -237,7 +247,7 @@ if test "$found_libsrtp2" = yes
 then
   AC_CHECK_LIB([srtp2], [srtp_protect_mki], [_sp_nargs=3], [_sp_nargs=4])
   AC_CHECK_LIB(srtp2, srtp_init,[
-   LIBS_SRTP="-lsrtp2"
+   LIBS_SRTP="${LIB_SRTP2} ${LIB_CRYPTO}"
    # Test program to check if the srtp_protect function accepts size_t* argument
    AC_MSG_CHECKING(['srtp_protect()' last argument type])
    original_cflags="$CFLAGS"
@@ -263,7 +273,7 @@ else
   if test "$found_libsrtp" = yes
   then
     AC_CHECK_LIB(srtp, srtp_init,
-     LIBS_SRTP="-lsrtp"
+     LIBS_SRTP="${LIB_SRTP2} ${LIB_CRYPTO}"
      AC_DEFINE([ENABLE_SRTP], 1, [Define if you have libsrtp library installed]))
   fi
 fi
@@ -478,17 +488,6 @@ if test "${ENABLE_SILENT}" = "yes"
 then
   AM_SILENT_RULES([yes])
 fi
-
-if test "$ENABLE_STATIC_CRYPTO" = yes; then
-  LIB_CRYPTO='-l:libcrypto.a'
-  LIB_SSL='-l:libssl.a'
-  LIB_SRTP2='-l:libsrtp2.a'
-else
-  LIB_CRYPTO='-lcrypto'
-  LIB_SSL='-lssl'
-  LIB_SRTP2='-lsrtp2'
-fi
-
 
 AC_CONFIG_FILES([Makefile src/Makefile makeann/Makefile
  extractaudio/Makefile libexecinfo/Makefile modules/Makefile
