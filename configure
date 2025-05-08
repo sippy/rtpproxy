@@ -14185,6 +14185,8 @@ fi
 
 if test "$found_libsrtp2" = yes
 then
+  save_LIBS="${LIBS}"
+  LIBS="${LIBS} ${LIB_CRYPTO}"
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for srtp_protect_mki in -lsrtp2" >&5
 printf %s "checking for srtp_protect_mki in -lsrtp2... " >&6; }
 if test ${ac_cv_lib_srtp2_srtp_protect_mki+y}
@@ -14317,6 +14319,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
    CFLAGS="$original_cflags"
    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $srtp_protect_lastarg" >&5
 printf "%s\n" "$srtp_protect_lastarg" >&6; }
+   LIBS="${save_LIBS}"
 
 printf "%s\n" "#define SRTP_PROTECT_LASTARG ${srtp_protect_lastarg}" >>confdefs.h
 
