@@ -245,6 +245,8 @@ fi
 AC_CHECK_HEADER(srtp2/srtp.h, found_libsrtp2=yes)
 if test "$found_libsrtp2" = yes
 then
+  save_LIBS="${LIBS}"
+  LIBS="${LIBS} ${LIB_CRYPTO}"
   AC_CHECK_LIB([srtp2], [srtp_protect_mki], [_sp_nargs=3], [_sp_nargs=4])
   AC_CHECK_LIB(srtp2, srtp_init,[
    LIBS_SRTP="${LIB_SRTP2} ${LIB_CRYPTO}"
@@ -264,6 +266,7 @@ then
      [srtp_protect_lastarg=size_t], [srtp_protect_lastarg=int])
    CFLAGS="$original_cflags"
    AC_MSG_RESULT([$srtp_protect_lastarg])
+   LIBS="${save_LIBS}"
    AC_DEFINE_UNQUOTED([SRTP_PROTECT_LASTARG], [${srtp_protect_lastarg}], [Type of the last argument of the srtp_protect() API])
    AC_DEFINE_UNQUOTED([SRTP_PROTECT_NARGS], [${_sp_nargs}], [Number of srtp_protect() arguments])
    AC_DEFINE([ENABLE_SRTP2], 1, [Define if you have libsrtp2 library installed])])
