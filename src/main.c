@@ -229,6 +229,7 @@ ehandler(void)
 #define LOPT_OVL_PROT 259
 #define LOPT_CONFIG   260
 #define LOPT_FORC_ASM 261
+#define LOPT_NO_RESOL 262
 
 const static struct option longopts[] = {
     { "dso", required_argument, NULL, LOPT_DSO },
@@ -237,6 +238,7 @@ const static struct option longopts[] = {
     { "overload_prot", optional_argument, NULL, LOPT_OVL_PROT },
     { "config", required_argument, NULL, LOPT_CONFIG },
     { "force_asymmetric", no_argument, NULL, LOPT_FORC_ASM },
+    { "no_resolve", no_argument, NULL, LOPT_NO_RESOL },
     { NULL,  0,                 NULL, 0 }
 };
 
@@ -437,6 +439,10 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 
         case LOPT_FORC_ASM:
             cfsp->aforce = 1;
+            break;
+
+        case LOPT_NO_RESOL:
+            cfsp->no_resolve = 1;
             break;
 
         case 'c':
@@ -803,6 +809,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 
     for (i = 0; i < 2; i++) {
 	int rmode = AI_ADDRCONFIG | AI_PASSIVE;
+	rmode |= cfsp->no_resolve ? AI_NUMERICHOST : 0;
 	cfsp->bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
 	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,

@@ -93,11 +93,14 @@ host2bindaddr(struct rtpp_bindaddrs *pub, const char *host, int pf,
      * If user specified * then change it to NULL,
      * that will make getaddrinfo to return addr_any socket
      */
-    if (host && (strcmp(host, "*") == 0))
+    if (host != NULL && is_wildcard(host, pf))
         host = NULL;
 
-    if ((ai_flags & AI_ADDRCONFIG) && host == NULL)
-        ai_flags ^= AI_ADDRCONFIG;
+    if (host != NULL) {
+        ai_flags |= is_numhost(host, pf) ? AI_NUMERICHOST : 0;
+    } else {
+        ai_flags &= ~AI_ADDRCONFIG;
+    }
 
     if ((n = resolve(sstosa(&ia), pf, host, SERVICE, ai_flags)) != 0) {
         *ep = gai_strerror(n);

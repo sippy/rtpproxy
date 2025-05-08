@@ -345,8 +345,32 @@ extractaddr(const char *str, const char **begin, const char **end, int *pf)
 }
 
 int
+is_wildcard(const char *hostnm, int pf)
+{
+
+    if (strcmp(hostnm, "*") == 0)
+        return 1;
+    if ((pf == AF_INET) && (strcmp(hostnm, "0.0.0.0") == 0))
+        return 1;
+    if ((pf == AF_INET6) && (strcmp(hostnm, "::") == 0))
+        return 1;
+    return 0;
+}
+
+int
+is_numhost(const char *hostnm, int pf)
+{
+
+    if ((pf == AF_INET6) && (strcmp(hostnm, "::1") == 0))
+        return 1;
+    if ((pf == AF_INET) && (strcmp(hostnm, "127.0.0.1") == 0))
+        return 1;
+    return 0;
+}
+
+int
 setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
-  const char *servname)
+  const char *servname, int no_resolve)
 {
     int n;
     int rmode = AI_PASSIVE;
@@ -355,10 +379,15 @@ setbindhost(struct sockaddr *ia, int pf, const char *bindhost,
      * If user specified * then change it to NULL,
      * that will make getaddrinfo to return addr_any socket
      */
-    if (bindhost && (strcmp(bindhost, "*") == 0))
+    if (bindhost && is_wildcard(bindhost, pf))
 	bindhost = NULL;
 
-    rmode |= (bindhost != NULL) ? AI_ADDRCONFIG : 0;
+    if (bindhost != NULL) {
+        if (no_resolve || is_numhost(bindhost, pf)) {
+            rmode |= AI_NUMERICHOST;
+        }
+        rmode |= AI_ADDRCONFIG;
+    }
 
     if ((n = resolve(ia, pf, bindhost, servname, rmode)) != 0) {
 	warnx("setbindhost: %s for %s %s", gai_strerror(n), bindhost, servname);

@@ -151,7 +151,7 @@ controlfd_init_udp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
     csp->port_ctl = atoi(cp);
     i = (csp->type == RTPC_UDP6) ? AF_INET6 : AF_INET;
     ifsin = sstosa(&csp->bindaddr);
-    r = setbindhost(ifsin, i, csp->cmd_sock, cp);
+    r = setbindhost(ifsin, i, csp->cmd_sock, cp, cfsp->no_resolve);
     if (tcp != NULL)
         *tcp = ':';
     if (r != 0) {
@@ -193,7 +193,7 @@ controlfd_init_tcp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
     csp->port_ctl = atoi(cp);
     i = (csp->type == RTPC_TCP6) ? AF_INET6 : AF_INET;
     ifsin = sstosa(&csp->bindaddr);
-    r = setbindhost(ifsin, i, csp->cmd_sock, cp);
+    r = setbindhost(ifsin, i, csp->cmd_sock, cp, cfsp->no_resolve);
     if (tcp != NULL)
         *tcp = ':';
     if (r != 0) {
