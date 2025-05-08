@@ -241,7 +241,7 @@ const static struct option longopts[] = {
 #ifdef LIBRTPPROXY
 #define IC_BAIL(c, r, m, mdb) do {  \
     init_config_bail(c, r, m, mdb); \
-    return (-r);                    \
+    return (-1);                    \
 } while (0)
 #define IC_ERR(code, fmt, ...) do { \
     warn(fmt, ##__VA_ARGS__);       \
@@ -259,7 +259,7 @@ const static struct option longopts[] = {
     err(code, fmt, ##__VA_ARGS__);  \
 } while (0)
 #define IC_ERRX(code, fmt, ...) do {\
-    err(code, fmt, ##__VA_ARGS__);  \
+    errx(code, fmt, ##__VA_ARGS__); \
 } while (0)
 #endif
 
