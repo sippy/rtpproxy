@@ -33,7 +33,7 @@ do
   rm -rf "${dir}"
 done
 
-ccache --max-size=100M
+ccache --max-size=250M
 ccache --set-config=sloppiness=file_macro
 ccache --cleanup
 ccache --zero-stats
