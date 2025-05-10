@@ -1,4 +1,4 @@
-ARG BUILD_IMAGE
+ARG BUILD_IMAGE=dummy
 FROM ${BUILD_IMAGE} AS build
 FROM scratch
 COPY --from=build /rtpproxy/ccache /rtpproxy/ccache
