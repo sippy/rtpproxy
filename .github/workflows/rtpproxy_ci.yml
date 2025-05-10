@@ -450,6 +450,12 @@ jobs:
         else
           echo "LIBSSL_APKG=libssl3t64" >> $GITHUB_ENV
         fi
+        if [ "${{ matrix.base_image }}" = "ubuntu:latest" -a "${{ github.ref_name }}" = "${{ github.event.repository.default_branch }}" ]
+        then
+          echo "ADD_LATEST=true" >> "$GITHUB_ENV"
+        else
+          echo "ADD_LATEST=false" >> "$GITHUB_ENV"
+        fi
 
     - name: Extract metadata (tags, labels) for Docker
       id: meta_dkr
@@ -463,6 +469,7 @@ jobs:
           type=ref,event=pr,suffix=-${{ env.OS_TAG}}
           type=raw,value=latest-${{ env.OS_TAG}},enable={{is_default_branch}}
           type=sha,suffix=-${{ env.OS_TAG}}
+          type=raw,value=latest,enable=${{ env.ADD_LATEST == 'true' }}
 
     - name: Extract metadata (tags, labels) for GHCR
       id: meta_ghcr
@@ -476,6 +483,7 @@ jobs:
           type=ref,event=pr,suffix=-${{ env.OS_TAG}}
           type=raw,value=latest-${{ env.OS_TAG}},enable={{is_default_branch}}
           type=sha,suffix=-${{ env.OS_TAG}}
+          type=raw,value=latest,enable=${{ env.ADD_LATEST == 'true' }}
 
     - name: Build Docker image
       uses: docker/build-push-action@v6
