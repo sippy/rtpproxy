@@ -66,10 +66,13 @@ static void rtpp_refcnt_decref(struct rtpp_refcnt *, HERETYPE);
 #define RC_FLAG_HASPRDTOR  (1 << 3)
 #define RC_FLAG_PA_STDFREE (1 << 4)
 
+#define CACHE_SIZE 64
+
 struct rtpp_refcnt_priv
 {
     struct rtpp_refcnt pub;
-    _Atomic(int) cnt;
+    _Atomic(int) cnt __attribute__((aligned(CACHE_SIZE)));
+    int shared __attribute__((aligned(CACHE_SIZE)));
     rtpp_refcnt_dtor_t dtor_f;
     void *data;
     rtpp_refcnt_dtor_t pre_dtor_f;
@@ -129,7 +132,6 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
 #if defined(RTPP_DEBUG)
     pvt->pub.smethods = rtpp_refcnt_smethods;
 #endif
-    atomic_init(&pvt->cnt, 1);
     return (&pvt->pub);
 }
 
@@ -142,7 +144,6 @@ rtpp_refcnt_ctor_pa(void *pap)
 #if defined(RTPP_DEBUG)
     pvt->pub.smethods = rtpp_refcnt_smethods;
 #endif
-    atomic_init(&pvt->cnt, 1);
     pvt->flags |= RC_FLAG_PA;
     return (&pvt->pub);
 }
@@ -169,10 +170,16 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub, HERETYPE mlp)
 
     PUB2PVT(pub, pvt);
     RTPP_DBGCODE() {
-        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed) + 1;
         RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
     }
-    oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
+    if (pvt->shared) {
+        oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed) + 1;
+    } else {
+        oldcnt = 1;
+        pvt->shared = 1;
+        atomic_store_explicit(&pvt->cnt, 1, memory_order_release);
+    }
 #if RTPP_DEBUG_refcnt
     if (pvt->flags & RC_FLAG_TRACE) {
 #ifdef RTPP_DEBUG
@@ -199,7 +206,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
 
     PUB2PVT(pub, pvt);
     RTPP_DBGCODE() {
-        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed) + 1;
         RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
     }
 #if RTPP_DEBUG_refcnt
@@ -210,7 +217,11 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
      */
     flags = pvt->flags;
 #endif
-    oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release);
+    if (pvt->shared) {
+        oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release) + 1;
+    } else {
+        oldcnt = 1;
+    }
 #if RTPP_DEBUG_refcnt
     if (flags & RC_FLAG_TRACE) {
 #ifdef RTPP_DEBUG
@@ -228,7 +239,9 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
 #endif
     RTPP_DBG_ASSERT(oldcnt > 0);
     if (oldcnt == 1) {
-        atomic_thread_fence(memory_order_acquire);
+        if (pvt->shared) {
+            atomic_thread_fence(memory_order_acquire);
+        }
         flags = pvt->flags;
         if ((flags & RC_FLAG_PA) == 0) {
             if (flags & RC_FLAG_HASPRDTOR) {
@@ -272,7 +285,7 @@ rtpp_refcnt_getdata(struct rtpp_refcnt *pub)
     struct rtpp_refcnt_priv *pvt;
 
     PUB2PVT(pub, pvt);
-    RTPP_DBG_ASSERT(atomic_load(&pvt->cnt) > 0);
+    RTPP_DBG_ASSERT(atomic_load(&pvt->cnt) >= 0);
     return (pvt->data);
 }
 
@@ -299,7 +312,7 @@ rtpp_refcnt_traceen(struct rtpp_refcnt *pub, HERETYPE mlp)
 
     PUB2PVT(pub, pvt);
     pvt->flags |= RC_FLAG_TRACE;
-    int oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+    int oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed) + 1;
     fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).traceen()\n", mlp, pub, oldcnt));
 }
 
@@ -309,7 +322,7 @@ rtpp_refcnt_peek(struct rtpp_refcnt *pub)
     struct rtpp_refcnt_priv *pvt;
 
     PUB2PVT(pub, pvt);
-    return atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+    return atomic_load_explicit(&pvt->cnt, memory_order_relaxed) + 1;
 }
 #endif
 
