@@ -121,6 +121,7 @@
 #include "rtpp_stacktrace.h"
 #if defined(LIBRTPPROXY)
 #include "librtpproxy.h"
+#include "librtpp_main.h"
 #include "rtpp_module_if_static.h"
 #endif
 
@@ -930,7 +931,7 @@ int
 main(int argc, const char * const *argv)
 #else
 struct rtpp_cfg *
-rtpp_main(int argc, const char * const *argv)
+_rtpp_main(int argc, const char * const *argv)
 #endif
 {
     int i, len, pid_fd;

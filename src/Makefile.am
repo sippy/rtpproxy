@@ -179,7 +179,8 @@ rtpp_fintest_LDFLAGS = $(LTO_FLAG)
 librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \
   $(top_srcdir)/libucl/libucl.la $(XXH_DIR)/libxxHash.la \
-  rtpp_module_if_static.c rtpp_module_if_static.h
+  rtpp_module_if_static.c rtpp_module_if_static.h \
+  librtpp_main.c
 librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS) -fPIC
 librtpproxy_la_CPPFLAGS = $(rtpproxy_CPPFLAGS) -DLIBRTPPROXY
 librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
