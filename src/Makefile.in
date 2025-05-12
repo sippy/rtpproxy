@@ -230,7 +230,7 @@ am__librtpproxy_la_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_module_if_fin.c rtpp_refcnt.c \
 	rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \
 	$(top_srcdir)/libucl/libucl.la $(XXH_DIR)/libxxHash.la \
-	rtpp_module_if_static.c rtpp_module_if_static.h
+	rtpp_module_if_static.c rtpp_module_if_static.h librtpp_main.c
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 =
 am__objects_2 = $(am__objects_1)
@@ -315,7 +315,8 @@ am__objects_13 = $(am__objects_7) $(am__objects_8) $(am__objects_9) \
 	$(am__objects_10) $(am__objects_11) $(am__objects_12)
 am_librtpproxy_la_OBJECTS = $(am__objects_6) $(am__objects_13) \
 	librtpproxy_la-rtpp_refcnt.lo librtpproxy_la-rtpp_mallocs.lo \
-	librtpproxy_la-rtpp_module_if_static.lo
+	librtpproxy_la-rtpp_module_if_static.lo \
+	librtpproxy_la-librtpp_main.lo
 librtpproxy_la_OBJECTS = $(am_librtpproxy_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -1070,6 +1071,7 @@ am__depfiles_remade =  \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_timed_task_fin.Po \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_ttl_fin.Po \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_weakref_fin.Po \
+	./$(DEPDIR)/librtpproxy_la-librtpp_main.Plo \
 	./$(DEPDIR)/librtpproxy_la-main.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtp.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtp_analyze.Plo \
@@ -1675,7 +1677,8 @@ rtpp_fintest_LDFLAGS = $(LTO_FLAG)
 librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \
   $(top_srcdir)/libucl/libucl.la $(XXH_DIR)/libxxHash.la \
-  rtpp_module_if_static.c rtpp_module_if_static.h
+  rtpp_module_if_static.c rtpp_module_if_static.h \
+  librtpp_main.c
 
 librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS) -fPIC
 librtpproxy_la_CPPFLAGS = $(rtpproxy_CPPFLAGS) -DLIBRTPPROXY
@@ -2581,6 +2584,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_timed_task_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_ttl_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_weakref_fin.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-librtpp_main.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-main.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtp.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtp_analyze.Plo@am__quote@ # am--include-marker
@@ -3418,6 +3422,13 @@ librtpproxy_la-rtpp_module_if_static.lo: rtpp_module_if_static.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_module_if_static.c' object='librtpproxy_la-rtpp_module_if_static.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-rtpp_module_if_static.lo `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
+
+librtpproxy_la-librtpp_main.lo: librtpp_main.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -MT librtpproxy_la-librtpp_main.lo -MD -MP -MF $(DEPDIR)/librtpproxy_la-librtpp_main.Tpo -c -o librtpproxy_la-librtpp_main.lo `test -f 'librtpp_main.c' || echo '$(srcdir)/'`librtpp_main.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpproxy_la-librtpp_main.Tpo $(DEPDIR)/librtpproxy_la-librtpp_main.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='librtpp_main.c' object='librtpproxy_la-librtpp_main.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-librtpp_main.lo `test -f 'librtpp_main.c' || echo '$(srcdir)/'`librtpp_main.c
 
 rtpp_fintest-rtpp_fintest.o: rtpp_fintest.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_fintest_CPPFLAGS) $(CPPFLAGS) $(rtpp_fintest_CFLAGS) $(CFLAGS) -MT rtpp_fintest-rtpp_fintest.o -MD -MP -MF $(DEPDIR)/rtpp_fintest-rtpp_fintest.Tpo -c -o rtpp_fintest-rtpp_fintest.o `test -f 'rtpp_fintest.c' || echo '$(srcdir)/'`rtpp_fintest.c
@@ -7477,6 +7488,7 @@ distclean: distclean-am
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_timed_task_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_ttl_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_weakref_fin.Po
+	-rm -f ./$(DEPDIR)/librtpproxy_la-librtpp_main.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-main.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtp.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtp_analyze.Plo
@@ -7878,6 +7890,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_timed_task_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_ttl_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpproxy_debug-rtpp_weakref_fin.Po
+	-rm -f ./$(DEPDIR)/librtpproxy_la-librtpp_main.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-main.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtp.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtp_analyze.Plo
