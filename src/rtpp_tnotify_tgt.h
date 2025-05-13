@@ -25,9 +25,27 @@
  *
  */
 
+enum rtpp_tnotify_stype {
+    RTPP_TNS_LOCAL,
+    RTPP_TNS_INET,
+    RTPP_TNS_FD
+};
+
+#define RTPP_TNT_STYPE(tntp) ({int sst; \
+    switch ((tntp)->socket_type) { \
+    case RTPP_TNS_LOCAL: \
+    case RTPP_TNS_FD: \
+        sst = AF_LOCAL; \
+        break; \
+    case RTPP_TNS_INET: \
+        sst = AF_INET; \
+        break; \
+    } \
+    sst;})
+
 struct rtpp_tnotify_target {
     char *socket_name;
-    int socket_type;
+    enum rtpp_tnotify_stype socket_type;
     struct sockaddr_storage remote;
     socklen_t remote_len;
     struct sockaddr *local;

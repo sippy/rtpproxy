@@ -53,6 +53,7 @@
 #include "rtpp_tnotify_set.h"
 #include "rtpp_tnotify_tgt.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_util.h"
 
 #define RTPP_TNOTIFY_TARGETS_MAX 64
 #define RTPP_TNOTIFY_WILDCARDS_MAX 2
@@ -61,7 +62,7 @@
 
 struct rtpp_tnotify_wildcard {
     char *socket_name;
-    int socket_type;
+    enum rtpp_tnotify_stype socket_type;
     int port;
 };
 
@@ -177,18 +178,28 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
     sprefix = NULL;
     if (strncmp("unix:", sock_name, 5) == 0) {
         usock_name = sock_name + 5;
-        rtep->rtt.socket_type = AF_LOCAL;
+        rtep->rtt.socket_type = RTPP_TNS_LOCAL;
     } else if (strncmp("tcp:", sock_name, 4) == 0) {
         if (parse_hostport(sock_name + 4, host, sizeof(host), port, sizeof(port), 0, e) != 0) {
             return (-1);
         }
-        rtep->rtt.socket_type = AF_INET;
+        rtep->rtt.socket_type = RTPP_TNS_INET;
+#if defined(LIBRTPPROXY)
+    } else if (strncmp("fd:", sock_name, 3) == 0) {
+        int fd;
+        if (atoi_safe(sock_name + 3, &fd) != ATOI_OK || fd < 0) {
+            return (-1);
+        }
+        rtep->rtt.socket_type = RTPP_TNS_FD;
+        rtep->rtt.fd = fd;
+#endif
     } else {
         sprefix = "unix:";
         usock_name = sock_name;
-        rtep->rtt.socket_type = AF_LOCAL;
+        rtep->rtt.socket_type = RTPP_TNS_LOCAL;
     }
-    if (rtep->rtt.socket_type == AF_UNIX) {
+    switch (rtep->rtt.socket_type) {
+    case RTPP_TNS_LOCAL:
         if (strlen(usock_name) == 0) {
             *e = "Timeout notification socket name too short";
             return (-1);
@@ -200,12 +211,16 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
         ifsun->sun_len = strlen(ifsun->sun_path);
 #endif
         rtep->rtt.remote_len = sizeof(struct sockaddr_un);
-    } else if (rtep->rtt.socket_type == AF_INET && strcmp(host, CC_SELF_STR) == 0) {
-        rtep->rtw.socket_type = AF_INET;
-        rtep->rtw.port = atoi(port);
-        snp = &rtep->rtt.socket_name;
-        rval = 1;
-    } else {
+        break;
+
+    case RTPP_TNS_INET:
+        if (strcmp(host, CC_SELF_STR) == 0) {
+            rtep->rtw.socket_type = RTPP_TNS_INET;
+            rtep->rtw.port = atoi(port);
+            snp = &rtep->rtt.socket_name;
+            rval = 1;
+            break;
+        }
         ifsa = sstosa(&rtep->rtt.remote);
         n = resolve(ifsa, AF_INET, host, port, 0);
         if (n != 0) {
@@ -213,6 +228,9 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
             return (-1);
         }
         rtep->rtt.remote_len = SA_LEN(ifsa);
+        break;
+    default:
+        break;
     }
     int snlen = (sprefix == NULL) ? strlen(sock_name) :
                                     strlen(sprefix) + strlen(usock_name);
@@ -261,8 +279,12 @@ rtpp_tnotify_set_append(struct rtpp_tnotify_set *pub,
              goto e1;
         }
         memcpy(tntp, &rte.rtt, sizeof(struct rtpp_tnotify_target));
-        tntp->connected = 0;
-        tntp->fd = -1;
+        if (tntp->socket_type != RTPP_TNS_FD) {
+            tntp->connected = 0;
+            tntp->fd = -1;
+        } else {
+            tntp->connected = 1;
+        }
         pvt->tp[pvt->tp_len] = tntp;
         pvt->tp_len += 1;
     } else {
@@ -321,6 +343,7 @@ get_tp4wp(struct rtpp_tnotify_set_priv *pvt, struct rtpp_tnotify_wildcard *wp,
             continue;
         return (tp);
     }
+    assert(wp->socket_type != RTPP_TNS_FD);
     /* Nothing found, crank up a new entry */
     if (pvt->tp_len == RTPP_TNOTIFY_TARGETS_MAX) {
         return (NULL);
@@ -375,11 +398,14 @@ rtpp_tnotify_set_lookup(struct rtpp_tnotify_set *pub, const char *socket_name,
         for (i = 0; i < pvt->tp_len; i++) {
             if (pvt->tp[i]->socket_name == NULL)
                 continue;
-            if (pvt->tp[i]->socket_type != AF_LOCAL ||
+            if (pvt->tp[i]->socket_type != RTPP_TNS_LOCAL ||
               strcmp(pvt->tp[i]->socket_name + 5, socket_name) != 0)
                 continue;
             return (pvt->tp[i]);
         }
+        return (NULL);
+    } else if (sep - socket_name == 2 && memcmp(socket_name, "fd", 2) == 0) {
+        /* RTPP_TNS_FD can only match directly */
         return (NULL);
     }
     /* Handle wildcards */
@@ -387,7 +413,7 @@ rtpp_tnotify_set_lookup(struct rtpp_tnotify_set *pub, const char *socket_name,
         wp = pvt->wp[i];
         if (strcmp(wp->socket_name, socket_name) != 0)
             continue;
-        if (ccaddr != NULL && wp->socket_type != ccaddr->sa_family)
+        if (ccaddr != NULL && RTPP_TNT_STYPE(wp) != ccaddr->sa_family)
             continue;
         return (get_tp4wp(pvt, wp, ccaddr, laddr));
     }
