@@ -73,8 +73,8 @@ CONCAT(CONCAT(extern void *_, MEMDEB_APP), _memdeb);
 #define vasprintf(pp, fmt, vl) rtpp_memdeb_vasprintf((pp), (fmt), \
   MEMDEB_SYM, HEREVAL, (vl))
 #undef memcpy
-#define memcpy(dp, sp, len) rtpp_memdeb_memcpy((dp), (sp), (len), \
-  MEMDEB_SYM, HEREVAL)
+#define memcpy(dp, sp, len) rtpp_memdeb_memcpy((void *)(dp), (void *)(sp), \
+  (len), MEMDEB_SYM, HEREVAL)
 #define calloc(nm, sz) rtpp_memdeb_calloc((nm), (sz), MEMDEB_SYM, HEREVAL)
 
 void *rtpp_memdeb_malloc(size_t, void *, HERETYPE) RTPP_EXPORT;
