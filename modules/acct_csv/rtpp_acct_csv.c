@@ -80,6 +80,7 @@ struct rtpp_module_priv {
    struct rtpp_mod_acct_face o;
    struct rtpp_mod_acct_face a;
    struct rtpp_sbuf *sbuf;
+   struct rtpp_minfo *mself;
 };
 
 /* Bump this when some changes are made */
@@ -87,7 +88,8 @@ struct rtpp_module_priv {
 
 #define HNAME_REFRESH_IVAL	1.0
 
-static struct rtpp_module_priv *rtpp_acct_csv_ctor(const struct rtpp_cfg *);
+static struct rtpp_module_priv *rtpp_acct_csv_ctor(const struct rtpp_cfg *,
+  struct rtpp_minfo *);
 static void rtpp_acct_csv_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_csv_do(struct rtpp_module_priv *, struct rtpp_acct *);
 static off_t rtpp_acct_csv_lockf(int);
@@ -103,7 +105,7 @@ static const struct rtpp_acct_handlers acct_csv_aapi = {
     .on_session_end = AAPI_FUNC(rtpp_acct_csv_do, rtpp_acct_OSIZE())
 };
 
-struct rtpp_minfo RTPP_MOD_SELF = {
+const struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "acct_csv",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 1,
@@ -112,7 +114,8 @@ struct rtpp_minfo RTPP_MOD_SELF = {
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM,
 #endif
-    .aapi = &acct_csv_aapi
+    .aapi = &acct_csv_aapi,
+    .fn = &(struct rtpp_minfo_fset){0},
 };
 #if defined(LIBRTPPROXY)
 DATA_SET(rtpp_modules, RTPP_MOD_SELF);
@@ -208,16 +211,18 @@ rtpp_acct_csv_open(struct rtpp_module_priv *pvt)
     }
     pvt->fd = open(pvt->fname, O_WRONLY | O_APPEND | O_CREAT, DEFFILEMODE);
     if (pvt->fd == -1) {
-        mod_elog(RTPP_LOG_ERR, "can't open '%s' for writing", pvt->fname);
+        RTPP_ELOG(pvt->mself->log, RTPP_LOG_ERR, "can't open '%s' for writing",
+          pvt->fname);
         goto e0;
     }
     pos = rtpp_acct_csv_lockf(pvt->fd);
     if (pos < 0) {
-        mod_elog(RTPP_LOG_ERR, "can't lock '%s'", pvt->fname);
+        RTPP_ELOG(pvt->mself->log, RTPP_LOG_ERR, "can't lock '%s'", pvt->fname);
         goto e1;
     }
     if (fstat(pvt->fd, &pvt->stt) < 0) {
-        mod_elog(RTPP_LOG_ERR, "can't get stats for '%s'", pvt->fname);
+        RTPP_ELOG(pvt->mself->log, RTPP_LOG_ERR, "can't get stats for '%s'",
+          pvt->fname);
         goto e2;
     }
     if (pvt->stt.st_size == 0) {
@@ -239,7 +244,7 @@ e0:
 }
 
 static struct rtpp_module_priv *
-rtpp_acct_csv_ctor(const struct rtpp_cfg *cfsp)
+rtpp_acct_csv_ctor(const struct rtpp_cfg *cfsp, struct rtpp_minfo *mself)
 {
     struct rtpp_module_priv *pvt;
 
@@ -265,6 +270,7 @@ rtpp_acct_csv_ctor(const struct rtpp_cfg *cfsp)
     if (rtpp_acct_csv_open(pvt) == -1) {
         goto e2;
     }
+    pvt->mself = mself;
     return (pvt);
 
 e2:

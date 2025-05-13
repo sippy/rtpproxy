@@ -39,4 +39,4 @@ struct rtpp_dtls {
     METHOD_ENTRY(rtpp_dtls_newconn, newconn);
 };
 
-struct rtpp_dtls *rtpp_dtls_ctor(const struct rtpp_cfg *);
+struct rtpp_dtls *rtpp_dtls_ctor(const struct rtpp_cfg *, struct rtpp_minfo *);

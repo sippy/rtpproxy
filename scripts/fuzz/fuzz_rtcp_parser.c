@@ -22,11 +22,11 @@ static const struct rtpp_minfo_fset minfo_fset = {
 __attribute__((constructor)) void
 fuzz_rtcp_parser_init()
 {
-    struct rtpp_minfo *mip;
+    const struct rtpp_minfo *mip;
 
     mip = rtpp_static_modules_lookup("acct_rtcp_hep");
     assert(mip != NULL);
-    mip->fn = &minfo_fset;
+    *mip->fn = minfo_fset;
 }
 
 int

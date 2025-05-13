@@ -147,6 +147,7 @@ struct rtpp_dtls_conn_priv {
     char fingerprint[FP_DIGEST_STRBUF_LEN];
     uint32_t ssrc;
     struct rtpp_timed_task *ttp;
+    struct rtpp_minfo *mself;
 };
 
 static BIO_METHOD *bio_method_udp(void);
@@ -170,7 +171,7 @@ static enum rtpp_dtls_mode rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *,
 static void rtpp_dtls_conn_godead(struct rtpp_dtls_conn *);
 
 static int tls_srtp_keyinfo(SSL *, const struct srtp_crypto_suite **,
-  uint8_t *, size_t, uint8_t *, size_t);
+  uint8_t *, size_t, uint8_t *, size_t, struct rtpp_log *);
 static int tls_peer_fingerprint(SSL *, char *, size_t);
 
 DEFINE_SMETHODS(rtpp_dtls_conn,
@@ -199,7 +200,7 @@ rtpp_dtls_conn_dtor(struct rtpp_dtls_conn_priv *pvt)
 
 struct rtpp_dtls_conn *
 rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
-  struct rtpp_stream *dtls_strmp)
+  struct rtpp_stream *dtls_strmp, struct rtpp_minfo *mself)
 {
     struct rtpp_dtls_conn_priv *pvt;
 
@@ -242,6 +243,7 @@ rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
     pvt->streams_wrt = cfsp->rtp_streams_wrt;
     pvt->timed_cf = cfsp->rtpp_timed_cf;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_dtls_conn_dtor);
+    pvt->mself = mself;
     return (&(pvt->pub));
 e5:
     BIO_free(pvt->sbio_out);
@@ -291,19 +293,19 @@ rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *self,
     }
     my_mode = rtpp_dtls_conn_pickmode(rdfsp->peer_mode);
     if (my_mode != pvt->mode && pvt->state != RDC_INIT) {
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "%p: cannot change mode "
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "%p: cannot change mode "
           "from %d to %d when in the %d state", self, pvt->mode, my_mode,
           pvt->state);
         goto failed;
     }
     if (rdfsp->algorithm.len != FP_DIGEST_ALG_LEN ||
       memcmp(rdfsp->algorithm.s, FP_DIGEST_ALG, FP_DIGEST_ALG_LEN) != 0) {
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "unsupported fingerprint "
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "unsupported fingerprint "
           "algorithm: \"%.*s\"", FMTSTR(&rdfsp->algorithm));
         goto failed;
     }
     if (rdfsp->fingerprint->len != FP_FINGERPRINT_STR_LEN) {
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "invalid fingerprint "
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "invalid fingerprint "
           "length: \"%lu\"", (unsigned long)rdfsp->fingerprint->len);
         goto failed;
     }
@@ -312,7 +314,7 @@ rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *self,
     if (rdfsp->ssrc != NULL) {
         uint32_t ssrc = strtoul(rdfsp->ssrc->s, &ep, 10);
         if (ep == rdfsp->ssrc->s || ep[0] != '\0') {
-            RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "invalid ssrc: %.*s",
+            RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "invalid ssrc: %.*s",
               FMTSTR(rdfsp->ssrc));
             goto failed;
         }
@@ -335,7 +337,7 @@ failed:
 
 static srtp_t
 setup_srtp_stream(const struct srtp_crypto_suite *suite, uint8_t *key,
-  uint32_t ssrc)
+  uint32_t ssrc, struct rtpp_log *log)
 {
     srtp_policy_t policy;
     srtp_t srtp_ctx;
@@ -358,7 +360,7 @@ setup_srtp_stream(const struct srtp_crypto_suite *suite, uint8_t *key,
 
     err = srtp_create(&srtp_ctx, &policy);
     if (err != srtp_err_status_ok || srtp_ctx == NULL) {
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "srtp_create() failed");
+        RTPP_LOG(log, RTPP_LOG_ERR, "srtp_create() failed");
         return (NULL);
     }
     return (srtp_ctx);
@@ -391,7 +393,7 @@ rtpp_dtls_conn_dtls_recv(struct rtpp_dtls_conn *self,
 
     r = BIO_write(pvt->sbio_in, pktp->data.buf, pktp->size);
     if (r <= 0) {
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "receive bio write error: %i", r);
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "receive bio write error: %i", r);
         ERR_clear_error();
         goto out;
     }
@@ -408,7 +410,7 @@ rtpp_dtls_conn_dtls_recv(struct rtpp_dtls_conn *self,
         }
 
 #if 0
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "%s: state=0x%04x",
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_DBUG, "%s: state=0x%04x",
           "server", SSL_get_state(pvt->ssl_ctx));
 #endif
 
@@ -417,7 +419,7 @@ rtpp_dtls_conn_dtls_recv(struct rtpp_dtls_conn *self,
             goto out;
 
         err = tls_srtp_keyinfo(pvt->ssl_ctx, &suite, cli_key, sizeof(cli_key),
-          srv_key, sizeof(srv_key));
+          srv_key, sizeof(srv_key), pvt->mself->log);
         if (err != 0) {
             goto godead;
         }
@@ -430,23 +432,25 @@ rtpp_dtls_conn_dtls_recv(struct rtpp_dtls_conn *self,
 
         if (pvt->fingerprint[0] != '\0' &&
           strcmp(pvt->fingerprint, srv_fingerprint) != 0) {
-            RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "fingerprint verification failed");
+            RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "fingerprint verification failed");
             goto godead;
         }
 
         pvt->srtp_ctx_out = setup_srtp_stream(suite,
-          pvt->mode == RTPP_DTLS_ACTIVE ? cli_key : srv_key, SSRC_BAD);
+          pvt->mode == RTPP_DTLS_ACTIVE ? cli_key : srv_key, SSRC_BAD,
+          pvt->mself->log);
         if (pvt->srtp_ctx_out == NULL) {
             goto godead;
         }
         pvt->srtp_ctx_in = setup_srtp_stream(suite,
-          pvt->mode == RTPP_DTLS_ACTIVE ? srv_key : cli_key, pvt->ssrc);
+          pvt->mode == RTPP_DTLS_ACTIVE ? srv_key : cli_key, pvt->ssrc,
+          pvt->mself->log);
         if (pvt->srtp_ctx_in == NULL) {
             goto godead;
         }
 
 #if 0
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG,
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_DBUG,
           "DTLS connection is established with %s key: %s", suite->can_name,
             pvt->fingerprint);
 #endif
@@ -454,7 +458,7 @@ rtpp_dtls_conn_dtls_recv(struct rtpp_dtls_conn *self,
     }
     goto out;
 godead:
-    RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "DTLS connection is dead: %p",
+    RTPP_LOG(pvt->mself->log, RTPP_LOG_DBUG, "DTLS connection is dead: %p",
       pvt);
     pvt->state = RDC_DEAD;
 out:
@@ -629,20 +633,20 @@ bio_method_udp(void)
 }
 
 static int
-print_error(const char *str, size_t len, void *unused)
+tls_print_error(const char *str, size_t len, void *arg)
 {
-    (void)unused;
-    RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "%.*s", (int)len, str);
+    struct rtpp_log *log = arg;
+    RTPP_LOG(log, RTPP_LOG_ERR, "%.*s", (int)len, str);
 
     return 1;
 }
 
 
 static void
-tls_flush_error(void)
+tls_flush_error(struct rtpp_log *log)
 {
 
-    ERR_print_errors_cb(print_error, NULL);
+    ERR_print_errors_cb(tls_print_error, log);
 }
 
 static int
@@ -658,14 +662,14 @@ tls_accept(struct rtpp_dtls_conn_priv *pvt)
     if (r <= 0) {
         const int ssl_err = SSL_get_error(pvt->ssl_ctx, r);
 
-        tls_flush_error();
+        tls_flush_error(pvt->mself->log);
 
         switch (ssl_err) {
         case SSL_ERROR_WANT_READ:
             break;
 
         default:
-            RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "accept error: %i",
+            RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "accept error: %i",
               ssl_err);
             return (-1);
         }
@@ -744,14 +748,14 @@ tls_connect(struct rtpp_dtls_conn_priv *pvt)
     if (r <= 0) {
         const int ssl_err = SSL_get_error(pvt->ssl_ctx, r);
 
-        tls_flush_error();
+        tls_flush_error(pvt->mself->log);
 
         switch (ssl_err) {
         case SSL_ERROR_WANT_READ:
             break;
 
         default:
-            RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "connect error: %i",
+            RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "connect error: %i",
               ssl_err);
             return (-1);
         }
@@ -775,7 +779,7 @@ mem_secclean(void *data, size_t size)
 static int
 tls_srtp_keyinfo(SSL *ssl_ctx, const struct srtp_crypto_suite **suite,
   uint8_t *cli_key, size_t cli_key_size, uint8_t *srv_key,
-  size_t srv_key_size)
+  size_t srv_key_size, struct rtpp_log *log)
 {
     static const char *label = "EXTRACTOR-dtls_srtp";
     size_t size;
@@ -785,7 +789,7 @@ tls_srtp_keyinfo(SSL *ssl_ctx, const struct srtp_crypto_suite **suite,
     sel = SSL_get_selected_srtp_profile(ssl_ctx);
     if (!sel) {
         ERR_clear_error();
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR,
+        RTPP_LOG(log, RTPP_LOG_ERR,
           "SSL_get_selected_srtp_profile() failed");
         return (-1);
     }
@@ -834,7 +838,7 @@ tls_srtp_keyinfo(SSL *ssl_ctx, const struct srtp_crypto_suite **suite,
     if (SSL_export_keying_material(ssl_ctx, keymat, 2 * size, label,
       strlen(label), NULL, 0, 0) != 1) {
         ERR_clear_error();
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR,
+        RTPP_LOG(log, RTPP_LOG_ERR,
           "SSL_export_keying_material() failed");
         return (-1);
     }

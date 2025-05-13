@@ -65,9 +65,11 @@
 struct rtpp_module_priv {
    struct rtpp_sbuf *sbp;
    struct hep_ctx *ctx;
+   struct rtpp_minfo *mself;
 };
 
-static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(const struct rtpp_cfg *);
+static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(const struct rtpp_cfg *,
+  struct rtpp_minfo *);
 static void rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct_rtcp *);
 static struct rtpp_module_conf *rtpp_acct_rtcp_hep_get_mconf(void);
@@ -85,7 +87,7 @@ static const struct rtpp_acct_handlers acct_rtcp_hep_aapi = {
     .on_rtcp_rcvd = AAPI_FUNC(rtpp_acct_rtcp_hep_do, rtpp_acct_rtcp_OSIZE())
 };
 
-struct rtpp_minfo RTPP_MOD_SELF = {
+const struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "acct_rtcp_hep",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 2,
@@ -96,14 +98,15 @@ struct rtpp_minfo RTPP_MOD_SELF = {
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM,
 #endif
-    .aapi = &acct_rtcp_hep_aapi
+    .aapi = &acct_rtcp_hep_aapi,
+    .fn = &(struct rtpp_minfo_fset){0},
 };
 #if defined(LIBRTPPROXY)
 DATA_SET(rtpp_modules, RTPP_MOD_SELF);
 #endif
 
 static struct rtpp_module_priv *
-rtpp_acct_rtcp_hep_ctor(const struct rtpp_cfg *cfsp)
+rtpp_acct_rtcp_hep_ctor(const struct rtpp_cfg *cfsp, struct rtpp_minfo *mself)
 {
     struct rtpp_module_priv *pvt;
 
@@ -115,6 +118,7 @@ rtpp_acct_rtcp_hep_ctor(const struct rtpp_cfg *cfsp)
     if (pvt->sbp == NULL) {
         goto e1;
     }
+    pvt->mself = mself;
     return (pvt);
 
 #if 0
@@ -186,26 +190,26 @@ rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *pvt, struct rtpp_acct_rtcp *rarp)
     ri.time_sec = SEC(&rtimeval);
     ri.time_usec = USEC(&rtimeval);
     if (hep_gen_fill(pvt->ctx, &ri) < 0) {
-      mod_log(RTPP_LOG_ERR, "hep_gen_fill() failed");
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "hep_gen_fill() failed");
         goto out;
     }
 
     if (hep_gen_append(pvt->ctx, HEP_VID_GEN, HEP_TID_CID, rarp->call_id,
       strlen(rarp->call_id)) < 0) {
-        mod_log(RTPP_LOG_ERR, "hep_gen_append() failed");
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "hep_gen_append() failed");
         goto out;
     }
 
     rtpp_sbuf_reset(pvt->sbp);
     rval = rtcp2json(pvt->sbp, rarp->pkt->data.buf, rarp->pkt->size);
     if (rval < 0) {
-        mod_log(RTPP_LOG_ERR, "rtcp2json() failed: %d", rval);
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "rtcp2json() failed: %d", rval);
         goto out;
     }
 
     rval = send_hep(pvt->ctx, &ri, pvt->sbp->bp, RS_ULEN(pvt->sbp));
     if (rval < 0) {
-        mod_log(RTPP_LOG_INFO, "send_hep() failed: %d", rval);
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_INFO, "send_hep() failed: %d", rval);
     }
 
 out:

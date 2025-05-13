@@ -88,7 +88,7 @@
 #include "ice/ice.h"
 
 struct rtpp_module_priv {
-    /* Empty */
+    struct rtpp_minfo *mself;
 };
 
 struct ila_sock {
@@ -115,9 +115,11 @@ struct ice_lite_agent_cfg {
     _Atomic(bool) completed;
     struct mux_demux_ctx rtcp_dmx_ctx;
     struct mux_demux_ctx rtcp_mx_ctx;
+    struct rtpp_minfo *mself;
 };
 
-static struct rtpp_module_priv *rtpp_ice_lite_ctor(const struct rtpp_cfg *);
+static struct rtpp_module_priv *rtpp_ice_lite_ctor(const struct rtpp_cfg *,
+  struct rtpp_minfo *);
 static void rtpp_ice_lite_dtor(struct rtpp_module_priv *);
 static void rtpp_ice_lite_worker(const struct rtpp_wthrdata *);
 static int rtpp_ice_lite_handle_command(struct rtpp_module_priv *,
@@ -133,7 +135,7 @@ void *_libre_memdeb;
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
-struct rtpp_minfo RTPP_MOD_SELF = {
+const struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "ice_lite",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 5,
@@ -144,6 +146,7 @@ struct rtpp_minfo RTPP_MOD_SELF = {
         .queue_size = RTPQ_MEDIUM_CB_LEN,
      },
     .capi = &(const struct rtpp_cplane_handlers){.ul_subc_handle = rtpp_ice_lite_handle_command},
+    .fn = &(struct rtpp_minfo_fset){0},
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM
 #endif
@@ -161,7 +164,9 @@ struct wipkt {
 void
 re_dbg_printf(int level, const char *buf, int len)
 {
-    mod_log(level, "%.*s", len, buf);
+#if defined(RTPP_DEBUG)
+    fprintf(stderr, "%.*s", len, buf);
+#endif
 }
 
 int
@@ -273,7 +278,7 @@ ice_lite_data_dtor(struct ice_lite_agent_cfg *pvt)
     mem_deref(pvt->mb);
     mem_deref(pvt->sock);
     mem_deref(pvt->icem);
-    RC_DECREF(RTPP_MOD_SELF.module_rcnt);
+    RC_DECREF(pvt->mself->super_rcnt);
 }
 
 int
@@ -285,7 +290,7 @@ udp_local_get(const struct udp_sock *us, struct sa *local)
 }
 
 static struct ice_lite_agent_cfg *
-ice_lite_data_ctor(int lufrag_len, int lpwd_len)
+ice_lite_data_ctor(int lufrag_len, int lpwd_len, struct rtpp_minfo *mself)
 {
     struct ice_lite_agent_cfg *ila_c;
     rtpp_str_mutble_t lufrag, lpwd;
@@ -321,7 +326,8 @@ ice_lite_data_ctor(int lufrag_len, int lpwd_len)
         goto e5;
     if (pthread_mutex_init(&ila_c->state_lock, NULL) != 0)
         goto e6;
-    RC_INCREF(RTPP_MOD_SELF.module_rcnt);
+    RC_INCREF(mself->super_rcnt);
+    ila_c->mself = mself;
     CALL_SMETHOD(ila_c->rcnt, attach, (rtpp_refcnt_dtor_t)ice_lite_data_dtor, ila_c);
     return (ila_c);
 e6:
@@ -369,7 +375,7 @@ ice_lite_candidate(struct ice_lite_agent_cfg *ila_c, int c, const rtpp_str_t *v)
 {
     struct rtpp_command_argsp args = {.c = c, .v = v};
     pthread_mutex_lock(&ila_c->state_lock);
-    int err = rtpp_cand_decode(ila_c->icem, &args, RTPP_MOD_SELF.log);
+    int err = rtpp_cand_decode(ila_c->icem, &args, ila_c->mself->log);
     pthread_mutex_unlock(&ila_c->state_lock);
     return (err);
 }
@@ -442,7 +448,7 @@ ice_lite_activate(struct rtpp_module_priv *pvt, const struct rtpp_subc_ctx *ctxp
     struct ice_lite_agent_cfg *ila_c;
     struct packet_processor_if stun_poi;
 
-    ila_c = ice_lite_data_ctor(lufrag_len, lpwd_len);
+    ila_c = ice_lite_data_ctor(lufrag_len, lpwd_len, pvt->mself);
     if (ila_c == NULL) {
         goto e0;
     }
@@ -526,8 +532,8 @@ rtpp_ice_lite_handle_command(struct rtpp_module_priv *pvt,
     struct rtpp_stream *ice_strmp;
 
     if (argc < 1) {
-        mod_log(RTPP_LOG_ERR, "expected at least 1 parameter: %d",
-          argc);
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR,
+          "expected at least 1 parameter: %d", argc);
         return (-1);
     }
     {static int b=0; while (b);}
@@ -644,7 +650,7 @@ rtpp_ice_lite_handle_command(struct rtpp_module_priv *pvt,
     return (0);
 
 invalmode:
-    RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "invalid mode: \"%s\"",
+    RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "invalid mode: \"%s\"",
       argv[0].s);
     return (-1);
 e0:
@@ -687,7 +693,7 @@ rtpp_ice_lite_enqueue(const struct pkt_proc_ctx *pktx)
     wip->ila_c = ila_c;
     RTPP_OBJ_INCREF(pktx->strmp_in);
     wip->strmp_in = pktx->strmp_in;
-    if (rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q) != 0) {
+    if (rtpp_queue_put_item(wi, ila_c->mself->wthr.mod_q) != 0) {
         RTPP_OBJ_DECREF(ila_c);
         RTPP_OBJ_DECREF(pktx->strmp_in);
         RTPP_OBJ_DECREF(wi);
@@ -715,7 +721,7 @@ rtpp_ice_lite_rtcp_mx(const struct pkt_proc_ctx *pktx)
 }
 
 static struct rtpp_module_priv *
-rtpp_ice_lite_ctor(const struct rtpp_cfg *cfsp)
+rtpp_ice_lite_ctor(const struct rtpp_cfg *cfsp, struct rtpp_minfo *mself)
 {
     struct rtpp_module_priv *pvt;
 
@@ -724,8 +730,9 @@ rtpp_ice_lite_ctor(const struct rtpp_cfg *cfsp)
         goto e0;
     }
 #ifdef RTPP_CHECK_LEAKS
-    _libre_memdeb = *rtpp_module.memdeb_p;
+    _libre_memdeb = *mself->memdeb_p;
 #endif
+    pvt->mself = mself;
     return (pvt);
 
 e0:

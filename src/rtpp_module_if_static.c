@@ -30,15 +30,15 @@
 #include "rtpp_linker_set.h"
 #include "rtpp_module_if_static.h"
 
-SET_DECLARE(rtpp_modules, struct rtpp_minfo);
+SET_DECLARE(rtpp_modules, const struct rtpp_minfo);
 
-struct rtpp_minfo *
+const struct rtpp_minfo *
 rtpp_static_modules_lookup(const char *name)
 {
-    struct rtpp_minfo **tp;
+    const struct rtpp_minfo **tp;
 
     SET_FOREACH(tp, rtpp_modules) {
-        struct rtpp_minfo *mp = *tp;
+        const struct rtpp_minfo *mp = *tp;
         if (strcmp(mp->descr.name, name) == 0) {
             return (mp);
         }
