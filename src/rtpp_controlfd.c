@@ -352,9 +352,11 @@ rtpp_ctrl_sock_parse(const char *optarg)
         rcsp->type= RTPC_STDIO;
         rcsp->exit_on_close = 1;
         optarg += 7;
+#if defined(LIBRTPPROXY)
     } else if (strncmp("fd:", optarg, 3) == 0) {
         rcsp->type= RTPC_FD;
         optarg += 3;
+#endif
     } else if (strncmp("tcp:", optarg, 4) == 0) {
         rcsp->type= RTPC_TCP4;
         optarg += 4;
