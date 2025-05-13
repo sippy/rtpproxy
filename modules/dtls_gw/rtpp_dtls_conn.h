@@ -55,7 +55,7 @@ struct res_loc {
 typedef void SSL_CTX;
 #endif
 DECLARE_CLASS(rtpp_dtls_conn, const struct rtpp_cfg *,
-  SSL_CTX *, struct rtpp_stream *);
+  SSL_CTX *, struct rtpp_stream *, struct rtpp_minfo *);
 
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_dtls_recv, void,
   const struct rtp_packet *);

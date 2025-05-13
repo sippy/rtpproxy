@@ -86,8 +86,8 @@ rtpp_modman_dtor(struct rtpp_modman_priv *pvt)
     rtpp_modman_fin(&(pvt->pub));
     for (mif = RTPP_LIST_HEAD(&pvt->all); mif != NULL; mif = tmp) {
         tmp = RTPP_ITER_NEXT(mif);
-        RTPP_OBJ_DECREF(mif);
         CALL_METHOD(mif, kaput);
+        RTPP_OBJ_DECREF(mif);
     }
 }
 

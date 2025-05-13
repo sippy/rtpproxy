@@ -152,6 +152,7 @@ extern const struct rtpc_reply_smethods * const rtpc_reply_smethods;
 #endif
 
 #define PVT_RCOFFS(pvtp) (offsetof(typeof(*(pvtp)), pub) + offsetof(typeof((pvtp)->pub), rcnt))
+#define PUB_RCOFFS(pub) offsetof(typeof(*(pub)), rcnt)
 
 #define PUB2PVT(pubp, pvtp) \
   (pvtp) = (typeof(pvtp))((char *)(pubp) - offsetof(typeof(*(pvtp)), pub))

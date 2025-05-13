@@ -84,11 +84,13 @@
 struct rtpp_module_priv {
     struct rtpp_dtls *dtls_ctx;
     const struct rtpp_cfg *cfsp;
+    struct rtpp_minfo *mself;
 };
 
 struct dtls_gw_stream_cfg {
     struct rtpp_refcnt *rcnt;
     struct rtpp_dtls_conn *dtls_conn;
+    struct rtpp_minfo *mself;
 };
 
 enum rtpp_dtls_dir {
@@ -98,6 +100,7 @@ enum rtpp_dtls_dir {
 struct rtpp_dtls_gw_aux {
     enum rtpp_dtls_dir direction;
     struct rtpp_dtls_conn *dtls_conn;
+    struct rtpp_minfo *mself;
 };
 
 struct wipkt {
@@ -105,7 +108,8 @@ struct wipkt {
     struct rtpp_dtls_gw_aux edata;
 };
 
-static struct rtpp_module_priv *rtpp_dtls_gw_ctor(const struct rtpp_cfg *);
+static struct rtpp_module_priv *rtpp_dtls_gw_ctor(const struct rtpp_cfg *,
+  struct rtpp_minfo *);
 static void rtpp_dtls_gw_dtor(struct rtpp_module_priv *);
 static void rtpp_dtls_gw_worker(const struct rtpp_wthrdata *);
 static int rtpp_dtls_gw_handle_command(struct rtpp_module_priv *,
@@ -120,7 +124,7 @@ static struct pproc_act rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *);
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
-struct rtpp_minfo RTPP_MOD_SELF = {
+const struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "dtls_gw",
     .descr.ver = MI_VER_INIT(),
     .descr.module_id = 4,
@@ -131,6 +135,7 @@ struct rtpp_minfo RTPP_MOD_SELF = {
         .queue_size = RTPQ_MEDIUM_CB_LEN,
     },
     .capi = &(const struct rtpp_cplane_handlers){.ul_subc_handle = rtpp_dtls_gw_handle_command},
+    .fn = &(struct rtpp_minfo_fset){0},
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM
 #endif
@@ -153,31 +158,32 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
             break;
         }
         wip = rtpp_wi_data_get_ptr(wi, sizeof(*wip), sizeof(*wip));
-        switch (wip->edata.direction) {
+        struct rtpp_dtls_gw_aux *edp = &wip->edata;
+        switch (edp->direction) {
         case DTLS_IN:
 #if 0
-            RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "Packet from DTLS");
+            RTPP_LOG(edp->mself->log, RTPP_LOG_DBUG, "Packet from DTLS");
 #endif
-            CALL_SMETHOD(wip->edata.dtls_conn, dtls_recv, wip->pktx.pktp);
+            CALL_SMETHOD(edp->dtls_conn, dtls_recv, wip->pktx.pktp);
             res = RES_HERE(1);
             break;
         case SRTP_IN:
 #if 0
             RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "DTLS: packet SRTP->RTP");
 #endif
-            res = CALL_SMETHOD(wip->edata.dtls_conn, srtp_recv, &wip->pktx);
+            res = CALL_SMETHOD(edp->dtls_conn, srtp_recv, &wip->pktx);
             break;
         case RTP_OUT:
 #if 0
             RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_DBUG, "DTLS: packet RTP->SRTP");
 #endif
-            res = CALL_SMETHOD(wip->edata.dtls_conn, rtp_send, &wip->pktx);
+            res = CALL_SMETHOD(edp->dtls_conn, rtp_send, &wip->pktx);
             break;
         default:
             abort();
         }
         if (res.v != 0) {
-            switch (wip->edata.direction) {
+            switch (edp->direction) {
             case DTLS_IN:
                 break;
             case SRTP_IN:
@@ -193,7 +199,7 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
         RTPP_OBJ_DECREF(wip->pktx.strmp_in);
         if (wip->pktx.strmp_out != NULL)
             RTPP_OBJ_DECREF(wip->pktx.strmp_out);
-        RTPP_OBJ_DECREF(wip->edata.dtls_conn);
+        RTPP_OBJ_DECREF(edp->dtls_conn);
         RTPP_OBJ_DECREF(wi);
     }
 }
@@ -204,7 +210,7 @@ dtls_gw_data_dtor(struct dtls_gw_stream_cfg *pvt)
 
     CALL_SMETHOD(pvt->dtls_conn, godead);
     RTPP_OBJ_DECREF(pvt->dtls_conn);
-    RC_DECREF(RTPP_MOD_SELF.module_rcnt);
+    RC_DECREF(pvt->mself->super_rcnt);
 }
 
 static struct dtls_gw_stream_cfg *
@@ -220,7 +226,8 @@ dtls_gw_data_ctor(struct rtpp_module_priv *pvt, struct rtpp_stream *dtls_strmp)
     if (rtps_c->dtls_conn == NULL) {
         goto e1;
     }
-    RC_INCREF(RTPP_MOD_SELF.module_rcnt);
+    rtps_c->mself = pvt->mself;
+    RC_INCREF(pvt->mself->super_rcnt);
     CALL_SMETHOD(rtps_c->rcnt, attach, (rtpp_refcnt_dtor_t)dtls_gw_data_dtor, rtps_c);
     return (rtps_c);
 e1:
@@ -286,7 +293,7 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
     enum rdg_cmd rdg_cmd;
 
     if (argc != 1 && argc != 3 && argc != 4) {
-        RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "expected 1, 3 or 4 parameters: %d",
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "expected 1, 3 or 4 parameters: %d",
           argc);
         return (-1);
     }
@@ -450,11 +457,11 @@ out:
     return (0);
 
 invalalg:
-    RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "invalid algorithm: \"%s\"",
+    RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "invalid algorithm: \"%s\"",
       argv[1].s);
     return (-1);
 invalmode:
-    RTPP_LOG(RTPP_MOD_SELF.log, RTPP_LOG_ERR, "invalid mode: \"%s\"",
+    RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "invalid mode: \"%s\"",
       argv[0].s);
     return (-1);
 e1:
@@ -478,6 +485,7 @@ rtpp_dtls_gw_taste_encrypted(struct pkt_proc_ctx *pktxp)
         rdgap = &dtls_in;
     rtps_c = pktxp->pproc->arg;
     rdgap->dtls_conn = rtps_c->dtls_conn;
+    rdgap->mself = rtps_c->mself;
     pktxp->auxp = rdgap;
     return (1);
 }
@@ -492,6 +500,7 @@ rtpp_dtls_gw_taste_plain(struct pkt_proc_ctx *pktxp)
         return (0);
     rtps_c = pktxp->pproc->arg;
     rtp_out.dtls_conn = rtps_c->dtls_conn;
+    rtp_out.mself = rtps_c->mself;
     pktxp->auxp = &rtp_out;
     return (1);
 }
@@ -514,7 +523,7 @@ rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *pktxp)
     RTPP_OBJ_INCREF(pktxp->strmp_in);
     if (pktxp->strmp_out != NULL)
         RTPP_OBJ_INCREF(pktxp->strmp_out);
-    if (rtpp_queue_put_item(wi, RTPP_MOD_SELF.wthr.mod_q) != 0) {
+    if (rtpp_queue_put_item(wi, edata->mself->wthr.mod_q) != 0) {
         if (pktxp->strmp_out != NULL)
             RTPP_OBJ_DECREF(pktxp->strmp_out);
         RTPP_OBJ_DECREF(pktxp->strmp_in);
@@ -527,7 +536,7 @@ rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *pktxp)
 }
 
 static struct rtpp_module_priv *
-rtpp_dtls_gw_ctor(const struct rtpp_cfg *cfsp)
+rtpp_dtls_gw_ctor(const struct rtpp_cfg *cfsp, struct rtpp_minfo *mself)
 {
     struct rtpp_module_priv *pvt;
     static int srtp_inited = 0;
@@ -536,7 +545,7 @@ rtpp_dtls_gw_ctor(const struct rtpp_cfg *cfsp)
     if (pvt == NULL) {
         goto e0;
     }
-    pvt->dtls_ctx = rtpp_dtls_ctor(cfsp);
+    pvt->dtls_ctx = rtpp_dtls_ctor(cfsp, mself);
     if (pvt->dtls_ctx == NULL) {
         goto e1;
     }
@@ -545,6 +554,7 @@ rtpp_dtls_gw_ctor(const struct rtpp_cfg *cfsp)
     }
     srtp_inited = 1;
     pvt->cfsp = cfsp;
+    pvt->mself = mself;
     return (pvt);
 e2:
     RTPP_OBJ_DECREF(pvt->dtls_ctx);

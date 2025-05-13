@@ -41,7 +41,7 @@ RTPP_MEMDEB_APP_STATIC;
 static const struct rtpp_acct_handlers badmod3_aapi = {
     .on_session_end = AAPI_FUNC(NULL + 1, 0)
 };
-struct rtpp_minfo RTPP_MOD_SELF = {
+const struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.name = "badmod3",
     .descr.ver = MI_VER_INIT(),
 #ifdef RTPP_CHECK_LEAKS

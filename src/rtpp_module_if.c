@@ -90,20 +90,19 @@
 
 struct rtpp_module_if_priv {
     struct rtpp_module_if pub;
-    void *dmp;
-    struct rtpp_minfo *mip;
+    struct rtpp_minfo mi;
     struct rtpp_module_priv *mpvt;
     struct rtpp_log *log;
     struct rtpp_modids ids;
     struct rtpp_weakref *sessions_wrt;
-    /* Privary version of the module's memdeb_p, store it here */
-    /* just in case module screws it up                        */
-    void *memdeb_p;
     int started;
     char mpath[0];
 };
 
-static void rtpp_mif_dtor(struct rtpp_module_if_priv *);
+static void rtpp_mif_log_unref(struct rtpp_log *);
+#if RTPP_CHECK_LEAKS
+static void rtpp_mif_memdeb_dtor(struct rtpp_minfo *);
+#endif
 static void rtpp_mif_run_acct(void *);
 static int rtpp_mif_load(struct rtpp_module_if *, const struct rtpp_cfg *, struct rtpp_log *);
 static int rtpp_mif_start(struct rtpp_module_if *, const struct rtpp_cfg *);
@@ -163,8 +162,6 @@ rtpp_module_if_ctor(const char *mpath)
     pvt->pub.get_mconf = &rtpp_mif_get_mconf;
     pvt->pub.ul_subc_handle = &rtpp_mif_ul_subc_handle;
     pvt->pub.kaput = &rtpp_mif_kaput;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_mif_dtor,
-      pvt);
     return ((&pvt->pub));
 
 e0:
@@ -205,7 +202,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
 {
     struct rtpp_module_if_priv *pvt;
     const char *derr;
-    struct rtpp_minfo *mip = NULL;
+    const struct rtpp_minfo *mip = NULL;
 
     PUB2PVT(self, pvt);
 #if defined(LIBRTPPROXY)
@@ -214,8 +211,8 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         goto e1;
 #endif
     if (mip == NULL) {
-        pvt->dmp = dlopen(pvt->mpath, RTLD_NOW);
-        if (pvt->dmp == NULL) {
+        void *dmp = dlopen(pvt->mpath, RTLD_NOW);
+        if (dmp == NULL) {
             derr = dlerror();
             if (strstr(derr, pvt->mpath) == NULL) {
                 RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen(%s): %s", pvt->mpath, derr);
@@ -224,7 +221,8 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
             }
             goto e1;
         }
-        mip = dlsym(pvt->dmp, "rtpp_module");
+        RTPP_OBJ_DTOR_ATTACH(&(pvt->pub), dlclose, dmp);
+        mip = dlsym(dmp, "rtpp_module");
         if (mip == NULL) {
             derr = dlerror();
             if (strstr(derr, pvt->mpath) == NULL) {
@@ -234,118 +232,124 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
                 RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol: %s",
                   derr);
             }
-            goto e2;
+            goto e1;
         }
     }
-    pvt->mip = mip;
-    if (!MI_VER_CHCK(pvt->mip)) {
+
+    if (!MI_VER_CHCK(mip) || mip->fn == NULL) {
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
           "consider recompiling the module", pvt->mpath);
-        goto e2;
+        goto e1;
     }
 
-    pvt->mip->fn = &mip_model;
+    size_t csize = mip->lower - mip->upper;
+    memcpy(pvt->mi.upper, mip->upper, csize);
+
+    if (pvt->mi.fn->_malloc == NULL) {
+        /* Don't use sizeof(mip_model) here, it has a variable-size junk
+         * attached to it! */
+        memcpy(pvt->mi.fn, &mip_model, sizeof(struct rtpp_minfo_fset));
+    }
+
+    RTPP_OBJ_INCREF(log);
+    RTPP_OBJ_DTOR_ATTACH(&(pvt->pub), rtpp_mif_log_unref, log);
+    pvt->mi.log = log;
+
 #if RTPP_CHECK_LEAKS
-    if (pvt->mip->memdeb_p == NULL) {
+    if (pvt->mi.memdeb_p == NULL) {
         RTPP_LOG(log, RTPP_LOG_ERR, "memdeb pointer is NULL in the %s, "
           "trying to load non-debug module?", pvt->mpath);
-        goto e2;
+        goto e1;
     }
-    pvt->memdeb_p = rtpp_memdeb_init(false);
-    if (pvt->memdeb_p == NULL) {
-        goto e2;
+    void *memdeb_p = rtpp_memdeb_init(false);
+    if (memdeb_p == NULL) {
+        goto e1;
     }
-    rtpp_memdeb_setlog(pvt->memdeb_p, log);
-    rtpp_memdeb_setname(pvt->memdeb_p, pvt->mip->descr.name);
-    /* We make a copy, so that the module cannot screw us up */
-    *pvt->mip->memdeb_p = pvt->memdeb_p;
+    rtpp_memdeb_setlog(memdeb_p, log);
+    rtpp_memdeb_setname(memdeb_p, pvt->mi.descr.name);
+    *pvt->mi.memdeb_p = pvt->mi.memdeb = memdeb_p;
+    RTPP_OBJ_DTOR_ATTACH(&(pvt->pub), rtpp_mif_memdeb_dtor, &(pvt->mi));
 #else
-    if (pvt->mip->memdeb_p != NULL) {
+    if (pvt->mi.memdeb_p != NULL) {
         RTPP_LOG(log, RTPP_LOG_ERR, "memdeb pointer is not NULL in the %s, "
           "trying to load debug module?", pvt->mpath);
-        goto e2;
+        goto e1;
     }
 #endif
-    pvt->mip->wthr.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
-    if (pvt->mip->wthr.sigterm == NULL) {
-        goto e3;
+    pvt->mi.wthr.sigterm = rtpp_wi_malloc_sgnl(SIGTERM, NULL, 0);
+    if (pvt->mi.wthr.sigterm == NULL) {
+        goto e1;
     }
     int qsize = RTPQ_SMALL_CB_LEN;
-    if (pvt->mip->wapi != NULL && pvt->mip->wapi->queue_size > 0)
-        qsize = pvt->mip->wapi->queue_size;
-    pvt->mip->wthr.mod_q = rtpp_queue_init(qsize, "rtpp_module_if(%s)",
-      pvt->mip->descr.name);
-    if (pvt->mip->wthr.mod_q == NULL) {
-        goto e4;
+    if (pvt->mi.wapi != NULL && pvt->mi.wapi->queue_size > 0)
+        qsize = pvt->mi.wapi->queue_size;
+    pvt->mi.wthr.mod_q = rtpp_queue_init(qsize, "rtpp_module_if(%s)",
+      pvt->mi.descr.name);
+    if (pvt->mi.wthr.mod_q == NULL) {
+        goto e2;
     }
-    rtpp_queue_setmaxlen(pvt->mip->wthr.mod_q, RTPQ_SMALL_CB_LEN * 8);
-    RTPP_OBJ_INCREF(log);
-    pvt->mip->log = log;
-    if (pvt->mip->aapi != NULL) {
-        if (pvt->mip->aapi->on_session_end.func != NULL &&
-          pvt->mip->aapi->on_session_end.argsize != rtpp_acct_OSIZE()) {
+    rtpp_queue_setmaxlen(pvt->mi.wthr.mod_q, RTPQ_SMALL_CB_LEN * 8);
+    if (pvt->mi.aapi != NULL) {
+        if (pvt->mi.aapi->on_session_end.func != NULL &&
+          pvt->mi.aapi->on_session_end.argsize != rtpp_acct_OSIZE()) {
             RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
               "consider recompiling the module", pvt->mpath);
-            goto e5;
+            goto e3;
         }
-        if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL &&
-          pvt->mip->aapi->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
+        if (pvt->mi.aapi->on_rtcp_rcvd.func != NULL &&
+          pvt->mi.aapi->on_rtcp_rcvd.argsize != rtpp_acct_rtcp_OSIZE()) {
             RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "
               "consider recompiling the module", pvt->mpath);
-            goto e5;
+            goto e3;
         }
-        self->has.do_acct = (pvt->mip->aapi->on_session_end.func != NULL);
+        self->has.do_acct = (pvt->mi.aapi->on_session_end.func != NULL);
     }
-    self->has.ul_subc_h = (pvt->mip->capi != NULL &&
-      pvt->mip->capi->ul_subc_handle != NULL);
+    self->has.ul_subc_h = (pvt->mi.capi != NULL &&
+      pvt->mi.capi->ul_subc_handle != NULL);
     pvt->ids.instance_id = CALL_METHOD(cfsp->modules_cf, get_next_id,
-      pvt->mip->descr.module_id);
-    pvt->mip->ids = self->ids = &pvt->ids;
-    pvt->mip->module_rcnt = self->rcnt;
-    self->descr = &(pvt->mip->descr);
+      pvt->mi.descr.module_id);
+    pvt->mi.ids = self->ids = &pvt->ids;
+    pvt->mi.super_rcnt = self->rcnt;
+    self->descr = &(pvt->mi.descr);
     pvt->sessions_wrt = cfsp->sessions_wrt;
-
     return (0);
-e5:
-    RTPP_OBJ_DECREF(pvt->mip->log);
-    rtpp_queue_destroy(pvt->mip->wthr.mod_q);
-    pvt->mip->wthr.mod_q = NULL;
-#if RTPP_CHECK_LEAKS
-    if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' leaked memory in the failed "
-          "constructor", pvt->mip->descr.name);
-    }
-#endif
-e4:
-    RTPP_OBJ_DECREF(pvt->mip->wthr.sigterm);
-    pvt->mip->wthr.sigterm = NULL;
 e3:
+    rtpp_queue_destroy(pvt->mi.wthr.mod_q);
+    pvt->mi.wthr.mod_q = NULL;
 #if RTPP_CHECK_LEAKS
-    rtpp_memdeb_dtor(pvt->memdeb_p);
+    if (rtpp_memdeb_dumpstats(pvt->mi.memdeb, 1) != 0) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "module '%s' leaked memory in the failed "
+          "constructor", pvt->mi.descr.name);
+    }
 #endif
 e2:
-    if (pvt->dmp != NULL)
-        dlclose(pvt->dmp);
-    pvt->mip = NULL;
+    RTPP_OBJ_DECREF(pvt->mi.wthr.sigterm);
+    pvt->mi.wthr.sigterm = NULL;
 e1:
     return (-1);
 }
 
 static void
-rtpp_mif_dtor(struct rtpp_module_if_priv *pvt)
+rtpp_mif_log_unref(struct rtpp_log *log)
 {
 
-    if (pvt->mip != NULL) {
-        if (pvt->started != 0) {
-            /* First, stop the worker thread */
-            RTPP_OBJ_INCREF(pvt->mip->wthr.sigterm);
-            for (int r = -1; r < 0;) {
-                r = rtpp_queue_put_item(pvt->mip->wthr.sigterm,
-                  pvt->mip->wthr.mod_q);
-            }
-        }
-    }
+    RTPP_OBJ_DECREF(log);
 }
+
+#if RTPP_CHECK_LEAKS
+static void
+rtpp_mif_memdeb_dtor(struct rtpp_minfo *mip)
+{
+
+    /* Unload and free everything */
+    /* Check if module leaked any mem */
+    if (rtpp_memdeb_dumpstats(mip->memdeb, 1) != 0) {
+        RTPP_LOG(mip->log, RTPP_LOG_ERR, "module '%s' leaked memory after "
+          "destruction", mip->descr.name);
+    }
+    rtpp_memdeb_dtor(mip->memdeb);
+}
+#endif
 
 static void
 rtpp_mif_kaput(struct rtpp_module_if *self)
@@ -356,30 +360,21 @@ rtpp_mif_kaput(struct rtpp_module_if *self)
 
     rtpp_module_if_fin(&(pvt->pub));
     if (pvt->started != 0) {
-        /* First, wait for worker thread to terminate */
-        pthread_join(pvt->mip->wthr.thread_id, NULL);
-    }
-    if (pvt->mip != NULL) {
-        rtpp_queue_destroy(pvt->mip->wthr.mod_q);
-        /* Then run module destructor (if any) */
-        if (pvt->mip->proc.dtor != NULL && pvt->mpvt != NULL) {
-            pvt->mip->proc.dtor(pvt->mpvt);
+        /* First, stop the worker thread */
+        RTPP_OBJ_INCREF(pvt->mi.wthr.sigterm);
+        for (int r = -1; r < 0;) {
+            r = rtpp_queue_put_item(pvt->mi.wthr.sigterm,
+              pvt->mi.wthr.mod_q);
         }
-        RTPP_OBJ_DECREF(pvt->mip->log);
-        RTPP_OBJ_DECREF(pvt->mip->wthr.sigterm);
-
-#if RTPP_CHECK_LEAKS
-        /* Check if module leaked any mem */
-        if (rtpp_memdeb_dumpstats(pvt->memdeb_p, 1) != 0) {
-            RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s' leaked memory after "
-              "destruction", pvt->mip->descr.name);
-        }
-        rtpp_memdeb_dtor(pvt->memdeb_p);
-#endif
+        /* Then wait for worker thread to terminate */
+        pthread_join(pvt->mi.wthr.thread_id, NULL);
     }
-    /* Unload and free everything */
-    if (pvt->dmp != NULL)
-        dlclose(pvt->dmp);
+    rtpp_queue_destroy(pvt->mi.wthr.mod_q);
+    /* Then run module destructor (if any) */
+    if (pvt->mi.proc.dtor != NULL && pvt->mpvt != NULL) {
+        pvt->mi.proc.dtor(pvt->mpvt);
+    }
+    RTPP_OBJ_DECREF(pvt->mi.wthr.sigterm);
 }
 
 static void
@@ -392,9 +387,9 @@ rtpp_mif_run_acct(void *argp)
     const struct rtpp_acct_handlers *aap;
 
     pvt = (struct rtpp_module_if_priv *)argp;
-    aap = pvt->mip->aapi;
+    aap = pvt->mi.aapi;
     for (;;) {
-        wi = rtpp_queue_get_item(pvt->mip->wthr.mod_q, 0);
+        wi = rtpp_queue_get_item(pvt->mi.wthr.mod_q, 0);
         if (rtpp_wi_get_type(wi) == RTPP_WI_TYPE_SGNL) {
             signum = rtpp_wi_sgnl_get_signum(wi);
             RTPP_OBJ_DECREF(wi);
@@ -433,15 +428,15 @@ rtpp_mif_do_acct(struct rtpp_module_if *self, struct rtpp_acct *acct)
     PUB2PVT(self, pvt);
     wi = rtpp_wi_malloc_apis(do_acct_aname, &acct, sizeof(acct));
     if (wi == NULL) {
-        RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
-          "memory", pvt->mip->descr.name);
+        RTPP_LOG(pvt->mi.log, RTPP_LOG_ERR, "module '%s': cannot allocate "
+          "memory", pvt->mi.descr.name);
         return;
     }
     RTPP_OBJ_INCREF(acct);
-    if (rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q) == 0)
+    if (rtpp_queue_put_item(wi, pvt->mi.wthr.mod_q) == 0)
         return;
-    RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': accounting queue "
-      "is full", pvt->mip->descr.name);
+    RTPP_LOG(pvt->mi.log, RTPP_LOG_ERR, "module '%s': accounting queue "
+      "is full", pvt->mi.descr.name);
     RTPP_OBJ_DECREF(acct);
     RTPP_OBJ_DECREF(wi);
 }
@@ -455,15 +450,15 @@ rtpp_mif_do_acct_rtcp(struct rtpp_module_if *self, struct rtpp_acct_rtcp *acct)
     PUB2PVT(self, pvt);
     wi = rtpp_wi_malloc_apis(do_acct_rtcp_aname, &acct, sizeof(acct));
     if (wi == NULL) {
-        RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': cannot allocate "
-          "memory", pvt->mip->descr.name);
+        RTPP_LOG(pvt->mi.log, RTPP_LOG_ERR, "module '%s': cannot allocate "
+          "memory", pvt->mi.descr.name);
         RTPP_OBJ_DECREF(acct);
         return;
     }
-    if (rtpp_queue_put_item(wi, pvt->mip->wthr.mod_q) == 0)
+    if (rtpp_queue_put_item(wi, pvt->mi.wthr.mod_q) == 0)
         return;
-    RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s': accounting queue "
-      "is full", pvt->mip->descr.name);
+    RTPP_LOG(pvt->mi.log, RTPP_LOG_ERR, "module '%s': accounting queue "
+      "is full", pvt->mi.descr.name);
     RTPP_OBJ_DECREF(acct);
     RTPP_OBJ_DECREF(wi);
 }
@@ -476,20 +471,20 @@ rtpp_mif_construct(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
     struct rtpp_module_if_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (pvt->mip->proc.ctor != NULL) {
-        pvt->mpvt = pvt->mip->proc.ctor(cfsp);
+    if (pvt->mi.proc.ctor != NULL) {
+        pvt->mpvt = pvt->mi.proc.ctor(cfsp, &pvt->mi);
         if (pvt->mpvt == NULL) {
-            RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "module '%s' failed to initialize",
-              pvt->mip->descr.name);
+            RTPP_LOG(pvt->mi.log, RTPP_LOG_ERR, "module '%s' failed to initialize",
+              pvt->mi.descr.name);
             return (-1);
         }
     }
-    if (pvt->mip->proc.config != NULL) {
-        if (pvt->mip->proc.config(pvt->mpvt) != 0) {
-            RTPP_LOG(pvt->mip->log, RTPP_LOG_ERR, "%p->config() method has failed: %s",
-              self, pvt->mip->descr.name);
-            if (pvt->mip->proc.dtor != NULL) {
-                pvt->mip->proc.dtor(pvt->mpvt);
+    if (pvt->mi.proc.config != NULL) {
+        if (pvt->mi.proc.config(pvt->mpvt) != 0) {
+            RTPP_LOG(pvt->mi.log, RTPP_LOG_ERR, "%p->config() method has failed: %s",
+              self, pvt->mi.descr.name);
+            if (pvt->mi.proc.dtor != NULL) {
+                pvt->mi.proc.dtor(pvt->mpvt);
             }
             return (-1);
         }
@@ -503,10 +498,10 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
     struct rtpp_module_if_priv *pvt;
 
     PUB2PVT(self, pvt);
-    if (pvt->mip->aapi == NULL && pvt->mip->wapi == NULL)
+    if (pvt->mi.aapi == NULL && pvt->mi.wapi == NULL)
         return (0);
-    if (pvt->mip->aapi != NULL) {
-        if (pvt->mip->aapi->on_rtcp_rcvd.func != NULL) {
+    if (pvt->mi.aapi != NULL) {
+        if (pvt->mi.aapi->on_rtcp_rcvd.func != NULL) {
             struct packet_processor_if acct_rtcp_poi = {
                 .descr = "acct_rtcp",
                 .taste = packet_is_rtcp,
@@ -516,19 +511,19 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
             if (CALL_SMETHOD(cfsp->pproc_manager, reg, PPROC_ORD_WITNESS, &acct_rtcp_poi) < 0)
                 return (-1);
         }
-        if (pthread_create(&pvt->mip->wthr.thread_id, NULL,
+        if (pthread_create(&pvt->mi.wthr.thread_id, NULL,
           PTH_CB(&rtpp_mif_run_acct), pvt) != 0) {
             return (-1);
         }
     } else {
-        pvt->mip->wthr.mpvt = pvt->mpvt;
-        if (pthread_create(&pvt->mip->wthr.thread_id, NULL,
-          PTH_CB(pvt->mip->wapi->main_thread), &pvt->mip->wthr) != 0) {
+        pvt->mi.wthr.mpvt = pvt->mpvt;
+        if (pthread_create(&pvt->mi.wthr.thread_id, NULL,
+          PTH_CB(pvt->mi.wapi->main_thread), &pvt->mi.wthr) != 0) {
             return (-1);
         }
     }
 #if HAVE_PTHREAD_SETNAME_NP
-    (void)pthread_setname_np(pvt->mip->wthr.thread_id, pvt->mip->descr.name);
+    (void)pthread_setname_np(pvt->mi.wthr.thread_id, pvt->mi.descr.name);
 #endif
     pvt->started = 1;
     return (0);
@@ -541,11 +536,11 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
     struct rtpp_module_conf *rval;
 
     PUB2PVT(self, pvt);
-    if (pvt->mip->proc.get_mconf == NULL) {
+    if (pvt->mi.proc.get_mconf == NULL) {
         *mcpp = NULL;
         return (0);
     }
-    rval = pvt->mip->proc.get_mconf();
+    rval = pvt->mi.proc.get_mconf();
     if (rval == NULL) {
         return (-1);
     }
@@ -562,5 +557,5 @@ rtpp_mif_ul_subc_handle(const struct after_success_h_args *ashap,
 
     self = ashap->stat;
     PUB2PVT(self, pvt);
-    return (pvt->mip->capi->ul_subc_handle(pvt->mpvt, ctxp));
+    return (pvt->mi.capi->ul_subc_handle(pvt->mpvt, ctxp));
 }

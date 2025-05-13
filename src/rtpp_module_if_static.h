@@ -26,4 +26,4 @@
 
 #pragma once
 
-struct rtpp_minfo *rtpp_static_modules_lookup(const char *);
+const struct rtpp_minfo *rtpp_static_modules_lookup(const char *);

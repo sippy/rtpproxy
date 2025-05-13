@@ -27,7 +27,7 @@
 
 #pragma once
 
-#define MODULE_API_REVISION 11
+#define MODULE_API_REVISION 12
 
 struct rtpp_cfg;
 struct rtpp_module_priv;
@@ -35,6 +35,7 @@ struct rtpp_module_conf;
 struct rtpp_acct_handlers;
 struct rtpp_cplane_handlers;
 struct rtpp_wthr_handlers;
+struct rtpp_minfo;
 
 #if !defined(MODULE_IF_CODE)
 #include <sys/types.h>
@@ -42,7 +43,7 @@ struct rtpp_wthr_handlers;
 #endif
 
 DEFINE_RAW_METHOD(rtpp_module_ctor, struct rtpp_module_priv *,
-  const struct rtpp_cfg *);
+  const struct rtpp_cfg *, struct rtpp_minfo *);
 DEFINE_RAW_METHOD(rtpp_module_get_mconf, struct rtpp_module_conf *, void);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_config, int);
 DEFINE_METHOD(rtpp_module_priv, rtpp_module_dtor, void);
@@ -81,48 +82,44 @@ DEFINE_RAW_METHOD(rtpp_module_vasprintf, int, char **, const char *, va_list);
 #define EXPAND_AND_CONCAT(a, b) a##b
 #define CONCAT(a, b) EXPAND_AND_CONCAT(a, b)
 #define RTPP_MOD_SELF CONCAT(rtpp_module_, RTPP_MOD_NAME)
-extern struct rtpp_minfo RTPP_MOD_SELF;
+extern const struct rtpp_minfo RTPP_MOD_SELF;
 #else
 #define RTPP_MOD_SELF (rtpp_module)
 #endif
+
+#define _MMFN (*(RTPP_MOD_SELF.fn))
 
 #if defined(RTPP_CHECK_LEAKS)
 
 #define _MMDEB *(RTPP_MOD_SELF.memdeb_p)
 
-#define mod_malloc(n) RTPP_MOD_SELF.fn->_malloc((n), _MMDEB, \
+#define mod_malloc(n) _MMFN._malloc((n), _MMDEB, \
   HEREVAL)
-#define mod_zmalloc(n) RTPP_MOD_SELF.fn->_zmalloc((n), _MMDEB, \
+#define mod_zmalloc(n) _MMFN._zmalloc((n), _MMDEB, \
   HEREVAL)
-#define mod_rzmalloc(n, m) RTPP_MOD_SELF.fn->_rzmalloc((n), (m), _MMDEB, \
+#define mod_rzmalloc(n, m) _MMFN._rzmalloc((n), (m), _MMDEB, \
   HEREVAL)
-#define mod_free(p) RTPP_MOD_SELF.fn->_free((p), _MMDEB, \
+#define mod_free(p) _MMFN._free((p), _MMDEB, \
   HEREVAL)
-#define mod_realloc(p,n) RTPP_MOD_SELF.fn->_realloc((p), (n), _MMDEB, \
+#define mod_realloc(p,n) _MMFN._realloc((p), (n), _MMDEB, \
   HEREVAL)
-#define mod_strdup(p) RTPP_MOD_SELF.fn->_strdup((p), _MMDEB, \
+#define mod_strdup(p) _MMFN._strdup((p), _MMDEB, \
   HEREVAL)
-#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF.fn->_asprintf((pp), \
+#define mod_asprintf(pp, fmt, args...) _MMFN._asprintf((pp), \
   _MMDEB, HEREVAL, (fmt), ## args)
-#define mod_vasprintf(pp, fmt, vl) RTPP_MOD_SELF.fn->_vasprintf((pp), (fmt), \
+#define mod_vasprintf(pp, fmt, vl) _MMFN._vasprintf((pp), (fmt), \
   _MMDEB, HEREVAL, (vl))
 #else
-#define mod_malloc(n) RTPP_MOD_SELF.fn->_malloc((n))
-#define mod_zmalloc(n) RTPP_MOD_SELF.fn->_zmalloc((n))
-#define mod_rzmalloc(n, m) RTPP_MOD_SELF.fn->_rzmalloc((n), m)
-#define mod_free(p) RTPP_MOD_SELF.fn->_free((p))
-#define mod_realloc(p,n) RTPP_MOD_SELF.fn->_realloc((p), (n))
-#define mod_strdup(p) RTPP_MOD_SELF.fn->_strdup((p))
-#define mod_asprintf(pp, fmt, args...) RTPP_MOD_SELF.fn->_asprintf((pp), (fmt), ## args)
-#define mod_vasprintf(pp, fmt, vl) RTPP_MOD_SELF.fn->_vasprintf((pp), (fmt), (vl))
+#define mod_malloc(n) _MMFN._malloc((n))
+#define mod_zmalloc(n) _MMFN._zmalloc((n))
+#define mod_rzmalloc(n, m) _MMFN._rzmalloc((n), m)
+#define mod_free(p) _MMFN._free((p))
+#define mod_realloc(p,n) _MMFN._realloc((p), (n))
+#define mod_strdup(p) _MMFN._strdup((p))
+#define mod_asprintf(pp, fmt, args...) _MMFN._asprintf((pp), (fmt), ## args)
+#define mod_vasprintf(pp, fmt, vl) _MMFN._vasprintf((pp), (fmt), (vl))
 
 #endif /* RTPP_CHECK_LEAKS */
-
-#define mod_log(args...) CALL_METHOD(RTPP_MOD_SELF.log, genwrite, __FUNCTION__, \
-  __LINE__, ## args)
-#define mod_elog(args...) CALL_METHOD(RTPP_MOD_SELF.log, errwrite, __FUNCTION__, \
-  __LINE__, ## args)
-
 #endif /* !MODULE_IF_CODE */
 
 struct api_version {
@@ -173,23 +170,34 @@ struct rtpp_minfo_fset {
     const void *auxp[];
 };
 
-struct rtpp_minfo {
+DECLARE_CLASS_PUBTYPE(rtpp_minfo, {
     /* Upper half, filled by the module */
-    struct rtpp_mdescr descr;
-    struct rtpp_mhandlers proc;
-    const struct rtpp_acct_handlers *aapi;
-    const struct rtpp_cplane_handlers *capi;
-    const struct rtpp_wthr_handlers *wapi;
-    void **memdeb_p;
+    union {
+        struct {
+            struct rtpp_mdescr descr;
+            struct rtpp_mhandlers proc;
+            const struct rtpp_acct_handlers *aapi;
+            const struct rtpp_cplane_handlers *capi;
+            const struct rtpp_wthr_handlers *wapi;
+            void **memdeb_p;
+            struct rtpp_minfo_fset *fn;
+        };
+        char upper[0];
+    };
     /* Lower half, filled by the core */
-    const struct rtpp_modids *ids;
-    const struct rtpp_minfo_fset *fn;
-    struct rtpp_log *log;
-    struct rtpp_refcnt *module_rcnt;
-    struct rtpp_wthrdata wthr;
-};
+    union {
+        struct {
+            const struct rtpp_modids *ids;
+            struct rtpp_log *log;
+            struct rtpp_refcnt *super_rcnt;
+            struct rtpp_wthrdata wthr;
+            void *memdeb;
+        };
+        char lower[0];
+    };
+});
 
-extern struct rtpp_minfo rtpp_module RTPP_EXPORT;
+extern const struct rtpp_minfo rtpp_module RTPP_EXPORT;
 
 #define MI_VER_INIT() { \
     .rev = MODULE_API_REVISION, \
