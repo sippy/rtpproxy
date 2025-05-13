@@ -80,6 +80,7 @@
 #include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
 #include "rtpp_refproxy.h"
+#include "rtpp_sbuf.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -116,12 +117,6 @@ static void rtpp_mif_kaput(struct rtpp_module_if *self);
 
 static const char *do_acct_aname = "do_acct";
 static const char *do_acct_rtcp_aname = "do_acct_rtcp";
-
-extern void rtpp_sbuf_ctor(void);
-extern void rtpp_sbuf_dtor(void);
-extern void rtpp_sbuf_extend(void);
-extern void rtpp_sbuf_reset(void);
-extern void rtpp_sbuf_write(void);
 
 static const struct rtpp_minfo_fset mip_model = {
 #if RTPP_CHECK_LEAKS
