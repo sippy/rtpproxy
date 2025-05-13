@@ -531,6 +531,7 @@ static struct rtpp_module_priv *
 rtpp_dtls_gw_ctor(const struct rtpp_cfg *cfsp)
 {
     struct rtpp_module_priv *pvt;
+    static int srtp_inited = 0;
 
     pvt = mod_zmalloc(sizeof(struct rtpp_module_priv));
     if (pvt == NULL) {
@@ -540,9 +541,10 @@ rtpp_dtls_gw_ctor(const struct rtpp_cfg *cfsp)
     if (pvt->dtls_ctx == NULL) {
         goto e1;
     }
-    if (srtp_init() != 0) {
+    if (!srtp_inited && srtp_init() != 0) {
         goto e2;
     }
+    srtp_inited = 1;
     pvt->cfsp = cfsp;
     return (pvt);
 e2:
