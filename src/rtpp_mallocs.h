@@ -51,4 +51,7 @@ void *rtpp_rmalloc_memdeb(size_t, size_t, void *, HERETYPE);
 void *rtpp_rmalloc(size_t, size_t);
 #endif
 
+void *rtpp_sys_malloc(size_t);
+void rtpp_sys_free(void *);
+
 #endif

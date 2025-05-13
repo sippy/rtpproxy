@@ -129,3 +129,18 @@ rtpp_rmalloc_memdeb(size_t msize, size_t rcntp_offs, void *memdeb_p,
 
     return (rval);
 }
+
+#undef malloc
+#undef free
+
+void *
+rtpp_sys_malloc(size_t size)
+{
+    return (malloc(size));
+}
+
+void
+rtpp_sys_free(void *p)
+{
+    free(p);
+}
