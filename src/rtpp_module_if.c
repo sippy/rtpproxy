@@ -380,7 +380,6 @@ rtpp_mif_kaput(struct rtpp_module_if *self)
     /* Unload and free everything */
     if (pvt->dmp != NULL)
         dlclose(pvt->dmp);
-    free(pvt);
 }
 
 static void

@@ -110,7 +110,6 @@ rtpc_reply_ctor(const struct rtpp_command_ctx *ctx)
 #if defined(RTPP_DEBUG)
     pvt->pub.smethods = rtpc_reply_smethods;
 #endif
-    CALL_SMETHOD(pvt->pub.rcnt, use_stdfree, pvt);
     return ((&pvt->pub));
 
 e0:

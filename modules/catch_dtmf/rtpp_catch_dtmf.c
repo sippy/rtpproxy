@@ -129,13 +129,6 @@ struct rtpp_minfo RTPP_MOD_SELF = {
 DATA_SET(rtpp_modules, RTPP_MOD_SELF);
 #endif
 
-static void
-rtpp_catch_dtmf_edata_dtor(void *p)
-{
-
-    mod_free(p);
-}
-
 static struct catch_dtmf_edata *
 rtpp_catch_dtmf_edata_ctor(enum rtpp_stream_side side)
 {
@@ -150,7 +143,6 @@ rtpp_catch_dtmf_edata_ctor(enum rtpp_stream_side side)
         edata->hst[i].digit = -1;
     }
     edata->side = side;
-    CALL_SMETHOD(edata->rcnt, attach, rtpp_catch_dtmf_edata_dtor, edata);
     return edata;
 e0:
     return (NULL);
@@ -272,7 +264,6 @@ catch_dtmf_data_dtor(struct catch_dtmf_stream_cfg *rtps_c)
 
     RTPP_OBJ_DECREF(rtps_c->rtdp);
     RTPP_OBJ_DECREF(rtps_c->edata);
-    free(rtps_c);
     RC_DECREF(RTPP_MOD_SELF.module_rcnt);
 }
 

@@ -81,7 +81,6 @@ rtpp_pcnt_strm_ctor(void)
 
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -92,7 +91,6 @@ rtpp_pcnt_strm_dtor(struct rtpp_pcnt_strm_priv *pvt)
 
     rtpp_pcnt_strm_fin(&(pvt->pub));
     pthread_mutex_destroy(&pvt->lock);
-    free(pvt);
 }
 
 static void

@@ -195,7 +195,6 @@ rtpp_dtls_conn_dtor(struct rtpp_dtls_conn_priv *pvt)
     /* BIO_free(pvt->sbio_in); <- done by SSL_free() */
     SSL_free(pvt->ssl_ctx);
     BIO_meth_free(pvt->biomet);
-    free(pvt);
 }
 
 struct rtpp_dtls_conn *

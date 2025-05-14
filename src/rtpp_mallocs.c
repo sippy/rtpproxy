@@ -91,7 +91,7 @@ rtpp_rzmalloc_memdeb(size_t msize, size_t rcntp_offs, void *memdeb_p,
     }
     memset(rval, '\0', asize);
     rco = (char *)rval + msize + pad_size;
-    rcnt = rtpp_refcnt_ctor_pa(rco);
+    rcnt = rtpp_refcnt_ctor_pa(rco, rval);
     *PpP(rval, rcntp_offs, struct rtpp_refcnt **) = rcnt;
 
     return (rval);
@@ -124,7 +124,7 @@ rtpp_rmalloc_memdeb(size_t msize, size_t rcntp_offs, void *memdeb_p,
     }
     rco = (char *)rval + msize + pad_size;
     memset(rco, '\0', rtpp_refcnt_osize);
-    rcnt = rtpp_refcnt_ctor_pa(rco);
+    rcnt = rtpp_refcnt_ctor_pa(rco, rval);
     *PpP(rval, rcntp_offs, struct rtpp_refcnt **) = rcnt;
 
     return (rval);

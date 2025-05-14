@@ -36,10 +36,8 @@ DECLARE_CLASS(rtpp_refcnt, void *, rtpp_refcnt_dtor_t);
 DECLARE_METHOD(rtpp_refcnt, refcnt_incref, void, const struct rtpp_codeptr *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_decref, void, const struct rtpp_codeptr *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_getdata, void *);
-DECLARE_METHOD(rtpp_refcnt, refcnt_reg_pd, void, rtpp_refcnt_dtor_t, void *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_attach, void, rtpp_refcnt_dtor_t, void *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_traceen, void, const struct rtpp_codeptr *);
-DECLARE_METHOD(rtpp_refcnt, refcnt_use_stdfree, void, void *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_peek, int);
 
 DECLARE_SMETHODS(rtpp_refcnt)
@@ -47,10 +45,8 @@ DECLARE_SMETHODS(rtpp_refcnt)
     METHOD_ENTRY(refcnt_incref, incref);
     METHOD_ENTRY(refcnt_decref, decref);
     METHOD_ENTRY(refcnt_getdata, getdata);
-    METHOD_ENTRY(refcnt_reg_pd, reg_pd);
     METHOD_ENTRY(refcnt_attach, attach);
     METHOD_ENTRY(refcnt_traceen, traceen);
-    METHOD_ENTRY(refcnt_use_stdfree, use_stdfree);
     METHOD_ENTRY(refcnt_peek, peek);
 };
 
@@ -65,7 +61,7 @@ struct rtpp_refcnt
 };
 
 extern const size_t rtpp_refcnt_osize;
-rtpp_refcnt_rot *rtpp_refcnt_ctor_pa(void *);
+rtpp_refcnt_rot *rtpp_refcnt_ctor_pa(void *, void *);
 
 #define _GET_ARG_3(_1, _2, _3, ...) _3
 #define _RC_CHOOSE(NAME, ...) _GET_ARG_3(__VA_ARGS__, NAME##_2, NAME##_1,)

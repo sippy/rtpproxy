@@ -75,7 +75,6 @@ rtpp_ttl_ctor(int max_ttl)
 
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -86,7 +85,6 @@ rtpp_ttl_dtor(struct rtpp_ttl_priv *pvt)
 
     rtpp_ttl_fin(&(pvt->pub));
     pthread_mutex_destroy(&pvt->lock);
-    free(pvt);
 }
 
 static void

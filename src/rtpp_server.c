@@ -145,7 +145,6 @@ rtpp_server_dtor(struct rtpp_server_priv *rp)
 
     rtpp_server_fin(&rp->pub);
     close(rp->fd);
-    free(rp);
 }
 
 static struct rtp_packet *

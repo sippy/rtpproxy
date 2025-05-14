@@ -61,9 +61,8 @@ mem_zalloc(size_t size, mem_destroy_h *dh)
         return (NULL);
     rp = (void *)pvt->data;
     if (dh != NULL) {
-        CALL_SMETHOD(pvt->rcnt, reg_pd, (rtpp_refcnt_dtor_t)dh, rp);
+        CALL_SMETHOD(pvt->rcnt, attach, (rtpp_refcnt_dtor_t)dh, rp);
     }
-    CALL_SMETHOD(pvt->rcnt, use_stdfree, pvt);
     return (rp);
 }
 

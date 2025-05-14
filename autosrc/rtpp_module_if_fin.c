@@ -99,7 +99,6 @@ rtpp_module_if_fintest()
     CALL_TFIN(&tp->pub, load);
     CALL_TFIN(&tp->pub, start);
     assert((_naborts - naborts_s) == 7);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_module_if_fintest);
 #endif /* RTPP_FINTEST */

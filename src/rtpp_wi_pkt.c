@@ -133,7 +133,7 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
         RC_INCREF(sock_rcnt);
         wipp->aux_rcnt = sock_rcnt;
     }
-    CALL_SMETHOD(pkt->rcnt, reg_pd, (rtpp_refcnt_dtor_t)rtpp_wi_pkt_free,
+    CALL_SMETHOD(pkt->rcnt, attach, (rtpp_refcnt_dtor_t)rtpp_wi_pkt_free,
       wipp);
     return (&(wipp->pub));
 }
@@ -142,7 +142,6 @@ static void
 rtpp_wi_free(struct rtpp_wi_sendto *wis)
 {
     rtpp_wi_pkt_free(&wis->wip);
-    free(wis);
 }
 
 static void

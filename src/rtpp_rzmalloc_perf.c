@@ -62,7 +62,6 @@ rtpp_rzmalloc_perf(void)
     if (pvt == NULL) {
         goto e0;
     }
-    CALL_SMETHOD(pvt->pub.rcnt, use_stdfree, pvt);
     return (pvt);
 
 e0:

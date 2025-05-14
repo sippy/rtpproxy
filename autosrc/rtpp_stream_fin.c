@@ -226,7 +226,6 @@ rtpp_stream_fintest()
     CALL_TFIN(&tp->pub, set_skt);
     CALL_TFIN(&tp->pub, update_skt);
     assert((_naborts - naborts_s) == 23);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_stream_fintest);
 #endif /* RTPP_FINTEST */

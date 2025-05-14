@@ -74,7 +74,6 @@ rtpp_sessinfo_fintest()
     CALL_TFIN(&tp->pub, sync_polltbl);
     CALL_TFIN(&tp->pub, update);
     assert((_naborts - naborts_s) == 4);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_sessinfo_fintest);
 #endif /* RTPP_FINTEST */

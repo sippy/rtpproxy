@@ -146,7 +146,6 @@ rtpp_hash_table_fintest()
     CALL_TFIN(&tp->pub, remove_str);
     CALL_TFIN(&tp->pub, transfer);
     assert((_naborts - naborts_s) == 13);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_hash_table_fintest);
 #endif /* RTPP_FINTEST */

@@ -234,7 +234,6 @@ rtpp_proc_servers_dtor(struct rtpp_proc_servers_priv *stap)
     RTPP_OBJ_DECREF(stap->inact_servers);
     RTPP_OBJ_DECREF(stap->act_servers);
     rtpp_queue_destroy(stap->cmd_q);
-    free(stap);
 }
 
 struct rtpp_proc_servers *
@@ -287,7 +286,6 @@ e2:
     rtpp_queue_destroy(stap->cmd_q);
 e1:
     RTPP_OBJ_DECREF(&stap->pub);
-    free(stap);
 e0:
     return (NULL);
 }

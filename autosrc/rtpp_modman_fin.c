@@ -81,7 +81,6 @@ rtpp_modman_fintest()
     CALL_TFIN(&tp->pub, insert);
     CALL_TFIN(&tp->pub, startall);
     assert((_naborts - naborts_s) == 5);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_modman_fintest);
 #endif /* RTPP_FINTEST */

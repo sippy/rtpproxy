@@ -273,7 +273,6 @@ ice_lite_data_dtor(struct ice_lite_agent_cfg *pvt)
     mem_deref(pvt->mb);
     mem_deref(pvt->sock);
     mem_deref(pvt->icem);
-    mod_free(pvt);
     RC_DECREF(RTPP_MOD_SELF.module_rcnt);
 }
 

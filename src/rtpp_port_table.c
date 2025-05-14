@@ -100,7 +100,6 @@ e2:
     pthread_mutex_destroy(&pvt->lock);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -112,7 +111,6 @@ rtpp_ptbl_dtor(struct rtpp_ptbl_priv *pvt)
     rtpp_port_table_fin(&pvt->pub);
     pthread_mutex_destroy(&pvt->lock);
     free(pvt->port_table);
-    free(pvt);
 }
 
 static int

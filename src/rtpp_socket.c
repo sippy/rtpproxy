@@ -134,7 +134,6 @@ rtpp_socket_ctor(struct rtpp_anetio_cf *netio, int domain, int type)
     return (&pvt->pub);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -148,7 +147,6 @@ rtpp_socket_dtor(struct rtpp_socket_priv *pvt)
         shutdown(pvt->fd, SHUT_RDWR);
     }
     close(pvt->fd);
-    free(pvt);
 }
 
 static int

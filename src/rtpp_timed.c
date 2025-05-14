@@ -193,7 +193,6 @@ e2:
     rtpp_queue_destroy(rtcp->q);
 e1:
     RTPP_OBJ_DECREF(&(rtcp->pub));
-    free(rtcp);
 e0:
     return (NULL);
 }
@@ -220,7 +219,6 @@ rtpp_timed_destroy(struct rtpp_timed_cf *rtpp_timed_cf)
     rtpp_timed_fin(&(rtpp_timed_cf->pub));
     rtpp_queue_destroy(rtpp_timed_cf->cmd_q);
     rtpp_queue_destroy(rtpp_timed_cf->q);
-    free(rtpp_timed_cf);
 }
 
 static struct rtpp_timed_task *
@@ -241,7 +239,7 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
     }
     memset(wi_data, '\0', rtpp_timed_cf->wi_dsize);
     wi_data->wi = wi;
-    wi_data->pub.rcnt = rtpp_refcnt_ctor_pa(&wi_data->rco[0]);
+    wi_data->pub.rcnt = rtpp_refcnt_ctor_pa(&wi_data->rco[0], NULL);
     if (wi_data->pub.rcnt == NULL) {
         RTPP_OBJ_DECREF(wi);
         return (NULL);

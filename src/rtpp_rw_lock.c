@@ -61,7 +61,6 @@ rtpp_rw_lock_dtor(struct rtpp_rw_lock_priv *pvt)
     rtpp_rw_lock_fin(&(pvt->pub));
     pthread_mutex_destroy(&pvt->write_lock);
     pthread_mutex_destroy(&pvt->cnt_lock);
-    free(pvt);
 }
 
 struct rtpp_rw_lock *
@@ -82,7 +81,6 @@ e3:
     pthread_mutex_destroy(&pvt->cnt_lock);
 e2:
     RTPP_OBJ_DECREF(&pvt->pub);
-    free(pvt);
 e1:
     return (NULL);
 }

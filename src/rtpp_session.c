@@ -210,7 +210,6 @@ e2:
     RTPP_OBJ_DECREF(log);
 e1:
     RTPP_OBJ_DECREF(pub);
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -272,7 +271,6 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
 
     RTPP_OBJ_DECREF(pvt->pub.rtcp);
     RTPP_OBJ_DECREF(pvt->pub.rtp);
-    free(pvt);
 }
 
 int

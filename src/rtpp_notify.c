@@ -148,7 +148,6 @@ e2:
     rtpp_queue_destroy(pvt->nqueue);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -161,7 +160,6 @@ rtpp_notify_dtor(struct rtpp_notify_priv *pvt)
     pthread_join(pvt->thread_id, NULL);
     rtpp_queue_destroy(pvt->nqueue);
     RTPP_OBJ_DECREF(pvt->glog);
-    free(pvt);
 }
 
 static int

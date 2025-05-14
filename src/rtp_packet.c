@@ -95,7 +95,6 @@ rtp_packet_alloc()
     if (pkt == NULL) {
         return (NULL);
     }
-    CALL_SMETHOD(pkt->pub.rcnt, use_stdfree, pkt);
     pkt->pub.wi = &(pkt->pvt.wip.pub);
 
     return &(pkt->pub);

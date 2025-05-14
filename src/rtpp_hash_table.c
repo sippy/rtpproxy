@@ -172,7 +172,6 @@ e2:
     free(pvt->l1);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -202,7 +201,6 @@ hash_table_dtor(struct rtpp_hash_table_priv *pvt)
     RTPP_DBG_ASSERT(pvt->l1->hte_num == 0);
 
     free(pvt->l1);
-    free(pvt);
 }
 
 static inline uint64_t

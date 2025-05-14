@@ -66,7 +66,6 @@ rtpp_analyzer_fintest()
     CALL_TFIN(&tp->pub, get_stats);
     CALL_TFIN(&tp->pub, update);
     assert((_naborts - naborts_s) == 3);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_analyzer_fintest);
 #endif /* RTPP_FINTEST */

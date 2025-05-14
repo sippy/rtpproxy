@@ -95,7 +95,6 @@ pproc_handlers_dtor(struct pproc_handlers *hndlrs)
         if (ip->rcnt != NULL)
             RTPP_OBJ_DECREF(ip);
     }
-    free(hndlrs);
 }
 
 static struct pproc_handlers *
@@ -120,7 +119,6 @@ rtpp_pproc_mgr_dtor(struct pproc_manager_pvt *pvt)
     pthread_mutex_destroy(&pvt->lock);
     RTPP_OBJ_DECREF(pvt->rtpp_stats);
     RTPP_OBJ_DECREF(pvt->handlers);
-    free(pvt);
 }
 
 struct pproc_manager *

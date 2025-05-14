@@ -58,7 +58,6 @@ rtpp_pcnt_strm_fintest()
     CALL_TFIN(&tp->pub, get_stats);
     CALL_TFIN(&tp->pub, reg_pktin);
     assert((_naborts - naborts_s) == 2);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_pcnt_strm_fintest);
 #endif /* RTPP_FINTEST */

@@ -87,7 +87,6 @@ rtpp_analyzer_ctor(struct rtpp_log *log)
     return (rap);
 e0:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
     return (NULL);
 }
 
@@ -154,5 +153,4 @@ rtpp_analyzer_dtor(struct rtpp_analyzer_priv *pvt)
     rtpp_analyzer_fin(&(pvt->pub));
     rtpp_stats_destroy(&pvt->rstat);
     RTPP_OBJ_DECREF(pvt->log);
-    free(pvt);
 }

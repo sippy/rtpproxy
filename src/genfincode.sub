@@ -109,7 +109,6 @@ emit_fintestfunction() {
     i=$((${i} + 1))
   done
   echo   "    assert((_naborts - naborts_s) == ${i});"
-  echo   "    free(tp);"
   echo   "}"
   echo   "DATA_SET(rtpp_fintests, ${oname}_fintest);"
 }

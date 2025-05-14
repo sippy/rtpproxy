@@ -114,7 +114,6 @@ rtpp_weakref_fintest()
     CALL_TFIN(&tp->pub, set_on_last);
     CALL_TFIN(&tp->pub, unreg);
     assert((_naborts - naborts_s) == 9);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_weakref_fintest);
 #endif /* RTPP_FINTEST */

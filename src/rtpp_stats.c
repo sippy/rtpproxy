@@ -257,7 +257,6 @@ e2:
     free(pvt->stats);
 e1:
     RTPP_OBJ_DECREF(pub);
-    free(fp);
 e0:
     return (NULL);
 }
@@ -380,7 +379,6 @@ rtpp_stats_dtor(struct rtpp_stats_full *fp)
     }
     free(pvt->stats);
     rtpp_stats_fin(&fp->pub);
-    free(fp);
 }
 
 static int

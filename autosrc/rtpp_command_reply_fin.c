@@ -106,7 +106,6 @@ rtpc_reply_fintest()
     CALL_TFIN(&tp->pub, ok);
     CALL_TFIN(&tp->pub, reserve);
     assert((_naborts - naborts_s) == 8);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpc_reply_fintest);
 #endif /* RTPP_FINTEST */

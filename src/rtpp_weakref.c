@@ -98,7 +98,6 @@ e1:
     RTPP_OBJ_DECREF(pvt->pub.ht);
 e0:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
     return (NULL);
 }
 
@@ -204,7 +203,6 @@ rtpp_weakref_dtor(struct rtpp_weakref_priv *pvt)
     rtpp_weakref_fin(&(pvt->pub));
     pthread_mutex_destroy(&pvt->on_lock);
     RTPP_OBJ_DECREF(pvt->pub.ht);
-    free(pvt);
 }
 
 static void *

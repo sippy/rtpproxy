@@ -143,7 +143,6 @@ e1:
         }
     }
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -161,7 +160,6 @@ rtpp_pipe_dtor(struct rtpp_pipe_priv *pvt)
     }
     RTPP_OBJ_DECREF(pvt->pub.pcount);
     RTPP_OBJ_DECREF(pvt->pub.log);
-    free(pvt);
 }
 
 static int

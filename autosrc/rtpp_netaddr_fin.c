@@ -106,7 +106,6 @@ rtpp_netaddr_fintest()
     CALL_TFIN(&tp->pub, set);
     CALL_TFIN(&tp->pub, sip_print);
     assert((_naborts - naborts_s) == 8);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_netaddr_fintest);
 #endif /* RTPP_FINTEST */

@@ -45,7 +45,6 @@ rtpp_timed_task_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, cancel);
     assert((_naborts - naborts_s) == 1);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_timed_task_fintest);
 #endif /* RTPP_FINTEST */

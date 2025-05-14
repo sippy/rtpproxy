@@ -50,7 +50,6 @@ rtpp_pearson_perfect_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, hash);
     assert((_naborts - naborts_s) == 1);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_pearson_perfect_fintest);
 #endif /* RTPP_FINTEST */

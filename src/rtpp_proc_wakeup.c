@@ -171,7 +171,6 @@ e2:
     pthread_mutex_destroy(&pvt->mutex);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -187,7 +186,6 @@ rtpp_proc_wakeup_dtor(struct rtpp_proc_wakeup_priv *pvt)
     pthread_join(pvt->thread_id, NULL);
     pthread_cond_destroy(&pvt->cond);
     pthread_mutex_destroy(&pvt->mutex);
-    free(pvt);
 }
 
 static int

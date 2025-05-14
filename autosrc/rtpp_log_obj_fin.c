@@ -72,7 +72,6 @@ rtpp_log_fintest()
     CALL_TFIN(&tp->pub, start);
     CALL_TFIN(&tp->pub, genwrite);
     assert((_naborts - naborts_s) == 4);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_log_fintest);
 #endif /* RTPP_FINTEST */

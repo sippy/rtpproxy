@@ -105,7 +105,6 @@ e2:
     RTPP_OBJ_DECREF(pvt->ht);
 e0:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
     return (NULL);
 }
 
@@ -116,7 +115,6 @@ rtpp_cmd_rcache_entry_free(void *p)
 
     rep = (struct rtpp_cmd_rcache_entry_pvt *)p;
     RC_DECREF(rep->reply_rcnt);
-    free(rep);
 }
 
 static void
@@ -185,7 +183,6 @@ rtpp_cmd_rcache_dtor(struct rtpp_cmd_rcache_pvt *pvt)
 
     rtpp_cmd_rcache_fin(&pvt->pub);
     RTPP_OBJ_DECREF(pvt->ht);
-    free(pvt);
 }
 
 static int

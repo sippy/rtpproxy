@@ -105,7 +105,6 @@ rtpp_pcount_dtor(struct rtpp_pcount_priv *pvt)
 {
 
     rtpp_pcount_fin(&(pvt->pub));
-    free(pvt);
 }
 
 static void

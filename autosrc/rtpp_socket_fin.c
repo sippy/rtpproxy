@@ -130,7 +130,6 @@ rtpp_socket_fintest()
     CALL_TFIN(&tp->pub, settimestamp);
     CALL_TFIN(&tp->pub, settos);
     assert((_naborts - naborts_s) == 11);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_socket_fintest);
 #endif /* RTPP_FINTEST */

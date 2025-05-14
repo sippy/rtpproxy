@@ -199,7 +199,6 @@ e7:
     rtpp_polltbl_hst_dtor(&pvt->hst_rtp);
 e6:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
     return (NULL);
 }
 
@@ -210,7 +209,6 @@ rtpp_sessinfo_dtor(struct rtpp_sessinfo_priv *pvt)
     rtpp_sessinfo_fin(&(pvt->pub));
     rtpp_polltbl_hst_dtor(&pvt->hst_rtp);
     rtpp_polltbl_hst_dtor(&pvt->hst_rtcp);
-    free(pvt);
 }
 
 static int
