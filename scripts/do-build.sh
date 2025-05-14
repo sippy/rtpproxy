@@ -29,6 +29,7 @@ then
 fi
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
+${SUDO} sysctl -w kernel.core_pattern=core
 
 ALLCLEAN_TGT="all clean distclean"
 
