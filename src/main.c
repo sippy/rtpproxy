@@ -186,6 +186,22 @@ rtpp_glog_fin(void)
 #endif
 
 static void
+badsignal(int sig)
+{
+    static volatile sig_atomic_t in_handler = 0;
+
+    signal(sig, SIG_DFL);
+    if (!in_handler) {
+        in_handler = 1;
+
+        RTPP_LOG(_sig_cf->glog, RTPP_LOG_CRIT, "got BAD signal %d, fastshutdown = %d",
+          sig, _sig_cf->fastshutdown);
+    }
+    raise(sig);
+    _exit(128 + sig);
+}
+
+static void
 fatsignal(int sig)
 {
 
@@ -196,9 +212,10 @@ fatsignal(int sig)
     }
     /*
      * Got second signal while already in the fastshutdown mode, something
-     * probably jammed, do quick exit right from sighandler.
+     * probably jammed, do quick exit right from sighandler, with an error
+     * code.
      */
-    rtpp_exit(1, 0);
+    rtpp_exit(1, 128 + sig);
 }
 
 static void
@@ -1209,19 +1226,21 @@ _rtpp_main(int argc, const char * const *argv)
         signal(SIGPROF, fatsignal);
         signal(SIGUSR1, fatsignal);
         signal(SIGUSR2, fatsignal);
+        void (*bad_handler)(int) = badsignal;
         RTPP_DBGCODE(catchtrace) {
-            signal(SIGQUIT, rtpp_stacktrace);
-            signal(SIGILL, rtpp_stacktrace);
-            signal(SIGTRAP, rtpp_stacktrace);
-            signal(SIGABRT, rtpp_stacktrace);
-#if defined(SIGEMT)
-            signal(SIGEMT, rtpp_stacktrace);
-#endif
-            signal(SIGFPE, rtpp_stacktrace);
-            signal(SIGBUS, rtpp_stacktrace);
-            signal(SIGSEGV, rtpp_stacktrace);
-            signal(SIGSYS, rtpp_stacktrace);
+            bad_handler = rtpp_stacktrace;
         }
+        signal(SIGQUIT, bad_handler);
+        signal(SIGILL, bad_handler);
+        signal(SIGTRAP, bad_handler);
+        signal(SIGABRT, bad_handler);
+#if defined(SIGEMT)
+        signal(SIGEMT, bad_handler);
+#endif
+        signal(SIGFPE, bad_handler);
+        signal(SIGBUS, bad_handler);
+        signal(SIGSEGV, bad_handler);
+        signal(SIGSYS, bad_handler);
     }
 
 #if !defined(LIBRTPPROXY)
