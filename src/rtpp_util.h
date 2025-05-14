@@ -49,7 +49,7 @@ int set_rlimits(const struct rtpp_cfg *);
 int drop_privileges(const struct rtpp_cfg *);
 char *rtpp_strsep(char **, const char *);
 int rtpp_daemon_rel_parent(const struct rtpp_daemon_rope *);
-struct rtpp_daemon_rope rtpp_daemon(int, int);
+struct rtpp_daemon_rope rtpp_daemon(int, int, int);
 int url_unquote(unsigned char *, int) RTPP_EXPORT;
 int url_unquote2(const char *, char *, int) RTPP_EXPORT;
 int url_quote(const char *, char *, int, int) RTPP_EXPORT;

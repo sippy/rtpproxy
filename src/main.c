@@ -234,6 +234,7 @@ ehandler(void)
 #define LOPT_CONFIG   260
 #define LOPT_FORC_ASM 261
 #define LOPT_NO_RESOL 262
+#define LOPT_NO_REDIR 263
 
 const static struct option longopts[] = {
     { "dso", required_argument, NULL, LOPT_DSO },
@@ -243,6 +244,7 @@ const static struct option longopts[] = {
     { "config", required_argument, NULL, LOPT_CONFIG },
     { "force_asymmetric", no_argument, NULL, LOPT_FORC_ASM },
     { "no_resolve", no_argument, NULL, LOPT_NO_RESOL },
+    { "no_redirect", no_argument, NULL, LOPT_NO_REDIR },
     { NULL,  0,                 NULL, 0 }
 };
 
@@ -349,6 +351,9 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
     cfsp->target_pfreq = MIN(POLL_RATE, cfsp->sched_hz);
     cfsp->slowshutdown = 0;
     cfsp->fastshutdown = 0;
+#if defined(RTPP_DEBUG)
+    cfsp->no_redirect = 1;
+#endif
 
     cfsp->rtpp_tnset_cf = rtpp_tnotify_set_ctor();
     if (cfsp->rtpp_tnset_cf == NULL) {
@@ -449,6 +454,10 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 
         case LOPT_NO_RESOL:
             cfsp->no_resolve = 1;
+            break;
+
+        case LOPT_NO_REDIR:
+            cfsp->no_redirect = 1;
             break;
 
         case 'c':
@@ -1069,7 +1078,7 @@ _rtpp_main(int argc, const char * const *argv)
                 MAIN_ERR(1, "getcwd");
             }
         }
-	drop = rtpp_daemon(cfsp->ropts.no_chdir, 0);
+	drop = rtpp_daemon(cfsp->ropts.no_chdir, 0, cfsp->no_redirect);
 	if (drop.result == -1)
 	    MAIN_ERR(1, "can't switch into daemon mode");
 	    /* NOTREACHED */

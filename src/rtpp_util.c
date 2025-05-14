@@ -196,7 +196,7 @@ rtpp_daemon_rel_parent(const struct rtpp_daemon_rope *rp)
  */
 
 struct rtpp_daemon_rope
-rtpp_daemon(int nochdir, int noclose)
+rtpp_daemon(int nochdir, int noclose, int noredir)
 {
     struct sigaction osa, sa;
     int fd;
@@ -256,11 +256,13 @@ rtpp_daemon(int nochdir, int noclose)
             (void)close(fd);
         }
 #if !defined(RTPP_DEBUG)
-        if (dup2(STDIN_FILENO, STDOUT_FILENO) < 0) {
-            goto child_fail;
-        }
-        if (dup2(STDIN_FILENO, STDERR_FILENO) < 0) {
-            goto child_fail;
+	if (!noredir) {
+            if (dup2(STDIN_FILENO, STDOUT_FILENO) < 0) {
+                goto child_fail;
+            }
+            if (dup2(STDIN_FILENO, STDERR_FILENO) < 0) {
+                goto child_fail;
+            }
         }
 #endif
     }

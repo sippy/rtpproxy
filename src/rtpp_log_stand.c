@@ -69,6 +69,7 @@ struct rtpp_log_inst {
     const char *format_se[2];
     const char *eformat_se[2];
     double itime;
+    int log_stderr;
 };
 
 struct rtpp_log_inst *
@@ -125,6 +126,7 @@ _rtpp_log_open(const struct rtpp_cfg *cf, const char *app, const char *call_id)
     rli->format_sl[1] = NULL;
     rli->eformat_sl[0] = "%s:%s:%s:%d: ";
     rli->eformat_sl[1] = ": %s (%d)";
+    rli->log_stderr = cf->no_redirect;
     return (rli);
 }
 
@@ -270,9 +272,8 @@ _rtpp_log_write_va(struct rtpp_log_inst *rli, int level, const char *function,
         va_copy(apc, ap);
 	vsyslog_async(level, rtpp_log_buff, rli->format_sl[1], format, apc);
         va_end(apc);
-#if !defined(RTPP_DEBUG)
-        return;
-#endif
+        if (!rli->log_stderr)
+            return;
     }
 #endif
 

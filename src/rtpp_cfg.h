@@ -149,6 +149,7 @@ struct rtpp_cfg {
     struct rtpp_locking *locks;
 
     int no_resolve;
+    int no_redirect;
 
     struct rtpp_proc_servers *proc_servers;
 #if ENABLE_MODULE_IF
