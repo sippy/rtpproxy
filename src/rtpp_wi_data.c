@@ -52,7 +52,6 @@ rtpp_wi_malloc_data(void *dataptr, size_t datalen)
     if (wipp == NULL) {
         return (NULL);
     }
-    CALL_SMETHOD(wipp->pub.rcnt, use_stdfree, wipp);
     *wipp = (const struct rtpp_wi_data) {
         .pub.wi_type = RTPP_WI_TYPE_DATA,
         .pub.rcnt = wipp->pub.rcnt
@@ -73,7 +72,6 @@ rtpp_wi_malloc_udata(void **dataptr, size_t datalen)
     if (wipp == NULL) {
         return (NULL);
     }
-    CALL_SMETHOD(wipp->pub.rcnt, use_stdfree, wipp);
     *wipp = (const struct rtpp_wi_data) {
         .pub.wi_type = RTPP_WI_TYPE_DATA,
         .pub.rcnt = wipp->pub.rcnt

@@ -118,5 +118,4 @@ rtpp_pearson_perfect_dtor(struct rtpp_pearson_perfect_priv *rppp)
 {
 
     rtpp_pearson_perfect_fin(&rppp->pub);
-    free(rppp);
 }

@@ -285,10 +285,9 @@ e3:
     close(rrc->fd);
 e2:
     RTPP_OBJ_DECREF(rrc->log);
-    RTPP_OBJ_DECREF(&(rrc->pub));
     pthread_mutex_destroy(&rrc->lock);
 e1:
-    free(rrc);
+    RTPP_OBJ_DECREF(&(rrc->pub));
 e0:
     return NULL;
 }
@@ -696,5 +695,4 @@ rtpp_record_close(struct rtpp_record_channel *rrc)
 done:
     RTPP_OBJ_DECREF(rrc->log);
     pthread_mutex_destroy(&rrc->lock);
-    free(rrc);
 }

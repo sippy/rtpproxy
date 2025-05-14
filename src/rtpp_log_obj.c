@@ -99,7 +99,6 @@ rtpp_log_obj_dtor(struct rtpp_log_priv *pvt)
     rtpp_log_fin(&pvt->pub);
     if (pvt->log != NULL)
         rtpp_log_close(pvt->log);
-    free(pvt);
 }
 
 static void

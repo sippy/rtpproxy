@@ -337,7 +337,6 @@ e2:
     pthread_mutex_destroy(&pvt->lock);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -444,7 +443,6 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     RTPP_OBJ_DECREF(pvt->pub.pproc_manager);
 
     pthread_mutex_destroy(&pvt->lock);
-    free(pvt);
 }
 
 static void
@@ -524,7 +522,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
         }
         pthread_mutex_unlock(&pvt->lock);
         rtpp_command_get_stats(cmd)->nplrs_created.cnt++;
-        CALL_SMETHOD(rsrv->rcnt, reg_pd, (rtpp_refcnt_dtor_t)player_predestroy_cb,
+        CALL_SMETHOD(rsrv->rcnt, attach, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           pvt->rtpp_stats);
         RTPP_OBJ_DECREF(rsrv);
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,

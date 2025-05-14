@@ -89,7 +89,6 @@ rtpp_netaddr_ctor(void)
 
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -114,7 +113,6 @@ rtpp_netaddr_dtor(struct rtpp_netaddr_priv *pvt)
 
     rtpp_netaddr_fin(&(pvt->pub));
     pthread_mutex_destroy(&pvt->lock);
-    free(pvt);
 }
 
 static int

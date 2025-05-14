@@ -77,7 +77,6 @@ rtpp_refproxy_dtor(struct rtpp_refproxy_priv *pvt)
     for (int i = 0; i < pvt->ulen; i++) {
         RC_DECREF(pvt->rcnts[i]);
     }
-    free(pvt);
 }
 
 static void

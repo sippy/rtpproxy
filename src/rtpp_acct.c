@@ -114,5 +114,4 @@ rtpp_acct_dtor(struct rtpp_acct_priv *pvt)
         RTPP_OBJ_DECREF(pvt->pub.rtcp.a.rem_addr);
     if (pvt->pub.rtcp.o.rem_addr != NULL)
         RTPP_OBJ_DECREF(pvt->pub.rtcp.o.rem_addr);
-    free(pvt);
 }

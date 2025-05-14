@@ -77,7 +77,6 @@ rtpp_ringbuf_ctor(size_t el_size, int nelements)
     return (&pvt->pub);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
-    free(pvt);
 e0:
     return (NULL);
 }
@@ -88,7 +87,6 @@ rtpp_ringbuf_dtor(struct rtpp_ringbuf_priv *pvt)
 
     rtpp_ringbuf_fin(&(pvt->pub));
     free(pvt->elements);
-    free(pvt);
 }
 
 static void

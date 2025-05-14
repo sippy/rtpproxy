@@ -58,7 +58,6 @@ rtpp_timeout_data_ctor(struct rtpp_tnotify_target *ttp, const rtpp_str_t *tag)
     pvt->tag.rw.len = tag->len;
     pvt->pub.notify_target = ttp;
     pvt->pub.notify_tag = &pvt->tag.fx;
-    CALL_SMETHOD(pvt->pub.rcnt, use_stdfree, pvt);
     return ((&pvt->pub));
 
 e0:

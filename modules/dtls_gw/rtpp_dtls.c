@@ -76,7 +76,6 @@ rtpp_dtls_dtor(struct rtpp_dtls_priv *pvt)
 
     X509_free(pvt->cert);
     SSL_CTX_free(pvt->ctx);
-    free(pvt);
 }
 
 struct rtpp_dtls *

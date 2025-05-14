@@ -204,7 +204,6 @@ dtls_gw_data_dtor(struct dtls_gw_stream_cfg *pvt)
 
     CALL_SMETHOD(pvt->dtls_conn, godead);
     RTPP_OBJ_DECREF(pvt->dtls_conn);
-    free(pvt);
     RC_DECREF(RTPP_MOD_SELF.module_rcnt);
 }
 

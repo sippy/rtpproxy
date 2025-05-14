@@ -89,7 +89,6 @@ rtpp_modman_dtor(struct rtpp_modman_priv *pvt)
         RTPP_OBJ_DECREF(mif);
         CALL_METHOD(mif, kaput);
     }
-    free(pvt);
 }
 
 static void

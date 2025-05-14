@@ -160,6 +160,8 @@ extern const struct rtpc_reply_smethods * const rtpc_reply_smethods;
 
 #define RTPP_OBJ_INCREF(obj) RC_INCREF((obj)->rcnt)
 #define RTPP_OBJ_DECREF(obj) RC_DECREF((obj)->rcnt)
+#define RTPP_OBJ_DTOR_ATTACH(obj, f, p) CALL_SMETHOD((obj)->rcnt, attach, \
+  (rtpp_refcnt_dtor_t)(f), (p))
 
 #define DEFINE_CB_STRUCT(functype) \
     typedef struct { \
