@@ -50,11 +50,10 @@ test_startstop() {
       echo "rtpproxy_start ${rargs} ${SOCK_RARGS}" >&2
       rtpproxy_start ${rargs} ${SOCK_RARGS}
       report "`basename ${RTPPROXY}` start"
-      RTPP_LOGFILE="${TMP_LOGFILE}"
-      TMP_LOGFILE="/dev/null" rtpproxy_stop ${sig}
+      rtpproxy_stop ${sig}
       report "`basename ${RTPPROXY}` stop (SIG${sig})"
-      cat "${RTPP_LOGFILE}" >> "${TS_LOGFILE}"
-      rm "${RTPP_LOGFILE}"
+      cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
+      rm "${TMP_LOGFILE}"
       ${DIFF} "startstop/${REF_OUTFILE}" "${RTPP_OUTFILE}"
       report "`basename ${RTPPROXY}` output"
     done

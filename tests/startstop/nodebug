@@ -3,11 +3,44 @@
 # test start up of rtpproxy and handling of SIGTERM and SIGHUP
 
 BASEDIR="`dirname "${0}"`/.."
+_DEBUG_RTPP=0
+if [ ${_DEBUG_RTPP} -ne 0 ]
+then
+  SUDO_REQUIRED=1
+  RTPP_POST_START_SLEEP=1
+fi
 . "${BASEDIR}/functions"
 
 TS_LOGFILE="startstop.nodebug.rlog"
 
 . "${BASEDIR}/startstop/startstop.sub"
 
-test_startstop "startstop.nodebug.rout" "${RTPPROXY_PROD}" "libucl/libucl_test.nodebug.conf" \
+if [ ${_DEBUG_RTPP} -ne 0 ]
+then
+  echo 0 | ${SUDO} tee /proc/sys/kernel/yama/ptrace_scope
+fi
+
+start_rtpp() {
+    ${RTPPROXY_PROD} "${@}" || return ${?}
+    if [ ${_DEBUG_RTPP} -eq 0 ]
+    then
+      return 0
+    fi
+    while [ ! -s ${TMP_PIDFILE} ]
+    do
+      sleep 0.05
+      _i=$((${_i} + 1))
+      if [ ${_i} -eq 3 ]
+      then
+        cat ${TMP_LOGFILE} >&2
+        return 1
+      fi
+    done
+    ${SUDO} gdb -batch -ex "attach `cat ${TMP_PIDFILE}`" \
+      -ex "handle SIGTERM nostop print pass" \
+      -ex "handle SIGHUP nostop print pass" -ex "continue" \
+      -ex "bt" -ex "detach" -ex "quit" 1>&2 &
+}
+
+test_startstop "startstop.nodebug.rout" start_rtpp "libucl/libucl_test.nodebug.conf" \
  "catch_dtmf dtls_gw ice_lite" "startstop.nodebug.output"
