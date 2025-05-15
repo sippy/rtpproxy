@@ -360,6 +360,8 @@ rtpp_mif_kaput(struct rtpp_module_if *self)
 
     PUB2PVT(self, pvt);
 
+    RTPP_LOG(pvt->mi.log, RTPP_LOG_DBUG, "Shutting down %s",
+      pvt->mi.descr.name);
     rtpp_module_if_fin(&(pvt->pub));
     if (pvt->started != 0) {
         /* First, stop the worker thread */
