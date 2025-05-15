@@ -30,8 +30,10 @@
 #define _GNU_SOURCE
 #endif
 
+#include <dlfcn.h>
 #include <stdatomic.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -261,9 +263,20 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
             atomic_thread_fence(memory_order_acquire);
         }
         for (int i = pvt->ulen; i >= 0; i--) {
+            struct dtor_pair *dp = &pvt->dtors[i];
+#if RTPP_DEBUG_refcnt
+            if (flags & RC_FLAG_TRACE) {
+                Dl_info info;
+                if (dladdr(dp->f, &info) && info.dli_sname != NULL)
+                    fprintf(stderr, "calling destructor %s@<%p>(%p)\n", info.dli_sname,
+                      dp->f, dp->data);
+                else
+                    fprintf(stderr, "calling destructor @<%p>(%p)\n", dp->f, dp->data);
+            }
+#endif
             if (i == 0)
                 rtpp_refcnt_fin(pub);
-            pvt->dtors[i].f(pvt->dtors[i].data);
+            dp->f(dp->data);
         }
     }
 }
