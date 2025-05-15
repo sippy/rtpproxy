@@ -169,7 +169,7 @@ jobs:
 
   FuncTest:
     name: Functional Testing    
-    needs: [LoadJobs_conf, FullBuild]
+    needs: [LoadJobs_conf]
     if: needs.LoadJobs_conf.outputs.do_FuncTest == 'true'
     # The type of runner that the job will run on
     runs-on: ubuntu-${{ matrix.os }}
@@ -242,7 +242,7 @@ jobs:
 
   Glitching:
     name: Glitch Injection
-    needs: [LoadJobs_conf, FuncTest]
+    needs: [LoadJobs_conf]
     if: needs.LoadJobs_conf.outputs.do_Glitch == 'true'
     # The type of runner that the job will run on
     runs-on: ubuntu-${{ matrix.os }}
