@@ -163,7 +163,7 @@ rtpp_daemon_parent(const struct rtpp_daemon_rope *rp)
         e = 1;
     }
 #if defined(RTPP_DEBUG)
-    __gcov_flush();
+    rtpp_gcov_flush();
 #endif
     _exit(e);
 }

@@ -113,7 +113,7 @@ again:
    assert(res == len);
 }
 
-#define AFLUSH() {__gcov_flush(); abort();}
+#define AFLUSH() {rtpp_gcov_flush(); abort();}
 
 void
 rtpp_glitch_init(struct rtpp_glitch_opts *glopts)

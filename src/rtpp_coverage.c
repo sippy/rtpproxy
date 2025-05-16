@@ -25,10 +25,23 @@
  *
  */
 
-#ifndef _RTPP_COVERAGE_H
-#define _RTPP_COVERAGE_H
+#include "unistd.h"
 
-void rtpp_gcov_flush(void);
-int is_gcov_on(void);
+#include "rtpp_coverage.h"
 
-#endif /* _RTPP_COVERAGE_H */
+extern void __gcov_flush(void) __attribute__((weak));
+
+/* check in gcc sources gcc/gcov-io.h for the prototype */
+void
+rtpp_gcov_flush(void)
+{
+    if (__gcov_flush == NULL)
+        return;
+    __gcov_flush();
+}
+
+int
+is_gcov_on(void)
+{
+    return (__gcov_flush != NULL);
+}
