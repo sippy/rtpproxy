@@ -63,7 +63,6 @@ rtpp_cmd_rcache_fintest()
     CALL_TFIN(&tp->pub, lookup);
     CALL_TFIN(&tp->pub, shutdown);
     assert((_naborts - naborts_s) == 3);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_cmd_rcache_fintest);
 #endif /* RTPP_FINTEST */

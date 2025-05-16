@@ -66,7 +66,6 @@ rtpp_proc_servers_fintest()
     CALL_TFIN(&tp->pub, reg);
     CALL_TFIN(&tp->pub, unreg);
     assert((_naborts - naborts_s) == 3);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_proc_servers_fintest);
 #endif /* RTPP_FINTEST */

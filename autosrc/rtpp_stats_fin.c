@@ -106,7 +106,6 @@ rtpp_stats_fintest()
     CALL_TFIN(&tp->pub, updatebyname);
     CALL_TFIN(&tp->pub, updatebyname_d);
     assert((_naborts - naborts_s) == 8);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_stats_fintest);
 #endif /* RTPP_FINTEST */

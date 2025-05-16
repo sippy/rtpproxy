@@ -66,7 +66,6 @@ rtpp_rw_lock_fintest()
     CALL_TFIN(&tp->pub, unlock);
     CALL_TFIN(&tp->pub, upgrade);
     assert((_naborts - naborts_s) == 3);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_rw_lock_fintest);
 #endif /* RTPP_FINTEST */

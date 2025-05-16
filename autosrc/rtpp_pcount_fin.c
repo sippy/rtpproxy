@@ -82,7 +82,6 @@ rtpp_pcount_fintest()
     CALL_TFIN(&tp->pub, reg_ignr);
     CALL_TFIN(&tp->pub, reg_reld);
     assert((_naborts - naborts_s) == 5);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_pcount_fintest);
 #endif /* RTPP_FINTEST */

@@ -50,7 +50,6 @@ rtpp_proc_wakeup_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, nudge);
     assert((_naborts - naborts_s) == 1);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_proc_wakeup_fintest);
 #endif /* RTPP_FINTEST */

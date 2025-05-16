@@ -50,7 +50,6 @@ rtpp_refproxy_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, add);
     assert((_naborts - naborts_s) == 1);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_refproxy_fintest);
 #endif /* RTPP_FINTEST */

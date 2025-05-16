@@ -228,9 +228,10 @@ am__librtpproxy_la_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_modman_fin.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_module_if_fin.h \
 	$(RTPP_AUTOSRC_DIR)/rtpp_module_if_fin.c rtpp_refcnt.c \
-	rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \
-	$(top_srcdir)/libucl/libucl.la $(XXH_DIR)/libxxHash.la \
-	rtpp_module_if_static.c rtpp_module_if_static.h librtpp_main.c
+	rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h rtpp_coverage.c \
+	rtpp_coverage.h $(top_srcdir)/libucl/libucl.la \
+	$(XXH_DIR)/libxxHash.la rtpp_module_if_static.c \
+	rtpp_module_if_static.h librtpp_main.c
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 =
 am__objects_2 = $(am__objects_1)
@@ -315,6 +316,7 @@ am__objects_13 = $(am__objects_7) $(am__objects_8) $(am__objects_9) \
 	$(am__objects_10) $(am__objects_11) $(am__objects_12)
 am_librtpproxy_la_OBJECTS = $(am__objects_6) $(am__objects_13) \
 	librtpproxy_la-rtpp_refcnt.lo librtpproxy_la-rtpp_mallocs.lo \
+	librtpproxy_la-rtpp_coverage.lo \
 	librtpproxy_la-rtpp_module_if_static.lo \
 	librtpproxy_la-librtpp_main.lo
 librtpproxy_la_OBJECTS = $(am_librtpproxy_la_OBJECTS)
@@ -334,7 +336,8 @@ am__objects_14 = $(MAINSRCDIR)/rtpp_fintest-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_fintest-rtpp_refcnt.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_fintest-rtpp_threads.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_fintest-rtpp_mallocs.$(OBJEXT) \
-	$(MAINSRCDIR)/rtpp_fintest-rtpp_stacktrace.$(OBJEXT)
+	$(MAINSRCDIR)/rtpp_fintest-rtpp_stacktrace.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.$(OBJEXT)
 am__objects_15 = $(am__objects_14) \
 	rtpp_fintest-rtpp_memdeb_test.$(OBJEXT)
 am__objects_16 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_command_rcache_fin.$(OBJEXT)
@@ -436,7 +439,8 @@ am__objects_55 = $(MAINSRCDIR)/rtpp_objck-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_refcnt.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_threads.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_mallocs.$(OBJEXT) \
-	$(MAINSRCDIR)/rtpp_objck-rtpp_stacktrace.$(OBJEXT)
+	$(MAINSRCDIR)/rtpp_objck-rtpp_stacktrace.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_objck-rtpp_coverage.$(OBJEXT)
 am__objects_56 = $(am__objects_55) \
 	rtpp_objck-rtpp_memdeb_test.$(OBJEXT)
 am__objects_57 =  \
@@ -548,7 +552,8 @@ am__objects_89 =  \
 	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_refcnt.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_threads.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_mallocs.$(OBJEXT) \
-	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.$(OBJEXT)
+	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.$(OBJEXT)
 am__objects_90 = $(am__objects_89) \
 	rtpp_rzmalloc_perf_debug-rtpp_memdeb_test.$(OBJEXT)
 am__objects_91 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_netaddr_fin.$(OBJEXT)
@@ -678,7 +683,8 @@ am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	$(MAINSRCDIR)/rtpp_threads.h $(MAINSRCDIR)/rtpp_threads.c \
 	$(MAINSRCDIR)/rtpp_mallocs.c $(MAINSRCDIR)/rtpp_mallocs.h \
 	$(MAINSRCDIR)/rtpp_stacktrace.c \
-	$(MAINSRCDIR)/rtpp_stacktrace.h rtpp_memdeb_stats.h \
+	$(MAINSRCDIR)/rtpp_stacktrace.h $(MAINSRCDIR)/rtpp_coverage.c \
+	$(MAINSRCDIR)/rtpp_coverage.h rtpp_memdeb_stats.h \
 	rtpp_memdeb_test.c $(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.h \
 	$(RTPP_AUTOSRC_DIR)/rtpp_netaddr_fin.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_pearson_perfect_fin.h \
@@ -825,7 +831,8 @@ am__objects_127 = $(MAINSRCDIR)/rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpproxy_debug-rtpp_refcnt.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpproxy_debug-rtpp_threads.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpproxy_debug-rtpp_mallocs.$(OBJEXT) \
-	$(MAINSRCDIR)/rtpproxy_debug-rtpp_stacktrace.$(OBJEXT)
+	$(MAINSRCDIR)/rtpproxy_debug-rtpp_stacktrace.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.$(OBJEXT)
 am__objects_128 = $(am__objects_127) \
 	rtpproxy_debug-rtpp_memdeb_test.$(OBJEXT)
 am__objects_129 = $(am__objects_128)
@@ -922,6 +929,7 @@ am__depfiles_remade =  \
 	$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc.Po \
 	$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ver.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_autoglitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_glitch.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_mallocs.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_memdeb.Po \
@@ -929,6 +937,7 @@ am__depfiles_remade =  \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_stacktrace.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_threads.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_autoglitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_glitch.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_mallocs.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_memdeb.Po \
@@ -936,6 +945,7 @@ am__depfiles_remade =  \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_stacktrace.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_threads.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_autoglitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_glitch.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_mallocs.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_memdeb.Po \
@@ -943,6 +953,7 @@ am__depfiles_remade =  \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_threads.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_autoglitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_mallocs.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po \
@@ -1089,6 +1100,7 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/librtpproxy_la-rtpp_command_reply.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_command_stream.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_controlfd.Plo \
+	./$(DEPDIR)/librtpproxy_la-rtpp_coverage.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_epoll.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_genuid.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_genuid_singlet.Plo \
@@ -1475,7 +1487,8 @@ RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
   $(MAINSRCDIR)/rtpp_refcnt.h $(MAINSRCDIR)/rtpp_threads.h \
   $(MAINSRCDIR)/rtpp_threads.c \
   $(MAINSRCDIR)/rtpp_mallocs.c $(MAINSRCDIR)/rtpp_mallocs.h \
-  $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h
+  $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h \
+  $(MAINSRCDIR)/rtpp_coverage.c $(MAINSRCDIR)/rtpp_coverage.h
 
 @ENABLE_LIBUNWIND_FALSE@RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
@@ -1676,6 +1689,7 @@ rtpp_fintest_LDADD = $(RTPP_MEMDEB_LDADD)
 rtpp_fintest_LDFLAGS = $(LTO_FLAG)
 librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \
+  rtpp_coverage.c rtpp_coverage.h \
   $(top_srcdir)/libucl/libucl.la $(XXH_DIR)/libxxHash.la \
   rtpp_module_if_static.c rtpp_module_if_static.h \
   librtpp_main.c
@@ -1926,6 +1940,9 @@ $(MAINSRCDIR)/rtpp_fintest-rtpp_mallocs.$(OBJEXT):  \
 $(MAINSRCDIR)/rtpp_fintest-rtpp_stacktrace.$(OBJEXT):  \
 	$(MAINSRCDIR)/$(am__dirstamp) \
 	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_command_rcache_fin.$(OBJEXT):  \
 	$(RTPP_AUTOSRC_DIR)/$(am__dirstamp) \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
@@ -2056,6 +2073,9 @@ $(MAINSRCDIR)/rtpp_objck-rtpp_mallocs.$(OBJEXT):  \
 $(MAINSRCDIR)/rtpp_objck-rtpp_stacktrace.$(OBJEXT):  \
 	$(MAINSRCDIR)/$(am__dirstamp) \
 	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_objck-rtpp_coverage.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 $(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_netaddr_fin.$(OBJEXT):  \
 	$(RTPP_AUTOSRC_DIR)/$(am__dirstamp) \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
@@ -2174,6 +2194,9 @@ $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_mallocs.$(OBJEXT):  \
 	$(MAINSRCDIR)/$(am__dirstamp) \
 	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.$(OBJEXT):  \
 	$(MAINSRCDIR)/$(am__dirstamp) \
 	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_netaddr_fin.$(OBJEXT):  \
@@ -2325,6 +2348,9 @@ $(MAINSRCDIR)/rtpproxy_debug-rtpp_mallocs.$(OBJEXT):  \
 $(MAINSRCDIR)/rtpproxy_debug-rtpp_stacktrace.$(OBJEXT):  \
 	$(MAINSRCDIR)/$(am__dirstamp) \
 	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_netaddr_fin.$(OBJEXT):  \
 	$(RTPP_AUTOSRC_DIR)/$(am__dirstamp) \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
@@ -2435,6 +2461,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ver.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_autoglitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_mallocs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_memdeb.Po@am__quote@ # am--include-marker
@@ -2442,6 +2469,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_stacktrace.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_threads.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_autoglitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_mallocs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_memdeb.Po@am__quote@ # am--include-marker
@@ -2449,6 +2477,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_stacktrace.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_threads.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_autoglitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_mallocs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_memdeb.Po@am__quote@ # am--include-marker
@@ -2456,6 +2485,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_threads.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_autoglitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_mallocs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po@am__quote@ # am--include-marker
@@ -2602,6 +2632,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_command_reply.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_command_stream.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_controlfd.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_coverage.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_epoll.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_genuid.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_genuid_singlet.Plo@am__quote@ # am--include-marker
@@ -3416,6 +3447,13 @@ librtpproxy_la-rtpp_mallocs.lo: rtpp_mallocs.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-rtpp_mallocs.lo `test -f 'rtpp_mallocs.c' || echo '$(srcdir)/'`rtpp_mallocs.c
 
+librtpproxy_la-rtpp_coverage.lo: rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -MT librtpproxy_la-rtpp_coverage.lo -MD -MP -MF $(DEPDIR)/librtpproxy_la-rtpp_coverage.Tpo -c -o librtpproxy_la-rtpp_coverage.lo `test -f 'rtpp_coverage.c' || echo '$(srcdir)/'`rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpproxy_la-rtpp_coverage.Tpo $(DEPDIR)/librtpproxy_la-rtpp_coverage.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_coverage.c' object='librtpproxy_la-rtpp_coverage.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-rtpp_coverage.lo `test -f 'rtpp_coverage.c' || echo '$(srcdir)/'`rtpp_coverage.c
+
 librtpproxy_la-rtpp_module_if_static.lo: rtpp_module_if_static.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -MT librtpproxy_la-rtpp_module_if_static.lo -MD -MP -MF $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Tpo -c -o librtpproxy_la-rtpp_module_if_static.lo `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Tpo $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Plo
@@ -3541,6 +3579,20 @@ $(MAINSRCDIR)/rtpp_fintest-rtpp_stacktrace.obj: $(MAINSRCDIR)/rtpp_stacktrace.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_stacktrace.c' object='$(MAINSRCDIR)/rtpp_fintest-rtpp_stacktrace.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_fintest_CPPFLAGS) $(CPPFLAGS) $(rtpp_fintest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_fintest-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
+
+$(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.o: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_fintest_CPPFLAGS) $(CPPFLAGS) $(rtpp_fintest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_fintest_CPPFLAGS) $(CPPFLAGS) $(rtpp_fintest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+
+$(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.obj: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_fintest_CPPFLAGS) $(CPPFLAGS) $(rtpp_fintest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_fintest_CPPFLAGS) $(CPPFLAGS) $(rtpp_fintest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
 
 rtpp_fintest-rtpp_memdeb_test.o: rtpp_memdeb_test.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_fintest_CPPFLAGS) $(CPPFLAGS) $(rtpp_fintest_CFLAGS) $(CFLAGS) -MT rtpp_fintest-rtpp_memdeb_test.o -MD -MP -MF $(DEPDIR)/rtpp_fintest-rtpp_memdeb_test.Tpo -c -o rtpp_fintest-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
@@ -4339,6 +4391,20 @@ $(MAINSRCDIR)/rtpp_objck-rtpp_stacktrace.obj: $(MAINSRCDIR)/rtpp_stacktrace.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_stacktrace.c' object='$(MAINSRCDIR)/rtpp_objck-rtpp_stacktrace.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_objck-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
+
+$(MAINSRCDIR)/rtpp_objck-rtpp_coverage.o: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_objck-rtpp_coverage.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpp_objck-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpp_objck-rtpp_coverage.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_objck-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+
+$(MAINSRCDIR)/rtpp_objck-rtpp_coverage.obj: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_objck-rtpp_coverage.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpp_objck-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpp_objck-rtpp_coverage.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_objck-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
 
 rtpp_objck-rtpp_memdeb_test.o: rtpp_memdeb_test.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT rtpp_objck-rtpp_memdeb_test.o -MD -MP -MF $(DEPDIR)/rtpp_objck-rtpp_memdeb_test.Tpo -c -o rtpp_objck-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
@@ -5165,6 +5231,20 @@ $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.obj: $(MAINSRCDIR)/rtpp_s
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_stacktrace.c' object='$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_debug_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_debug_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
+
+$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.o: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_debug_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_debug_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_debug_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_debug_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+
+$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.obj: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_debug_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_debug_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_debug_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_debug_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
 
 rtpp_rzmalloc_perf_debug-rtpp_memdeb_test.o: rtpp_memdeb_test.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_rzmalloc_perf_debug_CPPFLAGS) $(CPPFLAGS) $(rtpp_rzmalloc_perf_debug_CFLAGS) $(CFLAGS) -MT rtpp_rzmalloc_perf_debug-rtpp_memdeb_test.o -MD -MP -MF $(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_memdeb_test.Tpo -c -o rtpp_rzmalloc_perf_debug-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
@@ -6832,6 +6912,20 @@ $(MAINSRCDIR)/rtpproxy_debug-rtpp_stacktrace.obj: $(MAINSRCDIR)/rtpp_stacktrace.
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpproxy_debug-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
 
+$(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.o: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+
+$(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.obj: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
+
 rtpproxy_debug-rtpp_memdeb_test.o: rtpp_memdeb_test.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_memdeb_test.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Tpo -c -o rtpproxy_debug-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po
@@ -7339,6 +7433,7 @@ distclean: distclean-am
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc.Po
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ver.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_memdeb.Po
@@ -7346,6 +7441,7 @@ distclean: distclean-am
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_stacktrace.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_memdeb.Po
@@ -7353,6 +7449,7 @@ distclean: distclean-am
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_stacktrace.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_memdeb.Po
@@ -7360,6 +7457,7 @@ distclean: distclean-am
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po
@@ -7506,6 +7604,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_command_reply.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_command_stream.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_controlfd.Plo
+	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_coverage.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_epoll.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_genuid.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_genuid_singlet.Plo
@@ -7741,6 +7840,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc.Po
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ver.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_memdeb.Po
@@ -7748,6 +7848,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_stacktrace.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_memdeb.Po
@@ -7755,6 +7856,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_stacktrace.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_memdeb.Po
@@ -7762,6 +7864,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_rzmalloc_perf_debug-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpproxy_debug-rtpp_memdeb.Po
@@ -7908,6 +8011,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_command_reply.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_command_stream.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_controlfd.Plo
+	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_coverage.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_epoll.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_genuid.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_genuid_singlet.Plo

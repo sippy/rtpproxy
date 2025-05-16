@@ -66,7 +66,6 @@ rtpp_ringbuf_fintest()
     CALL_TFIN(&tp->pub, locate);
     CALL_TFIN(&tp->pub, push);
     assert((_naborts - naborts_s) == 3);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_ringbuf_fintest);
 #endif /* RTPP_FINTEST */

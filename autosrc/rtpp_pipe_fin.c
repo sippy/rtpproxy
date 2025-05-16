@@ -74,7 +74,6 @@ rtpp_pipe_fintest()
     CALL_TFIN(&tp->pub, get_ttl);
     CALL_TFIN(&tp->pub, upd_cntrs);
     assert((_naborts - naborts_s) == 4);
-    free(tp);
 }
 DATA_SET(rtpp_fintests, rtpp_pipe_fintest);
 #endif /* RTPP_FINTEST */
