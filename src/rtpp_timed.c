@@ -81,8 +81,6 @@ struct rtpp_timed_wi {
     double when;
     double offset;
     struct rtpp_timed_cf *timed_cf;
-    struct rtpp_wi *wi;
-    void *rco[0];
 };
 
 static void rtpp_timed_destroy(struct rtpp_timed_cf *);
@@ -94,8 +92,6 @@ static struct rtpp_timed_task *rtpp_timed_schedule_rc(struct rtpp_timed *,
 static void rtpp_timed_process(struct rtpp_timed_cf *, double);
 static int rtpp_timed_cancel(struct rtpp_timed_task *);
 static void rtpp_timed_shutdown(struct rtpp_timed *);
-
-static void rtpp_timed_task_dtor(struct rtpp_timed_wi *);
 
 DEFINE_SMETHODS(rtpp_timed,
     .schedule = &rtpp_timed_schedule,
@@ -238,12 +234,7 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
         return (NULL);
     }
     memset(wi_data, '\0', rtpp_timed_cf->wi_dsize);
-    wi_data->wi = wi;
-    wi_data->pub.rcnt = rtpp_refcnt_ctor_pa(&wi_data->rco[0], NULL);
-    if (wi_data->pub.rcnt == NULL) {
-        RTPP_OBJ_DECREF(wi);
-        return (NULL);
-    }
+    wi_data->pub.rcnt = wi->rcnt;
     wi_data->cb.func = cb_func;
     wi_data->cb.arg = cb_func_arg;
     wi_data->cancel_cb.func = cancel_cb_func;
@@ -254,15 +245,18 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
     if (callback_rcnt != NULL) {
         RC_INCREF(callback_rcnt);
     }
+#if defined(RTPP_DEBUG)
+    RTPP_OBJ_DTOR_ATTACH(wi, (rtpp_refcnt_dtor_t)&rtpp_timed_task_fin,
+      &(wi_data->pub));
+#endif
     if (support_cancel != 0) {
         wi_data->pub.cancel = &rtpp_timed_cancel;
         wi_data->timed_cf = rtpp_timed_cf;
         RTPP_OBJ_INCREF(pub);
+        RTPP_OBJ_DTOR_ATTACH_RC(wi, pub->rcnt);
     }
-    RTPP_OBJ_INCREF(&(wi_data->pub));
+    RTPP_OBJ_INCREF(wi);
     rtpp_queue_put_item(wi, rtpp_timed_cf->q);
-    CALL_SMETHOD(wi_data->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_task_dtor,
-      wi_data);
     return (&(wi_data->pub));
 }
 
@@ -366,17 +360,6 @@ rtpp_timed_match_wi(struct rtpp_wi *wia, void *p)
         return (0);
     }
     return (1);
-}
-
-static void
-rtpp_timed_task_dtor(struct rtpp_timed_wi *wi_data)
-{
-
-    rtpp_timed_task_fin(&(wi_data->pub));
-    if (wi_data->timed_cf != NULL) {
-        RTPP_OBJ_DECREF(&(wi_data->timed_cf->pub));
-    }
-    RTPP_OBJ_DECREF(wi_data->wi);
 }
 
 static int
