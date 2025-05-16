@@ -32,7 +32,8 @@ HEPSRCDIR=$(top_srcdir)/external/hepconnector
 if ENABLE_noinst
 noinst_PROGRAMS = libucl_test
 endif
-libucl_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libucl_test \
+libucl_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup -Dmod_free=free \
+  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libucl_test \
   -I$(UCL_DIR)/include -I$(HEPSRCDIR)
 libucl_test_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libucl_test_SOURCES = libucl_test.c \

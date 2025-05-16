@@ -48,8 +48,9 @@ typedef struct conf_helper_callback_map {
 } conf_helper_map;
 
 struct rtpp_module_conf {
+    struct rtpp_refcnt *rcnt;
     void *conf_data;
-    conf_helper_map conf_map[];
+    const conf_helper_map *conf_map;
 };
 
 bool rtpp_ucl_set_unknown(struct rtpp_log *, const ucl_object_t *top,

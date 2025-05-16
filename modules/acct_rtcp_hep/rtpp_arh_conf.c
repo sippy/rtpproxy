@@ -134,16 +134,16 @@ conf_set_capt_id(struct rtpp_log *log, const ucl_object_t *top,
     return (true);
 }
 
-static struct rtpp_module_conf _rtpp_arh_conf = {
+const struct rtpp_module_conf _rtpp_arh_conf = {
     .conf_data = NULL,
-    .conf_map = {
+    .conf_map = (const conf_helper_map[]){
         { "load", NULL }, /* The "load" is set when the hep_ctx is created */
         { "capt_host", (conf_helper_t) conf_set_capt_host },
         { "capt_port", (conf_helper_t) conf_set_capt_port },
         { "capt_ptype", (conf_helper_t) conf_set_capt_ptype },
         { "capt_id", (conf_helper_t) conf_set_capt_id },
-        { NULL, (conf_helper_t) rtpp_ucl_set_unknown }
+        { NULL, (conf_helper_t) rtpp_ucl_set_unknown },
+        { NULL, NULL }
     }
 };
-
-struct rtpp_module_conf *rtpp_arh_conf = &_rtpp_arh_conf;
+const int _rtpp_arh_conf_size = sizeof(_rtpp_arh_conf);

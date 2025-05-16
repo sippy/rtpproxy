@@ -22,9 +22,9 @@ RTPP_MEMDEB_STATIC(rtpproxy);
 RTPP_MEMDEB_STATIC(libucl_test);
 
 static bool conf_helper_mapper(const ucl_object_t *obj,
-  conf_helper_map *map, void *target, conf_helper_map **failed);
+  const conf_helper_map *map, void *target, const conf_helper_map **failed);
 
-extern struct rtpp_module_conf *rtpp_arh_conf;
+extern const struct rtpp_module_conf _rtpp_arh_conf;
 
 static void
 rtpp_log_obj_write_early(struct rtpp_log *self, const char *fname, int lnum,
@@ -65,8 +65,8 @@ parse_modules(const ucl_object_t *wop)
     const ucl_object_t *obj_key;
     int ecode, success;
     void *confp;
-    conf_helper_map *map = rtpp_arh_conf->conf_map;
-    conf_helper_map *fent;
+    const conf_helper_map *map = _rtpp_arh_conf.conf_map;
+    const conf_helper_map *fent;
     struct hep_ctx cbuf;
 
     it_conf = ucl_object_iterate_new(wop);
@@ -192,8 +192,8 @@ e0:
 }
 
 static bool
-conf_helper_mapper(const ucl_object_t *obj, conf_helper_map *map,
-  void *target, conf_helper_map **fentrpp)
+conf_helper_mapper(const ucl_object_t *obj, const conf_helper_map *map,
+  void *target, const conf_helper_map **fentrpp)
 {
     ucl_object_iter_t it;
     const ucl_object_t *cur;

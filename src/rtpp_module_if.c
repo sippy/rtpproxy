@@ -82,6 +82,9 @@
 #include "rtpp_refproxy.h"
 #include "rtpp_sbuf.h"
 #include "rtpp_coverage.h"
+#include "rtpp_debug.h"
+#include "ucl.h"
+#include "rtpp_ucl.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -96,11 +99,11 @@ struct rtpp_module_if_priv {
     struct rtpp_log *log;
     struct rtpp_modids ids;
     struct rtpp_weakref *sessions_wrt;
+    struct rtpp_module_conf *mcp;
     int started;
     char mpath[0];
 };
 
-static void rtpp_mif_log_unref(struct rtpp_log *);
 #if RTPP_CHECK_LEAKS
 static void rtpp_mif_memdeb_dtor(struct rtpp_minfo *);
 #endif
@@ -254,7 +257,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     }
 
     RTPP_OBJ_INCREF(log);
-    RTPP_OBJ_DTOR_ATTACH(&(pvt->pub), rtpp_mif_log_unref, log);
+    RTPP_OBJ_DTOR_ATTACH_RC(&(pvt->pub), log->rcnt);
     pvt->mi.log = log;
 
 #if RTPP_CHECK_LEAKS
@@ -329,13 +332,6 @@ e2:
     pvt->mi.wthr.sigterm = NULL;
 e1:
     return (-1);
-}
-
-static void
-rtpp_mif_log_unref(struct rtpp_log *log)
-{
-
-    RTPP_OBJ_DECREF(log);
 }
 
 #if RTPP_CHECK_LEAKS
@@ -484,7 +480,7 @@ rtpp_mif_construct(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
         }
     }
     if (pvt->mi.proc.config != NULL) {
-        if (pvt->mi.proc.config(pvt->mpvt) != 0) {
+        if (pvt->mi.proc.config(pvt->mpvt, pvt->mcp) != 0) {
             RTPP_LOG(pvt->mi.log, RTPP_LOG_ERR, "%p->config() method has failed: %s",
               self, pvt->mi.descr.name);
             if (pvt->mi.proc.dtor != NULL) {
@@ -540,6 +536,7 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
     struct rtpp_module_conf *rval;
 
     PUB2PVT(self, pvt);
+    RTPP_DBG_ASSERT(pvt->mcp == NULL);
     if (pvt->mi.proc.get_mconf == NULL) {
         *mcpp = NULL;
         return (0);
@@ -548,7 +545,9 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
     if (rval == NULL) {
         return (-1);
     }
-    *mcpp = rval;
+    RTPP_OBJ_INCREF(rval);
+    RTPP_OBJ_DTOR_ATTACH_RC(&(pvt->pub), rval->rcnt);
+    *mcpp = pvt->mcp = rval;
     return (0);
 }
 

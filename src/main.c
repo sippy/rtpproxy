@@ -113,6 +113,8 @@
 #include "rtpp_locking.h"
 #include "rtpp_nofile.h"
 #include "advanced/pproc_manager.h"
+#include "ucl.h"
+#include "rtpp_ucl.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
@@ -430,6 +432,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
                 IC_ERRX(1, "%p->get_mconf() method has failed: %s", mif, cp);
             }
             if (mcp != NULL) {
+                 RTPP_OBJ_DECREF(mcp);
                  IC_ERRX(1, "%s: dymanic module requires configuration, cannot be "
                    "loaded via --dso option", cp);
             }
