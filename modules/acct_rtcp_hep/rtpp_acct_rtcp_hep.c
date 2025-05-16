@@ -53,6 +53,7 @@
 #include "rtpp_ucl.h"
 #include "rtpa_stats.h"
 #include "rtpp_linker_set.h"
+#include "rtpp_refcnt.h"
 
 #include "rtcp2json.h"
 #include "core_hep.h"
@@ -73,9 +74,10 @@ static struct rtpp_module_priv *rtpp_acct_rtcp_hep_ctor(const struct rtpp_cfg *,
 static void rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_rtcp_hep_do(struct rtpp_module_priv *, struct rtpp_acct_rtcp *);
 static struct rtpp_module_conf *rtpp_acct_rtcp_hep_get_mconf(void);
-static int rtpp_acct_rtcp_hep_config(struct rtpp_module_priv *);
+static int rtpp_acct_rtcp_hep_config(struct rtpp_module_priv *,
+  struct rtpp_module_conf *);
 
-extern struct rtpp_module_conf *rtpp_arh_conf;
+extern const struct rtpp_module_conf _rtpp_arh_conf;
 
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
@@ -131,10 +133,18 @@ e0:
     return (NULL);
 }
 
+struct rtpp_module_conf_pvt {
+    struct hep_ctx ctx;
+    struct rtpp_module_conf pub;
+};
+
 static int
-rtpp_acct_rtcp_hep_config(struct rtpp_module_priv *pvt)
+rtpp_acct_rtcp_hep_config(struct rtpp_module_priv *pvt,
+  struct rtpp_module_conf *mcpub)
 {
-    pvt->ctx = rtpp_arh_conf->conf_data;
+    struct rtpp_module_conf_pvt *mcpvt;
+    PUB2PVT(mcpub, mcpvt);
+    pvt->ctx = &mcpvt->ctx;
     if (init_hepsocket(pvt->ctx) != 0) {
         return (-1);
     }
@@ -144,9 +154,6 @@ rtpp_acct_rtcp_hep_config(struct rtpp_module_priv *pvt)
 static void
 rtpp_acct_rtcp_hep_dtor(struct rtpp_module_priv *pvt)
 {
-    if (pvt->ctx->capt_host != default_ctx.capt_host && pvt->ctx->capt_host != NULL) {
-        mod_free(pvt->ctx->capt_host);
-    }
     hep_gen_dtor(pvt->ctx);
     rtpp_sbuf_dtor(pvt->sbp);
     mod_free(pvt);
@@ -216,13 +223,27 @@ out:
     return;
 }
 
+static void
+mconf_dtor(struct hep_ctx *ctxp)
+{
+    if (ctxp->capt_host != NULL && ctxp->capt_host != default_ctx.capt_host) {
+        mod_free(ctxp->capt_host);
+    }
+}
+
 static struct rtpp_module_conf *
 rtpp_acct_rtcp_hep_get_mconf(void)
 {
-    static struct hep_ctx hp;
+    struct rtpp_module_conf_pvt *cp;
 
-    hp = default_ctx;
-    rtpp_arh_conf->conf_data = &hp;
-
-    return (rtpp_arh_conf);
+    cp = mod_rzmalloc(sizeof(*cp), PVT_RCOFFS(cp));
+    if (cp == NULL)
+        return NULL;
+    struct rtpp_refcnt *rtp = cp->pub.rcnt;
+    cp->pub = _rtpp_arh_conf;
+    cp->pub.rcnt = rtp;
+    cp->ctx = default_ctx;
+    cp->pub.conf_data = &cp->ctx;
+    RTPP_OBJ_DTOR_ATTACH(&(cp->pub), mconf_dtor, &cp->ctx);
+    return (&cp->pub);
 }

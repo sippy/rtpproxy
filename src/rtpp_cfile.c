@@ -210,6 +210,7 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
         if (mcp != NULL) {
             map = mcp->conf_map;
             confp = mcp->conf_data;
+            RTPP_OBJ_DECREF(mcp);
         } else {
             map = default_module_map;
             confp = NULL;
