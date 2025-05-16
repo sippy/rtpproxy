@@ -81,6 +81,7 @@
 #include "rtpp_command_private.h"
 #include "rtpp_refproxy.h"
 #include "rtpp_sbuf.h"
+#include "rtpp_coverage.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #endif
@@ -211,7 +212,8 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         goto e1;
 #endif
     if (mip == NULL) {
-        void *dmp = dlopen(pvt->mpath, RTLD_NOW);
+        int dlflags = RTLD_NOW | (is_gcov_on() ? RTLD_NODELETE : 0);
+        void *dmp = dlopen(pvt->mpath, dlflags);
         if (dmp == NULL) {
             derr = dlerror();
             if (strstr(derr, pvt->mpath) == NULL) {

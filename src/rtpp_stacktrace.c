@@ -55,7 +55,7 @@ rtpp_stacktrace(int sig)
         fprintf(stderr, "%s\n", strings[i]);
     fflush(stderr);
     signal(sig, SIG_DFL);
-    __gcov_flush();
+    rtpp_gcov_flush();
     kill(getpid(), sig);
 }
 

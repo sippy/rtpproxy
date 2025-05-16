@@ -8,7 +8,8 @@ RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
   $(MAINSRCDIR)/rtpp_refcnt.h $(MAINSRCDIR)/rtpp_threads.h \
   $(MAINSRCDIR)/rtpp_threads.c \
   $(MAINSRCDIR)/rtpp_mallocs.c $(MAINSRCDIR)/rtpp_mallocs.h \
-  $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h
+  $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h \
+  $(MAINSRCDIR)/rtpp_coverage.c $(MAINSRCDIR)/rtpp_coverage.h
 if !ENABLE_LIBUNWIND
 RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
 endif
