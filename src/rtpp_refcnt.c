@@ -72,7 +72,10 @@ static void rtpp_refcnt_decref(struct rtpp_refcnt *, HERETYPE);
 
 struct dtor_pair {
     rtpp_refcnt_dtor_t f;
-    void *data;
+    union {
+        void *data;
+        struct rtpp_refcnt *rcnt;
+    };
 };
 
 #define MAX_DTORS 8
@@ -91,6 +94,7 @@ const size_t rtpp_refcnt_osize = sizeof(struct rtpp_refcnt_priv);
 
 static void rtpp_refcnt_attach(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *);
+static void rtpp_refcnt_attach_rc(struct rtpp_refcnt *, struct rtpp_refcnt *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt *);
 
 #if RTPP_DEBUG_refcnt
@@ -107,6 +111,7 @@ DEFINE_SMETHODS(rtpp_refcnt,
     .peek = rtpp_refcnt_peek,
 #endif
     .attach = &rtpp_refcnt_attach,
+    .attach_rc = &rtpp_refcnt_attach_rc,
 );
 
 #if defined(RTPP_CHECK_LEAKS)
@@ -118,6 +123,9 @@ rtpp_refcnt_free(void *p)
 }
 #endif
 
+#define DTOR_PAIR_INIT(fn, fd) (struct dtor_pair){.f=(fn), .data=(fd)}
+#define DTOR_RC_INIT(rc) (struct dtor_pair){.rcnt=(rc)}
+
 struct rtpp_refcnt *
 rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
 {
@@ -128,18 +136,18 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
         return (NULL);
     }
 #if !defined(RTPP_CHECK_LEAKS)
-    pvt->dtors[0] = (struct dtor_pair){free, pvt};
+    pvt->dtors[0] = DTOR_PAIR_INIT(free, pvt);
 #else
-    pvt->dtors[0] = (struct dtor_pair){rtpp_refcnt_free, pvt};
+    pvt->dtors[0] = DTOR_PAIR_INIT(rtpp_refcnt_free, pvt);
 #endif
     if (dtor_f != NULL) {
-        pvt->dtors[1] = (struct dtor_pair){dtor_f, data};
+        pvt->dtors[1] = DTOR_PAIR_INIT(dtor_f, data);
         pvt->ulen = 1;
     } else if (data != NULL) {
 #if !defined(RTPP_CHECK_LEAKS)
-        pvt->dtors[1] = (struct dtor_pair){free, data};
+        pvt->dtors[1] = DTOR_PAIR_INIT(free, data);
 #else
-        pvt->dtors[1] = (struct dtor_pair){rtpp_refcnt_free, data};
+        pvt->dtors[1] = DTOR_PAIR_INIT(rtpp_refcnt_free, data);
 #endif
         pvt->ulen = 1;
     }
@@ -157,9 +165,9 @@ rtpp_refcnt_ctor_pa(void *pap, void *data)
     pvt = (struct rtpp_refcnt_priv *)pap;
     if (data != NULL) {
 #if !defined(RTPP_CHECK_LEAKS)
-        pvt->dtors[0] = (struct dtor_pair){free, data};
+        pvt->dtors[0] = DTOR_PAIR_INIT(free, data);
 #else
-        pvt->dtors[0] = (struct dtor_pair){rtpp_refcnt_free, data};
+        pvt->dtors[0] = DTOR_PAIR_INIT(rtpp_refcnt_free, data);
 #endif
     } else {
         pvt->ulen = -1;
@@ -179,7 +187,18 @@ rtpp_refcnt_attach(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f,
     PUB2PVT(pub, pvt);
     RTPP_DBG_ASSERT(MAX_DTORS > pvt->ulen);
     pvt->ulen += 1;
-    pvt->dtors[pvt->ulen] = (struct dtor_pair){dtor_f, data};
+    pvt->dtors[pvt->ulen] = DTOR_PAIR_INIT(dtor_f, data);
+}
+
+static void
+rtpp_refcnt_attach_rc(struct rtpp_refcnt *pub, struct rtpp_refcnt *other)
+{
+    struct rtpp_refcnt_priv *pvt;
+
+    PUB2PVT(pub, pvt);
+    RTPP_DBG_ASSERT(MAX_DTORS > pvt->ulen);
+    pvt->ulen += 1;
+    pvt->dtors[pvt->ulen] = DTOR_RC_INIT(other);
 }
 
 static void
@@ -276,7 +295,12 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
 #endif
             if (i == 0)
                 rtpp_refcnt_fin(pub);
-            dp->f(dp->data);
+            if (dp->f != NULL) {
+                dp->f(dp->data);
+            } else {
+                struct rtpp_refcnt *other = dp->rcnt;
+                rtpp_refcnt_decref(other, mlp);
+            }
         }
     }
 }
