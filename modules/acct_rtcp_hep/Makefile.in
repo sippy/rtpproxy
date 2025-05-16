@@ -196,7 +196,8 @@ am__objects_3 =  \
 	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_refcnt.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_threads.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.$(OBJEXT) \
-	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.$(OBJEXT)
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.$(OBJEXT) \
+	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.$(OBJEXT)
 am__objects_4 = $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.$(OBJEXT)
 am_rtpp_sbuf_selftest_OBJECTS =  \
 	$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_sbuf.$(OBJEXT) \
@@ -227,6 +228,7 @@ am__depfiles_remade =  \
 	$(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo \
 	$(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po \
@@ -457,7 +459,8 @@ RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
   $(MAINSRCDIR)/rtpp_refcnt.h $(MAINSRCDIR)/rtpp_threads.h \
   $(MAINSRCDIR)/rtpp_threads.c \
   $(MAINSRCDIR)/rtpp_mallocs.c $(MAINSRCDIR)/rtpp_mallocs.h \
-  $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h
+  $(MAINSRCDIR)/rtpp_stacktrace.c $(MAINSRCDIR)/rtpp_stacktrace.h \
+  $(MAINSRCDIR)/rtpp_coverage.c $(MAINSRCDIR)/rtpp_coverage.h
 
 @ENABLE_LIBUNWIND_FALSE@RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
 RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
@@ -700,6 +703,9 @@ $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_mallocs.$(OBJEXT):  \
 $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.$(OBJEXT):  \
 	$(MAINSRCDIR)/$(am__dirstamp) \
 	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
 $(RTPP_AUTOSRC_DIR)/$(am__dirstamp):
 	@$(MKDIR_P) $(RTPP_AUTOSRC_DIR)
 	@: >>$(RTPP_AUTOSRC_DIR)/$(am__dirstamp)
@@ -729,6 +735,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po@am__quote@ # am--include-marker
@@ -1017,6 +1024,20 @@ $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.obj: $(MAINSRCDIR)/rtpp_stacktr
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
 
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.o: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+
+$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.obj: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/rtpp_sbuf_selftest-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
+
 $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_sbuf_selftest_CPPFLAGS) $(CPPFLAGS) $(rtpp_sbuf_selftest_CFLAGS) $(CFLAGS) -MT $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.o -MD -MP -MF $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo -c -o $(RTPP_AUTOSRC_DIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Tpo $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_refcnt_fin.Po
@@ -1177,6 +1198,7 @@ distclean: distclean-am
 	-rm -f $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
@@ -1246,6 +1268,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(HEPSRCDIR)/$(DEPDIR)/rtpp_acct_rtcp_hep_la-core_hep.Plo
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtcp2json_test-rtpp_sbuf.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_glitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_mallocs.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_sbuf_selftest-rtpp_memdeb.Po
