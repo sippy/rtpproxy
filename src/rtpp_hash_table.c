@@ -653,10 +653,11 @@ hash_table_foreach_rc(struct rtpp_hash_table *self,
                 free(sp);
             }
             if (mval & RTPP_HT_MATCH_BRK) {
-                break;
+                goto out;
             }
         }
     }
+out:
     pthread_mutex_unlock(&pvt->hash_table_lock);
 }
 
@@ -766,6 +767,7 @@ hash_table_purge_f(struct rtpp_refcnt *rptr, void *ap)
 {
     struct purge_batch *pbp = (struct purge_batch *)ap;
 
+    RTPP_DBG_ASSERT(pbp->n < PURGE_BATCH);
     RC_INCREF(rptr);
     pbp->rptrs[pbp->n++] = rptr;
     return (RTPP_HT_MATCH_DEL | (pbp->n == PURGE_BATCH ? RTPP_HT_MATCH_BRK : 0));
@@ -780,6 +782,7 @@ hash_table_purge(struct rtpp_hash_table *self)
     for (npurged = 0;; npurged++) {
         pb.n = 0;
         hash_table_foreach_rc(self, hash_table_purge_f, &pb, NULL);
+        RTPP_DBG_ASSERT(pb.n <= PURGE_BATCH);
         if (pb.n == 0)
             break;
         for (int i = 0; i < pb.n; i++)
