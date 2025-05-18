@@ -623,12 +623,11 @@ hash_table_find_str(struct rtpp_hash_table *self, const rtpp_str_t *key)
     return (hash_table_find_raw(pvt, key->s, key->len));
 }
 
-
 #define VDTE_MVAL(m) (((m) & ~(RTPP_HT_MATCH_BRK | RTPP_HT_MATCH_DEL)) == 0)
 
 static void
-hash_table_foreach(struct rtpp_hash_table *self,
-  rtpp_hash_table_match_t hte_ematch, void *marg, struct rtpp_ht_opstats *hosp)
+hash_table_foreach_rc(struct rtpp_hash_table *self,
+  rtpp_hash_table_match_rc_t hte_ematch_rc, void *marg, struct rtpp_ht_opstats *hosp)
 {
     struct rtpp_hash_table_entry *sp, *sp_next;
     struct rtpp_hash_table_priv *pvt;
@@ -646,7 +645,7 @@ hash_table_foreach(struct rtpp_hash_table *self,
             RTPP_DBG_ASSERT(sp->hte_type == rtpp_hte_refcnt_t);
             rptr = (struct rtpp_refcnt *)sp->sptr;
             sp_next = sp->next;
-            mval = hte_ematch(CALL_SMETHOD(rptr, getdata), marg);
+            mval = hte_ematch_rc(rptr, marg);
             RTPP_DBG_ASSERT(VDTE_MVAL(mval));
             if (mval & RTPP_HT_MATCH_DEL) {
                 hash_table_remove_locked(pvt, sp, sp->hash, hosp);
@@ -659,6 +658,27 @@ hash_table_foreach(struct rtpp_hash_table *self,
         }
     }
     pthread_mutex_unlock(&pvt->hash_table_lock);
+}
+
+struct rc2norc_args {
+    rtpp_hash_table_match_t hte_ematch;
+    void *marg;
+};
+
+static int
+ematch_rc2norc(struct rtpp_refcnt *rptr, void *marg)
+{
+    struct rc2norc_args *args = (struct rc2norc_args *)marg;
+    void *data = CALL_SMETHOD(rptr, getdata);
+    return args->hte_ematch(data, args->marg);
+}
+
+static void
+hash_table_foreach(struct rtpp_hash_table *self,
+  rtpp_hash_table_match_t hte_ematch, void *marg, struct rtpp_ht_opstats *hosp)
+{
+    struct rc2norc_args args = {.hte_ematch = hte_ematch, .marg = marg};
+    return hash_table_foreach_rc(self, ematch_rc2norc, &args, hosp);
 }
 
 static void
@@ -735,23 +755,36 @@ hash_table_get_length(struct rtpp_hash_table *self)
     return (rval);
 }
 
-static int
-hash_table_purge_f(void *dp, void *ap)
-{
-    int *npurgedp;
+#define PURGE_BATCH 64
+struct purge_batch {
+    struct rtpp_refcnt *rptrs[PURGE_BATCH];
+    int n;
+};
 
-    npurgedp = (int *)ap;
-    *npurgedp += 1;
-    return (RTPP_HT_MATCH_DEL);
+static int
+hash_table_purge_f(struct rtpp_refcnt *rptr, void *ap)
+{
+    struct purge_batch *pbp = (struct purge_batch *)ap;
+
+    RC_INCREF(rptr);
+    pbp->rptrs[pbp->n++] = rptr;
+    return (RTPP_HT_MATCH_DEL | (pbp->n == PURGE_BATCH ? RTPP_HT_MATCH_BRK : 0));
 }
 
 static int
 hash_table_purge(struct rtpp_hash_table *self)
 {
     int npurged;
+    struct purge_batch pb;
 
-    npurged = 0;
-    CALL_SMETHOD(self, foreach, hash_table_purge_f, &npurged, NULL);
+    for (npurged = 0;; npurged++) {
+        pb.n = 0;
+        hash_table_foreach_rc(self, hash_table_purge_f, &pb, NULL);
+        if (pb.n == 0)
+            break;
+        for (int i = 0; i < pb.n; i++)
+            RC_DECREF(pb.rptrs[i]);
+    }
     return (npurged);
 }
 

@@ -35,6 +35,7 @@ struct rtpp_hash_table_entry;
 struct rtpp_refcnt;
 
 DEFINE_RAW_METHOD(rtpp_hash_table_match, int, void *, void *);
+DEFINE_RAW_METHOD(rtpp_hash_table_match_rc, int, struct rtpp_refcnt *, void *);
 
 struct rtpp_ht_opstats {
     unsigned first:1;
