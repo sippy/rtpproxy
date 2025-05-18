@@ -253,15 +253,18 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
+    RTPP_OBJ_DTOR_ATTACH(&pvt->pub, pthread_mutex_destroy, &pvt->lock);
     pvt->pub.pproc_manager = CALL_SMETHOD(ap->pproc_manager, clone);
     if (pvt->pub.pproc_manager == NULL) {
-        goto e2;
+        goto e1;
     }
+    RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->pub.pproc_manager);
     if (ap->pipe_type == PIPE_RTP) {
         pvt->pub.analyzer = rtpp_analyzer_ctor(ap->log);
         if (pvt->pub.analyzer == NULL) {
-            goto e3;
+            goto e1;
         }
+        RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->pub.analyzer);
 
         const struct packet_processor_if resize_packet_poi = {
             .descr = "resize_packet",
@@ -270,12 +273,11 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
             .enqueue = &resizer_injest
         };
         if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_RESIZE, &resize_packet_poi) < 0)
-            goto e4;
+            goto e1;
         pvt->npkts_resizer_in_idx = CALL_SMETHOD(ap->rtpp_stats, getidxbyname,
           "npkts_resizer_in");
         if (pvt->npkts_resizer_in_idx == -1)
-            goto e5;
-
+            goto e2;
     }
 
     const struct packet_processor_if analyze_packet_poi = {
@@ -285,25 +287,28 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
         .enqueue = (ap->pipe_type == PIPE_RTP) ? &analyze_rtp_packet : &analyze_rtcp_packet,
     };
     if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_ANALYZE, &analyze_packet_poi) < 0)
-        goto e5;
+        goto e2;
 
     pvt->pub.pcnt_strm = rtpp_pcnt_strm_ctor();
     if (pvt->pub.pcnt_strm == NULL) {
-        goto e6;
+        goto e3;
     }
+    RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->pub.pcnt_strm);
     pvt->raddr_prev = rtpp_netaddr_ctor();
     if (pvt->raddr_prev == NULL) {
-        goto e7;
+        goto e3;
     }
+    RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->raddr_prev);
     pvt->rem_addr = rtpp_netaddr_ctor();
     if (pvt->rem_addr == NULL) {
-        goto e8;
+        goto e3;
     }
+    RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->rem_addr);
     pvt->proc_servers = ap->proc_servers;
-    RTPP_OBJ_INCREF(ap->proc_servers);
+    RTPP_OBJ_BORROW(&pvt->pub, ap->proc_servers);
     pvt->rtpp_stats = ap->rtpp_stats;
     pvt->pub.log = ap->log;
-    RTPP_OBJ_INCREF(ap->log);
+    RTPP_OBJ_BORROW(&pvt->pub, ap->log);
     pvt->pub.side = ap->side;
     pvt->pub.pipe_type = ap->pipe_type;
 
@@ -317,24 +322,12 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_stream_dtor);
     return (&pvt->pub);
 
-e8:
-    RTPP_OBJ_DECREF(pvt->raddr_prev);
-e7:
-    RTPP_OBJ_DECREF(pvt->pub.pcnt_strm);
-e6:
+e3:
     CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt);
-e5:
+e2:
     if (ap->pipe_type == PIPE_RTP) {
         CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt + 1);
     }
-e4:
-    if (ap->pipe_type == PIPE_RTP) {
-        RTPP_OBJ_DECREF(pvt->pub.analyzer);
-    }
-e3:
-    RTPP_OBJ_DECREF(pvt->pub.pproc_manager);
-e2:
-    pthread_mutex_destroy(&pvt->lock);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
 e0:
@@ -408,7 +401,6 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
          if (rst.pecount > 0) {
              CALL_SMETHOD(pvt->rtpp_stats, updatebyname, "rtpa_perrs", rst.pecount);
          }
-         RTPP_OBJ_DECREF(pvt->pub.analyzer);
     }
     if (pvt->fd != NULL)
         RTPP_OBJ_DECREF(pvt->fd);
@@ -431,18 +423,10 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
     }
     if (pub->ttl != NULL)
         RTPP_OBJ_DECREF(pub->ttl);
-    RTPP_OBJ_DECREF(pub->pcnt_strm);
-    RTPP_OBJ_DECREF(pvt->pub.log);
-    RTPP_OBJ_DECREF(pvt->rem_addr);
-    RTPP_OBJ_DECREF(pvt->raddr_prev);
-    RTPP_OBJ_DECREF(pvt->proc_servers);
     if (pvt->pub.pipe_type == PIPE_RTP) {
         CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt + 1);
     }
     CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt);
-    RTPP_OBJ_DECREF(pvt->pub.pproc_manager);
-
-    pthread_mutex_destroy(&pvt->lock);
 }
 
 static void
@@ -522,7 +506,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
         }
         pthread_mutex_unlock(&pvt->lock);
         rtpp_command_get_stats(cmd)->nplrs_created.cnt++;
-        CALL_SMETHOD(rsrv->rcnt, attach, (rtpp_refcnt_dtor_t)player_predestroy_cb,
+        RTPP_OBJ_DTOR_ATTACH(rsrv, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           pvt->rtpp_stats);
         RTPP_OBJ_DECREF(rsrv);
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,

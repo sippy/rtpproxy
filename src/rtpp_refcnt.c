@@ -78,7 +78,6 @@ struct dtor_pair {
     };
 };
 
-#define MAX_DTORS 8
 struct rtpp_refcnt_priv
 {
     struct rtpp_refcnt pub;

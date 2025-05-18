@@ -262,8 +262,6 @@ rtpp_ice_lite_worker(const struct rtpp_wthrdata *wp)
         }
         pthread_mutex_unlock(&ila_c->state_lock);
         RTPP_OBJ_DECREF(pkt);
-        RTPP_OBJ_DECREF(wip->strmp_in);
-        RTPP_OBJ_DECREF(ila_c);
         RTPP_OBJ_DECREF(wi);
     }
 }
@@ -689,13 +687,11 @@ rtpp_ice_lite_enqueue(const struct pkt_proc_ctx *pktx)
     if (wi == NULL)
         return (PPROC_ACT_DROP);
     wip->pkt = pktx->pktp;
-    RTPP_OBJ_INCREF(ila_c);
+    RTPP_OBJ_BORROW(wi, ila_c);
     wip->ila_c = ila_c;
-    RTPP_OBJ_INCREF(pktx->strmp_in);
+    RTPP_OBJ_BORROW(wi, pktx->strmp_in);
     wip->strmp_in = pktx->strmp_in;
     if (rtpp_queue_put_item(wi, ila_c->mself->wthr.mod_q) != 0) {
-        RTPP_OBJ_DECREF(ila_c);
-        RTPP_OBJ_DECREF(pktx->strmp_in);
         RTPP_OBJ_DECREF(wi);
         return (PPROC_ACT_DROP);
     }

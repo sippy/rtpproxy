@@ -196,21 +196,8 @@ rtpp_dtls_gw_worker(const struct rtpp_wthrdata *wp)
             }
             RTPP_OBJ_DECREF(wip->pktx.pktp);
         }
-        RTPP_OBJ_DECREF(wip->pktx.strmp_in);
-        if (wip->pktx.strmp_out != NULL)
-            RTPP_OBJ_DECREF(wip->pktx.strmp_out);
-        RTPP_OBJ_DECREF(edp->dtls_conn);
         RTPP_OBJ_DECREF(wi);
     }
-}
-
-static void
-dtls_gw_data_dtor(struct dtls_gw_stream_cfg *pvt)
-{
-
-    CALL_SMETHOD(pvt->dtls_conn, godead);
-    RTPP_OBJ_DECREF(pvt->dtls_conn);
-    RC_DECREF(pvt->mself->super_rcnt);
 }
 
 static struct dtls_gw_stream_cfg *
@@ -228,7 +215,11 @@ dtls_gw_data_ctor(struct rtpp_module_priv *pvt, struct rtpp_stream *dtls_strmp)
     }
     rtps_c->mself = pvt->mself;
     RC_INCREF(pvt->mself->super_rcnt);
-    CALL_SMETHOD(rtps_c->rcnt, attach, (rtpp_refcnt_dtor_t)dtls_gw_data_dtor, rtps_c);
+    RTPP_OBJ_DTOR_ATTACH_RC(rtps_c, pvt->mself->super_rcnt);
+    RTPP_OBJ_DTOR_ATTACH_RC(rtps_c, rtps_c->dtls_conn->rcnt);
+    RTPP_OBJ_DTOR_ATTACH(rtps_c, GET_SMETHOD(rtps_c->dtls_conn, godead),
+      rtps_c->dtls_conn);
+    rtps_c->mself = pvt->mself;
     return (rtps_c);
 e1:
     mod_free(rtps_c);
@@ -517,17 +508,13 @@ rtpp_dtls_gw_enqueue(const struct pkt_proc_ctx *pktxp)
     if (wi == NULL)
         return (PPROC_ACT_DROP);
     wip->edata = *edata;
-    RTPP_OBJ_INCREF(edata->dtls_conn);
+    RTPP_OBJ_BORROW(wi, edata->dtls_conn);
     wip->pktx = *pktxp;
     wip->pktx.rsp = NULL;
-    RTPP_OBJ_INCREF(pktxp->strmp_in);
+    RTPP_OBJ_BORROW(wi, pktxp->strmp_in);
     if (pktxp->strmp_out != NULL)
-        RTPP_OBJ_INCREF(pktxp->strmp_out);
+        RTPP_OBJ_BORROW(wi, pktxp->strmp_out);
     if (rtpp_queue_put_item(wi, edata->mself->wthr.mod_q) != 0) {
-        if (pktxp->strmp_out != NULL)
-            RTPP_OBJ_DECREF(pktxp->strmp_out);
-        RTPP_OBJ_DECREF(pktxp->strmp_in);
-        RTPP_OBJ_DECREF(edata->dtls_conn);
         RTPP_OBJ_DECREF(wi);
         return (PPROC_ACT_DROP);
     }

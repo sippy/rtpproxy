@@ -85,18 +85,6 @@ DEFINE_SMETHODS(pproc_manager,
     .reg_drop = &rtpp_pproc_mgr_reg_drop,
 );
 
-static void
-pproc_handlers_dtor(struct pproc_handlers *hndlrs)
-{
-
-    for (int i = 0; i < hndlrs->nprocs; i++) {
-        const struct packet_processor_if *ip = &hndlrs->pproc[i].ppif;
-        RTPP_DBG_ASSERT(hndlrs->pproc[i].order != _PPROC_ORD_EMPTY);
-        if (ip->rcnt != NULL)
-            RTPP_OBJ_DECREF(ip);
-    }
-}
-
 static struct pproc_handlers *
 pproc_handlers_alloc(int nprocs)
 {
@@ -107,8 +95,6 @@ pproc_handlers_alloc(int nprocs)
     if (hndlrs == NULL)
         return (NULL);
     hndlrs->nprocs = nprocs;
-    CALL_SMETHOD(hndlrs->rcnt, attach, (rtpp_refcnt_dtor_t)&pproc_handlers_dtor,
-      hndlrs);
     return (hndlrs);
 }
 
@@ -116,8 +102,6 @@ static void
 rtpp_pproc_mgr_dtor(struct pproc_manager_pvt *pvt)
 {
 
-    pthread_mutex_destroy(&pvt->lock);
-    RTPP_OBJ_DECREF(pvt->rtpp_stats);
     RTPP_OBJ_DECREF(pvt->handlers);
 }
 
@@ -134,17 +118,16 @@ pproc_manager_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
         goto e1;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0)
         goto e1;
+    RTPP_OBJ_DTOR_ATTACH(&(pvt->pub), pthread_mutex_destroy, &pvt->lock);
     pvt->handlers = pproc_handlers_alloc(nprocs);
     if (pvt->handlers == NULL)
-        goto e2;
-    RTPP_OBJ_INCREF(rtpp_stats);
+        goto e1;
+    RTPP_OBJ_BORROW(&(pvt->pub), rtpp_stats);
     pvt->rtpp_stats = rtpp_stats;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_pproc_mgr_dtor);
     return (&(pvt->pub));
-e2:
-    pthread_mutex_destroy(&pvt->lock);
 e1:
-    free(pvt);
+    RTPP_OBJ_DECREF(&(pvt->pub));
 e0:
     return (NULL);
 }
@@ -179,7 +162,7 @@ rtpp_pproc_mgr_register(struct pproc_manager *pub, enum pproc_order pproc_order,
     for (int j = 0; j < newh->nprocs; j++) {
         ip = &newh->pproc[j].ppif;
         if (ip->rcnt != NULL)
-            RTPP_OBJ_INCREF(ip);
+            RTPP_OBJ_BORROW(newh, ip);
     }
     RTPP_OBJ_DECREF(pvt->handlers);
     pvt->handlers = newh;
@@ -278,7 +261,7 @@ rtpp_pproc_mgr_unregister(struct pproc_manager *pub, void *key)
 {
     int i;
     struct pproc_manager_pvt *pvt;
-    struct pproc_handlers *newh;
+    struct pproc_handlers *newh, *oldh;
 
     PUB2PVT(pub, pvt);
     pthread_mutex_lock(&pvt->lock);
@@ -301,11 +284,14 @@ rtpp_pproc_mgr_unregister(struct pproc_manager *pub, void *key)
         for (int j = 0; j < newh->nprocs; j++) {
             ip = &newh->pproc[j].ppif;
             if (ip->rcnt != NULL)
-                RTPP_OBJ_INCREF(ip);
+                RTPP_OBJ_BORROW(newh, ip);
         }
-        RTPP_OBJ_DECREF(pvt->handlers);
+        oldh = pvt->handlers;
         pvt->handlers = newh;
         pthread_mutex_unlock(&pvt->lock);
+        /* DECREF might call a destructor chain, so it should be done out */
+        /* of the locked area! */
+        RTPP_OBJ_DECREF(oldh);
         return (0);
     }
     abort();
@@ -332,7 +318,7 @@ rtpp_pproc_mgr_clone(struct pproc_manager *pub)
         const struct packet_processor_if *ip = &pvt_new->handlers->pproc[i].ppif;
         RTPP_DBG_ASSERT(pvt->handlers->pproc[i].order != _PPROC_ORD_EMPTY);
         if (ip->rcnt != NULL)
-            RTPP_OBJ_INCREF(ip);
+            RTPP_OBJ_BORROW(pvt->handlers, ip);
     }
     pthread_mutex_unlock(&pvt->lock);
     return (rval);

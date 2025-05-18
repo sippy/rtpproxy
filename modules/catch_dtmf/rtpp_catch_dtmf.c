@@ -255,20 +255,8 @@ rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *wp)
           rtpp_str_fix(&notify_tag), notyfy_type);
 
 skip:
-        RTPP_OBJ_DECREF(wip->edata);
-        RTPP_OBJ_DECREF(wip->rtdp);
-        RTPP_OBJ_DECREF(wip->pkt);
         RTPP_OBJ_DECREF(wi);
     }
-}
-
-static void
-catch_dtmf_data_dtor(struct catch_dtmf_stream_cfg *rtps_c)
-{
-
-    RTPP_OBJ_DECREF(rtps_c->rtdp);
-    RTPP_OBJ_DECREF(rtps_c->edata);
-    RC_DECREF(rtps_c->mself->super_rcnt);
 }
 
 static struct catch_dtmf_stream_cfg *
@@ -281,27 +269,27 @@ catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const rtpp_str_t *dtmf_ta
     if (rtps_c == NULL) {
         goto e0;
     }
+    rtps_c->mself = mself;
+    RC_INCREF(mself->super_rcnt);
+    RTPP_OBJ_DTOR_ATTACH_RC(rtps_c, mself->super_rcnt);
+    rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp_in->side);
+    if (!rtps_c->edata) {
+        RTPP_LOG(mself->log, RTPP_LOG_ERR, "cannot create edata (sp=%p)",
+          ctxp->strmp_in);
+        goto e1;
+    }
+    RTPP_OBJ_DTOR_ATTACH_RC(rtps_c, rtps_c->edata->rcnt);
     rtps_c->rtdp = rtpp_timeout_data_ctor(ctxp->sessp->timeout_data->notify_target,
       dtmf_tag);
     if (rtps_c->rtdp == NULL) {
         goto e1;
     }
+    RTPP_OBJ_DTOR_ATTACH_RC(rtps_c, rtps_c->rtdp->rcnt);
     atomic_init(&(rtps_c->pt), new_pt);
     atomic_init(&(rtps_c->act), PPROC_ACT_TEE_v);
-    rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp_in->side);
-    if (!rtps_c->edata) {
-        RTPP_LOG(mself->log, RTPP_LOG_ERR, "cannot create edata (sp=%p)",
-          ctxp->strmp_in);
-        goto e2;
-    }
-    rtps_c->mself = mself;
-    RC_INCREF(mself->super_rcnt);
-    CALL_SMETHOD(rtps_c->rcnt, attach, (rtpp_refcnt_dtor_t)catch_dtmf_data_dtor, rtps_c);
     return (rtps_c);
-e2:
-    RTPP_OBJ_DECREF(rtps_c->rtdp);
 e1:
-    mod_free(rtps_c);
+    RTPP_OBJ_DECREF(rtps_c);
 e0:
     return (NULL);
 }
@@ -430,17 +418,14 @@ rtpp_catch_dtmf_enqueue(const struct pkt_proc_ctx *pktx)
     wi = rtpp_wi_malloc_udata((void **)&wip, sizeof(struct wipkt));
     if (wi == NULL)
         return (PPROC_ACT_DROP);
-    RTPP_OBJ_INCREF(pktx->pktp);
+    RTPP_OBJ_BORROW(wi, pktx->pktp);
     /* we need to duplicate the tag and state */
     wip->edata = rtps_c->edata;
-    RTPP_OBJ_INCREF(rtps_c->edata);
+    RTPP_OBJ_BORROW(wi, rtps_c->edata);
     wip->pkt = pktx->pktp;
-    RTPP_OBJ_INCREF(rtps_c->rtdp);
+    RTPP_OBJ_BORROW(wi, rtps_c->rtdp);
     wip->rtdp = rtps_c->rtdp;
     if (rtpp_queue_put_item(wi, rtps_c->mself->wthr.mod_q) != 0) {
-        RTPP_OBJ_DECREF(rtps_c->rtdp);
-        RTPP_OBJ_DECREF(rtps_c->edata);
-        RTPP_OBJ_DECREF(pktx->pktp);
         RTPP_OBJ_DECREF(wi);
         return (PPROC_ACT_DROP);
     }

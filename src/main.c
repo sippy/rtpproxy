@@ -911,7 +911,7 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
     RTPP_OBJ_DECREF(cfsp->rtpp_timed_cf);
     CALL_METHOD(cfsp->rtpp_proc_ttl_cf, dtor);
     RTPP_OBJ_DECREF(cfsp->proc_servers);
-    CALL_METHOD(cfsp->rtpp_proc_cf, dtor);
+    RTPP_OBJ_DECREF(cfsp->rtpp_proc_cf);
     RTPP_OBJ_DECREF(cfsp->sessinfo);
     RTPP_OBJ_DECREF(cfsp->rtpp_stats);
     for (int i = 0; i <= RTPP_PT_MAX; i++) {

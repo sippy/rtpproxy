@@ -190,7 +190,6 @@ rtpp_dtls_conn_dtor(struct rtpp_dtls_conn_priv *pvt)
         srtp_dealloc(pvt->srtp_ctx_in);
     if (pvt->srtp_ctx_out != NULL)
         srtp_dealloc(pvt->srtp_ctx_out);
-    RTPP_OBJ_DECREF(pvt->streams_wrt);
     pthread_mutex_destroy(&pvt->state_lock);
     /* BIO_free(pvt->sbio_out); <- done by SSL_free() */
     /* BIO_free(pvt->sbio_in); <- done by SSL_free() */
@@ -239,7 +238,7 @@ rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
     /* Cannot grab refcount here, circular reference would ensue */
     /* RTPP_OBJ_INCREF(dtls_strmp); */
     pvt->dtls_strm_id = dtls_strmp->stuid;
-    RTPP_OBJ_INCREF(cfsp->rtp_streams_wrt);
+    RTPP_OBJ_BORROW(&pvt->pub, cfsp->rtp_streams_wrt);
     pvt->streams_wrt = cfsp->rtp_streams_wrt;
     pvt->timed_cf = cfsp->rtpp_timed_cf;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_dtls_conn_dtor);
@@ -254,7 +253,7 @@ e3:
 e2:
     BIO_meth_free(pvt->biomet);
 e1:
-    mod_free(pvt);
+    RTPP_OBJ_DECREF(&pvt->pub);
 e0:
     return (NULL);
 }

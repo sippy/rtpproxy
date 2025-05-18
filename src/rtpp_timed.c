@@ -252,8 +252,7 @@ rtpp_timed_schedule_base(struct rtpp_timed *pub, double offset,
     if (support_cancel != 0) {
         wi_data->pub.cancel = &rtpp_timed_cancel;
         wi_data->timed_cf = rtpp_timed_cf;
-        RTPP_OBJ_INCREF(pub);
-        RTPP_OBJ_DTOR_ATTACH_RC(wi, pub->rcnt);
+        RTPP_OBJ_BORROW(wi, pub);
     }
     RTPP_OBJ_INCREF(wi);
     rtpp_queue_put_item(wi, rtpp_timed_cf->q);

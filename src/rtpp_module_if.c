@@ -256,8 +256,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         memcpy(pvt->mi.fn, &mip_model, sizeof(struct rtpp_minfo_fset));
     }
 
-    RTPP_OBJ_INCREF(log);
-    RTPP_OBJ_DTOR_ATTACH_RC(&(pvt->pub), log->rcnt);
+    RTPP_OBJ_BORROW(&(pvt->pub), log);
     pvt->mi.log = log;
 
 #if RTPP_CHECK_LEAKS
@@ -545,8 +544,7 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
     if (rval == NULL) {
         return (-1);
     }
-    RTPP_OBJ_INCREF(rval);
-    RTPP_OBJ_DTOR_ATTACH_RC(&(pvt->pub), rval->rcnt);
+    RTPP_OBJ_BORROW(&(pvt->pub), rval);
     *mcpp = pvt->mcp = rval;
     return (0);
 }
