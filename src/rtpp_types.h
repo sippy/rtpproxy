@@ -139,10 +139,11 @@ extern const struct rtpc_reply_smethods * const rtpc_reply_smethods;
 )
 
 #if defined(RTPP_DEBUG)
-#define CALL_SMETHOD(obj, method, args...) (obj)->smethods->method(obj, ## args)
+#define GET_SMETHOD(obj, method) ((obj)->smethods->method)
 #else
-#define CALL_SMETHOD(obj, method, args...) GET_SMETHODS(obj)->method(obj, ## args)
+#define GET_SMETHOD(obj, method) (GET_SMETHODS(obj)->method)
 #endif
+#define CALL_SMETHOD(obj, method, args...) GET_SMETHOD(obj, method)(obj, ## args)
 
 #ifdef __clang__
     #define typeof(x) __typeof__(x)
@@ -165,6 +166,14 @@ extern const struct rtpc_reply_smethods * const rtpc_reply_smethods;
   (rtpp_refcnt_dtor_t)(f), (p))
 #define RTPP_OBJ_DTOR_ATTACH_RC(obj, rc) CALL_SMETHOD((obj)->rcnt, attach_rc, \
   (rc))
+#define RTPP_OBJ_DTOR_ATTACH_OBJ(obj, obj1) CALL_SMETHOD((obj)->rcnt, attach_rc, \
+  (obj1)->rcnt)
+#define RTPP_OBJ_BORROW(bob, lob) \
+    do { /* Attach first, then increase, the "lob: counter might have */ \
+         /* certain optimizations for the count == 1 case             */ \
+        RTPP_OBJ_DTOR_ATTACH_RC((bob), (lob)->rcnt); \
+        RTPP_OBJ_INCREF(lob); \
+    } while (0)
 
 #define DEFINE_CB_STRUCT(functype) \
     typedef struct { \
