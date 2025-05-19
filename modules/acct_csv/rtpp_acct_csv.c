@@ -267,10 +267,10 @@ rtpp_acct_csv_ctor(const struct rtpp_cfg *cfsp, struct rtpp_minfo *mself)
         strcpy(pvt->node_id, "UNKNOWN");
     }
     pvt->fd = -1;
+    pvt->mself = mself;
     if (rtpp_acct_csv_open(pvt) == -1) {
         goto e2;
     }
-    pvt->mself = mself;
     return (pvt);
 
 e2:
