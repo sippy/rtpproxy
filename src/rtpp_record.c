@@ -576,11 +576,13 @@ rtpp_record_write_locked(struct rtpp_record_channel *rrc, const struct pkt_proc_
 	return;
 
     rem_addr = CALL_SMETHOD(stp, get_rem_addr, 0);
-    if (rem_addr == NULL) {
-        return;
+    if (rem_addr != NULL) {
+        CALL_SMETHOD(rem_addr, get, sstosa(&daddr), sizeof(daddr));
+        RTPP_OBJ_DECREF(rem_addr);
+    } else {
+        memset(&daddr, 0, sizeof(daddr));
+        sstosa(&daddr)->sa_family = stp->laddr->sa_family;
     }
-    CALL_SMETHOD(rem_addr, get, sstosa(&daddr), sizeof(daddr));
-    RTPP_OBJ_DECREF(rem_addr);
 
     if (packet->rtime.wall == -1) {
         RTPP_ELOG(stp->log, RTPP_LOG_ERR, "can't get current time");
