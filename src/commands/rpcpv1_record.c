@@ -78,16 +78,17 @@ rtpp_cmd_record_ematch(void *dp, void *ap)
     } else {
         return(RTPP_HT_MATCH_CONT);
     }
-    if (handle_copy(rep->cfsp, spa, idx, NULL, rep->rop) == 0) {
+    if (handle_copy(rep->cfsp, NULL, spa, idx, NULL, rep->rop) == 0) {
         rep->nrecorded++;
     }
     return(RTPP_HT_MATCH_CONT);
 }
 
 int
-handle_record(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
+handle_record(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
     struct record_ematch_arg rea;
+    struct common_cmd_args *ccap = &cmd->cca;
     struct record_opts *rop = (struct record_opts *)ccap->opts.record;
 
     memset(&rea, '\0', sizeof(rea));
@@ -100,6 +101,7 @@ handle_record(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
     if (rea.nrecorded == 0) {
         return -1;
     }
+    CALL_SMETHOD(cmd->reply, ok);
     return 0;
 }
 
@@ -120,6 +122,18 @@ rtpp_command_record_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command 
         case 's':
         case 'S':
             rop->record_single_file = RSF_MODE_DFLT(cfsp);;
+            break;
+
+        case 'p':
+        case 'P':
+            if (cmd->cca.op == RECORD) {
+                RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
+                  "RECORD: command modifier `%c' is not allowed in RECORD",
+                  *cp);
+                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_2);
+                goto err_undo_1;
+            }
+            rop->reply_port = 1;
             break;
 
         default:

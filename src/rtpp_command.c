@@ -94,70 +94,85 @@ struct rtpp_command_priv {
 
 struct d_opts;
 
-static int create_twinlistener(unsigned int, void *);
 static void handle_info(const struct rtpp_cfg *, struct rtpp_command *);
 
-struct create_twinlistener_args {
+struct create_listener_args {
     const struct rtpp_cfg *cfs;
     const struct sockaddr *ia;
     struct rtpp_socket **fds;
     int *port;
 };
 
+static enum rtpp_ptu_rval
+create_listener(struct create_listener_args *ctap, unsigned int port, struct rtpp_socket **fdp)
+{
+    struct sockaddr_storage iac;
+    struct rtpp_socket *fd;
+    int so_rcvbuf;
+    enum rtpp_ptu_rval rval = RTPP_PTU_BRKERR;
+
+    fd = rtpp_socket_ctor(ctap->cfs->rtpp_proc_cf->netio,
+        ctap->ia->sa_family, SOCK_DGRAM);
+    if (fd == NULL) {
+        RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't create %s socket",
+            SA_AF2STR(ctap->ia));
+        goto e0;
+    }
+    memcpy(&iac, ctap->ia, SA_LEN(ctap->ia));
+    satosin(&iac)->sin_port = htons(port);
+    if (CALL_SMETHOD(fd, bind2, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
+        if (errno != EADDRINUSE && errno != EACCES) {
+            RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't bind to the %s port %d",
+                SA_AF2STR(ctap->ia), port);
+        } else {
+            rval = RTPP_PTU_ONEMORE;
+        }
+        goto e1;
+    }
+    if ((ctap->ia->sa_family == AF_INET) && (ctap->cfs->tos >= 0) &&
+      (CALL_SMETHOD(fd, settos, ctap->cfs->tos) == -1))
+        RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set TOS to %d", ctap->cfs->tos);
+    so_rcvbuf = 256 * 1024;
+    if (CALL_SMETHOD(fd, setrbuf, so_rcvbuf) == -1)
+        RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
+    if (CALL_SMETHOD(fd, setnonblock) < 0)
+        goto e1;
+    CALL_SMETHOD(fd, settimestamp);
+    *fdp = fd;
+    return (RTPP_PTU_OK);
+e1:
+    RTPP_OBJ_DECREF(fd);
+e0:
+    return rval;
+}
+
 static int
 create_twinlistener(unsigned int port, void *ap)
 {
-    struct sockaddr_storage iac;
-    int rval, i, so_rcvbuf;
-    struct create_twinlistener_args *ctap;
+    int rval, i;
+    struct create_listener_args *ctap;
 
     RTPP_DBG_ASSERT(port >= 1 && IS_VALID_PORT(port - 1));
-
-    ctap = (struct create_twinlistener_args *)ap;
-
+    ctap = (struct create_listener_args *)ap;
     ctap->fds[0] = ctap->fds[1] = NULL;
 
-    rval = RTPP_PTU_BRKERR;
     for (i = 0; i < 2; i++) {
-	ctap->fds[i] = rtpp_socket_ctor(ctap->cfs->rtpp_proc_cf->netio,
-	  ctap->ia->sa_family, SOCK_DGRAM);
-	if (ctap->fds[i] == NULL) {
-	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't create %s socket",
-	      SA_AF2STR(ctap->ia));
-	    goto failure;
-	}
-	memcpy(&iac, ctap->ia, SA_LEN(ctap->ia));
-	satosin(&iac)->sin_port = htons(port);
-	if (CALL_SMETHOD(ctap->fds[i], bind2, sstosa(&iac), SA_LEN(ctap->ia)) != 0) {
-	    if (errno != EADDRINUSE && errno != EACCES) {
-		RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "can't bind to the %s port %d",
-		  SA_AF2STR(ctap->ia), port);
-	    } else {
-		rval = RTPP_PTU_ONEMORE;
-	    }
-	    goto failure;
-	}
-	port++;
-	if ((ctap->ia->sa_family == AF_INET) && (ctap->cfs->tos >= 0) &&
-	  (CALL_SMETHOD(ctap->fds[i], settos, ctap->cfs->tos) == -1))
-	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set TOS to %d", ctap->cfs->tos);
-	so_rcvbuf = 256 * 1024;
-	if (CALL_SMETHOD(ctap->fds[i], setrbuf, so_rcvbuf) == -1)
-	    RTPP_ELOG(ctap->cfs->glog, RTPP_LOG_ERR, "unable to set 256K receive buffer size");
-        if (CALL_SMETHOD(ctap->fds[i], setnonblock) < 0)
+        rval = create_listener(ctap, port, &(ctap->fds[i]));
+        if (rval != RTPP_PTU_OK)
             goto failure;
-        CALL_SMETHOD(ctap->fds[i], settimestamp);
+        port++;
     }
     RTPP_DBG_ASSERT(port > 2 && IS_VALID_PORT(port - 2));
     *ctap->port = port - 2;
     return RTPP_PTU_OK;
 
 failure:
-    for (i = 0; i < 2; i++)
-	if (ctap->fds[i] != NULL) {
-            RTPP_OBJ_DECREF(ctap->fds[i]);
-	    ctap->fds[i] = NULL;
-	}
+    for (i = 0; i < 2; i++) {
+        if (ctap->fds[i] == NULL)
+            continue;
+        RTPP_OBJ_DECREF(ctap->fds[i]);
+        ctap->fds[i] = NULL;
+    }
     return rval;
 }
 
@@ -165,7 +180,7 @@ int
 rtpp_create_listener(const struct rtpp_cfg *cfsp, const struct sockaddr *ia, int *port,
   struct rtpp_socket **fds)
 {
-    struct create_twinlistener_args cta;
+    struct create_listener_args cta;
     int i;
     struct rtpp_port_table *rpp;
 
@@ -280,7 +295,7 @@ get_command(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp, int contro
                 break;
         }
     } else {
-	PUB2PVT(cmd, pvt);
+        PUB2PVT(cmd, pvt);
         if (cmd == NULL) {
             asize = sizeof(rcsp->emrg.addr);
             lp = &asize;
@@ -539,7 +554,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
         }
-	break;
+        break;
 
     case GET_STATS:
         verbose = 0;
@@ -588,7 +603,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         break;
 
     case RECORD:
-        i = handle_record(cfsp, &cmd->cca);
+        i = handle_record(cfsp, cmd);
         break;
 
     case NORECORD:
@@ -611,19 +626,19 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     if (i == -1 && cmd->cca.op != UPDATE) {
         rtpp_str_t to_tag = cmd->cca.to_tag ? *cmd->cca.to_tag :
           (rtpp_str_t){.len = 4, .s = "NONE"};
-	RTPP_LOG(cfsp->glog, RTPP_LOG_INFO,
-	  "%s request failed: session %.*s, tags %.*s/%.*s not found", cmd->cca.rname,
-	  (int)cmd->cca.call_id->len, cmd->cca.call_id->s, (int)cmd->cca.from_tag->len,
+        RTPP_LOG(cfsp->glog, RTPP_LOG_INFO,
+          "%s request failed: session %.*s, tags %.*s/%.*s not found", cmd->cca.rname,
+          (int)cmd->cca.call_id->len, cmd->cca.call_id->s, (int)cmd->cca.from_tag->len,
           cmd->cca.from_tag->s, (int)to_tag.len, to_tag.s);
-	switch (cmd->cca.op) {
-	case LOOKUP:
-	    rtpp_command_ul_opts_free(cmd->cca.opts.ul);
-	    ul_reply_port(cmd, NULL);
-	    return 0;
+        switch (cmd->cca.op) {
+        case LOOKUP:
+            rtpp_command_ul_opts_free(cmd->cca.opts.ul);
+            ul_reply_port(cmd, NULL);
+            return 0;
 
-	case PLAY:
-	    rtpp_command_play_opts_free(cmd->cca.opts.play);
-	    break;
+        case PLAY:
+            rtpp_command_play_opts_free(cmd->cca.opts.play);
+            break;
 
         case COPY:
         case RECORD:
@@ -634,17 +649,16 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             RTPP_DBG_ASSERT(CALL_SMETHOD(cmd->cca.opts.delete->rcnt, peek) == 1);
             break;
 
-	default:
-	    RTPP_DBG_ASSERT(cmd->cca.opts.ptr == NULL);
-	    break;
-	}
-	CALL_SMETHOD(cmd->reply, error, ECODE_SESUNKN);
-	return 0;
+        default:
+            RTPP_DBG_ASSERT(cmd->cca.opts.ptr == NULL);
+            break;
+        }
+        CALL_SMETHOD(cmd->reply, error, ECODE_SESUNKN);
+        return 0;
     }
 
     switch (cmd->cca.op) {
     case DELETE:
-    case RECORD:
     case NORECORD:
         CALL_SMETHOD(cmd->reply, ok);
         break;
@@ -659,11 +673,11 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         break;
 
     case COPY:
-        if (handle_copy(cfsp, spa, i, recording_name, cmd->cca.opts.record) != 0) {
+        if (handle_copy(cfsp, cmd, spa, i, recording_name, cmd->cca.opts.record) != 0) {
             CALL_SMETHOD(cmd->reply, error, ECODE_CPYFAIL);
             return 0;
         }
-        CALL_SMETHOD(cmd->reply, ok);
+    case RECORD:
         break;
 
     case QUERY:

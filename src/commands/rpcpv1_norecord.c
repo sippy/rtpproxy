@@ -28,6 +28,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
@@ -51,6 +52,7 @@
 #include "rtpp_hash_table.h"
 #include "rtpp_session.h"
 #include "rtpp_util.h"
+#include "commands/rpcpv1_norecord.h"
 
 
 struct norecord_ematch_arg {
@@ -108,7 +110,7 @@ rtpp_cmd_norecord_ematch(void *dp, void *ap)
 }
 
 int
-handle_norecord(struct rtpp_cfg *cfsp, struct common_cmd_args *ccap, int all)
+handle_norecord(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap, int all)
 {
     struct norecord_ematch_arg rea;
 

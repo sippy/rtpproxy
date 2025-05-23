@@ -76,6 +76,7 @@
 #include "rtpp_util.h"
 #include "rtpp_pipe.h"
 #include "rtpp_netaddr.h"
+#include "rtpp_socket.h"
 #include "advanced/pproc_manager.h"
 
 enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP, MODE_LOCAL_PCAP}; /* MODE_LOCAL_RTP/MODE_REMOTE_PKT? */
@@ -111,66 +112,44 @@ DEFINE_SMETHODS(rtpp_record,
 );
 
 static int
-ropen_remote_ctor_pa(struct rtpp_record_channel *rrc, struct rtpp_log *log,
-  const char *rname, int is_rtcp)
+ropen_remote_ctor_pa(const struct rtpp_cfg *cfg, struct rtpp_record_channel *rrc,
+  const struct remote_copy_args *rap, struct rtpp_log *log, const char *rname, int is_rtcp)
 {
-    char *cp, *tmp;
+    const char *cp = rap->rport;
+    char tmp[8];
     int n, port;
     struct sockaddr_storage raddr;
 
-    tmp = strdup(rname + 4);
-    if (tmp == NULL) {
-        RTPP_ELOG(log, RTPP_LOG_ERR, "can't allocate memory");
-        goto e0;
-    }
     rrc->mode = MODE_REMOTE_RTP;
     rrc->needspool = 0;
-    cp = strrchr(tmp, ':');
-    if (cp == NULL) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "remote recording target specification should include port number");
-        goto e1;
-    }
-    *cp = '\0';
-    cp++;
 
     if (is_rtcp) {
         /* Handle RTCP (increase target port by 1) */
-        port = atoi(cp);
+        port = atoi(rap->rport);
         if (port <= 0 || port > 65534) {
             RTPP_LOG(log, RTPP_LOG_ERR, "invalid port in the remote recording target specification");
-            goto e1;
+            return (-1);
         }
-        sprintf(cp, "%d", port + 1);
+        snprintf(tmp, sizeof(tmp), "%d", port + 1);
+        cp = tmp;
     }
 
-    n = resolve(sstosa(&raddr), AF_INET, tmp, cp, 0);
+    n = resolve(sstosa(&raddr), AF_INET, rap->rhost, cp, 0);
     if (n != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "ropen: getaddrinfo: %s", gai_strerror(n));
-        goto e1;
+        return (-1);
     }
-    rrc->fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (rrc->fd == -1) {
-        RTPP_ELOG(log, RTPP_LOG_ERR, "ropen: can't create socket");
-        goto e1;
-    }
+    rrc->fd = CALL_SMETHOD(rap->fds[rap->idx], getfd);
     if (connect(rrc->fd, sstosa(&raddr), SA_LEN(sstosa(&raddr))) == -1) {
         RTPP_ELOG(log, RTPP_LOG_ERR, "ropen: can't connect socket");
-        goto e2;
+        return (-1);
     }
-    free(tmp);
     return (0);
-
-e2:
-    close(rrc->fd);
-e1:
-    free(tmp);
-e0:
-    return (-1);
 }
 
 struct rtpp_record *
-rtpp_record_ctor(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
-  const char *rname, int orig, int record_type)
+rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap,
+  struct rtpp_session *sp, const char *rname, int orig, int record_type)
 {
     struct rtpp_record_channel *rrc;
     const char *sdir, *suffix1, *suffix2;
@@ -181,8 +160,8 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
 
     rrc = rtpp_rzmalloc(sizeof(*rrc), PVT_RCOFFS(rrc));
     if (rrc == NULL) {
-	RTPP_ELOG(sp->log, RTPP_LOG_ERR, "can't allocate memory");
-	goto e0;
+        RTPP_ELOG(sp->log, RTPP_LOG_ERR, "can't allocate memory");
+        goto e0;
     }
     if (pthread_mutex_init(&rrc->lock, NULL) != 0)
         goto e1;
@@ -199,24 +178,25 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
     rrc->pub.smethods = rtpp_record_smethods;
 #endif
     if (remote) {
-	rval = ropen_remote_ctor_pa(rrc, sp->log, rname, (record_type == RECORD_RTCP));
+        rval = ropen_remote_ctor_pa(cfsp, rrc, rap, sp->log, rname, (record_type == RECORD_RTCP));
         if (rval < 0) {
             goto e2;
         }
+        RTPP_OBJ_BORROW(&rrc->pub, rap->fds[rap->idx]);
         CALL_SMETHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
           rrc);
         return (&rrc->pub);
     }
 
     if (cfsp->rdir == NULL) {
-	RTPP_LOG(sp->log, RTPP_LOG_ERR, "directory for saving local recordings is not configured");
+        RTPP_LOG(sp->log, RTPP_LOG_ERR, "directory for saving local recordings is not configured");
         goto e2;
     }
 
     if (cfsp->record_pcap != 0) {
-	rrc->mode = MODE_LOCAL_PCAP;
+        rrc->mode = MODE_LOCAL_PCAP;
     } else {
-	rrc->mode = MODE_LOCAL_PKT;
+        rrc->mode = MODE_LOCAL_PKT;
     }
 
     if (rrc->record_single_file != 0) {
@@ -229,52 +209,52 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
         suffix2 = (record_type == RECORD_RTP) ? ".rtp" : ".rtcp";
     }
     if (cfsp->sdir == NULL) {
-	sdir = cfsp->rdir;
-	rrc->needspool = 0;
+        sdir = cfsp->rdir;
+        rrc->needspool = 0;
     } else {
-	sdir = cfsp->sdir;
-	rrc->needspool = 1;
-	if (rname == NULL) {
-	    sprintf(rrc->rpath, "%s/%.*s=%.*s%s%s", cfsp->rdir, (int)sp->call_id->len,
+        sdir = cfsp->sdir;
+        rrc->needspool = 1;
+        if (rname == NULL) {
+            sprintf(rrc->rpath, "%s/%.*s=%.*s%s%s", cfsp->rdir, (int)sp->call_id->len,
               sp->call_id->s, (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s,
-	      suffix1, suffix2);
-	} else {
-	    sprintf(rrc->rpath, "%s/%s%s", cfsp->rdir, rname, suffix2);
-	}
+              suffix1, suffix2);
+        } else {
+            sprintf(rrc->rpath, "%s/%s%s", cfsp->rdir, rname, suffix2);
+        }
     }
     if (rname == NULL) {
-	sprintf(rrc->spath, "%s/%.*s=%.*s%s%s", sdir, (int)sp->call_id->len,
+        sprintf(rrc->spath, "%s/%.*s=%.*s%s%s", sdir, (int)sp->call_id->len,
           sp->call_id->s, (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s,
-	  suffix1, suffix2);
+          suffix1, suffix2);
     } else {
-	sprintf(rrc->spath, "%s/%s%s", sdir, rname, suffix2);
+        sprintf(rrc->spath, "%s/%s%s", sdir, rname, suffix2);
     }
     rrc->fd = open(rrc->spath, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (rrc->fd == -1) {
-	RTPP_ELOG(sp->log, RTPP_LOG_ERR, "can't open file %s for writing",
-	  rrc->spath);
+        RTPP_ELOG(sp->log, RTPP_LOG_ERR, "can't open file %s for writing",
+          rrc->spath);
         goto e2;
     }
 
     if (rrc->mode == MODE_LOCAL_PCAP) {
-	pcap_hdr.magic_number = PCAP_MAGIC;
-	pcap_hdr.version_major = PCAP_VER_MAJR;
-	pcap_hdr.version_minor = PCAP_VER_MINR;
-	pcap_hdr.thiszone = 0;
-	pcap_hdr.sigfigs = 0;
-	pcap_hdr.snaplen = 65535;
-	pcap_hdr.network = PCAP_FORMAT;
-	rval = write(rrc->fd, &pcap_hdr, sizeof(pcap_hdr));
-	if (rval == -1) {
-	    RTPP_ELOG(sp->log, RTPP_LOG_ERR, "%s: error writing header",
-	      rrc->spath);
+        pcap_hdr.magic_number = PCAP_MAGIC;
+        pcap_hdr.version_major = PCAP_VER_MAJR;
+        pcap_hdr.version_minor = PCAP_VER_MINR;
+        pcap_hdr.thiszone = 0;
+        pcap_hdr.sigfigs = 0;
+        pcap_hdr.snaplen = 65535;
+        pcap_hdr.network = PCAP_FORMAT;
+        rval = write(rrc->fd, &pcap_hdr, sizeof(pcap_hdr));
+        if (rval == -1) {
+            RTPP_ELOG(sp->log, RTPP_LOG_ERR, "%s: error writing header",
+              rrc->spath);
             goto e3;
-	}
-	if (rval < sizeof(pcap_hdr)) {
-	    RTPP_LOG(sp->log, RTPP_LOG_ERR, "%s: short write writing header",
-	      rrc->spath);
+        }
+        if (rval < sizeof(pcap_hdr)) {
+            RTPP_LOG(sp->log, RTPP_LOG_ERR, "%s: short write writing header",
+              rrc->spath);
             goto e3;
-	}
+        }
     }
 
     CALL_SMETHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
@@ -282,7 +262,8 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, struct rtpp_session *sp,
     return (&rrc->pub);
 
 e3:
-    close(rrc->fd);
+    if (rrc->mode != MODE_REMOTE_RTP)
+        close(rrc->fd);
 e2:
     RTPP_OBJ_DECREF(rrc->log);
     pthread_mutex_destroy(&rrc->lock);
@@ -299,14 +280,15 @@ flush_rbuf(struct rtpp_record_channel *rrc)
 
     rval = write(rrc->fd, rrc->rbuf, rrc->rbuf_len);
     if (rval != -1) {
-	rrc->rbuf_len = 0;
-	return 0;
+        rrc->rbuf_len = 0;
+        return 0;
     }
 
     RTPP_ELOG(rrc->log, RTPP_LOG_ERR, "error while recording session (%s)",
       rrc->proto);
     /* Prevent futher writing if error happens */
-    close(rrc->fd);
+    if (rrc->mode != MODE_REMOTE_RTP)
+        close(rrc->fd);
     rrc->fd = -1;
     return -1;
 }
@@ -338,19 +320,19 @@ prepare_pkt_hdr_adhoc(const struct prepare_pkt_hdr_args *phap)
     ap->time = phap->atime_wall;
     switch (sstosa(&phap->packet->raddr)->sa_family) {
     case AF_INET:
-	ap->addr.in4.sin_family = sstosa(&phap->packet->raddr)->sa_family;
-	ap->addr.in4.sin_port = satosin(&phap->packet->raddr)->sin_port;
-	ap->addr.in4.sin_addr = satosin(&phap->packet->raddr)->sin_addr;
-	break;
+        ap->addr.in4.sin_family = sstosa(&phap->packet->raddr)->sa_family;
+        ap->addr.in4.sin_port = satosin(&phap->packet->raddr)->sin_port;
+        ap->addr.in4.sin_addr = satosin(&phap->packet->raddr)->sin_addr;
+        break;
 
     case AF_INET6:
-	ap->addr.in6.sin_family = sstosa(&phap->packet->raddr)->sa_family;
-	ap->addr.in6.sin_port = satosin6(&phap->packet->raddr)->sin6_port;
-	ap->addr.in6.sin_addr = satosin6(&phap->packet->raddr)->sin6_addr;
-	break;
+        ap->addr.in6.sin_family = sstosa(&phap->packet->raddr)->sa_family;
+        ap->addr.in6.sin_port = satosin6(&phap->packet->raddr)->sin6_port;
+        ap->addr.in6.sin_addr = satosin6(&phap->packet->raddr)->sin6_addr;
+        break;
 
     default:
-	abort();
+        abort();
     }
 
     ap->plen = phap->packet->size;
@@ -419,8 +401,8 @@ prepare_pkt_hdr_pcap(const struct prepare_pkt_hdr_args *phap)
 
 #if 0
     if (src_addr->sa_family != AF_INET) {
-	RTPP_ELOG(phap->log, RTPP_LOG_ERR, "only AF_INET pcap format is supported");
-	return -1;
+        RTPP_ELOG(phap->log, RTPP_LOG_ERR, "only AF_INET pcap format is supported");
+        return -1;
     }
 #endif
 
@@ -573,7 +555,7 @@ rtpp_record_write_locked(struct rtpp_record_channel *rrc, const struct pkt_proc_
     struct rtpp_stream *stp = pktxp->strmp_out;
 
     if (rrc->fd == -1)
-	return;
+        return;
 
     rem_addr = CALL_SMETHOD(stp, get_rem_addr, 0);
     if (rem_addr != NULL) {
@@ -594,18 +576,18 @@ rtpp_record_write_locked(struct rtpp_record_channel *rrc, const struct pkt_proc_
 
     switch (rrc->mode) {
     case MODE_REMOTE_RTP:
-	send(rrc->fd, packet->data.buf, packet->size, 0);
-	return;
+        send(rrc->fd, packet->data.buf, packet->size, 0);
+        return;
 
     case MODE_LOCAL_PKT:
-	hdr_size = sizeof(struct pkt_hdr_adhoc);
-	prepare_pkt_hdr = &prepare_pkt_hdr_adhoc;
-	break;
+        hdr_size = sizeof(struct pkt_hdr_adhoc);
+        prepare_pkt_hdr = &prepare_pkt_hdr_adhoc;
+        break;
 
     case MODE_LOCAL_PCAP:
         hdr_size = get_hdr_size(sstosa(&packet->raddr));
-	prepare_pkt_hdr = &prepare_pkt_hdr_pcap;
-	break;
+        prepare_pkt_hdr = &prepare_pkt_hdr_pcap;
+        break;
 
     default:
         /* Should not happen */
@@ -614,8 +596,8 @@ rtpp_record_write_locked(struct rtpp_record_channel *rrc, const struct pkt_proc_
 
     /* Check if the write buffer has necessary space, and flush if not */
     if ((rrc->rbuf_len + hdr_size + packet->size > sizeof(rrc->rbuf)) && rrc->rbuf_len > 0)
-	if (flush_rbuf(rrc) != 0)
-	    return;
+        if (flush_rbuf(rrc) != 0)
+            return;
 
     struct prepare_pkt_hdr_args pargs = {
       .packet = packet,
@@ -631,29 +613,30 @@ rtpp_record_write_locked(struct rtpp_record_channel *rrc, const struct pkt_proc_
         union anyhdr hdr;
         pargs.hdrp = &hdr;
 
-	if (prepare_pkt_hdr(&pargs) != 0)
-	    return;
+        if (prepare_pkt_hdr(&pargs) != 0)
+            return;
 
-	v[0].iov_base = (void *)&hdr;
-	v[0].iov_len = hdr_size;
-	v[1].iov_base = packet->data.buf;
-	v[1].iov_len = packet->size;
+        v[0].iov_base = (void *)&hdr;
+        v[0].iov_len = hdr_size;
+        v[1].iov_base = packet->data.buf;
+        v[1].iov_len = packet->size;
 
-	rval = writev(rrc->fd, v, 2);
-	if (rval != -1)
-	    return;
+        rval = writev(rrc->fd, v, 2);
+        if (rval != -1)
+            return;
 
         proto = CALL_SMETHOD(stp, get_proto);
-	RTPP_ELOG(stp->log, RTPP_LOG_ERR, "error while recording session (%s)",
-	  proto);
-	/* Prevent futher writing if error happens */
-	close(rrc->fd);
-	rrc->fd = -1;
-	return;
+        RTPP_ELOG(stp->log, RTPP_LOG_ERR, "error while recording session (%s)",
+          proto);
+        /* Prevent futher writing if error happens */
+        if (rrc->mode != MODE_REMOTE_RTP)
+            close(rrc->fd);
+        rrc->fd = -1;
+        return;
     }
     pargs.hdrp = (void *)rrc->rbuf + rrc->rbuf_len;
     if (prepare_pkt_hdr(&pargs) != 0)
-	return;
+        return;
     rrc->rbuf_len += hdr_size;
     memcpy(rrc->rbuf + rrc->rbuf_len, packet->data.buf, packet->size);
     rrc->rbuf_len += packet->size;
@@ -677,22 +660,22 @@ rtpp_record_close(struct rtpp_record_channel *rrc)
 
     rtpp_record_fin(&rrc->pub);
     if (rrc->mode != MODE_REMOTE_RTP && rrc->rbuf_len > 0)
-	flush_rbuf(rrc);
-
-    if (rrc->fd != -1)
-	close(rrc->fd);
+        flush_rbuf(rrc);
 
     if (rrc->mode == MODE_REMOTE_RTP)
-	goto done;
+        goto done;
+
+    if (rrc->fd != -1)
+        close(rrc->fd);
 
     if (keep == 0) {
-	if (unlink(rrc->spath) == -1)
-	    RTPP_ELOG(rrc->log, RTPP_LOG_ERR, "can't remove "
-	      "session record %s", rrc->spath);
+        if (unlink(rrc->spath) == -1)
+            RTPP_ELOG(rrc->log, RTPP_LOG_ERR, "can't remove "
+              "session record %s", rrc->spath);
     } else if (rrc->needspool == 1) {
-	if (rename(rrc->spath, rrc->rpath) == -1)
-	    RTPP_ELOG(rrc->log, RTPP_LOG_ERR, "can't move "
-	      "session record from spool into permanent storage");
+        if (rename(rrc->spath, rrc->rpath) == -1)
+            RTPP_ELOG(rrc->log, RTPP_LOG_ERR, "can't move "
+              "session record from spool into permanent storage");
     }
 done:
     RTPP_OBJ_DECREF(rrc->log);

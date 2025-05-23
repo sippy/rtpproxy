@@ -355,27 +355,10 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             hostname = alloca(len + 1);
             memcpy(hostname, t, len);
             hostname[len] = '\0';
-            struct sockaddr_storage local_addr;
-            ai_flags = cfsp->no_resolve ? AI_NUMERICHOST : 0;
-            n = resolve(sstosa(&local_addr), tpf, hostname, SERVICE, ai_flags);
-            if (n != 0) {
-                RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-                  "invalid remote address: %s: %s", hostname, gai_strerror(n));
-                CALL_SMETHOD(cmd->reply, error, ECODE_INVLARG_2);
-                goto err_undo_1;
-            }
-            if (local4remote(sstosa(&local_addr), &local_addr) == -1) {
-                RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-                  "can't find local address for remote address: %s", hostname);
-                CALL_SMETHOD(cmd->reply, error, ECODE_INVLARG_3);
-                goto err_undo_1;
-            }
-            ulop->local_addr = CALL_METHOD(cfsp->bindaddrs_cf, addr2,
-              sstosa(&local_addr), &errmsg);
+            ulop->local_addr = CALL_METHOD(cfsp->bindaddrs_cf, local4remote, cfsp,
+              cmd->glog, tpf, hostname, SERVICE);
             if (ulop->local_addr == NULL) {
-                RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-                  "invalid local address: %s", errmsg);
-                CALL_SMETHOD(cmd->reply, error, ECODE_INVLARG_4);
+                CALL_SMETHOD(cmd->reply, error, ECODE_INVLARG_2);
                 goto err_undo_1;
             }
             cp--;
@@ -613,8 +596,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
           "tag %.*s", AF2STR(ulop->pf), lport, FMTSTR(cmd->cca.from_tag));
         if (cfsp->record_all != 0) {
             const struct record_opts ropts = {.record_single_file = RSF_MODE_DFLT(cfsp)};
-            handle_copy(cfsp, spa, 0, NULL, &ropts);
-            handle_copy(cfsp, spa, 1, NULL, &ropts);
+            handle_copy(cfsp, NULL, spa, 0, NULL, &ropts);
+            handle_copy(cfsp, NULL, spa, 1, NULL, &ropts);
         }
         /* Save ref, it will be decref'd by the command disposal code */
         RTPP_DBG_ASSERT(cmd->sp == NULL);

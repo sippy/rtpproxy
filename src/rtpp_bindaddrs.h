@@ -37,12 +37,15 @@ DEFINE_METHOD(rtpp_bindaddrs, addr2bindaddr, const struct sockaddr *,
 DEFINE_METHOD(rtpp_bindaddrs, host2bindaddr, const struct sockaddr *,
   const char *, int, int, const char **);
 DEFINE_METHOD(rtpp_bindaddrs, bindaddr4af, const struct sockaddr *, int);
+DEFINE_METHOD(rtpp_bindaddrs, local4remote, const struct sockaddr *,
+  const struct rtpp_cfg *, struct rtpp_log *, int, const char *, const char *);
 DEFINE_METHOD(rtpp_bindaddrs, rtpp_bindaddrs_dtor, void);
 
 struct rtpp_bindaddrs {
     addr2bindaddr_t addr2;
     host2bindaddr_t host2;
     bindaddr4af_t foraf;
+    local4remote_t local4remote;
     rtpp_bindaddrs_dtor_t dtor;
 };
 

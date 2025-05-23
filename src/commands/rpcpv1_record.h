@@ -33,9 +33,10 @@ struct rtpp_command_args;
 struct record_opts {
     struct rtpp_refcnt *rcnt;
     int record_single_file;
+    int reply_port;
 };
 
-int handle_record(const struct rtpp_cfg *, struct common_cmd_args *);
+int handle_record(const struct rtpp_cfg *, struct rtpp_command *);
 struct record_opts *rtpp_command_record_opts_parse(const struct rtpp_cfg *,
   struct rtpp_command *, const struct rtpp_command_args *);
 
