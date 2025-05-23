@@ -8,6 +8,16 @@
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
+rtpp_stop() {
+  rtpproxy_stop TERM
+  RC="${?}"
+  if [ -e ${TMP_LOGFILE} ]
+  then
+    mv ${TMP_LOGFILE} _command_parser.rlog
+  fi
+  return "${RC}"
+}
+
 run_command_parser() {
   socket=${1}
   shift
@@ -16,30 +26,33 @@ run_command_parser() {
     RTPP_ARGS="-d dbug -b -m 23820 -M 23823 ${extra_opts}"
     if [ "${socket}" = "stdio:" ]
     then
-      ${RTPPROXY} -f -s "${socket}" ${RTPP_ARGS} < $BASEDIR/command_parser/command_parser.input 2>command_parser.rlog || return 1
+      ${RTPPROXY} -f -s "${socket}" ${RTPP_ARGS} < $BASEDIR/command_parser/command_parser.input 2>_command_parser.rlog || return 1
     else
       RTPP_SOCKFILE="${socket}" rtpproxy_start ${RTPP_ARGS} || return 1
       if ! ${RTPP_QUERY} -t 10 -b -s "${socket}" -i $BASEDIR/command_parser/command_parser.input
       then
-        rtpproxy_stop TERM
+        rtpp_stop
         return 1
       fi
-      rtpproxy_stop TERM || return 1
+      rtpp_stop || return 1
     fi
   done
 }
 
+rm -f command_parser.rlog
+
 for socket in ${RTPP_TEST_SOCKETS}
 do
-  if [ -e command_parser.rlog ]
-  then
-    rm command_parser.rlog
-  fi
+  rm -f _command_parser.rlog
   run_command_parser "${socket}" "" "-P" "-r ${RECORD_DIR}" "-P -r ${RECORD_DIR}" > command_parser.rout
   RTPP_RC="${?}"
-  if [ ${RTPP_RC} -ne 0 -a -s command_parser.rlog ]
+  if [ ${RTPP_RC} -ne 0 -a -s _command_parser.rlog ]
   then
-    cat command_parser.rlog >&1
+    cat _command_parser.rlog >&1
+  fi
+  if [ -s _command_parser.rlog ]
+  then
+    cat _command_parser.rlog >> command_parser.rlog
   fi
   report_rc ${RTPP_RC} "wait for the rtproxy shutdown on ${socket}"
   ${DIFF} ${BASEDIR}/command_parser/command_parser.output command_parser.rout
