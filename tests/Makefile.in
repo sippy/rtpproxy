@@ -448,7 +448,7 @@ EXTRA_DIST = $(am__append_3) $(am__append_6) $(am__append_9) \
 @ENABLE_MEMGLITCHING_TRUE@memdeb_EXTRA_DIST = memdeb
 @ENABLE_MEMGLITCHING_TRUE@memdeb_CLEANFILES = glitch1.*
 @BUILD_CRYPTO_TRUE@dtls_gw_EXTRA_DIST = dtls_gw
-@BUILD_CRYPTO_TRUE@dtls_gw_CLEANFILES = 
+@BUILD_CRYPTO_TRUE@dtls_gw_CLEANFILES = dtls_gw.?.r*
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
