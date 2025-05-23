@@ -24,5 +24,5 @@
  *
  */
 
-int rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *,
+int rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *, struct rtpp_command *,
   const struct rtpp_command_args *, struct after_success_h *);

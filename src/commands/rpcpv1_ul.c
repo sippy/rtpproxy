@@ -73,6 +73,7 @@
 #include "rtpp_proc_async.h"
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc.h"
+#include "commands/rpcpv1_record.h"
 #include "rtpp_command_reply.h"
 #include "rtpp_command_stats.h"
 
@@ -611,11 +612,13 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
         RTPP_LOG(spa->log, RTPP_LOG_INFO, "new session on %s port %d created, "
           "tag %.*s", AF2STR(ulop->pf), lport, FMTSTR(cmd->cca.from_tag));
         if (cfsp->record_all != 0) {
-            handle_copy(cfsp, spa, 0, NULL, RSF_MODE_DFLT(cfsp));
-            handle_copy(cfsp, spa, 1, NULL, RSF_MODE_DFLT(cfsp));
+            const struct record_opts ropts = {.record_single_file = RSF_MODE_DFLT(cfsp)};
+            handle_copy(cfsp, spa, 0, NULL, &ropts);
+            handle_copy(cfsp, spa, 1, NULL, &ropts);
         }
         /* Save ref, it will be decref'd by the command disposal code */
         RTPP_DBG_ASSERT(cmd->sp == NULL);
+        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, spa);
         cmd->sp = spa;
     }
 

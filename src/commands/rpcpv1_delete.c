@@ -28,6 +28,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -70,8 +71,6 @@ struct delete_ematch_arg {
         unsigned int medianum;
     } res;
 };
-
-static void rtpp_command_del_opts_free(struct delete_opts *);
 
 static int
 rtpp_cmd_delete_ematch(void *dp, void *ap)
@@ -123,7 +122,8 @@ rtpp_cmd_delete_ematch(void *dp, void *ap)
     return (RTPP_HT_MATCH_DEL | RTPP_HT_MATCH_BRK);
 }
 
-struct delete_opts {
+struct delete_opts_priv {
+    struct delete_opts pub;
     int weak;
 };
 
@@ -147,20 +147,19 @@ do_delete(const struct rtpp_cfg *cfsp, const rtpp_str_t *call_id, struct delete_
     return (dep->res.ndeleted == 0) ? -1 : 0;
 }
 
-
 int
 handle_delete(const struct rtpp_cfg *cfsp, struct common_cmd_args *ccap)
 {
+    struct delete_opts_priv *dop;
+    PUB2PVT(ccap->opts.delete, dop);
     struct delete_ematch_arg dea = {
         .from_tag = ccap->from_tag,
         .to_tag = ccap->to_tag,
-        .weak = ccap->opts.delete->weak,
+        .weak = dop->weak,
         .sessions_wrt = cfsp->sessions_wrt,
     };
 
     int res = do_delete(cfsp, ccap->call_id, &dea);
-    rtpp_command_del_opts_free(ccap->opts.delete);
-    ccap->opts.delete = NULL;
     return res;
 }
 
@@ -169,7 +168,8 @@ handle_delete_as_subc(const struct after_success_h_args *ap,
   const struct rtpp_subc_ctx *scp)
 {
     const struct rtpp_cfg *cfsp = ap->stat;
-    struct delete_opts *dop = ap->dyn;
+    struct delete_opts_priv *dop;
+    PUB2PVT((struct delete_opts *)ap->dyn, dop);
     struct delete_ematch_arg dea = {
         .from_tag = scp->sessp->from_tag,
         .weak = dop->weak,
@@ -182,10 +182,10 @@ handle_delete_as_subc(const struct after_success_h_args *ap,
 struct delete_opts *
 rtpp_command_del_opts_parse(struct rtpp_command *cmd, const struct rtpp_command_args *ap)
 {
-    struct delete_opts *dlop;
+    struct delete_opts_priv *dlop;
     const char *cp;
 
-    dlop = rtpp_zmalloc(sizeof(struct delete_opts));
+    dlop = rtpp_rzmalloc(sizeof(struct delete_opts_priv), PVT_RCOFFS(dlop));
     if (dlop == NULL) {
         if (cmd != NULL)
             CALL_SMETHOD(cmd->reply, error, ECODE_NOMEM_1);
@@ -207,17 +207,11 @@ rtpp_command_del_opts_parse(struct rtpp_command *cmd, const struct rtpp_command_
             goto err_undo_1;
         }
     }
-    return (dlop);
+    return (&dlop->pub);
 
 err_undo_1:
-    rtpp_command_del_opts_free(dlop);
+    RTPP_OBJ_DECREF(&dlop->pub);
 err_undo_0:
     return (NULL);
 }
 
-static void
-rtpp_command_del_opts_free(struct delete_opts *dlop)
-{
-
-    free(dlop);
-}

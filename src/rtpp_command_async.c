@@ -214,7 +214,7 @@ again:
             if (cmd->no_glock == 0) {
                 pthread_mutex_unlock(&(cfsp->locks->glob));
             }
-            free_command(cmd);
+            RTPP_OBJ_DECREF(cmd);
         }
     } while (i == 0 && umode != 0);
 out:
@@ -258,7 +258,7 @@ again:
         if (cmd->no_glock == 0) {
             pthread_mutex_unlock(&(cfsp->locks->glob));
         }
-        free_command(cmd);
+        RTPP_OBJ_DECREF(cmd);
     } while (rval == 0);
     return (rval);
 }

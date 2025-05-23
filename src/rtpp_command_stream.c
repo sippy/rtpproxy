@@ -50,6 +50,8 @@
 #include "rtpp_command_reply.h"
 #include "rtpp_network.h"
 #include "rtpp_util.h"
+#include "rtpp_codeptr.h"
+#include "rtpp_refcnt.h"
 
 static void
 rtpp_command_stream_compact(struct rtpp_cmd_connection *rcs)
@@ -158,7 +160,7 @@ rtpp_command_stream_get(const struct rtpp_cfg *cfsp, struct rtpp_cmd_connection 
 
     if (rtpp_command_split(cmd, len, rval, NULL) != 0) {
         /* Error reply is handled by the rtpp_command_split() */
-        free_command(cmd);
+        RTPP_OBJ_DECREF(cmd);
         return (NULL);
     }
 

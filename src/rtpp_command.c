@@ -183,26 +183,6 @@ rtpp_create_listener(const struct rtpp_cfg *cfsp, const struct sockaddr *ia, int
       &cta));
 }
 
-void
-free_command(struct rtpp_command *cmd)
-{
-    struct rtpp_command_priv *pvt;
-
-    PUB2PVT(cmd, pvt);
-    if (pvt->ctx.rcache_obj != NULL) {
-        RTPP_OBJ_DECREF(pvt->ctx.rcache_obj);
-    }
-    if (cmd->sp != NULL) {
-        RTPP_OBJ_DECREF(cmd->sp);
-    }
-    for (int i = 0; i < MAX_SUBC_NUM; i++) {
-        if (cmd->after_success[i].args.dyn != NULL)
-            free(cmd->after_success[i].args.dyn);
-    }
-    RTPP_OBJ_DECREF(cmd->reply);
-    free(pvt);
-}
-
 struct rtpp_command *
 rtpp_command_ctor(const struct rtpp_cfg *cfsp, int controlfd,
   const struct rtpp_timestamp *dtime, struct rtpp_command_stats *csp, int umode)
@@ -210,7 +190,7 @@ rtpp_command_ctor(const struct rtpp_cfg *cfsp, int controlfd,
     struct rtpp_command_priv *pvt;
     struct rtpp_command *cmd;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_command_priv));
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_command_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         return (NULL);
     }
@@ -225,9 +205,10 @@ rtpp_command_ctor(const struct rtpp_cfg *cfsp, int controlfd,
     pvt->ctx.umode = umode;
     cmd->reply = rtpc_reply_ctor(&pvt->ctx);
     if (cmd->reply == NULL) {
-        free(pvt);
+        RTPP_OBJ_DECREF(cmd);
         return (NULL);
     }
+    RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, cmd->reply);
     return (cmd);
 }
 
@@ -291,7 +272,7 @@ get_command(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp, int contro
                 RTPP_LOG(cfsp->glog, RTPP_LOG_DBUG,
                   "EOF before receiving any command data");
                 if (cmd != NULL)
-                    free_command(cmd);
+                    RTPP_OBJ_DECREF(cmd);
                 *rval = GET_CMD_EOF;
                 return (NULL);
             }
@@ -315,7 +296,7 @@ get_command(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp, int contro
         if (errno != EAGAIN && errno != EINTR)
             RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't read from control socket");
         if (cmd != NULL)
-            free_command(cmd);
+            RTPP_OBJ_DECREF(cmd);
         *rval = GET_CMD_IOERR;
         return (NULL);
     }
@@ -329,7 +310,7 @@ get_command(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp, int contro
 
     if (rtpp_command_split(cmd, len, rval, rcache_obj) != 0) {
         /* Error reply is handled by the rtpp_command_split() */
-        free_command(cmd);
+        RTPP_OBJ_DECREF(cmd);
         return (NULL);
     }
     return (cmd);
@@ -348,7 +329,7 @@ rtpp_command_guard_retrans(struct rtpp_command *cmd,
     PUB2PVT(cmd, pvt);
     cres = CALL_METHOD(rcache_obj, lookup, rtpp_str_fix(&pvt->ctx.cookie));
     if (cres == NULL) {
-        RTPP_OBJ_INCREF(rcache_obj);
+        RTPP_OBJ_BORROW(cmd, rcache_obj);
         pvt->ctx.rcache_obj = rcache_obj;
         return (0);
     }
@@ -467,13 +448,11 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     const char *cp;
     const char *recording_name;
     struct rtpp_session *spa;
-    int record_single_file;
     int norecord_all;
 
     spa = NULL;
     recording_name = NULL;
     norecord_all = 0;
-    record_single_file = 0;
 
     /* Step II: parse parameters that are specific to a particular op and run simple ops */
     switch (cmd->cca.op) {
@@ -517,21 +496,12 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         recording_name = cmd->args.v[2].s;
         /* Fallthrough */
     case RECORD:
-        if (cmd->args.v[0].s[1] == 'S' || cmd->args.v[0].s[1] == 's') {
-            if (cmd->args.v[0].s[2] != '\0') {
-                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_2);
-                return 0;
-            }
-            record_single_file = RSF_MODE_DFLT(cfsp);
-        } else {
-            if (cmd->args.v[0].s[1] != '\0') {
-                RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_3);
-                return 0;
-            }
-            record_single_file = 0;
+        cmd->cca.opts.record = rtpp_command_record_opts_parse(cfsp, cmd, &cmd->args);
+        if (cmd->cca.opts.record == NULL) {
+            RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
+            return 0;
         }
+        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, cmd->cca.opts.record);
         break;
 
     case NORECORD:
@@ -559,6 +529,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
         }
+        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, cmd->cca.opts.delete);
         break;
 
     case UPDATE:
@@ -597,7 +568,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     }
 
     for (int i = 0; i < cmd->subc.n; i++) {
-        if (rtpp_subcommand_ul_opts_parse(cfsp, &cmd->subc.args[i],
+        if (rtpp_subcommand_ul_opts_parse(cfsp, cmd, &cmd->subc.args[i],
           &cmd->after_success[i]) != 0) {
             if (cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP)
                 rtpp_command_ul_opts_free(cmd->cca.opts.ul);
@@ -613,27 +584,28 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
      */
     switch (cmd->cca.op) {
     case DELETE:
-	i = handle_delete(cfsp, &cmd->cca);
-	break;
+        i = handle_delete(cfsp, &cmd->cca);
+        break;
 
     case RECORD:
-	i = handle_record(cfsp, &cmd->cca, record_single_file);
-	break;
+        i = handle_record(cfsp, &cmd->cca);
+        break;
 
     case NORECORD:
-	i = handle_norecord(cfsp, &cmd->cca, norecord_all);
-	break;
+        i = handle_norecord(cfsp, &cmd->cca, norecord_all);
+        break;
 
     default:
-	i = find_stream(cfsp, cmd->cca.call_id, cmd->cca.from_tag,
-	  cmd->cca.to_tag, &spa);
-	if (i != -1) {
-	    if (cmd->cca.op != UPDATE)
-		i = NOT(i);
-	    RTPP_DBG_ASSERT(cmd->sp == NULL);
-	    cmd->sp = spa;
-	}
-	break;
+        i = find_stream(cfsp, cmd->cca.call_id, cmd->cca.from_tag,
+        cmd->cca.to_tag, &spa);
+        if (i != -1) {
+            if (cmd->cca.op != UPDATE)
+            i = NOT(i);
+            RTPP_DBG_ASSERT(cmd->sp == NULL);
+            RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, spa);
+            cmd->sp = spa;
+        }
+        break;
     }
 
     if (i == -1 && cmd->cca.op != UPDATE) {
@@ -653,6 +625,15 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 	    rtpp_command_play_opts_free(cmd->cca.opts.play);
 	    break;
 
+        case COPY:
+        case RECORD:
+            RTPP_DBG_ASSERT(CALL_SMETHOD(cmd->cca.opts.record->rcnt, peek) == 1);
+            break;
+
+        case DELETE:
+            RTPP_DBG_ASSERT(CALL_SMETHOD(cmd->cca.opts.delete->rcnt, peek) == 1);
+            break;
+
 	default:
 	    RTPP_DBG_ASSERT(cmd->cca.opts.ptr == NULL);
 	    break;
@@ -665,42 +646,42 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     case DELETE:
     case RECORD:
     case NORECORD:
-	CALL_SMETHOD(cmd->reply, ok);
-	break;
+        CALL_SMETHOD(cmd->reply, ok);
+        break;
 
     case NOPLAY:
-	CALL_SMETHOD(spa->rtp->stream[i], handle_noplay);
-	CALL_SMETHOD(cmd->reply, ok);
-	break;
+        CALL_SMETHOD(spa->rtp->stream[i], handle_noplay);
+        CALL_SMETHOD(cmd->reply, ok);
+        break;
 
     case PLAY:
         rtpp_command_play_handle(spa->rtp->stream[i], cmd);
-	break;
+        break;
 
     case COPY:
-	if (handle_copy(cfsp, spa, i, recording_name, record_single_file) != 0) {
+        if (handle_copy(cfsp, spa, i, recording_name, cmd->cca.opts.record) != 0) {
             CALL_SMETHOD(cmd->reply, error, ECODE_CPYFAIL);
             return 0;
         }
-	CALL_SMETHOD(cmd->reply, ok);
-	break;
+        CALL_SMETHOD(cmd->reply, ok);
+        break;
 
     case QUERY:
-	rval = handle_query(cfsp, cmd, spa->rtp, i);
-	if (rval != 0) {
-	    CALL_SMETHOD(cmd->reply, error, rval);
-	}
-	break;
+        rval = handle_query(cfsp, cmd, spa->rtp, i);
+        if (rval != 0) {
+            CALL_SMETHOD(cmd->reply, error, rval);
+        }
+        break;
 
     case LOOKUP:
     case UPDATE:
-	rtpp_command_ul_handle(cfsp, cmd, i);
-	rtpp_command_ul_opts_free(cmd->cca.opts.ul);
-	break;
+        rtpp_command_ul_handle(cfsp, cmd, i);
+        rtpp_command_ul_opts_free(cmd->cca.opts.ul);
+        break;
 
     default:
-	/* Programmatic error, should not happen */
-	abort();
+        /* Programmatic error, should not happen */
+        abort();
     }
 
     return 0;

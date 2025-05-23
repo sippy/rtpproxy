@@ -32,6 +32,7 @@
 
 struct rtpp_timestamp;
 struct rtpc_reply;
+struct record_opts;
 
 enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
   QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS, NORECORD};
@@ -47,6 +48,7 @@ struct common_cmd_args {
         struct ul_opts *ul;
         struct play_opts *play;
         struct delete_opts *delete;
+        struct record_opts *record;
         void *ptr;
     } opts;
 };
@@ -71,6 +73,7 @@ struct after_success_h {
 };
 
 struct rtpp_command {
+    struct rtpp_refcnt *rcnt;
     char buf[RTPP_CMD_BUFLEN];
     struct rtpp_command_args args;
     struct {

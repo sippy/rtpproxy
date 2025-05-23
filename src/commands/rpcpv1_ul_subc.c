@@ -36,6 +36,8 @@
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_modman.h"
+#include "rtpp_codeptr.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_command.h"
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
@@ -66,9 +68,10 @@ handle_mod_subc_parse(const struct rtpp_cfg *cfsp, const char *ip,
 #endif
 
 int
-rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp,
+rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd,
   const struct rtpp_command_args *subc_args, struct after_success_h *asp)
 {
+    struct delete_opts *dop;
 
     switch(subc_args->v[0].s[0]) {
     case 'M':
@@ -86,9 +89,11 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp,
     case 'd':
         if (subc_args->c != 1)
             return (-1);
-        asp->args.dyn = rtpp_command_del_opts_parse(NULL, subc_args);
-        if (asp->args.dyn == NULL)
+        dop = rtpp_command_del_opts_parse(NULL, subc_args);
+        if (dop == NULL)
             return (-1);
+        asp->args.dyn = dop;
+        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, dop);
         asp->args.stat = (void *)cfsp;
         asp->handler = handle_delete_as_subc;
         break;

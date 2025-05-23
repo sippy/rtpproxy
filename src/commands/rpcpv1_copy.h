@@ -30,9 +30,10 @@
 #define _RTPP_COMMAND_COPY_H_
 
 struct rtpp_session;
+struct record_opts;
 
 int handle_copy(const struct rtpp_cfg *, struct rtpp_session *, int,
-  const char *, int);
+  const char *, const struct record_opts *);
 
 #define RSF_MODE_DFLT(cfsp) (((cfsp)->record_pcap == 0) ? 0 : 1)
 

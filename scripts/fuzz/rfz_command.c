@@ -50,6 +50,6 @@ ExecuteRTPPCommand(struct rtpp_conf *gcp, const char *data, size_t size, int deb
     assert(tp == cmd->reply);
     assert(trp == cmd->reply->rcnt);
     assert(CALL_SMETHOD(cmd->reply->rcnt, peek) == 1);
-    free_command(cmd);
+    RTPP_OBJ_DECREF(cmd);
     return (rval);
 }

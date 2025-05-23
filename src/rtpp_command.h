@@ -48,7 +48,6 @@ struct rtpp_timestamp;
 #define RTPP_CMD_BUFLEN (8 * 1024)
 
 int handle_command(const struct rtpp_cfg *, struct rtpp_command *);
-void free_command(struct rtpp_command *);
 struct rtpp_command *get_command(const struct rtpp_cfg *, struct rtpp_ctrl_sock *, int, int *,
   const struct rtpp_timestamp *, struct rtpp_command_stats *csp,
   struct rtpp_cmd_rcache *);

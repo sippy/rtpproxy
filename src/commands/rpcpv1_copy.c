@@ -45,16 +45,17 @@
 #include "rtpp_session.h"
 #include "rtpp_util.h"
 #include "commands/rpcpv1_copy.h"
+#include "commands/rpcpv1_record.h"
 
 int
 handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_session *spa, int idx,
-  const char *rname, int record_single_file)
+  const char *rname, const struct record_opts *rop)
 {
     int remote;
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0)? 1 : 0;
 
-    if (remote == 0 && record_single_file != 0) {
+    if (remote == 0 && rop->record_single_file != 0) {
         if (spa->rtp->stream[idx]->rrc != NULL)
             return (-1);
         if (spa->rtp->stream[NOT(idx)]->rrc != NULL) {
