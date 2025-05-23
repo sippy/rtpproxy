@@ -29,7 +29,7 @@
 
 struct rtpp_codeptr;
 
-#define MAX_DTORS 16
+#define MAX_DTORS 24
 
 typedef void (*rtpp_refcnt_dtor_t)(void *);
 
