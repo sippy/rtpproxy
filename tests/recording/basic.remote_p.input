@@ -1,0 +1,3 @@
+C %%CALLID%% udp:127.0.0.1:%%REC_PORT%% from_tag_1
+C %%CALLID%% udp:127.0.0.1:%%REC_PORT%% to_tag_1
+Cp %%CALLID%% udp:127.0.0.1:%%REC_PORT%% to_tag_1 from_tag_1

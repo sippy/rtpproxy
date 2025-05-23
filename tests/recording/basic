@@ -48,6 +48,7 @@ run_rtpproxy() {
   rtp_porto=${3}
   rproto=${4}
   rport=${5}
+  rtp_port_rec=${6}
   recstop=
 
   case "${rproto}" in
@@ -93,8 +94,9 @@ run_rtpproxy() {
     "${CD_DIR}/basic.refresh.input"; \
    sleep 7; cat "${CD_DIR}/basic.stats.input") | \
    sed -u "s|%%CALLID%%|${CALL_ID}|g ; s|%%REC_PORT%%|${rport}|g" | \
-   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} | sed \
-   "s|^${rtp_porta}$|%%PORT_A%%|g ;  s|^${rtp_porto}$|%%PORT_O%%|g"
+    ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} | sed \
+    "s|^${rtp_porta}$|%%PORT_A%%|g ; s|^${rtp_porto}$|%%PORT_O%%|g ; \
+     s|^${rtp_port_rec}|%%PORT_REC%%|g"
 
   case "${rproto}" in
   files)
@@ -127,9 +129,10 @@ run_recording() {
   CALL_ID="recording.${REC_PROTO}_${REC_PORT}.rec."
   RECNAME="${CALL_ID}=from_tag_1"
   MIN_PORT=$((${RTP_PORT}))
-  MAX_PORT=$((${RTP_PORT} + 3))
+  MAX_PORT=$((${RTP_PORT} + 7))
   RTP_PORT_A=${RTP_PORT}
   RTP_PORT_O=$((${RTP_PORT} + 2))
+  RTP_PORT_REC=$((${RTP_PORT} + 6))
   RTPP_REC_ARGS="-P -r ${RECORD_DIR} -S ${RECORD_SPL_DIR}"
 
   ONAME="recording.${REC_PORT}.${REC_PROTO}.rout"
@@ -138,7 +141,7 @@ run_recording() {
   RTPP_ARGS="-d dbug -f -s stdio: -b -m ${MIN_PORT} \
    -M ${MAX_PORT} -T2 -W2"
 
-  if [ "${REC_PROTO}" = "remote" ]
+  if [ "${REC_PROTO}" = "remote" -o "${REC_PROTO}" = "remote_p" ]
   then
     NC_ARGS="-k -u -l 127.0.0.1 ${REC_PORT}"
     nc ${NC_ARGS} > ${TNAME}&
@@ -156,7 +159,7 @@ run_recording() {
   UDPRPL_O_PID=${!}
   report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate) to ${RTP_PORT_O}/rtp"
   run_rtpproxy "${RECNAME}" ${RTP_PORT_A} ${RTP_PORT_O} "${REC_PROTO}" \
-    "${REC_PORT}" > "${ONAME}" 2> "${LNAME}"
+    "${REC_PORT}" "${RTP_PORT_REC}" > "${ONAME}" 2> "${LNAME}"
   RTPP_RC=${?}
   ${DIFF} "${CD_DIR}/basic.${REC_PROTO}.output" "${ONAME}"
   DIFF_RC=${?}
@@ -170,7 +173,7 @@ run_recording() {
   fi
   report_rc ${RTPP_RC} "wait for the rtproxy shutdown"
   report_rc ${DIFF_RC} "checking rtproxy output"
-  if [ "${REC_PROTO}" = "remote" ]
+  if [ "${REC_PROTO}" = "remote" -o "${REC_PROTO}" = "remote_p" ]
   then
     kill -TERM ${RTPP_NC_PID} 2>/dev/null
     ##wait ${RTPP_NC_PID}
@@ -180,7 +183,7 @@ run_recording() {
   report "wait for udpreplay (answering) shutdown"
   wait ${UDPRPL_O_PID}
   report "wait for udpreplay (originate) shutdown"
-  if [ "${REC_PROTO}" = "remote" ]
+  if [ "${REC_PROTO}" = "remote" -o "${REC_PROTO}" = "remote_p" ]
   then
     recsize=`wc -c "${TNAME}"| awk '{print $1}'`
     if [ ${recsize} -ne ${RECSIZE} ]
@@ -191,7 +194,7 @@ run_recording() {
   fi
 }
 
-SUB_TESTS="files singlefile stopall files_stophalf singlefile_stophalf remote"
+SUB_TESTS="${SUB_TESTS:-"files singlefile stopall files_stophalf singlefile_stophalf remote remote_p"}"
 
 for stest in ${SUB_TESTS}
 do
