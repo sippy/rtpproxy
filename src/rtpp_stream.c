@@ -254,6 +254,8 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
+    pvt->pub.log = ap->log;
+    RTPP_OBJ_BORROW(&pvt->pub, ap->log);
     RTPP_OBJ_DTOR_ATTACH(&pvt->pub, pthread_mutex_destroy, &pvt->lock);
     pvt->pub.pproc_manager = CALL_SMETHOD(ap->pproc_manager, clone);
     if (pvt->pub.pproc_manager == NULL) {
@@ -308,8 +310,6 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     pvt->proc_servers = ap->proc_servers;
     RTPP_OBJ_BORROW(&pvt->pub, ap->proc_servers);
     pvt->rtpp_stats = ap->rtpp_stats;
-    pvt->pub.log = ap->log;
-    RTPP_OBJ_BORROW(&pvt->pub, ap->log);
     pvt->pub.side = ap->side;
     pvt->pub.pipe_type = ap->pipe_type;
 
@@ -413,8 +413,6 @@ rtpp_stream_dtor(struct rtpp_stream_priv *pvt)
         rtp_resizer_free(pvt->rtpp_stats, pub->resizer);
     if (pub->rrc != NULL)
         RTPP_OBJ_DECREF(pub->rrc);
-    if (pub->pcount != NULL)
-        RTPP_OBJ_DECREF(pub->pcount);
     for (unsigned int i = 0; i < pvt->pmod_data.nmodules; i++) {
         struct rtpp_refcnt *mdata_rcnt;
         mdata_rcnt = atomic_load(&(pvt->pmod_data.adp[i]));

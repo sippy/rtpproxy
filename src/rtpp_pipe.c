@@ -32,6 +32,7 @@
 
 #include "config.h"
 
+#include "rtpp_debug.h"
 #include "rtpp_genuid_singlet.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
@@ -51,6 +52,7 @@
 #include "rtpp_pcnt_strm.h"
 #include "rtpp_pcnts_strm.h"
 #include "rtpp_stats.h"
+#include "rtpp_refcnt.h"
 #include "advanced/pproc_manager.h"
 
 struct rtpp_pipe_priv
@@ -90,6 +92,7 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
         goto e0;
     }
 
+    RTPP_OBJ_BORROW(&pvt->pub, ap->log);
     pvt->streams_wrt = ap->streams_wrt;
 
     rtpp_gen_uid(&pvt->pub.ppuid);
@@ -108,6 +111,7 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
         if (pvt->pub.stream[i] == NULL) {
             goto e1;
         }
+        RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->pub.stream[i]);
         if (CALL_SMETHOD(pvt->streams_wrt, reg, pvt->pub.stream[i]->rcnt,
           pvt->pub.stream[i]->stuid) != 0) {
             goto e1;
@@ -117,31 +121,30 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
     pvt->pub.stream[1]->stuid_sendr = pvt->pub.stream[0]->stuid;
     pvt->pub.pcount = rtpp_pcount_ctor();
     if (pvt->pub.pcount == NULL) {
-        goto e2;
+        goto e1;
     }
+    RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->pub.pcount);
     for (i = 0; i < 2; i++) {
-        RTPP_OBJ_INCREF(pvt->pub.pcount);
+        RTPP_OBJ_BORROW(pvt->pub.stream[i], pvt->pub.pcount);
         pvt->pub.stream[i]->pcount = pvt->pub.pcount;
     }
     pvt->pub.stream[0]->pproc_manager->reverse = pvt->pub.stream[1]->pproc_manager;
-    RTPP_OBJ_INCREF(pvt->pub.stream[1]->pproc_manager);
+    RTPP_OBJ_BORROW(&pvt->pub, pvt->pub.stream[1]->pproc_manager);
     pvt->pub.stream[1]->pproc_manager->reverse = pvt->pub.stream[0]->pproc_manager;
-    RTPP_OBJ_INCREF(pvt->pub.stream[0]->pproc_manager);
+    RTPP_OBJ_BORROW(&pvt->pub, pvt->pub.stream[0]->pproc_manager);
     pvt->pipe_type = ap->pipe_type;
     pvt->pub.rtpp_stats = ap->rtpp_stats;
     pvt->pub.log = ap->log;
-    RTPP_OBJ_INCREF(ap->log);
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_pipe_dtor);
+#if defined(RTPP_DEBUG)
+    RTPP_OBJ_DTOR_ATTACH(&pvt->pub, rtpp_pipe_fin, &(pvt->pub));
+#endif
     return (&pvt->pub);
 
-e2:
 e1:
-    for (i = 0; i < 2; i++) {
-        if (pvt->pub.stream[i] != NULL) {
+    for (i = 0; i < 2; i++)
+        if (pvt->pub.stream[i] != NULL)
             CALL_SMETHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
-            RTPP_OBJ_DECREF(pvt->pub.stream[i]);
-        }
-    }
     RTPP_OBJ_DECREF(&(pvt->pub));
 e0:
     return (NULL);
@@ -152,14 +155,9 @@ rtpp_pipe_dtor(struct rtpp_pipe_priv *pvt)
 {
     int i;
 
-    rtpp_pipe_fin(&(pvt->pub));
     for (i = 0; i < 2; i++) {
         CALL_SMETHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
-        RTPP_OBJ_DECREF(pvt->pub.stream[i]->pproc_manager->reverse);
-        RTPP_OBJ_DECREF(pvt->pub.stream[i]);
     }
-    RTPP_OBJ_DECREF(pvt->pub.pcount);
-    RTPP_OBJ_DECREF(pvt->pub.log);
 }
 
 static int
