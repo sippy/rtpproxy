@@ -188,7 +188,7 @@ rtpp_command_del_opts_parse(struct rtpp_command *cmd, const struct rtpp_command_
     dlop = rtpp_rzmalloc(sizeof(struct delete_opts_priv), PVT_RCOFFS(dlop));
     if (dlop == NULL) {
         if (cmd != NULL)
-            CALL_SMETHOD(cmd->reply, error, ECODE_NOMEM_1);
+            CALL_SMETHOD(cmd->reply, deliver_error, ECODE_NOMEM_1);
         goto err_undo_0;
     }
     for (cp = ap->v[0].s + 1; *cp != '\0'; cp++) {
@@ -202,7 +202,7 @@ rtpp_command_del_opts_parse(struct rtpp_command *cmd, const struct rtpp_command_
             if (cmd != NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "DELETE: unknown command modifier `%c'", *cp);
-                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_4);
+                CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_4);
             }
             goto err_undo_1;
         }

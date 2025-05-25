@@ -450,7 +450,7 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
     return (0);
 synerr:
     RTPP_LOG(pvt->ctx.cfs->glog, RTPP_LOG_ERR, "command syntax error");
-    CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_1);
+    CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_1);
     *rval = GET_CMD_INVAL;
     return (1);
 
@@ -477,7 +477,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 
     case GET_VER:
         /* This returns base version. */
-        CALL_SMETHOD(cmd->reply, number, CPROTOVER);
+        CALL_SMETHOD(cmd->reply, deliver_number, CPROTOVER);
         return 0;
 
     case DELETE_ALL:
@@ -485,7 +485,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         RTPP_LOG(cfsp->glog, RTPP_LOG_INFO, "deleting all active sessions");
         CALL_SMETHOD(cfsp->sessions_wrt, purge);
         CALL_SMETHOD(cfsp->sessions_ht, purge);
-        CALL_SMETHOD(cmd->reply, ok);
+        CALL_SMETHOD(cmd->reply, deliver_ok);
         return 0;
 
     case INFO:
@@ -523,14 +523,14 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         if (cmd->args.v[0].s[1] == 'A' || cmd->args.v[0].s[1] == 'a') {
             if (cmd->args.v[0].s[2] != '\0') {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_2);
+                CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_2);
                 return 0;
             }
             norecord_all = 1;
         } else {
             if (cmd->args.v[0].s[1] != '\0') {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_3);
+                CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_3);
                 return 0;
             }
             norecord_all = 0;
@@ -568,13 +568,13 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             default:
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
                   "STATS: unknown command modifier `%c'", *cp);
-                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_5);
+                CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_5);
                 return 0;
             }
         }
         i = handle_get_stats(cfsp->rtpp_stats, cmd, verbose);
         if (i != 0) {
-            CALL_SMETHOD(cmd->reply, error, i);
+            CALL_SMETHOD(cmd->reply, deliver_error, i);
         }
         return 0;
 
@@ -587,7 +587,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
           &cmd->after_success[i]) != 0) {
             if (cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP)
                 rtpp_command_ul_opts_free(cmd->cca.opts.ul);
-            CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_SUBC);
+            CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_SUBC);
             return 0;
         }
         RTPP_DBG_ASSERT(cmd->after_success[i].handler != NULL);
@@ -653,19 +653,19 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             RTPP_DBG_ASSERT(cmd->cca.opts.ptr == NULL);
             break;
         }
-        CALL_SMETHOD(cmd->reply, error, ECODE_SESUNKN);
+        CALL_SMETHOD(cmd->reply, deliver_error, ECODE_SESUNKN);
         return 0;
     }
 
     switch (cmd->cca.op) {
     case DELETE:
     case NORECORD:
-        CALL_SMETHOD(cmd->reply, ok);
+        CALL_SMETHOD(cmd->reply, deliver_ok);
         break;
 
     case NOPLAY:
         CALL_SMETHOD(spa->rtp->stream[i], handle_noplay);
-        CALL_SMETHOD(cmd->reply, ok);
+        CALL_SMETHOD(cmd->reply, deliver_ok);
         break;
 
     case PLAY:
@@ -674,7 +674,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 
     case COPY:
         if (handle_copy(cfsp, cmd, spa, i, recording_name, cmd->cca.opts.record) != 0) {
-            CALL_SMETHOD(cmd->reply, error, ECODE_CPYFAIL);
+            CALL_SMETHOD(cmd->reply, deliver_error, ECODE_CPYFAIL);
             return 0;
         }
     case RECORD:
@@ -683,7 +683,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     case QUERY:
         rval = handle_query(cfsp, cmd, spa->rtp, i);
         if (rval != 0) {
-            CALL_SMETHOD(cmd->reply, error, rval);
+            CALL_SMETHOD(cmd->reply, deliver_error, rval);
         }
         break;
 
@@ -736,7 +736,7 @@ handle_info(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 
         default:
             RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "command syntax error");
-            CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_7);
+            CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_7);
             return;
         }
     }
@@ -804,6 +804,6 @@ XXX this needs work to fix it after rtp/rtcp split
         CALL_SMETHOD(cmd->reply, commit);
         CALL_SMETHOD(cmd->reply, deliver, 0);
     } else {
-        CALL_SMETHOD(cmd->reply, error, ECODE_NOMEM_6);
+        CALL_SMETHOD(cmd->reply, deliver_error, ECODE_NOMEM_6);
     }
 }

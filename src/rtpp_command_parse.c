@@ -257,25 +257,25 @@ rtpp_command_pre_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     if (fill_cmd_props(cfsp, cmd, &cprops) != 0) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "unknown command \"%c\"",
           cmd->args.v[0].s[0]);
-        CALL_SMETHOD(cmd->reply, error, ECODE_CMDUNKN);
+        CALL_SMETHOD(cmd->reply, deliver_error, ECODE_CMDUNKN);
         return (-1);
     }
     if (cmd->args.c < cprops.min_argc || cmd->args.c > cprops.max_argc) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s command syntax error"
           ": invalid number of arguments (%d)", cmd->cca.rname, cmd->args.c);
-        CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_NARGS);
+        CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_NARGS);
         return (-1);
     }
     if (cprops.has_cmods == 0 && cprops.cmods[0] != '\0') {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s command syntax error"
           ": modifiers are not supported by the command", cmd->cca.rname);
-        CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_MODS);
+        CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_MODS);
         return (-1);
     }
     if (cprops.has_subc == 0 && cmd->subc.n > 0) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s command syntax error"
           ": subcommand is not supported", cmd->cca.rname);
-        CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_SUBC);
+        CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_SUBC);
         return (-1);
     }
     if (cprops.has_call_id) {

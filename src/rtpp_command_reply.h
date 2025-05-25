@@ -34,9 +34,15 @@ struct sockaddr;
 
 DECLARE_CLASS(rtpc_reply, const struct rtpp_command_ctx *);
 
-DECLARE_METHOD(rtpc_reply, rtpc_reply_error, void, int);
-DECLARE_METHOD(rtpc_reply, rtpc_reply_ok, void);
-DECLARE_METHOD(rtpc_reply, rtpc_reply_number, void, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver_error, void, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver_ok, void);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver_number, void, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver_port_addr, int, const struct sockaddr *,
+  int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_append_port_addr, int, const struct sockaddr *,
+  int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_append_port_addr_s, int, const char *,
+  int, int);
 DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver, void, int);
 DECLARE_METHOD(rtpc_reply, rtpc_reply_append, int, const char *,
   int, int);
@@ -47,9 +53,12 @@ DECLARE_METHOD(rtpc_reply, rtpc_reply_reserve, int, int);
 
 DECLARE_SMETHODS(rtpc_reply)
 {
-    METHOD_ENTRY(rtpc_reply_error, error);
-    METHOD_ENTRY(rtpc_reply_ok, ok);
-    METHOD_ENTRY(rtpc_reply_number, number);
+    METHOD_ENTRY(rtpc_reply_deliver_error, deliver_error);
+    METHOD_ENTRY(rtpc_reply_deliver_ok, deliver_ok);
+    METHOD_ENTRY(rtpc_reply_deliver_number, deliver_number);
+    METHOD_ENTRY(rtpc_reply_deliver_port_addr, deliver_port_addr);
+    METHOD_ENTRY(rtpc_reply_append_port_addr, append_port_addr);
+    METHOD_ENTRY(rtpc_reply_append_port_addr_s, append_port_addr_s);
     METHOD_ENTRY(rtpc_reply_deliver, deliver);
     METHOD_ENTRY(rtpc_reply_append, append);
     METHOD_ENTRY(rtpc_reply_appendf, appendf);

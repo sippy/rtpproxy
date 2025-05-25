@@ -88,7 +88,7 @@ handle_ver_feature(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
      */
     if (strcmp(cmd->args.v[1].s, "20081224") == 0 &&
       !CALL_METHOD(cfsp->rtpp_tnset_cf, isenabled)) {
-        CALL_SMETHOD(cmd->reply, number, 0);
+        CALL_SMETHOD(cmd->reply, deliver_number, 0);
         return;
     }
     for (known = i = 0; proto_caps[i].pc_id != NULL; ++i) {
@@ -97,7 +97,7 @@ handle_ver_feature(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             break;
         }
     }
-    CALL_SMETHOD(cmd->reply, number, known);
+    CALL_SMETHOD(cmd->reply, deliver_number, known);
 }
 
 const struct proto_cap *

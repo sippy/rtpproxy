@@ -101,7 +101,7 @@ handle_record(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
     if (rea.nrecorded == 0) {
         return -1;
     }
-    CALL_SMETHOD(cmd->reply, ok);
+    CALL_SMETHOD(cmd->reply, deliver_ok);
     return 0;
 }
 
@@ -114,7 +114,7 @@ rtpp_command_record_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command 
 
     rop = rtpp_rzmalloc(sizeof(struct record_opts), PUB_RCOFFS(rop));
     if (rop == NULL) {
-        CALL_SMETHOD(cmd->reply, error, ECODE_NOMEM_1);
+        CALL_SMETHOD(cmd->reply, deliver_error, ECODE_NOMEM_1);
         goto err_undo_0;
     }
     for (cp = ap->v[0].s + 1; *cp != '\0'; cp++) {
@@ -130,7 +130,7 @@ rtpp_command_record_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command 
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "RECORD: command modifier `%c' is not allowed in RECORD",
                   *cp);
-                CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_2);
+                CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_2);
                 goto err_undo_1;
             }
             rop->reply_port = 1;
@@ -139,7 +139,7 @@ rtpp_command_record_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command 
         default:
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
               "RECORD: unknown command modifier `%c'", *cp);
-            CALL_SMETHOD(cmd->reply, error, ECODE_PARSE_3);
+            CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_3);
             goto err_undo_1;
         }
     }
