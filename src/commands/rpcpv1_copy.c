@@ -157,7 +157,8 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, struct rtpp_s
     }
     if (cmd != NULL) {
         if (rop->reply_port != 0 && remote) {
-            CALL_SMETHOD(cmd->reply, deliver_number, rargs.lport);
+            if (CALL_SMETHOD(cmd->reply, deliver_port_addr, rargs.laddr, rargs.lport) != 0)
+                goto out;
         } else {
             CALL_SMETHOD(cmd->reply, deliver_ok);
         }

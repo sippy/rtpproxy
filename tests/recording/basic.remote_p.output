@@ -2,7 +2,7 @@
 %%PORT_O%%
 0
 E50
-%%PORT_REC%%
+%%PORT_REC%% 127.0.0.1
 rtpa_nsent=300 rtpa_nrcvd=300 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 rtpa_nsent=302 rtpa_nrcvd=302 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0
 0
