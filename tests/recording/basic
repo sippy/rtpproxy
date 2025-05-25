@@ -93,7 +93,8 @@ run_rtpproxy() {
    sleep 8; cat "${CD_DIR}/basic.stats.input" "${CD_DIR}/basic.recstop${recstop}.input" \
     "${CD_DIR}/basic.refresh.input"; \
    sleep 7; cat "${CD_DIR}/basic.stats.input") | \
-   sed -u "s|%%CALLID%%|${CALL_ID}|g ; s|%%REC_PORT%%|${rport}|g" | \
+   sed -u "s|%%CALLID%%|${CALL_ID}|g ; s|%%REC_PORT%%|${rport}|g ; \
+    s|%%REC_NAME%%|${recfile}|g" | \
     ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} | sed \
     "s|^${rtp_porta}$|%%PORT_A%%|g ; s|^${rtp_porto}$|%%PORT_O%%|g ; \
      s|^${rtp_port_rec}|%%PORT_REC%%|g"
@@ -111,7 +112,7 @@ run_rtpproxy() {
     done
     ;;
 
-  singlefile|stopall)
+  singlefile|singlefile_c|stopall)
     recfile="${rname}.pcap"
     if [ -e "${recfile}" ]
     then
@@ -194,7 +195,7 @@ run_recording() {
   fi
 }
 
-SUB_TESTS="${SUB_TESTS:-"files singlefile stopall files_stophalf singlefile_stophalf remote remote_p"}"
+SUB_TESTS="${SUB_TESTS:-"files singlefile singlefile_c stopall files_stophalf singlefile_stophalf remote remote_p"}"
 
 for stest in ${SUB_TESTS}
 do
