@@ -11,6 +11,14 @@ static void rtpc_reply_append_fin(void *pub) {
     fprintf(stderr, "Method rtpc_reply@%p::append (rtpc_reply_append) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpc_reply_append_port_addr_fin(void *pub) {
+    fprintf(stderr, "Method rtpc_reply@%p::append_port_addr (rtpc_reply_append_port_addr) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void rtpc_reply_append_port_addr_s_fin(void *pub) {
+    fprintf(stderr, "Method rtpc_reply@%p::append_port_addr_s (rtpc_reply_append_port_addr_s) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpc_reply_appendf_fin(void *pub) {
     fprintf(stderr, "Method rtpc_reply@%p::appendf (rtpc_reply_appendf) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -23,16 +31,20 @@ static void rtpc_reply_deliver_fin(void *pub) {
     fprintf(stderr, "Method rtpc_reply@%p::deliver (rtpc_reply_deliver) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpc_reply_error_fin(void *pub) {
-    fprintf(stderr, "Method rtpc_reply@%p::error (rtpc_reply_error) is invoked after destruction\x0a", pub);
+static void rtpc_reply_deliver_error_fin(void *pub) {
+    fprintf(stderr, "Method rtpc_reply@%p::deliver_error (rtpc_reply_deliver_error) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpc_reply_number_fin(void *pub) {
-    fprintf(stderr, "Method rtpc_reply@%p::number (rtpc_reply_number) is invoked after destruction\x0a", pub);
+static void rtpc_reply_deliver_number_fin(void *pub) {
+    fprintf(stderr, "Method rtpc_reply@%p::deliver_number (rtpc_reply_deliver_number) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpc_reply_ok_fin(void *pub) {
-    fprintf(stderr, "Method rtpc_reply@%p::ok (rtpc_reply_ok) is invoked after destruction\x0a", pub);
+static void rtpc_reply_deliver_ok_fin(void *pub) {
+    fprintf(stderr, "Method rtpc_reply@%p::deliver_ok (rtpc_reply_deliver_ok) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void rtpc_reply_deliver_port_addr_fin(void *pub) {
+    fprintf(stderr, "Method rtpc_reply@%p::deliver_port_addr (rtpc_reply_deliver_port_addr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpc_reply_reserve_fin(void *pub) {
@@ -41,22 +53,28 @@ static void rtpc_reply_reserve_fin(void *pub) {
 }
 static const struct rtpc_reply_smethods rtpc_reply_smethods_fin = {
     .append = (rtpc_reply_append_t)&rtpc_reply_append_fin,
+    .append_port_addr = (rtpc_reply_append_port_addr_t)&rtpc_reply_append_port_addr_fin,
+    .append_port_addr_s = (rtpc_reply_append_port_addr_s_t)&rtpc_reply_append_port_addr_s_fin,
     .appendf = (rtpc_reply_appendf_t)&rtpc_reply_appendf_fin,
     .commit = (rtpc_reply_commit_t)&rtpc_reply_commit_fin,
     .deliver = (rtpc_reply_deliver_t)&rtpc_reply_deliver_fin,
-    .error = (rtpc_reply_error_t)&rtpc_reply_error_fin,
-    .number = (rtpc_reply_number_t)&rtpc_reply_number_fin,
-    .ok = (rtpc_reply_ok_t)&rtpc_reply_ok_fin,
+    .deliver_error = (rtpc_reply_deliver_error_t)&rtpc_reply_deliver_error_fin,
+    .deliver_number = (rtpc_reply_deliver_number_t)&rtpc_reply_deliver_number_fin,
+    .deliver_ok = (rtpc_reply_deliver_ok_t)&rtpc_reply_deliver_ok_fin,
+    .deliver_port_addr = (rtpc_reply_deliver_port_addr_t)&rtpc_reply_deliver_port_addr_fin,
     .reserve = (rtpc_reply_reserve_t)&rtpc_reply_reserve_fin,
 };
 void rtpc_reply_fin(struct rtpc_reply *pub) {
     RTPP_DBG_ASSERT(pub->smethods->append != (rtpc_reply_append_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->append_port_addr != (rtpc_reply_append_port_addr_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->append_port_addr_s != (rtpc_reply_append_port_addr_s_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->appendf != (rtpc_reply_appendf_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->commit != (rtpc_reply_commit_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->deliver != (rtpc_reply_deliver_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->error != (rtpc_reply_error_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->number != (rtpc_reply_number_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->ok != (rtpc_reply_ok_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->deliver_error != (rtpc_reply_deliver_error_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->deliver_number != (rtpc_reply_deliver_number_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->deliver_ok != (rtpc_reply_deliver_ok_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->deliver_port_addr != (rtpc_reply_deliver_port_addr_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->reserve != (rtpc_reply_reserve_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpc_reply_smethods_fin &&
       pub->smethods != NULL);
@@ -85,12 +103,15 @@ rtpc_reply_fintest()
     assert(tp->pub.rcnt != NULL);
     static const struct rtpc_reply_smethods dummy = {
         .append = (rtpc_reply_append_t)((void *)0x1),
+        .append_port_addr = (rtpc_reply_append_port_addr_t)((void *)0x1),
+        .append_port_addr_s = (rtpc_reply_append_port_addr_s_t)((void *)0x1),
         .appendf = (rtpc_reply_appendf_t)((void *)0x1),
         .commit = (rtpc_reply_commit_t)((void *)0x1),
         .deliver = (rtpc_reply_deliver_t)((void *)0x1),
-        .error = (rtpc_reply_error_t)((void *)0x1),
-        .number = (rtpc_reply_number_t)((void *)0x1),
-        .ok = (rtpc_reply_ok_t)((void *)0x1),
+        .deliver_error = (rtpc_reply_deliver_error_t)((void *)0x1),
+        .deliver_number = (rtpc_reply_deliver_number_t)((void *)0x1),
+        .deliver_ok = (rtpc_reply_deliver_ok_t)((void *)0x1),
+        .deliver_port_addr = (rtpc_reply_deliver_port_addr_t)((void *)0x1),
         .reserve = (rtpc_reply_reserve_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
@@ -98,14 +119,17 @@ rtpc_reply_fintest()
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, append);
+    CALL_TFIN(&tp->pub, append_port_addr);
+    CALL_TFIN(&tp->pub, append_port_addr_s);
     CALL_TFIN(&tp->pub, appendf);
     CALL_TFIN(&tp->pub, commit);
     CALL_TFIN(&tp->pub, deliver);
-    CALL_TFIN(&tp->pub, error);
-    CALL_TFIN(&tp->pub, number);
-    CALL_TFIN(&tp->pub, ok);
+    CALL_TFIN(&tp->pub, deliver_error);
+    CALL_TFIN(&tp->pub, deliver_number);
+    CALL_TFIN(&tp->pub, deliver_ok);
+    CALL_TFIN(&tp->pub, deliver_port_addr);
     CALL_TFIN(&tp->pub, reserve);
-    assert((_naborts - naborts_s) == 8);
+    assert((_naborts - naborts_s) == 11);
 }
 DATA_SET(rtpp_fintests, rtpc_reply_fintest);
 #endif /* RTPP_FINTEST */
