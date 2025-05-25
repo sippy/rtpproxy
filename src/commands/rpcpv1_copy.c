@@ -128,6 +128,8 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, struct rtpp_s
             RTPP_LOG(spa->log, RTPP_LOG_INFO,
               "starting recording RTCP session on port %d", spa->rtcp->stream[idx]->port);
         }
+        if (cmd != NULL)
+            CALL_SMETHOD(cmd->reply, deliver_ok);
         return (0);
     }
 
