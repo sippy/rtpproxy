@@ -466,7 +466,8 @@ SRCS_AUTOGEN_DEBUG = $(rtpp_netaddr_AUTOSRCS) \
 	$(rtpp_ringbuf_AUTOSRCS) $(rtpp_sessinfo_AUTOSRCS) \
 	$(rtpp_rw_lock_AUTOSRCS) $(rtpp_proc_servers_AUTOSRCS) \
 	$(rtpp_proc_wakeup_AUTOSRCS) $(rtpp_socket_AUTOSRCS) \
-	$(rtpp_refproxy_AUTOSRCS) $(rtpp_command_reply_AUTOSRCS)
+	$(rtpp_refproxy_AUTOSRCS) $(rtpp_command_reply_AUTOSRCS) \
+	$(rtpp_genuid_AUTOSRCS)
 rtpp_command_rcache_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.c
 rtpp_log_obj_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.c
 rtpp_port_table_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_port_table_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_port_table_fin.c
@@ -496,6 +497,7 @@ rtpp_proc_wakeup_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.h $(RTPP_AU
 rtpp_socket_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.c
 rtpp_refproxy_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.c
 rtpp_command_reply_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.c
+rtpp_genuid_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.c
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
 pkglib_LTLIBRARIES = rtpp_badmod1.la rtpp_badmod1_debug.la \
  rtpp_badmod2.la rtpp_badmod2_debug.la \
