@@ -49,7 +49,6 @@ struct rtpp_log {
     METHOD_ENTRY(rtpp_log_setlevel, setlevel);
     METHOD_ENTRY(rtpp_log_start, start);
     /* UID */
-    uint64_t lguid;
 };
 
 struct rtpp_log *rtpp_log_ctor(const char *, const char *, int);

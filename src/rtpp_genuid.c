@@ -32,52 +32,50 @@
 #include <stdlib.h>
 
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
 #include "rtpp_genuid.h"
+#include "rtpp_genuid_fin.h"
 #include "rtpp_mallocs.h"
 
 struct rtpp_genuid_priv {
-    struct rtpp_genuid_obj pub;
+    struct rtpp_genuid pub;
     _Atomic(uint64_t) lastuid;
 };
 
-static void rtpp_genuid_gen(struct rtpp_genuid_obj *, uint64_t *vp);
-static void rtpp_genuid_dtor(struct rtpp_genuid_obj *);
+static uint64_t rtpp_genuid_gen(struct rtpp_genuid *);
 
-struct rtpp_genuid_obj *
+DEFINE_SMETHODS(rtpp_genuid,
+    .gen = &rtpp_genuid_gen,
+);
+
+struct rtpp_genuid *
 rtpp_genuid_ctor(void)
 {
     struct rtpp_genuid_priv *pvt;
 
-    pvt = rtpp_zmalloc(sizeof(struct rtpp_genuid_priv));
+    pvt = rtpp_rzmalloc(sizeof(struct rtpp_genuid_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
     }
     atomic_init(&pvt->lastuid, 0);
-    pvt->pub.dtor = &rtpp_genuid_dtor;
-    pvt->pub.gen = &rtpp_genuid_gen;
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = GET_SMETHODS(&pvt->pub);
+    RTPP_OBJ_DTOR_ATTACH(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_genuid_fin,
+      &(pvt->pub));
+#endif
     return (&pvt->pub);
 
 e0:
     return (NULL);
 }
 
-static void
-rtpp_genuid_dtor(struct rtpp_genuid_obj *pub)
+static uint64_t
+rtpp_genuid_gen(struct rtpp_genuid *pub)
 {
     struct rtpp_genuid_priv *pvt;
 
     PUB2PVT(pub, pvt);
 
-    free(pvt);
-}
-
-static void
-rtpp_genuid_gen(struct rtpp_genuid_obj *pub, uint64_t *vp)
-{
-    struct rtpp_genuid_priv *pvt;
-
-    PUB2PVT(pub, pvt);
-
-    *vp = atomic_fetch_add_explicit(&(pvt->lastuid), 1,
+    return atomic_fetch_add_explicit(&(pvt->lastuid), 1,
       memory_order_relaxed);
 }

@@ -33,9 +33,9 @@
 #include "config.h"
 
 #include "rtpp_debug.h"
-#include "rtpp_genuid_singlet.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
+#include "rtpp_genuid.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_pcount.h"
 #include "rtpp_codeptr.h"
@@ -95,7 +95,7 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
     RTPP_OBJ_BORROW(&pvt->pub, ap->log);
     pvt->streams_wrt = ap->streams_wrt;
 
-    rtpp_gen_uid(&pvt->pub.ppuid);
+    pvt->pub.ppuid = CALL_SMETHOD(ap->guid, gen);
     struct r_stream_ctor_args rsca = {
         .log = ap->log,
         .proc_servers = ap->proc_servers,
@@ -103,7 +103,8 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
         .pipe_type = ap->pipe_type,
         .seuid = ap->seuid,
         .nmodules = ap->nmodules,
-        .pproc_manager = ap->pproc_manager
+        .pproc_manager = ap->pproc_manager,
+        .guid = ap->guid,
     };
     for (i = 0; i < 2; i++) {
         rsca.side = i;

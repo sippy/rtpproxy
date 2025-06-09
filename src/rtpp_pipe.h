@@ -45,6 +45,7 @@ struct r_pipe_ctor_args {
     int pipe_type;
     unsigned int nmodules;
     struct pproc_manager *pproc_manager;
+    struct rtpp_genuid *guid;
 };
 
 DECLARE_CLASS(rtpp_pipe, const struct r_pipe_ctor_args *);

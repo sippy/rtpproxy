@@ -40,7 +40,6 @@
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_log_obj_fin.h"
-#include "rtpp_genuid_singlet.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 
@@ -78,7 +77,6 @@ rtpp_log_ctor(const char *app, const char *call_id, int flags)
     if (pvt == NULL) {
         return (NULL);
     }
-    rtpp_gen_uid(&pvt->pub.lguid);
     pvt->pub.genwrite = rtpp_log_obj_write_early;
     pvt->pub.errwrite = rtpp_log_obj_ewrite_early;
     pvt->pub.setlevel = rtpp_log_obj_setlevel_early;

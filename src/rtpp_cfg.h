@@ -152,6 +152,7 @@ struct rtpp_cfg {
     int no_redirect;
 
     struct rtpp_proc_servers *proc_servers;
+    struct rtpp_genuid *guid;
 #if ENABLE_MODULE_IF
     struct rtpp_modman *modules_cf;
 #else

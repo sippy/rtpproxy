@@ -34,6 +34,7 @@
 #include "config.h"
 
 #include "rtpp_types.h"
+#include "rtpp_cfg.h"
 #include "rtpp_log.h"
 #include "rtpp_log_obj.h"
 #include "rtpp_command.h"
@@ -93,7 +94,8 @@ rtpp_command_play_opts_free(struct play_opts *plop)
 }
 
 void
-rtpp_command_play_handle(struct rtpp_stream *rsp, struct rtpp_command *cmd)
+rtpp_command_play_handle(struct rtpp_stream *rsp, struct rtpp_command *cmd,
+  const struct rtpp_cfg *cfsp)
 {
     const char *codecs;
     int ptime;
@@ -112,8 +114,15 @@ rtpp_command_play_handle(struct rtpp_stream *rsp, struct rtpp_command *cmd)
         codecs = plop->codecs->s;
         ptime = -1;
     }
-    if (plop->count != 0 && CALL_SMETHOD(rsp, handle_play, codecs,
-      plop->pname->s, plop->count, cmd, ptime) != 0) {
+    const struct r_stream_h_play_args pa = {
+        .codecs = codecs,
+        .pname = plop->pname->s,
+        .playcount = plop->count,
+        .cmd = cmd,
+        .ptime = ptime,
+        .guid = cfsp->guid,
+    };
+    if (plop->count != 0 && CALL_SMETHOD(rsp, handle_play, &pa) != 0) {
         CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PLRFAIL);
         goto freeplop;
     }

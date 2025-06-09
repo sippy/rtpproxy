@@ -55,7 +55,7 @@
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
-#include "rtpp_genuid_singlet.h"
+#include "rtpp_genuid.h"
 #include "rtp_info.h"
 #include "rtp_packet.h"
 #include "rtpp_mallocs.h"
@@ -126,8 +126,8 @@ struct rtpp_stream_priv
 };
 
 static void rtpp_stream_dtor(struct rtpp_stream_priv *);
-static int rtpp_stream_handle_play(struct rtpp_stream *, const char *,
-  const char *, int, struct rtpp_command *, int);
+static int rtpp_stream_handle_play(struct rtpp_stream *,
+  const struct r_stream_h_play_args *);
 static void rtpp_stream_handle_noplay(struct rtpp_stream *);
 static int rtpp_stream_isplayer_active(struct rtpp_stream *);
 static void rtpp_stream_finish_playback(struct rtpp_stream *, uint64_t);
@@ -313,7 +313,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     pvt->pub.side = ap->side;
     pvt->pub.pipe_type = ap->pipe_type;
 
-    rtpp_gen_uid(&pvt->pub.stuid);
+    pvt->pub.stuid = CALL_SMETHOD(ap->guid, gen);
     pvt->pub.seuid = ap->seuid;
     for (unsigned int i = 0; i < ap->nmodules; i++) {
         atomic_init(&(pvt->pmod_data.adp[i]), NULL);
@@ -443,8 +443,8 @@ drop_packets(const struct pkt_proc_ctx *pktxp)
 }
 
 static int
-rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
-  const char *pname, int playcount, struct rtpp_command *cmd, int ptime)
+rtpp_stream_handle_play(struct rtpp_stream *self,
+  const struct r_stream_h_play_args *ap)
 {
     struct rtpp_stream_priv *pvt;
     int n;
@@ -452,9 +452,9 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
     struct rtpp_server *rsrv;
     uint16_t seq;
     uint32_t ssrc;
-    const char *plerror;
-    struct rtpp_server_ctor_args sca = {.name = pname, .loop = playcount,
-      .ptime = ptime};
+    const char *plerror, *codecs = ap->codecs;
+    struct rtpp_server_ctor_args sca = {.name = ap->pname, .loop = ap->playcount,
+      .ptime = ap->ptime, .guid = ap->guid};
 
     PUB2PVT(self, pvt);
 
@@ -480,7 +480,7 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
         rsrv = rtpp_server_ctor(&sca);
         if (rsrv == NULL) {
             RTPP_LOG(pvt->pub.log, RTPP_LOG_DBUG, "rtpp_server_ctor(\"%s\", %d, %d) failed",
-              pname, n, playcount);
+              ap->pname, n, ap->playcount);
             plerror = "rtpp_server_ctor() failed";
             if (sca.result == RTPP_SERV_NOENT)
                 continue;
@@ -497,20 +497,20 @@ rtpp_stream_handle_play(struct rtpp_stream *self, const char *codecs,
             goto e1;
         }
         if (pvt->rtps.inact == 0) {
-            CALL_SMETHOD(rsrv, start, cmd->dtime->mono);
+            CALL_SMETHOD(rsrv, start, ap->cmd->dtime->mono);
         }
         if (CALL_SMETHOD(pvt->proc_servers, reg, rsrv, pvt->rtps.inact) != 0) {
             plerror = "proc_servers->reg() method failed";
             goto e2;
         }
         pthread_mutex_unlock(&pvt->lock);
-        rtpp_command_get_stats(cmd)->nplrs_created.cnt++;
+        rtpp_command_get_stats(ap->cmd)->nplrs_created.cnt++;
         RTPP_OBJ_DTOR_ATTACH(rsrv, (rtpp_refcnt_dtor_t)player_predestroy_cb,
           pvt->rtpp_stats);
         RTPP_OBJ_DECREF(rsrv);
         RTPP_LOG(pvt->pub.log, RTPP_LOG_INFO,
           "%d times playing prompt %s codec %d: SSRC=" SSRC_FMT ", seq=%u",
-          playcount, pname, n, ssrc, seq);
+          ap->playcount, ap->pname, n, ssrc, seq);
         return 0;
     }
     goto e0;
