@@ -30,12 +30,14 @@
 
 enum rtp_type;
 #ifndef RTPP_FINCODE
+struct rtpp_genuid;
 struct rtpp_server_ctor_args {
     const char *name;
     enum rtp_type codec;
     int loop;
     int ptime;
     int result;
+    struct rtpp_genuid *guid;
 };
 #else
 struct rtpp_server_ctor_args;

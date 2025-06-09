@@ -33,9 +33,11 @@ struct rtpp_log;
 struct play_opts;
 struct rtpp_command;
 struct rtpp_stream;
+struct rtpp_cfg;
 
 struct play_opts *rtpp_command_play_opts_parse(struct rtpp_command *);
-void rtpp_command_play_handle(struct rtpp_stream *, struct rtpp_command *);
+void rtpp_command_play_handle(struct rtpp_stream *, struct rtpp_command *,
+  const struct rtpp_cfg *);
 void rtpp_command_play_opts_free(struct play_opts *);
 
 #endif

@@ -13,7 +13,6 @@
 #include "rtpp_endian.h"
 #include "rtpp_time.h"
 #include "rtpp_ssrc.h"
-#include "rtpp_genuid_singlet.h"
 #include "rtp_info.h"
 #include "rtp.h"
 #include "rtp_packet.h"
@@ -33,7 +32,6 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
         return (0);
 
     if (log == NULL) {
-        assert(rtpp_gen_uid_init() == 0);
         log = rtpp_log_ctor("rtpproxy", NULL, LF_REOPEN);
         assert(log != NULL);
         rap = rtpp_analyzer_ctor(log);

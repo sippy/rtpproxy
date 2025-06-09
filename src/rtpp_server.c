@@ -45,7 +45,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_server.h"
 #include "rtpp_server_fin.h"
-#include "rtpp_genuid_singlet.h"
+#include "rtpp_genuid.h"
 #include "rtpp_debug.h"
 
 /*
@@ -128,7 +128,7 @@ rtpp_server_ctor(struct rtpp_server_ctor_args *ap)
     rp->rtp->ssrc = random();
     rp->pload = rp->buf + RTP_HDR_LEN(rp->rtp);
 
-    rtpp_gen_uid(&rp->pub.sruid);
+    rp->pub.sruid = CALL_SMETHOD(ap->guid, gen);
 
     PUBINST_FININIT(&rp->pub, rp, rtpp_server_dtor);
     ap->result = RTPP_SERV_OK;

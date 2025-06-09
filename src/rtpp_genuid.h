@@ -26,14 +26,13 @@
  *
  */
 
-struct rtpp_genuid_obj;
+DECLARE_CLASS(rtpp_genuid, void);
 
-DEFINE_METHOD(rtpp_genuid_obj, rtpp_genuid_gen, void, uint64_t *);
-DEFINE_METHOD(rtpp_genuid_obj, rtpp_genuid_dtor, void);
+DECLARE_METHOD(rtpp_genuid, rtpp_genuid_gen, uint64_t);
 
-struct rtpp_genuid_obj {
-    rtpp_genuid_gen_t gen;
-    rtpp_genuid_dtor_t dtor;
+DECLARE_SMETHODS(rtpp_genuid)
+{
+    METHOD_ENTRY(rtpp_genuid_gen, gen);
 };
 
-struct rtpp_genuid_obj *rtpp_genuid_ctor(void);
+DECLARE_CLASS_PUBTYPE(rtpp_genuid, {});

@@ -48,7 +48,7 @@
 #include "rtpp_command_args.h"
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
-#include "rtpp_genuid_singlet.h"
+#include "rtpp_genuid.h"
 #include "rtpp_hash_table.h"
 #include "rtpp_list.h"
 #include "rtpp_mallocs.h"
@@ -95,7 +95,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     }
 
     pub = &(pvt->pub);
-    rtpp_gen_uid(&pub->seuid);
+    pub->seuid = CALL_SMETHOD(cfs->guid, gen);
 
     log = rtpp_log_ctor("rtpproxy", ccap->call_id->s, 0);
     if (log == NULL) {
@@ -109,7 +109,9 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
 #if ENABLE_MODULE_IF
       .nmodules  = cfs->modules_cf->count.total,
 #endif
-      .pproc_manager = cfs->pproc_manager};
+      .pproc_manager = cfs->pproc_manager,
+      .guid = cfs->guid,
+    };
     pub->rtp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtp == NULL) {
         goto e2;

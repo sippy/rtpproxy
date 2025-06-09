@@ -83,7 +83,7 @@
 #include "rtpp_defines.h"
 #include "rtpp_command.h"
 #include "rtpp_controlfd.h"
-#include "rtpp_genuid_singlet.h"
+#include "rtpp_genuid.h"
 #include "rtpp_hash_table.h"
 #include "commands/rpcpv1_ver.h"
 #include "rtpp_command_async.h"
@@ -319,7 +319,7 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     assert(cfsp->_pad == (void *)0x12345678);
     cfsp->_pad = (void *)((uintptr_t)cfsp->_pad ^ 0x87654321);
 #endif
-    rtpp_gen_uid_free();
+    RTPP_OBJ_DECREF(cfsp->guid);
 #if !defined(LIBRTPPROXY)
     rtpp_exit(memdeb, rval);
 #else
@@ -930,7 +930,7 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
     }
     free(cfsp->ctrl_socks);
     cfsp->ctrl_socks = NULL;
-    rtpp_gen_uid_free();
+    RTPP_OBJ_DECREF(cfsp->guid);
 #if defined(LIBRTPPROXY)
     RTPP_OBJ_DECREF(cfsp->glog);
 #endif
@@ -1025,8 +1025,9 @@ _rtpp_main(int argc, const char * const *argv)
     }
 
     seedrandom();
-    if (rtpp_gen_uid_init() != 0) {
-        MAIN_ERR(1, "rtpp_gen_uid_init() failed");
+    cfsp->guid = rtpp_genuid_ctor();
+    if (cfsp->guid == NULL) {
+        MAIN_ERR(1, "rtpp_genuid_ctor() failed");
         /* NOTREACHED */
     }
 

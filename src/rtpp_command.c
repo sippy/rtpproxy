@@ -669,7 +669,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
         break;
 
     case PLAY:
-        rtpp_command_play_handle(spa->rtp->stream[i], cmd);
+        rtpp_command_play_handle(spa->rtp->stream[i], cmd, cfsp);
         break;
 
     case COPY:

@@ -61,12 +61,22 @@ struct r_stream_ctor_args {
     uint64_t seuid;
     unsigned int nmodules;
     struct pproc_manager *pproc_manager;
+    struct rtpp_genuid *guid;
+};
+
+struct r_stream_h_play_args {
+    const char *codecs;
+    const char *pname;
+    int playcount;
+    struct rtpp_command *cmd;
+    int ptime;
+    struct rtpp_genuid *guid;
 };
 
 DECLARE_CLASS(rtpp_stream, const struct r_stream_ctor_args *);
 
-DECLARE_METHOD(rtpp_stream, rtpp_stream_handle_play, int, const char *,
-  const char *, int, struct rtpp_command *, int);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_handle_play, int,
+  const struct r_stream_h_play_args *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_handle_noplay, void);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_isplayer_active, int);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_finish_playback, void, uint64_t);
