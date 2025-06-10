@@ -62,12 +62,6 @@ static void rtpp_refcnt_decref(struct rtpp_refcnt *, HERETYPE);
  */
 #define RC_ABS_MAX 2000000
 
-#define RC_FLAG_PA         (1 << 0)
-#define RC_FLAG_TRACE      (1 << 1)
-#define RC_FLAG_HASDTOR    (1 << 2)
-#define RC_FLAG_HASPRDTOR  (1 << 3)
-#define RC_FLAG_PA_STDFREE (1 << 4)
-
 #define CACHE_SIZE 64
 
 struct dtor_pair {
@@ -82,11 +76,13 @@ struct rtpp_refcnt_priv
 {
     struct rtpp_refcnt pub;
     _Atomic(int) cnt __attribute__((aligned(CACHE_SIZE)));
-    int shared __attribute__((aligned(CACHE_SIZE)));
-    int ulen;
+    struct {
+        unsigned int shared:1;
 #if RTPP_DEBUG_refcnt
-    int flags;
+        unsigned int trace:1;
 #endif
+    }  __attribute__((aligned(CACHE_SIZE)));
+    int ulen;
     struct dtor_pair dtors[MAX_DTORS];
 };
 const size_t rtpp_refcnt_osize = sizeof(struct rtpp_refcnt_priv);
@@ -219,7 +215,7 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub, HERETYPE mlp)
         atomic_store_explicit(&pvt->cnt, 1, memory_order_release);
     }
 #if RTPP_DEBUG_refcnt
-    if (pvt->flags & RC_FLAG_TRACE) {
+    if (pvt->trace == 1) {
 #ifdef RTPP_DEBUG
         char *dbuf;
         rtpp_memdeb_asprintf(&dbuf, MEMDEB_SYM, mlp,
@@ -253,7 +249,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
      * somebody decrements it and deallocates. Atomic is not needed since
      * this initialized at the init time.
      */
-    int flags = pvt->flags;
+    unsigned int trace = pvt->trace;
 #endif
     if (pvt->shared) {
         oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release) + 1;
@@ -261,7 +257,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
         oldcnt = 1;
     }
 #if RTPP_DEBUG_refcnt
-    if (flags & RC_FLAG_TRACE) {
+    if (trace) {
 #ifdef RTPP_DEBUG
         char *dbuf;
         rtpp_memdeb_asprintf(&dbuf, MEMDEB_SYM, mlp,
@@ -283,7 +279,7 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
         for (int i = pvt->ulen; i >= 0; i--) {
             struct dtor_pair *dp = &pvt->dtors[i];
 #if RTPP_DEBUG_refcnt
-            if (flags & RC_FLAG_TRACE) {
+            if (trace) {
                 Dl_info info;
                 if (dladdr(dp->f, &info) && info.dli_sname != NULL)
                     fprintf(stderr, "calling destructor %s@<%p>(%p)\n", info.dli_sname,
@@ -321,7 +317,7 @@ rtpp_refcnt_traceen(struct rtpp_refcnt *pub, HERETYPE mlp)
     struct rtpp_refcnt_priv *pvt;
 
     PUB2PVT(pub, pvt);
-    pvt->flags |= RC_FLAG_TRACE;
+    pvt->trace = 1;
     int oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed) + 1;
     fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).traceen()\n", mlp, pub, oldcnt));
 }
