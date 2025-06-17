@@ -231,8 +231,6 @@ rtpp_proc_servers_dtor(struct rtpp_proc_servers_priv *stap)
     rtpp_proc_servers_fin(&(stap->pub));
     rtpp_queue_put_item(stap->sigterm, stap->cmd_q);
     pthread_join(stap->thread_id, NULL);
-    RTPP_OBJ_DECREF(stap->inact_servers);
-    RTPP_OBJ_DECREF(stap->act_servers);
     rtpp_queue_destroy(stap->cmd_q);
 }
 
@@ -256,10 +254,12 @@ rtpp_proc_servers_ctor(const struct rtpp_cfg *cfsp, struct rtpp_anetio_cf *netio
     if (stap->act_servers == NULL) {
         goto e3;
     }
+    RTPP_OBJ_DTOR_ATTACH_OBJ(&stap->pub, stap->act_servers);
     stap->inact_servers = rtpp_weakref_ctor();
     if (stap->inact_servers == NULL) {
-        goto e4;
+        goto e3;
     }
+    RTPP_OBJ_DTOR_ATTACH_OBJ(&stap->pub, stap->inact_servers);
 
     stap->inact_servers->ht->seed = stap->act_servers->ht->seed;
     stap->netio = netio;
@@ -268,7 +268,7 @@ rtpp_proc_servers_ctor(const struct rtpp_cfg *cfsp, struct rtpp_anetio_cf *netio
 
     if (pthread_create(&stap->thread_id, NULL,
       (void *(*)(void *))&rtpp_proc_servers_run, stap) != 0) {
-        goto e5;
+        goto e3;
     }
 #if HAVE_PTHREAD_SETNAME_NP
     (void)pthread_setname_np(stap->thread_id, "rtpp_proc_servers");
@@ -276,10 +276,6 @@ rtpp_proc_servers_ctor(const struct rtpp_cfg *cfsp, struct rtpp_anetio_cf *netio
 
     PUBINST_FININIT(&stap->pub, stap, rtpp_proc_servers_dtor);
     return (&stap->pub);
-e5:
-    RTPP_OBJ_DECREF(stap->inact_servers);
-e4:
-    RTPP_OBJ_DECREF(stap->act_servers);
 e3:
     RTPP_OBJ_DECREF(stap->sigterm);
 e2:
