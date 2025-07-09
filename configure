@@ -14240,8 +14240,7 @@ fi
 
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for srtp_init in -lsrtp2" >&5
 printf %s "checking for srtp_init in -lsrtp2... " >&6; }
-  save_LIBS="$LIBS"
-  LIBS="${LIBS} ${LIB_SRTP2}"
+  LIBS="${save_LIBS} ${LIB_SRTP2} ${LIB_CRYPTO} -lpthread"
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -14297,7 +14296,6 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
    CFLAGS="$original_cflags"
    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $srtp_protect_lastarg" >&5
 printf "%s\n" "$srtp_protect_lastarg" >&6; }
-   LIBS="${save_LIBS}"
 
 printf "%s\n" "#define SRTP_PROTECT_LASTARG ${srtp_protect_lastarg}" >>confdefs.h
 
