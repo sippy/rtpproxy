@@ -14240,50 +14240,28 @@ fi
 
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for srtp_init in -lsrtp2" >&5
 printf %s "checking for srtp_init in -lsrtp2... " >&6; }
-if test ${ac_cv_lib_srtp2_srtp_init+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsrtp2  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+  save_LIBS="$LIBS"
+  LIBS="${LIBS} ${LIB_SRTP2}"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char srtp_init (void);
+      #include <srtp2/srtp.h>
+
 int
 main (void)
 {
-return srtp_init ();
+
+      return (int)srtp_init();
+
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"
 then :
-  ac_cv_lib_srtp2_srtp_init=yes
-else case e in #(
-  e) ac_cv_lib_srtp2_srtp_init=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_srtp2_srtp_init" >&5
-printf "%s\n" "$ac_cv_lib_srtp2_srtp_init" >&6; }
-if test "x$ac_cv_lib_srtp2_srtp_init" = xyes
-then :
 
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
    LIBS_SRTP="${LIB_SRTP2} ${LIB_CRYPTO}"
    # Test program to check if the srtp_protect function accepts size_t* argument
    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking 'srtp_protect()' last argument type" >&5
@@ -14329,8 +14307,17 @@ printf "%s\n" "#define SRTP_PROTECT_NARGS ${_sp_nargs}" >>confdefs.h
 
 printf "%s\n" "#define ENABLE_SRTP2 1" >>confdefs.h
 
-fi
 
+else case e in #(
+  e)
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+   ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+  LIBS="${save_LIBS}"
 else
   # libsrtp
   ac_fn_c_check_header_compile "$LINENO" "srtp/srtp.h" "ac_cv_header_srtp_srtp_h" "$ac_includes_default"
