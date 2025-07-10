@@ -146,7 +146,7 @@ AC_ARG_ENABLE([static-crypto],
   [ENABLE_STATIC_CRYPTO=no])
 
 if test "$ENABLE_STATIC_CRYPTO" = yes; then
-  LIB_CRYPTO='-l:libcrypto.a'
+  LIB_CRYPTO='-l:libcrypto.a -lpthread'
   LIB_SSL='-l:libssl.a'
   LIB_SRTP2='-l:libsrtp2.a'
 else
@@ -249,7 +249,7 @@ then
   LIBS="${LIBS} ${LIB_CRYPTO}"
   AC_CHECK_LIB([srtp2], [srtp_protect_mki], [_sp_nargs=3], [_sp_nargs=4])
   AC_MSG_CHECKING([for srtp_init in -lsrtp2])
-  LIBS="${save_LIBS} ${LIB_SRTP2} ${LIB_CRYPTO} -lpthread"
+  LIBS="${save_LIBS} ${LIB_SRTP2} ${LIB_CRYPTO}"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([
       #include <srtp2/srtp.h>
     ], [
