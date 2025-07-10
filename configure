@@ -13664,7 +13664,7 @@ fi
 
 
 if test "$ENABLE_STATIC_CRYPTO" = yes; then
-  LIB_CRYPTO='-l:libcrypto.a'
+  LIB_CRYPTO='-l:libcrypto.a -lpthread'
   LIB_SSL='-l:libssl.a'
   LIB_SRTP2='-l:libsrtp2.a'
 else
@@ -14240,7 +14240,7 @@ fi
 
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for srtp_init in -lsrtp2" >&5
 printf %s "checking for srtp_init in -lsrtp2... " >&6; }
-  LIBS="${save_LIBS} ${LIB_SRTP2} ${LIB_CRYPTO} -lpthread"
+  LIBS="${save_LIBS} ${LIB_SRTP2} ${LIB_CRYPTO}"
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
