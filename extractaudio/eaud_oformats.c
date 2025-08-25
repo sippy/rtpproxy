@@ -83,6 +83,7 @@ const struct supported_fmt eaud_data_fmts[] = {
     {"dpcm_8",    SF_FORMAT_DPCM_8,    "8 bit differential PCM (XI only)"},
     {"dpcm_16",   SF_FORMAT_DPCM_16,   "16 bit differential PCM (XI only)"},
     {"vorbis",    SF_FORMAT_VORBIS,    "Xiph Vorbis encoding"},
+    {"opus",      SF_FORMAT_OPUS,      "Xiph Opus encoding"},
     {.name = NULL}
 };
 
