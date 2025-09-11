@@ -118,19 +118,17 @@ ALL="command_parser rtp_parser rtcp_parser rtp_session"
 OBJS0="${OBJS}"
 for fz in ${ALL}
 do
-  OBJS="${OBJS0}"
   obj="${OUT}/fuzz_${fz}.o"
   ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -Imodules/acct_rtcp_hep \
    -o "${obj}" -c scripts/fuzz/fuzz_${fz}.c
+  OBJS="${OBJS0} ${obj}"
 
   case "${fz}" in
   rtp_parser)
       LIBRTPP="${RTPPLIB}"
-      OBJS="${OBJS} ${obj}"
       ;;
   *)
       LIBRTPP="-Wl,--whole-archive ${RTPPLIB} -Wl,--no-whole-archive"
-      OBJS="${OBJS} ${obj}"
       ;;
   esac
 
