@@ -105,6 +105,8 @@ struct ul_opts {
     int new_port;
 
     int onhold;
+    int tos;
+    int has_tos;
 };
 
 #define BC_appendf(f, ...) { \
@@ -181,6 +183,8 @@ ul_opts_init(const struct rtpp_cfg *cfsp, struct ul_opts *ulop)
     ulop->lia[0] = ulop->lia[1] = ulop->reply.ia = cfsp->bindaddr[0];
     ulop->lidx = 1;
     ulop->pf = AF_INET;
+    ulop->tos = -1;
+    ulop->has_tos = 0;
 }
 
 void
@@ -366,6 +370,30 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             ulop->new_port = 1;
             break;
 
+        case 't':
+        case 'T': {
+            const char *next, *vsp;
+            enum atoi_rval arval;
+            long ntos;
+
+            vsp = cp + 1;
+            if (!isdigit((unsigned char)*vsp)) {
+                RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
+                CALL_SMETHOD(cmd->reply, deliver_error, ECODE_INVLARG_8);
+                goto err_undo_1;
+            }
+            arval = strtol_saferange(vsp, &ntos, 0, 255, &next);
+            if (arval != ATOI_OK) {
+                RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
+                CALL_SMETHOD(cmd->reply, deliver_error, ECODE_INVLARG_8);
+                goto err_undo_1;
+            }
+            ulop->tos = (int)ntos;
+            ulop->has_tos = 1;
+            cp = (char *)next - 1;
+            break;
+        }
+
         default:
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "unknown command modifier `%c'",
               *cp);
@@ -442,6 +470,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
     struct rtpp_session *spa, *spb;
     struct rtpp_socket *fd;
     struct ul_opts *ulop;
+    int desired_tos;
 
     pidx = 1;
     lport = 0;
@@ -460,6 +489,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
     if (sidx != -1) {
         RTPP_DBG_ASSERT(cmd->cca.op == UPDATE || cmd->cca.op == LOOKUP);
         spa = cmd->sp;
+        desired_tos = ulop->has_tos ? ulop->tos : spa->rtp->stream[sidx]->tos;
         fd = CALL_SMETHOD(spa->rtp->stream[sidx], get_skt, HEREVAL);
         if (fd == NULL || ulop->new_port != 0) {
             if (ulop->local_addr != NULL) {
@@ -467,7 +497,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             } else if (ulop->new_port != 0 && ulop->lidx == -1 && spa->rtp->stream[sidx]->laddr != ulop->lia[0]) {
                 spa->rtp->stream[sidx]->laddr = ulop->lia[0];
             }
-            if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr, &lport, fds) == -1) {
+            if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr, &lport, fds,
+              desired_tos) == -1) {
                 if (fd != NULL)
                     RTPP_OBJ_DECREF(fd);
                 RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
@@ -487,6 +518,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             RTPP_OBJ_DECREF(fds[1]);
             spa->rtp->stream[sidx]->port = lport;
             spa->rtcp->stream[sidx]->port = lport + 1;
+            spa->rtp->stream[sidx]->tos = desired_tos;
+            spa->rtcp->stream[sidx]->tos = desired_tos;
             if (spa->complete == 0) {
                 rtpp_command_get_stats(cmd)->nsess_complete.cnt++;
                 CALL_SMETHOD(spa->rtp->stream[0]->ttl, reset_with,
@@ -495,6 +528,25 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
                   cfsp->max_ttl);
             }
             spa->complete = 1;
+        } else if (ulop->has_tos) {
+            if (spa->rtp->stream[sidx]->laddr->sa_family == AF_INET) {
+                if (CALL_SMETHOD(fd, settos, desired_tos) == -1) {
+                    RTPP_ELOG(spa->log, RTPP_LOG_ERR,
+                      "unable to set TOS to %d", desired_tos);
+                }
+            }
+            struct rtpp_socket *rtcp_fd = CALL_SMETHOD(spa->rtcp->stream[sidx], get_skt, HEREVAL);
+            if (rtcp_fd != NULL) {
+                if (spa->rtcp->stream[sidx]->laddr->sa_family == AF_INET) {
+                    if (CALL_SMETHOD(rtcp_fd, settos, desired_tos) == -1) {
+                        RTPP_ELOG(spa->log, RTPP_LOG_ERR,
+                          "unable to set TOS to %d", desired_tos);
+                    }
+                }
+                RTPP_OBJ_DECREF(rtcp_fd);
+            }
+            spa->rtp->stream[sidx]->tos = desired_tos;
+            spa->rtcp->stream[sidx]->tos = desired_tos;
         }
         if (fd != NULL) {
             RTPP_OBJ_DECREF(fd);
@@ -541,7 +593,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             CALL_SMETHOD(cmd->reply, deliver_error, cfsp->overload_prot.ecode);
             goto err_undo_0;
         }
-        if (rtpp_create_listener(cfsp, ulop->lia[0], &lport, fds) == -1) {
+        desired_tos = ulop->has_tos ? ulop->tos : -1;
+        if (rtpp_create_listener(cfsp, ulop->lia[0], &lport, fds, desired_tos) == -1) {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "can't create listener");
             CALL_SMETHOD(cmd->reply, deliver_error, ECODE_LSTFAIL_2);
             goto err_undo_0;
@@ -558,6 +611,11 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
         if (spa == NULL) {
             handle_nomem(cmd, ECODE_NOMEM_4, NULL);
             return (-1);
+        }
+        int effective_tos = ulop->has_tos ? ulop->tos : cfsp->tos;
+        for (int i = 0; i < 2; i++) {
+            spa->rtp->stream[i]->tos = effective_tos;
+            spa->rtcp->stream[i]->tos = effective_tos;
         }
 
         rtpp_command_get_stats(cmd)->nsess_created.cnt++;

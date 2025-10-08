@@ -61,7 +61,7 @@
 
 static int
 get_args4remote(const struct rtpp_cfg *cfsp, const char *rname, struct rtpp_log *log,
-  struct remote_copy_args *ap)
+  int desired_tos, struct remote_copy_args *ap)
 {
     char *tmp;
     const struct sockaddr *laddr;
@@ -80,7 +80,7 @@ get_args4remote(const struct rtpp_cfg *cfsp, const char *rname, struct rtpp_log 
     if (laddr == NULL)
         return (-1);
     int lport;
-    if (rtpp_create_listener(cfsp, laddr, &lport, fds) != 0) {
+    if (rtpp_create_listener(cfsp, laddr, &lport, fds, desired_tos) != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "can't create listener");
         return (-1);
     }
@@ -135,7 +135,7 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, struct rtpp_s
 
     int rval = -1;
     if (remote)
-        if (get_args4remote(cfsp, rname, spa->log, &rargs) != 0)
+        if (get_args4remote(cfsp, rname, spa->log, spa->rtp->stream[idx]->tos, &rargs) != 0)
             return (-1);
 
     if (spa->rtp->stream[idx]->rrc == NULL) {

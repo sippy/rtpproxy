@@ -312,6 +312,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     pvt->rtpp_stats = ap->rtpp_stats;
     pvt->pub.side = ap->side;
     pvt->pub.pipe_type = ap->pipe_type;
+    pvt->pub.tos = -1;
 
     pvt->pub.stuid = CALL_SMETHOD(ap->guid, gen);
     pvt->pub.seuid = ap->seuid;
