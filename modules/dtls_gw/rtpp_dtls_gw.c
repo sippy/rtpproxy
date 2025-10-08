@@ -248,7 +248,8 @@ rtpp_dtls_gw_setup_sender(struct rtpp_module_priv *pvt,
         abort();
     }
 
-    if (rtpp_create_listener(pvt->cfsp, dtls_strmp->laddr, &lport, fds) == -1)
+    if (rtpp_create_listener(pvt->cfsp, dtls_strmp->laddr, &lport, fds,
+      dtls_strmp->tos) == -1)
         return (-1);
     CALL_SMETHOD(pvt->cfsp->sessinfo, append, spa, sidx, fds);
     CALL_METHOD(pvt->cfsp->rtpp_proc_cf, nudge);

@@ -154,6 +154,8 @@ DECLARE_CLASS_PUBTYPE(rtpp_stream, {
     char *codecs;
     /* Requested ptime */
     int ptime;
+    /* Desired IP TOS/DSCP value */
+    int tos;
     /* UID, read-only */
     uint64_t stuid;
     /* UID of the session we belong to, read-only */

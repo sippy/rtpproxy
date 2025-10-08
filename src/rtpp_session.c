@@ -151,6 +151,8 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     for (i = 0; i < 2; i++) {
         pub->rtp->stream[i]->laddr = lia[i];
         pub->rtcp->stream[i]->laddr = lia[i];
+        pub->rtp->stream[i]->tos = cfs->tos;
+        pub->rtcp->stream[i]->tos = cfs->tos;
     }
     if (weak) {
         pub->rtp->stream[0]->weak = 1;
