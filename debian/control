@@ -1,0 +1,24 @@
+Source: rtpproxy
+Section: net
+Priority: optional
+Maintainer: Maxim Sobolev <sobomax@sippysoft.com>
+Build-Depends: debhelper-compat (= 13),
+               autoconf,
+               automake,
+               libtool,
+               pkg-config,
+               libssl-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/sippy/rtpproxy
+Vcs-Git: https://github.com/sippy/rtpproxy.git
+Vcs-Browser: https://github.com/sippy/rtpproxy
+Rules-Requires-Root: no
+
+Package: rtpproxy
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: High-performance SIP RTP media proxy
+ RTPProxy is a high-performance, scalable media relay designed for
+ SIP-based applications. It supports advanced media handling features
+ such as secure RTP, codec transcoding modules, and high availability
+ deployments.
