@@ -21,6 +21,9 @@ on:
       do_MinBuild:
         description: "Whether the current workflow should continue"
         value: ${{ jobs.check_disabled_actions.outputs.do_MinBuild }}
+      do_DebianPackage:
+        description: "Whether the current workflow should continue"
+        value: ${{ jobs.check_disabled_actions.outputs.do_DebianPackage }}
 
 jobs:
   check_disabled_actions:
@@ -33,6 +36,7 @@ jobs:
       do_Fuzzing: ${{ steps.check_status.outputs.do_Fuzzing }}
       do_Glitch: ${{ steps.check_status.outputs.do_Glitch }}
       do_MinBuild: ${{ steps.check_status.outputs.do_MinBuild }}
+      do_DebianPackage: ${{ steps.check_status.outputs.do_DebianPackage }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4

@@ -1,0 +1,48 @@
+Source: rtpproxy
+Section: net
+Priority: optional
+Maintainer: Maxim Sobolev <sobomax@sippysoft.com>
+Build-Depends: debhelper-compat (= 13),
+               pkg-config,
+               libssl-dev,
+               libbcg729-dev,
+               libgsm1-dev,
+               libsndfile1-dev,
+               libunwind-dev,
+               libsrtp2-dev,
+               libsystemd-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/sippy/rtpproxy
+Vcs-Git: https://github.com/sippy/rtpproxy.git
+Vcs-Browser: https://github.com/sippy/rtpproxy
+Rules-Requires-Root: no
+
+Package: rtpproxy
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, adduser
+Description: High-performance SIP RTP media proxy
+ RTPProxy is a high-performance, scalable media relay designed for
+ SIP-based applications. It supports advanced media handling features
+ such as secure RTP, codec transcoding modules, and high availability
+ deployments.
+
+Package: rtpproxy-debug
+Section: debug
+Architecture: any
+Depends: ${misc:Depends}, rtpproxy (= ${binary:Version})
+Multi-Arch: same
+Description: Debug helpers and modules for RTPProxy
+ This package provides the debugging-friendly binaries and modules for
+ RTPProxy, including the rtpproxy_debug control tool, UDP contention
+ tester, and the *_debug.so plugin variants.
+
+Package: rtpproxy-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, rtpproxy (= ${binary:Version})
+Multi-Arch: same
+Description: Development files for librtpproxy instrumentation library
+ librtpproxy exposes the internal RTPProxy engine to external tooling
+ for instrumentation and advanced control. This development package
+ ships the static archive and public header needed to link against the
+ library.

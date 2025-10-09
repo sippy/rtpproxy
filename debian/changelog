@@ -1,0 +1,34 @@
+rtpproxy (3.1+dev1) unstable; urgency=medium
+
+  * Build librtpproxy during package configuration and ship a new
+    rtpproxy-dev package with the static archive and public header.
+  * Add optional audio and unwind build dependencies required by the
+    librtpproxy-enabled build.
+  * Split debugging helpers and *_debug modules into the rtpproxy-debug
+    binary package.
+  * Ship the DTLS gateway and ICE lite modules in their respective
+    runtime and debug packages to avoid missing-file warnings.
+  * Depend on libsrtp2 during the build so the crypto modules are
+    compiled and available for packaging.
+  * Enable systemd integration by building against libsystemd-dev and
+    configuring with --enable-systemd.
+  * Preserve librtpproxy's static archive contents under LTO by appending
+    -ffat-lto-objects to the maintainer build flags.
+  * Reuse the upstream systemd service and socket units in Debian builds,
+    installing their shared sysconfig file for consistent configuration.
+  * Update the systemd service to supervise rtpproxy via systemd sockets
+    so the packaged unit works with Type=notify without extra tuning.
+  * Create a dedicated rtpproxy user and group at install time so the
+    service runs under a locked-down account by default.
+  * Align the packaged systemd unit with /run paths so PID tracking stays
+    consistent with RuntimeDirectory management.
+  * Pass systemd's MAINPID through ExecStart so the daemon receives the
+    tracked PID even when launched under socket activation.
+
+ -- Maxim Sobolev <sobomax@sippysoft.com>  Wed, 15 May 2024 00:00:00 +0000
+
+rtpproxy (3.1) unstable; urgency=medium
+
+  * Initial release of Debian packaging skeleton.
+
+ -- Maxim Sobolev <sobomax@sippysoft.com>  Wed, 15 May 2024 00:00:00 +0000
