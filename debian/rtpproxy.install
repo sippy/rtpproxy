@@ -1,4 +1,5 @@
 usr/bin/makeann
+usr/bin/extractaudio
 usr/bin/rtpproxy
 usr/bin/rtpproxy_debug
 usr/bin/udp_contention
