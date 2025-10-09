@@ -138,7 +138,11 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: rtpproxy-debian-packages
-        path: debian-artifacts
+        path: |
+          debian-artifacts/*.deb
+          debian-artifacts/*.buildinfo
+          debian-artifacts/*.changes
+        compression-level: 0
         if-no-files-found: error
 
   FullBuild:
