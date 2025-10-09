@@ -1,3 +1,10 @@
+rtpproxy (3.1+dev1) unstable; urgency=medium
+
+  * Build librtpproxy during package configuration and ship a new
+    rtpproxy-dev package with the static archive and public header.
+
+ -- Maxim Sobolev <sobomax@sippysoft.com>  Wed, 15 May 2024 00:00:00 +0000
+
 rtpproxy (3.1) unstable; urgency=medium
 
   * Initial release of Debian packaging skeleton.

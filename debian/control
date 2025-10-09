@@ -20,3 +20,14 @@ Description: High-performance SIP RTP media proxy
  SIP-based applications. It supports advanced media handling features
  such as secure RTP, codec transcoding modules, and high availability
  deployments.
+
+Package: rtpproxy-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, rtpproxy (= ${binary:Version})
+Multi-Arch: same
+Description: Development files for librtpproxy instrumentation library
+ librtpproxy exposes the internal RTPProxy engine to external tooling
+ for instrumentation and advanced control. This development package
+ ships the static archive and public header needed to link against the
+ library.
