@@ -94,6 +94,43 @@ jobs:
     - name: build
       run: sh -x ./scripts/do-build.sh cleanbuild
 
+  DebianPackage:
+    name: Debian package build
+    needs: LoadJobs_conf
+    if: needs.LoadJobs_conf.outputs.do_DebianPackage == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: Install build tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential devscripts debhelper pkg-config libssl-dev libbcg729-dev libgsm1-dev libsndfile1-dev libunwind-dev libsrtp2-dev fakeroot
+    - name: Build Debian package
+      env:
+        DEB_BUILD_OPTIONS: nocheck
+      run: |
+        dpkg-buildpackage -us -uc -b
+
+    - name: Test install Debian packages
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        pkgs=(../*.deb)
+        if [ "${#pkgs[@]}" -eq 0 ]; then
+          echo "No Debian packages produced" >&2
+          exit 1
+        fi
+        sudo apt-get install -y "${pkgs[@]}"
+
+    - name: Upload Debian packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: rtpproxy-debian-packages
+        path: ../*.deb
+        if-no-files-found: error
+
   FullBuild:
     name: Full Build
     needs: [LoadJobs_conf, MinBuild]
@@ -427,7 +464,8 @@ jobs:
         GIT_BRANCH="${GIT_BRANCH#refs/tags/}"
         echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_ENV
         OS_TAG="`echo ${BASE_IMAGE} | sed 's|:|_|g'`"
-        CCACHE_IMAGE="${{ env.GHCR_REPO }}:${GIT_BRANCH}-${OS_TAG}-cccache"
+        BRANCH_TAG="`echo ${GIT_BRANCH} | sed 's|/|_|g'`"
+        CCACHE_IMAGE="${{ env.GHCR_REPO }}:${BRANCH_TAG}-${OS_TAG}-cccache"
         if ! docker pull ${CCACHE_IMAGE} 2>&1 >/dev/null
         then
           CCACHE_BIMAGE="scratch"
@@ -435,6 +473,7 @@ jobs:
           CCACHE_BIMAGE="${CCACHE_IMAGE}"
         fi
         docker pull ${CCACHE_BIN_IMAGE}
+        echo "BRANCH_TAG=${BRANCH_TAG}" >> $GITHUB_ENV
         echo "CCACHE_IMAGE=${CCACHE_IMAGE}" >> $GITHUB_ENV
         echo "CCACHE_BIMAGE=${CCACHE_BIMAGE}" >> $GITHUB_ENV
         echo "BUILD_IMAGE=${{ env.LOCAL_REPO }}:latest-${OS_TAG}" >> $GITHUB_ENV
@@ -463,12 +502,12 @@ jobs:
       with:
         images: ${{ env.DOCKER_REPO }}
         tags: |
-          type=schedule,suffix=-${{ env.OS_TAG}}
-          type=ref,event=branch,suffix=-${{ env.OS_TAG}}
-          type=ref,event=tag,suffix=-${{ env.OS_TAG}}
-          type=ref,event=pr,suffix=-${{ env.OS_TAG}}
-          type=raw,value=latest-${{ env.OS_TAG}},enable={{is_default_branch}}
-          type=sha,suffix=-${{ env.OS_TAG}}
+          type=schedule,suffix=-${{ env.OS_TAG }}
+          type=ref,event=branch,suffix=-${{ env.OS_TAG }}
+          type=ref,event=tag,suffix=-${{ env.OS_TAG }}
+          type=ref,event=pr,suffix=-${{ env.OS_TAG }}
+          type=raw,value=latest-${{ env.OS_TAG }},enable={{is_default_branch}}
+          type=sha,suffix=-${{ env.OS_TAG }}
           type=raw,value=latest,enable=${{ env.ADD_LATEST == 'true' }}
 
     - name: Extract metadata (tags, labels) for GHCR
@@ -477,18 +516,18 @@ jobs:
       with:
         images: ${{ env.GHCR_REPO }}
         tags: |
-          type=schedule,suffix=-${{ env.OS_TAG}}
-          type=ref,event=branch,suffix=-${{ env.OS_TAG}}
-          type=ref,event=tag,suffix=-${{ env.OS_TAG}}
-          type=ref,event=pr,suffix=-${{ env.OS_TAG}}
-          type=raw,value=latest-${{ env.OS_TAG}},enable={{is_default_branch}}
-          type=sha,suffix=-${{ env.OS_TAG}}
+          type=schedule,suffix=-${{ env.OS_TAG }}
+          type=ref,event=branch,suffix=-${{ env.OS_TAG }}
+          type=ref,event=tag,suffix=-${{ env.OS_TAG }}
+          type=ref,event=pr,suffix=-${{ env.OS_TAG }}
+          type=raw,value=latest-${{ env.OS_TAG }},enable={{is_default_branch}}
+          type=sha,suffix=-${{ env.OS_TAG }}
           type=raw,value=latest,enable=${{ env.ADD_LATEST == 'true' }}
 
     - name: Build Docker image
       uses: docker/build-push-action@v6
       env:
-        CACHE_SPEC: "type=registry,ref=${{ env.GHCR_REPO }}:${{ env.GIT_BRANCH }}-${{ env.OS_TAG}}-buildcache"
+        CACHE_SPEC: "type=registry,ref=${{ env.GHCR_REPO }}:${{ env.BRANCH_TAG }}-${{ env.OS_TAG }}-buildcache"
       with:
         context: .
         file: ./docker/Dockerfile
