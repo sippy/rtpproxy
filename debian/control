@@ -9,7 +9,8 @@ Build-Depends: debhelper-compat (= 13),
                libgsm1-dev,
                libsndfile1-dev,
                libunwind-dev,
-               libsrtp2-dev
+               libsrtp2-dev,
+               libsystemd-dev
 Standards-Version: 4.6.2
 Homepage: https://github.com/sippy/rtpproxy
 Vcs-Git: https://github.com/sippy/rtpproxy.git

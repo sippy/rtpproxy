@@ -10,6 +10,8 @@ rtpproxy (3.1+dev1) unstable; urgency=medium
     runtime and debug packages to avoid missing-file warnings.
   * Depend on libsrtp2 during the build so the crypto modules are
     compiled and available for packaging.
+  * Enable systemd integration by building against libsystemd-dev and
+    configuring with --enable-systemd.
 
  -- Maxim Sobolev <sobomax@sippysoft.com>  Wed, 15 May 2024 00:00:00 +0000
 
