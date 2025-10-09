@@ -113,11 +113,21 @@ jobs:
       run: |
         dpkg-buildpackage -us -uc -b
 
+    - name: Collect Debian packages
+      run: |
+        set -euo pipefail
+        mkdir -p debian-artifacts
+        shopt -s nullglob
+        for artifact in ../*.deb ../*.buildinfo ../*.changes; do
+          [ -e "${artifact}" ] || continue
+          mv "${artifact}" debian-artifacts/
+        done
+
     - name: Test install Debian packages
       run: |
         set -euo pipefail
         shopt -s nullglob
-        pkgs=(../*.deb)
+        pkgs=(./debian-artifacts/*.deb)
         if [ "${#pkgs[@]}" -eq 0 ]; then
           echo "No Debian packages produced" >&2
           exit 1
@@ -128,7 +138,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: rtpproxy-debian-packages
-        path: ../*.deb
+        path: debian-artifacts
         if-no-files-found: error
 
   FullBuild:
