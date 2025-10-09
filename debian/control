@@ -19,7 +19,7 @@ Rules-Requires-Root: no
 
 Package: rtpproxy
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}, adduser
 Description: High-performance SIP RTP media proxy
  RTPProxy is a high-performance, scalable media relay designed for
  SIP-based applications. It supports advanced media handling features

@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        if ! getent group rtpproxy >/dev/null; then
+            addgroup --system rtpproxy
+        fi
+        if ! getent passwd rtpproxy >/dev/null; then
+            adduser --system --ingroup rtpproxy --home /var/lib/rtpproxy \
+                --shell /usr/sbin/nologin --no-create-home rtpproxy
+        fi
+        install -d -o rtpproxy -g rtpproxy -m 0750 /var/lib/rtpproxy
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
