@@ -4,3 +4,5 @@ usr/bin/rtpproxy
 usr/lib/*/rtpproxy/rtpp_acct_csv.so
 usr/lib/*/rtpproxy/rtpp_acct_rtcp_hep.so
 usr/lib/*/rtpproxy/rtpp_catch_dtmf.so
+usr/lib/*/rtpproxy/rtpp_dtls_gw.so
+usr/lib/*/rtpproxy/rtpp_ice_lite.so
