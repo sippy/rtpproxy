@@ -106,7 +106,7 @@ jobs:
     - name: Install build tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential devscripts debhelper pkg-config autoconf automake libtool libssl-dev fakeroot
+        sudo apt-get install -y build-essential devscripts debhelper pkg-config autoconf automake libtool libssl-dev libbcg729-dev fakeroot
     - name: Build Debian package
       env:
         DEB_BUILD_OPTIONS: nocheck
