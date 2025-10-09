@@ -4,7 +4,7 @@
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure -- --enable-librtpproxy --enable-systemd
+	dh_auto_configure -- --enable-librtpproxy --enable-systemd --enable-lto=yes
 
 override_dh_update_autotools_config:
 	@echo "Skipping autotools config update"
