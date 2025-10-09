@@ -2,7 +2,7 @@
 Description=RTPproxy controlling socket
 
 [Socket]
-ListenStream=127.0.0.1:22222
+ListenStream=/run/rtpproxy.sock
 Accept=false
 
 [Install]

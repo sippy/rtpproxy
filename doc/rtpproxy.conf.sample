@@ -1,0 +1,18 @@
+# Example rtpproxy configuration file in UCL format.
+#
+# Enable accounting modules shipped with the Debian rtpproxy package.
+# Comment or remove any modules you do not plan to use. The runtime will
+# automatically load the shared object that matches each module name.
+modules {
+    acct_csv {
+        logfile = /var/log/rtpproxy/rtpproxy.csv
+    }
+
+    # Forward RTCP reports to a HEP collector.
+    acct_rtcp_hep {
+        capt_host = 127.0.0.1
+        capt_port = 9060
+        capt_ptype = udp
+        capt_id = 101
+    }
+}

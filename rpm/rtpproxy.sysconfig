@@ -1,1 +1,10 @@
-OPTIONS=""
+# Command-line options passed to rtpproxy by the systemd unit.
+#
+# The service already enables foreground operation and manages the runtime
+# directory, so typically only the control socket and advertised addresses
+# need to be provided here. For example:
+#   OPTIONS="-s udp:127.0.0.1:7722 -l 203.0.113.10/198.51.100.10"
+#
+# Leave the value empty to accept the built-in defaults.
+# The packaged default listens on all available addresses.
+OPTIONS="-l *"

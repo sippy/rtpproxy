@@ -99,6 +99,81 @@ jobs:
     - name: build
       run: sh -x ./scripts/do-build.sh cleanbuild
 
+  DebianPackage:
+    name: Debian Package Build
+    needs: [LoadJobs_conf, FullBuild]
+    if: needs.LoadJobs_conf.outputs.do_DebianPackage == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: Install build tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential devscripts debhelper pkg-config libssl-dev libbcg729-dev libgsm1-dev libsndfile1-dev libunwind-dev libsrtp2-dev libsystemd-dev fakeroot zip
+    - name: Build Debian package
+      env:
+        DEB_BUILD_OPTIONS: nocheck
+      run: |
+        dpkg-buildpackage -us -uc -b
+
+    - name: Collect Debian packages
+      run: |
+        set -euo pipefail
+        mkdir -p debian-artifacts
+        shopt -s nullglob
+        for artifact in ../*.deb ../*.ddeb ../*.buildinfo ../*.changes; do
+          [ -e "${artifact}" ] || continue
+          base=$(basename "${artifact}")
+          mv "${artifact}" "debian-artifacts/${base}"
+        done
+
+    - name: Test install Debian packages
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        pkgs=(./debian-artifacts/*.deb)
+        if [ "${#pkgs[@]}" -eq 0 ]; then
+          echo "No Debian packages produced" >&2
+          exit 1
+        fi
+        sudo apt-get install -y "${pkgs[@]}"
+
+    - name: Exercise systemd service
+      run: |
+        set -euo pipefail
+        trap 'status=$?; sudo journalctl -xeu rtpproxy.service || true; exit $status' ERR
+        trap 'sudo systemctl disable --now rtpproxy.socket || true' EXIT
+        sudo systemctl daemon-reload
+        sudo systemctl enable --now rtpproxy.socket
+        sudo systemctl start rtpproxy.service
+        sudo systemctl status --no-pager rtpproxy.service
+        sudo systemctl restart rtpproxy.service
+        sudo systemctl status --no-pager rtpproxy.service
+        sudo systemctl stop rtpproxy.service
+        sudo systemctl status --no-pager rtpproxy.service || true
+
+    - name: Setup GitHub Actions artifact client
+      uses: lhotari/gh-actions-artifact-client@v2
+
+    - name: Upload Debian artifacts
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        uploaded=0
+        for file in debian-artifacts/*.deb debian-artifacts/*.ddeb debian-artifacts/*.buildinfo debian-artifacts/*.changes; do
+          [ -e "$file" ] || continue
+          uploaded=1
+          name=$(basename "$file")
+          echo "Uploading $name, file: $file"
+          zip - "$file" | gh-actions-artifact-client.js upload "$name" --retentionDays=7
+        done
+        if [ "$uploaded" -eq 0 ]; then
+          echo "No Debian artifacts found for upload" >&2
+          exit 1
+        fi
+
   FullBuild:
     name: Full Build
     needs: [LoadJobs_conf, MinBuild]
@@ -550,7 +625,8 @@ jobs:
       run: sh -x docker/update_description.sh docker/README.md
 
   roll_release:
-    needs: [LoadJobs_conf, Docker]
+    name: Roll Release
+    needs: [LoadJobs_conf, Docker, DebianPackage]
     permissions:
       contents: write
     uses: sippy/cimagic/.github/workflows/RollReleaseDraft.yml@v1

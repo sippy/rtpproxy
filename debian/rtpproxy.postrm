@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    purge)
+        if command -v deluser >/dev/null 2>&1; then
+            deluser --system --quiet rtpproxy || true
+        fi
+        if command -v delgroup >/dev/null 2>&1; then
+            delgroup --quiet rtpproxy || true
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

@@ -1,14 +1,21 @@
 [Unit]
-Description=A symmetric RTP proxy
-After=network.target
+Description=RTPProxy media relay
+Documentation=man:rtpproxy(8)
+Requires=rtpproxy.socket
+After=network.target rtpproxy.socket
 
 [Service]
 Type=notify
 User=rtpproxy
 Group=rtpproxy
-EnvironmentFile=/etc/sysconfig/rtpproxy
-PIDFile=/var/run/rtpproxy/rtpproxy.pid
-ExecStart=/usr/bin/rtpproxy -f -p /var/run/rtpproxy/rtpproxy.pid $OPTIONS
+EnvironmentFile=-/etc/sysconfig/rtpproxy
+Sockets=rtpproxy.socket
+PIDFile=/run/rtpproxy/rtpproxy.pid
+RuntimeDirectory=rtpproxy
+RuntimeDirectoryMode=0755
+ExecStart=/usr/bin/rtpproxy -f -s systemd: -p /run/rtpproxy/rtpproxy.pid $OPTIONS
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
 
 [Install]
 Also=rtpproxy.socket
