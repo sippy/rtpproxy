@@ -106,7 +106,7 @@ jobs:
     - name: Install build tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential devscripts debhelper pkg-config libssl-dev libbcg729-dev libgsm1-dev libsndfile1-dev libunwind-dev libsrtp2-dev fakeroot
+        sudo apt-get install -y build-essential devscripts debhelper pkg-config libssl-dev libbcg729-dev libgsm1-dev libsndfile1-dev libunwind-dev libsrtp2-dev fakeroot zip
     - name: Build Debian package
       env:
         DEB_BUILD_OPTIONS: nocheck
@@ -134,45 +134,25 @@ jobs:
         fi
         sudo apt-get install -y "${pkgs[@]}"
 
-    - name: Upload runtime package
-      uses: actions/upload-artifact@v4
-      with:
-        name: rtpproxy.deb
-        path: debian-artifacts/rtpproxy_*.deb
-        compression-level: 0
-        if-no-files-found: error
+    - name: Setup GitHub Actions artifact client
+      uses: lhotari/gh-actions-artifact-client@v2
 
-    - name: Upload development package
-      uses: actions/upload-artifact@v4
-      with:
-        name: rtpproxy-dev.deb
-        path: debian-artifacts/rtpproxy-dev_*.deb
-        compression-level: 0
-        if-no-files-found: error
-
-    - name: Upload debug package
-      uses: actions/upload-artifact@v4
-      with:
-        name: rtpproxy-debug.deb
-        path: debian-artifacts/rtpproxy-debug_*.deb
-        compression-level: 0
-        if-no-files-found: error
-
-    - name: Upload build metadata
-      uses: actions/upload-artifact@v4
-      with:
-        name: rtpproxy.buildinfo
-        path: debian-artifacts/*.buildinfo
-        compression-level: 0
-        if-no-files-found: error
-
-    - name: Upload changeset
-      uses: actions/upload-artifact@v4
-      with:
-        name: rtpproxy.changes
-        path: debian-artifacts/*.changes
-        compression-level: 0
-        if-no-files-found: error
+    - name: Upload Debian artifacts
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        uploaded=0
+        for file in debian-artifacts/*.deb debian-artifacts/*.buildinfo debian-artifacts/*.changes; do
+          [ -e "$file" ] || continue
+          uploaded=1
+          name=$(basename "$file")
+          echo "Uploading $name, file: $file"
+          zip - "$file" | gh-actions-artifact-client.js upload "$name" --retentionDays=7
+        done
+        if [ "$uploaded" -eq 0 ]; then
+          echo "No Debian artifacts found for upload" >&2
+          exit 1
+        fi
 
   FullBuild:
     name: Full Build
