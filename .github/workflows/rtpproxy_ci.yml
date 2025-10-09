@@ -113,6 +113,24 @@ jobs:
       run: |
         dpkg-buildpackage -us -uc -b
 
+    - name: Test install Debian packages
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        pkgs=(../*.deb)
+        if [ "${#pkgs[@]}" -eq 0 ]; then
+          echo "No Debian packages produced" >&2
+          exit 1
+        fi
+        sudo apt-get install -y "${pkgs[@]}"
+
+    - name: Upload Debian packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: rtpproxy-debian-packages
+        path: ../*.deb
+        if-no-files-found: error
+
   FullBuild:
     name: Full Build
     needs: [LoadJobs_conf, MinBuild]
