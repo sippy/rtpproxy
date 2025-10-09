@@ -22,8 +22,9 @@ rtpproxy (3.1+dev1) unstable; urgency=medium
     service runs under a locked-down account by default.
   * Align the packaged systemd unit with /run paths so PID tracking stays
     consistent with RuntimeDirectory management.
-  * Use systemd's MAINPID in ExecStart for the pidfile flag instead of
-    hardcoding the /run directory path.
+  * Keep ExecStart's pidfile flag pointed at /run/rtpproxy/rtpproxy.pid
+    because the MAINPID environment variable is not available at start
+    time.
 
  -- Maxim Sobolev <sobomax@sippysoft.com>  Wed, 15 May 2024 00:00:00 +0000
 
