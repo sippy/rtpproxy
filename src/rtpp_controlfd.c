@@ -65,7 +65,7 @@ static int
 controlfd_init_systemd(void)
 {
 #ifdef HAVE_SYSTEMD_DAEMON
-    int nfd, controlfd;
+    int nfd;
 
     nfd = sd_listen_fds(0);
     if (nfd > 1) {
@@ -264,6 +264,9 @@ rtpp_controlfd_init(const struct rtpp_cfg *cfsp)
             }
             controlfd_out = controlfd_in;
             break;
+        default:
+            warnx("unhandled RTPC_XXX type: %d", ctrl_sock->type);
+            abort();
         }
         if (controlfd_in < 0 || controlfd_out < 0) {
             return (-1);
