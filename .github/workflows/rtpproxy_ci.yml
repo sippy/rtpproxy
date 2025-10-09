@@ -120,7 +120,11 @@ jobs:
         shopt -s nullglob
         for artifact in ../*.deb ../*.buildinfo ../*.changes; do
           [ -e "${artifact}" ] || continue
-          mv "${artifact}" debian-artifacts/
+          base=$(basename "${artifact}")
+          if [[ "${base}" == *-dbgsym_*.deb ]]; then
+            base="${base%.deb}.ddeb"
+          fi
+          mv "${artifact}" "debian-artifacts/${base}"
         done
 
     - name: Test install Debian packages
@@ -142,7 +146,7 @@ jobs:
         set -euo pipefail
         shopt -s nullglob
         uploaded=0
-        for file in debian-artifacts/*.deb debian-artifacts/*.buildinfo debian-artifacts/*.changes; do
+        for file in debian-artifacts/*.deb debian-artifacts/*.ddeb debian-artifacts/*.buildinfo debian-artifacts/*.changes; do
           [ -e "$file" ] || continue
           uploaded=1
           name=$(basename "$file")
