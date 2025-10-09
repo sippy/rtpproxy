@@ -14,6 +14,8 @@ rtpproxy (3.1+dev1) unstable; urgency=medium
     configuring with --enable-systemd.
   * Preserve librtpproxy's static archive contents under LTO by appending
     -ffat-lto-objects to the maintainer build flags.
+  * Provide a packaged systemd service and default configuration so the
+    daemon can be managed with systemd out of the box.
 
  -- Maxim Sobolev <sobomax@sippysoft.com>  Wed, 15 May 2024 00:00:00 +0000
 
