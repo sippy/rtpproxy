@@ -134,14 +134,43 @@ jobs:
         fi
         sudo apt-get install -y "${pkgs[@]}"
 
-    - name: Upload Debian packages
+    - name: Upload runtime package
       uses: actions/upload-artifact@v4
       with:
-        name: rtpproxy-debian-packages
-        path: |
-          debian-artifacts/*.deb
-          debian-artifacts/*.buildinfo
-          debian-artifacts/*.changes
+        name: rtpproxy.deb
+        path: debian-artifacts/rtpproxy_*.deb
+        compression-level: 0
+        if-no-files-found: error
+
+    - name: Upload development package
+      uses: actions/upload-artifact@v4
+      with:
+        name: rtpproxy-dev.deb
+        path: debian-artifacts/rtpproxy-dev_*.deb
+        compression-level: 0
+        if-no-files-found: error
+
+    - name: Upload debug package
+      uses: actions/upload-artifact@v4
+      with:
+        name: rtpproxy-debug.deb
+        path: debian-artifacts/rtpproxy-debug_*.deb
+        compression-level: 0
+        if-no-files-found: error
+
+    - name: Upload build metadata
+      uses: actions/upload-artifact@v4
+      with:
+        name: rtpproxy.buildinfo
+        path: debian-artifacts/*.buildinfo
+        compression-level: 0
+        if-no-files-found: error
+
+    - name: Upload changeset
+      uses: actions/upload-artifact@v4
+      with:
+        name: rtpproxy.changes
+        path: debian-artifacts/*.changes
         compression-level: 0
         if-no-files-found: error
 
