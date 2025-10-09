@@ -118,12 +118,9 @@ jobs:
         set -euo pipefail
         mkdir -p debian-artifacts
         shopt -s nullglob
-        for artifact in ../*.deb ../*.buildinfo ../*.changes; do
+        for artifact in ../*.deb ../*.ddeb ../*.buildinfo ../*.changes; do
           [ -e "${artifact}" ] || continue
           base=$(basename "${artifact}")
-          if [[ "${base}" == *-dbgsym_*.deb ]]; then
-            base="${base%.deb}.ddeb"
-          fi
           mv "${artifact}" "debian-artifacts/${base}"
         done
 
