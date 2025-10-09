@@ -2,6 +2,10 @@ rtpproxy (3.1+dev1) unstable; urgency=medium
 
   * Build librtpproxy during package configuration and ship a new
     rtpproxy-dev package with the static archive and public header.
+  * Add optional audio and unwind build dependencies required by the
+    librtpproxy-enabled build.
+  * Split debugging helpers and *_debug modules into the rtpproxy-debug
+    binary package.
 
  -- Maxim Sobolev <sobomax@sippysoft.com>  Wed, 15 May 2024 00:00:00 +0000
 

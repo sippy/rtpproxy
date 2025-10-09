@@ -5,7 +5,10 @@ Maintainer: Maxim Sobolev <sobomax@sippysoft.com>
 Build-Depends: debhelper-compat (= 13),
                pkg-config,
                libssl-dev,
-               libbcg729-dev
+               libbcg729-dev,
+               libgsm1-dev,
+               libsndfile1-dev,
+               libunwind-dev
 Standards-Version: 4.6.2
 Homepage: https://github.com/sippy/rtpproxy
 Vcs-Git: https://github.com/sippy/rtpproxy.git
@@ -20,6 +23,16 @@ Description: High-performance SIP RTP media proxy
  SIP-based applications. It supports advanced media handling features
  such as secure RTP, codec transcoding modules, and high availability
  deployments.
+
+Package: rtpproxy-debug
+Section: debug
+Architecture: any
+Depends: ${misc:Depends}, rtpproxy (= ${binary:Version})
+Multi-Arch: same
+Description: Debug helpers and modules for RTPProxy
+ This package provides the debugging-friendly binaries and modules for
+ RTPProxy, including the rtpproxy_debug control tool, UDP contention
+ tester, and the *_debug.so plugin variants.
 
 Package: rtpproxy-dev
 Section: libdevel
