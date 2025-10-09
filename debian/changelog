@@ -16,6 +16,8 @@ rtpproxy (3.1+dev1) unstable; urgency=medium
     -ffat-lto-objects to the maintainer build flags.
   * Reuse the upstream systemd service and socket units in Debian builds,
     installing their shared sysconfig file for consistent configuration.
+  * Update the systemd service to supervise rtpproxy via systemd sockets
+    so the packaged unit works with Type=notify without extra tuning.
   * Create a dedicated rtpproxy user and group at install time so the
     service runs under a locked-down account by default.
 
