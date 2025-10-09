@@ -135,6 +135,19 @@ jobs:
         fi
         sudo apt-get install -y "${pkgs[@]}"
 
+    - name: Exercise systemd service
+      run: |
+        set -euo pipefail
+        sudo systemctl daemon-reload
+        sudo systemctl enable --now rtpproxy.socket
+        sudo systemctl start rtpproxy.service
+        sudo systemctl status --no-pager rtpproxy.service
+        sudo systemctl restart rtpproxy.service
+        sudo systemctl status --no-pager rtpproxy.service
+        sudo systemctl stop rtpproxy.service
+        sudo systemctl status --no-pager rtpproxy.service || true
+        sudo systemctl disable --now rtpproxy.socket
+
     - name: Setup GitHub Actions artifact client
       uses: lhotari/gh-actions-artifact-client@v2
 

@@ -22,6 +22,8 @@ rtpproxy (3.1+dev1) unstable; urgency=medium
     service runs under a locked-down account by default.
   * Align the packaged systemd unit with /run paths so PID tracking stays
     consistent with RuntimeDirectory management.
+  * Pass systemd's MAINPID through ExecStart so the daemon receives the
+    tracked PID even when launched under socket activation.
 
  -- Maxim Sobolev <sobomax@sippysoft.com>  Wed, 15 May 2024 00:00:00 +0000
 
