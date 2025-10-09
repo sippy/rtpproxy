@@ -1,0 +1,7 @@
+usr/bin/rtpproxy_debug
+usr/bin/udp_contention
+usr/lib/*/rtpproxy/rtpp_acct_csv_debug.so
+usr/lib/*/rtpproxy/rtpp_acct_rtcp_hep_debug.so
+usr/lib/*/rtpproxy/rtpp_catch_dtmf_debug.so
+usr/lib/*/rtpproxy/rtpp_dtls_gw_debug.so
+usr/lib/*/rtpproxy/rtpp_ice_lite_debug.so

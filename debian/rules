@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+
+export DEB_CFLAGS_MAINT_APPEND = -ffat-lto-objects
+export DEB_CXXFLAGS_MAINT_APPEND = -ffat-lto-objects
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-librtpproxy --enable-systemd --enable-lto=yes
+
+override_dh_update_autotools_config:
+	@echo "Skipping autotools config update"
+
+override_dh_autoreconf:
+	@echo "Skipping autoreconf; using bundled configure script"
+
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
+
+execute_after_dh_auto_install:
+	install -D -m 0644 rpm/rtpproxy.sysconfig debian/rtpproxy/etc/sysconfig/rtpproxy
+	rm -f debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/rtpproxy/*.la
+	rm -f debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/librtpproxy.la
+	rm -f debian/tmp/usr/share/man/man8/rtpproxy.8
+
+override_dh_auto_test:
+	@echo "Skipping upstream tests for package build"
