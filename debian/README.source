@@ -1,0 +1,13 @@
+Building the Debian packaging helpers locally requires the Debian helper tools.
+
+Before invoking commands such as `debian/rules clean` or `dpkg-buildpackage`,
+install the packaging toolchain, for example:
+
+```
+sudo apt-get update
+sudo apt-get install debhelper
+```
+
+The packaging workflow in CI already provisions these dependencies. When
+working on the packaging locally you need to provision them once per build
+environment.
