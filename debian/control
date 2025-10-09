@@ -3,9 +3,6 @@ Section: net
 Priority: optional
 Maintainer: Maxim Sobolev <sobomax@sippysoft.com>
 Build-Depends: debhelper-compat (= 13),
-               autoconf,
-               automake,
-               libtool,
                pkg-config,
                libssl-dev,
                libbcg729-dev

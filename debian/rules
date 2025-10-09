@@ -3,5 +3,11 @@
 %:
 	dh $@
 
+override_dh_update_autotools_config:
+	@echo "Skipping autotools config update"
+
+override_dh_autoreconf:
+	@echo "Skipping autoreconf; using bundled configure script"
+
 override_dh_auto_test:
 	@echo "Skipping upstream tests for package build"
