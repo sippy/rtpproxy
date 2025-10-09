@@ -9,5 +9,11 @@ override_dh_update_autotools_config:
 override_dh_autoreconf:
 	@echo "Skipping autoreconf; using bundled configure script"
 
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
+
+execute_after_dh_auto_install:
+	rm -f debian/rtpproxy/usr/lib/$(DEB_HOST_MULTIARCH)/rtpproxy/*.la
+
 override_dh_auto_test:
 	@echo "Skipping upstream tests for package build"
