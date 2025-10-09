@@ -15,6 +15,11 @@ on:
 permissions:
   contents: write
 
+# Cancels previous runs of this workflow for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   LoadJobs_conf:
     name: Load Jobs Settings
