@@ -1,7 +1,10 @@
 #!/usr/bin/make -f
 
+export DEB_CFLAGS_MAINT_APPEND = -ffat-lto-objects
+export DEB_CXXFLAGS_MAINT_APPEND = -ffat-lto-objects
+
 %:
-	dh $@
+        dh $@
 
 override_dh_auto_configure:
 	dh_auto_configure -- --enable-librtpproxy --enable-systemd --enable-lto=yes

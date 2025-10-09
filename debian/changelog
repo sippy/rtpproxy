@@ -12,6 +12,8 @@ rtpproxy (3.1+dev1) unstable; urgency=medium
     compiled and available for packaging.
   * Enable systemd integration by building against libsystemd-dev and
     configuring with --enable-systemd.
+  * Preserve librtpproxy's static archive contents under LTO by appending
+    -ffat-lto-objects to the maintainer build flags.
 
  -- Maxim Sobolev <sobomax@sippysoft.com>  Wed, 15 May 2024 00:00:00 +0000
 
