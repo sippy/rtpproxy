@@ -111,7 +111,7 @@ jobs:
   FullBuild:
     name: Full Build
     needs: [LoadJobs_conf, MinBuild]
-    if: needs.LoadJobs_conf.outputs.do_FullBuild == 'true'
+    if: always() && needs.LoadJobs_conf.outputs.do_FullBuild == 'true'
     # The type of runner that the job will run on
     runs-on: ubuntu-${{ matrix.os }}
     env:
@@ -184,7 +184,7 @@ jobs:
   FuncTest:
     name: Functional Testing    
     needs: [LoadJobs_conf, FullBuild]
-    if: needs.LoadJobs_conf.outputs.do_FuncTest == 'true'
+    if: always() && needs.LoadJobs_conf.outputs.do_FuncTest == 'true'
     # The type of runner that the job will run on
     runs-on: ubuntu-${{ matrix.os }}
     env:
@@ -257,7 +257,7 @@ jobs:
   Glitching:
     name: Glitch Injection
     needs: [LoadJobs_conf, FuncTest]
-    if: needs.LoadJobs_conf.outputs.do_Glitch == 'true'
+    if: always() && needs.LoadJobs_conf.outputs.do_Glitch == 'true'
     # The type of runner that the job will run on
     runs-on: ubuntu-${{ matrix.os }}
     env:
@@ -330,7 +330,7 @@ jobs:
   Fuzzing:
     name: Fuzz with OSS-Fuzz
     needs: [LoadJobs_conf, Glitching]
-    if: needs.LoadJobs_conf.outputs.do_Fuzzing == 'true'
+    if: always() && needs.LoadJobs_conf.outputs.do_Fuzzing == 'true'
     runs-on: ubuntu-latest
     permissions:
       security-events: write
@@ -379,7 +379,7 @@ jobs:
   Docker:
     name: Build&Push to DockerHub
     needs: [LoadJobs_conf, Fuzzing]
-    if: needs.LoadJobs_conf.outputs.do_Docker == 'true' &&
+    if: always() && needs.LoadJobs_conf.outputs.do_Docker == 'true' &&
         (github.event_name == 'push' || github.event_name == 'pull_request')
     runs-on: ubuntu-latest
     permissions:
