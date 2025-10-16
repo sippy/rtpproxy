@@ -37,22 +37,22 @@
 #include "rtpp_command_args.h"
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_ul.h"
-#include "commands/rpcpv1_ul_subc_ttl.h"
+#include "commands/rpcpv1_ul_subc_set.h"
 
 int
-rtpp_subcommand_ttl_handler(const struct after_success_h_args *ashap,
+rtpp_subcommand_set_handler(const struct after_success_h_args *ashap,
   const struct rtpp_subc_ctx *rscp)
 {
-    const struct rtpp_subcommand_ttl *tap;
+    const struct rtpp_subcommand_set *tap;
     struct rtpp_stream *strmp;
 
-    tap = (struct rtpp_subcommand_ttl *)ashap->dyn;
+    tap = (struct rtpp_subcommand_set *)ashap->dyn;
     switch (tap->direction) {
-    case TTL_FORWARD:
+    case SET_FORWARD:
         strmp = rscp->strmp_in;
         break;
 
-    case TTL_REVERSE:
+    case SET_REVERSE:
         strmp = rscp->strmp_out;
         if (strmp == NULL)
             return (-1);
@@ -62,7 +62,14 @@ rtpp_subcommand_ttl_handler(const struct after_success_h_args *ashap,
         abort();
     }
 
-    strmp->stream_ttl = tap->ttl;
-    CALL_SMETHOD(strmp->ttl, reset_with, tap->ttl);
+    switch (tap->param) {
+    case SET_PRM_TTL:
+        strmp->stream_ttl = tap->val;
+        CALL_SMETHOD(strmp->ttl, reset_with, tap->val);
+        break;
+
+    default:
+        abort();
+    }
     return (0);
 }

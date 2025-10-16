@@ -27,6 +27,7 @@
 #include <sys/socket.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "config_pp.h"
 
@@ -46,7 +47,7 @@
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc.h"
 #include "commands/rpcpv1_delete.h"
-#include "commands/rpcpv1_ul_subc_ttl.h"
+#include "commands/rpcpv1_ul_subc_set.h"
 
 #if ENABLE_MODULE_IF
 static int
@@ -70,27 +71,31 @@ handle_mod_subc_parse(const struct rtpp_cfg *cfsp, const char *ip,
 #endif
 
 static int
-handle_ttl_subc_parse(const struct rtpp_cfg *cfsp, const char *cp,
-  struct after_success_h *asp)
+handle_set_subc_parse(const struct rtpp_cfg *cfsp, const char *cp,
+  const rtpp_str_const_t *v, struct after_success_h *asp)
 {
-    struct rtpp_subcommand_ttl ttl_arg, *tap;
+    struct rtpp_subcommand_set set_arg, *tap;
 
     if (cp[0] == 'r' || cp[0] == 'R') {
-        ttl_arg.direction = TTL_REVERSE;
-        cp += 1;
+        set_arg.direction = SET_REVERSE;
     } else {
-        ttl_arg.direction = TTL_FORWARD;
+        set_arg.direction = SET_FORWARD;
     }
-    if (atoi_safe(cp, &ttl_arg.ttl) != ATOI_OK)
+    if (strcmp(v->s, "ttl=") != 0) {
         return (-1);
-    if (ttl_arg.ttl <= 0)
+    }
+    set_arg.param = SET_PRM_TTL;
+    cp = v->s + 4;
+    if (atoi_safe(cp, &set_arg.val) != ATOI_OK)
         return (-1);
-    tap = rtpp_zmalloc(sizeof(ttl_arg));
+    if (set_arg.val <= 0)
+        return (-1);
+    tap = rtpp_zmalloc(sizeof(set_arg));
     if (tap == NULL)
         return (-1);
-    *tap = ttl_arg;
+    *tap = set_arg;
     asp->args.dyn = tap;
-    asp->handler = rtpp_subcommand_ttl_handler;
+    asp->handler = rtpp_subcommand_set_handler;
     return (0);
 }
 
@@ -125,11 +130,11 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *
         asp->handler = handle_delete_as_subc;
         break;
 
-    case 'T':
-    case 't':
-        if (subc_args->c != 1)
+    case 'S':
+    case 's':
+        if (subc_args->c != 2 || subc_args->v[0].len < 1 || subc_args->v[0].len > 2)
             return (-1);
-        return (handle_ttl_subc_parse(cfsp, &subc_args->v[0].s[1], asp));
+        return (handle_set_subc_parse(cfsp, &subc_args->v[0].s[1], &subc_args->v[1], asp));
         break;
 
     default:

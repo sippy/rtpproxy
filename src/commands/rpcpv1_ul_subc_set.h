@@ -27,15 +27,23 @@
 struct rtpp_subc_ctx;
 struct after_success_h_args;
 
-enum rtpp_subcommand_ttl_direction {
-    TTL_FORWARD = 0,
-    TTL_REVERSE = 1
+enum rtpp_subcommand_set_direction {
+    SET_FORWARD = 0,
+    SET_REVERSE = 1
 };
 
-struct rtpp_subcommand_ttl {
-    int ttl;
-    enum rtpp_subcommand_ttl_direction direction;
+enum rtpp_subcommand_set_param {
+    SET_PRM_TTL,
+    SET_PRM_TOS,
+    SET_PRM_SSRC_IN,
+    SET_PRM_SSRC_OUT,
 };
 
-int rtpp_subcommand_ttl_handler(const struct after_success_h_args *,
+struct rtpp_subcommand_set {
+    int val;
+    enum rtpp_subcommand_set_param param;
+    enum rtpp_subcommand_set_direction direction;
+};
+
+int rtpp_subcommand_set_handler(const struct after_success_h_args *,
   const struct rtpp_subc_ctx *);
