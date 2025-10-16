@@ -53,15 +53,8 @@ enum rtpps_latch_mode {
 };
 
 struct r_stream_ctor_args {
-    struct rtpp_log *log;
-    struct rtpp_proc_servers *proc_servers;
-    struct rtpp_stats *rtpp_stats;
     enum rtpp_stream_side side;
-    int pipe_type;
-    uint64_t seuid;
-    unsigned int nmodules;
-    struct pproc_manager *pproc_manager;
-    struct rtpp_genuid *guid;
+    const struct r_pipe_ctor_args *pipe_cap;
 };
 
 struct r_stream_h_play_args {

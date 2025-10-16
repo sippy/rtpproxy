@@ -244,9 +244,10 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
 {
     struct rtpp_stream_priv *pvt;
     size_t alen;
+    const struct r_pipe_ctor_args *pap = ap->pipe_cap;
 
     alen = offsetof(struct rtpp_stream_priv, pmod_data.adp) + 
-      (ap->nmodules * sizeof(pvt->pmod_data.adp[0]));
+      (pap->nmodules * sizeof(pvt->pmod_data.adp[0]));
     pvt = rtpp_rzmalloc(alen, PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
@@ -254,16 +255,16 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
-    pvt->pub.log = ap->log;
-    RTPP_OBJ_BORROW(&pvt->pub, ap->log);
+    pvt->pub.log = pap->log;
+    RTPP_OBJ_BORROW(&pvt->pub, pap->log);
     RTPP_OBJ_DTOR_ATTACH(&pvt->pub, pthread_mutex_destroy, &pvt->lock);
-    pvt->pub.pproc_manager = CALL_SMETHOD(ap->pproc_manager, clone);
+    pvt->pub.pproc_manager = CALL_SMETHOD(pap->pproc_manager, clone);
     if (pvt->pub.pproc_manager == NULL) {
         goto e1;
     }
     RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->pub.pproc_manager);
-    if (ap->pipe_type == PIPE_RTP) {
-        pvt->pub.analyzer = rtpp_analyzer_ctor(ap->log);
+    if (pap->pipe_type == PIPE_RTP) {
+        pvt->pub.analyzer = rtpp_analyzer_ctor(pap->log);
         if (pvt->pub.analyzer == NULL) {
             goto e1;
         }
@@ -277,7 +278,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
         };
         if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_RESIZE, &resize_packet_poi) < 0)
             goto e1;
-        pvt->npkts_resizer_in_idx = CALL_SMETHOD(ap->rtpp_stats, getidxbyname,
+        pvt->npkts_resizer_in_idx = CALL_SMETHOD(pap->rtpp_stats, getidxbyname,
           "npkts_resizer_in");
         if (pvt->npkts_resizer_in_idx == -1)
             goto e2;
@@ -287,7 +288,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
         .descr = "analyze_packet",
         .arg = (void *)pvt->pub.analyzer,
         .key = (void *)pvt,
-        .enqueue = (ap->pipe_type == PIPE_RTP) ? &analyze_rtp_packet : &analyze_rtcp_packet,
+        .enqueue = (pap->pipe_type == PIPE_RTP) ? &analyze_rtp_packet : &analyze_rtcp_packet,
     };
     if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_ANALYZE, &analyze_packet_poi) < 0)
         goto e2;
@@ -307,18 +308,18 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
         goto e3;
     }
     RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->rem_addr);
-    pvt->proc_servers = ap->proc_servers;
-    RTPP_OBJ_BORROW(&pvt->pub, ap->proc_servers);
-    pvt->rtpp_stats = ap->rtpp_stats;
+    pvt->proc_servers = pap->proc_servers;
+    RTPP_OBJ_BORROW(&pvt->pub, pap->proc_servers);
+    pvt->rtpp_stats = pap->rtpp_stats;
     pvt->pub.side = ap->side;
-    pvt->pub.pipe_type = ap->pipe_type;
+    pvt->pub.pipe_type = pap->pipe_type;
 
-    pvt->pub.stuid = CALL_SMETHOD(ap->guid, gen);
-    pvt->pub.seuid = ap->seuid;
-    for (unsigned int i = 0; i < ap->nmodules; i++) {
+    pvt->pub.stuid = CALL_SMETHOD(pap->guid, gen);
+    pvt->pub.seuid = pap->seuid;
+    for (unsigned int i = 0; i < pap->nmodules; i++) {
         atomic_init(&(pvt->pmod_data.adp[i]), NULL);
     }
-    pvt->pmod_data.nmodules = ap->nmodules;
+    pvt->pmod_data.nmodules = pap->nmodules;
     pvt->pub.pmod_datap = &(pvt->pmod_data);
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_stream_dtor);
     return (&pvt->pub);
@@ -326,7 +327,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
 e3:
     CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt);
 e2:
-    if (ap->pipe_type == PIPE_RTP) {
+    if (pap->pipe_type == PIPE_RTP) {
         CALL_SMETHOD(pvt->pub.pproc_manager, unreg, pvt + 1);
     }
 e1:
