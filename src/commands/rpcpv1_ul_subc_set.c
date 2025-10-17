@@ -28,8 +28,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "config.h"
+
 #include "rtpp_codeptr.h"
 #include "rtpp_types.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_log.h"
+#include "rtpp_log_obj.h"
+#include "rtpp_pipe.h"
+#include "rtpp_socket.h"
+#include "rtpp_session.h"
 #include "rtpp_stream.h"
 #include "rtpp_ttl.h"
 #include "rtpp_command.h"
@@ -38,6 +46,25 @@
 #include "rtpp_command_private.h"
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc_set.h"
+
+static int
+strmp_settos(const struct rtpp_subc_ctx *rscp, struct rtpp_stream *strmp, int val)
+{
+    if (strmp->laddr->sa_family != AF_INET)
+        return (-1);
+    struct rtpp_socket *fd = CALL_SMETHOD(strmp, get_skt, HEREVAL);
+    if (fd == NULL)
+        goto out;
+    int tres = CALL_SMETHOD(fd, settos, val);
+    RTPP_OBJ_DECREF(fd);
+    if (tres == -1) {
+        RTPP_ELOG(rscp->log, RTPP_LOG_ERR, "unable to set TOS to %d", val);
+        return (-1);
+    }
+out:
+    strmp->tos = val;
+    return (0);
+}
 
 int
 rtpp_subcommand_set_handler(const struct after_success_h_args *ashap,
@@ -66,6 +93,16 @@ rtpp_subcommand_set_handler(const struct after_success_h_args *ashap,
     case SET_PRM_TTL:
         strmp->stream_ttl = tap->val;
         CALL_SMETHOD(strmp->ttl, reset_with, tap->val);
+        break;
+
+    case SET_PRM_TOS:
+        if (strmp_settos(rscp, strmp, tap->val) != 0)
+            return (-1);
+        struct rtpp_stream_pair rtcp = get_rtcp_pair(rscp->sessp, strmp);
+        if (rtcp.ret != 0 || rtcp.in == NULL)
+            break;
+        if (strmp_settos(rscp, rtcp.in, tap->val) != 0)
+            return (-1);
         break;
 
     default:

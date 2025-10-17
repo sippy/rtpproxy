@@ -57,12 +57,26 @@ struct rtpp_session {
     struct rtpp_refcnt *rcnt;
 };
 
+struct rtpp_session_ctor_args {
+    const struct rtpp_cfg *cfs;
+    struct common_cmd_args *ccap;
+    const struct rtpp_timestamp *dtime;
+    const struct sockaddr **lia;
+    int weak;
+};
+
+struct rtpp_stream_pair {
+    struct rtpp_stream *in;
+    struct rtpp_stream *out;
+    int ret;
+};
+
 struct rtpp_cfg;
 
 int compare_session_tags(const rtpp_str_t *, const rtpp_str_t *, unsigned *);
 int find_stream(const struct rtpp_cfg *, const rtpp_str_t *, const rtpp_str_t *,
   const rtpp_str_t *, struct rtpp_session **);
+struct rtpp_stream_pair get_rtcp_pair(const struct rtpp_session *,
+  const struct rtpp_stream *) RTPP_EXPORT;
 
-struct rtpp_session *rtpp_session_ctor(const struct rtpp_cfg *,
-  struct common_cmd_args *, const struct rtpp_timestamp *,
-  const struct sockaddr **, int, int, struct rtpp_socket **);
+struct rtpp_session *rtpp_session_ctor(const struct rtpp_session_ctor_args *);

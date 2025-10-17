@@ -42,6 +42,7 @@ struct remote_copy_args {
     const struct sockaddr *laddr;
     int lport;
     struct rtpp_socket *fds[2];
+    int tos;
 };
 
 DECLARE_CLASS(rtpp_record, const struct rtpp_cfg *, const struct remote_copy_args *, struct rtpp_session *,

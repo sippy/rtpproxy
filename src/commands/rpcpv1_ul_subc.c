@@ -81,11 +81,15 @@ handle_set_subc_parse(const struct rtpp_cfg *cfsp, const char *cp,
     } else {
         set_arg.direction = SET_FORWARD;
     }
-    if (strcmp(v->s, "ttl=") != 0) {
+    if (strcmp(v->s, "ttl=") == 0) {
+        set_arg.param = SET_PRM_TTL;
+        cp = v->s + 4;
+    } else if (strcmp(v->s, "tos=") == 0) {
+        set_arg.param = SET_PRM_TOS;
+        cp = v->s + 4;
+    } else {
         return (-1);
     }
-    set_arg.param = SET_PRM_TTL;
-    cp = v->s + 4;
     if (atoi_safe(cp, &set_arg.val) != ATOI_OK)
         return (-1);
     if (set_arg.val <= 0)
