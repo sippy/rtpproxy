@@ -6,7 +6,8 @@ include $(top_srcdir)/autosrc/Makefile.ami
 UCL_DIR=$(top_srcdir)/external/libucl
 UCL_SDIR=$(UCL_DIR)/src
 
-noinst_LTLIBRARIES = libucl.la libucl_debug.la
+noinst_LTLIBRARIES = libucl.la
+
 libucl_la_SOURCES = $(UCL_SDIR)/ucl_emitter_streamline.c \
   $(UCL_SDIR)/ucl_emitter_utils.c \
   $(UCL_SDIR)/ucl_emitter.c \
@@ -39,5 +40,12 @@ libucl_test_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
   $(MAINSRCDIR)/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
-libucl_test_LDADD=libucl_debug.la $(RTPP_MEMDEB_LDADD)
+libucl_test_LDADD=$(RTPP_MEMDEB_LDADD)
 libucl_test_LDLAGS=$(LTO_FLAG)
+
+if ENABLE_debug
+noinst_LTLIBRARIES += libucl_debug.la
+libucl_test_LDADD += libucl_debug.la
+else
+libucl_test_LDADD += libucl.la
+endif

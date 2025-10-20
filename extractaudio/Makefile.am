@@ -6,7 +6,9 @@ include $(top_srcdir)/autosrc/Makefile.ami
 
 bin_PROGRAMS=extractaudio
 if ENABLE_noinst
+if ENABLE_debug
 noinst_PROGRAMS=extractaudio_debug
+endif
 endif
 
 extractaudio_BASESOURCES=extractaudio.c decoder.c rtpp_loader.c $(MAINSRCDIR)/rtp.c \

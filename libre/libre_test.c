@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "re_types.h"
@@ -21,15 +22,20 @@
 #include "re_udp.h"
 #include "ice/ice.h"
 
+#ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
 #include "libexecinfo/stacktraverse.h"
 #include "libexecinfo/execinfo.h"
+#endif
+
 #include "rtpp_command_args.h"
 
 #include "rtpp_re.h"
 
+#ifdef RTPP_CHECK_LEAKS
 RTPP_MEMDEB_STATIC(libre);
 RTPP_MEMDEB_STATIC(libre_test);
+#endif
 
 //typedef int udp_helper_send_h;
 //typedef int udp_helper_recv_h;
@@ -83,8 +89,10 @@ main(int argc, char **argv)
     uint64_t tiebrk = 1;
     struct ice_cand_attr cand;
 
+#ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_INIT(libre);
     RTPP_MEMDEB_INIT1(libre_test);
+#endif
 
     void *sock = mem_zalloc(1, NULL);
 #if 0
@@ -108,8 +116,10 @@ main(int argc, char **argv)
     icem_stund_recv(comp, &src, req, 0);
 #endif
     int ecode = 0;
+#ifdef RTPP_CHECK_LEAKS
     if ((rtpp_memdeb_dumpstats(_libre_memdeb, 0) != 0) || (rtpp_memdeb_dumpstats(_libre_test_memdeb, 0) != 0))
         ecode = 1;
+#endif
 
     return (ecode);
 }

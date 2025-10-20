@@ -135,6 +135,11 @@ AC_ARG_ENABLE([noinst],
   [ENABLE_noinst=$enableval],
   [ENABLE_noinst=yes])
 
+AC_ARG_ENABLE([debug],
+  AS_HELP_STRING([--enable-debug],[Enable building debug binaries (default is yes)]),
+  [ENABLE_debug=$enableval],
+  [ENABLE_debug=yes])
+
 AC_ARG_ENABLE([silent],
   AS_HELP_STRING([--enable-silent],[Less verbose build]),
   [ENABLE_SILENT=$enableval],
@@ -495,6 +500,7 @@ AM_CONDITIONAL(ENABLE_LTO, [test "x${ENABLE_LTO}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBRTPPROXY, [test "x${ENABLE_LIBRTPPROXY}" = "xyes" ])
 AM_CONDITIONAL(ENABLE_LIBUNWIND, [test "${ENABLE_LIBUNWIND}" = 1 ])
 AM_CONDITIONAL(ENABLE_noinst, [test "x${ENABLE_noinst}" = "xyes" ])
+AM_CONDITIONAL(ENABLE_debug, [test "x${ENABLE_debug}" = "xyes" ])
 AM_CONDITIONAL([TESTS_EXIST], [test -d "$srcdir/tests"])
 
 if test "${ENABLE_SILENT}" = "yes"

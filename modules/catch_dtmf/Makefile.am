@@ -3,7 +3,11 @@ include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
 include $(top_srcdir)/m4/rtpp_module.ami
 
-pkglib_LTLIBRARIES = rtpp_catch_dtmf.la rtpp_catch_dtmf_debug.la
+pkglib_LTLIBRARIES = rtpp_catch_dtmf.la
+
+if ENABLE_debug
+pkglib_LTLIBRARIES += rtpp_catch_dtmf_debug.la
+endif
 
 noinst_LTLIBRARIES = librtpp_catch_dtmf.la
 

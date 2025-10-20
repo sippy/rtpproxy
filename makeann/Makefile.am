@@ -5,7 +5,9 @@ include $(top_srcdir)/autosrc/Makefile.ami
 
 bin_PROGRAMS=makeann
 if ENABLE_noinst
+if ENABLE_debug
 noinst_PROGRAMS=makeann_debug
+endif
 endif
 
 extractaudio_SRCDIR=$(top_srcdir)/extractaudio

@@ -91,7 +91,7 @@ CXXFLAGS="${CXXFLAGS} -DRTPP_DEBUG_refcnt=1"
 
 if ! AR="${AR}" RANLIB="${RANLIB}" NM="${NM}" STRIP="${STRIP}" \
  LDFLAGS="${LDFLAGS}" CFLAGS="${CFLAGS}" ./configure --enable-librtpproxy \
-  --enable-lto --enable-silent --enable-noinst=no
+  --enable-lto --enable-silent --disable-noinst --disable-debug
 then
   cat config.log
   exit 1

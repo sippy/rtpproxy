@@ -6,7 +6,8 @@ include $(top_srcdir)/autosrc/Makefile.ami
 RE_DIR=$(top_srcdir)/external/libre
 RE_SDIR=$(RE_DIR)/src
 
-noinst_LTLIBRARIES = libre.la libre_debug.la
+noinst_LTLIBRARIES = libre.la
+
 libre_la_SOURCES = $(RE_SDIR)/stun/stun.c $(RE_SDIR)/stun/stun.h \
   $(RE_SDIR)/stun/ctrans.c $(RE_SDIR)/stun/msg.c $(RE_SDIR)/stun/hdr.c \
   $(RE_SDIR)/stun/rep.c $(RE_SDIR)/stun/attr.c $(RE_SDIR)/stun/addr.c \
@@ -27,18 +28,32 @@ CPPFLAGS_libre_common = -I$(RE_DIR)/include -I$(RE_SDIR) \
   -DUSE_OPENSSL
 libre_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_libre_common)
 libre_la_CPPFLAGS = $(CPPFLAGS_libre_common)
+libre_la_LIBADD = $(LIB_CRYPTO)
 libre_debug_la_SOURCES = $(libre_la_SOURCES)
 libre_debug_la_CPPFLAGS = $(CPPFLAGS_libre_common) -DRTPP_MEMDEB_FREE_NULL \
   $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libre
 libre_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_libre_common) $(RTPP_MEMDEB_CFLAGS)
+libre_debug_la_LIBADD = $(libre_la_LIBADD)
 
 if ENABLE_noinst
 noinst_PROGRAMS = libre_test
 endif
-libre_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libre_test \
+
+libre_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup \
   $(CPPFLAGS_libre_common)
-libre_test_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
-libre_test_SOURCES = libre_test.c \
-  $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
-libre_test_LDADD=libre_debug.la $(RTPP_MEMDEB_LDADD) $(LIB_CRYPTO)
-libre_test_LDLAGS=$(LTO_FLAG)
+libre_test_CFLAGS = $(LTO_FLAG)
+libre_test_SOURCES = libre_test.c
+libre_test_LDLAGS = $(LTO_FLAG)
+
+if ENABLE_debug
+noinst_LTLIBRARIES += libre_debug.la
+libre_test_CPPFLAGS += $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libre_test
+libre_test_SOURCES += $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
+libre_test_CFLAGS += $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+libre_test_LDADD = $(RTPP_MEMDEB_LDADD) libre_debug.la
+else
+libre_test_CPPFLAGS += -I$(RTPP_AUTOSRC_DIR)
+libre_test_SOURCES += $(top_srcdir)/src/rtpp_mallocs.c \
+  $(top_srcdir)/src/rtpp_refcnt.c
+libre_test_LDADD = libre.la
+endif

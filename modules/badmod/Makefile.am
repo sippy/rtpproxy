@@ -3,10 +3,13 @@ include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
 include $(top_srcdir)/m4/rtpp_module.ami
 
-pkglib_LTLIBRARIES = rtpp_badmod1.la rtpp_badmod1_debug.la \
- rtpp_badmod2.la rtpp_badmod2_debug.la \
- rtpp_badmod3.la rtpp_badmod3_debug.la \
- rtpp_badmod4.la rtpp_badmod4_debug.la
+pkglib_LTLIBRARIES = rtpp_badmod1.la rtpp_badmod2.la \
+ rtpp_badmod3.la rtpp_badmod4.la
+
+if ENABLE_debug
+pkglib_LTLIBRARIES += rtpp_badmod1_debug.la \
+ rtpp_badmod2_debug.la rtpp_badmod3_debug.la rtpp_badmod4_debug.la
+endif
 
 rtpp_badmod1_la_SOURCES = rtpp_badmod1.c
 rtpp_badmod1_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)

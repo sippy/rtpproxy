@@ -3,7 +3,11 @@ include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
 include $(top_srcdir)/m4/rtpp_module.ami
 
-pkglib_LTLIBRARIES = rtpp_ice_lite.la rtpp_ice_lite_debug.la
+pkglib_LTLIBRARIES = rtpp_ice_lite.la
+
+if ENABLE_debug
+pkglib_LTLIBRARIES += rtpp_ice_lite_debug.la
+endif
 
 noinst_LTLIBRARIES = librtpp_ice_lite.la
 

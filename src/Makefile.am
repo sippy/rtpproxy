@@ -4,9 +4,12 @@ include $(top_srcdir)/m4/ccflags.ami
 include $(top_srcdir)/m4/coverage.ami
 include $(top_srcdir)/autosrc/Makefile.ami
 
-bin_PROGRAMS=rtpproxy rtpproxy_debug
+bin_PROGRAMS=rtpproxy
 if ENABLE_noinst
 noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_rzmalloc_perf_debug rtpp_fintest
+endif
+if ENABLE_debug
+bin_PROGRAMS += rtpproxy_debug
 endif
 if ENABLE_LIBRTPPROXY
 lib_LTLIBRARIES = librtpproxy.la
