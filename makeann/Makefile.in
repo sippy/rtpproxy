@@ -92,7 +92,8 @@ build_triplet = @build@
 host_triplet = @host@
 @ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
 bin_PROGRAMS = makeann$(EXEEXT)
-@ENABLE_noinst_TRUE@noinst_PROGRAMS = makeann_debug$(EXEEXT)
+@ENABLE_debug_TRUE@@ENABLE_noinst_TRUE@noinst_PROGRAMS =  \
+@ENABLE_debug_TRUE@@ENABLE_noinst_TRUE@	makeann_debug$(EXEEXT)
 subdir = makeann
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \

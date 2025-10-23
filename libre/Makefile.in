@@ -93,6 +93,14 @@ build_triplet = @build@
 host_triplet = @host@
 @ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
 @ENABLE_noinst_TRUE@noinst_PROGRAMS = libre_test$(EXEEXT)
+@ENABLE_debug_TRUE@am__append_2 = libre_debug.la
+@ENABLE_debug_TRUE@am__append_3 = $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libre_test
+@ENABLE_debug_TRUE@am__append_4 = $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
+@ENABLE_debug_TRUE@am__append_5 = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+@ENABLE_debug_FALSE@am__append_6 = -I$(RTPP_AUTOSRC_DIR)
+@ENABLE_debug_FALSE@am__append_7 = $(top_srcdir)/src/rtpp_mallocs.c \
+@ENABLE_debug_FALSE@  $(top_srcdir)/src/rtpp_refcnt.c
+
 subdir = libre
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
@@ -111,7 +119,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-libre_la_LIBADD =
+am__DEPENDENCIES_1 =
+libre_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__dirstamp = $(am__leading_dot)dirstamp
 am_libre_la_OBJECTS = $(RE_SDIR)/stun/libre_la-stun.lo \
 	$(RE_SDIR)/stun/libre_la-ctrans.lo \
@@ -151,7 +160,8 @@ am__v_lt_1 =
 libre_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libre_la_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-libre_debug_la_LIBADD =
+am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+libre_debug_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am__objects_1 = $(RE_SDIR)/stun/libre_debug_la-stun.lo \
 	$(RE_SDIR)/stun/libre_debug_la-ctrans.lo \
 	$(RE_SDIR)/stun/libre_debug_la-msg.lo \
@@ -190,6 +200,23 @@ libre_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(libre_debug_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
 	$@
+@ENABLE_debug_TRUE@am_libre_debug_la_rpath =
+am__libre_test_SOURCES_DIST = libre_test.c $(MAINSRCDIR)/rtpp_memdeb.c \
+	$(MAINSRCDIR)/rtpp_memdeb.h \
+	$(MAINSRCDIR)/rtpp_memdeb_internal.h \
+	$(MAINSRCDIR)/rtpp_glitch.c $(MAINSRCDIR)/rtpp_glitch.h \
+	$(MAINSRCDIR)/rtpp_codeptr.h $(MAINSRCDIR)/rtpp_autoglitch.c \
+	$(MAINSRCDIR)/rtpp_autoglitch.h $(MAINSRCDIR)/rtpp_debugon.h \
+	$(MAINSRCDIR)/rtpp_refcnt.c $(MAINSRCDIR)/rtpp_refcnt.h \
+	$(MAINSRCDIR)/rtpp_threads.h $(MAINSRCDIR)/rtpp_threads.c \
+	$(MAINSRCDIR)/rtpp_mallocs.c $(MAINSRCDIR)/rtpp_mallocs.h \
+	$(MAINSRCDIR)/rtpp_stacktrace.c \
+	$(MAINSRCDIR)/rtpp_stacktrace.h $(MAINSRCDIR)/rtpp_coverage.c \
+	$(MAINSRCDIR)/rtpp_coverage.h \
+	$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.h \
+	$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c \
+	$(top_srcdir)/src/rtpp_mallocs.c \
+	$(top_srcdir)/src/rtpp_refcnt.c
 am__objects_2 = $(MAINSRCDIR)/libre_test-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/libre_test-rtpp_glitch.$(OBJEXT) \
 	$(MAINSRCDIR)/libre_test-rtpp_autoglitch.$(OBJEXT) \
@@ -200,13 +227,16 @@ am__objects_2 = $(MAINSRCDIR)/libre_test-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/libre_test-rtpp_coverage.$(OBJEXT)
 am__objects_3 =  \
 	$(RTPP_AUTOSRC_DIR)/libre_test-rtpp_refcnt_fin.$(OBJEXT)
+@ENABLE_debug_TRUE@am__objects_4 = $(am__objects_2) $(am__objects_3)
+@ENABLE_debug_FALSE@am__objects_5 = $(top_builddir)/src/libre_test-rtpp_mallocs.$(OBJEXT) \
+@ENABLE_debug_FALSE@	$(top_builddir)/src/libre_test-rtpp_refcnt.$(OBJEXT)
 am_libre_test_OBJECTS = libre_test-libre_test.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_3)
+	$(am__objects_4) $(am__objects_5)
 libre_test_OBJECTS = $(am_libre_test_OBJECTS)
-am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.la
-am__DEPENDENCIES_2 =
-libre_test_DEPENDENCIES = libre_debug.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_2)
+am__DEPENDENCIES_3 = $(top_srcdir)/libexecinfo/libexecinfo.la
+@ENABLE_debug_FALSE@libre_test_DEPENDENCIES = libre.la
+@ENABLE_debug_TRUE@libre_test_DEPENDENCIES = $(am__DEPENDENCIES_3) \
+@ENABLE_debug_TRUE@	libre_debug.la
 libre_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libre_test_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -294,6 +324,8 @@ am__depfiles_remade =  \
 	$(RE_SDIR)/sys/$(DEPDIR)/libre_la-endian.Plo \
 	$(RE_SDIR)/sys/$(DEPDIR)/libre_la-rand.Plo \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libre_test-rtpp_refcnt_fin.Po \
+	$(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Po \
+	$(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Po \
 	./$(DEPDIR)/libre_debug_la-rtpp_re.Plo \
 	./$(DEPDIR)/libre_debug_la-rtpp_re_dbg.Plo \
 	./$(DEPDIR)/libre_debug_la-rtpp_re_icesdp.Plo \
@@ -325,7 +357,7 @@ am__v_CCLD_1 =
 SOURCES = $(libre_la_SOURCES) $(libre_debug_la_SOURCES) \
 	$(libre_test_SOURCES)
 DIST_SOURCES = $(libre_la_SOURCES) $(libre_debug_la_SOURCES) \
-	$(libre_test_SOURCES)
+	$(am__libre_test_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -573,7 +605,7 @@ rtpp_command_reply_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.h $(RTP
 rtpp_genuid_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.c
 RE_DIR = $(top_srcdir)/external/libre
 RE_SDIR = $(RE_DIR)/src
-noinst_LTLIBRARIES = libre.la libre_debug.la
+noinst_LTLIBRARIES = libre.la $(am__append_2)
 libre_la_SOURCES = $(RE_SDIR)/stun/stun.c $(RE_SDIR)/stun/stun.h \
   $(RE_SDIR)/stun/ctrans.c $(RE_SDIR)/stun/msg.c $(RE_SDIR)/stun/hdr.c \
   $(RE_SDIR)/stun/rep.c $(RE_SDIR)/stun/attr.c $(RE_SDIR)/stun/addr.c \
@@ -597,20 +629,20 @@ CPPFLAGS_libre_common = -I$(RE_DIR)/include -I$(RE_SDIR) \
 
 libre_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_libre_common)
 libre_la_CPPFLAGS = $(CPPFLAGS_libre_common)
+libre_la_LIBADD = $(LIB_CRYPTO)
 libre_debug_la_SOURCES = $(libre_la_SOURCES)
 libre_debug_la_CPPFLAGS = $(CPPFLAGS_libre_common) -DRTPP_MEMDEB_FREE_NULL \
   $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libre
 
 libre_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_libre_common) $(RTPP_MEMDEB_CFLAGS)
-libre_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libre_test \
-  $(CPPFLAGS_libre_common)
-
-libre_test_CFLAGS = $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
-libre_test_SOURCES = libre_test.c \
-  $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
-
-libre_test_LDADD = libre_debug.la $(RTPP_MEMDEB_LDADD) $(LIB_CRYPTO)
+libre_debug_la_LIBADD = $(libre_la_LIBADD)
+libre_test_CPPFLAGS = -DMODULE_IF_CODE -Dmod_strdup=strdup \
+	$(CPPFLAGS_libre_common) $(am__append_3) $(am__append_6)
+libre_test_CFLAGS = $(LTO_FLAG) $(am__append_5)
+libre_test_SOURCES = libre_test.c $(am__append_4) $(am__append_7)
 libre_test_LDLAGS = $(LTO_FLAG)
+@ENABLE_debug_FALSE@libre_test_LDADD = libre.la
+@ENABLE_debug_TRUE@libre_test_LDADD = $(RTPP_MEMDEB_LDADD) libre_debug.la
 all: all-am
 
 .SUFFIXES:
@@ -864,7 +896,7 @@ $(RE_SDIR)/sa/libre_debug_la-pton.lo: $(RE_SDIR)/sa/$(am__dirstamp) \
 	$(RE_SDIR)/sa/$(DEPDIR)/$(am__dirstamp)
 
 libre_debug.la: $(libre_debug_la_OBJECTS) $(libre_debug_la_DEPENDENCIES) $(EXTRA_libre_debug_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libre_debug_la_LINK)  $(libre_debug_la_OBJECTS) $(libre_debug_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(libre_debug_la_LINK) $(am_libre_debug_la_rpath) $(libre_debug_la_OBJECTS) $(libre_debug_la_LIBADD) $(LIBS)
 $(MAINSRCDIR)/$(am__dirstamp):
 	@$(MKDIR_P) $(MAINSRCDIR)
 	@: >>$(MAINSRCDIR)/$(am__dirstamp)
@@ -904,6 +936,18 @@ $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp):
 $(RTPP_AUTOSRC_DIR)/libre_test-rtpp_refcnt_fin.$(OBJEXT):  \
 	$(RTPP_AUTOSRC_DIR)/$(am__dirstamp) \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
+$(top_builddir)/src/$(am__dirstamp):
+	@$(MKDIR_P) $(top_builddir)/src
+	@: >>$(top_builddir)/src/$(am__dirstamp)
+$(top_builddir)/src/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(top_builddir)/src/$(DEPDIR)
+	@: >>$(top_builddir)/src/$(DEPDIR)/$(am__dirstamp)
+$(top_builddir)/src/libre_test-rtpp_mallocs.$(OBJEXT):  \
+	$(top_builddir)/src/$(am__dirstamp) \
+	$(top_builddir)/src/$(DEPDIR)/$(am__dirstamp)
+$(top_builddir)/src/libre_test-rtpp_refcnt.$(OBJEXT):  \
+	$(top_builddir)/src/$(am__dirstamp) \
+	$(top_builddir)/src/$(DEPDIR)/$(am__dirstamp)
 
 libre_test$(EXEEXT): $(libre_test_OBJECTS) $(libre_test_DEPENDENCIES) $(EXTRA_libre_test_DEPENDENCIES) 
 	@rm -f libre_test$(EXEEXT)
@@ -933,6 +977,7 @@ mostlyclean-compile:
 	-rm -f $(RE_SDIR)/sys/*.$(OBJEXT)
 	-rm -f $(RE_SDIR)/sys/*.lo
 	-rm -f $(RTPP_AUTOSRC_DIR)/*.$(OBJEXT)
+	-rm -f $(top_builddir)/src/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -1006,6 +1051,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(RE_SDIR)/sys/$(DEPDIR)/libre_la-endian.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RE_SDIR)/sys/$(DEPDIR)/libre_la-rand.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libre_test-rtpp_refcnt_fin.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libre_debug_la-rtpp_re.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libre_debug_la-rtpp_re_dbg.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libre_debug_la-rtpp_re_icesdp.Plo@am__quote@ # am--include-marker
@@ -1662,6 +1709,34 @@ $(RTPP_AUTOSRC_DIR)/libre_test-rtpp_refcnt_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_ref
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libre_test_CPPFLAGS) $(CPPFLAGS) $(libre_test_CFLAGS) $(CFLAGS) -c -o $(RTPP_AUTOSRC_DIR)/libre_test-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
 
+$(top_builddir)/src/libre_test-rtpp_mallocs.o: $(top_builddir)/src/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libre_test_CPPFLAGS) $(CPPFLAGS) $(libre_test_CFLAGS) $(CFLAGS) -MT $(top_builddir)/src/libre_test-rtpp_mallocs.o -MD -MP -MF $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Tpo -c -o $(top_builddir)/src/libre_test-rtpp_mallocs.o `test -f '$(top_builddir)/src/rtpp_mallocs.c' || echo '$(srcdir)/'`$(top_builddir)/src/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Tpo $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_builddir)/src/rtpp_mallocs.c' object='$(top_builddir)/src/libre_test-rtpp_mallocs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libre_test_CPPFLAGS) $(CPPFLAGS) $(libre_test_CFLAGS) $(CFLAGS) -c -o $(top_builddir)/src/libre_test-rtpp_mallocs.o `test -f '$(top_builddir)/src/rtpp_mallocs.c' || echo '$(srcdir)/'`$(top_builddir)/src/rtpp_mallocs.c
+
+$(top_builddir)/src/libre_test-rtpp_mallocs.obj: $(top_builddir)/src/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libre_test_CPPFLAGS) $(CPPFLAGS) $(libre_test_CFLAGS) $(CFLAGS) -MT $(top_builddir)/src/libre_test-rtpp_mallocs.obj -MD -MP -MF $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Tpo -c -o $(top_builddir)/src/libre_test-rtpp_mallocs.obj `if test -f '$(top_builddir)/src/rtpp_mallocs.c'; then $(CYGPATH_W) '$(top_builddir)/src/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/src/rtpp_mallocs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Tpo $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_builddir)/src/rtpp_mallocs.c' object='$(top_builddir)/src/libre_test-rtpp_mallocs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libre_test_CPPFLAGS) $(CPPFLAGS) $(libre_test_CFLAGS) $(CFLAGS) -c -o $(top_builddir)/src/libre_test-rtpp_mallocs.obj `if test -f '$(top_builddir)/src/rtpp_mallocs.c'; then $(CYGPATH_W) '$(top_builddir)/src/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/src/rtpp_mallocs.c'; fi`
+
+$(top_builddir)/src/libre_test-rtpp_refcnt.o: $(top_builddir)/src/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libre_test_CPPFLAGS) $(CPPFLAGS) $(libre_test_CFLAGS) $(CFLAGS) -MT $(top_builddir)/src/libre_test-rtpp_refcnt.o -MD -MP -MF $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Tpo -c -o $(top_builddir)/src/libre_test-rtpp_refcnt.o `test -f '$(top_builddir)/src/rtpp_refcnt.c' || echo '$(srcdir)/'`$(top_builddir)/src/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Tpo $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_builddir)/src/rtpp_refcnt.c' object='$(top_builddir)/src/libre_test-rtpp_refcnt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libre_test_CPPFLAGS) $(CPPFLAGS) $(libre_test_CFLAGS) $(CFLAGS) -c -o $(top_builddir)/src/libre_test-rtpp_refcnt.o `test -f '$(top_builddir)/src/rtpp_refcnt.c' || echo '$(srcdir)/'`$(top_builddir)/src/rtpp_refcnt.c
+
+$(top_builddir)/src/libre_test-rtpp_refcnt.obj: $(top_builddir)/src/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libre_test_CPPFLAGS) $(CPPFLAGS) $(libre_test_CFLAGS) $(CFLAGS) -MT $(top_builddir)/src/libre_test-rtpp_refcnt.obj -MD -MP -MF $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Tpo -c -o $(top_builddir)/src/libre_test-rtpp_refcnt.obj `if test -f '$(top_builddir)/src/rtpp_refcnt.c'; then $(CYGPATH_W) '$(top_builddir)/src/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/src/rtpp_refcnt.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Tpo $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_builddir)/src/rtpp_refcnt.c' object='$(top_builddir)/src/libre_test-rtpp_refcnt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libre_test_CPPFLAGS) $(CPPFLAGS) $(libre_test_CFLAGS) $(CFLAGS) -c -o $(top_builddir)/src/libre_test-rtpp_refcnt.obj `if test -f '$(top_builddir)/src/rtpp_refcnt.c'; then $(CYGPATH_W) '$(top_builddir)/src/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/src/rtpp_refcnt.c'; fi`
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -1817,6 +1892,8 @@ distclean-generic:
 	-$(am__rm_f) $(RE_SDIR)/sys/$(am__dirstamp)
 	-$(am__rm_f) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
 	-$(am__rm_f) $(RTPP_AUTOSRC_DIR)/$(am__dirstamp)
+	-$(am__rm_f) $(top_builddir)/src/$(DEPDIR)/$(am__dirstamp)
+	-$(am__rm_f) $(top_builddir)/src/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1896,6 +1973,8 @@ distclean: distclean-am
 	-rm -f $(RE_SDIR)/sys/$(DEPDIR)/libre_la-endian.Plo
 	-rm -f $(RE_SDIR)/sys/$(DEPDIR)/libre_la-rand.Plo
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libre_test-rtpp_refcnt_fin.Po
+	-rm -f $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Po
+	-rm -f $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Po
 	-rm -f ./$(DEPDIR)/libre_debug_la-rtpp_re.Plo
 	-rm -f ./$(DEPDIR)/libre_debug_la-rtpp_re_dbg.Plo
 	-rm -f ./$(DEPDIR)/libre_debug_la-rtpp_re_icesdp.Plo
@@ -2019,6 +2098,8 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(RE_SDIR)/sys/$(DEPDIR)/libre_la-endian.Plo
 	-rm -f $(RE_SDIR)/sys/$(DEPDIR)/libre_la-rand.Plo
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libre_test-rtpp_refcnt_fin.Po
+	-rm -f $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_mallocs.Po
+	-rm -f $(top_builddir)/src/$(DEPDIR)/libre_test-rtpp_refcnt.Po
 	-rm -f ./$(DEPDIR)/libre_debug_la-rtpp_re.Plo
 	-rm -f ./$(DEPDIR)/libre_debug_la-rtpp_re_dbg.Plo
 	-rm -f ./$(DEPDIR)/libre_debug_la-rtpp_re_icesdp.Plo

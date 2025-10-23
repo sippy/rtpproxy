@@ -91,6 +91,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
+@ENABLE_debug_TRUE@am__append_2 = rtpp_dtls_gw_debug.la
 subdir = modules/dtls_gw
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
@@ -175,6 +176,8 @@ rtpp_dtls_gw_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_dtls_gw_debug_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_dtls_gw_debug_la_LDFLAGS) $(LDFLAGS) -o $@
+@ENABLE_debug_TRUE@am_rtpp_dtls_gw_debug_la_rpath = -rpath \
+@ENABLE_debug_TRUE@	$(pkglibdir)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -472,7 +475,7 @@ rtpp_refproxy_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.h $(RTPP_AUTOSRC_
 rtpp_command_reply_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.c
 rtpp_genuid_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.c
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
-pkglib_LTLIBRARIES = rtpp_dtls_gw.la rtpp_dtls_gw_debug.la
+pkglib_LTLIBRARIES = rtpp_dtls_gw.la $(am__append_2)
 noinst_LTLIBRARIES = librtpp_dtls_gw.la
 rtpp_dtls_gw_la_SOURCES = rtpp_dtls_gw.c rtpp_dtls.c rtpp_dtls.h \
   rtpp_dtls_conn.c rtpp_dtls_conn.h rtpp_dtls_util.c rtpp_dtls_util.h
@@ -582,7 +585,7 @@ rtpp_dtls_gw.la: $(rtpp_dtls_gw_la_OBJECTS) $(rtpp_dtls_gw_la_DEPENDENCIES) $(EX
 	$(AM_V_CCLD)$(rtpp_dtls_gw_la_LINK) -rpath $(pkglibdir) $(rtpp_dtls_gw_la_OBJECTS) $(rtpp_dtls_gw_la_LIBADD) $(LIBS)
 
 rtpp_dtls_gw_debug.la: $(rtpp_dtls_gw_debug_la_OBJECTS) $(rtpp_dtls_gw_debug_la_DEPENDENCIES) $(EXTRA_rtpp_dtls_gw_debug_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(rtpp_dtls_gw_debug_la_LINK) -rpath $(pkglibdir) $(rtpp_dtls_gw_debug_la_OBJECTS) $(rtpp_dtls_gw_debug_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(rtpp_dtls_gw_debug_la_LINK) $(am_rtpp_dtls_gw_debug_la_rpath) $(rtpp_dtls_gw_debug_la_OBJECTS) $(rtpp_dtls_gw_debug_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

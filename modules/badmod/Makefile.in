@@ -91,6 +91,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
+@ENABLE_debug_TRUE@am__append_2 = rtpp_badmod1_debug.la \
+@ENABLE_debug_TRUE@ rtpp_badmod2_debug.la rtpp_badmod3_debug.la rtpp_badmod4_debug.la
+
 subdir = modules/badmod
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
@@ -155,6 +158,8 @@ rtpp_badmod1_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_badmod1_debug_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_badmod1_debug_la_LDFLAGS) $(LDFLAGS) -o $@
+@ENABLE_debug_TRUE@am_rtpp_badmod1_debug_la_rpath = -rpath \
+@ENABLE_debug_TRUE@	$(pkglibdir)
 rtpp_badmod2_la_LIBADD =
 am_rtpp_badmod2_la_OBJECTS = rtpp_badmod2_la-rtpp_badmod2.lo
 rtpp_badmod2_la_OBJECTS = $(am_rtpp_badmod2_la_OBJECTS)
@@ -171,6 +176,8 @@ rtpp_badmod2_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_badmod2_debug_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_badmod2_debug_la_LDFLAGS) $(LDFLAGS) -o $@
+@ENABLE_debug_TRUE@am_rtpp_badmod2_debug_la_rpath = -rpath \
+@ENABLE_debug_TRUE@	$(pkglibdir)
 rtpp_badmod3_la_LIBADD =
 am_rtpp_badmod3_la_OBJECTS = rtpp_badmod3_la-rtpp_badmod3.lo
 rtpp_badmod3_la_OBJECTS = $(am_rtpp_badmod3_la_OBJECTS)
@@ -186,6 +193,8 @@ rtpp_badmod3_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_badmod3_debug_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_badmod3_debug_la_LDFLAGS) $(LDFLAGS) -o $@
+@ENABLE_debug_TRUE@am_rtpp_badmod3_debug_la_rpath = -rpath \
+@ENABLE_debug_TRUE@	$(pkglibdir)
 rtpp_badmod4_la_LIBADD =
 am_rtpp_badmod4_la_OBJECTS = rtpp_badmod4_la-rtpp_badmod4.lo
 rtpp_badmod4_la_OBJECTS = $(am_rtpp_badmod4_la_OBJECTS)
@@ -201,6 +210,8 @@ rtpp_badmod4_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_badmod4_debug_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_badmod4_debug_la_LDFLAGS) $(LDFLAGS) -o $@
+@ENABLE_debug_TRUE@am_rtpp_badmod4_debug_la_rpath = -rpath \
+@ENABLE_debug_TRUE@	$(pkglibdir)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -499,11 +510,8 @@ rtpp_refproxy_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.h $(RTPP_AUTOSRC_
 rtpp_command_reply_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.c
 rtpp_genuid_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.c
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
-pkglib_LTLIBRARIES = rtpp_badmod1.la rtpp_badmod1_debug.la \
- rtpp_badmod2.la rtpp_badmod2_debug.la \
- rtpp_badmod3.la rtpp_badmod3_debug.la \
- rtpp_badmod4.la rtpp_badmod4_debug.la
-
+pkglib_LTLIBRARIES = rtpp_badmod1.la rtpp_badmod2.la rtpp_badmod3.la \
+	rtpp_badmod4.la $(am__append_2)
 rtpp_badmod1_la_SOURCES = rtpp_badmod1.c
 rtpp_badmod1_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
 rtpp_badmod1_la_CPPFLAGS = -D_BSD_SOURCE
@@ -620,25 +628,25 @@ rtpp_badmod1.la: $(rtpp_badmod1_la_OBJECTS) $(rtpp_badmod1_la_DEPENDENCIES) $(EX
 	$(AM_V_CCLD)$(rtpp_badmod1_la_LINK) -rpath $(pkglibdir) $(rtpp_badmod1_la_OBJECTS) $(rtpp_badmod1_la_LIBADD) $(LIBS)
 
 rtpp_badmod1_debug.la: $(rtpp_badmod1_debug_la_OBJECTS) $(rtpp_badmod1_debug_la_DEPENDENCIES) $(EXTRA_rtpp_badmod1_debug_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(rtpp_badmod1_debug_la_LINK) -rpath $(pkglibdir) $(rtpp_badmod1_debug_la_OBJECTS) $(rtpp_badmod1_debug_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(rtpp_badmod1_debug_la_LINK) $(am_rtpp_badmod1_debug_la_rpath) $(rtpp_badmod1_debug_la_OBJECTS) $(rtpp_badmod1_debug_la_LIBADD) $(LIBS)
 
 rtpp_badmod2.la: $(rtpp_badmod2_la_OBJECTS) $(rtpp_badmod2_la_DEPENDENCIES) $(EXTRA_rtpp_badmod2_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_badmod2_la_LINK) -rpath $(pkglibdir) $(rtpp_badmod2_la_OBJECTS) $(rtpp_badmod2_la_LIBADD) $(LIBS)
 
 rtpp_badmod2_debug.la: $(rtpp_badmod2_debug_la_OBJECTS) $(rtpp_badmod2_debug_la_DEPENDENCIES) $(EXTRA_rtpp_badmod2_debug_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(rtpp_badmod2_debug_la_LINK) -rpath $(pkglibdir) $(rtpp_badmod2_debug_la_OBJECTS) $(rtpp_badmod2_debug_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(rtpp_badmod2_debug_la_LINK) $(am_rtpp_badmod2_debug_la_rpath) $(rtpp_badmod2_debug_la_OBJECTS) $(rtpp_badmod2_debug_la_LIBADD) $(LIBS)
 
 rtpp_badmod3.la: $(rtpp_badmod3_la_OBJECTS) $(rtpp_badmod3_la_DEPENDENCIES) $(EXTRA_rtpp_badmod3_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_badmod3_la_LINK) -rpath $(pkglibdir) $(rtpp_badmod3_la_OBJECTS) $(rtpp_badmod3_la_LIBADD) $(LIBS)
 
 rtpp_badmod3_debug.la: $(rtpp_badmod3_debug_la_OBJECTS) $(rtpp_badmod3_debug_la_DEPENDENCIES) $(EXTRA_rtpp_badmod3_debug_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(rtpp_badmod3_debug_la_LINK) -rpath $(pkglibdir) $(rtpp_badmod3_debug_la_OBJECTS) $(rtpp_badmod3_debug_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(rtpp_badmod3_debug_la_LINK) $(am_rtpp_badmod3_debug_la_rpath) $(rtpp_badmod3_debug_la_OBJECTS) $(rtpp_badmod3_debug_la_LIBADD) $(LIBS)
 
 rtpp_badmod4.la: $(rtpp_badmod4_la_OBJECTS) $(rtpp_badmod4_la_DEPENDENCIES) $(EXTRA_rtpp_badmod4_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(rtpp_badmod4_la_LINK) -rpath $(pkglibdir) $(rtpp_badmod4_la_OBJECTS) $(rtpp_badmod4_la_LIBADD) $(LIBS)
 
 rtpp_badmod4_debug.la: $(rtpp_badmod4_debug_la_OBJECTS) $(rtpp_badmod4_debug_la_DEPENDENCIES) $(EXTRA_rtpp_badmod4_debug_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(rtpp_badmod4_debug_la_LINK) -rpath $(pkglibdir) $(rtpp_badmod4_debug_la_OBJECTS) $(rtpp_badmod4_debug_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(rtpp_badmod4_debug_la_LINK) $(am_rtpp_badmod4_debug_la_rpath) $(rtpp_badmod4_debug_la_OBJECTS) $(rtpp_badmod4_debug_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

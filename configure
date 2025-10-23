@@ -675,6 +675,8 @@ AM_CFLAGS
 subdirs
 TESTS_EXIST_FALSE
 TESTS_EXIST_TRUE
+ENABLE_debug_FALSE
+ENABLE_debug_TRUE
 ENABLE_noinst_FALSE
 ENABLE_noinst_TRUE
 ENABLE_LIBUNWIND_FALSE
@@ -857,6 +859,7 @@ enable_basic_tests
 enable_lto
 enable_librtpproxy
 enable_noinst
+enable_debug
 enable_silent
 enable_static_crypto
 enable_docs
@@ -1521,6 +1524,7 @@ Optional Features:
   --enable-lto            enable LTO (Link-Time Optimization): yes/no/auto
   --enable-librtpproxy    Build librtpproxy for instrumentation
   --enable-noinst         Enable building noinst binaries (default is yes)
+  --enable-debug          Enable building debug binaries (default is yes)
   --enable-silent         Less verbose build
   --enable-static-crypto  Link statically against libssl, libcrypto, libsrtp2
   --enable-docs           enable generation of documentation
@@ -13643,6 +13647,16 @@ esac
 fi
 
 
+# Check whether --enable-debug was given.
+if test ${enable_debug+y}
+then :
+  enableval=$enable_debug; ENABLE_debug=$enableval
+else case e in #(
+  e) ENABLE_debug=yes ;;
+esac
+fi
+
+
 # Check whether --enable-silent was given.
 if test ${enable_silent+y}
 then :
@@ -15852,6 +15866,14 @@ else
   ENABLE_noinst_FALSE=
 fi
 
+ if test "x${ENABLE_debug}" = "xyes" ; then
+  ENABLE_debug_TRUE=
+  ENABLE_debug_FALSE='#'
+else
+  ENABLE_debug_TRUE='#'
+  ENABLE_debug_FALSE=
+fi
+
  if test -d "$srcdir/tests"; then
   TESTS_EXIST_TRUE=
   TESTS_EXIST_FALSE='#'
@@ -16114,6 +16136,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${ENABLE_noinst_TRUE}" && test -z "${ENABLE_noinst_FALSE}"; then
   as_fn_error $? "conditional \"ENABLE_noinst\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${ENABLE_debug_TRUE}" && test -z "${ENABLE_debug_FALSE}"; then
+  as_fn_error $? "conditional \"ENABLE_debug\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${TESTS_EXIST_TRUE}" && test -z "${TESTS_EXIST_FALSE}"; then

@@ -92,7 +92,7 @@ build_triplet = @build@
 host_triplet = @host@
 @ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
 bin_PROGRAMS = extractaudio$(EXEEXT)
-@ENABLE_noinst_TRUE@noinst_PROGRAMS = extractaudio_debug$(EXEEXT)
+@ENABLE_debug_TRUE@@ENABLE_noinst_TRUE@noinst_PROGRAMS = extractaudio_debug$(EXEEXT)
 @BUILD_CRYPTO_TRUE@am__append_2 = eaud_crypto.c eaud_crypto.h srtp_util.c srtp_util.h
 @BUILD_CRYPTO_TRUE@am__append_3 = @LIBS_SRTP@
 subdir = extractaudio

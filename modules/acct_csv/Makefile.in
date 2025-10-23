@@ -91,6 +91,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
+@ENABLE_debug_TRUE@am__append_2 = rtpp_acct_csv_debug.la
 subdir = modules/acct_csv
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
@@ -163,6 +164,8 @@ rtpp_acct_csv_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_acct_csv_debug_la_CFLAGS) $(CFLAGS) \
 	$(rtpp_acct_csv_debug_la_LDFLAGS) $(LDFLAGS) -o $@
+@ENABLE_debug_TRUE@am_rtpp_acct_csv_debug_la_rpath = -rpath \
+@ENABLE_debug_TRUE@	$(pkglibdir)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -451,7 +454,7 @@ rtpp_refproxy_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.h $(RTPP_AUTOSRC_
 rtpp_command_reply_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.c
 rtpp_genuid_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.c
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
-pkglib_LTLIBRARIES = rtpp_acct_csv.la rtpp_acct_csv_debug.la
+pkglib_LTLIBRARIES = rtpp_acct_csv.la $(am__append_2)
 noinst_LTLIBRARIES = librtpp_acct_csv.la
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
 rtpp_acct_csv_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
@@ -551,7 +554,7 @@ rtpp_acct_csv.la: $(rtpp_acct_csv_la_OBJECTS) $(rtpp_acct_csv_la_DEPENDENCIES) $
 	$(AM_V_CCLD)$(rtpp_acct_csv_la_LINK) -rpath $(pkglibdir) $(rtpp_acct_csv_la_OBJECTS) $(rtpp_acct_csv_la_LIBADD) $(LIBS)
 
 rtpp_acct_csv_debug.la: $(rtpp_acct_csv_debug_la_OBJECTS) $(rtpp_acct_csv_debug_la_DEPENDENCIES) $(EXTRA_rtpp_acct_csv_debug_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(rtpp_acct_csv_debug_la_LINK) -rpath $(pkglibdir) $(rtpp_acct_csv_debug_la_OBJECTS) $(rtpp_acct_csv_debug_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(rtpp_acct_csv_debug_la_LINK) $(am_rtpp_acct_csv_debug_la_rpath) $(rtpp_acct_csv_debug_la_OBJECTS) $(rtpp_acct_csv_debug_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

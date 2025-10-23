@@ -93,6 +93,9 @@ build_triplet = @build@
 host_triplet = @host@
 @ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
 @ENABLE_noinst_TRUE@noinst_PROGRAMS = libucl_test$(EXEEXT)
+@ENABLE_debug_TRUE@am__append_2 = libucl_debug.la
+@ENABLE_debug_TRUE@am__append_3 = libucl_debug.la
+@ENABLE_debug_FALSE@am__append_4 = libucl.la
 subdir = libucl
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
@@ -147,6 +150,7 @@ libucl_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(libucl_debug_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+@ENABLE_debug_TRUE@am_libucl_debug_la_rpath =
 am__objects_2 = $(MAINSRCDIR)/libucl_test-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/libucl_test-rtpp_glitch.$(OBJEXT) \
 	$(MAINSRCDIR)/libucl_test-rtpp_autoglitch.$(OBJEXT) \
@@ -163,7 +167,8 @@ am_libucl_test_OBJECTS = libucl_test-libucl_test.$(OBJEXT) \
 	$(am__objects_3)
 libucl_test_OBJECTS = $(am_libucl_test_OBJECTS)
 am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.la
-libucl_test_DEPENDENCIES = libucl_debug.la $(am__DEPENDENCIES_1)
+libucl_test_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__append_3) \
+	$(am__append_4)
 libucl_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libucl_test_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -482,7 +487,7 @@ rtpp_command_reply_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.h $(RTP
 rtpp_genuid_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.c
 UCL_DIR = $(top_srcdir)/external/libucl
 UCL_SDIR = $(UCL_DIR)/src
-noinst_LTLIBRARIES = libucl.la libucl_debug.la
+noinst_LTLIBRARIES = libucl.la $(am__append_2)
 libucl_la_SOURCES = $(UCL_SDIR)/ucl_emitter_streamline.c \
   $(UCL_SDIR)/ucl_emitter_utils.c \
   $(UCL_SDIR)/ucl_emitter.c \
@@ -514,7 +519,8 @@ libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
   $(MAINSRCDIR)/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
 
-libucl_test_LDADD = libucl_debug.la $(RTPP_MEMDEB_LDADD)
+libucl_test_LDADD = $(RTPP_MEMDEB_LDADD) $(am__append_3) \
+	$(am__append_4)
 libucl_test_LDLAGS = $(LTO_FLAG)
 all: all-am
 
@@ -618,7 +624,7 @@ $(UCL_SDIR)/libucl_debug_la-ucl_util.lo: $(UCL_SDIR)/$(am__dirstamp) \
 	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
 
 libucl_debug.la: $(libucl_debug_la_OBJECTS) $(libucl_debug_la_DEPENDENCIES) $(EXTRA_libucl_debug_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libucl_debug_la_LINK)  $(libucl_debug_la_OBJECTS) $(libucl_debug_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(libucl_debug_la_LINK) $(am_libucl_debug_la_rpath) $(libucl_debug_la_OBJECTS) $(libucl_debug_la_LIBADD) $(LIBS)
 $(top_builddir)/modules/acct_rtcp_hep/$(am__dirstamp):
 	@$(MKDIR_P) $(top_builddir)/modules/acct_rtcp_hep
 	@: >>$(top_builddir)/modules/acct_rtcp_hep/$(am__dirstamp)
