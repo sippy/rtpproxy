@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 #
 # Copyright (c) 2015 Sippy Software, Inc. All rights reserved.
 #
@@ -36,7 +36,7 @@ class command_runner(object):
     fin = None
     fout = None
     rval = 0
-    maxfails = 5
+    maxfails = 0
 
     def __init__(self, rc, commands = None, fin = None, fout = None):
         self.responses = []
@@ -62,8 +62,12 @@ class command_runner(object):
                 return
         self.rc.send_command(command, self.got_result)
 
-    def got_result(self, result):
-        if result == None:
+    def got_result(self, result, ex=None):
+        if ex is not None:
+            self.rval = ex
+            ED2.breakLoop()
+            return
+        if result is None:
             if self.maxfails == 0:
                 self.rval = 2
                 ED2.breakLoop()
@@ -148,4 +152,6 @@ if __name__ == '__main__':
         Timeout(crun.timeout, timeout)
     ED2.loop()
     rc.shutdown()
+    if isinstance(crun.rval, Exception):
+        raise crun.rval
     sys.exit(crun.rval)
