@@ -29,3 +29,22 @@ install_clang() {
   ${APT_UPDATE}
   apt-mark hold ca-certificates
 }
+
+get_cc_ver() {
+  CC_v="`${CC} -v 2>&1`"
+  if [ "${?}" -ne 0 -o ! -n "${CC_v}" ]
+  then
+    exit 1
+  fi
+  CC_dm="`${CC} -dumpmachine 2>&1`"
+  if [ "${?}" -ne 0 -o ! -n "${CC_dm}" ]
+  then
+    exit 1
+  fi
+  CC_dv="`${CC} -dumpversion 2>&1`"
+  if [ "${?}" -ne 0 -o ! -n "${CC_dv}" ]
+  then
+    exit 1
+  fi
+  echo "${CC_v}${CC_dm}${CC_dv}" | md5sum | awk '{print $1}'
+}

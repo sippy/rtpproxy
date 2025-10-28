@@ -51,7 +51,6 @@ WORKDIR /rtpproxy
 COPY --from=ccache_bin /usr/bin/ccache /usr/bin/ccache
 ARG TARGETPLATFORM
 ARG BASE_IMAGE
-ENV CCACHE_COMPILERCHECK="content"
 RUN env `./scripts/build/get-arch-buildargs.sh platformopts` \
   /rtpproxy/docker/build.sh
 RUN ls -l /usr/local/bin/rtpproxy*

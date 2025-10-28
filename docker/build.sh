@@ -41,6 +41,13 @@ ccache --zero-stats
 . "docker/clang_ver.sub"
 set_clang_env
 
+CC_VER="`CC="clang-${CLANG_VER}" get_cc_ver`"
+if [ "${?}" -ne 0 -o ! -n "${CC_VER}" -o "${CC_VER}" = "68b329da9893e34099c7d8ad5cb9c940" ]
+then
+  exit 1
+fi
+export CCACHE_COMPILERCHECK="string:${CC_VER}"
+
 CC=clang-${CLANG_VER} AR=llvm-ar-${CLANG_VER} RANLIB=llvm-ranlib-${CLANG_VER} \
  NM=llvm-nm-${CLANG_VER} STRIP=llvm-strip-${CLANG_VER} CFLAGS="-O3 -pipe" \
  LDFLAGS="-L/usr/local/lib -fuse-ld=lld-${CLANG_VER}" ./configure ${CONFIGURE_ARGS}
