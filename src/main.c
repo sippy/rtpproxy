@@ -125,6 +125,9 @@
 #include "librtpproxy.h"
 #include "librtpp_main.h"
 #include "rtpp_module_if_static.h"
+static const int is_lib = 1;
+#else
+static const int is_lib = 0;
 #endif
 
 #ifndef RTPP_DEBUG
@@ -362,6 +365,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
     cfsp->rrtcp = 1;
     cfsp->runcreds->sock_mode = 0;
     cfsp->ttl_mode = TTL_UNIFIED;
+    cfsp->is_lib = is_lib;
     cfsp->log_level = -1;
     cfsp->log_facility = -1;
     cfsp->sched_hz = rtpp_get_sched_hz();
@@ -539,7 +543,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
         break;
 
 	case 's':
-            ctrl_sock = rtpp_ctrl_sock_parse(optarg);
+            ctrl_sock = rtpp_ctrl_sock_parse(optarg, is_lib);
             if (ctrl_sock == NULL) {
                 IC_ERRX(1, "can't parse control socket argument");
             }
@@ -688,7 +692,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 	case 'n':
 	    if(strlen(optarg) == 0)
 		IC_ERRX(1, "timeout notification socket name too short");
-            if (CALL_METHOD(cfsp->rtpp_tnset_cf, append, optarg,
+            if (CALL_METHOD(cfsp->rtpp_tnset_cf, append, optarg, is_lib,
               &errmsg) != 0) {
                 IC_ERRX(1, "error adding timeout notification: %s", errmsg);
             }
@@ -769,7 +773,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 
     /* No control socket has been specified, add a default one */
     if (RTPP_LIST_IS_EMPTY(cfsp->ctrl_socks)) {
-        ctrl_sock = rtpp_ctrl_sock_parse(CMD_SOCK);
+        ctrl_sock = rtpp_ctrl_sock_parse(CMD_SOCK, is_lib);
         if (ctrl_sock == NULL) {
             IC_ERRX(1, "can't parse control socket: \"%s\"", CMD_SOCK);
         }

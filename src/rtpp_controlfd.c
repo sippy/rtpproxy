@@ -324,7 +324,7 @@ rtpp_controlfd_cleanup(const struct rtpp_cfg *cfsp)
 }
 
 struct rtpp_ctrl_sock *
-rtpp_ctrl_sock_parse(const char *optarg)
+rtpp_ctrl_sock_parse(const char *optarg, int is_lib)
 {
     struct rtpp_ctrl_sock *rcsp;
 
@@ -355,11 +355,9 @@ rtpp_ctrl_sock_parse(const char *optarg)
         rcsp->type= RTPC_STDIO;
         rcsp->exit_on_close = 1;
         optarg += 7;
-#if defined(LIBRTPPROXY)
-    } else if (strncmp("fd:", optarg, 3) == 0) {
+    } else if (is_lib && strncmp("fd:", optarg, 3) == 0) {
         rcsp->type= RTPC_FD;
         optarg += 3;
-#endif
     } else if (strncmp("tcp:", optarg, 4) == 0) {
         rcsp->type= RTPC_TCP4;
         optarg += 4;

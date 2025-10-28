@@ -53,7 +53,7 @@ struct rtpp_ctrl_sock {
   || (rcsp)->type == RTPC_TCP4 || (rcsp)->type == RTPC_TCP6 || (rcsp)->type == RTPC_SYSD)
 
 int rtpp_controlfd_init(const struct rtpp_cfg *);
-struct rtpp_ctrl_sock *rtpp_ctrl_sock_parse(const char *);
+struct rtpp_ctrl_sock *rtpp_ctrl_sock_parse(const char *, int);
 const char *rtpp_ctrl_sock_describe(struct rtpp_ctrl_sock *);
 void rtpp_controlfd_cleanup(const struct rtpp_cfg *);
 socklen_t rtpp_csock_addrlen(struct rtpp_ctrl_sock *);

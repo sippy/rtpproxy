@@ -85,11 +85,9 @@
 #include "rtpp_debug.h"
 #include "ucl.h"
 #include "rtpp_ucl.h"
+#include "rtpp_module_if_static.h"
 #ifdef RTPP_CHECK_LEAKS
 #include "rtpp_memdeb_internal.h"
-#endif
-#if defined(LIBRTPPROXY)
-#include "rtpp_module_if_static.h"
 #endif
 
 struct rtpp_module_if_priv {
@@ -209,11 +207,11 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     const struct rtpp_minfo *mip = NULL;
 
     PUB2PVT(self, pvt);
-#if defined(LIBRTPPROXY)
-    mip = rtpp_static_modules_lookup(pvt->mpath);
-    if (mip == NULL)
-        goto e1;
-#endif
+    if (cfsp->is_lib) {
+        mip = rtpp_static_modules_lookup(pvt->mpath);
+        if (mip == NULL)
+            goto e1;
+    }
     if (mip == NULL) {
         int dlflags = RTLD_NOW | (is_gcov_on() ? RTLD_NODELETE : 0);
         void *dmp = dlopen(pvt->mpath, dlflags);

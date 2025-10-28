@@ -80,7 +80,8 @@ struct rtpp_tnotify_set_priv {
 };
 
 static void rtpp_tnotify_set_dtor(struct rtpp_tnotify_set *);
-static int rtpp_tnotify_set_append(struct rtpp_tnotify_set *, const char *, const char **);
+static int rtpp_tnotify_set_append(struct rtpp_tnotify_set *, const char *,
+  int, const char **);
 static struct rtpp_tnotify_target *rtpp_tnotify_set_lookup(struct rtpp_tnotify_set *,
   const char *, struct sockaddr *, struct sockaddr *);
 static int rtpp_tnotify_set_isenabled(struct rtpp_tnotify_set *);
@@ -164,7 +165,7 @@ parse_hostport(const char *hostport, char *host, int hsize, char *port, int psiz
 /* Returns 0 for a specific target, 1 for wildcard, -1 for an error */
 static int
 parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
-  const char **e)
+  int is_lib, const char **e)
 {
     char host[512], port[10];
     char *new_sn, **snp;
@@ -184,15 +185,13 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
             return (-1);
         }
         rtep->rtt.socket_type = RTPP_TNS_INET;
-#if defined(LIBRTPPROXY)
-    } else if (strncmp("fd:", sock_name, 3) == 0) {
+    } else if (is_lib && strncmp("fd:", sock_name, 3) == 0) {
         int fd;
         if (atoi_safe(sock_name + 3, &fd) != ATOI_OK || fd < 0) {
             return (-1);
         }
         rtep->rtt.socket_type = RTPP_TNS_FD;
         rtep->rtt.fd = fd;
-#endif
     } else {
         sprefix = "unix:";
         usock_name = sock_name;
@@ -252,7 +251,7 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
 
 static int
 rtpp_tnotify_set_append(struct rtpp_tnotify_set *pub,
-  const char *socket_name, const char **e)
+  const char *socket_name, int is_lib, const char **e)
 {
     int rval;
     struct rtpp_tnotify_set_priv *pvt;
@@ -262,7 +261,7 @@ rtpp_tnotify_set_append(struct rtpp_tnotify_set *pub,
 
     PUB2PVT(pub, pvt);
     memset(&rte, '\0', sizeof(union rtpp_tnotify_entry));
-    rval = parse_timeout_sock(socket_name, &rte, e);
+    rval = parse_timeout_sock(socket_name, &rte, is_lib, e);
     if (rval < 0) {
         goto e0;
     }
