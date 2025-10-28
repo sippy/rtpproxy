@@ -214,7 +214,8 @@ am__librtpproxy_la_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_str.c rtpp_str.h rtpp_sbuf.c rtpp_sbuf.h rtpp_refproxy.c \
 	rtpp_command_reply.c $(ADV_DIR)/packet_observer.h \
 	$(ADV_DIR)/pproc_manager.c $(ADV_DIR)/pproc_manager.h \
-	rtpp_modman.c rtpp_module_if.c rtpp_module.h rtpp_log_stand.c \
+	rtpp_modman.c rtpp_module_if_static.c rtpp_module_if_static.h \
+	rtpp_module_if.c rtpp_module.h rtpp_log_stand.c \
 	rtpp_log_stand.h rtpp_log.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.h \
 	$(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.c \
@@ -230,8 +231,7 @@ am__librtpproxy_la_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_module_if_fin.c rtpp_refcnt.c \
 	rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h rtpp_coverage.c \
 	rtpp_coverage.h $(top_srcdir)/libucl/libucl.la \
-	$(XXH_DIR)/libxxHash.la rtpp_module_if_static.c \
-	rtpp_module_if_static.h librtpp_main.c
+	$(XXH_DIR)/libxxHash.la librtpp_main.c
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 =
 am__objects_2 = $(am__objects_1)
@@ -296,7 +296,8 @@ am__objects_6 = librtpproxy_la-main.lo librtpproxy_la-rtpp_server.lo \
 	librtpproxy_la-rtpp_sbuf.lo librtpproxy_la-rtpp_refproxy.lo \
 	librtpproxy_la-rtpp_command_reply.lo \
 	$(ADV_DIR)/librtpproxy_la-pproc_manager.lo \
-	librtpproxy_la-rtpp_modman.lo $(am__objects_3) \
+	librtpproxy_la-rtpp_modman.lo \
+	librtpproxy_la-rtpp_module_if_static.lo $(am__objects_3) \
 	$(am__objects_4) $(am__objects_5)
 am__objects_7 =  \
 	$(RTPP_AUTOSRC_DIR)/librtpproxy_la-rtpp_command_rcache_fin.lo
@@ -314,9 +315,7 @@ am__objects_13 = $(am__objects_7) $(am__objects_8) $(am__objects_9) \
 	$(am__objects_10) $(am__objects_11) $(am__objects_12)
 am_librtpproxy_la_OBJECTS = $(am__objects_6) $(am__objects_13) \
 	librtpproxy_la-rtpp_refcnt.lo librtpproxy_la-rtpp_mallocs.lo \
-	librtpproxy_la-rtpp_coverage.lo \
-	librtpproxy_la-rtpp_module_if_static.lo \
-	librtpproxy_la-librtpp_main.lo
+	librtpproxy_la-rtpp_coverage.lo librtpproxy_la-librtpp_main.lo
 librtpproxy_la_OBJECTS = $(am_librtpproxy_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -662,7 +661,8 @@ am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	rtpp_str.c rtpp_str.h rtpp_sbuf.c rtpp_sbuf.h rtpp_refproxy.c \
 	rtpp_command_reply.c $(ADV_DIR)/packet_observer.h \
 	$(ADV_DIR)/pproc_manager.c $(ADV_DIR)/pproc_manager.h \
-	rtpp_modman.c rtpp_module_if.c rtpp_module.h rtpp_log_stand.c \
+	rtpp_modman.c rtpp_module_if_static.c rtpp_module_if_static.h \
+	rtpp_module_if.c rtpp_module.h rtpp_log_stand.c \
 	rtpp_log_stand.h rtpp_log.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.h \
 	$(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.c \
@@ -815,8 +815,9 @@ am__objects_122 = rtpproxy_debug-main.$(OBJEXT) \
 	rtpproxy_debug-rtpp_refproxy.$(OBJEXT) \
 	rtpproxy_debug-rtpp_command_reply.$(OBJEXT) \
 	$(ADV_DIR)/rtpproxy_debug-pproc_manager.$(OBJEXT) \
-	rtpproxy_debug-rtpp_modman.$(OBJEXT) $(am__objects_119) \
-	$(am__objects_120) $(am__objects_121)
+	rtpproxy_debug-rtpp_modman.$(OBJEXT) \
+	rtpproxy_debug-rtpp_module_if_static.$(OBJEXT) \
+	$(am__objects_119) $(am__objects_120) $(am__objects_121)
 am__objects_123 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_command_rcache_fin.$(OBJEXT)
 am__objects_124 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_log_obj_fin.$(OBJEXT)
@@ -1233,6 +1234,7 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_modman.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po \
+	./$(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_netaddr.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_netio_async.Po \
 	./$(DEPDIR)/rtpproxy_debug-rtpp_network.Po \
@@ -1616,8 +1618,9 @@ BASE_SOURCES = main.c rtp.h rtpp_server.c rtpp_defines.h rtpp_log.h \
 	$(RTPP_AUTOSRC_SOURCES) rtpp_epoll.c rtpp_str.c rtpp_str.h \
 	rtpp_sbuf.c rtpp_sbuf.h rtpp_refproxy.c rtpp_command_reply.c \
 	$(ADV_DIR)/packet_observer.h $(ADV_DIR)/pproc_manager.c \
-	$(ADV_DIR)/pproc_manager.h rtpp_modman.c $(am__append_5) \
-	$(am__append_8) $(am__append_9)
+	$(ADV_DIR)/pproc_manager.h rtpp_modman.c \
+	rtpp_module_if_static.c rtpp_module_if_static.h \
+	$(am__append_5) $(am__append_8) $(am__append_9)
 rtpproxy_LDADD = librtpproxy.la -lm -lpthread $(am__append_6) \
 	$(am__append_10)
 rtpproxy_debug_LDADD = -lm -lpthread @LIBS_ELPERIODIC@ \
@@ -1699,7 +1702,6 @@ librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \
   rtpp_coverage.c rtpp_coverage.h \
   $(top_srcdir)/libucl/libucl.la $(XXH_DIR)/libxxHash.la \
-  rtpp_module_if_static.c rtpp_module_if_static.h \
   librtpp_main.c
 
 librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS) -fPIC
@@ -2779,6 +2781,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_modman.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_netaddr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_netio_async.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpproxy_debug-rtpp_network.Po@am__quote@ # am--include-marker
@@ -3385,6 +3388,13 @@ librtpproxy_la-rtpp_modman.lo: rtpp_modman.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-rtpp_modman.lo `test -f 'rtpp_modman.c' || echo '$(srcdir)/'`rtpp_modman.c
 
+librtpproxy_la-rtpp_module_if_static.lo: rtpp_module_if_static.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -MT librtpproxy_la-rtpp_module_if_static.lo -MD -MP -MF $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Tpo -c -o librtpproxy_la-rtpp_module_if_static.lo `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Tpo $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_module_if_static.c' object='librtpproxy_la-rtpp_module_if_static.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-rtpp_module_if_static.lo `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
+
 librtpproxy_la-rtpp_module_if.lo: rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -MT librtpproxy_la-rtpp_module_if.lo -MD -MP -MF $(DEPDIR)/librtpproxy_la-rtpp_module_if.Tpo -c -o librtpproxy_la-rtpp_module_if.lo `test -f 'rtpp_module_if.c' || echo '$(srcdir)/'`rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpproxy_la-rtpp_module_if.Tpo $(DEPDIR)/librtpproxy_la-rtpp_module_if.Plo
@@ -3468,13 +3478,6 @@ librtpproxy_la-rtpp_coverage.lo: rtpp_coverage.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_coverage.c' object='librtpproxy_la-rtpp_coverage.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-rtpp_coverage.lo `test -f 'rtpp_coverage.c' || echo '$(srcdir)/'`rtpp_coverage.c
-
-librtpproxy_la-rtpp_module_if_static.lo: rtpp_module_if_static.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -MT librtpproxy_la-rtpp_module_if_static.lo -MD -MP -MF $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Tpo -c -o librtpproxy_la-rtpp_module_if_static.lo `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Tpo $(DEPDIR)/librtpproxy_la-rtpp_module_if_static.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_module_if_static.c' object='librtpproxy_la-rtpp_module_if_static.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-rtpp_module_if_static.lo `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
 
 librtpproxy_la-librtpp_main.lo: librtpp_main.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -MT librtpproxy_la-librtpp_main.lo -MD -MP -MF $(DEPDIR)/librtpproxy_la-librtpp_main.Tpo -c -o librtpproxy_la-librtpp_main.lo `test -f 'librtpp_main.c' || echo '$(srcdir)/'`librtpp_main.c
@@ -6731,6 +6734,20 @@ rtpproxy_debug-rtpp_modman.obj: rtpp_modman.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_modman.obj `if test -f 'rtpp_modman.c'; then $(CYGPATH_W) 'rtpp_modman.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_modman.c'; fi`
 
+rtpproxy_debug-rtpp_module_if_static.o: rtpp_module_if_static.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_module_if_static.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Tpo -c -o rtpproxy_debug-rtpp_module_if_static.o `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_module_if_static.c' object='rtpproxy_debug-rtpp_module_if_static.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_module_if_static.o `test -f 'rtpp_module_if_static.c' || echo '$(srcdir)/'`rtpp_module_if_static.c
+
+rtpproxy_debug-rtpp_module_if_static.obj: rtpp_module_if_static.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_module_if_static.obj -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Tpo -c -o rtpproxy_debug-rtpp_module_if_static.obj `if test -f 'rtpp_module_if_static.c'; then $(CYGPATH_W) 'rtpp_module_if_static.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_module_if_static.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_module_if_static.c' object='rtpproxy_debug-rtpp_module_if_static.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -c -o rtpproxy_debug-rtpp_module_if_static.obj `if test -f 'rtpp_module_if_static.c'; then $(CYGPATH_W) 'rtpp_module_if_static.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_module_if_static.c'; fi`
+
 rtpproxy_debug-rtpp_module_if.o: rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpproxy_debug_CPPFLAGS) $(CPPFLAGS) $(rtpproxy_debug_CFLAGS) $(CFLAGS) -MT rtpproxy_debug-rtpp_module_if.o -MD -MP -MF $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Tpo -c -o rtpproxy_debug-rtpp_module_if.o `test -f 'rtpp_module_if.c' || echo '$(srcdir)/'`rtpp_module_if.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Tpo $(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po
@@ -7788,6 +7805,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_modman.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po
+	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_netaddr.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_netio_async.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_network.Po
@@ -8197,6 +8215,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_modman.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_module_if.Po
+	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_module_if_static.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_netaddr.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_netio_async.Po
 	-rm -f ./$(DEPDIR)/rtpproxy_debug-rtpp_network.Po
