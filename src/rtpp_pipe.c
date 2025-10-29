@@ -32,6 +32,7 @@
 
 #include "config.h"
 
+#include "rtpp_cfg.h"
 #include "rtpp_debug.h"
 #include "rtpp_log.h"
 #include "rtpp_types.h"
@@ -53,6 +54,7 @@
 #include "rtpp_pcnts_strm.h"
 #include "rtpp_stats.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_session.h"
 #include "advanced/pproc_manager.h"
 
 struct rtpp_pipe_priv
@@ -85,6 +87,7 @@ struct rtpp_pipe *
 rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
 {
     struct rtpp_pipe_priv *pvt;
+    const struct rtpp_cfg *cfs = ap->session_cap->cfs;
     int i;
 
     pvt = rtpp_rzmalloc(sizeof(struct rtpp_pipe_priv), PVT_RCOFFS(pvt));
@@ -93,9 +96,13 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
     }
 
     RTPP_OBJ_BORROW(&pvt->pub, ap->log);
-    pvt->streams_wrt = ap->streams_wrt;
+    if (ap->pipe_type == PIPE_RTP) {
+        pvt->streams_wrt = cfs->rtp_streams_wrt;
+    } else {
+        pvt->streams_wrt = cfs->rtcp_streams_wrt;
+    }
 
-    pvt->pub.ppuid = CALL_SMETHOD(ap->guid, gen);
+    pvt->pub.ppuid = CALL_SMETHOD(cfs->guid, gen);
     struct r_stream_ctor_args rsca = {
         .pipe_cap = ap,
     };
@@ -127,7 +134,7 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
     pvt->pub.stream[1]->pproc_manager->reverse = pvt->pub.stream[0]->pproc_manager;
     RTPP_OBJ_BORROW(&pvt->pub, pvt->pub.stream[0]->pproc_manager);
     pvt->pipe_type = ap->pipe_type;
-    pvt->pub.rtpp_stats = ap->rtpp_stats;
+    pvt->pub.rtpp_stats = cfs->rtpp_stats;
     pvt->pub.log = ap->log;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_pipe_dtor);
 #if defined(RTPP_DEBUG)

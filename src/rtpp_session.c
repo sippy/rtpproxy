@@ -112,20 +112,13 @@ rtpp_session_ctor(const struct rtpp_session_ctor_args *ap)
     CALL_METHOD(log, start, cfs);
     CALL_METHOD(log, setlevel, cfs->log_level);
     pipe_cfg = (struct r_pipe_ctor_args){.seuid = pub->seuid,
-      .streams_wrt = cfs->rtp_streams_wrt, .proc_servers = cfs->proc_servers,
-      .log = log, .rtpp_stats = cfs->rtpp_stats, .pipe_type = PIPE_RTP,
-#if ENABLE_MODULE_IF
-      .nmodules  = cfs->modules_cf->count.total,
-#endif
-      .pproc_manager = cfs->pproc_manager,
-      .guid = cfs->guid,
+      .log = log, .pipe_type = PIPE_RTP, .session_cap = ap,
     };
     pub->rtp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtp == NULL) {
         goto e3;
     }
     /* spb is RTCP twin session for this one. */
-    pipe_cfg.streams_wrt = cfs->rtcp_streams_wrt;
     pipe_cfg.pipe_type = PIPE_RTCP;
     pub->rtcp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtcp == NULL) {
@@ -155,10 +148,6 @@ rtpp_session_ctor(const struct rtpp_session_ctor_args *ap)
         goto e8;
     }
     pub->from_tag_nmn = &pvt->from_tag_nmn.fx;
-    for (i = 0; i < 2; i++) {
-        pub->rtp->stream[i]->laddr = ap->lia[i];
-        pub->rtcp->stream[i]->laddr = ap->lia[i];
-    }
     if (ap->weak) {
         pub->rtp->stream[0]->weak = 1;
     } else {

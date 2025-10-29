@@ -82,6 +82,8 @@
 #include "advanced/pproc_manager.h"
 #include "advanced/packet_processor.h"
 #include "rtpp_command_stats.h"
+#include "rtpp_modman.h"
+#include "rtpp_session.h"
 
 #define  SEQ_SYNC_IVAL   1.0    /* in seconds */
 
@@ -245,9 +247,16 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     struct rtpp_stream_priv *pvt;
     size_t alen;
     const struct r_pipe_ctor_args *pap = ap->pipe_cap;
+    const struct rtpp_session_ctor_args *sap = pap->session_cap;
+    const struct rtpp_cfg *cfs = sap->cfs;
+    int nmodules = 0;
+
+#if ENABLE_MODULE_IF
+    nmodules  = cfs->modules_cf->count.total;
+#endif
 
     alen = offsetof(struct rtpp_stream_priv, pmod_data.adp) + 
-      (pap->nmodules * sizeof(pvt->pmod_data.adp[0]));
+      (nmodules * sizeof(pvt->pmod_data.adp[0]));
     pvt = rtpp_rzmalloc(alen, PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         goto e0;
@@ -258,7 +267,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     pvt->pub.log = pap->log;
     RTPP_OBJ_BORROW(&pvt->pub, pap->log);
     RTPP_OBJ_DTOR_ATTACH(&pvt->pub, pthread_mutex_destroy, &pvt->lock);
-    pvt->pub.pproc_manager = CALL_SMETHOD(pap->pproc_manager, clone);
+    pvt->pub.pproc_manager = CALL_SMETHOD(cfs->pproc_manager, clone);
     if (pvt->pub.pproc_manager == NULL) {
         goto e1;
     }
@@ -278,7 +287,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
         };
         if (CALL_SMETHOD(pvt->pub.pproc_manager, reg, PPROC_ORD_RESIZE, &resize_packet_poi) < 0)
             goto e1;
-        pvt->npkts_resizer_in_idx = CALL_SMETHOD(pap->rtpp_stats, getidxbyname,
+        pvt->npkts_resizer_in_idx = CALL_SMETHOD(cfs->rtpp_stats, getidxbyname,
           "npkts_resizer_in");
         if (pvt->npkts_resizer_in_idx == -1)
             goto e2;
@@ -308,19 +317,20 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
         goto e3;
     }
     RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->rem_addr);
-    pvt->proc_servers = pap->proc_servers;
-    RTPP_OBJ_BORROW(&pvt->pub, pap->proc_servers);
-    pvt->rtpp_stats = pap->rtpp_stats;
+    pvt->proc_servers = cfs->proc_servers;
+    RTPP_OBJ_BORROW(&pvt->pub, cfs->proc_servers);
+    pvt->rtpp_stats = cfs->rtpp_stats;
     pvt->pub.side = ap->side;
     pvt->pub.pipe_type = pap->pipe_type;
 
-    pvt->pub.stuid = CALL_SMETHOD(pap->guid, gen);
+    pvt->pub.stuid = CALL_SMETHOD(cfs->guid, gen);
     pvt->pub.seuid = pap->seuid;
-    for (unsigned int i = 0; i < pap->nmodules; i++) {
+    for (unsigned int i = 0; i < nmodules; i++) {
         atomic_init(&(pvt->pmod_data.adp[i]), NULL);
     }
-    pvt->pmod_data.nmodules = pap->nmodules;
+    pvt->pmod_data.nmodules = nmodules;
     pvt->pub.pmod_datap = &(pvt->pmod_data);
+    pvt->pub.laddr = sap->lia[ap->side];
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_stream_dtor);
     return (&pvt->pub);
 

@@ -30,6 +30,7 @@
 struct rtpp_stats;
 struct rtpp_acct_pipe;
 struct rtpp_proc_servers;
+struct rtpp_session_ctor_args;
 
 #define PIPE_RTP        1
 #define PIPE_RTCP       2
@@ -38,14 +39,9 @@ struct rtpp_proc_servers;
 
 struct r_pipe_ctor_args {
     uint64_t seuid;
-    struct rtpp_weakref *streams_wrt;
-    struct rtpp_proc_servers *proc_servers;
     struct rtpp_log *log;
-    struct rtpp_stats *rtpp_stats;
     int pipe_type;
-    unsigned int nmodules;
-    struct pproc_manager *pproc_manager;
-    struct rtpp_genuid *guid;
+    const struct rtpp_session_ctor_args *session_cap;
 };
 
 DECLARE_CLASS(rtpp_pipe, const struct r_pipe_ctor_args *);
