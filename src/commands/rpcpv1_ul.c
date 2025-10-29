@@ -541,23 +541,20 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             CALL_SMETHOD(cmd->reply, deliver_error, cfsp->overload_prot.ecode);
             goto err_undo_0;
         }
-        if (rtpp_create_listener(cfsp, ulop->lia[0], &lport, fds) == -1) {
-            RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "can't create listener");
-            CALL_SMETHOD(cmd->reply, deliver_error, ECODE_LSTFAIL_2);
-            goto err_undo_0;
-        }
 
         /*
          * Session creation. If creation is requested with weak flag,
          * set weak[0].
          */
-        spa = rtpp_session_ctor(cfsp, &cmd->cca, cmd->dtime, ulop->lia,
-          ulop->weak, lport, fds);
-        RTPP_OBJ_DECREF(fds[0]);
-        RTPP_OBJ_DECREF(fds[1]);
+        struct rtpp_session_ctor_args sa = {
+            .cfs = cfsp, .ccap = &cmd->cca, .dtime = cmd->dtime, .lia = ulop->lia,
+            .weak = ulop->weak,
+        };
+        spa = rtpp_session_ctor(&sa);
         if (spa == NULL) {
-            handle_nomem(cmd, ECODE_NOMEM_4, NULL);
-            return (-1);
+            RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "can't create session");
+            CALL_SMETHOD(cmd->reply, deliver_error, ECODE_LSTFAIL_2);
+            goto err_undo_0;
         }
 
         rtpp_command_get_stats(cmd)->nsess_created.cnt++;
@@ -589,6 +586,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
               "option", (int)rtpp_rlim_max(cfsp->nofile));
         }
 
+        lport = spa->rtp->stream[0]->port;
         RTPP_LOG(spa->log, RTPP_LOG_INFO, "new session on %s port %d created, "
           "tag %.*s", AF2STR(ulop->pf), lport, FMTSTR(cmd->cca.from_tag));
         if (cfsp->record_all != 0) {

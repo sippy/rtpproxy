@@ -461,19 +461,11 @@ ice_lite_activate(struct rtpp_module_priv *pvt, const struct rtpp_subc_ctx *ctxp
     if (CALL_SMETHOD(ice_strmp->pproc_manager, reg, PPROC_ORD_RECV,
       &stun_poi) < 0)
         goto e1;
-    struct rtpp_stream *rtcp_strmp_in = NULL, *rtcp_strmp_out;
-    int i;
-    for (i = 0; i < 2; i++) {
-        if (ctxp->sessp->rtp->stream[i] != ice_strmp)
-            continue;
-        rtcp_strmp_in = ctxp->sessp->rtcp->stream[i];
-        rtcp_strmp_out = ctxp->sessp->rtcp->stream[i ^ 1];
-        break;
-    }
-    if (i == 2) {
+    struct rtpp_stream_pair rtcp = get_rtcp_pair(ctxp->sessp, ice_strmp);
+    if (rtcp.ret != 0) {
         goto e2;
     }
-    if (rtcp_strmp_in != NULL) {
+    if (rtcp.in != NULL) {
         struct packet_processor_if rtcp_dmx_poi = {
             .descr = "rtcp demux",
             .taste = rtpp_is_rtcp_tst,
@@ -483,8 +475,8 @@ ice_lite_activate(struct rtpp_module_priv *pvt, const struct rtpp_subc_ctx *ctxp
             .rcnt = ila_c->rcnt
         };
         ila_c->rtcp_dmx_ctx = (struct mux_demux_ctx) {
-            .strmp_in = rtcp_strmp_in,
-            .strmp_out = rtcp_strmp_out,
+            .strmp_in = rtcp.in,
+            .strmp_out = rtcp.out,
         };
         if (CALL_SMETHOD(ice_strmp->pproc_manager, reg, PPROC_ORD_CT_RECV,
             &rtcp_dmx_poi) < 0)
@@ -498,11 +490,11 @@ ice_lite_activate(struct rtpp_module_priv *pvt, const struct rtpp_subc_ctx *ctxp
             .rcnt = ila_c->rcnt
         };
         ila_c->rtcp_mx_ctx = (struct mux_demux_ctx) {
-            .strmp_in = rtcp_strmp_out,
+            .strmp_in = rtcp.out,
             .strmp_out = ice_strmp,
-            .unreg = rtcp_strmp_in->pproc_manager->reverse,
+            .unreg = rtcp.in->pproc_manager->reverse,
         };
-        if (CALL_SMETHOD(rtcp_strmp_in->pproc_manager->reverse, reg, PPROC_ORD_CT_SEND,
+        if (CALL_SMETHOD(rtcp.in->pproc_manager->reverse, reg, PPROC_ORD_CT_SEND,
             &rtcp_mx_poi) < 0)
             goto e3;
     }

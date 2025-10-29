@@ -56,6 +56,7 @@
 #include "rtpp_modman.h"
 #include "rtpp_pipe.h"
 #include "rtpp_codeptr.h"
+#include "rtpp_socket.h"
 #include "rtpp_stream.h"
 #include "rtpp_session.h"
 #include "rtpp_sessinfo.h"
@@ -79,28 +80,35 @@ struct rtpp_session_priv
 static void rtpp_session_dtor(struct rtpp_session_priv *);
 
 struct rtpp_session *
-rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
-  const struct rtpp_timestamp *dtime, const struct sockaddr **lia, int weak,
-  int lport, struct rtpp_socket **fds)
+rtpp_session_ctor(const struct rtpp_session_ctor_args *ap)
 {
     struct rtpp_session_priv *pvt;
     struct rtpp_session *pub;
     struct rtpp_log *log;
     struct r_pipe_ctor_args pipe_cfg;
-    int i;
+    const struct rtpp_cfg *cfs = ap->cfs;
+    struct common_cmd_args *ccap = ap->ccap;
+    int i, lport = 0;
+    struct rtpp_socket *fds[2];
+
+    log = rtpp_log_ctor("rtpproxy", ccap->call_id->s, 0);
+    if (log == NULL) {
+        goto e0;
+    }
+
+    if (rtpp_create_listener(cfs, ap->lia[0], &lport, fds) == -1) {
+        RTPP_LOG(log, RTPP_LOG_ERR, "can't create listener");
+        goto e1;
+    }
 
     pvt = rtpp_rzmalloc(sizeof(struct rtpp_session_priv), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
-        goto e0;
+        goto e2;
     }
 
     pub = &(pvt->pub);
     pub->seuid = CALL_SMETHOD(cfs->guid, gen);
 
-    log = rtpp_log_ctor("rtpproxy", ccap->call_id->s, 0);
-    if (log == NULL) {
-        goto e1;
-    }
     CALL_METHOD(log, start, cfs);
     CALL_METHOD(log, setlevel, cfs->log_level);
     pipe_cfg = (struct r_pipe_ctor_args){.seuid = pub->seuid,
@@ -114,28 +122,28 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
     };
     pub->rtp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtp == NULL) {
-        goto e2;
+        goto e3;
     }
     /* spb is RTCP twin session for this one. */
     pipe_cfg.streams_wrt = cfs->rtcp_streams_wrt;
     pipe_cfg.pipe_type = PIPE_RTCP;
     pub->rtcp = rtpp_pipe_ctor(&pipe_cfg);
     if (pub->rtcp == NULL) {
-        goto e3;
+        goto e4;
     }
     pvt->acct = rtpp_acct_ctor(pub->seuid);
     if (pvt->acct == NULL) {
-        goto e4;
+        goto e5;
     }
-    pvt->acct->init_ts->wall = dtime->wall;
-    pvt->acct->init_ts->mono = dtime->mono;
+    pvt->acct->init_ts->wall = ap->dtime->wall;
+    pvt->acct->init_ts->mono = ap->dtime->mono;
 
     if (rtpp_str_dup2(ccap->call_id, &pvt->call_id.ro) == NULL) {
-        goto e5;
+        goto e6;
     }
     pub->call_id = &pvt->call_id.fx;
     if (rtpp_str_dup2(ccap->from_tag, &pvt->from_tag.ro) == NULL) {
-        goto e6;
+        goto e7;
     }
     pub->from_tag = &pvt->from_tag.fx;
     rtpp_str_const_t tag_nomedianum = {.s = ccap->from_tag->s, .len = ccap->from_tag->len};
@@ -144,14 +152,14 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
         tag_nomedianum.len = semi - tag_nomedianum.s;
     }
     if (rtpp_str_dup2(&tag_nomedianum, &pvt->from_tag_nmn.ro) == NULL) {
-        goto e7;
+        goto e8;
     }
     pub->from_tag_nmn = &pvt->from_tag_nmn.fx;
     for (i = 0; i < 2; i++) {
-        pub->rtp->stream[i]->laddr = lia[i];
-        pub->rtcp->stream[i]->laddr = lia[i];
+        pub->rtp->stream[i]->laddr = ap->lia[i];
+        pub->rtcp->stream[i]->laddr = ap->lia[i];
     }
-    if (weak) {
+    if (ap->weak) {
         pub->rtp->stream[0]->weak = 1;
     } else {
         pub->strong = 1;
@@ -163,7 +171,7 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
         if (i == 0 || cfs->ttl_mode == TTL_INDEPENDENT) {
             pub->rtp->stream[i]->ttl = rtpp_ttl_ctor(cfs->max_setup_ttl);
             if (pub->rtp->stream[i]->ttl == NULL) {
-                goto e8;
+                goto e9;
             }
         } else {
             pub->rtp->stream[i]->ttl = pub->rtp->stream[0]->ttl;
@@ -190,28 +198,33 @@ rtpp_session_ctor(const struct rtpp_cfg *cfs, struct common_cmd_args *ccap,
 #endif
 
     CALL_SMETHOD(cfs->sessinfo, append, pub, 0, fds);
+    RTPP_OBJ_DECREF(fds[0]);
+    RTPP_OBJ_DECREF(fds[1]);
     CALL_METHOD(cfs->rtpp_proc_cf, nudge);
 
     CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor,
       pvt);
     return (&pvt->pub);
 
-e8:
+e9:
     free(pvt->from_tag_nmn.rw.s);
-e7:
+e8:
     free(pvt->from_tag.rw.s);
-e6:
+e7:
     free(pvt->call_id.rw.s);
-e5:
+e6:
     RTPP_OBJ_DECREF(pvt->acct);
-e4:
+e5:
     RTPP_OBJ_DECREF(pub->rtcp);
-e3:
+e4:
     RTPP_OBJ_DECREF(pub->rtp);
-e2:
-    RTPP_OBJ_DECREF(log);
-e1:
+e3:
     RTPP_OBJ_DECREF(pub);
+e2:
+    RTPP_OBJ_DECREF(fds[0]);
+    RTPP_OBJ_DECREF(fds[1]);
+e1:
+    RTPP_OBJ_DECREF(log);
 e0:
     return (NULL);
 }
@@ -365,4 +378,18 @@ find_stream(const struct rtpp_cfg *cfsp, const rtpp_str_t *call_id,
         *spp = ma.sp;
     }
     return ma.rval;
+}
+
+struct rtpp_stream_pair
+get_rtcp_pair(const struct rtpp_session *sessp, const struct rtpp_stream *rtp_strmp_in)
+{
+
+    for (int i = 0; i < 2; i++) {
+        if (sessp->rtp->stream[i] != rtp_strmp_in)
+            continue;
+        return (struct rtpp_stream_pair){
+           .in = sessp->rtcp->stream[i], .out = sessp->rtcp->stream[i ^ 1]
+        };
+    }
+    return (struct rtpp_stream_pair){.ret = -1};
 }
