@@ -24,9 +24,15 @@ install_clang() {
   fi
   ${APT_INSTALL} curl gpg lsb-release
   MYREL="`lsb_release -c | grep ^Codename | awk '{print $2}'`"
-  echo "deb [signed-by=/usr/share/keyrings/llvm.gpg] http://apt.llvm.org/${MYREL}/ llvm-toolchain-${MYREL}-${CLANG_VER} main" > /etc/apt/sources.list.d/llvm.list
-  curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor > /usr/share/keyrings/llvm.gpg
-  ${APT_UPDATE}
+  if [ "${MYREL}" = "trixie" ]
+  then
+    curl -o /tmp/llvm.sh https://apt.llvm.org/llvm.sh
+    bash /tmp/llvm.sh ${CLANG_VER}
+  else
+    echo "deb [signed-by=/usr/share/keyrings/llvm.gpg] http://apt.llvm.org/${MYREL}/ llvm-toolchain-${MYREL}-${CLANG_VER} main" > /etc/apt/sources.list.d/llvm.list
+    curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor > /usr/share/keyrings/llvm.gpg
+    ${APT_UPDATE}
+  fi
   apt-mark hold ca-certificates
 }
 

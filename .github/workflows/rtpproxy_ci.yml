@@ -396,8 +396,8 @@ jobs:
         ports:
           - 5000:5000
     env:
-      CLANG_VER_NEW: 18
-      CLANG_VER_OLD: 16
+      CLANG_VER_NEW: 19
+      CLANG_VER_OLD: 19
       DOCKER_REPO: sippylabs/rtpproxy
       GHCR_REPO: ghcr.io/${{ github.repository_owner }}/rtpproxy
       LOCAL_REPO: localhost:5000/sippylabs/rtpproxy
@@ -406,10 +406,13 @@ jobs:
       DOCKER_RW: ${{ ( github.repository == 'sippy/rtpproxy' && github.event_name != 'pull_request' ) && 'true' || 'false' }}
       CCACHE_BIN_IMAGE: ghcr.io/sobomax/ccache:${{ matrix.ccache_bin_image }}
     strategy:
+      fail-fast: false
       matrix:
         include:
         - base_image: 'debian:12-slim'
           ccache_bin_image: 'latest-debian-12'
+        - base_image: 'debian:13-slim'
+          ccache_bin_image: 'latest-debian-13'
         - base_image: 'ubuntu:latest'
           ccache_bin_image: 'latest-ubuntu-24.04'
     steps:
@@ -466,7 +469,7 @@ jobs:
          grep -v unknown | sort -u | paste -sd ','`"
         echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
         echo "OS_TAG=${OS_TAG}" >> $GITHUB_ENV
-        if [[ "${{ matrix.base_image }}" == debian:* ]]
+        if [[ "${{ matrix.base_image }}" == debian:12* ]]
         then
           echo "LIBSSL_APKG=libssl3" >> $GITHUB_ENV
         else
