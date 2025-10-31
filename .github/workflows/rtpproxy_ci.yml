@@ -406,10 +406,13 @@ jobs:
       DOCKER_RW: ${{ ( github.repository == 'sippy/rtpproxy' && github.event_name != 'pull_request' ) && 'true' || 'false' }}
       CCACHE_BIN_IMAGE: ghcr.io/sobomax/ccache:${{ matrix.ccache_bin_image }}
     strategy:
+      fail-fast: false
       matrix:
         include:
         - base_image: 'debian:12-slim'
           ccache_bin_image: 'latest-debian-12'
+        - base_image: 'debian:13-slim'
+          ccache_bin_image: 'latest-debian-13'
         - base_image: 'ubuntu:latest'
           ccache_bin_image: 'latest-ubuntu-24.04'
     steps:
