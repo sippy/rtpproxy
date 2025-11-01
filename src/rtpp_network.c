@@ -47,6 +47,7 @@
 #include "rtpp_types.h"
 #include "rtpp_network.h"
 #include "rtpp_debug.h"
+#include "rtpp_util.h"
 
 int
 ishostseq(const struct sockaddr *ia1, const struct sockaddr *ia2)
@@ -236,9 +237,22 @@ resolve(struct sockaddr *ia, int pf, const char *host,
 	/* Use the first socket address returned */
 	memcpy(ia, res->ai_addr, res->ai_addrlen);
 	freeaddrinfo(res);
+        return 0;
     }
-
-    return n;
+    if ((flags & AI_NUMERICHOST) == 0)
+        return n;
+    void *dst = (pf == AF_INET) ? (void *)&(satosin(ia)->sin_addr) :
+      (void *)&(satosin6(ia)->sin6_addr);
+    if (inet_pton(pf, host, dst) != 1)
+        return n;
+    int port = 0;
+    if (servname != NULL) {
+        if (atoi_saferange(servname, &port, 1, 65535) != ATOI_OK)
+            return n;
+    }
+    ia->sa_family = pf;
+    setport(ia, port);
+    return 0;
 }
 
 #if !defined(BYTE_ORDER)
