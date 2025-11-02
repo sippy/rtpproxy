@@ -141,6 +141,7 @@ DECLARE_CLASS_PUBTYPE(rtpp_stream, {
     const struct sockaddr *laddr;
     int port;
     int asymmetric;
+    int stream_ttl;
     enum rtpp_stream_side side;
     /* Flags: strong create/delete; weak ones */
     int weak;
@@ -153,6 +154,8 @@ DECLARE_CLASS_PUBTYPE(rtpp_stream, {
     char *codecs;
     /* Requested ptime */
     int ptime;
+    /* Desired IP TOS/DSCP value */
+    int tos;
     /* UID, read-only */
     uint64_t stuid;
     /* UID of the session we belong to, read-only */

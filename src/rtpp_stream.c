@@ -322,9 +322,11 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     pvt->rtpp_stats = cfs->rtpp_stats;
     pvt->pub.side = ap->side;
     pvt->pub.pipe_type = pap->pipe_type;
+    pvt->pub.tos = cfs->tos;
 
     pvt->pub.stuid = CALL_SMETHOD(cfs->guid, gen);
     pvt->pub.seuid = pap->seuid;
+    pvt->pub.stream_ttl = cfs->max_ttl;
     for (unsigned int i = 0; i < nmodules; i++) {
         atomic_init(&(pvt->pmod_data.adp[i]), NULL);
     }

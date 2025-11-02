@@ -16,9 +16,9 @@ permissions:
   contents: write
 
 # Cancels previous runs of this workflow for the same PR
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || startsWith(github.ref_name, 'codex/') || github.ref_name == 'wip' }}
+#concurrency:
+#  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+#  cancel-in-progress: ${{ github.event_name == 'pull_request' || startsWith(github.ref_name, 'codex/') || github.ref_name == 'wip' }}
 
 jobs:
   LoadJobs_conf:

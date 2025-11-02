@@ -80,7 +80,7 @@ get_args4remote(const struct rtpp_cfg *cfsp, const char *rname, struct rtpp_log 
     if (laddr == NULL)
         return (-1);
     int lport;
-    if (rtpp_create_listener(cfsp, laddr, &lport, fds) != 0) {
+    if (rtpp_create_listener(cfsp, laddr, &lport, fds, ap->tos) != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "can't create listener");
         return (-1);
     }
@@ -97,7 +97,6 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, struct rtpp_s
   int idx, const char *rname, const struct record_opts *rop)
 {
     int remote;
-    struct remote_copy_args rargs = {0};
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0)? 1 : 0;
 
@@ -134,9 +133,11 @@ handle_copy(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, struct rtpp_s
     }
 
     int rval = -1;
-    if (remote)
+    struct remote_copy_args rargs = {.tos = spa->rtp->stream[idx]->tos};
+    if (remote) {
         if (get_args4remote(cfsp, rname, spa->log, &rargs) != 0)
             return (-1);
+    }
 
     if (spa->rtp->stream[idx]->rrc == NULL) {
         spa->rtp->stream[idx]->rrc = rtpp_record_ctor(cfsp, &rargs, spa, rname, idx, RECORD_RTP);
