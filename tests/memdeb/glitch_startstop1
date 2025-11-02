@@ -9,5 +9,5 @@ SUDO_REQUIRED=1
 
 disable_aslr
 
-glitch_test startstop/startstop1 6 startstop.rlog "" 3
+glitch_test startstop/startstop1 7 startstop.rlog "" 3
 report "glitching startstop/startstop1"
