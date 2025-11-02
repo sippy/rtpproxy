@@ -410,7 +410,7 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
                     *rval = GET_CMD_OK;
                     return (1);
                 }
-                assert(CALL_SMETHOD(cmd->reply, appendf, "%.*s ", ap->len, ap->s) == 0);
+                assert(CALL_SMETHOD(cmd->reply, appendf, "%.*s ", (int)ap->len, ap->s) == 0);
                 CALL_SMETHOD(cmd->reply, commit);
                 continue;
             }
