@@ -431,7 +431,8 @@ am__objects_55 = rtpp_objck-rtpp_objck.$(OBJEXT) $(am__objects_54) \
 	rtpp_objck-rtpp_queue.$(OBJEXT) \
 	rtpp_objck-rtpp_wi_data.$(OBJEXT) \
 	rtpp_objck-rtpp_wi_sgnl.$(OBJEXT) \
-	rtpp_objck-rtpp_wi_pkt.$(OBJEXT) rtpp_objck-rtp.$(OBJEXT)
+	rtpp_objck-rtpp_wi_pkt.$(OBJEXT) rtpp_objck-rtp.$(OBJEXT) \
+	rtpp_objck-rtpp_util.$(OBJEXT)
 am__objects_56 = $(MAINSRCDIR)/rtpp_objck-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_glitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_autoglitch.$(OBJEXT) \
@@ -525,7 +526,8 @@ am__objects_90 = rtpp_objck_perf-rtpp_objck.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_wi_data.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_wi_sgnl.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_wi_pkt.$(OBJEXT) \
-	rtpp_objck_perf-rtp.$(OBJEXT)
+	rtpp_objck_perf-rtp.$(OBJEXT) \
+	rtpp_objck_perf-rtpp_util.$(OBJEXT)
 am_rtpp_objck_perf_OBJECTS = $(am__objects_90) \
 	rtpp_objck_perf-rtpp_refcnt.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_mallocs.$(OBJEXT)
@@ -1180,6 +1182,7 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/rtpp_objck-rtpp_stats.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_time.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_timed.Po \
+	./$(DEPDIR)/rtpp_objck-rtpp_util.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_wi_data.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_wi_pkt.Po \
 	./$(DEPDIR)/rtpp_objck-rtpp_wi_sgnl.Po \
@@ -1196,6 +1199,7 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/rtpp_objck_perf-rtpp_stats.Po \
 	./$(DEPDIR)/rtpp_objck_perf-rtpp_time.Po \
 	./$(DEPDIR)/rtpp_objck_perf-rtpp_timed.Po \
+	./$(DEPDIR)/rtpp_objck_perf-rtpp_util.Po \
 	./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_data.Po \
 	./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_pkt.Po \
 	./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_sgnl.Po \
@@ -1639,7 +1643,8 @@ rtpp_objck_BASESOURCES = rtpp_objck.c $(SRCS_AUTOGEN) rtpp_network.c \
   rtpp_pearson_perfect.c rtpp_pearson_perfect.h rtpp_pearson.c rtpp_pearson.h \
   rtpp_time.c rtpp_time.h rtpp_timed.c rtpp_timed.h rtp_packet.c rtp_packet.h \
   rtpp_queue.c rtpp_queue.h rtpp_wi.h rtpp_wi_data.c rtpp_wi_data.h \
-  rtpp_wi_sgnl.c rtpp_wi_sgnl.h rtpp_wi_pkt.c rtpp_wi_pkt.h rtp.c rtp.h
+  rtpp_wi_sgnl.c rtpp_wi_sgnl.h rtpp_wi_pkt.c rtpp_wi_pkt.h rtp.c rtp.h \
+  rtpp_util.c rtpp_util.h
 
 rtpp_objck_perf_SOURCES = $(rtpp_objck_BASESOURCES) rtpp_refcnt.c rtpp_refcnt.h \
   rtpp_mallocs.c rtpp_mallocs.h
@@ -2727,6 +2732,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_stats.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_time.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_timed.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_util.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_wi_data.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_wi_pkt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtpp_wi_sgnl.Po@am__quote@ # am--include-marker
@@ -2743,6 +2749,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck_perf-rtpp_stats.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck_perf-rtpp_time.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck_perf-rtpp_timed.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck_perf-rtpp_util.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_data.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_pkt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_sgnl.Po@am__quote@ # am--include-marker
@@ -4326,6 +4333,20 @@ rtpp_objck-rtp.obj: rtp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o rtpp_objck-rtp.obj `if test -f 'rtp.c'; then $(CYGPATH_W) 'rtp.c'; else $(CYGPATH_W) '$(srcdir)/rtp.c'; fi`
 
+rtpp_objck-rtpp_util.o: rtpp_util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT rtpp_objck-rtpp_util.o -MD -MP -MF $(DEPDIR)/rtpp_objck-rtpp_util.Tpo -c -o rtpp_objck-rtpp_util.o `test -f 'rtpp_util.c' || echo '$(srcdir)/'`rtpp_util.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_objck-rtpp_util.Tpo $(DEPDIR)/rtpp_objck-rtpp_util.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_util.c' object='rtpp_objck-rtpp_util.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o rtpp_objck-rtpp_util.o `test -f 'rtpp_util.c' || echo '$(srcdir)/'`rtpp_util.c
+
+rtpp_objck-rtpp_util.obj: rtpp_util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT rtpp_objck-rtpp_util.obj -MD -MP -MF $(DEPDIR)/rtpp_objck-rtpp_util.Tpo -c -o rtpp_objck-rtpp_util.obj `if test -f 'rtpp_util.c'; then $(CYGPATH_W) 'rtpp_util.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_util.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_objck-rtpp_util.Tpo $(DEPDIR)/rtpp_objck-rtpp_util.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_util.c' object='rtpp_objck-rtpp_util.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -c -o rtpp_objck-rtpp_util.obj `if test -f 'rtpp_util.c'; then $(CYGPATH_W) 'rtpp_util.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_util.c'; fi`
+
 $(MAINSRCDIR)/rtpp_objck-rtpp_memdeb.o: $(MAINSRCDIR)/rtpp_memdeb.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/rtpp_objck-rtpp_memdeb.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_memdeb.Tpo -c -o $(MAINSRCDIR)/rtpp_objck-rtpp_memdeb.o `test -f '$(MAINSRCDIR)/rtpp_memdeb.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_memdeb.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_memdeb.Tpo $(MAINSRCDIR)/$(DEPDIR)/rtpp_objck-rtpp_memdeb.Po
@@ -5067,6 +5088,20 @@ rtpp_objck_perf-rtp.obj: rtp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtp.c' object='rtpp_objck_perf-rtp.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_perf_CFLAGS) $(CFLAGS) -c -o rtpp_objck_perf-rtp.obj `if test -f 'rtp.c'; then $(CYGPATH_W) 'rtp.c'; else $(CYGPATH_W) '$(srcdir)/rtp.c'; fi`
+
+rtpp_objck_perf-rtpp_util.o: rtpp_util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_perf_CFLAGS) $(CFLAGS) -MT rtpp_objck_perf-rtpp_util.o -MD -MP -MF $(DEPDIR)/rtpp_objck_perf-rtpp_util.Tpo -c -o rtpp_objck_perf-rtpp_util.o `test -f 'rtpp_util.c' || echo '$(srcdir)/'`rtpp_util.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_objck_perf-rtpp_util.Tpo $(DEPDIR)/rtpp_objck_perf-rtpp_util.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_util.c' object='rtpp_objck_perf-rtpp_util.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_perf_CFLAGS) $(CFLAGS) -c -o rtpp_objck_perf-rtpp_util.o `test -f 'rtpp_util.c' || echo '$(srcdir)/'`rtpp_util.c
+
+rtpp_objck_perf-rtpp_util.obj: rtpp_util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_perf_CFLAGS) $(CFLAGS) -MT rtpp_objck_perf-rtpp_util.obj -MD -MP -MF $(DEPDIR)/rtpp_objck_perf-rtpp_util.Tpo -c -o rtpp_objck_perf-rtpp_util.obj `if test -f 'rtpp_util.c'; then $(CYGPATH_W) 'rtpp_util.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_util.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rtpp_objck_perf-rtpp_util.Tpo $(DEPDIR)/rtpp_objck_perf-rtpp_util.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_util.c' object='rtpp_objck_perf-rtpp_util.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_perf_CFLAGS) $(CFLAGS) -c -o rtpp_objck_perf-rtpp_util.obj `if test -f 'rtpp_util.c'; then $(CYGPATH_W) 'rtpp_util.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_util.c'; fi`
 
 rtpp_objck_perf-rtpp_refcnt.o: rtpp_refcnt.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_objck_perf_CPPFLAGS) $(CPPFLAGS) $(rtpp_objck_perf_CFLAGS) $(CFLAGS) -MT rtpp_objck_perf-rtpp_refcnt.o -MD -MP -MF $(DEPDIR)/rtpp_objck_perf-rtpp_refcnt.Tpo -c -o rtpp_objck_perf-rtpp_refcnt.o `test -f 'rtpp_refcnt.c' || echo '$(srcdir)/'`rtpp_refcnt.c
@@ -7751,6 +7786,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_stats.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_time.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_timed.Po
+	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_util.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_wi_data.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_wi_pkt.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_wi_sgnl.Po
@@ -7767,6 +7803,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_stats.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_time.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_timed.Po
+	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_util.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_data.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_pkt.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_sgnl.Po
@@ -8161,6 +8198,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_stats.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_time.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_timed.Po
+	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_util.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_wi_data.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_wi_pkt.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtpp_wi_sgnl.Po
@@ -8177,6 +8215,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_stats.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_time.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_timed.Po
+	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_util.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_data.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_pkt.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck_perf-rtpp_wi_sgnl.Po
