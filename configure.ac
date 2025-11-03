@@ -437,10 +437,7 @@ AC_LINK_IFELSE(
   [AC_LANG_PROGRAM([[#include <stdint.h>]],
     [[uint64_t val = 0; __atomic_add_fetch(&val, 1, __ATOMIC_RELAXED);]]
   )],
-  [
-    AC_MSG_RESULT([no])
-    AC_SEARCH_LIBS([__atomic_load_8], [atomic])
-  ],
+  [AC_MSG_RESULT([no])],
   [LIBS="$LIBS -latomic"
     AC_LINK_IFELSE(
       [AC_LANG_PROGRAM([[#include <stdint.h>]],
