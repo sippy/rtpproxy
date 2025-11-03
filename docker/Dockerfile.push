@@ -16,4 +16,8 @@ WORKDIR /
 
 COPY --from=build / /
 
+ARG TARGETPLATFORM
+RUN /usr/local/bin/rtpproxy -V
+RUN /usr/local/bin/rtpproxy_debug -V || echo "WARNING: rtpproxy_debug is BROKEN on ${TARGETPLATFORM}" >&2
+
 ENTRYPOINT ["/usr/local/bin/rtpproxy", "-fF"]
