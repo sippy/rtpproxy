@@ -8,12 +8,10 @@ platformopts() {
   ubuntu:*)
     case "${TARGETPLATFORM}" in
     linux/arm64/v8)
-      out="${out} QEMU_CPU=cortex-a53"
+      echo "QEMU_CPU=cortex-a53"
       ;;
     esac
   esac
-  test -z "${out}" || echo ${out}
-  test -z "${@}" || echo "${@}"
 }
 
 case "${1}" in

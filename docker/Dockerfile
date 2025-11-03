@@ -33,11 +33,12 @@ ARG APT_INSTALL="apt-get install --no-install-recommends -y"
 ARG APT_UPDATE="apt-get -y update -qq"
 ARG TARGETPLATFORM
 ARG BASE_IMAGE
+ENV SET_ENV="./get-arch-buildargs.sh platformopts"
 RUN --mount=type=bind,source=docker/install_depends.sh,target=install_depends.sh \
     --mount=type=bind,source=docker/clang_ver.sub,target=docker/clang_ver.sub \
     --mount=type=bind,source=scripts/build/get-arch-buildargs.sh,target=get-arch-buildargs.sh \
-      env `./get-arch-buildargs.sh platformopts` \
-      ./install_depends.sh
+    --mount=type=bind,source=scripts/build/in_docker.sh,target=in_docker.sh \
+      ./in_docker.sh ./install_depends.sh
 
 COPY --exclude=.git* --link . /rtpproxy/
 
@@ -51,8 +52,8 @@ WORKDIR /rtpproxy
 COPY --from=ccache_bin /usr/bin/ccache /usr/bin/ccache
 ARG TARGETPLATFORM
 ARG BASE_IMAGE
-RUN env `./scripts/build/get-arch-buildargs.sh platformopts` \
-  /rtpproxy/docker/build.sh
+ENV SET_ENV="./scripts/build/get-arch-buildargs.sh platformopts"
+RUN ./scripts/build/in_docker.sh /rtpproxy/docker/build.sh
 RUN ls -l /usr/local/bin/rtpproxy*
 RUN ls -l /usr/local/bin/makeann*
 RUN ls -l /usr/local/lib/*rtpproxy*
