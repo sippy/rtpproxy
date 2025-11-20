@@ -28,6 +28,8 @@
 #ifndef _RTPP_PROC_ASYNC_H_
 #define _RTPP_PROC_ASYNC_H_
 
+#include <pthread.h>
+
 struct rtpp_proc_async;
 struct rtpp_anetio_cf;
 struct rtpp_cfg;
