@@ -27,6 +27,8 @@
 
 #include <unistd.h>
 
+#include "config.h"
+
 #include "librtpproxy.h"
 #include "librtpp_main.h"
 
@@ -38,8 +40,8 @@ struct opt_save {
     int optreset;
 };
 
-#if defined(__linux__)
-static int optreset; /* Not present in linux */
+#if !HAVE_DECL_OPTRESET
+static int optreset; /* Not present in glibc */
 #endif
 
 #define OPT_SAVE(sp) (*(sp) = (struct opt_save){optarg, optind, optopt, opterr, optreset})

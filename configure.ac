@@ -449,6 +449,8 @@ AC_LINK_IFELSE(
 )
 AC_CHECK_FUNCS([pthread_yield pthread_setname_np])
 
+AC_CHECK_DECLS([optreset], [], [], [[#include <unistd.h>]])
+
 AC_ARG_ENABLE(docs,
   AS_HELP_STRING([--enable-docs],[enable generation of documentation]),
   [ENABLE_DOCS=${enableval}], [ENABLE_DOCS=no])
