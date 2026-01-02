@@ -325,6 +325,12 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
                 CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_15);
                 goto err_undo_1;
             }
+            if (tpf != ulop->pf) {
+                RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "mismatched protocol (%d local, %d session)",
+                  tpf, ulop->pf);
+                CALL_SMETHOD(cmd->reply, deliver_error, ECODE_INVLARG_1);
+                goto err_undo_1;
+            }
             hostname = alloca(len + 1);
             memcpy(hostname, t, len);
             hostname[len] = '\0';
