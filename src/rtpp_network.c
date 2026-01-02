@@ -375,11 +375,17 @@ int
 is_numhost(const char *hostnm, int pf)
 {
 
-    if ((pf == AF_INET6) && (strcmp(hostnm, "::1") == 0))
-        return 1;
-    if ((pf == AF_INET) && (strcmp(hostnm, "127.0.0.1") == 0))
-        return 1;
-    return 0;
+    if (pf == AF_INET) {
+        if (strcmp(hostnm, "127.0.0.1") == 0)
+            return 1;
+        return 0;
+    }
+    RTPP_DBG_ASSERT(pf == AF_INET6);
+    if (strchr(hostnm, '.') != NULL)
+        return 0;
+    if (strspn(hostnm, "0123456789abcdefABCDEF:") != strlen(hostnm))
+        return 0;
+    return 1;
 }
 
 int
