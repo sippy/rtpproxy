@@ -374,18 +374,11 @@ is_wildcard(const char *hostnm, int pf)
 int
 is_numhost(const char *hostnm, int pf)
 {
-
-    if (pf == AF_INET) {
-        if (strcmp(hostnm, "127.0.0.1") == 0)
-            return 1;
-        return 0;
-    }
-    RTPP_DBG_ASSERT(pf == AF_INET6);
-    if (strchr(hostnm, '.') != NULL)
-        return 0;
-    if (strspn(hostnm, "0123456789abcdefABCDEF:") != strlen(hostnm))
-        return 0;
-    return 1;
+    const char *numset = (pf == AF_INET) ? "0123456789." :
+                                           "0123456789abcdefABCDEF:";
+    if (strspn(hostnm, numset) == strlen(hostnm))
+        return 1;
+    return 0;
 }
 
 int
