@@ -151,7 +151,7 @@ AC_ARG_ENABLE([static-crypto],
   [ENABLE_STATIC_CRYPTO=no])
 
 if test "$ENABLE_STATIC_CRYPTO" = yes; then
-  LIB_CRYPTO='-l:libcrypto.a -lpthread'
+  LIB_CRYPTO="${LIB_CRYPTO_STATIC:-"-l:libcrypto.a -lpthread"}"
   LIB_SSL='-l:libssl.a'
   LIB_SRTP2='-l:libsrtp2.a'
 else
