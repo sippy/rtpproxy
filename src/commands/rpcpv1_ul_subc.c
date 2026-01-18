@@ -73,6 +73,7 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *
   const struct rtpp_command_args *subc_args, struct after_success_h *asp)
 {
     struct delete_opts *dop;
+    struct rtpp_subcommand_set *sop;
 
     switch(subc_args->v[0].s[0]) {
     case 'M':
@@ -103,7 +104,11 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *
     case 's':
         if (subc_args->c != 2 || subc_args->v[0].len < 1 || subc_args->v[0].len > 2)
             return (-1);
-        return (handle_set_subc_parse(cfsp, &subc_args->v[0].s[1], &subc_args->v[1], asp));
+        sop = handle_set_subc_parse(cfsp, &subc_args->v[0].s[1], &subc_args->v[1], asp);
+        if (sop == NULL)
+            return (-1);
+        asp->args.dyn = sop;
+        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, sop);
         break;
 
     default:

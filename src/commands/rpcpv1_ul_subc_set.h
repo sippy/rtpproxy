@@ -40,10 +40,11 @@ enum rtpp_subcommand_set_param {
 };
 
 struct rtpp_subcommand_set {
+    struct rtpp_refcnt *rcnt;
     int val;
     enum rtpp_subcommand_set_param param;
     enum rtpp_subcommand_set_direction direction;
 };
 
-int handle_set_subc_parse(const struct rtpp_cfg *, const char *,
+struct rtpp_subcommand_set *handle_set_subc_parse(const struct rtpp_cfg *, const char *,
   const rtpp_str_const_t *, struct after_success_h *);

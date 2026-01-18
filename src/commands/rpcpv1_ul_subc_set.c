@@ -25,6 +25,7 @@
  */
 
 #include <sys/socket.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -114,7 +115,7 @@ rtpp_subcommand_set_handler(const struct after_success_h_args *ashap,
     return (0);
 }
 
-int
+struct rtpp_subcommand_set *
 handle_set_subc_parse(const struct rtpp_cfg *cfsp, const char *cp,
   const rtpp_str_const_t *v, struct after_success_h *asp)
 {
@@ -125,24 +126,27 @@ handle_set_subc_parse(const struct rtpp_cfg *cfsp, const char *cp,
     } else {
         set_arg.direction = SET_FORWARD;
     }
-    if (strcmp(v->s, "ttl=") == 0) {
+    if (v->len < 5)
+        return (NULL);
+    if (memcmp(v->s, "ttl=", 4) == 0) {
         set_arg.param = SET_PRM_TTL;
         cp = v->s + 4;
-    } else if (strcmp(v->s, "tos=") == 0) {
+    } else if (memcmp(v->s, "tos=", 4) == 0) {
         set_arg.param = SET_PRM_TOS;
         cp = v->s + 4;
     } else {
-        return (-1);
+        return (NULL);
     }
     if (atoi_safe(cp, &set_arg.val) != ATOI_OK)
-        return (-1);
+        return (NULL);
     if (set_arg.val <= 0)
-        return (-1);
-    tap = rtpp_zmalloc(sizeof(set_arg));
+        return (NULL);
+    tap = rtpp_rzmalloc(sizeof(set_arg), offsetof(struct rtpp_subcommand_set, rcnt));
     if (tap == NULL)
-        return (-1);
-    *tap = set_arg;
-    asp->args.dyn = tap;
+        return (NULL);
+    tap->val = set_arg.val;
+    tap->direction = set_arg.direction;
+    tap->param = set_arg.param;
     asp->handler = rtpp_subcommand_set_handler;
-    return (0);
+    return (tap);
 }
