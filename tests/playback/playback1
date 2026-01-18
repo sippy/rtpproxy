@@ -6,7 +6,9 @@
 
 BASEDIR="`dirname "${0}"`/.."
 SUDO_REQUIRED=1
+
 . "${BASEDIR}/functions"
+. "${BASEDIR}/playback/playback1.sub"
 
 TARGET_PORT=12344
 RTPP_TIMEOUT=8
@@ -128,5 +130,10 @@ do
     ${DIFF} playback1.rout ${MODEL_ROUT}
     report "checking rtpproxy stdout"
     sha256_verify ${ofile} playback/playback1.checksums
+    EXTRA_CHECK="playback/playback1.type${ttype}.check"
+    if [ -e "${EXTRA_CHECK}" ]
+    then
+      . "${EXTRA_CHECK}"
+    fi
   done
 done
