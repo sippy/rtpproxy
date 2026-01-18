@@ -1,0 +1,10 @@
+checktos() {
+  if ! ${TCPDUMP} -r "${1}" >/dev/null 2>&1
+  then
+    cp "`which tcpdump`" /tmp
+    local TCPDUMP="/tmp/tcpdump"
+  fi
+  RES="`${TCPDUMP} -r "${1}" -v | grep 'tos ' | sed 's|.*tos ||;s|,.*||' | uniq`"
+  test "${RES}" = "${2}"
+  report "checking TOS [${RES}]"
+}

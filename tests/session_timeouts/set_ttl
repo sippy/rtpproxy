@@ -1,0 +1,9 @@
+#!/bin/sh
+
+BASEDIR="${BASEDIR:-$(dirname -- $0)/..}"
+BASEDIR="$(readlink -f -- $BASEDIR)"
+
+. "${BASEDIR}/functions"
+
+${RPTL_INT} -s "${BASEDIR}/session_timeouts/set_ttl.rptl"
+report "running set_ttl.rptl RPTL script"
