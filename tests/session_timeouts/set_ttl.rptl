@@ -1,0 +1,32 @@
+.eval: 0 -> SESS_NOTFOUND
+.eval: ../src/rtpproxy_debug -> RTPPROXY_BIN
+socket rtpp: stdio: -d warn -p /dev/null
+
+.echo: Setting up sessions...
+rtpp: U callid_1 127.0.0.1 12345 from_tag_1 to_tag_1 && S ttl=2 -> validate_port(_)
+rtpp: L callid_1 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: U callid_2 127.0.0.1 12345 from_tag_2 to_tag_2 -> validate_port(_)
+rtpp: L callid_2 127.0.0.1 54321 from_tag_2 to_tag_2 && S ttl=4 -> validate_port(_)
+rtpp: U callid_3 127.0.0.1 12345 from_tag_3 to_tag_3 && S ttl=1 -> validate_port(_)
+rtpp: L callid_3 127.0.0.1 54321 from_tag_3 to_tag_3 && S ttl=8 -> validate_port(_)
+
+.sleep: 1.5
+.echo: Checking sessions (1 of 4)...
+rtpp: L callid_1 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: L callid_2 127.0.0.1 54321 from_tag_2 to_tag_2 -> validate_port(_)
+rtpp: L callid_3 127.0.0.1 54321 from_tag_3 to_tag_3 -> validate_port(_)
+
+.sleep: 3.5
+.echo: Checking sessions (2 of 4)...
+rtpp: L callid_1 127.0.0.1 54321 from_tag_1 to_tag_1 -> str_compare(SESS_NOTFOUND)
+rtpp: L callid_2 127.0.0.1 54321 from_tag_2 to_tag_2 -> validate_port(_)
+rtpp: L callid_3 127.0.0.1 54321 from_tag_3 to_tag_3 -> validate_port(_)
+
+.sleep: 5.5
+.echo: Checking sessions (3 of 4)...
+rtpp: L callid_2 127.0.0.1 54321 from_tag_2 to_tag_2 -> str_compare(SESS_NOTFOUND)
+rtpp: L callid_3 127.0.0.1 54321 from_tag_3 to_tag_3 -> validate_port(_)
+
+.sleep: 9.5
+.echo: Checking sessions (4 of 4)...
+rtpp: L callid_3 127.0.0.1 54321 from_tag_3 to_tag_3 -> str_compare(SESS_NOTFOUND)

@@ -1,2 +1,2 @@
-Lr127.0.0.1 callid_1 127.0.0.1 %%PORT2%% from_tag_1 to_tag_1
-L6 callid_1_ipv6 ::1 %%PORT2%% from_tag_1 to_tag_1
+Lr127.0.0.1 callid_1 127.0.0.1 %%PORT2%% from_tag_1 to_tag_1 && S tos=43
+L6 callid_1_ipv6 ::1 %%PORT2%% from_tag_1 to_tag_1 && S tos=43
