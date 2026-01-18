@@ -115,11 +115,14 @@ class ScriptRunner():
         socket = self.sockets[cmd.socket_name]
         socket.rc.send_command(command, self.got_result, cmd, command, socket)
 
-    def got_result(self, result, cmd, command, socket):
-        if result == None:
+    def got_result(self, result, cmd, command, socket, ex=None):
+        if result is None or ex is not None:
             from sippy.Core.EventDispatcher import ED2
             ei = ExceptionInfo()
-            ei.exception = Exception(F'None returned by the proxy "{cmd.socket_name}@{socket.spath}" when executing "{cmd.action}"')
+            if ex is None:
+                ei.exception = Exception(F'None returned by the proxy "{cmd.socket_name}@{socket.spath}" when executing "{cmd.action}"')
+            else:
+                ei.exception = ex
             ei.cmd = cmd
             ei.command = command
             self.ex_info = ei
