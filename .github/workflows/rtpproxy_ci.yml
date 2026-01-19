@@ -478,6 +478,15 @@ jobs:
         OS_TAG="`echo ${BASE_IMAGE} | sed 's|:|_|g'`"
         BRANCH_TAG="`echo ${GIT_BRANCH} | sed 's|/|_|g'`"
         CCACHE_IMAGE="${{ env.GHCR_REPO }}:${BRANCH_TAG}-${OS_TAG}-cccache"
+        CACHE_SPEC="type=registry,ref=${CCACHE_IMAGE}"
+        if [ "${DOCKER_RW}" = "true" ]
+        then
+          CACHE_TO="${CACHE_SPEC},mode=max"
+        else
+          CACHE_TO="gha"
+        fi
+        echo "CACHE_SPEC=${CACHE_SPEC}" >> $GITHUB_ENV
+        echo "CACHE_TO=${CACHE_TO}" >> $GITHUB_ENV
         if ! docker pull ${CCACHE_IMAGE} 2>&1 >/dev/null
         then
           CCACHE_BIMAGE="scratch"
@@ -539,7 +548,6 @@ jobs:
     - name: Build Docker image
       uses: docker/build-push-action@v6
       env:
-        CACHE_SPEC: "type=registry,ref=${{ env.GHCR_REPO }}:${{ env.BRANCH_TAG }}-${{ env.OS_TAG }}-buildcache"
         DOCKER_BUILD_SUMMARY: false
         DOCKER_BUILD_RECORD_UPLOAD: false
       with:
@@ -558,7 +566,7 @@ jobs:
         platforms: ${{ env.PLATFORMS }}
         push: true
         cache-from: ${{ env.CACHE_SPEC }}
-        cache-to: ${{ env.CACHE_SPEC }},mode=max
+        cache-to: ${{ env.CACHE_TO }}
 
     - name: Export ccache
       if: env.DOCKER_RW == 'true'
