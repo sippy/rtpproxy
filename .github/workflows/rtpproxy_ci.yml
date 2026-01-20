@@ -477,16 +477,14 @@ jobs:
         echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_ENV
         OS_TAG="`echo ${BASE_IMAGE} | sed 's|:|_|g'`"
         BRANCH_TAG="`echo ${GIT_BRANCH} | sed 's|/|_|g'`"
-        CCACHE_IMAGE="${{ env.GHCR_REPO }}:${BRANCH_TAG}-${OS_TAG}-cccache"
-        CACHE_SPEC="type=registry,ref=${CCACHE_IMAGE}"
         if [ "${DOCKER_RW}" = "true" ]
         then
-          CACHE_TO="${CACHE_SPEC},mode=max"
+          CCACHE_IMAGE="${{ env.GHCR_REPO }}:${BRANCH_TAG}-${OS_TAG}-cccache"
         else
-          CACHE_TO="gha"
+          CCACHE_IMAGE="${{ env.GHCR_REPO }}:master-${OS_TAG}-cccache"
         fi
+        CACHE_SPEC="type=registry,ref=${CCACHE_IMAGE}"
         echo "CACHE_SPEC=${CACHE_SPEC}" >> $GITHUB_ENV
-        echo "CACHE_TO=${CACHE_TO}" >> $GITHUB_ENV
         if ! docker pull ${CCACHE_IMAGE} 2>&1 >/dev/null
         then
           CCACHE_BIMAGE="scratch"
@@ -546,6 +544,7 @@ jobs:
           type=raw,value=latest,enable=${{ env.ADD_LATEST == 'true' }}
 
     - name: Build Docker image
+      if: env.DOCKER_RW == 'true'
       uses: docker/build-push-action@v6
       env:
         DOCKER_BUILD_SUMMARY: false
@@ -566,7 +565,30 @@ jobs:
         platforms: ${{ env.PLATFORMS }}
         push: true
         cache-from: ${{ env.CACHE_SPEC }}
-        cache-to: ${{ env.CACHE_TO }}
+        cache-to: ${{ env.CACHE_SPEC }},mode=max
+
+    - name: Build Docker image (PR)
+      if: env.DOCKER_RW != 'true'
+      uses: docker/build-push-action@v6
+      env:
+        DOCKER_BUILD_SUMMARY: false
+        DOCKER_BUILD_RECORD_UPLOAD: false
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        build-args: |
+          CLANG_VER_OLD=${{ env.CLANG_VER_OLD }}
+          CLANG_VER_NEW=${{ env.CLANG_VER_NEW }}
+          BASE_IMAGE=${{ env.BASE_IMAGE }}
+          LIBG722_IMAGE=${{ env.LIBG722_IMAGE }}
+          CCACHE_IMAGE=${{ env.CCACHE_BIMAGE }}
+          CCACHE_BIN_IMAGE=${{ env.CCACHE_BIN_IMAGE }}
+          CCACHE_ROOT=${{ env.CCACHE_ROOT }}
+          LIBSSL_APKG=${{ env.LIBSSL_APKG }}
+        tags: ${{ env.BUILD_IMAGE }}
+        platforms: ${{ env.PLATFORMS }}
+        push: true
+        cache-from: ${{ env.CACHE_SPEC }}
 
     - name: Export ccache
       if: env.DOCKER_RW == 'true'
