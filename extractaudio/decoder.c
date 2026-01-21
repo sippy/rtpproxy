@@ -35,6 +35,7 @@
 #include <netinet/udp.h>
 #include <stdlib.h>
 #include <string.h>
+#include <err.h>
 
 #include "config.h"
 
@@ -71,6 +72,7 @@ decoder_new(struct session *sp, int dflags)
     dp->stime = dp->pp->pkt->time;
     dp->nticks = dp->sticks = dp->pp->parsed.ts;
     dp->dticks = 0;
+    dp->silence_at_receiver = dp->silence_from_sender = 0;
     dp->lpt = RTP_PCMU;
     dp->dflags = dflags;
     /* dp->f = fopen(i, "w"); */
@@ -79,13 +81,47 @@ decoder_new(struct session *sp, int dflags)
     return (void *)dp;
 }
 
+static
+unsigned int
+extract_some_pending_silence(struct decoder_stream *dp)
+{
+    unsigned int t;
+
+    if (dp->silence_at_receiver > 0) {
+	/* Handle overlapping silences.
+	** If the sender has a gap in the timestamps AND packets arrive later
+	** than playout time, we do not want to double up the generated silence.
+	** So we elide any silence caused by late arrivals that is covered by
+	** the period of sender-indicated silence.
+	*/
+	if (dp->silence_from_sender > 0) {
+	    warnx("Silence overlap: explicit sender gap of %u ticks, inferred silence of %u ticks at receiver", dp->silence_from_sender, dp->silence_at_receiver);
+	    if (dp->silence_at_receiver >= dp->silence_from_sender)
+		dp->silence_at_receiver -= dp->silence_from_sender;
+	    else
+		dp->silence_at_receiver = 0;
+	}
+	t = dp->silence_at_receiver;
+	if (t > 4000)
+	    t = 4000;
+	dp->silence_at_receiver -= t;
+	if (t > 0) return t;
+    }
+
+    t = dp->silence_from_sender;
+    if (t > 4000)
+	t = 4000;
+    dp->silence_from_sender -= t;
+    return t;
+}
+
 int32_t
 decoder_get(struct decoder_stream *dp)
 {
     unsigned int cticks, t;
     int j;
 
-    if (dp->oblen == 0) {
+    while (dp->oblen <= 0) {
         if (dp->pp == NULL)
             return DECODER_EOF;
         cticks = dp->pp->parsed.ts;
@@ -98,30 +134,16 @@ decoder_get(struct decoder_stream *dp)
             dp->nticks = cticks;
             dp->sticks = cticks - (dp->pp->pkt->time - dp->stime) * 8000;
         }
+        /* Calculate sender-indicated silence between the expected timestamp and the current one. */
         if (dp->nticks < cticks) {
             t = cticks - dp->nticks;
-            if (t > 4000)
-                t = 4000;
-            if ((dp->dflags & D_FLAG_NOSYNC) != 0) {
-                dp->nticks += t;
-                dp->dticks += t;
-                return (DECODER_SKIP);
-            }
-            j = generate_silence(dp, dp->obuf, t);
-            if (j <= 0)
-                return DECODER_ERROR;
             dp->nticks += t;
-            dp->dticks += t;
-            dp->oblen = j / 2;
-            dp->obp = dp->obuf;
-        } else if ((dp->pp->pkt->time - dp->stime - (double)dp->dticks / 8000.0) > 0.2) {
-            t = (((dp->pp->pkt->time - dp->stime) * 8000) - dp->dticks) / 2;
-            if (t > 4000)
-                t = 4000;
-            if ((dp->dflags & D_FLAG_NOSYNC) != 0) {
-                dp->dticks += t;
+            if ((dp->dflags & D_FLAG_NOSYNC) != 0)
                 return (DECODER_SKIP);
-            }
+            dp->silence_from_sender += t;
+        }
+        t = extract_some_pending_silence(dp);
+        if (t > 0) {
             j = generate_silence(dp, dp->obuf, t);
             if (j <= 0)
                 return DECODER_ERROR;
@@ -129,13 +151,27 @@ decoder_get(struct decoder_stream *dp)
             dp->oblen = j / 2;
             dp->obp = dp->obuf;
         } else {
+            /* Calculate receiver-detected silence from packet arrival time
+            ** compared to playout time.
+            ** We do not generate silence immediately, because we want the
+            ** generated silence to follow the audio, and possibly be
+            ** subsumed into any sender-indicated silence.
+            ** We do not infer silence if there is no audio payload, because
+            ** we want the silence to prefix the next actual audio data.
+            */
+            if (RPLEN(dp->pp) > 0 && (dp->pp->pkt->time - dp->stime - dp->dticks / 8000.0) > 0.2) {
+                t = (((dp->pp->pkt->time - dp->stime) * 8000) - dp->dticks) / 2;
+                if ((dp->dflags & D_FLAG_NOSYNC) != 0) {
+                    dp->dticks += t;
+                    return (DECODER_SKIP);
+                }
+                dp->silence_at_receiver += t;
+            }
             j = decode_frame(dp, dp->obuf, RPLOAD(dp->pp), RPLEN(dp->pp), \
               sizeof(dp->obuf));
             if (j > 0)
                 dp->lpt = dp->pp->rpkt->pt;
             dp->pp = MYQ_NEXT(dp->pp);
-            if (j <= 0)
-                return decoder_get(dp);
             dp->oblen = j / 2;
             dp->obp = dp->obuf;
         }
