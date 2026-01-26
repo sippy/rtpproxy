@@ -1136,7 +1136,7 @@ _rtpp_main(int argc, const char * const *argv)
         }
     }
 
-    if (cfsp->ropts.no_pid == 0) {
+    if (cfsp->ropts.no_pid == 0 && strcmp(cfsp->pid_file, "/dev/null") != 0) {
         pid_fd = open(cfsp->pid_file, O_WRONLY | O_CREAT, DEFFILEMODE);
         if (pid_fd < 0) {
             RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't open pidfile for writing");
