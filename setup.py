@@ -1,22 +1,41 @@
 from sys import exit, path as sys_path
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 from os.path import realpath, dirname, join as path_join
 from sys import argv as sys_argv
+import sys
 
 sys_path.insert(0, realpath(dirname(__file__)))
-from build_tools.PyTestCommand import PyTestCommand
+try:
+    from build_tools.PyTestCommand import PyTestCommand
+except Exception:
+    PyTestCommand = None
 
 mod_name = 'LossyQueue'
 mod_name_dbg = mod_name + '_debug'
 
 mod_dir = dirname(realpath(__file__))
-src_dir = 'src/'
+src_dir = 'src'
 
-compile_args = [f'-I{src_dir}', '-flto']
-link_args = ['-flto', '-Wl,--version-script=python/symbols.map']
-debug_cflags = ['-g3', '-O0', '-DDEBUG_MOD']
+include_dirs = [path_join(mod_dir, src_dir)]
+
+compile_args = []
+link_args = []
+if sys.platform.startswith('linux'):
+    compile_args = ['-flto']
+    version_script = path_join(mod_dir, 'python', 'symbols.map')
+    link_args = ['-flto', f'-Wl,--version-script={version_script}']
+    debug_cflags = ['-g3', '-O0', '-DDEBUG_MOD']
+elif sys.platform == 'darwin':
+    debug_cflags = ['-g', '-O0', '-DDEBUG_MOD']
+elif sys.platform == 'win32':
+    compile_args = ['/std:c11', '/experimental:c11atomics', '/D_CRT_USE_C11_ATOMICS']
+    debug_cflags = ['/Zi', '/Od', '/DDEBUG_MOD']
+else:
+    debug_cflags = ['-g', '-O0', '-DDEBUG_MOD']
+
 mod_common_args = {
-    'sources': ['python/LossyQueue_mod.c', src_dir + 'SPMCQueue.c'],
+    'sources': ['python/LossyQueue_mod.c', path_join(src_dir, 'SPMCQueue.c')],
+    'include_dirs': include_dirs,
     'extra_compile_args': compile_args,
     'extra_link_args': link_args
 }
@@ -30,6 +49,5 @@ setup (name = 'SPMCQueue',
        version = '1.0',
        description = 'This is a package for LossyQueue module',
        ext_modules = [module1, module2],
-       cmdclass={'test': PyTestCommand},
+       cmdclass={'test': PyTestCommand} if PyTestCommand else {},
 )
-
