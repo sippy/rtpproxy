@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stdatomic.h>
 #include <stdlib.h>
+#if defined(_WIN32)
+#include <malloc.h>
+#endif
 
 #include "SPMCQueue.h"
 
@@ -23,11 +26,45 @@ struct SPMCQueue {
     _Alignas(CACHE_LINE_SIZE) void* slots[0]; // FAM for void pointer type slots
 };
 
+static size_t
+round_up_size(size_t size, size_t alignment)
+{
+    return (size + alignment - 1) & ~(alignment - 1);
+}
+
+static void *
+spmc_aligned_alloc(size_t alignment, size_t size)
+{
+    size_t alloc_size = round_up_size(size, alignment);
+#if defined(_WIN32)
+    return _aligned_malloc(alloc_size, alignment);
+#elif defined(__APPLE__)
+    void *ptr = NULL;
+    if (posix_memalign(&ptr, alignment, alloc_size) != 0) {
+        return NULL;
+    }
+    return ptr;
+#else
+    return aligned_alloc(alignment, alloc_size);
+#endif
+}
+
+static void
+spmc_aligned_free(void *ptr)
+{
+#if defined(_WIN32)
+    _aligned_free(ptr);
+#else
+    free(ptr);
+#endif
+}
+
 // Function to create a new queue
 SPMCQueue *
 create_queue(size_t capacity)
 {
-    SPMCQueue* queue = (SPMCQueue*) aligned_alloc(CACHE_LINE_SIZE, sizeof(SPMCQueue) + sizeof(void*) * capacity);
+    size_t alloc_size = sizeof(SPMCQueue) + sizeof(void*) * capacity;
+    SPMCQueue* queue = (SPMCQueue*) spmc_aligned_alloc(CACHE_LINE_SIZE, alloc_size);
     if (queue == NULL) {
         return NULL;
     }
@@ -42,7 +79,7 @@ create_queue(size_t capacity)
 
 // Function to destroy a queue
 void destroy_queue(SPMCQueue* queue) {
-    free(queue);
+    spmc_aligned_free(queue);
 }
 
 #define LOAD_R_IDX(q, mo) \
