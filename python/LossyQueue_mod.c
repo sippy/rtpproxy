@@ -97,7 +97,7 @@ static PyMethodDef PyLossyQueue_methods[] = {
 static PyTypeObject PyLossyQueueType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = MODULE_NAME_STR "." MODULE_NAME_STR,
-    .tp_doc = "Single producer single consumer queue",
+    .tp_doc = "Single producer multiple consumers queue",
     .tp_basicsize = sizeof(PyLossyQueue),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
@@ -110,7 +110,7 @@ static PyTypeObject PyLossyQueueType = {
 static struct PyModuleDef LossyQueue_module = {
     PyModuleDef_HEAD_INIT,
     .m_name = MODULE_NAME_STR,
-    .m_doc = "Python interface for a lock-free Single Producer Single Consumer (SPSC) queue.",
+    .m_doc = "Python interface for a lock-free Single Producer Multiple Consumers (SPMC) queue.",
     .m_size = -1,
 };
 
