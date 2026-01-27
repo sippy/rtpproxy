@@ -120,6 +120,7 @@ struct rtpp_stream_priv
     struct rtpp_acct_hold hld_stat;
     /* Descriptor */
     struct rtpp_socket *fd;
+    _Atomic(int) _fd_set;
     /* Remote source address */
     struct rtpp_netaddr *rem_addr;
     int npkts_resizer_in_idx;
@@ -331,6 +332,7 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     pvt->pmod_data.nmodules = nmodules;
     pvt->pub.pmod_datap = &(pvt->pmod_data);
     pvt->pub.laddr = sap->lia[ap->side];
+    atomic_init(&pvt->_fd_set, 0);
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_stream_dtor);
     return (&pvt->pub);
 
@@ -913,6 +915,7 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
         RTPP_DBG_ASSERT(pvt->fd != NULL);
         RTPP_OBJ_DECREF(pvt->fd);
         pvt->fd = NULL;
+        atomic_store_explicit(&pvt->_fd_set, 0, memory_order_relaxed);
         pthread_mutex_unlock(&pvt->lock);
         return;
     }
@@ -920,6 +923,7 @@ rtpp_stream_set_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     CALL_SMETHOD(new_skt, set_stuid, self->stuid);
     pvt->fd = new_skt;
     RTPP_OBJ_INCREF(pvt->fd);
+    atomic_store_explicit(&pvt->_fd_set, 1, memory_order_relaxed);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
         _rtpp_stream_plr_start(pvt, getdtime());
     }
@@ -957,6 +961,7 @@ rtpp_stream_update_skt(struct rtpp_stream *self, struct rtpp_socket *new_skt)
     CALL_SMETHOD(new_skt, set_stuid, self->stuid);
     pvt->fd = new_skt;
     RTPP_OBJ_INCREF(pvt->fd);
+    atomic_store_explicit(&pvt->_fd_set, 1, memory_order_relaxed);
     if (pvt->rtps.inact != 0 && !CALL_SMETHOD(pvt->rem_addr, isempty)) {
         _rtpp_stream_plr_start(pvt, getdtime());
     }
@@ -1010,16 +1015,12 @@ rtpp_stream_issendable(struct rtpp_stream *self)
     struct rtpp_stream_priv *pvt;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
     if (CALL_SMETHOD(pvt->rem_addr, isempty)) {
-        pthread_mutex_unlock(&pvt->lock);
         return (0);
     }
-    if (pvt->fd == NULL) {
-        pthread_mutex_unlock(&pvt->lock);
+    if (atomic_load_explicit(&pvt->_fd_set, memory_order_relaxed) == 0) {
         return (0);
     }
-    pthread_mutex_unlock(&pvt->lock);
     return (1);
 }
 

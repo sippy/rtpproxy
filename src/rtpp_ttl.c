@@ -26,9 +26,9 @@
  *
  */
 
-#include <pthread.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 
 #include "rtpp_types.h"
 #include "rtpp_mallocs.h"
@@ -39,9 +39,8 @@
 
 struct rtpp_ttl_priv {
     struct rtpp_ttl pub;
-    int max_ttl;
-    int ttl;
-    pthread_mutex_t lock;
+    _Atomic(int) max_ttl;
+    _Atomic(int) ttl;
 };
 
 static void rtpp_ttl_dtor(struct rtpp_ttl_priv *);
@@ -66,15 +65,11 @@ rtpp_ttl_ctor(int max_ttl)
     if (pvt == NULL) {
         goto e0;
     }
-    if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
-        goto e1;
-    }
-    pvt->ttl = pvt->max_ttl = max_ttl;
+    atomic_init(&pvt->max_ttl, max_ttl);
+    atomic_init(&pvt->ttl, max_ttl);
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_ttl_dtor);
     return ((&pvt->pub));
 
-e1:
-    RTPP_OBJ_DECREF(&(pvt->pub));
 e0:
     return (NULL);
 }
@@ -84,18 +79,17 @@ rtpp_ttl_dtor(struct rtpp_ttl_priv *pvt)
 {
 
     rtpp_ttl_fin(&(pvt->pub));
-    pthread_mutex_destroy(&pvt->lock);
 }
 
 static void
 rtpp_ttl_reset(struct rtpp_ttl *self)
 {
     struct rtpp_ttl_priv *pvt;
+    int max_ttl;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
-    pvt->ttl = pvt->max_ttl;
-    pthread_mutex_unlock(&pvt->lock);
+    max_ttl = atomic_load_explicit(&pvt->max_ttl, memory_order_relaxed);
+    atomic_store_explicit(&pvt->ttl, max_ttl, memory_order_relaxed);
 }
 
 static void
@@ -104,10 +98,8 @@ rtpp_ttl_reset_with(struct rtpp_ttl *self, int max_ttl)
     struct rtpp_ttl_priv *pvt;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
-    pvt->ttl = max_ttl;
-    pvt->max_ttl = max_ttl;
-    pthread_mutex_unlock(&pvt->lock);
+    atomic_store_explicit(&pvt->max_ttl, max_ttl, memory_order_relaxed);
+    atomic_store_explicit(&pvt->ttl, max_ttl, memory_order_relaxed);
 }
 
 static int
@@ -117,9 +109,9 @@ rtpp_ttl_get_remaining(struct rtpp_ttl *self)
     int rval;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
-    rval = pvt->ttl;
-    pthread_mutex_unlock(&pvt->lock);
+    rval = atomic_load_explicit(&pvt->ttl, memory_order_relaxed);
+    if (rval < 0)
+        rval = 0;
     return (rval);
 }
 
@@ -130,10 +122,8 @@ rtpp_ttl_decr(struct rtpp_ttl *self)
     int rval;
 
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
-    rval = pvt->ttl;
-    if (pvt->ttl > 0)
-        pvt->ttl--;
-    pthread_mutex_unlock(&pvt->lock);
+    rval = atomic_fetch_sub_explicit(&pvt->ttl, 1, memory_order_relaxed);
+    if (rval < 0)
+        rval = 0;
     return (rval);
 }
