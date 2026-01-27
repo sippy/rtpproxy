@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdatomic.h>
 
 #include "rtpp_types.h"
 #include "rtpp_codeptr.h"
@@ -45,7 +46,7 @@
 struct rtpp_netaddr_priv {
     struct rtpp_netaddr pub;
     struct sockaddr_storage sas;
-    socklen_t rlen;
+    _Atomic(socklen_t) rlen;
     pthread_mutex_t lock;
 };
 
@@ -84,6 +85,7 @@ rtpp_netaddr_ctor(void)
     if (pthread_mutex_init(&pvt->lock, NULL) != 0) {
         goto e1;
     }
+    atomic_init(&pvt->rlen, 0);
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_netaddr_dtor);
     return ((&pvt->pub));
 
@@ -103,7 +105,7 @@ rtpp_netaddr_set(struct rtpp_netaddr *self, const struct sockaddr *addr, size_t 
 
     pthread_mutex_lock(&pvt->lock);
     memcpy(&pvt->sas, addr, alen);
-    pvt->rlen = alen;
+    atomic_store_explicit(&pvt->rlen, alen, memory_order_relaxed);
     pthread_mutex_unlock(&pvt->lock);
 }
 
@@ -123,9 +125,7 @@ rtpp_netaddr_isempty(struct rtpp_netaddr *self)
 
     RTPP_DBG_ASSERT(self != NULL);
     PUB2PVT(self, pvt);
-    pthread_mutex_lock(&pvt->lock);
-    rval = (pvt->rlen == 0);
-    pthread_mutex_unlock(&pvt->lock);
+    rval = (atomic_load_explicit(&pvt->rlen, memory_order_relaxed) == 0);
     return (rval);
 }
 
@@ -134,11 +134,13 @@ rtpp_netaddr_cmp(struct rtpp_netaddr *self, const struct sockaddr *sap, size_t s
 {
     struct rtpp_netaddr_priv *pvt;
     int rval;
+    socklen_t rlen;
 
     PUB2PVT(self, pvt);
     RTPP_DBG_ASSERT(salen <= sizeof(pvt->sas));
     pthread_mutex_lock(&pvt->lock);
-    if (salen != pvt->rlen) {
+    rlen = atomic_load_explicit(&pvt->rlen, memory_order_relaxed);
+    if (salen != rlen) {
         rval = -1;
         goto unlock_and_return;
     }
@@ -153,10 +155,12 @@ rtpp_netaddr_isaddrseq(struct rtpp_netaddr *self, const struct sockaddr *sap)
 {
     struct rtpp_netaddr_priv *pvt;
     int rval;
+    socklen_t rlen;
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
-    RTPP_DBG_ASSERT(pvt->rlen > 0);
+    rlen = atomic_load_explicit(&pvt->rlen, memory_order_relaxed);
+    RTPP_DBG_ASSERT(rlen > 0);
     rval = isaddrseq(sstosa(&pvt->sas), sap);
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
@@ -167,10 +171,12 @@ rtpp_netaddr_cmphost(struct rtpp_netaddr *self, const struct sockaddr *sap)
 {
     struct rtpp_netaddr_priv *pvt;
     int rval;
+    socklen_t rlen;
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
-    RTPP_DBG_ASSERT(pvt->rlen > 0);
+    rlen = atomic_load_explicit(&pvt->rlen, memory_order_relaxed);
+    RTPP_DBG_ASSERT(rlen > 0);
     rval = ishostseq(sstosa(&pvt->sas), sap);
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
@@ -190,13 +196,15 @@ static size_t
 rtpp_netaddr_get(struct rtpp_netaddr *self, struct sockaddr *sap, size_t salen)
 {
     struct rtpp_netaddr_priv *pvt;
+    socklen_t rlen;
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
-    RTPP_DBG_ASSERT((salen >= pvt->rlen) && (pvt->rlen > 0));
-    memcpy(sap, &pvt->sas, pvt->rlen);
+    rlen = atomic_load_explicit(&pvt->rlen, memory_order_relaxed);
+    RTPP_DBG_ASSERT((salen >= rlen) && (rlen > 0));
+    memcpy(sap, &pvt->sas, rlen);
     pthread_mutex_unlock(&pvt->lock);
-    return (pvt->rlen);
+    return (rlen);
 }
 
 static size_t
@@ -205,10 +213,12 @@ rtpp_netaddr_sip_print(struct rtpp_netaddr *self, char *buf, size_t blen,
 {
     char *rval;
     struct rtpp_netaddr_priv *pvt;
+    socklen_t rlen;
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
-    RTPP_DBG_ASSERT(pvt->rlen > 0);
+    rlen = atomic_load_explicit(&pvt->rlen, memory_order_relaxed);
+    RTPP_DBG_ASSERT(rlen > 0);
     rval = addrport2char_r(sstosa(&pvt->sas), buf, blen, portsep);
     pthread_mutex_unlock(&pvt->lock);
     RTPP_DBG_ASSERT(rval != NULL);
