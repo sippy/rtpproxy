@@ -25,21 +25,6 @@
  *
  */
 
-#ifndef _RTPP_PROC_ASYNC_H_
-#define _RTPP_PROC_ASYNC_H_
+#pragma once
 
-struct rtpp_proc_async;
-struct rtpp_anetio_cf;
-struct rtpp_cfg;
-
-DEFINE_METHOD(rtpp_proc_async, rtpp_proc_async_nudge, int);
-
-struct rtpp_proc_async {
-    struct rtpp_refcnt *rcnt;
-    struct rtpp_anetio_cf *netio;
-    rtpp_proc_async_nudge_t nudge;
-};
-
-struct rtpp_proc_async *rtpp_proc_async_ctor(const struct rtpp_cfg *);
-
-#endif
+void rtpp_proc_async_setprocname(pthread_t thread_id, const char *pname);

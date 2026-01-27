@@ -56,6 +56,7 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_proc.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_proc_util.h"
 #include "rtpp_proc_wakeup.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_sessinfo.h"
@@ -207,19 +208,6 @@ next:
         }
     }
     rtpp_polltbl_free(&tcp->ptbl);
-}
-
-void
-rtpp_proc_async_setprocname(pthread_t thread_id, const char *pname)
-{
-#if HAVE_PTHREAD_SETNAME_NP
-    const char ppr[] = "rtpp_proc: ";
-    char *ptrname = alloca(sizeof(ppr) + strlen(pname));
-    if (ptrname != NULL) {
-        sprintf(ptrname, "%s%s", ppr, pname);
-        (void)pthread_setname_np(thread_id, ptrname);
-    }
-#endif
 }
 
 static int
