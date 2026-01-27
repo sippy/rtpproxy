@@ -23,23 +23,29 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+
  */
 
-#ifndef _RTPP_PROC_ASYNC_H_
-#define _RTPP_PROC_ASYNC_H_
-
-struct rtpp_proc_async;
-struct rtpp_anetio_cf;
-struct rtpp_cfg;
-
-DEFINE_METHOD(rtpp_proc_async, rtpp_proc_async_nudge, int);
-
-struct rtpp_proc_async {
-    struct rtpp_refcnt *rcnt;
-    struct rtpp_anetio_cf *netio;
-    rtpp_proc_async_nudge_t nudge;
-};
-
-struct rtpp_proc_async *rtpp_proc_async_ctor(const struct rtpp_cfg *);
-
+#if defined(LINUX_XXX) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE /* pthread_setname_np() */
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+
+#include "config.h"
+
+void
+rtpp_proc_async_setprocname(pthread_t thread_id, const char *pname)
+{
+#if HAVE_PTHREAD_SETNAME_NP
+    const char ppr[] = "rtpp_proc: ";
+    char *ptrname = alloca(sizeof(ppr) + strlen(pname));
+    if (ptrname != NULL) {
+        sprintf(ptrname, "%s%s", ppr, pname);
+        (void)pthread_setname_np(thread_id, ptrname);
+    }
+#endif
+}

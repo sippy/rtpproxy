@@ -56,7 +56,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtp_packet.c rtpp_time.c rtpp_time.h rtpp_pcnts_strm.h rtpp_runcreds.h \
   rtpp_sessinfo.c rtpp_weakref.c rtpp_rw_lock.c \
   rtpp_proc_servers.c rtpp_stream.c rtpp_proc_wakeup.c \
-  rtpp_genuid.c \
+  rtpp_genuid.c rtpp_proc_util.c rtpp_proc_util.h \
   rtpp_log_obj.c rtpp_socket.c rtpp_wi_apis.c rtpp_wi_apis.h \
   rtpp_ttl.c rtpp_proc_ttl.h rtpp_proc_ttl.c \
   rtpp_pipe.c rtpp_pcount.c rtpp_debug.h rtpp_wi_sgnl.c rtpp_wi_sgnl.h \

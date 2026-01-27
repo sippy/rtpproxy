@@ -45,6 +45,7 @@
 #include "rtpp_time.h"
 #include "rtpp_threads.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_proc_util.h"
 #include "rtpp_proc_wakeup_fin.h"
 #include "rtpp_proc_wakeup.h"
 
