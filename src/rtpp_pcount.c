@@ -53,13 +53,15 @@ struct _rtpps_pcount {
 
 #define TOP_DROPS_SIZE 4
 
+struct rtpp_pcount_loc {
+    _Atomic(uintptr_t) ptr_hashed;
+    _Atomic(unsigned long) cnt;
+};
+
 struct rtpp_pcount_priv {
     struct rtpp_pcount pub;
     struct _rtpps_pcount cnt;
-    struct {
-        _Atomic(const struct rtpp_codeptr *) ptr;
-        _Atomic(unsigned long) cnt;
-    } top_drop_locs[TOP_DROPS_SIZE];
+    struct rtpp_pcount_loc top_drop_locs[TOP_DROPS_SIZE];
 };
 
 static void rtpp_pcount_dtor(struct rtpp_pcount_priv *);
@@ -90,7 +92,7 @@ rtpp_pcount_ctor(void)
     atomic_init(&(pvt->cnt.ndropped), 0);
     atomic_init(&(pvt->cnt.nignored), 0);
     for (int i = 0; i < TOP_DROPS_SIZE; i++) {
-        atomic_init(&(pvt->top_drop_locs[i].ptr), NULL);
+        atomic_init(&(pvt->top_drop_locs[i].ptr_hashed), 0);
         atomic_init(&(pvt->top_drop_locs[i].cnt), 0);
     }
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_pcount_dtor);
@@ -116,27 +118,41 @@ rtpp_pcount_reg_reld(struct rtpp_pcount *self)
     atomic_fetch_add_explicit(&pvt->cnt.nrelayed, 1, memory_order_relaxed);
 }
 
+struct rtpp_pcount_loc_cached {
+    uintptr_t ptr_hashed;
+    _Atomic(unsigned long) *cntp;
+};
+
 static void
 rtpp_pcount_reg_drop(struct rtpp_pcount *self, HERETYPEARG)
 {
     struct rtpp_pcount_priv *pvt;
+    static _Thread_local struct rtpp_pcount_loc_cached cached_ptr = {};
 
     PUB2PVT(self, pvt);
     atomic_fetch_add_explicit(&pvt->cnt.ndropped, 1, memory_order_relaxed);
     assert(mlp != NULL);
+    uintptr_t hashed_ptr = (uintptr_t)mlp ^ (uintptr_t)self;
+    if (cached_ptr.ptr_hashed == hashed_ptr) {
+        atomic_fetch_add_explicit(cached_ptr.cntp, 1, memory_order_relaxed);
+        return;
+    }
+
     for (int i = 0; i < TOP_DROPS_SIZE; i++) {
-        const struct rtpp_codeptr *old_ptr;
+        uintptr_t old_ptr;
 
 retry:
-        old_ptr = atomic_load_explicit(&pvt->top_drop_locs[i].ptr, memory_order_relaxed);
-        if (old_ptr == NULL) {
-            if (atomic_compare_exchange_strong(&pvt->top_drop_locs[i].ptr, &old_ptr, mlp) != true) {
+        old_ptr = atomic_load_explicit(&pvt->top_drop_locs[i].ptr_hashed, memory_order_relaxed);
+        if (old_ptr == 0) {
+            if (atomic_compare_exchange_strong(&pvt->top_drop_locs[i].ptr_hashed, &old_ptr, hashed_ptr) != true) {
                 goto retry;
             }
         }
-        if (old_ptr != NULL && old_ptr != mlp)
+        if (old_ptr != 0 && old_ptr != hashed_ptr)
             continue;
         atomic_fetch_add_explicit(&pvt->top_drop_locs[i].cnt, 1, memory_order_relaxed);
+        cached_ptr.ptr_hashed = hashed_ptr;
+        cached_ptr.cntp = &pvt->top_drop_locs[i].cnt;
         break;
     }
 }
@@ -147,12 +163,14 @@ static void rtpp_pcount_log_drops(struct rtpp_pcount *self, struct rtpp_log *log
 
     PUB2PVT(self, pvt);
     for (int i = 0; i < TOP_DROPS_SIZE; i++) {
+        uintptr_t hashed_ptr;
         const struct rtpp_codeptr *mlp;
         unsigned long cnt;
 
-        mlp = atomic_load_explicit(&pvt->top_drop_locs[i].ptr, memory_order_relaxed);
-        if (mlp == NULL)
+        hashed_ptr = atomic_load_explicit(&pvt->top_drop_locs[i].ptr_hashed, memory_order_relaxed);
+        if (hashed_ptr == 0)
             break;
+        mlp = (const struct rtpp_codeptr *)(hashed_ptr ^ (uintptr_t)self);
         cnt = atomic_load_explicit(&pvt->top_drop_locs[i].cnt, memory_order_relaxed);
         if (cnt == 0)
             continue;
