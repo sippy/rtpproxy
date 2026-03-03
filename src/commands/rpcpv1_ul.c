@@ -336,7 +336,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             hostname[len] = '\0';
             ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
             ai_flags |= cfsp->no_resolve ? AI_NUMERICHOST : 0;
-            ulop->local_addr = CALL_METHOD(cfsp->bindaddrs_cf, host2, hostname,
+            ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, host2, hostname,
               tpf, ai_flags, &errmsg);
             if (ulop->local_addr == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
@@ -358,7 +358,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
             hostname = alloca(len + 1);
             memcpy(hostname, t, len);
             hostname[len] = '\0';
-            ulop->local_addr = CALL_METHOD(cfsp->bindaddrs_cf, local4remote, cfsp,
+            ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, local4remote, cfsp,
               cmd->glog, tpf, hostname, SERVICE);
             if (ulop->local_addr == NULL) {
                 CALL_SMETHOD(cmd->reply, deliver_error, ECODE_INVLARG_2);
@@ -386,7 +386,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
          * local/remote address provided either via "R" or "L" make sure we
          * pick up address that matches the address family of the stream.
          */
-        ulop->local_addr = CALL_METHOD(cfsp->bindaddrs_cf, foraf,
+        ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, foraf,
           ulop->pf);
         if (ulop->local_addr == NULL) {
             RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "cannot match local "

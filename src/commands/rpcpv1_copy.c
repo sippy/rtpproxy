@@ -76,7 +76,7 @@ get_args4remote(const struct rtpp_cfg *cfsp, const char *rname, struct rtpp_log 
     }
     *tmp = '\0';
 
-    laddr = CALL_METHOD(cfsp->bindaddrs_cf, local4remote, cfsp, log, AF_INET, ap->rhost, SERVICE);
+    laddr = CALL_SMETHOD(cfsp->bindaddrs_cf, local4remote, cfsp, log, AF_INET, ap->rhost, SERVICE);
     if (laddr == NULL)
         return (-1);
     int lport;

@@ -45,6 +45,9 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_network.h"
 #include "rtpp_mallocs.h"
+#include "rtpp_codeptr.h"
+#include "rtpp_refcnt.h"
+#include "rtpp_str.h"
 #include "rtpp_bindaddrs.h"
 
 struct bindaddr_list {
@@ -58,6 +61,7 @@ struct rtpp_bindaddrs_pvt {
     pthread_mutex_t bindaddr_lock;
 };
 
+static void rtpp_bindaddrs_dtor(struct rtpp_bindaddrs_pvt *);
 static const struct sockaddr *
 addr2bindaddr(struct rtpp_bindaddrs *pub, const struct sockaddr *ia, const char **ep)
 {
@@ -134,17 +138,15 @@ bindaddr4af(struct rtpp_bindaddrs *pub, int af)
 }
 
 static void
-rtpp_bindaddrs_dtor(struct rtpp_bindaddrs *pub)
+rtpp_bindaddrs_dtor(struct rtpp_bindaddrs_pvt *cf)
 {
-    struct rtpp_bindaddrs_pvt *cf;
     struct bindaddr_list *bl, *bl_next;
 
-    PUB2PVT(pub, cf);
     for (bl = cf->bindaddr_list; bl != NULL; bl = bl_next) {
         bl_next = bl->next;
         free(bl);
     }
-    free(cf);
+    pthread_mutex_destroy(&cf->bindaddr_lock);
 }
 
 static const struct sockaddr *
@@ -175,24 +177,27 @@ rtpp_bindaddrs_local4remote(struct rtpp_bindaddrs *pub, const struct rtpp_cfg *c
     return (rval);
 }
 
+DEFINE_SMETHODS(rtpp_bindaddrs,
+    .addr2 = &addr2bindaddr,
+    .host2 = &host2bindaddr,
+    .foraf = &bindaddr4af,
+    .local4remote = &rtpp_bindaddrs_local4remote,
+);
+
 struct rtpp_bindaddrs *
 rtpp_bindaddrs_ctor(void)
 {
     struct rtpp_bindaddrs_pvt *cf;
 
-    cf = rtpp_zmalloc(sizeof(*cf));
+    cf = rtpp_rzmalloc(sizeof(*cf), PVT_RCOFFS(cf));
     if (cf == NULL)
         goto e0;
     if (pthread_mutex_init(&cf->bindaddr_lock, NULL) != 0)
         goto e1;
-    cf->pub.addr2 = addr2bindaddr;
-    cf->pub.host2 = host2bindaddr;
-    cf->pub.foraf = bindaddr4af;
-    cf->pub.dtor = rtpp_bindaddrs_dtor;
-    cf->pub.local4remote = rtpp_bindaddrs_local4remote;
+    PUBINST_FININIT(&cf->pub, cf, rtpp_bindaddrs_dtor);
     return (&(cf->pub));
 e1:
-    free(cf);
+    RTPP_OBJ_DECREF(&(cf->pub));
 e0:
     return (NULL);
 }

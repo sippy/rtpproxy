@@ -303,7 +303,7 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
     if (msg != NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "%s", msg);
     }
-    CALL_METHOD(cfsp->bindaddrs_cf, dtor);
+    RTPP_OBJ_DECREF(cfsp->bindaddrs_cf);
     free(cfsp->locks);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     CALL_METHOD(cfsp->nofile, dtor);
@@ -851,14 +851,14 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 	rmode |= cfsp->no_resolve ? AI_NUMERICHOST : 0;
 	cfsp->bindaddr[i] = NULL;
 	if (bh[i] != NULL) {
-	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
+	    cfsp->bindaddr[i] = CALL_SMETHOD(cfsp->bindaddrs_cf,
               host2, bh[i], AF_INET, rmode, &errmsg);
 	    if (cfsp->bindaddr[i] == NULL)
 		IC_ERRX(1, "host2bindaddr(%s): %s", bh[i], errmsg);
 	    continue;
 	}
 	if (bh6[i] != NULL) {
-	    cfsp->bindaddr[i] = CALL_METHOD(cfsp->bindaddrs_cf,
+	    cfsp->bindaddr[i] = CALL_SMETHOD(cfsp->bindaddrs_cf,
               host2, bh6[i], AF_INET6, rmode, &errmsg);
 	    if (cfsp->bindaddr[i] == NULL)
 		IC_ERRX(1, "host2bindaddr(%s): %s", bh6[i], errmsg);
@@ -908,7 +908,7 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
     RTPP_OBJ_DECREF(cfsp->pproc_manager);
     free(cfsp->runcreds);
     RTPP_OBJ_DECREF(cfsp->rtpp_notify_cf);
-    CALL_METHOD(cfsp->bindaddrs_cf, dtor);
+    RTPP_OBJ_DECREF(cfsp->bindaddrs_cf);
     free(cfsp->locks);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
     CALL_SMETHOD(cfsp->rtpp_timed_cf, shutdown);

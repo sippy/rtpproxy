@@ -26,30 +26,28 @@
  *
  */
 
-#ifndef _RTPP_BINDADDRS_H_
-#define _RTPP_BINDADDRS_H_
+#pragma once
 
 struct sockaddr;
-struct rtpp_bindaddrs;
+struct rtpp_bindaddr;
+struct rtpp_cfg;
+struct rtpp_log;
 
-DEFINE_METHOD(rtpp_bindaddrs, addr2bindaddr, const struct sockaddr *,
+DECLARE_CLASS(rtpp_bindaddrs, void);
+
+DECLARE_METHOD(rtpp_bindaddrs, addr2bindaddr, const struct sockaddr *,
   const struct sockaddr *, const char **);
-DEFINE_METHOD(rtpp_bindaddrs, host2bindaddr, const struct sockaddr *,
+DECLARE_METHOD(rtpp_bindaddrs, host2bindaddr, const struct sockaddr *,
   const char *, int, int, const char **);
-DEFINE_METHOD(rtpp_bindaddrs, bindaddr4af, const struct sockaddr *, int);
-DEFINE_METHOD(rtpp_bindaddrs, local4remote, const struct sockaddr *,
+DECLARE_METHOD(rtpp_bindaddrs, bindaddr4af, const struct sockaddr *, int);
+DECLARE_METHOD(rtpp_bindaddrs, local4remote, const struct sockaddr *,
   const struct rtpp_cfg *, struct rtpp_log *, int, const char *, const char *);
-DEFINE_METHOD(rtpp_bindaddrs, rtpp_bindaddrs_dtor, void);
 
-struct rtpp_bindaddrs {
-    addr2bindaddr_t addr2;
-    host2bindaddr_t host2;
-    bindaddr4af_t foraf;
-    local4remote_t local4remote;
-    rtpp_bindaddrs_dtor_t dtor;
+DECLARE_SMETHODS(rtpp_bindaddrs) {
+    METHOD_ENTRY(addr2bindaddr, addr2);
+    METHOD_ENTRY(host2bindaddr, host2);
+    METHOD_ENTRY(bindaddr4af,  foraf);
+    METHOD_ENTRY(local4remote, local4remote);
 };
 
-/* Function prototypes */
-struct rtpp_bindaddrs *rtpp_bindaddrs_ctor(void);
-
-#endif
+DECLARE_CLASS_PUBTYPE(rtpp_bindaddrs, {});

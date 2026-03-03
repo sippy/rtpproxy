@@ -106,6 +106,7 @@ extern const struct rtpp_proc_servers_smethods * const rtpp_proc_servers_smethod
 extern const struct rtpp_proc_wakeup_smethods * const rtpp_proc_wakeup_smethods;
 extern const struct pproc_manager_smethods * const pproc_manager_smethods RTPP_EXPORT;
 extern const struct rtpp_dtls_conn_smethods * const rtpp_dtls_conn_smethods;
+extern const struct rtpp_bindaddrs_smethods * const rtpp_bindaddrs_smethods;
 extern const struct rtpp_socket_smethods * const rtpp_socket_smethods;
 extern const struct rtpp_refproxy_smethods * const rtpp_refproxy_smethods RTPP_EXPORT;
 extern const struct rtpc_reply_smethods * const rtpc_reply_smethods;
@@ -134,6 +135,7 @@ extern const struct rtpp_genuid_smethods * const rtpp_genuid_smethods;
     struct rtpp_proc_wakeup *: rtpp_proc_wakeup_smethods, \
     struct pproc_manager *: pproc_manager_smethods, \
     struct rtpp_dtls_conn *: rtpp_dtls_conn_smethods, \
+    struct rtpp_bindaddrs *: rtpp_bindaddrs_smethods, \
     struct rtpp_socket *: rtpp_socket_smethods, \
     struct rtpp_refproxy *: rtpp_refproxy_smethods, \
     struct rtpc_reply *: rtpc_reply_smethods, \
