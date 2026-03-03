@@ -31,7 +31,7 @@
 rtpproxy \- RTP (Real\-time Transport Protocol) Proxy Server
 .SH "SYNOPSIS"
 .HP \w'\fBrtpproxy\fR\ 'u
-\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-V\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-L\fR\ \fInofile_limit\fR] [\fB\-A\fR\ \fIadvaddr1\fR\fI[/advaddr2]\fR] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-w\fR\ \fIsock_mode\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR] [\fB\-W\fR\ \fIsetup_ttl\fR] [\fB\-\-force_asymmetric\fR]
+\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-V\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-l\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-6\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-L\fR\ \fInofile_limit\fR] [\fB\-A\fR\ \fIadvaddr1\fR\fI[/advaddr2]\fR] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-w\fR\ \fIsock_mode\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR] [\fB\-W\fR\ \fIsetup_ttl\fR] [\fB\-\-force_asymmetric\fR]
 .SH "DESCRIPTION"
 .PP
 The
@@ -75,12 +75,29 @@ Show supported rtpp command protocol revisions\&.
 .PP
 \fB\-l\fR \fIaddr1\fR\fI[/addr2]\fR
 .RS 4
-IPv4 listen IP address(es)\&. You can specify either one or two addresses\&. If two addresses are specified, the rtpproxy will work in bridging mode\&.
+IPv4 listen IP address(es)\&. This option can be specified multiple times\&. Bridging mode can be enabled when the first IPv4 (or first IPv6) listen argument is specified as
+\fIaddr1/addr2\fR\&.
+.sp
+Additional labeled listen addresses use the separate format
+\fI[label@]address[=advertized_address]\fR\&. The
+\fI/addr2\fR
+form is not valid for labeled entries\&.
+.sp
+When multiple listen addresses are configured, all addresses after the first must have unique labels\&. Such labels are accepted by the
+l{label}
+argument in
+U
+and
+L
+commands\&.
 .RE
 .PP
 \fB\-6\fR \fIaddr1\fR\fI[/addr2]\fR
 .RS 4
-IPv6 listen IP address(es)\&. You can specify either one or two addresses\&. If two addresses are specified, the rtpproxy will work in bridging mode\&.
+IPv6 listen IP address(es)\&. This option can be specified multiple times\&. Two argument formats are supported:
+\fIaddr1[/addr2]\fR
+and
+\fI[label@]address[=advertized_address]\fR\&.
 .RE
 .PP
 \fB\-s\fR \fIctrl_socket\fR
@@ -247,6 +264,14 @@ The rtpproxy requires four file descriptors per session to ensure that it can re
 Set advertised address of rtpproxy\&. Useful if the rtpproxy is behind a NAT firewall\&. (Amazon EC2) When the rtpproxy receives a session request from a SIP controller it will return the IP address(es) specified by the
 \fB\-A\fR
 option\&.
+.sp
+This option configures the legacy bridge
+\fIinternal/external\fR
+address pair\&. For per\-address advertised overrides with multiple
+\fB\-l\fR/\fB\-6\fR
+entries, use
+\fI=advertized_address\fR
+inside each listen address argument\&.
 .RE
 .PP
 \fB\-m\fR \fImin_port\fR
@@ -407,13 +432,13 @@ The latest version of this program and its components can be found at
 Author.
 .RE
 .PP
-\fBMaksym Sobolyev\fR <\&sobomax@gmail\&.com\&>
+\fBMaksym Sobolyev\fR <\&sobomax@sippysoft\&.com\&>
 .RS 4
 Author.
 .RE
 .SH "COPYRIGHT"
 .br
-Copyright \(co 2006-20019 Maksym Sobolyev \m[blue]\fB<sobomax@gmail\&.com>\fR\m[]
+Copyright \(co 2006-2026 Maksym Sobolyev \m[blue]\fB<sobomax@sippysoft\&.com>\fR\m[]
 .br
 Copyright \(co 2006 Jan Janak \m[blue]\fB<janakj@users\&.berlios\&.de>\fR\m[]
 .br

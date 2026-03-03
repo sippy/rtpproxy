@@ -62,3 +62,5 @@ rtpp_command_reply_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.h $(RTP
 SRCS_AUTOGEN_DEBUG += $(rtpp_command_reply_AUTOSRCS)
 rtpp_genuid_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.c
 SRCS_AUTOGEN_DEBUG += $(rtpp_genuid_AUTOSRCS)
+rtpp_bindaddrs_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_bindaddrs_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_bindaddrs_fin.c
+SRCS_AUTOGEN_DEBUG += $(rtpp_bindaddrs_AUTOSRCS)
