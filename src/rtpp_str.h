@@ -69,6 +69,10 @@ struct rtpp_str {
 
 #define RTPP_STR_ITERATE(sp, cp) for((cp) = (sp)->s; (cp) < ((sp)->s + (sp)->len); (cp)++)
 
+#define rtpp_str_mutble_i(_s)	((rtpp_str_mutble_t){.s = _s, .len = strlen(_s)})
+#define rtpp_str_const_i(_s)	((rtpp_str_const_t){.s = _s, .len = strlen(_s)})
+#define rtpp_str_i(_s)		((rtpp_str_t){.s = _s, .len = (sizeof(_s) - 1)})
+
 struct rtpp_str *_rtpp_str_dup2(const struct rtpp_str *,
   struct rtpp_str *dst);
 

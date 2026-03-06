@@ -627,7 +627,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 
     if (i == -1 && cmd->cca.op != UPDATE) {
         rtpp_str_t to_tag = cmd->cca.to_tag ? *cmd->cca.to_tag :
-          (rtpp_str_t){.len = 4, .s = "NONE"};
+          rtpp_str_i("NONE");
         RTPP_LOG(cfsp->glog, RTPP_LOG_INFO,
           "%s request failed: session %.*s, tags %.*s/%.*s not found", cmd->cca.rname,
           (int)cmd->cca.call_id->len, cmd->cca.call_id->s, (int)cmd->cca.from_tag->len,
