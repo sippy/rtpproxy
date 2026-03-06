@@ -615,7 +615,8 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
     struct recvset *rsp[UC_MAX_THREADS];
     int i;
     double pps, tduration_s, tduration_r, poll_rate;
-    uint64_t nrecvd_total, nsent_total, nsent_succ_total, rtt_total;
+    uint64_t nrecvd_total, nsent_total, nsent_succ_total;
+    MAYBE_UNUSED uint64_t rtt_total;
     uint64_t send_nerrs_total, send_nshrts_total;
     static int test_run_n;
 

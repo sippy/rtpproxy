@@ -34,6 +34,8 @@
 #include <string.h>
 #include <stdatomic.h>
 
+#include "config.h"
+
 #include "rtpp_types.h"
 #include "rtpp_codeptr.h"
 #include "rtpp_refcnt.h"
@@ -155,7 +157,7 @@ rtpp_netaddr_isaddrseq(struct rtpp_netaddr *self, const struct sockaddr *sap)
 {
     struct rtpp_netaddr_priv *pvt;
     int rval;
-    socklen_t rlen;
+    MAYBE_UNUSED socklen_t rlen;
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
@@ -171,7 +173,7 @@ rtpp_netaddr_cmphost(struct rtpp_netaddr *self, const struct sockaddr *sap)
 {
     struct rtpp_netaddr_priv *pvt;
     int rval;
-    socklen_t rlen;
+    MAYBE_UNUSED socklen_t rlen;
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
@@ -213,7 +215,7 @@ rtpp_netaddr_sip_print(struct rtpp_netaddr *self, char *buf, size_t blen,
 {
     char *rval;
     struct rtpp_netaddr_priv *pvt;
-    socklen_t rlen;
+    MAYBE_UNUSED socklen_t rlen;
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
