@@ -138,7 +138,7 @@ DECLARE_CLASS_PUBTYPE(rtpp_stream, {
     /* ttl for stream */
     struct rtpp_ttl *ttl;
     /* Local listen address/port */
-    const struct sockaddr *laddr;
+    const struct rtpp_bindaddr *laddr;
     int port;
     int asymmetric;
     int stream_ttl;

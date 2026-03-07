@@ -1,0 +1,62 @@
+.eval: 127.0.0.1 -> ADDR_IPv4
+.eval: 1.2.3.4 -> AADDR_IPv4
+.eval: ::1 -> ADDR_IPv6
+.eval: 1:2:3 -> AADDR_IPv6
+.eval: 6 -> PROTO_IPv6
+.eval: ../src/rtpproxy_debug -> RTPPROXY_BIN
+socket rtpp: stdio: -d warn -p /dev/null -l * -6 /:: -l one@127.0.0.1 -l two@127.0.0.1=1.2.3.4 -6 three@::1 -6 four@::1=1:2:3
+
+.echo: Setting up sessions...
+rtpp: U callid_1 127.0.0.1 12345 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: L callid_1 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: Ul{one} callid_2 127.0.0.1 12345 from_tag_2 to_tag_2 -> str_split( , PORT, ADDR)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(ADDR_IPv4)
+rtpp: Ll{two} callid_2 127.0.0.1 54321 from_tag_2 to_tag_2 -> str_split( , PORT, ADDR)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv4)
+rtpp: U6l{three} callid_3 ::2 12345 from_tag_3 to_tag_3 -> str_split( , PORT, ADDR, PROTO)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(ADDR_IPv6)
+.eval: %%PROTO%% -> str_compare(PROTO_IPv6)
+rtpp: L6l{four} callid_3 ::3 54321 from_tag_3 to_tag_3 -> str_split( , PORT, ADDR, PROTO)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv6)
+.eval: %%PROTO%% -> str_compare(PROTO_IPv6)
+rtpp: U6 callid_4 ::4 12345 from_tag_1 to_tag_1 -> str_split( , PORT, ADDR, PROTO)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv6)
+.eval: %%PROTO%% -> str_compare(PROTO_IPv6)
+rtpp: L6 callid_4 ::5 54321 from_tag_1 to_tag_1 -> str_split( , PORT, ADDR, PROTO)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv6)
+.eval: %%PROTO%% -> str_compare(PROTO_IPv6)
+rtpp: Uie callid_5 127.0.0.1 12345 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: L6ei callid_5 ::6 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: Uii callid_6 127.0.0.1 12345 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: Lii callid_6 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: U6ei callid_7 ::6 12345 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: Lie callid_7 127.0.0.1 12345 from_tag_1 to_tag_1 -> validate_port(_)
+
+socket rtpp: stdio: -d warn -p /dev/null -l 127.0.0.1 -6 /::1 -A 1.2.3.4/1:2:3
+
+rtpp: Ur[::1] callid_8 127.0.0.1 12345 from_tag_1 to_tag_1 -> str_split( , PORT, ADDR, PROTO)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv6)
+.eval: %%PROTO%% -> str_compare(PROTO_IPv6)
+rtpp: L6r127.0.0.1 callid_8 ::6 54321 from_tag_1 to_tag_1 -> str_split( , PORT, ADDR)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv4)
+rtpp: Ur127.0.0.1 callid_9 127.0.0.1 12345 from_tag_1 to_tag_1 -> str_split( , PORT, ADDR)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv4)
+rtpp: Lr127.0.0.1 callid_9 127.0.0.1 54321 from_tag_1 to_tag_1 -> str_split( , PORT, ADDR)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv4)
+rtpp: U6r127.0.0.1 callid_10 ::6 12345 from_tag_1 to_tag_1 -> str_split( , PORT, ADDR)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv4)
+rtpp: Lr[::1] callid_10 127.0.0.1 12345 from_tag_1 to_tag_1 -> str_split( , PORT, ADDR, PROTO)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%ADDR%% -> str_compare(AADDR_IPv6)
+.eval: %%PROTO%% -> str_compare(PROTO_IPv6)

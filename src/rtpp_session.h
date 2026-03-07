@@ -35,6 +35,7 @@ struct common_cmd_args;
 struct sockaddr;
 struct rtpp_timestamp;
 struct rtpp_timeout_data;
+struct rtpp_bindaddr;
 
 struct rtpp_session {
     const rtpp_str_t *call_id;
@@ -61,7 +62,7 @@ struct rtpp_session_ctor_args {
     const struct rtpp_cfg *cfs;
     struct common_cmd_args *ccap;
     const struct rtpp_timestamp *dtime;
-    const struct sockaddr **lia;
+    const struct rtpp_bindaddr **lia;
     int weak;
 };
 

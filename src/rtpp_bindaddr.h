@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2006 Maxim Sobolev <sobomax@FreeBSD.org>
- * Copyright (c) 2006-2016 Sippy Software, Inc., http://www.sippysoft.com
+ * Copyright (c) 2026 Sippy Software, Inc., http://www.sippysoft.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,30 +28,14 @@
 #pragma once
 
 struct sockaddr;
-struct rtpp_bindaddr;
-struct rtpp_bindaddr_params;
-struct rtpp_cfg;
-struct rtpp_log;
 struct rtpp_str_const;
 
-DECLARE_CLASS(rtpp_bindaddrs, void);
-
-DECLARE_METHOD(rtpp_bindaddrs, addr2bindaddr, const struct rtpp_bindaddr *,
-  const struct sockaddr *, const char **);
-DECLARE_METHOD(rtpp_bindaddrs, label2bindaddr, const struct rtpp_bindaddr *,
-  const struct rtpp_str_const *);
-DECLARE_METHOD(rtpp_bindaddrs, host2bindaddr, const struct rtpp_bindaddr *,
-  const char *, int, int, const char **, const struct rtpp_bindaddr_params *);
-DECLARE_METHOD(rtpp_bindaddrs, bindaddr4af, const struct rtpp_bindaddr *, int);
-DECLARE_METHOD(rtpp_bindaddrs, local4remote, const struct rtpp_bindaddr *,
-  const struct rtpp_cfg *, struct rtpp_log *, int, const char *, const char *);
-
-DECLARE_SMETHODS(rtpp_bindaddrs) {
-    METHOD_ENTRY(addr2bindaddr, addr2);
-    METHOD_ENTRY(label2bindaddr, label2);
-    METHOD_ENTRY(host2bindaddr, host2);
-    METHOD_ENTRY(bindaddr4af,  foraf);
-    METHOD_ENTRY(local4remote, local4remote);
+struct rtpp_bindaddr_params {
+     struct rtpp_str_const advaddr;
+     struct rtpp_str_const label;
 };
 
-DECLARE_CLASS_PUBTYPE(rtpp_bindaddrs, {});
+struct rtpp_bindaddr {
+     const struct sockaddr *addr;
+     struct rtpp_bindaddr_params params;
+};

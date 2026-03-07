@@ -17,7 +17,7 @@
 <!ENTITY janakj_emtag "<email>&janakj_email;</email>">
 <!ENTITY sobomax_firstname "Maksym">
 <!ENTITY sobomax_surname "Sobolyev">
-<!ENTITY sobomax_email "sobomax@gmail.com">
+<!ENTITY sobomax_email "sobomax@sippysoft.com">
 <!ENTITY sobomax_username "sobomax">
 <!ENTITY sobomax_emtag "<email>&sobomax_email;</email>">
 <!ENTITY dhemail "&sobomax_emtag;">
@@ -48,10 +48,10 @@
     </author>
 
     <copyright id="c.sobomax">
-      <year>2006-20019</year>
+      <year>2006-2026</year>
 
       <holder>&dhfirstname; &dhsurname; <ulink
-      url="mailto:sobomax@gmail.com">&lt;&sobomax_email;&gt;</ulink></holder>
+      url="mailto:&sobomax_email;">&lt;&sobomax_email;&gt;</ulink></holder>
     </copyright>
 
     <copyright id="c.janjanak">
@@ -94,11 +94,17 @@
 
       <arg choice="opt"><option>-R</option></arg>
 
-      <arg choice="opt"><option>-l</option>
+      <arg choice="opt" rep="repeat"><option>-l</option>
       <replaceable>addr1<optional>/addr2</optional></replaceable></arg>
 
-      <arg choice="opt"><option>-6</option>
+      <arg choice="opt" rep="repeat"><option>-l</option>
+      <replaceable><optional>label@</optional>address<optional>=advertized_address</optional></replaceable></arg>
+
+      <arg choice="opt" rep="repeat"><option>-6</option>
       <replaceable>addr1<optional>/addr2</optional></replaceable></arg>
+
+      <arg choice="opt" rep="repeat"><option>-6</option>
+      <replaceable><optional>label@</optional>address<optional>=advertized_address</optional></replaceable></arg>
 
       <arg choice="opt"><option>-s</option>
       <replaceable>ctrl_socket</replaceable></arg>
@@ -243,9 +249,20 @@
         <replaceable>addr1<optional>/addr2</optional></replaceable></term>
 
         <listitem>
-          <para>IPv4 listen IP address(es). You can specify either one or two
-          addresses. If two addresses are specified, the rtpproxy will work in
-          bridging mode.</para>
+          <para>IPv4 listen IP address(es). This option can be specified
+          multiple times. Bridging mode can be enabled when the first IPv4 (or
+          first IPv6) listen argument is specified as
+          <replaceable>addr1/addr2</replaceable>.</para>
+
+          <para>Additional labeled listen addresses use the separate format
+          <replaceable>[label@]address[=advertized_address]</replaceable>. The
+          <replaceable>/addr2</replaceable> form is not valid for labeled
+          entries.</para>
+
+          <para>When multiple listen addresses are configured, all addresses
+          after the first must have unique labels. Such labels are accepted by
+          the <literal>l{label}</literal> argument in <literal>U</literal> and
+          <literal>L</literal> commands.</para>
         </listitem>
       </varlistentry>
 
@@ -254,9 +271,10 @@
         <replaceable>addr1<optional>/addr2</optional></replaceable></term>
 
         <listitem>
-          <para>IPv6 listen IP address(es). You can specify either one or two
-          addresses. If two addresses are specified, the rtpproxy will work in
-          bridging mode.</para>
+          <para>IPv6 listen IP address(es). This option can be specified
+          multiple times. Two argument formats are supported:
+          <replaceable>addr1[/addr2]</replaceable> and
+          <replaceable>[label@]address[=advertized_address]</replaceable>.</para>
         </listitem>
       </varlistentry>
 
@@ -428,6 +446,13 @@
           behind a NAT firewall. (Amazon EC2) When the rtpproxy receives a
           session request from a SIP controller it will return the IP
           address(es) specified by the <option>-A</option> option.</para>
+
+          <para>This option configures the legacy bridge
+          <replaceable>internal/external</replaceable> address pair. For
+          per-address advertised overrides with multiple
+          <option>-l</option>/<option>-6</option> entries, use
+          <replaceable>=advertized_address</replaceable> inside each listen
+          address argument.</para>
         </listitem>
       </varlistentry>
 

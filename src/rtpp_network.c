@@ -350,12 +350,28 @@ extractaddr(const char *str, const char **begin, const char **end, int *pf)
     if (t == str)
 	return (-1);
     if (tpf == AF_INET6)
-	*end = (char *)(str + 1);
+	*end = (const char *)(str + 1);
     else
-	*end = (char *)str;
+	*end = (const char *)str;
     *pf = tpf;
-    *begin = (char *)t;
+    *begin = (const char *)t;
     return(str - t);
+}
+
+int
+extractlabel(const char *str, const char **begin, const char **end)
+{
+    const char *t;
+
+    if (*str != '{')
+	return (-1);
+    str++;
+    t = strchr(str, '}');
+    if (t == NULL || t == str)
+	return (-1);
+    *end = (const char *)t;
+    *begin = (const char *)str;
+    return(t - str);
 }
 
 int

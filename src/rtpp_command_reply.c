@@ -56,6 +56,7 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_command_reply.h"
+#include "rtpp_bindaddr.h"
 
 struct rtpc_reply_priv {
     struct rtpc_reply pub;
@@ -71,11 +72,11 @@ struct rtpc_reply_priv {
 static void rtpc_reply_deliver_error(struct rtpc_reply *, int);
 static void rtpc_reply_deliver_ok(struct rtpc_reply *);
 static void rtpc_reply_deliver_number(struct rtpc_reply *, int);
-static int rtpc_reply_append_port_addr(struct rtpc_reply *, const struct sockaddr *,
-  int);
-static int rtpc_reply_deliver_port_addr(struct rtpc_reply *, const struct sockaddr *,
-  int);
-static int rtpc_reply_append_port_addr_s(struct rtpc_reply *, const char *,
+static int rtpc_reply_append_port_addr(struct rtpc_reply *,
+  const struct rtpp_bindaddr *, int);
+static int rtpc_reply_deliver_port_addr(struct rtpc_reply *,
+  const struct rtpp_bindaddr *, int);
+static int rtpc_reply_append_port_addr_s(struct rtpc_reply *, const rtpp_str_const_t *,
   int, int);
 static void rtpc_reply_deliver(struct rtpc_reply *, int);
 static int rtpc_reply_append(struct rtpc_reply *, const char *, int, int);
@@ -178,24 +179,31 @@ rtpc_reply_deliver_number(struct rtpc_reply *self, int number)
 }
 
 static int
-rtpc_reply_append_port_addr_s(struct rtpc_reply *self, const char *sap, int port, int pf)
+rtpc_reply_append_port_addr_s(struct rtpc_reply *self, const rtpp_str_const_t *sap, int port, int pf)
 {
     const char *at = pf == AF_INET ? "" : " 6";
 
-    return rtpc_reply_appendf(self, "%d %s%s", port, sap, at);
+    return rtpc_reply_appendf(self, "%d %.*s%s", port, FMTSTR(sap), at);
 }
 
 static int
-rtpc_reply_append_port_addr(struct rtpc_reply *self, const struct sockaddr *sa, int port)
+rtpc_reply_append_port_addr(struct rtpc_reply *self, const struct rtpp_bindaddr *sa, int port)
 {
     char saddr[MAX_ADDR_STRLEN];
+    rtpp_str_const_t sad;
+    const rtpp_str_const_t *sap = &sa->params.advaddr;
 
-    addr2char_r(sa, saddr, sizeof(saddr));
-    return rtpc_reply_append_port_addr_s(self, saddr, port, sa->sa_family);
+    if (sap->s == NULL) {
+        addr2char_r(sa->addr, saddr, sizeof(saddr));
+        sad = rtpp_str_const_i(saddr);
+        sap = &sad;
+    }
+    return rtpc_reply_append_port_addr_s(self, sap, port, sa->addr->sa_family);
 }
 
 static int
-rtpc_reply_deliver_port_addr(struct rtpc_reply *self, const struct sockaddr *sa, int port)
+rtpc_reply_deliver_port_addr(struct rtpc_reply *self,
+  const struct rtpp_bindaddr *sa, int port)
 {
     struct rtpc_reply_priv *pvt;
 

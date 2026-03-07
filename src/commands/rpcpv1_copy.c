@@ -55,6 +55,7 @@
 #include "rtpp_command_sub.h"
 #include "rtpp_command_private.h"
 #include "rtpp_socket.h"
+#include "rtpp_bindaddr.h"
 #include "rtpp_bindaddrs.h"
 #include "commands/rpcpv1_copy.h"
 #include "commands/rpcpv1_record.h"
@@ -64,7 +65,7 @@ get_args4remote(const struct rtpp_cfg *cfsp, const char *rname, struct rtpp_log 
   struct remote_copy_args *ap)
 {
     char *tmp;
-    const struct sockaddr *laddr;
+    const struct rtpp_bindaddr *laddr;
     struct rtpp_socket *fds[2] = {0};
 
     rname += 4;
@@ -80,7 +81,7 @@ get_args4remote(const struct rtpp_cfg *cfsp, const char *rname, struct rtpp_log 
     if (laddr == NULL)
         return (-1);
     int lport;
-    if (rtpp_create_listener(cfsp, laddr, &lport, fds, ap->tos) != 0) {
+    if (rtpp_create_listener(cfsp, laddr->addr, &lport, fds, ap->tos) != 0) {
         RTPP_LOG(log, RTPP_LOG_ERR, "can't create listener");
         return (-1);
     }

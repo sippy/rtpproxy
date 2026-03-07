@@ -29,6 +29,8 @@
 
 struct rtpp_command_ctx;
 struct sockaddr;
+struct rtpp_bindaddr;
+struct rtpp_str_const;
 
 #define IS_WEIRD_ERRNO(e) ((e) == EINTR || (e) == EAGAIN || (e) == ENOBUFS)
 
@@ -37,12 +39,12 @@ DECLARE_CLASS(rtpc_reply, const struct rtpp_command_ctx *);
 DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver_error, void, int);
 DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver_ok, void);
 DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver_number, void, int);
-DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver_port_addr, int, const struct sockaddr *,
-  int);
-DECLARE_METHOD(rtpc_reply, rtpc_reply_append_port_addr, int, const struct sockaddr *,
-  int);
-DECLARE_METHOD(rtpc_reply, rtpc_reply_append_port_addr_s, int, const char *,
-  int, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver_port_addr, int,
+  const struct rtpp_bindaddr *, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_append_port_addr, int,
+  const struct rtpp_bindaddr *, int);
+DECLARE_METHOD(rtpc_reply, rtpc_reply_append_port_addr_s, int,
+  const struct rtpp_str_const *, int, int);
 DECLARE_METHOD(rtpc_reply, rtpc_reply_deliver, void, int);
 DECLARE_METHOD(rtpc_reply, rtpc_reply_append, int, const char *,
   int, int);

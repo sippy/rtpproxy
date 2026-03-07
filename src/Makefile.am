@@ -31,7 +31,7 @@ RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_record.h rtpp_hash_table.h rtpp_weakref.h rtpp_analyzer.h \
   rtpp_pcnt_strm.h rtpp_ttl.h rtpp_pipe.h rtpp_ringbuf.h rtpp_sessinfo.h \
   rtpp_rw_lock.h rtpp_proc_servers.h rtpp_proc_wakeup.h rtpp_socket.h \
-  rtpp_refproxy.h rtpp_command_reply.h rtpp_genuid.h
+  rtpp_refproxy.h rtpp_command_reply.h rtpp_genuid.h rtpp_bindaddrs.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
 BASE_SOURCES=main.c rtp.h rtpp_server.c \
@@ -64,7 +64,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   rtpp_pcnt_strm.c rtpp_endian.h rtpp_ringbuf.c \
   $(CMDSRCDIR)/rpcpv1_delete.c $(CMDSRCDIR)/rpcpv1_delete.h $(CMDSRCDIR)/rpcpv1_record.c \
   $(CMDSRCDIR)/rpcpv1_record.h rtpp_port_table.c rtpp_acct.c \
-  rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddrs.h rtpp_ssrc.h \
+  rtpp_acct.h rtpp_stats.h rtpp_bindaddrs.c rtpp_bindaddr.h \
+  rtpp_bindargs.c rtpp_bindargs.h rtpp_ssrc.h \
   rtpp_netaddr.c rtpp_acct_pipe.h $(CMDSRCDIR)/rpcpv1_play.c \
   $(CMDSRCDIR)/rpcpv1_play.h $(CMDSRCDIR)/rpcpv1_ver.h $(CMDSRCDIR)/rpcpv1_ver.c \
   rtpp_pearson_perfect.c rtpp_acct_rtcp.h \

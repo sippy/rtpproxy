@@ -65,6 +65,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_timeout_data.h"
 #include "rtpp_proc_async.h"
+#include "rtpp_bindaddr.h"
 
 struct rtpp_session_priv
 {
@@ -96,7 +97,7 @@ rtpp_session_ctor(const struct rtpp_session_ctor_args *ap)
         goto e0;
     }
 
-    if (rtpp_create_listener(cfs, ap->lia[0], &lport, fds, cfs->tos) == -1) {
+    if (rtpp_create_listener(cfs, ap->lia[0]->addr, &lport, fds, cfs->tos) == -1) {
         RTPP_LOG(log, RTPP_LOG_ERR, "can't create listener");
         goto e1;
     }

@@ -53,6 +53,7 @@ struct pproc_manager;
 struct rtpp_locking;
 struct rtpp_nofile;
 struct rtpp_modman;
+struct rtpp_bindaddr;
 
 #define RTPP_PT_INET	0
 #define	RTPP_PT_INET6	1
@@ -92,8 +93,7 @@ struct rtpp_cfg {
      * internal one. Second can be NULL, in this case there is no bridge
      * mode enabled.
      */
-    const struct sockaddr *bindaddr[2];   /* RTP socket(s) addresses */
-    char const * advaddr[2];        /* advertised addresses */
+    const struct rtpp_bindaddr *bindaddr[2];   /* RTP socket(s) addresses */
     int tos;
 
     const char *rdir;

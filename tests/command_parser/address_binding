@@ -1,0 +1,11 @@
+#!/bin/sh
+
+TESTDIR="`dirname -- ${0}`"
+TESTNAME="`basename -- ${0}`"
+BASEDIR="${BASEDIR:-${TESTDIR}/..}"
+BASEDIR="$(readlink -f -- $BASEDIR)"
+
+. "${BASEDIR}/functions"
+
+${RPTL_INT} -s "${TESTDIR}/${TESTNAME}.rptl"
+report "running ${TESTNAME}.rptl RPTL script"

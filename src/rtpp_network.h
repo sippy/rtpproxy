@@ -50,6 +50,7 @@ int resolve(struct sockaddr *, int, const char *, const char *, int);
 uint16_t rtpp_in_cksum(void *, int);
 int local4remote(const struct sockaddr *, struct sockaddr_storage *);
 int extractaddr(const char *, const char **, const char **, int *);
+int extractlabel(const char *str, const char **, const char **);
 int setbindhost(struct sockaddr *, int, const char *, const char *, int);
 int is_wildcard(const char *, int);
 int is_numhost(const char *, int);

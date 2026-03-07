@@ -48,13 +48,14 @@
 #include "rtpp_command_private.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_util.h"
+#include "rtpp_bindaddr.h"
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc_set.h"
 
 static int
 strmp_settos(const struct rtpp_subc_ctx *rscp, struct rtpp_stream *strmp, int val)
 {
-    if (strmp->laddr->sa_family != AF_INET)
+    if (strmp->laddr->addr->sa_family != AF_INET)
         return (-1);
     struct rtpp_socket *fd = CALL_SMETHOD(strmp, get_skt, HEREVAL);
     if (fd == NULL)

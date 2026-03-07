@@ -47,6 +47,8 @@
 #include "rtpp_log_obj.h"
 #include "rtpp_cfg.h"
 #include "rtpp_defines.h"
+#include "rtpp_str.h"
+#include "rtpp_bindaddr.h"
 #include "rtpp_bindaddrs.h"
 #include "rtpp_time.h"
 #include "rtpp_command.h"
@@ -80,8 +82,7 @@
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
 struct ul_reply {
-    const struct sockaddr *ia;
-    const char *ia_ov;
+    const struct rtpp_bindaddr *ia;
     int port;
 };
 
@@ -93,12 +94,12 @@ struct ul_opts {
     const rtpp_str_t *addr;
     const rtpp_str_t *port;
     struct sockaddr *ia[2];
-    const struct sockaddr *lia[2];
+    const struct rtpp_bindaddr *lia[2];
 
     struct ul_reply reply;
     
     int lidx;
-    const struct sockaddr *local_addr;
+    const struct rtpp_bindaddr *local_addr;
     const rtpp_str_t *notify_socket;
     rtpp_str_const_t notify_tag;
     int pf;
@@ -127,16 +128,11 @@ ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
 
     r = CALL_SMETHOD(cmd->reply, reserve, 2);
     assert(r == 0);
-    if (ulr == NULL || ulr->ia == NULL || ishostnull(ulr->ia)) {
+    if (ulr == NULL || ulr->ia == NULL || ishostnull(ulr->ia->addr)) {
         rport = (ulr == NULL) ? 0 : ulr->port;
         r = CALL_SMETHOD(cmd->reply, appendf, "%d", rport);
     } else {
-        if (ulr->ia_ov == NULL) {
-            r = CALL_SMETHOD(cmd->reply, append_port_addr, ulr->ia, ulr->port);
-        } else {
-            r = CALL_SMETHOD(cmd->reply, append_port_addr_s, ulr->ia_ov, ulr->port,
-              ulr->ia->sa_family);
-        }
+        r = CALL_SMETHOD(cmd->reply, append_port_addr, ulr->ia, ulr->port);
     }
     assert(r == 0);
     if (cmd->subc.n > 0) {
@@ -205,7 +201,7 @@ rtpp_command_ul_opts_free(struct ul_opts *ulop)
 struct ul_opts *
 rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
 {
-    int len, tpf, n, i, ai_flags;
+    int len, tpf, n, i, ai_flags, use_label;
     char *hostname;
     const char *cp, *t;
     rtpp_str_const_t notify_tag;
@@ -319,11 +315,31 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
 
         case 'l':
         case 'L':
-            len = extractaddr(cp + 1, &t, &cp, &tpf);
+            use_label = (cp[1] != '{') ? 0 : 1;
+            if (use_label) {
+                len = extractlabel(cp + 1, &t, &cp);
+            } else {
+                len = extractaddr(cp + 1, &t, &cp, &tpf);
+            }
             if (len == -1) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 CALL_SMETHOD(cmd->reply, deliver_error, ECODE_PARSE_15);
                 goto err_undo_1;
+            }
+            hostname = alloca(len + 1);
+            memcpy(hostname, t, len);
+            hostname[len] = '\0';
+            if (use_label) {
+                const rtpp_str_const_t label = (rtpp_str_const_t){.s = hostname, .len = len};
+                ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, label2,
+                  &label);
+                if (ulop->local_addr == NULL) {
+                    RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
+                      "address label not found: %s", hostname);
+                    CALL_SMETHOD(cmd->reply, deliver_error, ECODE_INVLARG_1);
+                    goto err_undo_1;
+                }
+                tpf = ulop->local_addr->addr->sa_family;
             }
             if (tpf != ulop->pf) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "mismatched protocol (%d local, %d session)",
@@ -331,13 +347,12 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
                 CALL_SMETHOD(cmd->reply, deliver_error, ECODE_INVLARG_1);
                 goto err_undo_1;
             }
-            hostname = alloca(len + 1);
-            memcpy(hostname, t, len);
-            hostname[len] = '\0';
+            if (use_label)
+                break;
             ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
             ai_flags |= cfsp->no_resolve ? AI_NUMERICHOST : 0;
             ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, host2, hostname,
-              tpf, ai_flags, &errmsg);
+              tpf, ai_flags, &errmsg, NULL);
             if (ulop->local_addr == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
                   "invalid local address: %s: %s", hostname, errmsg);
@@ -380,7 +395,7 @@ rtpp_command_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd
         }
     }
     if (ulop->local_addr == NULL && ulop->lidx == 1 &&
-      ulop->pf != ulop->lia[0]->sa_family) {
+      ulop->pf != ulop->lia[0]->addr->sa_family) {
         /*
          * When there is no explicit direction specified via "E"/"I" and no
          * local/remote address provided either via "R" or "L" make sure we
@@ -475,8 +490,8 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
             } else if (ulop->new_port != 0 && ulop->lidx == -1 && spa->rtp->stream[sidx]->laddr != ulop->lia[0]) {
                 spa->rtp->stream[sidx]->laddr = ulop->lia[0];
             }
-            if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr, &lport, fds,
-              desired_tos) == -1) {
+            if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr->addr,
+              &lport, fds, desired_tos) == -1) {
                 if (fd != NULL)
                     RTPP_OBJ_DECREF(fd);
                 RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
@@ -535,7 +550,7 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
         }
         RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
           "new %s/%s session %.*s, tag %.*s requested, type %s",
-          SA_AF2STR(ulop->lia[0]), SA_AF2STR(ulop->lia[1]), FMTSTR(cmd->cca.call_id),
+          SA_AF2STR(ulop->lia[0]->addr), SA_AF2STR(ulop->lia[1]->addr), FMTSTR(cmd->cca.call_id),
           FMTSTR(cmd->cca.from_tag), ulop->weak ? "weak" : "strong");
         if (cfsp->slowshutdown != 0) {
             RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
@@ -687,14 +702,6 @@ rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, in
     RTPP_DBG_ASSERT(lport != 0);
     ulop->reply.port = lport;
     ulop->reply.ia = ulop->lia[0];
-    if (cfsp->advaddr[0] != NULL) {
-        if (cfsp->bmode != 0 && cfsp->advaddr[1] != NULL &&
-          ulop->lia[0] == cfsp->bindaddr[1]) {
-            ulop->reply.ia_ov = cfsp->advaddr[1];
-        } else {
-            ulop->reply.ia_ov = cfsp->advaddr[0];
-        }
-    }
     for (int i = 0; i < cmd->subc.n; i++) {
         struct rtpp_subc_ctx rsc = {
             .sessp = spa,

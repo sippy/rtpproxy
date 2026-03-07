@@ -71,6 +71,7 @@
 #include "rtpp_netio_async.h"
 #include "rtpp_netaddr.h"
 #include "rtpp_linker_set.h"
+#include "rtpp_bindaddr.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
@@ -405,7 +406,7 @@ ice_lite_start(struct ice_lite_agent_cfg *ila_c, struct rtpp_stream *isp,
     pthread_mutex_lock(&ila_c->state_lock);
     laddr = &ila_c->sock->laddr;
     if (laddr->len == 0) {
-        const struct sockaddr *s_laddr = isp->laddr;
+        const struct sockaddr *s_laddr = isp->laddr->addr;
         memcpy(&laddr->u.sa, s_laddr, SA_LEN(s_laddr));
         laddr->len = SA_LEN(s_laddr);
         sa_set_port(laddr, isp->port);

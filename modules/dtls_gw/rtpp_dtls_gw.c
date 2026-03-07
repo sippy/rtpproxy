@@ -74,6 +74,7 @@
 #include "rtpp_pcount.h"
 #include "rtpp_pcnt_strm.h"
 #include "rtpp_linker_set.h"
+#include "rtpp_bindaddr.h"
 #include "advanced/packet_processor.h"
 #include "advanced/pproc_manager.h"
 
@@ -248,7 +249,7 @@ rtpp_dtls_gw_setup_sender(struct rtpp_module_priv *pvt,
         abort();
     }
 
-    if (rtpp_create_listener(pvt->cfsp, dtls_strmp->laddr, &lport, fds,
+    if (rtpp_create_listener(pvt->cfsp, dtls_strmp->laddr->addr, &lport, fds,
       dtls_strmp->tos) == -1)
         return (-1);
     CALL_SMETHOD(pvt->cfsp->sessinfo, append, spa, sidx, fds);

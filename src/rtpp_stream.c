@@ -84,6 +84,7 @@
 #include "rtpp_command_stats.h"
 #include "rtpp_modman.h"
 #include "rtpp_session.h"
+#include "rtpp_bindaddr.h"
 
 #define  SEQ_SYNC_IVAL   1.0    /* in seconds */
 
@@ -1007,7 +1008,7 @@ _rtpp_stream_recv_pkt(struct rtpp_stream_priv *pvt,
 {
     struct rtp_packet *pkt;
 
-    pkt = CALL_SMETHOD(pvt->fd, rtp_recv, dtime, pvt->pub.laddr, pvt->pub.port);
+    pkt = CALL_SMETHOD(pvt->fd, rtp_recv, dtime, pvt->pub.laddr->addr, pvt->pub.port);
     return (pkt);
 }
 

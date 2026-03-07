@@ -92,6 +92,9 @@
 #include "rtpp_proc_async.h"
 #include "rtpp_proc_servers.h"
 #include "rtpp_proc_ttl.h"
+#include "rtpp_str.h"
+#include "rtpp_bindaddr.h"
+#include "rtpp_bindargs.h"
 #include "rtpp_bindaddrs.h"
 #include "rtpp_network.h"
 #include "rtpp_notify.h"
@@ -333,8 +336,10 @@ init_config_bail(struct rtpp_cfg *cfsp, int rval, const char *msg, int memdeb)
 static int
 init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 {
-    int ch, i, umode, stdio_mode;
-    char *bh[2], *bh6[2], *cp;
+    int ch, umode, stdio_mode;
+    struct bindarg bargs[BINDARG_MAX] = {0};
+    int banum = 0;
+    char *cp;
     const char *errmsg;
     struct passwd *pp;
     struct group *gp;
@@ -347,8 +352,6 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
     struct rtpp_module_conf *mcp;
 #endif
 
-    bh[0] = bh[1] = bh6[0] = bh6[1] = NULL;
-
     umode = stdio_mode = 0;
 
     cfsp->pid_file = PID_FILE;
@@ -356,9 +359,6 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
     cfsp->port_min = PORT_MIN;
     cfsp->port_max = PORT_MAX;
     cfsp->port_ctl = 0;
-
-    cfsp->advaddr[0] = NULL;
-    cfsp->advaddr[1] = NULL;
 
     cfsp->max_ttl = SESSION_TIMEOUT;
     cfsp->tos = TOS;
@@ -394,6 +394,7 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
     if (cfsp->bindaddrs_cf == NULL) {
         IC_ERR(1, "malloc(rtpp_cfg->bindaddrs_cf)");
     }
+    struct rtpp_bindaddr_params iebparams[2] = {0};
 
     cfsp->nofile = rtpp_nofile_ctor();
     if (cfsp->nofile == NULL)
@@ -501,46 +502,32 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 	    break;
 
 	case 'l':
-	    bh[0] = optarg;
-	    bh[1] = strchr(bh[0], '/');
-	    if (bh[1] != NULL) {
-		*bh[1] = '\0';
-		bh[1]++;
-		cfsp->bmode = 1;
-		/*
-		 * Historically, in bridge mode all clients are assumed to
-		 * be asymmetric
-		 */
-		cfsp->aforce = 1;
-	    }
+	    if (banum == BINDARG_MAX)
+		IC_ERRX(1, "number of listening addresses exceeds BINDARG_MAX");
+	    bindarg_parse(&bargs[banum++], optarg, 0);
 	    break;
 
 	case '6':
-	    bh6[0] = optarg;
-	    bh6[1] = strchr(bh6[0], '/');
-	    if (bh6[1] != NULL) {
-		*bh6[1] = '\0';
-		bh6[1]++;
-		cfsp->bmode = 1;
-		cfsp->aforce = 1;
-	    }
+	    if (banum == BINDARG_MAX)
+		IC_ERRX(1, "number of listening addresses exceeds BINDARG_MAX");
+	    bindarg_parse(&bargs[banum++], optarg, 1);
 	    break;
 
-    case 'A':
-        if (*optarg == '\0') {
-            IC_ERRX(1, "first advertised address is invalid");
-        }
-        cfsp->advaddr[0] = optarg;
-        cp = strchr(optarg, '/');
-        if (cp != NULL) {
-            *cp = '\0';
-            cp++;
-            if (*cp == '\0') {
-                IC_ERRX(1, "second advertised address is invalid");
-            }
-        }
-        cfsp->advaddr[1] = cp;
-        break;
+	case 'A':
+	    if (*optarg == '\0') {
+		IC_ERRX(1, "first advertised address is invalid");
+	    }
+	    cp = strchr(optarg, '/');
+	    if (cp != NULL) {
+		*cp = '\0';
+		cp++;
+		if (*cp == '\0') {
+		    IC_ERRX(1, "second advertised address is invalid");
+		}
+		iebparams[1].advaddr = rtpp_str_const_i(cp);
+	    }
+	    iebparams[0].advaddr = rtpp_str_const_i(optarg);
+	    break;
 
 	case 's':
             ctrl_sock = rtpp_ctrl_sock_parse(optarg, is_lib);
@@ -763,10 +750,6 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
         }
     }
 
-    if (cfsp->bmode != 0 && brsym != 0) {
-        cfsp->aforce = 0;
-    }
-
     if (cfsp->max_setup_ttl == 0) {
         cfsp->max_setup_ttl = cfsp->max_ttl;
     }
@@ -816,59 +799,17 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
     if (cfsp->port_min > cfsp->port_max)
 	IC_ERRX(1, "port_min should be less than port_max");
 
-    if (bh[0] == NULL && bh[1] == NULL && bh6[0] == NULL && bh6[1] == NULL) {
-	bh[0] = "*";
+    if (init_bindaddrs(cfsp, bargs, banum, iebparams) != 0)
+	IC_BAIL(cfsp, 1, "init_bindaddrs() failed", 1);
+
+    if (cfsp->bmode != 0 && brsym == 0) {
+	/*
+	 * Historically, in bridge mode all clients are assumed to
+	 * be asymmetric
+	 */
+	cfsp->aforce = 1;
     }
 
-    for (i = 0; i < 2; i++) {
-	if (bh[i] != NULL && *bh[i] == '\0')
-	    bh[i] = NULL;
-	if (bh6[i] != NULL && *bh6[i] == '\0')
-	    bh6[i] = NULL;
-    }
-
-    i = ((bh[0] == NULL) ? 0 : 1) + ((bh[1] == NULL) ? 0 : 1) +
-      ((bh6[0] == NULL) ? 0 : 1) + ((bh6[1] == NULL) ? 0 : 1);
-    if (cfsp->bmode != 0) {
-	if (bh[0] != NULL && bh6[0] != NULL)
-	    IC_ERRX(1, "either IPv4 or IPv6 should be configured for external "
-	      "interface in bridging mode, not both");
-	if (bh[1] != NULL && bh6[1] != NULL)
-	    IC_ERRX(1, "either IPv4 or IPv6 should be configured for internal "
-	      "interface in bridging mode, not both");
-        if (cfsp->advaddr[0] != NULL && cfsp->advaddr[1] == NULL)
-            IC_ERRX(1, "two advertised addresses are required for internal "
-              "and external interfaces in bridging mode");
-	if (i != 2)
-	    IC_ERRX(1, "incomplete configuration of the bridging mode - exactly "
-	      "2 listen addresses required, %d provided", i);
-    } else if (i != 1) {
-	IC_ERRX(1, "exactly 1 listen addresses required, %d provided", i);
-    }
-
-    for (i = 0; i < 2; i++) {
-	int rmode = AI_ADDRCONFIG | AI_PASSIVE;
-	rmode |= cfsp->no_resolve ? AI_NUMERICHOST : 0;
-	cfsp->bindaddr[i] = NULL;
-	if (bh[i] != NULL) {
-	    cfsp->bindaddr[i] = CALL_SMETHOD(cfsp->bindaddrs_cf,
-              host2, bh[i], AF_INET, rmode, &errmsg);
-	    if (cfsp->bindaddr[i] == NULL)
-		IC_ERRX(1, "host2bindaddr(%s): %s", bh[i], errmsg);
-	    continue;
-	}
-	if (bh6[i] != NULL) {
-	    cfsp->bindaddr[i] = CALL_SMETHOD(cfsp->bindaddrs_cf,
-              host2, bh6[i], AF_INET6, rmode, &errmsg);
-	    if (cfsp->bindaddr[i] == NULL)
-		IC_ERRX(1, "host2bindaddr(%s): %s", bh6[i], errmsg);
-	    continue;
-	}
-    }
-    if (cfsp->bindaddr[0] == NULL) {
-	cfsp->bindaddr[0] = cfsp->bindaddr[1];
-	cfsp->bindaddr[1] = NULL;
-    }
     return 0;
 }
 
