@@ -110,6 +110,7 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	basic_versions/basic_versions1 \
 @ENABLE_BASIC_TESTS_TRUE@	command_parser/command_parser1 \
 @ENABLE_BASIC_TESTS_TRUE@	command_parser/address_binding \
+@ENABLE_BASIC_TESTS_TRUE@	command_parser/ul_subc \
 @ENABLE_BASIC_TESTS_TRUE@	forwarding/forwarding1_robust \
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_tcp \
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_tcp_wild \
