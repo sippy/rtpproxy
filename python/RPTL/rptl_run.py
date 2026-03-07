@@ -43,7 +43,9 @@ class CommandRunner():
         from sippy.Rtp_proxy.client import Rtp_proxy_client
         if socket_name == 'stdio:':
             rtpproxy_bin = variables.get('RTPPROXY_BIN', 'rtpproxy')
-            self.rc = StdioRtpProxyClient(params, rtpproxy_bin = rtpproxy_bin)
+            rtpproxy_stderr = variables.get('RTPPROXY_STDERR')
+            self.rc = StdioRtpProxyClient(params, rtpproxy_bin = rtpproxy_bin,
+              rtpproxy_stderr = rtpproxy_stderr)
             self.proc = self.rc.proc
         else:
             self.rc = Rtp_proxy_client({'_sip_address': '127.0.0.1'}, spath = socket_name,
@@ -67,7 +69,8 @@ class CommandRunner():
         self.rc = None
 
 class StdioRtpProxyClient(Rtp_proxy_client_stream):
-    def __init__(self, extra_args, nworkers = 1, rtpproxy_bin = None):
+    def __init__(self, extra_args, nworkers = 1, rtpproxy_bin = None,
+      rtpproxy_stderr = None):
         import socket
         import subprocess
         if rtpproxy_bin is None:
@@ -76,26 +79,42 @@ class StdioRtpProxyClient(Rtp_proxy_client_stream):
         cmd = [rtpproxy_bin, '-f', '-s', 'stdio:'] + list(extra_args)
         parent_sock, child_sock = socket.socketpair()
         self._stdio_sock = parent_sock
-        self.proc = subprocess.Popen(cmd, stdin = child_sock, stdout = child_sock,
-          stderr = None, close_fds = True)
-        child_sock.close()
-        super().__init__({'_sip_address': '127.0.0.1'}, address = parent_sock,
-          bind_address = None, nworkers = nworkers, family = socket.AF_UNIX)
+        self._stderr = None
+        try:
+            if rtpproxy_stderr is not None:
+                self._stderr = open(rtpproxy_stderr, 'w')
+            self.proc = subprocess.Popen(cmd, stdin = child_sock, stdout = child_sock,
+              stderr = self._stderr, close_fds = True)
+            child_sock.close()
+            super().__init__({'_sip_address': '127.0.0.1'}, address = parent_sock,
+              bind_address = None, nworkers = nworkers, family = socket.AF_UNIX)
+        except Exception:
+            parent_sock.close()
+            child_sock.close()
+            if hasattr(self, 'proc') and self.proc is not None and self.proc.poll() is None:
+                self.proc.kill()
+                self.proc.wait()
+            if self._stderr is not None:
+                self._stderr.close()
+                self._stderr = None
+            raise
 
     def shutdown(self):
         super().shutdown()
         if self._stdio_sock is not None:
             self._stdio_sock.close()
             self._stdio_sock = None
-        if self.proc is None:
-            return
-        if self.proc.poll() is None:
-            self.proc.terminate()
-            try:
-                self.proc.wait(timeout = 2.0)
-            except Exception:
-                self.proc.kill()
-        self.proc = None
+        if self.proc is not None:
+            if self.proc.poll() is None:
+                self.proc.terminate()
+                try:
+                    self.proc.wait(timeout = 2.0)
+                except Exception:
+                    self.proc.kill()
+            self.proc = None
+        if self._stderr is not None:
+            self._stderr.close()
+            self._stderr = None
 
 class TransFunction():
     name: str
@@ -160,6 +179,8 @@ class ScriptRunner():
             cmd = self.commands[self.i_command]
             self.i_command += 1
             if isinstance(cmd, SocketSpec):
+                if cmd.name in self.sockets:
+                    self.sockets[cmd.name].shutdown()
                 self.sockets[cmd.name] = CommandRunner(cmd.address, cmd.outfile,
                   cmd.params, self.variables)
                 continue
