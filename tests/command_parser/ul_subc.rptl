@@ -1,0 +1,15 @@
+.eval: E3 -> ECODE_PARSE_SUBC
+.eval: ../src/rtpproxy_debug -> RTPPROXY_BIN
+socket rtpp: stdio: -d warn -p /dev/null -l *
+
+.echo: Positive U&&L case...
+rtpp: U callid_1s 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 54321 -> str_split( , PORT, AMPAMP, PORT1)
+.eval: %%PORT%% -> validate_port(_)
+.eval: %%PORT1%% -> validate_port(_)
+
+.echo: Negative U&&L cases...
+rtpp: U callid_1n0 127.0.0.1 12345 from_tag_1 && L 127.0.0.1 54321 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_1n1 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_1n2 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 54321 extra -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_1n3 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 notaport -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_1n4 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 54321 udp:127.0.0.1:1234 % -> str_compare(ECODE_PARSE_SUBC)

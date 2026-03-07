@@ -72,6 +72,7 @@ const static struct proto_cap proto_caps[] = {
     { "20250523", "Support for the \"P\" modifier in the C command"},
     { "20251015", "Support for changing session's ttl / IP tos via S subcommand" },
     { "20260306", "Support for address labels in the \"Ul\"/\"Ll\" commands " },
+    { "20260307", "Support for single-shot dual-leg setup via \"U ... && L ...\" " },
     { NULL, NULL }
 };
 
