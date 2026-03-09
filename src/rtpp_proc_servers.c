@@ -134,12 +134,12 @@ process_rtp_servers_foreach(void *dp, void *ap)
             }
             break;
         }
-        pkt->sender = fap->sender;
         struct pkt_proc_ctx pktx = {
             .strmp_in = strmp_in,
             .strmp_out = strmp_out,
             .pktp = pkt,
             .flags = PPROC_FLAG_LGEN,
+            .sender = fap->sender,
         };
         if (CALL_SMETHOD(strmp_in->pproc_manager, handleat, &pktx,
           PPROC_ORD_PLAY + 1).a & PPROC_ACT_TAKE_v)

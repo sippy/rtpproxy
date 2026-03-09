@@ -74,7 +74,8 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
     struct pkt_proc_ctx pktx = {
         .strmp_in = stp,
         .strmp_out = CALL_SMETHOD(stp, get_sender, cfsp),
-        .rsp = rsp
+        .rsp = rsp,
+        .sender = sender,
     };
     /* Repeat since we may have several packets queued on the same socket */
     ndrain = -1;
@@ -94,7 +95,6 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
             ndrain += 1;
             continue;
         }
-        packet->sender = sender;
         pktx.pktp = packet;
         CALL_SMETHOD(stp->pproc_manager, handle, &pktx);
     } while (ndrain > 0);
@@ -144,11 +144,11 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
                 struct pkt_proc_ctx pktx = {
                     .strmp_in = stp,
                     .strmp_out = CALL_SMETHOD(stp, get_sender, cfsp),
-                    .rsp = rsp
+                    .rsp = rsp,
+                    .sender = sender,
                 };
 
                 while ((pktx.pktp = rtp_resizer_get(stp->resizer, dtime->mono)) != NULL) {
-                    pktx.pktp->sender = sender;
                     if (CALL_SMETHOD(stp->pproc_manager, handleat, &pktx,
                       PPROC_ORD_RESIZE + 1).a & PPROC_ACT_TAKE_v)
                         rsp->npkts_resizer_out.cnt++;

@@ -32,7 +32,6 @@
 struct rtp_info;
 struct rtpp_wi;
 struct rtpp_refcnt;
-struct sthread_args;
 struct packet_processor_if;
 
 #define MAX_RPKT_LEN 8192
@@ -40,7 +39,6 @@ struct packet_processor_if;
 struct rtp_packet {
     struct rtpp_refcnt *rcnt;
 #if defined(_RTP_H_)
-    struct rtpp_wi *wi;
     struct rtp_packet *next;
     struct rtp_packet *prev;
 
@@ -51,14 +49,12 @@ struct rtp_packet {
     size_t      size;
 
     struct sockaddr_storage raddr;
-    struct sockaddr_storage sendto;
     struct sockaddr_storage _laddr;
     const struct sockaddr *laddr;
     int         lport;
 
     socklen_t   rlen;
     struct rtpp_timestamp rtime;
-    struct sthread_args *sender;
 
     /*
      * The packet, keep it the last member so that we can use
@@ -80,5 +76,6 @@ void rtp_packet_set_ts(struct rtp_packet *, uint32_t ts);
 
 #define RTPP_DUP_HDRONLY 0x1    /* Do not copy payload, only headers, requires packet to be parsed */
 void rtp_packet_dup(struct rtp_packet *, const struct rtp_packet *, int);
+struct rtpp_wi *rtp_packet_get_wi(struct rtp_packet *);
 
 #endif

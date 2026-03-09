@@ -30,9 +30,9 @@
 
 struct rtpp_refcnt;
 struct rtpp_log;
+struct sthread_args;
 
-struct rtpp_wi_pvt {
-    struct rtpp_wi pub;
+struct rtpp_wi_sendargs {
     int sock;
     struct rtpp_refcnt *aux_rcnt;
     size_t msg_len;
@@ -43,6 +43,12 @@ struct rtpp_wi_pvt {
     int nsend;
     int debug;
     struct rtpp_log *log;
+};
+
+struct rtpp_wi_pvt {
+    struct rtpp_wi pub;
+    struct rtpp_wi_sendargs sendargs;
+    struct sockaddr_storage _sendto;
     char data[0];
 };
 

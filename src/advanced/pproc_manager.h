@@ -32,6 +32,7 @@ struct rtpp_session;
 struct rtpp_stream;
 struct rtp_packet;
 struct rtpp_stats;
+struct sthread_args;
 
 enum pproc_action;
 enum pproc_order;
@@ -43,6 +44,7 @@ struct pkt_proc_ctx {
     struct rtpp_stream *strmp_out;
     struct rtp_packet *pktp;
     struct rtpp_proc_rstats *rsp;
+    struct sthread_args *sender;
     const struct packet_processor_if *pproc;
     void *auxp;
     unsigned int flags;

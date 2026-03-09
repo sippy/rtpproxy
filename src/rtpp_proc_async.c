@@ -284,7 +284,7 @@ relay_packet(const struct pkt_proc_ctx *pktxp)
     if (!CALL_SMETHOD(stp_out, issendable)) {
         return PPROC_ACT_DROP;
     }
-    CALL_SMETHOD(stp_out, send_pkt, packet->sender, packet);
+    CALL_SMETHOD(stp_out, send_pkt, pktxp->sender, packet);
     if ((pktxp->flags & PPROC_FLAG_LGEN) == 0) {
         CALL_SMETHOD(stp_in->pcount, reg_reld);
         if (pktxp->rsp != NULL) {

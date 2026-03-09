@@ -50,6 +50,7 @@
 struct rtp_packet_full;
 
 struct rtp_packet_priv {
+    struct rtpp_wi *wi;
     struct rtp_info rinfo;
     struct rtpp_wi_pvt wip;
 };
@@ -95,9 +96,39 @@ rtp_packet_alloc()
     if (pkt == NULL) {
         return (NULL);
     }
-    pkt->pub.wi = &(pkt->pvt.wip.pub);
 
     return &(pkt->pub);
+}
+
+static void
+rp_wi_free(void *wi)
+{
+
+    free(wi);
+}
+
+struct rtpp_wi *
+rtp_packet_get_wi(struct rtp_packet *pub)
+{
+    struct rtp_packet_full *pkt;
+    struct rtpp_wi *wi;
+
+    PUB2PVT(pub, pkt);
+    if (pkt->pvt.wi == NULL) {
+        pkt->pvt.wi = &(pkt->pvt.wip.pub);
+        wi = pkt->pvt.wi;
+    } else {
+        wi = rtpp_zmalloc(sizeof(pkt->pvt.wip));
+        if (wi == NULL)
+            goto e0;
+        if (RTPP_OBJ_DTOR_ATTACH(pub, (rtpp_refcnt_dtor_t)&rp_wi_free, wi) != 0)
+            goto e1;
+    }
+    return (wi);
+e1:
+    rp_wi_free(wi);
+e0:
+    return (NULL);
 }
 
 void 

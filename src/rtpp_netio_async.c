@@ -91,7 +91,8 @@ rtpp_anetio_sthread(struct sthread_args *args)
 {
     int n, nsend, i, send_errno, nretry;
     struct rtpp_wi *wi, *wis[RTPQ_LARGE_CB_LEN / 8];
-    struct rtpp_wi_pvt *wipp;
+    struct rtpp_wi_pvt *_wipp;
+    const struct rtpp_wi_sendargs *wipp;
 #if RTPP_DEBUG_timers
     double tp[3], runtime, sleeptime;
     long run_n;
@@ -108,11 +109,13 @@ rtpp_anetio_sthread(struct sthread_args *args)
 
         for (i = 0; i < nsend; i++) {
 	    wi = wis[i];
-            PUB2PVT(wi, wipp);
+            PUB2PVT(wi, _wipp);
             if (wi->wi_type == RTPP_WI_TYPE_SGNL) {
                 RTPP_OBJ_DECREF(wi);
                 goto out;
             }
+            wipp = &_wipp->sendargs;
+            int ncopies = wipp->nsend;
             nretry = 0;
             do {
                 n = sendto(wipp->sock, wipp->msg, wipp->msg_len, wipp->flags,
@@ -144,7 +147,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
                 }
 #endif
                 if (n >= 0) {
-                    wipp->nsend--;
+                    ncopies--;
                 } else {
                     /* "EPERM" is Linux thing, yield and retry */
                     if ((send_errno == EPERM || send_errno == ENOBUFS)
@@ -155,7 +158,7 @@ rtpp_anetio_sthread(struct sthread_args *args)
                         break;
                     }
                 }
-            } while (wipp->nsend > 0);
+            } while (ncopies > 0);
             RTPP_OBJ_DECREF(wi);
         }
 #if RTPP_DEBUG_timers
@@ -181,8 +184,9 @@ static void
 rtpp_anetio_sendto_debug(struct rtpp_anetio_cf *netio_cf, struct rtpp_wi *wi)
 {
 #if RTPP_DEBUG_netio >= 1
-    struct rtpp_wi_pvt *wipp;
-    PUB2PVT(wi, wipp);
+    struct rtpp_wi_pvt *_wipp;
+    PUB2PVT(wi, _wipp);
+    struct rtpp_wi_sendargs *wipp = &_wipp->sendargs;
     wipp->debug = 1;
     wipp->log = netio_cf->args[0].glog;
     RTPP_OBJ_INCREF(wipp->log);
