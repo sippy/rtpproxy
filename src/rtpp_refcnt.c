@@ -76,20 +76,24 @@ struct rtpp_refcnt_priv
 {
     struct rtpp_refcnt pub;
     _Atomic(int) cnt __attribute__((aligned(CACHE_SIZE)));
+    _Atomic(int) ulen __attribute__((aligned(CACHE_SIZE)));
     struct {
         unsigned int shared:1;
 #if RTPP_DEBUG_refcnt
         unsigned int trace:1;
 #endif
     }  __attribute__((aligned(CACHE_SIZE)));
-    int ulen;
     struct dtor_pair dtors[MAX_DTORS];
 };
 const size_t rtpp_refcnt_osize = sizeof(struct rtpp_refcnt_priv);
 
-static void rtpp_refcnt_attach(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
+static int rtpp_refcnt_attach(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
+  void *) __attribute__((warn_unused_result));
+static void rtpp_refcnt_attach_nc(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *);
-static void rtpp_refcnt_attach_rc(struct rtpp_refcnt *, struct rtpp_refcnt *);
+static int rtpp_refcnt_attach_rc(struct rtpp_refcnt *, struct rtpp_refcnt *)
+  __attribute__((warn_unused_result));
+static void rtpp_refcnt_attach_rc_nc(struct rtpp_refcnt *, struct rtpp_refcnt *);
 static void *rtpp_refcnt_getdata(struct rtpp_refcnt *);
 
 #if RTPP_DEBUG_refcnt
@@ -106,7 +110,9 @@ DEFINE_SMETHODS(rtpp_refcnt,
     .peek = rtpp_refcnt_peek,
 #endif
     .attach = &rtpp_refcnt_attach,
+    .attach_nc = &rtpp_refcnt_attach_nc,
     .attach_rc = &rtpp_refcnt_attach_rc,
+    .attach_rc_nc = &rtpp_refcnt_attach_rc_nc,
 );
 
 #if defined(RTPP_CHECK_LEAKS)
@@ -137,14 +143,14 @@ rtpp_refcnt_ctor(void *data, rtpp_refcnt_dtor_t dtor_f)
 #endif
     if (dtor_f != NULL) {
         pvt->dtors[1] = DTOR_PAIR_INIT(dtor_f, data);
-        pvt->ulen = 1;
+        atomic_init(&pvt->ulen, 1);
     } else if (data != NULL) {
 #if !defined(RTPP_CHECK_LEAKS)
         pvt->dtors[1] = DTOR_PAIR_INIT(free, data);
 #else
         pvt->dtors[1] = DTOR_PAIR_INIT(rtpp_refcnt_free, data);
 #endif
-        pvt->ulen = 1;
+        atomic_init(&pvt->ulen, 1);
     }
 #if defined(RTPP_DEBUG)
     pvt->pub.smethods = rtpp_refcnt_smethods;
@@ -165,7 +171,7 @@ rtpp_refcnt_ctor_pa(void *pap, void *data)
         pvt->dtors[0] = DTOR_PAIR_INIT(rtpp_refcnt_free, data);
 #endif
     } else {
-        pvt->ulen = -1;
+        atomic_init(&pvt->ulen, -1);
     }
 #if defined(RTPP_DEBUG)
     pvt->pub.smethods = rtpp_refcnt_smethods;
@@ -173,27 +179,51 @@ rtpp_refcnt_ctor_pa(void *pap, void *data)
     return (&pvt->pub);
 }
 
-static void
+static int
 rtpp_refcnt_attach(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f,
   void *data)
 {
     struct rtpp_refcnt_priv *pvt;
 
     PUB2PVT(pub, pvt);
-    RTPP_DBG_ASSERT(MAX_DTORS > pvt->ulen);
-    pvt->ulen += 1;
-    pvt->dtors[pvt->ulen] = DTOR_PAIR_INIT(dtor_f, data);
+    int ulen = atomic_fetch_add_explicit(&pvt->ulen, 1, memory_order_relaxed) + 1;
+    if (ulen >= MAX_DTORS) {
+        atomic_fetch_sub_explicit(&pvt->ulen, 1, memory_order_relaxed);
+        return -1;
+    }
+    pvt->dtors[ulen] = DTOR_PAIR_INIT(dtor_f, data);
+    return 0;
 }
 
 static void
+rtpp_refcnt_attach_nc(struct rtpp_refcnt *pub, rtpp_refcnt_dtor_t dtor_f,
+  void *data)
+{
+    MAYBE_UNUSED int r = rtpp_refcnt_attach(pub, dtor_f, data);
+    RTPP_DBG_ASSERT(r == 0);
+}
+
+static int
 rtpp_refcnt_attach_rc(struct rtpp_refcnt *pub, struct rtpp_refcnt *other)
 {
     struct rtpp_refcnt_priv *pvt;
 
     PUB2PVT(pub, pvt);
-    RTPP_DBG_ASSERT(MAX_DTORS > pvt->ulen);
-    pvt->ulen += 1;
-    pvt->dtors[pvt->ulen] = DTOR_RC_INIT(other);
+    int ulen = atomic_fetch_add_explicit(&pvt->ulen, 1, memory_order_relaxed) + 1;
+    if (ulen >= MAX_DTORS) {
+        atomic_fetch_sub_explicit(&pvt->ulen, 1, memory_order_relaxed);
+        return -1;
+    }
+    pvt->dtors[ulen] = DTOR_RC_INIT(other);
+    return 0;
+}
+
+
+static void
+rtpp_refcnt_attach_rc_nc(struct rtpp_refcnt *pub, struct rtpp_refcnt *other)
+{
+    MAYBE_UNUSED int r = rtpp_refcnt_attach_rc(pub, other);
+    RTPP_DBG_ASSERT(r == 0);
 }
 
 static void
@@ -276,7 +306,8 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
         if (pvt->shared) {
             atomic_thread_fence(memory_order_acquire);
         }
-        for (int i = pvt->ulen; i >= 0; i--) {
+        int ulen = atomic_load_explicit(&pvt->ulen, memory_order_relaxed);
+        for (int i = ulen; i >= 0; i--) {
             struct dtor_pair *dp = &pvt->dtors[i];
 #if RTPP_DEBUG_refcnt
             if (trace) {
@@ -306,7 +337,7 @@ rtpp_refcnt_getdata(struct rtpp_refcnt *pub)
     struct rtpp_refcnt_priv *pvt;
 
     PUB2PVT(pub, pvt);
-    RTPP_DBG_ASSERT(atomic_load(&pvt->cnt) >= 0 && pvt->ulen >= 0);
+    RTPP_DBG_ASSERT(atomic_load(&pvt->cnt) >= 0 && atomic_load(&pvt->ulen) >= 0);
     return (pvt->dtors[0].data);
 }
 
