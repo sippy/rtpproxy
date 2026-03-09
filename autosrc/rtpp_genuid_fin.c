@@ -45,7 +45,7 @@ rtpp_genuid_fintest()
         .gen = (rtpp_genuid_gen_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
-    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_genuid_fin,
+    RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_genuid_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, gen);

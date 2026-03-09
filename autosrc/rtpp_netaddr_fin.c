@@ -94,7 +94,7 @@ rtpp_netaddr_fintest()
         .sip_print = (rtpp_netaddr_sip_print_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
-    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_netaddr_fin,
+    RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_netaddr_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, cmp);

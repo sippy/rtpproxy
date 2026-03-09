@@ -94,7 +94,7 @@ rtpp_stats_fintest()
         .updatebyname_d = (rtpp_stats_updatebyname_d_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
-    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_stats_fin,
+    RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_stats_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, getidxbyname);

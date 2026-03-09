@@ -72,7 +72,7 @@ rtpp_modman_fintest()
     tp->pub.get_ul_subc_h = (rtpp_modman_get_ul_subc_h_t)((void *)0x1);
     tp->pub.insert = (rtpp_modman_insert_t)((void *)0x1);
     tp->pub.startall = (rtpp_modman_startall_t)((void *)0x1);
-    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_modman_fin,
+    RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_modman_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, do_acct);

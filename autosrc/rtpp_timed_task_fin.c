@@ -40,7 +40,7 @@ rtpp_timed_task_fintest()
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
     tp->pub.cancel = (rtpp_timed_task_cancel_t)((void *)0x1);
-    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_timed_task_fin,
+    RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_timed_task_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, cancel);

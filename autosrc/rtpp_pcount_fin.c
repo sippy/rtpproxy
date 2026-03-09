@@ -73,7 +73,7 @@ rtpp_pcount_fintest()
         .reg_reld = (rtpp_pcount_reg_reld_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
-    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_pcount_fin,
+    RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_pcount_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, get_stats);

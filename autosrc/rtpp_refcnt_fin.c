@@ -11,8 +11,16 @@ static void refcnt_attach_fin(void *pub) {
     fprintf(stderr, "Method rtpp_refcnt@%p::attach (refcnt_attach) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void refcnt_attach_nc_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_refcnt@%p::attach_nc (refcnt_attach_nc) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void refcnt_attach_rc_fin(void *pub) {
     fprintf(stderr, "Method rtpp_refcnt@%p::attach_rc (refcnt_attach_rc) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void refcnt_attach_rc_nc_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_refcnt@%p::attach_rc_nc (refcnt_attach_rc_nc) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void refcnt_decref_fin(void *pub) {
@@ -37,7 +45,9 @@ static void refcnt_traceen_fin(void *pub) {
 }
 static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
     .attach = (refcnt_attach_t)&refcnt_attach_fin,
+    .attach_nc = (refcnt_attach_nc_t)&refcnt_attach_nc_fin,
     .attach_rc = (refcnt_attach_rc_t)&refcnt_attach_rc_fin,
+    .attach_rc_nc = (refcnt_attach_rc_nc_t)&refcnt_attach_rc_nc_fin,
     .decref = (refcnt_decref_t)&refcnt_decref_fin,
     .getdata = (refcnt_getdata_t)&refcnt_getdata_fin,
     .incref = (refcnt_incref_t)&refcnt_incref_fin,
@@ -46,7 +56,9 @@ static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
 };
 void rtpp_refcnt_fin(struct rtpp_refcnt *pub) {
     RTPP_DBG_ASSERT(pub->smethods->attach != (refcnt_attach_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->attach_nc != (refcnt_attach_nc_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->attach_rc != (refcnt_attach_rc_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->attach_rc_nc != (refcnt_attach_rc_nc_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->decref != (refcnt_decref_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->getdata != (refcnt_getdata_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->incref != (refcnt_incref_t)NULL);
@@ -79,7 +91,9 @@ rtpp_refcnt_fintest()
     assert(tp->pub.rcnt != NULL);
     static const struct rtpp_refcnt_smethods dummy = {
         .attach = (refcnt_attach_t)((void *)0x1),
+        .attach_nc = (refcnt_attach_nc_t)((void *)0x1),
         .attach_rc = (refcnt_attach_rc_t)((void *)0x1),
+        .attach_rc_nc = (refcnt_attach_rc_nc_t)((void *)0x1),
         .decref = (refcnt_decref_t)((void *)0x1),
         .getdata = (refcnt_getdata_t)((void *)0x1),
         .incref = (refcnt_incref_t)((void *)0x1),
@@ -87,17 +101,19 @@ rtpp_refcnt_fintest()
         .traceen = (refcnt_traceen_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
-    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_refcnt_fin,
+    RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_refcnt_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, attach);
+    CALL_TFIN(&tp->pub, attach_nc);
     CALL_TFIN(&tp->pub, attach_rc);
+    CALL_TFIN(&tp->pub, attach_rc_nc);
     CALL_TFIN(&tp->pub, decref);
     CALL_TFIN(&tp->pub, getdata);
     CALL_TFIN(&tp->pub, incref);
     CALL_TFIN(&tp->pub, peek);
     CALL_TFIN(&tp->pub, traceen);
-    assert((_naborts - naborts_s) == 7);
+    assert((_naborts - naborts_s) == 9);
 }
 DATA_SET(rtpp_fintests, rtpp_refcnt_fintest);
 #endif /* RTPP_FINTEST */

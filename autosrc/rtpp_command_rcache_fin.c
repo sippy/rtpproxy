@@ -56,7 +56,7 @@ rtpp_cmd_rcache_fintest()
     tp->pub.insert = (rcache_insert_t)((void *)0x1);
     tp->pub.lookup = (rcache_lookup_t)((void *)0x1);
     tp->pub.shutdown = (rcache_shutdown_t)((void *)0x1);
-    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_cmd_rcache_fin,
+    RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_cmd_rcache_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, insert);
