@@ -183,8 +183,8 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         if (rval < 0) {
             goto e2;
         }
-        RTPP_OBJ_BORROW(&rrc->pub, rap->fds[rap->idx]);
-        CALL_SMETHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
+        RTPP_OBJ_BORROW_s(&rrc->pub, rap->fds[rap->idx]);
+        RTPP_OBJ_DTOR_ATTACH_s(&rrc->pub, (rtpp_refcnt_dtor_t)&rtpp_record_close,
           rrc);
         return (&rrc->pub);
     }
@@ -258,7 +258,7 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         }
     }
 
-    CALL_SMETHOD(rrc->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_record_close,
+    RTPP_OBJ_DTOR_ATTACH_s(&rrc->pub, (rtpp_refcnt_dtor_t)&rtpp_record_close,
       rrc);
     return (&rrc->pub);
 

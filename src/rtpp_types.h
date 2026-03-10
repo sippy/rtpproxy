@@ -69,11 +69,11 @@ struct rtpp_type_linkable {
 #if defined(RTPP_DEBUG)
 #define PUBINST_FININIT(pub_inst, pvt_inst, dtor) \
     (pub_inst)->smethods = GET_SMETHODS(pub_inst); \
-    CALL_SMETHOD((pub_inst)->rcnt, attach, (rtpp_refcnt_dtor_t)(dtor), \
+    RTPP_OBJ_DTOR_ATTACH_s((pub_inst), (rtpp_refcnt_dtor_t)(dtor), \
       pvt_inst);
 #else
 #define PUBINST_FININIT(pub_inst, pvt_inst, dtor) \
-    CALL_SMETHOD((pub_inst)->rcnt, attach, (rtpp_refcnt_dtor_t)(dtor), \
+    RTPP_OBJ_DTOR_ATTACH_s((pub_inst), (rtpp_refcnt_dtor_t)(dtor), \
       pvt_inst);
 #endif
 
@@ -168,14 +168,31 @@ extern const struct rtpp_genuid_smethods * const rtpp_genuid_smethods;
 #define RTPP_OBJ_DECREF(obj) RC_DECREF((obj)->rcnt)
 #define RTPP_OBJ_DTOR_ATTACH(obj, f, p) CALL_SMETHOD((obj)->rcnt, attach, \
   (rtpp_refcnt_dtor_t)(f), (p))
+#define RTPP_OBJ_DTOR_ATTACH_s(obj, f, p) CALL_SMETHOD((obj)->rcnt, attach_nc, \
+  (rtpp_refcnt_dtor_t)(f), (p))
 #define RTPP_OBJ_DTOR_ATTACH_RC(obj, rc) CALL_SMETHOD((obj)->rcnt, attach_rc, \
+  (rc))
+#define RTPP_OBJ_DTOR_ATTACH_RC_s(obj, rc) CALL_SMETHOD((obj)->rcnt, attach_rc_nc, \
   (rc))
 #define RTPP_OBJ_DTOR_ATTACH_OBJ(obj, obj1) CALL_SMETHOD((obj)->rcnt, attach_rc, \
   (obj1)->rcnt)
+#define RTPP_OBJ_DTOR_ATTACH_OBJ_s(obj, obj1) CALL_SMETHOD((obj)->rcnt, attach_rc_nc, \
+  (obj1)->rcnt)
 #define RTPP_OBJ_BORROW(bob, lob) \
+    ({ /* Attach first, then increase, the "lob: counter might have */ \
+       /* certain optimizations for the count == 1 case             */ \
+       typeof(bob) _bob = (bob); \
+       typeof(lob) _lob = (lob); \
+       int _rval = RTPP_OBJ_DTOR_ATTACH_RC(_bob, _lob->rcnt); \
+       if (_rval == 0) { \
+           RTPP_OBJ_INCREF(_lob); \
+       } \
+       _rval; \
+    })
+#define RTPP_OBJ_BORROW_s(bob, lob) \
     do { /* Attach first, then increase, the "lob: counter might have */ \
          /* certain optimizations for the count == 1 case             */ \
-        RTPP_OBJ_DTOR_ATTACH_RC((bob), (lob)->rcnt); \
+        RTPP_OBJ_DTOR_ATTACH_RC_s((bob), (lob)->rcnt); \
         RTPP_OBJ_INCREF(lob); \
     } while (0)
 

@@ -224,7 +224,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
             }
             goto e1;
         }
-        RTPP_OBJ_DTOR_ATTACH(&(pvt->pub), dlclose, dmp);
+        RTPP_OBJ_DTOR_ATTACH_s(&(pvt->pub), dlclose, dmp);
         mip = dlsym(dmp, "rtpp_module");
         if (mip == NULL) {
             derr = dlerror();
@@ -254,7 +254,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
         memcpy(pvt->mi.fn, &mip_model, sizeof(struct rtpp_minfo_fset));
     }
 
-    RTPP_OBJ_BORROW(&(pvt->pub), log);
+    RTPP_OBJ_BORROW_s(&(pvt->pub), log);
     pvt->mi.log = log;
 
 #if RTPP_CHECK_LEAKS
@@ -270,7 +270,7 @@ rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct r
     rtpp_memdeb_setlog(memdeb_p, log);
     rtpp_memdeb_setname(memdeb_p, pvt->mi.descr.name);
     *pvt->mi.memdeb_p = pvt->mi.memdeb = memdeb_p;
-    RTPP_OBJ_DTOR_ATTACH(&(pvt->pub), rtpp_mif_memdeb_dtor, &(pvt->mi));
+    RTPP_OBJ_DTOR_ATTACH_s(&(pvt->pub), rtpp_mif_memdeb_dtor, &(pvt->mi));
 #else
     if (pvt->mi.memdeb_p != NULL) {
         RTPP_LOG(log, RTPP_LOG_ERR, "memdeb pointer is not NULL in the %s, "
@@ -542,7 +542,7 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
     if (rval == NULL) {
         return (-1);
     }
-    RTPP_OBJ_BORROW(&(pvt->pub), rval);
+    RTPP_OBJ_BORROW_s(&(pvt->pub), rval);
     *mcpp = pvt->mcp = rval;
     return (0);
 }

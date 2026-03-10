@@ -111,7 +111,7 @@ rtpp_dtls_ctor(const struct rtpp_cfg *cfsp, struct rtpp_minfo *mself)
     pvt->pub.newconn = &rtpp_dtls_newconn;
     pvt->cfsp = cfsp;
     pvt->mself = mself;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)rtpp_dtls_dtor, pvt);
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, (rtpp_refcnt_dtor_t)rtpp_dtls_dtor, pvt);
     return (&(pvt->pub));
 e3:
     X509_free(pvt->cert);

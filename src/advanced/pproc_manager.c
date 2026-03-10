@@ -118,11 +118,11 @@ pproc_manager_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
         goto e1;
     if (pthread_mutex_init(&pvt->lock, NULL) != 0)
         goto e1;
-    RTPP_OBJ_DTOR_ATTACH(&(pvt->pub), pthread_mutex_destroy, &pvt->lock);
+    RTPP_OBJ_DTOR_ATTACH_s(&(pvt->pub), pthread_mutex_destroy, &pvt->lock);
     pvt->handlers = pproc_handlers_alloc(nprocs);
     if (pvt->handlers == NULL)
         goto e1;
-    RTPP_OBJ_BORROW(&(pvt->pub), rtpp_stats);
+    RTPP_OBJ_BORROW_s(&(pvt->pub), rtpp_stats);
     pvt->rtpp_stats = rtpp_stats;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_pproc_mgr_dtor);
     return (&(pvt->pub));
@@ -162,7 +162,7 @@ rtpp_pproc_mgr_register(struct pproc_manager *pub, enum pproc_order pproc_order,
     for (int j = 0; j < newh->nprocs; j++) {
         ip = &newh->pproc[j].ppif;
         if (ip->rcnt != NULL)
-            RTPP_OBJ_BORROW(newh, ip);
+            RTPP_OBJ_BORROW_s(newh, ip);
     }
     RTPP_OBJ_DECREF(pvt->handlers);
     pvt->handlers = newh;
@@ -284,7 +284,7 @@ rtpp_pproc_mgr_unregister(struct pproc_manager *pub, void *key)
         for (int j = 0; j < newh->nprocs; j++) {
             ip = &newh->pproc[j].ppif;
             if (ip->rcnt != NULL)
-                RTPP_OBJ_BORROW(newh, ip);
+                RTPP_OBJ_BORROW_s(newh, ip);
         }
         oldh = pvt->handlers;
         pvt->handlers = newh;

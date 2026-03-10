@@ -254,12 +254,12 @@ rtpp_proc_servers_ctor(const struct rtpp_cfg *cfsp, struct rtpp_anetio_cf *netio
     if (stap->act_servers == NULL) {
         goto e3;
     }
-    RTPP_OBJ_DTOR_ATTACH_OBJ(&stap->pub, stap->act_servers);
+    RTPP_OBJ_DTOR_ATTACH_OBJ_s(&stap->pub, stap->act_servers);
     stap->inact_servers = rtpp_weakref_ctor();
     if (stap->inact_servers == NULL) {
         goto e3;
     }
-    RTPP_OBJ_DTOR_ATTACH_OBJ(&stap->pub, stap->inact_servers);
+    RTPP_OBJ_DTOR_ATTACH_OBJ_s(&stap->pub, stap->inact_servers);
 
     stap->inact_servers->ht->seed = stap->act_servers->ht->seed;
     stap->netio = netio;

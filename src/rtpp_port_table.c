@@ -92,7 +92,7 @@ rtpp_port_table_ctor(int port_min, int port_max, int seq_ports, uint16_t port_ct
     pvt->port_table_idx = pvt->port_table_len - 1;
 
     pvt->pub.get_port = &rtpp_ptbl_get_port;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_ptbl_dtor,
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_ptbl_dtor,
       pvt);
     return ((&pvt->pub));
 

@@ -60,7 +60,7 @@ rtpp_genuid_ctor(void)
     atomic_init(&pvt->lastuid, 0);
 #if defined(RTPP_DEBUG)
     pvt->pub.smethods = GET_SMETHODS(&pvt->pub);
-    RTPP_OBJ_DTOR_ATTACH(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_genuid_fin,
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_genuid_fin,
       &(pvt->pub));
 #endif
     return (&pvt->pub);

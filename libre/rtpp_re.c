@@ -61,7 +61,7 @@ mem_zalloc(size_t size, mem_destroy_h *dh)
         return (NULL);
     rp = (void *)pvt->data;
     if (dh != NULL) {
-        CALL_SMETHOD(pvt->rcnt, attach, (rtpp_refcnt_dtor_t)dh, rp);
+        RTPP_OBJ_DTOR_ATTACH_s(pvt, (rtpp_refcnt_dtor_t)dh, rp);
     }
     return (rp);
 }

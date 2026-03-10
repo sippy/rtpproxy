@@ -740,7 +740,7 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
         }
         /* Save ref, it will be decref'd by the command disposal code */
         RTPP_DBG_ASSERT(cmd->sp == NULL);
-        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, spa);
+        RTPP_OBJ_DTOR_ATTACH_OBJ_s(cmd, spa);
         cmd->sp = spa;
     }
 

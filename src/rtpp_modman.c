@@ -70,7 +70,7 @@ rtpp_modman_ctor(void)
     pvt->pub.get_next_id = rtpp_modman_get_next_id;
     pvt->pub.do_acct = rtpp_modman_do_acct;
     pvt->pub.get_ul_subc_h = rtpp_modman_get_ul_subc_h;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_modman_dtor,
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_modman_dtor,
       pvt);
     return ((&pvt->pub));
 

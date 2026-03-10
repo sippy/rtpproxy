@@ -327,7 +327,7 @@ ice_lite_data_ctor(int lufrag_len, int lpwd_len, struct rtpp_minfo *mself)
         goto e6;
     RC_INCREF(mself->super_rcnt);
     ila_c->mself = mself;
-    CALL_SMETHOD(ila_c->rcnt, attach, (rtpp_refcnt_dtor_t)ice_lite_data_dtor, ila_c);
+    RTPP_OBJ_DTOR_ATTACH_s(ila_c, (rtpp_refcnt_dtor_t)ice_lite_data_dtor, ila_c);
     return (ila_c);
 e6:
     RTPP_OBJ_DECREF(ila_c->sock->raddr);
@@ -680,9 +680,9 @@ rtpp_ice_lite_enqueue(const struct pkt_proc_ctx *pktx)
     if (wi == NULL)
         return (PPROC_ACT_DROP);
     wip->pkt = pktx->pktp;
-    RTPP_OBJ_BORROW(wi, ila_c);
+    RTPP_OBJ_BORROW_s(wi, ila_c);
     wip->ila_c = ila_c;
-    RTPP_OBJ_BORROW(wi, pktx->strmp_in);
+    RTPP_OBJ_BORROW_s(wi, pktx->strmp_in);
     wip->strmp_in = pktx->strmp_in;
     if (rtpp_queue_put_item(wi, ila_c->mself->wthr.mod_q) != 0) {
         RTPP_OBJ_DECREF(wi);

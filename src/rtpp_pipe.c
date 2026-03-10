@@ -95,7 +95,7 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
         goto e0;
     }
 
-    RTPP_OBJ_BORROW(&pvt->pub, ap->log);
+    RTPP_OBJ_BORROW_s(&pvt->pub, ap->log);
     if (ap->pipe_type == PIPE_RTP) {
         pvt->streams_wrt = cfs->rtp_streams_wrt;
     } else {
@@ -112,7 +112,7 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
         if (pvt->pub.stream[i] == NULL) {
             goto e1;
         }
-        RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->pub.stream[i]);
+        RTPP_OBJ_DTOR_ATTACH_OBJ_s(&pvt->pub, pvt->pub.stream[i]);
         if (CALL_SMETHOD(pvt->streams_wrt, reg, pvt->pub.stream[i]->rcnt,
           pvt->pub.stream[i]->stuid) != 0) {
             goto e1;
@@ -124,21 +124,21 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
     if (pvt->pub.pcount == NULL) {
         goto e1;
     }
-    RTPP_OBJ_DTOR_ATTACH_OBJ(&pvt->pub, pvt->pub.pcount);
+    RTPP_OBJ_DTOR_ATTACH_OBJ_s(&pvt->pub, pvt->pub.pcount);
     for (i = 0; i < 2; i++) {
-        RTPP_OBJ_BORROW(pvt->pub.stream[i], pvt->pub.pcount);
+        RTPP_OBJ_BORROW_s(pvt->pub.stream[i], pvt->pub.pcount);
         pvt->pub.stream[i]->pcount = pvt->pub.pcount;
     }
     pvt->pub.stream[0]->pproc_manager->reverse = pvt->pub.stream[1]->pproc_manager;
-    RTPP_OBJ_BORROW(&pvt->pub, pvt->pub.stream[1]->pproc_manager);
+    RTPP_OBJ_BORROW_s(&pvt->pub, pvt->pub.stream[1]->pproc_manager);
     pvt->pub.stream[1]->pproc_manager->reverse = pvt->pub.stream[0]->pproc_manager;
-    RTPP_OBJ_BORROW(&pvt->pub, pvt->pub.stream[0]->pproc_manager);
+    RTPP_OBJ_BORROW_s(&pvt->pub, pvt->pub.stream[0]->pproc_manager);
     pvt->pipe_type = ap->pipe_type;
     pvt->pub.rtpp_stats = cfs->rtpp_stats;
     pvt->pub.log = ap->log;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_pipe_dtor);
 #if defined(RTPP_DEBUG)
-    RTPP_OBJ_DTOR_ATTACH(&pvt->pub, rtpp_pipe_fin, &(pvt->pub));
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, rtpp_pipe_fin, &(pvt->pub));
 #endif
     return (&pvt->pub);
 

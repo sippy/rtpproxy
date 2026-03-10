@@ -67,7 +67,7 @@ rtpp_acct_rtcp_ctor(const char *call_id, const struct rtp_packet *pp)
         goto e1;
     }
     pvt->pub.jt = &pvt->_jt;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_acct_rtcp_dtor,
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_acct_rtcp_dtor,
       pvt);
     return ((&pvt->pub));
 

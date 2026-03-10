@@ -78,7 +78,7 @@ rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
     };
     memcpy(wis->msg, msg, msg_len);
     memcpy(&(wis->to), sendto, tolen);
-    CALL_SMETHOD(wis->wip.pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_wi_free,
+    RTPP_OBJ_DTOR_ATTACH_s(&wis->wip.pub, (rtpp_refcnt_dtor_t)&rtpp_wi_free,
       wis);
     return (&(wis->wip.pub));
 }
@@ -106,7 +106,7 @@ rtpp_wi_malloc_na(int sock, const void *msg, size_t msg_len, int flags,
         .aux_rcnt = data_rcnt,
     };
     memcpy(&(wis->to), sendto, tolen);
-    CALL_SMETHOD(wis->wip.pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_wi_free,
+    RTPP_OBJ_DTOR_ATTACH_s(&wis->wip.pub, (rtpp_refcnt_dtor_t)&rtpp_wi_free,
       wis);
     return (&(wis->wip.pub));
 }
@@ -133,8 +133,6 @@ rtpp_wi_malloc_pkt_na(int sock, struct rtp_packet *pkt,
         RC_INCREF(sock_rcnt);
         wipp->aux_rcnt = sock_rcnt;
     }
-    CALL_SMETHOD(pkt->rcnt, attach, (rtpp_refcnt_dtor_t)rtpp_wi_pkt_free,
-      wipp);
     return (&(wipp->pub));
 }
 

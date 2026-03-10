@@ -97,7 +97,7 @@ rtpp_cmd_rcache_ctor(struct rtpp_timed *rtpp_timed_cf, double min_ttl)
     pvt->pub.insert = &rtpp_cmd_rcache_insert;
     pvt->pub.lookup = &rtpp_cmd_rcache_lookup;
     pvt->pub.shutdown = &rtpp_cmd_rcache_shutdown;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_cmd_rcache_dtor,
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_cmd_rcache_dtor,
       pvt);
     return (&pvt->pub);
 
@@ -134,7 +134,7 @@ rtpp_cmd_rcache_insert(struct rtpp_cmd_rcache *pub, const rtpp_str_t *cookie,
     RC_INCREF(reply_rcnt);
     rep->reply_rcnt = reply_rcnt;
     rep->etime = ctime + pvt->min_ttl;
-    CALL_SMETHOD(rep->pub.rcnt, attach, rtpp_cmd_rcache_entry_free, rep);
+    RTPP_OBJ_DTOR_ATTACH_s(&rep->pub, rtpp_cmd_rcache_entry_free, rep);
     CALL_SMETHOD(pvt->ht, append_str_refcnt, cookie, rep->pub.rcnt, NULL);
     /*
      * append_refcnt() either takes ownership in which case it incs refcount

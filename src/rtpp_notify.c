@@ -138,7 +138,7 @@ rtpp_notify_ctor(struct rtpp_log *glog)
     pvt->glog = glog;
     pvt->pub.schedule = &rtpp_notify_schedule;
 
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_notify_dtor,
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_notify_dtor,
       pvt);
     return (&pvt->pub);
 

@@ -244,6 +244,6 @@ rtpp_acct_rtcp_hep_get_mconf(void)
     cp->pub.rcnt = rtp;
     cp->ctx = default_ctx;
     cp->pub.conf_data = &cp->ctx;
-    RTPP_OBJ_DTOR_ATTACH(&(cp->pub), mconf_dtor, &cp->ctx);
+    RTPP_OBJ_DTOR_ATTACH_s(&(cp->pub), mconf_dtor, &cp->ctx);
     return (&cp->pub);
 }

@@ -394,6 +394,7 @@ main(int argc, char **argv)
     do {
         struct rtp_packet *pkt = rtp_packet_alloc();
         wi = rtpp_wi_malloc_pkt_na(-1, pkt, na, 1, NULL);
+        assert(wi != NULL);
         taint(wi);
         RTPP_OBJ_DECREF(wi);
         tests.wi_malloc_pkt.nitems++;

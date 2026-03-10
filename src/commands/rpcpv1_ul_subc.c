@@ -171,12 +171,15 @@ rtpp_command_ul_look_subc_parse(const struct rtpp_cfg *cfsp,
     lsp->to_tag = cmd->cca.to_tag;
     lsp->csp = rtpp_command_get_stats(cmd);
     lsp->raddr = rtpp_command_get_raddr(cmd);
-    CALL_SMETHOD(lsp->rcnt, attach,
-      (rtpp_refcnt_dtor_t)&rtpp_command_ul_opts_free, ulop);
+    RTPP_OBJ_DTOR_ATTACH_s(lsp, (rtpp_refcnt_dtor_t)&rtpp_command_ul_opts_free,
+      ulop);
     asp->args.stat = (void *)cfsp;
     asp->args.dyn = lsp;
     asp->handler = rtpp_command_ul_as_subc;
-    RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, lsp);
+    if (RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, lsp) != 0) {
+        RTPP_OBJ_DECREF(lsp);
+        return -1;
+    }
     return (0);
 }
 
@@ -228,7 +231,10 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *
         if (dop == NULL)
             return (-1);
         asp->args.dyn = dop;
-        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, dop);
+        if (RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, dop) != 0) {
+            RTPP_OBJ_DECREF(dop);
+            return (-1);
+        }
         asp->args.stat = (void *)cfsp;
         asp->handler = handle_delete_as_subc;
         break;
@@ -241,7 +247,10 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *
         if (sop == NULL)
             return (-1);
         asp->args.dyn = sop;
-        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, sop);
+        if (RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, sop) != 0) {
+            RTPP_OBJ_DECREF(sop);
+             return (-1);
+        }
         break;
 
     case 'L':

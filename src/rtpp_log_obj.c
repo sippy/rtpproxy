@@ -85,7 +85,7 @@ rtpp_log_ctor(const char *app, const char *call_id, int flags)
     pvt->call_id = call_id;
     pvt->flags = flags;
     pvt->level = -1;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_log_obj_dtor,
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_log_obj_dtor,
       pvt);
     return (&pvt->pub);
 }

@@ -192,7 +192,7 @@ rtpp_session_ctor(const struct rtpp_session_ctor_args *ap)
     RTPP_OBJ_DECREF(fds[1]);
     CALL_METHOD(cfs->rtpp_proc_cf, nudge);
 
-    CALL_SMETHOD(pub->rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_session_dtor,
+    RTPP_OBJ_DTOR_ATTACH_s(pub, (rtpp_refcnt_dtor_t)&rtpp_session_dtor,
       pvt);
     return (&pvt->pub);
 

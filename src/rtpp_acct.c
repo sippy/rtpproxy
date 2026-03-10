@@ -89,7 +89,7 @@ rtpp_acct_ctor(uint64_t seuid)
     pvt->pub.jrasta = &pvt->_jrasta;
     pvt->pub.init_ts = &pvt->_init_ts;
     pvt->pub.destroy_ts = &pvt->_destroy_ts;
-    CALL_SMETHOD(pvt->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&rtpp_acct_dtor,
+    RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, (rtpp_refcnt_dtor_t)&rtpp_acct_dtor,
       pvt);
     return ((&pvt->pub));
 

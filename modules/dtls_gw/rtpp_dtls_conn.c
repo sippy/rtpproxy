@@ -238,7 +238,7 @@ rtpp_dtls_conn_ctor(const struct rtpp_cfg *cfsp, SSL_CTX *ctx,
     /* Cannot grab refcount here, circular reference would ensue */
     /* RTPP_OBJ_INCREF(dtls_strmp); */
     pvt->dtls_strm_id = dtls_strmp->stuid;
-    RTPP_OBJ_BORROW(&pvt->pub, cfsp->rtp_streams_wrt);
+    RTPP_OBJ_BORROW_s(&pvt->pub, cfsp->rtp_streams_wrt);
     pvt->streams_wrt = cfsp->rtp_streams_wrt;
     pvt->timed_cf = cfsp->rtpp_timed_cf;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_dtls_conn_dtor);

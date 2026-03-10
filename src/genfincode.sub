@@ -98,7 +98,7 @@ emit_fintestfunction() {
     echo "    };"
     echo "    tp->pub.smethods = &dummy;"
   fi
-  echo   "    CALL_SMETHOD(tp->pub.rcnt, attach, (rtpp_refcnt_dtor_t)&${oname}_fin,"
+  echo   "    RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&${oname}_fin,"
   echo   "      &tp->pub);"
   echo   "    RTPP_OBJ_DECREF(&(tp->pub));"
   i=0

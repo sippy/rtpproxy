@@ -255,6 +255,10 @@ rtpp_anetio_send_pkt_na(struct sthread_args *sender, int sock, \
     }
 
     wi = rtpp_wi_malloc_pkt_na(sock, pkt, sendto, nsend, sock_rcnt);
+    if (wi == NULL) {
+        RTPP_OBJ_DECREF(pkt);
+        return -1;
+    }
     /*
      * rtpp_wi_malloc_pkt_na() consumes pkt and returns wi, so no need to
      * call rtp_packet_free() here.

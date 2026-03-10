@@ -225,7 +225,7 @@ rtpp_command_ctor(const struct rtpp_cfg *cfsp, int controlfd,
         RTPP_OBJ_DECREF(cmd);
         return (NULL);
     }
-    RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, cmd->reply);
+    RTPP_OBJ_DTOR_ATTACH_OBJ_s(cmd, cmd->reply);
     return (cmd);
 }
 
@@ -346,7 +346,9 @@ rtpp_command_guard_retrans(struct rtpp_command *cmd,
     PUB2PVT(cmd, pvt);
     cres = CALL_METHOD(rcache_obj, lookup, rtpp_str_fix(&pvt->ctx.cookie));
     if (cres == NULL) {
-        RTPP_OBJ_BORROW(cmd, rcache_obj);
+        if (RTPP_OBJ_BORROW(cmd, rcache_obj) != 0) {
+            return (-1);
+        }
         pvt->ctx.rcache_obj = rcache_obj;
         return (0);
     }
@@ -408,7 +410,12 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
             /* Stream communication mode doesn't use cookie */
             if (pvt->ctx.umode != 0 && cap->c == 0 && pvt->ctx.cookie.s == NULL) {
                 pvt->ctx.cookie = *ap;
-                if (rtpp_command_guard_retrans(cmd, rcache_obj)) {
+                int gres = rtpp_command_guard_retrans(cmd, rcache_obj);
+                if (gres < 0) {
+                    *rval = GET_CMD_ENOMEM;
+                    return (-1);
+                }
+                if (gres > 0) {
                     *rval = GET_CMD_OK;
                     return (1);
                 }
@@ -518,7 +525,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
         }
-        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, cmd->cca.opts.record);
+        RTPP_OBJ_DTOR_ATTACH_OBJ_s(cmd, cmd->cca.opts.record);
         break;
 
     case NORECORD:
@@ -546,7 +553,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't parse options");
             return 0;
         }
-        RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, cmd->cca.opts.delete);
+        RTPP_OBJ_DTOR_ATTACH_OBJ_s(cmd, cmd->cca.opts.delete);
         break;
 
     case UPDATE:
@@ -619,7 +626,7 @@ handle_command(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd)
             if (cmd->cca.op != UPDATE)
             i = NOT(i);
             RTPP_DBG_ASSERT(cmd->sp == NULL);
-            RTPP_OBJ_DTOR_ATTACH_OBJ(cmd, spa);
+            RTPP_OBJ_DTOR_ATTACH_OBJ_s(cmd, spa);
             cmd->sp = spa;
         }
         break;

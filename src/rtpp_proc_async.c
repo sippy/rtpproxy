@@ -329,7 +329,7 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
     if (proc_cf->pub.netio == NULL) {
         goto e0;
     }
-    RTPP_OBJ_DTOR_ATTACH(&proc_cf->pub, rtpp_netio_async_destroy, proc_cf->pub.netio);
+    RTPP_OBJ_DTOR_ATTACH_s(&proc_cf->pub, rtpp_netio_async_destroy, proc_cf->pub.netio);
 
     proc_cf->cf_save = cfsp;
 
@@ -354,23 +354,23 @@ rtpp_proc_async_ctor(const struct rtpp_cfg *cfsp)
     if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtp_thread, PIPE_RTP) != 0) {
         goto e2;
     }
-    RTPP_OBJ_DTOR_ATTACH(&proc_cf->pub, rtpp_proc_async_thread_destroy, &proc_cf->rtp_thread);
+    RTPP_OBJ_DTOR_ATTACH_s(&proc_cf->pub, rtpp_proc_async_thread_destroy, &proc_cf->rtp_thread);
 
     if (rtpp_proc_async_thread_init(cfsp, proc_cf, &proc_cf->rtcp_thread, PIPE_RTCP) != 0) {
         goto e2;
     }
-    RTPP_OBJ_DTOR_ATTACH(&proc_cf->pub, rtpp_proc_async_thread_destroy, &proc_cf->rtcp_thread);
+    RTPP_OBJ_DTOR_ATTACH_s(&proc_cf->pub, rtpp_proc_async_thread_destroy, &proc_cf->rtcp_thread);
 
     proc_cf->wakeup_cf = rtpp_proc_wakeup_ctor(proc_cf->rtp_thread.ptbl.wakefd[1],
       proc_cf->rtcp_thread.ptbl.wakefd[1]);
     if (proc_cf->wakeup_cf == NULL)
         goto e2;
-    RTPP_OBJ_DTOR_ATTACH_OBJ(&proc_cf->pub, proc_cf->wakeup_cf);
+    RTPP_OBJ_DTOR_ATTACH_OBJ_s(&proc_cf->pub, proc_cf->wakeup_cf);
 
-    RTPP_OBJ_BORROW(&proc_cf->pub, cfsp->rtpp_stats);
-    RTPP_OBJ_BORROW(&proc_cf->pub, cfsp->pproc_manager);
+    RTPP_OBJ_BORROW_s(&proc_cf->pub, cfsp->rtpp_stats);
+    RTPP_OBJ_BORROW_s(&proc_cf->pub, cfsp->pproc_manager);
 
-    RTPP_OBJ_DTOR_ATTACH(&proc_cf->pub, rtpp_proc_async_dtor, proc_cf);
+    RTPP_OBJ_DTOR_ATTACH_s(&proc_cf->pub, rtpp_proc_async_dtor, proc_cf);
 
     proc_cf->pub.nudge = &rtpp_proc_async_nudge;
     return (&proc_cf->pub);
