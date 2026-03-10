@@ -489,6 +489,16 @@ rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
         return (RES_HERE(-1));
     }
 
+    if (pktxp->flags & PPROC_FLAG_COW) {
+        struct rtp_packet *p = rtp_packet_alloc();
+        if (p == NULL)
+            return (RES_HERE(-1));
+        rtp_packet_dup(p, pktxp->pktp, 0);
+        RTPP_OBJ_DECREF(pktxp->pktp);
+        pktxp->pktp = p;
+        pktxp->flags ^= PPROC_FLAG_COW;
+    }
+
     len = pktxp->pktp->size;
     if (rtpp_is_rtcp_tst(pktxp)) {
         status = RES_HERE(SRTCP_PROTECT(pvt->srtp_ctx_out, pktxp->pktp->data.buf, &len));

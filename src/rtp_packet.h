@@ -71,11 +71,12 @@ struct rtp_packet {
 #define RTP_PKT_COPYOFF(x) (offsetof(typeof(*x), parse_result))
 
 struct rtp_packet *rtp_packet_alloc() RTPP_EXPORT;
+void rtp_packet_dup(struct rtp_packet *, const struct rtp_packet *, int) RTPP_EXPORT;
+
 void rtp_packet_set_seq(struct rtp_packet *, uint16_t seq);
 void rtp_packet_set_ts(struct rtp_packet *, uint32_t ts);
 
 #define RTPP_DUP_HDRONLY 0x1    /* Do not copy payload, only headers, requires packet to be parsed */
-void rtp_packet_dup(struct rtp_packet *, const struct rtp_packet *, int);
 struct rtpp_wi *rtp_packet_get_wi(struct rtp_packet *);
 
 #endif

@@ -38,6 +38,7 @@ enum pproc_action;
 enum pproc_order;
 
 #define PPROC_FLAG_LGEN (1 << 0)
+#define PPROC_FLAG_COW  (1 << 1)
 
 struct pkt_proc_ctx {
     struct rtpp_stream *strmp_in;
