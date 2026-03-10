@@ -90,8 +90,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@am__append_1 = autosrc/chk_up2date \
-@ENABLE_BASIC_TESTS_TRUE@	recording/basic makeann/makeann1 \
-@ENABLE_BASIC_TESTS_TRUE@	unittests/rtcp2json1 \
+@ENABLE_BASIC_TESTS_TRUE@	recording/basic recording/src_srs \
+@ENABLE_BASIC_TESTS_TRUE@	makeann/makeann1 unittests/rtcp2json1 \
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_sbuf \
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_objck \
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_rzmalloc_perf \
@@ -394,7 +394,9 @@ EXTRA_DIST = $(am__append_3) $(am__append_6) $(am__append_9) \
 @ENABLE_BASIC_TESTS_TRUE@autosrc_EXTRA_DIST = autosrc
 @ENABLE_BASIC_TESTS_TRUE@autosrc_CLEANFILES = 
 @ENABLE_BASIC_TESTS_TRUE@recording_EXTRA_DIST = recording
-@ENABLE_BASIC_TESTS_TRUE@recording_CLEANFILES = recording.*
+@ENABLE_BASIC_TESTS_TRUE@recording_CLEANFILES = recording.* recording/src_srs*.rlog \
+@ENABLE_BASIC_TESTS_TRUE@  recording/src_srs*.rout recording/call*.rtp
+
 @ENABLE_BASIC_TESTS_TRUE@makeann_EXTRA_DIST = makeann
 @ENABLE_MEMGLITCHING_TRUE@makeann_EXTRA_DIST = makeann
 @ENABLE_BASIC_TESTS_TRUE@makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
