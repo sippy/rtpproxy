@@ -350,14 +350,14 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
         rdfsp = &rdfs;
         /* Fallthrough */
     case RDG_CMD_D:
-        dtls_strmp = ctxp->strmp_in;
+        dtls_strmp = ctxp->env->strmp_in;
         break;
 
     case RDG_CMD_S:
         rdfsp = NULL;
         /* Fallthrough */
     case RDG_CMD_U:
-        dtls_strmp = ctxp->strmp_out;
+        dtls_strmp = ctxp->env->strmp_out;
         break;
     }
 
@@ -384,7 +384,7 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
         }
     }
     if (rdfsp != NULL && rdfs.peer_mode == RTPP_DTLS_PASSIVE) {
-        if (rtpp_dtls_gw_setup_sender(pvt, ctxp->sessp, dtls_strmp) != 0) {
+        if (rtpp_dtls_gw_setup_sender(pvt, ctxp->env->sessp, dtls_strmp) != 0) {
             goto e0;
         }
     }

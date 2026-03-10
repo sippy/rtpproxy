@@ -823,11 +823,14 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
     RTPP_DBG_ASSERT(lport != 0);
     ulop->reply.port = lport;
     ulop->reply.ia = ulop->lia[0];
+    struct rtpp_subc_env rse = {
+        .sessp = spa,
+        .strmp_in = spa->rtp->stream[pidx],
+        .strmp_out = spa->rtp->stream[NOT(pidx)]
+    };
     for (int i = 0; i < cmd->subc.n; i++) {
         struct rtpp_subc_ctx rsc = {
-            .sessp = spa,
-            .strmp_in = spa->rtp->stream[pidx],
-            .strmp_out = spa->rtp->stream[NOT(pidx)],
+            .env = &rse,
             .subc_args = &(cmd->subc.args[i]),
             .resp = &(cmd->subc.res[i]),
             .log = spa->log,

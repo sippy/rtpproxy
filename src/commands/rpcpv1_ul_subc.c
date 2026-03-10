@@ -109,7 +109,7 @@ rtpp_command_ul_as_subc(const struct after_success_h_args *ap,
     int sidx, rval;
 
     lsp = (const struct rtpp_subcommand_ul_lstate *)ap->dyn;
-    RTPP_DBG_ASSERT(scp->sessp != NULL);
+    RTPP_DBG_ASSERT(scp->env->sessp != NULL);
     RTPP_DBG_ASSERT(lsp != NULL);
     RTPP_DBG_ASSERT(lsp->ulop != NULL);
     RTPP_DBG_ASSERT(lsp->to_tag != NULL);
@@ -120,18 +120,18 @@ rtpp_command_ul_as_subc(const struct after_success_h_args *ap,
     scmd.dtime = lsp->dtime;
     scmd.laddr = lsp->laddr;
     scmd.cca.op = lsp->op;
-    scmd.cca.call_id = scp->sessp->call_id;
-    scmd.cca.from_tag = scp->sessp->from_tag;
+    scmd.cca.call_id = scp->env->sessp->call_id;
+    scmd.cca.from_tag = scp->env->sessp->from_tag;
     scmd.cca.to_tag = lsp->to_tag;
     scmd.cca.opts.ul = lsp->ulop;
-    if (scp->sessp->rtp->stream[0] == scp->strmp_in) {
+    if (scp->env->sessp->rtp->stream[0] == scp->env->strmp_in) {
         sidx = 0;
-    } else if (scp->sessp->rtp->stream[1] == scp->strmp_in) {
+    } else if (scp->env->sessp->rtp->stream[1] == scp->env->strmp_in) {
         sidx = 1;
     } else {
         return (-1);
     }
-    scmd.sp = scp->sessp;
+    scmd.sp = scp->env->sessp;
     rval = rtpp_command_ul_handle_impl(cfsp, &scmd, sidx, scp->resp, lsp->csp,
       &lsp->raddr);
     return (rval);

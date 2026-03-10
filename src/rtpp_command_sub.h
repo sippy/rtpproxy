@@ -37,10 +37,14 @@ struct rtpp_subc_resp {
     char buf_t[512];
 };
 
-struct rtpp_subc_ctx {
+struct rtpp_subc_env {
     struct rtpp_session *sessp;
     struct rtpp_stream *strmp_in;
     struct rtpp_stream *strmp_out;
+};
+
+struct rtpp_subc_ctx {
+    struct rtpp_subc_env *env;
     const struct rtpp_command_args *subc_args;
     struct rtpp_subc_resp *resp;
     struct rtpp_log *log;

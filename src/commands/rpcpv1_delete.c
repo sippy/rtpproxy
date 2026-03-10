@@ -171,12 +171,12 @@ handle_delete_as_subc(const struct after_success_h_args *ap,
     struct delete_opts_priv *dop;
     PUB2PVT((struct delete_opts *)ap->dyn, dop);
     struct delete_ematch_arg dea = {
-        .from_tag = scp->sessp->from_tag,
+        .from_tag = scp->env->sessp->from_tag,
         .weak = dop->weak,
         .sessions_wrt = cfsp->sessions_wrt
     };
 
-    return do_delete(cfsp, scp->sessp->call_id, &dea);
+    return do_delete(cfsp, scp->env->sessp->call_id, &dea);
 }
 
 struct delete_opts *

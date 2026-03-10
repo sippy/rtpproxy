@@ -462,7 +462,7 @@ ice_lite_activate(struct rtpp_module_priv *pvt, const struct rtpp_subc_ctx *ctxp
     if (CALL_SMETHOD(ice_strmp->pproc_manager, reg, PPROC_ORD_RECV,
       &stun_poi) < 0)
         goto e1;
-    struct rtpp_stream_pair rtcp = get_rtcp_pair(ctxp->sessp, ice_strmp);
+    struct rtpp_stream_pair rtcp = get_rtcp_pair(ctxp->env->sessp, ice_strmp);
     if (rtcp.ret != 0) {
         goto e2;
     }
@@ -575,12 +575,12 @@ rtpp_ice_lite_handle_command(struct rtpp_module_priv *pvt,
         rpwd = rtpp_str_fix(&argv[2]);
     case RIL_CMD_C:
     case RIL_CMD_D:
-        ice_strmp = ctxp->strmp_in;
+        ice_strmp = ctxp->env->strmp_in;
         break;
 
     case RIL_CMD_S:
     case RIL_CMD_U:
-        ice_strmp = ctxp->strmp_out;
+        ice_strmp = ctxp->env->strmp_out;
         break;
     }
 

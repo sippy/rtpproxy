@@ -81,15 +81,15 @@ rtpp_subcommand_set_handler(const struct after_success_h_args *ashap,
     tap = (struct rtpp_subcommand_set *)ashap->dyn;
     switch (tap->direction) {
     case SET_FORWARD:
-        strmp = rscp->strmp_in;
-        strmp1 = rscp->strmp_out;
+        strmp = rscp->env->strmp_in;
+        strmp1 = rscp->env->strmp_out;
         break;
 
     case SET_REVERSE:
-        strmp = rscp->strmp_out;
+        strmp = rscp->env->strmp_out;
         if (strmp == NULL)
             return (-1);
-        strmp1 = rscp->strmp_in;
+        strmp1 = rscp->env->strmp_in;
         break;
 
     default:
@@ -107,7 +107,7 @@ rtpp_subcommand_set_handler(const struct after_success_h_args *ashap,
     case SET_PRM_TOS:
         if (strmp_settos(rscp, strmp, tap->val) != 0)
             return (-1);
-        struct rtpp_stream_pair rtcp = get_rtcp_pair(rscp->sessp, strmp);
+        struct rtpp_stream_pair rtcp = get_rtcp_pair(rscp->env->sessp, strmp);
         if (rtcp.ret != 0 || rtcp.in == NULL)
             break;
         if (strmp_settos(rscp, rtcp.in, tap->val) != 0)

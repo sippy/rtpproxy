@@ -253,12 +253,15 @@ out:
         assert(CALL_SMETHOD(cmd->reply, reserve, sizeof(SUBC_FAIL_RSP)) == 0);
     }
     aerr = 0;
+    struct rtpp_subc_env rse = {
+        .sessp = cmd->sp,
+        .strmp_in = spp->stream[idx],
+        .strmp_out = spp->stream[NOT(idx)]
+    };
     for (int i = 0, skipped = 0; i < cmd->subc.n; i++) {
         CALL_SMETHOD(cmd->reply, commit);
         struct rtpp_subc_ctx rsc = {
-            .sessp = cmd->sp,
-            .strmp_in = spp->stream[idx],
-            .strmp_out = spp->stream[NOT(idx)],
+            .env = &rse,
             .subc_args = &(cmd->subc.args[i]),
             .resp = &(cmd->subc.res[i]),
             .log = spp->log,

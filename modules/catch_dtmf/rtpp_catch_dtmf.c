@@ -272,14 +272,14 @@ catch_dtmf_data_ctor(const struct rtpp_subc_ctx *ctxp, const rtpp_str_t *dtmf_ta
     rtps_c->mself = mself;
     RC_INCREF(mself->super_rcnt);
     RTPP_OBJ_DTOR_ATTACH_RC_s(rtps_c, mself->super_rcnt);
-    rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->strmp_in->side);
+    rtps_c->edata = rtpp_catch_dtmf_edata_ctor(ctxp->env->strmp_in->side);
     if (!rtps_c->edata) {
         RTPP_LOG(mself->log, RTPP_LOG_ERR, "cannot create edata (sp=%p)",
-          ctxp->strmp_in);
+          ctxp->env->strmp_in);
         goto e1;
     }
     RTPP_OBJ_DTOR_ATTACH_RC_s(rtps_c, rtps_c->edata->rcnt);
-    rtps_c->rtdp = rtpp_timeout_data_ctor(ctxp->sessp->timeout_data->notify_target,
+    rtps_c->rtdp = rtpp_timeout_data_ctor(ctxp->env->sessp->timeout_data->notify_target,
       dtmf_tag);
     if (rtps_c->rtdp == NULL) {
         goto e1;
@@ -304,20 +304,20 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     enum pproc_action old_act, new_act = PPROC_ACT_TEE_v;
     rtpp_str_const_t dtmf_tag;
 
-    if (ctxp->sessp->timeout_data == NULL) {
+    if (ctxp->env->sessp->timeout_data == NULL) {
         RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "notification is not enabled (sp=%p)",
-          ctxp->sessp);
+          ctxp->env->sessp);
         return (-1);
     }
     if (ctxp->subc_args->c < 2) {
         RTPP_LOG(pvt->mself->log, RTPP_LOG_DBUG, "no tag specified (sp=%p)",
-          ctxp->sessp);
+          ctxp->env->sessp);
         return (-1);
     }
 
     if (ctxp->subc_args->c > 4) {
         RTPP_LOG(pvt->mself->log, RTPP_LOG_DBUG, "too many arguments (sp=%p)",
-          ctxp->sessp);
+          ctxp->env->sessp);
         return (-1);
     }
 
@@ -358,7 +358,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
 
     struct packet_processor_if dtmf_poi;
 
-    if (CALL_SMETHOD(ctxp->strmp_in->pproc_manager, lookup, pvt, &dtmf_poi) == 0) {
+    if (CALL_SMETHOD(ctxp->env->strmp_in->pproc_manager, lookup, pvt, &dtmf_poi) == 0) {
         rtps_c = catch_dtmf_data_ctor(ctxp, rtpp_str_fix(&dtmf_tag), new_pt, pvt->mself);
         if (rtps_c == NULL) {
             return (-1);
@@ -371,7 +371,7 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
             .arg = rtps_c,
             .rcnt = rtps_c->rcnt
         };
-        if (CALL_SMETHOD(ctxp->strmp_in->pproc_manager, reg, PPROC_ORD_WITNESS, &dtmf_poi) < 0) {
+        if (CALL_SMETHOD(ctxp->env->strmp_in->pproc_manager, reg, PPROC_ORD_WITNESS, &dtmf_poi) < 0) {
             RTPP_OBJ_DECREF(&dtmf_poi);
             return (-1);
         }
@@ -382,11 +382,11 @@ rtpp_catch_dtmf_handle_command(struct rtpp_module_priv *pvt,
     old_pt = atomic_exchange(&(rtps_c->pt), new_pt);
     if (old_pt != -1)
         RTPP_LOG(pvt->mself->log, RTPP_LOG_DBUG, "sp=%p, pt=%d->%d",
-          ctxp->strmp_in, old_pt, new_pt);
+          ctxp->env->strmp_in, old_pt, new_pt);
     old_act = atomic_exchange(&(rtps_c->act), new_act);
     if (old_act != new_act)
         RTPP_LOG(pvt->mself->log, RTPP_LOG_DBUG, "sp=%p, act=%d->%d",
-          ctxp->strmp_in, old_act, new_act);
+          ctxp->env->strmp_in, old_act, new_act);
     RTPP_OBJ_DECREF(&dtmf_poi);
     return (0);
 }
