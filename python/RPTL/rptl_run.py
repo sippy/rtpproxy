@@ -1,5 +1,7 @@
-import sys, getopt
+import sys, getopt, shlex
 from time import sleep
+from socket import socketpair, AF_UNIX
+from subprocess import Popen, TimeoutExpired
 
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import Node, NodeVisitor
@@ -35,17 +37,19 @@ grammar = Grammar(
 
 class CommandRunner():
     rc = None
+    name: str
     spath: str
     outfile: str
     proc = None
 
-    def __init__(self, socket_name, outfile, params, variables):
+    def __init__(self, instance_name, socket_name, outfile, params, variables):
         from sippy.Rtp_proxy.client import Rtp_proxy_client
+        self.name = instance_name
         if socket_name == 'stdio:':
             rtpproxy_bin = variables.get('RTPPROXY_BIN', 'rtpproxy')
             rtpproxy_stderr = variables.get('RTPPROXY_STDERR')
             self.rc = StdioRtpProxyClient(params, rtpproxy_bin = rtpproxy_bin,
-              rtpproxy_stderr = rtpproxy_stderr)
+              rtpproxy_stderr = rtpproxy_stderr, instance_name = self.name)
             self.proc = self.rc.proc
         else:
             self.rc = Rtp_proxy_client({'_sip_address': '127.0.0.1'}, spath = socket_name,
@@ -70,24 +74,23 @@ class CommandRunner():
 
 class StdioRtpProxyClient(Rtp_proxy_client_stream):
     def __init__(self, extra_args, nworkers = 1, rtpproxy_bin = None,
-      rtpproxy_stderr = None):
-        import socket
-        import subprocess
+      rtpproxy_stderr = None, instance_name = None):
         if rtpproxy_bin is None:
             rtpproxy_bin = 'rtpproxy'
+        self.instance_name = instance_name
         self.worker_class = RTPPLWorker_internal
         cmd = [rtpproxy_bin, '-f', '-s', 'stdio:'] + list(extra_args)
-        parent_sock, child_sock = socket.socketpair()
+        parent_sock, child_sock = socketpair()
         self._stdio_sock = parent_sock
         self._stderr = None
         try:
             if rtpproxy_stderr is not None:
                 self._stderr = open(rtpproxy_stderr, 'w')
-            self.proc = subprocess.Popen(cmd, stdin = child_sock, stdout = child_sock,
+            self.proc = Popen(cmd, stdin = child_sock, stdout = child_sock,
               stderr = self._stderr, close_fds = True)
             child_sock.close()
             super().__init__({'_sip_address': '127.0.0.1'}, address = parent_sock,
-              bind_address = None, nworkers = nworkers, family = socket.AF_UNIX)
+              bind_address = None, nworkers = nworkers, family = AF_UNIX)
         except Exception:
             parent_sock.close()
             child_sock.close()
@@ -100,25 +103,33 @@ class StdioRtpProxyClient(Rtp_proxy_client_stream):
             raise
 
     def shutdown(self):
-        super().shutdown()
+        proc_rc = None
         if self._stdio_sock is not None:
             self._stdio_sock.close()
             self._stdio_sock = None
-        if self.proc is not None:
-            if self.proc.poll() is None:
-                self.proc.terminate()
-                try:
-                    self.proc.wait(timeout = 2.0)
-                except Exception:
-                    self.proc.kill()
-            self.proc = None
-        if self._stderr is not None:
-            self._stderr.close()
-            self._stderr = None
+        try:
+            super().shutdown()
+        finally:
+            if self.proc is not None:
+                proc_rc = self.proc.poll()
+                if proc_rc is None:
+                    self.proc.terminate()
+                    try:
+                        proc_rc = self.proc.wait(timeout = 2.0)
+                    except TimeoutExpired:
+                        self.proc.kill()
+                        proc_rc = self.proc.wait()
+                self.proc = None
+            if self._stderr is not None:
+                self._stderr.close()
+                self._stderr = None
+        if proc_rc is not None and proc_rc != 0:
+            raise RuntimeError(
+              F'managed rtpproxy instance "{self.instance_name}" exited with return code {proc_rc}')
 
 class TransFunction():
     name: str
-    args: list
+    args: tuple
     def __init__(self, name, args):
         handlers = {
           'str_split':self.str_split,
@@ -126,7 +137,7 @@ class TransFunction():
           'str_compare':self.str_compare,
         }
         self.name = name
-        self.args = args
+        self.args = tuple(args)
         self.handler = handlers[name]
 
     def str_split(self, srun, res):
@@ -179,10 +190,14 @@ class ScriptRunner():
             cmd = self.commands[self.i_command]
             self.i_command += 1
             if isinstance(cmd, SocketSpec):
+                address = self.expand_vars(cmd.address)
+                params = []
+                for raw_param in cmd.params:
+                    params.extend(shlex.split(self.expand_vars(raw_param)))
                 if cmd.name in self.sockets:
                     self.sockets[cmd.name].shutdown()
-                self.sockets[cmd.name] = CommandRunner(cmd.address, cmd.outfile,
-                  cmd.params, self.variables)
+                self.sockets[cmd.name] = CommandRunner(cmd.name, address, cmd.outfile,
+                  params, self.variables)
                 continue
             break
         command = self.expand_vars(cmd.action)
@@ -250,7 +265,10 @@ class ScriptRunner():
         if not isinstance(output_var, TransFunction):
             self.variables[output_var] = value
         else:
-            output_var.handler(self, value)
+            try:
+                output_var.handler(self, value)
+            except Exception as ex:
+                raise Exception(F'"{value}" -> {output_var.name}{output_var.args}: failed') from ex
 
     def handle_echo(self, cmd, command):
         sys.stderr.write(command + '\n')
