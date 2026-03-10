@@ -69,6 +69,7 @@ struct rtpp_refcnt
 };
 
 extern const size_t rtpp_refcnt_osize;
+extern const size_t rtpp_refcnt_oalign;
 rtpp_refcnt_rot *rtpp_refcnt_ctor_pa(void *, void *);
 
 #define _GET_ARG_3(_1, _2, _3, ...) _3

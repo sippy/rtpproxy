@@ -37,6 +37,23 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_refcnt.h"
 
+#if !defined(RTPP_CHECK_LEAKS)
+static void *
+rtpp_aligned_malloc(size_t msize, size_t alignment)
+{
+    void *rval;
+
+    if (alignment < sizeof(void *)) {
+        alignment = sizeof(void *);
+    }
+    RTPP_DBG_ASSERT((alignment & (alignment - 1)) == 0);
+    if (posix_memalign(&rval, alignment, msize) != 0) {
+        return (NULL);
+    }
+    return (rval);
+}
+#endif
+
 void *
 #if !defined(RTPP_CHECK_LEAKS)
 rtpp_zmalloc(size_t msize)
@@ -47,7 +64,7 @@ rtpp_zmalloc_memdeb(size_t msize, void *memdeb_p, const struct rtpp_codeptr *mlp
     void *rval;
 
 #if !defined(RTPP_CHECK_LEAKS)
-    rval = malloc(msize);
+    rval = rtpp_aligned_malloc(msize, rtpp_refcnt_oalign);
 #else
     rval = rtpp_memdeb_malloc(msize, memdeb_p, mlp);
 #endif
@@ -56,11 +73,6 @@ rtpp_zmalloc_memdeb(size_t msize, void *memdeb_p, const struct rtpp_codeptr *mlp
     }
     return (rval);
 }
-
-struct alig_help {
-    char a[1];
-    intmax_t b;
-};
 
 #define PpP(p1, p2, type) (type)(((char *)p1) + ((size_t)p2))
 
@@ -74,15 +86,16 @@ rtpp_rzmalloc_memdeb(size_t msize, size_t rcntp_offs, void *memdeb_p,
 {
     void *rval;
     struct rtpp_refcnt *rcnt;
-    size_t pad_size, asize;
+    size_t pad_size, asize, alignment;
     void *rco;
 
     RTPP_DBG_ASSERT(msize >= rcntp_offs + sizeof(struct rtpp_refcnt *));
-    size_t norm_off = offsetof(struct alig_help, b);
-    pad_size = (norm_off - msize) & (norm_off - 1);
+    alignment = rtpp_refcnt_oalign;
+    RTPP_DBG_ASSERT((alignment & (alignment - 1)) == 0);
+    pad_size = (alignment - (msize & (alignment - 1))) & (alignment - 1);
     asize = msize + pad_size + rtpp_refcnt_osize;
 #if !defined(RTPP_CHECK_LEAKS)
-    rval = malloc(asize);
+    rval = rtpp_aligned_malloc(asize, alignment);
 #else
     rval = rtpp_memdeb_malloc(asize, memdeb_p, mlp);
 #endif
@@ -107,15 +120,16 @@ rtpp_rmalloc_memdeb(size_t msize, size_t rcntp_offs, void *memdeb_p,
 {
     void *rval;
     struct rtpp_refcnt *rcnt;
-    size_t pad_size, asize;
+    size_t pad_size, asize, alignment;
     void *rco;
 
     RTPP_DBG_ASSERT(msize >= rcntp_offs + sizeof(struct rtpp_refcnt *));
-    size_t norm_off = offsetof(struct alig_help, b);
-    pad_size = (norm_off - msize) & (norm_off - 1);
+    alignment = rtpp_refcnt_oalign;
+    RTPP_DBG_ASSERT((alignment & (alignment - 1)) == 0);
+    pad_size = (alignment - (msize & (alignment - 1))) & (alignment - 1);
     asize = msize + pad_size + rtpp_refcnt_osize;
 #if !defined(RTPP_CHECK_LEAKS)
-    rval = malloc(asize);
+    rval = rtpp_aligned_malloc(asize, alignment);
 #else
     rval = rtpp_memdeb_malloc(asize, memdeb_p, mlp);
 #endif

@@ -86,6 +86,7 @@ struct rtpp_refcnt_priv
     struct dtor_pair dtors[MAX_DTORS];
 };
 const size_t rtpp_refcnt_osize = sizeof(struct rtpp_refcnt_priv);
+const size_t rtpp_refcnt_oalign = _Alignof(struct rtpp_refcnt_priv);
 
 static int rtpp_refcnt_attach(struct rtpp_refcnt *, rtpp_refcnt_dtor_t,
   void *) __attribute__((warn_unused_result));
