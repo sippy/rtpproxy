@@ -1,0 +1,82 @@
+.eval: 0 -> RES_OK
+.eval: && -> AMPAMP
+.eval: 0.0.0.0 0 -> NULL_TARGET
+.eval: 0 -> ALICE_CODEC
+.eval: 3 -> BOB_CODEC
+.eval: npkts_rcvd -> PKTS_RCVD
+.eval: npkts_played -> PKTS_PLAYED
+.eval: npkts_relayed -> PKTS_RELAYED
+.eval: rtpa_nsent -> STAT_KEY
+.eval: 7.0 -> WAIT_TRAFFIC
+.eval: playback1 -> PROMPT_NAME
+.eval: ../src/rtpproxy_debug -> RTPPROXY_BIN
+.eval: --dso ../modules/dtls_gw/.libs/rtpp_dtls_gw_debug.so -> DTLS_GW_MOD
+.eval: -d dbug -p /dev/null -l * -P -R -r ./recording -S ./recording -> RTPPROXY_ARGS
+
+.eval: recording/src_srs.alice.rlog -> RTPPROXY_STDERR
+socket alice: stdio: %%RTPPROXY_ARGS%% -> recording/src_srs.alice.rout
+.eval: recording/src_srs.proxy.rlog -> RTPPROXY_STDERR
+socket proxy: stdio: %%RTPPROXY_ARGS%% %%DTLS_GW_MOD%% -> recording/src_srs.proxy.rout
+.eval: recording/src_srs.bob.rlog -> RTPPROXY_STDERR
+socket bob: stdio: %%RTPPROXY_ARGS%% -> recording/src_srs.bob.rout
+.eval: recording/src_srs.spy.rlog -> RTPPROXY_STDERR
+socket spy: stdio: %%RTPPROXY_ARGS%% %%DTLS_GW_MOD%% -> recording/src_srs.spy.rout
+
+.echo: Build Alice-Proxy-Bob chain...
+alice: Ur127.0.0.1 call_ab_alice %%NULL_TARGET%% alice_from alice_to -> str_split( , ALICE_AB_PORT, ALICE_AB_HOST)
+.eval: %%ALICE_AB_PORT%% -> validate_port(_)
+bob: Ur127.0.0.1 call_ab_bob %%NULL_TARGET%% bob_from bob_to -> str_split( , BOB_AB_PORT, BOB_AB_HOST)
+.eval: %%BOB_AB_PORT%% -> validate_port(_)
+
+proxy: Ul127.0.0.1 call_ab_proxy %%ALICE_AB_HOST%% %%ALICE_AB_PORT%% alice_p_from bob_p_from && Ll127.0.0.1 %%BOB_AB_HOST%% %%BOB_AB_PORT%% -> str_split(&&, U_RES, L_RES)
+.eval: %%U_RES%% -> str_split( , PROXY_AB_PORT, PROXY_AB_HOST)
+.eval: %%L_RES%% -> str_split( , PROXY_BA_PORT, PROXY_BA_HOST)
+.eval: %%PROXY_AB_PORT%% -> validate_port(_)
+.eval: %%PROXY_BA_PORT%% -> validate_port(_)
+
+alice: L call_ab_alice %%PROXY_BA_HOST%% %%PROXY_BA_PORT%% alice_from alice_to -> str_split( , ALICE_AB_BACK_PORT)
+.eval: %%ALICE_AB_BACK_PORT%% -> validate_port(_)
+bob: L call_ab_bob %%PROXY_AB_HOST%% %%PROXY_AB_PORT%% bob_from bob_to -> str_split( , BOB_AB_BACK_PORT)
+.eval: %%BOB_AB_BACK_PORT%% -> validate_port(_)
+
+.echo: Build Proxy-Spy chain...
+proxy: Ul127.0.0.1 call_ps_proxy %%NULL_TARGET%% proxy_spy_from proxy_spy_to && M4:1 S && Ll127.0.0.1 %%NULL_TARGET%% && M4:1 S -> str_split(&&, U_RES, DTLS_PARAMS_1, L_RES, DTLS_PARAMS_2)
+.eval: %%U_RES%% -> str_split( , PROXY_PS_PORT, PROXY_PS_HOST)
+.eval: %%L_RES%% -> str_split( , PROXY_PS_BACK_PORT, PROXY_PS_BACK_HOST)
+.eval: %%DTLS_PARAMS_1%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+.eval: %%DTLS_PARAMS_2%% -> str_compare(DTLS_PARAMS_1)
+.eval: %%PROXY_PS_PORT%% -> validate_port(_)
+.eval: %%PROXY_PS_BACK_PORT%% -> validate_port(_)
+.eval: M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> DTLS_M_P_CMD
+spy: Ur127.0.0.1 call_ps_spy %%PROXY_PS_BACK_HOST%% %%PROXY_PS_BACK_PORT%% spy_from spy_to && %%DTLS_M_P_CMD%% && Lr127.0.0.1 %%PROXY_PS_HOST%% %%PROXY_PS_PORT%% && %%DTLS_M_P_CMD%% -> str_split(&&, U_RES, M_RES, L_RES)
+.eval: %%U_RES%% -> str_split( , SPY_PS_PORT, SPY_PS_HOST)
+.eval: %%M_RES%% -> str_compare(RES_OK)
+.eval: %%L_RES%% -> str_split( , SPY_PS_BACK_PORT, SPY_PS_BACK_HOST)
+.eval: %%SPY_PS_PORT%% -> validate_port(_)
+.eval: %%SPY_PS_BACK_PORT%% -> validate_port(_)
+proxy: Ul127.0.0.1 call_ps_proxy %%SPY_PS_BACK_HOST%% %%SPY_PS_BACK_PORT%% proxy_spy_from proxy_spy_to && Ll127.0.0.1 %%SPY_PS_HOST%% %%SPY_PS_PORT%% && C call_ab_proxy bob_p_from alice_p_from -> str_split(&&, U_RES, L_RES)
+.eval: %%U_RES%% -> str_split( , PROXY_PS_PORT1, PROXY_PS_HOST1)
+.eval: %%L_RES%% -> str_split( , PROXY_PS_BACK_PORT1, PROXY_PS_BACK_HOST1)
+.eval: %%PROXY_PS_PORT1%% -> str_compare(PROXY_PS_PORT)
+.eval: %%PROXY_PS_HOST1%% -> str_compare(PROXY_PS_HOST)
+.eval: %%PROXY_PS_BACK_PORT1%% -> str_compare(PROXY_PS_BACK_PORT)
+.eval: %%PROXY_PS_BACK_HOST1%% -> str_compare(PROXY_PS_BACK_HOST)
+
+.echo: Enable recording on both endpoint legs...
+alice: R call_ab_alice alice_to alice_from -> str_compare(RES_OK)
+bob: R call_ab_bob bob_to bob_from -> str_compare(RES_OK)
+spy: R call_ps_spy spy_from -> str_compare(RES_OK)
+spy: R call_ps_spy spy_to spy_from -> str_compare(RES_OK)
+
+.sleep: 0.1
+.echo: Starting playback in both directions...
+alice: P1 call_ab_alice %%PROMPT_NAME%% %%ALICE_CODEC%% alice_to alice_from -> str_compare(RES_OK)
+.sleep: 2.0
+bob: P1 call_ab_bob %%PROMPT_NAME%% %%BOB_CODEC%% bob_to bob_from -> str_compare(RES_OK)
+.sleep: %%WAIT_TRAFFIC%%
+
+.echo: Delete spy session
+proxy: D call_ps_proxy proxy_spy_from proxy_spy_to -> str_compare(RES_OK)
+alice: P1 call_ab_alice %%PROMPT_NAME%% %%ALICE_CODEC%% alice_to alice_from -> str_compare(RES_OK)
+bob: P1 call_ab_bob %%PROMPT_NAME%% %%BOB_CODEC%% bob_to bob_from -> str_compare(RES_OK)
+.sleep: %%WAIT_TRAFFIC%%

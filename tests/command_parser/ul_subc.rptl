@@ -1,4 +1,6 @@
 .eval: E3 -> ECODE_PARSE_SUBC
+.eval: 0 -> CRES_OK
+.eval: -1 -> CRES_FAIL
 .eval: ../src/rtpproxy_debug -> RTPPROXY_BIN
 socket rtpp: stdio: -d warn -p /dev/null -l *
 
@@ -7,9 +9,27 @@ rtpp: U callid_1s 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 54321 -> st
 .eval: %%PORT%% -> validate_port(_)
 .eval: %%PORT1%% -> validate_port(_)
 
+.echo: Positive U&&C case...
+rtpp: U callid_2s 127.0.0.1 22345 from_tag_2 to_tag_2 -> PORT2
+.eval: %%PORT2%% -> validate_port(_)
+rtpp: U callid_2d 127.0.0.1 32345 from_tag_3 to_tag_3 && C callid_2s from_tag_2 to_tag_2 -> PORT3
+.eval: %%PORT3%% -> validate_port(_)
+
 .echo: Negative U&&L cases...
 rtpp: U callid_1n0 127.0.0.1 12345 from_tag_1 && L 127.0.0.1 54321 -> str_compare(ECODE_PARSE_SUBC)
 rtpp: U callid_1n1 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 -> str_compare(ECODE_PARSE_SUBC)
 rtpp: U callid_1n2 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 54321 extra -> str_compare(ECODE_PARSE_SUBC)
 rtpp: U callid_1n3 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 notaport -> str_compare(ECODE_PARSE_SUBC)
 rtpp: U callid_1n4 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 54321 udp:127.0.0.1:1234 % -> str_compare(ECODE_PARSE_SUBC)
+
+.echo: Negative U&&C cases...
+rtpp: U callid_2n0 127.0.0.1 42345 from_tag_4 && C callid_2s from_tag_2 to_tag_2 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_2n1 127.0.0.1 42345 from_tag_4 to_tag_4 && C callid_2s from_tag_2 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_2n2 127.0.0.1 42345 from_tag_4 to_tag_4 && C callid_2s from_tag_2 to_tag_2 extra -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_2n3 127.0.0.1 42345 from_tag_4 to_tag_4 && Cx callid_2s from_tag_2 to_tag_2 -> str_compare(ECODE_PARSE_SUBC)
+
+.echo: Runtime U&&C failure case...
+rtpp: U callid_2n4 127.0.0.1 42345 from_tag_4 to_tag_4 && C no_such_call no_such_from no_such_to -> str_split( , PORT4, AMPAMP1, CRES1)
+.eval: %%PORT4%% -> validate_port(_)
+.eval: %%AMPAMP1%% -> str_compare(AMPAMP)
+.eval: %%CRES1%% -> str_compare(CRES_FAIL)

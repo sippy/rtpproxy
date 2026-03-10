@@ -1,0 +1,69 @@
+#!/bin/sh
+
+TESTDIR="`dirname -- ${0}`"
+TESTNAME="`basename -- ${0}`"
+BASEDIR="${BASEDIR:-${TESTDIR}/..}"
+BASEDIR="$(readlink -f -- ${BASEDIR})"
+
+. "${BASEDIR}/functions"
+
+CD_DIR="${BASEDIR}/recording"
+PROMPT_BASE="${BASEDIR}/playback1"
+RPTL_SCRIPT="${CD_DIR}/${TESTNAME}.rptl"
+RLOG_FILE="${CD_DIR}/${TESTNAME}.rlog"
+ROUT_FILE="${CD_DIR}/${TESTNAME}.rout"
+PROXY_ROUT_FILE="${CD_DIR}/${TESTNAME}.proxy.rout"
+ALICE_ROUT_FILE="${CD_DIR}/${TESTNAME}.alice.rout"
+BOB_ROUT_FILE="${CD_DIR}/${TESTNAME}.bob.rout"
+SPY_ROUT_FILE="${CD_DIR}/${TESTNAME}.spy.rout"
+
+if [ ! -s "${PROMPT_BASE}.0" ]
+then
+  ${MAKEANN} "${BASEDIR}/ringback.sln" "${PROMPT_BASE}"
+  report "makeann playback1"
+else
+  ok "playback1 prompt already exists"
+fi
+
+REC_ALL="call_ab_alice=alice_from.a call_ab_bob=bob_from.a call_ps_spy=spy_from.a \
+ call_ps_spy=spy_from.o"
+
+for recf in ${REC_ALL}
+do
+  rm -f "${TESTDIR}/${recf}.rtp"
+done
+
+rm -f "${RLOG_FILE}" "${ROUT_FILE}" "${PROXY_ROUT_FILE}" \
+  "${ALICE_ROUT_FILE}" "${BOB_ROUT_FILE}" "${SPY_ROUT_FILE}"
+
+(cd "${BASEDIR}" && ${RPTL_INT} -s "${RPTL_SCRIPT}") > "${ROUT_FILE}" 2> "${RLOG_FILE}"
+RPTL_RC=${?}
+if [ ${RPTL_RC} -ne 0 ]
+then
+  cat "${RLOG_FILE}" >&2
+  if [ -e "${ALICE_ROUT_FILE}" ]
+  then
+    cat "${ALICE_ROUT_FILE}" >&2
+  fi
+  if [ -e "${BOB_ROUT_FILE}" ]
+  then
+    cat "${BOB_ROUT_FILE}" >&2
+  fi
+  if [ -e "${SPY_ROUT_FILE}" ]
+  then
+    cat "${SPY_ROUT_FILE}" >&2
+  fi
+  if [ -e "${PROXY_ROUT_FILE}" ]
+  then
+    cat "${PROXY_ROUT_FILE}" >&2
+  fi
+fi
+report_rc ${RPTL_RC} "running ${TESTNAME}.rptl RPTL script"
+
+for recf in ${REC_ALL}
+do
+  RFILE="${TESTDIR}/${recf}.rtp"
+  test -s "${RFILE}"
+  REC_RC=${?}
+  report_rc ${REC_RC} "checking recording output ${RFILE}"
+done

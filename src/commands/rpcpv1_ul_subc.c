@@ -53,6 +53,7 @@
 #include "rtpp_mallocs.h"
 #include "commands/rpcpv1_ul.h"
 #include "commands/rpcpv1_ul_subc.h"
+#include "commands/rpcpv1_ul_subc_copy.h"
 #include "commands/rpcpv1_delete.h"
 #include "commands/rpcpv1_ul_subc_set.h"
 
@@ -261,6 +262,10 @@ rtpp_subcommand_ul_opts_parse(const struct rtpp_cfg *cfsp, struct rtpp_command *
     case 'L':
     case 'l':
         return (rtpp_command_ul_look_subc_parse(cfsp, cmd, subc_args, asp));
+
+    case 'C':
+    case 'c':
+        return (rtpp_command_ul_copy_subc_parse(cfsp, cmd, subc_args, asp));
 
     default:
         return (-1);

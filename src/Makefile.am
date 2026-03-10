@@ -77,7 +77,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   $(CMDSRCDIR)/rpcpv1_ul_subc.c $(CMDSRCDIR)/rpcpv1_ul_subc.h \
   $(RTPP_AUTOSRC_SOURCES) rtpp_epoll.c rtpp_str.c rtpp_str.h \
   rtpp_sbuf.c rtpp_sbuf.h rtpp_refproxy.c rtpp_command_reply.c \
-  $(CMDSRCDIR)/rpcpv1_ul_subc_set.c $(CMDSRCDIR)/rpcpv1_ul_subc_set.h
+  $(CMDSRCDIR)/rpcpv1_ul_subc_set.c $(CMDSRCDIR)/rpcpv1_ul_subc_set.h \
+  $(CMDSRCDIR)/rpcpv1_ul_subc_copy.c $(CMDSRCDIR)/rpcpv1_ul_subc_copy.h
 BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/pproc_manager.c \
   $(ADV_DIR)/pproc_manager.h
 BASE_SOURCES+=rtpp_modman.c rtpp_module_if_static.c rtpp_module_if_static.h
