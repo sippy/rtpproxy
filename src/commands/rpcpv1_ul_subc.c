@@ -134,6 +134,11 @@ rtpp_command_ul_as_subc(const struct after_success_h_args *ap,
     scmd.sp = scp->env->sessp;
     rval = rtpp_command_ul_handle_impl(cfsp, &scmd, sidx, scp->resp, lsp->csp,
       &lsp->raddr);
+    if (rval == 0) {
+        struct rtpp_stream *t = scp->env->strmp_in;
+        scp->env->strmp_in = scp->env->strmp_out;
+        scp->env->strmp_out = t;
+    }
     return (rval);
 }
 
