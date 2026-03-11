@@ -30,6 +30,7 @@
 struct rtpp_codeptr;
 
 #define MAX_DTORS 24
+#define CACHELINE_SIZE 64
 
 typedef void (*rtpp_refcnt_dtor_t)(void *);
 

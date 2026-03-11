@@ -62,8 +62,6 @@ static void rtpp_refcnt_decref(struct rtpp_refcnt *, HERETYPE);
  */
 #define RC_ABS_MAX 2000000
 
-#define CACHE_SIZE 64
-
 struct dtor_pair {
     rtpp_refcnt_dtor_t f;
     union {
@@ -75,14 +73,14 @@ struct dtor_pair {
 struct rtpp_refcnt_priv
 {
     struct rtpp_refcnt pub;
-    _Atomic(int) cnt __attribute__((aligned(CACHE_SIZE)));
-    _Atomic(int) ulen __attribute__((aligned(CACHE_SIZE)));
+    _Atomic(int) cnt __attribute__((aligned(CACHELINE_SIZE)));
+    _Atomic(int) ulen __attribute__((aligned(CACHELINE_SIZE)));
     struct {
         unsigned int shared:1;
 #if RTPP_DEBUG_refcnt
         unsigned int trace:1;
 #endif
-    }  __attribute__((aligned(CACHE_SIZE)));
+    }  __attribute__((aligned(CACHELINE_SIZE)));
     struct dtor_pair dtors[MAX_DTORS];
 };
 const size_t rtpp_refcnt_osize = sizeof(struct rtpp_refcnt_priv);
