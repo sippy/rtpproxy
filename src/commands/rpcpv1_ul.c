@@ -330,7 +330,8 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
             memcpy(hostname, t, len);
             hostname[len] = '\0';
             if (use_label) {
-                const rtpp_str_const_t label = (rtpp_str_const_t){.s = hostname, .len = len};
+                const rtpp_str_const_t label = (rtpp_str_const_t){
+                  .s = hostname, .len = len};
                 ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, label2,
                   &label);
                 if (ulop->local_addr == NULL) {
@@ -339,16 +340,8 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
                     *ecodep = ECODE_INVLARG_1;
                     goto err_undo_1;
                 }
-                tpf = ulop->local_addr->addr->sa_family;
-            }
-            if (tpf != ulop->pf) {
-                RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "mismatched protocol (%d local, %d session)",
-                  tpf, ulop->pf);
-                *ecodep = ECODE_INVLARG_1;
-                goto err_undo_1;
-            }
-            if (use_label)
                 break;
+            }
             ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
             ai_flags |= cfsp->no_resolve ? AI_NUMERICHOST : 0;
             ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, host2, hostname,
