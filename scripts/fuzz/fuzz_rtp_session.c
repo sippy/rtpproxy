@@ -123,7 +123,7 @@ proc_foreach(void *dp, void *ap)
         struct rtp_packet *pktp = rtp_packet_alloc();
         assert (pktp != NULL);
         void *olddata = CALL_SMETHOD(pktp->rcnt, getdata);
-        CALL_SMETHOD(pktp->rcnt, attach, wpd_f, olddata);
+        RTPP_OBJ_DTOR_ATTACH_s(pktp, wpd_f, olddata);
         rap = sstosa(&pktp->raddr);
         memcpy(rap, fap->data, sizeof(struct sockaddr_in));
         rap->sa_family = AF_INET;
