@@ -50,9 +50,9 @@
 #include "rtpp_str.h"
 #include "rtpp_time.h"
 #include "rtpp_command_stats.h"
+#include "rtpp_network.h"
 #include "rtpp_command_ctx.h"
 #include "rtpp_command_rcache.h"
-#include "rtpp_network.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_command_reply.h"
@@ -152,7 +152,7 @@ rtpc_reply_deliver(struct rtpc_reply *self, int errd)
         }
         RTPP_OBJ_INCREF(self);
         if (rtpp_anetio_sendto_na(pvt->ctx->cfs->rtpp_proc_cf->netio, pvt->ctx->controlfd,
-          pvt->buf.r, pvt->buf.clen, 0, sstosa(&pvt->ctx->raddr), pvt->ctx->rlen,
+          pvt->buf.r, pvt->buf.clen, 0, sstosa(pvt->ctx->raddr.a), pvt->ctx->raddr.l,
           self->rcnt) != 0)
         {
             RTPP_OBJ_DECREF(self);

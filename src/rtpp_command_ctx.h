@@ -34,7 +34,7 @@ struct rtpp_command_ctx {
     int umode;
     struct rtpp_cmd_rcache *rcache_obj;
     struct rtpp_timestamp dtime;
-    struct sockaddr_storage raddr;
-    socklen_t rlen;
+    struct rtpp_sockaddr raddr;
+    struct sockaddr_storage _raddr;
     struct rtpp_command_stats *csp;
 };

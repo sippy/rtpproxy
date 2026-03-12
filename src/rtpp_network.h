@@ -98,7 +98,7 @@ int is_numhost(const char *, int);
 
 struct rtpp_sockaddr {
     const struct sockaddr_storage *a;
-    size_t l;
+    socklen_t l;
 };
 
 /*

@@ -35,8 +35,6 @@ struct ul_opts;
 struct ul_reply;
 struct rtpp_command;
 struct rtpp_session;
-struct rtpp_subc_ctx;
-struct rtpp_subc_resp;
 struct rtpp_command_args;
 struct after_success_h;
 struct rtpp_command_stats;
@@ -62,10 +60,9 @@ struct ul_opts *rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *,
 void rtpp_command_ul_opts_free(struct ul_opts *ulop);
 int rtpp_command_ul_handle(const struct rtpp_cfg *, struct rtpp_command *,
   int);
+int format_ul_reply_result(const struct ul_opts *, char *, size_t);
 int rtpp_command_ul_handle_impl(const struct rtpp_cfg *,
-  struct rtpp_command *, int, struct rtpp_subc_resp *,
-  struct rtpp_command_stats *, const struct rtpp_sockaddr *);
-void ul_reply_port(struct rtpp_command *cmd,
-  struct ul_reply *ulr);
+  struct rtpp_command *, int);
+void ul_reply_port(const struct rtpp_command *cmd, struct ul_reply *ulr);
 
 #endif

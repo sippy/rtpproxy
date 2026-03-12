@@ -26,6 +26,7 @@
  */
 
 #include <sys/param.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>

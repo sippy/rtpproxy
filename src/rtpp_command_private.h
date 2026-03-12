@@ -33,6 +33,7 @@
 struct rtpp_timestamp;
 struct rtpc_reply;
 struct record_opts;
+struct rtpp_sockaddr;
 
 enum rtpp_cmd_op {DELETE, RECORD, PLAY, NOPLAY, COPY, UPDATE, LOOKUP, INFO,
   QUERY, VER_FEATURE, GET_VER, DELETE_ALL, GET_STATS, NORECORD};
@@ -88,5 +89,7 @@ struct rtpp_command {
     struct rtpp_session *sp;
     struct rtpp_log *glog;
     struct rtpc_reply *reply;
+    const struct rtpp_sockaddr *raddr;
+    struct rtpp_command_stats *csp;
     struct after_success_h after_success[MAX_SUBC_NUM];
 };

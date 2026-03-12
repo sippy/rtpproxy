@@ -124,7 +124,7 @@ static int rtpp_command_ul_pre_parse(const struct rtpp_command *,
 }
 
 void
-ul_reply_port(struct rtpp_command *cmd, struct ul_reply *ulr)
+ul_reply_port(const struct rtpp_command *cmd, struct ul_reply *ulr)
 {
     int rport, r;
     const char subc_err[] = " && -1";
@@ -535,19 +535,20 @@ handle_nomem(struct rtpp_command *cmd, int ecode, struct rtpp_session *spa)
     CALL_SMETHOD(cmd->reply, deliver_error, ecode);
 }
 
-static int
-format_ul_reply_result(const struct ul_reply *ulr, struct rtpp_subc_resp *rsp)
+int
+format_ul_reply_result(const struct ul_opts *ulop, char *buf_t, size_t blen)
 {
     const rtpp_str_const_t *sap;
     rtpp_str_const_t sad;
     char saddr[MAX_ADDR_STRLEN];
     const char *at;
     int plen;
+    const struct ul_reply *ulr = &ulop->reply;
 
     if (ulr == NULL || ulr->ia == NULL || ishostnull(ulr->ia->addr)) {
-        plen = snprintf(rsp->buf_t, sizeof(rsp->buf_t), "%d",
+        plen = snprintf(buf_t, blen, "%d",
           (ulr != NULL) ? ulr->port : 0);
-        return (plen > -1 && plen < sizeof(rsp->buf_t)) ? 0 : -1;
+        return (plen > -1 && plen < blen) ? 0 : -1;
     }
     sap = &ulr->ia->params.advaddr;
     if (sap->s == NULL) {
@@ -557,15 +558,14 @@ format_ul_reply_result(const struct ul_reply *ulr, struct rtpp_subc_resp *rsp)
         sap = &sad;
     }
     at = (ulr->ia->addr->sa_family == AF_INET) ? "" : " 6";
-    plen = snprintf(rsp->buf_t, sizeof(rsp->buf_t), "%d %.*s%s",
+    plen = snprintf(buf_t, blen, "%d %.*s%s",
       ulr->port, FMTSTR(sap), at);
-    return (plen > -1 && plen < sizeof(rsp->buf_t)) ? 0 : -1;
+    return (plen > -1 && plen < blen) ? 0 : -1;
 }
 
 int
 rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
-  struct rtpp_command *cmd, int sidx, struct rtpp_subc_resp *rsp,
-  struct rtpp_command_stats *csp, const struct rtpp_sockaddr *raddrp)
+  struct rtpp_command *cmd, int sidx)
 {
     int pidx, lport, sessions_active;
     struct rtpp_socket *fds[2];
@@ -582,7 +582,7 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
     ulop = cmd->cca.opts.ul;
 
 #define UL_FAIL(_ecode) do { \
-    if (rsp == NULL) \
+    if (cmd->reply != NULL) \
         CALL_SMETHOD(cmd->reply, deliver_error, (_ecode)); \
     goto err_undo_0; \
 } while (0)
@@ -626,8 +626,8 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
             spa->rtp->stream[sidx]->port = lport;
             spa->rtcp->stream[sidx]->port = lport + 1;
             if (spa->complete == 0) {
-                if (csp != NULL)
-                    csp->nsess_complete.cnt++;
+                if (cmd->csp != NULL)
+                    cmd->csp->nsess_complete.cnt++;
                 CALL_SMETHOD(spa->rtp->stream[0]->ttl, reset_with,
                   spa->rtp->stream[0]->stream_ttl);
                 CALL_SMETHOD(spa->rtp->stream[1]->ttl, reset_with,
@@ -693,8 +693,8 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
             UL_FAIL(ECODE_LSTFAIL_2);
         }
 
-        if (csp != NULL)
-            csp->nsess_created.cnt++;
+        if (cmd->csp != NULL)
+            cmd->csp->nsess_created.cnt++;
 
         hte = CALL_SMETHOD(cfsp->sessions_ht, append_str_refcnt, spa->call_id,
           spa->rcnt, NULL);
@@ -744,11 +744,11 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
         }
         if (ulop->notify_socket != NULL) {
             struct rtpp_tnotify_target *rttp;
-            struct rtpp_sockaddr raddr = (raddrp != NULL) ? *raddrp :
-              (struct rtpp_sockaddr){.l = 0};
+            RTPP_DBG_ASSERT(cmd->raddr != NULL);
 
             rttp = CALL_METHOD(cfsp->rtpp_tnset_cf, lookup, ulop->notify_socket->s,
-              (raddr.l > 0) ? sstosa(raddr.a) : NULL, (raddr.l > 0) ? cmd->laddr : NULL);
+              (cmd->raddr->l > 0) ? sstosa(cmd->raddr->a) : NULL,
+              (cmd->raddr->l > 0) ? cmd->laddr : NULL);
             if (rttp == NULL) {
                 RTPP_LOG(spa->log, RTPP_LOG_ERR, "invalid socket name %.*s",
                   FMTSTR(ulop->notify_socket));
@@ -833,26 +833,18 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
         if (rsc.resp->result != 0)
             break;
     }
-    if (rsp == NULL) {
+    if (cmd->reply != NULL) {
         ul_reply_port(cmd, &ulop->reply);
-    } else if (format_ul_reply_result(&ulop->reply, rsp) != 0) {
-        goto err_undo_0;
     }
-#undef UL_FAIL
     return (0);
 
 err_undo_0:
-#undef UL_FAIL
     return (-1);
 }
 
 int
 rtpp_command_ul_handle(const struct rtpp_cfg *cfsp, struct rtpp_command *cmd, int sidx)
 {
-    struct rtpp_command_stats *csp;
-    struct rtpp_sockaddr raddr;
 
-    csp = rtpp_command_get_stats(cmd);
-    raddr = rtpp_command_get_raddr(cmd);
-    return (rtpp_command_ul_handle_impl(cfsp, cmd, sidx, NULL, csp, &raddr));
+    return (rtpp_command_ul_handle_impl(cfsp, cmd, sidx));
 }

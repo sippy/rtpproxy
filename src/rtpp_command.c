@@ -217,10 +217,12 @@ rtpp_command_ctor(const struct rtpp_cfg *cfsp, int controlfd,
     pvt->ctx.dtime.wall = dtime->wall;
     pvt->ctx.dtime.mono = dtime->mono;
     cmd->dtime = &pvt->ctx.dtime;
-    pvt->ctx.csp = csp;
+    cmd->csp = pvt->ctx.csp = csp;
     cmd->glog = cfsp->glog;
     pvt->ctx.umode = umode;
     cmd->reply = rtpc_reply_ctor(&pvt->ctx);
+    pvt->ctx.raddr.a = &pvt->ctx._raddr;
+    cmd->raddr = &pvt->ctx.raddr;
     if (cmd->reply == NULL) {
         RTPP_OBJ_DECREF(cmd);
         return (NULL);
@@ -235,29 +237,24 @@ rtpp_command_set_raddr(struct rtpp_command *cmd, const struct sockaddr *raddr, s
     struct rtpp_command_priv *pvt;
 
     PUB2PVT(cmd, pvt);
-    memcpy(&pvt->ctx.raddr, raddr, rlen);
-    pvt->ctx.rlen = rlen;
+    memcpy(&pvt->ctx._raddr, raddr, rlen);
+    pvt->ctx.raddr.l = rlen;
 }
 
 struct rtpp_sockaddr
 rtpp_command_get_raddr(const struct rtpp_command *cmd)
 {
-    struct rtpp_sockaddr raddr;
     const struct rtpp_command_priv *pvt;
 
     PUB2PVT(cmd, pvt);
-    raddr.a = &pvt->ctx.raddr;
-    raddr.l = pvt->ctx.rlen;
-    return (raddr);
+    return (pvt->ctx.raddr);
 }
 
 struct rtpp_command_stats *
 rtpp_command_get_stats(const struct rtpp_command *cmd)
 {
-    const struct rtpp_command_priv *pvt;
 
-    PUB2PVT(cmd, pvt);
-    return (pvt->ctx.csp);
+    return (cmd->csp);
 }
 
 struct rtpp_command *
@@ -303,9 +300,9 @@ get_command(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *rcsp, int contro
             lp = &asize;
             raddr = sstosa(&rcsp->emrg.addr);
         } else {
-            pvt->ctx.rlen = sizeof(pvt->ctx.raddr);
-            lp = &pvt->ctx.rlen;
-            raddr = sstosa(&pvt->ctx.raddr);
+            pvt->ctx.raddr.l = sizeof(pvt->ctx._raddr);
+            lp = &pvt->ctx.raddr.l;
+            raddr = sstosa(pvt->ctx.raddr.a);
         }
         len = recvfrom(controlfd, bp, bsize - 1, 0, raddr, lp);
     }
@@ -354,11 +351,11 @@ rtpp_command_guard_retrans(struct rtpp_command *cmd,
     }
     len = cres->reply->len;
     int r = rtpp_anetio_sendto_na(pvt->ctx.cfs->rtpp_proc_cf->netio, pvt->ctx.controlfd,
-      cres->reply->s, len, 0, sstosa(&pvt->ctx.raddr), pvt->ctx.rlen, cres->rcnt);
+      cres->reply->s, len, 0, sstosa(pvt->ctx.raddr.a), pvt->ctx.raddr.l, cres->rcnt);
     if (r != 0)
         RTPP_OBJ_DECREF(cres);
-    pvt->ctx.csp->ncmds_rcvd.cnt--;
-    pvt->ctx.csp->ncmds_rcvd_ndups.cnt++;
+    cmd->csp->ncmds_rcvd.cnt--;
+    cmd->csp->ncmds_rcvd_ndups.cnt++;
     return (1);
 }
 
@@ -379,7 +376,7 @@ rtpp_command_split(struct rtpp_command *cmd, int len, int *rval,
         RTPP_LOG(pvt->ctx.cfs->glog, RTPP_LOG_DBUG, "received command \"%s\"",
           cmd->buf);
     }
-    pvt->ctx.csp->ncmds_rcvd.cnt++;
+    cmd->csp->ncmds_rcvd.cnt++;
 
     cap = &cmd->args;
     rtpp_strsplit(cmd->buf, mbuf, len, sizeof(mbuf));
