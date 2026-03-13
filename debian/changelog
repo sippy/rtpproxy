@@ -1,4 +1,4 @@
-rtpproxy (3.1+dev1) unstable; urgency=medium
+rtpproxy (3.2.0+dev) unstable; urgency=medium
 
   * Initial release of Debian packaging skeleton.
 
