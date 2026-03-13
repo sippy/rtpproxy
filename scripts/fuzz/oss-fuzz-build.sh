@@ -20,14 +20,16 @@ install_src_pkg() {
   local PKGNAME="${1}"
   mkdir -p /tmp/src/libfuzzer
   local TMPDIR="`mktemp -d /tmp/src/libfuzzer/${PKGNAME}.XXXXXXXX`"
+  local TMPFILE="${TMPDIR}/time_hack.h"
+  printf '#define _GNU_SOURCE\n#include <time.h>\n#define time(x) ({if((x) != NULL) *(time_t *)(x) = 0x69b30000; 0x69b30000;})\n'  > "${TMPFILE}"
   local OLD_PWD="`pwd`"
   cd ${TMPDIR}
   apt-get build-dep -y ${PKGNAME}
   apt-get source ${PKGNAME}
   cd ${2}-*
   (head -n 1 debian/rules; \
-   echo "export CFLAGS=${CFLAGS}"; \
-   echo "export CXXFLAGS=${CXXFLAGS}"; \
+   echo "export CFLAGS=${CFLAGS} --include ${TMPFILE}"; \
+   echo "export CXXFLAGS=${CXXFLAGS} --include ${TMPFILE}"; \
    echo "export RANLIB=${RANLIB}"; \
    tail -n +2 debian/rules) > debian/_rules
   mv debian/_rules debian/rules

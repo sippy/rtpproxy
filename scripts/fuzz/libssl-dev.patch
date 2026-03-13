@@ -130,3 +130,25 @@ Last-Update: 2024-08-16
  
          data.ssl_version = s->version;
          if (!ossl_assert(sess_id_len <= SSL_MAX_SSL_SESSION_ID_LENGTH))
+--- openssl-1.1.1f/fuzz/client.c.orig	2026-03-12 20:18:46.424656000 -0700
++++ openssl-1.1.1f/fuzz/client.c	2026-03-12 20:19:18.983162000 -0700
+@@ -34,7 +34,7 @@
+  * in things not being fully reproducible and have a slightly
+  * different coverage.
+  */
+-#if !defined(_WIN32)
++#if !defined(_WIN32) && !defined(time)
+ time_t time(time_t *t) TIME_IMPL(t)
+ #endif
+ 
+--- openssl-1.1.1f/fuzz/server.c.orig	2026-03-12 20:18:46.424656000 -0700
++++ openssl-1.1.1f/fuzz/server.c	2026-03-12 20:19:18.983162000 -0700
+@@ -34,7 +34,7 @@
+  * in things not being fully reproducible and have a slightly
+  * different coverage.
+  */
+-#if !defined(_WIN32)
++#if !defined(_WIN32) && !defined(time)
+ time_t time(time_t *t) TIME_IMPL(t)
+ #endif
+ 
