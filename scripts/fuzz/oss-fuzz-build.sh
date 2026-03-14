@@ -5,7 +5,7 @@ set -x
 set -o pipefail
 
 CC="${CC:-"clang19"}"
-CXX="${CXX:-"${CC}"}"
+CXX="${CXX:-"clang++19"}"
 CFLAGS="${CFLAGS:-"-g3 -O1 -Wall"}"
 CXXFLAGS="${CXXFLAGS:-"${CFLAGS}"}"
 OUT="${OUT:-"."}"
@@ -86,7 +86,7 @@ fi
 
 LD="lld"
 LD_BIN="ld.lld"
-LDFLAGS="-fuse-ld=${LD}"
+LDFLAGS="${LDFLAGS} -fuse-ld=${LD}"
 
 CFLAGS="${CFLAGS} -DRTPP_DEBUG_refcnt=1"
 CXXFLAGS="${CXXFLAGS} -DRTPP_DEBUG_refcnt=1"
@@ -112,7 +112,7 @@ for src in rfz_chunk.c rfz_command.c rfz_utils.c
 do
   obj="${OUT}/${src%.*}.o"
   src=scripts/fuzz/${src}
-  ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -o ${obj} -c ${src}
+  ${CC} ${CFLAGS} -Isrc -o ${obj} -c ${src}
   OBJS="${OBJS} ${obj}"
 done
 
@@ -121,7 +121,7 @@ OBJS0="${OBJS}"
 for fz in ${ALL}
 do
   obj="${OUT}/fuzz_${fz}.o"
-  ${CC} ${CFLAGS} ${LIB_FUZZING_ENGINE} -Isrc -Imodules/acct_rtcp_hep \
+  ${CC} ${CFLAGS} -Isrc -Imodules/acct_rtcp_hep \
    -o "${obj}" -c scripts/fuzz/fuzz_${fz}.c
   OBJS="${OBJS0} ${obj}"
 
@@ -134,8 +134,8 @@ do
       ;;
   esac
 
-  ${CXX} ${CXXFLAGS} ${LIB_FUZZING_ENGINE} ${LDFLAGS} -o ${OUT}/fuzz_${fz} \
-   ${OBJS} ${LIBRTPP} -lm ${LIBSRTP}
+  ${CXX} ${CXXFLAGS} ${LDFLAGS} -o ${OUT}/fuzz_${fz} \
+   ${OBJS} ${LIBRTPP} -lm ${LIBSRTP} ${LIB_FUZZING_ENGINE}
 
   for suff in dict options
   do
