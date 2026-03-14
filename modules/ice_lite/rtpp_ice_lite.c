@@ -253,6 +253,8 @@ rtpp_ice_lite_worker(const struct rtpp_wthrdata *wp)
         struct sa raddr = {0};
         rtpp2re_sa(&raddr, sstosa(&pkt->raddr));
         ila_c->sock->strmp_in = wip->strmp_in;
+        if (ila_c->sock->rh == NULL)
+            goto out;
         ila_c->sock->rh(&raddr, mb, ila_c->sock->rh_arg);
         bool completed = iscompleted(ila_c->icem);
         if (!ila_iscompleted(ila_c) && completed) {
@@ -261,6 +263,7 @@ rtpp_ice_lite_worker(const struct rtpp_wthrdata *wp)
             CALL_SMETHOD(ila_c->sock->strmp_in, latch, pkt);
             atomic_store_explicit(&ila_c->completed, true, memory_order_relaxed);
         }
+out:
         pthread_mutex_unlock(&ila_c->state_lock);
         RTPP_OBJ_DECREF(pkt);
         RTPP_OBJ_DECREF(wi);
