@@ -171,14 +171,19 @@ LLVMFuzzerTestOneInput(const char *data, size_t size)
     struct rfz_chunk chunk = {.rem_size = size, .rem_data = data};
     struct foreach_args fa = {.rsp = &rs};
 
+    int minchunk_s = sizeof(struct sockaddr_in) + 1;
     do {
         chunk = rfz_get_chunk(chunk.rem_data, chunk.rem_size);
-        if (chunk.size < sizeof(struct sockaddr_in))
+        if (chunk.size < minchunk_s)
             break;
-        if (chunk.size > sizeof(struct sockaddr_in) + MAX_RPKT_LEN)
+        if (chunk.size > minchunk_s + MAX_RPKT_LEN)
             break;
-        fa.data = chunk.data;
-        fa.size = chunk.size;
+        if (chunk.data[0] == 0) {
+            ExecuteRTPPCommand(&gconf, chunk.data + 1, chunk.size - 1, 0);
+            continue;
+        }
+        fa.data = chunk.data + 1;
+        fa.size = chunk.size - 1;
         CALL_SMETHOD(gconf.cfsp->sessions_ht, foreach, proc_foreach, (void *)&fa, NULL);
     } while (chunk.rem_size > 1);
     for (int i = 0; i < fa.nwait; i++)
