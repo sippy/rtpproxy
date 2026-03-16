@@ -84,6 +84,8 @@ jobs:
       packages: write
     needs: build_test_python
     uses: sippy/cimagic/.github/workflows/BuildPythonWheels.yml@v2
+    with:
+      ghcr_repo: ${{ github.repository_owner }}/rtqueue
 
   publish_all_wheels:
     name: Publish Python Wheels
