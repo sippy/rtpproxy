@@ -45,9 +45,14 @@ mod_debug_args['extra_compile_args'] = mod_debug_args['extra_compile_args'] + de
 module1 = Extension(mod_name, **mod_common_args)
 module2 = Extension(mod_name_dbg, **mod_debug_args)
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup (name = 'SPMCQueue',
        version = '1.0',
        description = 'This is a package for LossyQueue module',
        ext_modules = [module1, module2],
        cmdclass={'test': PyTestCommand} if PyTestCommand else {},
+       long_description=long_description,
+       long_description_content_type='text/markdown',
 )
