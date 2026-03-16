@@ -142,9 +142,10 @@ jobs:
         - os: 24.04
           compiler: 'clang-17'
         - os: 24.04
-          compiler: 'clang-18'
-        - os: 24.04
           compiler: 'clang-19'
+        - os: 24.04
+          compiler: 'clang-20'
+
     steps:
     - uses: actions/checkout@v4
       with:
@@ -216,9 +217,9 @@ jobs:
         - os: 24.04
           compiler: 'clang-17'
         - os: 24.04
-          compiler: 'clang-18'
-        - os: 24.04
           compiler: 'clang-19'
+        - os: 24.04
+          compiler: 'clang-20'
 
     steps:
     - uses: actions/checkout@v4
@@ -290,9 +291,9 @@ jobs:
         - os: 24.04
           compiler: 'clang-17'
         - os: 24.04
-          compiler: 'clang-18'
-        - os: 24.04
           compiler: 'clang-19'
+        - os: 24.04
+          compiler: 'clang-20'
 
     steps:
     - uses: actions/checkout@v4
