@@ -1,4 +1,6 @@
 UCL_DIR=$(top_srcdir)/external/libucl
 XXH_DIR=$(top_srcdir)/libxxHash
+RTQ_DIR=$(top_srcdir)/libRTQueue
+RTQ_SDIR=$(top_srcdir)/external/RTQueue/src
 MOD_DIR=$(top_srcdir)/modules
 ADV_DIR=$(top_srcdir)/src/advanced

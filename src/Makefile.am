@@ -85,7 +85,7 @@ BASE_SOURCES+=rtpp_modman.c rtpp_module_if_static.c rtpp_module_if_static.h
 
 rtpproxy_LDADD=librtpproxy.la -lm -lpthread
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.la \
-  $(XXH_DIR)/libxxHash_debug.la $(RTPP_MEMDEB_LDADD)
+  $(XXH_DIR)/libxxHash_debug.la $(RTQ_DIR)/libRTQueue_debug.la $(RTPP_MEMDEB_LDADD)
 rtpproxy_debug_LDFLAGS=-Wl,--export-dynamic $(LTO_FLAG)
 rtpproxy_LDFLAGS=$(LTO_FLAG)
 
@@ -143,7 +143,7 @@ rtpp_rzmalloc_perf_debug_LDADD = $(rtpp_rzmalloc_perf_LDADD) \
 
 RTPP_COMMON_CPPFLAGS=-DCFILE_PATH='"$(sysconfdir)/@PACKAGE@.conf"' \
   -DMDDIR_PATH='"$(libdir)/@PACKAGE@"' -I$(UCL_DIR)/include \
-  -I$(XXH_DIR) -D_BSD_SOURCE
+  -I$(XXH_DIR) -D_BSD_SOURCE -I$(RTQ_SDIR)
 EXTRA_CFLAGS = $(CC_WFLAGS) $(LTO_FLAG)
 
 EXTRA_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR)
@@ -191,7 +191,7 @@ librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \
 librtpproxy_la_CFLAGS = $(rtpproxy_CFLAGS) -fPIC
 librtpproxy_la_CPPFLAGS = $(rtpproxy_CPPFLAGS) -DLIBRTPPROXY
 librtpproxy_la_LIBADD = $(top_srcdir)/libucl/libucl.la \
-  $(XXH_DIR)/libxxHash.la
+  $(XXH_DIR)/libxxHash.la $(RTQ_DIR)/libRTQueue.la
 if BUILD_MODULES
 librtpproxy_la_LIBADD += $(MOD_DIR)/catch_dtmf/librtpp_catch_dtmf.la \
   $(MOD_DIR)/acct_csv/librtpp_acct_csv.la \

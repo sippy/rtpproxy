@@ -21,7 +21,7 @@ if BUILD_CRYPTO
 SUB_LIBRE=	libre
 endif
 
-SUBDIRS=	libexecinfo libucl libxxHash $(SUB_LIBRE) makeann $(SUBD_MOD) \
+SUBDIRS=	libexecinfo libucl libxxHash libRTQueue $(SUB_LIBRE) makeann $(SUBD_MOD) \
   $(SUBD_ELP) src $(SUBD_UDCNT) \
   $(SUBD_EAUD) ${SUBD_DOCS}
 
