@@ -810,14 +810,6 @@ rtpp_stream_guess_addr(struct rtpp_stream *self,
       CALL_SMETHOD(pvt->rem_addr, cmphost, sstosa(&packet->raddr))) {
         return (0);
     }
-#if 0
-    if (self->addr == NULL) {
-        self->addr = malloc(packet->rlen);
-        if (self->addr == NULL) {
-            return (-1);
-        }
-    }
-#endif
     actor = rtpp_stream_get_actor(self);
     ptype = rtpp_stream_get_proto(self);
     rport = ntohs(satosin(&packet->raddr)->sin_port);
