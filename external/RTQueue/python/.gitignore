@@ -1,0 +1,6 @@
+.eggs/
+LossyQueue.*.so
+LossyQueue_debug.*.so
+*.egg-info/
+__pycache__/
+build/

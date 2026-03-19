@@ -1,0 +1,6 @@
+{
+    global:
+        PyInit_LossyQueue*;
+    local:
+        *;
+};
