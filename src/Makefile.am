@@ -31,7 +31,8 @@ RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_record.h rtpp_hash_table.h rtpp_weakref.h rtpp_analyzer.h \
   rtpp_pcnt_strm.h rtpp_ttl.h rtpp_pipe.h rtpp_ringbuf.h rtpp_sessinfo.h \
   rtpp_rw_lock.h rtpp_proc_servers.h rtpp_proc_wakeup.h rtpp_socket.h \
-  rtpp_refproxy.h rtpp_command_reply.h rtpp_genuid.h rtpp_bindaddrs.h
+  rtpp_refproxy.h rtpp_command_reply.h rtpp_genuid.h rtpp_bindaddrs.h \
+  rtpp_packetport.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
 BASE_SOURCES=main.c rtp.h rtpp_server.c \
@@ -78,7 +79,8 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   $(RTPP_AUTOSRC_SOURCES) rtpp_epoll.c rtpp_str.c rtpp_str.h \
   rtpp_sbuf.c rtpp_sbuf.h rtpp_refproxy.c rtpp_command_reply.c \
   $(CMDSRCDIR)/rpcpv1_ul_subc_set.c $(CMDSRCDIR)/rpcpv1_ul_subc_set.h \
-  $(CMDSRCDIR)/rpcpv1_ul_subc_copy.c $(CMDSRCDIR)/rpcpv1_ul_subc_copy.h
+  $(CMDSRCDIR)/rpcpv1_ul_subc_copy.c $(CMDSRCDIR)/rpcpv1_ul_subc_copy.h \
+  rtpp_packetport.c
 BASE_SOURCES+=$(ADV_DIR)/packet_observer.h $(ADV_DIR)/pproc_manager.c \
   $(ADV_DIR)/pproc_manager.h
 BASE_SOURCES+=rtpp_modman.c rtpp_module_if_static.c rtpp_module_if_static.h
