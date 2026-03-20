@@ -36,6 +36,23 @@ struct sockaddr;
 struct rtpp_timestamp;
 struct rtpp_timeout_data;
 struct rtpp_bindaddr;
+struct rtpp_packetport_int;
+typedef struct rtpp_session rtpp_session_rot;
+
+struct rtpp_packetport_ref {
+    struct rtpp_packetport_int *ppi;
+    unsigned int rport;
+};
+
+DECLARE_METHOD(rtpp_session, rtpp_session_set_packetport, void, int,
+  struct rtpp_packetport_int *, unsigned int);
+DECLARE_METHOD(rtpp_session, rtpp_session_unset_packetport, void, int);
+
+DECLARE_SMETHODS(rtpp_session)
+{
+    METHOD_ENTRY(rtpp_session_set_packetport, set_packetport);
+    METHOD_ENTRY(rtpp_session_unset_packetport, unset_packetport);
+};
 
 struct rtpp_session {
     const rtpp_str_t *call_id;
@@ -56,6 +73,9 @@ struct rtpp_session {
 
     /* Refcounter */
     struct rtpp_refcnt *rcnt;
+#if defined(RTPP_DEBUG)
+    const struct rtpp_session_smethods *smethods;
+#endif
 };
 
 struct rtpp_session_ctor_args {
@@ -64,6 +84,8 @@ struct rtpp_session_ctor_args {
     const struct rtpp_timestamp *dtime;
     const struct rtpp_bindaddr **lia;
     int weak;
+    const struct rtpp_packetport_ref *ep_packetport;
+    struct rtpp_packetport_int *lpacketport;
 };
 
 struct rtpp_stream_pair {

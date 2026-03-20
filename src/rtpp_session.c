@@ -63,9 +63,11 @@
 #include "rtpp_stats.h"
 #include "rtpp_ttl.h"
 #include "rtpp_refcnt.h"
+#include "rtpp_weakref.h"
 #include "rtpp_timeout_data.h"
 #include "rtpp_proc_async.h"
 #include "rtpp_bindaddr.h"
+#include "rtpp_packetport.h"
 
 struct rtpp_session_priv
 {
@@ -79,6 +81,14 @@ struct rtpp_session_priv
 };
 
 static void rtpp_session_dtor(struct rtpp_session_priv *);
+static void rtpp_session_set_packetport(struct rtpp_session *, int,
+  struct rtpp_packetport_int *, unsigned int);
+static void rtpp_session_unset_packetport(struct rtpp_session *, int);
+
+DEFINE_SMETHODS(rtpp_session,
+    .set_packetport = &rtpp_session_set_packetport,
+    .unset_packetport = &rtpp_session_unset_packetport,
+);
 
 struct rtpp_session *
 rtpp_session_ctor(const struct rtpp_session_ctor_args *ap)
@@ -90,16 +100,22 @@ rtpp_session_ctor(const struct rtpp_session_ctor_args *ap)
     const struct rtpp_cfg *cfs = ap->cfs;
     struct common_cmd_args *ccap = ap->ccap;
     int i, lport = 0;
-    struct rtpp_socket *fds[2];
+    struct rtpp_socket *fds[2] = {NULL, NULL};
 
     log = rtpp_log_ctor("rtpproxy", ccap->call_id->s, 0);
     if (log == NULL) {
         goto e0;
     }
 
-    if (rtpp_create_listener(cfs, ap->lia[0]->addr, &lport, fds, cfs->tos) == -1) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "can't create listener");
-        goto e1;
+    RTPP_DBG_ASSERT(ap->ep_packetport != NULL);
+    if (ap->lpacketport != NULL) {
+        lport = CALL_SMETHOD(ap->lpacketport, next_out_port);
+    } else {
+        if (rtpp_create_listener(cfs, ap->lia[0]->addr, &lport, fds,
+          cfs->tos) == -1) {
+            RTPP_LOG(log, RTPP_LOG_ERR, "can't create listener");
+            goto e1;
+        }
     }
 
     pvt = rtpp_rzmalloc(sizeof(struct rtpp_session_priv), PVT_RCOFFS(pvt));
@@ -186,11 +202,22 @@ rtpp_session_ctor(const struct rtpp_session_ctor_args *ap)
         pvt->module_cf = cfs->modules_cf;
     }
 #endif
+#if defined(RTPP_DEBUG)
+    pvt->pub.smethods = GET_SMETHODS(&pvt->pub);
+#endif
 
-    CALL_SMETHOD(cfs->sessinfo, append, pub, 0, fds);
-    RTPP_OBJ_DECREF(fds[0]);
-    RTPP_OBJ_DECREF(fds[1]);
-    CALL_METHOD(cfs->rtpp_proc_cf, nudge);
+    if (ap->lpacketport != NULL) {
+        CALL_SMETHOD(pub, set_packetport, 0, ap->lpacketport, lport);
+    } else {
+        CALL_SMETHOD(cfs->sessinfo, append, pub, 0, fds);
+        RTPP_OBJ_DECREF(fds[0]);
+        RTPP_OBJ_DECREF(fds[1]);
+        CALL_METHOD(cfs->rtpp_proc_cf, nudge);
+    }
+    if (ap->ep_packetport->ppi != NULL) {
+        CALL_SMETHOD(pub, set_packetport, 1, ap->ep_packetport->ppi,
+          ap->ep_packetport->rport);
+    }
 
     RTPP_OBJ_DTOR_ATTACH_s(pub, (rtpp_refcnt_dtor_t)&rtpp_session_dtor,
       pvt);
@@ -211,8 +238,10 @@ e4:
 e3:
     RTPP_OBJ_DECREF(pub);
 e2:
-    RTPP_OBJ_DECREF(fds[0]);
-    RTPP_OBJ_DECREF(fds[1]);
+    if (fds[0] != NULL)
+        RTPP_OBJ_DECREF(fds[0]);
+    if (fds[1] != NULL)
+        RTPP_OBJ_DECREF(fds[1]);
 e1:
     RTPP_OBJ_DECREF(log);
 e0:
@@ -220,9 +249,33 @@ e0:
 }
 
 static void
+rtpp_session_set_packetport(struct rtpp_session *pub, int idx,
+  struct rtpp_packetport_int *ppi, unsigned int rport)
+{
+    struct rtpp_packetport_ref rtp_pp = {
+        .ppi = ppi,
+        .rport = rport,
+    };
+    struct rtpp_packetport_ref rtcp_pp = {
+        .ppi = ppi,
+        .rport = rport + 1,
+    };
+
+    CALL_SMETHOD(pub->rtp->stream[idx], set_packetport, &rtp_pp);
+    CALL_SMETHOD(pub->rtcp->stream[idx], set_packetport, &rtcp_pp);
+}
+
+static void
+rtpp_session_unset_packetport(struct rtpp_session *pub, int idx)
+{
+    CALL_SMETHOD(pub->rtp->stream[idx], set_packetport, NULL);
+    CALL_SMETHOD(pub->rtcp->stream[idx], set_packetport, NULL);
+}
+
+static void
 rtpp_session_dtor(struct rtpp_session_priv *pvt)
 {
-    int i;
+    int i, sports[2];
     double session_time;
     struct rtpp_session *pub;
 
@@ -236,9 +289,8 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
         CALL_SMETHOD(pub->rtp, upd_cntrs, &pvt->acct->rtp);
         CALL_SMETHOD(pub->rtcp, upd_cntrs, &pvt->acct->rtcp);
     }
-    RTPP_LOG(pub->log, RTPP_LOG_INFO, "session on ports %d/%d is cleaned up",
-      pub->rtp->stream[0]->port, pub->rtp->stream[1]->port);
     for (i = 0; i < 2; i++) {
+        sports[i] = pub->rtp->stream[i]->port;
         CALL_SMETHOD(pvt->sessinfo, remove, pub, i);
     }
     RTPP_OBJ_DECREF(pvt->sessinfo);
@@ -264,9 +316,8 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     }
     RTPP_OBJ_DECREF(pvt->acct);
 
-    RTPP_OBJ_DECREF(pvt->pub.log);
-    if (pvt->pub.timeout_data != NULL)
-        RTPP_OBJ_DECREF(pvt->pub.timeout_data);
+    if (pub->timeout_data != NULL)
+        RTPP_OBJ_DECREF(pub->timeout_data);
     if (pvt->call_id.rw.s != NULL)
         free(pvt->call_id.rw.s);
     if (pvt->from_tag.rw.s != NULL)
@@ -274,8 +325,11 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     if (pvt->from_tag_nmn.rw.s != NULL)
         free(pvt->from_tag_nmn.rw.s);
 
-    RTPP_OBJ_DECREF(pvt->pub.rtcp);
-    RTPP_OBJ_DECREF(pvt->pub.rtp);
+    RTPP_OBJ_DECREF(pub->rtcp);
+    RTPP_OBJ_DECREF(pub->rtp);
+    RTPP_LOG(pub->log, RTPP_LOG_INFO, "session on ports %d/%d is cleaned up",
+      sports[0], sports[1]);
+    RTPP_OBJ_DECREF(pub->log);
 }
 
 int

@@ -73,7 +73,7 @@ rxmit_packets(const struct rtpp_cfg *cfsp, struct rtpp_stream *stp,
     struct rtp_packet *packet = NULL;
     struct pkt_proc_ctx pktx = {
         .strmp_in = stp,
-        .strmp_out = CALL_SMETHOD(stp, get_sender, cfsp),
+        .strmp_out = CALL_SMETHOD(stp, get_sender),
         .rsp = rsp,
         .sender = sender,
     };
@@ -143,7 +143,7 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
             if (stp->resizer != NULL) {
                 struct pkt_proc_ctx pktx = {
                     .strmp_in = stp,
-                    .strmp_out = CALL_SMETHOD(stp, get_sender, cfsp),
+                    .strmp_out = CALL_SMETHOD(stp, get_sender),
                     .rsp = rsp,
                     .sender = sender,
                 };

@@ -30,8 +30,11 @@
 #include <netinet/in.h>
 #include <assert.h>
 #include <ctype.h>
+#include <inttypes.h>
+#include <limits.h>
 #include <stddef.h>
 #include <netdb.h>
+#include <stdint.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,6 +82,7 @@
 #include "commands/rpcpv1_record.h"
 #include "rtpp_command_reply.h"
 #include "rtpp_command_stats.h"
+#include "rtpp_packetport.h"
 
 #define FREE_IF_NULL(p)	{if ((p) != NULL) {free(p); (p) = NULL;}}
 
@@ -105,6 +109,8 @@ struct ul_opts {
     rtpp_str_const_t notify_tag;
     int pf;
     int new_port;
+    struct rtpp_packetport_ref packetport;
+    struct rtpp_packetport_int *lpacketport;
 
     int onhold;
 };
@@ -190,6 +196,12 @@ rtpp_command_ul_opts_free(struct ul_opts *ulop)
     FREE_IF_NULL(ulop->codecs);
     FREE_IF_NULL(ulop->ia[0]);
     FREE_IF_NULL(ulop->ia[1]);
+    if (ulop->packetport.ppi != NULL) {
+        RTPP_OBJ_DECREF(ulop->packetport.ppi);
+    }
+    if (ulop->lpacketport != NULL) {
+        RTPP_OBJ_DECREF(ulop->lpacketport);
+    }
     free(ulop);
 }
 
@@ -198,9 +210,53 @@ rtpp_command_ul_opts_free(struct ul_opts *ulop)
 #define	IPSTR_MIN_LENv6	2	/* "::" */
 #define	IPSTR_MAX_LENv6	45
 
+#define RTPP_ULA_RTQ_PREFIX "RTQ:"
+
+static const rtpp_str_t rtpp_ula_rtq = rtpp_str_i(RTPP_ULA_RTQ_PREFIX);
+
 #define	IS_IPSTR_VALID(ips, pf)	((pf) == AF_INET ? \
   (strlen(ips) >= IPSTR_MIN_LENv4 && strlen(ips) <= IPSTR_MAX_LENv4) : \
   (strlen(ips) >= IPSTR_MIN_LENv6 && strlen(ips) <= IPSTR_MAX_LENv6))
+
+static int
+ul_opts_parse_packetport_i(const char *addr, struct rtpp_packetport_int **ppip)
+{
+    char *ep;
+    uintptr_t pktpp_u;
+
+    pktpp_u = (uintptr_t)strtoumax(addr, &ep, 0);
+    if (addr[0] == '\0' || *ep != '\0' || pktpp_u == 0) {
+        return (-1);
+    }
+    *ppip = rtpp_packetport_get_int((struct rtpp_packetport *)pktpp_u);
+    if (*ppip == NULL) {
+        return (-1);
+    }
+    return (0);
+}
+
+static int
+ul_opts_parse_packetport(const char *addr, const rtpp_str_t *port,
+  struct rtpp_packetport_ref *ppref)
+{
+    char *ep;
+    uintptr_t pktpp_u;
+    uintmax_t rport;
+
+    pktpp_u = (uintptr_t)strtoumax(addr, &ep, 0);
+    if (addr[0] == '\0' || *ep != '\0' || pktpp_u == 0 || port == NULL) {
+        return (-1);
+    }
+    rport = strtoumax(port->s, &ep, 10);
+    if (port->s[0] == '\0' || *ep != '\0' || rport == 0 || rport > UINT_MAX) {
+        return (-1);
+    }
+    if (ul_opts_parse_packetport_i(addr, &ppref->ppi) != 0) {
+        return (-1);
+    }
+    ppref->rport = (unsigned int)rport;
+    return (0);
+}
 
 struct ul_opts *
 rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
@@ -330,6 +386,17 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
             memcpy(hostname, t, len);
             hostname[len] = '\0';
             if (use_label) {
+                if (cfsp->is_lib && len > rtpp_ula_rtq.len &&
+                  memcmp(hostname, rtpp_ula_rtq.s, rtpp_ula_rtq.len) == 0) {
+                    if (ul_opts_parse_packetport_i(hostname + rtpp_ula_rtq.len,
+                      &ulop->lpacketport) != 0) {
+                        RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
+                          "invalid local packetport address: %s", hostname);
+                        *ecodep = ECODE_INVLARG_1;
+                        goto err_undo_1;
+                    }
+                    break;
+                }
                 const rtpp_str_const_t label = (rtpp_str_const_t){
                   .s = hostname, .len = len};
                 ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, label2,
@@ -403,7 +470,21 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
             goto err_undo_1;
         }
     }
-    if (ulop->addr != NULL && ulop->port != NULL && IS_IPSTR_VALID(ulop->addr->s, ulop->pf)) {
+    if (cfsp->is_lib && ulop->addr != NULL &&
+      ulop->addr->len > rtpp_ula_rtq.len) {
+        if (memcmp(ulop->addr->s, rtpp_ula_rtq.s, rtpp_ula_rtq.len) == 0) {
+            if (ul_opts_parse_packetport(ulop->addr->s + rtpp_ula_rtq.len,
+              ulop->port, &ulop->packetport) != 0) {
+                RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "invalid packetport address: %.*s",
+                  FMTSTR(ulop->addr));
+                *ecodep = ECODE_INVLARG_7;
+                goto err_undo_1;
+            }
+            goto done;
+        }
+    }
+    if (ulop->addr != NULL && ulop->port != NULL &&
+      IS_IPSTR_VALID(ulop->addr->s, ulop->pf)) {
         n = resolve(sstosa(&tia), ulop->pf, ulop->addr->s, ulop->port->s, AI_NUMERICHOST);
         if (n == 0) {
             if (!ishostnull(sstosa(&tia))) {
@@ -428,6 +509,7 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
             goto err_undo_1;
         }
     }
+done:
     return (ulop);
 
 err_undo_1:
@@ -574,12 +656,16 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
     struct rtpp_socket *fd;
     struct ul_opts *ulop;
     int desired_tos;
+    int has_packetport;
+    int local_is_packetport;
 
     pidx = 1;
     lport = 0;
     spa = spb = NULL;
     fds[0] = fds[1] = NULL;
     ulop = cmd->cca.opts.ul;
+    has_packetport = 0;
+    local_is_packetport = 0;
 
 #define UL_FAIL(_ecode) do { \
     if (cmd->reply != NULL) \
@@ -599,32 +685,65 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
         spa = cmd->sp;
         desired_tos = spa->rtp->stream[sidx]->tos;
         fd = CALL_SMETHOD(spa->rtp->stream[sidx], get_skt, HEREVAL);
-        if (fd == NULL || ulop->new_port != 0) {
+        has_packetport = rtpp_stream_has_packetport(spa->rtp->stream[sidx]);
+        if ((fd == NULL && has_packetport == 0) ||
+          spa->rtp->stream[sidx]->port == 0 || ulop->new_port != 0 ||
+          ulop->lpacketport != NULL) {
+            struct rtpp_packetport_ref curpp = {};
+            struct rtpp_packetport_int *lppip;
+
+            if (has_packetport != 0) {
+                (void)CALL_SMETHOD(spa->rtp->stream[sidx], get_packetport,
+                  &curpp);
+            }
+            lppip = (ulop->lpacketport != NULL) ? ulop->lpacketport : curpp.ppi;
             if (ulop->local_addr != NULL) {
                 spa->rtp->stream[sidx]->laddr = ulop->local_addr;
             } else if (ulop->new_port != 0 && ulop->lidx == -1 && spa->rtp->stream[sidx]->laddr != ulop->lia[0]) {
                 spa->rtp->stream[sidx]->laddr = ulop->lia[0];
             }
-            if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr->addr,
-              &lport, fds, desired_tos) == -1) {
-                if (fd != NULL)
-                    RTPP_OBJ_DECREF(fd);
-                RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
-                UL_FAIL(ECODE_LSTFAIL_1);
-            }
-            if (fd != NULL && ulop->new_port != 0) {
-                RTPP_LOG(spa->log, RTPP_LOG_INFO,
-                  "new port requested, releasing %d/%d, replacing with %d/%d",
-                  spa->rtp->stream[sidx]->port, spa->rtcp->stream[sidx]->port, lport, lport + 1);
-                CALL_SMETHOD(cfsp->sessinfo, update, spa, sidx, fds);
+            if (lppip != NULL) {
+                if (fd != NULL) {
+                    CALL_SMETHOD(cfsp->sessinfo, remove, spa, sidx);
+                    CALL_SMETHOD(spa->rtp->stream[sidx], set_skt, NULL);
+                    CALL_SMETHOD(spa->rtcp->stream[sidx], set_skt, NULL);
+                }
+                lport = CALL_SMETHOD(lppip, next_out_port);
+                CALL_SMETHOD(spa, set_packetport, sidx, lppip, lport);
             } else {
-                CALL_SMETHOD(cfsp->sessinfo, append, spa, sidx, fds);
+                if (rtpp_create_listener(cfsp, spa->rtp->stream[sidx]->laddr->addr,
+                  &lport, fds, desired_tos) == -1) {
+                    if (fd != NULL)
+                        RTPP_OBJ_DECREF(fd);
+                    RTPP_LOG(spa->log, RTPP_LOG_ERR, "can't create listener");
+                    UL_FAIL(ECODE_LSTFAIL_1);
+                }
+                CALL_SMETHOD(spa, unset_packetport, sidx);
+                if (fd != NULL && ulop->new_port != 0) {
+                    RTPP_LOG(spa->log, RTPP_LOG_INFO,
+                      "new port requested, releasing %d/%d, replacing with %d/%d",
+                      spa->rtp->stream[sidx]->port, spa->rtcp->stream[sidx]->port, lport, lport + 1);
+                    CALL_SMETHOD(cfsp->sessinfo, update, spa, sidx, fds);
+                } else {
+                    CALL_SMETHOD(cfsp->sessinfo, append, spa, sidx, fds);
+                }
+                CALL_METHOD(cfsp->rtpp_proc_cf, nudge);
+                RTPP_OBJ_DECREF(fds[0]);
+                RTPP_OBJ_DECREF(fds[1]);
             }
-            CALL_METHOD(cfsp->rtpp_proc_cf, nudge);
-            RTPP_OBJ_DECREF(fds[0]);
-            RTPP_OBJ_DECREF(fds[1]);
             spa->rtp->stream[sidx]->port = lport;
             spa->rtcp->stream[sidx]->port = lport + 1;
+            if (lppip != NULL) {
+                if (CALL_SMETHOD(lppip, reg_streams, spa, sidx, lport) != 0) {
+                    if (curpp.ppi != NULL) {
+                        RTPP_OBJ_DECREF(curpp.ppi);
+                    }
+                    UL_FAIL(ECODE_NOMEM_9);
+                }
+            }
+            if (curpp.ppi != NULL) {
+                RTPP_OBJ_DECREF(curpp.ppi);
+            }
             if (spa->complete == 0) {
                 if (cmd->csp != NULL)
                     cmd->csp->nsess_complete.cnt++;
@@ -663,10 +782,19 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
         if (ulop->local_addr != NULL) {
             ulop->lia[0] = ulop->lia[1] = ulop->local_addr;
         }
-        RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
-          "new %s/%s session %.*s, tag %.*s requested, type %s",
-          SA_AF2STR(ulop->lia[0]->addr), SA_AF2STR(ulop->lia[1]->addr), FMTSTR(cmd->cca.call_id),
-          FMTSTR(cmd->cca.from_tag), ulop->weak ? "weak" : "strong");
+        if (ulop->lpacketport != NULL) {
+            RTPP_DBG_ASSERT(cfsp->is_lib);
+            RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
+              "new RTQ session %.*s, tag %.*s requested, type %s",
+              FMTSTR(cmd->cca.call_id), FMTSTR(cmd->cca.from_tag),
+              ulop->weak ? "weak" : "strong");
+        } else {
+            RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
+              "new %s/%s session %.*s, tag %.*s requested, type %s",
+              SA_AF2STR(ulop->lia[0]->addr), SA_AF2STR(ulop->lia[1]->addr),
+              FMTSTR(cmd->cca.call_id), FMTSTR(cmd->cca.from_tag),
+              ulop->weak ? "weak" : "strong");
+        }
         if (cfsp->slowshutdown != 0) {
             RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
               "proxy is in the deorbiting-burn mode, new session rejected");
@@ -685,7 +813,8 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
          */
         struct rtpp_session_ctor_args sa = {
             .cfs = cfsp, .ccap = &cmd->cca, .dtime = cmd->dtime, .lia = ulop->lia,
-            .weak = ulop->weak,
+            .weak = ulop->weak, .ep_packetport = &ulop->packetport,
+            .lpacketport = ulop->lpacketport,
         };
         spa = rtpp_session_ctor(&sa);
         if (spa == NULL) {
@@ -724,8 +853,23 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
         }
 
         lport = spa->rtp->stream[0]->port;
-        RTPP_LOG(spa->log, RTPP_LOG_INFO, "new session on %s port %d created, "
-          "tag %.*s", AF2STR(ulop->pf), lport, FMTSTR(cmd->cca.from_tag));
+        if (ulop->lpacketport != NULL) {
+            if (CALL_SMETHOD(ulop->lpacketport, reg_streams, spa, 0,
+              lport) != 0) {
+                handle_nomem(cmd, ECODE_NOMEM_9, spa);
+                return (-1);
+            }
+        }
+        if (ulop->lpacketport != NULL) {
+            RTPP_DBG_ASSERT(cfsp->is_lib);
+            RTPP_LOG(spa->log, RTPP_LOG_INFO,
+              "new session on RTQ port %d created, tag %.*s",
+              lport, FMTSTR(cmd->cca.from_tag));
+        } else {
+            RTPP_LOG(spa->log, RTPP_LOG_INFO,
+              "new session on %s port %d created, tag %.*s",
+              AF2STR(ulop->pf), lport, FMTSTR(cmd->cca.from_tag));
+        }
         if (cfsp->record_all != 0) {
             const struct record_opts ropts = {.record_single_file = RSF_MODE_DFLT(cfsp)};
             handle_copy(cfsp, NULL, spa, 0, NULL, &ropts);
@@ -776,6 +920,12 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
         CALL_SMETHOD(spa->rtcp->stream[pidx], prefill_addr, &(ulop->ia[1]),
           cmd->dtime->mono);
     }
+    if (ulop->packetport.ppi != NULL) {
+        CALL_SMETHOD(spa, set_packetport, pidx, ulop->packetport.ppi,
+          ulop->packetport.rport);
+    } else {
+        CALL_SMETHOD(spa, unset_packetport, pidx);
+    }
     if (ulop->onhold != 0) {
         CALL_SMETHOD(spa->rtp->stream[pidx], reg_onhold);
         CALL_SMETHOD(spa->rtcp->stream[pidx], reg_onhold);
@@ -815,7 +965,8 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
 
     RTPP_DBG_ASSERT(lport != 0);
     ulop->reply.port = lport;
-    ulop->reply.ia = ulop->lia[0];
+    local_is_packetport = rtpp_stream_has_packetport(spa->rtp->stream[NOT(pidx)]);
+    ulop->reply.ia = (local_is_packetport != 0) ? NULL : ulop->lia[0];
     struct rtpp_subc_env rse = {
         .sessp = spa,
         .strmp_in = spa->rtp->stream[pidx],

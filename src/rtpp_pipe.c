@@ -145,7 +145,7 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
 e1:
     for (i = 0; i < 2; i++)
         if (pvt->pub.stream[i] != NULL)
-            CALL_SMETHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
+            CALL_SMETHOD(pvt->pub.stream[i], unreg);
     RTPP_OBJ_DECREF(&(pvt->pub));
 e0:
     return (NULL);
@@ -157,7 +157,7 @@ rtpp_pipe_dtor(struct rtpp_pipe_priv *pvt)
     int i;
 
     for (i = 0; i < 2; i++) {
-        CALL_SMETHOD(pvt->streams_wrt, unreg, pvt->pub.stream[i]->stuid);
+        CALL_SMETHOD(pvt->pub.stream[i], unreg);
     }
 }
 

@@ -43,6 +43,7 @@ struct rtpp_acct_hold;
 struct rtpp_proc_rstats;
 struct rtpp_timestamp;
 struct rtpp_cfg;
+struct rtpp_packetport_ref;
 
 enum rtpp_stream_side { RTPP_SSIDE_CALLER = 1, RTPP_SSIDE_CALLEE = 0 };
 
@@ -68,6 +69,8 @@ struct r_stream_h_play_args {
 
 DECLARE_CLASS(rtpp_stream, const struct r_stream_ctor_args *);
 
+int rtpp_stream_has_packetport(struct rtpp_stream *);
+
 DECLARE_METHOD(rtpp_stream, rtpp_stream_handle_play, int,
   const struct r_stream_h_play_args *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_handle_noplay, void);
@@ -79,6 +82,10 @@ DECLARE_METHOD(rtpp_stream, rtpp_stream_guess_addr, int,
   struct rtp_packet *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_prefill_addr, void,
   struct sockaddr **, double);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_get_packetport, int,
+  struct rtpp_packetport_ref *);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_set_packetport, void,
+  const struct rtpp_packetport_ref *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_set_skt, void, struct rtpp_socket *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_get_skt, struct rtpp_socket *,
   HERETYPE);
@@ -100,8 +107,8 @@ DECLARE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
 DECLARE_METHOD(rtpp_stream, rtpp_stream_latch, int, struct rtp_packet *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_setmode, void, enum rtpps_latch_mode);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_getmode, enum rtpps_latch_mode);
-DECLARE_METHOD(rtpp_stream, rtpp_stream_get_sender, struct rtpp_stream *,
-  const struct rtpp_cfg *cfsp);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_get_sender, struct rtpp_stream *);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_unreg, void);
 
 DECLARE_SMETHODS(rtpp_stream) {
     METHOD_ENTRY(rtpp_stream_handle_play, handle_play);
@@ -112,6 +119,8 @@ DECLARE_SMETHODS(rtpp_stream) {
     METHOD_ENTRY(rtpp_stream_get_proto, get_proto);
     METHOD_ENTRY(rtpp_stream_guess_addr, guess_addr);
     METHOD_ENTRY(rtpp_stream_prefill_addr, prefill_addr);
+    METHOD_ENTRY(rtpp_stream_get_packetport, get_packetport);
+    METHOD_ENTRY(rtpp_stream_set_packetport, set_packetport);
     METHOD_ENTRY(rtpp_stream_set_skt, set_skt);
     METHOD_ENTRY(rtpp_stream_get_skt, get_skt);
     METHOD_ENTRY(rtpp_stream_update_skt, update_skt);
@@ -127,6 +136,7 @@ DECLARE_SMETHODS(rtpp_stream) {
     METHOD_ENTRY(rtpp_stream_latch_setmode, latch_setmode);
     METHOD_ENTRY(rtpp_stream_latch_getmode, latch_getmode);
     METHOD_ENTRY(rtpp_stream_get_sender, get_sender);
+    METHOD_ENTRY(rtpp_stream_unreg, unreg);
 };
 
 struct pmod_data {

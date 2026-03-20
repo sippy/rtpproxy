@@ -43,22 +43,9 @@
 #include "rtpp_refcnt.h"
 
 #include "rtpp_wi.h"
-#include "rtpp_wi_private.h"
 
 #include "advanced/pproc_manager.h"
-
-struct rtp_packet_full;
-
-struct rtp_packet_priv {
-    struct rtpp_wi *wi;
-    struct rtp_info rinfo;
-    struct rtpp_wi_pvt wip;
-};
-
-struct rtp_packet_full {
-    struct rtp_packet pub;
-    struct rtp_packet_priv pvt;
-};
+#include "rtp_packet_priv.h"
 
 void
 rtp_packet_dup(struct rtp_packet *dpkt, const struct rtp_packet *spkt, int flags)

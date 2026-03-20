@@ -118,7 +118,7 @@ process_rtp_servers_foreach(void *dp, void *ap)
     strmp_out = CALL_SMETHOD(fap->cfsp->rtp_streams_wrt, get_by_idx, rsrv->stuid);
     if (strmp_out == NULL)
         goto e0;
-    strmp_in = CALL_SMETHOD(strmp_out, get_sender, fap->cfsp);
+    strmp_in = CALL_SMETHOD(strmp_out, get_sender);
     if (strmp_in == NULL)
         goto e1;
     for (;;) {
