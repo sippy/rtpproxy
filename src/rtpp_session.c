@@ -252,6 +252,9 @@ static void
 rtpp_session_set_packetport(struct rtpp_session *pub, int idx,
   struct rtpp_packetport_int *ppi, unsigned int rport)
 {
+    if (!rtpp_is_lib)
+        abort();
+
     struct rtpp_packetport_ref rtp_pp = {
         .ppi = ppi,
         .rport = rport,
@@ -268,6 +271,9 @@ rtpp_session_set_packetport(struct rtpp_session *pub, int idx,
 static void
 rtpp_session_unset_packetport(struct rtpp_session *pub, int idx)
 {
+    if (!rtpp_is_lib)
+        return;
+
     CALL_SMETHOD(pub->rtp->stream[idx], set_packetport, NULL);
     CALL_SMETHOD(pub->rtcp->stream[idx], set_packetport, NULL);
 }

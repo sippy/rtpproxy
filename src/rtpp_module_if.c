@@ -199,45 +199,57 @@ acct_rtcp_enqueue(const struct pkt_proc_ctx *pktx)
     return (PPROC_ACT_TEE);
 }
 
+static const struct rtpp_minfo *
+rtpp_modules_lookup(struct rtpp_module_if *self, const char *mpath, struct rtpp_log *log)
+{
+    const struct rtpp_minfo *mip = NULL;
+
+    const char *derr;
+    int dlflags = RTLD_NOW | (is_gcov_on() ? RTLD_NODELETE : 0);
+    void *dmp = dlopen(mpath, dlflags);
+    if (dmp == NULL) {
+        derr = dlerror();
+        if (strstr(derr, mpath) == NULL) {
+            RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen(%s): %s", mpath, derr);
+        } else {
+            RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen() module: %s", derr);
+        }
+        goto e1;
+    }
+    RTPP_OBJ_DTOR_ATTACH_s(self, dlclose, dmp);
+    mip = dlsym(dmp, "rtpp_module");
+    if (mip == NULL) {
+        derr = dlerror();
+        if (strstr(derr, mpath) == NULL) {
+            RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol in the %s"
+              ": %s", mpath, derr);
+        } else {
+            RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol: %s",
+              derr);
+        }
+        goto e1;
+    }
+    return (mip);
+e1:
+    return (NULL);
+}
+
+
 static int
 rtpp_mif_load(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp, struct rtpp_log *log)
 {
     struct rtpp_module_if_priv *pvt;
-    const char *derr;
     const struct rtpp_minfo *mip = NULL;
 
     PUB2PVT(self, pvt);
-    if (cfsp->is_lib) {
+
+    if (rtpp_use_smodules) {
         mip = rtpp_static_modules_lookup(pvt->mpath);
-        if (mip == NULL)
-            goto e1;
+    } else {
+        mip = rtpp_modules_lookup(self, pvt->mpath, log);
     }
-    if (mip == NULL) {
-        int dlflags = RTLD_NOW | (is_gcov_on() ? RTLD_NODELETE : 0);
-        void *dmp = dlopen(pvt->mpath, dlflags);
-        if (dmp == NULL) {
-            derr = dlerror();
-            if (strstr(derr, pvt->mpath) == NULL) {
-                RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen(%s): %s", pvt->mpath, derr);
-            } else {
-                RTPP_LOG(log, RTPP_LOG_ERR, "can't dlopen() module: %s", derr);
-            }
-            goto e1;
-        }
-        RTPP_OBJ_DTOR_ATTACH_s(&(pvt->pub), dlclose, dmp);
-        mip = dlsym(dmp, "rtpp_module");
-        if (mip == NULL) {
-            derr = dlerror();
-            if (strstr(derr, pvt->mpath) == NULL) {
-                RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol in the %s"
-                  ": %s", pvt->mpath, derr);
-            } else {
-                RTPP_LOG(log, RTPP_LOG_ERR, "can't find 'rtpp_module' symbol: %s",
-                  derr);
-            }
-            goto e1;
-        }
-    }
+    if (mip == NULL)
+        goto e1;
 
     if (!MI_VER_CHCK(mip) || mip->fn == NULL) {
         RTPP_LOG(log, RTPP_LOG_ERR, "incompatible API version in the %s, "

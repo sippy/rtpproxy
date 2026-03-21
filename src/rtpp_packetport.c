@@ -46,6 +46,7 @@
 
 #include "SPMCQueue.h"
 
+#include "rtpp_cfg.h"
 #include "rtpp_types.h"
 #include "rtpp_debug.h"
 #include "rtpp_codeptr.h"
@@ -487,6 +488,9 @@ rtpp_packetport_reg_stream(struct rtpp_packetport_int *self, unsigned int port,
   struct rtpp_stream *stp)
 {
     struct rtpp_packetport_int_priv *pvt;
+
+    if (!rtpp_is_lib)
+        abort();
 
     PUB2PVT(self, pvt);
     if (CALL_SMETHOD(pvt->streams_ht, append_refcnt, &port, stp->rcnt,

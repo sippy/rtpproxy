@@ -30,6 +30,8 @@
 #include "rtpp_linker_set.h"
 #include "rtpp_module_if_static.h"
 
+const int rtpp_use_smodules __attribute__((weak)) = 1;
+
 SET_DECLARE(rtpp_modules, const struct rtpp_minfo);
 
 const struct rtpp_minfo *

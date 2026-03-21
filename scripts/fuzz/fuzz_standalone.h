@@ -8,6 +8,9 @@
 #include <unistd.h>
 #endif /* FUZZ_STANDALONE */
 
+const int rtpp_is_lib = 0;
+const int rtpp_use_smodules = 1;
+
 #if defined(FUZZ_STANDALONE)
 extern int LLVMFuzzerInitialize(int *argc, char ***argv) __attribute__((__weak__));
 

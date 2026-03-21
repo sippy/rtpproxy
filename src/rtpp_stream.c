@@ -979,6 +979,9 @@ rtpp_stream_set_packetport(struct rtpp_stream *self,
     struct rtpp_stream_priv *pvt;
     struct rtpp_packetport_ref opktpp;
 
+    if (!rtpp_is_lib)
+        abort();
+
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);
     opktpp = pvt->packetport;
@@ -1012,6 +1015,9 @@ rtpp_stream_get_packetport(struct rtpp_stream *self,
 {
     struct rtpp_stream_priv *pvt;
     int rval;
+
+    if (!rtpp_is_lib)
+        return (0);
 
     PUB2PVT(self, pvt);
     pthread_mutex_lock(&pvt->lock);

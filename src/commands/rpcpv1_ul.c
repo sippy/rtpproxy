@@ -386,7 +386,7 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
             memcpy(hostname, t, len);
             hostname[len] = '\0';
             if (use_label) {
-                if (cfsp->is_lib && len > rtpp_ula_rtq.len &&
+                if (rtpp_is_lib && len > rtpp_ula_rtq.len &&
                   memcmp(hostname, rtpp_ula_rtq.s, rtpp_ula_rtq.len) == 0) {
                     if (ul_opts_parse_packetport_i(hostname + rtpp_ula_rtq.len,
                       &ulop->lpacketport) != 0) {
@@ -470,7 +470,7 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
             goto err_undo_1;
         }
     }
-    if (cfsp->is_lib && ulop->addr != NULL &&
+    if (rtpp_is_lib && ulop->addr != NULL &&
       ulop->addr->len > rtpp_ula_rtq.len) {
         if (memcmp(ulop->addr->s, rtpp_ula_rtq.s, rtpp_ula_rtq.len) == 0) {
             if (ul_opts_parse_packetport(ulop->addr->s + rtpp_ula_rtq.len,
@@ -783,7 +783,7 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
             ulop->lia[0] = ulop->lia[1] = ulop->local_addr;
         }
         if (ulop->lpacketport != NULL) {
-            RTPP_DBG_ASSERT(cfsp->is_lib);
+            RTPP_DBG_ASSERT(rtpp_is_lib);
             RTPP_LOG(cmd->glog, RTPP_LOG_INFO,
               "new RTQ session %.*s, tag %.*s requested, type %s",
               FMTSTR(cmd->cca.call_id), FMTSTR(cmd->cca.from_tag),
@@ -861,7 +861,7 @@ rtpp_command_ul_handle_impl(const struct rtpp_cfg *cfsp,
             }
         }
         if (ulop->lpacketport != NULL) {
-            RTPP_DBG_ASSERT(cfsp->is_lib);
+            RTPP_DBG_ASSERT(rtpp_is_lib);
             RTPP_LOG(spa->log, RTPP_LOG_INFO,
               "new session on RTQ port %d created, tag %.*s",
               lport, FMTSTR(cmd->cca.from_tag));

@@ -44,6 +44,8 @@ enum rtpp_ttl_mode {
 
 typedef enum rtpp_ttl_mode rtpp_ttl_mode;
 
+extern const int rtpp_is_lib;
+
 struct rtpp_timed;
 struct rtpp_sessinfo;
 struct rtpp_log;
@@ -154,7 +156,6 @@ struct rtpp_cfg {
     struct rtpp_proc_servers *proc_servers;
     struct rtpp_genuid *guid;
 
-    int is_lib;
 #if ENABLE_MODULE_IF
     struct rtpp_modman *modules_cf;
 #else

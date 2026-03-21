@@ -26,4 +26,6 @@
 
 #pragma once
 
+extern const int rtpp_use_smodules;
+
 const struct rtpp_minfo *rtpp_static_modules_lookup(const char *);
