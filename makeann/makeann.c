@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     int16_t slbuf[160];
     int i, j, k, rsize, wsize, loop, limit, rlimit, ch;
 #ifdef ENABLE_G729
-    int vad_enable = 0;
+    MAYBE_UNUSED int vad_enable = 0;
     G729_ECTX *ctx_g729;
 #endif
 #ifdef ENABLE_GSM

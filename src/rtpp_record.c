@@ -80,6 +80,22 @@
 #include "rtpp_bindaddr.h"
 #include "advanced/pproc_manager.h"
 
+#if defined(__clang__)
+#define RTPP_DIAG_PUSH _Pragma("clang diagnostic push")
+#define RTPP_DIAG_POP _Pragma("clang diagnostic pop")
+#define RTPP_DIAG_IGNORE_ADDR_OF_PACKED \
+  _Pragma("clang diagnostic ignored \"-Waddress-of-packed-member\"")
+#elif defined(__GNUC__)
+#define RTPP_DIAG_PUSH _Pragma("GCC diagnostic push")
+#define RTPP_DIAG_POP _Pragma("GCC diagnostic pop")
+#define RTPP_DIAG_IGNORE_ADDR_OF_PACKED \
+  _Pragma("GCC diagnostic ignored \"-Waddress-of-packed-member\"")
+#else
+#define RTPP_DIAG_PUSH
+#define RTPP_DIAG_POP
+#define RTPP_DIAG_IGNORE_ADDR_OF_PACKED
+#endif
+
 enum record_mode {MODE_LOCAL_PKT, MODE_REMOTE_RTP, MODE_LOCAL_PCAP}; /* MODE_LOCAL_RTP/MODE_REMOTE_PKT? */
 
 struct rtpp_record_channel {
@@ -447,14 +463,24 @@ prepare_pkt_hdr_pcap(const struct prepare_pkt_hdr_args *phap)
         memcpy(&pcp->en10t.pcaprec_hdr, &phd, sizeof(phd));
         ether = &pcp->en10t.ether;
         ether->type = ETHERTYPE_INET;
+        /*
+         * This overlay is a serialized PCAP header buffer. The packed layout
+         * is intentional and validated on strict-alignment targets.
+         */
+        RTPP_DIAG_PUSH
+        RTPP_DIAG_IGNORE_ADDR_OF_PACKED
         udp = &(pcp->en10t.udpip.udphdr);
         ipp.v4 = &(pcp->en10t.udpip.iphdr);
+        RTPP_DIAG_POP
     } else {
         memcpy(&pcp->en10t_v6.pcaprec_hdr, &phd, sizeof(phd));
         ether = &pcp->en10t_v6.ether;
         ether->type = ETHERTYPE_INET6;
+        RTPP_DIAG_PUSH
+        RTPP_DIAG_IGNORE_ADDR_OF_PACKED
         udp = &(pcp->en10t_v6.udpip6.udphdr);
         ipp.v6 = &(pcp->en10t_v6.udpip6.iphdr);
+        RTPP_DIAG_POP
     }
     if (phap->face == 0 && ishostnull(dst_addr) && !ishostnull(src_addr)) {
         if (local4remote(src_addr, &tmp_addr) == 0) {

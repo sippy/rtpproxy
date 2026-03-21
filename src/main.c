@@ -134,12 +134,6 @@ const int rtpp_is_lib = 0;
 const int rtpp_use_smodules = 0;
 #endif
 
-#ifndef RTPP_DEBUG
-# define RTPP_DEBUG	0
-#else
-# define RTPP_DEBUG	1
-#endif
-
 #define PRIO_UNSET (PRIO_MIN - 1)
 
 static void usage(void);
