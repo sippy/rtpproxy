@@ -91,7 +91,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @ENABLE_WARN_IPT_TRUE@am__append_1 = -Werror=incompatible-pointer-types
-subdir = libxxHash
+@ENABLE_debug_TRUE@am__append_2 = libRTQueue_debug.la
+subdir = libRTQueue
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
 	$(top_srcdir)/m4/ax_check_docbook_dtd.m4 \
@@ -108,25 +109,28 @@ CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-libxxHash_la_LIBADD =
+libRTQueue_la_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_libxxHash_la_OBJECTS = $(XXH_SDIR)/libxxHash_la-xxhash.lo
-libxxHash_la_OBJECTS = $(am_libxxHash_la_OBJECTS)
+am_libRTQueue_la_OBJECTS = $(RTQ_SDIR)/libRTQueue_la-SPMCQueue.lo
+libRTQueue_la_OBJECTS = $(am_libRTQueue_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-libxxHash_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libxxHash_la_CFLAGS) \
+libRTQueue_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libRTQueue_la_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-libxxHash_debug_la_LIBADD =
-am__objects_1 = $(XXH_SDIR)/libxxHash_debug_la-xxhash.lo
-am_libxxHash_debug_la_OBJECTS = $(am__objects_1)
-libxxHash_debug_la_OBJECTS = $(am_libxxHash_debug_la_OBJECTS)
-libxxHash_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+libRTQueue_debug_la_LIBADD =
+am__libRTQueue_debug_la_SOURCES_DIST = $(RTQ_SDIR)/SPMCQueue.c \
+	$(RTQ_SDIR)/SPMCQueue.h
+am__objects_1 = $(RTQ_SDIR)/libRTQueue_debug_la-SPMCQueue.lo
+@ENABLE_debug_TRUE@am_libRTQueue_debug_la_OBJECTS = $(am__objects_1)
+libRTQueue_debug_la_OBJECTS = $(am_libRTQueue_debug_la_OBJECTS)
+libRTQueue_debug_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(libxxHash_debug_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(libRTQueue_debug_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+@ENABLE_debug_TRUE@am_libRTQueue_debug_la_rpath =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -142,8 +146,8 @@ am__v_at_1 =
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade =  \
-	$(XXH_SDIR)/$(DEPDIR)/libxxHash_debug_la-xxhash.Plo \
-	$(XXH_SDIR)/$(DEPDIR)/libxxHash_la-xxhash.Plo
+	$(RTQ_SDIR)/$(DEPDIR)/libRTQueue_debug_la-SPMCQueue.Plo \
+	$(RTQ_SDIR)/$(DEPDIR)/libRTQueue_la-SPMCQueue.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -163,8 +167,9 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libxxHash_la_SOURCES) $(libxxHash_debug_la_SOURCES)
-DIST_SOURCES = $(libxxHash_la_SOURCES) $(libxxHash_debug_la_SOURCES)
+SOURCES = $(libRTQueue_la_SOURCES) $(libRTQueue_debug_la_SOURCES)
+DIST_SOURCES = $(libRTQueue_la_SOURCES) \
+	$(am__libRTQueue_debug_la_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -188,8 +193,8 @@ am__define_uniq_tagged_files = \
     if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
   done | $(am__uniquify_input)`
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
-	$(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/ccflags.ami \
-	$(top_srcdir)/m4/coverage.ami $(top_srcdir)/m4/memdeb.ami
+	$(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami \
+	$(top_srcdir)/m4/memdeb.ami
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -336,7 +341,6 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-RTPP_AUTOSRC_DIR = $(top_srcdir)/autosrc
 RTPP_MEMDEB_CPPFLAGS = -DRTPP_MEMDEB_STDOUT -include rtpp_debugon.h \
   -I$(top_srcdir) -I$(RTPP_AUTOSRC_DIR)
 
@@ -360,22 +364,26 @@ CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
 @ENABLE_LTO_TRUE@LTO_FLAG = -flto
 NOPT_CFLAGS = -g3 -O0
 CLEANFILES = *.gcda *.gcno *.gcov
-XXH_DIR = $(top_srcdir)/external/xxHash
-XXH_SDIR = $(XXH_DIR)
-noinst_LTLIBRARIES = libxxHash.la libxxHash_debug.la
-libxxHash_la_SOURCES = $(XXH_SDIR)/xxhash.c $(XXH_SDIR)/xxhash.h
-CFLAGS_libxxHash_common = -Wno-pointer-sign -std=c11 -DHAVE_CONFIG_H -D_BSD_SOURCE \
-  -Wno-unused-parameter $(LTO_FLAG)
+RTQ_DIR = $(top_srcdir)/external/RTQueue
+RTQ_SDIR = $(RTQ_DIR)/src
+noinst_LTLIBRARIES = libRTQueue.la $(am__append_2)
+CFLAGS_libRTQueue_common = -std=c11 -DHAVE_CONFIG_H -D_BSD_SOURCE \
+  $(LTO_FLAG)
 
-libxxHash_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_libxxHash_common)
-libxxHash_debug_la_SOURCES = $(libxxHash_la_SOURCES)
-libxxHash_debug_la_CPPFLAGS = -DRTPP_MEMDEB_FREE_NULL $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=rtpproxy
-libxxHash_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_libxxHash_common) $(RTPP_MEMDEB_CFLAGS)
+libRTQueue_la_SOURCES = $(RTQ_SDIR)/SPMCQueue.c $(RTQ_SDIR)/SPMCQueue.h
+libRTQueue_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_libRTQueue_common)
+@ENABLE_debug_TRUE@libRTQueue_debug_la_SOURCES = $(libRTQueue_la_SOURCES)
+@ENABLE_debug_TRUE@libRTQueue_debug_la_CPPFLAGS = -DRTPP_MEMDEB_FREE_NULL -DMEMDEB_APP=rtpproxy \
+@ENABLE_debug_TRUE@  $(RTPP_MEMDEB_CPPFLAGS)
+
+@ENABLE_debug_TRUE@libRTQueue_debug_la_CFLAGS = $(NOPT_CFLAGS) $(CFLAGS_libRTQueue_common) \
+@ENABLE_debug_TRUE@  $(RTPP_MEMDEB_CFLAGS)
+
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -384,9 +392,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu libxxHash/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu libRTQueue/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu libxxHash/Makefile
+	  $(AUTOMAKE) --gnu libRTQueue/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -395,7 +403,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(top_srcdir)/m4/autosrc.ami $(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__empty):
+$(top_srcdir)/m4/memdeb.ami $(top_srcdir)/m4/ccflags.ami $(top_srcdir)/m4/coverage.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -414,33 +422,34 @@ clean-noinstLTLIBRARIES:
 	      sort -u`; \
 	echo rm -f $${locs}; \
 	$(am__rm_f) $${locs}
-$(XXH_SDIR)/$(am__dirstamp):
-	@$(MKDIR_P) $(XXH_SDIR)
-	@: >>$(XXH_SDIR)/$(am__dirstamp)
-$(XXH_SDIR)/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) $(XXH_SDIR)/$(DEPDIR)
-	@: >>$(XXH_SDIR)/$(DEPDIR)/$(am__dirstamp)
-$(XXH_SDIR)/libxxHash_la-xxhash.lo: $(XXH_SDIR)/$(am__dirstamp) \
-	$(XXH_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RTQ_SDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(RTQ_SDIR)
+	@: >>$(RTQ_SDIR)/$(am__dirstamp)
+$(RTQ_SDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(RTQ_SDIR)/$(DEPDIR)
+	@: >>$(RTQ_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RTQ_SDIR)/libRTQueue_la-SPMCQueue.lo: $(RTQ_SDIR)/$(am__dirstamp) \
+	$(RTQ_SDIR)/$(DEPDIR)/$(am__dirstamp)
 
-libxxHash.la: $(libxxHash_la_OBJECTS) $(libxxHash_la_DEPENDENCIES) $(EXTRA_libxxHash_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libxxHash_la_LINK)  $(libxxHash_la_OBJECTS) $(libxxHash_la_LIBADD) $(LIBS)
-$(XXH_SDIR)/libxxHash_debug_la-xxhash.lo: $(XXH_SDIR)/$(am__dirstamp) \
-	$(XXH_SDIR)/$(DEPDIR)/$(am__dirstamp)
+libRTQueue.la: $(libRTQueue_la_OBJECTS) $(libRTQueue_la_DEPENDENCIES) $(EXTRA_libRTQueue_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libRTQueue_la_LINK)  $(libRTQueue_la_OBJECTS) $(libRTQueue_la_LIBADD) $(LIBS)
+$(RTQ_SDIR)/libRTQueue_debug_la-SPMCQueue.lo:  \
+	$(RTQ_SDIR)/$(am__dirstamp) \
+	$(RTQ_SDIR)/$(DEPDIR)/$(am__dirstamp)
 
-libxxHash_debug.la: $(libxxHash_debug_la_OBJECTS) $(libxxHash_debug_la_DEPENDENCIES) $(EXTRA_libxxHash_debug_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libxxHash_debug_la_LINK)  $(libxxHash_debug_la_OBJECTS) $(libxxHash_debug_la_LIBADD) $(LIBS)
+libRTQueue_debug.la: $(libRTQueue_debug_la_OBJECTS) $(libRTQueue_debug_la_DEPENDENCIES) $(EXTRA_libRTQueue_debug_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libRTQueue_debug_la_LINK) $(am_libRTQueue_debug_la_rpath) $(libRTQueue_debug_la_OBJECTS) $(libRTQueue_debug_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f $(XXH_SDIR)/*.$(OBJEXT)
-	-rm -f $(XXH_SDIR)/*.lo
+	-rm -f $(RTQ_SDIR)/*.$(OBJEXT)
+	-rm -f $(RTQ_SDIR)/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@$(XXH_SDIR)/$(DEPDIR)/libxxHash_debug_la-xxhash.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@$(XXH_SDIR)/$(DEPDIR)/libxxHash_la-xxhash.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RTQ_SDIR)/$(DEPDIR)/libRTQueue_debug_la-SPMCQueue.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RTQ_SDIR)/$(DEPDIR)/libRTQueue_la-SPMCQueue.Plo@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -472,25 +481,25 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-$(XXH_SDIR)/libxxHash_la-xxhash.lo: $(XXH_SDIR)/xxhash.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxxHash_la_CFLAGS) $(CFLAGS) -MT $(XXH_SDIR)/libxxHash_la-xxhash.lo -MD -MP -MF $(XXH_SDIR)/$(DEPDIR)/libxxHash_la-xxhash.Tpo -c -o $(XXH_SDIR)/libxxHash_la-xxhash.lo `test -f '$(XXH_SDIR)/xxhash.c' || echo '$(srcdir)/'`$(XXH_SDIR)/xxhash.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(XXH_SDIR)/$(DEPDIR)/libxxHash_la-xxhash.Tpo $(XXH_SDIR)/$(DEPDIR)/libxxHash_la-xxhash.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(XXH_SDIR)/xxhash.c' object='$(XXH_SDIR)/libxxHash_la-xxhash.lo' libtool=yes @AMDEPBACKSLASH@
+$(RTQ_SDIR)/libRTQueue_la-SPMCQueue.lo: $(RTQ_SDIR)/SPMCQueue.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libRTQueue_la_CFLAGS) $(CFLAGS) -MT $(RTQ_SDIR)/libRTQueue_la-SPMCQueue.lo -MD -MP -MF $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_la-SPMCQueue.Tpo -c -o $(RTQ_SDIR)/libRTQueue_la-SPMCQueue.lo `test -f '$(RTQ_SDIR)/SPMCQueue.c' || echo '$(srcdir)/'`$(RTQ_SDIR)/SPMCQueue.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_la-SPMCQueue.Tpo $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_la-SPMCQueue.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTQ_SDIR)/SPMCQueue.c' object='$(RTQ_SDIR)/libRTQueue_la-SPMCQueue.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxxHash_la_CFLAGS) $(CFLAGS) -c -o $(XXH_SDIR)/libxxHash_la-xxhash.lo `test -f '$(XXH_SDIR)/xxhash.c' || echo '$(srcdir)/'`$(XXH_SDIR)/xxhash.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libRTQueue_la_CFLAGS) $(CFLAGS) -c -o $(RTQ_SDIR)/libRTQueue_la-SPMCQueue.lo `test -f '$(RTQ_SDIR)/SPMCQueue.c' || echo '$(srcdir)/'`$(RTQ_SDIR)/SPMCQueue.c
 
-$(XXH_SDIR)/libxxHash_debug_la-xxhash.lo: $(XXH_SDIR)/xxhash.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxxHash_debug_la_CPPFLAGS) $(CPPFLAGS) $(libxxHash_debug_la_CFLAGS) $(CFLAGS) -MT $(XXH_SDIR)/libxxHash_debug_la-xxhash.lo -MD -MP -MF $(XXH_SDIR)/$(DEPDIR)/libxxHash_debug_la-xxhash.Tpo -c -o $(XXH_SDIR)/libxxHash_debug_la-xxhash.lo `test -f '$(XXH_SDIR)/xxhash.c' || echo '$(srcdir)/'`$(XXH_SDIR)/xxhash.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(XXH_SDIR)/$(DEPDIR)/libxxHash_debug_la-xxhash.Tpo $(XXH_SDIR)/$(DEPDIR)/libxxHash_debug_la-xxhash.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(XXH_SDIR)/xxhash.c' object='$(XXH_SDIR)/libxxHash_debug_la-xxhash.lo' libtool=yes @AMDEPBACKSLASH@
+$(RTQ_SDIR)/libRTQueue_debug_la-SPMCQueue.lo: $(RTQ_SDIR)/SPMCQueue.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libRTQueue_debug_la_CPPFLAGS) $(CPPFLAGS) $(libRTQueue_debug_la_CFLAGS) $(CFLAGS) -MT $(RTQ_SDIR)/libRTQueue_debug_la-SPMCQueue.lo -MD -MP -MF $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_debug_la-SPMCQueue.Tpo -c -o $(RTQ_SDIR)/libRTQueue_debug_la-SPMCQueue.lo `test -f '$(RTQ_SDIR)/SPMCQueue.c' || echo '$(srcdir)/'`$(RTQ_SDIR)/SPMCQueue.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_debug_la-SPMCQueue.Tpo $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_debug_la-SPMCQueue.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTQ_SDIR)/SPMCQueue.c' object='$(RTQ_SDIR)/libRTQueue_debug_la-SPMCQueue.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxxHash_debug_la_CPPFLAGS) $(CPPFLAGS) $(libxxHash_debug_la_CFLAGS) $(CFLAGS) -c -o $(XXH_SDIR)/libxxHash_debug_la-xxhash.lo `test -f '$(XXH_SDIR)/xxhash.c' || echo '$(srcdir)/'`$(XXH_SDIR)/xxhash.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libRTQueue_debug_la_CPPFLAGS) $(CPPFLAGS) $(libRTQueue_debug_la_CFLAGS) $(CFLAGS) -c -o $(RTQ_SDIR)/libRTQueue_debug_la-SPMCQueue.lo `test -f '$(RTQ_SDIR)/SPMCQueue.c' || echo '$(srcdir)/'`$(RTQ_SDIR)/SPMCQueue.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
-	-rm -rf $(XXH_SDIR)/.libs $(XXH_SDIR)/_libs
+	-rm -rf $(RTQ_SDIR)/.libs $(RTQ_SDIR)/_libs
 	-rm -rf .libs _libs
 
 ID: $(am__tagged_files)
@@ -608,8 +617,8 @@ clean-generic:
 distclean-generic:
 	-$(am__rm_f) $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || $(am__rm_f) $(CONFIG_CLEAN_VPATH_FILES)
-	-$(am__rm_f) $(XXH_SDIR)/$(DEPDIR)/$(am__dirstamp)
-	-$(am__rm_f) $(XXH_SDIR)/$(am__dirstamp)
+	-$(am__rm_f) $(RTQ_SDIR)/$(DEPDIR)/$(am__dirstamp)
+	-$(am__rm_f) $(RTQ_SDIR)/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -620,8 +629,8 @@ clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -f $(XXH_SDIR)/$(DEPDIR)/libxxHash_debug_la-xxhash.Plo
-	-rm -f $(XXH_SDIR)/$(DEPDIR)/libxxHash_la-xxhash.Plo
+	-rm -f $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_debug_la-SPMCQueue.Plo
+	-rm -f $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_la-SPMCQueue.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -667,8 +676,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -f $(XXH_SDIR)/$(DEPDIR)/libxxHash_debug_la-xxhash.Plo
-	-rm -f $(XXH_SDIR)/$(DEPDIR)/libxxHash_la-xxhash.Plo
+	-rm -f $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_debug_la-SPMCQueue.Plo
+	-rm -f $(RTQ_SDIR)/$(DEPDIR)/libRTQueue_la-SPMCQueue.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

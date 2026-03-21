@@ -384,7 +384,7 @@ RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
   $(MAINSRCDIR)/rtpp_coverage.c $(MAINSRCDIR)/rtpp_coverage.h
 
 @ENABLE_LIBUNWIND_FALSE@RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
-RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
+RTPP_MEMDEB_LD_ADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
 MAINSRCDIR = $(top_srcdir)/src
 DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \

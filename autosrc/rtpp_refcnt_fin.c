@@ -43,6 +43,10 @@ static void refcnt_traceen_fin(void *pub) {
     fprintf(stderr, "Method rtpp_refcnt@%p::traceen (refcnt_traceen) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void refcnt_tryincref_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_refcnt@%p::tryincref (refcnt_tryincref) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
     .attach = (refcnt_attach_t)&refcnt_attach_fin,
     .attach_nc = (refcnt_attach_nc_t)&refcnt_attach_nc_fin,
@@ -53,6 +57,7 @@ static const struct rtpp_refcnt_smethods rtpp_refcnt_smethods_fin = {
     .incref = (refcnt_incref_t)&refcnt_incref_fin,
     .peek = (refcnt_peek_t)&refcnt_peek_fin,
     .traceen = (refcnt_traceen_t)&refcnt_traceen_fin,
+    .tryincref = (refcnt_tryincref_t)&refcnt_tryincref_fin,
 };
 void rtpp_refcnt_fin(struct rtpp_refcnt *pub) {
     RTPP_DBG_ASSERT(pub->smethods->attach != (refcnt_attach_t)NULL);
@@ -64,6 +69,7 @@ void rtpp_refcnt_fin(struct rtpp_refcnt *pub) {
     RTPP_DBG_ASSERT(pub->smethods->incref != (refcnt_incref_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->peek != (refcnt_peek_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->traceen != (refcnt_traceen_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->tryincref != (refcnt_tryincref_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_refcnt_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_refcnt_smethods_fin;
@@ -99,6 +105,7 @@ rtpp_refcnt_fintest()
         .incref = (refcnt_incref_t)((void *)0x1),
         .peek = (refcnt_peek_t)((void *)0x1),
         .traceen = (refcnt_traceen_t)((void *)0x1),
+        .tryincref = (refcnt_tryincref_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
     RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_refcnt_fin,
@@ -113,7 +120,8 @@ rtpp_refcnt_fintest()
     CALL_TFIN(&tp->pub, incref);
     CALL_TFIN(&tp->pub, peek);
     CALL_TFIN(&tp->pub, traceen);
-    assert((_naborts - naborts_s) == 9);
+    CALL_TFIN(&tp->pub, tryincref);
+    assert((_naborts - naborts_s) == 10);
 }
 DATA_SET(rtpp_fintests, rtpp_refcnt_fintest);
 #endif /* RTPP_FINTEST */

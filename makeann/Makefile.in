@@ -382,7 +382,7 @@ RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
   $(MAINSRCDIR)/rtpp_coverage.c $(MAINSRCDIR)/rtpp_coverage.h
 
 @ENABLE_LIBUNWIND_FALSE@RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
-RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
+RTPP_MEMDEB_LD_ADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
 MAINSRCDIR = $(top_srcdir)/src
 DEFAULT_INCLUDES = -I$(MAINSRCDIR)
 CC_WFLAGS = -Wall -Werror=implicit-function-declaration \
@@ -408,8 +408,9 @@ SRCS_AUTOGEN_DEBUG = $(rtpp_netaddr_AUTOSRCS) \
 	$(rtpp_ringbuf_AUTOSRCS) $(rtpp_sessinfo_AUTOSRCS) \
 	$(rtpp_rw_lock_AUTOSRCS) $(rtpp_proc_servers_AUTOSRCS) \
 	$(rtpp_proc_wakeup_AUTOSRCS) $(rtpp_socket_AUTOSRCS) \
-	$(rtpp_refproxy_AUTOSRCS) $(rtpp_command_reply_AUTOSRCS) \
-	$(rtpp_genuid_AUTOSRCS) $(rtpp_bindaddrs_AUTOSRCS)
+	$(rtpp_refproxy_AUTOSRCS) $(rtpp_wref_AUTOSRCS) \
+	$(rtpp_command_reply_AUTOSRCS) $(rtpp_genuid_AUTOSRCS) \
+	$(rtpp_bindaddrs_AUTOSRCS) $(rtpp_packetport_AUTOSRCS)
 rtpp_command_rcache_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_rcache_fin.c
 rtpp_log_obj_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_log_obj_fin.c
 rtpp_port_table_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_port_table_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_port_table_fin.c
@@ -438,9 +439,11 @@ rtpp_proc_servers_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_servers_fin.h $(RTPP_
 rtpp_proc_wakeup_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_proc_wakeup_fin.c
 rtpp_socket_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_socket_fin.c
 rtpp_refproxy_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_refproxy_fin.c
+rtpp_wref_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_wref_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_wref_fin.c
 rtpp_command_reply_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_command_reply_fin.c
 rtpp_genuid_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.c
 rtpp_bindaddrs_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_bindaddrs_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_bindaddrs_fin.c
+rtpp_packetport_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_packetport_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_packetport_fin.c
 extractaudio_SRCDIR = $(top_srcdir)/extractaudio
 makeann_SOURCES = makeann.c rtp.h g711.h $(extractaudio_SRCDIR)/g729_compat.c \
   $(extractaudio_SRCDIR)/g729_compat.h
@@ -450,7 +453,7 @@ makeann_CPPFLAGS = -I$(extractaudio_SRCDIR) -D_BSD_SOURCE
 makeann_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 makeann_LDFLAGS = $(LTO_FLAG)
 makeann_debug_SOURCES = $(makeann_SOURCES) $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
-makeann_debug_LDADD = $(makeann_LDADD) $(RTPP_MEMDEB_LDADD)
+makeann_debug_LDADD = $(makeann_LDADD) $(RTPP_MEMDEB_LD_ADD)
 makeann_debug_CPPFLAGS = $(makeann_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=makeann
 makeann_debug_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 makeann_debug_LDFLAGS = $(makeann_LDFLAGS)

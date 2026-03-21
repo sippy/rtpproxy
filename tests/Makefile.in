@@ -95,7 +95,9 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_sbuf \
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_objck \
 @ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_rzmalloc_perf \
-@ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_fintest libucl/libucl1 \
+@ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_fintest \
+@ENABLE_BASIC_TESTS_TRUE@	unittests/rtpp_wref_test \
+@ENABLE_BASIC_TESTS_TRUE@	libucl/libucl1 \
 @ENABLE_BASIC_TESTS_TRUE@	libexecinfo/libexecinfo1 \
 @ENABLE_BASIC_TESTS_TRUE@	acct_rtcp_hep/confval1 \
 @ENABLE_BASIC_TESTS_TRUE@	acct_rtcp_hep/basic catch_dtmf/basic \

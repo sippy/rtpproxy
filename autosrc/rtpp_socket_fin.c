@@ -15,12 +15,28 @@ static void rtpp_socket_drain_fin(void *pub) {
     fprintf(stderr, "Method rtpp_socket@%p::drain (rtpp_socket_drain) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_socket_get_session_link_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_socket@%p::get_session_link (rtpp_socket_get_session_link) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void rtpp_socket_get_stream_link_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_socket@%p::get_stream_link (rtpp_socket_get_stream_link) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_socket_get_stuid_fin(void *pub) {
     fprintf(stderr, "Method rtpp_socket@%p::get_stuid (rtpp_socket_get_stuid) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_socket_getfd_fin(void *pub) {
     fprintf(stderr, "Method rtpp_socket@%p::getfd (rtpp_socket_getfd) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void rtpp_socket_link_session_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_socket@%p::link_session (rtpp_socket_link_session) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void rtpp_socket_link_stream_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_socket@%p::link_stream (rtpp_socket_link_stream) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_socket_rtp_recv_fin(void *pub) {
@@ -54,8 +70,12 @@ static void rtpp_socket_settos_fin(void *pub) {
 static const struct rtpp_socket_smethods rtpp_socket_smethods_fin = {
     .bind2 = (rtpp_socket_bind_t)&rtpp_socket_bind_fin,
     .drain = (rtpp_socket_drain_t)&rtpp_socket_drain_fin,
+    .get_session_link = (rtpp_socket_get_session_link_t)&rtpp_socket_get_session_link_fin,
+    .get_stream_link = (rtpp_socket_get_stream_link_t)&rtpp_socket_get_stream_link_fin,
     .get_stuid = (rtpp_socket_get_stuid_t)&rtpp_socket_get_stuid_fin,
     .getfd = (rtpp_socket_getfd_t)&rtpp_socket_getfd_fin,
+    .link_session = (rtpp_socket_link_session_t)&rtpp_socket_link_session_fin,
+    .link_stream = (rtpp_socket_link_stream_t)&rtpp_socket_link_stream_fin,
     .rtp_recv = (rtpp_socket_rtp_recv_t)&rtpp_socket_rtp_recv_fin,
     .send_pkt_na = (rtpp_socket_send_pkt_na_t)&rtpp_socket_send_pkt_na_fin,
     .set_stuid = (rtpp_socket_set_stuid_t)&rtpp_socket_set_stuid_fin,
@@ -67,8 +87,12 @@ static const struct rtpp_socket_smethods rtpp_socket_smethods_fin = {
 void rtpp_socket_fin(struct rtpp_socket *pub) {
     RTPP_DBG_ASSERT(pub->smethods->bind2 != (rtpp_socket_bind_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->drain != (rtpp_socket_drain_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_session_link != (rtpp_socket_get_session_link_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_stream_link != (rtpp_socket_get_stream_link_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->get_stuid != (rtpp_socket_get_stuid_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->getfd != (rtpp_socket_getfd_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->link_session != (rtpp_socket_link_session_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->link_stream != (rtpp_socket_link_stream_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->rtp_recv != (rtpp_socket_rtp_recv_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->send_pkt_na != (rtpp_socket_send_pkt_na_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->set_stuid != (rtpp_socket_set_stuid_t)NULL);
@@ -104,8 +128,12 @@ rtpp_socket_fintest()
     static const struct rtpp_socket_smethods dummy = {
         .bind2 = (rtpp_socket_bind_t)((void *)0x1),
         .drain = (rtpp_socket_drain_t)((void *)0x1),
+        .get_session_link = (rtpp_socket_get_session_link_t)((void *)0x1),
+        .get_stream_link = (rtpp_socket_get_stream_link_t)((void *)0x1),
         .get_stuid = (rtpp_socket_get_stuid_t)((void *)0x1),
         .getfd = (rtpp_socket_getfd_t)((void *)0x1),
+        .link_session = (rtpp_socket_link_session_t)((void *)0x1),
+        .link_stream = (rtpp_socket_link_stream_t)((void *)0x1),
         .rtp_recv = (rtpp_socket_rtp_recv_t)((void *)0x1),
         .send_pkt_na = (rtpp_socket_send_pkt_na_t)((void *)0x1),
         .set_stuid = (rtpp_socket_set_stuid_t)((void *)0x1),
@@ -120,8 +148,12 @@ rtpp_socket_fintest()
     RTPP_OBJ_DECREF(&(tp->pub));
     CALL_TFIN(&tp->pub, bind2);
     CALL_TFIN(&tp->pub, drain);
+    CALL_TFIN(&tp->pub, get_session_link);
+    CALL_TFIN(&tp->pub, get_stream_link);
     CALL_TFIN(&tp->pub, get_stuid);
     CALL_TFIN(&tp->pub, getfd);
+    CALL_TFIN(&tp->pub, link_session);
+    CALL_TFIN(&tp->pub, link_stream);
     CALL_TFIN(&tp->pub, rtp_recv);
     CALL_TFIN(&tp->pub, send_pkt_na);
     CALL_TFIN(&tp->pub, set_stuid);
@@ -129,7 +161,7 @@ rtpp_socket_fintest()
     CALL_TFIN(&tp->pub, setrbuf);
     CALL_TFIN(&tp->pub, settimestamp);
     CALL_TFIN(&tp->pub, settos);
-    assert((_naborts - naborts_s) == 11);
+    assert((_naborts - naborts_s) == 15);
 }
 DATA_SET(rtpp_fintests, rtpp_socket_fintest);
 #endif /* RTPP_FINTEST */

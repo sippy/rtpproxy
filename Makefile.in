@@ -195,8 +195,9 @@ am__define_uniq_tagged_files = \
   unique=`for i in $$list; do \
     if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
   done | $(am__uniquify_input)`
-DIST_SUBDIRS = libexecinfo libucl libxxHash libre makeann modules \
-	external/libelperiodic/src src pertools extractaudio doc tests
+DIST_SUBDIRS = libexecinfo libucl libxxHash libRTQueue libre makeann \
+	modules external/libelperiodic/src src pertools extractaudio \
+	doc tests
 am__DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.in AUTHORS \
 	ChangeLog INSTALL README.md compile config.guess config.sub \
 	depcomp install-sh ltmain.sh missing
@@ -399,7 +400,7 @@ AUTOMAKE_OPTIONS = foreign
 @BUILD_UDP_CONTENTION_TRUE@SUBD_UDCNT = pertools
 @BUILD_DOCS_TRUE@SUBD_DOCS = doc
 @BUILD_CRYPTO_TRUE@SUB_LIBRE = libre
-SUBDIRS = libexecinfo libucl libxxHash $(SUB_LIBRE) makeann \
+SUBDIRS = libexecinfo libucl libxxHash libRTQueue $(SUB_LIBRE) makeann \
 	$(SUBD_MOD) $(SUBD_ELP) src $(SUBD_UDCNT) $(SUBD_EAUD) \
 	${SUBD_DOCS} $(am__append_1)
 dist_man_MANS = rtpproxy.8

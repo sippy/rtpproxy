@@ -7,63 +7,63 @@
 #include "rtpp_debug.h"
 #include "rtpp_weakref.h"
 #include "rtpp_weakref_fin.h"
-static void rtpp_wref_foreach_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_weakref@%p::foreach (rtpp_wref_foreach) is invoked after destruction\x0a", pub);
+static void rtpp_wrt_foreach_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::foreach (rtpp_wrt_foreach) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpp_wref_get_by_idx_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_weakref@%p::get_by_idx (rtpp_wref_get_by_idx) is invoked after destruction\x0a", pub);
+static void rtpp_wrt_get_by_idx_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::get_by_idx (rtpp_wrt_get_by_idx) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpp_wref_get_length_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_weakref@%p::get_length (rtpp_wref_get_length) is invoked after destruction\x0a", pub);
+static void rtpp_wrt_get_length_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::get_length (rtpp_wrt_get_length) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpp_wref_move_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_weakref@%p::move (rtpp_wref_move) is invoked after destruction\x0a", pub);
+static void rtpp_wrt_move_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::move (rtpp_wrt_move) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpp_wref_purge_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_weakref@%p::purge (rtpp_wref_purge) is invoked after destruction\x0a", pub);
+static void rtpp_wrt_purge_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::purge (rtpp_wrt_purge) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpp_wref_reg_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_weakref@%p::reg (rtpp_wref_reg) is invoked after destruction\x0a", pub);
+static void rtpp_wrt_reg_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::reg (rtpp_wrt_reg) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpp_wref_set_on_first_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_weakref@%p::set_on_first (rtpp_wref_set_on_first) is invoked after destruction\x0a", pub);
+static void rtpp_wrt_set_on_first_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::set_on_first (rtpp_wrt_set_on_first) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpp_wref_set_on_last_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_weakref@%p::set_on_last (rtpp_wref_set_on_last) is invoked after destruction\x0a", pub);
+static void rtpp_wrt_set_on_last_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::set_on_last (rtpp_wrt_set_on_last) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
-static void rtpp_wref_unreg_fin(void *pub) {
-    fprintf(stderr, "Method rtpp_weakref@%p::unreg (rtpp_wref_unreg) is invoked after destruction\x0a", pub);
+static void rtpp_wrt_unreg_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_weakref@%p::unreg (rtpp_wrt_unreg) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static const struct rtpp_weakref_smethods rtpp_weakref_smethods_fin = {
-    .foreach = (rtpp_wref_foreach_t)&rtpp_wref_foreach_fin,
-    .get_by_idx = (rtpp_wref_get_by_idx_t)&rtpp_wref_get_by_idx_fin,
-    .get_length = (rtpp_wref_get_length_t)&rtpp_wref_get_length_fin,
-    .move = (rtpp_wref_move_t)&rtpp_wref_move_fin,
-    .purge = (rtpp_wref_purge_t)&rtpp_wref_purge_fin,
-    .reg = (rtpp_wref_reg_t)&rtpp_wref_reg_fin,
-    .set_on_first = (rtpp_wref_set_on_first_t)&rtpp_wref_set_on_first_fin,
-    .set_on_last = (rtpp_wref_set_on_last_t)&rtpp_wref_set_on_last_fin,
-    .unreg = (rtpp_wref_unreg_t)&rtpp_wref_unreg_fin,
+    .foreach = (rtpp_wrt_foreach_t)&rtpp_wrt_foreach_fin,
+    .get_by_idx = (rtpp_wrt_get_by_idx_t)&rtpp_wrt_get_by_idx_fin,
+    .get_length = (rtpp_wrt_get_length_t)&rtpp_wrt_get_length_fin,
+    .move = (rtpp_wrt_move_t)&rtpp_wrt_move_fin,
+    .purge = (rtpp_wrt_purge_t)&rtpp_wrt_purge_fin,
+    .reg = (rtpp_wrt_reg_t)&rtpp_wrt_reg_fin,
+    .set_on_first = (rtpp_wrt_set_on_first_t)&rtpp_wrt_set_on_first_fin,
+    .set_on_last = (rtpp_wrt_set_on_last_t)&rtpp_wrt_set_on_last_fin,
+    .unreg = (rtpp_wrt_unreg_t)&rtpp_wrt_unreg_fin,
 };
 void rtpp_weakref_fin(struct rtpp_weakref *pub) {
-    RTPP_DBG_ASSERT(pub->smethods->foreach != (rtpp_wref_foreach_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->get_by_idx != (rtpp_wref_get_by_idx_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->get_length != (rtpp_wref_get_length_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->move != (rtpp_wref_move_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->purge != (rtpp_wref_purge_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->reg != (rtpp_wref_reg_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->set_on_first != (rtpp_wref_set_on_first_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->set_on_last != (rtpp_wref_set_on_last_t)NULL);
-    RTPP_DBG_ASSERT(pub->smethods->unreg != (rtpp_wref_unreg_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->foreach != (rtpp_wrt_foreach_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_by_idx != (rtpp_wrt_get_by_idx_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->get_length != (rtpp_wrt_get_length_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->move != (rtpp_wrt_move_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->purge != (rtpp_wrt_purge_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->reg != (rtpp_wrt_reg_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->set_on_first != (rtpp_wrt_set_on_first_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->set_on_last != (rtpp_wrt_set_on_last_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->unreg != (rtpp_wrt_unreg_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_weakref_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_weakref_smethods_fin;
@@ -90,15 +90,15 @@ rtpp_weakref_fintest()
     assert(tp != NULL);
     assert(tp->pub.rcnt != NULL);
     static const struct rtpp_weakref_smethods dummy = {
-        .foreach = (rtpp_wref_foreach_t)((void *)0x1),
-        .get_by_idx = (rtpp_wref_get_by_idx_t)((void *)0x1),
-        .get_length = (rtpp_wref_get_length_t)((void *)0x1),
-        .move = (rtpp_wref_move_t)((void *)0x1),
-        .purge = (rtpp_wref_purge_t)((void *)0x1),
-        .reg = (rtpp_wref_reg_t)((void *)0x1),
-        .set_on_first = (rtpp_wref_set_on_first_t)((void *)0x1),
-        .set_on_last = (rtpp_wref_set_on_last_t)((void *)0x1),
-        .unreg = (rtpp_wref_unreg_t)((void *)0x1),
+        .foreach = (rtpp_wrt_foreach_t)((void *)0x1),
+        .get_by_idx = (rtpp_wrt_get_by_idx_t)((void *)0x1),
+        .get_length = (rtpp_wrt_get_length_t)((void *)0x1),
+        .move = (rtpp_wrt_move_t)((void *)0x1),
+        .purge = (rtpp_wrt_purge_t)((void *)0x1),
+        .reg = (rtpp_wrt_reg_t)((void *)0x1),
+        .set_on_first = (rtpp_wrt_set_on_first_t)((void *)0x1),
+        .set_on_last = (rtpp_wrt_set_on_last_t)((void *)0x1),
+        .unreg = (rtpp_wrt_unreg_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
     RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_weakref_fin,
