@@ -21,7 +21,7 @@ rtpp_dtls_gw_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_dtls_gw_common)
 rtpp_dtls_gw_la_LIBADD = $(LIB_SSL) $(LIBS_SRTP)
 
 rtpp_dtls_gw_debug_la_SOURCES = $(rtpp_dtls_gw_la_SOURCES)
-rtpp_dtls_gw_debug_la_LIBADD = $(rtpp_dtls_gw_la_LIBADD) $(RTPP_MEMDEB_LDADD)
+rtpp_dtls_gw_debug_la_LIBADD = $(rtpp_dtls_gw_la_LIBADD) $(RTPP_MEMDEB_LD_ADD)
 rtpp_dtls_gw_debug_la_LDFLAGS = $(rtpp_dtls_gw_la_LDFLAGS)
 rtpp_dtls_gw_debug_la_CPPFLAGS = $(rtpp_dtls_gw_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="dtls_gw"

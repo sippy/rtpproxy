@@ -40,7 +40,7 @@ libucl_test_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 libucl_test_SOURCES = libucl_test.c \
   $(top_srcdir)/modules/acct_rtcp_hep/rtpp_arh_conf.c \
   $(MAINSRCDIR)/rtpp_ucl.c $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
-libucl_test_LDADD=$(RTPP_MEMDEB_LDADD)
+libucl_test_LDADD=$(RTPP_MEMDEB_LD_ADD)
 libucl_test_LDLAGS=$(LTO_FLAG)
 
 if ENABLE_debug

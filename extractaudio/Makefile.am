@@ -33,7 +33,7 @@ extractaudio_LDFLAGS = $(LTO_FLAG)
 
 extractaudio_debug_SOURCES = $(extractaudio_BASESOURCES) $(RTPP_MEMDEB_CORESRCS) \
   $(rtpp_netaddr_AUTOSRCS) $(rtpp_refcnt_AUTOSRCS) $(rtpp_ringbuf_AUTOSRCS)
-extractaudio_debug_LDADD = $(extractaudio_LDADD) $(RTPP_MEMDEB_LDADD)
+extractaudio_debug_LDADD = $(extractaudio_LDADD) $(RTPP_MEMDEB_LD_ADD)
 extractaudio_debug_CPPFLAGS = $(extractaudio_CPPFLAGS) \
   $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=extractaudio
 extractaudio_debug_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)

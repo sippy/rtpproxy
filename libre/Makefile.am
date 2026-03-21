@@ -50,10 +50,10 @@ noinst_LTLIBRARIES += libre_debug.la
 libre_test_CPPFLAGS += $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=libre_test
 libre_test_SOURCES += $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
 libre_test_CFLAGS += $(NOPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
-libre_test_LDADD = $(RTPP_MEMDEB_LDADD) libre_debug.la
+libre_test_LDADD = $(RTPP_MEMDEB_LD_ADD) libre_debug.la
 else
 libre_test_CPPFLAGS += -I$(RTPP_AUTOSRC_DIR)
-libre_test_SOURCES += $(top_srcdir)/src/rtpp_mallocs.c \
-  $(top_srcdir)/src/rtpp_refcnt.c
+libre_test_SOURCES += $(MAINSRCDIR)/rtpp_mallocs.c \
+  $(MAINSRCDIR)/rtpp_refcnt.c
 libre_test_LDADD = libre.la
 endif

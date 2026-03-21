@@ -20,7 +20,7 @@ makeann_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 makeann_LDFLAGS = $(LTO_FLAG)
 
 makeann_debug_SOURCES = $(makeann_SOURCES) $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
-makeann_debug_LDADD = $(makeann_LDADD) $(RTPP_MEMDEB_LDADD)
+makeann_debug_LDADD = $(makeann_LDADD) $(RTPP_MEMDEB_LD_ADD)
 makeann_debug_CPPFLAGS = $(makeann_CPPFLAGS) $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP=makeann
 makeann_debug_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 makeann_debug_LDFLAGS = $(makeann_LDFLAGS)

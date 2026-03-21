@@ -33,7 +33,7 @@ CFLAGS_acct_rtcp_hep_common = -std=c11 -D_BSD_SOURCE -D_XOPEN_SOURCE \
 rtpp_acct_rtcp_hep_la_CFLAGS=$(OPT_CFLAGS) $(CFLAGS_acct_rtcp_hep_common)
 
 rtpp_acct_rtcp_hep_debug_la_SOURCES = $(rtpp_acct_rtcp_hep_la_SOURCES)
-rtpp_acct_rtcp_hep_debug_la_LIBADD = $(RTPP_MEMDEB_LDADD)
+rtpp_acct_rtcp_hep_debug_la_LIBADD = $(RTPP_MEMDEB_LD_ADD)
 rtpp_acct_rtcp_hep_debug_la_LDFLAGS=$(rtpp_acct_rtcp_hep_la_LDFLAGS)
 rtpp_acct_rtcp_hep_debug_la_CPPFLAGS=$(rtpp_acct_rtcp_hep_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="acct_rtcp_hep"
@@ -48,7 +48,7 @@ rtpp_sbuf_selftest_CPPFLAGS = -Drtpp_sbuf_selftest=main \
 rtpp_sbuf_selftest_CFLAGS = $(OPT_CFLAGS) $(RTPP_MEMDEB_CFLAGS) $(LTO_FLAG)
 rtpp_sbuf_selftest_SOURCES = $(MAINSRCDIR)/rtpp_sbuf.c $(MAINSRCDIR)/rtpp_sbuf.h \
   $(RTPP_MEMDEB_CORESRCS) $(rtpp_refcnt_AUTOSRCS)
-rtpp_sbuf_selftest_LDADD = $(RTPP_MEMDEB_LDADD)
+rtpp_sbuf_selftest_LDADD = $(RTPP_MEMDEB_LD_ADD)
 rtpp_sbuf_selftest_LDFLAGS = $(LTO_FLAG)
 
 librtpp_acct_rtcp_hep_la_SOURCES = $(rtpp_acct_rtcp_hep_la_SOURCES)

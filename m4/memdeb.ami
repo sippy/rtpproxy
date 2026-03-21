@@ -13,4 +13,4 @@ RTPP_MEMDEB_CORESRCS = $(MAINSRCDIR)/rtpp_memdeb.c $(MAINSRCDIR)/rtpp_memdeb.h \
 if !ENABLE_LIBUNWIND
 RTPP_MEMDEB_CFLAGS = -fno-omit-frame-pointer
 endif
-RTPP_MEMDEB_LDADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread
+RTPP_MEMDEB_LD_ADD = $(top_srcdir)/libexecinfo/libexecinfo.la @LIBS_DL@ -lpthread

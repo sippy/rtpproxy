@@ -87,7 +87,7 @@ BASE_SOURCES+=rtpp_modman.c rtpp_module_if_static.c rtpp_module_if_static.h
 
 rtpproxy_LDADD=librtpproxy.la -lm -lpthread
 rtpproxy_debug_LDADD=-lm -lpthread @LIBS_ELPERIODIC@ $(top_srcdir)/libucl/libucl_debug.la \
-  $(XXH_DIR)/libxxHash_debug.la $(RTQ_DIR)/libRTQueue_debug.la $(RTPP_MEMDEB_LDADD)
+  $(XXH_DIR)/libxxHash_debug.la $(RTQ_DIR)/libRTQueue_debug.la $(RTPP_MEMDEB_LD_ADD)
 rtpproxy_debug_LDFLAGS=-Wl,--export-dynamic $(LTO_FLAG)
 rtpproxy_LDFLAGS=$(LTO_FLAG)
 
@@ -124,7 +124,7 @@ rtpp_objck_BASESOURCES=rtpp_objck.c $(SRCS_AUTOGEN) rtpp_network.c \
   rtpp_util.c rtpp_util.h
 rtpp_objck_perf_SOURCES=$(rtpp_objck_BASESOURCES) rtpp_refcnt.c rtpp_refcnt.h \
   rtpp_mallocs.c rtpp_mallocs.h
-rtpp_objck_LDADD=$(rtpp_objck_perf_LDADD) $(RTPP_MEMDEB_LDADD)
+rtpp_objck_LDADD=$(rtpp_objck_perf_LDADD) $(RTPP_MEMDEB_LD_ADD)
 rtpp_objck_SOURCES=$(rtpp_objck_BASESOURCES) $(SRCS_MEMDEB_CORE) $(SRCS_AUTOGEN_DEBUG)
 
 rtpp_rzmalloc_perf_SOURCES = rtpp_rzmalloc_perf.c rtpp_mallocs.c rtpp_mallocs.h \
@@ -182,7 +182,7 @@ rtpp_fintest_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) -Drtpp_fintest=main \
   "-DRTPP_AUTOTRAP()=(_naborts++)" -DRTPP_FINTEST $(RTPP_MEMDEB_CPPFLAGS) \
   -I$(top_srcdir) -DMEMDEB_APP=rtpp_fintest
 rtpp_fintest_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
-rtpp_fintest_LDADD = $(RTPP_MEMDEB_LDADD)
+rtpp_fintest_LDADD = $(RTPP_MEMDEB_LD_ADD)
 rtpp_fintest_LDFLAGS = $(LTO_FLAG)
 
 librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \

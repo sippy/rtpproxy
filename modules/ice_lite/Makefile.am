@@ -22,7 +22,7 @@ rtpp_ice_lite_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_rtpp_ice_lite_common)
 rtpp_ice_lite_la_LIBADD = $(top_srcdir)/libre/libre.la $(LIB_CRYPTO)
 
 rtpp_ice_lite_debug_la_SOURCES = $(rtpp_ice_lite_la_SOURCES)
-rtpp_ice_lite_debug_la_LIBADD = $(top_srcdir)/libre/libre_debug.la $(RTPP_MEMDEB_LDADD) $(LIB_CRYPTO)
+rtpp_ice_lite_debug_la_LIBADD = $(top_srcdir)/libre/libre_debug.la $(RTPP_MEMDEB_LD_ADD) $(LIB_CRYPTO)
 rtpp_ice_lite_debug_la_LDFLAGS = $(rtpp_ice_lite_la_LDFLAGS)
 rtpp_ice_lite_debug_la_CPPFLAGS = $(rtpp_ice_lite_la_CPPFLAGS) \
  $(RTPP_MEMDEB_CPPFLAGS) -DMEMDEB_APP="ice_lite"
