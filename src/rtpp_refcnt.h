@@ -37,6 +37,7 @@ typedef void (*rtpp_refcnt_dtor_t)(void *);
 DECLARE_CLASS(rtpp_refcnt, void *, rtpp_refcnt_dtor_t);
 
 DECLARE_METHOD(rtpp_refcnt, refcnt_incref, void, const struct rtpp_codeptr *);
+DECLARE_METHOD(rtpp_refcnt, refcnt_tryincref, int);
 DECLARE_METHOD(rtpp_refcnt, refcnt_decref, void, const struct rtpp_codeptr *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_getdata, void *);
 DECLARE_METHOD(rtpp_refcnt, refcnt_attach, int, rtpp_refcnt_dtor_t, void *);
@@ -49,6 +50,7 @@ DECLARE_METHOD(rtpp_refcnt, refcnt_peek, int);
 DECLARE_SMETHODS(rtpp_refcnt)
 {
     METHOD_ENTRY(refcnt_incref, incref);
+    METHOD_ENTRY(refcnt_tryincref, tryincref) __attribute__((warn_unused_result));
     METHOD_ENTRY(refcnt_decref, decref);
     METHOD_ENTRY(refcnt_getdata, getdata);
     METHOD_ENTRY(refcnt_attach, attach) __attribute__((warn_unused_result));

@@ -54,6 +54,8 @@
 #endif
 
 static void rtpp_refcnt_incref(struct rtpp_refcnt *, HERETYPE);
+static int rtpp_refcnt_tryincref(struct rtpp_refcnt *)
+  __attribute__((warn_unused_result));
 static void rtpp_refcnt_decref(struct rtpp_refcnt *, HERETYPE);
 
 /*
@@ -102,6 +104,7 @@ static int rtpp_refcnt_peek(struct rtpp_refcnt *);
 
 DEFINE_SMETHODS(rtpp_refcnt,
     .incref = &rtpp_refcnt_incref,
+    .tryincref = &rtpp_refcnt_tryincref,
     .decref = &rtpp_refcnt_decref,
     .getdata = &rtpp_refcnt_getdata,
 #if RTPP_DEBUG_refcnt
@@ -233,13 +236,13 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub, HERETYPE mlp)
 
     PUB2PVT(pub, pvt);
     RTPP_DBGCODE() {
-        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed) + 1;
-        RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
+        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+        RTPP_DBG_ASSERT(oldcnt >= 0 && oldcnt < RC_ABS_MAX);
     }
     if (pvt->shared) {
-        oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed) + 1;
+        oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_relaxed);
     } else {
-        oldcnt = 1;
+        oldcnt = 0;
         pvt->shared = 1;
         atomic_store_explicit(&pvt->cnt, 1, memory_order_release);
     }
@@ -248,17 +251,38 @@ rtpp_refcnt_incref(struct rtpp_refcnt *pub, HERETYPE mlp)
 #ifdef RTPP_DEBUG
         char *dbuf;
         rtpp_memdeb_asprintf(&dbuf, MEMDEB_SYM, mlp,
-          CODEPTR_FMT(": rtpp_refcnt(%p, %u).incref()", mlp, pub, oldcnt));
+          CODEPTR_FMT(": rtpp_refcnt(%p, %u).incref()", mlp, pub, oldcnt+1));
         if (dbuf != NULL) {
             rtpp_stacktrace_print(dbuf);
             free(dbuf);
         }
 #else
-        fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).incref()\n", mlp, pub, oldcnt));
+        fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).incref()\n", mlp, pub, oldcnt+1));
 #endif
     }
 #endif
-    RTPP_DBG_ASSERT(oldcnt > 0);
+    RTPP_DBG_ASSERT(oldcnt >= 0);
+}
+
+static int
+rtpp_refcnt_tryincref(struct rtpp_refcnt *pub)
+{
+    struct rtpp_refcnt_priv *pvt;
+    int oldcnt;
+
+    PUB2PVT(pub, pvt);
+    if (!pvt->shared) {
+        pvt->shared = 1;
+        atomic_store_explicit(&pvt->cnt, 1, memory_order_release);
+        return (0);
+    }
+    oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_acquire);
+    if (oldcnt < 0) {
+        atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release);
+        return (-1);
+    }
+    RTPP_DBG_ASSERT(oldcnt < RC_ABS_MAX);
+    return (0);
 }
 
 static void
@@ -269,8 +293,8 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
 
     PUB2PVT(pub, pvt);
     RTPP_DBGCODE() {
-        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed) + 1;
-        RTPP_DBG_ASSERT(oldcnt > 0 && oldcnt < RC_ABS_MAX);
+        oldcnt = atomic_load_explicit(&pvt->cnt, memory_order_relaxed);
+        RTPP_DBG_ASSERT(oldcnt >= 0 && oldcnt < RC_ABS_MAX);
     }
 #if RTPP_DEBUG_refcnt
     /*
@@ -281,27 +305,27 @@ rtpp_refcnt_decref(struct rtpp_refcnt *pub, HERETYPE mlp)
     unsigned int trace = pvt->trace;
 #endif
     if (pvt->shared) {
-        oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release) + 1;
+        oldcnt = atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_release);
     } else {
-        oldcnt = 1;
+        oldcnt = 0;
     }
 #if RTPP_DEBUG_refcnt
     if (trace) {
 #ifdef RTPP_DEBUG
         char *dbuf;
         rtpp_memdeb_asprintf(&dbuf, MEMDEB_SYM, mlp,
-          CODEPTR_FMT(": rtpp_refcnt(%p, %u).decref()", mlp, pub, oldcnt));
+          CODEPTR_FMT(": rtpp_refcnt(%p, %u).decref()", mlp, pub, oldcnt+1));
         if (dbuf != NULL) {
             rtpp_stacktrace_print(dbuf);
             free(dbuf);
         }
 #else
-        fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).decref()\n", mlp, pub, oldcnt));
+        fprintf(stderr, CODEPTR_FMT(": rtpp_refcnt(%p, %u).decref()\n", mlp, pub, oldcnt+1));
 #endif
     }
 #endif
-    RTPP_DBG_ASSERT(oldcnt > 0);
-    if (oldcnt == 1) {
+    RTPP_DBG_ASSERT(oldcnt >= 0);
+    if (oldcnt == 0) {
         if (pvt->shared) {
             atomic_thread_fence(memory_order_acquire);
         }
