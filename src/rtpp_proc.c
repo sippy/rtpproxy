@@ -129,14 +129,26 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
             continue;
         }
         iskt = ep->data.ptr;
-        uint64_t stuid = CALL_SMETHOD(iskt, get_stuid);
-        stp = CALL_SMETHOD(ptbl->streams_wrt, get_by_idx, stuid);
-        if (stp == NULL)
-            continue;
-        sp = CALL_SMETHOD(cfsp->sessions_wrt, get_by_idx, stp->seuid);
+        sp = CALL_SMETHOD(iskt, get_session_link);
+        stp = CALL_SMETHOD(iskt, get_stream_link);
+        if (stp == NULL) {
+            uint64_t stuid = CALL_SMETHOD(iskt, get_stuid);
+
+            stp = CALL_SMETHOD(ptbl->streams_wrt, get_by_idx, stuid);
+            if (stp == NULL) {
+                if (sp != NULL)
+                    RTPP_OBJ_DECREF(sp);
+                continue;
+            }
+            CALL_SMETHOD(iskt, link_stream, stp);
+        }
         if (sp == NULL) {
-            RTPP_OBJ_DECREF(stp);
-            continue;
+            sp = CALL_SMETHOD(cfsp->sessions_wrt, get_by_idx, stp->seuid);
+            if (sp == NULL) {
+                RTPP_OBJ_DECREF(stp);
+                continue;
+            }
+            CALL_SMETHOD(iskt, link_session, sp);
         }
         if (sp->complete != 0) {
             rxmit_packets(cfsp, stp, dtime, drain_repeat, sender, rsp);

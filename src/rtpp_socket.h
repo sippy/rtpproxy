@@ -36,6 +36,8 @@ struct rtpp_log;
 struct rtpp_netaddr;
 struct rtpp_timestamp;
 struct rtpp_anetio_cf;
+struct rtpp_session;
+struct rtpp_stream;
 
 DECLARE_CLASS(rtpp_socket, struct rtpp_anetio_cf *, int, int);
 
@@ -55,6 +57,12 @@ DEFINE_METHOD(rtpp_socket, rtpp_socket_drain, int, const char *,
   struct rtpp_log *);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_set_stuid, void, uint64_t);
 DEFINE_METHOD(rtpp_socket, rtpp_socket_get_stuid, uint64_t);
+DEFINE_METHOD(rtpp_socket, rtpp_socket_link_session, void,
+  struct rtpp_session *);
+DEFINE_METHOD(rtpp_socket, rtpp_socket_get_session_link, struct rtpp_session *);
+DEFINE_METHOD(rtpp_socket, rtpp_socket_link_stream, void,
+  struct rtpp_stream *);
+DEFINE_METHOD(rtpp_socket, rtpp_socket_get_stream_link, struct rtpp_stream *);
 
 DECLARE_SMETHODS(rtpp_socket)
 {
@@ -71,6 +79,10 @@ DECLARE_SMETHODS(rtpp_socket)
     METHOD_ENTRY(rtpp_socket_drain, drain);
     METHOD_ENTRY(rtpp_socket_set_stuid, set_stuid);
     METHOD_ENTRY(rtpp_socket_get_stuid, get_stuid);
+    METHOD_ENTRY(rtpp_socket_link_session, link_session);
+    METHOD_ENTRY(rtpp_socket_get_session_link, get_session_link);
+    METHOD_ENTRY(rtpp_socket_link_stream, link_stream);
+    METHOD_ENTRY(rtpp_socket_get_stream_link, get_stream_link);
 };
 
 DECLARE_CLASS_PUBTYPE(rtpp_socket, {});

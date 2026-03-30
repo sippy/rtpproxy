@@ -44,11 +44,14 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_socket.h"
 #include "rtpp_socket_fin.h"
+#include "rtpp_session.h"
+#include "rtpp_stream.h"
 #include "rtpp_netio_async.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_time.h"
 #include "rtpp_network.h"
 #include "rtpp_network_io.h"
+#include "rtpp_wref.h"
 #include "rtp.h"
 #include "rtp_packet.h"
 #include "rtpp_debug.h"
@@ -68,6 +71,8 @@ struct rtpp_socket_priv {
     int fd;
     int type;
     uint64_t stuid;
+    struct rtpp_wref *session_wref;
+    struct rtpp_wref *stream_wref;
     rs_rtp_recv_t rtp_recv;
 };
 
@@ -89,6 +94,10 @@ static int rtpp_socket_drain(struct rtpp_socket *, const char *,
   struct rtpp_log *);
 static void rtpp_socket_set_stuid(struct rtpp_socket *, uint64_t);
 static uint64_t rtpp_socket_get_stuid(struct rtpp_socket *);
+static void rtpp_socket_link_session(struct rtpp_socket *, struct rtpp_session *);
+static struct rtpp_session *rtpp_socket_get_session_link(struct rtpp_socket *);
+static void rtpp_socket_link_stream(struct rtpp_socket *, struct rtpp_stream *);
+static struct rtpp_stream *rtpp_socket_get_stream_link(struct rtpp_socket *);
 
 #if HAVE_SO_TS_CLOCK
 static struct rtp_packet *rtpp_socket_rtp_recv_mono(const struct rs_recv_arg *);
@@ -106,6 +115,10 @@ DEFINE_SMETHODS(rtpp_socket,
     .drain = &rtpp_socket_drain,
     .set_stuid = &rtpp_socket_set_stuid,
     .get_stuid = &rtpp_socket_get_stuid,
+    .link_session = &rtpp_socket_link_session,
+    .get_session_link = &rtpp_socket_get_session_link,
+    .link_stream = &rtpp_socket_link_stream,
+    .get_stream_link = &rtpp_socket_get_stream_link,
 );
 
 struct rtpp_socket *
@@ -131,7 +144,18 @@ rtpp_socket_ctor(struct rtpp_anetio_cf *netio, int domain, int type)
     }
     pvt->rtp_recv = &rtpp_socket_rtp_recv_simple;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_socket_dtor);
+    pvt->session_wref = rtpp_wref_ctor();
+    if (pvt->session_wref == NULL) {
+        goto e2;
+    }
+    pvt->stream_wref = rtpp_wref_ctor();
+    if (pvt->stream_wref == NULL) {
+        goto e2;
+    }
     return (&pvt->pub);
+e2:
+    RTPP_OBJ_DECREF(&(pvt->pub));
+    return (NULL);
 e1:
     RTPP_OBJ_DECREF(&(pvt->pub));
 e0:
@@ -143,6 +167,12 @@ rtpp_socket_dtor(struct rtpp_socket_priv *pvt)
 {
 
     rtpp_socket_fin(&pvt->pub);
+    if (pvt->stream_wref != NULL) {
+        RTPP_OBJ_DECREF(pvt->stream_wref);
+    }
+    if (pvt->session_wref != NULL) {
+        RTPP_OBJ_DECREF(pvt->session_wref);
+    }
     if (pvt->type != SOCK_DGRAM) {
         shutdown(pvt->fd, SHUT_RDWR);
     }
@@ -402,4 +432,52 @@ rtpp_socket_get_stuid(struct rtpp_socket *self)
     PUB2PVT(self, pvt);
 
     return (pvt->stuid);
+}
+
+static void
+rtpp_socket_link_session(struct rtpp_socket *self, struct rtpp_session *sp)
+{
+    struct rtpp_socket_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    RTPP_DBG_ASSERT(sp != NULL);
+    (void)CALL_SMETHOD(pvt->session_wref, setref, sp->rcnt, sp);
+}
+
+static struct rtpp_session *
+rtpp_socket_get_session_link(struct rtpp_socket *self)
+{
+    struct rtpp_socket_priv *pvt;
+    const struct rtpp_wref_target *sp_target;
+
+    PUB2PVT(self, pvt);
+    sp_target = CALL_SMETHOD(pvt->session_wref, getref);
+    if (sp_target != NULL) {
+        return (sp_target->obj);
+    }
+    return (NULL);
+}
+
+static void
+rtpp_socket_link_stream(struct rtpp_socket *self, struct rtpp_stream *stp)
+{
+    struct rtpp_socket_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    RTPP_DBG_ASSERT(stp != NULL);
+    (void)CALL_SMETHOD(pvt->stream_wref, setref, stp->rcnt, stp);
+}
+
+static struct rtpp_stream *
+rtpp_socket_get_stream_link(struct rtpp_socket *self)
+{
+    struct rtpp_socket_priv *pvt;
+    const struct rtpp_wref_target *stp_target;
+
+    PUB2PVT(self, pvt);
+    stp_target = CALL_SMETHOD(pvt->stream_wref, getref);
+    if (stp_target != NULL) {
+        return (stp_target->obj);
+    }
+    return (NULL);
 }
