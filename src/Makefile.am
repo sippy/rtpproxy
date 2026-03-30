@@ -6,7 +6,8 @@ include $(top_srcdir)/autosrc/Makefile.ami
 
 bin_PROGRAMS=rtpproxy
 if ENABLE_noinst
-noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_rzmalloc_perf_debug rtpp_fintest
+noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_rzmalloc_perf_debug rtpp_fintest \
+  rtpp_wref_test
 endif
 if ENABLE_debug
 bin_PROGRAMS += rtpproxy_debug
@@ -31,8 +32,8 @@ RTPP_AUTOSRC_SOURCES_S = rtpp_netaddr.h rtpp_pearson_perfect.h rtpp_refcnt.h \
   rtpp_record.h rtpp_hash_table.h rtpp_weakref.h rtpp_analyzer.h \
   rtpp_pcnt_strm.h rtpp_ttl.h rtpp_pipe.h rtpp_ringbuf.h rtpp_sessinfo.h \
   rtpp_rw_lock.h rtpp_proc_servers.h rtpp_proc_wakeup.h rtpp_socket.h \
-  rtpp_refproxy.h rtpp_command_reply.h rtpp_genuid.h rtpp_bindaddrs.h \
-  rtpp_packetport.h
+  rtpp_refproxy.h rtpp_wref.h rtpp_command_reply.h rtpp_genuid.h \
+  rtpp_bindaddrs.h rtpp_packetport.h
 
 CMDSRCDIR=$(MAINSRCDIR)/commands
 BASE_SOURCES=main.c rtp.h rtpp_server.c \
@@ -77,7 +78,7 @@ BASE_SOURCES=main.c rtp.h rtpp_server.c \
   $(CMDSRCDIR)/rpcpv1_norecord.c $(CMDSRCDIR)/rpcpv1_norecord.h \
   $(CMDSRCDIR)/rpcpv1_ul_subc.c $(CMDSRCDIR)/rpcpv1_ul_subc.h \
   $(RTPP_AUTOSRC_SOURCES) rtpp_epoll.c rtpp_str.c rtpp_str.h \
-  rtpp_sbuf.c rtpp_sbuf.h rtpp_refproxy.c rtpp_command_reply.c \
+  rtpp_sbuf.c rtpp_sbuf.h rtpp_refproxy.c rtpp_wref.c rtpp_command_reply.c \
   $(CMDSRCDIR)/rpcpv1_ul_subc_set.c $(CMDSRCDIR)/rpcpv1_ul_subc_set.h \
   $(CMDSRCDIR)/rpcpv1_ul_subc_copy.c $(CMDSRCDIR)/rpcpv1_ul_subc_copy.h \
   rtpp_packetport.c
@@ -184,6 +185,14 @@ rtpp_fintest_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) -Drtpp_fintest=main \
 rtpp_fintest_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 rtpp_fintest_LDADD = $(RTPP_MEMDEB_LD_ADD)
 rtpp_fintest_LDFLAGS = $(LTO_FLAG)
+
+rtpp_wref_test_SOURCES = rtpp_wref_test.c rtpp_wref.c rtpp_wref.h \
+  $(SRCS_MEMDEB_CORE) $(SRCS_AUTOGEN_DEBUG)
+rtpp_wref_test_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) $(RTPP_MEMDEB_CPPFLAGS) \
+  -I$(top_srcdir) -DMEMDEB_APP=rtpp_wref_test
+rtpp_wref_test_CFLAGS = $(NOPT_CFLAGS) $(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+rtpp_wref_test_LDADD = $(RTPP_MEMDEB_LD_ADD)
+rtpp_wref_test_LDFLAGS = $(LTO_FLAG)
 
 librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \

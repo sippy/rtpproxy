@@ -111,6 +111,7 @@ extern const struct rtpp_socket_smethods * const rtpp_socket_smethods;
 extern const struct rtpp_session_smethods * const rtpp_session_smethods;
 extern const struct rtpp_packetport_int_smethods * const rtpp_packetport_int_smethods;
 extern const struct rtpp_refproxy_smethods * const rtpp_refproxy_smethods RTPP_EXPORT;
+extern const struct rtpp_wref_smethods * const rtpp_wref_smethods;
 extern const struct rtpc_reply_smethods * const rtpc_reply_smethods;
 extern const struct rtpp_genuid_smethods * const rtpp_genuid_smethods;
 
@@ -142,6 +143,7 @@ extern const struct rtpp_genuid_smethods * const rtpp_genuid_smethods;
     struct rtpp_session *: rtpp_session_smethods, \
     struct rtpp_packetport_int *: rtpp_packetport_int_smethods, \
     struct rtpp_refproxy *: rtpp_refproxy_smethods, \
+    struct rtpp_wref *: rtpp_wref_smethods, \
     struct rtpc_reply *: rtpc_reply_smethods, \
     struct rtpp_genuid *: rtpp_genuid_smethods \
 )
