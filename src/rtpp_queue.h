@@ -86,6 +86,8 @@ struct rtpp_wi *rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake
 struct rtpp_wi *rtpp_queue_get_item_by(struct rtpp_queue *queue, struct timespec *,
   int *);
 int rtpp_queue_get_items(struct rtpp_queue *, struct rtpp_wi **, int, int);
+int rtpp_queue_get_items_by(struct rtpp_queue *, struct rtpp_wi **, int,
+  struct timespec *, int *);
 int rtpp_queue_get_length(struct rtpp_queue *);
 unsigned int rtpp_queue_setqlen(struct rtpp_queue *, unsigned int);
 

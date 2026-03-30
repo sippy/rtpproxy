@@ -82,29 +82,6 @@ circ_buf_push(circ_buf_t *c, struct rtpp_wi *data)
     return(0);  /* return success to indicate successful push. */
 }
 
-static int
-circ_buf_pop(circ_buf_t *c, struct rtpp_wi **data)
-{
-    unsigned int next;
-
-    if (circ_buf_isempty(c))
-        return(-1);
-
-    next = c->tail + 1;  /* next is where tail will point to after this read. */
-    if (next == c->buflen)
-        next = 0;
-#if RTPQ_DEBUG
-    assert(c->tail < c->buflen);
-#endif
-
-    *data = c->buffer[c->tail];  /* Read data and then move */
-#if RTPQ_DEBUG
-    c->buffer[c->tail] = NULL;
-#endif
-    c->tail = next;              /* tail to next offset. */
-    return(0);  /* return success to indicate successful pop. */
-}
-
 static unsigned int
 circ_buf_popmany(circ_buf_t *c, struct rtpp_wi *data[], unsigned int howmany)
 {
@@ -341,6 +318,30 @@ rtpp_queue_getclen(const struct rtpp_queue *queue)
     return (clen);
 }
 
+static int
+rtpp_queue_extract_items(struct rtpp_queue *queue, struct rtpp_wi **items, int ilen)
+{
+    int i, j;
+
+    i = circ_buf_popmany(&queue->circb, items, ilen);
+    if ((i == ilen) || (queue->length == 0))
+        return (i);
+    items += i;
+    ilen -= i;
+    for (j = 0; j < ilen; j++) {
+        items[j] = queue->head;
+        queue->head = items[j]->next;
+        if (queue->head == NULL) {
+            queue->tail = NULL;
+            j += 1;
+            break;
+        }
+    }
+    queue->length -= j;
+    i += j;
+    return (i);
+}
+
 unsigned int
 rtpp_queue_setqlen(struct rtpp_queue *queue, unsigned int qlen)
 {
@@ -413,29 +414,9 @@ rtpp_queue_get_item_by(struct rtpp_queue *queue, struct timespec *deadline, int 
 {
     struct rtpp_wi *wi;
 
-    pthread_mutex_lock(&queue->mutex);
-    while (rtpp_queue_getclen(queue) == 0) {
-        int rc = pthread_cond_timedwait(&queue->cond, &queue->mutex, deadline);
-        if (rval != NULL)
-            *rval = rc;
-        pthread_mutex_unlock(&queue->mutex);
+    if (rtpp_queue_get_items_by(queue, &wi, 1, deadline, rval) == 0)
         return (NULL);
-    }
-#if RTPQ_DEBUG
-    assert(rtpp_queue_getclen(queue) > 0);
-#endif
-    if (circ_buf_pop(&queue->circb, &wi) == 0) {
-        pthread_mutex_unlock(&queue->mutex);
-        return (wi);
-    }
-    wi = queue->head;
-#if RTPQ_DEBUG
-    assert(rtpp_queue_getclen(queue) > 0);
-#endif
-    RTPPQ_REMOVE_HEAD(queue);
-    pthread_mutex_unlock(&queue->mutex);
     wi->next = NULL;
-
     return (wi);
 }
 
@@ -444,36 +425,16 @@ rtpp_queue_get_item(struct rtpp_queue *queue, int return_on_wake)
 {
     struct rtpp_wi *wi;
 
-    pthread_mutex_lock(&queue->mutex);
-    while (rtpp_queue_getclen(queue) == 0) {
-        pthread_cond_wait(&queue->cond, &queue->mutex);
-        if (rtpp_queue_getclen(queue) == 0 && return_on_wake != 0) {
-            pthread_mutex_unlock(&queue->mutex);
-            return (NULL);
-        }
-    }
-#if RTPQ_DEBUG
-    assert(rtpp_queue_getclen(queue) > 0);
-#endif
-    if (circ_buf_pop(&queue->circb, &wi) == 0) {
-        pthread_mutex_unlock(&queue->mutex);
-        return (wi);
-    }
-    wi = queue->head;
-#if RTPQ_DEBUG
-    assert(rtpp_queue_getclen(queue) > 0);
-#endif
-    RTPPQ_REMOVE_HEAD(queue);
-    pthread_mutex_unlock(&queue->mutex);
+    if (rtpp_queue_get_items(queue, &wi, 1, return_on_wake) == 0)
+        return (NULL);
     wi->next = NULL;
-
     return (wi);
 }
 
 int
 rtpp_queue_get_items(struct rtpp_queue *queue, struct rtpp_wi **items, int ilen, int return_on_wake)
 {
-    int i, j;
+    int i;
 
     pthread_mutex_lock(&queue->mutex);
     while (rtpp_queue_getclen(queue) == 0) {
@@ -483,26 +444,29 @@ rtpp_queue_get_items(struct rtpp_queue *queue, struct rtpp_wi **items, int ilen,
             return (0);
         }
     }
-    /* Pull out of circular buffer first */
-    i = circ_buf_popmany(&queue->circb, items, ilen);
-    if ((i == ilen) || (queue->length == 0))
-        goto done;
-    items += i;
-    ilen -= i;
-    for (j = 0; j < ilen; j++) {
-        items[j] = queue->head;
-        queue->head = items[j]->next;
-        if (queue->head == NULL) {
-            queue->tail = NULL;
-            j += 1;
-            break;
-        }
-    }
-    queue->length -= j;
-    i += j;
-done:
+    i = rtpp_queue_extract_items(queue, items, ilen);
     pthread_mutex_unlock(&queue->mutex);
+    return (i);
+}
 
+int
+rtpp_queue_get_items_by(struct rtpp_queue *queue, struct rtpp_wi **items, int ilen,
+  struct timespec *deadline, int *rval)
+{
+    int i, rc;
+
+    pthread_mutex_lock(&queue->mutex);
+    while (rtpp_queue_getclen(queue) == 0) {
+        rc = pthread_cond_timedwait(&queue->cond, &queue->mutex, deadline);
+        if (rtpp_queue_getclen(queue) != 0)
+            break;
+        if (rval != NULL)
+            *rval = rc;
+        pthread_mutex_unlock(&queue->mutex);
+        return (0);
+    }
+    i = rtpp_queue_extract_items(queue, items, ilen);
+    pthread_mutex_unlock(&queue->mutex);
     return (i);
 }
 
