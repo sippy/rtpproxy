@@ -39,34 +39,34 @@ DEFINE_RAW_METHOD(rtpp_weakref_cb, void, void *);
 
 DECLARE_CLASS(rtpp_weakref, void);
 
-DECLARE_METHOD(rtpp_weakref, rtpp_wref_reg, int,
+DECLARE_METHOD(rtpp_weakref, rtpp_wrt_reg, int,
   struct rtpp_refcnt *, uint64_t);
-DECLARE_METHOD(rtpp_weakref, rtpp_wref_unreg, struct rtpp_refcnt *,
+DECLARE_METHOD(rtpp_weakref, rtpp_wrt_unreg, struct rtpp_refcnt *,
   uint64_t);
-DECLARE_METHOD(rtpp_weakref, rtpp_wref_move, struct rtpp_refcnt *,
+DECLARE_METHOD(rtpp_weakref, rtpp_wrt_move, struct rtpp_refcnt *,
   uint64_t, struct rtpp_weakref *);
-DECLARE_METHOD(rtpp_weakref, rtpp_wref_get_by_idx, void *,
+DECLARE_METHOD(rtpp_weakref, rtpp_wrt_get_by_idx, void *,
   uint64_t);
-DECLARE_METHOD(rtpp_weakref, rtpp_wref_foreach, void,
+DECLARE_METHOD(rtpp_weakref, rtpp_wrt_foreach, void,
   rtpp_weakref_foreach_t, void *);
-DECLARE_METHOD(rtpp_weakref, rtpp_wref_get_length, int);
-DECLARE_METHOD(rtpp_weakref, rtpp_wref_purge, int);
-DECLARE_METHOD(rtpp_weakref, rtpp_wref_set_on_first,
+DECLARE_METHOD(rtpp_weakref, rtpp_wrt_get_length, int);
+DECLARE_METHOD(rtpp_weakref, rtpp_wrt_purge, int);
+DECLARE_METHOD(rtpp_weakref, rtpp_wrt_set_on_first,
   rtpp_weakref_cb_t, rtpp_weakref_cb_t, void *);
-DECLARE_METHOD(rtpp_weakref, rtpp_wref_set_on_last,
+DECLARE_METHOD(rtpp_weakref, rtpp_wrt_set_on_last,
   rtpp_weakref_cb_t, rtpp_weakref_cb_t, void *);
 
 DECLARE_SMETHODS(rtpp_weakref)
 {
-    METHOD_ENTRY(rtpp_wref_reg, reg);
-    METHOD_ENTRY(rtpp_wref_unreg, unreg);
-    METHOD_ENTRY(rtpp_wref_move, move);
-    METHOD_ENTRY(rtpp_wref_get_by_idx, get_by_idx);
-    METHOD_ENTRY(rtpp_wref_foreach, foreach);
-    METHOD_ENTRY(rtpp_wref_get_length, get_length);
-    METHOD_ENTRY(rtpp_wref_purge, purge);
-    METHOD_ENTRY(rtpp_wref_set_on_first, set_on_first);
-    METHOD_ENTRY(rtpp_wref_set_on_last, set_on_last);
+    METHOD_ENTRY(rtpp_wrt_reg, reg);
+    METHOD_ENTRY(rtpp_wrt_unreg, unreg);
+    METHOD_ENTRY(rtpp_wrt_move, move);
+    METHOD_ENTRY(rtpp_wrt_get_by_idx, get_by_idx);
+    METHOD_ENTRY(rtpp_wrt_foreach, foreach);
+    METHOD_ENTRY(rtpp_wrt_get_length, get_length);
+    METHOD_ENTRY(rtpp_wrt_purge, purge);
+    METHOD_ENTRY(rtpp_wrt_set_on_first, set_on_first);
+    METHOD_ENTRY(rtpp_wrt_set_on_last, set_on_last);
 };
 
 DECLARE_CLASS_PUBTYPE(rtpp_weakref, {

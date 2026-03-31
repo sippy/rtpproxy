@@ -50,29 +50,29 @@ struct rtpp_weakref_priv {
 
 static void rtpp_weakref_dtor(struct rtpp_weakref_priv *);
 static int rtpp_weakref_reg(struct rtpp_weakref *, struct rtpp_refcnt *, uint64_t);
-static void *rtpp_wref_get_by_idx(struct rtpp_weakref *, uint64_t);
+static void *rtpp_wrt_get_by_idx(struct rtpp_weakref *, uint64_t);
 static struct rtpp_refcnt *rtpp_weakref_unreg(struct rtpp_weakref *, uint64_t);
 static struct rtpp_refcnt *rtpp_weakref_move(struct rtpp_weakref *, uint64_t,
   struct rtpp_weakref *);
-static void rtpp_wref_foreach(struct rtpp_weakref *, rtpp_weakref_foreach_t,
+static void rtpp_wrt_foreach(struct rtpp_weakref *, rtpp_weakref_foreach_t,
   void *);
-static int rtpp_wref_get_length(struct rtpp_weakref *);
-static int rtpp_wref_purge(struct rtpp_weakref *);
-static rtpp_weakref_cb_t rtpp_wref_set_on_first(struct rtpp_weakref *, rtpp_weakref_cb_t,
+static int rtpp_wrt_get_length(struct rtpp_weakref *);
+static int rtpp_wrt_purge(struct rtpp_weakref *);
+static rtpp_weakref_cb_t rtpp_wrt_set_on_first(struct rtpp_weakref *, rtpp_weakref_cb_t,
   void *);
-static rtpp_weakref_cb_t rtpp_wref_set_on_last(struct rtpp_weakref *, rtpp_weakref_cb_t,
+static rtpp_weakref_cb_t rtpp_wrt_set_on_last(struct rtpp_weakref *, rtpp_weakref_cb_t,
   void *);
 
 DEFINE_SMETHODS(rtpp_weakref,
     .reg = &rtpp_weakref_reg,
-    .get_by_idx = &rtpp_wref_get_by_idx,
+    .get_by_idx = &rtpp_wrt_get_by_idx,
     .unreg = &rtpp_weakref_unreg,
     .move = &rtpp_weakref_move,
-    .foreach = &rtpp_wref_foreach,
-    .get_length = &rtpp_wref_get_length,
-    .purge = &rtpp_wref_purge,
-    .set_on_first = &rtpp_wref_set_on_first,
-    .set_on_last = &rtpp_wref_set_on_last,
+    .foreach = &rtpp_wrt_foreach,
+    .get_length = &rtpp_wrt_get_length,
+    .purge = &rtpp_wrt_purge,
+    .set_on_first = &rtpp_wrt_set_on_first,
+    .set_on_last = &rtpp_wrt_set_on_last,
 );
 
 struct rtpp_weakref *
@@ -206,7 +206,7 @@ rtpp_weakref_dtor(struct rtpp_weakref_priv *pvt)
 }
 
 static void *
-rtpp_wref_get_by_idx(struct rtpp_weakref *pub, uint64_t suid)
+rtpp_wrt_get_by_idx(struct rtpp_weakref *pub, uint64_t suid)
 {
     struct rtpp_weakref_priv *pvt;
     struct rtpp_refcnt *rco;
@@ -221,7 +221,7 @@ rtpp_wref_get_by_idx(struct rtpp_weakref *pub, uint64_t suid)
 }
 
 static void
-rtpp_wref_foreach(struct rtpp_weakref *pub, rtpp_weakref_foreach_t foreach_f,
+rtpp_wrt_foreach(struct rtpp_weakref *pub, rtpp_weakref_foreach_t foreach_f,
   void *foreach_d)
 {
     struct rtpp_weakref_priv *pvt;
@@ -247,7 +247,7 @@ rtpp_wref_foreach(struct rtpp_weakref *pub, rtpp_weakref_foreach_t foreach_f,
 }
 
 static int
-rtpp_wref_get_length(struct rtpp_weakref *pub)
+rtpp_wrt_get_length(struct rtpp_weakref *pub)
 {
     struct rtpp_weakref_priv *pvt;
 
@@ -256,7 +256,7 @@ rtpp_wref_get_length(struct rtpp_weakref *pub)
 }
 
 static int
-rtpp_wref_purge(struct rtpp_weakref *pub)
+rtpp_wrt_purge(struct rtpp_weakref *pub)
 {
     struct rtpp_weakref_priv *pvt;
     int npurged;
@@ -278,7 +278,7 @@ rtpp_wref_purge(struct rtpp_weakref *pub)
 }
 
 static rtpp_weakref_cb_t
-rtpp_wref_set_on_first(struct rtpp_weakref *pub, rtpp_weakref_cb_t cb_func,
+rtpp_wrt_set_on_first(struct rtpp_weakref *pub, rtpp_weakref_cb_t cb_func,
   void *cb_func_arg)
 {
     struct rtpp_weakref_priv *pvt;
@@ -292,7 +292,7 @@ rtpp_wref_set_on_first(struct rtpp_weakref *pub, rtpp_weakref_cb_t cb_func,
 }
 
 static rtpp_weakref_cb_t
-rtpp_wref_set_on_last(struct rtpp_weakref *pub, rtpp_weakref_cb_t cb_func,
+rtpp_wrt_set_on_last(struct rtpp_weakref *pub, rtpp_weakref_cb_t cb_func,
   void *cb_func_arg)
 {
     struct rtpp_weakref_priv *pvt;
