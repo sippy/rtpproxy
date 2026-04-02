@@ -118,8 +118,10 @@ rtpp_pipe_ctor(const struct r_pipe_ctor_args *ap)
             goto e1;
         }
     }
-    pvt->pub.stream[0]->stuid_sendr = pvt->pub.stream[1]->stuid;
-    pvt->pub.stream[1]->stuid_sendr = pvt->pub.stream[0]->stuid;
+    if (CALL_SMETHOD(pvt->pub.stream[0], link_sender, pvt->pub.stream[1]) != 0)
+        goto e1;
+    if (CALL_SMETHOD(pvt->pub.stream[1], link_sender, pvt->pub.stream[0]) != 0)
+        goto e1;
     pvt->pub.pcount = rtpp_pcount_ctor();
     if (pvt->pub.pcount == NULL) {
         goto e1;

@@ -107,6 +107,7 @@ DECLARE_METHOD(rtpp_stream, rtpp_stream_get_rem_addr, struct rtpp_netaddr *,
 DECLARE_METHOD(rtpp_stream, rtpp_stream_latch, int, struct rtp_packet *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_setmode, void, enum rtpps_latch_mode);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_getmode, enum rtpps_latch_mode);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_link_sender, int, struct rtpp_stream *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_get_sender, struct rtpp_stream *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_unreg, void);
 
@@ -135,6 +136,7 @@ DECLARE_SMETHODS(rtpp_stream) {
     METHOD_ENTRY(rtpp_stream_latch, latch);
     METHOD_ENTRY(rtpp_stream_latch_setmode, latch_setmode);
     METHOD_ENTRY(rtpp_stream_latch_getmode, latch_getmode);
+    METHOD_ENTRY(rtpp_stream_link_sender, link_sender);
     METHOD_ENTRY(rtpp_stream_get_sender, get_sender);
     METHOD_ENTRY(rtpp_stream_unreg, unreg);
 };
@@ -170,8 +172,6 @@ DECLARE_CLASS_PUBTYPE(rtpp_stream, {
     uint64_t stuid;
     /* UID of the session we belong to, read-only */
     uint64_t seuid;
-    /* UID of the associated "sending" stream, read-only */
-    uint64_t stuid_sendr;
     /* UID of the associated "RTCP" stream, read-only */
     uint64_t stuid_rtcp;
     /* UID of the associated "RTP" stream, read-only */
