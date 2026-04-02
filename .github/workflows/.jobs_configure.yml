@@ -39,7 +39,7 @@ jobs:
       do_BuildPackages: ${{ steps.check_status.outputs.do_BuildPackages }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Check disabled actions
       id: check_status
