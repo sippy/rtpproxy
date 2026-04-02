@@ -96,12 +96,12 @@ rtpp_wref_setref(struct rtpp_wref *pub, struct rtpp_refcnt *target, void *obj)
     if (rval != 0) {
         return (-1);
     }
-    atomic_store_explicit(&pvt->cnt, 1, memory_order_release);
     pvt->target = (struct rtpp_wref_target){.rco = target, .obj = obj};
     /*
      * Keep the weak reference object alive until the target invalidates it.
      */
     RTPP_OBJ_INCREF(&pvt->pub);
+    atomic_store_explicit(&pvt->cnt, 1, memory_order_release);
     return (0);
 }
 
@@ -135,17 +135,17 @@ rtpp_wref_getref(struct rtpp_wref *pub)
     int oldcnt;
 
     PUB2PVT(pub, pvt);
-    oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_acq_rel);
+    oldcnt = atomic_fetch_add_explicit(&pvt->cnt, 1, memory_order_acquire);
     if (oldcnt == 0) {
-        atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_acq_rel);
+        atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_relaxed);
         return (NULL);
     }
     RTPP_DBG_ASSERT(oldcnt >= 1);
     RTPP_DBG_ASSERT(pvt->target.rco != NULL);
     if (CALL_SMETHOD(pvt->target.rco, tryincref) == 0) {
-        atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_acq_rel);
+        atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_relaxed);
         return (&pvt->target);
     }
-    atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_acq_rel);
+    atomic_fetch_sub_explicit(&pvt->cnt, 1, memory_order_relaxed);
     return (NULL);
 }
