@@ -20,6 +20,15 @@ override_dh_shlibdeps:
 
 execute_after_dh_auto_install:
 	install -D -m 0644 rpm/rtpproxy.sysconfig debian/rtpproxy/etc/sysconfig/rtpproxy
+	if [ -d debian/tmp/usr/include/src/librtpproxy ]; then \
+		mkdir -p debian/tmp/usr/include/librtpproxy; \
+		mv debian/tmp/usr/include/src/librtpproxy/packetport.h \
+		  debian/tmp/usr/include/librtpproxy/packetport.h; \
+		mv debian/tmp/usr/include/src/librtpproxy/packet_ext.h \
+		  debian/tmp/usr/include/librtpproxy/packet_ext.h; \
+		rmdir debian/tmp/usr/include/src/librtpproxy; \
+		rmdir debian/tmp/usr/include/src; \
+	fi
 	rm -f debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/rtpproxy/*.la
 	rm -f debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/librtpproxy.la
 	rm -f debian/tmp/usr/share/man/man8/rtpproxy.8

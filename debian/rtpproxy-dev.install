@@ -1,2 +1,4 @@
 usr/include/librtpproxy.h
+usr/include/librtpproxy/packet_ext.h
+usr/include/librtpproxy/packetport.h
 usr/lib/*/librtpproxy.a

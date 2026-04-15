@@ -64,6 +64,8 @@
 #include "rtp_packet.h"
 #include "rtp_packet_priv.h"
 #include "rtpp_packetport.h"
+#include "librtpproxy/packetport.h"
+#include "librtpproxy/packet_ext.h"
 #include "rtpp_packet_ext.h"
 #include "rtpp_pipe.h"
 #include "rtpp_session.h"
