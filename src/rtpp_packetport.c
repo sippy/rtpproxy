@@ -82,19 +82,24 @@
 #define RTPP_PACKETPORT_IN_PORT0 2
 #define RTPP_PPSIG_TERM 0
 #define RTPP_PPSIG_NUDGE 1
-
-static const struct timespec rtpp_packetport_tick = {
-    .tv_sec = 0,
-    .tv_nsec = 10000000L,
-};
+#define RTPP_PPSIG_FLUSH 2
 
 struct rtpp_packetport_int_priv {
     struct rtpp_packetport_int pub;
     struct rtpp_packetport ext;
     uint64_t id;
     unsigned int capacity;
+    enum rtpp_packetport_flush_mode flush_mode;
+    struct timespec flush_interval;
     _Atomic(unsigned int) out_port;
     _Atomic(unsigned int) in_port;
+    struct {
+        _Atomic(uint64_t) out_run;
+        uint64_t out_run_lc;
+    } __attribute__((aligned(CACHELINE_SIZE))) out_run_state;
+    struct {
+        uint64_t last_flush_run;
+    } __attribute__((aligned(CACHELINE_SIZE))) flush_state;
     pthread_t worker_id;
     struct rtpp_queue *pqueue;
     struct rtpp_hash_table *streams_ht;
@@ -119,8 +124,17 @@ struct rtpp_packet_ext_o {
     struct rtp_packet_full pktp;
 };
 
+struct rtpp_packetport_wi2pktxp_ctx {
+    struct rtpp_packetport_int_priv *pvt;
+    uint64_t out_run_lc;
+    int flush_seen;
+    int term_seen;
+};
+
+static void rtpp_packetport_try_push_many_pre_cb(void *, void *);
 static void rtpp_packetport_dtor_obj(struct rtpp_packetport_int_priv *);
-static void *rtpp_packetport_run(void *);
+static void *rtpp_packetport_run_auto(void *);
+static void *rtpp_packetport_run_explicit(void *);
 static int rtpp_packetport_send_pkt_na(struct rtpp_packetport_int *,
   unsigned int, struct rtp_packet *);
 static unsigned int rtpp_packetport_next_in_port_int(struct rtpp_packetport_int *);
@@ -131,6 +145,9 @@ static int rtpp_packetport_reg_streams(struct rtpp_packetport_int *,
   struct rtpp_session *, int, unsigned int);
 static void rtpp_packetport_unreg_stream(struct rtpp_packetport_int *,
   unsigned int);
+static int rtpp_packetport_emit_sgnl(struct rtpp_packetport_int_priv *, int,
+  const void *, size_t);
+static void *rtpp_packetport_wi2pktxp(void *, void *);
 static int rtpp_packetport_queue(struct SPMCQueue *, struct rtp_packet_ext *);
 static struct rtpp_wi *rtpp_packetport_get_wi(struct rtp_packet *,
   unsigned int);
@@ -138,13 +155,72 @@ static int rtpp_packetport_queue_wi(struct rtpp_packetport_int_priv *,
   struct rtpp_wi *);
 static int rtpp_packetport_proc_wi_batch(struct rtpp_packetport_int_priv *,
   struct rtpp_wi **, int);
+static uint64_t rtpp_packetport_out_run(struct rtpp_packetport_int_priv *);
 static void rtpp_packetport_drain_queue(struct SPMCQueue *);
 static void rtpp_packetport_drain_out(struct rtpp_packetport_int_priv *);
 static int rtpp_packetport_ismapped(const void *);
 static int rtpp_packetport_nudge(struct rtpp_packetport_int_priv *);
 static unsigned int rtpp_packetport_nport_alloc(_Atomic(unsigned int) *);
 static enum rtpp_ht_key_types rtpp_packetport_htkey_type(void);
-static void rtpp_packetport_deadline_step(struct timespec *);
+static int rtpp_packetport_ctor_args_valid(
+  const struct rtpp_packetport_ctor_args *);
+static void rtpp_packetport_deadline_step(struct timespec *,
+  const struct timespec *);
+
+static void
+rtpp_packetport_try_push_many_pre_cb(void *cb_arg, void *value)
+{
+    struct rtpp_packet_ext_int *pktxip;
+
+    (void)cb_arg;
+    PUB2PVT((struct rtp_packet_ext *)value, pktxip);
+    RTPP_OBJ_INCREF(pktxip);
+}
+
+static void *
+rtpp_packetport_wi2pktxp(void *cb_arg, void *key)
+{
+    struct rtpp_packetport_wi2pktxp_ctx *ctx;
+    struct rtpp_wi *wi;
+    struct rtpp_wi_pvt *wipp;
+    struct rtp_packet_ext *pktxp;
+    struct rtp_packet *pktp;
+    uint64_t sig_run;
+    size_t dlen;
+    int signum;
+
+    ctx = cb_arg;
+    wi = key;
+    if (wi->wi_type == RTPP_WI_TYPE_SGNL) {
+        signum = rtpp_wi_sgnl_get_signum(wi);
+        if (signum == RTPP_PPSIG_TERM) {
+            ctx->term_seen = 1;
+            RTPP_OBJ_DECREF(wi);
+            return (NULL);
+        }
+        if (signum == RTPP_PPSIG_FLUSH) {
+            const uint64_t *srp;
+
+            srp = rtpp_wi_sgnl_get_data(wi, &dlen);
+            if (dlen == sizeof(*srp)) {
+                sig_run = *srp;
+                if (sig_run >= ctx->out_run_lc) {
+                    ctx->flush_seen = 1;
+                }
+            }
+            RTPP_OBJ_DECREF(wi);
+            return (NULL);
+        }
+        RTPP_DBG_ASSERT(signum == RTPP_PPSIG_NUDGE);
+        RTPP_OBJ_DECREF(wi);
+        return (NULL);
+    }
+    PUB2PVT(wi, wipp);
+    pktp = (struct rtp_packet *)wipp->sendargs.msg;
+    pktxp = rtpp_packet_ext_link(pktp, wipp->sendargs.sock);
+    RTPP_OBJ_DECREF(wi);
+    return (pktxp);
+}
 
 DEFINE_SMETHODS(rtpp_packetport_int,
     .send_pkt_na = &rtpp_packetport_send_pkt_na,
@@ -264,41 +340,49 @@ rtpp_packet_ext_set_rtime(struct rtp_packet_ext *pktxp, double wall, double mono
 }
 
 struct rtpp_packetport *
-rtpp_packetport_ctor(unsigned int capacity)
+rtpp_packetport_ctor(const struct rtpp_packetport_ctor_args *ap)
 {
     struct rtpp_packetport_int_priv *pvt;
+    void *(*worker_run)(void *);
 
     _Static_assert(sizeof(unsigned int) == sizeof(uint32_t) ||
       sizeof(unsigned int) == sizeof(uint64_t),
       "unsupported unsigned int width");
-    assert(capacity > 0);
+    assert(ap != NULL);
+    assert(rtpp_packetport_ctor_args_valid(ap) != 0);
+    if (!rtpp_packetport_ctor_args_valid(ap)) {
+        errno = EINVAL;
+        return (NULL);
+    }
     pvt = rtpp_rzmalloc(sizeof(*pvt), PVT_RCOFFS(pvt));
     if (pvt == NULL) {
         return (NULL);
     }
-    pvt->capacity = capacity;
-    pvt->ext.in = create_queue((size_t)capacity);
+    pvt->capacity = ap->capacity;
+    pvt->flush_mode = ap->flush_mode;
+    pvt->flush_interval = ap->flush_interval;
+    pvt->ext.in = create_queue((size_t)ap->capacity);
     if (pvt->ext.in == NULL) {
         goto e0;
     }
     RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, destroy_queue, pvt->ext.in);
-    pvt->ext.out = create_queue((size_t)capacity);
+    pvt->ext.out = create_queue((size_t)ap->capacity);
     if (pvt->ext.out == NULL) {
         goto e0;
     }
     RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, destroy_queue, pvt->ext.out);
-    pvt->pqueue = rtpp_queue_init(capacity + 1, "rtpp_packetport(%p)", pvt);
+    pvt->pqueue = rtpp_queue_init(ap->capacity + 1, "rtpp_packetport(%p)", pvt);
     if (pvt->pqueue == NULL) {
         goto e0;
     }
-    rtpp_queue_setmaxlen(pvt->pqueue, capacity + 1);
+    rtpp_queue_setmaxlen(pvt->pqueue, ap->capacity + 1);
     RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, rtpp_queue_destroy, pvt->pqueue);
-    pvt->wi_batch = rtpp_zmalloc(sizeof(pvt->wi_batch[0]) * (size_t)capacity);
+    pvt->wi_batch = rtpp_zmalloc(sizeof(pvt->wi_batch[0]) * (size_t)ap->capacity);
     if (pvt->wi_batch == NULL) {
         goto e0;
     }
     RTPP_OBJ_DTOR_ATTACH_s(&pvt->pub, rtpp_sys_free, pvt->wi_batch);
-    pvt->out_batch = rtpp_zmalloc(sizeof(pvt->out_batch[0]) * (size_t)capacity);
+    pvt->out_batch = rtpp_zmalloc(sizeof(pvt->out_batch[0]) * (size_t)ap->capacity);
     if (pvt->out_batch == NULL) {
         goto e0;
     }
@@ -313,13 +397,17 @@ rtpp_packetport_ctor(unsigned int capacity)
     if (pvt->sigterm == NULL) {
         goto e0;
     }
-    if (pthread_create(&pvt->worker_id, NULL, &rtpp_packetport_run, pvt) != 0) {
+    worker_run = pvt->flush_mode == RTPP_PACKETPORT_FLUSH_EXPLICIT ?
+      &rtpp_packetport_run_explicit : &rtpp_packetport_run_auto;
+    if (pthread_create(&pvt->worker_id, NULL, worker_run, pvt) != 0) {
         RTPP_OBJ_DECREF(pvt->sigterm);
         goto e0;
     }
     pvt->id = RTPP_PACKETPORT_PRIV_ID;
     atomic_init(&pvt->out_port, (unsigned int)RTPP_PACKETPORT_OUT_PORT0);
     atomic_init(&pvt->in_port, (unsigned int)RTPP_PACKETPORT_IN_PORT0);
+    atomic_init(&pvt->out_run_state.out_run, 0);
+    pvt->flush_state.last_flush_run = UINT64_MAX;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_packetport_dtor_obj);
 #if HAVE_PTHREAD_SETNAME_NP
     (void)pthread_setname_np(pvt->worker_id, "rtpp_packetport");
@@ -334,10 +422,13 @@ void
 rtpp_packetport_push(struct rtpp_packetport *ext, struct rtp_packet_ext *pktxp)
 {
     struct rtpp_packetport_int_priv *pvt;
+    struct rtpp_packet_ext_int *pktxip;
 
     EXT2PVT(ext, pvt);
+    PUB2PVT(pktxp, pktxip);
+    RTPP_OBJ_INCREF(pktxip);
     if (rtpp_packetport_queue(pvt->ext.out, pktxp) != 0) {
-        rtp_packet_ext_dtor(pktxp);
+        RTPP_OBJ_DECREF(pktxip);
     }
 }
 
@@ -345,9 +436,47 @@ int
 rtpp_packetport_try_push(struct rtpp_packetport *ext, struct rtp_packet_ext *pktxp)
 {
     struct rtpp_packetport_int_priv *pvt;
+    struct rtpp_packet_ext_int *pktxip;
 
     EXT2PVT(ext, pvt);
-    return (try_push(pvt->ext.out, pktxp) ? 0 : -1);
+    PUB2PVT(pktxp, pktxip);
+    RTPP_OBJ_INCREF(pktxip);
+    if (!try_push(pvt->ext.out, pktxp)) {
+        RTPP_OBJ_DECREF(pktxip);
+        return (-1);
+    }
+    return (0);
+}
+
+size_t
+rtpp_packetport_try_push_many(struct rtpp_packetport *ext,
+  struct rtp_packet_ext **pktxps, size_t max_items)
+{
+    struct rtpp_packetport_int_priv *pvt;
+
+    EXT2PVT(ext, pvt);
+    return (try_push_many_pre(pvt->ext.out, (void **)pktxps, max_items,
+      rtpp_packetport_try_push_many_pre_cb, NULL));
+}
+
+int
+rtpp_packetport_flush(struct rtpp_packetport *ext)
+{
+    struct rtpp_packetport_int_priv *pvt;
+    uint64_t seen_run;
+
+    EXT2PVT(ext, pvt);
+    seen_run = atomic_load_explicit(&pvt->out_run_state.out_run,
+      memory_order_relaxed);
+    if (seen_run == pvt->flush_state.last_flush_run) {
+        return (0);
+    }
+    if (rtpp_packetport_emit_sgnl(pvt, RTPP_PPSIG_FLUSH, &seen_run,
+      sizeof(seen_run)) != 0) {
+        return (-1);
+    }
+    pvt->flush_state.last_flush_run = seen_run;
+    return (0);
 }
 
 struct rtpp_packetport_int *
@@ -408,14 +537,32 @@ rtpp_packetport_dtor_obj(struct rtpp_packetport_int_priv *pvt)
 {
 
     pvt->id = 0;
-    rtpp_queue_put_item(pvt->sigterm, pvt->pqueue);
+    rtpp_packetport_queue_wi(pvt, pvt->sigterm);
     pthread_join(pvt->worker_id, NULL);
     rtpp_packetport_drain_queue(pvt->ext.out);
     rtpp_packetport_drain_queue(pvt->ext.in);
 }
 
 static void *
-rtpp_packetport_run(void *argp)
+rtpp_packetport_run_explicit(void *argp)
+{
+    struct rtpp_packetport_int_priv *pvt;
+    int nwis;
+
+    pvt = argp;
+    for (;;) {
+        nwis = rtpp_queue_get_items(pvt->pqueue, pvt->wi_batch,
+          (int)pvt->capacity, 0);
+        if (nwis == 0)
+            continue;
+        if (rtpp_packetport_proc_wi_batch(pvt, pvt->wi_batch, nwis) != 0)
+            break;
+    }
+    return (NULL);
+}
+
+static void *
+rtpp_packetport_run_auto(void *argp)
 {
     struct rtpp_packetport_int_priv *pvt;
     struct timespec deadline, *ddp = NULL;
@@ -431,7 +578,7 @@ rtpp_packetport_run(void *argp)
                 ddp = &deadline;
                 dtime2mtimespec(getdtime(), ddp);
             }
-            rtpp_packetport_deadline_step(ddp);
+            rtpp_packetport_deadline_step(ddp, &pvt->flush_interval);
             nwis = rtpp_queue_get_items_by(pvt->pqueue, pvt->wi_batch,
               (int)pvt->capacity, ddp, NULL);
             qlen -= 1;
@@ -532,6 +679,23 @@ rtpp_packetport_unreg_stream(struct rtpp_packetport_int *self, unsigned int port
 }
 
 static int
+rtpp_packetport_emit_sgnl(struct rtpp_packetport_int_priv *pvt, int signum,
+  const void *data, size_t dlen)
+{
+    struct rtpp_wi *wi;
+
+    wi = rtpp_wi_malloc_sgnl(signum, data, dlen);
+    if (wi == NULL) {
+        return (-1);
+    }
+    if (rtpp_packetport_queue_wi(pvt, wi) != 0) {
+        RTPP_OBJ_DECREF(wi);
+        return (-1);
+    }
+    return (0);
+}
+
+static int
 rtpp_packetport_queue(struct SPMCQueue *queue, struct rtp_packet_ext *pktxp)
 {
     void *dropxp;
@@ -578,37 +742,44 @@ static int
 rtpp_packetport_proc_wi_batch(struct rtpp_packetport_int_priv *pvt,
   struct rtpp_wi **wis, int nwis)
 {
-    struct rtpp_wi_pvt *wipp;
-    struct rtp_packet_ext *pktxp;
-    struct rtp_packet *pktp;
-    int i, signum, term_seen;
+    struct rtpp_packetport_wi2pktxp_ctx ctx;
+    size_t i, ndropped, offset, processed;
 
-    term_seen = 0;
-    for (i = 0; i < nwis; i++) {
-        if (wis[i]->wi_type == RTPP_WI_TYPE_SGNL) {
-            signum = rtpp_wi_sgnl_get_signum(wis[i]);
-            if (signum == RTPP_PPSIG_TERM) {
-                term_seen = 1;
-                break;
-            }
-            RTPP_DBG_ASSERT(signum == RTPP_PPSIG_NUDGE);
-            continue;
-        }
-        PUB2PVT(wis[i], wipp);
-        pktp = (struct rtp_packet *)wipp->sendargs.msg;
-        pktxp = rtpp_packet_ext_link(pktp, wipp->sendargs.sock);
-        if (pktxp == NULL) {
-            continue;
-        }
-        if (rtpp_packetport_queue(pvt->ext.in, pktxp) != 0) {
-            rtp_packet_ext_dtor(pktxp);
+    ctx = (struct rtpp_packetport_wi2pktxp_ctx){
+        .pvt = pvt,
+        .out_run_lc = pvt->out_run_state.out_run_lc,
+    };
+    ndropped = 0;
+    offset = 0;
+    while (offset < (size_t)nwis) {
+        processed = try_push_many_kv(pvt->ext.in, (void **)(wis + offset),
+          (size_t)nwis - offset, rtpp_packetport_wi2pktxp, &ctx);
+        offset += processed;
+        if (offset < (size_t)nwis) {
+            ndropped += try_pop_many(pvt->ext.in, pvt->out_batch + ndropped,
+              (size_t)nwis - offset);
         }
     }
-    for (i = 0; i < nwis; i++)
-        RTPP_OBJ_DECREF(wis[i]);
-    if (term_seen != 0)
+    for (i = 0; i < ndropped; i++) {
+        rtp_packet_ext_dtor(pvt->out_batch[i]);
+    }
+    if (ctx.term_seen != 0)
         return (-1);
+    if (ctx.flush_seen != 0) {
+        rtpp_packetport_drain_out(pvt);
+    }
     return (0);
+}
+
+static uint64_t
+rtpp_packetport_out_run(struct rtpp_packetport_int_priv *pvt)
+{
+    uint64_t run;
+
+    run = atomic_fetch_add_explicit(&pvt->out_run_state.out_run, 1,
+      memory_order_relaxed) + 1;
+    pvt->out_run_state.out_run_lc = run;
+    return (run);
 }
 
 static void
@@ -633,6 +804,7 @@ rtpp_packetport_drain_out(struct rtpp_packetport_int_priv *pvt)
     struct pkt_proc_ctx pktx;
     size_t i, nitems;
 
+    (void)rtpp_packetport_out_run(pvt);
     while ((nitems = try_pop_many(pvt->ext.out, pvt->out_batch,
       (size_t)pvt->capacity)) > 0) {
         for (i = 0; i < nitems; i++) {
@@ -683,17 +855,7 @@ rtpp_packetport_ismapped(const void *ptr)
 static int
 rtpp_packetport_nudge(struct rtpp_packetport_int_priv *pvt)
 {
-    struct rtpp_wi *wi;
-
-    wi = rtpp_wi_malloc_sgnl(RTPP_PPSIG_NUDGE, NULL, 0);
-    if (wi == NULL) {
-        return (-1);
-    }
-    if (rtpp_queue_put_item(wi, pvt->pqueue) != 0) {
-        RTPP_OBJ_DECREF(wi);
-        return (-1);
-    }
-    return (0);
+    return (rtpp_packetport_emit_sgnl(pvt, RTPP_PPSIG_NUDGE, NULL, 0));
 }
 
 static enum rtpp_ht_key_types
@@ -706,14 +868,37 @@ rtpp_packetport_htkey_type(void)
 }
 
 static void
-rtpp_packetport_deadline_step(struct timespec *deadline)
+rtpp_packetport_deadline_step(struct timespec *deadline,
+  const struct timespec *tick)
 {
 
-    deadline->tv_sec += rtpp_packetport_tick.tv_sec;
-    deadline->tv_nsec += rtpp_packetport_tick.tv_nsec;
+    deadline->tv_sec += tick->tv_sec;
+    deadline->tv_nsec += tick->tv_nsec;
     if (deadline->tv_nsec >= NSEC_MAX) {
         deadline->tv_sec += 1;
         deadline->tv_nsec -= NSEC_MAX;
+    }
+}
+
+static int
+rtpp_packetport_ctor_args_valid(const struct rtpp_packetport_ctor_args *ap)
+{
+
+    if (ap == NULL || ap->capacity == 0) {
+        return (0);
+    }
+    if (ap->flush_interval.tv_sec < 0 || ap->flush_interval.tv_nsec < 0 ||
+      ap->flush_interval.tv_nsec >= NSEC_MAX) {
+        return (0);
+    }
+    switch (ap->flush_mode) {
+    case RTPP_PACKETPORT_FLUSH_EXPLICIT:
+        return (1);
+    case RTPP_PACKETPORT_FLUSH_TIMER:
+        return (ap->flush_interval.tv_sec > 0 || ap->flush_interval.tv_nsec > 0);
+
+    default:
+        return (0);
     }
 }
 
