@@ -10,7 +10,7 @@ noinst_LTLIBRARIES = libRTQueue.la
 CFLAGS_libRTQueue_common = -std=c11 -DHAVE_CONFIG_H -D_BSD_SOURCE \
   $(LTO_FLAG)
 libRTQueue_la_SOURCES = $(RTQ_SDIR)/SPMCQueue.c $(RTQ_SDIR)/SPMCQueue.h
-libRTQueue_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_libRTQueue_common)
+libRTQueue_la_CFLAGS = $(OPT_CFLAGS) -DNDEBUG $(CFLAGS_libRTQueue_common)
 
 if ENABLE_debug
 noinst_LTLIBRARIES += libRTQueue_debug.la
