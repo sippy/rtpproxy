@@ -371,7 +371,7 @@ CFLAGS_libRTQueue_common = -std=c11 -DHAVE_CONFIG_H -D_BSD_SOURCE \
   $(LTO_FLAG)
 
 libRTQueue_la_SOURCES = $(RTQ_SDIR)/SPMCQueue.c $(RTQ_SDIR)/SPMCQueue.h
-libRTQueue_la_CFLAGS = $(OPT_CFLAGS) $(CFLAGS_libRTQueue_common)
+libRTQueue_la_CFLAGS = $(OPT_CFLAGS) -DNDEBUG $(CFLAGS_libRTQueue_common)
 @ENABLE_debug_TRUE@libRTQueue_debug_la_SOURCES = $(libRTQueue_la_SOURCES)
 @ENABLE_debug_TRUE@libRTQueue_debug_la_CPPFLAGS = -DRTPP_MEMDEB_FREE_NULL -DMEMDEB_APP=rtpproxy \
 @ENABLE_debug_TRUE@  $(RTPP_MEMDEB_CPPFLAGS)

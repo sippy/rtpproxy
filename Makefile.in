@@ -104,7 +104,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
 	$(am__configure_deps) $(am__include_HEADERS_DIST) \
-	$(am__DIST_COMMON)
+	$(am__nobase_include_HEADERS_DIST) $(am__DIST_COMMON)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
@@ -165,11 +165,14 @@ am__uninstall_files_from_dir = { \
        $(am__cd) "$$dir" && echo $$files | $(am__xargs_n) 40 $(am__rm_f); }; \
   }
 man8dir = $(mandir)/man8
-am__installdirs = "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(includedir)"
+am__installdirs = "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(includedir)" \
+	"$(DESTDIR)$(includedir)"
 NROFF = nroff
 MANS = $(dist_man_MANS)
 am__include_HEADERS_DIST = src/librtpproxy.h
-HEADERS = $(include_HEADERS)
+am__nobase_include_HEADERS_DIST = src/librtpproxy/packetport.h \
+	src/librtpproxy/packet_ext.h
+HEADERS = $(include_HEADERS) $(nobase_include_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 am__recursive_targets = \
@@ -408,6 +411,7 @@ EXTRA_DIST = README.remote doc rpm/rtpproxy.init rpm/rtpproxy.spec \
  LICENSE README.md
 
 @ENABLE_LIBRTPPROXY_TRUE@include_HEADERS = src/librtpproxy.h
+@ENABLE_LIBRTPPROXY_TRUE@nobase_include_HEADERS = src/librtpproxy/packetport.h src/librtpproxy/packet_ext.h
 all: all-recursive
 
 .SUFFIXES:
@@ -516,6 +520,30 @@ uninstall-includeHEADERS:
 	@$(NORMAL_UNINSTALL)
 	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
+install-nobase_includeHEADERS: $(nobase_include_HEADERS)
+	@$(NORMAL_INSTALL)
+	@list='$(nobase_include_HEADERS)'; test -n "$(includedir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(includedir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(includedir)" || exit 1; \
+	fi; \
+	$(am__nobase_list) | while read dir files; do \
+	  xfiles=; for file in $$files; do \
+	    if test -f "$$file"; then xfiles="$$xfiles $$file"; \
+	    else xfiles="$$xfiles $(srcdir)/$$file"; fi; done; \
+	  test -z "$$xfiles" || { \
+	    test "x$$dir" = x. || { \
+	      echo " $(MKDIR_P) '$(DESTDIR)$(includedir)/$$dir'"; \
+	      $(MKDIR_P) "$(DESTDIR)$(includedir)/$$dir"; }; \
+	    echo " $(INSTALL_HEADER) $$xfiles '$(DESTDIR)$(includedir)/$$dir'"; \
+	    $(INSTALL_HEADER) $$xfiles "$(DESTDIR)$(includedir)/$$dir" || exit $$?; }; \
+	done
+
+uninstall-nobase_includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nobase_include_HEADERS)'; test -n "$(includedir)" || list=; \
+	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
 	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -825,7 +853,7 @@ check: check-recursive
 all-am: Makefile $(MANS) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -880,7 +908,8 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-includeHEADERS install-man
+install-data-am: install-includeHEADERS install-man \
+	install-nobase_includeHEADERS
 
 install-dvi: install-dvi-recursive
 
@@ -926,7 +955,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-man
+uninstall-am: uninstall-includeHEADERS uninstall-man \
+	uninstall-nobase_includeHEADERS
 
 uninstall-man: uninstall-man8
 
@@ -943,13 +973,14 @@ uninstall-man: uninstall-man8
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am \
 	install-includeHEADERS install-info install-info-am \
-	install-man install-man8 install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-includeHEADERS uninstall-man \
-	uninstall-man8
+	install-man install-man8 install-nobase_includeHEADERS \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
+	ps ps-am tags tags-am uninstall uninstall-am \
+	uninstall-includeHEADERS uninstall-man uninstall-man8 \
+	uninstall-nobase_includeHEADERS
 
 .PRECIOUS: Makefile
 
