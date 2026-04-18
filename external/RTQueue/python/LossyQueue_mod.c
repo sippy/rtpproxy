@@ -23,6 +23,9 @@
 typedef struct {
     PyObject_HEAD
     SPMCQueue* queue;
+    size_t queue_size;
+    PyObject** push_buffer;
+    PyObject** pop_buffer;
 } PyLossyQueue;
 
 static int PyLossyQueue_init(PyLossyQueue* self, PyObject* args, PyObject* kwds) {
@@ -44,19 +47,42 @@ static int PyLossyQueue_init(PyLossyQueue* self, PyObject* args, PyObject* kwds)
         PyErr_SetString(PyExc_RuntimeError, "Error initializing queue");
         return -1;
     }
+    self->queue_size = (size_t)size;
+    self->push_buffer = PyMem_New(PyObject*, self->queue_size);
+    self->pop_buffer = PyMem_New(PyObject*, self->queue_size);
+    if (self->push_buffer == NULL || self->pop_buffer == NULL) {
+        destroy_queue(self->queue);
+        self->queue = NULL;
+        self->queue_size = 0;
+        PyMem_Free(self->push_buffer);
+        PyMem_Free(self->pop_buffer);
+        self->push_buffer = NULL;
+        self->pop_buffer = NULL;
+        PyErr_NoMemory();
+        return -1;
+    }
 
     return 0;
 }
 
 // The __del__ method for PyLossyQueue objects
 static void PyLossyQueue_dealloc(PyLossyQueue* self) {
-    PyObject* item;
     if (self->queue != NULL) {
-        while (try_pop(self->queue, (void **)&item)) {
-            Py_DECREF(item);
+        while (1) {
+            size_t popped = try_pop_many(self->queue, (void **)self->pop_buffer,
+              self->queue_size);
+
+            if (popped == 0) {
+                break;
+            }
+            for (size_t i = 0; i < popped; i++) {
+                Py_DECREF(self->pop_buffer[i]);
+            }
         }
         destroy_queue(self->queue);  // replace with actual queue destruction function
     }
+    PyMem_Free(self->push_buffer);
+    PyMem_Free(self->pop_buffer);
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
@@ -78,6 +104,60 @@ static PyObject* PyLossyQueue_put(PyLossyQueue* self, PyObject* args) {
     Py_RETURN_NONE;
 }
 
+static PyObject*
+PyLossyQueue_put_many(PyLossyQueue* self, PyObject* items_obj)
+{
+    PyObject* seq = PySequence_Fast(items_obj, "items must be iterable");
+    Py_ssize_t count;
+    Py_ssize_t i;
+    size_t offset = 0;
+
+    if (seq == NULL) {
+        return NULL;
+    }
+
+    count = PySequence_Fast_GET_SIZE(seq);
+    if (count == 0) {
+        Py_DECREF(seq);
+        Py_RETURN_NONE;
+    }
+    if ((size_t)count > self->queue_size) {
+        Py_DECREF(seq);
+        PyErr_SetString(PyExc_ValueError,
+          "batch size must not exceed queue capacity");
+        return NULL;
+    }
+
+    for (i = 0; i < count; i++) {
+        PyObject* item = PySequence_Fast_GET_ITEM(seq, i);
+
+        Py_INCREF(item);
+        self->push_buffer[i] = item;
+    }
+    Py_DECREF(seq);
+
+    while (offset < (size_t)count) {
+        size_t pushed = try_push_many(self->queue,
+          (void **)(self->push_buffer + offset),
+          (size_t)count - offset);
+
+        offset += pushed;
+        if (offset == (size_t)count) {
+            break;
+        }
+
+        size_t needed = (size_t)count - offset;
+        size_t to_pop = needed;
+        size_t popped;
+
+        popped = try_pop_many(self->queue, (void **)self->pop_buffer, to_pop);
+        for (size_t j = 0; j < popped; j++) {
+            Py_DECREF(self->pop_buffer[j]);
+        }
+    }
+    Py_RETURN_NONE;
+}
+
 // The get method for PyLossyQueue objects
 static PyObject* PyLossyQueue_get(PyLossyQueue* self) {
     PyObject* item;
@@ -90,6 +170,7 @@ static PyObject* PyLossyQueue_get(PyLossyQueue* self) {
 
 static PyMethodDef PyLossyQueue_methods[] = {
     {"put", (PyCFunction)PyLossyQueue_put, METH_VARARGS, "Put an item into the queue"},
+    {"put_many", (PyCFunction)PyLossyQueue_put_many, METH_O, "Put multiple items into the queue"},
     {"get", (PyCFunction)PyLossyQueue_get, METH_NOARGS, "Get an item from the queue"},
     {NULL}  // Sentinel
 };
@@ -129,4 +210,3 @@ PyMODINIT_FUNC PY_INIT_FUNC(void) {
 
     return module;
 }
-

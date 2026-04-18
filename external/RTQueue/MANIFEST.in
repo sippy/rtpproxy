@@ -1,3 +1,3 @@
 include build_tools/__init__.py build_tools/PyTestCommand.py
-include src/SPMCQueue.c src/SPMCQueue.h
+include src/SPMCQueue.c src/SPMCQueue.h src/symbols.map
 include python/symbols.map

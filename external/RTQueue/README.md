@@ -137,6 +137,15 @@ Add an item to the queue. If the queue is full, automatically removes the oldest
   - `item`: Any Python object to store in the queue.
 - **Returns:** None
 
+#### `put_many(items)`
+Add multiple items to the queue. If the queue is full, automatically removes the oldest items so every supplied item is enqueued.
+
+- **Parameters:**
+  - `items`: Any iterable of Python objects to store in the queue.
+- **Raises:**
+  - `ValueError`: If the iterable contains more items than the queue capacity.
+- **Returns:** None
+
 #### `get()`
 Retrieve and remove an item from the queue.
 
@@ -259,6 +268,19 @@ void batch_consumer_example(SPMCQueue* queue) {
         printf("Item %zu: %lu\n", i, (uintptr_t)items[i]);
     }
 }
+
+void batch_producer_example(SPMCQueue* queue) {
+    void* items[BATCH_SIZE] = {
+        (void*)1, (void*)2, (void*)3, (void*)4,
+        (void*)5, (void*)6, (void*)7, (void*)8,
+        (void*)9, (void*)10, (void*)11, (void*)12,
+        (void*)13, (void*)14, (void*)15, (void*)16,
+    };
+
+    // Push as many items as will fit in one batch
+    size_t count = try_push_many(queue, items, BATCH_SIZE);
+    printf("Pushed %zu items in one batch\n", count);
+}
 ```
 
 ### API Reference
@@ -284,6 +306,26 @@ Attempt to push a value onto the queue.
   - `value`: Pointer to store in the queue.
 - **Returns:** `true` if successful, `false` if queue is full.
 
+#### `size_t try_push_many(SPMCQueue* queue, void** values, size_t howmany)`
+Attempt to push multiple values at once (batch operation).
+
+- **Parameters:**
+  - `queue`: The queue.
+  - `values`: Array of pointers to store in the queue.
+  - `howmany`: Maximum number of items to push.
+- **Returns:** Number of items actually pushed (0 to `howmany`).
+
+#### `size_t try_push_many_pre(SPMCQueue* queue, void** values, size_t howmany, SPMCPrePushFunc pre_queue, void *cb_arg)`
+Attempt to push multiple values at once while running a callback for each item that is actually accepted.
+
+- **Parameters:**
+  - `queue`: The queue.
+  - `values`: Array of pointers to store in the queue.
+  - `howmany`: Maximum number of items to push.
+  - `pre_queue`: Optional callback invoked after capacity has been confirmed for an item and before that item is made visible to consumers.
+  - `cb_arg`: Opaque callback context pointer passed to `pre_queue`.
+- **Returns:** Number of items actually pushed (0 to `howmany`).
+
 #### `bool try_pop(SPMCQueue* queue, void** value)`
 Attempt to pop a value from the queue.
 
@@ -305,7 +347,7 @@ Attempt to pop multiple values at once (batch operation).
 
 - Queue size should be a power of 2 for optimal performance
 - Use larger queue sizes to reduce the chance of dropped items
-- The `try_pop_many()` function is more efficient for high-throughput scenarios
+- The `try_push_many()` and `try_pop_many()` functions are more efficient for high-throughput scenarios
 - Internal structures are cache-line aligned to prevent false sharing
 - No dynamic memory allocation during operation (all allocations happen at queue creation)
 

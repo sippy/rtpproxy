@@ -1,0 +1,13 @@
+{
+    global:
+        create_queue;
+        destroy_queue;
+        try_push;
+        try_push_many;
+        try_push_many_pre;
+        try_push_many_kv;
+        try_pop;
+        try_pop_many;
+    local:
+        *;
+};
