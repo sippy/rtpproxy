@@ -45,10 +45,10 @@ jobs:
       COMPILER: ${{ matrix.compiler }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -81,11 +81,52 @@ jobs:
       run: python -m pytest -q python/test_lossyqueue.py
       shell: bash
 
+  build_test_c:
+    name: 'Build&Test: C API'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Configure CMake
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+      shell: bash
+
+    - name: Build
+      run: cmake --build build --config Debug --parallel
+      shell: bash
+
+    - name: Test
+      run: |
+        ctest --test-dir build --build-config Debug --output-on-failure
+        ./build/spmc_bench_test
+      shell: bash
+
+  benchmark_pgo_c:
+    name: 'Benchmark: C API PGO'
+    needs: [build_test_c]
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install benchmark toolchain
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang llvm
+      shell: bash
+
+    - name: Benchmark baseline vs PGO
+      env:
+        BENCH_SECONDS: 5
+      run: scripts/build/benchmark_pgo.sh
+      shell: bash
+
   build_wheels:
     name: Build Python Wheels
     permissions:
       packages: write
-    needs: build_test_python
+    needs: [build_test_python, build_test_c]
     uses: sippy/cimagic/.github/workflows/BuildPythonWheels.yml@v2
     with:
       ghcr_repo: ${{ github.repository_owner }}/rtqueue
@@ -102,17 +143,17 @@ jobs:
       contents: read
       id-token: write
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Download all wheel artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         path: dist
         pattern: 'dist-*'
         merge-multiple: true
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.x'
 

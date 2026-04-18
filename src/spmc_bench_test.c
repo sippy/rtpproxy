@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <sched.h>
 #include <unistd.h>
 #include <time.h>
 #include <stdint.h>
@@ -35,7 +36,6 @@ void* worker_thread(void* arg) {
     SPMCQueue* queue = args->queue;
     _Alignas(CACHE_LINE_SIZE) void* values[WRKR_BATCH_SIZE] = {};
     uintptr_t last_value = 0;
-    struct timespec delay = {};
     int sleepcycles = 0;
 
     while (1) {
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    while (!try_push(queue, (void *)EOW_SENTINEL)) { pthread_yield(); } // Add EOW marker
+    while (!try_push(queue, (void *)EOW_SENTINEL)) { sched_yield(); } // Add EOW marker
 
     // Wait for the worker thread to exit
     if (pthread_join(worker, NULL)) {
@@ -142,6 +142,9 @@ int main(int argc, char *argv[]) {
     }
 
     assert(chksum == args.chksum);
+#if defined(NDEBUG)
+    (void)chksum;
+#endif
     double ttime = etime - stime + num_seconds;
     i--;
     printf("Sent %" PRIu64 " + %" PRIu64 ", received %" PRIu64 " messages in %.5f seconds\n", i - disc, disc, args.count, ttime);
