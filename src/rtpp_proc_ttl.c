@@ -55,6 +55,7 @@
 #include "rtpp_refcnt.h"
 #include "rtpp_mallocs.h"
 #include "rtpp_pipe.h"
+#include "rtpp_stream.h"
 #include "rtpp_timeout_data.h"
 #include "rtpp_locking.h"
 #include "rtpp_threads.h"
@@ -79,6 +80,20 @@ static void rtpp_proc_ttl(struct rtpp_hash_table *, const struct foreach_args *)
 
 static const char *notyfy_type = "timeout";
 
+static void
+rtpp_proc_ttl_refill_pps(struct rtpp_pipe *pipe)
+{
+
+    if (pipe == NULL) {
+        return;
+    }
+    for (int i = 0; i < 2; i++) {
+        if (pipe->stream[i] != NULL) {
+            CALL_SMETHOD(pipe->stream[i], refill_pps_bucket);
+        }
+    }
+}
+
 static int
 rtpp_proc_ttl_foreach(void *dp, void *ap)
 {
@@ -91,6 +106,8 @@ rtpp_proc_ttl_foreach(void *dp, void *ap)
      * locked context of the rtpp_hash_table, which holds its own ref.
      */
     sp = (const struct rtpp_session *)dp;
+    rtpp_proc_ttl_refill_pps(sp->rtp);
+    rtpp_proc_ttl_refill_pps(sp->rtcp);
 
     if (CALL_SMETHOD(sp->rtp, get_ttl) == 0) {
         RTPP_LOG(sp->log, RTPP_LOG_INFO, "session timeout");

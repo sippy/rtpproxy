@@ -400,6 +400,28 @@ atoi_saferange(const char *s, int *res, int min, int max)
 }
 
 enum atoi_rval
+rtpp_parse_rtp_rtcp_val(const char *s, int *rtp_val, int *rtcp_val, int minval)
+{
+    int rval, rval_rtcp;
+    const char *rtcp_val_s;
+
+    if (atoi_safe(s, &rval) == ATOI_OK) {
+        rval_rtcp = rval;
+        goto check_range;
+    }
+    if (atoi_safe_sep(s, &rval, ',', &rtcp_val_s) != ATOI_OK)
+        return (ATOI_NOTINT);
+    if (atoi_safe(rtcp_val_s, &rval_rtcp) != ATOI_OK)
+        return (ATOI_NOTINT);
+check_range:
+    if (rval < minval || rval_rtcp < minval)
+        return (ATOI_OUTRANGE);
+    *rtp_val = rval;
+    *rtcp_val = rval_rtcp;
+    return (ATOI_OK);
+}
+
+enum atoi_rval
 strtol_saferange(const char *s, long *res, long min, long max,
   const char **next)
 {

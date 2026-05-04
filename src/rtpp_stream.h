@@ -109,6 +109,9 @@ DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_setmode, void, enum rtpps_latch_mo
 DECLARE_METHOD(rtpp_stream, rtpp_stream_latch_getmode, enum rtpps_latch_mode);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_link_sender, int, struct rtpp_stream *);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_get_sender, struct rtpp_stream *);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_set_pps_limit, void, int);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_set_max_pkt_size, void, int);
+DECLARE_METHOD(rtpp_stream, rtpp_stream_refill_pps_bucket, void);
 DECLARE_METHOD(rtpp_stream, rtpp_stream_unreg, void);
 
 DECLARE_SMETHODS(rtpp_stream) {
@@ -138,6 +141,9 @@ DECLARE_SMETHODS(rtpp_stream) {
     METHOD_ENTRY(rtpp_stream_latch_getmode, latch_getmode);
     METHOD_ENTRY(rtpp_stream_link_sender, link_sender);
     METHOD_ENTRY(rtpp_stream_get_sender, get_sender);
+    METHOD_ENTRY(rtpp_stream_set_pps_limit, set_pps_limit);
+    METHOD_ENTRY(rtpp_stream_set_max_pkt_size, set_max_pkt_size);
+    METHOD_ENTRY(rtpp_stream_refill_pps_bucket, refill_pps_bucket);
     METHOD_ENTRY(rtpp_stream_unreg, unreg);
 };
 

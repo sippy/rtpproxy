@@ -1,5 +1,17 @@
 --dso&&
 --dso&/not/there/garbage/100500
+--maxpps&&
+--maxpps&-1
+--maxpps&10,-1
+--maxpps&10,bad
+--maxpps&10,
+--maxpps&bad
+--maxpsize&&
+--maxpsize&-1
+--maxpsize&1200,-1
+--maxpsize&1200,bad
+--maxpsize&1200,
+--maxpsize&bad
 --nice&&
 --nice&100500
 --nice&garbage

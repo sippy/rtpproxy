@@ -4,7 +4,7 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 <!-- Please adjust the date whenever revising the manpage. -->
-<!ENTITY dhdate "<date>May 16, 2019</date>">
+<!ENTITY dhdate "<date>May 5, 2026</date>">
 <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
       allowed: see man(7), man(1). -->
 <!ENTITY dhsection "<manvolnum>8</manvolnum>">
@@ -117,6 +117,12 @@
 
       <arg choice="opt"><option>-T</option>
       <replaceable>max_ttl</replaceable></arg>
+
+      <arg choice="opt"><option>--maxpps</option>
+      <replaceable>pps<optional>,rtcp_pps</optional></replaceable></arg>
+
+      <arg choice="opt"><option>--maxpsize</option>
+      <replaceable>size<optional>,rtcp_size</optional></replaceable></arg>
 
       <arg choice="opt"><option>-r</option> <replaceable>rdir</replaceable>
       <arg choice="opt"><option>-S</option>
@@ -419,6 +425,37 @@
           <para>If the rtpproxy does not receive any RTP packets for more than
           <replaceable>max_ttl</replaceable> it will then delete the
           session.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--maxpps</option>
+        <replaceable>pps<optional>,rtcp_pps</optional></replaceable></term>
+
+        <listitem>
+          <para>Set the default per-stream packet-per-second limit for newly
+          created RTP/RTCP streams. The first value applies to RTP streams.
+          The optional second value applies to RTCP streams; if omitted, the
+          RTP value is used for RTCP as well. A value of 0 disables the
+          default limit, which is the default behavior. The limit can be
+          changed for an existing session using the <literal>S pps=</literal>
+          control sub-command.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--maxpsize</option>
+        <replaceable>size<optional>,rtcp_size</optional></replaceable></term>
+
+        <listitem>
+          <para>Set the default maximum allowed incoming packet size in bytes
+          for newly created RTP/RTCP streams. The first value applies to RTP
+          streams. The optional second value applies to RTCP streams; if
+          omitted, the RTP value is used for RTCP as well. Packets larger than
+          the configured size are dropped. A value of 0 disables the default
+          limit, which is the default behavior. The limit can be changed for
+          an existing session using the <literal>S mps=</literal> control
+          sub-command.</para>
         </listitem>
       </varlistentry>
 

@@ -72,6 +72,17 @@ out:
 }
 
 static int
+parse_rtp_rtcp_vals(const char *cp, struct rtpp_subcommand_set *set_arg,
+  int minval)
+{
+
+    if (rtpp_parse_rtp_rtcp_val(cp, &set_arg->val, &set_arg->val_rtcp,
+      minval) != ATOI_OK)
+        return (-1);
+    return (0);
+}
+
+static int
 rtpp_subcommand_set_handler(const struct after_success_h_args *ashap,
   const struct rtpp_subc_ctx *rscp)
 {
@@ -110,8 +121,24 @@ rtpp_subcommand_set_handler(const struct after_success_h_args *ashap,
         struct rtpp_stream_pair rtcp = get_rtcp_pair(rscp->env->sessp, strmp);
         if (rtcp.ret != 0 || rtcp.in == NULL)
             break;
-        if (strmp_settos(rscp, rtcp.in, tap->val) != 0)
+        if (strmp_settos(rscp, rtcp.in, tap->val_rtcp) != 0)
             return (-1);
+        break;
+
+    case SET_PRM_PPS:
+        CALL_SMETHOD(strmp, set_pps_limit, tap->val);
+        struct rtpp_stream_pair rtcp_pps = get_rtcp_pair(rscp->env->sessp, strmp);
+        if (rtcp_pps.ret != 0 || rtcp_pps.in == NULL)
+            break;
+        CALL_SMETHOD(rtcp_pps.in, set_pps_limit, tap->val_rtcp);
+        break;
+
+    case SET_PRM_MPS:
+        CALL_SMETHOD(strmp, set_max_pkt_size, tap->val);
+        struct rtpp_stream_pair rtcp_mps = get_rtcp_pair(rscp->env->sessp, strmp);
+        if (rtcp_mps.ret != 0 || rtcp_mps.in == NULL)
+            break;
+        CALL_SMETHOD(rtcp_mps.in, set_max_pkt_size, tap->val_rtcp);
         break;
 
     default:
@@ -139,17 +166,40 @@ handle_set_subc_parse(const struct rtpp_cfg *cfsp, const char *cp,
     } else if (memcmp(v->s, "tos=", 4) == 0) {
         set_arg.param = SET_PRM_TOS;
         cp = v->s + 4;
+    } else if (memcmp(v->s, "pps=", 4) == 0) {
+        set_arg.param = SET_PRM_PPS;
+        cp = v->s + 4;
+    } else if (memcmp(v->s, "mps=", 4) == 0) {
+        set_arg.param = SET_PRM_MPS;
+        cp = v->s + 4;
     } else {
         return (NULL);
     }
-    if (atoi_safe(cp, &set_arg.val) != ATOI_OK)
-        return (NULL);
-    if (set_arg.val <= 0)
-        return (NULL);
+    switch (set_arg.param) {
+    case SET_PRM_PPS:
+    case SET_PRM_MPS:
+        if (parse_rtp_rtcp_vals(cp, &set_arg, 0) != 0)
+            return (NULL);
+        break;
+
+    case SET_PRM_TOS:
+        if (parse_rtp_rtcp_vals(cp, &set_arg, 1) != 0)
+            return (NULL);
+        break;
+
+    default:
+        if (atoi_safe(cp, &set_arg.val) != ATOI_OK)
+            return (NULL);
+        if (set_arg.val <= 0)
+            return (NULL);
+        set_arg.val_rtcp = 0;
+        break;
+    }
     tap = rtpp_rzmalloc(sizeof(set_arg), offsetof(struct rtpp_subcommand_set, rcnt));
     if (tap == NULL)
         return (NULL);
     tap->val = set_arg.val;
+    tap->val_rtcp = set_arg.val_rtcp;
     tap->direction = set_arg.direction;
     tap->param = set_arg.param;
     asp->handler = rtpp_subcommand_set_handler;

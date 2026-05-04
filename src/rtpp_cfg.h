@@ -90,6 +90,10 @@ struct rtpp_cfg {
     int port_ctl;               /* Port number for UDP control, 0 for Unix domain */
     int max_ttl;
     int max_setup_ttl;
+    int maxpps_rtp;
+    int maxpps_rtcp;
+    int maxpsize_rtp;
+    int maxpsize_rtcp;
     /*
      * The first address is for external interface, the second one - for
      * internal one. Second can be NULL, in this case there is no bridge

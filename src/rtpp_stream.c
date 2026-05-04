@@ -127,6 +127,9 @@ struct rtpp_stream_priv
     /* Descriptor */
     struct rtpp_socket *fd;
     _Atomic(int) _is_sendable;
+    _Atomic(int) pps_limit;
+    _Atomic(int) pps_tokens;
+    _Atomic(int) max_pkt_size;
     struct rtpp_packetport_ref packetport;
     /* Remote source address */
     struct rtpp_netaddr *rem_addr;
@@ -184,6 +187,10 @@ static struct rtp_packet *rtpp_stream_rx(struct rtpp_stream *,
 static struct rtpp_netaddr *rtpp_stream_get_rem_addr(struct rtpp_stream *, int);
 static struct rtpp_stream *rtpp_stream_get_sender(struct rtpp_stream *);
 static int rtpp_stream_link_sender(struct rtpp_stream *, struct rtpp_stream *);
+static void rtpp_stream_set_pps_limit(struct rtpp_stream *, int);
+static void rtpp_stream_set_max_pkt_size(struct rtpp_stream *, int);
+static void rtpp_stream_refill_pps_bucket(struct rtpp_stream *);
+static int rtpp_stream_check_limits(struct rtpp_stream_priv *, struct rtp_packet *);
 static void rtpp_stream_unreg(struct rtpp_stream *);
 
 DEFINE_SMETHODS(rtpp_stream,
@@ -213,6 +220,9 @@ DEFINE_SMETHODS(rtpp_stream,
     .latch_getmode = &rtpp_stream_latch_getmode,
     .get_sender = &rtpp_stream_get_sender,
     .link_sender = &rtpp_stream_link_sender,
+    .set_pps_limit = &rtpp_stream_set_pps_limit,
+    .set_max_pkt_size = &rtpp_stream_set_max_pkt_size,
+    .refill_pps_bucket = &rtpp_stream_refill_pps_bucket,
     .unreg = &rtpp_stream_unreg,
 );
 
@@ -360,7 +370,14 @@ rtpp_stream_ctor(const struct r_stream_ctor_args *ap)
     pvt->pmod_data.nmodules = nmodules;
     pvt->pub.pmod_datap = &(pvt->pmod_data);
     pvt->pub.laddr = sap->lia[ap->side];
+    int pps_limit = (pap->pipe_type == PIPE_RTP) ? cfs->maxpps_rtp :
+      cfs->maxpps_rtcp;
+    int max_pkt_size = (pap->pipe_type == PIPE_RTP) ? cfs->maxpsize_rtp :
+      cfs->maxpsize_rtcp;
     atomic_init(&pvt->_is_sendable, 0);
+    atomic_init(&pvt->pps_limit, pps_limit);
+    atomic_init(&pvt->pps_tokens, pps_limit);
+    atomic_init(&pvt->max_pkt_size, max_pkt_size);
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_stream_dtor);
     return (&pvt->pub);
 
@@ -1191,6 +1208,11 @@ rtpp_stream_rx(struct rtpp_stream *self, struct rtpp_weakref *rtcps_wrt,
         return (NULL);
     }
     rsp->npkts_rcvd.cnt++;
+    if (rtpp_stream_check_limits(pvt, packet) == 0) {
+        RTPP_OBJ_DECREF(packet);
+        rsp->npkts_discard.cnt++;
+        return (RTPP_S_RX_DCONT);
+    }
 
     if (RTPLM_GET(pvt) == RTPLM_FORCE_OFF)
         goto nolatch;
@@ -1286,6 +1308,56 @@ rtpp_stream_get_sender(struct rtpp_stream *self)
     if (stp == NULL)
         return NULL;
     return stp->obj;
+}
+
+static void
+rtpp_stream_set_pps_limit(struct rtpp_stream *self, int pps)
+{
+    struct rtpp_stream_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    atomic_store_explicit(&pvt->pps_limit, pps, memory_order_relaxed);
+    atomic_store_explicit(&pvt->pps_tokens, pps, memory_order_relaxed);
+}
+
+static void
+rtpp_stream_set_max_pkt_size(struct rtpp_stream *self, int max_pkt_size)
+{
+    struct rtpp_stream_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    atomic_store_explicit(&pvt->max_pkt_size, max_pkt_size,
+      memory_order_relaxed);
+}
+
+static void
+rtpp_stream_refill_pps_bucket(struct rtpp_stream *self)
+{
+    struct rtpp_stream_priv *pvt;
+    int pps;
+
+    PUB2PVT(self, pvt);
+    pps = atomic_load_explicit(&pvt->pps_limit, memory_order_relaxed);
+    atomic_store_explicit(&pvt->pps_tokens, pps, memory_order_relaxed);
+}
+
+static int
+rtpp_stream_check_limits(struct rtpp_stream_priv *pvt, struct rtp_packet *packet)
+{
+    int max_pkt_size, pps, tokens;
+
+    max_pkt_size = atomic_load_explicit(&pvt->max_pkt_size,
+      memory_order_relaxed);
+    if (max_pkt_size > 0 && packet->size > (size_t)max_pkt_size) {
+        return (0);
+    }
+    pps = atomic_load_explicit(&pvt->pps_limit, memory_order_relaxed);
+    if (pps == 0) {
+        return (1);
+    }
+    tokens = atomic_fetch_sub_explicit(&pvt->pps_tokens, 1,
+      memory_order_relaxed);
+    return (tokens > 0);
 }
 
 static void

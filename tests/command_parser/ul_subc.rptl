@@ -15,12 +15,48 @@ rtpp: U callid_2s 127.0.0.1 22345 from_tag_2 to_tag_2 -> PORT2
 rtpp: U callid_2d 127.0.0.1 32345 from_tag_3 to_tag_3 && C callid_2s from_tag_2 to_tag_2 -> PORT3
 .eval: %%PORT3%% -> validate_port(_)
 
+.echo: Positive S pps= case...
+rtpp: U callid_3s 127.0.0.1 12345 from_tag_5 to_tag_5 && S pps=10 -> validate_port(_)
+rtpp: L callid_3s 127.0.0.1 54321 from_tag_5 to_tag_5 && S pps=10,20 -> validate_port(_)
+rtpp: U callid_3s 127.0.0.1 12345 from_tag_5 to_tag_5 && S pps=0 -> validate_port(_)
+
+.echo: Positive S mps= case...
+rtpp: U callid_5s 127.0.0.1 12345 from_tag_9 to_tag_9 && S mps=1200 -> validate_port(_)
+rtpp: L callid_5s 127.0.0.1 54321 from_tag_9 to_tag_9 && S mps=1200,1000 -> validate_port(_)
+rtpp: U callid_5s 127.0.0.1 12345 from_tag_9 to_tag_9 && S mps=0 -> validate_port(_)
+
+.echo: Positive S tos= case...
+rtpp: U callid_4s 127.0.0.1 12345 from_tag_7 to_tag_7 && S tos=10 -> validate_port(_)
+rtpp: L callid_4s 127.0.0.1 54321 from_tag_7 to_tag_7 && S tos=10,20 -> validate_port(_)
+
 .echo: Negative U&&L cases...
 rtpp: U callid_1n0 127.0.0.1 12345 from_tag_1 && L 127.0.0.1 54321 -> str_compare(ECODE_PARSE_SUBC)
 rtpp: U callid_1n1 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 -> str_compare(ECODE_PARSE_SUBC)
 rtpp: U callid_1n2 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 54321 extra -> str_compare(ECODE_PARSE_SUBC)
 rtpp: U callid_1n3 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 notaport -> str_compare(ECODE_PARSE_SUBC)
 rtpp: U callid_1n4 127.0.0.1 12345 from_tag_1 to_tag_1 && L 127.0.0.1 54321 udp:127.0.0.1:1234 % -> str_compare(ECODE_PARSE_SUBC)
+
+.echo: Negative S pps= cases...
+rtpp: U callid_3n0 127.0.0.1 12345 from_tag_6 to_tag_6 && S pps=-1 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_3n1 127.0.0.1 12345 from_tag_6 to_tag_6 && S pps=bad -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_3n2 127.0.0.1 12345 from_tag_6 to_tag_6 && S pps= -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_3n3 127.0.0.1 12345 from_tag_6 to_tag_6 && S pps=10,-1 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_3n4 127.0.0.1 12345 from_tag_6 to_tag_6 && S pps=10,bad -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_3n5 127.0.0.1 12345 from_tag_6 to_tag_6 && S pps=10, -> str_compare(ECODE_PARSE_SUBC)
+
+.echo: Negative S mps= cases...
+rtpp: U callid_5n0 127.0.0.1 12345 from_tag_10 to_tag_10 && S mps=-1 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_5n1 127.0.0.1 12345 from_tag_10 to_tag_10 && S mps=bad -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_5n2 127.0.0.1 12345 from_tag_10 to_tag_10 && S mps= -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_5n3 127.0.0.1 12345 from_tag_10 to_tag_10 && S mps=1200,-1 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_5n4 127.0.0.1 12345 from_tag_10 to_tag_10 && S mps=1200,bad -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_5n5 127.0.0.1 12345 from_tag_10 to_tag_10 && S mps=1200, -> str_compare(ECODE_PARSE_SUBC)
+
+.echo: Negative S tos= cases...
+rtpp: U callid_4n0 127.0.0.1 12345 from_tag_8 to_tag_8 && S tos=0 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_4n1 127.0.0.1 12345 from_tag_8 to_tag_8 && S tos=10,0 -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_4n2 127.0.0.1 12345 from_tag_8 to_tag_8 && S tos=10,bad -> str_compare(ECODE_PARSE_SUBC)
+rtpp: U callid_4n3 127.0.0.1 12345 from_tag_8 to_tag_8 && S tos=10, -> str_compare(ECODE_PARSE_SUBC)
 
 .echo: Negative U&&C cases...
 rtpp: U callid_2n0 127.0.0.1 42345 from_tag_4 && C callid_2s from_tag_2 to_tag_2 -> str_compare(ECODE_PARSE_SUBC)

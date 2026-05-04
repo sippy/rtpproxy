@@ -151,6 +151,7 @@ usage(void)
       "[-L nfiles] [-m port_min]\n\t  [-M port_max] [-u uname[:gname]] [-w sock_mode] "
       "[-n timeout_socket]\n\t  [-d log_level[:log_facility]] [-p pid_file]\n"
       "\t  [-c fifo|rr] [-A addr1[/addr2] [-W setup_ttl]\n"
+      "\t  [--maxpps pps[,rtcp_pps]] [--maxpsize size[,rtcp_size]]\n"
       "\trtpproxy -V\n");
 }
 
@@ -255,6 +256,8 @@ ehandler(void)
 #define LOPT_FORC_ASM 261
 #define LOPT_NO_RESOL 262
 #define LOPT_NO_REDIR 263
+#define LOPT_MAXPPS   264
+#define LOPT_MAXPSIZE 265
 
 const static struct option longopts[] = {
     { "dso", required_argument, NULL, LOPT_DSO },
@@ -265,6 +268,8 @@ const static struct option longopts[] = {
     { "force_asymmetric", no_argument, NULL, LOPT_FORC_ASM },
     { "no_resolve", no_argument, NULL, LOPT_NO_RESOL },
     { "no_redirect", no_argument, NULL, LOPT_NO_REDIR },
+    { "maxpps", required_argument, NULL, LOPT_MAXPPS },
+    { "maxpsize", required_argument, NULL, LOPT_MAXPSIZE },
     { NULL,  0,                 NULL, 0 }
 };
 
@@ -356,6 +361,10 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
     cfsp->port_ctl = 0;
 
     cfsp->max_ttl = SESSION_TIMEOUT;
+    cfsp->maxpps_rtp = 0;
+    cfsp->maxpps_rtcp = 0;
+    cfsp->maxpsize_rtp = 0;
+    cfsp->maxpsize_rtcp = 0;
     cfsp->tos = TOS;
     cfsp->rrtcp = 1;
     cfsp->runcreds->sock_mode = 0;
@@ -477,6 +486,30 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
 
         case LOPT_NO_REDIR:
             cfsp->no_redirect = 1;
+            break;
+
+        case LOPT_MAXPPS:
+            switch (rtpp_parse_rtp_rtcp_val(optarg, &cfsp->maxpps_rtp,
+              &cfsp->maxpps_rtcp, 0)) {
+            case ATOI_OK:
+                break;
+            case ATOI_OUTRANGE:
+                IC_ERRX(1, "%s: maxpps argument is out of range", optarg);
+            default:
+                IC_ERRX(1, "%s: maxpps argument is invalid", optarg);
+            }
+            break;
+
+        case LOPT_MAXPSIZE:
+            switch (rtpp_parse_rtp_rtcp_val(optarg, &cfsp->maxpsize_rtp,
+              &cfsp->maxpsize_rtcp, 0)) {
+            case ATOI_OK:
+                break;
+            case ATOI_OUTRANGE:
+                IC_ERRX(1, "%s: maxpsize argument is out of range", optarg);
+            default:
+                IC_ERRX(1, "%s: maxpsize argument is invalid", optarg);
+            }
             break;
 
         case 'c':

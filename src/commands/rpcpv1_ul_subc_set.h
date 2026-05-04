@@ -35,6 +35,8 @@ enum rtpp_subcommand_set_direction {
 enum rtpp_subcommand_set_param {
     SET_PRM_TTL,
     SET_PRM_TOS,
+    SET_PRM_PPS,
+    SET_PRM_MPS,
     SET_PRM_SSRC_IN,
     SET_PRM_SSRC_OUT,
 };
@@ -42,6 +44,7 @@ enum rtpp_subcommand_set_param {
 struct rtpp_subcommand_set {
     struct rtpp_refcnt *rcnt;
     int val;
+    int val_rtcp;
     enum rtpp_subcommand_set_param param;
     enum rtpp_subcommand_set_direction direction;
 };
