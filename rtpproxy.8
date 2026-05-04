@@ -2,12 +2,12 @@
 .\"     Title: rtpproxy
 .\"    Author: Jan Janak <janakj@users.berlios.de>
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: May 16, 2019
+.\"      Date: May 5, 2026
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "RTPPROXY" "8" "May 16, 2019" "[FIXME: source]" "[FIXME: manual]"
+.TH "RTPPROXY" "8" "May 5, 2026" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,7 @@
 rtpproxy \- RTP (Real\-time Transport Protocol) Proxy Server
 .SH "SYNOPSIS"
 .HP \w'\fBrtpproxy\fR\ 'u
-\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-V\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-l\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-6\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-L\fR\ \fInofile_limit\fR] [\fB\-A\fR\ \fIadvaddr1\fR\fI[/advaddr2]\fR] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-w\fR\ \fIsock_mode\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR] [\fB\-W\fR\ \fIsetup_ttl\fR] [\fB\-\-force_asymmetric\fR]
+\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-V\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-l\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-6\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-\-maxpps\fR\ \fIpps\fR\fI[,rtcp_pps]\fR] [\fB\-\-maxpsize\fR\ \fIsize\fR\fI[,rtcp_size]\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-L\fR\ \fInofile_limit\fR] [\fB\-A\fR\ \fIadvaddr1\fR\fI[/advaddr2]\fR] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-w\fR\ \fIsock_mode\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR] [\fB\-W\fR\ \fIsetup_ttl\fR] [\fB\-\-force_asymmetric\fR]
 .SH "DESCRIPTION"
 .PP
 The
@@ -248,6 +248,20 @@ Specify the RTP inactivity timer\&. Defaults to 60 seconds\&.
 If the rtpproxy does not receive any RTP packets for more than
 \fImax_ttl\fR
 it will then delete the session\&.
+.RE
+.PP
+\fB\-\-maxpps\fR \fIpps\fR\fI[,rtcp_pps]\fR
+.RS 4
+Set the default per\-stream packet\-per\-second limit for newly created RTP/RTCP streams\&. The first value applies to RTP streams\&. The optional second value applies to RTCP streams; if omitted, the RTP value is used for RTCP as well\&. A value of 0 disables the default limit, which is the default behavior\&. The limit can be changed for an existing session using the
+S pps=
+control sub\-command\&.
+.RE
+.PP
+\fB\-\-maxpsize\fR \fIsize\fR\fI[,rtcp_size]\fR
+.RS 4
+Set the default maximum allowed incoming packet size in bytes for newly created RTP/RTCP streams\&. The first value applies to RTP streams\&. The optional second value applies to RTCP streams; if omitted, the RTP value is used for RTCP as well\&. Packets larger than the configured size are dropped\&. A value of 0 disables the default limit, which is the default behavior\&. The limit can be changed for an existing session using the
+S mps=
+control sub\-command\&.
 .RE
 .PP
 \fB\-L\fR \fInofile_limit\fR

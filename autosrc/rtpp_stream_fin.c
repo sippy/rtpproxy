@@ -83,6 +83,10 @@ static void rtpp_stream_prefill_addr_fin(void *pub) {
     fprintf(stderr, "Method rtpp_stream@%p::prefill_addr (rtpp_stream_prefill_addr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_stream_refill_pps_bucket_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_stream@%p::refill_pps_bucket (rtpp_stream_refill_pps_bucket) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_stream_reg_onhold_fin(void *pub) {
     fprintf(stderr, "Method rtpp_stream@%p::reg_onhold (rtpp_stream_reg_onhold) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -99,8 +103,16 @@ static void rtpp_stream_send_pkt_to_fin(void *pub) {
     fprintf(stderr, "Method rtpp_stream@%p::send_pkt_to (rtpp_stream_send_pkt_to) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_stream_set_max_pkt_size_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_stream@%p::set_max_pkt_size (rtpp_stream_set_max_pkt_size) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void rtpp_stream_set_packetport_fin(void *pub) {
     fprintf(stderr, "Method rtpp_stream@%p::set_packetport (rtpp_stream_set_packetport) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
+static void rtpp_stream_set_pps_limit_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_stream@%p::set_pps_limit (rtpp_stream_set_pps_limit) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
 static void rtpp_stream_set_skt_fin(void *pub) {
@@ -135,11 +147,14 @@ static const struct rtpp_stream_smethods rtpp_stream_smethods_fin = {
     .link_sender = (rtpp_stream_link_sender_t)&rtpp_stream_link_sender_fin,
     .locklatch = (rtpp_stream_locklatch_t)&rtpp_stream_locklatch_fin,
     .prefill_addr = (rtpp_stream_prefill_addr_t)&rtpp_stream_prefill_addr_fin,
+    .refill_pps_bucket = (rtpp_stream_refill_pps_bucket_t)&rtpp_stream_refill_pps_bucket_fin,
     .reg_onhold = (rtpp_stream_reg_onhold_t)&rtpp_stream_reg_onhold_fin,
     .rx = (rtpp_stream_rx_t)&rtpp_stream_rx_fin,
     .send_pkt = (rtpp_stream_send_pkt_t)&rtpp_stream_send_pkt_fin,
     .send_pkt_to = (rtpp_stream_send_pkt_to_t)&rtpp_stream_send_pkt_to_fin,
+    .set_max_pkt_size = (rtpp_stream_set_max_pkt_size_t)&rtpp_stream_set_max_pkt_size_fin,
     .set_packetport = (rtpp_stream_set_packetport_t)&rtpp_stream_set_packetport_fin,
+    .set_pps_limit = (rtpp_stream_set_pps_limit_t)&rtpp_stream_set_pps_limit_fin,
     .set_skt = (rtpp_stream_set_skt_t)&rtpp_stream_set_skt_fin,
     .unreg = (rtpp_stream_unreg_t)&rtpp_stream_unreg_fin,
     .update_skt = (rtpp_stream_update_skt_t)&rtpp_stream_update_skt_fin,
@@ -164,11 +179,14 @@ void rtpp_stream_fin(struct rtpp_stream *pub) {
     RTPP_DBG_ASSERT(pub->smethods->link_sender != (rtpp_stream_link_sender_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->locklatch != (rtpp_stream_locklatch_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->prefill_addr != (rtpp_stream_prefill_addr_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->refill_pps_bucket != (rtpp_stream_refill_pps_bucket_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->reg_onhold != (rtpp_stream_reg_onhold_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->rx != (rtpp_stream_rx_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->send_pkt != (rtpp_stream_send_pkt_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->send_pkt_to != (rtpp_stream_send_pkt_to_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->set_max_pkt_size != (rtpp_stream_set_max_pkt_size_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->set_packetport != (rtpp_stream_set_packetport_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->set_pps_limit != (rtpp_stream_set_pps_limit_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->set_skt != (rtpp_stream_set_skt_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->unreg != (rtpp_stream_unreg_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->update_skt != (rtpp_stream_update_skt_t)NULL);
@@ -217,11 +235,14 @@ rtpp_stream_fintest()
         .link_sender = (rtpp_stream_link_sender_t)((void *)0x1),
         .locklatch = (rtpp_stream_locklatch_t)((void *)0x1),
         .prefill_addr = (rtpp_stream_prefill_addr_t)((void *)0x1),
+        .refill_pps_bucket = (rtpp_stream_refill_pps_bucket_t)((void *)0x1),
         .reg_onhold = (rtpp_stream_reg_onhold_t)((void *)0x1),
         .rx = (rtpp_stream_rx_t)((void *)0x1),
         .send_pkt = (rtpp_stream_send_pkt_t)((void *)0x1),
         .send_pkt_to = (rtpp_stream_send_pkt_to_t)((void *)0x1),
+        .set_max_pkt_size = (rtpp_stream_set_max_pkt_size_t)((void *)0x1),
         .set_packetport = (rtpp_stream_set_packetport_t)((void *)0x1),
+        .set_pps_limit = (rtpp_stream_set_pps_limit_t)((void *)0x1),
         .set_skt = (rtpp_stream_set_skt_t)((void *)0x1),
         .unreg = (rtpp_stream_unreg_t)((void *)0x1),
         .update_skt = (rtpp_stream_update_skt_t)((void *)0x1),
@@ -249,15 +270,18 @@ rtpp_stream_fintest()
     CALL_TFIN(&tp->pub, link_sender);
     CALL_TFIN(&tp->pub, locklatch);
     CALL_TFIN(&tp->pub, prefill_addr);
+    CALL_TFIN(&tp->pub, refill_pps_bucket);
     CALL_TFIN(&tp->pub, reg_onhold);
     CALL_TFIN(&tp->pub, rx);
     CALL_TFIN(&tp->pub, send_pkt);
     CALL_TFIN(&tp->pub, send_pkt_to);
+    CALL_TFIN(&tp->pub, set_max_pkt_size);
     CALL_TFIN(&tp->pub, set_packetport);
+    CALL_TFIN(&tp->pub, set_pps_limit);
     CALL_TFIN(&tp->pub, set_skt);
     CALL_TFIN(&tp->pub, unreg);
     CALL_TFIN(&tp->pub, update_skt);
-    assert((_naborts - naborts_s) == 27);
+    assert((_naborts - naborts_s) == 30);
 }
 DATA_SET(rtpp_fintests, rtpp_stream_fintest);
 #endif /* RTPP_FINTEST */
