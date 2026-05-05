@@ -35,7 +35,7 @@ struct rtpp_bindaddr_params;
 #define BINDARG_MAX     16
 
 struct bindarg {
-    const char *h;
+    char *h;
     struct rtpp_bindaddr_params params;
     int is_v6;
 };

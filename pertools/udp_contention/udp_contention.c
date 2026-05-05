@@ -97,7 +97,7 @@ struct tconf {
     int paylen_max;
     struct addrinfo *dstaddrs;
     int ndstaddrs;
-    const char *dstaddr;
+    char *dstaddr;
     int dstnetpref;
     int test_kind;
     uint64_t magic;

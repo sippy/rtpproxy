@@ -134,28 +134,47 @@ e0:
 }
 
 static int
-controlfd_init_udp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
+controlfd_setbindhost(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp,
+  struct sockaddr *ifsin, int af)
 {
-    struct sockaddr *ifsin;
-    char *cp, *tcp = NULL;
-    int controlfd, so_rcvbuf, i, r;
+    const char *cp, *bindhost, *port;
+    char *bindhost_buf;
+    size_t bindhost_len;
+    int r;
 
     cp = strrchr(csp->cmd_sock, ':');
     if (cp != NULL) {
-        *cp = '\0';
-        tcp = cp;
-        cp++;
+        bindhost_len = cp - csp->cmd_sock;
+        bindhost_buf = alloca(bindhost_len + 1);
+        memcpy(bindhost_buf, csp->cmd_sock, bindhost_len);
+        bindhost_buf[bindhost_len] = '\0';
+        bindhost = bindhost_buf;
+        port = cp + 1;
+    } else {
+        bindhost = csp->cmd_sock;
+        port = CPORT;
     }
-    if (cp == NULL || *cp == '\0')
-        cp = CPORT;
-    csp->port_ctl = atoi(cp);
-    i = (csp->type == RTPC_UDP6) ? AF_INET6 : AF_INET;
-    ifsin = sstosa(&csp->bindaddr);
-    r = setbindhost(ifsin, i, csp->cmd_sock, cp, cfsp->no_resolve);
-    if (tcp != NULL)
-        *tcp = ':';
+    if (*port == '\0')
+        port = CPORT;
+    csp->port_ctl = atoi(port);
+    r = setbindhost(ifsin, af, bindhost, port, cfsp->no_resolve);
     if (r != 0) {
         warnx("setbindhost failed");
+        return (-1);
+    }
+    return (0);
+}
+
+static int
+controlfd_init_udp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
+{
+    struct sockaddr *ifsin;
+    int controlfd, so_rcvbuf, i, r;
+
+    i = (csp->type == RTPC_UDP6) ? AF_INET6 : AF_INET;
+    ifsin = sstosa(&csp->bindaddr);
+    r = controlfd_setbindhost(cfsp, csp, ifsin, i);
+    if (r != 0) {
         return (-1);
     }
     controlfd = socket(i, SOCK_DGRAM, 0);
@@ -179,25 +198,12 @@ static int
 controlfd_init_tcp(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
     struct sockaddr *ifsin;
-    char *cp, *tcp = NULL;;
     int controlfd, so_rcvbuf, i, r;
 
-    cp = strrchr(csp->cmd_sock, ':');
-    if (cp != NULL) {
-        *cp = '\0';
-        tcp = cp;
-        cp++;
-    }
-    if (cp == NULL || *cp == '\0')
-        cp = CPORT;
-    csp->port_ctl = atoi(cp);
     i = (csp->type == RTPC_TCP6) ? AF_INET6 : AF_INET;
     ifsin = sstosa(&csp->bindaddr);
-    r = setbindhost(ifsin, i, csp->cmd_sock, cp, cfsp->no_resolve);
-    if (tcp != NULL)
-        *tcp = ':';
+    r = controlfd_setbindhost(cfsp, csp, ifsin, i);
     if (r != 0) {
-        warnx("setbindhost failed");
         return (-1);
     }
     controlfd = socket(i, SOCK_STREAM, 0);

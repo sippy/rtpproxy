@@ -379,7 +379,7 @@ rtpp_tnotify_set_lookup(struct rtpp_tnotify_set *pub, const char *socket_name,
     struct rtpp_tnotify_set_priv *pvt;
     struct rtpp_tnotify_wildcard *wp;
     int i;
-    char *sep;
+    const char *sep;
 
     PUB2PVT(pub, pvt);
     for (i = 0; i < pvt->tp_len; i++) {

@@ -56,7 +56,7 @@ static int base64_block_to_octet_triple (char *out, char *in)
     int i;
 
     for (i = 0; i < 4; i++) {
-        char *p = strchr(b64chars, in[i]);
+        const char *p = strchr(b64chars, in[i]);
         if (p != NULL) {
             sextets[i] = p - b64chars;
         } else{  j++; }
