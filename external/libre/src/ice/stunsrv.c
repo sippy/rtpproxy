@@ -175,7 +175,7 @@ static int handle_stun_full(struct icem *icem,
  */
 static int handle_stun_lite(struct icem *icem,
 			    struct icem_comp *comp, const struct sa *src,
-			    bool use_cand)
+			    uint32_t prio, bool use_cand)
 {
 	struct ice_cand *lcand, *rcand;
 	struct ice_candpair *cp;
@@ -186,8 +186,11 @@ static int handle_stun_lite(struct icem *icem,
 
 	rcand = icem_cand_find(&icem->rcandl, comp->id, src);
 	if (!rcand) {
-		DEBUG_WARNING("lite: could not find remote candidate\n");
-		return 0;
+		err = icem_rcand_add_prflx(&rcand, icem, comp->id, prio, src);
+		if (err) {
+			DEBUG_WARNING("lite: could not add PeerReflexive remote candidate (%m)\n", err);
+			return err;
+		}
 	}
 
 	/* find the local host candidate with the same component */
@@ -302,7 +305,7 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 				       use_cand, presz > 0);
 	}
 	else {
-		err = handle_stun_lite(icem, comp, src, use_cand);
+		err = handle_stun_lite(icem, comp, src, prio_prflx, use_cand);
 	}
 
 	if (err)
