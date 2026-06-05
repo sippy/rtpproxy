@@ -40,7 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [22.04]
-        compiler: ['gcc-i386-cross', 'clang-i386-cross', 'gcc-mips64-cross', 'gcc-arm32-cross', 'gcc-arm64-cross', 'gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
+        compiler: ['gcc-i386-cross', 'clang-i386-cross', 'gcc-mips64-cross', 'gcc-arm32-cross', 'gcc-arm64-cross', 'gcc', 'clang', 'gcc-12', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
         - os: 24.04
           compiler: 'gcc'
@@ -60,6 +60,10 @@ jobs:
           compiler: 'clang-19'
         - os: 24.04
           compiler: 'clang-20'
+        - os: 26.04
+          compiler: 'gcc'
+        - os: 26.04
+          compiler: 'clang'
 
     steps:
     - uses: actions/checkout@v6
@@ -127,7 +131,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [22.04]
-        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
+        compiler: ['gcc', 'clang', 'gcc-12', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
         - os: 24.04
           compiler: 'gcc'
@@ -145,6 +149,10 @@ jobs:
           compiler: 'clang-19'
         - os: 24.04
           compiler: 'clang-20'
+        - os: 26.04
+          compiler: 'gcc'
+        - os: 26.04
+          compiler: 'clang'
 
     steps:
     - uses: actions/checkout@v6
@@ -202,7 +210,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [22.04]
-        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
+        compiler: ['gcc', 'clang', 'gcc-12', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
         - os: 24.04
           compiler: 'gcc'
@@ -220,6 +228,10 @@ jobs:
           compiler: 'clang-19'
         - os: 24.04
           compiler: 'clang-20'
+        - os: 26.04
+          compiler: 'gcc'
+        - os: 26.04
+          compiler: 'clang'
 
     steps:
     - uses: actions/checkout@v6
@@ -276,7 +288,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [22.04]
-        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
+        compiler: ['gcc', 'clang', 'gcc-12', 'clang-12', 'clang-13', 'clang-14', 'clang-15']
         include:
         - os: 24.04
           compiler: 'gcc'
@@ -294,6 +306,10 @@ jobs:
           compiler: 'clang-19'
         - os: 24.04
           compiler: 'clang-20'
+        - os: 26.04
+          compiler: 'gcc'
+        - os: 26.04
+          compiler: 'clang'
 
     steps:
     - uses: actions/checkout@v6
@@ -378,7 +394,7 @@ jobs:
         path: ./out/artifacts
     - name: Upload Sarif
       if: always() && steps.build.outcome == 'success' && matrix.sanitizer != 'coverage'
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v4
       with:
         # Path to SARIF file relative to the root of the repository
         sarif_file: cifuzz-sarif/results.sarif
@@ -416,8 +432,10 @@ jobs:
           ccache_bin_image: 'latest-debian-12'
         - base_image: 'debian:13-slim'
           ccache_bin_image: 'latest-debian-13'
-        - base_image: 'ubuntu:latest'
+        - base_image: 'ubuntu:24.04'
           ccache_bin_image: 'latest-ubuntu-24.04'
+        - base_image: 'ubuntu:latest'
+          ccache_bin_image: 'latest-ubuntu-26.04'
     steps:
     - name: Maximize build space
       shell: sh -x -e {0}
