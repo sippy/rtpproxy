@@ -35,7 +35,7 @@ run_rtpproxy() {
     rm "${rname}" || return 1
   fi
   (sed "s|%%CALLID%%|${CALL_ID}|g" "${CD_DIR}/basic.input" | \
-   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS}) | sed \
+   sudo -n -u nobody ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS}) | sed \
    "s|^${rtp_porta}$|%%PORT_A%%|g ;  s|^${rtp_porto}$|%%PORT_O%%|g"
   (env RTPP_GLITCH_ACT="" ${EXTRACTAUDIO} -S -A "${rname}" || return 1) | \
    sed "s|${CALL_ID}|%%CALL_ID%%|g"

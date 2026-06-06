@@ -5,6 +5,6 @@ BASEDIR="`dirname "${0}"`/.."
 
 for good_rargs in '-V' '-v' '-C' '--maxpps=10 -V' '--maxpps=10,20 -V' '--maxpps=0 -V' '--maxpsize=1200 -V' '--maxpsize=1200,1000 -V' '--maxpsize=0 -V'
 do
-  ${RTPPROXY} ${good_rargs}
+  sudo -n -u nobody ${RTPPROXY} ${good_rargs}
   report "rtpproxy start with good argumens: \""${good_rargs}"\""
 done

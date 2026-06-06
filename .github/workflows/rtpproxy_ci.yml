@@ -30,10 +30,14 @@ jobs:
     needs: LoadJobs_conf
     if: needs.LoadJobs_conf.outputs.do_MinBuild == 'true'
     # The type of runner that the job will run on
-    runs-on: ubuntu-${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:${{ matrix.os }}
+      options: >-
+        -v sources:/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
     env:
       COMPILER: ${{ matrix.compiler }}
-      TAR_CMD: tar_nosuid
+      TAR_CMD: tar
       GHA_OS: ubuntu-${{ matrix.os }}
 
     strategy:
@@ -66,6 +70,11 @@ jobs:
           compiler: 'clang'
 
     steps:
+    - name: Install git
+      run: |
+        apt-get update
+        apt-get install -y git lsb-release gnupg2 wget
+
     - uses: actions/checkout@v6
       with:
         submodules: 'recursive'
@@ -74,14 +83,7 @@ jobs:
       if: endsWith(matrix.compiler, '-cross')
       run: sh -x scripts/build/start_container.sh
 
-    - name: Workaround for tar not being able to access /var/cache/apt/archives
-      if: endsWith(matrix.compiler, '-cross') == 0
-      run: |
-        sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
-        sudo chmod u+s "$(command -v tar)"
-
     - name: Cache apt-get packages
-      if: endsWith(matrix.compiler, '-cross') == 0
       uses: actions/cache@v5
       with:
         path: /var/cache/apt/archives
@@ -92,12 +94,6 @@ jobs:
 
     - name: Install apt-get updates
       run: scripts/ft-apt-get-update.sh
-
-    - name: Set up Python
-      if: endsWith(matrix.compiler, '-cross') == 0
-      uses: actions/setup-python@v6
-      with:
-        python-version: 3.9
 
     - name: install_depends
       run: sh -x scripts/build/install_depends.sh
@@ -114,6 +110,7 @@ jobs:
     with:
       apt_depends: pkg-config libssl-dev libbcg729-dev libgsm1-dev libsndfile1-dev libunwind-dev libsrtp2-dev libsystemd-dev systemd procps
       test_dpkgs_script: ./scripts/do-dpkg-test.sh
+      os_versions: '["ubuntu:26.04", "ubuntu:24.04", "ubuntu:22.04", "debian:13", "debian:12", "debian:11"]'
 
   FullBuild:
     name: Full Build
@@ -121,10 +118,14 @@ jobs:
     if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_FullBuild == 'true' &&
         (needs.LoadJobs_conf.outputs.do_MinBuild != 'true' || needs.MinBuild.result == 'success') }}
     # The type of runner that the job will run on
-    runs-on: ubuntu-${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:${{ matrix.os }}
+      options: >-
+        -v sources:/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
     env:
       COMPILER: ${{ matrix.compiler }}
-      TAR_CMD: tar_nosuid
+      TAR_CMD: tar
       GHA_OS: ubuntu-${{ matrix.os }}
 
     strategy:
@@ -155,19 +156,14 @@ jobs:
           compiler: 'clang'
 
     steps:
+    - name: Install git
+      run: |
+        apt-get update
+        apt-get install -y git lsb-release gnupg2 wget
+
     - uses: actions/checkout@v6
       with:
         submodules: 'recursive'
-
-    - name: Start Docker container
-      if: endsWith(matrix.compiler, '-cross')
-      run: sh -x scripts/build/start_container.sh
-
-    - name: Workaround for tar not being able to access /var/cache/apt/archives
-      if: endsWith(matrix.compiler, '-cross') == 0
-      run: |
-        sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
-        sudo chmod u+s "$(command -v tar)"
 
     - name: Cache apt-get packages
       if: endsWith(matrix.compiler, '-cross') == 0
@@ -182,12 +178,6 @@ jobs:
     - name: Install apt-get updates
       run: scripts/ft-apt-get-update.sh
 
-    - name: Set up Python
-      if: endsWith(matrix.compiler, '-cross') == 0
-      uses: actions/setup-python@v6
-      with:
-        python-version: 3.9
-
     - name: install_depends
       run: sh -x scripts/build/install_depends.sh
 
@@ -200,10 +190,14 @@ jobs:
     if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_FuncTest == 'true' &&
         (needs.LoadJobs_conf.outputs.do_FullBuild != 'true' || needs.FullBuild.result == 'success') }}
     # The type of runner that the job will run on
-    runs-on: ubuntu-${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:${{ matrix.os }}
+      options: >-
+        -v sources:/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
     env:
       COMPILER: ${{ matrix.compiler }}
-      TAR_CMD: tar_nosuid
+      TAR_CMD: tar
       GHA_OS: ubuntu-${{ matrix.os }}
 
     strategy:
@@ -234,14 +228,14 @@ jobs:
           compiler: 'clang'
 
     steps:
+    - name: Install git
+      run: |
+        apt-get update
+        apt-get install -y git lsb-release gnupg2 wget
+
     - uses: actions/checkout@v6
       with:
         submodules: 'recursive'
-
-    - name: Workaround for tar not being able to access /var/cache/apt/archives
-      run: |
-        sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
-        sudo chmod u+s "$(command -v tar)"
 
     - name: Cache apt-get packages
       uses: actions/cache@v5
@@ -254,11 +248,6 @@ jobs:
 
     - name: Install apt-get updates
       run: scripts/ft-apt-get-update.sh
-
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: 3.9
 
     - name: install_depends
       run: sh -x scripts/build/install_depends.sh
@@ -278,10 +267,14 @@ jobs:
     if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_Glitch == 'true' &&
         (needs.LoadJobs_conf.outputs.do_FuncTest != 'true' || needs.FuncTest.result == 'success') }}
     # The type of runner that the job will run on
-    runs-on: ubuntu-${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:${{ matrix.os }}
+      options: >-
+        -v sources:/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
     env:
       COMPILER: ${{ matrix.compiler }}
-      TAR_CMD: tar_nosuid
+      TAR_CMD: tar
       GHA_OS: ubuntu-${{ matrix.os }}
 
     strategy:
@@ -312,14 +305,14 @@ jobs:
           compiler: 'clang'
 
     steps:
+    - name: Install git
+      run: |
+        apt-get update
+        apt-get install -y git lsb-release gnupg2 wget
+
     - uses: actions/checkout@v6
       with:
         submodules: 'recursive'
-
-    - name: Workaround for tar not being able to access /var/cache/apt/archives
-      run: |
-        sudo cp "$(command -v tar)" "$(command -v tar)"_nosuid
-        sudo chmod u+s "$(command -v tar)"
 
     - name: Cache apt-get packages
       uses: actions/cache@v5
@@ -332,11 +325,6 @@ jobs:
 
     - name: Install apt-get updates
       run: scripts/ft-apt-get-update.sh
-
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: 3.9
 
     - name: install_depends
       run: sh -x scripts/build/install_depends.sh

@@ -111,7 +111,7 @@ run_rtpp_on_stdout()
   shift 2
   tempfoo="`basename $0`.XXXXX"
   TMP_PIDFILE=`mktemp -t ${tempfoo}` || return 1
-  (geninput "${GI_ARG}" RTPP${RIDX} | "${RTPPROXY}" -p "${TMP_PIDFILE}" -f \
+  (geninput "${GI_ARG}" RTPP${RIDX} | sudo -n -u nobody "${RTPPROXY}" -p "${TMP_PIDFILE}" -f \
    -s stdio: "${@}" > session_timeouts.rout${RIDX} 2> session_timeouts.rlog${RIDX})&
   RTPP_PID=${!}
   _i=0

@@ -27,7 +27,7 @@ run_catch_dtmf() {
     sleep 10; grep -v _ipv6 "${CD_DIR}/../forwarding/forwarding1.sstats.input"; \
     sleep 4; grep -v ^X "${CD_DIR}/.././forwarding/forwarding1.stats.input" | grep -v resizer | uniq ; \
     cat "${CD_DIR}/../session_timeouts/stats.input") | \
-     ${RTPPROXY} ${RTPP_ARGS} 2>catch_dtmf.rlog || return 1
+     sudo -n -u nobody ${RTPPROXY} ${RTPP_ARGS} 2>catch_dtmf.rlog || return 1
 }
 
 set -- `${RTPP_NOTYFY_CLIENT} -s "${RTPP_NOTIFY_SOCK_TCP}:0" \

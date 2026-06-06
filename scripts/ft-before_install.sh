@@ -6,10 +6,11 @@ set -e
 . $(dirname $0)/build/build.conf.sub
 
 ${SUDO} apt-get -y install python3-pip python3-dev
-PIP_RUN="python -m pip"
+PIP_RUN="python3 -m pip"
+${SUDO} find /usr/lib -type f -name 'EXTERNALLY-MANAGED' -delete
 ${PIP_RUN} install --user -U pip setuptools
-which python
-python --version
+which python3
+python3 --version
 for pkg in parsimonious cpp-coveralls
 do
   ${PIP_RUN} install --user ${pkg}

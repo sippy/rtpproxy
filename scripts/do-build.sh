@@ -21,12 +21,6 @@ automake --version
 autoconf --version
 autoreconf --version
 
-if [ "${TTYPE}" != "depsbuild" -a "${TTYPE}" != "cleanbuild" ]
-then
-  ${SUDO} iptables -w -L OUTPUT
-  ${SUDO} iptables -w -L INPUT
-  ${SUDO} sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
-fi
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
 ${SUDO} sysctl -w kernel.core_pattern=core
@@ -40,6 +34,10 @@ fi
 
 if [ "${TTYPE}" = "cleanbuild" ]
 then
+  if [ -n "${DOCKR_PLATFORM}" ]
+  then
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --host=${DOCKR_PLATFORM}-pc-linux-gnu"
+  fi
   ./configure ${CONFIGURE_ARGS}
   exec make ${ALLCLEAN_TGT}
 fi
@@ -72,9 +70,13 @@ make
 ${SUDO} make install
 cd ..
 wget https://ftp2.osuosl.org/pub/blfs/conglomeration/libsndfile/libsndfile-${SNDFILE_VER}.tar.xz
+if ! which xzcat
+then
+  apt install -y xz-utils
+fi
 xzcat libsndfile-${SNDFILE_VER}.tar.xz | ${TAR_CMD} -xv -f -
 cd libsndfile-${SNDFILE_VER}
-./configure
+CFLAGS="-std=gnu17" ./configure
 make
 ${SUDO} make install
 cd ${OPWD}
@@ -126,7 +128,7 @@ UDPR_DIR=/tmp/dist/udpreplay
 
 git clone -b master https://github.com/sippy/udpreplay.git ${UDPR_DIR}
 mkdir ${UDPR_DIR}/build
-cmake -B${UDPR_DIR}/build -H${UDPR_DIR}
+cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -B${UDPR_DIR}/build -H${UDPR_DIR}
 make -C ${UDPR_DIR}/build all
 ${SUDO} make -C ${UDPR_DIR}/build install
 

@@ -11,7 +11,12 @@ then
   exit 1
 fi
 
-sudo apt-get update
-sudo apt-get install -y qemu-user-static
+if ! docker -v 2>/dev/null
+then
+  ${SUDO} apt-get update
+  ${SUDO} apt-get install -y docker.io
+fi
+docker run --rm --privileged tonistiigi/binfmt:latest -install all
 docker pull ${DOCKR_BASE}
-docker run --cidfile "${DKR_CID_FILE}" -d --restart=always --platform linux/${DOCKR_PLATFORM} -v `pwd`:`pwd` ${DOCKR_BASE} sleep infinity
+docker run --cidfile "${DKR_CID_FILE}" -d --restart=always \
+ --platform linux/${DOCKR_PLATFORM} -v sources:`pwd` ${DOCKR_BASE} sleep infinity
