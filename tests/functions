@@ -23,16 +23,32 @@ RTPP_POST_STOP_SLEEP="${RTPP_POST_STOP_SLEEP:-"0.2"}"
 
 RTPPROXY_DBG="${TOP_BUILDDIR}/src/rtpproxy_debug"
 RTPPROXY_PROD="${TOP_BUILDDIR}/src/rtpproxy"
-RTPPROXY="${RTPPROXY:-${RTPPROXY_DBG}}"
 RTPP_QUERY="${PYINT} ${PYTHON_DIR}/tools/rtpp_query.py -n 1"
 RTPP_NOTYFY_CLIENT="${PYINT} ${PYTHON_DIR}/tools/rtpp_notify_client.py"
 RPTL_INT="${PYINT} ${RPTL_DIR}/rptl_run.py"
 MAKEANN_DBG=${TOP_BUILDDIR}/makeann/makeann_debug
 MAKEANN_PROD=${TOP_BUILDDIR}/makeann/makeann
-MAKEANN="${MAKEANN:-${MAKEANN_PROD}}"
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio_debug
 REVTEMPL="${PYINT} ${TOP_BUILDDIR}/scripts/revtempl.py"
 KILL_CMD="`which kill`"
+ROOT_KILL_CMD="${SUDO} ${KILL_CMD}"
+MKTEMP_CMD="`which mktemp`"
+ID_CMD="`which id`"
+MYID_MKTEMP_CMD="${MKTEMP_CMD}"
+RTPPROXY="${RTPPROXY:-${RTPPROXY_DBG}}"
+MAKEANN="${MAKEANN:-${MAKEANN_PROD}}"
+
+MYUID=`id -u`
+
+if [ ${MYUID} -eq 0 ]
+then
+  for v in RTPPROXY_DBG RTPPROXY_PROD RTPP_QUERY RTPP_NOTYFY_CLIENT \
+   RPTL_INT MAKEANN_DBG MAKEANN_PROD EXTRACTAUDIO REVTEMPL MKTEMP_CMD \
+   RTPPROXY MAKEANN KILL_CMD ID_CMD
+  do
+    eval "${v}=\"setpriv --reuid=rtpproxy --regid=rtpproxy --init-groups -- \${${v}}\""
+  done
+fi
 
 setup_tstart() {
   RTPP_MCLOCK_NAME="`RTPP_GLITCH_ACT="" ${RTPPROXY} -C 2>/dev/null`"
@@ -54,8 +70,8 @@ randomize_test_sockets() {
   RTPP_TEST_SOCK_TCP4_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
   RTPP_TEST_SOCK_TCP6_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
   tempfoo="`basename $0`.XXXXX"
-  RTPP_TEST_SOCK_UNIX="`mktemp -t ${tempfoo}`"
-  RTPP_TEST_SOCK_CUNIX="`mktemp -t ${tempfoo}`"
+  RTPP_TEST_SOCK_UNIX="`${MKTEMP_CMD} -t ${tempfoo}`"
+  RTPP_TEST_SOCK_CUNIX="`${MKTEMP_CMD} -t ${tempfoo}`"
 }
 
 assign_test_sockets() {
@@ -209,10 +225,12 @@ fi
 SED="sed ${SED_ARGS}"
 
 rtpproxy_start() {
+  local IFS=' 
+'
   tempfoo="`basename $0`.XXXXX"
-  TMP_PIDFILE=`mktemp -t ${tempfoo}` || return 1
-  TMP_SOCKFILE=${RTPP_SOCKFILE:-`mktemp -t ${tempfoo}`} || return 1
-  TMP_LOGFILE=${RTPP_LOGFILE:-`mktemp -t ${tempfoo}`} || return 1
+  TMP_PIDFILE=`${MKTEMP_CMD} -t ${tempfoo}` || return 1
+  TMP_SOCKFILE=${RTPP_SOCKFILE:-`${MKTEMP_CMD} -t ${tempfoo}`} || return 1
+  TMP_LOGFILE=${RTPP_LOGFILE:-`${MYID_MKTEMP_CMD} -t ${tempfoo}`} || return 1
   RTPP_RUNDIR=`pwd`
   if [ ! -z "${RTPP_OUTFILE}" ]
   then
@@ -338,7 +356,7 @@ notify_client_stop() {
 witness_stop() {
   if [ "${WITNESS_PID}" != "" ]
   then
-    ${SUDO} ${KILL_CMD} -TERM ${WITNESS_PID} 2>/dev/null
+    ${ROOT_KILL_CMD} -TERM ${WITNESS_PID} 2>/dev/null
     if [ "${WITNESS_ADD_FILES}" != "" ]
     then
       WITNESS_NAME="${TESTNAME}.${TEST_TIMESTAMP}.debug.tbz2"

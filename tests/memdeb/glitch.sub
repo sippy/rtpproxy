@@ -8,6 +8,9 @@ spin_nc()
   then
     rm "${GNC_LOG}"
   fi
+  # Filtering replaces this file as the test runner (root in CI), while the
+  # notification client runs as rtpproxy and cannot truncate that replacement.
+  rm -f glitch1.ncout
   set -- `${RTPP_NOTYFY_CLIENT} -D -s tcp:127.0.0.1:0 -o glitch1.ncout -t 600 -l "${GNC_LOG}"`
   RTPP_NC_RC=${?}
   NC_PID="${1}"

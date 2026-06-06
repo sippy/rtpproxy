@@ -10,12 +10,23 @@ MODULE="`readlink -f -- "${TOP_BUILDDIR}/modules/acct_csv/.libs/rtpp_acct_csv_de
 CDIR="`pwd`"
 WDIR="${CDIR}/acct_csv.wdir"
 
+# The rtpproxy may be run under a wrapper, e.g. setpriv when started as
+# root: create directories it writes into under the same wrapper.
+case "${RTPPROXY}" in
+*" -- "*)
+  RUN_AS="${RTPPROXY%% -- *} --"
+  ;;
+*)
+  RUN_AS=""
+  ;;
+esac
+
 # Run rtpproxy in directory ${1} with the remaining arguments, creating
 # and deleting a single session
 run_rtpproxy() {
   rdir="${WDIR}/${1}"
   shift
-  mkdir "${rdir}" || return 1
+  ${RUN_AS} mkdir "${rdir}" || return 1
   printf 'U acct_csv_test 127.0.0.1 12345 from_tag\nD acct_csv_test from_tag\n' | \
    (cd "${rdir}" && ${RTPPROXY} -f -s stdio: -d dbug "${@}") > /dev/null \
    2> "${rdir}.rlog"
@@ -40,7 +51,7 @@ EOC
 }
 
 rm -rf "${WDIR}"
-mkdir "${WDIR}"
+${RUN_AS} mkdir "${WDIR}"
 report "creating ${WDIR}"
 
 write_conf "${WDIR}/abs.conf" "${WDIR}/abs.csv"
