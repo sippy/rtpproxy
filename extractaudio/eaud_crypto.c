@@ -59,12 +59,25 @@
 #include "eaud_crypto.h"
 #include "srtp_util.h"
 
+/*
+ * Master-key + salt octet counts, per RFC 3711 (CM ciphers) and RFC 7714
+ * (GCM/AEAD ciphers). These mirror SRTP_SALT_LEN (14), SRTP_AEAD_SALT_LEN
+ * (12), and SRTP_AES_{128,192,256}_KEY_LEN from <srtp2/srtp.h>, spelled
+ * out here so this table is self-contained and doesn't depend on
+ * internal libsrtp2 macros that may not exist in older libsrtp (v1).
+ */
+#define CM_SALT_LEN     14
+#define AEAD_SALT_LEN   12
+#define AES_128_KEY_LEN 16
+#define AES_192_KEY_LEN 24
+#define AES_256_KEY_LEN 32
+
+typedef void (*srtp_policy_setter_t)(srtp_crypto_policy_t *);
+
 struct srtp_crypto_suite {
     const char *can_name;
-    int key_size;
-    int tag_size;
-    int ckey_len;
-    srtp_sec_serv_t sec_serv;
+    int ckey_len;                     /* total master key + salt, in octets */
+    srtp_policy_setter_t set_policy;  /* configures both cipher & auth      */
 };
 
 #define MAX_KEY_LEN      96
@@ -76,18 +89,50 @@ struct eaud_crypto {
     char key[MAX_KEY_LEN];
 };
 
+/*
+ * Each entry's set_policy is called directly against both the .rtp and
+ * .rtcp fields of srtp_policy_t (which share the same srtp_crypto_policy_t
+ * type), so cipher type, key length, auth type/tag length and sec_serv are
+ * all configured consistently by libsrtp2 itself instead of being
+ * reconstructed by hand here.
+ */
 static struct srtp_crypto_suite srtp_crypto_suites[] = {
-    {.can_name = "AES_CM_128_HMAC_SHA1_32", .key_size = 128, .tag_size = 4,
-     .ckey_len = 30, .sec_serv = sec_serv_conf_and_auth},
-#if 0
-    {.can_name = "F8_128_HMAC_SHA1_32", .key_size = 128, .tag_size = 4,
-     .ckey_len = ???, .sec_serv = sec_serv_conf_and_auth},
+    {.can_name = "AES_CM_128_HMAC_SHA1_32",
+     .ckey_len = AES_128_KEY_LEN + CM_SALT_LEN,
+     .set_policy = srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32},
+    {.can_name = "AES_CM_128_HMAC_SHA1_80",
+     .ckey_len = AES_128_KEY_LEN + CM_SALT_LEN,
+     /* srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80() is a macro alias
+      * for this in <srtp2/srtp.h>, not a real function -- can't take
+      * its address, so reference the underlying function directly. */
+     .set_policy = srtp_crypto_policy_set_rtp_default},
+    {.can_name = "AES_192_CM_HMAC_SHA1_32",
+     .ckey_len = AES_192_KEY_LEN + CM_SALT_LEN,
+     .set_policy = srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32},
+    {.can_name = "AES_192_CM_HMAC_SHA1_80",
+     .ckey_len = AES_192_KEY_LEN + CM_SALT_LEN,
+     .set_policy = srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80},
+    {.can_name = "AES_256_CM_HMAC_SHA1_32",
+     .ckey_len = AES_256_KEY_LEN + CM_SALT_LEN,
+     .set_policy = srtp_crypto_policy_set_aes_cm_256_hmac_sha1_32},
+    {.can_name = "AES_256_CM_HMAC_SHA1_80",
+     .ckey_len = AES_256_KEY_LEN + CM_SALT_LEN,
+     .set_policy = srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80},
+#if ENABLE_SRTP2
+    {.can_name = "AEAD_AES_128_GCM_8",
+     .ckey_len = AES_128_KEY_LEN + AEAD_SALT_LEN,
+     .set_policy = srtp_crypto_policy_set_aes_gcm_128_8_auth},
+    {.can_name = "AEAD_AES_128_GCM",
+     .ckey_len = AES_128_KEY_LEN + AEAD_SALT_LEN,
+     .set_policy = srtp_crypto_policy_set_aes_gcm_128_16_auth},
+    {.can_name = "AEAD_AES_256_GCM_8",
+     .ckey_len = AES_256_KEY_LEN + AEAD_SALT_LEN,
+     .set_policy = srtp_crypto_policy_set_aes_gcm_256_8_auth},
+    {.can_name = "AEAD_AES_256_GCM",
+     .ckey_len = AES_256_KEY_LEN + AEAD_SALT_LEN,
+     .set_policy = srtp_crypto_policy_set_aes_gcm_256_16_auth},
 #endif
-  {.can_name = "AES_CM_128_HMAC_SHA1_32", .key_size = 128, .tag_size = 4,
-   .ckey_len = 30, .sec_serv = sec_serv_conf_and_auth},
-  {.can_name = "AES_CM_128_HMAC_SHA1_80", .key_size = 128, .tag_size = 10,
-   .ckey_len = 30, .sec_serv = sec_serv_conf_and_auth},
-  {.can_name = NULL}
+    {.can_name = NULL}
 };
 
 static struct srtp_crypto_suite *
@@ -126,10 +171,20 @@ eaud_crypto_getopt_parse(char *optarg)
           (int)(dlm - optarg), optarg);
         return (NULL);
     }
-    expected_len = (suite->ckey_len * 4) / 3;
+    /*
+     * Standard (padded) base64 length for suite->ckey_len octets:
+     * ceil(ckey_len / 3) * 4. This must use ceiling division, not the
+     * simple "* 4 / 3" truncation the original single-suite (128-bit
+     * CM, 30-octet key+salt) code used -- that shortcut only produces
+     * the right answer when ckey_len happens to be a multiple of 3.
+     * Key+salt sizes for AES-192/256 CM and AES-128/256 GCM are not
+     * multiples of 3, so their base64 encoding legitimately requires
+     * '=' padding in the final block.
+     */
+    expected_len = ((suite->ckey_len + 2) / 3) * 4;
     assert(expected_len <= MAX_KEY_LEN);
     skey = dlm + 1;
-    if (strlen(skey) != expected_len) {
+    if ((int)strlen(skey) != expected_len) {
         fprintf(stderr, "invalid length of base64 key encoding, expected %d, "
           "supplied %d\n", expected_len, (int)strlen(skey));
         return (NULL);
@@ -140,24 +195,37 @@ eaud_crypto_getopt_parse(char *optarg)
     }
     memset(rval, '\0', sizeof(struct eaud_crypto));
     len = base64_string_to_octet_string(rval->key, &pad, skey, expected_len);
-    if (pad != 0) {
-        fprintf(stderr, "error: padding in base64 unexpected\n");
+    /*
+     * `len` is the number of *input* base64 characters consumed. If
+     * decoding stopped short of the full string, that means padding
+     * ('=') showed up somewhere before the final block, which is
+     * malformed base64.
+     */
+    if (len != expected_len) {
+        fprintf(stderr, "error: malformed base64 key/salt encoding "
+              "(unexpected padding before end of string)\n");
         goto e0;
     }
-    if (len < expected_len) {
-        fprintf(stderr, "error: too few digits in key/salt "
-              "(should be %d digits, found %d)\n", expected_len, len);
-        goto e0;;
+    /*
+     * `pad` (0, 1 or 2) is how many '=' characters were in the final
+     * block, i.e. how many fewer than 3 octets that block decoded to.
+     * Confirm the total decoded octet count matches what this suite
+     * actually needs -- this is the real integrity check that replaces
+     * the old blanket "no padding allowed" rule.
+     */
+    if ((len / 4) * 3 - pad != suite->ckey_len) {
+        fprintf(stderr, "error: decoded key/salt length mismatch "
+              "(expected %d octets, got %d)\n", suite->ckey_len,
+              (len / 4) * 3 - pad);
+        goto e0;
     }
     rval->suite = suite;
-    srtp_crypto_policy_set_rtp_default(&rval->policy.rtp);
-    srtp_crypto_policy_set_rtcp_default(&rval->policy.rtcp);
+    suite->set_policy(&rval->policy.rtp);
+    suite->set_policy(&rval->policy.rtcp);
     rval->policy.key = (uint8_t *)rval->key;
     rval->policy.next = NULL;
     rval->policy.window_size = 128;
     rval->policy.allow_repeat_tx = 0;
-    rval->policy.rtp.auth_tag_len = suite->tag_size;
-    rval->policy.rtp.sec_serv = rval->policy.rtcp.sec_serv = suite->sec_serv;
     return (rval);
 e0:
     free(rval);
