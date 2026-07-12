@@ -22,6 +22,8 @@ __beforeexit_cleanup()
   fi
 }
 
+set -x
+
 truncate -s 0 ${BV_LOGFILE}
 for socket in ${RTPP_TEST_SOCKETS}
 do
