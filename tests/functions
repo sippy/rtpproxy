@@ -31,13 +31,15 @@ MAKEANN_PROD=${TOP_BUILDDIR}/makeann/makeann
 EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio_debug
 REVTEMPL="${PYINT} ${TOP_BUILDDIR}/scripts/revtempl.py"
 KILL_CMD="`which kill`"
+MKTEMP_CMD="`which mktemp`"
 
 MYUID=`id -u`
 
 if [ ${MYUID} -eq 0 ]
 then
   set -x
-  for v in RTPPROXY_DBG RTPPROXY_PROD RTPP_QUERY RTPP_NOTYFY_CLIENT RPTL_INT MAKEANN_DBG MAKEANN_PROD EXTRACTAUDIO REVTEMPL
+  for v in RTPPROXY_DBG RTPPROXY_PROD RTPP_QUERY RTPP_NOTYFY_CLIENT \
+   RPTL_INT MAKEANN_DBG MAKEANN_PROD EXTRACTAUDIO REVTEMPL MKTEMP_CMD
   do
     eval "${v}=\"sudo -n -u nobody \${${v}}\""
   done
@@ -67,8 +69,8 @@ randomize_test_sockets() {
   RTPP_TEST_SOCK_TCP4_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
   RTPP_TEST_SOCK_TCP6_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
   tempfoo="`basename $0`.XXXXX"
-  RTPP_TEST_SOCK_UNIX="`mktemp -t ${tempfoo}`"
-  RTPP_TEST_SOCK_CUNIX="`mktemp -t ${tempfoo}`"
+  RTPP_TEST_SOCK_UNIX="`${MKTEMP_CMD} -t ${tempfoo}`"
+  RTPP_TEST_SOCK_CUNIX="`${MKTEMP_CMD} -t ${tempfoo}`"
 }
 
 assign_test_sockets() {
@@ -223,9 +225,9 @@ SED="sed ${SED_ARGS}"
 
 rtpproxy_start() {
   tempfoo="`basename $0`.XXXXX"
-  TMP_PIDFILE=`mktemp -t ${tempfoo}` || return 1
-  TMP_SOCKFILE=${RTPP_SOCKFILE:-`mktemp -t ${tempfoo}`} || return 1
-  TMP_LOGFILE=${RTPP_LOGFILE:-`mktemp -t ${tempfoo}`} || return 1
+  TMP_PIDFILE=`${MKTEMP_CMD} -t ${tempfoo}` || return 1
+  TMP_SOCKFILE=${RTPP_SOCKFILE:-`${MKTEMP_CMD} -t ${tempfoo}`} || return 1
+  TMP_LOGFILE=${RTPP_LOGFILE:-`${MKTEMP_CMD} -t ${tempfoo}`} || return 1
   RTPP_RUNDIR=`pwd`
   if [ ! -z "${RTPP_OUTFILE}" ]
   then
