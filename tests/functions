@@ -36,10 +36,12 @@ MYUID=`id -u`
 
 if [ ${MYUID} -eq 0 ]
 then
+  set -x
   for v in RTPPROXY_DBG RTPPROXY_PROD RTPP_QUERY RTPP_NOTYFY_CLIENT RPTL_INT MAKEANN_DBG MAKEANN_PROD EXTRACTAUDIO REVTEMPL
   do
     eval "${v}=\"sudo -n -u nobody \${${v}}\""
   done
+  set +x
 fi
 
 RTPPROXY="${RTPPROXY:-${RTPPROXY_DBG}}"
