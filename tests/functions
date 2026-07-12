@@ -32,6 +32,8 @@ EXTRACTAUDIO=${TOP_BUILDDIR}/extractaudio/extractaudio_debug
 REVTEMPL="${PYINT} ${TOP_BUILDDIR}/scripts/revtempl.py"
 KILL_CMD="`which kill`"
 MKTEMP_CMD="`which mktemp`"
+RTPPROXY="${RTPPROXY:-${RTPPROXY_DBG}}"
+MAKEANN="${MAKEANN:-${MAKEANN_PROD}}"
 
 MYUID=`id -u`
 
@@ -39,15 +41,13 @@ if [ ${MYUID} -eq 0 ]
 then
   set -x
   for v in RTPPROXY_DBG RTPPROXY_PROD RTPP_QUERY RTPP_NOTYFY_CLIENT \
-   RPTL_INT MAKEANN_DBG MAKEANN_PROD EXTRACTAUDIO REVTEMPL MKTEMP_CMD
+   RPTL_INT MAKEANN_DBG MAKEANN_PROD EXTRACTAUDIO REVTEMPL MKTEMP_CMD \
+   RTPPROXY MAKEANN
   do
     eval "${v}=\"sudo -n -u nobody \${${v}}\""
   done
   set +x
 fi
-
-RTPPROXY="${RTPPROXY:-${RTPPROXY_DBG}}"
-MAKEANN="${MAKEANN:-${MAKEANN_PROD}}"
 
 setup_tstart() {
   RTPP_MCLOCK_NAME="`RTPP_GLITCH_ACT="" ${RTPPROXY} -C 2>/dev/null`"
