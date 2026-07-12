@@ -224,6 +224,7 @@ fi
 SED="sed ${SED_ARGS}"
 
 rtpproxy_start() {
+  local IFS=
   tempfoo="`basename $0`.XXXXX"
   TMP_PIDFILE=`${MKTEMP_CMD} -t ${tempfoo}` || return 1
   TMP_SOCKFILE=${RTPP_SOCKFILE:-`${MKTEMP_CMD} -t ${tempfoo}`} || return 1

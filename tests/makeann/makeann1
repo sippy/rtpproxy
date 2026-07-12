@@ -6,7 +6,7 @@
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
-for ma_cmd in ${MAKEANN_PROD} ${MAKEANN_DBG}
+for ma_cmd in "${MAKEANN_PROD}" "${MAKEANN_DBG}"
 do
   RB_BASE="${BASEDIR}/ringback"
   RB_SLN="${RB_BASE}.sln"
