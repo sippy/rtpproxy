@@ -13,6 +13,6 @@ which python3
 python3 --version
 for pkg in parsimonious cpp-coveralls
 do
-  ${PIP_RUN} install --user ${pkg}
+  ${PIP_RUN} install ${pkg}
 done
-${PIP_RUN} install --user -r python/tools/requirements.txt
+${PIP_RUN} install -r python/tools/requirements.txt
