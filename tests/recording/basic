@@ -95,7 +95,7 @@ run_rtpproxy() {
    sleep 7; cat "${CD_DIR}/basic.stats.input") | \
    sed -u "s|%%CALLID%%|${CALL_ID}|g ; s|%%REC_PORT%%|${rport}|g ; \
     s|%%REC_NAME%%|${recfile}|g" | \
-    sudo -n -u nobody ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} | sed \
+    ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS} | sed \
     "s|^${rtp_porta}$|%%PORT_A%%|g ; s|^${rtp_porto}$|%%PORT_O%%|g ; \
      s|^${rtp_port_rec}|%%PORT_REC%%|g"
 

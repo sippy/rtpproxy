@@ -27,7 +27,7 @@ for socket in ${RTPP_TEST_SOCKETS}
 do
   if [ "${socket}" = "stdio:" ]
   then
-    sudo -n -u nobody ${RTPPROXY} -f -s "${socket}" < $BASEDIR/basic_versions/basic_versions.input 2>>${BV_LOGFILE} | \
+    ${RTPPROXY} -f -s "${socket}" < $BASEDIR/basic_versions/basic_versions.input 2>>${BV_LOGFILE} | \
       ${DIFF} ${BASEDIR}/basic_versions/basic_versions.output -
     report "basic_versions on ${socket}"
   else
