@@ -22,11 +22,11 @@ do_run()
 {
   for bad_rargs in ${1}
   do
-    IFS=\&
+    local IFS=\&
     set -o noglob
     RTPP_ARGS=`eval "echo \"${bad_rargs}\""`
     rtpproxy_start ${RTPP_ARGS}
-    reportifnotfail "`basename ${RTPPROXY}` don't start with bad argumens: \""${RTPP_ARGS}"\""
+    reportifnotfail "${RTPPROXY}: don't start with bad argumens: \""${RTPP_ARGS}"\""
     cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
     rm "${TMP_LOGFILE}"
   done
@@ -46,5 +46,5 @@ do
   do_run "${bad_rargs_all}" &
   DR_PID=${!}
   wait ${DR_PID}
-  report "checks for `basename ${RTPPROXY}`"
+  report "checks for: ${RTPPROXY}"
 done

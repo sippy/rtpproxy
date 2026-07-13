@@ -64,8 +64,8 @@
 -u&:nogroup
 -u&nahh:${mygid}
 -u&nahh:dooh
--u&nobody
--u&nobody:nogroup
+-u&games
+-u&games:nogroup
 -u&root:${mygid}
 -v
 -w&&

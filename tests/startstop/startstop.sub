@@ -49,13 +49,13 @@ test_startstop() {
       rm -f rtpproxy_acct.csv
       echo "rtpproxy_start ${rargs} ${SOCK_RARGS}" >&2
       rtpproxy_start ${rargs} ${SOCK_RARGS}
-      report "`basename ${RTPPROXY}` start"
+      report "${RTPPROXY}: start"
       rtpproxy_stop ${sig}
-      report "`basename ${RTPPROXY}` stop (SIG${sig})"
+      report "${RTPPROXY}: stop (SIG${sig})"
       cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
       rm "${TMP_LOGFILE}"
       ${DIFF} "startstop/${REF_OUTFILE}" "${RTPP_OUTFILE}"
-      report "`basename ${RTPPROXY}` output"
+      report "${RTPPROXY}: output"
     done
   done
 }

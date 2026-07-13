@@ -2,6 +2,8 @@
 
 # test start up of rtpproxy and handling of SIGTERM and SIGHUP
 
+set -x
+
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
