@@ -45,7 +45,7 @@ then
    RPTL_INT MAKEANN_DBG MAKEANN_PROD EXTRACTAUDIO REVTEMPL MKTEMP_CMD \
    RTPPROXY MAKEANN KILL_CMD
   do
-    eval "${v}=\"su nobody \${${v}}\""
+    eval "${v}=\"setpriv --reuid=rtpproxy --regid=rtpproxy --init-groups -- \${${v}}\""
   done
 fi
 
@@ -350,6 +350,7 @@ notify_client_stop() {
     not_exited=0
     break
   done
+  ps -o pid,ppid,pgid,sid,user,state,comm,args -p ${NC_PID}
   report_rc ${not_exited} "waiting for NOTYFY_CLIENT[${NC_PID}] to exit"
   set +x
 }
