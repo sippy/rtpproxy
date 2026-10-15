@@ -12,3 +12,28 @@ do
   ${EXTRACTAUDIO} ${bad_args}
   reportifnotfail "extractaudio start with bad argumens: ${bad_args}"
 done
+
+# Output options are checked with a valid recording, so that nothing but the
+# bad value can make extractaudio fail, and before the output file is created.
+wfile="badargs.out.ogg"
+for bad_args in "-r 11025" "-r 16000x" "-r ''" "-r 16000 -D gsm610" \
+ "-r 16000 -D g721_32" "-b 64" "-b 5 -D opus" "-b 300 -D opus" \
+ "-s -b 6 -D opus" "-s -b 600 -D opus" "-b nan -D opus" "-b -nan -D opus" \
+ "-b ''" "-b 64 -C 0.5 -D opus" "-C 2" "-C -0.5" "-C nan" "-C -nan" \
+ "-C NaN -D opus" "-C ''"
+do
+  rm -f ${wfile}
+  eval ${EXTRACTAUDIO} -F ogg ${bad_args} extractaudio/call1_alaw ${wfile} \
+   >/dev/null 2>&1
+  reportifnotfail "extractaudio start with bad argumens: ${bad_args}"
+  test ! -e ${wfile}
+  report "${wfile} is not created for: ${bad_args}"
+done
+
+# Data formats without a compression level are only detected once the output
+# file is open, which has to be removed then.
+wfile="badargs.clevel.wav"
+${EXTRACTAUDIO} -D pcm_16 -C 0.5 extractaudio/call1_alaw ${wfile}
+reportifnotfail "extractaudio start with bad argumens: -D pcm_16 -C 0.5"
+test ! -e ${wfile}
+report "${wfile} is removed"
