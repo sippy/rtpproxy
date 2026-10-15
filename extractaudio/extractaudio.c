@@ -45,6 +45,7 @@
 #include <getopt.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -101,13 +102,14 @@ const static struct option longopts[] = {
 RTPP_MEMDEB_APP_STATIC;
 #endif
 
-const static char *usage_msg[8] = {
-  "%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
-  "usage: extractaudio [-idsne] [-F file_fmt] [-D data_fmt] rdir outfile",
-  "                    [link1] ... [linkN]",
-  "       extractaudio [-idsne] [-F file_fmt] [-D data_fmt] [-A answer_cap]",
-  "                    [-B originate_cap] [--alice-crypto CSPEC]",
-  "                    [--bob-crypto CSPEC] outfile [link1] ... [linkN]",
+const static char *usage_msg[9] = {
+  "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+  "usage: extractaudio [-idsne] [-F file_fmt] [-D data_fmt] [-r rate]",
+  "                    [-b kbps | -C level] rdir outfile [link1] ... [linkN]",
+  "       extractaudio [-idsne] [-F file_fmt] [-D data_fmt] [-r rate]",
+  "                    [-b kbps | -C level] [-A answer_cap] [-B originate_cap]",
+  "                    [--alice-crypto CSPEC] [--bob-crypto CSPEC]",
+  "                    outfile [link1] ... [linkN]",
   "       extractaudio -S [-A answer_cap] [-B originate_cap]",
   "       extractaudio -S rdir"
 };
@@ -117,7 +119,7 @@ usage(void)
 {
 
     fprintf(stderr, usage_msg[0], usage_msg[1], usage_msg[2], usage_msg[3],
-      usage_msg[4], usage_msg[5], usage_msg[6], usage_msg[7]);
+      usage_msg[4], usage_msg[5], usage_msg[6], usage_msg[7], usage_msg[8]);
     exit(1);
 }
 
@@ -232,6 +234,37 @@ e0:
     return -1;
 }
 
+/* Parse a floating point option value, rejecting empty strings and NaN */
+static int
+parse_double(const char *s, double *vp)
+{
+    char *ep;
+    double v;
+
+    v = strtod(s, &ep);
+    if (ep == s || *ep != '\0' || isnan(v))
+        return (-1);
+    *vp = v;
+    return (0);
+}
+
+/* Data formats that only exist as 8 KHz (narrowband) codecs */
+static bool
+data_fmt_nbonly(uint32_t fmt)
+{
+
+    switch (fmt & SF_FORMAT_SUBMASK) {
+    case SF_FORMAT_GSM610:
+    case SF_FORMAT_G721_32:
+    case SF_FORMAT_G723_24:
+    case SF_FORMAT_G723_40:
+        return (true);
+
+    default:
+        return (false);
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -257,6 +290,9 @@ main(int argc, char **argv)
     int option_index;
     struct eaud_crypto *alice_crypto, *bob_crypto;
     int64_t isample, sync_sample;
+    int orate;
+    double kbps, clevel;
+    char *ep;
 
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_APP_INIT();
@@ -265,7 +301,8 @@ main(int argc, char **argv)
     MYQ_INIT(&channels);
     MYQ_INIT(&act_subset);
     memset(&sfinfo, 0, sizeof(sfinfo));
-    sfinfo.samplerate = 8000;
+    orate = 8000;
+    kbps = clevel = -1;
     sfinfo.channels = 1;
     use_file_fmt = use_data_fmt = 0;
     dflt_file_fmt = SF_FORMAT_WAV;
@@ -280,7 +317,7 @@ main(int argc, char **argv)
     int scanonly = 0;
     int ecode = 0;
 
-    while ((ch = getopt_long(argc, argv, "dsSineF:D:A:B:U:", longopts,
+    while ((ch = getopt_long(argc, argv, "dsSineF:D:A:B:U:r:b:C:", longopts,
       &option_index)) != -1)
         switch (ch) {
         case 'd':
@@ -354,6 +391,32 @@ main(int argc, char **argv)
             scanonly = 1;
             break;
 
+        case 'r':
+            orate = strtol(optarg, &ep, 10);
+            if (*ep != '\0' || (orate != 8000 && orate != 16000)) {
+                warnx("%s: output rate must be 8000 or 16000", optarg);
+                ecode = 1;
+                goto done;
+            }
+            break;
+
+        case 'b':
+            if (parse_double(optarg, &kbps) != 0 || kbps <= 0) {
+                warnx("%s: invalid bitrate", optarg);
+                ecode = 1;
+                goto done;
+            }
+            break;
+
+        case 'C':
+            if (parse_double(optarg, &clevel) != 0 || clevel < 0 ||
+              clevel > 1) {
+                warnx("%s: compression level must be 0.0 to 1.0", optarg);
+                ecode = 1;
+                goto done;
+            }
+            break;
+
         case 'e':
             dflags |= D_FLAG_ERRFAIL;
             break;
@@ -377,6 +440,32 @@ main(int argc, char **argv)
     }
     if (use_data_fmt == 0) {
         use_data_fmt = dflt_data_fmt;
+        /* GSM 06.10 is narrowband only, use the stereo default instead */
+        if (orate != 8000 && data_fmt_nbonly(use_data_fmt))
+            use_data_fmt = SF_FORMAT_MS_ADPCM;
+    }
+    if (orate != 8000 && data_fmt_nbonly(use_data_fmt)) {
+        warnx("-r %d: the data format only supports 8000", orate);
+        ecode = 1;
+        goto done;
+    }
+    if (kbps >= 0 && clevel >= 0) {
+        warnx("-b and -C are mutually exclusive");
+        ecode = 1;
+        goto done;
+    }
+    if (kbps >= 0 && (use_data_fmt & SF_FORMAT_SUBMASK) != SF_FORMAT_OPUS) {
+        warnx("-b requires -D opus");
+        ecode = 1;
+        goto done;
+    }
+    /* libsndfile supports 6 to 256 kbps per channel for Opus */
+    if (kbps >= 0 && (kbps / sfinfo.channels < 6 ||
+      kbps / sfinfo.channels > 256)) {
+        warnx("%g: bitrate must be %d to %d kbps for %d channel(s)", kbps,
+          6 * sfinfo.channels, 256 * sfinfo.channels, sfinfo.channels);
+        ecode = 1;
+        goto done;
     }
 
     if (idprio != 0) {
@@ -445,8 +534,8 @@ main(int argc, char **argv)
             basetime = cnp->cp->btime;
     }
     MYQ_FOREACH(cnp, &channels) {
-        cnp->cp->skip = (cnp->cp->btime - basetime) * 8000;
-        cnp->cp->decoder = decoder_new(&(cnp->cp->session), dflags);
+        cnp->cp->skip = (cnp->cp->btime - basetime) * orate;
+        cnp->cp->decoder = decoder_new(&(cnp->cp->session), dflags, orate);
         if (cnp->cp->decoder == NULL)
             err(1, "decoder_new() failed");
         nch++;
@@ -455,10 +544,28 @@ main(int argc, char **argv)
     oblen = 0;
 
     sfinfo.format = use_file_fmt | use_data_fmt;
+    sfinfo.samplerate = orate;
+    if (kbps >= 0) {
+        /*
+         * libsndfile maps the compression level q to an Opus bitrate of
+         * ((1 - q) * 250000 + 6000) bits per second per channel.
+         */
+        clevel = 1.0 - (kbps * 1000.0 / sfinfo.channels - 6000.0) / 250000.0;
+    }
 
     sffile = sf_open(argv[0], SFM_WRITE, &sfinfo);
     if (sffile == NULL)
         errx(2, "%s: can't open output file", argv[0]);
+    /* Must be set after sf_open() and before the first write */
+    if (clevel >= 0 && sf_command(sffile, SFC_SET_COMPRESSION_LEVEL, &clevel,
+      sizeof(clevel)) != SF_TRUE) {
+        warnx("%s: compression level not supported by the output format",
+          argv[0]);
+        sf_close(sffile);
+        unlink(argv[0]);
+        ecode = 1;
+        goto done;
+    }
 #if defined(EAUD_DUMPRAW)
     FILE *raw_file = fopen(EAUD_DUMPRAW, "w");
 #endif
@@ -547,7 +654,7 @@ out:
             fwrite(obuf, sizeof(int16_t), oblen, raw_file);
 #endif
             sf_write_short(sffile, obuf, oblen);
-            nwsamples += oblen / sizeof(obuf[0]);
+            nwsamples += oblen / sfinfo.channels;
             oblen = 0;
         }
     } while (neof < nch);

@@ -52,15 +52,35 @@
 #define	DECODER_ERROR	(-(2 << 16))
 #define	DECODER_SKIP	(-(3 << 16))
 
+#define	US_HALF	8	/* upsampler taps on each side of the midpoint */
+
+/* Most 8 KHz RTP ticks decoded at once, ~0.5 seconds */
+#define	DECODER_MAX_TICKS	(4 * 1024)
+/* Most output samples per RTP tick: 2 at 16 KHz */
+#define	DECODER_MAX_RMULT	2
+/* Most RTP ticks of silence inserted at once to fill a gap */
+#define	DECODER_MAX_GAP		4000
+
+#if DECODER_MAX_GAP > DECODER_MAX_TICKS
+#error "DECODER_MAX_GAP has to fit into the decoder buffers"
+#endif
+
 struct decoder_stream {
     struct session *sp;
     struct packet *pp;
     unsigned int nticks;
     unsigned int sticks;
     unsigned char lpt;
-    int16_t obuf[4 * 1024];	/* 0.5 seconds at 8 KHz 16 bits per sample */
+    /* Output at up to 16 KHz, 16 bits per sample */
+    int16_t obuf[DECODER_MAX_TICKS * DECODER_MAX_RMULT];
+    /* Narrowband 8 KHz decoder output, before upsampling */
+    int16_t nbuf[DECODER_MAX_TICKS];
     int16_t *obp;
     unsigned int oblen;
+    int rmult;			/* output samples per 8 KHz RTP tick: 1 or 2 */
+    int16_t us_hist[2 * US_HALF];	/* upsampler history */
+    int us_active;		/* upsampler is inside a narrowband run */
+    unsigned int us_skip;	/* priming output samples still to drop */
 #ifdef ENABLE_G729
     G729_DCTX *g729_ctx;
 #endif
@@ -80,10 +100,12 @@ struct decoder_stream {
 #define D_FLAG_NOSYNC    0x1
 #define D_FLAG_ERRFAIL   0x2
 
-void *decoder_new(struct session *, int);
+void *decoder_new(struct session *, int, int);
 int32_t decoder_get(struct decoder_stream *);
 int decode_frame(struct decoder_stream *, int16_t *, unsigned char *,
   unsigned int, unsigned int);
 int generate_silence(struct decoder_stream *, int16_t *, unsigned int);
+int output_frame(struct decoder_stream *);
+int output_silence(struct decoder_stream *, unsigned int);
 
 #endif
